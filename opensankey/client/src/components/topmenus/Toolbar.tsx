@@ -121,7 +121,6 @@ export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData })
             {
               app_data.publish_options.view_filter ? <UnitaryTagGroupFilter app_data={app_data} /> : <></>
             }
-            <RevealAllDataDevControl app_data={app_data} />
             {
               app_data.publish_options.level_filter ? <LevelTagFilter app_data={app_data} /> : <></>
             }
@@ -1170,28 +1169,10 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
     </Box>
   ) : null
 
-  // Rendu final
-  return SelectorOfTagsByGroup.length > 0 ? (
-    <FilterWrapperBox app_data={app_data} title={t(`Banner.${title_key}`)} defaultOpen={app_data.is_static}>
-      {ResetHierarchyButton}
-      {config.show_title_column ? title_filter_column(app_data) : null}
-      {TypeSelectionHeader}
-      {SelectorOfTagsByGroup}
-      {ViewFilterKindControl}
-      {GapModeControl}
-    </FilterWrapperBox>
-  ) : <></>
-}
-
-// « Toutes données » (reveal_data_links) : déplacé hors du panneau « Affichage », rendu
-// une seule fois dans le drawer et réservé au MODE DÉVELOPPEUR (temporaire). Union avec la
-// vue courante : affiche aussi les flux porteurs d'une donnée collectée, tous niveaux confondus.
-const RevealAllDataDevControl = ({ app_data }: { app_data: Class_ApplicationData }) => {
-  const { t, drawing_area } = app_data
-  const { sankey } = drawing_area
-  const [, setCount] = useState(0)
-  if (!app_data.has_sankey_dev) return <></>
-  return <FilterWrapperBox app_data={app_data} title={t('Banner.data_links_reveal')}>
+  // « Toutes données » (reveal_data_links) — intégré au panneau ViewTags (« Génération
+  // de vues »), réservé au MODE DÉVELOPPEUR (temporaire). Union avec la vue courante :
+  // affiche aussi les flux porteurs d'une donnée collectée, tous niveaux confondus.
+  const RevealAllDataControl = (mode === 'unitary' && app_data.has_sankey_dev) ? (
     <Box layerStyle='menuconfig_grid'>
       <HStack spacing={4} align='center'>
         <Checkbox
@@ -1210,7 +1191,20 @@ const RevealAllDataDevControl = ({ app_data }: { app_data: Class_ApplicationData
         </Checkbox>
       </HStack>
     </Box>
-  </FilterWrapperBox>
+  ) : null
+
+  // Rendu final
+  return SelectorOfTagsByGroup.length > 0 ? (
+    <FilterWrapperBox app_data={app_data} title={t(`Banner.${title_key}`)} defaultOpen={app_data.is_static}>
+      {ResetHierarchyButton}
+      {config.show_title_column ? title_filter_column(app_data) : null}
+      {TypeSelectionHeader}
+      {SelectorOfTagsByGroup}
+      {ViewFilterKindControl}
+      {GapModeControl}
+      {RevealAllDataControl}
+    </FilterWrapperBox>
+  ) : <></>
 }
 
 // Composants wrapper pour maintenir la compatibilité avec l'API existante
