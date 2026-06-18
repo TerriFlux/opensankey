@@ -1009,11 +1009,15 @@ export const buildSankeyWorkbookData = (
   // variable. Les colonnes purement solveur de SEP (index de variable dans la matrice Ai,
   // statistiques Monte-Carlo, valeur « complétée ») n'existent pas côté front et sont omises.
   // Le write-back du bridge ignore cet onglet (id non routé) -> aucune édition n'est répercutée.
+  // Intitulés alignés sur l'onglet Flux : la valeur d'entrée = « Valeur », le résultat solveur =
+  // « Valeur calculée », l'incertitude = « Incertitude % ». Les bornes de la donnée d'entrée = «
+  // Min »/« Max » (comme Flux) ; les bornes du résultat réconcilié (sans équivalent Flux) = « Min
+  // calculée »/« Max calculée », en miroir de « Valeur calculée ».
   const analysisHeaders = [
     'Origine', 'Destination',
-    'Valeur reconciliée', 'Borne inférieure', 'Borne supérieure',
-    'Valeur non-réconciliée', 'Borne inférieure non-réconciliée', 'Borne supérieure non-réconciliée',
-    'Incertitude relative non-réconciliée (%)',
+    'Valeur calculée', 'Min calculée', 'Max calculée',
+    'Valeur', 'Min', 'Max',
+    'Incertitude %',
     'Delta réconcilié - non-réconcilié', 'Écart réconcilié (nb σ)', 'Type de variable'
   ]
   // Colonnes de résultat réconcilié / analyse -> en-tête violet (comme « Valeur calculée » du Flux).
