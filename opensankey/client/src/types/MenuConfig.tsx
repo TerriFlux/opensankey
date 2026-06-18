@@ -211,6 +211,9 @@ export class Class_MenuConfig {
   protected _main_zone_show_spreadsheet: boolean = false
   // Onglet « Doc » : panneau de documentation markdown, partage le slot droit comme le tableur.
   protected _main_zone_show_doc: boolean = false
+  // Doc détachée dans une fenêtre OS séparée : état TRANSITOIRE (non sérialisé), piloté par
+  // MainZoneTabs. Quand vrai, la doc ne réserve plus d'espace in-app (le diagramme récupère la place).
+  public main_zone_doc_detached: boolean = false
   // Position de la doc dans la grande zone (cf. Type_MainZoneDocLayout).
   protected _main_zone_doc_layout: Type_MainZoneDocLayout = 'sheet-right'
   // Hauteur (px) de la doc dans les modes bas (diagram-bottom / window-bottom), réglée par la poignée.
@@ -250,7 +253,7 @@ export class Class_MenuConfig {
     // La colonne de droite n'existe que si le tableur est affiché, OU si la doc est en mode « accolée
     // au tableur » (sheet-*). En mode bas (diagram-bottom / window-bottom) la doc ne réserve pas de
     // largeur à droite.
-    const docInRightColumn = this._main_zone_show_doc &&
+    const docInRightColumn = this._main_zone_show_doc && !this.main_zone_doc_detached &&
       DOC_LAYOUTS_WITH_SHEET.includes(this._main_zone_doc_layout)
     const rightColumnShown = this._main_zone_show_spreadsheet || docInRightColumn
     if (!(this._main_zone_show_diagram && rightColumnShown)) return 0
@@ -269,7 +272,7 @@ export class Class_MenuConfig {
    * drawing area, donc le diagramme se recadre dans la hauteur restante. 0 dans les autres cas.
    */
   public getMainZoneBottomReservedPx(): number {
-    if (!(this._main_zone_show_diagram && this._main_zone_show_doc)) return 0
+    if (!(this._main_zone_show_diagram && this._main_zone_show_doc && !this.main_zone_doc_detached)) return 0
     if (!DOC_LAYOUTS_BOTTOM.includes(this._main_zone_doc_layout)) return 0
     const MIN_DOC_PX = 120
     const MIN_DIAGRAM_PX = 120

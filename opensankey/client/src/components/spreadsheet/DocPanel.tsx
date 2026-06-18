@@ -15,7 +15,7 @@ import {
   Box, Button, Textarea, Portal,
   Menu, MenuButton, MenuList, MenuItem, MenuGroup, MenuDivider
 } from '@chakra-ui/react'
-import { ChevronDownIcon } from '@chakra-ui/icons'
+import { ChevronDownIcon, ExternalLinkIcon } from '@chakra-ui/icons'
 import ReactMarkdown from 'react-markdown'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
@@ -127,14 +127,19 @@ export const DocPanel = (
   {
     app_data, active,
     docLayout, setDocLayout,
-    showDiagram, showSpreadsheet
+    showDiagram, showSpreadsheet,
+    detached, onToggleDetach
   }: {
     app_data: Class_ApplicationData,
     active: boolean,
     docLayout: Type_MainZoneDocLayout,
     setDocLayout: (v: Type_MainZoneDocLayout) => void,
     showDiagram: boolean,
-    showSpreadsheet: boolean
+    showSpreadsheet: boolean,
+    // Détachement du panneau dans une fenêtre OS séparée (cf. usePipWindow). Optionnels : le panneau
+    // reste fonctionnel sans, le bouton n'apparaît simplement pas.
+    detached?: boolean,
+    onToggleDetach?: () => void
   }
 ) => {
   const [text, setText] = useState<string>(app_data.documentation_markdown)
@@ -469,6 +474,17 @@ export const DocPanel = (
             <Button {...tab_btn_style(mode === 'edit')} onClick={() => setMode('edit')}>Édition</Button>
             <Button {...tab_btn_style(mode === 'split')} onClick={() => setMode('split')}>Côte à côte</Button>
             <Button {...tab_btn_style(mode === 'preview')} onClick={() => setMode('preview')}>Aperçu</Button>
+            {/* Détacher / ré-attacher la doc dans une fenêtre OS séparée (second écran). */}
+            {onToggleDetach && (
+              <Button
+                {...tab_btn_style(!!detached)}
+                leftIcon={<ExternalLinkIcon />}
+                onClick={onToggleDetach}
+                title={detached ? 'Ré-attacher la documentation dans la fenêtre principale' : 'Détacher la documentation dans une fenêtre séparée'}
+              >
+                {detached ? 'Ré-attacher' : 'Détacher'}
+              </Button>
+            )}
           </Box>
         </Box>
       </Box>

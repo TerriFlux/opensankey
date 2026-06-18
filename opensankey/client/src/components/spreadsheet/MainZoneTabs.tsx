@@ -16,6 +16,7 @@ import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Type_MainZoneDocLayout, DOC_LAYOUTS_WITH_SHEET, DOC_LAYOUTS_BOTTOM } from '../../types/MenuConfig'
 import { UniverSpreadSheet } from './UniverSpreadSheet'
 import { DocPanel } from './DocPanel'
+import { usePipWindow, PipPortal } from './PipWindow'
 
 const MIN_RATIO = 0.15
 const MAX_RATIO = 0.85
@@ -99,6 +100,24 @@ export const MainZoneTabs = (
     setDocLayout, setDocBottomPx, setDocSheetRatio
   } = useMainZone(app_data)
 
+  // Détachement de la doc dans une fenêtre OS séparée (transitoire, non persisté).
+  const { pipWindow, open: openDocPip, close: closeDocPip } = usePipWindow()
+  const docDetached = pipWindow != null
+  const toggleDocDetach = () => {
+    if (docDetached) closeDocPip()
+    else openDocPip({ width: 480, height: 680, title: 'OpenSankey — Documentation' })
+  }
+  // La doc occupe un slot in-app seulement si affichée ET non détachée.
+  const docInApp = showDoc && !docDetached
+  // Miroir du drapeau pour les réserves de largeur/hauteur du diagramme (getMainZoneRight/Bottom
+  // ReservedPx, lues par toute drawing area lors d'areaAutoFit). Assignation simple (pas le setter
+  // notifiant) : MainZoneTabs se re-rend déjà depuis son propre état pipWindow.
+  app_data.menu_configuration.main_zone_doc_detached = docDetached
+  // Si la doc est masquée pendant qu'elle est détachée, on referme la fenêtre (ré-attachement).
+  useEffect(() => {
+    if (!showDoc && docDetached) closeDocPip()
+  }, [showDoc, docDetached, closeDocPip])
+
   // Re-render on viewport resize so fixed-position panels stay within the browser window.
   const [, forceResize] = useReducer((n: number) => n + 1, 0)
   useEffect(() => {
@@ -115,11 +134,11 @@ export const MainZoneTabs = (
   const contentBottom = window.innerHeight - bottomH
   const contentH = Math.max(0, contentBottom - contentTop)
 
-  // Familles de disposition de la doc.
-  const docWithSheet = showDoc && DOC_LAYOUTS_WITH_SHEET.includes(docLayout)
-  const docBottomMode = showDoc && DOC_LAYOUTS_BOTTOM.includes(docLayout)
+  // Familles de disposition de la doc (uniquement quand elle occupe un slot in-app).
+  const docWithSheet = docInApp && DOC_LAYOUTS_WITH_SHEET.includes(docLayout)
+  const docBottomMode = docInApp && DOC_LAYOUTS_BOTTOM.includes(docLayout)
   // Doc seule (ni diagramme ni tableur) -> elle remplit toute la zone, peu importe le mode.
-  const docAlone = showDoc && !showDiagram && !showSpreadsheet
+  const docAlone = docInApp && !showDiagram && !showSpreadsheet
   // Bandeau pleine largeur : window-bottom, ou diagram-bottom sans diagramme (repli).
   const docFullWidthBand = !docAlone && docBottomMode &&
     (docLayout === 'window-bottom' || !showDiagram)
@@ -158,7 +177,7 @@ export const MainZoneTabs = (
     }
     drawing_area.areaAutoFit()
     app_data.draw()
-  }, [showDiagram, showSpreadsheet, showDoc, docLayout, splitRatio, docBottomPx])
+  }, [showDiagram, showSpreadsheet, showDoc, docDetached, docLayout, splitRatio, docBottomPx])
 
   // --- Séparateur vertical : largeur de la colonne droite ---
   const onVDividerDown = (e: React.MouseEvent) => {
@@ -230,7 +249,7 @@ export const MainZoneTabs = (
     window.addEventListener('mouseup', up)
   }
 
-  const docPanelEl = (
+  const renderDocPanel = (detached: boolean) => (
     <DocPanel
       app_data={app_data}
       active={showDoc}
@@ -238,11 +257,21 @@ export const MainZoneTabs = (
       setDocLayout={setDocLayout}
       showDiagram={showDiagram}
       showSpreadsheet={showSpreadsheet}
+      detached={detached}
+      onToggleDetach={toggleDocDetach}
     />
   )
+  const docPanelEl = renderDocPanel(false)
 
   return (
     <>
+      {/* Doc détachée : rendue LIVE dans une fenêtre OS séparée (cf. PipWindow). */}
+      {pipWindow && (
+        <PipPortal pipWindow={pipWindow}>
+          {renderDocPanel(true)}
+        </PipPortal>
+      )}
+
       {/* Doc seule : remplit toute la grande zone. */}
       {docAlone && (
         <div style={{
