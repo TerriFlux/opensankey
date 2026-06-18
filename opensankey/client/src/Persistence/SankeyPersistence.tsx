@@ -2035,6 +2035,7 @@ export class DrawingAreaPersistence {
     }
     if (drawing_area.filter_label > 0) json_object['filter_label'] = drawing_area.filter_label
     if (drawing_area.filter_link_value > 0) json_object['filter_link_value'] = drawing_area.filter_link_value
+    if (drawing_area.show_zero_links) json_object['show_zero_links'] = true
     if (drawing_area.type_data != initial_show_structure) json_object['show_structure'] = drawing_area.type_data
     if (drawing_area.data_source !== 'reconciled') json_object['data_source'] = drawing_area.data_source
     if (drawing_area.interval_display !== 'free_value') json_object['interval_display'] = drawing_area.interval_display
@@ -2348,6 +2349,7 @@ export class DrawingAreaPersistence {
     drawing_area['_color'] = getStringFromJSON(json_object, 'couleur_fond_sankey', drawing_area.color)
     drawing_area['_filter_label'] = getNumberFromJSON(json_object, 'filter_label', 0)
     drawing_area['_filter_link_value'] = getNumberFromJSON(json_object, 'filter_link_value', 0)
+    drawing_area['_show_zero_links'] = getBooleanFromJSON(json_object, 'show_zero_links', false)
     drawing_area['_grid_size'] = getNumberFromJSON(json_object, 'grid_square_size', drawing_area.grid_size)
     drawing_area['_grid_visible'] = getBooleanFromJSON(json_object, 'grid_visible', drawing_area.grid_visible)
     drawing_area['_height'] = getNumberFromJSON(json_object, 'height', drawing_area.height)

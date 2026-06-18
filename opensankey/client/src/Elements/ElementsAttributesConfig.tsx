@@ -3042,6 +3042,30 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       it: 'Scegliere quale regola definisce il colore del flusso'
     }
   } satisfies AttributeConfig<'flow' | 'source' | 'target' | 'gradient' | 'auto'>,
+
+  // #fn — force l'affichage de CE flux même quand sa valeur est nulle, en complément
+  // de l'option globale « flux nuls visibles » (drawing_area.show_zero_links). La
+  // visibilité réelle est décidée dans Link._is_visible_ignoring_container_modes.
+  visible_when_zero: {
+    default: false,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['drawWithNodes', 'drawElements'] as LinkBaseActionType[],
+    labels: {
+      en: 'Show if null',
+      fr: 'Afficher si nul',
+      es: 'Mostrar si es nulo',
+      de: 'Anzeigen wenn null',
+      it: 'Mostra se nullo'
+    },
+    tooltips: {
+      en: 'Always draw this link even when its value is zero (overrides the null-link filter for this link only)',
+      fr: 'Toujours afficher ce flux même si sa valeur est nulle (outrepasse le masquage des flux nuls, pour ce flux uniquement)',
+      es: 'Mostrar siempre este flujo aunque su valor sea cero (anula el filtrado de flujos nulos solo para este flujo)',
+      de: 'Diesen Fluss immer anzeigen, auch wenn sein Wert null ist (überschreibt die Nullfluss-Filterung nur für diesen Fluss)',
+      it: 'Mostra sempre questo flusso anche se il suo valore è zero (ignora il filtro dei flussi nulli solo per questo flusso)'
+    }
+  } satisfies AttributeConfig<boolean>,
 } as const
 
 export const LINKS_LABEL_SPECIFIC_CONFIG = {

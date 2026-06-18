@@ -893,6 +893,7 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   shape_arrow_size!: LinkShapeSpecificValues['arrow_size']
   shape_is_dashed!: LinkShapeSpecificValues['is_dashed']
   shape_color_rule!: LinkShapeSpecificValues['color_rule']
+  shape_visible_when_zero!: LinkShapeSpecificValues['visible_when_zero']
 
   public getShapeColorToUse() {
     return this.shape_color
@@ -1191,6 +1192,7 @@ export class Class_ElementStyle {
   shape_arrow_size!: LinkShapeSpecificValues['arrow_size']
   shape_is_dashed!: LinkShapeSpecificValues['is_dashed']
   shape_color_rule!: LinkShapeSpecificValues['color_rule']
+  shape_visible_when_zero!: LinkShapeSpecificValues['visible_when_zero']
 
   value_label_on_path!: LinkLabelSpecificValues['on_path']
   value_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
