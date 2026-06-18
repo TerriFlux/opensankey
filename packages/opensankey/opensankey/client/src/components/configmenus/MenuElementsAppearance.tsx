@@ -1800,6 +1800,21 @@ export const MenuConfigurationAppearance = ({
                               >
                                 {t('Flux.apparence.shape_is_dashed')}
                               </OverloadedCheckbox>
+                            </Box>
+                            <Box layerStyle='menuconfigpanel_row_2cols'>
+                              <OverloadedCheckbox
+                                elements={links_elements}
+                                config={LINK_SHAPE_SPECIFIC_CONFIG}
+                                prefix={'shape'}
+                                attributeKey="visible_when_zero"
+                                isChecked={linkShapeValues.visible_when_zero}
+                                onChange={(checked) => { linkShapeValues.visible_when_zero = checked }}
+                                getIsIndeterminate={() => isLinkShapeSpecificValueIndeterminate(links_elements, 'visible_when_zero')}
+                                tooltipLabel={t(`Flux.apparence.tooltips.${getLinkShapeAttributeKey('shape', 'visible_when_zero')}`)}
+                                t={t}
+                              >
+                                {t('Flux.apparence.shape_visible_when_zero')}
+                              </OverloadedCheckbox>
                             </Box></Box>
                         </> : <></>}
 

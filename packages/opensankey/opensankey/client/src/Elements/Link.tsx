@@ -1121,6 +1121,16 @@ export class Class_LinkElement extends Class_LinkAttribute {
     return this.valueCurrent === 0
   }
 
+  /**
+   * #fn — un flux à valeur nulle reste affiché si l'option GLOBALE « flux nuls
+   * visibles » (drawing_area.show_zero_links, Paramètres d'affichage) est active,
+   * OU si ce flux porte l'attribut PAR-FLUX `shape_visible_when_zero`. Lu dans
+   * `_is_visible_ignoring_container_modes` pour outrepasser le filtre `is_not_zero`.
+   */
+  public get is_forced_visible_when_zero(): boolean {
+    return this.drawing_area.show_zero_links || this.shape_visible_when_zero
+  }
+
   public get child_links() { return this._child_links }
   public get is_multi_link() { return this._is_multi_link }
 
@@ -1262,7 +1272,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       Object.values(this._child_links).length == 0 &&
       this.are_source_and_target_displayed &&
       this.are_related_flux_tags_selected &&
-      (!require_non_zero || this.is_not_zero)
+      (!require_non_zero || this.is_not_zero || this.is_forced_visible_when_zero)
     )
   }
 
