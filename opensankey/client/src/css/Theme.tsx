@@ -991,6 +991,31 @@ export const buttonStyles = {
     },
   }),
 
+  // Boutons du groupe ajustement/verrous/plein écran de la barre d'outils. La largeur
+  // est contrainte explicitement (2rem) : certaines icônes sont composites (police+verrou,
+  // taille+verrou) et, sans cette borne, le bouton s'élargissait au-delà de la colonne.
+  toolbar_button_6: defineStyle({
+    bgColor: 'primaire.4',
+    borderColor: 'secondaire.4',
+    border: 'none',
+    color: 'white',
+    width: '2rem',
+    height: '2rem',
+    minW: 'unset',
+    padding: '0.2rem',
+    zIndex: 0,
+    _hover: {
+      bgColor: 'tertiaire.4',
+      borderColor: 'secondaire.4',
+      border: 'none',
+    },
+    _active: {
+      bgColor: 'tertiaire.4',
+      borderColor: 'secondaire.4',
+      border: 'none',
+    },
+  }),
+
   button_dataTagg_sequence_play: defineStyle({
     bgColor: 'primaire.3',
     borderColor: 'primaire.3',
