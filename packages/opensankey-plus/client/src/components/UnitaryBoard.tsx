@@ -1,37 +1,72 @@
-import { updateUnitaryStyles } from "../deps/OpenSankey/Algorithms/UnitaryBoard"
-import { elementStyleConfigs, node_exchanges_style, node_unitary_styles } from "../deps/OpenSankey/Elements/ElementStyle"
-import { Class_NodeElement } from "../deps/OpenSankey/Elements/Node"
-import { DrawingAreaPersistence } from "../deps/OpenSankey/Persistence/SankeyPersistence"
-import { compressJSONToGzip } from "../deps/OpenSankey/Persistence/UniversalJSONCompression"
-import { Class_Tag } from "../deps/OpenSankey/types/Tag"
-import { Class_ViewTagGroup } from "../deps/OpenSankey/types/TagGroup"
-import { makeId } from "../deps/OpenSankey/types/Utils"
-import { Class_ApplicationDataOSP } from "../types/ApplicationDataOSP"
-import { Class_DrawingAreaOSP, DrawingAreaPersistenceOSP } from "../types/DrawingAreaOSP"
+import { updateUnitaryStyles } from '../deps/OpenSankey/Algorithms/UnitaryBoard'
+import { elementStyleConfigs, node_exchanges_style, node_unitary_styles } from '../deps/OpenSankey/Elements/ElementStyle'
+import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
+import { compressJSONToGzip } from '../deps/OpenSankey/Persistence/UniversalJSONCompression'
+import { Class_Tag } from '../deps/OpenSankey/types/Tag'
+import { Class_ViewTagGroup } from '../deps/OpenSankey/types/TagGroup'
+import { makeId } from '../deps/OpenSankey/types/Utils'
+import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
+import { Class_DrawingAreaOSP, DrawingAreaPersistenceOSP } from '../types/DrawingAreaOSP'
 
 /**
- * Crée une vue unitaire - soit un board avec tous les nœuds, soit une vue focalisée sur un nœud spécifique
- * @param app_data - L'application data
- * @param node_ref - Le nœud de référence (optionnel). Si fourni, crée une vue focalisée sur ce nœud
+ * Retire toute la GÉOMÉTRIE d'un JSON de DrawingArea pour que le board unitaire se
+ * charge comme un import neuf : positions de nœuds/liens supprimées (fromJSON
+ * retombe sur le défaut 0), `node_pos_is_center` désactivé (sinon x/y serait
+ * réinterprété comme un centre persistant), verrous/offsets de position retirés des
+ * `local`, et ANCRAGE des liens (verrous de côté + deltas d'accroche) remis à zéro.
+ * Résultat : computeAutoSankey recalcule TOUTE la disposition à partir de la seule
+ * topologie + valeurs, sans corrélation au diagramme source.
  */
-export const createUnitaryView = (
+const stripGeometryFromDrawingAreaJSON = (json: Record<string, unknown>) => {
+  json.node_pos_is_center = false
+  const POSITION_LOCAL_KEYS = [
+    'shape_position_u_locked', 'shape_position_v_locked',
+    'shape_position_dx', 'shape_position_dy'
+  ]
+  // Ancrage des flux sur les nœuds (champs niveau-lien, hors `local`) : côté verrouillé
+  // + décalage d'accroche. Non touchés par resetAttributes/resetAnchorLocks au load.
+  const LINK_ANCHOR_KEYS = [
+    'source_side_locked', 'target_side_locked',
+    'source_anchor_delta', 'target_anchor_delta'
+  ]
+  const nodes = json.nodes as Record<string, Record<string, unknown>> | undefined
+  if (nodes) {
+    Object.values(nodes).forEach(n => {
+      delete n.x
+      delete n.y
+      const local = n.local as Record<string, unknown> | undefined
+      if (local) POSITION_LOCAL_KEYS.forEach(k => delete local[k])
+    })
+  }
+  const links = json.links as Record<string, Record<string, unknown>> | undefined
+  if (links) {
+    Object.values(links).forEach(l => {
+      delete l.x
+      delete l.y
+      LINK_ANCHOR_KEYS.forEach(k => delete l[k])
+      const local = l.local as Record<string, unknown> | undefined
+      if (local) POSITION_LOCAL_KEYS.forEach(k => delete local[k])
+    })
+  }
+}
+
+/**
+ * Construit et configure une DrawingArea unitaire (copie du diagramme de base,
+ * styles + ViewTagGroups unitaires, focalisation éventuelle sur node_ref) SANS
+ * la dessiner, la recentrer ni la sauver comme vue. Partie commune au flux
+ * « vue unitaire » (createUnitaryView) et au flux « sankey unitaire en modal »
+ * (createUnitarySankeyDetached).
+ */
+const buildUnitaryDrawingArea = (
   app_data: Class_ApplicationDataOSP,
   node_ref?: Class_NodeElement
-) => {
+): Class_DrawingAreaOSP => {
   // If no base sankey is given, we take the currently active sankey
   const base_drawing_area = app_data.drawing_area
   base_drawing_area.purgeSelection()
 
-  // If no view existed previously, we add the active sankey as master sankey
-  if (!app_data.has_views && !app_data.master_drawing_area) {
-    app_data.master_drawing_area = app_data.drawing_area
-    app_data.drawing_area.sankey.setInvisible()
-    app_data.drawing_area.purgeSelection()
-    app_data.drawing_area.unDraw()
-  }
-
   // Create the new sankey
-  const new_drawing_area = app_data.createNewDrawingArea(makeId('unitary_view'))
+  const new_drawing_area = app_data.createNewDrawingArea(makeId('unitary_view')) as Class_DrawingAreaOSP
   new_drawing_area.is_unitary = true
   new_drawing_area.bypass_redraws = true
 
@@ -40,8 +75,31 @@ export const createUnitaryView = (
   const id = new_drawing_area.id
   const copy = DrawingAreaPersistenceOSP.toJSON(base_drawing_area as Class_DrawingAreaOSP, { keep_siblings: true })
   copy.id = id
+  // Le board unitaire se construit comme un import « neuf » : on charge le JSON du
+  // source MAIS débarrassé de toute GÉOMÉTRIE, puis computeAutoSankey décide tout.
+  // Sinon la géométrie source persiste (positions, centre persisté via
+  // node_pos_is_center, verrous de colonne/ligne) et le board reste corrélé au
+  // diagramme principal (« bouger un nœud du source déplaçait celui du board »).
+  // On nettoie DANS le JSON, avant fromJSON, pour ne jamais charger cet état (le
+  // faire après fromJSON se bat avec l'état déjà posé et déstabilise l'orientation).
+  stripGeometryFromDrawingAreaJSON(copy)
   DrawingAreaPersistenceOSP.fromJSON(new_drawing_area, copy)
   new_drawing_area.name = name
+
+  // « From scratch » : la copie JSON ci-dessus a ramené le styles_dict du source
+  // (dont le style 'default', référencé par tous les éléments en index 0, et ses
+  // customisations : valeur sur les nœuds, cadres de label, couleurs...). Le board
+  // unitaire ne doit pas en hériter → on remet le socle de styles aux valeurs usine.
+  // Les styles custom assignés par élément sont retirés plus tard par removeAllStyles
+  // (updateUnitaryStyles), et les styles unitaires sont appliqués par-dessus.
+  new_drawing_area.sankey.resetBaseStylesToFactory()
+
+  // Forcer le mode 'free' : le diagramme source est souvent en format papier (A3…),
+  // or en mode papier le placement vertical REMPLIT la hauteur de la page (espacement
+  // = hauteur_dispo / nb de nœuds) au lieu d'un écart fixe → écarts démesurés sur le
+  // board unitaire, qui en plus suivent le redimensionnement de la zone. En 'free',
+  // computeAutoSankey empile avec l'écart par défaut (compact).
+  new_drawing_area.paper_format = 'free'
 
   // Supprimer les containers
   new_drawing_area.sankey.containers_list.forEach(cont => {
@@ -78,7 +136,7 @@ export const createUnitaryView = (
   )
 
   // Créer les ViewTagGroup et établir les relations
-  let unitary_tags_groups: Class_ViewTagGroup[] = []
+  const unitary_tags_groups: Class_ViewTagGroup[] = []
 
   if (node_type && (sectorTag || productTag)) {
     // Cas avec distinction secteurs/produits
@@ -178,8 +236,32 @@ export const createUnitaryView = (
   new_drawing_area.filter_label = 0
   new_drawing_area.filter_link_value = 0
 
-  // Appliquer les styles unitaires
+  // Appliquer les styles unitaires + layout (computeAutoSankey). La géométrie ayant
+  // été nettoyée dans le JSON (cf. stripGeometryFromDrawingAreaJSON), computeAutoSankey
+  // repart de zéro comme sur un import neuf.
   updateUnitaryStyles(new_drawing_area)
+
+  return new_drawing_area
+}
+
+/**
+ * Crée une vue unitaire - soit un board avec tous les nœuds, soit une vue focalisée sur un nœud spécifique
+ * @param app_data - L'application data
+ * @param node_ref - Le nœud de référence (optionnel). Si fourni, crée une vue focalisée sur ce nœud
+ */
+export const createUnitaryView = (
+  app_data: Class_ApplicationDataOSP,
+  node_ref?: Class_NodeElement
+) => {
+  // If no view existed previously, we add the active sankey as master sankey
+  if (!app_data.has_views && !app_data.master_drawing_area) {
+    app_data.master_drawing_area = app_data.drawing_area
+    app_data.drawing_area.sankey.setInvisible()
+    app_data.drawing_area.purgeSelection()
+    app_data.drawing_area.unDraw()
+  }
+
+  const new_drawing_area = buildUnitaryDrawingArea(app_data, node_ref)
 
   // Dessiner et centrer
   new_drawing_area.draw()
@@ -208,4 +290,36 @@ export const createUnitaryNewView = (
   node_ref: Class_NodeElement
 ) => {
   return createUnitaryView(app_data, node_ref)
+}
+
+/**
+ * Crée une DrawingArea unitaire destinée à être rendue dans un conteneur DOM
+ * détaché (modal draggable avec zone de dessin), EN PLUS du diagramme principal
+ * qui reste affiché. Ne touche pas master_drawing_area / la visibilité du
+ * diagramme principal, et n'enregistre PAS de vue.
+ *
+ * @param app_data L'application data
+ * @param node_ref Le nœud de référence (focalisation)
+ * @param container_selector Sélecteur CSS du div hôte (zone de dessin du modal)
+ * @returns la DrawingArea unitaire, déjà dessinée dans le conteneur
+ */
+export const createUnitarySankeyDetached = (
+  app_data: Class_ApplicationDataOSP,
+  node_ref: Class_NodeElement,
+  container_selector: string
+): Class_DrawingAreaOSP => {
+  const new_drawing_area = buildUnitaryDrawingArea(app_data, node_ref)
+  new_drawing_area.container_selector = container_selector
+  // Lecture seule + pas de grille (la DA détachée est un aperçu, pas une zone d'édition).
+  new_drawing_area.grid_visible = false
+  // Mode sélection (curseur pointeur), pas édition : drawBackground() — appelé par
+  // draw() — applique la classe CSS du curseur selon ce mode, donc on le fixe AVANT.
+  new_drawing_area.setToModeEdition(false)
+  // Rendu. Le cadrage + centrage sont faits par areaAutoFit (dans draw) : pour un
+  // board unitaire (is_unitary) il centre désormais l'axe non-dominant. Pas de
+  // recenter() ici (il décale les positions puis areaAutoFit recadre par-dessus →
+  // conflit ; et il étendait la zone à la fenêtre, ce qui faisait « suivre » le resize).
+  new_drawing_area.to_recenter = false
+  new_drawing_area.draw()
+  return new_drawing_area
 }
