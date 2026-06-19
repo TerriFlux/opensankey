@@ -46,6 +46,7 @@ import { compressJSONToGzip, decompressUploadedFileUniversal } from '../Persiste
 import { updateFrom } from '../Algorithms/UpdateFrom'
 import { centerChildrenOnParent } from '../Algorithms/Hierarchies'
 import { DrawingAreaPersistence } from '../Persistence/SankeyPersistence'
+import type { Class_NodeElement } from '../Elements/Node'
 
 // SPECIFIC TYPES **********************************************************************/
 
@@ -332,6 +333,16 @@ export class Class_ApplicationData {
    * json is the raw source file JSON (null for view sources).
    * mode overrides data_var_to_update when provided (e.g. when called from App.tsx with all attrs). */
   public post_apply_layout_callback?: (tmp_DA: Class_DrawingArea, json: Type_JSON | null, mode?: string[]) => void = undefined
+
+  /** Hook injecté par OS+ (cf. ModalUnitarySankeyOSP) : dessine le sankey unitaire
+   * focalisé sur `node` dans le conteneur DOM `container_selector`, EN PLUS du
+   * diagramme principal. Retourne un handle pour le redessiner (resize) et le
+   * nettoyer. Alimente l'onglet « Sankey unitaire » du tooltip de nœud
+   * (NodeTooltip). Absent hors OS+. */
+  public draw_unitary_in_container?: (
+    node: Class_NodeElement,
+    container_selector: string
+  ) => { redraw: () => void, cleanup: () => void } | void = undefined
 
   protected _waiting_processes: { [id: string]: NodeJS.Timeout } = {}
   protected _waiting_time_for_processes: number = 50 // ms

@@ -69,7 +69,8 @@ export const resources_nodes = {
           rat: 'Ratios',
           prov: 'Inputs',
           values_tab: 'Values',
-          tags_tab: 'Other informations'
+          tags_tab: 'Other informations',
+          unitary_tab: 'Unitary Sankey'
         },
         tabs: {
           apparence: 'Appearence',
@@ -320,7 +321,8 @@ export const resources_nodes = {
           prov: 'Entrées',
           dest: 'Sorties',
           values_tab: 'Valeurs',
-          tags_tab: 'Autres informations'
+          tags_tab: 'Autres informations',
+          unitary_tab: 'Sankey unitaire'
         },
         tabs: {
           apparence: 'Apparence',
@@ -560,7 +562,8 @@ export const resources_nodes = {
           rat: 'Ratios',
           prov: 'Entradas',
           values_tab: 'Valores',
-          tags_tab: 'Otras informaciones'
+          tags_tab: 'Otras informaciones',
+          unitary_tab: 'Sankey unitario'
         },
         tabs: {
           apparence: 'Apariencia',
@@ -805,7 +808,8 @@ export const resources_nodes = {
           rat: 'Verhältnisse',
           prov: 'Eingänge',
           values_tab: 'Werte',
-          tags_tab: 'Weitere Informationen'
+          tags_tab: 'Weitere Informationen',
+          unitary_tab: 'Einheits-Sankey'
         },
         tabs: {
           apparence: 'Darstellung',
@@ -1050,7 +1054,8 @@ export const resources_nodes = {
           rat: 'Rapporti',
           prov: 'Ingressi',
           values_tab: 'Valori',
-          tags_tab: 'Altre informazioni'
+          tags_tab: 'Altre informazioni',
+          unitary_tab: 'Sankey unitario'
         },
         tabs: {
           apparence: 'Aspetto',
