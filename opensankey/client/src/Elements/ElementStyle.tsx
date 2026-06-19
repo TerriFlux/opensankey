@@ -1,4 +1,4 @@
-import { ALL_ATTRIBUTES_CONFIG, ExtractConfigValue } from './ElementsAttributesConfig'
+import { ALL_ATTRIBUTES_CONFIG, ExtractConfigValue, default_element_color } from './ElementsAttributesConfig'
 
 type ElementStyleConfig = Partial<{
   [K in keyof typeof ALL_ATTRIBUTES_CONFIG]: ExtractConfigValue<typeof ALL_ATTRIBUTES_CONFIG[K]>
@@ -227,7 +227,7 @@ elementStyleConfigs[NodeExportBelowStyle] = {
 elementStyleConfigs[LinkImportExportCloseStyle] = {
   name: 'ElementStyle.LinkImportExportCloseStyle',
   config: {
-    "value_label_is_visible": false,
+    'value_label_is_visible': false,
   }
 }
 
@@ -235,8 +235,8 @@ elementStyleConfigs[LinkImportCloseStyle] = {
   name: 'ElementStyle.LinkImportCloseStyle',
   config: {
     'shape_orientation': 'vh',
-    "shape_ending_tangeant": 1,
-    "shape_is_arrow": false
+    'shape_ending_tangeant': 1,
+    'shape_is_arrow': false
   }
 }
 
@@ -244,7 +244,7 @@ elementStyleConfigs[LinkExportCloseStyle] = {
   name: 'ElementStyle.LinkExportCloseStyle',
   config: {
     'shape_orientation': 'hv',
-    "shape_starting_tangeant": 1
+    'shape_starting_tangeant': 1
   }
 }
 
@@ -268,6 +268,18 @@ elementStyleConfigs[SankeyUnitaryNodeStyle] = {
     name_label_vert: 'bottom',
     name_label_font_size: 20,
 
+    // Couleur figée par le style unitaire : on force shape_color_sustainable pour
+    // que getShapeColorToUse() retourne shape_color en ignorant la colormap des
+    // tags. Combiné au resetAttributes() de updateUnitaryStyles (qui vide les
+    // overrides locaux), le board unitaire affiche toujours la même couleur.
+    shape_color: default_element_color,
+    shape_color_sustainable: true,
+
+    // Pas de valeur sur le nœud : les valeurs s'affichent sur les flux. Sans ça, si
+    // le style de base du modèle (conservé par removeAllStyles) active la valeur,
+    // elle réapparaît sur les nœuds du board unitaire.
+    value_label_is_visible: false,
+
     shape_min_width: 100,
     shape_color_visible: false,
     shape_border_visible: true,
@@ -290,6 +302,9 @@ elementStyleConfigs[SankeyUnitaryNodeInputStyle] = {
     name_label_vert: 'middle',
     name_label_text_align: 'right',
     name_label_font_size: 20,
+    shape_color: default_element_color,
+    shape_color_sustainable: true,
+    value_label_is_visible: false,
     shape_min_width: 1,
     shape_min_height: 1,
     shape_visible: false,
@@ -305,6 +320,9 @@ elementStyleConfigs[SankeyUnitaryNodeOutputStyle] = {
     name_label_horiz: 'right',
     name_label_vert: 'middle',
     name_label_font_size: 20,
+    shape_color: default_element_color,
+    shape_color_sustainable: true,
+    value_label_is_visible: false,
     shape_min_width: 1,
     shape_min_height: 1,
     shape_visible: false,
@@ -318,11 +336,22 @@ elementStyleConfigs[LinkInUnitaryStyle] = {
   name: 'ElementStyle.LinkInUnitaryStyle',
   config: {
     shape_orientation: 'hh',
+    // Couleur reprise du nœud (uniforme via SankeyUnitaryNode*Style) plutôt que de
+    // la colormap des tags : évite que le flux ressorte d'une couleur de tag.
+    shape_color_rule: 'source',
     shape_is_arrow: false,
+    // Style auto-contenu : le socle 'default' étant remis à l'usine pour le board
+    // unitaire (value_label masquée par défaut), c'est au style de flux d'activer
+    // l'affichage du % sur chaque flux.
+    value_label_is_visible: true,
+    // Pas de nom de flux sur le board unitaire (le défaut usine de name_label est
+    // visible=true) : on n'y affiche que le %.
+    name_label_is_visible: false,
     value_label_color: 'black',
     value_label_font_size: 20,
     value_label_bold: true,
     value_label_horiz: 'left',
+    value_label_vert: 'middle',
     value_label_on_path: false,
     value_label_pos_auto: false,
     value_label_unit_visible: true,
@@ -342,6 +371,16 @@ elementStyleConfigs[LinkOutUnitaryStyle] = {
   name: 'ElementStyle.LinkOutUnitaryStyle',
   config: {
     shape_orientation: 'hh',
+    // Couleur reprise du nœud (uniforme via SankeyUnitaryNode*Style) plutôt que de
+    // la colormap des tags : évite que le flux ressorte d'une couleur de tag.
+    shape_color_rule: 'source',
+    // Style auto-contenu : le socle 'default' étant remis à l'usine pour le board
+    // unitaire (value_label masquée par défaut), c'est au style de flux d'activer
+    // l'affichage du % sur chaque flux.
+    value_label_is_visible: true,
+    // Pas de nom de flux sur le board unitaire (le défaut usine de name_label est
+    // visible=true) : on n'y affiche que le %.
+    name_label_is_visible: false,
     value_label_font_size: 20,
     value_label_color: 'black',
     value_label_bold: true,

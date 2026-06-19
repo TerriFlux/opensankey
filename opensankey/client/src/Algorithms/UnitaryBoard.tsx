@@ -1,8 +1,6 @@
 import {
-  node_unitary_styles, SankeyUnitaryNodeStyle, SankeyUnitaryNodeInputStyle, SankeyUnitaryNodeOutputStyle,
-  LinkOutUnitaryStyle, LinkInUnitaryStyle,
-  node_exchanges_style,
-  product_sector_styles
+  SankeyUnitaryNodeStyle, SankeyUnitaryNodeInputStyle, SankeyUnitaryNodeOutputStyle,
+  LinkOutUnitaryStyle, LinkInUnitaryStyle
 } from '../Elements/ElementStyle'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_DataTagGroup, Class_ViewTagGroup } from '../types/TagGroup'
@@ -32,17 +30,14 @@ export const updateUnitaryStyles = (drawing_area: Class_DrawingArea) => {
   const productTag = node_type?.tags_dict['produit']
   const _sectorTag = node_type?.tags_dict['secteur']
 
-  // Réinitialiser tous les styles unitaires d'abord
-  drawing_area.sankey.nodes_list.forEach(node => {
-    node_unitary_styles.forEach(s => node.removeStyleById(s))
-    node_exchanges_style.forEach(s => node.removeStyleById(s))
-    product_sector_styles.forEach(s => node.removeStyleById(s))
-  })
-  drawing_area.sankey.links_list.forEach(link => {
-    node_unitary_styles.forEach(s => link.removeStyleById(s))
-    node_exchanges_style.forEach(s => link.removeStyleById(s))
-    product_sector_styles.forEach(s => link.removeStyleById(s))
-  })
+  // Repartir d'une feuille blanche : retirer TOUS les styles assignés (styles
+  // unitaires/exchange/product d'un précédent passage, mais AUSSI les styles
+  // custom de l'utilisateur) pour ne garder que le style de base (index 0).
+  // Sinon les attributs label/valeur d'un style custom assigné fuient et le
+  // board unitaire n'affiche pas une mise en forme homogène. resetAttributes()
+  // (plus bas) ne nettoie que les overrides locaux, pas les styles assignés.
+  drawing_area.sankey.nodes_list.forEach(node => node.removeAllStyles())
+  drawing_area.sankey.links_list.forEach(link => link.removeAllStyles())
 
   // Appliquer le style central aux nœuds sélectionnés
   center_nodes.forEach(n => {
@@ -123,6 +118,11 @@ export const updateUnitaryStyles = (drawing_area: Class_DrawingArea) => {
   // L'ancien code se limitait à computeAutoSankey + reorganize du seul nœud central,
   // d'où les croisements et le défaut de centrage à la création (corrigés dès qu'on
   // relançait la disposition auto).
+  // Espacements par défaut du style (NE PAS utiliser app_data.layout_v/h_spacing : ce
+  // réglage est dimensionné pour le GRAND diagramme principal et donne des écarts
+  // énormes sur le board unitaire compact). NB : le board est forcé en 'free'
+  // (cf. buildUnitaryDrawingArea) — sinon le mode papier hérité du source remplit la
+  // hauteur de la page et ces espacements sont ignorés.
   const default_dx = drawing_area.sankey.styles_dict['default'].shape_position_dx ?? 0
   const default_dy = drawing_area.sankey.styles_dict['default'].shape_position_dy ?? 0
   drawing_area.nodePositioning.computeAutoSankey(false, true, default_dx, default_dy)

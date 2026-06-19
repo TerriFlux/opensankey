@@ -105,8 +105,22 @@ export class Class_DrawingArea {
   public to_recenter = false
   public is_unitary = false
 
-  /** True quand l'utilisateur peut interagir (édition normale, ou publish + editable). */
-  public get editable(): boolean { return this.application_data.is_editable }
+  /** Sélecteur CSS du conteneur DOM hôte où _initDraw append le SVG #draw_zoom.
+   * Vaut '#sankey_app' pour le diagramme principal (zone de dessin de l'app).
+   * Une DrawingArea détachée (ex: sankey unitaire rendu dans un modal) pointe
+   * vers son propre conteneur, ce qui permet un rendu SIMULTANÉ de plusieurs
+   * diagrammes sans collision de SVG. */
+  public container_selector = '#sankey_app'
+
+  /** True quand la DA n'est pas la zone de dessin principale (rendue dans un
+   * modal/panneau détaché). Sert à neutraliser les offsets liés aux menus
+   * (navbar/footer) qui n'existent pas autour du conteneur détaché. */
+  public get is_detached(): boolean { return this.container_selector !== '#sankey_app' }
+
+  /** True quand l'utilisateur peut interagir (édition normale, ou publish + editable).
+   * Une DA détachée (sankey unitaire en modal) est en lecture seule : pas d'édition,
+   * et la grille ne se dessine pas (drawGrid teste grid_visible && editable). */
+  public get editable(): boolean { return this.application_data.is_editable && !this.is_detached }
 
   public drawing_link = false
   public bypass_redraws: boolean = false
@@ -547,15 +561,17 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   protected _initDraw() {
-    const height = this.application_data.publish_options.embedded ? '100%' : window.innerHeight
+    // DA détachée (modal) : on remplit le conteneur hôte ('100%') plutôt que
+    // d'imposer window.innerHeight (qui déborderait le modal).
+    const height = (this.application_data.publish_options.embedded || this.is_detached) ? '100%' : window.innerHeight
     // _initDraw est l'UNIQUE point de création de #draw_zoom : on le rend idempotent en
     // retirant tout #draw_zoom préexistant avant d'en append un nouveau. unDraw() ne
     // supprime que le nœud référencé par this.d3_selection_zoom_area ; un orphelin laissé
     // par un autre chemin (double-mount StrictMode, édition tableur → redraw, etc.) lui
     // échappe et se dédoublait à chaque draw. Ce remove centralisé couvre tous les chemins.
-    d3.select('#sankey_app').selectAll('#draw_zoom').remove()
+    d3.select(this.container_selector).selectAll('#draw_zoom').remove()
     // Add zoom zone where we can scroll to zoom or drag with mouse middle button
-    this.d3_selection_zoom_area = d3.select('#sankey_app')
+    this.d3_selection_zoom_area = d3.select(this.container_selector)
       .append('svg')
       .attr('id', 'draw_zoom')
       .attr('width', '100%')
@@ -1229,10 +1245,21 @@ export class Class_DrawingArea {
       // we don't want the stale paper bounds to clamp the transform).
       this._updateScrollbars()
       this.zoomListener.scaleTo(this.d3_selection_zoom_area, new_k)
-      this.zoomListener.translateTo(
-        this.d3_selection_zoom_area, 0, 0,
-        [this._fit_margin / 2 + (is_horiz ? label_overflow_left : 0) - this._background_d3_groups_shift_x * new_k,
-          this._fit_margin / 2 + this.getNavBarHeight() + (!is_horiz ? label_overflow_top : 0) - this._background_d3_groups_shift_y * new_k])
+      // Board unitaire : centrer le contenu dans la fenêtre sur CHAQUE axe où il y a
+      // du mou (contenu plus petit que la fenêtre à l'échelle de fit). areaAutoFit cale
+      // sinon le contenu en haut-gauche. On ne se base PAS sur is_horiz : pour un board
+      // compact dans un grand modal, this._width/_height valent la fenêtre →
+      // ratio_h==ratio_v → is_horiz=false → seul l'horizontal était centré.
+      // Scopé is_unitary pour ne rien changer au diagramme principal.
+      const center_h = this.is_unitary && bbox.width * new_k < this.window_fitting_width
+      const center_v = this.is_unitary && bbox.height * new_k < this.window_fitting_height
+      const px = center_h
+        ? (this.window_fitting_width - bbox.width * new_k) / 2 - bbox.x * new_k
+        : this._fit_margin / 2 + (is_horiz ? label_overflow_left : 0) - this._background_d3_groups_shift_x * new_k
+      const py = center_v
+        ? (this.window_fitting_height - bbox.height * new_k) / 2 - bbox.y * new_k + this.getNavBarHeight()
+        : this._fit_margin / 2 + this.getNavBarHeight() + (!is_horiz ? label_overflow_top : 0) - this._background_d3_groups_shift_y * new_k
+      this.zoomListener.translateTo(this.d3_selection_zoom_area, 0, 0, [px, py])
       this.drawBackground()
       this.drawGrid()
       if (this._k_fit !== prev_k_fit) this._refreshLabelsForFitZoom()
@@ -2878,7 +2905,14 @@ export class Class_DrawingArea {
     if (this.is_bg_image_ratio_mode) return
     this._height = _; this.drawBackground(); this.drawGrid()
   }
-  public get window_fitting_height(): number { return window.innerHeight - this._fit_margin - this.getNavBarHeight() - this.getBottomBarHeight() - this.main_zone_bottom_reserved }
+  public get window_fitting_height(): number {
+    // DA détachée : on cadre dans le conteneur hôte (modal), pas la fenêtre.
+    if (this.is_detached) {
+      const h = (document.querySelector(this.container_selector) as HTMLElement | null)?.clientHeight ?? 0
+      if (h > 0) return h - this._fit_margin
+    }
+    return window.innerHeight - this._fit_margin - this.getNavBarHeight() - this.getBottomBarHeight() - this.main_zone_bottom_reserved
+  }
   // Hauteur réservée en bas de la grande zone pour la doc (modes diagram-bottom / window-bottom).
   // Source globale (menu_configuration), symétrique de main_zone_right_reserved. Null-safe : la
   // drawing area est construite pendant le super() de ApplicationData, AVANT que la sous-classe ne
@@ -2895,6 +2929,11 @@ export class Class_DrawingArea {
     return this.application_data.menu_configuration?.getMainZoneRightReservedPx() ?? 0
   }
   public get window_fitting_width(): number {
+    // DA détachée : on cadre dans le conteneur hôte (modal), pas la fenêtre.
+    if (this.is_detached) {
+      const w = (document.querySelector(this.container_selector) as HTMLElement | null)?.clientWidth ?? 0
+      if (w > 0) return w - this._fit_margin
+    }
     return window.innerWidth - this._fit_margin - this.main_zone_right_reserved
   }
 
@@ -2971,6 +3010,10 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   public getNavBarHeight() {
+    // DA détachée : aucun menu autour du conteneur → pas d'offset.
+    if (this.is_detached) {
+      return 0
+    }
     if (this.static && !this.application_data.publish_options.topbar) {
       return 0
     }
@@ -2984,6 +3027,10 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   public getBottomBarHeight() {
+    // DA détachée : aucun menu autour du conteneur → pas d'offset.
+    if (this.is_detached) {
+      return 0
+    }
     return (document.getElementsByClassName('BottomMenu')[0]?.getBoundingClientRect().height) ?? 2 * parseFloat(getComputedStyle(document.documentElement).fontSize)
   }
 
