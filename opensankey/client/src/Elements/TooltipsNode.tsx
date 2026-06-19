@@ -2,6 +2,7 @@ import * as d3 from 'd3'
 import { Class_NodeElement } from './Node'
 import { Class_LinkElement } from './Link'
 import { TOOLTIP_STYLES, TooltipBehaviorManager } from './TooltipsCSS'
+import { getNameLabelValues } from './ElementsAttributesConfig'
 import { TFunction } from 'i18next'
 
 
@@ -145,6 +146,35 @@ export class NodeTooltip {
     return html
   }
 
+  /**
+   * Formate une valeur de total avec le même nombre de chiffres que les valeurs
+   * de flux (config value_label d'un lien représentatif) — réplique fmtNum de
+   * TooltipsLink. Sans lien de référence, repli sur la chaîne brute séparée.
+   */
+  private formatValue(n: number, sampleLink?: Class_LinkElement): string {
+    const addSep = (s: string) => s.replace(/(?<!\..*)(\d)(?=(?:\d{3})+(?:\.|$))/g, '$1 ')
+    if (!sampleLink) return addSep(String(n))
+    const lv = getNameLabelValues(sampleLink, 'value_label')
+    let v = n
+    if (lv.unit_factor && lv.unit_factor > 1) {
+      v = v / lv.unit_factor
+    }
+    let text: string
+    if (lv.scientific_notation) {
+      text = lv.significant_digits
+        ? v.toExponential((lv.nb_significant_digits ?? 1) - 1)
+        : v.toExponential()
+    } else if (lv.significant_digits) {
+      text = String(parseFloat(v.toPrecision(lv.nb_significant_digits ?? 3)))
+      if (lv.custom_digit) text = String(parseFloat(parseFloat(text).toFixed(lv.nb_digit ?? 0)))
+    } else if (lv.custom_digit) {
+      text = String(parseFloat(v.toFixed(lv.nb_digit ?? 0)))
+    } else {
+      text = String(v)
+    }
+    return addSep(text)
+  }
+
   private getValuesTabHTML(hasInputs: boolean, hasOutputs: boolean, input_val: number, output_val: number, t: TFunction): string {
     let html = '<table class="tooltip-table"><thead><tr>'
     html += `<th>${t('Noeud.drawing_area_tooltip.prov')} / ${t('Noeud.drawing_area_tooltip.dest')}</th>`
@@ -169,8 +199,8 @@ export class NodeTooltip {
       return row
     }
 
-    const renderTotalRow = (totalVal: number) => {
-      const totalValStr = String(totalVal).replace(/(?<!\..*)(\d)(?=(?:\d{3})+(?:\.|$))/g, '$1 ')
+    const renderTotalRow = (totalVal: number, sampleLink?: Class_LinkElement) => {
+      const totalValStr = this.formatValue(totalVal, sampleLink)
       let row = '<tr class="total-row">'
       row += '<td>Total</td>'
       row += `<td class="value">${totalValStr}</td>`
@@ -182,19 +212,21 @@ export class NodeTooltip {
     // Section Entrées
     if (hasInputs) {
       html += `<tr class="section-header"><td colspan="3">${t('Noeud.drawing_area_tooltip.prov')}</td></tr>`
-      this._node.input_links_list.filter(l => l.is_visible).forEach(l => {
+      const inputLinks = this._node.input_links_list.filter(l => l.is_visible)
+      inputLinks.forEach(l => {
         html += renderRow(l, input_val, true)
       })
-      html += renderTotalRow(input_val)
+      html += renderTotalRow(input_val, inputLinks[0])
     }
 
     // Section Sorties
     if (hasOutputs) {
       html += `<tr class="section-header"><td colspan="3">${t('Noeud.drawing_area_tooltip.dest')}</td></tr>`
-      this._node.output_links_list.filter(l => l.is_visible).forEach(l => {
+      const outputLinks = this._node.output_links_list.filter(l => l.is_visible)
+      outputLinks.forEach(l => {
         html += renderRow(l, output_val, false)
       })
-      html += renderTotalRow(output_val)
+      html += renderTotalRow(output_val, outputLinks[0])
     }
 
     html += '</tbody></table>'
