@@ -45,6 +45,7 @@ import {
 } from './components/SankeyPlusViews'
 
 import { ModalAnimatedExportOSP } from './components/ModalAnimatedExportOSP'
+import { ModalUnitarySankeyOSP } from './components/ModalUnitarySankeyOSP'
 
 import {
   ModalSelectionIcon
@@ -286,6 +287,9 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
       app_data={app_data}
     />,
     <ModalCreateUnitaryViewOSP
+      app_data={app_data}
+    />,
+    <ModalUnitarySankeyOSP
       app_data={app_data}
     />,
     <ModalTrialWelcomeOSP

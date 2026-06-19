@@ -3,7 +3,6 @@ import React, { useState, FC } from 'react'
 import { Box, Button, Input, InputGroup, InputRightElement, MenuItem } from '@chakra-ui/react'
 import { OSTooltip, WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
-import { createUnitaryNewView } from './UnitaryBoard'
 
 interface BaseComponentPropsPlus {
   new_data_plus: Class_ApplicationDataOSP
@@ -109,28 +108,12 @@ export const ButtonNodeContextCreateUnitaryView = ({ app_data }: { app_data: Cla
   return <Button
     as={MenuItem}
     onClick={() => {
-      app_data.sendWaitingToast(
-        () => {
-          if (drawing_area.node_contextualised) {
-            const d = createUnitaryNewView(app_data,drawing_area.node_contextualised)
-            app_data.setCurrentView(d.id)
-            app_data.menu_configuration_osp.updateComponentRelatedToViews()
-          }
-
-          menu_configuration_osp.updateComponentRelatedToViews()
-          menu_configuration_osp.ref_to_save_in_cache_indicator.current(true)
-          closeContextMenu()
-
-        },
-        {
-          success: {
-            title: t('toast.u_v_loaded'),
-          },
-          loading: {
-            title: t('toast.u_v_loading'),
-          }
-        }
-      )
+      // Sankey unitaire ouvert dans un panneau draggable (second diagramme),
+      // au lieu d'être généré comme une vue qui remplace la zone principale.
+      if (drawing_area.node_contextualised) {
+        menu_configuration_osp.ref_open_unitary_sankey_modal.current(drawing_area.node_contextualised)
+      }
+      closeContextMenu()
     }}
     variant='contextmenu_button'
   >

@@ -10,7 +10,6 @@ import { CONVERTER_CONFIGS } from '../deps/OpenSankey/components/dialogs/Persist
 import { MenuConfig } from '../deps/OpenSankey/components/dialogs/SankeyMenuContext'
 import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
-import { createUnitaryNewView } from './UnitaryBoard'
 
 // Extension de la config ZDD
 export const createZDDMenuConfigPlus = (): MenuConfig => {
@@ -249,10 +248,13 @@ export const createNodeModifierPlus = (app_data: Class_ApplicationDataOSP) => {
   return {
     ...baseModifiers,
     createUnitarySankey: () => {
+      // Le sankey unitaire n'est plus généré comme une vue (qui échangeait la
+      // zone de dessin principale) mais comme un second diagramme rendu dans un
+      // panneau draggable, en plus du diagramme principal (cf. ModalUnitarySankeyOSP).
       if (app_data.drawing_area.node_contextualised) {
-        const d = createUnitaryNewView( app_data,app_data.drawing_area.node_contextualised)
-        app_data.setCurrentView(d.id)
-        app_data.menu_configuration_osp.updateComponentRelatedToViews()
+        app_data.menu_configuration_osp.ref_open_unitary_sankey_modal.current(
+          app_data.drawing_area.node_contextualised
+        )
       }
     },
     generateLabelFromChildren: () => {
