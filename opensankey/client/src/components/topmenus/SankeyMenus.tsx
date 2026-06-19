@@ -41,12 +41,16 @@ import {
   Drawer,
   DrawerBody,
   DrawerContent,
+  IconButton,
   Text
 } from '@chakra-ui/react'
+
+import { ExternalLinkIcon } from '@chakra-ui/icons'
 
 import { ApplyLayoutDialog } from '../dialogs/SankeyMenuDialogs'
 import { DrawerSequenceDataTagg, ToolBarBottom } from './MenuBottom'
 import { useMainZone, mainZoneRightReservedPx } from '../spreadsheet/MainZoneTabs'
+import { usePipWindow, PipPortal } from '../spreadsheet/PipWindow'
 import { modalResolutionPNG, modalResolutionPDF } from './SankeyExports'
 import { MenuTopNavBar } from './MenuTop'
 import { IType_DictHookRefSetterShowDialogComponents, keyTypeConfig, keyTypeElements, Type_AdditionalMenus } from '../../types/MenuConfig'
@@ -56,7 +60,7 @@ import { SankeyContainerSelection, SankeyNodeSelection } from '../configmenus/Me
 import { MenuConfigurationAppearance } from '../configmenus/MenuElementsAppearance'
 import { WrapperContentConfig } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { OSTooltip } from '../configmenus/MenuCommon'
+import { OSTooltip, OSTooltipDisabledContext } from '../configmenus/MenuCommon'
 import { UniversalFileConverter } from '../dialogs/PersistenceProcessDialog'
 import { FormatConfigStructure, } from '../dialogs/PersistenceProcessDialogConfigs'
 import { LabelRichTextEditor } from '../dialogs/RichTextEditor'
@@ -116,6 +120,19 @@ export const SankeyMenu = (
   //Switch the variable value that handle opening and closing the configuration menu
   const toggleShow = () => {
     set_show_nav(!show_nav)
+  }
+
+  // Détachement du panneau de configuration dans une fenêtre SYSTÈME séparée (même mécanisme que la
+  // doc, cf. PipWindow). Quand détaché : le Drawer ancré n'est plus rendu et le contenu vit dans la
+  // fenêtre fille via PipPortal (sous-arbre React LIVE, write-back identique).
+  const { pipWindow: configPipWindow, open: openConfigPip, close: closeConfigPip } = usePipWindow()
+  const configDetached = configPipWindow != null
+  const toggleConfigDetach = () => {
+    if (configDetached) {
+      closeConfigPip()
+    } else {
+      openConfigPip({ width: 460, height: 760, title: 'OpenSankey — ' + t('Banner.open_configuration_menu') })
+    }
   }
 
   // Aligned with the floating config toggle button (same top as the wrench).
@@ -179,7 +196,7 @@ export const SankeyMenu = (
         app_data.is_editable ? <>
           <Drawer
             blockScrollOnMount={false}
-            isOpen={show_nav}
+            isOpen={show_nav && !configDetached}
             placement='right'
             onClose={() => set_show_nav(false)}
             onEsc={() => {
@@ -207,14 +224,40 @@ export const SankeyMenu = (
               }}
             >
               <DrawerBody style={{ overflowX: 'auto' }}>
-                <ConfigMenu app_data={app_data} additional_menus={additionalMenus} />
+                <ConfigMenu
+                  app_data={app_data}
+                  additional_menus={additionalMenus}
+                  detached={false}
+                  onToggleDetach={toggleConfigDetach}
+                />
               </DrawerBody>
             </DrawerContent>
-          </Drawer></> :
+          </Drawer>
+          {/* Panneau de configuration détaché dans une fenêtre OS séparée. */}
+          {configPipWindow && (
+            <PipPortal pipWindow={configPipWindow}>
+              {/* Tooltips désactivés dans la fenêtre détachée : les Tooltip Chakra écoutent le
+                  document principal et resteraient « collés » (cf. OSTooltipDisabledContext). */}
+              <OSTooltipDisabledContext.Provider value={true}>
+                <Box
+                  style={{ height: '100%', overflow: 'auto', padding: '0.4rem' }}
+                  background={app_data.menu_configuration.style_config[
+                    app_data.menu_configuration.type_menu_configuration_selected].theme}
+                >
+                  <ConfigMenu
+                    app_data={app_data}
+                    additional_menus={additionalMenus}
+                    detached={true}
+                    onToggleDetach={toggleConfigDetach}
+                  />
+                </Box>
+              </OSTooltipDisabledContext.Provider>
+            </PipPortal>
+          )}</> :
           <></>}
 
 
-      {app_data.is_editable ? (
+      {app_data.is_editable && !configDetached ? (
         <OSTooltip
           placement='left'
           label={t('Banner.open_configuration_menu')}
@@ -285,16 +328,25 @@ export const SankeyMenu = (
   )
 }
 
-const ConfigMenu = ({ app_data, additional_menus }: {
-  app_data: Class_ApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus>
+const ConfigMenu = ({ app_data, additional_menus, detached, onToggleDetach }: {
+  app_data: Class_ApplicationData,
+  additional_menus: MutableRefObject<Type_AdditionalMenus>,
+  detached?: boolean,
+  onToggleDetach?: () => void
 }) => {
+  const { t } = app_data
   const { type_menu_configuration_selected, style_config } = app_data.menu_configuration
   const [, setUpdate] = useState(false)
 
   app_data.menu_configuration.ref_to_menu_config_updater.current = () => setUpdate(a => !a)
 
   const sizeBtn = document.getElementsByClassName('buttonGroupTypeConfig')[0]?.getBoundingClientRect().height ?? 30
-  const maxHConfig = window.innerHeight - (app_data.drawing_area.getNavBarHeight() + app_data.drawing_area.getBottomBarHeight() + sizeBtn + (app_data.drawing_area.fit_margin * 2))
+  // En mode ancré : on borne la hauteur à l'espace écran restant (calcul JS sur la fenêtre
+  // principale). En mode détaché : les unités CSS sont résolues dans la fenêtre fille, on utilise
+  // donc vh pour remplir cette fenêtre indépendamment de la taille de la fenêtre principale.
+  const maxHConfig = detached
+    ? 'calc(100vh - ' + (sizeBtn + 16) + 'px)'
+    : 'calc(' + (window.innerHeight - (app_data.drawing_area.getNavBarHeight() + app_data.drawing_area.getBottomBarHeight() + sizeBtn + (app_data.drawing_area.fit_margin * 2))) + 'px - 0.8rem)'
 
   return <Box layerStyle='config_menu_layout' style={{
     background: (style_config[type_menu_configuration_selected].theme),
@@ -302,14 +354,38 @@ const ConfigMenu = ({ app_data, additional_menus }: {
     gridTemplateRows: 'auto 1fr auto',
     alignContent: 'start'
   }}>
-    <Box layerStyle='type_config_box'>
+    <Box layerStyle='type_config_box' style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
       <ConfigMenuTypeConfig app_data={app_data} additional_menus={additional_menus} />
+      {/* Détacher / ré-attacher le panneau de configuration dans une fenêtre OS séparée. */}
+      {onToggleDetach && (
+        <OSTooltip label={detached
+          ? t('Banner.reattach_configuration_menu')
+          : t('Banner.detach_configuration_menu')}>
+          <IconButton
+            aria-label='detach-config'
+            icon={<ExternalLinkIcon boxSize='0.8rem' />}
+            size='xs'
+            minW='1.2rem'
+            w='1.2rem'
+            maxW='1.2rem'
+            h='1.2rem'
+            p='0'
+            flexShrink={0}
+            variant='ghost'
+            fontWeight='normal'
+            color={detached ? 'gray.900' : 'gray.600'}
+            bg={detached ? 'gray.200' : 'transparent'}
+            _hover={{ bg: 'gray.100' }}
+            onClick={onToggleDetach}
+          />
+        </OSTooltip>
+      )}
     </Box>
     <Box
       className='config_box'
       layerStyle='config_box'
       style={{
-        maxHeight: 'calc(' + maxHConfig + 'px - 0.8rem)',
+        maxHeight: maxHConfig,
         overflowY: 'auto',
         overflowX: 'hidden'
       }}

@@ -12,7 +12,7 @@
 // External imports
 import React, { useEffect, useRef, useState } from 'react'
 import {
-  Box, Button, Textarea, Portal,
+  Box, Button, IconButton, Textarea, Portal,
   Menu, MenuButton, MenuList, MenuItem, MenuGroup, MenuDivider
 } from '@chakra-ui/react'
 import { ChevronDownIcon, ExternalLinkIcon } from '@chakra-ui/icons'
@@ -474,16 +474,22 @@ export const DocPanel = (
             <Button {...tab_btn_style(mode === 'edit')} onClick={() => setMode('edit')}>Édition</Button>
             <Button {...tab_btn_style(mode === 'split')} onClick={() => setMode('split')}>Côte à côte</Button>
             <Button {...tab_btn_style(mode === 'preview')} onClick={() => setMode('preview')}>Aperçu</Button>
-            {/* Détacher / ré-attacher la doc dans une fenêtre OS séparée (second écran). */}
+            {/* Détacher / ré-attacher la doc dans une fenêtre OS séparée (second écran).
+                Icône seule (sans texte) pour rester cohérent avec le bouton du menu config. */}
             {onToggleDetach && (
-              <Button
+              <IconButton
                 {...tab_btn_style(!!detached)}
-                leftIcon={<ExternalLinkIcon />}
+                aria-label='detach-doc'
+                icon={<ExternalLinkIcon boxSize='0.8rem' />}
+                minW='1.2rem'
+                width='1.2rem'
+                maxW='1.2rem'
+                h='1.2rem'
+                p='0'
+                flexShrink={0}
                 onClick={onToggleDetach}
                 title={detached ? 'Ré-attacher la documentation dans la fenêtre principale' : 'Détacher la documentation dans une fenêtre séparée'}
-              >
-                {detached ? 'Ré-attacher' : 'Détacher'}
-              </Button>
+              />
             )}
           </Box>
         </Box>

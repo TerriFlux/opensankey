@@ -125,6 +125,7 @@ export const resources_app_elements = {
         new_excel_template: 'Blank Excel file',
         open_json: 'JSON',
         open_excel: 'Excel',
+        import_image: 'Image',
         open_sankeymatic: 'SankeyMATIC',
         format_converter: 'Convert format',
         title_pref: 'User personnal themes',
@@ -496,7 +497,9 @@ export const resources_app_elements = {
         hlp_node_tag_filter: 'Filter nodes and apply color of tagds',
         hlp_link_tag_filter: 'Filter link and apply color of tagds',
         hlp_data_tag_filter: 'Choose data and apply color of tagds',
-        open_configuration_menu: 'Open configuration menu.'
+        open_configuration_menu: 'Open configuration menu.',
+        detach_configuration_menu: 'Detach the configuration panel into a separate window',
+        reattach_configuration_menu: 'Reattach the configuration panel into the main window'
       },
 
       useTemplate: 'Use this template',
@@ -672,6 +675,7 @@ export const resources_app_elements = {
         new_excel_template: 'Fichier Excel vierge',
         open_json: 'JSON',
         open_excel: 'Excel',
+        import_image: 'Image',
         format_converter: 'Convertisseur de format',
         open_sankeymatic: 'SankeyMATIC',
         title_pref: 'Thèmes utilisateur',
@@ -1073,7 +1077,9 @@ export const resources_app_elements = {
         hlp_node_tag_filter: 'Filtrer les noeuds et appliquer la couleur des étiquettes',
         hlp_link_tag_filter: 'Filtrer les flux et appliquer la couleur des étiquettes',
         hlp_data_tag_filter: 'Choisir les données et appliquer la couleur des étiquettes',
-        open_configuration_menu: 'Ouvrez le menu de configuration.'
+        open_configuration_menu: 'Ouvrez le menu de configuration.',
+        detach_configuration_menu: 'Détacher le panneau de configuration dans une fenêtre séparée',
+        reattach_configuration_menu: 'Ré-attacher le panneau de configuration dans la fenêtre principale'
       },
       useTemplate: 'Utiliser ce modèle',
       DisplayWelcome: 'Accueil',
@@ -1243,6 +1249,7 @@ export const resources_app_elements = {
         new_excel_template: 'Archivo Excel vacío',
         open_json: 'JSON',
         open_excel: 'Excel',
+        import_image: 'Imagen',
         format_converter: 'Conversor de formato',
         open_sankeymatic: 'SankeyMATIC',
         title_pref: 'Temas de usuario',
@@ -1628,7 +1635,9 @@ export const resources_app_elements = {
         hlp_node_tag_filter: 'Filtrar nodos y aplicar el color de las etiquetas',
         hlp_link_tag_filter: 'Filtrar flujos y aplicar el color de las etiquetas',
         hlp_data_tag_filter: 'Elegir datos y aplicar el color de las etiquetas',
-        open_configuration_menu: 'Abrir el menú de configuración.'
+        open_configuration_menu: 'Abrir el menú de configuración.',
+        detach_configuration_menu: 'Separar el panel de configuración en una ventana aparte',
+        reattach_configuration_menu: 'Volver a anclar el panel de configuración en la ventana principal'
       },
       useTemplate: 'Usar esta plantilla',
       DisplayWelcome: 'Inicio',
@@ -1798,6 +1807,7 @@ export const resources_app_elements = {
         new_excel_template: 'Leere Excel-Datei',
         open_json: 'JSON',
         open_excel: 'Excel',
+        import_image: 'Bild',
         format_converter: 'Formatkonverter',
         open_sankeymatic: 'SankeyMATIC',
         title_pref: 'Benutzerthemen',
@@ -2183,7 +2193,9 @@ export const resources_app_elements = {
         hlp_node_tag_filter: 'Knoten filtern und Beschriftungsfarben anwenden',
         hlp_link_tag_filter: 'Flüsse filtern und Beschriftungsfarben anwenden',
         hlp_data_tag_filter: 'Daten wählen und Beschriftungsfarben anwenden',
-        open_configuration_menu: 'Konfigurationsmenü öffnen.'
+        open_configuration_menu: 'Konfigurationsmenü öffnen.',
+        detach_configuration_menu: 'Konfigurationsbereich in einem separaten Fenster lösen',
+        reattach_configuration_menu: 'Konfigurationsbereich wieder im Hauptfenster andocken'
       },
       useTemplate: 'Diese Vorlage verwenden',
       DisplayWelcome: 'Startseite',
@@ -2353,6 +2365,7 @@ export const resources_app_elements = {
         new_excel_template: 'File Excel vuoto',
         open_json: 'JSON',
         open_excel: 'Excel',
+        import_image: 'Immagine',
         format_converter: 'Convertitore di formato',
         open_sankeymatic: 'SankeyMATIC',
         title_pref: 'Temi utente',
@@ -2738,7 +2751,9 @@ export const resources_app_elements = {
         hlp_node_tag_filter: 'Filtrare i nodi e applicare il colore delle etichette',
         hlp_link_tag_filter: 'Filtrare i flussi e applicare il colore delle etichette',
         hlp_data_tag_filter: 'Scegliere i dati e applicare il colore delle etichette',
-        open_configuration_menu: 'Aprire il menu di configurazione.'
+        open_configuration_menu: 'Aprire il menu di configurazione.',
+        detach_configuration_menu: 'Stacca il pannello di configurazione in una finestra separata',
+        reattach_configuration_menu: 'Riaggancia il pannello di configurazione nella finestra principale'
       },
       useTemplate: 'Usa questo modello',
       DisplayWelcome: 'Home',

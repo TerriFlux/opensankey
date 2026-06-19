@@ -665,6 +665,12 @@ export const TooltipValueSurcharge = (k: string, t: TFunction) => {
 }
 
 
+// Désactive le rendu des tooltips dans un sous-arbre. Utilisé pour les panneaux détachés en fenêtre
+// PiP : les Tooltip Chakra reposent sur des écouteurs du `document` PRINCIPAL et ne reçoivent jamais
+// le `mouseleave` émis dans la fenêtre fille -> tooltips « collants » impossibles à fermer. Dans ce
+// contexte, OSTooltip rend simplement ses enfants sans wrapper Tooltip.
+export const OSTooltipDisabledContext = React.createContext(false)
+
 export const OSTooltip = ({ label,disabled=false, delay = 500, placement = 'auto', isAlwaysOpen = false, children }: React.PropsWithChildren<{
   delay?: number,
   label: string,
@@ -673,7 +679,8 @@ export const OSTooltip = ({ label,disabled=false, delay = 500, placement = 'auto
   isAlwaysOpen?: boolean
   children: ReactNode
 }>) => {
-  if (label === undefined || label === null) {
+  const tooltips_disabled = React.useContext(OSTooltipDisabledContext)
+  if (tooltips_disabled || label === undefined || label === null) {
     return <>{children}</>
   }
   const element_key = label.split(' ').join('_')

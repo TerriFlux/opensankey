@@ -28,6 +28,12 @@ import { createPortal } from 'react-dom'
 
 type Type_PipOptions = { width?: number, height?: number, title?: string }
 
+// Le navigateur n'autorise qu'UNE fenêtre Document Picture-in-Picture par document à la fois :
+// ouvrir une 2e fenêtre PiP ferme la 1re. Pour que deux panneaux (doc + config) puissent être
+// détachés SIMULTANÉMENT, on suit ici l'occupation du « créneau PiP » au niveau module : le premier
+// panneau détaché prend le créneau PiP (sans chrome), le second bascule sur window.open (popup).
+let dpipSlotTaken = false
+
 // Recopie toutes les feuilles de style du document source vers le document cible. Renvoie une
 // fonction de nettoyage qui débranche le MutationObserver installé pour les feuilles ajoutées après.
 const syncStyles = (target: Document): (() => void) => {
@@ -84,14 +90,35 @@ export const usePipWindow = () => {
   const [pipWindow, setPipWindow] = useState<Window | null>(null)
   // Évite une fermeture récursive (close() -> pagehide -> setPipWindow -> ...).
   const closingRef = useRef(false)
+  // Mémorise si CETTE instance occupe le créneau Document-PiP (vs un simple window.open), pour le
+  // libérer à la fermeture et permettre au prochain détachement de réutiliser le PiP.
+  const usedDpipRef = useRef(false)
+
+  const releaseDpipSlot = useCallback(() => {
+    if (usedDpipRef.current) {
+      dpipSlotTaken = false
+      usedDpipRef.current = false
+    }
+  }, [])
 
   const open = useCallback(async ({ width = 480, height = 640, title = '' }: Type_PipOptions = {}) => {
     let win: Window | null = null
     const dpip = (window as unknown as { documentPictureInPicture?: { requestWindow: (o: { width: number, height: number }) => Promise<Window> } }).documentPictureInPicture
-    if (dpip && dpip.requestWindow) {
+    // PiP seulement si l'API existe ET que le créneau unique n'est pas déjà pris par un autre panneau.
+    if (dpip && dpip.requestWindow && !dpipSlotTaken) {
       win = await dpip.requestWindow({ width, height })
+      if (win) {
+        dpipSlotTaken = true
+        usedDpipRef.current = true
+      }
     } else {
-      win = window.open('', '', `popup,width=${width},height=${height}`)
+      // Repli : Document PiP indisponible (ex. contexte non-HTTPS) OU créneau PiP déjà occupé par un
+      // autre panneau détaché. `popup` ouvre une fenêtre minimale ; on désactive le reste du chrome
+      // pour masquer au maximum la barre d'adresse / barres d'outils (les navigateurs récents ignorent
+      // certains de ces drapeaux, mais `popup` suffit généralement à retirer la barre d'adresse sur
+      // Chromium). Plusieurs fenêtres window.open peuvent coexister, contrairement au PiP.
+      win = window.open('', '', `popup=yes,location=no,toolbar=no,menubar=no,status=no,scrollbars=no,resizable=yes,width=${width},height=${height}`)
+      usedDpipRef.current = false
     }
     if (!win) return
     win.document.title = title
@@ -101,11 +128,12 @@ export const usePipWindow = () => {
     win.document.body.style.height = '100%'
     const onPageHide = () => {
       if (closingRef.current) return
+      releaseDpipSlot()
       setPipWindow(null)
     }
     win.addEventListener('pagehide', onPageHide)
     setPipWindow(win)
-  }, [])
+  }, [releaseDpipSlot])
 
   const close = useCallback(() => {
     setPipWindow((win) => {
@@ -114,14 +142,16 @@ export const usePipWindow = () => {
         win.close()
         closingRef.current = false
       }
+      releaseDpipSlot()
       return null
     })
-  }, [])
+  }, [releaseDpipSlot])
 
   // Ferme la fenêtre si le composant hôte est démonté (changement de diagramme, etc.).
   useEffect(() => () => {
     setPipWindow((win) => { win?.close(); return null })
-  }, [])
+    releaseDpipSlot()
+  }, [releaseDpipSlot])
 
   return { pipWindow, open, close }
 }
