@@ -5,12 +5,21 @@ import { TOOLTIP_STYLES, TooltipBehaviorManager } from './TooltipsCSS'
 import { getNameLabelValues } from './ElementsAttributesConfig'
 import { TFunction } from 'i18next'
 
+// Conteneur DOM (id fixe) de la zone de dessin du sankey unitaire embarqué dans
+// l'onglet du tooltip. Un seul tooltip à la fois → id unique suffisant.
+const UNITARY_TOOLTIP_CONTAINER_ID = 'unitary_tooltip_sankey_container'
 
 
 export class NodeTooltip {
   private _node: Class_NodeElement
   public behaviorManager?: TooltipBehaviorManager
   public mousePosition: { x: number; y: number } = { x: 0, y: 0 }
+
+  // Onglet « Sankey unitaire » : handle de dessin (fourni par le hook OS+) et
+  // observer de redimensionnement. Dessin paresseux à la 1re activation.
+  private _unitaryHandle?: { redraw: () => void, cleanup: () => void }
+  private _unitaryResizeObserver?: ResizeObserver
+  private _unitaryDrawn = false
 
   constructor(node: Class_NodeElement) {
     this._node = node
@@ -24,11 +33,22 @@ export class NodeTooltip {
 
   public removeTooltip() {
     this.behaviorManager?.cleanup()
+    this.cleanupUnitary()
     d3.selectAll('.sankey-tooltip').remove()
     this._node.d3_selection?.classed('tooltip_shown', false)
   }
 
+  /** Détruit le sankey unitaire embarqué (DA détachée + observer) s'il existe. */
+  private cleanupUnitary() {
+    this._unitaryResizeObserver?.disconnect()
+    this._unitaryResizeObserver = undefined
+    this._unitaryHandle?.cleanup()
+    this._unitaryHandle = undefined
+    this._unitaryDrawn = false
+  }
+
   public drawTooltip() {
+    this.cleanupUnitary()
     d3.selectAll('.sankey-tooltip').remove()
 
     let x = this.mousePosition.x || this._node.position_x
@@ -79,11 +99,60 @@ export class NodeTooltip {
 
         // Activer l'onglet cliqué
         button.classList.add('active')
-        if (tabContents[index]) {
-          tabContents[index].classList.add('active')
+        const content = tabContents[index] as HTMLElement | undefined
+        if (content) {
+          content.classList.add('active')
+          // L'onglet « Sankey unitaire » se dessine paresseusement : son conteneur
+          // n'a une taille non nulle qu'une fois affiché (display:block).
+          if (content.getAttribute('data-tab-key') === 'unitary') {
+            this.drawUnitaryTab()
+          }
         }
       })
     })
+  }
+
+  /**
+   * Dessine (une seule fois) le sankey unitaire dans le conteneur de l'onglet, via
+   * le hook injecté par OS+. Épingle le tooltip pour qu'il ne se ferme pas pendant
+   * qu'on interagit avec le diagramme, et observe le redimensionnement pour recadrer.
+   */
+  private drawUnitaryTab() {
+    if (this._unitaryDrawn) return
+    const hook = this._node.drawing_area.application_data.draw_unitary_in_container
+    if (typeof hook !== 'function') return
+    const container = document.getElementById(UNITARY_TOOLTIP_CONTAINER_ID)
+    if (!container) return
+    this._unitaryDrawn = true
+
+    // Épingle : l'utilisateur va survoler le diagramme, ne pas auto-fermer.
+    const tooltip = container.closest('.sankey-tooltip') as HTMLElement | null
+    if (tooltip) {
+      tooltip.classList.add('pinned')
+      const pin = tooltip.querySelector('.tooltip-pin') as HTMLElement | null
+      if (pin) { pin.classList.add('active'); pin.title = 'Désépingler' }
+    }
+
+    try {
+      const handle = hook(this._node, '#' + UNITARY_TOOLTIP_CONTAINER_ID)
+      if (handle) this._unitaryHandle = handle
+    } catch (e) {
+      console.error('[unitary-tooltip] dessin du sankey unitaire échoué:', e)
+      this._unitaryDrawn = false
+      return
+    }
+
+    // Recadrage au redimensionnement du tooltip (poignée resize CSS).
+    if (typeof ResizeObserver !== 'undefined') {
+      let raf = 0
+      let first = true
+      this._unitaryResizeObserver = new ResizeObserver(() => {
+        if (first) { first = false; return } // 1er callback = taille initiale, déjà dessinée
+        if (raf) cancelAnimationFrame(raf)
+        raf = requestAnimationFrame(() => this._unitaryHandle?.redraw())
+      })
+      this._unitaryResizeObserver.observe(container)
+    }
   }
 
   private getTooltipHTML(): string {
@@ -94,10 +163,35 @@ export class NodeTooltip {
     this._node.input_links_list.filter(l => l.is_visible).forEach(l => input_val += l.valueCurrent ?? 0)
     this._node.output_links_list.filter(l => l.is_visible).forEach(l => output_val += l.valueCurrent ?? 0)
 
-    const t = this._node.drawing_area.application_data.t.bind(this._node.drawing_area.application_data)
+    const app_data = this._node.drawing_area.application_data
+    const t = app_data.t.bind(app_data)
     const hasInputs = this._node.hasInputLinks()
     const hasOutputs = this._node.hasOutputLinks()
     const hasTags = this._node.sankey.flux_taggs_list.length > 0
+    // Onglet unitaire : seulement si OS+ a injecté le hook de dessin.
+    const hasUnitary = app_data.has_sankey_plus && typeof app_data.draw_unitary_in_container === 'function'
+
+    // Définition des onglets disponibles (clé, libellé, contenu HTML).
+    const tabs: { key: string, label: string, content: string }[] = [{
+      key: 'values',
+      label: t('Noeud.drawing_area_tooltip.values_tab') || 'Valeurs & Ratios',
+      content: this.getValuesTabHTML(hasInputs, hasOutputs, input_val, output_val, t)
+    }]
+    if (hasTags) {
+      tabs.push({
+        key: 'tags',
+        label: t('Noeud.drawing_area_tooltip.tags_tab') || 'Tags de flux',
+        content: this.getTagsTabHTML(hasInputs, hasOutputs, input_val, output_val, t)
+      })
+    }
+    if (hasUnitary) {
+      tabs.push({
+        key: 'unitary',
+        label: t('Noeud.drawing_area_tooltip.unitary_tab') || 'Sankey unitaire',
+        // Conteneur vide : OS+ y dessine la DA unitaire à l'activation de l'onglet.
+        content: `<div class="unitary-tooltip-container" id="${UNITARY_TOOLTIP_CONTAINER_ID}"></div>`
+      })
+    }
 
     // Structure HTML
     let html = `<style>${TOOLTIP_STYLES}${this.getTabStyles()}</style>`
@@ -111,34 +205,27 @@ export class NodeTooltip {
       html += `<p class="tooltip-subtitle">${this._node.tooltip_text.split('\n').join('<br>')}</p>`
     }
 
-    // Onglets (seulement si on a des tags)
-    if (hasTags) {
-      html += '<div class="tab-container">'
-      html += '<div class="tab-buttons">'
-      html += `<button class="tab-button active">${t('Noeud.drawing_area_tooltip.values_tab') || 'Valeurs & Ratios'}</button>`
-      html += `<button class="tab-button">${t('Noeud.drawing_area_tooltip.tags_tab') || 'Tags de flux'}</button>`
-      html += '</div>'
-      html += '</div>'
+    const useTabs = tabs.length > 1
+    // Onglets (seulement si plus d'un onglet disponible)
+    if (useTabs) {
+      html += '<div class="tab-container"><div class="tab-buttons">'
+      tabs.forEach((tab, i) => {
+        html += `<button class="tab-button${i === 0 ? ' active' : ''}">${tab.label}</button>`
+      })
+      html += '</div></div>'
     }
 
     html += '</div>'
 
     // Contenu avec onglets
     html += '<div class="tooltip-content">'
-
-    if (hasTags) {
-      // Premier onglet : Valeurs et ratios
-      html += '<div class="tab-content active">'
-      html += this.getValuesTabHTML(hasInputs, hasOutputs, input_val, output_val, t)
-      html += '</div>'
-
-      // Deuxième onglet : Tags de flux
-      html += '<div class="tab-content">'
-      html += this.getTagsTabHTML(hasInputs, hasOutputs, input_val, output_val, t)
-      html += '</div>'
+    if (useTabs) {
+      tabs.forEach((tab, i) => {
+        html += `<div class="tab-content${i === 0 ? ' active' : ''}" data-tab-key="${tab.key}">${tab.content}</div>`
+      })
     } else {
-      // Pas d'onglets, affichage direct des valeurs
-      html += this.getValuesTabHTML(hasInputs, hasOutputs, input_val, output_val, t)
+      // Un seul onglet : affichage direct du contenu (valeurs)
+      html += tabs[0].content
     }
 
     html += '</div>'
@@ -176,9 +263,22 @@ export class NodeTooltip {
   }
 
   private getValuesTabHTML(hasInputs: boolean, hasOutputs: boolean, input_val: number, output_val: number, t: TFunction): string {
+    // Unité commune affichée une seule fois dans l'en-tête de la colonne
+    // « Valeurs » plutôt que répétée sur chaque ligne.
+    const sampleLink = this._node.input_links_list.filter(l => l.is_visible)[0]
+      ?? this._node.output_links_list.filter(l => l.is_visible)[0]
+    let unit = ''
+    if (sampleLink) {
+      const lv = getNameLabelValues(sampleLink, 'value_label')
+      if (lv.unit_visible) unit = (lv.unit ?? '').toString().trim()
+    }
+    const valHeader = unit
+      ? `${t('Noeud.drawing_area_tooltip.val')} (${unit})`
+      : t('Noeud.drawing_area_tooltip.val')
+
     let html = '<table class="tooltip-table"><thead><tr>'
     html += `<th>${t('Noeud.drawing_area_tooltip.prov')} / ${t('Noeud.drawing_area_tooltip.dest')}</th>`
-    html += `<th>${t('Noeud.drawing_area_tooltip.val')}</th>`
+    html += `<th>${valHeader}</th>`
     html += `<th>${t('Noeud.drawing_area_tooltip.rat')}</th>`
     html += '</tr></thead><tbody>'
 
@@ -187,13 +287,8 @@ export class NodeTooltip {
       const ratio = totalVal > 0 ? Math.round(((link.valueCurrent ?? 0) / totalVal) * 100) + '%' : '-'
       let row = '<tr>'
       row += `<td>${nodeName}</td>`
-      const data_label_visible = link.value_label_is_visible
-      link.value_label_is_visible = true
-      const tmp = link.value_label_unit_type
-      link.value_label_unit_type = 'unit_name'
-      row += `<td class="value">${link.data_label('value_label')}</td>`
-      link.value_label_unit_type = tmp
-      link.value_label_is_visible = data_label_visible
+      // Valeur sans unité : l'unité est déjà dans l'en-tête de colonne.
+      row += `<td class="value">${this.formatValue(link.valueCurrent ?? 0, link)}</td>`
       row += `<td class="ratio">${ratio}</td>`
       row += '</tr>'
       return row
@@ -323,6 +418,17 @@ export class NodeTooltip {
       }
       .tab-content.active {
         display: block;
+      }
+      /* Conteneur du sankey unitaire embarqué : zone de dessin dimensionnée
+         (la DA détachée recadre via areaAutoFit), redimensionnable avec le tooltip. */
+      .unitary-tooltip-container {
+        position: relative;
+        width: 40vw;
+        height: 50vh;
+        min-width: 22rem;
+        min-height: 16rem;
+        background: white;
+        overflow: hidden;
       }
     `
   }
