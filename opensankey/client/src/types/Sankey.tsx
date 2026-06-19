@@ -390,6 +390,35 @@ export class Class_Sankey {
     this._styles[id] = new_style
   }
 
+  /**
+   * Réinitialise le style par défaut et les styles de base aux valeurs usine, en
+   * mutant les instances existantes (les éléments les référencent en index 0, on ne
+   * peut donc pas les remplacer). Utilisé par le board unitaire (OS+) : il amorce une
+   * DrawingArea isolée par copie JSON du diagramme source, ce qui ramène les
+   * customisations de styles du source (valeur affichée sur les nœuds, cadres de
+   * label, couleurs...). Le board unitaire doit repartir « from scratch » ; on remet
+   * donc le socle de styles à neuf avant d'appliquer les styles unitaires.
+   * Ne touche ni la topologie, ni les styles custom (retirés par removeAllStyles).
+   */
+  public resetBaseStylesToFactory() {
+    // default_style ('default', non-deletable) : une instance fraîche pré-remplit
+    // son _storage avec TOUS les défauts de config → copyFrom remet le socle à neuf.
+    const factory_default = this.createNewElementStyle(default_style_id, default_style_name, false)
+    this.default_style.copyFrom(factory_default)
+    // base_styles (deletable, configurés via elementStyleConfigs) : on régénère
+    // chaque _storage à partir de la config usine.
+    base_styles.forEach(style_id => {
+      const existing = this._styles[style_id]
+      if (!existing) return
+      const factory = this.createNewElementStyle(style_id, elementStyleConfigs[style_id].name, true)
+      Object.keys(elementStyleConfigs[style_id].config).forEach(key => {
+        //@ts-expect-error clé dynamique
+        factory[key] = elementStyleConfigs[style_id].config[key]
+      })
+      existing.copyFrom(factory)
+    })
+  }
+
   public draw() {
     // // Draw links
     // this.links_list.forEach(link => link.draw())
