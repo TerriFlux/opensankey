@@ -8,7 +8,6 @@ import { faLocationDot, faPercent, faRulerVertical } from '@fortawesome/free-sol
 import { ConfigMenuNumberInput, OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_DataTagGroup } from '../../types/TagGroup'
-import { useMainZone, mainZoneRightReservedPx } from '../spreadsheet/MainZoneTabs'
 
 /**
  * Right toolbar for some simple functionnality on the DA (Draw flow, recenter DA,...)
@@ -18,9 +17,10 @@ import { useMainZone, mainZoneRightReservedPx } from '../spreadsheet/MainZoneTab
  * }
  * @return {*}
  */
-export const ToolBarBottom = ({ new_data }: { new_data: Class_ApplicationData }) => {
-  const { t } = new_data
-
+export const ToolBarBottom = ({ new_data, right_offset }: {
+  new_data: Class_ApplicationData,
+  right_offset?: string | number
+}) => {
   // Local State to update this & subcomponent
   const [, setUpdater] = useState(0)
   const refreshThis = () => {
@@ -32,34 +32,26 @@ export const ToolBarBottom = ({ new_data }: { new_data: Class_ApplicationData })
   if (!new_data.is_static) {
     btn_mouse_mode_edition = <ComponentMouseMode app_data={new_data} updateParentComponent={refreshThis} />
   }
+  // Barre d'outils verticale (layerStyle 'toolbar_right'). En édition, on l'ancre en BAS
+  // d'écran (au-dessus de la barre du bas), dans la même colonne que le bouton d'ouverture
+  // du menu de configuration (`right_offset` = sa position), largeur 2rem pour aligner les
+  // bords. Un zIndex supérieur au panneau de config (zIndex 30) la garde visible.
+  // Le bouton « ? » d'aide a été déplacé dans le menu déroulant « Aide » (cf. MenuTop).
   const sizeBottomMenu = document.getElementsByClassName('BottomMenu')[0]?.getBoundingClientRect().height ?? 0
-  // Décale la barre du bas (centrée) vers la gauche de la moitié de la largeur réservée par le
-  // tableur, pour rester centrée dans la région diagramme. useMainZone -> re-render au toggle.
-  useMainZone(new_data)
-  const rightReserve = mainZoneRightReservedPx(new_data)
+  // `right_offset` peut être un nombre (px, menu fermé) ou une string 'calc(...)' (menu ouvert).
+  // Chakra interprète un `right` NUMÉRIQUE comme un multiple de l'échelle d'espacement
+  // (×0.25rem) → on force l'unité px pour rester aligné sur le bouton config (style inline px).
+  const right_css = typeof right_offset === 'number' ? right_offset + 'px' : right_offset
   return <Box
-    layerStyle={new_data.is_static ? 'toolbar_right' : 'toolbar_bottom'} // Changement du layerStyle
-    bottom={new_data.is_static ? '' : 'calc(' + String(sizeBottomMenu + (new_data.drawing_area.fit_margin / 2)) + 'px + 1rem)'}
-    left={(new_data.is_static || rightReserve === 0) ? undefined : 'calc(50% - ' + (rightReserve / 2) + 'px)'}
+    layerStyle='toolbar_right'
+    zIndex={new_data.is_static ? undefined : 40}
+    width={new_data.is_static ? undefined : '2rem'}
+    right={new_data.is_static ? undefined : right_css}
+    top={new_data.is_static ? undefined : 'auto'}
+    transform={new_data.is_static ? undefined : 'none'}
+    bottom={new_data.is_static ? undefined
+      : 'calc(' + sizeBottomMenu + 'px + ' + (new_data.drawing_area.fit_margin / 2) + 'px + 1rem)'}
   >
-    {/* Help — the save-in-cache button moved back to the topbar (document-state
-        block, see TopBarStateButtons), since it reflects application state. */}
-    {!new_data.is_static ? <ButtonGroup spacing='0.5rem'>
-      <OSTooltip
-        placement='top'
-        label={t('Banner.tooltipHelp')}
-        isAlwaysOpen={!new_data.is_static && new_data.menu_configuration.show_splashscreen}
-      >
-        <Button
-          className='toolbar_bottom_help'
-          variant='info'
-          size='sizeToolbarButton'
-          onClick={() => new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current!(true)}
-        >
-          ?
-        </Button>
-      </OSTooltip>
-    </ButtonGroup> : <></>}
     {btn_mouse_mode_edition}
     {/* Groupe des modes de position (absolu / proportionnel / échelle) : agit sur le
         rendu, donc pertinent en publish. En mode statique il est piloté par l'option
@@ -83,11 +75,11 @@ const ComponentMouseMode = (
   const size = app_data.is_static ? 'sizeToolbarButtonStatic' : 'sizeToolbarButton'
   { /* Boutons permettant soit de passer la souris en mode sélection soit en mode création noeud/flux */ }
   return <OSTooltip
-    placement={app_data.is_static ? 'left' : 'top'}
+    placement='left'
     label={t('Banner.tooltipLiason')}
     isAlwaysOpen={menu_configuration.show_splashscreen}
   >
-    <ButtonGroup className='toolbar_bottom_mouse_mode' isAttached orientation={app_data.is_static ? 'vertical' : 'horizontal'}> {/* Orientation verticale */}
+    <ButtonGroup className='toolbar_bottom_mouse_mode' isAttached orientation='vertical'>
       <Button
         variant={drawing_area.isInEditionMode() ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
         id='button_selection_edition'
@@ -138,8 +130,8 @@ const ComponentPositionMode = ({ app_data, updateParentComponent }: { app_data: 
   const mode = drawing_area.sankey.styles_dict['default'].shape_position_type
   // #1231 — Le mode « paramétrique » n'est plus un mode utilisateur : seuls Absolu et
   // Pourcentage. Bouton paramétrique retiré.
-  return <ButtonGroup className='toolbar_bottom_position_mode' isAttached orientation={app_data.is_static ? 'vertical' : 'horizontal'}>
-    <OSTooltip placement='top' label={t('Banner.posMode_absolute')}>
+  return <ButtonGroup className='toolbar_bottom_position_mode' isAttached orientation='vertical'>
+    <OSTooltip placement='left' label={t('Banner.posMode_absolute')}>
       <Button
         variant={mode === 'absolute' ? 'toolbar_button_position_mode_activated' : 'toolbar_button_position_mode'}
         size={size}
@@ -149,7 +141,7 @@ const ComponentPositionMode = ({ app_data, updateParentComponent }: { app_data: 
         <FontAwesomeIcon icon={faLocationDot} />
       </Button>
     </OSTooltip>
-    <OSTooltip placement='top' label={t('Banner.posMode_proportional')}>
+    <OSTooltip placement='left' label={t('Banner.posMode_proportional')}>
       <Button
         variant={mode === 'proportional' ? 'toolbar_button_position_mode_activated' : 'toolbar_button_position_mode'}
         size={size}
@@ -159,7 +151,7 @@ const ComponentPositionMode = ({ app_data, updateParentComponent }: { app_data: 
         <FontAwesomeIcon icon={faPercent} />
       </Button>
     </OSTooltip>
-    <OSTooltip placement='top' label={t('Banner.posMode_scale_adapted')}>
+    <OSTooltip placement='left' label={t('Banner.posMode_scale_adapted')}>
       <Button
         variant={mode === 'scale_adapted' ? 'toolbar_button_position_mode_activated' : 'toolbar_button_position_mode'}
         size={size}
@@ -201,15 +193,15 @@ const ComponetStretchButtons = ({ app_data, updateParentComponent }: { app_data:
     updateParentComponent()
   }
 
-  return <ButtonGroup className='toolbar_bottom_stretch' isAttached orientation={app_data.is_static ? 'vertical' : 'horizontal'}>
-    <OSTooltip placement={app_data.is_static ? 'left' : 'top'} label={t('Banner.tooltipAdjustH')}>
+  return <ButtonGroup className='toolbar_bottom_stretch' isAttached orientation='vertical'>
+    <OSTooltip placement='left' label={t('Banner.tooltipAdjustH')}>
       <Button variant='toolbar_button_6'
         size={size}
         onClick={() => app_data.drawing_area.areaAutoFit(true)}>
         {app_data.icon_library.icon_area_fit_horiz}
       </Button>
     </OSTooltip>
-    <OSTooltip placement={app_data.is_static ? 'left' : 'top'} label={t('Banner.tooltipAdjustV')}>
+    <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')}>
       <Button variant='toolbar_button_6'
         size={size}
         onClick={() => app_data.drawing_area.areaAutoFit(false)}>
@@ -217,7 +209,7 @@ const ComponetStretchButtons = ({ app_data, updateParentComponent }: { app_data:
       </Button>
     </OSTooltip>
 
-    <OSTooltip placement={app_data.is_static ? 'left' : 'top'} label={t('Banner.tooltipRecenter')}>
+    <OSTooltip placement='left' label={t('Banner.tooltipRecenter')}>
       <Button variant='toolbar_button_6'
         size={size}
         onClick={() => {
@@ -230,7 +222,7 @@ const ComponetStretchButtons = ({ app_data, updateParentComponent }: { app_data:
     </OSTooltip>
 
     <OSTooltip
-      placement={app_data.is_static ? 'left' : 'top'}
+      placement='left'
       label={app_data.drawing_area.font_size_locked ? t('Banner.tooltipFontLocked') : t('Banner.tooltipFontUnlocked')}
     >
       <Button variant='toolbar_button_6'
@@ -246,7 +238,7 @@ const ComponetStretchButtons = ({ app_data, updateParentComponent }: { app_data:
     </OSTooltip>
 
     <OSTooltip
-      placement={app_data.is_static ? 'left' : 'top'}
+      placement='left'
       label={app_data.drawing_area.size_locked ? t('Banner.tooltipSizeLocked') : t('Banner.tooltipSizeUnlocked')}
     >
       <Button variant='toolbar_button_6'
@@ -262,7 +254,7 @@ const ComponetStretchButtons = ({ app_data, updateParentComponent }: { app_data:
     </OSTooltip>
 
     <OSTooltip
-      placement={app_data.is_static ? 'left' : 'top'}
+      placement='left'
       label={document.fullscreenElement ? t('Banner.quit_fullscreen') : t('Banner.fullscreen')}
     >
       <Button

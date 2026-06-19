@@ -63,7 +63,8 @@ import {
   faDiagramProject,
   faTable,
   faFileLines,
-  faBan
+  faBan,
+  faCircleQuestion
 } from '@fortawesome/free-solid-svg-icons'
 import {
   FontAwesomeIcon
@@ -907,6 +908,12 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
       </MenuButton>
     </OSTooltip>
     <MenuList>
+      <MenuItem
+        icon={helpMenuIcon(<FontAwesomeIcon icon={faCircleQuestion} />)}
+        onClick={() => new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current!(true)}
+      >
+        {t('Menu.aide_navigation')}
+      </MenuItem>
       <MenuItem
         icon={helpMenuIcon(logo_tour)}
         onClick={() => { new_data.setSteps(); setIsOpen(true) }}

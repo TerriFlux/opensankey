@@ -1333,7 +1333,7 @@ export class Class_ApplicationData {
         content: this.t('guide.toolbar_bottom_stretch'),
       },
       {
-        selector: '.toolbar_bottom_help',
+        selector: '.menutop_button_aide',
         content: this.t('guide.toolbar_bottom_help'),
       },
       {
