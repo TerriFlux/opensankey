@@ -43,6 +43,19 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
     setOpen(true)
   }
 
+  // Hook consommé par l'onglet « Sankey unitaire » du tooltip de nœud (OS) : dessine
+  // un sankey unitaire détaché focalisé sur `n` dans le conteneur DOM passé, EN PLUS
+  // du diagramme principal. Renvoie un handle (redraw au resize + cleanup à la fermeture).
+  app_data.draw_unitary_in_container = (n: Class_NodeElement, container_selector: string) => {
+    const da = createUnitarySankeyDetached(app_data, n, container_selector)
+    // Pare-feu : resync du DOM du diagramme principal après construction (cf. useEffect).
+    app_data.drawing_area.draw()
+    return {
+      redraw: () => da.draw(),
+      cleanup: () => { da.unDraw(); da.delete() }
+    }
+  }
+
   const node_id = node?.id
 
   // (Re)construit le sankey unitaire détaché à chaque changement de nœud (ou ouverture).
