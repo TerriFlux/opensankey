@@ -1336,7 +1336,7 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
           <Divider orientation='vertical' height='1.5rem' borderColor='gray.300' margin='0 0.25rem' />
         </> : <></>}
         {constent_additional_nav_item}
-        <AppInfoPopover />
+        <AppInfoPopover new_data={new_data} />
         {/* Language selector kept as the right-most control of the topbar. */}
         {!new_data.is_static ? <Menu variant='selector_lang'>
           <MenuButton>
@@ -1372,7 +1372,7 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
  *   - REACT_APP_CHANGELOG_URL   link to the changelog (lists current + previous versions)
  *   - REACT_APP_VERSIONS_URL    endpoint returning archived versions [{ version, url }]
  */
-const AppInfoPopover = () => {
+const AppInfoPopover = ({ new_data }: { new_data: Class_ApplicationData }) => {
   const version = process.env.REACT_APP_VERSION ?? ''
   const channel = process.env.REACT_APP_RELEASE_CHANNEL ?? ''
   const release_date = process.env.REACT_APP_RELEASE_DATE ?? ''
@@ -1422,6 +1422,13 @@ const AppInfoPopover = () => {
         <PopoverArrow />
         <PopoverBody>
           <VStack align='start' spacing='0.25rem' fontSize='sm'>
+            <HStack spacing='0.4rem' alignSelf='center'>
+              <Text color='gray.500'>Édité par</Text>
+              <Link href='https://terriflux.fr' isExternal>
+                <Image src={new_data.logo_terriflux} height='1rem' objectFit='contain' alt='TerriFlux' />
+              </Link>
+            </HStack>
+            <Divider my='0.25rem' />
             {version && <HStack spacing='0.4rem'>
               <Text>Version {version}</Text>
               {channel === 'alpha' && <Badge colorScheme='orange'>alpha</Badge>}
@@ -1442,6 +1449,9 @@ const AppInfoPopover = () => {
             {changelog_url && <Link href={changelog_url} color='blue.500' isExternal>
               Changelog
             </Link>}
+            <Link href='https://terriflux.fr' color='blue.500' isExternal>
+              terriflux.fr
+            </Link>
             <Link href='mailto:support@terriflux.fr' color='blue.500'>
               support@terriflux.fr
             </Link>
