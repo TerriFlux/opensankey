@@ -1289,7 +1289,19 @@ export class StylePersistence {
   public static toJSON(style: Class_ElementStyle): Type_JSON {
     const json_object = {} as Type_JSON
     Object.entries(style.attributes).forEach(([key, value]) => {
-      if (style.isAttributeOverloaded(key)) {
+      // Le style 'default' ne persiste que ce qui diffère du défaut usine (isAttributeOverloaded,
+      // branche !_default_style). Les styles NON-'default' persistent TOUTE valeur explicitement
+      // stockée — y compris une valeur égale au 'default' : dans la chaîne de styles d'un élément
+      // (ex. [default, NodeStyle, NodeSectorStyle]) un style peut RÉTABLIR le défaut usine pour
+      // ANNULER une valeur héritée d'un AUTRE style de la chaîne (NodeSectorStyle.shape_margin=0
+      // annule NodeStyle.shape_margin=10). isAttributeOverloaded ne compare qu'au style 'default'
+      // et ignore ces combinaisons → il droppait ces overrides, et au rechargement le nœud héritait
+      // l'autre valeur (marges → tous les nœuds plus gros + coin relevé). On garde donc l'intégralité
+      // du storage explicite des styles non-'default'.
+      const keep = style.is_default_style
+        ? style.isAttributeOverloaded(key)
+        : style.isAttributeExplicit(key)
+      if (keep) {
         //@ts-expect-error xxx
         json_object[key] = value
       }

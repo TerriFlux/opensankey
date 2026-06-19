@@ -1303,6 +1303,18 @@ export class Class_ElementStyle {
     })
   }
 
+  /** Vrai pour le style 'default' (socle sans style parent). Sert à la persistance :
+   * le 'default' ne sauve que ce qui diffère du défaut usine, les autres styles sauvent
+   * toute valeur explicitement stockée (cf. StylePersistence.toJSON). */
+  public get is_default_style(): boolean { return !this._default_style }
+
+  /** Un attribut est-il explicitement porté par CE style (présent dans son storage) ?
+   * Les styles non-'default' ne sont pas pré-remplis : leur storage ne contient que les
+   * valeurs de seed + chargées + posées par l'utilisateur, donc « explicites ». */
+  public isAttributeExplicit(attr: keyof ConfigType): boolean {
+    return this._storage[attr] !== undefined
+  }
+
   public isAttributeOverloaded(
     attr: keyof ConfigType
   ) {
