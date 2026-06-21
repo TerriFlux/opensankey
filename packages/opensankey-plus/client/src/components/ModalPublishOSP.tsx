@@ -479,8 +479,11 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
             )}
 
             <FormControl>
-              <FormLabel>Nom du fichier zip</FormLabel>
+              <FormLabel>Nom de publication (zip et dossier en ligne)</FormLabel>
               <Input value={publish_name} onChange={(e) => setPublishName(e.target.value)} />
+              <Text fontSize='xs' color='gray.500' mt={1}>
+                Accents et espaces seront normalisés (ex. « Pays Voironnais » → « Pays_Voironnais »).
+              </Text>
             </FormControl>
 
             {source === 'current' && (
