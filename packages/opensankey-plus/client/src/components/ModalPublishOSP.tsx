@@ -39,6 +39,7 @@ import {
   FormLabel,
   Spinner,
   Divider,
+  Link,
   Popover,
   PopoverTrigger,
   PopoverContent,
@@ -57,7 +58,7 @@ interface Props {
   app_data: Class_ApplicationDataOSP
 }
 
-type PublishSource = 'current' | 'folder'
+type PublishSource = 'current' | 'folder' | 'client'
 
 // Descripteur d'une option booléenne window.sankey (label + défaut = getPublishOptions).
 type FlagOpt = { key: string, label: string, def: boolean }
@@ -228,6 +229,9 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
   const [folders, setFolders] = useState<string[]>([])
   const [folders_available, setFoldersAvailable] = useState(false)
   const [selected_folder, setSelectedFolder] = useState('')
+  const [deploy_available, setDeployAvailable] = useState(false)
+  const [deployed_url, setDeployedUrl] = useState('')
+  const [client_files, setClientFiles] = useState<FileList | null>(null)
   const [running, setRunning] = useState(false)
   const node_ref = useRef<HTMLDivElement>(null)
 
@@ -244,16 +248,20 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
     setFlags(defaultFlags())
     setPositionMode('')
     setSource('current')
+    setDeployedUrl('')
+    setClientFiles(null)
     fetch(window.location.origin + '/api/publish/folders')
       .then((r) => r.json())
       .then((data) => {
         setFoldersAvailable(!!data.available)
         setFolders(data.folders || [])
         setSelectedFolder((data.folders && data.folders[0]) || '')
+        setDeployAvailable(!!data.deploy_available)
       })
       .catch(() => {
         setFoldersAvailable(false)
         setFolders([])
+        setDeployAvailable(false)
       })
   }, [is_open])
 
@@ -269,6 +277,14 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
   // l'item de menu déclencheur est déjà gardé par les mêmes conditions).
   if (!is_open || !app_data.has_sankey_dev || !app_data.has_sankey_plus) return <></>
 
+  // webkitdirectory/directory ne sont pas dans les types JSX : on les pose via le DOM.
+  const dirInputRef = (el: HTMLInputElement | null) => {
+    if (el) {
+      el.setAttribute('webkitdirectory', '')
+      el.setAttribute('directory', '')
+    }
+  }
+
   const downloadZip = async (response: Response, fallback_name: string) => {
     if (!response.ok) {
       let msg = 'Échec de la publication'
@@ -281,51 +297,87 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
     FileSaver.saveAs(blob, m ? m[1] : fallback_name)
   }
 
-  const publishCurrent = async () => {
+  // Construit et envoie la requête vers `endpoint` selon la source (étude
+  // courante = JSON ou multipart si logo ; dossier serveur = JSON {folder}).
+  const buildRequest = (endpoint: string): Promise<Response> => {
+    const url = window.location.origin + endpoint
+    if (source === 'folder') {
+      return fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folder: selected_folder, publish_name: publish_name || undefined }),
+      })
+    }
+    if (source === 'client') {
+      const form = new FormData()
+      if (publish_name) form.append('publish_name', publish_name)
+      const paths: string[] = []
+      Array.from(client_files ?? []).forEach((f) => {
+        form.append('files', f)
+        // webkitRelativePath = "<dossier>/<sous-chemin>" (non typé sur File)
+        paths.push((f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name)
+      })
+      form.append('paths', JSON.stringify(paths))
+      return fetch(url, { method: 'POST', body: form })
+    }
     const diagram = JSON.stringify(app_data.toJSON())
     const globals: Record<string, unknown> = { ...flags, header }
     if (position_mode) globals.position_mode = position_mode
     const options: Record<string, unknown> = { publish_name: publish_name || 'sankey', globals }
-    let response: Response
     if (logo_file) {
       options.logo_filename = logo_file.name
       const form = new FormData()
       form.append('diagram', diagram)
       form.append('options', JSON.stringify(options))
       form.append('logo', logo_file)
-      response = await fetch(window.location.origin + '/api/publish/current', {
-        method: 'POST', body: form,
-      })
-    } else {
-      response = await fetch(window.location.origin + '/api/publish/current', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ diagram, options }),
-      })
+      return fetch(url, { method: 'POST', body: form })
     }
-    await downloadZip(response, sanitizeZipName(publish_name) + '.zip')
-  }
-
-  const publishFolder = async () => {
-    const response = await fetch(window.location.origin + '/api/publish/folder', {
+    return fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ folder: selected_folder, publish_name: publish_name || undefined }),
+      body: JSON.stringify({ diagram, options }),
     })
-    await downloadZip(response, sanitizeZipName(publish_name || selected_folder) + '.zip')
   }
 
-  const can_run = !running && (source === 'current' || (source === 'folder' && !!selected_folder))
+  const can_run = !running && (
+    source === 'current'
+    || (source === 'folder' && !!selected_folder)
+    || (source === 'client' && !!client_files && client_files.length > 0)
+  )
 
   const handlePublish = () => {
     setRunning(true)
-    const run = source === 'current' ? publishCurrent() : publishFolder()
+    const endpoint = source === 'current' ? '/api/publish/current' : '/api/publish/folder'
+    const run = buildRequest(endpoint)
+      .then((r) => downloadZip(r, sanitizeZipName(publish_name || selected_folder) + '.zip'))
     app_data.sendWaitingToast(
       () => run.finally(() => setRunning(false)),
       {
         success: { title: 'Site publié' },
         loading: { title: 'Génération du site en cours...' },
         error: { title: 'Échec de la publication' },
+      }
+    )
+  }
+
+  const handleDeploy = () => {
+    setRunning(true)
+    setDeployedUrl('')
+    const run = buildRequest('/api/publish/deploy').then(async (r) => {
+      if (!r.ok) {
+        let msg = 'Échec du déploiement'
+        try { msg = (await r.json()).error || msg } catch { /* corps non-JSON */ }
+        throw new Error(msg)
+      }
+      const data = await r.json()
+      setDeployedUrl(data.url || '')
+    })
+    app_data.sendWaitingToast(
+      () => run.finally(() => setRunning(false)),
+      {
+        success: { title: 'Site déployé en ligne' },
+        loading: { title: 'Déploiement en cours...' },
+        error: { title: 'Échec du déploiement' },
       }
     )
   }
@@ -372,6 +424,7 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
                     Un dossier du serveur
                     {!folders_available && ' (indisponible)'}
                   </Radio>
+                  <Radio value='client'>Un dossier local (depuis cet ordinateur)</Radio>
                 </Stack>
               </RadioGroup>
             </FormControl>
@@ -384,6 +437,35 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
                     <option key={f} value={f}>{f}</option>
                   ))}
                 </Select>
+              </FormControl>
+            )}
+
+            {source === 'client' && (
+              <FormControl>
+                <FormLabel mb={2}>Dossier local à publier</FormLabel>
+                <Input
+                  type='file'
+                  multiple
+                  ref={dirInputRef}
+                  height='auto'
+                  py={2}
+                  px={2}
+                  lineHeight='1.8'
+                  onChange={(e) => {
+                    setClientFiles(e.target.files)
+                    const first = e.target.files?.[0] as (File & { webkitRelativePath?: string }) | undefined
+                    const root = first?.webkitRelativePath?.split('/')[0]
+                    if (root && (!publish_name || source === 'client')) setPublishName(root)
+                  }}
+                />
+                {client_files && client_files.length > 0 && (
+                  <Text fontSize='xs' color='gray.500' mt={1}>
+                    {client_files.length} fichier(s) sélectionné(s)
+                  </Text>
+                )}
+                <Text fontSize='xs' color='gray.500' mt={1}>
+                  Le dossier doit contenir un index.html (viewer) + les données JSON.
+                </Text>
               </FormControl>
             )}
 
@@ -441,12 +523,32 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
               Le zip contient un site HTML autonome (assets compilés inclus) + un lanceur
               local (server.bat / server.sh). Voir LISEZ-MOI.txt.
             </Text>
+
+            {deployed_url && (
+              <Box p={2} bg='green.50' borderRadius='md' border='1px solid' borderColor='green.200'>
+                <Text fontSize='sm' fontWeight='semibold' color='green.700'>Déployé en ligne :</Text>
+                <Link href={deployed_url} isExternal color='blue.600' fontSize='sm' wordBreak='break-all'>
+                  {deployed_url}
+                </Link>
+              </Box>
+            )}
           </VStack>
         </Box>
 
         <HStack p={3} justify='flex-end' borderTop='1px solid' borderColor='gray.200' spacing={2}>
           <ButtonGroup>
             <Button variant='ghost' onClick={() => setIsOpen(false)}>Annuler</Button>
+            {deploy_available && (
+              <Button
+                colorScheme='green'
+                variant='outline'
+                isDisabled={!can_run}
+                isLoading={running}
+                onClick={handleDeploy}
+              >
+                Déployer en ligne
+              </Button>
+            )}
             <Button
               colorScheme='blue'
               isDisabled={!can_run}
@@ -454,7 +556,7 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
               leftIcon={running ? <Spinner size='xs' /> : undefined}
               onClick={handlePublish}
             >
-              Publier
+              Télécharger (zip)
             </Button>
           </ButtonGroup>
         </HStack>
