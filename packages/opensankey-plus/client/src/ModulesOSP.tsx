@@ -45,6 +45,7 @@ import {
 } from './components/SankeyPlusViews'
 
 import { ModalAnimatedExportOSP } from './components/ModalAnimatedExportOSP'
+import { ModalPublishOSP } from './components/ModalPublishOSP'
 import { ModalUnitarySankeyOSP } from './components/ModalUnitarySankeyOSP'
 
 import {
@@ -299,6 +300,9 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
       app_data={app_data}
     />,
     <ModalAnimatedExportOSP
+      app_data={app_data}
+    />,
+    <ModalPublishOSP
       app_data={app_data}
     />
   ]

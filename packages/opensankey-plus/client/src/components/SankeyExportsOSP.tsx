@@ -564,4 +564,16 @@ export const registerExtraExportMenuItems = (app_data: Class_ApplicationDataOSP)
       ]
     }
   ]
+  // Publication d'un site statique autonome (zip) — cf. ModalPublishOSP.
+  // PROTÉGÉE : visible uniquement en mode dev ET avec licence OpenSankey+
+  // (feature en cours de stabilisation, non exposée aux utilisateurs finaux).
+  if (app_data.has_sankey_dev && app_data.has_sankey_plus) {
+    mc.extra_export_menu_items.push({
+      key: 'publish_static_site',
+      label: 'Site (zip)...',
+      onClick: () => {
+        app_data.menu_configuration_osp.ref_show_modal_publish.current(true)
+      }
+    })
+  }
 }

@@ -37,6 +37,9 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
 
   private _ref_show_modal_animated_export: MutableRefObject<(_: boolean) => void>
 
+  // Ouvre le panneau de publication d'un site statique autonome (zip).
+  private _ref_show_modal_publish: MutableRefObject<(_: boolean) => void>
+
   constructor() {
     super()
 
@@ -50,6 +53,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     this._ref_update_modal_unitary_view = useRef(() => null)
     this._ref_open_unitary_sankey_modal = useRef((_: Class_NodeElement) => null)
     this._ref_show_modal_animated_export = useRef((_: boolean) => null)
+    this._ref_show_modal_publish = useRef((_: boolean) => null)
 
     this._ref_to_btn_top_pref_updater = useRef(() => null)
     this._ref_to_node_hyperlink_updater = useRef(() => null)
@@ -108,6 +112,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
   public get ref_update_modal_unitary_view(): MutableRefObject<() => void> { return this._ref_update_modal_unitary_view }
   public get ref_open_unitary_sankey_modal(): MutableRefObject<(node: Class_NodeElement) => void> { return this._ref_open_unitary_sankey_modal }
   public get ref_show_modal_animated_export(): MutableRefObject<(_: boolean) => void> { return this._ref_show_modal_animated_export }
+  public get ref_show_modal_publish(): MutableRefObject<(_: boolean) => void> { return this._ref_show_modal_publish }
 
   public get ref_to_node_hyperlink_updater(): MutableRefObject<(() => void)> { return this._ref_to_node_hyperlink_updater }
 
