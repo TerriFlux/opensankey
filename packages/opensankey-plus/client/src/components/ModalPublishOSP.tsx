@@ -230,6 +230,7 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
   const [folders_available, setFoldersAvailable] = useState(false)
   const [selected_folder, setSelectedFolder] = useState('')
   const [deploy_available, setDeployAvailable] = useState(false)
+  const [deploy_force, setDeployForce] = useState(false)
   const [deployed_url, setDeployedUrl] = useState('')
   const [client_files, setClientFiles] = useState<FileList | null>(null)
   const [running, setRunning] = useState(false)
@@ -249,6 +250,7 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
     setPositionMode('')
     setSource('current')
     setDeployedUrl('')
+    setDeployForce(false)
     setClientFiles(null)
     fetch(window.location.origin + '/api/publish/folders')
       .then((r) => r.json())
@@ -301,16 +303,22 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
   // courante = JSON ou multipart si logo ; dossier serveur = JSON {folder}).
   const buildRequest = (endpoint: string): Promise<Response> => {
     const url = window.location.origin + endpoint
+    // `force` n'est lu que par la route /deploy ; inoffensif pour les routes zip.
     if (source === 'folder') {
       return fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ folder: selected_folder, publish_name: publish_name || undefined }),
+        body: JSON.stringify({
+          folder: selected_folder,
+          publish_name: publish_name || undefined,
+          force: deploy_force,
+        }),
       })
     }
     if (source === 'client') {
       const form = new FormData()
       if (publish_name) form.append('publish_name', publish_name)
+      form.append('force', deploy_force ? '1' : '0')
       const paths: string[] = []
       Array.from(client_files ?? []).forEach((f) => {
         form.append('files', f)
@@ -330,12 +338,13 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
       form.append('diagram', diagram)
       form.append('options', JSON.stringify(options))
       form.append('logo', logo_file)
+      form.append('force', deploy_force ? '1' : '0')
       return fetch(url, { method: 'POST', body: form })
     }
     return fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ diagram, options }),
+      body: JSON.stringify({ diagram, options, force: deploy_force }),
     })
   }
 
@@ -523,6 +532,19 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
               Le zip contient un site HTML autonome (assets compilés inclus) + un lanceur
               local (server.bat / server.sh). Voir LISEZ-MOI.txt.
             </Text>
+
+            {deploy_available && (
+              <Checkbox
+                size='sm'
+                isChecked={deploy_force}
+                onChange={(e) => setDeployForce(e.target.checked)}
+              >
+                Remplacer si le site existe déjà en ligne
+                <Text as='span' fontSize='xs' color='gray.500'>
+                  {' '}(l'ancienne version est archivée dans versions/)
+                </Text>
+              </Checkbox>
+            )}
 
             {deployed_url && (
               <Box p={2} bg='green.50' borderRadius='md' border='1px solid' borderColor='green.200'>
