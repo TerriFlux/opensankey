@@ -188,8 +188,40 @@ def versions():
 # template_folder pointe déjà sur client/build (assets compilés). Le pipeline
 # (server/publish.py) recopie tout le build statique pour un zip portable.
 def _publish_data_root():
-    """Racine des dossiers publiables côté serveur (études déjà déployées)."""
-    return os.environ.get("MFADataDir") or os.environ.get("SANKEY_DATA")
+    """Racine des dossiers publiables côté serveur (études déjà déployées).
+    Variable MFADATA, telle que définie par scripts/start_vscode.bat."""
+    return os.environ.get("MFADATA")
+
+
+def _reconstruct_client_folder():
+    """Reconstruit dans un dossier temporaire l'arborescence d'un dossier uploadé
+    depuis le navigateur (input webkitdirectory). Renvoie (temp_dir, folder_name)
+    ou (None, None) si aucun fichier. Le 1er segment du chemin (= nom du dossier
+    sélectionné) est retiré pour que index.html retombe à la racine."""
+    files = request.files.getlist("files")
+    if not files:
+        return None, None
+    raw_paths = request.form.get("paths")
+    try:
+        rel_paths = json.loads(raw_paths) if raw_paths else []
+    except Exception:
+        rel_paths = []
+    base = tempfile.mkdtemp(prefix="sankey_client_")
+    folder_name = None
+    for i, f in enumerate(files):
+        rel = (rel_paths[i] if i < len(rel_paths) else None) or f.filename or ""
+        rel = rel.replace("\\", "/")
+        parts = [p for p in rel.split("/") if p not in ("", ".", "..")]
+        if not parts:
+            continue
+        if folder_name is None and len(parts) > 1:
+            folder_name = parts[0]
+        if len(parts) > 1:
+            parts = parts[1:]  # retirer le nom du dossier sélectionné
+        dest = os.path.join(base, *parts)
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        f.save(dest)
+    return base, folder_name
 
 
 def _safe_under(root, folder):
@@ -201,34 +233,70 @@ def _safe_under(root, folder):
     return target
 
 
-@sankeyapp.route("/api/publish/folders")
-def publish_folders():
-    """Liste les dossiers serveur publiables (contenant un index.html viewer)."""
+class _PublishError(Exception):
+    """Erreur métier publish avec code HTTP associé."""
+    def __init__(self, message, code=400):
+        super().__init__(message)
+        self.code = code
+
+
+def _resolve_publish_folder():
+    """Détermine le dossier source à publier selon la requête :
+    - multipart avec fichiers (upload navigateur) -> reconstruction temp ;
+    - JSON {folder} -> dossier de la racine serveur MFADATA.
+    Renvoie (project_dir, publish_name). Lève _PublishError sinon."""
+    is_multipart = request.content_type and "multipart/form-data" in request.content_type
+    if is_multipart and request.files.getlist("files"):
+        project_dir, folder_name = _reconstruct_client_folder()
+        if not project_dir:
+            raise _PublishError("Dossier vide", 400)
+        publish_name = request.form.get("publish_name") or folder_name or "sankey_site"
+        return project_dir, publish_name
+    # Dossier serveur (JSON)
     root = _publish_data_root()
     if not root or not os.path.isdir(root):
-        return jsonify({"available": False, "folders": []})
-    try:
-        folders = publish_lib.find_index_folders(root)
-    except Exception:
-        traceback.print_exc()
-        folders = []
-    return jsonify({"available": True, "folders": folders})
+        raise _PublishError("Aucune racine de données configurée", 400)
+    data = request.get_json(silent=True) or {}
+    folder = (data.get("folder") or "").strip()
+    if not folder:
+        raise _PublishError("Dossier non spécifié", 400)
+    project_dir = _safe_under(root, folder)
+    if not project_dir or not os.path.isdir(project_dir):
+        raise _PublishError("Dossier introuvable", 404)
+    publish_name = data.get("publish_name") or os.path.basename(folder.rstrip("/\\"))
+    return project_dir, publish_name
+
+
+@sankeyapp.route("/api/publish/folders")
+def publish_folders():
+    """Liste les dossiers serveur publiables + disponibilité du déploiement en ligne."""
+    root = _publish_data_root()
+    folders = []
+    available = bool(root and os.path.isdir(root))
+    if available:
+        try:
+            folders = publish_lib.find_index_folders(root)
+        except Exception:
+            traceback.print_exc()
+            folders = []
+    deploy_cfg = publish_lib.get_deploy_config()
+    return jsonify({
+        "available": available,
+        "folders": folders,
+        "deploy_available": deploy_cfg is not None,
+        "deploy_url_base": deploy_cfg["url_base"] if deploy_cfg else None,
+    })
 
 
 @sankeyapp.route("/api/publish/folder", methods=["POST"])
 def publish_folder_route():
-    """Publie un dossier serveur et renvoie le site autonome en zip."""
-    root = _publish_data_root()
-    if not root or not os.path.isdir(root):
-        return jsonify({"error": "Aucune racine de données configurée"}), 400
-    data = request.get_json(silent=True) or {}
-    folder = (data.get("folder") or "").strip()
-    if not folder:
-        return jsonify({"error": "Dossier non spécifié"}), 400
-    project_dir = _safe_under(root, folder)
-    if not project_dir or not os.path.isdir(project_dir):
-        return jsonify({"error": "Dossier introuvable"}), 404
-    publish_name = data.get("publish_name") or os.path.basename(folder.rstrip("/\\"))
+    """Publie un dossier et renvoie le site autonome en zip. Deux modes :
+    - multipart (upload navigateur webkitdirectory) : dossier reconstruit en temp.
+    - JSON {folder} : dossier de la racine serveur MFADATA."""
+    try:
+        project_dir, publish_name = _resolve_publish_folder()
+    except _PublishError as e:
+        return jsonify({"error": str(e)}), e.code
     try:
         artifact = publish_lib.publish_folder(project_dir, template_folder, publish_name=publish_name)
         zip_path = publish_lib.zip_artifact(artifact, publish_lib.sanitize_filename(publish_name))
@@ -284,6 +352,53 @@ def publish_current_route():
         as_attachment=True,
         download_name=os.path.basename(zip_path),
     )
+
+
+@sankeyapp.route("/api/publish/deploy", methods=["POST"])
+def publish_deploy_route():
+    """Publie l'étude (ouverte ou dossier serveur) PUIS l'envoie en ligne (scp/ssh)
+    vers le serveur de portfolios. Renvoie l'URL publique. Mêmes payloads que
+    /api/publish/current et /api/publish/folder, plus un champ 'folder' pour la
+    source dossier."""
+    cfg = publish_lib.get_deploy_config()
+    if not cfg:
+        return jsonify({"error": "Déploiement en ligne non configuré sur ce serveur"}), 400
+
+    is_multipart = request.content_type and "multipart/form-data" in request.content_type
+    # Étude courante : multipart avec 'diagram', ou JSON {diagram} (sans 'folder').
+    json_data = None if is_multipart else (request.get_json(silent=True) or {})
+    is_current = (
+        (is_multipart and request.form.get("diagram"))
+        or (json_data is not None and not json_data.get("folder") and json_data.get("diagram"))
+    )
+    try:
+        if is_current:
+            if is_multipart:
+                diagram = request.form.get("diagram")
+                try:
+                    options = json.loads(request.form.get("options") or "{}")
+                except Exception:
+                    options = {}
+                logo = request.files.get("logo")
+                if logo and logo.filename:
+                    options["logo_filename"] = publish_lib.sanitize_filename(logo.filename)
+                    options["logo_bytes"] = logo.read()
+            else:
+                diagram = json_data.get("diagram")
+                options = json_data.get("options") or {}
+            artifact = publish_lib.publish_current_study(diagram, template_folder, options=options)
+            publish_name = options.get("publish_name") or "sankey"
+        else:
+            # Dossier client (upload) ou dossier serveur (JSON).
+            project_dir, publish_name = _resolve_publish_folder()
+            artifact = publish_lib.publish_folder(project_dir, template_folder, publish_name=publish_name)
+        url = publish_lib.deploy_artifact_to_server(artifact, publish_name, cfg)
+    except _PublishError as e:
+        return jsonify({"error": str(e)}), e.code
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+    return jsonify({"url": url})
 
 
 @sankeyapp.route("/<path:path>")

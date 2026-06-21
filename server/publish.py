@@ -914,3 +914,65 @@ def zip_artifact(artifact_dir, zip_basename=None):
     # make_archive ajoute .zip ; archive le contenu du dossier à la racine du zip
     zip_path = shutil.make_archive(str(out_base), "zip", root_dir=str(artifact_dir))
     return zip_path
+
+
+# ---------------------------------------------------------------------------
+# Déploiement en ligne (porté de sankey_deploy.py : scp + ssh unzip)
+# ---------------------------------------------------------------------------
+def get_deploy_config():
+    """Config du serveur de déploiement (portfolios terriflux/OVH).
+
+    Valeurs par défaut = celles du script historique sankey_deploy.py ; l'auth SSH
+    se fait via la clé par défaut ~/.ssh du process Flask (ou SANKEY_DEPLOY_KEY).
+    Tout est surchargeable par variable d'environnement. Mettre SANKEY_DEPLOY_OFF
+    à "1" pour désactiver complètement (le bouton est alors masqué)."""
+    if os.environ.get("SANKEY_DEPLOY_OFF") == "1":
+        return None
+    return {
+        "host": os.environ.get("SANKEY_DEPLOY_HOST", "ssh.cluster031.hosting.ovh.net"),
+        "user": os.environ.get("SANKEY_DEPLOY_USER", "lwdlgxd"),
+        "path": os.environ.get("SANKEY_DEPLOY_PATH", "/homez.1606/lwdlgxd/www/portfolios"),
+        "key": os.environ.get("SANKEY_DEPLOY_KEY") or None,
+        "port": os.environ.get("SANKEY_DEPLOY_PORT") or "22",
+        "url_base": (os.environ.get("SANKEY_DEPLOY_URL_BASE")
+                     or "https://terriflux.com/portfolios").rstrip("/"),
+    }
+
+
+def _run_remote(cmd, timeout=300):
+    """Lance scp/ssh, lève RuntimeError avec stderr en cas d'échec."""
+    import subprocess
+    res = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+    if res.returncode != 0:
+        raise RuntimeError((res.stderr or res.stdout or "échec commande distante").strip())
+    return res
+
+
+def deploy_artifact_to_server(artifact_dir, slug, config):
+    """Zippe l'artifact, l'envoie par scp puis le dézippe dans <path>/<slug>
+    sur le serveur distant. Renvoie l'URL publique.
+
+    slug : nom de publication assaini (segment d'URL + dossier distant)."""
+    slug = sanitize_filename(slug) or "sankey_site"
+    zip_path = zip_artifact(artifact_dir, slug)
+    remote_zip = f"{slug}.zip"
+    target = f"{config['user']}@{config['host']}"
+    path = config["path"]
+
+    common = ["-o", "StrictHostKeyChecking=accept-new", "-o", "BatchMode=yes"]
+    scp = ["scp", *common, "-P", str(config["port"])]
+    ssh = ["ssh", *common, "-p", str(config["port"])]
+    if config.get("key"):
+        scp += ["-i", config["key"]]
+        ssh += ["-i", config["key"]]
+
+    # 1. Envoi de l'archive
+    _run_remote(scp + [zip_path, f"{target}:{path}/{remote_zip}"], timeout=600)
+    # 2. Remplacement atomique du dossier + décompression + nettoyage archive
+    remote_script = (
+        f"rm -rf {path}/{slug} && mkdir -p {path}/{slug} && "
+        f"cd {path} && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 "
+        f"unzip -o {remote_zip} -d {slug} && rm -f {remote_zip}"
+    )
+    _run_remote(ssh + [target, remote_script], timeout=300)
+    return f"{config['url_base']}/{slug}"
