@@ -10,6 +10,7 @@ import time
 import tempfile
 import json
 import html
+import base64
 from datetime import datetime
 
 # External modules
@@ -22,8 +23,10 @@ from flask import render_template
 from flask import request
 from flask import redirect
 from flask import send_from_directory
+from flask import send_file
 from flask import Response
 from flask import jsonify
+from flask_login import current_user
 from threading import Lock
 from opensankey.server.views import (
     set_process_state,
@@ -42,6 +45,7 @@ import mfa_problem.mfa_problem_main as mfa_problem_main
 # ---------------------------------------------------------------
 # Local imports
 from logincomponent.server.models import update_metrics
+from . import publish as publish_lib
 
 # CONSTANTS -----------------------------------------------------
 MAX_LINE_LENGTH = 120
@@ -177,6 +181,109 @@ def versions():
     # Semantic descending sort (1.1.10 > 1.1.9), tolerant of pre-release suffixes.
     ordered = sorted(links, key=lambda v: [int(x) for x in re.findall(r"\d+", v)], reverse=True)
     return jsonify([{"version": v, "url": links[v]} for v in ordered])
+
+
+# ---------------------------------------------------------------
+# Publication d'une étude en site statique autonome (zip)
+# template_folder pointe déjà sur client/build (assets compilés). Le pipeline
+# (server/publish.py) recopie tout le build statique pour un zip portable.
+def _publish_data_root():
+    """Racine des dossiers publiables côté serveur (études déjà déployées)."""
+    return os.environ.get("MFADataDir") or os.environ.get("SANKEY_DATA")
+
+
+def _safe_under(root, folder):
+    """Résout folder sous root en refusant toute évasion de chemin."""
+    root_p = os.path.realpath(root)
+    target = os.path.realpath(os.path.join(root_p, folder))
+    if target != root_p and not target.startswith(root_p + os.sep):
+        return None
+    return target
+
+
+@sankeyapp.route("/api/publish/folders")
+def publish_folders():
+    """Liste les dossiers serveur publiables (contenant un index.html viewer)."""
+    root = _publish_data_root()
+    if not root or not os.path.isdir(root):
+        return jsonify({"available": False, "folders": []})
+    try:
+        folders = publish_lib.find_index_folders(root)
+    except Exception:
+        traceback.print_exc()
+        folders = []
+    return jsonify({"available": True, "folders": folders})
+
+
+@sankeyapp.route("/api/publish/folder", methods=["POST"])
+def publish_folder_route():
+    """Publie un dossier serveur et renvoie le site autonome en zip."""
+    root = _publish_data_root()
+    if not root or not os.path.isdir(root):
+        return jsonify({"error": "Aucune racine de données configurée"}), 400
+    data = request.get_json(silent=True) or {}
+    folder = (data.get("folder") or "").strip()
+    if not folder:
+        return jsonify({"error": "Dossier non spécifié"}), 400
+    project_dir = _safe_under(root, folder)
+    if not project_dir or not os.path.isdir(project_dir):
+        return jsonify({"error": "Dossier introuvable"}), 404
+    publish_name = data.get("publish_name") or os.path.basename(folder.rstrip("/\\"))
+    try:
+        artifact = publish_lib.publish_folder(project_dir, template_folder, publish_name=publish_name)
+        zip_path = publish_lib.zip_artifact(artifact, publish_lib.sanitize_filename(publish_name))
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+    return send_file(
+        zip_path,
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name=os.path.basename(zip_path),
+    )
+
+
+@sankeyapp.route("/api/publish/current", methods=["POST"])
+def publish_current_route():
+    """Publie l'étude ouverte (JSON envoyé par le front) en site autonome zip.
+
+    Accepte du JSON ({diagram, options}) ou un multipart form (diagram, options,
+    logo) pour permettre l'upload d'un logo binaire.
+    """
+    options = {}
+    diagram = None
+    if request.content_type and "multipart/form-data" in request.content_type:
+        diagram = request.form.get("diagram")
+        raw_opts = request.form.get("options")
+        if raw_opts:
+            try:
+                options = json.loads(raw_opts)
+            except Exception:
+                options = {}
+        logo = request.files.get("logo")
+        if logo and logo.filename:
+            options["logo_filename"] = publish_lib.sanitize_filename(logo.filename)
+            options["logo_bytes"] = logo.read()
+    else:
+        data = request.get_json(silent=True) or {}
+        diagram = data.get("diagram")
+        options = data.get("options") or {}
+
+    if not diagram:
+        return jsonify({"error": "Diagramme manquant"}), 400
+    try:
+        artifact = publish_lib.publish_current_study(diagram, template_folder, options=options)
+        base = publish_lib.sanitize_filename(options.get("publish_name") or "sankey_site")
+        zip_path = publish_lib.zip_artifact(artifact, base)
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+    return send_file(
+        zip_path,
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name=os.path.basename(zip_path),
+    )
 
 
 @sankeyapp.route("/<path:path>")
@@ -764,3 +871,381 @@ def trial_converted():
         "ts": int(data.get("converted_at") or (time.time() * 1000)),
     })
     return jsonify({"ok": True}), 200
+
+
+# ---------------------------------------------------------------
+# Vision import : extraire la structure d'un diagramme Sankey depuis une image
+# ---------------------------------------------------------------
+# Modèle par défaut (vision haute résolution, meilleure lecture des chiffres et
+# des croisements de flux). Surchargeable par l'environnement.
+VISION_MODEL = os.environ.get("VISION_MODEL", "claude-opus-4-8")
+
+# Quota mensuel d'imports par utilisateur quand on consomme la clé TerriFlux
+# (modèle A). 0 => illimité. Les utilisateurs is_developer et ceux qui
+# fournissent leur propre clé (modèle B / BYOK) ne sont pas comptés.
+VISION_MONTHLY_QUOTA = int(os.environ.get("VISION_MONTHLY_QUOTA", "50"))
+_VISION_USAGE_LOCK = Lock()
+_VISION_USAGE_FILE = os.path.join(_TRIAL_DIR, "vision_usage.json")
+
+# Types d'images acceptés par l'API Anthropic.
+_VISION_MEDIA_TYPES = {
+    "png": "image/png",
+    "jpg": "image/jpeg",
+    "jpeg": "image/jpeg",
+    "gif": "image/gif",
+    "webp": "image/webp",
+}
+
+# Schéma de sortie structurée : le modèle DOIT renvoyer cette forme exacte.
+VISION_SANKEY_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "title": {"type": "string"},
+        "tags": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "color": {"type": "string"},
+                },
+                "required": ["name", "color"],
+                "additionalProperties": False,
+            },
+        },
+        "nodes": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "color": {"type": "string"},
+                    "is_stock": {"type": "boolean"},
+                },
+                "required": ["name", "color", "is_stock"],
+                "additionalProperties": False,
+            },
+        },
+        "flux": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "source": {"type": "string"},
+                    "target": {"type": "string"},
+                    "value": {"type": "number"},
+                    "estimated": {"type": "boolean"},
+                },
+                "required": ["source", "target", "value", "estimated"],
+                "additionalProperties": False,
+            },
+        },
+    },
+    "required": ["nodes", "flux"],
+    "additionalProperties": False,
+}
+
+VISION_PROMPT = (
+    "Tu analyses un diagramme de Sankey (flux de matières/énergie). Extrais sa "
+    "structure :\n"
+    "- nodes : tous les noeuds (boîtes/colonnes). is_stock=true pour un noeud de "
+    "type stock/réservoir (souvent encadré), sinon false. color = couleur "
+    "dominante hex (#rrggbb) ou ''.\n"
+    "- flux : chaque flux orienté source -> target avec sa valeur numérique. "
+    "Vérifie la conservation : à chaque noeud intermédiaire, somme des entrées = "
+    "somme des sorties. estimated=true si la valeur n'est pas lisible directement "
+    "et que tu l'as déduite, sinon false.\n"
+    "- tags : la légende couleur si présente (name + color hex).\n"
+    "N'invente pas de noeuds. Utilise exactement les libellés lus sur l'image."
+)
+
+
+def _vision_usage_key(user_id):
+    """Clé de comptage = utilisateur + mois courant (quota glissant mensuel)."""
+    return f"{user_id}:{datetime.utcnow().strftime('%Y-%m')}"
+
+
+def _vision_usage_get(user_id):
+    """Nombre d'imports déjà consommés ce mois par cet utilisateur."""
+    try:
+        with open(_VISION_USAGE_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return int(data.get(_vision_usage_key(user_id), 0))
+    except (FileNotFoundError, ValueError, json.JSONDecodeError):
+        return 0
+
+
+def _vision_usage_incr(user_id):
+    """Incrémente (atomiquement) le compteur mensuel et renvoie la nouvelle valeur."""
+    os.makedirs(_TRIAL_DIR, exist_ok=True)
+    key = _vision_usage_key(user_id)
+    with _VISION_USAGE_LOCK:
+        try:
+            with open(_VISION_USAGE_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except (FileNotFoundError, ValueError, json.JSONDecodeError):
+            data = {}
+        data[key] = int(data.get(key, 0)) + 1
+        with open(_VISION_USAGE_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f)
+        return data[key]
+
+
+def _vision_parse_json(text):
+    """Extrait un objet JSON depuis la réponse du modèle, tolérant aux fences
+    markdown et au texte autour. Renvoie un dict ou None."""
+    if not text:
+        return None
+    candidates = [text.strip()]
+    stripped = text.strip()
+    if stripped.startswith("```"):
+        # Retire un éventuel bloc ```json ... ```
+        inner = stripped.strip("`")
+        if inner.lower().startswith("json"):
+            inner = inner[4:]
+        candidates.append(inner.strip())
+    start, end = text.find("{"), text.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        candidates.append(text[start:end + 1])
+    for cand in candidates:
+        try:
+            data = json.loads(cand)
+            if isinstance(data, dict):
+                return data
+        except (json.JSONDecodeError, TypeError):
+            continue
+    return None
+
+
+def _vision_build_workbook(structure):
+    """Construit un classeur openpyxl (Noeuds + matrice IO) à partir de la
+    structure validée, au format lu par SankeyExcelParser."""
+    from openpyxl import Workbook
+
+    nodes = structure.get("nodes") or []
+    flux = structure.get("flux") or []
+
+    # Ordre des noeuds : ceux déclarés, plus tout noeud référencé par un flux
+    # mais absent de la liste (robustesse).
+    node_names = []
+    seen = set()
+    for n in nodes:
+        name = (n.get("name") or "").strip()
+        if name and name not in seen:
+            seen.add(name)
+            node_names.append(name)
+    for f in flux:
+        for key in ("source", "target"):
+            name = (f.get(key) or "").strip()
+            if name and name not in seen:
+                seen.add(name)
+                node_names.append(name)
+
+    color_by_name = {
+        (n.get("name") or "").strip(): (n.get("color") or "")
+        for n in nodes
+    }
+
+    flow_map = {}
+    for f in flux:
+        s = (f.get("source") or "").strip()
+        t = (f.get("target") or "").strip()
+        if s and t:
+            flow_map[(s, t)] = f.get("value")
+
+    wb = Workbook()
+
+    ws_nodes = wb.active
+    ws_nodes.title = "Noeuds"
+    ws_nodes.append(["Niveau d'agrégation", "Noeuds", "Couleur"])
+    for name in node_names:
+        ws_nodes.append([1, name, color_by_name.get(name, "")])
+
+    # Matrice entrées-sorties : définit la STRUCTURE (présence des flux).
+    ws_io = wb.create_sheet("Table entrées-sorties")
+    ws_io.append([None] + node_names)
+    for origin in node_names:
+        row = [origin]
+        for dest in node_names:
+            row.append(flow_map.get((origin, dest)))
+        ws_io.append(row)
+
+    # Onglet Données : porte les VALEURS des flux (la matrice IO seule ne les
+    # transmet pas — vérifié end-to-end via load_sankey).
+    ws_data = wb.create_sheet("Données")
+    ws_data.append(["Origine", "Destination", "Valeur"])
+    for (origin, dest), val in flow_map.items():
+        if val is not None:
+            ws_data.append([origin, dest, val])
+
+    return wb
+
+
+@sankeyapp.route("/api/vision/extract", methods=["POST"])
+def vision_extract():
+    """Reçoit une image (multipart, champ 'image') et renvoie la structure
+    Sankey extraite par Claude (vision). Forme : {"ok": True, "structure": {...}}.
+    L'utilisateur valide/corrige cette structure avant l'import (route /build).
+
+    Modèle économique hybride :
+    - BYOK : si le client fournit `anthropic_key`, on l'utilise telle quelle,
+      sans quota ni authentification (l'utilisateur paie sa propre conso).
+    - Sinon (clé TerriFlux) : authentification requise + quota mensuel par
+      utilisateur (bypass pour is_developer)."""
+    byok_key = (request.form.get("anthropic_key") or "").strip()
+
+    metered = False
+    user_id = None
+    if byok_key:
+        api_key = byok_key
+    else:
+        if not getattr(current_user, "is_authenticated", False):
+            return jsonify({
+                "ok": False,
+                "error": "connexion requise (ou fournissez votre propre clé Anthropic)",
+            }), 401
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        if not api_key:
+            return jsonify({"ok": False, "error": "ANTHROPIC_API_KEY non configurée côté serveur"}), 503
+        user_id = current_user.get_id()
+        metered = not bool(getattr(current_user, "is_developer", False))
+        if metered and VISION_MONTHLY_QUOTA > 0:
+            used = _vision_usage_get(user_id)
+            if used >= VISION_MONTHLY_QUOTA:
+                return jsonify({
+                    "ok": False,
+                    "error": "quota mensuel d'imports atteint",
+                    "quota": {"used": used, "limit": VISION_MONTHLY_QUOTA},
+                }), 402
+
+    image_file = request.files.get("image")
+    if image_file is None or not image_file.filename:
+        return jsonify({"ok": False, "error": "aucune image fournie"}), 400
+
+    ext = os.path.splitext(image_file.filename)[1].lstrip(".").lower()
+    media_type = _VISION_MEDIA_TYPES.get(ext)
+    if media_type is None:
+        return jsonify({
+            "ok": False,
+            "error": "format d'image non supporté (png, jpg, gif, webp)",
+        }), 400
+
+    b64 = base64.standard_b64encode(image_file.read()).decode("utf-8")
+
+    try:
+        import anthropic
+    except ImportError:
+        return jsonify({
+            "ok": False,
+            "error": "le paquet 'anthropic' n'est pas installé côté serveur",
+        }), 503
+
+    image_block = {
+        "type": "image",
+        "source": {"type": "base64", "media_type": media_type, "data": b64},
+    }
+    try:
+        client = anthropic.Anthropic(api_key=api_key)
+        try:
+            # Sortie structurée (recommandée) : le modèle est contraint au schéma.
+            resp = client.messages.create(
+                model=VISION_MODEL,
+                max_tokens=16000,
+                output_config={"format": {"type": "json_schema", "schema": VISION_SANKEY_SCHEMA}},
+                messages=[{
+                    "role": "user",
+                    "content": [image_block, {"type": "text", "text": VISION_PROMPT}],
+                }],
+            )
+        except TypeError:
+            # SDK anthropic trop ancien pour `output_config` : repli sur une
+            # consigne JSON stricte + extraction manuelle.
+            resp = client.messages.create(
+                model=VISION_MODEL,
+                max_tokens=16000,
+                messages=[{
+                    "role": "user",
+                    "content": [
+                        image_block,
+                        {"type": "text", "text": VISION_PROMPT + "\n\nRéponds UNIQUEMENT "
+                         "avec un objet JSON valide conforme à ce schéma (sans texte "
+                         "autour) : " + json.dumps(VISION_SANKEY_SCHEMA)},
+                    ],
+                }],
+            )
+    except Exception as exc:
+        trace.logger.error(f"vision_extract: appel Anthropic échoué: {exc}")
+        return jsonify({"ok": False, "error": f"appel modèle échoué: {exc}"}), 502
+
+    if getattr(resp, "stop_reason", None) == "refusal":
+        return jsonify({"ok": False, "error": "extraction refusée par le modèle"}), 422
+
+    text = next((b.text for b in resp.content if getattr(b, "type", None) == "text"), "")
+    structure = _vision_parse_json(text)
+    if structure is None:
+        trace.logger.error("vision_extract: JSON non parseable depuis la réponse du modèle")
+        return jsonify({"ok": False, "error": "réponse du modèle non parseable"}), 502
+
+    usage = getattr(resp, "usage", None)
+    usage_out = None
+    if usage is not None:
+        usage_out = {
+            "input_tokens": getattr(usage, "input_tokens", None),
+            "output_tokens": getattr(usage, "output_tokens", None),
+        }
+
+    quota_out = None
+    if metered:
+        new_used = _vision_usage_incr(user_id)
+        quota_out = {"used": new_used, "limit": VISION_MONTHLY_QUOTA}
+
+    return jsonify({
+        "ok": True,
+        "structure": structure,
+        "usage": usage_out,
+        "quota": quota_out,
+    }), 200
+
+
+@sankeyapp.route("/api/vision/build", methods=["POST"])
+def vision_build():
+    """Reçoit une structure Sankey validée (JSON : {"structure": {...}}), la
+    matérialise en classeur Excel, la charge via SankeyExcelParser et renvoie le
+    JSON Sankey au même format que le chargement Excel (consommable par
+    app_data.fromJSON)."""
+    body = request.get_json(silent=True) or {}
+    structure = body.get("structure")
+    if not isinstance(structure, dict) or not structure.get("flux"):
+        return jsonify({"ok": False, "error": "structure invalide ou vide"}), 400
+
+    tmp_dir = tempfile.mkdtemp()
+    log_dir = tempfile.mkdtemp()
+    log_filename = os.path.join(log_dir, "rollover.log")
+    trace.logger_init(log_filename, "w")
+
+    try:
+        wb = _vision_build_workbook(structure)
+        xlsx_path = os.path.join(tmp_dir, "vision_import.xlsx")
+        wb.save(xlsx_path)
+
+        io_input = IOExcel()
+        ok, msg = io_input.load_sankey(
+            xlsx_path,
+            do_coherence_checks=False,
+            split_flux_by_fluxtags=False,
+        )
+        if not ok:
+            return jsonify({"ok": False, "error": f"échec du parsing: {msg}"}), 422
+
+        json_path = os.path.join(tmp_dir, "vision_import.json")
+        io_output = IOJson(io_input.sankey)
+        io_output.write_sankey(json_path)
+
+        with open(json_path, "r", encoding="utf-8") as f:
+            sankey_json = json.load(f)
+
+        return jsonify({"ok": True, "sankey": sankey_json}), 200
+
+    except Exception as exc:
+        trace.logger.error(f"vision_build: {exc}")
+        return jsonify({"ok": False, "error": str(exc)}), 500

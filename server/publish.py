@@ -1,0 +1,916 @@
+# coding: utf-8
+#
+# Publication d'une étude Sankey en site statique autonome (zip).
+#
+# Ce module est un portage, adapté pour tourner dans le serveur Flask déployé,
+# du pipeline de publication des scripts locaux MFAData (sankey_publish.py,
+# html_json_replacer.py, normalize_filenames.py). Différence clé : au lieu de
+# compiler / télécharger les assets, on copie l'INTÉGRALITÉ du build React
+# (client/build/static — tous les chunks code-splités) et on détecte le bundle
+# `main.<hash>.js/css` réel pour remplacer les placeholders du template viewer.
+#
+# Deux sources :
+#   - un dossier serveur contenant déjà un index.html viewer (format historique)
+#   - l'étude ouverte dans l'app : on synthétise un dossier source intermédiaire
+#     (index.html + data.json bruts) puis on le passe dans le MÊME pipeline.
+#
+# Le format intermédiaire attendu par le pipeline (cf. dossiers MFAData) :
+#   <script defer src="static/js/mainjs"></script>
+#   <link href="static/css/maincss" rel="stylesheet">
+#   <script src="NAME.json"></script>                       (JSON brut)
+#   <script>window.sankey.diagram = window.sankey['NAME']</script>
+# Le pipeline réécrit les deux derniers en chargeur `NAME.json.gz` (fetch + gunzip
+# côté React), gzippe le JSON, normalise les noms de fichiers accentués.
+
+import os
+import re
+import gzip
+import json
+import shutil
+import tempfile
+import unicodedata
+from datetime import datetime
+from pathlib import Path
+from urllib.parse import unquote
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+def vprint(message, level=1):
+    # Les fonctions portées appellent vprint(msg, level) abondamment ; on route
+    # tout vers le logger en debug pour ne pas polluer les logs serveur.
+    logger.debug(message)
+
+
+# ---------------------------------------------------------------------------
+# Utilitaires fichiers (portés de sankey_common.py)
+# ---------------------------------------------------------------------------
+def _longpath(p):
+    r"""Sur Windows, préfixe \\?\ pour lever la limite MAX_PATH (260 car.)."""
+    if os.name == "nt":
+        s = str(Path(p).resolve())
+        if not s.startswith("\\\\?\\"):
+            s = "\\\\?\\" + s
+        return s
+    return str(p)
+
+
+def safe_copy(src, dst):
+    """Copie un fichier en gérant permissions et longs chemins Windows."""
+    src_lp = _longpath(src)
+    dst_lp = _longpath(dst)
+    try:
+        shutil.copy2(src_lp, dst_lp)
+        return True
+    except PermissionError:
+        try:
+            shutil.copy(src_lp, dst_lp)
+            return True
+        except PermissionError:
+            try:
+                with open(src_lp, "rb") as fsrc, open(dst_lp, "wb") as fdst:
+                    shutil.copyfileobj(fsrc, fdst)
+                return True
+            except Exception as e:
+                logger.warning("Impossible de copier %s vers %s: %s", src, dst, e)
+                return False
+    except Exception as e:
+        logger.warning("Erreur copie %s vers %s: %s", src, dst, e)
+        return False
+
+
+# Dossiers à ne jamais lister comme publiables.
+_EXCLUDED_DIRS = {
+    "Tous", "mfadata", "artifacts", "artefacts", "Archives",
+    "public", "Documents", "Livrables",
+}
+
+
+def find_index_folders(base_path, current_path=""):
+    """Liste les dossiers (récursif) contenant un fichier index.html."""
+    folders = []
+    full = os.path.join(base_path, current_path) if current_path else base_path
+    try:
+        for item in os.listdir(full):
+            item_path = os.path.join(full, item)
+            if not os.path.isdir(item_path) or item in _EXCLUDED_DIRS:
+                continue
+            rel = os.path.join(current_path, item) if current_path else item
+            if os.path.isfile(os.path.join(item_path, "index.html")):
+                folders.append(rel.replace("\\", "/"))
+            folders.extend(find_index_folders(base_path, rel))
+    except (PermissionError, FileNotFoundError):
+        pass
+    return folders
+
+
+# ---------------------------------------------------------------------------
+# Normalisation des noms de fichiers (porté de normalize_filenames.py)
+# ---------------------------------------------------------------------------
+def sanitize_filename(filename):
+    """Normalise un nom de fichier (accents, espaces, caractères spéciaux)."""
+    if not filename:
+        return filename
+    path = Path(filename)
+    name = path.stem
+    suffix = path.suffix
+    name = unicodedata.normalize("NFD", name)
+    name = "".join(c for c in name if unicodedata.category(c) != "Mn")
+    replacements = {
+        "œ": "oe", "æ": "ae", "ß": "ss",
+        " ": "_", "+": "plus", "&": "et", "%": "pct",
+        "(": "", ")": "", "[": "", "]": "",
+        "{": "", "}": "", "<": "", ">": "",
+        "|": "-", "\\": "-", "/": "-",
+        "*": "", "?": "", '"': "", "'": "",
+        ":": "-", ";": "-",
+    }
+    for old, new in replacements.items():
+        name = name.replace(old, new)
+    name = re.sub(r"[^\x00-\x7F]+", "", name)
+    name = re.sub(r"[-_]+", "_", name)
+    name = name.strip("-_")
+    return name + suffix
+
+
+def normalize_files_and_update_html(target_dir):
+    """Renomme les fichiers du dossier vers des noms normalisés (sans accents)."""
+    target_path = Path(target_dir)
+    file_mapping = {}
+    files_to_rename = []
+    for file_path in target_path.rglob("*"):
+        if file_path.is_file():
+            original = file_path.name
+            normalized = sanitize_filename(original)
+            if original != normalized:
+                files_to_rename.append((file_path, normalized))
+                file_mapping[original] = normalized
+    for file_path, new_name in files_to_rename:
+        try:
+            new_path = file_path.parent / new_name
+            counter = 1
+            while new_path.exists() and new_path != file_path:
+                stem = Path(new_name).stem
+                suffix = Path(new_name).suffix
+                conflict = f"{stem}_{counter}{suffix}"
+                new_path = file_path.parent / conflict
+                for orig, norm in list(file_mapping.items()):
+                    if norm == new_name:
+                        file_mapping[orig] = conflict
+                        new_name = conflict
+                        break
+                counter += 1
+            file_path.rename(new_path)
+        except Exception as e:
+            logger.warning("Erreur renommage %s: %s", file_path.name, e)
+    return file_mapping
+
+
+# ---------------------------------------------------------------------------
+# Réécriture HTML pour compression + chargeur gz (porté de html_json_replacer.py)
+# ---------------------------------------------------------------------------
+def sanitize_js_variable_name(name):
+    clean = re.sub(r"[^a-zA-Z0-9_]", "_", name)
+    clean = re.sub(r"_+", "_", clean).strip("_")
+    if clean and clean[0].isdigit():
+        clean = f"var_{clean}"
+    return clean or "unnamed_var"
+
+
+def _check_value_in_mapping(value, file_mapping):
+    variants = [
+        value, value + ".gz", value + ".json", value + ".json.gz",
+        value.replace(".json", "") if ".json" in value else None,
+    ]
+    for v in variants:
+        if v and (v in file_mapping or v in file_mapping.values()):
+            return True
+    return False
+
+
+def _normalize_all_file_references(content, file_mapping):
+    if not file_mapping:
+        return content
+    errors = []
+    # Vérifs des zones critiques (sous_filieres / assignations diagram)
+    m = re.search(r"window\.sankey\.sous_filieres\s*=\s*\{([^}]+)\}", content, re.DOTALL)
+    if m:
+        for value in re.findall(r"'[^']+'\s*:\s*'([^']+)'", m.group(1)):
+            if not _check_value_in_mapping(value, file_mapping):
+                errors.append(f"sous_filieres: '{value}' absent du mapping")
+    for pattern, desc in [
+        (r"window\.sankey\.diagram\s*=\s*window\.sankey\[['\"](.*?)['\"]\]", "diagram"),
+        (r"window\.sankey\.filiere\s*=\s*window\.sankey\[['\"](.*?)['\"]\]", "filiere"),
+    ]:
+        for match in re.findall(pattern, content):
+            if not _check_value_in_mapping(match, file_mapping):
+                errors.append(f"{desc}: '{match}' absent du mapping")
+    if errors:
+        for e in errors:
+            logger.warning("Réf HTML non résolue: %s", e)
+        return content  # ne rien remplacer si incohérence
+    for original, normalized in file_mapping.items():
+        original_base = original.replace(".gz", "").replace(".json", "")
+        normalized_base = normalized.replace(".gz", "").replace(".json", "")
+        if original_base and original_base in content:
+            content = content.replace(original_base, normalized_base)
+    return content
+
+
+def _update_single_html(html_file):
+    """Réécrit un HTML : normalise les refs, transforme les <script src=*.json>
+    en chargeur asynchrone vers les .json.gz, renomme les fichiers du dossier."""
+    with open(_longpath(html_file), "r", encoding="utf-8") as f:
+        content = f.read()
+
+    if "<meta charset=" not in content and "<meta http-equiv=" not in content:
+        if "<head>" in content:
+            content = content.replace("<head>", '<head>\n    <meta charset="utf-8">')
+        elif "<head" in content:
+            content = re.sub(r"(<head[^>]*>)", r'\1\n    <meta charset="utf-8">', content)
+
+    json_script_pattern = r'<script[^>]*src="([^"]+\.(?:json(?:\.gz)?|gz))"[^>]*></script>'
+    json_scripts = re.findall(json_script_pattern, content)
+
+    # Mapping de normalisation de tous les fichiers du dossier + renommage physique
+    file_mapping = {}
+    target_dir = html_file.parent
+    for file_path in target_dir.rglob("*"):
+        if file_path.is_file() and file_path != html_file:
+            original = file_path.name
+            normalized = sanitize_filename(original)
+            file_mapping[original] = normalized
+            if original != normalized:
+                try:
+                    new_path = file_path.parent / normalized
+                    counter = 1
+                    while new_path.exists() and new_path != file_path:
+                        stem = Path(normalized).stem
+                        suffix = Path(normalized).suffix
+                        conflict = f"{stem}_{counter}{suffix}"
+                        new_path = file_path.parent / conflict
+                        file_mapping[original] = conflict
+                        normalized = conflict
+                        counter += 1
+                    os.rename(_longpath(file_path), _longpath(new_path))
+                except Exception as e:
+                    logger.warning("Erreur renommage %s: %s", original, e)
+                    file_mapping.pop(original, None)
+
+    content = _normalize_all_file_references(content, file_mapping)
+
+    # Construire la liste des fichiers JSON normalisés + leur extension cible
+    json_files = []
+    json_extensions = {}
+    for src in json_scripts:
+        if src.endswith(".json.gz") or src.endswith(".json"):
+            ext_to_add = ".json.gz"
+        elif src.endswith(".gz"):
+            ext_to_add = ".gz"
+        else:
+            ext_to_add = ".json.gz"
+        parts = src.split("/")
+        normalized_parts = []
+        for i, part in enumerate(parts):
+            normalized_part = part
+            variants = [part + ".gz", part] if i == len(parts) - 1 else [part]
+            for variant in variants:
+                if variant in file_mapping:
+                    normalized_part = (
+                        file_mapping[variant]
+                        .replace(".json.gz", "").replace(".json", "").replace(".gz", "")
+                    )
+                    break
+            normalized_parts.append(normalized_part)
+        normalized_path = "/".join(normalized_parts)
+        json_files.append(normalized_path)
+        json_extensions[normalized_path] = ext_to_add
+
+    # Supprimer les anciens <script src=*.json> (noms originaux et normalisés)
+    all_json_names = json_scripts + [file_mapping.get(s, s) for s in json_scripts]
+    for json_src in set(all_json_names):
+        pattern = f'<script[^>]*src="{re.escape(json_src)}"[^>]*></script>'
+        content = re.sub(pattern, "", content)
+
+    # Supprimer l'assignation directe window.sankey.diagram = window.sankey['..']
+    diagram_assignment = (
+        r"<script>\s*window\.sankey\.diagram\s*=\s*"
+        r"window\.sankey\[(?:\"[^\"]*\"|'[^']*')\]\s*</script>\s*"
+    )
+    content = re.sub(diagram_assignment, "", content)
+
+    if json_files:
+        loading_calls = []
+        for i, base_name in enumerate(json_files):
+            var_name = base_name.split("/")[-1]
+            safe_var = sanitize_js_variable_name(var_name)
+            ext_to_add = json_extensions.get(base_name, ".json.gz")
+            if i == 0:
+                loading_calls.append(
+                    f"\n    window.sankey.diagram = '{safe_var}{ext_to_add}'"
+                    f"\n    window.sankey['{var_name}'] = '{safe_var}{ext_to_add}'"
+                )
+            else:
+                loading_calls.append(
+                    f"\n    window.sankey['{var_name}'] = '{safe_var}{ext_to_add}'"
+                )
+        script_code = "\n  <script>" + "".join(loading_calls) + "\n  </script>"
+        if "</body>" in content:
+            content = content.replace("</body>", f"{script_code}\n</body>")
+
+    with open(_longpath(html_file), "w", encoding="utf-8") as f:
+        f.write(content)
+
+
+def _update_html_for_compression(target_dir):
+    for html_file in Path(target_dir).resolve().rglob("*.html"):
+        try:
+            _update_single_html(html_file)
+        except Exception as e:
+            logger.warning("Erreur réécriture %s: %s", html_file, e)
+
+
+# ---------------------------------------------------------------------------
+# Détection / copie des assets compilés (NOUVEAU vs script legacy)
+# ---------------------------------------------------------------------------
+def _find_main_asset(directory, prefix, suffix):
+    """Retrouve le bundle hashé main.<hash>.<ext> dans un dossier."""
+    if not directory.exists():
+        return None
+    # Exact "main.<hash>.js" en priorité, sinon premier "main*.js" non-chunk.
+    candidates = [
+        p for p in directory.glob(f"{prefix}.*{suffix}")
+        if not p.name.endswith(".map") and ".chunk." not in p.name
+    ]
+    if not candidates:
+        candidates = [
+            p for p in directory.glob(f"{prefix}*{suffix}")
+            if not p.name.endswith(".map") and ".chunk." not in p.name
+        ]
+    return candidates[0] if candidates else None
+
+
+def copy_build_assets(build_dir, target_dir):
+    """Copie TOUT le build statique (tous les chunks) + meta dans l'artifact,
+    et renvoie le mapping {js, css} vers les bundles main hashés.
+
+    Indispensable car le build CRA est code-splité : ne copier que main.js
+    casserait le lazy-loading des chunks. Les .map sont exclus (poids inutile)."""
+    build_path = Path(build_dir)
+    target_path = Path(target_dir)
+    assets = {}
+
+    src_static = build_path / "static"
+    if src_static.exists():
+        shutil.copytree(
+            src_static,
+            target_path / "static",
+            dirs_exist_ok=True,
+            ignore=shutil.ignore_patterns("*.map"),
+        )
+    # meta/ : favicons + manifest référencés par le template build
+    src_meta = build_path / "meta"
+    if src_meta.exists():
+        shutil.copytree(src_meta, target_path / "meta", dirs_exist_ok=True)
+
+    # Logos OpenSankey : l'UI les référence selon deux conventions —
+    #  - 'logos/logo_opensankey.png' (chemin configuré, topbar...)
+    #  - 'logo_opensankey.png' à la RACINE (bouton "Editer dans OpenSankey",
+    #    cf. MenuTop <Image src='logo_opensankey.png'>).
+    # On fournit les deux, sinon le logo manque (surtout sur l'étude courante).
+    src_logos = build_path / "logos"
+    if src_logos.exists():
+        shutil.copytree(src_logos, target_path / "logos", dirs_exist_ok=True)
+        for logo_name in ("logo_opensankey.png", "logo_opensankeyplus.png"):
+            src_logo = src_logos / logo_name
+            if src_logo.is_file():
+                safe_copy(src_logo, target_path / logo_name)
+
+    main_js = _find_main_asset(target_path / "static" / "js", "main", ".js")
+    main_css = _find_main_asset(target_path / "static" / "css", "main", ".css")
+    if main_js:
+        assets["js"] = f"static/js/{main_js.name}"
+    if main_css:
+        assets["css"] = f"static/css/{main_css.name}"
+    return assets
+
+
+def _update_js_css_references(index_file, assets):
+    """Remplace les placeholders du template viewer par les vrais bundles."""
+    with open(index_file, "r", encoding="utf-8") as f:
+        content = f.read()
+    original = content
+    if "css" in assets:
+        content = content.replace("static/css/maincss", assets["css"])
+    if "js" in assets:
+        content = content.replace("static/js/mainjs", assets["js"])
+    if content != original:
+        with open(index_file, "w", encoding="utf-8") as f:
+            f.write(content)
+
+
+def _adapt_project_index(project_dir, final_dir, build_dir):
+    source_index = project_dir / "index.html"
+    dest_index = final_dir / "index.html"
+    if not safe_copy(source_index, dest_index):
+        raise RuntimeError("Échec copie index.html")
+    assets = copy_build_assets(build_dir, final_dir)
+    if assets:
+        _update_js_css_references(dest_index, assets)
+    else:
+        logger.warning("Aucun asset compilé trouvé dans %s", build_dir)
+
+
+# ---------------------------------------------------------------------------
+# Extraction des fichiers référencés (porté de sankey_publish.py)
+# ---------------------------------------------------------------------------
+def _is_local_file(url):
+    if not url or not isinstance(url, str):
+        return False
+    if url.startswith(("http://", "https://", "//", "data:", "javascript:", "mailto:")):
+        return False
+    if "%PUBLIC_URL%" in url or url.startswith("#"):
+        return False
+    if url.startswith("/") and not url.startswith("./"):
+        return False
+    if url.strip() in ("", "mainjs", "maincss"):
+        return False
+    return True
+
+
+def _clean_path(file_path):
+    if not isinstance(file_path, str):
+        return str(file_path)
+    file_path = unquote(file_path).lstrip("./").replace("\\", "/")
+    return file_path
+
+
+_IGNORED_FILES = {"static/css/maincss", "static/js/mainjs", "logo_terriflux.png"}
+_COMMON_EXT = [
+    ".json", ".gz", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".pdf",
+    ".xlsx", ".xls", ".docx", ".pptx", ".zip", ".ico", ".css", ".js",
+]
+
+
+def _extract_referenced_files(html_file_path):
+    try:
+        with open(html_file_path, "r", encoding="utf-8") as f:
+            html_content = f.read()
+    except Exception:
+        return []
+
+    referenced = set()
+
+    def add(file_path):
+        if _is_local_file(file_path) and _clean_path(file_path) not in _IGNORED_FILES:
+            referenced.add(_clean_path(file_path))
+
+    for pat in [
+        r'<script[^>]*src\s*=\s*(?:"([^"]+)"|\'([^\']+)\')[^>]*>',
+        r'<link[^>]*href\s*=\s*(?:"([^"]+)"|\'([^\']+)\')[^>]*>',
+        r'<img[^>]*src\s*=\s*(?:"([^"]+)"|\'([^\']+)\')[^>]*>',
+    ]:
+        for m in re.finditer(pat, html_content, re.IGNORECASE):
+            add(m.group(1) if m.group(1) is not None else m.group(2))
+
+    for pat in [
+        r"window\.sankey\.logo\s*=\s*['\"]([^'\"]+)['\"]",
+        r"window\.sankey\.excel\s*=\s*['\"]([^'\"]+)['\"]",
+        r"window\.sankey\.background\s*=\s*['\"]([^'\"]+)['\"]",
+        r"window\.sankey\.favicon\s*=\s*['\"]([^'\"]+)['\"]",
+    ]:
+        for m in re.finditer(pat, html_content, re.IGNORECASE):
+            add(m.group(1))
+
+    for ext in _COMMON_EXT:
+        ext_esc = re.escape(ext)
+        for m in re.finditer(r'"([^"]*' + ext_esc + r')"', html_content, re.IGNORECASE):
+            add(m.group(1))
+        for m in re.finditer(r"'([^']*" + ext_esc + r")'", html_content, re.IGNORECASE):
+            add(m.group(1))
+
+    for pat in [
+        r'(?:"([^"]+\.(?:json|xlsx?|png|jpg|jpeg|gif|svg))")',
+        r"(?:'([^']+\.(?:json|xlsx?|png|jpg|jpeg|gif|svg))')",
+    ]:
+        for m in re.finditer(pat, html_content, re.IGNORECASE):
+            ref = next((g for g in m.groups() if g is not None), None)
+            if ref is None:
+                continue
+            if not any(ref.lower().endswith(e) for e in _COMMON_EXT):
+                ref += ".json"
+            add(ref)
+
+    return sorted(referenced)
+
+
+def _copy_json_smart(project_dir, final_dir, json_ref):
+    gz_source = project_dir / (json_ref + ".gz")
+    json_source = project_dir / json_ref
+    json_dest = final_dir / json_ref
+    json_dest.parent.mkdir(parents=True, exist_ok=True)
+    if gz_source.is_file():
+        return safe_copy(gz_source, final_dir / (json_ref + ".gz"))
+    if json_source.is_file():
+        return safe_copy(json_source, json_dest)
+    return False
+
+
+def _copy_case_insensitive(project_dir, final_dir, file_ref):
+    source = project_dir / file_ref
+    if source.is_file():
+        dest = final_dir / file_ref
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        return safe_copy(source, dest)
+    try:
+        if "/" in file_ref or "\\" in file_ref:
+            fp = Path(file_ref)
+            search_dir = project_dir / fp.parent
+            filename = fp.name
+        else:
+            search_dir = project_dir
+            filename = file_ref
+        if not search_dir.exists():
+            return False
+        filename_lower = filename.lower()
+        for existing in search_dir.iterdir():
+            if existing.is_file() and existing.name.lower() == filename_lower:
+                dest = final_dir / file_ref
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                return safe_copy(existing, dest)
+        # Fallback élisions françaises ("Vue ensemble" vs "Vue d'ensemble")
+        norm = re.sub(r"\w'", "", filename).lower()
+        for existing in search_dir.iterdir():
+            if existing.is_file() and re.sub(r"\w'", "", existing.name).lower() == norm:
+                dest = final_dir / file_ref
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                return safe_copy(existing, dest)
+    except Exception as e:
+        logger.warning("Erreur recherche %s: %s", file_ref, e)
+    return False
+
+
+def _copy_referenced_files(project_dir, final_dir, html_file_path):
+    copied = 0
+    for ref in _extract_referenced_files(html_file_path):
+        if ref.endswith(".json"):
+            ok = _copy_json_smart(project_dir, final_dir, ref)
+        else:
+            ok = _copy_case_insensitive(project_dir, final_dir, ref)
+        if ok:
+            copied += 1
+        else:
+            logger.warning("Fichier référencé introuvable: %s", ref)
+    return copied
+
+
+def _copy_excel_files(project_dir, final_dir):
+    copied = 0
+    for root, _dirs, files in os.walk(project_dir):
+        for file in files:
+            if Path(file).suffix.lower() in (".xlsx", ".xls"):
+                source = Path(root) / file
+                try:
+                    rel = source.relative_to(project_dir)
+                    dest = final_dir / rel
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    if safe_copy(source, dest):
+                        copied += 1
+                except Exception as e:
+                    logger.warning("Erreur copie excel %s: %s", file, e)
+    return copied
+
+
+def _copy_logos(source_dir, target_dir):
+    copied = 0
+    for _root, _dirs, files in os.walk(source_dir):
+        for file in files:
+            if os.path.splitext(file.lower())[1] in (".png", ".jpg", ".jpeg"):
+                if safe_copy(Path(source_dir) / file, Path(target_dir) / file.lower()):
+                    copied += 1
+    return copied
+
+
+def _compress_json_files(target_dir):
+    """Compresse chaque .json en .json.gz (compact) et supprime l'original."""
+    target_path = Path(target_dir)
+    for json_file in target_path.glob("*.json"):
+        if json_file.name == "resources.json":
+            continue
+        gz_file = json_file.with_suffix(".json.gz")
+        if gz_file.exists():
+            continue
+        try:
+            with open(json_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            with gzip.open(gz_file, "wt", encoding="utf-8") as f:
+                json.dump(data, f, separators=(",", ":"), ensure_ascii=False)
+            json_file.unlink()
+        except Exception as e:
+            logger.warning("Erreur compression %s: %s", json_file.name, e)
+
+
+# ---------------------------------------------------------------------------
+# Pipeline principal
+# ---------------------------------------------------------------------------
+_SERVER_BAT = r"""@echo off
+rem Sert le site en local : un site Sankey charge ses donnees (.json.gz) par fetch,
+rem ce qui est INTERDIT en file:// -> il faut un petit serveur HTTP.
+rem On utilise PowerShell (present sur tout Windows, aucune installation) plutot que
+rem Python : "where python" trouverait l'alias Microsoft Store et echouerait au double-clic.
+cd /d "%~dp0"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0serve.ps1"
+if %errorlevel% neq 0 (
+  echo.
+  echo Echec du demarrage du serveur PowerShell.
+  echo Alternative si Python est installe : python -m http.server 8000
+  echo puis ouvrez http://localhost:8000
+  pause
+)
+"""
+
+# Serveur HTTP statique en PowerShell pur (TcpListener) : present sur tout
+# Windows, sans admin ni installation. Sert le dossier courant ; ne fixe JAMAIS
+# Content-Encoding (les .json.gz sont decompresses par l'app, pas par le navigateur).
+_SERVE_PS1 = r"""$ErrorActionPreference = 'Stop'
+$root = Split-Path -Parent $MyInvocation.MyCommand.Path
+$rootFull = [System.IO.Path]::GetFullPath($root)
+
+$mimes = @{
+  '.html'='text/html'; '.htm'='text/html'; '.js'='text/javascript'; '.mjs'='text/javascript';
+  '.css'='text/css'; '.json'='application/json'; '.gz'='application/gzip'; '.map'='application/json';
+  '.png'='image/png'; '.jpg'='image/jpeg'; '.jpeg'='image/jpeg'; '.gif'='image/gif';
+  '.svg'='image/svg+xml'; '.ico'='image/x-icon'; '.webmanifest'='application/manifest+json';
+  '.woff'='font/woff'; '.woff2'='font/woff2'; '.ttf'='font/ttf';
+  '.pdf'='application/pdf'; '.txt'='text/plain';
+  '.xlsx'='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+}
+
+$port = 8000
+$listener = $null
+while ($port -lt 8100) {
+  try {
+    $listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, $port)
+    $listener.Start()
+    break
+  } catch { $listener = $null; $port++ }
+}
+if (-not $listener) { Write-Host 'Aucun port libre (8000-8099).'; Read-Host 'Entree pour fermer'; exit 1 }
+
+$url = "http://localhost:$port/"
+Write-Host ''
+Write-Host '  Site Sankey - serveur local (PowerShell)'
+Write-Host "  Ouvrez : $url"
+Write-Host '  (laissez cette fenetre ouverte ; fermez-la pour arreter)'
+Write-Host ''
+Start-Process $url
+
+while ($true) {
+  $client = $listener.AcceptTcpClient()
+  $stream = $client.GetStream()
+  try {
+    $reader = New-Object System.IO.StreamReader($stream, [System.Text.Encoding]::ASCII)
+    $requestLine = $reader.ReadLine()
+    while ($true) { $h = $reader.ReadLine(); if ($null -eq $h -or $h -eq '') { break } }
+    if ($requestLine) {
+      $parts = $requestLine.Split(' ')
+      $target = if ($parts.Length -ge 2) { $parts[1] } else { '/' }
+      $target = $target.Split('?')[0]
+      $rel = [System.Uri]::UnescapeDataString($target.TrimStart('/'))
+      if ([string]::IsNullOrEmpty($rel)) { $rel = 'index.html' }
+      $rel = $rel.Replace('/', '\')
+      $full = [System.IO.Path]::GetFullPath((Join-Path $root $rel))
+      if (-not $full.StartsWith($rootFull)) {
+        $body = [System.Text.Encoding]::UTF8.GetBytes('403')
+        $head = "HTTP/1.1 403 Forbidden`r`nContent-Length: $($body.Length)`r`nConnection: close`r`n`r`n"
+      } elseif (Test-Path $full -PathType Leaf) {
+        $ext = [System.IO.Path]::GetExtension($full).ToLower()
+        $ct = $mimes[$ext]; if (-not $ct) { $ct = 'application/octet-stream' }
+        $body = [System.IO.File]::ReadAllBytes($full)
+        $head = "HTTP/1.1 200 OK`r`nContent-Type: $ct`r`n"
+        $head += "Content-Length: $($body.Length)`r`nConnection: close`r`n`r`n"
+      } else {
+        $body = [System.Text.Encoding]::UTF8.GetBytes('404 Not Found')
+        $head = "HTTP/1.1 404 Not Found`r`nContent-Type: text/plain`r`n"
+        $head += "Content-Length: $($body.Length)`r`nConnection: close`r`n`r`n"
+      }
+      $hb = [System.Text.Encoding]::ASCII.GetBytes($head)
+      $stream.Write($hb, 0, $hb.Length)
+      $stream.Write($body, 0, $body.Length)
+      $stream.Flush()
+    }
+  } catch {
+  } finally {
+    try { $client.Close() } catch {}
+  }
+}
+"""
+
+_SERVER_SH = """#!/bin/sh
+# Sert le site en local : un site Sankey charge ses donnees (.json.gz) par fetch,
+# ce qui est INTERDIT en file:// -> il faut un petit serveur HTTP.
+cd "$(dirname "$0")" || exit 1
+PORT=8000
+echo ""
+echo "  Site Sankey - serveur local"
+echo "  Ouvrez : http://localhost:$PORT"
+echo "  (laissez ce terminal ouvert ; Ctrl+C pour arreter)"
+echo ""
+( sleep 1; (xdg-open "http://localhost:$PORT" || open "http://localhost:$PORT") >/dev/null 2>&1 ) &
+python3 -m http.server "$PORT" || python -m http.server "$PORT"
+"""
+
+_README_TXT = """Site Sankey autonome
+====================
+
+IMPORTANT : n'ouvrez PAS index.html directement (double-clic / file://).
+Le diagramme charge ses donnees (.json.gz) via une requete reseau, bloquee
+par les navigateurs en file://. Vous verriez alors une erreur
+"NetworkError when attempting to fetch resource".
+
+Pour visualiser le site :
+
+  - Windows : double-cliquez sur server.bat
+      (serveur PowerShell integre : AUCUNE installation requise)
+  - macOS / Linux : ./server.sh  (Python3 est preinstalle)
+
+Le navigateur s'ouvre automatiquement sur http://localhost:8000
+(ou le premier port libre).
+
+Alternative : deposez ce dossier sur n'importe quel hebergement web statique
+(GitLab/GitHub Pages, Netlify, un serveur Apache/nginx...) et ouvrez l'URL.
+"""
+
+
+def _write_local_servers(final_dir):
+    """Ajoute des lanceurs de serveur HTTP local + un README dans l'artifact,
+    car le site charge ses .json.gz par fetch (impossible en file://)."""
+    final_dir = Path(final_dir)
+    with open(final_dir / "server.bat", "w", encoding="utf-8", newline="\r\n") as f:
+        f.write(_SERVER_BAT)
+    with open(final_dir / "serve.ps1", "w", encoding="utf-8", newline="\r\n") as f:
+        f.write(_SERVE_PS1)
+    sh_path = final_dir / "server.sh"
+    with open(sh_path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(_SERVER_SH)
+    try:
+        os.chmod(sh_path, 0o755)
+    except Exception:
+        pass
+    (final_dir / "LISEZ-MOI.txt").write_text(_README_TXT, encoding="utf-8")
+
+
+def _artifacts_base():
+    base = Path(tempfile.gettempdir()) / "sankey_publish"
+    d = base / f"build_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}"
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def publish_folder(project_dir, build_dir, publish_name=None, artifacts_base=None):
+    """Publie un dossier source (contenant index.html viewer + data) en artifact
+    statique autonome. Renvoie le chemin du dossier artifact créé.
+
+    project_dir : dossier source contenant l'index.html viewer.
+    build_dir   : client/build (assets compilés).
+    """
+    project_dir = Path(project_dir)
+    index_html = project_dir / "index.html"
+    if not index_html.exists():
+        # Règle "Résultats unique" : un seul sous-dossier nommé Résultats -> l'utiliser
+        subdirs = [d for d in project_dir.iterdir() if d.is_dir()]
+        if len(subdirs) == 1:
+            name = re.sub(r"^\d+\s+", "", subdirs[0].name)
+            name = "".join(
+                c for c in unicodedata.normalize("NFD", name)
+                if unicodedata.category(c) != "Mn"
+            ).lower()
+            if name == "resultats" and (subdirs[0] / "index.html").exists():
+                project_dir = subdirs[0]
+                index_html = project_dir / "index.html"
+    if not index_html.exists():
+        raise FileNotFoundError(f"index.html introuvable dans {project_dir}")
+
+    if not publish_name:
+        publish_name = project_dir.name
+    publish_name = re.sub(r"[^\w\-_.]", "_", publish_name) or "sankey_site"
+
+    base = Path(artifacts_base) if artifacts_base else _artifacts_base()
+    final_dir = base / publish_name
+    if final_dir.exists():
+        shutil.rmtree(final_dir)
+    final_dir.mkdir(parents=True, exist_ok=True)
+
+    _copy_logos(project_dir, final_dir)
+    for aux in (".stamped", "resources.json"):
+        src = project_dir / aux
+        if src.is_file():
+            safe_copy(src, final_dir / aux)
+
+    _adapt_project_index(project_dir, final_dir, build_dir)
+    _copy_referenced_files(project_dir, final_dir, index_html)
+    _copy_excel_files(project_dir, final_dir)
+    _update_html_for_compression(final_dir)
+    normalize_files_and_update_html(final_dir)
+    _compress_json_files(final_dir)
+    _write_local_servers(final_dir)
+    return str(final_dir)
+
+
+def _build_viewer_index(title, data_basename, options):
+    """Génère un index.html viewer au format intermédiaire attendu par le pipeline.
+
+    Toutes les options viewer (cf. SankeyGlobals / getPublishOptions côté client)
+    sont passées génériquement via `options['globals']` (dict). On émet un unique
+    objet `window.sankey = {...}` ; `publish` est toujours forcé à true. Le logo
+    éventuel (fichier uploadé) est injecté ici comme `logo`."""
+    glob = dict(options.get("globals") or {})
+    glob["publish"] = True
+    if options.get("logo_filename"):
+        glob["logo"] = options["logo_filename"]
+        if options.get("logo_width"):
+            try:
+                glob["logo_width"] = int(options["logo_width"])
+            except (TypeError, ValueError):
+                pass
+    # JSON inline dans une <script> : neutraliser tout </script> ou balise HTML.
+    payload = json.dumps(glob, ensure_ascii=False).replace("</", "<\\/")
+    lines = [
+        "<!DOCTYPE html>",
+        "<html>",
+        "<head>",
+        '  <meta charset="utf-8">',
+        f"  <title>{html_escape(title)}</title>",
+        '  <script defer src="static/js/mainjs"></script>',
+        '  <link href="static/css/maincss" rel="stylesheet">',
+        "</head>",
+        "<body>",
+        "  <script>",
+        f"window.sankey = {payload}",
+        "  </script>",
+        f'  <script src="{data_basename}.json"></script>',
+        f"  <script>window.sankey.diagram = window.sankey['{data_basename}']</script>",
+        '  <div id="react-container"></div>',
+        "</body>",
+        "</html>",
+    ]
+    return "\n".join(lines)
+
+
+def html_escape(s):
+    return (
+        str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    )
+
+
+def publish_current_study(diagram_json, build_dir, options=None, artifacts_base=None):
+    """Publie l'étude ouverte (JSON fourni par le front) en artifact statique.
+
+    diagram_json : str (JSON brut) ou dict du diagramme (app_data.toJSON()).
+    options : { publish_name, header, toolbar, editable, recenter,
+                logo_filename, logo_bytes, logo_width }
+    """
+    options = options or {}
+    publish_name = re.sub(r"[^\w\-_.]", "_", options.get("publish_name") or "sankey") or "sankey"
+    data_basename = sanitize_js_variable_name(publish_name) or "diagram"
+
+    base = Path(artifacts_base) if artifacts_base else _artifacts_base()
+    source_dir = base / f"_src_{publish_name}"
+    if source_dir.exists():
+        shutil.rmtree(source_dir)
+    source_dir.mkdir(parents=True, exist_ok=True)
+
+    # data JSON brut
+    if isinstance(diagram_json, (dict, list)):
+        diagram_text = json.dumps(diagram_json, ensure_ascii=False)
+    else:
+        diagram_text = str(diagram_json)
+    with open(source_dir / f"{data_basename}.json", "w", encoding="utf-8") as f:
+        f.write(diagram_text)
+
+    # logo éventuel
+    if options.get("logo_bytes") and options.get("logo_filename"):
+        try:
+            with open(source_dir / options["logo_filename"], "wb") as f:
+                f.write(options["logo_bytes"])
+        except Exception as e:
+            logger.warning("Erreur écriture logo: %s", e)
+            options.pop("logo_filename", None)
+
+    title = options.get("header") or (options.get("globals") or {}).get("header") or publish_name
+    with open(source_dir / "index.html", "w", encoding="utf-8") as f:
+        f.write(_build_viewer_index(title, data_basename, options))
+
+    return publish_folder(source_dir, build_dir, publish_name=publish_name, artifacts_base=base)
+
+
+def zip_artifact(artifact_dir, zip_basename=None):
+    """Zippe le dossier artifact et renvoie le chemin du .zip."""
+    artifact_dir = Path(artifact_dir)
+    zip_basename = zip_basename or artifact_dir.name
+    out_base = artifact_dir.parent / zip_basename
+    # make_archive ajoute .zip ; archive le contenu du dossier à la racine du zip
+    zip_path = shutil.make_archive(str(out_base), "zip", root_dir=str(artifact_dir))
+    return zip_path
