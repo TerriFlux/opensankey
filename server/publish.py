@@ -948,13 +948,15 @@ def _run_remote(cmd, timeout=300):
     return res
 
 
-def deploy_artifact_to_server(artifact_dir, slug, config):
+def deploy_artifact_to_server(artifact_dir, slug, config, force=False):
     """Zippe l'artifact, l'envoie par scp puis le dézippe dans <path>/<slug>
     sur le serveur distant. Renvoie l'URL publique.
 
-    slug : nom de publication assaini (segment d'URL + dossier distant)."""
+    slug : nom de publication assaini (segment d'URL + dossier distant).
+    force : si le dossier distant existe déjà, refuse (RuntimeError) sauf si
+            force=True ; dans ce cas l'ancien dossier est archivé dans
+            <path>/versions/<slug>_<date> avant d'être remplacé."""
     slug = sanitize_filename(slug) or "sankey_site"
-    zip_path = zip_artifact(artifact_dir, slug)
     remote_zip = f"{slug}.zip"
     target = f"{config['user']}@{config['host']}"
     path = config["path"]
@@ -966,13 +968,27 @@ def deploy_artifact_to_server(artifact_dir, slug, config):
         scp += ["-i", config["key"]]
         ssh += ["-i", config["key"]]
 
+    # 0. Pré-vérification d'existence (avant tout upload)
+    check = _run_remote(ssh + [target, f'[ -d "{path}/{slug}" ] && echo EXISTS || echo FREE'])
+    if "EXISTS" in check.stdout and not force:
+        raise RuntimeError(
+            f"Le dossier « {slug} » existe déjà en ligne. "
+            "Cochez « Remplacer » pour l'écraser (une sauvegarde datée sera "
+            "conservée dans versions/)."
+        )
+
     # 1. Envoi de l'archive
+    zip_path = zip_artifact(artifact_dir, slug)
     _run_remote(scp + [zip_path, f"{target}:{path}/{remote_zip}"], timeout=600)
-    # 2. Remplacement atomique du dossier + décompression + nettoyage archive
+    # 2. Archivage daté de l'ancien dossier (si présent) + décompression + nettoyage.
+    #    versions/ est commun à tous les dépôts du serveur de portfolios.
     remote_script = (
-        f"rm -rf {path}/{slug} && mkdir -p {path}/{slug} && "
-        f"cd {path} && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 "
-        f"unzip -o {remote_zip} -d {slug} && rm -f {remote_zip}"
+        f'cd "{path}" && '
+        f'if [ -d "{slug}" ]; then mkdir -p versions && '
+        f'mv "{slug}" "versions/{slug}_$(date +%Y%m%d_%H%M%S)"; fi && '
+        f'mkdir -p "{slug}" && '
+        f'LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 unzip -o "{remote_zip}" -d "{slug}" && '
+        f'rm -f "{remote_zip}"'
     )
     _run_remote(ssh + [target, remote_script], timeout=300)
     return f"{config['url_base']}/{slug}"

@@ -367,6 +367,10 @@ def publish_deploy_route():
     is_multipart = request.content_type and "multipart/form-data" in request.content_type
     # Étude courante : multipart avec 'diagram', ou JSON {diagram} (sans 'folder').
     json_data = None if is_multipart else (request.get_json(silent=True) or {})
+    if is_multipart:
+        force = request.form.get("force") in ("1", "true", "True", "on")
+    else:
+        force = bool(json_data.get("force"))
     is_current = (
         (is_multipart and request.form.get("diagram"))
         or (json_data is not None and not json_data.get("folder") and json_data.get("diagram"))
@@ -392,7 +396,7 @@ def publish_deploy_route():
             # Dossier client (upload) ou dossier serveur (JSON).
             project_dir, publish_name = _resolve_publish_folder()
             artifact = publish_lib.publish_folder(project_dir, template_folder, publish_name=publish_name)
-        url = publish_lib.deploy_artifact_to_server(artifact, publish_name, cfg)
+        url = publish_lib.deploy_artifact_to_server(artifact, publish_name, cfg, force=force)
     except _PublishError as e:
         return jsonify({"error": str(e)}), e.code
     except Exception as e:
