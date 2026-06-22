@@ -236,6 +236,11 @@ const buildUnitaryDrawingArea = (
   new_drawing_area.filter_label = 0
   new_drawing_area.filter_link_value = 0
 
+  // Masquer la légende : le JSON copié du diagramme source ramène son état de
+  // visibilité (cf. toJSON ci-dessus), donc une légende visible dans le diagramme
+  // principal réapparaîtrait dans le sankey unitaire (vue comme infobulle détachée).
+  new_drawing_area.legend.masked = true
+
   // Appliquer les styles unitaires + layout (computeAutoSankey). La géométrie ayant
   // été nettoyée dans le JSON (cf. stripGeometryFromDrawingAreaJSON), computeAutoSankey
   // repart de zéro comme sur un import neuf.
