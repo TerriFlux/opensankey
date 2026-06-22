@@ -189,8 +189,16 @@ def versions():
 # (server/publish.py) recopie tout le build statique pour un zip portable.
 def _publish_data_root():
     """Racine des dossiers publiables côté serveur (études déjà déployées).
-    Variable MFADATA, telle que définie par scripts/start_vscode.bat."""
-    return os.environ.get("MFADATA")
+
+    Les noms de variable diffèrent selon l'environnement (serveur = `MFAData`,
+    launcher local = `MFADATA`, scripts = `MFADataDir`) et Linux est sensible à
+    la casse : on cherche donc, insensible à la casse, toute variable nommée
+    MFAData ou MFADataDir pointant sur un dossier existant."""
+    wanted = {"mfadata", "mfadatadir"}
+    for key, value in os.environ.items():
+        if key.lower() in wanted and value and os.path.isdir(value):
+            return value
+    return None
 
 
 def _reconstruct_client_folder():
