@@ -1182,7 +1182,24 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * `_is_visible_ignoring_container_modes` pour outrepasser le filtre `is_not_zero`.
    */
   public get is_forced_visible_when_zero(): boolean {
+    // #188 — a structurally-absent flux does not exist for this dataTag: it must
+    // never be revealed by the global "show zero links" option.
+    if (this.is_structurally_absent_for_current_datatags) return false
     return this.drawing_area.show_zero_links || this.shape_visible_when_zero
+  }
+
+  /**
+   * #188 — true when this flux is structurally absent for the currently selected
+   * dataTags (pruned by the no-propagation option; #161 marker on the leaf). The
+   * flux does not exist for that dataTag, so it must stay hidden even with
+   * "show zero links" on or in structure mode — overriding the null-value path
+   * in is_not_zero (valueCurrent is null for an absent leaf, which would
+   * otherwise read as "!= 0" and reveal the link as a dashed phantom).
+   * Legacy/default files carry no marker, so this is always false there.
+   */
+  public get is_structurally_absent_for_current_datatags(): boolean {
+    if (this._values instanceof Class_LinkValue) return this._values.structurally_absent
+    return this._values.getStructurallyAbsentForDataTags(this.selected_data_tags_list as Class_DataTag[])
   }
 
   public get child_links() { return this._child_links }
@@ -2383,6 +2400,11 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @memberof Class_LinkElement
    */
   public get is_not_zero(): boolean {
+    // #188 — a flux structurally absent for the current dataTags does not exist
+    // there: it is never "non-zero", so it stays hidden. Checked before the
+    // structure-mode short-circuit (which would otherwise force it visible) and
+    // before the valueCurrent path (null for an absent leaf reads as "!= 0").
+    if (this.is_structurally_absent_for_current_datatags) return false
     if (this.sankey.drawing_area.type_data === 'structure') {
       return true
     }

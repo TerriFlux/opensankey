@@ -305,6 +305,22 @@ export class Class_ElementValueTree {
     }
   }
 
+  // #188 — mirror getValueForDataTags but return the structurally-absent marker
+  // of the matching leaf. getValueForDataTags returns null for an absent leaf,
+  // which is indistinguishable from a plain missing value; a Link needs the
+  // marker itself to stay hidden (not drawn as a dashed zero phantom) for a
+  // dataTag where the flux does not exist.
+  public getStructurallyAbsentForDataTags(data_tags: Class_DataTag[]): boolean {
+    if (data_tags.length === 0) return false
+    const matching_tags = data_tags.filter(tag => (tag.group === this.data_tag_group))
+    const remaining_tags = data_tags.filter(tag => (tag.group !== this.data_tag_group))
+    if (matching_tags.length !== 1) return false
+    const child = this.children[matching_tags[0].id]
+    if (child === undefined) return false
+    if (child instanceof Class_ElementValue) return child.structurally_absent
+    return child.getStructurallyAbsentForDataTags(remaining_tags)
+  }
+
   public setValueForDataTags(data_tags: Class_DataTag[], val: Class_ElementValue) {
     if (data_tags.length === 0) return
     const matching_tags = data_tags.filter(tag => (tag.group === this.data_tag_group))
