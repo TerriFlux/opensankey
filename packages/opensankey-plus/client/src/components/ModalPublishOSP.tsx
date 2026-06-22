@@ -231,6 +231,7 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
   const [selected_folder, setSelectedFolder] = useState('')
   const [deploy_available, setDeployAvailable] = useState(false)
   const [deploy_force, setDeployForce] = useState(false)
+  const [tree_mode, setTreeMode] = useState(false)
   const [deployed_url, setDeployedUrl] = useState('')
   const [client_files, setClientFiles] = useState<FileList | null>(null)
   const [running, setRunning] = useState(false)
@@ -251,6 +252,7 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
     setSource('current')
     setDeployedUrl('')
     setDeployForce(false)
+    setTreeMode(false)
     setClientFiles(null)
     fetch(window.location.origin + '/api/publish/folders')
       .then((r) => r.json())
@@ -312,6 +314,7 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
           folder: selected_folder,
           publish_name: publish_name || undefined,
           force: deploy_force,
+          tree: tree_mode,
         }),
       })
     }
@@ -319,6 +322,7 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
       const form = new FormData()
       if (publish_name) form.append('publish_name', publish_name)
       form.append('force', deploy_force ? '1' : '0')
+      form.append('tree', tree_mode ? '1' : '0')
       const paths: string[] = []
       Array.from(client_files ?? []).forEach((f) => {
         form.append('files', f)
@@ -485,6 +489,19 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
                 Accents et espaces seront normalisés (ex. « Pays Voironnais » → « Pays_Voironnais »).
               </Text>
             </FormControl>
+
+            {(source === 'folder' || source === 'client') && (
+              <Checkbox
+                size='sm'
+                isChecked={tree_mode}
+                onChange={(e) => setTreeMode(e.target.checked)}
+              >
+                Publier toute l'arborescence (portfolio)
+                <Text as='span' fontSize='xs' color='gray.500'>
+                  {' '}(toutes les sous-études + pages de navigation/README)
+                </Text>
+              </Checkbox>
+            )}
 
             {source === 'current' && (
               <>
