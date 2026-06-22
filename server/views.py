@@ -385,8 +385,10 @@ def publish_deploy_route():
     json_data = None if is_multipart else (request.get_json(silent=True) or {})
     if is_multipart:
         force = request.form.get("force") in ("1", "true", "True", "on")
+        update = request.form.get("update") in ("1", "true", "True", "on")
     else:
         force = bool(json_data.get("force"))
+        update = bool(json_data.get("update"))
     is_current = (
         (is_multipart and request.form.get("diagram"))
         or (json_data is not None and not json_data.get("folder") and json_data.get("diagram"))
@@ -412,7 +414,8 @@ def publish_deploy_route():
             # Dossier client (upload) ou dossier serveur (JSON), étude unique ou arborescence.
             project_dir, publish_name = _resolve_publish_folder()
             artifact = _build_folder_artifact(project_dir, publish_name, _read_bool_field("tree"))
-        url = publish_lib.deploy_artifact_to_server(artifact, publish_name, cfg, force=force)
+        url = publish_lib.deploy_artifact_to_server(
+            artifact, publish_name, cfg, force=force, update=update)
     except _PublishError as e:
         return jsonify({"error": str(e)}), e.code
     except Exception as e:

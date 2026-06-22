@@ -1177,14 +1177,17 @@ def _run_remote(cmd, timeout=300):
     return res
 
 
-def deploy_artifact_to_server(artifact_dir, slug, config, force=False):
-    """Zippe l'artifact, l'envoie par scp puis le dézippe dans <path>/<slug>
+def deploy_artifact_to_server(artifact_dir, slug, config, force=False, update=False):
+    """Zippe l'artifact, l'envoie par scp puis l'installe dans <path>/<slug>
     sur le serveur distant. Renvoie l'URL publique.
 
-    slug : nom de publication assaini (segment d'URL + dossier distant).
-    force : si le dossier distant existe déjà, refuse (RuntimeError) sauf si
-            force=True ; dans ce cas l'ancien dossier est archivé dans
-            <path>/versions/<slug>_<date> avant d'être remplacé."""
+    slug   : nom de publication assaini (segment d'URL + dossier distant).
+    force  : (mode remplacement) si le dossier existe déjà, refuse sauf force=True ;
+             dans ce cas l'ancien dossier est archivé dans <path>/versions/<slug>_<date>.
+    update : (mode mise à jour) fusion additive : les études déjà en ligne (dossiers
+             contenant diagrams.html) sont PRÉSERVÉES telles quelles (données + assets) ;
+             on ajoute seulement les nouveaux dossiers et on rafraîchit les pages de
+             navigation. Aucune suppression. force est ignoré dans ce mode."""
     slug = sanitize_filename(slug) or "sankey_site"
     remote_zip = f"{slug}.zip"
     target = f"{config['user']}@{config['host']}"
@@ -1197,27 +1200,45 @@ def deploy_artifact_to_server(artifact_dir, slug, config, force=False):
         scp += ["-i", config["key"]]
         ssh += ["-i", config["key"]]
 
-    # 0. Pré-vérification d'existence (avant tout upload)
-    check = _run_remote(ssh + [target, f'[ -d "{path}/{slug}" ] && echo EXISTS || echo FREE'])
-    if "EXISTS" in check.stdout and not force:
-        raise RuntimeError(
-            f"Le dossier « {slug} » existe déjà en ligne. "
-            "Cochez « Remplacer » pour l'écraser (une sauvegarde datée sera "
-            "conservée dans versions/)."
-        )
+    # 0. Pré-vérification d'existence (hors mode update, qui fusionne sans écraser)
+    if not update:
+        check = _run_remote(ssh + [target, f'[ -d "{path}/{slug}" ] && echo EXISTS || echo FREE'])
+        if "EXISTS" in check.stdout and not force:
+            raise RuntimeError(
+                f"Le dossier « {slug} » existe déjà en ligne. "
+                "Cochez « Remplacer » pour l'écraser (sauvegarde datée dans versions/), "
+                "ou « Mode mise à jour » pour n'ajouter que les nouveautés."
+            )
 
     # 1. Envoi de l'archive
     zip_path = zip_artifact(artifact_dir, slug)
     _run_remote(scp + [zip_path, f"{target}:{path}/{remote_zip}"], timeout=600)
-    # 2. Archivage daté de l'ancien dossier (si présent) + décompression + nettoyage.
-    #    versions/ est commun à tous les dépôts du serveur de portfolios.
-    remote_script = (
-        f'cd "{path}" && '
-        f'if [ -d "{slug}" ]; then mkdir -p versions && '
-        f'mv "{slug}" "versions/{slug}_$(date +%Y%m%d_%H%M%S)"; fi && '
-        f'mkdir -p "{slug}" && '
-        f'LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 unzip -o "{remote_zip}" -d "{slug}" && '
-        f'rm -f "{remote_zip}"'
-    )
+
+    if update:
+        # Mode mise à jour : décompresser dans un staging, retirer du staging les
+        # études DÉJÀ en ligne (dossiers ayant un diagrams.html) pour préserver
+        # leurs binaires, puis fusionner le reste (navigation + nouveaux dossiers).
+        stage = f".staging_{slug}"
+        remote_script = (
+            f'cd "{path}" && rm -rf "{stage}" && mkdir -p "{stage}" && '
+            f'LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 unzip -o "{remote_zip}" -d "{stage}" >/dev/null && '
+            f'if [ -d "{slug}" ]; then '
+            f'( cd "{slug}" && find . -name diagrams.html ) | sed "s|^\\./||; s|/diagrams.html$||" | '
+            f'while read leaf; do '
+            f'if [ -n "$leaf" ] && [ -d "{stage}/$leaf" ]; then rm -rf "{stage}/$leaf"; fi; done; '
+            f'cp -rf "{stage}"/. "{slug}"/; '
+            f'else mkdir -p "{slug}" && cp -rf "{stage}"/. "{slug}"/; fi && '
+            f'rm -rf "{stage}" "{remote_zip}"'
+        )
+    else:
+        # Mode remplacement : archivage daté de l'ancien dossier + décompression.
+        remote_script = (
+            f'cd "{path}" && '
+            f'if [ -d "{slug}" ]; then mkdir -p versions && '
+            f'mv "{slug}" "versions/{slug}_$(date +%Y%m%d_%H%M%S)"; fi && '
+            f'mkdir -p "{slug}" && '
+            f'LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 unzip -o "{remote_zip}" -d "{slug}" && '
+            f'rm -f "{remote_zip}"'
+        )
     _run_remote(ssh + [target, remote_script], timeout=300)
     return f"{config['url_base']}/{slug}"
