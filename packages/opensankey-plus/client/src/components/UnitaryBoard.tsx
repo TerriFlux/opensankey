@@ -57,9 +57,14 @@ const stripGeometryFromDrawingAreaJSON = (json: Record<string, unknown>) => {
  * « vue unitaire » (createUnitaryView) et au flux « sankey unitaire en modal »
  * (createUnitarySankeyDetached).
  */
+/** Mode d'affichage des valeurs de flux sur le board unitaire (cf. sélecteur du modal). */
+export type UnitaryValueMode = 'percent' | 'value' | 'normalized'
+
 const buildUnitaryDrawingArea = (
   app_data: Class_ApplicationDataOSP,
-  node_ref?: Class_NodeElement
+  node_ref?: Class_NodeElement,
+  value_mode: UnitaryValueMode = 'percent',
+  normalize_link_id?: string | null
 ): Class_DrawingAreaOSP => {
   // If no base sankey is given, we take the currently active sankey
   const base_drawing_area = app_data.drawing_area
@@ -246,6 +251,27 @@ const buildUnitaryDrawingArea = (
   // repart de zéro comme sur un import neuf.
   updateUnitaryStyles(new_drawing_area)
 
+  // Mode d'affichage des valeurs de flux. Par défaut 'percent' : les styles de flux
+  // unitaires portent déjà value_label_unit_type '%ID'/'%OS' (% de la somme E/S du
+  // nœud central). Les autres modes ne font que changer ce type d'unité ; le calcul
+  // est ensuite assuré par format_value (cf. types/Utils.tsx).
+  new_drawing_area.unitary_value_mode = value_mode
+  if (value_mode !== 'percent') {
+    const in_style = new_drawing_area.sankey.styles_dict['LinkInUnitaryStyle']
+    const out_style = new_drawing_area.sankey.styles_dict['LinkOutUnitaryStyle']
+    if (value_mode === 'value') {
+      // Valeur brute (+ unité si un tag d'unité existe).
+      if (in_style) in_style.value_label_unit_type = 'unit_tag'
+      if (out_style) out_style.value_label_unit_type = 'unit_tag'
+    } else {
+      // Normalisé : ratio vs un flux de référence fixé à 1 (sankey.normalised_link).
+      if (in_style) in_style.value_label_unit_type = 'normalized'
+      if (out_style) out_style.value_label_unit_type = 'normalized'
+      const ref = normalize_link_id ? new_drawing_area.sankey.links_dict[normalize_link_id] : undefined
+      new_drawing_area.sankey.normalised_link = ref ?? undefined
+    }
+  }
+
   return new_drawing_area
 }
 
@@ -311,9 +337,11 @@ export const createUnitaryNewView = (
 export const createUnitarySankeyDetached = (
   app_data: Class_ApplicationDataOSP,
   node_ref: Class_NodeElement,
-  container_selector: string
+  container_selector: string,
+  value_mode: UnitaryValueMode = 'percent',
+  normalize_link_id?: string | null
 ): Class_DrawingAreaOSP => {
-  const new_drawing_area = buildUnitaryDrawingArea(app_data, node_ref)
+  const new_drawing_area = buildUnitaryDrawingArea(app_data, node_ref, value_mode, normalize_link_id)
   new_drawing_area.container_selector = container_selector
   // Lecture seule + pas de grille (la DA détachée est un aperçu, pas une zone d'édition).
   new_drawing_area.grid_visible = false

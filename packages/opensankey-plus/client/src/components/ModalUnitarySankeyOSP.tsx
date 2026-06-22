@@ -2,13 +2,14 @@
 import React, { FC, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Draggable, { DraggableProps } from 'react-draggable'
-import { Box, CloseButton, Text } from '@chakra-ui/react'
+import { Box, Button, ButtonGroup, CloseButton, HStack, Select, Text } from '@chakra-ui/react'
 
 // OpenSankey / OpenSankey+ libs
 import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
+import { Class_LinkElement } from '../deps/OpenSankey/Elements/Link'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { Class_DrawingAreaOSP } from '../types/DrawingAreaOSP'
-import { createUnitarySankeyDetached } from './UnitaryBoard'
+import { createUnitarySankeyDetached, UnitaryValueMode } from './UnitaryBoard'
 
 // react-draggable : typings embarqués optionnels vs @types requis (cf. SankeyPlusViews).
 const DraggableComponent = Draggable as unknown as React.ComponentClass<Partial<DraggableProps>>
@@ -33,6 +34,11 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
   const [open, setOpen] = useState(false)
   // Nœud central courant (sélectionné par clic droit, puis modifiable via le dropdown).
   const [node, setNode] = useState<Class_NodeElement | null>(null)
+  // Mode d'affichage des valeurs de flux : pourcentage (défaut), valeur brute, ou
+  // normalisé (un flux de référence fixé à 1). Reconstruit l'unitaire à chaque changement.
+  const [value_mode, setValueMode] = useState<UnitaryValueMode>('percent')
+  // Flux de référence (id) pour le mode normalisé.
+  const [normalize_link_id, setNormalizeLinkId] = useState<string | null>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const nodeRef = useRef<any>(null)
   const da_ref = useRef<Class_DrawingAreaOSP | null>(null)
@@ -65,7 +71,9 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
     // le composant — et React Refresh peut ensuite rester bloqué en état d'erreur.
     // On garantit que le panneau s'ouvre quoi qu'il arrive ; le détail va en console.
     try {
-      const da = createUnitarySankeyDetached(app_data, node, '#' + UNITARY_MODAL_CONTAINER_ID)
+      const da = createUnitarySankeyDetached(
+        app_data, node, '#' + UNITARY_MODAL_CONTAINER_ID, value_mode, normalize_link_id
+      )
       da_ref.current = da
       // Pare-feu : redessiner le diagramme principal depuis son modèle (intact)
       // après construction de l'unitaire, pour resynchroniser son DOM. Sûr car le
@@ -98,14 +106,33 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
       da_ref.current?.delete()
       da_ref.current = null
     }
-    // node_id : on reconstruit quand le nœud central change.
-  }, [open, node_id])
+    // node_id : on reconstruit quand le nœud central change ; value_mode/normalize_link_id :
+    // quand le mode d'affichage des valeurs change.
+  }, [open, node_id, value_mode, normalize_link_id])
 
   if (!app_data.has_sankey_plus || !open || !node) return <></>
 
   // Liste des nœuds sélectionnables comme centre de l'unitaire (diagramme principal).
   const base_sankey = (app_data.drawing_area as Class_DrawingAreaOSP).sankey
   const selectable_nodes = base_sankey.visible_nodes_list_sorted
+
+  // Flux du nœud central (entrées + sorties), candidats comme flux de référence du
+  // mode normalisé. On lit les ids sur le diagramme de base ; createUnitarySankeyDetached
+  // les résout dans le sankey unitaire (les ids sont préservés par la copie JSON).
+  const central_links = [
+    ...(node.input_links_list as Class_LinkElement[]),
+    ...(node.output_links_list as Class_LinkElement[])
+  ]
+  const link_label = (l: Class_LinkElement) => l.source.name + ' → ' + l.target.name
+
+  // Changement de mode. En passant en « normalisé » sans flux de référence choisi,
+  // on présélectionne le premier flux du nœud central pour afficher quelque chose.
+  const handleModeChange = (mode: UnitaryValueMode) => {
+    if (mode === 'normalized' && !normalize_link_id && central_links.length > 0) {
+      setNormalizeLinkId(central_links[0].id)
+    }
+    setValueMode(mode)
+  }
 
   // Rendu via portal sur document.body : le SVG unitaire NE doit PAS être imbriqué
   // dans #sankey_app, sinon le redraw du diagramme principal
@@ -132,6 +159,47 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
           <CloseButton justifySelf='end' onClick={() => setOpen(false)} />
         </Box>
         <Box layerStyle='menu_draggable_content_layout'>
+          {/* Sélecteur du mode d'affichage des valeurs de flux : pourcentage (défaut),
+              valeur brute, ou normalisé (un flux de référence fixé à 1). En mode
+              normalisé, un dropdown choisit le flux de référence. */}
+          <HStack gap='3' paddingBottom='2' flexWrap='wrap'>
+            <ButtonGroup size='sm' isAttached variant='outline'>
+              <Button
+                colorScheme={value_mode === 'percent' ? 'blue' : 'gray'}
+                variant={value_mode === 'percent' ? 'solid' : 'outline'}
+                onClick={() => handleModeChange('percent')}
+              >
+                {t('unit_value_mode_percent')}
+              </Button>
+              <Button
+                colorScheme={value_mode === 'value' ? 'blue' : 'gray'}
+                variant={value_mode === 'value' ? 'solid' : 'outline'}
+                onClick={() => handleModeChange('value')}
+              >
+                {t('unit_value_mode_value')}
+              </Button>
+              <Button
+                colorScheme={value_mode === 'normalized' ? 'blue' : 'gray'}
+                variant={value_mode === 'normalized' ? 'solid' : 'outline'}
+                onClick={() => handleModeChange('normalized')}
+              >
+                {t('unit_value_mode_normalized')}
+              </Button>
+            </ButtonGroup>
+            {value_mode === 'normalized' && (
+              <Select
+                size='sm'
+                maxWidth='20rem'
+                value={normalize_link_id ?? ''}
+                onChange={(e) => setNormalizeLinkId(e.target.value || null)}
+                placeholder={t('unit_value_mode_ref')}
+              >
+                {central_links.map((l) => (
+                  <option key={l.id} value={l.id}>{link_label(l)}</option>
+                ))}
+              </Select>
+            )}
+          </HStack>
           {/* Sélecteur de nœud central À GAUCHE de la zone de dessin (flex row). Le
               SURVOL d'un nœud reconstruit l'unitaire (aperçu immédiat, comme l'ancien
               comportement dans la zone principale) ; le clic le sélectionne aussi. */}
