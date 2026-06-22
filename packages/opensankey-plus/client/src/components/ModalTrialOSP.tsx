@@ -32,6 +32,7 @@ import {
 
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import {
+  canStartTrial,
   getTrialState,
   hasBeenOffered,
   hasExpiredBeenAcknowledged,
@@ -105,6 +106,8 @@ export const ModalTrialWelcomeOSP: FC<TrialComponentProps> = ({ app_data }) => {
 
   useEffect(() => {
     if (app_data.has_real_sankey_plus_licence) return
+    // Enrolment closed (2026-06-22): never offer a new trial.
+    if (!canStartTrial()) return
     if (hasBeenOffered()) return
     setShow(true)
   }, [app_data])
@@ -301,6 +304,11 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
 
   // Trial expired (or trial active but at day 31) — fall back to plain "Unlock" CTA.
   if (hasTrialStarted()) {
+    return iconCTA(t('Menu.get_premium_tooltip'), () => goToCheckout(app_data))
+  }
+
+  // Trial not started yet, enrolment closed (2026-06-22) — no opt-in; show the subscribe CTA instead.
+  if (!canStartTrial()) {
     return iconCTA(t('Menu.get_premium_tooltip'), () => goToCheckout(app_data))
   }
 
