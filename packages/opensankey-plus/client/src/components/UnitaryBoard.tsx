@@ -265,8 +265,14 @@ const buildUnitaryDrawingArea = (
       if (out_style) out_style.value_label_unit_type = 'unit_tag'
     } else {
       // Normalisé : ratio vs un flux de référence fixé à 1 (sankey.normalised_link).
-      if (in_style) in_style.value_label_unit_type = 'normalized'
-      if (out_style) out_style.value_label_unit_type = 'normalized'
+      // Les styles unitaires forcent value_label_custom_digit + nb_digit=0 (entiers),
+      // ce qui arrondirait les ratios (0,5 ; 1,33…) à l'entier. On repasse sur les
+      // chiffres significatifs (toPrecision) pour conserver les décimales.
+      ;[in_style, out_style].forEach(style => {
+        if (!style) return
+        style.value_label_unit_type = 'normalized'
+        style.value_label_custom_digit = false
+      })
       const ref = normalize_link_id ? new_drawing_area.sankey.links_dict[normalize_link_id] : undefined
       new_drawing_area.sankey.normalised_link = ref ?? undefined
     }

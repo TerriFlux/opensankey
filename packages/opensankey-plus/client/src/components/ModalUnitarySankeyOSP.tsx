@@ -169,21 +169,21 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
                 variant={value_mode === 'percent' ? 'solid' : 'outline'}
                 onClick={() => handleModeChange('percent')}
               >
-                {t('unit_value_mode_percent')}
+                {t('view.unit_value_mode_percent')}
               </Button>
               <Button
                 colorScheme={value_mode === 'value' ? 'blue' : 'gray'}
                 variant={value_mode === 'value' ? 'solid' : 'outline'}
                 onClick={() => handleModeChange('value')}
               >
-                {t('unit_value_mode_value')}
+                {t('view.unit_value_mode_value')}
               </Button>
               <Button
                 colorScheme={value_mode === 'normalized' ? 'blue' : 'gray'}
                 variant={value_mode === 'normalized' ? 'solid' : 'outline'}
                 onClick={() => handleModeChange('normalized')}
               >
-                {t('unit_value_mode_normalized')}
+                {t('view.unit_value_mode_normalized')}
               </Button>
             </ButtonGroup>
             {value_mode === 'normalized' && (
@@ -192,7 +192,7 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
                 maxWidth='20rem'
                 value={normalize_link_id ?? ''}
                 onChange={(e) => setNormalizeLinkId(e.target.value || null)}
-                placeholder={t('unit_value_mode_ref')}
+                placeholder={t('view.unit_value_mode_ref')}
               >
                 {central_links.map((l) => (
                   <option key={l.id} value={l.id}>{link_label(l)}</option>
