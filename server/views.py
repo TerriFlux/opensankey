@@ -240,6 +240,21 @@ class _PublishError(Exception):
         self.code = code
 
 
+def _read_bool_field(name):
+    """Lit un booléen depuis le form (multipart) ou le corps JSON."""
+    if request.content_type and "multipart/form-data" in request.content_type:
+        return request.form.get(name) in ("1", "true", "True", "on")
+    data = request.get_json(silent=True) or {}
+    return bool(data.get(name))
+
+
+def _build_folder_artifact(project_dir, publish_name, tree):
+    """Publie un dossier en mode étude unique ou arborescence (portfolio)."""
+    if tree:
+        return publish_lib.publish_tree(project_dir, template_folder, publish_name=publish_name)
+    return publish_lib.publish_folder(project_dir, template_folder, publish_name=publish_name)
+
+
 def _resolve_publish_folder():
     """Détermine le dossier source à publier selon la requête :
     - multipart avec fichiers (upload navigateur) -> reconstruction temp ;
@@ -297,8 +312,9 @@ def publish_folder_route():
         project_dir, publish_name = _resolve_publish_folder()
     except _PublishError as e:
         return jsonify({"error": str(e)}), e.code
+    tree = _read_bool_field("tree")
     try:
-        artifact = publish_lib.publish_folder(project_dir, template_folder, publish_name=publish_name)
+        artifact = _build_folder_artifact(project_dir, publish_name, tree)
         zip_path = publish_lib.zip_artifact(artifact, publish_lib.sanitize_filename(publish_name))
     except Exception as e:
         traceback.print_exc()
@@ -393,9 +409,9 @@ def publish_deploy_route():
             artifact = publish_lib.publish_current_study(diagram, template_folder, options=options)
             publish_name = options.get("publish_name") or "sankey"
         else:
-            # Dossier client (upload) ou dossier serveur (JSON).
+            # Dossier client (upload) ou dossier serveur (JSON), étude unique ou arborescence.
             project_dir, publish_name = _resolve_publish_folder()
-            artifact = publish_lib.publish_folder(project_dir, template_folder, publish_name=publish_name)
+            artifact = _build_folder_artifact(project_dir, publish_name, _read_bool_field("tree"))
         url = publish_lib.deploy_artifact_to_server(artifact, publish_name, cfg, force=force)
     except _PublishError as e:
         return jsonify({"error": str(e)}), e.code

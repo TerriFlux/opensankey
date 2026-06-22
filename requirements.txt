@@ -12,5 +12,9 @@ SQLAlchemy==1.4.25
 werkzeug==2.3.7
 itsdangerous
 stripe
+anthropic>=0.69.0
+openpyxl
+markdown
+beautifulsoup4
 flake8>=7.1.0
 pycodestyle>=2.12.0

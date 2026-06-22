@@ -169,6 +169,174 @@ def normalize_files_and_update_html(target_dir):
 
 
 # ---------------------------------------------------------------------------
+# PathMapper + copie README/images/documents (porté de path_mapper.py) — pour
+# la génération d'arborescence portfolio multi-niveaux.
+# ---------------------------------------------------------------------------
+_ACCENT_MAP = {
+    'à': 'a', 'á': 'a', 'â': 'a', 'ã': 'a', 'ä': 'a', 'å': 'a',
+    'è': 'e', 'é': 'e', 'ê': 'e', 'ë': 'e',
+    'ì': 'i', 'í': 'i', 'î': 'i', 'ï': 'i',
+    'ò': 'o', 'ó': 'o', 'ô': 'o', 'õ': 'o', 'ö': 'o',
+    'ù': 'u', 'ú': 'u', 'û': 'u', 'ü': 'u', 'ç': 'c', 'ñ': 'n',
+    'À': 'A', 'Á': 'A', 'Â': 'A', 'Ã': 'A', 'Ä': 'A', 'Å': 'A',
+    'È': 'E', 'É': 'E', 'Ê': 'E', 'Ë': 'E',
+    'Ì': 'I', 'Í': 'I', 'Î': 'I', 'Ï': 'I',
+    'Ò': 'O', 'Ó': 'O', 'Ô': 'O', 'Õ': 'O', 'Ö': 'O',
+    'Ù': 'U', 'Ú': 'U', 'Û': 'U', 'Ü': 'U', 'Ç': 'C', 'Ñ': 'N',
+}
+
+
+class PathMapper:
+    """Mapping bidirectionnel chemins originaux <-> normalisés (sans accents/espaces).
+    "Etude" disparaît (→ ""). Permet de reconstruire les noms d'affichage et le
+    breadcrumb dans les pages de navigation."""
+
+    def __init__(self):
+        self.original_to_normalized = {}
+        self.normalized_to_original = {}
+
+    def normalize_folder_name(self, folder_name):
+        if not folder_name:
+            return ""
+        if folder_name == "Etude":
+            self.original_to_normalized["Etude"] = ""
+            return ""
+        if folder_name in self.original_to_normalized:
+            return self.original_to_normalized[folder_name]
+        normalized = folder_name.replace(' ', '-')
+        for old, new in _ACCENT_MAP.items():
+            normalized = normalized.replace(old, new)
+        normalized = re.sub(r'[^a-zA-Z0-9\-]', '', normalized)
+        normalized = re.sub(r'-+', '-', normalized).strip('-')
+        if normalized:
+            self.original_to_normalized[folder_name] = normalized
+            self.normalized_to_original[normalized] = folder_name
+        return normalized
+
+    def normalize_path(self, original_path):
+        parts = str(original_path).replace('\\', '/').split('/')
+        out = []
+        for part in parts:
+            if not part:
+                continue
+            np = self.normalize_folder_name(part)
+            if np:
+                out.append(np)
+        return '/'.join(out)
+
+    def get_display_name(self, normalized_name):
+        return self.normalized_to_original.get(normalized_name, normalized_name)
+
+    def export_mapping(self):
+        return {
+            'original_to_normalized': dict(self.original_to_normalized),
+            'normalized_to_original': dict(self.normalized_to_original),
+        }
+
+    def save_mapping(self, file_path):
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(self.export_mapping(), f, ensure_ascii=False, indent=2)
+
+
+def copy_root_documentation(mfa_path, public_root):
+    """Copie README.md racine + image_front + dossiers doc vers la racine publique."""
+    mfa_path = Path(mfa_path)
+    public_root = Path(public_root)
+    copied = 0
+    root_readme = mfa_path / 'README.md'
+    if root_readme.exists() and safe_copy(root_readme, public_root / 'README.md'):
+        copied += 1
+    for folder in ('doc', 'docs', 'documentation', 'images', 'img', 'assets',
+                   'static', 'media', 'files', 'guides', 'help', 'manual'):
+        src = mfa_path / folder
+        if src.is_dir():
+            try:
+                dst = public_root / folder
+                if dst.exists():
+                    shutil.rmtree(dst)
+                shutil.copytree(src, dst)
+                copied += 1
+            except Exception as e:
+                logger.warning("Erreur copie dossier doc %s: %s", folder, e)
+    for fname in ('CHANGELOG.md', 'LICENSE', 'LICENSE.md',
+                  'image_front.png', 'image_front.jpg', 'image_front.jpeg'):
+        src = mfa_path / fname
+        if src.is_file() and safe_copy(src, public_root / fname):
+            copied += 1
+    return copied
+
+
+def copy_readme_with_mapping(mfa_data_dir, source_project_path, target_project_path,
+                             target_dir, path_mapper, public_root):
+    """Copie README.md + images + documents (.pdf/.docx/.pptx) à chaque niveau du
+    chemin, vers le dossier normalisé correspondant. Porté de path_mapper.py."""
+    mfa_path = Path(mfa_data_dir)
+    public_root = Path(public_root)
+    source_parts = [p for p in source_project_path.replace('\\', '/').split('/') if p]
+    target_parts = [p for p in target_project_path.replace('\\', '/').split('/') if p]
+
+    copied = copy_root_documentation(mfa_path, public_root)
+
+    # Décalage source/cible (cas base relative)
+    offset = 0
+    if target_parts:
+        for i, sp in enumerate(source_parts):
+            if sp == target_parts[0]:
+                offset = i
+                break
+
+    image_exts = {'.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp'}
+    document_exts = {'.pdf', '.docx', '.pptx'}
+
+    for i in range(1, len(target_parts) + 1):
+        if offset + i > len(source_parts):
+            break
+        partial_target_path = '/'.join(target_parts[:i])
+        partial_normalized = path_mapper.normalize_path(partial_target_path)
+        full_source_path = '/'.join(source_parts[:offset + i])
+        source_dir = mfa_path / full_source_path
+        if not partial_normalized:
+            continue
+        target_norm_dir = public_root / partial_normalized
+
+        readme_src = source_dir / 'README.md'
+        if readme_src.exists():
+            target_norm_dir.mkdir(parents=True, exist_ok=True)
+            if safe_copy(readme_src, target_norm_dir / 'README.md'):
+                copied += 1
+
+        if source_dir.exists():
+            for fp in source_dir.iterdir():
+                if fp.is_file() and fp.suffix.lower() in image_exts:
+                    target_norm_dir.mkdir(parents=True, exist_ok=True)
+                    safe_copy(fp, target_norm_dir / f"{fp.stem}{fp.suffix.lower()}")
+
+        # Documents uniquement à la racine d'un dossier "Etude" + manifest JSON
+        if source_dir.exists() and source_dir.name == 'Etude':
+            manifest = []
+            for fp in source_dir.iterdir():
+                if fp.is_file() and fp.suffix.lower() in document_exts:
+                    target_norm_dir.mkdir(parents=True, exist_ok=True)
+                    safe = sanitize_filename(fp.name)
+                    if safe_copy(fp, target_norm_dir / safe):
+                        manifest.append({'file': safe, 'label': fp.stem})
+            if manifest:
+                mpath = target_norm_dir / 'documents.json'
+                existing = {}
+                if mpath.exists():
+                    try:
+                        with open(mpath, encoding='utf-8') as f:
+                            existing = {it['file']: it for it in json.load(f)}
+                    except Exception:
+                        existing = {}
+                for it in manifest:
+                    existing[it['file']] = it
+                with open(mpath, 'w', encoding='utf-8') as f:
+                    json.dump(list(existing.values()), f, ensure_ascii=False, indent=2)
+    return copied
+
+
+# ---------------------------------------------------------------------------
 # Réécriture HTML pour compression + chargeur gz (porté de html_json_replacer.py)
 # ---------------------------------------------------------------------------
 def sanitize_js_variable_name(name):
@@ -769,12 +937,17 @@ def _artifacts_base():
     return d
 
 
-def publish_folder(project_dir, build_dir, publish_name=None, artifacts_base=None):
+def publish_folder(project_dir, build_dir, publish_name=None, artifacts_base=None,
+                   final_dir=None, write_servers=True):
     """Publie un dossier source (contenant index.html viewer + data) en artifact
     statique autonome. Renvoie le chemin du dossier artifact créé.
 
-    project_dir : dossier source contenant l'index.html viewer.
-    build_dir   : client/build (assets compilés).
+    project_dir   : dossier source contenant l'index.html viewer.
+    build_dir     : client/build (assets compilés).
+    final_dir     : si fourni, écrit l'artifact dans CE dossier exact (utilisé par
+                    la génération d'arborescence) au lieu de <base>/<publish_name>.
+    write_servers : ajoute les lanceurs locaux (server.bat/...). Désactivé pour les
+                    sous-projets d'une arborescence (lanceurs uniquement à la racine).
     """
     project_dir = Path(project_dir)
     index_html = project_dir / "index.html"
@@ -797,8 +970,11 @@ def publish_folder(project_dir, build_dir, publish_name=None, artifacts_base=Non
         publish_name = project_dir.name
     publish_name = re.sub(r"[^\w\-_.]", "_", publish_name) or "sankey_site"
 
-    base = Path(artifacts_base) if artifacts_base else _artifacts_base()
-    final_dir = base / publish_name
+    if final_dir is not None:
+        final_dir = Path(final_dir)
+    else:
+        base = Path(artifacts_base) if artifacts_base else _artifacts_base()
+        final_dir = base / publish_name
     if final_dir.exists():
         shutil.rmtree(final_dir)
     final_dir.mkdir(parents=True, exist_ok=True)
@@ -815,8 +991,61 @@ def publish_folder(project_dir, build_dir, publish_name=None, artifacts_base=Non
     _update_html_for_compression(final_dir)
     normalize_files_and_update_html(final_dir)
     _compress_json_files(final_dir)
-    _write_local_servers(final_dir)
+    if write_servers:
+        _write_local_servers(final_dir)
     return str(final_dir)
+
+
+def publish_tree(parent_dir, build_dir, publish_name=None, artifacts_base=None,
+                 build_info=None):
+    """Publie une ARBORESCENCE (portfolio) : tous les sous-dossiers contenant un
+    index.html viewer sous parent_dir, avec pages de navigation/README à chaque
+    niveau (remplace gitlab_pipeline + generate_html de MFAData).
+
+    Renvoie le chemin du dossier public généré.
+
+    NB : avec le build React code-splité (publicPath relatif), les assets compilés
+    sont recopiés dans chaque projet (pas de partage racine possible sans rebuild)."""
+    from . import publish_html
+
+    parent_dir = Path(parent_dir)
+    base = Path(artifacts_base) if artifacts_base else _artifacts_base()
+    pub_name = re.sub(r"[^\w\-_.]", "_", publish_name or parent_dir.name) or "portfolio"
+    public_dir = base / pub_name
+    if public_dir.exists():
+        shutil.rmtree(public_dir)
+    public_dir.mkdir(parents=True, exist_ok=True)
+
+    mapper = PathMapper()
+    projects = find_index_folders(str(parent_dir))
+    if (parent_dir / "index.html").exists():
+        projects = ["."] + projects
+    if not projects:
+        raise FileNotFoundError(
+            f"Aucun dossier avec index.html sous {parent_dir}"
+        )
+
+    published = 0
+    for rel in projects:
+        proj_abs = parent_dir if rel == "." else parent_dir / rel
+        norm = "" if rel == "." else mapper.normalize_path(rel)
+        target = public_dir if not norm else public_dir / norm
+        try:
+            publish_folder(proj_abs, build_dir, final_dir=target, write_servers=False)
+            published += 1
+        except Exception as e:
+            logger.warning("Échec publication projet %s: %s", rel, e)
+            continue
+        src_rel = "" if rel == "." else rel
+        copy_readme_with_mapping(str(parent_dir), src_rel, src_rel, target, mapper, public_dir)
+
+    if published == 0:
+        raise RuntimeError("Aucun projet publié dans l'arborescence")
+
+    # Pages de navigation + README (renomme chaque index.html viewer en diagrams.html)
+    publish_html.generate_all_index_pages(str(public_dir), build_info or "portfolio", mapper)
+    _write_local_servers(public_dir)
+    return str(public_dir)
 
 
 def _build_viewer_index(title, data_basename, options):
