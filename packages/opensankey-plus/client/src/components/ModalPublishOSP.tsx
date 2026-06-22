@@ -226,9 +226,15 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
   const [flags, setFlags] = useState<Record<string, boolean>>(defaultFlags())
   const [position_mode, setPositionMode] = useState<'' | Type_PositionMode>('')
   const [logo_file, setLogoFile] = useState<File | null>(null)
-  const [folders, setFolders] = useState<string[]>([])
   const [folders_available, setFoldersAvailable] = useState(false)
   const [selected_folder, setSelectedFolder] = useState('')
+  // Explorateur de l'arbre des dossiers serveur (navigation montée/descente).
+  const [browse_entries, setBrowseEntries] = useState<Array<{
+    name: string; path: string; has_index: boolean; has_children: boolean
+  }>>([])
+  const [browse_parent, setBrowseParent] = useState<string | null>(null)
+  const [browse_has_index, setBrowseHasIndex] = useState(false)
+  const [browse_loaded, setBrowseLoaded] = useState(false)
   const [deploy_available, setDeployAvailable] = useState(false)
   const [deploy_force, setDeployForce] = useState(false)
   const [deploy_update, setDeployUpdate] = useState(false)
@@ -240,6 +246,24 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
 
   // Bind l'ouverture pour que le menu puisse appeler ref.current(true).
   app_data.menu_configuration_osp.ref_show_modal_publish.current = setIsOpen
+
+  // Charge le contenu d'un dossier de l'arbre serveur et en fait la sélection
+  // courante (le nom de publication suit le dernier segment).
+  const loadBrowse = (path: string) => {
+    setSelectedFolder(path)
+    const seg = path.split('/').filter(Boolean)
+    setPublishName(seg.length ? seg[seg.length - 1] : 'portfolio')
+    fetch(window.location.origin + '/api/publish/browse?path=' + encodeURIComponent(path))
+      .then((r) => r.json())
+      .then((d) => {
+        setBrowseLoaded(true)
+        if (d.available === false) { setBrowseEntries([]); return }
+        setBrowseEntries(d.entries || [])
+        setBrowseParent(d.parent ?? null)
+        setBrowseHasIndex(!!d.has_index)
+      })
+      .catch(() => { setBrowseEntries([]); setBrowseLoaded(true) })
+  }
 
   // (Re)initialise à l'ouverture + charge la liste des dossiers serveur.
   useEffect(() => {
@@ -256,17 +280,19 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
     setDeployUpdate(false)
     setTreeMode(false)
     setClientFiles(null)
+    setSelectedFolder('')
+    setBrowseEntries([])
+    setBrowseParent(null)
+    setBrowseHasIndex(false)
+    setBrowseLoaded(false)
     fetch(window.location.origin + '/api/publish/folders')
       .then((r) => r.json())
       .then((data) => {
         setFoldersAvailable(!!data.available)
-        setFolders(data.folders || [])
-        setSelectedFolder((data.folders && data.folders[0]) || '')
         setDeployAvailable(!!data.deploy_available)
       })
       .catch(() => {
         setFoldersAvailable(false)
-        setFolders([])
         setDeployAvailable(false)
       })
   }, [is_open])
@@ -359,7 +385,7 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
 
   const can_run = !running && (
     source === 'current'
-    || (source === 'folder' && !!selected_folder)
+    || (source === 'folder' && browse_loaded && (browse_has_index || tree_mode))
     || (source === 'client' && !!client_files && client_files.length > 0)
   )
 
@@ -435,7 +461,14 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
           <VStack align='stretch' spacing={4}>
             <FormControl>
               <FormLabel>Source</FormLabel>
-              <RadioGroup value={source} onChange={(v) => setSource(v as PublishSource)}>
+              <RadioGroup
+                value={source}
+                onChange={(v) => {
+                  const s = v as PublishSource
+                  setSource(s)
+                  if (s === 'folder' && !browse_loaded) loadBrowse('')
+                }}
+              >
                 <Stack direction='column' spacing={1}>
                   <Radio value='current'>L'étude ouverte</Radio>
                   <Radio value='folder' isDisabled={!folders_available || folders.length === 0}>
@@ -449,12 +482,64 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
 
             {source === 'folder' && (
               <FormControl>
-                <FormLabel>Dossier</FormLabel>
-                <Select value={selected_folder} onChange={(e) => setSelectedFolder(e.target.value)}>
-                  {folders.map((f) => (
-                    <option key={f} value={f}>{f}</option>
+                <FormLabel>Dossier serveur (explorateur)</FormLabel>
+                <HStack mb={2} spacing={1} fontSize='sm' flexWrap='wrap'>
+                  <Link color='blue.600' onClick={() => loadBrowse('')}>🏠 racine</Link>
+                  {selected_folder.split('/').filter(Boolean).map((seg, i, arr) => (
+                    <React.Fragment key={i}>
+                      <Text as='span' color='gray.400'>/</Text>
+                      <Link color='blue.600' onClick={() => loadBrowse(arr.slice(0, i + 1).join('/'))}>
+                        {seg}
+                      </Link>
+                    </React.Fragment>
                   ))}
-                </Select>
+                </HStack>
+                <Box maxH='180px' overflowY='auto' border='1px solid' borderColor='gray.200' borderRadius='md'>
+                  {browse_parent !== null && (
+                    <Box
+                      as='button'
+                      type='button'
+                      width='100%'
+                      textAlign='left'
+                      px={2}
+                      py={1}
+                      fontSize='sm'
+                      _hover={{ bg: 'gray.50' }}
+                      onClick={() => loadBrowse(browse_parent || '')}
+                    >
+                      ⬆ ..
+                    </Box>
+                  )}
+                  {browse_entries.map((e) => (
+                    <Box
+                      as='button'
+                      key={e.path}
+                      type='button'
+                      width='100%'
+                      textAlign='left'
+                      px={2}
+                      py={1}
+                      fontSize='sm'
+                      _hover={{ bg: 'gray.50' }}
+                      onClick={() => loadBrowse(e.path)}
+                    >
+                      📁 {e.name}
+                      {e.has_index && (
+                        <Text as='span' fontSize='2xs' color='green.600'> ● diagramme</Text>
+                      )}
+                      {e.has_children && <Text as='span' fontSize='2xs' color='gray.400'> ▸</Text>}
+                    </Box>
+                  ))}
+                  {browse_entries.length === 0 && (
+                    <Text fontSize='xs' color='gray.500' p={2}>Aucun sous-dossier</Text>
+                  )}
+                </Box>
+                <Text fontSize='xs' color='gray.600' mt={2}>
+                  Sélection : <b>{selected_folder || 'racine'}</b>{' '}
+                  {browse_has_index
+                    ? '(étude — publiable seule ou en arborescence)'
+                    : '(conteneur — cochez « arborescence » pour tout déployer)'}
+                </Text>
               </FormControl>
             )}
 
