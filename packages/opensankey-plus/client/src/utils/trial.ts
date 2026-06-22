@@ -28,6 +28,22 @@ const TRIAL_EXPIRED_ACK_KEY = 'os_plus_trial_expired_ack'
 const TRIAL_DURATION_DAYS = 30
 const MS_PER_DAY = 1000 * 60 * 60 * 24
 
+// --------------------------------------------------------------------------------------------------
+// Kill-switch — new-trial enrolment closed on 2026-06-22.
+// --------------------------------------------------------------------------------------------------
+// We no longer hand out NEW OpenSankey+ trials. Browsers that already started one keep their access
+// until it expires naturally at day 31 (isTrialActive() still reads their localStorage), so no active
+// trial is cut short. Only the *entry points* are closed:
+//   - startTrial() refuses to create a new trial (single chokepoint, UI-independent).
+//   - the welcome modal never auto-shows and the banner offers "subscribe" instead of "start trial".
+// PHASE 2 (after ~2026-07-22, once every 30-day trial started before the cut-off has expired):
+//   remove the trial code entirely — drop isTrialActive() from ApplicationDataOSP, delete this file,
+//   ModalTrialOSP, DevTrialDebugOSP and the server /api/trial/* routes.
+const TRIALS_OPEN_FOR_NEW_USERS = false
+
+/** True while new browsers are still allowed to start a trial. Closed on 2026-06-22. */
+export const canStartTrial = (): boolean => TRIALS_OPEN_FOR_NEW_USERS
+
 export type TrialState = {
   /** Has the welcome offer ever been presented to this browser. */
   is_offered: boolean
@@ -111,6 +127,8 @@ export const markTrialOffered = (): void => {
  * Returns true if the trial was just started, false if it was already running.
  */
 export const startTrial = (): boolean => {
+  // Enrolment closed: never create a new trial, whatever the caller. Existing trials are untouched.
+  if (!TRIALS_OPEN_FOR_NEW_USERS) return false
   if (hasTrialStarted()) return false
   const started_at = Date.now()
   const uuid = generateUUID()
