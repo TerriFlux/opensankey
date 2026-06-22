@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { ChangeEvent, useEffect, useState } from 'react'
+import React, { ChangeEvent, useEffect, useRef, useState } from 'react'
 import { Checkbox, Box, Button, Input, Select, Text, Divider, Alert, AlertIcon } from '@chakra-ui/react'
 import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react'
 import { WarningIcon } from '@chakra-ui/icons'
@@ -496,6 +496,26 @@ export const UniversalFileConverter = ({
   const [input_options_json, set_input_options_json] = useState(getDefaultInputOptions(input_config['json']))
   const [input_options_base, set_input_options_base] = useState(getDefaultOutputOptions(input_config['base']))
   //const [input_options_blob, set_input_options_blob] = useState(getDefaultInputOptions('blob'))
+  // [#188] INPUT_OPTION_KEYS the user toggled by hand in this dialog session.
+  // Two uses: (a) the [SA #162] peek overlay must not clobber a manual toggle,
+  // and (b) only user-overridden autocorrection/propagation options are sent to
+  // the parser — untouched ones are omitted so the parser applies the value
+  // recorded in the file's "Options de réconciliation" sheet (mfa_options
+  // fallback), exactly like run_reconciliation.py. A ref (not state): it is read
+  // in the async peek .then and at POST time and never needs to re-render.
+  const user_touched_input_keys = useRef<Set<string>>(new Set())
+  // User-facing wrapper around set_input_options_base: a manual change records
+  // the affected INPUT_OPTION_KEYS as touched. The peek effect / initialize call
+  // set_input_options_base directly, so they never mark anything touched.
+  const set_input_options_base_user = (opts: Record<string, unknown>) => {
+    set_input_options_base((prev) => {
+      const prev_rec = prev as Record<string, unknown>
+      for (const k of INPUT_OPTION_KEYS) {
+        if (prev_rec[k] !== opts[k]) user_touched_input_keys.current.add(k)
+      }
+      return opts as typeof input_options_base
+    })
+  }
   const [launch_at_opening, setLaunchAtOpening] = useState(false)
   const [show_terminal, set_show_terminal] = useState(true)
   const [config, setConfig] = useState<ConverterConfig>(CONVERTER_CONFIGS['universal'])
@@ -581,7 +601,10 @@ export const UniversalFileConverter = ({
         if (!opts || Object.keys(opts).length === 0) return
         const pick = (keys: readonly string[]): Record<string, unknown> =>
           Object.fromEntries(Object.entries(opts).filter(([k]) => keys.includes(k)))
-        const fi = pick(INPUT_OPTION_KEYS)
+        // [#188] Do not overwrite an option the user already toggled by hand.
+        const fi = Object.fromEntries(
+          Object.entries(pick(INPUT_OPTION_KEYS)).filter(([k]) => !user_touched_input_keys.current.has(k))
+        )
         const fs = pick(SOLVER_OPTION_KEYS)
         if (Object.keys(fi).length > 0)
           set_input_options_base((prev) => ({ ...prev, ...fi }) as typeof input_options_base)
@@ -737,6 +760,23 @@ export const UniversalFileConverter = ({
     }
   }
 
+  // [#188] Options actually transmitted to the backend load. Every input option
+  // is sent EXCEPT the autocorrection/propagation ones (INPUT_OPTION_KEYS) the
+  // user did not touch: omitting an untouched key lets the parser apply the
+  // value recorded in the file's "Options de réconciliation" sheet (mfa_options
+  // fallback) rather than the dialog default. This aligns the app load path with
+  // run_reconciliation.py and fixes re-opening a reconciled file (#188: spurious
+  // flux propagated across dataTags, and create_new_flux no longer overridable).
+  const getInputOptionsForRequest = (): Record<string, unknown> => {
+    const all = (getCurrentInputOptions() ?? {}) as Record<string, unknown>
+    const out: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(all)) {
+      if ((INPUT_OPTION_KEYS as readonly string[]).includes(k) && !user_touched_input_keys.current.has(k)) continue
+      out[k] = v
+    }
+    return out
+  }
+
   const initialize = (
     config: ConverterConfig,
     file_path: string,
@@ -755,6 +795,9 @@ export const UniversalFileConverter = ({
     setProcessing(false)
     setFailure(false)
     setResult('')
+    // [#188] Fresh dialog opening: clear manual-override tracking so the
+    // workbook's recorded options pre-fill the buckets cleanly.
+    user_touched_input_keys.current = new Set()
     const input_format = getInitialFormat(config.input.format, 'excel')
     set_input_format(input_format)
     const output_format = getInitialFormat(config.output.format, 'json')
@@ -963,7 +1006,7 @@ export const UniversalFileConverter = ({
     form_data.append('output_format', output_format)
     const output_options = getCurrentOutputOptions()
     form_data.append('output_options', JSON.stringify(output_options))
-    const input_options = getCurrentInputOptions()
+    const input_options = getInputOptionsForRequest()
     form_data.append('input_options', JSON.stringify(input_options))
     const fetchData = {
       method: 'POST',
@@ -1024,7 +1067,7 @@ export const UniversalFileConverter = ({
     form_data.append('output_format', output_format)
     const output_options = getCurrentOutputOptions()
     form_data.append('output_options', JSON.stringify(output_options))
-    const input_options = getCurrentInputOptions()
+    const input_options = getInputOptionsForRequest()
     form_data.append('input_options', JSON.stringify(input_options))
     fetch(window.location.origin + url_prefix + '/upload/retrieve_json', {
       method: 'POST',
@@ -1074,7 +1117,7 @@ export const UniversalFileConverter = ({
       form_data.append('solver_options', JSON.stringify(solver_options))
     }
     form_data.append('output_options', JSON.stringify(output_options))
-    const input_options = getCurrentInputOptions() as Record<string, unknown>
+    const input_options = getInputOptionsForRequest()
     // The eight input options (create_new_nodes, create_new_flux,
     // propagate_flux_to_children, propagate_flux_to_parent,
     // autofix_parenthood_mat_balance, autofix_constraint_redundancies,
@@ -1235,7 +1278,7 @@ export const UniversalFileConverter = ({
       options_json={input_options_json as Record<string, unknown>}
       set_options_json={(opts) => set_input_options_json(opts as typeof input_options_json)}
       options_base={input_options_base as Record<string, unknown>}
-      set_options_base={(opts) => set_input_options_base(opts as typeof input_options_base)}
+      set_options_base={(opts) => set_input_options_base_user(opts as Record<string, unknown>)}
       input_config={effective_input_config}
       output_config={effective_output_config}
       show_options={false}
@@ -1351,7 +1394,7 @@ export const UniversalFileConverter = ({
             options_json={input_options_json as Record<string, unknown>}
             set_options_json={(opts) => set_input_options_json(opts as typeof input_options_json)}
             options_base={input_options_base as Record<string, unknown>}
-            set_options_base={(opts) => set_input_options_base(opts as typeof input_options_base)}
+            set_options_base={(opts) => set_input_options_base_user(opts as Record<string, unknown>)}
             input_config={effective_input_config}
             output_config={effective_output_config}
             show_selector={false}
