@@ -231,6 +231,7 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
   const [selected_folder, setSelectedFolder] = useState('')
   const [deploy_available, setDeployAvailable] = useState(false)
   const [deploy_force, setDeployForce] = useState(false)
+  const [deploy_update, setDeployUpdate] = useState(false)
   const [tree_mode, setTreeMode] = useState(false)
   const [deployed_url, setDeployedUrl] = useState('')
   const [client_files, setClientFiles] = useState<FileList | null>(null)
@@ -252,6 +253,7 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
     setSource('current')
     setDeployedUrl('')
     setDeployForce(false)
+    setDeployUpdate(false)
     setTreeMode(false)
     setClientFiles(null)
     fetch(window.location.origin + '/api/publish/folders')
@@ -314,6 +316,7 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
           folder: selected_folder,
           publish_name: publish_name || undefined,
           force: deploy_force,
+          update: deploy_update,
           tree: tree_mode,
         }),
       })
@@ -322,6 +325,7 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
       const form = new FormData()
       if (publish_name) form.append('publish_name', publish_name)
       form.append('force', deploy_force ? '1' : '0')
+      form.append('update', deploy_update ? '1' : '0')
       form.append('tree', tree_mode ? '1' : '0')
       const paths: string[] = []
       Array.from(client_files ?? []).forEach((f) => {
@@ -343,12 +347,13 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
       form.append('options', JSON.stringify(options))
       form.append('logo', logo_file)
       form.append('force', deploy_force ? '1' : '0')
+      form.append('update', deploy_update ? '1' : '0')
       return fetch(url, { method: 'POST', body: form })
     }
     return fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ diagram, options, force: deploy_force }),
+      body: JSON.stringify({ diagram, options, force: deploy_force, update: deploy_update }),
     })
   }
 
@@ -554,16 +559,30 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
             </Text>
 
             {deploy_available && (
-              <Checkbox
-                size='sm'
-                isChecked={deploy_force}
-                onChange={(e) => setDeployForce(e.target.checked)}
-              >
-                Remplacer si le site existe déjà en ligne
-                <Text as='span' fontSize='xs' color='gray.500'>
-                  {' '}(l'ancienne version est archivée dans versions/)
-                </Text>
-              </Checkbox>
+              <>
+                <Checkbox
+                  size='sm'
+                  isChecked={deploy_update}
+                  onChange={(e) => setDeployUpdate(e.target.checked)}
+                >
+                  Mode mise à jour (ajout sans toucher aux études existantes)
+                  <Text as='span' fontSize='xs' color='gray.500'>
+                    {' '}(préserve données + assets des diagrammes en ligne, ajoute les
+                    nouveaux dossiers et rafraîchit la navigation)
+                  </Text>
+                </Checkbox>
+                <Checkbox
+                  size='sm'
+                  isChecked={deploy_force}
+                  isDisabled={deploy_update}
+                  onChange={(e) => setDeployForce(e.target.checked)}
+                >
+                  Remplacer si le site existe déjà en ligne
+                  <Text as='span' fontSize='xs' color='gray.500'>
+                    {' '}(l'ancienne version est archivée dans versions/)
+                  </Text>
+                </Checkbox>
+              </>
             )}
 
             {deployed_url && (
