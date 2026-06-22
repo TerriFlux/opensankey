@@ -2161,6 +2161,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
   // (e.g. d3 extrapolation, missing domain) cannot produce broken anchor math.
   private _safeRawThickness(raw: number): number {
     if (!Number.isFinite(raw) || raw < 0) return 0
+    // Respect the maximum_flux cap: a flow whose value exceeds the cap is DRAWN
+    // clamped at maximum_flux, so node height and anchor offsets must use the
+    // same capped value — otherwise the node grows past the visible flux stack.
+    // The minimum cap is intentionally NOT applied here (see the comment block
+    // above): summing the per-link 2px/minimum_flux floor would inflate nodes
+    // that carry many thin links.
+    if (this.drawing_area.maximum_flux && raw > this.drawing_area.maximum_flux) {
+      return this.drawing_area.maximum_flux
+    }
     return raw
   }
 
