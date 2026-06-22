@@ -471,7 +471,7 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
               >
                 <Stack direction='column' spacing={1}>
                   <Radio value='current'>L'étude ouverte</Radio>
-                  <Radio value='folder' isDisabled={!folders_available || folders.length === 0}>
+                  <Radio value='folder' isDisabled={!folders_available}>
                     Un dossier du serveur
                     {!folders_available && ' (indisponible)'}
                   </Radio>
