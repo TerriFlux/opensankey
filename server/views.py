@@ -311,6 +311,52 @@ def publish_folders():
     })
 
 
+@sankeyapp.route("/api/publish/browse")
+def publish_browse():
+    """Navigation dans l'arbre des dossiers serveur (explorateur). Renvoie les
+    sous-dossiers immédiats de `path` (relatif à la racine MFAData), pour permettre
+    de remonter/descendre et sélectionner n'importe quel dossier — y compris un
+    conteneur sans index.html, pour déployer toute son arborescence."""
+    root = _publish_data_root()
+    if not root or not os.path.isdir(root):
+        return jsonify({"available": False, "entries": []})
+    rel = (request.args.get("path") or "").strip().strip("/\\")
+    cur = _safe_under(root, rel) if rel else os.path.realpath(root)
+    if not cur or not os.path.isdir(cur):
+        return jsonify({"error": "Dossier introuvable"}), 404
+
+    def _listed_subdirs(d):
+        out = []
+        try:
+            for name in os.listdir(d):
+                if name.startswith(".") or name in publish_lib._EXCLUDED_DIRS:
+                    continue
+                if os.path.isdir(os.path.join(d, name)):
+                    out.append(name)
+        except OSError:
+            pass
+        return out
+
+    entries = []
+    for name in sorted(_listed_subdirs(cur), key=lambda s: s.lower()):
+        full = os.path.join(cur, name)
+        child_rel = (rel + "/" + name) if rel else name
+        entries.append({
+            "name": name,
+            "path": child_rel,
+            "has_index": os.path.isfile(os.path.join(full, "index.html")),
+            "has_children": len(_listed_subdirs(full)) > 0,
+        })
+    parent = None if not rel else "/".join(rel.replace("\\", "/").split("/")[:-1])
+    return jsonify({
+        "available": True,
+        "path": rel,
+        "parent": parent,
+        "has_index": os.path.isfile(os.path.join(cur, "index.html")),
+        "entries": entries,
+    })
+
+
 @sankeyapp.route("/api/publish/folder", methods=["POST"])
 def publish_folder_route():
     """Publie un dossier et renvoie le site autonome en zip. Deux modes :
