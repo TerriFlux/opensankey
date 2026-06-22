@@ -112,6 +112,32 @@ const POSITION_MODE_LABELS: Array<{ value: '' | Type_PositionMode, label: string
 const sanitizeZipName = (name: string): string =>
   (name || 'sankey_site').replace(/[^\w\-_.]/g, '_') || 'sankey_site'
 
+// Limite d'upload (alignée sur client_max_body_size nginx = 100 Mo).
+const MAX_UPLOAD_BYTES = 100 * 1024 * 1024
+const JUNK_SEGMENTS = new Set(['node_modules', '.git', '.cache', 'static'])
+
+// Ne garder, pour un dossier local, que les fichiers utiles à la publication :
+// on exclut les assets compilés (static/, ré-injectés côté serveur), les
+// sourcemaps (.map, très lourds) et les dossiers techniques.
+const isPublishableUpload = (rel: string): boolean => {
+  const parts = rel.split('/')
+  if (parts.some((p) => JUNK_SEGMENTS.has(p))) return false
+  if (rel.toLowerCase().endsWith('.map')) return false
+  return true
+}
+
+const relPathOf = (f: File): string =>
+  (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name
+
+const filterClientFiles = (files: FileList | null): { files: File[]; bytes: number } => {
+  const out: File[] = []
+  let bytes = 0
+  Array.from(files ?? []).forEach((f) => {
+    if (isPublishableUpload(relPathOf(f))) { out.push(f); bytes += f.size }
+  })
+  return { files: out, bytes }
+}
+
 // Sélecteur déroulant type filtre Excel (recherche + « Tout sélectionner »
 // tri-state + cases), pilotant un Record<string,boolean>. Même ergonomie que le
 // sélecteur d'autocomplétion (ChecklistDropdown d'OpenSankey), mais générique.
@@ -354,10 +380,9 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
       form.append('update', deploy_update ? '1' : '0')
       form.append('tree', tree_mode ? '1' : '0')
       const paths: string[] = []
-      Array.from(client_files ?? []).forEach((f) => {
+      filterClientFiles(client_files).files.forEach((f) => {
         form.append('files', f)
-        // webkitRelativePath = "<dossier>/<sous-chemin>" (non typé sur File)
-        paths.push((f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name)
+        paths.push(relPathOf(f))
       })
       form.append('paths', JSON.stringify(paths))
       return fetch(url, { method: 'POST', body: form })
@@ -383,10 +408,13 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
     })
   }
 
+  const client_upload = filterClientFiles(client_files)
+  const client_too_big = client_upload.bytes > MAX_UPLOAD_BYTES
+
   const can_run = !running && (
     source === 'current'
     || (source === 'folder' && browse_loaded && (browse_has_index || tree_mode))
-    || (source === 'client' && !!client_files && client_files.length > 0)
+    || (source === 'client' && client_upload.files.length > 0 && !client_too_big)
   )
 
   const handlePublish = () => {
@@ -562,8 +590,17 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
                   }}
                 />
                 {client_files && client_files.length > 0 && (
-                  <Text fontSize='xs' color='gray.500' mt={1}>
-                    {client_files.length} fichier(s) sélectionné(s)
+                  <Text fontSize='xs' color={client_too_big ? 'red.600' : 'gray.500'} mt={1}>
+                    {client_upload.files.length} fichier(s) à envoyer ·{' '}
+                    {(client_upload.bytes / 1048576).toFixed(1)} Mo
+                    {client_files.length > client_upload.files.length &&
+                      ` (${client_files.length - client_upload.files.length} ignoré(s) : static/.map/node_modules)`}
+                  </Text>
+                )}
+                {client_too_big && (
+                  <Text fontSize='xs' color='red.600' mt={1}>
+                    Trop volumineux (limite 100 Mo). Sélectionnez un dossier source plus léger
+                    (sans archives ni gros fichiers), ou déployez-le via « dossier du serveur ».
                   </Text>
                 )}
                 <Text fontSize='xs' color='gray.500' mt={1}>
