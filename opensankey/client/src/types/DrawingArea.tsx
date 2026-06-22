@@ -105,6 +105,13 @@ export class Class_DrawingArea {
   public to_recenter = false
   public is_unitary = false
 
+  /** Mode d'affichage des valeurs de flux sur un board unitaire (is_unitary).
+   * 'percent' = % de la somme entrée/sortie du nœud central (défaut historique),
+   * 'value' = valeur brute, 'normalized' = ratio vs un flux de référence fixé à 1
+   * (sankey.normalised_link). Piloté par le sélecteur de l'en-tête du modal unitaire ;
+   * lu par formatValueWithOption pour ne pas forcer le suffixe '%' hors mode percent. */
+  public unitary_value_mode: 'percent' | 'value' | 'normalized' = 'percent'
+
   /** Sélecteur CSS du conteneur DOM hôte où _initDraw append le SVG #draw_zoom.
    * Vaut '#sankey_app' pour le diagramme principal (zone de dessin de l'app).
    * Une DrawingArea détachée (ex: sankey unitaire rendu dans un modal) pointe
