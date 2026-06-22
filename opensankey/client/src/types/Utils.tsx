@@ -363,13 +363,19 @@ export const formatValueWithOption = (element:Class_BaseShape,value: number | st
   //@ts-expect-error xxx
   const label_values = getNameLabelValues(element, prefix)
   if (
-    element.style.includes(element.sankey.styles_dict['LinkInUnitaryStyle']) || 
+    element.style.includes(element.sankey.styles_dict['LinkInUnitaryStyle']) ||
       element.style.includes(element.sankey.styles_dict['SankeyUnitaryNodeOutputStyle']) ||
       element.style.includes(element.sankey.styles_dict['SankeyUnitaryNodeInputStyle']) ||
       element.style.includes(element.sankey.styles_dict['LinkOutUnitaryStyle'])
   ) {
-    if (value == 100) return ''
-    return value + '%'
+    // Le board unitaire force l'affichage du '%' UNIQUEMENT en mode percent (défaut).
+    // En mode 'value'/'normalized', on laisse retomber sur le formatage normal (la
+    // valeur a déjà été calculée par format_value selon le value_label_unit_type posé
+    // par buildUnitaryDrawingArea : valeur brute ou ratio vs flux de référence).
+    if ((element.sankey.drawing_area?.unitary_value_mode ?? 'percent') === 'percent') {
+      if (value == 100) return ''
+      return value + '%'
+    }
   }
   if (option == '%IS' && value) {
     return value + '%'
@@ -611,7 +617,11 @@ export const format_value = (
     data_value = data_value && stock_level ? data_value / stock_level * 100 : null
     is_percent = true
   } else if (label_values.unit_type == 'normalized') {
-    data_value = data_value! / element.sankey.normalised_link!.value!.valueResult!
+    // Ratio vs le flux de référence (fixé à 1). En mode données il n'y a pas de
+    // valueResult → on retombe sur valueData. Garde-fou si pas de flux réf / réf nulle.
+    const ref = element.sankey.normalised_link?.value
+    const ref_value = ref ? (ref.valueResult ?? ref.valueData) : null
+    data_value = (data_value != null && ref_value) ? data_value / ref_value : null
   }
 
   /*==========================================================================*/
