@@ -243,6 +243,17 @@ export class Class_MenuConfig {
     this._main_zone_listeners.push(l)
     return () => { this._main_zone_listeners = this._main_zone_listeners.filter((x) => x !== l) }
   }
+  /** Notifie les abonnés de la grande zone (barre du haut + MainZoneTabs). Exposé pour
+   *  que des features injectées (ex. l'onglet « Unit. » OS+) puissent re-rendre le bouton. */
+  public notifyMainZone() { this._notifyMainZone() }
+
+  // Onglet « Unit. » (sankey unitaire, feature OS+) affiché à côté de Diagramme/Tableur/Doc.
+  // Renseigné par le modal OS+ (ModalUnitarySankeyOSP) ; reste neutre en OS pur. Le bouton de
+  // la topbar n'apparaît que si `unitary_tab_available`, est surligné selon `unitary_tab_open`,
+  // et `toggleUnitaryTab` ouvre/ferme le modal unitaire. Le modal notifie via notifyMainZone().
+  public unitary_tab_available: boolean = false
+  public unitary_tab_open: boolean = false
+  public toggleUnitaryTab: () => void = () => { /* injecté par OS+ */ }
   /**
    * Largeur (px) réservée à droite par le tableur/doc en mode split (0 sinon). Source unique de
    * vérité : calculée à partir de l'état (booléens + ratio) et de window.innerWidth, donc valable
