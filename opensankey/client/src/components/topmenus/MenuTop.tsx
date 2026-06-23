@@ -1294,7 +1294,12 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
   const { logo } = new_data
   const langToFlag: Record<string, string> = { fr: 'fr', en: 'gb', es: 'es', de: 'de', it: 'it' }
   const [flag, setFlag] = useState(langToFlag[new_data.i18n.language] ?? 'gb')
-  const menutop_grid_template = new_data.is_static ? '100px 30fr auto' : 'minmax(7vw, 100px) auto auto'
+  // En statique, la .TopMenu a 3 ou 4 enfants : logo, (header optionnel), boutons, bloc méta
+  // (info). Avec un header, il faut 4 colonnes sinon le bloc méta déborde sur une 2e ligne
+  // (info mal placé). Sans header (3 enfants), 3 colonnes suffisent.
+  const menutop_grid_template = new_data.is_static
+    ? (new_data.publish_options.header ? '100px 30fr auto auto' : '100px 30fr auto')
+    : 'minmax(7vw, 100px) auto auto'
 
   // Format variable so if it's an list of Element, wrap these element in <React.Fragment/> with key to ensure no warning in console
   const constent_additional_nav_item = <>
