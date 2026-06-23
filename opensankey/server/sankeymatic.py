@@ -330,7 +330,7 @@ def parse_sankeymatic_file(filename: str):
     - True , dict of node, flows & other parameters when file exist
     - False , None when file doesn't exist
     """
-    with open(filename, "r") as f:
+    with open(filename, "r", encoding="utf-8") as f:
         return True, None, parse_sankeymatic_text(f.read())
     return False, "Error at sankeymatic file opening", None
 
