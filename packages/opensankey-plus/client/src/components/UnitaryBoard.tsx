@@ -141,6 +141,15 @@ const buildUnitaryDrawingArea = (
   // tronqué). On le pose APRÈS fromJSON, sinon le chargement le réécrirait depuis le JSON.
   new_drawing_area.size_locked = false
 
+  // DÉVERROUILLER la police pour l'aperçu unitaire. Police VERROUILLÉE (défaut) = taille ÉCRAN
+  // constante quel que soit le zoom (compensation 1/k) : les labels ne rétrécissent pas avec le
+  // board. Sur un conteneur ÉTROIT (ex. panneau docké dans la colonne droite), des labels longs
+  // (« Production biologique », « Prélèvements ») gardent une largeur écran > largeur du panneau →
+  // débordement que AUCUN cadrage ne peut résorber (le fit rapetisse les formes mais pas les labels).
+  // Déverrouillée, la police suit l'échelle : areaAutoFit (avec la borne de largeur, cf. DrawingArea)
+  // fait tenir formes + labels. Posé avant draw() : le setter no-op sur sélections d3 non créées.
+  new_drawing_area.font_size_locked = false
+
   // Supprimer les containers
   new_drawing_area.sankey.containers_list.forEach(cont => {
     new_drawing_area.deleteContainer(cont)

@@ -1,7 +1,6 @@
 // Standard libs
 import React, { ChangeEvent, FC, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import Draggable, { DraggableProps } from 'react-draggable'
 import { Box, Button, ButtonGroup, CloseButton, HStack, Input, Select, Spinner, Text } from '@chakra-ui/react'
 
 // OpenSankey / OpenSankey+ libs
@@ -9,26 +8,32 @@ import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
 import { Class_LinkElement } from '../deps/OpenSankey/Elements/Link'
 import { makeId, Type_JSON } from '../deps/OpenSankey/types/Utils'
 import { decompressGzipDataFixed } from '../deps/OpenSankey/Persistence/UniversalJSONCompression'
+import { mainZoneUnitaryRect } from '../deps/OpenSankey/components/spreadsheet/MainZoneTabs'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { Class_DrawingAreaOSP, DrawingAreaPersistenceOSP } from '../types/DrawingAreaOSP'
 import { createUnitarySankeyDetached, refocusUnitaryDrawingArea, UnitaryValueMode } from './UnitaryBoard'
 
-// react-draggable : typings embarqués optionnels vs @types requis (cf. SankeyPlusViews).
-const DraggableComponent = Draggable as unknown as React.ComponentClass<Partial<DraggableProps>>
-
-// Conteneur DOM (id fixe) de la zone de dessin du modal unitaire singleton.
+// Conteneur DOM (id fixe) de la zone de dessin du panneau unitaire singleton.
 const UNITARY_MODAL_CONTAINER_ID = 'unitary_sankey_app_singleton'
 
 type SourceMode = 'local' | 'excel'
 
 // ===========================================================================
-// Modal « Sankey unitaire » (singleton) — fusion local + Excel
+// Panneau « Sankey unitaire » (singleton) — fusion local + Excel
 // ---------------------------------------------------------------------------
 // Point d'entrée unique des sankeys unitaires (bouton « Unit. » de la bannière +
 // clic droit sur un nœud). Remplace l'ancien mécanisme « vue unitaire » : ici le
-// sankey unitaire est rendu comme un SECOND diagramme indépendant, dans un panneau
-// draggable, EN PLUS du diagramme principal (rendu simultané via
-// DrawingArea.container_selector). Il ne crée PLUS de vue persistante.
+// sankey unitaire est rendu comme un SECOND diagramme indépendant, EN PLUS du
+// diagramme principal (rendu simultané via DrawingArea.container_selector). Il ne
+// crée PLUS de vue persistante.
+//
+// Le panneau est un membre de la « grande zone » (cf. MainZoneTabs OS base, à côté de
+// Diagramme/Tableur/Doc) : son affichage suit menu_configuration.main_zone_show_unitary
+// et il est DOCKÉ dans le bloc réservé de la colonne droite. Le contenu reste porté vers
+// document.body (createPortal) — hors #sankey_app, sinon le redraw du diagramme principal
+// effacerait son SVG (cf. DrawingArea._initDraw : selectAll('#draw_zoom').remove() scopé
+// au container) — mais positionné EXACTEMENT sur mainZoneUnitaryRect (géométrie partagée
+// avec MainZoneTabs, qui réserve/empile l'espace côté OS base).
 //
 // Deux sources :
 //  - Local : le nœud central est choisi dans le diagramme courant (app_data).
@@ -39,7 +44,8 @@ type SourceMode = 'local' | 'excel'
 
 export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> = ({ app_data }) => {
   const { t } = app_data
-  const [open, setOpen] = useState(false)
+  // Affichage du panneau = membre de la grande zone (persisté, piloté par la topbar / le clic droit).
+  const open = app_data.menu_configuration.main_zone_show_unitary
   // Nœud central courant (appartient au sankey de la source active).
   const [node, setNode] = useState<Class_NodeElement | null>(null)
   // Mode d'affichage des valeurs de flux : pourcentage (défaut), valeur brute, ou
@@ -68,8 +74,17 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
   const [, setUpdater] = useState(0)
   const forceUpdate = () => setUpdater(a => a + 1)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const nodeRef = useRef<any>(null)
+  // Re-rendu (donc repositionnement sur mainZoneUnitaryRect) quand la grande zone change (toggle,
+  // ratios, layout doc, tableur…) ou que la fenêtre est redimensionnée. Le panneau étant porté vers
+  // document.body, il ne suit pas naturellement la mise en page de MainZoneTabs : on s'aligne via le
+  // même état (menu_configuration) + window resize.
+  useEffect(() => {
+    const off = app_data.menu_configuration.addMainZoneListener(forceUpdate)
+    window.addEventListener('resize', forceUpdate)
+    return () => { off(); window.removeEventListener('resize', forceUpdate) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const da_ref = useRef<Class_DrawingAreaOSP | null>(null)
   // Nœud central déjà affiché par la DA détachée courante : permet à l'effet de
   // re-focalisation (léger) de ne rien faire quand la construction (lourde) vient
@@ -108,24 +123,21 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
   app_data.menu_configuration_osp.ref_open_unitary_sankey_modal.current = (n: Class_NodeElement | null) => {
     setSourceMode('local')
     if (n) setNode(n)
-    setOpen(true)
+    app_data.menu_configuration.main_zone_show_unitary = true
   }
 
-  // Onglet « Unit. » de la topbar (cf. UnitaryTabButton, OS base) : le toggle ouvre/ferme
-  // ce modal singleton. Assigné à chaque rendu (idempotent), même modal fermé, pour rester
-  // câblé. La disponibilité du bouton et son surlignage sont synchronisés par les effets
-  // ci-dessous (sur has_sankey_plus et open).
-  app_data.menu_configuration.toggleUnitaryTab = () => setOpen(o => !o)
+  // Bouton « Unit. » de la topbar (cf. UnitaryTabButton, OS base) + points d'entrée OS+ (clic droit,
+  // onglet tooltip) : toggle l'affichage du panneau dans la grande zone. Assigné à chaque rendu
+  // (idempotent), même panneau fermé, pour rester câblé. La disponibilité et le surlignage du bouton
+  // suivent désormais has_sankey_plus / main_zone_show_unitary (le setter notifie la grande zone).
+  app_data.menu_configuration.toggleUnitaryTab = () => {
+    app_data.menu_configuration.main_zone_show_unitary = !app_data.menu_configuration.main_zone_show_unitary
+  }
   useEffect(() => {
     app_data.menu_configuration.unitary_tab_available = app_data.has_sankey_plus
     app_data.menu_configuration.notifyMainZone()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [app_data.has_sankey_plus])
-  useEffect(() => {
-    app_data.menu_configuration.unitary_tab_open = open
-    app_data.menu_configuration.notifyMainZone()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
 
   // Hook consommé par l'onglet « Sankey unitaire » du tooltip de nœud (OS) : dessine
   // un sankey unitaire détaché focalisé sur `n` dans le conteneur DOM passé, EN PLUS
@@ -191,14 +203,24 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
       console.error('[unitary] construction du sankey unitaire échouée:', e)
     }
 
-    // Recadrage sur redimensionnement du conteneur (poignée resize CSS).
+    // Recadrage sur redimensionnement du conteneur. Le panneau étant DOCKÉ (taille pilotée par le
+    // flex de la colonne droite), sa taille change : (a) à l'ouverture, une fois la mise en page flex
+    // résolue — le draw() synchrone ci-dessus a pu tomber sur un conteneur de taille nulle, donc fitté
+    // à la fenêtre ; (b) au resize de fenêtre ; (c) au déplacement du séparateur tableur/doc ↔ unitaire.
+    // On redessine à CHAQUE changement de taille non nul (pas de skip du 1er callback : avec le flex la
+    // 1re taille réelle EST ce callback, et la sauter laissait le board fitté à la fenêtre).
     const el = document.getElementById(UNITARY_MODAL_CONTAINER_ID)
     let ro: ResizeObserver | null = null
     let raf = 0
-    let first = true
+    let prev_w = 0
+    let prev_h = 0
     if (el && typeof ResizeObserver !== 'undefined') {
       ro = new ResizeObserver(() => {
-        if (first) { first = false; return } // 1er callback = taille initiale, déjà dessinée
+        const w = el.clientWidth
+        const h = el.clientHeight
+        if (w <= 0 || h <= 0 || (w === prev_w && h === prev_h)) return
+        prev_w = w
+        prev_h = h
         if (raf) cancelAnimationFrame(raf)
         raf = requestAnimationFrame(() => { da_ref.current?.draw() })
       })
@@ -215,6 +237,21 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, value_mode, normalize_link_id, source_mode, selected_data_id])
+
+  // RECADRAGE piloté par la GÉOMÉTRIE du bloc réservé (mainZoneUnitaryRect). Le panneau étant docké,
+  // sa taille change avec la fenêtre, le ratio du séparateur tableur/doc ↔ unitaire, le toggle du
+  // tableur/doc, etc. — tous reflétés dans le rect. On redessine (areaAutoFit refit dans draw()) à
+  // chaque changement de dimensions, via rAF (après la mise en page). Complète le ResizeObserver (qui
+  // ne capte que les variations propres au conteneur) et garantit le refit même quand React repositionne
+  // le panneau sans que le conteneur ne déclenche l'observer au bon moment.
+  const geom_rect = open ? mainZoneUnitaryRect(app_data) : null
+  const geom_key = geom_rect ? Math.round(geom_rect.width) + 'x' + Math.round(geom_rect.height) : ''
+  useEffect(() => {
+    if (!open) return
+    const id = requestAnimationFrame(() => da_ref.current?.draw())
+    return () => cancelAnimationFrame(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, geom_key])
 
   // RE-FOCALISATION (légère) au changement de nœud : re-sélectionne le tag unitaire du
   // nouveau nœud sur la DA déjà construite, sans refaire toJSON/fromJSON. C'est ce qui
@@ -414,51 +451,77 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
     </Button>
   )
 
-  // Rendu via portal sur document.body : le SVG unitaire NE doit PAS être imbriqué
-  // dans #sankey_app, sinon le redraw du diagramme principal supprimerait aussi le SVG
-  // de l'unitaire. Le portal garde le contexte React (thème Chakra, etc.).
+  // Géométrie du bloc réservé dans la colonne droite (partagée avec MainZoneTabs). Null si le panneau
+  // n'est pas censé s'afficher (sécurité : open implique déjà show_unitary).
+  const rect = mainZoneUnitaryRect(app_data)
+  if (!rect) return <></>
+
+  // Rendu via portal sur document.body : le SVG unitaire NE doit PAS être imbriqué dans #sankey_app,
+  // sinon le redraw du diagramme principal supprimerait aussi le SVG de l'unitaire (cf. _initDraw,
+  // selectAll('#draw_zoom').remove() scopé au container). Le portal garde le contexte React (thème
+  // Chakra, etc.). Le panneau est positionné EN FIXE sur `rect` (docké dans la colonne droite).
   return createPortal(
-    <DraggableComponent
-      nodeRef={nodeRef}
-      handle='.title_menu'
-      defaultPosition={{ x: window.innerWidth / 4, y: window.innerHeight / 8 }}
+    <Box
+      position='fixed'
+      top={`${rect.top}px`}
+      left={`${rect.left}px`}
+      width={`${rect.width}px`}
+      height={`${rect.height}px`}
+      zIndex={21}
+      background='white'
+      borderLeft='1px solid #e2e8f0'
+      borderTop='1px solid #e2e8f0'
+      boxShadow='-1px 0 4px rgba(0,0,0,0.06)'
+      display='flex'
+      flexDirection='column'
+      overflow='hidden'
     >
+      {/* En-tête : titre (nœud central) + fermeture (masque le panneau de la grande zone). */}
       <Box
-        ref={nodeRef}
-        layerStyle='menu_draggable_layout'
-        position='fixed'
-        top='0'
-        left='0'
-        zIndex='1500'
+        display='flex'
+        alignItems='center'
+        justifyContent='space-between'
+        gap='0.5rem'
+        padding='0.3rem 0.6rem'
+        borderBottom='1px solid'
+        borderColor='gray.200'
+        flex='0 0 auto'
       >
-        <Box className='title_menu' layerStyle='menu_draggable_title_layout'>
-          <Text justifySelf='start' fontStyle='h1' margin='0'>
-            {t('view.unit')}{node ? ' — ' + node.name : ''}
-          </Text>
-          <CloseButton justifySelf='end' onClick={() => setOpen(false)} />
-        </Box>
-        <Box layerStyle='menu_draggable_content_layout'>
-          {/* Barre de contrôle : source + (import Excel) + mode d'affichage des valeurs. */}
-          <Box
-            marginBottom='3'
-            padding='3'
-            borderRadius='md'
-            border='1px solid'
-            borderColor='gray.200'
-            bg='gray.50'
-            display='grid'
-            gridRowGap='2.5'
-          >
-            {/* Source des données : diagramme courant ou import Excel. */}
-            <HStack gap='3' flexWrap='wrap'>
-              <Text fontSize='sm' fontWeight='600' color='gray.600' minWidth='6rem'>
-                {t('Menu.Transformation.sourceType')}
-              </Text>
-              <ButtonGroup size='sm' spacing='1'>
-                {sourceButton('local', t('view.unit_tab_local'))}
-                {sourceButton('excel', t('view.unit_tab_excel'))}
-              </ButtonGroup>
-            </HStack>
+        <Text fontSize='0.8rem' fontWeight='600' color='gray.700' isTruncated>
+          {t('view.unit')}{node ? ' — ' + node.name : ''}
+        </Text>
+        <CloseButton
+          size='sm'
+          flexShrink={0}
+          onClick={() => { app_data.menu_configuration.main_zone_show_unitary = false }}
+        />
+      </Box>
+      <Box display='flex' flexDirection='column' flex='1 1 0' minHeight={0} padding='0.5rem'>
+        {/* Barre de contrôle : source + (import Excel) + mode d'affichage des valeurs.
+              flex '0 1 auto' + maxHeight + scroll : ne mange pas tout le panneau quand il est court. */}
+        <Box
+          flex='0 1 auto'
+          maxHeight='55%'
+          overflowY='auto'
+          marginBottom='2'
+          padding='2'
+          borderRadius='md'
+          border='1px solid'
+          borderColor='gray.200'
+          bg='gray.50'
+          display='grid'
+          gridRowGap='2.5'
+        >
+          {/* Source des données : diagramme courant ou import Excel. */}
+          <HStack gap='3' flexWrap='wrap'>
+            <Text fontSize='sm' fontWeight='600' color='gray.600' minWidth='6rem'>
+              {t('Menu.Transformation.sourceType')}
+            </Text>
+            <ButtonGroup size='sm' spacing='1'>
+              {sourceButton('local', t('view.unit_tab_local'))}
+              {sourceButton('excel', t('view.unit_tab_excel'))}
+            </ButtonGroup>
+          </HStack>
 
           {/* Import Excel : sélection de fichier + liste des sources chargées. */}
           {source_mode === 'excel' && (
@@ -524,98 +587,96 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
             </Box>
           )}
 
-            {/* Mode d'affichage des valeurs de flux : pourcentage (défaut), valeur brute,
+          {/* Mode d'affichage des valeurs de flux : pourcentage (défaut), valeur brute,
                 ou normalisé (un flux de référence fixé à 1, choisi dans le dropdown). */}
-            <HStack gap='3' flexWrap='wrap'>
-              <Text fontSize='sm' fontWeight='600' color='gray.600' minWidth='6rem'>
-                {t('view.choose_link_ref_sankey_unit')}
-              </Text>
-              <ButtonGroup size='sm' spacing='1'>
-                {modeButton('percent', t('view.unit_value_mode_percent'))}
-                {modeButton('value', t('view.unit_value_mode_value'))}
-                {modeButton('normalized', t('view.unit_value_mode_normalized'))}
-              </ButtonGroup>
-              {value_mode === 'normalized' && (
-                <Select
-                  size='sm'
-                  maxWidth='18rem'
-                  bg='white'
-                  value={normalize_link_id ?? ''}
-                  onChange={(e) => handleRefChange(e.target.value || null)}
-                  placeholder={t('view.unit_value_mode_ref')}
-                >
-                  {central_links.map((l) => (
-                    <option key={l.id} value={l.id}>{link_label(l)}</option>
-                  ))}
-                </Select>
-              )}
-            </HStack>
-          </Box>
+          <HStack gap='3' flexWrap='wrap'>
+            <Text fontSize='sm' fontWeight='600' color='gray.600' minWidth='6rem'>
+              {t('view.choose_link_ref_sankey_unit')}
+            </Text>
+            <ButtonGroup size='sm' spacing='1'>
+              {modeButton('percent', t('view.unit_value_mode_percent'))}
+              {modeButton('value', t('view.unit_value_mode_value'))}
+              {modeButton('normalized', t('view.unit_value_mode_normalized'))}
+            </ButtonGroup>
+            {value_mode === 'normalized' && (
+              <Select
+                size='sm'
+                maxWidth='18rem'
+                bg='white'
+                value={normalize_link_id ?? ''}
+                onChange={(e) => handleRefChange(e.target.value || null)}
+                placeholder={t('view.unit_value_mode_ref')}
+              >
+                {central_links.map((l) => (
+                  <option key={l.id} value={l.id}>{link_label(l)}</option>
+                ))}
+              </Select>
+            )}
+          </HStack>
+        </Box>
 
-          {/* Sélecteur de nœud central À GAUCHE de la zone de dessin (flex row). Le
-              SURVOL d'un nœud reconstruit l'unitaire (aperçu immédiat) ; le clic le
-              sélectionne aussi. */}
-          <Box display='flex' flexDirection='row' alignItems='stretch' gap='2'>
-            <Box
-              minWidth='12rem'
-              maxWidth='16rem'
-              height='52vh'
-              overflowY='auto'
-              borderRight='1px solid var(--chakra-colors-gray-200, #e2e8f0)'
-              paddingRight='1'
-            >
-              {node_groups.filter(g => g.nodes.length > 0).map((g) => (
-                <Box key={g.key} marginBottom='1.5'>
-                  <Text
-                    fontSize='xs'
-                    fontWeight='700'
-                    textTransform='uppercase'
-                    letterSpacing='0.03em'
-                    color='gray.500'
+        {/* Sélecteur de nœud central À GAUCHE de la zone de dessin (flex row, remplit la
+              hauteur restante). Le SURVOL d'un nœud reconstruit l'unitaire (aperçu immédiat) ;
+              le clic le sélectionne aussi. */}
+        <Box display='flex' flexDirection='row' alignItems='stretch' gap='2' flex='1 1 0' minHeight={0}>
+          <Box
+            width='12rem'
+            minWidth='9rem'
+            maxWidth='45%'
+            height='100%'
+            overflowY='auto'
+            borderRight='1px solid var(--chakra-colors-gray-200, #e2e8f0)'
+            paddingRight='1'
+          >
+            {node_groups.filter(g => g.nodes.length > 0).map((g) => (
+              <Box key={g.key} marginBottom='1.5'>
+                <Text
+                  fontSize='xs'
+                  fontWeight='700'
+                  textTransform='uppercase'
+                  letterSpacing='0.03em'
+                  color='gray.500'
+                  paddingX='2'
+                  paddingY='0.5'
+                >
+                  {g.label}
+                </Text>
+                {g.nodes.map((n) => (
+                  <Box
+                    key={n.id}
+                    onMouseEnter={() => hoverNode(n as Class_NodeElement)}
+                    onClick={() => pickNode(n as Class_NodeElement)}
+                    cursor='pointer'
                     paddingX='2'
-                    paddingY='0.5'
+                    paddingY='1'
+                    borderRadius='4px'
+                    whiteSpace='nowrap'
+                    overflow='hidden'
+                    textOverflow='ellipsis'
+                    fontWeight={n.id === node_id ? 'bold' : 'normal'}
+                    background={n.id === node_id ? 'var(--chakra-colors-blue-100, #bee3f8)' : 'transparent'}
+                    _hover={{ background: 'var(--chakra-colors-gray-100, #edf2f7)' }}
                   >
-                    {g.label}
-                  </Text>
-                  {g.nodes.map((n) => (
-                    <Box
-                      key={n.id}
-                      onMouseEnter={() => hoverNode(n as Class_NodeElement)}
-                      onClick={() => pickNode(n as Class_NodeElement)}
-                      cursor='pointer'
-                      paddingX='2'
-                      paddingY='1'
-                      borderRadius='4px'
-                      whiteSpace='nowrap'
-                      overflow='hidden'
-                      textOverflow='ellipsis'
-                      fontWeight={n.id === node_id ? 'bold' : 'normal'}
-                      background={n.id === node_id ? 'var(--chakra-colors-blue-100, #bee3f8)' : 'transparent'}
-                      _hover={{ background: 'var(--chakra-colors-gray-100, #edf2f7)' }}
-                    >
-                      {n.name}
-                    </Box>
-                  ))}
-                </Box>
-              ))}
-            </Box>
-            <div
-              id={UNITARY_MODAL_CONTAINER_ID}
-              style={{
-                position: 'relative',
-                width: '42vw',
-                height: '52vh',
-                minWidth: '20rem',
-                minHeight: '15rem',
-                resize: 'both',
-                overflow: 'hidden',
-                background: 'white'
-              }}
-            />
+                    {n.name}
+                  </Box>
+                ))}
+              </Box>
+            ))}
           </Box>
+          <div
+            id={UNITARY_MODAL_CONTAINER_ID}
+            style={{
+              position: 'relative',
+              flex: '1 1 0',
+              minWidth: 0,
+              minHeight: 0,
+              overflow: 'hidden',
+              background: 'white'
+            }}
+          />
         </Box>
       </Box>
-    </DraggableComponent>,
+    </Box>,
     document.body
   )
 }
