@@ -63,6 +63,7 @@ import {
   faDiagramProject,
   faTable,
   faFileLines,
+  faShareNodes,
   faBan,
   faImage,
   faCircleQuestion
@@ -172,6 +173,29 @@ const main_zone_btn_style = (active: boolean) => ({
   _hover: { bg: 'gray.100', bgColor: 'gray.100', color: 'gray.900' },
   _active: { bg: 'gray.200', bgColor: 'gray.200' },
 })
+
+/**
+ * Bouton « Unit. » (sankey unitaire) de la grande zone, à côté de Diagramme/Tableur/Doc.
+ * La feature est portée par OS+ : le bouton n'apparaît que si OS+ a renseigné
+ * `menu_configuration.unitary_tab_available`. Le clic toggle le modal unitaire (singleton),
+ * et le bouton se surligne tant que le modal est ouvert. Réutilisé en édition
+ * (TopBarStateButtons) et en publish (MenuTopNavBar, derrière l'option `unitary`).
+ */
+export const UnitaryTabButton = ({ new_data }: BaseApplicationDataType) => {
+  const { unitaryTabAvailable, unitaryTabOpen, toggleUnitary } = useMainZone(new_data)
+  if (!unitaryTabAvailable) return <></>
+  return <OSTooltip placement='bottom' label='Sankey unitaire'>
+    <Button
+      aria-label='Unit.'
+      className='topbar_button_main_zone_unitary'
+      onClick={toggleUnitary}
+      {...main_zone_btn_style(unitaryTabOpen)}
+    >
+      <FontAwesomeIcon icon={faShareNodes} style={{ height: '0.95rem', width: '0.95rem' }} />
+      <Box as='span' style={{ fontSize: '0.5rem', lineHeight: 1 }}>Unit.</Box>
+    </Button>
+  </OSTooltip>
+}
 
 export const TopBarStateButtons = ({ new_data }: BaseApplicationDataType) => {
   const { t, icon_library, history } = new_data
@@ -294,6 +318,7 @@ export const TopBarStateButtons = ({ new_data }: BaseApplicationDataType) => {
         <Box as='span' style={{ fontSize: '0.5rem', lineHeight: 1 }}>Doc</Box>
       </Button>
     </OSTooltip>
+    <UnitaryTabButton new_data={new_data} />
   </ButtonGroup>
 }
 
@@ -1360,6 +1385,10 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
           <TopBarStateButtons new_data={new_data} />
           <Divider orientation='vertical' height='1.5rem' borderColor='gray.300' margin='0 0.25rem' />
         </> : <></>}
+        {/* En publish : onglet « Unit. » seul (sans le reste du bloc d'état), activé par
+            l'option de publication `unitary`. Le bouton se masque de lui-même si OS+ absent. */}
+        {new_data.is_static && new_data.publish_options.unitary ?
+          <UnitaryTabButton new_data={new_data} /> : <></>}
         {constent_additional_nav_item}
         <AppInfoPopover new_data={new_data} />
         {/* Language selector kept as the right-most control of the topbar. */}
