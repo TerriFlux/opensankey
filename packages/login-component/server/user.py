@@ -386,16 +386,16 @@ def set_preference():
 
     # Dump user palette
     if "palette" in request.json:
-        with open(os.path.join(path_dir_user, "palette.json"), "w") as file:
+        with open(os.path.join(path_dir_user, "palette.json"), "w", encoding="utf-8") as file:
             json.dump(request.json.get("palette"), file)
 
     # Dump user icon catalog
     if "icon_catalog" in request.json:
-        with open(os.path.join(path_dir_user, "icon.json"), "w") as file:
+        with open(os.path.join(path_dir_user, "icon.json"), "w", encoding="utf-8") as file:
             json.dump(request.json.get("icon_catalog"), file)
 
     # Dump user taggs
-    with open(os.path.join(path_dir_user, "taggs.json"), "w") as file:
+    with open(os.path.join(path_dir_user, "taggs.json"), "w", encoding="utf-8") as file:
         taggs = {}
         if "node_taggs" in request.json:
             taggs["node_taggs"] = request.json.get("node_taggs")
@@ -407,7 +407,7 @@ def set_preference():
         json.dump(taggs, file)
 
     # Dump user style
-    with open(os.path.join(path_dir_user, "style.json"), "w") as file:
+    with open(os.path.join(path_dir_user, "style.json"), "w", encoding="utf-8") as file:
         style = {}
         if "style_node" in request.json:
             style["style_node"] = request.json.get("style_node")
@@ -466,24 +466,24 @@ def get_preference():
 
         # Get user palette if file exist
         if os.path.exists(path_palette):
-            with open(path_palette, "r") as file:
+            with open(path_palette, "r", encoding="utf-8") as file:
                 preference["palette"] = json.load(file)
 
         # Get user icon catalog if file exist
         if os.path.exists(path_icon):
-            with open(path_icon, "r") as file:
+            with open(path_icon, "r", encoding="utf-8") as file:
                 preference["icon_catalog"] = json.load(file)
 
         # Get user taggs if file exist
         if os.path.exists(path_taggs):
-            with open(path_taggs, "r") as file:
+            with open(path_taggs, "r", encoding="utf-8") as file:
                 taggs = json.load(file)
                 for key, value in taggs.items():
                     preference[key] = value
 
         # Get user style if file exist
         if os.path.exists(path_style):
-            with open(path_style, "r") as file:
+            with open(path_style, "r", encoding="utf-8") as file:
                 style = json.load(file)
                 for key, value in style.items():
                     preference[key] = value
