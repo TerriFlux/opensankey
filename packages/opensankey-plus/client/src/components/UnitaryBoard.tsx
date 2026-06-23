@@ -13,7 +13,8 @@ import { Class_DrawingAreaOSP, DrawingAreaPersistenceOSP } from '../types/Drawin
  * charge comme un import neuf : positions de nœuds/liens supprimées (fromJSON
  * retombe sur le défaut 0), `node_pos_is_center` désactivé (sinon x/y serait
  * réinterprété comme un centre persistant), verrous/offsets de position retirés des
- * `local`, et ANCRAGE des liens (verrous de côté + deltas d'accroche) remis à zéro.
+ * `local`, ANCRAGE des liens (verrous de côté + deltas d'accroche) et DROITURE des
+ * flux (must_stay_straight / straight_mode / straight_include_children) remis à zéro.
  * Résultat : computeAutoSankey recalcule TOUTE la disposition à partir de la seule
  * topologie + valeurs, sans corrélation au diagramme source.
  */
@@ -28,6 +29,13 @@ const stripGeometryFromDrawingAreaJSON = (json: Record<string, unknown>) => {
   const LINK_ANCHOR_KEYS = [
     'source_side_locked', 'target_side_locked',
     'source_anchor_delta', 'target_anchor_delta'
+  ]
+  // Droiture des flux (valeurs de forme dans `local`) : marqueur « garder droit »,
+  // mode d'ancrage de droiture et propagation aux enfants. C'est de la géométrie
+  // imposée : laissée en place, elle forcerait computeAutoSankey à garder certains
+  // flux droits → board corrélé au diagramme source. On la retire comme le reste.
+  const LINK_STRAIGHTNESS_LOCAL_KEYS = [
+    'shape_must_stay_straight', 'shape_straight_mode', 'shape_straight_include_children'
   ]
   const nodes = json.nodes as Record<string, Record<string, unknown>> | undefined
   if (nodes) {
@@ -45,7 +53,10 @@ const stripGeometryFromDrawingAreaJSON = (json: Record<string, unknown>) => {
       delete l.y
       LINK_ANCHOR_KEYS.forEach(k => delete l[k])
       const local = l.local as Record<string, unknown> | undefined
-      if (local) POSITION_LOCAL_KEYS.forEach(k => delete local[k])
+      if (local) {
+        POSITION_LOCAL_KEYS.forEach(k => delete local[k])
+        LINK_STRAIGHTNESS_LOCAL_KEYS.forEach(k => delete local[k])
+      }
     })
   }
 }
@@ -64,10 +75,14 @@ const buildUnitaryDrawingArea = (
   app_data: Class_ApplicationDataOSP,
   node_ref?: Class_NodeElement,
   value_mode: UnitaryValueMode = 'percent',
-  normalize_link_id?: string | null
+  normalize_link_id?: string | null,
+  // app_data fournissant le diagramme SOURCE à copier. Vaut app_data par défaut
+  // (source = diagramme courant). Pour un unitaire issu d'un import Excel, on passe
+  // l'app_data temporaire qui porte le sankey importé : le nouveau board est créé dans
+  // app_data (contexte de rendu/thème) mais copié depuis source_app_data.drawing_area.
+  source_app_data: Class_ApplicationDataOSP = app_data
 ): Class_DrawingAreaOSP => {
-  // If no base sankey is given, we take the currently active sankey
-  const base_drawing_area = app_data.drawing_area
+  const base_drawing_area = source_app_data.drawing_area
   base_drawing_area.purgeSelection()
 
   // Create the new sankey
@@ -345,9 +360,12 @@ export const createUnitarySankeyDetached = (
   node_ref: Class_NodeElement,
   container_selector: string,
   value_mode: UnitaryValueMode = 'percent',
-  normalize_link_id?: string | null
+  normalize_link_id?: string | null,
+  // Source du diagramme à copier (cf. buildUnitaryDrawingArea). Défaut = app_data
+  // (diagramme courant) ; pour un import Excel, l'app_data temporaire importé.
+  source_app_data: Class_ApplicationDataOSP = app_data
 ): Class_DrawingAreaOSP => {
-  const new_drawing_area = buildUnitaryDrawingArea(app_data, node_ref, value_mode, normalize_link_id)
+  const new_drawing_area = buildUnitaryDrawingArea(app_data, node_ref, value_mode, normalize_link_id, source_app_data)
   new_drawing_area.container_selector = container_selector
   // Lecture seule + pas de grille (la DA détachée est un aperçu, pas une zone d'édition).
   new_drawing_area.grid_visible = false
