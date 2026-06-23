@@ -1350,8 +1350,13 @@ export class Class_DrawingArea {
           new_k = Math.min(avail_w / bbox.width, avail_h / bbox.height)
         }
       } else {
-        // Diagramme principal : comportement historique inchangé (cadre l'axe dominant).
-        new_k = is_horiz ? k_to_fit_horiz : k_to_fit_vert
+        // Diagramme principal : on cadre l'axe dominant, mais SANS laisser déborder
+        // les labels de l'axe secondaire. k_to_fit_horiz/vert réservent chacun le
+        // débordement des labels (#165) de LEUR axe ; prendre la plus petite des deux
+        // garantit que les labels rentrent sur les deux axes (et donc dans les coins).
+        // Cas courant (pas de débordement sur l'axe secondaire) : min() retombe sur
+        // l'axe dominant → cadrage historique inchangé.
+        new_k = Math.min(k_to_fit_horiz, k_to_fit_vert)
       }
       this._k_fit = new_k
       this._zoom_height = is_horiz ? Math.max(this.height, Math.min(this.height, this.window_fitting_height) / this._k_horiz) : this.height
@@ -1393,12 +1398,12 @@ export class Class_DrawingArea {
         ? this.window_fitting_width / 2 - cnx * new_k
         : center_h
           ? (this.window_fitting_width - bbox.width * new_k) / 2 - bbox.x * new_k
-          : this._fit_margin / 2 + (is_horiz ? label_overflow_left : 0) - this._background_d3_groups_shift_x * new_k
+          : this._fit_margin / 2 + label_overflow_left - this._background_d3_groups_shift_x * new_k
       const py = unitary_center_node
         ? this.window_fitting_height / 2 + this.getNavBarHeight() - cny * new_k
         : center_v
           ? (this.window_fitting_height - bbox.height * new_k) / 2 - bbox.y * new_k + this.getNavBarHeight()
-          : this._fit_margin / 2 + this.getNavBarHeight() + (!is_horiz ? label_overflow_top : 0) - this._background_d3_groups_shift_y * new_k
+          : this._fit_margin / 2 + this.getNavBarHeight() + label_overflow_top - this._background_d3_groups_shift_y * new_k
       this.zoomListener.translateTo(this.d3_selection_zoom_area, 0, 0, [px, py])
       this.drawBackground()
       this.drawGrid()
