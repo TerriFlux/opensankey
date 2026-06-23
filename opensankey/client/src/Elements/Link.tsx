@@ -1328,10 +1328,16 @@ export class Class_LinkElement extends Class_LinkAttribute {
       const node_type = this.sankey.node_taggs_dict['type de noeud']
       const productTag = node_type?.tags_dict['produit']
       const sectorTag = node_type?.tags_dict['secteur']
-      const source_is_product = this.source.hasGivenTag(productTag)
-      const source_is_sector = this.source.hasGivenTag(sectorTag)
-      const source_unitary_tagg = source_is_product ? 'product_unitary' : source_is_sector ? 'sector_unitary' : 'unitary'
-      const target_unitary_tagg = source_unitary_tagg == 'unitary' ? 'unitary' : source_unitary_tagg == 'product_unitary' ? 'sector_unitary' : 'product_unitary'
+      // Le tagg unitaire d'une extrémité dépend de SON propre type (produit/secteur),
+      // pas de l'opposé de la source. L'ancien code supposait une structure bipartite
+      // produit↔secteur : pour un lien produit→produit (ex. Production biologique →
+      // Bois sur pied), il testait la cible dans 'sector_unitary' (groupe inexistant
+      // pour un nœud produit) → undefined → lien masqué. On teste chaque bout dans son
+      // groupe réel (les cas produit→secteur / secteur→produit restent identiques).
+      const unitaryTaggOf = (node: Class_NodeElement) =>
+        node.hasGivenTag(productTag) ? 'product_unitary' : node.hasGivenTag(sectorTag) ? 'sector_unitary' : 'unitary'
+      const source_unitary_tagg = unitaryTaggOf(this.source)
+      const target_unitary_tagg = unitaryTaggOf(this.target)
       const visible = this.source.grouped_taggs_dict[source_unitary_tagg] &&
         this.source.grouped_taggs_dict[source_unitary_tagg][0].is_selected ||
         this.target.grouped_taggs_dict[target_unitary_tagg] &&
