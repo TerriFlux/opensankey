@@ -720,23 +720,28 @@ export class Class_DrawingArea {
   public drawGrid() {
     // Clean if needed
     this.d3_selection_grid?.selectAll('.line').remove()
+    // Mêmes bornes que le fond : canvas en mode papier, union canvas ∪ viewport en
+    // mode libre (la grille remplit toute la fenêtre, comme le fond).
+    const b = this.is_paper_mode
+      ? { x: this._background_d3_groups_shift_x, y: this._background_d3_groups_shift_y, w: this._zoom_width, h: this._zoom_height }
+      : this._freeBgBounds()
     // Draw only if asked OR outside publishing mode
     if (this.grid_visible && this.editable) {
       // Draw horizontal lines
-      const number_of_horizontal_lines = Math.min(200, this._zoom_height / this.grid_size)
+      const number_of_horizontal_lines = Math.min(200, b.h / this.grid_size)
       for (let row = 0; row < number_of_horizontal_lines; row++) {
         this.d3_selection_grid?.append('line')
           .attr('class', 'line line-horiz')
           .attr('id', 'line_horiz_drawing_area_' + String(row))
           .attr('x1', '0')
-          .attr('x2', this._zoom_width)
+          .attr('x2', b.w)
           .attr('y1', row * this.grid_size)
           .attr('y2', row * this.grid_size)
           .style('stroke', this.grid_color)
           .style('stroke-dasharray', 4)
       }
       // Draw vertical lines
-      const number_of_vertical_lines = Math.min(200, this._zoom_width / this.grid_size)
+      const number_of_vertical_lines = Math.min(200, b.w / this.grid_size)
       for (let column = 0; column < number_of_vertical_lines; column++) {
         this.d3_selection_grid?.append('line')
           .attr('class', 'line line-vert')
@@ -744,7 +749,7 @@ export class Class_DrawingArea {
           .attr('x1', column * this.grid_size)
           .attr('x2', column * this.grid_size)
           .attr('y1', 0)
-          .attr('y2', this._zoom_height)
+          .attr('y2', b.h)
           .style('stroke-dasharray', 4)
           .style('stroke', this.grid_color)
       }
@@ -752,7 +757,7 @@ export class Class_DrawingArea {
     }
     this.d3_selection_grid?.attr(
       'transform',
-      'translate(' + this._background_d3_groups_shift_x + ', ' + this._background_d3_groups_shift_y + ')')
+      'translate(' + b.x + ', ' + b.y + ')')
   }
 
   /**
@@ -1931,29 +1936,42 @@ export class Class_DrawingArea {
    *
    * @param {*} drawing_area
    */
+  /**
+   * Bornes (coords monde, dans g_drawing) du fond et de la grille en mode libre.
+   * = UNION du canvas (zoom area) et du VIEWPORT VISIBLE converti en coords monde.
+   * Le viewport (= viewport_border : [fm, navH+fm, viewW, viewH] en écran) garantit
+   * que le fond/grille remplissent toujours toute la fenêtre, quel que soit le pan/zoom
+   * ou le ré-ancrage (#165) — le canvas figé, lui, ne couvre plus la fenêtre après un
+   * ré-ancrage ou quand le contenu est plus petit qu'elle.
+   */
+  private _freeBgBounds(): { x: number, y: number, w: number, h: number } {
+    let x0 = this._background_d3_groups_shift_x
+    let y0 = this._background_d3_groups_shift_y
+    let x1 = x0 + this._zoom_width
+    let y1 = y0 + this._zoom_height
+    const node = this.d3_selection_zoom_area?.node()
+    if (node) {
+      const t = d3.zoomTransform(node)
+      if (t.k) {
+        const fm = this._fit_margin / 2
+        const navH = this.getNavBarHeight()
+        x0 = Math.min(x0, (fm - t.x) / t.k)
+        y0 = Math.min(y0, (navH + fm - t.y) / t.k)
+        x1 = Math.max(x1, (fm + this.window_fitting_width - t.x) / t.k)
+        y1 = Math.max(y1, (navH + fm + this.window_fitting_height - t.y) / t.k)
+      }
+    }
+    return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }
+  }
+
   protected drawBackground() {
     // Clean if needed
     this.d3_selection_bg?.selectAll('.bg').remove()
-    // Bornes du fond. En mode libre (#165, police verrouillée), la bbox de fit est
-    // calculée sur les FORMES seules (labels exclus pour ne pas diverger), donc
-    // _background_d3_groups_shift_* / _zoom_* ne couvrent pas le débordement des
-    // labels. Après le ré-ancrage du pan sur les labels, ceux-ci se retrouvaient
-    // au-dessus/à gauche du fond (bande non peinte). On étend donc le rectangle à
-    // l'UNION du canvas et de la bbox réelle du contenu (labels inclus).
-    let bgX = this._background_d3_groups_shift_x
-    let bgY = this._background_d3_groups_shift_y
-    let bgW = this._zoom_width
-    let bgH = this._zoom_height
-    if (!this.is_paper_mode) {
-      const gbb = this.d3_selection?.node()?.getBBox()
-      if (gbb && (gbb.width > 0 || gbb.height > 0)) {
-        const x0 = Math.min(bgX, gbb.x)
-        const y0 = Math.min(bgY, gbb.y)
-        const x1 = Math.max(bgX + bgW, gbb.x + gbb.width)
-        const y1 = Math.max(bgY + bgH, gbb.y + gbb.height)
-        bgX = x0; bgY = y0; bgW = x1 - x0; bgH = y1 - y0
-      }
-    }
+    // Bornes du fond : en mode papier, le canvas figé (taille papier). En mode libre,
+    // l'union canvas ∪ viewport (cf. _freeBgBounds) pour remplir toute la fenêtre.
+    const b = this.is_paper_mode
+      ? { x: this._background_d3_groups_shift_x, y: this._background_d3_groups_shift_y, w: this._zoom_width, h: this._zoom_height }
+      : this._freeBgBounds()
     // Draw background (fill only — the editable-canvas border is drawn separately
     // on the SVG root via _updateViewportBorder so it stays anchored to the viewport
     // and doesn't slide off-screen when the user pans content).
@@ -1961,11 +1979,11 @@ export class Class_DrawingArea {
       .attr('class', 'bg')
       .attr('id', 'bg_drawing_area')
       .attr('fill', this.color)
-      .attr('width', bgW)
-      .attr('height', bgH)
+      .attr('width', b.w)
+      .attr('height', b.h)
       .attr(
         'transform',
-        'translate(' + bgX + ', ' + bgY + ')')
+        'translate(' + b.x + ', ' + b.y + ')')
     this._updateViewportBorder()
     this.drawCursor()
     this.drawBgImage()
