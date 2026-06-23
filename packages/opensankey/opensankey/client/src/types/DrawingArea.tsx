@@ -1465,6 +1465,10 @@ export class Class_DrawingArea {
         if (this._font_size_locked) {
           this._updateScrollbars()
           this.zoomListener.translateTo(this.d3_selection_zoom_area, 0, 0, [px, py])
+          // Le ré-ancrage ci-dessus change le transform APRÈS le drawBackground/drawGrid
+          // initiaux : on les redessine pour que le fond et la grille suivent le contenu.
+          this.drawBackground()
+          this.drawGrid()
         }
       }
     }
@@ -1930,6 +1934,26 @@ export class Class_DrawingArea {
   protected drawBackground() {
     // Clean if needed
     this.d3_selection_bg?.selectAll('.bg').remove()
+    // Bornes du fond. En mode libre (#165, police verrouillée), la bbox de fit est
+    // calculée sur les FORMES seules (labels exclus pour ne pas diverger), donc
+    // _background_d3_groups_shift_* / _zoom_* ne couvrent pas le débordement des
+    // labels. Après le ré-ancrage du pan sur les labels, ceux-ci se retrouvaient
+    // au-dessus/à gauche du fond (bande non peinte). On étend donc le rectangle à
+    // l'UNION du canvas et de la bbox réelle du contenu (labels inclus).
+    let bgX = this._background_d3_groups_shift_x
+    let bgY = this._background_d3_groups_shift_y
+    let bgW = this._zoom_width
+    let bgH = this._zoom_height
+    if (!this.is_paper_mode) {
+      const gbb = this.d3_selection?.node()?.getBBox()
+      if (gbb && (gbb.width > 0 || gbb.height > 0)) {
+        const x0 = Math.min(bgX, gbb.x)
+        const y0 = Math.min(bgY, gbb.y)
+        const x1 = Math.max(bgX + bgW, gbb.x + gbb.width)
+        const y1 = Math.max(bgY + bgH, gbb.y + gbb.height)
+        bgX = x0; bgY = y0; bgW = x1 - x0; bgH = y1 - y0
+      }
+    }
     // Draw background (fill only — the editable-canvas border is drawn separately
     // on the SVG root via _updateViewportBorder so it stays anchored to the viewport
     // and doesn't slide off-screen when the user pans content).
@@ -1937,11 +1961,11 @@ export class Class_DrawingArea {
       .attr('class', 'bg')
       .attr('id', 'bg_drawing_area')
       .attr('fill', this.color)
-      .attr('width', this._zoom_width)
-      .attr('height', this._zoom_height)
+      .attr('width', bgW)
+      .attr('height', bgH)
       .attr(
         'transform',
-        'translate(' + this._background_d3_groups_shift_x + ', ' + this._background_d3_groups_shift_y + ')')
+        'translate(' + bgX + ', ' + bgY + ')')
     this._updateViewportBorder()
     this.drawCursor()
     this.drawBgImage()
