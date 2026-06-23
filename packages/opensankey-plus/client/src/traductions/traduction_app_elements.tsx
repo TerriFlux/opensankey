@@ -296,6 +296,9 @@ export const resources_app_elements = {
         dis_createFromSelected: 'No node selected, can\'t create an unitary sankey',
         unit_tab_local: 'From local sankey',
         unit_tab_excel: 'From excel file',
+        unit_group_products: 'Market processes',
+        unit_group_sectors: 'Transformation processes',
+        unit_group_other: 'Undifferentiated',
         context_node_unit: 'Create unitary sankey from this node',
         tooltips: {
           keep_master_var: 'Allow to choose variable value of the sankey view to be from the sankey master',
@@ -776,6 +779,9 @@ export const resources_app_elements = {
         dis_createFromSelected: 'Aucun noeud sélectionnés',
         unit_tab_local: 'Depuis sankey local',
         unit_tab_excel: 'Depuis fichier excel',
+        unit_group_products: 'Processus de marché',
+        unit_group_sectors: 'Processus de transformation',
+        unit_group_other: 'Indifférenciés',
         context_node_unit: 'Créer sankey unitaire',
         tooltips: {
           keep_master_var: 'Permet de choisir des variables qui ont pour valeur ceux du sankey maître',
@@ -1275,6 +1281,9 @@ export const resources_app_elements = {
         dis_createFromSelected: 'Ningún nodo seleccionado, no se puede crear un sankey unitario',
         unit_tab_local: 'Desde sankey local',
         unit_tab_excel: 'Desde archivo Excel',
+        unit_group_products: 'Procesos de mercado',
+        unit_group_sectors: 'Procesos de transformación',
+        unit_group_other: 'Indiferenciados',
         context_node_unit: 'Crear sankey unitario desde este nodo',
         tooltips: {
           keep_master_var: 'Permite elegir el valor de la variable de la vista del sankey desde el sankey maestro',
@@ -1769,6 +1778,9 @@ export const resources_app_elements = {
         dis_createFromSelected: 'Kein Knoten ausgewählt, Einheits-Sankey kann nicht erstellt werden',
         unit_tab_local: 'Aus lokalem Sankey',
         unit_tab_excel: 'Aus Excel-Datei',
+        unit_group_products: 'Marktprozesse',
+        unit_group_sectors: 'Transformationsprozesse',
+        unit_group_other: 'Undifferenziert',
         context_node_unit: 'Einheits-Sankey von diesem Knoten erstellen',
         tooltips: {
           keep_master_var: 'Ermöglicht die Auswahl einer Variablen, deren Wert aus dem Master-Sankey stammt',
@@ -2263,6 +2275,9 @@ export const resources_app_elements = {
         dis_createFromSelected: 'Nessun nodo selezionato, impossibile creare un sankey unitario',
         unit_tab_local: 'Dal sankey locale',
         unit_tab_excel: 'Da file Excel',
+        unit_group_products: 'Processi di mercato',
+        unit_group_sectors: 'Processi di trasformazione',
+        unit_group_other: 'Indifferenziati',
         context_node_unit: 'Crea sankey unitario da questo nodo',
         tooltips: {
           keep_master_var: 'Permette di scegliere il valore della variabile della vista dal sankey principale',
