@@ -36,7 +36,6 @@ import {
   getTrialState,
   hasBeenOffered,
   hasExpiredBeenAcknowledged,
-  hasTrialStarted,
   markExpiredAcknowledged,
   markTrialOffered,
   startTrial,
@@ -295,6 +294,9 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
   )
 
   // Trial active — show countdown CTA pointing at the subscription page.
+  // This is the ONLY case where the banner shows: it stays visible until the running
+  // trial ends. New enrolment is closed (2026-06-22), so users who never started — and
+  // users whose trial has expired — get no banner at all.
   if (state.is_active) {
     return iconCTA(
       t('Trial.banner_active', { days: state.days_remaining }),
@@ -302,23 +304,7 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
     )
   }
 
-  // Trial expired (or trial active but at day 31) — fall back to plain "Unlock" CTA.
-  if (hasTrialStarted()) {
-    return iconCTA(t('Menu.get_premium_tooltip'), () => goToCheckout(app_data))
-  }
-
-  // Trial not started yet, enrolment closed (2026-06-22) — no opt-in; show the subscribe CTA instead.
-  if (!canStartTrial()) {
-    return iconCTA(t('Menu.get_premium_tooltip'), () => goToCheckout(app_data))
-  }
-
-  // Trial not started yet — offer the opt-in directly from the banner.
-  const handleStart = () => {
-    startTrial()
-    refreshAfterTrialChange(app_data)
-    bumpBanner()
-  }
-  return iconCTA(t('Trial.banner_start_tooltip'), handleStart)
+  return <></>
 }
 
 // Re-export the legacy name so existing imports keep working.
