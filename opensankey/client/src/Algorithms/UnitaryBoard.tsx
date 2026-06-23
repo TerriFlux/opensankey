@@ -19,6 +19,11 @@ export const updateUnitaryStyles = (drawing_area: Class_DrawingArea) => {
   if (center_nodes.length === 0) return
   drawing_area.bypass_redraws = true
 
+  // Mémoriser le nœud central : areaAutoFit (scopé is_unitary) cale ce nœud au centre
+  // de la fenêtre plutôt que la bbox, pour qu'il reste au même endroit d'un focus à
+  // l'autre (l'étoile est asymétrique → centrer la bbox ferait sauter le central).
+  drawing_area.unitary_center_node_id = center_nodes[0].id
+
   // Le repositionnement de la légende fait partie du layout du board unitaire :
   // on ne le fait QUE quand des nœuds unitaires sont actifs. Le faire avant ce
   // garde écrasait la position de la légende sur tout diagramme normal à chaque
@@ -79,15 +84,18 @@ export const updateUnitaryStyles = (drawing_area: Class_DrawingArea) => {
   const unit_taggs = drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
   if (unit_taggs.length > 0) {
     const selectedTag = unit_taggs[0].tags_list.filter(tag => tag.is_selected)[0]
+    // Échelle par data tag = max de la valeur des nœuds centraux SOUS ce tag (data_value
+    // dépend du tag sélectionné). On garde l'invariant « un seul tag sélectionné » en
+    // (dé)sélectionnant au fil de l'itération — O(T) au lieu de l'ancienne double boucle
+    // O(T²) (qui ré-désélectionnait tous les tags à chaque itération).
+    unit_taggs[0].tags_list.forEach(tag2 => tag2.setUnSelected())
     unit_taggs[0].tags_list.forEach(tag => {
-      unit_taggs[0].tags_list.forEach(tag2 => tag2.setUnSelected())
       tag.setSelected()
       let linksMaxValue = 0
       center_nodes.forEach(n => linksMaxValue = Math.max(linksMaxValue, n.data_value))
-      linksMaxValue += 1
-      tag.scale = linksMaxValue/1.5
+      tag.scale = (linksMaxValue + 1) / 1.5
+      tag.setUnSelected()
     })
-    unit_taggs[0].tags_list.forEach(tag2 => tag2.setUnSelected())
     selectedTag.setSelected()
   } else {
     let max_value = 0
@@ -102,6 +110,14 @@ export const updateUnitaryStyles = (drawing_area: Class_DrawingArea) => {
   drawing_area.sankey.nodes_list
     .forEach(n => {
       n.resetAttributes()
+      // Neutraliser toute représentation de STOCK : un nœud à stock (ex. « Bois sur
+      // pied ») a sa hauteur pilotée par le stock (use_stock_for_height) et/ou affiche
+      // une forme de stock — il sortait alors à une taille différente des autres
+      // centraux dans le board unitaire (où la taille doit être homogène, pilotée par
+      // les flux). Ce sont des champs directs du nœud (ni style, ni remis par
+      // resetAttributes) → on les force ici.
+      n.use_stock_for_height = false
+      n.stock_shape_is_visible = false
       if (n.hasGivenTag(productTag)) {
         n.shape_type = 'capsule'
       } else {
