@@ -182,14 +182,20 @@ const main_zone_btn_style = (active: boolean) => ({
  * (TopBarStateButtons) et en publish (MenuTopNavBar, derrière l'option `unitary`).
  */
 export const UnitaryTabButton = ({ new_data }: BaseApplicationDataType) => {
-  const { unitaryTabAvailable, unitaryTabOpen, toggleUnitary } = useMainZone(new_data)
+  const { unitaryTabAvailable, showUnitary, showDiagram, showSpreadsheet, showDoc, setShowUnitary } = useMainZone(new_data)
   if (!unitaryTabAvailable) return <></>
+  // Bascule en gardant toujours au moins un panneau affiché (diagramme / tableur / doc / unitaire).
+  const toggleUnitary = () => {
+    const next = !showUnitary
+    if (!next && !(showDiagram || showSpreadsheet || showDoc)) return
+    setShowUnitary(next)
+  }
   return <OSTooltip placement='bottom' label='Sankey unitaire'>
     <Button
       aria-label='Unit.'
       className='topbar_button_main_zone_unitary'
       onClick={toggleUnitary}
-      {...main_zone_btn_style(unitaryTabOpen)}
+      {...main_zone_btn_style(showUnitary)}
     >
       <FontAwesomeIcon icon={faShareNodes} style={{ height: '0.95rem', width: '0.95rem' }} />
       <Box as='span' style={{ fontSize: '0.5rem', lineHeight: 1 }}>Unit.</Box>
@@ -200,14 +206,15 @@ export const UnitaryTabButton = ({ new_data }: BaseApplicationDataType) => {
 export const TopBarStateButtons = ({ new_data }: BaseApplicationDataType) => {
   const { t, icon_library, history } = new_data
   const {
-    showDiagram, showSpreadsheet, showDoc,
+    showDiagram, showSpreadsheet, showDoc, showUnitary,
     setShowDiagram, setShowSpreadsheet, setShowDoc
   } = useMainZone(new_data)
-  // Bascule en gardant toujours au moins un panneau affiché (diagramme / tableur / doc).
-  const others = (a: boolean, b: boolean) => a || b
-  const toggleDiagram = () => { const next = !showDiagram; if (!next && !others(showSpreadsheet, showDoc)) return; setShowDiagram(next) }
-  const toggleSpreadsheet = () => { const next = !showSpreadsheet; if (!next && !others(showDiagram, showDoc)) return; setShowSpreadsheet(next) }
-  const toggleDoc = () => { const next = !showDoc; if (!next && !others(showDiagram, showSpreadsheet)) return; setShowDoc(next) }
+  // Bascule en gardant toujours au moins un panneau affiché (diagramme / tableur / doc / unitaire).
+  // L'unitaire compte : on peut donc masquer le diagramme et ne garder que le panneau unitaire.
+  const others = (...flags: boolean[]) => flags.some(Boolean)
+  const toggleDiagram = () => { const next = !showDiagram; if (!next && !others(showSpreadsheet, showDoc, showUnitary)) return; setShowDiagram(next) }
+  const toggleSpreadsheet = () => { const next = !showSpreadsheet; if (!next && !others(showDiagram, showDoc, showUnitary)) return; setShowSpreadsheet(next) }
+  const toggleDoc = () => { const next = !showDoc; if (!next && !others(showDiagram, showSpreadsheet, showUnitary)) return; setShowDoc(next) }
 
   const [save_boolean, setSaveBoolean] = useState(true)
   new_data.menu_configuration.ref_to_save_in_cache_indicator.current = (b: boolean) => {

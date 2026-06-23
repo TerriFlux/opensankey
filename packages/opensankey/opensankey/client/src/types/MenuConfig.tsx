@@ -223,6 +223,13 @@ export class Class_MenuConfig {
   // occupe le reste. Réglée par le séparateur tableur/doc. Vaut pour l'axe horizontal (sheet-left/
   // right) comme vertical (sheet-top/bottom).
   protected _main_zone_doc_sheet_ratio: number = 0.5
+  // Panneau « Sankey unitaire » (feature OS+) : partage la colonne de droite avec le tableur/doc, en
+  // s'empilant DESSOUS (séparateur horizontal). Booléen d'affichage + part VERTICALE de la colonne
+  // droite donnée au groupe tableur/doc (l'unitaire occupe le reste). Le CONTENU du panneau est rendu
+  // par OS+ (porté vers document.body, hors #sankey_app, cf. ModalUnitarySankeyOSP) et positionné sur
+  // le bloc réservé ici via mainZoneUnitaryRect ; OS de base ne fait que réserver/empiler l'espace.
+  protected _main_zone_show_unitary: boolean = false
+  protected _main_zone_unitary_ratio: number = 0.6
   protected _main_zone_listeners: Array<() => void> = []
   protected _notifyMainZone() { this._main_zone_listeners.forEach((l) => l()) }
   public get main_zone_show_diagram() { return this._main_zone_show_diagram }
@@ -239,6 +246,10 @@ export class Class_MenuConfig {
   public set main_zone_split_ratio(v: number) { this._main_zone_split_ratio = v; this._notifyMainZone() }
   public get main_zone_doc_sheet_ratio() { return this._main_zone_doc_sheet_ratio }
   public set main_zone_doc_sheet_ratio(v: number) { this._main_zone_doc_sheet_ratio = v; this._notifyMainZone() }
+  public get main_zone_show_unitary() { return this._main_zone_show_unitary }
+  public set main_zone_show_unitary(v: boolean) { this._main_zone_show_unitary = v; this._notifyMainZone() }
+  public get main_zone_unitary_ratio() { return this._main_zone_unitary_ratio }
+  public set main_zone_unitary_ratio(v: number) { this._main_zone_unitary_ratio = v; this._notifyMainZone() }
   public addMainZoneListener(l: () => void): () => void {
     this._main_zone_listeners.push(l)
     return () => { this._main_zone_listeners = this._main_zone_listeners.filter((x) => x !== l) }
@@ -247,12 +258,12 @@ export class Class_MenuConfig {
    *  que des features injectées (ex. l'onglet « Unit. » OS+) puissent re-rendre le bouton. */
   public notifyMainZone() { this._notifyMainZone() }
 
-  // Onglet « Unit. » (sankey unitaire, feature OS+) affiché à côté de Diagramme/Tableur/Doc.
-  // Renseigné par le modal OS+ (ModalUnitarySankeyOSP) ; reste neutre en OS pur. Le bouton de
-  // la topbar n'apparaît que si `unitary_tab_available`, est surligné selon `unitary_tab_open`,
-  // et `toggleUnitaryTab` ouvre/ferme le modal unitaire. Le modal notifie via notifyMainZone().
+  // Panneau « Unit. » (sankey unitaire, feature OS+) affiché à côté de Diagramme/Tableur/Doc.
+  // `unitary_tab_available` est renseigné par OS+ (ModalUnitarySankeyOSP) ; reste neutre en OS pur.
+  // Le bouton de la topbar n'apparaît que si disponible et son état ouvert/surligné suit désormais
+  // `main_zone_show_unitary` (le panneau est un membre de la grande zone, persisté). `toggleUnitaryTab`
+  // reste exposé pour les points d'entrée OS+ (clic droit / onglet tooltip de nœud).
   public unitary_tab_available: boolean = false
-  public unitary_tab_open: boolean = false
   public toggleUnitaryTab: () => void = () => { /* injecté par OS+ */ }
   /**
    * Largeur (px) réservée à droite par le tableur/doc en mode split (0 sinon). Source unique de
@@ -266,7 +277,8 @@ export class Class_MenuConfig {
     // largeur à droite.
     const docInRightColumn = this._main_zone_show_doc && !this.main_zone_doc_detached &&
       DOC_LAYOUTS_WITH_SHEET.includes(this._main_zone_doc_layout)
-    const rightColumnShown = this._main_zone_show_spreadsheet || docInRightColumn
+    // Le panneau unitaire (OS+) s'empile dans la colonne droite : il la fait exister à lui seul.
+    const rightColumnShown = this._main_zone_show_spreadsheet || docInRightColumn || this._main_zone_show_unitary
     if (!(this._main_zone_show_diagram && rightColumnShown)) return 0
     const MIN_SPREADSHEET_PX = 320
     const MIN_DIAGRAM_PX = 160
@@ -306,7 +318,9 @@ export class Class_MenuConfig {
       doc_layout: this._main_zone_doc_layout,
       doc_bottom_px: this._main_zone_doc_bottom_px,
       split_ratio: this._main_zone_split_ratio,
-      doc_sheet_ratio: this._main_zone_doc_sheet_ratio
+      doc_sheet_ratio: this._main_zone_doc_sheet_ratio,
+      show_unitary: this._main_zone_show_unitary,
+      unitary_ratio: this._main_zone_unitary_ratio
     }
   }
 
@@ -323,6 +337,8 @@ export class Class_MenuConfig {
     this._main_zone_doc_bottom_px = getNumberFromJSON(json, 'doc_bottom_px', this._main_zone_doc_bottom_px)
     this._main_zone_split_ratio = getNumberFromJSON(json, 'split_ratio', this._main_zone_split_ratio)
     this._main_zone_doc_sheet_ratio = getNumberFromJSON(json, 'doc_sheet_ratio', this._main_zone_doc_sheet_ratio)
+    this._main_zone_show_unitary = getBooleanFromJSON(json, 'show_unitary', this._main_zone_show_unitary)
+    this._main_zone_unitary_ratio = getNumberFromJSON(json, 'unitary_ratio', this._main_zone_unitary_ratio)
     this._notifyMainZone()
   }
 
