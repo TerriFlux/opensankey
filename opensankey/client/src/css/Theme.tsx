@@ -1325,18 +1325,20 @@ export const menuStyles = {
       bg: 'transparent',
       bgColor: 'transparent',
       height: '2.25rem',
-      minWidth: '2.75rem',
+      minWidth: '2.4rem',
       padding: '0',
-      marginRight: '0.25rem',
-      marginLeft: '0.25rem',
+      marginRight: '0.1rem',
+      marginLeft: '0.1rem',
       fontSize: '0.62rem',
       lineHeight: '1',
       'svg': { 'height': '1.25rem', 'width': '1.75rem' },
       // Chakra MenuButton wraps content in a span — apply grid there so the
       // inner Box(gridColumn=, gridRow=) place icon top + label/chevron below.
+      // 'auto auto' : la colonne label épouse le texte (boutons resserrés) au
+      // lieu de '1fr' qui étirait le bouton.
       span: {
         display: 'grid',
-        gridTemplateColumns: '1fr auto',
+        gridTemplateColumns: 'auto auto',
         gridTemplateRows: '1.45rem 0.8rem',
         alignItems: 'center',
         justifyItems: 'center',
@@ -2207,8 +2209,8 @@ export const sizes = {
     height: '2.25rem',
     minW: 'unset',
     padding: '0',
-    marginRight: '0.25rem',
-    marginLeft: '0.25rem'
+    marginRight: '0.1rem',
+    marginLeft: '0.1rem'
   }),
   sizeMenuTopButtonSaveCache: defineStyle({
     height: '2rem',
@@ -2314,18 +2316,20 @@ export const tabsStyles = {
       bg: 'transparent',
       bgColor: 'transparent',
       height: '2.25rem',
-      minWidth: '2.75rem',
+      minWidth: '2.4rem',
       padding: '0',
-      marginRight: '0.25rem',
-      marginLeft: '0.25rem',
+      marginRight: '0.1rem',
+      marginLeft: '0.1rem',
       fontSize: '0.62rem',
       lineHeight: '1',
       'svg': { 'height': '1.25rem', 'width': '1.75rem' },
       // Chakra MenuButton wraps content in a span — apply grid there so the
       // inner Box(gridColumn=, gridRow=) place icon top + label/chevron below.
+      // 'auto auto' : la colonne label épouse le texte (boutons resserrés) au
+      // lieu de '1fr' qui étirait le bouton.
       span: {
         display: 'grid',
-        gridTemplateColumns: '1fr auto',
+        gridTemplateColumns: 'auto auto',
         gridTemplateRows: '1.45rem 0.8rem',
         alignItems: 'center',
         justifyItems: 'center',
