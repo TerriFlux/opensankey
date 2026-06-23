@@ -94,7 +94,7 @@ import { createUnitaryNewView } from './UnitaryBoard'
 // Le serveur ne gère qu'UN process à la fois → les Excel du catalogue sont
 // traités séquentiellement (cf. boucle d'import de input_loader_json_catalog).
 // ===========================================================================
-const loadExcelFileAsSankeyJSON = async (
+export const loadExcelFileAsSankeyJSON = async (
   app_data: Class_ApplicationDataOSP,
   file: File
 ): Promise<Type_JSON> => {

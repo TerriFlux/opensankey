@@ -12,11 +12,11 @@ const DraggableComponent = Draggable as unknown as React.ComponentClass<Partial<
 import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
 import { Class_LinkElement } from '../deps/OpenSankey/Elements/Link'
 import { makeId, Type_JSON } from '../deps/OpenSankey/types/Utils'
-import { decompressGzipDataFixed } from '../deps/OpenSankey/Persistence/UniversalJSONCompression'
 import { mainZoneUnitaryRect } from '../deps/OpenSankey/components/spreadsheet/MainZoneTabs'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { Class_DrawingAreaOSP, DrawingAreaPersistenceOSP } from '../types/DrawingAreaOSP'
 import { createUnitarySankeyDetached, refocusUnitaryDrawingArea, UnitaryValueMode } from './UnitaryBoard'
+import { loadExcelFileAsSankeyJSON } from './SankeyPlusViews'
 
 // Conteneur DOM (id fixe) de la zone de dessin du panneau unitaire singleton.
 const UNITARY_MODAL_CONTAINER_ID = 'unitary_sankey_app_singleton'
@@ -243,8 +243,27 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
       da_ref.current = null
       built_for_node.current = undefined
     }
+    // normalize_link_id VOLONTAIREMENT hors deps : il change à CHAQUE nœud (flux de
+    // référence par défaut, cf. effet plus bas) et le remettre ici reconstruisait tout le
+    // diagramme (toJSON/fromJSON) à chaque changement de nœud — par-dessus le refocus léger,
+    // d'où la lenteur. Le mode normalisé est mis à jour par l'effet léger dédié ci-dessous.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, value_mode, normalize_link_id, source_mode, selected_data_id])
+  }, [open, value_mode, source_mode, selected_data_id])
+
+  // MODE NORMALISÉ — MAJ LÉGÈRE du flux de référence sans reconstruction. Seul
+  // sankey.normalised_link dépend de normalize_link_id (les types d'unité des styles sont
+  // posés à la construction selon value_mode). On le met à jour puis on redessine, au lieu
+  // de reconstruire toute la DA. No-op hors mode normalisé.
+  useEffect(() => {
+    if (!open || value_mode !== 'normalized') return
+    const da = da_ref.current
+    if (!da) return
+    da.sankey.normalised_link = normalize_link_id
+      ? da.sankey.links_dict[normalize_link_id]
+      : undefined
+    da.draw()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [normalize_link_id, value_mode])
 
   // RECADRAGE piloté par la GÉOMÉTRIE du bloc réservé (mainZoneUnitaryRect). Le panneau étant docké,
   // sa taille change avec la fenêtre, le ratio du séparateur tableur/doc ↔ unitaire, le toggle du
@@ -314,37 +333,18 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
   }
 
   const processOneFile = async (file: File): Promise<void> => {
-    const root = window.location.origin
     setCurrentFileName(file.name)
-    // 1. Upload
-    const form_data = new FormData()
-    form_data.append('file', file)
-    form_data.append('output_format', 'json')
-    form_data.append('process_label', t('ProcessDialog.open_excel_file'))
-    await fetch(root + '/opensankey/convert/launch', { method: 'POST', body: form_data })
-    // 2. Poll jusqu'à la fin (statut machine renvoyé par le serveur).
-    await new Promise<void>(resolve => {
-      const url_check = root + app_data.url_prefix + 'upload/check_process'
-      const interval = setInterval(() => {
-        fetch(url_check, { method: 'POST', body: '' }).then(r => {
-          if (!r.ok) return
-          r.json().then(data => {
-            if (data.status === 'finished' || data.status === 'failed') {
-              clearInterval(interval)
-              resolve()
-            }
-          })
-        })
-      }, 2000)
-    })
-    // 3. Récupérer le résultat (gzip)
-    const response = await fetch(root + '/opensankey/upload/retrieve_result', { method: 'POST', body: new FormData() })
-    if (response.ok) {
-      const arrayBuffer = await response.arrayBuffer()
-      const decompressed = await decompressGzipDataFixed(arrayBuffer)
-      const jsonData = JSON.parse(decompressed)
+    // Conversion serveur via la séquence robuste partagée (convert/launch +
+    // poll + retrieve_result) : elle envoie les input/output_options par défaut
+    // (sans quoi le parse échoue sur les checks symétriques et output.json n'est
+    // jamais écrit → retrieve_result 404) et rejette proprement sur statut
+    // 'failed' au lieu d'appeler retrieve_result sur un fichier absent.
+    try {
+      const jsonData = await loadExcelFileAsSankeyJSON(app_data, file)
       jsonData['version'] = local_app_data.current.version
       list_data.current[makeId('data_src_')] = { name: file.name, data: jsonData }
+    } catch (e) {
+      console.error('[unitary] import Excel échoué:', e)
     }
   }
 
