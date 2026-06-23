@@ -133,6 +133,23 @@ export class Class_DrawingArea {
    * diagrammes sans collision de SVG. */
   public container_selector = '#sankey_app'
 
+  /** Document HÔTE du conteneur de dessin. Null = document principal (cas normal).
+   * Une DA rendue dans une fenêtre détachée (Document Picture-in-Picture / popup,
+   * cf. PipWindow) pointe ici le `document` de cette fenêtre fille : la résolution
+   * du conteneur (getContainerNode) cible alors le bon document, et tout le SVG est
+   * construit dans la fenêtre fille (d3.append crée les nœuds dans le ownerDocument
+   * du conteneur sélectionné). */
+  public container_owner_document: Document | null = null
+
+  /** Élément DOM hôte de la zone de dessin, résolu dans le bon document
+   * (`container_owner_document` si défini, sinon le document principal). Centralise
+   * la résolution du conteneur pour qu'une DA détachée dans une autre fenêtre s'y
+   * dessine. Peut renvoyer null si le conteneur n'est pas (encore) monté. */
+  protected getContainerNode(): HTMLElement | null {
+    return (this.container_owner_document ?? document)
+      .querySelector(this.container_selector) as HTMLElement | null
+  }
+
   /** True quand la DA n'est pas la zone de dessin principale (rendue dans un
    * modal/panneau détaché). Sert à neutraliser les offsets liés aux menus
    * (navbar/footer) qui n'existent pas autour du conteneur détaché. */
@@ -616,9 +633,11 @@ export class Class_DrawingArea {
     // supprime que le nœud référencé par this.d3_selection_zoom_area ; un orphelin laissé
     // par un autre chemin (double-mount StrictMode, édition tableur → redraw, etc.) lui
     // échappe et se dédoublait à chaque draw. Ce remove centralisé couvre tous les chemins.
-    d3.select(this.container_selector).selectAll('#draw_zoom').remove()
+    // Conteneur résolu dans le bon document (fenêtre fille si DA détachée en PiP).
+    const container_node = this.getContainerNode()
+    d3.select(container_node as HTMLElement).selectAll('#draw_zoom').remove()
     // Add zoom zone where we can scroll to zoom or drag with mouse middle button
-    this.d3_selection_zoom_area = d3.select(this.container_selector)
+    this.d3_selection_zoom_area = d3.select(container_node as HTMLElement)
       .append('svg')
       .attr('id', 'draw_zoom')
       .attr('width', '100%')
@@ -1146,11 +1165,20 @@ export class Class_DrawingArea {
     // écran), les labels peuvent dominer le getBBox et faire diverger les fits
     // successifs en cascade (bbox grandit → k_fit chute → labels encore plus
     // gros). On masque temporairement les <text> pour fitter sur les formes
-    // uniquement. Au tout premier autoFit (_k_fit=1, pas encore de
-    // compensation), on garde le comportement historique qui inclut les labels.
+    // uniquement, en réservant leur débordement (px écran) plus bas.
     // En mode déverrouillé (police native), aucune compensation : on inclut
     // toujours les labels comme avant #165 (pas de divergence possible).
-    const skip_text_in_bbox = this._font_size_locked && this._k_fit !== 1
+    //
+    // On EXCLUT donc les labels dès que la police est verrouillée — Y COMPRIS au
+    // tout premier fit (_k_fit=1). Inclure les labels à ce moment-là les mesurait
+    // à leur taille NATIVE (compensation 1/k=1) alors qu'ils seront ensuite
+    // affichés à taille écran CONSTANTE — donc bien plus grands dans le repère du
+    // contenu rétréci : la bbox les sous-estimait et ils débordaient à gauche/droite
+    // au (re)chargement en mode cadrage figé (#1240), là où aucun fit live ne vient
+    // ensuite corriger. SAUF le board unitaire, qui se cale volontairement à
+    // _k_fit=1 avec labels INCLUS pour rester cohérent d'un nœud à l'autre (cf.
+    // draw()) ; on garde donc pour lui le comportement historique.
+    const skip_text_in_bbox = this._font_size_locked && (this._k_fit !== 1 || !this.is_unitary)
     // Débordement des labels exclus de la bbox de fit (en px ÉCRAN), réservé plus
     // bas pour que les labels en bord de diagramme ne touchent pas la bordure.
     let label_overflow_left = 0
@@ -3053,7 +3081,7 @@ export class Class_DrawingArea {
   public get window_fitting_height(): number {
     // DA détachée : on cadre dans le conteneur hôte (modal), pas la fenêtre.
     if (this.is_detached) {
-      const h = (document.querySelector(this.container_selector) as HTMLElement | null)?.clientHeight ?? 0
+      const h = this.getContainerNode()?.clientHeight ?? 0
       if (h > 0) return h - this._fit_margin
     }
     return window.innerHeight - this._fit_margin - this.getNavBarHeight() - this.getBottomBarHeight() - this.main_zone_bottom_reserved
@@ -3076,7 +3104,7 @@ export class Class_DrawingArea {
   public get window_fitting_width(): number {
     // DA détachée : on cadre dans le conteneur hôte (modal), pas la fenêtre.
     if (this.is_detached) {
-      const w = (document.querySelector(this.container_selector) as HTMLElement | null)?.clientWidth ?? 0
+      const w = this.getContainerNode()?.clientWidth ?? 0
       if (w > 0) return w - this._fit_margin
     }
     return window.innerWidth - this._fit_margin - this.main_zone_right_reserved
