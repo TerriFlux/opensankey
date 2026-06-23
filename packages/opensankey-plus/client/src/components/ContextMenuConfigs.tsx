@@ -147,16 +147,7 @@ new_structure[0].children!.push({
     { type: 'nodeProperty', property: 'is_parent', operator: '==', value: true }
   ]
 })
-new_structure[5].children!.push({
-  type: 'button',
-  actionName: 'createUnitarySankey'
-})
-
 const new_static_structure = [...STATIC_NODE_MENU_CONFIG.structure]
-new_static_structure.push({
-  type: 'button',
-  actionName: 'createUnitarySankey'
-})
 
 export const createNodeMenuConfigPlus = (): MenuConfig => {
   return {
