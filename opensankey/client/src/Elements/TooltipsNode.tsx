@@ -131,6 +131,12 @@ export class NodeTooltip {
       tooltip.classList.add('pinned')
       const pin = tooltip.querySelector('.tooltip-pin') as HTMLElement | null
       if (pin) { pin.classList.add('active'); pin.title = 'Désépingler' }
+      // Taille par défaut explicite à la 1re ouverture de l'onglet unitaire : le
+      // conteneur de dessin est désormais flex (remplit le tooltip), donc la chaîne
+      // flex a besoin d'une hauteur définie sinon elle s'effondre aux tailles mini.
+      // On ne touche pas si l'utilisateur a déjà redimensionné (style inline posé).
+      if (!tooltip.style.width) tooltip.style.width = '40vw'
+      if (!tooltip.style.height) tooltip.style.height = '60vh'
     }
 
     try {
@@ -141,6 +147,13 @@ export class NodeTooltip {
       this._unitaryDrawn = false
       return
     }
+
+    // Autofit fiable à l'ouverture : le 1er dessin (hook ci-dessus) a lieu alors que
+    // l'onglet vient de passer visible et que la taille du tooltip vient d'être posée,
+    // donc le conteneur n'est pas toujours mesuré à sa taille finale → areaAutoFit
+    // cadre sur une taille périmée. On reprogramme un redraw une fois le layout
+    // appliqué (double rAF) pour que l'unitaire rentre dans la taille du tooltip.
+    requestAnimationFrame(() => requestAnimationFrame(() => this._unitaryHandle?.redraw()))
 
     // Recadrage au redimensionnement du tooltip (poignée resize CSS).
     if (typeof ResizeObserver !== 'undefined') {
@@ -419,16 +432,36 @@ export class NodeTooltip {
       .tab-content.active {
         display: block;
       }
-      /* Conteneur du sankey unitaire embarqué : zone de dessin dimensionnée
-         (la DA détachée recadre via areaAutoFit), redimensionnable avec le tooltip. */
+      /* Onglet unitaire : la zone de dessin doit REMPLIR le tooltip pour suivre
+         son redimensionnement (poignée resize CSS). On rend le panneau d'onglet
+         flex-colonne pleine hauteur ; le conteneur de dessin prend tout l'espace. */
+      .tab-content[data-tab-key="unitary"].active {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        box-sizing: border-box;
+      }
+      /* Conteneur du sankey unitaire embarqué : zone de dessin qui remplit le
+         panneau (la DA détachée recadre via areaAutoFit). En suivant la taille du
+         tooltip, son redimensionnement déclenche le ResizeObserver → redraw. */
       .unitary-tooltip-container {
         position: relative;
-        width: 40vw;
-        height: 50vh;
-        min-width: 22rem;
-        min-height: 16rem;
+        flex: 1 1 auto;
+        width: 100%;
+        /* min-width/height à 0 : le conteneur doit pouvoir RÉTRÉCIR avec le tooltip
+           (le diagramme se remet à l'échelle pour rentrer). Un min non nul figeait sa
+           taille quand on réduisait le tooltip → débordement tronqué + ResizeObserver
+           qui ne se redéclenchait plus (taille du conteneur gelée au min). */
+        min-width: 0;
+        min-height: 0;
         background: white;
         overflow: hidden;
+      }
+      /* Aperçu auto-fit : pas de pan/zoom attendu. Les scrollbars internes de la
+         DA (dessinées quand la bbox AVEC labels dépasse le viewport, alors que le
+         fit cadre sur les formes seules) ne sont que du bruit visuel ici. */
+      .unitary-tooltip-container .scrollbar {
+        display: none !important;
       }
     `
   }
