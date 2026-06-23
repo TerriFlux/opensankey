@@ -64,6 +64,7 @@ import {
   faTable,
   faFileLines,
   faBan,
+  faImage,
   faCircleQuestion
 } from '@fortawesome/free-solid-svg-icons'
 import {
@@ -76,6 +77,7 @@ import { Type_JSON } from '../../types/Utils'
 import { clickSaveSVG } from './SankeyExports'
 import { ModalTemplate } from './SankeyTemplates'
 import { ModalExcelTemplate } from './ExcelTemplateModal'
+import { ModalImageImport } from './ImageImportModal'
 import {
   loadUniversalJSON,
 } from '../../Persistence/UniversalJSONCompression'
@@ -138,9 +140,9 @@ export const GoToUserDoc = () => {
  */
 const topbar_state_btn_style = {
   size: 'sm' as const,
-  boxSize: '2rem',
-  minWidth: '2rem',
-  fontSize: '1rem',
+  boxSize: '1.6rem',
+  minWidth: '1.6rem',
+  fontSize: '0.85rem',
   bg: 'transparent',
   bgColor: 'transparent',
   borderColor: 'transparent',
@@ -325,6 +327,8 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
 
   // State for Excel template modal
   const [show_excel_template, set_show_excel_template] = useState(false)
+  // State for image import modal (extraction de structure depuis une image)
+  const [show_image_import, set_show_image_import] = useState(false)
 
   // Liste des tutoriels disponibles dans SankeyData/tutorials, peuplée par le
   // sous-menu « Tutoriels » de l'Aide (endpoint /menus/tutorials, lit index.json).
@@ -475,6 +479,10 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
       >
         {new_data.icon_library.icon_open_sankey_excel}
         {t('Menu.open_excel')}
+      </MenuItem>
+      <MenuItem onClick={() => { set_show_image_import(true) }}>
+        <Box as='span' mr='0.5em'><FontAwesomeIcon icon={faImage} /></Box>
+        {t('Menu.import_image')}
       </MenuItem>
       <MenuItem
         onClick={() => {
@@ -804,6 +812,10 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
           {new_data.icon_library.icon_open_sankey_excel}
           {t('Menu.open_excel')}
         </MenuItem>
+        <MenuItem onClick={() => { set_show_image_import(true) }}>
+          <Box as='span' mr='0.5em'><FontAwesomeIcon icon={faImage} /></Box>
+          {t('Menu.import_image')}
+        </MenuItem>
         <MenuItem onClick={() => {
           if (_load_sankeymatic.current) {
             _load_sankeymatic.current.name = ''
@@ -1019,8 +1031,9 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
           .map((arr, i) => {
             return <Fragment key={'top_grp_' + i}>
               <ButtonGroup
-                marginRight='1rem'
-                marginLeft='1rem'
+                marginRight='0.35rem'
+                marginLeft='0.35rem'
+                spacing='0'
               >
                 {
                   arr.map((k, i) => {
@@ -1052,6 +1065,11 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
       new_data={new_data}
       show={show_excel_template}
       setShow={set_show_excel_template}
+    />
+    <ModalImageImport
+      new_data={new_data}
+      show={show_image_import}
+      setShow={set_show_image_import}
     />
   </>
 }
