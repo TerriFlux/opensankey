@@ -634,10 +634,15 @@ export class Class_DrawingArea {
     // par un autre chemin (double-mount StrictMode, édition tableur → redraw, etc.) lui
     // échappe et se dédoublait à chaque draw. Ce remove centralisé couvre tous les chemins.
     // Conteneur résolu dans le bon document (fenêtre fille si DA détachée en PiP).
+    // Sélection par NŒUD (vs sélecteur string) : d3 type alors le parent à `null` ; on
+    // recaste vers le parent `HTMLElement` attendu par d3_selection_zoom_area (phantom
+    // type sans incidence runtime — la sélection par nœud cible bien le bon document).
     const container_node = this.getContainerNode()
-    d3.select(container_node as HTMLElement).selectAll('#draw_zoom').remove()
+    const container_sel = d3.select(container_node as HTMLElement) as unknown as
+      d3.Selection<HTMLElement, unknown, HTMLElement, unknown>
+    container_sel.selectAll('#draw_zoom').remove()
     // Add zoom zone where we can scroll to zoom or drag with mouse middle button
-    this.d3_selection_zoom_area = d3.select(container_node as HTMLElement)
+    this.d3_selection_zoom_area = container_sel
       .append('svg')
       .attr('id', 'draw_zoom')
       .attr('width', '100%')
@@ -1194,7 +1199,13 @@ export class Class_DrawingArea {
       // plus visible quand le fit collapse à ~1e-4 (grand user_scale).
       const k_live = this.getZoomScale()
       const full_bbox = this.d3_selection_elements_group?.node()?.getBBox()
-      const hidden_texts = this.d3_selection_elements_group?.selectAll<SVGTextElement, unknown>('text')
+      // On masque les labels SVG <text> ET les labels rich-text <foreignObject>
+      // (.element_fo, issue #1232) : les deux vivent dans le repère zoomé avec la
+      // compensation 1/k (police verrouillée), donc les deux dominent le getBBox et
+      // doivent être exclus du fit ET réservés en débordement. Ne masquer que les
+      // <text> laissait les foreignObject dans la bbox (mesurés à taille native,
+      // débordement non réservé) → labels rich-text qui dépassent au chargement.
+      const hidden_texts = this.d3_selection_elements_group?.selectAll<SVGGraphicsElement, unknown>('text, .element_fo')
       hidden_texts?.style('display', 'none')
       bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
       hidden_texts?.style('display', null)
