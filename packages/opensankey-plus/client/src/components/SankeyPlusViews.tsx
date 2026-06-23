@@ -247,7 +247,7 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
   // Data -------------------------------------------------------------------------------
 
   const { t, icon_library, menu_configuration_osp } = app_data
-  const { icon_add_element, icon_remove_element, icon_welcome, icon_attr_view, icon_unit_view, icon_copy, icon_locked } = icon_library
+  const { icon_add_element, icon_remove_element, icon_welcome, icon_attr_view, icon_copy, icon_locked } = icon_library
   const [, setCount] = useState(0)
   const refreshThis = () => {
     setCount(a => a + 1)
@@ -305,8 +305,6 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
   }
   const onDeleteView = () => { app_data.deleteCurrentView() }
   const onOpenAttrTransfer = () => { menu_configuration_osp.ref_to_modal_view_attributes_switcher.current(true) }
-  // Ouvre le modal unitaire fusionné (local + Excel), sans nœud présélectionné.
-  const onOpenUnitary = () => { menu_configuration_osp.ref_open_unitary_sankey_modal.current(null) }
 
   // Catalogue : ouvre le sélecteur de fichiers (JSON/Excel) importés comme vues.
   const onOpenCatalog = () => {
@@ -455,7 +453,6 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
         <MenuDivider />
         {viewMenuItem('catalog', icon_copy, t('view.catalog'), onOpenCatalog, { need_plus: true })}
         {viewMenuItem('attr', icon_attr_view, t('view.keep_master_var'), onOpenAttrTransfer, { need_plus: true, extra_disabled: !in_named_view })}
-        {viewMenuItem('unit', icon_unit_view, t('view.unit'), onOpenUnitary, { need_plus: true })}
       </MenuList>
     </ChakraMenu>
     {can_manage ? input_loader_json_catalog : <></>}

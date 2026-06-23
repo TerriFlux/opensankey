@@ -111,6 +111,22 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
     setOpen(true)
   }
 
+  // Onglet « Unit. » de la topbar (cf. UnitaryTabButton, OS base) : le toggle ouvre/ferme
+  // ce modal singleton. Assigné à chaque rendu (idempotent), même modal fermé, pour rester
+  // câblé. La disponibilité du bouton et son surlignage sont synchronisés par les effets
+  // ci-dessous (sur has_sankey_plus et open).
+  app_data.menu_configuration.toggleUnitaryTab = () => setOpen(o => !o)
+  useEffect(() => {
+    app_data.menu_configuration.unitary_tab_available = app_data.has_sankey_plus
+    app_data.menu_configuration.notifyMainZone()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [app_data.has_sankey_plus])
+  useEffect(() => {
+    app_data.menu_configuration.unitary_tab_open = open
+    app_data.menu_configuration.notifyMainZone()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
+
   // Hook consommé par l'onglet « Sankey unitaire » du tooltip de nœud (OS) : dessine
   // un sankey unitaire détaché focalisé sur `n` dans le conteneur DOM passé, EN PLUS
   // du diagramme principal. Renvoie un handle (redraw au resize + cleanup à la fermeture).

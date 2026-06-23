@@ -81,6 +81,7 @@ const OPTION_GROUPS: Array<{ title: string, options: FlagOpt[] }> = [
       { key: 'fit_toolbar', label: "Barre d'outils — ajustement / verrous / plein écran", def: false },
       { key: 'embedded', label: 'Mode intégré (hauteur 100 %)', def: false },
       { key: 'recenter', label: 'Recentrage automatique à l’ouverture', def: true },
+      { key: 'unitary', label: 'Onglet « Unit. » (sankey unitaire)', def: false },
     ],
   },
   {
