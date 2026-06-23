@@ -11,7 +11,7 @@
 // Labels are intentionally hard-coded in French: this never ships to end users, so it skips i18n.
 // ==================================================================================================
 
-import React, { FC, useRef, useState } from 'react'
+import React, { FC, useEffect, useRef, useState } from 'react'
 import Draggable, { DraggableProps } from 'react-draggable'
 import {
   Badge,
@@ -61,6 +61,13 @@ interface DevTrialDebugProps {
   app_data: Class_ApplicationDataOSP
 }
 
+// The panel no longer has its own toolbar button: it is opened on demand from the drawing-area
+// right-click menu (dev-gated). Module-level listener registry, mirroring devForceOpenTrialModal.
+const _open_listeners: Array<() => void> = []
+export const devOpenTrialDebugPanel = (): void => {
+  _open_listeners.forEach((fn) => { try { fn() } catch { /* ignore */ } })
+}
+
 const readRealHasAccount = (app_data: Class_ApplicationDataOSP): boolean =>
   !!(app_data as unknown as { login_component?: { has_account?: boolean } }).login_component?.has_account
 
@@ -78,6 +85,16 @@ export const DevTrialDebugOSP: FC<DevTrialDebugProps> = ({ app_data }) => {
   const [, setTick] = useState(0)
   const [days, setDays] = useState(5)
   const nodeRef = useRef(null)
+
+  // Opened from the drawing-area right-click menu via devOpenTrialDebugPanel().
+  useEffect(() => {
+    const listener = () => setOpen(true)
+    _open_listeners.push(listener)
+    return () => {
+      const i = _open_listeners.indexOf(listener)
+      if (i >= 0) _open_listeners.splice(i, 1)
+    }
+  }, [])
 
   // Re-read the (mutated) state and re-render after every action.
   const refresh = () => setTick((n) => n + 1)
@@ -116,10 +133,6 @@ export const DevTrialDebugOSP: FC<DevTrialDebugProps> = ({ app_data }) => {
 
   return (
     <>
-      <Button size='xs' colorScheme='purple' variant='outline' onClick={() => setOpen(true)}>
-        Essai (dev)
-      </Button>
-
       {open && (
         <Portal>
           <DraggableComponent

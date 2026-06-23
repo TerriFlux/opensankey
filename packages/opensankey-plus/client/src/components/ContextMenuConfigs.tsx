@@ -10,6 +10,7 @@ import { CONVERTER_CONFIGS } from '../deps/OpenSankey/components/dialogs/Persist
 import { MenuConfig } from '../deps/OpenSankey/components/dialogs/SankeyMenuContext'
 import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
+import { devOpenTrialDebugPanel } from './DevTrialDebugOSP'
 
 // Extension de la config ZDD
 export const createZDDMenuConfigPlus = (): MenuConfig => {
@@ -36,10 +37,37 @@ export const createZDDMenuConfigPlus = (): MenuConfig => {
             return (app_data as Class_ApplicationDataOSP).has_sankey_afm
           }
         }]
+      },
+      {
+        type: 'button',
+        actionName: 'openTrialDevPanel',
+        visibilityConditions: [{
+          type: 'custom',
+          customCheck: (app_data) => {
+            return (app_data as Class_ApplicationDataOSP).has_sankey_dev
+          }
+        }]
       }
     ],
     actions: {
       ...ZDD_MENU_CONFIG.actions,
+      openTrialDevPanel: {
+        type: 'action',
+        labels: {
+          en: 'Trial (dev)',
+          fr: 'Essai (dev)',
+          es: 'Prueba (dev)',
+          de: 'Test (dev)',
+          it: 'Prova (dev)'
+        },
+        tooltips: {
+          en: 'Open the OpenSankey+ trial / subscription debug panel',
+          fr: 'Ouvrir le panneau de debug essai / abonnement OpenSankey+',
+          es: 'Abrir el panel de depuración de prueba / suscripción OpenSankey+',
+          de: 'Debug-Panel für Test / Abonnement OpenSankey+ öffnen',
+          it: 'Apri il pannello di debug prova / abbonamento OpenSankey+'
+        }
+      },
       afmReconciliation: {
         type: 'action',
         labels: {
@@ -68,7 +96,7 @@ export const createZDDMenuConfigPlus = (): MenuConfig => {
         },
         tooltips: {
           en: 'Run reconciliation in no-redundancy mode: redundant balance constraints are dropped so measured values are kept as-is and only unknown flows are filled in',
-          fr: "Lance la réconciliation en mode sans redondance : les bilans en trop sont retirés, les valeurs mesurées sont conservées telles quelles et seuls les flux inconnus sont complétés",
+          fr: 'Lance la réconciliation en mode sans redondance : les bilans en trop sont retirés, les valeurs mesurées sont conservées telles quelles et seuls les flux inconnus sont complétés',
           es: 'Ejecuta la reconciliación en modo sin redundancia',
           de: 'Abgleich im Modus ohne Redundanz ausführen',
           it: 'Esegue la riconciliazione in modalità senza ridondanza'
@@ -238,6 +266,12 @@ export const createZDDModifierPlus = (app_data: Class_ApplicationDataOSP) => {
       dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
       app_data.drawing_area.is_drawing_area_contextualised = false
       app_data.menu_configuration_osp.ref_to_menu_context_drawing_area_updater.current()
+    },
+    openTrialDevPanel: () => {
+      // Dev-only: open the trial/subscription debug panel (mounted in ModulesOSP).
+      app_data.drawing_area.is_drawing_area_contextualised = false
+      app_data.menu_configuration_osp.ref_to_menu_context_drawing_area_updater.current()
+      devOpenTrialDebugPanel()
     }
   }
 }
