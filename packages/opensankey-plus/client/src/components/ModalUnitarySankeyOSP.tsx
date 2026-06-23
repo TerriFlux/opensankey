@@ -1,7 +1,12 @@
 // Standard libs
 import React, { ChangeEvent, FC, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Box, Button, ButtonGroup, CloseButton, HStack, Input, Select, Spinner, Text } from '@chakra-ui/react'
+import Draggable, { DraggableProps } from 'react-draggable'
+import { Box, Button, ButtonGroup, CloseButton, HStack, IconButton, Input, Select, Spinner, Text } from '@chakra-ui/react'
+import { ExternalLinkIcon } from '@chakra-ui/icons'
+
+// react-draggable : typings embarqués optionnels vs @types requis (cf. SankeyPlusViews).
+const DraggableComponent = Draggable as unknown as React.ComponentClass<Partial<DraggableProps>>
 
 // OpenSankey / OpenSankey+ libs
 import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
@@ -85,6 +90,9 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Ref du conteneur draggable (mode détaché en dialogue flottant).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const nodeRef = useRef<any>(null)
   const da_ref = useRef<Class_DrawingAreaOSP | null>(null)
   // Nœud central déjà affiché par la DA détachée courante : permet à l'effet de
   // re-focalisation (léger) de ne rien faire quand la construction (lourde) vient
@@ -451,33 +459,20 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
     </Button>
   )
 
-  // Géométrie du bloc réservé dans la colonne droite (partagée avec MainZoneTabs). Null si le panneau
-  // n'est pas censé s'afficher (sécurité : open implique déjà show_unitary).
-  const rect = mainZoneUnitaryRect(app_data)
-  if (!rect) return <></>
+  const detached = app_data.menu_configuration.main_zone_unitary_detached
+  // Géométrie du bloc réservé (mode docké, partagée avec MainZoneTabs). En détaché, pas de rect :
+  // le panneau est rendu en dialogue flottant draggable.
+  const rect = detached ? null : mainZoneUnitaryRect(app_data)
+  const toggleDetach = () => { app_data.menu_configuration.main_zone_unitary_detached = !detached }
 
-  // Rendu via portal sur document.body : le SVG unitaire NE doit PAS être imbriqué dans #sankey_app,
-  // sinon le redraw du diagramme principal supprimerait aussi le SVG de l'unitaire (cf. _initDraw,
-  // selectAll('#draw_zoom').remove() scopé au container). Le portal garde le contexte React (thème
-  // Chakra, etc.). Le panneau est positionné EN FIXE sur `rect` (docké dans la colonne droite).
-  return createPortal(
-    <Box
-      position='fixed'
-      top={`${rect.top}px`}
-      left={`${rect.left}px`}
-      width={`${rect.width}px`}
-      height={`${rect.height}px`}
-      zIndex={21}
-      background='white'
-      borderLeft='1px solid #e2e8f0'
-      borderTop='1px solid #e2e8f0'
-      boxShadow='-1px 0 4px rgba(0,0,0,0.06)'
-      display='flex'
-      flexDirection='column'
-      overflow='hidden'
-    >
-      {/* En-tête : titre (nœud central) + fermeture (masque le panneau de la grande zone). */}
+  // Contenu commun aux deux modes (docké / dialogue flottant) : en-tête (poignée de drag + boutons
+  // détacher/rattacher et fermer) puis barre de contrôle + sélecteur de nœud + zone de dessin.
+  const panelContent = (
+    <>
+      {/* En-tête : titre (nœud central) + détacher/rattacher + fermeture. Classe de poignée de drag
+          utilisée par react-draggable en mode détaché. */}
       <Box
+        className='unitary_drag_handle'
         display='flex'
         alignItems='center'
         justifyContent='space-between'
@@ -486,15 +481,25 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
         borderBottom='1px solid'
         borderColor='gray.200'
         flex='0 0 auto'
+        cursor={detached ? 'move' : 'default'}
       >
         <Text fontSize='0.8rem' fontWeight='600' color='gray.700' isTruncated>
           {t('view.unit')}{node ? ' — ' + node.name : ''}
         </Text>
-        <CloseButton
-          size='sm'
-          flexShrink={0}
-          onClick={() => { app_data.menu_configuration.main_zone_show_unitary = false }}
-        />
+        <HStack spacing='1' flexShrink={0}>
+          <IconButton
+            size='sm'
+            variant='ghost'
+            aria-label='detach-unitary'
+            icon={<ExternalLinkIcon boxSize='0.9rem' />}
+            onClick={toggleDetach}
+            title={detached ? 'Rattacher le panneau dans la grande zone' : 'Détacher en dialogue flottant'}
+          />
+          <CloseButton
+            size='sm'
+            onClick={() => { app_data.menu_configuration.main_zone_show_unitary = false }}
+          />
+        </HStack>
       </Box>
       <Box display='flex' flexDirection='column' flex='1 1 0' minHeight={0} padding='0.5rem'>
         {/* Barre de contrôle : source + (import Excel) + mode d'affichage des valeurs.
@@ -676,6 +681,63 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
           />
         </Box>
       </Box>
+    </>
+  )
+
+  // Portal sur document.body : le SVG unitaire NE doit PAS vivre dans #sankey_app (le redraw du
+  // diagramme principal fait selectAll('#draw_zoom').remove() scopé au container, cf. _initDraw).
+  //  - DÉTACHÉ : dialogue flottant draggable (poignée = en-tête), redimensionnable (resize CSS).
+  //  - DOCKÉ : position fixe sur `rect` (bloc réservé de la colonne droite, cf. MainZoneTabs).
+  if (detached) {
+    return createPortal(
+      <DraggableComponent
+        nodeRef={nodeRef}
+        handle='.unitary_drag_handle'
+        defaultPosition={{ x: window.innerWidth / 4, y: window.innerHeight / 8 }}
+      >
+        <Box
+          ref={nodeRef}
+          position='fixed'
+          top='0'
+          left='0'
+          zIndex={1500}
+          width='46vw'
+          height='62vh'
+          minWidth='30rem'
+          minHeight='22rem'
+          background='white'
+          borderRadius='md'
+          boxShadow='lg'
+          border='1px solid #e2e8f0'
+          display='flex'
+          flexDirection='column'
+          overflow='hidden'
+          resize='both'
+        >
+          {panelContent}
+        </Box>
+      </DraggableComponent>,
+      document.body
+    )
+  }
+  if (!rect) return <></>
+  return createPortal(
+    <Box
+      position='fixed'
+      top={`${rect.top}px`}
+      left={`${rect.left}px`}
+      width={`${rect.width}px`}
+      height={`${rect.height}px`}
+      zIndex={21}
+      background='white'
+      borderLeft='1px solid #e2e8f0'
+      borderTop='1px solid #e2e8f0'
+      boxShadow='-1px 0 4px rgba(0,0,0,0.06)'
+      display='flex'
+      flexDirection='column'
+      overflow='hidden'
+    >
+      {panelContent}
     </Box>,
     document.body
   )
