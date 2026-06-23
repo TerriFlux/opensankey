@@ -42,6 +42,11 @@ import {
   Thead,
   Tr,
   Button,
+  Menu as ChakraMenu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  MenuDivider,
   Modal,
   ModalContent,
   ModalBody,
@@ -49,12 +54,11 @@ import {
   ModalHeader,
   ModalOverlay,
   ButtonGroup,
-  useDisclosure,
-  Fade,
   Spinner,
   Text,
 
 } from '@chakra-ui/react'
+import { ChevronDownIcon } from '@chakra-ui/icons'
 
 // OpenSankey Libs
 import {
@@ -243,18 +247,17 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
   // Data -------------------------------------------------------------------------------
 
   const { t, icon_library, menu_configuration_osp } = app_data
-  const { icon_add_element, icon_remove_element, icon_welcome, icon_next, icon_previous, icon_attr_view, icon_unit_view, icon_copy, icon_locked, icon_collapse_down, icon_collapse_up } = icon_library
+  const { icon_add_element, icon_remove_element, icon_welcome, icon_attr_view, icon_unit_view, icon_copy, icon_locked } = icon_library
   const [, setCount] = useState(0)
-  const { isOpen, onToggle } = useDisclosure()
   const refreshThis = () => {
     setCount(a => a + 1)
   }
   const drawing_area_plus = app_data.drawing_area as Class_DrawingAreaOSP
 
-  menu_configuration_osp.ref_to_banner_views_opened.current = isOpen
+  menu_configuration_osp.ref_to_banner_views_opened.current = false
   menu_configuration_osp.ref_to_banner_views_updater.current = refreshThis
 
-  // Re-centrer la bannière dans la zone de dessin gauche quand le tableur/doc s'ouvre ou se ferme.
+  // Re-render au toggle du tableur/doc (la navigation vit dans la topbar).
   useEffect(() => {
     return app_data.menu_configuration.addMainZoneListener(refreshThis)
   }, [])
@@ -268,384 +271,50 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
   const has_sankey_plus = app_data.has_sankey_plus
   const has_views = app_data.has_views
   const is_view_master = app_data.is_view_master
-  const has_view_before = app_data.has_view_before
-  const has_view_after = app_data.has_view_after
-  const is_static = app_data.is_static
   const is_editable = app_data.is_editable
-
-  // Button to create a view ------------------------------------------------------------
 
   const logo_locked = <Box className='iconLocked'>
     {icon_locked}
   </Box>
 
-  const activate_button_to_create_view = has_sankey_plus
-  const button_to_create_view = <OSTooltip
-    placement='bottom'
-    label={
-      (!has_sankey_plus) ?
-        (t('Menu.sankeyOSPDisabled')) :
-        t('view.tooltips.buttonCreateView')}
-  >
-    <Button
-      variant='button_banner_view'
-      size='sizeMenuTopButton'
-      isDisabled={!activate_button_to_create_view}
-      onClick={() => {
-        // Crée une vue VIDE (indépendante du diagramme courant)
-        const view_id = makeId('view')
-        app_data.createNewView(view_id, t('view.new_view_name'), false)
-        app_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
-        app_data.setCurrentView(view_id)
-        app_data.menu_configuration_osp.updateComponentRelatedToViews()
-      }}
-    >
-      <Box
-        layerStyle='banner_view_buttons'
-      >
-        <Box
-          gridRow="1"
-          padding="0.1rem 0 0.1rem 0"
-        >
-          {icon_add_element}
-          {
-            !has_sankey_plus ?
-              logo_locked
-              : <></>
-          }
-        </Box>
-        <Box
-          gridRow="2"
-        >
-          {t('Menu.addView')}
-        </Box>
-      </Box>
-    </Button>
-  </OSTooltip>
+  // ── Conditions d'activation (licence + contexte de la vue courante) ────────
+  const can_manage = has_sankey_plus
+  const in_named_view = has_views && !is_view_master   // vraie vue (pas le maître)
 
-  // Button to copy the current view ----------------------------------------------------
+  // ── Handlers des actions de gestion de vues ───────────────────────────────
+  // Retour au maître via le raccourci clavier déjà câblé (F7) dispatché sur document.
+  const onReturnToMaster = () => {
+    const evt_key_f7 = new KeyboardEvent('keydown', { key: 'F7' })
+    if (document.onkeydown) document.onkeydown(evt_key_f7)
+  }
+  const onAddView = () => {
+    // Crée une vue VIDE (indépendante du diagramme courant)
+    const view_id = makeId('view')
+    app_data.createNewView(view_id, t('view.new_view_name'), false)
+    app_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+    app_data.setCurrentView(view_id)
+    app_data.menu_configuration_osp.updateComponentRelatedToViews()
+  }
+  const onCopyView = () => {
+    // Copie la vue courante dans une nouvelle vue
+    const view_id = makeId('view')
+    app_data.createNewView(view_id, 'Copie de ' + app_data.drawing_area.name, true)
+    app_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+    app_data.setCurrentView(view_id)
+    app_data.menu_configuration_osp.updateComponentRelatedToViews()
+  }
+  const onDeleteView = () => { app_data.deleteCurrentView() }
+  const onOpenAttrTransfer = () => { menu_configuration_osp.ref_to_modal_view_attributes_switcher.current(true) }
+  // Ouvre le modal unitaire fusionné (local + Excel), sans nœud présélectionné.
+  const onOpenUnitary = () => { menu_configuration_osp.ref_open_unitary_sankey_modal.current(null) }
 
-  const activate_button_to_copy_view = has_sankey_plus
-  const button_to_copy_view = <OSTooltip
-    placement='bottom'
-    label={
-      (!has_sankey_plus) ?
-        (t('Menu.sankeyOSPDisabled')) :
-        t('view.tooltips.buttonCloneView')}
-  >
-    <Button
-      variant='button_banner_view'
-      size='sizeMenuTopButton'
-      isDisabled={!activate_button_to_copy_view}
-      onClick={() => {
-        // Copie la vue courante dans une nouvelle vue (équivalent Ctrl+X)
-        const view_id = makeId('view')
-        app_data.createNewView(view_id, 'Copie de ' + app_data.drawing_area.name, true)
-        app_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
-        app_data.setCurrentView(view_id)
-        app_data.menu_configuration_osp.updateComponentRelatedToViews()
-      }}
-    >
-      <Box
-        layerStyle='banner_view_buttons'
-      >
-        <Box
-          gridRow="1"
-          padding="0.1rem 0 0.1rem 0"
-        >
-          {icon_copy}
-          {
-            !has_sankey_plus ?
-              logo_locked
-              : <></>
-          }
-        </Box>
-        <Box
-          gridRow="2"
-        >
-          {t('Menu.cloneView')}
-        </Box>
-      </Box>
-    </Button>
-  </OSTooltip>
-
-  // Button to delete actual view -------------------------------------------------------
-
-  const activate_button_to_delete_actual_view = has_sankey_plus && has_views && !is_view_master
-  const button_to_delete_actual_view = <OSTooltip
-    placement='bottom'
-    label={
-      (!has_sankey_plus) ?
-        (t('Menu.sankeyOSPDisabled')) :
-        t('view.tooltips.button_delete_actual_view')
+  // Catalogue : ouvre le sélecteur de fichiers (JSON/Excel) importés comme vues.
+  const onOpenCatalog = () => {
+    if (ref_to_input_loader_json_catalog.current) {
+      ref_to_input_loader_json_catalog.current.name = ''
+      ref_to_input_loader_json_catalog.current.click()
     }
-  >
-    <Button
-      variant='button_banner_view'
-      size='sizeMenuTopButton'
-      isDisabled={!activate_button_to_delete_actual_view}
-      onClick={
-        // Delete the view
-        () => {
-          app_data.deleteCurrentView()
-        }
-      }
-    >
-      <Box
-        layerStyle='banner_view_buttons'
-      >
-        <Box
-          gridRow="1"
-          padding="0.1rem 0 0.1rem 0"
-        >
-          {icon_remove_element}
-          {
-            (!has_sankey_plus) ?
-              logo_locked :
-              <></>
-          }
-        </Box>
-        <Box
-          gridRow="2"
-        >
-          {t('view.delete')}
-        </Box>
-      </Box>
-    </Button>
-  </OSTooltip>
-
-  // Button to fallback to master -------------------------------------------------------
-
-  const activate_button_to_return_to_master = has_views && !is_view_master
-  const button_to_return_to_master = <OSTooltip
-    placement='bottom'
-    label={t('view.tooltips.home')}
-  >
-    <Button
-      variant='button_banner_view'
-      size='sizeMenuTopButton'
-      isDisabled={!activate_button_to_return_to_master}
-      onClick={() => {
-        const evt = document
-        const evt_key_f7 = new KeyboardEvent('keydown', { key: 'F7' })
-        if (evt.onkeydown) {
-          evt.onkeydown(evt_key_f7)
-        }
-      }}
-    >
-      <Box
-        layerStyle='banner_view_buttons'
-      >
-        <Box
-          gridRow="1"
-          padding="0.1rem 0 0.1rem 0"
-        >
-          {icon_welcome}
-        </Box>
-        <Box
-          gridRow="2"
-        >
-          {t('Menu.home')}
-        </Box>
-      </Box>
-    </Button>
-  </OSTooltip>
-
-  // Button to go to next view ----------------------------------------------------------
-
-  const activate_button_to_prev_view = has_views && has_view_before
-  const button_to_prev_view = <OSTooltip
-    placement='bottom'
-    label={t('view.tooltips.PrevViewButton')}
-  >
-    <Box>
-      <Button
-        variant='button_banner_view'
-        size='sizeMenuTopButton'
-        isDisabled={!activate_button_to_prev_view}
-        onClick={() => {
-          const ev = document
-          const tmp = new KeyboardEvent('keydown', { key: 'F8' })
-          if (ev.onkeydown) {
-            ev.onkeydown(tmp as KeyboardEvent)
-          }
-        }}
-      >
-        <Box
-          layerStyle='banner_view_buttons'
-        >
-          <Box
-            gridRow="1"
-            padding="0.1rem 0 0.1rem 0"
-          >
-            {icon_previous}
-          </Box>
-          <Box
-            gridRow="2"
-          >
-            {t('Menu.precView')}
-          </Box>
-        </Box>
-      </Button>
-    </Box>
-  </OSTooltip>
-
-  // Button to previous view ------------------------------------------------------------
-
-  const activate_button_to_next_view = has_views && has_view_after
-  const button_to_next_view = <OSTooltip
-    placement='bottom'
-    label={t('view.tooltips.NextViewButton')}
-  >
-    <Button
-      variant='button_banner_view'
-      size='sizeMenuTopButton'
-      isDisabled={!activate_button_to_next_view}
-      onClick={() => {
-        const ev = document
-        const tmp = new KeyboardEvent('keydown', { key: 'F9' })
-        if (ev.onkeydown) {
-          ev.onkeydown(tmp as KeyboardEvent)
-        }
-      }}
-    >
-      <Box
-        layerStyle='banner_view_buttons'
-      >
-        <Box
-          gridRow="1"
-          padding="0.1rem 0 0.1rem 0"
-        >
-          {icon_next}
-        </Box>
-        <Box
-          gridRow="2"
-        >
-          {t('Menu.nextView')}
-        </Box>
-      </Box>
-    </Button>
-  </OSTooltip>
-
-  // Button to display attributes transfert modal ---------------------------------------
-
-  const activate_button_to_show_view_attr_transfert_modal = has_sankey_plus && has_views && !is_view_master
-  const button_to_show_view_attr_transfert_modal = <OSTooltip
-    placement='bottom'
-    label={
-      (!has_sankey_plus) ?
-        (t('Menu.sankeyOSPDisabled')) :
-        t('view.tooltips.buttonCloneMasterAttrView')
-    }>
-    <Button
-      variant='button_banner_view'
-      size='sizeMenuTopButton'
-      isDisabled={!activate_button_to_show_view_attr_transfert_modal}
-      onClick={
-        () => {
-          menu_configuration_osp.ref_to_modal_view_attributes_switcher.current(true)
-        }
-      }
-    >
-      <Box
-        layerStyle='banner_view_buttons'
-      >
-        <Box
-          gridRow="1"
-          padding="0.1rem 0 0.1rem 0"
-        >
-          {icon_attr_view}
-          {
-            (!has_sankey_plus) ?
-              logo_locked
-              : <></>
-          }
-        </Box>
-        <Box
-          gridRow="2"
-        >
-          {t('view.keep_master_var')}
-        </Box>
-      </Box>
-    </Button>
-  </OSTooltip>
-
-  const button_to_show_modal_create_unitary_view = <OSTooltip
-    placement='bottom'
-    label={
-      (!has_sankey_plus) ?
-        (t('Menu.sankeyOSPDisabled')) :
-        t('view.tooltips.buttonOpenModalUnitary')
-    }>
-    <Button
-      variant='button_banner_view'
-      size='sizeMenuTopButton'
-      isDisabled={!has_sankey_plus}
-      onClick={
-        () => {
-          menu_configuration_osp.ref_show_modal_unitary_view.current(true)
-        }
-      }>
-      <Box layerStyle='banner_view_buttons' >
-        <Box
-          gridRow="1"
-          padding="0.1rem 0 0.1rem 0"
-        >
-          {icon_unit_view}
-          {
-            (!has_sankey_plus) ? logo_locked : <></>}
-        </Box>
-        <Box gridRow="2" >
-          {t('view.unit')}
-        </Box>
-      </Box>
-    </Button>
-  </OSTooltip>
-
-  // Button to load views as a catalog of view (ie  JSON containing only views) ---------
-
-  const activate_create_data_catalog = has_sankey_plus // TODO need only license ?
-  const create_data_catalog = <OSTooltip
-    placement='bottom'
-    label={
-      (!has_sankey_plus) ?
-        (t('Menu.sankeyOSPDisabled')) :
-        t('view.tooltips.catalog_data')
-    }
-  >
-    <Button
-      variant='button_banner_view'
-      size='sizeMenuTopButton' isDisabled={!activate_create_data_catalog}
-      onClick={
-        () => {
-          if (ref_to_input_loader_json_catalog.current) {
-            ref_to_input_loader_json_catalog.current.name = ''
-            ref_to_input_loader_json_catalog.current.click()
-          }
-        }}
-    >
-      <Box
-        layerStyle='banner_view_buttons'
-      >
-        <Box
-          gridRow="1"
-          padding="0.1rem 0 0.1rem 0"
-        >
-          {icon_copy}
-          {
-            (!has_sankey_plus) ?
-              logo_locked
-              : <></>
-          }
-        </Box>
-        <Box
-          gridRow="2"
-        >
-          {t('view.catalog')}
-        </Box>
-      </Box>
-    </Button>
-  </OSTooltip>
+  }
 
   // Input to read JSON as a catalog of view (ie  JSON containing only views) ---------
 
@@ -717,92 +386,140 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
     }}
   />
 
-  const style: React.CSSProperties = is_editable ? {
-    position: 'fixed',
-    top: drawing_area_plus.getNavBarHeight() + drawing_area_plus.fit_margin,
-    zIndex: '1',
-    background: 'white',
-    border: '1px solid',
-    borderRadius: '4px',
-    width: 'fit-content',
-    // Centre dans la zone de dessin gauche (et non sur tout l'écran) pour rester hors du tableur.
-    left: (window.innerWidth - mainZoneRightReservedPx(app_data)) / 2,
-    transform: 'translate(-50%)'
-  } : {}
-
-  // ButtonsGrooup doesn't have variant so we set style here
-  const buttonGroupView = <ButtonGroup
-    className='BannerView'
-    style={style}
-  >
-    {/* Load + Save  */}
-    {is_editable && app_data.has_sankey_plus ? input_loader_json_catalog : <></>}
-    {is_editable && app_data.has_sankey_plus ? create_data_catalog : <></>}
-
-    {/* Return to Sankey master button */}
-    {is_editable ? button_to_return_to_master : <></>}
-
-    {/* Create, switch between or delete views */}
-    {is_editable && app_data.has_sankey_plus ? button_to_create_view : <></>}
-    {is_editable && app_data.has_sankey_plus ? button_to_copy_view : <></>}
-    {button_to_prev_view}
-    {button_to_next_view}
-    <Box
-      height='3rem'
-      gridColumnEnd='span 4'
-      alignSelf='center'
-      alignContent='center'
-    >
-      <SelecteurView app_data={app_data} />
-
-    </Box>
-    {
-      is_editable && app_data.has_sankey_plus ?
-        <>
-          {button_to_delete_actual_view}
-          {button_to_show_view_attr_transfert_modal}
-          {button_to_show_modal_create_unitary_view}
-        </> :
-        <></>
-    }
-    {is_editable ? <Button
-      variant='button_collapse_banner_view'
-      size='sizeMenuTopButton'
-      onClick={onToggle}>
-      {isOpen ? icon_collapse_up : icon_collapse_down}
-    </Button> : <></>}
-  </ButtonGroup>
-
-  const buttonShowBanner = <OSTooltip placement='bottom' label={t('Menu.tooltips.view')}>
-    <Button
-      variant={isOpen ? 'menutop_button_view_activated' : 'menutop_button'}
-      size='sizeMenuTopButton'
-      onClick={onToggle}
-    >
-      <Box
-        layerStyle='menutop_button_style'
-      >
+  // ── Élément du menu « Vue » avec gestion licence + tooltip ────────────────
+  // Le wrapper Box permet au tooltip de s'afficher même quand le MenuItem est
+  // désactivé (même approche que le menu Aide de la topbar).
+  const viewMenuItem = (
+    key: string,
+    icon: JSX.Element,
+    label: string,
+    onClick: () => void,
+    opts: { need_plus?: boolean; extra_disabled?: boolean } = {}
+  ): JSX.Element => {
+    const is_locked = !!opts.need_plus && !has_sankey_plus
+    const disabled = is_locked || !!opts.extra_disabled
+    const item = <MenuItem
+      icon={
         <Box
-          gridRow='1'
+          display='inline-flex'
+          alignItems='center'
+          justifyContent='center'
+          boxSize='1.2rem'
+          sx={{ '& svg': { width: '1.1rem', height: '1.1rem' } }}
         >
-          {logo_view}
+          {icon}
         </Box>
-        <Box
-          gridRow='2'
-        >
-          {t(('Menu.view'))}
-        </Box>
+      }
+      isDisabled={disabled}
+      onClick={() => { if (!disabled) onClick() }}
+    >
+      <Box as='span' display='inline-flex' alignItems='center' gap='0.4rem'>
+        {label}
+        {is_locked ? logo_locked : null}
       </Box>
-    </Button>
-  </OSTooltip>
-  if (!is_editable && app_data.has_views) return <>{buttonGroupView}</>
-  else if (is_editable) return <>
-    {buttonShowBanner}
-    <Fade in={isOpen} style={{ display: isOpen ? 'unset' : 'none' }} >
-      {buttonGroupView}
-    </Fade>
+    </MenuItem>
+    return is_locked
+      ? <OSTooltip key={key} placement='right' label={t('Menu.sankeyOSPDisabled')}><Box>{item}</Box></OSTooltip>
+      : <React.Fragment key={key}>{item}</React.Fragment>
+  }
+
+  // La gestion de vues n'existe que dans l'éditeur.
+  if (!is_editable) return <></>
+
+  // ── Menu déroulant « Vue » (gestion des vues) ─────────────────────────────
+  // Dropdown topbar cohérent avec Fichier / Édition / Aide / AFM (même style
+  // menu_button_subnav_style). Les mêmes actions restent dans le panneau de
+  // configuration (ViewsConfig) pour la gestion détaillée. La NAVIGATION entre
+  // vues (Préc./sélecteur/Suiv.) est rendue à part (cf. BannerViewNavOSP).
+  return <>
+    <ChakraMenu
+      variant='menu_button_subnav_style'
+      placement='bottom-start'
+      id='views'
+    >
+      <OSTooltip placement='bottom' label={t('Menu.tooltips.view')}>
+        <MenuButton>
+          <Box gridColumn='1' gridColumnEnd='span 2' gridRow='1'>{logo_view}</Box>
+          <Box gridColumn='1' gridRow='2'>{t('Menu.view')}</Box>
+          <Box gridColumn='2' gridRow='2' height='1rem' width='1rem'>
+            <ChevronDownIcon style={{ height: '1rem', width: '1rem' }} />
+          </Box>
+        </MenuButton>
+      </OSTooltip>
+      <MenuList>
+        {viewMenuItem('home', icon_welcome, t('Menu.home'), onReturnToMaster, { extra_disabled: !in_named_view })}
+        <MenuDivider />
+        {viewMenuItem('add', icon_add_element, t('Menu.addView'), onAddView, { need_plus: true })}
+        {viewMenuItem('copy', icon_copy, t('Menu.cloneView'), onCopyView, { need_plus: true })}
+        {viewMenuItem('delete', icon_remove_element, t('view.delete'), onDeleteView, { need_plus: true, extra_disabled: !in_named_view })}
+        <MenuDivider />
+        {viewMenuItem('catalog', icon_copy, t('view.catalog'), onOpenCatalog, { need_plus: true })}
+        {viewMenuItem('attr', icon_attr_view, t('view.keep_master_var'), onOpenAttrTransfer, { need_plus: true, extra_disabled: !in_named_view })}
+        {viewMenuItem('unit', icon_unit_view, t('view.unit'), onOpenUnitary, { need_plus: true })}
+      </MenuList>
+    </ChakraMenu>
+    {can_manage ? input_loader_json_catalog : <></>}
   </>
-  return <></>
+}
+
+/**
+ * Navigation entre vues (Préc. / sélecteur / Suiv.), rendue dans un bloc topbar
+ * distinct du menu déroulant « Vues » (placée après « Aide »). Tout le bloc est
+ * masqué tant qu'aucune vue n'existe : il n'y a alors rien à parcourir ni à
+ * sélectionner (le sélecteur retomberait sur un champ vide).
+ */
+export const BannerViewNavOSP = ({ app_data }: { app_data: Class_ApplicationDataOSP }) => {
+  const { t, icon_library, menu_configuration_osp } = app_data
+  const { icon_next, icon_previous } = icon_library
+  const [, setCount] = useState(0)
+  const refreshThis = () => setCount(a => a + 1)
+  menu_configuration_osp.ref_to_banner_view_nav_updater.current = refreshThis
+
+  // Re-render au toggle du tableur/doc (recentrage topbar).
+  useEffect(() => {
+    return app_data.menu_configuration.addMainZoneListener(refreshThis)
+  }, [])
+
+  const has_views = app_data.has_views
+  const has_view_before = app_data.has_view_before
+  const has_view_after = app_data.has_view_after
+
+  // Pas de vues → rien à naviguer : on masque tout le bloc (et donc Préc./Suiv.).
+  if (!has_views) return <></>
+
+  const onPrevView = () => {
+    const tmp = new KeyboardEvent('keydown', { key: 'F8' })
+    if (document.onkeydown) document.onkeydown(tmp)
+  }
+  const onNextView = () => {
+    const tmp = new KeyboardEvent('keydown', { key: 'F9' })
+    if (document.onkeydown) document.onkeydown(tmp)
+  }
+
+  const nav_button = (
+    tooltip_key: string,
+    icon: JSX.Element,
+    label: string,
+    onClick: () => void,
+    enabled: boolean
+  ): JSX.Element => <OSTooltip placement='bottom' label={t(tooltip_key)}>
+    <Box>
+      <Button variant='menutop_button' size='sizeMenuTopButton' isDisabled={!enabled} onClick={onClick}>
+        <Box layerStyle='menutop_button_style'>
+          <Box gridRow='1'>{icon}</Box>
+          <Box gridRow='2'>{label}</Box>
+        </Box>
+      </Button>
+    </Box>
+  </OSTooltip>
+
+  return <ButtonGroup className='BannerViewNav' alignItems='center' spacing='0'>
+    {nav_button('view.tooltips.PrevViewButton', icon_previous, t('Menu.precView'), onPrevView, has_view_before)}
+    <Box minW='7rem' maxW='14rem' alignSelf='center'>
+      <SelecteurView app_data={app_data} />
+    </Box>
+    {nav_button('view.tooltips.NextViewButton', icon_next, t('Menu.nextView'), onNextView, has_view_after)}
+  </ButtonGroup>
 }
 
 /**

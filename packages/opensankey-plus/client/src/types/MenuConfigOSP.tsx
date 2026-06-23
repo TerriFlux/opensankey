@@ -6,14 +6,15 @@ import { OSPShowMenuComponentsVarType } from './LegacyTypes'
 export type keyTypeConfigOSP = keyTypeConfig | 'presentation'
 export type keyTypeElementsOSP = keyTypeElements | 'data_tag' | 'tag_flow' | 'tag_node' | 'view'
 export class Class_MenuConfigOSP extends Class_MenuConfig {
-  // OSP inserts the Vues/AFM group after the OS document group, and pushes the
-  // "Aide" dropdown to the very end (after AFM) rather than keeping it where OS
-  // places it. Filtering it out of the inherited order then re-appending keeps
-  // a single 'aide' group at the right edge of the menu block.
+  // OSP inserts the Vues/AFM/edit group after the OS document group, pushes the
+  // "Aide" dropdown after it, and isolates the view NAVIGATION (Préc./sélecteur/
+  // Suiv.) in its own block at the very end (after Aide). The "Vues" management
+  // dropdown stays in the main group; only the navigation trails after Aide.
   protected override _menu_top_order = [
     ...super.menu_top_order.filter(group => !group.includes('aide')),
     ['diagrams', 'views', 'afm', 'edit'],
     ['aide'],
+    ['views_nav'],
   ]
   private _dict_setter_show_dialog_plus: OSPShowMenuComponentsVarType
 
@@ -23,6 +24,9 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
 
   private _ref_to_config_DA_bg_image_updater: MutableRefObject<(() => void)>
   private _ref_to_banner_views_updater: MutableRefObject<() => void>
+  // Updater de la navigation entre vues (Préc./sélecteur/Suiv.), rendue dans un
+  // bloc topbar distinct du menu déroulant « Vues » (cf. BannerViewNavOSP).
+  private _ref_to_banner_view_nav_updater: MutableRefObject<() => void>
   private _ref_to_banner_views_opened: MutableRefObject<boolean>
   private _ref_to_views_config_updater: MutableRefObject<() => void>
   private _ref_to_modal_view_attributes_switcher: MutableRefObject<(_: boolean) => void>
@@ -31,9 +35,10 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
   private _ref_show_modal_unitary_view: MutableRefObject<(_: boolean) => void>
   private _ref_update_modal_unitary_view: MutableRefObject<() => void>
 
-  // Ouvre un modal draggable contenant le sankey unitaire (rendu détaché) du
-  // nœud passé, EN PLUS du diagramme principal (cf. ModalUnitarySankeyOSP).
-  private _ref_open_unitary_sankey_modal: MutableRefObject<(node: Class_NodeElement) => void>
+  // Ouvre le modal draggable du sankey unitaire (rendu détaché), EN PLUS du
+  // diagramme principal (cf. ModalUnitarySankeyOSP). node = nœud central, ou null
+  // pour ouvrir sans présélection (le modal prend alors le 1er nœud visible).
+  private _ref_open_unitary_sankey_modal: MutableRefObject<(node: Class_NodeElement | null) => void>
 
   private _ref_show_modal_animated_export: MutableRefObject<(_: boolean) => void>
 
@@ -44,6 +49,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     super()
 
     this._ref_to_banner_views_updater = useRef(() => null)
+    this._ref_to_banner_view_nav_updater = useRef(() => null)
     this._ref_to_banner_views_opened = useRef(false)
     this._ref_to_views_config_updater = useRef(() => null)
 
@@ -51,7 +57,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     this._ref_to_modal_view_attr_updater = useRef(() => null)
     this._ref_show_modal_unitary_view = useRef((_: boolean) => null)
     this._ref_update_modal_unitary_view = useRef(() => null)
-    this._ref_open_unitary_sankey_modal = useRef((_: Class_NodeElement) => null)
+    this._ref_open_unitary_sankey_modal = useRef((_: Class_NodeElement | null) => null)
     this._ref_show_modal_animated_export = useRef((_: boolean) => null)
     this._ref_show_modal_publish = useRef((_: boolean) => null)
 
@@ -75,6 +81,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
 
   public updateComponentRelatedToViews() {
     this._ref_to_banner_views_updater.current()
+    this._ref_to_banner_view_nav_updater.current()
     this._ref_to_views_config_updater.current()
     this._ref_to_modal_view_attr_updater.current()
     this.updateComponentSaveDiagramJSON()
@@ -104,13 +111,14 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
 
   public get dict_setter_show_dialog_plus(): OSPShowMenuComponentsVarType { return this._dict_setter_show_dialog_plus }
   public get ref_to_banner_views_updater(): MutableRefObject<() => void> { return this._ref_to_banner_views_updater }
+  public get ref_to_banner_view_nav_updater(): MutableRefObject<() => void> { return this._ref_to_banner_view_nav_updater }
   public get ref_to_banner_views_opened() { return this._ref_to_banner_views_opened }
   public get ref_to_views_config_updater(): MutableRefObject<() => void> { return this._ref_to_views_config_updater }
   public get ref_to_modal_view_attributes_switcher(): MutableRefObject<(_: boolean) => void> { return this._ref_to_modal_view_attributes_switcher }
   public get ref_to_modal_view_attr_updater(): MutableRefObject<() => void> { return this._ref_to_modal_view_attr_updater }
   public get ref_show_modal_unitary_view(): MutableRefObject<(_: boolean) => void> { return this._ref_show_modal_unitary_view }
   public get ref_update_modal_unitary_view(): MutableRefObject<() => void> { return this._ref_update_modal_unitary_view }
-  public get ref_open_unitary_sankey_modal(): MutableRefObject<(node: Class_NodeElement) => void> { return this._ref_open_unitary_sankey_modal }
+  public get ref_open_unitary_sankey_modal(): MutableRefObject<(node: Class_NodeElement | null) => void> { return this._ref_open_unitary_sankey_modal }
   public get ref_show_modal_animated_export(): MutableRefObject<(_: boolean) => void> { return this._ref_show_modal_animated_export }
   public get ref_show_modal_publish(): MutableRefObject<(_: boolean) => void> { return this._ref_show_modal_publish }
 

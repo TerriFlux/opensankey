@@ -39,8 +39,8 @@ import {
   ModalTransparentViewAttrOSP,
   ModalViewNotSavedOSP,
   BannerViewsOSP,
+  BannerViewNavOSP,
   ViewsConfig,
-  ModalCreateUnitaryViewOSP,
   renderApplyLayoutExtraTabOSP,
 } from './components/SankeyPlusViews'
 
@@ -100,6 +100,8 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
 
 
   additionalMenus.current.external_top_buttons_item['views'] = <BannerViewsOSP app_data={new_data_plus} />
+  // Navigation entre vues (Préc./sélecteur/Suiv.), bloc topbar isolé après « Aide ».
+  additionalMenus.current.external_top_buttons_item['views_nav'] = <BannerViewNavOSP app_data={new_data_plus} />
 
   // Trial state-aware topbar CTA. Hidden when the user holds a real OS+ licence.
   // Rendered in the top-right via additional_nav_item, alongside login buttons.
@@ -285,9 +287,6 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
       app_data={app_data}
     />,
     <ModalSelectionIcon
-      app_data={app_data}
-    />,
-    <ModalCreateUnitaryViewOSP
       app_data={app_data}
     />,
     <ModalUnitarySankeyOSP
