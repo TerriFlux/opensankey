@@ -540,6 +540,15 @@ export class Class_DrawingArea {
     // et ferait déborder en hauteur ; le vertical garantit que le dataTag le plus
     // grand tient dans la hauteur de la fenêtre.
     const recompute_locked = this._size_locked && (this._locked_fit_dirty || !locked_zoom_transform)
+    // drawElements() ci-dessus a dessiné les labels alors que #draw_zoom venait d'être
+    // recréé à k=1 (font_compensation = 1/k = 1, police brute). C'est areaAutoFit (ou la
+    // réapplication du transform verrouillé) qui pose ensuite le zoom de cadrage. Or
+    // areaAutoFit ne rafraîchit la compensation (1/k) des labels QUE si _k_fit change ;
+    // lors d'un redraw à contenu identique (ex. « pare-feu » du board unitaire) _k_fit
+    // reste inchangé → les labels gardent leur taille calée sur k=1 et le scale SVG les
+    // rapetisse. On capture donc _k_fit avant le fit pour forcer un rafraîchissement
+    // final quand le fit ne l'a pas déjà fait.
+    const k_fit_before_fit = this._k_fit
     this.areaAutoFit(recompute_locked ? false : undefined, recompute_locked)
     if (recompute_locked) {
       this._locked_fit_dirty = false
@@ -548,6 +557,13 @@ export class Class_DrawingArea {
       this.drawBackground()
       this.drawGrid()
       this._updateScrollbars()
+    }
+    // Si areaAutoFit n'a pas changé _k_fit, il n'a pas rafraîchi les labels (et la
+    // réapplication d'un transform verrouillé ne le fait jamais) : ils sont donc encore
+    // dimensionnés pour le zoom identité. En mode police verrouillée, forcer la mise à
+    // l'échelle 1/k sur le zoom courant.
+    if (this._font_size_locked && this._k_fit === k_fit_before_fit) {
+      this._refreshLabelsForFitZoom()
     }
     this._legend.draw()
     // Added events listeners
@@ -1241,9 +1257,25 @@ export class Class_DrawingArea {
       // et non sur toute la fenêtre, sinon le bord opposé déborde de _fit_margin/2
       // et la marge symétrique disparaît de ce côté. On retranche en plus le
       // débordement des labels (px écran), exclus de la bbox de fit (#165).
-      const new_k = is_horiz
-        ? (this.window_fitting_width - this._fit_margin - label_overflow_left - label_overflow_right) / this.width
-        : (this.window_fitting_height - this._fit_margin - label_overflow_top - label_overflow_bottom) / this.height
+      const k_to_fit_horiz = (this.window_fitting_width - this._fit_margin - label_overflow_left - label_overflow_right) / this.width
+      const k_to_fit_vert = (this.window_fitting_height - this._fit_margin - label_overflow_top - label_overflow_bottom) / this.height
+      let new_k: number
+      if (this.is_unitary) {
+        // Board unitaire (aperçu) : le contenu doit REMPLIR la fenêtre (s'agrandir ET
+        // se réduire) et suivre son redimensionnement. On calcule donc l'échelle sur la
+        // bbox RÉELLE du contenu — pas sur this.width/_height qui sont bornés à la
+        // fenêtre (Math.max(fitting, …)) et plafonneraient k à ~1 : le diagramme restait
+        // à sa taille naturelle au lieu de suivre la fenêtre. On prend la plus petite
+        // des deux échelles pour que TOUT rentre (formes + labels) sur les deux axes ;
+        // center_h/center_v (plus bas) recentrent le mou. (bbox.width/height nuls →
+        // +Infinity, ignoré par Math.min ; le cas bbox vide est déjà géré plus haut.)
+        const k_bbox_horiz = (this.window_fitting_width - this._fit_margin - label_overflow_left - label_overflow_right) / bbox.width
+        const k_bbox_vert = (this.window_fitting_height - this._fit_margin - label_overflow_top - label_overflow_bottom) / bbox.height
+        new_k = Math.min(k_bbox_horiz, k_bbox_vert)
+      } else {
+        // Diagramme principal : comportement historique inchangé (cadre l'axe dominant).
+        new_k = is_horiz ? k_to_fit_horiz : k_to_fit_vert
+      }
       this._k_fit = new_k
       this._zoom_height = is_horiz ? Math.max(this.height, Math.min(this.height, this.window_fitting_height) / this._k_horiz) : this.height
       this._zoom_width = !is_horiz ? Math.max(this.width, Math.min(this.width, this.window_fitting_width) / this._k_vert) : this.width
