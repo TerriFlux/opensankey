@@ -93,7 +93,13 @@ const buildUnitaryDrawingArea = (
   // Copy current sankey
   const name = node_ref ? 'Unitary view of ' + node_ref.name : 'Board Unitary View'
   const id = new_drawing_area.id
-  const copy = DrawingAreaPersistenceOSP.toJSON(base_drawing_area as Class_DrawingAreaOSP, { keep_siblings: true })
+  // keep_siblings:false → on NE copie PAS les nœuds import/export déjà splittés du
+  // source : seul le nœud d'échange parent (« International ») est sérialisé (avec ses
+  // liens réécrits sur lui). Le split est ensuite REJOUÉ par afterFromJSON() ci-dessous,
+  // exactement comme au chargement du diagramme principal. Sinon (keep_siblings:true) le
+  // parent restait non-splitté donc VISIBLE dans le board unitaire, alors qu'il doit
+  // disparaître au profit de ses enfants import/export.
+  const copy = DrawingAreaPersistenceOSP.toJSON(base_drawing_area as Class_DrawingAreaOSP, { keep_siblings: false })
   copy.id = id
   // Le board unitaire se construit comme un import « neuf » : on charge le JSON du
   // source MAIS débarrassé de toute GÉOMÉTRIE, puis computeAutoSankey décide tout.
@@ -104,6 +110,13 @@ const buildUnitaryDrawingArea = (
   // faire après fromJSON se bat avec l'état déjà posé et déstabilise l'orientation).
   stripGeometryFromDrawingAreaJSON(copy)
   DrawingAreaPersistenceOSP.fromJSON(new_drawing_area, copy)
+  // Rejouer le post-traitement de chargement (split import/export). DrawingAreaPersistence
+  // .fromJSON N'appelle PAS afterFromJSON (contrairement à ApplicationData.fromJSON du
+  // diagramme principal) : sans cet appel, splitTrade() ne tourne pas et le nœud d'échange
+  // « International » reste entier et visible. afterFromJSON() le resplitte en enfants
+  // import/export (qui reprennent ses liens) et le passe invisible — comme dans le
+  // diagramme principal.
+  new_drawing_area.afterFromJSON()
   new_drawing_area.name = name
 
   // « From scratch » : la copie JSON ci-dessus a ramené le styles_dict du source
@@ -121,6 +134,13 @@ const buildUnitaryDrawingArea = (
   // computeAutoSankey empile avec l'écart par défaut (compact).
   new_drawing_area.paper_format = 'free'
 
+  // Neutraliser le verrou de taille (#1240) hérité du diagramme source via le JSON
+  // copié : un aperçu unitaire DOIT toujours se recadrer (ouverture + redimensionnement
+  // du tooltip/modal). Verrouillé, areaAutoFit reste inerte → le 1er rendu force un fit
+  // vertical (labels qui débordent) et le resize réapplique un transform gelé (diagramme
+  // tronqué). On le pose APRÈS fromJSON, sinon le chargement le réécrirait depuis le JSON.
+  new_drawing_area.size_locked = false
+
   // Supprimer les containers
   new_drawing_area.sankey.containers_list.forEach(cont => {
     new_drawing_area.deleteContainer(cont)
@@ -137,9 +157,13 @@ const buildUnitaryDrawingArea = (
   const productTag = node_type?.tags_dict['produit']
   const sectorTag = node_type?.tags_dict['secteur']
 
-  // Filtrer les nœuds par type
-  const products_nodes = new_drawing_area.sankey.nodes_list.filter(n => n.hasGivenTag(productTag))
-  const sector_nodes = new_drawing_area.sankey.nodes_list.filter(n => n.hasGivenTag(sectorTag))
+  // Filtrer les nœuds par type. Les nœuds d'échange (import/export) sont EXCLUS de
+  // products_nodes/sector_nodes : ce sont des extrémités (un seul flux) qui ne doivent
+  // pas devenir des nœuds centraux unitaires sélectionnables. On les filtre ici, avant
+  // la conversion echange→sector ci-dessous (à ce stade ils portent encore le tag
+  // `echange`), pour qu'ils ne reçoivent pas de tag view unitaire.
+  const products_nodes = new_drawing_area.sankey.nodes_list.filter(n => n.hasGivenTag(productTag) && !n.hasGivenTag(echangeTag))
+  const sector_nodes = new_drawing_area.sankey.nodes_list.filter(n => n.hasGivenTag(sectorTag) && !n.hasGivenTag(echangeTag))
   const exchange_nodes = new_drawing_area.sankey.nodes_list.filter(n => n.hasGivenTag(echangeTag))
   exchange_nodes.forEach(n => {
     node_exchanges_style.forEach(s => {
@@ -294,6 +318,50 @@ const buildUnitaryDrawingArea = (
   }
 
   return new_drawing_area
+}
+
+/**
+ * Re-focalise une DrawingArea unitaire DÉJÀ construite sur un nouveau nœud central,
+ * sans refaire la copie JSON / le fromJSON / la reconstruction des ViewTagGroups
+ * (tout ça ne dépend que de la SOURCE, pas du nœud choisi). On se contente de
+ * re-sélectionner le tag unitaire du nouveau nœud (et d'activer le bon groupe
+ * produit/secteur), puis updateUnitaryStyles re-pose styles + layout sur la seule
+ * étoile visible. C'est le chemin « instantané » du survol/changement de nœud :
+ * O(nœuds visibles) au lieu de O(graphe entier sérialisé) par changement.
+ *
+ * Le caller appelle ensuite da.draw() (draw() remet bypass_redraws à false).
+ */
+export const refocusUnitaryDrawingArea = (
+  da: Class_DrawingAreaOSP,
+  node_ref: Class_NodeElement
+) => {
+  const sankey = da.sankey
+  const node_in_da = sankey.nodes_dict[node_ref.id]
+  if (!node_in_da) return
+
+  // Les groupes unitaires créés par buildUnitaryDrawingArea : 'unitary' (cas simple)
+  // ou la paire siblings 'product_unitary'/'sector_unitary'.
+  const groups = ['unitary', 'product_unitary', 'sector_unitary']
+    .map(id => sankey.view_taggs_dict[id])
+    .filter(Boolean) as Class_ViewTagGroup[]
+  if (groups.length === 0) return
+
+  // Repartir d'une sélection vide sur tous les groupes unitaires…
+  groups.forEach(g => g.tags_list.forEach(tag => tag.setUnSelected()))
+  // …puis sélectionner le tag du nouveau nœud central dans SON groupe et l'activer
+  // (l'autre sibling produit/secteur est désactivé : updateUnitaryStyles ne retient
+  // comme centre que les tags sélectionnés d'un groupe activé).
+  groups.forEach(g => {
+    const tag = node_in_da.tags_dict[g.id]
+    if (tag && tag.group === g) {
+      g.activated = true
+      tag.setSelected()
+    } else if (g.id === 'product_unitary' || g.id === 'sector_unitary') {
+      g.activated = false
+    }
+  })
+
+  updateUnitaryStyles(da)
 }
 
 /**
