@@ -58,7 +58,8 @@ export const mainZoneUnitaryRect = (
   app_data: Class_ApplicationData
 ): { top: number, left: number, width: number, height: number } | null => {
   const mc = app_data.menu_configuration
-  if (!mc.main_zone_show_unitary) return null
+  // Détaché en dialogue flottant → pas de bloc réservé (OS+ le rend en Draggable).
+  if (!mc.main_zone_show_unitary || mc.main_zone_unitary_detached) return null
   const da = app_data.drawing_area
   const navH = da.getNavBarHeight ? da.getNavBarHeight() : 56
   const bottomH = da.getBottomBarHeight ? da.getBottomBarHeight() : 0
@@ -118,6 +119,7 @@ export const useMainZone = (app_data: Class_ApplicationData) => {
     // OS de base ne fait que réserver/empiler le bloc.
     unitaryTabAvailable: mc.unitary_tab_available,
     showUnitary: mc.main_zone_show_unitary,
+    unitaryDetached: mc.main_zone_unitary_detached,
     unitaryRatio: mc.main_zone_unitary_ratio,
     toggleUnitary: () => mc.toggleUnitaryTab(),
     docLayout: mc.main_zone_doc_layout,
@@ -162,7 +164,7 @@ export const MainZoneTabs = (
   { app_data }: { app_data: Class_ApplicationData }
 ) => {
   const {
-    showDiagram, showSpreadsheet, showDoc, showUnitary, unitaryRatio,
+    showDiagram, showSpreadsheet, showDoc, showUnitary, unitaryDetached, unitaryRatio,
     docLayout, docBottomPx, splitRatio, docSheetRatio,
     setDocLayout, setDocBottomPx, setDocSheetRatio
   } = useMainZone(app_data)
@@ -204,14 +206,16 @@ export const MainZoneTabs = (
   // Familles de disposition de la doc (uniquement quand elle occupe un slot in-app).
   const docWithSheet = docInApp && DOC_LAYOUTS_WITH_SHEET.includes(docLayout)
   const docBottomMode = docInApp && DOC_LAYOUTS_BOTTOM.includes(docLayout)
-  // Doc seule (ni diagramme, ni tableur, ni unitaire) -> elle remplit toute la zone, peu importe le mode.
-  const docAlone = docInApp && !showDiagram && !showSpreadsheet && !showUnitary
+  // Unitaire DOCKÉ dans la colonne droite (vs détaché en dialogue flottant, qui ne réserve rien).
+  const unitaryDocked = showUnitary && !unitaryDetached
+  // Doc seule (ni diagramme, ni tableur, ni unitaire docké) -> elle remplit toute la zone.
+  const docAlone = docInApp && !showDiagram && !showSpreadsheet && !unitaryDocked
   // Bandeau pleine largeur : window-bottom, ou diagram-bottom sans diagramme (repli).
   const docFullWidthBand = !docAlone && docBottomMode &&
     (docLayout === 'window-bottom' || !showDiagram)
 
-  // Colonne de droite (tableur ± doc accolée, ± panneau unitaire empilé dessous).
-  const rightColumnShown = !docAlone && (showSpreadsheet || docWithSheet || showUnitary)
+  // Colonne de droite (tableur ± doc accolée, ± panneau unitaire docké empilé dessous).
+  const rightColumnShown = !docAlone && (showSpreadsheet || docWithSheet || unitaryDocked)
   // Groupe tableur/doc en haut de la colonne droite (l'unitaire s'empile en dessous).
   const sheetGroupShown = showSpreadsheet || docWithSheet
 
@@ -249,7 +253,7 @@ export const MainZoneTabs = (
     // showUnitary : ouvrir/fermer le panneau change la réserve de largeur droite quand il est le seul
     // occupant de la colonne (pas de tableur/doc) -> re-fit. Le RATIO unitaire ne change pas la largeur
     // réservée (partage vertical interne), il est donc volontairement hors deps (pas de re-fit au drag).
-  }, [showDiagram, showSpreadsheet, showDoc, showUnitary, docDetached, docLayout, splitRatio, docBottomPx])
+  }, [showDiagram, showSpreadsheet, showDoc, showUnitary, unitaryDetached, docDetached, docLayout, splitRatio, docBottomPx])
 
   // --- Séparateur vertical : largeur de la colonne droite ---
   const onVDividerDown = (e: React.MouseEvent) => {
@@ -326,7 +330,7 @@ export const MainZoneTabs = (
   // porté vers document.body et se repositionne sur mainZoneUnitaryRect : on écrit le ratio EN DIRECT
   // dans menu_configuration pendant le drag (le setter notifie -> le panneau suit). Pas de re-fit du
   // diagramme (ratio hors deps de l'effet ci-dessus) car la largeur réservée à droite est inchangée.
-  const showUnitaryDivider = rightColumnShown && sheetGroupShown && showUnitary
+  const showUnitaryDivider = rightColumnShown && sheetGroupShown && unitaryDocked
   const unitColTop = contentTop
   const unitColH = Math.max(1, (window.innerHeight - rightBottom) - unitColTop)
   const unitRatioFromMouse = (clientY: number) => clampUnitaryRatio((clientY - unitColTop) / unitColH)
@@ -397,7 +401,7 @@ export const MainZoneTabs = (
           {sheetGroupShown && (
             <div style={{
               // Avec l'unitaire empilé dessous : hauteur = part verticale (unitaryRatio) ; sinon plein.
-              flex: showUnitary ? `0 0 ${clampUnitaryRatio(unitaryRatio) * 100}%` : '1 1 0',
+              flex: unitaryDocked ? `0 0 ${clampUnitaryRatio(unitaryRatio) * 100}%` : '1 1 0',
               minHeight: 0, minWidth: 0,
               display: 'flex',
               flexDirection: docWithSheet ? sheetSlotFlexDir(docLayout) : 'column'
@@ -432,7 +436,7 @@ export const MainZoneTabs = (
           {showUnitaryDivider && (
             <div style={{ flex: '0 0 6px', minHeight: 0 }} />
           )}
-          {showUnitary && (
+          {unitaryDocked && (
             // Bloc RÉSERVÉ au panneau unitaire : laissé vide ici (fond blanc). Le contenu réel est
             // rendu par OS+ (ModalUnitarySankeyOSP), porté vers document.body — hors #sankey_app pour
             // survivre au redraw du diagramme principal — et positionné sur mainZoneUnitaryRect.

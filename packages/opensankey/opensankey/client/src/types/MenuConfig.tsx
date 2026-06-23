@@ -230,6 +230,11 @@ export class Class_MenuConfig {
   // le bloc réservé ici via mainZoneUnitaryRect ; OS de base ne fait que réserver/empiler l'espace.
   protected _main_zone_show_unitary: boolean = false
   protected _main_zone_unitary_ratio: number = 0.6
+  // Panneau unitaire DÉTACHÉ en dialogue flottant (draggable) au lieu d'être docké dans la colonne
+  // droite. État TRANSITOIRE (non sérialisé), piloté par le bouton détacher/rattacher du panneau.
+  // Quand vrai, l'unitaire ne réserve plus d'espace in-app (le diagramme/tableur récupèrent la place)
+  // et mainZoneUnitaryRect renvoie null ; OS+ le rend alors en Draggable.
+  protected _main_zone_unitary_detached: boolean = false
   protected _main_zone_listeners: Array<() => void> = []
   protected _notifyMainZone() { this._main_zone_listeners.forEach((l) => l()) }
   public get main_zone_show_diagram() { return this._main_zone_show_diagram }
@@ -250,6 +255,8 @@ export class Class_MenuConfig {
   public set main_zone_show_unitary(v: boolean) { this._main_zone_show_unitary = v; this._notifyMainZone() }
   public get main_zone_unitary_ratio() { return this._main_zone_unitary_ratio }
   public set main_zone_unitary_ratio(v: number) { this._main_zone_unitary_ratio = v; this._notifyMainZone() }
+  public get main_zone_unitary_detached() { return this._main_zone_unitary_detached }
+  public set main_zone_unitary_detached(v: boolean) { this._main_zone_unitary_detached = v; this._notifyMainZone() }
   public addMainZoneListener(l: () => void): () => void {
     this._main_zone_listeners.push(l)
     return () => { this._main_zone_listeners = this._main_zone_listeners.filter((x) => x !== l) }
@@ -277,8 +284,10 @@ export class Class_MenuConfig {
     // largeur à droite.
     const docInRightColumn = this._main_zone_show_doc && !this.main_zone_doc_detached &&
       DOC_LAYOUTS_WITH_SHEET.includes(this._main_zone_doc_layout)
-    // Le panneau unitaire (OS+) s'empile dans la colonne droite : il la fait exister à lui seul.
-    const rightColumnShown = this._main_zone_show_spreadsheet || docInRightColumn || this._main_zone_show_unitary
+    // Le panneau unitaire (OS+) s'empile dans la colonne droite : il la fait exister à lui seul,
+    // SAUF s'il est détaché en dialogue flottant (il ne réserve alors plus d'espace).
+    const unitaryDocked = this._main_zone_show_unitary && !this._main_zone_unitary_detached
+    const rightColumnShown = this._main_zone_show_spreadsheet || docInRightColumn || unitaryDocked
     if (!(this._main_zone_show_diagram && rightColumnShown)) return 0
     const MIN_SPREADSHEET_PX = 320
     const MIN_DIAGRAM_PX = 160
