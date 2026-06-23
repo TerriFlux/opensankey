@@ -1199,13 +1199,18 @@ export class Class_DrawingArea {
       // plus visible quand le fit collapse à ~1e-4 (grand user_scale).
       const k_live = this.getZoomScale()
       const full_bbox = this.d3_selection_elements_group?.node()?.getBBox()
-      // On masque les labels SVG <text> ET les labels rich-text <foreignObject>
-      // (.element_fo, issue #1232) : les deux vivent dans le repère zoomé avec la
-      // compensation 1/k (police verrouillée), donc les deux dominent le getBBox et
-      // doivent être exclus du fit ET réservés en débordement. Ne masquer que les
-      // <text> laissait les foreignObject dans la bbox (mesurés à taille native,
-      // débordement non réservé) → labels rich-text qui dépassent au chargement.
-      const hidden_texts = this.d3_selection_elements_group?.selectAll<SVGGraphicsElement, unknown>('text, .element_fo')
+      // On masque TOUTES les parties de label qui vivent dans le repère zoomé avec la
+      // compensation 1/k (police verrouillée) — sinon elles dominent le getBBox et le
+      // fit diverge / sous-estime :
+      //  - <text> (labels simples + textPath des flux) ;
+      //  - <foreignObject class="element_fo"> (labels rich-text #1232) ;
+      //  - leurs fonds <rect class="name_label_bg / value_label_bg"> qui portent le
+      //    MÊME transform scale(1/k) et la même taille que le label.
+      // Ne masquer que les <text>/.element_fo laissait le fond gonfler la bbox (cas
+      // Cartofob : rect element_fo_background scale ~2) → débordement non réservé →
+      // labels qui dépassent au (re)chargement en cadrage figé.
+      const hidden_texts = this.d3_selection_elements_group?.selectAll<SVGGraphicsElement, unknown>(
+        'text, .element_fo, .name_label_bg, .value_label_bg')
       hidden_texts?.style('display', 'none')
       bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
       hidden_texts?.style('display', null)
