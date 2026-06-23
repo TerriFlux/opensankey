@@ -56,6 +56,11 @@ export const useMainZone = (app_data: Class_ApplicationData) => {
     showDiagram: mc.main_zone_show_diagram,
     showSpreadsheet: mc.main_zone_show_spreadsheet,
     showDoc: mc.main_zone_show_doc,
+    // Onglet « Unit. » (sankey unitaire OS+) : disponibilité + état ouvert + toggle (injectés
+    // par le modal OS+). Permet à la barre du haut d'afficher/surligner le bouton.
+    unitaryTabAvailable: mc.unitary_tab_available,
+    unitaryTabOpen: mc.unitary_tab_open,
+    toggleUnitary: () => mc.toggleUnitaryTab(),
     docLayout: mc.main_zone_doc_layout,
     docBottomPx: mc.main_zone_doc_bottom_px,
     splitRatio: mc.main_zone_split_ratio,
