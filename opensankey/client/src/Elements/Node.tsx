@@ -95,6 +95,11 @@ export class Class_NodeElement extends Class_NodeBase {
   public has_material_balance: boolean = true
   public _stock_values: Class_StockValue | Class_ElementValueTree
 
+  // Sankey unitaire : id du flux de référence choisi pour le mode « normalisé » quand
+  // CE nœud est le centre de l'unitaire. Mémorisé par nœud (restauré au changement de
+  // nœud central dans le modal). En mémoire seulement (non persisté en JSON pour l'instant).
+  public unitary_ref_link_id: string | null = null
+
   // Stock visual sub-element (SA#1229): node-like shape stacked above the node
   // that reuses the full node attribute machinery. Lazily created when the node
   // has a stock. Not a graph node — owned and drawn by this host.
@@ -1699,17 +1704,21 @@ export class Class_NodeElement extends Class_NodeBase {
           const is_product = this.hasGivenTag(productTag)
           const is_sector = this.hasGivenTag(sectorTag)
           const the_unitary_tagg = is_product ? 'product_unitary' : is_sector ? 'sector_unitary' : 'unitary'
-          const other_unitary_tagg = the_unitary_tagg == 'unitary' ? 'unitary' : the_unitary_tagg == 'product_unitary' ? 'sector_unitary' : 'product_unitary'
+          // Un voisin est « le centre unitaire » s'il est sélectionné dans SON propre
+          // groupe (produit/secteur), pas dans l'opposé du type de CE nœud. L'ancien
+          // code supposait une structure bipartite produit↔secteur : un voisin produit
+          // d'un nœud produit (ex. Production biologique → Bois sur pied) était cherché
+          // dans 'sector_unitary' → jamais trouvé → nœud masqué.
+          const isSelectedUnitaryCenter = (node: Class_NodeElement) => {
+            const tagg = node.hasGivenTag(productTag) ? 'product_unitary' : node.hasGivenTag(sectorTag) ? 'sector_unitary' : 'unitary'
+            return node.grouped_taggs_dict[tagg] &&
+              (node.grouped_taggs_dict[tagg][0].group as Class_ViewTagGroup).activated &&
+              node.grouped_taggs_dict[tagg][0].is_selected
+          }
           display = /*display &&*/
             ((this._taggs_dict[the_unitary_tagg]  && (this._taggs_dict[the_unitary_tagg][0].group as Class_ViewTagGroup).activated && this._taggs_dict[the_unitary_tagg][0].is_selected)
-              || this.input_links_list.filter(l => 
-                l.source.grouped_taggs_dict[other_unitary_tagg] && 
-                (l.source.grouped_taggs_dict[other_unitary_tagg][0].group as Class_ViewTagGroup).activated && 
-                l.source.grouped_taggs_dict[other_unitary_tagg][0].is_selected).length > 0
-              || this.output_links_list.filter(l => 
-                l.target.grouped_taggs_dict[other_unitary_tagg] &&
-                (l.target.grouped_taggs_dict[other_unitary_tagg][0].group as Class_ViewTagGroup).activated &&  
-                l.target.grouped_taggs_dict[other_unitary_tagg][0].is_selected).length > 0
+              || this.input_links_list.filter(l => isSelectedUnitaryCenter(l.source)).length > 0
+              || this.output_links_list.filter(l => isSelectedUnitaryCenter(l.target)).length > 0
             )
         }
         are_related_node_tags_selected = display
