@@ -77,6 +77,14 @@ function sortElementByIdOrder(
   list: string[]) {
   return list.indexOf(el_a.id) - list.indexOf(el_b.id)
 }
+
+/**
+ * Board unitaire : hauteur écran VISÉE du nœud central, en fraction de la hauteur de la
+ * fenêtre. areaAutoFit cale l'échelle pour que le central fasse cette taille (plafonnée par
+ * l'échelle de fit pour ne jamais couper l'étoile), afin que le central garde une taille
+ * apparente constante d'un focus à l'autre. À ajuster si le central paraît trop gros/petit.
+ */
+const UNITARY_CENTRAL_HEIGHT_FRACTION = 0.3
 export class Class_DrawingArea {
   public application_data: Class_ApplicationData
   public nodePositioning: NodePositioning
@@ -104,6 +112,12 @@ export class Class_DrawingArea {
   public static: boolean = !!window.sankey?.publish
   public to_recenter = false
   public is_unitary = false
+
+  /** id du nœud central d'un board unitaire (is_unitary). Posé par updateUnitaryStyles
+   * à chaque (re)focalisation. areaAutoFit s'en sert pour caler ce nœud au CENTRE de la
+   * fenêtre (au lieu de centrer la bbox), afin qu'il reste au même endroit d'un focus à
+   * l'autre malgré l'asymétrie de l'étoile (entrées/sorties en nombre/largeur variables). */
+  public unitary_center_node_id?: string
 
   /** Mode d'affichage des valeurs de flux sur un board unitaire (is_unitary).
    * 'percent' = % de la somme entrée/sortie du nœud central (défaut historique),
@@ -540,6 +554,16 @@ export class Class_DrawingArea {
     // et ferait déborder en hauteur ; le vertical garantit que le dataTag le plus
     // grand tient dans la hauteur de la fenêtre.
     const recompute_locked = this._size_locked && (this._locked_fit_dirty || !locked_zoom_transform)
+    // Board unitaire (aperçu) : chaque draw() est un cadrage « frais » indépendant — il
+    // remplit la fenêtre et ne conserve pas de zoom utilisateur. On repart donc de
+    // _k_fit=1 avant le fit pour qu'areaAutoFit calcule sa bbox dans le MÊME régime que
+    // sur une DrawingArea neuve : skip_text_in_bbox = font_size_locked && _k_fit !== 1
+    // (cf. areaAutoFit). Sinon, depuis que le board unitaire RÉUTILISE la même DA d'un
+    // nœud à l'autre (au lieu d'en recréer une), le 1er nœud (DA fraîche, _k_fit=1, bbox
+    // labels INCLUS) et les suivants (_k_fit hérité ≠ 1, bbox labels EXCLUS + overflow)
+    // donnaient une échelle ET un centrage différents → board « pas centré », nœud
+    // central qui saute. Scopé is_unitary : aucun effet sur le diagramme principal.
+    if (this.is_unitary) this._k_fit = 1
     // drawElements() ci-dessus a dessiné les labels alors que #draw_zoom venait d'être
     // recréé à k=1 (font_compensation = 1/k = 1, police brute). C'est areaAutoFit (ou la
     // réapplication du transform verrouillé) qui pose ensuite le zoom de cadrage. Or
@@ -1259,19 +1283,72 @@ export class Class_DrawingArea {
       // débordement des labels (px écran), exclus de la bbox de fit (#165).
       const k_to_fit_horiz = (this.window_fitting_width - this._fit_margin - label_overflow_left - label_overflow_right) / this.width
       const k_to_fit_vert = (this.window_fitting_height - this._fit_margin - label_overflow_top - label_overflow_bottom) / this.height
+      // Board unitaire : centre du nœud central (étoile) en coordonnées monde, pour
+      // l'épingler au centre de la fenêtre (échelle + translation ci-dessous). Posé par
+      // updateUnitaryStyles. Absent (cas dégénéré : vue générique sans nœud central) →
+      // on retombe sur le centrage de la bbox.
+      const unitary_center_node = (this.is_unitary && this.unitary_center_node_id)
+        ? this._sankey.nodes_dict[this.unitary_center_node_id]
+        : undefined
+      const cnx = unitary_center_node
+        ? unitary_center_node.position_x + unitary_center_node.getShapeWidthToUse() / 2
+        : 0
+      const cny = unitary_center_node
+        ? unitary_center_node.position_y + unitary_center_node.getShapeHeightToUse() / 2
+        : 0
+
       let new_k: number
       if (this.is_unitary) {
         // Board unitaire (aperçu) : le contenu doit REMPLIR la fenêtre (s'agrandir ET
         // se réduire) et suivre son redimensionnement. On calcule donc l'échelle sur la
         // bbox RÉELLE du contenu — pas sur this.width/_height qui sont bornés à la
         // fenêtre (Math.max(fitting, …)) et plafonneraient k à ~1 : le diagramme restait
-        // à sa taille naturelle au lieu de suivre la fenêtre. On prend la plus petite
-        // des deux échelles pour que TOUT rentre (formes + labels) sur les deux axes ;
-        // center_h/center_v (plus bas) recentrent le mou. (bbox.width/height nuls →
-        // +Infinity, ignoré par Math.min ; le cas bbox vide est déjà géré plus haut.)
-        const k_bbox_horiz = (this.window_fitting_width - this._fit_margin - label_overflow_left - label_overflow_right) / bbox.width
-        const k_bbox_vert = (this.window_fitting_height - this._fit_margin - label_overflow_top - label_overflow_bottom) / bbox.height
-        new_k = Math.min(k_bbox_horiz, k_bbox_vert)
+        // à sa taille naturelle au lieu de suivre la fenêtre.
+        const avail_w = this.window_fitting_width - this._fit_margin - label_overflow_left - label_overflow_right
+        const avail_h = this.window_fitting_height - this._fit_margin - label_overflow_top - label_overflow_bottom
+        if (unitary_center_node) {
+          // TAILLE APPARENTE DU NŒUD CENTRAL CONSTANTE d'un focus à l'autre. On fixe
+          // l'échelle pour que le central fasse toujours UNITARY_CENTRAL_HEIGHT_FRACTION de
+          // la hauteur de la fenêtre.
+          //
+          // Base de normalisation = la hauteur de flux NOMINALE du central
+          // (data_value / scale × 100), PAS getShapeHeightToUse(). getShapeHeightToUse fait
+          // un max(…, shape_min_height, enveloppe des enfants attachés) : pour un nœud très
+          // désagrégé comme « Bois sur pied », l'enveloppe/min peut le gonfler → new_k plus
+          // petit → central « plus étroit / un peu moins haut » que les autres. La hauteur de
+          // flux nominale, elle, vaut le MÊME ~150 pour tous (le scale unitaire vaut
+          // valeur_centrale/1.5, cf. updateUnitaryStyles) → new_k strictement identique d'un
+          // focus à l'autre, insensible aux quirks de forme.
+          //
+          // On ne PLAFONNE volontairement PAS par une échelle « tout faire rentrer » : ce
+          // plafond réservait 2×max(demi-gauche, demi-droite) et pénalisait les étoiles
+          // ASYMÉTRIQUES (le central rétrécissait, ex. « bois sur pied » 1↔3 paraissait plus
+          // petit que « bois énergie »). Sans plafond, le central est strictement constant ;
+          // une étoile à très nombreux flux peut déborder (scroll de l'aperçu), cas rare.
+          // (hauteur nominale nulle → on retombe sur un fit des formes pour ne pas diviser par 0.)
+          const central_flow_h = this._scale > 0
+            ? (unitary_center_node.data_value / this._scale) * 100
+            : 0
+          if (central_flow_h > 0) {
+            new_k = (UNITARY_CENTRAL_HEIGHT_FRACTION * this.window_fitting_height) / central_flow_h
+          } else {
+            // Fallback (central sans hauteur) : fit des FORMES des nœuds visibles (pas des
+            // libellés, souvent très longs), centré sur le nœud (demi-extension max ×2).
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+            this._sankey.visible_nodes_list.forEach(n => {
+              minX = Math.min(minX, n.position_x); minY = Math.min(minY, n.position_y)
+              maxX = Math.max(maxX, n.position_x + n.getShapeWidthToUse())
+              maxY = Math.max(maxY, n.position_y + n.getShapeHeightToUse())
+            })
+            const half_w = Math.max(cnx - minX, maxX - cnx)
+            const half_h = Math.max(cny - minY, maxY - cny)
+            new_k = Math.min(avail_w / (2 * half_w), avail_h / (2 * half_h))
+          }
+        } else {
+          // Pas de nœud central : on prend la plus petite des deux échelles pour que TOUT
+          // rentre (formes + labels) sur les deux axes ; center_h/center_v recentrent le mou.
+          new_k = Math.min(avail_w / bbox.width, avail_h / bbox.height)
+        }
       } else {
         // Diagramme principal : comportement historique inchangé (cadre l'axe dominant).
         new_k = is_horiz ? k_to_fit_horiz : k_to_fit_vert
@@ -1279,25 +1356,49 @@ export class Class_DrawingArea {
       this._k_fit = new_k
       this._zoom_height = is_horiz ? Math.max(this.height, Math.min(this.height, this.window_fitting_height) / this._k_horiz) : this.height
       this._zoom_width = !is_horiz ? Math.max(this.width, Math.min(this.width, this.window_fitting_width) / this._k_vert) : this.width
+      if (unitary_center_node) {
+        // Board unitaire centré sur le nœud : le canvas (donc le translateExtent calculé
+        // par _updateScrollbars) doit coïncider EXACTEMENT avec la fenêtre visible centrée
+        // sur cnx/cny à l'échelle new_k. Sinon, comme new_k (échelle ×2-demi-extension) est
+        // plus PETIT que l'ancienne échelle de fit-bbox, la fenêtre visible (viewport/new_k)
+        // dépasse le translateExtent hérité → le constrain d3 (ancrage haut-gauche quand le
+        // contenu < viewport) re-cale le diagramme en haut-gauche et le rapetisse (symptôme
+        // « nœud central complètement à gauche et petit » sur les étoiles asymétriques).
+        // En calant le canvas sur la vue centrée, dx0/dx1 du constrain s'annulent → il
+        // devient inerte et le centrage tient quel que soit new_k. Bonus : contenu ⊆ canvas
+        // == viewport → plus de scrollbars résiduels.
+        const half_view_w = this.window_fitting_width / (2 * new_k)
+        const half_view_h = this.window_fitting_height / (2 * new_k)
+        this._background_d3_groups_shift_x = cnx - half_view_w
+        this._background_d3_groups_shift_y = cny - half_view_h
+        this._zoom_width = 2 * half_view_w
+        this._zoom_height = 2 * half_view_h
+      }
       // Refresh translateExtent BEFORE scaleTo/translateTo so d3-zoom's constrain
       // uses the current content bbox (e.g. when switching back from paper to free,
       // we don't want the stale paper bounds to clamp the transform).
       this._updateScrollbars()
       this.zoomListener.scaleTo(this.d3_selection_zoom_area, new_k)
-      // Board unitaire : centrer le contenu dans la fenêtre sur CHAQUE axe où il y a
-      // du mou (contenu plus petit que la fenêtre à l'échelle de fit). areaAutoFit cale
-      // sinon le contenu en haut-gauche. On ne se base PAS sur is_horiz : pour un board
-      // compact dans un grand modal, this._width/_height valent la fenêtre →
-      // ratio_h==ratio_v → is_horiz=false → seul l'horizontal était centré.
-      // Scopé is_unitary pour ne rien changer au diagramme principal.
+      // Board unitaire (scopé is_unitary pour ne rien changer au diagramme principal) :
+      // - avec nœud central → on l'épingle au CENTRE de la fenêtre (translateTo place le
+      //   monde (0,0) en pixel [px,py], donc le point monde cnx/cny tombe au centre).
+      //   C'est ce qui le maintient au même endroit d'un focus à l'autre.
+      // - fallback sans central (vue générique) → on centre la bbox sur chaque axe où il
+      //   y a du mou (contenu plus petit que la fenêtre). On ne se base PAS sur is_horiz :
+      //   pour un board compact dans un grand modal, _width/_height valent la fenêtre →
+      //   ratio_h==ratio_v → is_horiz=false → seul l'horizontal serait centré.
       const center_h = this.is_unitary && bbox.width * new_k < this.window_fitting_width
       const center_v = this.is_unitary && bbox.height * new_k < this.window_fitting_height
-      const px = center_h
-        ? (this.window_fitting_width - bbox.width * new_k) / 2 - bbox.x * new_k
-        : this._fit_margin / 2 + (is_horiz ? label_overflow_left : 0) - this._background_d3_groups_shift_x * new_k
-      const py = center_v
-        ? (this.window_fitting_height - bbox.height * new_k) / 2 - bbox.y * new_k + this.getNavBarHeight()
-        : this._fit_margin / 2 + this.getNavBarHeight() + (!is_horiz ? label_overflow_top : 0) - this._background_d3_groups_shift_y * new_k
+      const px = unitary_center_node
+        ? this.window_fitting_width / 2 - cnx * new_k
+        : center_h
+          ? (this.window_fitting_width - bbox.width * new_k) / 2 - bbox.x * new_k
+          : this._fit_margin / 2 + (is_horiz ? label_overflow_left : 0) - this._background_d3_groups_shift_x * new_k
+      const py = unitary_center_node
+        ? this.window_fitting_height / 2 + this.getNavBarHeight() - cny * new_k
+        : center_v
+          ? (this.window_fitting_height - bbox.height * new_k) / 2 - bbox.y * new_k + this.getNavBarHeight()
+          : this._fit_margin / 2 + this.getNavBarHeight() + (!is_horiz ? label_overflow_top : 0) - this._background_d3_groups_shift_y * new_k
       this.zoomListener.translateTo(this.d3_selection_zoom_area, 0, 0, [px, py])
       this.drawBackground()
       this.drawGrid()
