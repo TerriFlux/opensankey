@@ -1243,6 +1243,12 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
   if (new_data.is_static && diagrams_list) dict_components_menu_top['diagrams'] = diagrams_element
   dict_components_menu_top = { ...dict_components_menu_top, ...additionalMenus.current.external_top_buttons_item }
   if (new_data.is_static && new_data.publish_options.edit_button) dict_components_menu_top['edit'] = edit_button
+  // Onglet « Unit. » (sankey unitaire OS+) : aligné avec les boutons statiques (à côté
+  // d'« Éditer »), pas dans le bloc méta de droite (sinon retour à la ligne). Le bouton se
+  // masque de lui-même si OS+ est absent.
+  if (new_data.is_static && new_data.publish_options.unitary) {
+    dict_components_menu_top['unitary'] = <UnitaryTabButton new_data={new_data} />
+  }
   dict_components_menu_top['help'] = help_button
 
   return <Box
@@ -1385,10 +1391,6 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
           <TopBarStateButtons new_data={new_data} />
           <Divider orientation='vertical' height='1.5rem' borderColor='gray.300' margin='0 0.25rem' />
         </> : <></>}
-        {/* En publish : onglet « Unit. » seul (sans le reste du bloc d'état), activé par
-            l'option de publication `unitary`. Le bouton se masque de lui-même si OS+ absent. */}
-        {new_data.is_static && new_data.publish_options.unitary ?
-          <UnitaryTabButton new_data={new_data} /> : <></>}
         {constent_additional_nav_item}
         <AppInfoPopover new_data={new_data} />
         {/* Language selector kept as the right-most control of the topbar. */}
