@@ -1379,7 +1379,21 @@ export class Class_DrawingArea {
             ? (unitary_center_node.data_value / this._scale) * 100
             : 0
           if (central_flow_h > 0) {
-            new_k = (UNITARY_CENTRAL_HEIGHT_FRACTION * this.window_fitting_height) / central_flow_h
+            const k_height = (UNITARY_CENTRAL_HEIGHT_FRACTION * this.window_fitting_height) / central_flow_h
+            // BORNE PAR LA LARGEUR. L'étoile unitaire est disposée HORIZONTALEMENT (source → central →
+            // cible) et le rendu CENTRE sur le nœud central (px = W/2 − cnx·k). L'échelle ci-dessus ne
+            // vise que la HAUTEUR du central : sur un conteneur PORTRAIT (étroit et haut, ex. panneau
+            // docké dans la colonne droite à côté du tableur/doc), elle déborde en largeur et pousse les
+            // nœuds latéraux hors champ. On borne donc par l'échelle qui fait tenir, AUTOUR DE cnx, la
+            // plus grande demi-extension du contenu (formes + labels, bbox incluant le texte ici car
+            // _k_fit=1) dans la largeur disponible : 2·max(cnx−bbox.x, bbox.droite−cnx)·k ≤ W−marge.
+            // En PAYSAGE (ancien modal large), k_width ≥ k_height → min() retombe sur k_height : taille
+            // apparente du central inchangée, comportement préservé.
+            const half_w = Math.max(cnx - bbox.x, (bbox.x + bbox.width) - cnx)
+            const k_width = half_w > 0
+              ? (this.window_fitting_width - this._fit_margin) / (2 * half_w)
+              : k_height
+            new_k = Math.min(k_height, k_width)
           } else {
             // Fallback (central sans hauteur) : fit des FORMES des nœuds visibles (pas des
             // libellés, souvent très longs), centré sur le nœud (demi-extension max ×2).
