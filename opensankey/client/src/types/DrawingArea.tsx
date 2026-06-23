@@ -1451,7 +1451,22 @@ export class Class_DrawingArea {
       this.zoomListener.translateTo(this.d3_selection_zoom_area, 0, 0, [px, py])
       this.drawBackground()
       this.drawGrid()
-      if (this._k_fit !== prev_k_fit) this._refreshLabelsForFitZoom()
+      if (this._k_fit !== prev_k_fit) {
+        this._refreshLabelsForFitZoom()
+        // Issue #165 — police verrouillée : le refresh ci-dessus vient d'agrandir les
+        // labels en coordonnées monde (compensation passée de 1/k_avant à 1/new_k). Or
+        // _updateScrollbars (appelé AVANT scaleTo/translateTo) avait posé le
+        // translateExtent sur la bbox des labels encore à leur ANCIENNE taille (souvent
+        // native au 1er fit) ; le constrain d3 a donc ancré le bord des PETITS labels au
+        // viewport, et les labels désormais agrandis débordent (passent sous la top bar
+        // en haut, hors écran à gauche). On recalcule l'extent sur la bbox réelle des
+        // labels puis on ré-applique le translateTo : le constrain ré-ancre le VRAI bord
+        // des labels dans la zone visible (sous la top bar, marge à gauche).
+        if (this._font_size_locked) {
+          this._updateScrollbars()
+          this.zoomListener.translateTo(this.d3_selection_zoom_area, 0, 0, [px, py])
+        }
+      }
     }
   }
 
