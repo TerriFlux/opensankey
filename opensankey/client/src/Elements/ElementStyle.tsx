@@ -288,7 +288,7 @@ elementStyleConfigs[SankeyUnitaryNodeStyle] = {
     shape_border_dashed: true,
     name_label_bold: true,
     name_label_uppercase: true,
-    name_label_box_width: 350,
+    name_label_box_width: 150,
     name_label_background_visible: false,
 
     shape_position_dx: 250
@@ -308,7 +308,7 @@ elementStyleConfigs[SankeyUnitaryNodeInputStyle] = {
     shape_min_width: 1,
     shape_min_height: 1,
     shape_visible: false,
-    name_label_box_width: 250,
+    name_label_box_width: 150,
     shape_position_dx: 250,
     shape_position_dy: 25
   }
@@ -326,7 +326,7 @@ elementStyleConfigs[SankeyUnitaryNodeOutputStyle] = {
     shape_min_width: 1,
     shape_min_height: 1,
     shape_visible: false,
-    name_label_box_width: 250,
+    name_label_box_width: 150,
     shape_position_dx: 250,
     shape_position_dy: 25
   }
