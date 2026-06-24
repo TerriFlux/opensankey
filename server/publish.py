@@ -84,7 +84,7 @@ def safe_copy(src, dst):
 # Dossiers à ne jamais lister comme publiables.
 _EXCLUDED_DIRS = {
     "Tous", "mfadata", "artifacts", "artefacts", "Archives",
-    "public", "Documents", "Livrables",
+    "public", "Documents", "Livrables", "Partenaires", "Interne",
 }
 
 
