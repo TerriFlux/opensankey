@@ -14,7 +14,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     ...super.menu_top_order.filter(group => !group.includes('aide')),
     ['diagrams', 'views', 'afm', 'edit'],
     ['aide'],
-    ['views_nav'],
+    ['views_nav', 'data_tag_topbar'],
   ]
   private _dict_setter_show_dialog_plus: OSPShowMenuComponentsVarType
 

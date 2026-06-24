@@ -335,6 +335,7 @@ export const resources_app_elements = {
       'elements_mfa_blocked_long': 'Some Sankey elements are not visible because they come from MFASankey and your account does not have this module',
       Tags: {
         sequence: 'Sequence',
+        topbar: 'Top bar',
         sequence_timeout: 'Timeout between steps',
         tooltips: {
           sequence: 'Activate mode sequence for the datatag group, it make appear a sequential stepper to play tag after of the group'
@@ -818,6 +819,7 @@ export const resources_app_elements = {
       Tags: {
         unit: 'Unités',
         sequence: 'Séquence',
+        topbar: 'Barre du haut',
         sequence_timeout: 'Délai entre étapes',
         tooltips: {
           unit: 'Unités',
@@ -1319,6 +1321,7 @@ export const resources_app_elements = {
       'elements_mfa_blocked_long': 'Algunos elementos del Sankey no son visibles porque provienen de MFASankey y su cuenta no tiene este módulo',
       Tags: {
         sequence: 'Secuencia',
+        topbar: 'Barra superior',
         sequence_timeout: 'Tiempo entre pasos',
         tooltips: {
           sequence: 'Activar el modo secuencia para el grupo de etiquetas de datos, muestra un stepper secuencial para reproducir las etiquetas del grupo'
@@ -1816,6 +1819,7 @@ export const resources_app_elements = {
       'elements_mfa_blocked_long': 'Einige Sankey-Elemente sind nicht sichtbar, da sie aus MFASankey stammen und Ihr Konto dieses Modul nicht besitzt',
       Tags: {
         sequence: 'Sequenz',
+        topbar: 'Obere Leiste',
         sequence_timeout: 'Zeitabstand zwischen Schritten',
         tooltips: {
           sequence: 'Sequenzmodus für die Daten-Tag-Gruppe aktivieren, zeigt einen sequenziellen Stepper an, um die Tags der Gruppe nacheinander abzuspielen'
@@ -2313,6 +2317,7 @@ export const resources_app_elements = {
       'elements_mfa_blocked_long': 'Alcuni elementi del Sankey non sono visibili perché provengono da MFASankey e il tuo account non possiede questo modulo',
       Tags: {
         sequence: 'Sequenza',
+        topbar: 'Barra superiore',
         sequence_timeout: 'Tempo tra i passaggi',
         tooltips: {
           sequence: 'Attiva la modalità sequenza per il gruppo di tag dati, mostra uno stepper sequenziale per riprodurre i tag del gruppo'

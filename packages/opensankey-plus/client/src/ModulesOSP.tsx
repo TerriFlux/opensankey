@@ -34,6 +34,7 @@ import {
 } from './deps/OpenSankey/Modules'
 
 import { ContextZDT } from './components/ContextZDTOSP'
+import { BannerDataTagTopbar } from './deps/OpenSankey/components/topmenus/Toolbar'
 
 import {
   ModalTransparentViewAttrOSP,
@@ -102,6 +103,9 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   additionalMenus.current.external_top_buttons_item['views'] = <BannerViewsOSP app_data={new_data_plus} />
   // Navigation entre vues (Préc./sélecteur/Suiv.), bloc topbar isolé après « Aide ».
   additionalMenus.current.external_top_buttons_item['views_nav'] = <BannerViewNavOSP app_data={new_data_plus} />
+  // Sélecteur de data tags en topbar (groupes dont la bannière vaut 'topbar'), placé
+  // à côté de la navigation entre vues.
+  additionalMenus.current.external_top_buttons_item['data_tag_topbar'] = <BannerDataTagTopbar app_data={new_data} />
 
   // Trial state-aware topbar CTA. Hidden when the user holds a real OS+ licence.
   // Rendered in the top-right via additional_nav_item, alongside login buttons.

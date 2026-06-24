@@ -1036,6 +1036,13 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                             >
                               {t('Tags.sequence')}
                             </option> : <></>}
+                            {elementTagNameProp == 'data_taggs' ? <option
+                              key={'topbar' + tag_group.id}
+                              id='TopbarBaner'
+                              value='topbar'
+                            >
+                              {t('Tags.topbar')}
+                            </option> : <></>}
                           </Select>
                         </OSTooltip>
                         </Td>
