@@ -18,6 +18,104 @@ import { Type_DisaggregationGap, const_default_position_x, const_default_positio
 const width_fitler_drawer = 270
 
 /**
+ * Reconstruit les child links et redessine après un changement de sélection d'un
+ * groupe de data tags. Suppose que la sélection (selectTagsFromId/Ids) a déjà été
+ * appliquée sur `tagg`. Factorisé pour être partagé entre le panneau de filtres et
+ * le sélecteur de data tags en topbar (banner 'topbar').
+ */
+export const applyDataTagChildLinks = (
+  app_data: Class_ApplicationData,
+  tagg: Class_DataTagGroup,
+  entries: string[]
+) => {
+  // La sélection à valeur unique a pu poser bypass_redraws=true (preview Menu
+  // unitaire) — ici le draw() final serait un no-op et le changement d'unité (scale
+  // par tag) ne se verrait pas. On le remet à false pour que le redraw réapplique
+  // l'échelle par dataTag.
+  app_data.drawing_area.bypass_redraws = false
+  app_data.drawing_area.sankey.links_list.forEach(l => {
+    if (l.is_multi_link) return
+
+    if (entries.length === 1) {
+      Object.keys(l.child_links).forEach(key => {
+        l.child_links[key].delete()
+        delete l.child_links[key]
+      })
+    } else {
+      tagg.tags_list.forEach(tag => {
+        if (!tag.is_selected && tag.id in l.child_links) {
+          l.child_links[tag.id].delete()
+          delete l.child_links[tag.id]
+        }
+      })
+      tagg.selected_tags_list.forEach(tag => {
+        if (tag.id in l.child_links || l.is_multi_link) return
+        const child_link = app_data.drawing_area.sankey.addNewLink(l.source, l.target)
+        child_link.copyFrom(l)
+        l.addChildLink(child_link, tag)
+      })
+    }
+  })
+
+  // Les hauteurs de nœuds dépendent des valeurs des liens (qui viennent de changer
+  // avec le data tag). En mode paramétrique il faut donc rejouer la chaîne de
+  // positionnement pour que l'écart entre nœuds reste cohérent avec les nouvelles
+  // hauteurs.
+  if (app_data.drawing_area.sankey.default_style.shape_position_type === 'parametric') {
+    app_data.drawing_area.nodePositioning.computeParametrization(false)
+  }
+
+  app_data.drawing_area.draw()
+  app_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.reorganizeIOLinks())
+  app_data.drawing_area.orderElementOnDA()
+}
+
+/**
+ * Sélecteur de data tags rendu dans la topbar (groupes dont la bannière vaut
+ * 'topbar'), pensé pour être placé à côté de la navigation entre vues. Rend un
+ * <Select> mono-sélection par groupe ; le changement applique la même
+ * reconstruction de child links + redraw que la sélection mono-valeur du panneau
+ * de filtres (cf. applyDataTagChildLinks).
+ */
+export const BannerDataTagTopbar = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const { drawing_area } = app_data
+  const { sankey } = drawing_area
+  const [, setCount] = useState(0)
+  app_data.menu_configuration.ref_to_toolbar_data_tag_updater.current = () => setCount(c => c + 1)
+
+  const topbar_taggs = sankey.getTagGroupsAsList('data_taggs')
+    .filter(grp => (grp as unknown as Class_DataTagGroup).banner === 'topbar') as unknown as Class_DataTagGroup[]
+
+  if (topbar_taggs.length === 0) return <></>
+
+  return <HStack className='BannerDataTagTopbar' alignItems='center' spacing='0.2rem'>
+    {topbar_taggs.map(tagg => {
+      if (Object.keys(tagg.tags_dict || {}).length < 1) return <React.Fragment key={tagg.id} />
+      const selected_value = tagg.selected_tags_list[0]?.id ?? tagg.tags_list[0]?.id ?? ''
+      return <HStack key={tagg.id} alignItems='center' spacing='0.3rem'>
+        <Box as='span' whiteSpace='nowrap' fontSize='0.8rem'>{tagg.name}</Box>
+        <Box minW='7rem' maxW='14rem' alignSelf='center'>
+          <OSTooltip placement='bottom' label={tagg.name}>
+            <Select
+              value={selected_value}
+              onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+                tagg.selectTagsFromId(evt.target.value)
+                applyDataTagChildLinks(app_data, tagg, [evt.target.value])
+                app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
+              }}
+            >
+              {tagg.tags_list.map(tag => (
+                <option key={tag.id} value={tag.id}>{tag.display_name}</option>
+              ))}
+            </Select>
+          </OSTooltip>
+        </Box>
+      </HStack>
+    })}
+  </HStack>
+}
+
+/**
  * Component that show filters for for link value and tag group (node,flow &  data)
  *
  * @param {*} { app_data }
@@ -722,48 +820,10 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
     updateComponents()
   }
 
-  // Logique spécifique pour les data tags
+  // Logique spécifique pour les data tags (sélection déjà appliquée en amont par
+  // handleTagSelection). Délègue à la fonction factorisée partagée avec la topbar.
   const handleDataTagSelection = (tagg: Class_DataTagGroup, entries: string[]) => {
-    // La sélection à valeur unique a posé bypass_redraws=true (l.524) — utile au
-    // preview du Menu unitaire, mais ici le draw() final serait un no-op et le
-    // changement d'unité (donc la scale par tag, cf. unit_tag.scale) ne se verrait
-    // pas. On le remet à false pour que le redraw réapplique l'échelle par dataTag.
-    app_data.drawing_area.bypass_redraws = false
-    app_data.drawing_area.sankey.links_list.forEach(l => {
-      if (l.is_multi_link) return
-
-      if (entries.length === 1) {
-        Object.keys(l.child_links).forEach(key => {
-          l.child_links[key].delete()
-          delete l.child_links[key]
-        })
-      } else {
-        tagg.tags_list.forEach(tag => {
-          if (!tag.is_selected && tag.id in l.child_links) {
-            l.child_links[tag.id].delete()
-            delete l.child_links[tag.id]
-          }
-        })
-        tagg.selected_tags_list.forEach(tag => {
-          if (tag.id in l.child_links || l.is_multi_link) return
-          const child_link = app_data.drawing_area.sankey.addNewLink(l.source, l.target)
-          child_link.copyFrom(l)
-          l.addChildLink(child_link, tag)
-        })
-      }
-    })
-
-    // Les hauteurs de nœuds dépendent des valeurs des liens (qui viennent de changer
-    // avec le data tag). En mode paramétrique il faut donc rejouer la chaîne de
-    // positionnement pour que l'écart entre nœuds reste cohérent avec les nouvelles
-    // hauteurs.
-    if (app_data.drawing_area.sankey.default_style.shape_position_type === 'parametric') {
-      app_data.drawing_area.nodePositioning.computeParametrization(false)
-    }
-
-    app_data.drawing_area.draw()
-    app_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.reorganizeIOLinks())
-    app_data.drawing_area.orderElementOnDA()
+    applyDataTagChildLinks(app_data, tagg, entries)
   }
 
   // Création du sélecteur selon le type de banner
