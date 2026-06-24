@@ -28,7 +28,7 @@ import React, { useState } from 'react'
 import * as d3 from 'd3'
 import { Class_ApplicationData } from './ApplicationData'
 import { FType_InitializeAdditionalMenus } from '../Modules'
-import { value_option_percent_constants, ValueOptionType } from '../Elements/LinkValues'
+import { value_option_percent_constants, unit_stock_percent_constants, ValueOptionType } from '../Elements/LinkValues'
 import { Class_NodeBase } from '../Elements/NodeBase'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_DataTagGroup } from './TagGroup'
@@ -602,6 +602,15 @@ export const format_value = (
   const is_node = element instanceof Class_NodeElement
   const source = is_node ? node : link.source
   const target = is_node ? node : link.target
+  // Mode « collectées » (données brutes, non réconciliées) : une valeur affichée en %
+  // (% des entrées/sorties/parent d'un nœud, ou % du stock du nœud source/destination)
+  // se calculerait sur des sommes de flux incomplètes → résultat trompeur. On n'affiche
+  // donc rien dans ce cas, sans toucher au sélecteur d'unité (qui reste inchangé).
+  const is_percent_unit = value_option_percent_constants.includes(label_values.unit_type) ||
+    (unit_stock_percent_constants as readonly string[]).includes(label_values.unit_type)
+  if ((data_type === 'data' || data_type === 'data_label') && is_percent_unit) {
+    return ''
+  }
   let is_percent = false
   if (label_values.unit_type == '%IS') {
     let total_source = 0
