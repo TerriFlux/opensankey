@@ -1385,6 +1385,11 @@ export class SankeyPersistence {
     kwargs?: Type_JSON
   ) {
     const json_node_object = getJSONFromJSON(json_object, 'nodes', {})
+    // Passe 1 : créer + charger TOUS les nœuds (et l'ordre des liens io) avant de
+    // résoudre les dimensions. #193 — la résolution des dimensions (parent_name)
+    // ignore désormais tout parent absent de nodes_dict ; il faut donc que tous les
+    // nœuds réellement présents dans le fichier soient créés au préalable, sinon une
+    // référence parent en avant dans le JSON serait faussement traitée comme absente.
     Object.entries(json_node_object)
       .forEach(([_, node_json]) => {
         // Get or Create a node
@@ -1402,7 +1407,12 @@ export class SankeyPersistence {
           getJSONFromJSON(json_node_object, node.id, {}),
           {}
         )
-        // Set dimensions
+      })
+    // Passe 2 : tous les nœuds du fichier existent -> résoudre les dimensions.
+    Object.entries(json_node_object)
+      .forEach(([_, node_json]) => {
+        const node = sankey.nodes_dict[_]
+        if (!node) return
         node.dimensionsFromJSON(
           node_json as Type_JSON,
           json_object.version === '0.9' || json_object.version === '0.91',
