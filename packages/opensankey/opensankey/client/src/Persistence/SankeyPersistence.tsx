@@ -48,6 +48,9 @@ import { Class_Tag } from '../types/Tag'
 import { node_exchanges_style, elementStyleConfigs, product_sector_styles, ElementStyleKey, LinkStyle, NodeStyle, ContainerStyle } from '../Elements/ElementStyle'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
+// Issue #191 — migration de rétro-compat de la césure des libellés, isolée dans
+// son propre module pour rester testable sans le graphe d'imports lourd d'ici.
+import { applyWrapLongWordsRetrocompat } from './persistenceMigrations'
 
 
 export class BaseElementPersistence {
@@ -2420,6 +2423,10 @@ export class DrawingAreaPersistence {
 
     LegendPersistence.fromJSON(+version!, drawing_area.legend, json_object)
     SankeyPersistence.fromJSON(+version!, drawing_area.sankey, json_object)
+
+    // Issue #191 — rétro-compat de la césure des libellés mono-mots des anciens
+    // fichiers (< 1.1.4). Cf. doc de applyWrapLongWordsRetrocompat.
+    applyWrapLongWordsRetrocompat(drawing_area.sankey, version)
 
     //drawing_area['_list_g_element_id'] = getStringListFromJSON(json_object, 'order_g_elements', drawing_area.list_g_element)
     const order_from_json = getStringListFromJSON(json_object, 'order_g_elements', [])
