@@ -1139,6 +1139,9 @@ export const UniversalFileConverter = ({
       form_data.append('data', JSON.stringify(app_data.toJSON(toJSON_kwargs)))
     } else if (input_format == 'example_excel' || input_format == 'example_json') {
       form_data.append('file_name', file_path)
+      // Racine de résolution serveur : 'mfadata' pour la sankeythèque (contenu
+      // Etudes/Clients pas encore migré), défaut 'sankeydata' (templates/tutoriels).
+      if (config.example_root) form_data.append('example_root', config.example_root)
     } else {
       form_data.append('file', current_input_file as Blob)
     }

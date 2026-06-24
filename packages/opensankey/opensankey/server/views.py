@@ -489,13 +489,18 @@ def launch_conversion():
 
         if input_format == "example_excel" or input_format == "example_json":
             exemple = request.form["file_name"]
-            # Tout le contenu servi (templates/tutoriels) vit dans le submodule
-            # SankeyData (env SANKEY_DATA, posee automatiquement par app.py depuis
-            # la racine du checkout). Pas de repli MFAData. NB : on ne peut PAS
-            # deduire le chemin depuis __file__ ici, car opensankey est installe
-            # (copie) en site-packages cote serveur.
-            sankey_data = os.environ.get("SANKEY_DATA")
-            input_file_name = os.path.join(sankey_data, exemple) if sankey_data else exemple
+            # Racine de resolution des exemples, selon la source qui a liste le
+            # fichier (le client la passe explicitement) :
+            #  - 'sankeydata' (defaut) : templates + tutoriels, servis par
+            #    /menus/tutorials & l'index sur SANKEY_DATA (migration phase 1) ;
+            #  - 'mfadata' : la sankeytheque (Etudes/Clients), servie par
+            #    /menus/examples = parse_folder sur MFAData (PAS encore migree).
+            # NB : on ne peut PAS deduire le chemin depuis __file__ ici, car
+            # opensankey est installe (copie) en site-packages cote serveur.
+            example_root = request.form.get("example_root", "sankeydata")
+            root_env = "MFAData" if example_root == "mfadata" else "SANKEY_DATA"
+            data_root = os.environ.get(root_env)
+            input_file_name = os.path.join(data_root, exemple) if data_root else exemple
             if input_format == "example_json":
                 # Tolerance .json / .json.gz + conversion automatique en .json.gz
                 # au premier chargement (mise en cache sur disque), exactement
