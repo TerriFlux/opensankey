@@ -35,7 +35,7 @@ import { Class_DataTagGroup } from './TagGroup'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_BaseShape } from '../Elements/Element'
 import { getNameLabelValues } from '../Elements/ElementsAttributesConfig'
-import type { Type_RatioFluxConstraint } from './Sankey'
+import type { Type_RatioFluxConstraint, Type_RatioStockFluxConstraint } from './Sankey'
 
 export const default_file_name = 'Diagramme de Sankey'
 
@@ -414,6 +414,23 @@ export const link_ratio_constraint = (link: Class_LinkElement): Type_RatioFluxCo
 }
 
 /**
+ * Contrainte « ratio stock flux » (#156) dont le flux (source→destination) est le terme
+ * principal : `flux = coef × stock`, dans `sankey.ratio_stock_flux_constraints`. null
+ * s'il n'y en a pas. Même logique de match que `link_ratio_constraint` (nom des nœuds +
+ * data_tag par nom/id).
+ */
+export const link_ratio_stock_flux_constraint = (link: Class_LinkElement): Type_RatioStockFluxConstraint | null => {
+  const constraints = link.sankey.ratio_stock_flux_constraints
+  if (!constraints || constraints.length === 0) return null
+  const src = link.source.name
+  const dst = link.target.name
+  const dt = link.value?.data_tag ?? null
+  return constraints.find(c =>
+    c.origin === src && c.destination === dst &&
+    (c.data_tag == null || c.data_tag === dt?.name || c.data_tag === dt?.id)) ?? null
+}
+
+/**
  * Formate un nombre (déjà en %) selon les réglages de chiffres du label de valeur
  * (notation scientifique / chiffres significatifs / chiffres après la virgule).
  * Sans `label_values`, retombe sur le comportement historique (.toFixed(2)).
@@ -442,7 +459,7 @@ const format_percent_number = (
  * `label_values` (réglages du label de valeur) gouverne les chiffres après la virgule.
  */
 export const ratio_flux_coef_text = (
-  c: Type_RatioFluxConstraint,
+  c: { coef: number | null, min: number | null, max: number | null },
   label_values?: ReturnType<typeof getNameLabelValues>
 ): string | null => {
   const pct = (v: number) => format_percent_number(v * 100, label_values)
@@ -463,7 +480,11 @@ export const link_ratio_coef_label = (
   label_values?: ReturnType<typeof getNameLabelValues>
 ): string | null => {
   const c = link_ratio_constraint(link)
-  return c ? ratio_flux_coef_text(c, label_values) : null
+  if (c) return ratio_flux_coef_text(c, label_values)
+  // #156 — à défaut d'une contrainte ratio flux, afficher le coef d'une contrainte
+  // ratio stock flux (flux = coef × stock) sur le même flux principal.
+  const sc = link_ratio_stock_flux_constraint(link)
+  return sc ? ratio_flux_coef_text(sc, label_values) : null
 }
 
 /**
