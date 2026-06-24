@@ -1912,6 +1912,13 @@ export interface ConverterConfig {
   // Backend
   server_endpoint: string
 
+  // Racine de résolution serveur des fichiers d'exemple (input_format
+  // example_excel / example_json). 'sankeydata' (défaut) = templates + tutoriels
+  // migrés dans le submodule SankeyData (env SANKEY_DATA) ; 'mfadata' = contenu
+  // de la sankeythèque (Etudes/Clients), servi par /menus/examples depuis
+  // MFAData et pas encore migré. Forwardé tel quel dans le form_data du launch.
+  example_root?: 'sankeydata' | 'mfadata'
+
   input: {
     required: boolean
     format: {
@@ -2122,6 +2129,46 @@ export const CONVERTER_CONFIGS = {
     title: 'ProcessDialog.load_example',
     launch_button_label: 'ProcessDialog.load',
     server_endpoint: '/opensankey/convert/launch',
+    input: {
+      required: false,
+      format: {
+        options: ['example_excel']  // Format fixe, pas de sélecteur
+      },
+    },
+    output: {
+      required: false,
+      format: {
+        options: ['json']  // Format fixe
+      },
+    }
+  } satisfies ConverterConfig,
+  // Sankeythèque : mêmes dialogues que load_example_* mais le contenu
+  // (Etudes/Clients) est servi par /menus/examples depuis MFAData et n'est pas
+  // encore migré vers SankeyData → example_root: 'mfadata' pour que
+  // convert/launch résolve le file_name contre MFAData et non SANKEY_DATA.
+  load_sankeytheque_json: {
+    title: 'ProcessDialog.load_example',
+    launch_button_label: 'ProcessDialog.load',
+    server_endpoint: '/opensankey/convert/launch',
+    example_root: 'mfadata',
+    input: {
+      required: false,
+      format: {
+        options: ['example_json']  // Format fixe, pas de sélecteur
+      },
+    },
+    output: {
+      required: false,
+      format: {
+        options: ['json']  // Format fixe
+      },
+    }
+  } satisfies ConverterConfig,
+  load_sankeytheque_excel: {
+    title: 'ProcessDialog.load_example',
+    launch_button_label: 'ProcessDialog.load',
+    server_endpoint: '/opensankey/convert/launch',
+    example_root: 'mfadata',
     input: {
       required: false,
       format: {
