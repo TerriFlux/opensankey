@@ -801,7 +801,16 @@ export class NodeDimensionsManager {
             ) {
               // Get parent
               parent_id = matching_nodes_id[parent_id] ?? parent_id
-              const parent = this._node.sankey.nodes_dict[parent_id] ?? this._node.sankey.addNewNode(parent_id, parent_id)
+              // #193 — ne PAS matérialiser un parent absent du fichier. Un diagramme
+              // sauvegardé en « éléments visibles uniquement » (niveaux d'agrégation
+              // repliés → parents exclus, voulu) laisse sur chaque feuille un
+              // `dimensions[*].parent_name` pendant. La référence pendante doit être
+              // ignorée silencieusement (l'enfant reste à son propre niveau, sans
+              // parent), sinon on recrée un nœud orphelin à chaque ré-ouverture.
+              // Tous les nœuds réellement présents existent déjà ici (load_nodes les
+              // crée tous avant de résoudre les dimensions), donc une absence de
+              // nodes_dict signifie bien « parent hors fichier ».
+              const parent = this._node.sankey.nodes_dict[parent_id]
 
               // Get child & parent tags
               if (parent) {
