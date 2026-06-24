@@ -321,7 +321,7 @@ const SankeyThequeCardsGenerator: FC<FCType_SankeyThequeCardsGenerator> = ({ new
                 const file_name = [...path, cardStruct[1].is_json].join('/')
                 new_data.menu_configuration_sa.dict_setter_show_dialog_SA.ref_setter_show_modal_sankeytheque.current(false)
                 new_data.menu_configuration.ref_universal_converter_set_config.current(
-                  CONVERTER_CONFIGS['load_example_json'], file_name!, true
+                  CONVERTER_CONFIGS['load_sankeytheque_json'], file_name!, true
                 )
                 new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current!(true)
               }}>
@@ -333,7 +333,7 @@ const SankeyThequeCardsGenerator: FC<FCType_SankeyThequeCardsGenerator> = ({ new
                 const file_name = [...path, cardStruct[1].is_reconciled ? cardStruct[1].is_reconciled : cardStruct[1].is_excel].join('/')
                 new_data.menu_configuration_sa.dict_setter_show_dialog_SA.ref_setter_show_modal_sankeytheque.current(false)
                 new_data.menu_configuration.ref_universal_converter_set_config.current(
-                  CONVERTER_CONFIGS['load_example_excel'], file_name!, true
+                  CONVERTER_CONFIGS['load_sankeytheque_excel'], file_name!, true
                 )
                 new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current!(true)
               }}>
