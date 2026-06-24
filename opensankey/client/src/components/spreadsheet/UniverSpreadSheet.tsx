@@ -465,7 +465,12 @@ export const UniverSpreadSheet = (
             // formulaBar: false -> retire la barre de formule (nom de cellule + fx + contenu) en
             // haut de la grille : inutile ici (pas de saisie de formules, juste de la donnée tabulaire).
             formulaBar: false,
-            footer: { statisticBar: false }
+            // addSheetButtonConfig.show: false -> masque le bouton « + » d'ajout d'onglet (créer une
+            // feuille arbitraire n'a pas de sens ici ; onglets gérés via le sélecteur « Onglets »).
+            // NE PAS le masquer en CSS : le « + » et les flèches de navigation entre onglets partagent
+            // le même composant Univer (data-u-comp="sheet-bar-append-button") -> un display:none CSS
+            // masquerait AUSSI les flèches de scroll des onglets.
+            footer: { statisticBar: false, addSheetButtonConfig: { show: false } }
           }),
           // Filtre (autofilter Excel : flèche par colonne, tri, recherche, valeurs) + tri par colonne.
           UniverSheetsFilterPreset(),
@@ -764,9 +769,6 @@ export const UniverSpreadSheet = (
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
-      {/* Masque le bouton "+" d'ajout d'onglet de la barre Univer : créer une feuille arbitraire
-          n'a pas de sens ici (onglets calqués sur le format Excel, gérés via le sélecteur « Onglets »). */}
-      <style>{'[data-u-comp="sheet-bar-append-button"] { display: none !important; }'}</style>
       <div style={{
         display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'nowrap', overflowX: 'auto',
         padding: '1px 6px', borderBottom: '1px solid #e2e8f0', background: '#f7fafc'
