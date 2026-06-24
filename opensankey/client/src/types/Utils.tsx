@@ -407,10 +407,20 @@ export const link_ratio_constraint = (link: Class_LinkElement): Type_RatioFluxCo
   if (!constraints || constraints.length === 0) return null
   const src = link.source.name
   const dst = link.target.name
-  const dt = link.value?.data_tag ?? null
-  return constraints.find(c =>
-    c.origin === src && c.destination === dst &&
-    (c.data_tag == null || c.data_tag === dt?.name || c.data_tag === dt?.id)) ?? null
+  // La contrainte peut cibler PLUSIEURS familles de data tags (ex. Année +
+  // Scenario), sérialisées dans `data_tag` jointes par ":". On compare donc
+  // contre la combinaison COURANTE complète du flux (un tag par famille), et
+  // pas le seul tag de la feuille la plus profonde — sinon le match échouait
+  // dès qu'il y avait deux familles (label % vide). Une famille absente de la
+  // contrainte = wildcard : elle matche toutes ses valeurs.
+  const selected = link.selected_data_tags_list ?? []
+  const sel_names = new Set(selected.map(t => t.name))
+  const sel_ids = new Set(selected.map(t => t.id))
+  return constraints.find(c => {
+    if (c.origin !== src || c.destination !== dst) return false
+    if (c.data_tag == null) return true
+    return String(c.data_tag).split(':').every(w => sel_names.has(w) || sel_ids.has(w))
+  }) ?? null
 }
 
 /**
