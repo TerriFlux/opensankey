@@ -79,6 +79,7 @@ const OPTION_GROUPS: Array<{ title: string, options: FlagOpt[] }> = [
       { key: 'footer', label: 'Pied de page', def: false },
       { key: 'toolbar', label: "Barre d'outils — modes de position (absolu/proportionnel/échelle)", def: false },
       { key: 'fit_toolbar', label: "Barre d'outils — ajustement / verrous / plein écran", def: false },
+      { key: 'fullscreen', label: 'Bouton plein écran (même sans barre d’outils)', def: true },
       { key: 'embedded', label: 'Mode intégré (hauteur 100 %)', def: false },
       { key: 'recenter', label: 'Recentrage automatique à l’ouverture', def: true },
       { key: 'unitary', label: 'Onglet « Unit. » (sankey unitaire)', def: false },
