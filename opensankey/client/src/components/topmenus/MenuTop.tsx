@@ -203,6 +203,34 @@ export const UnitaryTabButton = ({ new_data }: BaseApplicationDataType) => {
   </OSTooltip>
 }
 
+/**
+ * Bouton « Doc » de la grande zone en mode publication, à côté d'« Unit. »/« Éditer ».
+ * N'apparaît que si le diagramme embarque une documentation (documentation_markdown non vide) ;
+ * le clic toggle l'affichage du panneau doc (rendu par MainZoneTabs), surligné tant qu'il est ouvert.
+ * En édition normale, le toggle Doc vit déjà dans TopBarStateButtons.
+ */
+export const DocTabButton = ({ new_data }: BaseApplicationDataType) => {
+  const { showDoc, showDiagram, showSpreadsheet, showUnitary, setShowDoc } = useMainZone(new_data)
+  if (new_data.documentation_markdown === '') return <></>
+  // Bascule en gardant toujours au moins un panneau affiché (diagramme / tableur / doc / unitaire).
+  const toggleDoc = () => {
+    const next = !showDoc
+    if (!next && !(showDiagram || showSpreadsheet || showUnitary)) return
+    setShowDoc(next)
+  }
+  return <OSTooltip placement='bottom' label='Documentation'>
+    <Button
+      aria-label='Doc'
+      className='topbar_button_main_zone_doc'
+      onClick={toggleDoc}
+      {...main_zone_btn_style(showDoc)}
+    >
+      <FontAwesomeIcon icon={faFileLines} style={{ height: '0.95rem', width: '0.95rem' }} />
+      <Box as='span' style={{ fontSize: '0.5rem', lineHeight: 1 }}>Doc</Box>
+    </Button>
+  </OSTooltip>
+}
+
 export const TopBarStateButtons = ({ new_data }: BaseApplicationDataType) => {
   const { t, icon_library, history } = new_data
   const {
@@ -1256,7 +1284,14 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
   if (new_data.is_static && new_data.publish_options.unitary) {
     dict_components_menu_top['unitary'] = <UnitaryTabButton new_data={new_data} />
   }
-  dict_components_menu_top['help'] = help_button
+  // Bouton « Doc » : affiche/masque le panneau documentation (s'auto-masque si pas de doc).
+  if (new_data.is_static && new_data.publish_options.doc) {
+    dict_components_menu_top['doc'] = <DocTabButton new_data={new_data} />
+  }
+  // Bouton « Aide à la navigation » : optionnel en publish (défaut masqué).
+  if (new_data.publish_options.navigation_help) {
+    dict_components_menu_top['help'] = help_button
+  }
 
   return <Box
     display='grid'
