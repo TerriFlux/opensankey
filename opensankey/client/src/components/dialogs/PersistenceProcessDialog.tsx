@@ -324,12 +324,22 @@ export const retrieveJSONResults = (
   // compressed cache (normal "load into current view" UX). The reconciliation
   // blob→blob path passes false: the reconciled diagram is a preview that must
   // not silently overwrite the saved view.
-  persist_view_to_cache: boolean = true
+  persist_view_to_cache: boolean = true,
+  // Reconciliation/completion of an EXISTING diagram (blob→blob) : on garde
+  // l'échelle des flux que l'utilisateur avait déjà calée, au lieu de la
+  // recalculer (computeScale) sur les nouvelles valeurs solveur — sinon un flux
+  // de bilan complété (gros) fait sauter l'échelle (ex. 15 → 90) et écrase tous
+  // les autres flux. L'import Excel (excel→blob), lui, n'a pas d'échelle
+  // préexistante : il garde le recalcul.
+  preserve_scale: boolean = false
 ) => {
   // // Failsafe
   // if (text === '{}')
   //   return
   const current_json = app_data.toJSON()
+  // Échelle des flux calée par l'utilisateur AVANT le rechargement (le reset plus
+  // bas recrée la drawing_area). Restaurée en fin de fonction quand preserve_scale.
+  const initial_scale = app_data.drawing_area.scale
   // Layout source for the "keep the starting layout" transfer (updateFromJSON below).
   // app_data.toJSON() serialises the MASTER at top-level; when we are inside a view,
   // the active view's own DA JSON lives under ['views'][view_id] (refreshed from the
@@ -438,6 +448,12 @@ export const retrieveJSONResults = (
   } else {
     app_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true, optimize_crossing, h_spacing, v_spacing, sources_mode, sinks_mode)
     app_data.drawing_area.sankey.setTrade(true)
+  }
+  // Réconciliation/complétion d'un diagramme existant : restaurer l'échelle que
+  // l'utilisateur avait calée (computeScale l'aurait clobbérée avec le nouveau
+  // max de flux complété).
+  if (preserve_scale) {
+    app_data.drawing_area.scale = initial_scale
   }
   app_data.drawing_area.draw()
   app_data.menu_configuration.updateComponentRelatedToStyles()
@@ -957,6 +973,9 @@ export const UniversalFileConverter = ({
             // Reconciliation runs blob→blob; Excel-into-current-view is the other
             // view_only trigger.
             const is_reconciliation_preview = is_inside_view && input_format == 'blob' && output_format == 'blob'
+            // Réconciliation/complétion d'un diagramme existant (blob→blob), dans
+            // une vue OU sur le master : on préserve l'échelle de flux déjà calée.
+            const is_blob_reconciliation = input_format == 'blob' && output_format == 'blob'
             const view_only =
               is_reconciliation_preview ||
               (is_inside_view && input_format == 'excel' && Boolean(getCurrentInputOptions()?.['only_current_view']))
@@ -976,7 +995,8 @@ export const UniversalFileConverter = ({
               view_only,
               // Reconciliation is a preview — don't freeze it into the view cache.
               // The Excel-into-current-view load keeps the default (persist).
-              !is_reconciliation_preview
+              !is_reconciliation_preview,
+              is_blob_reconciliation
             )
           }
           //setAutoLoad(false)
