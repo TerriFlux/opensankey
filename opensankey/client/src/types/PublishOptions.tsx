@@ -24,6 +24,7 @@ export interface SankeyGlobals {
   footer?: boolean       // default false
   toolbar?: boolean      // default false : groupe des modes de position (absolu/proportionnel/échelle) dans la barre du bas
   fit_toolbar?: boolean  // default false : groupe ajustement/verrous/plein écran dans la barre du bas
+  fullscreen?: boolean   // default true : bouton plein écran isolé en publish, même quand `fit_toolbar` est masqué
   filter_bar?: boolean   // default true : barre de filtres à gauche (drawer)
   embedded?: boolean     // default false (height = innerHeight) ; true => 100%
   recenter?: boolean     // default true : auto-recenter à l'ouverture en publish
@@ -69,6 +70,7 @@ export interface PublishOptions {
   footer: boolean
   toolbar: boolean
   fit_toolbar: boolean
+  fullscreen: boolean
   filter_bar: boolean
   embedded: boolean
   recenter: boolean
@@ -137,6 +139,7 @@ export const getPublishOptions = (): PublishOptions => {
     footer: bool(s.footer, false),
     toolbar: bool(s.toolbar, false),
     fit_toolbar: bool(s.fit_toolbar, false),
+    fullscreen: bool(s.fullscreen, true),
     filter_bar: bool(s.filter_bar, true),
     embedded: bool(s.embedded, false),
     recenter: bool(s.recenter, true),
@@ -181,6 +184,7 @@ export type ViewerSankeyOptions = {
   footer?: boolean
   toolbar?: boolean
   fit_toolbar?: boolean
+  fullscreen?: boolean
   filter_bar?: boolean
   embedded?: boolean
   recenter?: boolean
@@ -220,7 +224,7 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
   const next: SankeyGlobals = { ...current, publish: true }
 
   const keys: Array<keyof ViewerSankeyOptions> = [
-    'editable', 'topbar', 'footer', 'toolbar', 'fit_toolbar', 'filter_bar', 'embedded', 'recenter',
+    'editable', 'topbar', 'footer', 'toolbar', 'fit_toolbar', 'fullscreen', 'filter_bar', 'embedded', 'recenter',
     'edit_button', 'unitary', 'doc', 'navigation_help',
     'logo', 'header', 'diagram', 'diagram_layout', 'diagram_layout_options',
     'diagrams_list', 'sous_filieres',
