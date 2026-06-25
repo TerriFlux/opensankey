@@ -9,8 +9,6 @@ import './traductions/traduction'
 import i18next from './traductions/traduction'
 import { SankeyApp } from './AppSA'
 import { Class_ApplicationDataSA } from './ApplicationDataSA'
-import { loadUniversalJSON } from './deps/OpenSankey+/deps/OpenSankey/Persistence/UniversalJSONCompression'
-import { Type_JSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
 import { useTranslation } from 'react-i18next'
 
 window.React = React
@@ -25,51 +23,26 @@ const root = createRoot(container)
 
 const App: FC = () => {
   const [dataApp, setDataApp] = useState<Class_ApplicationDataSA | null>(null)
-  const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const translation = useTranslation('translation', { useSuspense: false })
   useEffect(() => {
-    const initializeApp = async () => {
-      const newDataApp = new Class_ApplicationDataSA(!!window.sankey?.publish)
-      newDataApp.t = translation.t
-      newDataApp.i18n = translation.i18n
-      const opts = newDataApp.publish_options
-      if (opts.diagram) {
-        setIsLoading(true)
-
-        newDataApp.sendWaitingToast(() => {
-          console.log('Chargement du diagramme en cours...')
-        })
-
-        try {
-          if (typeof opts.diagram === 'string') {
-            newDataApp.file_name = opts.diagram
-            const data = await loadUniversalJSON(opts.diagram)
-            newDataApp.fromJSON(data as Type_JSON)
-            newDataApp.file_name = opts.diagram
-          } else {
-            // Objet JSON inline
-            newDataApp.fromJSON(opts.diagram as unknown as Type_JSON)
-          }
-
-          setDataApp(newDataApp)
-        } catch (error) {
-          console.error('Erreur lors du chargement du JSON:', error)
-          // Gérer l'erreur si nécessaire
-          setDataApp(newDataApp) // Ou gérer différemment selon vos besoins
-        } finally {
-          setIsLoading(false)
-        }
-      } else {
-        // Pas de diagramme à charger, initialiser directement
-        setDataApp(newDataApp)
-      }
+    const newDataApp = new Class_ApplicationDataSA(!!window.sankey?.publish)
+    newDataApp.t = translation.t
+    newDataApp.i18n = translation.i18n
+    // Le diagramme de publication (window.sankey.diagram) est chargé UNE SEULE FOIS
+    // par OpenSankeyApp (son useEffect de montage), APRÈS createNewMenuConfiguration().
+    // On ne fait PAS fromJSON ici : à ce stade menu_configuration et les refs de la
+    // drawing area n'existent pas encore (createNewMenuConfiguration appelle le hook
+    // useToast, donc n'est exécutable que dans le rendu d'OpenSankeyApp). Le faire ici
+    // plantait fromJSON (purgeSelection) et faisait basculer is_static → double
+    // chargement du .gz + erreurs console captées en mode publish (#196).
+    if (typeof newDataApp.publish_options.diagram === 'string') {
+      newDataApp.file_name = newDataApp.publish_options.diagram
     }
-
-    initializeApp()
+    setDataApp(newDataApp)
   }, [])
 
-  if (isLoading || !dataApp) {
+  if (!dataApp) {
     return (
       <>
         <style>
