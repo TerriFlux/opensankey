@@ -308,9 +308,17 @@ const buildUnitaryDrawingArea = (
     const in_style = new_drawing_area.sankey.styles_dict['LinkInUnitaryStyle']
     const out_style = new_drawing_area.sankey.styles_dict['LinkOutUnitaryStyle']
     if (value_mode === 'value') {
-      // Valeur brute (+ unité si un tag d'unité existe).
-      if (in_style) in_style.value_label_unit_type = 'unit_tag'
-      if (out_style) out_style.value_label_unit_type = 'unit_tag'
+      // Valeur brute (+ unité si un tag d'unité existe). On retire le forçage entier
+      // (value_label_custom_digit + nb_digit=0) hérité du mode '%' : sur des valeurs
+      // brutes il arrondirait à l'unité (0,5 → 0/1, 1234,5 → 1230) alors que le mode
+      // valeur doit refléter la donnée. Sans custom_digit, le format suit le STYLE
+      // unitaire (value_label_significant_digits + nb_significant_digits), donc reste
+      // pleinement configurable depuis ce style.
+      ;[in_style, out_style].forEach(style => {
+        if (!style) return
+        style.value_label_unit_type = 'unit_tag'
+        style.value_label_custom_digit = false
+      })
     } else {
       // Normalisé : ratio vs un flux de référence fixé à 1 (sankey.normalised_link).
       // Les styles unitaires forcent value_label_custom_digit + nb_digit=0 (entiers),
