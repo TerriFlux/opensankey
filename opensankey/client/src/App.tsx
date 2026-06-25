@@ -121,25 +121,31 @@ export const OpenSankeyApp = ({
     }
   }
 
-  if (opts.diagram) {
-    if (typeof opts.diagram === 'string') {
-      // URL : fetch + décompression + parse
-      app_data.file_name = opts.diagram
-      loadUniversalJSON(opts.diagram).then(data => {
-        app_data.file_name = opts.diagram as string
-        applyDiagramData(data as Type_JSON)
-      }).catch(e => console.log(e))
-    } else {
-      // Objet JSON inline : appliqué directement (use case embed HTML one-file)
-      applyDiagramData(opts.diagram as unknown as Type_JSON)
+  // Auto-chargement initial depuis les données (diagramme publish, localStorage, URL) :
+  // exécuté UNE SEULE FOIS au montage. Hors d'un useEffect, ce bloc se ré-exécutait à chaque
+  // re-rendu — en mode publish avec un gros diagramme par défaut (opts.diagram), chaque
+  // chargement async redessinait → re-rendu → re-chargement : boucle infinie (#196).
+  useEffect(() => {
+    if (opts.diagram) {
+      if (typeof opts.diagram === 'string') {
+        // URL : fetch + décompression + parse
+        app_data.file_name = opts.diagram
+        loadUniversalJSON(opts.diagram).then(data => {
+          app_data.file_name = opts.diagram as string
+          applyDiagramData(data as Type_JSON)
+        }).catch(e => console.log(e))
+      } else {
+        // Objet JSON inline : appliqué directement (use case embed HTML one-file)
+        applyDiagramData(opts.diagram as unknown as Type_JSON)
+      }
+    } else if (json_data !== null && json_data != '' && json_data != 'null') {
+      app_data.fromJSON(JSON.parse(json_data))
     }
-  } else if (json_data !== null && json_data != '' && json_data != 'null') {
-    app_data.fromJSON(JSON.parse(json_data))
-  }
 
-  if (url_info) {
-    app_data.readUrlJSON(url_info)
-  }
+    if (url_info) {
+      app_data.readUrlJSON(url_info)
+    }
+  }, [])
 
   const mode_pref = sessionStorage.getItem('modepref')
   const menu_config = app_data.menu_configuration

@@ -934,7 +934,9 @@ export class Class_ApplicationData {
     if (this._language !== undefined && i18next.language !== this.language)
       i18next.changeLanguage(this.language)
 
-    this.menu_configuration.updateAllMenuComponents()
+    // ?. : _afterFromJSON peut s'exécuter avant que menu_configuration soit prêt
+    // (course à l'auto-chargement au montage en mode publish) — cf. l. 610. (#196)
+    this.menu_configuration?.updateAllMenuComponents()
   }
 
   /**
