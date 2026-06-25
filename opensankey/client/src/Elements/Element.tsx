@@ -596,7 +596,18 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
   public copyAttrFrom(element_to_copy: Class_ProtoElement) {
     this._storage = {};
     (Object.keys(element_to_copy._storage) as Array<keyof ConfigType>).forEach(key => {
-      if (element_to_copy._storage[key] !== this.getStyleProperty(key as keyof ConfigType)) {
+      // Minimise an override against the SOURCE's own resolved style, not the
+      // target's. A key held in the source `_storage` that differs from the
+      // source's style is a genuine, intentional override and must survive the
+      // copy verbatim. Comparing against the target style (the previous
+      // behaviour) wrongly dropped an override that happened to match a TARGET
+      // style which a later step then replaces — e.g. on "apply layout from a
+      // source diagram", `styleNode` (UpdateFrom) swaps the target's extremity
+      // style right after `attrNode`, so extremity-node label anchors
+      // (name_label_horiz / name_label_vert) were lost (#195). For shared-style
+      // cases (view ↔ master) source and target styles coincide, so this is a
+      // no-op and the "transparent view" minimisation is preserved.
+      if (element_to_copy._storage[key] !== element_to_copy.getStyleProperty(key as keyof ConfigType)) {
         this._storage[key] = element_to_copy._storage[key]
       }
     })
