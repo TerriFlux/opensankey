@@ -32,6 +32,7 @@ import {
   sortLinksElementsByRelativeNodesPositions
 } from './Link'
 import { Class_Handler } from './Handler'
+import { reorganizeIOOrder } from './reorganizeIOOrder'
 import { format_value, Type_JSON } from '../types/Utils'
 import { default_element_color } from './ElementsAttributesConfig'
 import { SankeyAnimation } from '../Algorithms/SankeyAnimation'
@@ -929,20 +930,35 @@ export class Class_NodeElement extends Class_NodeBase {
     return undefined
   }
 
-  public reorganizeIOLinks() {
-    // Automatic reorg : release the anchor locks set manually on this node.
-    this._links_order.forEach(l => l.setAnchorLockedForNode(this, false))
+  /**
+   * Re-derive the I/O links order from the relative node positions.
+   *
+   * @param release_locks When true (default), the anchor locks ("cadenas" of the
+   *   "Ordre des flux E/S" menu) set manually on this node are released first and
+   *   every link is re-sorted — this is the explicit "recalcul automatique" the lock
+   *   tooltip refers to (Réorganiser button, computeAutoSankey, expand/contract…).
+   *   When false, locked anchors are PRESERVED : they keep their frozen side and
+   *   their slot in the order, and only the unlocked links are re-sorted around
+   *   them. A manual node drag passes false so it no longer undoes a user-locked
+   *   arrangement (the lock promises "déplacer le noeud opposé ne la repositionnera plus").
+   */
+  public reorganizeIOLinks(release_locks: boolean = true) {
+    if (release_locks)
+      this._links_order.forEach(l => l.setAnchorLockedForNode(this, false))
     const echangeTag = this.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
     const import_links = this.input_links_list.filter(l => l.source.hasGivenTag(echangeTag as Class_Tag))
     const export_links = this.output_links_list.filter(l => l.target.hasGivenTag(echangeTag as Class_Tag))
     const recycling_links = this._links_order.filter(l => l.shape_is_recycling)
 
-    // Rebuild links_order array safely
-    const newLinksOrder = this._links_order
-      .filter(l => !import_links.includes(l) && !export_links.includes(l) && !recycling_links.includes(l))
-      .sort((link_a, link_b) => sortLinksElementsByRelativeNodesPositions(link_a, link_b, this))
-
-    this._links_order = [...import_links, ...newLinksOrder, ...recycling_links, ...export_links]
+    this._links_order = reorganizeIOOrder(
+      this._links_order,
+      import_links,
+      export_links,
+      recycling_links,
+      (l) => l.getAnchorLockedForNode(this),
+      (link_a, link_b) => sortLinksElementsByRelativeNodesPositions(link_a, link_b, this),
+      release_locks
+    )
     this.draw()
   }
 
