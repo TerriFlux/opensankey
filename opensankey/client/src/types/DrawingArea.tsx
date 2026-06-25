@@ -164,6 +164,16 @@ export class Class_DrawingArea {
   public bypass_redraws: boolean = false
   public bypass_compute_positions: boolean = false
 
+  /**
+   * Documentation (onglet Doc, SA#167) importée depuis un fichier source lors d'un
+   * transfert de mise en page. La doc vit sur l'ApplicationData (partagée), or la DA
+   * temporaire d'import partage le MÊME application_data que le diagramme courant : on
+   * ne peut donc pas la transporter via application_data. On la stocke ici en transitoire,
+   * lue par updateFrom (mode 'doc'). undefined = pas de doc importée (ex. source = vue).
+   */
+  public imported_documentation_markdown: string | undefined = undefined
+  public imported_documentation_images: { [id: string]: string } | undefined = undefined
+
   /** Solver/reconciliation options loaded from an Excel "Options" sheet. Pre-fills the reconciliation dialog. */
   public mfa_options: Record<string, unknown> = {}
 
