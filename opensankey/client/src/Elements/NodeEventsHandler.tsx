@@ -508,8 +508,11 @@ export class NodeEventsHandler {
         dict_old_orders[n.id] = n.links_order.map(l => l.id)
       })
 
-      // Apply spatial reorganization.
-      nodes_to_reorganize.forEach(n => n.reorganizeIOLinks())
+      // Apply spatial reorganization. A manual node drag is NOT the explicit
+      // "recalcul automatique" that releases the I/O anchor locks ("cadenas") :
+      // pass release_locks=false so a user-locked arrangement survives the move
+      // (only the unlocked links re-sort around the locked ones).
+      nodes_to_reorganize.forEach(n => n.reorganizeIOLinks(false))
 
       // Snapshot new link orders AFTER reorganization — needed by redo.
       const dict_new_orders: { [nodeId: string]: string[] } = {}
