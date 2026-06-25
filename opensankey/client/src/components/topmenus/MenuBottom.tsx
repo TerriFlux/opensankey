@@ -66,6 +66,14 @@ export const ToolBarBottom = ({ new_data, right_offset }: {
       app_data={new_data}
       updateParentComponent={refreshThis}
     /> : <></>}
+    {/* Plein écran isolé : en publish, disponible même quand le groupe ajustement
+        (`fit_toolbar`) est masqué. Retiré dès que `fit_toolbar` est affiché, car le bouton
+        y figure déjà (évite le doublon). */}
+    {(new_data.is_static && new_data.publish_options.fullscreen && !new_data.publish_options.fit_toolbar)
+      ? <ButtonGroup className='toolbar_bottom_stretch' isAttached orientation='vertical'>
+        <ComponentFullscreenButton app_data={new_data} updateParentComponent={refreshThis} />
+      </ButtonGroup>
+      : <></>}
   </Box>
 }
 
@@ -165,6 +173,41 @@ const ComponentPositionMode = ({ app_data, updateParentComponent }: { app_data: 
 }
 
 /**
+ * Bouton plein écran isolé. Réutilisé dans le groupe ajustement (ComponetStretchButtons) et,
+ * en publish, en bouton autonome quand `fit_toolbar` est masqué (option `fullscreen`).
+ */
+const ComponentFullscreenButton = (
+  { app_data, updateParentComponent }: { app_data: Class_ApplicationData, updateParentComponent: () => void }
+) => {
+  const { t } = app_data
+  const size = app_data.is_static ? 'sizeToolbarButtonStatic' : 'sizeToolbarButton'
+  const logo_btn_fs = document.fullscreenElement ? app_data.icon_library.icon_enter_fullscreen : app_data.icon_library.icon_exit_fullscreen
+  const toggleFullscreen = async () => {
+    if (!document.fullscreenElement) {
+      await document.documentElement.requestFullscreen()
+      app_data.drawing_area.draw()
+    } else if (document.exitFullscreen) {
+      await document.exitFullscreen()
+      app_data.drawing_area.draw()
+    }
+    updateParentComponent()
+  }
+  return <OSTooltip
+    placement='left'
+    label={document.fullscreenElement ? t('Banner.quit_fullscreen') : t('Banner.fullscreen')}
+  >
+    <Button
+      variant='toolbar_button_6'
+      id='button_fullscreen'
+      size={size}
+      onClick={toggleFullscreen}
+    >
+      {logo_btn_fs}
+    </Button>
+  </OSTooltip>
+}
+
+/**
  *Buttons component to recenter DA horizontally or vertically
  *
  * @param {*} { new_data, updateParentComponent }
@@ -174,24 +217,6 @@ const ComponetStretchButtons = ({ app_data, updateParentComponent }: { app_data:
   // Use variable from class
   const { t } = app_data
   const size = app_data.is_static ? 'sizeToolbarButtonStatic' : 'sizeToolbarButton'
-  const logo_btn_fs = document.fullscreenElement ? app_data.icon_library.icon_enter_fullscreen : app_data.icon_library.icon_exit_fullscreen
-
-  // const tmp = new KeyboardEvent('keydown', { key: 'F', ctrlKey: true })
-  // const doc = document
-  // // Function that trigger event on Ctrl + F
-  const executeManualCtrlF = async () => {
-    //evt.preventDefault()
-    // Toggle fullscreen
-    if (!document.fullscreenElement) {
-      await document.documentElement.requestFullscreen()
-      app_data.drawing_area.draw()
-    }
-    else if (document.exitFullscreen) {
-      await document.exitFullscreen()
-      app_data.drawing_area.draw()
-    }
-    updateParentComponent()
-  }
 
   return <ButtonGroup className='toolbar_bottom_stretch' isAttached orientation='vertical'>
     <OSTooltip placement='left' label={t('Banner.tooltipAdjustH')}>
@@ -253,19 +278,7 @@ const ComponetStretchButtons = ({ app_data, updateParentComponent }: { app_data:
       </Button>
     </OSTooltip>
 
-    <OSTooltip
-      placement='left'
-      label={document.fullscreenElement ? t('Banner.quit_fullscreen') : t('Banner.fullscreen')}
-    >
-      <Button
-        variant='toolbar_button_6'
-        id='button_fullscreen'
-        size={size}
-        onClick={executeManualCtrlF}
-      >
-        {logo_btn_fs}
-      </Button>
-    </OSTooltip>
+    <ComponentFullscreenButton app_data={app_data} updateParentComponent={updateParentComponent} />
   </ButtonGroup>
 }
 
