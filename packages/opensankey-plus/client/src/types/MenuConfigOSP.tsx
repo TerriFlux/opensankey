@@ -35,6 +35,11 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
   private _ref_show_modal_unitary_view: MutableRefObject<(_: boolean) => void>
   private _ref_update_modal_unitary_view: MutableRefObject<() => void>
 
+  // Reconstruction du board sankey unitaire (ModalUnitarySankeyOSP) quand les valeurs
+  // de la source changent (ex. changement de data tag sélectionné). Distinct de
+  // _ref_update_modal_unitary_view (modale de VUE unitaire, cf. SankeyPlusViews).
+  private _ref_to_unitary_board_data_tag_updater: MutableRefObject<() => void>
+
   // Ouvre le modal draggable du sankey unitaire (rendu détaché), EN PLUS du
   // diagramme principal (cf. ModalUnitarySankeyOSP). node = nœud central, ou null
   // pour ouvrir sans présélection (le modal prend alors le 1er nœud visible).
@@ -57,6 +62,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     this._ref_to_modal_view_attr_updater = useRef(() => null)
     this._ref_show_modal_unitary_view = useRef((_: boolean) => null)
     this._ref_update_modal_unitary_view = useRef(() => null)
+    this._ref_to_unitary_board_data_tag_updater = useRef(() => null)
     this._ref_open_unitary_sankey_modal = useRef((_: Class_NodeElement | null) => null)
     this._ref_show_modal_animated_export = useRef((_: boolean) => null)
     this._ref_show_modal_publish = useRef((_: boolean) => null)
@@ -98,6 +104,14 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     this._ref_update_modal_unitary_view.current()
   }
 
+  // Le changement de data tag (sélecteur topbar, cf. BannerDataTagTopbar) modifie les
+  // valeurs de flux de la source : le board unitaire doit être reconstruit pour les
+  // refléter. OS base ne connaît pas ce board → on branche ici, côté OSP.
+  public override updateAllComponentsRelatedToDataTags() {
+    super.updateAllComponentsRelatedToDataTags()
+    this._ref_to_unitary_board_data_tag_updater.current()
+  }
+
   public override updateAllComponentsRelatedToLevelTags() {
     super.updateAllComponentsRelatedToLevelTags()
     this._ref_update_modal_unitary_view.current()
@@ -118,6 +132,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
   public get ref_to_modal_view_attr_updater(): MutableRefObject<() => void> { return this._ref_to_modal_view_attr_updater }
   public get ref_show_modal_unitary_view(): MutableRefObject<(_: boolean) => void> { return this._ref_show_modal_unitary_view }
   public get ref_update_modal_unitary_view(): MutableRefObject<() => void> { return this._ref_update_modal_unitary_view }
+  public get ref_to_unitary_board_data_tag_updater(): MutableRefObject<() => void> { return this._ref_to_unitary_board_data_tag_updater }
   public get ref_open_unitary_sankey_modal(): MutableRefObject<(node: Class_NodeElement | null) => void> { return this._ref_open_unitary_sankey_modal }
   public get ref_show_modal_animated_export(): MutableRefObject<(_: boolean) => void> { return this._ref_show_modal_animated_export }
   public get ref_show_modal_publish(): MutableRefObject<(_: boolean) => void> { return this._ref_show_modal_publish }

@@ -59,6 +59,10 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
   // Flux de référence (id) pour le mode normalisé.
   const [normalize_link_id, setNormalizeLinkId] = useState<string | null>(null)
 
+  // En mode publication (lecture seule), pas de choix de source ni d'import Excel : le sankey
+  // unitaire se construit uniquement depuis le diagramme local (cf. is_editable).
+  const editable = app_data.is_editable
+
   // Source des données : diagramme courant ou import Excel.
   const [source_mode, setSourceMode] = useState<SourceMode>('local')
 
@@ -78,6 +82,10 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
   // Compteur de re-rendu (list_data est un ref → ne déclenche pas de rendu seul).
   const [, setUpdater] = useState(0)
   const forceUpdate = () => setUpdater(a => a + 1)
+  // Compteur de RECONSTRUCTION : incrémenté quand les valeurs de la source changent
+  // (changement de data tag sélectionné via la topbar). Ajouté aux deps de l'effet de
+  // construction pour forcer un toJSON/fromJSON de la source mise à jour.
+  const [rebuild_count, setRebuildCount] = useState(0)
 
   // Re-rendu (donc repositionnement sur mainZoneUnitaryRect) quand la grande zone change (toggle,
   // ratios, layout doc, tableur…) ou que la fenêtre est redimensionnée. Le panneau étant porté vers
@@ -125,6 +133,13 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
     const echangeTag = sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
     return (sankey.visible_nodes_list_sorted as Class_NodeElement[])
       .filter(n => !(echangeTag && n.hasGivenTag(echangeTag)))
+  }
+
+  // Reconstruction du board quand les valeurs de la source changent (changement de
+  // data tag sélectionné via la topbar). Ne concerne que la source locale (l'import
+  // Excel est indépendant du data tag du diagramme principal).
+  app_data.menu_configuration_osp.ref_to_unitary_board_data_tag_updater.current = () => {
+    if (source_mode === 'local') setRebuildCount(c => c + 1)
   }
 
   // Ouverture depuis le bouton « Unit. » (sans nœud) ou le clic droit (avec nœud).
@@ -248,7 +263,7 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
     // diagramme (toJSON/fromJSON) à chaque changement de nœud — par-dessus le refocus léger,
     // d'où la lenteur. Le mode normalisé est mis à jour par l'effet léger dédié ci-dessous.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, value_mode, source_mode, selected_data_id])
+  }, [open, value_mode, source_mode, selected_data_id, rebuild_count])
 
   // MODE NORMALISÉ — MAJ LÉGÈRE du flux de référence sans reconstruction. Seul
   // sankey.normalised_link dépend de normalize_link_id (les types d'unité des styles sont
@@ -517,19 +532,22 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
           display='grid'
           gridRowGap='2.5'
         >
-          {/* Source des données : diagramme courant ou import Excel. */}
-          <HStack gap='3' flexWrap='wrap'>
-            <Text fontSize='sm' fontWeight='600' color='gray.600' minWidth='6rem'>
-              {t('Menu.Transformation.sourceType')}
-            </Text>
-            <ButtonGroup size='sm' spacing='1'>
-              {sourceButton('local', t('view.unit_tab_local'))}
-              {sourceButton('excel', t('view.unit_tab_excel'))}
-            </ButtonGroup>
-          </HStack>
+          {/* Source des données : diagramme courant ou import Excel. Masqué en lecture seule
+                (publication) : seule la source locale est disponible, pas d'import. */}
+          {editable && (
+            <HStack gap='3' flexWrap='wrap'>
+              <Text fontSize='sm' fontWeight='600' color='gray.600' minWidth='6rem'>
+                {t('Menu.Transformation.sourceType')}
+              </Text>
+              <ButtonGroup size='sm' spacing='1'>
+                {sourceButton('local', t('view.unit_tab_local'))}
+                {sourceButton('excel', t('view.unit_tab_excel'))}
+              </ButtonGroup>
+            </HStack>
+          )}
 
           {/* Import Excel : sélection de fichier + liste des sources chargées. */}
-          {source_mode === 'excel' && (
+          {editable && source_mode === 'excel' && (
             <Box paddingBottom='2' display='grid' gridRowGap='0.4rem'>
               <Box display='grid' gridTemplateColumns='1fr auto' gap='0.4rem' alignItems='center'>
                 <Input
