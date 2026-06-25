@@ -213,6 +213,12 @@ export const UpdateModeGrid = ({ attrs, onToggle, t, show_expert_rows = true, ex
             </Box>
           </Box>
         </OSTooltip>
+        <OSTooltip label={t('Menu.Transformation.tooltips.doc')}>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.doc')}</Box>
+            <Box layerStyle='options_4cols'>{btn('doc', 'X')}</Box>
+          </Box>
+        </OSTooltip>
       </>)}
 
       {show_expert_rows && extra_tab && tp(extra_tab.render(attrs, onToggle, t))}
@@ -408,6 +414,9 @@ export const OpenSankeyDiagramSelector = (app_data: Class_ApplicationData) => {
     }
 
     app_data.drawing_area.draw()
+    // Si la doc a été transférée, resynchroniser le panneau Doc s'il est ouvert (il lit
+    // documentation_markdown dans un state local, non rafraîchi par le seul draw()).
+    if (expanded_mode.includes('doc')) app_data.menu_configuration.ref_to_doc.current()
     app_data.post_apply_layout_callback?.(tmp_DA, source_json ?? null, expanded_mode)
     const after = snapshotDA(app_data.drawing_area)
     app_data.history.saveUndo(() => restoreDA(before))
@@ -424,6 +433,20 @@ export const OpenSankeyDiagramSelector = (app_data: Class_ApplicationData) => {
       tmp_DA.bypass_redraws = true
       app_data.loadDrawingAreaFromJSON(tmp_DA, json_object as Type_JSON)
       tmp_DA.afterFromJSON()
+      // La doc (onglet Doc) est un champ niveau ApplicationData, non chargé par
+      // loadDrawingAreaFromJSON (qui ne traite que le niveau DA). On l'extrait du JSON
+      // source et on la stocke en transitoire sur la DA temporaire pour qu'updateFrom
+      // (mode 'doc') puisse la transférer — tmp_DA partage app_data avec le diagramme
+      // courant, donc on ne peut pas passer par application_data.
+      const src_json = json_object as Type_JSON
+      tmp_DA.imported_documentation_markdown =
+        typeof src_json['documentation_markdown'] === 'string'
+          ? src_json['documentation_markdown'] as string
+          : ''
+      tmp_DA.imported_documentation_images =
+        (src_json['documentation_images'] && typeof src_json['documentation_images'] === 'object')
+          ? src_json['documentation_images'] as { [id: string]: string }
+          : {}
       applySourceDA(tmp_DA, json_object as Type_JSON)
     } catch (error) {
       console.error('❌ Erreur lors du traitement du fichier:', error)

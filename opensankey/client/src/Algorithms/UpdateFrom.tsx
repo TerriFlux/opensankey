@@ -699,6 +699,19 @@ export const updateFrom = (
   //}
   //}
 
+  // Constraints — diagram-level relations entre flux/stocks (Ratio Flux #116,
+  // Ratio Stock Flux + Chaînage Stock #156). Conceptuellement ce sont des données
+  // de valeurs : on les transfère avec le mode `Values`. Deep-clone (les lignes sont
+  // des objets de données plates) pour ne pas partager les références avec la source.
+  if (mode.includes('Values') || all) {
+    drawing_area.sankey.ratio_flux_constraints =
+      structuredClone(other_drawing_area.sankey.ratio_flux_constraints)
+    drawing_area.sankey.ratio_stock_flux_constraints =
+      structuredClone(other_drawing_area.sankey.ratio_stock_flux_constraints)
+    drawing_area.sankey.stock_chaining_constraints =
+      structuredClone(other_drawing_area.sankey.stock_chaining_constraints)
+  }
+
   // Nodes input/output link ordering — owned by posFlux.
   // One pass per node (not per link) so each node is reordered at most once.
   if (pos_flux || all) {
@@ -708,6 +721,21 @@ export const updateFrom = (
       if (!other_node) return
       node.keepLinkOrderingFrom(other_node, revert_matching_links_id)
     })
+  }
+
+  // Documentation markdown (onglet Doc, SA#167) — champ porté par l'ApplicationData,
+  // pas par le sankey/DA. La DA source d'un transfert de mise en page partage le MÊME
+  // application_data que la cible (createNewDrawingArea), donc la doc importée est portée
+  // en transitoire sur la DA source (imported_documentation_*, rempli depuis le JSON par
+  // le dialogue d'import). On recopie le texte ET les images attachées (réfs `img://<id>`),
+  // sinon le markdown importé afficherait des images cassées. undefined = source sans doc
+  // importée (ex. source = une autre vue, doc déjà partagée) → ne rien faire.
+  if (mode.includes('doc') || all) {
+    const dst_app = drawing_area.application_data
+    if (dst_app && other_drawing_area.imported_documentation_markdown !== undefined) {
+      dst_app.documentation_markdown = other_drawing_area.imported_documentation_markdown
+      dst_app.documentation_images = { ...(other_drawing_area.imported_documentation_images ?? {}) }
+    }
   }
 
   // Update icon catalog
