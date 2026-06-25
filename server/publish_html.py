@@ -1225,7 +1225,14 @@ def generate_directory_index(tree_level, current_path_parts, build_info, public_
 
     # Section des projets (MODIFIÉE avec bouton readme)
     if projects or groups:
-        html_content += '''
+        # En-tête de section pour les filières (uniquement à la racine du portfolio)
+        if not current_path_parts:
+            html_content += '''
+        <div class="section">
+            <h2>Modèles de filières françaises</h2>
+            <div class="grid">'''
+        else:
+            html_content += '''
         <div>
             <div class="grid">'''
         
@@ -1263,7 +1270,7 @@ def generate_directory_index(tree_level, current_path_parts, build_info, public_
         if len(directories) == 2:
             html_content += '''
         <div class="section">
-            <h2>📂 Sous-catégories</h2>
+            <h2>Modèles transversaux (toutes filières)</h2>
             <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem;">'''
             
             for dir_name, dir_info in sorted(directories.items()):
@@ -1281,7 +1288,7 @@ def generate_directory_index(tree_level, current_path_parts, build_info, public_
             # CAS NORMAL: Plus de 2 dossiers, afficher des cartes
             html_content += '''
         <div class="section">
-            <h2>📂 Dossiers</h2>
+            <h2>Modèles transversaux (toutes filières)</h2>
             <div class="grid">'''
             
             for dir_name, dir_info in sorted(directories.items()):
