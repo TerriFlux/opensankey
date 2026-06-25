@@ -1023,6 +1023,10 @@ export class Class_ApplicationData {
    */
   public applyPublishStateOptions(): void {
     const opts = this.publish_options
+    // Panneau documentation : ouvert d'office en publish si l'option `doc` est active et qu'une doc existe.
+    if (opts.doc && this._documentation_markdown !== '') {
+      this.menu_configuration.main_zone_show_doc = true
+    }
     if (!opts.data_tag_selection && !opts.view_tag_selection && !opts.position_mode) return
     const sankey = this._drawing_area.sankey
 
