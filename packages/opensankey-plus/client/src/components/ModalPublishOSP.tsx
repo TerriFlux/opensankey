@@ -82,6 +82,8 @@ const OPTION_GROUPS: Array<{ title: string, options: FlagOpt[] }> = [
       { key: 'embedded', label: 'Mode intégré (hauteur 100 %)', def: false },
       { key: 'recenter', label: 'Recentrage automatique à l’ouverture', def: true },
       { key: 'unitary', label: 'Onglet « Unit. » (sankey unitaire)', def: false },
+      { key: 'doc', label: 'Bouton « Doc » (documentation, si présente)', def: false },
+      { key: 'navigation_help', label: 'Bouton « Aide à la navigation »', def: false },
     ],
   },
   {
