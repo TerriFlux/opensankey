@@ -142,6 +142,10 @@ export const DocPanel = (
     onToggleDetach?: () => void
   }
 ) => {
+  // En mode publication (is_static sans publish_options.editable), la doc est en lecture seule :
+  // on n'affiche que l'aperçu et on masque toute la barre d'édition (cf. is_editable, utilisé
+  // partout ailleurs pour neutraliser l'édition).
+  const editable = app_data.is_editable
   const [text, setText] = useState<string>(app_data.documentation_markdown)
   const [mode, setMode] = useState<Type_DocMode>('preview')
   const [viewSubmenuOpen, setViewSubmenuOpen] = useState(false)
@@ -318,8 +322,9 @@ export const DocPanel = (
     return <a href={href} target='_blank' rel='noreferrer'>{children}</a>
   }
 
-  const showEditor = mode === 'edit' || mode === 'split'
-  const showPreview = mode === 'preview' || mode === 'split'
+  const showEditor = editable && (mode === 'edit' || mode === 'split')
+  // Aperçu visible dès que l'éditeur ne l'est pas (mode 'preview' ou lecture seule), ou en côte à côte.
+  const showPreview = !showEditor || mode === 'split'
 
   return (
     <Box display='flex' flexDirection='column' height='100%' background='white'>
@@ -341,8 +346,8 @@ export const DocPanel = (
             sous le libellé au lieu de déborder à droite hors du panneau. */}
         <Box display='flex' alignItems='center' flexWrap='wrap' gap='0.25rem 0.5rem' flex='0 1 auto' minWidth={0}>
           <Box fontSize='0.8rem' fontWeight='600' color='gray.700'>Documentation</Box>
-          {/* Sélecteur de position de la doc dans la grande zone (masqué en aperçu seul). */}
-          {mode !== 'preview' && (
+          {/* Sélecteur de position de la doc dans la grande zone (masqué en aperçu seul et en lecture seule). */}
+          {editable && mode !== 'preview' && (
             <Menu placement='bottom-start' isLazy>
               <MenuButton
                 as={Button}
@@ -399,8 +404,8 @@ export const DocPanel = (
             style={{ display: 'none' }}
             onChange={onPickImage}
           />
-          {/* Sélecteur d'insertion unique (image, lien vers une vue, sommaire) masqué en aperçu seul. */}
-          {mode !== 'preview' && (
+          {/* Sélecteur d'insertion unique (image, lien vers une vue, sommaire) masqué en aperçu seul et en lecture seule. */}
+          {editable && mode !== 'preview' && (
             <Menu placement='bottom-end' isLazy>
               <MenuButton
                 as={Button}
@@ -471,9 +476,14 @@ export const DocPanel = (
               n'est qu'un dernier recours pour un panneau plus étroit qu'un seul bouton (ne contient
               aucun menu déroulant, donc pas de risque de rognage de popover). */}
           <Box display='flex' flexWrap='wrap' justifyContent='flex-end' gap='0.15rem' minWidth={0} overflowX='auto'>
-            <Button {...tab_btn_style(mode === 'edit')} onClick={() => setMode('edit')}>Édition</Button>
-            <Button {...tab_btn_style(mode === 'split')} onClick={() => setMode('split')}>Côte à côte</Button>
-            <Button {...tab_btn_style(mode === 'preview')} onClick={() => setMode('preview')}>Aperçu</Button>
+            {/* Bascules de mode masquées en lecture seule (publication) : seul l'aperçu a du sens. */}
+            {editable && (
+              <>
+                <Button {...tab_btn_style(mode === 'edit')} onClick={() => setMode('edit')}>Édition</Button>
+                <Button {...tab_btn_style(mode === 'split')} onClick={() => setMode('split')}>Côte à côte</Button>
+                <Button {...tab_btn_style(mode === 'preview')} onClick={() => setMode('preview')}>Aperçu</Button>
+              </>
+            )}
             {/* Détacher / ré-attacher la doc dans une fenêtre OS séparée (second écran).
                 Icône seule (sans texte) pour rester cohérent avec le bouton du menu config. */}
             {onToggleDetach && (
