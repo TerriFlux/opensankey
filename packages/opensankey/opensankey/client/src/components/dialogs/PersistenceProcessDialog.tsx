@@ -1002,6 +1002,13 @@ export const UniversalFileConverter = ({
           //setAutoLoad(false)
           setProcessing(false)
           setFailure(false)
+          // Chargement d'un exemple/tutoriel/modèle réussi : le diagramme est en
+          // place, le terminal n'apporte plus rien → fermer la modale. Les autres
+          // chemins auto_load (import d'un fichier Excel/JSON) gardent la modale
+          // ouverte pour laisser lire warnings/erreurs.
+          if (input_format == 'example_json' || input_format == 'example_excel') {
+            app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current!(false)
+          }
         } catch (error) {
           setResult('FAILED Erreur chargement JSON:' + error)
           setProcessing(false)
