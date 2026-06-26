@@ -42,11 +42,23 @@ export const ToolBarBottom = ({ new_data, right_offset }: {
   // Chakra interprète un `right` NUMÉRIQUE comme un multiple de l'échelle d'espacement
   // (×0.25rem) → on force l'unité px pour rester aligné sur le bouton config (style inline px).
   const right_css = typeof right_offset === 'number' ? right_offset + 'px' : right_offset
+  // En mode statique (publish), le layerStyle `toolbar_right` fige `right: 1rem`. Quand la doc (ou
+  // le tableur) occupe la colonne de droite, le diagramme se recadre à gauche mais la toolbar
+  // resterait collée au bord droit, cachée sous le panneau doc (zIndex 20). On la décale vers la
+  // gauche de la largeur réservée à droite (rightReserve = right_offset - fit_margin) tout en
+  // gardant la base 1rem du layerStyle ; sans réserve on laisse undefined (position par défaut).
+  const static_right_reserve = new_data.is_static
+    ? Math.max(0, (typeof right_offset === 'number' ? right_offset : 0) - new_data.drawing_area.fit_margin)
+    : 0
+  const static_right = static_right_reserve > 0
+    ? 'calc(1rem + ' + static_right_reserve + 'px)'
+    : undefined
   return <Box
     layerStyle='toolbar_right'
-    zIndex={new_data.is_static ? undefined : 40}
+    // zIndex relevé au-dessus de l'overlay doc/tableur (zIndex 20) quand la toolbar est décalée.
+    zIndex={new_data.is_static ? (static_right_reserve > 0 ? 25 : undefined) : 40}
     width={new_data.is_static ? undefined : '2rem'}
-    right={new_data.is_static ? undefined : right_css}
+    right={new_data.is_static ? static_right : right_css}
     top={new_data.is_static ? undefined : 'auto'}
     transform={new_data.is_static ? undefined : 'none'}
     bottom={new_data.is_static ? undefined
