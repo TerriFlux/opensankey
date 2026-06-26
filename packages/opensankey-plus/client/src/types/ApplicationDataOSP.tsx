@@ -276,6 +276,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     // super._toJSON, donc on le sérialise explicitement au niveau racine/master.
     if (this._documentation_markdown !== '') json_entry['documentation_markdown'] = this._documentation_markdown
     if (Object.keys(this._documentation_images).length > 0) json_entry['documentation_images'] = this._documentation_images
+    // Paramètres de publication (niveau application_data) : ce chemin « avec vues » n'appelle pas
+    // super._toJSON, donc on les sérialise explicitement au niveau racine/master.
+    if (Object.keys(this._publish_settings).length > 0) json_entry['publish_settings'] = this._publish_settings
     // État d'affichage de la grande zone (panneaux visibles + layout) : même raison, sérialisé ici.
     json_entry['main_zone'] = this.menu_configuration.mainZoneStateToJSON()
     // Vue active au moment de la sauvegarde : relue par viewsFromJSON pour la rouvrir/sélectionner
@@ -317,6 +320,11 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     this._documentation_markdown = getStringFromJSON(json_object, 'documentation_markdown', this._documentation_markdown)
     const imgs = json_object['documentation_images']
     if (imgs && typeof imgs === 'object') this._documentation_images = imgs as { [id: string]: string }
+    // Paramètres de publication : préservés si la clé est absente (ex. switch de vue only_current_view).
+    const pub_opts = json_object['publish_settings']
+    if (pub_opts && typeof pub_opts === 'object' && !Array.isArray(pub_opts)) {
+      this._publish_settings = pub_opts as Type_JSON
+    }
     // Restaure l'état d'affichage de la grande zone (absent => valeur courante préservée, ex. switch
     // de vue only_current_view qui ne porte pas les métadonnées master).
     const mz = json_object['main_zone']

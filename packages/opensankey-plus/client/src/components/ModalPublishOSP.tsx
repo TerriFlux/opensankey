@@ -53,6 +53,7 @@ import FileSaver from 'file-saver'
 
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { Type_PositionMode } from '../deps/OpenSankey/types/PublishOptions'
+import { Type_JSON } from '../deps/OpenSankey/types/Utils'
 
 interface Props {
   app_data: Class_ApplicationDataOSP
@@ -115,6 +116,35 @@ const POSITION_MODE_LABELS: Array<{ value: '' | Type_PositionMode, label: string
 
 const sanitizeZipName = (name: string): string =>
   (name || 'sankey_site').replace(/[^\w\-_.]/g, '_') || 'sankey_site'
+
+// Forme persistée dans app_data.publish_settings : on y range les réglages du dialogue pour
+// qu'une re-publication / mise à jour reparte exactement des mêmes paramètres.
+type PersistedPublishOptions = {
+  flags?: Record<string, boolean>
+  position_mode?: '' | Type_PositionMode
+  header?: string
+  publish_name?: string
+  logo?: string | null            // data-URI base64 du logo (autonome, voyage avec le diagramme)
+  logo_filename?: string | null
+}
+
+// Lecture d'un fichier (logo) en data-URI base64, pour le persister dans le diagramme.
+const fileToDataURL = (file: File): Promise<string> => new Promise((resolve, reject) => {
+  const reader = new FileReader()
+  reader.onload = () => resolve(reader.result as string)
+  reader.onerror = () => reject(reader.error)
+  reader.readAsDataURL(file)
+})
+
+// Reconstruit un File envoyable (multipart) à partir d'un data-URI base64 persisté.
+const dataURLToFile = (data_url: string, filename: string): File | null => {
+  const m = data_url.match(/^data:([^;]+);base64,(.*)$/)
+  if (!m) return null
+  const bin = atob(m[2])
+  const arr = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i)
+  return new File([arr], filename, { type: m[1] })
+}
 
 // Limite d'upload (alignée sur client_max_body_size nginx = 100 Mo).
 const MAX_UPLOAD_BYTES = 100 * 1024 * 1024
@@ -256,6 +286,10 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
   const [flags, setFlags] = useState<Record<string, boolean>>(defaultFlags())
   const [position_mode, setPositionMode] = useState<'' | Type_PositionMode>('')
   const [logo_file, setLogoFile] = useState<File | null>(null)
+  // Logo persisté dans le diagramme (data-URI) + son nom : réutilisé tel quel si l'utilisateur
+  // n'en re-sélectionne pas un nouveau.
+  const [logo_data_url, setLogoDataUrl] = useState<string | null>(null)
+  const [logo_filename, setLogoFilename] = useState<string | null>(null)
   const [folders_available, setFoldersAvailable] = useState(false)
   const [selected_folder, setSelectedFolder] = useState('')
   // Explorateur de l'arbre des dossiers serveur (navigation montée/descente).
@@ -298,12 +332,17 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
   // (Re)initialise à l'ouverture + charge la liste des dossiers serveur.
   useEffect(() => {
     if (!is_open) return
-    const name = app_data.file_name || 'sankey'
+    // Réglages mémorisés sur le diagramme (re-publication => mêmes paramètres). Défauts sinon.
+    const saved = (app_data.publish_settings || {}) as PersistedPublishOptions
+    const name = (typeof saved.publish_name === 'string' && saved.publish_name)
+      || app_data.file_name || 'sankey'
     setPublishName(name)
-    setHeader(name)
+    setHeader(typeof saved.header === 'string' ? saved.header : (app_data.file_name || 'sankey'))
     setLogoFile(null)
-    setFlags(defaultFlags())
-    setPositionMode('')
+    setLogoDataUrl(typeof saved.logo === 'string' ? saved.logo : null)
+    setLogoFilename(typeof saved.logo_filename === 'string' ? saved.logo_filename : null)
+    setFlags({ ...defaultFlags(), ...(saved.flags || {}) })
+    setPositionMode(saved.position_mode || '')
     setSource('current')
     setDeployedUrl('')
     setDeployForce(false)
@@ -359,6 +398,16 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
     FileSaver.saveAs(blob, m ? m[1] : fallback_name)
   }
 
+  // Mémorise les réglages courants sur le diagramme (sérialisés par toJSON) et marque le cache à
+  // sauver, pour qu'une re-publication / mise à jour reparte des mêmes paramètres.
+  const persistOptions = () => {
+    const opts: PersistedPublishOptions = { flags, header, publish_name }
+    if (position_mode) opts.position_mode = position_mode
+    if (logo_data_url) { opts.logo = logo_data_url; opts.logo_filename = logo_filename || 'logo.png' }
+    app_data.publish_settings = opts as unknown as Type_JSON
+    app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+  }
+
   // Construit et envoie la requête vers `endpoint` selon la source (étude
   // courante = JSON ou multipart si logo ; dossier serveur = JSON {folder}).
   const buildRequest = (endpoint: string): Promise<Response> => {
@@ -395,12 +444,15 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
     const globals: Record<string, unknown> = { ...flags, header }
     if (position_mode) globals.position_mode = position_mode
     const options: Record<string, unknown> = { publish_name: publish_name || 'sankey', globals }
-    if (logo_file) {
-      options.logo_filename = logo_file.name
+    // Logo : fichier fraîchement choisi en priorité, sinon le logo persisté (reconstruit du data-URI).
+    const logo_to_send = logo_file
+      ?? (logo_data_url ? dataURLToFile(logo_data_url, logo_filename || 'logo.png') : null)
+    if (logo_to_send) {
+      options.logo_filename = logo_to_send.name
       const form = new FormData()
       form.append('diagram', diagram)
       form.append('options', JSON.stringify(options))
-      form.append('logo', logo_file)
+      form.append('logo', logo_to_send)
       form.append('force', deploy_force ? '1' : '0')
       form.append('update', deploy_update ? '1' : '0')
       return fetch(url, { method: 'POST', body: form })
@@ -423,6 +475,7 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
 
   const handlePublish = () => {
     setRunning(true)
+    if (source === 'current') persistOptions()
     const endpoint = source === 'current' ? '/api/publish/current' : '/api/publish/folder'
     const run = buildRequest(endpoint)
       .then((r) => downloadZip(r, sanitizeZipName(publish_name || selected_folder) + '.zip'))
@@ -438,6 +491,7 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
 
   const handleDeploy = () => {
     setRunning(true)
+    if (source === 'current') persistOptions()
     setDeployedUrl('')
     const run = buildRequest('/api/publish/deploy').then(async (r) => {
       if (!r.ok) {
@@ -650,8 +704,20 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
                     py={2}
                     px={2}
                     lineHeight='1.8'
-                    onChange={(e) => setLogoFile(e.target.files?.[0] ?? null)}
+                    onChange={async (e) => {
+                      const f = e.target.files?.[0] ?? null
+                      setLogoFile(f)
+                      if (f) {
+                        setLogoFilename(f.name)
+                        try { setLogoDataUrl(await fileToDataURL(f)) } catch { setLogoDataUrl(null) }
+                      }
+                    }}
                   />
+                  {logo_data_url && !logo_file && (
+                    <Text fontSize='xs' color='gray.500' mt={1}>
+                      Logo enregistré réutilisé{logo_filename ? ` (${logo_filename})` : ''}.
+                    </Text>
+                  )}
                 </FormControl>
 
                 <Divider />
