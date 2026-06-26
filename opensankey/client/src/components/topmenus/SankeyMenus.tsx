@@ -287,7 +287,7 @@ export const SankeyMenu = (
       ) : (<></>)}
 
 
-      {(!app_data.is_static || app_data.publish_options.toolbar || app_data.publish_options.fit_toolbar) ? <ToolBarBottom
+      {(!app_data.is_static || app_data.publish_options.toolbar || app_data.publish_options.fit_toolbar || app_data.publish_options.fullscreen) ? <ToolBarBottom
         new_data={app_data}
         right_offset={app_data.drawing_area.fit_margin + rightReserve}
       /> : <></>}

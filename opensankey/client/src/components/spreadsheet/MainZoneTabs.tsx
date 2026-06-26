@@ -194,6 +194,20 @@ export const MainZoneTabs = (
     return () => window.removeEventListener('resize', forceResize)
   }, [])
 
+  // La hauteur des barres haut/bas (navH / bottomH) est lue dans le DOM au rendu. En publish, la doc
+  // s'ouvre d'office au démarrage AVANT que la frise de data tags (.BottomMenu) ait sa hauteur finale,
+  // donc la doc déborderait par-dessus (workaround actuel : fermer/rouvrir la doc). On observe les
+  // barres pour re-render dès que leur taille change, sans intervention de l'utilisateur.
+  useEffect(() => {
+    if (typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(() => forceResize())
+    const top = document.getElementsByClassName('TopMenu')[0]
+    const bottom = document.getElementsByClassName('BottomMenu')[0]
+    if (top) ro.observe(top)
+    if (bottom) ro.observe(bottom)
+    return () => ro.disconnect()
+  }, [])
+
   const drawing_area = app_data.drawing_area
   const navH = drawing_area.getNavBarHeight ? drawing_area.getNavBarHeight() : 56
   const bottomH = drawing_area.getBottomBarHeight ? drawing_area.getBottomBarHeight() : 0
