@@ -230,11 +230,12 @@ export const ModalTrialExpiredOSP: FC<TrialComponentProps> = ({ app_data }) => {
 // --------------------------------------------------------------------------------------------------
 // State machine:
 //   - has real licence              → hidden
+//   - has SankeySuite (top tier)    → hidden
 //   - trial active                  → "✦ OS+ trial — N days left"   click → /license/checkout
-//   - trial expired (was started)   → "✦ Unlock OpenSankey+"        click → /license/checkout
-//   - never started, was offered    → "✦ Start 30-day OS+ trial"    click → starts trial
-//   - never started, never offered  → (welcome modal handles it; banner shows "Start trial" too
-//                                     so users who closed the modal can still opt in)
+//   - has OS+ but not SankeySuite   → "Upgrade to SankeySuite" CTA  click → /license/checkout
+//   - free tier (no licence)        → "Get a licence" text CTA      click → /license/checkout
+//                                     Always visible so the subscribe entry point is
+//                                     discoverable (enrolment closed 2026-06-22).
 // ==================================================================================================
 
 /** A small ticking "version" so the banner re-renders when the user clicks on it. */
@@ -264,7 +265,8 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
     }
   }, [])
 
-  if (app_data.has_real_sankey_plus_licence) return <></>
+  // Top tier (SankeySuite) already owned → nothing left to sell, hide the banner.
+  if (app_data.has_real_sankey_suite_licence) return <></>
 
   const state = getTrialState()
 
@@ -293,10 +295,34 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
     </Tooltip>
   )
 
+  // Visible text CTA (logo + label) — used for the always-on subscribe button so the
+  // call to action is discoverable without hovering. Matches the accent-coloured pill
+  // style of the surrounding top-bar.
+  const textCTA = (label: string, tooltip: string, logo: string, onClick: () => void) => (
+    <Tooltip label={tooltip} placement='top'>
+      <Button
+        aria-label={label}
+        variant='button_banner_subscription'
+        onClick={onClick}
+        h='1.7rem'
+        leftIcon={
+          <Image
+            src={logo}
+            alt=''
+            h='1.2rem'
+            w='1.2rem'
+            objectFit='contain'
+          />
+        }
+      >
+        {label}
+      </Button>
+    </Tooltip>
+  )
+
   // Trial active — show countdown CTA pointing at the subscription page.
-  // This is the ONLY case where the banner shows: it stays visible until the running
-  // trial ends. New enrolment is closed (2026-06-22), so users who never started — and
-  // users whose trial has expired — get no banner at all.
+  // New enrolment is closed (2026-06-22), so this is a residual case for the few users
+  // whose trial is still running.
   if (state.is_active) {
     return iconCTA(
       t('Trial.banner_active', { days: state.days_remaining }),
@@ -304,7 +330,25 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
     )
   }
 
-  return <></>
+  // Has a real OS+ licence but not SankeySuite → teaser the upgrade to the top tier
+  // (MFA / reconciliation), which also bundles OS+.
+  if (app_data.has_real_sankey_plus_licence) {
+    return textCTA(
+      t('Trial.banner_subscribe_suite'),
+      t('Trial.banner_subscribe_suite_tooltip'),
+      app_data.logo_sankey_suite,
+      () => goToCheckout(app_data),
+    )
+  }
+
+  // Free tier — no licence at all: show a permanent, visible "Get a licence" CTA so the
+  // subscription entry point is always reachable from the top-bar.
+  return textCTA(
+    t('Trial.banner_subscribe'),
+    t('Trial.banner_subscribe_tooltip'),
+    app_data.logo_sankey_plus,
+    () => goToCheckout(app_data),
+  )
 }
 
 // Re-export the legacy name so existing imports keep working.

@@ -41,6 +41,16 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     return this._has_sankey_plus || this.is_static
   }
 
+  /**
+   * True when the user holds a real SankeySuite licence (the tier above OS+, which
+   * unlocks MFA/reconciliation) or runs in static mode. SankeySuite has no free trial,
+   * so unlike OS+ there is no trial bonus to strip out. Used by the subscribe CTA to
+   * decide whether to keep teasing the upgrade.
+   */
+  public get has_real_sankey_suite_licence(): boolean {
+    return this._has_sankey_afm || this.is_static
+  }
+
   protected _master_drawing_area: Class_DrawingArea | undefined
   protected _views: {
     [id: string]: {
@@ -127,6 +137,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   // PRIVATE ATTRIBUTES =================================================================
 
   private _logo_sankey_plus: string = ''
+  private _logo_sankey_suite: string = ''
 
   private _waiting_to_set_view: string | undefined
 
@@ -152,6 +163,8 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
 
     // Get OpenSankey+ logo
     this._logo_sankey_plus = 'logos/logo_opensankeyplus.png'
+    // Get SankeySuite logo (next tier above OS+)
+    this._logo_sankey_suite = 'logos/logo_OSS.png'
 
     if (this.has_sankey_plus && !this._drawing_area.static) {
       // Update user palette when connected
@@ -887,6 +900,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
 
   // GETTERS / SETTERS ==================================================================
   public get logo_sankey_plus(): string { return this._logo_sankey_plus }
+  public get logo_sankey_suite(): string { return this._logo_sankey_suite }
 
 
 
