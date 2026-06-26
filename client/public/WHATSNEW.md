@@ -7,6 +7,34 @@
 
 <!-- LANG:fr -->
 
+## v1.1.7 — Juin 2026
+
+### Publier ses diagrammes comme un site en ligne
+
+C'est le grand ajout de cette version : un **mode Publication** qui transforme un ou plusieurs diagrammes en un **site web autonome**, prêt à mettre en ligne.
+
+- **Portfolio de diagrammes.** On rassemble plusieurs diagrammes dans un site à pages, avec des **en-têtes de sections** sur la page d'accueil pour organiser la présentation. Les dossiers de travail marqués « Partenaires » ou « Interne » sont automatiquement exclus du site publié.
+- **Génération en un clic.** La publication produit une **archive autonome** que l'on déploie en ligne ou que l'on conserve en local. Lors d'une mise à jour, le déploiement complète l'existant et **sauvegarde automatiquement** la version précédente (datée), sans rien écraser par accident.
+- **Réglages mémorisés.** Les paramètres de publication (pages, options d'affichage) sont enregistrés avec le diagramme et repris d'un lancement à l'autre.
+- **Expérience de lecture soignée.** En mode publication, le diagramme et sa documentation sont en lecture seule, avec un **bouton plein écran** dédié, l'**aide à la navigation** et un **bouton Doc** accessibles au lecteur.
+
+### Diagrammes embarqués : ouvrir directement sur la bonne vue
+
+Pour intégrer un diagramme dans un autre site ou une autre application, deux nouvelles options permettent d'**imposer l'état initial** à l'ouverture : le **mode de navigation** (absolu / proportionnel / adapté à l'échelle) et le **data tag présélectionné** (par exemple une année ou un territoire donné). Le diagramme embarqué s'ouvre ainsi tout de suite dans la bonne configuration, sans manipulation du lecteur.
+
+### Confort de visualisation
+
+- **Sélecteur de data tag en barre du haut.** Le choix de l'année / du territoire / de la donnée est désormais accessible directement dans la barre du haut, en tout contexte (y compris en publication).
+- **Sankey unitaire docké ou détaché.** Le panneau de Sankey unitaire (le focus sur un nœud) peut s'afficher dans la grande zone à côté du diagramme ou se détacher en fenêtre indépendante ; le nœud central garde une taille homogène d'un focus à l'autre et ses libellés sont mieux mis en page.
+- **Versions et nouveautés dans l'application.** Un accès aux **versions archivées** et une page **changelog** intégrée permettent de retrouver l'historique et de pointer une version précise ; l'info-bulle de version indique la date et le repère de build.
+
+### Corrections de fiabilité
+
+- **Plus de flux fantômes en changeant d'année.** Les flux qui apparaissaient ou disparaissaient indûment en parcourant les dataTags ont été éliminés, et la structure d'un diagramme ne « déteint » plus d'une année sur l'autre.
+- **Stocks multi-données fiabilisés.** Un diagramme avec des stocks portant plusieurs familles de données est désormais relu fidèlement après enregistrement (plus de perte ni d'incohérence au rechargement).
+- **Cadenas des flux d'entrée/sortie préservé** lors du déplacement d'un nœud, et **échelle des flux conservée** après une complétion ou une réconciliation.
+- **Ouverture plus robuste** : nœuds parents absents qui n'étaient pas recréés à tort, et import de fichiers SankeyMATIC accentués corrigé sous Windows.
+
 ## v1.1.5 — Juin 2026
 
 ### Une application complètement intégrée : tableur + diagramme + documentation
@@ -115,6 +143,34 @@ C'est le grand changement de cette version. OpenSankey n'oblige plus à passer p
 - **Noms de styles par défaut traduisibles** : les styles créés automatiquement à l'import suivent la langue de l'interface. Les styles renommés manuellement sont préservés.
 
 <!-- LANG:en -->
+
+## v1.1.7 — June 2026
+
+### Publish your diagrams as an online site
+
+The headline of this version is a new **Publish mode** that turns one or several diagrams into a **standalone website**, ready to put online.
+
+- **Diagram portfolio.** Gather several diagrams into a multi-page site, with **section headers** on the home page to structure the presentation. Working folders marked "Partners" or "Internal" are automatically excluded from the published site.
+- **One-click generation.** Publishing produces a **self-contained archive** that you deploy online or keep locally. On an update, the deployment adds to the existing site and **automatically backs up** the previous version (dated), without overwriting anything by accident.
+- **Remembered settings.** Publication settings (pages, display options) are saved with the diagram and reused from one run to the next.
+- **Polished reading experience.** In publish mode the diagram and its documentation are read-only, with a dedicated **fullscreen button**, **navigation help** and a **Doc button** available to the reader.
+
+### Embedded diagrams: open straight on the right view
+
+To embed a diagram in another site or application, two new options let you **set the initial state** on load: the **navigation mode** (absolute / proportional / scale-adapted) and the **preselected data tag** (for example a given year or territory). An embedded diagram thus opens right away in the intended configuration, with no action needed from the reader.
+
+### Viewing comfort
+
+- **Data tag selector in the top bar.** Choosing the year / territory / dataset is now available directly in the top bar, in any context (including publish mode).
+- **Docked or detached single-node Sankey.** The single-node Sankey panel (the focus on one node) can be shown in the main area next to the diagram or detached into its own window; the central node keeps a consistent size from one focus to the next, and its labels are better laid out.
+- **Versions and what's new inside the app.** Access to **archived versions** and a built-in **changelog** page let you browse history and point to a specific version; the version tooltip shows the build date and reference.
+
+### Reliability fixes
+
+- **No more phantom flows when switching year.** Flows that wrongly appeared or disappeared while browsing dataTags have been eliminated, and a diagram's structure no longer "bleeds" from one year to another.
+- **Multi-data stocks made reliable.** A diagram with stocks carrying several data families is now read back faithfully after saving (no more loss or inconsistency on reload).
+- **Input/output flow locks preserved** when moving a node, and **flow scale kept** after a completion or reconciliation.
+- **More robust opening**: missing parent nodes that were wrongly recreated, and import of accented SankeyMATIC files fixed on Windows.
 
 ## v1.1.5 — June 2026
 

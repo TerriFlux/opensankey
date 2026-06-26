@@ -11,11 +11,29 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 
 ---
 
-## [Unreleased]
+## [1.1.7] — 2026-06-26
 
-### Viewers : état initial paramétrable (mode de navigation + data tag présélectionné)
+Release publique consolidant le travail depuis la 1.1.5 (les versions
+intermédiaires 1.1.6 / 1.1.7 avaient été diffusées à des intégrateurs). Détails
+par module dans les changelogs liés en tête de fichier.
+
+### Publication : diagrammes publiés comme site autonome
+
+- **Mode Publication / portfolio** : génération d'un site web autonome (archive déployable en ligne ou dossier local) à partir d'un ou plusieurs diagrammes, avec **en-têtes de sections** sur la page d'accueil et **exclusion automatique** des dossiers *Partenaires* / *Interne* ([su-model/sankeyapplication#194](https://gitlab.com/su-model/sankeyapplication/-/issues/194)). Déploiement **additif** avec **sauvegarde datée** de la version précédente. Réglages de publication mémorisés avec le diagramme. En lecture : diagramme et documentation en lecture seule, **bouton plein écran** isolé, **aide à la navigation** et **bouton Doc** côté lecteur. Chargement unique du diagramme côté viewer ([#196](https://gitlab.com/su-model/sankeyapplication/-/issues/196)).
+
+### Viewers embarqués : état initial paramétrable
 
 - Nouvelles options de publication `position_mode` (`'absolute' | 'proportional' | 'scale_adapted'`) et `data_tag_selection` (`{ groupe : tag }`, résolus par id ou par nom), acceptées via `window.sankey` et en props des Viewers `ViewerOpenSankeyApp` / `ViewerSankeyApplication`. Permet d'ouvrir un diagramme embarqué directement dans le mode de navigation voulu et sur un data tag donné. Détail technique : [submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md](submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md).
+
+### Confort de visualisation
+
+- **Sélecteur de data tag en barre du haut**, accessible en tout contexte (y compris en publication).
+- **Sankey unitaire docké ou détaché** : panneau affiché dans la grande zone à côté du diagramme ou détaché en fenêtre indépendante, nœud central de taille homogène, libellés mieux mis en page.
+- **Versions & changelog dans l'application** ([#164](https://gitlab.com/su-model/sankeyapplication/-/issues/164)) : accès aux versions archivées, page changelog intégrée, info commit/date dans l'info-bulle de version.
+
+### Corrections
+
+- Flux fantômes entre dataTags éliminés ([#188](https://gitlab.com/su-model/sankeyapplication/-/issues/188), [#161](https://gitlab.com/su-model/sankeyapplication/-/issues/161)) ; round-trip JSON des stocks multi-données fiabilisé ([#189](https://gitlab.com/su-model/sankeyapplication/-/issues/189)) ; cadenas des flux d'entrée/sortie préservé au déplacement d'un nœud ([#197](https://gitlab.com/su-model/sankeyapplication/-/issues/197)) ; échelle des flux préservée à la complétion / réconciliation ; orphelins `parent_name` non recréés à tort à l'ouverture ([#193](https://gitlab.com/su-model/sankeyapplication/-/issues/193)) ; import SankeyMATIC accentué corrigé sous Windows ([#182](https://gitlab.com/su-model/sankeyapplication/-/issues/182)).
 
 ## [1.1.5] — 2026-06-04
 
