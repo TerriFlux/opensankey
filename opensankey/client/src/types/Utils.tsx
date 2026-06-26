@@ -28,13 +28,14 @@ import React, { useState } from 'react'
 import * as d3 from 'd3'
 import { Class_ApplicationData } from './ApplicationData'
 import { FType_InitializeAdditionalMenus } from '../Modules'
-import { value_option_percent_constants, ValueOptionType } from '../Elements/LinkValues'
+import { value_option_percent_constants, unit_stock_percent_constants, ValueOptionType } from '../Elements/LinkValues'
 import { Class_NodeBase } from '../Elements/NodeBase'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_DataTagGroup } from './TagGroup'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_BaseShape } from '../Elements/Element'
 import { getNameLabelValues } from '../Elements/ElementsAttributesConfig'
+import type { Type_RatioFluxConstraint, Type_RatioStockFluxConstraint } from './Sankey'
 
 export const default_file_name = 'Diagramme de Sankey'
 
@@ -362,13 +363,19 @@ export const formatValueWithOption = (element:Class_BaseShape,value: number | st
   //@ts-expect-error xxx
   const label_values = getNameLabelValues(element, prefix)
   if (
-    element.style.includes(element.sankey.styles_dict['LinkInUnitaryStyle']) || 
+    element.style.includes(element.sankey.styles_dict['LinkInUnitaryStyle']) ||
       element.style.includes(element.sankey.styles_dict['SankeyUnitaryNodeOutputStyle']) ||
       element.style.includes(element.sankey.styles_dict['SankeyUnitaryNodeInputStyle']) ||
       element.style.includes(element.sankey.styles_dict['LinkOutUnitaryStyle'])
   ) {
-    if (value == 100) return ''
-    return value + '%'
+    // Le board unitaire force l'affichage du '%' UNIQUEMENT en mode percent (défaut).
+    // En mode 'value'/'normalized', on laisse retomber sur le formatage normal (la
+    // valeur a déjà été calculée par format_value selon le value_label_unit_type posé
+    // par buildUnitaryDrawingArea : valeur brute ou ratio vs flux de référence).
+    if ((element.sankey.drawing_area?.unitary_value_mode ?? 'percent') === 'percent') {
+      if (value == 100) return ''
+      return value + '%'
+    }
   }
   if (option == '%IS' && value) {
     return value + '%'
@@ -388,6 +395,139 @@ export const formatValueWithOption = (element:Class_BaseShape,value: number | st
   return value as string
 }
 
+/**
+ * Contrainte de ratio dont le flux (source→destination) est le terme principal,
+ * dans `sankey.ratio_flux_constraints` (#116). null s'il n'y en a pas.
+ * Le data_tag de la contrainte (s'il est défini) doit matcher le tag courant du flux ;
+ * la contrainte référence le data_tag par son nom (résolution par nom côté SEP) alors
+ * que le flux porte un Class_DataTag, d'où le match sur le nom (ou l'id par robustesse).
+ */
+export const link_ratio_constraint = (link: Class_LinkElement): Type_RatioFluxConstraint | null => {
+  const constraints = link.sankey.ratio_flux_constraints
+  if (!constraints || constraints.length === 0) return null
+  const src = link.source.name
+  const dst = link.target.name
+  // La contrainte peut cibler PLUSIEURS familles de data tags (ex. Année +
+  // Scenario), sérialisées dans `data_tag` jointes par ":". On compare donc
+  // contre la combinaison COURANTE complète du flux (un tag par famille), et
+  // pas le seul tag de la feuille la plus profonde — sinon le match échouait
+  // dès qu'il y avait deux familles (label % vide). Une famille absente de la
+  // contrainte = wildcard : elle matche toutes ses valeurs.
+  const selected = link.selected_data_tags_list ?? []
+  const sel_names = new Set(selected.map(t => t.name))
+  const sel_ids = new Set(selected.map(t => t.id))
+  return constraints.find(c => {
+    if (c.origin !== src || c.destination !== dst) return false
+    if (c.data_tag == null) return true
+    return String(c.data_tag).split(':').every(w => sel_names.has(w) || sel_ids.has(w))
+  }) ?? null
+}
+
+/**
+ * Contrainte « ratio stock flux » (#156) dont le flux (source→destination) est le terme
+ * principal : `flux = coef × stock`, dans `sankey.ratio_stock_flux_constraints`. null
+ * s'il n'y en a pas. Même logique de match que `link_ratio_constraint` (nom des nœuds +
+ * data_tag par nom/id).
+ */
+export const link_ratio_stock_flux_constraint = (link: Class_LinkElement): Type_RatioStockFluxConstraint | null => {
+  const constraints = link.sankey.ratio_stock_flux_constraints
+  if (!constraints || constraints.length === 0) return null
+  const src = link.source.name
+  const dst = link.target.name
+  // Même logique multi-familles que link_ratio_constraint : la contrainte peut
+  // cibler plusieurs familles de data tags (ex. Année + Scenario) sérialisées
+  // dans `data_tag` jointes par ":". On compare contre la combinaison COURANTE
+  // complète du flux, pas le seul tag de la feuille la plus profonde — sinon le
+  // match échoue dès qu'il y a deux familles (label % vide). Famille absente de
+  // la contrainte = wildcard.
+  const selected = link.selected_data_tags_list ?? []
+  const sel_names = new Set(selected.map(t => t.name))
+  const sel_ids = new Set(selected.map(t => t.id))
+  return constraints.find(c => {
+    if (c.origin !== src || c.destination !== dst) return false
+    if (c.data_tag == null) return true
+    return String(c.data_tag).split(':').every(w => sel_names.has(w) || sel_ids.has(w))
+  }) ?? null
+}
+
+/**
+ * Formate un nombre (déjà en %) selon les réglages de chiffres du label de valeur
+ * (notation scientifique / chiffres significatifs / chiffres après la virgule).
+ * Sans `label_values`, retombe sur le comportement historique (.toFixed(2)).
+ */
+const format_percent_number = (
+  v: number,
+  label_values?: ReturnType<typeof getNameLabelValues>
+): string => {
+  if (!label_values) return String(parseFloat(v.toFixed(2)))
+  if (label_values.scientific_notation) {
+    return label_values.significant_digits
+      ? v.toExponential(label_values.nb_significant_digits! - 1)
+      : v.toExponential()
+  }
+  if (label_values.significant_digits === true) {
+    let t = String(parseFloat(v.toPrecision(label_values.nb_significant_digits)))
+    if (label_values.custom_digit) t = String(parseFloat(parseFloat(t).toFixed(label_values.nb_digit)))
+    return t
+  }
+  if (label_values.custom_digit) return String(parseFloat(v.toFixed(label_values.nb_digit)))
+  return String(v)
+}
+
+/**
+ * Pourcentage formaté d'une contrainte : « 30% » (coef), « ≥30% »/« ≤50% », « 30–50% ».
+ * `label_values` (réglages du label de valeur) gouverne les chiffres après la virgule.
+ */
+export const ratio_flux_coef_text = (
+  c: { coef: number | null, min: number | null, max: number | null },
+  label_values?: ReturnType<typeof getNameLabelValues>
+): string | null => {
+  const pct = (v: number) => format_percent_number(v * 100, label_values)
+  if (c.coef != null) return pct(c.coef) + '%'
+  if (c.min != null && c.max != null) return pct(c.min) + '–' + pct(c.max) + '%'
+  if (c.min != null) return '≥' + pct(c.min) + '%'
+  if (c.max != null) return '≤' + pct(c.max) + '%'
+  return null
+}
+
+/**
+ * Libellé « coefficient » d'un flux contraint (#116) — le % prescrit de la contrainte.
+ * NB : distinct de l'unit_type %IS/%OS de format_value, qui calcule la part RÉELLE des
+ * données ; ici on lit le coefficient PRESCRIT.
+ */
+export const link_ratio_coef_label = (
+  link: Class_LinkElement,
+  label_values?: ReturnType<typeof getNameLabelValues>
+): string | null => {
+  const c = link_ratio_constraint(link)
+  if (c) return ratio_flux_coef_text(c, label_values)
+  // #156 — à défaut d'une contrainte ratio flux, afficher le coef d'une contrainte
+  // ratio stock flux (flux = coef × stock) sur le même flux principal.
+  const sc = link_ratio_stock_flux_constraint(link)
+  return sc ? ratio_flux_coef_text(sc, label_values) : null
+}
+
+/**
+ * Traduction lisible par défaut d'une contrainte de ratio (#116), utilisée quand le
+ * champ `traduction` est absent (au chargement, dans le tooltip et le tableur).
+ * Ex : « Blé → Meunerie = 50% de Exploitation agricole → Blé », ou pour un agrégat
+ * « Blé → Meunerie = 50% des sorties de Blé ».
+ */
+export const ratio_flux_constraint_traduction = (c: Type_RatioFluxConstraint): string => {
+  const main = `${c.origin} → ${c.destination}`
+  let ref: string
+  if (c.origin_ref === '*' && c.destination_ref === '*') ref = 'tous les flux'
+  else if (c.destination_ref === '*') ref = `les sorties de ${c.origin_ref}`
+  else if (c.origin_ref === '*') ref = `les entrées de ${c.destination_ref}`
+  else ref = `${c.origin_ref} → ${c.destination_ref}`
+  const pct = (v: number) => String(parseFloat((v * 100).toFixed(2))) + '%'
+  if (c.coef != null) return `${main} = ${pct(c.coef)} de ${ref}`
+  if (c.min != null && c.max != null) return `${main} : entre ${pct(c.min)} et ${pct(c.max)} de ${ref}`
+  if (c.min != null) return `${main} ≥ ${pct(c.min)} de ${ref}`
+  if (c.max != null) return `${main} ≤ ${pct(c.max)} de ${ref}`
+  return main
+}
+
 export const link_data_label = (type_data: Type_Structure, link: Class_LinkElement,prefix:'name_label'|'value_label') => {
   // Helper: append target value as "source→target" when target is set and differs from source
   const withTarget = (source_text: string) => {
@@ -401,6 +541,27 @@ export const link_data_label = (type_data: Type_Structure, link: Class_LinkEleme
 
   const data_source = link.drawing_area.data_source
 
+  // #116 — coefficient prescrit de la contrainte ratio, en %.
+  // Règle : on affiche le % en mode COLLECTÉ (données saisies / étiquetées), mais PAS
+  // quand on affiche une valeur RÉELLEMENT CALCULÉE — là on ne montre que la valeur
+  // (« 120 » et non « 120 (50%) »). Le piège : `type_data === 'reconciled'` recouvre
+  // deux cas : (a) sans résultats, l'option « Collectées » du sélecteur mappe sur
+  // data_source 'reconciled' → c'est du collecté, on VEUT le % ; (b) avec résultats,
+  // « Calculées » → c'est du résultat, on NE veut PAS le %. On discrimine donc sur la
+  // présence d'un résultat calculé pour CE flux (valueResult), pas sur le mode seul.
+  // Exclu aussi en structure / intervalle libre. Un flux défini par ratio sans donnée
+  // ni résultat : withCoef renvoie le coef seul (« 50% »). Le coef suit les réglages du
+  // label de valeur : masqué si « valeur visible » décoché, formaté avec le même nombre
+  // de décimales.
+  const coef_label_values = getNameLabelValues(link, prefix)
+  const has_computed_result = link.value?.valueResult != null
+  const coef_allowed_for_mode =
+    type_data === 'data' || type_data === 'data_label' ||
+    ((type_data === 'reconciled' || type_data === 'free_value') && !has_computed_result)
+  const coef = (prefix === 'value_label' && coef_label_values.is_visible && coef_allowed_for_mode)
+    ? link_ratio_coef_label(link, coef_label_values) : null
+  const withCoef = (text: string) => coef ? (text ? text + ' (' + coef + ')' : coef) : text
+
   // Intervals links: only show [min - max] in free_interval mode
   if (link.value?.value_option === 'intervals') {
     if (link.drawing_area.interval_display === 'free_interval') {
@@ -408,16 +569,16 @@ export const link_data_label = (type_data: Type_Structure, link: Class_LinkEleme
       const min = use_data ? (link.value?.data_min ?? link.value?.result_min) : (link.value?.result_min ?? link.value?.data_min)
       const max = use_data ? (link.value?.data_max ?? link.value?.result_max) : (link.value?.result_max ?? link.value?.data_max)
       if (min !== null || max !== null) {
-        return '[' + (min ?? '?') + ' - ' + (max ?? '?') + ']'
+        return withCoef('[' + (min ?? '?') + ' - ' + (max ?? '?') + ']')
       }
     }
-    return ''
+    return withCoef('')
   }
 
   if (type_data == 'data' || type_data == 'data_label') {
-    if (!link.value?.valueData) return ''
+    if (!link.value?.valueData) return withCoef('')
     const src_text = formatValueWithOption(link,format_value(type_data, link.value?.valueData, link, link.unit_name(prefix),prefix), link.value?.value_option,prefix)
-    return withTarget(src_text as string)
+    return withCoef(withTarget(src_text as string))
   }
   // Reconciled links with min/max — choose data or result source
   const use_data_minmax = data_source === 'data' || data_source === 'data_label'
@@ -427,15 +588,15 @@ export const link_data_label = (type_data: Type_Structure, link: Class_LinkEleme
     if (type_data === 'free_interval') {
       const min = interval_min ?? link.value?.result_min
       const max = interval_max ?? link.value?.result_max
-      return '[' + format_value(type_data, min, link, link.unit_name(prefix),prefix) + ',' + format_value(type_data, max, link, link.unit_name(prefix),prefix) + ']'
+      return withCoef('[' + format_value(type_data, min, link, link.unit_name(prefix),prefix) + ',' + format_value(type_data, max, link, link.unit_name(prefix),prefix) + ']')
     }
     if (type_data === 'free_value') {
-      return withTarget(format_value(type_data, link.valueCurrent!, link, link.unit_name(prefix),prefix))
+      return withCoef(withTarget(format_value(type_data, link.valueCurrent!, link, link.unit_name(prefix),prefix)))
     }
-    return ''
+    return withCoef('')
   }
 
-  return withTarget(format_value(type_data, link.valueCurrent!, link, link.unit_name(prefix),prefix))
+  return withCoef(withTarget(format_value(type_data, link.valueCurrent!, link, link.unit_name(prefix),prefix)))
 }
 
 export const format_value = (
@@ -461,6 +622,15 @@ export const format_value = (
   const is_node = element instanceof Class_NodeElement
   const source = is_node ? node : link.source
   const target = is_node ? node : link.target
+  // Mode « collectées » (données brutes, non réconciliées) : une valeur affichée en %
+  // (% des entrées/sorties/parent d'un nœud, ou % du stock du nœud source/destination)
+  // se calculerait sur des sommes de flux incomplètes → résultat trompeur. On n'affiche
+  // donc rien dans ce cas, sans toucher au sélecteur d'unité (qui reste inchangé).
+  const is_percent_unit = value_option_percent_constants.includes(label_values.unit_type) ||
+    (unit_stock_percent_constants as readonly string[]).includes(label_values.unit_type)
+  if ((data_type === 'data' || data_type === 'data_label') && is_percent_unit) {
+    return ''
+  }
   let is_percent = false
   if (label_values.unit_type == '%IS') {
     let total_source = 0
@@ -497,7 +667,11 @@ export const format_value = (
     data_value = data_value && stock_level ? data_value / stock_level * 100 : null
     is_percent = true
   } else if (label_values.unit_type == 'normalized') {
-    data_value = data_value! / element.sankey.normalised_link!.value!.valueResult!
+    // Ratio vs le flux de référence (fixé à 1). En mode données il n'y a pas de
+    // valueResult → on retombe sur valueData. Garde-fou si pas de flux réf / réf nulle.
+    const ref = element.sankey.normalised_link?.value
+    const ref_value = ref ? (ref.valueResult ?? ref.valueData) : null
+    data_value = (data_value != null && ref_value) ? data_value / ref_value : null
   }
 
   /*==========================================================================*/

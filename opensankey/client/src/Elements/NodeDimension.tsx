@@ -50,6 +50,20 @@ export type Type_ContainerMode =
   | 'in_children_out_children'
   | 'in_parent_out_parent'
 
+/**
+ * #1231 — Type de désagrégation MÉMORISÉ pour une dimension (= un axe d'un nœud
+ * parent). Enregistré à chaque désagrégation LOCALE (clic droit) : simple,
+ * englobement (4 variantes container) ou expansion latérale. Persisté dans le
+ * JSON, et NON effacé par l'agrégation (c'est une préférence, pas l'état courant
+ * d'affichage). La désagrégation GLOBALE (menu Hiérarchies) le relit pour
+ * réappliquer le même type par nœud au lieu de toujours désagréger « simple ».
+ */
+export type Type_DisaggregationKind =
+  | 'children'
+  | Exclude<Type_ContainerMode, null>
+  | 'expanded_left'
+  | 'expanded_right'
+
 export class Class_NodeDimension {
 
   // PRIVATE ATTRIBUTES =================================================================
@@ -70,6 +84,16 @@ export class Class_NodeDimension {
   // Replaces the old clone-based mechanism (master_node / slave_nodes).
   private _expanded_left: boolean = false
   private _expanded_right: boolean = false
+  // #1231 — Type de désagrégation mémorisé (cf. Type_DisaggregationKind). Posé par
+  // les désagrégations locales (clic droit), persisté, survit aux agrégations.
+  private _preferred_disaggregation: Type_DisaggregationKind | null = null
+  // #1231 — Marqueur TRANSITOIRE (non persisté) : la désagrégation courante de cette
+  // dimension a été déclenchée par une action LOCALE (clic droit), pas par le menu
+  // Hiérarchies global ni par un chargement. Sert UNIQUEMENT à décider l'affichage du
+  // bouton « Réinitialiser la hiérarchie » (état hybride local). Posé à true par les
+  // handlers locaux (NodeActions), remis à false sur toute sortie (agrégation, reset,
+  // désengloble, contract).
+  private _forced_by_local_action: boolean = false
 
   /**
    * True if element is currently on a deletion process
@@ -191,11 +215,15 @@ export class Class_NodeDimension {
     // Set protection
     this._is_currently_in_unsetting_recursion = true
     // Set booleans accordingly
+    // #1231 — sortie du mode englobant via agrégation → retirer le style cadre.
+    this._removeContainerStyleIfLeaving()
     this._force_show_children = false
     this._force_show_parent = true
     this._container_mode = null
     this._expanded_left = false
     this._expanded_right = false
+    // #1231 — l'agrégation annule toute désagrégation locale de cette dim.
+    this._forced_by_local_action = false
     this._updated()
     // Unset all other children node's dimensions
     const nodes_to_redraw = new Set([
@@ -233,11 +261,16 @@ export class Class_NodeDimension {
     // Set protection
     this._is_currently_in_unsetting_recursion = true
     // Set booleans accordingly
+    // #1231 — sortie du mode englobant via désagrégation simple → retirer le style cadre.
+    this._removeContainerStyleIfLeaving()
     this._force_show_children = true
     this._force_show_parent = false
     this._container_mode = null
     this._expanded_left = false
     this._expanded_right = false
+    // #1231 — mémoriser le type « simple » (sauf au rechargement, qui restaure
+    // la préférence sauvegardée séparément).
+    if (!fromJSON) this._preferred_disaggregation = 'children'
     this._updated()
     // Unset other dimensions
     const nodes_to_redraw = new Set([
@@ -281,6 +314,8 @@ export class Class_NodeDimension {
     this._expanded_left = false
     this._expanded_right = false
     this._container_mode = mode
+    // #1231 — mémoriser le type « englobement » (variante container choisie).
+    if (!fromJSON) this._preferred_disaggregation = mode
     // Apply the enclosing-node visual style (transparent fill, dashed
     // border, top-centered label). Geometry is handled separately by the
     // tied_to_nodes coupling in NodeActions.
@@ -338,18 +373,33 @@ export class Class_NodeDimension {
   }
 
   /**
-   * Exit container display mode and reset to a neutral state (no forcing).
+   * #1231 — Retire le style de nœud-cadre (NodeContainerStyle) du parent quand on
+   * QUITTE le mode englobant. À appeler TANT QUE `_container_mode` est encore non-null
+   * (lit l'état courant). Sans ça, sortir du mode englobant par un autre chemin que
+   * `unsetContainerMode` (agrégation → setForceToShowParent, désagrégation simple,
+   * expansion, `showAccordingToLevelTags` → unsetForcingToShow, c.-à-d. via le menu
+   * Hiérarchies) laissait le style « cadre » (fond transparent, bord pointillé) collé
+   * au nœud. Ne retire le style que si AUCUNE autre dimension du parent n'est englobante.
    */
-  public unsetContainerMode() {
+  private _removeContainerStyleIfLeaving() {
     if (!this._container_mode) return
-    this._container_mode = null
-    // Remove the enclosing-node style only if no other dimension still
-    // wants this node to be a container.
     const still_container = this._parent.dimensions_as_parent
       .some(dim => dim !== this && dim.container_mode)
     if (!still_container) {
       this._parent.removeStyleById(NodeContainerStyle)
     }
+  }
+
+  /**
+   * Exit container display mode and reset to a neutral state (no forcing).
+   */
+  public unsetContainerMode() {
+    if (!this._container_mode) return
+    // Remove the enclosing-node style only if no other dimension still
+    // wants this node to be a container.
+    this._removeContainerStyleIfLeaving()
+    this._container_mode = null
+    this._forced_by_local_action = false
     this._updated()
     const nodes_to_redraw = new Set([
       this._parent,
@@ -380,11 +430,15 @@ export class Class_NodeDimension {
       return
     if (this._is_currently_in_unsetting_recursion) return
     this._is_currently_in_unsetting_recursion = true
+    // #1231 — sortie du mode englobant via expansion latérale → retirer le style cadre.
+    this._removeContainerStyleIfLeaving()
     this._force_show_children = false
     this._force_show_parent = false
     this._container_mode = null
     this._expanded_left = target_left
     this._expanded_right = target_right
+    // #1231 — mémoriser le type « expansion latérale » (côté choisi).
+    if (!fromJSON) this._preferred_disaggregation = target_left ? 'expanded_left' : 'expanded_right'
     this._updated()
     if (!fromJSON) {
       const nodes_to_redraw = new Set([
@@ -408,6 +462,7 @@ export class Class_NodeDimension {
     if (!this._expanded_left && !this._expanded_right) return
     this._expanded_left = false
     this._expanded_right = false
+    this._forced_by_local_action = false
     this._updated()
     const nodes_to_redraw = new Set([
       this._parent,
@@ -425,12 +480,15 @@ export class Class_NodeDimension {
   }
 
   public unsetForcingToShow() {
-
+    // #1231 — sortie du mode englobant via showAccordingToLevelTags (menu Hiérarchies)
+    // → retirer le style cadre.
+    this._removeContainerStyleIfLeaving()
     this._force_show_children = false
     this._force_show_parent = false
     this._container_mode = null
     this._expanded_left = false
     this._expanded_right = false
+    this._forced_by_local_action = false
     this._updated()
   }
 
@@ -484,6 +542,14 @@ export class Class_NodeDimension {
     if (this._expanded_right) return 'right'
     return null
   }
+
+  // #1231 — Préférence de désagrégation mémorisée (cf. Type_DisaggregationKind).
+  public get preferred_disaggregation(): Type_DisaggregationKind | null { return this._preferred_disaggregation }
+  public set preferred_disaggregation(_: Type_DisaggregationKind | null) { this._preferred_disaggregation = _ }
+
+  // #1231 — Marqueur « désagrégé localement » (transitoire), cf. _forced_by_local_action.
+  public get forced_by_local_action() { return this._forced_by_local_action }
+  public set forced_by_local_action(_: boolean) { this._forced_by_local_action = _ }
 
   public normalize() {
     const group = this.parent.sankey.level_taggs_dict[this.id]
@@ -668,6 +734,10 @@ export class NodeDimensionsManager {
             // Issue #1225 — expansion latérale unifiée sur la dimension
             if (dimension.expanded_left) dimensions[dimension.id].expanded_left = true
             if (dimension.expanded_right) dimensions[dimension.id].expanded_right = true
+            // #1231 — type de désagrégation mémorisé. Écrit indépendamment de l'état
+            // d'affichage courant (un nœud ré-agrégé garde sa préférence pour la
+            // prochaine désagrégation globale).
+            if (dimension.preferred_disaggregation) dimensions[dimension.id].preferred_disaggregation = dimension.preferred_disaggregation
           } else {
             const cur_children_tags = dimensions[dimension.id].children_tags as string[]
             dimensions[dimension.id].children_tags = [...cur_children_tags, dimension.id]
@@ -731,7 +801,16 @@ export class NodeDimensionsManager {
             ) {
               // Get parent
               parent_id = matching_nodes_id[parent_id] ?? parent_id
-              const parent = this._node.sankey.nodes_dict[parent_id] ?? this._node.sankey.addNewNode(parent_id, parent_id)
+              // #193 — ne PAS matérialiser un parent absent du fichier. Un diagramme
+              // sauvegardé en « éléments visibles uniquement » (niveaux d'agrégation
+              // repliés → parents exclus, voulu) laisse sur chaque feuille un
+              // `dimensions[*].parent_name` pendant. La référence pendante doit être
+              // ignorée silencieusement (l'enfant reste à son propre niveau, sans
+              // parent), sinon on recrée un nœud orphelin à chaque ré-ouverture.
+              // Tous les nœuds réellement présents existent déjà ici (load_nodes les
+              // crée tous avant de résoudre les dimensions), donc une absence de
+              // nodes_dict signifie bien « parent hors fichier ».
+              const parent = this._node.sankey.nodes_dict[parent_id]
 
               // Get child & parent tags
               if (parent) {
@@ -776,6 +855,12 @@ export class NodeDimensionsManager {
                 } else if (dimension_as_json.expanded_right) {
                   const nodeDimParent = parent.nodeDimensionAsParent(this._node)!
                   nodeDimParent?.setExpandedSide('right', true)
+                }
+                // #1231 — restaurer le type de désagrégation mémorisé (indépendant
+                // de l'état d'affichage : présent même pour un nœud ré-agrégé).
+                const preferred_disaggregation = getStringOrUndefinedFromJSON(dimension_as_json, 'preferred_disaggregation')
+                if (preferred_disaggregation && childDim) {
+                  childDim.preferred_disaggregation = preferred_disaggregation as Type_DisaggregationKind
                 }
                 if (this._node.sankey.level_taggs_dict[_]) {
                   let level = 0

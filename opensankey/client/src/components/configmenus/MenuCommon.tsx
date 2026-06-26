@@ -242,23 +242,49 @@ export const WrapperContentConfig = ({ title, children, hide = false }: React.Pr
 export const MenuResetAttrLocal = (
   {
     new_data,
-    dict_overwritted_attr
+    dict_overwritted_attr,
+    onResetAll,
+    onResetLocal,
+    is_disabled,
+    computeOverloadedAttr
   }: {
     new_data: Class_ApplicationData,
-    dict_overwritted_attr: { [x: string]: { overloaded: boolean, name: string } }
+    dict_overwritted_attr: { [x: string]: { overloaded: boolean, name: string } },
+    // Surcharges optionnelles : permettent de réutiliser ce menu pour réinitialiser
+    // un style édité (et non les éléments sélectionnés). Sans elles, comportement
+    // historique = reset des éléments sélectionnés.
+    onResetAll?: () => void,
+    onResetLocal?: (k: string) => void,
+    is_disabled?: boolean,
+    // Si fourni, la liste des surcharges est recalculée à chaque ouverture du menu
+    // (et après chaque reset), pour refléter les éditions d'attributs faites entre-temps
+    // sans dépendre d'un re-render du parent.
+    computeOverloadedAttr?: () => { [x: string]: { overloaded: boolean, name: string } }
   }) => {
   const { t, icon_library, drawing_area } = new_data
   const { sankey } = drawing_area
   const { icon_undo } = icon_library
 
-  // Delete all local attributes of selected elements
-  const resetAll = () => new_data.drawing_area.sankey.resetAttrSelectedElements()
-  // Delete local attributes 'k' of selected elements
-  const resetLocal = (k: string) =>
-    sankey.deleteLocalAttrSelectedElements(k as (keyof typeof ALL_ATTRIBUTES_CONFIG), drawing_area.selected_elements_list)
+  const [local_dict, setLocalDict] = useState(dict_overwritted_attr)
+  const refreshDict = () => { if (computeOverloadedAttr) setLocalDict(computeOverloadedAttr()) }
 
-  return <Menu direction='rtl' placement='left' closeOnSelect={false}>
-    <MenuButton as={Button} variant='menuconfigpanel_option_button'>
+  // Delete all local attributes of selected elements
+  const resetAll = () => {
+    if (onResetAll) onResetAll()
+    else new_data.drawing_area.sankey.resetAttrSelectedElements()
+    refreshDict()
+  }
+  // Delete local attributes 'k' of selected elements
+  const resetLocal = (k: string) => {
+    if (onResetLocal) onResetLocal(k)
+    else sankey.deleteLocalAttrSelectedElements(k as (keyof typeof ALL_ATTRIBUTES_CONFIG), drawing_area.selected_elements_list)
+    refreshDict()
+  }
+
+  const dict_to_use = computeOverloadedAttr ? local_dict : dict_overwritted_attr
+
+  return <Menu direction='rtl' placement='left' closeOnSelect={false} onOpen={refreshDict}>
+    <MenuButton as={Button} variant='menuconfigpanel_option_button' isDisabled={is_disabled}>
       {icon_undo}
       <ChevronDownIcon />
     </MenuButton>
@@ -267,7 +293,7 @@ export const MenuResetAttrLocal = (
       <MenuItem onClick={resetAll}>{t('Menu.reset_all_attr')} </MenuItem>
       <MenuDivider />
       {
-        Object.entries(dict_overwritted_attr).filter(ent => ent[1].overloaded).map(ent => {
+        Object.entries(dict_to_use).filter(ent => ent[1].overloaded).map(ent => {
           return <MenuItem onClick={() => resetLocal(ent[0])}>{t('Menu.reset_attr')}{ent[1].name}</MenuItem>
         })
       }
@@ -639,6 +665,12 @@ export const TooltipValueSurcharge = (k: string, t: TFunction) => {
 }
 
 
+// Désactive le rendu des tooltips dans un sous-arbre. Utilisé pour les panneaux détachés en fenêtre
+// PiP : les Tooltip Chakra reposent sur des écouteurs du `document` PRINCIPAL et ne reçoivent jamais
+// le `mouseleave` émis dans la fenêtre fille -> tooltips « collants » impossibles à fermer. Dans ce
+// contexte, OSTooltip rend simplement ses enfants sans wrapper Tooltip.
+export const OSTooltipDisabledContext = React.createContext(false)
+
 export const OSTooltip = ({ label,disabled=false, delay = 500, placement = 'auto', isAlwaysOpen = false, children }: React.PropsWithChildren<{
   delay?: number,
   label: string,
@@ -647,7 +679,8 @@ export const OSTooltip = ({ label,disabled=false, delay = 500, placement = 'auto
   isAlwaysOpen?: boolean
   children: ReactNode
 }>) => {
-  if (label === undefined || label === null) {
+  const tooltips_disabled = React.useContext(OSTooltipDisabledContext)
+  if (tooltips_disabled || label === undefined || label === null) {
     return <>{children}</>
   }
   const element_key = label.split(' ').join('_')
@@ -822,12 +855,17 @@ export const OverloadedButtonGroup = <T extends string>({
   const fullAttributeKey = `${prefix}_${attributeKey}` as keyof typeof config
   const isOverloaded = isElementAttributeOverloaded(elements, fullAttributeKey, config)
   const tooltipLabel = t(`${String(attributePath)}.tooltips.${String(fullAttributeKey)}`)
+  // Groupe d'icônes (pas de label texte) : on ne laisse pas la grille s'étirer pour
+  // remplir sa colonne, sinon les boutons sont trop larges avec une icône minuscule
+  // centrée. width:fit-content rend les boutons compacts ; les groupes à labels texte
+  // (ex. position_type) gardent leur largeur pleine.
+  const hasOnlyIcons = items.every(item => item.icon)
   return (
     <OverloadIndicatorWrapper
       isOverloaded={isOverloaded}
     >
       <OSTooltip label={tooltipLabel}>
-        <Box layerStyle={`options_${items.length}cols`}>
+        <Box layerStyle={`options_${items.length}cols`} sx={hasOnlyIcons ? { width: 'fit-content' } : undefined}>
           {items.map((item, idx) => {
             const position =
               items.length === 2 ? (idx === 0 ? 'left' : 'right') :
@@ -941,12 +979,12 @@ export const OverloadIndicatorWrapper = ({
       display='inline-flex'
       sx={{
         '& > *': {
-          boxShadow: '0 0 0 1.5px rgba(66, 153, 225, 0.5)', // blue.400 avec transparence
+          boxShadow: '0 0 0 1.5px rgba(128, 90, 213, 0.7)', // purple.500 = surcharge
           borderRadius: '6px',
           transition: 'box-shadow 0.2s'
         },
         '&:hover > *': {
-          boxShadow: '0 0 0 2px rgba(66, 153, 225, 0.8)', // blue.500 plus opaque
+          boxShadow: '0 0 0 2px rgba(128, 90, 213, 1)', // purple.500 opaque
         },
         cursor: 'help'
       }}
@@ -1233,8 +1271,8 @@ export const InputIndicatorWrapper = ({
 }>) => {
   // Priorité : multiValue > overloaded
   const hasIndicator = isMultiValue || isOverloaded
-  const color = isMultiValue ? 'rgba(237, 137, 54, 0.5)' : 'rgba(66, 153, 225, 0.5)' // orange ou bleu
-  const colorHover = isMultiValue ? 'rgba(237, 137, 54, 0.8)' : 'rgba(66, 153, 225, 0.8)'
+  const color = isMultiValue ? 'rgba(237, 137, 54, 0.5)' : 'rgba(128, 90, 213, 0.7)' // orange (multi) ou violet (surcharge)
+  const colorHover = isMultiValue ? 'rgba(237, 137, 54, 0.8)' : 'rgba(128, 90, 213, 1)'
 
   if (!hasIndicator) {
     return <>{children}</>

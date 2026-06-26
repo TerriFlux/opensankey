@@ -508,8 +508,11 @@ export class NodeEventsHandler {
         dict_old_orders[n.id] = n.links_order.map(l => l.id)
       })
 
-      // Apply spatial reorganization.
-      nodes_to_reorganize.forEach(n => n.reorganizeIOLinks())
+      // Apply spatial reorganization. A manual node drag is NOT the explicit
+      // "recalcul automatique" that releases the I/O anchor locks ("cadenas") :
+      // pass release_locks=false so a user-locked arrangement survives the move
+      // (only the unlocked links re-sort around the locked ones).
+      nodes_to_reorganize.forEach(n => n.reorganizeIOLinks(false))
 
       // Snapshot new link orders AFTER reorganization — needed by redo.
       const dict_new_orders: { [nodeId: string]: string[] } = {}
@@ -597,6 +600,12 @@ export class NodeEventsHandler {
       this._node.drawing_area.setAbsoluteMode()
       this._node.drawing_area.drawElements()
     }
+    // Un nœud déplacé peut être l'ancre absolue de nœuds « Ecartement » de sa colonne :
+    // relancer drawElements pour que anchorParametricNodesToAbsolute les recale sous lui.
+    // (else-if : la branche %/échelle ci-dessus a déjà redessiné en absolu.)
+    else if (this._node.sankey.visible_nodes_list.some(n => n.shape_position_type === 'parametric')) {
+      this._node.drawing_area.drawElements()
+    }
 
     let new_bbox = this._node.drawing_area.d3_selection_elements_group?.node()?.getBBox() ?? undefined
 
@@ -656,6 +665,12 @@ export class NodeEventsHandler {
         target,
         this._node.drawing_area,
       )
+      // Indispensable AVANT le 1er rendu : sans ce drapeau, le ghost_link est
+      // jugé invisible (sa cible est un nœud fantôme masqué → are_source_and_
+      // target_displayed=false) et updateLinksPositions le dé-dessine ; aucun
+      // pointillé n'apparaît pendant le glisser. Le chemin « drag depuis le fond »
+      // le pose déjà ; on s'aligne pour le « drag depuis un nœud ».
+      this._node.drawing_area.drawing_link = true
       // Peuple source._output_links_starting_point[ghost_link.id] pour que le
       // 1er rendu du ghost_link voie son starting_point (sinon drawElements
       // est skip et aucun path n'est tracé pendant le drag initial).

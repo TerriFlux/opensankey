@@ -2,7 +2,11 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
-## [Unreleased]
+## [1.1.7] — 2026-06-26
+
+### Added (viewer publish — état initial : mode de navigation + data tag présélectionné)
+
+- **Options `position_mode` et `data_tag_selection`** ([types/PublishOptions.tsx](opensankey/client/src/types/PublishOptions.tsx), [types/ApplicationData.tsx](opensankey/client/src/types/ApplicationData.tsx), [App.tsx](opensankey/client/src/App.tsx), [ViewApp.tsx](opensankey/client/src/ViewApp.tsx)) : deux nouvelles options de publication (lues depuis `window.sankey` et acceptées en props des Viewers `ViewerOpenSankeyApp` / `ViewerSankeyApplication`). `position_mode` (`'absolute' | 'proportional' | 'scale_adapted'`) impose le mode de navigation/positionnement à l'ouverture (équivalent d'un clic dans la barre du bas). `data_tag_selection` (`Record<string, string>` = `{ groupe : tag }`, résolus par id **ou** par nom) présélectionne un data tag par groupe. Appliquées après le chargement du diagramme (et l'éventuel `diagram_layout`) via la nouvelle méthode `Class_ApplicationData.applyPublishStateOptions()` ; la sélection des data tags précède le mode car les modes proportionnel/échelle capturent leur référence sur le data tag courant.
 
 ### Added (application intégrée — tableur Univer + documentation + grande zone split-view)
 

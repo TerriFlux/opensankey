@@ -20,7 +20,9 @@ import { ChevronDownIcon } from '@chakra-ui/icons'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import {
   buildSankeyWorkbookData, Type_SheetColumns, Type_ColMeta, Type_SheetMeta, SHEET_ID_NOEUDS,
-  SHEET_ID_FLUX, SHEET_ID_RATIO, SHEET_ID_RATIO_STOCK, SHEET_ID_STOCK_CHAINING
+  allNodesTyped,
+  SHEET_ID_FLUX, SHEET_ID_RATIO, SHEET_ID_RATIO_STOCK, SHEET_ID_STOCK_CHAINING,
+  SHEET_ID_TES, SHEET_ID_TER
 } from './UniverSankeyData'
 import { attachSankeyBridge } from './UniverSankeyBridge'
 import { parseHierarchyFromLevels, refreshAfterHierarchyChange } from './UniverHierarchyOps'
@@ -41,6 +43,12 @@ const PLACEMENT_MODES: { id: 'auto' | 'none' | 'increment', label: string }[] = 
   { id: 'auto', label: 'Placement : auto' },
   { id: 'none', label: 'Placement : aucun' },
   { id: 'increment', label: 'Placement : incrémental' }
+]
+
+// Mode d'affichage des matrices TES/TER (cf. MenuConfig.spreadsheet_matrix_mode).
+const MATRIX_MODES: { id: 'cross' | 'value', label: string }[] = [
+  { id: 'cross', label: 'Matrice : croix' },
+  { id: 'value', label: 'Matrice : valeur' }
 ]
 
 /**
@@ -275,10 +283,21 @@ export const UniverSpreadSheet = (
   const apiRef = useRef<any>(null)
   // Métadonnées de colonnes (par onglet) du dernier build, pour le sélecteur "Colonnes".
   const columnsRef = useRef<Type_SheetColumns>({})
+  // Instance Sankey pour laquelle on a construit le dernier classeur. reset()/nouveau diagramme/
+  // changement de vue/chargement JSON remplacent app_data.drawing_area.sankey par une NOUVELLE
+  // instance : dans ce cas on ne conserve PAS l'onglet actif du classeur précédent (keepActive),
+  // sinon le tableur « se souvient » de l'onglet du diagramme précédent.
+  const builtForSankeyRef = useRef<any>(null)
 
   const [activeSheetId, setActiveSheetId] = useState<string>('')
   // Colonnes masquées par onglet (indices).
   const [hiddenCols, setHiddenCols] = useState<{ [sheetId: string]: number[] }>({})
+  // Choix EXPLICITES de visibilité de colonne par l'utilisateur (sélecteur « Colonnes »), par onglet :
+  // { [sheetId]: { [col]: hidden } }. Persistés à travers les rebuilds (déclenchés à chaque édition de
+  // la zone de dessin) pour que buildAndApply ne réécrase pas les choix par les règles par défaut.
+  const userColOverridesRef = useRef<{ [sheetId: string]: { [col: number]: boolean } }>({})
+  // Idem pour la visibilité des onglets (sélecteur « Onglets ») : { [sheetId]: hidden }.
+  const userSheetOverridesRef = useRef<{ [sheetId: string]: boolean }>({})
   // Onglets du dernier build (ordre d'affichage) + onglets masqués (ids), pour le sélecteur "Onglets".
   const [sheetsMeta, setSheetsMeta] = useState<Type_SheetMeta[]>([])
   const [hiddenSheets, setHiddenSheets] = useState<string[]>([])
@@ -290,6 +309,10 @@ export const UniverSpreadSheet = (
   // Mode de placement des nœuds créés depuis le tableur (miroir de menu_configuration).
   const [placementMode, setPlacementMode] = useState<'auto' | 'none' | 'increment'>(
     app_data.menu_configuration.spreadsheet_placement_mode
+  )
+  // Mode d'affichage des matrices TES/TER (miroir de menu_configuration).
+  const [matrixMode, setMatrixMode] = useState<'cross' | 'value'>(
+    app_data.menu_configuration.spreadsheet_matrix_mode
   )
   // Modale « Ajouter une contrainte » (onglets Ratio flux / Ratio stock flux / Chaînage stock).
   const [isAddConstraintOpen, setIsAddConstraintOpen] = useState(false)
@@ -393,7 +416,8 @@ export const UniverSpreadSheet = (
     const init = async () => {
       const [
         presets, sheetsCore, localeMod,
-        sheetsFilter, filterLocaleMod, sheetsSort, sortLocaleMod
+        sheetsFilter, filterLocaleMod, sheetsSort, sortLocaleMod,
+        sheetsDataValidation, dataValidationLocaleMod
       ] = await Promise.all([
         import('@univerjs/presets'),
         import('@univerjs/presets/preset-sheets-core'),
@@ -401,12 +425,15 @@ export const UniverSpreadSheet = (
         import('@univerjs/presets/preset-sheets-filter'),
         import('@univerjs/presets/preset-sheets-filter/locales/fr-FR'),
         import('@univerjs/presets/preset-sheets-sort'),
-        import('@univerjs/presets/preset-sheets-sort/locales/fr-FR')
+        import('@univerjs/presets/preset-sheets-sort/locales/fr-FR'),
+        import('@univerjs/presets/preset-sheets-data-validation'),
+        import('@univerjs/presets/preset-sheets-data-validation/locales/fr-FR')
       ])
       await Promise.all([
         import('@univerjs/presets/lib/styles/preset-sheets-core.css'),
         import('@univerjs/presets/lib/styles/preset-sheets-filter.css'),
-        import('@univerjs/presets/lib/styles/preset-sheets-sort.css')
+        import('@univerjs/presets/lib/styles/preset-sheets-sort.css'),
+        import('@univerjs/presets/lib/styles/preset-sheets-data-validation.css')
       ])
       const liveContainer = containerRef.current
       if (disposed || !liveContainer) {
@@ -416,12 +443,16 @@ export const UniverSpreadSheet = (
       const { UniverSheetsCorePreset } = sheetsCore
       const { UniverSheetsFilterPreset } = sheetsFilter
       const { UniverSheetsSortPreset } = sheetsSort
+      const { UniverSheetsDataValidationPreset } = sheetsDataValidation
       const sheetsCoreFrFR = localeMod.default
 
       const { univer, univerAPI } = createUniver({
         locale: LocaleType.FR_FR,
         locales: {
-          [LocaleType.FR_FR]: merge({}, sheetsCoreFrFR, filterLocaleMod.default, sortLocaleMod.default)
+          [LocaleType.FR_FR]: merge(
+            {}, sheetsCoreFrFR, filterLocaleMod.default, sortLocaleMod.default,
+            dataValidationLocaleMod.default
+          )
         },
         theme: defaultTheme,
         presets: [
@@ -434,11 +465,19 @@ export const UniverSpreadSheet = (
             // formulaBar: false -> retire la barre de formule (nom de cellule + fx + contenu) en
             // haut de la grille : inutile ici (pas de saisie de formules, juste de la donnée tabulaire).
             formulaBar: false,
-            footer: { statisticBar: false }
+            // addSheetButtonConfig.show: false -> masque le bouton « + » d'ajout d'onglet (créer une
+            // feuille arbitraire n'a pas de sens ici ; onglets gérés via le sélecteur « Onglets »).
+            // NE PAS le masquer en CSS : le « + » et les flèches de navigation entre onglets partagent
+            // le même composant Univer (data-u-comp="sheet-bar-append-button") -> un display:none CSS
+            // masquerait AUSSI les flèches de scroll des onglets.
+            footer: { statisticBar: false, addSheetButtonConfig: { show: false } }
           }),
           // Filtre (autofilter Excel : flèche par colonne, tri, recherche, valeurs) + tri par colonne.
           UniverSheetsFilterPreset(),
-          UniverSheetsSortPreset()
+          UniverSheetsSortPreset(),
+          // Validation de données : listes déroulantes (sélecteur d'étiquette dans les colonnes de
+          // tags des feuilles de nœuds).
+          UniverSheetsDataValidationPreset()
         ]
       })
       univerInstance = univer
@@ -463,11 +502,28 @@ export const UniverSpreadSheet = (
       const buildAndApply = () => {
         isSyncing.current = true
         try {
+          // Source de vérité de l'état d'affichage = sankey.spreadsheet_state (persisté par
+          // diagramme, cf. SankeyPersistence). On y branche DIRECTEMENT les refs d'overrides :
+          // toute modif via les sélecteurs « Onglets »/« Colonnes » écrit alors dans le modèle,
+          // donc sauvegardée au JSON. Lecture LIVE (reset()/changement de vue remplacent
+          // app_data.drawing_area.sankey par une nouvelle instance).
+          const sankeyState = app_data.drawing_area.sankey.spreadsheet_state
+          if (!sankeyState.col_overrides) sankeyState.col_overrides = {}
+          if (!sankeyState.sheet_overrides) sankeyState.sheet_overrides = {}
+          userColOverridesRef.current = sankeyState.col_overrides
+          userSheetOverridesRef.current = sankeyState.sheet_overrides
+          // Si la sankey courante a été remplacée depuis le dernier build (nouveau diagramme,
+          // reset, changement de vue, chargement JSON), on ne reporte pas l'onglet actif du
+          // classeur précédent : on repart de l'état persisté du nouveau diagramme (Flux par défaut).
+          const sankeyChanged = builtForSankeyRef.current !== app_data.drawing_area.sankey
+          builtForSankeyRef.current = app_data.drawing_area.sankey
           let keepActive: string | null = null
           const existing = univerAPI.getActiveWorkbook && univerAPI.getActiveWorkbook()
           if (existing) {
-            const as = existing.getActiveSheet && existing.getActiveSheet()
-            keepActive = as && as.getSheetId ? as.getSheetId() : null
+            if (!sankeyChanged) {
+              const as = existing.getActiveSheet && existing.getActiveSheet()
+              keepActive = as && as.getSheetId ? as.getSheetId() : null
+            }
             if (univerAPI.disposeUnit) {
               univerAPI.disposeUnit(existing.getId())
             }
@@ -479,8 +535,16 @@ export const UniverSpreadSheet = (
           const hidden: { [sheetId: string]: number[] } = {}
           Object.keys(built.columns).forEach((sheetId) => {
             hidden[sheetId] = []
+            const overrides = userColOverridesRef.current[sheetId] || {}
             built.columns[sheetId].forEach((c) => {
-              if (!c.mandatory && !c.hasData) {
+              if (c.mandatory) {
+                return
+              }
+              // Choix utilisateur explicite prioritaire ; sinon règle par défaut (vide ou forcedHidden).
+              const shouldHide = c.index in overrides
+                ? overrides[c.index]
+                : (!c.hasData || c.forcedHidden)
+              if (shouldHide) {
                 setColHidden(sheetId, c.index, true)
                 hidden[sheetId].push(c.index)
               }
@@ -489,19 +553,57 @@ export const UniverSpreadSheet = (
             freezeHeaderRow(sheetId)
           })
           setHiddenCols(hidden)
+          // Listes déroulantes (sélecteur d'étiquette) sur les colonnes de tags des feuilles de
+          // nœuds : validation de liste appliquée aux lignes de données (en-tête figé exclu). Le
+          // write-back (UniverSankeyBridge) aligne ensuite l'appartenance du nœud sur la cellule.
+          Object.keys(built.validations || {}).forEach((sheetId) => {
+            const rules = built.validations[sheetId]
+            if (!rules || rules.length === 0) {
+              return
+            }
+            const ws = wb.getSheetBySheetId ? wb.getSheetBySheetId(sheetId) : null
+            if (!ws) {
+              return
+            }
+            const rowCount = typeof ws.getMaxRows === 'function' ? ws.getMaxRows() : 1000
+            const numRows = Math.max(1, rowCount - 1)
+            rules.forEach((rule) => {
+              try {
+                const dv = univerAPI.newDataValidation()
+                  .requireValueInList(rule.options, rule.multiple, true)
+                  .build()
+                ws.getRange(1, rule.col, numRows, 1).setDataValidation(dv)
+              } catch (e) { /* preset absent / API indispo : pas de dropdown, édition libre */ }
+            })
+          })
           // Onglet actif cible : on conserve celui sur lequel l'utilisateur était (keepActive) ;
           // au tout premier build (keepActive null) l'onglet par défaut est Flux. On le rend actif
           // AVANT de masquer les onglets vides (Univer interdit de masquer la feuille active) et
           // APRÈS les opérations par-feuille (hide colonnes/freeze) qui laissent sinon active la
           // dernière feuille traitée -> l'onglet changeait au moindre rebuild.
-          const targetActive = keepActive || SHEET_ID_FLUX
+          // À la réouverture (keepActive null), on restaure l'onglet persisté ; sinon Flux par défaut.
+          const targetActive = keepActive || sankeyState.active_sheet || SHEET_ID_FLUX
           if (wb && typeof wb.setActiveSheet === 'function') {
             try { wb.setActiveSheet(targetActive) } catch (e) { /* feuille absente */ }
           }
           // Masque par défaut les onglets vides (sauf Flux, toujours visible, et sauf l'onglet actif).
           const hiddenSh: string[] = []
+          const sheetOverrides = userSheetOverridesRef.current
+          // Format `products_sectors` : l'onglet Noeuds n'est redondant avec Produits/Secteurs/Échanges
+          // que si CHAQUE nœud porte un tag de nature -> masqué par défaut. S'il reste des nœuds non
+          // catégorisés (visibles seulement dans Noeuds), on garde l'onglet.
+          const noeudsRedundant = allNodesTyped(app_data, onlyVisibleRef.current)
           built.sheets.forEach((s) => {
-            const shouldHide = !s.hasData && s.id !== SHEET_ID_FLUX && s.id !== targetActive
+            // Choix utilisateur explicite prioritaire ; sinon défaut (onglet vide masqué, ou Noeuds
+            // masqué quand tous les nœuds sont ventilés en produits/secteurs/échanges). Flux et
+            // l'onglet actif restent toujours visibles (Univer interdit de masquer la feuille active).
+            const defaultHide = !s.hasData || (s.id === SHEET_ID_NOEUDS && noeudsRedundant)
+            const wantHide = s.id in sheetOverrides ? sheetOverrides[s.id] : defaultHide
+            // Flux n'est jamais masqué PAR DÉFAUT (il a toujours des données -> defaultHide=false),
+            // mais un choix utilisateur explicite (sheet_overrides) doit pouvoir le masquer. Seule
+            // contrainte conservée : ne pas masquer l'onglet actif (interdit par Univer ; l'appelant
+            // bascule l'onglet actif avant de masquer Flux).
+            const shouldHide = wantHide && s.id !== targetActive
             setSheetHidden(s.id, shouldHide)
             if (shouldHide) {
               hiddenSh.push(s.id)
@@ -511,7 +613,9 @@ export const UniverSpreadSheet = (
           const wbA = univerAPI.getActiveWorkbook && univerAPI.getActiveWorkbook()
           const asNow = wbA && wbA.getActiveSheet && wbA.getActiveSheet()
           if (asNow && asNow.getSheetId) {
-            setActiveSheetId(asNow.getSheetId())
+            const sid = asNow.getSheetId()
+            setActiveSheetId(sid)
+            sankeyState.active_sheet = sid
           }
           syncFilterState()
         } finally {
@@ -532,7 +636,12 @@ export const UniverSpreadSheet = (
         const wb = univerAPI.getActiveWorkbook && univerAPI.getActiveWorkbook()
         const as = wb && wb.getActiveSheet && wb.getActiveSheet()
         if (as && as.getSheetId) {
-          setActiveSheetId(as.getSheetId())
+          const sid = as.getSheetId()
+          setActiveSheetId(sid)
+          // Persiste l'onglet courant (sauf pendant un rebuild, où buildAndApply gère active_sheet).
+          if (!isSyncing.current) {
+            app_data.drawing_area.sankey.spreadsheet_state.active_sheet = sid
+          }
         }
         syncFilterState()
       })
@@ -567,6 +676,10 @@ export const UniverSpreadSheet = (
   // Visibilité d'une colonne (Univer + état local), par onglet actif.
   const handleColSet = (col: number, hidden: boolean) => {
     setColHidden(activeSheetId, col, hidden)
+    // Mémorise le choix pour le réappliquer aux rebuilds suivants (édition de la zone de dessin).
+    const sheetOverrides = userColOverridesRef.current[activeSheetId] || {}
+    sheetOverrides[col] = hidden
+    userColOverridesRef.current[activeSheetId] = sheetOverrides
     setHiddenCols((prev) => {
       const cur = new Set(prev[activeSheetId] || [])
       if (hidden) {
@@ -594,6 +707,8 @@ export const UniverSpreadSheet = (
       }
     }
     setSheetHidden(sheetId, hidden)
+    // Mémorise le choix pour le réappliquer aux rebuilds suivants (édition de la zone de dessin).
+    userSheetOverridesRef.current[sheetId] = hidden
     setHiddenSheets((prev) => {
       const cur = new Set(prev)
       if (hidden) {
@@ -620,6 +735,17 @@ export const UniverSpreadSheet = (
   const isNoeuds = activeSheetId === SHEET_ID_NOEUDS
   const isConstraintSheet = activeSheetId === SHEET_ID_RATIO ||
     activeSheetId === SHEET_ID_RATIO_STOCK || activeSheetId === SHEET_ID_STOCK_CHAINING
+  const isMatrixSheet = activeSheetId === SHEET_ID_TES || activeSheetId === SHEET_ID_TER
+
+  // Bascule croix/valeur des matrices TES/TER : met à jour le ref + reconstruit le classeur.
+  const toggleMatrixMode = (m: 'cross' | 'value') => {
+    setMatrixMode(m)
+    app_data.menu_configuration.spreadsheet_matrix_mode = m
+    const ref = app_data.menu_configuration.ref_to_spreadsheet
+    if (ref && ref.current) {
+      ref.current()
+    }
+  }
 
   // Après ajout d'une contrainte depuis la modale : bascule sur l'onglet de la famille concernée
   // (l'onglet actif est mis avant le rebuild -> buildAndApply le restaure via keepActive).
@@ -670,7 +796,7 @@ export const UniverSpreadSheet = (
             width='auto'
             maxW='110px'
             flexShrink={0}
-            title="Construit la hiérarchie d'agrégation depuis la colonne Niveau d'agrégation"
+            title="Construit la hiérarchie d'agrégation depuis la colonne Niveau"
             onClick={runOp(parseHierarchyFromLevels)}
           >
             Parser
@@ -705,6 +831,16 @@ export const UniverSpreadSheet = (
           onChange={(v) => toggleOnlyVisible(v === 'visible')}
           title="Filtre d'affichage des lignes du tableur"
         />
+
+        {/* Affichage des matrices TES/TER : croix (structure) ou valeur (suit le data_type courant). */}
+        {isMatrixSheet && (
+          <SingleSelectMenu
+            value={matrixMode}
+            options={MATRIX_MODES}
+            onChange={toggleMatrixMode}
+            title="Contenu des cellules de la matrice : croix (le flux existe) ou valeur du flux pour le data_type sélectionné"
+          />
+        )}
 
         {/* Mode de placement des nœuds créés depuis le tableur (ajout de flux/nœud). */}
         <SingleSelectMenu

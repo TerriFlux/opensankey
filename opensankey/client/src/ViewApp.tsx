@@ -69,6 +69,8 @@ const ViewerInner: FC<ViewerOpenSankeyAppProps> = ({ initial_data, ...options })
       app_data.fromJSON(initial_data as unknown as Type_JSON)
     }
     app_data.draw()
+    // Applique l'état initial demandé via props viewer (position_mode / data_tag_selection)
+    app_data.applyPublishStateOptions()
   }, [app_data, initial_data])
 
   return <div id="sankey_app" style={{ backgroundColor: 'WhiteSmoke' }} />

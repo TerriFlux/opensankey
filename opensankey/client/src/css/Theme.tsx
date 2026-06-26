@@ -991,6 +991,31 @@ export const buttonStyles = {
     },
   }),
 
+  // Boutons du groupe ajustement/verrous/plein écran de la barre d'outils. La largeur
+  // est contrainte explicitement (2rem) : certaines icônes sont composites (police+verrou,
+  // taille+verrou) et, sans cette borne, le bouton s'élargissait au-delà de la colonne.
+  toolbar_button_6: defineStyle({
+    bgColor: 'primaire.4',
+    borderColor: 'secondaire.4',
+    border: 'none',
+    color: 'white',
+    width: '2rem',
+    height: '2rem',
+    minW: 'unset',
+    padding: '0.2rem',
+    zIndex: 0,
+    _hover: {
+      bgColor: 'tertiaire.4',
+      borderColor: 'secondaire.4',
+      border: 'none',
+    },
+    _active: {
+      bgColor: 'tertiaire.4',
+      borderColor: 'secondaire.4',
+      border: 'none',
+    },
+  }),
+
   button_dataTagg_sequence_play: defineStyle({
     bgColor: 'primaire.3',
     borderColor: 'primaire.3',
@@ -1300,18 +1325,20 @@ export const menuStyles = {
       bg: 'transparent',
       bgColor: 'transparent',
       height: '2.25rem',
-      minWidth: '2.75rem',
+      minWidth: '2.4rem',
       padding: '0',
-      marginRight: '0.25rem',
-      marginLeft: '0.25rem',
+      marginRight: '0.1rem',
+      marginLeft: '0.1rem',
       fontSize: '0.62rem',
       lineHeight: '1',
       'svg': { 'height': '1.25rem', 'width': '1.75rem' },
       // Chakra MenuButton wraps content in a span — apply grid there so the
       // inner Box(gridColumn=, gridRow=) place icon top + label/chevron below.
+      // 'auto auto' : la colonne label épouse le texte (boutons resserrés) au
+      // lieu de '1fr' qui étirait le bouton.
       span: {
         display: 'grid',
-        gridTemplateColumns: '1fr auto',
+        gridTemplateColumns: 'auto auto',
         gridTemplateRows: '1.45rem 0.8rem',
         alignItems: 'center',
         justifyItems: 'center',
@@ -2182,8 +2209,8 @@ export const sizes = {
     height: '2.25rem',
     minW: 'unset',
     padding: '0',
-    marginRight: '0.25rem',
-    marginLeft: '0.25rem'
+    marginRight: '0.1rem',
+    marginLeft: '0.1rem'
   }),
   sizeMenuTopButtonSaveCache: defineStyle({
     height: '2rem',
@@ -2289,18 +2316,20 @@ export const tabsStyles = {
       bg: 'transparent',
       bgColor: 'transparent',
       height: '2.25rem',
-      minWidth: '2.75rem',
+      minWidth: '2.4rem',
       padding: '0',
-      marginRight: '0.25rem',
-      marginLeft: '0.25rem',
+      marginRight: '0.1rem',
+      marginLeft: '0.1rem',
       fontSize: '0.62rem',
       lineHeight: '1',
       'svg': { 'height': '1.25rem', 'width': '1.75rem' },
       // Chakra MenuButton wraps content in a span — apply grid there so the
       // inner Box(gridColumn=, gridRow=) place icon top + label/chevron below.
+      // 'auto auto' : la colonne label épouse le texte (boutons resserrés) au
+      // lieu de '1fr' qui étirait le bouton.
       span: {
         display: 'grid',
-        gridTemplateColumns: '1fr auto',
+        gridTemplateColumns: 'auto auto',
         gridTemplateRows: '1.45rem 0.8rem',
         alignItems: 'center',
         justifyItems: 'center',
@@ -2898,6 +2927,14 @@ const layerStyles = {
     gridRowGap: '0.2rem',
     color: 'primaire.5',
     // overflowY: 'auto',
+    // Hauteur minimale des box de config : sans elle, une box qui ne contient
+    // que son titre + la ligne sélecteur (cas « aucune sélection » sur
+    // Nœuds/ZDT) s'écrase en un mince bandeau. On la scope ici (panneau de
+    // config) et non sur le layerStyle partagé box_content_config, qui est
+    // aussi réutilisé ailleurs (modale Réconciliation, etc.).
+    '> *': {
+      minHeight: '16rem',
+    },
   },
 
   element_box: {

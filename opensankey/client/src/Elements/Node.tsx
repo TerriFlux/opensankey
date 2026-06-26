@@ -32,6 +32,7 @@ import {
   sortLinksElementsByRelativeNodesPositions
 } from './Link'
 import { Class_Handler } from './Handler'
+import { reorganizeIOOrder } from './reorganizeIOOrder'
 import { format_value, Type_JSON } from '../types/Utils'
 import { default_element_color } from './ElementsAttributesConfig'
 import { SankeyAnimation } from '../Algorithms/SankeyAnimation'
@@ -94,6 +95,11 @@ export class Class_NodeElement extends Class_NodeBase {
   public stock_height_scale_factor: number = 1
   public has_material_balance: boolean = true
   public _stock_values: Class_StockValue | Class_ElementValueTree
+
+  // Sankey unitaire : id du flux de référence choisi pour le mode « normalisé » quand
+  // CE nœud est le centre de l'unitaire. Mémorisé par nœud (restauré au changement de
+  // nœud central dans le modal). En mémoire seulement (non persisté en JSON pour l'instant).
+  public unitary_ref_link_id: string | null = null
 
   // Stock visual sub-element (SA#1229): node-like shape stacked above the node
   // that reuses the full node attribute machinery. Lazily created when the node
@@ -566,6 +572,36 @@ export class Class_NodeElement extends Class_NodeBase {
     return [...new Set(nodeList)]
   }
 
+  // Source 'tag' du label : display_name du tag de nœud assigné au nœud dans le
+  // groupe choisi (le premier si plusieurs). Aucun tag dans ce groupe → nom du
+  // nœud.
+  protected override resolveTagLabel(): string {
+    const group_id = this.name_label_tag_group_id
+    if (group_id === '') return this.name_label
+    const tag = this.tags_list.find(t => t.group.id === group_id)
+    return tag ? tag.display_name : this.name_label
+  }
+
+  // Source 'ancestor' du label : remonte le long de la dimension choisie
+  // (name_label_dimension_id = id d'un groupe de level tags) jusqu'à l'ancêtre
+  // racine, et affiche son nom. Dimension vide → première dimension dont le nœud
+  // est enfant. Aucun ancêtre → nom de l'élément (il EST déjà la racine).
+  protected override resolveAncestorLabel(): string {
+    let dim_id = this.name_label_dimension_id
+    if (dim_id === '') dim_id = this.dimensions_as_child[0]?.id ?? ''
+    if (dim_id === '') return this.name_label
+    let current = this.dimensions_as_child.find(d => d.id === dim_id)?.parent as Class_NodeElement | undefined
+    if (!current) return this.name_label
+    const seen = new Set<string>([this.id])
+    while (current && !seen.has(current.id)) {
+      seen.add(current.id)
+      const next = current.dimensions_as_child.find(d => d.id === dim_id)?.parent as Class_NodeElement | undefined
+      if (!next) break
+      current = next
+    }
+    return current ? current.name_label : this.name_label
+  }
+
   // TAGS METHODS =======================================================================
   public hasGivenTag(tag: Class_Tag) { return this._nodeTagsManager.hasGivenTag(tag) }
   public tagsUpdated() { this._are_related_node_tags_selected = undefined }
@@ -679,6 +715,11 @@ export class Class_NodeElement extends Class_NodeBase {
   // 🔄 DRAW LINKS ARROW - RÉINTÉGRÉ DIRECTEMENT
   public drawLinksArrow() {
     this._drawLinksArrow()
+    this._orderD3Elements()
+  }
+
+  public drawLinksSourceNotch() {
+    this._drawLinksSourceNotch()
     this._orderD3Elements()
   }
 
@@ -889,20 +930,35 @@ export class Class_NodeElement extends Class_NodeBase {
     return undefined
   }
 
-  public reorganizeIOLinks() {
-    // Automatic reorg : release the anchor locks set manually on this node.
-    this._links_order.forEach(l => l.setAnchorLockedForNode(this, false))
+  /**
+   * Re-derive the I/O links order from the relative node positions.
+   *
+   * @param release_locks When true (default), the anchor locks ("cadenas" of the
+   *   "Ordre des flux E/S" menu) set manually on this node are released first and
+   *   every link is re-sorted — this is the explicit "recalcul automatique" the lock
+   *   tooltip refers to (Réorganiser button, computeAutoSankey, expand/contract…).
+   *   When false, locked anchors are PRESERVED : they keep their frozen side and
+   *   their slot in the order, and only the unlocked links are re-sorted around
+   *   them. A manual node drag passes false so it no longer undoes a user-locked
+   *   arrangement (the lock promises "déplacer le noeud opposé ne la repositionnera plus").
+   */
+  public reorganizeIOLinks(release_locks: boolean = true) {
+    if (release_locks)
+      this._links_order.forEach(l => l.setAnchorLockedForNode(this, false))
     const echangeTag = this.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
     const import_links = this.input_links_list.filter(l => l.source.hasGivenTag(echangeTag as Class_Tag))
     const export_links = this.output_links_list.filter(l => l.target.hasGivenTag(echangeTag as Class_Tag))
     const recycling_links = this._links_order.filter(l => l.shape_is_recycling)
 
-    // Rebuild links_order array safely
-    const newLinksOrder = this._links_order
-      .filter(l => !import_links.includes(l) && !export_links.includes(l) && !recycling_links.includes(l))
-      .sort((link_a, link_b) => sortLinksElementsByRelativeNodesPositions(link_a, link_b, this))
-
-    this._links_order = [...import_links, ...newLinksOrder, ...recycling_links, ...export_links]
+    this._links_order = reorganizeIOOrder(
+      this._links_order,
+      import_links,
+      export_links,
+      recycling_links,
+      (l) => l.getAnchorLockedForNode(this),
+      (link_a, link_b) => sortLinksElementsByRelativeNodesPositions(link_a, link_b, this),
+      release_locks
+    )
     this.draw()
   }
 
@@ -951,7 +1007,7 @@ export class Class_NodeElement extends Class_NodeBase {
     if (this.value_label_stick_to_label) {
       this._nodeDrawNameLabel?.refreshStickLayout()
     }
-    //this._drawLinksStartCaps() // Ajouter ici
+    this._drawLinksStartCaps()
   }
   /**
    * Apply node position to it shape in d3
@@ -1011,26 +1067,29 @@ export class Class_NodeElement extends Class_NodeBase {
    * Function that draw all the arrow of link visible linked to this node
    */
   private _drawLinksArrow() {
-    // Normal arrows: this node is the target, arrow drawn on link.target_side.
-    const normal_arrows = this.input_links_list
-      .filter(link => link.is_visible && link.shape_is_arrow && !link.shape_is_arrow_reversed && link.isRelatedD3SelectionPresentAndSynced)
+    // Target arrows: this node is the target, arrow drawn on link.target_side.
+    const target_arrows = this.input_links_list
+      .filter(link => link.is_visible && link.shape_is_arrow && link.isRelatedD3SelectionPresentAndSynced)
       .map(link => ({
         link,
+        is_source_arrow: false,
         arrow_side: link.target_side,
         link_thickness: link.thicknessTarget,
         is_horizontal_at_anchor: link.is_horizontal || link.is_vertical_horizontal
       }))
-    // Reversed arrows: this node is the source, arrow drawn on link.source_side
-    // (visual reversal only — the data flow direction is unchanged).
-    const reversed_arrows = this.output_links_list
-      .filter(link => link.is_visible && link.shape_is_arrow && link.shape_is_arrow_reversed && link.isRelatedD3SelectionPresentAndSynced)
+    // Source arrows: this node is the source, arrow drawn on link.source_side
+    // (independent of the target arrow — a link can carry both; graphical only,
+    // the data flow direction is unchanged).
+    const source_arrows = this.output_links_list
+      .filter(link => link.is_visible && link.shape_arrow_at_source && link.isRelatedD3SelectionPresentAndSynced)
       .map(link => ({
         link,
+        is_source_arrow: true,
         arrow_side: link.source_side,
         link_thickness: link.thicknessSource,
         is_horizontal_at_anchor: link.is_horizontal || link.is_horizontal_vertical
       }))
-    const list_link_to_add_arrow = [...normal_arrows, ...reversed_arrows]
+    const list_link_to_add_arrow = [...target_arrows, ...source_arrows]
       .sort((a, b) => this._links_order.indexOf(a.link) - this._links_order.indexOf(b.link))
 
     const node_height = this.getShapeHeightToUse()
@@ -1073,7 +1132,9 @@ export class Class_NodeElement extends Class_NodeBase {
 
         // Visible link thickness at the anchor (clamped to minimum_flux / 2px).
         const link_value = item.link_thickness
-        const is_reversed = link.shape_is_arrow_reversed
+        // Côté source ou cible : déterminé par la nature de cette entrée (un flux
+        // peut porter une flèche aux deux extrémités), pas par un drapeau du flux.
+        const is_reversed = item.is_source_arrow
         // Arrow length : in fan mode, the user-set shape_arrow_size is used
         // as-is. In standalone, cap the length to link_value so a wide flow
         // doesn't end with a squashed triangle (height/base <<1) — unless
@@ -1147,7 +1208,7 @@ export class Class_NodeElement extends Class_NodeBase {
         const is_horizontal_at_target = item.is_horizontal_at_anchor
         const is_revert = (is_horizontal_at_target && link_arrow_side_right) || (!is_horizontal_at_target && link_arrow_side_bottom)
 
-        link.shape_arrow_path = draw_arrow_part(
+        const arrow_path = draw_arrow_part(
           arrow_half_height,
           p5,
           +link_value,
@@ -1158,9 +1219,80 @@ export class Class_NodeElement extends Class_NodeBase {
           node_arrow_shift,
           arrows_adjustment
         )
+        // Router vers la bonne extrémité : chaque flèche est stockée séparément
+        // sur le flux pour que cible et source ne s'écrasent pas.
+        if (item.is_source_arrow) {
+          link.shape_arrow_path_source = arrow_path
+        } else {
+          link.shape_arrow_path = arrow_path
+        }
       })
 
     //this._drawLinksStartCaps()
+  }
+
+  /**
+   * Compute the "source notch" (negative arrow) chevrons for this node's
+   * outgoing links. All links leaving the same node side share a SINGLE notch:
+   * one chevron whose base spans every link's attach band on that side and whose
+   * apex is pushed into the ribbon (toward the targets) by the deepest requested
+   * notch size. The resulting path is pushed onto every participating link, which
+   * draws a background-colored copy on its own d3 selection — so the notch is
+   * carved consistently whatever the global element z-order.
+   */
+  private _drawLinksSourceNotch() {
+    const links = this.output_links_list.filter(
+      link => link.is_visible && link.shape_source_notch && link.isRelatedD3SelectionPresentAndSynced
+    )
+    if (links.length === 0)
+      return
+
+    const sides: Type_Side[] = ['left', 'right', 'top', 'bottom']
+    sides.forEach(side => {
+      const side_links = links.filter(link => link.source_side === side)
+      if (side_links.length === 0)
+        return
+
+      const depth = Math.max(...side_links.map(link => link.shape_source_notch_size ?? 0))
+      if (!(depth > 0))
+        return
+
+      let path: string
+      if (side === 'left' || side === 'right') {
+        // Base = vertical segment at the node edge, spanning all attach bands.
+        const x_base = side_links[0].position_x_start
+        let y_min = Infinity, y_max = -Infinity
+        side_links.forEach(link => {
+          const half = link.thicknessSource / 2
+          y_min = Math.min(y_min, link.position_y_start - half)
+          y_max = Math.max(y_max, link.position_y_start + half)
+        })
+        const apex_x = x_base + (side === 'right' ? depth : -depth)
+        const y_mid = (y_min + y_max) / 2
+        path = 'M ' + x_base + ',' + y_min
+          + ' L ' + apex_x + ',' + y_mid
+          + ' L ' + x_base + ',' + y_max
+          + ' Z'
+      }
+      else {
+        // Base = horizontal segment at the node edge, spanning all attach bands.
+        const y_base = side_links[0].position_y_start
+        let x_min = Infinity, x_max = -Infinity
+        side_links.forEach(link => {
+          const half = link.thicknessSource / 2
+          x_min = Math.min(x_min, link.position_x_start - half)
+          x_max = Math.max(x_max, link.position_x_start + half)
+        })
+        const apex_y = y_base + (side === 'bottom' ? depth : -depth)
+        const x_mid = (x_min + x_max) / 2
+        path = 'M ' + x_min + ',' + y_base
+          + ' L ' + x_mid + ',' + apex_y
+          + ' L ' + x_max + ',' + y_base
+          + ' Z'
+      }
+
+      side_links.forEach(link => { link.shape_source_notch_path = path })
+    })
   }
 
   /**
@@ -1529,7 +1661,43 @@ export class Class_NodeElement extends Class_NodeBase {
       const the_unitary_tagg = is_product ? 'product_unitary' : is_sector ? 'sector_unitary' : 'unitary'
       return this._taggs_dict[the_unitary_tagg]  && (this._taggs_dict[the_unitary_tagg][0].group as Class_ViewTagGroup).activated && this._taggs_dict[the_unitary_tagg][0].is_selected
     }
-    return false    
+    return false
+  }
+
+  /**
+   * Filtre « mode vue » (cf. Class_ViewTagGroup.view_mode), version PLATE qui
+   * court-circuite les level tags. Retourne :
+   *  - undefined : aucun groupe view tag en mode filtre, OU ce nœud ne porte aucun
+   *    de ces groupes → porte node-tag/dimension normale ;
+   *  - true  : le nœud porte une étiquette SÉLECTIONNÉE d'un groupe en mode filtre ;
+   *  - false : le nœud porte une autre étiquette (non sélectionnée) d'un tel groupe.
+   * (Visibilité seulement — pas de remontée vers les ancêtres ; cf. #173 pour ça.)
+   */
+  public viewTagVisibility(): boolean | undefined {
+    const groups = this.sankey.view_mode_groups
+    if (groups.length === 0) return undefined
+    // INTERSECTION (AND) de tous les groupes en mode filtre : un nœud n'est visible
+    // que s'il satisfait CHAQUE groupe auquel il est concerné. Croiser deux filtres
+    // affine donc le détail (on retire globalement des nœuds). Retourne undefined si
+    // le nœud n'est concerné par aucun groupe (porte node-tag/dimension normale).
+    let concerned = false
+    let visible = true
+    for (const g of groups) {
+      const own = this.grouped_taggs_dict[g.id]
+      if (own && own.length > 0) {
+        // Porte ce groupe : doit avoir une étiquette sélectionnée.
+        concerned = true
+        if (!own.some(tag => tag.is_selected)) visible = false
+      } else if (this.dimensions_as_parent.some(dim =>
+        dim.children.some(c => (c.grouped_taggs_dict[g.id]?.length ?? 0) > 0))) {
+        // Ne porte pas le groupe mais a un enfant qui le porte = AGRÉGAT de la vue
+        // (ex. nœud niveau 1 « bois ») → caché, sinon il s'afficherait EN PLUS des
+        // feuilles (superposition).
+        concerned = true
+        visible = false
+      }
+    }
+    return concerned ? visible : undefined
   }
 
   public get are_related_node_tags_selected(): boolean {
@@ -1552,23 +1720,34 @@ export class Class_NodeElement extends Class_NodeBase {
           const is_product = this.hasGivenTag(productTag)
           const is_sector = this.hasGivenTag(sectorTag)
           const the_unitary_tagg = is_product ? 'product_unitary' : is_sector ? 'sector_unitary' : 'unitary'
-          const other_unitary_tagg = the_unitary_tagg == 'unitary' ? 'unitary' : the_unitary_tagg == 'product_unitary' ? 'sector_unitary' : 'product_unitary'
+          // Un voisin est « le centre unitaire » s'il est sélectionné dans SON propre
+          // groupe (produit/secteur), pas dans l'opposé du type de CE nœud. L'ancien
+          // code supposait une structure bipartite produit↔secteur : un voisin produit
+          // d'un nœud produit (ex. Production biologique → Bois sur pied) était cherché
+          // dans 'sector_unitary' → jamais trouvé → nœud masqué.
+          const isSelectedUnitaryCenter = (node: Class_NodeElement) => {
+            const tagg = node.hasGivenTag(productTag) ? 'product_unitary' : node.hasGivenTag(sectorTag) ? 'sector_unitary' : 'unitary'
+            return node.grouped_taggs_dict[tagg] &&
+              (node.grouped_taggs_dict[tagg][0].group as Class_ViewTagGroup).activated &&
+              node.grouped_taggs_dict[tagg][0].is_selected
+          }
           display = /*display &&*/
             ((this._taggs_dict[the_unitary_tagg]  && (this._taggs_dict[the_unitary_tagg][0].group as Class_ViewTagGroup).activated && this._taggs_dict[the_unitary_tagg][0].is_selected)
-              || this.input_links_list.filter(l => 
-                l.source.grouped_taggs_dict[other_unitary_tagg] && 
-                (l.source.grouped_taggs_dict[other_unitary_tagg][0].group as Class_ViewTagGroup).activated && 
-                l.source.grouped_taggs_dict[other_unitary_tagg][0].is_selected).length > 0
-              || this.output_links_list.filter(l => 
-                l.target.grouped_taggs_dict[other_unitary_tagg] &&
-                (l.target.grouped_taggs_dict[other_unitary_tagg][0].group as Class_ViewTagGroup).activated &&  
-                l.target.grouped_taggs_dict[other_unitary_tagg][0].is_selected).length > 0
+              || this.input_links_list.filter(l => isSelectedUnitaryCenter(l.source)).length > 0
+              || this.output_links_list.filter(l => isSelectedUnitaryCenter(l.target)).length > 0
             )
         }
         are_related_node_tags_selected = display
       } else {
         are_related_node_tags_selected = true
       }
+
+      // Mode filtre vue (généralisation du mécanisme unitaire) : un groupe view tag
+      // en mode filtre cache un nœud qui ne porte aucune de ses étiquettes sélectionnées.
+      // Décidé ICI (caché par node_tags_fingerprint) pour que la visibilité des liens
+      // se recalcule. Court-circuit des level tags via are_related_dimensions_selected.
+      const vt = this.viewTagVisibility()
+      if (vt !== undefined) are_related_node_tags_selected = vt && are_related_node_tags_selected
 
       if (are_related_node_tags_selected !== this._are_related_node_tags_selected) {
         this.updateVisibilityFingerprint()
@@ -1581,13 +1760,38 @@ export class Class_NodeElement extends Class_NodeBase {
   }
 
   public get is_visible() {
-    return (
+    // Vue courante OU (mode « afficher aussi les flux porteurs de données »)
+    // nœud révélé parce qu'attaché à un flux portant une valeur collectée saisie.
+    // Dans les deux cas, la porte orphelin s'applique encore.
+    if (this.is_visible_without_orphan || this.is_revealed_by_data) {
+      return this.orphan_visible
+    }
+    return false
+  }
+
+  /**
+   * Vrai si ce nœud n'est PAS visible dans la vue courante mais est révélé par le
+   * mode « afficher aussi les flux porteurs de données » (extrémité d'un flux
+   * portant une valeur collectée saisie). Sert à reconnecter ces nœuds au
+   * diagramme via les flux structurels (cf. `Class_LinkElement.is_visible`).
+   * Lit `is_visible_without_orphan` (pas `is_visible`) pour rester non récursif.
+   */
+  public get is_revealed_by_data(): boolean {
+    return this.drawing_area.application_data.reveal_data_links &&
       super.is_visible &&
-      this.are_related_node_tags_selected &&
-      this.are_related_dimensions_selected &&
-      this.are_links_visibilities_ok &&
-      this.orphan_visible
-    )
+      !this.is_visible_without_orphan &&
+      this.is_attached_to_collected_data_link
+  }
+
+  /**
+   * Vrai si ce nœud est l'extrémité d'au moins un flux (feuille, sans child_links)
+   * porteur d'une valeur collectée saisie. Sert au mode « afficher aussi les flux
+   * porteurs de données » (cf. `Class_ApplicationData.reveal_data_links`).
+   */
+  public get is_attached_to_collected_data_link(): boolean {
+    const carries = (l: Class_LinkElement) =>
+      Object.values(l.child_links).length == 0 && l.has_collected_data
+    return this.input_links_list.some(carries) || this.output_links_list.some(carries)
   }
   public get is_visible_without_orphan() {
     return (
@@ -1642,7 +1846,9 @@ export class Class_NodeElement extends Class_NodeBase {
 
   private get orphan_visible() {
     if (this.visible_input_links_list.length + this.visible_output_links_list.length == 0) {
-      if (this.shape_orphan_node_visible) return true
+      // Option globale « Nœuds orphelins » (drawing_area) OU override par-nœud
+      // (shape_orphan_node_visible) : un nœud sans lien visible reste affiché.
+      if (this.shape_orphan_node_visible || this.drawing_area.show_orphan_nodes) return true
       else return false
     }
     return true
@@ -1653,7 +1859,7 @@ export class Class_NodeElement extends Class_NodeBase {
       return true
     }
     const input_links_visible = this.input_links_list.filter(link =>
-      link.is_not_zero &&
+      (link.is_not_zero || link.is_forced_visible_when_zero) &&
       link.are_related_flux_tags_selected &&
       link.source.are_related_node_tags_selected &&
       link.source.are_related_dimensions_selected
@@ -1662,7 +1868,7 @@ export class Class_NodeElement extends Class_NodeBase {
       return true
     }
     const output_links_visible = this.output_links_list.filter(link =>
-      link.is_not_zero &&
+      (link.is_not_zero || link.is_forced_visible_when_zero) &&
       link.are_related_flux_tags_selected &&
       link.target.are_related_node_tags_selected &&
       link.target.are_related_dimensions_selected
@@ -1779,6 +1985,10 @@ export class Class_NodeElement extends Class_NodeBase {
 
   public get are_related_dimensions_selected(): boolean {
     if (this.is_unitary_tag) return true
+    // Mode filtre vue (généralisation de is_unitary_tag) : un nœud gouverné par un
+    // groupe view tag en mode filtre court-circuite les level tags. Le show/hide réel
+    // est décidé par are_related_node_tags_selected (fingerprinté).
+    if (this.sankey.view_mode_active && this.viewTagVisibility() !== undefined) return true
 
     if (this._are_related_dimensions_selected === undefined) {
       const are_related_dimensions_selected = this._nodeDimensionsManager.checkIfRelatedDimensionsAreSelected()
@@ -1967,7 +2177,8 @@ export class Class_NodeElement extends Class_NodeBase {
    * Dessine le début des flux sur les ellipses pour un rendu plus fluide
    */
   private _drawLinksStartCaps() {
-    // Seulement pour les nœuds elliptiques
+    // Caps seulement sur les nœuds elliptiques ; l'activation est par flux
+    // (attribut shape_link_caps), pas au niveau du nœud.
     if (this.shape_type !== 'ellipse') return
 
     // Nettoyer les caps précédents
@@ -1989,10 +2200,10 @@ export class Class_NodeElement extends Class_NodeBase {
     sides.forEach(side => {
       // Récupérer les liens pour ce côté dans l'ordre
       const output_links = this._links_order.filter(link =>
-        link.is_visible && link.source === this && link.source_side === side
+        link.is_visible && link.shape_link_caps && !link.shape_arrow_at_source && link.source === this && link.source_side === side
       )
       const input_links = this._links_order.filter(link =>
-        link.is_visible && !link.shape_is_arrow && link.target === this && link.target_side === side
+        link.is_visible && link.shape_link_caps && !link.shape_is_arrow && link.target === this && link.target_side === side
       )
 
       // Dessiner les caps pour ce côté

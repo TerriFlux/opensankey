@@ -62,7 +62,11 @@ import {
   faExclamation,
   faDiagramProject,
   faTable,
-  faFileLines
+  faFileLines,
+  faShareNodes,
+  faBan,
+  faImage,
+  faCircleQuestion
 } from '@fortawesome/free-solid-svg-icons'
 import {
   FontAwesomeIcon
@@ -74,6 +78,7 @@ import { Type_JSON } from '../../types/Utils'
 import { clickSaveSVG } from './SankeyExports'
 import { ModalTemplate } from './SankeyTemplates'
 import { ModalExcelTemplate } from './ExcelTemplateModal'
+import { ModalImageImport } from './ImageImportModal'
 import {
   loadUniversalJSON,
 } from '../../Persistence/UniversalJSONCompression'
@@ -136,9 +141,9 @@ export const GoToUserDoc = () => {
  */
 const topbar_state_btn_style = {
   size: 'sm' as const,
-  boxSize: '2rem',
-  minWidth: '2rem',
-  fontSize: '1rem',
+  boxSize: '1.6rem',
+  minWidth: '1.6rem',
+  fontSize: '0.85rem',
   bg: 'transparent',
   bgColor: 'transparent',
   borderColor: 'transparent',
@@ -169,17 +174,75 @@ const main_zone_btn_style = (active: boolean) => ({
   _active: { bg: 'gray.200', bgColor: 'gray.200' },
 })
 
+/**
+ * Bouton « Unit. » (sankey unitaire) de la grande zone, à côté de Diagramme/Tableur/Doc.
+ * La feature est portée par OS+ : le bouton n'apparaît que si OS+ a renseigné
+ * `menu_configuration.unitary_tab_available`. Le clic toggle le modal unitaire (singleton),
+ * et le bouton se surligne tant que le modal est ouvert. Réutilisé en édition
+ * (TopBarStateButtons) et en publish (MenuTopNavBar, derrière l'option `unitary`).
+ */
+export const UnitaryTabButton = ({ new_data }: BaseApplicationDataType) => {
+  const { unitaryTabAvailable, showUnitary, showDiagram, showSpreadsheet, showDoc, setShowUnitary } = useMainZone(new_data)
+  if (!unitaryTabAvailable) return <></>
+  // Bascule en gardant toujours au moins un panneau affiché (diagramme / tableur / doc / unitaire).
+  const toggleUnitary = () => {
+    const next = !showUnitary
+    if (!next && !(showDiagram || showSpreadsheet || showDoc)) return
+    setShowUnitary(next)
+  }
+  return <OSTooltip placement='bottom' label='Sankey unitaire'>
+    <Button
+      aria-label='Unit.'
+      className='topbar_button_main_zone_unitary'
+      onClick={toggleUnitary}
+      {...main_zone_btn_style(showUnitary)}
+    >
+      <FontAwesomeIcon icon={faShareNodes} style={{ height: '0.95rem', width: '0.95rem' }} />
+      <Box as='span' style={{ fontSize: '0.5rem', lineHeight: 1 }}>Unit.</Box>
+    </Button>
+  </OSTooltip>
+}
+
+/**
+ * Bouton « Doc » de la grande zone en mode publication, à côté d'« Unit. »/« Éditer ».
+ * N'apparaît que si le diagramme embarque une documentation (documentation_markdown non vide) ;
+ * le clic toggle l'affichage du panneau doc (rendu par MainZoneTabs), surligné tant qu'il est ouvert.
+ * En édition normale, le toggle Doc vit déjà dans TopBarStateButtons.
+ */
+export const DocTabButton = ({ new_data }: BaseApplicationDataType) => {
+  const { showDoc, showDiagram, showSpreadsheet, showUnitary, setShowDoc } = useMainZone(new_data)
+  if (new_data.documentation_markdown === '') return <></>
+  // Bascule en gardant toujours au moins un panneau affiché (diagramme / tableur / doc / unitaire).
+  const toggleDoc = () => {
+    const next = !showDoc
+    if (!next && !(showDiagram || showSpreadsheet || showUnitary)) return
+    setShowDoc(next)
+  }
+  return <OSTooltip placement='bottom' label='Documentation'>
+    <Button
+      aria-label='Doc'
+      className='topbar_button_main_zone_doc'
+      onClick={toggleDoc}
+      {...main_zone_btn_style(showDoc)}
+    >
+      <FontAwesomeIcon icon={faFileLines} style={{ height: '0.95rem', width: '0.95rem' }} />
+      <Box as='span' style={{ fontSize: '0.5rem', lineHeight: 1 }}>Doc</Box>
+    </Button>
+  </OSTooltip>
+}
+
 export const TopBarStateButtons = ({ new_data }: BaseApplicationDataType) => {
   const { t, icon_library, history } = new_data
   const {
-    showDiagram, showSpreadsheet, showDoc,
+    showDiagram, showSpreadsheet, showDoc, showUnitary,
     setShowDiagram, setShowSpreadsheet, setShowDoc
   } = useMainZone(new_data)
-  // Bascule en gardant toujours au moins un panneau affiché (diagramme / tableur / doc).
-  const others = (a: boolean, b: boolean) => a || b
-  const toggleDiagram = () => { const next = !showDiagram; if (!next && !others(showSpreadsheet, showDoc)) return; setShowDiagram(next) }
-  const toggleSpreadsheet = () => { const next = !showSpreadsheet; if (!next && !others(showDiagram, showDoc)) return; setShowSpreadsheet(next) }
-  const toggleDoc = () => { const next = !showDoc; if (!next && !others(showDiagram, showSpreadsheet)) return; setShowDoc(next) }
+  // Bascule en gardant toujours au moins un panneau affiché (diagramme / tableur / doc / unitaire).
+  // L'unitaire compte : on peut donc masquer le diagramme et ne garder que le panneau unitaire.
+  const others = (...flags: boolean[]) => flags.some(Boolean)
+  const toggleDiagram = () => { const next = !showDiagram; if (!next && !others(showSpreadsheet, showDoc, showUnitary)) return; setShowDiagram(next) }
+  const toggleSpreadsheet = () => { const next = !showSpreadsheet; if (!next && !others(showDiagram, showDoc, showUnitary)) return; setShowSpreadsheet(next) }
+  const toggleDoc = () => { const next = !showDoc; if (!next && !others(showDiagram, showSpreadsheet, showUnitary)) return; setShowDoc(next) }
 
   const [save_boolean, setSaveBoolean] = useState(true)
   new_data.menu_configuration.ref_to_save_in_cache_indicator.current = (b: boolean) => {
@@ -188,13 +251,22 @@ export const TopBarStateButtons = ({ new_data }: BaseApplicationDataType) => {
   }
   new_data.menu_configuration.ref_to_save_in_cache_indicator_value.current = save_boolean
 
+  // Session toggle "ne jamais enregistrer la vue" : driven from the "Vue non
+  // enregistrée" modal, surfaced/reset here on the cache cloud button.
+  const [never_save_session, setNeverSaveSession] = useState(false)
+  new_data.menu_configuration.ref_to_never_save_view_session.current = (b: boolean) => {
+    new_data.menu_configuration.ref_to_never_save_view_session_value.current = b
+    setNeverSaveSession(b)
+  }
+  new_data.menu_configuration.ref_to_never_save_view_session_value.current = never_save_session
+
   if (new_data.is_static) return <></>
 
   const ok_saved = save_boolean
-  const indicator_saved_data = <Box color={ok_saved ? 'tertiaire.3' : 'tertiaire.1'}>
+  const indicator_saved_data = <Box color={never_save_session ? 'tertiaire.1' : (ok_saved ? 'tertiaire.3' : 'tertiaire.1')}>
     <FontAwesomeIcon
       style={{ 'height': '0.75em', 'width': '0.75rem' }}
-      icon={(ok_saved) ? faCheck : faExclamation} />
+      icon={never_save_session ? faBan : (ok_saved ? faCheck : faExclamation)} />
   </Box>
 
   return <ButtonGroup spacing='0.1rem' alignItems='center'>
@@ -218,11 +290,17 @@ export const TopBarStateButtons = ({ new_data }: BaseApplicationDataType) => {
         {...topbar_state_btn_style}
       />
     </OSTooltip>
-    <OSTooltip placement='bottom' label={t('Menu.tooltips.checkpoint')}>
+    <OSTooltip placement='bottom' label={never_save_session ? t('Menu.tooltips.reactivate_view_save') : t('Menu.tooltips.checkpoint')}>
       <Button
         aria-label={t('Menu.tooltips.checkpoint')}
         className='topbar_button_save_in_cache'
         onClick={() => {
+          // If the session "ne jamais enregistrer la vue" mode is on, a click
+          // re-enables the "Vue non enregistrée" dialog. The checkpoint save runs
+          // on the same click.
+          if (new_data.menu_configuration.ref_to_never_save_view_session_value.current) {
+            new_data.menu_configuration.ref_to_never_save_view_session.current(false)
+          }
           const ev = document; const tmp = new KeyboardEvent('keydown', { key: 's', ctrlKey: true })
           if (ev.onkeydown) {
             ev.onkeydown(tmp)
@@ -275,6 +353,7 @@ export const TopBarStateButtons = ({ new_data }: BaseApplicationDataType) => {
         <Box as='span' style={{ fontSize: '0.5rem', lineHeight: 1 }}>Doc</Box>
       </Button>
     </OSTooltip>
+    <UnitaryTabButton new_data={new_data} />
   </ButtonGroup>
 }
 
@@ -308,6 +387,33 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
 
   // State for Excel template modal
   const [show_excel_template, set_show_excel_template] = useState(false)
+  // State for image import modal (extraction de structure depuis une image)
+  const [show_image_import, set_show_image_import] = useState(false)
+
+  // Liste des tutoriels disponibles dans SankeyData/tutorials, peuplée par le
+  // sous-menu « Tutoriels » de l'Aide (endpoint /menus/tutorials, lit index.json).
+  const [tutorials_list, setTutorialsList] = useState<{ file: string, title: string }[]>([])
+  const [tuto_submenu_open, setTutoSubmenuOpen] = useState(false)
+  const tutorials_fetched = useRef(false)
+  const fetch_tutorials_list = () => {
+    if (tutorials_fetched.current) return
+    tutorials_fetched.current = true
+    fetch(window.location.origin + '/opensankey//menus/tutorials', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    })
+      .then(response => response.json())
+      .then(json_data => setTutorialsList(json_data.tutorials ?? []))
+      .catch((error) => {
+        // En cas d'échec on retombe sur le tutoriel historique unique.
+        tutorials_fetched.current = false
+        console.error('Error in fetch_tutorials_list - ' + error.toString())
+      })
+  }
+
+  // Ouvrir un dropdown du menu du haut (Fichier, Exporter, …) ferme le tiroir de
+  // filtres de gauche, sinon les deux se chevauchent à l'écran.
+  const closeFilterDrawer = () => new_data.menu_configuration.ref_close_filter_drawer.current?.(false)
 
   // Helper used by the Fichier/Édition menus to reset the universal converter
   // dialog with a given config and open it. Centralizes the two boilerplate
@@ -319,11 +425,11 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
     ref_setter_show_modal_file_converter.current!(true)
   }
 
-  // Charge directement le tutoriel unique (SankeyData/tutorials/Tutoriel.json)
-  // via le universal converter, sans modale de navigation par dossiers.
-  const open_tutorial_file = () => {
+  // Charge un tutoriel de SankeyData/tutorials via le universal converter, sans
+  // modale de navigation par dossiers. file = nom de fichier dans tutorials/.
+  const open_tutorial_file = (file: string = 'Tutoriel.json.gz') => {
     new_data.menu_configuration.ref_universal_converter_set_config.current(
-      CONVERTER_CONFIGS['load_tutorial'], 'tutorials/Tutoriel.json.gz', true
+      CONVERTER_CONFIGS['load_tutorial'], 'tutorials/' + file, true
     )
     ref_setter_show_modal_file_converter.current!(true)
   }
@@ -332,6 +438,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
   const button_resetDA = <ChakraMenu
     variant='menu_button_subnav_style'
     placement='bottom-start' id='nouveau'
+    onOpen={closeFilterDrawer}
   >
     <OSTooltip
       placement='bottom'
@@ -364,6 +471,10 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
       </MenuButton>
     </OSTooltip>
     <MenuList>
+      <MenuItem onClick={() => { new_data.reinitialization() }}>
+        {new_data.icon_library.icon_new_da}
+        {t('Menu.from_new')}
+      </MenuItem>
       <MenuItem onClick={() => { ref_setter_show_modal_templates_lib.current!(true) }}>
         {new_data.icon_library.icon_new_da}
         {t('Menu.from_model')}
@@ -379,6 +490,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
   const button_open_sankey = <ChakraMenu
     variant='menu_button_subnav_style'
     placement='bottom-start' id='ouvrir'
+    onOpen={closeFilterDrawer}
   >
     <OSTooltip placement='bottom' label={t('Menu.tooltips.ouvrir')}>
       <MenuButton className='menutop_button_open'>
@@ -427,6 +539,10 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
       >
         {new_data.icon_library.icon_open_sankey_excel}
         {t('Menu.open_excel')}
+      </MenuItem>
+      <MenuItem onClick={() => { set_show_image_import(true) }}>
+        <Box as='span' mr='0.5em'><FontAwesomeIcon icon={faImage} /></Box>
+        {t('Menu.import_image')}
       </MenuItem>
       <MenuItem
         onClick={() => {
@@ -498,6 +614,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
     placement='bottom-start'
     variant='menu_button_subnav_style'
     id='enregistrer'
+    onOpen={closeFilterDrawer}
   >
     <OSTooltip placement='bottom' label={t('Menu.tooltips.enregistrer')}>
       <MenuButton className='menutop_button_save'>
@@ -555,6 +672,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
     placement='bottom-start'
     variant='menu_button_subnav_style'
     id='exporter'
+    onOpen={closeFilterDrawer}
   >
     <OSTooltip placement='bottom' label={t('Menu.tooltips.export')}>
       <MenuButton className='menutop_button_export'>
@@ -714,6 +832,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
   const button_fichier = <ChakraMenu
     variant='menu_button_subnav_style'
     placement='bottom-start' id='fichier'
+    onOpen={closeFilterDrawer}
   >
     <OSTooltip placement='bottom' label={t('Menu.tooltips.fichier')}>
       <MenuButton className='menutop_button_fichier'>
@@ -730,6 +849,10 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
     </OSTooltip>
     <MenuList>
       <MenuGroup title={t('Menu.new')}>
+        <MenuItem onClick={() => { new_data.reinitialization() }}>
+          {new_data.icon_library.icon_new_da}
+          {t('Menu.from_new')}
+        </MenuItem>
         <MenuItem onClick={() => { ref_setter_show_modal_templates_lib.current!(true) }}>
           {new_data.icon_library.icon_new_da}
           {t('Menu.from_model')}
@@ -748,6 +871,10 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
         <MenuItem onClick={() => open_converter_with('load_excel')}>
           {new_data.icon_library.icon_open_sankey_excel}
           {t('Menu.open_excel')}
+        </MenuItem>
+        <MenuItem onClick={() => { set_show_image_import(true) }}>
+          <Box as='span' mr='0.5em'><FontAwesomeIcon icon={faImage} /></Box>
+          {t('Menu.import_image')}
         </MenuItem>
         <MenuItem onClick={() => {
           if (_load_sankeymatic.current) {
@@ -780,6 +907,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
   const button_edition = <ChakraMenu
     variant='menu_button_subnav_style'
     placement='bottom-start' id='edition'
+    onOpen={closeFilterDrawer}
   >
     <OSTooltip placement='bottom' label={t('Menu.tooltips.edit')}>
       <MenuButton className='menutop_button_edition'>
@@ -835,6 +963,8 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
   const button_aide = <ChakraMenu
     variant='menu_button_subnav_style'
     placement='bottom-start' id='aide'
+    onOpen={() => { closeFilterDrawer(); fetch_tutorials_list() }}
+    onClose={() => setTutoSubmenuOpen(false)}
   >
     <OSTooltip placement='bottom' label={t('Menu.tooltips.aide')}>
       <MenuButton className='menutop_button_aide'>
@@ -851,17 +981,66 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
     </OSTooltip>
     <MenuList>
       <MenuItem
+        icon={helpMenuIcon(<FontAwesomeIcon icon={faCircleQuestion} />)}
+        onClick={() => new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current!(true)}
+      >
+        {t('Menu.aide_navigation')}
+      </MenuItem>
+      <MenuItem
         icon={helpMenuIcon(logo_tour)}
         onClick={() => { new_data.setSteps(); setIsOpen(true) }}
       >
         {t('guide.guide')}
       </MenuItem>
-      <MenuItem
-        icon={helpMenuIcon(new_data.icon_library.icon_tuto)}
-        onClick={() => open_tutorial_file()}
-      >
-        {t('Menu.formation')}
-      </MenuItem>
+      {tutorials_list.length > 1
+        ? (
+          // Plusieurs tutoriels : sous-menu flyout listant tutorials/index.json.
+          // Chakra v2 n'a pas de sous-menu natif : on contrôle l'ouverture au
+          // survol (le clic sur un MenuItem-bouton fermerait le menu parent).
+          <Box
+            onMouseEnter={() => setTutoSubmenuOpen(true)}
+            onMouseLeave={() => setTutoSubmenuOpen(false)}
+          >
+            <Menu isOpen={tuto_submenu_open} placement='right-start' gutter={0} offset={[0, 0]}>
+              <MenuButton
+                as={MenuItem}
+                closeOnSelect={false}
+              >
+                <Box display='flex' alignItems='center' justifyContent='space-between'>
+                  <Box display='flex' alignItems='center' gap='0.75rem'>
+                    {helpMenuIcon(new_data.icon_library.icon_tuto)}
+                    {t('Menu.formation')}
+                  </Box>
+                  <ChevronDownIcon style={{ height: '1rem', width: '1rem', transform: 'rotate(-90deg)' }} />
+                </Box>
+              </MenuButton>
+              <Portal>
+                <MenuList
+                  onMouseEnter={() => setTutoSubmenuOpen(true)}
+                  onMouseLeave={() => setTutoSubmenuOpen(false)}
+                >
+                  {tutorials_list.map((tuto) => (
+                    <MenuItem
+                      key={tuto.file}
+                      onClick={() => open_tutorial_file(tuto.file)}
+                    >
+                      {tuto.title}
+                    </MenuItem>
+                  ))}
+                </MenuList>
+              </Portal>
+            </Menu>
+          </Box>
+        )
+        : (
+          // Un seul tutoriel (ou liste non chargée) : chargement direct.
+          <MenuItem
+            icon={helpMenuIcon(new_data.icon_library.icon_tuto)}
+            onClick={() => open_tutorial_file(tutorials_list[0]?.file)}
+          >
+            {t('Menu.formation')}
+          </MenuItem>
+        )}
       {(new_data.menu_configuration.extra_help_menu_items ?? []).map((item) => {
         const tooltip_text = item.tooltip ? item.tooltip() : ''
         const menu_item = (
@@ -912,8 +1091,9 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
           .map((arr, i) => {
             return <Fragment key={'top_grp_' + i}>
               <ButtonGroup
-                marginRight='1rem'
-                marginLeft='1rem'
+                marginRight='0.35rem'
+                marginLeft='0.35rem'
+                spacing='0'
               >
                 {
                   arr.map((k, i) => {
@@ -945,6 +1125,11 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
       new_data={new_data}
       show={show_excel_template}
       setShow={set_show_excel_template}
+    />
+    <ModalImageImport
+      new_data={new_data}
+      show={show_image_import}
+      setShow={set_show_image_import}
     />
   </>
 }
@@ -1093,7 +1278,20 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
   if (new_data.is_static && diagrams_list) dict_components_menu_top['diagrams'] = diagrams_element
   dict_components_menu_top = { ...dict_components_menu_top, ...additionalMenus.current.external_top_buttons_item }
   if (new_data.is_static && new_data.publish_options.edit_button) dict_components_menu_top['edit'] = edit_button
-  dict_components_menu_top['help'] = help_button
+  // Onglet « Unit. » (sankey unitaire OS+) : aligné avec les boutons statiques (à côté
+  // d'« Éditer »), pas dans le bloc méta de droite (sinon retour à la ligne). Le bouton se
+  // masque de lui-même si OS+ est absent.
+  if (new_data.is_static && new_data.publish_options.unitary) {
+    dict_components_menu_top['unitary'] = <UnitaryTabButton new_data={new_data} />
+  }
+  // Bouton « Doc » : affiche/masque le panneau documentation (s'auto-masque si pas de doc).
+  if (new_data.is_static && new_data.publish_options.doc) {
+    dict_components_menu_top['doc'] = <DocTabButton new_data={new_data} />
+  }
+  // Bouton « Aide à la navigation » : optionnel en publish (défaut masqué).
+  if (new_data.publish_options.navigation_help) {
+    dict_components_menu_top['help'] = help_button
+  }
 
   return <Box
     display='grid'
@@ -1138,7 +1336,12 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
   const { logo } = new_data
   const langToFlag: Record<string, string> = { fr: 'fr', en: 'gb', es: 'es', de: 'de', it: 'it' }
   const [flag, setFlag] = useState(langToFlag[new_data.i18n.language] ?? 'gb')
-  const menutop_grid_template = new_data.is_static ? '100px 30fr auto' : 'minmax(7vw, 100px) auto auto'
+  // En statique, la .TopMenu a 3 ou 4 enfants : logo, (header optionnel), boutons, bloc méta
+  // (info). Avec un header, il faut 4 colonnes sinon le bloc méta déborde sur une 2e ligne
+  // (info mal placé). Sans header (3 enfants), 3 colonnes suffisent.
+  const menutop_grid_template = new_data.is_static
+    ? (new_data.publish_options.header ? '100px 30fr auto auto' : '100px 30fr auto')
+    : 'minmax(7vw, 100px) auto auto'
 
   // Format variable so if it's an list of Element, wrap these element in <React.Fragment/> with key to ensure no warning in console
   const constent_additional_nav_item = <>
@@ -1236,7 +1439,7 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
           <Divider orientation='vertical' height='1.5rem' borderColor='gray.300' margin='0 0.25rem' />
         </> : <></>}
         {constent_additional_nav_item}
-        <AppInfoPopover />
+        <AppInfoPopover new_data={new_data} />
         {/* Language selector kept as the right-most control of the topbar. */}
         {!new_data.is_static ? <Menu variant='selector_lang'>
           <MenuButton>
@@ -1272,7 +1475,7 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
  *   - REACT_APP_CHANGELOG_URL   link to the changelog (lists current + previous versions)
  *   - REACT_APP_VERSIONS_URL    endpoint returning archived versions [{ version, url }]
  */
-const AppInfoPopover = () => {
+const AppInfoPopover = ({ new_data }: { new_data: Class_ApplicationData }) => {
   const version = process.env.REACT_APP_VERSION ?? ''
   const channel = process.env.REACT_APP_RELEASE_CHANNEL ?? ''
   const release_date = process.env.REACT_APP_RELEASE_DATE ?? ''
@@ -1322,6 +1525,13 @@ const AppInfoPopover = () => {
         <PopoverArrow />
         <PopoverBody>
           <VStack align='start' spacing='0.25rem' fontSize='sm'>
+            <HStack spacing='0.4rem' alignSelf='center'>
+              <Text color='gray.500'>Édité par</Text>
+              <Link href='https://terriflux.fr' isExternal>
+                <Image src={new_data.logo_terriflux} height='1rem' objectFit='contain' alt='TerriFlux' />
+              </Link>
+            </HStack>
+            <Divider my='0.25rem' />
             {version && <HStack spacing='0.4rem'>
               <Text>Version {version}</Text>
               {channel === 'alpha' && <Badge colorScheme='orange'>alpha</Badge>}
@@ -1342,6 +1552,9 @@ const AppInfoPopover = () => {
             {changelog_url && <Link href={changelog_url} color='blue.500' isExternal>
               Changelog
             </Link>}
+            <Link href='https://terriflux.fr' color='blue.500' isExternal>
+              terriflux.fr
+            </Link>
             <Link href='mailto:support@terriflux.fr' color='blue.500'>
               support@terriflux.fr
             </Link>

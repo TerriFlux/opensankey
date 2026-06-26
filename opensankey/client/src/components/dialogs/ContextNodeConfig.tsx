@@ -121,6 +121,20 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       children: [
         { type: 'button', actionName: 'editName' },
         { type: 'button', actionName: 'resetAttr' },
+        {
+          type: 'button',
+          actionName: 'applyStyleToChildren',
+          // Visible dès qu'au moins un nœud parent est sélectionné : l'action
+          // propage le style de CHAQUE nœud parent sélectionné à ses propres
+          // enfants (multi-sélection supportée).
+          visibilityConditions: [
+            {
+              type: 'custom',
+              customCheck: (app_data) =>
+                app_data.drawing_area.selected_nodes_list.some(n => n.is_parent)
+            }
+          ]
+        },
         { type: 'widget', widgetName: 'ButtonNodeContextAssignStyle' }
       ]
     },
@@ -315,7 +329,18 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       ]
     },
     { type: 'button', actionName: 'startAnimation' },
-    { type: 'button', actionName: 'copyElement' }
+    { type: 'button', actionName: 'copyElement' },
+    {
+      type: 'button',
+      actionName: 'saveNodeImage',
+      visibilityConditions: [{
+        type: 'custom',
+        customCheck: (app_data) => {
+          const node = app_data.drawing_area.node_contextualised
+          return !!node?.icon_is_image && !!node?.icon_image_src
+        }
+      }]
+    }
   ],
 
   actions: {
@@ -699,6 +724,13 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       undoable: true
     },
 
+    applyStyleToChildren: {
+      type: 'action',
+      labels: { en: 'Apply style to children', fr: 'Appliquer le style aux enfants', es: 'Aplicar estilo a los hijos', de: 'Stil auf Kinder anwenden', it: 'Applica stile ai figli' },
+      tooltips: { en: 'Copy this node\'s style and attributes onto all its descendants in the dimension hierarchy', fr: 'Copier le style et les attributs de ce nœud sur toute sa descendance dans la hiérarchie de dimensions', es: 'Copiar el estilo y los atributos de este nodo en toda su descendencia en la jerarquía de dimensiones', de: 'Stil und Attribute dieses Knotens auf alle Nachfahren in der Dimensionshierarchie kopieren', it: 'Copia lo stile e gli attributi di questo nodo su tutta la sua discendenza nella gerarchia delle dimensioni' },
+      undoable: true
+    },
+
     reorg: {
       type: 'action',
       labels: { en: 'Reorganize I/O', fr: 'Réorganiser E/S', es: 'Reorganizar E/S', de: 'E/A reorganisieren', it: 'Riorganizza I/O' },
@@ -734,6 +766,13 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       type: 'action',
       labels: { en: 'Copy element(s)', fr: 'Copier les éléments', es: 'Copiar elemento(s)', de: 'Element(e) kopieren', it: 'Copia elemento/i' },
       tooltips: { en: 'Duplicate the selected element(s) — copies remain selected', fr: 'Dupliquer les éléments sélectionnés — les copies restent sélectionnées', es: 'Duplicar los elementos seleccionados — las copias permanecen seleccionadas', de: 'Ausgewählte Element(e) duplizieren — Kopien bleiben ausgewählt', it: 'Duplicare gli elementi selezionati — le copie rimangono selezionate' }
+    },
+
+    saveNodeImage: {
+      type: 'action',
+      labels: { en: 'Save image', fr: 'Enregistrer l\'image', es: 'Guardar imagen', de: 'Bild speichern', it: 'Salva immagine' },
+      tooltips: { en: 'Download the node image to a file', fr: 'Télécharger l\'image du nœud dans un fichier', es: 'Descargar la imagen del nodo a un archivo', de: 'Knotenbild in eine Datei herunterladen', it: 'Scarica l\'immagine del nodo in un file' },
+      closeMenuAfter: true
     }
   },
 

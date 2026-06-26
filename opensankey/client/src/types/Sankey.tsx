@@ -88,6 +88,18 @@ export type Type_StockChainingConstraint = {
   traduction: string | null,
 }
 
+// État d'affichage du tableur (UniverSpreadSheet) persisté par diagramme :
+//   - active_sheet : onglet sélectionné à la réouverture (id Univer, ex. SHEET_ID_FLUX) ;
+//   - sheet_overrides : choix explicites de visibilité d'onglet { [sheetId]: hidden } ;
+//   - col_overrides : choix explicites de visibilité de colonne { [sheetId]: { [colIndex]: hidden } }.
+// Tout est optionnel/additif : absent des anciens fichiers -> comportement par défaut (onglets vides
+// masqués, colonnes par défaut, onglet Flux actif).
+export type Type_SpreadsheetState = {
+  active_sheet?: string,
+  sheet_overrides?: { [sheetId: string]: boolean },
+  col_overrides?: { [sheetId: string]: { [col: number]: boolean } },
+}
+
 export class Class_Sankey {
   public drawing_area: Class_DrawingArea
 
@@ -132,6 +144,9 @@ export class Class_Sankey {
   // shared with the Excel parser and edited from the spreadsheet tabs.
   private _ratio_stock_flux_constraints: Type_RatioStockFluxConstraint[] = []
   private _stock_chaining_constraints: Type_StockChainingConstraint[] = []
+  // État d'affichage du tableur Univer (onglet actif, onglets/colonnes masqués), persisté par
+  // diagramme. Pure préférence d'UI (n'affecte pas le modèle/calcul). Voir Type_SpreadsheetState.
+  private _spreadsheet_state: Type_SpreadsheetState = {}
 
   public normalised_link?: Class_LinkElement
 
@@ -150,6 +165,7 @@ export class Class_Sankey {
     this._ratio_flux_constraints = []
     this._ratio_stock_flux_constraints = []
     this._stock_chaining_constraints = []
+    this._spreadsheet_state = {}
 
     this._styles[default_style_id] = this.createNewElementStyle(default_style_id, default_style_name, false)
     base_styles.forEach(style_id => this.create_internal_style(style_id, elementStyleConfigs))
@@ -181,6 +197,14 @@ export class Class_Sankey {
 
   public set stock_chaining_constraints(_: Type_StockChainingConstraint[]) {
     this._stock_chaining_constraints = _ ?? []
+  }
+
+  public get spreadsheet_state(): Type_SpreadsheetState {
+    return this._spreadsheet_state
+  }
+
+  public set spreadsheet_state(_: Type_SpreadsheetState) {
+    this._spreadsheet_state = _ ?? {}
   }
 
   public delete() {
@@ -364,6 +388,35 @@ export class Class_Sankey {
     }
     )
     this._styles[id] = new_style
+  }
+
+  /**
+   * Réinitialise le style par défaut et les styles de base aux valeurs usine, en
+   * mutant les instances existantes (les éléments les référencent en index 0, on ne
+   * peut donc pas les remplacer). Utilisé par le board unitaire (OS+) : il amorce une
+   * DrawingArea isolée par copie JSON du diagramme source, ce qui ramène les
+   * customisations de styles du source (valeur affichée sur les nœuds, cadres de
+   * label, couleurs...). Le board unitaire doit repartir « from scratch » ; on remet
+   * donc le socle de styles à neuf avant d'appliquer les styles unitaires.
+   * Ne touche ni la topologie, ni les styles custom (retirés par removeAllStyles).
+   */
+  public resetBaseStylesToFactory() {
+    // default_style ('default', non-deletable) : une instance fraîche pré-remplit
+    // son _storage avec TOUS les défauts de config → copyFrom remet le socle à neuf.
+    const factory_default = this.createNewElementStyle(default_style_id, default_style_name, false)
+    this.default_style.copyFrom(factory_default)
+    // base_styles (deletable, configurés via elementStyleConfigs) : on régénère
+    // chaque _storage à partir de la config usine.
+    base_styles.forEach(style_id => {
+      const existing = this._styles[style_id]
+      if (!existing) return
+      const factory = this.createNewElementStyle(style_id, elementStyleConfigs[style_id].name, true)
+      Object.keys(elementStyleConfigs[style_id].config).forEach(key => {
+        //@ts-expect-error clé dynamique
+        factory[key] = elementStyleConfigs[style_id].config[key]
+      })
+      existing.copyFrom(factory)
+    })
   }
 
   public draw() {
@@ -752,6 +805,42 @@ export class Class_Sankey {
     _resetAttrToStyleVal()
   }
 
+  /**
+   * Enlève toutes les surcharges d'un style par rapport au style par défaut
+   * (équivalent de resetAttrSelectedElements, mais pour un style édité).
+   */
+  public resetAttrStyle(style: Class_ElementStyle) {
+    const menu = this.drawing_area.application_data.menu_configuration
+    const curr_attr = { ...style.attributes }
+
+    const inv_resetAttrStyle = () => {
+      style.attributes = { ...curr_attr }
+      menu.updateAllComponentsRelatedToNodes()
+      menu.updateComponentRelatedToStyles()
+    }
+
+    const _resetAttrStyle = () => {
+      style.resetOverloadedAttributes()
+      menu.updateAllComponentsRelatedToNodes()
+      menu.updateComponentRelatedToStyles()
+    }
+
+    this.drawing_area.application_data.history.saveUndo(inv_resetAttrStyle)
+    this.drawing_area.application_data.history.saveRedo(_resetAttrStyle)
+    _resetAttrStyle()
+  }
+
+  /** Enlève une surcharge précise d'un style (équivalent deleteLocalAttrSelectedElements). */
+  public deleteLocalAttrStyle(style: Class_ElementStyle, k: keyof typeof ALL_ATTRIBUTES_CONFIG) {
+    if (k in ALL_ATTRIBUTES_CONFIG) {
+      style.deleteAttribute(k as string)
+      style.redrawReferences()
+    }
+    const menu = this.drawing_area.application_data.menu_configuration
+    menu.updateAllComponentsRelatedToNodes()
+    menu.updateComponentRelatedToStyles()
+  }
+
 
   public get styles_dict() { return this._styles }
   public get element_default_style() { return this._styles[default_style_id] }
@@ -1079,6 +1168,22 @@ export class Class_Sankey {
   public get level_taggs_list() { return Object.values(this._level_taggs) }
   public get view_taggs_dict() { return this._view_taggs }
   public get view_taggs_list() { return Object.values(this._view_taggs) }
+  /**
+   * Groupes de view tags en « mode filtre » (activés + view_mode), HORS les groupes
+   * unitaires câblés (unitary/product_unitary/sector_unitary, qui ont leur propre
+   * logique de voisinage dans is_unitary_tag). Sélectionner une étiquette d'un tel
+   * groupe filtre la visibilité en court-circuitant les level tags (cf.
+   * Node.viewTagVisibility). Visibilité seulement — pas de remontée vers les ancêtres.
+   */
+  public get view_mode_groups(): Class_ViewTagGroup[] {
+    return this.view_taggs_list.filter(t =>
+      t.activated && t.view_mode &&
+      t.id !== 'unitary' && t.id !== 'product_unitary' && t.id !== 'sector_unitary')
+  }
+  /** True dès qu'au moins un groupe de view tags est en mode filtre. */
+  public get view_mode_active(): boolean {
+    return this.view_mode_groups.length > 0
+  }
   // Icons
   public get icon_catalog(): { [x: string]: string } { return this._icon_catalog }
   public set icon_catalog(value: { [x: string]: string }) { this._icon_catalog = value }

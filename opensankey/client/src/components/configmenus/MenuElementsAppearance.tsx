@@ -36,6 +36,7 @@ import {
   OverloadedCheckbox,
   isElementAttributeOverloaded,
   InputIndicatorWrapper,
+  OverloadIndicatorWrapper,
   CustomFaEyeCheckIcon,
   WrapperBoxSubSectionMenu
 } from './MenuCommon'
@@ -74,7 +75,6 @@ import {
   getNodeShapeAttributeKey,
   getLabelAttributeKey,
   getConfigValues,
-  getLinkShapeAttributeKey,
   Type_AnchorAlignVertical,
   Type_AnchorAlignHorizontal,
   Type_HatchOrientation
@@ -82,6 +82,7 @@ import {
 import { SankeyMultiTypeSelectionSimple } from './MenuElementsSelection'
 import { unit_constants } from '../../Elements/LinkValues'
 import { NodeIOReorganizer } from '../dialogs/NodeIOReorganizer'
+import { STRAIGHT_MENU_MODES, straightActionKey, Type_StraightMenuMode } from '../dialogs/ContextLinkConfig'
 
 /**
  * Widget d'angle du texte du label (−180°..180°) : remplace l'ancien toggle
@@ -998,7 +999,7 @@ const LabelContentComponent = ({
               </OverloadedButton>
             </Box>
           </Box>
-          {prefix === 'name_label' && (
+          {prefix === 'name_label' && (<>
             <Box layerStyle='menuconfigpanel_row_2cols'>
               <Box layerStyle='menuconfigpanel_option_name'>
                 {t('Flux.labels.name_label_text_source')}
@@ -1013,28 +1014,50 @@ const LabelContentComponent = ({
                     value={linkLabelValues.text_source as string}
                     onChange={(evt) => { linkLabelValues.text_source = evt.target.value }}
                   >
-                    {['custom', 'none', 'source', 'target', 'source_target'].map(opt => (
+                    {['custom', 'none', 'source', 'target', 'source_target',
+                      ...(app_data.drawing_area.sankey.flux_taggs_list.length > 0 ? ['tag'] : [])].map(opt => (
                       <option key={'text_source_' + opt} value={opt}>{t('Flux.labels.text_source.' + opt)}</option>
                     ))}
                   </Select>
                 </OSTooltip>
               </InputIndicatorWrapper>
             </Box>
-          )}
+            {linkLabelValues.text_source === 'tag' && (
+              <Box layerStyle='menuconfigpanel_row_2cols'>
+                <Box layerStyle='menuconfigpanel_option_name'>
+                  {t('Flux.labels.name_label_tag_group')}
+                </Box>
+                <Select
+                  value={linkLabelValues.flux_tag_group_id as string}
+                  onChange={(evt) => { linkLabelValues.flux_tag_group_id = evt.target.value }}
+                >
+                  {app_data.drawing_area.sankey.flux_taggs_list.map(g => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
+                  ))}
+                </Select>
+              </Box>
+            )}
+          </>)}
           {/* </Box> */}
         </>
       ) : null}
-      {/* Contenu du label de nom : 'name' (= le nom de l'élément, historique) ou
-          'custom' (= un texte de label indépendant, éditable sans renommer
-          l'élément — même principe que text_value du flux). Factorisé pour les
-          nœuds ET les zones de texte (containers) : tous deux des Class_NodeBase
-          avec name_label_custom / name_label_text. */}
+      {/* Contenu du label de nom. Quatre sources, factorisées pour les nœuds ET
+          les zones de texte (containers), tous deux des Class_NodeBase :
+           - 'name'     : le nom de l'élément (historique)
+           - 'custom'   : un texte de label indépendant, éditable sans renommer
+           - 'tag'      : le nom long (display_name) d'un tag choisi
+           - 'ancestor' : le nom du nœud ancêtre racine le long d'une dimension */}
       {(() => {
         if (prefix !== 'name_label') return null
         const name_label_elements = [...selection.nodes, ...selection.containers] as Class_NodeBase[]
         if (name_label_elements.length === 0) return null
         const first = name_label_elements[0]
-        const is_custom = first?.name_label_custom ?? false
+        const source = first?.name_label_source ?? 'name'
+        const sankey = app_data.drawing_area.sankey
+        // Source 'tag' (nœuds) : on choisit un groupe de tags de nœud ; le label
+        // affiche le tag de ce groupe assigné au nœud (le premier si plusieurs).
+        const tag_groups = sankey.node_taggs_list
+        const dimension_groups = sankey.level_taggs_list
         // Libellé de l'option « nom » selon le type sélectionné.
         const name_option_label = selection.hasNodes
           ? t('Noeud.labels.text_source.name')
@@ -1046,24 +1069,30 @@ const LabelContentComponent = ({
             </Box>
             <OSTooltip label={t('Noeud.labels.tooltips.name_label_text_source')}>
               <Select
-                value={is_custom ? 'custom' : 'name'}
+                value={source}
                 onChange={(evt) => {
-                  const useCustom = evt.target.value === 'custom'
+                  const new_source = evt.target.value as 'name' | 'custom' | 'tag' | 'ancestor'
                   name_label_elements.forEach(n => {
-                    // À l'activation, amorcer le texte custom avec le nom courant
+                    // À l'activation custom, amorcer le texte avec le nom courant
                     // s'il est vide, pour ne pas afficher un label vide.
-                    if (useCustom && !n.name_label_text) n.name_label_text = n.name_label
-                    n.name_label_custom = useCustom
+                    if (new_source === 'custom' && !n.name_label_text) n.name_label_text = n.name_label
+                    // Amorcer le groupe par défaut pour la source 'tag'.
+                    if (new_source === 'tag' && !n.name_label_tag_group_id && tag_groups[0]) {
+                      n.name_label_tag_group_id = tag_groups[0].id
+                    }
+                    n.name_label_source = new_source
                   })
                   refreshParentComponent()
                 }}
               >
                 <option value='name'>{name_option_label}</option>
                 <option value='custom'>{t('Noeud.labels.text_source.custom')}</option>
+                {selection.hasNodes && tag_groups.length > 0 ? <option value='tag'>{t('Noeud.labels.text_source.tag')}</option> : null}
+                {selection.hasNodes ? <option value='ancestor'>{t('Noeud.labels.text_source.ancestor')}</option> : null}
               </Select>
             </OSTooltip>
           </Box>
-          {is_custom && displayMode === 'simple_text' ? (
+          {source === 'custom' && displayMode === 'simple_text' ? (
             <Box layerStyle='menuconfigpanel_row_2cols'>
               <Box layerStyle='menuconfigpanel_option_name'>
                 {t('Noeud.labels.name_label_text')}
@@ -1075,6 +1104,40 @@ const LabelContentComponent = ({
                   refreshParentComponent()
                 }}
               />
+            </Box>
+          ) : null}
+          {source === 'tag' ? (
+            <Box layerStyle='menuconfigpanel_row_2cols'>
+              <Box layerStyle='menuconfigpanel_option_name'>
+                {t('Noeud.labels.name_label_tag_group')}
+              </Box>
+              <Select
+                value={first?.name_label_tag_group_id ?? ''}
+                onChange={(evt) => {
+                  const group_id = evt.target.value
+                  name_label_elements.forEach(n => { n.name_label_tag_group_id = group_id })
+                  refreshParentComponent()
+                }}
+              >
+                {tag_groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+              </Select>
+            </Box>
+          ) : null}
+          {source === 'ancestor' && dimension_groups.length > 1 ? (
+            <Box layerStyle='menuconfigpanel_row_2cols'>
+              <Box layerStyle='menuconfigpanel_option_name'>
+                {t('Noeud.labels.name_label_dimension')}
+              </Box>
+              <Select
+                value={first?.name_label_dimension_id ?? ''}
+                onChange={(evt) => {
+                  name_label_elements.forEach(n => { n.name_label_dimension_id = evt.target.value })
+                  refreshParentComponent()
+                }}
+              >
+                <option value=''>{t('Noeud.labels.name_label_dimension_auto')}</option>
+                {dimension_groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+              </Select>
             </Box>
           ) : null}
         </>
@@ -1152,7 +1215,12 @@ export const MenuConfigurationAppearance = ({
     return elements
   }
 
+  // En mode style, ref_selected_style.current peut pointer un id absent du
+  // styles_dict de la vue courante (après changement de vue/style) : on filtre
+  // les entrées undefined pour éviter un allElements = [undefined] (length 1
+  // mais elements[0] === undefined → Reflect.get called on non-object).
   const allElements = (menu_for_style ? [sankey.styles_dict[ref_selected_style.current]] : getAllSelectedElements())
+    .filter(Boolean) as Class_ElementStyle[] | (Class_NodeElement | Class_LinkElement | Class_ContainerElement)[]
   const selection = analyzeSelection(allElements)
   const elements = allElements as ElementsType
   const base_elements = allElements as Class_NodeElement[] | Class_LinkElement[] | Class_ContainerElement[]
@@ -1455,42 +1523,41 @@ export const MenuConfigurationAppearance = ({
                           />
                         </Box>
                         <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                          <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.anchor_align_vertical')}</Box>
-                          <OverloadedButtonGroup
-                            elements={nodes_elements}
-                            config={NODE_SHAPE_SPECIFIC_CONFIG}
-                            attributePath={'Noeud.apparence'}
-                            prefix={'shape'}
-                            attributeKey="anchor_align_vertical"
-                            currentValue={nodeShapeValues.anchor_align_vertical}
-                            items={[
-                              { value: 'top' as Type_AnchorAlignVertical, icon: app_data.icon_library.icon_text_vert_pos_top },
-                              { value: 'center' as Type_AnchorAlignVertical, icon: app_data.icon_library.icon_text_vert_pos_center },
-                              { value: 'bottom' as Type_AnchorAlignVertical, icon: app_data.icon_library.icon_text_vert_pos_bottom }
-                            ]}
-                            onChange={(value) => { nodeShapeValues.anchor_align_vertical = value }}
-                            getIsIndeterminate={() => isNodeShapeSpecificValueIndeterminate(nodes_elements, 'anchor_align_vertical')}
-                            t={t}
-                          />
-                        </Box>
-                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                          <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.anchor_align_horizontal')}</Box>
-                          <OverloadedButtonGroup
-                            elements={nodes_elements}
-                            config={NODE_SHAPE_SPECIFIC_CONFIG}
-                            attributePath={'Noeud.apparence'}
-                            prefix={'shape'}
-                            attributeKey="anchor_align_horizontal"
-                            currentValue={nodeShapeValues.anchor_align_horizontal}
-                            items={[
-                              { value: 'left' as Type_AnchorAlignHorizontal, icon: app_data.icon_library.icon_text_align_left },
-                              { value: 'center' as Type_AnchorAlignHorizontal, icon: app_data.icon_library.icon_text_align_center },
-                              { value: 'right' as Type_AnchorAlignHorizontal, icon: app_data.icon_library.icon_text_align_right }
-                            ]}
-                            onChange={(value) => { nodeShapeValues.anchor_align_horizontal = value }}
-                            getIsIndeterminate={() => isNodeShapeSpecificValueIndeterminate(nodes_elements, 'anchor_align_horizontal')}
-                            t={t}
-                          />
+                          <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.anchor_align')}</Box>
+                          <Box display='flex' alignItems='center' gap='2'>
+                            <OverloadedButtonGroup
+                              elements={nodes_elements}
+                              config={NODE_SHAPE_SPECIFIC_CONFIG}
+                              attributePath={'Noeud.apparence'}
+                              prefix={'shape'}
+                              attributeKey="anchor_align_vertical"
+                              currentValue={nodeShapeValues.anchor_align_vertical}
+                              items={[
+                                { value: 'top' as Type_AnchorAlignVertical, icon: app_data.icon_library.icon_text_vert_pos_top },
+                                { value: 'center' as Type_AnchorAlignVertical, icon: app_data.icon_library.icon_text_vert_pos_center },
+                                { value: 'bottom' as Type_AnchorAlignVertical, icon: app_data.icon_library.icon_text_vert_pos_bottom }
+                              ]}
+                              onChange={(value) => { nodeShapeValues.anchor_align_vertical = value }}
+                              getIsIndeterminate={() => isNodeShapeSpecificValueIndeterminate(nodes_elements, 'anchor_align_vertical')}
+                              t={t}
+                            />
+                            <OverloadedButtonGroup
+                              elements={nodes_elements}
+                              config={NODE_SHAPE_SPECIFIC_CONFIG}
+                              attributePath={'Noeud.apparence'}
+                              prefix={'shape'}
+                              attributeKey="anchor_align_horizontal"
+                              currentValue={nodeShapeValues.anchor_align_horizontal}
+                              items={[
+                                { value: 'left' as Type_AnchorAlignHorizontal, icon: app_data.icon_library.icon_text_align_left },
+                                { value: 'center' as Type_AnchorAlignHorizontal, icon: app_data.icon_library.icon_text_align_center },
+                                { value: 'right' as Type_AnchorAlignHorizontal, icon: app_data.icon_library.icon_text_align_right }
+                              ]}
+                              onChange={(value) => { nodeShapeValues.anchor_align_horizontal = value }}
+                              getIsIndeterminate={() => isNodeShapeSpecificValueIndeterminate(nodes_elements, 'anchor_align_horizontal')}
+                              t={t}
+                            />
+                          </Box>
                         </Box>
                         {nodeShapeValues.position_type == 'parametric' ? <>
                           <ElementAttrSetterNumberInput2Cols
@@ -1534,83 +1601,82 @@ export const MenuConfigurationAppearance = ({
                           const all_same_v_lock = real_nodes.every(n => (n.shape_position_v_locked === true) === first_v_locked)
                           return <>
                             <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                              <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.column_u')}</Box>
-                              <Box display='flex' alignItems='center' gap={1}>
-                                <ConfigMenuNumberInput
-                                  t={t}
-                                  default_value={first_u}
-                                  menu_for_style={menu_for_style}
-                                  minimum_value={0}
-                                  step={1}
-                                  stepper={true}
-                                  function_on_blur={(value) => {
-                                    const new_u = value ?? 0
-                                    const snapshots = real_nodes.map(n => ({ node: n, u: n.position_u }))
-                                    const apply = () => {
-                                      real_nodes.forEach(n => { n.position_u = new_u })
-                                      refreshAll()
-                                    }
-                                    const revert = () => {
-                                      snapshots.forEach(s => { s.node.position_u = s.u })
-                                      refreshAll()
-                                    }
-                                    app_data.history.saveUndo(revert)
-                                    app_data.history.saveRedo(apply)
-                                    apply()
-                                  }}
-                                  multiValue={u_indeterminate}
-                                />
-                                <OSTooltip label={t('Noeud.apparence.tooltips.shape_position_u_locked')}>
-                                  <Button
-                                    variant={first_u_locked && all_same_u_lock ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                                    onClick={() => {
-                                      const new_locked = !(first_u_locked && all_same_u_lock)
-                                      nodeShapeValues.position_u_locked = new_locked
+                              <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.column_row_uv')}</Box>
+                              <Box display='flex' alignItems='center' gap={2}>
+                                <Box display='flex' alignItems='center' gap={1}>
+                                  <ConfigMenuNumberInput
+                                    t={t}
+                                    default_value={first_u}
+                                    menu_for_style={menu_for_style}
+                                    minimum_value={0}
+                                    step={1}
+                                    stepper={true}
+                                    function_on_blur={(value) => {
+                                      const new_u = value ?? 0
+                                      const snapshots = real_nodes.map(n => ({ node: n, u: n.position_u }))
+                                      const apply = () => {
+                                        real_nodes.forEach(n => { n.position_u = new_u })
+                                        refreshAll()
+                                      }
+                                      const revert = () => {
+                                        snapshots.forEach(s => { s.node.position_u = s.u })
+                                        refreshAll()
+                                      }
+                                      app_data.history.saveUndo(revert)
+                                      app_data.history.saveRedo(apply)
+                                      apply()
                                     }}
-                                  >
-                                    {first_u_locked && all_same_u_lock ? <FaLock /> : <FaLockOpen />}
-                                  </Button>
-                                </OSTooltip>
-                              </Box>
-                            </Box>
-                            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                              <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.row_v')}</Box>
-                              <Box display='flex' alignItems='center' gap={1}>
-                                <ConfigMenuNumberInput
-                                  t={t}
-                                  default_value={first_v}
-                                  menu_for_style={menu_for_style}
-                                  minimum_value={0}
-                                  step={1}
-                                  stepper={true}
-                                  function_on_blur={(value) => {
-                                    const new_v = value ?? 0
-                                    const snapshots = real_nodes.map(n => ({ node: n, v: n.position_v }))
-                                    const apply = () => {
-                                      real_nodes.forEach(n => { n.position_v = new_v })
-                                      refreshAll()
-                                    }
-                                    const revert = () => {
-                                      snapshots.forEach(s => { s.node.position_v = s.v })
-                                      refreshAll()
-                                    }
-                                    app_data.history.saveUndo(revert)
-                                    app_data.history.saveRedo(apply)
-                                    apply()
-                                  }}
-                                  multiValue={v_indeterminate}
-                                />
-                                <OSTooltip label={t('Noeud.apparence.tooltips.shape_position_v_locked')}>
-                                  <Button
-                                    variant={first_v_locked && all_same_v_lock ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                                    onClick={() => {
-                                      const new_locked = !(first_v_locked && all_same_v_lock)
-                                      nodeShapeValues.position_v_locked = new_locked
+                                    multiValue={u_indeterminate}
+                                  />
+                                  <OSTooltip label={t('Noeud.apparence.tooltips.shape_position_u_locked')}>
+                                    <Button
+                                      variant={first_u_locked && all_same_u_lock ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                                      onClick={() => {
+                                        const new_locked = !(first_u_locked && all_same_u_lock)
+                                        nodeShapeValues.position_u_locked = new_locked
+                                      }}
+                                    >
+                                      {first_u_locked && all_same_u_lock ? <FaLock /> : <FaLockOpen />}
+                                    </Button>
+                                  </OSTooltip>
+                                </Box>
+                                <Box display='flex' alignItems='center' gap={1}>
+                                  <ConfigMenuNumberInput
+                                    t={t}
+                                    default_value={first_v}
+                                    menu_for_style={menu_for_style}
+                                    minimum_value={0}
+                                    step={1}
+                                    stepper={true}
+                                    function_on_blur={(value) => {
+                                      const new_v = value ?? 0
+                                      const snapshots = real_nodes.map(n => ({ node: n, v: n.position_v }))
+                                      const apply = () => {
+                                        real_nodes.forEach(n => { n.position_v = new_v })
+                                        refreshAll()
+                                      }
+                                      const revert = () => {
+                                        snapshots.forEach(s => { s.node.position_v = s.v })
+                                        refreshAll()
+                                      }
+                                      app_data.history.saveUndo(revert)
+                                      app_data.history.saveRedo(apply)
+                                      apply()
                                     }}
-                                  >
-                                    {first_v_locked && all_same_v_lock ? <FaLock /> : <FaLockOpen />}
-                                  </Button>
-                                </OSTooltip>
+                                    multiValue={v_indeterminate}
+                                  />
+                                  <OSTooltip label={t('Noeud.apparence.tooltips.shape_position_v_locked')}>
+                                    <Button
+                                      variant={first_v_locked && all_same_v_lock ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                                      onClick={() => {
+                                        const new_locked = !(first_v_locked && all_same_v_lock)
+                                        nodeShapeValues.position_v_locked = new_locked
+                                      }}
+                                    >
+                                      {first_v_locked && all_same_v_lock ? <FaLock /> : <FaLockOpen />}
+                                    </Button>
+                                  </OSTooltip>
+                                </Box>
                               </Box>
                             </Box>
                           </>
@@ -1671,21 +1737,47 @@ export const MenuConfigurationAppearance = ({
                                 </Select>
                               </OSTooltip>
                             </Box>
-                            <Box layerStyle='menuconfigpanel_row_2cols'>
-                              <OverloadedCheckbox
+                          </Box>
+                          {/* Bascules d'apparence du flux sous forme de boutons-icônes
+                              (flèche, inverser la flèche, encoche source, hachuré, afficher
+                              si nul). Tooltips auto-générés par OverloadedButton depuis la
+                              config. Les tailles (flèche/encoche) sont inline, sans label,
+                              juste après leur icône. */}
+                          <Box as='span' display='flex' alignItems='center' gap='0.25rem' flexWrap='wrap'>
+                            <Box display='inline-flex' flexShrink={0} flexGrow={0} w='1.5rem' h='1.5rem'>
+                              <OverloadedButton
                                 elements={links_elements}
                                 config={LINK_SHAPE_SPECIFIC_CONFIG}
+                                attributePath='Flux.apparence'
                                 prefix={'shape'}
                                 attributeKey="is_arrow"
-                                isChecked={linkShapeValues.is_arrow}
-                                onChange={(checked) => { linkShapeValues.is_arrow = checked }}
-                                getIsIndeterminate={() => isLinkShapeSpecificValueIndeterminate(links_elements, 'is_arrow')}
-                                tooltipLabel={t(`Flux.apparence.tooltips.${getLinkShapeAttributeKey('shape', 'is_arrow')}`)}
-                                t={t}
+                                variant={getButtonVariant('', isLinkShapeSpecificValueIndeterminate(links_elements, 'is_arrow'), linkShapeValues.is_arrow)}
+                                onClick={() => { linkShapeValues.is_arrow = !linkShapeValues.is_arrow }}
+                                buttonSx={{ width: '1.5rem', minWidth: '1.5rem', height: '1.5rem', padding: '0', '& svg': { width: '16px', height: '16px' } }}
                               >
-                                {t('Flux.apparence.shape_is_arrow')}
-                              </OverloadedCheckbox>
-                              {linkShapeValues.is_arrow && (
+                                {app_data.icon_library.icon_link_arrow}
+                              </OverloadedButton>
+                            </Box>
+                            {/* Flèche côté source, indépendante de la flèche cible :
+                                les deux peuvent être actives en même temps. */}
+                            <Box display='inline-flex' flexShrink={0} flexGrow={0} w='1.5rem' h='1.5rem'>
+                              <OverloadedButton
+                                elements={links_elements}
+                                config={LINK_SHAPE_SPECIFIC_CONFIG}
+                                attributePath='Flux.apparence'
+                                prefix={'shape'}
+                                attributeKey="arrow_at_source"
+                                variant={getButtonVariant('', isLinkShapeSpecificValueIndeterminate(links_elements, 'arrow_at_source'), linkShapeValues.arrow_at_source)}
+                                onClick={() => { linkShapeValues.arrow_at_source = !linkShapeValues.arrow_at_source }}
+                                buttonSx={{ width: '1.5rem', minWidth: '1.5rem', height: '1.5rem', padding: '0', '& svg': { width: '16px', height: '16px' } }}
+                              >
+                                {app_data.icon_library.icon_link_arrow_reversed}
+                              </OverloadedButton>
+                            </Box>
+                            {/* Taille de flèche (partagée par les deux pointes), inline sans
+                                label, visible dès qu'une des deux flèches est active. */}
+                            {(linkShapeValues.is_arrow || linkShapeValues.arrow_at_source) && (
+                              <Box flexShrink={0} w='4.5rem'>
                                 <InputGroup variant='menuconfigpanel_option_input'>
                                   <ConfigMenuNumberInput
                                     t={t}
@@ -1698,40 +1790,84 @@ export const MenuConfigurationAppearance = ({
                                     multiValue={isLinkShapeSpecificValueIndeterminate(links_elements, 'arrow_size')}
                                   />
                                 </InputGroup>
-                              )}
-                            </Box>
-                            {linkShapeValues.is_arrow && (
-                              <Box layerStyle='menuconfigpanel_row_2cols'>
-                                <OverloadedCheckbox
-                                  elements={links_elements}
-                                  config={LINK_SHAPE_SPECIFIC_CONFIG}
-                                  prefix={'shape'}
-                                  attributeKey="is_arrow_reversed"
-                                  isChecked={linkShapeValues.is_arrow_reversed}
-                                  onChange={(checked) => { linkShapeValues.is_arrow_reversed = checked }}
-                                  getIsIndeterminate={() => isLinkShapeSpecificValueIndeterminate(links_elements, 'is_arrow_reversed')}
-                                  tooltipLabel={t(`Flux.apparence.tooltips.${getLinkShapeAttributeKey('shape', 'is_arrow_reversed')}`)}
-                                  t={t}
-                                >
-                                  {t('Flux.apparence.shape_is_arrow_reversed')}
-                                </OverloadedCheckbox>
                               </Box>
                             )}
-                            <Box layerStyle='menuconfigpanel_row_2cols'>
-                              <OverloadedCheckbox
+                            <Box display='inline-flex' flexShrink={0} flexGrow={0} w='1.5rem' h='1.5rem'>
+                              <OverloadedButton
                                 elements={links_elements}
                                 config={LINK_SHAPE_SPECIFIC_CONFIG}
+                                attributePath='Flux.apparence'
+                                prefix={'shape'}
+                                attributeKey="source_notch"
+                                variant={getButtonVariant('', isLinkShapeSpecificValueIndeterminate(links_elements, 'source_notch'), linkShapeValues.source_notch)}
+                                onClick={() => { linkShapeValues.source_notch = !linkShapeValues.source_notch }}
+                                buttonSx={{ width: '1.5rem', minWidth: '1.5rem', height: '1.5rem', padding: '0', '& svg': { width: '16px', height: '16px' } }}
+                              >
+                                {app_data.icon_library.icon_link_source_notch}
+                              </OverloadedButton>
+                            </Box>
+                            {/* Profondeur d'encoche, inline sans label juste après l'icône. */}
+                            {linkShapeValues.source_notch && (
+                              <Box flexShrink={0} w='4.5rem'>
+                                <InputGroup variant='menuconfigpanel_option_input'>
+                                  <ConfigMenuNumberInput
+                                    t={t}
+                                    default_value={linkShapeValues.source_notch_size}
+                                    menu_for_style={menu_for_style}
+                                    minimum_value={1}
+                                    unit_text='px'
+                                    stepper={true}
+                                    function_on_blur={(value) => { linkShapeValues.source_notch_size = value ?? linkShapeValues.source_notch_size }}
+                                    multiValue={isLinkShapeSpecificValueIndeterminate(links_elements, 'source_notch_size')}
+                                  />
+                                </InputGroup>
+                              </Box>
+                            )}
+                            <Box display='inline-flex' flexShrink={0} flexGrow={0} w='1.5rem' h='1.5rem'>
+                              <OverloadedButton
+                                elements={links_elements}
+                                config={LINK_SHAPE_SPECIFIC_CONFIG}
+                                attributePath='Flux.apparence'
                                 prefix={'shape'}
                                 attributeKey="is_dashed"
-                                isChecked={linkShapeValues.is_dashed}
-                                onChange={(checked) => { linkShapeValues.is_dashed = checked }}
-                                getIsIndeterminate={() => isLinkShapeSpecificValueIndeterminate(links_elements, 'is_dashed')}
-                                tooltipLabel={t(`Flux.apparence.tooltips.${getLinkShapeAttributeKey('shape', 'is_dashed')}`)}
-                                t={t}
+                                variant={getButtonVariant('', isLinkShapeSpecificValueIndeterminate(links_elements, 'is_dashed'), linkShapeValues.is_dashed)}
+                                onClick={() => { linkShapeValues.is_dashed = !linkShapeValues.is_dashed }}
+                                buttonSx={{ width: '1.5rem', minWidth: '1.5rem', height: '1.5rem', padding: '0', '& svg': { width: '16px', height: '16px' } }}
                               >
-                                {t('Flux.apparence.shape_is_dashed')}
-                              </OverloadedCheckbox>
-                            </Box></Box>
+                                {app_data.icon_library.icon_link_dashed}
+                              </OverloadedButton>
+                            </Box>
+                            <Box display='inline-flex' flexShrink={0} flexGrow={0} w='1.5rem' h='1.5rem'>
+                              <OverloadedButton
+                                elements={links_elements}
+                                config={LINK_SHAPE_SPECIFIC_CONFIG}
+                                attributePath='Flux.apparence'
+                                prefix={'shape'}
+                                attributeKey="visible_when_zero"
+                                variant={getButtonVariant('', isLinkShapeSpecificValueIndeterminate(links_elements, 'visible_when_zero'), linkShapeValues.visible_when_zero)}
+                                onClick={() => { linkShapeValues.visible_when_zero = !linkShapeValues.visible_when_zero }}
+                                buttonSx={{ width: '1.5rem', minWidth: '1.5rem', height: '1.5rem', padding: '0', '& svg': { width: '16px', height: '16px' } }}
+                              >
+                                {app_data.icon_library.icon_link_visible_when_zero}
+                              </OverloadedButton>
+                            </Box>
+                            {/* Raccord du flux sur nœud elliptique (comble l'espace
+                                ellipse <-> départ du flux). */}
+                            <Box display='inline-flex' flexShrink={0} flexGrow={0} w='1.5rem' h='1.5rem'>
+                              <OverloadedButton
+                                elements={links_elements}
+                                config={LINK_SHAPE_SPECIFIC_CONFIG}
+                                attributePath='Flux.apparence'
+                                prefix={'shape'}
+                                attributeKey="link_caps"
+                                variant={getButtonVariant('', isLinkShapeSpecificValueIndeterminate(links_elements, 'link_caps'), linkShapeValues.link_caps)}
+                                onClick={() => { linkShapeValues.link_caps = !linkShapeValues.link_caps }}
+                                buttonSx={{ width: '1.5rem', minWidth: '1.5rem', height: '1.5rem', padding: '0', '& svg': { width: '16px', height: '16px' } }}
+                              >
+                                {app_data.icon_library.icon_link_caps}
+                              </OverloadedButton>
+                            </Box>
+                          </Box>
                         </> : <></>}
 
                       {/* Recyclage tristate (taille d'un bouton d'orientation) + 4 orientations
@@ -1914,6 +2050,46 @@ export const MenuConfigurationAppearance = ({
                         />
                       </Box>
                       {/* </Box> */}
+                      {/* Droiture multi-ancrage (#665) : mode d'ancrage + propagation aux
+                          enfants. Pendant menu du clic droit « Rectitude ». */}
+                      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                        <OSTooltip label={t('Flux.apparence.tooltips.shape_straight_mode')}>
+                          <Box layerStyle='menuconfigpanel_option_name'>
+                            {t('Flux.apparence.shape_straight_mode')}
+                          </Box>
+                        </OSTooltip>
+                        <Select
+                          w='100%'
+                          value={linkShapeValues.straight_mode}
+                          onChange={(evt) => {
+                            const v = evt.target.value as Type_StraightMenuMode
+                            linkShapeValues.straight_mode = v
+                            // Drapeau legacy gardé en phase (rétrocompat enforceStraightLinks).
+                            linkShapeValues.must_stay_straight = v !== 'none'
+                            if (v === 'none') linkShapeValues.straight_include_children = false
+                          }}
+                        >
+                          {STRAIGHT_MENU_MODES.map(mode => (
+                            <option key={'straight_' + mode} value={mode}>
+                              {t('ContextMenuLinks.' + straightActionKey('Flux', mode))}
+                            </option>
+                          ))}
+                        </Select>
+                      </Box>
+                      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                        <OSTooltip label={t('Flux.apparence.tooltips.shape_straight_include_children')}>
+                          <Box layerStyle='menuconfigpanel_option_name'>
+                            {t('Flux.apparence.shape_straight_include_children')}
+                          </Box>
+                        </OSTooltip>
+                        <Checkbox
+                          isChecked={linkShapeValues.straight_include_children}
+                          isDisabled={linkShapeValues.straight_mode === 'none'}
+                          onChange={(evt) => {
+                            linkShapeValues.straight_include_children = evt.target.checked
+                          }}
+                        />
+                      </Box>
                       <Box as='span' textStyle='title_sub_section'>{t('Flux.apparence.anchor')}</Box>
                       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
                         {[
@@ -2398,8 +2574,8 @@ export const MenuShapeAttributes = ({
             maximum_value={20}
             stepper={true}
             isOverloaded={isElementAttributeOverloaded(elements, prefix + '_' + String('border_thickness') as keyof typeof BASE_SHAPE_CONFIG, BASE_SHAPE_CONFIG)} />
-
-          <Box as='span' layerStyle='options_2cols'>
+          {/* Tireté et Ombre portée (icônes) inline avec l'épaisseur */}
+          <Box display='flex' alignItems='center' justifyContent='flex-end' gap={2} fontSize='xl'>
             <OverloadedCheckbox
               elements={elements}
               config={config}
@@ -2408,14 +2584,12 @@ export const MenuShapeAttributes = ({
               isChecked={shapeValues.border_dashed}
               onChange={(checked) => { shapeValues.border_dashed = checked }}
               getIsIndeterminate={() => isShapeValueIndeterminate(elements, prefix, 'border_dashed')}
-              tooltipLabel={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_dashed')}`)}
+              tooltipLabel={t(`${attributePath}.${getShapeAttributeKey(prefix, 'border_dashed')}`)}
               t={t}
             >
-              {t(`${attributePath}.${getShapeAttributeKey(prefix, 'border_dashed')}`)}
+              {app_data.icon_library.icon_border_dashed}
             </OverloadedCheckbox>
-          </Box>
-          {prefix === 'shape' ? (
-            <Box as='span' layerStyle='options_2cols'>
+            {prefix === 'shape' ? (
               <OverloadedCheckbox
                 elements={elements}
                 config={BASE_SHAPE_CONFIG}
@@ -2424,15 +2598,13 @@ export const MenuShapeAttributes = ({
                 isChecked={shapeValues.shadow_visible}
                 onChange={(checked) => { shapeValues.shadow_visible = checked }}
                 getIsIndeterminate={() => isShapeValueIndeterminate(elements, prefix, 'shadow_visible')}
-                tooltipLabel={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'shadow_visible')}`)}
+                tooltipLabel={t(`${attributePath}.${getShapeAttributeKey(prefix, 'shadow_visible')}`)}
                 t={t}
               >
-                {t(`${attributePath}.${getShapeAttributeKey(prefix, 'shadow_visible')}`)}
+                {app_data.icon_library.icon_drop_shadow}
               </OverloadedCheckbox>
-            </Box>
-          ) : (
-            <Box />
-          )}
+            ) : null}
+          </Box>
         </Box>
 
         {/* Largeur du fond :
@@ -2522,23 +2694,27 @@ export const ShapeTypeSelector = ({
   }
 
   return (
-    <OSTooltip label={t(`${attributePath}.tooltips.shape_type`)}>
-      <Box layerStyle={prefix === 'shape' ? 'options_4cols' : 'options_3cols'}>
-        {shapeTypes.map(({ value, position, icon }) => (
-          <Button
-            key={value}
-            variant={getButtonVariant(
-              position,
-              isShapeValueIndeterminate(elements, prefix, 'type'),
-              shapeValues.type === value
-            )}
-            onClick={() => { shapeValues.type = value }}
-          >
-            {icon}
-          </Button>
-        ))}
-      </Box>
-    </OSTooltip>
+    <OverloadIndicatorWrapper
+      isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_type` as keyof typeof BASE_SHAPE_CONFIG, BASE_SHAPE_CONFIG)}
+    >
+      <OSTooltip label={t(`${attributePath}.tooltips.shape_type`)}>
+        <Box layerStyle={prefix === 'shape' ? 'options_4cols' : 'options_3cols'} sx={{ width: 'fit-content' }}>
+          {shapeTypes.map(({ value, position, icon }) => (
+            <Button
+              key={value}
+              variant={getButtonVariant(
+                position,
+                isShapeValueIndeterminate(elements, prefix, 'type'),
+                shapeValues.type === value
+              )}
+              onClick={() => { shapeValues.type = value }}
+            >
+              {icon}
+            </Button>
+          ))}
+        </Box>
+      </OSTooltip>
+    </OverloadIndicatorWrapper>
   )
 }
 
@@ -2571,25 +2747,29 @@ export const HatchSelector = ({
   ]
 
   return (
-    <OSTooltip label={t(`${attributePath}.tooltips.shape_hatch`)}>
-      <Box layerStyle='options_4cols'>
-        {options.map(({ value, position, icon }) => (
-          <Button
-            key={value}
-            variant={getButtonVariant(
-              position,
-              isNodeShapeSpecificValueIndeterminate(elements as Class_NodeBase[], 'hatch'),
-              nodeShapeValues.hatch === value
-            )}
-            onClick={() => {
-              nodeShapeValues.hatch = (nodeShapeValues.hatch === value) ? 'none' : value
-            }}
-          >
-            {icon}
-          </Button>
-        ))}
-      </Box>
-    </OSTooltip>
+    <OverloadIndicatorWrapper
+      isOverloaded={isElementAttributeOverloaded(elements, 'shape_hatch' as keyof typeof NODE_SHAPE_SPECIFIC_CONFIG, NODE_SHAPE_SPECIFIC_CONFIG)}
+    >
+      <OSTooltip label={t(`${attributePath}.tooltips.shape_hatch`)}>
+        <Box layerStyle='options_4cols' sx={{ width: 'fit-content' }}>
+          {options.map(({ value, position, icon }) => (
+            <Button
+              key={value}
+              variant={getButtonVariant(
+                position,
+                isNodeShapeSpecificValueIndeterminate(elements as Class_NodeBase[], 'hatch'),
+                nodeShapeValues.hatch === value
+              )}
+              onClick={() => {
+                nodeShapeValues.hatch = (nodeShapeValues.hatch === value) ? 'none' : value
+              }}
+            >
+              {icon}
+            </Button>
+          ))}
+        </Box>
+      </OSTooltip>
+    </OverloadIndicatorWrapper>
   )
 }
 

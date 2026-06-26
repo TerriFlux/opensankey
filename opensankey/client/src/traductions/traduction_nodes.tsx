@@ -69,7 +69,8 @@ export const resources_nodes = {
           rat: 'Ratios',
           prov: 'Inputs',
           values_tab: 'Values',
-          tags_tab: 'Other informations'
+          tags_tab: 'Other informations',
+          unitary_tab: 'Unitary Sankey'
         },
         tabs: {
           apparence: 'Appearence',
@@ -148,10 +149,16 @@ export const resources_nodes = {
           anchor: 'Anchor position',
           name_label_text_source: 'Label content',
           name_label_text: 'Custom label',
+          name_label_tag_group: 'Tag group',
+          name_label_tag: 'Tag',
+          name_label_dimension: 'Dimension',
+          name_label_dimension_auto: 'Automatic (first one)',
           text_source: {
             name: 'Node name',
             name_container: 'Element name',
             custom: 'Custom text',
+            tag: 'Tag long name',
+            ancestor: 'Ancestor node name',
           },
 
           tooltips: {
@@ -237,7 +244,10 @@ export const resources_nodes = {
         SankeyUnitaryNodeInputStyle: 'Unitary node input',
         SankeyUnitaryNodeOutputStyle: 'Unitary node output',
         LinkInUnitaryStyle: 'Unitary input link',
-        LinkOutUnitaryStyle: 'Unitary output link'
+        LinkOutUnitaryStyle: 'Unitary output link',
+        family: 'Family',
+        family_predefined: 'Application styles',
+        family_user: 'User styles'
       }
     }
   },
@@ -311,7 +321,8 @@ export const resources_nodes = {
           prov: 'Entrées',
           dest: 'Sorties',
           values_tab: 'Valeurs',
-          tags_tab: 'Autres informations'
+          tags_tab: 'Autres informations',
+          unitary_tab: 'Sankey unitaire'
         },
         tabs: {
           apparence: 'Apparence',
@@ -332,8 +343,10 @@ export const resources_nodes = {
           column_u: 'Colonne (u)',
           position_v: 'Ligne',
           row_v: 'Ligne (v)',
+          column_row_uv: 'Colonne (u) / Ligne (v)',
           position_dx: 'Ecart horizontal',
           position_dy: 'Ecart vertical',
+          anchor_align: 'Ancre flux',
           anchor_align_vertical: 'Ancres (côtés verticaux)',
           anchor_align_horizontal: 'Ancres (côtés horizontaux)',
           asn: 'Appliquer le style aux noeuds',
@@ -385,10 +398,16 @@ export const resources_nodes = {
           anchor: 'Position de l\'ancre',
           name_label_text_source: 'Contenu du label',
           name_label_text: 'Label personnalisé',
+          name_label_tag_group: 'Groupe de tags',
+          name_label_tag: 'Tag',
+          name_label_dimension: 'Dimension',
+          name_label_dimension_auto: 'Automatique (la première)',
           text_source: {
             name: 'Nom du nœud',
             name_container: 'Nom de l\'élément',
             custom: 'Texte personnalisé',
+            tag: 'Nom long d\'un tag',
+            ancestor: 'Nom du nœud ancêtre',
           },
           tooltips: {
             name_label_text_source: 'Choisir ce qu\'affiche le label du nœud : le nom du nœud, ou un texte personnalisé indépendant (éditable sans renommer le nœud)',
@@ -471,7 +490,10 @@ export const resources_nodes = {
         SankeyUnitaryNodeInputStyle: 'Unitaire noeud entrée',
         SankeyUnitaryNodeOutputStyle: 'Unitaire noeud sortie',
         LinkInUnitaryStyle: 'Unitaire flux entrée',
-        LinkOutUnitaryStyle: 'Unitaire flux sortie'
+        LinkOutUnitaryStyle: 'Unitaire flux sortie',
+        family: 'Famille',
+        family_predefined: 'Styles de l\'application',
+        family_user: 'Styles utilisateur'
       }
     }
   },
@@ -540,7 +562,8 @@ export const resources_nodes = {
           rat: 'Ratios',
           prov: 'Entradas',
           values_tab: 'Valores',
-          tags_tab: 'Otras informaciones'
+          tags_tab: 'Otras informaciones',
+          unitary_tab: 'Sankey unitario'
         },
         tabs: {
           apparence: 'Apariencia',
@@ -619,10 +642,16 @@ export const resources_nodes = {
           anchor: 'Posición del ancla',
           name_label_text_source: 'Contenido de la etiqueta',
           name_label_text: 'Etiqueta personalizada',
+          name_label_tag_group: 'Grupo de etiquetas',
+          name_label_tag: 'Etiqueta',
+          name_label_dimension: 'Dimensión',
+          name_label_dimension_auto: 'Automática (la primera)',
           text_source: {
             name: 'Nombre del nodo',
             name_container: 'Nombre del elemento',
             custom: 'Texto personalizado',
+            tag: 'Nombre largo de una etiqueta',
+            ancestor: 'Nombre del nodo ancestro',
           },
           tooltips: {
             name_label_text_source: 'Elegir lo que muestra la etiqueta del nodo: el nombre del nodo, o un texto personalizado independiente (editable sin renombrar el nodo)',
@@ -707,7 +736,10 @@ export const resources_nodes = {
         SankeyUnitaryNodeInputStyle: 'Nodo unitario entrada',
         SankeyUnitaryNodeOutputStyle: 'Nodo unitario salida',
         LinkInUnitaryStyle: 'Flujo unitario entrada',
-        LinkOutUnitaryStyle: 'Flujo unitario salida'
+        LinkOutUnitaryStyle: 'Flujo unitario salida',
+        family: 'Familia',
+        family_predefined: 'Estilos de la aplicación',
+        family_user: 'Estilos de usuario'
       }
     }
   },
@@ -776,7 +808,8 @@ export const resources_nodes = {
           rat: 'Verhältnisse',
           prov: 'Eingänge',
           values_tab: 'Werte',
-          tags_tab: 'Weitere Informationen'
+          tags_tab: 'Weitere Informationen',
+          unitary_tab: 'Einheits-Sankey'
         },
         tabs: {
           apparence: 'Darstellung',
@@ -855,10 +888,16 @@ export const resources_nodes = {
           anchor: 'Ankerposition',
           name_label_text_source: 'Beschriftungsinhalt',
           name_label_text: 'Benutzerdefinierte Beschriftung',
+          name_label_tag_group: 'Tag-Gruppe',
+          name_label_tag: 'Tag',
+          name_label_dimension: 'Dimension',
+          name_label_dimension_auto: 'Automatisch (erste)',
           text_source: {
             name: 'Knotenname',
             name_container: 'Elementname',
             custom: 'Benutzerdefinierter Text',
+            tag: 'Langer Tag-Name',
+            ancestor: 'Name des Vorfahrknotens',
           },
           tooltips: {
             name_label_text_source: 'Wählen, was die Knotenbeschriftung anzeigt: den Knotennamen oder einen unabhängigen benutzerdefinierten Text (bearbeitbar, ohne den Knoten umzubenennen)',
@@ -943,7 +982,10 @@ export const resources_nodes = {
         SankeyUnitaryNodeInputStyle: 'Einheitsknoten Eingang',
         SankeyUnitaryNodeOutputStyle: 'Einheitsknoten Ausgang',
         LinkInUnitaryStyle: 'Einheitsfluss Eingang',
-        LinkOutUnitaryStyle: 'Einheitsfluss Ausgang'
+        LinkOutUnitaryStyle: 'Einheitsfluss Ausgang',
+        family: 'Familie',
+        family_predefined: 'Anwendungsstile',
+        family_user: 'Benutzerstile'
       }
     }
   },
@@ -1012,7 +1054,8 @@ export const resources_nodes = {
           rat: 'Rapporti',
           prov: 'Ingressi',
           values_tab: 'Valori',
-          tags_tab: 'Altre informazioni'
+          tags_tab: 'Altre informazioni',
+          unitary_tab: 'Sankey unitario'
         },
         tabs: {
           apparence: 'Aspetto',
@@ -1091,10 +1134,16 @@ export const resources_nodes = {
           anchor: 'Posizione dell\'ancora',
           name_label_text_source: 'Contenuto dell\'etichetta',
           name_label_text: 'Etichetta personalizzata',
+          name_label_tag_group: 'Gruppo di tag',
+          name_label_tag: 'Tag',
+          name_label_dimension: 'Dimensione',
+          name_label_dimension_auto: 'Automatica (la prima)',
           text_source: {
             name: 'Nome del nodo',
             name_container: 'Nome dell\'elemento',
             custom: 'Testo personalizzato',
+            tag: 'Nome lungo di un tag',
+            ancestor: 'Nome del nodo antenato',
           },
           tooltips: {
             name_label_text_source: 'Scegli cosa mostra l\'etichetta del nodo: il nome del nodo, o un testo personalizzato indipendente (modificabile senza rinominare il nodo)',
@@ -1179,7 +1228,10 @@ export const resources_nodes = {
         SankeyUnitaryNodeInputStyle: 'Nodo unitario ingresso',
         SankeyUnitaryNodeOutputStyle: 'Nodo unitario uscita',
         LinkInUnitaryStyle: 'Flusso unitario ingresso',
-        LinkOutUnitaryStyle: 'Flusso unitario uscita'
+        LinkOutUnitaryStyle: 'Flusso unitario uscita',
+        family: 'Famiglia',
+        family_predefined: 'Stili dell\'applicazione',
+        family_user: 'Stili utente'
       }
     }
   }

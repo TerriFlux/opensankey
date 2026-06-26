@@ -18,6 +18,7 @@ import { StorageType } from '../../Elements/Element'
 import { ALL_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
 import { NodePositioning } from '../../Algorithms/NodePositioning'
 import { Class_NodeDimension } from '../../Elements/NodeDimension'
+import { downloadImageSource } from './SaveImage'
 
 // ==================================================================================================
 // CLASSE PRINCIPALE D'ACTIONS DES NŒUDS
@@ -167,8 +168,12 @@ export class NodeActions {
     const childDims = this.contextualised_node.dimensions_as_parent
 
     if (childDims.length > 0) {
-      const child = childDims.filter(dim => dim.children.filter(c => c.id == dim_name).length > 0)[0].children[0].id
+      const target_dim = childDims.filter(dim => dim.children.filter(c => c.id == dim_name).length > 0)[0]
+      const child = target_dim.children[0].id
       disaggregate(this.app_data, this.contextualised_node, child)
+      // #1231 — désagrégation LOCALE (clic droit) → marque l'état hybride local
+      // (affiche « Réinitialiser la hiérarchie »).
+      target_dim.forced_by_local_action = true
       this._restackEnglobingChain(this.contextualised_node)
       this.drawing_area.draw()
       // this.drawing_area.purgeSelection()
@@ -208,6 +213,9 @@ export class NodeActions {
       const child = this.drawing_area.sankey.nodes_dict[dim_name]
       if (!child) return
       disaggregationExpansion(this.app_data, node, true, child)
+      // #1231 — expansion LOCALE (clic droit) → marque l'état hybride local.
+      const dim = node.nodeDimensionAsParent(child)
+      if (dim) dim.forced_by_local_action = true
     })
   }
 
@@ -216,6 +224,9 @@ export class NodeActions {
       const child = this.drawing_area.sankey.nodes_dict[dim_name]
       if (!child) return
       disaggregationExpansion(this.app_data, node, false, child)
+      // #1231 — expansion LOCALE (clic droit) → marque l'état hybride local.
+      const dim = node.nodeDimensionAsParent(child)
+      if (dim) dim.forced_by_local_action = true
     })
   }
 
@@ -407,6 +418,9 @@ export class NodeActions {
         }
       } else {
         dim.setContainerMode(target_mode)
+        // #1231 — englobement LOCAL (clic droit) → marque l'état hybride local
+        // (affiche « Réinitialiser la hiérarchie »).
+        dim.forced_by_local_action = true
         parent.tied_to_nodes = true
         // Mirror leaving: attach this dim's children into the parent's
         // geometric frame, so the cadre géométrique behaves like a ZDT
@@ -758,6 +772,22 @@ export class NodeActions {
     this.executeWithUndo(doReset, undoReset)
   }
 
+  // Propage le style (styles custom + attributs) de chaque nœud parent
+  // sélectionné à toute sa descendance dans la hiérarchie de dimensions (comme
+  // le pinceau, mais parent → enfants). Multi-sélection supportée : si aucun
+  // nœud n'est sélectionné on retombe sur le nœud contextualisé. L'undo/redo
+  // (une seule transition pour toute la sélection) est géré dans
+  // applyStyleToNodesChildren.
+  applyStyleToChildren = () => {
+    const parents = (this.selected_nodes.length > 0
+      ? this.selected_nodes
+      : (this.contextualised_node ? [this.contextualised_node] : [])
+    ).filter(n => n.is_parent)
+    if (parents.length === 0) return
+    this.drawing_area.applyStyleToNodesChildren(parents)
+    this.refreshAndSave()
+  }
+
   reorg = () => {
     const dict_old_io: { [x: string]: string[] } = {}
     this.selected_nodes.forEach(node =>
@@ -905,6 +935,14 @@ export class NodeActions {
     this.refreshAndSave()
   }
 
+  // Télécharge l'image affichée sur le nœud (icon_is_image) sous forme de fichier.
+  saveNodeImage = () => {
+    const node = this.contextualised_node
+    if (!node?.icon_is_image || !node.icon_image_src) return
+    downloadImageSource(node.icon_image_src, node.name || node.id)
+    this.closeContextMenu()
+  }
+
   static createModifier = (app_data: Class_ApplicationData) => {
     const nodeActions = new NodeActions(app_data)
 
@@ -959,6 +997,7 @@ export class NodeActions {
       // Autres actions
       editName: nodeActions.editName,
       resetAttr: nodeActions.resetAttr,
+      applyStyleToChildren: nodeActions.applyStyleToChildren,
 
       startAnimation: nodeActions.startAnimation,
       createTiedZdt: nodeActions.createTiedZdt,
@@ -971,6 +1010,7 @@ export class NodeActions {
       selectOutputLinks: nodeActions.selectOutputLinks,
       selectInputLinks: nodeActions.selectInputLinks,
       copyElement: nodeActions.copyElement,
+      saveNodeImage: nodeActions.saveNodeImage,
 
       // Actions dynamiques générées pour les dimensions
       // ...setChildActions,

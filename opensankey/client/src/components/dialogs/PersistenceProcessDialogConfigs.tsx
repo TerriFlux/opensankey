@@ -751,6 +751,34 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       ]
     } satisfies FormatAttributeConfig<boolean>,
 
+    // #161 — master toggle. Checked (default) = legacy: the diagram structure is
+    // propagated across every dataTag. Unchecked = keep only the (flux, dataTag)
+    // combinations present in the input; a flux absent for a dataTag is treated
+    // as non-existent (reconciled to 0). Per-group overrides live on each dataTag
+    // group (Tags sheet column "Propager la structure" / tag-group editor).
+    propagate_datatag_structure: {
+      group: 'autocorrection',
+      default: true,
+      type: (() => true) as (() => boolean),
+      labels: {
+        en: 'Propagate structure across dataTags',
+        fr: 'Propager la structure sur les dataTags',
+        es: 'Propagar la estructura a través de los dataTags',
+        de: 'Struktur über dataTags hinweg propagieren',
+        it: 'Propagare la struttura tra i dataTag'
+      },
+      tooltips: {
+        en: 'When unchecked, keep only the (flux, dataTag) combinations present in the input; a flux absent for a dataTag does not exist there (reconciled to 0)',
+        fr: 'Décoché : ne conserver que les combinaisons (flux, dataTag) présentes dans l\'entrée ; un flux absent pour un dataTag n\'y existe pas (réconcilié à 0)',
+        es: 'Sin marcar: conservar solo las combinaciones (flujo, dataTag) presentes en la entrada; un flujo ausente para un dataTag no existe (reconciliado a 0)',
+        de: 'Nicht markiert: nur die im Input vorhandenen (Fluss, dataTag)-Kombinationen behalten; ein für einen dataTag fehlender Fluss existiert dort nicht (auf 0 abgeglichen)',
+        it: 'Deselezionato: mantenere solo le combinazioni (flusso, dataTag) presenti nell\'input; un flusso assente per un dataTag non esiste (riconciliato a 0)'
+      },
+      visibilityConditions: [
+        { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' }
+      ]
+    } satisfies FormatAttributeConfig<boolean>,
+
     autofix_parenthood_mat_balance: {
       group: 'autocorrection',
       breakBefore: true,
@@ -1884,6 +1912,13 @@ export interface ConverterConfig {
   // Backend
   server_endpoint: string
 
+  // Racine de résolution serveur des fichiers d'exemple (input_format
+  // example_excel / example_json). 'sankeydata' (défaut) = templates + tutoriels
+  // migrés dans le submodule SankeyData (env SANKEY_DATA) ; 'mfadata' = contenu
+  // de la sankeythèque (Etudes/Clients), servi par /menus/examples depuis
+  // MFAData et pas encore migré. Forwardé tel quel dans le form_data du launch.
+  example_root?: 'sankeydata' | 'mfadata'
+
   input: {
     required: boolean
     format: {
@@ -1962,6 +1997,28 @@ export const SOLVER_OPTION_KEYS = [
   'skip_rref',
   'with_reconciled',
   'with_completed',
+] as const
+
+// IID=162: the input (autocorrection) options persisted in the workbook
+// "Options de réconciliation" sheet — the full group='autocorrection' set that
+// load_sankey consumes and that decides whether the load/reconciliation
+// succeeds, so they can be frozen in the file and pre-fill the dialog. Single
+// source of truth shared with the parser's MFA_INPUT_OPTION_KEYS
+// (SankeyExcelParser io_excel_constants). Keep in sync with the keys declared in
+// INPUT_ATTRIBUTES_CONFIG.base above.
+export const INPUT_OPTION_KEYS = [
+  'create_new_nodes',
+  'create_new_flux',
+  'propagate_flux_to_children',
+  'propagate_flux_to_parent',
+  'autofix_parenthood_mat_balance',
+  'autofix_constraint_redundancies',
+  'allow_flux_to_descendant',
+  'autonormalize_ratio_constraints',
+  'autofix_ter_duplicate_entries',
+  'typo_strict',
+  'autocorrect_typo',
+  'propagate_datatag_structure',
 ] as const
 
 export const CONVERTER_CONFIGS = {
@@ -2072,6 +2129,46 @@ export const CONVERTER_CONFIGS = {
     title: 'ProcessDialog.load_example',
     launch_button_label: 'ProcessDialog.load',
     server_endpoint: '/opensankey/convert/launch',
+    input: {
+      required: false,
+      format: {
+        options: ['example_excel']  // Format fixe, pas de sélecteur
+      },
+    },
+    output: {
+      required: false,
+      format: {
+        options: ['json']  // Format fixe
+      },
+    }
+  } satisfies ConverterConfig,
+  // Sankeythèque : mêmes dialogues que load_example_* mais le contenu
+  // (Etudes/Clients) est servi par /menus/examples depuis MFAData et n'est pas
+  // encore migré vers SankeyData → example_root: 'mfadata' pour que
+  // convert/launch résolve le file_name contre MFAData et non SANKEY_DATA.
+  load_sankeytheque_json: {
+    title: 'ProcessDialog.load_example',
+    launch_button_label: 'ProcessDialog.load',
+    server_endpoint: '/opensankey/convert/launch',
+    example_root: 'mfadata',
+    input: {
+      required: false,
+      format: {
+        options: ['example_json']  // Format fixe, pas de sélecteur
+      },
+    },
+    output: {
+      required: false,
+      format: {
+        options: ['json']  // Format fixe
+      },
+    }
+  } satisfies ConverterConfig,
+  load_sankeytheque_excel: {
+    title: 'ProcessDialog.load_example',
+    launch_button_label: 'ProcessDialog.load',
+    server_endpoint: '/opensankey/convert/launch',
+    example_root: 'mfadata',
     input: {
       required: false,
       format: {

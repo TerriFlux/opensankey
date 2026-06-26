@@ -27,7 +27,7 @@ import React from 'react'
 import { faCopy, faDeleteLeft, faFolderTree, faIcons, faListCheck, faObjectUngroup } from '@fortawesome/free-solid-svg-icons'
 import { FaCaretSquareLeft, FaCaretSquareRight, FaCog, FaFileImport, FaPalette, FaRandom, FaUser, FaPowerOff } from 'react-icons/fa'
 import {
-  faArrowPointer, faArrowsLeftRight, faArrowsUpDown, faChartSimple, faCloudArrowUp, faCompress, faDownload, faExpand,
+  faArrowPointer, faArrowsLeftRight, faArrowsUpDown, faArrowsToDot, faChartSimple, faCloudArrowUp, faCompress, faDownload, faExpand,
   faFile, faFileExport, faFileInvoice, faFolderOpen, faGears, faImage, faPenNib, faPenToSquare, faPlus, faRepeat,
   faRotateLeft, faRotateRight, faShapes, faShareNodes, faSliders, faTable, faUpRightFromSquare, faXmark, faBox, faFileExcel, faFileCode, faArrowRightArrowLeft, faBrush,
   faLock, faLockOpen, faFont
@@ -1555,6 +1555,7 @@ export class Class_IconLibrary {
 
   protected _icon_area_fit_vert = <FontAwesomeIcon icon={faArrowsUpDown} />
   protected _icon_area_fit_horiz = <FontAwesomeIcon icon={faArrowsLeftRight} />
+  protected _icon_recenter = <FontAwesomeIcon icon={faArrowsToDot} />
 
   protected _icon_font_size_locked = <span style={{ display: 'inline-flex', alignItems: 'center', gap: '1px' }}><FontAwesomeIcon icon={faFont} style={{ fontSize: '0.7em' }} /><FontAwesomeIcon icon={faLock} /></span>
   protected _icon_font_size_unlocked = <span style={{ display: 'inline-flex', alignItems: 'center', gap: '1px' }}><FontAwesomeIcon icon={faFont} style={{ fontSize: '0.7em' }} /><FontAwesomeIcon icon={faLockOpen} /></span>
@@ -1610,6 +1611,62 @@ export class Class_IconLibrary {
 
   protected _icon_link_curved = logo_courbe
   protected _icon_link_structure = logo_structure
+
+  // Bascules d'apparence du flux (rangée de boutons-icônes du menu « Flux »).
+  protected _icon_link_arrow = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" width="1em" height="1em"
+      fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="2" y1="8.5" x2="12" y2="8.5" />
+      <polyline points="9,5 13,8.5 9,12" />
+    </svg>
+  )
+  protected _icon_link_arrow_reversed = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" width="1em" height="1em"
+      fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="5" y1="8.5" x2="15" y2="8.5" />
+      <polyline points="8,5 4,8.5 8,12" />
+    </svg>
+  )
+  protected _icon_link_source_notch = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" width="1em" height="1em"
+      fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="7" y1="8.5" x2="15.5" y2="8.5" />
+      <polyline points="2,3.5 7,8.5 2,13.5" />
+    </svg>
+  )
+  protected _icon_link_dashed = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" width="1em" height="1em"
+      fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="3 2.5">
+      <line x1="1.5" y1="8.5" x2="15.5" y2="8.5" />
+    </svg>
+  )
+  protected _icon_link_visible_when_zero = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" width="1em" height="1em"
+      fill="none" stroke="currentColor" strokeWidth="1.5">
+      <ellipse cx="8.5" cy="8.5" rx="4" ry="6" />
+    </svg>
+  )
+  // Raccord de flux : une ellipse (le nœud) d'où part un flux plein plus fin.
+  protected _icon_link_caps = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" width="1em" height="1em"
+      fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round">
+      <rect x="4.5" y="6.5" width="11" height="4" rx="0.5" fill="currentColor" stroke="none" />
+      <ellipse cx="4.5" cy="8.5" rx="3" ry="6" />
+    </svg>
+  )
+  protected _icon_border_dashed = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" width="1em" height="1em"
+      fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="2.5 2">
+      <rect x="2" y="2" width="13" height="13" rx="1.5" />
+    </svg>
+  )
+  protected _icon_drop_shadow = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" width="1em" height="1em"
+      fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="5" y="5" width="9" height="9" rx="1.5" fill="currentColor" opacity="0.3" stroke="none" />
+      <rect x="2.5" y="2.5" width="9" height="9" rx="1.5" fill="white" />
+    </svg>
+  )
 
   protected _icon_order_up = <FaAngleUp />
   protected _icon_order_down = <FaAngleDown />
@@ -1740,6 +1797,7 @@ export class Class_IconLibrary {
   public get icon_exit_fullscreen() { return this._icon_exit_fullscreen }
   public get icon_area_fit_vert() { return this._icon_area_fit_vert }
   public get icon_area_fit_horiz() { return this._icon_area_fit_horiz }
+  public get icon_recenter() { return this._icon_recenter }
   public get icon_font_size_locked() { return this._icon_font_size_locked }
   public get icon_font_size_unlocked() { return this._icon_font_size_unlocked }
   public get icon_size_locked() { return this._icon_size_locked }
@@ -1846,6 +1904,14 @@ export class Class_IconLibrary {
   public get icon_orientation_recycle() { return this.normalizeIcon(this._icon_orientation_recycle) }
   public get icon_link_curved() { return this.normalizeIcon(this._icon_link_curved) }
   public get icon_link_structure() { return this.normalizeIcon(this._icon_link_structure) }
+  public get icon_link_arrow() { return this.normalizeIcon(this._icon_link_arrow) }
+  public get icon_link_arrow_reversed() { return this.normalizeIcon(this._icon_link_arrow_reversed) }
+  public get icon_link_source_notch() { return this.normalizeIcon(this._icon_link_source_notch) }
+  public get icon_link_dashed() { return this.normalizeIcon(this._icon_link_dashed) }
+  public get icon_link_visible_when_zero() { return this.normalizeIcon(this._icon_link_visible_when_zero) }
+  public get icon_link_caps() { return this.normalizeIcon(this._icon_link_caps) }
+  public get icon_border_dashed() { return this.normalizeIcon(this._icon_border_dashed) }
+  public get icon_drop_shadow() { return this.normalizeIcon(this._icon_drop_shadow) }
   public get icon_ellipse_shape() { return this.normalizeIcon(this._icon_ellipse_shape) }
   public get icon_rect_shape() { return this.normalizeIcon(this._icon_rect_shape) }
   public get icon_capsule_shape() { return this.normalizeIcon(this._icon_capsule_shape) }

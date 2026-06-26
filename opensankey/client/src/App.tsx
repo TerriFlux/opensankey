@@ -26,7 +26,6 @@
 
 import React, { useEffect } from 'react'
 import LZString from 'lz-string'
-import * as d3 from 'd3'
 import { TourProvider } from '@reactour/tour'
 
 /*************************************************************************************************/
@@ -106,38 +105,47 @@ export const OpenSankeyApp = ({
         app_data.drawing_area.bypass_redraws = true
         updateFrom(app_data.drawing_area, tmp_DA, layout_mode)
         app_data.post_apply_layout_callback?.(tmp_DA, layout_data as Type_JSON, layout_mode)
+        // (dédup #draw_zoom désormais centralisée dans DrawingArea._initDraw)
         app_data.drawing_area.draw()
         // Le layout fusionne des attributs de la drawing area (verrous taille/police,
         // banner='sequence' & sélection des data tags, etc.) APRÈS le updateAllMenuComponents()
         // déclenché par fromJSON ci-dessus. Sans ce rafraîchissement, les menus/toolbars
         // (barre de séquence, verrous) gardent l'état d'avant-layout — visible en viewer publish.
         app_data.menu_configuration.updateAllMenuComponents()
+        app_data.applyPublishStateOptions()
         applyPublishRecenter()
       }).catch(e => console.log(e))
     } else {
+      app_data.applyPublishStateOptions()
       applyPublishRecenter()
     }
   }
 
-  if (opts.diagram) {
-    if (typeof opts.diagram === 'string') {
-      // URL : fetch + décompression + parse
-      app_data.file_name = opts.diagram
-      loadUniversalJSON(opts.diagram).then(data => {
-        app_data.file_name = opts.diagram as string
-        applyDiagramData(data as Type_JSON)
-      }).catch(e => console.log(e))
-    } else {
-      // Objet JSON inline : appliqué directement (use case embed HTML one-file)
-      applyDiagramData(opts.diagram as unknown as Type_JSON)
+  // Auto-chargement initial depuis les données (diagramme publish, localStorage, URL) :
+  // exécuté UNE SEULE FOIS au montage. Hors d'un useEffect, ce bloc se ré-exécutait à chaque
+  // re-rendu — en mode publish avec un gros diagramme par défaut (opts.diagram), chaque
+  // chargement async redessinait → re-rendu → re-chargement : boucle infinie (#196).
+  useEffect(() => {
+    if (opts.diagram) {
+      if (typeof opts.diagram === 'string') {
+        // URL : fetch + décompression + parse
+        app_data.file_name = opts.diagram
+        loadUniversalJSON(opts.diagram).then(data => {
+          app_data.file_name = opts.diagram as string
+          applyDiagramData(data as Type_JSON)
+        }).catch(e => console.log(e))
+      } else {
+        // Objet JSON inline : appliqué directement (use case embed HTML one-file)
+        applyDiagramData(opts.diagram as unknown as Type_JSON)
+      }
+    } else if (json_data !== null && json_data != '' && json_data != 'null') {
+      app_data.fromJSON(JSON.parse(json_data))
     }
-  } else if (json_data !== null && json_data != '' && json_data != 'null') {
-    app_data.fromJSON(JSON.parse(json_data))
-  }
 
-  if (url_info) {
-    app_data.readUrlJSON(url_info)
-  }
+    if (url_info) {
+      app_data.readUrlJSON(url_info)
+    }
+  }, [])
 
   const mode_pref = sessionStorage.getItem('modepref')
   const menu_config = app_data.menu_configuration
@@ -162,8 +170,7 @@ export const OpenSankeyApp = ({
   }, [])
 
   useEffect(() => {
-    // Delete potential duplicat
-    d3.select('#draw_zoom').remove()
+    // (dédup #draw_zoom désormais centralisée dans DrawingArea._initDraw)
     app_data.menu_configuration.ref_toolbar.current()
     app_data.draw()
     applyPublishRecenter()

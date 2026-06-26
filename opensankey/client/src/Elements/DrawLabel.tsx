@@ -132,6 +132,16 @@ export abstract class DrawLabelBase {
 
   // Flags de configuration
   protected enableEditing: boolean = false
+  // Quand vrai, drawGenericLabel dessine la structure éditable (texte + input)
+  // même si le label est vide / sous le seuil — nécessaire pour éditer la valeur
+  // d'un flux encore en pointillé (sans valeur), qui n'a normalement aucun label.
+  protected _force_editable_draw: boolean = false
+
+  // Détection manuelle du double-clic (cf. attachDoubleClickEdit). Stockée sur
+  // l'instance (qui survit au redraw du DOM), pas sur le <text> : le 1er clic peut
+  // recréer le <text>, ce qui casse le `dblclick` natif (les deux clics doivent
+  // atterrir sur le MÊME nœud DOM — non garanti sur Mac). Timestamp en ms.
+  private _last_label_click_ts: number = 0
 
   public d3_selection: d3_selection_type | null = null
 
@@ -1258,26 +1268,36 @@ export abstract class DrawLabelBase {
     input.focus()
     const sel = window.getSelection()
     const range = document.createRange()
-    if (initialValue !== undefined) {
-      // Ultra-shortcut "tape directement sur un élément sélectionné" :
-      // on conserve le nom existant et on insère la touche tapée en fin,
-      // comme si l'utilisateur avait double-cliqué puis tapé la touche.
-      input.textContent = (input.textContent ?? '') + initialValue
-      range.selectNodeContents(input)
-      range.collapse(false)
-      sel?.removeAllRanges()
-      sel?.addRange(range)
-      input.dispatchEvent(new Event('input', { bubbles: true }))
-    } else {
-      // Double-clic : sélectionne tout le contenu (équivalent input.select()).
-      range.selectNodeContents(input)
-      sel?.removeAllRanges()
-      sel?.addRange(range)
-    }
+    // Qu'on entre en édition par double-clic (initialValue === undefined) ou par
+    // frappe directe sur un élément sélectionné (ultra-shortcut #688), on adopte
+    // le même comportement : sélectionner tout le mot existant (équivalent
+    // input.select()), focus au début. La touche tapée sert uniquement à entrer
+    // en édition, elle n'est pas insérée en fin de mot.
+    void initialValue
+    range.selectNodeContents(input)
+    sel?.removeAllRanges()
+    sel?.addRange(range)
   }
 
   public setInputLabelInvisible() {
     this.drawGenericLabel()
+  }
+
+  /**
+   * Ouvre l'éditeur inline de valeur même quand le flux n'a pas encore de valeur
+   * (flux en pointillé) : dans ce cas aucun label n'est dessiné, donc aucun input
+   * n'existe à révéler. On force alors le dessin de la structure éditable puis on
+   * affiche l'input. Sert au double-clic sur le tracé du flux lui-même.
+   */
+  public openInlineEditor() {
+    if (!this._element.drawing_area.editable || !this.enableEditing) return
+    const inputId = `${this.prefix}_input_${this.getElementId()}`
+    if (!document.getElementById(inputId)) {
+      this._force_editable_draw = true
+      this.drawGenericLabel()
+      this._force_editable_draw = false
+    }
+    this.setInputLabelVisible()
   }
 
   /**
@@ -1289,7 +1309,12 @@ export abstract class DrawLabelBase {
     box_pos_x: number,
     box_pos_y: number,
     box_width: number,
-    box_height: number = 30
+    box_height: number = 30,
+    // force_nowrap : éditeur étroit qui grandit avec le contenu (pas de wrap, pas
+    // de largeur fixe) — pour la valeur d'un flux (numérique, jamais multi-mots),
+    // dont la « boîte » de label (box_width, ~300px) donnerait une zone d'édition
+    // démesurément large.
+    force_nowrap: boolean = false
   ) {
     if (!this._element.drawing_area.editable) return
 
@@ -1300,8 +1325,8 @@ export abstract class DrawLabelBase {
     // Quand le label tient sur une ligne sans espace, la boîte d\'édition
     // déborde horizontalement (overflow visible) plutôt que de wrapper.
     const lbl = this._label_values as { box_width?: number, wrap_long_words?: boolean, font_size?: number } | undefined
-    const target_width = lbl?.box_width ?? box_width
-    const wrap_long = lbl?.wrap_long_words ?? false
+    const target_width = force_nowrap ? box_width : (lbl?.box_width ?? box_width)
+    const wrap_long = force_nowrap ? false : (lbl?.wrap_long_words ?? false)
     // Compensation zoom (issue #165) : le foreignObject vit dans le repère
     // local zoomé, donc la CSS font-size en px y est aussi multipliée par k.
     const comp = this._element.drawing_area?.font_compensation ?? 1
@@ -1351,6 +1376,11 @@ export abstract class DrawLabelBase {
     } else {
       div
         .style('white-space', 'nowrap')
+      // En mode étroit (valeur), garantir une largeur minimale cliquable même
+      // quand le flux n'a pas encore de valeur (input vide).
+      if (force_nowrap) {
+        div.style('min-width', `${target_width}px`)
+      }
     }
     (div.node() as HTMLDivElement).textContent = this.getInputInitialValue()
     div
@@ -1398,6 +1428,18 @@ export abstract class DrawLabelBase {
         // stopPropagation pour éviter le double-trigger via le <g> du nœud
         // (qui purge + ré-ajoute → flicker visuel).
         evt.stopPropagation()
+        // Détection MANUELLE du double-clic : le 1er clic (addElementToSelection)
+        // peut recréer le <text>, donc le second clic atterrit sur un autre nœud
+        // DOM et le `dblclick` natif ne se déclenche pas (systématique sur Mac).
+        // On mesure l'écart entre deux clics sur l'instance (qui survit au redraw).
+        const now = Date.now()
+        const is_double = (now - this._last_label_click_ts) <= 400
+        this._last_label_click_ts = is_double ? 0 : now
+        if (is_double) {
+          evt.preventDefault()
+          this.setInputLabelVisible()
+          return
+        }
         const el = this._element as Class_BaseShape
         const drawing_area = el.drawing_area
         // Sélectionne l'élément (via _selection) sinon Escape/purgeSelection
@@ -1412,8 +1454,12 @@ export abstract class DrawLabelBase {
         this.refreshLabelResizeHandles()
       })
       .on('dblclick', (evt: MouseEvent) => {
+        // Conservé pour les plateformes où le `dblclick` natif fonctionne ;
+        // la détection manuelle ci-dessus prend le relais sinon. setInputLabelVisible
+        // est idempotent, un éventuel double-déclenchement est sans effet.
         evt.stopPropagation()
         evt.preventDefault()
+        this._last_label_click_ts = 0
         this.setInputLabelVisible()
       })
   }
@@ -1465,10 +1511,10 @@ export abstract class DrawLabelBase {
       return this.drawImage()
     }
 
-    if (!this.shouldDrawLabel()) return
+    if (!this._force_editable_draw && !this.shouldDrawLabel()) return
 
     const labelText = String(this.getLabelText())
-    if (!labelText) return
+    if (!labelText && !this._force_editable_draw) return
 
     this.d3_selection = d3_selection.append('g')
       .attr('id', `g_${this.prefix}`)
@@ -2087,11 +2133,12 @@ export class NodeDrawNameLabel extends NodeDrawLabelBase {
 
   protected onInputChange(value: string): void {
     // En mode label personnalisé, l'édition inline écrit dans le champ de label
-    // indépendant (le nœud n'est PAS renommé) ; sinon elle renomme le nœud,
-    // comportement historique.
-    if (this.node.name_label_custom) {
+    // indépendant (le nœud n'est PAS renommé) ; en mode 'name' elle renomme le
+    // nœud (historique) ; pour les sources dérivées (tag/ancestor) le label ne
+    // s'édite pas directement → on ignore la saisie.
+    if (this.node.name_label_source === 'custom') {
       this.node.name_label_text = value
-    } else {
+    } else if (this.node.name_label_source === 'name') {
       this.node.name = value
     }
     // Sync texte → fo_content uniquement en mode rich text
@@ -2642,6 +2689,13 @@ export class LinkDrawNameLabel extends LinkDrawLabelBase {
       const t = this.link.target?.name_label_effective ?? ''
       return `${s} → ${t}`
     }
+    case 'tag': {
+      // Tag de flux assigné au lien dans le groupe choisi (premier si plusieurs).
+      const group_id = this.link.name_label_flux_tag_group_id
+      if (group_id === '') return this.link.text_value
+      const tag = this.link.flux_tags_list.find(t => t.group.id === group_id)
+      return tag ? tag.display_name : this.link.text_value
+    }
     case 'custom':
     default:
       return this.link.text_value
@@ -2740,7 +2794,10 @@ export class LinkDrawValueLabel extends LinkDrawLabelBase {
     // Issue #165 : eff_font_size = police compensée (constante à l'écran en mode
     // verrouillé) pour que le positionnement de la box suive les glyphes.
     const eff_font_size = this.getEffectiveFontSize()
-    const box_width = this._label_values.box_width || 120
+    // Éditeur de valeur étroit : une valeur est numérique et courte, la box_width
+    // du label (~300px) donnait une zone d'édition démesurée. On part d'une boîte
+    // compacte qui grandit avec le contenu (force_nowrap).
+    const box_width = 60 * (this._element.drawing_area?.font_compensation ?? 1)
 
     let box_pos_x = label_pos_x
     if (label_anchor === 'end') box_pos_x -= box_width
@@ -2748,7 +2805,7 @@ export class LinkDrawValueLabel extends LinkDrawLabelBase {
 
     const box_pos_y = label_pos_y - eff_font_size / 2
 
-    this.drawLabelInput(this.d3_selection, box_pos_x, box_pos_y, box_width)
+    this.drawLabelInput(this.d3_selection, box_pos_x, box_pos_y, box_width, 30, true)
     this.attachDoubleClickEdit(textElement)
     // Also handle double-click on the textPath child (when value label follows the flow curve)
     const textPath = textElement.select<SVGTextPathElement>('textPath')

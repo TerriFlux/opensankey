@@ -267,6 +267,8 @@ export const UnifiedElementSelection = ({
     new Set(enabledTypes || ['node'])
   )
   const [, setCount] = useState(0)
+  const [tag_filter_group_id, set_tag_filter_group_id] = useState('')
+  const [tag_filter_tag_id, set_tag_filter_tag_id] = useState('')
 
   // ✅ Icônes pour chaque type
   const typeIcons = {
@@ -326,10 +328,22 @@ export const UnifiedElementSelection = ({
   // LOGIQUE SINGLE-TYPE
   // ==================================================================================
 
+  // Tag filter helpers — only for node and link single-type configs
+  const tagGroups = (isSingleType && singleConfig && (singleConfig.type === 'node' || singleConfig.type === 'link'))
+    ? (singleConfig.type === 'node'
+      ? app_data.drawing_area.sankey.node_taggs_list
+      : app_data.drawing_area.sankey.flux_taggs_list)
+    : []
+  const activeTagGroup = tagGroups.find(g => g.id === tag_filter_group_id) ?? null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const activeTag: any = activeTagGroup?.tags_list.find(t => t.id === tag_filter_tag_id) ?? null
+
   const singleTypeElements = isSingleType && singleConfig
     ? (only_visible
       ? singleConfig.getVisibleElements(app_data)
       : singleConfig.getAllElements(app_data))
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .filter(el => !activeTag || (el as any).hasGivenTag(activeTag))
     : []
 
   const singleTypeSelectedElements = isSingleType && singleConfig
@@ -552,6 +566,42 @@ export const UnifiedElementSelection = ({
   // Dans le composant UnifiedElementSelection
   // ==================================================================================
 
+  const renderTagFilter = () => {
+    if (!isSingleType || !singleConfig) return null
+    if (singleConfig.type !== 'node' && singleConfig.type !== 'link') return null
+    if (tagGroups.length === 0) return null
+    return (
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Select
+          size='xs'
+          variant='menuconfigpanel_option_select'
+          value={tag_filter_group_id}
+          onChange={(e) => {
+            set_tag_filter_group_id(e.target.value)
+            set_tag_filter_tag_id('')
+          }}
+        >
+          <option value=''>—</option>
+          {tagGroups.map(g => (
+            <option key={g.id} value={g.id}>{g.name}</option>
+          ))}
+        </Select>
+        <Select
+          size='xs'
+          variant='menuconfigpanel_option_select'
+          value={tag_filter_tag_id}
+          isDisabled={!activeTagGroup}
+          onChange={(e) => set_tag_filter_tag_id(e.target.value)}
+        >
+          <option value=''>—</option>
+          {(activeTagGroup?.tags_list ?? []).map(tag => (
+            <option key={tag.id} value={tag.id}>{tag.display_name}</option>
+          ))}
+        </Select>
+      </Box>
+    )
+  }
+
   const renderDropdown = () => {
     const labelKey = isMultiType
       ? 'Menu.selection'
@@ -684,6 +734,7 @@ export const UnifiedElementSelection = ({
             </Button>
           </OSTooltip>
         </Box>
+        {renderTagFilter()}
       </Box>
     )
   }
@@ -742,6 +793,8 @@ export const UnifiedElementSelection = ({
           </Button>
         </OSTooltip>
       </Box>
+
+      {renderTagFilter()}
 
       {/* Ligne Name Input (single-type seulement) */}
       {isSingleType && singleConfig?.hasNameInput && (

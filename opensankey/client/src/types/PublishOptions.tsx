@@ -10,6 +10,10 @@
 // (ViewerOpenSankeyApp / ViewerSankeyApplication) : voir applyViewerOptions().
 // ==================================================================================================
 
+// Modes de navigation / positionnement (cf. DrawingArea.setAbsoluteMode / setProportionalMode /
+// setScaleAdaptedMode et styles_dict['default'].shape_position_type).
+export type Type_PositionMode = 'absolute' | 'proportional' | 'scale_adapted'
+
 export interface SankeyGlobals {
   // Mode
   publish?: boolean      // true => is_static
@@ -20,10 +24,14 @@ export interface SankeyGlobals {
   footer?: boolean       // default false
   toolbar?: boolean      // default false : groupe des modes de position (absolu/proportionnel/échelle) dans la barre du bas
   fit_toolbar?: boolean  // default false : groupe ajustement/verrous/plein écran dans la barre du bas
+  fullscreen?: boolean   // default true : bouton plein écran isolé en publish, même quand `fit_toolbar` est masqué
   filter_bar?: boolean   // default true : barre de filtres à gauche (drawer)
   embedded?: boolean     // default false (height = innerHeight) ; true => 100%
   recenter?: boolean     // default true : auto-recenter à l'ouverture en publish
   edit_button?: boolean  // default true : bouton "Éditer" (renvoi vers open-sankey.fr) dans la topbar en publish
+  unitary?: boolean      // default false : onglet « Unit. » (sankey unitaire OS+) dans la topbar en publish
+  doc?: boolean          // default false : bouton « Doc » (panneau documentation) dans la topbar en publish, visible seulement si une doc existe
+  navigation_help?: boolean  // default false : bouton « Aide à la navigation » dans la topbar en publish
 
   // Branding
   logo?: string
@@ -41,6 +49,15 @@ export interface SankeyGlobals {
   data_type?: boolean             // default true
   data_type_intervals?: boolean   // default true
   value_filter?: boolean          // default true
+  view_filter?: boolean           // default true : section "génération de vues" (view_taggs) dans le drawer
+  level_filter?: boolean          // default true : section "niveaux/hiérarchies" (level_taggs) dans le drawer
+  node_filter?: boolean           // default true : section "tags d'éléments" (node/flux_taggs) dans le drawer
+  data_filter?: boolean           // default true : section "sélection de données" (data_taggs) dans le drawer
+
+  // État initial
+  position_mode?: Type_PositionMode  // mode de navigation imposé à l'ouverture (absolu/proportionnel/échelle adaptée)
+  data_tag_selection?: Record<string, string>  // { groupe (id ou nom) : tag (id ou nom) } préselectionné à l'ouverture
+  view_tag_selection?: Record<string, string>  // { groupe (id ou nom) : tag (id ou nom) } : active le filtre vue du groupe sur ce tag à l'ouverture
 
   // Indexer pour configs per-diagramme (diagrams_list etc.)
   [key: string]: unknown
@@ -53,13 +70,24 @@ export interface PublishOptions {
   footer: boolean
   toolbar: boolean
   fit_toolbar: boolean
+  fullscreen: boolean
   filter_bar: boolean
   embedded: boolean
   recenter: boolean
   edit_button: boolean
+  unitary: boolean
+  doc: boolean
+  navigation_help: boolean
   data_type: boolean
   data_type_intervals: boolean
   value_filter: boolean
+  view_filter: boolean
+  level_filter: boolean
+  node_filter: boolean
+  data_filter: boolean
+  position_mode: Type_PositionMode | null
+  data_tag_selection: Record<string, string> | null
+  view_tag_selection: Record<string, string> | null
   logo: string | null
   header: string | null
   diagram: string | Record<string, unknown> | null
@@ -76,6 +104,17 @@ declare global {
 
 const bool = (v: unknown, def: boolean): boolean => (typeof v === 'boolean' ? v : def)
 const str = (v: unknown): string | null => (typeof v === 'string' ? v : null)
+const POSITION_MODES: Type_PositionMode[] = ['absolute', 'proportional', 'scale_adapted']
+const posMode = (v: unknown): Type_PositionMode | null =>
+  (typeof v === 'string' && (POSITION_MODES as string[]).includes(v)) ? v as Type_PositionMode : null
+const strRecord = (v: unknown): Record<string, string> | null => {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return null
+  const out: Record<string, string> = {}
+  for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
+    if (typeof val === 'string') out[k] = val
+  }
+  return Object.keys(out).length > 0 ? out : null
+}
 
 let _warned_sous_filieres = false
 
@@ -100,13 +139,24 @@ export const getPublishOptions = (): PublishOptions => {
     footer: bool(s.footer, false),
     toolbar: bool(s.toolbar, false),
     fit_toolbar: bool(s.fit_toolbar, false),
+    fullscreen: bool(s.fullscreen, true),
     filter_bar: bool(s.filter_bar, true),
     embedded: bool(s.embedded, false),
     recenter: bool(s.recenter, true),
     edit_button: bool(s.edit_button, true),
+    unitary: bool(s.unitary, false),
+    doc: bool(s.doc, false),
+    navigation_help: bool(s.navigation_help, false),
     data_type: bool(s.data_type, true),
     data_type_intervals: bool(s.data_type_intervals, true),
     value_filter: bool(s.value_filter, true),
+    view_filter: bool(s.view_filter, true),
+    level_filter: bool(s.level_filter, true),
+    node_filter: bool(s.node_filter, true),
+    data_filter: bool(s.data_filter, true),
+    position_mode: posMode(s.position_mode),
+    data_tag_selection: strRecord(s.data_tag_selection),
+    view_tag_selection: strRecord(s.view_tag_selection),
     logo: str(s.logo),
     header: str(s.header),
     diagram: (typeof s.diagram === 'string')
@@ -134,10 +184,14 @@ export type ViewerSankeyOptions = {
   footer?: boolean
   toolbar?: boolean
   fit_toolbar?: boolean
+  fullscreen?: boolean
   filter_bar?: boolean
   embedded?: boolean
   recenter?: boolean
   edit_button?: boolean
+  unitary?: boolean
+  doc?: boolean
+  navigation_help?: boolean
   logo?: string
   header?: string
   diagram?: string | Record<string, unknown>
@@ -149,6 +203,13 @@ export type ViewerSankeyOptions = {
   data_type?: boolean
   data_type_intervals?: boolean
   value_filter?: boolean
+  view_filter?: boolean
+  level_filter?: boolean
+  node_filter?: boolean
+  data_filter?: boolean
+  position_mode?: Type_PositionMode
+  data_tag_selection?: Record<string, string>
+  view_tag_selection?: Record<string, string>
   // Configs per-diagramme (clé = nom dans diagrams_list)
   diagrams_config?: Record<string, Record<string, unknown>>
 }
@@ -163,11 +224,13 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
   const next: SankeyGlobals = { ...current, publish: true }
 
   const keys: Array<keyof ViewerSankeyOptions> = [
-    'editable', 'topbar', 'footer', 'toolbar', 'fit_toolbar', 'filter_bar', 'embedded', 'recenter',
-    'edit_button',
+    'editable', 'topbar', 'footer', 'toolbar', 'fit_toolbar', 'fullscreen', 'filter_bar', 'embedded', 'recenter',
+    'edit_button', 'unitary', 'doc', 'navigation_help',
     'logo', 'header', 'diagram', 'diagram_layout', 'diagram_layout_options',
     'diagrams_list', 'sous_filieres',
     'data_type', 'data_type_intervals', 'value_filter',
+    'view_filter', 'level_filter', 'node_filter', 'data_filter',
+    'position_mode', 'data_tag_selection', 'view_tag_selection',
   ]
   for (const k of keys) {
     if (options[k] !== undefined) {

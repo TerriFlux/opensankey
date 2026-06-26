@@ -37,6 +37,10 @@ import { NodeEventsHandler } from './NodeEventsHandler'
 export const default_selected_stroke_width = 3
 //export const label_margin = 0
 
+// Sources possibles pour le contenu du label de nom d'un nœud / d'une zone de
+// texte. Voir l'attribut de style name_label_source (NAME_LABEL_CONFIG).
+export type Type_NameLabelSource = 'name' | 'custom' | 'tag' | 'ancestor'
+
 export function sortNodesElements(
   a: Class_NodeBase | Class_ElementStyle,
   b: Class_NodeBase | Class_ElementStyle
@@ -60,13 +64,13 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   private _position_v: number
 
   protected _name: string
-  // Label de nom indépendant du nom du nœud (même principe que text_value du
-  // flux). Quand _name_label_custom est true, le name_label affiche
-  // _name_label_text au lieu du nom, et l'édition (inline + rich text) écrit
-  // dans _name_label_text SANS renommer le nœud. Défaut false → comportement
-  // historique (le label EST le nom).
-  protected _name_label_custom: boolean = false
-  protected _name_label_text: string = ''
+  // Le contenu du label de nom (source, texte libre, groupe de tags, dimension)
+  // est désormais porté par le système d'attributs/styles (_storage) :
+  // name_label_source / name_label_text / name_label_tag_group_id /
+  // name_label_dimension_id, définis dans NAME_LABEL_CONFIG. Voir
+  // Type_NameLabelSource pour la sémantique des valeurs de source. Ils sont ainsi
+  // propagés par le pinceau et « appliquer le style aux enfants », et éditables
+  // dans le menu de configuration des styles.
   protected _nodeDrawShape: NodeDrawShape
   protected _nodeDrawNameLabel: NodeDrawNameLabel
   protected _nodeDrawIcon: NodeDrawNameLabel
@@ -188,8 +192,8 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   protected _copyFrom(_: Class_NodeBase): void {
     super._copyFrom(_)
     this._name = _.name
-    this._name_label_custom = _._name_label_custom
-    this._name_label_text = _._name_label_text
+    // name_label_source/text/tag_group_id/dimension_id sont des attributs _storage,
+    // déjà copiés par copyAttrFrom (appelé dans Element._copyFrom via super).
     this._position_u = _._position_u
     this._position_v = _._position_v
 
@@ -565,16 +569,33 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     return this._name
   }
 
-  // Label de nom indépendant (cf. _name_label_custom / _name_label_text).
-  public get name_label_custom() { return this._name_label_custom }
-  public set name_label_custom(_: boolean) { this._name_label_custom = _; this.drawNameLabel() }
-  public get name_label_text() { return this._name_label_text }
-  public set name_label_text(_: string) { this._name_label_text = _; this.drawNameLabel() }
-  // Texte effectivement affiché par le name_label : le texte custom indépendant
-  // quand il est activé, sinon le nom (avec le découpage par séparateur). Sert de
-  // source unique au rendu (getLabelText) et à l'init du rich text.
+  // Compat historique : name_label_custom <=> source 'custom'. Conserve le
+  // comportement des appelants existants (édition inline/rich text, titre…).
+  // name_label_source est un attribut _storage (NAME_LABEL_CONFIG) ; l'affecter
+  // déclenche l'action drawNameLabel.
+  public get name_label_custom() { return this.name_label_source === 'custom' }
+  public set name_label_custom(_: boolean) { this.name_label_source = _ ? 'custom' : 'name' }
+
+  // Texte effectivement affiché par le name_label, selon la source choisie. Sert
+  // de source unique au rendu (getLabelText) et à l'init du rich text.
   public get name_label_effective(): string {
-    return this._name_label_custom ? this._name_label_text : this.name_label
+    switch (this.name_label_source) {
+    case 'custom': return this.name_label_text
+    case 'tag': return this.resolveTagLabel()
+    case 'ancestor': return this.resolveAncestorLabel()
+    default: return this.name_label
+    }
+  }
+
+  // Sources 'tag' et 'ancestor' : surchargées par Class_NodeElement (qui porte
+  // les tags et les dimensions). Par défaut (zone de texte / base) → nom de
+  // l'élément, car un container n'a ni tags assignés ni dimensions.
+  protected resolveTagLabel(): string {
+    return this.name_label
+  }
+
+  protected resolveAncestorLabel(): string {
+    return this.name_label
   }
 
   public get attached_container(): Class_NodeBase[] { return this._attached_container }
@@ -633,6 +654,20 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     if (new_left === cur_left && new_top === cur_top) return
     this.position_x = new_left - this.shape_margin_left
     this.position_y = new_top - this.shape_margin_top
+  }
+
+  // Full re-fit of the top-left onto the attached-node envelope (grows AND
+  // shrinks, unlike expandToContainAttachedNodes which only grows). The size
+  // stays dynamic (_envelopeSize) — we only move the corner. Called after an
+  // operation that moves the nodes without going through a drag (view switch /
+  // layout apply via updateFrom), where the frame would otherwise keep its old
+  // position and sit offset from its nodes until the user nudges it manually.
+  public reanchorTiedFrame() {
+    if (!this._tied_to_nodes || this._attached_node.length === 0) return
+    const bbox = this._computeEnvelopeBBox(this._attached_node)
+    if (!bbox) return
+    this.position_x = bbox.min_x - this.shape_margin_left
+    this.position_y = bbox.min_y - this.shape_margin_top
   }
 
   public setDragStartPositions(positions: { [x: string]: [number, number] }) { this._drag_start_pos = positions }

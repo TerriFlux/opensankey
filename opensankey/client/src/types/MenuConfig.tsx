@@ -174,6 +174,12 @@ export class Class_MenuConfig {
   // Réglage de session (non persisté).
   protected _spreadsheet_placement_mode: 'auto' | 'none' | 'increment' = 'auto'
 
+  // Affichage des matrices de flux (onglets TES/TER) du tableur :
+  //  - 'cross' : 'x' dès qu'un flux origine→destination existe (vue structurelle pure)
+  //  - 'value' : valeur du flux pour le data_type sélectionné (sinon 'x' si le flux existe)
+  // Réglage de session (non persisté).
+  protected _spreadsheet_matrix_mode: 'cross' | 'value' = 'cross'
+
   /**
    * Dict containing theme of menu according to _type_menu_configuration_selected & elements configurable
    *
@@ -205,6 +211,9 @@ export class Class_MenuConfig {
   protected _main_zone_show_spreadsheet: boolean = false
   // Onglet « Doc » : panneau de documentation markdown, partage le slot droit comme le tableur.
   protected _main_zone_show_doc: boolean = false
+  // Doc détachée dans une fenêtre OS séparée : état TRANSITOIRE (non sérialisé), piloté par
+  // MainZoneTabs. Quand vrai, la doc ne réserve plus d'espace in-app (le diagramme récupère la place).
+  public main_zone_doc_detached: boolean = false
   // Position de la doc dans la grande zone (cf. Type_MainZoneDocLayout).
   protected _main_zone_doc_layout: Type_MainZoneDocLayout = 'sheet-right'
   // Hauteur (px) de la doc dans les modes bas (diagram-bottom / window-bottom), réglée par la poignée.
@@ -214,6 +223,18 @@ export class Class_MenuConfig {
   // occupe le reste. Réglée par le séparateur tableur/doc. Vaut pour l'axe horizontal (sheet-left/
   // right) comme vertical (sheet-top/bottom).
   protected _main_zone_doc_sheet_ratio: number = 0.5
+  // Panneau « Sankey unitaire » (feature OS+) : partage la colonne de droite avec le tableur/doc, en
+  // s'empilant DESSOUS (séparateur horizontal). Booléen d'affichage + part VERTICALE de la colonne
+  // droite donnée au groupe tableur/doc (l'unitaire occupe le reste). Le CONTENU du panneau est rendu
+  // par OS+ (porté vers document.body, hors #sankey_app, cf. ModalUnitarySankeyOSP) et positionné sur
+  // le bloc réservé ici via mainZoneUnitaryRect ; OS de base ne fait que réserver/empiler l'espace.
+  protected _main_zone_show_unitary: boolean = false
+  protected _main_zone_unitary_ratio: number = 0.6
+  // Panneau unitaire DÉTACHÉ en dialogue flottant (draggable) au lieu d'être docké dans la colonne
+  // droite. État TRANSITOIRE (non sérialisé), piloté par le bouton détacher/rattacher du panneau.
+  // Quand vrai, l'unitaire ne réserve plus d'espace in-app (le diagramme/tableur récupèrent la place)
+  // et mainZoneUnitaryRect renvoie null ; OS+ le rend alors en Draggable.
+  protected _main_zone_unitary_detached: boolean = false
   protected _main_zone_listeners: Array<() => void> = []
   protected _notifyMainZone() { this._main_zone_listeners.forEach((l) => l()) }
   public get main_zone_show_diagram() { return this._main_zone_show_diagram }
@@ -230,10 +251,27 @@ export class Class_MenuConfig {
   public set main_zone_split_ratio(v: number) { this._main_zone_split_ratio = v; this._notifyMainZone() }
   public get main_zone_doc_sheet_ratio() { return this._main_zone_doc_sheet_ratio }
   public set main_zone_doc_sheet_ratio(v: number) { this._main_zone_doc_sheet_ratio = v; this._notifyMainZone() }
+  public get main_zone_show_unitary() { return this._main_zone_show_unitary }
+  public set main_zone_show_unitary(v: boolean) { this._main_zone_show_unitary = v; this._notifyMainZone() }
+  public get main_zone_unitary_ratio() { return this._main_zone_unitary_ratio }
+  public set main_zone_unitary_ratio(v: number) { this._main_zone_unitary_ratio = v; this._notifyMainZone() }
+  public get main_zone_unitary_detached() { return this._main_zone_unitary_detached }
+  public set main_zone_unitary_detached(v: boolean) { this._main_zone_unitary_detached = v; this._notifyMainZone() }
   public addMainZoneListener(l: () => void): () => void {
     this._main_zone_listeners.push(l)
     return () => { this._main_zone_listeners = this._main_zone_listeners.filter((x) => x !== l) }
   }
+  /** Notifie les abonnés de la grande zone (barre du haut + MainZoneTabs). Exposé pour
+   *  que des features injectées (ex. l'onglet « Unit. » OS+) puissent re-rendre le bouton. */
+  public notifyMainZone() { this._notifyMainZone() }
+
+  // Panneau « Unit. » (sankey unitaire, feature OS+) affiché à côté de Diagramme/Tableur/Doc.
+  // `unitary_tab_available` est renseigné par OS+ (ModalUnitarySankeyOSP) ; reste neutre en OS pur.
+  // Le bouton de la topbar n'apparaît que si disponible et son état ouvert/surligné suit désormais
+  // `main_zone_show_unitary` (le panneau est un membre de la grande zone, persisté). `toggleUnitaryTab`
+  // reste exposé pour les points d'entrée OS+ (clic droit / onglet tooltip de nœud).
+  public unitary_tab_available: boolean = false
+  public toggleUnitaryTab: () => void = () => { /* injecté par OS+ */ }
   /**
    * Largeur (px) réservée à droite par le tableur/doc en mode split (0 sinon). Source unique de
    * vérité : calculée à partir de l'état (booléens + ratio) et de window.innerWidth, donc valable
@@ -244,9 +282,12 @@ export class Class_MenuConfig {
     // La colonne de droite n'existe que si le tableur est affiché, OU si la doc est en mode « accolée
     // au tableur » (sheet-*). En mode bas (diagram-bottom / window-bottom) la doc ne réserve pas de
     // largeur à droite.
-    const docInRightColumn = this._main_zone_show_doc &&
+    const docInRightColumn = this._main_zone_show_doc && !this.main_zone_doc_detached &&
       DOC_LAYOUTS_WITH_SHEET.includes(this._main_zone_doc_layout)
-    const rightColumnShown = this._main_zone_show_spreadsheet || docInRightColumn
+    // Le panneau unitaire (OS+) s'empile dans la colonne droite : il la fait exister à lui seul,
+    // SAUF s'il est détaché en dialogue flottant (il ne réserve alors plus d'espace).
+    const unitaryDocked = this._main_zone_show_unitary && !this._main_zone_unitary_detached
+    const rightColumnShown = this._main_zone_show_spreadsheet || docInRightColumn || unitaryDocked
     if (!(this._main_zone_show_diagram && rightColumnShown)) return 0
     const MIN_SPREADSHEET_PX = 320
     const MIN_DIAGRAM_PX = 160
@@ -263,7 +304,7 @@ export class Class_MenuConfig {
    * drawing area, donc le diagramme se recadre dans la hauteur restante. 0 dans les autres cas.
    */
   public getMainZoneBottomReservedPx(): number {
-    if (!(this._main_zone_show_diagram && this._main_zone_show_doc)) return 0
+    if (!(this._main_zone_show_diagram && this._main_zone_show_doc && !this.main_zone_doc_detached)) return 0
     if (!DOC_LAYOUTS_BOTTOM.includes(this._main_zone_doc_layout)) return 0
     const MIN_DOC_PX = 120
     const MIN_DIAGRAM_PX = 120
@@ -286,7 +327,9 @@ export class Class_MenuConfig {
       doc_layout: this._main_zone_doc_layout,
       doc_bottom_px: this._main_zone_doc_bottom_px,
       split_ratio: this._main_zone_split_ratio,
-      doc_sheet_ratio: this._main_zone_doc_sheet_ratio
+      doc_sheet_ratio: this._main_zone_doc_sheet_ratio,
+      show_unitary: this._main_zone_show_unitary,
+      unitary_ratio: this._main_zone_unitary_ratio
     }
   }
 
@@ -303,6 +346,8 @@ export class Class_MenuConfig {
     this._main_zone_doc_bottom_px = getNumberFromJSON(json, 'doc_bottom_px', this._main_zone_doc_bottom_px)
     this._main_zone_split_ratio = getNumberFromJSON(json, 'split_ratio', this._main_zone_split_ratio)
     this._main_zone_doc_sheet_ratio = getNumberFromJSON(json, 'doc_sheet_ratio', this._main_zone_doc_sheet_ratio)
+    this._main_zone_show_unitary = getBooleanFromJSON(json, 'show_unitary', this._main_zone_show_unitary)
+    this._main_zone_unitary_ratio = getNumberFromJSON(json, 'unitary_ratio', this._main_zone_unitary_ratio)
     this._notifyMainZone()
   }
 
@@ -385,6 +430,12 @@ export class Class_MenuConfig {
   private _ref_to_toolbar_updater: MutableRefObject<() => void>
   private _ref_to_save_in_cache_indicator: MutableRefObject<(b: boolean) => void>
   private _ref_to_save_in_cache_indicator_value: MutableRefObject<boolean>
+  // Session toggle "ne jamais enregistrer la vue" : when true, switching away
+  // from an edited view discards changes silently (no "Vue non enregistrée"
+  // modal). Reset by clicking the cache cloud icon. Lives here (OS base) so the
+  // OS-base cloud button and the OSP view machinery share one flag.
+  private _ref_to_never_save_view_session: MutableRefObject<(b: boolean) => void>
+  private _ref_to_never_save_view_session_value: MutableRefObject<boolean>
 
   private _ref_to_save_diagram_updater: MutableRefObject<() => void>
   private _ref_to_load_diagram_updater: MutableRefObject<() => void>
@@ -529,6 +580,8 @@ export class Class_MenuConfig {
     // Toolbar+
     this._ref_to_save_in_cache_indicator = useRef((_: boolean) => null)
     this._ref_to_save_in_cache_indicator_value = useRef(true)
+    this._ref_to_never_save_view_session = useRef((_: boolean) => null)
+    this._ref_to_never_save_view_session_value = useRef(false)
     this._ref_to_toolbar_updater = useRef(() => null)
     this._ref_to_toolbar_link_visual_filter_updater = useRef(() => null)
     this._ref_to_toolbar_node_tag_updater = useRef(() => null)
@@ -855,7 +908,7 @@ export class Class_MenuConfig {
       'updateComponentRelatedToLinksData',
       (_this: Class_MenuConfig) => {
         _this._ref_to_menu_config_links_data_updater.current()
-        _this._ref_to_spreadsheet.current()
+        _this.updateSpreadsheet()
         _this._ref_to_menu_contextual_config_links_data_updater.current()
       }
     )
@@ -922,6 +975,20 @@ export class Class_MenuConfig {
   }
 
   /**
+   * Reconstruit le classeur du Tableur (si l'onglet est ouvert) en DEBOUNCE. Le rebuild
+   * (buildAndApply) dispose+recrée l'unit Univer entier : c'est lourd, et il était appelé
+   * directement à chaque update de nœuds/flux -> grosse latence dans la zone de dessin tableur
+   * ouvert. Un id de process partagé collapse les rafales d'updates en un seul rebuild.
+   * @memberof Class_MenuConfig
+   */
+  public updateSpreadsheet() {
+    this._add_waiting_process(
+      'ref_to_spreadsheet',
+      (_this: Class_MenuConfig) => { _this._ref_to_spreadsheet.current() }
+    )
+  }
+
+  /**
    * Re-render all menus for node config
    * - SankeyNodeEdition
    * - OpenSankeyConfigurationNodesAttributes
@@ -930,7 +997,7 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public updateAllComponentsRelatedToNodes() {
-    this.ref_to_spreadsheet.current()
+    this.updateSpreadsheet()
     this.updateComponentRelatedToNodesSelection()
     this.updateAllComponentsRelatedToNodesConfig()
     this.updateComponentRelatedToStyles()
@@ -959,7 +1026,7 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public updateAllComponentsRelatedToLinks() {
-    this.ref_to_spreadsheet.current()
+    this.updateSpreadsheet()
     this._ref_to_menu_context_links_updater.current()
     this.updateComponentRelatedToLinksSelection()
     this.updateAllComponentsRelatedToLinksConfig()
@@ -1381,6 +1448,14 @@ export class Class_MenuConfig {
     return this._ref_to_save_in_cache_indicator_value
   }
 
+  public get ref_to_never_save_view_session(): MutableRefObject<(b: boolean) => void> {
+    return this._ref_to_never_save_view_session
+  }
+
+  public get ref_to_never_save_view_session_value(): MutableRefObject<boolean> {
+    return this._ref_to_never_save_view_session_value
+  }
+
   public get ref_to_toolbar_updater(): MutableRefObject<() => void> {
     return this._ref_to_toolbar_updater
   }
@@ -1469,6 +1544,9 @@ export class Class_MenuConfig {
 
   public get spreadsheet_placement_mode() { return this._spreadsheet_placement_mode }
   public set spreadsheet_placement_mode(_: 'auto' | 'none' | 'increment') { this._spreadsheet_placement_mode = _ }
+
+  public get spreadsheet_matrix_mode() { return this._spreadsheet_matrix_mode }
+  public set spreadsheet_matrix_mode(_: 'cross' | 'value') { this._spreadsheet_matrix_mode = _ }
 
   public get type_menu_configuration_selected() { return this._type_menu_configuration_selected }
   public set type_menu_configuration_selected(value) { this._type_menu_configuration_selected = value }

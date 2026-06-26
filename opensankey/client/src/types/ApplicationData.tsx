@@ -36,7 +36,7 @@ import { StepType } from '@reactour/tour'
 import { useToast, CreateToastFnReturn } from '@chakra-ui/react'
 
 import { Class_MenuConfig, keyTypeConfig, keyTypeElements } from '../types/MenuConfig'
-import { default_file_name, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, randomId, toast_bypass, Type_JSON } from './Utils'
+import { const_default_position_x, const_default_position_y, default_file_name, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, randomId, toast_bypass, Type_JSON } from './Utils'
 import { getPublishOptions, PublishOptions } from './PublishOptions'
 import { Class_ApplicationHistory } from './ApplicationHistory'
 import { Class_IconLibrary } from '../css/IconLibrairie'
@@ -44,7 +44,9 @@ import { Class_DrawingArea } from './DrawingArea'
 import { initializeTooltipSystem } from '../Elements/TooltipsConfig'
 import { compressJSONToGzip, decompressUploadedFileUniversal } from '../Persistence/UniversalJSONCompression'
 import { updateFrom } from '../Algorithms/UpdateFrom'
+import { centerChildrenOnParent } from '../Algorithms/Hierarchies'
 import { DrawingAreaPersistence } from '../Persistence/SankeyPersistence'
+import type { Class_NodeElement } from '../Elements/Node'
 
 // SPECIFIC TYPES **********************************************************************/
 
@@ -319,7 +321,7 @@ export class Class_ApplicationData {
   }
 
   // App
-  public version: string = '1.1.5'
+  public version: string = '1.1.7'
   public fit_screen: boolean
   public static_path: string = 'static/opensankey'
   public options: { [_: string]: boolean | string } = {}
@@ -331,6 +333,16 @@ export class Class_ApplicationData {
    * json is the raw source file JSON (null for view sources).
    * mode overrides data_var_to_update when provided (e.g. when called from App.tsx with all attrs). */
   public post_apply_layout_callback?: (tmp_DA: Class_DrawingArea, json: Type_JSON | null, mode?: string[]) => void = undefined
+
+  /** Hook injecté par OS+ (cf. ModalUnitarySankeyOSP) : dessine le sankey unitaire
+   * focalisé sur `node` dans le conteneur DOM `container_selector`, EN PLUS du
+   * diagramme principal. Retourne un handle pour le redessiner (resize) et le
+   * nettoyer. Alimente l'onglet « Sankey unitaire » du tooltip de nœud
+   * (NodeTooltip). Absent hors OS+. */
+  public draw_unitary_in_container?: (
+    node: Class_NodeElement,
+    container_selector: string
+  ) => { redraw: () => void, cleanup: () => void } | void = undefined
 
   protected _waiting_processes: { [id: string]: NodeJS.Timeout } = {}
   protected _waiting_time_for_processes: number = 50 // ms
@@ -345,6 +357,11 @@ export class Class_ApplicationData {
   // Pièces jointes images de la doc : map id -> data-URI base64. Référencées dans le markdown par
   // `img://<id>` (garde l'éditeur lisible) ; persistées en JSON avec le diagramme (autonome).
   protected _documentation_images: { [id: string]: string } = {}
+  // Derniers paramètres du dialogue « Publier le site (zip) » choisis pour ce diagramme (flags
+  // d'affichage du viewer, mode de position, en-tête, nom de publication, logo en data-URI).
+  // Persistés en JSON pour qu'une re-publication / mise à jour reparte exactement des mêmes réglages.
+  // /!\ Distinct de `publish_options` (config viewer runtime read-only issue de window.sankey).
+  protected _publish_settings: Type_JSON = {}
 
 
   /**
@@ -516,6 +533,15 @@ export class Class_ApplicationData {
    */
   public layout_optimize_crossing: boolean = true
 
+  /**
+   * Mode « afficher aussi les flux porteurs de données » : quand actif, EN PLUS de
+   * la vue courante, on révèle les flux portant une valeur collectée saisie
+   * (`Class_LinkElement.has_collected_data`) et leurs nœuds, tous niveaux
+   * d'agrégation confondus (bypass des portes niveau/dimension). Union avec la vue
+   * normale, pas un filtre. Vue d'exploration de session (non persistée).
+   */
+  public reveal_data_links: boolean = false
+
 
 
   // CONSTRUCTOR ========================================================================
@@ -577,6 +603,8 @@ export class Class_ApplicationData {
     // La doc markdown est attachée au diagramme : un nouveau diagramme repart d'une doc vide.
     this._documentation_markdown = ''
     this._documentation_images = {}
+    // Les paramètres de publication sont attachés au diagramme : nouveau diagramme => réglages vierges.
+    this._publish_settings = {}
     // Undraw and create new DA
     this._drawing_area.unDraw()
     this._drawing_area = this.createNewDrawingArea()
@@ -764,6 +792,7 @@ export class Class_ApplicationData {
     if (this._file_name != default_file_name) json_object['name_file'] = this._file_name
     if (this._documentation_markdown !== '') json_object['documentation_markdown'] = this._documentation_markdown
     if (Object.keys(this._documentation_images).length > 0) json_object['documentation_images'] = this._documentation_images
+    if (Object.keys(this._publish_settings).length > 0) json_object['publish_settings'] = this._publish_settings
     json_object['main_zone'] = this.menu_configuration.mainZoneStateToJSON()
     return {
       ...json_object,
@@ -796,12 +825,27 @@ export class Class_ApplicationData {
     this._fromJSON(json_object, kwargs)
     // Post processing & menu updating
     this._afterFromJSON()
+    // Le « filtre vue » fait partie de l'état persistant du diagramme : s'il était actif
+    // à l'enregistrement (œil ON / view_mode), il est RESTAURÉ tel quel à l'ouverture pour
+    // que le sous-ensemble curé de la vue s'affiche sans réintervention manuelle.
+    // view_mode (et activated) sont déjà désérialisés par Class_ViewTagGroup ; on se contente
+    // d'INVALIDER les caches (node_tags_fingerprint + visibilité) quand le filtre est actif
+    // pour qu'ils soient recalculés AVEC le filtre — sinon la visibilité reste figée sur un
+    // cache périmé et des nœuds de la vue resteraient masqués au chargement.
+    if (this._drawing_area.sankey.view_mode_active) {
+      this._drawing_area.sankey.nodeTagsUpdated()
+      this._drawing_area.sankey.nodes_list.forEach(n => n.updateVisibilityFingerprint())
+    }
     // Then draw if asked
     if (draw) {
       this._drawing_area.sankey.sortNodes()
       // If the JSON has no geometric info, auto-layout the diagram
       if (!('height' in json_object) && !('width' in json_object) && !('user_scale' in json_object)) {
         this._drawing_area.nodePositioning.computeAutoSankey(true, true)
+        // Puis centrer chaque enfant sur son ancêtre niveau 1 (version légère : pose juste
+        // les centres, pas de désagrégation/ré-agrégation récursive — bien plus rapide au
+        // chargement) pour que le filtre vue révèle des nœuds déjà placés.
+        centerChildrenOnParent(this)
       }
       this._drawing_area.draw()
       this._drawing_area.recenter()
@@ -825,8 +869,14 @@ export class Class_ApplicationData {
     this._documentation_markdown = getStringFromJSON(json_object, 'documentation_markdown', '')
     const imgs = json_object['documentation_images']
     this._documentation_images = (imgs && typeof imgs === 'object') ? imgs as { [id: string]: string } : {}
+    const pub_opts = json_object['publish_settings']
+    this._publish_settings = (pub_opts && typeof pub_opts === 'object' && !Array.isArray(pub_opts))
+      ? pub_opts as Type_JSON : {}
     const mz = json_object['main_zone']
-    if (mz && typeof mz === 'object') this.menu_configuration.mainZoneStateFromJSON(mz as Type_JSON)
+    // Garde défensive : menu_configuration est créé via un hook React (useToast) ; si _fromJSON
+    // s'exécute avant son initialisation, l'appel jetait et avortait tout le chargement (et donc
+    // l'application du filtre de vue). Le `?.` saute proprement ce cas (cf. ligne ~608).
+    if (mz && typeof mz === 'object') this.menu_configuration?.mainZoneStateFromJSON(mz as Type_JSON)
   }
 
 
@@ -895,7 +945,9 @@ export class Class_ApplicationData {
     if (this._language !== undefined && i18next.language !== this.language)
       i18next.changeLanguage(this.language)
 
-    this.menu_configuration.updateAllMenuComponents()
+    // ?. : _afterFromJSON peut s'exécuter avant que menu_configuration soit prêt
+    // (course à l'auto-chargement au montage en mode publish) — cf. l. 610. (#196)
+    this.menu_configuration?.updateAllMenuComponents()
   }
 
   /**
@@ -906,8 +958,8 @@ export class Class_ApplicationData {
    * @param {Type_JSON} json_object
    * @memberof Class_ApplicationData
    */
-  public updateFromJSON(json_object: Type_JSON) {
-    this._updateFromJSON(json_object)
+  public updateFromJSON(json_object: Type_JSON, kwargs?: Type_JSON) {
+    this._updateFromJSON(json_object, kwargs)
     this._menu_configuration!.updateAllMenuComponents()
   }
 
@@ -926,7 +978,7 @@ export class Class_ApplicationData {
    * @param {Type_JSON} json_object
    * @memberof Class_ApplicationData
    */
-  protected _updateFromJSON(json_object: Type_JSON, _?: Type_JSON) {
+  protected _updateFromJSON(json_object: Type_JSON, kwargs?: Type_JSON) {
     //if (json_object['layout'] !== undefined) {
     const json_layout = json_object as Type_JSON
     const drawing_area_from_layout = this.createNewDrawingArea()
@@ -934,10 +986,16 @@ export class Class_ApplicationData {
     DrawingAreaPersistence.fromJSON(drawing_area_from_layout, json_layout)
     drawing_area_from_layout.sankey.nodes_list.forEach(n => n.setVisible())
     this.file_name = getStringFromJSON(json_layout, 'name_file', this.file_name)
+    // `exclude_scale` : au chargement d'un Excel (réconciliation « garder le layout »),
+    // l'échelle a déjà été calculée par computeScale() sur les nouvelles données ; ne pas
+    // la réécraser avec l'échelle stockée dans le layout. Le chargement d'un fichier de
+    // mise en page séparé (window.sankey.diagram_layout), lui, veut bien appliquer l'échelle.
+    const mode = ['attrDrawingArea', 'scale', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'addFreeLabel', 'removeFreeLabel', 'attrFreeLabel', 'posFreeLabel', 'Views', 'tagLevel', 'addTagLevel', 'removeTagLevel', 'tagNode', 'assignTagNode', 'tagFlux', 'assignTagFlux', 'tagData', 'icon_catalog', 'styleDA', 'styleNode', 'styleFlux', 'styleFreeLabel']
+      .filter(m => !(kwargs?.['exclude_scale'] && m === 'scale'))
     updateFrom(
       this.drawing_area,
       drawing_area_from_layout,
-      ['attrDrawingArea', 'scale', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'addFreeLabel', 'removeFreeLabel', 'attrFreeLabel', 'posFreeLabel', 'Views', 'tagLevel', 'addTagLevel', 'removeTagLevel', 'tagNode', 'assignTagNode', 'tagFlux', 'assignTagFlux', 'tagData', 'icon_catalog', 'styleDA', 'styleNode', 'styleFlux', 'styleFreeLabel']
+      mode
     )
     //}
   }
@@ -960,6 +1018,109 @@ export class Class_ApplicationData {
         }
       }
     )
+  }
+
+  /**
+   * Applique l'état initial demandé par les options de publication (`publish_options`) :
+   * présélection d'un data tag dans un ou plusieurs groupes, puis mode de navigation
+   * (absolu / proportionnel / échelle adaptée). À appeler APRÈS le chargement du diagramme
+   * (et l'éventuel layout), une fois que les tags et positions existent.
+   *
+   * - `data_tag_selection` est un dict { groupe : tag } où groupe/tag se résolvent par id OU par nom.
+   *   Appliqué AVANT le mode car les modes proportionnel/échelle capturent leur référence sur le
+   *   datatag courant.
+   * - `view_tag_selection` est un dict { groupe : tag } (même résolution id/nom) qui sélectionne la
+   *   valeur ET active le filtre vue (view_mode) du groupe, comme l'œil dans la barre du bas.
+   * - `position_mode` impose le mode de positionnement, comme un clic dans la barre du bas.
+   * @memberof Class_ApplicationData
+   */
+  public applyPublishStateOptions(): void {
+    const opts = this.publish_options
+    // Panneau documentation : ouvert d'office en publish si l'option `doc` est active et qu'une doc existe.
+    if (opts.doc && this._documentation_markdown !== '') {
+      this.menu_configuration.main_zone_show_doc = true
+    }
+    if (!opts.data_tag_selection && !opts.view_tag_selection && !opts.position_mode) return
+    const sankey = this._drawing_area.sankey
+
+    // 1) Présélection des data tags
+    if (opts.data_tag_selection) {
+      for (const [group_key, tag_key] of Object.entries(opts.data_tag_selection)) {
+        const group = sankey.data_taggs_list.find(g => g.id === group_key || g.name === group_key)
+        if (!group) {
+          // eslint-disable-next-line no-console
+          console.warn(`[OpenSankey] position/data_tag_selection : groupe de data tag introuvable « ${group_key} »`)
+          continue
+        }
+        const tag = group.tags_list.find(t => t.id === tag_key || t.name === tag_key)
+        if (!tag) {
+          // eslint-disable-next-line no-console
+          console.warn(`[OpenSankey] data_tag_selection : tag « ${tag_key} » introuvable dans le groupe « ${group_key} »`)
+          continue
+        }
+        group.selectTagsFromId(tag.id)
+      }
+    }
+
+    // 2) Présélection des view tags + activation du filtre vue (view_mode) du groupe.
+    //    Un view tag n'a aucun effet visuel tant que view_mode n'est pas actif ; on reproduit
+    //    donc la séquence de l'œil de la barre du bas (cf. Toolbar.applyViewFilter) : activer le
+    //    groupe + view_mode, sélectionner la valeur, puis recalculer la visibilité (caches
+    //    node_tags_fingerprint + is_visible) et éventuellement relancer une mise en page auto si
+    //    le filtre révèle des nœuds encore à la position par défaut.
+    if (opts.view_tag_selection) {
+      let any_view_applied = false
+      for (const [group_key, tag_key] of Object.entries(opts.view_tag_selection)) {
+        const group = sankey.view_taggs_list.find(g => g.id === group_key || g.name === group_key)
+        if (!group) {
+          // eslint-disable-next-line no-console
+          console.warn(`[OpenSankey] view_tag_selection : groupe de view tag introuvable « ${group_key} »`)
+          continue
+        }
+        // Mots-clés spéciaux « all » / « none » / « * » : désactivent le filtre vue du groupe →
+        // toutes les valeurs redeviennent visibles (équivalent de décocher l'œil dans la barre du bas).
+        const tag_key_lc = tag_key.toLowerCase()
+        if (tag_key_lc === 'all' || tag_key_lc === 'none' || tag_key === '*') {
+          group.view_mode = false
+          any_view_applied = true
+          continue
+        }
+        const tag = group.tags_list.find(t => t.id === tag_key || t.name === tag_key)
+        if (!tag) {
+          // eslint-disable-next-line no-console
+          console.warn(`[OpenSankey] view_tag_selection : tag « ${tag_key} » introuvable dans le groupe « ${group_key} »`)
+          continue
+        }
+        group.activated = true
+        group.view_mode = true
+        group.selectTagsFromId(tag.id)
+        any_view_applied = true
+      }
+      if (any_view_applied) {
+        sankey.nodeTagsUpdated()
+        sankey.nodes_list.forEach(n => n.updateVisibilityFingerprint())
+        sankey.nodes_list.forEach(n => { void n.is_visible })
+        sankey.nodes_list.forEach(n => { void n.is_visible })
+        if (sankey.view_mode_active && this._drawing_area.view_filter_kind === 'auto') {
+          const needs_auto_layout = sankey.visible_nodes_list.some(n =>
+            n.position_x === const_default_position_x &&
+            n.position_y === const_default_position_y)
+          if (needs_auto_layout) this._drawing_area.nodePositioning.computeAutoSankey(true, true)
+        }
+      }
+    }
+
+    // 3) Mode de navigation
+    if (opts.position_mode) {
+      const current = sankey.styles_dict['default'].shape_position_type
+      if (current !== opts.position_mode) {
+        if (opts.position_mode === 'absolute') this._drawing_area.setAbsoluteMode()
+        else if (opts.position_mode === 'proportional') this._drawing_area.setProportionalMode()
+        else if (opts.position_mode === 'scale_adapted') this._drawing_area.setScaleAdaptedMode()
+      }
+    }
+
+    this._drawing_area.draw()
   }
 
   /**
@@ -1200,7 +1361,7 @@ export class Class_ApplicationData {
         content: this.t('guide.toolbar_bottom_stretch'),
       },
       {
-        selector: '.toolbar_bottom_help',
+        selector: '.menutop_button_aide',
         content: this.t('guide.toolbar_bottom_help'),
       },
       {
@@ -1729,11 +1890,11 @@ export class Class_ApplicationData {
       allNodes: ['addNode', 'removeNode', 'posNode', 'attrNode'],
       allFlux: ['addFlux', 'removeFlux', 'posFlux', 'attrFlux'],
       allFreeLabels: ['addFreeLabel', 'removeFreeLabel', 'attrFreeLabel', 'posFreeLabel'],
-      allTagNode: ['addTagNode', 'removeTagNode', 'tagNode'],
-      allTagFlux: ['addTagFlux', 'removeTagFlux', 'tagFlux'],
+      allTagNode: ['addTagNode', 'removeTagNode', 'tagNode', 'assignTagNode'],
+      allTagFlux: ['addTagFlux', 'removeTagFlux', 'tagFlux', 'assignTagFlux'],
       allTagData: ['addTagData', 'removeTagData', 'tagData'],
       allTagLevel: ['addTagLevel', 'removeTagLevel', 'tagLevel'],
-      allTags: ['addTagNode', 'removeTagNode', 'tagNode', 'addTagFlux', 'removeTagFlux', 'tagFlux', 'addTagData', 'removeTagData', 'tagData', 'addTagLevel', 'removeTagLevel', 'tagLevel'],
+      allTags: ['addTagNode', 'removeTagNode', 'tagNode', 'assignTagNode', 'addTagFlux', 'removeTagFlux', 'tagFlux', 'assignTagFlux', 'addTagData', 'removeTagData', 'tagData', 'addTagLevel', 'removeTagLevel', 'tagLevel'],
       allStyles: ['styleDA', 'styleNode', 'styleFlux', 'styleFreeLabel'],
       allDA: ['attrDrawingArea', 'scale'],
       allValues: ['Values']
@@ -1768,6 +1929,9 @@ export class Class_ApplicationData {
 
   public get documentation_images(): { [id: string]: string } { return this._documentation_images }
   public set documentation_images(value: { [id: string]: string }) { this._documentation_images = value }
+
+  public get publish_settings(): Type_JSON { return this._publish_settings }
+  public set publish_settings(value: Type_JSON) { this._publish_settings = value }
 
   /** Override in subclasses to expose named views as layout sources */
   public get layout_view_sources(): Array<{ id: string, name: string }> { return [] }

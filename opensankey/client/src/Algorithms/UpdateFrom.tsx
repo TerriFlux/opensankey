@@ -1,3 +1,4 @@
+import { Class_NodeBase } from '../Elements/NodeBase'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_NodeDimension } from '../Elements/NodeDimension'
 import { SankeyPersistence } from '../Persistence/SankeyPersistence'
@@ -322,6 +323,11 @@ export const updateFrom = (
         // Issue #1225 — flags d'expansion latérale unifiés sur la dim
         if (src_dim.expanded_left) dim.setExpandedSide('left', true)
         else if (src_dim.expanded_right) dim.setExpandedSide('right', true)
+        // #1231 — recopier le type de désagrégation mémorisé (indépendant de l'état
+        // d'affichage), pour que la désagrégation globale réapplique le même type
+        // dans la vue cible. Les setX ci-dessus sont en fromJSON=true → ne le posent
+        // pas eux-mêmes ; on le copie explicitement comme la persistance.
+        dim.preferred_disaggregation = src_dim.preferred_disaggregation
       })
     })
     drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
@@ -402,7 +408,9 @@ export const updateFrom = (
 
   const add_nodes = mode.includes('addNode')
   const remove_nodes = mode.includes('removeNode')
-  const sync_nodes_tags = mode.includes('tagNode')
+  // `tagNode` met à jour la définition du groupe d'étiquettes (bloc plus haut) ;
+  // `assignTagNode` met à jour l'assignation des étiquettes aux nœuds (réfs ci-dessous).
+  const sync_nodes_tags = mode.includes('assignTagNode')
   const sync_nodes_positions = mode.includes('posNode')
   const sync_nodes_attr = mode.includes('attrNode')
 
@@ -449,7 +457,7 @@ export const updateFrom = (
     }
 
     // Update nodes ref to node_taggs
-    // (copyDimensionsFrom is intentionally NOT called here: tagNode owns only
+    // (copyDimensionsFrom is intentionally NOT called here: assignTagNode owns only
     //  tag references, not dimensions — pulling dimensions would propagate
     //  force_show_children and other dim state that should stay local.)
     if ((sync_nodes_tags) || all) {
@@ -516,7 +524,9 @@ export const updateFrom = (
   const add_flux = mode.includes('addFlux')
   const remove_flux = mode.includes('removeFlux')
   const pos_flux = mode.includes('posFlux')
-  const sync_flux_tags = mode.includes('tagFlux')
+  // `tagFlux` met à jour la définition du groupe d'étiquettes (bloc plus haut) ;
+  // `assignTagFlux` met à jour l'assignation des étiquettes aux valeurs de flux.
+  const sync_flux_tags = mode.includes('assignTagFlux')
   const sync_flux_values = mode.includes('Values')
   const sync_flux_attr = mode.includes('attrFlux')
 
@@ -689,6 +699,19 @@ export const updateFrom = (
   //}
   //}
 
+  // Constraints — diagram-level relations entre flux/stocks (Ratio Flux #116,
+  // Ratio Stock Flux + Chaînage Stock #156). Conceptuellement ce sont des données
+  // de valeurs : on les transfère avec le mode `Values`. Deep-clone (les lignes sont
+  // des objets de données plates) pour ne pas partager les références avec la source.
+  if (mode.includes('Values') || all) {
+    drawing_area.sankey.ratio_flux_constraints =
+      structuredClone(other_drawing_area.sankey.ratio_flux_constraints)
+    drawing_area.sankey.ratio_stock_flux_constraints =
+      structuredClone(other_drawing_area.sankey.ratio_stock_flux_constraints)
+    drawing_area.sankey.stock_chaining_constraints =
+      structuredClone(other_drawing_area.sankey.stock_chaining_constraints)
+  }
+
   // Nodes input/output link ordering — owned by posFlux.
   // One pass per node (not per link) so each node is reordered at most once.
   if (pos_flux || all) {
@@ -698,6 +721,21 @@ export const updateFrom = (
       if (!other_node) return
       node.keepLinkOrderingFrom(other_node, revert_matching_links_id)
     })
+  }
+
+  // Documentation markdown (onglet Doc, SA#167) — champ porté par l'ApplicationData,
+  // pas par le sankey/DA. La DA source d'un transfert de mise en page partage le MÊME
+  // application_data que la cible (createNewDrawingArea), donc la doc importée est portée
+  // en transitoire sur la DA source (imported_documentation_*, rempli depuis le JSON par
+  // le dialogue d'import). On recopie le texte ET les images attachées (réfs `img://<id>`),
+  // sinon le markdown importé afficherait des images cassées. undefined = source sans doc
+  // importée (ex. source = une autre vue, doc déjà partagée) → ne rien faire.
+  if (mode.includes('doc') || all) {
+    const dst_app = drawing_area.application_data
+    if (dst_app && other_drawing_area.imported_documentation_markdown !== undefined) {
+      dst_app.documentation_markdown = other_drawing_area.imported_documentation_markdown
+      dst_app.documentation_images = { ...(other_drawing_area.imported_documentation_images ?? {}) }
+    }
   }
 
   // Update icon catalog
@@ -794,12 +832,14 @@ export const updateFrom = (
       })
   }
 
-  // Parametric mode must not propagate via layout import — always stay absolute.
+  // Le mode parametric GLOBAL ne doit pas se propager via l'import de layout : le style
+  // par défaut repasse en absolu pour que les positions importées soient respectées
+  // (sinon recomputeParametricLayout ré-empile toute la colonne). En revanche, le
+  // marquage parametric PAR NŒUD est conservé : un nœud « Ecartement » doit garder son
+  // calage relatif au nœud du dessus à travers les changements de vue / reload
+  // (anchorParametricNodesToAbsolute le replace après le placement global).
   Object.values(drawing_area.sankey.styles_dict).forEach(style => {
     if (style.shape_position_type === 'parametric') style.shape_position_type = 'absolute'
-  })
-  drawing_area.sankey.nodes_list.forEach(node => {
-    if (node.shape_position_type === 'parametric') node.shape_position_type = 'absolute'
   })
 
   // #1230 — Mode coordonnées absolues : après un re-chargement des positions
@@ -810,6 +850,17 @@ export const updateFrom = (
   // getShape*ToUse() reflète déjà la nouvelle vue. Les changements de taille
   // ULTÉRIEURS (échelle/datatag) re-centreront normalement.
   if (sync_nodes_positions || all) {
+    // u/v ne sont pas persistés (default 0) et ne sont calculés que dans la branche
+    // proportional/parametric ci-dessous. Pour qu'un mix par-nœud (nœuds marqués
+    // « Ecartement ») dispose de colonnes valides quel que soit le mode global, on les
+    // dérive de la géométrie importée s'ils n'ont jamais été calculés (tous à 0).
+    const uv_uncomputed = drawing_area.sankey.visible_nodes_list.length > 0 &&
+      drawing_area.sankey.visible_nodes_list.every(n => n.position_u === 0 && n.position_v === 0)
+    if (uv_uncomputed) {
+      drawing_area.nodePositioning.inferPositionUFromX()
+      drawing_area.nodePositioning.computeParametrization(false)
+    }
+
     // #1231 — modes proportionnel ET écart (ex-paramétrique) : re-capturer le cadre de
     // référence (médiane globale, centre par colonne, sommes par colonne) sur les positions
     // importées pour qu'elles soient respectées, puis suivies au prochain datatag.
@@ -820,5 +871,34 @@ export const updateFrom = (
     } else {
       drawing_area.sankey.nodes_list.forEach(node => node.settleCenterAnchor())
     }
+
+    // Re-ancrer les cadres géométriques (nœuds/ZDT tied) sur l'enveloppe de leurs
+    // nœuds attachés. La TAILLE du cadre est dynamique (_envelopeSize) donc déjà
+    // correcte, mais son coin haut-gauche n'est re-fitté que lors d'un drag — après
+    // un changement de vue / import de layout (positions des nœuds modifiées), le
+    // cadre restait à son ancienne position et apparaissait décalé jusqu'à ce qu'on
+    // déplace un nœud ou le cadre. On le recale ici, avant le draw du caller.
+    // Ordre bottom-up : un cadre attaché à d'autres cadres doit attendre que
+    // ceux-ci soient recalés (leur position alimente le bbox de l'englobant).
+    const tied_frames: Class_NodeBase[] = [
+      ...drawing_area.sankey.nodes_list,
+      ...drawing_area.sankey.containers_list,
+    ].filter(el => el.tied_to_nodes && el.attached_node.length > 0)
+    const settled = new Set<Class_NodeBase>()
+    let progressed = true
+    while (progressed && settled.size < tied_frames.length) {
+      progressed = false
+      tied_frames.forEach(frame => {
+        if (settled.has(frame)) return
+        const pending = frame.attached_node.some(n =>
+          n.tied_to_nodes && n.attached_node.length > 0 && !settled.has(n))
+        if (pending) return
+        frame.reanchorTiedFrame()
+        settled.add(frame)
+        progressed = true
+      })
+    }
+    // Repli en cas de cycle d'attachement : recaler ce qui reste une fois.
+    tied_frames.forEach(frame => { if (!settled.has(frame)) frame.reanchorTiedFrame() })
   }
 }

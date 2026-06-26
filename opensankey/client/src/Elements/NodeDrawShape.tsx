@@ -93,8 +93,9 @@ export class NodeDrawShape {
 
     //const drawingElements = this._node.internalDrawingElements
 
-    // Clean previous shape
+    // Clean previous shape and its associated clip-path wrapper
     this._node.d3_selection_g_shape?.selectAll('.node_shape').remove()
+    this._node.d3_selection_g_shape?.selectAll('.node_border_clip_def').remove()
 
     // Do the rest only if shape is visible
     // Compute shape attributes
@@ -156,14 +157,57 @@ export class NodeDrawShape {
     const fill_to_use = (hatch && hatch !== 'none')
       ? this.applyHatchPattern(color, hatch)
       : color
+
+    // IID=152 — inner-stroke clip: confine the node border strictly inside the
+    // fill area so it never bleeds outward over adjacent flow bands.
+    // We skip this for frame nodes (tied_to_nodes) because their pointer-events
+    // rely on the outer half of the visible stroke for click detection.
+    //
+    // The <clipPath> is inserted as a sibling element inside d3_selection_g_shape.
+    // A `userSpaceOnUse` clip-path is resolved in the user space of the element
+    // that references it — INCLUDING that element's own `transform`. The shape
+    // element already carries `translate(-margin_left,-margin_top)` (applied
+    // below), so the clip geometry inherits it automatically. We must therefore
+    // give the clip the RAW geometry (no margin translate) — re-applying the
+    // margin here would double-count it and shift the clip up-left by one margin,
+    // cropping the border on the right/bottom edges (visible when margins != 0).
+    let clip_attr: string | null = null
+    if (!acts_as_frame && base_thickness > 0 && this._node.shape_border_visible) {
+      const g_shape = this._node.d3_selection_g_shape
+      if (g_shape) {
+        const clip_id = `clip-node-border-${this._node.id}`
+        const clip_g = g_shape.append('g').classed('node_border_clip_def', true)
+        const clip = clip_g.append('clipPath').attr('id', clip_id)
+        if (this._node.shape_type === 'rect') {
+          clip.append('rect')
+            .attr('width', width)
+            .attr('height', height)
+            .attr('rx', this._node.shape_border_radius)
+        } else if (this._node.shape_type === 'ellipse') {
+          clip.append('ellipse')
+            .attr('cx', width / 2)
+            .attr('cy', height / 2)
+            .attr('rx', width / 2)
+            .attr('ry', height / 2)
+        } else {
+          // capsule / capsule_h — reuse the same path geometry
+          clip.append('path')
+            .attr('d', this._node.shape_type === 'capsule' ? this.getCapsulePath() : this.getHorizontalCapsulePath())
+        }
+        clip_attr = `url(#${clip_id})`
+      }
+    }
+
+    const effective_thickness = clip_attr ? base_thickness * 2 : base_thickness
     const sel = this._node.d3_selection_g_shape?.selectAll('.node_shape')
       .attr('id', this._node.id)
       .attr('fill-opacity', this._node.shape_visible && this._node.shape_color_visible ? this._node.shape_opacity : '0')
       .attr('fill', fill_to_use)
       .attr('stroke', this._node.shape_border_color_sustainable ? this._node.shape_border_color : this._node.getShapeColorToUse())
-      .attr('stroke-width', base_thickness)
+      .attr('stroke-width', effective_thickness)
       .attr('stroke-dasharray', this._node.shape_border_dashed ? '10,3' : '')
       .attr('stroke-opacity', (this._node.shape_border_visible) ? 1 : 0)
+      .attr('clip-path', clip_attr)
       .attr('pointer-events', acts_as_frame ? 'visibleStroke' : null)
     // Ombre portée : appliquée sur le groupe g_node_shape (pas sur .node_shape)
     // pour que le clip de bordure interne ne rogne pas l'ombre.

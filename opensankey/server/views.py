@@ -53,6 +53,7 @@ from flask import render_template
 from flask import request
 from flask import Response
 from flask import send_file
+from flask import send_from_directory
 from flask import session
 
 import SankeyExcelParser.su_trace as trace
@@ -135,7 +136,7 @@ def write_process_status(log_filename, status):
     if not path:
         return
     try:
-        with open(path, "w") as f:
+        with open(path, "w", encoding="utf-8") as f:
             f.write(status)
     except OSError:
         # Canal best-effort : en cas d'échec d'écriture, le client retombe sur
@@ -149,7 +150,7 @@ def read_process_status(log_filename):
     if not path or not os.path.isfile(path):
         return None
     try:
-        with open(path, "r") as f:
+        with open(path, "r", encoding="utf-8") as f:
             return f.read().strip() or None
     except OSError:
         return None
@@ -175,9 +176,13 @@ def check_process():
     try:
         logname = state['logname']
         if os.path.isfile(logname):
-            f = open(logname, "r")
-            results = f.read()
-            f.close()
+            # Le log est écrit en UTF-8 (su_trace.logger_init :
+            # logging.FileHandler(..., encoding="utf-8")). Sous Windows, open()
+            # sans encodage explicite décode en cp1252 et lève UnicodeDecodeError
+            # dès qu'un nom de feuille/nœud accentué produit un octet hors cp1252
+            # → 500 en boucle, spinner client figé. On lit donc en UTF-8 tolérant.
+            with open(logname, "r", encoding="utf-8", errors="replace") as f:
+                results = f.read()
             results_dict = {
                 "log_name": logname,
                 "output": results,
@@ -383,6 +388,69 @@ def retrieve_json():
         )
 
 
+@opensankey.route("/convert/peek_options", methods=["POST"])
+def peek_options():
+    """
+    [IID=162] Lightweight, synchronous peek of an uploaded Excel workbook's
+    "Options de réconciliation" sheet.
+
+    Returns the key-value options it declares (input autocorrection flags +
+    solver flags) so the converter / reconciliation dialog can pre-tick the
+    matching checkboxes the moment the file is selected — before the full parse
+    runs, which is otherwise too late to inform the load options. Reuses the
+    parser's own sheet-name recognition (accent-insensitive) and value coercion
+    so it stays consistent with an actual load. Always answers 200 with a
+    (possibly empty) ``solver_options`` map; never blocks file selection.
+    """
+    from SankeyExcelParser.classes.sankey_pandas import SankeyPandas
+    import SankeyExcelParser.io_excel_constants as PEEK_CONST
+    options = {}
+    tmp_dir = None
+    try:
+        uploaded = request.files.get("file")
+        if uploaded is not None:
+            tmp_dir = tempfile.mkdtemp()
+            path = os.path.join(tmp_dir, "peek.xlsx")
+            uploaded.save(path)
+            sankey = SankeyPandas()
+            xl = pd.ExcelFile(path)
+            for sheet_name in xl.sheet_names:
+                ok, refkey = sankey._consistantSheetName(sheet_name)
+                if not ok:
+                    continue
+                if refkey == PEEK_CONST.MFA_OPTIONS_SHEET:
+                    ok_read, _ = sankey.xl_read_mfa_options_sheet(xl.parse(sheet_name))
+                    if ok_read:
+                        options = dict(sankey.mfa_options)
+                elif refkey == PEEK_CONST.TAG_SHEET:
+                    # #161 — parse the Tags sheet so the per dataTag-group
+                    # propagate_structure flags are known (see derivation below).
+                    try:
+                        sankey.xl_read_tags_sheet(xl.parse(sheet_name))
+                    except Exception:
+                        pass
+            # #161 — initialise the dialog's global "Propager la structure"
+            # checkbox from the file: unchecked as soon as one dataTag group is
+            # non-propagating. An explicit value in the Options sheet wins.
+            data_groups = list(sankey.taggs.get(PEEK_CONST.TAG_TYPE_DATA, {}).values())
+            if data_groups and "propagate_datatag_structure" not in options:
+                options = dict(options)
+                options["propagate_datatag_structure"] = all(
+                    g.propagate_structure for g in data_groups
+                )
+    except Exception as e:
+        trace.logger.warning(f"peek_options: {e}")
+        options = {}
+    finally:
+        if tmp_dir is not None:
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+    return Response(
+        json.dumps({"solver_options": options}),
+        status=200,
+        mimetype="application/json",
+    )
+
+
 @opensankey.route("/convert/launch", methods=["POST"])
 def launch_conversion():
     """
@@ -421,18 +489,25 @@ def launch_conversion():
 
         if input_format == "example_excel" or input_format == "example_json":
             exemple = request.form["file_name"]
-            # Les tutoriels/templates migres vivent dans le submodule SankeyData
-            # (env SANKEY_DATA, posee automatiquement par app.py depuis la racine
-            # du checkout) ; les exemples historiques restent dans MFAData. On
-            # resout SANKEY_DATA en priorite, avec repli sur MFAData. NB : on ne
-            # peut PAS deduire le chemin depuis __file__ ici, car opensankey est
-            # installe (copie) en site-packages cote serveur.
-            sankey_data = os.environ.get("SANKEY_DATA")
-            candidate = os.path.join(sankey_data, exemple) if sankey_data else None
-            if candidate and os.path.exists(candidate):
-                input_file_name = candidate
-            else:
-                input_file_name = os.path.join(os.environ.get("MFAData"), exemple)
+            # Racine de resolution des exemples, selon la source qui a liste le
+            # fichier (le client la passe explicitement) :
+            #  - 'sankeydata' (defaut) : templates + tutoriels, servis par
+            #    /menus/tutorials & l'index sur SANKEY_DATA (migration phase 1) ;
+            #  - 'mfadata' : la sankeytheque (Etudes/Clients), servie par
+            #    /menus/examples = parse_folder sur MFAData (PAS encore migree).
+            # NB : on ne peut PAS deduire le chemin depuis __file__ ici, car
+            # opensankey est installe (copie) en site-packages cote serveur.
+            example_root = request.form.get("example_root", "sankeydata")
+            root_env = "MFAData" if example_root == "mfadata" else "SANKEY_DATA"
+            data_root = os.environ.get(root_env)
+            input_file_name = os.path.join(data_root, exemple) if data_root else exemple
+            if input_format == "example_json":
+                # Tolerance .json / .json.gz + conversion automatique en .json.gz
+                # au premier chargement (mise en cache sur disque), exactement
+                # comme pour les tutoriels.
+                resolved = handle_json_or_compressed(input_file_name)
+                if isinstance(resolved, str):
+                    input_file_name = resolved
             extension = os.path.splitext(input_file_name)[1]
             if extension == '.xlsx':
                 input_format = 'excel'
@@ -687,6 +762,21 @@ def conversion_thread(
         # avant le check, le silencent et accumulent les corrections sur
         # _auto_corrected_node_cells / _auto_corrected_constraint_ids.
         input_options.setdefault('do_coherence_checks', True)
+
+        # #181 : comme le pipeline de réconciliation
+        # (sankeyapplication/server/views.py), les fluxTags portés par les
+        # lignes de l'onglet « Données » d'un fichier MFA sont des annotations
+        # (source, méthode, fiabilité…) qui varient par ligne. Les laisser
+        # fragmenter une arête (orig→dest) en un flux distinct par combo
+        # produisait, à l'ouverture, des liens parallèles « fantômes » sans
+        # données doublant le flux réconcilié, et faisait échouer les références
+        # non-taguées des onglets Contraintes/Min-Max (« Could not find or
+        # create specified flux »). On rejoint la convention de la
+        # réconciliation : un seul flux par arête, les annotations restant
+        # portées par les Data. setdefault => un appelant peut toujours
+        # réactiver explicitement le découpage (split_flux_by_fluxtags=True).
+        if input_format == 'excel':
+            input_options.setdefault('split_flux_by_fluxtags', False)
 
         # Charger avec les options d'entrée
         trace.logger.info("📖 Lecture du fichier source...")
@@ -1269,20 +1359,40 @@ def _generate_excel_template(filepath, sheets, lang="fr"):
 @opensankey.route("/menus/templates", methods=["POST"])
 def menus_templates():
     """
-    Return data from MFAData/Modèles/Template
+    Renvoie l'index des modeles (templates).
 
-    Returns
-    -------
-    :return: _description_
-    :rtype: _type_
+    Les modeles migres vivent dans le submodule SankeyData (env SANKEY_DATA,
+    sous-dossier templates/) ; repli sur MFAData/Modeles/Template/ tant que la
+    migration n'est pas deployee partout. Les chemins file_path / img_path de
+    l'index sont relatifs a la racine SANKEY_DATA (ex. templates/<diff>/...) et
+    sont servis : data via /opensankey/convert/launch (example_json), images via
+    /opensankey/menus/templates_asset/<path>.
     """
-    data_folder = os.environ.get("MFAData")
-    data_folder += "/Modèles/Template/"
-    data_index = {}
-    with open(data_folder + "index.json") as file_index:
+    sankey_data = os.environ.get("SANKEY_DATA")
+    index_path = os.path.join(sankey_data, "templates", "index.json") if sankey_data else None
+    if not (index_path and os.path.exists(index_path)):
+        index_path = os.path.join(os.environ.get("MFAData"), "Modèles", "Template", "index.json")
+    with open(index_path, encoding="utf-8") as file_index:
         data_index = json.load(file_index)
     response = Response(response=json.dumps(data_index), status=200, mimetype="application/json")
     return response
+
+
+@opensankey.route("/menus/templates_asset/<path:asset>", methods=["GET"])
+def menus_templates_asset(asset):
+    """
+    Sert un fichier (image de previsualisation, ...) depuis la racine SANKEY_DATA.
+
+    Le chemin `asset` est relatif a SANKEY_DATA (ex. templates/essential/image/
+    business_simple.png) ; send_from_directory neutralise les remontees de chemin.
+    """
+    sankey_data = os.environ.get("SANKEY_DATA")
+    if not sankey_data:
+        abort(404)
+    # Route GET publique : on ne sert que le contenu des modeles (templates/).
+    if not asset.replace("\\", "/").startswith("templates/"):
+        abort(404)
+    return send_from_directory(sankey_data, asset)
 
 
 @opensankey.route("/menus/examples", methods=["POST"])
@@ -1324,6 +1434,41 @@ def menus_examples():
         response = Response(response=str(expt), status=500, mimetype="application/json")
         return response
 
+    return response
+
+
+@opensankey.route("/menus/tutorials", methods=["POST"])
+def menus_tutorials():
+    """
+    Liste les tutoriels disponibles dans SANKEY_DATA/tutorials.
+
+    Renvoie une liste ordonnee [{file, title}] lue depuis tutorials/index.json
+    si present ; sinon repli sur un listing des fichiers .json / .json.gz du
+    dossier (titre = nom de fichier sans extension).
+    """
+    sankey_data = os.environ.get("SANKEY_DATA")
+    folder = os.path.join(sankey_data, "tutorials") if sankey_data else None
+    tutorials = []
+    index_path = os.path.join(folder, "index.json") if folder else None
+    if index_path and os.path.exists(index_path):
+        with open(index_path, encoding="utf-8") as file_index:
+            data_index = json.load(file_index)
+        raw = data_index.get("tutorials", []) if isinstance(data_index, dict) else data_index
+        for item in raw:
+            if isinstance(item, dict) and item.get("file"):
+                tutorials.append({"file": item["file"], "title": item.get("title", item["file"])})
+    elif folder and os.path.isdir(folder):
+        for name in sorted(os.listdir(folder)):
+            if name == "index.json":
+                continue
+            if name.endswith(".json.gz") or name.endswith(".json"):
+                title = name
+                for ext in (".json.gz", ".json"):
+                    if title.endswith(ext):
+                        title = title[: -len(ext)]
+                        break
+                tutorials.append({"file": name, "title": title.replace("_", " ")})
+    response = Response(response=json.dumps({"tutorials": tutorials}), status=200, mimetype="application/json")
     return response
 
 

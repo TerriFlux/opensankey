@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { ChangeEvent, useEffect, useState } from 'react'
+import React, { ChangeEvent, useEffect, useRef, useState } from 'react'
 import { Checkbox, Box, Button, Input, Select, Text, Divider, Alert, AlertIcon } from '@chakra-ui/react'
 import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react'
 import { WarningIcon } from '@chakra-ui/icons'
@@ -36,7 +36,7 @@ import { Type_JSON, default_main_sankey_id } from '../../types/Utils'
 import { ActionButtons, ProcessTerminal } from './PersistenceProcessDialogTerminal'
 import {
   CONVERTER_CONFIGS, ConverterConfig, FormatConfigStructure, FormatType, getDefaultInputOptions, getDefaultOutputOptions,
-  getInitialFormat, hasOptionsFormat, SOLVER_OPTION_KEYS, OptionGroup, OPTION_GROUP_LABELS
+  getInitialFormat, hasOptionsFormat, SOLVER_OPTION_KEYS, INPUT_OPTION_KEYS, OptionGroup, OPTION_GROUP_LABELS
 } from './PersistenceProcessDialogConfigs'
 import { MenuConditionEvaluator } from './SankeyMenuContext'
 import { OSTooltip, WrapperBoxSubSectionMenu } from '../configmenus/MenuCommon'
@@ -319,12 +319,27 @@ export const retrieveJSONResults = (
   paper_format?: Type_PaperFormat,
   paper_orientation?: Type_PaperOrientation,
   margin_mm?: number,
-  view_only: boolean = false
+  view_only: boolean = false,
+  // When true (default), a view_only load writes the result back into the view's
+  // compressed cache (normal "load into current view" UX). The reconciliation
+  // blob→blob path passes false: the reconciled diagram is a preview that must
+  // not silently overwrite the saved view.
+  persist_view_to_cache: boolean = true,
+  // Reconciliation/completion of an EXISTING diagram (blob→blob) : on garde
+  // l'échelle des flux que l'utilisateur avait déjà calée, au lieu de la
+  // recalculer (computeScale) sur les nouvelles valeurs solveur — sinon un flux
+  // de bilan complété (gros) fait sauter l'échelle (ex. 15 → 90) et écrase tous
+  // les autres flux. L'import Excel (excel→blob), lui, n'a pas d'échelle
+  // préexistante : il garde le recalcul.
+  preserve_scale: boolean = false
 ) => {
   // // Failsafe
   // if (text === '{}')
   //   return
   const current_json = app_data.toJSON()
+  // Échelle des flux calée par l'utilisateur AVANT le rechargement (le reset plus
+  // bas recrée la drawing_area). Restaurée en fin de fonction quand preserve_scale.
+  const initial_scale = app_data.drawing_area.scale
   // Layout source for the "keep the starting layout" transfer (updateFromJSON below).
   // app_data.toJSON() serialises the MASTER at top-level; when we are inside a view,
   // the active view's own DA JSON lives under ['views'][view_id] (refreshed from the
@@ -417,7 +432,9 @@ export const retrieveJSONResults = (
   // Case 1 : Apply extracted layout if present -> contains positions
   if (apply_layout_current_sankey) {
     app_data.drawing_area.nodePositioning.computeScale()
-    app_data.updateFromJSON(layout_source_json)
+    // L'échelle vient d'être recalculée sur les nouvelles données : ne pas la réécraser
+    // avec celle stockée dans le layout importé.
+    app_data.updateFromJSON(layout_source_json, { exclude_scale: true } as Type_JSON)
     // mfa_problem#222 : updateFromJSON merge les positions sans rejouer
     // afterFromJSON → les nœuds import/export d'échange ne sont ni restylés ni
     // replacés. setTrade(true) réapplique les styles import/export à TOUS les
@@ -426,20 +443,36 @@ export const retrieveJSONResults = (
     app_data.drawing_area.sankey.setTrade(true)
   } else if (JSON_data['layout']) {
     app_data.drawing_area.nodePositioning.computeScale()
-    app_data.updateFromJSON(JSON_data['layout'] as Type_JSON)
+    app_data.updateFromJSON(JSON_data['layout'] as Type_JSON, { exclude_scale: true } as Type_JSON)
     app_data.drawing_area.sankey.setTrade(true)
   } else {
     app_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true, optimize_crossing, h_spacing, v_spacing, sources_mode, sinks_mode)
     app_data.drawing_area.sankey.setTrade(true)
   }
+  // Réconciliation/complétion d'un diagramme existant : restaurer l'échelle que
+  // l'utilisateur avait calée (computeScale l'aurait clobbérée avec le nouveau
+  // max de flux complété).
+  if (preserve_scale) {
+    app_data.drawing_area.scale = initial_scale
+  }
   app_data.drawing_area.draw()
   app_data.menu_configuration.updateComponentRelatedToStyles()
 
   // In view_only mode, every mutation above happened on the current view's DA.
-  // Refresh its compressed cache so that the next view switch or save sees the
-  // reconciled diagram instead of the pre-reconciliation snapshot.
-  if (view_only) {
+  // Normally we refresh its compressed cache so the next view switch or save
+  // sees the loaded diagram. The reconciliation blob→blob path opts out
+  // (persist_view_to_cache=false): there the reconciled diagram is a preview
+  // that must not silently overwrite the saved view — switching view or
+  // reloading reverts to the pre-reconciliation snapshot.
+  if (view_only && persist_view_to_cache) {
     app_data.saveCurrentViewToCache()
+  } else if (view_only) {
+    // Reconciliation preview: we deliberately skip saveCurrentViewToCache so the
+    // reconciled diagram is NOT frozen into the view. But it IS an unsaved change
+    // on the live view, so flag the view as dirty (indicator = false) — leaving
+    // the view then raises the "Vue non enregistrée" modal, letting the user keep
+    // or discard the reconciliation instead of losing it silently.
+    app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
   }
 }
 
@@ -479,6 +512,26 @@ export const UniversalFileConverter = ({
   const [input_options_json, set_input_options_json] = useState(getDefaultInputOptions(input_config['json']))
   const [input_options_base, set_input_options_base] = useState(getDefaultOutputOptions(input_config['base']))
   //const [input_options_blob, set_input_options_blob] = useState(getDefaultInputOptions('blob'))
+  // [#188] INPUT_OPTION_KEYS the user toggled by hand in this dialog session.
+  // Two uses: (a) the [SA #162] peek overlay must not clobber a manual toggle,
+  // and (b) only user-overridden autocorrection/propagation options are sent to
+  // the parser — untouched ones are omitted so the parser applies the value
+  // recorded in the file's "Options de réconciliation" sheet (mfa_options
+  // fallback), exactly like run_reconciliation.py. A ref (not state): it is read
+  // in the async peek .then and at POST time and never needs to re-render.
+  const user_touched_input_keys = useRef<Set<string>>(new Set())
+  // User-facing wrapper around set_input_options_base: a manual change records
+  // the affected INPUT_OPTION_KEYS as touched. The peek effect / initialize call
+  // set_input_options_base directly, so they never mark anything touched.
+  const set_input_options_base_user = (opts: Record<string, unknown>) => {
+    set_input_options_base((prev) => {
+      const prev_rec = prev as Record<string, unknown>
+      for (const k of INPUT_OPTION_KEYS) {
+        if (prev_rec[k] !== opts[k]) user_touched_input_keys.current.add(k)
+      }
+      return opts as typeof input_options_base
+    })
+  }
   const [launch_at_opening, setLaunchAtOpening] = useState(false)
   const [show_terminal, set_show_terminal] = useState(true)
   const [config, setConfig] = useState<ConverterConfig>(CONVERTER_CONFIGS['universal'])
@@ -542,6 +595,41 @@ export const UniversalFileConverter = ({
         stored_file_handles.delete(dialog_name)
       })
   }, [])
+
+  // [SA #162] As soon as an Excel input file is picked, peek its "Options de
+  // réconciliation" sheet and pre-tick the matching checkboxes. The full parse
+  // only runs on "Lancer", which is too late to inform the load options, so a
+  // tiny server endpoint reads just that sheet (reusing the parser's
+  // accent-insensitive recognition + coercion) and we overlay its values onto
+  // the option buckets: INPUT (autocorrection) options into input_options_base,
+  // SOLVER options into output_options_base. Best-effort: a missing sheet or a
+  // failed peek leaves the defaults untouched and never blocks selection.
+  useEffect(() => {
+    if (input_format !== 'excel' || !input_file) return
+    let cancelled = false
+    const fd = new FormData()
+    fd.append('file', input_file)
+    fetch(window.location.origin + url_prefix + '/convert/peek_options', { method: 'POST', body: fd })
+      .then((r) => (r.ok ? r.json() : { solver_options: {} }))
+      .then((data: { solver_options?: Record<string, unknown> }) => {
+        if (cancelled) return
+        const opts = data?.solver_options ?? {}
+        if (!opts || Object.keys(opts).length === 0) return
+        const pick = (keys: readonly string[]): Record<string, unknown> =>
+          Object.fromEntries(Object.entries(opts).filter(([k]) => keys.includes(k)))
+        // [#188] Do not overwrite an option the user already toggled by hand.
+        const fi = Object.fromEntries(
+          Object.entries(pick(INPUT_OPTION_KEYS)).filter(([k]) => !user_touched_input_keys.current.has(k))
+        )
+        const fs = pick(SOLVER_OPTION_KEYS)
+        if (Object.keys(fi).length > 0)
+          set_input_options_base((prev) => ({ ...prev, ...fi }) as typeof input_options_base)
+        if (Object.keys(fs).length > 0)
+          set_output_options_base((prev) => ({ ...prev, ...fs }) as typeof output_options_base)
+      })
+      .catch(() => { /* peek is best-effort; never block file selection */ })
+    return () => { cancelled = true }
+  }, [input_file, input_format])
 
   // [SA #136] Generic enforcement of `disabledConditions` + `forcedValueWhenDisabled`
   // declared on FormatAttributeConfig entries. When an option's
@@ -688,6 +776,23 @@ export const UniversalFileConverter = ({
     }
   }
 
+  // [#188] Options actually transmitted to the backend load. Every input option
+  // is sent EXCEPT the autocorrection/propagation ones (INPUT_OPTION_KEYS) the
+  // user did not touch: omitting an untouched key lets the parser apply the
+  // value recorded in the file's "Options de réconciliation" sheet (mfa_options
+  // fallback) rather than the dialog default. This aligns the app load path with
+  // run_reconciliation.py and fixes re-opening a reconciled file (#188: spurious
+  // flux propagated across dataTags, and create_new_flux no longer overridable).
+  const getInputOptionsForRequest = (): Record<string, unknown> => {
+    const all = (getCurrentInputOptions() ?? {}) as Record<string, unknown>
+    const out: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(all)) {
+      if ((INPUT_OPTION_KEYS as readonly string[]).includes(k) && !user_touched_input_keys.current.has(k)) continue
+      out[k] = v
+    }
+    return out
+  }
+
   const initialize = (
     config: ConverterConfig,
     file_path: string,
@@ -706,6 +811,9 @@ export const UniversalFileConverter = ({
     setProcessing(false)
     setFailure(false)
     setResult('')
+    // [#188] Fresh dialog opening: clear manual-override tracking so the
+    // workbook's recorded options pre-fill the buckets cleanly.
+    user_touched_input_keys.current = new Set()
     const input_format = getInitialFormat(config.input.format, 'excel')
     set_input_format(input_format)
     const output_format = getInitialFormat(config.output.format, 'json')
@@ -730,19 +838,37 @@ export const UniversalFileConverter = ({
     // overrides declared on the ConverterConfig. Overrides let shortcut configs
     // (create_index / create_ter / create_tes) start with a tailored selection
     // (e.g. Index sheet only) without forcing the user to untick everything.
+    // [SA #162] Options persisted in the workbook "Options de réconciliation"
+    // sheet are carried in drawing_area.mfa_options (a flat dict of input AND
+    // solver flags). Pre-fill the dialog by routing each family to its bucket so
+    // the user does not have to re-tick options the file already declares. The
+    // parser also applies the input options at load time, so a file is correct
+    // even on the Excel→reconciliation path where mfa_options is not yet set.
+    const file_opts = (app_data.drawing_area.mfa_options ?? {}) as Record<string, unknown>
+    const pick_file_opts = (keys: readonly string[]): Record<string, unknown> =>
+      Object.fromEntries(Object.entries(file_opts).filter(([k]) => keys.includes(k)))
+    const file_input_opts = pick_file_opts(INPUT_OPTION_KEYS)
+    const file_solver_opts = pick_file_opts(SOLVER_OPTION_KEYS)
+
     set_input_options_excel({ ...getDefaultInputOptions(input_config['excel']), ...(config.input_overrides_excel ?? {}) })
     set_input_options_json({ ...getDefaultInputOptions(input_config['json']), ...(config.input_overrides_json ?? {}) })
-    set_input_options_base({ ...getDefaultOutputOptions(input_config['base']), ...(config.input_overrides_base ?? {}) })
+    // Input (autocorrection) options pre-filled from the workbook last, so they
+    // win over the generic defaults / config overrides.
+    set_input_options_base({
+      ...getDefaultOutputOptions(input_config['base']),
+      ...(config.input_overrides_base ?? {}),
+      ...file_input_opts,
+    })
     set_output_options_excel({ ...getDefaultOutputOptions(output_config['excel']), ...(config.output_overrides_excel ?? {}) })
     set_output_options_json({ ...getDefaultOutputOptions(output_config['json']), ...(config.output_overrides_json ?? {}) })
-    // Pre-set solver-only flags from the caller (e.g. the "Compléter le
-    // diagramme" command pre-checks with_completed so the user does not need
-    // to toggle it manually before launching). These flags live in
-    // output_options_base, declared with group='solver' in the config so they
-    // render alongside enable_uncertainty / debug_mode / skip_rref.
+    // Solver flags live in output_options_base (group='solver'). Order matters:
+    // workbook values win over the generic defaults, but a per-command preset
+    // (default_solver_options, e.g. "Compléter le diagramme" pre-checking
+    // with_completed) still wins over the file for the keys it explicitly sets.
     set_output_options_base({
       ...getDefaultOutputOptions(output_config['base']),
       ...(config.output_overrides_base ?? {}),
+      ...file_solver_opts,
       ...(default_solver_options ?? {}),
     })
 
@@ -803,83 +929,93 @@ export const UniversalFileConverter = ({
 
 
     // ========== MODE CHARGEMENT CLASSIQUE ==========
-    const path = window.location.origin
-    const url = path + url_prefix + 'upload/retrieve_result'
-    const form_data = new FormData()
+    // Le rapatriement du résultat puis le chargement dans la zone de dessin
+    // (retrieveJSONResults / fromJSON) peuvent figer l'UI plusieurs secondes sur
+    // un gros diagramme. On enveloppe tout dans sendWaitingToast pour afficher un
+    // spinner « Chargement du diagramme... » pendant cette phase sans feedback.
+    app_data.sendWaitingToast(
+      async () => {
+        const path = window.location.origin
+        const url = path + url_prefix + 'upload/retrieve_result'
+        const form_data = new FormData()
 
-    const fetchData = {
-      method: 'POST',
-      body: form_data
-    }
-    // app_data.sendWaitingToast(
-    //   async () => {
-    try {
-
-      const response = await fetch(url, fetchData)
-      if (response.ok) {
-        const arrayBuffer = await response.arrayBuffer()
-        //const uint8Array = new Uint8Array(arrayBuffer)
-        const decompressed = await decompressGzipDataFixed(arrayBuffer)
-        const jsonData = JSON.parse(decompressed)
-        // « Charger seulement la mise en page » : le serveur a court-circuité
-        // le parse SEP et renvoyé le contenu de l'onglet « layout », qui est un
-        // diagramme JSON complet. On le charge tel quel comme un fichier JSON
-        // (remplacement total, pas de recalcul de mise en page ni de
-        // réconciliation), exactement comme le chemin example_json.
-        const only_layout = input_format == 'excel' && Boolean(getCurrentInputOptions()?.['only_layout'])
-        if (input_format == 'example_json' || only_layout) {
-          app_data.fromJSON(jsonData as Type_JSON, {} /*output_options_json*/)
-        } else {
-          // Loading into the current view only (never replace app_data, otherwise
-          // the master and the other views are wiped). Two triggers:
-          //   - blob→blob reconciliation from the active view (always view-only),
-          //   - Excel import with the user-set ``only_current_view`` option
-          //     (checked by default, only shown when inside a view).
-          const is_inside_view = app_data.drawing_area.id !== default_main_sankey_id
-          const view_only =
-            is_inside_view && (
-              (input_format == 'blob' && output_format == 'blob') ||
-              (input_format == 'excel' && Boolean(getCurrentInputOptions()?.['only_current_view']))
-            )
-          retrieveJSONResults(
-            app_data,
-            jsonData,
-            auto_layout,
-            output_options_json as Type_JSON,
-            app_data.layout_h_spacing ?? undefined,
-            app_data.layout_v_spacing ?? undefined,
-            app_data.layout_optimize_crossing,
-            app_data.layout_sources_mode,
-            app_data.layout_sinks_mode,
-            paperFormat,
-            paperOrientation,
-            marginMm,
-            view_only
-          )
+        const fetchData = {
+          method: 'POST',
+          body: form_data
         }
-        //setAutoLoad(false)
-      } else {
-        // Le statut a beau etre "termine", la recuperation du resultat peut
-        // echouer (ex: fichier introuvable cote serveur -> 404). Sans ce else,
-        // le code tombait en bas et affichait "Succes" alors que rien n'etait
-        // charge. On remonte l'erreur dans le dialogue.
-        setResult('FAILED Erreur chargement: ' + response.status + ' ' + response.statusText)
-        setProcessing(false)
-        setFailure(true)
-        return
+        try {
+          const response = await fetch(url, fetchData)
+          if (!response.ok) {
+            // Le statut a beau etre "termine", la recuperation du resultat peut
+            // echouer (ex: fichier introuvable cote serveur -> 404). On remonte
+            // l'erreur dans le dialogue ET dans le toast (throw plus bas).
+            throw new Error('chargement: ' + response.status + ' ' + response.statusText)
+          }
+          const arrayBuffer = await response.arrayBuffer()
+          //const uint8Array = new Uint8Array(arrayBuffer)
+          const decompressed = await decompressGzipDataFixed(arrayBuffer)
+          const jsonData = JSON.parse(decompressed)
+          // « Charger seulement la mise en page » : le serveur a court-circuité
+          // le parse SEP et renvoyé le contenu de l'onglet « layout », qui est un
+          // diagramme JSON complet. On le charge tel quel comme un fichier JSON
+          // (remplacement total, pas de recalcul de mise en page ni de
+          // réconciliation), exactement comme le chemin example_json.
+          const only_layout = input_format == 'excel' && Boolean(getCurrentInputOptions()?.['only_layout'])
+          if (input_format == 'example_json' || only_layout) {
+            app_data.fromJSON(jsonData as Type_JSON, {} /*output_options_json*/)
+          } else {
+            // Loading into the current view only (never replace app_data, otherwise
+            // the master and the other views are wiped). Two triggers:
+            //   - blob→blob reconciliation from the active view (always view-only),
+            //   - Excel import with the user-set ``only_current_view`` option
+            //     (checked by default, only shown when inside a view).
+            const is_inside_view = app_data.drawing_area.id !== default_main_sankey_id
+            // Reconciliation runs blob→blob; Excel-into-current-view is the other
+            // view_only trigger.
+            const is_reconciliation_preview = is_inside_view && input_format == 'blob' && output_format == 'blob'
+            // Réconciliation/complétion d'un diagramme existant (blob→blob), dans
+            // une vue OU sur le master : on préserve l'échelle de flux déjà calée.
+            const is_blob_reconciliation = input_format == 'blob' && output_format == 'blob'
+            const view_only =
+              is_reconciliation_preview ||
+              (is_inside_view && input_format == 'excel' && Boolean(getCurrentInputOptions()?.['only_current_view']))
+            retrieveJSONResults(
+              app_data,
+              jsonData,
+              auto_layout,
+              output_options_json as Type_JSON,
+              app_data.layout_h_spacing ?? undefined,
+              app_data.layout_v_spacing ?? undefined,
+              app_data.layout_optimize_crossing,
+              app_data.layout_sources_mode,
+              app_data.layout_sinks_mode,
+              paperFormat,
+              paperOrientation,
+              marginMm,
+              view_only,
+              // Reconciliation is a preview — don't freeze it into the view cache.
+              // The Excel-into-current-view load keeps the default (persist).
+              !is_reconciliation_preview,
+              is_blob_reconciliation
+            )
+          }
+          //setAutoLoad(false)
+          setProcessing(false)
+          setFailure(false)
+        } catch (error) {
+          setResult('FAILED Erreur chargement JSON:' + error)
+          setProcessing(false)
+          //setStarted(false)
+          setFailure(true)
+          throw error // propage au toast pour afficher l'erreur
+        }
+      },
+      {
+        success: { title: app_data.t('toast.load_json.success.title') },
+        loading: { title: app_data.t('toast.load_json.loading.title') },
+        error: { title: app_data.t('toast.load_json.error.title') }
       }
-    } catch (error) {
-      setResult('FAILED Erreur chargement JSON:' + error)
-      setProcessing(false)
-      //setStarted(false)
-      setFailure(true)
-      return
-    }
-
-    //setStarted(false)
-    setProcessing(false)
-    setFailure(false)
-    // })
+    )
   }
 
   const downloadFileResult = () => {
@@ -890,7 +1026,7 @@ export const UniversalFileConverter = ({
     form_data.append('output_format', output_format)
     const output_options = getCurrentOutputOptions()
     form_data.append('output_options', JSON.stringify(output_options))
-    const input_options = getCurrentInputOptions()
+    const input_options = getInputOptionsForRequest()
     form_data.append('input_options', JSON.stringify(input_options))
     const fetchData = {
       method: 'POST',
@@ -951,7 +1087,7 @@ export const UniversalFileConverter = ({
     form_data.append('output_format', output_format)
     const output_options = getCurrentOutputOptions()
     form_data.append('output_options', JSON.stringify(output_options))
-    const input_options = getCurrentInputOptions()
+    const input_options = getInputOptionsForRequest()
     form_data.append('input_options', JSON.stringify(input_options))
     fetch(window.location.origin + url_prefix + '/upload/retrieve_json', {
       method: 'POST',
@@ -1001,7 +1137,7 @@ export const UniversalFileConverter = ({
       form_data.append('solver_options', JSON.stringify(solver_options))
     }
     form_data.append('output_options', JSON.stringify(output_options))
-    const input_options = getCurrentInputOptions() as Record<string, unknown>
+    const input_options = getInputOptionsForRequest()
     // The eight input options (create_new_nodes, create_new_flux,
     // propagate_flux_to_children, propagate_flux_to_parent,
     // autofix_parenthood_mat_balance, autofix_constraint_redundancies,
@@ -1011,18 +1147,21 @@ export const UniversalFileConverter = ({
     // true = fix + populate _auto_corrected_* for the red highlight.
     form_data.append('input_options', JSON.stringify(input_options))
     if (input_format == 'blob') {
-      // In blob→blob mode (e.g. reconciliation_sankey), when the user is inside a
-      // view, only serialize that view so the optimizer receives just the visible
-      // sub-diagram — not the master + every view.
+      // In blob→blob mode (e.g. reconciliation_sankey) and blob→excel (save Excel),
+      // when the user is inside a view, only serialize that view so the export /
+      // optimizer receives just the visible sub-diagram — not the master + every view.
       const toJSON_kwargs = { ...output_options_base, ...output_options } as Type_JSON
       const is_inside_view = app_data.drawing_area.id !== default_main_sankey_id
-      if (output_format == 'blob' && is_inside_view) toJSON_kwargs['only_current_view'] = true
+      if ((output_format == 'blob' || output_format == 'excel') && is_inside_view) toJSON_kwargs['only_current_view'] = true
       // Forward the user-set ``only_current_view`` from the blob input options
       // (Sankey courant) to the toJSON serialization.
       if (input_options['only_current_view']) toJSON_kwargs['only_current_view'] = true
       form_data.append('data', JSON.stringify(app_data.toJSON(toJSON_kwargs)))
     } else if (input_format == 'example_excel' || input_format == 'example_json') {
       form_data.append('file_name', file_path)
+      // Racine de résolution serveur : 'mfadata' pour la sankeythèque (contenu
+      // Etudes/Clients pas encore migré), défaut 'sankeydata' (templates/tutoriels).
+      if (config.example_root) form_data.append('example_root', config.example_root)
     } else {
       form_data.append('file', current_input_file as Blob)
     }
@@ -1162,7 +1301,7 @@ export const UniversalFileConverter = ({
       options_json={input_options_json as Record<string, unknown>}
       set_options_json={(opts) => set_input_options_json(opts as typeof input_options_json)}
       options_base={input_options_base as Record<string, unknown>}
-      set_options_base={(opts) => set_input_options_base(opts as typeof input_options_base)}
+      set_options_base={(opts) => set_input_options_base_user(opts as Record<string, unknown>)}
       input_config={effective_input_config}
       output_config={effective_output_config}
       show_options={false}
@@ -1278,7 +1417,7 @@ export const UniversalFileConverter = ({
             options_json={input_options_json as Record<string, unknown>}
             set_options_json={(opts) => set_input_options_json(opts as typeof input_options_json)}
             options_base={input_options_base as Record<string, unknown>}
-            set_options_base={(opts) => set_input_options_base(opts as typeof input_options_base)}
+            set_options_base={(opts) => set_input_options_base_user(opts as Record<string, unknown>)}
             input_config={effective_input_config}
             output_config={effective_output_config}
             show_selector={false}

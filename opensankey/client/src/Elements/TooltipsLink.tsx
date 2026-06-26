@@ -4,7 +4,7 @@ import { Class_NodeElement } from './Node'
 import { Class_LinkValue } from './LinkValues'
 import { Class_DataTag } from '../types/Tag'
 import { TOOLTIP_STYLES, TooltipBehaviorManager } from './TooltipsCSS'
-import { link_data_label, format_value } from '../types/Utils'
+import { link_data_label, format_value, link_ratio_constraint, ratio_flux_constraint_traduction } from '../types/Utils'
 import { getNameLabelValues } from './ElementsAttributesConfig'
 
 export class LinkTooltip {
@@ -177,7 +177,15 @@ export class LinkTooltip {
     }
     this._link.value_label_is_visible = data_label_visible
 
-    // Source / URL de la donnée courante (colonnes "Source"/"URL" de l'onglet Données)
+    // #116 — contrainte de ratio dont ce flux est le terme principal : on affiche sa
+    // traduction (générée par défaut si absente au chargement).
+    const ratio_c = link_ratio_constraint(this._link)
+    if (ratio_c) {
+      const trad = ratio_c.traduction || ratio_flux_constraint_traduction(ratio_c)
+      html += `<tr><th>Contrainte</th><td>${this.escapeHtml(trad)}</td></tr>`
+    }
+
+    // Source / URL / Hypothèse de la donnée courante (colonnes "Source"/"URL"/"Hypothèse" de l'onglet Données)
     html += this.getDataSourceUrlRows()
 
     // Contexte dataTags courant (Année, région…)
@@ -324,7 +332,7 @@ export class LinkTooltip {
   }
 
   /**
-   * Lignes <tr> "Source" et "URL" de la donnée courante du flux. Affichées
+   * Lignes <tr> "Source", "URL" et "Hypothèse" de la donnée courante du flux. Affichées
    * seulement si renseignées ; l'URL est rendue cliquable (le tooltip étant
    * épinglable, cf. #158). Aucun affichage si le flux n'a pas de valeur courante.
    */
@@ -337,6 +345,9 @@ export class LinkTooltip {
     }
     if (value.data_url) {
       html += `<tr><th>URL</th><td>${this.urlAnchor(value.data_url)}</td></tr>`
+    }
+    if (value.data_hypothesis) {
+      html += `<tr><th>Hypothèse</th><td>${this.escapeHtml(value.data_hypothesis)}</td></tr>`
     }
     return html
   }

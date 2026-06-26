@@ -1,6 +1,6 @@
 import type { Class_DataTag, Class_Tag } from '../types/Tag'
 import type { Class_DataTagGroup, Class_TagGroup } from '../types/TagGroup'
-import { Type_JSON, makeId, getNumberOrNullFromJSON, getStringOrNullFromJSON, getStringFromJSON, getJSONOrUndefinedFromJSON } from '../types/Utils'
+import { Type_JSON, makeId, getNumberOrNullFromJSON, getStringOrNullFromJSON, getStringFromJSON, getBooleanFromJSON, getJSONOrUndefinedFromJSON } from '../types/Utils'
 import type { Class_LinkElement } from './Link'
 import type { Class_NodeElement } from './Node'
 
@@ -141,6 +141,10 @@ export class Class_ElementValueTree {
         has_data = has_data || child.has_data
       })
     return has_data
+  }
+
+  public get has_collected_data(): boolean {
+    return Object.values(this.children).some(child => child.has_collected_data)
   }
 
   public set_only_data() {
@@ -288,12 +292,33 @@ export class Class_ElementValueTree {
     if (matching_tags.length !== 1) return null
     const child = this.children[matching_tags[0].id]
     if (child !== undefined) {
-      if (child instanceof Class_ElementValue) return child
+      if (child instanceof Class_ElementValue)
+        // #161 — a flux pruned for this dataTag does not exist there: treat it
+        // as having no value, so the link is not drawn for this dataTag (same
+        // path as a missing leaf). Only triggers for option-on files; with no
+        // marker (legacy/default) the behaviour is unchanged.
+        return child.structurally_absent ? null : child
       else return child.getValueForDataTags(remaining_tags)
     }
     else {
       return null
     }
+  }
+
+  // #188 — mirror getValueForDataTags but return the structurally-absent marker
+  // of the matching leaf. getValueForDataTags returns null for an absent leaf,
+  // which is indistinguishable from a plain missing value; a Link needs the
+  // marker itself to stay hidden (not drawn as a dashed zero phantom) for a
+  // dataTag where the flux does not exist.
+  public getStructurallyAbsentForDataTags(data_tags: Class_DataTag[]): boolean {
+    if (data_tags.length === 0) return false
+    const matching_tags = data_tags.filter(tag => (tag.group === this.data_tag_group))
+    const remaining_tags = data_tags.filter(tag => (tag.group !== this.data_tag_group))
+    if (matching_tags.length !== 1) return false
+    const child = this.children[matching_tags[0].id]
+    if (child === undefined) return false
+    if (child instanceof Class_ElementValue) return child.structurally_absent
+    return child.getStructurallyAbsentForDataTags(remaining_tags)
   }
 
   public setValueForDataTags(data_tags: Class_DataTag[], val: Class_ElementValue) {
@@ -450,6 +475,11 @@ export class Class_ElementValue {
   }
 
   public text_value: string | null = null
+
+  // #161 — true when this (flux, dataTag) cell was pruned by the no-propagation
+  // option: the flux does not exist for this dataTag. Used to omit the link
+  // from the diagram for that dataTag (see getValueForDataTags). Default false.
+  public structurally_absent: boolean = false
 
   // VALUE VECTORS =====================================================================
   // Each vector has length = vectorSize (set by subclass).
@@ -614,6 +644,7 @@ export class Class_ElementValue {
   public get has_result(): boolean { return false }
   public get has_intervals(): boolean { return false }
   public get has_data(): boolean { return false }
+  public get has_collected_data(): boolean { return false }
   public set_only_data() { /* subclasses override */ }
 
   public getMaxValue(): number {
@@ -729,9 +760,10 @@ export class Class_LinkValue extends Class_ElementValue {
 
   // LINK-SPECIFIC ATTRIBUTES ===========================================================
   private _ratio_unit_tag: Class_DataTag | null
-  // Free-text metadata of the data row (Données sheet "Source" / "URL" columns).
+  // Free-text metadata of the data row (Données sheet "Source" / "URL" / "Hypothèse" columns).
   private _data_source: string | null = null
   private _data_url: string | null = null
+  private _data_hypothesis: string | null = null
 
   public get ratio_unit_tag() { return this._ratio_unit_tag }
   public set ratio_unit_tag(_) { this._ratio_unit_tag = _ }
@@ -740,6 +772,8 @@ export class Class_LinkValue extends Class_ElementValue {
   public set data_source(_: string | null) { this._data_source = _ }
   public get data_url() { return this._data_url }
   public set data_url(_: string | null) { this._data_url = _ }
+  public get data_hypothesis() { return this._data_hypothesis }
+  public set data_hypothesis(_: string | null) { this._data_hypothesis = _ }
 
   public value_option: ValueOptionType = 'value'
 
@@ -769,6 +803,12 @@ export class Class_LinkValue extends Class_ElementValue {
 
   public get has_data() {
     return this._data_value[Class_LinkValue.SRC] !== null || this._data_min[Class_LinkValue.SRC] !== null || (this.value_option != 'value' && this.value_option != 'intervals')
+  }
+
+  // Valeur collectée SAISIE uniquement (donnée mesurée ou borne min) — exclut les
+  // flux définis seulement par ratio/% (contrairement à has_data ci-dessus).
+  public get has_collected_data(): boolean {
+    return this._data_value[Class_LinkValue.SRC] !== null || this._data_min[Class_LinkValue.SRC] !== null
   }
 
   public set_only_data() {
@@ -838,6 +878,7 @@ export class Class_LinkValue extends Class_ElementValue {
       this.ratio_unit_tag = element.ratio_unit_tag
       this.data_source = element.data_source
       this.data_url = element.data_url
+      this.data_hypothesis = element.data_hypothesis
     }
     // Copy vectors via base class
     super.copyFrom(element)
@@ -881,6 +922,9 @@ export class Class_LinkValue extends Class_ElementValue {
     if (this._ratio_unit_tag) json_object['ratio_unit_tag'] = this._ratio_unit_tag.id
     if (this._data_source != null) json_object['data_source'] = this._data_source
     if (this._data_url != null) json_object['data_url'] = this._data_url
+    if (this._data_hypothesis != null) json_object['data_hypothesis'] = this._data_hypothesis
+    // #161 — preserve the structurally-absent marker on save.
+    if (this.structurally_absent) json_object['structurally_absent'] = true
     return json_object
   }
 
@@ -908,6 +952,9 @@ export class Class_LinkValue extends Class_ElementValue {
     matching_tags_id: { [_: string]: { [_: string]: string; }; } = {}
   ) {
     super.fromJSON(json_object, matching_taggs_id, matching_tags_id)
+    // #161 — the flux does not exist for this dataTag (pruned by the
+    // no-propagation option). Absent in legacy files -> defaults to false.
+    this.structurally_absent = getBooleanFromJSON(json_object, 'structurally_absent', false)
     if (Object.prototype.hasOwnProperty.call(json_object, 'value')) {
       this.fromJSONLegacy(json_object)
     }
@@ -926,6 +973,7 @@ export class Class_LinkValue extends Class_ElementValue {
 
       this._data_source = getStringOrNullFromJSON(json_object, 'data_source')
       this._data_url = getStringOrNullFromJSON(json_object, 'data_url')
+      this._data_hypothesis = getStringOrNullFromJSON(json_object, 'data_hypothesis')
 
       this.text_value = getStringFromJSON(json_object, 'text_value', this.text_value!)
       this.value_option = getStringFromJSON(json_object, 'value_option', 'value') as ValueOptionType

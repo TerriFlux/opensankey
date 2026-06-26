@@ -53,6 +53,7 @@ import { Class_NodeElement } from '../../Elements/Node'
 import { Class_ElementStyle } from '../../Elements/Element'
 import { Class_ContainerElement } from '../../Elements/TextZone'
 import { ALL_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
+import { elementStyleConfigs } from '../../Elements/ElementStyle'
 
 export const GenericModalStyle = ({
   app_data
@@ -110,6 +111,45 @@ export const GenericStyleSelector = ({ app_data, children }: React.PropsWithChil
     : default_style_id
   const selected_style = styles_dict[selected_style_id]
 
+  // Familles de styles. Pour l'instant deux familles : les styles prédéfinis de
+  // l'application (définis dans ElementStyle.tsx + style par défaut) et les styles
+  // créés par l'utilisateur. À terme on pourra en ajouter d'autres ici.
+  const isPredefinedStyle = (id: string) => id === default_style_id || (id in elementStyleConfigs)
+  const style_families = [
+    { key: 'predefined' as const, label: t('ElementStyle.family_predefined'), match: (id: string) => isPredefinedStyle(id) },
+    { key: 'user' as const, label: t('ElementStyle.family_user'), match: (id: string) => !isPredefinedStyle(id) }
+  ]
+  const [selected_family, setSelectedFamily] = useState<'predefined' | 'user'>(
+    isPredefinedStyle(selected_style_id) ? 'predefined' : 'user'
+  )
+  const current_family = style_families.find(f => f.key === selected_family) ?? style_families[0]
+
+  // Si le style sélectionné a changé en dehors de ce menu (clic sur un nœud, ajout…)
+  // et n'appartient pas à la famille courante, on recale la famille affichée.
+  if (!current_family.match(selected_style_id)) {
+    const fam = isPredefinedStyle(selected_style_id) ? 'predefined' : 'user'
+    if (fam !== selected_family) setSelectedFamily(fam)
+  }
+
+  const filtered_style_ids = Object.keys(styles_dict).filter(id => current_family.match(id))
+
+  // Surcharges du style sélectionné par rapport au style par défaut (pour le menu de reset).
+  // Recalculé à la volée par MenuResetAttrLocal (à l'ouverture / après reset) car l'édition
+  // d'un attribut via le menu d'apparence ne re-rend pas ce composant.
+  const lang = (app_data.language ?? 'fr') as 'fr' | 'en'
+  const computeOverloadedAttr = () => {
+    const dict: { [_: string]: { overloaded: boolean, name: string } } = {}
+    Object.entries(ALL_ATTRIBUTES_CONFIG).forEach(([key, cfg]) => {
+      if (selected_style.isAttributeOverloaded(key as keyof typeof ALL_ATTRIBUTES_CONFIG)) {
+        dict[key] = {
+          overloaded: true,
+          name: (cfg as { labels?: { fr: string, en: string } }).labels?.[lang] ?? key
+        }
+      }
+    })
+    return dict
+  }
+
   // const config = elementType === 'nodes' ? {
   //   selectedRef: app_data.menu_configuration.ref_selected_style,
   const updateAll = () => {
@@ -124,6 +164,43 @@ export const GenericStyleSelector = ({ app_data, children }: React.PropsWithChil
 
   return (
     <Box layerStyle='menuconfigpanel_grid'>
+      {/* Sélecteur de famille de styles (prédéfinis de l'application / utilisateur) */}
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' display='flex' gap='0.4rem'>
+        <Box layerStyle='menuconfigpanel_option_name' textStyle='h3'>
+          {t('ElementStyle.family')}
+        </Box>
+        <Box flex='auto'>
+          <Menu>
+            <MenuButton
+              as={Button}
+              w='100%'
+              variant='menuconfigpanel_option_button'
+              rightIcon={icon_open_selector}
+            >
+              {current_family.label}
+            </MenuButton>
+            <MenuList>
+              {style_families.map(fam => (
+                <MenuItem
+                  key={fam.key}
+                  onClick={() => {
+                    setSelectedFamily(fam.key)
+                    const ids = Object.keys(styles_dict).filter(fam.match)
+                    if (!ids.includes(selected_style_id)) {
+                      app_data.menu_configuration.ref_selected_style.current = ids[0] ?? default_style_id
+                    }
+                    updateAll()
+                    setUpdate(!update)
+                  }}
+                >
+                  {fam.label}
+                </MenuItem>
+              ))}
+            </MenuList>
+          </Menu>
+        </Box>
+      </Box>
+
       <Box as='span' layerStyle='menustylepanel_row_droplist'>
         {/* Bouton pour ajouter un style */}
         <Button
@@ -132,6 +209,7 @@ export const GenericStyleSelector = ({ app_data, children }: React.PropsWithChil
           onClick={() => {
             const new_style = app_data.drawing_area.sankey.addNewDefaultElementStyle()
             app_data.menu_configuration.ref_selected_style.current = new_style.id
+            setSelectedFamily('user')
             updateAll()
             app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
             setUpdate(!update)
@@ -150,7 +228,7 @@ export const GenericStyleSelector = ({ app_data, children }: React.PropsWithChil
             {CutName(t(selected_style.name), 30)}
           </MenuButton>
           <MenuList>
-            {Object.keys(app_data.drawing_area.sankey.styles_dict).map(id => (
+            {filtered_style_ids.map(id => (
               <MenuItem
                 key={id}
                 onClick={() => {
@@ -179,6 +257,28 @@ export const GenericStyleSelector = ({ app_data, children }: React.PropsWithChil
         >
           {icon_remove_element}
         </Button>
+
+        {/* Menu pour enlever les surcharges du style par rapport au style par défaut */}
+        <OSTooltip label={t('Noeud.tooltips.AS')}>
+          <MenuResetAttrLocal
+            new_data={app_data}
+            dict_overwritted_attr={computeOverloadedAttr()}
+            computeOverloadedAttr={computeOverloadedAttr}
+            is_disabled={selected_style_id === default_style_id}
+            onResetAll={() => {
+              app_data.drawing_area.sankey.resetAttrStyle(selected_style)
+              updateAll()
+              app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+              setUpdate(!update)
+            }}
+            onResetLocal={(k) => {
+              app_data.drawing_area.sankey.deleteLocalAttrStyle(selected_style, k as keyof typeof ALL_ATTRIBUTES_CONFIG)
+              updateAll()
+              app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+              setUpdate(!update)
+            }}
+          />
+        </OSTooltip>
       </Box>
 
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' display='flex' gap='0.4rem'>
