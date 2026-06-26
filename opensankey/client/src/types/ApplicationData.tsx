@@ -357,6 +357,11 @@ export class Class_ApplicationData {
   // Pièces jointes images de la doc : map id -> data-URI base64. Référencées dans le markdown par
   // `img://<id>` (garde l'éditeur lisible) ; persistées en JSON avec le diagramme (autonome).
   protected _documentation_images: { [id: string]: string } = {}
+  // Derniers paramètres du dialogue « Publier le site (zip) » choisis pour ce diagramme (flags
+  // d'affichage du viewer, mode de position, en-tête, nom de publication, logo en data-URI).
+  // Persistés en JSON pour qu'une re-publication / mise à jour reparte exactement des mêmes réglages.
+  // /!\ Distinct de `publish_options` (config viewer runtime read-only issue de window.sankey).
+  protected _publish_settings: Type_JSON = {}
 
 
   /**
@@ -598,6 +603,8 @@ export class Class_ApplicationData {
     // La doc markdown est attachée au diagramme : un nouveau diagramme repart d'une doc vide.
     this._documentation_markdown = ''
     this._documentation_images = {}
+    // Les paramètres de publication sont attachés au diagramme : nouveau diagramme => réglages vierges.
+    this._publish_settings = {}
     // Undraw and create new DA
     this._drawing_area.unDraw()
     this._drawing_area = this.createNewDrawingArea()
@@ -785,6 +792,7 @@ export class Class_ApplicationData {
     if (this._file_name != default_file_name) json_object['name_file'] = this._file_name
     if (this._documentation_markdown !== '') json_object['documentation_markdown'] = this._documentation_markdown
     if (Object.keys(this._documentation_images).length > 0) json_object['documentation_images'] = this._documentation_images
+    if (Object.keys(this._publish_settings).length > 0) json_object['publish_settings'] = this._publish_settings
     json_object['main_zone'] = this.menu_configuration.mainZoneStateToJSON()
     return {
       ...json_object,
@@ -861,6 +869,9 @@ export class Class_ApplicationData {
     this._documentation_markdown = getStringFromJSON(json_object, 'documentation_markdown', '')
     const imgs = json_object['documentation_images']
     this._documentation_images = (imgs && typeof imgs === 'object') ? imgs as { [id: string]: string } : {}
+    const pub_opts = json_object['publish_settings']
+    this._publish_settings = (pub_opts && typeof pub_opts === 'object' && !Array.isArray(pub_opts))
+      ? pub_opts as Type_JSON : {}
     const mz = json_object['main_zone']
     // Garde défensive : menu_configuration est créé via un hook React (useToast) ; si _fromJSON
     // s'exécute avant son initialisation, l'appel jetait et avortait tout le chargement (et donc
@@ -1918,6 +1929,9 @@ export class Class_ApplicationData {
 
   public get documentation_images(): { [id: string]: string } { return this._documentation_images }
   public set documentation_images(value: { [id: string]: string }) { this._documentation_images = value }
+
+  public get publish_settings(): Type_JSON { return this._publish_settings }
+  public set publish_settings(value: Type_JSON) { this._publish_settings = value }
 
   /** Override in subclasses to expose named views as layout sources */
   public get layout_view_sources(): Array<{ id: string, name: string }> { return [] }
