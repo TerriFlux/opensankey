@@ -2,7 +2,11 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
-## [Unreleased] — Mai 2026
+## [1.1.7] — 2026-06-26
+
+### Publication : portfolio de diagrammes en site autonome
+
+- **Mode Publication / portfolio** (`ModalPublishOSP`) : génération d'un site web autonome (archive déployable en ligne ou dossier local) regroupant un ou plusieurs diagrammes, avec en-têtes de sections sur la page d'accueil et exclusion automatique des dossiers *Partenaires* / *Interne* (su-model/sankeyapplication#194). Déploiement additif avec sauvegarde datée de la version précédente, réglages de publication persistés avec le diagramme. En lecture : diagramme et documentation en lecture seule, bouton plein écran isolé, aide à la navigation et bouton Doc côté lecteur, sélecteur de data tag en barre du haut. Viewers embarqués paramétrables (`position_mode`, `data_tag_selection`) et chargement unique du diagramme (su-model/sankeyapplication#196). Sankey unitaire docké dans la grande zone ou détaché en fenêtre. Voir [submodules/OpenSankey/CHANGELOG.md](submodules/OpenSankey/CHANGELOG.md) pour le détail côté base.
 
 ### Bump du submodule OpenSankey — verrou de taille (#1240), fixes & styles toolbar
 
