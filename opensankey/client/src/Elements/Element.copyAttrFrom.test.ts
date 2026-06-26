@@ -32,7 +32,6 @@ jest.mock('./ElementsAttributesConfig', () => ({
   ALL_ATTRIBUTES_CONFIG: new Proxy({}, { get: () => ({ default: undefined }) })
 }))
 
-// eslint-disable-next-line import/first
 import { Class_ProtoElement } from './Element'
 
 // Stub minimal : copyAttrFrom ne lit que `_storage` (sac d'overrides) et
