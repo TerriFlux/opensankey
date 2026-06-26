@@ -373,12 +373,15 @@ def publish_folder_route():
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-    return send_file(
+    resp = send_file(
         zip_path,
         mimetype="application/zip",
         as_attachment=True,
         download_name=os.path.basename(zip_path),
     )
+    # Build jetable : supprimé une fois le zip entièrement streamé au client.
+    resp.call_on_close(lambda: publish_lib.cleanup_build_dir(artifact))
+    return resp
 
 
 @sankeyapp.route("/api/publish/current", methods=["POST"])
@@ -416,12 +419,15 @@ def publish_current_route():
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-    return send_file(
+    resp = send_file(
         zip_path,
         mimetype="application/zip",
         as_attachment=True,
         download_name=os.path.basename(zip_path),
     )
+    # Build jetable : supprimé une fois le zip entièrement streamé au client.
+    resp.call_on_close(lambda: publish_lib.cleanup_build_dir(artifact))
+    return resp
 
 
 @sankeyapp.route("/api/publish/deploy", methods=["POST"])
@@ -447,6 +453,7 @@ def publish_deploy_route():
         (is_multipart and request.form.get("diagram"))
         or (json_data is not None and not json_data.get("folder") and json_data.get("diagram"))
     )
+    artifact = None
     try:
         if is_current:
             if is_multipart:
@@ -475,6 +482,10 @@ def publish_deploy_route():
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+    finally:
+        # Build jetable : supprimé une fois le déploiement terminé (réussi ou non).
+        if artifact:
+            publish_lib.cleanup_build_dir(artifact)
     return jsonify({"url": url})
 
 

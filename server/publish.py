@@ -27,7 +27,6 @@ import re
 import gzip
 import json
 import shutil
-import tempfile
 import unicodedata
 from datetime import datetime
 from pathlib import Path
@@ -930,11 +929,38 @@ def _write_local_servers(final_dir):
     (final_dir / "LISEZ-MOI.txt").write_text(_README_TXT, encoding="utf-8")
 
 
+def _builds_root():
+    """Racine des dossiers de build (répertoires de travail des publications).
+
+    Volontairement HORS de /tmp : ce dernier peut être purgé par le système à
+    tout moment et n'est pas dimensionné pour ce volume (un build pèse de 30 Mo
+    à ~1 Go). Surchargeable par SANKEY_BUILDS_DIR ; sinon ~/sankey_builds
+    (= /home/ubuntu/sankey_builds quand le process Flask tourne en `ubuntu`)."""
+    env = os.environ.get("SANKEY_BUILDS_DIR")
+    return Path(env) if env else Path.home() / "sankey_builds"
+
+
 def _artifacts_base():
-    base = Path(tempfile.gettempdir()) / "sankey_publish"
+    base = _builds_root()
     d = base / f"build_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}"
     d.mkdir(parents=True, exist_ok=True)
     return d
+
+
+def cleanup_build_dir(artifact_dir):
+    """Supprime le dossier de build `build_<timestamp>` contenant l'artifact et
+    son zip. Les builds sont des répertoires de travail jetables une fois le zip
+    envoyé / l'étude déployée : on les supprime immédiatement pour éviter toute
+    accumulation sur le disque. À appeler APRÈS la fin du streaming du zip
+    (cf. Response.call_on_close) ou en fin de déploiement.
+
+    Garde-fou : ne supprime que si le parent s'appelle bien `build_<...>`."""
+    try:
+        build_dir = Path(artifact_dir).parent
+        if build_dir.name.startswith("build_"):
+            shutil.rmtree(build_dir, ignore_errors=True)
+    except Exception as e:
+        logger.warning("Échec nettoyage du dossier de build %s: %s", artifact_dir, e)
 
 
 def publish_folder(project_dir, build_dir, publish_name=None, artifacts_base=None,
