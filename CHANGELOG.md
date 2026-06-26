@@ -2,7 +2,7 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
-## [Unreleased]
+## [1.1.7] — 2026-06-26
 
 ### Added (viewer publish — état initial : mode de navigation + data tag présélectionné)
 
