@@ -66,6 +66,8 @@ env.bat
 preferences/**
 client/.env
 .claude/settings.local.json
+# Réglages Claude actifs = propres à chaque contributeur (cf .claude/<user>/ + set_claude_env.sh)
+.claude/settings.json
 dbg_constraints__summary_txt_filename
 
 # Local POC outputs (test_dual_output_poc.py)
