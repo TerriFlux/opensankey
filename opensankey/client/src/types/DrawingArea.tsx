@@ -2873,6 +2873,20 @@ export class Class_DrawingArea {
         this._updateScrollbars()
       }, 100)
 
+      // En mode libre, le fond et la grille sont dimensionnés via _freeBgBounds()
+      // (union canvas ∪ viewport visible) au moment du draw. Le zoom n'applique qu'un
+      // transform : sans re-draw, le fond/grille gardent leur taille précédente et
+      // rétrécissent avec le contenu en dézoomant, laissant la fenêtre non remplie.
+      // On les redessine donc (débouncé) pour qu'ils recalculent leurs bornes sur le
+      // viewport courant et remplissent toujours la fenêtre. En mode papier le canvas
+      // est figé : rien à refaire.
+      if (!this.is_paper_mode) {
+        this.application_data._add_waiting_process('redraw_bg_grid_zoom', () => {
+          this.drawBackground()
+          this.drawGrid()
+        }, 80)
+      }
+
       // Issue #165 — Mode verrouillé : la font-size écran doit rester constante
       // pendant le zoom molette. Le zoom change le repère local (donc la taille
       // apparente du texte) ; on re-render les labels avec le nouveau facteur de
