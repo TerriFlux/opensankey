@@ -300,8 +300,14 @@ export class Class_NodeElement extends Class_NodeBase {
       .forEach(link_to_copy => {
         const copied_id = matching_link_id[link_to_copy.id] ?? link_to_copy.id
         const link = this.drawing_area.sankey.links_dict[copied_id] as Class_LinkElement
-        if ((link !== undefined) && (!this._links_order.includes(link)))
-          this._links_order.push(link)
+        if (link !== undefined) {
+          // Carry the I/O anchor lock ("cadenas") with the order it pins, so a
+          // re-applied layout keeps the locked arrangement instead of reverting
+          // to auto-reorg (#202).
+          link.copyAnchorLockFrom(link_to_copy)
+          if (!this._links_order.includes(link))
+            this._links_order.push(link)
+        }
       })
 
     // after copying node_to_copy._link_orders add the remaining links
