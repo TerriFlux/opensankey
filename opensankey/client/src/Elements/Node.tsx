@@ -737,9 +737,8 @@ export class Class_NodeElement extends Class_NodeBase {
   public getShapeWidthToUse() {
     // #201 : same raw-sum-then-band-floor policy as getShapeHeightToUse, for the
     // top/bottom band of vertically-laid-out nodes. Summing the per-link clamped
-    // thickness inflated the node width to N × minimum_flux for N thin links.
-    // getSideBandExtent floors the band ONCE in structure/interval display
-    // (sub-pixel flows overlap), and keeps the raw sum in value display (#200).
+    // thickness inflated the node width to N × minimum_flux for N thin links;
+    // getSideBandExtent floors the band ONCE (flux size limit applies to nodes).
     const sum_of_top_thickness = this.getSideBandExtent('top')
     const sum_of_bottom_thickness = this.getSideBandExtent('bottom')
     // super.getShapeWidthToUse() inclut shape_min_width ET, si tied,
@@ -772,10 +771,11 @@ export class Class_NodeElement extends Class_NodeBase {
     }
     const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag : undefined
     // #201 : size on the RAW sums per side (sub-pixel flows superpose into one
-    // band), then floor ONCE on the band in structure/interval display — not the
-    // sum of per-link 2px floors, which inflated the node to N × minimum_flux for
-    // N thin links. In value display the raw sum is kept as-is (node-too-thin is
-    // the separate #200). See nodeBandHeight.clampBandThickness.
+    // band), then floor ONCE on the band — not the sum of per-link 2px floors,
+    // which inflated the node to N × minimum_flux for N thin links. The flux size
+    // limit (minimum_flux) floors the node band too, in every display mode, so a
+    // node is never thinner than its links (also covers #200). See
+    // nodeBandHeight.clampBandThickness.
     const sum_of_left_thickness = this.getSideBandExtent('left')
     const sum_of_right_thickness = this.getSideBandExtent('right')
     if (echangeTag && this.hasGivenTag(echangeTag)) {
@@ -1347,9 +1347,14 @@ export class Class_NodeElement extends Class_NodeBase {
    * Visible band extent of ONE side for the node shape (#201) — height for
    * left/right sides, width for top/bottom sides.
    * Σ of the side's RAW link thicknesses (sub-pixel/structural flows overlap, so
-   * they contribute < minimum_flux / 0), then floored ONCE on the band in
-   * structure/interval display. In value display the raw sum is returned as-is
-   * (the node-too-thin case is the separate #200, which floors at draw time only).
+   * they contribute < minimum_flux / 0), then floored ONCE on the band — not the
+   * sum of per-link 2px floors, which inflated the node to N × minimum_flux.
+   *
+   * The flux size limit (minimum_flux) applies to the NODE band as well as to the
+   * links — "taille limite des nœuds et flux" (#201). It floors the band in EVERY
+   * display mode so a node never renders thinner than its links: in structure
+   * display thin flows overlap to ~minimum_flux; in value display a node whose raw
+   * band is sub-pixel was thinner than its 2px-floored links (that was #200).
    */
   private getSideBandExtent(side: Type_Side): number {
     const links = this.getLinksOrdered(side).filter(link => link.is_visible_for_sizing_of(this))
@@ -1357,7 +1362,6 @@ export class Class_NodeElement extends Class_NodeBase {
       (sum, link) => sum + (link.source === this ? link.thicknessSourceRaw : link.thicknessTargetRaw),
       0
     )
-    if (!this.drawing_area.is_structure_display) return raw
     return clampBandThickness(raw, links.length > 0, this.drawing_area.minimum_flux)
   }
 

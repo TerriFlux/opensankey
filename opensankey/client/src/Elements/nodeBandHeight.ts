@@ -11,6 +11,11 @@
 // The fix : size the node on the RAW sums per side (sub-pixel flows superpose),
 // then apply the flux floor ONCE on the band — matching the visible band and the
 // #199 arrow fan, instead of stacking the per-link 2px floors.
+//
+// The flux size limit (minimum_flux) is applied to the node band as well as to
+// the links — "taille limite des nœuds et flux" (#201). The band is floored in
+// every display mode so a node is never thinner than its 2px-floored links (this
+// also covers #200, the node-too-thin-in-value-display case).
 
 /**
  * Clamp ONE side's raw band thickness (Σ of the side's RAW link thicknesses) to

@@ -12,6 +12,11 @@ import { clampBandThickness } from './nodeBandHeight'
 // puis appliquer le plancher de flux UNE fois sur la bande — pas par lien.
 // clampBandThickness isole cette politique pure, sans le graphe d3/DOM de
 // Class_NodeElement.
+//
+// La « taille limite des nœuds et flux » (minimum_flux) s'applique désormais au
+// nœud comme aux flux, dans TOUS les modes d'affichage (getSideBandExtent appelle
+// clampBandThickness sans condition) : un nœud n'est jamais plus fin que ses flux
+// (couvre aussi #200 — nœud trop fin en affichage valeurs).
 
 // Cas Pruneaux (F&L 2015, user_scale 3000) : 4 sorties sous-pixel, Σ brut ~1.33px.
 const PRUNEAUX_SORTIES_RAW = 1.33 // Σ des 4 sorties brutes
