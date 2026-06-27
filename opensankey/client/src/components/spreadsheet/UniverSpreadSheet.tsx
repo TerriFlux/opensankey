@@ -11,6 +11,7 @@
 
 // External imports
 import React, { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Button, Popover, PopoverTrigger, PopoverContent, PopoverArrow, PopoverBody,
   Portal, Input, Checkbox, Divider, VStack, Text, Menu, MenuButton, MenuList, MenuItem
@@ -30,25 +31,28 @@ import { AddConstraintModal } from './AddConstraintModal'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+// Type i18next minimal (clé -> libellé) pour typer les builders d'options ci-dessous.
+type Type_TFn = (key: string) => string
+
 // Filtres d'affichage du tableur. Pour l'instant deux modes ; la liste est destinée à s'enrichir
 // (ex. masquer les flux à zéro, n'afficher qu'un tag…) sans toucher au reste de la barre d'outils.
 // 'visible' = seulement les éléments visibles (exclut repliés/agrégés) → onlyVisible.
-const DISPLAY_FILTERS: { id: 'all' | 'visible', label: string }[] = [
-  { id: 'all', label: 'Tout afficher' },
-  { id: 'visible', label: 'Visibles uniquement' }
+const displayFilters = (t: Type_TFn): { id: 'all' | 'visible', label: string }[] => [
+  { id: 'all', label: t('Spreadsheet.toolbar.show_all') },
+  { id: 'visible', label: t('Spreadsheet.toolbar.only_visible') }
 ]
 
 // Modes de placement des nœuds créés depuis le tableur (cf. MenuConfig.spreadsheet_placement_mode).
-const PLACEMENT_MODES: { id: 'auto' | 'none' | 'increment', label: string }[] = [
-  { id: 'auto', label: 'Placement : auto' },
-  { id: 'none', label: 'Placement : aucun' },
-  { id: 'increment', label: 'Placement : incrémental' }
+const placementModes = (t: Type_TFn): { id: 'auto' | 'none' | 'increment', label: string }[] => [
+  { id: 'auto', label: t('Spreadsheet.toolbar.placement_auto') },
+  { id: 'none', label: t('Spreadsheet.toolbar.placement_none') },
+  { id: 'increment', label: t('Spreadsheet.toolbar.placement_increment') }
 ]
 
 // Mode d'affichage des matrices TES/TER (cf. MenuConfig.spreadsheet_matrix_mode).
-const MATRIX_MODES: { id: 'cross' | 'value', label: string }[] = [
-  { id: 'cross', label: 'Matrice : croix' },
-  { id: 'value', label: 'Matrice : valeur' }
+const matrixModes = (t: Type_TFn): { id: 'cross' | 'value', label: string }[] => [
+  { id: 'cross', label: t('Spreadsheet.toolbar.matrix_cross') },
+  { id: 'value', label: t('Spreadsheet.toolbar.matrix_value') }
 ]
 
 /**
@@ -105,6 +109,7 @@ const ColumnSelector = (
   { columns, hiddenSet, onSet }:
   { columns: Type_ColMeta[], hiddenSet: Set<number>, onSet: (col: number, hidden: boolean) => void }
 ) => {
+  const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
   const [search, setSearch] = useState('')
 
@@ -124,8 +129,8 @@ const ColumnSelector = (
   }
 
   const triggerLabel = columns.length === 0
-    ? 'Colonnes'
-    : `Colonnes (${columns.length - hiddenSet.size}/${columns.length})`
+    ? t('Spreadsheet.toolbar.columns')
+    : t('Spreadsheet.toolbar.columns_count', { shown: columns.length - hiddenSet.size, total: columns.length })
 
   return (
     <Popover isOpen={isOpen} onClose={() => setIsOpen(false)} placement='bottom-start' isLazy>
@@ -150,7 +155,7 @@ const ColumnSelector = (
           <PopoverBody p='6px'>
             <Input
               size='xs'
-              placeholder='Rechercher'
+              placeholder={t('Spreadsheet.toolbar.search')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               mb='6px'
@@ -161,7 +166,7 @@ const ColumnSelector = (
               isIndeterminate={!allChecked && !noneChecked}
               onChange={(e) => toggleAll(e.target.checked)}
             >
-              <Text fontSize='xs' fontStyle='italic'>(Tout sélectionner)</Text>
+              <Text fontSize='xs' fontStyle='italic'>{t('Spreadsheet.toolbar.select_all')}</Text>
             </Checkbox>
             <Divider my='4px' />
             <VStack align='stretch' spacing='2px' maxH='240px' overflowY='auto'>
@@ -195,6 +200,7 @@ const SheetSelector = (
   { sheets, hiddenSet, onSet }:
   { sheets: Type_SheetMeta[], hiddenSet: Set<string>, onSet: (sheetId: string, hidden: boolean) => void }
 ) => {
+  const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
   const [search, setSearch] = useState('')
 
@@ -214,8 +220,8 @@ const SheetSelector = (
   }
 
   const triggerLabel = sheets.length === 0
-    ? 'Onglets'
-    : `Onglets (${sheets.length - hiddenSet.size}/${sheets.length})`
+    ? t('Spreadsheet.toolbar.sheets')
+    : t('Spreadsheet.toolbar.sheets_count', { shown: sheets.length - hiddenSet.size, total: sheets.length })
 
   return (
     <Popover isOpen={isOpen} onClose={() => setIsOpen(false)} placement='bottom-start' isLazy>
@@ -240,7 +246,7 @@ const SheetSelector = (
           <PopoverBody p='6px'>
             <Input
               size='xs'
-              placeholder='Rechercher'
+              placeholder={t('Spreadsheet.toolbar.search')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               mb='6px'
@@ -251,7 +257,7 @@ const SheetSelector = (
               isIndeterminate={!allChecked && !noneChecked}
               onChange={(e) => toggleAll(e.target.checked)}
             >
-              <Text fontSize='xs' fontStyle='italic'>(Tout sélectionner)</Text>
+              <Text fontSize='xs' fontStyle='italic'>{t('Spreadsheet.toolbar.select_all')}</Text>
             </Checkbox>
             <Divider my='4px' />
             <VStack align='stretch' spacing='2px' maxH='240px' overflowY='auto'>
@@ -276,9 +282,56 @@ const SheetSelector = (
   )
 }
 
+// Mapping langue applicative (i18next) -> type d'enum LocaleType Univer. Univer fournit en-US/fr-FR/
+// es-ES/de-DE/it-IT (cf. @univerjs/presets/.../locales). Repli en-US.
+const UNIVER_LOCALE_TYPE: { [lang: string]: string } = {
+  fr: 'FR_FR', en: 'EN_US', es: 'ES_ES', de: 'DE_DE', it: 'IT_IT'
+}
+
+// Charge les 4 fichiers de locale Univer (core/filter/sort/data-validation) pour la langue donnée.
+// Imports STATIQUES par langue (et non un import dynamique à chemin variable) : le champ `exports`
+// du paquet @univerjs/presets n'expose les locales que via le wildcard `./preset-sheets-core/*`, que
+// webpack résout par littéral mais PAS en contexte dynamique -> on énumère les langues explicitement.
+const loadUniverLocales = (lang: string): Promise<any[]> => {
+  switch (lang) {
+  case 'fr': return Promise.all([
+    import('@univerjs/presets/preset-sheets-core/locales/fr-FR'),
+    import('@univerjs/presets/preset-sheets-filter/locales/fr-FR'),
+    import('@univerjs/presets/preset-sheets-sort/locales/fr-FR'),
+    import('@univerjs/presets/preset-sheets-data-validation/locales/fr-FR')
+  ])
+  case 'es': return Promise.all([
+    import('@univerjs/presets/preset-sheets-core/locales/es-ES'),
+    import('@univerjs/presets/preset-sheets-filter/locales/es-ES'),
+    import('@univerjs/presets/preset-sheets-sort/locales/es-ES'),
+    import('@univerjs/presets/preset-sheets-data-validation/locales/es-ES')
+  ])
+  case 'de': return Promise.all([
+    import('@univerjs/presets/preset-sheets-core/locales/de-DE'),
+    import('@univerjs/presets/preset-sheets-filter/locales/de-DE'),
+    import('@univerjs/presets/preset-sheets-sort/locales/de-DE'),
+    import('@univerjs/presets/preset-sheets-data-validation/locales/de-DE')
+  ])
+  case 'it': return Promise.all([
+    import('@univerjs/presets/preset-sheets-core/locales/it-IT'),
+    import('@univerjs/presets/preset-sheets-filter/locales/it-IT'),
+    import('@univerjs/presets/preset-sheets-sort/locales/it-IT'),
+    import('@univerjs/presets/preset-sheets-data-validation/locales/it-IT')
+  ])
+  default: return Promise.all([
+    import('@univerjs/presets/preset-sheets-core/locales/en-US'),
+    import('@univerjs/presets/preset-sheets-filter/locales/en-US'),
+    import('@univerjs/presets/preset-sheets-sort/locales/en-US'),
+    import('@univerjs/presets/preset-sheets-data-validation/locales/en-US')
+  ])
+  }
+}
+
 export const UniverSpreadSheet = (
   { app_data, active }: { app_data: Class_ApplicationData, active: boolean }
 ) => {
+  const { t, i18n } = useTranslation()
+  const lang = (i18n.language || 'en').slice(0, 2)
   const containerRef = useRef<HTMLDivElement>(null)
   const apiRef = useRef<any>(null)
   // Métadonnées de colonnes (par onglet) du dernier build, pour le sélecteur "Colonnes".
@@ -414,21 +467,19 @@ export const UniverSpreadSheet = (
     const isSyncing = { current: false }
 
     const init = async () => {
+      // Locale Univer suivant la langue applicative (repli en-US). Les presets et leurs 4 fichiers de
+      // locale sont chargés en chunks séparés (cf. loadUniverLocales).
       const [
-        presets, sheetsCore, localeMod,
-        sheetsFilter, filterLocaleMod, sheetsSort, sortLocaleMod,
-        sheetsDataValidation, dataValidationLocaleMod
+        presets, sheetsCore, sheetsFilter, sheetsSort, sheetsDataValidation
       ] = await Promise.all([
         import('@univerjs/presets'),
         import('@univerjs/presets/preset-sheets-core'),
-        import('@univerjs/presets/preset-sheets-core/locales/fr-FR'),
         import('@univerjs/presets/preset-sheets-filter'),
-        import('@univerjs/presets/preset-sheets-filter/locales/fr-FR'),
         import('@univerjs/presets/preset-sheets-sort'),
-        import('@univerjs/presets/preset-sheets-sort/locales/fr-FR'),
-        import('@univerjs/presets/preset-sheets-data-validation'),
-        import('@univerjs/presets/preset-sheets-data-validation/locales/fr-FR')
+        import('@univerjs/presets/preset-sheets-data-validation')
       ])
+      const [localeMod, filterLocaleMod, sortLocaleMod, dataValidationLocaleMod] =
+        await loadUniverLocales(lang)
       await Promise.all([
         import('@univerjs/presets/lib/styles/preset-sheets-core.css'),
         import('@univerjs/presets/lib/styles/preset-sheets-filter.css'),
@@ -444,13 +495,15 @@ export const UniverSpreadSheet = (
       const { UniverSheetsFilterPreset } = sheetsFilter
       const { UniverSheetsSortPreset } = sheetsSort
       const { UniverSheetsDataValidationPreset } = sheetsDataValidation
-      const sheetsCoreFrFR = localeMod.default
+      const sheetsCoreLocale = localeMod.default
 
+      const univerLocale = LocaleType[(UNIVER_LOCALE_TYPE[lang] || 'EN_US') as keyof typeof LocaleType] ||
+        LocaleType.EN_US
       const { univer, univerAPI } = createUniver({
-        locale: LocaleType.FR_FR,
+        locale: univerLocale,
         locales: {
-          [LocaleType.FR_FR]: merge(
-            {}, sheetsCoreFrFR, filterLocaleMod.default, sortLocaleMod.default,
+          [univerLocale]: merge(
+            {}, sheetsCoreLocale, filterLocaleMod.default, sortLocaleMod.default,
             dataValidationLocaleMod.default
           )
         },
@@ -664,7 +717,9 @@ export const UniverSpreadSheet = (
         univerInstance.dispose()
       }
     }
-  }, [active])
+    // `lang` dans les deps : un changement de langue recrée l'instance Univer avec la nouvelle locale
+    // (menus/filtres internes) et reconstruit le classeur (noms d'onglets / en-têtes traduits).
+  }, [active, lang])
 
   // Bouton hiérarchie (onglet Noeuds) : opère sur la sélection courante.
   const runOp = (op: (a: Class_ApplicationData, api: any) => boolean) => () => {
@@ -781,10 +836,10 @@ export const UniverSpreadSheet = (
             colorScheme='blue'
             width='auto'
             flexShrink={0}
-            title='Créer une contrainte (flux, stock, total de nœud…) via un formulaire guidé'
+            title={t('Spreadsheet.toolbar.add_constraint_tip')}
             onClick={() => setIsAddConstraintOpen(true)}
           >
-            + Contrainte
+            {t('Spreadsheet.toolbar.add_constraint')}
           </Button>
         )}
 
@@ -796,10 +851,10 @@ export const UniverSpreadSheet = (
             width='auto'
             maxW='110px'
             flexShrink={0}
-            title="Construit la hiérarchie d'agrégation depuis la colonne Niveau"
+            title={t('Spreadsheet.toolbar.parser_tip')}
             onClick={runOp(parseHierarchyFromLevels)}
           >
-            Parser
+            {t('Spreadsheet.toolbar.parser')}
           </Button>
         )}
 
@@ -818,39 +873,39 @@ export const UniverSpreadSheet = (
           flexShrink={0}
           colorScheme={filterOn ? 'blue' : 'gray'}
           variant={filterOn ? 'solid' : 'outline'}
-          title='Active/désactive les filtres de colonne (style Excel) sur cet onglet'
+          title={t('Spreadsheet.toolbar.filter_tip')}
           onClick={() => toggleFilter(!filterOn)}
         >
-          Filtrer
+          {t('Spreadsheet.toolbar.filter')}
         </Button>
 
-        {/* Filtre d'affichage (extensible : voir DISPLAY_FILTERS). */}
+        {/* Filtre d'affichage (extensible : voir displayFilters). */}
         <SingleSelectMenu
           value={onlyVisible ? 'visible' : 'all'}
-          options={DISPLAY_FILTERS}
+          options={displayFilters(t)}
           onChange={(v) => toggleOnlyVisible(v === 'visible')}
-          title="Filtre d'affichage des lignes du tableur"
+          title={t('Spreadsheet.toolbar.display_filter_tip')}
         />
 
         {/* Affichage des matrices TES/TER : croix (structure) ou valeur (suit le data_type courant). */}
         {isMatrixSheet && (
           <SingleSelectMenu
             value={matrixMode}
-            options={MATRIX_MODES}
+            options={matrixModes(t)}
             onChange={toggleMatrixMode}
-            title="Contenu des cellules de la matrice : croix (le flux existe) ou valeur du flux pour le data_type sélectionné"
+            title={t('Spreadsheet.toolbar.matrix_tip')}
           />
         )}
 
         {/* Mode de placement des nœuds créés depuis le tableur (ajout de flux/nœud). */}
         <SingleSelectMenu
           value={placementMode}
-          options={PLACEMENT_MODES}
+          options={placementModes(t)}
           onChange={(m) => {
             setPlacementMode(m)
             app_data.menu_configuration.spreadsheet_placement_mode = m
           }}
-          title="Comment positionner un nœud créé en ajoutant un flux : auto (disposition complète), aucun (position par défaut), incrémental (devine la place sans bouger les autres)"
+          title={t('Spreadsheet.toolbar.placement_tip')}
         />
       </div>
       <div ref={containerRef} style={{ flex: 1, minHeight: 0 }} />

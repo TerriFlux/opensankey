@@ -8,6 +8,7 @@ import { resources_guided_tour } from './traduction_guided_tour'
 import { resources_loading_toasts } from './traduction_loading_toasts'
 import { resources_template } from './traduction_templates'
 import { resources_welcome } from './traduction_welcome'
+import { resources_spreadsheet } from './traduction_spreadsheet'
 import { ZDD_MENU_CONFIG } from '../components/dialogs/ContextZDDConfig'
 import { LINK_MENU_CONFIG } from '../components/dialogs/ContextLinkConfig'
 import { NODE_MENU_CONFIG } from '../components/dialogs/ContextNodeConfig'
@@ -465,6 +466,7 @@ deep_assign_resources(resources_welcome as Record<string, unknown>, resources_op
 deep_assign_resources(resources_guided_tour as Record<string, unknown>, resources_opensankey)
 deep_assign_resources(resources_loading_toasts as Record<string, unknown>, resources_opensankey)
 deep_assign_resources(resources_template as Record<string, unknown>, resources_opensankey)
+deep_assign_resources(resources_spreadsheet as Record<string, unknown>, resources_opensankey)
 deep_assign_resources(resources_process_dialog as Record<string, unknown>, resources_opensankey)
 // Update traduction
 const resources = resources_opensankey // /!\ i18next accept only var with name "resources"

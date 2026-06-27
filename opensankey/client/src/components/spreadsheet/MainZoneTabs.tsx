@@ -174,7 +174,7 @@ export const MainZoneTabs = (
   const docDetached = pipWindow != null
   const toggleDocDetach = () => {
     if (docDetached) closeDocPip()
-    else openDocPip({ width: 480, height: 680, title: 'OpenSankey — Documentation' })
+    else openDocPip({ width: 480, height: 680, title: app_data.t('Spreadsheet.doc.window_title') })
   }
   // La doc occupe un slot in-app seulement si affichée ET non détachée.
   const docInApp = showDoc && !docDetached
