@@ -25,9 +25,11 @@
 // ==================================================================================================
 
 import React, { useState, } from 'react'
+import i18next from 'i18next'
 import pako from 'pako'
 import { Box, Button, Input, Select, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react'
 import { Type_JSON } from '../../types/Utils'
+import { parseDocMarkdown, resolveDocMarkdown } from '../../Persistence/persistenceMigrations'
 import { MenuDraggable } from '../topmenus/SankeyMenus'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
@@ -439,10 +441,12 @@ export const OpenSankeyDiagramSelector = (app_data: Class_ApplicationData) => {
       // (mode 'doc') puisse la transférer — tmp_DA partage app_data avec le diagramme
       // courant, donc on ne peut pas passer par application_data.
       const src_json = json_object as Type_JSON
-      tmp_DA.imported_documentation_markdown =
-        typeof src_json['documentation_markdown'] === 'string'
-          ? src_json['documentation_markdown'] as string
-          : ''
+      // Doc multilingue : on résout pour la langue active (repli en→fr) avant de
+      // la transférer en transitoire (le champ importé reste une string).
+      tmp_DA.imported_documentation_markdown = resolveDocMarkdown(
+        parseDocMarkdown(src_json['documentation_markdown'], src_json['language'] as string | undefined),
+        i18next.language
+      )
       tmp_DA.imported_documentation_images =
         (src_json['documentation_images'] && typeof src_json['documentation_images'] === 'object')
           ? src_json['documentation_images'] as { [id: string]: string }

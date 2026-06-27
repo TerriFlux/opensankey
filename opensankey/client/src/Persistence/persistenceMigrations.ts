@@ -6,6 +6,80 @@
 import type { Class_Sankey } from '../types/Sankey'
 import type { Class_ProtoElement } from '../Elements/Element'
 
+// ---------------------------------------------------------------------------
+// Documentation markdown multilingue (onglet « Doc »)
+// ---------------------------------------------------------------------------
+// Le champ `documentation_markdown` est stocké en interne comme une map
+// { langue -> markdown }. La sérialisation est RÉTRO-COMPATIBLE et auto-décrite :
+//   - 0 langue        -> champ absent
+//   - 1 seule langue  -> string (format historique, lisible par les versions
+//                        antérieures qui attendaient une string)
+//   - plusieurs       -> map { fr, en, ... } (les tutoriels traduits)
+// La relecture accepte les deux formes : une string historique est rangée sous
+// la langue déclarée du fichier (défaut 'fr', le contenu existant étant
+// francophone). Aucun bump de version n'est requis : le type porte l'info.
+
+export type Type_DocMarkdownMap = { [lang: string]: string }
+
+/** Normalise un code langue en 2 lettres minuscules ('en-US' -> 'en'). */
+export function normalizeDocLang(lang: string | undefined): string {
+  return (lang || 'fr').substring(0, 2).toLowerCase()
+}
+
+/**
+ * Sérialise la map doc pour le JSON. Renvoie `undefined` si vide (le champ ne
+ * doit alors pas être écrit), une string si une seule langue (format
+ * historique), sinon la map filtrée des entrées vides.
+ */
+export function serializeDocMarkdown(
+  map: Type_DocMarkdownMap
+): string | Type_DocMarkdownMap | undefined {
+  const langs = Object.keys(map).filter((l) => (map[l] ?? '') !== '')
+  if (langs.length === 0) return undefined
+  if (langs.length === 1) return map[langs[0]]
+  const out: Type_DocMarkdownMap = {}
+  langs.forEach((l) => { out[l] = map[l] })
+  return out
+}
+
+/**
+ * Relit le champ doc (string historique ou map) vers une map { langue ->
+ * markdown }. `file_lang` = langue déclarée du diagramme (clé `language`),
+ * utilisée pour ranger une string historique.
+ */
+export function parseDocMarkdown(
+  raw: unknown,
+  file_lang: string | undefined
+): Type_DocMarkdownMap {
+  if (typeof raw === 'string') {
+    return raw ? { [normalizeDocLang(file_lang)]: raw } : {}
+  }
+  if (raw && typeof raw === 'object') {
+    const out: Type_DocMarkdownMap = {}
+    for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+      if (typeof v === 'string') out[k] = v
+    }
+    return out
+  }
+  return {}
+}
+
+/**
+ * Résout la map doc vers le markdown à afficher pour la langue active, avec
+ * repli en→fr→première disponible (aligné sur la résolution des titres de
+ * tutoriels). Renvoie '' si aucune doc.
+ */
+export function resolveDocMarkdown(
+  map: Type_DocMarkdownMap,
+  lang: string | undefined
+): string {
+  const l = normalizeDocLang(lang)
+  if (map[l] != null) return map[l]
+  for (const fb of ['en', 'fr']) if (map[fb] != null) return map[fb]
+  const first = Object.values(map)[0]
+  return first ?? ''
+}
+
 /**
  * Compare deux versions « pointées » (ex. '0.92', '1.1', '1.1.4') segment par
  * segment, numériquement (segments manquants traités comme 0). Renvoie vrai si

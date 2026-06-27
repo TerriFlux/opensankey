@@ -357,6 +357,37 @@ export const TopBarStateButtons = ({ new_data }: BaseApplicationDataType) => {
   </ButtonGroup>
 }
 
+// Entrée d'index de tutoriel renvoyée par /menus/tutorials. Deux formes :
+//  - legacy mono-langue : { file, title }
+//  - groupée multi-langue : { id?, title: {lang}|string, files: {lang} }
+type TutorialEntry =
+  | { file: string, title: string }
+  | { id?: string, title: string | Record<string, string>, files: Record<string, string> }
+
+// Langues de repli quand la langue active n'a pas de variante : en puis fr,
+// puis la première disponible. Aligné sur le pattern des templates (title 'en').
+const TUTO_FALLBACK_LANGS = ['en', 'fr']
+const pick_lang_value = (map: Record<string, string>, lang: string): string | undefined => {
+  if (map[lang] != null) return map[lang]
+  for (const fb of TUTO_FALLBACK_LANGS) if (map[fb] != null) return map[fb]
+  return Object.values(map)[0]
+}
+
+// Résout une entrée d'index vers { file, title } pour la langue active, en
+// appliquant le repli en→fr→première. Renvoie null si l'entrée n'expose aucun
+// fichier chargeable (groupée sans files résolvable).
+const resolve_tutorial = (entry: TutorialEntry, lang: string): { file: string, title: string } | null => {
+  if ('files' in entry) {
+    const file = pick_lang_value(entry.files, lang)
+    if (!file) return null
+    const title = typeof entry.title === 'object'
+      ? (pick_lang_value(entry.title, lang) ?? entry.id ?? file)
+      : (entry.title ?? entry.id ?? file)
+    return { file, title }
+  }
+  return { file: entry.file, title: entry.title }
+}
+
 /**
  * Buttons present in navbar when application is not static
  *
@@ -392,7 +423,11 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
 
   // Liste des tutoriels disponibles dans SankeyData/tutorials, peuplée par le
   // sous-menu « Tutoriels » de l'Aide (endpoint /menus/tutorials, lit index.json).
-  const [tutorials_list, setTutorialsList] = useState<{ file: string, title: string }[]>([])
+  // Deux formes d'entrée coexistent : legacy mono-langue { file, title } et
+  // groupée multi-langue { id?, title: {lang}|string, files: {lang} }. La
+  // résolution langue → fichier/titre se fait au rendu via resolve_tutorial(),
+  // pour suivre les changements de langue sans re-fetch.
+  const [tutorials_list, setTutorialsList] = useState<TutorialEntry[]>([])
   const [tuto_submenu_open, setTutoSubmenuOpen] = useState(false)
   const tutorials_fetched = useRef(false)
   const fetch_tutorials_list = () => {
@@ -960,6 +995,11 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
     >
       {node}
     </Box>
+  // Résout chaque entrée d'index pour la langue active (repli en→fr→première).
+  // Calculé au rendu pour suivre les changements de langue sans re-fetch.
+  const resolved_tutorials = tutorials_list
+    .map((tuto) => resolve_tutorial(tuto, new_data.i18n.language))
+    .filter((t): t is { file: string, title: string } => t !== null)
   const button_aide = <ChakraMenu
     variant='menu_button_subnav_style'
     placement='bottom-start' id='aide'
@@ -992,7 +1032,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
       >
         {t('guide.guide')}
       </MenuItem>
-      {tutorials_list.length > 1
+      {resolved_tutorials.length > 1
         ? (
           // Plusieurs tutoriels : sous-menu flyout listant tutorials/index.json.
           // Chakra v2 n'a pas de sous-menu natif : on contrôle l'ouverture au
@@ -1019,7 +1059,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
                   onMouseEnter={() => setTutoSubmenuOpen(true)}
                   onMouseLeave={() => setTutoSubmenuOpen(false)}
                 >
-                  {tutorials_list.map((tuto) => (
+                  {resolved_tutorials.map((tuto) => (
                     <MenuItem
                       key={tuto.file}
                       onClick={() => open_tutorial_file(tuto.file)}
@@ -1036,7 +1076,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
           // Un seul tutoriel (ou liste non chargée) : chargement direct.
           <MenuItem
             icon={helpMenuIcon(new_data.icon_library.icon_tuto)}
-            onClick={() => open_tutorial_file(tutorials_list[0]?.file)}
+            onClick={() => open_tutorial_file(resolved_tutorials[0]?.file)}
           >
             {t('Menu.formation')}
           </MenuItem>
