@@ -976,6 +976,12 @@ export class Class_MenuConfig {
    */
   public updateAllMenuComponents() {
     this._ref_to_menu_updater.current()
+    // Reconstruit les menus injectés par les submodules (OS+/LC) : leurs JSX (titres de panneaux de
+    // config, libellés de la colonne d'outils…) sont figés dans additionalMenus.current avec les t(…)
+    // évalués à la construction. Sans ce rerender, un changement de langue ne les met pas à jour
+    // (ils restaient dans la langue initiale). Le re-render est porté par un setState de composant
+    // (WrapperInitializeAdditionalMenus), donc dans le bon scope React.
+    this._ref_rerender_submodules_menus.current()
     // TDODO : to have an updater in OpenSankeyMenusDictBuilder so if we cahnge language it update language of submenus,
     //  for now OpenSankeyMenusDictBuilder is a function so the updater crash the app because the re-render is out of the correct scope
     // this._ref_to_submenu_updater.current()
