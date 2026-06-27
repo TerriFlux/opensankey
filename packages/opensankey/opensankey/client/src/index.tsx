@@ -61,7 +61,13 @@ import { INPUT_ATTRIBUTES_CONFIG, OUTPUT_ATTRIBUTES_CONFIG } from './components/
 window.React = React
 const browserLang = navigator.language.slice(0, 2)
 const supportedLangs = ['fr', 'en', 'es', 'de', 'it']
-i18next.changeLanguage(supportedLangs.includes(browserLang) ? browserLang : 'en')
+// Ne forcer la langue du navigateur qu'au premier lancement : si l'utilisateur a déjà choisi une
+// langue, le LanguageDetector l'a mise en cache dans localStorage['i18nextLng'] et l'a restaurée à
+// l'init. La réécraser ici réinitialisait la langue à chaque rechargement (bug). On respecte donc
+// la préférence mémorisée et on ne retombe sur le navigateur que si elle est absente/invalide.
+const savedLang = localStorage.getItem('i18nextLng')
+if (!savedLang || !supportedLangs.includes(savedLang))
+  i18next.changeLanguage(supportedLangs.includes(browserLang) ? browserLang : 'en')
 
 // Application container
 const container = document.getElementById('react-container') as Element | DocumentFragment
