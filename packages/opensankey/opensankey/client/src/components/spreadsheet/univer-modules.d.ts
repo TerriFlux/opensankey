@@ -11,10 +11,12 @@
 
 declare module '@univerjs/presets'
 declare module '@univerjs/presets/preset-sheets-core'
-declare module '@univerjs/presets/preset-sheets-core/locales/fr-FR'
+// Locales chargées dynamiquement selon la langue applicative (en-US/fr-FR/es-ES/de-DE/it-IT) ->
+// déclaration générique par dossier de locales.
+declare module '@univerjs/presets/preset-sheets-core/locales/*'
 declare module '@univerjs/presets/preset-sheets-filter'
-declare module '@univerjs/presets/preset-sheets-filter/locales/fr-FR'
+declare module '@univerjs/presets/preset-sheets-filter/locales/*'
 declare module '@univerjs/presets/preset-sheets-sort'
-declare module '@univerjs/presets/preset-sheets-sort/locales/fr-FR'
+declare module '@univerjs/presets/preset-sheets-sort/locales/*'
 declare module '@univerjs/presets/preset-sheets-data-validation'
-declare module '@univerjs/presets/preset-sheets-data-validation/locales/fr-FR'
+declare module '@univerjs/presets/preset-sheets-data-validation/locales/*'

@@ -11,6 +11,7 @@
 // ==================================================================================================
 
 import React, { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Button, RadioGroup, Radio, HStack, VStack, Text, Input, Box, CloseButton,
   Popover, PopoverTrigger, PopoverContent, PopoverBody, PopoverArrow, Portal, FormControl, FormLabel
@@ -32,6 +33,7 @@ const NodeSelect = (
   { nodes, value, onChange, placeholder }:
   { nodes: string[], value: string, onChange: (v: string) => void, placeholder: string }
 ) => {
+  const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
   const [search, setSearch] = useState('')
   const lc = search.trim().toLowerCase()
@@ -57,7 +59,7 @@ const NodeSelect = (
           <PopoverArrow />
           <PopoverBody>
             <Input
-              size='xs' placeholder='Rechercher…' value={search} mb={2}
+              size='xs' placeholder={t('Spreadsheet.constraint.search')} value={search} mb={2}
               onChange={(e) => setSearch(e.target.value)} autoFocus
             />
             <VStack align='stretch' spacing={0} maxH='220px' overflowY='auto'>
@@ -71,7 +73,7 @@ const NodeSelect = (
                 </Box>
               ))}
               {rows.length === 0 && (
-                <Text fontSize='xs' color='gray.500' fontStyle='italic'>Aucun nœud</Text>
+                <Text fontSize='xs' color='gray.500' fontStyle='italic'>{t('Spreadsheet.constraint.no_node')}</Text>
               )}
             </VStack>
           </PopoverBody>
@@ -90,8 +92,12 @@ const TermEditor = (
     nodes: string[], nodeByName: { [name: string]: any }, state: any, setState: (s: any) => void
   }
 ) => {
+  const { t } = useTranslation()
   const TYPE_LABELS: { [k in TermType]: string } = {
-    flux: 'Flux', node_total: 'Nœud (total)', stock: 'Stock', delta_stock: 'Δ stock'
+    flux: t('Spreadsheet.constraint.type_flux'),
+    node_total: t('Spreadsheet.constraint.type_node_total'),
+    stock: t('Spreadsheet.constraint.type_stock'),
+    delta_stock: t('Spreadsheet.constraint.type_delta_stock')
   }
   // Flux : l'origine reste TOUJOURS libre (tous les nœuds) ; seule la destination se restreint
   // aux cibles réelles de l'origine choisie. Un filtrage mutuel bloquerait l'édition une fois les
@@ -107,32 +113,32 @@ const TermEditor = (
       <Text fontWeight='bold' fontSize='sm' mb={1}>{label}</Text>
       <RadioGroup size='sm' value={type} onChange={(v) => setType(v as TermType)} mb={2}>
         <HStack spacing={3}>
-          {allowedTypes.map((t) => <Radio key={t} value={t}>{TYPE_LABELS[t]}</Radio>)}
+          {allowedTypes.map((tt) => <Radio key={tt} value={tt}>{TYPE_LABELS[tt]}</Radio>)}
         </HStack>
       </RadioGroup>
       {type === 'flux' && (
         <HStack>
-          <NodeSelect nodes={fluxOrigOptions} value={state.orig || ''} placeholder='Origine'
+          <NodeSelect nodes={fluxOrigOptions} value={state.orig || ''} placeholder={t('Spreadsheet.constraint.origin')}
             onChange={(v) => setState({ ...state, orig: v })} />
           <Text fontSize='xs'>→</Text>
-          <NodeSelect nodes={fluxDestOptions} value={state.dest || ''} placeholder='Destination'
+          <NodeSelect nodes={fluxDestOptions} value={state.dest || ''} placeholder={t('Spreadsheet.constraint.destination')}
             onChange={(v) => setState({ ...state, dest: v })} />
         </HStack>
       )}
       {type === 'node_total' && (
         <HStack>
-          <NodeSelect nodes={nodes} value={state.node || ''} placeholder='Nœud'
+          <NodeSelect nodes={nodes} value={state.node || ''} placeholder={t('Spreadsheet.constraint.node')}
             onChange={(v) => setState({ ...state, node: v })} />
           <RadioGroup size='sm' value={state.dir || 'in'} onChange={(v) => setState({ ...state, dir: v as Dir })}>
             <HStack spacing={2}>
-              <Radio value='in'>entrants</Radio>
-              <Radio value='out'>sortants</Radio>
+              <Radio value='in'>{t('Spreadsheet.constraint.in')}</Radio>
+              <Radio value='out'>{t('Spreadsheet.constraint.out')}</Radio>
             </HStack>
           </RadioGroup>
         </HStack>
       )}
       {(type === 'stock' || type === 'delta_stock') && (
-        <NodeSelect nodes={nodes} value={state.node || ''} placeholder='Nœud'
+        <NodeSelect nodes={nodes} value={state.node || ''} placeholder={t('Spreadsheet.constraint.node')}
           onChange={(v) => setState({ ...state, node: v })} />
       )}
     </Box>
@@ -152,6 +158,7 @@ export const AddConstraintModal = (
     onAdded?: (family: ConstraintFamily) => void
   }
 ) => {
+  const { t } = useTranslation()
   const sankey = app_data.drawing_area.sankey
   const nodes = (sankey.nodes_list as any[]).map((n) => n.name).sort((a, b) => a.localeCompare(b))
   // Map nom -> nœud, pour exploiter input_links_list / output_links_list lors du filtrage Flux.
@@ -239,10 +246,13 @@ export const AddConstraintModal = (
 
   // Traduction générée automatiquement à partir des choix (par défaut ; surchargeable).
   const describeTerm = (type: TermType, s: any): string =>
-    type === 'flux' ? `flux ${s.orig || '?'}→${s.dest || '?'}`
-      : type === 'node_total' ? `total des ${s.dir === 'out' ? 'sortants' : 'entrants'} de ${s.node || '?'}`
-        : type === 'stock' ? `stock de ${s.node || '?'}`
-          : `Δ stock de ${s.node || '?'}`
+    type === 'flux' ? t('Spreadsheet.constraint.desc_flux', { orig: s.orig || '?', dest: s.dest || '?' })
+      : type === 'node_total'
+        ? (s.dir === 'out'
+          ? t('Spreadsheet.constraint.desc_node_out', { node: s.node || '?' })
+          : t('Spreadsheet.constraint.desc_node_in', { node: s.node || '?' }))
+        : type === 'stock' ? t('Spreadsheet.constraint.desc_stock', { node: s.node || '?' })
+          : t('Spreadsheet.constraint.desc_delta', { node: s.node || '?' })
   const autoTraduction =
     `${describeTerm(t1Type, t1)} ${OP_LABEL[op]} ${value || '?'} × ${describeTerm(t2Type, t2)}`
   const effectiveTraduction = (traductionEdited ? traduction : autoTraduction).trim() || null
@@ -305,13 +315,13 @@ export const AddConstraintModal = (
           cursor='move'
           userSelect='none'
         >
-          <Text justifySelf='start' fontStyle='h1' margin='0'>Ajouter une contrainte</Text>
+          <Text justifySelf='start' fontStyle='h1' margin='0'>{t('Spreadsheet.constraint.title')}</Text>
           <CloseButton justifySelf='end' onClick={onClose} />
         </Box>
         <Box layerStyle='menu_draggable_content_layout'>
           <VStack align='stretch' spacing={3}>
             <TermEditor
-              label='Terme 1' type={t1Type} setType={setT1Type}
+              label={t('Spreadsheet.constraint.term1')} type={t1Type} setType={setT1Type}
               allowedTypes={['flux', 'node_total', 'stock']}
               nodes={nodes} nodeByName={nodeByName} state={t1} setState={setT1}
             />
@@ -324,23 +334,23 @@ export const AddConstraintModal = (
                 </HStack>
               </RadioGroup>
               <Input
-                size='xs' width='90px' value={value} placeholder='coef'
+                size='xs' width='90px' value={value} placeholder={t('Spreadsheet.constraint.coef')}
                 onChange={(e) => setValue(e.target.value)}
               />
               <Text fontSize='sm'>×</Text>
             </HStack>
             <TermEditor
-              label='Terme 2 (référence)' type={t2Type} setType={setT2Type}
+              label={t('Spreadsheet.constraint.term2_ref')} type={t2Type} setType={setT2Type}
               allowedTypes={t2Allowed}
               nodes={nodes} nodeByName={nodeByName} state={t2} setState={setT2}
             />
             <FormControl>
               <HStack justify='space-between' mb={1}>
-                <FormLabel fontSize='xs' m={0}>Traduction (auto, modifiable)</FormLabel>
+                <FormLabel fontSize='xs' m={0}>{t('Spreadsheet.constraint.translation_label')}</FormLabel>
                 {traductionEdited && (
                   <Button size='xs' variant='link' colorScheme='blue'
                     onClick={() => { setTraductionEdited(false); setTraduction('') }}>
-                      régénérer
+                    {t('Spreadsheet.constraint.regenerate')}
                   </Button>
                 )}
               </HStack>
@@ -348,15 +358,15 @@ export const AddConstraintModal = (
                 size='xs'
                 value={traductionEdited ? traduction : autoTraduction}
                 onChange={(e) => { setTraduction(e.target.value); setTraductionEdited(true) }}
-                placeholder='Description en langage naturel'
+                placeholder={t('Spreadsheet.constraint.translation_ph')}
               />
             </FormControl>
             {!family && (
-              <Text fontSize='xs' color='red.500'>Combinaison de termes non valide.</Text>
+              <Text fontSize='xs' color='red.500'>{t('Spreadsheet.constraint.invalid_combo')}</Text>
             )}
             <HStack justify='flex-end' spacing={2} pt={1}>
-              <Button size='sm' variant='ghost' onClick={onClose}>Annuler</Button>
-              <Button size='sm' colorScheme='blue' isDisabled={!canAdd} onClick={add}>Ajouter</Button>
+              <Button size='sm' variant='ghost' onClick={onClose}>{t('Spreadsheet.constraint.cancel')}</Button>
+              <Button size='sm' colorScheme='blue' isDisabled={!canAdd} onClick={add}>{t('Spreadsheet.constraint.add')}</Button>
             </HStack>
           </VStack>
         </Box>

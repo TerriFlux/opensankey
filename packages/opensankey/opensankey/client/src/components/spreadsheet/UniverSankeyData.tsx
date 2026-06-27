@@ -9,10 +9,17 @@
 // Couleurs alignées sur SankeyExcelParser/classes/excel_formatter.py (CATEGORY_COLORS, main colors).
 // ==================================================================================================
 
+import i18next from 'i18next'
+
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { default_element_color } from '../../Elements/ElementsAttributesConfig'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
+// Traduction des noms d'onglets / en-têtes de colonnes du classeur. Lecture via le singleton i18next
+// (le classeur est reconstruit à chaque changement de langue, cf. UniverSpreadSheet useEffect[lang]).
+const tr = (key: string, opts?: Record<string, unknown>): string =>
+  i18next.t('Spreadsheet.' + key, opts) as string
 
 // Univer non typé par tsc (cf univer-modules.d.ts) -> structure de classeur typée souplement.
 type Type_WorkbookData = any
@@ -628,13 +635,13 @@ export const nodeSheetTagColumns = (
 // En-têtes des colonnes "core" d'une feuille de nœuds. `nodeHeaderLabel` = libellé de la colonne du
 // nom (Noeuds / Produits / Secteurs / Echanges, comme les feuilles SEP).
 const nodeCoreHeaders = (nodeHeaderLabel: string): string[] => ([
-  'Niveau',
+  tr('header.level'),
   nodeHeaderLabel,
-  'Equilibre',
-  'Couleur',
-  'Définitions',
-  'Colonne u',
-  'Ligne v'
+  tr('header.balance'),
+  tr('header.color'),
+  tr('header.definitions'),
+  tr('header.column_u'),
+  tr('header.row_v')
 ])
 
 type Type_TagCol = { group: any, hex: string, vertical: boolean }
@@ -915,9 +922,9 @@ export const buildFluxMatrixSheets = (
 
   // --- TES : matrice IO (origines en lignes, destinations en colonnes) ---------------------------
   const tesCells: Type_CellData = {}
-  writeMatrixBlock(tesCells, 0, 'Origine ╲ Destination', nodes, nodes, fluxMap, false, mode, headerStyleFor)
+  writeMatrixBlock(tesCells, 0, tr('header.origin_dest'), nodes, nodes, fluxMap, false, mode, headerStyleFor)
   const tesSheet = makeMatrixSheet(
-    SHEET_ID_TES, 'TES (matrice IO)', tesCells, nodes.length + 1,
+    SHEET_ID_TES, tr('sheet.tes'), tesCells, nodes.length + 1,
     ['', ...nodes.map((n: any) => n.name)], [0], nodes.length
   )
 
@@ -927,12 +934,12 @@ export const buildFluxMatrixSheets = (
 
   const terCells: Type_CellData = {}
   // Bloc 1 « Ressources » : flux secteur→produit (produits lignes, secteurs colonnes, flip).
-  writeMatrixBlock(terCells, 0, 'Ressources', products, sectors, fluxMap, true, mode, headerStyleFor)
+  writeMatrixBlock(terCells, 0, tr('header.resources'), products, sectors, fluxMap, true, mode, headerStyleFor)
   // Ligne vide de séparation, puis bloc 2 « Emplois » : flux produit→secteur.
   const afterBlock2 = writeMatrixBlock(
-    terCells, block2HeaderRow, 'Emplois', products, sectors, fluxMap, false, mode, headerStyleFor)
+    terCells, block2HeaderRow, tr('header.uses'), products, sectors, fluxMap, false, mode, headerStyleFor)
   const terSheet = makeMatrixSheet(
-    SHEET_ID_TER, 'TER (emplois-ressources)', terCells, sectors.length + 1,
+    SHEET_ID_TER, tr('sheet.ter'), terCells, sectors.length + 1,
     ['', ...sectors.map((n: any) => n.name)], [0, block2HeaderRow], afterBlock2
   )
 
@@ -961,8 +968,10 @@ export const buildSankeyWorkbookData = (
   // --- Onglet Flux (fusion Flux + Données : un flux par ligne, toutes les colonnes de valeur) -----
   // Origine/Destination/Valeur obligatoires ; le reste optionnel (masqué si vide via le sélecteur).
   const fluxHeaders = [
-    'Origine', 'Destination', 'Valeur', 'Min', 'Max', 'Valeur calculée', 'Valeur destination',
-    'Quantité naturelle', 'Incertitude %', 'Source', 'Hypothèse'
+    tr('header.origin'), tr('header.destination'), tr('header.value'), tr('header.min'),
+    tr('header.max'), tr('header.computed_value'), tr('header.dest_value'),
+    tr('header.natural_quantity'), tr('header.uncertainty_pct'), tr('header.source'),
+    tr('header.hypothesis')
   ]
   const fluxCells: Type_CellData = { 0: {} }
   // 'Valeur calculée' (col 5) = résultat réconcilié -> en-tête violet. 'Incertitude %' (col 8) = nombre
@@ -1014,11 +1023,11 @@ export const buildSankeyWorkbookData = (
   // Min »/« Max » (comme Flux) ; les bornes du résultat réconcilié (sans équivalent Flux) = « Min
   // calculée »/« Max calculée », en miroir de « Valeur calculée ».
   const analysisHeaders = [
-    'Origine', 'Destination',
-    'Valeur calculée', 'Min calculée', 'Max calculée',
-    'Valeur', 'Min', 'Max',
-    'Incertitude %',
-    'Delta réconcilié - non-réconcilié', 'Écart réconcilié (nb σ)', 'Type de variable'
+    tr('header.origin'), tr('header.destination'),
+    tr('header.computed_value'), tr('header.computed_min'), tr('header.computed_max'),
+    tr('header.value'), tr('header.min'), tr('header.max'),
+    tr('header.uncertainty_pct'),
+    tr('header.delta_recon'), tr('header.gap_sigma'), tr('header.variable_type')
   ]
   // Colonnes de résultat réconcilié / analyse -> en-tête violet (comme « Valeur calculée » du Flux).
   const ANALYSIS_RESULT_COLS = new Set([2, 3, 4, 9, 10, 11])
@@ -1033,9 +1042,9 @@ export const buildSankeyWorkbookData = (
   // (SEP distingue en plus « Redondante » via l'analyse de redondance du solveur, indisponible ici.)
   const analysisClassif = (v: any): string => {
     if (!v) return ''
-    if (v.has_collected_data) return 'Mesurée'
-    if (v.has_intervals) return 'Libre (intervalle)'
-    if (v.valueResult != null) return 'Déterminée'
+    if (v.has_collected_data) return tr('classif.measured')
+    if (v.has_intervals) return tr('classif.free_interval')
+    if (v.valueResult != null) return tr('classif.determined')
     return ''
   }
   let analysisHasResult = false
@@ -1113,7 +1122,7 @@ export const buildSankeyWorkbookData = (
   ]
   // Onglet Noeuds : tous les nœuds, lignes hiérarchisées (enfants sous parents par dimension).
   const noeudsRows = noeudsRowEntries(app_data, onlyVisible)
-  const noeuds = makeNodeSheet(SHEET_ID_NOEUDS, 'Noeuds', noeudsRows, tagColsNoeuds, 'Nom')
+  const noeuds = makeNodeSheet(SHEET_ID_NOEUDS, tr('sheet.nodes'), noeudsRows, tagColsNoeuds, tr('header.name'))
 
   // Séparation par nature (format SEP `products_sectors`) : une feuille par type de nœud, filtrée
   // par le tag `type de noeud`. Onglet vide (tag absent) => masqué par défaut comme les autres.
@@ -1123,19 +1132,19 @@ export const buildSankeyWorkbookData = (
   const produitsRows = produitTag ? noeudsRowEntries(app_data, onlyVisible, produitTag) : []
   const secteursRows = secteurTag ? noeudsRowEntries(app_data, onlyVisible, secteurTag) : []
   const echangesRows = echangeTag ? noeudsRowEntries(app_data, onlyVisible, echangeTag) : []
-  const produits = makeNodeSheet(SHEET_ID_PRODUITS, 'Produits', produitsRows, tagCols, 'Nom')
-  const secteurs = makeNodeSheet(SHEET_ID_SECTEURS, 'Secteurs', secteursRows, tagCols, 'Nom')
-  const echanges = makeNodeSheet(SHEET_ID_ECHANGES, 'Echanges', echangesRows, tagCols, 'Nom')
+  const produits = makeNodeSheet(SHEET_ID_PRODUITS, tr('sheet.products'), produitsRows, tagCols, tr('header.name'))
+  const secteurs = makeNodeSheet(SHEET_ID_SECTEURS, tr('sheet.sectors'), secteursRows, tagCols, tr('header.name'))
+  const echanges = makeNodeSheet(SHEET_ID_ECHANGES, tr('sheet.exchanges'), echangesRows, tagCols, tr('header.name'))
 
   // --- Onglet Etiquettes (un groupe par ligne) ---------------------------------------------------
-  const tagHeaders = ['Nom du groupe d\'étiquette', 'Type d\'étiquette', 'Etiquettes', 'Couleurs']
+  const tagHeaders = [tr('header.tag_group_name'), tr('header.tag_type'), tr('header.tags'), tr('header.colors')]
   const tagCells: Type_CellData = { 0: {} }
   tagHeaders.forEach((h, c) => { tagCells[0][c] = { v: h, s: headerStyle(HEX_TAG_SHEET) } })
   const allGroups: Array<{ type: string, groups: any[] }> = [
-    { type: 'Noeud', groups: sankey.node_taggs_list || [] },
-    { type: 'Niveau', groups: sankey.level_taggs_list || [] },
-    { type: 'Flux', groups: sankey.flux_taggs_list || [] },
-    { type: 'Donnée', groups: sankey.data_taggs_list || [] }
+    { type: tr('tagtype.node'), groups: sankey.node_taggs_list || [] },
+    { type: tr('tagtype.level'), groups: sankey.level_taggs_list || [] },
+    { type: tr('tagtype.flux'), groups: sankey.flux_taggs_list || [] },
+    { type: tr('tagtype.data'), groups: sankey.data_taggs_list || [] }
   ]
   let tagRow = 1
   allGroups.forEach(({ type, groups }) => {
@@ -1158,7 +1167,7 @@ export const buildSankeyWorkbookData = (
   // un résultat dans une colonne d'entrée (ex. Δ Stock = stock_variation_result alors qu'aucune
   // variation n'a été saisie). Les résultats vivent dans les colonnes 'calculé' (2 et 4), où les
   // nœuds agrégés (stock purement RÉSULTAT) restent visibles. Aligné sur l'onglet Flux.
-  const stockHeaders = ['Nœud', 'Stock', 'Stock calculé', 'Δ Stock', 'Δ calculée']
+  const stockHeaders = [tr('header.node'), tr('header.stock'), tr('header.computed_stock'), tr('header.delta_stock'), tr('header.computed_delta')]
   // 'Stock calculé' (col 2) et 'Δ calculée' (col 4) = résultats -> en-tête violet.
   const STOCK_RESULT_COLS = new Set([2, 4])
   const stockCells: Type_CellData = { 0: {} }
@@ -1186,8 +1195,8 @@ export const buildSankeyWorkbookData = (
   // Sémantique : Σ(main) = Coef · Σ(réf) et/ou Min·Σ(réf) ≤ Σ(main) ≤ Max·Σ(réf). "*" sur un côté
   // = agrégat de tous les flux entrants (origine="*") / sortants (destination="*") du nœud opposé.
   const ratioHeaders = [
-    'Origine', 'Destination', 'Coef', 'Min', 'Max',
-    'Origine réf', 'Destination réf', 'Étiquette', 'Étiquette réf', 'Traduction'
+    tr('header.origin'), tr('header.destination'), tr('header.coef'), tr('header.min'), tr('header.max'),
+    tr('header.origin_ref'), tr('header.dest_ref'), tr('header.tag'), tr('header.tag_ref'), tr('header.translation')
   ]
   const ratioCells: Type_CellData = { 0: {} }
   ratioHeaders.forEach((h, c) => { ratioCells[0][c] = { v: h, s: headerStyle(HEX_CORE) } })
@@ -1210,8 +1219,8 @@ export const buildSankeyWorkbookData = (
 
   // --- Onglet Ratio Stock Flux (#156) : flux[O->D, période] = Coef · S[Stock, période réf] -------
   const ratioStockHeaders = [
-    'Origine', 'Destination', 'Coef', 'Min', 'Max',
-    'Stock', 'Étiquette', 'Étiquette réf', 'Traduction'
+    tr('header.origin'), tr('header.destination'), tr('header.coef'), tr('header.min'), tr('header.max'),
+    tr('header.stock'), tr('header.tag'), tr('header.tag_ref'), tr('header.translation')
   ]
   const ratioStockCells: Type_CellData = { 0: {} }
   ratioStockHeaders.forEach((h, c) => { ratioStockCells[0][c] = { v: h, s: headerStyle(HEX_CORE) } })
@@ -1233,7 +1242,7 @@ export const buildSankeyWorkbookData = (
 
   // --- Onglet Chaînage Stock (#156) : S[Stock, Année] = Coef · S[Stock, Année réf] + Δstock ------
   const stockChainHeaders = [
-    'Stock', 'Coef', 'Delta stock', 'Étiquette', 'Étiquette réf', 'Traduction'
+    tr('header.stock'), tr('header.coef'), tr('header.delta_stock_plain'), tr('header.tag'), tr('header.tag_ref'), tr('header.translation')
   ]
   const stockChainCells: Type_CellData = { 0: {} }
   stockChainHeaders.forEach((h, c) => { stockChainCells[0][c] = { v: h, s: headerStyle(HEX_CORE) } })
@@ -1259,11 +1268,11 @@ export const buildSankeyWorkbookData = (
   const aggTagStart = aggAttrStart + 4
   const aggDefIdx = aggTagStart + nodeTagGroups.length
   const aggHeaders = [
-    ...Array.from({ length: agg.levelCount }, (_, i) => 'Niveau ' + (i + 1)),
-    ...(agg.hasDimCol ? ['Dimension'] : []),
-    'Equilibre entrée-sortie', 'Couleur', 'Colonne u', 'Ligne v',
+    ...Array.from({ length: agg.levelCount }, (_, i) => tr('header.level_n', { n: i + 1 })),
+    ...(agg.hasDimCol ? [tr('header.dimension')] : []),
+    tr('header.balance_io'), tr('header.color'), tr('header.column_u'), tr('header.row_v'),
     ...nodeTagGroups.map((g: any) => g.name),
-    'Définitions'
+    tr('header.definitions')
   ]
   const aggCells: Type_CellData = { 0: {} }
   aggHeaders.forEach((h, c) => {
@@ -1309,7 +1318,7 @@ export const buildSankeyWorkbookData = (
     sheets: {
       [SHEET_ID_FLUX]: {
         id: SHEET_ID_FLUX,
-        name: 'Flux',
+        name: tr('sheet.flux'),
         cellData: fluxCells,
         columnData: fluxColumnData,
         ...(fluxHeaderH ? { rowData: { 0: { h: fluxHeaderH } } } : {}),
@@ -1318,7 +1327,7 @@ export const buildSankeyWorkbookData = (
       },
       [SHEET_ID_ANALYSIS]: {
         id: SHEET_ID_ANALYSIS,
-        name: 'Analyse des résultats',
+        name: tr('sheet.analysis'),
         cellData: analysisCells,
         columnData: analysisColumnData,
         ...(analysisHeaderH ? { rowData: { 0: { h: analysisHeaderH } } } : {}),
@@ -1333,7 +1342,7 @@ export const buildSankeyWorkbookData = (
       [SHEET_ID_ECHANGES]: echanges.sheet,
       [SHEET_ID_NOEUDS_AGG]: {
         id: SHEET_ID_NOEUDS_AGG,
-        name: 'Noeuds par agrégation',
+        name: tr('sheet.nodes_agg'),
         cellData: aggCells,
         columnData: autoColumnWidths(aggCells, aggHeaders.length),
         rowData: { 0: { h: 40 } },
@@ -1342,7 +1351,7 @@ export const buildSankeyWorkbookData = (
       },
       [SHEET_ID_TAGS]: {
         id: SHEET_ID_TAGS,
-        name: 'Etiquettes',
+        name: tr('sheet.tags'),
         cellData: tagCells,
         columnData: autoColumnWidths(tagCells, 6),
         rowCount: Math.max(50, tagRow + 20),
@@ -1350,7 +1359,7 @@ export const buildSankeyWorkbookData = (
       },
       [SHEET_ID_STOCK]: {
         id: SHEET_ID_STOCK,
-        name: 'Stocks',
+        name: tr('sheet.stock'),
         cellData: stockCells,
         columnData: autoColumnWidths(stockCells, stockHeaders.length),
         rowCount: Math.max(50, stockRow + 20),
@@ -1358,7 +1367,7 @@ export const buildSankeyWorkbookData = (
       },
       [SHEET_ID_RATIO]: {
         id: SHEET_ID_RATIO,
-        name: 'Ratio flux',
+        name: tr('sheet.ratio'),
         cellData: ratioCells,
         columnData: autoColumnWidths(ratioCells, ratioHeaders.length),
         rowCount: Math.max(50, ratioRow + 20),
@@ -1366,7 +1375,7 @@ export const buildSankeyWorkbookData = (
       },
       [SHEET_ID_RATIO_STOCK]: {
         id: SHEET_ID_RATIO_STOCK,
-        name: 'Ratio stock flux',
+        name: tr('sheet.ratio_stock'),
         cellData: ratioStockCells,
         columnData: autoColumnWidths(ratioStockCells, ratioStockHeaders.length),
         rowCount: Math.max(50, ratioStockRow + 20),
@@ -1374,7 +1383,7 @@ export const buildSankeyWorkbookData = (
       },
       [SHEET_ID_STOCK_CHAINING]: {
         id: SHEET_ID_STOCK_CHAINING,
-        name: 'Chaînage stock',
+        name: tr('sheet.stock_chaining'),
         cellData: stockChainCells,
         columnData: autoColumnWidths(stockChainCells, stockChainHeaders.length),
         rowCount: Math.max(50, stockChainRow + 20),
@@ -1404,26 +1413,26 @@ export const buildSankeyWorkbookData = (
   // Métadonnées d'onglets (dans l'ordre d'affichage `sheetOrder`) : hasData = au moins une ligne de
   // données. Les compteurs *Row pointent sur la prochaine ligne libre (1 = aucune donnée).
   const sheets: Type_SheetMeta[] = [
-    { id: SHEET_ID_TAGS, name: 'Etiquettes', hasData: tagRow > 1 },
-    { id: SHEET_ID_NOEUDS, name: 'Noeuds', hasData: noeudsRows.length > 0 },
-    { id: SHEET_ID_PRODUITS, name: 'Produits', hasData: produitsRows.length > 0 },
-    { id: SHEET_ID_SECTEURS, name: 'Secteurs', hasData: secteursRows.length > 0 },
-    { id: SHEET_ID_ECHANGES, name: 'Echanges', hasData: echangesRows.length > 0 },
+    { id: SHEET_ID_TAGS, name: tr('sheet.tags'), hasData: tagRow > 1 },
+    { id: SHEET_ID_NOEUDS, name: tr('sheet.nodes'), hasData: noeudsRows.length > 0 },
+    { id: SHEET_ID_PRODUITS, name: tr('sheet.products'), hasData: produitsRows.length > 0 },
+    { id: SHEET_ID_SECTEURS, name: tr('sheet.sectors'), hasData: secteursRows.length > 0 },
+    { id: SHEET_ID_ECHANGES, name: tr('sheet.exchanges'), hasData: echangesRows.length > 0 },
     // N'apparaît par défaut que s'il y a une vraie hiérarchie (sinon = doublon plat de Noeuds) ;
     // reste activable via le sélecteur d'onglets.
-    { id: SHEET_ID_NOEUDS_AGG, name: 'Noeuds par agrégation', hasData: agg.rows.length > 0 && agg.hasDimCol },
-    { id: SHEET_ID_FLUX, name: 'Flux', hasData: links.length > 0 },
+    { id: SHEET_ID_NOEUDS_AGG, name: tr('sheet.nodes_agg'), hasData: agg.rows.length > 0 && agg.hasDimCol },
+    { id: SHEET_ID_FLUX, name: tr('sheet.flux'), hasData: links.length > 0 },
     // Masqué par défaut tant qu'aucune réconciliation n'a produit de résultat (sinon doublon vide
     // de Flux) ; réaffichable via le sélecteur « Onglets ».
-    { id: SHEET_ID_ANALYSIS, name: 'Analyse des résultats', hasData: analysisHasResult },
+    { id: SHEET_ID_ANALYSIS, name: tr('sheet.analysis'), hasData: analysisHasResult },
     // Matrices de flux : visibilité par défaut selon la structure (cf. buildFluxMatrixSheets) ;
     // toujours réaffichables via le sélecteur « Onglets ».
-    { id: SHEET_ID_TES, name: 'TES (matrice IO)', hasData: matrices.tes.hasData },
-    { id: SHEET_ID_TER, name: 'TER (emplois-ressources)', hasData: matrices.ter.hasData },
-    { id: SHEET_ID_RATIO, name: 'Ratio flux', hasData: ratioRow > 1 },
-    { id: SHEET_ID_RATIO_STOCK, name: 'Ratio stock flux', hasData: ratioStockRow > 1 },
-    { id: SHEET_ID_STOCK_CHAINING, name: 'Chaînage stock', hasData: stockChainRow > 1 },
-    { id: SHEET_ID_STOCK, name: 'Stocks', hasData: stockRow > 1 }
+    { id: SHEET_ID_TES, name: tr('sheet.tes'), hasData: matrices.tes.hasData },
+    { id: SHEET_ID_TER, name: tr('sheet.ter'), hasData: matrices.ter.hasData },
+    { id: SHEET_ID_RATIO, name: tr('sheet.ratio'), hasData: ratioRow > 1 },
+    { id: SHEET_ID_RATIO_STOCK, name: tr('sheet.ratio_stock'), hasData: ratioStockRow > 1 },
+    { id: SHEET_ID_STOCK_CHAINING, name: tr('sheet.stock_chaining'), hasData: stockChainRow > 1 },
+    { id: SHEET_ID_STOCK, name: tr('sheet.stock'), hasData: stockRow > 1 }
   ]
 
   // Validations de liste (sélecteur d'étiquette) des colonnes de tags des feuilles de nœuds : chaque
