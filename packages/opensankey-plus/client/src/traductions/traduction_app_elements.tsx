@@ -88,7 +88,7 @@ export const resources_app_elements = {
 
         Config: {
           presentation: 'Presentation',
-          element_element: 'Eléments',
+          element_element: 'Elements',
           element_object0: 'Areas',
           element_object: 'Text and image areas',
           element_view: 'View',
