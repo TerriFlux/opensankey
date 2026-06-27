@@ -37,6 +37,7 @@ import { format_value, Type_JSON } from '../types/Utils'
 import { default_element_color } from './ElementsAttributesConfig'
 import { SankeyAnimation } from '../Algorithms/SankeyAnimation'
 import { draw_arrow_part } from './NodeDrawShape'
+import { computeArrowPlacement } from './arrowLayout'
 import { Class_Sankey } from '../types/Sankey'
 import { Class_Tag } from '../types/Tag'
 import { NodeTooltip } from './TooltipsNode'
@@ -1075,6 +1076,7 @@ export class Class_NodeElement extends Class_NodeBase {
         is_source_arrow: false,
         arrow_side: link.target_side,
         link_thickness: link.thicknessTarget,
+        link_thickness_raw: link.thicknessTargetRaw,
         is_horizontal_at_anchor: link.is_horizontal || link.is_vertical_horizontal
       }))
     // Source arrows: this node is the source, arrow drawn on link.source_side
@@ -1087,6 +1089,7 @@ export class Class_NodeElement extends Class_NodeBase {
         is_source_arrow: true,
         arrow_side: link.source_side,
         link_thickness: link.thicknessSource,
+        link_thickness_raw: link.thicknessSourceRaw,
         is_horizontal_at_anchor: link.is_horizontal || link.is_horizontal_vertical
       }))
     const list_link_to_add_arrow = [...target_arrows, ...source_arrows]
@@ -1097,26 +1100,28 @@ export class Class_NodeElement extends Class_NodeBase {
 
     // Two layout modes, driven by drawing_area.arrow_use_standalone_layout :
     //
-    // - standalone (default true, issue #681) : each arrow is an independent
-    //   triangle, base = link's clamped thickness, base center = link's
-    //   actual visible end center. Always aligned with the link stroke,
-    //   even when flows are clamped above their raw value (the typical
-    //   case where bases on the same side visually overlap).
+    // - fan (default) : all arrows on a node side share a single fan whose tips
+    //   converge toward the node side center. The fan is sized in RAW thickness
+    //   space (since #199) : total height = Σ raw thicknesses = node height, and
+    //   each link gets a cumulative offset of raw thicknesses inside it. So flows
+    //   clamped up to the 2px minimum overlap in the fan exactly as they do at
+    //   the node, instead of stacking Σ(2px) and inflating the fan past the node
+    //   height (the oversized-arrow bug on nodes fed by many thin flows, #199).
     //
-    // - fan (opt-in, set flag to false) : all arrows on a node side share
-    //   a single fan whose total height = Σ clamped thicknesses. Each link
-    //   gets a cumulative offset inside that fan, which produces sloped
-    //   tips that converge toward the node side center. Looks nice when no
-    //   flow gets clamped (raw == clamped), drifts otherwise.
+    // - standalone (opt-in, issue #681) : each arrow is an independent triangle,
+    //   base = link's clamped thickness, base center = link's actual visible end
+    //   center. No fan, no cumulative offset.
     const use_standalone = this.drawing_area.arrow_use_standalone_layout
     let cum_v_left = 0
     let cum_h_top = 0
     let cum_v_right = 0
     let cum_h_bottom = 0
-    const sumLinkLeft = !use_standalone ? this.getSumOfLinksThickness('left', true) : 0
-    const sumLinkRight = !use_standalone ? this.getSumOfLinksThickness('right', true) : 0
-    const sumLinkTop = !use_standalone ? this.getSumOfLinksThickness('top', true) : 0
-    const sumLinkBottom = !use_standalone ? this.getSumOfLinksThickness('bottom', true) : 0
+    // Fan sums in RAW space (clamped=false) so the fan total matches the node
+    // height ; see computeArrowPlacement / #199.
+    const sumLinkLeft = !use_standalone ? this.getSumOfLinksThickness('left', false) : 0
+    const sumLinkRight = !use_standalone ? this.getSumOfLinksThickness('right', false) : 0
+    const sumLinkTop = !use_standalone ? this.getSumOfLinksThickness('top', false) : 0
+    const sumLinkBottom = !use_standalone ? this.getSumOfLinksThickness('bottom', false) : 0
 
     list_link_to_add_arrow
       .forEach(item => {
@@ -1132,6 +1137,9 @@ export class Class_NodeElement extends Class_NodeBase {
 
         // Visible link thickness at the anchor (clamped to minimum_flux / 2px).
         const link_value = item.link_thickness
+        // Raw thickness (proportional to value, node-height space) — the fan is
+        // sized in this space so it matches the node height (#199).
+        const link_value_raw = item.link_thickness_raw
         // Côté source ou cible : déterminé par la nature de cette entrée (un flux
         // peut porter une flèche aux deux extrémités), pas par un drapeau du flux.
         const is_reversed = item.is_source_arrow
@@ -1150,36 +1158,42 @@ export class Class_NodeElement extends Class_NodeBase {
         let yt: number
         let arrow_half_height: number
         let arrow_already_computed: number
+        // Base of the arrow (draw_arrow_part `linkSize`) : raw in fan mode (so the
+        // fan tiles the node band), clamped in standalone mode (visible triangle).
+        let arrow_slice: number
         if (!use_standalone) {
-          // Fan : arrow_half_height = side total / 2, position centered on node side.
+          // Fan : sized in RAW space (#199). total = Σ raw on the side, cumulative
+          // offset accumulates raw thicknesses, position centered on node side.
           let total_cumul_of_side = 0
           let current_cumul_of_side = 0
           if (link_arrow_side_left) {
             xt = + this.position_x - this.shape_margin_left
             yt = + this.position_y + node_height / 2
             current_cumul_of_side = cum_v_left ; total_cumul_of_side = sumLinkLeft
-            cum_v_left += link_value
+            cum_v_left += link_value_raw
           }
           else if (link_arrow_side_right) {
             xt = + this.position_x + node_width + this.shape_margin_right
             yt = + this.position_y + node_height / 2
             current_cumul_of_side = cum_v_right ; total_cumul_of_side = sumLinkRight
-            cum_v_right += link_value
+            cum_v_right += link_value_raw
           }
           else if (link_arrow_side_top) {
             xt = + this.position_x + node_width / 2
             yt = + this.position_y
             current_cumul_of_side = cum_h_top ; total_cumul_of_side = sumLinkTop
-            cum_h_top += link_value
+            cum_h_top += link_value_raw
           }
           else {
             xt = + this.position_x + node_width / 2
             yt = + this.position_y + node_height
             current_cumul_of_side = cum_h_bottom ; total_cumul_of_side = sumLinkBottom
-            cum_h_bottom += link_value
+            cum_h_bottom += link_value_raw
           }
-          arrow_half_height = total_cumul_of_side / 2
-          arrow_already_computed = current_cumul_of_side
+          const placement = computeArrowPlacement(false, link_value_raw, link_value, total_cumul_of_side, current_cumul_of_side)
+          arrow_half_height = placement.arrow_half_height
+          arrow_already_computed = placement.arrow_already_computed
+          arrow_slice = placement.slice
         }
         else {
           // Standalone : base centered on link's actual visible end, half_height = link/2,
@@ -1200,8 +1214,10 @@ export class Class_NodeElement extends Class_NodeBase {
             xt = is_reversed ? link.position_x_start : link.position_x_end
             yt = + this.position_y + node_height
           }
-          arrow_half_height = link_value / 2
-          arrow_already_computed = 0
+          const placement = computeArrowPlacement(true, link_value_raw, link_value, 0, 0)
+          arrow_half_height = placement.arrow_half_height
+          arrow_already_computed = placement.arrow_already_computed
+          arrow_slice = placement.slice
         }
         const p5 = [xt, yt]
 
@@ -1211,7 +1227,7 @@ export class Class_NodeElement extends Class_NodeBase {
         const arrow_path = draw_arrow_part(
           arrow_half_height,
           p5,
-          +link_value,
+          +arrow_slice,
           arrow_already_computed,
           is_horizontal_at_target,
           is_revert,

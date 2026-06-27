@@ -332,13 +332,14 @@ export class Class_DrawingArea {
   // remains proportional to value even in structure mode (legacy behaviour).
   private _structure_mode_force_min: boolean = true
 
-  // Arrow layout : when false (default, legacy), arrows on each node side
-  // share a single "fan" base : tilts and cumulative offsets stack in
-  // clamped space. The fan is nicer visually when raw == clamped (no flow
-  // gets clamped up) but produces misalignment otherwise (see #681).
-  // When true, each arrow is a standalone triangle whose base = its link's
-  // clamped thickness, centered on the link's actual visible end (correct
-  // alignment in all clamping regimes) — opt-in fix.
+  // Arrow layout : when false (default), arrows on each node side share a single
+  // "fan" with converging tips. Since #199 the fan is sized on the RAW link
+  // thicknesses (like the node height and anchors), so flows clamped up to the
+  // minimum thickness overlap in the fan exactly as they do at the node and the
+  // fan total stays equal to the node height — no more oversized arrow bundles
+  // on nodes fed by many thin flows. When true (opt-in, fix #681), each arrow is
+  // instead a standalone triangle whose base = its link's clamped thickness,
+  // centered on the link's actual visible end (independent triangles, no fan).
   private _arrow_use_standalone_layout: boolean = false
 
   // Filter out link inferior to this value (when filter value is at 0 doesn't filter link even null)
