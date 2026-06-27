@@ -66,7 +66,8 @@ import {
   faShareNodes,
   faBan,
   faImage,
-  faCircleQuestion
+  faCircleQuestion,
+  faTableColumns
 } from '@fortawesome/free-solid-svg-icons'
 import {
   FontAwesomeIcon
@@ -182,6 +183,7 @@ const main_zone_btn_style = (active: boolean) => ({
  * (TopBarStateButtons) et en publish (MenuTopNavBar, derrière l'option `unitary`).
  */
 export const UnitaryTabButton = ({ new_data }: BaseApplicationDataType) => {
+  const { t } = new_data
   const { unitaryTabAvailable, showUnitary, showDiagram, showSpreadsheet, showDoc, setShowUnitary } = useMainZone(new_data)
   if (!unitaryTabAvailable) return <></>
   // Bascule en gardant toujours au moins un panneau affiché (diagramme / tableur / doc / unitaire).
@@ -190,15 +192,15 @@ export const UnitaryTabButton = ({ new_data }: BaseApplicationDataType) => {
     if (!next && !(showDiagram || showSpreadsheet || showDoc)) return
     setShowUnitary(next)
   }
-  return <OSTooltip placement='bottom' label='Sankey unitaire'>
+  return <OSTooltip placement='bottom' label={t('Spreadsheet.zone.unitary')}>
     <Button
-      aria-label='Unit.'
+      aria-label={t('Spreadsheet.zone.unit')}
       className='topbar_button_main_zone_unitary'
       onClick={toggleUnitary}
       {...main_zone_btn_style(showUnitary)}
     >
       <FontAwesomeIcon icon={faShareNodes} style={{ height: '0.95rem', width: '0.95rem' }} />
-      <Box as='span' style={{ fontSize: '0.5rem', lineHeight: 1 }}>Unit.</Box>
+      <Box as='span' style={{ fontSize: '0.5rem', lineHeight: 1 }}>{t('Spreadsheet.zone.unit')}</Box>
     </Button>
   </OSTooltip>
 }
@@ -210,6 +212,7 @@ export const UnitaryTabButton = ({ new_data }: BaseApplicationDataType) => {
  * En édition normale, le toggle Doc vit déjà dans TopBarStateButtons.
  */
 export const DocTabButton = ({ new_data }: BaseApplicationDataType) => {
+  const { t } = new_data
   const { showDoc, showDiagram, showSpreadsheet, showUnitary, setShowDoc } = useMainZone(new_data)
   if (new_data.documentation_markdown === '') return <></>
   // Bascule en gardant toujours au moins un panneau affiché (diagramme / tableur / doc / unitaire).
@@ -218,31 +221,30 @@ export const DocTabButton = ({ new_data }: BaseApplicationDataType) => {
     if (!next && !(showDiagram || showSpreadsheet || showUnitary)) return
     setShowDoc(next)
   }
-  return <OSTooltip placement='bottom' label='Documentation'>
+  return <OSTooltip placement='bottom' label={t('Spreadsheet.zone.documentation')}>
     <Button
-      aria-label='Doc'
+      aria-label={t('Spreadsheet.zone.doc')}
       className='topbar_button_main_zone_doc'
       onClick={toggleDoc}
       {...main_zone_btn_style(showDoc)}
     >
       <FontAwesomeIcon icon={faFileLines} style={{ height: '0.95rem', width: '0.95rem' }} />
-      <Box as='span' style={{ fontSize: '0.5rem', lineHeight: 1 }}>Doc</Box>
+      <Box as='span' style={{ fontSize: '0.5rem', lineHeight: 1 }}>{t('Spreadsheet.zone.doc')}</Box>
     </Button>
   </OSTooltip>
 }
 
-export const TopBarStateButtons = ({ new_data }: BaseApplicationDataType) => {
+/**
+ * Boutons d'état du document : annuler / rétablir / sauvegarder-en-cache.
+ * Historiquement dans la topbar, désormais rendus dans la colonne d'outils rétractable
+ * (cf. SankeyMenu). `vertical` choisit l'orientation du ButtonGroup et le placement des
+ * tooltips. Le composant reste monté tant que la colonne existe (display:none quand fermée)
+ * pour garder les refs d'indicateur de sauvegarde enregistrées.
+ */
+export const DocumentStateButtons = ({ new_data, vertical = false }: {
+  new_data: Class_ApplicationData, vertical?: boolean
+}) => {
   const { t, icon_library, history } = new_data
-  const {
-    showDiagram, showSpreadsheet, showDoc, showUnitary,
-    setShowDiagram, setShowSpreadsheet, setShowDoc
-  } = useMainZone(new_data)
-  // Bascule en gardant toujours au moins un panneau affiché (diagramme / tableur / doc / unitaire).
-  // L'unitaire compte : on peut donc masquer le diagramme et ne garder que le panneau unitaire.
-  const others = (...flags: boolean[]) => flags.some(Boolean)
-  const toggleDiagram = () => { const next = !showDiagram; if (!next && !others(showSpreadsheet, showDoc, showUnitary)) return; setShowDiagram(next) }
-  const toggleSpreadsheet = () => { const next = !showSpreadsheet; if (!next && !others(showDiagram, showDoc, showUnitary)) return; setShowSpreadsheet(next) }
-  const toggleDoc = () => { const next = !showDoc; if (!next && !others(showDiagram, showSpreadsheet, showUnitary)) return; setShowDoc(next) }
 
   const [save_boolean, setSaveBoolean] = useState(true)
   new_data.menu_configuration.ref_to_save_in_cache_indicator.current = (b: boolean) => {
@@ -262,6 +264,7 @@ export const TopBarStateButtons = ({ new_data }: BaseApplicationDataType) => {
 
   if (new_data.is_static) return <></>
 
+  const tt_placement = vertical ? 'left' : 'bottom'
   const ok_saved = save_boolean
   const indicator_saved_data = <Box color={never_save_session ? 'tertiaire.1' : (ok_saved ? 'tertiaire.3' : 'tertiaire.1')}>
     <FontAwesomeIcon
@@ -269,8 +272,8 @@ export const TopBarStateButtons = ({ new_data }: BaseApplicationDataType) => {
       icon={never_save_session ? faBan : (ok_saved ? faCheck : faExclamation)} />
   </Box>
 
-  return <ButtonGroup spacing='0.1rem' alignItems='center'>
-    <OSTooltip placement='bottom' label={t('Menu.undo')}>
+  return <ButtonGroup spacing='0.1rem' alignItems='center' orientation={vertical ? 'vertical' : 'horizontal'}>
+    <OSTooltip placement={tt_placement} label={t('Menu.undo')}>
       <IconButton
         aria-label={t('Menu.undo')}
         className='topbar_button_undo'
@@ -280,7 +283,7 @@ export const TopBarStateButtons = ({ new_data }: BaseApplicationDataType) => {
         {...topbar_state_btn_style}
       />
     </OSTooltip>
-    <OSTooltip placement='bottom' label={t('Menu.redo')}>
+    <OSTooltip placement={tt_placement} label={t('Menu.redo')}>
       <IconButton
         aria-label={t('Menu.redo')}
         className='topbar_button_redo'
@@ -290,7 +293,7 @@ export const TopBarStateButtons = ({ new_data }: BaseApplicationDataType) => {
         {...topbar_state_btn_style}
       />
     </OSTooltip>
-    <OSTooltip placement='bottom' label={never_save_session ? t('Menu.tooltips.reactivate_view_save') : t('Menu.tooltips.checkpoint')}>
+    <OSTooltip placement={tt_placement} label={never_save_session ? t('Menu.tooltips.reactivate_view_save') : t('Menu.tooltips.checkpoint')}>
       <Button
         aria-label={t('Menu.tooltips.checkpoint')}
         className='topbar_button_save_in_cache'
@@ -320,41 +323,109 @@ export const TopBarStateButtons = ({ new_data }: BaseApplicationDataType) => {
         </Box>
       </Button>
     </OSTooltip>
-    <OSTooltip placement='bottom' label='Diagramme'>
+  </ButtonGroup>
+}
+
+export const TopBarStateButtons = ({ new_data, vertical = false }: {
+  new_data: Class_ApplicationData, vertical?: boolean
+}) => {
+  const { t } = new_data
+  const {
+    showDiagram, showSpreadsheet, showDoc, showUnitary,
+    setShowDiagram, setShowSpreadsheet, setShowDoc
+  } = useMainZone(new_data)
+  // Bascule en gardant toujours au moins un panneau affiché (diagramme / tableur / doc / unitaire).
+  // L'unitaire compte : on peut donc masquer le diagramme et ne garder que le panneau unitaire.
+  const others = (...flags: boolean[]) => flags.some(Boolean)
+  // Exclusivité avec les inspecteurs du diagramme : ouvrir le tableur/doc ferme config + filtre
+  // (groupe « zone principale » vs groupe « inspecteur », au plus un grand panneau droit à la fois).
+  const closeInspectors = () => {
+    new_data.menu_configuration.ref_menu_opened.current[1](false)
+    new_data.menu_configuration.ref_close_filter_drawer.current(false)
+  }
+  const toggleDiagram = () => { const next = !showDiagram; if (!next && !others(showSpreadsheet, showDoc, showUnitary)) return; setShowDiagram(next) }
+  const toggleSpreadsheet = () => { const next = !showSpreadsheet; if (!next && !others(showDiagram, showDoc, showUnitary)) return; if (next) closeInspectors(); setShowSpreadsheet(next) }
+  const toggleDoc = () => { const next = !showDoc; if (!next && !others(showDiagram, showSpreadsheet, showUnitary)) return; if (next) closeInspectors(); setShowDoc(next) }
+
+  if (new_data.is_static) return <></>
+
+  const tt_placement = vertical ? 'left' : 'bottom'
+
+  return <ButtonGroup
+    spacing='0.1rem'
+    alignItems='center'
+    orientation={vertical ? 'vertical' : 'horizontal'}
+  >
+    <OSTooltip placement={tt_placement} label={t('Spreadsheet.zone.diagram')}>
       <Button
-        aria-label='Diagramme'
+        aria-label={t('Spreadsheet.zone.diagram')}
         className='topbar_button_main_zone_diagram'
         onClick={toggleDiagram}
         {...main_zone_btn_style(showDiagram)}
       >
         <FontAwesomeIcon icon={faDiagramProject} style={{ height: '0.95rem', width: '0.95rem' }} />
-        <Box as='span' style={{ fontSize: '0.5rem', lineHeight: 1 }}>Diagramme</Box>
+        <Box as='span' style={{ fontSize: '0.5rem', lineHeight: 1 }}>{t('Spreadsheet.zone.diagram')}</Box>
       </Button>
     </OSTooltip>
-    <OSTooltip placement='bottom' label='Tableur'>
+    <OSTooltip placement={tt_placement} label={t('Spreadsheet.zone.spreadsheet')}>
       <Button
-        aria-label='Tableur'
+        aria-label={t('Spreadsheet.zone.spreadsheet')}
         className='topbar_button_main_zone_spreadsheet'
         onClick={toggleSpreadsheet}
         {...main_zone_btn_style(showSpreadsheet)}
       >
         <FontAwesomeIcon icon={faTable} style={{ height: '0.95rem', width: '0.95rem' }} />
-        <Box as='span' style={{ fontSize: '0.5rem', lineHeight: 1 }}>Tableur</Box>
+        <Box as='span' style={{ fontSize: '0.5rem', lineHeight: 1 }}>{t('Spreadsheet.zone.spreadsheet')}</Box>
       </Button>
     </OSTooltip>
-    <OSTooltip placement='bottom' label='Doc'>
+    <OSTooltip placement={tt_placement} label={t('Spreadsheet.zone.doc')}>
       <Button
-        aria-label='Doc'
+        aria-label={t('Spreadsheet.zone.doc')}
         className='topbar_button_main_zone_doc'
         onClick={toggleDoc}
         {...main_zone_btn_style(showDoc)}
       >
         <FontAwesomeIcon icon={faFileLines} style={{ height: '0.95rem', width: '0.95rem' }} />
-        <Box as='span' style={{ fontSize: '0.5rem', lineHeight: 1 }}>Doc</Box>
+        <Box as='span' style={{ fontSize: '0.5rem', lineHeight: 1 }}>{t('Spreadsheet.zone.doc')}</Box>
       </Button>
     </OSTooltip>
     <UnitaryTabButton new_data={new_data} />
   </ButtonGroup>
+}
+
+/**
+ * Bouton plein écran de la barre du haut (style neutre, comme undo/redo/save). En éditeur, le plein
+ * écran a quitté la colonne d'outils (action de vue plutôt qu'outil canvas) ; il vit ici.
+ */
+export const TopBarFullscreenButton = ({ new_data }: BaseApplicationDataType) => {
+  const { t, icon_library } = new_data
+  const [, force] = useState(0)
+  useEffect(() => {
+    const h = () => force(c => c + 1)
+    document.addEventListener('fullscreenchange', h)
+    return () => document.removeEventListener('fullscreenchange', h)
+  }, [])
+  if (new_data.is_static) return <></>
+  const in_fs = !!document.fullscreenElement
+  const toggle = async () => {
+    if (!document.fullscreenElement) {
+      await document.documentElement.requestFullscreen()
+      new_data.draw()
+    } else if (document.exitFullscreen) {
+      await document.exitFullscreen()
+      new_data.draw()
+    }
+    force(c => c + 1)
+  }
+  return <OSTooltip placement='bottom' label={in_fs ? t('Banner.quit_fullscreen') : t('Banner.fullscreen')}>
+    <IconButton
+      aria-label='fullscreen'
+      className='topbar_button_fullscreen'
+      icon={in_fs ? icon_library.icon_enter_fullscreen : icon_library.icon_exit_fullscreen}
+      onClick={toggle}
+      {...topbar_state_btn_style}
+    />
+  </OSTooltip>
 }
 
 // Entrée d'index de tutoriel renvoyée par /menus/tutorials. Deux formes :
@@ -1381,7 +1452,9 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
   // (info mal placé). Sans header (3 enfants), 3 colonnes suffisent.
   const menutop_grid_template = new_data.is_static
     ? (new_data.publish_options.header ? '100px 30fr auto auto' : '100px 30fr auto')
-    : 'minmax(7vw, 100px) auto auto'
+    // Colonne centrale 1fr pour centrer les onglets de zone (Diagramme / Tableur / Doc) entre les
+    // menus (gauche) et le bloc méta langue/compte (droite).
+    : 'minmax(7vw, 100px) auto 1fr auto'
 
   // Format variable so if it's an list of Element, wrap these element in <React.Fragment/> with key to ensure no warning in console
   const constent_additional_nav_item = <>
@@ -1462,6 +1535,10 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
         new_data.is_static ?
           <MenuTopButtonsStatic new_data={new_data} additionalMenus={additionalMenus} /> :
           <MenuTopButtons new_data={new_data} additionalMenus={additionalMenus} />}
+      {/* Onglets de zone (Diagramme / Tableur / Doc / Unitaire) centrés : navigation primaire. */}
+      {!new_data.is_static ? <Box justifySelf='center' alignSelf='center'>
+        <TopBarStateButtons new_data={new_data} />
+      </Box> : <></>}
       <Box
         margin='0.25rem'
         alignSelf='center'
@@ -1472,10 +1549,11 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
         gap='0.25rem'
         width='unset'
       >
-        {/* Document-state block (undo / redo / save-in-cache) — its own group
-            separated from the language/info meta controls by a divider. */}
+        {/* Bloc état document (undo / redo / save) + plein écran, à gauche du bloc langue/compte.
+            Actions globales/fréquentes : restent en haut, pas dans la colonne d'outils canvas. */}
         {!new_data.is_static ? <>
-          <TopBarStateButtons new_data={new_data} />
+          <DocumentStateButtons new_data={new_data} />
+          <TopBarFullscreenButton new_data={new_data} />
           <Divider orientation='vertical' height='1.5rem' borderColor='gray.300' margin='0 0.25rem' />
         </> : <></>}
         {constent_additional_nav_item}
@@ -1496,6 +1574,28 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
             </MenuList>
           </Portal>
         </Menu> : <></>}
+        {/* Bouton bascule de la colonne d'outils rétractable, placé à droite du sélecteur de langue.
+            Ouvre/ferme la colonne (barre verticale + config + filtres + undo/redo/save) et recadre le
+            diagramme dans la largeur restante. */}
+        {!new_data.is_static ? <OSTooltip
+          placement='bottom'
+          label={new_data.t('Banner.toggle_tools_column', { defaultValue: 'Afficher / masquer la barre d\'outils' })}
+        >
+          <IconButton
+            aria-label='toggle-tools-column'
+            className='topbar_button_toggle_tools'
+            icon={<FontAwesomeIcon icon={faTableColumns} />}
+            onClick={() => {
+              const mc = new_data.menu_configuration
+              mc.tools_column_open = !mc.tools_column_open
+              new_data.drawing_area.areaAutoFit()
+              new_data.draw()
+            }}
+            {...topbar_state_btn_style}
+            color={new_data.menu_configuration.tools_column_open ? 'gray.900' : 'gray.700'}
+            bg={new_data.menu_configuration.tools_column_open ? 'gray.200' : 'transparent'}
+          />
+        </OSTooltip> : <></>}
       </Box>
     </Box>
   </Box>

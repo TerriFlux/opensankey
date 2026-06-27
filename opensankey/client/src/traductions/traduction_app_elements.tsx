@@ -146,6 +146,7 @@ export const resources_app_elements = {
           type_style: 'Formatting',
           presentation: 'Tags/Views',
           element_graph: 'Graph',
+          element_legend: 'Legend',
           element_node: 'Node',
           element_flow: 'Flow',
           element_node_tag: 'Node Label',

@@ -1,4 +1,4 @@
-import React, { useState, RefObject, useRef, ReactNode, useReducer } from 'react'
+import React, { useState, RefObject, useRef, ReactNode, useReducer, useEffect } from 'react'
 import {
   Drawer, Button, Collapse, DrawerContent, DrawerBody, Box, useDisclosure,
   Heading, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Text, Select, Checkbox, Switch,
@@ -6,6 +6,7 @@ import {
 } from '@chakra-ui/react'
 import { CheckIcon, ChevronDownIcon } from '@chakra-ui/icons'
 import { OSMultiSelect, typeElementSelectable, CustomFaEyeCheckIcon, OSTooltip, ConfigMenuNumberInput } from '../configmenus/MenuCommon'
+import { useMainZone, mainZoneRightReservedPx } from '../spreadsheet/MainZoneTabs'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_TagGroup, Class_DataTagGroup, Class_LevelTagGroup, Class_ViewTagGroup } from '../../types/TagGroup'
 import { Class_LevelTag } from '../../types/Tag'
@@ -121,7 +122,12 @@ export const BannerDataTagTopbar = ({ app_data }: { app_data: Class_ApplicationD
  * @param {*} { app_data }
  * @return {*} 
  */
-export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData }) => {
+export const ToolbarFilter = ({ app_data, hide_floating_button }: {
+  app_data: Class_ApplicationData,
+  // En éditeur, le bouton flottant historique est masqué : le bouton filtre vit dans la colonne
+  // d'outils rétractable (cf. SankeyMenu), qui pilote le drawer via ref_toggle_filter_drawer.
+  hide_floating_button?: boolean
+}) => {
   const hasVisibleFilters = () => {
     const { sankey } = app_data.drawing_area
 
@@ -158,14 +164,67 @@ export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData })
   }
   const [drawerOpen, setDrawerOpen] = useState(app_data.is_static)
   const [, forceUpdate] = useReducer(x => x + 1, 0)
+  // Abonnement à la grande zone : garde l'offset droit (rightReserve) à jour quand la colonne d'outils
+  // ou le tableur change de largeur.
+  useMainZone(app_data)
+  const rightReserve = mainZoneRightReservedPx(app_data)
+  // En éditeur, le panneau de filtres s'ouvre à DROITE (à côté de la colonne d'outils, comme la config) ;
+  // en publish/statique on garde l'ouverture historique à gauche (bouton flottant gauche).
+  const drawer_on_right = !app_data.is_static
   const width_drawer = (drawerOpen ? width_fitler_drawer + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin
-  app_data.menu_configuration.ref_close_filter_drawer.current = setDrawerOpen
+  // Intention doc/tableur mémorisée à l'ouverture du filtre (même principe que la config) : le filtre
+  // partage la colonne droite, donc l'ouvrir masque doc/tableur ; on les restaure à la fermeture.
+  // null = rien à restaurer.
+  const savedZoneRef = useRef<{ doc: boolean, spreadsheet: boolean } | null>(null)
+  // Ouvre/ferme le drawer de filtres en gérant l'exclusivité avec la config ET la mémorisation de la
+  // zone principale (doc/tableur). Centralise tous les chemins (bouton colonne, bouton flottant, Drawer
+  // onClose, raccourcis via ref_close_filter_drawer) pour que doc/tableur se rouvrent à la fermeture.
+  const setFilterOpen = (open: boolean) => {
+    if (open !== drawerOpen) {
+      if (open) {
+        // Panneau latéral droit unique : ouvrir le filtre ferme la config (qui restaure d'abord son
+        // propre état doc/tableur), puis on mémorise et on masque la zone ; on garde le diagramme.
+        app_data.menu_configuration.ref_menu_opened.current[1](false)
+        savedZoneRef.current = {
+          doc: app_data.menu_configuration.main_zone_show_doc,
+          spreadsheet: app_data.menu_configuration.main_zone_show_spreadsheet
+        }
+        app_data.menu_configuration.main_zone_show_spreadsheet = false
+        app_data.menu_configuration.main_zone_show_doc = false
+        app_data.menu_configuration.main_zone_show_diagram = true
+      } else if (savedZoneRef.current) {
+        // Restaurer l'intention doc/tableur mémorisée à l'ouverture.
+        if (savedZoneRef.current.spreadsheet) app_data.menu_configuration.main_zone_show_spreadsheet = true
+        if (savedZoneRef.current.doc) app_data.menu_configuration.main_zone_show_doc = true
+        savedZoneRef.current = null
+      }
+    }
+    setDrawerOpen(open)
+  }
+  app_data.menu_configuration.ref_close_filter_drawer.current = setFilterOpen
+  app_data.menu_configuration.ref_toggle_filter_drawer.current = () => setFilterOpen(!drawerOpen)
   app_data.menu_configuration.ref_toolbar.current = forceUpdate
 
+  // Disponibilité publiée pour la colonne d'outils (bouton filtre conditionnel). Posée AVANT le
+  // retour anticipé pour rester correcte même sans filtre visible.
+  const filters_visible = hasVisibleFilters()
+  app_data.menu_configuration.filter_bar_available = filters_visible
 
-  if (!hasVisibleFilters()) return <></>
+  // Panneau de filtres docké (éditeur) : sa largeur est réservée par le diagramme quand ouvert
+  // (cf. DrawingArea.side_panel_reserved) → dock à droite au lieu de recouvrir la zone de dessin.
+  app_data.menu_configuration.side_panel_filter_open = drawer_on_right && drawerOpen
+  // Re-fit du diagramme à l'ouverture/fermeture (la largeur réservée change). Éditeur uniquement.
+  const filterDidMount = useRef(false)
+  useEffect(() => {
+    if (!filterDidMount.current) { filterDidMount.current = true; return }
+    if (!drawer_on_right) return
+    app_data.drawing_area.areaAutoFit()
+    app_data.draw()
+  }, [drawerOpen])
+
+  if (!filters_visible) return <></>
   return <>
-    <Button
+    {!hide_floating_button ? <Button
       id='buttonOpenFilterDrawer'
       variant='toolbar_button_open_filter'
       size='sizeToolbarButton'
@@ -173,17 +232,17 @@ export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData })
         left: width_drawer,
         top: app_data.drawing_area.getNavBarHeight() + (app_data.drawing_area.fit_margin)
       }}
-      onClick={() => setDrawerOpen(!drawerOpen)}
+      onClick={() => setFilterOpen(!drawerOpen)}
     >
       {
         app_data.icon_library.icon_filter_tags
       }
-    </Button>
+    </Button> : <></>}
 
     <Drawer
-      placement='left'
+      placement={drawer_on_right ? 'right' : 'left'}
       isOpen={drawerOpen}
-      onClose={() => setDrawerOpen(false)}
+      onClose={() => setFilterOpen(false)}
       blockScrollOnMount={false}
       variant='drawer_menu_filter'
       trapFocus={false}
@@ -202,7 +261,9 @@ export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData })
           height: 'fit-content',
           boxShadow: 'unset',
           maxWidth: 'unset',
-          left: app_data.drawing_area.fit_margin / 2,
+          ...(drawer_on_right
+            ? { right: app_data.drawing_area.fit_margin / 2 + rightReserve }
+            : { left: app_data.drawing_area.fit_margin / 2 }),
           maxHeight: app_data.drawing_area.window_fitting_height,
           //overflowY: 'auto',
           marginTop: (app_data.drawing_area.fit_margin) + document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().y + document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height

@@ -89,7 +89,7 @@ export const ToolBarBottom = ({ new_data, right_offset }: {
   </Box>
 }
 
-const ComponentMouseMode = (
+export const ComponentMouseMode = (
   { app_data, updateParentComponent }: { app_data: Class_ApplicationData, updateParentComponent: () => void }) => {
   const { t, menu_configuration, drawing_area, icon_library } = app_data
   const size = app_data.is_static ? 'sizeToolbarButtonStatic' : 'sizeToolbarButton'
@@ -144,7 +144,7 @@ const ComponentMouseMode = (
 }
 
 
-const ComponentPositionMode = ({ app_data, updateParentComponent }: { app_data: Class_ApplicationData, updateParentComponent: () => void }) => {
+export const ComponentPositionMode = ({ app_data, updateParentComponent }: { app_data: Class_ApplicationData, updateParentComponent: () => void }) => {
   const { t, drawing_area } = app_data
   const size = app_data.is_static ? 'sizeToolbarButtonStatic' : 'sizeToolbarButton'
   const mode = drawing_area.sankey.styles_dict['default'].shape_position_type
@@ -225,7 +225,7 @@ const ComponentFullscreenButton = (
  * @param {*} { new_data, updateParentComponent }
  * @return {*}
  */
-const ComponetStretchButtons = ({ app_data, updateParentComponent }: { app_data: Class_ApplicationData, updateParentComponent: () => void }) => {
+export const ComponetStretchButtons = ({ app_data, updateParentComponent, hide_fullscreen }: { app_data: Class_ApplicationData, updateParentComponent: () => void, hide_fullscreen?: boolean }) => {
   // Use variable from class
   const { t } = app_data
   const size = app_data.is_static ? 'sizeToolbarButtonStatic' : 'sizeToolbarButton'
@@ -290,7 +290,8 @@ const ComponetStretchButtons = ({ app_data, updateParentComponent }: { app_data:
       </Button>
     </OSTooltip>
 
-    <ComponentFullscreenButton app_data={app_data} updateParentComponent={updateParentComponent} />
+    {/* En éditeur, le plein écran est déplacé dans la barre du haut (cf. TopBarFullscreenButton). */}
+    {hide_fullscreen ? <></> : <ComponentFullscreenButton app_data={app_data} updateParentComponent={updateParentComponent} />}
   </ButtonGroup>
 }
 
