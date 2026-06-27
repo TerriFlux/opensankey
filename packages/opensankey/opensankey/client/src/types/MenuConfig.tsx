@@ -73,6 +73,10 @@ export const DOC_LAYOUTS_WITH_SHEET: Type_MainZoneDocLayout[] =
   ['sheet-right', 'sheet-left', 'sheet-top', 'sheet-bottom']
 // Positions qui placent la doc en bas et raccourcissent le diagramme (réserve verticale).
 export const DOC_LAYOUTS_BOTTOM: Type_MainZoneDocLayout[] = ['diagram-bottom', 'window-bottom']
+// Largeur (px) de la colonne d'outils rétractable à droite (barre verticale + config + filtres +
+// undo/redo/save). Quand ouverte, cette largeur est réservée par le diagramme (cf.
+// getToolsColumnWidthPx / getMainZoneRightReservedPx) pour que la zone de dessin ne morde pas dessus.
+export const TOOLS_COLUMN_WIDTH_PX = 48
 export type keyTypeConfig = 'data' | 'style'
 export type keyTypeElements = 'data' | 'DA' | 'flow' | 'node' | 'element' | 'object' | 'legend'
 export interface IType_DictHookRefSetterShowDialogComponents {
@@ -235,8 +239,27 @@ export class Class_MenuConfig {
   // Quand vrai, l'unitaire ne réserve plus d'espace in-app (le diagramme/tableur récupèrent la place)
   // et mainZoneUnitaryRect renvoie null ; OS+ le rend alors en Draggable.
   protected _main_zone_unitary_detached: boolean = false
+  // Colonne d'outils rétractable à droite (éditeur uniquement). `tools_column_enabled` est posé par
+  // SankeyMenu (= !is_static) : en mode publish/statique la colonne n'existe pas et ne réserve rien.
+  // `_tools_column_open` (défaut ouvert) pilote l'affichage ET la réserve de largeur du diagramme.
+  public tools_column_enabled: boolean = false
+  // Disponibilité du panneau de filtres (posée par ToolbarFilter) : conditionne le bouton filtre
+  // dans la colonne d'outils.
+  public filter_bar_available: boolean = false
+  // Panneaux latéraux droits (config / filtre) ouverts en ÉDITEUR : posés par SankeyMenu / ToolbarFilter.
+  // Quand l'un est ouvert, sa largeur est réservée par le diagramme (cf. DrawingArea.main_zone_right_reserved)
+  // pour qu'il dock à droite au lieu de flotter par-dessus la zone de dessin. Mutuellement exclusifs.
+  public side_panel_config_open: boolean = false
+  public side_panel_filter_open: boolean = false
+  protected _tools_column_open: boolean = true
   protected _main_zone_listeners: Array<() => void> = []
   protected _notifyMainZone() { this._main_zone_listeners.forEach((l) => l()) }
+  public get tools_column_open() { return this._tools_column_open }
+  public set tools_column_open(v: boolean) { this._tools_column_open = v; this._notifyMainZone() }
+  /** Largeur (px) réservée à droite par la colonne d'outils (0 si absente/fermée). */
+  public getToolsColumnWidthPx(): number {
+    return (this.tools_column_enabled && this._tools_column_open) ? TOOLS_COLUMN_WIDTH_PX : 0
+  }
   public get main_zone_show_diagram() { return this._main_zone_show_diagram }
   public set main_zone_show_diagram(v: boolean) { this._main_zone_show_diagram = v; this._notifyMainZone() }
   public get main_zone_show_spreadsheet() { return this._main_zone_show_spreadsheet }
@@ -288,14 +311,17 @@ export class Class_MenuConfig {
     // SAUF s'il est détaché en dialogue flottant (il ne réserve alors plus d'espace).
     const unitaryDocked = this._main_zone_show_unitary && !this._main_zone_unitary_detached
     const rightColumnShown = this._main_zone_show_spreadsheet || docInRightColumn || unitaryDocked
-    if (!(this._main_zone_show_diagram && rightColumnShown)) return 0
+    // La colonne d'outils s'ajoute toujours à la réserve droite (qu'il y ait ou non un tableur/doc) :
+    // elle occupe l'extrême droite et le tableur/doc se décale d'autant vers la gauche (cf. MainZoneTabs).
+    const tools = this.getToolsColumnWidthPx()
+    if (!(this._main_zone_show_diagram && rightColumnShown)) return tools
     const MIN_SPREADSHEET_PX = 320
     const MIN_DIAGRAM_PX = 160
     const W = window.innerWidth
     let w = (1 - this._main_zone_split_ratio) * W
     w = Math.max(MIN_SPREADSHEET_PX, w)
     w = Math.min(w, Math.max(MIN_SPREADSHEET_PX, W - MIN_DIAGRAM_PX))
-    return w
+    return w + tools
   }
 
   /**
@@ -359,6 +385,9 @@ export class Class_MenuConfig {
   protected _waiting_time_for_processes: number = 50 // ms
 
   private _ref_close_filter_drawer: MutableRefObject<((_: boolean) => void)>
+  // Bascule (ouvre/ferme) le drawer de filtres depuis la colonne d'outils (le bouton flottant
+  // historique étant masqué en éditeur). Renseigné par ToolbarFilter.
+  private _ref_toggle_filter_drawer: MutableRefObject<(() => void)>
   private _ref_toolbar: MutableRefObject<(() => void)>
 
   private _ref_rerender_submodules_menus: MutableRefObject<() => void>
@@ -683,6 +712,7 @@ export class Class_MenuConfig {
     this._ref_to_menu_config_node_icon_updater = useRef(() => null)
 
     this._ref_close_filter_drawer = useRef(() => null)
+    this._ref_toggle_filter_drawer = useRef(() => undefined)
     this._ref_toolbar = useRef(() => null)
   }
 
@@ -1521,6 +1551,7 @@ export class Class_MenuConfig {
   public get r_value_type_set_elements() { return this._r_value_type_set_elements }
 
   public get ref_close_filter_drawer(): MutableRefObject<((_: boolean) => void)> { return this._ref_close_filter_drawer }
+  public get ref_toggle_filter_drawer(): MutableRefObject<(() => void)> { return this._ref_toggle_filter_drawer }
   public get ref_toolbar(): MutableRefObject<(() => void)> { return this._ref_toolbar }
   public get ref_to_toolbar_node_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_node_tag_updater }
   public get ref_to_toolbar_link_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_link_tag_updater }
