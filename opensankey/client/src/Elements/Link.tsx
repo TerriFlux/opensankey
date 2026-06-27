@@ -43,6 +43,7 @@ import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeElement } from './Node'
 import type { Class_NodeDimension } from './NodeDimension'
 import { Type_Side, } from './ElementsAttributesConfig'
+import { transferAnchorLock } from './anchorLockTransfer'
 import { Class_LinkAttribute } from './Element'
 import { LinkDrawNameLabel, LinkDrawValueLabel } from './DrawLabel'
 import { Class_ApplicationData } from '../types/ApplicationData'
@@ -337,6 +338,24 @@ export class Class_LinkElement extends Class_LinkAttribute {
     super.copyAttrFrom(_)
     this.source_anchor_delta = _.source_anchor_delta
     this.target_anchor_delta = _.target_anchor_delta
+  }
+
+  // I/O anchor lock ("cadenas" of the "Ordre des flux E/S" menu). Carried with
+  // the link ORDER (Node.keepLinkOrderingFrom), not with copyAttrFrom : the lock
+  // and the order it pins are one setting, transferred together when a layout is
+  // re-applied so the locked arrangement survives the next reorg (issue #202).
+  // Both the flag AND the frozen side are copied — see transferAnchorLock.
+  public copyAnchorLockFrom(_: Class_LinkElement): void {
+    const next = transferAnchorLock<Type_Side>({
+      source_side_locked: _._source_side_locked,
+      source_side_frozen: _._source_side_frozen,
+      target_side_locked: _._target_side_locked,
+      target_side_frozen: _._target_side_frozen,
+    })
+    this._source_side_locked = next.source_side_locked
+    this._source_side_frozen = next.source_side_frozen
+    this._target_side_locked = next.target_side_locked
+    this._target_side_frozen = next.target_side_frozen
   }
 
   //public copyFrom(_: Class_ProtoElement<typeof ALL_ATTRIBUTES_CONFIG>) {
