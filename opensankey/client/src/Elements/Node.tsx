@@ -49,6 +49,7 @@ import { NodeDrawValueLabel } from './DrawLabel'
 import { Class_StockValue, Class_ElementValueTree } from './LinkValues'
 import { Class_StockShape } from './StockShape'
 import { Type_Side } from './ElementsAttributesConfig'
+import { clampBandThickness } from './nodeBandHeight'
 import { NodeStyle, NodeImportCloseStyle, NodeExportCloseStyle, NodeImportExportCloseStyle, LinkImportCloseStyle, LinkExportCloseStyle, LinkImportExportCloseStyle, LinkImportExportAboveBelowStyle, NodeExportBelowStyle, NodeImportAboveStyle, NodeImportExportAboveBelowStyle, NodeSectorStyle, LinkStyle } from './ElementStyle'
 // 
 // CLASSE PRINCIPALE AVEC LIENS RÉINTÉGRÉS *********************************************
@@ -734,18 +735,13 @@ export class Class_NodeElement extends Class_NodeBase {
 
   // 🔄 SHAPE SIZE METHODS - RÉINTÉGRÉS DIRECTEMENT
   public getShapeWidthToUse() {
-    // In structure mode, node size must not be proportional to flow values
-    // — links are all drawn at the clamped (>= 2px / minimum_flux) thickness.
-    // Use the clamped sum so the node grows with the *number* of links, not
-    // their values, and arrows (which also live in clamped space) align with
-    // the node edges. This mirrors the natural behaviour of "data + intervals"
-    // mode (where valueCurrent is null, so raw thickness is already 2).
-    const clamped = this.drawing_area.is_structure_display
-    // for_sizing=true : la taille du nœud doit refléter ses propres flux
-    // même si ceux-ci sont masqués par un container_mode (cas typique :
-    // enfants d'un parent en mode englobant entrées/sorties parent).
-    const sum_of_top_thickness = this.getSumOfLinksThickness('top', clamped, true)
-    const sum_of_bottom_thickness = this.getSumOfLinksThickness('bottom', clamped, true)
+    // #201 : same raw-sum-then-band-floor policy as getShapeHeightToUse, for the
+    // top/bottom band of vertically-laid-out nodes. Summing the per-link clamped
+    // thickness inflated the node width to N × minimum_flux for N thin links.
+    // getSideBandExtent floors the band ONCE in structure/interval display
+    // (sub-pixel flows overlap), and keeps the raw sum in value display (#200).
+    const sum_of_top_thickness = this.getSideBandExtent('top')
+    const sum_of_bottom_thickness = this.getSideBandExtent('bottom')
     // super.getShapeWidthToUse() inclut shape_min_width ET, si tied,
     // la largeur de l'enveloppe des enfants attachés (mode englobant).
     return Math.max(sum_of_top_thickness, sum_of_bottom_thickness, super.getShapeWidthToUse())
@@ -775,9 +771,13 @@ export class Class_NodeElement extends Class_NodeBase {
       }
     }
     const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag : undefined
-    const clamped = this.drawing_area.is_structure_display
-    const sum_of_left_thickness = this.getSumOfLinksThickness('left', clamped, true)
-    const sum_of_right_thickness = this.getSumOfLinksThickness('right', clamped, true)
+    // #201 : size on the RAW sums per side (sub-pixel flows superpose into one
+    // band), then floor ONCE on the band in structure/interval display — not the
+    // sum of per-link 2px floors, which inflated the node to N × minimum_flux for
+    // N thin links. In value display the raw sum is kept as-is (node-too-thin is
+    // the separate #200). See nodeBandHeight.clampBandThickness.
+    const sum_of_left_thickness = this.getSideBandExtent('left')
+    const sum_of_right_thickness = this.getSideBandExtent('right')
     if (echangeTag && this.hasGivenTag(echangeTag)) {
       // TODO code to be rewritten when rearchitecturing code for Import Export
       return Math.max(sum_of_left_thickness, sum_of_right_thickness, 3)
@@ -1341,6 +1341,24 @@ export class Class_NodeElement extends Class_NodeBase {
         }
       })
     return sum
+  }
+
+  /**
+   * Visible band extent of ONE side for the node shape (#201) — height for
+   * left/right sides, width for top/bottom sides.
+   * Σ of the side's RAW link thicknesses (sub-pixel/structural flows overlap, so
+   * they contribute < minimum_flux / 0), then floored ONCE on the band in
+   * structure/interval display. In value display the raw sum is returned as-is
+   * (the node-too-thin case is the separate #200, which floors at draw time only).
+   */
+  private getSideBandExtent(side: Type_Side): number {
+    const links = this.getLinksOrdered(side).filter(link => link.is_visible_for_sizing_of(this))
+    const raw = links.reduce(
+      (sum, link) => sum + (link.source === this ? link.thicknessSourceRaw : link.thicknessTargetRaw),
+      0
+    )
+    if (!this.drawing_area.is_structure_display) return raw
+    return clampBandThickness(raw, links.length > 0, this.drawing_area.minimum_flux)
   }
 
   private getLinksStartingPositionOffSet(side: Type_Side) {
