@@ -46,6 +46,10 @@ import { compressJSONToGzip, decompressUploadedFileUniversal } from '../Persiste
 import { updateFrom } from '../Algorithms/UpdateFrom'
 import { centerChildrenOnParent } from '../Algorithms/Hierarchies'
 import { DrawingAreaPersistence } from '../Persistence/SankeyPersistence'
+import {
+  Type_DocMarkdownMap, serializeDocMarkdown, parseDocMarkdown,
+  resolveDocMarkdown, normalizeDocLang
+} from '../Persistence/persistenceMigrations'
 import type { Class_NodeElement } from '../Elements/Node'
 
 // SPECIFIC TYPES **********************************************************************/
@@ -353,7 +357,10 @@ export class Class_ApplicationData {
   protected _file_name = default_file_name
 
   // Documentation markdown libre attachée au diagramme (onglet « Doc »), persistée en JSON.
-  protected _documentation_markdown: string = ''
+  // Stockée par langue { fr, en, ... } : un même diagramme peut embarquer la doc
+  // traduite (cf. tutoriels multilingues). Le getter/setter public expose une
+  // string résolue pour la langue active (repli en→fr). Voir persistenceMigrations.
+  protected _documentation_markdown: Type_DocMarkdownMap = {}
   // Pièces jointes images de la doc : map id -> data-URI base64. Référencées dans le markdown par
   // `img://<id>` (garde l'éditeur lisible) ; persistées en JSON avec le diagramme (autonome).
   protected _documentation_images: { [id: string]: string } = {}
@@ -601,7 +608,7 @@ export class Class_ApplicationData {
     const by_pass_redraw = this._drawing_area.bypass_redraws
     this._file_name = default_file_name
     // La doc markdown est attachée au diagramme : un nouveau diagramme repart d'une doc vide.
-    this._documentation_markdown = ''
+    this._documentation_markdown = {}
     this._documentation_images = {}
     // Les paramètres de publication sont attachés au diagramme : nouveau diagramme => réglages vierges.
     this._publish_settings = {}
@@ -790,7 +797,8 @@ export class Class_ApplicationData {
     if (this._language !== undefined)
       json_object['language'] = this._language
     if (this._file_name != default_file_name) json_object['name_file'] = this._file_name
-    if (this._documentation_markdown !== '') json_object['documentation_markdown'] = this._documentation_markdown
+    const doc_serialized = serializeDocMarkdown(this._documentation_markdown)
+    if (doc_serialized !== undefined) json_object['documentation_markdown'] = doc_serialized
     if (Object.keys(this._documentation_images).length > 0) json_object['documentation_images'] = this._documentation_images
     if (Object.keys(this._publish_settings).length > 0) json_object['publish_settings'] = this._publish_settings
     json_object['main_zone'] = this.menu_configuration.mainZoneStateToJSON()
@@ -866,7 +874,10 @@ export class Class_ApplicationData {
     // Update drawing area
     DrawingAreaPersistence.fromJSON(this._drawing_area, json_object, kwargs)
     this._file_name = getStringFromJSON(json_object, 'name_file', this._file_name)
-    this._documentation_markdown = getStringFromJSON(json_object, 'documentation_markdown', '')
+    this._documentation_markdown = parseDocMarkdown(
+      json_object['documentation_markdown'],
+      json_object['language'] as string | undefined
+    )
     const imgs = json_object['documentation_images']
     this._documentation_images = (imgs && typeof imgs === 'object') ? imgs as { [id: string]: string } : {}
     const pub_opts = json_object['publish_settings']
@@ -1037,7 +1048,7 @@ export class Class_ApplicationData {
   public applyPublishStateOptions(): void {
     const opts = this.publish_options
     // Panneau documentation : ouvert d'office en publish si l'option `doc` est active et qu'une doc existe.
-    if (opts.doc && this._documentation_markdown !== '') {
+    if (opts.doc && this.documentation_markdown !== '') {
       this.menu_configuration.main_zone_show_doc = true
     }
     if (!opts.data_tag_selection && !opts.view_tag_selection && !opts.position_mode) return
@@ -1924,8 +1935,24 @@ export class Class_ApplicationData {
   public get file_name(): string { return this._file_name }
   public set file_name(value: string) { this._file_name = value }
 
-  public get documentation_markdown(): string { return this._documentation_markdown }
-  public set documentation_markdown(value: string) { this._documentation_markdown = value }
+  // Doc résolue pour la langue active (i18next), repli en→fr→première. Le setter
+  // écrit dans le slot de la langue active : éditer en mode 'en' ne touche que la
+  // doc anglaise. Voir _documentation_markdown (map par langue).
+  public get documentation_markdown(): string {
+    return resolveDocMarkdown(this._documentation_markdown, i18next.language)
+  }
+
+  public set documentation_markdown(value: string) {
+    const lang = normalizeDocLang(i18next.language || this._language)
+    if (value === '') delete this._documentation_markdown[lang]
+    else this._documentation_markdown[lang] = value
+  }
+
+  // Map complète { langue -> markdown } pour les outils qui manipulent toutes les
+  // traductions (édition multilingue, sérialisation). Le getter string ci-dessus
+  // reste l'accès courant pour l'affichage.
+  public get documentation_markdown_map(): Type_DocMarkdownMap { return this._documentation_markdown }
+  public set documentation_markdown_map(value: Type_DocMarkdownMap) { this._documentation_markdown = value }
 
   public get documentation_images(): { [id: string]: string } { return this._documentation_images }
   public set documentation_images(value: { [id: string]: string }) { this._documentation_images = value }

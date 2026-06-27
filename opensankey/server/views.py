@@ -1442,9 +1442,16 @@ def menus_tutorials():
     """
     Liste les tutoriels disponibles dans SANKEY_DATA/tutorials.
 
-    Renvoie une liste ordonnee [{file, title}] lue depuis tutorials/index.json
-    si present ; sinon repli sur un listing des fichiers .json / .json.gz du
-    dossier (titre = nom de fichier sans extension).
+    Renvoie la liste ordonnee lue depuis tutorials/index.json si present ; sinon
+    repli sur un listing des fichiers .json / .json.gz du dossier.
+
+    Le serveur est agnostique a la langue : il transmet les entrees telles
+    quelles, et c'est le menu (cote client) qui resout la langue active. Deux
+    formes d'entree sont supportees :
+      - legacy mono-langue : {"file": "...", "title": "..."}
+      - groupee multi-langue : {"id": "...",
+            "title": {"fr": "...", "en": "...", ...},
+            "files": {"fr": "...", "en": "...", ...}}
     """
     sankey_data = os.environ.get("SANKEY_DATA")
     folder = os.path.join(sankey_data, "tutorials") if sankey_data else None
@@ -1455,7 +1462,17 @@ def menus_tutorials():
             data_index = json.load(file_index)
         raw = data_index.get("tutorials", []) if isinstance(data_index, dict) else data_index
         for item in raw:
-            if isinstance(item, dict) and item.get("file"):
+            if not isinstance(item, dict):
+                continue
+            if item.get("files"):
+                # Entree groupee multi-langue : transmise telle quelle, la
+                # resolution langue -> fichier/titre se fait cote client.
+                tutorials.append({
+                    "id": item.get("id"),
+                    "title": item.get("title", item.get("id", "")),
+                    "files": item["files"],
+                })
+            elif item.get("file"):
                 tutorials.append({"file": item["file"], "title": item.get("title", item["file"])})
     elif folder and os.path.isdir(folder):
         for name in sorted(os.listdir(folder)):
