@@ -63,6 +63,7 @@ import { Class_ZoneSelection } from '../Elements/SelectionZone'
 import { Class_Tag } from './Tag'
 import { Class_ContainerElement } from '../Elements/TextZone'
 import { Class_ApplicationData } from './ApplicationData'
+import { compareZOrder, dedupeZOrderKeepFirst } from './zOrder'
 import { TooltipEventManager } from '../Elements/TooltipsConfig'
 import { Class_NodeBase, sortNodesElements } from '../Elements/NodeBase'
 import {
@@ -75,7 +76,7 @@ function sortElementByIdOrder(
   el_a: Class_NodeBase | Class_LinkElement,
   el_b: Class_NodeBase | Class_LinkElement,
   list: string[]) {
-  return list.indexOf(el_a.id) - list.indexOf(el_b.id)
+  return compareZOrder(el_a.id, el_b.id, list)
 }
 
 /**
@@ -1814,7 +1815,17 @@ export class Class_DrawingArea {
   }
 
   public orderElementOnDA() {
-    const list_element_id = this._list_g_element_id
+    // Dédoublonnage défensif (même politique que moveOrderElementInDA : on garde la
+    // 1ʳᵉ occurrence). L'application d'une mise en page (updateFrom) peut laisser des
+    // ids en double dans la liste d'ordre : `attrDrawingArea` la pré-amorce avec
+    // l'ordre Z de la source, puis addNewContainer (constructeur de Class_ContainerElement)
+    // repousse chaque zone de texte fraîchement créée à la fin, dans l'ordre des données.
+    // Le tri ci-dessous reposant sur indexOf, un doublon ferait choisir l'occurrence
+    // ajoutée (ordre de création) au lieu de celle de l'ordre Z source — d'où un ordre Z
+    // incorrect tant qu'on n'avait pas « nudgé » un élément au 1er/dernier plan à la main.
+    const list_element_id = dedupeZOrderKeepFirst(this._list_g_element_id)
+    if (list_element_id.length !== this._list_g_element_id.length)
+      this._list_g_element_id = list_element_id
 
     this.d3_selection_elements_sankey_group
       ?.selectAll(this._group_to_select)
