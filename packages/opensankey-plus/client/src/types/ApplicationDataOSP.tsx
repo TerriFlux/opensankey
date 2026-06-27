@@ -2,6 +2,7 @@ import { useToast } from '@chakra-ui/react'
 import pako from 'pako'
 import { Class_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
 import { default_main_sankey_id, getJSONOrUndefinedFromJSON, getStringFromJSON, makeId, Type_JSON } from '../deps/OpenSankey/types/Utils'
+import { serializeDocMarkdown, parseDocMarkdown } from '../deps/OpenSankey/Persistence/persistenceMigrations'
 import { Class_MenuConfigOSP } from './MenuConfigOSP'
 import { Class_ApplicationHistory } from '../deps/OpenSankey/types/ApplicationHistory'
 import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
@@ -287,7 +288,8 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     json_entry = DrawingAreaPersistenceOSP.toJSON(this._master_drawing_area! as Class_DrawingAreaOSP, kwargs)
     // Champ doc markdown global (niveau application_data) : ce chemin « avec vues » n'appelle pas
     // super._toJSON, donc on le sérialise explicitement au niveau racine/master.
-    if (this._documentation_markdown !== '') json_entry['documentation_markdown'] = this._documentation_markdown
+    const doc_serialized = serializeDocMarkdown(this._documentation_markdown)
+    if (doc_serialized !== undefined) json_entry['documentation_markdown'] = doc_serialized
     if (Object.keys(this._documentation_images).length > 0) json_entry['documentation_images'] = this._documentation_images
     // Paramètres de publication (niveau application_data) : ce chemin « avec vues » n'appelle pas
     // super._toJSON, donc on les sérialise explicitement au niveau racine/master.
@@ -330,7 +332,12 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     this._file_name = getStringFromJSON(json_object, 'name_file', this._file_name)
     // Champ global : on préserve la valeur courante si la clé est absente (ex. switch de vue avec
     // only_current_view où le json ne porte que la vue, pas les métadonnées master).
-    this._documentation_markdown = getStringFromJSON(json_object, 'documentation_markdown', this._documentation_markdown)
+    if (json_object['documentation_markdown'] !== undefined) {
+      this._documentation_markdown = parseDocMarkdown(
+        json_object['documentation_markdown'],
+        json_object['language'] as string | undefined
+      )
+    }
     const imgs = json_object['documentation_images']
     if (imgs && typeof imgs === 'object') this._documentation_images = imgs as { [id: string]: string }
     // Paramètres de publication : préservés si la clé est absente (ex. switch de vue only_current_view).
