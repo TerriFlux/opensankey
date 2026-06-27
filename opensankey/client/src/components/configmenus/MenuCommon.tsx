@@ -55,7 +55,15 @@ import {
   Select,
   PlacementWithLogical,
   Textarea,
-  SystemStyleObject
+  SystemStyleObject,
+  Divider,
+  Popover,
+  PopoverArrow,
+  PopoverBody,
+  PopoverContent,
+  PopoverTrigger,
+  Portal,
+  VStack
 } from '@chakra-ui/react'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 import { FaSquare } from 'react-icons/fa'
@@ -707,6 +715,125 @@ export const OSTooltip = ({ label,disabled=false, delay = 500, placement = 'auto
       {children}
     </Tooltip>
   }
+}
+
+export type OSChecklistItem = {
+  key: string
+  label: string
+  tooltip?: string
+  is_checked: boolean
+  is_disabled?: boolean
+  onChange: (checked: boolean) => void
+}
+
+/**
+ * Sélecteur déroulant façon filtre Excel pour un groupe d'options booléennes
+ * indépendantes (même pattern que le ChecklistDropdown des dialogues de
+ * persistance). Le bouton trigger résume la sélection ; au clic, un popover
+ * (porté en `Portal` pour passer au-dessus des panneaux de config) liste les
+ * options cochables, avec une case « (Tout sélectionner) » en tri-state et un
+ * champ de recherche optionnel. Les changements s'appliquent IMMÉDIATEMENT
+ * (pas d'OK/Annuler) : chaque bascule appelle directement `item.onChange`.
+ *
+ * Remplace les rangées de boutons toggle qui débordent (wrap) quand elles sont
+ * trop nombreuses pour la largeur du panneau.
+ */
+export const OSChecklistDropdown: FC<{
+  items: OSChecklistItem[]
+  /** Texte du bouton quand aucune option n'est sélectionnée. */
+  placeholder: string
+  /** Libellé de la case « (Tout sélectionner) ». */
+  select_all_label: string
+  /** Si fourni, affiche un champ de recherche filtrant les options par libellé. */
+  search_placeholder?: string
+  min_width?: string
+}> = ({ items, placeholder, select_all_label, search_placeholder, min_width = '180px' }) => {
+  const [is_open, setIsOpen] = useState(false)
+  const [search, setSearch] = useState('')
+
+  const search_lc = search.trim().toLowerCase()
+  const visible_items = search_lc
+    ? items.filter(it => it.label.toLowerCase().includes(search_lc))
+    : items
+
+  const selected = items.filter(it => it.is_checked)
+  const trigger_label = selected.length > 0
+    ? selected.map(it => it.label).join(', ')
+    : placeholder
+
+  const visible_checked = visible_items.filter(it => it.is_checked).length
+  const all_checked = visible_items.length > 0 && visible_checked === visible_items.length
+  const none_checked = visible_checked === 0
+  const toggleAllVisible = (next: boolean) => {
+    visible_items.forEach(it => {
+      if (!it.is_disabled && it.is_checked !== next) it.onChange(next)
+    })
+  }
+
+  const openPopover = () => { setSearch(''); setIsOpen(true) }
+
+  return (
+    <Popover isOpen={is_open} onClose={() => setIsOpen(false)} placement='bottom-start' isLazy>
+      <PopoverTrigger>
+        <Button
+          size='xs'
+          variant='outline'
+          rightIcon={<ChevronDownIcon />}
+          onClick={() => (is_open ? setIsOpen(false) : openPopover())}
+          width='100%'
+          minW={min_width}
+          justifyContent='space-between'
+          fontWeight='normal'
+        >
+          <Text noOfLines={1} textAlign='left' width='100%'>{trigger_label}</Text>
+        </Button>
+      </PopoverTrigger>
+      {/* Portal : le popover échappe à l'overflow des panneaux de config et flotte au-dessus. */}
+      <Portal>
+        <PopoverContent minW='240px' maxW='360px' zIndex='popover'>
+          <PopoverArrow />
+          <PopoverBody p='6px'>
+            {search_placeholder && (
+              <Input
+                size='xs'
+                placeholder={search_placeholder}
+                value={search}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+                mb='6px'
+              />
+            )}
+            <Checkbox
+              size='sm'
+              isChecked={all_checked}
+              isIndeterminate={!all_checked && !none_checked}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => toggleAllVisible(e.target.checked)}
+            >
+              <Text fontSize='xs' fontStyle='italic'>{select_all_label}</Text>
+            </Checkbox>
+            <Divider my='4px' />
+            <VStack align='stretch' spacing='2px' maxH='220px' overflowY='auto'>
+              {visible_items.map(it => (
+                <Checkbox
+                  key={it.key}
+                  size='sm'
+                  isChecked={it.is_checked}
+                  isDisabled={it.is_disabled}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => it.onChange(e.target.checked)}
+                >
+                  <OSTooltip label={it.tooltip ?? ''}>
+                    <Text fontSize='xs'>{it.label}</Text>
+                  </OSTooltip>
+                </Checkbox>
+              ))}
+              {visible_items.length === 0 && (
+                <Text fontSize='xs' color='gray.500' fontStyle='italic'>—</Text>
+              )}
+            </VStack>
+          </PopoverBody>
+        </PopoverContent>
+      </Portal>
+    </Popover>
+  )
 }
 
 export const CustomFaEyeCheckIcon = (props: CheckboxProps) => {

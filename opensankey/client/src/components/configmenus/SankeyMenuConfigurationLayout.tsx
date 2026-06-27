@@ -36,7 +36,7 @@ import { ConfigMenuNumberInput, MenuColorPicker, WrapperBoxSubSectionMenu } from
 import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle, OnDragEndResponder } from 'react-beautiful-dnd'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_DataTagGroup } from '../../types/TagGroup'
-import { CustomFaEyeCheckIcon, OSTooltip } from './MenuCommon'
+import { CustomFaEyeCheckIcon, OSChecklistDropdown, OSTooltip } from './MenuCommon'
 import { Type_PaperFormat, Type_PaperOrientation } from '../../Elements/ElementsAttributesConfig'
 
 // Utils functions -------------------------------------------------------------------
@@ -760,26 +760,34 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
       {/* ✅ SECTION CONTENU */}
       <Box as='span' textStyle='title_sub_section'>{t('Menu.content') || 'Contenu'}</Box>
 
-      {/* Contenu : échelle + dataTags + type de données */}
-      <Box as='span' layerStyle='options_3cols'>
-        <Button
-          variant={app_data.drawing_area.legend.display_legend_scale ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-          onClick={() => eventLegendScale(!app_data.drawing_area.legend.display_legend_scale)}
-        >
-          {t('Menu.display_scale')}
-        </Button>
-        <Button
-          variant={app_data.drawing_area.legend.legend_show_dataTags ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-          onClick={() => eventLegendDataTag(!app_data.drawing_area.legend.legend_show_dataTags)}
-        >
-          {t('MEP.leg_show_dataTags')}
-        </Button>
-        <Button
-          variant={app_data.drawing_area.legend.legend_show_data_type ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-          onClick={() => eventLegendDataType(!app_data.drawing_area.legend.legend_show_data_type)}
-        >
-          {t('MEP.leg_show_data_type')}
-        </Button>
+      {/* Contenu : sélecteur déroulant des éléments affichés (échelle / étiquettes /
+          type de données) + bascule d'orientation. Le sélecteur remplace la rangée de
+          boutons toggle qui débordait (wrap) sur les panneaux étroits. */}
+      <Box as='span' layerStyle='options_2cols'>
+        <OSChecklistDropdown
+          placeholder={t('Menu.content') || 'Contenu'}
+          select_all_label={t('Spreadsheet.toolbar.select_all')}
+          items={[
+            {
+              key: 'display_legend_scale',
+              label: t('Menu.display_scale'),
+              is_checked: app_data.drawing_area.legend.display_legend_scale,
+              onChange: eventLegendScale
+            },
+            {
+              key: 'legend_show_dataTags',
+              label: t('MEP.leg_show_dataTags'),
+              is_checked: app_data.drawing_area.legend.legend_show_dataTags,
+              onChange: eventLegendDataTag
+            },
+            {
+              key: 'legend_show_data_type',
+              label: t('MEP.leg_show_data_type'),
+              is_checked: app_data.drawing_area.legend.legend_show_data_type,
+              onChange: eventLegendDataType
+            }
+          ]}
+        />
         <Button
           variant={app_data.drawing_area.legend.legend_horizontal ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
           onClick={() => eventLegendHorizontal(!app_data.drawing_area.legend.legend_horizontal)}
