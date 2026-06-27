@@ -95,7 +95,6 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
     const off = app_data.menu_configuration.addMainZoneListener(forceUpdate)
     window.addEventListener('resize', forceUpdate)
     return () => { off(); window.removeEventListener('resize', forceUpdate) }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Ref du conteneur draggable (mode détaché en dialogue flottant).
@@ -159,7 +158,6 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
   useEffect(() => {
     app_data.menu_configuration.unitary_tab_available = app_data.has_sankey_plus
     app_data.menu_configuration.notifyMainZone()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [app_data.has_sankey_plus])
 
   // Hook consommé par l'onglet « Sankey unitaire » du tooltip de nœud (OS) : dessine
@@ -191,7 +189,6 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
       setNode(nodes[0] as Class_NodeElement)
     }
     // node volontairement hors deps (évite une boucle ; lu en lecture seule).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, source_mode, selected_data_id])
 
   // CONSTRUCTION (lourde) du sankey unitaire détaché. Ne dépend QUE de la source et du
@@ -262,7 +259,6 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
     // référence par défaut, cf. effet plus bas) et le remettre ici reconstruisait tout le
     // diagramme (toJSON/fromJSON) à chaque changement de nœud — par-dessus le refocus léger,
     // d'où la lenteur. Le mode normalisé est mis à jour par l'effet léger dédié ci-dessous.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, value_mode, source_mode, selected_data_id, rebuild_count])
 
   // MODE NORMALISÉ — MAJ LÉGÈRE du flux de référence sans reconstruction. Seul
@@ -277,7 +273,6 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
       ? da.sankey.links_dict[normalize_link_id]
       : undefined
     da.draw()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [normalize_link_id, value_mode])
 
   // RECADRAGE piloté par la GÉOMÉTRIE du bloc réservé (mainZoneUnitaryRect). Le panneau étant docké,
@@ -292,7 +287,6 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
     if (!open) return
     const id = requestAnimationFrame(() => da_ref.current?.draw())
     return () => cancelAnimationFrame(id)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, geom_key])
 
   // RE-FOCALISATION (légère) au changement de nœud : re-sélectionne le tag unitaire du
@@ -315,7 +309,6 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
     } catch (e) {
       console.error('[unitary] re-focalisation du sankey unitaire échouée:', e)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [node_id])
 
   // Annuler une présélection de survol en attente à la fermeture / au démontage.
@@ -336,7 +329,6 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
     const stored = node.unitary_ref_link_id
     const valid = stored && links.some(l => l.id === stored)
     setNormalizeLinkId(valid ? stored : (links[0]?.id ?? null))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [node_id, source_mode, selected_data_id])
 
   // --- Import Excel : upload + poll + récupération (cf. SankeyPlusViews) -------
