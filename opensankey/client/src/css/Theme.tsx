@@ -1430,7 +1430,9 @@ export const menuStyles = {
       gridTemplateColumns: '1fr 3fr',
       gridColumnGap: '0.25rem',
     },
-    list: { zIndex: '3' }
+    // dropdown (1000) : doit passer au-dessus des panneaux tableur/doc de la grande
+    // zone (MainZoneTabs, zIndex 20-25) qui sinon recouvrent ce menu porté en Portal.
+    list: { zIndex: 'dropdown' }
   }),
 
   menu_subnav_item_demo: menu.definePartsStyle({
@@ -2421,7 +2423,9 @@ export const tabsStyles = {
       gridTemplateColumns: '1fr 3fr',
       gridColumnGap: '0.25rem',
     },
-    list: { zIndex: '3' }
+    // dropdown (1000) : doit passer au-dessus des panneaux tableur/doc de la grande
+    // zone (MainZoneTabs, zIndex 20-25) qui sinon recouvrent ce menu porté en Portal.
+    list: { zIndex: 'dropdown' }
   }),
 
   menu_subnav_item_demo: menu.definePartsStyle({
