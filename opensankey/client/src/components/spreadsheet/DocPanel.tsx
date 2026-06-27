@@ -4,13 +4,17 @@
 // Panneau « Doc » : éditeur de documentation markdown + aperçu rendu.
 // Monté dans la grande zone (onglet "Doc" de MainZoneTabs), partage le slot droit comme le tableur.
 //
-// Le contenu est un champ unique au niveau ApplicationData (documentation_markdown), persisté en JSON
-// avec le diagramme. L'édition met à jour le modèle en direct et marque les données comme non
-// sauvegardées (l'indicateur du bouton checkpoint passe au rouge ; l'utilisateur sauve via Ctrl+S).
+// Le contenu est un champ au niveau ApplicationData (documentation_markdown), persisté en JSON
+// avec le diagramme. Il est multilingue : stocké en interne comme une map { langue -> markdown },
+// l'accesseur app_data.documentation_markdown résout la langue active (repli en→fr). L'éditeur
+// affiche/écrit la doc de la langue UI courante ; changer de langue recharge le slot correspondant.
+// L'édition met à jour le modèle en direct et marque les données comme non sauvegardées
+// (l'indicateur du bouton checkpoint passe au rouge ; l'utilisateur sauve via Ctrl+S).
 // ==================================================================================================
 
 // External imports
 import React, { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Box, Button, IconButton, Textarea, Portal,
   Menu, MenuButton, MenuList, MenuItem, MenuGroup, MenuDivider
@@ -92,21 +96,23 @@ const makeHeading = (level: 1 | 2 | 3) =>
 
 const HeadingRenderers = { h1: makeHeading(1), h2: makeHeading(2), h3: makeHeading(3) }
 
+type Type_TFn = (key: string) => string
+
 // Libellés courts des positions de la doc (pour le bouton du menu).
-const DOC_POS_LABEL: Record<Type_MainZoneDocLayout, string> = {
-  'sheet-right': 'À droite du tableur',
-  'sheet-left': 'À gauche du tableur',
-  'sheet-top': 'Au-dessus du tableur',
-  'sheet-bottom': 'En-dessous du tableur',
-  'diagram-bottom': 'Sous le diagramme',
-  'window-bottom': 'Bandeau bas'
-}
+const docPosLabel = (t: Type_TFn): Record<Type_MainZoneDocLayout, string> => ({
+  'sheet-right': t('Spreadsheet.doc.pos_sheet_right'),
+  'sheet-left': t('Spreadsheet.doc.pos_sheet_left'),
+  'sheet-top': t('Spreadsheet.doc.pos_sheet_top'),
+  'sheet-bottom': t('Spreadsheet.doc.pos_sheet_bottom'),
+  'diagram-bottom': t('Spreadsheet.doc.pos_diagram_bottom'),
+  'window-bottom': t('Spreadsheet.doc.pos_window_bottom')
+})
 // Positions « accolées au tableur » proposées dans le sous-groupe.
-const SHEET_POSITIONS: [Type_MainZoneDocLayout, string][] = [
-  ['sheet-right', 'À droite'],
-  ['sheet-left', 'À gauche'],
-  ['sheet-top', 'Au-dessus'],
-  ['sheet-bottom', 'En-dessous']
+const sheetPositions = (t: Type_TFn): [Type_MainZoneDocLayout, string][] => [
+  ['sheet-right', t('Spreadsheet.doc.pos_right')],
+  ['sheet-left', t('Spreadsheet.doc.pos_left')],
+  ['sheet-top', t('Spreadsheet.doc.pos_top')],
+  ['sheet-bottom', t('Spreadsheet.doc.pos_bottom')]
 ]
 
 const tab_btn_style = (active: boolean) => ({
@@ -145,6 +151,9 @@ export const DocPanel = (
   // En mode publication (is_static sans publish_options.editable), la doc est en lecture seule :
   // on n'affiche que l'aperçu et on masque toute la barre d'édition (cf. is_editable, utilisé
   // partout ailleurs pour neutraliser l'édition).
+  const { t, i18n } = useTranslation()
+  const DOC_POS_LABEL = docPosLabel(t)
+  const SHEET_POSITIONS = sheetPositions(t)
   const editable = app_data.is_editable
   const [text, setText] = useState<string>(app_data.documentation_markdown)
   const [mode, setMode] = useState<Type_DocMode>('preview')
@@ -185,6 +194,13 @@ export const DocPanel = (
       setText(app_data.documentation_markdown)
     }
   }, [active])
+
+  // La doc est multilingue (map par langue, résolue par app_data.documentation_markdown
+  // pour la langue active). Au changement de langue de l'UI, recharger le texte de la
+  // langue courante : l'édition écrit alors dans le slot de cette langue.
+  useEffect(() => {
+    setText(app_data.documentation_markdown)
+  }, [i18n.language])
 
   // Resynchronise même panneau déjà ouvert : chargement d'un fichier / nouveau diagramme déclenche
   // updateAllMenuComponents() qui appelle cette ref (cf. le tableur via ref_to_spreadsheet).
@@ -345,7 +361,7 @@ export const DocPanel = (
             (modes édition/côte à côte), le sélecteur de position « À droite du tableur » passe
             sous le libellé au lieu de déborder à droite hors du panneau. */}
         <Box display='flex' alignItems='center' flexWrap='wrap' gap='0.25rem 0.5rem' flex='0 1 auto' minWidth={0}>
-          <Box fontSize='0.8rem' fontWeight='600' color='gray.700'>Documentation</Box>
+          <Box fontSize='0.8rem' fontWeight='600' color='gray.700'>{t('Spreadsheet.doc.title')}</Box>
           {/* Sélecteur de position de la doc dans la grande zone (masqué en aperçu seul et en lecture seule). */}
           {editable && mode !== 'preview' && (
             <Menu placement='bottom-start' isLazy>
@@ -360,7 +376,7 @@ export const DocPanel = (
                 {DOC_POS_LABEL[docLayout]}
               </MenuButton>
               <MenuList fontSize='0.85rem' zIndex={1600}>
-                <MenuGroup title='Avec le tableur'>
+                <MenuGroup title={t('Spreadsheet.doc.with_sheet')}>
                   {SHEET_POSITIONS.map(([pos, label]) => (
                     <MenuItem
                       key={pos}
@@ -379,13 +395,13 @@ export const DocPanel = (
                   onClick={() => setDocLayout('diagram-bottom')}
                   fontWeight={docLayout === 'diagram-bottom' ? 'bold' : 'normal'}
                 >
-                  {docLayout === 'diagram-bottom' ? '✓ ' : ''}Sous le diagramme
+                  {docLayout === 'diagram-bottom' ? '✓ ' : ''}{t('Spreadsheet.doc.under_diagram')}
                 </MenuItem>
                 <MenuItem
                   onClick={() => setDocLayout('window-bottom')}
                   fontWeight={docLayout === 'window-bottom' ? 'bold' : 'normal'}
                 >
-                  {docLayout === 'window-bottom' ? '✓ ' : ''}Bandeau bas (pleine largeur)
+                  {docLayout === 'window-bottom' ? '✓ ' : ''}{t('Spreadsheet.doc.window_bottom_full')}
                 </MenuItem>
               </MenuList>
             </Menu>
@@ -415,16 +431,16 @@ export const DocPanel = (
                 width='auto'
                 rightIcon={<ChevronDownIcon />}
               >
-                Insérer
+                {t('Spreadsheet.doc.insert')}
               </MenuButton>
               <MenuList fontSize='0.85rem' zIndex={1600}>
                 <MenuItem onClick={() => fileInputRef.current?.click()}>
-                  Une image…
+                  {t('Spreadsheet.doc.insert_image')}
                 </MenuItem>
                 {view_sources.length > 0 && (
                   <>
                     <MenuItem onClick={insertViewsOutline}>
-                      Titre + lien pour chaque vue
+                      {t('Spreadsheet.doc.insert_views_outline')}
                     </MenuItem>
                     <MenuDivider />
                     {/* Sous-menu flyout des vues. Chakra v2 n'a pas de sous-menu natif : on contrôle
@@ -436,7 +452,7 @@ export const DocPanel = (
                       <Menu isOpen={viewSubmenuOpen} placement='right-start' gutter={0} offset={[0, 0]} isLazy>
                         <MenuButton as={MenuItem} closeOnSelect={false}>
                           <Box display='flex' alignItems='center' justifyContent='space-between'>
-                            <Box>Lien vers une vue</Box>
+                            <Box>{t('Spreadsheet.doc.insert_view_link')}</Box>
                             <ChevronDownIcon style={{ height: '1rem', width: '1rem', transform: 'rotate(-90deg)' }} />
                           </Box>
                         </MenuButton>
@@ -479,9 +495,9 @@ export const DocPanel = (
             {/* Bascules de mode masquées en lecture seule (publication) : seul l'aperçu a du sens. */}
             {editable && (
               <>
-                <Button {...tab_btn_style(mode === 'edit')} onClick={() => setMode('edit')}>Édition</Button>
-                <Button {...tab_btn_style(mode === 'split')} onClick={() => setMode('split')}>Côte à côte</Button>
-                <Button {...tab_btn_style(mode === 'preview')} onClick={() => setMode('preview')}>Aperçu</Button>
+                <Button {...tab_btn_style(mode === 'edit')} onClick={() => setMode('edit')}>{t('Spreadsheet.doc.mode_edit')}</Button>
+                <Button {...tab_btn_style(mode === 'split')} onClick={() => setMode('split')}>{t('Spreadsheet.doc.mode_split')}</Button>
+                <Button {...tab_btn_style(mode === 'preview')} onClick={() => setMode('preview')}>{t('Spreadsheet.doc.mode_preview')}</Button>
               </>
             )}
             {/* Détacher / ré-attacher la doc dans une fenêtre OS séparée (second écran).
@@ -498,7 +514,7 @@ export const DocPanel = (
                 p='0'
                 flexShrink={0}
                 onClick={onToggleDetach}
-                title={detached ? 'Ré-attacher la documentation dans la fenêtre principale' : 'Détacher la documentation dans une fenêtre séparée'}
+                title={detached ? t('Spreadsheet.doc.reattach') : t('Spreadsheet.doc.detach')}
               />
             )}
           </Box>
@@ -515,7 +531,7 @@ export const DocPanel = (
               onChange={(e) => onChange(e.target.value)}
               onScroll={(e) => recordScroll(e.currentTarget)}
               onPaste={onPaste}
-              placeholder={'Rédigez la documentation de ce diagramme en markdown…\n\n# Titre\n\n- point 1\n- point 2'}
+              placeholder={t('Spreadsheet.doc.editor_placeholder')}
               height='100%'
               resize='none'
               border='none'
