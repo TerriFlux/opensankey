@@ -75,9 +75,12 @@ export const mainZoneUnitaryRect = (
   const docBottomMode = docInApp && DOC_LAYOUTS_BOTTOM.includes(mc.main_zone_doc_layout)
   const sheetGroupShown = mc.main_zone_show_spreadsheet || docWithSheet
 
+  // Largeur de la colonne d'outils rétractable (extrême droite) : la colonne droite tableur/doc se
+  // décale d'autant vers la gauche pour ne pas passer dessous.
+  const toolsW = mc.getToolsColumnWidthPx()
   const rightSlotW = spreadsheetWidthPx(mc.main_zone_split_ratio)
-  const left = showDiagram ? (W - rightSlotW) : 0
-  const width = showDiagram ? rightSlotW : W
+  const left = showDiagram ? (W - rightSlotW - toolsW) : 0
+  const width = showDiagram ? rightSlotW : (W - toolsW)
 
   // Bandeau doc pleine largeur (window-bottom, ou diagram-bottom sans diagramme) : raccourcit la
   // colonne droite par le bas, comme dans le composant.
@@ -213,6 +216,9 @@ export const MainZoneTabs = (
   const bottomH = drawing_area.getBottomBarHeight ? drawing_area.getBottomBarHeight() : 0
 
   const W = window.innerWidth
+  // Largeur réservée à l'extrême droite par la colonne d'outils rétractable (0 si fermée/publish).
+  // La colonne droite (tableur/doc/unitaire) et les séparateurs se décalent d'autant vers la gauche.
+  const toolsW = app_data.menu_configuration.getToolsColumnWidthPx()
   const contentTop = navH
   const contentBottom = window.innerHeight - bottomH
   const contentH = Math.max(0, contentBottom - contentTop)
@@ -301,15 +307,15 @@ export const MainZoneTabs = (
     window.addEventListener('mouseup', up)
   }
 
-  // Géométrie.
-  const rightLeft = showDiagram ? (W - rightSlotW) : 0
+  // Géométrie. Tout le bord droit est décalé de toolsW (colonne d'outils à l'extrême droite).
+  const rightLeft = showDiagram ? (W - rightSlotW - toolsW) : 0
   // La colonne droite est raccourcie par le bas seulement par un bandeau pleine largeur.
   const rightBottom = docFullWidthBand ? (bottomH + docH) : bottomH
-  // Bandeau doc (mode bas) : pleine largeur, ou seulement sous le diagramme (largeur restante).
-  const docBandWidth = docFullWidthBand ? W : (W - rightReserveW)
+  // Bandeau doc (mode bas) : pleine largeur (moins la colonne d'outils), ou seulement sous le diagramme.
+  const docBandWidth = docFullWidthBand ? (W - toolsW) : (W - rightReserveW - toolsW)
 
   const showVDivider = showDiagram && rightColumnShown
-  const vDividerX = W - rightSlotW
+  const vDividerX = W - rightSlotW - toolsW
   const showHDivider = docBottomMode && !docAlone
 
   // --- Séparateur tableur/doc dans la colonne droite (modes sheet-*) ---
@@ -384,10 +390,10 @@ export const MainZoneTabs = (
         </PipPortal>
       )}
 
-      {/* Doc seule : remplit toute la grande zone. */}
+      {/* Doc seule : remplit toute la grande zone (moins la colonne d'outils à droite). */}
       {docAlone && (
         <div style={{
-          position: 'fixed', top: contentTop, left: 0, right: 0, bottom: bottomH,
+          position: 'fixed', top: contentTop, left: 0, right: toolsW, bottom: bottomH,
           zIndex: 20, background: 'white'
         }}>
           {docPanelEl}
@@ -404,7 +410,7 @@ export const MainZoneTabs = (
             position: 'fixed',
             top: contentTop,
             left: rightLeft,
-            right: 0,
+            right: toolsW,
             bottom: rightBottom,
             zIndex: 20,
             background: 'white',
@@ -518,7 +524,7 @@ export const MainZoneTabs = (
             position: 'fixed',
             top: unitDividerY - 3,
             left: rightLeft,
-            width: showDiagram ? rightSlotW : W,
+            width: showDiagram ? rightSlotW : (W - toolsW),
             height: 6,
             zIndex: 25,
             cursor: 'row-resize',

@@ -207,6 +207,7 @@ export const OpenSankeyApp = ({
         {app_data.publish_options.filter_bar ?
           <ToolbarFilter
             app_data={app_data}
+            hide_floating_button={!app_data.is_static}
           /> : <></>}
         <>
           <SankeyMenu

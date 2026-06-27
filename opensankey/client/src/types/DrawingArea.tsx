@@ -3196,7 +3196,26 @@ export class Class_DrawingArea {
   // dans la largeur restante via areaAutoFit() (cf MainZoneTabs, déclenché au toggle / changement
   // de vue).
   public get main_zone_right_reserved(): number {
-    return this.application_data.menu_configuration?.getMainZoneRightReservedPx() ?? 0
+    const mc = this.application_data.menu_configuration
+    if (!mc) return 0
+    return mc.getMainZoneRightReservedPx() + this.side_panel_reserved
+  }
+  // Largeur réservée à droite par un panneau latéral docké (config ou filtre) en mode éditeur, pour
+  // que le diagramme se recadre au lieu d'être recouvert. 0 en publish/statique (panneaux flottants
+  // historiques). Les largeurs reproduisent celles des panneaux : config = max(20%, 420px)
+  // (cf. menu_config_width/menu_config_min_width_px), filtre = 270px (cf. width_fitler_drawer) ; on
+  // ajoute fit_margin pour laisser un interstice entre diagramme et panneau.
+  public get side_panel_reserved(): number {
+    if (this.static) return 0
+    const mc = this.application_data.menu_configuration
+    if (!mc) return 0
+    if (mc.side_panel_config_open) {
+      return Math.max(0.20 * window.innerWidth, 420) + this._fit_margin
+    }
+    if (mc.side_panel_filter_open) {
+      return 270 + this._fit_margin
+    }
+    return 0
   }
   public get window_fitting_width(): number {
     // DA détachée : on cadre dans le conteneur hôte (modal), pas la fenêtre.
