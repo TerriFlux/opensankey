@@ -825,7 +825,9 @@ export const TitleConfig = ({ app_data }: { app_data: Class_ApplicationData }) =
   }
 
   const data_taggs = sankey.data_taggs_list
+  const view_taggs = sankey.view_taggs_list
   const [token_group_id, setTokenGroupId] = useState('')
+  const [view_token_group_id, setViewTokenGroupId] = useState('')
 
   // La visibilité du titre est pilotée ici. Le texte (statique + jetons) et le
   // reste du style s'éditent via l'interface normale des zones de texte.
@@ -847,6 +849,19 @@ export const TitleConfig = ({ app_data }: { app_data: Class_ApplicationData }) =
     const c = sankey.getOrCreateTitleContainer()
     const token = '{' + grp.name + '}'
     // Le titre édite name_label_text (texte de label indépendant), pas le nom.
+    const current = c.name_label_text
+    c.name_label_text = current ? current + ' ' + token : token
+    app_data.drawing_area.draw()
+    refreshThisAndUpdateRelatedComponents()
+  }
+
+  // Insère le jeton {NomDeLaVue} ; remplacé au rendu par l'étiquette de view tag
+  // sélectionnée (suit la vue affichée).
+  const eventInsertViewToken = () => {
+    const grp = view_taggs.find(g => g.id === view_token_group_id)
+    if (!grp) return
+    const c = sankey.getOrCreateTitleContainer()
+    const token = '{' + grp.name + '}'
     const current = c.name_label_text
     c.name_label_text = current ? current + ' ' + token : token
     app_data.drawing_area.draw()
@@ -895,6 +910,31 @@ export const TitleConfig = ({ app_data }: { app_data: Class_ApplicationData }) =
             onClick={eventInsertToken}
           >
             {t('Menu.TitleInsertToken')}
+          </Button>
+        </Box>
+      }
+
+      {/* Insertion d'un jeton view tag (suit la vue sélectionnée) */}
+      {view_taggs.length > 0 &&
+        <Box as='span' layerStyle='options_2cols'>
+          <OSTooltip label={t('Menu.tooltips.TitleViewGroupSelect')}>
+            <Select
+              size='sm'
+              value={view_token_group_id}
+              onChange={(evt) => setViewTokenGroupId(evt.target.value)}
+            >
+              <option value=''>{t('Menu.TitleSelectGroup')}</option>
+              {view_taggs.map(tagg => (
+                <option key={tagg.id} value={tagg.id}>{tagg.name}</option>
+              ))}
+            </Select>
+          </OSTooltip>
+          <Button
+            variant='menuconfigpanel_option_button'
+            isDisabled={view_token_group_id === ''}
+            onClick={eventInsertViewToken}
+          >
+            {t('Menu.TitleInsertViewToken')}
           </Button>
         </Box>
       }
