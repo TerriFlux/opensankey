@@ -122,8 +122,13 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
 
   // Add an option for flow color rule
   if (has_sankey_plus) {
-    new_data_plus.menu_configuration.flow_color_origin_type.push('gradient')
-    new_data_plus.menu_configuration.flow_color_origin_type.push('auto')
+    const flow_color_origin_type = new_data_plus.menu_configuration.flow_color_origin_type
+    if (!flow_color_origin_type.includes('gradient')) {
+      flow_color_origin_type.push('gradient')
+    }
+    if (!flow_color_origin_type.includes('auto')) {
+      flow_color_origin_type.push('auto')
+    }
   }
 
   if (has_sankey_afm && !new_data.is_static) {
