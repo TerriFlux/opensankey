@@ -164,12 +164,14 @@ export const DrawingAreaConfig = ({
   }
 
   const eventMinLinkThickness = (evt: number | null | undefined) => {
-    // #200 — distinguer « champ vidé » de « 0 saisi » :
-    //  • null/undefined (champ vide)  → retour au DÉFAUT (plancher dur 2px) en
-    //    effaçant la clé minimum_flux ;
-    //  • 0 (saisi explicitement)      → flux tracés à leur ÉPAISSEUR RÉELLE ;
-    //  • n > 0                        → plancher de n px.
-    const new_min = (evt === null || evt === undefined) ? undefined : evt
+    // #200 — le DÉFAUT est 2px (le champ affiche 2 quand aucune valeur n'est
+    // posée). On ne stocke `minimum_flux` que pour une valeur qui s'écarte du
+    // défaut ; sinon on efface la clé (document propre, plancher dur 2px) :
+    //  • vide / 2 (= défaut)     → effacer la clé → plancher 2px ;
+    //  • 0 (saisi explicitement) → flux tracés à leur ÉPAISSEUR RÉELLE ;
+    //  • autre n                 → plancher de n px (au-dessus comme en dessous de 2).
+    const DEFAULT_MIN = 2
+    const new_min = (evt === null || evt === undefined || evt === DEFAULT_MIN) ? undefined : evt
     if (new_min === app_data.drawing_area.minimum_flux) return // pas de no-op dans l'historique
     const f = (_: number | undefined) => {
       if (_ !== undefined) {
@@ -424,7 +426,7 @@ export const DrawingAreaConfig = ({
         <OSTooltip label={t('MEP.tooltips.MinFlux')}>
           <ConfigMenuNumberInput
             t={app_data.t}
-            default_value={app_data.drawing_area.minimum_flux}
+            default_value={app_data.drawing_area.minimum_flux ?? 2}
             function_on_blur={eventMinLinkThickness}
             minimum_value={0}
             maximum_value={app_data.drawing_area.maximum_flux}

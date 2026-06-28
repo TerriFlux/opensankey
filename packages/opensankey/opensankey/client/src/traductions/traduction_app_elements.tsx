@@ -356,7 +356,7 @@ export const resources_app_elements = {
         tooltips: {
           Echelle: 'Change the scale of the links and nodes',
           MaxFlux: 'Change the maximum size (in pixels) for the display of the nodes and links',
-          MinFlux: 'Minimum thickness (px) of links and nodes. Leave empty for the 2px default, or enter 0 to draw every flow at its real thickness (thin flows stop overlapping, but become faint and harder to click).',
+          MinFlux: 'Minimum thickness (px) of links and nodes. Default is 2px; enter 0 to draw every flow at its real thickness (thin flows stop overlapping, but become faint and harder to click).',
           StructureForceMin: 'In structure mode, force all link thicknesses to the minimum value (ignore data values). Disable to keep proportional thicknesses.',
           ArrowStandaloneLayout: 'When enabled, each arrow is a standalone triangle aligned to its own flow. When disabled (default), arrows on a node side share a common fan whose tips converge (its height matches the node, even when flows are clamped to the minimum thickness).',
           TCG: 'Size of the background grid tiles (in pixels)',
@@ -918,7 +918,7 @@ export const resources_app_elements = {
         tooltips: {
           Echelle: 'Modifier l\'échelle des flux et noeuds',
           MaxFlux: 'Modifier la taille maximale (en pixel) pour l\'affichage des nœuds et flux',
-          MinFlux: 'Épaisseur minimale (px) des flux et nœuds. Vide = défaut 2px ; 0 = tracer chaque flux à son épaisseur réelle (les flux fins ne se chevauchent plus, mais deviennent ténus et peu cliquables).',
+          MinFlux: 'Épaisseur minimale (px) des flux et nœuds. Défaut 2px ; 0 = tracer chaque flux à son épaisseur réelle (les flux fins ne se chevauchent plus, mais deviennent ténus et peu cliquables).',
           StructureForceMin: 'En mode Structure, forcer toutes les épaisseurs de flux à la valeur minimale (ignorer les valeurs). Décocher pour garder les épaisseurs proportionnelles.',
           ArrowStandaloneLayout: 'Si activé, chaque flèche est un triangle indépendant aligné sur son propre flux. Si décoché (défaut), les flèches d\'un même côté de nœud partagent un éventail commun dont les pointes convergent (sa hauteur épouse celle du nœud, même quand des flux sont clampés à l\'épaisseur minimale).',
           TCG: 'Taille des carreaux de la grille de fond (en pixel)',
