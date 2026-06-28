@@ -949,6 +949,9 @@ export class Class_ViewTagGroup extends Class_NodeTagGroup {
   // sélectionnée sont montrés quel que soit le niveau, les autres étiquettes du
   // groupe sont cachées. (Visibilité seulement — pas de remontée vers les ancêtres.)
   private _view_mode: boolean = false
+  // Libellé personnalisable de l'option « vue complète » du sélecteur topbar
+  // (BannerViewTagTopbar). Vide = libellé par défaut (traduction Banner.view_full).
+  private _full_view_label: string = ''
 
   /**
    * True if tag is currently on a deletion process
@@ -996,6 +999,7 @@ export class Class_ViewTagGroup extends Class_NodeTagGroup {
     this._activated = tagg_to_copy._activated
     this._siblings = [...tagg_to_copy._siblings]
     this._view_mode = tagg_to_copy._view_mode
+    this._full_view_label = tagg_to_copy._full_view_label
   }
 
   protected _toJSON(json_object: Type_JSON, _kwargs?: Type_JSON) {
@@ -1003,6 +1007,7 @@ export class Class_ViewTagGroup extends Class_NodeTagGroup {
     json_object['activated'] = this._activated
     json_object['siblings'] = this._siblings
     json_object['view_mode'] = this._view_mode
+    json_object['full_view_label'] = this._full_view_label
   }
 
   protected _fromJSON(json_object: Type_JSON, kwargs?: Type_JSON) {
@@ -1010,10 +1015,14 @@ export class Class_ViewTagGroup extends Class_NodeTagGroup {
     this._activated = getBooleanFromJSON(json_object, 'activated', this._activated)
     this._siblings = getStringListFromJSON(json_object, 'siblings', this._siblings)
     this._view_mode = getBooleanFromJSON(json_object, 'view_mode', this._view_mode)
+    this._full_view_label = getStringFromJSON(json_object, 'full_view_label', this._full_view_label)
   }
 
   public get view_mode(): boolean { return this._view_mode }
   public set view_mode(_: boolean) { this._view_mode = _ }
+
+  public get full_view_label(): string { return this._full_view_label }
+  public set full_view_label(_: string) { this._full_view_label = _ }
 
   /**
    * Function to add sibling to current group and referenced group,

@@ -832,6 +832,9 @@ export class NodeElementPersistence extends NodeBasePersistence {
     if (node.stock_height_scale_factor !== 1) {
       json_object['stock_height_scale_factor'] = node.stock_height_scale_factor
     }
+    if (node.max_height !== null) {
+      json_object['max_height'] = node.max_height
+    }
     if (!node.has_material_balance) {
       json_object['has_material_balance'] = false
     }
@@ -1054,6 +1057,9 @@ export class NodeElementPersistence extends NodeBasePersistence {
     }
     if (json_node_object['stock_height_scale_factor'] !== undefined) {
       node.stock_height_scale_factor = json_node_object['stock_height_scale_factor'] as number
+    }
+    if (json_node_object['max_height'] !== undefined) {
+      node.max_height = json_node_object['max_height'] as number
     }
     if (json_node_object['has_material_balance'] !== undefined) {
       node.has_material_balance = json_node_object['has_material_balance'] as boolean

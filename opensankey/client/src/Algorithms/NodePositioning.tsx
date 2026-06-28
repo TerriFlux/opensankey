@@ -1170,7 +1170,11 @@ export class NodePositioning {
    * (rétrocompat). undefined si pas de flux de référence ou valeur indisponible.
    */
   private referenceFluxRefValue(): number | undefined {
-    const ref = this.proportionalReferenceLink
+    // Lien brut (pas le getter `proportionalReferenceLink` qui renvoie undefined si le flux
+    // est masqué) : en mode vue le flux de référence peut être caché par le filtre, mais sa
+    // valeur de référence (dénominateur de l'échelle) reste définie. Pour le proportionnel ce
+    // chemin n'est emprunté que si le flux est visible → comportement inchangé.
+    const ref = this._prop_reference_link
     if (!ref) return undefined
     const tags = this.resolveReferenceDataTags()
     if (tags.length > 0) {
@@ -1222,7 +1226,9 @@ export class NodePositioning {
    * mode, valeur_courante == valeur_ref → échelle inchangée → pas de saut.
    */
   public captureScaleReference() {
-    const ref = this.proportionalReferenceLink
+    // Lien brut : on doit pouvoir capturer la valeur de référence même si le flux est
+    // momentanément masqué par un filtre vue (cf. referenceFluxRefValue).
+    const ref = this._prop_reference_link
     const v = ref ? this.referenceFluxRefValue() : undefined
     if (ref && v && v > 0) {
       // Valeur au datatag de référence (couple flux/datatag) ; échelle de base = échelle courante.
@@ -1242,7 +1248,10 @@ export class NodePositioning {
    * récursion ; on l'évite).
    */
   public applyAdaptedScale() {
-    const ref = this.proportionalReferenceLink
+    // En mode vue, le flux de référence peut être masqué par le filtre → on prend le lien brut
+    // (sa valeur de réf reste le « gabarit » de taille). Hors vue, getter visibilité-gated.
+    const view_active = this.drawingArea.sankey.view_mode_active
+    const ref = view_active ? this._prop_reference_link : this.proportionalReferenceLink
     if (!ref) return
     // Capture paresseuse (1er dessin / après chargement) : base = échelle + valeur courantes
     // → ratio 1 à cette frame, pas de saut.
@@ -1250,13 +1259,43 @@ export class NodePositioning {
       this.captureScaleReference()
       return
     }
-    const v = Math.abs(ref.valueCurrent ?? 0)
+    // En mode vue : v = valeur du CORRESPONDANT de la vue (flux enfant visible portant l'étiquette
+    // sélectionnée). new_scale = ref_scale × correspondant / valeur_réf → le flux correspondant est
+    // dessiné à l'épaisseur du flux de référence (une vue plus petite dilate l'échelle pour normaliser
+    // le correspondant à la taille de référence). Hors vue : valeur courante du flux de réf (datatags).
+    const v = view_active
+      ? this.referenceFluxViewValue(ref)
+      : Math.abs(ref.valueCurrent ?? 0)
     if (v <= 0) return
     const new_scale = this._scale_adapted_ref_scale * v / this._scale_adapted_ref_value
     if (isFinite(new_scale) && new_scale > 0) {
       this.drawingArea._scale = new_scale
       this.drawingArea._scaleValueToPx.domain([0, new_scale])
     }
+  }
+
+  /**
+   * Mode vue — valeur du flux de référence dans la VUE courante : somme des liens visibles dont
+   * la source descend de `ref.source`, la cible descend de `ref.target`, ET dont les DEUX
+   * extrémités portent l'étiquette view tag sélectionnée (viewTagVisibility === true). Ce dernier
+   * filtre est indispensable car la hiérarchie a plusieurs dimensions (essences ET propriétés) :
+   * sans lui on cumulerait les liens croisés (ex. essence chêne → propriété domaniale).
+   */
+  private referenceFluxViewValue(ref: Class_LinkElement): number {
+    const src = ref.source as Class_NodeElement
+    const tgt = ref.target as Class_NodeElement
+    const src_set = new Set<Class_NodeElement>([src, ...src.getListDescendantOfNode()])
+    const tgt_set = new Set<Class_NodeElement>([tgt, ...tgt.getListDescendantOfNode()])
+    let sum = 0
+    this.drawingArea.sankey.visible_links_list.forEach(l => {
+      const ls = l.source as Class_NodeElement
+      const lt = l.target as Class_NodeElement
+      if (!src_set.has(ls) || !tgt_set.has(lt)) return
+      if (ls.viewTagVisibility() !== true || lt.viewTagVisibility() !== true) return
+      const v = l.valueCurrent
+      if (v != null && isFinite(v)) sum += Math.abs(v)
+    })
+    return sum
   }
 
   /**
@@ -1330,10 +1369,17 @@ export class NodePositioning {
     // #1231 — Régime « flux de référence » : f = ratio de VALEUR du flux de référence entre le
     // datatag courant et le datatag de référence (couple persisté flux/datatag). f=1 au datatag
     // de réf ; indépendant du moment où l'on (r)entre en mode %.
-    const ref_link = this.proportionalReferenceLink
+    // En mode vue, le flux de référence peut être masqué par le filtre → lien brut. Le facteur
+    // est piloté par la valeur du CORRESPONDANT de la vue (somme des flux enfants visibles
+    // portant l'étiquette sélectionnée) rapportée à la valeur du flux de référence : une vue
+    // plus petite que le total donne f<1 → le diagramme se comprime (rétracte).
+    const view_active = this.drawingArea.sankey.view_mode_active
+    const ref_link = view_active ? this._prop_reference_link : this.proportionalReferenceLink
     if (ref_link) {
       const ref_val = this.referenceFluxRefValue()
-      const cur = Math.abs(ref_link.valueCurrent ?? 0)
+      const cur = view_active
+        ? this.referenceFluxViewValue(ref_link)
+        : Math.abs(ref_link.valueCurrent ?? 0)
       if (ref_val && ref_val > 0 && cur > 0) {
         const f = cur / ref_val
         return (isFinite(f) && f > 0) ? f : 1
@@ -1376,7 +1422,13 @@ export class NodePositioning {
     // préservé EXACTEMENT entre colonnes (un nœud plus haut le reste, gauche ou droite), et
     // la colonne la plus dense « tire » tout le diagramme. Plus de plancher par colonne.
     const f = this.proportionalFactor(nodes)
-    const f_eff = Math.max(f, this.proportionalMinFactor(nodes))
+    // En mode vue, le plancher anti-chevauchement (proportionalMinFactor) se calcule sur les
+    // centres de référence capturés en VUE COMPLÈTE, incohérents avec le sous-ensemble visible :
+    // il peut renvoyer une valeur énorme qui dilate tout à l'infini. On le neutralise donc en
+    // vue et on applique directement f (le risque résiduel est un chevauchement, pas une explosion).
+    const f_eff = this.drawingArea.sankey.view_mode_active
+      ? f
+      : Math.max(f, this.proportionalMinFactor(nodes))
     nodes.forEach(n => n.applyProportionalCompression(this._prop_median_y!, f_eff))
   }
 

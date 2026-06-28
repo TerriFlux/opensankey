@@ -2,9 +2,9 @@ import React, { useState, RefObject, useRef, ReactNode, useReducer, useEffect } 
 import {
   Drawer, Button, Collapse, DrawerContent, DrawerBody, Box, useDisclosure,
   Heading, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Text, Select, Checkbox, Switch,
-  Menu, MenuButton, MenuList, MenuItem, HStack, Divider
+  Menu, MenuButton, MenuList, MenuItem, HStack, VStack, Divider
 } from '@chakra-ui/react'
-import { CheckIcon, ChevronDownIcon } from '@chakra-ui/icons'
+import { CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
 import { OSMultiSelect, typeElementSelectable, CustomFaEyeCheckIcon, OSTooltip, ConfigMenuNumberInput } from '../configmenus/MenuCommon'
 import { useMainZone, mainZoneRightReservedPx } from '../spreadsheet/MainZoneTabs'
 import { Class_ApplicationData } from '../../types/ApplicationData'
@@ -78,8 +78,66 @@ export const applyDataTagChildLinks = (
  * reconstruction de child links + redraw que la sélection mono-valeur du panneau
  * de filtres (cf. applyDataTagChildLinks).
  */
+/**
+ * Bloc topbar « Préc. / <Select> / Suiv. » partagé par les sélecteurs de data tags et de
+ * view tags (« générateur de vues »), sur le modèle de la navigation entre vues. Le nom du
+ * groupe est calé EN PETIT AU-DESSUS du sélecteur (pas à gauche) : on gagne en largeur sans
+ * épaissir la topbar (qui réserve déjà deux lignes pour ses boutons). Sélecteur élargi et
+ * flèches compactes. La logique de navigation (bornes, options) est portée par l'appelant.
+ */
+const TopbarNavSelect = ({
+  prefix, options, value, onChange, onPrev, onNext, prev_disabled, next_disabled, select_label, t
+}: {
+  prefix: string
+  options: { value: string, label: string }[]
+  value: string
+  onChange: (value: string) => void
+  onPrev: () => void
+  onNext: () => void
+  prev_disabled: boolean
+  next_disabled: boolean
+  select_label: string
+  t: (key: string) => string
+}) => {
+  // Flèches : largeur FIXE minuscule (p='0', flexShrink=0) + variant 'ghost' (gris, pas le
+  // solid vert par défaut) — sinon elles s'élargissent et écrasent le sélecteur.
+  const arrow = (icon: JSX.Element, on_click: () => void, disabled: boolean, tip: string, aria: string) =>
+    <OSTooltip placement='bottom' label={tip}>
+      <Button
+        size='xs' variant='ghost' colorScheme='gray'
+        minW='1.1rem' w='1.1rem' h='1.5rem' p='0' flexShrink={0}
+        isDisabled={disabled} onClick={on_click} aria-label={aria}
+      >
+        {icon}
+      </Button>
+    </OSTooltip>
+  return <VStack spacing='0' align='stretch' w='13rem' mr='0.7rem'>
+    {prefix !== '' ? (
+      <Box fontSize='0.6rem' lineHeight='1.1' color='gray.600' whiteSpace='nowrap' overflow='hidden' textOverflow='ellipsis'>
+        {prefix}
+      </Box>
+    ) : null}
+    <HStack spacing='0.1rem'>
+      {arrow(<ChevronLeftIcon boxSize='0.9rem' />, onPrev, prev_disabled, t('Menu.precView'), 'prev')}
+      <Box flex='1' minW='3rem'>
+        <OSTooltip placement='bottom' label={select_label}>
+          <Select
+            size='xs'
+            fontSize='0.7rem'
+            value={value}
+            onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => onChange(evt.target.value)}
+          >
+            {options.map(o => <option key={o.value} value={o.value} style={{ fontSize: '0.7rem' }}>{o.label}</option>)}
+          </Select>
+        </OSTooltip>
+      </Box>
+      {arrow(<ChevronRightIcon boxSize='0.9rem' />, onNext, next_disabled, t('Menu.nextView'), 'next')}
+    </HStack>
+  </VStack>
+}
+
 export const BannerDataTagTopbar = ({ app_data }: { app_data: Class_ApplicationData }) => {
-  const { drawing_area } = app_data
+  const { t, drawing_area } = app_data
   const { sankey } = drawing_area
   const [, setCount] = useState(0)
   app_data.menu_configuration.ref_to_toolbar_data_tag_updater.current = () => setCount(c => c + 1)
@@ -89,38 +147,132 @@ export const BannerDataTagTopbar = ({ app_data }: { app_data: Class_ApplicationD
 
   if (topbar_taggs.length === 0) return <></>
 
-  return <HStack className='BannerDataTagTopbar' alignItems='center' spacing='0.2rem'>
+  return <HStack className='BannerDataTagTopbar' alignItems='center' spacing='0.4rem'>
     {topbar_taggs.map(tagg => {
       if (Object.keys(tagg.tags_dict || {}).length < 1) return <React.Fragment key={tagg.id} />
-      const selected_value = tagg.selected_tags_list[0]?.id ?? tagg.tags_list[0]?.id ?? ''
-      return <HStack key={tagg.id} alignItems='center' spacing='0.3rem'>
-        <Box as='span' whiteSpace='nowrap' fontSize='0.8rem'>{tagg.name}</Box>
-        <Box minW='7rem' maxW='14rem' alignSelf='center'>
-          <OSTooltip placement='bottom' label={tagg.name}>
-            <Select
-              value={selected_value}
-              onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                tagg.selectTagsFromId(evt.target.value)
-                applyDataTagChildLinks(app_data, tagg, [evt.target.value])
-                app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
-              }}
-            >
-              {tagg.tags_list.map(tag => (
-                <option key={tag.id} value={tag.id}>{tag.display_name}</option>
-              ))}
-            </Select>
-          </OSTooltip>
-        </Box>
-      </HStack>
+      const tags = tagg.tags_list
+      const selected_value = tagg.selected_tags_list[0]?.id ?? tags[0]?.id ?? ''
+      const cur_idx = tags.findIndex(tg => tg.id === selected_value)
+      const select = (id: string) => {
+        tagg.selectTagsFromId(id)
+        applyDataTagChildLinks(app_data, tagg, [id])
+        app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
+        setCount(c => c + 1)
+      }
+      return <TopbarNavSelect
+        key={tagg.id}
+        t={t}
+        prefix={tagg.name}
+        select_label={tagg.name}
+        value={selected_value}
+        options={tags.map(tag => ({ value: tag.id, label: tag.display_name }))}
+        onChange={select}
+        onPrev={() => { if (cur_idx > 0) select(tags[cur_idx - 1].id) }}
+        onNext={() => { if (cur_idx >= 0 && cur_idx < tags.length - 1) select(tags[cur_idx + 1].id) }}
+        prev_disabled={cur_idx <= 0}
+        next_disabled={cur_idx < 0 || cur_idx >= tags.length - 1}
+      />
     })}
   </HStack>
+}
+
+/**
+ * Redessine après un changement de sélection / d'activation du filtre vue. Suppose que
+ * la sélection (selectTagsFromId) et le view_mode ont déjà été posés sur le groupe.
+ * Factorisé pour être partagé entre l'ancien panneau (handleTagSelection mode 'unitary')
+ * et le sélecteur de view tags en topbar (BannerViewTagTopbar). Reprend la stabilisation
+ * de visibilité (2 passes) + mise en page auto optionnelle (view_filter_kind === 'auto').
+ */
+export const applyViewTagFilterRedraw = (app_data: Class_ApplicationData) => {
+  const { drawing_area } = app_data
+  const { sankey } = drawing_area
+  sankey.nodeTagsUpdated()
+  sankey.nodes_list.forEach(n => n.updateVisibilityFingerprint())
+  updateUnitaryStyles(drawing_area)
+  drawing_area.bypass_redraws = false
+  // Stabilise la visibilité avant de décider d'une éventuelle mise en page auto.
+  sankey.nodes_list.forEach(n => { void n.is_visible })
+  sankey.nodes_list.forEach(n => { void n.is_visible })
+  if (sankey.view_mode_active && drawing_area.view_filter_kind === 'auto') {
+    const needs_auto_layout = sankey.visible_nodes_list.some(n =>
+      n.position_x === const_default_position_x &&
+      n.position_y === const_default_position_y)
+    if (needs_auto_layout) drawing_area.nodePositioning.computeAutoSankey(true, true)
+  }
+  drawing_area.to_recenter = true
+  drawing_area.recenter()
+  drawing_area.draw()
+}
+
+/**
+ * Sélecteur de view tags (« générateur de vues ») rendu dans la topbar, sur le MODÈLE de
+ * la navigation entre vues : bouton Préc. / <Select> / bouton Suiv. Agit sur le PREMIER
+ * groupe de view tags affichable (banner !== 'none'). Sélectionner une valeur active le
+ * filtre vue (view_mode) du groupe et applique la sélection ; l'option « vue complète »
+ * le désactive. Remplace l'ancien panneau « Génération de vues » du tiroir de filtres.
+ */
+export const BannerViewTagTopbar = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const { t, drawing_area } = app_data
+  const { sankey } = drawing_area
+  const [, setCount] = useState(0)
+  app_data.menu_configuration.ref_to_unitarytag_filter_updater.current = () => setCount(c => c + 1)
+
+  const view_taggs = sankey.getTagGroupsAsList('view_taggs')
+    .filter(grp => grp.banner !== 'none') as unknown as Class_ViewTagGroup[]
+  if (view_taggs.length === 0) return <></>
+  // Décision : un seul bloc, sur le premier groupe actif.
+  const tagg = view_taggs[0]
+  const tags = tagg.tags_list
+  if (tags.length < 1) return <></>
+
+  // Index courant uniquement si le filtre est actif (view_mode) ; sinon « vue complète ».
+  const cur_idx = tagg.view_mode ? tags.findIndex(tg => tg.is_selected) : -1
+  // Libellé de l'option « vue complète » : personnalisable par groupe (full_view_label),
+  // défaut = traduction Banner.view_full. Édité dans le menu de config (ViewsConfig), pas ici.
+  const full_label = tagg.full_view_label || t('Banner.view_full')
+
+  const selectValue = (id: string | null) => {
+    drawing_area.bypass_redraws = true
+    if (id === null) {
+      tagg.view_mode = false
+    } else {
+      tagg.activated = true
+      tagg.view_mode = true
+      tagg.selectTagsFromId(id)
+    }
+    applyViewTagFilterRedraw(app_data)
+    setCount(c => c + 1)
+  }
+
+  // « Vue complète » = position la plus à gauche (valeur '') ; les flèches naviguent dans
+  // [vue complète, tag0, tag1, …]. Suiv. depuis « vue complète » va donc au premier tag.
+  return <Box className='BannerViewTagTopbar'>
+    <TopbarNavSelect
+      t={t}
+      prefix={tagg.name}
+      select_label={tagg.name}
+      value={cur_idx >= 0 ? tags[cur_idx].id : ''}
+      options={[{ value: '', label: full_label }, ...tags.map(tag => ({ value: tag.id, label: tag.display_name }))]}
+      onChange={(v: string) => selectValue(v === '' ? null : v)}
+      onPrev={() => {
+        if (cur_idx === 0) selectValue(null)
+        else if (cur_idx > 0) selectValue(tags[cur_idx - 1].id)
+      }}
+      onNext={() => {
+        if (cur_idx === -1) selectValue(tags[0].id)
+        else if (cur_idx < tags.length - 1) selectValue(tags[cur_idx + 1].id)
+      }}
+      prev_disabled={cur_idx === -1}
+      next_disabled={cur_idx === tags.length - 1}
+    />
+  </Box>
 }
 
 /**
  * Component that show filters for for link value and tag group (node,flow &  data)
  *
  * @param {*} { app_data }
- * @return {*} 
+ * @return {*}
  */
 export const ToolbarFilter = ({ app_data, hide_floating_button }: {
   app_data: Class_ApplicationData,
@@ -277,9 +429,8 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
               (app_data.publish_options.data_type || app_data.publish_options.value_filter)
                 ? <FilterDisplay app_data={app_data} /> : <></>
             }
-            {
-              app_data.publish_options.view_filter ? <UnitaryTagGroupFilter app_data={app_data} /> : <></>
-            }
+            {/* « Génération de vues » (view tags) déplacé dans la topbar
+                (cf. BannerViewTagTopbar) — retiré du tiroir de filtres. */}
             {
               app_data.publish_options.level_filter ? <LevelTagFilter app_data={app_data} /> : <></>
             }
@@ -1283,51 +1434,34 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
 
   // Réglage GLOBAL du sous-mode du filtre vue (commun à tous les view tags) :
   // « Filtre seul » (garde les positions) vs « Mise en page auto ».
-  const ViewFilterKindControl = (mode === 'unitary' && !app_data.is_static && taggs_in_banner.some(t => !t.id.includes('unitary'))) ? (
-    <Box layerStyle='menuconfig_grid'>
-      <Box layerStyle='menuconfigpanel_option_name'>
-        <OSTooltip label={t('Banner.view_mode_tt')}>
-          <Box as='span'>{t('Banner.view_mode')}</Box>
-        </OSTooltip>
-      </Box>
-      <Box layerStyle='filter_grid_row'>
-        <Select
-          size='xs'
-          value={drawing_area.view_filter_kind}
-          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-            drawing_area.view_filter_kind = evt.target.value as 'filter' | 'auto'
-            applyViewFilter()
-          }}>
-          <option value='filter'>{t('Banner.view_filter_only')}</option>
-          <option value='auto'>{t('Banner.view_auto_layout')}</option>
-        </Select>
-      </Box>
-    </Box>
-  ) : null
+  // UI retirée temporairement (on y reviendra). La logique (drawing_area.view_filter_kind,
+  // applyViewFilter) est conservée ; le sous-mode reste piloté par sa valeur par défaut.
+  const ViewFilterKindControl = null
+  // const ViewFilterKindControl = (mode === 'unitary' && !app_data.is_static && taggs_in_banner.some(t => !t.id.includes('unitary'))) ? (
+  //   <Box layerStyle='menuconfig_grid'>
+  //     <Box layerStyle='menuconfigpanel_option_name'>
+  //       <OSTooltip label={t('Banner.view_mode_tt')}>
+  //         <Box as='span'>{t('Banner.view_mode')}</Box>
+  //       </OSTooltip>
+  //     </Box>
+  //     <Box layerStyle='filter_grid_row'>
+  //       <Select
+  //         size='xs'
+  //         value={drawing_area.view_filter_kind}
+  //         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+  //           drawing_area.view_filter_kind = evt.target.value as 'filter' | 'auto'
+  //           applyViewFilter()
+  //         }}>
+  //         <option value='filter'>{t('Banner.view_filter_only')}</option>
+  //         <option value='auto'>{t('Banner.view_auto_layout')}</option>
+  //       </Select>
+  //     </Box>
+  //   </Box>
+  // ) : null
 
-  // « Toutes données » (reveal_data_links) — intégré au panneau ViewTags (« Génération
-  // de vues »), réservé au MODE DÉVELOPPEUR (temporaire). Union avec la vue courante :
-  // affiche aussi les flux porteurs d'une donnée collectée, tous niveaux confondus.
-  const RevealAllDataControl = (mode === 'unitary' && app_data.has_sankey_dev) ? (
-    <Box layerStyle='menuconfig_grid'>
-      <HStack spacing={4} align='center'>
-        <Checkbox
-          variant='menuconfigpanel_option_checkbox'
-          isChecked={app_data.reveal_data_links}
-          onChange={(evt: React.ChangeEvent<HTMLInputElement>) => {
-            app_data.reveal_data_links = evt.target.checked
-            sankey.nodes_list.forEach(n => n.resetLinkVisibilitiesMemorization())
-            sankey.draw()
-            drawing_area.legend.draw()
-            setCount(a => a + 1)
-          }}>
-          <OSTooltip label={t('Banner.data_links_reveal_tt')}>
-            {t('Banner.data_links_reveal')}
-          </OSTooltip>
-        </Checkbox>
-      </HStack>
-    </Box>
-  ) : null
+  // « Toutes données » (reveal_data_links) — UI retirée temporairement (on y reviendra).
+  // La logique sous-jacente (app_data.reveal_data_links) est conservée.
+  const RevealAllDataControl = null
 
   // Rendu final
   return SelectorOfTagsByGroup.length > 0 ? (
