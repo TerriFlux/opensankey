@@ -95,6 +95,12 @@ export class Class_NodeElement extends Class_NodeBase {
   // local_link_scale ("Facteur d'échelle"): the base flux scale is multiplied
   // by this factor (larger factor = shorter node). Default 1.
   public stock_height_scale_factor: number = 1
+  // Optional ceiling on the rendered shape height, applied in BOTH stock and
+  // normal mode. Stored in VALUE units (like flux values), converted to px via
+  // scaleValueToPx at draw time so the cap follows the diagram scale (correct
+  // across views in "adapted scale" mode). null = no cap. Settable via the
+  // config panel input or by a right-click action capturing the current height.
+  public max_height: number | null = null
   public has_material_balance: boolean = true
   public _stock_values: Class_StockValue | Class_ElementValueTree
 
@@ -264,6 +270,7 @@ export class Class_NodeElement extends Class_NodeBase {
     super.copyAttrFrom(_)
     this.use_stock_for_height = _.use_stock_for_height
     this.stock_height_scale_factor = _.stock_height_scale_factor
+    this.max_height = _.max_height
     this.stock_shape_is_visible = _.stock_shape_is_visible
     this.stock_si_caption = _.stock_si_caption
     this.stock_delta_caption = _.stock_delta_caption
@@ -766,6 +773,23 @@ export class Class_NodeElement extends Class_NodeBase {
   }
 
   public getShapeHeightToUse() {
+    const natural = this._getNaturalShapeHeight()
+    // Apply the optional user-defined ceiling (stock and normal mode alike).
+    // max_height is stored in VALUE units (like flux values), not px, so the
+    // cap follows the diagram scale: in "adapted scale" mode the scale changes
+    // per view/datatag and a px-fixed cap would be wrong — converting through
+    // scaleValueToPx keeps the cap proportional across views.
+    if (this.max_height !== null && this.max_height > 0) {
+      const cap_px = this.drawing_area.scaleValueToPx(this.max_height)
+      return Math.max(Math.min(natural, cap_px), 1)
+    }
+    return natural
+  }
+
+  // Intrinsic shape height (stock-driven or flux-thickness-driven), BEFORE the
+  // optional max_height cap. Used both by getShapeHeightToUse and by the
+  // "capture current height" action so capturing yields the uncapped value.
+  private _getNaturalShapeHeight() {
     if (this.use_stock_for_height) {
       const si = this.currentStockInitialForHeight()
       if (si !== null) {
@@ -789,6 +813,15 @@ export class Class_NodeElement extends Class_NodeBase {
       return Math.max(sum_of_left_thickness, sum_of_right_thickness, 3)
     }
     return Math.max(sum_of_left_thickness, sum_of_right_thickness, super.getShapeHeightToUse())
+  }
+
+  // Set max_height to the node's current intrinsic (uncapped) height, so the
+  // node freezes at the size it currently shows. Used by the right-click action.
+  // Stored in VALUE units (inverse of scaleValueToPx) so the cap stays correct
+  // when the scale changes between views in "adapted scale" mode.
+  public setMaxHeightToCurrentHeight() {
+    const px = this._getNaturalShapeHeight()
+    this.max_height = this.drawing_area.scaleValueToPx.invert(px)
   }
 
   // 🔄 LINKS METHODS - RÉINTÉGRÉS DIRECTEMENT ========================================

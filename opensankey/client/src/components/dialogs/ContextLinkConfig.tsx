@@ -122,8 +122,11 @@ export const LINK_MENU_CONFIG: MenuConfig = {
       visibilityConditions: [{
         type: 'custom',
         customCheck: (app_data) => {
+          // Disponible aussi en mode absolu : on peut désigner le flux de référence à
+          // l'avance (il alimente le recalage des vues et sera utilisé dès le passage en
+          // relatif / échelle adaptée).
           const m = app_data.drawing_area.sankey.default_style.shape_position_type
-          return m === 'proportional' || m === 'scale_adapted'
+          return m === 'absolute' || m === 'proportional' || m === 'scale_adapted'
         }
       }]
     },
