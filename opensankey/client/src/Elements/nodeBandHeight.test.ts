@@ -58,4 +58,13 @@ describe('AFMBase issue #201 — bande bridée GLOBALE, pas Σ planchers', () =>
     // à l\'ancre) mais sont TRACÉS à minimum_flux → la bande visible vaut ~2px.
     expect(clampBandThickness(0, true, MIN)).toBe(MIN)
   })
+
+  // #200 — le plancher de bande suit le même fluxFloor que les liens : avec
+  // minimum_flux = 0 (flux à épaisseur réelle), la bande épouse la somme brute,
+  // donc le nœud n'est jamais plus haut que ses flux fins.
+  it('plancher 0 → la bande épouse la somme brute (nœud à épaisseur réelle)', () => {
+    expect(clampBandThickness(1.33, true, 0)).toBe(1.33)
+    expect(clampBandThickness(0, true, 0)).toBe(0)
+    expect(clampBandThickness(40, true, 0)).toBe(40)
+  })
 })
