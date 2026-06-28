@@ -34,7 +34,7 @@ import {
 } from './deps/OpenSankey/Modules'
 
 import { ContextZDT } from './components/ContextZDTOSP'
-import { BannerDataTagTopbar } from './deps/OpenSankey/components/topmenus/Toolbar'
+import { BannerDataTagTopbar, BannerViewTagTopbar } from './deps/OpenSankey/components/topmenus/Toolbar'
 
 import {
   ModalTransparentViewAttrOSP,
@@ -106,6 +106,9 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   // Sélecteur de data tags en topbar (groupes dont la bannière vaut 'topbar'), placé
   // à côté de la navigation entre vues.
   additionalMenus.current.external_top_buttons_item['data_tag_topbar'] = <BannerDataTagTopbar app_data={new_data} />
+  // Générateur de vues (view tags) en topbar, sur le modèle de la navigation entre vues
+  // (Préc./sélecteur/Suiv.) ; remplace l'ancien panneau « Génération de vues » du tiroir.
+  additionalMenus.current.external_top_buttons_item['view_tag_topbar'] = <BannerViewTagTopbar app_data={new_data} />
 
   // Trial state-aware topbar CTA. Hidden when the user holds a real OS+ licence.
   // Rendered in the top-right via additional_nav_item, alongside login buttons.

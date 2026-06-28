@@ -236,6 +236,7 @@ export const resources_app_elements = {
       view: {
         'unit': 'Unit.',
         'storytelling': 'Storytelling',
+        'full_view_label': 'Label of the "full view" option',
         'select': 'Select View',
         'new_view_name': 'New view',
         'actual': 'Sankey master',
@@ -724,6 +725,7 @@ export const resources_app_elements = {
         'unit': 'Unit.',
 
         'storytelling': 'Gestion des vues',
+        'full_view_label': 'Libellé de l\'option « vue complète »',
         'select': 'Sélection Vue',
         'new_view_name': 'Nouvelle vue',
         'actual': 'Sankey maître',
@@ -1231,6 +1233,7 @@ export const resources_app_elements = {
       view: {
         'unit': 'Unit.',
         'storytelling': 'Storytelling',
+        'full_view_label': 'Etiqueta de la opción «vista completa»',
         'select': 'Seleccionar vista',
         'new_view_name': 'Nueva vista',
         'actual': 'Sankey principal',
@@ -1733,6 +1736,7 @@ export const resources_app_elements = {
       view: {
         'unit': 'Unit.',
         'storytelling': 'Storytelling',
+        'full_view_label': 'Bezeichnung der Option „vollständige Ansicht“',
         'select': 'Ansicht auswählen',
         'new_view_name': 'Neue Ansicht',
         'actual': 'Sankey-Master',
@@ -2235,6 +2239,7 @@ export const resources_app_elements = {
       view: {
         'unit': 'Unit.',
         'storytelling': 'Storytelling',
+        'full_view_label': 'Etichetta dell\'opzione «vista completa»',
         'select': 'Seleziona vista',
         'new_view_name': 'Nuova vista',
         'actual': 'Sankey principale',

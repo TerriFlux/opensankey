@@ -73,6 +73,7 @@ import { UpdateModeGrid } from '../deps/OpenSankey/components/dialogs/SankeyMenu
 import { ConfigMenuTextInput, OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_DrawingAreaOSP, DrawingAreaPersistenceOSP } from '../types/DrawingAreaOSP'
 import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
+import { Class_ViewTagGroup } from '../deps/OpenSankey/types/TagGroup'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { mainZoneRightReservedPx } from '../deps/OpenSankey/components/spreadsheet/MainZoneTabs'
@@ -632,6 +633,10 @@ export const ViewsConfig = (
   const is_activated = app_data.has_sankey_plus
   const curr_view = drawing_area_plus
   const list_view = app_data.views_order //include master
+  // Groupes de view tags affichables (générateur de vues en topbar) : on y édite ici le
+  // libellé de l'option « vue complète » (full_view_label), planqué dans la config des vues.
+  const view_taggs = drawing_area_plus.sankey.getTagGroupsAsList('view_taggs')
+    .filter(grp => grp.banner !== 'none') as unknown as Class_ViewTagGroup[]
 
   // JSX elements -----------------------------------------------------------------------
 
@@ -710,6 +715,26 @@ export const ViewsConfig = (
           })}
         </Tbody>
       </Table>
+
+      {/* Libellé de l'option « vue complète » du sélecteur topbar (générateur de vues),
+          éditable par groupe de view tags. Vide = libellé par défaut. */}
+      {view_taggs.map(vt => (
+        <Box as='span' key={vt.id} layerStyle='menuconfigpanel_row_2cols'>
+          <Box layerStyle='menuconfigpanel_option_name'>
+            {t('view.full_view_label')}{view_taggs.length > 1 ? ` (${vt.name})` : ''}
+          </Box>
+          <InputGroup variant='menuconfigpanel_option_input'>
+            <Input
+              variant='menuconfigpanel_option_input'
+              placeholder={t('Banner.view_full')}
+              value={vt.full_view_label}
+              isDisabled={!is_activated}
+              onChange={evt => { vt.full_view_label = evt.target.value; refreshThis() }}
+              onBlur={() => menu_configuration_osp.updateComponentRelatedToViews()}
+            />
+          </InputGroup>
+        </Box>
+      ))}
     </Box>
 
   </WrapperBoxSubSectionMenu>
