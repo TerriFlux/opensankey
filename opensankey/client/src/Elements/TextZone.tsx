@@ -43,13 +43,17 @@ export class Class_ContainerElement extends Class_NodeBase {
     const base = super.name_label_effective
     if (!this._is_title || !base.includes('{')) return base
     let out = base
-    this.drawing_area.sankey.data_taggs_list.forEach(grp => {
-      const token = '{' + grp.name + '}'
-      if (out.includes(token)) {
-        const value = grp.selected_tags_list.map(tag => tag.display_name).join(', ')
-        out = out.replaceAll(token, value)
-      }
-    })
+    const interpolateGroups = (groups: { name: string, selected_tags_list: { display_name: string }[] }[]) => {
+      groups.forEach(grp => {
+        const token = '{' + grp.name + '}'
+        if (out.includes(token)) {
+          const value = grp.selected_tags_list.map(tag => tag.display_name).join(', ')
+          out = out.replaceAll(token, value)
+        }
+      })
+    }
+    interpolateGroups(this.drawing_area.sankey.data_taggs_list)
+    interpolateGroups(this.drawing_area.sankey.view_taggs_list)
     return out
   }
 
