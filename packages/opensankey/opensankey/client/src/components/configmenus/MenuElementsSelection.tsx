@@ -838,6 +838,23 @@ export const SankeyNodeSelection = ({ app_data }: { app_data: Class_ApplicationD
 
   return <>
     <UnifiedElementSelection app_data={app_data} config={NODE_CONFIG} mode="full" />
+    {firstNode &&
+      <Box layerStyle='options_2cols'>
+        <OSTooltip label={'Plafond de hauteur du nœud, exprimé dans l’unité des flux (il s’adapte à l’échelle comme les flux), appliqué en mode stock comme normal. Vide = pas de plafond. Astuce : clic droit sur le nœud » Hauteur max = hauteur actuelle.'}>
+          <Box as='span' fontSize='xs'>{'Hauteur maximale'}</Box>
+        </OSTooltip>
+        <ConfigMenuNumberInput
+          t={app_data.t}
+          default_value={firstNode.max_height}
+          function_on_blur={(v) => {
+            nodes.forEach(n => { n.max_height = (v && v > 0) ? v : null })
+            refreshStock()
+          }}
+          stepper={true}
+          minimum_value={0}
+        />
+      </Box>
+    }
     {showStock && (() => {
       const sv = firstNode.stock_value
       const data_taggs_list = app_data.drawing_area.sankey.data_taggs_list

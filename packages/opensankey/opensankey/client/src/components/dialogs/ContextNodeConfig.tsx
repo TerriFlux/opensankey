@@ -146,7 +146,19 @@ export const NODE_MENU_CONFIG: MenuConfig = {
         { type: 'button', actionName: 'toggleNameVisibility' },
         { type: 'button', actionName: 'toggleValueVisibility' },
         { type: 'button', actionName: 'moveToFirstPlan' },
-        { type: 'button', actionName: 'moveToLastPlan' }
+        { type: 'button', actionName: 'moveToLastPlan' },
+        { type: 'button', actionName: 'setMaxHeightToCurrent' },
+        {
+          type: 'button',
+          actionName: 'clearMaxHeight',
+          visibilityConditions: [{
+            type: 'custom',
+            customCheck: (app_data) => {
+              const node = app_data.drawing_area.node_contextualised
+              return !!node && node.max_height !== null
+            }
+          }]
+        }
       ]
     },
     // Edition hiérarchie (création de dimensions et liens)
@@ -766,6 +778,19 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       type: 'action',
       labels: { en: 'Copy element(s)', fr: 'Copier les éléments', es: 'Copiar elemento(s)', de: 'Element(e) kopieren', it: 'Copia elemento/i' },
       tooltips: { en: 'Duplicate the selected element(s) — copies remain selected', fr: 'Dupliquer les éléments sélectionnés — les copies restent sélectionnées', es: 'Duplicar los elementos seleccionados — las copias permanecen seleccionadas', de: 'Ausgewählte Element(e) duplizieren — Kopien bleiben ausgewählt', it: 'Duplicare gli elementi selezionati — le copie rimangono selezionate' }
+    },
+
+    setMaxHeightToCurrent: {
+      type: 'action',
+      labels: { en: 'Max height = current', fr: 'Hauteur max = actuelle', es: 'Altura máx = actual', de: 'Maximalhöhe = aktuell', it: 'Altezza max = attuale' },
+      tooltips: { en: 'Freeze the node height: set its maximum height to the current rendered height', fr: 'Figer la hauteur du nœud : fixe sa hauteur maximale à la hauteur actuellement affichée', es: 'Congelar la altura del nodo: fija su altura máxima a la altura mostrada actualmente', de: 'Knotenhöhe einfrieren: maximale Höhe auf die aktuell angezeigte Höhe setzen', it: 'Blocca l\'altezza del nodo: imposta l\'altezza massima a quella attualmente visualizzata' },
+      undoable: true
+    },
+    clearMaxHeight: {
+      type: 'action',
+      labels: { en: 'Clear max height', fr: 'Supprimer hauteur max', es: 'Quitar altura máx', de: 'Maximalhöhe entfernen', it: 'Rimuovi altezza max' },
+      tooltips: { en: 'Remove the maximum height ceiling', fr: 'Supprimer le plafond de hauteur maximale', es: 'Quitar el límite de altura máxima', de: 'Maximalhöhen-Begrenzung entfernen', it: 'Rimuovere il limite di altezza massima' },
+      undoable: true
     },
 
     saveNodeImage: {
