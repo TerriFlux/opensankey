@@ -164,18 +164,23 @@ export const DrawingAreaConfig = ({
   }
 
   const eventMinLinkThickness = (evt: number | null | undefined) => {
-    if (evt == null) return
+    // #200 — distinguer « champ vidé » de « 0 saisi » :
+    //  • null/undefined (champ vide)  → retour au DÉFAUT (plancher dur 2px) en
+    //    effaçant la clé minimum_flux ;
+    //  • 0 (saisi explicitement)      → flux tracés à leur ÉPAISSEUR RÉELLE ;
+    //  • n > 0                        → plancher de n px.
+    const new_min = (evt === null || evt === undefined) ? undefined : evt
+    if (new_min === app_data.drawing_area.minimum_flux) return // pas de no-op dans l'historique
     const f = (_: number | undefined) => {
-      if (_) {
+      if (_ !== undefined) {
         app_data.drawing_area.minimum_flux = _
-        app_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
       } else {
         app_data.drawing_area.removeMinimumLinkThickness()
-        app_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
       }
+      app_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
       refreshThisAndUpdateRelatedComponents()
     }
-    app_data.setValueAndSaveHistory(app_data.drawing_area, 'minimum_flux', evt, f)
+    app_data.setValueAndSaveHistory(app_data.drawing_area, 'minimum_flux', new_min, f)
   }
 
   const eventStructureForceMin = (evt: React.ChangeEvent<HTMLInputElement>) => {
@@ -421,6 +426,7 @@ export const DrawingAreaConfig = ({
             t={app_data.t}
             default_value={app_data.drawing_area.minimum_flux}
             function_on_blur={eventMinLinkThickness}
+            minimum_value={0}
             maximum_value={app_data.drawing_area.maximum_flux}
             stepper={true}
           />

@@ -14,8 +14,17 @@
 //
 // The flux size limit (minimum_flux) is applied to the node band as well as to
 // the links — "taille limite des nœuds et flux" (#201). The band is floored in
-// every display mode so a node is never thinner than its 2px-floored links (this
-// also covers #200, the node-too-thin-in-value-display case).
+// every display mode so a node is never thinner than its floored links.
+//
+// (fluxFloor partagé avec Class_LinkElement via flowThickness.ts)
+//
+// #200 — le plancher de bande suit désormais le MÊME `fluxFloor` que les liens :
+// `minimum_flux` quand il est défini (0 compris → la bande épouse la somme brute,
+// le nœud n'est jamais plus haut que ses flux à épaisseur réelle), sinon le
+// plancher dur de 2px par défaut. Sans ce partage, abaisser le plancher des flux
+// à 0 laisserait la bande figée à 2px et le nœud redominerait ses flux fins.
+
+import { fluxFloor } from './flowThickness'
 
 /**
  * Clamp ONE side's raw band thickness (Σ of the side's RAW link thicknesses) to
@@ -40,6 +49,5 @@ export function clampBandThickness(
   minimum_flux: number | null | undefined
 ): number {
   if (!has_links) return 0
-  if (minimum_flux && raw_band < minimum_flux) return minimum_flux
-  return Math.max(2, raw_band)
+  return Math.max(fluxFloor(minimum_flux), raw_band)
 }
