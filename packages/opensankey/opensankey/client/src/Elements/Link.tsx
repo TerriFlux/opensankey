@@ -44,6 +44,7 @@ import { Class_NodeElement } from './Node'
 import type { Class_NodeDimension } from './NodeDimension'
 import { Type_Side, } from './ElementsAttributesConfig'
 import { transferAnchorLock } from './anchorLockTransfer'
+import { clampLinkThickness } from './flowThickness'
 import { Class_LinkAttribute } from './Element'
 import { LinkDrawNameLabel, LinkDrawValueLabel } from './DrawLabel'
 import { Class_ApplicationData } from '../types/ApplicationData'
@@ -2134,16 +2135,18 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   /**
-   * Clamp a raw pixel thickness to the drawing area min/max limits
+   * Clamp a raw pixel thickness to the drawing area min/max limits.
+   *
+   * Le plancher est `minimum_flux` quand il est défini (0 compris → épaisseur
+   * réelle du flux), sinon le plancher dur historique de 2px (#200). Politique
+   * pure isolée dans flowThickness.ts (testable hors cycle d'imports).
    */
   private _clampThickness(linkValueInPx: number): number {
-    if (this.drawing_area.minimum_flux && linkValueInPx < this.drawing_area.minimum_flux) {
-      return this.drawing_area.minimum_flux
-    }
-    if (this.drawing_area.maximum_flux && linkValueInPx > this.drawing_area.maximum_flux) {
-      return this.drawing_area.maximum_flux
-    }
-    return Math.max(2, linkValueInPx)
+    return clampLinkThickness(
+      linkValueInPx,
+      this.drawing_area.minimum_flux,
+      this.drawing_area.maximum_flux
+    )
   }
 
   /**

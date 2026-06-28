@@ -3411,7 +3411,10 @@ export class Class_DrawingArea {
 
   public get minimum_flux(): number | undefined { return this._minimum_flux }
   public set minimum_flux(value: number | undefined) {
-    if (value === undefined || value > 0) {
+    // value >= 0 : 0 est une valeur VALIDE (#200 — plancher 0 = flux tracés à
+    // leur épaisseur réelle). Pour revenir au défaut 2px, on EFFACE la clé
+    // (removeMinimumLinkThickness), on ne pose pas 0.
+    if (value === undefined || value >= 0) {
       this._minimum_flux = value
       this.drawElements()
     }
