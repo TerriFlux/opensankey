@@ -234,14 +234,16 @@ export const ComponetStretchButtons = ({ app_data, updateParentComponent, hide_f
     <OSTooltip placement='left' label={t('Banner.tooltipAdjustH')}>
       <Button variant='toolbar_button_6'
         size={size}
-        onClick={() => app_data.drawing_area.areaAutoFit(true)}>
+        // Bouton explicite : recadre même quand le verrou de taille est actif (#1240).
+        onClick={() => app_data.drawing_area.areaAutoFit(true, true)}>
         {app_data.icon_library.icon_area_fit_horiz}
       </Button>
     </OSTooltip>
     <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')}>
       <Button variant='toolbar_button_6'
         size={size}
-        onClick={() => app_data.drawing_area.areaAutoFit(false)}>
+        // Bouton explicite : recadre même quand le verrou de taille est actif (#1240).
+        onClick={() => app_data.drawing_area.areaAutoFit(false, true)}>
         {app_data.icon_library.icon_area_fit_vert}
       </Button>
     </OSTooltip>
