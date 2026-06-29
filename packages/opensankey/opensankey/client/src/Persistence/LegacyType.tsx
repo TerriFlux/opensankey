@@ -299,6 +299,8 @@ export type SankeyData = {
   user_scale: number,
   maximum_flux?: number | null,
   minimum_flux?: number | null,
+  maximum_node?: number | null,
+  minimum_node?: number | null,
   accordeonToShow: string[]
   style_node: { [_: string]: SankeyNodeStyle },
   style_link: { [_: string]: SankeyLinkStyle },

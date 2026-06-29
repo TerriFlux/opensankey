@@ -66,6 +66,11 @@ export class Class_NodeElement extends Class_NodeBase {
   protected _dimensions_as_parent: { [id: string]: Class_NodeDimension } = {}
   protected _dimensions_as_child: { [id: string]: Class_NodeDimension } = {}
   protected _leveltaggs_as_antitagged: Class_LevelTagGroup[] = []
+  // Groupes de view tags dont ce nœud est EXCLU (anti-tag « 0 » dans la colonne du
+  // view tag, ex. Essence). Mirroir de _leveltaggs_as_antitagged pour les view tags :
+  // dès que le mode vue d'un de ces groupes est actif, le nœud est masqué
+  // (concerné mais sans vue), cf. viewTagVisibility().
+  protected _view_taggs_as_excluded: Class_ViewTagGroup[] = []
   protected _nodeDrawValueLabel: NodeDrawValueLabel
   protected d3_selection_g_value_label: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
   protected _sibling_node: Class_NodeElement | undefined = undefined
@@ -95,12 +100,6 @@ export class Class_NodeElement extends Class_NodeBase {
   // local_link_scale ("Facteur d'échelle"): the base flux scale is multiplied
   // by this factor (larger factor = shorter node). Default 1.
   public stock_height_scale_factor: number = 1
-  // Optional ceiling on the rendered shape height, applied in BOTH stock and
-  // normal mode. Stored in VALUE units (like flux values), converted to px via
-  // scaleValueToPx at draw time so the cap follows the diagram scale (correct
-  // across views in "adapted scale" mode). null = no cap. Settable via the
-  // config panel input or by a right-click action capturing the current height.
-  public max_height: number | null = null
   public has_material_balance: boolean = true
   public _stock_values: Class_StockValue | Class_ElementValueTree
 
@@ -270,7 +269,6 @@ export class Class_NodeElement extends Class_NodeBase {
     super.copyAttrFrom(_)
     this.use_stock_for_height = _.use_stock_for_height
     this.stock_height_scale_factor = _.stock_height_scale_factor
-    this.max_height = _.max_height
     this.stock_shape_is_visible = _.stock_shape_is_visible
     this.stock_si_caption = _.stock_si_caption
     this.stock_delta_caption = _.stock_delta_caption
@@ -781,21 +779,25 @@ export class Class_NodeElement extends Class_NodeBase {
 
   public getShapeHeightToUse() {
     const natural = this._getNaturalShapeHeight()
-    // Apply the optional user-defined ceiling (stock and normal mode alike).
-    // max_height is stored in VALUE units (like flux values), not px, so the
-    // cap follows the diagram scale: in "adapted scale" mode the scale changes
-    // per view/datatag and a px-fixed cap would be wrong — converting through
-    // scaleValueToPx keeps the cap proportional across views.
-    if (this.max_height !== null && this.max_height > 0) {
-      const cap_px = this.drawing_area.scaleValueToPx(this.max_height)
-      return Math.max(Math.min(natural, cap_px), 1)
-    }
-    return natural
+    // Global node size limit (in px, independent of the flux size limit):
+    // cap then floor the rendered node height. Fixed px across views (does NOT
+    // follow the scale), mirroring the flux size-limit control.
+    const max_node = this.drawing_area.maximum_node
+    const min_node = this.drawing_area.minimum_node
+    let h = natural
+    if (max_node && max_node > 0) h = Math.min(h, max_node)
+    if (min_node !== undefined && min_node > 0) h = Math.max(h, min_node)
+    return Math.max(h, 1)
   }
 
   // Intrinsic shape height (stock-driven or flux-thickness-driven), BEFORE the
-  // optional max_height cap. Used both by getShapeHeightToUse and by the
-  // "capture current height" action so capturing yields the uncapped value.
+  // global node size-limit clamp applied by getShapeHeightToUse. Public so the
+  // right-click action can read a node's uncapped height to seed the global
+  // maximum_node limit.
+  public getNaturalShapeHeight() {
+    return this._getNaturalShapeHeight()
+  }
+
   private _getNaturalShapeHeight() {
     if (this.use_stock_for_height) {
       const si = this.currentStockInitialForHeight()
@@ -820,15 +822,6 @@ export class Class_NodeElement extends Class_NodeBase {
       return Math.max(sum_of_left_thickness, sum_of_right_thickness, 3)
     }
     return Math.max(sum_of_left_thickness, sum_of_right_thickness, super.getShapeHeightToUse())
-  }
-
-  // Set max_height to the node's current intrinsic (uncapped) height, so the
-  // node freezes at the size it currently shows. Used by the right-click action.
-  // Stored in VALUE units (inverse of scaleValueToPx) so the cap stays correct
-  // when the scale changes between views in "adapted scale" mode.
-  public setMaxHeightToCurrentHeight() {
-    const px = this._getNaturalShapeHeight()
-    this.max_height = this.drawing_area.scaleValueToPx.invert(px)
   }
 
   // 🔄 LINKS METHODS - RÉINTÉGRÉS DIRECTEMENT ========================================
@@ -1767,6 +1760,13 @@ export class Class_NodeElement extends Class_NodeBase {
     let concerned = false
     let visible = true
     for (const g of groups) {
+      // Anti-tag « 0 » dans la colonne du view tag : le nœud est explicitement exclu
+      // de la vue → concerné mais jamais visible tant que ce groupe est en mode vue.
+      if (this._view_taggs_as_excluded.includes(g)) {
+        concerned = true
+        visible = false
+        continue
+      }
       const own = this.grouped_taggs_dict[g.id]
       if (own && own.length > 0) {
         // Porte ce groupe : doit avoir une étiquette sélectionnée.
@@ -2092,7 +2092,8 @@ export class Class_NodeElement extends Class_NodeBase {
     return {
       tags: this._tags,
       taggs_dict: this._taggs_dict,
-      leveltaggs_as_antitagged: this._leveltaggs_as_antitagged
+      leveltaggs_as_antitagged: this._leveltaggs_as_antitagged,
+      view_taggs_as_excluded: this._view_taggs_as_excluded
     }
   }
 

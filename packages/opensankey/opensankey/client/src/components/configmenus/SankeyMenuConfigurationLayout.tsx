@@ -66,6 +66,8 @@ export const DrawingAreaConfig = ({
   const ref_scale = useRef((_: string | null | undefined) => null)
   const ref_minimum_flux = useRef((_: string | null | undefined) => null)
   const ref_maximum_flux = useRef((_: string | null | undefined) => null)
+  const ref_minimum_node = useRef((_: string | null | undefined) => null)
+  const ref_maximum_node = useRef((_: string | null | undefined) => null)
 
   // Update refs
   if (unit_taggs.length > 0) {
@@ -75,6 +77,8 @@ export const DrawingAreaConfig = ({
   }
   ref_minimum_flux.current(String(app_data.drawing_area.minimum_flux ?? ''))
   ref_maximum_flux.current(String(app_data.drawing_area.maximum_flux ?? ''))
+  ref_minimum_node.current(String(app_data.drawing_area.minimum_node ?? ''))
+  ref_maximum_node.current(String(app_data.drawing_area.maximum_node ?? ''))
 
   const refreshThisAndUpdateRelatedComponents = () => {
     app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
@@ -214,6 +218,37 @@ export const DrawingAreaConfig = ({
       refreshThisAndUpdateRelatedComponents()
     }
     app_data.setValueAndSaveHistory(app_data.drawing_area, 'maximum_flux', evt, f)
+  }
+
+  // Limite de hauteur des nœuds (px), indépendante de la limite des flux.
+  // Entrer 0 (ou vider) efface la limite. Px fixes (ne suit pas l'échelle).
+  const eventMinNodeHeight = (evt: number | null | undefined) => {
+    const new_min = (evt === null || evt === undefined || evt === 0) ? undefined : evt
+    if (new_min === app_data.drawing_area.minimum_node) return // pas de no-op dans l'historique
+    const f = (_: number | undefined) => {
+      if (_ !== undefined) {
+        app_data.drawing_area.minimum_node = _
+      } else {
+        app_data.drawing_area.removeMinimumNodeHeight()
+      }
+      app_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
+      refreshThisAndUpdateRelatedComponents()
+    }
+    app_data.setValueAndSaveHistory(app_data.drawing_area, 'minimum_node', new_min, f)
+  }
+
+  const eventMaxNodeHeight = (evt: number | null | undefined) => {
+    if (evt == null) return
+    const f = (_: number | undefined) => {
+      if (_) {
+        app_data.drawing_area.maximum_node = _
+      } else {
+        app_data.drawing_area.removeMaximumNodeHeight()
+      }
+      app_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
+      refreshThisAndUpdateRelatedComponents()
+    }
+    app_data.setValueAndSaveHistory(app_data.drawing_area, 'maximum_node', evt, f)
   }
 
   return <>
@@ -452,6 +487,73 @@ export const DrawingAreaConfig = ({
         </OSTooltip>
       </Box>
 
+    </Box>
+
+    {/* Limite min/max de hauteur des nœuds (px), indépendante des flux */}
+    <Box layerStyle='menuconfigpanel_2row_3cols'>
+      <Box
+        layerStyle='menuconfigpanel_option_name'
+        gridColumnStart='1'
+        gridColumnEnd='2'
+        gridRowStart='2'
+        gridRowEnd='3'
+      >
+        {t('MEP.node_size_limit')}
+      </Box>
+      <Box
+        layerStyle='menuconfigpanel_option_name'
+        gridColumnStart='2'
+        gridColumnEnd='3'
+        gridRowStart='1'
+        gridRowEnd='2'
+        alignItems='flex-end'
+      >
+        {t('MEP.MinFlux')}
+      </Box>
+      <Box
+        layerStyle='menuconfigpanel_option_name'
+        gridColumnStart='3'
+        gridColumnEnd='4'
+        gridRowStart='1'
+        gridRowEnd='2'
+        alignItems='flex-end'
+      >
+        {t('MEP.MaxFlux')}
+      </Box>
+      <Box
+        gridColumnStart='2'
+        gridColumnEnd='3'
+        gridRowStart='2'
+        gridRowEnd='3'
+      >
+        <OSTooltip label={t('MEP.tooltips.MinNode')}>
+          <ConfigMenuNumberInput
+            t={app_data.t}
+            default_value={app_data.drawing_area.minimum_node ?? null}
+            function_on_blur={eventMinNodeHeight}
+            minimum_value={0}
+            maximum_value={app_data.drawing_area.maximum_node}
+            stepper={true}
+          />
+        </OSTooltip>
+      </Box>
+      <Box
+        gridColumnStart='3'
+        gridColumnEnd='4'
+        gridRowStart='2'
+        gridRowEnd='3'
+      >
+        <OSTooltip label={t('MEP.tooltips.MaxNode')}>
+          <ConfigMenuNumberInput
+            t={app_data.t}
+            default_value={app_data.drawing_area.maximum_node ?? null}
+            function_on_blur={eventMaxNodeHeight}
+            minimum_value={app_data.drawing_area.minimum_node}
+            stepper={true}
+            unit_text={right_addon_pixel(app_data.drawing_area.maximum_node!)}
+          />
+        </OSTooltip>
+      </Box>
     </Box>
 
     {/* Mode Structure : forcer toutes les épaisseurs à minimum_flux */}
