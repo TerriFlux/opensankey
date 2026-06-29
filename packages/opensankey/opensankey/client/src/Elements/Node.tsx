@@ -2172,6 +2172,18 @@ export class Class_NodeElement extends Class_NodeBase {
     return Math.max(input_val / pow_in, output_val / pow_out)
   }
 
+  // Comme pour les titres (Class_ContainerElement), le label d'un nœud peut
+  // contenir des jetons {Mot} interpolés au rendu. Pour l'instant un seul mot-clé :
+  // {Scale} → le facteur d'échelle local du nœud, écrit « x<facteur> » (ex. x24),
+  // utile pour signaler qu'un stock est représenté à une échelle différente du reste.
+  // Recalculé à chaque dessin (suit la valeur courante du facteur).
+  public override get name_label_effective(): string {
+    const base = super.name_label_effective
+    if (!base.includes('{Scale}')) return base
+    const factor = this.stock_height_scale_factor > 0 ? this.stock_height_scale_factor : 1
+    return base.replaceAll('{Scale}', 'x' + factor)
+  }
+
   public get data_label(): string {
     return this._computeValueLabelText('value_label')
   }
