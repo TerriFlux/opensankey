@@ -533,6 +533,13 @@ export class Class_NodeElement extends Class_NodeBase {
     } else {
       boxY = (nodeH - boxH) / 2
     }
+    // Mirror du pos_auto des labels de flux : si le nœud est trop fin pour
+    // contenir la boite (boxH > nodeH), une position centrée/intérieure la fait
+    // recouvrir le nœud. On la repousse alors entièrement à l'extérieur, en
+    // dessous par défaut (au-dessus seulement si la position demandée est 'top').
+    if (this.stock_label_pos_auto && boxH > nodeH) {
+      boxY = vert === 'top' ? -boxH - margin : nodeH + margin
+    }
 
     // Place the text content inside the box, then draw the background BEHIND it.
     content?.attr('transform', 'translate(' + (boxX + padding) + ', ' + boxY + ')')

@@ -2057,6 +2057,30 @@ export const STOCK_LABEL_CONFIG = {
       it: 'Larghezza di a capo del riquadro stock, in px schermo'
     }
   } satisfies AttributeConfig<number>,
+
+  // Mirror du pos_auto des labels de flux : quand le nœud porteur est trop fin
+  // pour contenir la boite de stock, on bascule la boite au-dessus (ou en
+  // dessous) du nœud au lieu de la laisser le recouvrir.
+  pos_auto: {
+    default: true,
+    type: (() => true) as (() => boolean),
+    category: 'stock_label' as const,
+    actions: ['drawStockBox'] as BaseActionType[],
+    labels: {
+      en: 'Auto position',
+      fr: 'Position verticale ajustée',
+      es: 'Posición automática',
+      de: 'Automatische Position',
+      it: 'Posizione automatica'
+    },
+    tooltips: {
+      en: 'When the node is too thin to hold the box, move it above/below the node instead of overlapping it',
+      fr: 'Quand le nœud est trop fin pour contenir la boite, la placer au-dessus/en dessous au lieu de la recouvrir',
+      es: 'Cuando el nodo es demasiado fino para la caja, colocarla encima/debajo en vez de superponerla',
+      de: 'Wenn der Knoten zu dünn für den Kasten ist, diesen darüber/darunter statt überlappend platzieren',
+      it: 'Quando il nodo è troppo sottile per il riquadro, posizionarlo sopra/sotto invece di sovrapporlo'
+    }
+  } satisfies AttributeConfig<boolean>,
 } as const
 
 export const VALUE_LABEL_CONFIG = {
@@ -3419,6 +3443,11 @@ export const getElementsValueLabelValues = (
   prefix: 'name_label' | 'value_label',
   refreshParentComponent: () => void
 ) => getConfigValues(elements, VALUE_LABEL_CONFIG, prefix, refreshParentComponent)
+
+export const getElementsStockLabelValues = (
+  elements: ElementsType,
+  refreshParentComponent: () => void
+) => getConfigValues(elements, STOCK_LABEL_CONFIG, 'stock_label', refreshParentComponent)
 
 export const getElementsNameLabelValues = (
   elements: Class_NodeBase[] | Class_ElementStyle[],
