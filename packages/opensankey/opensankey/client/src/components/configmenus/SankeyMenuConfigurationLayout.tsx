@@ -29,6 +29,7 @@ import {
   Box,
   Button,
   Checkbox,
+  Input,
   Select
 } from '@chakra-ui/react'
 
@@ -708,6 +709,23 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
     app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'display_legend_scale', checked, f)
   }
 
+  const eventScaleLegendUnit = (value: string) => {
+    const f = (_: string) => {
+      app_data.drawing_area.legend.scale_legend_unit = _
+      refreshThisAndUpdateRelatedComponents()
+    }
+    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'scale_legend_unit', value, f)
+  }
+
+  const eventScaleLegendRatio = (evt: number | null | undefined) => {
+    const value = (evt && evt !== 0) ? evt : 1
+    const f = (_: number) => {
+      app_data.drawing_area.legend.scale_legend_ratio = _
+      refreshThisAndUpdateRelatedComponents()
+    }
+    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'scale_legend_ratio', value, f)
+  }
+
   const eventLegendDataTag = (checked: boolean) => {
     const f = (_: boolean) => {
       app_data.drawing_area.legend.legend_show_dataTags = _
@@ -905,6 +923,39 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
           {t('MEP.leg_horizontal')}
         </Button>
       </Box>
+
+      {/* Échelle de la légende : unité + ratio (affiché uniquement si l'échelle est visible) */}
+      {app_data.drawing_area.legend.display_legend_scale && (
+        <>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <Box layerStyle='menuconfigpanel_option_name'>
+              {t('Menu.scale_legend_unit')}
+            </Box>
+            <Box>
+              <Input
+                variant='menuconfigpanel_option_input'
+                defaultValue={app_data.drawing_area.legend.scale_legend_unit}
+                placeholder={t('Menu.scale_legend_unit_ph')}
+                onBlur={(evt: React.FocusEvent<HTMLInputElement>) => eventScaleLegendUnit(evt.target.value)}
+              />
+            </Box>
+          </Box>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <Box layerStyle='menuconfigpanel_option_name'>
+              {t('Menu.scale_legend_ratio')}
+            </Box>
+            <Box>
+              <ConfigMenuNumberInput
+                t={app_data.t}
+                default_value={app_data.drawing_area.legend.scale_legend_ratio}
+                function_on_blur={eventScaleLegendRatio}
+                stepper={false}
+                fixed_dec={0}
+              />
+            </Box>
+          </Box>
+        </>
+      )}
 
     </Box>
   </Box>
