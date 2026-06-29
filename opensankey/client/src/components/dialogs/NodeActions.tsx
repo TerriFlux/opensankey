@@ -976,6 +976,32 @@ export class NodeActions {
     this.executeWithUndo(doClear, undoClear)
   }
 
+  // #1231b — Mode proportionnel / échelle adaptée : désigner/retirer CE nœud comme STOCK de
+  // référence (élément de référence généralisé : le rôle du « flux de référence » tenu par un
+  // nœud dans sa représentation stock). Médiane calée sur le centre du nœud, facteur = ratio
+  // de stock entre datatags. Transitoire : re-capture les références puis redessine.
+  setReferenceStock = () => {
+    const node = this.contextualised_node ?? this.selected_nodes[0]
+    if (!node) return
+    const np = this.drawing_area.nodePositioning
+    const is_ref = np.proportionalReferenceNode === node
+    np.setProportionalReferenceNode(is_ref ? undefined : node)
+    // Le même élément sert aux deux modes (proportionnel + échelle) : à la sélection,
+    // re-capturer les deux références ; au retrait, restaurer l'échelle de base en plus.
+    if (is_ref) {
+      np.clearScaleAdaptation()
+    } else {
+      np.captureScaleReference()
+    }
+    np.captureProportionalReference()
+    this.drawing_area.drawElements()
+    this.refreshAndSave()
+  }
+
+  setReferenceStockValue = (): boolean => {
+    return this.drawing_area.nodePositioning.proportionalReferenceNode === this.contextualised_node
+  }
+
   // Télécharge l'image affichée sur le nœud (icon_is_image) sous forme de fichier.
   saveNodeImage = () => {
     const node = this.contextualised_node
@@ -1053,6 +1079,8 @@ export class NodeActions {
       copyElement: nodeActions.copyElement,
       setGlobalMaxNodeToCurrent: nodeActions.setGlobalMaxNodeToCurrent,
       clearGlobalMaxNode: nodeActions.clearGlobalMaxNode,
+      setReferenceStock: nodeActions.setReferenceStock,
+      setReferenceStockValue: nodeActions.setReferenceStockValue,
       saveNodeImage: nodeActions.saveNodeImage,
 
       // Actions dynamiques générées pour les dimensions
