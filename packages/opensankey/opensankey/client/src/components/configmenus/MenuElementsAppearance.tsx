@@ -53,6 +53,7 @@ import {
   getNodeShapeValues,
   getElementsLabelValues,
   getElementsValueLabelValues,
+  getElementsStockLabelValues,
   getElementsNameLabelValues,
   getLinksLabelValues,
   getIconValues,
@@ -877,6 +878,33 @@ const LabelContentComponent = ({
               <Box />
               <Box />
             </Box>
+          )
+        })()}
+
+        {/* Stock (legacy box) : bascule « position verticale ajustée » à la
+            suite des boutons de positionnement, comme le pos_auto du flux. */}
+        {prefix === 'stock_label' && (() => {
+          const stockLabelValues = getElementsStockLabelValues(elements, refreshParentComponent)
+          return (
+            <OSTooltip label={'Position verticale ajustée : si le nœud est trop fin, la boite de stock passe en dessous au lieu de le recouvrir'}>
+              <Box layerStyle='options_4cols'>
+                <OverloadedButton
+                  elements={elements}
+                  config={STOCK_LABEL_CONFIG}
+                  attributePath={attributePath}
+                  prefix={prefix}
+                  attributeKey="pos_auto"
+                  variant={getButtonVariant('', isConfigValueIndeterminate(elements, STOCK_LABEL_CONFIG, 'pos_auto', prefix), stockLabelValues.pos_auto)}
+                  onClick={() => { stockLabelValues.pos_auto = !stockLabelValues.pos_auto }}
+                  buttonSx={{ '& svg': { width: '16px', height: '16px' } }}
+                >
+                  {app_data.icon_library.icon_label_auto_position}
+                </OverloadedButton>
+                <Box />
+                <Box />
+                <Box />
+              </Box>
+            </OSTooltip>
           )
         })()}
 

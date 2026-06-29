@@ -828,6 +828,7 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   stock_label_inside_horiz!: StockLabelAttributeTypes['inside_horiz']
   stock_label_inside_vert!: StockLabelAttributeTypes['inside_vert']
   stock_label_box_width!: StockLabelAttributeTypes['box_width']
+  stock_label_pos_auto!: StockLabelAttributeTypes['pos_auto']
   stock_label_background_visible!: StockLabelAttributeTypes['background_visible']
   stock_label_background_color!: StockLabelAttributeTypes['background_color']
   stock_label_background_opacity!: StockLabelAttributeTypes['background_opacity']
