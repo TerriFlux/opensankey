@@ -6,6 +6,7 @@ import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_Sankey } from '../types/Sankey'
 import { Class_Tag } from '../types/Tag'
 import { getStringFromJSON, getStringOrUndefinedFromJSON, Type_JSON } from '../types/Utils'
+import { settleNodeAnchorAfterLayout } from './applyLayoutAnchor'
 
 const matchAndModifyJSONIds = (
   sankey: Class_Sankey,
@@ -869,7 +870,9 @@ export const updateFrom = (
       drawing_area.nodePositioning.inferPositionUFromX()
       drawing_area.nodePositioning.captureProportionalReference()
     } else {
-      drawing_area.sankey.nodes_list.forEach(node => node.settleCenterAnchor())
+      // #204 — Ré-ancrage center-based résilient à la permutation largeur/hauteur que
+      // `posFlux` peut introduire après posNode (voir applyLayoutAnchor.ts).
+      drawing_area.sankey.nodes_list.forEach(node => settleNodeAnchorAfterLayout(node))
     }
 
     // Re-ancrer les cadres géométriques (nœuds/ZDT tied) sur l'enveloppe de leurs
