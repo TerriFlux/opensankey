@@ -130,6 +130,8 @@ export const font_families = [
 export const default_stick_to_drawing = true
 export const default_masked = true
 export const default_display_legend_scale = false
+export const default_scale_legend_unit = ''
+export const default_scale_legend_ratio = 1
 export const default_legend_police = 16
 export const default_legend_bg_border = false
 export const default_legend_bg_color = default_element_color
@@ -2590,6 +2592,28 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       it: 'Riempie il/i nodo/i selezionato/i con un motivo tratteggiato (nessuno / verticale / orizzontale / diagonale / anti-diagonale)'
     }
   } satisfies AttributeConfig<Type_HatchOrientation>,
+  is_reference_stock: {
+    default: false,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    // Pas d'action au set : le redraw est piloté par le handler (setReferenceStock) ; poser
+    // le marqueur ne doit pas déclencher de dessin (notamment pendant le nettoyage de l'ancien).
+    actions: [] as BaseActionType[],
+    labels: {
+      en: 'Reference stock',
+      fr: 'Stock de référence',
+      es: 'Stock de referencia',
+      de: 'Referenzbestand',
+      it: 'Stock di riferimento'
+    },
+    tooltips: {
+      en: 'In proportional / adapted-scale mode, anchor the diagram on this node\'s stock. Set via right-click "Set as reference stock".',
+      fr: 'En mode proportionnel / échelle adaptée, ancrer le diagramme sur le stock de ce nœud. Activé via clic droit « Définir comme stock de référence ».',
+      es: 'En modo proporcional / escala adaptada, anclar el diagrama en el stock de este nodo. Activado con clic derecho «Definir como stock de referencia».',
+      de: 'Im proportionalen / angepassten Maßstab-Modus das Diagramm am Bestand dieses Knotens verankern. Über Rechtsklick „Als Referenzbestand festlegen" aktiviert.',
+      it: 'In modalità proporzionale / scala adattata, ancorare il diagramma allo stock di questo nodo. Attivato con clic destro «Imposta come stock di riferimento».'
+    }
+  } satisfies AttributeConfig<boolean>,
 } as const
 
 export const LINK_SHAPE_SPECIFIC_CONFIG = {

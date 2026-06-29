@@ -39,7 +39,7 @@ import { SankeyAnimation } from '../Algorithms/SankeyAnimation'
 import { draw_arrow_part } from './NodeDrawShape'
 import { computeArrowPlacement } from './arrowLayout'
 import { Class_Sankey } from '../types/Sankey'
-import { Class_Tag } from '../types/Tag'
+import { Class_DataTag, Class_Tag } from '../types/Tag'
 import { NodeTooltip } from './TooltipsNode'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeDimension, NodeDimensionsManager } from './NodeDimension'
@@ -771,6 +771,22 @@ export class Class_NodeElement extends Class_NodeBase {
   public currentStockInitialForHeight(): number | null {
     if (!this.has_stock) return null
     const sv = this.stock_value
+    if (!sv) return null
+    const use_result = this.drawing_area.type_data !== 'data'
+    const si = use_result ? (sv.stockInitialResult ?? sv.stockInitialData) : sv.stockInitialData
+    return (si === null || si === undefined) ? null : si
+  }
+
+  /**
+   * #1231b — Stock initial pour un jeu de datatags ARBITRAIRE (miroir de
+   * currentStockInitialForHeight mais à des tags donnés). Sert d'élément de référence du
+   * mode proportionnel / échelle adaptée (datatag de référence). null si pas de stock.
+   */
+  public stockInitialForDataTags(tags: Class_DataTag[]): number | null {
+    if (!this.has_stock) return null
+    const sv = (this._stock_values instanceof Class_StockValue)
+      ? this._stock_values
+      : this._stock_values.getValueForDataTags(tags) as Class_StockValue | null
     if (!sv) return null
     const use_result = this.drawing_area.type_data !== 'data'
     const si = use_result ? (sv.stockInitialResult ?? sv.stockInitialData) : sv.stockInitialData

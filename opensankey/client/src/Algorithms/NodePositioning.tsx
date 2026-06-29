@@ -63,6 +63,14 @@ export class NodePositioning {
   // Transitoires (jamais persistés).
   private _prop_reference_link: Class_LinkElement | undefined = undefined
 
+  // #1231b — Élément de référence GÉNÉRALISÉ : un nœud (dans sa représentation stock) peut
+  // jouer le même rôle que le flux de référence. Mutuellement exclusif avec
+  // `_prop_reference_link` (un seul élément de référence à la fois). Si défini et visible :
+  //  - la médiane (centre de gravité) = centre vertical du nœud,
+  //  - le facteur f = stock courant / stock au datatag de référence.
+  // La valeur du stock = stock initial (cf. Node.currentStockInitialForHeight). Transitoire.
+  private _prop_reference_node: Class_NodeElement | undefined = undefined
+
   // #1231 — Datatag de RÉFÉRENCE (ids des tags datatag sélectionnés au moment où le flux de
   // référence a été défini). Les pourcentages sont calculés pour le couple (flux, datatag) :
   // f = valeur(flux, datatag courant) / valeur(flux, datatag de réf). PERSISTÉ (avec le flux
@@ -1130,17 +1138,61 @@ export class NodePositioning {
     return this._prop_reference_link
   }
 
-  public setProportionalReferenceLink(link: Class_LinkElement | undefined) {
-    // Persistance : un seul flux de référence. On nettoie le marqueur persisté
-    // `shape_is_reference_flux` sur tout autre lien et on le pose sur le nouveau (le set
-    // n'a pas d'action → pas de dessin parasite ; cf. ElementsAttributesConfig).
+  /** #1231b — Nœud de référence (visibilité-gated), pour l'état coché du menu nœud. */
+  public get proportionalReferenceNode(): Class_NodeElement | undefined {
+    if (this._prop_reference_node && !this._prop_reference_node.is_visible) return undefined
+    return this._prop_reference_node
+  }
+
+  /** #1231b — Élément de référence BRUT (lien OU nœud), sans filtre de visibilité. */
+  private get _rawReference(): Class_LinkElement | Class_NodeElement | undefined {
+    return this._prop_reference_link ?? this._prop_reference_node
+  }
+
+  /** #1231b — Élément de référence visibilité-gated (undefined si masqué). */
+  private get _gatedReference(): Class_LinkElement | Class_NodeElement | undefined {
+    const ref = this._rawReference
+    if (ref && !ref.is_visible) return undefined
+    return ref
+  }
+
+  // #1231b — Nettoie les marqueurs persistés de référence (lien ET nœud) sur TOUS les
+  // éléments, sauf `keep` (l'élément qu'on est en train de désigner). Le set n'a pas
+  // d'action → pas de dessin parasite (cf. ElementsAttributesConfig).
+  private clearReferenceMarkers(keep?: Class_LinkElement | Class_NodeElement) {
     this.drawingArea.sankey.links_list.forEach(l => {
-      if (l.shape_is_reference_flux && l !== link) l.shape_is_reference_flux = false
+      if (l.shape_is_reference_flux && l !== keep) l.shape_is_reference_flux = false
     })
+    this.drawingArea.sankey.nodes_list.forEach(n => {
+      if (n.shape_is_reference_stock && n !== keep) n.shape_is_reference_stock = false
+    })
+  }
+
+  public setProportionalReferenceLink(link: Class_LinkElement | undefined) {
+    // Un seul élément de référence à la fois : on retire tout marqueur (lien/nœud) existant.
+    this.clearReferenceMarkers(link)
     this._prop_reference_link = link
+    this._prop_reference_node = undefined
     if (link) {
       link.shape_is_reference_flux = true
-      // Mémoriser le datatag courant comme datatag de référence (couple flux/datatag).
+      // Mémoriser le datatag courant comme datatag de référence (couple élément/datatag).
+      this._prop_reference_datatag_ids = this.drawingArea.sankey.selected_data_tags_list.map(t => t.id)
+    } else {
+      this._prop_reference_datatag_ids = undefined
+    }
+  }
+
+  /**
+   * #1231b — Désigne (ou retire) un NŒUD-STOCK comme élément de référence. Mutuellement
+   * exclusif avec le flux de référence. Le marqueur persisté `shape_is_reference_stock` est
+   * posé sur le nœud (relu au chargement par `attachReferenceLinkFromAttributes`).
+   */
+  public setProportionalReferenceNode(node: Class_NodeElement | undefined) {
+    this.clearReferenceMarkers(node)
+    this._prop_reference_node = node
+    this._prop_reference_link = undefined
+    if (node) {
+      node.shape_is_reference_stock = true
       this._prop_reference_datatag_ids = this.drawingArea.sankey.selected_data_tags_list.map(t => t.id)
     } else {
       this._prop_reference_datatag_ids = undefined
@@ -1170,13 +1222,22 @@ export class NodePositioning {
    * (rétrocompat). undefined si pas de flux de référence ou valeur indisponible.
    */
   private referenceFluxRefValue(): number | undefined {
-    // Lien brut (pas le getter `proportionalReferenceLink` qui renvoie undefined si le flux
-    // est masqué) : en mode vue le flux de référence peut être caché par le filtre, mais sa
-    // valeur de référence (dénominateur de l'échelle) reste définie. Pour le proportionnel ce
-    // chemin n'est emprunté que si le flux est visible → comportement inchangé.
+    // Élément brut (pas le getter visibilité-gated) : en mode vue l'élément de référence peut
+    // être caché par le filtre, mais sa valeur de référence (dénominateur de l'échelle) reste
+    // définie. Pour le proportionnel ce chemin n'est emprunté que si visible → inchangé.
+    const tags = this.resolveReferenceDataTags()
+    // #1231b — Nœud-stock de référence : valeur = stock initial (cf. currentStockInitialForHeight).
+    const node = this._prop_reference_node
+    if (node) {
+      if (tags.length > 0) {
+        const v = node.stockInitialForDataTags(tags)
+        if (v != null && isFinite(v)) return Math.abs(v)
+      }
+      const vc = node.currentStockInitialForHeight()
+      return (vc != null && isFinite(vc)) ? Math.abs(vc) : undefined
+    }
     const ref = this._prop_reference_link
     if (!ref) return undefined
-    const tags = this.resolveReferenceDataTags()
     if (tags.length > 0) {
       const v = ref.valueForDataTags(tags)
       if (v != null && isFinite(v)) return Math.abs(v)
@@ -1186,13 +1247,43 @@ export class NodePositioning {
   }
 
   /**
+   * #1231b — Valeur COURANTE (datatags sélectionnés, hors vue) de l'élément de référence.
+   * Flux : épaisseur via valeur courante. Nœud-stock : stock initial courant. abs ; 0 si rien.
+   */
+  private referenceCurrentValue(): number {
+    const node = this._prop_reference_node
+    if (node) {
+      const v = node.currentStockInitialForHeight()
+      return (v != null && isFinite(v)) ? Math.abs(v) : 0
+    }
+    const ref = this._prop_reference_link
+    return ref ? Math.abs(ref.valueCurrent ?? 0) : 0
+  }
+
+  /**
+   * #1231b — Valeur de l'élément de référence dans la VUE courante (correspondant visible).
+   * Flux : somme des liens enfants visibles (referenceFluxViewValue). Nœud-stock : somme des
+   * stocks des nœuds descendants visibles portant l'étiquette view tag sélectionnée.
+   */
+  private referenceViewValue(): number {
+    const node = this._prop_reference_node
+    if (node) return this.referenceStockViewValue(node)
+    const ref = this._prop_reference_link
+    return ref ? this.referenceFluxViewValue(ref) : 0
+  }
+
+  /**
    * #1231 — Au chargement (persistance) : ré-attache le flux de référence depuis le marqueur
    * persisté `shape_is_reference_flux`. La capture (médiane proportionnelle / échelle) se
    * fait paresseusement au 1er dessin (anchorProportionalNodes / applyAdaptedScale).
    */
   public attachReferenceLinkFromAttributes() {
-    const flagged = this.drawingArea.sankey.links_list.find(l => l.shape_is_reference_flux)
-    this._prop_reference_link = flagged ?? undefined
+    const flagged_link = this.drawingArea.sankey.links_list.find(l => l.shape_is_reference_flux)
+    const flagged_node = this.drawingArea.sankey.nodes_list.find(n => n.shape_is_reference_stock)
+    this._prop_reference_link = flagged_link ?? undefined
+    // #1231b — Un seul élément de référence à la fois : si les deux marqueurs cohabitent
+    // (fichier incohérent), le flux prime et on ignore le nœud.
+    this._prop_reference_node = flagged_link ? undefined : (flagged_node ?? undefined)
   }
 
   /**
@@ -1226,9 +1317,9 @@ export class NodePositioning {
    * mode, valeur_courante == valeur_ref → échelle inchangée → pas de saut.
    */
   public captureScaleReference() {
-    // Lien brut : on doit pouvoir capturer la valeur de référence même si le flux est
+    // Élément brut : on doit pouvoir capturer la valeur de référence même si l'élément est
     // momentanément masqué par un filtre vue (cf. referenceFluxRefValue).
-    const ref = this._prop_reference_link
+    const ref = this._rawReference
     const v = ref ? this.referenceFluxRefValue() : undefined
     if (ref && v && v > 0) {
       // Valeur au datatag de référence (couple flux/datatag) ; échelle de base = échelle courante.
@@ -1248,10 +1339,10 @@ export class NodePositioning {
    * récursion ; on l'évite).
    */
   public applyAdaptedScale() {
-    // En mode vue, le flux de référence peut être masqué par le filtre → on prend le lien brut
-    // (sa valeur de réf reste le « gabarit » de taille). Hors vue, getter visibilité-gated.
+    // En mode vue, l'élément de référence peut être masqué par le filtre → on prend l'élément brut
+    // (sa valeur de réf reste le « gabarit » de taille). Hors vue, version visibilité-gated.
     const view_active = this.drawingArea.sankey.view_mode_active
-    const ref = view_active ? this._prop_reference_link : this.proportionalReferenceLink
+    const ref = view_active ? this._rawReference : this._gatedReference
     if (!ref) return
     // Capture paresseuse (1er dessin / après chargement) : base = échelle + valeur courantes
     // → ratio 1 à cette frame, pas de saut.
@@ -1259,13 +1350,13 @@ export class NodePositioning {
       this.captureScaleReference()
       return
     }
-    // En mode vue : v = valeur du CORRESPONDANT de la vue (flux enfant visible portant l'étiquette
-    // sélectionnée). new_scale = ref_scale × correspondant / valeur_réf → le flux correspondant est
-    // dessiné à l'épaisseur du flux de référence (une vue plus petite dilate l'échelle pour normaliser
-    // le correspondant à la taille de référence). Hors vue : valeur courante du flux de réf (datatags).
+    // En mode vue : v = valeur du CORRESPONDANT de la vue (enfant visible portant l'étiquette
+    // sélectionnée). new_scale = ref_scale × correspondant / valeur_réf → le correspondant est
+    // dessiné à la taille de référence (une vue plus petite dilate l'échelle pour normaliser le
+    // correspondant). Hors vue : valeur courante de l'élément de référence (datatags).
     const v = view_active
-      ? this.referenceFluxViewValue(ref)
-      : Math.abs(ref.valueCurrent ?? 0)
+      ? this.referenceViewValue()
+      : this.referenceCurrentValue()
     if (v <= 0) return
     const new_scale = this._scale_adapted_ref_scale * v / this._scale_adapted_ref_value
     if (isFinite(new_scale) && new_scale > 0) {
@@ -1293,6 +1384,24 @@ export class NodePositioning {
       if (!src_set.has(ls) || !tgt_set.has(lt)) return
       if (ls.viewTagVisibility() !== true || lt.viewTagVisibility() !== true) return
       const v = l.valueCurrent
+      if (v != null && isFinite(v)) sum += Math.abs(v)
+    })
+    return sum
+  }
+
+  /**
+   * #1231b — Mode vue — valeur du nœud-stock de référence dans la VUE courante : somme des
+   * stocks des nœuds visibles qui descendent du nœud de référence ET portent l'étiquette view
+   * tag sélectionnée (viewTagVisibility === true). Analogue stock de referenceFluxViewValue.
+   */
+  private referenceStockViewValue(node: Class_NodeElement): number {
+    const node_set = new Set<Class_NodeElement>([node, ...node.getListDescendantOfNode()])
+    let sum = 0
+    this.drawingArea.sankey.visible_nodes_list.forEach(n => {
+      if (!node_set.has(n)) return
+      if (!n.has_stock) return
+      if (n.viewTagVisibility() !== true) return
+      const v = n.currentStockInitialForHeight()
       if (v != null && isFinite(v)) sum += Math.abs(v)
     })
     return sum
@@ -1348,13 +1457,25 @@ export class NodePositioning {
     this._prop_ref_col_sums = this.proportionalColumnSums(nodes)
     nodes.forEach(n => n.captureProportionalCenterRef())
 
-    // #1231 — Avec flux de référence : la médiane (centre de gravité fixe) se cale sur le
-    // centre vertical du flux. Le facteur f est value-based (cf. proportionalFactor) : rien à
-    // capturer ici pour f (il dérive du couple flux/datatag de référence persisté).
-    const ref_link = this.proportionalReferenceLink
-    if (ref_link) {
-      this._prop_median_y = this.fluxCenterY(ref_link)
+    // #1231 — Avec élément de référence : la médiane (centre de gravité fixe) se cale sur le
+    // centre vertical de l'élément (flux à mi-parcours, ou centre du nœud-stock). Le facteur f
+    // est value-based (cf. proportionalFactor) : rien à capturer ici pour f (il dérive du couple
+    // élément/datatag de référence persisté).
+    const ref_center = this.referenceCenterY()
+    if (ref_center !== undefined) {
+      this._prop_median_y = ref_center
     }
+  }
+
+  /** #1231b — Centre vertical de l'élément de référence (visibilité-gated). undefined si aucun. */
+  private referenceCenterY(): number | undefined {
+    const ref = this._gatedReference
+    if (!ref) return undefined
+    const node = this._prop_reference_node
+    if (node && ref === node) {
+      return node.position_y + node.getShapeHeightToUse() / 2
+    }
+    return this.fluxCenterY(ref as Class_LinkElement)
   }
 
   /**
@@ -1374,12 +1495,12 @@ export class NodePositioning {
     // portant l'étiquette sélectionnée) rapportée à la valeur du flux de référence : une vue
     // plus petite que le total donne f<1 → le diagramme se comprime (rétracte).
     const view_active = this.drawingArea.sankey.view_mode_active
-    const ref_link = view_active ? this._prop_reference_link : this.proportionalReferenceLink
-    if (ref_link) {
+    const ref = view_active ? this._rawReference : this._gatedReference
+    if (ref) {
       const ref_val = this.referenceFluxRefValue()
       const cur = view_active
-        ? this.referenceFluxViewValue(ref_link)
-        : Math.abs(ref_link.valueCurrent ?? 0)
+        ? this.referenceViewValue()
+        : this.referenceCurrentValue()
       if (ref_val && ref_val > 0 && cur > 0) {
         const f = cur / ref_val
         return (isFinite(f) && f > 0) ? f : 1
@@ -1422,13 +1543,15 @@ export class NodePositioning {
     // préservé EXACTEMENT entre colonnes (un nœud plus haut le reste, gauche ou droite), et
     // la colonne la plus dense « tire » tout le diagramme. Plus de plancher par colonne.
     const f = this.proportionalFactor(nodes)
-    // En mode vue, le plancher anti-chevauchement (proportionalMinFactor) se calcule sur les
-    // centres de référence capturés en VUE COMPLÈTE, incohérents avec le sous-ensemble visible :
-    // il peut renvoyer une valeur énorme qui dilate tout à l'infini. On le neutralise donc en
-    // vue et on applique directement f (le risque résiduel est un chevauchement, pas une explosion).
-    const f_eff = this.drawingArea.sankey.view_mode_active
-      ? f
-      : Math.max(f, this.proportionalMinFactor(nodes))
+    // Plancher anti-chevauchement (écart minimum entre nœuds). En mode vue, les nœuds révélés par
+    // le filtre n'ont pas de position verticale propre (le fichier les stocke empilés) : deux
+    // peuvent se retrouver quasi collés et le facteur dépasserait 1, dilatant tout le diagramme à
+    // l'infini. On le PLAFONNE donc à 1 en vue : on applique l'écart minimum tant qu'il « tient »
+    // dans la disposition d'origine, mais on ne dilate jamais au-delà (pas d'explosion, et la vue
+    // ne se contracte pas plus que nécessaire). Hors vue : comportement normal (ensemble fixe).
+    const min_factor = this.proportionalMinFactor(nodes)
+    const capped_min = this.drawingArea.sankey.view_mode_active ? Math.min(min_factor, 1) : min_factor
+    const f_eff = Math.max(f, capped_min)
     nodes.forEach(n => n.applyProportionalCompression(this._prop_median_y!, f_eff))
   }
 

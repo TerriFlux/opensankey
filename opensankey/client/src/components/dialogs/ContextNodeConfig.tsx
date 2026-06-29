@@ -337,6 +337,21 @@ export const NODE_MENU_CONFIG: MenuConfig = {
         { type: 'widget', widgetName: 'MenuContextNodeStock' }
       ]
     },
+    // #1231b — Stock de référence (mode proportionnel / échelle adaptée). Disponible dès
+    // qu'un mode de position « ancré » est actif et que le nœud porte un stock.
+    {
+      type: 'button',
+      actionName: 'setReferenceStock',
+      visibilityConditions: [{
+        type: 'custom',
+        customCheck: (app_data) => {
+          const node = app_data.drawing_area.node_contextualised
+          if (!node?.has_stock) return false
+          const m = app_data.drawing_area.sankey.default_style.shape_position_type
+          return m === 'absolute' || m === 'proportional' || m === 'scale_adapted'
+        }
+      }]
+    },
     { type: 'button', actionName: 'startAnimation' },
     { type: 'button', actionName: 'copyElement' },
     {
@@ -789,6 +804,33 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       labels: { en: 'Clear global node max height', fr: 'Supprimer hauteur max globale', es: 'Quitar altura máx global', de: 'Globale Maximalhöhe entfernen', it: 'Rimuovi altezza max globale' },
       tooltips: { en: 'Remove the global maximum node height limit', fr: 'Supprimer la limite globale de hauteur des nœuds', es: 'Quitar el límite global de altura de los nodos', de: 'Globale Maximalhöhen-Begrenzung der Knoten entfernen', it: 'Rimuovere il limite globale di altezza dei nodi' },
       undoable: true,
+      closeMenuAfter: true
+    },
+
+    setReferenceStock: {
+      type: 'toggle',
+      labels: {
+        en: 'Reference stock (proportional)',
+        fr: 'Stock de référence (proportionnel)',
+        es: 'Stock de referencia (proporcional)',
+        de: 'Referenzbestand (proportional)',
+        it: 'Stock di riferimento (proporzionale)'
+      },
+      labelsToggle: {
+        en: { true: 'Unset reference stock', false: 'Set as reference stock' },
+        fr: { true: 'Retirer le stock de référence', false: 'Définir comme stock de référence' },
+        es: { true: 'Quitar stock de referencia', false: 'Definir como stock de referencia' },
+        de: { true: 'Referenzbestand entfernen', false: 'Als Referenzbestand festlegen' },
+        it: { true: 'Rimuovi stock di riferimento', false: 'Imposta come stock di riferimento' }
+      },
+      tooltips: {
+        en: 'In proportional / adapted-scale mode, anchor the diagram on this node\'s stock and scale everything by this stock\'s ratio across data tags.',
+        fr: 'En mode proportionnel / échelle adaptée, ancrer le diagramme sur le stock de ce nœud et dimensionner le reste selon le ratio de ce stock entre les tags de données.',
+        es: 'En modo proporcional / escala adaptada, anclar el diagrama en el stock de este nodo y escalar todo según la relación de este stock entre las etiquetas de datos.',
+        de: 'Im proportionalen / angepassten Maßstab-Modus das Diagramm am Bestand dieses Knotens verankern und alles anhand des Verhältnisses dieses Bestands über die Daten-Tags skalieren.',
+        it: 'In modalità proporzionale / scala adattata, ancorare il diagramma allo stock di questo nodo e ridimensionare tutto in base al rapporto di questo stock tra i tag di dati.'
+      },
+      getToggleValue: 'setReferenceStockValue',
       closeMenuAfter: true
     },
 
