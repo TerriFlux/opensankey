@@ -31,7 +31,8 @@ import { MouseEvent } from 'react'
 import {
   default_display_legend_scale, default_element_color, default_info_link_value_void, default_legend_bg_border,
   default_legend_bg_color, default_legend_bg_opacity, default_legend_horizontal, default_legend_police,
-  default_legend_show_constraints, default_legend_show_dataTags, default_masked, default_stick_to_drawing, default_width
+  default_legend_show_constraints, default_legend_show_dataTags, default_masked, default_scale_legend_ratio,
+  default_scale_legend_unit, default_stick_to_drawing, default_width
 } from './ElementsAttributesConfig'
 
 import { Class_DataTag, Class_Tag } from '../types/Tag'
@@ -43,6 +44,8 @@ export class ClassTemplate_Legend extends Class_NodeBase {
   private _stick_to_drawing = default_stick_to_drawing
   private _masked: boolean = default_masked
   private _display_legend_scale: boolean = default_display_legend_scale
+  private _scale_legend_unit: string = default_scale_legend_unit
+  private _scale_legend_ratio: number = default_scale_legend_ratio
   private _legend_police: number = default_legend_police
   private _legend_bg_border: boolean = default_legend_bg_border
   private _legend_bg_color: string = default_legend_bg_color
@@ -78,6 +81,8 @@ export class ClassTemplate_Legend extends Class_NodeBase {
     this._scale = cast_copy._scale
     this._width = cast_copy._width
     this._display_legend_scale = cast_copy._display_legend_scale
+    this._scale_legend_unit = cast_copy._scale_legend_unit
+    this._scale_legend_ratio = cast_copy._scale_legend_ratio
     this._legend_police = cast_copy._legend_police
     this._legend_bg_border = cast_copy._legend_bg_border
     this._legend_bg_color = cast_copy._legend_bg_color
@@ -649,6 +654,11 @@ export class ClassTemplate_Legend extends Class_NodeBase {
       }
       unit = selected_unit ? ' ' + selected_unit.name : ''
     }
+    // Apply user-defined ratio and unit on the scale legend
+    scale = scale / this._scale_legend_ratio
+    if (this._scale_legend_unit !== '') {
+      unit = ' ' + this._scale_legend_unit
+    }
 
     const g_draggable = g_scale?.append('g')
       .attr('class', 'g_draggable_scale')
@@ -658,10 +668,16 @@ export class ClassTemplate_Legend extends Class_NodeBase {
       .attr('width', '3px')
       .attr('height', '50px')
       .attr('fill', 'black')
+    // Auto format: integer when >= 1, significant digits when fractional
+    const abs_scale = Math.abs(scale)
+    let formatted_scale: string
+    if (abs_scale >= 1) formatted_scale = String(Number(scale.toFixed(2)))
+    else if (abs_scale > 0) formatted_scale = String(Number(scale.toPrecision(3)))
+    else formatted_scale = '0'
     g_draggable?.append('text')
       .attr('class', 'measurment_scale')
       .attr('transform', 'translate(5,25)')
-      .text(Math.round(scale) + ' ' + unit)
+      .text(formatted_scale + ' ' + unit)
 
     // const that = this
     // // Add drag event for the scale representation
@@ -753,6 +769,12 @@ export class ClassTemplate_Legend extends Class_NodeBase {
 
   public get display_legend_scale(): boolean { return this._display_legend_scale }
   public set display_legend_scale(_) { this._display_legend_scale = _; this.draw() }
+
+  public get scale_legend_unit(): string { return this._scale_legend_unit }
+  public set scale_legend_unit(_) { this._scale_legend_unit = _; this.draw() }
+
+  public get scale_legend_ratio(): number { return this._scale_legend_ratio }
+  public set scale_legend_ratio(_) { this._scale_legend_ratio = (_ && _ !== 0) ? _ : 1; this.draw() }
 
   public get legend_police(): number { return this._legend_police }
   public set legend_police(_) { this._legend_police = _; this.draw() }

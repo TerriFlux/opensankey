@@ -1079,6 +1079,8 @@ export class LegendPersistence extends ProtoElementPersistence {
     if (legend.display_legend_scale) json_legend['legend_scale'] = legend.display_legend_scale
     if (legend.width != default_width) json_legend['legend_width'] = legend.width
     if (legend.display_legend_scale) json_legend['display_legend_scale'] = legend.display_legend_scale
+    if (legend.scale_legend_unit !== '') json_legend['scale_legend_unit'] = legend.scale_legend_unit
+    if (legend.scale_legend_ratio !== 1) json_legend['scale_legend_ratio'] = legend.scale_legend_ratio
     if (legend.legend_police != default_legend_police) json_legend['legend_police'] = legend.legend_police
     if (legend.legend_bg_border) json_legend['legend_bg_border'] = legend.legend_bg_border
     if (legend.legend_bg_color != default_legend_bg_color) json_legend['legend_bg_color'] = legend.legend_bg_color
@@ -1147,6 +1149,8 @@ export class LegendPersistence extends ProtoElementPersistence {
     legend['_scale'] = getNumberFromJSON(json_legend, 'legend_scale', legend['_scale'])
     legend['_width'] = getNumberFromJSON(json_legend, 'legend_width', legend.width)
     legend['_display_legend_scale'] = getBooleanFromJSON(json_legend, 'display_legend_scale', legend.display_legend_scale)
+    legend['_scale_legend_unit'] = getStringFromJSON(json_legend, 'scale_legend_unit', legend.scale_legend_unit)
+    legend['_scale_legend_ratio'] = getNumberFromJSON(json_legend, 'scale_legend_ratio', legend.scale_legend_ratio)
     legend['_legend_police'] = getNumberFromJSON(json_legend, 'legend_police', legend.legend_police)
     legend['_legend_bg_border'] = getBooleanFromJSON(json_legend, 'legend_bg_border', legend.legend_bg_border)
     legend['_legend_bg_color'] = getStringFromJSON(json_legend, 'legend_bg_color', legend.legend_bg_color)
