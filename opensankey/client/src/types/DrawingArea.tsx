@@ -328,6 +328,12 @@ export class Class_DrawingArea {
   private _maximum_flux?: number
   private _minimum_flux?: number
 
+  // Limitations of NODE height (px), independent of the flux size limit above.
+  // Applied as a final cap/floor on each node's rendered height. Fixed px (does
+  // not follow the diagram scale), mirroring the flux size-limit control.
+  private _maximum_node?: number
+  private _minimum_node?: number
+
   // In structure mode (type_data === 'structure'), force all link thicknesses
   // to minimum_flux (or 2px) regardless of value. When false, link thickness
   // remains proportional to value even in structure mode (legacy behaviour).
@@ -503,6 +509,8 @@ export class Class_DrawingArea {
     this._height = drawing_area_to_copy._height
     this._maximum_flux = drawing_area_to_copy._maximum_flux
     this._minimum_flux = drawing_area_to_copy._minimum_flux
+    this._maximum_node = drawing_area_to_copy._maximum_node
+    this._minimum_node = drawing_area_to_copy._minimum_node
     this._structure_mode_force_min = drawing_area_to_copy._structure_mode_force_min
     this._arrow_use_standalone_layout = drawing_area_to_copy._arrow_use_standalone_layout
     this._scale = drawing_area_to_copy._scale
@@ -1755,6 +1763,24 @@ export class Class_DrawingArea {
    */
   public removeMaximumLinkThickness() {
     delete this._maximum_flux
+  }
+
+  /**
+   * Function to delete attr _minimum_node
+   *
+   * @memberof Class_DrawingArea
+   */
+  public removeMinimumNodeHeight() {
+    delete this._minimum_node
+  }
+
+  /**
+   * Function to delete attr _maximum_node
+   *
+   * @memberof Class_DrawingArea
+   */
+  public removeMaximumNodeHeight() {
+    delete this._maximum_node
   }
 
   /**
@@ -3416,6 +3442,23 @@ export class Class_DrawingArea {
     // (removeMinimumLinkThickness), on ne pose pas 0.
     if (value === undefined || value >= 0) {
       this._minimum_flux = value
+      this.drawElements()
+    }
+  }
+
+  // Node height limit (px), independent of the flux size limit.
+  public get maximum_node(): number | undefined { return this._maximum_node }
+  public set maximum_node(value: number | undefined) {
+    if (value === undefined || value > 0) {
+      this._maximum_node = value
+      this.drawElements()
+    }
+  }
+
+  public get minimum_node(): number | undefined { return this._minimum_node }
+  public set minimum_node(value: number | undefined) {
+    if (value === undefined || value > 0) {
+      this._minimum_node = value
       this.drawElements()
     }
   }

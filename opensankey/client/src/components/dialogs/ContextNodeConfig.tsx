@@ -147,16 +147,13 @@ export const NODE_MENU_CONFIG: MenuConfig = {
         { type: 'button', actionName: 'toggleValueVisibility' },
         { type: 'button', actionName: 'moveToFirstPlan' },
         { type: 'button', actionName: 'moveToLastPlan' },
-        { type: 'button', actionName: 'setMaxHeightToCurrent' },
+        { type: 'button', actionName: 'setGlobalMaxNodeToCurrent' },
         {
           type: 'button',
-          actionName: 'clearMaxHeight',
+          actionName: 'clearGlobalMaxNode',
           visibilityConditions: [{
             type: 'custom',
-            customCheck: (app_data) => {
-              const node = app_data.drawing_area.node_contextualised
-              return !!node && node.max_height !== null
-            }
+            customCheck: (app_data) => app_data.drawing_area.maximum_node !== undefined
           }]
         }
       ]
@@ -780,17 +777,19 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       tooltips: { en: 'Duplicate the selected element(s) — copies remain selected', fr: 'Dupliquer les éléments sélectionnés — les copies restent sélectionnées', es: 'Duplicar los elementos seleccionados — las copias permanecen seleccionadas', de: 'Ausgewählte Element(e) duplizieren — Kopien bleiben ausgewählt', it: 'Duplicare gli elementi selezionati — le copie rimangono selezionate' }
     },
 
-    setMaxHeightToCurrent: {
+    setGlobalMaxNodeToCurrent: {
       type: 'action',
-      labels: { en: 'Max height = current', fr: 'Hauteur max = actuelle', es: 'Altura máx = actual', de: 'Maximalhöhe = aktuell', it: 'Altezza max = attuale' },
-      tooltips: { en: 'Freeze the node height: set its maximum height to the current rendered height', fr: 'Figer la hauteur du nœud : fixe sa hauteur maximale à la hauteur actuellement affichée', es: 'Congelar la altura del nodo: fija su altura máxima a la altura mostrada actualmente', de: 'Knotenhöhe einfrieren: maximale Höhe auf die aktuell angezeigte Höhe setzen', it: 'Blocca l\'altezza del nodo: imposta l\'altezza massima a quella attualmente visualizzata' },
-      undoable: true
+      labels: { en: 'Global node max height = this node', fr: 'Hauteur max globale = ce nœud', es: 'Altura máx global = este nodo', de: 'Globale Maximalhöhe = dieser Knoten', it: 'Altezza max globale = questo nodo' },
+      tooltips: { en: 'Set the GLOBAL maximum node height (all nodes) to this node\'s current height', fr: 'Fixe la hauteur maximale GLOBALE des nœuds (tous les nœuds) à la hauteur actuelle de ce nœud', es: 'Fija la altura máxima GLOBAL de los nodos (todos) a la altura actual de este nodo', de: 'Setzt die GLOBALE maximale Knotenhöhe (alle Knoten) auf die aktuelle Höhe dieses Knotens', it: 'Imposta l\'altezza massima GLOBALE dei nodi (tutti) all\'altezza attuale di questo nodo' },
+      undoable: true,
+      closeMenuAfter: true
     },
-    clearMaxHeight: {
+    clearGlobalMaxNode: {
       type: 'action',
-      labels: { en: 'Clear max height', fr: 'Supprimer hauteur max', es: 'Quitar altura máx', de: 'Maximalhöhe entfernen', it: 'Rimuovi altezza max' },
-      tooltips: { en: 'Remove the maximum height ceiling', fr: 'Supprimer le plafond de hauteur maximale', es: 'Quitar el límite de altura máxima', de: 'Maximalhöhen-Begrenzung entfernen', it: 'Rimuovere il limite di altezza massima' },
-      undoable: true
+      labels: { en: 'Clear global node max height', fr: 'Supprimer hauteur max globale', es: 'Quitar altura máx global', de: 'Globale Maximalhöhe entfernen', it: 'Rimuovi altezza max globale' },
+      tooltips: { en: 'Remove the global maximum node height limit', fr: 'Supprimer la limite globale de hauteur des nœuds', es: 'Quitar el límite global de altura de los nodos', de: 'Globale Maximalhöhen-Begrenzung der Knoten entfernen', it: 'Rimuovere il limite globale di altezza dei nodi' },
+      undoable: true,
+      closeMenuAfter: true
     },
 
     saveNodeImage: {

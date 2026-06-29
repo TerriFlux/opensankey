@@ -935,44 +935,42 @@ export class NodeActions {
     this.refreshAndSave()
   }
 
-  // Fige la hauteur de chaque nœud sélectionné à sa hauteur courante (plafond
-  // max_height = hauteur intrinsèque actuelle). S'applique en mode stock comme
-  // normal. Undoable.
-  setMaxHeightToCurrent = () => {
-    const nodes = this.selected_nodes.length > 0
-      ? this.selected_nodes
-      : (this.contextualised_node ? [this.contextualised_node] : [])
-    if (nodes.length === 0) return
-    const dict_old_value: { [x: string]: number | null } = {}
-    nodes.forEach(n => { dict_old_value[n.id] = n.max_height })
+  // Règle la limite GLOBALE de hauteur des nœuds (drawing_area.maximum_node) sur
+  // la hauteur intrinsèque du nœud cliqué (px). Pratique pour caler la limite
+  // globale depuis un nœud de référence. Undoable.
+  setGlobalMaxNodeToCurrent = () => {
+    const node = this.contextualised_node ?? this.selected_nodes[0]
+    if (!node) return
+    const old_value = this.drawing_area.maximum_node
+    const new_value = Math.round(node.getNaturalShapeHeight())
 
     const doSet = () => {
-      nodes.forEach(n => { n.setMaxHeightToCurrentHeight(); n.draw() })
+      this.drawing_area.maximum_node = new_value
+      this.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
       this.refreshAndSave()
     }
     const undoSet = () => {
-      nodes.forEach(n => { n.max_height = dict_old_value[n.id]; n.draw() })
+      if (old_value !== undefined) this.drawing_area.maximum_node = old_value
+      else this.drawing_area.removeMaximumNodeHeight()
+      this.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
       this.refreshAndSave()
     }
     this.executeWithUndo(doSet, undoSet)
   }
 
-  // Supprime le plafond de hauteur (max_height = null) sur les nœuds
-  // sélectionnés. Undoable.
-  clearMaxHeight = () => {
-    const nodes = this.selected_nodes.length > 0
-      ? this.selected_nodes
-      : (this.contextualised_node ? [this.contextualised_node] : [])
-    if (nodes.length === 0) return
-    const dict_old_value: { [x: string]: number | null } = {}
-    nodes.forEach(n => { dict_old_value[n.id] = n.max_height })
+  // Retire la limite globale de hauteur des nœuds. Undoable.
+  clearGlobalMaxNode = () => {
+    const old_value = this.drawing_area.maximum_node
+    if (old_value === undefined) return
 
     const doClear = () => {
-      nodes.forEach(n => { n.max_height = null; n.draw() })
+      this.drawing_area.removeMaximumNodeHeight()
+      this.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
       this.refreshAndSave()
     }
     const undoClear = () => {
-      nodes.forEach(n => { n.max_height = dict_old_value[n.id]; n.draw() })
+      this.drawing_area.maximum_node = old_value
+      this.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
       this.refreshAndSave()
     }
     this.executeWithUndo(doClear, undoClear)
@@ -1053,8 +1051,8 @@ export class NodeActions {
       selectOutputLinks: nodeActions.selectOutputLinks,
       selectInputLinks: nodeActions.selectInputLinks,
       copyElement: nodeActions.copyElement,
-      setMaxHeightToCurrent: nodeActions.setMaxHeightToCurrent,
-      clearMaxHeight: nodeActions.clearMaxHeight,
+      setGlobalMaxNodeToCurrent: nodeActions.setGlobalMaxNodeToCurrent,
+      clearGlobalMaxNode: nodeActions.clearGlobalMaxNode,
       saveNodeImage: nodeActions.saveNodeImage,
 
       // Actions dynamiques générées pour les dimensions

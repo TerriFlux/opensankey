@@ -832,9 +832,6 @@ export class NodeElementPersistence extends NodeBasePersistence {
     if (node.stock_height_scale_factor !== 1) {
       json_object['stock_height_scale_factor'] = node.stock_height_scale_factor
     }
-    if (node.max_height !== null) {
-      json_object['max_height'] = node.max_height
-    }
     if (!node.has_material_balance) {
       json_object['has_material_balance'] = false
     }
@@ -1057,9 +1054,6 @@ export class NodeElementPersistence extends NodeBasePersistence {
     }
     if (json_node_object['stock_height_scale_factor'] !== undefined) {
       node.stock_height_scale_factor = json_node_object['stock_height_scale_factor'] as number
-    }
-    if (json_node_object['max_height'] !== undefined) {
-      node.max_height = json_node_object['max_height'] as number
     }
     if (json_node_object['has_material_balance'] !== undefined) {
       node.has_material_balance = json_node_object['has_material_balance'] as boolean
@@ -2055,6 +2049,8 @@ export class DrawingAreaPersistence {
     if (drawing_area.grid_color != default_grid_color) json_object['default_grid_color'] = drawing_area.grid_color
     if (drawing_area.maximum_flux) json_object['maximum_flux'] = drawing_area.maximum_flux
     if (drawing_area.minimum_flux) json_object['minimum_flux'] = drawing_area.minimum_flux
+    if (drawing_area.maximum_node) json_object['maximum_node'] = drawing_area.maximum_node
+    if (drawing_area.minimum_node) json_object['minimum_node'] = drawing_area.minimum_node
     if (!drawing_area.structure_mode_force_min) json_object['structure_mode_force_min'] = false
     if (drawing_area.arrow_use_standalone_layout) json_object['arrow_use_standalone_layout'] = true
     // Issue #165 — toujours sérialisé : l'absence du flag identifie un fichier
@@ -2396,6 +2392,8 @@ export class DrawingAreaPersistence {
     drawing_area['_height'] = getNumberFromJSON(json_object, 'height', drawing_area.height)
     drawing_area['_maximum_flux'] = getNumberOrUndefinedFromJSON(json_object, 'maximum_flux')
     drawing_area['_minimum_flux'] = getNumberOrUndefinedFromJSON(json_object, 'minimum_flux')
+    drawing_area['_maximum_node'] = getNumberOrUndefinedFromJSON(json_object, 'maximum_node')
+    drawing_area['_minimum_node'] = getNumberOrUndefinedFromJSON(json_object, 'minimum_node')
     drawing_area['_structure_mode_force_min'] = getBooleanFromJSON(json_object, 'structure_mode_force_min', true)
     drawing_area['_arrow_use_standalone_layout'] = getBooleanFromJSON(json_object, 'arrow_use_standalone_layout', false)
     drawing_area['_scale'] = getNumberFromJSON(json_object, 'user_scale', drawing_area.scale)
