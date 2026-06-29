@@ -395,7 +395,8 @@ export const TopBarStateButtons = ({ new_data, vertical = false }: {
 
 /**
  * Bouton plein écran de la barre du haut (style neutre, comme undo/redo/save). En éditeur, le plein
- * écran a quitté la colonne d'outils (action de vue plutôt qu'outil canvas) ; il vit ici.
+ * écran a quitté la colonne d'outils (action de vue plutôt qu'outil canvas) ; il vit ici. En publish,
+ * il est réutilisé dans la barre du haut quand l'option `fullscreen` est activée (cf. call site).
  */
 export const TopBarFullscreenButton = ({ new_data }: BaseApplicationDataType) => {
   const { t, icon_library } = new_data
@@ -405,7 +406,6 @@ export const TopBarFullscreenButton = ({ new_data }: BaseApplicationDataType) =>
     document.addEventListener('fullscreenchange', h)
     return () => document.removeEventListener('fullscreenchange', h)
   }, [])
-  if (new_data.is_static) return <></>
   const in_fs = !!document.fullscreenElement
   const toggle = async () => {
     if (!document.fullscreenElement) {
@@ -1553,6 +1553,12 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
             Actions globales/fréquentes : restent en haut, pas dans la colonne d'outils canvas. */}
         {!new_data.is_static ? <>
           <DocumentStateButtons new_data={new_data} />
+          <TopBarFullscreenButton new_data={new_data} />
+          <Divider orientation='vertical' height='1.5rem' borderColor='gray.300' margin='0 0.25rem' />
+        </> : <></>}
+        {/* En publish, le plein écran est dans la barre du haut (comme en éditeur) quand l'option
+            `fullscreen` est activée — plutôt qu'en bouton isolé dans la toolbar flottante du bas. */}
+        {(new_data.is_static && new_data.publish_options.fullscreen) ? <>
           <TopBarFullscreenButton new_data={new_data} />
           <Divider orientation='vertical' height='1.5rem' borderColor='gray.300' margin='0 0.25rem' />
         </> : <></>}

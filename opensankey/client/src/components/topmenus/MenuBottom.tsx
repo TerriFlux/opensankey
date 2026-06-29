@@ -73,19 +73,13 @@ export const ToolBarBottom = ({ new_data, right_offset }: {
       updateParentComponent={refreshThis}
     /> : <></>}
     {/* Groupe ajustement / verrous / plein écran : en mode statique, piloté par
-        l'option publish `fit_toolbar`. */}
+        l'option publish `fit_toolbar`. En publish, le plein écran est masqué de ce groupe quand
+        l'option `fullscreen` est active : il figure alors dans la barre du haut (cf. MenuTop). */}
     {(!new_data.is_static || new_data.publish_options.fit_toolbar) ? <ComponetStretchButtons
       app_data={new_data}
       updateParentComponent={refreshThis}
+      hide_fullscreen={new_data.is_static && new_data.publish_options.fullscreen}
     /> : <></>}
-    {/* Plein écran isolé : en publish, disponible même quand le groupe ajustement
-        (`fit_toolbar`) est masqué. Retiré dès que `fit_toolbar` est affiché, car le bouton
-        y figure déjà (évite le doublon). */}
-    {(new_data.is_static && new_data.publish_options.fullscreen && !new_data.publish_options.fit_toolbar)
-      ? <ButtonGroup className='toolbar_bottom_stretch' isAttached orientation='vertical'>
-        <ComponentFullscreenButton app_data={new_data} updateParentComponent={refreshThis} />
-      </ButtonGroup>
-      : <></>}
   </Box>
 }
 
