@@ -719,14 +719,33 @@ def generate_directory_index(tree_level, current_path_parts, build_info, public_
     """
     
     current_path = '/'.join(current_path_parts) if current_path_parts else ''
-    page_title = path_mapper.get_display_name(current_path_parts[-1]) if current_path_parts else 'Portfolio Sankey'
-    
-    # NOUVEAU: Lire la readme du dossier courant depuis les artifacts
+
+    # Dossier courant (dans les artifacts) — utilisé pour readme, logo et titre
     if current_path_parts:
         current_folder_path = Path(public_dir) / '/'.join(current_path_parts)
     else:
         current_folder_path = Path(public_dir)
-    
+
+    # Titre de la page : nom du dossier courant ; à la RACINE du portfolio, titre
+    # surchargeable via un fichier `portfolio_title.txt` (1ʳᵉ ligne) déposé à la
+    # racine du dossier publié, à défaut « Portfolio Sankey ».
+    portfolio_title = None
+    if not current_path_parts:
+        _title_file = current_folder_path / 'portfolio_title.txt'
+        if _title_file.exists():
+            try:
+                _lines = _title_file.read_text(encoding='utf-8').strip().splitlines()
+                if _lines:
+                    portfolio_title = _lines[0].strip()
+            except Exception:
+                portfolio_title = None
+    if current_path_parts:
+        page_title = path_mapper.get_display_name(current_path_parts[-1])
+    else:
+        page_title = portfolio_title or 'Portfolio Sankey'
+    # Titre de l'onglet du navigateur (marque conservée hors surcharge racine)
+    tab_title = page_title if (portfolio_title and not current_path_parts) else f'{page_title} - Portfolio Sankey'
+
     vprint(f"🔍 Recherche readme dans artifacts: {current_folder_path}",1)
     
     folder_readme = read_readme(current_folder_path)
@@ -752,7 +771,7 @@ def generate_directory_index(tree_level, current_path_parts, build_info, public_
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{page_title} - Portfolio Sankey</title>
+    <title>{tab_title}</title>
     <style>
         body {{
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -866,6 +885,13 @@ def generate_directory_index(tree_level, current_path_parts, build_info, public_
         .card:hover {{
             transform: translateY(-2px);
             box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            /* Survol = nouveau contexte d'empilement (à cause de `transform`) :
+               sans z-index, un menu déroulant ouvert (.download-list / .versions-list,
+               position:absolute) reste peint DERRIÈRE les cartes voisines tant que la
+               souris est sur la carte, et n'apparaît qu'au survol perdu. On élève la
+               carte survolée (élément de grille → z-index honoré) pour que son menu
+               passe au-dessus des cartes voisines. */
+            z-index: 10;
         }}
         .card.directory {{
             border-left-color: #3498db;

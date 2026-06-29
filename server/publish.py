@@ -257,7 +257,7 @@ def copy_root_documentation(mfa_path, public_root):
                 copied += 1
             except Exception as e:
                 logger.warning("Erreur copie dossier doc %s: %s", folder, e)
-    for fname in ('CHANGELOG.md', 'LICENSE', 'LICENSE.md',
+    for fname in ('CHANGELOG.md', 'LICENSE', 'LICENSE.md', 'portfolio_title.txt',
                   'image_front.png', 'image_front.jpg', 'image_front.jpeg'):
         src = mfa_path / fname
         if src.is_file() and safe_copy(src, public_root / fname):
