@@ -28,7 +28,7 @@
 import { Class_NodeElement } from './Node'
 import { Class_Tag } from '../types/Tag'
 import { Type_JSON } from '../types/Utils'
-import { Class_LevelTagGroup } from '../types/TagGroup'
+import { Class_LevelTagGroup, Class_ViewTagGroup } from '../types/TagGroup'
 
 /**
  * Class that handles all tag management operations for NodeElement
@@ -123,6 +123,18 @@ export class NodeTagsManager {
     }
   }
 
+  /**
+   * Marque le nœud comme EXCLU d'un groupe de view tags (anti-tag « 0 »). Pas de
+   * cross-référence (contrairement aux level anti-tags) : la visibilité est lue
+   * directement par Node.viewTagVisibility().
+   */
+  public addAsViewExcluded(_: Class_ViewTagGroup) {
+    const tagsData = this._node.internalTagsData
+    if (!tagsData.view_taggs_as_excluded.includes(_)) {
+      tagsData.view_taggs_as_excluded.push(_)
+    }
+  }
+
   public toJSON(json_object: Type_JSON) {
     // Tags
     if (this._node.taggs_list.length > 0) {
@@ -137,9 +149,20 @@ export class NodeTagsManager {
       )
     }
     const tagsData = this._node.internalTagsData
+    if (
+      (tagsData.leveltaggs_as_antitagged.length > 0 ||
+        tagsData.view_taggs_as_excluded.length > 0) &&
+      json_object['tags'] === undefined
+    ) {
+      json_object['tags'] = {}
+    }
     tagsData.leveltaggs_as_antitagged
       .forEach(leveltagg => {
         (json_object['tags'] as Type_JSON)[leveltagg.id] = [String(0)]
+      })
+    tagsData.view_taggs_as_excluded
+      .forEach(viewtagg => {
+        (json_object['tags'] as Type_JSON)[viewtagg.id] = [String(0)]
       })
   }
 
@@ -162,6 +185,12 @@ export class NodeTagsManager {
               if (+tag_id == 0 && level_taggs_dict[tagg_id]) {
               //if (+tag_id == 0) {
                 this._node._nodeTagsManager.addAsAntiTagged(tagg as Class_LevelTagGroup)
+                return
+              }
+              // Anti-tag « 0 » sur un groupe de view tags (ex. colonne Essence = 0) :
+              // le nœud est exclu de la vue, sans créer de fausse étiquette « 0 ».
+              if (+tag_id == 0 && this._node.sankey.view_taggs_dict[tagg_id]) {
+                this._node._nodeTagsManager.addAsViewExcluded(tagg as Class_ViewTagGroup)
                 return
               }
               let tag = tagg.tags_dict[tag_id]
