@@ -788,6 +788,20 @@ export class NodeActions {
     this.refreshAndSave()
   }
 
+  // Assigne la colonne (position_u) de chaque nœud parent sélectionné à toute sa
+  // descendance (comme applyStyleToChildren, mais on ne copie que la colonne).
+  // Multi-sélection supportée ; à défaut on retombe sur le nœud contextualisé.
+  // L'undo/redo (une seule transition) est géré dans assignColumnToNodesChildren.
+  assignColumnToChildren = () => {
+    const parents = (this.selected_nodes.length > 0
+      ? this.selected_nodes
+      : (this.contextualised_node ? [this.contextualised_node] : [])
+    ).filter(n => n.is_parent)
+    if (parents.length === 0) return
+    this.drawing_area.assignColumnToNodesChildren(parents)
+    this.refreshAndSave()
+  }
+
   reorg = () => {
     const dict_old_io: { [x: string]: string[] } = {}
     this.selected_nodes.forEach(node =>
@@ -1065,6 +1079,7 @@ export class NodeActions {
       editName: nodeActions.editName,
       resetAttr: nodeActions.resetAttr,
       applyStyleToChildren: nodeActions.applyStyleToChildren,
+      assignColumnToChildren: nodeActions.assignColumnToChildren,
 
       startAnimation: nodeActions.startAnimation,
       createTiedZdt: nodeActions.createTiedZdt,
