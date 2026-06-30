@@ -1229,12 +1229,14 @@ export class NodePositioning {
     // #1231b — Nœud-stock de référence : valeur = stock initial (cf. currentStockInitialForHeight).
     const node = this._prop_reference_node
     if (node) {
+      // #1231b — On ancre l'échelle adaptée sur la hauteur RÉELLEMENT rendue du nœud
+      // (max stock / bande de flux), pas sur la seule valeur de stock.
       if (tags.length > 0) {
         const v = node.stockInitialForDataTags(tags)
-        if (v != null && isFinite(v)) return Math.abs(v)
+        if (v != null && isFinite(v)) return node.stockValueAugmentedByFluxBand(v)
       }
       const vc = node.currentStockInitialForHeight()
-      return (vc != null && isFinite(vc)) ? Math.abs(vc) : undefined
+      return (vc != null && isFinite(vc)) ? node.stockValueAugmentedByFluxBand(vc) : undefined
     }
     const ref = this._prop_reference_link
     if (!ref) return undefined
@@ -1253,8 +1255,9 @@ export class NodePositioning {
   private referenceCurrentValue(): number {
     const node = this._prop_reference_node
     if (node) {
+      // #1231b — Ancrage sur la hauteur réelle (max stock / bande de flux).
       const v = node.currentStockInitialForHeight()
-      return (v != null && isFinite(v)) ? Math.abs(v) : 0
+      return (v != null && isFinite(v)) ? node.stockValueAugmentedByFluxBand(v) : 0
     }
     const ref = this._prop_reference_link
     return ref ? Math.abs(ref.valueCurrent ?? 0) : 0
@@ -1404,7 +1407,10 @@ export class NodePositioning {
       const v = n.currentStockInitialForHeight()
       if (v != null && isFinite(v)) sum += Math.abs(v)
     })
-    return sum
+    // #1231b — Ancrage sur la hauteur réelle : si la bande de flux du nœud de
+    // référence dépasse la hauteur-stock (cumul des correspondants visibles), on
+    // ancre l'échelle sur cette bande.
+    return node.stockValueAugmentedByFluxBand(sum)
   }
 
   /**
@@ -1419,6 +1425,111 @@ export class NodePositioning {
     }
     this._scale_adapted_ref_value = undefined
     this._scale_adapted_ref_scale = undefined
+  }
+
+  /**
+   * #1231 — Mode « échelle adaptée » : dérive le coin de chaque nœud « libre » depuis son CENTRE
+   * stocké, SANS jamais recommiter le coin dans le centre. Remplace `anchorAbsoluteNodesByCenter`
+   * dans la branche scale_adapted de `drawElements` : on garde la même dérivation centre→coin,
+   * mais on supprime la branche « taille inchangée → captureCenterFromCorner » qui figerait le
+   * recalage d'affichage (anti-chevauchement / clamp, cf. `resolveScaleAdaptedOverlaps`) dans le
+   * centre persisté → ce recalage se traînerait alors d'un viewtag/datatag à l'autre.
+   *
+   * Le centre reste la SEULE vérité : il n'est modifié que par les gestes utilisateur (drag,
+   * resize → `settleCenterAnchor`) et les opérations structurelles, jamais par le dessin. À chaque
+   * frame on repart donc du centre propre, et le recalage d'espacement est recalculé pour le
+   * datatag/viewtag courant (transitoire, jamais persistant).
+   *
+   * Mêmes exclusions que `anchorAbsoluteNodesByCenter` : nœuds visibles, libres (non relatifs),
+   * hors cadres tied. Lazy-init du centre au 1er dessin (fichier sans centre encore posé).
+   */
+  public deriveScaleAdaptedCornersFromCenter() {
+    this.drawingArea.sankey.nodes_list.forEach(n => {
+      if (!n.is_visible) return
+      if (n.shape_position_type === 'relative') return
+      if (n.tied_to_nodes && n.attached_node.length > 0) return
+      if (n.center_x === undefined || n.center_y === undefined) {
+        n.captureCenterFromCorner() // init unique ; le coin est déjà cohérent
+      } else {
+        n.forceDeriveFromCenter() // coin = centre − taille/2, sans recommit du centre
+      }
+    })
+  }
+
+  /**
+   * #1231 — Mode « échelle adaptée » : décale un nœud verticalement de `dy` POUR L'AFFICHAGE
+   * seulement (coin `position_y`), SANS toucher au centre stocké. Le recalage d'espacement est
+   * propre au datatag/viewtag courant : il est recalculé à chaque dessin à partir du centre
+   * (cf. `deriveScaleAdaptedCornersFromCenter`) et ne doit donc jamais être persisté, sinon il se
+   * traînerait d'un datatag/viewtag à l'autre. No-op si `dy` nul.
+   */
+  private shiftNodeY(n: Class_NodeElement, dy: number) {
+    if (!dy) return
+    n.position_y += dy
+  }
+
+  /**
+   * #1231 — Mode « échelle adaptée » : anti-chevauchement par colonne (DEPUIS LE HAUT) + clamp
+   * du haut du diagramme. Appelé après `deriveScaleAdaptedCornersFromCenter` dans la branche
+   * scale_adapted de `drawElements`.
+   *
+   * En mode échelle, les nœuds grossissent autour de leur centre FIXE quand l'échelle monte
+   * (bascule datatag/viewtag). Deux effets indésirables :
+   *  - deux nœuds d'une même colonne peuvent se recouvrir ;
+   *  - le nœud du haut, dont le coin = centre − hauteur/2, peut passer AU-DESSUS du haut du
+   *    diagramme (y < 0).
+   *
+   * On ne re-layoute PAS le diagramme :
+   *  1. anti-chevauchement : le nœud le plus haut de chaque colonne garde sa place, chaque nœud
+   *     suivant est descendu juste assez pour rétablir l'écart minimal (push vers le bas only) ;
+   *  2. clamp du haut : si le sommet de la colonne dépasse y=0, on décale TOUTE la colonne vers
+   *     le bas pour que son sommet tienne pile au haut du diagramme.
+   * Ces décalages sont D'AFFICHAGE (coin seulement, cf. `shiftNodeY`) : recalculés à chaque
+   * dessin depuis le centre, donc propres au datatag/viewtag courant et jamais persistés.
+   *
+   * Mêmes conventions de colonne que `backCalculateShapePositionDyFromY` : groupage par
+   * `position_u`, exclusion des nœuds `echange` (import/export, placés au niveau de leur flux),
+   * des nœuds relatifs et des cadres tied. `écart_min` = `shape_position_dy` GLOBAL.
+   */
+  public resolveScaleAdaptedOverlaps() {
+    const min_gap = this.drawingArea.sankey.styles_dict['default'].shape_position_dy ?? 50
+    const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
+    const columns = new Map<number, Class_NodeElement[]>()
+    this.drawingArea.sankey.visible_nodes_list.forEach(n => {
+      if (!n.is_visible) return
+      if (echangeTag && n.hasGivenTag(echangeTag)) return
+      if (n.shape_position_type === 'relative') return
+      if (n.tied_to_nodes && n.attached_node.length > 0) return
+      const arr = columns.get(n.position_u) ?? []
+      arr.push(n)
+      columns.set(n.position_u, arr)
+    })
+    columns.forEach(col => {
+      // Ordre vertical = ordre LOGIQUE de la colonne (`position_v`), PAS la géométrie courante :
+      // en échelle adaptée, position_y est dérivée du centre et peut différer d'un pouième entre
+      // deux nœuds quasi alignés → un tri par position_y inverserait leur ordre (ex. v=1 au-dessus
+      // de v=0) et le push figerait l'inversion. position_v est l'ordre stable (calculé au load,
+      // u/v verrouillés). position_y en départage seulement les v égaux (ne devrait pas arriver).
+      col.sort((a, b) => (a.position_v - b.position_v) || (a.position_y - b.position_y))
+      // DEBUG #1231 (temporaire) — dump de l'ordre par colonne pour diagnostiquer le non-respect
+      // de position_v en mode échelle adaptée (à retirer une fois la cause confirmée).
+      if (col.length > 1) {
+        // eslint-disable-next-line no-console
+        console.log('[scaleAdapted overlap] u=' + col[0].position_u + ' →',
+          col.map(n => `${n.name}(v=${n.position_v}, y=${Math.round(n.position_y)}, u=${n.position_u})`).join('  |  '))
+      }
+      // 1. anti-chevauchement, depuis le haut : descendre les nœuds qui se recouvrent.
+      for (let i = 1; i < col.length; i++) {
+        const prev = col[i - 1]
+        const curr = col[i]
+        const min_top = prev.position_y + prev.getShapeHeightToUse() + min_gap
+        if (curr.position_y < min_top) this.shiftNodeY(curr, min_top - curr.position_y)
+      }
+      // 2. clamp du haut : le sommet de la colonne (nœud le plus haut, jamais descendu) ne doit
+      //    pas dépasser y=0. Sinon on décale toute la colonne vers le bas (affichage seulement).
+      const top = col[0].position_y
+      if (top < 0) col.forEach(n => this.shiftNodeY(n, -top))
+    })
   }
 
   /**
