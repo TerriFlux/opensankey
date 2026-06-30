@@ -793,6 +793,26 @@ export class Class_NodeElement extends Class_NodeBase {
     return (si === null || si === undefined) ? null : si
   }
 
+  /**
+   * #1231b — Valeur-équivalente de la hauteur RÉELLEMENT rendue par ce nœud quand
+   * il est en mode stock-pour-hauteur : `max(hauteur-stock, bande de flux)` reconverti
+   * en unités de valeur (mêmes unités que la valeur de stock), via l'inverse de
+   * scaleValueToPx. Sert d'ancrage à l'échelle adaptée (élément de référence) : la
+   * taille pixel tenue constante devient la hauteur réelle du nœud, pas la seule valeur
+   * de stock. Quand la bande de flux ne dépasse pas, le résultat == |stock_value|
+   * (comportement inchangé). `stock_value` est la valeur de stock au datatag voulu.
+   */
+  public stockValueAugmentedByFluxBand(stock_value: number): number {
+    const base = Math.abs(stock_value)
+    const flux_band = Math.max(this.getSideBandExtent('left'), this.getSideBandExtent('right'))
+    if (!(flux_band > 0)) return base
+    const factor = this.stock_height_scale_factor > 0 ? this.stock_height_scale_factor : 1
+    // Hauteur-stock = scaleValueToPx(|stock_value|)/factor ; pour comparer la bande de
+    // flux dans les mêmes unités de valeur, on reconvertit (flux_band × factor) en valeur.
+    const flux_value_equiv = this.drawing_area.scaleValueToPx.invert(flux_band * factor)
+    return Math.max(base, flux_value_equiv)
+  }
+
   public getShapeHeightToUse() {
     const natural = this._getNaturalShapeHeight()
     // Global node size limit (in px, independent of the flux size limit):
@@ -821,7 +841,12 @@ export class Class_NodeElement extends Class_NodeBase {
         // Mirror the flux local_link_scale: base flux scale divided by the
         // per-node factor (larger factor = shorter node).
         const factor = this.stock_height_scale_factor > 0 ? this.stock_height_scale_factor : 1
-        return Math.max(this.drawing_area.scaleValueToPx(Math.abs(si)) / factor, 1)
+        const stock_h = this.drawing_area.scaleValueToPx(Math.abs(si)) / factor
+        // La hauteur stock-pilotée ne doit jamais être plus fine que la bande
+        // de flux entrants/sortants (un nœud ne peut pas être plus court que la
+        // somme de ses flux d'un côté) : on prend la plus grande des deux.
+        const flux_band = Math.max(this.getSideBandExtent('left'), this.getSideBandExtent('right'))
+        return Math.max(stock_h, flux_band, 1)
       }
     }
     const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag : undefined
