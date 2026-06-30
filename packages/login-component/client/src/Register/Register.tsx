@@ -27,7 +27,7 @@ import { LoginComponent } from '../LoginComponent'
 
 
 export const email_regex_str = '(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+(\\.[a-zA-Z0-9-]+)*\\.[a-zA-Z]{2,})$'
-export const pwd_regex_str = '^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[^a-zA-Z0-9\n\r\t]).{8,}$'
+export const pwd_regex_str = '^.+$'
 export const name_regex_str = '^[a-zéèêïA-Z]+([ ,.\'-][a-zéèêïA-Z]+)*[a-zéèêïA-Z]*$'
 export const lic_regex_str = '^([a-zA-Z0-9- ]{2,})$'
 
