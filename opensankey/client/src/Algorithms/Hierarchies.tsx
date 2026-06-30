@@ -885,6 +885,16 @@ export const centerChildrenOnParent = (new_data: Class_ApplicationData) => {
         // visite ensuite l'enfant, ses propres enfants hériteront de CE centre → collapse
         // transitif vers l'ancêtre niveau 1.
         c.setStoredCenter(center.x, center.y)
+        // L'enfant hérite de la colonne/rangée du parent (position_u/v) et on les
+        // VERROUILLE : le regroupement fait alors autorité. Le verrou est ce qui fait
+        // PERSISTER u/v (cf. NodeBasePersistence.toJSON, qui ne sérialise u/v qu'en mode
+        // parametric OU si verrouillé) et empêche un « disposition auto » ultérieur de
+        // ré-éclater les enfants (autosankey/inferPositionUFromX respectent le verrou).
+        // Le centre stocké (ci-dessus) garde l'alignement visuel.
+        c.position_u = node.position_u
+        c.position_v = node.position_v
+        c.shape_position_u_locked = true
+        c.shape_position_v_locked = true
         // L'enfant partage maintenant le centre de `root` : ses ancrages doivent suivre
         // l'ordre des ancrages de `root` (réorder « en s'appuyant sur les parents »).
         reorderAnchorsLikeAncestor(c, root)
