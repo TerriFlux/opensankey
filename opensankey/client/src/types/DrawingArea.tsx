@@ -798,10 +798,15 @@ export class Class_DrawingArea {
       this.nodePositioning.anchorProportionalNodes()
     } else if (this.sankey.styles_dict['default'].shape_position_type === 'scale_adapted') {
       // #1231 — Mode « échelle adaptée » : ajuster l'échelle (valeur→px) pour que le flux
-      // de référence garde la même épaisseur d'un datatag à l'autre, puis garder le centre
-      // des nœuds fixe pendant qu'ils se redimensionnent (comme l'absolu). Avant _sankey.draw().
+      // de référence garde la même épaisseur d'un datatag à l'autre, puis dériver le coin des
+      // nœuds depuis leur centre (vérité), SANS recommiter le coin dans le centre — sinon le
+      // recalage d'affichage ci-dessous se figerait dans le centre et se traînerait d'un
+      // datatag/viewtag à l'autre. Avant _sankey.draw().
       this.nodePositioning.applyAdaptedScale()
-      this.nodePositioning.anchorAbsoluteNodesByCenter()
+      this.nodePositioning.deriveScaleAdaptedCornersFromCenter()
+      // #1231 — anti-chevauchement par colonne (depuis le haut) + clamp du haut. D'AFFICHAGE
+      // seulement (coin), recalculé pour le datatag/viewtag courant, jamais persisté.
+      this.nodePositioning.resolveScaleAdaptedOverlaps()
     } else {
       // #1230 — Mode coordonnées absolues : garder le centre des nœuds fixe quand
       // leur taille de rendu change (échelle/valeur/bascule de vue). Doit tourner
@@ -3073,6 +3078,36 @@ export class Class_DrawingArea {
     const undos: Array<() => void> = []
     const redos: Array<() => void> = []
     sources.forEach(source => this._collectStyleToNodeChildren(source, undos, redos))
+    if (undos.length === 0) return
+    this.application_data.history.saveUndo(() => undos.forEach(u => u()))
+    this.application_data.history.saveRedo(() => redos.forEach(r => r()))
+  }
+
+  /**
+   * Assigne la colonne (`position_u`) de chaque nœud parent de `sources` à toute
+   * sa descendance dans la hiérarchie de dimensions (désagrégation), même si les
+   * enfants sont actuellement agrégés/masqués. Les descendants dont la colonne
+   * est verrouillée (`shape_position_u_locked`) sont ignorés — cohérent avec
+   * l'auto-layout (cf. NodePositioning). Toutes les modifications sont regroupées
+   * dans une seule transition d'historique (un seul undo/redo).
+   */
+  public assignColumnToNodesChildren(sources: Class_NodeElement[]): void {
+    const undos: Array<() => void> = []
+    const redos: Array<() => void> = []
+    sources.forEach(source => {
+      const target_u = source.position_u
+      // collectNodeDescendants inclut le nœud lui-même ; on l'exclut.
+      const descendants = [...NodePositioning.collectNodeDescendants(source)].filter(n => n !== source)
+      descendants.forEach(target => {
+        if (target.shape_position_u_locked === true) return
+        const old_u = target.position_u
+        if (old_u === target_u) return
+        undos.push(() => { target.position_u = old_u; target.draw() })
+        redos.push(() => { target.position_u = target_u; target.draw() })
+        target.position_u = target_u
+        target.draw()
+      })
+    })
     if (undos.length === 0) return
     this.application_data.history.saveUndo(() => undos.forEach(u => u()))
     this.application_data.history.saveRedo(() => redos.forEach(r => r()))

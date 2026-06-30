@@ -135,6 +135,20 @@ export const NODE_MENU_CONFIG: MenuConfig = {
             }
           ]
         },
+        {
+          type: 'button',
+          actionName: 'assignColumnToChildren',
+          // Visible dès qu'au moins un nœud parent est sélectionné : l'action
+          // assigne la colonne (position_u) de CHAQUE parent sélectionné à ses
+          // propres enfants (multi-sélection supportée).
+          visibilityConditions: [
+            {
+              type: 'custom',
+              customCheck: (app_data) =>
+                app_data.drawing_area.selected_nodes_list.some(n => n.is_parent)
+            }
+          ]
+        },
         { type: 'widget', widgetName: 'ButtonNodeContextAssignStyle' }
       ]
     },
@@ -752,6 +766,13 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       type: 'action',
       labels: { en: 'Apply style to children', fr: 'Appliquer le style aux enfants', es: 'Aplicar estilo a los hijos', de: 'Stil auf Kinder anwenden', it: 'Applica stile ai figli' },
       tooltips: { en: 'Copy this node\'s style and attributes onto all its descendants in the dimension hierarchy', fr: 'Copier le style et les attributs de ce nœud sur toute sa descendance dans la hiérarchie de dimensions', es: 'Copiar el estilo y los atributos de este nodo en toda su descendencia en la jerarquía de dimensiones', de: 'Stil und Attribute dieses Knotens auf alle Nachfahren in der Dimensionshierarchie kopieren', it: 'Copia lo stile e gli attributi di questo nodo su tutta la sua discendenza nella gerarchia delle dimensioni' },
+      undoable: true
+    },
+
+    assignColumnToChildren: {
+      type: 'action',
+      labels: { en: 'Assign column to children', fr: 'Assigner la colonne aux enfants', es: 'Asignar la columna a los hijos', de: 'Spalte auf Kinder anwenden', it: 'Assegna la colonna ai figli' },
+      tooltips: { en: 'Assign this node\'s column (position) to all its descendants in the dimension hierarchy (locked columns are skipped)', fr: 'Assigner la colonne (position) de ce nœud à toute sa descendance dans la hiérarchie de dimensions (les colonnes verrouillées sont ignorées)', es: 'Asignar la columna (posición) de este nodo a toda su descendencia en la jerarquía de dimensiones (se omiten las columnas bloqueadas)', de: 'Die Spalte (Position) dieses Knotens auf alle Nachfahren in der Dimensionshierarchie anwenden (gesperrte Spalten werden übersprungen)', it: 'Assegna la colonna (posizione) di questo nodo a tutta la sua discendenza nella gerarchia delle dimensioni (le colonne bloccate vengono ignorate)' },
       undoable: true
     },
 
