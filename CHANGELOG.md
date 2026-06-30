@@ -11,6 +11,22 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 
 ---
 
+## [1.1.8] — 2026-06-30
+
+Release alignée (1.1.8 sur les 4 modules). Principaux changements visibles :
+
+- **Publication / portfolio** : titre de portfolio surchargeable + logo racine, correctif du menu de téléchargement, bouton plein écran dans la barre du haut.
+- **Mise en page & échelle** : verrou de taille avec dézoom auto si un data tag déborde, élément de référence généralisé flux → nœud-stock (#1231b), épaisseur max d'échelle par view tag, positionnement auto des flux E/S conscient des colonnes (#205), plancher d'épaisseur des flux jusqu'à 0 (#200).
+- **Vues & labels** : générateur de vues en topbar, jeton `{Scale}` et jeton view tag dans les labels/titres, exclusion d'un nœud via l'anti-tag « 0 ».
+- **Authentification** : contrainte de mot de passe relâchée (non vide uniquement).
+- **i18n** : documentation et tutoriels multilingues (fr/en/es/de/it), langue persistée au rechargement, tableur traduit.
+
+Détails par submodule :
+
+- OpenSankey : voir [submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md](submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md)
+- OpenSankey+ : voir [submodules/OpenSankey+/CHANGELOG.md](submodules/OpenSankey+/CHANGELOG.md)
+- LoginComponent : voir [submodules/LoginComponent/CHANGELOG.md](submodules/LoginComponent/CHANGELOG.md)
+
 ## [1.1.7] — 2026-06-26
 
 Release publique consolidant le travail depuis la 1.1.5 (les versions
