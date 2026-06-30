@@ -244,10 +244,15 @@ export class NodeBasePersistence extends ProtoElementPersistence {
     // sous json_object['local'] par ProtoElementPersistence.toJSON. Plus rien à
     // écrire ici (cf. rétro-compat lecture dans fromJSON pour les anciens fichiers
     // qui stockaient ces clés à la racine du nœud).
-    if (node_base.sankey.default_style.shape_position_type == 'parametric') {
-      json_object['u'] = node_base.position_u
-      json_object['v'] = node_base.position_v
-    }
+    // position_u / position_v : persistés en mode global `parametric` (où u/v font
+    // autorité pour TOUS les nœuds) OU dès que le nœud est VERROUILLÉ en u/v. Le
+    // verrou est le signal « colonne/ligne éditée, à garder » : autosankey et
+    // inferPositionUFromX respectent déjà le verrou (ils ne recalculent jamais le
+    // u/v d'un nœud verrouillé). Les nœuds non verrouillés en mode `absolute`
+    // gardent la dérivation depuis x au chargement (cf. fromJSON du sankey).
+    const persist_uv_all = node_base.sankey.default_style.shape_position_type == 'parametric'
+    if (persist_uv_all || node_base.shape_position_u_locked) json_object['u'] = node_base.position_u
+    if (persist_uv_all || node_base.shape_position_v_locked) json_object['v'] = node_base.position_v
     if (node_base.tied_to_nodes) {
       json_object['tiedToNode'] = true
       json_object['attachedNodes'] = node_base.attached_node.map(n => n.id)
@@ -2053,6 +2058,8 @@ export class DrawingAreaPersistence {
     if (drawing_area.grid_color != default_grid_color) json_object['default_grid_color'] = drawing_area.grid_color
     if (drawing_area.maximum_flux) json_object['maximum_flux'] = drawing_area.maximum_flux
     if (drawing_area.minimum_flux) json_object['minimum_flux'] = drawing_area.minimum_flux
+    if (Object.keys(drawing_area.scale_reference_by_viewtag).length > 0)
+      json_object['scale_reference_by_viewtag'] = drawing_area.scale_reference_by_viewtag
     if (drawing_area.maximum_node) json_object['maximum_node'] = drawing_area.maximum_node
     if (drawing_area.minimum_node) json_object['minimum_node'] = drawing_area.minimum_node
     if (!drawing_area.structure_mode_force_min) json_object['structure_mode_force_min'] = false
@@ -2396,6 +2403,16 @@ export class DrawingAreaPersistence {
     drawing_area['_height'] = getNumberFromJSON(json_object, 'height', drawing_area.height)
     drawing_area['_maximum_flux'] = getNumberOrUndefinedFromJSON(json_object, 'maximum_flux')
     drawing_area['_minimum_flux'] = getNumberOrUndefinedFromJSON(json_object, 'minimum_flux')
+    // Référence d'échelle par view tag : dict { view_tag_id: { link_id, thickness } }.
+    const scale_ref_raw = json_object['scale_reference_by_viewtag']
+    if (scale_ref_raw && typeof scale_ref_raw === 'object') {
+      const clean: { [id: string]: { link_id: string, thickness: number } } = {}
+      Object.entries(scale_ref_raw as { [id: string]: { link_id?: unknown, thickness?: unknown } }).forEach(([vt_id, val]) => {
+        if (val && typeof val.link_id === 'string' && typeof val.thickness === 'number' && val.thickness > 0)
+          clean[vt_id] = { link_id: val.link_id, thickness: val.thickness }
+      })
+      drawing_area['_scale_reference_by_viewtag'] = clean
+    }
     drawing_area['_maximum_node'] = getNumberOrUndefinedFromJSON(json_object, 'maximum_node')
     drawing_area['_minimum_node'] = getNumberOrUndefinedFromJSON(json_object, 'minimum_node')
     drawing_area['_structure_mode_force_min'] = getBooleanFromJSON(json_object, 'structure_mode_force_min', true)
@@ -2476,20 +2493,26 @@ export class DrawingAreaPersistence {
     // ABSOLU (le mode % / échelle adaptée est une vue transitoire que l'utilisateur réactive).
     // 'parametric' (ancien) et 'proportional' → 'absolute'. La valeur 'parametric' reste valide
     // en interne pour les styles par-nœud d'échange import/export — on ne force QUE le style global.
+    // On capture le mode d'ORIGINE avant de le forcer : il décide si u/v font autorité.
+    const incoming_position_mode = drawing_area.sankey.default_style.shape_position_type
     if (drawing_area.sankey.default_style.shape_position_type === 'parametric' ||
         drawing_area.sankey.default_style.shape_position_type === 'proportional' ||
         drawing_area.sankey.default_style.shape_position_type === 'scale_adapted') {
       drawing_area.sankey.default_style.shape_position_type = 'absolute'
     }
 
-    // u/v ne sont persistés qu'en mode global parametric (cf. NodeBasePersistence.toJSON) :
-    // un fichier sauvé en mode absolu les recharge donc tous à 0. On les dérive de la
-    // géométrie importée s'ils n'ont jamais été calculés (tous à 0), pour que le mix
-    // par-nœud (« Ecartement ») dispose de colonnes valides dès le chargement, quel que
-    // soit le mode global. Si le JSON les portait (mode parametric), on n'y touche pas.
+    // Dérivation de u/v depuis la géométrie au chargement :
+    // - Mode d'origine `parametric` : u/v font autorité pour TOUS les nœuds (ils sont
+    //   tous persistés). On n'y touche pas, SAUF s'ils sont tous à 0 (jamais calculés).
+    // - Tout autre mode d'origine (`absolute`/…) : seuls les nœuds VERROUILLÉS portent
+    //   un u/v persisté (cf. NodeBasePersistence.toJSON). On (re)dérive donc les colonnes
+    //   depuis x : `inferPositionUFromX`/`computeParametrization` RESPECTENT les verrous
+    //   (le u/v verrouillé est conservé tel quel) et donnent aux non-verrouillés une
+    //   colonne valide. C'est ainsi que la colonne verrouillée (« assigner la colonne aux
+    //   enfants ») survit au rechargement sans figer tout le reste du diagramme.
     const uv_uncomputed = drawing_area.sankey.visible_nodes_list.length > 0 &&
       drawing_area.sankey.visible_nodes_list.every(n => n.position_u === 0 && n.position_v === 0)
-    if (uv_uncomputed) {
+    if (incoming_position_mode !== 'parametric' || uv_uncomputed) {
       drawing_area.nodePositioning.inferPositionUFromX()
       drawing_area.nodePositioning.computeParametrization(false)
     }
