@@ -2,6 +2,22 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [1.1.8] — 2026-06-30
+
+### Vues
+
+- **Générateur de vues en topbar** + libellé « vue complète » dans la configuration des vues.
+- Documentation markdown multilingue (master / vues).
+
+### Corrections
+
+- Évite les clés dupliquées gradient/auto dans le sélecteur de règle de couleur.
+- Correction du libellé EN du sélecteur d'éléments (« Eléments » → « Elements »).
+
+### Bump du submodule OpenSankey
+
+- Cascade complète de OpenSankey 1.1.8. Voir [submodules/OpenSankey/CHANGELOG.md](submodules/OpenSankey/CHANGELOG.md) pour le détail.
+
 ## [1.1.7] — 2026-06-26
 
 ### Publication : portfolio de diagrammes en site autonome
