@@ -88,6 +88,7 @@ export const resources_flux = {
           display_link_name: 'Display name',
           hide_link_name: 'Hide name',
           data_off_scale: 'Scale',
+          scale_ref_thickness: 'Max scale thickness (px)',
           tooltips: {
             color_source: {
               def: 'Choose what rule define flow color :',
@@ -115,7 +116,8 @@ export const resources_flux = {
             ending_tangeant: 'Setting the radius of the ending curvature in case the selected link(s) are represented as Bezier curve(s)',
             arrow_size: 'Change the size of the arrow (from the end of the link to the node)',
             data_off_scale: 'Define a scale for this flow, wich can break the coherence of flow thickness proportionality of value ',
-            local_scale: 'Define a local scaling factor that will be multiplied by the multiplier specified for this flow.'
+            local_scale: 'Define a local scaling factor that will be multiplied by the multiplier specified for this flow.',
+            scale_ref_thickness: 'Maximum thickness (px) for this flow in the current view tag: only when this flow would exceed this thickness, the diagram scale is rescaled so it sits exactly at this value; all other flows and the scale legend follow. Below the threshold, nothing changes. 0 = disabled. One reference flow per view tag.'
           }
         },
         labels: {
@@ -266,6 +268,7 @@ export const resources_flux = {
           display_link_name: 'Afficher le texte',
           hide_link_name: 'Masquer le texte',
           data_off_scale: 'Échelle',
+          scale_ref_thickness: 'Épaisseur max d\'échelle (px)',
 
           bezier_path: 'Chemin Bezier',
           bezier_outline: 'Contour Bezier',
@@ -292,7 +295,8 @@ export const resources_flux = {
             structure: 'Représente le/les flux sélectionné(s) comme si il n\'avait pas de valeur peu importe leur vraie valeur ',
             arrow_size: 'Modifie la taille de la flèche (largeur entre la fin du flux et le noeud',
             data_off_scale: 'Définie une échelle local pour l\'épaisseur du flux, cela peut casser la cohérence du diagramme au niveau de la proportionalité entre la valeur des flux et leur épaisseur ',
-            local_scale: 'Définissez un facteur d\'échelle local qui sera multiplié par le multiplicateur spécifié pour ce flux.'
+            local_scale: 'Définissez un facteur d\'échelle local qui sera multiplié par le multiplicateur spécifié pour ce flux.',
+            scale_ref_thickness: 'Épaisseur maximale (px) de ce flux pour le view tag courant : uniquement quand ce flux dépasserait cette épaisseur, l\'échelle du diagramme est recalculée pour qu\'il s\'y cale exactement ; tous les autres flux et la légende d\'échelle suivent. En dessous du seuil, rien ne change. 0 = désactivé. Un seul flux de référence par view tag.'
           }
         },
         labels: {
@@ -467,6 +471,7 @@ export const resources_flux = {
           display_link_name: 'Mostrar nombre',
           hide_link_name: 'Ocultar nombre',
           data_off_scale: 'Escala',
+          scale_ref_thickness: 'Grosor máx. de escala (px)',
           tooltips: {
             color_source: {
               def: 'Elegir la regla que define el color del flujo:',
@@ -494,7 +499,8 @@ export const resources_flux = {
             ending_tangeant: 'Configuración del radio de curvatura final en caso de que el/los flujo(s) seleccionado(s) se representen como curva(s) de Bezier',
             arrow_size: 'Cambiar el tamaño de la flecha (desde el final del flujo hasta el nodo)',
             data_off_scale: 'Define una escala local para el grosor del flujo, lo que puede romper la coherencia de proporcionalidad entre el valor y el grosor',
-            local_scale: 'Define un factor de escala local que se multiplicará por el multiplicador especificado para este flujo.'
+            local_scale: 'Define un factor de escala local que se multiplicará por el multiplicador especificado para este flujo.',
+            scale_ref_thickness: 'Grosor máximo (px) de este flujo para la etiqueta de vista actual: solo cuando este flujo superaría este grosor, la escala del diagrama se recalcula para ajustarlo exactamente a este valor; los demás flujos y la leyenda de escala se ajustan. Por debajo del umbral, no cambia nada. 0 = desactivado. Un flujo de referencia por etiqueta de vista.'
           }
         },
         labels: {
@@ -630,6 +636,7 @@ export const resources_flux = {
           display_link_name: 'Name anzeigen',
           hide_link_name: 'Name ausblenden',
           data_off_scale: 'Skalierung',
+          scale_ref_thickness: 'Max. Skalendicke (px)',
           tooltips: {
             color_source: {
               def: 'Wählen Sie die Regel, die die Flussfarbe definiert:',
@@ -657,7 +664,8 @@ export const resources_flux = {
             ending_tangeant: 'Einstellung des Endkrümmungsradius, falls der/die ausgewählte(n) Fluss/Flüsse als Bezier-Kurve(n) dargestellt werden',
             arrow_size: 'Größe des Pfeils ändern (vom Ende des Flusses zum Knoten)',
             data_off_scale: 'Definiert eine lokale Skalierung für die Flussdicke, was die Proportionalitätskohärenz zwischen Wert und Dicke brechen kann',
-            local_scale: 'Definieren Sie einen lokalen Skalierungsfaktor, der mit dem für diesen Fluss angegebenen Multiplikator multipliziert wird.'
+            local_scale: 'Definieren Sie einen lokalen Skalierungsfaktor, der mit dem für diesen Fluss angegebenen Multiplikator multipliziert wird.',
+            scale_ref_thickness: 'Maximale Dicke (px) dieses Flusses für das aktuelle View-Tag: Nur wenn dieser Fluss diese Dicke überschreiten würde, wird der Diagramm-Maßstab so neu berechnet, dass er genau diesen Wert erreicht; alle anderen Flüsse und die Skalenlegende folgen. Unterhalb des Schwellenwerts ändert sich nichts. 0 = deaktiviert. Ein Referenzfluss pro View-Tag.'
           }
         },
         labels: {
@@ -793,6 +801,7 @@ export const resources_flux = {
           display_link_name: 'Mostra nome',
           hide_link_name: 'Nascondi nome',
           data_off_scale: 'Scala',
+          scale_ref_thickness: 'Spessore max scala (px)',
           tooltips: {
             color_source: {
               def: 'Scegliere la regola che definisce il colore del flusso:',
@@ -820,7 +829,8 @@ export const resources_flux = {
             ending_tangeant: 'Impostazione del raggio di curvatura finale nel caso in cui il/i flusso/i selezionato/i siano rappresentati come curva/e di Bezier',
             arrow_size: 'Modifica la dimensione della freccia (dalla fine del flusso al nodo)',
             data_off_scale: 'Definisce una scala locale per lo spessore del flusso, il che può rompere la coerenza della proporzionalità tra valore e spessore',
-            local_scale: 'Definire un fattore di scala locale che sarà moltiplicato per il moltiplicatore specificato per questo flusso.'
+            local_scale: 'Definire un fattore di scala locale che sarà moltiplicato per il moltiplicatore specificato per questo flusso.',
+            scale_ref_thickness: 'Spessore massimo (px) di questo flusso per il tag vista corrente: solo quando questo flusso supererebbe questo spessore, la scala del diagramma viene ricalcolata affinché si attesti esattamente a questo valore; tutti gli altri flussi e la legenda della scala si adeguano. Sotto la soglia, nulla cambia. 0 = disattivato. Un flusso di riferimento per tag vista.'
           }
         },
         labels: {

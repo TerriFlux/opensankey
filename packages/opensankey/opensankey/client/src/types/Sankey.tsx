@@ -1184,6 +1184,17 @@ export class Class_Sankey {
   public get view_mode_active(): boolean {
     return this.view_mode_groups.length > 0
   }
+  /**
+   * Étiquette view tag courante servant de clé aux références d'échelle par view tag
+   * (cf. DrawingArea.applyViewTagScaleReference). C'est l'étiquette sélectionnée du
+   * premier groupe de view tags en mode filtre. undefined en « vue complète » (aucun
+   * groupe en mode filtre, ou aucune étiquette sélectionnée) → pas de référence d'échelle.
+   */
+  public get current_scale_reference_viewtag_id(): string | undefined {
+    const grp = this.view_mode_groups[0]
+    if (!grp) return undefined
+    return grp.selected_tags_list[0]?.id
+  }
   // Icons
   public get icon_catalog(): { [x: string]: string } { return this._icon_catalog }
   public set icon_catalog(value: { [x: string]: string }) { this._icon_catalog = value }
