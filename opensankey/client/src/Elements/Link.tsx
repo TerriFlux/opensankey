@@ -1841,6 +1841,25 @@ export class Class_LinkElement extends Class_LinkAttribute {
       return this._values.getValueForDataTags(this.selected_data_tags_list as Class_DataTag[]) as Class_LinkValue | null
   }
 
+  /**
+   * Épaisseur cible (px) de ce flux quand il est la référence d'échelle du view tag COURANT
+   * (cf. DrawingArea.applyViewTagScaleReference). undefined si ce flux n'est pas la référence
+   * du view tag courant, ou en « vue complète » (aucun view tag sélectionné). La donnée vit
+   * sur la DrawingArea (par view tag), pas comme attribut de flux — la valeur dépend du view
+   * tag affiché.
+   */
+  public get scale_reference_thickness(): number | undefined {
+    const vt_id = this.sankey.current_scale_reference_viewtag_id
+    if (!vt_id) return undefined
+    const ref = this.drawing_area.scale_reference_by_viewtag[vt_id]
+    return (ref && ref.link_id === this.id) ? ref.thickness : undefined
+  }
+  public set scale_reference_thickness(value: number | undefined) {
+    const vt_id = this.sankey.current_scale_reference_viewtag_id
+    if (!vt_id) return
+    this.drawing_area.setScaleReferenceForViewTag(vt_id, (value && value > 0) ? this.id : undefined, value ?? 0)
+  }
+
   private _is_computing = false
   public get valueCurrent() {
     if (this._is_computing) {

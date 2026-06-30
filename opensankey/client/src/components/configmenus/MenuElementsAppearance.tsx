@@ -2078,6 +2078,37 @@ export const MenuConfigurationAppearance = ({
                         />
                       </Box>
                       {/* </Box> */}
+                      {/* Référence d'échelle par view tag : épaisseur cible (px) du flux pour
+                          le view tag COURANT. Visible uniquement quand un view tag est
+                          sélectionné et qu'on édite de vrais flux (pas un style). */}
+                      {(() => {
+                        const vt_id = app_data.drawing_area.sankey.current_scale_reference_viewtag_id
+                        const linkInstances = (links_elements as (Class_LinkElement | Class_ElementStyle)[])
+                          .filter((e) => e instanceof Class_LinkElement) as Class_LinkElement[]
+                        if (!vt_id || linkInstances.length === 0) return null
+                        const vt_name = app_data.drawing_area.sankey.view_taggs_list
+                          .flatMap((g) => g.tags_list).find((tg) => tg.id === vt_id)?.name ?? vt_id
+                        return (
+                          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                            <OSTooltip label={t('Flux.apparence.tooltips.scale_ref_thickness')}>
+                              <Box layerStyle='menuconfigpanel_option_name'>
+                                {t('Flux.apparence.scale_ref_thickness')} ({vt_name})
+                              </Box>
+                            </OSTooltip>
+                            <ConfigMenuNumberInput
+                              default_value={linkInstances[0].scale_reference_thickness ?? 0}
+                              function_on_blur={(_) => {
+                                linkInstances.forEach((l) => { l.scale_reference_thickness = (_ && _ > 0) ? _ : undefined })
+                                app_data.drawing_area.drawElements()
+                              }}
+                              minimum_value={0}
+                              stepper={true}
+                              step={1}
+                              t={t}
+                            />
+                          </Box>
+                        )
+                      })()}
                       {/* Droiture multi-ancrage (#665) : mode d'ancrage + propagation aux
                           enfants. Pendant menu du clic droit « Rectitude ». */}
                       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
