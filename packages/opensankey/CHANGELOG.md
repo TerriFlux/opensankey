@@ -2,6 +2,33 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [1.1.8] — 2026-06-30
+
+### Mise en page & échelle
+
+- **Verrou de taille** : dézoom automatique quand un data tag déborde du cadrage figé ; les boutons d'ajustement H/V outrepassent désormais le verrou de taille.
+- **Nœud-stock (#1231b)** : hauteur = `max(stock, flux)`, complétion en mode échelle adaptée ; élément de référence (modes proportionnel / échelle) généralisé flux → nœud-stock.
+- **Échelle** : épaisseur max d'échelle par view tag (flux de référence + rescale) ; limite globale de hauteur des nœuds, séparée des flux ; modes relatif + échelle adaptée pilotés par le flux de référence remonté à la vue.
+- **Positionnement auto des flux E/S conscient des colonnes** (#205) ; commande « Assigner la colonne aux enfants » (menu contextuel nœud) ; `centerChildrenOnParent` verrouille u/v.
+- **Flux fins** (#200) : plancher d'épaisseur réellement configurable jusqu'à 0, champ « Min » à 2px par défaut ; taille limite des flux appliquée aussi aux nœuds (#201).
+- **Apply-layout** : fix décalage diagonal des nœuds-puits invisibles désagrégés (#204), ordre Z des zones de texte respecté (#203), cadenas d'ordre des flux E/S transféré (#202).
+- **Stock** : mode position verticale ajustée pour la boîte de stock.
+
+### Labels, légende & vues
+
+- Jeton `{Scale}` dans le label de nœud (facteur d'échelle ×N) ; jeton view tag dans le titre du diagramme (vide en vue complète).
+- Légende : échelle exprimable avec unité et ratio diviseur ; sélecteur déroulant pour les éléments de la légende.
+- Exclusion d'un nœud d'une vue via l'anti-tag « 0 ».
+
+### Publication & UI
+
+- Bouton plein écran dans la barre du haut comme en éditeur (mode publication).
+- Colonne d'outils rétractable + panneaux config/filtre dockés ; fond et grille remplissent la fenêtre au dézoom ; éventail de flèches dimensionné au brut (#199).
+
+### i18n
+
+- Langue choisie persistée au rechargement, retraduction des menus des submodules au changement de langue, documentation markdown et tutoriels multilingues (fr/en/es/de/it), tableur Univer traduit.
+
 ## [1.1.7] — 2026-06-26
 
 ### Added (viewer publish — état initial : mode de navigation + data tag présélectionné)
