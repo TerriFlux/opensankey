@@ -28,11 +28,11 @@ import * as d3 from 'd3'
 import { Class_NodeBase } from './NodeBase'
 
 import {
-  Class_LinkElement,
-  sortLinksElementsByRelativeNodesPositions
+  Class_LinkElement
 } from './Link'
 import { Class_Handler } from './Handler'
 import { reorganizeIOOrder } from './reorganizeIOOrder'
+import { orderIOByGeometry, Type_IOGeo } from './ioOrderGeometry'
 import { format_value, Type_JSON } from '../types/Utils'
 import { default_element_color } from './ElementsAttributesConfig'
 import { SankeyAnimation } from '../Algorithms/SankeyAnimation'
@@ -1006,16 +1006,61 @@ export class Class_NodeElement extends Class_NodeBase {
     const export_links = this.output_links_list.filter(l => l.target.hasGivenTag(echangeTag as Class_Tag))
     const recycling_links = this._links_order.filter(l => l.shape_is_recycling)
 
+    // Geometry-aware order of the "middle" links (the ones reorganizeIOOrder
+    // re-sorts) : column/row aware so flows fanning out to several columns no
+    // longer cross (cf. ioOrderGeometry.ts). We compute the full desired order
+    // here — it needs the whole same-side set to find column centroids — then
+    // hand reorganizeIOOrder a comparator backed by that order so its locked-
+    // anchor pinning (#197) is preserved.
+    const middle = this._links_order.filter(
+      l => !import_links.includes(l) && !export_links.includes(l) && !recycling_links.includes(l)
+    )
+    const order_index = this._computeIOOrderIndex(middle)
+
     this._links_order = reorganizeIOOrder(
       this._links_order,
       import_links,
       export_links,
       recycling_links,
       (l) => l.getAnchorLockedForNode(this),
-      (link_a, link_b) => sortLinksElementsByRelativeNodesPositions(link_a, link_b, this),
+      (link_a, link_b) => (order_index.get(link_a) ?? 0) - (order_index.get(link_b) ?? 0),
       release_locks
     )
     this.draw()
+  }
+
+  /**
+   * Build a link → display-rank map for the geometry-aware I/O order.
+   * Columns/rows are clustered with a tolerance set to the largest opposite-node
+   * width / height (the natural scale of within-column jitter for left-aligned
+   * nodes of mixed sizes). All positions are taken at node CENTRES.
+   */
+  private _computeIOOrderIndex(
+    middle: Class_LinkElement[]
+  ): Map<Class_LinkElement, number> {
+    const cx = this.position_x + this.getShapeWidthToUse() / 2
+    const cy = this.position_y + this.getShapeHeightToUse() / 2
+    let col_tol = 0
+    let row_tol = 0
+    const items = middle.map(l => {
+      const is_source = (l.source === this)
+      const other = is_source ? l.target : l.source
+      const side = is_source ? l.source_side : l.target_side
+      const ow = other.getShapeWidthToUse()
+      const oh = other.getShapeHeightToUse()
+      col_tol = Math.max(col_tol, ow)
+      row_tol = Math.max(row_tol, oh)
+      const geo: Type_IOGeo = {
+        side,
+        ox: other.position_x + ow / 2,
+        oy: other.position_y + oh / 2
+      }
+      return { item: l, geo }
+    })
+    const ordered = orderIOByGeometry(items, cx, cy, col_tol, row_tol)
+    const map = new Map<Class_LinkElement, number>()
+    ordered.forEach((l, i) => map.set(l, i))
+    return map
   }
 
   public reorganizeIOFromListIds(l: string[]) {
