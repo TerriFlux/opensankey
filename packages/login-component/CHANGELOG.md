@@ -2,6 +2,12 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [1.1.8] — 2026-06-30
+
+### Changed
+
+- Relâche la contrainte de mot de passe (non vide uniquement).
+
 ## [1.1.7] — 2026-06-26
 
 ### Aligné
