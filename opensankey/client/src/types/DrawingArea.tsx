@@ -291,10 +291,18 @@ export class Class_DrawingArea {
   public set size_locked(v: boolean) {
     if (this._size_locked === v) return
     this._size_locked = v
-    // Verrouiller = figer le cadrage courant tel quel (pas de recalcul).
+    // Verrouiller = figer le cadrage courant tel quel (pas de recalcul). On
+    // capture le transform courant comme cadrage de RÉFÉRENCE (cf.
+    // _locked_zoom_transform) : aucun draw n'est déclenché par le toggle.
     // Déverrouiller = on réajuste sur le dataTag courant.
-    if (v) this._locked_fit_dirty = false
-    else this.areaAutoFit()
+    if (v) {
+      this._locked_fit_dirty = false
+      this._captureLockedReference()
+    } else {
+      this._locked_zoom_transform = null
+      this._locked_overflow_shrunk = false
+      this.areaAutoFit()
+    }
   }
 
   // Cadrage verrouillé « à (re)calculer » : true tant que le layout n'est pas
@@ -304,6 +312,42 @@ export class Class_DrawingArea {
   // changements de dataTag suivants. Évite de figer un transform périmé calculé
   // trop tôt (avant recenter), cf. ApplicationData.fromJSON (draw → recenter → draw).
   protected _locked_fit_dirty: boolean = true
+
+  // Cadrage de RÉFÉRENCE en mode taille verrouillée : le transform (zoom/pan)
+  // figé sur lequel on recale chaque dataTag. Établi au verrouillage / au 1er fit
+  // / au recentrage, et rafraîchi tant qu'on n'est pas en débordement (pour
+  // absorber un zoom/pan manuel). NON persisté : ré-établi au chargement via le
+  // chemin recompute_locked. null tant qu'aucune référence n'a été posée.
+  protected _locked_zoom_transform: d3.ZoomTransform | null = null
+
+  // True quand le dataTag courant DÉBORDE le cadrage de référence et qu'on a donc
+  // dézoomé (fit) pour tout faire rentrer. Ce rétrécissement est TRANSITOIRE : on
+  // ne touche pas à _locked_zoom_transform, et dès qu'un dataTag plus petit rentre
+  // à nouveau on ré-applique la référence (ré-agrandissement). Le drapeau empêche
+  // aussi qu'un cadrage rétréci écrase la référence au draw suivant.
+  protected _locked_overflow_shrunk: boolean = false
+
+  // Capture le transform courant de la zone de zoom comme cadrage de référence
+  // verrouillé et sort de l'état « rétréci ». Appelé au verrouillage, après un fit
+  // verrouillé (draw recompute_locked) et après un recentrage.
+  protected _captureLockedReference() {
+    const node = this.d3_selection_zoom_area?.node()
+    if (node) this._locked_zoom_transform = d3.zoomTransform(node)
+    this._locked_overflow_shrunk = false
+  }
+
+  // Mode taille verrouillée : le contenu du dataTag courant déborde-t-il le
+  // cadrage de référence (échelle ref_k) ? On compare la bbox des éléments
+  // (coords monde) ramenée en px écran à la fenêtre disponible. Si oui, draw()
+  // dézoome (areaAutoFit) pour tout faire rentrer ; sinon il réapplique la
+  // référence. Petite tolérance pour éviter le jitter sur le dataTag de référence.
+  protected _lockedContentOverflows(ref_k: number): boolean {
+    const bbox = this.d3_selection_elements_group?.node()?.getBBox()
+    if (!bbox || (bbox.width === 0 && bbox.height === 0)) return false
+    const tol = 2
+    return (bbox.width * ref_k > this.window_fitting_width + tol)
+      || (bbox.height * ref_k > this.window_fitting_height + tol)
+  }
 
   protected createNewSankey(id: string = default_main_sankey_id) {
     const sankey = new Class_Sankey(this, id)
@@ -586,7 +630,15 @@ export class Class_DrawingArea {
     // capture la vue courante avant de redessiner pour la réappliquer à
     // l'identique après (le cadrage ne bouge donc pas d'un dataTag à l'autre).
     const zoom_node = this._size_locked ? this.d3_selection_zoom_area?.node() : null
-    const locked_zoom_transform = zoom_node ? d3.zoomTransform(zoom_node) : null
+    const live_zoom_transform = zoom_node ? d3.zoomTransform(zoom_node) : null
+    // Tant qu'on n'est pas dans un état « rétréci pour débordement », le transform
+    // live fait foi (il capture un éventuel zoom/pan manuel) et (re)devient le
+    // cadrage de référence. Un rétrécissement transitoire ne doit PAS l'écraser,
+    // sinon on ne pourrait jamais ré-agrandir sur un dataTag plus petit.
+    if (this._size_locked && live_zoom_transform && !this._locked_overflow_shrunk) {
+      this._locked_zoom_transform = live_zoom_transform
+    }
+    const locked_zoom_transform = this._size_locked ? this._locked_zoom_transform : null
 
     // Clean drawing area
     this.unDraw()
@@ -629,11 +681,24 @@ export class Class_DrawingArea {
     this.areaAutoFit(recompute_locked ? false : undefined, recompute_locked)
     if (recompute_locked) {
       this._locked_fit_dirty = false
+      // Le fit verrouillé qu'on vient d'appliquer devient le cadrage de référence.
+      this._captureLockedReference()
     } else if (locked_zoom_transform && this.d3_selection_zoom_area) {
-      this.zoomListener.transform(this.d3_selection_zoom_area, locked_zoom_transform)
-      this.drawBackground()
-      this.drawGrid()
-      this._updateScrollbars()
+      // Le contenu du dataTag courant rentre-t-il dans le cadrage de référence ?
+      // - Oui → on réapplique la référence à l'identique (cadrage figé).
+      // - Non (dataTag plus grand que celui de référence) → on dézoome (fit
+      //   vertical) pour tout faire rentrer ; rétrécissement transitoire, la
+      //   référence reste intacte pour ré-agrandir ensuite (cf. #1240).
+      if (this._lockedContentOverflows(locked_zoom_transform.k)) {
+        this._locked_overflow_shrunk = true
+        this.areaAutoFit(false, true)
+      } else {
+        this._locked_overflow_shrunk = false
+        this.zoomListener.transform(this.d3_selection_zoom_area, locked_zoom_transform)
+        this.drawBackground()
+        this.drawGrid()
+        this._updateScrollbars()
+      }
     }
     // Si areaAutoFit n'a pas changé _k_fit, il n'a pas rafraîchi les labels (et la
     // réapplication d'un transform verrouillé ne le fait jamais) : ils sont donc encore
@@ -2025,7 +2090,13 @@ export class Class_DrawingArea {
     // fige le bon cadrage — y compris dans les flux sans draw ultérieur. Sinon, fit
     // normal (heuristique horiz/vert).
     this.areaAutoFit(this._size_locked ? false : undefined, this._size_locked)
-    if (this._size_locked) this._locked_fit_dirty = false
+    if (this._size_locked) {
+      this._locked_fit_dirty = false
+      // Le recentrage (auto au 1er rendu, ou bouton « recentrer ») rétablit le
+      // cadrage : il devient la nouvelle référence verrouillée et annule un
+      // éventuel état rétréci.
+      this._captureLockedReference()
+    }
     this.orderElementOnDA()
   }
   /**
