@@ -771,7 +771,7 @@ export const NODE_MENU_CONFIG: MenuConfig = {
 
     assignColumnToChildren: {
       type: 'action',
-      labels: { en: 'Assign column to children', fr: 'Assigner la colonne aux enfants', es: 'Asignar la columna a los hijos', de: 'Spalte auf Kinder anwenden', it: 'Assegna la colonna ai figli' },
+      labels: { en: 'Assign column to children', fr: 'Assigner u,v aux enfants (lignes et colonnes)', es: 'Asignar la columna a los hijos', de: 'Spalte auf Kinder anwenden', it: 'Assegna la colonna ai figli' },
       tooltips: { en: 'Assign this node\'s column (position) to all its descendants in the dimension hierarchy (locked columns are skipped)', fr: 'Assigner la colonne (position) de ce nœud à toute sa descendance dans la hiérarchie de dimensions (les colonnes verrouillées sont ignorées)', es: 'Asignar la columna (posición) de este nodo a toda su descendencia en la jerarquía de dimensiones (se omiten las columnas bloqueadas)', de: 'Die Spalte (Position) dieses Knotens auf alle Nachfahren in der Dimensionshierarchie anwenden (gesperrte Spalten werden übersprungen)', it: 'Assegna la colonna (posizione) di questo nodo a tutta la sua discendenza nella gerarchia delle dimensioni (le colonne bloccate vengono ignorate)' },
       undoable: true
     },
