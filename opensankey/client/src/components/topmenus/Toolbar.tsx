@@ -85,7 +85,7 @@ export const applyDataTagChildLinks = (
  * épaissir la topbar (qui réserve déjà deux lignes pour ses boutons). Sélecteur élargi et
  * flèches compactes. La logique de navigation (bornes, options) est portée par l'appelant.
  */
-const TopbarNavSelect = ({
+export const TopbarNavSelect = ({
   prefix, options, value, onChange, onPrev, onNext, prev_disabled, next_disabled, select_label, t
 }: {
   prefix: string
@@ -217,6 +217,9 @@ export const BannerViewTagTopbar = ({ app_data }: { app_data: Class_ApplicationD
   const [, setCount] = useState(0)
   app_data.menu_configuration.ref_to_unitarytag_filter_updater.current = () => setCount(c => c + 1)
 
+  // Concept unifié vue ⊕ viewtag : quand la feature Vues remplace le sélecteur viewtag
+  // (utilisateurs plus), on masque ce sélecteur topbar (« tout est une vue nommée »).
+  if (app_data.views_replace_viewtag_topbar) return <></>
   const view_taggs = sankey.getTagGroupsAsList('view_taggs')
     .filter(grp => grp.banner !== 'none') as unknown as Class_ViewTagGroup[]
   if (view_taggs.length === 0) return <></>
@@ -454,6 +457,55 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
   // Get the maximum value a link can have, so it is used as maximum value we wan filter in popover_link_visual_filter
   const max_link_value = Math.max(0, ...app_data.drawing_area.sankey.links_list.map(l => Number(l.getMaxValue()) / (l.shape_local_link_scale ?? 1))) + 1
   const [, setCount] = useState(0)
+
+  // #seuil px — les seuils flux/étiquette peuvent s'exprimer en pixels (épaisseur
+  // rendue) plutôt qu'en valeur de donnée. En mode pixel, le curseur va de 0 au
+  // plus grand flux tracé (+1 px de marge). Chaque unité garde son propre seuil
+  // (filter_*_px vs filter_*), on ne fait que sélectionner l'actif ici.
+  const is_px = app_data.drawing_area.filter_unit === 'pixel'
+  // Zoom live : les seuils px sont en pixels ÉCRAN, donc les max des curseurs =
+  // épaisseur/hauteur locale × k (cf. DrawingArea.getZoomScale).
+  const zoom_k = app_data.drawing_area.getZoomScale()
+  const max_link_thickness_px = Math.ceil(Math.max(0, ...app_data.drawing_area.sankey.links_list.map(l => l.thickness)) * zoom_k) + 1
+  const seuil_max = is_px ? max_link_thickness_px : max_link_value
+  const flux_seuil = is_px ? app_data.drawing_area.filter_link_value_px : app_data.drawing_area.filter_link_value
+  const label_seuil = is_px ? app_data.drawing_area.filter_label_px : app_data.drawing_area.filter_label
+  const set_flux_seuil = (v: number) => {
+    if (is_px) app_data.drawing_area.filter_link_value_px = v
+    else app_data.drawing_area.filter_link_value = v
+  }
+  const set_label_seuil = (v: number) => {
+    if (is_px) app_data.drawing_area.filter_label_px = v
+    else app_data.drawing_area.filter_label = v
+  }
+
+  // Seuils LABEL nœud + LABEL stock (même unité). Max des curseurs : valeur du nœud
+  // (data_value) / |stock initial| en mode valeur ; hauteur de bande rendue en mode px.
+  const nodes_list = app_data.drawing_area.sankey.nodes_list
+  const stock_nodes = nodes_list.filter(n => n.has_stock)
+  const max_node_value = Math.max(0, ...nodes_list.map(n => n.data_value)) + 1
+  const max_stock_value = Math.max(0, ...stock_nodes.map(n => Math.abs(n.stock_initial_value ?? 0))) + 1
+  const max_node_px = Math.ceil(Math.max(0, ...nodes_list.map(n => n.getShapeHeightToUse())) * zoom_k) + 1
+  // Hauteur rendue d'un stock = scaleValueToPx(|.|)/facteur (cf. Node._getNaturalShapeHeight).
+  const max_stock_px = Math.ceil(Math.max(0, ...stock_nodes.map(n => {
+    const f = n.stock_height_scale_factor > 0 ? n.stock_height_scale_factor : 1
+    return app_data.drawing_area.scaleValueToPx(Math.abs(n.stock_initial_value ?? 0)) / f
+  })) * zoom_k) + 1
+  const node_max = is_px ? max_node_px : max_node_value
+  const stock_max = is_px ? max_stock_px : max_stock_value
+  const node_seuil = is_px ? app_data.drawing_area.filter_node_px : app_data.drawing_area.filter_node
+  const stock_seuil = is_px ? app_data.drawing_area.filter_stock_px : app_data.drawing_area.filter_stock
+  const set_node_seuil = (v: number) => {
+    if (is_px) app_data.drawing_area.filter_node_px = v
+    else app_data.drawing_area.filter_node = v
+  }
+  const set_stock_seuil = (v: number) => {
+    if (is_px) app_data.drawing_area.filter_stock_px = v
+    else app_data.drawing_area.filter_stock = v
+  }
+  // Un seuil nœud/stock change la visibilité des labels → re-tracer les nœuds.
+  const redraw_nodes = () => app_data.drawing_area.sankey.nodes_list.forEach(n => n.draw())
+
   app_data.menu_configuration.ref_to_toolbar_link_visual_filter_updater.current = () => setCount(a => a + 1)
 
   // Ref to popover button trigger to trap focus at popover when onBlur of NumberInput
@@ -463,9 +515,26 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
     <Box
       layerStyle='menuconfigpanel_grid'>
 
-      <Text fontSize='sm'>
-        {t('Banner.p_aff_seuil')}
-      </Text>
+      {/* Titre + bascule d'unité (valeur de donnée ↔ pixels). */}
+      <HStack justify='space-between' align='center' width='100%'>
+        <Text fontSize='sm'>
+          {t('Banner.p_aff_seuil')}
+        </Text>
+        <Select
+          size='xs'
+          width='auto'
+          value={app_data.drawing_area.filter_unit}
+          onChange={evt => {
+            app_data.drawing_area.filter_unit = evt.target.value === 'pixel' ? 'pixel' : 'value'
+            setCount(a => a + 1)
+            // Le sens des deux seuils change → re-tracer flux ET étiquettes.
+            app_data.drawing_area.sankey.draw()
+          }}
+        >
+          <option value='value'>{t('Banner.seuil_unit_value')}</option>
+          <option value='pixel'>{t('Banner.seuil_unit_pixel')}</option>
+        </Select>
+      </HStack>
 
       {/* Les deux seuils (flux + étiquettes) sur une seule ligne, chacun :
           libellé court + slider + saisie compacte. */}
@@ -474,16 +543,16 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
           display='grid' gridTemplateColumns='auto 1fr auto' gap='0.2rem'
           alignItems='center' flex='1' minW={0}
         >
-          <OSTooltip label={t('Banner.filtre')}>
+          <OSTooltip label={is_px ? t('Banner.filtre_px') : t('Banner.filtre')}>
             <Text fontSize='xs'>{t('Banner.seuil_flux')}</Text>
           </OSTooltip>
           <Slider
             variant='slider_filter_link_value'
             min={0}
-            max={max_link_value}
-            value={app_data.drawing_area.filter_link_value}
+            max={seuil_max}
+            value={flux_seuil}
             onChange={evt => {
-              app_data.drawing_area.filter_link_value = +evt
+              set_flux_seuil(+evt)
               setCount(a => a + 1)
               app_data.drawing_area.sankey.visible_links_list.forEach(link => {
                 link.draw()
@@ -499,13 +568,13 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
           <Box width='2.4rem'>
             <ConfigMenuNumberInput
               t={app_data.t}
-              default_value={app_data.drawing_area.filter_link_value}
+              default_value={flux_seuil}
               function_on_blur={(value) => {
-                if (value && value > max_link_value) {
-                  value = max_link_value
+                if (value && value > seuil_max) {
+                  value = seuil_max
                 }
                 if (value) {
-                  app_data.drawing_area.filter_link_value = value
+                  set_flux_seuil(value)
                   setCount(a => a + 1)
                   app_data.drawing_area.sankey.draw()
                 }
@@ -513,7 +582,7 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
                 ref.current?.focus() //avoid closure of popover
               }}
               minimum_value={0}
-              maximum_value={max_link_value}
+              maximum_value={seuil_max}
               stepper={false}
             />
           </Box>
@@ -523,16 +592,16 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
           display='grid' gridTemplateColumns='auto 1fr auto' gap='0.2rem'
           alignItems='center' flex='1' minW={0}
         >
-          <OSTooltip label={t('Banner.fl')}>
+          <OSTooltip label={is_px ? t('Banner.fl_px') : t('Banner.fl')}>
             <Text fontSize='xs'>{t('Banner.seuil_label')}</Text>
           </OSTooltip>
           <Slider
             variant='slider_filter_link_value'
             min={0}
-            max={max_link_value}
-            value={app_data.drawing_area.filter_label}
+            max={seuil_max}
+            value={label_seuil}
             onChange={(evt) => {
-              app_data.drawing_area.filter_label = +evt
+              set_label_seuil(+evt)
               setCount(a => a + 1)
               app_data.drawing_area.sankey.visible_links_list.forEach(link => link.drawValueLabel())
             }}
@@ -545,14 +614,14 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
           <Box width='2.4rem'>
             <ConfigMenuNumberInput
               t={app_data.t}
-              default_value={app_data.drawing_area.filter_label}
+              default_value={label_seuil}
               function_on_blur={(value) => {
 
                 if (value) {
-                  if (value > max_link_value) {
-                    value = max_link_value
+                  if (value > seuil_max) {
+                    value = seuil_max
                   }
-                  app_data.drawing_area.filter_label = value
+                  set_label_seuil(value)
                   setCount(a => a + 1)
                   app_data.drawing_area.sankey.links_list.forEach(link => link.drawValueLabel())
                 }
@@ -560,7 +629,101 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
                 ref.current?.focus() //avoid closure of popover
               }}
               minimum_value={0}
-              maximum_value={max_link_value}
+              maximum_value={seuil_max}
+              stepper={false}
+            />
+          </Box>
+        </Box>
+      </HStack>
+
+      {/* Seuils des LABELS de nœud et de stock, sur une même ligne (même unité que
+          les seuils flux/étiquette). Sous le seuil, le label est masqué, la forme reste. */}
+      <HStack spacing='0.6rem' align='center' width='100%'>
+        <Box
+          display='grid' gridTemplateColumns='auto 1fr auto' gap='0.2rem'
+          alignItems='center' flex='1' minW={0}
+        >
+          <OSTooltip label={is_px ? t('Banner.seuil_node_px') : t('Banner.seuil_node_tip')}>
+            <Text fontSize='xs'>{t('Banner.seuil_node')}</Text>
+          </OSTooltip>
+          <Slider
+            variant='slider_filter_link_value'
+            min={0}
+            max={node_max}
+            value={node_seuil}
+            onChange={evt => {
+              set_node_seuil(+evt)
+              setCount(a => a + 1)
+              redraw_nodes()
+            }}
+          >
+            <SliderTrack>
+              <SliderFilledTrack />
+            </SliderTrack>
+            <SliderThumb />
+          </Slider>
+          <Box width='2.4rem'>
+            <ConfigMenuNumberInput
+              t={app_data.t}
+              default_value={node_seuil}
+              function_on_blur={(value) => {
+                if (value) {
+                  if (value > node_max) {
+                    value = node_max
+                  }
+                  set_node_seuil(value)
+                  setCount(a => a + 1)
+                  redraw_nodes()
+                }
+                ref.current?.focus() //avoid closure of popover
+              }}
+              minimum_value={0}
+              maximum_value={node_max}
+              stepper={false}
+            />
+          </Box>
+        </Box>
+
+        <Box
+          display='grid' gridTemplateColumns='auto 1fr auto' gap='0.2rem'
+          alignItems='center' flex='1' minW={0}
+        >
+          <OSTooltip label={is_px ? t('Banner.seuil_stock_px') : t('Banner.seuil_stock_tip')}>
+            <Text fontSize='xs'>{t('Banner.seuil_stock')}</Text>
+          </OSTooltip>
+          <Slider
+            variant='slider_filter_link_value'
+            min={0}
+            max={stock_max}
+            value={stock_seuil}
+            onChange={evt => {
+              set_stock_seuil(+evt)
+              setCount(a => a + 1)
+              redraw_nodes()
+            }}
+          >
+            <SliderTrack>
+              <SliderFilledTrack />
+            </SliderTrack>
+            <SliderThumb />
+          </Slider>
+          <Box width='2.4rem'>
+            <ConfigMenuNumberInput
+              t={app_data.t}
+              default_value={stock_seuil}
+              function_on_blur={(value) => {
+                if (value) {
+                  if (value > stock_max) {
+                    value = stock_max
+                  }
+                  set_stock_seuil(value)
+                  setCount(a => a + 1)
+                  redraw_nodes()
+                }
+                ref.current?.focus() //avoid closure of popover
+              }}
+              minimum_value={0}
+              maximum_value={stock_max}
               stepper={false}
             />
           </Box>
@@ -933,7 +1096,9 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
             // showAccordingToLevelTags) → la redistribution des valeurs sur les
             // liens d'expansion a le bon contexte.
             any_hybrid = true
-            disaggregationExpansion(app_data, n as Class_NodeElement, pref === 'expanded_left', dim.children[0] as Class_NodeElement)
+            // finalize=false : batch sous bypass_redraws ; un unique draw()+recenter()
+            // est fait après la boucle (sinon un redraw complet par nœud → O(N²)).
+            disaggregationExpansion(app_data, n as Class_NodeElement, pref === 'expanded_left', dim.children[0] as Class_NodeElement, false)
           } else if (pref && pref !== 'children') {
             any_hybrid = true
             applyContainerModeForDim(app_data, dim, pref)
@@ -962,10 +1127,15 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
       // #1231 — un changement de niveau (désagrégation/agrégation globale) est une commande
       // de positionnement → mode absolu (réf flux/datatag persistée conservée).
       app_data.drawing_area.setAbsoluteMode()
+      // Réordonnancement E/S AVANT le draw (sous bypass_redraws=true encore actif) : il ne
+      // réordonne que _links_order (géométrie relative, invariante par la translation du
+      // recenter), donc son draw() interne est bypassé. Ainsi le draw() ci-dessous rend
+      // directement le bon ordre — au lieu d'un 3e rendu complet après recenter (le draw()
+      // réactivait le rendu → une passe entière gaspillée + rendu transitoire mal ordonné).
+      app_data.drawing_area.sankey.nodes_list.forEach(node => node.reorganizeIOLinks())
       app_data.drawing_area.draw()
       app_data.drawing_area.to_recenter = true
       app_data.drawing_area.recenter()
-      app_data.drawing_area.sankey.nodes_list.forEach(node => node.reorganizeIOLinks())
       app_data.drawing_area.orderElementOnDA()
 
       break
@@ -1397,6 +1567,9 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
             const f = (_: Type_DisaggregationGap) => {
               drawing_area.disaggregation_gap_mode = _
               updateComponents()
+              // Ré-empiler les enfants englobés selon le nouveau mode (restackContainerChildren
+              // au dessin) — sinon le changement de mode ne serait pas visible immédiatement.
+              drawing_area.draw()
             }
             app_data.setValueAndSaveHistory(drawing_area, 'disaggregation_gap_mode', val, f)
           }}>
@@ -1421,6 +1594,9 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
               const f = (_: number) => {
                 drawing_area.disaggregation_gap_value = _
                 updateComponents()
+                // Écart 'constant' lu en direct au dessin (containerChildGap) : re-dessiner ré-empile
+                // immédiatement tous les cadres englobants avec la nouvelle valeur.
+                drawing_area.draw()
               }
               app_data.setValueAndSaveHistory(drawing_area, 'disaggregation_gap_value', evt, f)
             }}

@@ -34,7 +34,7 @@ import {
   default_paper_format, default_paper_orientation, default_margin_mm,
   Type_PaperFormat, Type_PaperOrientation, Type_Side
 } from '../Elements/ElementsAttributesConfig'
-import { getStringFromJSON, Type_DataSource, Type_IntervalDisplay } from '../types/Utils'
+import { getStringFromJSON, Type_DataSource, Type_IntervalDisplay, Type_DisaggregationGap } from '../types/Utils'
 import { ratio_flux_constraint_traduction } from '../types/Utils'
 import { Class_ContainerElement } from '../Elements/TextZone'
 import { Class_NodeElement } from '../Elements/Node'
@@ -2062,6 +2062,13 @@ export class DrawingAreaPersistence {
       json_object['scale_reference_by_viewtag'] = drawing_area.scale_reference_by_viewtag
     if (drawing_area.maximum_node) json_object['maximum_node'] = drawing_area.maximum_node
     if (drawing_area.minimum_node) json_object['minimum_node'] = drawing_area.minimum_node
+    // Écart vertical des enfants englobés (désagrégation / expansion / englobement) : mode global
+    // (défaut 'fill' → sérialisé seulement s'il diffère) et valeur constante (sérialisée seulement
+    // si explicitement définie ; sinon le getter retombe sur default_style.shape_position_dy).
+    if (drawing_area.disaggregation_gap_mode !== 'fill')
+      json_object['disaggregation_gap_mode'] = drawing_area.disaggregation_gap_mode
+    if (drawing_area['_disaggregation_gap_value'] != null)
+      json_object['disaggregation_gap_value'] = drawing_area['_disaggregation_gap_value']
     if (!drawing_area.structure_mode_force_min) json_object['structure_mode_force_min'] = false
     if (drawing_area.arrow_use_standalone_layout) json_object['arrow_use_standalone_layout'] = true
     // Issue #165 — toujours sérialisé : l'absence du flag identifie un fichier
@@ -2081,6 +2088,13 @@ export class DrawingAreaPersistence {
     }
     if (drawing_area.filter_label > 0) json_object['filter_label'] = drawing_area.filter_label
     if (drawing_area.filter_link_value > 0) json_object['filter_link_value'] = drawing_area.filter_link_value
+    if (drawing_area.filter_unit !== 'value') json_object['filter_unit'] = drawing_area.filter_unit
+    if (drawing_area.filter_label_px > 0) json_object['filter_label_px'] = drawing_area.filter_label_px
+    if (drawing_area.filter_link_value_px > 0) json_object['filter_link_value_px'] = drawing_area.filter_link_value_px
+    if (drawing_area.filter_node > 0) json_object['filter_node'] = drawing_area.filter_node
+    if (drawing_area.filter_node_px > 0) json_object['filter_node_px'] = drawing_area.filter_node_px
+    if (drawing_area.filter_stock > 0) json_object['filter_stock'] = drawing_area.filter_stock
+    if (drawing_area.filter_stock_px > 0) json_object['filter_stock_px'] = drawing_area.filter_stock_px
     if (drawing_area.show_zero_links) json_object['show_zero_links'] = true
     if (drawing_area.show_orphan_nodes) json_object['show_orphan_nodes'] = true
     if (drawing_area.type_data != initial_show_structure) json_object['show_structure'] = drawing_area.type_data
@@ -2396,6 +2410,13 @@ export class DrawingAreaPersistence {
     drawing_area['_color'] = getStringFromJSON(json_object, 'couleur_fond_sankey', drawing_area.color)
     drawing_area['_filter_label'] = getNumberFromJSON(json_object, 'filter_label', 0)
     drawing_area['_filter_link_value'] = getNumberFromJSON(json_object, 'filter_link_value', 0)
+    drawing_area['_filter_unit'] = getStringFromJSON(json_object, 'filter_unit', 'value') === 'pixel' ? 'pixel' : 'value'
+    drawing_area['_filter_label_px'] = getNumberFromJSON(json_object, 'filter_label_px', 0)
+    drawing_area['_filter_link_value_px'] = getNumberFromJSON(json_object, 'filter_link_value_px', 0)
+    drawing_area['_filter_node'] = getNumberFromJSON(json_object, 'filter_node', 0)
+    drawing_area['_filter_node_px'] = getNumberFromJSON(json_object, 'filter_node_px', 0)
+    drawing_area['_filter_stock'] = getNumberFromJSON(json_object, 'filter_stock', 0)
+    drawing_area['_filter_stock_px'] = getNumberFromJSON(json_object, 'filter_stock_px', 0)
     drawing_area['_show_zero_links'] = getBooleanFromJSON(json_object, 'show_zero_links', false)
     drawing_area['_show_orphan_nodes'] = getBooleanFromJSON(json_object, 'show_orphan_nodes', false)
     drawing_area['_grid_size'] = getNumberFromJSON(json_object, 'grid_square_size', drawing_area.grid_size)
@@ -2415,6 +2436,12 @@ export class DrawingAreaPersistence {
     }
     drawing_area['_maximum_node'] = getNumberOrUndefinedFromJSON(json_object, 'maximum_node')
     drawing_area['_minimum_node'] = getNumberOrUndefinedFromJSON(json_object, 'minimum_node')
+    // Écart vertical des enfants englobés : mode (défaut 'fill' si absent) + valeur constante
+    // (null si absente ⇒ le getter retombe sur default_style.shape_position_dy).
+    drawing_area['_disaggregation_gap_mode'] =
+      getStringFromJSON(json_object, 'disaggregation_gap_mode', 'fill') as Type_DisaggregationGap
+    drawing_area['_disaggregation_gap_value'] =
+      getNumberOrUndefinedFromJSON(json_object, 'disaggregation_gap_value') ?? null
     drawing_area['_structure_mode_force_min'] = getBooleanFromJSON(json_object, 'structure_mode_force_min', true)
     drawing_area['_arrow_use_standalone_layout'] = getBooleanFromJSON(json_object, 'arrow_use_standalone_layout', false)
     drawing_area['_scale'] = getNumberFromJSON(json_object, 'user_scale', drawing_area.scale)
