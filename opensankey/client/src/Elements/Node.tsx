@@ -1055,34 +1055,41 @@ export class Class_NodeElement extends Class_NodeBase {
   }
 
   /**
-   * Build a link → display-rank map for the geometry-aware I/O order.
-   * Columns/rows are clustered with a tolerance set to the largest opposite-node
-   * width / height (the natural scale of within-column jitter for left-aligned
-   * nodes of mixed sizes). All positions are taken at node CENTRES.
+   * Build a link → display-rank map for the geometry-aware I/O order : each side's
+   * links are grouped into columns and ordered by their barycenter (cf.
+   * ioOrderGeometry.ts) so the bundles do not cross. The column clustering
+   * tolerance is a small fraction of the whole diagram's node width — big enough
+   * to merge the few-px misalignment within a column, small enough to keep
+   * distinct columns apart. All positions are taken at node CENTRES.
    */
   private _computeIOOrderIndex(
     middle: Class_LinkElement[]
   ): Map<Class_LinkElement, number> {
     const cx = this.position_x + this.getShapeWidthToUse() / 2
     const cy = this.position_y + this.getShapeHeightToUse() / 2
-    let col_tol = 0
-    let row_tol = 0
+    let min_x = Infinity, max_x = -Infinity, min_y = Infinity, max_y = -Infinity
+    this.sankey.visible_nodes_list.forEach(n => {
+      min_x = Math.min(min_x, n.position_x); max_x = Math.max(max_x, n.position_x)
+      min_y = Math.min(min_y, n.position_y); max_y = Math.max(max_y, n.position_y)
+    })
+    const span_x = max_x - min_x
+    const span_y = max_y - min_y
     const items = middle.map(l => {
       const is_source = (l.source === this)
       const other = is_source ? l.target : l.source
       const side = is_source ? l.source_side : l.target_side
-      const ow = other.getShapeWidthToUse()
-      const oh = other.getShapeHeightToUse()
-      col_tol = Math.max(col_tol, ow)
-      row_tol = Math.max(row_tol, oh)
+      // Curvature factor on THIS node's side : shape_starting_curve when the link
+      // leaves this node (source), shape_ending_curve when it arrives (target).
+      const curve = (is_source ? l.shape_starting_curve : l.shape_ending_curve) ?? 0.05
       const geo: Type_IOGeo = {
         side,
-        ox: other.position_x + ow / 2,
-        oy: other.position_y + oh / 2
+        ox: other.position_x + other.getShapeWidthToUse() / 2,
+        oy: other.position_y + other.getShapeHeightToUse() / 2,
+        curve
       }
       return { item: l, geo }
     })
-    const ordered = orderIOByGeometry(items, cx, cy, col_tol, row_tol)
+    const ordered = orderIOByGeometry(items, cx, cy, span_x, span_y)
     const map = new Map<Class_LinkElement, number>()
     ordered.forEach((l, i) => map.set(l, i))
     return map
