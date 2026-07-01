@@ -3138,6 +3138,74 @@ export class NodePositioning {
   }
 
   /**
+   * Ré-empile les enfants de chaque cadre englobant (`container_mode`) sur la position et la
+   * hauteur COURANTES du cadre — pendant de la Phase C de `recomputeParametricLayout`, mais pour
+   * les modes de positionnement NON-parametric (absolu, proportionnel, échelle adaptée).
+   *
+   * Pourquoi : dans ces modes, le placement global (`anchorAbsoluteNodesByCenter`,
+   * `anchorProportionalNodes`…) garde le CENTRE de chaque enfant fixe quand sa taille change
+   * (changement de datatag/vue/échelle). Des enfants empilés jointivement (écart constant) finissent
+   * donc par se chevaucher ou se disperser dès que leur valeur change. On ré-empile ici, du haut du
+   * cadre vers le bas, à l'écart persisté de chaque enfant (`shape_position_dy`, écrit par
+   * `layoutChildrenInParentSlot` — écart constant = 0 ⇒ pile jointive). L'enveloppe du cadre suit
+   * ensuite dynamiquement via `_envelopeSize()`.
+   *
+   * À appeler en FIN de placement (après le mode global + `anchorParametricNodesToAbsolute`), pour
+   * écraser le re-centrage individuel des enfants. Récursif : gère les cadres imbriqués (un enfant
+   * lui-même englobant). Les nœuds « échange » et les enfants invisibles sont exclus, comme partout.
+   */
+  public restackContainerChildren() {
+    const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
+
+    const isContainerParent = (n: Class_NodeElement): boolean =>
+      n.dimensions_as_parent.some(d => d.container_mode)
+
+    const sortByV = (nodes: Class_NodeElement[]): Class_NodeElement[] =>
+      [...nodes].sort((a, b) =>
+        a.position_v !== b.position_v ? a.position_v - b.position_v : a.position_y - b.position_y)
+
+    const collectContainerChildren = (container: Class_NodeElement): Class_NodeElement[] => {
+      const seen = new Set<Class_NodeElement>()
+      const children: Class_NodeElement[] = []
+      container.dimensions_as_parent
+        .filter(d => d.container_mode)
+        .forEach(dim => {
+          dim.children.forEach(child => {
+            const c = child as Class_NodeElement
+            if (seen.has(c)) return
+            seen.add(c)
+            if (!c.is_visible) return
+            if (echangeTag && c.hasGivenTag(echangeTag)) return
+            children.push(c)
+          })
+        })
+      return children
+    }
+
+    const positioned = new Set<Class_NodeElement>()
+    const positionRecursive = (container: Class_NodeElement) => {
+      if (positioned.has(container)) return
+      positioned.add(container)
+      const children = sortByV(collectContainerChildren(container))
+      if (children.length === 0) return
+      const anchor_y = container.position_y + container.shape_margin_top
+      NodePositioning.stackNodesVertically(children, anchor_y)
+      // Le centre stocké de chaque enfant devient sa position empilée : sinon le prochain
+      // anchorByCenterIfResized (mode absolu) tenterait de restaurer un centre périmé.
+      children.forEach(c => c.captureCenterFromCorner())
+      // Cadres imbriqués : un enfant peut lui-même englober des petits-enfants.
+      children.forEach(c => { if (isContainerParent(c)) positionRecursive(c) })
+    }
+
+    // Cadres englobants de premier niveau (pas eux-mêmes enfants d'un autre cadre) : la
+    // descente récursive prend en charge les cadres imbriqués.
+    this.drawingArea.sankey.visible_nodes_list
+      .filter(isContainerParent)
+      .filter(n => !n.dimensions_as_child.some(d => d.container_mode))
+      .forEach(positionRecursive)
+  }
+
+  /**
    * Redresse immédiatement un flux marqué « à garder droit » (clic droit → « Rendre
    * droit ») — issue su-model/opensankey#665, refonte #1231.
    *

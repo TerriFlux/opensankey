@@ -914,6 +914,13 @@ export class Class_DrawingArea {
     // recomputeParametricLayout empile déjà la colonne entière.
     if (this.sankey.styles_dict['default'].shape_position_type !== 'parametric') {
       this.nodePositioning.anchorParametricNodesToAbsolute()
+      // Ré-empiler les enfants des cadres englobants (container_mode) sur leur hauteur
+      // COURANTE. En 'parametric', recomputeParametricLayout (Phase C) le fait déjà ; dans les
+      // autres modes le placement global re-centre chaque enfant INDIVIDUELLEMENT (cf.
+      // anchorByCenterIfResized), si bien qu'un changement de datatag/vue/échelle modifie leur
+      // taille sans re-empiler la pile → l'écart constant n'est plus respecté (chevauchement).
+      // Tourne APRÈS le placement des enfants pour l'écraser, AVANT le draw.
+      this.nodePositioning.restackContainerChildren()
     }
     // Draw grid
     this.drawBackground()
