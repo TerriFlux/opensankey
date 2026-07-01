@@ -2149,6 +2149,21 @@ export const MenuConfigurationAppearance = ({
                           }}
                         />
                       </Box>
+                      {linkShapeValues.straight_mode !== 'none' && (
+                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                          <ElementAttrSetterNumberInput2Cols
+                            app_data={app_data}
+                            elements={links_elements}
+                            attributePath={'Flux.apparence'}
+                            attributeKey={'straight_offset'}
+                            prefix={'shape'}
+                            config={LINK_SHAPE_SPECIFIC_CONFIG}
+                            refreshParentComponent={refreshAll}
+                            minimum_value={-10000}
+                            maximum_value={10000}
+                            isOverloaded={isElementAttributeOverloaded(links_elements, 'shape_straight_offset' as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG)} />
+                        </Box>
+                      )}
                       <Box as='span' textStyle='title_sub_section'>{t('Flux.apparence.anchor')}</Box>
                       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
                         {[

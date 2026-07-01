@@ -2810,6 +2810,27 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     }
   } satisfies AttributeConfig<Type_StraightMode>,
 
+  straight_offset: {
+    default: 0,
+    type: (() => 0) as (() => number),
+    category: 'shape' as const,
+    actions: ['drawWithNodes', 'drawElements'] as LinkBaseActionType[],
+    labels: {
+      en: 'Straightness offset',
+      fr: 'Écart de droiture',
+      es: 'Desviación de rectitud',
+      de: 'Geradheits-Versatz',
+      it: 'Scarto di rettitudine'
+    },
+    tooltips: {
+      en: 'Constant vertical offset in pixels kept between the source and target anchors (target below source if positive). 0 = perfectly horizontal. Maintained across all data tags.',
+      fr: 'Écart vertical constant en pixels maintenu entre les accroches source et cible (cible plus bas que la source si positif). 0 = parfaitement horizontal. Conservé pour tous les tags de données.',
+      es: 'Desviación vertical constante en píxeles mantenida entre los anclajes de origen y destino (destino más abajo que el origen si es positivo). 0 = perfectamente horizontal. Se mantiene en todas las etiquetas de datos.',
+      de: 'Konstanter vertikaler Versatz in Pixeln zwischen Quell- und Zielanker (Ziel unterhalb der Quelle bei positivem Wert). 0 = perfekt horizontal. Über alle Daten-Tags hinweg beibehalten.',
+      it: 'Scarto verticale costante in pixel mantenuto tra gli ancoraggi di origine e destinazione (destinazione più in basso dell\'origine se positivo). 0 = perfettamente orizzontale. Mantenuto per tutti i tag di dati.'
+    }
+  } satisfies AttributeConfig<number>,
+
   is_reference_flux: {
     default: false,
     type: (() => false) as (() => boolean),
