@@ -469,34 +469,42 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
   }
 
   // === Droiture multi-ancrage (#665, refonte) ===
-  // Pose le mode d'ancrage (`shape_straight_mode`) du flux cliqué et, selon la portée,
-  // la propagation aux enfants (`shape_straight_include_children`). On garde le drapeau
-  // legacy `shape_must_stay_straight` en phase (= mode ≠ 'none') pour la rétrocompat.
+  // Pose le mode d'ancrage (`shape_straight_mode`) de TOUS les flux sélectionnés (repli sur
+  // le flux contextualisé si rien n'est sélectionné) et, selon la portée, la propagation aux
+  // enfants (`shape_straight_include_children`). On garde le drapeau legacy
+  // `shape_must_stay_straight` en phase (= mode ≠ 'none') pour la rétrocompat.
   // L'application/maintien réel est fait par NodePositioning.enforceStraightLinks à chaque
-  // draw. Undo : on restaure les 3 attributs + les position_y/dy des nœuds visibles.
+  // draw. Undo : on restaure les 3 attributs de chaque flux + les position_y/dy des nœuds visibles.
   const applyStraightMode = (scope: StraightScope, mode: Type_StraightMenuMode) => {
-    const link = contextualised_link
-    if (!link) return
+    const links = selected_links.length > 0
+      ? selected_links
+      : (contextualised_link ? [contextualised_link] : [])
+    if (links.length === 0) return
     const include = scope === 'Children' && mode !== 'none'
-    const old = {
-      mode: link.shape_straight_mode,
-      include: link.shape_straight_include_children,
-      legacy: link.shape_must_stay_straight
-    }
+    const old = links.map(l => ({
+      link: l,
+      mode: l.shape_straight_mode,
+      include: l.shape_straight_include_children,
+      legacy: l.shape_must_stay_straight
+    }))
     const saved = drawing_area.sankey.visible_nodes_list.map(n => ({
       n, y: n.position_y, dy: n.shape_position_dy
     }))
     const doApply = () => {
-      link.shape_straight_mode = mode
-      link.shape_straight_include_children = include
-      link.shape_must_stay_straight = mode !== 'none'
+      links.forEach(l => {
+        l.shape_straight_mode = mode
+        l.shape_straight_include_children = include
+        l.shape_must_stay_straight = mode !== 'none'
+      })
       drawing_area.drawElements()
       refreshThisAndToggleSaving()
     }
     const undoApply = () => {
-      link.shape_straight_mode = old.mode
-      link.shape_straight_include_children = old.include
-      link.shape_must_stay_straight = old.legacy
+      old.forEach(({ link, mode: oldMode, include: oldInclude, legacy }) => {
+        link.shape_straight_mode = oldMode
+        link.shape_straight_include_children = oldInclude
+        link.shape_must_stay_straight = legacy
+      })
       saved.forEach(({ n, y, dy }) => { n.position_y = y; n.shape_position_dy = dy })
       drawing_area.drawElements()
       refreshThisAndToggleSaving()
