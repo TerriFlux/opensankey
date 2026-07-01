@@ -3293,21 +3293,30 @@ export class NodePositioning {
     items.forEach(({ L, mode, startOff, endOff }) => {
       const srcAccr = L.source.position_y + startOff   // y de l'accroche côté source
       const tgtAccr = L.target.position_y + endOff      // y de l'accroche côté cible
-      // Ligne droite cible selon le mode (y croît vers le bas → min = le plus haut).
-      let line: number
+      // Écart vertical constant à maintenir entre l'accroche source et l'accroche
+      // cible (px, y croît vers le bas → positif = cible plus bas). 0 = horizontal.
+      const off = L.shape_straight_offset || 0
+      // Lignes cibles src/tgt telles que `tgtLine - srcLine == off`. Le nœud de
+      // référence du mode reste en place (delta nul), l'autre est amené pour
+      // satisfaire l'écart. off = 0 redonne exactement l'ancienne droiture.
+      let srcLine: number, tgtLine: number
       switch (mode) {
-      case 'target': line = tgtAccr; break
-      case 'highest': line = Math.min(srcAccr, tgtAccr); break
-      case 'lowest': line = Math.max(srcAccr, tgtAccr); break
+      case 'target':
+        tgtLine = tgtAccr; srcLine = tgtAccr - off; break
+      case 'highest': // ancre = accroche la plus haute (min y)
+        if (srcAccr <= tgtAccr) { srcLine = srcAccr; tgtLine = srcAccr + off }
+        else { tgtLine = tgtAccr; srcLine = tgtAccr - off }
+        break
+      case 'lowest': // ancre = accroche la plus basse (max y)
+        if (srcAccr >= tgtAccr) { srcLine = srcAccr; tgtLine = srcAccr + off }
+        else { tgtLine = tgtAccr; srcLine = tgtAccr - off }
+        break
       // 'source' (défaut) et 'absolute' (réservé → repli sur 'source' pour l'instant).
-      default: line = srcAccr; break
+      default: srcLine = srcAccr; tgtLine = srcAccr + off; break
       }
-      // Amène chaque accroche sur la ligne en déplaçant son nœud. Le nœud de
-      // référence du mode a un delta nul (line = son accroche) → il ne bouge pas ;
-      // 'highest'/'lowest' déplacent les deux vers la ligne commune.
-      const ds = line - srcAccr
+      const ds = srcLine - srcAccr
       if (Math.abs(ds) > 0.5) { L.source.position_y += ds; moved = true }
-      const dt = line - tgtAccr
+      const dt = tgtLine - tgtAccr
       if (Math.abs(dt) > 0.5) { L.target.position_y += dt; moved = true }
     })
     return moved
