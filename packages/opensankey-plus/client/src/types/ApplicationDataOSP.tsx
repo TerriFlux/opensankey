@@ -1,7 +1,7 @@
 import { useToast } from '@chakra-ui/react'
 import pako from 'pako'
 import { Class_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
-import { default_main_sankey_id, getJSONOrUndefinedFromJSON, getStringFromJSON, makeId, Type_JSON } from '../deps/OpenSankey/types/Utils'
+import { default_main_sankey_id, getBooleanFromJSON, getJSONOrUndefinedFromJSON, getStringFromJSON, makeId, Type_JSON } from '../deps/OpenSankey/types/Utils'
 import { serializeDocMarkdown, parseDocMarkdown } from '../deps/OpenSankey/Persistence/persistenceMigrations'
 import { Class_MenuConfigOSP } from './MenuConfigOSP'
 import { Class_ApplicationHistory } from '../deps/OpenSankey/types/ApplicationHistory'
@@ -43,6 +43,13 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   }
 
   /**
+   * Concept unifié vue ⊕ viewtag : pour les utilisateurs plus, la visibilité passe par des
+   * VUES nommées (cf. migration + chemin light in-place), donc on masque le sélecteur viewtag
+   * historique de la topbar. Les non-plus gardent ce sélecteur (pas de feature Vues).
+   */
+  public override get views_replace_viewtag_topbar(): boolean { return this.has_sankey_plus }
+
+  /**
    * True when the user holds a real SankeySuite licence (the tier above OS+, which
    * unlocks MFA/reconciliation) or runs in static mode. SankeySuite has no free trial,
    * so unlike OS+ there is no trial bonus to strip out. Used by the subscribe CTA to
@@ -57,12 +64,34 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     [id: string]: {
       name: string
       json: Uint8Array
+      // Sélection de visibilité portée par la vue (concept unifié vue ⊕ viewtag).
+      // { [view_tagg_id]: selected_label_id }. Absent/vide = vue complète (aucun filtre).
+      // Appliquée sur le Sankey OS au switch via _applyViewTagSelection (le mécanisme de
+      // visibilité reste en OS : hook ; le concept Vue/sélection vit ici, en OSP).
+      tag_selection?: { [view_tagg_id: string]: string }
+      // Vue « light » : pas d'override géométrie/style propre, seulement une sélection de
+      // visibilité héritée du maître. Promotion light→heavy = acquisition d'un delta d'override.
+      is_light?: boolean
+      // Si la vue a été auto-générée par la migration depuis un groupe de view tags,
+      // l'id de ce groupe (idempotence : ne pas régénérer).
+      generated_from_group_id?: string
     }
   }
   // heredited_attr[target_view_id][source_view_id] = string[] of attr keys to inherit from that source
   protected _heredited_attr: { [target_id: string]: { [source_id: string]: string[] } } = {}
   protected _views_order: string[] = []
   public get views_order() { return this._views_order }
+  // Affiche le Sankey maître comme une entrée à part entière dans la liste des vues
+  // (sélecteur topbar + table de config). Par défaut masqué (le maître n'était historiquement
+  // pas une entrée sélectionnable). Libellé éditable stocké dans _master_view_name.
+  protected _show_master_in_views: boolean = false
+  protected _master_view_name: string = ''
+  // Identité LOGIQUE de la vue courante, découplée de l'id du Sankey de la DA. Nécessaire
+  // pour les vues light qui RÉUTILISENT la DA maître (pas de rebuild) : sans ce champ, une
+  // vue light serait confondue avec le maître (is_view_master, navigation, suppression…).
+  // Pour une vue heavy, vaut l'id du Sankey de la DA ; pour master, default_main_sankey_id.
+  protected _current_view_id: string = default_main_sankey_id
+  public get current_view_id() { return this._current_view_id }
   public get master_drawing_area() { return this._master_drawing_area }
   public set master_drawing_area(master) { this._master_drawing_area = master }
 
@@ -234,6 +263,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       this._views = {}
       this._views_order = []
       this._heredited_attr = {}
+      this._current_view_id = default_main_sankey_id
       super.reset(kwargs)
     }
   }
@@ -271,14 +301,17 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       return super._toJSON(kwargs)
     }
     //save current view
-    if (!this.is_view_master) {
-      this._views[this._drawing_area.id].json = compressJSONToGzip(DrawingAreaPersistenceOSP.toJSON(this._drawing_area as Class_DrawingAreaOSP, kwargs))
+    // Vue light : la DA courante EST le maître (pas d'entrée _views propre, pas de géométrie
+    // propre) => on ne sauvegarde pas son json. Indexer par l'identité LOGIQUE, pas l'id DA.
+    if (!this.is_view_master && !this._views[this._current_view_id]?.is_light) {
+      this._views[this._current_view_id].json = compressJSONToGzip(DrawingAreaPersistenceOSP.toJSON(this._drawing_area as Class_DrawingAreaOSP, kwargs))
       this.menu_configuration.ref_to_save_in_cache_indicator.current(true)
     }
 
     // If we are in a view & the option only_current_view is at true then we export to JSON only the current view
+    // (une vue light n'a pas de données propres => on retombe sur l'export complet master+vues)
     if (kwargs && kwargs['only_current_view'] &&
-      !this.is_view_master
+      !this.is_view_master && !this._views[this._current_view_id]?.is_light
     ) {
       json_entry = super._toJSON()
       json_entry.id = default_main_sankey_id
@@ -298,7 +331,11 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     json_entry['main_zone'] = this.menu_configuration.mainZoneStateToJSON()
     // Vue active au moment de la sauvegarde : relue par viewsFromJSON pour la rouvrir/sélectionner
     // au chargement (sinon retombe toujours sur le master). id du master => default_main_sankey_id.
-    json_entry['current_view'] = this.drawing_area.id
+    json_entry['current_view'] = this._current_view_id
+    // Option « maître dans la liste des vues » + son libellé éditable (métadonnées de niveau
+    // application_data, comme current_view). Lues par viewsFromJSON.
+    json_entry['show_master_in_views'] = this._show_master_in_views
+    if (this._master_view_name) json_entry['master_view_name'] = this._master_view_name
     // If application_data has views then we save them in the JSON
     json_entry['views'] = {}
     const json_entry_views = json_entry['views']
@@ -307,7 +344,14 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       json_entry_views[id] = JSON.parse(pako.inflate(this._views[id].json, { to: 'string' }));
       (json_entry_views[id] as Type_JSON)['name'] = this._views[id].name
       if (Object.keys(this._heredited_attr[id] ?? {}).length > 0) (json_entry_views[id] as Type_JSON)['heredited_attr'] = this._heredited_attr[id]
-      if (kwargs && kwargs['save_only_visible_elements']) {
+      // Concept unifié vue ⊕ viewtag : sélection de visibilité + nature light de la vue.
+      const tag_selection = this._views[id].tag_selection
+      if (tag_selection && Object.keys(tag_selection).length > 0) (json_entry_views[id] as Type_JSON)['tag_selection'] = tag_selection
+      if (this._views[id].is_light) (json_entry_views[id] as Type_JSON)['is_light'] = true
+      if (this._views[id].generated_from_group_id) (json_entry_views[id] as Type_JSON)['generated_from_group_id'] = this._views[id].generated_from_group_id
+      // Une vue light n'a pas de géométrie propre (json minimal) : pas d'extraction possible
+      // ni utile en mode « visible only ». On conserve son json minimal + ses champs unifiés.
+      if (kwargs && kwargs['save_only_visible_elements'] && !this._views[id].is_light) {
         this.extractViewFromJSON(this._views[id].json, id)
         json_entry_views[id] = DrawingAreaPersistenceOSP.toJSON(this._drawing_area as Class_DrawingAreaOSP, kwargs)
       }
@@ -321,8 +365,10 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     kwargs?: Type_JSON
   ) {
     if (kwargs && kwargs['only_current_view']) {
-      if (!this.is_view_master) {
-        const current_view_id = this.drawing_area.id
+      // Vue light : pas de json propre (géométrie = maître) => rien à écrire. Indexer par
+      // l'identité LOGIQUE, pas l'id du Sankey de la DA (qui vaut le maître pour une light).
+      if (!this.is_view_master && !this._views[this._current_view_id]?.is_light) {
+        const current_view_id = this._current_view_id
         json_object['id'] = current_view_id
         this.views_dict[current_view_id].json = compressJSONToGzip(json_object)
       }
@@ -356,7 +402,10 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       return
     }
     this.viewsFromJSON(json_object)
-
+    // Migration « tout est une vue nommée » : génère les vues light manquantes depuis les
+    // groupes de view tags activés. Lancée ici (et non dans viewsFromJSON qui retourne tôt
+    // sans clé 'views') pour couvrir aussi les fichiers à viewtags sans vues OSP. Idempotente.
+    this._migrateViewTagsToViews()
   }
   public viewsFromJSON(json_object: Type_JSON) {
     const views_json = getJSONOrUndefinedFromJSON(json_object, 'views')
@@ -368,6 +417,10 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     this._drawing_area.purgeSelection()
     this._drawing_area.unDraw()
 
+    // Option « maître dans la liste des vues » + libellé éditable (rétro-compat : défauts si absents).
+    this._show_master_in_views = getBooleanFromJSON(json_object, 'show_master_in_views', false)
+    this._master_view_name = getStringFromJSON(json_object, 'master_view_name', '')
+
     Object.entries(views_json)
       .forEach(([view_id, view_json]) => {
         this.pushViewIdInViewOrder(view_id)
@@ -376,6 +429,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
           name: (view_json as Type_JSON)['name'] as string,
           'json': compressJSONToGzip(view_json as Type_JSON) as Uint8Array
         }
+        this._parseViewExtraFields(view_id, view_json as Type_JSON)
         const raw_attr = (view_json as Type_JSON)['heredited_attr']
         if (Array.isArray(raw_attr)) {
           // migration ancien format: heredited_attr était string[], source dans heredited_source_id
@@ -392,7 +446,15 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       this._drawing_area.sankey.setVisible()
       return
     }
-    this.extractViewFromJSON(this._views[active_view_id].json, active_view_id)
+    // Rouvre le fichier sur la vue active sauvegardée. Vue light => pas de rebuild (réutilise
+    // la DA maître) ; vue heavy => extraction du snapshot. Puis pose la sélection de visibilité.
+    this._current_view_id = active_view_id
+    if (this._views[active_view_id].is_light) {
+      this._drawing_area.sankey.setVisible()
+    } else {
+      this.extractViewFromJSON(this._views[active_view_id].json, active_view_id)
+    }
+    this._applyViewTagSelection(this._views[active_view_id].tag_selection)
     this._drawing_area.draw()
   }
 
@@ -403,8 +465,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
    */
   protected _updateFromJSON(json_object: Type_JSON, kwargs?: Type_JSON) {
     super._updateFromJSON(json_object, kwargs)
-    if (this.drawing_area.id != default_main_sankey_id && (kwargs && kwargs['only_current_view'])) {
-      this._views[this.drawing_area.id].json = compressJSONToGzip(DrawingAreaPersistenceOSP.toJSON(this.drawing_area as Class_DrawingAreaOSP, kwargs))
+    // Identité LOGIQUE (pas l'id du Sankey de la DA) ; une vue light n'a pas de json propre.
+    if (!this.is_view_master && !this._views[this._current_view_id]?.is_light && (kwargs && kwargs['only_current_view'])) {
+      this._views[this._current_view_id].json = compressJSONToGzip(DrawingAreaPersistenceOSP.toJSON(this.drawing_area as Class_DrawingAreaOSP, kwargs))
     }
   }
 
@@ -446,6 +509,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         name: (view_json as Type_JSON)['name'] as string,
         json: compressJSONToGzip(view_json as Type_JSON) as Uint8Array
       }
+      this._parseViewExtraFields(view_id, view_json as Type_JSON)
       const raw_attr = (view_json as Type_JSON)['heredited_attr']
       if (Array.isArray(raw_attr)) {
         const legacy_src = ((view_json as Type_JSON)['heredited_source_id'] as string | undefined) ?? default_main_sankey_id
@@ -461,7 +525,13 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     if (active_view_id === default_main_sankey_id) active_view_id = Object.keys(views_json).find(id => id !== default_main_sankey_id) ?? default_main_sankey_id
     console.log('[addViewsFromJSON] active_view_id resolved to:', active_view_id, '— exists:', active_view_id in this._views)
     if (active_view_id !== default_main_sankey_id && this._views[active_view_id]) {
-      this.extractViewFromJSON(this._views[active_view_id].json, active_view_id)
+      this._current_view_id = active_view_id
+      if (this._views[active_view_id].is_light) {
+        this._drawing_area.sankey.setVisible()
+      } else {
+        this.extractViewFromJSON(this._views[active_view_id].json, active_view_id)
+      }
+      this._applyViewTagSelection(this._views[active_view_id].tag_selection)
       this._drawing_area.draw()
     }
     ;(this.menu_configuration as Class_MenuConfigOSP).updateComponentRelatedToViews()
@@ -484,7 +554,13 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     //const visible_json = drawing_area_view.toJSON(false,true,false)
     //this._views[view_id].json = compressJSONToGzip(visible_json)
     //drawing_area_view.fromJSON(visible_json)
-    drawing_area_view.nodePositioning.arrangeTrade(false)
+    // Le chemin de bascule/extraction de vue ne repasse PAS par _afterFromJSON (contrairement
+    // à l'ouverture du fichier). Or les nœuds Import/Export d'échange sont TRANSITOIRES : non
+    // sérialisés, ils sont régénérés à chaque chargement par splitTrade(). Sans ce split, un
+    // simple arrangeTrade n'a rien à placer → les flux d'échange s'affichent sans leurs nœuds
+    // Import/Export scindés (bug : ils disparaissent au retour sur une vue heavy). afterFromJSON
+    // scinde (idempotent : un nœud d'échange déjà scindé n'a plus de lien) puis arrangeTrade.
+    drawing_area_view.afterFromJSON()
     if (this._drawing_area.d3_selection_zoom_area != null) {
       this._drawing_area.unDraw()
     }
@@ -657,7 +733,152 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     this._drawing_area.purgeSelection()
     this._drawing_area.unDraw()
     this.drawing_area = new_drawing_area
+    // Nouvelle vue heavy (DA propre) : son identité logique = son id de Sankey.
+    this._current_view_id = view_id
     return new_drawing_area
+  }
+
+  // ====================================================================================
+  // CONCEPT UNIFIÉ VUE ⊕ VIEWTAG
+  // ------------------------------------------------------------------------------------
+  // Une Vue porte une « sélection de visibilité » (tag_selection). Light = seulement une
+  // sélection héritée du maître ; heavy = en plus un delta d'override (heredited_attr).
+  // Layering : le mécanisme de visibilité reste en OS (hook, via Sankey.view_taggs +
+  // Node.viewTagVisibility) ; OSP porte le concept Vue et POSE le filtre au switch.
+  // ====================================================================================
+
+  /**
+   * Lit les champs du concept unifié (tag_selection / is_light / generated_from_group_id)
+   * depuis le JSON d'une vue et les pose sur l'entrée _views correspondante.
+   * @protected
+   */
+  protected _parseViewExtraFields(view_id: string, view_json: Type_JSON) {
+    const ts = view_json['tag_selection']
+    if (ts && typeof ts === 'object' && !Array.isArray(ts)) {
+      this._views[view_id].tag_selection = ts as { [view_tagg_id: string]: string }
+    }
+    if (view_json['is_light']) this._views[view_id].is_light = true
+    const gfg = view_json['generated_from_group_id']
+    if (typeof gfg === 'string') this._views[view_id].generated_from_group_id = gfg
+  }
+
+  /**
+   * Applique la sélection de visibilité d'une vue sur le Sankey OS courant : pour chaque
+   * groupe de view tags, sélectionne l'étiquette demandée + active le mode filtre, ou
+   * éteint le filtre si la vue ne contraint pas ce groupe (vue complète). Les groupes
+   * unitaires câblés sont laissés à leur propre logique. Bumpe la réactivité OS pour
+   * que le cache de visibilité des nœuds/liens soit recalculé.
+   * @protected
+   */
+  protected _applyViewTagSelection(
+    selection: { [view_tagg_id: string]: string } | undefined
+  ) {
+    const sankey = this._drawing_area.sankey
+    let changed = false
+    Object.values(sankey.view_taggs_dict).forEach((group) => {
+      if (group.id === 'unitary' || group.id === 'product_unitary' || group.id === 'sector_unitary') return
+      const selected_label = selection ? selection[group.id] : undefined
+      if (selected_label) {
+        group.activated = true
+        group.view_mode = true
+        group.selectTagsFromIds([selected_label])
+        changed = true
+      } else if (group.view_mode) {
+        group.view_mode = false
+        changed = true
+      }
+    })
+    if (changed) {
+      // La visibilité d'un nœud dépend de celle de ses voisins : une seule passe ne suffit
+      // pas à propager. Sans la stabilisation en 2 passes, la 1re sélection d'une vue light
+      // depuis le maître dessinait une visibilité non stabilisée (switch « avalé ») et il
+      // fallait re-sélectionner. On reprend la stabilisation de applyViewTagFilterRedraw.
+      sankey.nodeTagsUpdated()
+      sankey.nodes_list.forEach(n => n.updateVisibilityFingerprint())
+      sankey.nodes_list.forEach(n => { void n.is_visible })
+      sankey.nodes_list.forEach(n => { void n.is_visible })
+    }
+  }
+
+  /**
+   * Migration « tout est une vue nommée » : pour chaque groupe de view tags activé (hors
+   * unitaires), génère une vue light par étiquette (visibilité seule, géométrie héritée du
+   * maître). Additive et idempotente (id déterministe + garde d'existence). Bascule en mode
+   * multi-vues si le fichier n'en avait pas. Ne change PAS la vue courante (le fichier reste
+   * ouvert sur le maître / vue complète).
+   * @protected
+   */
+  protected _migrateViewTagsToViews() {
+    // Les vues sont une feature OSP/plus : ne pas injecter de vues dans les fichiers des
+    // utilisateurs sans licence (ils gardent le sélecteur viewtag historique).
+    if (!this.has_sankey_plus) return
+    const base_da = this._master_drawing_area ?? this._drawing_area
+    if (!base_da) return
+    const sankey = base_da.sankey
+    const groups = Object.values(sankey.view_taggs_dict).filter((g) =>
+      g.activated &&
+      g.id !== 'unitary' && g.id !== 'product_unitary' && g.id !== 'sector_unitary' &&
+      g.tags_list.length > 0
+    )
+    if (groups.length === 0) return
+    // Bascule en mode multi-vues si nécessaire (le maître devient la DA de référence).
+    if (!this._master_drawing_area) this._master_drawing_area = this._drawing_area
+    groups.forEach((group) => {
+      group.tags_list.forEach((tag) => {
+        const view_id = `vt__${group.id}__${tag.id}`
+        if (this._views[view_id]) return // idempotent
+        // Vue LIGHT : aucune géométrie propre (réutilise la DA maître en live) => json MINIMAL
+        // (id + name), pas de copie du maître. La géométrie ne sera matérialisée qu'à la
+        // promotion light→heavy (Phase 3).
+        const view_json = { id: view_id, name: tag.name }
+        this._views[view_id] = {
+          name: tag.name,
+          json: compressJSONToGzip(view_json) as Uint8Array,
+          tag_selection: { [group.id]: tag.id },
+          is_light: true,
+          generated_from_group_id: group.id,
+        }
+        this._heredited_attr[view_id] = {}
+        this.pushViewIdInViewOrder(view_id)
+      })
+    })
+  }
+
+  /**
+   * Action UI : (re)génère les vues light manquantes depuis les groupes de view tags activés
+   * (idempotent). Utile après ajout d'une nouvelle étiquette de view tag. Phase 2.
+   */
+  public syncViewsFromViewTags() {
+    this._migrateViewTagsToViews()
+    this.menu_configuration_osp.updateComponentRelatedToViews()
+  }
+
+  /** True si la vue courante est une vue light (visibilité seule, géométrie héritée du maître). */
+  public get is_current_view_light(): boolean {
+    return !!this._views[this._current_view_id]?.is_light
+  }
+
+  /**
+   * Promotion light → heavy (Phase 3) : « convertir en vue complète ». Matérialise la
+   * géométrie courante (celle du maître, qu'une vue light affiche en live) dans un snapshot
+   * propre à la vue, puis la marque heavy. À partir de là, la vue a sa propre DA (chemin
+   * extractViewFromJSON au switch) et ses éditions de géométrie/style lui sont propres.
+   * La sélection de visibilité (tag_selection) est conservée.
+   */
+  public promoteViewToFull(view_id: string) {
+    const view = this._views[view_id]
+    if (!view || !view.is_light) return
+    if (!this._master_drawing_area) return
+    const snap = DrawingAreaPersistenceOSP.toJSON(this._master_drawing_area as Class_DrawingAreaOSP)
+    view.json = compressJSONToGzip({ ...snap, id: view_id, name: view.name }) as Uint8Array
+    view.is_light = false
+    // Si la vue promue est la vue courante, la recharger via le chemin heavy pour que les
+    // éditions visent désormais sa DA propre (et non le maître partagé).
+    if (this._current_view_id === view_id) {
+      this.setCurrentView(view_id)
+    }
+    this.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+    this.menu_configuration_osp.updateComponentRelatedToViews()
   }
 
   /**
@@ -698,17 +919,36 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     }
     // Case 2 : Otherwise, just set new view
     else {
+      // Mode de position (absolu / proportionnel / échelle adaptée) = état d'affichage GLOBAL
+      // du viewer, pas une géométrie propre à la vue. Une vue heavy est reconstruite via
+      // extractViewFromJSON et repart du mode persisté dans son JSON → sans ça, passer d'une
+      // vue light en « échelle adaptée » à une vue complète perdait le mode. On capture le
+      // mode courant (sur la DA sortante) pour le ré-appliquer sur la nouvelle DA plus bas.
+      const prev_position_mode = this._drawing_area.sankey.styles_dict['default'].shape_position_type
       this._drawing_area.sankey.setInvisible()
       this._drawing_area.purgeSelection()
       this._drawing_area.unDraw()
+      // Vue LIGHT = pas d'override géométrie/style propre : réutilise la DA maître (géométrie
+      // héritée), AUCUN rebuild (pas d'extractViewFromJSON), seule la sélection de visibilité
+      // change. C'est ce qui rend le switch d'une vue light aussi léger qu'un toggle viewtag.
+      const is_light = id !== default_main_sankey_id && !!this._views[id]?.is_light
       // Set-up new sankey
-      if (id == default_main_sankey_id) this._drawing_area = this._master_drawing_area!
+      if (id == default_main_sankey_id || is_light) {
+        this._drawing_area = this._master_drawing_area!
+        // Le maître peut n'avoir jamais été scindé : quand le fichier s'ouvre directement sur
+        // une vue, le _afterFromJSON d'ouverture s'applique à la DA de la vue, pas au maître.
+        // On garantit ici la présence des nœuds Import/Export (splitTrade idempotent).
+        this._drawing_area.afterFromJSON()
+      }
       else this.extractViewFromJSON(this._views[id].json, id)
       //this._drawing_area = this._views[id].drawing_area!
+      // Identité LOGIQUE de la vue courante (découplée de l'id du Sankey de la DA, car une
+      // vue light réutilise la DA maître). Posée AVANT applyViewTagSelection / les redraws.
+      this._current_view_id = id
       this._drawing_area.sankey.setVisible()
       // Set original view in temporary var so it can be used when
       // we change view and don't want to save current modification
-      if (id !== default_main_sankey_id) {
+      if (id !== default_main_sankey_id && !is_light) {
         // Update view with heredited attr from configured source (master by default)
         this._drawing_area.bypass_redraws = true
         const attrs_by_source = this._heredited_attr[id] ?? {}
@@ -728,9 +968,28 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
           this.deleteCurrentOriginalView()
           this._original_current_view = clone_drawing_area
         }
+      } else if (is_light) {
+        // Vue light : aucune géométrie propre à sauvegarder => pas de snapshot « original »
+        // (sinon le garde de sauvegarde déclencherait à tort une modale au prochain switch).
+        this.deleteCurrentOriginalView()
       }
+      // Concept unifié vue ⊕ viewtag : applique la sélection de visibilité portée par la
+      // vue sur le Sankey OS (pose le filtre que le hook de visibilité OS consomme).
+      // Master / vue sans sélection => undefined => efface tout filtre.
+      this._applyViewTagSelection(
+        id === default_main_sankey_id ? undefined : this._views[id]?.tag_selection
+      )
       // Reset to Edition mode
       this._drawing_area.setToModeEdition(false)
+      // Préserver le mode de position global à travers le switch : si la nouvelle DA repart
+      // d'un mode différent (vue heavy reconstruite depuis son JSON), on ré-applique le mode
+      // courant via le setter approprié (capture des références échelle/proportion incluse).
+      const new_position_mode = this._drawing_area.sankey.styles_dict['default'].shape_position_type
+      if (new_position_mode !== prev_position_mode) {
+        if (prev_position_mode === 'scale_adapted') this._drawing_area.setScaleAdaptedMode()
+        else if (prev_position_mode === 'proportional') this._drawing_area.setProportionalMode()
+        else if (prev_position_mode === 'absolute') this._drawing_area.setAbsoluteMode()
+      }
       // Draw new-sankey
       this._drawing_area.sankey.sortNodes()
       this._drawing_area.draw()
@@ -758,15 +1017,17 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
 
   public setCurrentViewToNext() {
     if (this.has_views && this.has_view_after) {
-      const idx = this._views_order.indexOf(this._drawing_area.sankey.id)
-      this.setCurrentView(this._views_order[idx + 1])
+      const order = this.views_navigation_order
+      const idx = order.indexOf(this._current_view_id)
+      this.setCurrentView(order[idx + 1])
     }
   }
 
   public setCurrentViewToPrev() {
     if (this.has_views && this.has_view_before) {
-      const idx = this._views_order.indexOf(this._drawing_area.sankey.id)
-      this.setCurrentView(this._views_order[idx - 1])
+      const order = this.views_navigation_order
+      const idx = order.indexOf(this._current_view_id)
+      this.setCurrentView(order[idx - 1])
     }
   }
 
@@ -776,7 +1037,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
    * @memberof Class_ApplicationDataOSP
    */
   public deleteCurrentView() {
-    this.deleteView(this._drawing_area.sankey.id) // Remove for view dict
+    this.deleteView(this._current_view_id) // Remove for view dict
   }
 
   /**
@@ -788,14 +1049,20 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   public deleteView(id: string) {
     // Check if we are not trying to delete master
     if (this._views[id] !== undefined) {
+      // Une vue light réutilise la DA maître : capturer sa nature AVANT suppression de
+      // l'entrée pour décider plus bas s'il faut détruire la DA (heavy) ou non (light).
+      const was_light = !!this._views[id].is_light
       // Clean
       delete this._views[id] // Remove for view dict
       this._views_order.splice(this._views_order.indexOf(id), 1) // Remove id from view_order
       delete this._heredited_attr[id]
-      // Go to master
-      if (id == this.drawing_area.id) {
+      // Go to master (identité LOGIQUE : la DA d'une vue light est celle du maître)
+      if (id == this._current_view_id) {
         this.deleteCurrentOriginalView()
-        this._drawing_area.delete() // Delete view
+        // NE PAS supprimer la DA d'une vue light (ce serait détruire le maître).
+        if (!was_light) {
+          this._drawing_area.delete() // Delete view
+        }
         this.setCurrentViewToMaster()
         this.menu_configuration.updateAllMenuComponents()
         this.menu_configuration_osp.updateComponentRelatedToViews()
@@ -873,8 +1140,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   public override saveCurrentViewToCache(): void {
     if (!this.has_views) return
     if (this.is_view_master) return
-    const view_id = this._drawing_area.id
-    if (!this._views[view_id]) return
+    // Identité LOGIQUE ; une vue light n'a pas de json propre (géométrie = maître).
+    const view_id = this._current_view_id
+    if (!this._views[view_id] || this._views[view_id].is_light) return
     this._views[view_id].json = compressJSONToGzip(
       DrawingAreaPersistenceOSP.toJSON(this._drawing_area as Class_DrawingAreaOSP)
     )
@@ -885,8 +1153,11 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     // if (ev.onkeydown) {
     //   ev.onkeydown(tmp)
     // }
-    this._views[this._drawing_area.id].json = compressJSONToGzip(DrawingAreaPersistenceOSP.toJSON(this._drawing_area as Class_DrawingAreaOSP))
-    this.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+    // Vue light : rien à sauvegarder (pas de json propre). Identité LOGIQUE pour la heavy.
+    if (!this.is_view_master && !this._views[this._current_view_id]?.is_light) {
+      this._views[this._current_view_id].json = compressJSONToGzip(DrawingAreaPersistenceOSP.toJSON(this._drawing_area as Class_DrawingAreaOSP))
+      this.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+    }
     this.setCurrentView(this?._waiting_to_set_view ?? default_main_sankey_id)
     delete this._waiting_to_set_view
   }
@@ -920,6 +1191,21 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   public get views_dict() { return this._views }
   public get heredited_attr() { return this._heredited_attr }
 
+  public get show_master_in_views() { return this._show_master_in_views }
+  public set show_master_in_views(v: boolean) { this._show_master_in_views = v }
+  // Libellé brut du maître dans la liste des vues (vide = libellé par défaut appliqué côté UI).
+  public get master_view_name() { return this._master_view_name }
+  public set master_view_name(v: string) { this._master_view_name = v }
+
+  // Ordre de navigation entre vues (flèches Préc./Suiv. + sélecteur) : le maître y figure en
+  // tête UNIQUEMENT si show_master_in_views est actif. Sinon on garde la liste des vues seule
+  // (le maître reste atteignable via setCurrentViewToMaster, mais n'est pas dans la liste).
+  public get views_navigation_order(): string[] {
+    return this._show_master_in_views
+      ? [default_main_sankey_id, ...this._views_order]
+      : this._views_order
+  }
+
   public get master_view(): Class_DrawingArea | undefined {
     if (this.has_views)
       if (this.has_master_sankey)
@@ -936,19 +1222,23 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   }
 
   public get is_view_master(): boolean {
-    return (this._drawing_area.sankey.id === default_main_sankey_id)
+    // Identité LOGIQUE (et non l'id du Sankey de la DA) : une vue light réutilise la DA
+    // maître mais n'EST pas le maître.
+    return (this._current_view_id === default_main_sankey_id)
   }
 
   public get has_view_before(): boolean {
     if (this.has_views)
-      return (this._views_order.indexOf(this._drawing_area.sankey.id) > 0)
+      return (this.views_navigation_order.indexOf(this._current_view_id) > 0)
     else
       return false
   }
 
   public get has_view_after(): boolean {
     if (this.has_views) {
-      return (this._views_order.indexOf(this._drawing_area.sankey.id) < (this._views_order.length - 1))
+      const order = this.views_navigation_order
+      // indexOf === -1 (courant hors liste, ex. maître non affiché) => Suiv. va vers la 1re vue.
+      return (order.indexOf(this._current_view_id) < (order.length - 1))
     } else
       return false
   }

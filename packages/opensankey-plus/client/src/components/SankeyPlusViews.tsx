@@ -56,6 +56,7 @@ import {
   ButtonGroup,
   Spinner,
   Text,
+  Checkbox,
 
 } from '@chakra-ui/react'
 import { ChevronDownIcon } from '@chakra-ui/icons'
@@ -77,7 +78,7 @@ import { Class_ViewTagGroup } from '../deps/OpenSankey/types/TagGroup'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { mainZoneRightReservedPx } from '../deps/OpenSankey/components/spreadsheet/MainZoneTabs'
-import { LevelTagFilter } from '../deps/OpenSankey/components/topmenus/Toolbar'
+import { LevelTagFilter, TopbarNavSelect } from '../deps/OpenSankey/components/topmenus/Toolbar'
 import { compressJSONToGzip, decompressGzipDataFixed, decompressUploadedFileUniversal } from '../deps/OpenSankey/Persistence/UniversalJSONCompression'
 import { DrawingAreaPersistence } from '../deps/OpenSankey/Persistence/SankeyPersistence'
 import { INPUT_ATTRIBUTES_CONFIG, OUTPUT_ATTRIBUTES_CONFIG, getDefaultInputOptions, getDefaultOutputOptions } from '../deps/OpenSankey/components/dialogs/PersistenceProcessDialogConfigs'
@@ -306,6 +307,10 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
   }
   const onDeleteView = () => { app_data.deleteCurrentView() }
   const onOpenAttrTransfer = () => { menu_configuration_osp.ref_to_modal_view_attributes_switcher.current(true) }
+  // Concept unifié vue ⊕ viewtag : (re)génère les vues light depuis les étiquettes de view tags.
+  const onSyncViewsFromTags = () => { app_data.syncViewsFromViewTags(); refreshThis() }
+  // Promotion light → heavy : la vue courante (light) acquiert une géométrie/style propre.
+  const onPromoteView = () => { app_data.promoteViewToFull(app_data.current_view_id); refreshThis() }
 
   // Catalogue : ouvre le sélecteur de fichiers (JSON/Excel) importés comme vues.
   const onOpenCatalog = () => {
@@ -454,6 +459,10 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
         <MenuDivider />
         {viewMenuItem('catalog', icon_copy, t('view.catalog'), onOpenCatalog, { need_plus: true })}
         {viewMenuItem('attr', icon_attr_view, t('view.keep_master_var'), onOpenAttrTransfer, { need_plus: true, extra_disabled: !in_named_view })}
+        <MenuDivider />
+        {/* Concept unifié vue ⊕ viewtag : générer les vues depuis les étiquettes + promotion light→heavy */}
+        {viewMenuItem('sync_tags', icon_add_element, t('view.sync_from_tags'), onSyncViewsFromTags, { need_plus: true })}
+        {viewMenuItem('promote', icon_attr_view, t('view.promote'), onPromoteView, { need_plus: true, extra_disabled: !in_named_view || !app_data.is_current_view_light })}
       </MenuList>
     </ChakraMenu>
     {can_manage ? input_loader_json_catalog : <></>}
@@ -467,8 +476,7 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
  * sélectionner (le sélecteur retomberait sur un champ vide).
  */
 export const BannerViewNavOSP = ({ app_data }: { app_data: Class_ApplicationDataOSP }) => {
-  const { t, icon_library, menu_configuration_osp } = app_data
-  const { icon_next, icon_previous } = icon_library
+  const { t, menu_configuration_osp, drawing_area } = app_data
   const [, setCount] = useState(0)
   const refreshThis = () => setCount(a => a + 1)
   menu_configuration_osp.ref_to_banner_view_nav_updater.current = refreshThis
@@ -494,30 +502,45 @@ export const BannerViewNavOSP = ({ app_data }: { app_data: Class_ApplicationData
     if (document.onkeydown) document.onkeydown(tmp)
   }
 
-  const nav_button = (
-    tooltip_key: string,
-    icon: JSX.Element,
-    label: string,
-    onClick: () => void,
-    enabled: boolean
-  ): JSX.Element => <OSTooltip placement='bottom' label={t(tooltip_key)}>
-    <Box>
-      <Button variant='menutop_button' size='sizeMenuTopButton' isDisabled={!enabled} onClick={onClick}>
-        <Box layerStyle='menutop_button_style'>
-          <Box gridRow='1'>{icon}</Box>
-          <Box gridRow='2'>{label}</Box>
-        </Box>
-      </Button>
-    </Box>
-  </OSTooltip>
+  // Titre du bloc, calé en petit au-dessus du sélecteur (même mise en page que les
+  // data tags en topbar) : nom du groupe de view tags s'il en existe un, sinon libellé
+  // générique « Vues par défaut ».
+  const view_taggs = drawing_area.sankey.getTagGroupsAsList('view_taggs') as unknown as Class_ViewTagGroup[]
+  const title = view_taggs.length > 0 ? view_taggs[0].name : t('view.banner_default_title')
 
-  return <ButtonGroup className='BannerViewNav' alignItems='center' spacing='0'>
-    {nav_button('view.tooltips.PrevViewButton', icon_previous, t('Menu.precView'), onPrevView, has_view_before)}
-    <Box minW='7rem' maxW='14rem' alignSelf='center'>
-      <SelecteurView app_data={app_data} />
-    </Box>
-    {nav_button('view.tooltips.NextViewButton', icon_next, t('Menu.nextView'), onNextView, has_view_after)}
-  </ButtonGroup>
+  // Options / valeur du sélecteur : ordre de navigation (le maître y figure en tête si l'option
+  // show_master_in_views est active). Le maître courant reste toujours représentable même masqué.
+  const master_name = app_data.master_view_name || t('view.actual')
+  const viewLabel = (id: string) => id === default_main_sankey_id
+    ? master_name
+    : (app_data.views_dict[id]?.name ?? id)
+  const value = (
+    Object.keys(app_data.views_dict).includes(app_data.current_view_id) &&
+    app_data.current_view_id !== default_main_sankey_id
+  ) ? app_data.current_view_id : default_main_sankey_id
+  const options = app_data.views_navigation_order.map(id => ({ value: id, label: viewLabel(id) }))
+  if (!options.some(o => o.value === value)) options.unshift({ value, label: viewLabel(value) })
+
+  const select = (view: string) => {
+    app_data.setCurrentView(view)
+    // Update views components (without updating save in cache button)
+    app_data.menu_configuration_osp.updateComponentRelatedToViews()
+  }
+
+  return <Box className='BannerViewNav'>
+    <TopbarNavSelect
+      t={t}
+      prefix={title}
+      select_label={title}
+      value={value}
+      options={options}
+      onChange={select}
+      onPrev={onPrevView}
+      onNext={onNextView}
+      prev_disabled={!has_view_before}
+      next_disabled={!has_view_after}
+    />
+  </Box>
 }
 
 /**
@@ -535,14 +558,12 @@ export const BannerViewNavOSP = ({ app_data }: { app_data: Class_ApplicationData
 export const SelecteurView = (
   { app_data }: { app_data: Class_ApplicationDataOSP }
 ) => {
-  const drawing_area_plus = app_data.drawing_area as Class_DrawingAreaOSP
-
   const [s_select_or_edit, sSelectOrEdit] = useState<'edit' | 'select'>('select')
 
-  const cur_view = drawing_area_plus
   const has_sankey_plus = app_data.has_sankey_plus
   const has_views = app_data.has_views
   const is_view_master = app_data.is_view_master
+  const master_name = app_data.master_view_name || app_data.t('view.actual')
 
   // JSX elements -----------------------------------------------------------------------
 
@@ -566,14 +587,19 @@ export const SelecteurView = (
       }
     }
     value={
-      Object.keys(app_data.views_dict).includes(cur_view.id) && cur_view.id !== default_main_sankey_id
-        ? cur_view.id
-        : 'master'
+      // Identité LOGIQUE de la vue courante (une vue light réutilise la DA maître, donc
+      // cur_view.id vaudrait le maître ; current_view_id reflète la vraie vue sélectionnée).
+      Object.keys(app_data.views_dict).includes(app_data.current_view_id) && app_data.current_view_id !== default_main_sankey_id
+        ? app_data.current_view_id
+        : default_main_sankey_id
     }
   >
-    <option value="master" disabled hidden>Sankey Maître</option>
+    {/* Maître non listé (option désactivée) : placeholder caché pour que la valeur courante
+        « maître » reste affichable sans polluer la liste. */}
+    {!app_data.show_master_in_views &&
+      <option value={default_main_sankey_id} disabled hidden>{master_name}</option>}
     {
-      app_data.views_order
+      app_data.views_navigation_order
         .map((view, i) => {
           const is_master_option = view === default_main_sankey_id
           return <option
@@ -581,7 +607,7 @@ export const SelecteurView = (
             value={view}
             style={is_master_option ? { fontStyle: 'italic', backgroundColor: '#e2e8f0' } : undefined}
           >
-            {app_data.views_dict[view].name}
+            {is_master_option ? master_name : app_data.views_dict[view].name}
           </option>
         })
     }
@@ -589,11 +615,11 @@ export const SelecteurView = (
 
   const text_input = <ConfigMenuTextInput
     t={app_data.t}
-    default_value={app_data.views_dict[cur_view.id]?.name}
+    default_value={app_data.views_dict[app_data.current_view_id]?.name}
     function_on_blur={(_) => {
       // Update text for links
       if ((_ !== undefined) && (_ !== null)) {
-        app_data.views_dict[cur_view.id].name = _
+        app_data.views_dict[app_data.current_view_id].name = _
         //cur_view.name = _
       }
       // Update this menu
@@ -632,11 +658,7 @@ export const ViewsConfig = (
   const drawing_area_plus = drawing_area as Class_DrawingAreaOSP
   const is_activated = app_data.has_sankey_plus
   const curr_view = drawing_area_plus
-  const list_view = app_data.views_order //include master
-  // Groupes de view tags affichables (générateur de vues en topbar) : on y édite ici le
-  // libellé de l'option « vue complète » (full_view_label), planqué dans la config des vues.
-  const view_taggs = drawing_area_plus.sankey.getTagGroupsAsList('view_taggs')
-    .filter(grp => grp.banner !== 'none') as unknown as Class_ViewTagGroup[]
+  const list_view = app_data.views_navigation_order // maître en tête si show_master_in_views
 
   // JSX elements -----------------------------------------------------------------------
 
@@ -654,6 +676,21 @@ export const ViewsConfig = (
           <SelecteurView app_data={app_data} />
         </InputGroup>
       </Box>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('view.show_master_in_list')}
+        </Box>
+        <Checkbox
+          variant='menuconfigpanel_option_checkbox'
+          isDisabled={!is_activated}
+          isChecked={app_data.show_master_in_views}
+          onChange={() => {
+            app_data.show_master_in_views = !app_data.show_master_in_views
+            menu_configuration_osp.updateComponentRelatedToViews()
+            refreshThis()
+          }}
+        />
+      </Box>
       <Table variant='table_view' size='sm'>
         <Thead>
           <Tr>
@@ -664,16 +701,20 @@ export const ViewsConfig = (
         </Thead>
         <Tbody>
           {list_view.map((view_id, idx) => {
+            const is_master = view_id == default_main_sankey_id
             return (
               <React.Fragment key={idx}>
                 <Tr style={{ 'border': (view_id === curr_view.id) ? '2px solid #5a9282' : 'none' }}>
                   <Td>
                     <Input
                       variant='menuconfigpanel_option_input'
-                      value={app_data.views_dict[view_id].name}
-                      isDisabled={!is_activated || (view_id == default_main_sankey_id)}
+                      // Maître : libellé éditable dédié (master_view_name), placeholder = défaut.
+                      value={is_master ? app_data.master_view_name : app_data.views_dict[view_id].name}
+                      placeholder={is_master ? t('view.actual') : undefined}
+                      isDisabled={!is_activated}
                       onChange={evt => {
-                        app_data.views_dict[view_id].name = evt.target.value
+                        if (is_master) app_data.master_view_name = evt.target.value
+                        else app_data.views_dict[view_id].name = evt.target.value
                         refreshThis()
                       }}
                       onBlur={() => {
@@ -715,26 +756,6 @@ export const ViewsConfig = (
           })}
         </Tbody>
       </Table>
-
-      {/* Libellé de l'option « vue complète » du sélecteur topbar (générateur de vues),
-          éditable par groupe de view tags. Vide = libellé par défaut. */}
-      {view_taggs.map(vt => (
-        <Box as='span' key={vt.id} layerStyle='menuconfigpanel_row_2cols'>
-          <Box layerStyle='menuconfigpanel_option_name'>
-            {t('view.full_view_label')}{view_taggs.length > 1 ? ` (${vt.name})` : ''}
-          </Box>
-          <InputGroup variant='menuconfigpanel_option_input'>
-            <Input
-              variant='menuconfigpanel_option_input'
-              placeholder={t('Banner.view_full')}
-              value={vt.full_view_label}
-              isDisabled={!is_activated}
-              onChange={evt => { vt.full_view_label = evt.target.value; refreshThis() }}
-              onBlur={() => menu_configuration_osp.updateComponentRelatedToViews()}
-            />
-          </InputGroup>
-        </Box>
-      ))}
     </Box>
 
   </WrapperBoxSubSectionMenu>
