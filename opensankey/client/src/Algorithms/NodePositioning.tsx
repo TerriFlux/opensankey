@@ -34,6 +34,7 @@ import {
 import { Class_DataTag, Class_LevelTag, Class_Tag } from '../types/Tag'
 import { Class_DataTagGroup } from '../types/TagGroup'
 import { Class_DrawingArea } from '../types/DrawingArea'
+import { Type_DisaggregationGap } from '../types/Utils'
 import { PAPER_TARGET_FONT_SIZES, Type_StraightMode } from '../Elements/ElementsAttributesConfig'
 import { NodeImportExportAboveBelowStyle, NodeImportExportCloseStyle, NodeLeftExtremityStyle, NodeRightExtremityStyle, NodeSectorStyle } from '../Elements/ElementStyle'
 
@@ -1115,8 +1116,11 @@ export class NodePositioning {
               ? (c.shape_position_dy ?? default_dy)
               : const_gap
           cursor += gap
-          // 'fill' et 'constant' fixent un écart explicite → on le matérialise dans dy.
-          if (mode !== 'children_dy') c.shape_position_dy = gap
+          // 'fill' fixe un écart CALCULÉ (propre à ce slot) → on le matérialise dans dy pour que
+          // le ré-empilement au dessin le reproduise. 'constant' est au contraire lu EN DIRECT
+          // depuis disaggregation_gap_value (containerChildGap) : ne rien figer, sinon éditer la
+          // valeur ne changerait pas les englobements déjà en place.
+          if (mode === 'fill') c.shape_position_dy = gap
         }
         c.position_y = cursor
         cursor += c.getShapeHeightToUse()
@@ -2925,6 +2929,53 @@ export class NodePositioning {
   }
 
   /**
+   * Écart vertical AVANT un enfant de cadre englobant, selon le mode d'écart courant :
+   *  - 'constant'  : `const_gap` (lu EN DIRECT sur `disaggregation_gap_value`) — éditer la valeur
+   *                  modifie donc tous les englobements existants au prochain dessin, l'écart
+   *                  n'étant volontairement PAS figé dans `shape_position_dy`.
+   *  - autres modes: `shape_position_dy` de l'enfant (fill = valeur calculée figée au slot ;
+   *                  children_dy = écart propre à l'enfant ; keep = les enfants ne sont pas
+   *                  ré-empilés, cf. appelants).
+   */
+  public static containerChildGap(
+    child: Class_NodeElement,
+    mode: Type_DisaggregationGap,
+    const_gap: number
+  ): number {
+    return mode === 'constant' ? const_gap : (child.shape_position_dy ?? 0)
+  }
+
+  /**
+   * Empile verticalement les enfants d'un cadre englobant, comme `stackNodesVertically` mais avec
+   * l'écart résolu par `containerChildGap` (constant lu en direct). Utilisé par le mode parametric
+   * (Phase C de `recomputeParametricLayout`) et les autres modes (`restackContainerChildren`).
+   */
+  public static stackContainerChildren(
+    nodes: Class_NodeElement[],
+    anchor_y: number,
+    mode: Type_DisaggregationGap,
+    const_gap: number
+  ) {
+    let cursor_y = anchor_y
+    nodes.forEach((node, i) => {
+      if (i > 0) cursor_y += NodePositioning.containerChildGap(node, mode, const_gap)
+      node.position_y = cursor_y
+      node.applyPosition()
+      cursor_y += node.getShapeHeightToUse()
+    })
+  }
+
+  /** Hauteur totale de la pile de `stackContainerChildren` (écart constant lu en direct). */
+  public static totalContainerStackHeight(
+    nodes: Class_NodeElement[],
+    mode: Type_DisaggregationGap,
+    const_gap: number
+  ): number {
+    return nodes.reduce((sum, n, i) =>
+      sum + n.getShapeHeightToUse() + (i > 0 ? NodePositioning.containerChildGap(n, mode, const_gap) : 0), 0)
+  }
+
+  /**
    * Point d'entrée unique pour le recompute du layout paramétrique (PR 3).
    *
    * Traite une colonne (ensemble de nœuds visibles partageant un même
@@ -2975,6 +3026,11 @@ export class NodePositioning {
     }
 
     const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
+
+    // Mode d'écart des enfants de cadre + valeur constante LIVE (cf. containerChildGap) : partagés
+    // par le sizing (Phase A) et l'empilement (Phase C) pour que l'écart 'constant' reste éditable.
+    const gap_mode = this.drawingArea.effective_gap_mode
+    const const_gap = this.drawingArea.disaggregation_gap_value
 
     // --- Helpers ---
 
@@ -3048,8 +3104,8 @@ export class NodePositioning {
       children.forEach(c => {
         if (isContainerParent(c)) sizeContainerRecursive(c)
       })
-      // Sum children heights + dy + top/bottom margins.
-      const stack_h = NodePositioning.totalStackHeight(children)
+      // Sum children heights + écarts (constant lu en direct) + top/bottom margins.
+      const stack_h = NodePositioning.totalContainerStackHeight(children, gap_mode, const_gap)
       const envelope_h = stack_h + container.shape_margin_top + container.shape_margin_bottom
       // Width: max of child widths + left/right margins. Container children
       // are supposed to be aligned on the container's x axis in the current
@@ -3123,7 +3179,7 @@ export class NodePositioning {
       const children = sortByV(collectContainerChildren(container))
       if (children.length === 0) return
       const anchor_y = container.position_y + container.shape_margin_top
-      NodePositioning.stackNodesVertically(children, anchor_y)
+      NodePositioning.stackContainerChildren(children, anchor_y, gap_mode, const_gap)
       children.forEach(c => {
         if (isContainerParent(c)) positionContainerChildrenRecursive(c)
       })
@@ -3145,16 +3201,27 @@ export class NodePositioning {
    * Pourquoi : dans ces modes, le placement global (`anchorAbsoluteNodesByCenter`,
    * `anchorProportionalNodes`…) garde le CENTRE de chaque enfant fixe quand sa taille change
    * (changement de datatag/vue/échelle). Des enfants empilés jointivement (écart constant) finissent
-   * donc par se chevaucher ou se disperser dès que leur valeur change. On ré-empile ici, du haut du
-   * cadre vers le bas, à l'écart persisté de chaque enfant (`shape_position_dy`, écrit par
-   * `layoutChildrenInParentSlot` — écart constant = 0 ⇒ pile jointive). L'enveloppe du cadre suit
-   * ensuite dynamiquement via `_envelopeSize()`.
+   * donc par se chevaucher ou se disperser dès que leur valeur change.
+   *
+   * Empilement À PLAT des FEUILLES : on collecte les feuilles réelles (pas les sous-cadres) dans
+   * l'ordre hiérarchique et on les espace UNIFORMÉMENT — écart identique quel que soit le niveau
+   * d'imbrication. Empiler récursivement les sous-cadres ajouterait leurs marges (`shape_margin_top`
+   * /`_bottom`) entre deux groupes → l'écart casserait au 2ᵉ niveau. Chaque sous-cadre est ensuite
+   * réancré (`reanchorTiedFrame`) pour envelopper ses feuilles ; sa taille suit via `_envelopeSize()`.
+   * Le cadre de premier niveau garde sa position (il sert d'ancre).
+   *
+   * L'écart est résolu par `containerChildGap` : en mode 'constant' il est lu EN DIRECT sur
+   * `disaggregation_gap_value` (éditer la valeur ré-englobe au prochain dessin, sans être figé dans
+   * les feuilles) ; sinon = `shape_position_dy` persisté. En mode 'keep' rien n'est ré-empilé.
    *
    * À appeler en FIN de placement (après le mode global + `anchorParametricNodesToAbsolute`), pour
-   * écraser le re-centrage individuel des enfants. Récursif : gère les cadres imbriqués (un enfant
-   * lui-même englobant). Les nœuds « échange » et les enfants invisibles sont exclus, comme partout.
+   * écraser le re-centrage individuel des feuilles. Nœuds « échange » et enfants invisibles exclus.
    */
   public restackContainerChildren() {
+    const mode = this.drawingArea.effective_gap_mode
+    // 'keep' = les enfants conservent leur position_y manuelle → aucun ré-empilement.
+    if (mode === 'keep') return
+    const const_gap = this.drawingArea.disaggregation_gap_value
     const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
 
     const isContainerParent = (n: Class_NodeElement): boolean =>
@@ -3164,7 +3231,8 @@ export class NodePositioning {
       [...nodes].sort((a, b) =>
         a.position_v !== b.position_v ? a.position_v - b.position_v : a.position_y - b.position_y)
 
-    const collectContainerChildren = (container: Class_NodeElement): Class_NodeElement[] => {
+    // Enfants directs VISIBLES d'un cadre (dédupliqués sur les dims container_mode).
+    const directChildren = (container: Class_NodeElement): Class_NodeElement[] => {
       const seen = new Set<Class_NodeElement>()
       const children: Class_NodeElement[] = []
       container.dimensions_as_parent
@@ -3182,27 +3250,44 @@ export class NodePositioning {
       return children
     }
 
-    const positioned = new Set<Class_NodeElement>()
-    const positionRecursive = (container: Class_NodeElement) => {
-      if (positioned.has(container)) return
-      positioned.add(container)
-      const children = sortByV(collectContainerChildren(container))
-      if (children.length === 0) return
-      const anchor_y = container.position_y + container.shape_margin_top
-      NodePositioning.stackNodesVertically(children, anchor_y)
-      // Le centre stocké de chaque enfant devient sa position empilée : sinon le prochain
-      // anchorByCenterIfResized (mode absolu) tenterait de restaurer un centre périmé.
-      children.forEach(c => c.captureCenterFromCorner())
-      // Cadres imbriqués : un enfant peut lui-même englober des petits-enfants.
-      children.forEach(c => { if (isContainerParent(c)) positionRecursive(c) })
+    // Feuilles visibles d'un cadre, dans l'ordre hiérarchique (DFS + tri par v) : on descend dans
+    // les sous-cadres et on ne renvoie QUE les vraies feuilles (pas les cadres eux-mêmes).
+    const leavesInOrder = (container: Class_NodeElement): Class_NodeElement[] => {
+      const out: Class_NodeElement[] = []
+      sortByV(directChildren(container)).forEach(c => {
+        if (isContainerParent(c)) out.push(...leavesInOrder(c))
+        else out.push(c)
+      })
+      return out
     }
 
-    // Cadres englobants de premier niveau (pas eux-mêmes enfants d'un autre cadre) : la
-    // descente récursive prend en charge les cadres imbriqués.
+    // Réancre les sous-cadres imbriqués (bottom-up) sur l'enveloppe de leurs feuilles.
+    const reanchorSubFrames = (container: Class_NodeElement) => {
+      directChildren(container).forEach(c => {
+        if (isContainerParent(c)) { reanchorSubFrames(c); c.reanchorTiedFrame() }
+      })
+    }
+
     this.drawingArea.sankey.visible_nodes_list
       .filter(isContainerParent)
       .filter(n => !n.dimensions_as_child.some(d => d.container_mode))
-      .forEach(positionRecursive)
+      .forEach(container => {
+        const leaves = leavesInOrder(container)
+        if (leaves.length === 0) return
+        // Empilement uniforme des feuilles depuis le haut du cadre de premier niveau.
+        let cursor = container.position_y + container.shape_margin_top
+        leaves.forEach((leaf, i) => {
+          if (i > 0) cursor += NodePositioning.containerChildGap(leaf, mode, const_gap)
+          leaf.position_y = cursor
+          leaf.applyPosition()
+          cursor += leaf.getShapeHeightToUse()
+        })
+        // Le centre stocké de chaque feuille devient sa position empilée : sinon le prochain
+        // anchorByCenterIfResized (mode absolu) tenterait de restaurer un centre périmé.
+        leaves.forEach(l => l.captureCenterFromCorner())
+        // Les sous-cadres enveloppent leurs feuilles ; le cadre de premier niveau reste ancré.
+        reanchorSubFrames(container)
+      })
   }
 
   /**
