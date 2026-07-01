@@ -1502,6 +1502,11 @@ export abstract class DrawLabelBase {
     this.cleanupPreviousLabel()
 
     if (this._label_values.has_fo) {
+      // Le mode « texte » (rich text / FO) doit respecter la visibilité du
+      // libellé au même titre que les modes icône/image ci-dessous : sans ce
+      // garde, décocher « Libellés » ne masquait pas un label en mode texte
+      // (cleanupPreviousLabel a déjà retiré l'ancien rendu).
+      if (!this._force_editable_draw && !this.shouldDrawLabel()) return
       return this.drawFO()
     }
     if (this._label_values.is_icon && this._label_values.is_visible) {
