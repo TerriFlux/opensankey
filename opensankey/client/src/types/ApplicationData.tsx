@@ -289,6 +289,15 @@ export class Class_ApplicationData {
   /** True hors mode publish, ou en publish si l'option `editable` est activée. */
   public get is_editable(): boolean { return !this.is_static || this.publish_options.editable }
 
+  /**
+   * Hook du concept unifié vue ⊕ viewtag : quand true, le sélecteur de view tags de la
+   * topbar (BannerViewTagTopbar) est masqué car la visibilité passe désormais par des VUES
+   * nommées (« tout est une vue nommée »). Faux en OS base (le sélecteur viewtag historique
+   * reste l'UI) ; surchargé en OpenSankey+ pour valoir vrai quand la feature Vues (plus) est
+   * disponible. Le mécanisme de visibilité, lui, reste en OS (Sankey.view_taggs / Node).
+   */
+  public get views_replace_viewtag_topbar(): boolean { return false }
+
   public createNewMenuConfiguration(): Class_MenuConfig {
     this._toast = useToast()
     this._menu_configuration = new Class_MenuConfig()
