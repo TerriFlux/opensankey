@@ -491,6 +491,14 @@ export class LinkControlPoints {
       this._control_points.is_dragged = false
 
       this.drawControlPoint()
+      // Moving a bend changes the link's curvature (shape_starting/ending_curve),
+      // which feeds the geometry-aware I/O order. Re-run it on both endpoints —
+      // just like a node drag does — so the user need not click "Réorganiser".
+      // release_locks=false : keep any manually locked anchors (#197).
+      ;[this.link.source, this.link.target].forEach(n => {
+        if (n && typeof (n as { reorganizeIOLinks?: unknown }).reorganizeIOLinks === 'function')
+          n.reorganizeIOLinks(false)
+      })
       this.link.drawing_area.application_data.menu_configuration.updateComponentRelatedToApparence()
       //this.link.drawing_area.areaAutoFit()
       // Save current attribute val after mutating them in dragHandlers events
