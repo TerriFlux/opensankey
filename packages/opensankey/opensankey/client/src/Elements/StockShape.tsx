@@ -60,13 +60,21 @@ export class Class_StockShape extends Class_NodeBase {
    * reconciled/calculated mode, raw data otherwise. Mirrors drawStockBox.
    */
   private _currentStockInitial(): number | null {
-    const sv = this._host.stock_value
-    if (!sv) return null
-    const use_result = this.drawing_area.type_data !== 'data'
-    const si = use_result
-      ? (sv.stockInitialResult ?? sv.stockInitialData)
-      : sv.stockInitialData
-    return (si === null || si === undefined) ? null : si
+    return this._host.stock_initial_value
+  }
+
+  /**
+   * Seuil d'affichage du label de stock (#seuil px) : compare |stock initial| (mode
+   * valeur) ou l'épaisseur rendue scaleValueToPx(|.|) (mode pixel) au seuil
+   * `filter_stock[_px]`. Piloté par le même helper que drawStockBox (legacy).
+   */
+  public override get is_above_label_threshold(): boolean {
+    const si = this._currentStockInitial()
+    // Hauteur RÉELLEMENT rendue de cette forme de stock (getShapeHeightToUse).
+    return this.drawing_area.stockLabelPassesThreshold(
+      si === null ? null : Math.abs(si),
+      this.getShapeHeightToUse()
+    )
   }
 
   /**
