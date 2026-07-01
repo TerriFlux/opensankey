@@ -2519,6 +2519,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @memberof Class_LinkElement
    */
   protected get is_value_above_threshold(): boolean {
+    // Mode pixel (#seuil px) : on compare l'épaisseur rendue, pas la valeur.
+    if (this.drawing_area.filter_unit === 'pixel') {
+      return this.isThicknessAbovePxThreshold(this.drawing_area.filter_link_value_px)
+    }
     if (this.drawing_area.filter_link_value == 0) {
       return true
     }
@@ -2530,6 +2534,23 @@ export class Class_LinkElement extends Class_LinkAttribute {
       return true
     }
     return Number(this.valueCurrent) >= this.drawing_area.filter_link_value
+  }
+
+  /**
+   * Seuil d'affichage exprimé en pixels (#seuil px). Renvoie true (= le flux passe
+   * le seuil) quand : le seuil est nul/négatif (désactivé), le flux n'a pas de
+   * valeur (ghost/structure — jamais masqué par un seuil), ou son épaisseur
+   * PROPORTIONNELLE (scaleValueToPx, avant plancher de lisibilité minimum_flux)
+   * atteint le seuil. On volontairement ne clampe pas : le seuil doit refléter la
+   * taille réelle de la donnée, pas le plancher de lisibilité.
+   */
+  public isThicknessAbovePxThreshold(px_threshold: number): boolean {
+    if (!(px_threshold > 0)) return true
+    if (this.valueCurrent == null) return true
+    // Pixels ÉCRAN : l'épaisseur locale (repère SVG) est multipliée par le zoom
+    // live `k` pour comparer au seuil exprimé en pixels réellement affichés.
+    const screen_px = this.scaleValueToPx(Number(this.valueCurrent)) * this.drawing_area.getZoomScale()
+    return screen_px >= px_threshold
   }
   public get tooltip_text(): string {
     return this._tooltip_text

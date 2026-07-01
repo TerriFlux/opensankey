@@ -2127,7 +2127,8 @@ export class NodeDrawNameLabel extends NodeDrawLabelBase {
   }
 
   protected shouldDrawLabel(): boolean {
-    return this._label_values.is_visible
+    // Seuil d'affichage des labels de nœud (#seuil px).
+    return this._label_values.is_visible && this.node.is_above_label_threshold
   }
 
   // En mode « value », le libellé affiche une valeur calculée : on désactive
@@ -2173,6 +2174,10 @@ export class NodeDrawValueLabel extends NodeDrawLabelBase {
     if (this._element.drawing_area.type_data === 'structure') return false
     if (!this._label_values.is_visible) return false
     if (this._nodeElement.value_label_stick_to_label && !this._nodeElement.name_label_is_visible) return false
+    // Seuil d'affichage (#seuil px) : `this.node` est un nœud OU une forme de stock
+    // (Class_StockShape réutilise NodeDrawValueLabel), le getter dispatche vers le
+    // bon seuil (filter_node vs filter_stock).
+    if (!this.node.is_above_label_threshold) return false
     return true
   }
 
@@ -2711,13 +2716,20 @@ export class LinkDrawNameLabel extends LinkDrawLabelBase {
     const link_text = this.getLabelText()
     const link_val = this.link.valueCurrent
     const text_source = this.prefix === 'name_label' ? this.link.name_label_text_source : 'custom'
+    const da = this._element.drawing_area
+
+    // Seuil d'affichage des étiquettes : en mode pixel (#seuil px) on compare
+    // l'épaisseur rendue du flux ; sinon la valeur de donnée (comportement historique).
+    const passes_label_threshold = da.filter_unit === 'pixel'
+      ? this.link.isThicknessAbovePxThreshold(da.filter_label_px)
+      : !(link_val !== undefined && link_val !== null && link_val <= da.filter_label)
 
     return (
       this._label_values.is_visible &&
       !this._label_values.has_fo &&
       text_source !== 'none' &&
       ((link_text ?? '') !== '') &&
-      !(link_val !== undefined && link_val !== null && link_val <= this._element.drawing_area.filter_label)
+      passes_label_threshold
     )
   }
 }
@@ -2826,9 +2838,16 @@ export class LinkDrawValueLabel extends LinkDrawLabelBase {
 
   protected shouldDrawLabel(): boolean {
     const link_val = this.link.valueCurrent
+    const da = this._element.drawing_area
 
-    if (this._element.drawing_area.type_data === 'structure') return false
-    if ((link_val ?? 0) < this._element.drawing_area.filter_label) return false
+    if (da.type_data === 'structure') return false
+    // Seuil d'affichage des valeurs : mode pixel (#seuil px) → épaisseur rendue,
+    // sinon valeur de donnée (comportement historique).
+    if (da.filter_unit === 'pixel') {
+      if (!this.link.isThicknessAbovePxThreshold(da.filter_label_px)) return false
+    } else if ((link_val ?? 0) < da.filter_label) {
+      return false
+    }
 
     // const x0 = this.link.position_x_start
     // const y0 = this.link.position_y_start

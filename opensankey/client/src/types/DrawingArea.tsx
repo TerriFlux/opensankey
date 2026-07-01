@@ -415,6 +415,24 @@ export class Class_DrawingArea {
   // Filter out link label inferior to this value (null is considered as 0)
   private _filter_label: number = 0
 
+  // Unité des seuils d'affichage flux/étiquette : 'value' (valeur de donnée,
+  // défaut historique) ou 'pixel' (épaisseur rendue). En mode 'pixel', les seuils
+  // actifs sont _filter_link_value_px / _filter_label_px, comparés à l'épaisseur
+  // proportionnelle du flux (scaleValueToPx, avant plancher de lisibilité). Chaque
+  // unité garde son propre seuil pour ne rien perdre en basculant d'unité.
+  private _filter_unit: 'value' | 'pixel' = 'value'
+  private _filter_link_value_px: number = 0
+  private _filter_label_px: number = 0
+
+  // Seuils d'affichage des LABELS de nœud et de STOCK (même unité _filter_unit).
+  // Sous le seuil, le label du nœud (nom + valeur) resp. le label de stock est masqué
+  // — la forme reste visible. En mode 'value' on compare la valeur (data_value du
+  // nœud / |stock initial|) ; en mode 'pixel' l'épaisseur rendue (hauteur de bande).
+  private _filter_node: number = 0
+  private _filter_node_px: number = 0
+  private _filter_stock: number = 0
+  private _filter_stock_px: number = 0
+
   // #fn — when true, links with a null value stay visible (global override of the
   // null-link filter). Per-link override is Link.shape_visible_when_zero.
   private _show_zero_links: boolean = false
@@ -560,6 +578,13 @@ export class Class_DrawingArea {
     this._color = drawing_area_to_copy._color
     this._filter_label = drawing_area_to_copy._filter_label
     this._filter_link_value = drawing_area_to_copy._filter_link_value
+    this._filter_unit = drawing_area_to_copy._filter_unit
+    this._filter_link_value_px = drawing_area_to_copy._filter_link_value_px
+    this._filter_label_px = drawing_area_to_copy._filter_label_px
+    this._filter_node = drawing_area_to_copy._filter_node
+    this._filter_node_px = drawing_area_to_copy._filter_node_px
+    this._filter_stock = drawing_area_to_copy._filter_stock
+    this._filter_stock_px = drawing_area_to_copy._filter_stock_px
     this._show_zero_links = drawing_area_to_copy._show_zero_links
     this._show_orphan_nodes = drawing_area_to_copy._show_orphan_nodes
     this._fit_margin = drawing_area_to_copy._fit_margin
@@ -3048,6 +3073,18 @@ export class Class_DrawingArea {
           this._refreshLabelsForFitZoom()
         }, 120)
       }
+
+      // Seuil d'affichage en pixels ÉCRAN : l'épaisseur/hauteur apparente change avec
+      // le zoom, donc la visibilité filtrée doit être réévaluée. Le zoom n'applique
+      // qu'un transform (pas de _draw), on redessine donc flux + nœuds (débouncé) pour
+      // relancer is_value_above_threshold / *LabelPassesThreshold. Uniquement si un
+      // seuil px est actif (sinon coût inutile).
+      if (this.has_active_pixel_filter) {
+        this.application_data._add_waiting_process('refresh_pixel_filter_zoom', () => {
+          this.sankey.visible_links_list.forEach(l => l.draw())
+          this.sankey.nodes_list.forEach(n => n.draw())
+        }, 120)
+      }
     }
   }
 
@@ -3837,6 +3874,79 @@ export class Class_DrawingArea {
 
   public get filter_link_value(): number { return this._filter_link_value }
   public set filter_link_value(value: number) { this._filter_link_value = value }
+
+  public get filter_unit(): 'value' | 'pixel' { return this._filter_unit }
+  public set filter_unit(value: 'value' | 'pixel') { this._filter_unit = value }
+
+  public get filter_link_value_px(): number { return this._filter_link_value_px }
+  public set filter_link_value_px(value: number) { this._filter_link_value_px = value }
+
+  public get filter_label_px(): number { return this._filter_label_px }
+  public set filter_label_px(value: number) { this._filter_label_px = value }
+
+  public get filter_node(): number { return this._filter_node }
+  public set filter_node(value: number) { this._filter_node = value }
+
+  public get filter_node_px(): number { return this._filter_node_px }
+  public set filter_node_px(value: number) { this._filter_node_px = value }
+
+  public get filter_stock(): number { return this._filter_stock }
+  public set filter_stock(value: number) { this._filter_stock = value }
+
+  public get filter_stock_px(): number { return this._filter_stock_px }
+  public set filter_stock_px(value: number) { this._filter_stock_px = value }
+
+  /**
+   * Seuil d'affichage du LABEL d'un nœud selon l'unité active (#seuil px).
+   * @param value    valeur de donnée du nœud (data_value)
+   * @param height_px hauteur de bande rendue du nœud (getShapeHeightToUse)
+   * @returns true si le nœud passe le seuil (label affiché).
+   */
+  public nodeLabelPassesThreshold(value: number, height_px: number): boolean {
+    if (this._filter_unit === 'pixel') {
+      if (!(this._filter_node_px > 0)) return true
+      // Pixels ÉCRAN : hauteur de bande locale × zoom live.
+      return height_px * this.getZoomScale() >= this._filter_node_px
+    }
+    if (!(this._filter_node > 0)) return true
+    return value >= this._filter_node
+  }
+
+  /**
+   * Seuil d'affichage du LABEL de stock selon l'unité active (#seuil px).
+   *
+   * IMPORTANT : la hauteur rendue d'un stock N'EST PAS scaleValueToPx(|valeur|) —
+   * elle est divisée par le facteur d'échelle stock par nœud (stock_height_scale_factor,
+   * cf. Node.tsx _getNaturalShapeHeight / drawStockBox). On exige donc que l'appelant
+   * fournisse la hauteur RÉELLEMENT rendue (repère local), pour que le seuil px « stock »
+   * soit sur la même échelle visuelle que le seuil px « flux ».
+   * @param abs_value magnitude du stock (|stock initial|), ou null (jamais masqué)
+   * @param height_px hauteur de bande RENDUE du stock (repère local, facteur inclus)
+   */
+  public stockLabelPassesThreshold(abs_value: number | null, height_px: number): boolean {
+    if (abs_value === null) return true
+    if (this._filter_unit === 'pixel') {
+      if (!(this._filter_stock_px > 0)) return true
+      // Pixels ÉCRAN : hauteur rendue locale × zoom live.
+      return height_px * this.getZoomScale() >= this._filter_stock_px
+    }
+    if (!(this._filter_stock > 0)) return true
+    return abs_value >= this._filter_stock
+  }
+
+  /**
+   * true si un seuil d'affichage exprimé en pixels est actif (unité pixel + au moins
+   * un seuil > 0). Sert à ne redéclencher un re-tracé au zoom que quand c'est utile
+   * (les pixels écran dépendent du zoom, cf. handlers de zoom).
+   */
+  public get has_active_pixel_filter(): boolean {
+    return this._filter_unit === 'pixel' && (
+      this._filter_link_value_px > 0 ||
+      this._filter_label_px > 0 ||
+      this._filter_node_px > 0 ||
+      this._filter_stock_px > 0
+    )
+  }
 
   public get show_zero_links(): boolean { return this._show_zero_links }
   public set show_zero_links(value: boolean) { this._show_zero_links = value }

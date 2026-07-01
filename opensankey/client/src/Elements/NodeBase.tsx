@@ -294,6 +294,15 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   }
 
   /**
+   * Seuil d'affichage du label (#seuil px). true = le label peut s'afficher.
+   * Base : pas de seuil (les sous-classes nœud/stock connaissent leur valeur et
+   * redéfinissent ce getter en s'appuyant sur drawing_area.{node,stock}LabelPassesThreshold).
+   */
+  public get is_above_label_threshold(): boolean {
+    return true
+  }
+
+  /**
    * #1230 — Mode coordonnées absolues : garde le CENTRE du nœud fixe quand sa
    * taille de rendu change pour une raison automatique (échelle globale des flux,
    * valeur, bascule de vue/datatag). À appeler une fois par cycle de dessin, avant

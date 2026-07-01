@@ -437,6 +437,14 @@ export class Class_NodeElement extends Class_NodeBase {
       ? (stock_val.stockVariationResult ?? stock_val.stockVariationData)
       : stock_val.stockVariationData
     if (si === null && dv === null) return
+    // Seuil d'affichage du label de stock (#seuil px) : magnitude = |si| si présent,
+    // sinon |dv|. La hauteur RENDUE du stock = scaleValueToPx(magnitude)/facteur
+    // (cf. _getNaturalShapeHeight), on la passe au seuil pour rester sur la même
+    // échelle px que les flux. Sous le seuil, on ne dessine pas le label de stock.
+    const stock_mag = si !== null ? Math.abs(si) : (dv !== null ? Math.abs(dv) : null)
+    const stock_factor = this.stock_height_scale_factor > 0 ? this.stock_height_scale_factor : 1
+    const stock_height_px = stock_mag === null ? 0 : this.drawing_area.scaleValueToPx(stock_mag) / stock_factor
+    if (!this.drawing_area.stockLabelPassesThreshold(stock_mag, stock_height_px)) return
     if (!this.d3_selection_g_shape) return
     const nodeW = this.getShapeWidthToUse()
     const nodeH = this.getShapeHeightToUse()
@@ -2247,6 +2255,27 @@ export class Class_NodeElement extends Class_NodeBase {
     const pow_out = Math.pow(10, max_digit_out)
     link_out.forEach(v => output_val += (v ?? 0) * pow_out)
     return Math.max(input_val / pow_in, output_val / pow_out)
+  }
+
+  /**
+   * Valeur de stock initiale courante (signée) au datatag actif, ou null si le nœud
+   * n'a pas de stock. Résultat en mode réconcilié/calculé, donnée brute en mode 'data'
+   * (miroir de drawStockBox / Class_StockShape). Sert au seuil d'affichage « stock ».
+   */
+  public get stock_initial_value(): number | null {
+    const sv = this.stock_value
+    if (!sv) return null
+    const use_result = this.drawing_area.type_data !== 'data'
+    const si = use_result ? (sv.stockInitialResult ?? sv.stockInitialData) : sv.stockInitialData
+    return (si === null || si === undefined) ? null : si
+  }
+
+  /**
+   * Seuil d'affichage des labels de nœud (#seuil px) : compare data_value (mode
+   * valeur) ou la hauteur de bande rendue (mode pixel) au seuil `filter_node[_px]`.
+   */
+  public override get is_above_label_threshold(): boolean {
+    return this.drawing_area.nodeLabelPassesThreshold(this.data_value, this.getShapeHeightToUse())
   }
 
   // Comme pour les titres (Class_ContainerElement), le label d'un nœud peut
