@@ -553,8 +553,8 @@ export const disaggregate = (
     const echangeTag = aggregateNode.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange'] as Class_Tag
     if (echangeTag) {
       parent_dim.children.forEach(child => {
-        child.input_links_list.filter(l => l.source.hasGivenTag(echangeTag)).forEach(l => l.source.dimensions_as_child[0].setForceToShowChildren())
-        child.output_links_list.filter(l => l.target.hasGivenTag(echangeTag)).forEach(l => l.target.dimensions_as_child[0].setForceToShowChildren())
+        child.input_links_list.filter(l => l.source.hasGivenTag(echangeTag)).forEach(l => l.source.dimensions_as_child[0]?.setForceToShowChildren())
+        child.output_links_list.filter(l => l.target.hasGivenTag(echangeTag)).forEach(l => l.target.dimensions_as_child[0]?.setForceToShowChildren())
       })
     }
 
@@ -638,7 +638,13 @@ export const disaggregationExpansion = (
   new_data: Class_ApplicationData,
   contextualised_node: Class_NodeElement,
   expand_left: boolean,
-  child: Class_NodeElement
+  child: Class_NodeElement,
+  // #1231 — En BATCH (changement de niveau global, cf. Toolbar) cette fonction est
+  // appelée une fois par nœud. Le draw()+recenter() final ci-dessous ré-active le
+  // rendu (draw() force bypass_redraws=false) et redessine TOUT le diagramme À CHAQUE
+  // nœud → O(N²). Avec finalize=false le batch reste sous bypass et l'appelant fait un
+  // UNIQUE draw()+recenter() après la boucle. En clic droit (standalone) : true = rendu ici.
+  finalize: boolean = true
 ) => {
   new_data.drawing_area.bypass_redraws = true
   const sankey = new_data.drawing_area.sankey
@@ -713,10 +719,14 @@ export const disaggregationExpansion = (
   to_reorg.forEach(n => n.reorganizeIOLinks())
   // #1231 — commande de positionnement (expansion/contraction) → mode absolu (réf persistée conservée).
   new_data.drawing_area.setAbsoluteMode()
-  new_data.drawing_area.draw()
-  new_data.drawing_area.to_recenter = true
-  new_data.drawing_area.recenter()
-  new_data.drawing_area.to_recenter = false
+  // En batch (finalize=false) on laisse bypass_redraws=true (posé en tête) : l'appelant
+  // fait un unique draw()+recenter() après la boucle. Sinon rendu immédiat (clic droit).
+  if (finalize) {
+    new_data.drawing_area.draw()
+    new_data.drawing_area.to_recenter = true
+    new_data.drawing_area.recenter()
+    new_data.drawing_area.to_recenter = false
+  }
 }
 
 /**
