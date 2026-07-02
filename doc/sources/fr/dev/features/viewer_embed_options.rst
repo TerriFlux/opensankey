@@ -154,6 +154,20 @@ Filtres topbar
        diagramme s'ouvre déjà filtré sur cette vue. Groupe/tag introuvable ignoré
        (``console.warn``). Valeur spéciale ``"all"``, ``"none"`` ou ``"*"`` :
        **désactive** le filtre vue du groupe (toutes les valeurs visibles).
+       En OpenSankey+, si le couple ``{ groupe : tag }`` désigne une **vraie vue**
+       (heavy, avec géométrie/style propres), le viewer bascule sur cette vue
+       (``setCurrentView``) au lieu d'un simple filtre de visibilité : on obtient
+       la mise en page et les overrides de la vue, pas seulement le maître filtré.
+       Une vue **light** reste traitée comme un filtre viewtag (géométrie héritée).
+   * - ``view_selection``
+     - ``string``
+     - **OpenSankey+ uniquement.** Ouvre DIRECTEMENT une **vue** par son **nom**
+       ou son **id**, indifféremment de son type (light/heavy) — exactement comme
+       le sélecteur de vue de la topbar (``setCurrentView``). C'est le moyen d'ouvrir
+       une vue heavy qui n'est pas rattachée à un couple ``{ groupe : tag }`` (ex.
+       une vue « complète » créée à la main). Prioritaire sur ``view_tag_selection``.
+       Vue introuvable : ignoré (``console.warn``). Le maître se désigne par son
+       libellé (``master_view_name``).
 
 Ces options sont appliquées après le chargement du diagramme (et de l'éventuel
 ``diagram_layout``) via ``Class_ApplicationData.applyPublishStateOptions()`` ; la
