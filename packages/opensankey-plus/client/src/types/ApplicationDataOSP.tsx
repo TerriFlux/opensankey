@@ -832,11 +832,11 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   }
 
   /**
-   * Résout une option de publication `view_selection` (nom OU id d'une vue) vers un id de vue.
-   * Fusion vue ⊕ viewtag : une vue se sélectionne par identité, indifféremment de son type
-   * (light/heavy), comme le sélecteur de vue de la topbar. Ordre de résolution : id exact dans
-   * `_views`, puis nom de vue, puis maître (id réservé `default_main_sankey_id` ou son libellé
-   * `master_view_name`). `null` si rien ne correspond.
+   * Résout une valeur de sélection (nom OU id d'une vue) vers un id de vue. Fusion vue ⊕ viewtag :
+   * une vue se sélectionne par identité, indifféremment de son type (light/heavy), comme le
+   * sélecteur de vue de la topbar. Ordre de résolution : id exact dans `_views`, puis nom de vue,
+   * puis maître (id réservé `default_main_sankey_id` ou son libellé `master_view_name`). `null` si
+   * rien ne correspond.
    * @protected
    */
   protected _resolveViewIdFromSelection(selection: string): string | null {
@@ -851,33 +851,52 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   }
 
   /**
-   * Concept unifié vue ⊕ viewtag côté publication. Deux façons de fixer la vue d'ouverture :
-   *   - `view_selection` (nom OU id de vue) : sélectionne DIRECTEMENT n'importe quelle vue, comme
-   *     le sélecteur de vue — indifférente au type (light/heavy). Prioritaire.
-   *   - `view_tag_selection` `{ groupe : tag }` : si le couple désigne une vraie vue (heavy générée
-   *     ou tag_selection correspondante), on bascule dessus ; sinon simple filtre de visibilité.
-   * La bascule (`setCurrentView` : swap de DA, cascade `heredited_attr`, visibilité `tag_selection`,
-   * mode de position préservé, redraw) se fait AVANT `super`, qui réapplique ensuite les data tags,
-   * le mode, et d'éventuels groupes view-tag restants en filtre light additif par-dessus la vue.
+   * Concept unifié vue ⊕ viewtag côté publication. `view_tag_selection` désigne, EXACTEMENT comme
+   * le sélecteur de vue de la topbar (cf. `SankeyPlusViews`), une VUE à ouvrir — indifféremment de
+   * son type (light/heavy). La valeur d'un couple `{ groupe : valeur }` est résolue en id de vue
+   * (id OU nom, cf. `_resolveViewIdFromSelection`) puis ouverte via `setCurrentView`, qui pose déjà
+   * la visibilité propre de la vue (tag_selection d'une light, effacement du filtre pour le maître
+   * ou une heavy sans sélection). On n'exécute donc PAS en plus le filtre view-tag de base.
+   * Replis si la valeur ne correspond à aucune vue : (1) vue heavy dont le couple {groupe:tag}
+   * matche, sinon (2) simple filtre de visibilité du view tag (chemin de base) — et si on était sur
+   * une autre vue (heavy ré-appliquée en place), on revient au maître pour ne pas superposer le
+   * filtre sur la géométrie d'une vue.
    * @memberof Class_ApplicationDataOSP
    */
   public override applyPublishStateOptions(): void {
     const opts = this.publish_options
     let target_view_id: string | null = null
-    if (opts.view_selection) {
-      target_view_id = this._resolveViewIdFromSelection(opts.view_selection)
-      if (!target_view_id) {
-        // eslint-disable-next-line no-console
-        console.warn(`[OpenSankey] view_selection : vue introuvable « ${opts.view_selection} »`)
+    let view_resolved = false // la valeur désignait une vue => visibilité déjà posée par setCurrentView
+    if (opts.view_tag_selection) {
+      // 1) valeur = VUE (id OU nom, light/heavy), résolue comme le sélecteur de vue
+      for (const value of Object.values(opts.view_tag_selection)) {
+        const vid = this._resolveViewIdFromSelection(value)
+        if (vid) { target_view_id = vid; view_resolved = true; break }
       }
-    }
-    if (!target_view_id && opts.view_tag_selection) {
-      target_view_id = this._resolveHeavyViewIdFromViewTagSelection(opts.view_tag_selection)
+      // 2) repli : vue heavy désignée par un couple {groupe : tag}
+      if (!target_view_id) {
+        target_view_id = this._resolveHeavyViewIdFromViewTagSelection(opts.view_tag_selection)
+        if (target_view_id) view_resolved = true
+      }
+      // 3) repli : simple filtre view-tag => si on est sur une AUTRE vue (heavy ré-appliquée en
+      //    place), revenir au maître pour ne pas superposer le filtre sur la géométrie d'une vue.
+      if (!target_view_id && !this.is_view_master) {
+        target_view_id = default_main_sankey_id
+      }
     }
     if (target_view_id && target_view_id !== this._current_view_id) {
       this.setCurrentView(target_view_id)
     }
-    super.applyPublishStateOptions()
+    if (view_resolved) {
+      // Vue ouverte comme le sélecteur : ne pas ré-appliquer un filtre view-tag de base par-dessus
+      // (double application + warn « tag introuvable » quand la valeur est un id/nom de vue).
+      const saved = opts.view_tag_selection
+      opts.view_tag_selection = null
+      super.applyPublishStateOptions()
+      opts.view_tag_selection = saved
+    } else {
+      super.applyPublishStateOptions()
+    }
   }
 
   /**
