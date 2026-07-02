@@ -88,9 +88,20 @@ export const OpenSankeyApp = ({
   const opts = app_data.publish_options
   const applyPublishRecenter = () => {
     if (app_data.is_static && opts.recenter) {
-      app_data.drawing_area.to_recenter = true
-      app_data.drawing_area.recenter()
-      app_data.drawing_area.to_recenter = false
+      const doRecenter = () => {
+        app_data.drawing_area.to_recenter = true
+        app_data.drawing_area.recenter()
+        app_data.drawing_area.to_recenter = false
+      }
+      // Différé de 2 frames : au tout premier chargement, le conteneur hôte
+      // (#sankey_app) peut ne pas avoir sa hauteur finale — quand l'embarqueur ajoute
+      // sa PROPRE topbar au-dessus, le layout flex n'est stabilisé qu'après le montage.
+      // recenter() lu trop tôt voit clientHeight=0 → window_fitting_* retombe sur
+      // window.innerHeight (garde `if h>0`) et le contenu se recale derrière la topbar
+      // externe (corrigé sinon dès la 1re interaction). Après 2 frames, les dimensions
+      // réelles du conteneur sont disponibles. En plein écran (pas de topbar externe) :
+      // clientHeight == innerHeight, le résultat est identique — simple recadrage à vide.
+      requestAnimationFrame(() => requestAnimationFrame(doRecenter))
     }
   }
   const applyDiagramData = (data: Type_JSON) => {
