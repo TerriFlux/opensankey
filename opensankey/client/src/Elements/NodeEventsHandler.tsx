@@ -705,7 +705,8 @@ export class NodeEventsHandler {
    * Define event when mouse moves over element
    */
   public handleMouseOver(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    const show_tooltip = event.shiftKey
+    // Option publish tooltip_on_hover : tooltips au simple survol, sans maintenir Shift.
+    const show_tooltip = event.shiftKey || this._node.drawing_area.application_data.publish_options.tooltip_on_hover
     // ALT + pas de tooltip déjà ouvert pour ce noeud
     if (show_tooltip && (event.target as HTMLElement).tagName !== 'tspan') {
       const existingTooltip = document.querySelector('.sankey-tooltip')

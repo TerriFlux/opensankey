@@ -3020,6 +3020,10 @@ export class Class_DrawingArea {
       if (isMac ? event.metaKey : event.ctrlKey) {
         // Avoid CTRL + Scroll (or CMD + Scroll on Mac) default behavior in Browser
         event.preventDefault()
+        // Option publish lock_zoom : zoom molette (Ctrl/Cmd + scroll, y compris pinch trackpad)
+        // désactivé. On garde le preventDefault (pas de zoom navigateur) mais on ne change pas
+        // l'échelle du diagramme. Le pan (scroll simple / shift+scroll) reste actif.
+        if (this.application_data?.publish_options?.lock_zoom) return
         // Guard: ignore if deltaY is 0 (can happen with touchpad or wheel tilt)
         if (event.deltaY === 0) return
         // Smooth zoom factor proportional to deltaY magnitude

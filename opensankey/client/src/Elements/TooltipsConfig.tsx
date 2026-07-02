@@ -237,7 +237,7 @@ export function implementTooltipForNode(NodeClass: typeof Class_NodeElement) {
     this: Class_NodeElement,
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-    const show_tooltip = event.shiftKey
+    const show_tooltip = event.shiftKey || this.drawing_area.application_data.publish_options.tooltip_on_hover
     if (show_tooltip && (event.target as HTMLElement).tagName !== 'tspan') {
       const tooltipManager = TooltipEventManager.getInstance()
       tooltipManager.showTooltip(this, event.pageX, event.pageY)
@@ -310,7 +310,7 @@ export function implementTooltipForLink(LinkClass: typeof Class_LinkElement) {
     this: Class_LinkElement,
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-    const show_tooltip = event.shiftKey
+    const show_tooltip = event.shiftKey || this.drawing_area.application_data.publish_options.tooltip_on_hover
     if (show_tooltip && (event.target as HTMLElement).tagName !== 'tspan' && (event.target as HTMLElement).tagName !== 'text') {
       const tooltipManager = TooltipEventManager.getInstance()
 
