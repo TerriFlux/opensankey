@@ -2803,17 +2803,34 @@ export class Class_DrawingArea {
 
     // Helper to get content extent via getBBox
     const getContentScreenExtent = () => {
-      if (!this.d3_selection_zoom_area || !this.d3_selection) return null
+      if (!this.d3_selection_zoom_area || !this.d3_selection_elements_group) return null
       const svgN = this.d3_selection_zoom_area.node()
-      const gN = this.d3_selection.node()
+      // Measure g_elements, not g_drawing: g_drawing includes the viewport-tracking
+      // background (see _updateScrollbars) which would let the thumb drag into empty space.
+      const gN = this.d3_selection_elements_group.node()
       if (!svgN || !gN) return null
       const t = d3.zoomTransform(svgN)
       let bbox: DOMRect
       try { bbox = gN.getBBox() } catch { return null }
+      const has_bbox = bbox.width !== 0 || bbox.height !== 0
+      // Union with the canvas rect so the pannable extent matches translateExtent.
+      let cx0: number, cy0: number, cx1: number, cy1: number
+      if (this.is_paper_mode) {
+        cx0 = 0; cy0 = 0; cx1 = this._width; cy1 = this._height
+      } else {
+        cx0 = this._background_d3_groups_shift_x
+        cy0 = this._background_d3_groups_shift_y
+        cx1 = cx0 + this._zoom_width
+        cy1 = cy0 + this._zoom_height
+      }
+      const x0 = has_bbox ? Math.min(bbox.x, cx0) : cx0
+      const y0 = has_bbox ? Math.min(bbox.y, cy0) : cy0
+      const x1 = has_bbox ? Math.max(bbox.x + bbox.width, cx1) : cx1
+      const y1 = has_bbox ? Math.max(bbox.y + bbox.height, cy1) : cy1
       const r = svgN.getBoundingClientRect()
       return {
-        screenW: bbox.width * t.k,
-        screenH: bbox.height * t.k,
+        screenW: (x1 - x0) * t.k,
+        screenH: (y1 - y0) * t.k,
         viewW: Math.min(r.width, window.innerWidth - Math.max(0, r.left)),
         viewH: Math.min(r.height, window.innerHeight - Math.max(0, r.top)),
         k: t.k
@@ -2867,7 +2884,12 @@ export class Class_DrawingArea {
     if (!this.d3_selection_zoom_area || !this._d3_scrollbar_h || !this._d3_scrollbar_v) return
     const svgNode = this.d3_selection_zoom_area.node()
     if (!svgNode) return
-    const gNode = this.d3_selection?.node()
+    // Measure the real content via g_elements, NOT g_drawing: g_drawing contains
+    // g_background, whose rect is sized to the union canvas ∪ visible viewport
+    // (_freeBgBounds). Panning re-runs drawBackground() and grows that rect to cover
+    // the newly revealed viewport, so g_drawing.getBBox() would grow without bound and
+    // make the scrollbar appear over — and pan into — empty space.
+    const gNode = this.d3_selection_elements_group?.node()
     if (!gNode) return
 
     const sb = this._scrollbar_size
@@ -2926,13 +2948,15 @@ export class Class_DrawingArea {
     // enough for the initial draw and for empty-diagram resets to anchor correctly.
     if (!has_bbox) return
 
-    // Map content bbox to screen coordinates using the zoom transform
+    // Map the pannable extent (union content ∪ canvas — the same rect used for
+    // translateExtent above) to screen coordinates using the zoom transform, so the
+    // scrollbar reflects exactly what d3-zoom lets the user pan to.
     const transform = d3.zoomTransform(svgNode)
     // In screen space: point (localX, localY) -> (transform.x + localX * k, transform.y + localY * k)
-    const screenLeft = transform.x + bbox!.x * transform.k
-    const screenRight = transform.x + (bbox!.x + bbox!.width) * transform.k
-    const screenTop = transform.y + bbox!.y * transform.k
-    const screenBottom = transform.y + (bbox!.y + bbox!.height) * transform.k
+    const screenLeft = transform.x + panX0 * transform.k
+    const screenRight = transform.x + panX1 * transform.k
+    const screenTop = transform.y + panY0 * transform.k
+    const screenBottom = transform.y + panY1 * transform.k
     const screenW = screenRight - screenLeft
     const screenH = screenBottom - screenTop
 
