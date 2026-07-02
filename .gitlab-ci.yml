@@ -325,7 +325,12 @@ publish:python:
   tags: [py312]
   rules:
     - if: $CI_COMMIT_TAG
-  needs: []
+  # npm d'abord : publish:python attend publish:npm (chaîne build:examples ->
+  # publish:npm -> publish:python). En prime, npm s'exécute donc AVANT que les
+  # builds de wheels (docker root) ne créent des fichiers root dans le workspace,
+  # donc plus aucun risque que le git submodule update de npm échoue (cf. chown ci-dessous).
+  needs:
+    - publish:npm
   dependencies: []
   script:
     # Version alignee sur le tag git (et donc sur la version npm publiee
@@ -352,11 +357,13 @@ publish:python:
     # ----------------------------------------------------------------
     # Ceinture-bretelles : les wheel builds tournent en root dans le
     # container manylinux et laissent build/, dist/, *.egg-info,
-    # */tests/, */data/ owned by root. Sans ce chown, le job suivant
-    # (publish:npm) echoue au 'git submodule update' avec un cascade de
-    # "Permission denied". Les scripts build_wheel_linux.sh font deja un
-    # trap chown EXIT cote container, mais on garde ce filet ici pour
-    # couvrir les vieux SHA de submodules sans le fix.
+    # */tests/, */data/ owned by root. On normalise l'ownership pour ne pas
+    # laisser de fichiers root dans le workspace partagé du runner (sinon un
+    # job ultérieur — ex. pages, ou un re-run — echoue au 'git submodule
+    # update' avec "Permission denied"). publish:npm tourne desormais AVANT ce
+    # job, donc il n'est plus concerné ; on garde ce filet pour les autres jobs.
+    # Les scripts build_wheel_linux.sh font deja un trap chown EXIT cote
+    # container, mais on garde ce filet ici pour couvrir les vieux SHA sans le fix.
     - echo "[publish:python] Normalise l'ownership host sur tous les artefacts"
     - |
       docker run --rm -v "$(pwd):/io" --entrypoint sh quay.io/pypa/manylinux2014_x86_64 \
