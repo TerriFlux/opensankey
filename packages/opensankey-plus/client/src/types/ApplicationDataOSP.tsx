@@ -801,6 +801,86 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   }
 
   /**
+   * Résout un `view_tag_selection` de publication `{ groupe : tag }` (id OU nom) vers l'id d'une
+   * VRAIE vue (heavy) si l'un des couples (groupe, tag) en désigne une. Deux stratégies :
+   *   1) id déterministe des vues générées/promues depuis un groupe de view tags : `vt__<g>__<t>`.
+   *   2) fallback : n'importe quelle vue heavy dont la `tag_selection` contient (group.id → tag.id).
+   * Ne renvoie qu'une vue non-light (une vue light se comporte déjà comme un simple filtre viewtag,
+   * géré par le chemin de base). `null` si aucune vue heavy ne correspond.
+   * @protected
+   */
+  protected _resolveHeavyViewIdFromViewTagSelection(
+    selection: Record<string, string>
+  ): string | null {
+    if (!this.has_views) return null
+    const base_sankey = (this._master_drawing_area ?? this._drawing_area).sankey
+    for (const [group_key, tag_key] of Object.entries(selection)) {
+      const group = base_sankey.view_taggs_list.find(g => g.id === group_key || g.name === group_key)
+      if (!group) continue
+      const tag = group.tags_list.find(t => t.id === tag_key || t.name === tag_key)
+      if (!tag) continue
+      // 1) id déterministe (migration/promotion depuis un groupe de view tags)
+      const gen_id = `vt__${group.id}__${tag.id}`
+      if (this._views[gen_id] && !this._views[gen_id].is_light) return gen_id
+      // 2) fallback : vue heavy dont la sélection de visibilité désigne ce couple
+      for (const [vid, v] of Object.entries(this._views)) {
+        if (v.is_light) continue
+        if (v.tag_selection && v.tag_selection[group.id] === tag.id) return vid
+      }
+    }
+    return null
+  }
+
+  /**
+   * Résout une option de publication `view_selection` (nom OU id d'une vue) vers un id de vue.
+   * Fusion vue ⊕ viewtag : une vue se sélectionne par identité, indifféremment de son type
+   * (light/heavy), comme le sélecteur de vue de la topbar. Ordre de résolution : id exact dans
+   * `_views`, puis nom de vue, puis maître (id réservé `default_main_sankey_id` ou son libellé
+   * `master_view_name`). `null` si rien ne correspond.
+   * @protected
+   */
+  protected _resolveViewIdFromSelection(selection: string): string | null {
+    if (selection === default_main_sankey_id) return default_main_sankey_id
+    if (this._views[selection]) return selection // id exact
+    for (const [vid, v] of Object.entries(this._views)) {
+      if (v.name === selection) return vid // par nom de vue
+    }
+    // Le maître n'est pas une entrée de _views : match sur son libellé éditable.
+    if (this._master_view_name && selection === this._master_view_name) return default_main_sankey_id
+    return null
+  }
+
+  /**
+   * Concept unifié vue ⊕ viewtag côté publication. Deux façons de fixer la vue d'ouverture :
+   *   - `view_selection` (nom OU id de vue) : sélectionne DIRECTEMENT n'importe quelle vue, comme
+   *     le sélecteur de vue — indifférente au type (light/heavy). Prioritaire.
+   *   - `view_tag_selection` `{ groupe : tag }` : si le couple désigne une vraie vue (heavy générée
+   *     ou tag_selection correspondante), on bascule dessus ; sinon simple filtre de visibilité.
+   * La bascule (`setCurrentView` : swap de DA, cascade `heredited_attr`, visibilité `tag_selection`,
+   * mode de position préservé, redraw) se fait AVANT `super`, qui réapplique ensuite les data tags,
+   * le mode, et d'éventuels groupes view-tag restants en filtre light additif par-dessus la vue.
+   * @memberof Class_ApplicationDataOSP
+   */
+  public override applyPublishStateOptions(): void {
+    const opts = this.publish_options
+    let target_view_id: string | null = null
+    if (opts.view_selection) {
+      target_view_id = this._resolveViewIdFromSelection(opts.view_selection)
+      if (!target_view_id) {
+        // eslint-disable-next-line no-console
+        console.warn(`[OpenSankey] view_selection : vue introuvable « ${opts.view_selection} »`)
+      }
+    }
+    if (!target_view_id && opts.view_tag_selection) {
+      target_view_id = this._resolveHeavyViewIdFromViewTagSelection(opts.view_tag_selection)
+    }
+    if (target_view_id && target_view_id !== this._current_view_id) {
+      this.setCurrentView(target_view_id)
+    }
+    super.applyPublishStateOptions()
+  }
+
+  /**
    * Migration « tout est une vue nommée » : pour chaque groupe de view tags activé (hors
    * unitaires), génère une vue light par étiquette (visibilité seule, géométrie héritée du
    * maître). Additive et idempotente (id déterministe + garde d'existence). Bascule en mode
