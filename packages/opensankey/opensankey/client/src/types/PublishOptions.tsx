@@ -57,8 +57,7 @@ export interface SankeyGlobals {
   // État initial
   position_mode?: Type_PositionMode  // mode de navigation imposé à l'ouverture (absolu/proportionnel/échelle adaptée)
   data_tag_selection?: Record<string, string>  // { groupe (id ou nom) : tag (id ou nom) } préselectionné à l'ouverture
-  view_tag_selection?: Record<string, string>  // { groupe (id ou nom) : tag (id ou nom) } : active le filtre vue du groupe sur ce tag à l'ouverture
-  view_selection?: string  // nom OU id d'une VUE (OS+) à ouvrir, indifférente au type (light/heavy) — comme le sélecteur de vue
+  view_tag_selection?: Record<string, string>  // { groupe (id ou nom) : valeur } : sélectionne une VUE (nom OU id, light/heavy) comme le sélecteur de vue ; sinon filtre le view tag sur ce tag
 
   // Indexer pour configs per-diagramme (diagrams_list etc.)
   [key: string]: unknown
@@ -89,7 +88,6 @@ export interface PublishOptions {
   position_mode: Type_PositionMode | null
   data_tag_selection: Record<string, string> | null
   view_tag_selection: Record<string, string> | null
-  view_selection: string | null
   logo: string | null
   header: string | null
   diagram: string | Record<string, unknown> | null
@@ -159,7 +157,6 @@ export const getPublishOptions = (): PublishOptions => {
     position_mode: posMode(s.position_mode),
     data_tag_selection: strRecord(s.data_tag_selection),
     view_tag_selection: strRecord(s.view_tag_selection),
-    view_selection: str(s.view_selection),
     logo: str(s.logo),
     header: str(s.header),
     diagram: (typeof s.diagram === 'string')
@@ -212,8 +209,7 @@ export type ViewerSankeyOptions = {
   data_filter?: boolean
   position_mode?: Type_PositionMode
   data_tag_selection?: Record<string, string>
-  view_tag_selection?: Record<string, string>
-  view_selection?: string  // nom OU id d'une VUE (OS+) à ouvrir, indifférente au type (light/heavy)
+  view_tag_selection?: Record<string, string>  // valeur = VUE (nom/id, light ou heavy, comme le sélecteur de vue) ou tag à filtrer
   // Configs per-diagramme (clé = nom dans diagrams_list)
   diagrams_config?: Record<string, Record<string, unknown>>
 }
@@ -234,7 +230,7 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
     'diagrams_list', 'sous_filieres',
     'data_type', 'data_type_intervals', 'value_filter',
     'view_filter', 'level_filter', 'node_filter', 'data_filter',
-    'position_mode', 'data_tag_selection', 'view_tag_selection', 'view_selection',
+    'position_mode', 'data_tag_selection', 'view_tag_selection',
   ]
   for (const k of keys) {
     if (options[k] !== undefined) {
