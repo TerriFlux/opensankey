@@ -3447,6 +3447,16 @@ export class Class_DrawingArea {
       const h = this.getContainerNode()?.clientHeight ?? 0
       if (h > 0) return h - this._fit_margin
     }
+    // Mode embarqué (embedded) : le SVG fait 100% du conteneur hôte (#sankey_app),
+    // qui peut être plus court que la fenêtre quand l'embarqueur ajoute sa PROPRE
+    // topbar au-dessus. On cadre donc dans la hauteur RÉELLE du conteneur (pas
+    // window.innerHeight, qui recalerait le contenu derrière la topbar externe).
+    // La topbar interne du viewer étant absente en embedded, pas d'offset navbar ;
+    // on retranche le footer (BottomMenu) et la réserve doc s'ils sont dans le conteneur.
+    if (this.application_data.publish_options.embedded) {
+      const h = this.getContainerNode()?.clientHeight ?? 0
+      if (h > 0) return h - this._fit_margin - this.getBottomBarHeight() - this.main_zone_bottom_reserved
+    }
     return window.innerHeight - this._fit_margin - this.getNavBarHeight() - this.getBottomBarHeight() - this.main_zone_bottom_reserved
   }
   // Hauteur réservée en bas de la grande zone pour la doc (modes diagram-bottom / window-bottom).
@@ -3488,6 +3498,13 @@ export class Class_DrawingArea {
     if (this.is_detached) {
       const w = this.getContainerNode()?.clientWidth ?? 0
       if (w > 0) return w - this._fit_margin
+    }
+    // Mode embarqué : cadre dans la largeur RÉELLE du conteneur hôte (l'embarqueur
+    // peut le rendre plus étroit que la fenêtre). Full-window => clientWidth ==
+    // innerWidth, comportement inchangé.
+    if (this.application_data.publish_options.embedded) {
+      const w = this.getContainerNode()?.clientWidth ?? 0
+      if (w > 0) return w - this._fit_margin - this.main_zone_right_reserved
     }
     return window.innerWidth - this._fit_margin - this.main_zone_right_reserved
   }
