@@ -89,18 +89,17 @@ export const OpenSankeyApp = ({
   const applyPublishRecenter = () => {
     if (app_data.is_static && opts.recenter) {
       const doRecenter = () => {
-        app_data.drawing_area.to_recenter = true
-        app_data.drawing_area.recenter()
-        app_data.drawing_area.to_recenter = false
+        const da = app_data.drawing_area
+        da.to_recenter = true
+        // force=true : en mode size_locked, draw() a déjà consommé le drapeau dirty,
+        // donc un recenter() non forcé sortirait immédiatement (garde ligne ~2066) et
+        // le cadrage figé (calculé trop tôt) resterait. On force le re-cadrage.
+        da.recenter(true)
+        da.to_recenter = false
       }
       // Différé de 2 frames : au tout premier chargement, le conteneur hôte
       // (#sankey_app) peut ne pas avoir sa hauteur finale — quand l'embarqueur ajoute
       // sa PROPRE topbar au-dessus, le layout flex n'est stabilisé qu'après le montage.
-      // recenter() lu trop tôt voit clientHeight=0 → window_fitting_* retombe sur
-      // window.innerHeight (garde `if h>0`) et le contenu se recale derrière la topbar
-      // externe (corrigé sinon dès la 1re interaction). Après 2 frames, les dimensions
-      // réelles du conteneur sont disponibles. En plein écran (pas de topbar externe) :
-      // clientHeight == innerHeight, le résultat est identique — simple recadrage à vide.
       requestAnimationFrame(() => requestAnimationFrame(doRecenter))
     }
   }
@@ -156,6 +155,36 @@ export const OpenSankeyApp = ({
     if (url_info) {
       app_data.readUrlJSON(url_info)
     }
+  }, [])
+
+  // Filet de cadrage initial (viewer publish). En embed sous une topbar externe,
+  // le conteneur hôte (#sankey_app) peut n'atteindre sa hauteur définitive qu'APRÈS
+  // le premier applyPublishRecenter (layout flex stabilisé tardivement) : recenter()
+  // lit alors une mauvaise hauteur (window_fitting_* retombe sur window.innerHeight)
+  // et le contenu se cale derrière la topbar — corrigé sinon dès la 1re interaction.
+  // Un ResizeObserver relance le recentrage quand le conteneur change de taille, puis
+  // se débranche une fois le diagramme chargé ET recadré (on ne re-cadre pas à chaque
+  // resize/zoom ultérieur, pour ne pas annuler un zoom/pan de l'utilisateur).
+  useEffect(() => {
+    if (!(app_data.is_static && opts.recenter) || typeof ResizeObserver === 'undefined') return
+    const el = document.querySelector('#sankey_app') as HTMLElement | null
+    if (!el) return
+    let initial = true
+    const ro = new ResizeObserver(() => {
+      // Le 1er callback reflète la taille courante au moment du observe() : on l'ignore,
+      // seul un VRAI changement de taille (stabilisation du layout) doit recadrer.
+      if (initial) { initial = false; return }
+      const da = app_data.drawing_area
+      if (!da || el.clientHeight <= 0) return
+      da.to_recenter = true
+      da.recenter(true) // force : le cadrage initial a pu figer le verrou de taille
+      da.to_recenter = false
+      // Débranche une fois le diagramme réellement chargé et recadré.
+      if (da.sankey?.nodes_list?.length > 0) ro.disconnect()
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const mode_pref = sessionStorage.getItem('modepref')
