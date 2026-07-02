@@ -54,6 +54,10 @@ export interface SankeyGlobals {
   node_filter?: boolean           // default true : section "tags d'éléments" (node/flux_taggs) dans le drawer
   data_filter?: boolean           // default true : section "sélection de données" (data_taggs) dans le drawer
 
+  // Interaction (viewer publish)
+  lock_zoom?: boolean             // default false : bloque le zoom molette/scale (le pan au bouton milieu reste actif)
+  tooltip_on_hover?: boolean      // default false : affiche les tooltips au simple survol, sans maintenir Shift
+
   // État initial
   position_mode?: Type_PositionMode  // mode de navigation imposé à l'ouverture (absolu/proportionnel/échelle adaptée)
   data_tag_selection?: Record<string, string>  // { groupe (id ou nom) : tag (id ou nom) } préselectionné à l'ouverture
@@ -85,6 +89,8 @@ export interface PublishOptions {
   level_filter: boolean
   node_filter: boolean
   data_filter: boolean
+  lock_zoom: boolean
+  tooltip_on_hover: boolean
   position_mode: Type_PositionMode | null
   data_tag_selection: Record<string, string> | null
   view_tag_selection: Record<string, string> | null
@@ -154,6 +160,8 @@ export const getPublishOptions = (): PublishOptions => {
     level_filter: bool(s.level_filter, true),
     node_filter: bool(s.node_filter, true),
     data_filter: bool(s.data_filter, true),
+    lock_zoom: bool(s.lock_zoom, false),
+    tooltip_on_hover: bool(s.tooltip_on_hover, false),
     position_mode: posMode(s.position_mode),
     data_tag_selection: strRecord(s.data_tag_selection),
     view_tag_selection: strRecord(s.view_tag_selection),
@@ -207,6 +215,8 @@ export type ViewerSankeyOptions = {
   level_filter?: boolean
   node_filter?: boolean
   data_filter?: boolean
+  lock_zoom?: boolean
+  tooltip_on_hover?: boolean
   position_mode?: Type_PositionMode
   data_tag_selection?: Record<string, string>
   view_tag_selection?: Record<string, string>  // valeur = VUE (nom/id, light ou heavy, comme le sélecteur de vue) ou tag à filtrer
@@ -230,6 +240,7 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
     'diagrams_list', 'sous_filieres',
     'data_type', 'data_type_intervals', 'value_filter',
     'view_filter', 'level_filter', 'node_filter', 'data_filter',
+    'lock_zoom', 'tooltip_on_hover',
     'position_mode', 'data_tag_selection', 'view_tag_selection',
   ]
   for (const k of keys) {
