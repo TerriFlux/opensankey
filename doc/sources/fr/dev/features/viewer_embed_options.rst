@@ -126,6 +126,25 @@ Filtres topbar
      - ``true``
      - Affiche le filtre par valeur.
 
+Interaction
+~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 15 60
+
+   * - Option
+     - Défaut
+     - Effet
+   * - ``lock_zoom``
+     - ``false``
+     - ``true`` bloque le zoom molette/scale de la zone de dessin ; le déplacement
+       (pan au bouton milieu) reste actif. Utile pour un viewer à échelle figée.
+   * - ``tooltip_on_hover``
+     - ``false``
+     - ``true`` affiche les tooltips (nœuds et liens) au simple survol, sans devoir
+       maintenir la touche Shift.
+
 État initial
 ~~~~~~~~~~~
 

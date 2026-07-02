@@ -174,6 +174,11 @@ function App() {
           // le sélecteur de vue. Le maître "sankey_maitre" = toutes essences agrégées.
           view_tag_selection={viewTagSelection}
           // --------------------------------------------------------------------
+          // Interaction
+          // --------------------------------------------------------------------
+          lock_zoom={true} // bloque le zoom molette/scale (le pan au bouton milieu reste possible)
+          tooltip_on_hover={true} // tooltips au simple survol, sans maintenir Shift
+          // --------------------------------------------------------------------
           // Filtres dans la topbar du viewer
           // --------------------------------------------------------------------
           data_type={false}
