@@ -5,9 +5,32 @@
 
 # ---------------------------------------------------------------
 # Flask imports
+import json
+import os
+import re
+
 from flask import redirect
 from flask import Flask
+from flask import jsonify
 from flask_cors import CORS
+
+
+# ---------------------------------------------------------------
+# Helpers
+def _app_version():
+    """Version applicative (alignée sur client/package.json / le tag git).
+
+    Lue paresseusement à chaque appel de /health, avec repli « unknown » : le
+    health-check ne doit jamais échouer à cause d'un chemin manquant.
+    """
+    try:
+        pkg = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "..", "client", "package.json"
+        )
+        with open(pkg, encoding="utf-8") as f:
+            return json.load(f).get("version", "unknown")
+    except Exception:
+        return "unknown"
 
 
 # ---------------------------------------------------------------
@@ -16,8 +39,26 @@ def create_app():
     # Instanciate app
     app = Flask(__name__, template_folder="./templates", static_folder=None)
 
-    # Set up CORS (Cross-Origin)
-    CORS(app, support_credentials=True)
+    # Set up CORS (Cross-Origin).
+    # - `supports_credentials` (et NON `support_credentials`, kwarg inexistant
+    #   silencieusement ignoré jusqu'ici) : autorise l'envoi du cookie de session.
+    # - Origins EXPLICITES par env (jamais `*` avec credentials : rejeté par les
+    #   navigateurs, et faille sinon). CORS_ALLOWED_ORIGINS = liste séparée par
+    #   des virgules/points-virgules, à définir par environnement (dev/test/prod
+    #   + éventuel front cross-origin). Défaut = front de dev craco uniquement.
+    cors_origins_env = os.environ.get("CORS_ALLOWED_ORIGINS", "").strip()
+    if cors_origins_env:
+        cors_origins = [o.strip() for o in re.split(r"[;,]", cors_origins_env) if o.strip()]
+    else:
+        cors_origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    CORS(app, origins=cors_origins, supports_credentials=True)
+
+    # Cookies de session : SameSite=Lax (le front est same-origin en prod, servi
+    # par Flask) + Secure activable par env (désactivable en dev http local).
+    app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+    app.config["SESSION_COOKIE_SECURE"] = (
+        os.environ.get("SESSION_COOKIE_SECURE", "true").lower() != "false"
+    )
 
     # Init SQL Database
     from logincomponent.server.models import init_db
@@ -57,12 +98,54 @@ def create_app():
     # Blueprint for OpenSankey part of app
     from opensankey.server.views import opensankey
     app.register_blueprint(opensankey, url_prefix="/opensankey")
+
+    # Auth SaaS sur les endpoints de TRAITEMENT d'OpenSankey (upload / conversion
+    # / import). OpenSankey (open-source) reste inchangé : la politique d'auth vit
+    # ici, dans la couche SaaS, via un before_request. On protège par liste
+    # explicite de préfixes — le shell de l'app (/opensankey/, /opensankey/<adress>),
+    # les menus, exemples et tutoriels restent publics. En mode publié (site
+    # statique) le serveur ne tourne pas : ces routes ne sont jamais atteintes.
+    protected_prefixes = (
+        "/opensankey/upload/",
+        "/opensankey/convert/",
+        "/opensankey/open_sankeymatic",
+        "/opensankey/url/load_json",
+    )
+
+    @app.before_request
+    def _require_login_for_opensankey_processing():
+        from flask import request
+        from flask_login import current_user
+
+        path = request.path
+        if any(path.startswith(p) for p in protected_prefixes):
+            if not current_user.is_authenticated:
+                return jsonify({"error": "authentication required"}), 401
     # from opensankey.doc import doc as opensankey_doc
     # app.register_blueprint(opensankey_doc, url_prefix='/doc')
 
     # TODO quoi faire avec ça ?
     # app.register_blueprint(sankeytools, url_prefix='/sankeytools')
     # app.register_blueprint(sankeydev, url_prefix='/sankeydev')
+
+    # Health-check PUBLIC (jamais derrière @login_required) : consommé par le
+    # `curl -f` de fin de job CI / restart_site.sh et par le monitoring externe.
+    # Renvoie 200 seulement si la base répond (SELECT 1), sinon 503 → le deploy
+    # échoue au lieu de laisser un site cassé en ligne.
+    @app.route("/health")
+    def health():
+        from sqlalchemy import text
+        from logincomponent.server.models import db
+
+        payload = {"status": "ok", "version": _app_version()}
+        try:
+            db.session.execute(text("SELECT 1"))
+        except Exception:
+            db.session.rollback()
+            payload["status"] = "error"
+            payload["database"] = "unreachable"
+            return jsonify(payload), 503
+        return jsonify(payload), 200
 
     # 404 handler
     def page_not_found(e):

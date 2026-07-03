@@ -11,6 +11,7 @@ import tempfile
 import json
 import html
 import base64
+from functools import wraps
 from datetime import datetime
 
 # External modules
@@ -27,6 +28,7 @@ from flask import send_file
 from flask import Response
 from flask import jsonify
 from flask_login import current_user
+from werkzeug.utils import secure_filename
 from threading import Lock
 from opensankey.server.views import (
     set_process_state,
@@ -70,6 +72,27 @@ sankeyapp = Blueprint(
     template_folder=template_folder,
     static_url_path="/static/sankeyapp",
 )
+
+
+def api_login_required(view):
+    """Exige une session authentifiée pour les endpoints d'API/traitement.
+
+    Contrairement à flask_login.login_required (qui redirige en 302 vers la page
+    de login), on renvoie un 401 JSON — adapté aux appels fetch du front. À poser
+    SOUS le décorateur @route (le routage reste le décorateur le plus externe).
+    En mode publié (site statique autonome) le serveur ne tourne pas : ces
+    endpoints ne sont donc jamais atteints par un viewer public.
+    """
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return Response(
+                json.dumps({"error": "authentication required"}),
+                status=401,
+                mimetype="application/json",
+            )
+        return view(*args, **kwargs)
+    return wrapped
 
 
 @sankeyapp.route("/")
@@ -291,6 +314,7 @@ def _resolve_publish_folder():
 
 
 @sankeyapp.route("/api/publish/folders")
+@api_login_required
 def publish_folders():
     """Liste les dossiers serveur publiables + disponibilité du déploiement en ligne."""
     root = _publish_data_root()
@@ -312,6 +336,7 @@ def publish_folders():
 
 
 @sankeyapp.route("/api/publish/browse")
+@api_login_required
 def publish_browse():
     """Navigation dans l'arbre des dossiers serveur (explorateur). Renvoie les
     sous-dossiers immédiats de `path` (relatif à la racine MFAData), pour permettre
@@ -358,6 +383,7 @@ def publish_browse():
 
 
 @sankeyapp.route("/api/publish/folder", methods=["POST"])
+@api_login_required
 def publish_folder_route():
     """Publie un dossier et renvoie le site autonome en zip. Deux modes :
     - multipart (upload navigateur webkitdirectory) : dossier reconstruit en temp.
@@ -385,6 +411,7 @@ def publish_folder_route():
 
 
 @sankeyapp.route("/api/publish/current", methods=["POST"])
+@api_login_required
 def publish_current_route():
     """Publie l'étude ouverte (JSON envoyé par le front) en site autonome zip.
 
@@ -431,6 +458,7 @@ def publish_current_route():
 
 
 @sankeyapp.route("/api/publish/deploy", methods=["POST"])
+@api_login_required
 def publish_deploy_route():
     """Publie l'étude (ouverte ou dossier serveur) PUIS l'envoie en ligne (scp/ssh)
     vers le serveur de portfolios. Renvoie l'URL publique. Mêmes payloads que
@@ -828,6 +856,7 @@ def solve_optimisation_problem_unified(
 #     return Response(json.dumps({"output": "OK"}), status=200, mimetype="application/json")
 
 @sankeyapp.route("/optimize/launch_optim", methods=["POST"])
+@api_login_required
 def launch_optim():
     """
     Launch optimisation process from uploaded file
@@ -844,7 +873,12 @@ def launch_optim():
         if input_format == "excel":
             # Sauvegarder le fichier uploadé (rapide)
             input_file = request.files["file"]
-            input_filename = os.path.join(tmp_dir, input_file.filename)
+            # secure_filename : le nom vient du client et est joint à un chemin
+            # disque → sans nettoyage, un « ../ » ou un nom absolu permettrait
+            # d'écrire hors du répertoire temporaire (path traversal). Repli sur
+            # un nom neutre si secure_filename renvoie une chaîne vide.
+            safe_filename = secure_filename(input_file.filename) or "input.xlsx"
+            input_filename = os.path.join(tmp_dir, safe_filename)
             input_file.save(input_filename)
             output_file_name = input_filename
             # Préparer les données pour le thread
@@ -1285,6 +1319,7 @@ def _vision_build_workbook(structure):
 
 
 @sankeyapp.route("/api/vision/extract", methods=["POST"])
+@api_login_required
 def vision_extract():
     """Reçoit une image (multipart, champ 'image') et renvoie la structure
     Sankey extraite par Claude (vision). Forme : {"ok": True, "structure": {...}}.
@@ -1411,6 +1446,7 @@ def vision_extract():
 
 
 @sankeyapp.route("/api/vision/build", methods=["POST"])
+@api_login_required
 def vision_build():
     """Reçoit une structure Sankey validée (JSON : {"structure": {...}}), la
     matérialise en classeur Excel, la charge via SankeyExcelParser et renvoie le

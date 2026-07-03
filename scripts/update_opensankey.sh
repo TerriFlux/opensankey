@@ -62,6 +62,58 @@ git submodule update --recursive
 echo ">>> deploy_SankeyApp.sh"
 bash scripts/deploy_SankeyApp.sh
 
+# --- Backup DB + migrations Alembic ---
+# Aligné sur les jobs de deploy de la CI (.gitlab-ci.yml : dev_opensankey /
+# test_opensankey / prod_opensankey) qui, entre le build et le restart, font :
+#   cp server/db.sqlite server/db.sqlite.bk/db_`date --iso-8601='seconds'`.sqlite
+#   find ./server/db.sqlite.bk -mtime +N -type f -delete
+#   alembic upgrade head
+# Le script SSH manuel ne le faisait pas → risque de tourner sur un schéma
+# périmé ou de casser la base. On reproduit ici la même séquence.
+#
+# cwd = $APP_DIR (on n'a pas quitté ce répertoire depuis le `cd` plus haut),
+# ce qui correspond à l'URL relative d'alembic.ini (sqlalchemy.url =
+# sqlite:///server/db.sqlite) et au REPO_FOLDER de la CI. Le venv est déjà
+# activé, donc `alembic` est celui de l'environnement cible.
+#
+# set -e garantit les garde-fous demandés : si le backup OU la migration
+# échoue, le script sort en non-zéro AVANT le restart (pas de redémarrage sur
+# une base non migrée / non sauvegardée).
+
+# Rétention des backups par environnement (identique à la CI).
+case "$ENV" in
+    dev)  BK_RETENTION_DAYS=30  ;;
+    test) BK_RETENTION_DAYS=180 ;;
+    prod) BK_RETENTION_DAYS=365 ;;
+esac
+
+DB_FILE="${APP_DIR}/server/db.sqlite"
+DB_BK_DIR="${APP_DIR}/server/db.sqlite.bk"
+
+# Idempotent : crée le dossier de backups s'il n'existe pas encore.
+mkdir -p "$DB_BK_DIR"
+
+if [[ -f "$DB_FILE" ]]; then
+    DB_BK_FILE="${DB_BK_DIR}/db_$(date --iso-8601='seconds').sqlite"
+    echo ">>> backup db.sqlite -> ${DB_BK_FILE}"
+    # Copie cohérente via `sqlite3 .backup` si dispo (respecte les verrous /
+    # transactions en cours) ; sinon repli sur `cp` — c'est ce que fait la CI.
+    if command -v sqlite3 >/dev/null 2>&1; then
+        sqlite3 "$DB_FILE" ".backup '${DB_BK_FILE}'"
+    else
+        cp "$DB_FILE" "$DB_BK_FILE"
+    fi
+    # Purge des backups plus vieux que la rétention (mêmes seuils que la CI).
+    find "$DB_BK_DIR" -mtime +"$BK_RETENTION_DAYS" -type f -delete
+else
+    # Premier déploiement : pas encore de base à sauvegarder. `alembic upgrade
+    # head` créera la base et appliquera toutes les migrations.
+    echo ">>> pas de ${DB_FILE} à sauvegarder (premier déploiement ?) — skip backup"
+fi
+
+echo ">>> alembic upgrade head"
+alembic upgrade head
+
 # --- Restart service ---
 echo ">>> restart_site.sh ${ENV}"
 bash scripts/restart_site.sh "$ENV"
