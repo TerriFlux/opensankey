@@ -229,7 +229,8 @@ export const ComponetStretchButtons = ({ app_data, updateParentComponent, hide_f
       <Button variant='toolbar_button_6'
         size={size}
         // Bouton explicite : recadre même quand le verrou de taille est actif (#1240).
-        onClick={() => app_data.drawing_area.areaAutoFit(true, true)}>
+        // #1244 : recadrage animé (zoom cinématique) sur ce déclencheur utilisateur.
+        onClick={() => app_data.drawing_area.areaAutoFitAnimated(true, true)}>
         {app_data.icon_library.icon_area_fit_horiz}
       </Button>
     </OSTooltip>
@@ -237,7 +238,8 @@ export const ComponetStretchButtons = ({ app_data, updateParentComponent, hide_f
       <Button variant='toolbar_button_6'
         size={size}
         // Bouton explicite : recadre même quand le verrou de taille est actif (#1240).
-        onClick={() => app_data.drawing_area.areaAutoFit(false, true)}>
+        // #1244 : recadrage animé (zoom cinématique) sur ce déclencheur utilisateur.
+        onClick={() => app_data.drawing_area.areaAutoFitAnimated(false, true)}>
         {app_data.icon_library.icon_area_fit_vert}
       </Button>
     </OSTooltip>
@@ -248,7 +250,8 @@ export const ComponetStretchButtons = ({ app_data, updateParentComponent, hide_f
         onClick={() => {
           app_data.drawing_area.to_recenter = true
           // Bouton explicite : recadre même quand le verrou de taille est actif (#1240).
-          app_data.drawing_area.recenter(true)
+          // #1244 : recentrage animé (glissement de caméra vers le centre).
+          app_data.drawing_area.recenterAnimated(true)
         }}>
         {app_data.icon_library.icon_recenter}
       </Button>
