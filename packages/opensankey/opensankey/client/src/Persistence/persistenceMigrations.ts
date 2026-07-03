@@ -118,7 +118,7 @@ export function resolveDocMarkdown(
  * segment. Une version absente (`undefined` — fichiers pré-0.9 sans champ
  * `version`) est considérée antérieure à toute cible (le fichier le plus ancien).
  */
-export function isVersionBelow(version: string | undefined, target: string): boolean {
+export function isVersionBelow(version: string | number | undefined, target: string): boolean {
   if (version === undefined || version === null || String(version).trim() === '') return true
   const va = String(version).split('.').map(s => parseInt(s, 10) || 0)
   const vb = target.split('.').map(s => parseInt(s, 10) || 0)
