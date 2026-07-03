@@ -33,7 +33,7 @@ import * as d3 from 'd3'
 import FileSaver from 'file-saver'
 
 import { StepType } from '@reactour/tour'
-import { useToast, CreateToastFnReturn } from '@chakra-ui/react'
+import { CreateToastFnReturn } from '@chakra-ui/react'
 
 import { Class_MenuConfig, keyTypeConfig, keyTypeElements } from '../types/MenuConfig'
 import { const_default_position_x, const_default_position_y, default_file_name, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, randomId, toast_bypass, Type_JSON } from './Utils'
@@ -298,8 +298,8 @@ export class Class_ApplicationData {
    */
   public get views_replace_viewtag_topbar(): boolean { return false }
 
-  public createNewMenuConfiguration(): Class_MenuConfig {
-    this._toast = useToast()
+  public createNewMenuConfiguration(toast: CreateToastFnReturn | null = null): Class_MenuConfig {
+    this._toast = toast
     this._menu_configuration = new Class_MenuConfig()
     this._history = new Class_ApplicationHistory(this._menu_configuration)
     return this._menu_configuration
@@ -893,8 +893,8 @@ export class Class_ApplicationData {
     this._publish_settings = (pub_opts && typeof pub_opts === 'object' && !Array.isArray(pub_opts))
       ? pub_opts as Type_JSON : {}
     const mz = json_object['main_zone']
-    // Garde défensive : menu_configuration est créé via un hook React (useToast) ; si _fromJSON
-    // s'exécute avant son initialisation, l'appel jetait et avortait tout le chargement (et donc
+    // Garde défensive : menu_configuration n'est posée que par createNewMenuConfiguration ; si
+    // _fromJSON s'exécute avant, l'appel jetait et avortait tout le chargement (et donc
     // l'application du filtre de vue). Le `?.` saute proprement ce cas (cf. ligne ~608).
     if (mz && typeof mz === 'object') this.menu_configuration?.mainZoneStateFromJSON(mz as Type_JSON)
   }
