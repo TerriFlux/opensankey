@@ -25,6 +25,7 @@
 // ==================================================================================================
 
 import React, { useEffect } from 'react'
+import { useToast } from '@chakra-ui/react'
 import LZString from 'lz-string'
 import { TourProvider } from '@reactour/tour'
 
@@ -84,7 +85,10 @@ export const OpenSankeyApp = ({
   const url_info = checkForUrlToJSON()
   // Initialize data
   const app_data = initializeApplicationData()
-  app_data.createNewMenuConfiguration()
+  // Le toast Chakra est un hook : on l'acquiert ici (corps du composant) et on l'injecte
+  // dans la config, désormais découplée de React (constructeurs sans hooks).
+  const toast = useToast()
+  app_data.createNewMenuConfiguration(toast)
   const opts = app_data.publish_options
   const applyPublishRecenter = () => {
     if (app_data.is_static && opts.recenter) {
@@ -184,7 +188,6 @@ export const OpenSankeyApp = ({
     })
     ro.observe(el)
     return () => ro.disconnect()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const mode_pref = sessionStorage.getItem('modepref')
