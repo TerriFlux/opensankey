@@ -68,14 +68,6 @@ export class DrawingAreaPersistenceOSP extends DrawingAreaPersistence {
     super.fromJSON_0_91(drawing_area, json_object, kwargs)
   }
 
-  public static fromJSON_1_1_1(
-    drawing_area: Class_DrawingArea,
-    json_object: Type_JSON,
-    kwargs?: Type_JSON
-  ) {
-    super.fromJSON_1_1_1(drawing_area, json_object, kwargs)
-  }
-
   public static fromJSON(drawing_area: Class_DrawingAreaOSP, json_object: Type_JSON, kwargs?: Type_JSON): void {
     super.fromJSON(drawing_area, json_object, kwargs)
     drawing_area['name'] = getStringFromJSON(json_object, 'name', drawing_area.name)
