@@ -260,24 +260,26 @@ export const GenericStyleSelector = ({ app_data, children }: React.PropsWithChil
 
         {/* Menu pour enlever les surcharges du style par rapport au style par défaut */}
         <OSTooltip label={t('Noeud.tooltips.AS')}>
-          <MenuResetAttrLocal
-            new_data={app_data}
-            dict_overwritted_attr={computeOverloadedAttr()}
-            computeOverloadedAttr={computeOverloadedAttr}
-            is_disabled={selected_style_id === default_style_id}
-            onResetAll={() => {
-              app_data.drawing_area.sankey.resetAttrStyle(selected_style)
-              updateAll()
-              app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-              setUpdate(!update)
-            }}
-            onResetLocal={(k) => {
-              app_data.drawing_area.sankey.deleteLocalAttrStyle(selected_style, k as keyof typeof ALL_ATTRIBUTES_CONFIG)
-              updateAll()
-              app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-              setUpdate(!update)
-            }}
-          />
+          <span>
+            <MenuResetAttrLocal
+              new_data={app_data}
+              dict_overwritted_attr={computeOverloadedAttr()}
+              computeOverloadedAttr={computeOverloadedAttr}
+              is_disabled={selected_style_id === default_style_id}
+              onResetAll={() => {
+                app_data.drawing_area.sankey.resetAttrStyle(selected_style)
+                updateAll()
+                app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+                setUpdate(!update)
+              }}
+              onResetLocal={(k) => {
+                app_data.drawing_area.sankey.deleteLocalAttrStyle(selected_style, k as keyof typeof ALL_ATTRIBUTES_CONFIG)
+                updateAll()
+                app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+                setUpdate(!update)
+              }}
+            />
+          </span>
         </OSTooltip>
       </Box>
 
@@ -357,10 +359,12 @@ export const ConfigMenuStyleElement = ({
       <>
         <Box layerStyle='menuconfigpanel_row_stylechoice'>
           <OSTooltip label={t('Noeud.tooltips.AS')}>
-            <MenuResetAttrLocal
-              new_data={app_data}
-              dict_overwritted_attr={dict_overwritted_attr}
-            />
+            <span>
+              <MenuResetAttrLocal
+                new_data={app_data}
+                dict_overwritted_attr={dict_overwritted_attr}
+              />
+            </span>
           </OSTooltip>
 
           <Button

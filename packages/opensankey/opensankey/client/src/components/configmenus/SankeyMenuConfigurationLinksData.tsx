@@ -150,7 +150,7 @@ export const LinkValueTypeSelector = ({
         >
           {type_constants.map(el => (
             <option key={'value_' + el} value={el}>
-              <OSTooltip label={el}>{t('Flux.labels.' + el)}</OSTooltip>
+              {t('Flux.labels.' + el)}
             </option>
           ))}
         </Select>
@@ -173,7 +173,7 @@ export const LinkValueTypeSelector = ({
           >
             {['source', 'target'].map(el => (
               <option key={'value_' + el} value={el}>
-                <OSTooltip label={el}>{t('Flux.labels.' + el)}</OSTooltip>
+                {t('Flux.labels.' + el)}
               </option>
             ))}
           </Select>
@@ -197,12 +197,12 @@ export const LinkValueTypeSelector = ({
             {node_ref === 'source'
               ? value_option_percent_constants_source.map(el => (
                 <option key={'value_' + el} value={el}>
-                  <OSTooltip label={el}>{t('Flux.labels.' + el)}</OSTooltip>
+                  {t('Flux.labels.' + el)}
                 </option>
               ))
               : value_option_percent_constants_target.map(el => (
                 <option key={'value_' + el} value={el}>
-                  <OSTooltip label={el}>{t('Flux.labels.' + el)}</OSTooltip>
+                  {t('Flux.labels.' + el)}
                 </option>
               ))
             }
@@ -231,7 +231,7 @@ export const LinkValueTypeSelector = ({
           >
             {['unit_ratio'].map(el => (
               <option key={'value_' + el} value={el}>
-                <OSTooltip label={el}>{t('Flux.labels.' + el)}</OSTooltip>
+                {t('Flux.labels.' + el)}
               </option>
             ))}
           </Select>
