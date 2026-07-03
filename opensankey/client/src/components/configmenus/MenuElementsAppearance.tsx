@@ -2171,6 +2171,7 @@ export const MenuConfigurationAppearance = ({
                           ['ending_curve', linkShapeValues.starting_curve * 100, 100]
                         ].map(p => {
                           return <ElementAttrSetterNumberInput2Cols
+                            key={String(p[0])}
                             app_data={app_data}
                             elements={links_elements}
                             attributePath={'Flux.apparence'}
@@ -2191,6 +2192,7 @@ export const MenuConfigurationAppearance = ({
                           ['ending_tangeant', 0, 100],
                         ].map(p => {
                           return <ElementAttrSetterNumberInput2Cols
+                            key={String(p[0])}
                             app_data={app_data}
                             elements={links_elements}
                             attributePath={'Flux.apparence'}

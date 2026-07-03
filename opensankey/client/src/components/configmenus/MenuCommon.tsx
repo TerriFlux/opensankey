@@ -302,7 +302,7 @@ export const MenuResetAttrLocal = (
       <MenuDivider />
       {
         Object.entries(dict_to_use).filter(ent => ent[1].overloaded).map(ent => {
-          return <MenuItem onClick={() => resetLocal(ent[0])}>{t('Menu.reset_attr')}{ent[1].name}</MenuItem>
+          return <MenuItem key={ent[0]} onClick={() => resetLocal(ent[0])}>{t('Menu.reset_attr')}{ent[1].name}</MenuItem>
         })
       }
     </MenuList>
