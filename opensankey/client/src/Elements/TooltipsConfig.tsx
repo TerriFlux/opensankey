@@ -373,7 +373,5 @@ export function initializeTooltipSystem() {
 
   // Initialiser le gestionnaire
   TooltipEventManager.getInstance()
-
-  console.log('Tooltip system initialized')
 }
 
