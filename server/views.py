@@ -396,9 +396,9 @@ def publish_folder_route():
     try:
         artifact = _build_folder_artifact(project_dir, publish_name, tree)
         zip_path = publish_lib.zip_artifact(artifact, publish_lib.sanitize_filename(publish_name))
-    except Exception as e:
+    except Exception:
         traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Erreur interne du serveur"}), 500
     resp = send_file(
         zip_path,
         mimetype="application/zip",
@@ -443,9 +443,9 @@ def publish_current_route():
         artifact = publish_lib.publish_current_study(diagram, template_folder, options=options)
         base = publish_lib.sanitize_filename(options.get("publish_name") or "sankey_site")
         zip_path = publish_lib.zip_artifact(artifact, base)
-    except Exception as e:
+    except Exception:
         traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Erreur interne du serveur"}), 500
     resp = send_file(
         zip_path,
         mimetype="application/zip",
@@ -507,9 +507,9 @@ def publish_deploy_route():
             artifact, publish_name, cfg, force=force, update=update)
     except _PublishError as e:
         return jsonify({"error": str(e)}), e.code
-    except Exception as e:
+    except Exception:
         traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Erreur interne du serveur"}), 500
     finally:
         # Build jetable : supprimé une fois le déploiement terminé (réussi ou non).
         if artifact:
@@ -1413,7 +1413,7 @@ def vision_extract():
             )
     except Exception as exc:
         trace.logger.error(f"vision_extract: appel Anthropic échoué: {exc}")
-        return jsonify({"ok": False, "error": f"appel modèle échoué: {exc}"}), 502
+        return jsonify({"ok": False, "error": "appel modèle échoué"}), 502
 
     if getattr(resp, "stop_reason", None) == "refusal":
         return jsonify({"ok": False, "error": "extraction refusée par le modèle"}), 422
@@ -1487,4 +1487,4 @@ def vision_build():
 
     except Exception as exc:
         trace.logger.error(f"vision_build: {exc}")
-        return jsonify({"ok": False, "error": str(exc)}), 500
+        return jsonify({"ok": False, "error": "construction du diagramme échouée"}), 500
