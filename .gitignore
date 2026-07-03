@@ -32,7 +32,8 @@ server/db.sqlite
 server/db.sqlite.bk
 
 # misc
-client/pnpm-lock.yaml
+# S3 #18 — client/pnpm-lock.yaml est desormais versionne (builds reproductibles,
+# pnpm install --frozen-lockfile en CI). Ne plus l'ignorer.
 client/package-lock.json
 
 #local server

@@ -39,7 +39,18 @@ if [ -n "$SITE_PACKAGES" ] && [ -d "$SITE_PACKAGES" ]; then
 fi
 
 # Install requirements
-pip_install -r requirements.txt  || exit_if_error $?
+# S3 #18 — builds reproductibles : si un requirements_frozen.txt (fige par
+# `pip freeze` sur la cible) est present, on l'utilise en priorite sur la cible
+# Linux (CI dev/test/prod + update_opensankey.sh). On garde requirements.txt en
+# fallback et sur les autres plateformes (dev local Windows/macOS) pour ne pas
+# imposer un freeze Linux-specifique. Regenerer apres tout changement de deps :
+#   pip freeze > requirements_frozen.txt   (dans le venv de deploiement)
+REQ_FILE=requirements.txt
+if [ -f requirements_frozen.txt ] && [ "$(uname -s)" = "Linux" ]; then
+  REQ_FILE=requirements_frozen.txt
+  printf ">>> Requirements figes : %s\n" "$REQ_FILE"
+fi
+pip_install -r "$REQ_FILE"  || exit_if_error $?
 
 # Install deps
 for submodule in OpenSankey+ LoginComponent MFAProblem; do

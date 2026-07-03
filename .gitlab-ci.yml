@@ -74,8 +74,13 @@ build:
     - echo $CI_PROJECT_DIR
     - source /home/gitlab-runner/gitlab_dev/bin/activate
     - export EIGEN_INCLUDE=$CI_PROJECT_DIR/submodules/MFAProblem/submodules/eigen
-    # Build SankeySuite node module
-    - bash scripts/build_client.sh -I -L -B -D # -S
+    # Build SankeySuite node module (sans -L : plus d'eslint --fix qui muterait
+    # le workspace ; le lint est fait en verification ci-dessous, sans --fix).
+    - bash scripts/build_client.sh -I -B -D # -S
+    # S3 #16 — Lint en verification (sans --fix). `lint:ci` = `eslint ./src` sur
+    # le client SA, qui couvre OS/OS+/LoginComponent via les symlinks src/deps
+    # crees par build_client.sh -I. Le pipeline echoue si une erreur eslint reste.
+    - (cd client && pnpm run lint:ci)
     # Check flask server
     - bash scripts/build_server.sh
   artifacts:
@@ -85,12 +90,44 @@ build:
     - schedules
 
 
+# S3 #20 — Coherence des pointeurs de submodules (garde-fou transitoire avant le
+# monorepo). Sur un checkout recursif, tout pointeur incoherent apparait dans
+# `git submodule status --recursive` avec un prefixe '+' (commit checkout != SHA
+# enregistre dans le gitlink) ou '-' (submodule non initialise). Le job echoue
+# alors, avant tout deploiement ou publication.
+check:submodule-coherence:
+  stage: build
+  tags: [py312]
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+    GIT_SUBMODULE_FORCE_HTTPS: "true"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
+    - when: always
+  script:
+    - echo "[coherence] Etat recursif des pointeurs de submodules :"
+    - git submodule status --recursive
+    - |
+      if git submodule status --recursive | grep -E '^[+-]'; then
+        echo "[coherence] ERREUR : pointeurs de submodules incoherents (lignes '+'/'-' ci-dessus)." >&2
+        echo "[coherence] Rejouer scripts/cascade.sh puis re-pousser." >&2
+        exit 1
+      fi
+    - echo "[coherence] OK — tous les pointeurs sont coherents."
+  dependencies: []
+
+
 # # Test : for all branches, units tests for submodules server side
+# S3 #14 — tourne aussi sur tag : les jobs publish:* (npm + wheels) ne se
+# declenchent que sur tag et sont desormais gates par `needs: [test]`, donc un
+# tag pose sur un commit rouge ne publie plus rien. On garde l'exclusion des
+# pipelines planifies (schedules) comme le job build.
 test:
   stage: test
   tags: [py312]
   rules:
-    - if: $CI_COMMIT_TAG
+    - if: $CI_PIPELINE_SOURCE == "schedule"
       when: never
     - when: always
   script:
@@ -113,6 +150,24 @@ test:
     - (cd submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser && python -m pytest tests/)
   dependencies:
     - build
+
+# S3 #16 — Tests jest (front) : les 12 suites unitaires d'OpenSankey ne
+# tournaient qu'en local (et le script npm `test` d'OS filtrait `-t 'AFMBase'`,
+# filtre desormais retire). Job independant : install dedie du client OS, isole
+# du build SaaS (pas de symlinks SA). CI=true -> react-scripts fait un run unique
+# (pas de watch) et echoue si une suite casse.
+test:jest:
+  stage: test
+  tags: [py312]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
+    - when: always
+  script:
+    - cd submodules/OpenSankey+/submodules/OpenSankey/opensankey/client
+    - pnpm install --config.dangerouslyAllowAllBuilds=true
+    - CI=true pnpm test
+  dependencies: []
 
 # Deploy : Only for main, on dev url acces
 dev_opensankey:
@@ -370,6 +425,38 @@ publish:python:
         -c "chown -R $(id -u):$(id -g) /io"
 
     # ----------------------------------------------------------------
+    # S3 #15 — Validation des wheels AVANT tout upload : une wheel cassee ne
+    # doit pas partir au registry consomme par cartofob-sankey.
+    #  1. `twine check` : valide les METADATA (PEP 639 License-File, etc.).
+    #  2. Smoke import : installe chaque wheel cp312 dans un venv jetable et
+    #     tente l'import du module — attrape un .so casse / une dep manquante.
+    # twine>=6 + packaging>=24 : reconnaissent le champ 'License-File' emis par
+    # setuptools>=77, sinon InvalidDistribution (idem install avant upload).
+    # ----------------------------------------------------------------
+    - pip install --upgrade --quiet --break-system-packages 'twine>=6' 'packaging>=24'
+    - echo "[publish:python] twine check des wheels"
+    - |
+      python3 -m twine check \
+        submodules/MFAProblem/dist/*manylinux*.whl \
+        submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/dist/*manylinux*.whl
+    - echo "[publish:python] smoke import MFAProblem (venv jetable cp312)"
+    - |
+      python3 -m venv /tmp/smoke_mfa
+      . /tmp/smoke_mfa/bin/activate
+      pip install --quiet submodules/MFAProblem/dist/*cp312*manylinux*.whl
+      python -c "import mfa_problem; print('[smoke] mfa_problem import OK')"
+      deactivate
+      rm -rf /tmp/smoke_mfa
+    - echo "[publish:python] smoke import SankeyExcelParser (venv jetable cp312)"
+    - |
+      python3 -m venv /tmp/smoke_sep
+      . /tmp/smoke_sep/bin/activate
+      pip install --quiet submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/dist/*cp312*manylinux*.whl
+      python -c "import SankeyExcelParser; print('[smoke] SankeyExcelParser import OK')"
+      deactivate
+      rm -rf /tmp/smoke_sep
+
+    # ----------------------------------------------------------------
     # Republication : la registry PyPI GitLab refuse d'ecraser un fichier
     # deja publie (HTTP 400 Bad Request). Un re-tag reutilise le meme
     # numero de version (ex: republication de v1.1.4 sur un nouveau
@@ -414,8 +501,12 @@ publish:npm:
   tags: [py312]
   rules:
     - if: $CI_COMMIT_TAG
+  # S3 #14 — gate sur `test` : la suite pytest (MFAProblem/OpenSankey/SEP) doit
+  # etre verte avant toute publication. `test` tourne desormais sur tag ; comme
+  # publish:python attend publish:npm, toute la chaine de publication est gatee.
   needs:
     - build:examples
+    - test
   dependencies:
     - build:examples
   script:

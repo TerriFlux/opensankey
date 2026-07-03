@@ -18,6 +18,7 @@
     "start": "craco start",
     "build": "craco build",
     "lint": "eslint --fix ./src",
+    "lint:ci": "eslint ./src",
     "dist": "tsc -p .",
     "test": "react-scripts test",
     "eject": "react-scripts eject",

@@ -139,7 +139,12 @@ printf "OK ------------------------------------------------------------------\n"
 printf "\nBuild ---------------------------------------------------------------\n"
 cd client
 if [ "$install" = true ] ; then
-  printf ">>> Install deps\n\n" && pnpm install --config.dangerouslyAllowAllBuilds=true || exit_if_error $?
+  # S3 #18 — builds reproductibles : en CI ($CI defini par GitLab), on impose le
+  # lockfile versionne (client/pnpm-lock.yaml) ; l'install echoue si le lockfile
+  # devrait changer. En local on laisse pnpm resoudre librement (mise a jour de deps).
+  FROZEN=""
+  [ -n "$CI" ] && FROZEN="--frozen-lockfile"
+  printf ">>> Install deps\n\n" && pnpm install $FROZEN --config.dangerouslyAllowAllBuilds=true || exit_if_error $?
   printf "\n"
 fi
 if [ "$linter" = true ] ; then
