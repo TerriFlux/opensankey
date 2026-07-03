@@ -19,7 +19,6 @@ from flask_login import logout_user
 from flask_login import LoginManager
 
 # Werkzeug
-from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
 
 # SQLAlchemy
@@ -31,6 +30,9 @@ from .mailing import is_email_valid
 from .models import User
 from .models import login_required
 from .models import db
+from .models import hash_password
+from .models import password_needs_rehash
+from .models import validate_password
 
 # ---------------------------------------------------------------
 # Create auth blue print
@@ -99,17 +101,21 @@ def signup_post():
         return jsonify(response), 200
 
     # if this returns a user, then the email already exists in database
-    # if this returns a user, then the email already exists in database
     existing_user = User.query.filter_by(email=user_infos["email"]).first()
     if existing_user:
         response["message"] = "account_already_created"
+        return jsonify(response), 200
+
+    # Check password policy (server-side)
+    if not validate_password(user_infos.get("password")):
+        response["message"] = "err_password_invalid"
         return jsonify(response), 200
 
     # create a new user with the form data. Hash the password so the plaintext
     # version isn't saved.
     new_user = User(
         email=user_infos["email"].lower(),
-        password=generate_password_hash(user_infos["password"], method="sha256"),
+        password=hash_password(user_infos["password"]),
         firstname=user_infos["firstname"],
         name=user_infos["lastname"],
         creation=datetime.now().isoformat(),
@@ -225,6 +231,11 @@ def login_post():
     # if the above check passes,
     # then we know the user has the right credentials
     login_user(user, remember=remember)
+
+    # Upgrade legacy password hashes transparently on successful login
+    if password_needs_rehash(user.password):
+        user.password = hash_password(password)
+        db.session.commit()
 
     # Clear secret token if needed
     if (user.secret_token is not None) and (user.secret_expiry is not None):
@@ -388,16 +399,18 @@ def forgot():
         response["user_is_authenticated"] = True
     # Verify email - if OK create reseting url
     else:
+        # Anti-énumération : la réponse est identique qu'un compte existe ou
+        # non ; on n'envoie le mail de reset que si le compte existe vraiment.
+        response["user_exists"] = True
         try:
             email = request.json.get("email")
             if is_email_valid(email):
                 user = User.query.filter(func.lower(User.email) == func.lower(email)).first()
                 if user is not None:
-                    response["user_exists"] = True
                     send_pw_reset_email(user, request.json.get("lang"))
-        except Exception as excpt:
-            response = Response(response="forgot_pw : " + str(excpt), status=500)
-            return response
+        except Exception:
+            # Ne pas divulguer le détail de l'erreur au client (anti-énumération)
+            return jsonify({"user_exists": True, "user_is_authenticated": False}), 200
     # Return
     return jsonify(response), 200
 
@@ -431,7 +444,11 @@ def reset(token):
         try:
             user = User.verify_pwd_reset_token(token)
             if user is not None:
-                user.password = generate_password_hash(request.json.get("password"), method="sha256")
+                new_password = request.json.get("password")
+                if not validate_password(new_password):
+                    response["passwd_is_updated"] = False
+                    return jsonify(response), 200
+                user.password = hash_password(new_password)
                 db.session.commit()
                 response["passwd_is_updated"] = True
         except Exception as excpt:

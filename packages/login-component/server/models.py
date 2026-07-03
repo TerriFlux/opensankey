@@ -26,6 +26,9 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
 from sqlalchemy.ext.associationproxy import association_proxy
 
+# Werkzeug
+from werkzeug.security import generate_password_hash
+
 # Itsdangerous - serialize URLs for secured API transactions
 from itsdangerous import URLSafeTimedSerializer as Serializer
 
@@ -37,6 +40,65 @@ from itsdangerous import URLSafeTimedSerializer as Serializer
 
 connected_user = Blueprint("connected_user", __name__)
 db = SQLAlchemy()
+
+
+# ---------------------------------------------------------------
+# Password hashing & policy
+#
+# Historique : les mots de passe étaient hashés avec method="sha256"
+# (HMAC-SHA256 à une seule itération, sans key-stretching, et supprimé de
+# Werkzeug 3.0). On passe à pbkdf2:sha256 avec 600000 itérations et on
+# ré-hashe de façon transparente les anciens hashes au login (voir auth.py).
+
+PWD_HASH_METHOD = "pbkdf2:sha256:600000"
+
+# Politique de force minimale : longueur seule (aucune règle de composition,
+# conformément à NIST 800-63B et à la relâche client volontaire). 8 caractères
+# minimum. Ne s'applique qu'au signup/reset/modify : les comptes existants ne
+# sont pas impactés.
+MIN_PASSWORD_LENGTH = 8
+
+
+def hash_password(password: str) -> str:
+    """Hash un mot de passe avec la méthode courante (pbkdf2:sha256)."""
+    return generate_password_hash(password, method=PWD_HASH_METHOD)
+
+
+def password_needs_rehash(stored_hash: str) -> bool:
+    """
+    True si le hash stocké utilise un schéma obsolète (legacy sha256) et doit
+    être ré-hashé avec la méthode courante lors d'une authentification réussie.
+    """
+    return not (stored_hash or "").startswith("pbkdf2:")
+
+
+def validate_password(password) -> bool:
+    """
+    Validation serveur minimale : le mot de passe doit être une chaîne non
+    vide (après strip). Renvoie True si acceptable.
+    """
+    return isinstance(password, str) and len(password.strip()) >= MIN_PASSWORD_LENGTH
+
+
+def stripe_event_already_processed(event_id: str) -> bool:
+    """True si l'événement Stripe a déjà été traité (idempotence webhook)."""
+    if not event_id:
+        return False
+    return ProcessedStripeEvent.query.get(event_id) is not None
+
+
+def mark_stripe_event_processed(event_id: str, event_type: str = "") -> None:
+    """Marque un événement Stripe comme traité (no-op si déjà présent)."""
+    if not event_id or ProcessedStripeEvent.query.get(event_id) is not None:
+        return
+    db.session.add(
+        ProcessedStripeEvent(
+            event_id=event_id,
+            event_type=event_type,
+            processed_at=datetime.now().isoformat(),
+        )
+    )
+    db.session.commit()
 
 
 # ---------------------------------------------------------------
@@ -376,6 +438,20 @@ class Metrics(db.Model):
             self.last_visit = epoch
 
 
+class ProcessedStripeEvent(db.Model):
+    """
+    Idempotence des webhooks Stripe : chaque event.id traité est enregistré
+    ici pour qu'un rejeu Stripe (retries) ne ré-exécute pas la logique
+    (double activation de licence, doublons...).
+    """
+
+    __tablename__ = "stripe_events_processed"
+    # Stripe garantit l'unicité de event.id
+    event_id = db.Column(db.String(255), primary_key=True)
+    event_type = db.Column(db.String(128))
+    processed_at = db.Column(db.String(128))
+
+
 # ---------------------------------------------------------------
 # Define decorators
 
@@ -492,13 +568,14 @@ def create_user_from_stripe(
 
     # Case 1 : no email related user nor stripe related customer
     if (user_by_email is None) and (user_by_stripe_id is None):
-        User(
+        new_user = User(
             email=user_email.lower(),
             firstname=user_firstname,
             name=user_lastname,
             creation=datetime.now().isoformat(),
             stripe_id=user_stripe_id,
         )
+        db.session.add(new_user)
         db.session.commit()
     # Case 2 : Got email related user but no stripe related customer
     elif (user_by_email is not None) and (user_by_stripe_id is None):
@@ -530,7 +607,10 @@ def delete_user_from_stripe(
     :rtype: (str, boolean)
     """
     # Get user related to mail
-    user = User.query.filter_by(func.lower(User.email) == func.lower(user_email), stripe_id=user_stripe_id).first()
+    user = User.query.filter(
+        func.lower(User.email) == func.lower(user_email),
+        User.stripe_id == user_stripe_id,
+    ).first()
 
     # Update user if it exists
     if user is not None:
@@ -843,24 +923,15 @@ def set_licence_invoice_paid(user_stripe_id: str, license_stripe_id: str, user_l
     :return: (message, success)
     :rtype: (str, bool)
     """
-    print("DEBUG set_licence_invoice_paid:")
-    print(f"  user_stripe_id: {user_stripe_id}")
-    print(f"  license_stripe_id: {license_stripe_id}")
-    print(f"  user_license_stripe_id: {user_license_stripe_id}")
-
     # Get user
     user = User.query.filter_by(stripe_id=user_stripe_id).first()
     if user is None:
-        print(f"ERROR: No user found with stripe_id={user_stripe_id}")
         return "No user found for invoice", False
-    print(f"  Found user: {user.email} (id={user.id})")
 
     # Get related license
     license = License.query.filter_by(stripe_id=license_stripe_id).first()
     if license is None:
-        print(f"ERROR: No license found with stripe_id={license_stripe_id}")
         return "No license found for invoice", False
-    print(f"  Found license: {license.name} (id={license.id})")
 
     # Try to find user_license with all 3 criteria (ideal case)
     user_license = UserLicences.query.filter_by(
@@ -869,16 +940,11 @@ def set_licence_invoice_paid(user_stripe_id: str, license_stripe_id: str, user_l
         stripe_id=user_license_stripe_id
     ).first()
 
-    if user_license is not None:
-        print(f"  Found user_license with all 3 criteria (id={user_license.id})")
-    else:
-        print("  No user_license found with all 3 criteria, trying alternatives...")
-
+    if user_license is None:
         # Alternative 1: Search by stripe_id only (maybe user/license not yet set)
         user_license = UserLicences.query.filter_by(stripe_id=user_license_stripe_id).first()
 
         if user_license is not None:
-            print(f"  Found user_license by stripe_id only (id={user_license.id})")
             # Update the user and license links
             user_license.user = user
             user_license.license = license
@@ -890,12 +956,10 @@ def set_licence_invoice_paid(user_stripe_id: str, license_stripe_id: str, user_l
             ).order_by(UserLicences.id.desc()).first()
 
             if user_license is not None:
-                print(f"  Found user_license by user+license (id={user_license.id})")
                 # Update the stripe_id
                 user_license.stripe_id = user_license_stripe_id
             else:
                 # Alternative 3: Create new entry if nothing found
-                print("  No user_license found, creating new entry")
                 user_license = UserLicences(
                     user=user,
                     license=license,
@@ -911,14 +975,11 @@ def set_licence_invoice_paid(user_stripe_id: str, license_stripe_id: str, user_l
     if user_license.expiry is None:
         user_license.expiry = "never"
 
-    print(f"  Setting user_license.activated=True (id={user_license.id})")
-
     # Apply modification to database
     try:
         db.session.commit()
-        print(f"  SUCCESS: License activated for user {user.email}")
         return "ok", True
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        print(f"  ERROR during commit: {str(e)}")
-        return f"Database error: {str(e)}", False
+        current_app.logger.exception("set_licence_invoice_paid: commit failed")
+        return "Database error", False

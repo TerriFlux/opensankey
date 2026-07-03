@@ -29,7 +29,6 @@ from sqlalchemy import func
 
 # Werkzeug
 from werkzeug.security import check_password_hash
-from werkzeug.security import generate_password_hash
 
 # Sankey libs
 import SankeyExcelParser.su_trace as trace
@@ -41,6 +40,8 @@ from .models import db
 from .models import User
 from .models import login_required
 from .models import license_required
+from .models import hash_password
+from .models import validate_password
 from .mailing import send_pw_modification_email
 from .stripe import cancel_subscription
 
@@ -140,7 +141,8 @@ def trigger_modify_pwd():
             send_pw_modification_email(current_user, request.json.get("lang"))
             db.session.commit()
     except Exception as e:
-        return "err:" + str(e), 500
+        trace.logger.error("trigger_modify_pwd failed: {}".format(e))
+        return "err", 500
     # Return
     return "ok", 200
 
@@ -169,7 +171,10 @@ def modify_pwd():
         return "token_expired", 400
 
     # Ok token, apply new password
-    current_user.password = generate_password_hash(request.json.get("new_password"), method="sha256")
+    new_password = request.json.get("new_password")
+    if not validate_password(new_password):
+        return "err_password_invalid", 400
+    current_user.password = hash_password(new_password)
 
     # Clear token
     current_user.secret_token = None
@@ -233,7 +238,8 @@ def delete_license(license_name):
             request.json.get("feedback"),
         )
     except Exception as e:
-        return "err_in_cancel : {}".format(e), 500
+        trace.logger.error("delete_license cancel failed: {}".format(e))
+        return "err_in_cancel", 500
     if not ok_cancel:
         return "failed_to_cancel", 500
     # Set subscription as deactivated
@@ -279,7 +285,8 @@ def delete_account():
         # force Logout user
         logout_user()
     except Exception as e:
-        return "err : {}".format(e), 500
+        trace.logger.error("delete_account failed: {}".format(e))
+        return "err", 500
     return "ok", 200
 
 

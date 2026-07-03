@@ -34,6 +34,8 @@ from .models import create_license_from_stripe
 from .models import set_licence_checkout_completed
 from .models import set_license_invoice_created
 from .models import set_licence_invoice_paid
+from .models import stripe_event_already_processed
+from .models import mark_stripe_event_processed
 
 
 # ---------------------------------------------------------------
@@ -62,6 +64,23 @@ if "STRIPE_SECRET_KEY" in os.environ:
 # Create stripe blue print
 stripe_blueprint = Blueprint("stripe_blueprint", __name__)
 stripe.api_key = STRIPE_KEYS["secret_key"]
+
+
+def _expected_livemode():
+    """
+    Environnement Stripe attendu, déduit du préfixe de la clé secrète.
+
+    Returns
+    -------
+    :return: True (live), False (test), ou None si indéterminé (pas d'enforce)
+    :rtype: bool | None
+    """
+    key = STRIPE_KEYS.get("secret_key") or ""
+    if key.startswith("sk_live") or key.startswith("rk_live"):
+        return True
+    if key.startswith("sk_test") or key.startswith("rk_test"):
+        return False
+    return None
 
 
 # ---------------------------------------------------------------
@@ -190,6 +209,17 @@ def stripe_webhook():
         # Invalid signature
         return "Invalid signature", 400
 
+    # Reject events coming from the wrong Stripe environment (test vs live)
+    expected_livemode = _expected_livemode()
+    if expected_livemode is not None and bool(event.get("livemode")) != expected_livemode:
+        # 200 pour que Stripe ne retente pas indéfiniment
+        return "ignored (livemode mismatch)", 200
+
+    # Idempotence : ne pas re-traiter un event déjà vu (rejeu Stripe)
+    event_id = event.get("id")
+    if stripe_event_already_processed(event_id):
+        return "ok (already processed)", 200
+
     # Defaut outputs
     msg, ok = "ok", True
 
@@ -220,6 +250,10 @@ def stripe_webhook():
             msg, ok = f(event["data"])
         except Exception as e:
             return "Error dispatching {0} : {1}".format(event["type"], e), 400
+
+    # Record the event as processed once handled successfully (idempotence)
+    if ok:
+        mark_stripe_event_processed(event_id, event.get("type", ""))
 
     # Return
     return msg, 200 if ok else 400
