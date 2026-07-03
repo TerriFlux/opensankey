@@ -124,6 +124,25 @@ export class Class_NodeElement extends Class_NodeBase {
       return this._stock_values.getValueForDataTags(this.sankey.selected_data_tags_list) as Class_StockValue | null
   }
 
+  // #1245 — Surbrillance du chemin amont/aval au survol. `event.buttons === 0`
+  // exclut les survols pendant un clic maintenu / drag en cours.
+  public eventMouseOver(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    super.eventMouseOver(event)
+    if (event.buttons === 0) this.drawing_area.highlightLinkedPath(this)
+  }
+
+  public eventMouseOut(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    super.eventMouseOut(event)
+    this.drawing_area.clearLinkedPathHighlight()
+  }
+
+  // Un drag qui démarre annule la surbrillance : pendant un repositionnement,
+  // l'utilisateur a besoin de voir TOUT le diagramme à opacité normale.
+  protected eventMouseDragStart(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+    this.drawing_area.clearLinkedPathHighlight()
+    super.eventMouseDragStart(event)
+  }
+
   /**
    * Creates an instance of Class_NodeBase.
    */
