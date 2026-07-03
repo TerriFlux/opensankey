@@ -7,6 +7,32 @@ import type { Class_Sankey } from '../types/Sankey'
 import type { Class_ProtoElement } from '../Elements/Element'
 
 // ---------------------------------------------------------------------------
+// Version de FORMAT (entier), distincte de la version d'app
+// ---------------------------------------------------------------------------
+// Incrémentée UNIQUEMENT quand la structure du JSON change (cf. FORMAT.md), et non
+// à chaque release. Sa présence dans un fichier signale qu'il est déjà au format
+// courant : le dispatcher (DrawingAreaPersistence.fromJSON) neutralise alors la
+// version pointée pour NE PAS rejouer les migrations legacy à seuil. C'est ce qui
+// corrige l'import Excel (SEP écrivait "1.0" → migrations < 1.1.4 appliquées à tort).
+// Doit rester alignée avec JSON_FORMAT_VERSION de SEP (io_base.py).
+export const CURRENT_FORMAT_VERSION = 1
+
+/**
+ * Version « effective » servant à piloter les migrations au chargement.
+ * - Fichier avec `format_version` explicite ⇒ déjà au format courant : on renvoie
+ *   `current_version` (toutes les migrations legacy à seuil no-op).
+ * - Sinon ⇒ on garde la version pointée du fichier (chaîne de migrations legacy).
+ * Pur et sans dépendance : testable en isolation.
+ */
+export function effectiveLoadVersion(
+  raw_version: string | undefined,
+  format_version: number | undefined,
+  current_version: string | undefined
+): string | undefined {
+  return (format_version !== undefined) ? current_version : raw_version
+}
+
+// ---------------------------------------------------------------------------
 // Documentation markdown multilingue (onglet « Doc »)
 // ---------------------------------------------------------------------------
 // Le champ `documentation_markdown` est stocké en interne comme une map

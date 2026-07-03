@@ -1,4 +1,9 @@
-import { isVersionBelow, applyWrapLongWordsRetrocompat } from './persistenceMigrations'
+import {
+  isVersionBelow,
+  applyWrapLongWordsRetrocompat,
+  effectiveLoadVersion,
+  CURRENT_FORMAT_VERSION,
+} from './persistenceMigrations'
 import type { Class_Sankey } from '../types/Sankey'
 import type { Class_ProtoElement } from '../Elements/Element'
 
@@ -30,6 +35,32 @@ describe('AFMBase issue #191 — isVersionBelow (comparateur de versions pointé
   it('traite une version absente comme le fichier le plus ancien', () => {
     expect(isVersionBelow(undefined, '1.1.4')).toBe(true)
     expect(isVersionBelow('', '1.1.4')).toBe(true)
+  })
+})
+
+// #22 — Sémantique de version de format : un fichier portant un `format_version`
+// explicite (écrit par SEP à l'import Excel, ou par un save récent) est déjà au
+// format courant et NE doit PAS subir les migrations legacy. `effectiveLoadVersion`
+// est la décision pure au cœur du shim de DrawingAreaPersistence.fromJSON.
+describe('#22 — effectiveLoadVersion (neutralisation via format_version)', () => {
+  it('renvoie la version courante quand format_version est présent (fichier moderne)', () => {
+    // SEP écrivait "1.0" (piège) : avec un format_version, on le remplace par la
+    // version courante ⇒ isVersionBelow(courante, seuil) = false, pas de migration.
+    expect(effectiveLoadVersion('1.0', 1, '1.1.9')).toBe('1.1.9')
+    expect(isVersionBelow(effectiveLoadVersion('1.0', 1, '1.1.9'), '1.1.4')).toBe(false)
+  })
+
+  it('garde la version pointée du fichier quand format_version est absent (legacy)', () => {
+    expect(effectiveLoadVersion('1.0', undefined, '1.1.9')).toBe('1.0')
+    expect(effectiveLoadVersion('0.92', undefined, '1.1.9')).toBe('0.92')
+    expect(effectiveLoadVersion(undefined, undefined, '1.1.9')).toBeUndefined()
+    // Un fichier legacy ("1.0", sans format_version) reste bien "below" 1.1.4.
+    expect(isVersionBelow(effectiveLoadVersion('1.0', undefined, '1.1.9'), '1.1.4')).toBe(true)
+  })
+
+  it('expose une version de format entière positive', () => {
+    expect(Number.isInteger(CURRENT_FORMAT_VERSION)).toBe(true)
+    expect(CURRENT_FORMAT_VERSION).toBeGreaterThanOrEqual(1)
   })
 })
 

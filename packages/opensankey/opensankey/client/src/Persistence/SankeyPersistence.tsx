@@ -50,7 +50,7 @@ import { Class_DrawingArea } from '../types/DrawingArea'
 import { convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
 // Issue #191 — migration de rétro-compat de la césure des libellés, isolée dans
 // son propre module pour rester testable sans le graphe d'imports lourd d'ici.
-import { applyWrapLongWordsRetrocompat } from './persistenceMigrations'
+import { applyWrapLongWordsRetrocompat, CURRENT_FORMAT_VERSION, effectiveLoadVersion } from './persistenceMigrations'
 
 
 export class BaseElementPersistence {
@@ -2043,6 +2043,10 @@ export class DrawingAreaPersistence {
     const json_object = {} as Type_JSON
     // Add current version of app
     json_object['version'] = drawing_area.application_data.version
+    // #22 — Version de FORMAT explicite (entier), distincte de la version d'app :
+    // signale que le fichier est au format courant ⇒ pas de migration legacy au
+    // rechargement (cf. DrawingAreaPersistence.fromJSON + FORMAT.md).
+    json_object['format_version'] = CURRENT_FORMAT_VERSION
     // #1231 (1.1.5) — marqueur de format : les x/y des nœuds sont des CENTRES (indépendant
     // du datatag/échelle). Drapeau explicite (et non comparaison de version) → robuste et
     // découplé du numéro de version. Absent ⇒ ancien format (coin) → migration au 1er draw.
@@ -2363,7 +2367,20 @@ export class DrawingAreaPersistence {
   ) {
     drawing_area.bypass_redraws = true
 
-    const version = getStringOrUndefinedFromJSON(json_object, 'version')
+    // #22 — Sémantique de format : un fichier portant un `format_version` explicite
+    // est déjà au FORMAT COURANT (ex. import Excel via SEP, qui écrivait "1.0" et
+    // déclenchait à tort les migrations legacy < 1.1.4). On neutralise alors la
+    // version pointée en la traitant comme courante ⇒ aucune migration legacy à
+    // seuil ne se rejoue. Les fichiers legacy (sans format_version) sont inchangés.
+    const file_format_version = getNumberOrUndefinedFromJSON(json_object, 'format_version')
+    const version = effectiveLoadVersion(
+      getStringOrUndefinedFromJSON(json_object, 'version'),
+      file_format_version,
+      drawing_area.application_data.version
+    )
+    // Cohérence : les lectures downstream de json_object.version voient aussi la
+    // version neutralisée (= la version courante de l'app, cf. effectiveLoadVersion).
+    if (file_format_version !== undefined) json_object['version'] = drawing_area.application_data.version
     if (
       (version === undefined) ||
       (Number(version) < 0.9)
