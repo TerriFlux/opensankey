@@ -18,6 +18,19 @@ sudo systemctl enable ${prefix}_opensankey
 sudo systemctl restart nginx
 sudo systemctl status ${prefix}_opensankey --no-pager
 
+# Ce script est un shell séparé : les variables du fichier `env` (chargé par
+# systemd via EnvironmentFile dans le service) n'y sont PAS présentes. On source
+# donc `env` à la racine de l'app pour récupérer HEALTHCHECK_URL (et co.).
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+APP_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
+ENV_FILE="${APP_DIR}/env"
+if [ -f "$ENV_FILE" ]; then
+    set -a
+    # shellcheck disable=SC1090
+    . "$ENV_FILE"
+    set +a
+fi
+
 # Health-check post-restart : on interroge /health jusqu'à ce que la base réponde
 # (SELECT 1). Si l'URL est configurée et que le check échoue, on sort en non-zéro
 # → le déploiement échoue au lieu de laisser un site cassé en ligne.
