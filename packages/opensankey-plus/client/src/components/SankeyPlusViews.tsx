@@ -57,7 +57,7 @@ import {
   Spinner,
   Text,
   Checkbox,
-
+  useToast,
 } from '@chakra-ui/react'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 
@@ -1236,7 +1236,8 @@ const TabImportExcelDataForUnitary = ({ app_data }: { app_data: Class_Applicatio
   const list_data = useRef<{ [x: string]: { name: string, data: Type_JSON } }>({})
   const list_selected_nodes_for_unitary = useRef<Class_NodeElement[]>([])
 
-  local_app_data.current.createNewMenuConfiguration()
+  const toast = useToast()
+  local_app_data.current.createNewMenuConfiguration(toast)
 
   // Failesafe : si on a des données mais aucune sélection valide, basculer sur la première
   if (Object.keys(list_data.current).length > 0 && !(selected_data_id in list_data.current)) {

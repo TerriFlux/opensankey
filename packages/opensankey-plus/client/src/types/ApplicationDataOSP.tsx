@@ -1,4 +1,4 @@
-import { useToast } from '@chakra-ui/react'
+import { CreateToastFnReturn } from '@chakra-ui/react'
 import pako from 'pako'
 import { Class_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
 import { default_main_sankey_id, getBooleanFromJSON, getJSONOrUndefinedFromJSON, getStringFromJSON, makeId, Type_JSON } from '../deps/OpenSankey/types/Utils'
@@ -232,8 +232,8 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     }
   }
 
-  public createNewMenuConfiguration() {
-    this._toast = useToast()
+  public createNewMenuConfiguration(toast: CreateToastFnReturn | null = null) {
+    this._toast = toast
     this._menu_configuration = new Class_MenuConfigOSP()
     this._history = new Class_ApplicationHistory(this._menu_configuration)
 

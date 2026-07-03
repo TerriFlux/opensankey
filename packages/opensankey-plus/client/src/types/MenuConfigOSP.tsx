@@ -1,4 +1,4 @@
-import { MutableRefObject, useRef } from 'react'
+import { MutableRefObject } from 'react'
 import { Class_MenuConfig, keyTypeConfig, keyTypeElements } from '../deps/OpenSankey/types/MenuConfig'
 import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
 import { OSPShowMenuComponentsVarType } from './LegacyTypes'
@@ -53,25 +53,25 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
   constructor() {
     super()
 
-    this._ref_to_banner_views_updater = useRef(() => null)
-    this._ref_to_banner_view_nav_updater = useRef(() => null)
-    this._ref_to_banner_views_opened = useRef(false)
-    this._ref_to_views_config_updater = useRef(() => null)
+    this._ref_to_banner_views_updater = { current: () => null }
+    this._ref_to_banner_view_nav_updater = { current: () => null }
+    this._ref_to_banner_views_opened = { current: false }
+    this._ref_to_views_config_updater = { current: () => null }
 
-    this._ref_to_modal_view_attributes_switcher = useRef((_: boolean) => null)
-    this._ref_to_modal_view_attr_updater = useRef(() => null)
-    this._ref_show_modal_unitary_view = useRef((_: boolean) => null)
-    this._ref_update_modal_unitary_view = useRef(() => null)
-    this._ref_to_unitary_board_data_tag_updater = useRef(() => null)
-    this._ref_open_unitary_sankey_modal = useRef((_: Class_NodeElement | null) => null)
-    this._ref_show_modal_animated_export = useRef((_: boolean) => null)
-    this._ref_show_modal_publish = useRef((_: boolean) => null)
+    this._ref_to_modal_view_attributes_switcher = { current: (_: boolean) => null }
+    this._ref_to_modal_view_attr_updater = { current: () => null }
+    this._ref_show_modal_unitary_view = { current: (_: boolean) => null }
+    this._ref_update_modal_unitary_view = { current: () => null }
+    this._ref_to_unitary_board_data_tag_updater = { current: () => null }
+    this._ref_open_unitary_sankey_modal = { current: (_: Class_NodeElement | null) => null }
+    this._ref_show_modal_animated_export = { current: (_: boolean) => null }
+    this._ref_show_modal_publish = { current: (_: boolean) => null }
 
-    this._ref_to_btn_top_pref_updater = useRef(() => null)
-    this._ref_to_node_hyperlink_updater = useRef(() => null)
-    this._ref_to_config_DA_bg_image_updater = useRef(() => null)
+    this._ref_to_btn_top_pref_updater = { current: () => null }
+    this._ref_to_node_hyperlink_updater = { current: () => null }
+    this._ref_to_config_DA_bg_image_updater = { current: () => null }
 
-    this._dict_setter_show_dialog_plus = {ref_setter_show_menu_view_not_saved: useRef(() => null)}
+    this._dict_setter_show_dialog_plus = {ref_setter_show_menu_view_not_saved: { current: () => null }}
 
     //this._style_config.data.elements_configurable.push('data_tag')
     this._style_config.presentation.elements_configurable.push('level_tag')

@@ -2,7 +2,7 @@
 import React, { ChangeEvent, FC, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Draggable, { DraggableProps } from 'react-draggable'
-import { Box, Button, ButtonGroup, CloseButton, HStack, IconButton, Input, Select, Spinner, Text } from '@chakra-ui/react'
+import { Box, Button, ButtonGroup, CloseButton, HStack, IconButton, Input, Select, Spinner, Text, useToast } from '@chakra-ui/react'
 import { ExternalLinkIcon } from '@chakra-ui/icons'
 
 // react-draggable : typings embarqués optionnels vs @types requis (cf. SankeyPlusViews).
@@ -113,11 +113,10 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
   const hover_timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   // Initialiser le menu config de l'app_data temporaire (requis par fromJSON/dessin).
-  // createNewMenuConfiguration() appelle des hooks (useToast, et useRef via le
-  // constructeur de Class_MenuConfigOSP) : il DOIT être invoqué dans le corps du
-  // composant — pas dans un useEffect — sinon « Invalid hook call ». Même pattern
-  // que les wrappers d'app (SpreadSheetWrapper) qui l'appellent à chaque rendu.
-  local_app_data.current.createNewMenuConfiguration()
+  // La config ne dépend plus de hooks React ; on lui injecte le toast Chakra acquis ici
+  // (useToast, hook → corps du composant).
+  const toast = useToast()
+  local_app_data.current.createNewMenuConfiguration(toast)
 
   // app_data de la source active (diagramme courant ou import Excel).
   const source_app_data = source_mode === 'local' ? app_data : local_app_data.current
