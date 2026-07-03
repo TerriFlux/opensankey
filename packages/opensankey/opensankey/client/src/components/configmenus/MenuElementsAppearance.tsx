@@ -2897,21 +2897,23 @@ export const MarginEditor = ({
         </OverloadedCheckbox>
         {editMarginsUnified && (
           <OSTooltip label={t('Noeud.apparence.tooltips.shape_margin')} placement='left'>
-            <ConfigMenuNumberInput
-              t={t}
-              default_value={shapeValues.margin_left}
-              function_on_blur={(value: number | null) => {
-                if (value !== null) {
-                  shapeValues.margin_left = value
-                  shapeValues.margin_right = value
-                  shapeValues.margin_top = value
-                  shapeValues.margin_bottom = value
-                }
-              }}
-              minimum_value={0}
-              stepper={true}
-              unit_text='px'
-            />
+            <span>
+              <ConfigMenuNumberInput
+                t={t}
+                default_value={shapeValues.margin_left}
+                function_on_blur={(value: number | null) => {
+                  if (value !== null) {
+                    shapeValues.margin_left = value
+                    shapeValues.margin_right = value
+                    shapeValues.margin_top = value
+                    shapeValues.margin_bottom = value
+                  }
+                }}
+                minimum_value={0}
+                stepper={true}
+                unit_text='px'
+              />
+            </span>
           </OSTooltip>
         )}
       </Box>
