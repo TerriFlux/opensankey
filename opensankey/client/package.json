@@ -26,7 +26,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "dist": "tsc -p .",
-    "test": "react-scripts test --env=jsdom  -t 'AFMBase'",
+    "test": "react-scripts test --env=jsdom",
     "test_regenerate": "react-scripts test -u",
     "jest-html": "jest-html -c **/main.css,**/bootstrap.css",
     "eject": "react-scripts eject",
