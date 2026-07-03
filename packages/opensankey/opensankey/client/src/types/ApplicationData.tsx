@@ -584,6 +584,12 @@ export class Class_ApplicationData {
     // For published mode only
     this.drawing_area.static = published_mode
     this.fit_screen = published_mode
+    // menu_configuration : les constructeurs des classes modèle n'appellent plus de hooks
+    // React (cf. #21), donc on peut la créer dès l'instanciation (sans toast). Sans ça,
+    // un appel précoce (ex. checkTokens/setLicenses du LoginComponent avant le 1er render)
+    // trouvait menu_configuration undefined et jetait. Le render l'ré-injecte avec le toast.
+    // Dispatch virtuel : construit la sous-classe (MenuConfigOSP/SA) comme createNewDrawingArea.
+    this.createNewMenuConfiguration()
     // Librairie of icon
     this._icon_library = this.createNewIconLibrary()
     // Get OpenSankey logo
