@@ -1,6 +1,6 @@
 # Architecture SankeyApplication
 
-Ce document décrit l'architecture globale de la stack SankeyApplication et référence des pistes d'amélioration identifiées lors de la revue de code du 2026-04-12.
+Ce document décrit l'architecture globale de la stack SankeyApplication et référence des pistes d'amélioration identifiées lors de la revue de code du 2026-04-12, **mise à jour lors de la revue du 2026-07-03** (statut de chaque piste, forces/faiblesses et plan d'action en fin de document).
 
 ## Stack 3 couches
 
@@ -125,7 +125,7 @@ static fromJSON(version, el, json, kwargs?): void
 // + fromJSON_pre_0_9, fromJSON_0_9, fromJSON_0_91 pour legacy
 ```
 
-Version actuelle : `0.93`. Côté OSP, les vues sont compressées gzip dans le JSON racine (`views[id] = {...data, name, heredited_attr}` + `current_view`).
+Version actuelle : `1.1.9` (alignée sur la version applicative depuis mai 2026). Depuis avril : migration `fromJSON_pre_0_94` (refonte expansion #1225) et module isolé [`persistenceMigrations.ts`](submodules/OpenSankey+/submodules/OpenSankey/opensankey/client/src/Persistence/persistenceMigrations.ts) (migration #191, comparateur `isVersionBelow` correct sur les versions à segments). Côté OSP, les vues sont compressées gzip dans le JSON racine (`views[id] = {...data, name, heredited_attr}` + `current_view`).
 
 ## Licensing / trial
 
@@ -194,7 +194,7 @@ sphinx-build -b html doc/sources/en doc/build/en/html
 
 ## Submodules Python
 
-### SankeyExcelParser (v1.1.2)
+### SankeyExcelParser (v1.1.9)
 
 Parser Excel ↔ graphe Sankey Python, distribué en binaire Cython (wheels `.pyd`/`.so`). Publié sur PyPI.
 
@@ -213,7 +213,7 @@ io_out = IOExcel(sankey); io_out.write_sankey("output.xlsx")
 
 **Changements avril 2026** : `StockData` pour stocks réconciliables (feuilles `stocks_results`/`stocks_analysis`), tapered flows (`data_value_target`), encodage hex pour IDs non-alphanumériques, distribution Cython binary-only.
 
-### MFAProblem (v1.1.2)
+### MFAProblem (v1.1.9)
 
 Solveur de réconciliation de flux de matière. Problème : trouver des valeurs compatibles avec les équations de bilan à partir de mesures incertaines.
 
@@ -266,7 +266,7 @@ Auth, licensing et paiement Stripe. Deux parties : `client/` (React/TS) et `serv
 
 # Pistes d'amélioration
 
-Identifiées lors de la revue de code, non priorisées.
+Identifiées lors de la revue de code d'avril 2026, non priorisées. **Le statut de chaque piste au 2026-07-03 est consolidé dans la section « Revue du 2026-07-03 » en fin de document.**
 
 ## 1. Symlinks `deps/` fragiles sous Windows
 
@@ -451,3 +451,152 @@ Beaucoup de bugs historiques viennent de fichiers clients édités à la main. P
 Plusieurs `t('${path}.${action}')` renvoient la clé brute quand la traduction manque (surtout côté EN). Pas de CI qui vérifie la parité FR/EN des catalogues.
 
 **Suggestion** : script `pnpm check-i18n` qui diff les clés FR vs EN et fail la CI si divergence. i18next expose les clés manquantes via `missingKeyHandler` — les collecter pendant les tests.
+
+---
+
+# Revue du 2026-07-03 — statuts, forces, faiblesses, plan d'action
+
+Mise à jour de la revue du 2026-04-12. Période couverte : releases 1.1.4 → 1.1.9, ~620 commits client OpenSankey, ~50 commits de robustesse MFAProblem/SEP, refonte publish/viewer, tableur Univer, stocks réconciliables #156.
+
+## Statut des pistes d'avril
+
+| # | Sujet | Statut 2026-07 |
+|---|-------|----------------|
+| 1 | Symlinks `deps/` | **Partiel** — recréation scriptée et idempotente (`build_client.sh` l.108-136, `build_client.bat` `mklink /J`, `bootstrap-submodules.ps1/.sh`) mais pas de `postinstall` ; piège Git Bash → symlinks POSIX cassés toujours présent |
+| 2 | `ApplicationDataOSP.tsx` | **Ouvert, aggravé** — 1392 lignes (+52 %) ; seul `isTrialActive` extrait (`utils/trial`) |
+| 3 | `SankeyPlusViews.tsx` | **Ouvert** — 1505 lignes, 7 composants + 2 helpers |
+| 4 | Helper `useForceRerender` | **Ouvert** — 0 occurrence ; 176 `MutableRefObject` dans le src OpenSankey |
+| 5 | `withBypassRedraws` | **Ouvert, aggravé** — 81 poses manuelles du flag dans 21 fichiers, aucun try/finally |
+| 6 | Versioning persistance | **Partiel** — `persistenceMigrations.ts` isolé, documenté et testé (première migration testée : #191) ; mais dispatch if-cascade conservé, pas de table, pas de golden round-trip |
+| 7 | Deep-clone change tracking | **Partiel** — mécanisme conservé (`ApplicationDataOSP.tsx:1064`) mais skippé en mode static et pour les vues light |
+| 8 | Migration `heredited_attr` | **Ouvert** — sniffing sans marqueur, gated `< 0.9` dans un site mais inconditionnel dans `addViewsFromJSON`, logique dupliquée en 2 endroits |
+| 9 | Héritage 3 couches | **Ouvert** (structurel, assumé) |
+| 10 | Tests unitaires client | **Partiel** — 12 fichiers jest OS (0 en avril : invariants géométriques + rétro-compat persistance) ; round-trip JSON et `updateFrom` couverts côté **Python** (SEP ~31 fichiers, MFA ~17) ; rien dans SA/OSP, jest absent de la CI |
+| 11 | Duck typing `Data`/`StockData` | **Ouvert** — désormais documenté en docstring mais non contractuel ; interface dupliquée qui croît (#156 : `_is_level`, `_paired_variation`) |
+| 12 | Monolithes MFAProblem | **Ouvert, aggravé** — `mfa_problem_solver.py` 1436 l. (+44 %), `mfa_problem_format_io.py` 1987 l. (+42 %) ; s'étend à SEP : `sankey_pandas.py` 6743 l., `sankey_base.py` 3155 l. |
+| 13 | Feuilles Excel regex | **Partiel** — feuilles ignorées listées dans le log (`io_base.py:150`), fix accents, typos de nœuds détectées/corrigées (#114 `typo_strict`/`autocorrect_typo`) ; pas de mode strict au niveau feuille ni suggestion Levenshtein |
+| 14 | Distribution Cython | **Résolu** — fallback pur-Python sans Cython dans les `setup.py`, wheels manylinux cp310+cp312 publiées sur tag |
+| 15 | Hash sha256 | **Ouvert, aggravé** — HMAC-SHA256 à 1 itération (werkzeug 2.3.7, méthode supprimée en Werkzeug 3.0 → montée de version bloquée) ; politique de mot de passe relâchée à « non vide » (1f47d4d), validée côté client uniquement, aucun contrôle serveur |
+| 16 | Idempotence webhooks Stripe | **Ouvert** — `stripe.py:167-225` dispatch direct sans stockage d'`event.id` |
+| 17 | `livemode` webhooks | **Ouvert** — aucun contrôle après `construct_event` |
+| R1 | Encodage `actionName` via `_` | **Ouvert** — `indexOf('_')` + `split('_')[0]` (`SankeyMenuContext.tsx:406,533`) |
+| R2 | Parsing silencieux SEP | **Partiel** (cf. #13) |
+| R3 | `bypass_redraws` sans garde | **Ouvert, aggravé** (cf. #5) |
+| R4 | Validation de schéma `fromJSON` | **Ouvert** — getters défensifs mais accès bruts crashables subsistent (`SankeyPersistence.tsx:2151`, `UpdateFrom.tsx:53`) |
+| R5 | Erreurs solveur typées | **Partiel** — plus de 500 brut : machine à états `RUNNING/FAILED/FINISHED` (`server/views.py:532-759`), statuts CVXPY/OSQP surfacés dans le log (#176, `ac0d193`, `49e31f5`) ; mais `optimisation()` retourne un bool, aucun code machine-lisible INFEASIBLE/SINGULAR/TIMEOUT |
+| R6 | Unicité des IDs | **Ouvert** — atténué sur `addNewNode` (suffixe `_0` récursif) ; vues, clones de DA et fingerprints sans garantie |
+| R7 | Listeners D3 | **Ouvert** — s'y ajoute `TooltipEventManager` (`TooltipsConfig.tsx:50-67`) : `mousemove` document permanent + timers jamais retirés (26 `addEventListener` vs 20 `remove` dans OS) |
+| R8 | Cycles `heredited_attr` | **Ouvert** — pas de boucle infinie (passe unique dans `views_order`) mais résultat d'un cycle silencieusement ordre-dépendant |
+| R9 | Tests golden fichiers réels | **Résolu** — submodule `SankeyData/` : 97 `.xlsx` (dont cas clients réels) + 210 fichiers de références (SEP/SCMFA/OpenSankey) + golden logs, exécutés en CI sur chaque branche (`TESTS_DIR`, `.gitlab-ci.yml:100`) |
+| R10 | check-i18n | **Ouvert** — ~13 500 lignes de catalogues sur 3 couches, rattrapage manuel via `deep_merge_translations`, rien en CI |
+
+**Bilan** : 2 points résolus (#14, R9), 8 partiels, 17 ouverts dont 5 aggravés. La robustesse *comportementale* a changé de niveau (force dominante ci-dessous) ; la dette *structurelle* a grossi avec le rythme de features.
+
+## Forces
+
+1. **Robustesse comportementale Python transformée** (~50 commits depuis avril) : les cas limites échouent bruyamment ou avertissent au lieu de produire des résultats faux — multi-campagnes n'avorte plus tout (#177), budget OSQP élargi avec exception réelle surfacée (#176), snap-to-zero relatif (#166), warning flux mesuré écrasé par sur-détermination (#189), échec explicite thread solveur, grille stock incohérente → échec propre.
+2. **Filet de tests golden industrialisé et en CI** : `SankeyData` centralise 97 classeurs réels + références versionnées par outil, avec scripts de régénération (`regenerate_testdata_refs.sh`, `bump_testdata.sh`) — toute régression parser/solveur casse le pipeline de branche.
+3. **Chaîne de release unifiée sur tag git** : versions strictement alignées npm = wheels (`PKG_VERSION=${CI_COMMIT_TAG#v}`), wheels manylinux multi-Python buildées en Docker + auditwheel, republication idempotente (skip npm, delete-avant-upload PyPI).
+4. **Qualité vérifiée en CI sur chaque branche** : ESLint + tsc (`pnpm run dist`) + pytest des 3 packages Python avec les golden ; hygiène de runner shell traitée (réinstall forcée des editables, purge egg-link).
+5. **Émergence d'une culture de test côté client** : 0 → 12 fichiers jest depuis le 17/06, ciblant les invariants géométriques (`applyLayoutAnchor`, `flowThickness`, `zOrder`…) et la rétro-compat de persistance.
+6. **Patterns récents bien conçus** : `types/PublishOptions.tsx` (source unique typée des options viewer/publish avec dépréciation gérée), dirty-tracking par fingerprints (`Element.tsx:77`, `Sankey.tsx:160`), expansion batch sans redraw par nœud (`Hierarchies.tsx:642`), vues light sans duplication de géométrie, seuils d'affichage en px écran avec re-filtrage débouncé au zoom.
+7. **Sécurité de base LoginComponent saine sur plusieurs plans** : signature webhook Stripe vérifiée, tokens de reset TTL courts à usage unique (15 min / PIN 10 min), comparaison de mot de passe en temps constant, path traversal maîtrisé côté publish (`_safe_under`), JSON inline échappé à la publication.
+8. **Parcours d'erreur utilisateur SEP nettement amélioré** : feuilles ignorées listées, feuille Options (18 options), typos de nœuds strict/autocorrect, log throttlé et lisible.
+
+## Faiblesses
+
+### Sécurité backend (nouveau — critique)
+
+- **S1. Endpoints sensibles sans authentification** : aucune route de `server/views.py` n'est `@login_required`. Anonymement accessibles : `/api/publish/deploy` (`views.py:433` → `scp`/`ssh` vers le serveur de portfolios OVH **prod**), `/api/publish/folder|current|browse|folders` (lecture/upload de l'arbre MFAData), `/optimize/launch_optim` (`views.py:830`, calcul lourd → DoS trivial), `/api/vision/build`. Seul `/api/vision/extract` contrôle `current_user.is_authenticated`.
+- **S2. CORS + CSRF** : `CORS(app, support_credentials=True)` (`server/__init__.py:20`) sans liste d'origins — et le kwarg correct est `supports_credentials`, donc config probablement partiellement inopérante. Auth par cookie de session sans token CSRF ni SameSite explicite → tous les POST mutateurs exposés.
+- **S3. Path traversal à l'upload** : `launch_optim` fait `os.path.join(tmp_dir, input_file.filename)` sans `secure_filename` (`views.py:847`) — un nom `../../…` écrit hors de `tmp_dir`.
+- **S4. Secrets et DB** : `FLASK_SECRET_KEY` avec fallback aléatoire par worker (`app.py:27`) → sessions et tokens de reset incohérents entre workers si l'env manque ; SQLite en chemin relatif avec `server/db.sqlite` versionné dans le repo.
+- **S5. Divulgation d'informations** : `str(e)` renvoyé au client (publish, vision, optimize, user), `/auth/forgot_pw` renvoie `user_exists` (énumération d'e-mails), logs stdout avec emails + identifiants Stripe en clair (`models.py:846-919`).
+- **S6. Token GitLab en clair** : bloc commenté « Tag Release » de `.gitlab-ci.yml` (~l.700) contient un `glpat-…` en dur, présent dans l'historique git — à révoquer et purger.
+- **S7. Points d'avril toujours ouverts** : hash sha256 1 itération + politique mdp « non vide » client-only (#15), webhooks Stripe sans idempotence (#16) ni contrôle `livemode` (#17).
+- **S8. Bugs latents licensing** : `create_user_from_stripe` sans `db.session.add()` (`models.py:494`, user non persisté), `delete_user_from_stripe` avec `filter_by(func.lower(...)==...)` invalide (`models.py:533`).
+
+### Dette structurelle en aggravation
+
+- **God-files quasi doublés en 3 mois** : `DrawingArea.tsx` 2422→4328 l. (+79 %), `NodePositioning.tsx` 2072→4006 (+93 %), `DrawLabel.tsx` 1644→2866, `MenuElementsAppearance.tsx` 2379→3635, `SankeyPersistence.tsx` 1797→2559 ; côté Python `sankey_pandas.py` 6743 l. Chaque feature/fix grossit les mêmes fichiers, sans plan d'extraction.
+- **Couche base polluée** : le tableur Univer (feature SA#163) vit dans OpenSankey base — 9 fichiers, 6185 lignes, dépendance Univer embarquée dans la lib open-source.
+- **`bypass_redraws` propagé** : 81 poses manuelles (R3 non corrigé se réplique mécaniquement à chaque feature).
+- **Hygiène** : 91 `console.log` dans les .tsx OS (28 dans `UniversalJSONCompression.tsx`, 29 dans `NodePositioning.tsx`), 54 casts `as unknown as` concentrés dans la persistance, `TooltipEventManager` singleton avec listeners globaux jamais retirés.
+- **Duplication `Data`/`StockData`** : chaque attribut transversal ajouté à la main en miroir dans les deux classes ; setters `except Exception: pass` dans `ProtoData` (`data.py:79-98`) qui avalent les valeurs invalides sans warning.
+
+### Process de release
+
+- **Les tags publient sans exécuter aucun test** : le job `test` a `when: never` sur tag (`.gitlab-ci.yml:92-94`) alors que `publish:npm`/`publish:python` ne tournent que sur tag — un tag posé sur un commit au pipeline rouge publie quand même.
+- **Wheels sans validation post-build** : ni `twine check` ni smoke test `pip install + import` avant upload au registry consommé par cartofob-sankey.
+- **Jest hors CI** : les 12 tests OS ne tournent qu'en local, et le script npm `test` d'OS filtre `-t 'AFMBase'` ; le lint CI utilise `eslint --fix` (mutation du workspace au lieu d'une vérification).
+- **`build:examples` toujours skippé** (TEMP 1.1.6) : editor/viewer d'exemples non rebuildés.
+
+### Persistance
+
+- **Piège `Number(version)`** : le dispatcher principal compare via `Number(version)` (`SankeyPersistence.tsx:2369-2389`) or `Number('1.1.9') = NaN` — fonctionne uniquement parce que tous les seuils actuels sont < 1 ; toute future migration à seuil ≥ 1.x copiant ce pattern ne se déclencherait jamais, silencieusement. S'y ajoutent 13 stubs morts `fromJSON_1_1_1` jamais invoqués.
+- **Fichier N× la taille du diagramme** : chaque vue heavy est ré-inflatée et insérée en clair à la sauvegarde (`ApplicationDataOSP.tsx:344`), sans delta par rapport au maître.
+- **`_toJSON` avec effets de bord** : en mode `save_only_visible_elements`, la sérialisation rebâtit `this._drawing_area` en boucle via `extractViewFromJSON` — la vue affichée après export dépend de la dernière itération.
+- **Coût du switch de vue multi-sources** : une DrawingArea temporaire complète reconstruite par source d'héritage à chaque switch (`ApplicationDataOSP.tsx:1379-1387`).
+
+## Plan d'action
+
+Déclinaison opérationnelle semaine par semaine (juillet–août 2026) : [PLAN-ETE-2026.md](PLAN-ETE-2026.md).
+
+### P0 — Sécurité (immédiat, avant toute autre chose)
+
+1. **Authentifier les endpoints serveur** : `@login_required` sur `/api/publish/*` (deploy en premier), `/optimize/launch_optim`, `/api/vision/build` (S1).
+2. **Révoquer et purger le token `glpat-…`** de `.gitlab-ci.yml` et de l'historique (S6).
+3. **`secure_filename` sur `launch_optim`** (S3) — fix d'une ligne.
+4. **`FLASK_SECRET_KEY` obligatoire** : fail au démarrage si absent (S4).
+5. **CORS** : corriger le kwarg (`supports_credentials`) + liste d'origins explicite ; cookies `SameSite=Lax` minimum (S2).
+6. **Mots de passe** : migrer vers `pbkdf2:sha256:600000` (natif werkzeug) avec rehash au login, + validation de force côté serveur (#15) — débloque aussi la montée Werkzeug 3.
+7. **Stripe** : table `stripe_events_processed(event_id PK)` + contrôle `event.livemode` (#16, #17) ; corriger les 2 bugs latents `models.py` (S8).
+8. **Fuites d'infos** : messages génériques au client, `forgot_pw` sans `user_exists`, purger les logs stdout emails/Stripe (S5).
+
+### P1 — Fiabilité de la release (semaines)
+
+9. **Faire dépendre `publish:*` des tests** : soit exécuter le job `test` sur tag, soit `needs: [test]` du pipeline de branche.
+10. **`twine check` + smoke import** des wheels avant upload.
+11. **Brancher jest en CI** (job dans `build` ou dédié) et retirer le filtre `-t 'AFMBase'` ; passer le lint CI en mode vérification (sans `--fix`).
+12. **Corriger le piège `Number(version)`** : généraliser `isVersionBelow` dans le dispatcher principal et supprimer les 13 stubs `fromJSON_1_1_1` morts — avant la première migration ≥ 1.x, après ce sera trop tard.
+13. **R5, le chaînon manquant** : classe `MFAProblemError` avec codes (`INFEASIBLE`, `SINGULAR`, `TIMEOUT`, `BAD_CONSTRAINT`) sérialisée en JSON → message i18n côté front (l'infrastructure statuts/logs existe déjà, il ne manque que le typage).
+
+### P2 — Dette structurelle (fond, à planifier par lot)
+
+14. **Stopper la croissance des god-files** : règle d'équipe « nouvelle feature = nouveau module », puis extraction progressive par domaine — `DrawingArea` (zoom/filtres/publish/copy-paste), `NodePositioning`, `ApplicationDataOSP` (#2), `SankeyPlusViews` (#3), `sankey_pandas.py` et `mfa_problem_format_io.py` (#12).
+15. **`withBypassRedraws(da, fn)` avec try/finally** (#5/R3) puis migration mécanique des 81 sites.
+16. **Sortir Univer de la couche base** vers SA (ou module optionnel lazy-loadé).
+17. **Validation de schéma au `fromJSON`** (R4) + tests golden round-trip TS `toJSON → fromJSON` (#6, #10) — les fixtures SankeyData existent déjà, les réutiliser côté jest.
+18. **`check-i18n` en CI** (R10) : diff des clés FR/EN, fail si divergence.
+19. **Base commune `ReconciliableVariable`** pour `Data`/`StockData` (#11) + remplacer les `except Exception: pass` de `ProtoData` par un warning.
+20. **Nettoyage** : `console.log` (lint rule `no-console`), casts `as unknown as` de la persistance, cycle de vie `TooltipEventManager` (R7).
+
+---
+
+# Chantiers stratégiques (audit élargi du 2026-07-03)
+
+Quatre dimensions structurantes hors du périmètre de la revue de code d'avril, auditées séparément.
+
+## A. Organisation en submodules → monorepo front
+
+**Constat chiffré** : sur les 6 derniers mois, **28,6 % des commits de SA et 28 % de ceux d'OSP sont des cascades de pointeurs** (664 commits de bruit sur 3172). Une feature dans OS = 3 commits / 3 repos / 3 pipelines ; dans SEP = 4. Les versions sont déjà alignées sur un seul numéro depuis mai, `release.sh` orchestre déjà le tout, et le paquet npm publié compile déjà les 4 couches en un artefact via les symlinks `deps/` — **c'est un monorepo de fait, distribué sur des submodules**. Les pièges structurels (junctions Windows vs symlinks POSIX, double déclaration de deps OS/OSP, TS2307 sur clone frais, 6 `safe.directory` en CI, mélange SSH/HTTPS des `.gitmodules`) découlent tous de cette topologie. La contrainte open-source d'OpenSankey est une contrainte de **publication** (repo public autonome), pas de développement.
+
+**Recommandation** : monorepo pnpm workspace front (`packages/{opensankey, opensankey-plus, login-component, sankeyapplication}` en `workspace:*`), OS mirroré vers le repo public par `git subtree split` outillé en CI ; Python inchangé (wheels + registry groupe). cartofob non impacté (même paquet npm). Effort ~5 semaines, précédé d'un `cascade.sh` + check CI de cohérence des pointeurs pour la transition. Risque principal : l'hygiène du premier split public (non-fuite de code privé). L'option « packages npm versionnés par couche » est écartée : à ~2 changements transversaux/jour, elle remplacerait la cascade par un cycle publish+bump pire.
+
+## B. Conception de la persistance
+
+**Constat** : le format n'a pas de schéma — la spécification est le code, **dupliqué en TS (SankeyPersistence 2559 l. + Legacy 2795 l.) et en Python (sankey_json.py 1906 l.), jamais confrontés en test croisé** alors que le chemin TS↔Python tourne à chaque réconciliation ; les 3 bugs de prod documentés viennent de là. SEP écrit `"version": "1.0"` **en dur** (`io_base.py:1458`) → un JSON issu d'un import Excel se voit appliquer les migrations < 1.1.4 comme un vieux fichier. Rétro-compat par convention « clé absente ⇒ défaut du code du jour » (~12 clés nouvelles/mois sans revue de format). Taille mesurée : vues heavy = 50 % du poids des fichiers multi-vues (snapshot intégral par vue, zéro dédup) ; sur les gros fichiers clients (CARTOFOB 7,3 Mo) ce sont les données multi-datatags qui dominent. `UniversalJSONCompression.tsx` n'est pas une amorce de refonte (utilitaire de transport, avec au passage un chargement pako depuis CDN et une branche brotli qui décompresse du gzip — à nettoyer).
+
+**Recommandation** : consolidation incrémentale (pas de format v2 big-bang). Été : `format_version` distinct de la version d'app + fix du « 1.0 » Python + `FORMAT.md`, puis **corpus golden multi-époques + tests croisés TS↔Python en CI** (le meilleur ratio protection/effort), puis centralisation des migrations dans `persistenceMigrations.ts`. Automne : schéma zod racine → JSON Schema publié → validation Python, et dédup des vues en delta (~50 % de gain, additive et rétro-lisible).
+
+## C. Architecture front (héritage, refs, D3)
+
+**Constat** : l'héritage 3 couches est un faux problème — **seules 3 classes traversent les couches** (ApplicationData, MenuConfig, DrawingArea), la couche SA pèse ~110 lignes, et le mécanisme d'injection est déjà de la composition (props d'`App`, slots `Type_AdditionalMenus`, callbacks injectés, pub/sub `addMainZoneListener` naissant). Les vrais problèmes : (1) **les constructeurs des classes modèle appellent des hooks React** (~150 `useRef()` dans le constructeur de `Class_MenuConfig`, `useToast()` dans `createNewMenuConfiguration`) → classes centrales ininstanciables hors render, donc intestables ; (2) le bus d'événements artisanal de **218 `MutableRefObject`** sans contrat (refs no-op par défaut → notifications perdues silencieusement, hack compteur dupliqué 60×, `updateAllMenuComponents()` en tir au canon) ; (3) 325 call-sites `draw()`/`unDraw()` dans 40 fichiers — les widgets portent la responsabilité du redraw. La frontière React/D3 elle-même est saine (DrawingArea possède le DOM SVG).
+
+**Recommandation** : ne pas casser l'héritage (rapport coût/bénéfice défavorable tant qu'OpenSankey n'est pas publié en paquet npm indépendant). Faire : sortir les hooks des constructeurs (remplacement mécanique `useRef(() => null)` → `{ current: () => null }`, toast injecté — 1 semaine, prérequis de toute testabilité), helper `useModelBinding` + résorption des 60 hacks compteur, généralisation du pub/sub par topic, extraction `ViewsManager`. Différer : fermeture des classes à l'héritage, refonte store observable, refonte frontière D3 (règle au fil de l'eau : les composants appellent des méthodes d'intention du modèle, pas `element.draw()`).
+
+## D. Infra, donnée, documentation
+
+**Constat** : le risque n°1 est **la perte de données** — backups de `db.sqlite` uniquement au moment des deploys CI, sur le même disque, aucune copie hors VPS, et le script de deploy manuel `update_opensankey.sh` ne fait ni backup ni `alembic upgrade` (divergence des deux canaux de deploy). Zéro healthcheck (un deploy qui 500 passe la CI en vert), zéro monitoring/alerting, logging serveur non configuré (`traceback.print_exc()` sur stdout), 404 redirigé silencieusement vers `/`. Reproductibilité faible : lockfiles client **gitignorés**, requirements partiellement pinnés, venv jamais recréé. `env.example` contient des clés Stripe test réelles. Préférences utilisateurs et MFAData sans quota/purge/sauvegarde. SQLite n'est **pas** le problème (volumétrie faible, alembic réellement utilisé — 9 migrations) : PostgreSQL différé sans état d'âme. Doc : `doc/views.py` en fait déjà adapté au double arbre fr/en ; legacy 2023 à purger ; duplication MD/RST toujours latente ; `doc/migrations/2026-05-vps-py3.12.md` est le seul vrai runbook.
+
+**Recommandation** : quick wins d'abord (~4 j : backup quotidien hors-site via le scp OVH déjà en place, `/health` + `curl -f` en fin de deploy, alignement du script manuel sur la CI, uptime externe, Sentry, lockfiles commités, hygiène secrets). Ensuite : déploiement par artefacts avec bascule de slot + rollback en secondes (généralise `archive_version.sh` qui fait déjà 80 % du concept), observabilité structurée, cycle de vie des données utilisateurs, consolidation doc.
