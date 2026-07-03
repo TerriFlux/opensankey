@@ -50,7 +50,7 @@ import { Class_DrawingArea } from '../types/DrawingArea'
 import { convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
 // Issue #191 — migration de rétro-compat de la césure des libellés, isolée dans
 // son propre module pour rester testable sans le graphe d'imports lourd d'ici.
-import { applyWrapLongWordsRetrocompat, CURRENT_FORMAT_VERSION, effectiveLoadVersion } from './persistenceMigrations'
+import { applyWrapLongWordsRetrocompat, CURRENT_FORMAT_VERSION, effectiveLoadVersion, isVersionBelow } from './persistenceMigrations'
 
 
 export class BaseElementPersistence {
@@ -69,13 +69,6 @@ export class BaseElementPersistence {
   }
 
   public static fromJSON_0_91(
-    _base_element: BaseElementPersistence,
-    _json_object: Type_JSON,
-    _kwargs?: Type_JSON
-  ) {
-  }
-
-  public static fromJSON_1_1_1(
     _base_element: BaseElementPersistence,
     _json_object: Type_JSON,
     _kwargs?: Type_JSON
@@ -188,13 +181,6 @@ export class ProtoElementPersistence extends BaseElementPersistence {
     }
   }
 
-  public static fromJSON_1_1_1(
-    _proto_element: Class_ProtoElement,
-    _json_object: Type_JSON,
-    _kwargs?: Type_JSON
-  ) {
-  }
-
   public static fromJSON(
     version: number,
     proto_element: Class_ProtoElement,
@@ -268,13 +254,6 @@ export class NodeBasePersistence extends ProtoElementPersistence {
   }
 
   public static fromJSON_0_9(
-    _base_element: Class_NodeBase,
-    _json_object: Type_JSON,
-    _kwargs?: Type_JSON
-  ) {
-  }
-
-  public static fromJSON_1_1_1(
     _base_element: Class_NodeBase,
     _json_object: Type_JSON,
     _kwargs?: Type_JSON
@@ -415,13 +394,6 @@ export class ContainerPersistence extends NodeBasePersistence {
       container.attributes['name_label_inside_horiz'] = true
 
     }
-  }
-
-  public static fromJSON_1_1_1(
-    _container: Class_ContainerElement,
-    _json_object: Type_JSON,
-    _kwargs?: Type_JSON
-  ) {
   }
 
   /**
@@ -730,13 +702,6 @@ export class LinkElementPersistence extends ProtoElementPersistence {
     }
   }
 
-  public static fromJSON_1_1_1(
-    _link: Class_LinkElement,
-    _json_object: Type_JSON,
-    _kwargs?: Type_JSON
-  ) {
-  }
-
   public static fromJSON(
     version: number,
     link: Class_LinkElement,
@@ -1023,13 +988,6 @@ export class NodeElementPersistence extends NodeBasePersistence {
     }
   }
 
-  public static fromJSON_1_1_1(
-    _node: Class_NodeElement,
-    _json_object: Type_JSON,
-    _kwargs?: Type_JSON
-  ) {
-  }
-
   public static fromJSON(version: number, node: Class_NodeElement, json_node_object: Type_JSON, kwargs?: Type_JSON) {
     super.fromJSON(version, node, json_node_object, kwargs)
 
@@ -1125,13 +1083,6 @@ export class LegendPersistence extends ProtoElementPersistence {
     if (!json_legend['legend_position']) return
     json_legend['x'] = +(json_legend['legend_position'] as Type_JSON)[0]
     json_legend['y'] = +(json_legend['legend_position'] as Type_JSON)[1]
-  }
-
-  public static fromJSON_1_1_1(
-    _legend: ClassTemplate_Legend,
-    _json_object: Type_JSON,
-    _kwargs?: Type_JSON
-  ) {
   }
 
   public static fromJSON(
@@ -1291,13 +1242,6 @@ export class StylePersistence {
     })
   }
 
-  public static fromJSON_1_1_1(
-    _style: Class_ElementStyle,
-    _json_object: Type_JSON,
-    _kwargs?: Type_JSON
-  ) {
-  }
-
   public static toJSON(style: Class_ElementStyle): Type_JSON {
     const json_object = {} as Type_JSON
     Object.entries(style.attributes).forEach(([key, value]) => {
@@ -1327,20 +1271,20 @@ export class StylePersistence {
 
     if (
       (version === undefined) ||
-      (Number(version) < 0.9)
+      isVersionBelow(version, '0.9')
     ) {
       this.fromJSON_pre_0_9(style, json_object, kwargs)
     }
 
     if (
       (version !== undefined) &&
-      (Number(version) < 0.91)
+      isVersionBelow(version, '0.91')
     ) {
       this.fromJSON_0_9(style, json_object, kwargs)
     }
     if (
       (version !== undefined) &&
-      (Number(version) < 0.92)
+      isVersionBelow(version, '0.92')
     ) {
       this.fromJSON_0_91(style, json_object, kwargs)
     }
@@ -1718,13 +1662,6 @@ export class SankeyPersistence {
       ContainerPersistence.fromJSON_0_91,
       kwargs
     )
-  }
-
-  public static fromJSON_1_1_1(
-    _sankey: Class_Sankey,
-    _json_object: Type_JSON,
-    _kwargs?: Type_JSON
-  ) {
   }
 
   /**
@@ -2177,13 +2114,6 @@ export class DrawingAreaPersistence {
     SankeyPersistence.fromJSON_0_91(drawing_area.sankey, json_object)
   }
 
-  public static fromJSON_1_1_1(
-    _drawing_area: Class_DrawingArea,
-    _json_object: Type_JSON,
-    _kwargs?: Type_JSON
-  ) {
-  }
-
   /**
    * Migration 0.93 → 0.94 (issue #1225) — rétrocompatibilité expansion latérale.
    *
@@ -2383,27 +2313,27 @@ export class DrawingAreaPersistence {
     if (file_format_version !== undefined) json_object['version'] = drawing_area.application_data.version
     if (
       (version === undefined) ||
-      (Number(version) < 0.9)
+      isVersionBelow(version, '0.9')
     ) {
       this.fromJSON_pre_0_9(drawing_area, json_object, kwargs)
     }
 
     if (
       (version !== undefined) &&
-      (Number(version) < 0.91)
+      isVersionBelow(version, '0.91')
     ) {
       this.fromJSON_0_9(drawing_area, json_object, kwargs)
     }
     if (
       (version !== undefined) &&
-      (Number(version) < 0.92)
+      isVersionBelow(version, '0.92')
     ) {
       this.fromJSON_0_91(drawing_area, json_object, kwargs)
       drawing_area.to_recenter = true
     }
     if (
       (version === undefined) ||
-      (Number(version) < 0.94)
+      isVersionBelow(version, '0.94')
     ) {
       // Issue #1225 — refonte expansion : suppression des clones
       // legacy `expandleft`/`expandright` et de leurs liens. Les flags
