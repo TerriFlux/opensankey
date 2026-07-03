@@ -50,22 +50,31 @@ const getViewLabel = (app_data: Class_ApplicationDataOSP, view_id: string): stri
   return app_data.views_dict[view_id]?.name ?? view_id
 }
 
+// Pixel size of the current view's export (drawing-area background + legend).
+// Mirrors the former buildPNGFormData sizing. Captured ONCE from the on-screen
+// view before an animated export iterates (each view/tag switch re-runs
+// areaAutoFit and mutates drawing_area.width/height), so every frame is composed
+// onto this constant "current drawing area" page instead of each frame's own
+// auto-fitted size — which is what made the GIF height jump and clip on the right.
+const getCurrentFrameSize = (
+  app_data: Class_ApplicationDataOSP,
+  dpi: Type_ExportDPI
+): { w: number; h: number } => {
+  const legend_w = !app_data.drawing_area.legend.masked ? app_data.drawing_area.legend.width : 0
+  if (app_data.drawing_area.is_paper_mode) {
+    const dims = app_data.drawing_area.getPaperDimensionsMm()
+    return { w: Math.round(dims.width / 25.4 * dpi), h: Math.round(dims.height / 25.4 * dpi) }
+  }
+  return { w: Math.round(app_data.drawing_area.width) + legend_w, h: Math.round(app_data.drawing_area.height) }
+}
+
 // Capture the current view as a PNG blob, rendered client-side (same path as
 // clickSavePNG in OS). Replaces the previous /opensankey/save/png round-trip
 // through wkhtmltoimage, so multi-view exports (zip / GIF / WebM) are now pixel
 // -faithful to the SVG export. Size logic mirrors the former buildPNGFormData.
 const captureViewAsPNGBlob = (app_data: Class_ApplicationDataOSP, dpi: Type_ExportDPI): Promise<Blob> => {
   const svg = app_data.pre_process_export_svg(true)
-  const legend_w = !app_data.drawing_area.legend.masked ? app_data.drawing_area.legend.width : 0
-  let target_w: number, target_h: number
-  if (app_data.drawing_area.is_paper_mode) {
-    const dims = app_data.drawing_area.getPaperDimensionsMm()
-    target_w = Math.round(dims.width / 25.4 * dpi)
-    target_h = Math.round(dims.height / 25.4 * dpi)
-  } else {
-    target_w = Math.round(app_data.drawing_area.width) + legend_w
-    target_h = Math.round(app_data.drawing_area.height)
-  }
+  const { w: target_w, h: target_h } = getCurrentFrameSize(app_data, dpi)
   return rasterizeSVGToPNGBlob(svg, target_w, target_h)
 }
 
@@ -267,31 +276,33 @@ const captureSelectedViewsAsPNG = async (
   return map
 }
 
-// Decode every PNG blob to ImageData on a SHARED canvas sized to the largest
-// frame, flattening transparency on white and padding smaller frames at the
-// top-left. Each captured view/tag is auto-fitted independently, so frames come
-// back with different pixel sizes; gifenc fixes the GIF logical-screen size on
-// the first frame (and MediaRecorder on the first canvas), which would clip any
-// taller/wider later frame at the bottom/right. Normalizing to a common size up
-// front guarantees the constant frame size both encoders require — no clipping.
-// Content origin is already aligned to the top-left across frames (see the
-// g_drawing counter-translate in _pre_process_export_svg), so top-left padding
-// keeps every diagram in register.
-const decodeFramesToCommonCanvas = async (ordered_blobs: Blob[]): Promise<ImageData[]> => {
+// Decode every PNG blob to ImageData on a SHARED canvas of a FIXED size, flattening
+// transparency on white and drawing each frame at the top-left. Each captured
+// view/tag is auto-fitted independently, so frames come back with different pixel
+// sizes; gifenc fixes the GIF logical-screen size on the first frame (and
+// MediaRecorder on the first canvas), which requires a constant frame size.
+// `frame_w`/`frame_h` are the current drawing-area page size (getCurrentFrameSize),
+// captured once before the export loop: frames larger than the page are clipped at
+// the right/bottom, smaller frames are padded in white. Content origin is already
+// aligned to the top-left across frames (see the g_drawing counter-translate in
+// _pre_process_export_svg), so the page frames every diagram in register.
+const decodeFramesToFixedCanvas = async (
+  ordered_blobs: Blob[],
+  frame_w: number,
+  frame_h: number
+): Promise<ImageData[]> => {
   const bitmaps = await Promise.all(ordered_blobs.map((b) => createImageBitmap(b)))
-  const max_w = Math.max(...bitmaps.map((b) => b.width))
-  const max_h = Math.max(...bitmaps.map((b) => b.height))
   const c = document.createElement('canvas')
-  c.width = max_w
-  c.height = max_h
+  c.width = frame_w
+  c.height = frame_h
   const ctx = c.getContext('2d')
   if (!ctx) throw new Error('No 2D context for frame decode')
   const frames: ImageData[] = []
   for (const bitmap of bitmaps) {
     ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, 0, max_w, max_h)
+    ctx.fillRect(0, 0, frame_w, frame_h)
     ctx.drawImage(bitmap, 0, 0)
-    frames.push(ctx.getImageData(0, 0, max_w, max_h))
+    frames.push(ctx.getImageData(0, 0, frame_w, frame_h))
     bitmap.close?.()
   }
   return frames
@@ -327,7 +338,7 @@ const encodeAnimatedWebM = async (
   opts: AnimExportOpts
 ): Promise<Blob> => {
   if (frames.length === 0) throw new Error('No frames to encode')
-  // All frames already share the common canvas size (see decodeFramesToCommonCanvas).
+  // All frames already share the fixed page size (see decodeFramesToFixedCanvas).
   const canvas = document.createElement('canvas')
   canvas.width = frames[0].width
   canvas.height = frames[0].height
@@ -384,7 +395,8 @@ const finalizeAnimatedExport = async (
   app_data: Class_ApplicationDataOSP,
   ordered_ids: string[],
   captures_by_id: Map<string, { label: string; blob: Blob }>,
-  opts: AnimExportOpts
+  opts: AnimExportOpts,
+  frame_size: { w: number; h: number }
 ): Promise<void> => {
   const sequence = buildSequence(ordered_ids, opts.loop_mode)
   const ordered_entries = sequence.map((id) => {
@@ -399,11 +411,11 @@ const finalizeAnimatedExport = async (
   let extension: string
   switch (opts.format) {
   case 'gif':
-    blob = await encodeAnimatedGIF(await decodeFramesToCommonCanvas(ordered_blobs), opts)
+    blob = await encodeAnimatedGIF(await decodeFramesToFixedCanvas(ordered_blobs, frame_size.w, frame_size.h), opts)
     extension = '.gif'
     break
   case 'webm':
-    blob = await encodeAnimatedWebM(await decodeFramesToCommonCanvas(ordered_blobs), opts)
+    blob = await encodeAnimatedWebM(await decodeFramesToFixedCanvas(ordered_blobs, frame_size.w, frame_size.h), opts)
     extension = '.webm'
     break
   case 'png_zip':
@@ -427,8 +439,10 @@ export const exportAnimatedSequence = async (
   opts: AnimExportOpts
 ): Promise<void> => {
   if (view_ids.length === 0) throw new Error('No views selected')
+  // Grab the on-screen drawing-area page size BEFORE capturing switches views.
+  const frame_size = getCurrentFrameSize(app_data, opts.dpi)
   const captures_by_id = await captureSelectedViewsAsPNG(app_data, view_ids, opts.dpi)
-  await finalizeAnimatedExport(app_data, view_ids, captures_by_id, opts)
+  await finalizeAnimatedExport(app_data, view_ids, captures_by_id, opts, frame_size)
 }
 
 // Capture each selected tag of a sequence data-tag group once. Selecting a tag
@@ -478,8 +492,10 @@ export const exportAnimatedDataTagSequence = async (
   if (tag_ids.length === 0) throw new Error('No tags selected')
   const tagg = app_data.drawing_area.sankey.getTagGroupsAsDict('data_taggs')[group_id] as Class_DataTagGroup | undefined
   if (!tagg) throw new Error('Sequence group not found: ' + group_id)
+  // Grab the on-screen drawing-area page size BEFORE capturing switches tags.
+  const frame_size = getCurrentFrameSize(app_data, opts.dpi)
   const captures_by_id = await captureSequenceTagsAsPNG(app_data, tagg, tag_ids, opts.dpi)
-  await finalizeAnimatedExport(app_data, tag_ids, captures_by_id, opts)
+  await finalizeAnimatedExport(app_data, tag_ids, captures_by_id, opts, frame_size)
 }
 
 // ===========================================================================
