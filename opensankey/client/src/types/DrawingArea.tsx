@@ -219,6 +219,16 @@ export class Class_DrawingArea {
   // Durée (ms) de l'interpolation de caméra (d3.interpolateZoom via d3-zoom).
   private readonly _zoom_animation_duration_ms: number = 450
 
+  // #1245 — Surbrillance du chemin amont/aval au survol d'un nœud/flux : le
+  // reste du diagramme est atténué (transition d'opacité) tant que la souris
+  // reste sur l'élément. Préférence de session, NON persistée (pas de bump de
+  // SankeyPersistence) — désactivable dans le menu Mise en page.
+  public hover_path_highlight_enabled: boolean = true
+  // true quand une atténuation est en cours (évite un restore inutile au mouseout).
+  private _path_highlight_active: boolean = false
+  private readonly _path_highlight_duration_ms: number = 150
+  private readonly _path_highlight_dim_opacity: number = 0.15
+
   // Effective fit zoom applied by areaAutoFit. Used as a per-label font-size
   // multiplier (1/_k_fit) so requested font-size in px stays constant on screen
   // regardless of how aggressively the auto-fit shrinks the view (e.g. when
@@ -2255,6 +2265,105 @@ export class Class_DrawingArea {
     const py = this.window_fitting_height / 2 + this.getNavBarHeight()
     const to = d3.zoomIdentity.translate(px - k * cx, py - k * cy).scale(k)
     this._animateZoomTo(to)
+  }
+
+  // SURBRILLANCE DE CHEMIN (#1245) ====================================================
+
+  /**
+   * Collecte l'ensemble amont + aval atteignable depuis `seeds` : BFS dans les
+   * deux sens sur les flux VISIBLES uniquement (un chemin qui ne passe que par
+   * des flux masqués ne doit pas être mis en évidence). Les cycles (flux de
+   * recyclage) sont gérés par les ensembles de visite — pas de boucle infinie.
+   */
+  private _collectLinkedPath(
+    seed_nodes: Class_NodeElement[],
+    seed_links: Class_LinkElement[]
+  ): { nodes: Set<Class_NodeElement>, links: Set<Class_LinkElement> } {
+    const visible_links = new Set(this.sankey.visible_links_list)
+    const nodes = new Set<Class_NodeElement>(seed_nodes)
+    const links = new Set<Class_LinkElement>(seed_links)
+    // Amont : remonter input_links → source ; aval : descendre output_links → target.
+    const walk = (start: Class_NodeElement, upstream: boolean) => {
+      const stack = [start]
+      const seen = new Set<Class_NodeElement>([start])
+      while (stack.length) {
+        const n = stack.pop() as Class_NodeElement
+        const next_links = (upstream ? n.input_links_list : n.output_links_list)
+          .filter(l => visible_links.has(l))
+        next_links.forEach(l => {
+          links.add(l)
+          const neighbor = upstream ? l.source : l.target
+          nodes.add(neighbor)
+          if (!seen.has(neighbor)) {
+            seen.add(neighbor)
+            stack.push(neighbor)
+          }
+        })
+      }
+    }
+    seed_nodes.forEach(n => { walk(n, true); walk(n, false) })
+    // Pour un flux survolé : tout l'amont de sa source + tout l'aval de sa cible.
+    seed_links.forEach(l => {
+      nodes.add(l.source); nodes.add(l.target)
+      walk(l.source, true); walk(l.target, false)
+    })
+    return { nodes, links }
+  }
+
+  /**
+   * Transition d'opacité nommée (n'interfère ni avec les transitions de tooltips
+   * ni avec celles des scrollbars). Posée sur le <g> racine de l'élément : le
+   * style est ORTHOGONAL aux attributs métier (shape_opacity…), donc un draw()
+   * ultérieur — qui recrée le <g> — repart naturellement propre.
+   */
+  private _transitionElementOpacity(
+    sel: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null,
+    opacity: number | null
+  ): void {
+    if (!sel) return
+    sel.interrupt('path_highlight')
+    const t = sel.transition('path_highlight').duration(this._path_highlight_duration_ms)
+    if (opacity === null) {
+      // Retour à l'état normal : on anime vers 1 puis on RETIRE le style inline
+      // (un style résiduel opacity=1 masquerait un futur changement métier).
+      t.style('opacity', 1).on('end', (_d, i, ns) => d3.select(ns[i]).style('opacity', null))
+    } else {
+      t.style('opacity', opacity)
+    }
+  }
+
+  /**
+   * Met en évidence le chemin amont/aval de l'élément survolé : tous les nœuds et
+   * flux hors chemin sont atténués. Appelé par les mouseover de Node/Link ; le
+   * mouseout appelle clearLinkedPathHighlight(). Sans effet si l'option est
+   * désactivée, pendant le mode pinceau de style, ou en mode édition de flux.
+   */
+  public highlightLinkedPath(element: Class_NodeElement | Class_LinkElement): void {
+    if (!this.hover_path_highlight_enabled) return
+    if (this.isInStylePaintMode() || this.isInEditionMode()) return
+    const is_link = element instanceof Class_LinkElement
+    const { nodes, links } = this._collectLinkedPath(
+      is_link ? [] : [element as Class_NodeElement],
+      is_link ? [element as Class_LinkElement] : []
+    )
+    // Élément isolé (nœud sans flux visible) : ne rien atténuer, ce serait du bruit.
+    if (links.size === 0) { this.clearLinkedPathHighlight(); return }
+    this._path_highlight_active = true
+    const dim = this._path_highlight_dim_opacity
+    this.sankey.visible_nodes_list.forEach(n =>
+      this._transitionElementOpacity(n.d3_selection, nodes.has(n) ? null : dim))
+    this.sankey.visible_links_list.forEach(l =>
+      this._transitionElementOpacity(l.d3_selection, links.has(l) ? null : dim))
+  }
+
+  /** Retire l'atténuation (transition inverse). Idempotent. */
+  public clearLinkedPathHighlight(): void {
+    if (!this._path_highlight_active) return
+    this._path_highlight_active = false
+    this.sankey.visible_nodes_list.forEach(n =>
+      this._transitionElementOpacity(n.d3_selection, null))
+    this.sankey.visible_links_list.forEach(l =>
+      this._transitionElementOpacity(l.d3_selection, null))
   }
 
   /**
