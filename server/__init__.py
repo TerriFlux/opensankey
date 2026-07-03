@@ -36,6 +36,24 @@ def _app_version():
 # ---------------------------------------------------------------
 # Global functions
 def create_app():
+    # Sentry (S3 #19) — capture des erreurs serveur. Initialise AVANT la creation
+    # de l'app (recommande pour FlaskIntegration). No-op si SENTRY_DSN absent
+    # (dev/local) : on n'active rien tant qu'aucun DSN n'est fourni par l'env.
+    sentry_dsn = os.environ.get("SENTRY_DSN", "").strip()
+    if sentry_dsn:
+        import sentry_sdk
+        from sentry_sdk.integrations.flask import FlaskIntegration
+
+        sentry_sdk.init(
+            dsn=sentry_dsn,
+            integrations=[FlaskIntegration()],
+            environment=os.environ.get("SENTRY_ENVIRONMENT") or os.environ.get("ENV"),
+            release=_app_version(),
+            # Traces desactivees par defaut (surcout perf) ; activable par env.
+            traces_sample_rate=float(os.environ.get("SENTRY_TRACES_SAMPLE_RATE", "0") or 0),
+            send_default_pii=False,
+        )
+
     # Instanciate app
     app = Flask(__name__, template_folder="./templates", static_folder=None)
 
