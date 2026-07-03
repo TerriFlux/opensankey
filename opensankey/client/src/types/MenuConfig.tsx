@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 // External imports
-import React, { Dispatch, MutableRefObject, RefObject, SetStateAction, useRef } from 'react'
+import React, { Dispatch, MutableRefObject, RefObject, SetStateAction } from 'react'
 
 import {
   Type_MacroTagGroup, Type_JSON,
@@ -535,16 +535,16 @@ export class Class_MenuConfig {
   private _dict_setter_show_dialog: IType_DictHookRefSetterShowDialogComponents
 
   private _selector_only_visible_elements: boolean = false
-  private _ref_selected_style: MutableRefObject<string> = useRef('default')
+  private _ref_selected_style: MutableRefObject<string> = { current: 'default' }
 
-  private _ref_to_updater_node_disagregate: MutableRefObject<(b: boolean) => void> = useRef(() => null)
-  private _ref_to_updater_node_agregate: MutableRefObject<(b: boolean) => void> = useRef(() => null)
+  private _ref_to_updater_node_disagregate: MutableRefObject<(b: boolean) => void> = { current: () => null }
+  private _ref_to_updater_node_agregate: MutableRefObject<(b: boolean) => void> = { current: () => null }
 
-  private _never_see_again: MutableRefObject<boolean> = useRef((localStorage.getItem('dontSeeAgainWelcome') === '1'))
+  private _never_see_again: MutableRefObject<boolean> = { current: (localStorage.getItem('dontSeeAgainWelcome') === '1') }
   private _show_splashscreen: boolean = false
 
 
-  private _additionalMenus: MutableRefObject<Type_AdditionalMenus> = useRef({
+  private _additionalMenus: MutableRefObject<Type_AdditionalMenus> = { current: {
     external_top_buttons_item: {},
 
     // Menu config
@@ -559,161 +559,146 @@ export class Class_MenuConfig {
 
     formations_menu: {},
     template_module_key: ['essential'],
-  })
+  } }
 
   constructor() {
-    this._ref_to_drawer_sequence_data_tag_updater = useRef(() => null)
+    this._ref_to_drawer_sequence_data_tag_updater = { current: () => null }
     // Init menu component updater ------------------------------------------------------
-    this._ref_rerender_submodules_menus = useRef(() => null)
-    this._ref_to_splashscreen_updater = useRef(() => null)
-    this._ref_to_menu_updater = useRef(() => null)
-    this._ref_to_submenu_updater = useRef(() => null)
-    this._ref_to_spreadsheet = useRef(() => null)
-    this._ref_to_doc = useRef(() => null)
-    this._ref_to_menu_config_updater = useRef(() => null)
-    this._ref_menu_opened = useRef([false, () => null])
+    this._ref_rerender_submodules_menus = { current: () => null }
+    this._ref_to_splashscreen_updater = { current: () => null }
+    this._ref_to_menu_updater = { current: () => null }
+    this._ref_to_submenu_updater = { current: () => null }
+    this._ref_to_spreadsheet = { current: () => null }
+    this._ref_to_doc = { current: () => null }
+    this._ref_to_menu_config_updater = { current: () => null }
+    this._ref_menu_opened = { current: [false, () => null] }
 
     // Layout
-    this._ref_to_menu_config_layout_updater = useRef(() => null)
-    this._ref_to_menu_contextual_config_layout_updater = useRef(() => null) //contextual ref updater
+    this._ref_to_menu_config_layout_updater = { current: () => null }
+    this._ref_to_menu_contextual_config_layout_updater = { current: () => null } //contextual ref updater
 
     // Dimensions
-    this._ref_to_menu_config_nodes_dim_selection_updater = useRef(() => null)
-    this._ref_to_menu_config_nodes_dim_tags_updater = useRef(() => null)
+    this._ref_to_menu_config_nodes_dim_selection_updater = { current: () => null }
+    this._ref_to_menu_config_nodes_dim_tags_updater = { current: () => null }
 
     // Nodes
-    this._ref_to_menu_config_nodes_selection_updater = useRef(() => null)
-    this._ref_to_menu_config_nodes_stock_updater = useRef(() => null)
+    this._ref_to_menu_config_nodes_selection_updater = { current: () => null }
+    this._ref_to_menu_config_nodes_stock_updater = { current: () => null }
 
-    this._ref_to_menu_config_apparence_updater = useRef(() => null)
-    this._ref_to_menu_config_styles_updater = useRef(() => null)
-    this._ref_to_menu_config_styles_editor_updater = useRef(() => null)
-    this._ref_to_menu_config_nodes_tags_updater = useRef(() => null)
-    this._ref_to_menu_config_nodes_tooltips_updater = useRef(() => null)
+    this._ref_to_menu_config_apparence_updater = { current: () => null }
+    this._ref_to_menu_config_styles_updater = { current: () => null }
+    this._ref_to_menu_config_styles_editor_updater = { current: () => null }
+    this._ref_to_menu_config_nodes_tags_updater = { current: () => null }
+    this._ref_to_menu_config_nodes_tooltips_updater = { current: () => null }
 
     // Links
-    this._ref_to_menu_config_links_selection_updater = useRef(() => null)
-    this._ref_to_menu_config_containers_selection_updater = useRef(() => null)
-    this._ref_to_menu_config_links_data_updater = useRef(() => null)
-    this._ref_to_menu_contextual_config_links_data_updater = useRef(() => null)
+    this._ref_to_menu_config_links_selection_updater = { current: () => null }
+    this._ref_to_menu_config_containers_selection_updater = { current: () => null }
+    this._ref_to_menu_config_links_data_updater = { current: () => null }
+    this._ref_to_menu_contextual_config_links_data_updater = { current: () => null }
 
 
-    this._ref_to_menu_config_links_tags_updater = useRef(() => null)
-    this._ref_to_menu_config_links_tooltips_updater = useRef(() => null)
+    this._ref_to_menu_config_links_tags_updater = { current: () => null }
+    this._ref_to_menu_config_links_tooltips_updater = { current: () => null }
     // Tags
-    this._ref_to_menu_config_tags_updater['level_taggs'] = useRef(() => null)
-    this._ref_to_menu_config_tags_updater['node_taggs'] = useRef(() => null)
-    this._ref_to_menu_config_tags_updater['flux_taggs'] = useRef(() => null)
-    this._ref_to_menu_config_tags_updater['data_taggs'] = useRef(() => null)
+    this._ref_to_menu_config_tags_updater['level_taggs'] = { current: () => null }
+    this._ref_to_menu_config_tags_updater['node_taggs'] = { current: () => null }
+    this._ref_to_menu_config_tags_updater['flux_taggs'] = { current: () => null }
+    this._ref_to_menu_config_tags_updater['data_taggs'] = { current: () => null }
 
     // Toolbar+
-    this._ref_to_save_in_cache_indicator = useRef((_: boolean) => null)
-    this._ref_to_save_in_cache_indicator_value = useRef(true)
-    this._ref_to_never_save_view_session = useRef((_: boolean) => null)
-    this._ref_to_never_save_view_session_value = useRef(false)
-    this._ref_to_toolbar_updater = useRef(() => null)
-    this._ref_to_toolbar_link_visual_filter_updater = useRef(() => null)
-    this._ref_to_toolbar_node_tag_updater = useRef(() => null)
-    this._ref_to_toolbar_link_tag_updater = useRef(() => null)
-    this._ref_to_toolbar_data_tag_updater = useRef(() => null)
-    this._ref_to_toolbar_level_tag_filter_updater = useRef(() => null)
-    this._ref_to_unitarytag_filter_updater = useRef(() => null)
+    this._ref_to_save_in_cache_indicator = { current: (_: boolean) => null }
+    this._ref_to_save_in_cache_indicator_value = { current: true }
+    this._ref_to_never_save_view_session = { current: (_: boolean) => null }
+    this._ref_to_never_save_view_session_value = { current: false }
+    this._ref_to_toolbar_updater = { current: () => null }
+    this._ref_to_toolbar_link_visual_filter_updater = { current: () => null }
+    this._ref_to_toolbar_node_tag_updater = { current: () => null }
+    this._ref_to_toolbar_link_tag_updater = { current: () => null }
+    this._ref_to_toolbar_data_tag_updater = { current: () => null }
+    this._ref_to_toolbar_level_tag_filter_updater = { current: () => null }
+    this._ref_to_unitarytag_filter_updater = { current: () => null }
 
     // Init context menu components updater ---------------------------------------------
 
-    this._ref_to_menu_context_nodes_updater = useRef(() => null)
-    this._ref_to_menu_context_links_updater = useRef(() => null)
-    this._ref_to_menu_context_drawing_area_updater = useRef(() => null)
+    this._ref_to_menu_context_nodes_updater = { current: () => null }
+    this._ref_to_menu_context_links_updater = { current: () => null }
+    this._ref_to_menu_context_drawing_area_updater = { current: () => null }
 
     // Init filtering components updater ------------------------------------------------
 
-    this._ref_to_nodetag_filter_updater = useRef(() => null)
-    // this._ref_to_fluxtag_filter_updater = useRef(() => null)
-    this._ref_to_datatag_filter_updater = useRef(() => null)
+    this._ref_to_nodetag_filter_updater = { current: () => null }
+    // this._ref_to_fluxtag_filter_updater = { current: () => null }
+    this._ref_to_datatag_filter_updater = { current: () => null }
 
     // Init save diagram JSON components updater ------------------------------------------------
 
-    this._ref_to_save_diagram_updater = useRef(() => null)
-    this._ref_to_load_diagram_updater = useRef(() => null)
+    this._ref_to_save_diagram_updater = { current: () => null }
+    this._ref_to_load_diagram_updater = { current: () => null }
 
     // Init ApplyLayoutDialog components updater ------------------------------------------------
 
-    this._ref_to_updater_modal_apply_layout = useRef(() => null)
+    this._ref_to_updater_modal_apply_layout = { current: () => null }
 
     // Init ModalPreference components updater ------------------------------------------------
 
-    this._ref_to_modal_pref_updater = useRef(() => null)
+    this._ref_to_modal_pref_updater = { current: () => null }
 
     // Init ToolBarBottom components updater ------------------------------------------------
-    this._ref_to_toolbar_bottom_updater = useRef(() => null)
+    this._ref_to_toolbar_bottom_updater = { current: () => null }
 
     // Init dict of setter show dialog -------------------------------------------------
-    this._ref_universal_converter_set_config = useRef(
-      (_: ConverterConfig, _file_path: string, _launch_at_opening: boolean) => null
-    )
+    this._ref_universal_converter_set_config = { current: (_: ConverterConfig, _file_path: string, _launch_at_opening: boolean) => null }
 
     this._dict_setter_show_dialog = {
       // Modal - Welcome
-      ref_setter_modal_welcome_active_page: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_modal_welcome: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_modal_support: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_modal_welcome_active_page: { current: () => null },
+      ref_setter_show_modal_welcome: { current: () => null },
+      ref_setter_show_modal_support: { current: () => null },
 
-      ref_setter_show_modal_file_converter: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_modal_rich_text_editor: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_shape_attribute_editor: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_value_type_editor: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modal_file_converter: { current: () => null },
+      ref_setter_show_modal_rich_text_editor: { current: () => null },
+      ref_setter_show_shape_attribute_editor: { current: () => null },
+      ref_setter_show_value_type_editor: { current: () => null },
 
-      ref_setter_show_modal_png_saver: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_png_saver_res_h: useRef<Dispatch<SetStateAction<number | undefined>>>(() => null),
-      ref_setter_png_saver_res_v: useRef<Dispatch<SetStateAction<number | undefined>>>(() => null),
+      ref_setter_show_modal_png_saver: { current: () => null },
+      ref_setter_png_saver_res_h: { current: () => null },
+      ref_setter_png_saver_res_v: { current: () => null },
 
-      ref_setter_show_modal_pdf_saver: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modal_pdf_saver: { current: () => null },
       // Modal - Style & Layout
-      ref_setter_show_modal_styles: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modal_styles: { current: () => null },
 
-      ref_setter_show_modal_apply_layout: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modal_apply_layout: { current: () => null },
 
-      ref_setter_show_modal_styles_containers: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modal_styles_containers: { current: () => null },
       // Other modals
-      ref_setter_show_modal_preference: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_modal_templates_lib: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_spreadsheet: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modal_preference: { current: () => null },
+      ref_setter_show_modal_templates_lib: { current: () => null },
+      ref_setter_show_spreadsheet: { current: () => null },
 
-      ref_setter_show_menu_node_icon: useRef(() => null),
-      ref_setter_show_modal_import_icons: useRef(() => null)
+      ref_setter_show_menu_node_icon: { current: () => null },
+      ref_setter_show_modal_import_icons: { current: () => null }
     }
 
-    this._ref_to_menu_config_container_updater = useRef(() => null)
-    this._ref_to_menu_context_container_updater = useRef(() => null)
+    this._ref_to_menu_config_container_updater = { current: () => null }
+    this._ref_to_menu_context_container_updater = { current: () => null }
 
-    this._r_setter_editor_content_fo_node = useRef(() => null)
-    this._r_editor_content_set_elements = useRef<(
-      elements: Class_NodeBase[] | Class_LinkElement[],
-      prefix: 'name_label' | 'value_label' | 'icon'
-    ) => void>(() => null)
-    this._r_rich_text_editor_refresh = useRef<() => void>(() => null)
-    this._icon_selector_set_elements = useRef<(
-      elements: Class_NodeBase[] | Class_LinkElement[],
-      prefix: 'name_label' | 'value_label' | 'icon'
-    ) => void>(() => null)
-    this._r_value_formatting_set_elements = useRef<(
-      elements: Class_NodeBase[] | Class_ElementStyle[] | Class_LinkElement[],
-      attributePath: string
-    ) => void>(() => null)
-    this._r_value_type_set_elements = useRef<(
-      _selected_links: Class_LinkElement[],
-      _unit_data_tagg: Class_DataTagGroup,
-      _refreshThis: () => void
-    ) => void>(() => null)
+    this._r_setter_editor_content_fo_node = { current: () => null }
+    this._r_editor_content_set_elements = { current: () => null }
+    this._r_rich_text_editor_refresh = { current: () => null }
+    this._icon_selector_set_elements = { current: () => null }
+    this._r_value_formatting_set_elements = { current: () => null }
+    this._r_value_type_set_elements = { current: () => null }
 
-    this._ref_to_menu_config_node_name_label_bg_updater = useRef(() => null)
-    this._ref_to_menu_config_link_scientific_precision_updater = useRef(() => null)
+    this._ref_to_menu_config_node_name_label_bg_updater = { current: () => null }
+    this._ref_to_menu_config_link_scientific_precision_updater = { current: () => null }
 
-    this._ref_to_menu_config_node_icon_updater = useRef(() => null)
+    this._ref_to_menu_config_node_icon_updater = { current: () => null }
 
-    this._ref_close_filter_drawer = useRef(() => null)
-    this._ref_toggle_filter_drawer = useRef(() => undefined)
-    this._ref_toolbar = useRef(() => null)
+    this._ref_close_filter_drawer = { current: () => null }
+    this._ref_toggle_filter_drawer = { current: () => undefined }
+    this._ref_toolbar = { current: () => null }
   }
 
   // PUBLIC METHODS =====================================================================
@@ -1356,7 +1341,7 @@ export class Class_MenuConfig {
   // Top menu components ----------------------------------------------------------------
 
   public init_refs_to_btn_toogle_top_menus(id: string) {
-    this._refs_to_btn_toogle_top_menus[id] = useRef<HTMLButtonElement>(null)
+    this._refs_to_btn_toogle_top_menus[id] = { current: null }
   }
 
   public get refs_to_btn_toogle_top_menus(): { [id: string]: RefObject<HTMLButtonElement> } {

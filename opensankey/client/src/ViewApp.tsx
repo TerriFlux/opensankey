@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 import React, { FC, useEffect, useState } from 'react'
-import { ChakraProvider } from '@chakra-ui/react'
+import { ChakraProvider, useToast } from '@chakra-ui/react'
 import i18next from 'i18next'
 import { I18nextProvider, initReactI18next, useTranslation } from 'react-i18next'
 
@@ -57,11 +57,11 @@ const ViewerInner: FC<ViewerOpenSankeyAppProps> = ({ initial_data, ...options })
     return data
   })
 
-  // createNewMenuConfiguration appelle des hooks Chakra (useToast) en interne :
-  // doit etre invoque pendant le render, pas depuis un useEffect (sinon
-  // React error #321 "Invalid hook call").
+  // Le toast Chakra est un hook : acquis ici (corps du composant) puis injecté dans la
+  // config. Les constructeurs des classes modèle n'appellent plus de hooks.
+  const toast = useToast()
   if (typeof app_data.createNewMenuConfiguration === 'function') {
-    app_data.createNewMenuConfiguration()
+    app_data.createNewMenuConfiguration(toast)
   }
 
   useEffect(() => {
