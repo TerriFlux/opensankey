@@ -1,5 +1,5 @@
 
-import { useToast } from '@chakra-ui/react'
+import { CreateToastFnReturn } from '@chakra-ui/react'
 import { Class_MenuConfigSA } from './MenuConfigSA'
 import { Class_ApplicationHistory } from './deps/OpenSankey+/deps/OpenSankey/types/ApplicationHistory'
 import { Class_ApplicationDataOSP } from './deps/OpenSankey+/types/ApplicationDataOSP'
@@ -30,8 +30,8 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
 
   // PUBLIC METHODS =====================================================================
 
-  public createNewMenuConfiguration() {
-    this._toast = useToast()
+  public createNewMenuConfiguration(toast: CreateToastFnReturn | null = null) {
+    this._toast = toast
     this._menu_configuration = new Class_MenuConfigSA()
     this._history = new Class_ApplicationHistory(this._menu_configuration)
     return this._menu_configuration

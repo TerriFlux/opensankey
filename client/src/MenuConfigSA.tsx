@@ -1,4 +1,4 @@
-import { Dispatch, MutableRefObject, SetStateAction, useRef } from 'react'
+import { Dispatch, MutableRefObject, SetStateAction } from 'react'
 import { Class_MenuConfigOSP } from './deps/OpenSankey+/types/MenuConfigOSP'
 //import {Class_MenuConfigLoginComponent } from './deps/LoginComponent/MenuConfigLoginComponent'
 
@@ -18,9 +18,9 @@ export class Class_MenuConfigSA extends Class_MenuConfigOSP {
    */
   constructor() {
     super()
-    this._ref_to_btn_top_sankeytheque_updater = useRef(() => null)
+    this._ref_to_btn_top_sankeytheque_updater = { current: () => null }
     this._dict_setter_show_dialog_SA = {
-      ref_setter_show_modal_sankeytheque: useRef(() => null)
+      ref_setter_show_modal_sankeytheque: { current: () => null }
     }
   }
 

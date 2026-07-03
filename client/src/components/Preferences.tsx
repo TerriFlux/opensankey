@@ -1,5 +1,5 @@
 import React, { useState, useRef, CSSProperties, Fragment, MutableRefObject, ChangeEvent, FC } from 'react'
-import { Box, TabList, TabPanels, TabPanel, Select, Editable, EditablePreview, EditableInput, Tabs, Text, Button, IconButton, Tab, ModalCloseButton, ModalContent, ModalOverlay, ModalHeader, ModalBody, Modal, Card, CardBody, Divider, CardHeader, Input, CardFooter } from '@chakra-ui/react'
+import { Box, TabList, TabPanels, TabPanel, Select, Editable, EditablePreview, EditableInput, Tabs, Text, Button, IconButton, Tab, ModalCloseButton, ModalContent, ModalOverlay, ModalHeader, ModalBody, Modal, Card, CardBody, Divider, CardHeader, Input, CardFooter, useToast } from '@chakra-ui/react'
 import { SketchPicker } from 'react-color'
 import { FaMinus, FaPlus } from 'react-icons/fa'
 import * as d3 from 'd3'
@@ -30,7 +30,8 @@ export const ModalPreference = ({new_data, additionalMenus: _additionalMenus}:{
   }
 
   const ghost_data = useRef<Class_ApplicationDataOSP>(new Class_ApplicationDataOSP(true,{no_key_event:true}))
-  ghost_data.current.createNewMenuConfiguration()
+  const toast = useToast()
+  ghost_data.current.createNewMenuConfiguration(toast)
   const list_palette: MutableRefObject<{ name: string, colors: string[] }[]> = useRef([])
 
   // user_data -------------------------------------------------------------------------------
