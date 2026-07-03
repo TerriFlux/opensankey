@@ -234,11 +234,8 @@ export const ModalWelcomeContent = (app_data: Class_ApplicationData) => {
       
         const data = await response.json()
         setResources(data)
-        console.log('✅ resources.json chargé')
-      } catch (error) {
-        // Si erreur réseau (pas CORS, pas de serveur, etc.)
-        console.log('ℹ️ resources.json non disponible, skip')
-        // Ne pas setResources, laisser à null
+      } catch {
+        // Si erreur réseau (pas CORS, pas de serveur, etc.) : ne pas setResources, laisser à null
       }
     }
     
