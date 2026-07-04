@@ -70,7 +70,9 @@ export function resolveNodeLabelCollisions(drawing_area: Class_DrawingArea): voi
   drawing_area.sankey.visible_nodes_list.forEach((node: Class_NodeElement) => {
     const g_node = node.d3_selection?.node()
     if (!g_node) return
-    const g_label = g_node.querySelector<SVGGElement>('#g_name_label')
+    // Deux rendus possibles pour le label de nom : texte SVG (g_name_label)
+    // ou rich text via foreignObject (#1232, id g_fo_name_label_<id>).
+    const g_label = g_node.querySelector<SVGGElement>('#g_name_label, [id^="g_fo_name_label"]')
     if (!g_label) return
     const rect = g_label.getBoundingClientRect()
     if (rect.width === 0 || rect.height === 0) return

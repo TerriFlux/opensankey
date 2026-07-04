@@ -1716,6 +1716,11 @@ export class Class_DrawingArea {
     // via Legend.applyPosition() qui lit k_fit. Suffit de re-déclencher la
     // pose du transform.
     this._legend.applyPosition()
+    // #1248 — ce refresh vient de RECRÉER tous les groupes de labels, effaçant
+    // les offsets de décollision posés en fin de draw() (il est notamment
+    // déclenché en débouncé ~120 ms après chaque fit/zoom en mode police
+    // verrouillée). On rejoue donc la passe sur les positions fraîches.
+    resolveNodeLabelCollisions(this)
   }
 
   /**
