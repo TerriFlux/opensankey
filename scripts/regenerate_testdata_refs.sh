@@ -24,7 +24,7 @@ SA_ROOT="${1:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 TD="$SA_ROOT/SankeyData"
 [ -d "$TD" ] || { echo "ERR: $TD introuvable" >&2; exit 1; }
 
-SEP="$SA_ROOT/submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser"
+SEP="$SA_ROOT/packages/opensankey/submodules/SankeyExcelParser"
 OS="$SA_ROOT/submodules/OpenSankey+/submodules/OpenSankey"
 MFA="$SA_ROOT/submodules/MFAProblem"
 

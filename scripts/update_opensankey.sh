@@ -40,7 +40,7 @@ cd "$APP_DIR"
 # --- Archive currently-deployed version before overwriting it ---
 # Enabled for prod only (pas de snapshot figé sur dev ni test).
 if [[ "$ENV" == "prod" ]]; then
-    CURRENT_VERSION=$(grep -m1 '"version"' "${APP_DIR}/client/package.json" \
+    CURRENT_VERSION=$(grep -m1 '"version"' "${APP_DIR}/packages/sankeyapplication/package.json" \
                       | sed -E 's/.*"version"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/')
     SLOT_DIR="${HOME_DIR}/${ENV}_v${CURRENT_VERSION}_opensankey"
     if [[ -n "$CURRENT_VERSION" && ! -e "$SLOT_DIR" ]]; then
