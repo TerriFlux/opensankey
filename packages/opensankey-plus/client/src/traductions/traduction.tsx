@@ -1,0 +1,34 @@
+import i18next from 'i18next'
+import { initReactI18next } from 'react-i18next'
+import LanguageDetector from 'i18next-browser-languagedetector'
+
+import { deep_assign_resources, resources_opensankey, use_context_config, I18nResources } from '../deps/OpenSankey/traductions/traduction'
+import { resources_app_elements } from './traduction_app_elements'
+import { resources_template } from './traduction_templates'
+import { createZDDMenuConfigPlus, createNodeMenuConfigPlus } from '../components/ContextMenuConfigs'
+
+//@ts-expect-error xxx
+use_context_config(resources_opensankey as unknown as I18nResources, createZDDMenuConfigPlus(), 'ContextMenuZDD')
+//@ts-expect-error xxx
+use_context_config(resources_opensankey as unknown as I18nResources, createNodeMenuConfigPlus(), 'ContextMenuNodes')
+// Traduction increment for OpenSankey+
+export const resources_opensankeyplus = {}
+deep_assign_resources(resources_opensankey, resources_opensankeyplus)
+deep_assign_resources(resources_app_elements, resources_opensankeyplus)
+deep_assign_resources(resources_template, resources_opensankeyplus)
+
+// Update traduction
+const resources = resources_opensankeyplus // /!\ i18next accept only var with name "resources"
+i18next
+  .use(LanguageDetector)
+  .use(initReactI18next) // passes i18n down to react-i18next
+  .init({
+    resources,
+    ns: ['translation'],
+    defaultNS: 'translation',
+    interpolation: {
+      escapeValue: false // react already safes from xss
+    }
+  })
+
+export default i18next
