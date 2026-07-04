@@ -19,9 +19,11 @@
     "isolatedModules": true,
     "downlevelIteration": true,
     "jsx": "react",
-    "outDir": "dist"
+    "outDir": "dist",
+    "declaration": true
   },
   "include": [
-    "src"
+    "src",
+    "../../opensankey/opensankey/client/src/**/*.d.ts"
   ]
 }

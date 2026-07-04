@@ -82,7 +82,7 @@ if "%build%"=="true" (
 )
 if "%dist%"=="true" (
     echo ^>^>^> Build distribution lib
-    call pnpm --filter @terriflux/sankeyapplication run dist
+    call pnpm run dist
     if errorlevel 1 exit /b 1
 )
 popd

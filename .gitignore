@@ -16,6 +16,9 @@ packages/*/client/build
 packages/*/client/dist
 packages/opensankey/opensankey/client/build
 packages/opensankey/opensankey/client/dist
+packages/*/pub
+packages/*/client/pub
+packages/opensankey/opensankey/client/pub
 
 # server
 __pycache__

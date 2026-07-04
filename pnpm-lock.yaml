@@ -13,12 +13,6 @@ importers:
 
   packages/login-component/client:
     dependencies:
-      '@babel/plugin-proposal-private-property-in-object':
-        specifier: ^7.21.11
-        version: 7.21.11(@babel/core@7.29.7)
-      '@babel/plugin-syntax-dynamic-import':
-        specifier: ^7.8.3
-        version: 7.8.3(@babel/core@7.29.7)
       '@chakra-ui/anatomy':
         specifier: ^2.3.4
         version: 2.3.4
@@ -49,33 +43,18 @@ importers:
       '@silevis/reactgrid':
         specifier: ^4.1.15
         version: 4.1.17(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@svgr/webpack':
-        specifier: ^8.1.0
-        version: 8.1.0(typescript@5.9.3)
       '@terriflux/opensankey':
         specifier: workspace:*
         version: link:../../opensankey/opensankey/client
       '@terriflux/opensankey-plus':
         specifier: workspace:*
         version: link:../../opensankey-plus/client
-      '@types/d3-selection':
-        specifier: ^3.0.10
-        version: 3.0.11
-      '@types/deep-diff':
-        specifier: ^1.0.5
-        version: 1.0.5
-      '@types/prop-types':
-        specifier: ^15.7.14
-        version: 15.7.15
       bootstrap:
         specifier: ^5.3.3
         version: 5.3.8(@popperjs/core@2.11.8)
       colormap:
         specifier: ^2.3.2
         version: 2.3.2
-      cross-conf-env:
-        specifier: ^1.3.0
-        version: 1.3.0
       d3-selection:
         specifier: ^3.0.0
         version: 3.0.0
@@ -85,18 +64,12 @@ importers:
       deep-diff:
         specifier: ^1.0.2
         version: 1.0.2
-      eslint:
-        specifier: ^8.57.1
-        version: 8.57.1
       file-saver:
         specifier: ^2.0.5
         version: 2.0.5
       framer-motion:
         specifier: ^11.18.2
         version: 11.18.2(@emotion/is-prop-valid@1.4.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      globals:
-        specifier: ^15.15.0
-        version: 15.15.0
       html-react-parser:
         specifier: ^5.2.2
         version: 5.2.17(@types/react@18.3.31)(react@18.3.1)
@@ -109,12 +82,6 @@ importers:
       lz-string:
         specifier: ^1.5.0
         version: 1.5.0
-      npm-build-zip:
-        specifier: ^1.0.4
-        version: 1.0.4
-      postcss:
-        specifier: ^8.5.2
-        version: 8.5.16
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -151,22 +118,16 @@ importers:
       react-router-dom:
         specifier: ^6.29.0
         version: 6.30.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-scripts:
-        specifier: ^5.0.1
-        version: 5.0.1(@babel/plugin-syntax-flow@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-react-jsx@7.29.7(@babel/core@7.29.7))(@types/babel__core@7.20.5)(debug@4.4.3)(eslint@8.57.1)(react@18.3.1)(sass@1.101.0)(ts-node@10.9.2(@types/node@20.19.43)(typescript@5.9.3))(type-fest@4.41.0)(typescript@5.9.3)
-      shx:
-        specifier: ^0.3.4
-        version: 0.3.4
-      ts-loader:
-        specifier: ^9.5.2
-        version: 9.6.2(loader-utils@3.3.1)(typescript@5.9.3)(webpack@5.108.3(postcss@8.5.16))
-      web-vitals:
-        specifier: ^3.5.2
-        version: 3.5.2
     devDependencies:
       '@babel/core':
         specifier: ^7.26.8
         version: 7.29.7
+      '@babel/plugin-proposal-private-property-in-object':
+        specifier: ^7.21.11
+        version: 7.21.11(@babel/core@7.29.7)
+      '@babel/plugin-syntax-dynamic-import':
+        specifier: ^7.8.3
+        version: 7.8.3(@babel/core@7.29.7)
       '@babel/preset-env':
         specifier: ^7.26.8
         version: 7.29.7(@babel/core@7.29.7)
@@ -185,12 +146,21 @@ importers:
       '@jest/globals':
         specifier: ^29.7.0
         version: 29.7.0
+      '@svgr/webpack':
+        specifier: ^8.1.0
+        version: 8.1.0(typescript@5.9.3)
       '@testing-library/jest-dom':
         specifier: ^6.6.3
         version: 6.9.1
       '@types/colormap':
         specifier: ^2.3.4
         version: 2.3.4
+      '@types/d3-selection':
+        specifier: ^3.0.10
+        version: 3.0.11
+      '@types/deep-diff':
+        specifier: ^1.0.5
+        version: 1.0.5
       '@types/file-saver':
         specifier: ^2.0.7
         version: 2.0.7
@@ -203,6 +173,9 @@ importers:
       '@types/node':
         specifier: ^20.17.19
         version: 20.19.43
+      '@types/prop-types':
+        specifier: ^15.7.14
+        version: 15.7.15
       '@types/react':
         specifier: ^18.3.18
         version: 18.3.31
@@ -221,30 +194,51 @@ importers:
       babel-loader:
         specifier: ^9.2.1
         version: 9.2.1(@babel/core@7.29.7)(webpack@5.108.3(postcss@8.5.16))
+      cross-conf-env:
+        specifier: ^1.3.0
+        version: 1.3.0
+      eslint:
+        specifier: ^8.57.1
+        version: 8.57.1
       eslint-plugin-mocha:
         specifier: ^10.5.0
         version: 10.5.0(eslint@8.57.1)
       eslint-plugin-react:
         specifier: ^7.37.4
         version: 7.37.5(eslint@8.57.1)
+      globals:
+        specifier: ^15.15.0
+        version: 15.15.0
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@20.19.43)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@types/node@20.19.43)(typescript@5.9.3))
+      npm-build-zip:
+        specifier: ^1.0.4
+        version: 1.0.4
+      postcss:
+        specifier: ^8.5.2
+        version: 8.5.16
+      react-scripts:
+        specifier: ^5.0.1
+        version: 5.0.1(@babel/plugin-syntax-flow@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-react-jsx@7.29.7(@babel/core@7.29.7))(@types/babel__core@7.20.5)(debug@4.4.3)(eslint@8.57.1)(react@18.3.1)(sass@1.101.0)(ts-node@10.9.2(@types/node@20.19.43)(typescript@5.9.3))(type-fest@4.41.0)(typescript@5.9.3)
+      shx:
+        specifier: ^0.3.4
+        version: 0.3.4
+      ts-loader:
+        specifier: ^9.5.2
+        version: 9.6.2(loader-utils@3.3.1)(typescript@5.9.3)(webpack@5.108.3(postcss@8.5.16))
       typescript:
         specifier: ^5.7.3
         version: 5.9.3
       typescript-eslint:
         specifier: ^7.18.0
         version: 7.18.0(eslint@8.57.1)(typescript@5.9.3)
+      web-vitals:
+        specifier: ^3.5.2
+        version: 3.5.2
 
   packages/opensankey-plus/client:
     dependencies:
-      '@babel/plugin-proposal-private-property-in-object':
-        specifier: ^7.21.11
-        version: 7.21.11(@babel/core@7.29.7)
-      '@babel/plugin-syntax-dynamic-import':
-        specifier: ^7.8.3
-        version: 7.8.3(@babel/core@7.29.7)
       '@chakra-ui/icons':
         specifier: ^2.2.4
         version: 2.2.4(@chakra-ui/react@2.10.10(@emotion/react@11.14.0(@types/react@18.3.31)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.31)(react@18.3.1))(@types/react@18.3.31)(react@18.3.1))(@types/react@18.3.31)(framer-motion@11.18.2(@emotion/is-prop-valid@1.4.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
@@ -263,12 +257,94 @@ importers:
       '@fortawesome/react-fontawesome':
         specifier: ^0.2.2
         version: 0.2.6(@fortawesome/fontawesome-svg-core@6.7.2)(react@18.3.1)
-      '@svgr/webpack':
-        specifier: ^8.1.0
-        version: 8.1.0(typescript@5.9.3)
       '@terriflux/opensankey':
         specifier: workspace:*
         version: link:../../opensankey/opensankey/client
+      colormap:
+        specifier: ^2.3.2
+        version: 2.3.2
+      deep-diff:
+        specifier: ^1.0.2
+        version: 1.0.2
+      file-saver:
+        specifier: ^2.0.5
+        version: 2.0.5
+      gifenc:
+        specifier: ^1.0.3
+        version: 1.0.3
+      i18next:
+        specifier: ^23.16.8
+        version: 23.16.8
+      i18next-browser-languagedetector:
+        specifier: ^7.2.2
+        version: 7.2.2
+      jszip:
+        specifier: ^3.10.1
+        version: 3.10.1
+      pako:
+        specifier: ^2.1.0
+        version: 2.2.0
+      pdf-lib:
+        specifier: ^1.17.1
+        version: 1.17.1
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      react-draggable:
+        specifier: 4.4.6
+        version: 4.4.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-google-recaptcha:
+        specifier: ^3.1.0
+        version: 3.1.0(react@18.3.1)
+      react-i18next:
+        specifier: ^14.1.3
+        version: 14.1.3(i18next@23.16.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-icons:
+        specifier: ^5.4.0
+        version: 5.7.0(react@18.3.1)
+      react-multi-select-component:
+        specifier: ^4.3.4
+        version: 4.3.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+    devDependencies:
+      '@babel/core':
+        specifier: ^7.26.8
+        version: 7.29.7
+      '@babel/plugin-proposal-private-property-in-object':
+        specifier: ^7.21.11
+        version: 7.21.11(@babel/core@7.29.7)
+      '@babel/plugin-syntax-dynamic-import':
+        specifier: ^7.8.3
+        version: 7.8.3(@babel/core@7.29.7)
+      '@babel/preset-env':
+        specifier: ^7.26.8
+        version: 7.29.7(@babel/core@7.29.7)
+      '@babel/preset-react':
+        specifier: ^7.26.3
+        version: 7.29.7(@babel/core@7.29.7)
+      '@babel/preset-typescript':
+        specifier: ^7.26.0
+        version: 7.29.7(@babel/core@7.29.7)
+      '@craco/craco':
+        specifier: ^7.1.0
+        version: 7.1.0(@types/node@20.19.43)(postcss@8.5.16)(react-scripts@5.0.1(@babel/plugin-syntax-flow@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-react-jsx@7.29.7(@babel/core@7.29.7))(@types/babel__core@7.20.5)(eslint@8.57.1)(react@18.3.1)(sass@1.101.0)(ts-node@10.9.2(@types/node@20.19.43)(typescript@5.9.3))(type-fest@4.41.0)(typescript@5.9.3))(typescript@5.9.3)
+      '@eslint/js':
+        specifier: ^9.20.0
+        version: 9.39.4
+      '@jest/globals':
+        specifier: ^29.7.0
+        version: 29.7.0
+      '@svgr/webpack':
+        specifier: ^8.1.0
+        version: 8.1.0(typescript@5.9.3)
+      '@testing-library/jest-dom':
+        specifier: ^6.6.3
+        version: 6.9.1
+      '@types/colormap':
+        specifier: ^2.3.4
+        version: 2.3.4
       '@types/d3-array':
         specifier: ^3.2.1
         version: 3.2.2
@@ -299,118 +375,6 @@ importers:
       '@types/deep-diff':
         specifier: ^1.0.5
         version: 1.0.5
-      '@types/pako':
-        specifier: ^2.0.3
-        version: 2.0.4
-      '@types/prop-types':
-        specifier: ^15.7.14
-        version: 15.7.15
-      '@types/react-beautiful-dnd':
-        specifier: ^13.1.8
-        version: 13.1.8
-      colormap:
-        specifier: ^2.3.2
-        version: 2.3.2
-      cross-conf-env:
-        specifier: ^1.3.0
-        version: 1.3.0
-      deep-diff:
-        specifier: ^1.0.2
-        version: 1.0.2
-      eslint:
-        specifier: ^8.57.1
-        version: 8.57.1
-      file-saver:
-        specifier: ^2.0.5
-        version: 2.0.5
-      gifenc:
-        specifier: ^1.0.3
-        version: 1.0.3
-      globals:
-        specifier: ^15.15.0
-        version: 15.15.0
-      i18next:
-        specifier: ^23.16.8
-        version: 23.16.8
-      i18next-browser-languagedetector:
-        specifier: ^7.2.2
-        version: 7.2.2
-      jszip:
-        specifier: ^3.10.1
-        version: 3.10.1
-      npm-build-zip:
-        specifier: ^1.0.4
-        version: 1.0.4
-      pako:
-        specifier: ^2.1.0
-        version: 2.2.0
-      pdf-lib:
-        specifier: ^1.17.1
-        version: 1.17.1
-      postcss:
-        specifier: ^8.5.2
-        version: 8.5.16
-      react:
-        specifier: ^18.3.1
-        version: 18.3.1
-      react-dom:
-        specifier: ^18.3.1
-        version: 18.3.1(react@18.3.1)
-      react-draggable:
-        specifier: 4.4.6
-        version: 4.4.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-google-recaptcha:
-        specifier: ^3.1.0
-        version: 3.1.0(react@18.3.1)
-      react-i18next:
-        specifier: ^14.1.3
-        version: 14.1.3(i18next@23.16.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-icons:
-        specifier: ^5.4.0
-        version: 5.7.0(react@18.3.1)
-      react-multi-select-component:
-        specifier: ^4.3.4
-        version: 4.3.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-scripts:
-        specifier: ^5.0.1
-        version: 5.0.1(@babel/plugin-syntax-flow@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-react-jsx@7.29.7(@babel/core@7.29.7))(@types/babel__core@7.20.5)(debug@4.4.3)(eslint@8.57.1)(react@18.3.1)(sass@1.101.0)(ts-node@10.9.2(@types/node@20.19.43)(typescript@5.9.3))(type-fest@4.41.0)(typescript@5.9.3)
-      shx:
-        specifier: ^0.3.4
-        version: 0.3.4
-      ts-loader:
-        specifier: ^9.5.2
-        version: 9.6.2(loader-utils@3.3.1)(typescript@5.9.3)(webpack@5.108.3(postcss@8.5.16))
-      web-vitals:
-        specifier: ^3.5.2
-        version: 3.5.2
-    devDependencies:
-      '@babel/core':
-        specifier: ^7.26.8
-        version: 7.29.7
-      '@babel/preset-env':
-        specifier: ^7.26.8
-        version: 7.29.7(@babel/core@7.29.7)
-      '@babel/preset-react':
-        specifier: ^7.26.3
-        version: 7.29.7(@babel/core@7.29.7)
-      '@babel/preset-typescript':
-        specifier: ^7.26.0
-        version: 7.29.7(@babel/core@7.29.7)
-      '@craco/craco':
-        specifier: ^7.1.0
-        version: 7.1.0(@types/node@20.19.43)(postcss@8.5.16)(react-scripts@5.0.1(@babel/plugin-syntax-flow@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-react-jsx@7.29.7(@babel/core@7.29.7))(@types/babel__core@7.20.5)(eslint@8.57.1)(react@18.3.1)(sass@1.101.0)(ts-node@10.9.2(@types/node@20.19.43)(typescript@5.9.3))(type-fest@4.41.0)(typescript@5.9.3))(typescript@5.9.3)
-      '@eslint/js':
-        specifier: ^9.20.0
-        version: 9.39.4
-      '@jest/globals':
-        specifier: ^29.7.0
-        version: 29.7.0
-      '@testing-library/jest-dom':
-        specifier: ^6.6.3
-        version: 6.9.1
-      '@types/colormap':
-        specifier: ^2.3.4
-        version: 2.3.4
       '@types/file-saver':
         specifier: ^2.0.7
         version: 2.0.7
@@ -420,15 +384,21 @@ importers:
       '@types/jszip':
         specifier: ^3.4.1
         version: 3.4.1
-      '@types/lz-string':
-        specifier: ^1.5.0
-        version: 1.5.0
       '@types/node':
         specifier: ^20.17.19
         version: 20.19.43
+      '@types/pako':
+        specifier: ^2.0.3
+        version: 2.0.4
+      '@types/prop-types':
+        specifier: ^15.7.14
+        version: 15.7.15
       '@types/react':
         specifier: ^18.3.18
         version: 18.3.31
+      '@types/react-beautiful-dnd':
+        specifier: ^13.1.8
+        version: 13.1.8
       '@types/react-color':
         specifier: ^3.0.13
         version: 3.0.13(@types/react@18.3.31)
@@ -447,21 +417,48 @@ importers:
       babel-loader:
         specifier: ^9.2.1
         version: 9.2.1(@babel/core@7.29.7)(webpack@5.108.3(postcss@8.5.16))
+      cross-conf-env:
+        specifier: ^1.3.0
+        version: 1.3.0
+      eslint:
+        specifier: ^8.57.1
+        version: 8.57.1
       eslint-plugin-mocha:
         specifier: ^10.5.0
         version: 10.5.0(eslint@8.57.1)
       eslint-plugin-react:
         specifier: ^7.37.4
         version: 7.37.5(eslint@8.57.1)
+      globals:
+        specifier: ^15.15.0
+        version: 15.15.0
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@20.19.43)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@types/node@20.19.43)(typescript@5.9.3))
+      npm-build-zip:
+        specifier: ^1.0.4
+        version: 1.0.4
+      postcss:
+        specifier: ^8.5.2
+        version: 8.5.16
+      react-scripts:
+        specifier: ^5.0.1
+        version: 5.0.1(@babel/plugin-syntax-flow@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-react-jsx@7.29.7(@babel/core@7.29.7))(@types/babel__core@7.20.5)(debug@4.4.3)(eslint@8.57.1)(react@18.3.1)(sass@1.101.0)(ts-node@10.9.2(@types/node@20.19.43)(typescript@5.9.3))(type-fest@4.41.0)(typescript@5.9.3)
+      shx:
+        specifier: ^0.3.4
+        version: 0.3.4
+      ts-loader:
+        specifier: ^9.5.2
+        version: 9.6.2(loader-utils@3.3.1)(typescript@5.9.3)(webpack@5.108.3(postcss@8.5.16))
       typescript:
         specifier: ^5.7.3
         version: 5.9.3
       typescript-eslint:
         specifier: ^7.18.0
         version: 7.18.0(eslint@8.57.1)(typescript@5.9.3)
+      web-vitals:
+        specifier: ^3.5.2
+        version: 3.5.2
 
   packages/opensankey/opensankey/client:
     dependencies:
@@ -495,39 +492,6 @@ importers:
       '@silevis/reactgrid':
         specifier: ^4.1.15
         version: 4.1.17(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@types/d3-array':
-        specifier: ^3.2.1
-        version: 3.2.2
-      '@types/d3-color':
-        specifier: ^3.1.3
-        version: 3.1.3
-      '@types/d3-drag':
-        specifier: ^3.0.7
-        version: 3.0.7
-      '@types/d3-ease':
-        specifier: ^3.0.2
-        version: 3.0.2
-      '@types/d3-scale':
-        specifier: ^4.0.8
-        version: 4.0.9
-      '@types/d3-scale-chromatic':
-        specifier: ^3.0.3
-        version: 3.1.0
-      '@types/d3-selection':
-        specifier: ^3.0.10
-        version: 3.0.11
-      '@types/d3-transition':
-        specifier: ^3.0.8
-        version: 3.0.9
-      '@types/d3-zoom':
-        specifier: ^3.0.8
-        version: 3.0.8
-      '@types/pako':
-        specifier: ^2.0.3
-        version: 2.0.4
-      '@types/webpack-env':
-        specifier: ^1.18.8
-        version: 1.18.8
       '@univerjs/presets':
         specifier: ^0.25.0
         version: 0.25.1(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rxjs@7.8.2)
@@ -543,9 +507,6 @@ importers:
       core-js:
         specifier: ^3.40.0
         version: 3.49.0
-      cross-conf-env:
-        specifier: ^1.3.0
-        version: 1.3.0
       css-select:
         specifier: ^5.1.0
         version: 5.2.2
@@ -582,9 +543,6 @@ importers:
       deep-diff:
         specifier: ^1.0.2
         version: 1.0.2
-      eslint:
-        specifier: ^8.57.1
-        version: 8.57.1
       file-saver:
         specifier: ^2.0.5
         version: 2.0.5
@@ -594,9 +552,6 @@ importers:
       glob-parent:
         specifier: ^6.0.2
         version: 6.0.2
-      globals:
-        specifier: ^15.15.0
-        version: 15.15.0
       html-react-parser:
         specifier: ^5.2.2
         version: 5.2.17(@types/react@18.3.31)(react@18.3.1)
@@ -624,9 +579,6 @@ importers:
       pdf-lib:
         specifier: ^1.17.1
         version: 1.17.1
-      postcss:
-        specifier: ^8.5.2
-        version: 8.5.16
       prop-types:
         specifier: ^15.8.1
         version: 15.8.1
@@ -678,15 +630,9 @@ importers:
       remark-math:
         specifier: ^6.0.0
         version: 6.0.0
-      shx:
-        specifier: ^0.3.4
-        version: 0.3.4
       svgo:
         specifier: ^3.3.2
         version: 3.3.3
-      ts-jest:
-        specifier: ^29.2.5
-        version: 29.4.11(@babel/core@7.29.7)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.29.7))(jest-util@29.7.0)(jest@29.7.0(@types/node@20.19.43)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@types/node@20.19.43)(typescript@5.9.3)))(typescript@5.9.3)
       uuid:
         specifier: ^9.0.1
         version: 9.0.1
@@ -700,115 +646,6 @@ importers:
       '@types/colormap':
         specifier: ^2.3.4
         version: 2.3.4
-      '@types/deep-diff':
-        specifier: ^1.0.5
-        version: 1.0.5
-      '@types/file-saver':
-        specifier: ^2.0.7
-        version: 2.0.7
-      '@types/jest':
-        specifier: ^29.5.14
-        version: 29.5.14
-      '@types/jszip':
-        specifier: ^3.4.1
-        version: 3.4.1
-      '@types/node':
-        specifier: ^20.17.19
-        version: 20.19.43
-      '@types/prop-types':
-        specifier: ^15.7.14
-        version: 15.7.15
-      '@types/react':
-        specifier: ^18.3.18
-        version: 18.3.31
-      '@types/react-beautiful-dnd':
-        specifier: ^13.1.8
-        version: 13.1.8
-      '@types/react-color':
-        specifier: ^3.0.13
-        version: 3.0.13(@types/react@18.3.31)
-      '@types/react-dom':
-        specifier: ^18.3.5
-        version: 18.3.7(@types/react@18.3.31)
-      '@types/react-router-dom':
-        specifier: ^5.3.3
-        version: 5.3.3
-      '@types/react-test-renderer':
-        specifier: ^18.3.1
-        version: 18.3.1
-      debug:
-        specifier: ^4.4.0
-        version: 4.4.3
-      eslint-plugin-mocha:
-        specifier: ^10.5.0
-        version: 10.5.0(eslint@8.57.1)
-      eslint-plugin-react:
-        specifier: ^7.37.4
-        version: 7.37.5(eslint@8.57.1)
-      jest:
-        specifier: ^29.7.0
-        version: 29.7.0(@types/node@20.19.43)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@types/node@20.19.43)(typescript@5.9.3))
-      jest-html:
-        specifier: ^1.5.0
-        version: 1.5.0(jest@29.7.0(@types/node@20.19.43)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@types/node@20.19.43)(typescript@5.9.3)))
-      npm-build-zip:
-        specifier: ^1.0.4
-        version: 1.0.4
-      react-scripts:
-        specifier: ^5.0.1
-        version: 5.0.1(@babel/plugin-syntax-flow@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-react-jsx@7.29.7(@babel/core@7.29.7))(@types/babel__core@7.20.5)(debug@4.4.3)(eslint@8.57.1)(react@18.3.1)(sass@1.101.0)(ts-node@10.9.2(@types/node@20.19.43)(typescript@5.9.3))(type-fest@4.41.0)(typescript@5.9.3)
-      react-test-renderer:
-        specifier: ^18.3.1
-        version: 18.3.1(react@18.3.1)
-      typescript:
-        specifier: ^5.7.3
-        version: 5.9.3
-      typescript-eslint:
-        specifier: ^7.18.0
-        version: 7.18.0(eslint@8.57.1)(typescript@5.9.3)
-    optionalDependencies:
-      fsevents:
-        specifier: ^2.3.3
-        version: 2.3.3
-
-  packages/sankeyapplication:
-    dependencies:
-      '@babel/plugin-syntax-dynamic-import':
-        specifier: ^7.8.3
-        version: 7.8.3(@babel/core@7.29.7)
-      '@chakra-ui/anatomy':
-        specifier: ^2.3.4
-        version: 2.3.4
-      '@chakra-ui/react':
-        specifier: ^2.10.5
-        version: 2.10.10(@emotion/react@11.14.0(@types/react@18.3.31)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.31)(react@18.3.1))(@types/react@18.3.31)(react@18.3.1))(@types/react@18.3.31)(framer-motion@11.18.2(@emotion/is-prop-valid@1.4.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@craco/craco':
-        specifier: ^7.1.0
-        version: 7.1.0(@types/node@22.20.0)(postcss@8.5.16)(react-scripts@5.0.1(@babel/plugin-syntax-flow@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-react-jsx@7.29.7(@babel/core@7.29.7))(@types/babel__core@7.20.5)(eslint@8.57.1)(react@18.3.1)(sass@1.101.0)(ts-node@10.9.2(@types/node@22.20.0)(typescript@5.9.3))(type-fest@4.41.0)(typescript@5.9.3))(typescript@5.9.3)
-      '@emotion/react':
-        specifier: ^11.14.0
-        version: 11.14.0(@types/react@18.3.31)(react@18.3.1)
-      '@emotion/styled':
-        specifier: ^11.14.0
-        version: 11.14.1(@emotion/react@11.14.0(@types/react@18.3.31)(react@18.3.1))(@types/react@18.3.31)(react@18.3.1)
-      '@stripe/react-stripe-js':
-        specifier: ^2.9.0
-        version: 2.9.0(@stripe/stripe-js@4.10.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@stripe/stripe-js':
-        specifier: ^4.10.0
-        version: 4.10.0
-      '@svgr/webpack':
-        specifier: ^8.1.0
-        version: 8.1.0(typescript@5.9.3)
-      '@terriflux/login-component':
-        specifier: workspace:*
-        version: link:../login-component/client
-      '@terriflux/opensankey':
-        specifier: workspace:*
-        version: link:../opensankey/opensankey/client
-      '@terriflux/opensankey-plus':
-        specifier: workspace:*
-        version: link:../opensankey-plus/client
       '@types/d3-array':
         specifier: ^3.2.1
         version: 3.2.2
@@ -839,12 +676,18 @@ importers:
       '@types/deep-diff':
         specifier: ^1.0.5
         version: 1.0.5
+      '@types/file-saver':
+        specifier: ^2.0.7
+        version: 2.0.7
       '@types/jest':
         specifier: ^29.5.14
         version: 29.5.14
+      '@types/jszip':
+        specifier: ^3.4.1
+        version: 3.4.1
       '@types/node':
-        specifier: ^22.13.4
-        version: 22.20.0
+        specifier: ^20.17.19
+        version: 20.19.43
       '@types/pako':
         specifier: ^2.0.3
         version: 2.0.4
@@ -863,42 +706,106 @@ importers:
       '@types/react-dom':
         specifier: ^18.3.5
         version: 18.3.7(@types/react@18.3.31)
-      '@types/react-google-recaptcha':
-        specifier: ^2.1.9
-        version: 2.1.9
+      '@types/react-router-dom':
+        specifier: ^5.3.3
+        version: 5.3.3
+      '@types/react-test-renderer':
+        specifier: ^18.3.1
+        version: 18.3.1
       '@types/webpack-env':
         specifier: ^1.18.8
         version: 1.18.8
       cross-conf-env:
         specifier: ^1.3.0
         version: 1.3.0
-      csstype:
-        specifier: ^3.1.3
-        version: 3.2.3
-      d3-selection:
-        specifier: ^3.0.0
-        version: 3.0.0
+      debug:
+        specifier: ^4.4.0
+        version: 4.4.3
       eslint:
         specifier: ^8.57.1
         version: 8.57.1
+      eslint-plugin-mocha:
+        specifier: ^10.5.0
+        version: 10.5.0(eslint@8.57.1)
+      eslint-plugin-react:
+        specifier: ^7.37.4
+        version: 7.37.5(eslint@8.57.1)
       globals:
         specifier: ^15.15.0
         version: 15.15.0
-      i18next:
-        specifier: ^23.16.8
-        version: 23.16.8
-      i18next-browser-languagedetector:
-        specifier: ^8.0.3
-        version: 8.2.1
       jest:
         specifier: ^29.7.0
-        version: 29.7.0(@types/node@22.20.0)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@types/node@22.20.0)(typescript@5.9.3))
+        version: 29.7.0(@types/node@20.19.43)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@types/node@20.19.43)(typescript@5.9.3))
+      jest-html:
+        specifier: ^1.5.0
+        version: 1.5.0(jest@29.7.0(@types/node@20.19.43)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@types/node@20.19.43)(typescript@5.9.3)))
       npm-build-zip:
         specifier: ^1.0.4
         version: 1.0.4
       postcss:
         specifier: ^8.5.2
         version: 8.5.16
+      react-scripts:
+        specifier: ^5.0.1
+        version: 5.0.1(@babel/plugin-syntax-flow@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-react-jsx@7.29.7(@babel/core@7.29.7))(@types/babel__core@7.20.5)(debug@4.4.3)(eslint@8.57.1)(react@18.3.1)(sass@1.101.0)(ts-node@10.9.2(@types/node@20.19.43)(typescript@5.9.3))(type-fest@4.41.0)(typescript@5.9.3)
+      react-test-renderer:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      shx:
+        specifier: ^0.3.4
+        version: 0.3.4
+      ts-jest:
+        specifier: ^29.2.5
+        version: 29.4.11(@babel/core@7.29.7)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.29.7))(jest-util@29.7.0)(jest@29.7.0(@types/node@20.19.43)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@types/node@20.19.43)(typescript@5.9.3)))(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      typescript-eslint:
+        specifier: ^7.18.0
+        version: 7.18.0(eslint@8.57.1)(typescript@5.9.3)
+    optionalDependencies:
+      fsevents:
+        specifier: ^2.3.3
+        version: 2.3.3
+
+  packages/sankeyapplication:
+    dependencies:
+      '@chakra-ui/anatomy':
+        specifier: ^2.3.4
+        version: 2.3.4
+      '@chakra-ui/react':
+        specifier: ^2.10.5
+        version: 2.10.10(@emotion/react@11.14.0(@types/react@18.3.31)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.31)(react@18.3.1))(@types/react@18.3.31)(react@18.3.1))(@types/react@18.3.31)(framer-motion@11.18.2(@emotion/is-prop-valid@1.4.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@emotion/react':
+        specifier: ^11.14.0
+        version: 11.14.0(@types/react@18.3.31)(react@18.3.1)
+      '@emotion/styled':
+        specifier: ^11.14.0
+        version: 11.14.1(@emotion/react@11.14.0(@types/react@18.3.31)(react@18.3.1))(@types/react@18.3.31)(react@18.3.1)
+      '@stripe/react-stripe-js':
+        specifier: ^2.9.0
+        version: 2.9.0(@stripe/stripe-js@4.10.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@stripe/stripe-js':
+        specifier: ^4.10.0
+        version: 4.10.0
+      '@terriflux/login-component':
+        specifier: workspace:*
+        version: link:../login-component/client
+      '@terriflux/opensankey':
+        specifier: workspace:*
+        version: link:../opensankey/opensankey/client
+      '@terriflux/opensankey-plus':
+        specifier: workspace:*
+        version: link:../opensankey-plus/client
+      d3-selection:
+        specifier: ^3.0.0
+        version: 3.0.0
+      i18next:
+        specifier: ^23.16.8
+        version: 23.16.8
+      i18next-browser-languagedetector:
+        specifier: ^8.0.3
+        version: 8.2.1
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -929,28 +836,16 @@ importers:
       react-router-dom:
         specifier: ^6.29.0
         version: 6.30.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-scripts:
-        specifier: ^5.0.1
-        version: 5.0.1(@babel/plugin-syntax-flow@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-react-jsx@7.29.7(@babel/core@7.29.7))(@types/babel__core@7.20.5)(eslint@8.57.1)(react@18.3.1)(sass@1.101.0)(ts-node@10.9.2(@types/node@22.20.0)(typescript@5.9.3))(type-fest@4.41.0)(typescript@5.9.3)
       react-text-loop:
         specifier: ^2.3.0
         version: 2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      shx:
-        specifier: ^0.3.4
-        version: 0.3.4
-      ts-loader:
-        specifier: ^9.5.2
-        version: 9.6.2(loader-utils@3.3.1)(typescript@5.9.3)(webpack@5.108.3(postcss@8.5.16))
-      typescript:
-        specifier: ^5.7.3
-        version: 5.9.3
-      web-vitals:
-        specifier: ^4.2.4
-        version: 4.2.4
     devDependencies:
       '@babel/core':
         specifier: ^7.26.8
         version: 7.29.7
+      '@babel/plugin-syntax-dynamic-import':
+        specifier: ^7.8.3
+        version: 7.8.3(@babel/core@7.29.7)
       '@babel/preset-env':
         specifier: ^7.26.8
         version: 7.29.7(@babel/core@7.29.7)
@@ -960,42 +855,144 @@ importers:
       '@babel/preset-typescript':
         specifier: ^7.26.0
         version: 7.29.7(@babel/core@7.29.7)
+      '@craco/craco':
+        specifier: ^7.1.0
+        version: 7.1.0(@types/node@22.20.0)(postcss@8.5.16)(react-scripts@5.0.1(@babel/plugin-syntax-flow@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-react-jsx@7.29.7(@babel/core@7.29.7))(@types/babel__core@7.20.5)(eslint@8.57.1)(react@18.3.1)(sass@1.101.0)(ts-node@10.9.2(@types/node@22.20.0)(typescript@5.9.3))(type-fest@4.41.0)(typescript@5.9.3))(typescript@5.9.3)
       '@eslint/js':
         specifier: ^9.20.0
         version: 9.39.4
       '@jest/globals':
         specifier: ^29.7.0
         version: 29.7.0
+      '@svgr/webpack':
+        specifier: ^8.1.0
+        version: 8.1.0(typescript@5.9.3)
       '@testing-library/jest-dom':
         specifier: ^6.6.3
         version: 6.9.1
       '@types/colormap':
         specifier: ^2.3.4
         version: 2.3.4
+      '@types/d3-array':
+        specifier: ^3.2.1
+        version: 3.2.2
+      '@types/d3-color':
+        specifier: ^3.1.3
+        version: 3.1.3
+      '@types/d3-drag':
+        specifier: ^3.0.7
+        version: 3.0.7
+      '@types/d3-ease':
+        specifier: ^3.0.2
+        version: 3.0.2
+      '@types/d3-scale':
+        specifier: ^4.0.8
+        version: 4.0.9
+      '@types/d3-scale-chromatic':
+        specifier: ^3.0.3
+        version: 3.1.0
+      '@types/d3-selection':
+        specifier: ^3.0.10
+        version: 3.0.11
+      '@types/d3-transition':
+        specifier: ^3.0.8
+        version: 3.0.9
+      '@types/d3-zoom':
+        specifier: ^3.0.8
+        version: 3.0.8
+      '@types/deep-diff':
+        specifier: ^1.0.5
+        version: 1.0.5
       '@types/file-saver':
         specifier: ^2.0.7
         version: 2.0.7
+      '@types/jest':
+        specifier: ^29.5.14
+        version: 29.5.14
       '@types/jszip':
         specifier: ^3.4.1
         version: 3.4.1
+      '@types/node':
+        specifier: ^22.13.4
+        version: 22.20.0
+      '@types/pako':
+        specifier: ^2.0.3
+        version: 2.0.4
+      '@types/prop-types':
+        specifier: ^15.7.14
+        version: 15.7.15
+      '@types/react':
+        specifier: ^18.3.18
+        version: 18.3.31
+      '@types/react-beautiful-dnd':
+        specifier: ^13.1.8
+        version: 13.1.8
+      '@types/react-color':
+        specifier: ^3.0.13
+        version: 3.0.13(@types/react@18.3.31)
+      '@types/react-dom':
+        specifier: ^18.3.5
+        version: 18.3.7(@types/react@18.3.31)
+      '@types/react-google-recaptcha':
+        specifier: ^2.1.9
+        version: 2.1.9
       '@types/react-router-dom':
         specifier: ^5.3.3
         version: 5.3.3
       '@types/react-test-renderer':
         specifier: ^18.3.1
         version: 18.3.1
+      '@types/webpack-env':
+        specifier: ^1.18.8
+        version: 1.18.8
       babel-loader:
         specifier: ^9.2.1
         version: 9.2.1(@babel/core@7.29.7)(webpack@5.108.3(postcss@8.5.16))
+      cross-conf-env:
+        specifier: ^1.3.0
+        version: 1.3.0
+      csstype:
+        specifier: ^3.1.3
+        version: 3.2.3
+      eslint:
+        specifier: ^8.57.1
+        version: 8.57.1
       eslint-plugin-mocha:
         specifier: ^10.5.0
         version: 10.5.0(eslint@8.57.1)
       eslint-plugin-react:
         specifier: ^7.37.4
         version: 7.37.5(eslint@8.57.1)
+      globals:
+        specifier: ^15.15.0
+        version: 15.15.0
+      jest:
+        specifier: ^29.7.0
+        version: 29.7.0(@types/node@22.20.0)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@types/node@22.20.0)(typescript@5.9.3))
+      npm-build-zip:
+        specifier: ^1.0.4
+        version: 1.0.4
+      postcss:
+        specifier: ^8.5.2
+        version: 8.5.16
+      react-scripts:
+        specifier: ^5.0.1
+        version: 5.0.1(@babel/plugin-syntax-flow@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-react-jsx@7.29.7(@babel/core@7.29.7))(@types/babel__core@7.20.5)(eslint@8.57.1)(react@18.3.1)(sass@1.101.0)(ts-node@10.9.2(@types/node@22.20.0)(typescript@5.9.3))(type-fest@4.41.0)(typescript@5.9.3)
+      shx:
+        specifier: ^0.3.4
+        version: 0.3.4
+      ts-loader:
+        specifier: ^9.5.2
+        version: 9.6.2(loader-utils@3.3.1)(typescript@5.9.3)(webpack@5.108.3(postcss@8.5.16))
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
       typescript-eslint:
         specifier: ^7.18.0
         version: 7.18.0(eslint@8.57.1)(typescript@5.9.3)
+      web-vitals:
+        specifier: ^4.2.4
+        version: 4.2.4
 
 packages:
 
@@ -13196,6 +13193,25 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@typescript-eslint/eslint-plugin@5.62.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)':
+    dependencies:
+      '@eslint-community/regexpp': 4.12.2
+      '@typescript-eslint/parser': 7.18.0(eslint@8.57.1)(typescript@5.9.3)
+      '@typescript-eslint/scope-manager': 5.62.0
+      '@typescript-eslint/type-utils': 5.62.0(eslint@8.57.1)(typescript@5.9.3)
+      '@typescript-eslint/utils': 5.62.0(eslint@8.57.1)(typescript@5.9.3)
+      debug: 4.4.3
+      eslint: 8.57.1
+      graphemer: 1.4.0
+      ignore: 5.3.2
+      natural-compare-lite: 1.4.0
+      semver: 7.8.5
+      tsutils: 3.21.0(typescript@5.9.3)
+    optionalDependencies:
+      typescript: 5.9.3
+    transitivePeerDependencies:
+      - supports-color
+
   '@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)':
     dependencies:
       '@eslint-community/regexpp': 4.12.2
@@ -16607,7 +16623,7 @@ snapshots:
       '@babel/core': 7.29.7
       '@babel/eslint-parser': 7.29.7(@babel/core@7.29.7)(eslint@8.57.1)
       '@rushstack/eslint-patch': 1.16.1
-      '@typescript-eslint/eslint-plugin': 5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)
+      '@typescript-eslint/eslint-plugin': 5.62.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)
       '@typescript-eslint/parser': 5.62.0(eslint@8.57.1)(typescript@5.9.3)
       babel-preset-react-app: 10.1.0
       confusing-browser-globals: 1.0.11
@@ -16716,7 +16732,7 @@ snapshots:
       '@typescript-eslint/experimental-utils': 5.62.0(eslint@8.57.1)(typescript@5.9.3)
       eslint: 8.57.1
     optionalDependencies:
-      '@typescript-eslint/eslint-plugin': 5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)
+      '@typescript-eslint/eslint-plugin': 5.62.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)
       jest: 27.5.1(ts-node@10.9.2(@types/node@20.19.43)(typescript@5.9.3))
     transitivePeerDependencies:
       - supports-color

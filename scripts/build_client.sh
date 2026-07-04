@@ -111,6 +111,6 @@ if [ "$build" = true ] ; then
   printf ">>> Build standalone\n" && DISABLE_ESLINT_PLUGIN=true CI= NODE_OPTIONS=--max-old-space-size=8192 pnpm run build || exit_if_error $?
 fi
 if [ "$dist" = true ] ; then
-  printf ">>> Build distribution lib\n" && pnpm --filter @terriflux/sankeyapplication run dist || exit_if_error $?
+  printf ">>> Build distribution lib\n" && pnpm run dist || exit_if_error $?
 fi
 printf "OK ------------------------------------------------------------------\n"

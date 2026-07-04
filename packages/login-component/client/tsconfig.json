@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES6",
-    "module": "ES6",
+    "module": "ES2020",
     "lib": [
       "dom",
       "dom.iterable",
@@ -19,9 +19,12 @@
     "isolatedModules": true,
     "downlevelIteration": true,
     "jsx": "react",
-    "outDir": "dist"
+    "outDir": "dist",
+    "declaration": true
   },
   "include": [
-    "src"
+    "src",
+    "../../opensankey/opensankey/client/src/**/*.d.ts",
+    "../../opensankey-plus/client/src/**/*.d.ts"
   ]
 }

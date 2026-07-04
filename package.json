@@ -8,6 +8,7 @@
     "lint:ci": "pnpm -r --no-bail run lint:ci",
     "typecheck": "pnpm --filter @terriflux/sankeyapplication exec tsc -p . --noEmit",
     "test": "pnpm --filter @terriflux/opensankey run test",
+    "dist": "pnpm -r run dist && node scripts/prepare_publish.mjs",
     "build": "pnpm --filter @terriflux/sankeyapplication run build"
   },
   "pnpm": {
