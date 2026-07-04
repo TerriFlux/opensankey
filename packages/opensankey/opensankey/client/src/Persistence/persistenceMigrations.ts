@@ -132,6 +132,67 @@ export function isVersionBelow(version: string | number | undefined, target: str
   return false // versions égales
 }
 
+// ---------------------------------------------------------------------------
+// #233 — Validation racine au chargement (pare-chocs léger)
+// ---------------------------------------------------------------------------
+// `fromJSON` supposait la forme du JSON racine et plantait avec une erreur
+// cryptique (ex. `Object.values(undefined)`) sur un fichier ancien ou édité à la
+// main dont une clé structurante manque ou a le mauvais type. Cette garde LÉGÈRE
+// (pas un schéma zod exhaustif — cf. item 47 de l'automne) vérifie la racine et le
+// TYPE des clés structurantes, et renvoie la liste lisible des champs
+// problématiques. Le dispatcher lève alors une erreur explicite AVANT le crash.
+//
+// Volontairement permissive : elle ne vérifie que la présence/le type de ce dont
+// l'absence ou le mauvais type ferait échouer la lecture. Une clé simplement
+// absente d'un fichier légitime (diagramme vide sans `nodes`, etc.) n'est PAS une
+// erreur — on ne signale un problème que sur un type INCOMPATIBLE d'une clé
+// présente (ou une racine qui n'est pas un objet).
+
+/** Vrai pour un objet « dictionnaire » simple (ni null, ni tableau). */
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null && !Array.isArray(v)
+}
+
+/** Clés structurantes attendues comme dictionnaires si présentes. */
+const ROOT_OBJECT_KEYS = [
+  'nodes', 'links',
+  'dataTags', 'nodeTags', 'levelTags', 'fluxTags', 'viewTags'
+] as const
+
+/**
+ * Valide la forme du JSON racine d'un diagramme Sankey. Renvoie la liste des
+ * champs problématiques (vide = OK). Pure et sans dépendance : testable en
+ * isolation et réutilisable côté outillage.
+ */
+export function validateSankeyRootJSON(json: unknown): string[] {
+  const problems: string[] = []
+  if (!isPlainObject(json)) {
+    const kind = json === null ? 'null'
+      : Array.isArray(json) ? 'un tableau'
+        : typeof json
+    problems.push(`racine : attendu un objet JSON, reçu ${kind}`)
+    return problems // rien d'autre n'est vérifiable
+  }
+  if ('version' in json && !(typeof json.version === 'string' || typeof json.version === 'number')) {
+    problems.push(`version : attendu une chaîne (ou un nombre), reçu ${typeof json.version}`)
+  }
+  if ('format_version' in json && typeof json.format_version !== 'number') {
+    problems.push(`format_version : attendu un entier, reçu ${typeof json.format_version}`)
+  }
+  for (const key of ROOT_OBJECT_KEYS) {
+    if (key in json && !isPlainObject(json[key])) {
+      const val = json[key]
+      const kind = val === null ? 'null' : Array.isArray(val) ? 'un tableau' : typeof val
+      problems.push(`${key} : attendu un objet, reçu ${kind}`)
+    }
+  }
+  // NB : `views` (concept OpenSankey+) n'est PAS validé ici. Sa forme varie selon
+  // l'époque (objet keyé par id dans les fichiers anciens, tableau plus tard) et la
+  // couche base OpenSankey ne le relit pas — le contraindre produirait des faux
+  // positifs sur des fichiers légitimes (cf. corpus 0.9→1.1.6).
+  return problems
+}
+
 /**
  * Issue #191 — rétro-compatibilité de la césure des libellés. L'attribut
  * `wrap_long_words` (césure d'un mot UNIQUE trop long par insertion d'un tiret,

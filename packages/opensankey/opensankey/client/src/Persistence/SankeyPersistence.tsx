@@ -50,7 +50,7 @@ import { Class_DrawingArea } from '../types/DrawingArea'
 import { convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
 // Issue #191 — migration de rétro-compat de la césure des libellés, isolée dans
 // son propre module pour rester testable sans le graphe d'imports lourd d'ici.
-import { applyWrapLongWordsRetrocompat, CURRENT_FORMAT_VERSION, effectiveLoadVersion, isVersionBelow } from './persistenceMigrations'
+import { applyWrapLongWordsRetrocompat, CURRENT_FORMAT_VERSION, effectiveLoadVersion, isVersionBelow, validateSankeyRootJSON } from './persistenceMigrations'
 
 
 export class BaseElementPersistence {
@@ -2295,6 +2295,17 @@ export class DrawingAreaPersistence {
     json_object: Type_JSON,
     kwargs?: Type_JSON
   ) {
+    // #233 — Pare-chocs léger : valider la forme de la racine AVANT toute lecture,
+    // pour transformer un crash cryptique (ex. `Object.values(undefined)` sur un
+    // fichier ancien ou édité à la main) en une erreur explicite qui liste les
+    // champs problématiques. Ne remplace pas une validation exhaustive (item 47).
+    const root_problems = validateSankeyRootJSON(json_object)
+    if (root_problems.length > 0) {
+      throw new Error(
+        'Fichier Sankey invalide — champ(s) problématique(s) :\n- ' + root_problems.join('\n- ')
+      )
+    }
+
     drawing_area.bypass_redraws = true
 
     // #22 — Sémantique de format : un fichier portant un `format_version` explicite
