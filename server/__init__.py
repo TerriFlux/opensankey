@@ -25,7 +25,8 @@ def _app_version():
     """
     try:
         pkg = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "..", "client", "package.json"
+            os.path.dirname(os.path.abspath(__file__)),
+            "..", "packages", "sankeyapplication", "package.json"
         )
         with open(pkg, encoding="utf-8") as f:
             return json.load(f).get("version", "unknown")

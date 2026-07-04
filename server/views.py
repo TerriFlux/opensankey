@@ -54,17 +54,12 @@ MAX_LINE_LENGTH = 120
 # ---------------------------------------------------------------
 # Create sankey_app app blueprint
 
-template_folder = os.path.join(
-    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "client"),
-    "build",
+_client_dir = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "packages", "sankeyapplication",
 )
-static_folder = os.path.join(
-    os.path.join(
-        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "client"),
-        "build",
-    ),
-    "static",
-)
+template_folder = os.path.join(_client_dir, "build")
+static_folder = os.path.join(template_folder, "static")
 sankeyapp = Blueprint(
     "sankeyapp",
     __name__,
