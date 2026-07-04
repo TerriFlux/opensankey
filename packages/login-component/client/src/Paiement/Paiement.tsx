@@ -15,11 +15,18 @@ import {
 import { getStripeConfig } from './PaiementFunctions'
 import { Presentation } from '../Register/Presentation'
 
-// Déclarer le type pour le custom element Stripe
+// Déclarer le type pour le custom element Stripe. Le namespace global JSX est
+// LE mécanisme prévu par React (≤18) pour enregistrer un custom element : pas
+// d'équivalent en syntaxe module, d'où le disable ciblé.
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
     interface IntrinsicElements {
-      'stripe-pricing-table': any;
+      'stripe-pricing-table': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+        'publishable-key'?: string
+        'pricing-table-id'?: string
+        'locale'?: string
+      };
     }
   }
 }

@@ -123,7 +123,7 @@ export const ContextZDT = (
     zdt_to_contextualise.draw()
     closeContextMenu()
   }}
-    variant='contextmenu_button'
+  variant='contextmenu_button'
   >{t('Menu.detachTiedNodes')} </Button>
 
   // Select nodes 'inside' zdt
@@ -144,7 +144,7 @@ export const ContextZDT = (
     zdt_to_contextualise.draw()
     closeContextMenu()
   }}
-    variant='contextmenu_button'
+  variant='contextmenu_button'
   >{t('Menu.SNI')}
   </Button>
 

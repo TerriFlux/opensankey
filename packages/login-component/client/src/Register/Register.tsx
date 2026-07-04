@@ -47,7 +47,7 @@ const Register = ({
   loginComponent: LoginComponent,
   setLicenses: React.MutableRefObject<() => void>,
   returnToApp: (navigate: NavigateFunction) => void,
-  theme: Record<string, any>
+  theme: Record<string, unknown>
 }) => {
   // Step to register
   const [on_wait, setOnWait] = useState(false)
@@ -94,27 +94,27 @@ const Register = ({
     // }
     // // step 1 : Get user infos
     // else if (registerStep === 1) {
-      if (okAccountInfos) {
-        // backend SignUp
-        setOnWait(true)
-        await userSignUp(
-          user_name,
-          password,
-          firstname,
-          lastname,
-          (ok: boolean) => {
-            setOkAccountCreated(ok)
-          },
-          navigate
+    if (okAccountInfos) {
+      // backend SignUp
+      setOnWait(true)
+      await userSignUp(
+        user_name,
+        password,
+        firstname,
+        lastname,
+        (ok: boolean) => {
+          setOkAccountCreated(ok)
+        },
+        navigate
+      )
+        .then(() =>
+          setOnWait(false)
         )
-          .then(() =>
-            setOnWait(false)
-          )
-      }
-      else {
-        logError(t('Register.account.msg.err_captcha'))
-      }
     }
+    else {
+      logError(t('Register.account.msg.err_captcha'))
+    }
+  }
 
   const log = <>
     <div
@@ -332,15 +332,15 @@ const Register = ({
 
   let header = '404 not found'
   let content = [<></>]
-  let width = { base: '92vw', sm: '32rem' }
+  const width = { base: '92vw', sm: '32rem' }
   // if (registerStep === 0) {
   //   header = t('Register.presentation.title')
   //   content = osplus_presentation
   //   width = '50vw'
   // }
   //else if (registerStep === 1) {
-    header = t('Register.account.title')
-    content = register_form
+  header = t('Register.account.title')
+  content = register_form
   // }
   // else if (registerStep === 2) {
   //   header = t('Register.validation.title')

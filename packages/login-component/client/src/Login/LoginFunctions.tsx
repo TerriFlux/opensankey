@@ -22,37 +22,37 @@ export const logError = (err: string) => {
 // export function activateLicensesTokens(
 //   loginComponent:LoginComponent,
 //   setUpdate:React.MutableRefObject<() => void>,
-  // update: boolean,
-  // set_update: (_: boolean) => void
+// update: boolean,
+// set_update: (_: boolean) => void
 //) {
-  // // Check AFM license
-  // activateLicenseToken(
-  //   app_name_sankeysuite,
-  //   '/user/infos/legacy/license_sankeysuite',
-  //   () => {
-  //     set_update(!update)
-  //   }
-  // )
-  // Check OpenSankey+ licence
-  // activateLicenseToken(
-  //   app_name_opensankeyplus,
-  //   '/user/infos/legacy/license_opensankeyplus',
-  //   () => { loginComponent.checkTokens(setUpdate) }
-  // )
-  // // Check if has dev acc
-  // fetch('/user/infos/legacy/is_developer',)
-  //   .then(response => {
-  //     if (response.ok) {
-  //       return response.json()
-  //     } else {
-  //       return Promise.reject(response)
-  //     }
-  //   }).then(data => {
-  //     if (data.is_dev) {
-  //       sessionStorage.setItem('SankeyDev', LZString.compress(JSON.stringify(true)))
-  //     }
-  //     //set_update(!update)
-  //   })
+// // Check AFM license
+// activateLicenseToken(
+//   app_name_sankeysuite,
+//   '/user/infos/legacy/license_sankeysuite',
+//   () => {
+//     set_update(!update)
+//   }
+// )
+// Check OpenSankey+ licence
+// activateLicenseToken(
+//   app_name_opensankeyplus,
+//   '/user/infos/legacy/license_opensankeyplus',
+//   () => { loginComponent.checkTokens(setUpdate) }
+// )
+// // Check if has dev acc
+// fetch('/user/infos/legacy/is_developer',)
+//   .then(response => {
+//     if (response.ok) {
+//       return response.json()
+//     } else {
+//       return Promise.reject(response)
+//     }
+//   }).then(data => {
+//     if (data.is_dev) {
+//       sessionStorage.setItem('SankeyDev', LZString.compress(JSON.stringify(true)))
+//     }
+//     //set_update(!update)
+//   })
 //}
 
 // Check if login if valid

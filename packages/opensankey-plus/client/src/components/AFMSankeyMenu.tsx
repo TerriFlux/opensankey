@@ -62,21 +62,21 @@ export const AFMEditionMenu = ({ app_data }: {
       </OSTooltip>
 
       <MenuList>
-          <MenuItem
-            onClick={() => {
-              app_data.menu_configuration.ref_universal_converter_set_config.current(
-                CONVERTER_CONFIGS['reconciliation'], '', false
-              )
-              app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
-            }}>
-            <FontAwesomeIcon
-              style={{ 'height': '1rem', 'width': '1rem' }}
-              icon={faTable}
-            />
-            <Box>
-              {t('Menu.afm_reconcil_excel')}
-            </Box>
-          </MenuItem>
+        <MenuItem
+          onClick={() => {
+            app_data.menu_configuration.ref_universal_converter_set_config.current(
+              CONVERTER_CONFIGS['reconciliation'], '', false
+            )
+            app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
+          }}>
+          <FontAwesomeIcon
+            style={{ 'height': '1rem', 'width': '1rem' }}
+            icon={faTable}
+          />
+          <Box>
+            {t('Menu.afm_reconcil_excel')}
+          </Box>
+        </MenuItem>
       </MenuList>
     </Menu>
   </>

@@ -66,7 +66,7 @@ export async function userSignUp(
       }
     })
     .then(() => {
-      let next_page = '/login'
+      const next_page = '/login'
       setTimeout(
         () => navigate(next_page),
         3000
