@@ -9,7 +9,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUserPlus, faRightToBracket } from '@fortawesome/free-solid-svg-icons'
 import { LoginOutButton } from '../Login/Login'
-import { OSTooltip } from 'open-sankey/src/components/configmenus/MenuCommon'
+import { OSTooltip } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
 import { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { LoginComponent } from '../LoginComponent'

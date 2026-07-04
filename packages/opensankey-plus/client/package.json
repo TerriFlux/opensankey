@@ -1,5 +1,5 @@
 {
-  "name": "sankeyanimation",
+  "name": "@terriflux/opensankey-plus",
   "type": "module",
   "version": "1.1.9",
   "homepage": ".",
@@ -63,7 +63,7 @@
     "shx": "^0.3.4",
     "ts-loader": "^9.5.2",
     "web-vitals": "^3.5.2",
-    "open-sankey": "workspace:*"
+    "@terriflux/opensankey": "workspace:*"
   },
   "devDependencies": {
     "@babel/core": "^7.26.8",

@@ -67,22 +67,22 @@ import {
   getJSONOrUndefinedFromJSON,
   makeId,
   Type_JSON,
-} from 'open-sankey/src/types/Utils'
+} from '@terriflux/opensankey/src/types/Utils'
 
-import { updateFrom } from 'open-sankey/src/Algorithms/UpdateFrom'
-import { UpdateModeGrid } from 'open-sankey/src/components/dialogs/SankeyMenuDialogs'
-import { ConfigMenuTextInput, OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu } from 'open-sankey/src/components/configmenus/MenuCommon'
+import { updateFrom } from '@terriflux/opensankey/src/Algorithms/UpdateFrom'
+import { UpdateModeGrid } from '@terriflux/opensankey/src/components/dialogs/SankeyMenuDialogs'
+import { ConfigMenuTextInput, OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
 import { Class_DrawingAreaOSP, DrawingAreaPersistenceOSP } from '../types/DrawingAreaOSP'
-import { Class_NodeElement } from 'open-sankey/src/Elements/Node'
-import { Class_ViewTagGroup } from 'open-sankey/src/types/TagGroup'
+import { Class_NodeElement } from '@terriflux/opensankey/src/Elements/Node'
+import { Class_ViewTagGroup } from '@terriflux/opensankey/src/types/TagGroup'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
-import { OSTooltip } from 'open-sankey/src/components/configmenus/MenuCommon'
-import { mainZoneRightReservedPx } from 'open-sankey/src/components/spreadsheet/MainZoneTabs'
-import { LevelTagFilter, TopbarNavSelect } from 'open-sankey/src/components/topmenus/Toolbar'
-import { compressJSONToGzip, decompressGzipDataFixed, decompressUploadedFileUniversal } from 'open-sankey/src/Persistence/UniversalJSONCompression'
-import { DrawingAreaPersistence } from 'open-sankey/src/Persistence/SankeyPersistence'
-import { INPUT_ATTRIBUTES_CONFIG, OUTPUT_ATTRIBUTES_CONFIG, getDefaultInputOptions, getDefaultOutputOptions } from 'open-sankey/src/components/dialogs/PersistenceProcessDialogConfigs'
-import { retrieveJSONResults } from 'open-sankey/src/components/dialogs/PersistenceProcessDialog'
+import { OSTooltip } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
+import { mainZoneRightReservedPx } from '@terriflux/opensankey/src/components/spreadsheet/MainZoneTabs'
+import { LevelTagFilter, TopbarNavSelect } from '@terriflux/opensankey/src/components/topmenus/Toolbar'
+import { compressJSONToGzip, decompressGzipDataFixed, decompressUploadedFileUniversal } from '@terriflux/opensankey/src/Persistence/UniversalJSONCompression'
+import { DrawingAreaPersistence } from '@terriflux/opensankey/src/Persistence/SankeyPersistence'
+import { INPUT_ATTRIBUTES_CONFIG, OUTPUT_ATTRIBUTES_CONFIG, getDefaultInputOptions, getDefaultOutputOptions } from '@terriflux/opensankey/src/components/dialogs/PersistenceProcessDialogConfigs'
+import { retrieveJSONResults } from '@terriflux/opensankey/src/components/dialogs/PersistenceProcessDialog'
 import { createUnitaryNewView } from './UnitaryBoard'
 
 // ===========================================================================

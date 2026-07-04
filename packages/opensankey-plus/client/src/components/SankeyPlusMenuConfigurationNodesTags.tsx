@@ -2,10 +2,10 @@
 import React, { useState } from 'react'
 import {Box,Checkbox,Select,} from '@chakra-ui/react'
 
-import type { Class_Tag } from 'open-sankey/src/types/Tag'
-import { WrapperBoxSubSectionMenu } from 'open-sankey/src/components/configmenus/MenuCommon'
-import { OSTooltip } from 'open-sankey/src/components/configmenus/MenuCommon'
-import { SankeyNodeSelectionSimple } from 'open-sankey/src/components/configmenus/MenuElementsSelection'
+import type { Class_Tag } from '@terriflux/opensankey/src/types/Tag'
+import { WrapperBoxSubSectionMenu } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
+import { OSTooltip } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
+import { SankeyNodeSelectionSimple } from '@terriflux/opensankey/src/components/configmenus/MenuElementsSelection'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
 export interface BaseComponentProps {

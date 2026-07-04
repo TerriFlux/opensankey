@@ -52,6 +52,12 @@ importers:
       '@svgr/webpack':
         specifier: ^8.1.0
         version: 8.1.0(typescript@5.9.3)
+      '@terriflux/opensankey':
+        specifier: workspace:*
+        version: link:../../opensankey/opensankey/client
+      '@terriflux/opensankey-plus':
+        specifier: workspace:*
+        version: link:../../opensankey-plus/client
       '@types/d3-selection':
         specifier: ^3.0.10
         version: 3.0.11
@@ -106,9 +112,6 @@ importers:
       npm-build-zip:
         specifier: ^1.0.4
         version: 1.0.4
-      open-sankey:
-        specifier: workspace:*
-        version: link:../../opensankey/opensankey/client
       postcss:
         specifier: ^8.5.2
         version: 8.5.16
@@ -151,9 +154,6 @@ importers:
       react-scripts:
         specifier: ^5.0.1
         version: 5.0.1(@babel/plugin-syntax-flow@7.29.7(@babel/core@7.29.7))(@babel/plugin-transform-react-jsx@7.29.7(@babel/core@7.29.7))(@types/babel__core@7.20.5)(debug@4.4.3)(eslint@8.57.1)(react@18.3.1)(sass@1.101.0)(ts-node@10.9.2(@types/node@20.19.43)(typescript@5.9.3))(type-fest@4.41.0)(typescript@5.9.3)
-      sankeyanimation:
-        specifier: workspace:*
-        version: link:../../opensankey-plus/client
       shx:
         specifier: ^0.3.4
         version: 0.3.4
@@ -266,6 +266,9 @@ importers:
       '@svgr/webpack':
         specifier: ^8.1.0
         version: 8.1.0(typescript@5.9.3)
+      '@terriflux/opensankey':
+        specifier: workspace:*
+        version: link:../../opensankey/opensankey/client
       '@types/d3-array':
         specifier: ^3.2.1
         version: 3.2.2
@@ -338,9 +341,6 @@ importers:
       npm-build-zip:
         specifier: ^1.0.4
         version: 1.0.4
-      open-sankey:
-        specifier: workspace:*
-        version: link:../../opensankey/opensankey/client
       pako:
         specifier: ^2.1.0
         version: 2.2.0
@@ -800,6 +800,15 @@ importers:
       '@svgr/webpack':
         specifier: ^8.1.0
         version: 8.1.0(typescript@5.9.3)
+      '@terriflux/login-component':
+        specifier: workspace:*
+        version: link:../login-component/client
+      '@terriflux/opensankey':
+        specifier: workspace:*
+        version: link:../opensankey/opensankey/client
+      '@terriflux/opensankey-plus':
+        specifier: workspace:*
+        version: link:../opensankey-plus/client
       '@types/d3-array':
         specifier: ^3.2.1
         version: 3.2.2
@@ -884,15 +893,9 @@ importers:
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@22.20.0)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@types/node@22.20.0)(typescript@5.9.3))
-      logincomponent:
-        specifier: workspace:*
-        version: link:../login-component/client
       npm-build-zip:
         specifier: ^1.0.4
         version: 1.0.4
-      open-sankey:
-        specifier: workspace:*
-        version: link:../opensankey/opensankey/client
       postcss:
         specifier: ^8.5.2
         version: 8.5.16
@@ -932,9 +935,6 @@ importers:
       react-text-loop:
         specifier: ^2.3.0
         version: 2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      sankeyanimation:
-        specifier: workspace:*
-        version: link:../opensankey-plus/client
       shx:
         specifier: ^0.3.4
         version: 0.3.4

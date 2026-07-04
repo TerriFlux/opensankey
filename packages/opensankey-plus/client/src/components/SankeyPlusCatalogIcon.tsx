@@ -1,5 +1,5 @@
 
-import * as d3 from 'open-sankey/src/d3Modules'
+import * as d3 from '@terriflux/opensankey/src/d3Modules'
 import React, { useState, useRef, ChangeEvent } from 'react'
 import {
   Box,
@@ -22,9 +22,9 @@ import {
 
 import SankeyListIcons from '../icons/lib_of_icons.json'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
-import { Class_NodeBase } from 'open-sankey/src/Elements/NodeBase'
-import { Class_LinkElement } from 'open-sankey/src/Elements/Link'
-import { getElementsLabelValues, BASE_LABEL_CONFIG, isConfigValueIndeterminate } from 'open-sankey/src/Elements/ElementsAttributesConfig'
+import { Class_NodeBase } from '@terriflux/opensankey/src/Elements/NodeBase'
+import { Class_LinkElement } from '@terriflux/opensankey/src/Elements/Link'
+import { getElementsLabelValues, BASE_LABEL_CONFIG, isConfigValueIndeterminate } from '@terriflux/opensankey/src/Elements/ElementsAttributesConfig'
 
 type KeysOfIcon = keyof typeof SankeyListIcons
 

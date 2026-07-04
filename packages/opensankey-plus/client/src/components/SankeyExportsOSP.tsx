@@ -28,11 +28,11 @@ import JSZip from 'jszip'
 import { PDFDocument } from 'pdf-lib'
 
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
-import { Class_DrawingArea } from 'open-sankey/src/types/DrawingArea'
-import { Class_DataTagGroup } from 'open-sankey/src/types/TagGroup'
-import { default_main_sankey_id, Type_JSON } from 'open-sankey/src/types/Utils'
-import { default_export_dpi, Type_ExportDPI } from 'open-sankey/src/Elements/ElementsAttributesConfig'
-import { rasterizeSVGToPNGBlob, rasterizeSVGToPDFBlob } from 'open-sankey/src/components/topmenus/SankeyExports'
+import { Class_DrawingArea } from '@terriflux/opensankey/src/types/DrawingArea'
+import { Class_DataTagGroup } from '@terriflux/opensankey/src/types/TagGroup'
+import { default_main_sankey_id, Type_JSON } from '@terriflux/opensankey/src/types/Utils'
+import { default_export_dpi, Type_ExportDPI } from '@terriflux/opensankey/src/Elements/ElementsAttributesConfig'
+import { rasterizeSVGToPNGBlob, rasterizeSVGToPDFBlob } from '@terriflux/opensankey/src/components/topmenus/SankeyExports'
 
 // ===========================================================================
 // Helpers

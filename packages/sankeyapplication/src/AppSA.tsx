@@ -21,39 +21,39 @@ import {
 
 // OpenSankey imports ===============================================================================
 
-import OpenSankeyApp from 'open-sankey/src/App'
+import OpenSankeyApp from '@terriflux/opensankey/src/App'
 
 // OpenSankey+ imports ===============================================================================
 
 import {
   initializeAdditionalMenusOSP,
   moduleDialogsOSP,
-} from 'sankeyanimation/src/ModulesOSP'
+} from '@terriflux/opensankey-plus/src/ModulesOSP'
 import { ModalWelcomeBuilderSA } from './components/ModalWelcomeSA'
 import {
   createZDDModifierPlus, createNodeModifierPlus,
   createZDDMenuConfigPlus, createLinkMenuConfigPlus, createNodeMenuConfigPlus,
   createStaticNodeMenuConfigPlus
-} from 'sankeyanimation/src/components/ContextMenuConfigs'
+} from '@terriflux/opensankey-plus/src/components/ContextMenuConfigs'
 
 import { Class_ApplicationDataSA } from './ApplicationDataSA'
 import { Theme_SankeyApplication } from './chakra/Theme'
-import Account from 'logincomponent/src/UserPages/Account'
-import Dashboard from 'logincomponent/src/UserPages/Dashboard'
-import Register from 'logincomponent/src/Register/Register'
-import { Login } from 'logincomponent/src/Login/Login'
-import { PasswordResetFromMail, PasswordResetFromToken } from 'logincomponent/src/Login/PasswordReset'
-import { PublicRoute } from 'logincomponent/src/Routes/PublicRoutes'
-import { PaiementCheckout, PaiementPage, PaiementReturn } from 'logincomponent/src/Paiement/Paiement'
+import Account from '@terriflux/login-component/src/UserPages/Account'
+import Dashboard from '@terriflux/login-component/src/UserPages/Dashboard'
+import Register from '@terriflux/login-component/src/Register/Register'
+import { Login } from '@terriflux/login-component/src/Login/Login'
+import { PasswordResetFromMail, PasswordResetFromToken } from '@terriflux/login-component/src/Login/PasswordReset'
+import { PublicRoute } from '@terriflux/login-component/src/Routes/PublicRoutes'
+import { PaiementCheckout, PaiementPage, PaiementReturn } from '@terriflux/login-component/src/Paiement/Paiement'
 import { MetaTags } from './components/MetaTags'
 import { logo_sankeytheque, ModalSankeyTheque } from './components/SankeyTheque'
-import { UserPagesButtons } from 'logincomponent/src/UserPages/UserPages'
-import { FType_ModuleDialogs } from 'open-sankey/src/Modules'
-import { Type_AdditionalMenus } from 'open-sankey/src/types/MenuConfig'
-import { createLinkModifier } from 'open-sankey/src/components/dialogs/ContextLinkConfig'
-import { PrivateRoute } from 'logincomponent/src/Routes/PrivateRoutes'
-import { Class_ApplicationData } from 'open-sankey/src/types/ApplicationData'
-import { OSP_INPUT_ATTRIBUTES_CONFIG, OSP_OUTPUT_ATTRIBUTES_CONFIG } from 'sankeyanimation/src/components/UniversalConverterDialogConfig'
+import { UserPagesButtons } from '@terriflux/login-component/src/UserPages/UserPages'
+import { FType_ModuleDialogs } from '@terriflux/opensankey/src/Modules'
+import { Type_AdditionalMenus } from '@terriflux/opensankey/src/types/MenuConfig'
+import { createLinkModifier } from '@terriflux/opensankey/src/components/dialogs/ContextLinkConfig'
+import { PrivateRoute } from '@terriflux/login-component/src/Routes/PrivateRoutes'
+import { Class_ApplicationData } from '@terriflux/opensankey/src/types/ApplicationData'
+import { OSP_INPUT_ATTRIBUTES_CONFIG, OSP_OUTPUT_ATTRIBUTES_CONFIG } from '@terriflux/opensankey-plus/src/components/UniversalConverterDialogConfig'
 import { ButtonOpenUSerPreference, ModalPreference } from './components/Preferences'
 
 

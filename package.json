@@ -7,7 +7,7 @@
     "lint": "pnpm -r --no-bail run lint",
     "lint:ci": "pnpm -r --no-bail run lint:ci",
     "typecheck": "pnpm --filter @terriflux/sankeyapplication exec tsc -p . --noEmit",
-    "test": "pnpm --filter open-sankey run test",
+    "test": "pnpm --filter @terriflux/opensankey run test",
     "build": "pnpm --filter @terriflux/sankeyapplication run build"
   },
   "pnpm": {

@@ -52,8 +52,8 @@ import { ChevronDownIcon } from '@chakra-ui/icons'
 import FileSaver from 'file-saver'
 
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
-import { Type_PositionMode } from 'open-sankey/src/types/PublishOptions'
-import { Type_JSON } from 'open-sankey/src/types/Utils'
+import { Type_PositionMode } from '@terriflux/opensankey/src/types/PublishOptions'
+import { Type_JSON } from '@terriflux/opensankey/src/types/Utils'
 
 interface Props {
   app_data: Class_ApplicationDataOSP

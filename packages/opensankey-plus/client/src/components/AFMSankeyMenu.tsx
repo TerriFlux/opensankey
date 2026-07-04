@@ -4,8 +4,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Box, MenuList, MenuItem, Menu, MenuButton, } from '@chakra-ui/react'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
-import { OSTooltip } from 'open-sankey/src/components/configmenus/MenuCommon'
-import { CONVERTER_CONFIGS } from 'open-sankey/src/components/dialogs/PersistenceProcessDialogConfigs'
+import { OSTooltip } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
+import { CONVERTER_CONFIGS } from '@terriflux/opensankey/src/components/dialogs/PersistenceProcessDialogConfigs'
 
 export const AFMEditionMenu = ({ app_data }: {
   app_data: Class_ApplicationDataOSP

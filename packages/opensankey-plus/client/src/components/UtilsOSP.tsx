@@ -18,13 +18,13 @@ import {
   getNumberOrUndefinedFromJSON,
   getStringFromJSON,
   Type_JSON
-} from 'open-sankey/src/types/Utils'
+} from '@terriflux/opensankey/src/types/Utils'
 
-import { default_container_content } from 'open-sankey/src/Elements/TextZone'
+import { default_container_content } from '@terriflux/opensankey/src/Elements/TextZone'
 import { OSPData, ViewType } from '../types/LegacyTypes'
 
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
-import { CustomFaEyeCheckIcon, OSTooltip, getButtonVariant } from 'open-sankey/src/components/configmenus/MenuCommon'
+import { CustomFaEyeCheckIcon, OSTooltip, getButtonVariant } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
 import { DiffType } from '../types/LegacyTypes'
 import { applyChange } from 'deep-diff'
 

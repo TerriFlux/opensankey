@@ -1,9 +1,9 @@
 
 import { CreateToastFnReturn } from '@chakra-ui/react'
 import { Class_MenuConfigSA } from './MenuConfigSA'
-import { Class_ApplicationHistory } from 'open-sankey/src/types/ApplicationHistory'
-import { Class_ApplicationDataOSP } from 'sankeyanimation/src/types/ApplicationDataOSP'
-import { LoginComponent } from 'logincomponent/src/LoginComponent'
+import { Class_ApplicationHistory } from '@terriflux/opensankey/src/types/ApplicationHistory'
+import { Class_ApplicationDataOSP } from '@terriflux/opensankey-plus/src/types/ApplicationDataOSP'
+import { LoginComponent } from '@terriflux/login-component/src/LoginComponent'
 
 export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
   /**

@@ -7,10 +7,10 @@ import {
 } from '@chakra-ui/react'
 
 // Local types
-import type { Class_Tag } from 'open-sankey/src/types/Tag'
-import { SankeyLinkSelectionSimple } from 'open-sankey/src/components/configmenus/MenuElementsSelection'
-import { WrapperBoxSubSectionMenu } from 'open-sankey/src/components/configmenus/MenuCommon'
-import { OSTooltip } from 'open-sankey/src/components/configmenus/MenuCommon'
+import type { Class_Tag } from '@terriflux/opensankey/src/types/Tag'
+import { SankeyLinkSelectionSimple } from '@terriflux/opensankey/src/components/configmenus/MenuElementsSelection'
+import { WrapperBoxSubSectionMenu } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
+import { OSTooltip } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
 export const MenuConfigurationLinksTags = ({new_data}:{new_data: Class_ApplicationDataOSP}) => {

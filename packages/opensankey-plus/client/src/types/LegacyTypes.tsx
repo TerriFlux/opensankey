@@ -2,8 +2,8 @@ import { Dispatch, SetStateAction, MutableRefObject } from 'react'
 import { Diff } from 'deep-diff'
 
 
-import type { IType_DictHookRefSetterShowDialogComponents } from 'open-sankey/src/types/MenuConfig'
-import { SankeyNodeStyle, SankeyLinkStyle, SankeyNode, SankeyLinkAttrLocal, SankeyLink, SankeyData } from 'open-sankey/src/Persistence/LegacyType'
+import type { IType_DictHookRefSetterShowDialogComponents } from '@terriflux/opensankey/src/types/MenuConfig'
+import { SankeyNodeStyle, SankeyLinkStyle, SankeyNode, SankeyLinkAttrLocal, SankeyLink, SankeyData } from '@terriflux/opensankey/src/Persistence/LegacyType'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
 

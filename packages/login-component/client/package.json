@@ -1,5 +1,5 @@
 {
-  "name": "logincomponent",
+  "name": "@terriflux/login-component",
   "type": "module",
   "version": "1.1.9",
   "homepage": ".",
@@ -64,8 +64,8 @@
     "shx": "^0.3.4",
     "ts-loader": "^9.5.2",
     "web-vitals": "^3.5.2",
-    "sankeyanimation": "workspace:*",
-    "open-sankey": "workspace:*"
+    "@terriflux/opensankey": "workspace:*",
+    "@terriflux/opensankey-plus": "workspace:*"
   },
   "devDependencies": {
     "@babel/core": "^7.26.8",

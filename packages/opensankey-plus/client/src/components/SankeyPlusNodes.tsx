@@ -1,7 +1,7 @@
 import React, { useState, FC } from 'react'
 
 import { Box, Button, Input, InputGroup, InputRightElement, MenuItem } from '@chakra-ui/react'
-import { OSTooltip, WrapperBoxSubSectionMenu } from 'open-sankey/src/components/configmenus/MenuCommon'
+import { OSTooltip, WrapperBoxSubSectionMenu } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
 interface BaseComponentPropsPlus {

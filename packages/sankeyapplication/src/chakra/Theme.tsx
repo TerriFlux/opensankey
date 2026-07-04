@@ -1,5 +1,5 @@
 import { extendTheme } from '@chakra-ui/react'
-import { Type_JSON } from 'open-sankey/src/types/Utils'
+import { Type_JSON } from '@terriflux/opensankey/src/types/Utils'
 
 import {
   btn_accountpage,
@@ -41,7 +41,7 @@ import {
 } from './InputStyles'
 import { tabs_variant_preference, tabs_variant_preference_style, tabs_variant_preference_tags } from './TabStyle'
 import { cards_user, cards_user_import } from './CardsStyles'
-import { opensankey_theme } from 'open-sankey/src/css/Theme'
+import { opensankey_theme } from '@terriflux/opensankey/src/css/Theme'
 
 const _text_style_log = {
   fontFamily: 'Open Sans,sans-serif',

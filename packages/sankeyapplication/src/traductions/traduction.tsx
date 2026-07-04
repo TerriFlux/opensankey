@@ -2,8 +2,8 @@ import i18next from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
 
-import { deep_assign_resources } from 'open-sankey/src/traductions/traduction'
-import { resources_opensankeyplus } from 'sankeyanimation/src/traductions/traduction'
+import { deep_assign_resources } from '@terriflux/opensankey/src/traductions/traduction'
+import { resources_opensankeyplus } from '@terriflux/opensankey-plus/src/traductions/traduction'
 
 import { resources_app_elements } from './traductions_app_elements'
 import { resources_metatags } from './traduction_metatags'

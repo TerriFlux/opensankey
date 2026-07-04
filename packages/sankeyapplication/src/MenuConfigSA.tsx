@@ -1,6 +1,6 @@
 import { Dispatch, MutableRefObject, SetStateAction } from 'react'
-import { Class_MenuConfigOSP } from 'sankeyanimation/src/types/MenuConfigOSP'
-//import {Class_MenuConfigLoginComponent } from 'logincomponent/src/MenuConfigLoginComponent'
+import { Class_MenuConfigOSP } from '@terriflux/opensankey-plus/src/types/MenuConfigOSP'
+//import {Class_MenuConfigLoginComponent } from '@terriflux/login-component/src/MenuConfigLoginComponent'
 
 type SAShowMenuComponentsVarType = {
   ref_setter_show_modal_sankeytheque: MutableRefObject<Dispatch<SetStateAction<boolean>>>,

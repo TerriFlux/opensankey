@@ -1,5 +1,5 @@
 // External imports
-import * as d3 from 'open-sankey/src/d3Modules'
+import * as d3 from '@terriflux/opensankey/src/d3Modules'
 import React, { useState, FC } from 'react'
 import colormap from 'colormap'
 import {
@@ -24,21 +24,21 @@ import {
   Class_LevelTag,
   Class_DataTag,
   Class_ProtoTag,
-} from 'open-sankey/src/types/Tag'
+} from '@terriflux/opensankey/src/types/Tag'
 
 // Local functions / components
 import {
   GetRandomInt,
   Type_MacroTagGroup
-} from 'open-sankey/src/types/Utils'
+} from '@terriflux/opensankey/src/types/Utils'
 
-import { MenuColorPicker, WrapperBoxSubSectionMenu } from 'open-sankey/src/components/configmenus/MenuCommon'
-import { Class_ElementValue, Class_LinkValue } from 'open-sankey/src/Elements/LinkValues'
-import { Class_DataTagGroup, Class_FluxTagGroup, Class_LevelTagGroup, Class_NodeTagGroup, Class_ProtoTagGroup, Class_TagGroup } from 'open-sankey/src/types/TagGroup'
+import { MenuColorPicker, WrapperBoxSubSectionMenu } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
+import { Class_ElementValue, Class_LinkValue } from '@terriflux/opensankey/src/Elements/LinkValues'
+import { Class_DataTagGroup, Class_FluxTagGroup, Class_LevelTagGroup, Class_NodeTagGroup, Class_ProtoTagGroup, Class_TagGroup } from '@terriflux/opensankey/src/types/TagGroup'
 
-import { OSTooltip } from 'open-sankey/src/components/configmenus/MenuCommon'
+import { OSTooltip } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
-import { default_grey_color } from 'open-sankey/src/Elements/ElementsAttributesConfig'
+import { default_grey_color } from '@terriflux/opensankey/src/Elements/ElementsAttributesConfig'
 
 export type FType_SankeySettingsEditionElementTags = {
   new_data: Class_ApplicationDataOSP,

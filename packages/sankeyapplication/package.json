@@ -81,9 +81,9 @@
     "ts-loader": "^9.5.2",
     "typescript": "^5.7.3",
     "web-vitals": "^4.2.4",
-    "open-sankey": "workspace:*",
-    "sankeyanimation": "workspace:*",
-    "logincomponent": "workspace:*"
+    "@terriflux/opensankey": "workspace:*",
+    "@terriflux/opensankey-plus": "workspace:*",
+    "@terriflux/login-component": "workspace:*"
   },
   "devDependencies": {
     "@babel/core": "^7.26.8",

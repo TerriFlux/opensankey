@@ -2,13 +2,13 @@
 // MenuConfigExtensions.tsx - Extension propre des configurations de menu ( Version)
 // ==================================================================================================
 
-import { LINK_MENU_CONFIG } from 'open-sankey/src/components/dialogs/ContextLinkConfig'
-import { NODE_MENU_CONFIG, STATIC_NODE_MENU_CONFIG } from 'open-sankey/src/components/dialogs/ContextNodeConfig'
-import { createZDDModifier, ZDD_MENU_CONFIG } from 'open-sankey/src/components/dialogs/ContextZDDConfig'
-import { createNodeModifier } from 'open-sankey/src/components/dialogs/NodeActions'
-import { CONVERTER_CONFIGS } from 'open-sankey/src/components/dialogs/PersistenceProcessDialogConfigs'
-import { MenuConfig } from 'open-sankey/src/components/dialogs/SankeyMenuContext'
-import { Class_NodeElement } from 'open-sankey/src/Elements/Node'
+import { LINK_MENU_CONFIG } from '@terriflux/opensankey/src/components/dialogs/ContextLinkConfig'
+import { NODE_MENU_CONFIG, STATIC_NODE_MENU_CONFIG } from '@terriflux/opensankey/src/components/dialogs/ContextNodeConfig'
+import { createZDDModifier, ZDD_MENU_CONFIG } from '@terriflux/opensankey/src/components/dialogs/ContextZDDConfig'
+import { createNodeModifier } from '@terriflux/opensankey/src/components/dialogs/NodeActions'
+import { CONVERTER_CONFIGS } from '@terriflux/opensankey/src/components/dialogs/PersistenceProcessDialogConfigs'
+import { MenuConfig } from '@terriflux/opensankey/src/components/dialogs/SankeyMenuContext'
+import { Class_NodeElement } from '@terriflux/opensankey/src/Elements/Node'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { devOpenTrialDebugPanel } from './DevTrialDebugOSP'
 
