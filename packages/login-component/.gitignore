@@ -1,0 +1,7 @@
+LoginComponent.egg-info/**
+build/**
+client/src/deps/OpenSankey+
+**/dist/**
+**/node_modules/**
+server/__pycache__/*.pyc
+
