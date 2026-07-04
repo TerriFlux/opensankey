@@ -198,9 +198,30 @@ export abstract class Class_BaseElement {
 
   public draw() {
     this._process_or_bypass(() => {
-      this.unDraw()
-      if (this.is_visible && !this._is_currently_deleted)
-        this._draw()
+      // #1246 (étape 1) — <g> racine STABLE : au redraw d'un élément déjà
+      // rendu, on vide son <g> et on redessine DEDANS au lieu de le détruire
+      // et recréer. L'identité DOM persiste entre deux draws (prérequis des
+      // transitions d'états #1247, et évite de repayer l'insertion DOM).
+      // Le <g> n'est réutilisable que s'il est encore rattaché au BON parent
+      // courant : la drawing area est recréée au reset()/changement de vue
+      // (unDraw global → isConnected false) et un élément peut changer de
+      // groupe parent — dans ces cas on repart d'un <g> neuf comme avant.
+      if (!this.is_visible || this._is_currently_deleted) {
+        this.unDraw()
+        return
+      }
+      const existing = this.d3_selection?.node()
+      const current_parent = this.drawing_area.d3_selection
+        ?.selectAll(' #' + this._svg_parent_group).node() as SVGGElement | null | undefined
+      if (existing && existing.isConnected && current_parent && existing.parentNode === current_parent) {
+        // Réutilisation : purge du contenu et des états d'affichage transitoires
+        // (opacité de surbrillance #1245 — un draw() doit repartir propre).
+        this.d3_selection?.interrupt('path_highlight').style('opacity', null)
+        this.d3_selection?.selectAll('*').remove()
+      } else {
+        this.unDraw()
+      }
+      this._draw()
     })
   }
   protected _draw() {
@@ -216,6 +237,8 @@ export abstract class Class_BaseElement {
   }
 
   protected _initDraw() {
+    // #1246 (étape 1) — <g> racine réutilisé (déjà vidé par draw()) : rien à créer.
+    if (this.d3_selection?.node()?.isConnected) return
     const d3_drawing_area = this.drawing_area.d3_selection
     if (d3_drawing_area !== null) {
       const d3_drawing_area_selection = d3_drawing_area.selectAll(' #' + this._svg_parent_group)
