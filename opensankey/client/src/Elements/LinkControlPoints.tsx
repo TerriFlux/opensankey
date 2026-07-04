@@ -24,6 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
+import * as d3 from '../d3Modules'
 import { Class_LinkElement } from './Link'
 import { Class_Handler } from './Handler'
 import { Class_DrawingArea } from '../types/DrawingArea'

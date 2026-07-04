@@ -1,4 +1,4 @@
-import * as d3 from 'd3'
+import * as d3 from '../d3Modules'
 
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_ApplicationData } from '../types/ApplicationData'

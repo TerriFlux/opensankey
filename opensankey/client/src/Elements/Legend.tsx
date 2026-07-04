@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import * as d3 from 'd3'
+import * as d3 from '../d3Modules'
 import { textwrap } from 'd3-textwrap'
 import { MouseEvent } from 'react'
 

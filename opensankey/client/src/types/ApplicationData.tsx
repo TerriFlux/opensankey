@@ -28,7 +28,7 @@
 //import React, { Dispatch, FC, MutableRefObject, SetStateAction, useRef } from 'react'
 import LZString from 'lz-string'
 import i18next, { TFunction, i18n } from 'i18next'
-import * as d3 from 'd3'
+import * as d3 from '../d3Modules'
 
 import FileSaver from 'file-saver'
 

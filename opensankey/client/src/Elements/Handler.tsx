@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 // External imports
-import * as d3 from 'd3'
+import * as d3 from '../d3Modules'
 
 import { Class_BaseElement, Class_ProtoElement } from '../Elements/Element'
 import { Class_DrawingArea } from '../types/DrawingArea'
