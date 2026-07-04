@@ -1,5 +1,5 @@
 
-import * as d3 from 'd3'
+import { select } from 'd3-selection'
 import React, { FC, useState, useEffect } from 'react'
 import { useNavigate, NavigateFunction } from 'react-router-dom'
 import i18next from 'i18next'
@@ -614,7 +614,7 @@ const Account = ({
   // Get user's data
   useEffect(() => {
     // Display error on screen
-    d3.select('.LogError').selectAll('*').remove()
+    select('.LogError').selectAll('*').remove()
 
     // Get user data if we dont have
     if (user_data.loading === true && reqCount < 20) {
@@ -651,7 +651,7 @@ const Account = ({
         .catch(error => {
           console.error('Error in userInfos - ' + error.toString())
           // Erreur fetch user data
-          d3.select('.LogError')
+          select('.LogError')
             .append('p')
             .style('color', 'red')
             .text(t('User.Pages.err_get_user_infos'))

@@ -1,4 +1,4 @@
-import * as d3 from 'd3'
+import { select } from 'd3-selection'
 import { TFunction } from 'i18next'
 import {
   app_name_opensankeyplus,
@@ -6,16 +6,16 @@ import {
 import { LoginComponent } from '../LoginComponent'
 
 const resetLogs = () => {
-  d3.select('.LogInfo').selectAll('*').remove()
-  d3.select('.LogError').selectAll('*').remove()
+  select('.LogInfo').selectAll('*').remove()
+  select('.LogError').selectAll('*').remove()
 }
 
 export const logInfo = (info: string) => {
-  d3.select('.LogInfo').append('p').text(info)
+  select('.LogInfo').append('p').text(info)
 }
 
 export const logError = (err: string) => {
-  d3.select('.LogError').append('p').text(err)
+  select('.LogError').append('p').text(err)
 }
 
 // Activate license Tokens if licenses are valid
@@ -211,7 +211,7 @@ export async function applyPasswordReset(
   callbackSuccess: () => void
 ) {
   // Remove all errors from screen
-  d3.select('.LogError').selectAll('*').remove()
+  select('.LogError').selectAll('*').remove()
   // Fetch Login
   const path = window.location.origin
   const url = path + '/auth/reset_pw/' + token
@@ -226,24 +226,24 @@ export async function applyPasswordReset(
       if (response.ok) {
         return response.json()
       } else {
-        d3.select('.LogError').append('p').text(t('Login.forgot.msg.err_server'))
+        select('.LogError').append('p').text(t('Login.forgot.msg.err_server'))
         return Promise.reject(response)
       }
     })
     .then(data => {
       if (data['user_is_authenticated'] === true) {
-        d3.select('.LogError').append('p').text(t('Login.forgot.msg.err_user_already_connected'))
+        select('.LogError').append('p').text(t('Login.forgot.msg.err_user_already_connected'))
         return
       }
       if (data['passwd_is_updated'] === true) {
-        d3.select('.LogInfo').append('p').text(t('Login.forgot.msg.ok'))
+        select('.LogInfo').append('p').text(t('Login.forgot.msg.ok'))
         setTimeout(
           callbackSuccess,
           3000
         )
         return
       }
-      d3.select('.LogError').append('p').text(t('Login.forgot.msg.err_token_expire'))
+      select('.LogError').append('p').text(t('Login.forgot.msg.err_token_expire'))
     })
     .catch(error => {
       console.error('Error in applyPasswordReset - ' + error.toString())

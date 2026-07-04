@@ -1,5 +1,5 @@
 
-import * as d3 from 'd3'
+import { select } from 'd3-selection'
 import LZString from 'lz-string'
 import i18next from 'i18next'
 import { NavigateFunction } from 'react-router-dom'
@@ -11,16 +11,16 @@ export const app_name_sankeysuite = 'SankeySuite'
 
 
 const resetLogs = () => {
-  d3.select('.LogInfo').selectAll('*').remove()
-  d3.select('.LogError').selectAll('*').remove()
+  select('.LogInfo').selectAll('*').remove()
+  select('.LogError').selectAll('*').remove()
 }
 
 export const logInfo = (info: string) => {
-  d3.select('.LogInfo').append('p').text(info)
+  select('.LogInfo').append('p').text(info)
 }
 
 export const logError = (err: string) => {
-  d3.select('.LogError').append('p').text(err)
+  select('.LogError').append('p').text(err)
 }
 
 // Check Licence and register account if everything is Ok
