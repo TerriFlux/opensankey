@@ -2214,7 +2214,7 @@ export class Class_DrawingArea {
     this.areaAutoFit(horiz, force_when_locked) // pose l'état final (node à t1)
     const to = d3.zoomTransform(node)
     if (this._sameZoomTransform(from, to)) return
-    this._animateZoomTo(to, from)
+    this.setCamera(to, { animate: true, from })
   }
 
   /**
@@ -2244,7 +2244,7 @@ export class Class_DrawingArea {
       .translate(t0.x - t0.k * dx, t0.y - t0.k * dy)
       .scale(t0.k)
     if (this._sameZoomTransform(from, to)) return
-    this._animateZoomTo(to, from)
+    this.setCamera(to, { animate: true, from })
   }
 
   /**
@@ -2264,7 +2264,80 @@ export class Class_DrawingArea {
     const px = this.window_fitting_width / 2
     const py = this.window_fitting_height / 2 + this.getNavBarHeight()
     const to = d3.zoomIdentity.translate(px - k * cx, py - k * cy).scale(k)
-    this._animateZoomTo(to)
+    this.setCamera(to, { animate: true })
+  }
+
+  // FAÇADE CAMÉRA (#1250 — phase 1) ===================================================
+  // Modèle cible : « caméra sur monde immuable ». Le transform d3-zoom est la
+  // seule source de vérité d'échelle/translation ; les opérations de caméra
+  // sont des fonctions qui produisent un transform, appliqué par setCamera().
+  // Phase 1 = amorce : la façade existe et les chemins NOUVEAUX (zoom
+  // cinématique #1244, futurs consommateurs) passent par elle. Le routage des
+  // internals d'areaAutoFit/recenter (et la bascule de contentBounds vers un
+  // calcul MODÈLE sans getBBox) viennent dans les phases suivantes.
+
+  /**
+   * Viewport utile en pixels écran : zone réellement disponible pour le
+   * diagramme (fenêtre ou conteneur hôte, réserves de panneaux déduites via
+   * window_fitting_*), et décalage vertical de la nav bar.
+   */
+  public getViewport(): { width: number, height: number, top_offset: number } {
+    return {
+      width: this.window_fitting_width,
+      height: this.window_fitting_height,
+      top_offset: this.getNavBarHeight()
+    }
+  }
+
+  /**
+   * Bounds du contenu en coordonnées MONDE. Phase 1 : mesure DOM (getBBox du
+   * groupe des éléments) — l'interface est posée, l'implémentation basculera
+   * vers un calcul depuis le modèle (positions + tailles + labels estimés) en
+   * phase 3, ce qui supprimera les dépendances à l'ordre de rendu.
+   */
+  public contentBounds(): { x: number, y: number, width: number, height: number } | null {
+    const bbox = this.d3_selection_elements_group?.node()?.getBBox()
+    if (!bbox || (bbox.width === 0 && bbox.height === 0)) return null
+    return { x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height }
+  }
+
+  /**
+   * Fonction PURE : transform de caméra qui cadre `bounds` dans `viewport`
+   * avec la marge donnée (contenu ancré en haut-gauche à margin/2, comme le
+   * fit historique). Ne lit ni n'écrit aucun état — testable unitairement.
+   */
+  public fitTransform(
+    bounds: { x: number, y: number, width: number, height: number },
+    viewport: { width: number, height: number, top_offset: number },
+    margin: number = this._fit_margin
+  ): d3.ZoomTransform {
+    const k_w = (viewport.width - margin) / bounds.width
+    const k_h = (viewport.height - margin) / bounds.height
+    // Bornes identiques au scaleExtent du zoomListener (rendu SVG gelé au-delà).
+    const k = Math.max(0.05, Math.min(20, Math.min(k_w, k_h)))
+    return d3.zoomIdentity
+      .translate(margin / 2 - bounds.x * k, viewport.top_offset + margin / 2 - bounds.y * k)
+      .scale(k)
+  }
+
+  /**
+   * Point d'application UNIQUE d'un transform de caméra. Passe toujours par
+   * zoomListener.transform pour garder l'état interne du behavior cohérent
+   * (d3.zoomTransform lu par Legend, _freeBgBounds, scrollbars…).
+   * `animate` : interpolation d3.interpolateZoom (cf. _animateZoomTo) ;
+   * `from` : point de départ imposé, posé instantanément avant l'animation.
+   */
+  public setCamera(
+    target: d3.ZoomTransform,
+    opts?: { animate?: boolean, from?: d3.ZoomTransform }
+  ): void {
+    const sel = this.d3_selection_zoom_area
+    if (!sel || !sel.node()) return
+    if (opts?.animate) {
+      this._animateZoomTo(target, opts.from)
+    } else {
+      this.zoomListener.transform(sel, target)
+    }
   }
 
   // SURBRILLANCE DE CHEMIN (#1245) ====================================================
