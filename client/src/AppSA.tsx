@@ -165,29 +165,15 @@ export const moduleDialogsSA: FType_ModuleDialogs = (
 export const SankeyApp = ({ new_data_app }: { new_data_app: Class_ApplicationDataSA }) => {
 
   const setLicenses = useRef(() => {
-    console.log('=== setLicenses function called ===')
-
     const log_component = new_data_app.login_component
-    console.log('loginComponent result:', log_component)
-
     const has_account = log_component.has_account
-    console.log('has_account:', has_account)
-    console.log('log_component.has_licence_sankeyplus:', log_component.has_licence_sankeyplus)
-    console.log('log_component.has_licence_sankeysuite:', log_component.has_licence_sankeysuite)
 
     new_data_app.has_sankey_plus = has_account && log_component.has_licence_sankeyplus
-    console.log('new_data_app.has_sankey_plus set to:', new_data_app.has_sankey_plus)
-
     new_data_app.has_sankey_afm = has_account && log_component.has_licence_sankeysuite
-    console.log('new_data_app.has_sankey_afm set to:', new_data_app.has_sankey_afm)
-
     new_data_app.has_sankey_dev = has_account && log_component.has_licence_dev
-    console.log('new_data_app.has_sankey_dev set to:', new_data_app.has_sankey_dev)
 
-    console.log('Calling updateAllMenuComponents...')
     new_data_app.menu_configuration.updateAllMenuComponents()
     new_data_app.menu_configuration.ref_rerender_submodules_menus.current()
-    console.log('=== setLicenses function completed ===')
   })
 
   // Minimal app ------------------------------------------------------------------------------------
