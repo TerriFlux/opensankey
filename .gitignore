@@ -2,6 +2,8 @@
 
 # dependencies
 client/node_modules
+# node_modules a n'importe quel niveau (racine, submodules, install ephemere CI…)
+node_modules/
 
 # testing
 client/coverage
