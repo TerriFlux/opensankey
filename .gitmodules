@@ -1,9 +1,3 @@
-[submodule "submodules/OpenSankey+"]
-	path = submodules/OpenSankey+
-	url = https://gitlab.com/su-model/sankeyanimation.git
-[submodule "submodules/LoginComponent"]
-	path = submodules/LoginComponent
-	url = https://gitlab.com/su-model/logincomponent.git
 [submodule "submodules/MFAProblem"]
 	path = submodules/MFAProblem
 	url = https://gitlab.com/su-model/mfa_problem.git
