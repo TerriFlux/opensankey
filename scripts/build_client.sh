@@ -77,11 +77,19 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd
 # Install global dependencies
 if [ "$gdeps" = true ] ; then
   printf "Global dependencies -------------------------------------------------\n"
-  if ! command -v pnpm &> /dev/null
+  # S3 #18 — pnpm epingle a la version du lockfile (client/package.json
+  # "packageManager"). corepack lit ce champ et active la bonne version, ce qui
+  # evite ERR_PNPM_LOCKFILE_CONFIG_MISMATCH quand le runner a un autre pnpm.
+  if command -v corepack &> /dev/null
+  then
+    printf ">>> Activation de pnpm via corepack\n"
+    corepack enable
+    corepack prepare pnpm@10.4.1 --activate
+  elif ! command -v pnpm &> /dev/null
   then
     global=`npm root -g`
     printf ">>> Installation dans "${global}"\n"
-    npm install -g pnpm
+    npm install -g pnpm@10.4.1
   fi
   printf "OK ------------------------------------------------------------------\n"
 fi
@@ -142,6 +150,15 @@ if [ "$install" = true ] ; then
   # S3 #18 — builds reproductibles : en CI ($CI defini par GitLab), on impose le
   # lockfile versionne (client/pnpm-lock.yaml) ; l'install echoue si le lockfile
   # devrait changer. En local on laisse pnpm resoudre librement (mise a jour de deps).
+  # corepack epingle pnpm a la version du champ "packageManager" de package.json
+  # (meme version que celle ayant genere le lockfile) pour eviter le mismatch.
+  if [ -n "$CI" ] ; then
+    if command -v corepack &> /dev/null ; then
+      corepack enable && corepack prepare pnpm@10.4.1 --activate
+    else
+      npm install -g pnpm@10.4.1
+    fi
+  fi
   FROZEN=""
   [ -n "$CI" ] && FROZEN="--frozen-lockfile"
   printf ">>> Install deps\n\n" && pnpm install $FROZEN --config.dangerouslyAllowAllBuilds=true || exit_if_error $?
