@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Build front du monorepo pnpm workspace (#235/#236).
+#
+# Les couches front (OpenSankey, OpenSankey+, LoginComponent, SA) vivent dans
+# packages/ et se resolvent par dependances workspace:* — il n'y a PLUS de
+# symlinks src/deps ni de recursion dans des submodules front (l'option -S
+# historique est acceptee mais sans effet, pour compatibilite des appels CI).
+
 # Function that trigger exit depending on command output code
 exit_if_error() {
   local exit_code=$1
@@ -15,10 +22,7 @@ install=false
 linter=false
 build=false
 dist=false
-deps=false
 gdeps=false
-
-args=$@
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -39,7 +43,7 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       ;;
     --sub_deps | -S)
-      deps=true
+      # Obsolete (ex-recursion submodules front) — no-op conserve pour compat
       shift # past argument
       ;;
     --global_deps | -G)
@@ -48,24 +52,15 @@ while [[ $# -gt 0 ]]; do
       ;;
     --help | -H)
       echo 'Options: '
-      echo '--install_deps | -I : Install node modules dependencies'
-      echo '--linter | -L : Run linter'
-      echo '--build | -B : Run build'
-      echo '--dist | -D : Compile dist'
-      echo '--sub_deps | -S : Run sub-scripts of deps'
-      echo '--global_deps | -G : Run install of global deps'
+      echo '--install_deps | -I : Install node modules dependencies (workspace racine)'
+      echo '--linter | -L : Run linter (tous les paquets)'
+      echo '--build | -B : Build standalone du client SA'
+      echo '--dist | -D : Compile dist (lib npm @terriflux/sankeyapplication)'
+      echo '--global_deps | -G : Installe pnpm (corepack)'
       exit 1
       ;;
     *)
-      echo 'Unknown option $1'
-      echo ''
-      echo 'Options: '
-      echo '--install_deps | -I : Install node modules dependencies'
-      echo '--linter | -L : Run linter'
-      echo '--build | -B : Run build'
-      echo '--dist | -D : Compile dist'
-      echo '--sub_deps | -S : Run sub-scripts of deps'
-      echo '--global_deps | -G : Run install of global deps'
+      echo "Unknown option $1"
       exit 1
       ;;
   esac
@@ -73,108 +68,49 @@ done
 
 # Repo root (this script lives in scripts/)
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )
+cd "$SCRIPT_DIR"
+
+# pnpm epingle via corepack (champ "packageManager" du package.json racine),
+# evite ERR_PNPM_LOCKFILE_CONFIG_MISMATCH quand le runner a un autre pnpm.
+ensure_pnpm() {
+  if command -v corepack &> /dev/null ; then
+    corepack enable && corepack prepare pnpm@10.4.1 --activate
+  elif ! command -v pnpm &> /dev/null ; then
+    npm install -g pnpm@10.4.1
+  fi
+}
 
 # Install global dependencies
 if [ "$gdeps" = true ] ; then
   printf "Global dependencies -------------------------------------------------\n"
-  # S3 #18 — pnpm epingle a la version du lockfile (client/package.json
-  # "packageManager"). corepack lit ce champ et active la bonne version, ce qui
-  # evite ERR_PNPM_LOCKFILE_CONFIG_MISMATCH quand le runner a un autre pnpm.
-  if command -v corepack &> /dev/null
-  then
-    printf ">>> Activation de pnpm via corepack\n"
-    corepack enable
-    corepack prepare pnpm@10.4.1 --activate
-  elif ! command -v pnpm &> /dev/null
-  then
-    global=`npm root -g`
-    printf ">>> Installation dans "${global}"\n"
-    npm install -g pnpm@10.4.1
-  fi
+  ensure_pnpm
   printf "OK ------------------------------------------------------------------\n"
 fi
 
-# Check sub deps
-if [ "$deps" = true ] ; then
-  printf "\nOpenSankey+ ========================================================\n"
-  cd $SCRIPT_DIR/submodules/OpenSankey+
-  bash build_client.sh $args || exit_if_error $?
-  printf "\nOK OpenSankey+ =======================================================\n"
-fi
-
-# Clean sub deps
-printf "\nClean deps ----------------------------------------------------------\n"
-bash $SCRIPT_DIR/submodules/OpenSankey+/build_client.sh &> /dev/null || exit_if_error $?
-for dir in node_modules dist build; do
-  if [ -d "$SCRIPT_DIR/submodules/OpenSankey+/client/$dir" ] ; then
-    echo "removing $SCRIPT_DIR/submodules/OpenSankey+/client/$dir"
-    rm -r "$SCRIPT_DIR/submodules/OpenSankey+/client/$dir" || exit_if_error $?
-  fi
-done
-printf "OK ------------------------------------------------------------------\n"
-
-# Recreate links with submodules
-printf "Linking dependencies ------------------------------------------------\n"
-# -Src
-for submodule in OpenSankey+ LoginComponent; do
-  cd $SCRIPT_DIR/client/src/deps
-  if [ -h $submodule ]; then
-    rm $submodule
-  fi
-  ln -s "$SCRIPT_DIR/submodules/$submodule/client/src" $submodule
-done
-
-# -In LoginComponent
-for submodule in OpenSankey+; do
-  cd $SCRIPT_DIR/client/src/deps/LoginComponent/deps
-  if [ -h $submodule ]; then
-    rm $submodule
-  fi
-  ln -s "$SCRIPT_DIR/submodules/$submodule/client/src" $submodule
-done
-
-# - Public dir
-cd $SCRIPT_DIR/client
-if [ -d "public" ]; then
-  rm -r public
-  git restore public
-fi
-cp -rsn $SCRIPT_DIR/submodules/OpenSankey+/client/public .
-cd $SCRIPT_DIR
-printf "OK ------------------------------------------------------------------\n"
-
 # Front-end build
 printf "\nBuild ---------------------------------------------------------------\n"
-cd client
 if [ "$install" = true ] ; then
   # S3 #18 — builds reproductibles : en CI ($CI defini par GitLab), on impose le
-  # lockfile versionne (client/pnpm-lock.yaml) ; l'install echoue si le lockfile
-  # devrait changer. En local on laisse pnpm resoudre librement (mise a jour de deps).
-  # corepack epingle pnpm a la version du champ "packageManager" de package.json
-  # (meme version que celle ayant genere le lockfile) pour eviter le mismatch.
+  # lockfile racine versionne ; l'install echoue si le lockfile devrait changer.
+  # En local on laisse pnpm resoudre librement (mise a jour de deps).
   if [ -n "$CI" ] ; then
-    if command -v corepack &> /dev/null ; then
-      corepack enable && corepack prepare pnpm@10.4.1 --activate
-    else
-      npm install -g pnpm@10.4.1
-    fi
+    ensure_pnpm
   fi
   FROZEN=""
   [ -n "$CI" ] && FROZEN="--frozen-lockfile"
-  printf ">>> Install deps\n\n" && pnpm install $FROZEN --config.dangerouslyAllowAllBuilds=true || exit_if_error $?
+  printf ">>> Install deps (workspace racine)\n\n" && pnpm install $FROZEN --config.dangerouslyAllowAllBuilds=true || exit_if_error $?
   printf "\n"
 fi
 if [ "$linter" = true ] ; then
-  printf ">>> Run linter\n" && pnpm run lint || exit_if_error $?
+  printf ">>> Run linter (workspace)\n" && pnpm run lint:ci || exit_if_error $?
 fi
 if [ "$build" = true ] ; then
   # DISABLE_ESLINT_PLUGIN : l'eslint interne de CRA/craco ne charge pas le plugin
   # typescript-eslint v7/v8 et plante sur les `eslint-disable @typescript-eslint/...` du tableur.
-  # Le lint est déjà fait par l'étape dédiée `eslint --fix ./src`.
+  # Le lint est déjà fait par l'étape dédiée (pnpm run lint:ci).
   printf ">>> Build standalone\n" && DISABLE_ESLINT_PLUGIN=true CI= NODE_OPTIONS=--max-old-space-size=8192 pnpm run build || exit_if_error $?
 fi
 if [ "$dist" = true ] ; then
-  printf ">>> Build distribution lib\n" && pnpm run dist || exit_if_error $?
+  printf ">>> Build distribution lib\n" && pnpm --filter @terriflux/sankeyapplication run dist || exit_if_error $?
 fi
-cd ..
 printf "OK ------------------------------------------------------------------\n"

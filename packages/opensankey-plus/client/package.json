@@ -12,7 +12,8 @@
     "dist": "tsc -p .",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "build_zip": "shx rm -rf $npm_config_datapath/artifacts/afmsankey_$npm_package_version.$npm_config_publish_name.zip && cross-conf-env npm-build-zip --name=$npm_config_publish_name --destination  $npm_config_datapath/artifacts"
+    "build_zip": "shx rm -rf $npm_config_datapath/artifacts/afmsankey_$npm_package_version.$npm_config_publish_name.zip && cross-conf-env npm-build-zip --name=$npm_config_publish_name --destination  $npm_config_datapath/artifacts",
+    "lint:ci": "eslint ./src"
   },
   "dependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
@@ -106,13 +107,6 @@
       "last 1 chrome version",
       "last 1 firefox version",
       "last 1 safari version"
-    ]
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@parcel/watcher",
-      "core-js",
-      "core-js-pure"
     ]
   }
 }
