@@ -62,7 +62,9 @@
     "react-scripts": "^5.0.1",
     "shx": "^0.3.4",
     "ts-loader": "^9.5.2",
-    "web-vitals": "^3.5.2"
+    "web-vitals": "^3.5.2",
+    "sankeyanimation": "workspace:*",
+    "open-sankey": "workspace:*"
   },
   "devDependencies": {
     "@babel/core": "^7.26.8",

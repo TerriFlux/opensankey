@@ -24,5 +24,12 @@
     "declaration": true,
     "declarationMap": true,
   },
-  "include": ["src", "../submodules/LoginComponent/client/src/UserPages/UserPages.tsx", "../submodules/LoginComponent/client/src/IconLibraryLoginComponent.tsx"]
+  "include": [
+    "src",
+    "../login-component/client/src/UserPages/UserPages.tsx",
+    "../login-component/client/src/IconLibraryLoginComponent.tsx",
+    "../opensankey/opensankey/client/src/**/*.d.ts",
+    "../opensankey-plus/client/src/**/*.d.ts",
+    "../login-component/client/src/**/*.d.ts"
+  ]
 }
