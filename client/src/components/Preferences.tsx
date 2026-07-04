@@ -2,7 +2,7 @@ import React, { useState, useRef, CSSProperties, Fragment, MutableRefObject, Cha
 import { Box, TabList, TabPanels, TabPanel, Select, Editable, EditablePreview, EditableInput, Tabs, Text, Button, IconButton, Tab, ModalCloseButton, ModalContent, ModalOverlay, ModalHeader, ModalBody, Modal, Card, CardBody, Divider, CardHeader, Input, CardFooter, useToast } from '@chakra-ui/react'
 import { SketchPicker } from 'react-color'
 import { FaMinus, FaPlus } from 'react-icons/fa'
-import * as d3 from 'd3'
+import { select } from 'd3-selection'
 
 import { TFunction } from 'i18next'
 import { SankeySettingsEditionElementTags } from '../deps/OpenSankey+/components/SankeyPlusMenuConfigurationTags'
@@ -548,9 +548,9 @@ const TabUserIcon: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_App
               const result = String((e.target as FileReader).result)
               const placeholder = document.createElement('div')
               placeholder.innerHTML = result
-              const path = d3.select(placeholder).selectAll('path')
+              const path = select(placeholder).selectAll('path')
               const attr_d = path.nodes().map(path_to_concat =>
-                d3.select(path_to_concat).attr('d')
+                select(path_to_concat).attr('d')
               ).join(' ')
 
               import_svg.current['user_' + (files[i].name).replace('.svg', '')] = attr_d
