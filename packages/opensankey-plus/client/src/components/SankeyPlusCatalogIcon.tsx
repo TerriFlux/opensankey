@@ -1,5 +1,5 @@
 
-import * as d3 from 'd3'
+import * as d3 from '../deps/OpenSankey/d3Modules'
 import React, { useState, useRef, ChangeEvent } from 'react'
 import {
   Box,

@@ -1,3 +1,4 @@
+import * as d3 from '../deps/OpenSankey/d3Modules'
 import { CreateToastFnReturn } from '@chakra-ui/react'
 import pako from 'pako'
 import { Class_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
