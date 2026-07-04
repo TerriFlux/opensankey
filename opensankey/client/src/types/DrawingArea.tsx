@@ -58,7 +58,6 @@ import { ClassTemplate_Legend } from '../Elements/Legend'
 import { Class_BaseElement, Class_ProtoElement } from '../Elements/Element'
 import { Class_ElementStyle } from '../Elements/Element'
 import { NodePositioning } from '../Algorithms/NodePositioning'
-import { resolveNodeLabelCollisions } from '../Algorithms/LabelCollision'
 import { Class_Sankey } from './Sankey'
 import { Class_ZoneSelection } from '../Elements/SelectionZone'
 import { Class_Tag } from './Tag'
@@ -229,11 +228,6 @@ export class Class_DrawingArea {
   private _path_highlight_active: boolean = false
   private readonly _path_highlight_duration_ms: number = 150
   private readonly _path_highlight_dim_opacity: number = 0.15
-
-  // #1248 — Anti-collision des labels de nom (passe statique en fin de draw,
-  // cf. Algorithms/LabelCollision). Préférence de session, NON persistée.
-  // Opt-in : défaut false, activable dans le menu Mise en page.
-  public label_collision_enabled: boolean = false
 
   // Effective fit zoom applied by areaAutoFit. Used as a per-label font-size
   // multiplier (1/_k_fit) so requested font-size in px stays constant on screen
@@ -766,10 +760,6 @@ export class Class_DrawingArea {
     //this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
 
     this.orderElementOnDA()
-
-    // #1248 — décollision des labels : tout est dessiné et le zoom de cadrage
-    // appliqué, les getBoundingClientRect sont donc définitifs. No-op si option off.
-    resolveNodeLabelCollisions(this)
 
     // Init zoom pan constraint (translateExtent) so the first user scroll is already bounded
     this._updateScrollbars()
@@ -1716,11 +1706,6 @@ export class Class_DrawingArea {
     // via Legend.applyPosition() qui lit k_fit. Suffit de re-déclencher la
     // pose du transform.
     this._legend.applyPosition()
-    // #1248 — ce refresh vient de RECRÉER tous les groupes de labels, effaçant
-    // les offsets de décollision posés en fin de draw() (il est notamment
-    // déclenché en débouncé ~120 ms après chaque fit/zoom en mode police
-    // verrouillée). On rejoue donc la passe sur les positions fraîches.
-    resolveNodeLabelCollisions(this)
   }
 
   /**

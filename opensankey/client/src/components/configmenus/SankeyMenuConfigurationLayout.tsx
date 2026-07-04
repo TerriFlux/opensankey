@@ -401,23 +401,6 @@ export const DrawingAreaConfig = ({
       </OSTooltip>
     </Checkbox>
 
-    {/* #1248 — Anti-collision des labels de nom. Préférence de session, non
-        persistée ; le redraw applique (ou retire) la passe de décollision. */}
-    <Checkbox
-      variant='menuconfigpanel_option_checkbox'
-      isChecked={app_data.drawing_area.label_collision_enabled}
-      icon={<CustomFaEyeCheckIcon />}
-      onChange={evt => {
-        app_data.drawing_area.label_collision_enabled = evt.target.checked
-        app_data.drawing_area.draw()
-        setCount(a => a + 1)
-      }}
-    >
-      <OSTooltip label={t('MEP.tooltips.LAC')}>
-        {t('MEP.LAC')}
-      </OSTooltip>
-    </Checkbox>
-
     {unit_taggs.length > 0 && (
       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
         <Box as='span' layerStyle='menuconfigpanel_part_title_3'>
