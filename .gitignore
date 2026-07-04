@@ -84,3 +84,6 @@ CLAUDE.local.md
 
 # Secrets / config locale (ne pas committer)
 .env
+
+# Install ephemere du job CI check:i18n (#234)
+.ci-i18n-deps/

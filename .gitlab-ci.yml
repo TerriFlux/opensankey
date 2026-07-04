@@ -169,6 +169,27 @@ test:jest:
     - CI=true pnpm test
   dependencies: []
 
+# S5 #234 — Parite des cles FR/EN des catalogues i18n (~13.5k lignes sur 3 couches,
+# rattrapees a la main via deep_merge_translations, rien en CI jusqu'ici). Le script
+# parse chaque catalogue via l'AST TypeScript et compare les cles FR vs EN. RATCHET :
+# la dette existante est gelee dans scripts/i18n-baseline.json ; le job n'echoue que
+# sur une NOUVELLE cle non appariee (regression). Objectif : resorber le baseline.
+check:i18n:
+  stage: test
+  tags: [py312]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
+    - when: always
+  script:
+    # Seule dependance du script : le module `typescript` (parsing AST). Install
+    # dedie et minimal (repertoire isole), independant du build SaaS. On cible un
+    # prefixe explicite (sinon `npm install` sans package.json remonte l'arbre et
+    # n'installe rien), puis on l'expose au `require` via NODE_PATH.
+    - npm install --no-save --no-package-lock --no-audit --no-fund --prefix "$CI_PROJECT_DIR/.ci-i18n-deps" typescript@5.8.3
+    - NODE_PATH="$CI_PROJECT_DIR/.ci-i18n-deps/node_modules" node scripts/check_i18n.mjs
+  dependencies: []
+
 # Deploy : Only for main, on dev url acces
 dev_opensankey:
   stage: deploy
