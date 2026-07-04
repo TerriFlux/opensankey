@@ -1,4 +1,4 @@
-import * as d3 from 'd3'
+import * as d3 from '../d3Modules'
 import { Class_NodeElement } from './Node'
 import { Class_LinkElement } from './Link'
 import { TOOLTIP_STYLES, TooltipBehaviorManager } from './TooltipsCSS'

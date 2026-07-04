@@ -43,7 +43,7 @@ import FileSaver from 'file-saver'
 import { PDFDocument } from 'pdf-lib'
 
 // Local libs
-import * as d3 from 'd3'
+import * as d3 from '../../d3Modules'
 import { MenuDraggable } from './SankeyMenus'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_DrawingArea } from '../../types/DrawingArea'

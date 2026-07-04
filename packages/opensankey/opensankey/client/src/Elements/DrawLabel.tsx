@@ -1,6 +1,6 @@
 // DrawLabelBase.ts - Classe de base commune pour tous les labels
 
-import * as d3 from 'd3'
+import * as d3 from '../d3Modules'
 import { textwrap } from 'd3-textwrap'
 import {
   BASE_SHAPE_CONFIG, getLinkLabelSpecificValue,

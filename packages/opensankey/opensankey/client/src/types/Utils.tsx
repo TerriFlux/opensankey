@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 import React, { useState } from 'react'
-import * as d3 from 'd3'
+import * as d3 from '../d3Modules'
 import { Class_ApplicationData } from './ApplicationData'
 import { FType_InitializeAdditionalMenus } from '../Modules'
 import { value_option_percent_constants, unit_stock_percent_constants, ValueOptionType } from '../Elements/LinkValues'
