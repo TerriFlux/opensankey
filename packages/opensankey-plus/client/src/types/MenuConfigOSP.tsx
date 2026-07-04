@@ -1,6 +1,6 @@
 import { MutableRefObject } from 'react'
-import { Class_MenuConfig, keyTypeConfig, keyTypeElements } from '../deps/OpenSankey/types/MenuConfig'
-import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
+import { Class_MenuConfig, keyTypeConfig, keyTypeElements } from 'open-sankey/src/types/MenuConfig'
+import { Class_NodeElement } from 'open-sankey/src/Elements/Node'
 import { OSPShowMenuComponentsVarType } from './LegacyTypes'
 
 export type keyTypeConfigOSP = keyTypeConfig | 'presentation'

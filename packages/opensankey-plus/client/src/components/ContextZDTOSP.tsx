@@ -1,11 +1,11 @@
 import { Box, Button, ButtonGroup, Divider, Menu, MenuButton, MenuList } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 import React, { useState } from 'react'
-import { Class_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
-import { MenuColorPicker } from '../deps/OpenSankey/components/configmenus/MenuCommon'
-import { ButtonContainerContextAssignStyle } from '../deps/OpenSankey/components/dialogs/MenuContextWidgetFactory'
-import { NodeActions } from '../deps/OpenSankey/components/dialogs/NodeActions'
-import { downloadImageSource } from '../deps/OpenSankey/components/dialogs/SaveImage'
+import { Class_ApplicationData } from 'open-sankey/src/types/ApplicationData'
+import { MenuColorPicker } from 'open-sankey/src/components/configmenus/MenuCommon'
+import { ButtonContainerContextAssignStyle } from 'open-sankey/src/components/dialogs/MenuContextWidgetFactory'
+import { NodeActions } from 'open-sankey/src/components/dialogs/NodeActions'
+import { downloadImageSource } from 'open-sankey/src/components/dialogs/SaveImage'
 
 export const ContextZDT = (
   { app_data: app_data }: { app_data: Class_ApplicationData }

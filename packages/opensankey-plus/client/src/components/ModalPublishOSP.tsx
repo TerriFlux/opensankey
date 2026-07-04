@@ -9,7 +9,7 @@
 // Le serveur recopie tout le build React compilé dans le zip : le site est autonome.
 //
 // Les options viewer exposées proviennent de la source de vérité
-// deps/OpenSankey/types/PublishOptions.tsx (SankeyGlobals / getPublishOptions).
+// open-sankey/src/types/PublishOptions.tsx (SankeyGlobals / getPublishOptions).
 // Elles sont envoyées au serveur dans options.globals et émises telles quelles
 // dans window.sankey du index.html publié.
 // ==================================================================================================
@@ -52,8 +52,8 @@ import { ChevronDownIcon } from '@chakra-ui/icons'
 import FileSaver from 'file-saver'
 
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
-import { Type_PositionMode } from '../deps/OpenSankey/types/PublishOptions'
-import { Type_JSON } from '../deps/OpenSankey/types/Utils'
+import { Type_PositionMode } from 'open-sankey/src/types/PublishOptions'
+import { Type_JSON } from 'open-sankey/src/types/Utils'
 
 interface Props {
   app_data: Class_ApplicationDataOSP

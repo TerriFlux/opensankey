@@ -21,39 +21,39 @@ import {
 
 // OpenSankey imports ===============================================================================
 
-import OpenSankeyApp from './deps/OpenSankey+/deps/OpenSankey/App'
+import OpenSankeyApp from 'open-sankey/src/App'
 
 // OpenSankey+ imports ===============================================================================
 
 import {
   initializeAdditionalMenusOSP,
   moduleDialogsOSP,
-} from './deps/OpenSankey+/ModulesOSP'
+} from 'sankeyanimation/src/ModulesOSP'
 import { ModalWelcomeBuilderSA } from './components/ModalWelcomeSA'
 import {
   createZDDModifierPlus, createNodeModifierPlus,
   createZDDMenuConfigPlus, createLinkMenuConfigPlus, createNodeMenuConfigPlus,
   createStaticNodeMenuConfigPlus
-} from './deps/OpenSankey+/components/ContextMenuConfigs'
+} from 'sankeyanimation/src/components/ContextMenuConfigs'
 
 import { Class_ApplicationDataSA } from './ApplicationDataSA'
 import { Theme_SankeyApplication } from './chakra/Theme'
-import Account from './deps/LoginComponent/UserPages/Account'
-import Dashboard from './deps/LoginComponent/UserPages/Dashboard'
-import Register from './deps/LoginComponent/Register/Register'
-import { Login } from './deps/LoginComponent/Login/Login'
-import { PasswordResetFromMail, PasswordResetFromToken } from './deps/LoginComponent/Login/PasswordReset'
-import { PublicRoute } from './deps/LoginComponent/Routes/PublicRoutes'
-import { PaiementCheckout, PaiementPage, PaiementReturn } from './deps/LoginComponent/Paiement/Paiement'
+import Account from 'logincomponent/src/UserPages/Account'
+import Dashboard from 'logincomponent/src/UserPages/Dashboard'
+import Register from 'logincomponent/src/Register/Register'
+import { Login } from 'logincomponent/src/Login/Login'
+import { PasswordResetFromMail, PasswordResetFromToken } from 'logincomponent/src/Login/PasswordReset'
+import { PublicRoute } from 'logincomponent/src/Routes/PublicRoutes'
+import { PaiementCheckout, PaiementPage, PaiementReturn } from 'logincomponent/src/Paiement/Paiement'
 import { MetaTags } from './components/MetaTags'
 import { logo_sankeytheque, ModalSankeyTheque } from './components/SankeyTheque'
-import { UserPagesButtons } from './deps/LoginComponent/UserPages/UserPages'
-import { FType_ModuleDialogs } from './deps/OpenSankey+/deps/OpenSankey/Modules'
-import { Type_AdditionalMenus } from './deps/OpenSankey+/deps/OpenSankey/types/MenuConfig'
-import { createLinkModifier } from './deps/OpenSankey+/deps/OpenSankey/components/dialogs/ContextLinkConfig'
-import { PrivateRoute } from './deps/LoginComponent/Routes/PrivateRoutes'
-import { Class_ApplicationData } from './deps/OpenSankey+/deps/OpenSankey/types/ApplicationData'
-import { OSP_INPUT_ATTRIBUTES_CONFIG, OSP_OUTPUT_ATTRIBUTES_CONFIG } from './deps/OpenSankey+/components/UniversalConverterDialogConfig'
+import { UserPagesButtons } from 'logincomponent/src/UserPages/UserPages'
+import { FType_ModuleDialogs } from 'open-sankey/src/Modules'
+import { Type_AdditionalMenus } from 'open-sankey/src/types/MenuConfig'
+import { createLinkModifier } from 'open-sankey/src/components/dialogs/ContextLinkConfig'
+import { PrivateRoute } from 'logincomponent/src/Routes/PrivateRoutes'
+import { Class_ApplicationData } from 'open-sankey/src/types/ApplicationData'
+import { OSP_INPUT_ATTRIBUTES_CONFIG, OSP_OUTPUT_ATTRIBUTES_CONFIG } from 'sankeyanimation/src/components/UniversalConverterDialogConfig'
 import { ButtonOpenUSerPreference, ModalPreference } from './components/Preferences'
 
 

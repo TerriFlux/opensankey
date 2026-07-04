@@ -20,8 +20,8 @@ import {
   ModalWelcome,
   ModalWelcomeContent,
   buildShortcutsContent
-} from '../deps/OpenSankey+/deps/OpenSankey/components/welcome/ModalWelcome'
-import { Class_ApplicationData } from '../deps/OpenSankey+/deps/OpenSankey/types/ApplicationData'
+} from 'open-sankey/src/components/welcome/ModalWelcome'
+import { Class_ApplicationData } from 'open-sankey/src/types/ApplicationData'
 import { FeaturesMatrixSA } from './FeaturesMatrixSA'
 
 // WHATSNEW.md is a single file with sections separated by <!-- LANG:xx --> markers.

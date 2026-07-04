@@ -18,13 +18,13 @@ import {
   getNumberOrUndefinedFromJSON,
   getStringFromJSON,
   Type_JSON
-} from '../deps/OpenSankey/types/Utils'
+} from 'open-sankey/src/types/Utils'
 
-import { default_container_content } from '../deps/OpenSankey/Elements/TextZone'
+import { default_container_content } from 'open-sankey/src/Elements/TextZone'
 import { OSPData, ViewType } from '../types/LegacyTypes'
 
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
-import { CustomFaEyeCheckIcon, OSTooltip, getButtonVariant } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import { CustomFaEyeCheckIcon, OSTooltip, getButtonVariant } from 'open-sankey/src/components/configmenus/MenuCommon'
 import { DiffType } from '../types/LegacyTypes'
 import { applyChange } from 'deep-diff'
 

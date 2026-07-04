@@ -1,4 +1,4 @@
-import './deps/OpenSankey/css/main.css'
+import 'open-sankey/src/css/main.css'
 import './css/style_elements_sankey.css'
 import './css/react-quill.css'
 import React from 'react'

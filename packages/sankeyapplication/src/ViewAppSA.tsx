@@ -22,8 +22,8 @@ import i18next from 'i18next'
 import { I18nextProvider, useTranslation } from 'react-i18next'
 
 import { Class_ApplicationDataSA } from './ApplicationDataSA'
-import { Type_AnyJSON, Type_JSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
-import { applyViewerOptions, ViewerSankeyOptions } from './deps/OpenSankey+/deps/OpenSankey/types/PublishOptions'
+import { Type_AnyJSON, Type_JSON } from 'open-sankey/src/types/Utils'
+import { applyViewerOptions, ViewerSankeyOptions } from 'open-sankey/src/types/PublishOptions'
 import { SankeyApp } from './AppSA'
 
 export type ViewerSankeyApplicationProps = ViewerSankeyOptions & {

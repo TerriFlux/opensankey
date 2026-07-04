@@ -1,6 +1,6 @@
 import React from 'react'
 import { Box, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react'
-import { Class_ApplicationData } from '../deps/OpenSankey+/deps/OpenSankey/types/ApplicationData'
+import { Class_ApplicationData } from 'open-sankey/src/types/ApplicationData'
 
 type LicenceFlag = 'plus' | 'afm' | 'dev'
 

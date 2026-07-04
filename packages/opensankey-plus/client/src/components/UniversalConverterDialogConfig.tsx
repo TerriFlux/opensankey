@@ -1,4 +1,4 @@
-import { FormatAttributeConfig, INPUT_ATTRIBUTES_CONFIG, OUTPUT_ATTRIBUTES_CONFIG } from '../deps/OpenSankey/components/dialogs/PersistenceProcessDialogConfigs'
+import { FormatAttributeConfig, INPUT_ATTRIBUTES_CONFIG, OUTPUT_ATTRIBUTES_CONFIG } from 'open-sankey/src/components/dialogs/PersistenceProcessDialogConfigs'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
 export const OSP_OUTPUT_ATTRIBUTES_CONFIG = {

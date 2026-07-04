@@ -14,10 +14,10 @@ import { ChakraProvider } from '@chakra-ui/react'
 import { initializeAdditionalMenusOSP, moduleDialogsOSP, } from './ModulesOSP'
 import { ModalWelcomeBuilderOSP } from './components/ModalWelcomeOSP'
 
-import OpenSankeyApp from './deps/OpenSankey/App'
+import OpenSankeyApp from 'open-sankey/src/App'
 import { createLinkMenuConfigPlus, createNodeMenuConfigPlus, createZDDMenuConfigPlus, createZDDModifierPlus, } from './components/ContextMenuConfigs'
-import { createLinkModifier } from './deps/OpenSankey/components/dialogs/ContextLinkConfig'
-import { opensankey_theme } from './deps/OpenSankey/css/Theme'
+import { createLinkModifier } from 'open-sankey/src/components/dialogs/ContextLinkConfig'
+import { opensankey_theme } from 'open-sankey/src/css/Theme'
 import { Class_ApplicationDataOSP } from './types/ApplicationDataOSP'
 import { OSP_INPUT_ATTRIBUTES_CONFIG, OSP_OUTPUT_ATTRIBUTES_CONFIG } from './components/UniversalConverterDialogConfig'
 

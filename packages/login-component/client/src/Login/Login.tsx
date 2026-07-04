@@ -21,7 +21,7 @@ import {
 
 import { loginOut, loginUser } from './LoginFunctions'
 import { LoginComponent } from '../LoginComponent'
-import { OSTooltip } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/MenuCommon'
+import { OSTooltip } from 'open-sankey/src/components/configmenus/MenuCommon'
 
 export const Login = ({
   t,

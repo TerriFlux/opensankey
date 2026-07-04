@@ -1,5 +1,5 @@
 import { defineStyle } from '@chakra-ui/react'
-import { sizes } from '../deps/OpenSankey+/deps/OpenSankey/css/Theme'
+import { sizes } from 'open-sankey/src/css/Theme'
 
 
 const _btn_lone_navigation = {

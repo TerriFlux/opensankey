@@ -9,10 +9,10 @@ import { ExternalLinkIcon } from '@chakra-ui/icons'
 const DraggableComponent = Draggable as unknown as React.ComponentClass<Partial<DraggableProps>>
 
 // OpenSankey / OpenSankey+ libs
-import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
-import { Class_LinkElement } from '../deps/OpenSankey/Elements/Link'
-import { makeId, Type_JSON } from '../deps/OpenSankey/types/Utils'
-import { mainZoneUnitaryRect } from '../deps/OpenSankey/components/spreadsheet/MainZoneTabs'
+import { Class_NodeElement } from 'open-sankey/src/Elements/Node'
+import { Class_LinkElement } from 'open-sankey/src/Elements/Link'
+import { makeId, Type_JSON } from 'open-sankey/src/types/Utils'
+import { mainZoneUnitaryRect } from 'open-sankey/src/components/spreadsheet/MainZoneTabs'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { Class_DrawingAreaOSP, DrawingAreaPersistenceOSP } from '../types/DrawingAreaOSP'
 import { createUnitarySankeyDetached, refocusUnitaryDrawingArea, UnitaryValueMode } from './UnitaryBoard'

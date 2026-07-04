@@ -3,11 +3,11 @@ import {
   default_main_sankey_id,
   getStringFromJSON,
   Type_JSON
-} from '../deps/OpenSankey/types/Utils'
+} from 'open-sankey/src/types/Utils'
 import { convert_data_plus_legacy } from '../components/UtilsOSP'
-import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
+import { Class_DrawingArea } from 'open-sankey/src/types/DrawingArea'
 import { Class_ApplicationDataOSP } from './ApplicationDataOSP'
-import { DrawingAreaPersistence } from '../deps/OpenSankey/Persistence/SankeyPersistence'
+import { DrawingAreaPersistence } from 'open-sankey/src/Persistence/SankeyPersistence'
 
 export class Class_DrawingAreaOSP extends Class_DrawingArea {
   public application_data: Class_ApplicationDataOSP

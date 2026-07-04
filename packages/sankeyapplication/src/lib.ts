@@ -3,4 +3,4 @@
 export { SankeyApp, initializeAdditionalMenusSA, moduleDialogsSA, returnToApp } from './AppSA'
 export { ViewerSankeyApplication } from './ViewAppSA'
 export { Class_ApplicationDataSA } from './ApplicationDataSA'
-export type { Type_JSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
+export type { Type_JSON } from 'open-sankey/src/types/Utils'

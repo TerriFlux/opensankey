@@ -23,9 +23,9 @@ import {
   ModalOverlay,
 } from '@chakra-ui/react'
 import { Class_ApplicationDataSA } from '../ApplicationDataSA'
-import { Type_JSON } from '../deps/OpenSankey+/deps/OpenSankey/types/Utils'
-import { CONVERTER_CONFIGS } from '../deps/OpenSankey+/deps/OpenSankey/components/dialogs/PersistenceProcessDialogConfigs'
-import { OSTooltip } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/MenuCommon'
+import { Type_JSON } from 'open-sankey/src/types/Utils'
+import { CONVERTER_CONFIGS } from 'open-sankey/src/components/dialogs/PersistenceProcessDialogConfigs'
+import { OSTooltip } from 'open-sankey/src/components/configmenus/MenuCommon'
 
 export const logo_sankeytheque = <svg
   xmlns='http://www.w3.org/2000/svg'

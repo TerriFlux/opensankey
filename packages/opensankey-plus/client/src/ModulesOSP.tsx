@@ -25,16 +25,16 @@
 // ==================================================================================================
 
 import React from 'react'
-import { WrapperContentConfig } from './deps/OpenSankey/components/configmenus/MenuCommon'
+import { WrapperContentConfig } from 'open-sankey/src/components/configmenus/MenuCommon'
 import {
   FType_InitializeAdditionalMenus,
   FType_ModuleDialogs,
   initializeAdditionalMenus,
   moduleDialogs
-} from './deps/OpenSankey/Modules'
+} from 'open-sankey/src/Modules'
 
 import { ContextZDT } from './components/ContextZDTOSP'
-import { BannerDataTagTopbar, BannerViewTagTopbar } from './deps/OpenSankey/components/topmenus/Toolbar'
+import { BannerDataTagTopbar, BannerViewTagTopbar } from 'open-sankey/src/components/topmenus/Toolbar'
 
 import {
   ModalTransparentViewAttrOSP,

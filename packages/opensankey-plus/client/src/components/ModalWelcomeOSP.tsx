@@ -6,9 +6,9 @@ import {
   ModalWelcome,
   ModalWelcomeContent,
   buildShortcutsContent
-} from '../deps/OpenSankey/components/welcome/ModalWelcome'
+} from 'open-sankey/src/components/welcome/ModalWelcome'
 import { Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react'
-import { Class_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
+import { Class_ApplicationData } from 'open-sankey/src/types/ApplicationData'
 
 
 export const ModalWelcomeBuilderOSP = ({ app_data }: { app_data: Class_ApplicationData }) => {

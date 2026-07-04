@@ -1,18 +1,21 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-client/node_modules
+packages/sankeyapplication/node_modules
 # node_modules a n'importe quel niveau (racine, submodules, install ephemere CI…)
 node_modules/
 
 # testing
-client/coverage
+packages/*/coverage
+packages/*/client/coverage
 
 # production
-client/build
-client/dist
-client/src/deps/OpenSankey+
-client/src/deps/LoginComponent
+packages/*/build
+packages/*/dist
+packages/*/client/build
+packages/*/client/dist
+packages/opensankey/opensankey/client/build
+packages/opensankey/opensankey/client/dist
 
 # server
 __pycache__

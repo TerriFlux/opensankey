@@ -67,22 +67,22 @@ import {
   getJSONOrUndefinedFromJSON,
   makeId,
   Type_JSON,
-} from '../deps/OpenSankey/types/Utils'
+} from 'open-sankey/src/types/Utils'
 
-import { updateFrom } from '../deps/OpenSankey/Algorithms/UpdateFrom'
-import { UpdateModeGrid } from '../deps/OpenSankey/components/dialogs/SankeyMenuDialogs'
-import { ConfigMenuTextInput, OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import { updateFrom } from 'open-sankey/src/Algorithms/UpdateFrom'
+import { UpdateModeGrid } from 'open-sankey/src/components/dialogs/SankeyMenuDialogs'
+import { ConfigMenuTextInput, OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu } from 'open-sankey/src/components/configmenus/MenuCommon'
 import { Class_DrawingAreaOSP, DrawingAreaPersistenceOSP } from '../types/DrawingAreaOSP'
-import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
-import { Class_ViewTagGroup } from '../deps/OpenSankey/types/TagGroup'
+import { Class_NodeElement } from 'open-sankey/src/Elements/Node'
+import { Class_ViewTagGroup } from 'open-sankey/src/types/TagGroup'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
-import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
-import { mainZoneRightReservedPx } from '../deps/OpenSankey/components/spreadsheet/MainZoneTabs'
-import { LevelTagFilter, TopbarNavSelect } from '../deps/OpenSankey/components/topmenus/Toolbar'
-import { compressJSONToGzip, decompressGzipDataFixed, decompressUploadedFileUniversal } from '../deps/OpenSankey/Persistence/UniversalJSONCompression'
-import { DrawingAreaPersistence } from '../deps/OpenSankey/Persistence/SankeyPersistence'
-import { INPUT_ATTRIBUTES_CONFIG, OUTPUT_ATTRIBUTES_CONFIG, getDefaultInputOptions, getDefaultOutputOptions } from '../deps/OpenSankey/components/dialogs/PersistenceProcessDialogConfigs'
-import { retrieveJSONResults } from '../deps/OpenSankey/components/dialogs/PersistenceProcessDialog'
+import { OSTooltip } from 'open-sankey/src/components/configmenus/MenuCommon'
+import { mainZoneRightReservedPx } from 'open-sankey/src/components/spreadsheet/MainZoneTabs'
+import { LevelTagFilter, TopbarNavSelect } from 'open-sankey/src/components/topmenus/Toolbar'
+import { compressJSONToGzip, decompressGzipDataFixed, decompressUploadedFileUniversal } from 'open-sankey/src/Persistence/UniversalJSONCompression'
+import { DrawingAreaPersistence } from 'open-sankey/src/Persistence/SankeyPersistence'
+import { INPUT_ATTRIBUTES_CONFIG, OUTPUT_ATTRIBUTES_CONFIG, getDefaultInputOptions, getDefaultOutputOptions } from 'open-sankey/src/components/dialogs/PersistenceProcessDialogConfigs'
+import { retrieveJSONResults } from 'open-sankey/src/components/dialogs/PersistenceProcessDialog'
 import { createUnitaryNewView } from './UnitaryBoard'
 
 // ===========================================================================
