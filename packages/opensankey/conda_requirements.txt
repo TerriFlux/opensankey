@@ -1,0 +1,10 @@
+openpyxl
+scs
+pandas
+flask==2.3.3
+flask_login
+flask_cors
+flask_sqlalchemy
+parameterized
+imgkit
+pdfkit

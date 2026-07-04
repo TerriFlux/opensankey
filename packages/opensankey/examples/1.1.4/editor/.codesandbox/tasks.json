@@ -1,0 +1,25 @@
+{
+  "setupTasks": [
+    {
+      "name": "Install Dependencies",
+      "command": "npm install"
+    }
+  ],
+  "tasks": {
+    "start": {
+      "name": "Start",
+      "command": "npm start",
+      "runAtStart": true,
+      "preview": {
+        "port": 3000
+      },
+      "restartOn": {
+        "files": ["package.json", "package-lock.json"]
+      }
+    },
+    "build": {
+      "name": "Build",
+      "command": "npm run build"
+    }
+  }
+}

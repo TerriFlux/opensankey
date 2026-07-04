@@ -1,0 +1,3 @@
+[submodule "submodules/SankeyExcelParser"]
+	path = submodules/SankeyExcelParser
+	url = git@gitlab.com:su-model/sankeyexcelparser.git
