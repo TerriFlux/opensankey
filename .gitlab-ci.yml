@@ -4,6 +4,16 @@ stages:
     - deploy
     # - build-docker
 
+# #237 — Pas de pipelines merge_request_event : ce projet fonctionne en
+# pipelines de branche (les jobs melangent rules et only/except ; en contexte
+# MR, `build` serait exclu et `pages`/`dev_opensankey` echoueraient sur leurs
+# `needs`). La MR affiche le pipeline de la branche source.
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
+    - when: always
+
 # Change pip's cache directory to be inside the project directory since we can
 # only cache local items.
 variables:
