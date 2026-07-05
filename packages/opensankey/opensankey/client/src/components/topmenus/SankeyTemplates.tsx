@@ -52,6 +52,7 @@ import {
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Type_AdditionalMenus } from '../../types/MenuConfig'
 import { CONVERTER_CONFIGS } from '../dialogs/PersistenceProcessDialogConfigs'
+import { loadSankeymaticTemplate } from '../../Persistence/sankeymaticLoad'
 
 // COMPONENTS ===========================================================================
 
@@ -230,13 +231,16 @@ export const ModalTemplate = ({ new_data, additionalMenu }:{
                             }}>
                             <Button variant='menuconfigpanel_option_button'
                               onClick={() => {
-                                // Draw template by downloading data from server
-                                //UploadExemple(templates[id].file_path, new_data)
-                                new_data.menu_configuration.ref_universal_converter_set_config.current(
-                                  CONVERTER_CONFIGS['load_example_json'], templates[id].file_path, true
-                                )
-                                new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
-                                //new_data.menu_configuration.ref_menu_opened.current[1](true)
+                                const file_path = templates[id].file_path
+                                if (file_path.endsWith('.txt')) {
+                                  // Modèle SankeyMATIC natif : parsé côté front (pas de converter JSON).
+                                  loadSankeymaticTemplate(file_path, new_data)
+                                } else {
+                                  new_data.menu_configuration.ref_universal_converter_set_config.current(
+                                    CONVERTER_CONFIGS['load_example_json'], file_path, true
+                                  )
+                                  new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
+                                }
                                 set_show_template(false)
                               }}>
                               {new_data.t('useTemplate')}

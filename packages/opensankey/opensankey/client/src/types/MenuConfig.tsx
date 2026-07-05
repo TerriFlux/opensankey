@@ -739,6 +739,11 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public openConfigMenu() {
+    // Ouverture AUTOMATIQUE de la config (sélection d'éléments au tracé de flux,
+    // légende, stock…) : on la neutralise si le tableur est affiché, sinon elle
+    // le refermerait (colonne droite partagée). L'ouverture MANUELLE passe par
+    // setConfigOpen (bouton) et reste possible — elle ferme alors le tableur.
+    if (this._main_zone_show_spreadsheet) return
     if (
       this._ref_menu_opened.current &&
       this._ref_menu_opened.current[0] === false
