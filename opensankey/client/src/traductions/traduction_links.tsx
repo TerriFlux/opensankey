@@ -89,6 +89,9 @@ export const resources_flux = {
           hide_link_name: 'Hide name',
           data_off_scale: 'Scale',
           scale_ref_thickness: 'Max scale thickness (px)',
+          bezier_path: 'Bezier path',
+          bezier_outline: 'Bezier outline',
+          bezier_outline_exact: 'Exact outline',
           tooltips: {
             color_source: {
               def: 'Choose what rule define flow color :',
@@ -272,6 +275,7 @@ export const resources_flux = {
 
           bezier_path: 'Chemin Bezier',
           bezier_outline: 'Contour Bezier',
+          bezier_outline_exact: 'Contour exact',
           tooltips: {
             couleur: 'Choisir la couleur pour le/les flux sélectionné(s)',
             color_source: {
@@ -472,6 +476,9 @@ export const resources_flux = {
           hide_link_name: 'Ocultar nombre',
           data_off_scale: 'Escala',
           scale_ref_thickness: 'Grosor máx. de escala (px)',
+          bezier_path: 'Trazado Bezier',
+          bezier_outline: 'Contorno Bezier',
+          bezier_outline_exact: 'Contorno exacto',
           tooltips: {
             color_source: {
               def: 'Elegir la regla que define el color del flujo:',
@@ -637,6 +644,9 @@ export const resources_flux = {
           hide_link_name: 'Name ausblenden',
           data_off_scale: 'Skalierung',
           scale_ref_thickness: 'Max. Skalendicke (px)',
+          bezier_path: 'Bezier-Pfad',
+          bezier_outline: 'Bezier-Kontur',
+          bezier_outline_exact: 'Exakte Kontur',
           tooltips: {
             color_source: {
               def: 'Wählen Sie die Regel, die die Flussfarbe definiert:',
@@ -802,6 +812,9 @@ export const resources_flux = {
           hide_link_name: 'Nascondi nome',
           data_off_scale: 'Scala',
           scale_ref_thickness: 'Spessore max scala (px)',
+          bezier_path: 'Percorso Bezier',
+          bezier_outline: 'Contorno Bezier',
+          bezier_outline_exact: 'Contorno esatto',
           tooltips: {
             color_source: {
               def: 'Scegliere la regola che definisce il colore del flusso:',

@@ -2535,7 +2535,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     const show_as_path = /*Math.abs(yf - y0) < 50 ||*/ ((dist / this.link.thickness) > 2)
     // En mode stick_to_label, nom et valeur doivent être en <text> droit pour
     // pouvoir se coller l'un à l'autre — on désactive le rendu textPath.
-    if (this._specific_label_values.on_path && show_as_path && this.link.shape_type !== 'bezier_outline' && !this.link.isTapered && !this.link.value_label_stick_to_label) {
+    if (this._specific_label_values.on_path && show_as_path && this.link.shape_type !== 'bezier_outline' && this.link.shape_type !== 'bezier_outline_exact' && !this.link.isTapered && !this.link.value_label_stick_to_label) {
       const d3_textpath_selection = textElement.append('textPath')
         .classed('link', true)
         .classed(`link_${this.displayPrefix}`, true)
