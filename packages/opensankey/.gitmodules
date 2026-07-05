@@ -1,0 +1,8 @@
+# Inerte dans le monorepo (seul le .gitmodules RACINE y fait foi, qui declare
+# SEP au chemin packages/opensankey/submodules/SankeyExcelParser). Ce fichier
+# devient le .gitmodules racine du miroir public OpenSankey produit par le
+# split (#238) : sans lui, le gitlink SEP serait orphelin et le miroir ne
+# serait pas clonable standalone.
+[submodule "submodules/SankeyExcelParser"]
+	path = submodules/SankeyExcelParser
+	url = https://gitlab.com/su-model/sankeyexcelparser.git

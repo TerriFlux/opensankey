@@ -1,0 +1,1124 @@
+import colormap from 'colormap'
+import { Class_LinkElement } from '../Elements/Link'
+import { Class_ElementValue } from '../Elements/LinkValues'
+import { Class_NodeElement } from '../Elements/Node'
+import { Class_Sankey } from './Sankey'
+import { tag_banner_type, Class_ProtoTag, Class_Tag, Class_NodeTag, Class_FluxTag, Class_DataTag, Class_LevelTag, Class_ViewTag } from './Tag'
+import { Type_JSON, getStringFromJSON, getBooleanFromJSON, getStringListFromJSON, getStringOrUndefinedFromJSON } from './Utils'
+
+// CLASS PROTO TAGGROUP *****************************************************************
+/**
+ * Class that define a TagGroup object
+ * @export
+ * @class Class_TagGroup
+ */
+
+export abstract class Class_ProtoTagGroup {
+
+  // PRIVATE ATTRIBUTES =================================================================
+  // Name
+  private _id: string
+  private _name: string
+
+  // List of tags
+  private _tag_count: number = 0
+  private _tags_order: string[] = []
+
+  // Type of banner
+  private _banner: tag_banner_type = 'one'
+
+  /**
+   * True if tag is currently on a deletion process
+   * Avoid infinite calls of delete() method
+   * @private
+   * @memberof Class_TagGroup
+   */
+  private _is_currently_deleted = false
+
+  // PROTECTED ATTRIBUTES ===============================================================
+  protected abstract _tags: { [id: string]: Class_ProtoTag; };
+
+  protected _ref_sankey: Class_Sankey
+
+  // CONSTRUCTOR ========================================================================
+  /**
+   * Creates an instance of Class_TagGroup.
+   * @param {string} id
+   * @param {string} name
+   * @memberof Class_TagGroup
+   */
+  constructor(id: string, name: string, sankey: Class_Sankey) {
+    this._id = id
+    this._name = name
+    this._ref_sankey = sankey
+  }
+
+  // CLEANING METHODS ===================================================================
+  /**
+   * Define deletion behavior
+   * @memberof Class_ProtoTagGroup
+   */
+  public delete() {
+    if (!this._is_currently_deleted) {
+      // Set as currently deleted
+      this._is_currently_deleted = true
+      // Delete all tags properly
+      Object.values(this._tags)
+        .forEach(tag => {
+          tag.delete()
+        })
+      this._tags = {}
+      this._tags_order = []
+      // Garbage collection will do the rest ...
+    }
+  }
+
+  // COPY METHODS =======================================================================
+  public copyFrom(
+    tagg_to_copy: Class_ProtoTagGroup,
+    matching_tags_id: { [_: string]: string; } = {}
+  ) {
+    this._copyFrom(tagg_to_copy, matching_tags_id)
+  }
+
+  protected _copyFrom(
+    tagg_to_copy: Class_ProtoTagGroup,
+    matching_tags_id: { [_: string]: string; } = {}
+  ) {
+    const revert_matching_id: { [id: string]: string; } = {}
+    Object.entries(matching_tags_id).forEach(([k, v]) => revert_matching_id[v] = k)
+    // Common attributes
+    this._name = tagg_to_copy._name
+    this._banner = tagg_to_copy._banner
+    this._tag_count = tagg_to_copy._tag_count
+    // tagg_to_copy._tags_order holds the SOURCE group's tag ids. When the two
+    // groups were matched by name but carry different tag ids (e.g. updateFrom
+    // a JSON whose tags were renamed), copying the order verbatim would leave
+    // this group's tags_order pointing at ids absent from its tags_dict. Since
+    // tags_list is derived from tags_order, that empties tags_list and the sync
+    // loops below run on nothing, orphaning every tag. Translate source ids back
+    // to this group's ids via revert_matching_id so the order stays resolvable.
+    this._tags_order = tagg_to_copy._tags_order.map(id => revert_matching_id[id] ?? id)
+
+    // Synchro current tags
+    this.tags_list
+      .forEach(tag => {
+        // Delete tags not present in new layout but present in curr
+        if (!((matching_tags_id[tag.id] ?? tag.id) in tagg_to_copy.tags_dict))
+          this.removeTag(tag)
+
+
+        // Transfer tags attr present in new layout and in curr
+        else
+          tag.copyFrom(tagg_to_copy.tags_dict[(matching_tags_id[tag.id] ?? tag.id)])
+      })
+
+    // Add missing tags
+    tagg_to_copy.tags_list
+      .forEach(tag => {
+        if (!((revert_matching_id[tag.id] ?? tag.id) in this.tags_dict))
+          this.addTag(tag.name, tag.id).copyFrom(tag)
+      })
+  }
+
+  public toJSON(
+    kwargs?: Type_JSON
+  ) {
+    // Create empty structs
+    const json_object = {} as Type_JSON
+    this._toJSON(json_object, kwargs)
+    return json_object
+  }
+
+  protected _toJSON(
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    // Fill group attributes
+    json_object['name'] = this._name
+    json_object['banner'] = this._banner
+    json_object['tags_order'] = this._tags_order
+    // Update tags infos
+    const json_object_tags = {} as Type_JSON
+    this.tags_list
+      .forEach(tag => {
+        json_object_tags[tag.id] = tag.toJSON()
+      })
+    json_object['tags'] = json_object_tags
+  }
+
+  public fromJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    this._fromJSON(json_object, kwargs)
+  }
+
+  protected _fromJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    // Read legacy JSON
+    this.fromLegacyJSON(json_object)
+    // Read group attributes
+    this._name = getStringFromJSON(json_object, 'name', this._name)
+    this._banner = getStringFromJSON(json_object, 'banner', this._banner) as tag_banner_type
+    // Create new tags & read their attributes
+    const matching_tags_id: { [_: string]: string; } = (kwargs && kwargs['matching_tags_id']) ? kwargs['matching_tags_id'] as { [_: string]: string; } : {}
+    Object.entries(json_object['tags'])
+      .forEach(([_, tag_json]) => {
+        // Get or Create tag
+        const tag_id = matching_tags_id[_] ?? _
+        const tag = this._tags[_] ?? this.addTag(tag_id, tag_id) // Tag will be renamed in fromJSON method
+
+        // Update tag with json
+        tag.fromJSON(tag_json as Type_JSON)
+      })
+    // Read tags order (or rebuild from dict keys)
+    const saved_order = getStringListFromJSON(json_object, 'tags_order', [])
+    if (saved_order.length > 0) {
+      // Use saved order, append any tags not in saved order
+      this._tags_order = saved_order.filter(id => id in this._tags)
+      Object.keys(this._tags).forEach(id => {
+        if (!this._tags_order.includes(id)) this._tags_order.push(id)
+      })
+    } else {
+      // Legacy: no saved order, use dict key order
+      this._tags_order = Object.keys(this._tags)
+    }
+
+    const nb_tags = Object.values(this._tags).length
+    if (Object.values(this._tags).filter(tag => tag.color != '').length == 0) {
+      // if tags has no colors they are generated from the defaut color map
+      const colors = colormap({
+        colormap: 'jet',
+        nshades: Math.max(11, nb_tags),
+        format: 'hex',
+        alpha: 1
+      })
+      let step = 1
+      if (nb_tags < 11) {
+        // colormap is sampled uniformly between the first index and the last
+        step = Math.round(11 / nb_tags)
+      }
+      Object.values(this._tags).forEach((tag, i) => tag.color = colors[i * step])
+    }
+  }
+
+  private fromLegacyJSON(json_object: Type_JSON) {
+    this._name = getStringFromJSON(json_object, 'group_name', this._name)
+  }
+
+  // PUBLIC METHODS =====================================================================
+  public addTag(
+    name: string,
+    id: string | undefined = undefined
+  ) {
+    const tag = this.createTag(name, id)
+    this._tags[tag.id] = tag
+    this._tag_count = this._tag_count + 1
+    if (!this._tags_order.includes(tag.id))
+      this._tags_order.push(tag.id)
+    return tag
+  }
+
+  public addDefaultTag() {
+    const n = String(this._tag_count)
+    const name = 'Etiquette ' + n
+    return this.addTag(name)
+  }
+
+  public removeTag(_: Class_ProtoTag) {
+    if (this._tags[_.id] !== undefined) {
+      _.delete()
+      delete this._tags[_.id]
+      const idx = this._tags_order.indexOf(_.id)
+      if (idx >= 0) this._tags_order.splice(idx, 1)
+    }
+  }
+
+  public selectTagsFromId(
+    id: string
+  ) {
+    const _selectTagsFromId = (_: string) => {
+      this.tags_list
+        .forEach(tag => {
+          if (tag.id === _) {
+            tag.setSelected()
+          }
+          else {
+            tag.setUnSelected()
+          }
+        })
+      this.updateTagsReferences()
+      this._ref_sankey.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToTags()
+    }
+    
+    const old_selected = this.selected_tags_list.length>0 ? this.selected_tags_list[0].id : ''
+    this._ref_sankey.drawing_area.application_data.history.saveUndo(() => _selectTagsFromId(old_selected))
+    this._ref_sankey.drawing_area.application_data.history.saveRedo(() => _selectTagsFromId(id))
+    _selectTagsFromId(id)
+  }
+
+  public selectTagsFromIds(
+    ids: string[]
+  ) {
+    this.tags_list
+      .forEach(tag => {
+        if (ids.includes(tag.id)) {
+          tag.setSelected(false)
+        }
+        else {
+          tag.setUnSelected(false)
+        }
+      })
+    this.updateTagsReferences()
+  }
+
+  public abstract updateTagsReferences(): void;
+
+  public moveTagUp(id: string) {
+    const idx = this._tags_order.indexOf(id)
+    if (idx > 0) {
+      this._tags_order.splice(idx, 1)
+      this._tags_order.splice(idx - 1, 0, id)
+    }
+  }
+
+  public moveTagDown(id: string) {
+    const idx = this._tags_order.indexOf(id)
+    if (idx >= 0 && idx < this._tags_order.length - 1) {
+      this._tags_order.splice(idx, 1)
+      this._tags_order.splice(idx + 1, 0, id)
+    }
+  }
+
+  public get tags_order() { return this._tags_order }
+
+  // PROTECTED METHODS ==================================================================
+  protected abstract createTag(
+    name: string,
+    id: string | undefined
+  ): Class_ProtoTag;
+
+  // GETTERS ============================================================================
+  /**
+   * Id of tag group
+   * @readonly
+   * @type {string}
+   * @memberof Class_ProtoTagGroup
+   */
+  public get id(): string { return this._id }
+
+  /**
+   * Name of tag group (!= id)
+   * @type {string}
+   * @memberof Class_ProtoTagGroup
+   */
+  public get name(): string { return this._name }
+
+  /**
+   * Return dict tag from the current group
+   * @type {{ [_: string]: Class_ProtoTag }}
+   * @memberof Class_ProtoTagGroup
+   */
+  public abstract get tags_dict(): { [_: string]: Class_ProtoTag; };
+
+  /**
+  * Return list tag from the current group
+  * @readonly
+  * @memberof Class_ProtoTagGroup
+  */
+  public get tags_list(): Class_ProtoTag[] {
+    if (this.tags_order.length > 0)
+      return this.tags_order
+        .filter(id => id in this.tags_dict)
+        .map(id => this.tags_dict[id])
+    return Object.values(this.tags_dict)
+  }
+
+  /**
+   * Return list of selected tag from the current group
+   * @readonly
+   * @memberof Class_ProtoTagGroup
+   */
+  public abstract get selected_tags_list(): Class_ProtoTag[];
+
+  /**
+   * True if tag group has tags
+   * @readonly
+   * @memberof Class_ProtoTagGroup
+   */
+  public get has_tags() { return this.tags_list.length > 0 }
+
+  /**
+   * True if tag group has tags selected
+   * @readonly
+   * @memberof Class_ProtoTagGroup
+   */
+  public get has_selected_tags() { return this.selected_tags_list.length > 0 }
+
+  public get first_selected_tags() {
+    if (this.has_tags)
+      if (this.has_selected_tags)
+        return this.selected_tags_list[0]
+
+      else
+        return this.tags_list[0]
+
+    else
+      return undefined
+  }
+
+  public get banner(): tag_banner_type { return this._banner }
+
+  // SETTERS ============================================================================
+  public set name(value: string) { this._name = value }
+  public set banner(value: tag_banner_type) { this._banner = value }
+}
+// CLASS TAGGROUP ***********************************************************************
+/**
+ * Class that define a TagGroup object
+ * @export
+ * @class Class_TagGroup
+ */
+
+export abstract class Class_TagGroup extends Class_ProtoTagGroup {
+
+  // PROTECTED ATTRIBUTES ===============================================================
+  protected abstract _tags: { [_: string]: Class_Tag; };
+
+  // PRIVATE ATTRIBUTES =================================================================
+  // Display attributes
+  private _use_colors: boolean = false
+
+  // CONSTRUCTOR ========================================================================
+  /**
+   * Creates an instance of Class_TagGroup.
+   * @param {string} id
+   * @param {string} name
+   * @memberof Class_TagGroup
+   */
+  constructor(
+    id: string,
+    name: string,
+    sankey: Class_Sankey
+  ) {
+    super(id, name, sankey)
+    // Default banner as multi
+    this.banner = 'multi'
+  }
+
+  // CLEANING METHODS ==================================================================
+  // COPY METHODS =====================================================================
+  protected _toJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    super._toJSON(json_object, kwargs)
+    json_object['use_colors'] = this._use_colors
+  }
+
+  protected _fromJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    super._fromJSON(json_object, kwargs)
+    this._use_colors = getBooleanFromJSON(json_object, 'use_colors', this._use_colors)
+
+  }
+
+  protected _copyFrom(
+    tagg_to_copy: Class_TagGroup,
+    matching_tags_id: { [_: string]: string; } = {}
+  ) {
+    super._copyFrom(tagg_to_copy, matching_tags_id)
+    this._use_colors = tagg_to_copy.use_colors
+  }
+
+  // PUBLIC METHODS =====================================================================
+  public updateTagsReferences(): void {
+    const ref_updated: (Class_NodeElement | Class_LinkElement | Class_ElementValue)[] = []
+    Object.values(this._tags)
+      .forEach(tag => {
+        tag.references
+          .forEach(ref => {
+            if (ref_updated.indexOf(ref) < 0) {
+              ref.draw()
+              ref_updated.push(ref)
+            }
+          })
+      })
+    //this._ref_sankey.drawing_area.checkAndUpdateAreaSize()
+  }
+
+  // PROTECTED METHODS ==================================================================
+  protected abstract createTag(
+    name: string,
+    id: string | undefined
+  ): Class_Tag;
+
+  // GETTER =============================================================================
+  /**
+   * Return dict tag from the current group
+   * @type {{ [_: string]: Class_Tag }}
+   * @memberof Class_TagGroup
+   */
+  public get tags_dict() { return this._tags }
+
+  /**
+   * Return ordered list of tags from the current group
+   * @type {Class_Tag[]}
+   * @memberof Class_TagGroup
+   */
+  public get tags_list(): Class_Tag[] {
+    if (this.tags_order.length > 0)
+      return this.tags_order
+        .filter(id => id in this.tags_dict)
+        .map(id => this.tags_dict[id])
+    return Object.values(this.tags_dict)
+  }
+
+  /**
+   * Return list of selected tag from the current group
+   * @readonly
+   * @memberof Class_TagGroup
+   */
+  public get selected_tags_list() { return this.tags_list.filter(t => t.is_selected) }
+
+  public get use_colors(): boolean { return this._use_colors }
+
+  // SETTER =============================================================================
+  public set use_colors(value: boolean) {
+    // Avoid useless updates
+    if (this._use_colors !== value) {
+      this._use_colors = value
+      this.updateTagsReferences()
+    }
+  }
+}
+// CLASS NODETAGGROUP *******************************************************************
+/**
+ * Class that define a Node TagGroup object
+ * @export
+ * @class Class_TagGroup
+ */
+
+export class Class_NodeTagGroup extends Class_TagGroup {
+
+  // PROTECTED ATTRIBUTES ===============================================================
+  protected _tags: { [_: string]: Class_NodeTag; }
+
+  // CONSTRUCTOR ========================================================================
+  /**
+   * Creates an instance of Class_TagGroup.
+   * @param {string} id
+   * @param {string} name
+   * @memberof Class_TagGroup
+   */
+  constructor(
+    id: string,
+    name: string,
+    sankey: Class_Sankey,
+    with_a_tag: boolean = true
+  ) {
+    super(id, name, sankey)
+    // Init dict of tags
+    this._tags = {}
+    // Create a first default tag
+    if (with_a_tag) this.addTag('Etiquette 0')
+  }
+
+  // PROTECTED METHODS ==================================================================
+  protected createTag(
+    name: string,
+    id: string | undefined = undefined
+  ) {
+    const tag = new Class_NodeTag(name, this, this._ref_sankey, id)
+    tag.setSelected()
+    return tag
+  }
+
+}
+// CLASS FLUXTAGGROUP *******************************************************************
+/**
+ * Class that define a Flux TagGroup object
+ * @export
+ * @class Class_TagGroup
+ */
+
+export class Class_FluxTagGroup extends Class_TagGroup {
+
+  // PROTECTED ATTRIBUTES ===============================================================
+  protected _tags: { [_: string]: Class_FluxTag; }
+
+  // CONSTRUCTOR ========================================================================
+  /**
+   * Creates an instance of Class_TagGroup.
+   * @param {string} id
+   * @param {string} name
+   * @memberof Class_TagGroup
+   */
+  constructor(
+    id: string,
+    name: string,
+    sankey: Class_Sankey,
+    with_a_tag: boolean = true
+  ) {
+    super(id, name, sankey)
+    // Init dict of tags
+    this._tags = {}
+    // Create a first default tag
+    if (with_a_tag) this.addTag('Etiquette 0')
+  }
+
+  // PROTECTED METHODS ==================================================================
+  protected createTag(
+    name: string,
+    id: string | undefined = undefined
+  ) {
+    const tag = new Class_FluxTag(name, this, this._ref_sankey, id)
+    tag.setSelected()
+    return tag
+  }
+
+}
+// CLASS DATATAGGROUP *******************************************************************
+/**
+ * Class that define a TagGroup object
+ * @export
+ * @class Class_TagGroup
+ */
+
+export class Class_DataTagGroup extends Class_ProtoTagGroup {
+
+  // PRIVATE ATTRIBUTES =================================================================
+  // Display attributes
+  private _use_colors: boolean = false
+
+  private _is_unit = false
+
+  // #161 — when false, the diagram structure is not propagated across this
+  // group's tags: a flux absent for a tag does not exist there. Default true
+  // (legacy). Mirrors the parser's TagGroup.propagate_structure.
+  private _propagate_structure = true
+
+  // PROTECTED ATTRIBUTES ===============================================================
+  protected _tags: { [_: string]: Class_DataTag; }
+
+  // CONSTRUCTOR ========================================================================
+  /**
+   * Creates an instance of Class_TagGroup.
+   * @param {string} id
+   * @param {string} name
+   * @memberof Class_TagGroup
+   */
+  constructor(
+    id: string,
+    name: string,
+    sankey: Class_Sankey,
+    with_a_tag: boolean = true
+  ) {
+    super(id, name, sankey)
+    // Init dict of tags
+    this._tags = {}
+    // Create and select a first default tag
+    if (with_a_tag) {
+      const tag = this.addTag('Etiquette 0')
+      tag.setSelected()
+    }
+  }
+
+  // COPY METHODS =======================================================================
+  protected _copyFrom(
+    tagg_to_copy: Class_DataTagGroup
+  ) {
+    super._copyFrom(tagg_to_copy)
+    this._use_colors = tagg_to_copy.use_colors
+    this._is_unit = tagg_to_copy._is_unit
+    this._propagate_structure = tagg_to_copy._propagate_structure
+  }
+
+  protected _toJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    super._toJSON(json_object, kwargs)
+    json_object['use_colors'] = this._use_colors
+    json_object['is_unit'] = this._is_unit
+    json_object['propagate_structure'] = this._propagate_structure
+  }
+
+  protected _fromJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    super._fromJSON(json_object, kwargs)
+    this._use_colors = getBooleanFromJSON(json_object, 'use_colors', this._use_colors)
+    if ( getBooleanFromJSON(json_object, 'is_sequence', false)) {
+      this.banner = 'sequence'
+    }
+    this._is_unit = getBooleanFromJSON(json_object, 'is_unit', this._is_unit)
+    this._propagate_structure = getBooleanFromJSON(json_object, 'propagate_structure', this._propagate_structure)
+  }
+
+  // PUBLIC METHODS =====================================================================
+  public selectTagsFromId(
+    id: string
+  ) {
+
+    const old_selected = this.selected_tags_list[0].id
+    const _selectTagsFromId = (_: string) => {
+      this.tags_list
+        .forEach(tag => {
+          if (tag.id === _) {
+            tag.setSelected()
+          }
+          else {
+            tag.setUnSelected()
+          }
+        })
+      this.checkSelectionCoherence()
+      this.updateTagsReferences()
+      this._ref_sankey.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToDataTags()
+    }
+
+    this._ref_sankey.drawing_area.application_data.history.saveUndo(() => _selectTagsFromId(old_selected))
+    this._ref_sankey.drawing_area.application_data.history.saveRedo(() => _selectTagsFromId(id))
+    _selectTagsFromId(id)
+  }
+
+  public selectTagsFromIds(
+    ids: string[]
+  ) {
+    this.tags_list
+      .forEach(tag => {
+        if (ids.includes(tag.id)) {
+          tag.setSelected()
+        }
+        else {
+          tag.setUnSelected()
+        }
+      })
+    this.checkSelectionCoherence()
+    this.updateTagsReferences()
+  }
+
+  public updateTagsReferences(): void {
+    // On datatags update everything is impacted
+    this._ref_sankey.drawing_area.draw()
+  }
+
+  // PROTECTED METHODS ==================================================================
+  protected createTag(
+    name: string,
+    id: string | undefined = undefined
+  ) {
+    return new Class_DataTag(name, this, this._ref_sankey, id)
+  }
+
+  // PRIVATE METHODES ===================================================================
+  /**
+   * Permet d'eviter de désélectionner tous les dataTags ce qui créerait une erreur
+   * @private
+   * @memberof Class_DataTagGroup
+   */
+  private checkSelectionCoherence() {
+    if (this.selected_tags_list.length === 0) {
+      this.tags_list[0]?.setSelected()
+    }
+  }
+
+  // GETTER =============================================================================
+  /**
+   * Return dict tag from the current group
+   * @type {{ [_: string]: Class_DataTag }}
+   * @memberof Class_DataTagGroup
+   */
+  public get tags_dict() { return this._tags }
+
+  /**
+   * Return ordered list of tags from the current group
+   * @type {Class_DataTag[]}
+   * @memberof Class_DataTagGroup
+   */
+  public get tags_list(): Class_DataTag[] {
+    if (this.tags_order.length > 0)
+      return this.tags_order
+        .filter(id => id in this.tags_dict)
+        .map(id => this.tags_dict[id])
+    return Object.values(this.tags_dict)
+  }
+
+  /**
+   * Return list of selected tag from the current group
+   * @readonly
+   * @memberof Class_DataTagGroup
+   */
+  public get selected_tags_list() { return this.tags_list.filter(t => t.is_selected) }
+
+  public get use_colors(): boolean { return this._use_colors }
+  public get is_unit(): boolean { return this._is_unit }
+
+  // SETTER ==============================================================================
+  public set use_colors(value: boolean) {
+    // Avoid useless updates
+    if (this._use_colors !== value) {
+      this._use_colors = value
+      this.updateTagsReferences()
+    }
+  }
+
+  public set is_unit(value: boolean) { this._is_unit = value }
+
+  // #161 — per-group structure-propagation flag (default true = legacy)
+  public get propagate_structure(): boolean { return this._propagate_structure }
+
+  public set propagate_structure(value: boolean) { this._propagate_structure = value }
+}
+// CLASS LEVEL TAGGROUP *****************************************************************
+/**
+ * Tag group for node level - Fusionné avec Class_ProtoLevelTagGroup
+ * @export
+ * @class Class_LevelTagGroup
+ */
+export class Class_LevelTagGroup  extends Class_NodeTagGroup{
+
+  // Display attributes
+  private _activated: boolean = false
+  private _siblings: string[] = []
+  private _antitagged_refs: Class_NodeElement[] = []
+
+  // PROTECTED ATTRIBUTES ===============================================================
+  public linked_tag_group : Class_TagGroup | null = null
+
+  /**
+   * True if tag is currently on a deletion process
+   * Avoid infinite calls of delete() method
+   * @private
+   * @memberof Class_LevelTagGroup
+   */
+
+  // CONSTRUCTOR ========================================================================
+  /**
+   * Creates an instance of Class_LevelTagGroup.
+   * @param {string} id
+   * @param {string} name
+   * @param {Class_Sankey} sankey
+   * @memberof Class_LevelTagGroup
+   */
+  constructor(id: string, name: string, sankey: Class_Sankey,with_a_tag: boolean = false) {
+    super(id,name,sankey,with_a_tag)
+  }
+
+  // CLEANING METHODS ====================================================================
+  /**
+   * Define deletion behavior
+   * @memberof Class_LevelTagGroup
+   */
+  public delete() {
+    super.delete()
+    this._antitagged_refs.forEach(ref => this.removeAntiTaggedRef(ref))
+    this._antitagged_refs = []
+  }
+
+  // COPY METHODS ========================================================================
+  public copyFrom(tagg_to_copy: Class_LevelTagGroup) {
+    this._copyFrom(tagg_to_copy)
+  }
+
+  protected _copyFrom(tagg_to_copy: Class_LevelTagGroup) {
+    super._copyFrom(tagg_to_copy)
+    this._activated = tagg_to_copy._activated
+    this._siblings = (tagg_to_copy as unknown as Class_LevelTagGroup)._siblings
+  }
+
+
+  protected _toJSON(json_object: Type_JSON, _kwargs?: Type_JSON) {
+    super._toJSON(json_object,_kwargs)
+
+    json_object['activated'] = this._activated
+    json_object['siblings'] = this._siblings
+  }
+
+  protected _fromJSON(json_object: Type_JSON, kwargs?: Type_JSON) {
+    super._fromJSON(json_object,kwargs)
+
+    this._activated = getBooleanFromJSON(json_object, 'activated', this._activated)
+    this._siblings = getStringListFromJSON(json_object, 'siblings', this._siblings)
+    const linked_tag_group_id = getStringOrUndefinedFromJSON(json_object, 'linked_tag_group')
+    if (linked_tag_group_id !== undefined)
+      this.linked_tag_group = this._ref_sankey.node_taggs_dict[linked_tag_group_id] ?? null
+  }
+
+  public addAntiTaggedRef(_: Class_NodeElement) {
+    if (!this._antitagged_refs.includes(_)) {
+      this._antitagged_refs.push(_)
+      _.addAsAntiTagged(this)
+    }
+  }
+
+  public removeAntiTaggedRef(_: Class_NodeElement) {
+    if (this._antitagged_refs.includes(_)) {
+      const idx = this._antitagged_refs.indexOf(_)
+      this._antitagged_refs.splice(idx, 1)
+      _.removeAsAntiTagged(this)
+    }
+  }
+
+  /**
+   * Function to add sibling to current group and referenced group,
+   * because they mutually interact at some mechanic
+   *
+   * @param {Class_LevelTagGroup} _
+   * @memberof Class_LevelTagGroup
+   */
+  public addSibling(_: Class_LevelTagGroup) {
+    // Add antagonist grp id to sibling
+    if (!this._siblings.includes(_.id)) {
+      this._siblings.push(_.id)
+    }
+
+    // Add this grp id to sibling antagonist list
+    if (!_._siblings.includes(this.id)) {
+      _._siblings.push(this.id)
+    }
+  }
+
+  /**
+   * Function to remove sibling to current group and referenced group,
+   * because they mutually interact at some mechanic
+   *
+   * @param {Class_LevelTagGroup} _
+   * @memberof Class_LevelTagGroup
+   */
+  public removeSibling(_: Class_LevelTagGroup) {
+    // remove antagonist grp id from sibling
+    if (this._siblings.includes(_.id)) {
+      const idx = this._siblings.indexOf(_.id)
+      this._siblings.splice(idx, 1)
+    }
+
+    // remove this grp id from sibling antagonist list
+    if (_._siblings.includes(this.id)) {
+      const idx = _._siblings.indexOf(this.id)
+      _._siblings.splice(idx, 1)
+    }
+  }
+
+  // PROTECTED METHODS ==================================================================
+  protected createTag(name: string, id: string | undefined = undefined): Class_LevelTag {
+    const tag = new Class_LevelTag(name, this, this._ref_sankey, id)
+    if (Object.keys(this._tags).length == 0) {
+      tag.setSelected()
+    } else {
+      tag.setUnSelected()
+    }
+    return tag
+  }
+
+
+  public get activated(): boolean { return this._activated }
+  public get siblings(): string[] { return this._siblings }
+  public get antitagged_refs() { return this._antitagged_refs }
+  
+  public set activated(value: boolean) {
+    this._activated = value
+  }
+
+  public set siblings(value: string[]) {
+    this._siblings = value
+    this._ref_sankey.draw()
+  }
+}
+
+
+
+// CLASS VIEW TAGGROUP ******************************************************************
+/**
+ * Tag group for view management - calqué sur LevelTagGroup avec sibling et activation
+ * @export
+ * @class Class_ViewTagGroup
+ */
+export class Class_ViewTagGroup extends Class_NodeTagGroup {
+  private _activated: boolean = false
+  private _siblings: string[] = []
+  // Mode « filtre vue » : quand actif sur un groupe de view tags (banner 'one'),
+  // sélectionner une étiquette filtre le diagramme en COURT-CIRCUITANT les level
+  // tags (généralisation du mécanisme unitaire) : les nœuds portant l'étiquette
+  // sélectionnée sont montrés quel que soit le niveau, les autres étiquettes du
+  // groupe sont cachées. (Visibilité seulement — pas de remontée vers les ancêtres.)
+  private _view_mode: boolean = false
+  // Libellé personnalisable de l'option « vue complète » du sélecteur topbar
+  // (BannerViewTagTopbar). Vide = libellé par défaut (traduction Banner.view_full).
+  private _full_view_label: string = ''
+
+  /**
+   * True if tag is currently on a deletion process
+   * Avoid infinite calls of delete() method
+   * @private
+   * @memberof Class_ViewTagGroup
+   */
+
+  // CONSTRUCTOR ========================================================================
+  /**
+   * Creates an instance of Class_ViewTagGroup.
+   * @param {string} id
+   * @param {string} name
+   * @param {Class_Sankey} sankey
+   * @param {boolean} [with_a_tag=false]
+   * @memberof Class_ViewTagGroup
+   */
+  constructor(
+    id: string,
+    name: string,
+    sankey: Class_Sankey,
+    with_a_tag: boolean = false
+  ) {
+    super(id, name, sankey, with_a_tag)
+    // Default banner as 'one' for view tags
+    this.banner = 'one'
+  }
+
+  // CLEANING METHODS ===================================================================
+  /**
+   * Define deletion behavior
+   * @memberof Class_ViewTagGroup
+   */
+  public delete() {
+    super.delete()
+  }
+
+  // COPY METHODS =======================================================================
+  public copyFrom(tagg_to_copy: Class_ViewTagGroup) {
+    this._copyFrom(tagg_to_copy)
+  }
+
+  protected _copyFrom(tagg_to_copy: Class_ViewTagGroup) {
+    super._copyFrom(tagg_to_copy)
+    this._activated = tagg_to_copy._activated
+    this._siblings = [...tagg_to_copy._siblings]
+    this._view_mode = tagg_to_copy._view_mode
+    this._full_view_label = tagg_to_copy._full_view_label
+  }
+
+  protected _toJSON(json_object: Type_JSON, _kwargs?: Type_JSON) {
+    super._toJSON(json_object, _kwargs)
+    json_object['activated'] = this._activated
+    json_object['siblings'] = this._siblings
+    json_object['view_mode'] = this._view_mode
+    json_object['full_view_label'] = this._full_view_label
+  }
+
+  protected _fromJSON(json_object: Type_JSON, kwargs?: Type_JSON) {
+    super._fromJSON(json_object, kwargs)
+    this._activated = getBooleanFromJSON(json_object, 'activated', this._activated)
+    this._siblings = getStringListFromJSON(json_object, 'siblings', this._siblings)
+    this._view_mode = getBooleanFromJSON(json_object, 'view_mode', this._view_mode)
+    this._full_view_label = getStringFromJSON(json_object, 'full_view_label', this._full_view_label)
+  }
+
+  public get view_mode(): boolean { return this._view_mode }
+  public set view_mode(_: boolean) { this._view_mode = _ }
+
+  public get full_view_label(): string { return this._full_view_label }
+  public set full_view_label(_: string) { this._full_view_label = _ }
+
+  /**
+   * Function to add sibling to current group and referenced group,
+   * because they mutually interact at some mechanic
+   *
+   * @param {Class_ViewTagGroup} _
+   * @memberof Class_ViewTagGroup
+   */
+  public addSibling(_: Class_ViewTagGroup) {
+    // Add antagonist grp id to sibling
+    if (!this._siblings.includes(_.id)) {
+      this._siblings.push(_.id)
+    }
+
+    // Add this grp id to sibling antagonist list
+    if (!_._siblings.includes(this.id)) {
+      _._siblings.push(this.id)
+    }
+  }
+
+  /**
+   * Function to remove sibling to current group and referenced group,
+   * because they mutually interact at some mechanic
+   *
+   * @param {Class_ViewTagGroup} _
+   * @memberof Class_ViewTagGroup
+   */
+  public removeSibling(_: Class_ViewTagGroup) {
+    // remove antagonist grp id from sibling
+    if (this._siblings.includes(_.id)) {
+      const idx = this._siblings.indexOf(_.id)
+      this._siblings.splice(idx, 1)
+    }
+
+    // remove this grp id from sibling antagonist list
+    if (_._siblings.includes(this.id)) {
+      const idx = _._siblings.indexOf(this.id)
+      _._siblings.splice(idx, 1)
+    }
+  }
+
+  // PROTECTED METHODS ==================================================================
+  /**
+   * Create a new ViewTag for this group
+   * @protected
+   * @param {string} name
+   * @param {string} [id]
+   * @return {Class_ViewTag}
+   * @memberof Class_ViewTagGroup
+   */
+  protected createTag(name: string, id: string | undefined = undefined): Class_ViewTag {
+    const tag = new Class_ViewTag(name, this, this._ref_sankey, id)
+    if (Object.keys(this._tags).length == 0) {
+      tag.setSelected()
+    } else {
+      tag.setUnSelected()
+    }
+    return tag
+  }
+
+  // GETTERS ============================================================================
+  /**
+   * Is this view tag group currently activated
+   * @readonly
+   * @type {boolean}
+   * @memberof Class_ViewTagGroup
+   */
+  public get activated(): boolean {
+    return this._activated
+  }
+
+  /**
+   * List of sibling tag group ids
+   * @readonly
+   * @type {string[]}
+   * @memberof Class_ViewTagGroup
+   */
+  public get siblings(): string[] {
+    return this._siblings
+  }
+
+  // SETTERS ============================================================================
+  /**
+   * Set activation state
+   * @memberof Class_ViewTagGroup
+   */
+  public set activated(value: boolean) {
+    this._activated = value
+  }
+
+  /**
+   * Set siblings list and redraw
+   * @memberof Class_ViewTagGroup
+   */
+  public set siblings(value: string[]) {
+    this._siblings = value
+    this._ref_sankey.draw()
+  }
+}

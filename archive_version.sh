@@ -41,7 +41,7 @@ esac
 
 # --- Detect version ---------------------------------------------------------
 if [[ -z "$VERSION" ]]; then
-  VERSION=$(grep -m1 '"version"' "${ENV_APP}/client/package.json" \
+  VERSION=$(grep -m1 '"version"' "${ENV_APP}/packages/sankeyapplication/package.json" \
             | sed -E 's/.*"version"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/')
 fi
 if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$ ]]; then

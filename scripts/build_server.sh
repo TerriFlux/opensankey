@@ -52,11 +52,13 @@ if [ -f requirements_frozen.txt ] && [ "$(uname -s)" = "Linux" ]; then
 fi
 pip_install -r "$REQ_FILE"  || exit_if_error $?
 
-# Install deps
-for submodule in OpenSankey+ LoginComponent MFAProblem; do
-  cd ./submodules/$submodule
+# Install deps — depuis le monorepo (#235), les couches front vivent dans
+# packages/ (OpenSankey+ etait un simple passe-plat vers OpenSankey) ;
+# MFAProblem reste un submodule Python.
+for dep in packages/opensankey packages/login-component submodules/MFAProblem; do
+  cd ./$dep
   bash build_server.sh || exit_if_error $?
-  cd ../..
+  cd - > /dev/null
 done
 
 # Check PEP

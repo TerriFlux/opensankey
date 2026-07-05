@@ -1,0 +1,5 @@
+packages:
+  - packages/opensankey/opensankey/client
+  - packages/opensankey-plus/client
+  - packages/login-component/client
+  - packages/sankeyapplication

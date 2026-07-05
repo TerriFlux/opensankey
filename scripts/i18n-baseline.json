@@ -1,66 +1,7 @@
 {
   "_readme": "Dette i18n gelée (#234). Clés FR/EN non appariées connues. Objectif : rétrécir jusqu'à {}. Régénérer via `node scripts/check_i18n.mjs --update-baseline`.",
   "files": {
-    "client/src/traductions/traductions_app_elements.tsx": {
-      "onlyEn": [
-        "translation.MEP.load_icon",
-        "translation.Menu.Transformation.Attribut",
-        "translation.Menu.Transformation.Geometry",
-        "translation.Menu.Transformation.PosNoeud",
-        "translation.Menu.Transformation.Shortcuts",
-        "translation.Menu.Transformation.Tags",
-        "translation.Menu.Transformation.Topology",
-        "translation.Menu.Transformation.Values",
-        "translation.Menu.Transformation.Views",
-        "translation.Menu.Transformation.ad",
-        "translation.Menu.Transformation.addFlux",
-        "translation.Menu.Transformation.addNode",
-        "translation.Menu.Transformation.amp",
-        "translation.Menu.Transformation.amp_import",
-        "translation.Menu.Transformation.amp_manuelle",
-        "translation.Menu.Transformation.amp_short",
-        "translation.Menu.Transformation.attrFlux",
-        "translation.Menu.Transformation.attrGeneral",
-        "translation.Menu.Transformation.attrNode",
-        "translation.Menu.Transformation.fmep",
-        "translation.Menu.Transformation.freeLabels",
-        "translation.Menu.Transformation.posFlux",
-        "translation.Menu.Transformation.removeFlux",
-        "translation.Menu.Transformation.removeNode",
-        "translation.Menu.Transformation.selectAll",
-        "translation.Menu.Transformation.selectDefault",
-        "translation.Menu.Transformation.tagData",
-        "translation.Menu.Transformation.tagFlux",
-        "translation.Menu.Transformation.tagFlux_assign",
-        "translation.Menu.Transformation.tagLevel",
-        "translation.Menu.Transformation.tagNode",
-        "translation.Menu.Transformation.tagNode_assign",
-        "translation.Menu.Transformation.title",
-        "translation.Menu.Transformation.trans_topo",
-        "translation.Menu.Transformation.unSelectAll",
-        "translation.Menu.Transformation.undo",
-        "translation.mfa_blocked",
-        "translation.welcome.breadcrumbs.intro"
-      ],
-      "onlyFr": [
-        "translation.Menu.diagramme",
-        "translation.Menu.tooltips.NextViewButton",
-        "translation.Menu.tooltips.PrevViewButton",
-        "translation.Menu.tooltips.buttonCloneView",
-        "translation.Menu.tooltips.buttonCreateView",
-        "translation.Menu.tooltips.buttonExportView",
-        "translation.Menu.tooltips.buttonImportView",
-        "translation.Menu.tooltips.home",
-        "translation.Menu.tooltips.saveView",
-        "translation.Paiement.win_content_buy",
-        "translation.Register.presentation.trial_month",
-        "translation.elements_mfa_blocked",
-        "translation.osplus_presentation",
-        "translation.osplus_presentation.text",
-        "translation.osplus_presentation.title"
-      ]
-    },
-    "submodules/OpenSankey+/client/src/traductions/traduction_app_elements.tsx": {
+    "packages/opensankey-plus/client/src/traductions/traduction_app_elements.tsx": {
       "onlyEn": [
         "translation.MEP.load_icon",
         "translation.Menu.Config.presentation",
@@ -120,7 +61,7 @@
         "translation.view.tooltips.buttonCreateViewUnitary"
       ]
     },
-    "submodules/OpenSankey+/submodules/OpenSankey/opensankey/client/src/traductions/traduction_app_elements.tsx": {
+    "packages/opensankey/opensankey/client/src/traductions/traduction_app_elements.tsx": {
       "onlyEn": [
         "translation.Banner.tooltipAjoutNode",
         "translation.Menu.PosFlux",
@@ -178,7 +119,7 @@
         "translation.Tags.EditDimensionLevel"
       ]
     },
-    "submodules/OpenSankey+/submodules/OpenSankey/opensankey/client/src/traductions/traduction_links.tsx": {
+    "packages/opensankey/opensankey/client/src/traductions/traduction_links.tsx": {
       "onlyEn": [
         "translation.Flux.apparence.tooltips.ending_curve",
         "translation.Flux.apparence.tooltips.ending_tangeant",
@@ -238,7 +179,7 @@
         "translation.Flux.labels.unit_tag"
       ]
     },
-    "submodules/OpenSankey+/submodules/OpenSankey/opensankey/client/src/traductions/traduction_nodes.tsx": {
+    "packages/opensankey/opensankey/client/src/traductions/traduction_nodes.tsx": {
       "onlyEn": [
         "translation.Noeud.apparence.shape_color",
         "translation.Noeud.apparence.shape_color_sustainable",
@@ -257,6 +198,65 @@
         "translation.Noeud.apparence.shape_arrow_angle_direction",
         "translation.Noeud.apparence.shape_arrow_angle_factor",
         "translation.Noeud.labels.tooltips.haut"
+      ]
+    },
+    "packages/sankeyapplication/src/traductions/traductions_app_elements.tsx": {
+      "onlyEn": [
+        "translation.MEP.load_icon",
+        "translation.Menu.Transformation.Attribut",
+        "translation.Menu.Transformation.Geometry",
+        "translation.Menu.Transformation.PosNoeud",
+        "translation.Menu.Transformation.Shortcuts",
+        "translation.Menu.Transformation.Tags",
+        "translation.Menu.Transformation.Topology",
+        "translation.Menu.Transformation.Values",
+        "translation.Menu.Transformation.Views",
+        "translation.Menu.Transformation.ad",
+        "translation.Menu.Transformation.addFlux",
+        "translation.Menu.Transformation.addNode",
+        "translation.Menu.Transformation.amp",
+        "translation.Menu.Transformation.amp_import",
+        "translation.Menu.Transformation.amp_manuelle",
+        "translation.Menu.Transformation.amp_short",
+        "translation.Menu.Transformation.attrFlux",
+        "translation.Menu.Transformation.attrGeneral",
+        "translation.Menu.Transformation.attrNode",
+        "translation.Menu.Transformation.fmep",
+        "translation.Menu.Transformation.freeLabels",
+        "translation.Menu.Transformation.posFlux",
+        "translation.Menu.Transformation.removeFlux",
+        "translation.Menu.Transformation.removeNode",
+        "translation.Menu.Transformation.selectAll",
+        "translation.Menu.Transformation.selectDefault",
+        "translation.Menu.Transformation.tagData",
+        "translation.Menu.Transformation.tagFlux",
+        "translation.Menu.Transformation.tagFlux_assign",
+        "translation.Menu.Transformation.tagLevel",
+        "translation.Menu.Transformation.tagNode",
+        "translation.Menu.Transformation.tagNode_assign",
+        "translation.Menu.Transformation.title",
+        "translation.Menu.Transformation.trans_topo",
+        "translation.Menu.Transformation.unSelectAll",
+        "translation.Menu.Transformation.undo",
+        "translation.mfa_blocked",
+        "translation.welcome.breadcrumbs.intro"
+      ],
+      "onlyFr": [
+        "translation.Menu.diagramme",
+        "translation.Menu.tooltips.NextViewButton",
+        "translation.Menu.tooltips.PrevViewButton",
+        "translation.Menu.tooltips.buttonCloneView",
+        "translation.Menu.tooltips.buttonCreateView",
+        "translation.Menu.tooltips.buttonExportView",
+        "translation.Menu.tooltips.buttonImportView",
+        "translation.Menu.tooltips.home",
+        "translation.Menu.tooltips.saveView",
+        "translation.Paiement.win_content_buy",
+        "translation.Register.presentation.trial_month",
+        "translation.elements_mfa_blocked",
+        "translation.osplus_presentation",
+        "translation.osplus_presentation.text",
+        "translation.osplus_presentation.title"
       ]
     }
   }

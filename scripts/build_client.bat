@@ -1,6 +1,11 @@
 @echo off
 setlocal enabledelayedexpansion
 
+REM Build front du monorepo pnpm workspace (#235/#236).
+REM Plus de junctions src\deps ni de recursion submodules front : les couches
+REM se resolvent par dependances workspace:*. L'option -S est acceptee mais
+REM sans effet (compat avec les anciens appels).
+
 REM === Capture script dir BEFORE shift (sinon %~dp0 devient le dir de %1) ===
 set "BAT_DIR=%~dp0"
 
@@ -9,7 +14,6 @@ set "install=false"
 set "linter=false"
 set "build=false"
 set "dist=false"
-set "deps=false"
 set "gdeps=false"
 
 REM === Parse arguments ===
@@ -19,7 +23,7 @@ if "%~1"=="--install_deps" (set "install=true") else if "%~1"=="-I" (set "instal
 if "%~1"=="--linter" (set "linter=true") else if "%~1"=="-L" (set "linter=true") else ^
 if "%~1"=="--build" (set "build=true") else if "%~1"=="-B" (set "build=true") else ^
 if "%~1"=="--dist" (set "dist=true") else if "%~1"=="-D" (set "dist=true") else ^
-if "%~1"=="--sub_deps" (set "deps=true") else if "%~1"=="-S" (set "deps=true") else ^
+if "%~1"=="--sub_deps" (rem no-op) else if "%~1"=="-S" (rem no-op) else ^
 if "%~1"=="--global_deps" (set "gdeps=true") else if "%~1"=="-G" (set "gdeps=true") else ^
 goto show_help
 shift
@@ -27,12 +31,11 @@ goto parse_args
 
 :show_help
 echo Options:
-echo --install_deps ^| -I : Install node modules dependencies
-echo --linter       ^| -L : Run linter
-echo --build        ^| -B : Run build
-echo --dist         ^| -D : Compile dist
-echo --sub_deps     ^| -S : Run sub-scripts of deps
-echo --global_deps  ^| -G : Install global deps
+echo --install_deps ^| -I : Install node modules dependencies ^(workspace racine^)
+echo --linter       ^| -L : Run linter ^(tous les paquets^)
+echo --build        ^| -B : Build standalone du client SA
+echo --dist         ^| -D : Compile dist ^(lib npm^)
+echo --global_deps  ^| -G : Installe pnpm ^(corepack^)
 exit /b 1
 
 :end_args
@@ -45,79 +48,35 @@ popd
 REM === Install global dependencies ===
 if "%gdeps%"=="true" (
     echo Global dependencies -------------------------------------------------
-    where pnpm >nul 2>nul
-    if errorlevel 1 (
-        for /f %%G in ('npm root -g') do set "GLOBAL_NPM_PATH=%%G"
-        echo ^>^>^> Installation dans !GLOBAL_NPM_PATH!
-        call npm install -g pnpm
+    where corepack >nul 2>nul
+    if not errorlevel 1 (
+        call corepack enable
+        call corepack prepare pnpm@10.4.1 --activate
+    ) else (
+        where pnpm >nul 2>nul
+        if errorlevel 1 call npm install -g pnpm@10.4.1
     )
     echo OK ------------------------------------------------------------------
 )
 
-REM === Sub-deps build ===
-if "%deps%"=="true" (
-    echo OpenSankey+ ========================================================
-    pushd "!SCRIPT_DIR!\submodules\OpenSankey+"
-    call build_client.bat %*
-    if errorlevel 1 exit /b 1
-    popd
-    echo OK OpenSankey+ =======================================================
-)
-
-REM === Clean sub deps ===
-echo Clean deps ----------------------------------------------------------
-call "!SCRIPT_DIR!\submodules\OpenSankey+\build_client.bat" >nul
-for %%D in (node_modules dist build) do (
-    if exist "!SCRIPT_DIR!\submodules\OpenSankey+\client\%%D" (
-        echo removing !SCRIPT_DIR!\submodules\OpenSankey+\client\%%D
-        rmdir /s /q "!SCRIPT_DIR!\submodules\OpenSankey+\client\%%D"
-    )
-)
-echo OK ------------------------------------------------------------------
-
-REM === Link dependencies ===
-echo Linking dependencies ------------------------------------------------
-for %%S in (OpenSankey+ LoginComponent) do (
-    pushd "!SCRIPT_DIR!\client\src\deps"
-    if exist "%%S" rmdir "%%S"
-    mklink /J "%%S" "..\..\..\submodules\%%S\client\src"
-    popd
-)
-
-for %%S in (OpenSankey+) do (
-    pushd "!SCRIPT_DIR!\client\src\deps\LoginComponent\deps"
-    if exist "%%S" rmdir "%%S"
-    mklink /J "%%S" "..\..\..\..\..\submodules\%%S\client\src"
-    popd
-)
-
-REM === Public directory ===
-pushd "!SCRIPT_DIR!\client"
-if exist "public" (
-    rmdir /s /q "public" 2>nul
-    git restore public 2>nul
-)
-robocopy "..\submodules\OpenSankey+\client\public" "public" /E /XO
-popd
-
-
-
-REM === Front-end build ===
+REM === Front-end build (workspace racine) ===
 echo Build ---------------------------------------------------------------
-pushd client
+pushd "!SCRIPT_DIR!"
 if "%install%"=="true" (
-    echo ^>^>^> Install deps
-    call pnpm install
+    echo ^>^>^> Install deps ^(workspace racine^)
+    call pnpm install --config.dangerouslyAllowAllBuilds=true
     if errorlevel 1 exit /b 1
 )
 if "%linter%"=="true" (
-    echo ^>^>^> Run linter
-    call pnpm run lint
+    echo ^>^>^> Run linter ^(workspace^)
+    call pnpm run lint:ci
     if errorlevel 1 exit /b 1
 )
 if "%build%"=="true" (
     echo ^>^>^> Build standalone
-    set CI=
+    set "DISABLE_ESLINT_PLUGIN=true"
+    set "CI="
+    set "NODE_OPTIONS=--max-old-space-size=8192"
     call pnpm run build
     if errorlevel 1 exit /b 1
 )

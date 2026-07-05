@@ -1,0 +1,267 @@
+stages:
+    - build
+    - deploy
+# Pip's cache doesn't store the python packages
+# https://pip.pypa.io/en/stable/reference/pip_install/#caching
+#
+# If you want to also cache the installed packages, you have to install
+# them in a virtualenv and cache it as well.
+cache:
+  paths:
+    - .cache/pip
+# Change pip's cache directory to be inside the project directory since we can
+# only cache local items.
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+  GIT_SUBMODULE_FORCE_HTTPS: "true"
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  PIP_QUIET: "1"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PIP_PROGRESS_BAR: "off"
+  PIP_ROOT_USER_ACTION: "ignore"
+  PUBLIC_URL: "/"
+build:
+  stage: build
+  tags: [py312]
+  script:
+    # Env
+    - echo $CI_PROJECT_DIR
+    - source /home/gitlab-runner/gitlab_dev/bin/activate
+    # Build open-sankey
+    - bash build_client.sh -I -L -B -D
+    - bash build_server.sh
+    - bash build_doc.sh
+  artifacts:
+    paths:
+      - opensankey/client/build  # c'est le dossier généré par `npm run build`
+  except:
+    - schedules
+
+# Pas de job `test` cote OpenSankey : opensankey/tests/ ne contient que
+# test_dict_results.py qui depend de TestData (submodule retire le 2026-05-19).
+# Les tests TestData tournent uniquement depuis SankeyApplication.
+# test.sh est conserve pour usage local (avec TESTS_DIR=<SA>/TestData).
+
+# =====================================================================
+# Déploiement Pages (single deployment, plan Free compatible)
+#
+# Le plan GitLab du namespace ne permet pas les "parallel deployments".
+# Stratégie : on republie TOUT le site à chaque pipeline, en récupérant
+# les versions précédentes depuis l'URL publique de Pages avant d'y
+# ajouter le build courant.
+#
+# Étapes :
+#   1. Mirror des anciennes versions (auto-découverte via index.html actuel)
+#      → public/<v>/ pour chaque version trouvée
+#   2. Build courant → public/$APP_VERSION/ + public/latest/
+#   3. Génération de public/index.html listant toutes les versions
+#
+# Tolérance : si une version est inaccessible (Pages down, version
+# supprimée), on continue sans bloquer ; un avertissement est loggé.
+# La toute première fois (pas d'index pré-existant), seule la version
+# courante sera publiée — l'historique se reconstruit à partir de là.
+# =====================================================================
+pages:
+  image: node:18
+  stage: deploy
+  variables:
+    GIT_SUBMODULE_STRATEGY: none  # Évite les problèmes de sous-modules SSH
+    PAGES_BASE_URL: "https://su-model.gitlab.io/opensankey"
+  script:
+    # === Récupération de la version depuis package.json ===
+    - PACKAGE_JSON_PATH="$CI_PROJECT_DIR/opensankey/client/package.json"
+    - |
+      if [ ! -f "$PACKAGE_JSON_PATH" ]; then
+        echo "[ERREUR] Le fichier package.json est introuvable à : $PACKAGE_JSON_PATH"
+        exit 1
+      fi
+    - APP_VERSION=$(node -p "require('$PACKAGE_JSON_PATH').version")
+    - |
+      if [ -z "$APP_VERSION" ] || [ "$APP_VERSION" = "undefined" ]; then
+        echo "[ERREUR] Impossible de lire la version depuis package.json"
+        exit 1
+      fi
+    - echo "[INFO] Version détectée depuis package.json  $APP_VERSION"
+    # === Outils ===
+    - apt-get update -qq && apt-get install -y -qq wget
+    # === Vérification que le build existe ===
+    - BUILD_DIR="$CI_PROJECT_DIR/opensankey/client/build"
+    - |
+      if [ ! -d "$BUILD_DIR" ]; then
+        echo "[ERREUR] Le dossier build n'existe pas : $BUILD_DIR"
+        echo "[INFO] Assurez-vous que le job 'build' s'est exécuté correctement."
+        exit 1
+      fi
+    # === Chemins ===
+    - JS_DIR="$BUILD_DIR/static/js"
+    - CSS_DIR="$BUILD_DIR/static/css"
+    - INDEX_FILE="$BUILD_DIR/index.html"
+    - PUBLIC_DIR="$CI_PROJECT_DIR/public"
+    - VERSION_DIR="$PUBLIC_DIR/$APP_VERSION"
+    - LATEST_DIR="$PUBLIC_DIR/latest"
+    - mkdir -p "$PUBLIC_DIR"
+    # === Vérification des dossiers nécessaires ===
+    - |
+      if [ ! -d "$JS_DIR" ]; then
+        echo "[ERREUR] Dossier JS introuvable : $JS_DIR"
+        exit 1
+      fi
+      if [ ! -d "$CSS_DIR" ]; then
+        echo "[ERREUR] Dossier CSS introuvable : $CSS_DIR"
+        exit 1
+      fi
+      if [ ! -f "$INDEX_FILE" ]; then
+        echo "[ERREUR] Fichier index.html introuvable : $INDEX_FILE"
+        exit 1
+      fi
+    # === JS ===
+    - |
+      cd "$JS_DIR"
+      js_found=false
+      for f in main.*.js; do
+        if [ -f "$f" ]; then
+          cp "$f" "opensankey-v$APP_VERSION.js"
+          echo "[INFO] JS renommé : $f → opensankey-v$APP_VERSION.js"
+          sed -i "s|$f|opensankey-v$APP_VERSION.js|g" "$INDEX_FILE"
+          js_found=true
+        fi
+      done
+      if [ "$js_found" = false ]; then
+        echo "[ATTENTION] Aucun fichier main.*.js trouvé"
+      fi
+    # === CSS ===
+    - |
+      cd "$CSS_DIR"
+      css_found=false
+      for f in main.*.css; do
+        if [ -f "$f" ]; then
+          cp "$f" "opensankey-v$APP_VERSION.css"
+          echo "[INFO] CSS renommé : $f → opensankey-v$APP_VERSION.css"
+          sed -i "s|$f|opensankey-v$APP_VERSION.css|g" "$INDEX_FILE"
+          css_found=true
+        fi
+      done
+
+      if [ "$css_found" = false ]; then
+        echo "[ATTENTION] Aucun fichier main.*.css trouvé"
+      fi
+    # === Chemins relatifs pour GitLab Pages
+    - sed -i 's|="/static/|="./static/|g' "$INDEX_FILE"
+    - echo "[INFO] Chemins convertis en relatifs pour GitLab Pages"
+
+    # =================================================================
+    # ÉTAPE 1 — Récupération des versions précédentes depuis Pages
+    # On parse l'index.html actuel pour découvrir les versions déjà
+    # déployées, puis on miroir chacune dans public/<v>/.
+    # =================================================================
+    - echo "[INFO] Récupération de l'index Pages courant pour découvrir les versions"
+    - |
+      if wget --quiet --tries=2 --timeout=15 -O current_index.html "$PAGES_BASE_URL/index.html"; then
+        echo "[INFO] index.html récupéré"
+        # Parse les liens de la forme href="./X.Y.Z/" ou href="X.Y.Z/"
+        grep -oE 'href="\.?/?[0-9]+\.[0-9]+\.[0-9]+/"' current_index.html \
+          | sed -E 's|href="\.?/?||; s|/"||' \
+          | sort -u > previous_versions.txt || true
+      else
+        echo "[ATTENTION] Pas d'index.html accessible (premier déploiement ?) — historique vide"
+        : > previous_versions.txt
+      fi
+    - echo "[INFO] Versions précédentes détectées :"
+    - cat previous_versions.txt || true
+    - |
+      mirror_version() {
+        local v="$1"
+        local target="$PUBLIC_DIR/$v"
+        echo "[INFO] Mirror $PAGES_BASE_URL/$v/ → $target"
+        mkdir -p "$target"
+        # --no-host-directories + --cut-dirs=2 pour aplatir su-model.gitlab.io/opensankey/<v>/...
+        # --no-parent pour rester sous <v>/
+        # || true : tolère les échecs partiels (Pages down, version supprimée…)
+        ( cd "$target" && wget \
+            --recursive \
+            --no-parent \
+            --no-host-directories \
+            --cut-dirs=2 \
+            --reject "index.html.tmp*" \
+            --quiet \
+            --tries=2 \
+            --timeout=30 \
+            "$PAGES_BASE_URL/$v/" ) || echo "[ATTENTION] Mirror partiel ou échoué pour $v"
+        if [ ! -f "$target/index.html" ]; then
+          echo "[ATTENTION] $v sans index.html après mirror — supprimé"
+          rm -rf "$target"
+        fi
+      }
+    - |
+      while IFS= read -r v; do
+        [ -z "$v" ] && continue
+        # Skip la version courante : elle sera (re)construite à l'étape 2
+        if [ "$v" = "$APP_VERSION" ]; then
+          echo "[INFO] Skip $v (= version courante, reconstruite ci-dessous)"
+          continue
+        fi
+        mirror_version "$v"
+      done < previous_versions.txt
+
+    # =================================================================
+    # ÉTAPE 2 — Build courant → public/$APP_VERSION/ + public/latest/
+    # =================================================================
+    - mkdir -p "$VERSION_DIR"
+    - cp -r "$BUILD_DIR"/* "$VERSION_DIR"
+    - echo '<meta http-equiv="refresh" content="0; url=/" />' > "$VERSION_DIR/404.html"
+    - echo "[INFO] Version $APP_VERSION écrite dans $VERSION_DIR"
+    - |
+      if [ -d "$VERSION_DIR/static" ]; then
+        ( cd "$VERSION_DIR" && zip -rq "static.zip" static/ )
+        echo "[INFO] static.zip créé pour $APP_VERSION"
+      fi
+    - rm -rf "$LATEST_DIR"
+    - cp -r "$VERSION_DIR" "$LATEST_DIR"
+    - echo "[INFO] latest/ mis à jour avec $APP_VERSION"
+
+    # =================================================================
+    # ÉTAPE 3 — Génération de public/index.html
+    # =================================================================
+    - |
+      ls -1 "$PUBLIC_DIR" \
+        | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
+        | sort -u -V -r > all_versions.txt || true
+      echo "[INFO] Versions à lister dans index.html :"
+      cat all_versions.txt
+    - |
+      {
+        echo '<!DOCTYPE html>'
+        echo '<html lang="fr"><head><meta charset="utf-8">'
+        echo '<title>OpenSankey - Versions</title>'
+        echo '<style>'
+        echo 'body { font-family: Arial, sans-serif; margin: 40px; max-width: 800px; }'
+        echo 'h1 { color: #333; }'
+        echo 'h2 { color: #555; margin-top: 30px; }'
+        echo 'a { display: block; margin: 8px 0; padding: 10px; background: #f5f5f5; text-decoration: none; color: #333; border-radius: 4px; }'
+        echo 'a:hover { background: #e0e0e0; }'
+        echo '.latest { background: #e8f4fd; font-weight: bold; }'
+        echo '.latest:hover { background: #d1e7ff; }'
+        echo '.download { font-size: 0.9em; color: #555; }'
+        echo '</style></head><body>'
+        echo '<h1>OpenSankey — Versions disponibles</h1>'
+        echo "<a class=\"latest\" href=\"./latest/\">Derniere version (latest = $APP_VERSION)</a>"
+        echo '<h2>Toutes les versions</h2>'
+        while IFS= read -r v; do
+          [ -z "$v" ] && continue
+          echo "<a href=\"./$v/\">Version $v</a>"
+          if [ -f "$PUBLIC_DIR/$v/static.zip" ]; then
+            echo "<a class=\"download\" href=\"./$v/static.zip\">static.zip (v$v)</a>"
+          fi
+        done < all_versions.txt
+        echo '</body></html>'
+      } > "$PUBLIC_DIR/index.html"
+    - echo "[INFO] Déploiement terminé. Versions servies :"
+    - ls -1 "$PUBLIC_DIR"
+  artifacts:
+    paths:
+      - public
+  dependencies:
+    - build
+  rules:
+    - when: manual
+      allow_failure: true

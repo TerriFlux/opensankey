@@ -1,0 +1,35 @@
+stages:
+    - build
+
+# Pip's cache doesn't store the python packages
+# https://pip.pypa.io/en/stable/reference/pip_install/#caching
+#
+# If you want to also cache the installed packages, you have to install
+# them in a virtualenv and cache it as well.
+cache:
+  paths:
+    - .cache/pip
+
+# Change pip's cache directory to be inside the project directory since we can
+# only cache local items.
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+  GIT_SUBMODULE_FORCE_HTTPS: "true"
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  PIP_QUIET: "1"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PIP_PROGRESS_BAR: "off"
+  PIP_ROOT_USER_ACTION: "ignore"
+
+build:
+  stage: build
+  tags: [py312]
+  script:
+    # Prepare env
+    - echo $CI_PROJECT_DIR
+    - source /home/gitlab-runner/gitlab_dev/bin/activate
+    # Build OpenSankey+
+    - bash build_client.sh -I -L -B -D -S
+    - bash build_server.sh
+  except:
+    - schedules

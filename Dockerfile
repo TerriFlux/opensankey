@@ -46,8 +46,9 @@ RUN chmod +x *.py 2>/dev/null || echo "No Python scripts to make executable"
 
 # Initialiser et mettre à jour les submodules git
 RUN git config --global --add safe.directory /app && \
-    git config --global --add safe.directory /app/submodules/OpenSankey+ && \
-    git config --global --add safe.directory /app/submodules/LoginComponent && \
+    git config --global --add safe.directory /app/submodules/MFAProblem && \
+    git config --global --add safe.directory /app/SankeyData && \
+    git config --global --add safe.directory /app/packages/opensankey/submodules/SankeyExcelParser && \
     git submodule update --init --recursive || echo "Submodules initialized"
 
 # Exécuter le script de build avec l'option -I (install dependencies)
@@ -59,7 +60,7 @@ RUN mkdir -p /app/web-generator && \
 
 # Variables d'environnement pour le générateur web
 ENV WEB_GENERATOR_BASE_PATH=/app/web-generator
-ENV SANKEY_COMPIL_DIR=/app/client
+ENV SANKEY_COMPIL_DIR=/app/packages/sankeyapplication
 ENV PYTHON_PATH=/app
 ENV PATH="/usr/bin:/usr/local/bin:${PATH}"
 

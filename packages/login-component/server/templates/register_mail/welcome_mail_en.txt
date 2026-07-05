@@ -1,0 +1,10 @@
+Welcome {{ first_name }}
+
+Your OpenSankey account has now been created.
+
+To log in, go directly to {{login_url}} or access it via the login menu in the top right-hand corner of the application.
+
+Documentation and tutorials are available from the application's help menu.
+
+Regards,
+The TerriFlux team

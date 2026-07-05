@@ -4,6 +4,16 @@ stages:
     - deploy
     # - build-docker
 
+# #237 — Pas de pipelines merge_request_event : ce projet fonctionne en
+# pipelines de branche (les jobs melangent rules et only/except ; en contexte
+# MR, `build` serait exclu et `pages`/`dev_opensankey` echoueraient sur leurs
+# `needs`). La MR affiche le pipeline de la branche source.
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
+    - when: always
+
 # Change pip's cache directory to be inside the project directory since we can
 # only cache local items.
 variables:
@@ -77,21 +87,20 @@ build:
     # Build SankeySuite node module (sans -L : plus d'eslint --fix qui muterait
     # le workspace ; le lint est fait en verification ci-dessous, sans --fix).
     - bash scripts/build_client.sh -I -B -D # -S
-    # S3 #16 — Lint en verification (sans --fix). `lint:ci` = `eslint ./src` sur
-    # le client SA, qui couvre OS/OS+/LoginComponent via les symlinks src/deps
-    # crees par build_client.sh -I. Le pipeline echoue si une erreur eslint reste.
-    - (cd client && pnpm run lint:ci)
+    # S3 #16 / #237 — Lint en verification (sans --fix) sur les 4 paquets du
+    # workspace (pnpm -r run lint:ci). Le pipeline echoue si une erreur reste.
+    - pnpm run lint:ci
     # Check flask server
     - bash scripts/build_server.sh
   artifacts:
     paths:
-      - client/build  # c'est le dossier généré par `npm run build`
+      - packages/sankeyapplication/build  # dossier généré par `pnpm run build`
   except:
     - schedules
 
 
-# S3 #20 — Coherence des pointeurs de submodules (garde-fou transitoire avant le
-# monorepo). Sur un checkout recursif, tout pointeur incoherent apparait dans
+# S3 #20 / #237 — Coherence des pointeurs de submodules restants (MFAProblem,
+# SankeyData, SankeyExcelParser). Sur un checkout recursif, tout pointeur incoherent apparait dans
 # `git submodule status --recursive` avec un prefixe '+' (commit checkout != SHA
 # enregistre dans le gitlink) ou '-' (submodule non initialise). Le job echoue
 # alors, avant tout deploiement ou publication.
@@ -111,7 +120,7 @@ check:submodule-coherence:
     - |
       if git submodule status --recursive | grep -E '^[+-]'; then
         echo "[coherence] ERREUR : pointeurs de submodules incoherents (lignes '+'/'-' ci-dessus)." >&2
-        echo "[coherence] Rejouer scripts/cascade.sh puis re-pousser." >&2
+        echo "[coherence] Re-pointer le submodule fautif (git add <chemin>) puis re-pousser." >&2
         exit 1
       fi
     - echo "[coherence] OK — tous les pointeurs sont coherents."
@@ -140,22 +149,21 @@ test:
     # the runner can leave a stale install and tests run against the wrong code).
     - rm -f $VIRTUAL_ENV/lib/python*/site-packages/MFAProblem.egg-link
     - sed -i '/mfa_problem/d' $VIRTUAL_ENV/lib/python*/site-packages/easy-install.pth || true
-    - pip install -e submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser
+    - pip install -e packages/opensankey/submodules/SankeyExcelParser
     - pip install -e submodules/MFAProblem
     # Run pytest separately per submodule so each has its own rootdir/sys.path.
     # Avoids "tests" package name collisions between sibling submodules and lets
     # mfa_problem resolve to the local source (which contains the tests/ subpackage).
     - (cd submodules/MFAProblem && python -m pytest tests/)
-    - (cd submodules/OpenSankey+/submodules/OpenSankey && python -m pytest opensankey/tests/)
-    - (cd submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser && python -m pytest tests/)
+    - (cd packages/opensankey && python -m pytest opensankey/tests/)
+    - (cd packages/opensankey/submodules/SankeyExcelParser && python -m pytest tests/)
   dependencies:
     - build
 
-# S3 #16 — Tests jest (front) : les 12 suites unitaires d'OpenSankey ne
-# tournaient qu'en local (et le script npm `test` d'OS filtrait `-t 'AFMBase'`,
-# filtre desormais retire). Job independant : install dedie du client OS, isole
-# du build SaaS (pas de symlinks SA). CI=true -> react-scripts fait un run unique
-# (pas de watch) et echoue si une suite casse.
+# S3 #16 / #237 — Tests jest (front). Depuis le monorepo, un seul install
+# workspace racine ; `pnpm run test` lance les suites d'OpenSankey (le corpus
+# golden SankeyData est present dans le checkout SA, donc corpusRoundTrip #230
+# tourne). CI=true -> react-scripts fait un run unique et echoue si une suite casse.
 test:jest:
   stage: test
   tags: [py312]
@@ -164,9 +172,9 @@ test:jest:
       when: never
     - when: always
   script:
-    - cd submodules/OpenSankey+/submodules/OpenSankey/opensankey/client
-    - pnpm install --config.dangerouslyAllowAllBuilds=true
-    - CI=true pnpm test
+    - bash scripts/build_client.sh -G
+    - pnpm install --frozen-lockfile --config.dangerouslyAllowAllBuilds=true
+    - CI=true pnpm run test
   dependencies: []
 
 # S5 #234 — Parite des cles FR/EN des catalogues i18n (~13.5k lignes sur 3 couches,
@@ -226,12 +234,9 @@ dev_opensankey:
     - git clean -fdx -e env -e cache -e server/db.sqlite -e server/db.sqlite.bk -e server/__pycache__ -e doc/__pycache__ -e __pycache__
     - git fetch
     - git pull
-    - git config --global --add safe.directory $REPO_FOLDER/sankeyapplication/submodules/LoginComponent
-    - git config --global --add safe.directory $REPO_FOLDER/sankeyapplication/submodules/MFAProblem
-    - git config --global --add safe.directory $REPO_FOLDER/sankeyapplication/submodules/MFAProblem/submodules/eigen
-    - git config --global --add safe.directory $REPO_FOLDER/submodules/OpenSankey+
-    - git config --global --add safe.directory $REPO_FOLDER/submodules/OpenSankey+/submodules/OpenSankey
-    - git config --global --add safe.directory $REPO_FOLDER/submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser
+    - git config --global --add safe.directory $REPO_FOLDER/submodules/MFAProblem
+    - git config --global --add safe.directory $REPO_FOLDER/submodules/MFAProblem/submodules/eigen
+    - git config --global --add safe.directory $REPO_FOLDER/packages/opensankey/submodules/SankeyExcelParser
     - git config --global --add safe.directory $REPO_FOLDER/SankeyData
     - git submodule init
     - git submodule foreach --recursive git reset --hard
@@ -328,11 +333,9 @@ prod_opensankey:
     - git pull
     # Shared-deploy umask : artefacts group-writable (cf. dev_opensankey).
     - umask 002
-    - git config --global --add safe.directory /home/ubuntu/prod_opensankey/sankeyapplication/submodules/MFAProblem
-    - git config --global --add safe.directory $REPO_FOLDER/sankeyapplication/submodules/LoginComponent
-    - git config --global --add safe.directory $REPO_FOLDER/submodules/OpenSankey+
-    - git config --global --add safe.directory $REPO_FOLDER/submodules/OpenSankey+/submodules/OpenSankey
-    - git config --global --add safe.directory $REPO_FOLDER/submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser
+    - git config --global --add safe.directory $REPO_FOLDER/submodules/MFAProblem
+    - git config --global --add safe.directory $REPO_FOLDER/submodules/MFAProblem/submodules/eigen
+    - git config --global --add safe.directory $REPO_FOLDER/packages/opensankey/submodules/SankeyExcelParser
     - git config --global --add safe.directory $REPO_FOLDER/SankeyData
     - git submodule init
     - git submodule foreach --recursive git reset --hard
@@ -366,10 +369,9 @@ build:examples:
     - when: manual
       allow_failure: true
   script:
-    # build_client.sh -I -D : install pnpm deps + recree les symlinks
-    # client/src/deps/{OpenSankey+,LoginComponent} (sans quoi tsc echoue
-    # avec TS2307 sur tous les imports './deps/...') + lance pnpm run dist.
-    - echo "[INFO] Install + symlinks + dist de la lib SA"
+    # build_client.sh -I -D : install workspace + dist des 4 paquets @terriflux/*
+    # (tsc par paquet puis staging pub/ via scripts/prepare_publish.mjs).
+    - echo "[INFO] Install + dist des paquets @terriflux/*"
     - bash scripts/build_client.sh -I -D
     # TEMP (1.1.6) — build des exemples React entièrement skippé. `current/editor`
     # utilise l'ancienne API SpreadSheet (reactgrid), remplacée par le tableur
@@ -381,7 +383,10 @@ build:examples:
     # - bash build-all.sh --only current
   artifacts:
     paths:
-      - client/dist
+      - packages/opensankey/opensankey/client/pub
+      - packages/opensankey-plus/client/pub
+      - packages/login-component/client/pub
+      - packages/sankeyapplication/pub
     expire_in: 1 week
 
 # =====================================================================
@@ -428,7 +433,7 @@ publish:python:
     # SankeyExcelParser — même recette manylinux pour cohérence
     # ----------------------------------------------------------------
     - echo "[publish:python] Build SankeyExcelParser wheels (manylinux, cp310 + cp312)"
-    - bash submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/build_wheel_linux.sh cp310-cp310 cp312-cp312
+    - bash packages/opensankey/submodules/SankeyExcelParser/build_wheel_linux.sh cp310-cp310 cp312-cp312
 
     # ----------------------------------------------------------------
     # Ceinture-bretelles : les wheel builds tournent en root dans le
@@ -459,7 +464,7 @@ publish:python:
     - |
       python3 -m twine check \
         submodules/MFAProblem/dist/*manylinux*.whl \
-        submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/dist/*manylinux*.whl
+        packages/opensankey/submodules/SankeyExcelParser/dist/*manylinux*.whl
     - echo "[publish:python] smoke import MFAProblem (venv jetable cp312)"
     - |
       python3 -m venv /tmp/smoke_mfa
@@ -472,7 +477,7 @@ publish:python:
     - |
       python3 -m venv /tmp/smoke_sep
       . /tmp/smoke_sep/bin/activate
-      pip install --quiet submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/dist/*cp312*manylinux*.whl
+      pip install --quiet packages/opensankey/submodules/SankeyExcelParser/dist/*cp312*manylinux*.whl
       python -c "import SankeyExcelParser; print('[smoke] SankeyExcelParser import OK')"
       deactivate
       rm -rf /tmp/smoke_sep
@@ -510,7 +515,7 @@ publish:python:
       python3 -m twine upload \
         --repository-url "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi" \
         submodules/MFAProblem/dist/*manylinux*.whl \
-        submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/dist/*manylinux*.whl
+        packages/opensankey/submodules/SankeyExcelParser/dist/*manylinux*.whl
 
 # =====================================================================
 # publish:npm — Publie @terriflux/sankeyapplication sur le GitLab Package
@@ -531,27 +536,36 @@ publish:npm:
   dependencies:
     - build:examples
   script:
-    - cd client
+    # #237 — publie les 4 paquets @terriflux/* depuis leurs stagings pub/
+    # (produits par build:examples via scripts/prepare_publish.mjs : dist/
+    # repose sous src/ + manifest epure, workspace:* deja reecrits en versions).
     # GitLab Package Registry exige l'ID numerique du projet pour npm publish
     # (le path encoded fonctionne en read mais pas en publish). On declare
     # le scope @terriflux uniquement ici (pas de publishConfig dans
     # package.json) pour que les deux URLs soient trivialement identiques.
-    - |
-      cat > .npmrc <<EOF
-      @terriflux:registry=https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/npm/
-      //gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/npm/:_authToken=${CI_JOB_TOKEN}
-      EOF
     # Idempotent : skip si la version est déjà sur le registry (cas typique
     # d'un retag ou d'un re-trigger du pipeline). Sinon le job échoue avec
     # "Package already exists" et pollue la liste des paquets en erreur.
     - |
-      PKG_NAME="$(node -p "require('./package.json').name")"
-      PKG_VERSION="$(node -p "require('./package.json').version")"
-      if npm view "${PKG_NAME}@${PKG_VERSION}" version >/dev/null 2>&1; then
-        echo "[publish:npm] ${PKG_NAME}@${PKG_VERSION} déjà publié — skip"
-      else
-        npm publish
-      fi
+      for PUB in packages/opensankey/opensankey/client/pub \
+                 packages/opensankey-plus/client/pub \
+                 packages/login-component/client/pub \
+                 packages/sankeyapplication/pub; do
+        cat > "$PUB/.npmrc" <<EOF
+      @terriflux:registry=https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/npm/
+      //gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/npm/:_authToken=${CI_JOB_TOKEN}
+      EOF
+        (
+          cd "$PUB"
+          PKG_NAME="$(node -p "require('./package.json').name")"
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+          if npm view "${PKG_NAME}@${PKG_VERSION}" version >/dev/null 2>&1; then
+            echo "[publish:npm] ${PKG_NAME}@${PKG_VERSION} déjà publié — skip"
+          else
+            npm publish
+          fi
+        ) || exit 1
+      done
 
 # Étape de build
 pages:
@@ -579,7 +593,7 @@ pages:
     - echo "[INFO] Configuration des variables d'environnement pour le mode GitLab Pages"
 
     # === Récupération de la version depuis package.json ===
-    - PACKAGE_JSON_PATH="$CI_PROJECT_DIR/client/package.json"
+    - PACKAGE_JSON_PATH="$CI_PROJECT_DIR/packages/sankeyapplication/package.json"
     - |
       if [ ! -f "$PACKAGE_JSON_PATH" ]; then
         echo "[ERREUR] Le fichier package.json est introuvable à : $PACKAGE_JSON_PATH"
@@ -594,10 +608,10 @@ pages:
     - echo "[INFO] Version détectée depuis package.json  $APP_VERSION"
 
     # === Chemins ===
-    - JS_DIR="$CI_PROJECT_DIR/client/build/static/js"
-    - CSS_DIR="$CI_PROJECT_DIR/client/build/static/css"
-    - INDEX_FILE="$CI_PROJECT_DIR/client/build/index.html"
-    - BUILD_DIR="$CI_PROJECT_DIR/client/build"
+    - JS_DIR="$CI_PROJECT_DIR/packages/sankeyapplication/build/static/js"
+    - CSS_DIR="$CI_PROJECT_DIR/packages/sankeyapplication/build/static/css"
+    - INDEX_FILE="$CI_PROJECT_DIR/packages/sankeyapplication/build/index.html"
+    - BUILD_DIR="$CI_PROJECT_DIR/packages/sankeyapplication/build"
     - PUBLIC_DIR="$CI_PROJECT_DIR/public"
     - mkdir -p "$PUBLIC_DIR"
     - VERSION_DIR="$PUBLIC_DIR/$APP_VERSION"

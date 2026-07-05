@@ -28,7 +28,7 @@ bash scripts/build_client.sh -I -B || exit_if_error $?
 
 # Need to change static paths in built SankeyApp client
 printf "Change static paths in built SankeyApp client ---------------------\n"
-cd $SANKEY_DIR/client
+cd $SANKEY_DIR/packages/sankeyapplication
 sed -i -e 's/\/static\//\/static\/sankeyapp\//g' ./build/index.html || exit_if_error $?
 sed -i -e 's/..\/static\//..\/..\/static\/sankeyapp\//g' ./build/static/css/*.css || exit_if_error $?
 sed -i -e 's/static\/sankeyanimation/\static\/sankeyapp\//g' ./build/static/*/* || exit_if_error $?

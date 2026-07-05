@@ -11,9 +11,7 @@ git submodule update --init --recursive
 # Parents of nested TestData submodules — deinit must run from each parent.
 NESTED_PARENTS=(
   "submodules/MFAProblem"
-  "submodules/OpenSankey+"
-  "submodules/OpenSankey+/submodules/OpenSankey"
-  "submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser"
+  "packages/opensankey/submodules/SankeyExcelParser"
 )
 
 for parent in "${NESTED_PARENTS[@]}"; do

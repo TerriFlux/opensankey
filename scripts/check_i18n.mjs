@@ -39,7 +39,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 // typescript est résolu depuis les node_modules disponibles (client SA en priorité).
 function loadTypeScript() {
   const candidates = [
-    join(ROOT, 'client', 'node_modules', 'typescript'),
+    join(ROOT, 'packages', 'sankeyapplication', 'node_modules', 'typescript'),
     join(ROOT, 'node_modules', 'typescript'),
     'typescript'
   ]
@@ -53,10 +53,10 @@ const ts = loadTypeScript()
 
 // Les catalogues à vérifier : tous les `traduction*.tsx` des couches front.
 const LAYER_SRC = [
-  'client/src',
-  'submodules/OpenSankey+/client/src',
-  'submodules/OpenSankey+/submodules/OpenSankey/opensankey/client/src',
-  'submodules/LoginComponent/client/src'
+  'packages/sankeyapplication/src',
+  'packages/opensankey-plus/client/src',
+  'packages/opensankey/opensankey/client/src',
+  'packages/login-component/client/src'
 ]
 const FILE_RE = /traductions?.*\.tsx?$/i
 
