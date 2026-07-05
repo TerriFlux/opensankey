@@ -58,7 +58,7 @@ from flask import session
 
 import SankeyExcelParser.su_trace as trace
 from SankeyExcelParser.io_base import IOExcel, IOJson
-from . import sankeymatic
+from . import stan_smfa
 
 template_folder = os.path.join(
     os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "client"),
@@ -1489,32 +1489,39 @@ def menus_tutorials():
     return response
 
 
-@opensankey.route("/open_sankeymatic", methods=["POST"])
-def open_sankeymatic():
+@opensankey.route("/open_stan", methods=["POST"])
+def open_stan():
+    """
+    Importe un fichier STAN .smfa (base SQLite) et renvoie une structure
+    OpenSankey. Périmètre v1 : nœuds, flux et valeurs (période/couche par défaut,
+    ou celles passées en paramètres de formulaire period_id/layer_id).
+    """
     try:
-        # Get input Excel filename
-        text_input_file = request.files["file_content"]
+        stan_input_file = request.files["file_content"]
 
-        # Create conversion files
-        tmp_dir = tempfile.mkdtemp()  # Tempory dir for conversion
-        text_input_filename = os.path.join(tmp_dir, "toto.txt")
-        text_input_file.save(text_input_filename)
+        tmp_dir = tempfile.mkdtemp()
+        stan_input_filename = os.path.join(tmp_dir, "input.smfa")
+        stan_input_file.save(stan_input_filename)
 
-        ok, msg, json_obj = sankeymatic.parse_sankeymatic_file(text_input_filename)
-        if not ok:
-            print(msg)
-        clean_file(text_input_filename, "Clean_TXT")
+        def _to_int(name):
+            raw = request.form.get(name)
+            try:
+                return int(raw) if raw not in (None, "") else None
+            except (TypeError, ValueError):
+                return None
+
+        json_obj = stan_smfa.parse_stan_smfa(
+            stan_input_filename,
+            period_id=_to_int("period_id"),
+            layer_id=_to_int("layer_id"),
+        )
+        clean_file(stan_input_filename, "Clean_STAN")
 
         response = Response(response=json.dumps(json_obj), status=200, mimetype="application/json")
         return response
     except Exception as e:
-        current_app.logger.error("OPEN SANKEY MATIC | {0}".format(e))
+        current_app.logger.error("OPEN STAN | {0}".format(e))
         abort(500)
-    return Response(
-        json.dumps({"output": "ERROR: load_process: le fichier tmp_log n'existe pas."}),
-        status=500,
-        mimetype="application/json",
-    )
 
 
 @opensankey.route("/url/load_json", methods=["POST"])

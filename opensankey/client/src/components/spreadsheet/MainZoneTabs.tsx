@@ -14,7 +14,7 @@ import React, { useEffect, useReducer, useRef, useState } from 'react'
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Type_MainZoneDocLayout, DOC_LAYOUTS_WITH_SHEET, DOC_LAYOUTS_BOTTOM } from '../../types/MenuConfig'
-import { UniverSpreadSheet } from './UniverSpreadSheet'
+import { SpreadsheetPanel } from './SpreadsheetPanel'
 import { DocPanel } from './DocPanel'
 import { usePipWindow, PipPortal } from './PipWindow'
 
@@ -433,7 +433,7 @@ export const MainZoneTabs = (
                   minHeight: 0, minWidth: 0,
                   ...(docWithSheet ? sheetBorder(docLayout) : {})
                 }}>
-                  <UniverSpreadSheet app_data={app_data} active={showSpreadsheet} />
+                  <SpreadsheetPanel app_data={app_data} active={showSpreadsheet} />
                 </div>
               )}
               {showDocSheetDivider && (

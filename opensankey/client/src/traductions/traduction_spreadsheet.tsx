@@ -15,6 +15,20 @@ export const resources_spreadsheet = {
     translation: {
       Spreadsheet: {
         // --- Onglets (noms de feuilles) ---
+        mode_grid: 'Table',
+        mode_text: 'Text',
+        text: {
+          help: 'One flow per line: "source [value] target" (SankeyMATIC) or 3 columns "source ; target ; value".',
+          apply: 'Apply',
+          refresh: 'Reload from diagram',
+          applied: 'Diagram updated',
+          error: 'Error',
+          flows_recognized: 'flows recognized',
+          lines_ignored: 'lines ignored',
+          layout: 'Layout:',
+          layout_native: 'SankeyMATIC',
+          layout_auto: 'Auto',
+        },
         sheet: {
           flux: 'Flows',
           analysis: 'Results analysis',
@@ -193,6 +207,20 @@ export const resources_spreadsheet = {
   fr: {
     translation: {
       Spreadsheet: {
+        mode_grid: 'Tableur',
+        mode_text: 'Texte',
+        text: {
+          help: 'Un flux par ligne : « source [valeur] cible » (SankeyMATIC) ou 3 colonnes « source ; cible ; valeur ».',
+          apply: 'Appliquer',
+          refresh: 'Recharger depuis le diagramme',
+          applied: 'Diagramme mis à jour',
+          error: 'Erreur',
+          flows_recognized: 'flux reconnus',
+          lines_ignored: 'lignes ignorées',
+          layout: 'Disposition :',
+          layout_native: 'SankeyMATIC',
+          layout_auto: 'Auto',
+        },
         sheet: {
           flux: 'Flux',
           analysis: 'Analyse des résultats',
@@ -363,6 +391,20 @@ export const resources_spreadsheet = {
   es: {
     translation: {
       Spreadsheet: {
+        mode_grid: 'Tabla',
+        mode_text: 'Texto',
+        text: {
+          help: 'Un flujo por línea: «origen [valor] destino» (SankeyMATIC) o 3 columnas «origen ; destino ; valor».',
+          apply: 'Aplicar',
+          refresh: 'Recargar desde el diagrama',
+          applied: 'Diagrama actualizado',
+          error: 'Error',
+          flows_recognized: 'flujos reconocidos',
+          lines_ignored: 'líneas ignoradas',
+          layout: 'Disposición:',
+          layout_native: 'SankeyMATIC',
+          layout_auto: 'Auto',
+        },
         sheet: {
           flux: 'Flujos',
           analysis: 'Análisis de resultados',
@@ -533,6 +575,20 @@ export const resources_spreadsheet = {
   de: {
     translation: {
       Spreadsheet: {
+        mode_grid: 'Tabelle',
+        mode_text: 'Text',
+        text: {
+          help: 'Ein Fluss pro Zeile: „Quelle [Wert] Ziel“ (SankeyMATIC) oder 3 Spalten „Quelle ; Ziel ; Wert“.',
+          apply: 'Anwenden',
+          refresh: 'Aus Diagramm neu laden',
+          applied: 'Diagramm aktualisiert',
+          error: 'Fehler',
+          flows_recognized: 'erkannte Flüsse',
+          lines_ignored: 'ignorierte Zeilen',
+          layout: 'Layout:',
+          layout_native: 'SankeyMATIC',
+          layout_auto: 'Auto',
+        },
         sheet: {
           flux: 'Flüsse',
           analysis: 'Ergebnisanalyse',
@@ -703,6 +759,20 @@ export const resources_spreadsheet = {
   it: {
     translation: {
       Spreadsheet: {
+        mode_grid: 'Tabella',
+        mode_text: 'Testo',
+        text: {
+          help: 'Un flusso per riga: «origine [valore] destinazione» (SankeyMATIC) o 3 colonne «origine ; destinazione ; valore».',
+          apply: 'Applica',
+          refresh: 'Ricarica dal diagramma',
+          applied: 'Diagramma aggiornato',
+          error: 'Errore',
+          flows_recognized: 'flussi riconosciuti',
+          lines_ignored: 'righe ignorate',
+          layout: 'Disposizione:',
+          layout_native: 'SankeyMATIC',
+          layout_auto: 'Auto',
+        },
         sheet: {
           flux: 'Flussi',
           analysis: 'Analisi dei risultati',

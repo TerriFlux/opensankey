@@ -80,6 +80,7 @@ import { clickSaveSVG } from './SankeyExports'
 import { ModalTemplate } from './SankeyTemplates'
 import { ModalExcelTemplate } from './ExcelTemplateModal'
 import { ModalImageImport } from './ImageImportModal'
+import { applySankeymaticText } from '../../Persistence/sankeymaticLoad'
 import {
   loadUniversalJSON,
 } from '../../Persistence/UniversalJSONCompression'
@@ -486,6 +487,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
   // Hook -----------------------------------
   const _load_json = useRef<HTMLInputElement>(null)
   const _load_sankeymatic = useRef<HTMLInputElement>(null)
+  const _load_stan = useRef<HTMLInputElement>(null)
 
   // State for Excel template modal
   const [show_excel_template, set_show_excel_template] = useState(false)
@@ -662,45 +664,17 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
         {new_data.icon_library.icon_open_sankey_sankeymatic}
         {t('Menu.open_sankeymatic')}
       </MenuItem>
-      <Input
-        accept='.txt'
-        type='file'
-        ref={_load_sankeymatic}
-        style={{ display: 'none' }}
-        onChange={(evt: ChangeEvent) => {
-          const files = (evt.target as HTMLFormElement).files
-          const reader = new FileReader()
-          const path = window.location.origin
-          const url = path + '/opensankey/open_sankeymatic'
-
-          reader.onload = (() => {
-            return (e: ProgressEvent<FileReader>) => {
-
-              const file_content = String((e.target as FileReader).result)
-
-              const blob = new Blob([file_content], { type: 'text/plain' })
-              const form_data = new FormData()
-              form_data.append('file_content', blob)
-
-              fetch(url, {
-                method: 'POST',
-                body: form_data
-              }).then(response => {
-                response
-                  .text()
-                  .then(text => {
-                    const json_data = JSON.parse(text)
-                    new_data.fromJSON(json_data)
-                  })
-                  .catch((error) => {
-                    console.error('Error in fetchExamples - ' + error.toString())
-
-                  })
-              })
-            }
-          })()
-          reader.readAsText(files[0])
-        }} />
+      <MenuItem
+        onClick={() => {
+          if (_load_stan.current) {
+            _load_stan.current.name = ''
+            _load_stan.current.click()
+          }
+        }}
+      >
+        {new_data.icon_library.icon_open_sankey_sankeymatic}
+        {t('Menu.open_stan')}
+      </MenuItem>
       <MenuItem
         onClick={() => {
           new_data.menu_configuration.ref_universal_converter_set_config.current(
@@ -991,6 +965,15 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
           {new_data.icon_library.icon_open_sankey_sankeymatic}
           {t('Menu.open_sankeymatic')}
         </MenuItem>
+        <MenuItem onClick={() => {
+          if (_load_stan.current) {
+            _load_stan.current.name = ''
+            _load_stan.current.click()
+          }
+        }}>
+          {new_data.icon_library.icon_open_sankey_sankeymatic}
+          {t('Menu.open_stan')}
+        </MenuItem>
       </MenuGroup>
       <MenuDivider />
       <MenuGroup title={t('Menu.enregistrer')}>
@@ -1242,6 +1225,44 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
       show={show_image_import}
       setShow={set_show_image_import}
     />
+    {/* Inputs fichiers cachés montés hors des menus : un MenuItem ferme le
+        MenuList (display:none), et click() sur un input dont un ancêtre est
+        masqué n'ouvre pas le sélecteur de fichier. Ici ils restent montés. */}
+    <Input
+      accept='.txt'
+      type='file'
+      ref={_load_sankeymatic}
+      style={{ display: 'none' }}
+      onChange={(evt: ChangeEvent) => {
+        const files = (evt.target as HTMLFormElement).files
+        if (!files || !files[0]) return
+        // Format natif SankeyMATIC parsé 100 % côté front (plus de POST Python).
+        const reader = new FileReader()
+        reader.onload = (e: ProgressEvent<FileReader>) => {
+          applySankeymaticText(String((e.target as FileReader).result), new_data)
+        }
+        reader.readAsText(files[0])
+      }} />
+    <Input
+      accept='.smfa'
+      type='file'
+      ref={_load_stan}
+      style={{ display: 'none' }}
+      onChange={(evt: ChangeEvent) => {
+        const files = (evt.target as HTMLFormElement).files
+        if (!files || !files[0]) return
+        // .smfa = base SQLite (binaire) : on POST le fichier tel quel.
+        const form_data = new FormData()
+        form_data.append('file_content', files[0])
+        fetch(window.location.origin + '/opensankey/open_stan', {
+          method: 'POST',
+          body: form_data
+        }).then(response => response.json())
+          .then(json_data => new_data.fromJSON(json_data))
+          .catch((error) => {
+            console.error('Error in open_stan - ' + error.toString())
+          })
+      }} />
   </>
 }
 
