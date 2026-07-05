@@ -1179,8 +1179,13 @@ const convert_tags: convert_tagsFuncType = (
         n.tags['Type de noeud'].splice(n.tags['Type de noeud'].indexOf('échange'), 1)
       }
       if ('Type de noeud' in n.tags && n.tags['Type de noeud'].includes('echange')) {
-        if (n.inputLinksId.length === 0) {
-          const link = data.links[n.outputLinksId[0]]
+        // Certains fichiers 0.8 n'ont ni inputLinksId ni outputLinksId sur les
+        // noeuds (les liens ne sont portes que par data.links) : listes vides
+        // par defaut, les gardes !link ci-dessous font le reste (SA#230).
+        const inputLinksId = n.inputLinksId ?? []
+        const outputLinksId = n.outputLinksId ?? []
+        if (inputLinksId.length === 0) {
+          const link = data.links[outputLinksId[0]]
           if (!link) {
             return
           }
@@ -1193,7 +1198,7 @@ const convert_tags: convert_tagsFuncType = (
             n.tags[tag_key] = JSON.parse(JSON.stringify(target_node.tags[tag_key]))
           })
         } else {
-          const link = data.links[n.inputLinksId[0]]
+          const link = data.links[inputLinksId[0]]
           if (!link) {
             return
           }
