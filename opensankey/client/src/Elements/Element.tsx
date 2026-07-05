@@ -596,7 +596,18 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
   public copyAttrFrom(element_to_copy: Class_ProtoElement) {
     this._storage = {};
     (Object.keys(element_to_copy._storage) as Array<keyof ConfigType>).forEach(key => {
-      if (element_to_copy._storage[key] !== this.getStyleProperty(key as keyof ConfigType)) {
+      // Minimise an override against the SOURCE's own resolved style, not the
+      // target's. A key held in the source `_storage` that differs from the
+      // source's style is a genuine, intentional override and must survive the
+      // copy verbatim. Comparing against the target style (the previous
+      // behaviour) wrongly dropped an override that happened to match a TARGET
+      // style which a later step then replaces — e.g. on "apply layout from a
+      // source diagram", `styleNode` (UpdateFrom) swaps the target's extremity
+      // style right after `attrNode`, so extremity-node label anchors
+      // (name_label_horiz / name_label_vert) were lost (#195). For shared-style
+      // cases (view ↔ master) source and target styles coincide, so this is a
+      // no-op and the "transparent view" minimisation is preserved.
+      if (element_to_copy._storage[key] !== element_to_copy.getStyleProperty(key as keyof ConfigType)) {
         this._storage[key] = element_to_copy._storage[key]
       }
     })
@@ -670,6 +681,9 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   shape_border_dashed!: ShapeAttributeTypes['border_dashed']
   shape_border_radius!: ShapeAttributeTypes['border_radius']
 
+  // =================== SHADOW ATTRIBUTES (shadow_*) ===================
+  shape_shadow_visible!: ShapeAttributeTypes['shadow_visible']
+
   // =================== NAME LABEL ATTRIBUTES (name_label_*) ===================
   // Visibility & Font
   name_label_has_fo!: NameLabelAttributeTypes['has_fo']
@@ -685,6 +699,11 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   // Separator
   name_label_separator!: NameLabelAttributeTypes['separator']
   name_label_separator_part!: NameLabelAttributeTypes['separator_part']
+  // Contenu du label (cf. Type_NameLabelSource) — désormais portés par le style.
+  name_label_source!: NameLabelAttributeTypes['source']
+  name_label_text!: NameLabelAttributeTypes['text']
+  name_label_tag_group_id!: NameLabelAttributeTypes['tag_group_id']
+  name_label_dimension_id!: NameLabelAttributeTypes['dimension_id']
 
   // Position
   name_label_horiz!: NameLabelAttributeTypes['horiz']
@@ -794,6 +813,7 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   name_label_on_path!: LinkLabelSpecificValues['on_path']
   name_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
   name_label_text_source!: LinkLabelSpecificValues['text_source']
+  name_label_flux_tag_group_id!: LinkLabelSpecificValues['flux_tag_group_id']
 
   // =================== STOCK LABEL ATTRIBUTES (stock_label_*) ===================
   stock_label_is_visible!: StockLabelAttributeTypes['is_visible']
@@ -808,6 +828,7 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   stock_label_inside_horiz!: StockLabelAttributeTypes['inside_horiz']
   stock_label_inside_vert!: StockLabelAttributeTypes['inside_vert']
   stock_label_box_width!: StockLabelAttributeTypes['box_width']
+  stock_label_pos_auto!: StockLabelAttributeTypes['pos_auto']
   stock_label_background_visible!: StockLabelAttributeTypes['background_visible']
   stock_label_background_color!: StockLabelAttributeTypes['background_color']
   stock_label_background_opacity!: StockLabelAttributeTypes['background_opacity']
@@ -837,6 +858,7 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   shape_anchor_align_vertical!: NodeShapeSpecificAttributeTypes['anchor_align_vertical']
   shape_anchor_align_horizontal!: NodeShapeSpecificAttributeTypes['anchor_align_horizontal']
   shape_hatch!: NodeShapeSpecificAttributeTypes['hatch']
+  shape_is_reference_stock!: NodeShapeSpecificAttributeTypes['is_reference_stock']
   shape_position_u_locked!: boolean
   shape_position_v_locked!: boolean
   shape_margin_bottom!: ShapeAttributeTypes['margin_bottom']
@@ -870,6 +892,8 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   shape_is_structure!: LinkShapeSpecificValues['is_structure']
   shape_must_stay_straight!: LinkShapeSpecificValues['must_stay_straight']
   shape_straight_include_children!: LinkShapeSpecificValues['straight_include_children']
+  shape_straight_mode!: LinkShapeSpecificValues['straight_mode']
+  shape_straight_offset!: LinkShapeSpecificValues['straight_offset']
   shape_is_reference_flux!: LinkShapeSpecificValues['is_reference_flux']
   shape_show_as_path_locked!: LinkShapeSpecificValues['show_as_path_locked']
   shape_orientation!: LinkShapeSpecificValues['orientation']
@@ -879,10 +903,14 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   shape_ending_tangeant!: LinkShapeSpecificValues['ending_tangeant']
   shape_middle_recycling!: LinkShapeSpecificValues['middle_recycling']
   shape_is_arrow!: LinkShapeSpecificValues['is_arrow']
-  shape_is_arrow_reversed!: LinkShapeSpecificValues['is_arrow_reversed']
+  shape_arrow_at_source!: LinkShapeSpecificValues['arrow_at_source']
   shape_arrow_size!: LinkShapeSpecificValues['arrow_size']
+  shape_source_notch!: LinkShapeSpecificValues['source_notch']
+  shape_source_notch_size!: LinkShapeSpecificValues['source_notch_size']
   shape_is_dashed!: LinkShapeSpecificValues['is_dashed']
   shape_color_rule!: LinkShapeSpecificValues['color_rule']
+  shape_visible_when_zero!: LinkShapeSpecificValues['visible_when_zero']
+  shape_link_caps!: LinkShapeSpecificValues['link_caps']
 
   public getShapeColorToUse() {
     return this.shape_color
@@ -1027,6 +1055,9 @@ export class Class_ElementStyle {
   shape_border_dashed!: ShapeAttributeTypes['border_dashed']
   shape_border_radius!: ShapeAttributeTypes['border_radius']
 
+  // =================== SHADOW ATTRIBUTES (shadow_*) ===================
+  shape_shadow_visible!: ShapeAttributeTypes['shadow_visible']
+
   // =================== NAME LABEL ATTRIBUTES (name_label_*) ===================
   // Visibility & Font
   name_label_has_fo!: NameLabelAttributeTypes['has_fo']
@@ -1042,6 +1073,11 @@ export class Class_ElementStyle {
   // Separator
   name_label_separator!: NameLabelAttributeTypes['separator']
   name_label_separator_part!: NameLabelAttributeTypes['separator_part']
+  // Contenu du label (cf. Type_NameLabelSource) — désormais portés par le style.
+  name_label_source!: NameLabelAttributeTypes['source']
+  name_label_text!: NameLabelAttributeTypes['text']
+  name_label_tag_group_id!: NameLabelAttributeTypes['tag_group_id']
+  name_label_dimension_id!: NameLabelAttributeTypes['dimension_id']
 
   // Position
   name_label_horiz!: NameLabelAttributeTypes['horiz']
@@ -1159,6 +1195,8 @@ export class Class_ElementStyle {
   shape_is_structure!: LinkShapeSpecificValues['is_structure']
   shape_must_stay_straight!: LinkShapeSpecificValues['must_stay_straight']
   shape_straight_include_children!: LinkShapeSpecificValues['straight_include_children']
+  shape_straight_mode!: LinkShapeSpecificValues['straight_mode']
+  shape_straight_offset!: LinkShapeSpecificValues['straight_offset']
   shape_is_reference_flux!: LinkShapeSpecificValues['is_reference_flux']
   shape_show_as_path_locked!: LinkShapeSpecificValues['show_as_path_locked']
   shape_orientation!: LinkShapeSpecificValues['orientation']
@@ -1168,10 +1206,14 @@ export class Class_ElementStyle {
   shape_ending_tangeant!: LinkShapeSpecificValues['ending_tangeant']
   shape_middle_recycling!: LinkShapeSpecificValues['middle_recycling']
   shape_is_arrow!: LinkShapeSpecificValues['is_arrow']
-  shape_is_arrow_reversed!: LinkShapeSpecificValues['is_arrow_reversed']
+  shape_arrow_at_source!: LinkShapeSpecificValues['arrow_at_source']
   shape_arrow_size!: LinkShapeSpecificValues['arrow_size']
+  shape_source_notch!: LinkShapeSpecificValues['source_notch']
+  shape_source_notch_size!: LinkShapeSpecificValues['source_notch_size']
   shape_is_dashed!: LinkShapeSpecificValues['is_dashed']
   shape_color_rule!: LinkShapeSpecificValues['color_rule']
+  shape_visible_when_zero!: LinkShapeSpecificValues['visible_when_zero']
+  shape_link_caps!: LinkShapeSpecificValues['link_caps']
 
   value_label_on_path!: LinkLabelSpecificValues['on_path']
   value_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
@@ -1180,6 +1222,7 @@ export class Class_ElementStyle {
   name_label_on_path!: LinkLabelSpecificValues['on_path']
   name_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
   name_label_text_source!: LinkLabelSpecificValues['text_source']
+  name_label_flux_tag_group_id!: LinkLabelSpecificValues['flux_tag_group_id']
 
   // =================== STOCK LABEL ATTRIBUTES (stock_label_*) ===================
   stock_label_is_visible!: StockLabelAttributeTypes['is_visible']
@@ -1202,6 +1245,7 @@ export class Class_ElementStyle {
   shape_anchor_align_vertical!: NodeShapeSpecificAttributeTypes['anchor_align_vertical']
   shape_anchor_align_horizontal!: NodeShapeSpecificAttributeTypes['anchor_align_horizontal']
   shape_hatch!: NodeShapeSpecificAttributeTypes['hatch']
+  shape_is_reference_stock!: NodeShapeSpecificAttributeTypes['is_reference_stock']
   shape_position_u_locked!: boolean
   shape_position_v_locked!: boolean
   shape_margin_bottom!: ShapeAttributeTypes['margin_bottom']
@@ -1264,18 +1308,38 @@ export class Class_ElementStyle {
   }
 
   public copyFrom(element: Class_ElementStyle) {
+    // Remise à zéro avant copie, comme copyAttrFrom pour les éléments : un style
+    // « hérité » doit devenir identique à sa source, sinon les clés posées dans la
+    // vue mais absentes du maître survivaient au ré-héritage (incohérence styles vs
+    // éléments). Seule la branche styleDA « update » de updateFrom est concernée
+    // (les autres appelants copient sur un style fraîchement créé, donc déjà vide).
+    this._storage = {}
     Object.keys(element._storage).forEach(key => {
       this._storage[key] = element._storage[key]
     })
+  }
+
+  /** Vrai pour le style 'default' (socle sans style parent). Sert à la persistance :
+   * le 'default' ne sauve que ce qui diffère du défaut usine, les autres styles sauvent
+   * toute valeur explicitement stockée (cf. StylePersistence.toJSON). */
+  public get is_default_style(): boolean { return !this._default_style }
+
+  /** Un attribut est-il explicitement porté par CE style (présent dans son storage) ?
+   * Les styles non-'default' ne sont pas pré-remplis : leur storage ne contient que les
+   * valeurs de seed + chargées + posées par l'utilisateur, donc « explicites ». */
+  public isAttributeExplicit(attr: keyof ConfigType): boolean {
+    return this._storage[attr] !== undefined
   }
 
   public isAttributeOverloaded(
     attr: keyof ConfigType
   ) {
     if (!this._default_style ) {
-      return this._storage[attr] !== undefined && this._storage[attr] !== this._config[attr].default
+      return this._storage[attr] !== undefined && this._storage[attr] !== this._config[attr]?.default
     }
-    return true
+    // Style non-défaut : surchargé = stocké ET différent de la valeur du style par défaut
+    const default_value = this._default_style.getElementProperty(attr) ?? this._config[attr]?.default
+    return this._storage[attr] !== undefined && this._storage[attr] !== default_value
   }
 
   public delete() {
@@ -1297,6 +1361,33 @@ export class Class_ElementStyle {
     }
   }
   public get attributes() { return this._storage }
+  public set attributes(value: Record<string, unknown>) {
+    this._storage = value
+    this.redrawReferences()
+  }
+
+  /** Redessine tous les éléments qui référencent ce style. */
+  public redrawReferences() {
+    Object.values(this._references).forEach(ref => ref.draw())
+  }
+
+  /**
+   * Enlève toutes les surcharges du style par rapport au style par défaut
+   * (réhéritage). Reconstruit un nouveau _storage pour ne pas muter un éventuel
+   * snapshot d'undo. Sur le style par défaut, isAttributeOverloaded est faux
+   * partout (valeurs == défaut) donc aucun attribut n'est retiré.
+   */
+  public resetOverloadedAttributes() {
+    const new_storage: Record<string, unknown> = {}
+    Object.keys(this._storage).forEach(key => {
+      if (!this.isAttributeOverloaded(key as keyof ConfigType)) {
+        new_storage[key] = this._storage[key]
+      }
+    })
+    this._storage = new_storage
+    this.redrawReferences()
+  }
+
   public get id() { return this._id }
   public get name() { return this._name }
   public set name(value: string) { this._name = value }

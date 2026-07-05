@@ -91,7 +91,14 @@ export abstract class Class_ProtoTagGroup {
     this._name = tagg_to_copy._name
     this._banner = tagg_to_copy._banner
     this._tag_count = tagg_to_copy._tag_count
-    this._tags_order = [...tagg_to_copy._tags_order]
+    // tagg_to_copy._tags_order holds the SOURCE group's tag ids. When the two
+    // groups were matched by name but carry different tag ids (e.g. updateFrom
+    // a JSON whose tags were renamed), copying the order verbatim would leave
+    // this group's tags_order pointing at ids absent from its tags_dict. Since
+    // tags_list is derived from tags_order, that empties tags_list and the sync
+    // loops below run on nothing, orphaning every tag. Translate source ids back
+    // to this group's ids via revert_matching_id so the order stays resolvable.
+    this._tags_order = tagg_to_copy._tags_order.map(id => revert_matching_id[id] ?? id)
 
     // Synchro current tags
     this.tags_list
@@ -591,6 +598,11 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
 
   private _is_unit = false
 
+  // #161 — when false, the diagram structure is not propagated across this
+  // group's tags: a flux absent for a tag does not exist there. Default true
+  // (legacy). Mirrors the parser's TagGroup.propagate_structure.
+  private _propagate_structure = true
+
   // PROTECTED ATTRIBUTES ===============================================================
   protected _tags: { [_: string]: Class_DataTag; }
 
@@ -624,6 +636,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     super._copyFrom(tagg_to_copy)
     this._use_colors = tagg_to_copy.use_colors
     this._is_unit = tagg_to_copy._is_unit
+    this._propagate_structure = tagg_to_copy._propagate_structure
   }
 
   protected _toJSON(
@@ -633,6 +646,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     super._toJSON(json_object, kwargs)
     json_object['use_colors'] = this._use_colors
     json_object['is_unit'] = this._is_unit
+    json_object['propagate_structure'] = this._propagate_structure
   }
 
   protected _fromJSON(
@@ -645,6 +659,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
       this.banner = 'sequence'
     }
     this._is_unit = getBooleanFromJSON(json_object, 'is_unit', this._is_unit)
+    this._propagate_structure = getBooleanFromJSON(json_object, 'propagate_structure', this._propagate_structure)
   }
 
   // PUBLIC METHODS =====================================================================
@@ -755,6 +770,11 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   }
 
   public set is_unit(value: boolean) { this._is_unit = value }
+
+  // #161 — per-group structure-propagation flag (default true = legacy)
+  public get propagate_structure(): boolean { return this._propagate_structure }
+
+  public set propagate_structure(value: boolean) { this._propagate_structure = value }
 }
 // CLASS LEVEL TAGGROUP *****************************************************************
 /**
@@ -923,6 +943,15 @@ export class Class_LevelTagGroup  extends Class_NodeTagGroup{
 export class Class_ViewTagGroup extends Class_NodeTagGroup {
   private _activated: boolean = false
   private _siblings: string[] = []
+  // Mode « filtre vue » : quand actif sur un groupe de view tags (banner 'one'),
+  // sélectionner une étiquette filtre le diagramme en COURT-CIRCUITANT les level
+  // tags (généralisation du mécanisme unitaire) : les nœuds portant l'étiquette
+  // sélectionnée sont montrés quel que soit le niveau, les autres étiquettes du
+  // groupe sont cachées. (Visibilité seulement — pas de remontée vers les ancêtres.)
+  private _view_mode: boolean = false
+  // Libellé personnalisable de l'option « vue complète » du sélecteur topbar
+  // (BannerViewTagTopbar). Vide = libellé par défaut (traduction Banner.view_full).
+  private _full_view_label: string = ''
 
   /**
    * True if tag is currently on a deletion process
@@ -969,20 +998,31 @@ export class Class_ViewTagGroup extends Class_NodeTagGroup {
     super._copyFrom(tagg_to_copy)
     this._activated = tagg_to_copy._activated
     this._siblings = [...tagg_to_copy._siblings]
+    this._view_mode = tagg_to_copy._view_mode
+    this._full_view_label = tagg_to_copy._full_view_label
   }
 
   protected _toJSON(json_object: Type_JSON, _kwargs?: Type_JSON) {
     super._toJSON(json_object, _kwargs)
     json_object['activated'] = this._activated
     json_object['siblings'] = this._siblings
-
+    json_object['view_mode'] = this._view_mode
+    json_object['full_view_label'] = this._full_view_label
   }
 
   protected _fromJSON(json_object: Type_JSON, kwargs?: Type_JSON) {
     super._fromJSON(json_object, kwargs)
     this._activated = getBooleanFromJSON(json_object, 'activated', this._activated)
     this._siblings = getStringListFromJSON(json_object, 'siblings', this._siblings)
+    this._view_mode = getBooleanFromJSON(json_object, 'view_mode', this._view_mode)
+    this._full_view_label = getStringFromJSON(json_object, 'full_view_label', this._full_view_label)
   }
+
+  public get view_mode(): boolean { return this._view_mode }
+  public set view_mode(_: boolean) { this._view_mode = _ }
+
+  public get full_view_label(): string { return this._full_view_label }
+  public set full_view_label(_: string) { this._full_view_label = _ }
 
   /**
    * Function to add sibling to current group and referenced group,

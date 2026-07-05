@@ -34,7 +34,8 @@ import {
 import { Class_DataTag, Class_LevelTag, Class_Tag } from '../types/Tag'
 import { Class_DataTagGroup } from '../types/TagGroup'
 import { Class_DrawingArea } from '../types/DrawingArea'
-import { PAPER_TARGET_FONT_SIZES } from '../Elements/ElementsAttributesConfig'
+import { Type_DisaggregationGap } from '../types/Utils'
+import { PAPER_TARGET_FONT_SIZES, Type_StraightMode } from '../Elements/ElementsAttributesConfig'
 import { NodeImportExportAboveBelowStyle, NodeImportExportCloseStyle, NodeLeftExtremityStyle, NodeRightExtremityStyle, NodeSectorStyle } from '../Elements/ElementStyle'
 
 
@@ -62,6 +63,14 @@ export class NodePositioning {
   // Sinon : fallback sur l'ancien calcul (moyenne des centres de colonnes / max ratio de sommes).
   // Transitoires (jamais persistés).
   private _prop_reference_link: Class_LinkElement | undefined = undefined
+
+  // #1231b — Élément de référence GÉNÉRALISÉ : un nœud (dans sa représentation stock) peut
+  // jouer le même rôle que le flux de référence. Mutuellement exclusif avec
+  // `_prop_reference_link` (un seul élément de référence à la fois). Si défini et visible :
+  //  - la médiane (centre de gravité) = centre vertical du nœud,
+  //  - le facteur f = stock courant / stock au datatag de référence.
+  // La valeur du stock = stock initial (cf. Node.currentStockInitialForHeight). Transitoire.
+  private _prop_reference_node: Class_NodeElement | undefined = undefined
 
   // #1231 — Datatag de RÉFÉRENCE (ids des tags datatag sélectionnés au moment où le flux de
   // référence a été défini). Les pourcentages sont calculés pour le couple (flux, datatag) :
@@ -938,6 +947,66 @@ export class NodePositioning {
   }
 
   /**
+   * Mix de positionnement PAR NŒUD, indépendant du mode global.
+   *
+   * Les nœuds marqués `absolute` restent placés par le mode global (absolu garde le
+   * centre fixe, proportionnel comprime, etc.) — on n'y touche pas. Les nœuds marqués
+   * `parametric` (« Ecartement ») se recalent verticalement sous le nœud directement
+   * AU-DESSUS d'eux dans leur colonne (`position_u`, ordre `position_v`), à l'écart
+   * constant `shape_position_dy`. Le nœud du dessus peut être un nœud absolu (servant
+   * d'ancre) ou un parametric déjà calé → une pile de parametrics pend sous l'ancre
+   * absolue.
+   *
+   * Le premier nœud d'une colonne, s'il est `parametric`, n'a pas de nœud au-dessus :
+   * il conserve la position que le mode global vient de lui donner (repli
+   * proportionnel/absolu courant).
+   *
+   * À appeler en fin de placement global, AVANT `_sankey.draw()`. À NE PAS appeler en
+   * mode global `parametric` (recomputeParametricLayout empile déjà la colonne entière).
+   *
+   * Exclus : nœuds invisibles, échange, `relative` (collés à un voisin), enfants de
+   * cadre englobant (positionnés par leur container).
+   */
+  public anchorParametricNodesToAbsolute() {
+    const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
+    const isContainerChild = (n: Class_NodeElement): boolean =>
+      n.dimensions_as_child.some(d => d.container_mode)
+
+    const members = this.drawingArea.sankey.visible_nodes_list.filter(n => {
+      if (!n.is_visible) return false
+      if (echangeTag && n.hasGivenTag(echangeTag)) return false
+      if (n.shape_position_type === 'relative') return false
+      if (isContainerChild(n)) return false
+      return true
+    })
+
+    // Rien à faire si aucune colonne ne contient de nœud parametric.
+    if (!members.some(n => n.shape_position_type === 'parametric')) return
+
+    const columns = new Map<number, Class_NodeElement[]>()
+    members.forEach(n => {
+      const col = columns.get(n.position_u) ?? []
+      col.push(n)
+      columns.set(n.position_u, col)
+    })
+
+    columns.forEach(column => {
+      const sorted = [...column].sort((a, b) => {
+        if (a.position_v !== b.position_v) return a.position_v - b.position_v
+        return a.position_y - b.position_y
+      })
+      let prev_bottom: number | null = null
+      sorted.forEach(node => {
+        if (node.shape_position_type === 'parametric' && prev_bottom !== null) {
+          node.position_y = prev_bottom + (node.shape_position_dy ?? 0)
+          node.applyPosition()
+        }
+        prev_bottom = node.position_y + node.getShapeHeightToUse()
+      })
+    })
+  }
+
+  /**
    * #1231 — Nœuds « libres » éligibles au mode proportionnel : visibles, non-échange,
    * non-relatifs, hors cadres tied. (Filtre commun capture/replacement.)
    */
@@ -1047,8 +1116,11 @@ export class NodePositioning {
               ? (c.shape_position_dy ?? default_dy)
               : const_gap
           cursor += gap
-          // 'fill' et 'constant' fixent un écart explicite → on le matérialise dans dy.
-          if (mode !== 'children_dy') c.shape_position_dy = gap
+          // 'fill' fixe un écart CALCULÉ (propre à ce slot) → on le matérialise dans dy pour que
+          // le ré-empilement au dessin le reproduise. 'constant' est au contraire lu EN DIRECT
+          // depuis disaggregation_gap_value (containerChildGap) : ne rien figer, sinon éditer la
+          // valeur ne changerait pas les englobements déjà en place.
+          if (mode === 'fill') c.shape_position_dy = gap
         }
         c.position_y = cursor
         cursor += c.getShapeHeightToUse()
@@ -1070,17 +1142,61 @@ export class NodePositioning {
     return this._prop_reference_link
   }
 
-  public setProportionalReferenceLink(link: Class_LinkElement | undefined) {
-    // Persistance : un seul flux de référence. On nettoie le marqueur persisté
-    // `shape_is_reference_flux` sur tout autre lien et on le pose sur le nouveau (le set
-    // n'a pas d'action → pas de dessin parasite ; cf. ElementsAttributesConfig).
+  /** #1231b — Nœud de référence (visibilité-gated), pour l'état coché du menu nœud. */
+  public get proportionalReferenceNode(): Class_NodeElement | undefined {
+    if (this._prop_reference_node && !this._prop_reference_node.is_visible) return undefined
+    return this._prop_reference_node
+  }
+
+  /** #1231b — Élément de référence BRUT (lien OU nœud), sans filtre de visibilité. */
+  private get _rawReference(): Class_LinkElement | Class_NodeElement | undefined {
+    return this._prop_reference_link ?? this._prop_reference_node
+  }
+
+  /** #1231b — Élément de référence visibilité-gated (undefined si masqué). */
+  private get _gatedReference(): Class_LinkElement | Class_NodeElement | undefined {
+    const ref = this._rawReference
+    if (ref && !ref.is_visible) return undefined
+    return ref
+  }
+
+  // #1231b — Nettoie les marqueurs persistés de référence (lien ET nœud) sur TOUS les
+  // éléments, sauf `keep` (l'élément qu'on est en train de désigner). Le set n'a pas
+  // d'action → pas de dessin parasite (cf. ElementsAttributesConfig).
+  private clearReferenceMarkers(keep?: Class_LinkElement | Class_NodeElement) {
     this.drawingArea.sankey.links_list.forEach(l => {
-      if (l.shape_is_reference_flux && l !== link) l.shape_is_reference_flux = false
+      if (l.shape_is_reference_flux && l !== keep) l.shape_is_reference_flux = false
     })
+    this.drawingArea.sankey.nodes_list.forEach(n => {
+      if (n.shape_is_reference_stock && n !== keep) n.shape_is_reference_stock = false
+    })
+  }
+
+  public setProportionalReferenceLink(link: Class_LinkElement | undefined) {
+    // Un seul élément de référence à la fois : on retire tout marqueur (lien/nœud) existant.
+    this.clearReferenceMarkers(link)
     this._prop_reference_link = link
+    this._prop_reference_node = undefined
     if (link) {
       link.shape_is_reference_flux = true
-      // Mémoriser le datatag courant comme datatag de référence (couple flux/datatag).
+      // Mémoriser le datatag courant comme datatag de référence (couple élément/datatag).
+      this._prop_reference_datatag_ids = this.drawingArea.sankey.selected_data_tags_list.map(t => t.id)
+    } else {
+      this._prop_reference_datatag_ids = undefined
+    }
+  }
+
+  /**
+   * #1231b — Désigne (ou retire) un NŒUD-STOCK comme élément de référence. Mutuellement
+   * exclusif avec le flux de référence. Le marqueur persisté `shape_is_reference_stock` est
+   * posé sur le nœud (relu au chargement par `attachReferenceLinkFromAttributes`).
+   */
+  public setProportionalReferenceNode(node: Class_NodeElement | undefined) {
+    this.clearReferenceMarkers(node)
+    this._prop_reference_node = node
+    this._prop_reference_link = undefined
+    if (node) {
+      node.shape_is_reference_stock = true
       this._prop_reference_datatag_ids = this.drawingArea.sankey.selected_data_tags_list.map(t => t.id)
     } else {
       this._prop_reference_datatag_ids = undefined
@@ -1110,9 +1226,24 @@ export class NodePositioning {
    * (rétrocompat). undefined si pas de flux de référence ou valeur indisponible.
    */
   private referenceFluxRefValue(): number | undefined {
-    const ref = this.proportionalReferenceLink
-    if (!ref) return undefined
+    // Élément brut (pas le getter visibilité-gated) : en mode vue l'élément de référence peut
+    // être caché par le filtre, mais sa valeur de référence (dénominateur de l'échelle) reste
+    // définie. Pour le proportionnel ce chemin n'est emprunté que si visible → inchangé.
     const tags = this.resolveReferenceDataTags()
+    // #1231b — Nœud-stock de référence : valeur = stock initial (cf. currentStockInitialForHeight).
+    const node = this._prop_reference_node
+    if (node) {
+      // #1231b — On ancre l'échelle adaptée sur la hauteur RÉELLEMENT rendue du nœud
+      // (max stock / bande de flux), pas sur la seule valeur de stock.
+      if (tags.length > 0) {
+        const v = node.stockInitialForDataTags(tags)
+        if (v != null && isFinite(v)) return node.stockValueAugmentedByFluxBand(v)
+      }
+      const vc = node.currentStockInitialForHeight()
+      return (vc != null && isFinite(vc)) ? node.stockValueAugmentedByFluxBand(vc) : undefined
+    }
+    const ref = this._prop_reference_link
+    if (!ref) return undefined
     if (tags.length > 0) {
       const v = ref.valueForDataTags(tags)
       if (v != null && isFinite(v)) return Math.abs(v)
@@ -1122,13 +1253,44 @@ export class NodePositioning {
   }
 
   /**
+   * #1231b — Valeur COURANTE (datatags sélectionnés, hors vue) de l'élément de référence.
+   * Flux : épaisseur via valeur courante. Nœud-stock : stock initial courant. abs ; 0 si rien.
+   */
+  private referenceCurrentValue(): number {
+    const node = this._prop_reference_node
+    if (node) {
+      // #1231b — Ancrage sur la hauteur réelle (max stock / bande de flux).
+      const v = node.currentStockInitialForHeight()
+      return (v != null && isFinite(v)) ? node.stockValueAugmentedByFluxBand(v) : 0
+    }
+    const ref = this._prop_reference_link
+    return ref ? Math.abs(ref.valueCurrent ?? 0) : 0
+  }
+
+  /**
+   * #1231b — Valeur de l'élément de référence dans la VUE courante (correspondant visible).
+   * Flux : somme des liens enfants visibles (referenceFluxViewValue). Nœud-stock : somme des
+   * stocks des nœuds descendants visibles portant l'étiquette view tag sélectionnée.
+   */
+  private referenceViewValue(): number {
+    const node = this._prop_reference_node
+    if (node) return this.referenceStockViewValue(node)
+    const ref = this._prop_reference_link
+    return ref ? this.referenceFluxViewValue(ref) : 0
+  }
+
+  /**
    * #1231 — Au chargement (persistance) : ré-attache le flux de référence depuis le marqueur
    * persisté `shape_is_reference_flux`. La capture (médiane proportionnelle / échelle) se
    * fait paresseusement au 1er dessin (anchorProportionalNodes / applyAdaptedScale).
    */
   public attachReferenceLinkFromAttributes() {
-    const flagged = this.drawingArea.sankey.links_list.find(l => l.shape_is_reference_flux)
-    this._prop_reference_link = flagged ?? undefined
+    const flagged_link = this.drawingArea.sankey.links_list.find(l => l.shape_is_reference_flux)
+    const flagged_node = this.drawingArea.sankey.nodes_list.find(n => n.shape_is_reference_stock)
+    this._prop_reference_link = flagged_link ?? undefined
+    // #1231b — Un seul élément de référence à la fois : si les deux marqueurs cohabitent
+    // (fichier incohérent), le flux prime et on ignore le nœud.
+    this._prop_reference_node = flagged_link ? undefined : (flagged_node ?? undefined)
   }
 
   /**
@@ -1162,7 +1324,9 @@ export class NodePositioning {
    * mode, valeur_courante == valeur_ref → échelle inchangée → pas de saut.
    */
   public captureScaleReference() {
-    const ref = this.proportionalReferenceLink
+    // Élément brut : on doit pouvoir capturer la valeur de référence même si l'élément est
+    // momentanément masqué par un filtre vue (cf. referenceFluxRefValue).
+    const ref = this._rawReference
     const v = ref ? this.referenceFluxRefValue() : undefined
     if (ref && v && v > 0) {
       // Valeur au datatag de référence (couple flux/datatag) ; échelle de base = échelle courante.
@@ -1182,7 +1346,10 @@ export class NodePositioning {
    * récursion ; on l'évite).
    */
   public applyAdaptedScale() {
-    const ref = this.proportionalReferenceLink
+    // En mode vue, l'élément de référence peut être masqué par le filtre → on prend l'élément brut
+    // (sa valeur de réf reste le « gabarit » de taille). Hors vue, version visibilité-gated.
+    const view_active = this.drawingArea.sankey.view_mode_active
+    const ref = view_active ? this._rawReference : this._gatedReference
     if (!ref) return
     // Capture paresseuse (1er dessin / après chargement) : base = échelle + valeur courantes
     // → ratio 1 à cette frame, pas de saut.
@@ -1190,13 +1357,64 @@ export class NodePositioning {
       this.captureScaleReference()
       return
     }
-    const v = Math.abs(ref.valueCurrent ?? 0)
+    // En mode vue : v = valeur du CORRESPONDANT de la vue (enfant visible portant l'étiquette
+    // sélectionnée). new_scale = ref_scale × correspondant / valeur_réf → le correspondant est
+    // dessiné à la taille de référence (une vue plus petite dilate l'échelle pour normaliser le
+    // correspondant). Hors vue : valeur courante de l'élément de référence (datatags).
+    const v = view_active
+      ? this.referenceViewValue()
+      : this.referenceCurrentValue()
     if (v <= 0) return
     const new_scale = this._scale_adapted_ref_scale * v / this._scale_adapted_ref_value
     if (isFinite(new_scale) && new_scale > 0) {
       this.drawingArea._scale = new_scale
       this.drawingArea._scaleValueToPx.domain([0, new_scale])
     }
+  }
+
+  /**
+   * Mode vue — valeur du flux de référence dans la VUE courante : somme des liens visibles dont
+   * la source descend de `ref.source`, la cible descend de `ref.target`, ET dont les DEUX
+   * extrémités portent l'étiquette view tag sélectionnée (viewTagVisibility === true). Ce dernier
+   * filtre est indispensable car la hiérarchie a plusieurs dimensions (essences ET propriétés) :
+   * sans lui on cumulerait les liens croisés (ex. essence chêne → propriété domaniale).
+   */
+  private referenceFluxViewValue(ref: Class_LinkElement): number {
+    const src = ref.source as Class_NodeElement
+    const tgt = ref.target as Class_NodeElement
+    const src_set = new Set<Class_NodeElement>([src, ...src.getListDescendantOfNode()])
+    const tgt_set = new Set<Class_NodeElement>([tgt, ...tgt.getListDescendantOfNode()])
+    let sum = 0
+    this.drawingArea.sankey.visible_links_list.forEach(l => {
+      const ls = l.source as Class_NodeElement
+      const lt = l.target as Class_NodeElement
+      if (!src_set.has(ls) || !tgt_set.has(lt)) return
+      if (ls.viewTagVisibility() !== true || lt.viewTagVisibility() !== true) return
+      const v = l.valueCurrent
+      if (v != null && isFinite(v)) sum += Math.abs(v)
+    })
+    return sum
+  }
+
+  /**
+   * #1231b — Mode vue — valeur du nœud-stock de référence dans la VUE courante : somme des
+   * stocks des nœuds visibles qui descendent du nœud de référence ET portent l'étiquette view
+   * tag sélectionnée (viewTagVisibility === true). Analogue stock de referenceFluxViewValue.
+   */
+  private referenceStockViewValue(node: Class_NodeElement): number {
+    const node_set = new Set<Class_NodeElement>([node, ...node.getListDescendantOfNode()])
+    let sum = 0
+    this.drawingArea.sankey.visible_nodes_list.forEach(n => {
+      if (!node_set.has(n)) return
+      if (!n.has_stock) return
+      if (n.viewTagVisibility() !== true) return
+      const v = n.currentStockInitialForHeight()
+      if (v != null && isFinite(v)) sum += Math.abs(v)
+    })
+    // #1231b — Ancrage sur la hauteur réelle : si la bande de flux du nœud de
+    // référence dépasse la hauteur-stock (cumul des correspondants visibles), on
+    // ancre l'échelle sur cette bande.
+    return node.stockValueAugmentedByFluxBand(sum)
   }
 
   /**
@@ -1211,6 +1429,111 @@ export class NodePositioning {
     }
     this._scale_adapted_ref_value = undefined
     this._scale_adapted_ref_scale = undefined
+  }
+
+  /**
+   * #1231 — Mode « échelle adaptée » : dérive le coin de chaque nœud « libre » depuis son CENTRE
+   * stocké, SANS jamais recommiter le coin dans le centre. Remplace `anchorAbsoluteNodesByCenter`
+   * dans la branche scale_adapted de `drawElements` : on garde la même dérivation centre→coin,
+   * mais on supprime la branche « taille inchangée → captureCenterFromCorner » qui figerait le
+   * recalage d'affichage (anti-chevauchement / clamp, cf. `resolveScaleAdaptedOverlaps`) dans le
+   * centre persisté → ce recalage se traînerait alors d'un viewtag/datatag à l'autre.
+   *
+   * Le centre reste la SEULE vérité : il n'est modifié que par les gestes utilisateur (drag,
+   * resize → `settleCenterAnchor`) et les opérations structurelles, jamais par le dessin. À chaque
+   * frame on repart donc du centre propre, et le recalage d'espacement est recalculé pour le
+   * datatag/viewtag courant (transitoire, jamais persistant).
+   *
+   * Mêmes exclusions que `anchorAbsoluteNodesByCenter` : nœuds visibles, libres (non relatifs),
+   * hors cadres tied. Lazy-init du centre au 1er dessin (fichier sans centre encore posé).
+   */
+  public deriveScaleAdaptedCornersFromCenter() {
+    this.drawingArea.sankey.nodes_list.forEach(n => {
+      if (!n.is_visible) return
+      if (n.shape_position_type === 'relative') return
+      if (n.tied_to_nodes && n.attached_node.length > 0) return
+      if (n.center_x === undefined || n.center_y === undefined) {
+        n.captureCenterFromCorner() // init unique ; le coin est déjà cohérent
+      } else {
+        n.forceDeriveFromCenter() // coin = centre − taille/2, sans recommit du centre
+      }
+    })
+  }
+
+  /**
+   * #1231 — Mode « échelle adaptée » : décale un nœud verticalement de `dy` POUR L'AFFICHAGE
+   * seulement (coin `position_y`), SANS toucher au centre stocké. Le recalage d'espacement est
+   * propre au datatag/viewtag courant : il est recalculé à chaque dessin à partir du centre
+   * (cf. `deriveScaleAdaptedCornersFromCenter`) et ne doit donc jamais être persisté, sinon il se
+   * traînerait d'un datatag/viewtag à l'autre. No-op si `dy` nul.
+   */
+  private shiftNodeY(n: Class_NodeElement, dy: number) {
+    if (!dy) return
+    n.position_y += dy
+  }
+
+  /**
+   * #1231 — Mode « échelle adaptée » : anti-chevauchement par colonne (DEPUIS LE HAUT) + clamp
+   * du haut du diagramme. Appelé après `deriveScaleAdaptedCornersFromCenter` dans la branche
+   * scale_adapted de `drawElements`.
+   *
+   * En mode échelle, les nœuds grossissent autour de leur centre FIXE quand l'échelle monte
+   * (bascule datatag/viewtag). Deux effets indésirables :
+   *  - deux nœuds d'une même colonne peuvent se recouvrir ;
+   *  - le nœud du haut, dont le coin = centre − hauteur/2, peut passer AU-DESSUS du haut du
+   *    diagramme (y < 0).
+   *
+   * On ne re-layoute PAS le diagramme :
+   *  1. anti-chevauchement : le nœud le plus haut de chaque colonne garde sa place, chaque nœud
+   *     suivant est descendu juste assez pour rétablir l'écart minimal (push vers le bas only) ;
+   *  2. clamp du haut : si le sommet de la colonne dépasse y=0, on décale TOUTE la colonne vers
+   *     le bas pour que son sommet tienne pile au haut du diagramme.
+   * Ces décalages sont D'AFFICHAGE (coin seulement, cf. `shiftNodeY`) : recalculés à chaque
+   * dessin depuis le centre, donc propres au datatag/viewtag courant et jamais persistés.
+   *
+   * Mêmes conventions de colonne que `backCalculateShapePositionDyFromY` : groupage par
+   * `position_u`, exclusion des nœuds `echange` (import/export, placés au niveau de leur flux),
+   * des nœuds relatifs et des cadres tied. `écart_min` = `shape_position_dy` GLOBAL.
+   */
+  public resolveScaleAdaptedOverlaps() {
+    const min_gap = this.drawingArea.sankey.styles_dict['default'].shape_position_dy ?? 50
+    const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
+    const columns = new Map<number, Class_NodeElement[]>()
+    this.drawingArea.sankey.visible_nodes_list.forEach(n => {
+      if (!n.is_visible) return
+      if (echangeTag && n.hasGivenTag(echangeTag)) return
+      if (n.shape_position_type === 'relative') return
+      if (n.tied_to_nodes && n.attached_node.length > 0) return
+      const arr = columns.get(n.position_u) ?? []
+      arr.push(n)
+      columns.set(n.position_u, arr)
+    })
+    columns.forEach(col => {
+      // Ordre vertical = ordre LOGIQUE de la colonne (`position_v`), PAS la géométrie courante :
+      // en échelle adaptée, position_y est dérivée du centre et peut différer d'un pouième entre
+      // deux nœuds quasi alignés → un tri par position_y inverserait leur ordre (ex. v=1 au-dessus
+      // de v=0) et le push figerait l'inversion. position_v est l'ordre stable (calculé au load,
+      // u/v verrouillés). position_y en départage seulement les v égaux (ne devrait pas arriver).
+      col.sort((a, b) => (a.position_v - b.position_v) || (a.position_y - b.position_y))
+      // DEBUG #1231 (temporaire) — dump de l'ordre par colonne pour diagnostiquer le non-respect
+      // de position_v en mode échelle adaptée (à retirer une fois la cause confirmée).
+      if (col.length > 1) {
+        // eslint-disable-next-line no-console
+        console.log('[scaleAdapted overlap] u=' + col[0].position_u + ' →',
+          col.map(n => `${n.name}(v=${n.position_v}, y=${Math.round(n.position_y)}, u=${n.position_u})`).join('  |  '))
+      }
+      // 1. anti-chevauchement, depuis le haut : descendre les nœuds qui se recouvrent.
+      for (let i = 1; i < col.length; i++) {
+        const prev = col[i - 1]
+        const curr = col[i]
+        const min_top = prev.position_y + prev.getShapeHeightToUse() + min_gap
+        if (curr.position_y < min_top) this.shiftNodeY(curr, min_top - curr.position_y)
+      }
+      // 2. clamp du haut : le sommet de la colonne (nœud le plus haut, jamais descendu) ne doit
+      //    pas dépasser y=0. Sinon on décale toute la colonne vers le bas (affichage seulement).
+      const top = col[0].position_y
+      if (top < 0) col.forEach(n => this.shiftNodeY(n, -top))
+    })
   }
 
   /**
@@ -1249,13 +1572,25 @@ export class NodePositioning {
     this._prop_ref_col_sums = this.proportionalColumnSums(nodes)
     nodes.forEach(n => n.captureProportionalCenterRef())
 
-    // #1231 — Avec flux de référence : la médiane (centre de gravité fixe) se cale sur le
-    // centre vertical du flux. Le facteur f est value-based (cf. proportionalFactor) : rien à
-    // capturer ici pour f (il dérive du couple flux/datatag de référence persisté).
-    const ref_link = this.proportionalReferenceLink
-    if (ref_link) {
-      this._prop_median_y = this.fluxCenterY(ref_link)
+    // #1231 — Avec élément de référence : la médiane (centre de gravité fixe) se cale sur le
+    // centre vertical de l'élément (flux à mi-parcours, ou centre du nœud-stock). Le facteur f
+    // est value-based (cf. proportionalFactor) : rien à capturer ici pour f (il dérive du couple
+    // élément/datatag de référence persisté).
+    const ref_center = this.referenceCenterY()
+    if (ref_center !== undefined) {
+      this._prop_median_y = ref_center
     }
+  }
+
+  /** #1231b — Centre vertical de l'élément de référence (visibilité-gated). undefined si aucun. */
+  private referenceCenterY(): number | undefined {
+    const ref = this._gatedReference
+    if (!ref) return undefined
+    const node = this._prop_reference_node
+    if (node && ref === node) {
+      return node.position_y + node.getShapeHeightToUse() / 2
+    }
+    return this.fluxCenterY(ref as Class_LinkElement)
   }
 
   /**
@@ -1270,10 +1605,17 @@ export class NodePositioning {
     // #1231 — Régime « flux de référence » : f = ratio de VALEUR du flux de référence entre le
     // datatag courant et le datatag de référence (couple persisté flux/datatag). f=1 au datatag
     // de réf ; indépendant du moment où l'on (r)entre en mode %.
-    const ref_link = this.proportionalReferenceLink
-    if (ref_link) {
+    // En mode vue, le flux de référence peut être masqué par le filtre → lien brut. Le facteur
+    // est piloté par la valeur du CORRESPONDANT de la vue (somme des flux enfants visibles
+    // portant l'étiquette sélectionnée) rapportée à la valeur du flux de référence : une vue
+    // plus petite que le total donne f<1 → le diagramme se comprime (rétracte).
+    const view_active = this.drawingArea.sankey.view_mode_active
+    const ref = view_active ? this._rawReference : this._gatedReference
+    if (ref) {
       const ref_val = this.referenceFluxRefValue()
-      const cur = Math.abs(ref_link.valueCurrent ?? 0)
+      const cur = view_active
+        ? this.referenceViewValue()
+        : this.referenceCurrentValue()
       if (ref_val && ref_val > 0 && cur > 0) {
         const f = cur / ref_val
         return (isFinite(f) && f > 0) ? f : 1
@@ -1316,7 +1658,15 @@ export class NodePositioning {
     // préservé EXACTEMENT entre colonnes (un nœud plus haut le reste, gauche ou droite), et
     // la colonne la plus dense « tire » tout le diagramme. Plus de plancher par colonne.
     const f = this.proportionalFactor(nodes)
-    const f_eff = Math.max(f, this.proportionalMinFactor(nodes))
+    // Plancher anti-chevauchement (écart minimum entre nœuds). En mode vue, les nœuds révélés par
+    // le filtre n'ont pas de position verticale propre (le fichier les stocke empilés) : deux
+    // peuvent se retrouver quasi collés et le facteur dépasserait 1, dilatant tout le diagramme à
+    // l'infini. On le PLAFONNE donc à 1 en vue : on applique l'écart minimum tant qu'il « tient »
+    // dans la disposition d'origine, mais on ne dilate jamais au-delà (pas d'explosion, et la vue
+    // ne se contracte pas plus que nécessaire). Hors vue : comportement normal (ensemble fixe).
+    const min_factor = this.proportionalMinFactor(nodes)
+    const capped_min = this.drawingArea.sankey.view_mode_active ? Math.min(min_factor, 1) : min_factor
+    const f_eff = Math.max(f, capped_min)
     nodes.forEach(n => n.applyProportionalCompression(this._prop_median_y!, f_eff))
   }
 
@@ -2579,6 +2929,53 @@ export class NodePositioning {
   }
 
   /**
+   * Écart vertical AVANT un enfant de cadre englobant, selon le mode d'écart courant :
+   *  - 'constant'  : `const_gap` (lu EN DIRECT sur `disaggregation_gap_value`) — éditer la valeur
+   *                  modifie donc tous les englobements existants au prochain dessin, l'écart
+   *                  n'étant volontairement PAS figé dans `shape_position_dy`.
+   *  - autres modes: `shape_position_dy` de l'enfant (fill = valeur calculée figée au slot ;
+   *                  children_dy = écart propre à l'enfant ; keep = les enfants ne sont pas
+   *                  ré-empilés, cf. appelants).
+   */
+  public static containerChildGap(
+    child: Class_NodeElement,
+    mode: Type_DisaggregationGap,
+    const_gap: number
+  ): number {
+    return mode === 'constant' ? const_gap : (child.shape_position_dy ?? 0)
+  }
+
+  /**
+   * Empile verticalement les enfants d'un cadre englobant, comme `stackNodesVertically` mais avec
+   * l'écart résolu par `containerChildGap` (constant lu en direct). Utilisé par le mode parametric
+   * (Phase C de `recomputeParametricLayout`) et les autres modes (`restackContainerChildren`).
+   */
+  public static stackContainerChildren(
+    nodes: Class_NodeElement[],
+    anchor_y: number,
+    mode: Type_DisaggregationGap,
+    const_gap: number
+  ) {
+    let cursor_y = anchor_y
+    nodes.forEach((node, i) => {
+      if (i > 0) cursor_y += NodePositioning.containerChildGap(node, mode, const_gap)
+      node.position_y = cursor_y
+      node.applyPosition()
+      cursor_y += node.getShapeHeightToUse()
+    })
+  }
+
+  /** Hauteur totale de la pile de `stackContainerChildren` (écart constant lu en direct). */
+  public static totalContainerStackHeight(
+    nodes: Class_NodeElement[],
+    mode: Type_DisaggregationGap,
+    const_gap: number
+  ): number {
+    return nodes.reduce((sum, n, i) =>
+      sum + n.getShapeHeightToUse() + (i > 0 ? NodePositioning.containerChildGap(n, mode, const_gap) : 0), 0)
+  }
+
+  /**
    * Point d'entrée unique pour le recompute du layout paramétrique (PR 3).
    *
    * Traite une colonne (ensemble de nœuds visibles partageant un même
@@ -2629,6 +3026,11 @@ export class NodePositioning {
     }
 
     const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
+
+    // Mode d'écart des enfants de cadre + valeur constante LIVE (cf. containerChildGap) : partagés
+    // par le sizing (Phase A) et l'empilement (Phase C) pour que l'écart 'constant' reste éditable.
+    const gap_mode = this.drawingArea.effective_gap_mode
+    const const_gap = this.drawingArea.disaggregation_gap_value
 
     // --- Helpers ---
 
@@ -2702,8 +3104,8 @@ export class NodePositioning {
       children.forEach(c => {
         if (isContainerParent(c)) sizeContainerRecursive(c)
       })
-      // Sum children heights + dy + top/bottom margins.
-      const stack_h = NodePositioning.totalStackHeight(children)
+      // Sum children heights + écarts (constant lu en direct) + top/bottom margins.
+      const stack_h = NodePositioning.totalContainerStackHeight(children, gap_mode, const_gap)
       const envelope_h = stack_h + container.shape_margin_top + container.shape_margin_bottom
       // Width: max of child widths + left/right margins. Container children
       // are supposed to be aligned on the container's x axis in the current
@@ -2777,7 +3179,7 @@ export class NodePositioning {
       const children = sortByV(collectContainerChildren(container))
       if (children.length === 0) return
       const anchor_y = container.position_y + container.shape_margin_top
-      NodePositioning.stackNodesVertically(children, anchor_y)
+      NodePositioning.stackContainerChildren(children, anchor_y, gap_mode, const_gap)
       children.forEach(c => {
         if (isContainerParent(c)) positionContainerChildrenRecursive(c)
       })
@@ -2789,6 +3191,103 @@ export class NodePositioning {
       .filter(isContainerParent)
       .filter(c => scope.type !== 'column' || c.position_u === scope.u)
       .forEach(c => positionContainerChildrenRecursive(c))
+  }
+
+  /**
+   * Ré-empile les enfants de chaque cadre englobant (`container_mode`) sur la position et la
+   * hauteur COURANTES du cadre — pendant de la Phase C de `recomputeParametricLayout`, mais pour
+   * les modes de positionnement NON-parametric (absolu, proportionnel, échelle adaptée).
+   *
+   * Pourquoi : dans ces modes, le placement global (`anchorAbsoluteNodesByCenter`,
+   * `anchorProportionalNodes`…) garde le CENTRE de chaque enfant fixe quand sa taille change
+   * (changement de datatag/vue/échelle). Des enfants empilés jointivement (écart constant) finissent
+   * donc par se chevaucher ou se disperser dès que leur valeur change.
+   *
+   * Empilement À PLAT des FEUILLES : on collecte les feuilles réelles (pas les sous-cadres) dans
+   * l'ordre hiérarchique et on les espace UNIFORMÉMENT — écart identique quel que soit le niveau
+   * d'imbrication. Empiler récursivement les sous-cadres ajouterait leurs marges (`shape_margin_top`
+   * /`_bottom`) entre deux groupes → l'écart casserait au 2ᵉ niveau. Chaque sous-cadre est ensuite
+   * réancré (`reanchorTiedFrame`) pour envelopper ses feuilles ; sa taille suit via `_envelopeSize()`.
+   * Le cadre de premier niveau garde sa position (il sert d'ancre).
+   *
+   * L'écart est résolu par `containerChildGap` : en mode 'constant' il est lu EN DIRECT sur
+   * `disaggregation_gap_value` (éditer la valeur ré-englobe au prochain dessin, sans être figé dans
+   * les feuilles) ; sinon = `shape_position_dy` persisté. En mode 'keep' rien n'est ré-empilé.
+   *
+   * À appeler en FIN de placement (après le mode global + `anchorParametricNodesToAbsolute`), pour
+   * écraser le re-centrage individuel des feuilles. Nœuds « échange » et enfants invisibles exclus.
+   */
+  public restackContainerChildren() {
+    const mode = this.drawingArea.effective_gap_mode
+    // 'keep' = les enfants conservent leur position_y manuelle → aucun ré-empilement.
+    if (mode === 'keep') return
+    const const_gap = this.drawingArea.disaggregation_gap_value
+    const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
+
+    const isContainerParent = (n: Class_NodeElement): boolean =>
+      n.dimensions_as_parent.some(d => d.container_mode)
+
+    const sortByV = (nodes: Class_NodeElement[]): Class_NodeElement[] =>
+      [...nodes].sort((a, b) =>
+        a.position_v !== b.position_v ? a.position_v - b.position_v : a.position_y - b.position_y)
+
+    // Enfants directs VISIBLES d'un cadre (dédupliqués sur les dims container_mode).
+    const directChildren = (container: Class_NodeElement): Class_NodeElement[] => {
+      const seen = new Set<Class_NodeElement>()
+      const children: Class_NodeElement[] = []
+      container.dimensions_as_parent
+        .filter(d => d.container_mode)
+        .forEach(dim => {
+          dim.children.forEach(child => {
+            const c = child as Class_NodeElement
+            if (seen.has(c)) return
+            seen.add(c)
+            if (!c.is_visible) return
+            if (echangeTag && c.hasGivenTag(echangeTag)) return
+            children.push(c)
+          })
+        })
+      return children
+    }
+
+    // Feuilles visibles d'un cadre, dans l'ordre hiérarchique (DFS + tri par v) : on descend dans
+    // les sous-cadres et on ne renvoie QUE les vraies feuilles (pas les cadres eux-mêmes).
+    const leavesInOrder = (container: Class_NodeElement): Class_NodeElement[] => {
+      const out: Class_NodeElement[] = []
+      sortByV(directChildren(container)).forEach(c => {
+        if (isContainerParent(c)) out.push(...leavesInOrder(c))
+        else out.push(c)
+      })
+      return out
+    }
+
+    // Réancre les sous-cadres imbriqués (bottom-up) sur l'enveloppe de leurs feuilles.
+    const reanchorSubFrames = (container: Class_NodeElement) => {
+      directChildren(container).forEach(c => {
+        if (isContainerParent(c)) { reanchorSubFrames(c); c.reanchorTiedFrame() }
+      })
+    }
+
+    this.drawingArea.sankey.visible_nodes_list
+      .filter(isContainerParent)
+      .filter(n => !n.dimensions_as_child.some(d => d.container_mode))
+      .forEach(container => {
+        const leaves = leavesInOrder(container)
+        if (leaves.length === 0) return
+        // Empilement uniforme des feuilles depuis le haut du cadre de premier niveau.
+        let cursor = container.position_y + container.shape_margin_top
+        leaves.forEach((leaf, i) => {
+          if (i > 0) cursor += NodePositioning.containerChildGap(leaf, mode, const_gap)
+          leaf.position_y = cursor
+          leaf.applyPosition()
+          cursor += leaf.getShapeHeightToUse()
+        })
+        // Le centre stocké de chaque feuille devient sa position empilée : sinon le prochain
+        // anchorByCenterIfResized (mode absolu) tenterait de restaurer un centre périmé.
+        leaves.forEach(l => l.captureCenterFromCorner())
+        // Les sous-cadres enveloppent leurs feuilles ; le cadre de premier niveau reste ancré.
+        reanchorSubFrames(container)
+      })
   }
 
   /**
@@ -2838,39 +3337,72 @@ export class NodePositioning {
       L.is_visible && !L.shape_is_recycling && L.source !== L.target &&
       !(echangeTag && (L.source.hasGivenTag(echangeTag) || L.target.hasGivenTag(echangeTag)))
 
-    // Flux à redresser = marqués visibles + (si include_children) flux visibles dont
-    // source ET cible descendent des nœuds d'un flux marqué (même hidden).
-    const to_straighten = new Set<Class_LinkElement>()
+    // Mode d'ancrage effectif d'un flux. Source de vérité = `shape_straight_mode`
+    // (enum). Rétrocompat : un ancien fichier ne portant que `shape_must_stay_straight`
+    // se comporte comme l'ancien modèle, soit l'ancrage 'source'. 'none' = libre.
+    const effectiveMode = (L: Class_LinkElement): Type_StraightMode | null => {
+      const m = L.shape_straight_mode
+      if (m && m !== 'none') return m
+      return L.shape_must_stay_straight ? 'source' : null
+    }
+
+    // Flux à redresser → mode. Marqués visibles + (si include_children) flux visibles
+    // dont source ET cible descendent des nœuds d'un flux marqué (même hidden) ; les
+    // enfants héritent du mode du parent.
+    const to_straighten = new Map<Class_LinkElement, Type_StraightMode>()
     this.drawingArea.sankey.links_list.forEach(L => {
-      if (!L.shape_must_stay_straight) return
-      if (isStraightenable(L)) to_straighten.add(L)
+      const mode = effectiveMode(L as Class_LinkElement)
+      if (!mode) return
+      if (isStraightenable(L)) to_straighten.set(L as Class_LinkElement, mode)
       if (L.shape_straight_include_children) {
         this.collectDescendantStraightLinks(L as Class_LinkElement, isStraightenable)
-          .forEach(c => to_straighten.add(c))
+          .forEach(c => { if (!to_straighten.has(c)) to_straighten.set(c, mode) })
       }
     })
     if (to_straighten.size === 0) return false
 
     // Offsets d'accroche relatifs (invariants par translation), capturés depuis le
     // cache AVANT tout déplacement.
-    type SItem = { L: Class_LinkElement, startOff: number, endOff: number }
+    type SItem = { L: Class_LinkElement, mode: Type_StraightMode, startOff: number, endOff: number }
     const items: SItem[] = []
-    to_straighten.forEach(L => {
+    to_straighten.forEach((mode, L) => {
       const s = (L.source as Class_NodeElement).getOutputLinkStartingPoint(L)
       const e = (L.target as Class_NodeElement).getInputLinkEndingPoint(L)
       if (!s || !e) return
-      items.push({ L, startOff: s.y - L.source.position_y, endOff: e.y - L.target.position_y })
+      items.push({ L, mode, startOff: s.y - L.source.position_y, endOff: e.y - L.target.position_y })
     })
     // Amont → aval : un nœud déplacé comme cible doit l'être avant d'être source.
     items.sort((a, b) => a.L.source.position_u - b.L.source.position_u)
 
     let moved = false
-    items.forEach(({ L, startOff, endOff }) => {
-      const delta = (L.source.position_y + startOff) - (L.target.position_y + endOff)
-      if (Math.abs(delta) > 0.5) {
-        L.target.position_y += delta
-        moved = true
+    items.forEach(({ L, mode, startOff, endOff }) => {
+      const srcAccr = L.source.position_y + startOff   // y de l'accroche côté source
+      const tgtAccr = L.target.position_y + endOff      // y de l'accroche côté cible
+      // Écart vertical constant à maintenir entre l'accroche source et l'accroche
+      // cible (px, y croît vers le bas → positif = cible plus bas). 0 = horizontal.
+      const off = L.shape_straight_offset || 0
+      // Lignes cibles src/tgt telles que `tgtLine - srcLine == off`. Le nœud de
+      // référence du mode reste en place (delta nul), l'autre est amené pour
+      // satisfaire l'écart. off = 0 redonne exactement l'ancienne droiture.
+      let srcLine: number, tgtLine: number
+      switch (mode) {
+      case 'target':
+        tgtLine = tgtAccr; srcLine = tgtAccr - off; break
+      case 'highest': // ancre = accroche la plus haute (min y)
+        if (srcAccr <= tgtAccr) { srcLine = srcAccr; tgtLine = srcAccr + off }
+        else { tgtLine = tgtAccr; srcLine = tgtAccr - off }
+        break
+      case 'lowest': // ancre = accroche la plus basse (max y)
+        if (srcAccr >= tgtAccr) { srcLine = srcAccr; tgtLine = srcAccr + off }
+        else { tgtLine = tgtAccr; srcLine = tgtAccr - off }
+        break
+      // 'source' (défaut) et 'absolute' (réservé → repli sur 'source' pour l'instant).
+      default: srcLine = srcAccr; tgtLine = srcAccr + off; break
       }
+      const ds = srcLine - srcAccr
+      if (Math.abs(ds) > 0.5) { L.source.position_y += ds; moved = true }
+      const dt = tgtLine - tgtAccr
+      if (Math.abs(dt) > 0.5) { L.target.position_y += dt; moved = true }
     })
     return moved
   }

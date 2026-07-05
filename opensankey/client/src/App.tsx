@@ -26,7 +26,6 @@
 
 import React, { useEffect } from 'react'
 import LZString from 'lz-string'
-import * as d3 from 'd3'
 import { TourProvider } from '@reactour/tour'
 
 /*************************************************************************************************/
@@ -89,9 +88,19 @@ export const OpenSankeyApp = ({
   const opts = app_data.publish_options
   const applyPublishRecenter = () => {
     if (app_data.is_static && opts.recenter) {
-      app_data.drawing_area.to_recenter = true
-      app_data.drawing_area.recenter()
-      app_data.drawing_area.to_recenter = false
+      const doRecenter = () => {
+        const da = app_data.drawing_area
+        da.to_recenter = true
+        // force=true : en mode size_locked, draw() a déjà consommé le drapeau dirty,
+        // donc un recenter() non forcé sortirait immédiatement (garde ligne ~2066) et
+        // le cadrage figé (calculé trop tôt) resterait. On force le re-cadrage.
+        da.recenter(true)
+        da.to_recenter = false
+      }
+      // Différé de 2 frames : au tout premier chargement, le conteneur hôte
+      // (#sankey_app) peut ne pas avoir sa hauteur finale — quand l'embarqueur ajoute
+      // sa PROPRE topbar au-dessus, le layout flex n'est stabilisé qu'après le montage.
+      requestAnimationFrame(() => requestAnimationFrame(doRecenter))
     }
   }
   const applyDiagramData = (data: Type_JSON) => {
@@ -106,38 +115,77 @@ export const OpenSankeyApp = ({
         app_data.drawing_area.bypass_redraws = true
         updateFrom(app_data.drawing_area, tmp_DA, layout_mode)
         app_data.post_apply_layout_callback?.(tmp_DA, layout_data as Type_JSON, layout_mode)
+        // (dédup #draw_zoom désormais centralisée dans DrawingArea._initDraw)
         app_data.drawing_area.draw()
         // Le layout fusionne des attributs de la drawing area (verrous taille/police,
         // banner='sequence' & sélection des data tags, etc.) APRÈS le updateAllMenuComponents()
         // déclenché par fromJSON ci-dessus. Sans ce rafraîchissement, les menus/toolbars
         // (barre de séquence, verrous) gardent l'état d'avant-layout — visible en viewer publish.
         app_data.menu_configuration.updateAllMenuComponents()
+        app_data.applyPublishStateOptions()
         applyPublishRecenter()
       }).catch(e => console.log(e))
     } else {
+      app_data.applyPublishStateOptions()
       applyPublishRecenter()
     }
   }
 
-  if (opts.diagram) {
-    if (typeof opts.diagram === 'string') {
-      // URL : fetch + décompression + parse
-      app_data.file_name = opts.diagram
-      loadUniversalJSON(opts.diagram).then(data => {
-        app_data.file_name = opts.diagram as string
-        applyDiagramData(data as Type_JSON)
-      }).catch(e => console.log(e))
-    } else {
-      // Objet JSON inline : appliqué directement (use case embed HTML one-file)
-      applyDiagramData(opts.diagram as unknown as Type_JSON)
+  // Auto-chargement initial depuis les données (diagramme publish, localStorage, URL) :
+  // exécuté UNE SEULE FOIS au montage. Hors d'un useEffect, ce bloc se ré-exécutait à chaque
+  // re-rendu — en mode publish avec un gros diagramme par défaut (opts.diagram), chaque
+  // chargement async redessinait → re-rendu → re-chargement : boucle infinie (#196).
+  useEffect(() => {
+    if (opts.diagram) {
+      if (typeof opts.diagram === 'string') {
+        // URL : fetch + décompression + parse
+        app_data.file_name = opts.diagram
+        loadUniversalJSON(opts.diagram).then(data => {
+          app_data.file_name = opts.diagram as string
+          applyDiagramData(data as Type_JSON)
+        }).catch(e => console.log(e))
+      } else {
+        // Objet JSON inline : appliqué directement (use case embed HTML one-file)
+        applyDiagramData(opts.diagram as unknown as Type_JSON)
+      }
+    } else if (json_data !== null && json_data != '' && json_data != 'null') {
+      app_data.fromJSON(JSON.parse(json_data))
     }
-  } else if (json_data !== null && json_data != '' && json_data != 'null') {
-    app_data.fromJSON(JSON.parse(json_data))
-  }
 
-  if (url_info) {
-    app_data.readUrlJSON(url_info)
-  }
+    if (url_info) {
+      app_data.readUrlJSON(url_info)
+    }
+  }, [])
+
+  // Filet de cadrage initial (viewer publish). En embed sous une topbar externe,
+  // le conteneur hôte (#sankey_app) peut n'atteindre sa hauteur définitive qu'APRÈS
+  // le premier applyPublishRecenter (layout flex stabilisé tardivement) : recenter()
+  // lit alors une mauvaise hauteur (window_fitting_* retombe sur window.innerHeight)
+  // et le contenu se cale derrière la topbar — corrigé sinon dès la 1re interaction.
+  // Un ResizeObserver relance le recentrage quand le conteneur change de taille, puis
+  // se débranche une fois le diagramme chargé ET recadré (on ne re-cadre pas à chaque
+  // resize/zoom ultérieur, pour ne pas annuler un zoom/pan de l'utilisateur).
+  useEffect(() => {
+    if (!(app_data.is_static && opts.recenter) || typeof ResizeObserver === 'undefined') return
+    const el = document.querySelector('#sankey_app') as HTMLElement | null
+    if (!el) return
+    let initial = true
+    const ro = new ResizeObserver(() => {
+      // Le 1er callback reflète la taille courante au moment du observe() : on l'ignore,
+      // seul un VRAI changement de taille (stabilisation du layout) doit recadrer.
+      if (initial) { initial = false; return }
+      const da = app_data.drawing_area
+      if (!da || el.clientHeight <= 0) return
+      da.to_recenter = true
+      da.recenter(true) // force : le cadrage initial a pu figer le verrou de taille
+      da.to_recenter = false
+      // Débranche une fois le diagramme réellement chargé et recadré.
+      if (da.sankey?.nodes_list?.length > 0) ro.disconnect()
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const mode_pref = sessionStorage.getItem('modepref')
   const menu_config = app_data.menu_configuration
@@ -162,8 +210,7 @@ export const OpenSankeyApp = ({
   }, [])
 
   useEffect(() => {
-    // Delete potential duplicat
-    d3.select('#draw_zoom').remove()
+    // (dédup #draw_zoom désormais centralisée dans DrawingArea._initDraw)
     app_data.menu_configuration.ref_toolbar.current()
     app_data.draw()
     applyPublishRecenter()
@@ -200,6 +247,7 @@ export const OpenSankeyApp = ({
         {app_data.publish_options.filter_bar ?
           <ToolbarFilter
             app_data={app_data}
+            hide_floating_button={!app_data.is_static}
           /> : <></>}
         <>
           <SankeyMenu

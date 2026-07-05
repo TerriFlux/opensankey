@@ -18,6 +18,7 @@ import { StorageType } from '../../Elements/Element'
 import { ALL_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
 import { NodePositioning } from '../../Algorithms/NodePositioning'
 import { Class_NodeDimension } from '../../Elements/NodeDimension'
+import { downloadImageSource } from './SaveImage'
 
 // ==================================================================================================
 // CLASSE PRINCIPALE D'ACTIONS DES NŒUDS
@@ -167,8 +168,12 @@ export class NodeActions {
     const childDims = this.contextualised_node.dimensions_as_parent
 
     if (childDims.length > 0) {
-      const child = childDims.filter(dim => dim.children.filter(c => c.id == dim_name).length > 0)[0].children[0].id
+      const target_dim = childDims.filter(dim => dim.children.filter(c => c.id == dim_name).length > 0)[0]
+      const child = target_dim.children[0].id
       disaggregate(this.app_data, this.contextualised_node, child)
+      // #1231 — désagrégation LOCALE (clic droit) → marque l'état hybride local
+      // (affiche « Réinitialiser la hiérarchie »).
+      target_dim.forced_by_local_action = true
       this._restackEnglobingChain(this.contextualised_node)
       this.drawing_area.draw()
       // this.drawing_area.purgeSelection()
@@ -208,6 +213,9 @@ export class NodeActions {
       const child = this.drawing_area.sankey.nodes_dict[dim_name]
       if (!child) return
       disaggregationExpansion(this.app_data, node, true, child)
+      // #1231 — expansion LOCALE (clic droit) → marque l'état hybride local.
+      const dim = node.nodeDimensionAsParent(child)
+      if (dim) dim.forced_by_local_action = true
     })
   }
 
@@ -216,6 +224,9 @@ export class NodeActions {
       const child = this.drawing_area.sankey.nodes_dict[dim_name]
       if (!child) return
       disaggregationExpansion(this.app_data, node, false, child)
+      // #1231 — expansion LOCALE (clic droit) → marque l'état hybride local.
+      const dim = node.nodeDimensionAsParent(child)
+      if (dim) dim.forced_by_local_action = true
     })
   }
 
@@ -407,6 +418,9 @@ export class NodeActions {
         }
       } else {
         dim.setContainerMode(target_mode)
+        // #1231 — englobement LOCAL (clic droit) → marque l'état hybride local
+        // (affiche « Réinitialiser la hiérarchie »).
+        dim.forced_by_local_action = true
         parent.tied_to_nodes = true
         // Mirror leaving: attach this dim's children into the parent's
         // geometric frame, so the cadre géométrique behaves like a ZDT
@@ -758,6 +772,36 @@ export class NodeActions {
     this.executeWithUndo(doReset, undoReset)
   }
 
+  // Propage le style (styles custom + attributs) de chaque nœud parent
+  // sélectionné à toute sa descendance dans la hiérarchie de dimensions (comme
+  // le pinceau, mais parent → enfants). Multi-sélection supportée : si aucun
+  // nœud n'est sélectionné on retombe sur le nœud contextualisé. L'undo/redo
+  // (une seule transition pour toute la sélection) est géré dans
+  // applyStyleToNodesChildren.
+  applyStyleToChildren = () => {
+    const parents = (this.selected_nodes.length > 0
+      ? this.selected_nodes
+      : (this.contextualised_node ? [this.contextualised_node] : [])
+    ).filter(n => n.is_parent)
+    if (parents.length === 0) return
+    this.drawing_area.applyStyleToNodesChildren(parents)
+    this.refreshAndSave()
+  }
+
+  // Assigne la colonne (position_u) de chaque nœud parent sélectionné à toute sa
+  // descendance (comme applyStyleToChildren, mais on ne copie que la colonne).
+  // Multi-sélection supportée ; à défaut on retombe sur le nœud contextualisé.
+  // L'undo/redo (une seule transition) est géré dans assignColumnToNodesChildren.
+  assignColumnToChildren = () => {
+    const parents = (this.selected_nodes.length > 0
+      ? this.selected_nodes
+      : (this.contextualised_node ? [this.contextualised_node] : [])
+    ).filter(n => n.is_parent)
+    if (parents.length === 0) return
+    this.drawing_area.assignColumnToNodesChildren(parents)
+    this.refreshAndSave()
+  }
+
   reorg = () => {
     const dict_old_io: { [x: string]: string[] } = {}
     this.selected_nodes.forEach(node =>
@@ -905,6 +949,81 @@ export class NodeActions {
     this.refreshAndSave()
   }
 
+  // Règle la limite GLOBALE de hauteur des nœuds (drawing_area.maximum_node) sur
+  // la hauteur intrinsèque du nœud cliqué (px). Pratique pour caler la limite
+  // globale depuis un nœud de référence. Undoable.
+  setGlobalMaxNodeToCurrent = () => {
+    const node = this.contextualised_node ?? this.selected_nodes[0]
+    if (!node) return
+    const old_value = this.drawing_area.maximum_node
+    const new_value = Math.round(node.getNaturalShapeHeight())
+
+    const doSet = () => {
+      this.drawing_area.maximum_node = new_value
+      this.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
+      this.refreshAndSave()
+    }
+    const undoSet = () => {
+      if (old_value !== undefined) this.drawing_area.maximum_node = old_value
+      else this.drawing_area.removeMaximumNodeHeight()
+      this.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
+      this.refreshAndSave()
+    }
+    this.executeWithUndo(doSet, undoSet)
+  }
+
+  // Retire la limite globale de hauteur des nœuds. Undoable.
+  clearGlobalMaxNode = () => {
+    const old_value = this.drawing_area.maximum_node
+    if (old_value === undefined) return
+
+    const doClear = () => {
+      this.drawing_area.removeMaximumNodeHeight()
+      this.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
+      this.refreshAndSave()
+    }
+    const undoClear = () => {
+      this.drawing_area.maximum_node = old_value
+      this.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
+      this.refreshAndSave()
+    }
+    this.executeWithUndo(doClear, undoClear)
+  }
+
+  // #1231b — Mode proportionnel / échelle adaptée : désigner/retirer CE nœud comme STOCK de
+  // référence (élément de référence généralisé : le rôle du « flux de référence » tenu par un
+  // nœud dans sa représentation stock). Médiane calée sur le centre du nœud, facteur = ratio
+  // de stock entre datatags. Transitoire : re-capture les références puis redessine.
+  setReferenceStock = () => {
+    const node = this.contextualised_node ?? this.selected_nodes[0]
+    if (!node) return
+    const np = this.drawing_area.nodePositioning
+    const is_ref = np.proportionalReferenceNode === node
+    np.setProportionalReferenceNode(is_ref ? undefined : node)
+    // Le même élément sert aux deux modes (proportionnel + échelle) : à la sélection,
+    // re-capturer les deux références ; au retrait, restaurer l'échelle de base en plus.
+    if (is_ref) {
+      np.clearScaleAdaptation()
+    } else {
+      np.captureScaleReference()
+    }
+    np.captureProportionalReference()
+    this.drawing_area.drawElements()
+    this.refreshAndSave()
+  }
+
+  setReferenceStockValue = (): boolean => {
+    return this.drawing_area.nodePositioning.proportionalReferenceNode === this.contextualised_node
+  }
+
+  // Télécharge l'image affichée sur le nœud (icon_is_image) sous forme de fichier.
+  saveNodeImage = () => {
+    const node = this.contextualised_node
+    if (!node?.icon_is_image || !node.icon_image_src) return
+    downloadImageSource(node.icon_image_src, node.name || node.id)
+    this.closeContextMenu()
+  }
+
   static createModifier = (app_data: Class_ApplicationData) => {
     const nodeActions = new NodeActions(app_data)
 
@@ -959,6 +1078,8 @@ export class NodeActions {
       // Autres actions
       editName: nodeActions.editName,
       resetAttr: nodeActions.resetAttr,
+      applyStyleToChildren: nodeActions.applyStyleToChildren,
+      assignColumnToChildren: nodeActions.assignColumnToChildren,
 
       startAnimation: nodeActions.startAnimation,
       createTiedZdt: nodeActions.createTiedZdt,
@@ -971,6 +1092,11 @@ export class NodeActions {
       selectOutputLinks: nodeActions.selectOutputLinks,
       selectInputLinks: nodeActions.selectInputLinks,
       copyElement: nodeActions.copyElement,
+      setGlobalMaxNodeToCurrent: nodeActions.setGlobalMaxNodeToCurrent,
+      clearGlobalMaxNode: nodeActions.clearGlobalMaxNode,
+      setReferenceStock: nodeActions.setReferenceStock,
+      setReferenceStockValue: nodeActions.setReferenceStockValue,
+      saveNodeImage: nodeActions.saveNodeImage,
 
       // Actions dynamiques générées pour les dimensions
       // ...setChildActions,

@@ -28,16 +28,18 @@ import * as d3 from 'd3'
 import { Class_NodeBase } from './NodeBase'
 
 import {
-  Class_LinkElement,
-  sortLinksElementsByRelativeNodesPositions
+  Class_LinkElement
 } from './Link'
 import { Class_Handler } from './Handler'
+import { reorganizeIOOrder } from './reorganizeIOOrder'
+import { orderIOByGeometry, Type_IOGeo } from './ioOrderGeometry'
 import { format_value, Type_JSON } from '../types/Utils'
 import { default_element_color } from './ElementsAttributesConfig'
 import { SankeyAnimation } from '../Algorithms/SankeyAnimation'
 import { draw_arrow_part } from './NodeDrawShape'
+import { computeArrowPlacement } from './arrowLayout'
 import { Class_Sankey } from '../types/Sankey'
-import { Class_Tag } from '../types/Tag'
+import { Class_DataTag, Class_Tag } from '../types/Tag'
 import { NodeTooltip } from './TooltipsNode'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeDimension, NodeDimensionsManager } from './NodeDimension'
@@ -47,6 +49,7 @@ import { NodeDrawValueLabel } from './DrawLabel'
 import { Class_StockValue, Class_ElementValueTree } from './LinkValues'
 import { Class_StockShape } from './StockShape'
 import { Type_Side } from './ElementsAttributesConfig'
+import { clampBandThickness } from './nodeBandHeight'
 import { NodeStyle, NodeImportCloseStyle, NodeExportCloseStyle, NodeImportExportCloseStyle, LinkImportCloseStyle, LinkExportCloseStyle, LinkImportExportCloseStyle, LinkImportExportAboveBelowStyle, NodeExportBelowStyle, NodeImportAboveStyle, NodeImportExportAboveBelowStyle, NodeSectorStyle, LinkStyle } from './ElementStyle'
 // 
 // CLASSE PRINCIPALE AVEC LIENS RÉINTÉGRÉS *********************************************
@@ -63,6 +66,11 @@ export class Class_NodeElement extends Class_NodeBase {
   protected _dimensions_as_parent: { [id: string]: Class_NodeDimension } = {}
   protected _dimensions_as_child: { [id: string]: Class_NodeDimension } = {}
   protected _leveltaggs_as_antitagged: Class_LevelTagGroup[] = []
+  // Groupes de view tags dont ce nœud est EXCLU (anti-tag « 0 » dans la colonne du
+  // view tag, ex. Essence). Mirroir de _leveltaggs_as_antitagged pour les view tags :
+  // dès que le mode vue d'un de ces groupes est actif, le nœud est masqué
+  // (concerné mais sans vue), cf. viewTagVisibility().
+  protected _view_taggs_as_excluded: Class_ViewTagGroup[] = []
   protected _nodeDrawValueLabel: NodeDrawValueLabel
   protected d3_selection_g_value_label: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
   protected _sibling_node: Class_NodeElement | undefined = undefined
@@ -94,6 +102,11 @@ export class Class_NodeElement extends Class_NodeBase {
   public stock_height_scale_factor: number = 1
   public has_material_balance: boolean = true
   public _stock_values: Class_StockValue | Class_ElementValueTree
+
+  // Sankey unitaire : id du flux de référence choisi pour le mode « normalisé » quand
+  // CE nœud est le centre de l'unitaire. Mémorisé par nœud (restauré au changement de
+  // nœud central dans le modal). En mémoire seulement (non persisté en JSON pour l'instant).
+  public unitary_ref_link_id: string | null = null
 
   // Stock visual sub-element (SA#1229): node-like shape stacked above the node
   // that reuses the full node attribute machinery. Lazily created when the node
@@ -292,8 +305,14 @@ export class Class_NodeElement extends Class_NodeBase {
       .forEach(link_to_copy => {
         const copied_id = matching_link_id[link_to_copy.id] ?? link_to_copy.id
         const link = this.drawing_area.sankey.links_dict[copied_id] as Class_LinkElement
-        if ((link !== undefined) && (!this._links_order.includes(link)))
-          this._links_order.push(link)
+        if (link !== undefined) {
+          // Carry the I/O anchor lock ("cadenas") with the order it pins, so a
+          // re-applied layout keeps the locked arrangement instead of reverting
+          // to auto-reorg (#202).
+          link.copyAnchorLockFrom(link_to_copy)
+          if (!this._links_order.includes(link))
+            this._links_order.push(link)
+        }
       })
 
     // after copying node_to_copy._link_orders add the remaining links
@@ -418,6 +437,14 @@ export class Class_NodeElement extends Class_NodeBase {
       ? (stock_val.stockVariationResult ?? stock_val.stockVariationData)
       : stock_val.stockVariationData
     if (si === null && dv === null) return
+    // Seuil d'affichage du label de stock (#seuil px) : magnitude = |si| si présent,
+    // sinon |dv|. La hauteur RENDUE du stock = scaleValueToPx(magnitude)/facteur
+    // (cf. _getNaturalShapeHeight), on la passe au seuil pour rester sur la même
+    // échelle px que les flux. Sous le seuil, on ne dessine pas le label de stock.
+    const stock_mag = si !== null ? Math.abs(si) : (dv !== null ? Math.abs(dv) : null)
+    const stock_factor = this.stock_height_scale_factor > 0 ? this.stock_height_scale_factor : 1
+    const stock_height_px = stock_mag === null ? 0 : this.drawing_area.scaleValueToPx(stock_mag) / stock_factor
+    if (!this.drawing_area.stockLabelPassesThreshold(stock_mag, stock_height_px)) return
     if (!this.d3_selection_g_shape) return
     const nodeW = this.getShapeWidthToUse()
     const nodeH = this.getShapeHeightToUse()
@@ -512,6 +539,13 @@ export class Class_NodeElement extends Class_NodeBase {
     } else {
       boxY = (nodeH - boxH) / 2
     }
+    // Mirror du pos_auto des labels de flux : si le nœud est trop fin pour
+    // contenir la boite (boxH > nodeH), une position centrée/intérieure la fait
+    // recouvrir le nœud. On la repousse alors entièrement à l'extérieur, en
+    // dessous par défaut (au-dessus seulement si la position demandée est 'top').
+    if (this.stock_label_pos_auto && boxH > nodeH) {
+      boxY = vert === 'top' ? -boxH - margin : nodeH + margin
+    }
 
     // Place the text content inside the box, then draw the background BEHIND it.
     content?.attr('transform', 'translate(' + (boxX + padding) + ', ' + boxY + ')')
@@ -564,6 +598,36 @@ export class Class_NodeElement extends Class_NodeBase {
       nodeList = [...nodeList, dim.parent as Class_NodeElement, ...dim.parent.getListAncestorOfNode()]
     })
     return [...new Set(nodeList)]
+  }
+
+  // Source 'tag' du label : display_name du tag de nœud assigné au nœud dans le
+  // groupe choisi (le premier si plusieurs). Aucun tag dans ce groupe → nom du
+  // nœud.
+  protected override resolveTagLabel(): string {
+    const group_id = this.name_label_tag_group_id
+    if (group_id === '') return this.name_label
+    const tag = this.tags_list.find(t => t.group.id === group_id)
+    return tag ? tag.display_name : this.name_label
+  }
+
+  // Source 'ancestor' du label : remonte le long de la dimension choisie
+  // (name_label_dimension_id = id d'un groupe de level tags) jusqu'à l'ancêtre
+  // racine, et affiche son nom. Dimension vide → première dimension dont le nœud
+  // est enfant. Aucun ancêtre → nom de l'élément (il EST déjà la racine).
+  protected override resolveAncestorLabel(): string {
+    let dim_id = this.name_label_dimension_id
+    if (dim_id === '') dim_id = this.dimensions_as_child[0]?.id ?? ''
+    if (dim_id === '') return this.name_label
+    let current = this.dimensions_as_child.find(d => d.id === dim_id)?.parent as Class_NodeElement | undefined
+    if (!current) return this.name_label
+    const seen = new Set<string>([this.id])
+    while (current && !seen.has(current.id)) {
+      seen.add(current.id)
+      const next = current.dimensions_as_child.find(d => d.id === dim_id)?.parent as Class_NodeElement | undefined
+      if (!next) break
+      current = next
+    }
+    return current ? current.name_label : this.name_label
   }
 
   // TAGS METHODS =======================================================================
@@ -682,6 +746,11 @@ export class Class_NodeElement extends Class_NodeBase {
     this._orderD3Elements()
   }
 
+  public drawLinksSourceNotch() {
+    this._drawLinksSourceNotch()
+    this._orderD3Elements()
+  }
+
   /**
    * Launch animation from this node
    */
@@ -692,18 +761,12 @@ export class Class_NodeElement extends Class_NodeBase {
 
   // 🔄 SHAPE SIZE METHODS - RÉINTÉGRÉS DIRECTEMENT
   public getShapeWidthToUse() {
-    // In structure mode, node size must not be proportional to flow values
-    // — links are all drawn at the clamped (>= 2px / minimum_flux) thickness.
-    // Use the clamped sum so the node grows with the *number* of links, not
-    // their values, and arrows (which also live in clamped space) align with
-    // the node edges. This mirrors the natural behaviour of "data + intervals"
-    // mode (where valueCurrent is null, so raw thickness is already 2).
-    const clamped = this.drawing_area.is_structure_display
-    // for_sizing=true : la taille du nœud doit refléter ses propres flux
-    // même si ceux-ci sont masqués par un container_mode (cas typique :
-    // enfants d'un parent en mode englobant entrées/sorties parent).
-    const sum_of_top_thickness = this.getSumOfLinksThickness('top', clamped, true)
-    const sum_of_bottom_thickness = this.getSumOfLinksThickness('bottom', clamped, true)
+    // #201 : same raw-sum-then-band-floor policy as getShapeHeightToUse, for the
+    // top/bottom band of vertically-laid-out nodes. Summing the per-link clamped
+    // thickness inflated the node width to N × minimum_flux for N thin links;
+    // getSideBandExtent floors the band ONCE (flux size limit applies to nodes).
+    const sum_of_top_thickness = this.getSideBandExtent('top')
+    const sum_of_bottom_thickness = this.getSideBandExtent('bottom')
     // super.getShapeWidthToUse() inclut shape_min_width ET, si tied,
     // la largeur de l'enveloppe des enfants attachés (mode englobant).
     return Math.max(sum_of_top_thickness, sum_of_bottom_thickness, super.getShapeWidthToUse())
@@ -722,20 +785,87 @@ export class Class_NodeElement extends Class_NodeBase {
     return (si === null || si === undefined) ? null : si
   }
 
+  /**
+   * #1231b — Stock initial pour un jeu de datatags ARBITRAIRE (miroir de
+   * currentStockInitialForHeight mais à des tags donnés). Sert d'élément de référence du
+   * mode proportionnel / échelle adaptée (datatag de référence). null si pas de stock.
+   */
+  public stockInitialForDataTags(tags: Class_DataTag[]): number | null {
+    if (!this.has_stock) return null
+    const sv = (this._stock_values instanceof Class_StockValue)
+      ? this._stock_values
+      : this._stock_values.getValueForDataTags(tags) as Class_StockValue | null
+    if (!sv) return null
+    const use_result = this.drawing_area.type_data !== 'data'
+    const si = use_result ? (sv.stockInitialResult ?? sv.stockInitialData) : sv.stockInitialData
+    return (si === null || si === undefined) ? null : si
+  }
+
+  /**
+   * #1231b — Valeur-équivalente de la hauteur RÉELLEMENT rendue par ce nœud quand
+   * il est en mode stock-pour-hauteur : `max(hauteur-stock, bande de flux)` reconverti
+   * en unités de valeur (mêmes unités que la valeur de stock), via l'inverse de
+   * scaleValueToPx. Sert d'ancrage à l'échelle adaptée (élément de référence) : la
+   * taille pixel tenue constante devient la hauteur réelle du nœud, pas la seule valeur
+   * de stock. Quand la bande de flux ne dépasse pas, le résultat == |stock_value|
+   * (comportement inchangé). `stock_value` est la valeur de stock au datatag voulu.
+   */
+  public stockValueAugmentedByFluxBand(stock_value: number): number {
+    const base = Math.abs(stock_value)
+    const flux_band = Math.max(this.getSideBandExtent('left'), this.getSideBandExtent('right'))
+    if (!(flux_band > 0)) return base
+    const factor = this.stock_height_scale_factor > 0 ? this.stock_height_scale_factor : 1
+    // Hauteur-stock = scaleValueToPx(|stock_value|)/factor ; pour comparer la bande de
+    // flux dans les mêmes unités de valeur, on reconvertit (flux_band × factor) en valeur.
+    const flux_value_equiv = this.drawing_area.scaleValueToPx.invert(flux_band * factor)
+    return Math.max(base, flux_value_equiv)
+  }
+
   public getShapeHeightToUse() {
+    const natural = this._getNaturalShapeHeight()
+    // Global node size limit (in px, independent of the flux size limit):
+    // cap then floor the rendered node height. Fixed px across views (does NOT
+    // follow the scale), mirroring the flux size-limit control.
+    const max_node = this.drawing_area.maximum_node
+    const min_node = this.drawing_area.minimum_node
+    let h = natural
+    if (max_node && max_node > 0) h = Math.min(h, max_node)
+    if (min_node !== undefined && min_node > 0) h = Math.max(h, min_node)
+    return Math.max(h, 1)
+  }
+
+  // Intrinsic shape height (stock-driven or flux-thickness-driven), BEFORE the
+  // global node size-limit clamp applied by getShapeHeightToUse. Public so the
+  // right-click action can read a node's uncapped height to seed the global
+  // maximum_node limit.
+  public getNaturalShapeHeight() {
+    return this._getNaturalShapeHeight()
+  }
+
+  private _getNaturalShapeHeight() {
     if (this.use_stock_for_height) {
       const si = this.currentStockInitialForHeight()
       if (si !== null) {
         // Mirror the flux local_link_scale: base flux scale divided by the
         // per-node factor (larger factor = shorter node).
         const factor = this.stock_height_scale_factor > 0 ? this.stock_height_scale_factor : 1
-        return Math.max(this.drawing_area.scaleValueToPx(Math.abs(si)) / factor, 1)
+        const stock_h = this.drawing_area.scaleValueToPx(Math.abs(si)) / factor
+        // La hauteur stock-pilotée ne doit jamais être plus fine que la bande
+        // de flux entrants/sortants (un nœud ne peut pas être plus court que la
+        // somme de ses flux d'un côté) : on prend la plus grande des deux.
+        const flux_band = Math.max(this.getSideBandExtent('left'), this.getSideBandExtent('right'))
+        return Math.max(stock_h, flux_band, 1)
       }
     }
     const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag : undefined
-    const clamped = this.drawing_area.is_structure_display
-    const sum_of_left_thickness = this.getSumOfLinksThickness('left', clamped, true)
-    const sum_of_right_thickness = this.getSumOfLinksThickness('right', clamped, true)
+    // #201 : size on the RAW sums per side (sub-pixel flows superpose into one
+    // band), then floor ONCE on the band — not the sum of per-link 2px floors,
+    // which inflated the node to N × minimum_flux for N thin links. The flux size
+    // limit (minimum_flux) floors the node band too, in every display mode, so a
+    // node is never thinner than its links (also covers #200). See
+    // nodeBandHeight.clampBandThickness.
+    const sum_of_left_thickness = this.getSideBandExtent('left')
+    const sum_of_right_thickness = this.getSideBandExtent('right')
     if (echangeTag && this.hasGivenTag(echangeTag)) {
       // TODO code to be rewritten when rearchitecturing code for Import Export
       return Math.max(sum_of_left_thickness, sum_of_right_thickness, 3)
@@ -889,21 +1019,88 @@ export class Class_NodeElement extends Class_NodeBase {
     return undefined
   }
 
-  public reorganizeIOLinks() {
-    // Automatic reorg : release the anchor locks set manually on this node.
-    this._links_order.forEach(l => l.setAnchorLockedForNode(this, false))
+  /**
+   * Re-derive the I/O links order from the relative node positions.
+   *
+   * @param release_locks When true (default), the anchor locks ("cadenas" of the
+   *   "Ordre des flux E/S" menu) set manually on this node are released first and
+   *   every link is re-sorted — this is the explicit "recalcul automatique" the lock
+   *   tooltip refers to (Réorganiser button, computeAutoSankey, expand/contract…).
+   *   When false, locked anchors are PRESERVED : they keep their frozen side and
+   *   their slot in the order, and only the unlocked links are re-sorted around
+   *   them. A manual node drag passes false so it no longer undoes a user-locked
+   *   arrangement (the lock promises "déplacer le noeud opposé ne la repositionnera plus").
+   */
+  public reorganizeIOLinks(release_locks: boolean = true) {
+    if (release_locks)
+      this._links_order.forEach(l => l.setAnchorLockedForNode(this, false))
     const echangeTag = this.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
     const import_links = this.input_links_list.filter(l => l.source.hasGivenTag(echangeTag as Class_Tag))
     const export_links = this.output_links_list.filter(l => l.target.hasGivenTag(echangeTag as Class_Tag))
     const recycling_links = this._links_order.filter(l => l.shape_is_recycling)
 
-    // Rebuild links_order array safely
-    const newLinksOrder = this._links_order
-      .filter(l => !import_links.includes(l) && !export_links.includes(l) && !recycling_links.includes(l))
-      .sort((link_a, link_b) => sortLinksElementsByRelativeNodesPositions(link_a, link_b, this))
+    // Geometry-aware order of the "middle" links (the ones reorganizeIOOrder
+    // re-sorts) : column/row aware so flows fanning out to several columns no
+    // longer cross (cf. ioOrderGeometry.ts). We compute the full desired order
+    // here — it needs the whole same-side set to find column centroids — then
+    // hand reorganizeIOOrder a comparator backed by that order so its locked-
+    // anchor pinning (#197) is preserved.
+    const middle = this._links_order.filter(
+      l => !import_links.includes(l) && !export_links.includes(l) && !recycling_links.includes(l)
+    )
+    const order_index = this._computeIOOrderIndex(middle)
 
-    this._links_order = [...import_links, ...newLinksOrder, ...recycling_links, ...export_links]
+    this._links_order = reorganizeIOOrder(
+      this._links_order,
+      import_links,
+      export_links,
+      recycling_links,
+      (l) => l.getAnchorLockedForNode(this),
+      (link_a, link_b) => (order_index.get(link_a) ?? 0) - (order_index.get(link_b) ?? 0),
+      release_locks
+    )
     this.draw()
+  }
+
+  /**
+   * Build a link → display-rank map for the geometry-aware I/O order : each side's
+   * links are grouped into columns and ordered by their barycenter (cf.
+   * ioOrderGeometry.ts) so the bundles do not cross. The column clustering
+   * tolerance is a small fraction of the whole diagram's node width — big enough
+   * to merge the few-px misalignment within a column, small enough to keep
+   * distinct columns apart. All positions are taken at node CENTRES.
+   */
+  private _computeIOOrderIndex(
+    middle: Class_LinkElement[]
+  ): Map<Class_LinkElement, number> {
+    const cx = this.position_x + this.getShapeWidthToUse() / 2
+    const cy = this.position_y + this.getShapeHeightToUse() / 2
+    let min_x = Infinity, max_x = -Infinity, min_y = Infinity, max_y = -Infinity
+    this.sankey.visible_nodes_list.forEach(n => {
+      min_x = Math.min(min_x, n.position_x); max_x = Math.max(max_x, n.position_x)
+      min_y = Math.min(min_y, n.position_y); max_y = Math.max(max_y, n.position_y)
+    })
+    const span_x = max_x - min_x
+    const span_y = max_y - min_y
+    const items = middle.map(l => {
+      const is_source = (l.source === this)
+      const other = is_source ? l.target : l.source
+      const side = is_source ? l.source_side : l.target_side
+      // Curvature factor on THIS node's side : shape_starting_curve when the link
+      // leaves this node (source), shape_ending_curve when it arrives (target).
+      const curve = (is_source ? l.shape_starting_curve : l.shape_ending_curve) ?? 0.05
+      const geo: Type_IOGeo = {
+        side,
+        ox: other.position_x + other.getShapeWidthToUse() / 2,
+        oy: other.position_y + other.getShapeHeightToUse() / 2,
+        curve
+      }
+      return { item: l, geo }
+    })
+    const ordered = orderIOByGeometry(items, cx, cy, span_x, span_y)
+    const map = new Map<Class_LinkElement, number>()
+    ordered.forEach((l, i) => map.set(l, i))
+    return map
   }
 
   public reorganizeIOFromListIds(l: string[]) {
@@ -951,7 +1148,7 @@ export class Class_NodeElement extends Class_NodeBase {
     if (this.value_label_stick_to_label) {
       this._nodeDrawNameLabel?.refreshStickLayout()
     }
-    //this._drawLinksStartCaps() // Ajouter ici
+    this._drawLinksStartCaps()
   }
   /**
    * Apply node position to it shape in d3
@@ -1011,26 +1208,31 @@ export class Class_NodeElement extends Class_NodeBase {
    * Function that draw all the arrow of link visible linked to this node
    */
   private _drawLinksArrow() {
-    // Normal arrows: this node is the target, arrow drawn on link.target_side.
-    const normal_arrows = this.input_links_list
-      .filter(link => link.is_visible && link.shape_is_arrow && !link.shape_is_arrow_reversed && link.isRelatedD3SelectionPresentAndSynced)
+    // Target arrows: this node is the target, arrow drawn on link.target_side.
+    const target_arrows = this.input_links_list
+      .filter(link => link.is_visible && link.shape_is_arrow && link.isRelatedD3SelectionPresentAndSynced)
       .map(link => ({
         link,
+        is_source_arrow: false,
         arrow_side: link.target_side,
         link_thickness: link.thicknessTarget,
+        link_thickness_raw: link.thicknessTargetRaw,
         is_horizontal_at_anchor: link.is_horizontal || link.is_vertical_horizontal
       }))
-    // Reversed arrows: this node is the source, arrow drawn on link.source_side
-    // (visual reversal only — the data flow direction is unchanged).
-    const reversed_arrows = this.output_links_list
-      .filter(link => link.is_visible && link.shape_is_arrow && link.shape_is_arrow_reversed && link.isRelatedD3SelectionPresentAndSynced)
+    // Source arrows: this node is the source, arrow drawn on link.source_side
+    // (independent of the target arrow — a link can carry both; graphical only,
+    // the data flow direction is unchanged).
+    const source_arrows = this.output_links_list
+      .filter(link => link.is_visible && link.shape_arrow_at_source && link.isRelatedD3SelectionPresentAndSynced)
       .map(link => ({
         link,
+        is_source_arrow: true,
         arrow_side: link.source_side,
         link_thickness: link.thicknessSource,
+        link_thickness_raw: link.thicknessSourceRaw,
         is_horizontal_at_anchor: link.is_horizontal || link.is_horizontal_vertical
       }))
-    const list_link_to_add_arrow = [...normal_arrows, ...reversed_arrows]
+    const list_link_to_add_arrow = [...target_arrows, ...source_arrows]
       .sort((a, b) => this._links_order.indexOf(a.link) - this._links_order.indexOf(b.link))
 
     const node_height = this.getShapeHeightToUse()
@@ -1038,26 +1240,28 @@ export class Class_NodeElement extends Class_NodeBase {
 
     // Two layout modes, driven by drawing_area.arrow_use_standalone_layout :
     //
-    // - standalone (default true, issue #681) : each arrow is an independent
-    //   triangle, base = link's clamped thickness, base center = link's
-    //   actual visible end center. Always aligned with the link stroke,
-    //   even when flows are clamped above their raw value (the typical
-    //   case where bases on the same side visually overlap).
+    // - fan (default) : all arrows on a node side share a single fan whose tips
+    //   converge toward the node side center. The fan is sized in RAW thickness
+    //   space (since #199) : total height = Σ raw thicknesses = node height, and
+    //   each link gets a cumulative offset of raw thicknesses inside it. So flows
+    //   clamped up to the 2px minimum overlap in the fan exactly as they do at
+    //   the node, instead of stacking Σ(2px) and inflating the fan past the node
+    //   height (the oversized-arrow bug on nodes fed by many thin flows, #199).
     //
-    // - fan (opt-in, set flag to false) : all arrows on a node side share
-    //   a single fan whose total height = Σ clamped thicknesses. Each link
-    //   gets a cumulative offset inside that fan, which produces sloped
-    //   tips that converge toward the node side center. Looks nice when no
-    //   flow gets clamped (raw == clamped), drifts otherwise.
+    // - standalone (opt-in, issue #681) : each arrow is an independent triangle,
+    //   base = link's clamped thickness, base center = link's actual visible end
+    //   center. No fan, no cumulative offset.
     const use_standalone = this.drawing_area.arrow_use_standalone_layout
     let cum_v_left = 0
     let cum_h_top = 0
     let cum_v_right = 0
     let cum_h_bottom = 0
-    const sumLinkLeft = !use_standalone ? this.getSumOfLinksThickness('left', true) : 0
-    const sumLinkRight = !use_standalone ? this.getSumOfLinksThickness('right', true) : 0
-    const sumLinkTop = !use_standalone ? this.getSumOfLinksThickness('top', true) : 0
-    const sumLinkBottom = !use_standalone ? this.getSumOfLinksThickness('bottom', true) : 0
+    // Fan sums in RAW space (clamped=false) so the fan total matches the node
+    // height ; see computeArrowPlacement / #199.
+    const sumLinkLeft = !use_standalone ? this.getSumOfLinksThickness('left', false) : 0
+    const sumLinkRight = !use_standalone ? this.getSumOfLinksThickness('right', false) : 0
+    const sumLinkTop = !use_standalone ? this.getSumOfLinksThickness('top', false) : 0
+    const sumLinkBottom = !use_standalone ? this.getSumOfLinksThickness('bottom', false) : 0
 
     list_link_to_add_arrow
       .forEach(item => {
@@ -1073,7 +1277,12 @@ export class Class_NodeElement extends Class_NodeBase {
 
         // Visible link thickness at the anchor (clamped to minimum_flux / 2px).
         const link_value = item.link_thickness
-        const is_reversed = link.shape_is_arrow_reversed
+        // Raw thickness (proportional to value, node-height space) — the fan is
+        // sized in this space so it matches the node height (#199).
+        const link_value_raw = item.link_thickness_raw
+        // Côté source ou cible : déterminé par la nature de cette entrée (un flux
+        // peut porter une flèche aux deux extrémités), pas par un drapeau du flux.
+        const is_reversed = item.is_source_arrow
         // Arrow length : in fan mode, the user-set shape_arrow_size is used
         // as-is. In standalone, cap the length to link_value so a wide flow
         // doesn't end with a squashed triangle (height/base <<1) — unless
@@ -1089,36 +1298,42 @@ export class Class_NodeElement extends Class_NodeBase {
         let yt: number
         let arrow_half_height: number
         let arrow_already_computed: number
+        // Base of the arrow (draw_arrow_part `linkSize`) : raw in fan mode (so the
+        // fan tiles the node band), clamped in standalone mode (visible triangle).
+        let arrow_slice: number
         if (!use_standalone) {
-          // Fan : arrow_half_height = side total / 2, position centered on node side.
+          // Fan : sized in RAW space (#199). total = Σ raw on the side, cumulative
+          // offset accumulates raw thicknesses, position centered on node side.
           let total_cumul_of_side = 0
           let current_cumul_of_side = 0
           if (link_arrow_side_left) {
             xt = + this.position_x - this.shape_margin_left
             yt = + this.position_y + node_height / 2
             current_cumul_of_side = cum_v_left ; total_cumul_of_side = sumLinkLeft
-            cum_v_left += link_value
+            cum_v_left += link_value_raw
           }
           else if (link_arrow_side_right) {
             xt = + this.position_x + node_width + this.shape_margin_right
             yt = + this.position_y + node_height / 2
             current_cumul_of_side = cum_v_right ; total_cumul_of_side = sumLinkRight
-            cum_v_right += link_value
+            cum_v_right += link_value_raw
           }
           else if (link_arrow_side_top) {
             xt = + this.position_x + node_width / 2
             yt = + this.position_y
             current_cumul_of_side = cum_h_top ; total_cumul_of_side = sumLinkTop
-            cum_h_top += link_value
+            cum_h_top += link_value_raw
           }
           else {
             xt = + this.position_x + node_width / 2
             yt = + this.position_y + node_height
             current_cumul_of_side = cum_h_bottom ; total_cumul_of_side = sumLinkBottom
-            cum_h_bottom += link_value
+            cum_h_bottom += link_value_raw
           }
-          arrow_half_height = total_cumul_of_side / 2
-          arrow_already_computed = current_cumul_of_side
+          const placement = computeArrowPlacement(false, link_value_raw, link_value, total_cumul_of_side, current_cumul_of_side)
+          arrow_half_height = placement.arrow_half_height
+          arrow_already_computed = placement.arrow_already_computed
+          arrow_slice = placement.slice
         }
         else {
           // Standalone : base centered on link's actual visible end, half_height = link/2,
@@ -1139,18 +1354,20 @@ export class Class_NodeElement extends Class_NodeBase {
             xt = is_reversed ? link.position_x_start : link.position_x_end
             yt = + this.position_y + node_height
           }
-          arrow_half_height = link_value / 2
-          arrow_already_computed = 0
+          const placement = computeArrowPlacement(true, link_value_raw, link_value, 0, 0)
+          arrow_half_height = placement.arrow_half_height
+          arrow_already_computed = placement.arrow_already_computed
+          arrow_slice = placement.slice
         }
         const p5 = [xt, yt]
 
         const is_horizontal_at_target = item.is_horizontal_at_anchor
         const is_revert = (is_horizontal_at_target && link_arrow_side_right) || (!is_horizontal_at_target && link_arrow_side_bottom)
 
-        link.shape_arrow_path = draw_arrow_part(
+        const arrow_path = draw_arrow_part(
           arrow_half_height,
           p5,
-          +link_value,
+          +arrow_slice,
           arrow_already_computed,
           is_horizontal_at_target,
           is_revert,
@@ -1158,9 +1375,80 @@ export class Class_NodeElement extends Class_NodeBase {
           node_arrow_shift,
           arrows_adjustment
         )
+        // Router vers la bonne extrémité : chaque flèche est stockée séparément
+        // sur le flux pour que cible et source ne s'écrasent pas.
+        if (item.is_source_arrow) {
+          link.shape_arrow_path_source = arrow_path
+        } else {
+          link.shape_arrow_path = arrow_path
+        }
       })
 
     //this._drawLinksStartCaps()
+  }
+
+  /**
+   * Compute the "source notch" (negative arrow) chevrons for this node's
+   * outgoing links. All links leaving the same node side share a SINGLE notch:
+   * one chevron whose base spans every link's attach band on that side and whose
+   * apex is pushed into the ribbon (toward the targets) by the deepest requested
+   * notch size. The resulting path is pushed onto every participating link, which
+   * draws a background-colored copy on its own d3 selection — so the notch is
+   * carved consistently whatever the global element z-order.
+   */
+  private _drawLinksSourceNotch() {
+    const links = this.output_links_list.filter(
+      link => link.is_visible && link.shape_source_notch && link.isRelatedD3SelectionPresentAndSynced
+    )
+    if (links.length === 0)
+      return
+
+    const sides: Type_Side[] = ['left', 'right', 'top', 'bottom']
+    sides.forEach(side => {
+      const side_links = links.filter(link => link.source_side === side)
+      if (side_links.length === 0)
+        return
+
+      const depth = Math.max(...side_links.map(link => link.shape_source_notch_size ?? 0))
+      if (!(depth > 0))
+        return
+
+      let path: string
+      if (side === 'left' || side === 'right') {
+        // Base = vertical segment at the node edge, spanning all attach bands.
+        const x_base = side_links[0].position_x_start
+        let y_min = Infinity, y_max = -Infinity
+        side_links.forEach(link => {
+          const half = link.thicknessSource / 2
+          y_min = Math.min(y_min, link.position_y_start - half)
+          y_max = Math.max(y_max, link.position_y_start + half)
+        })
+        const apex_x = x_base + (side === 'right' ? depth : -depth)
+        const y_mid = (y_min + y_max) / 2
+        path = 'M ' + x_base + ',' + y_min
+          + ' L ' + apex_x + ',' + y_mid
+          + ' L ' + x_base + ',' + y_max
+          + ' Z'
+      }
+      else {
+        // Base = horizontal segment at the node edge, spanning all attach bands.
+        const y_base = side_links[0].position_y_start
+        let x_min = Infinity, x_max = -Infinity
+        side_links.forEach(link => {
+          const half = link.thicknessSource / 2
+          x_min = Math.min(x_min, link.position_x_start - half)
+          x_max = Math.max(x_max, link.position_x_start + half)
+        })
+        const apex_y = y_base + (side === 'bottom' ? depth : -depth)
+        const x_mid = (x_min + x_max) / 2
+        path = 'M ' + x_min + ',' + y_base
+          + ' L ' + x_mid + ',' + apex_y
+          + ' L ' + x_max + ',' + y_base
+          + ' Z'
+      }
+
+      side_links.forEach(link => { link.shape_source_notch_path = path })
+    })
   }
 
   /**
@@ -1193,6 +1481,28 @@ export class Class_NodeElement extends Class_NodeBase {
         }
       })
     return sum
+  }
+
+  /**
+   * Visible band extent of ONE side for the node shape (#201) — height for
+   * left/right sides, width for top/bottom sides.
+   * Σ of the side's RAW link thicknesses (sub-pixel/structural flows overlap, so
+   * they contribute < minimum_flux / 0), then floored ONCE on the band — not the
+   * sum of per-link 2px floors, which inflated the node to N × minimum_flux.
+   *
+   * The flux size limit (minimum_flux) applies to the NODE band as well as to the
+   * links — "taille limite des nœuds et flux" (#201). It floors the band in EVERY
+   * display mode so a node never renders thinner than its links: in structure
+   * display thin flows overlap to ~minimum_flux; in value display a node whose raw
+   * band is sub-pixel was thinner than its 2px-floored links (that was #200).
+   */
+  private getSideBandExtent(side: Type_Side): number {
+    const links = this.getLinksOrdered(side).filter(link => link.is_visible_for_sizing_of(this))
+    const raw = links.reduce(
+      (sum, link) => sum + (link.source === this ? link.thicknessSourceRaw : link.thicknessTargetRaw),
+      0
+    )
+    return clampBandThickness(raw, links.length > 0, this.drawing_area.minimum_flux)
   }
 
   private getLinksStartingPositionOffSet(side: Type_Side) {
@@ -1529,7 +1839,50 @@ export class Class_NodeElement extends Class_NodeBase {
       const the_unitary_tagg = is_product ? 'product_unitary' : is_sector ? 'sector_unitary' : 'unitary'
       return this._taggs_dict[the_unitary_tagg]  && (this._taggs_dict[the_unitary_tagg][0].group as Class_ViewTagGroup).activated && this._taggs_dict[the_unitary_tagg][0].is_selected
     }
-    return false    
+    return false
+  }
+
+  /**
+   * Filtre « mode vue » (cf. Class_ViewTagGroup.view_mode), version PLATE qui
+   * court-circuite les level tags. Retourne :
+   *  - undefined : aucun groupe view tag en mode filtre, OU ce nœud ne porte aucun
+   *    de ces groupes → porte node-tag/dimension normale ;
+   *  - true  : le nœud porte une étiquette SÉLECTIONNÉE d'un groupe en mode filtre ;
+   *  - false : le nœud porte une autre étiquette (non sélectionnée) d'un tel groupe.
+   * (Visibilité seulement — pas de remontée vers les ancêtres ; cf. #173 pour ça.)
+   */
+  public viewTagVisibility(): boolean | undefined {
+    const groups = this.sankey.view_mode_groups
+    if (groups.length === 0) return undefined
+    // INTERSECTION (AND) de tous les groupes en mode filtre : un nœud n'est visible
+    // que s'il satisfait CHAQUE groupe auquel il est concerné. Croiser deux filtres
+    // affine donc le détail (on retire globalement des nœuds). Retourne undefined si
+    // le nœud n'est concerné par aucun groupe (porte node-tag/dimension normale).
+    let concerned = false
+    let visible = true
+    for (const g of groups) {
+      // Anti-tag « 0 » dans la colonne du view tag : le nœud est explicitement exclu
+      // de la vue → concerné mais jamais visible tant que ce groupe est en mode vue.
+      if (this._view_taggs_as_excluded.includes(g)) {
+        concerned = true
+        visible = false
+        continue
+      }
+      const own = this.grouped_taggs_dict[g.id]
+      if (own && own.length > 0) {
+        // Porte ce groupe : doit avoir une étiquette sélectionnée.
+        concerned = true
+        if (!own.some(tag => tag.is_selected)) visible = false
+      } else if (this.dimensions_as_parent.some(dim =>
+        dim.children.some(c => (c.grouped_taggs_dict[g.id]?.length ?? 0) > 0))) {
+        // Ne porte pas le groupe mais a un enfant qui le porte = AGRÉGAT de la vue
+        // (ex. nœud niveau 1 « bois ») → caché, sinon il s'afficherait EN PLUS des
+        // feuilles (superposition).
+        concerned = true
+        visible = false
+      }
+    }
+    return concerned ? visible : undefined
   }
 
   public get are_related_node_tags_selected(): boolean {
@@ -1552,23 +1905,34 @@ export class Class_NodeElement extends Class_NodeBase {
           const is_product = this.hasGivenTag(productTag)
           const is_sector = this.hasGivenTag(sectorTag)
           const the_unitary_tagg = is_product ? 'product_unitary' : is_sector ? 'sector_unitary' : 'unitary'
-          const other_unitary_tagg = the_unitary_tagg == 'unitary' ? 'unitary' : the_unitary_tagg == 'product_unitary' ? 'sector_unitary' : 'product_unitary'
+          // Un voisin est « le centre unitaire » s'il est sélectionné dans SON propre
+          // groupe (produit/secteur), pas dans l'opposé du type de CE nœud. L'ancien
+          // code supposait une structure bipartite produit↔secteur : un voisin produit
+          // d'un nœud produit (ex. Production biologique → Bois sur pied) était cherché
+          // dans 'sector_unitary' → jamais trouvé → nœud masqué.
+          const isSelectedUnitaryCenter = (node: Class_NodeElement) => {
+            const tagg = node.hasGivenTag(productTag) ? 'product_unitary' : node.hasGivenTag(sectorTag) ? 'sector_unitary' : 'unitary'
+            return node.grouped_taggs_dict[tagg] &&
+              (node.grouped_taggs_dict[tagg][0].group as Class_ViewTagGroup).activated &&
+              node.grouped_taggs_dict[tagg][0].is_selected
+          }
           display = /*display &&*/
             ((this._taggs_dict[the_unitary_tagg]  && (this._taggs_dict[the_unitary_tagg][0].group as Class_ViewTagGroup).activated && this._taggs_dict[the_unitary_tagg][0].is_selected)
-              || this.input_links_list.filter(l => 
-                l.source.grouped_taggs_dict[other_unitary_tagg] && 
-                (l.source.grouped_taggs_dict[other_unitary_tagg][0].group as Class_ViewTagGroup).activated && 
-                l.source.grouped_taggs_dict[other_unitary_tagg][0].is_selected).length > 0
-              || this.output_links_list.filter(l => 
-                l.target.grouped_taggs_dict[other_unitary_tagg] &&
-                (l.target.grouped_taggs_dict[other_unitary_tagg][0].group as Class_ViewTagGroup).activated &&  
-                l.target.grouped_taggs_dict[other_unitary_tagg][0].is_selected).length > 0
+              || this.input_links_list.filter(l => isSelectedUnitaryCenter(l.source)).length > 0
+              || this.output_links_list.filter(l => isSelectedUnitaryCenter(l.target)).length > 0
             )
         }
         are_related_node_tags_selected = display
       } else {
         are_related_node_tags_selected = true
       }
+
+      // Mode filtre vue (généralisation du mécanisme unitaire) : un groupe view tag
+      // en mode filtre cache un nœud qui ne porte aucune de ses étiquettes sélectionnées.
+      // Décidé ICI (caché par node_tags_fingerprint) pour que la visibilité des liens
+      // se recalcule. Court-circuit des level tags via are_related_dimensions_selected.
+      const vt = this.viewTagVisibility()
+      if (vt !== undefined) are_related_node_tags_selected = vt && are_related_node_tags_selected
 
       if (are_related_node_tags_selected !== this._are_related_node_tags_selected) {
         this.updateVisibilityFingerprint()
@@ -1581,13 +1945,38 @@ export class Class_NodeElement extends Class_NodeBase {
   }
 
   public get is_visible() {
-    return (
+    // Vue courante OU (mode « afficher aussi les flux porteurs de données »)
+    // nœud révélé parce qu'attaché à un flux portant une valeur collectée saisie.
+    // Dans les deux cas, la porte orphelin s'applique encore.
+    if (this.is_visible_without_orphan || this.is_revealed_by_data) {
+      return this.orphan_visible
+    }
+    return false
+  }
+
+  /**
+   * Vrai si ce nœud n'est PAS visible dans la vue courante mais est révélé par le
+   * mode « afficher aussi les flux porteurs de données » (extrémité d'un flux
+   * portant une valeur collectée saisie). Sert à reconnecter ces nœuds au
+   * diagramme via les flux structurels (cf. `Class_LinkElement.is_visible`).
+   * Lit `is_visible_without_orphan` (pas `is_visible`) pour rester non récursif.
+   */
+  public get is_revealed_by_data(): boolean {
+    return this.drawing_area.application_data.reveal_data_links &&
       super.is_visible &&
-      this.are_related_node_tags_selected &&
-      this.are_related_dimensions_selected &&
-      this.are_links_visibilities_ok &&
-      this.orphan_visible
-    )
+      !this.is_visible_without_orphan &&
+      this.is_attached_to_collected_data_link
+  }
+
+  /**
+   * Vrai si ce nœud est l'extrémité d'au moins un flux (feuille, sans child_links)
+   * porteur d'une valeur collectée saisie. Sert au mode « afficher aussi les flux
+   * porteurs de données » (cf. `Class_ApplicationData.reveal_data_links`).
+   */
+  public get is_attached_to_collected_data_link(): boolean {
+    const carries = (l: Class_LinkElement) =>
+      Object.values(l.child_links).length == 0 && l.has_collected_data
+    return this.input_links_list.some(carries) || this.output_links_list.some(carries)
   }
   public get is_visible_without_orphan() {
     return (
@@ -1642,7 +2031,9 @@ export class Class_NodeElement extends Class_NodeBase {
 
   private get orphan_visible() {
     if (this.visible_input_links_list.length + this.visible_output_links_list.length == 0) {
-      if (this.shape_orphan_node_visible) return true
+      // Option globale « Nœuds orphelins » (drawing_area) OU override par-nœud
+      // (shape_orphan_node_visible) : un nœud sans lien visible reste affiché.
+      if (this.shape_orphan_node_visible || this.drawing_area.show_orphan_nodes) return true
       else return false
     }
     return true
@@ -1653,7 +2044,7 @@ export class Class_NodeElement extends Class_NodeBase {
       return true
     }
     const input_links_visible = this.input_links_list.filter(link =>
-      link.is_not_zero &&
+      (link.is_not_zero || link.is_forced_visible_when_zero) &&
       link.are_related_flux_tags_selected &&
       link.source.are_related_node_tags_selected &&
       link.source.are_related_dimensions_selected
@@ -1662,7 +2053,7 @@ export class Class_NodeElement extends Class_NodeBase {
       return true
     }
     const output_links_visible = this.output_links_list.filter(link =>
-      link.is_not_zero &&
+      (link.is_not_zero || link.is_forced_visible_when_zero) &&
       link.are_related_flux_tags_selected &&
       link.target.are_related_node_tags_selected &&
       link.target.are_related_dimensions_selected
@@ -1779,6 +2170,10 @@ export class Class_NodeElement extends Class_NodeBase {
 
   public get are_related_dimensions_selected(): boolean {
     if (this.is_unitary_tag) return true
+    // Mode filtre vue (généralisation de is_unitary_tag) : un nœud gouverné par un
+    // groupe view tag en mode filtre court-circuite les level tags. Le show/hide réel
+    // est décidé par are_related_node_tags_selected (fingerprinté).
+    if (this.sankey.view_mode_active && this.viewTagVisibility() !== undefined) return true
 
     if (this._are_related_dimensions_selected === undefined) {
       const are_related_dimensions_selected = this._nodeDimensionsManager.checkIfRelatedDimensionsAreSelected()
@@ -1798,7 +2193,8 @@ export class Class_NodeElement extends Class_NodeBase {
     return {
       tags: this._tags,
       taggs_dict: this._taggs_dict,
-      leveltaggs_as_antitagged: this._leveltaggs_as_antitagged
+      leveltaggs_as_antitagged: this._leveltaggs_as_antitagged,
+      view_taggs_as_excluded: this._view_taggs_as_excluded
     }
   }
 
@@ -1859,6 +2255,39 @@ export class Class_NodeElement extends Class_NodeBase {
     const pow_out = Math.pow(10, max_digit_out)
     link_out.forEach(v => output_val += (v ?? 0) * pow_out)
     return Math.max(input_val / pow_in, output_val / pow_out)
+  }
+
+  /**
+   * Valeur de stock initiale courante (signée) au datatag actif, ou null si le nœud
+   * n'a pas de stock. Résultat en mode réconcilié/calculé, donnée brute en mode 'data'
+   * (miroir de drawStockBox / Class_StockShape). Sert au seuil d'affichage « stock ».
+   */
+  public get stock_initial_value(): number | null {
+    const sv = this.stock_value
+    if (!sv) return null
+    const use_result = this.drawing_area.type_data !== 'data'
+    const si = use_result ? (sv.stockInitialResult ?? sv.stockInitialData) : sv.stockInitialData
+    return (si === null || si === undefined) ? null : si
+  }
+
+  /**
+   * Seuil d'affichage des labels de nœud (#seuil px) : compare data_value (mode
+   * valeur) ou la hauteur de bande rendue (mode pixel) au seuil `filter_node[_px]`.
+   */
+  public override get is_above_label_threshold(): boolean {
+    return this.drawing_area.nodeLabelPassesThreshold(this.data_value, this.getShapeHeightToUse())
+  }
+
+  // Comme pour les titres (Class_ContainerElement), le label d'un nœud peut
+  // contenir des jetons {Mot} interpolés au rendu. Pour l'instant un seul mot-clé :
+  // {Scale} → le facteur d'échelle local du nœud, écrit « x<facteur> » (ex. x24),
+  // utile pour signaler qu'un stock est représenté à une échelle différente du reste.
+  // Recalculé à chaque dessin (suit la valeur courante du facteur).
+  public override get name_label_effective(): string {
+    const base = super.name_label_effective
+    if (!base.includes('{Scale}')) return base
+    const factor = this.stock_height_scale_factor > 0 ? this.stock_height_scale_factor : 1
+    return base.replaceAll('{Scale}', 'x' + factor)
   }
 
   public get data_label(): string {
@@ -1967,7 +2396,8 @@ export class Class_NodeElement extends Class_NodeBase {
    * Dessine le début des flux sur les ellipses pour un rendu plus fluide
    */
   private _drawLinksStartCaps() {
-    // Seulement pour les nœuds elliptiques
+    // Caps seulement sur les nœuds elliptiques ; l'activation est par flux
+    // (attribut shape_link_caps), pas au niveau du nœud.
     if (this.shape_type !== 'ellipse') return
 
     // Nettoyer les caps précédents
@@ -1989,10 +2419,10 @@ export class Class_NodeElement extends Class_NodeBase {
     sides.forEach(side => {
       // Récupérer les liens pour ce côté dans l'ordre
       const output_links = this._links_order.filter(link =>
-        link.is_visible && link.source === this && link.source_side === side
+        link.is_visible && link.shape_link_caps && !link.shape_arrow_at_source && link.source === this && link.source_side === side
       )
       const input_links = this._links_order.filter(link =>
-        link.is_visible && !link.shape_is_arrow && link.target === this && link.target_side === side
+        link.is_visible && link.shape_link_caps && !link.shape_is_arrow && link.target === this && link.target_side === side
       )
 
       // Dessiner les caps pour ce côté

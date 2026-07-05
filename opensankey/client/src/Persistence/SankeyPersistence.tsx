@@ -34,19 +34,23 @@ import {
   default_paper_format, default_paper_orientation, default_margin_mm,
   Type_PaperFormat, Type_PaperOrientation, Type_Side
 } from '../Elements/ElementsAttributesConfig'
-import { getStringFromJSON, Type_DataSource, Type_IntervalDisplay } from '../types/Utils'
+import { getStringFromJSON, Type_DataSource, Type_IntervalDisplay, Type_DisaggregationGap } from '../types/Utils'
+import { ratio_flux_constraint_traduction } from '../types/Utils'
 import { Class_ContainerElement } from '../Elements/TextZone'
 import { Class_NodeElement } from '../Elements/Node'
 import { ConfigType } from '../Elements/ElementsAttributesConfig'
 import { Class_BaseElement, Class_ElementStyle, Class_ProtoElement, ExtractAttributeValue } from '../Elements/Element'
 import { Class_LinkElement } from '../Elements/Link'
-import { Class_NodeBase } from '../Elements/NodeBase'
+import { Class_NodeBase, Type_NameLabelSource } from '../Elements/NodeBase'
 import { ClassTemplate_Legend } from '../Elements/Legend'
-import { Class_Sankey, Type_RatioFluxConstraint, Type_RatioStockFluxConstraint, Type_StockChainingConstraint } from '../types/Sankey'
+import { Class_Sankey, Type_RatioFluxConstraint, Type_RatioStockFluxConstraint, Type_StockChainingConstraint, Type_SpreadsheetState } from '../types/Sankey'
 import { Class_Tag } from '../types/Tag'
 import { node_exchanges_style, elementStyleConfigs, product_sector_styles, ElementStyleKey, LinkStyle, NodeStyle, ContainerStyle } from '../Elements/ElementStyle'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
+// Issue #191 — migration de rétro-compat de la césure des libellés, isolée dans
+// son propre module pour rester testable sans le graphe d'imports lourd d'ici.
+import { applyWrapLongWordsRetrocompat } from './persistenceMigrations'
 
 
 export class BaseElementPersistence {
@@ -85,7 +89,12 @@ export class BaseElementPersistence {
   ): Type_JSON {
     // #1231 (1.1.5) — format courant : x/y = CENTRE du nœud (indépendant du datatag/échelle).
     // Les autres éléments (conteneurs, liens, légende…) gardent le coin/position d'origine.
-    if (base_element instanceof Class_NodeElement) {
+    // Exception (mode englobant) : un nœud cadre tied a une hauteur DÉRIVÉE de l'enveloppe de
+    // ses enfants → la conversion centre↔coin (coin = centre − hauteur/2) est instable au
+    // rechargement (au moment où le coin est reconstruit les enfants ne sont pas encore
+    // attachés, l'enveloppe vaut 0). On persiste donc le coin directement, comme les
+    // conteneurs — cohérent avec `anchorAbsoluteNodesByCenter` qui exclut déjà les cadres tied.
+    if (base_element instanceof Class_NodeElement && !base_element.tied_to_nodes) {
       const c = base_element.centerForPersistence()
       json_object['x'] = c.x
       json_object['y'] = c.y
@@ -106,7 +115,12 @@ export class BaseElementPersistence {
     // #1231 (1.1.5) — fichier ≥ 1.1.5 (drapeau `pos_is_center` propagé via kwargs) : x/y est le
     // CENTRE → on le pose directement. Sinon (fichiers < 1.1.5 ou éléments non-nœuds) : x/y est
     // le coin → on le pose tel quel, et pour un nœud le centre sera migré au 1er draw (coin+taille/2).
-    if (base_element instanceof Class_NodeElement && _kwargs?.['pos_is_center']) {
+    // Exception cadres tied (mode englobant) : persistés en COIN par toJSON (hauteur dérivée de
+    // l'enveloppe, instable à la reconstruction du centre tant que les enfants ne sont pas
+    // attachés) → on lit le coin tel quel, sans passer par setStoredCenter. Le drapeau `tiedToNode`
+    // est lu directement du JSON car `_tied_to_nodes` n'est restauré que plus tard (NodeBase.fromJSON).
+    const is_tied_frame = getBooleanFromJSON(json_object, 'tiedToNode', false)
+    if (base_element instanceof Class_NodeElement && _kwargs?.['pos_is_center'] && !is_tied_frame) {
       base_element.setStoredCenter(x, y)
     } else {
       base_element.position_x = x
@@ -225,19 +239,20 @@ export class NodeBasePersistence extends ProtoElementPersistence {
   public static toJSON(node_base: Class_NodeBase, json_object: Type_JSON, kwargs?: Type_JSON) {
     super.toJSON(node_base, json_object, kwargs)
     json_object['name'] = node_base.name
-    // Label de nom indépendant du nom du nœud. Écrit uniquement s'il est utilisé,
-    // pour ne pas alourdir les fichiers ni modifier les diagrammes existants
-    // (rétro-compatible : absence des clés ⇒ défauts false/'' au chargement).
-    if (node_base.name_label_custom) {
-      json_object['name_label_custom'] = true
-    }
-    if (node_base.name_label_text !== '') {
-      json_object['name_label_text'] = node_base.name_label_text
-    }
-    if (node_base.sankey.default_style.shape_position_type == 'parametric') {
-      json_object['u'] = node_base.position_u
-      json_object['v'] = node_base.position_v
-    }
+    // Le contenu du label (name_label_source/text/tag_group_id/dimension_id) est
+    // désormais un attribut de style (_storage) : il est sérialisé génériquement
+    // sous json_object['local'] par ProtoElementPersistence.toJSON. Plus rien à
+    // écrire ici (cf. rétro-compat lecture dans fromJSON pour les anciens fichiers
+    // qui stockaient ces clés à la racine du nœud).
+    // position_u / position_v : persistés en mode global `parametric` (où u/v font
+    // autorité pour TOUS les nœuds) OU dès que le nœud est VERROUILLÉ en u/v. Le
+    // verrou est le signal « colonne/ligne éditée, à garder » : autosankey et
+    // inferPositionUFromX respectent déjà le verrou (ils ne recalculent jamais le
+    // u/v d'un nœud verrouillé). Les nœuds non verrouillés en mode `absolute`
+    // gardent la dérivation depuis x au chargement (cf. fromJSON du sankey).
+    const persist_uv_all = node_base.sankey.default_style.shape_position_type == 'parametric'
+    if (persist_uv_all || node_base.shape_position_u_locked) json_object['u'] = node_base.position_u
+    if (persist_uv_all || node_base.shape_position_v_locked) json_object['v'] = node_base.position_v
     if (node_base.tied_to_nodes) {
       json_object['tiedToNode'] = true
       json_object['attachedNodes'] = node_base.attached_node.map(n => n.id)
@@ -277,8 +292,28 @@ export class NodeBasePersistence extends ProtoElementPersistence {
     super.fromJSON(version, node_base, json_node_object, kwargs)
 
     node_base['_name'] = getStringFromJSON(json_node_object, 'name', node_base.name)
-    node_base['_name_label_custom'] = getBooleanFromJSON(json_node_object, 'name_label_custom', node_base.name_label_custom)
-    node_base['_name_label_text'] = getStringFromJSON(json_node_object, 'name_label_text', node_base.name_label_text)
+    // Rétro-compat : le contenu du label est maintenant un attribut de style,
+    // chargé génériquement depuis `local` par super.fromJSON ci-dessus. Les
+    // anciens fichiers stockaient ces valeurs à la RACINE du nœud (et le booléen
+    // historique name_label_custom) ; on les rapatrie dans _storage si présentes,
+    // sans écraser une éventuelle valeur déjà lue depuis `local`.
+    const legacy_custom = getBooleanFromJSON(json_node_object, 'name_label_custom', false)
+    if (legacy_custom && node_base.attributes['name_label_source'] === undefined) {
+      node_base.attributes['name_label_source'] = 'custom'
+    }
+    if (json_node_object['name_label_source'] !== undefined) {
+      node_base.attributes['name_label_source'] =
+        getStringFromJSON(json_node_object, 'name_label_source', 'name') as Type_NameLabelSource
+    }
+    if (json_node_object['name_label_text'] !== undefined) {
+      node_base.attributes['name_label_text'] = getStringFromJSON(json_node_object, 'name_label_text', '')
+    }
+    if (json_node_object['name_label_tag_group_id'] !== undefined) {
+      node_base.attributes['name_label_tag_group_id'] = getStringFromJSON(json_node_object, 'name_label_tag_group_id', '')
+    }
+    if (json_node_object['name_label_dimension_id'] !== undefined) {
+      node_base.attributes['name_label_dimension_id'] = getStringFromJSON(json_node_object, 'name_label_dimension_id', '')
+    }
     node_base['_position_u'] = getNumberFromJSON(json_node_object, 'u', node_base.position_u)
     node_base['_position_v'] = getNumberFromJSON(json_node_object, 'v', node_base.position_v)
 
@@ -748,10 +783,24 @@ export class LinkElementPersistence extends ProtoElementPersistence {
     const json_local = getJSONOrUndefinedFromJSON(json_object, 'local')
     if (
       json_local
-      && json_local['shape_is_recycling'] === true
+      // Clé moderne OU clé legacy `recycling` (fichiers < 0.92, cf. fromJSON_0_91 ligne 628 :
+      // `recycling` -> `shape_is_recycling`). Sans la clé legacy ici, un recyclage forcé d'un
+      // vieux fichier restait NON verrouillé → traité en auto par SEP à la réconciliation, qui
+      // n'écrivait alors rien → le flux revenait non-recyclage (côté de lien inversé, hauteur
+      // de nœud faussée). On lit le JSON brut (les deux clés) pour être indépendant de l'ordre
+      // des passes de chargement.
+      && (json_local['shape_is_recycling'] === true || json_local['recycling'] === true)
       && json_local['shape_is_recycling_locked'] === undefined
     ) {
       link.attributes['shape_is_recycling_locked'] = true
+    }
+    // Migration flèche inversée → modèle deux flèches indépendantes. Avant, l'unique
+    // flèche (shape_is_arrow) était déplacée côté source par shape_is_arrow_reversed.
+    // Désormais shape_is_arrow = flèche côté cible et shape_arrow_at_source = flèche
+    // côté source : un ancien flux « inversé » devient une flèche source seule.
+    if (json_local && json_local['shape_is_arrow_reversed'] === true) {
+      link.attributes['shape_is_arrow'] = false
+      link.attributes['shape_arrow_at_source'] = true
     }
   }
 }
@@ -1035,12 +1084,15 @@ export class LegendPersistence extends ProtoElementPersistence {
     if (legend.display_legend_scale) json_legend['legend_scale'] = legend.display_legend_scale
     if (legend.width != default_width) json_legend['legend_width'] = legend.width
     if (legend.display_legend_scale) json_legend['display_legend_scale'] = legend.display_legend_scale
+    if (legend.scale_legend_unit !== '') json_legend['scale_legend_unit'] = legend.scale_legend_unit
+    if (legend.scale_legend_ratio !== 1) json_legend['scale_legend_ratio'] = legend.scale_legend_ratio
     if (legend.legend_police != default_legend_police) json_legend['legend_police'] = legend.legend_police
     if (legend.legend_bg_border) json_legend['legend_bg_border'] = legend.legend_bg_border
     if (legend.legend_bg_color != default_legend_bg_color) json_legend['legend_bg_color'] = legend.legend_bg_color
     if (legend.legend_bg_opacity != default_legend_bg_opacity) json_legend['legend_bg_opacity'] = legend.legend_bg_opacity
-    if (legend.legend_show_dataTags) json_legend['legend_show_dataTags'] = legend.legend_show_dataTags
+    if (!legend.legend_show_dataTags) json_legend['legend_show_dataTags'] = legend.legend_show_dataTags
     if (legend.legend_show_constraints) json_legend['legend_show_constraints'] = legend.legend_show_constraints
+    if (legend.legend_horizontal) json_legend['legend_horizontal'] = legend.legend_horizontal
     if (legend.stick_to_drawing != undefined) json_legend['legend_stick_to_drawing'] = legend.stick_to_drawing
     if (legend.info_link_value_void) json_legend['info_link_value_void'] = legend.info_link_value_void
     if (!legend.legend_show_data_type) json_legend['legend_show_data_type'] = legend.legend_show_data_type
@@ -1102,12 +1154,15 @@ export class LegendPersistence extends ProtoElementPersistence {
     legend['_scale'] = getNumberFromJSON(json_legend, 'legend_scale', legend['_scale'])
     legend['_width'] = getNumberFromJSON(json_legend, 'legend_width', legend.width)
     legend['_display_legend_scale'] = getBooleanFromJSON(json_legend, 'display_legend_scale', legend.display_legend_scale)
+    legend['_scale_legend_unit'] = getStringFromJSON(json_legend, 'scale_legend_unit', legend.scale_legend_unit)
+    legend['_scale_legend_ratio'] = getNumberFromJSON(json_legend, 'scale_legend_ratio', legend.scale_legend_ratio)
     legend['_legend_police'] = getNumberFromJSON(json_legend, 'legend_police', legend.legend_police)
     legend['_legend_bg_border'] = getBooleanFromJSON(json_legend, 'legend_bg_border', legend.legend_bg_border)
     legend['_legend_bg_color'] = getStringFromJSON(json_legend, 'legend_bg_color', legend.legend_bg_color)
     legend['_legend_bg_opacity'] = getNumberFromJSON(json_legend, 'legend_bg_opacity', legend.legend_bg_opacity)
     legend['_legend_show_dataTags'] = getBooleanFromJSON(json_legend, 'legend_show_dataTags', legend.legend_show_dataTags)
     legend['_legend_show_constraints'] = getBooleanFromJSON(json_legend, 'legend_show_constraints', legend.legend_show_constraints)
+    legend['_legend_horizontal'] = getBooleanFromJSON(json_legend, 'legend_horizontal', legend.legend_horizontal)
     legend['_info_link_value_void'] = getBooleanFromJSON(json_legend, 'info_link_value_void', legend.info_link_value_void)
     legend['_legend_show_data_type'] = getBooleanFromJSON(json_legend, 'legend_show_data_type', legend.legend_show_data_type)
     legend['_stick_to_drawing'] = getBooleanFromJSON(json_legend, 'legend_stick_to_drawing', legend.stick_to_drawing)
@@ -1246,7 +1301,19 @@ export class StylePersistence {
   public static toJSON(style: Class_ElementStyle): Type_JSON {
     const json_object = {} as Type_JSON
     Object.entries(style.attributes).forEach(([key, value]) => {
-      if (style.isAttributeOverloaded(key)) {
+      // Le style 'default' ne persiste que ce qui diffère du défaut usine (isAttributeOverloaded,
+      // branche !_default_style). Les styles NON-'default' persistent TOUTE valeur explicitement
+      // stockée — y compris une valeur égale au 'default' : dans la chaîne de styles d'un élément
+      // (ex. [default, NodeStyle, NodeSectorStyle]) un style peut RÉTABLIR le défaut usine pour
+      // ANNULER une valeur héritée d'un AUTRE style de la chaîne (NodeSectorStyle.shape_margin=0
+      // annule NodeStyle.shape_margin=10). isAttributeOverloaded ne compare qu'au style 'default'
+      // et ignore ces combinaisons → il droppait ces overrides, et au rechargement le nœud héritait
+      // l'autre valeur (marges → tous les nœuds plus gros + coin relevé). On garde donc l'intégralité
+      // du storage explicite des styles non-'default'.
+      const keep = style.is_default_style
+        ? style.isAttributeOverloaded(key)
+        : style.isAttributeExplicit(key)
+      if (keep) {
         //@ts-expect-error xxx
         json_object[key] = value
       }
@@ -1327,6 +1394,11 @@ export class SankeyPersistence {
     kwargs?: Type_JSON
   ) {
     const json_node_object = getJSONFromJSON(json_object, 'nodes', {})
+    // Passe 1 : créer + charger TOUS les nœuds (et l'ordre des liens io) avant de
+    // résoudre les dimensions. #193 — la résolution des dimensions (parent_name)
+    // ignore désormais tout parent absent de nodes_dict ; il faut donc que tous les
+    // nœuds réellement présents dans le fichier soient créés au préalable, sinon une
+    // référence parent en avant dans le JSON serait faussement traitée comme absente.
     Object.entries(json_node_object)
       .forEach(([_, node_json]) => {
         // Get or Create a node
@@ -1344,7 +1416,12 @@ export class SankeyPersistence {
           getJSONFromJSON(json_node_object, node.id, {}),
           {}
         )
-        // Set dimensions
+      })
+    // Passe 2 : tous les nœuds du fichier existent -> résoudre les dimensions.
+    Object.entries(json_node_object)
+      .forEach(([_, node_json]) => {
+        const node = sankey.nodes_dict[_]
+        if (!node) return
         node.dimensionsFromJSON(
           node_json as Type_JSON,
           json_object.version === '0.9' || json_object.version === '0.91',
@@ -1527,6 +1604,11 @@ export class SankeyPersistence {
       json_object['ratio_stock_flux_constraints'] = sankey.ratio_stock_flux_constraints as unknown as Type_JSON
     if (sankey.stock_chaining_constraints.length > 0)
       json_object['stock_chaining_constraints'] = sankey.stock_chaining_constraints as unknown as Type_JSON
+
+    // État d'affichage du tableur (onglet actif, onglets/colonnes masqués). Préférence d'UI,
+    // additive & rétro-compatible : absente des anciens fichiers -> comportement par défaut.
+    if (Object.keys(sankey.spreadsheet_state).length > 0)
+      json_object['spreadsheet_state'] = sankey.spreadsheet_state as unknown as Type_JSON
 
     sankey.create_child_links()
     // Out
@@ -1760,6 +1842,11 @@ export class SankeyPersistence {
         ? json_object['ratio_flux_constraints']
         : []
     ) as unknown as Type_RatioFluxConstraint[]
+    // #116 — génère une traduction par défaut pour toute contrainte chargée sans
+    // (affichée dans le tooltip du flux et la colonne « Traduction » du tableur).
+    sankey.ratio_flux_constraints.forEach(c => {
+      if (!c.traduction) c.traduction = ratio_flux_constraint_traduction(c)
+    })
 
     // Stock constraints (#156). Additive: absent from older files -> empty.
     sankey.ratio_stock_flux_constraints = (
@@ -1772,6 +1859,14 @@ export class SankeyPersistence {
         ? json_object['stock_chaining_constraints']
         : []
     ) as unknown as Type_StockChainingConstraint[]
+
+    // État d'affichage du tableur (onglet actif, onglets/colonnes masqués). Additif :
+    // absent des anciens fichiers -> objet vide (comportement par défaut au build du tableur).
+    sankey.spreadsheet_state = (
+      typeof json_object['spreadsheet_state'] === 'object' && json_object['spreadsheet_state'] !== null
+        ? json_object['spreadsheet_state']
+        : {}
+    ) as unknown as Type_SpreadsheetState
 
     // Legacy migration: older files store the %IS/%OS/... family per-link via
     // value_option; fold them into the canonical list (sankeyexcelparser#116).
@@ -1963,6 +2058,17 @@ export class DrawingAreaPersistence {
     if (drawing_area.grid_color != default_grid_color) json_object['default_grid_color'] = drawing_area.grid_color
     if (drawing_area.maximum_flux) json_object['maximum_flux'] = drawing_area.maximum_flux
     if (drawing_area.minimum_flux) json_object['minimum_flux'] = drawing_area.minimum_flux
+    if (Object.keys(drawing_area.scale_reference_by_viewtag).length > 0)
+      json_object['scale_reference_by_viewtag'] = drawing_area.scale_reference_by_viewtag
+    if (drawing_area.maximum_node) json_object['maximum_node'] = drawing_area.maximum_node
+    if (drawing_area.minimum_node) json_object['minimum_node'] = drawing_area.minimum_node
+    // Écart vertical des enfants englobés (désagrégation / expansion / englobement) : mode global
+    // (défaut 'fill' → sérialisé seulement s'il diffère) et valeur constante (sérialisée seulement
+    // si explicitement définie ; sinon le getter retombe sur default_style.shape_position_dy).
+    if (drawing_area.disaggregation_gap_mode !== 'fill')
+      json_object['disaggregation_gap_mode'] = drawing_area.disaggregation_gap_mode
+    if (drawing_area['_disaggregation_gap_value'] != null)
+      json_object['disaggregation_gap_value'] = drawing_area['_disaggregation_gap_value']
     if (!drawing_area.structure_mode_force_min) json_object['structure_mode_force_min'] = false
     if (drawing_area.arrow_use_standalone_layout) json_object['arrow_use_standalone_layout'] = true
     // Issue #165 — toujours sérialisé : l'absence du flag identifie un fichier
@@ -1982,6 +2088,15 @@ export class DrawingAreaPersistence {
     }
     if (drawing_area.filter_label > 0) json_object['filter_label'] = drawing_area.filter_label
     if (drawing_area.filter_link_value > 0) json_object['filter_link_value'] = drawing_area.filter_link_value
+    if (drawing_area.filter_unit !== 'value') json_object['filter_unit'] = drawing_area.filter_unit
+    if (drawing_area.filter_label_px > 0) json_object['filter_label_px'] = drawing_area.filter_label_px
+    if (drawing_area.filter_link_value_px > 0) json_object['filter_link_value_px'] = drawing_area.filter_link_value_px
+    if (drawing_area.filter_node > 0) json_object['filter_node'] = drawing_area.filter_node
+    if (drawing_area.filter_node_px > 0) json_object['filter_node_px'] = drawing_area.filter_node_px
+    if (drawing_area.filter_stock > 0) json_object['filter_stock'] = drawing_area.filter_stock
+    if (drawing_area.filter_stock_px > 0) json_object['filter_stock_px'] = drawing_area.filter_stock_px
+    if (drawing_area.show_zero_links) json_object['show_zero_links'] = true
+    if (drawing_area.show_orphan_nodes) json_object['show_orphan_nodes'] = true
     if (drawing_area.type_data != initial_show_structure) json_object['show_structure'] = drawing_area.type_data
     if (drawing_area.data_source !== 'reconciled') json_object['data_source'] = drawing_area.data_source
     if (drawing_area.interval_display !== 'free_value') json_object['interval_display'] = drawing_area.interval_display
@@ -1999,6 +2114,9 @@ export class DrawingAreaPersistence {
     if (drawing_area.show_background_image) json_object['background_image'] = drawing_area.background_image
     if (drawing_area.constrain_to_bg_image_ratio) json_object['constrain_to_bg_image_ratio'] = drawing_area.constrain_to_bg_image_ratio
     if (drawing_area.bg_image_horizontal_align !== 'left') json_object['bg_image_horizontal_align'] = drawing_area.bg_image_horizontal_align
+
+    if (Object.keys(drawing_area.mfa_options).length > 0)
+      json_object['solver_options'] = drawing_area.mfa_options as Type_JSON
 
     const out = {
       ...json_object,
@@ -2292,11 +2410,38 @@ export class DrawingAreaPersistence {
     drawing_area['_color'] = getStringFromJSON(json_object, 'couleur_fond_sankey', drawing_area.color)
     drawing_area['_filter_label'] = getNumberFromJSON(json_object, 'filter_label', 0)
     drawing_area['_filter_link_value'] = getNumberFromJSON(json_object, 'filter_link_value', 0)
+    drawing_area['_filter_unit'] = getStringFromJSON(json_object, 'filter_unit', 'value') === 'pixel' ? 'pixel' : 'value'
+    drawing_area['_filter_label_px'] = getNumberFromJSON(json_object, 'filter_label_px', 0)
+    drawing_area['_filter_link_value_px'] = getNumberFromJSON(json_object, 'filter_link_value_px', 0)
+    drawing_area['_filter_node'] = getNumberFromJSON(json_object, 'filter_node', 0)
+    drawing_area['_filter_node_px'] = getNumberFromJSON(json_object, 'filter_node_px', 0)
+    drawing_area['_filter_stock'] = getNumberFromJSON(json_object, 'filter_stock', 0)
+    drawing_area['_filter_stock_px'] = getNumberFromJSON(json_object, 'filter_stock_px', 0)
+    drawing_area['_show_zero_links'] = getBooleanFromJSON(json_object, 'show_zero_links', false)
+    drawing_area['_show_orphan_nodes'] = getBooleanFromJSON(json_object, 'show_orphan_nodes', false)
     drawing_area['_grid_size'] = getNumberFromJSON(json_object, 'grid_square_size', drawing_area.grid_size)
     drawing_area['_grid_visible'] = getBooleanFromJSON(json_object, 'grid_visible', drawing_area.grid_visible)
     drawing_area['_height'] = getNumberFromJSON(json_object, 'height', drawing_area.height)
     drawing_area['_maximum_flux'] = getNumberOrUndefinedFromJSON(json_object, 'maximum_flux')
     drawing_area['_minimum_flux'] = getNumberOrUndefinedFromJSON(json_object, 'minimum_flux')
+    // Référence d'échelle par view tag : dict { view_tag_id: { link_id, thickness } }.
+    const scale_ref_raw = json_object['scale_reference_by_viewtag']
+    if (scale_ref_raw && typeof scale_ref_raw === 'object') {
+      const clean: { [id: string]: { link_id: string, thickness: number } } = {}
+      Object.entries(scale_ref_raw as { [id: string]: { link_id?: unknown, thickness?: unknown } }).forEach(([vt_id, val]) => {
+        if (val && typeof val.link_id === 'string' && typeof val.thickness === 'number' && val.thickness > 0)
+          clean[vt_id] = { link_id: val.link_id, thickness: val.thickness }
+      })
+      drawing_area['_scale_reference_by_viewtag'] = clean
+    }
+    drawing_area['_maximum_node'] = getNumberOrUndefinedFromJSON(json_object, 'maximum_node')
+    drawing_area['_minimum_node'] = getNumberOrUndefinedFromJSON(json_object, 'minimum_node')
+    // Écart vertical des enfants englobés : mode (défaut 'fill' si absent) + valeur constante
+    // (null si absente ⇒ le getter retombe sur default_style.shape_position_dy).
+    drawing_area['_disaggregation_gap_mode'] =
+      getStringFromJSON(json_object, 'disaggregation_gap_mode', 'fill') as Type_DisaggregationGap
+    drawing_area['_disaggregation_gap_value'] =
+      getNumberOrUndefinedFromJSON(json_object, 'disaggregation_gap_value') ?? null
     drawing_area['_structure_mode_force_min'] = getBooleanFromJSON(json_object, 'structure_mode_force_min', true)
     drawing_area['_arrow_use_standalone_layout'] = getBooleanFromJSON(json_object, 'arrow_use_standalone_layout', false)
     drawing_area['_scale'] = getNumberFromJSON(json_object, 'user_scale', drawing_area.scale)
@@ -2332,8 +2477,18 @@ export class DrawingAreaPersistence {
       drawing_area['_bg_image_horizontal_align'] = (v === 'center' || v === 'right') ? v : 'left'
     }
 
+    // Solver options from Excel "Options" sheet, re-serialized here as 'solver_options'
+    const solver_opts = json_object['solver_options']
+    drawing_area.mfa_options = (solver_opts && typeof solver_opts === 'object' && !Array.isArray(solver_opts))
+      ? solver_opts as Record<string, unknown>
+      : {}
+
     LegendPersistence.fromJSON(+version!, drawing_area.legend, json_object)
     SankeyPersistence.fromJSON(+version!, drawing_area.sankey, json_object)
+
+    // Issue #191 — rétro-compat de la césure des libellés mono-mots des anciens
+    // fichiers (< 1.1.4). Cf. doc de applyWrapLongWordsRetrocompat.
+    applyWrapLongWordsRetrocompat(drawing_area.sankey, version)
 
     //drawing_area['_list_g_element_id'] = getStringListFromJSON(json_object, 'order_g_elements', drawing_area.list_g_element)
     const order_from_json = getStringListFromJSON(json_object, 'order_g_elements', [])
@@ -2365,10 +2520,28 @@ export class DrawingAreaPersistence {
     // ABSOLU (le mode % / échelle adaptée est une vue transitoire que l'utilisateur réactive).
     // 'parametric' (ancien) et 'proportional' → 'absolute'. La valeur 'parametric' reste valide
     // en interne pour les styles par-nœud d'échange import/export — on ne force QUE le style global.
+    // On capture le mode d'ORIGINE avant de le forcer : il décide si u/v font autorité.
+    const incoming_position_mode = drawing_area.sankey.default_style.shape_position_type
     if (drawing_area.sankey.default_style.shape_position_type === 'parametric' ||
         drawing_area.sankey.default_style.shape_position_type === 'proportional' ||
         drawing_area.sankey.default_style.shape_position_type === 'scale_adapted') {
       drawing_area.sankey.default_style.shape_position_type = 'absolute'
+    }
+
+    // Dérivation de u/v depuis la géométrie au chargement :
+    // - Mode d'origine `parametric` : u/v font autorité pour TOUS les nœuds (ils sont
+    //   tous persistés). On n'y touche pas, SAUF s'ils sont tous à 0 (jamais calculés).
+    // - Tout autre mode d'origine (`absolute`/…) : seuls les nœuds VERROUILLÉS portent
+    //   un u/v persisté (cf. NodeBasePersistence.toJSON). On (re)dérive donc les colonnes
+    //   depuis x : `inferPositionUFromX`/`computeParametrization` RESPECTENT les verrous
+    //   (le u/v verrouillé est conservé tel quel) et donnent aux non-verrouillés une
+    //   colonne valide. C'est ainsi que la colonne verrouillée (« assigner la colonne aux
+    //   enfants ») survit au rechargement sans figer tout le reste du diagramme.
+    const uv_uncomputed = drawing_area.sankey.visible_nodes_list.length > 0 &&
+      drawing_area.sankey.visible_nodes_list.every(n => n.position_u === 0 && n.position_v === 0)
+    if (incoming_position_mode !== 'parametric' || uv_uncomputed) {
+      drawing_area.nodePositioning.inferPositionUFromX()
+      drawing_area.nodePositioning.computeParametrization(false)
     }
 
     // #1231 — Persistance du COUPLE de référence (flux + datatag) du mode %. Le flux est

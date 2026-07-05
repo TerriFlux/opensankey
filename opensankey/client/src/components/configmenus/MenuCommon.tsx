@@ -55,7 +55,15 @@ import {
   Select,
   PlacementWithLogical,
   Textarea,
-  SystemStyleObject
+  SystemStyleObject,
+  Divider,
+  Popover,
+  PopoverArrow,
+  PopoverBody,
+  PopoverContent,
+  PopoverTrigger,
+  Portal,
+  VStack
 } from '@chakra-ui/react'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 import { FaSquare } from 'react-icons/fa'
@@ -242,23 +250,49 @@ export const WrapperContentConfig = ({ title, children, hide = false }: React.Pr
 export const MenuResetAttrLocal = (
   {
     new_data,
-    dict_overwritted_attr
+    dict_overwritted_attr,
+    onResetAll,
+    onResetLocal,
+    is_disabled,
+    computeOverloadedAttr
   }: {
     new_data: Class_ApplicationData,
-    dict_overwritted_attr: { [x: string]: { overloaded: boolean, name: string } }
+    dict_overwritted_attr: { [x: string]: { overloaded: boolean, name: string } },
+    // Surcharges optionnelles : permettent de réutiliser ce menu pour réinitialiser
+    // un style édité (et non les éléments sélectionnés). Sans elles, comportement
+    // historique = reset des éléments sélectionnés.
+    onResetAll?: () => void,
+    onResetLocal?: (k: string) => void,
+    is_disabled?: boolean,
+    // Si fourni, la liste des surcharges est recalculée à chaque ouverture du menu
+    // (et après chaque reset), pour refléter les éditions d'attributs faites entre-temps
+    // sans dépendre d'un re-render du parent.
+    computeOverloadedAttr?: () => { [x: string]: { overloaded: boolean, name: string } }
   }) => {
   const { t, icon_library, drawing_area } = new_data
   const { sankey } = drawing_area
   const { icon_undo } = icon_library
 
-  // Delete all local attributes of selected elements
-  const resetAll = () => new_data.drawing_area.sankey.resetAttrSelectedElements()
-  // Delete local attributes 'k' of selected elements
-  const resetLocal = (k: string) =>
-    sankey.deleteLocalAttrSelectedElements(k as (keyof typeof ALL_ATTRIBUTES_CONFIG), drawing_area.selected_elements_list)
+  const [local_dict, setLocalDict] = useState(dict_overwritted_attr)
+  const refreshDict = () => { if (computeOverloadedAttr) setLocalDict(computeOverloadedAttr()) }
 
-  return <Menu direction='rtl' placement='left' closeOnSelect={false}>
-    <MenuButton as={Button} variant='menuconfigpanel_option_button'>
+  // Delete all local attributes of selected elements
+  const resetAll = () => {
+    if (onResetAll) onResetAll()
+    else new_data.drawing_area.sankey.resetAttrSelectedElements()
+    refreshDict()
+  }
+  // Delete local attributes 'k' of selected elements
+  const resetLocal = (k: string) => {
+    if (onResetLocal) onResetLocal(k)
+    else sankey.deleteLocalAttrSelectedElements(k as (keyof typeof ALL_ATTRIBUTES_CONFIG), drawing_area.selected_elements_list)
+    refreshDict()
+  }
+
+  const dict_to_use = computeOverloadedAttr ? local_dict : dict_overwritted_attr
+
+  return <Menu direction='rtl' placement='left' closeOnSelect={false} onOpen={refreshDict}>
+    <MenuButton as={Button} variant='menuconfigpanel_option_button' isDisabled={is_disabled}>
       {icon_undo}
       <ChevronDownIcon />
     </MenuButton>
@@ -267,7 +301,7 @@ export const MenuResetAttrLocal = (
       <MenuItem onClick={resetAll}>{t('Menu.reset_all_attr')} </MenuItem>
       <MenuDivider />
       {
-        Object.entries(dict_overwritted_attr).filter(ent => ent[1].overloaded).map(ent => {
+        Object.entries(dict_to_use).filter(ent => ent[1].overloaded).map(ent => {
           return <MenuItem onClick={() => resetLocal(ent[0])}>{t('Menu.reset_attr')}{ent[1].name}</MenuItem>
         })
       }
@@ -639,6 +673,12 @@ export const TooltipValueSurcharge = (k: string, t: TFunction) => {
 }
 
 
+// Désactive le rendu des tooltips dans un sous-arbre. Utilisé pour les panneaux détachés en fenêtre
+// PiP : les Tooltip Chakra reposent sur des écouteurs du `document` PRINCIPAL et ne reçoivent jamais
+// le `mouseleave` émis dans la fenêtre fille -> tooltips « collants » impossibles à fermer. Dans ce
+// contexte, OSTooltip rend simplement ses enfants sans wrapper Tooltip.
+export const OSTooltipDisabledContext = React.createContext(false)
+
 export const OSTooltip = ({ label,disabled=false, delay = 500, placement = 'auto', isAlwaysOpen = false, children }: React.PropsWithChildren<{
   delay?: number,
   label: string,
@@ -647,7 +687,8 @@ export const OSTooltip = ({ label,disabled=false, delay = 500, placement = 'auto
   isAlwaysOpen?: boolean
   children: ReactNode
 }>) => {
-  if (label === undefined || label === null) {
+  const tooltips_disabled = React.useContext(OSTooltipDisabledContext)
+  if (tooltips_disabled || label === undefined || label === null) {
     return <>{children}</>
   }
   const element_key = label.split(' ').join('_')
@@ -674,6 +715,125 @@ export const OSTooltip = ({ label,disabled=false, delay = 500, placement = 'auto
       {children}
     </Tooltip>
   }
+}
+
+export type OSChecklistItem = {
+  key: string
+  label: string
+  tooltip?: string
+  is_checked: boolean
+  is_disabled?: boolean
+  onChange: (checked: boolean) => void
+}
+
+/**
+ * Sélecteur déroulant façon filtre Excel pour un groupe d'options booléennes
+ * indépendantes (même pattern que le ChecklistDropdown des dialogues de
+ * persistance). Le bouton trigger résume la sélection ; au clic, un popover
+ * (porté en `Portal` pour passer au-dessus des panneaux de config) liste les
+ * options cochables, avec une case « (Tout sélectionner) » en tri-state et un
+ * champ de recherche optionnel. Les changements s'appliquent IMMÉDIATEMENT
+ * (pas d'OK/Annuler) : chaque bascule appelle directement `item.onChange`.
+ *
+ * Remplace les rangées de boutons toggle qui débordent (wrap) quand elles sont
+ * trop nombreuses pour la largeur du panneau.
+ */
+export const OSChecklistDropdown: FC<{
+  items: OSChecklistItem[]
+  /** Texte du bouton quand aucune option n'est sélectionnée. */
+  placeholder: string
+  /** Libellé de la case « (Tout sélectionner) ». */
+  select_all_label: string
+  /** Si fourni, affiche un champ de recherche filtrant les options par libellé. */
+  search_placeholder?: string
+  min_width?: string
+}> = ({ items, placeholder, select_all_label, search_placeholder, min_width = '180px' }) => {
+  const [is_open, setIsOpen] = useState(false)
+  const [search, setSearch] = useState('')
+
+  const search_lc = search.trim().toLowerCase()
+  const visible_items = search_lc
+    ? items.filter(it => it.label.toLowerCase().includes(search_lc))
+    : items
+
+  const selected = items.filter(it => it.is_checked)
+  const trigger_label = selected.length > 0
+    ? selected.map(it => it.label).join(', ')
+    : placeholder
+
+  const visible_checked = visible_items.filter(it => it.is_checked).length
+  const all_checked = visible_items.length > 0 && visible_checked === visible_items.length
+  const none_checked = visible_checked === 0
+  const toggleAllVisible = (next: boolean) => {
+    visible_items.forEach(it => {
+      if (!it.is_disabled && it.is_checked !== next) it.onChange(next)
+    })
+  }
+
+  const openPopover = () => { setSearch(''); setIsOpen(true) }
+
+  return (
+    <Popover isOpen={is_open} onClose={() => setIsOpen(false)} placement='bottom-start' isLazy>
+      <PopoverTrigger>
+        <Button
+          size='xs'
+          variant='outline'
+          rightIcon={<ChevronDownIcon />}
+          onClick={() => (is_open ? setIsOpen(false) : openPopover())}
+          width='100%'
+          minW={min_width}
+          justifyContent='space-between'
+          fontWeight='normal'
+        >
+          <Text noOfLines={1} textAlign='left' width='100%'>{trigger_label}</Text>
+        </Button>
+      </PopoverTrigger>
+      {/* Portal : le popover échappe à l'overflow des panneaux de config et flotte au-dessus. */}
+      <Portal>
+        <PopoverContent minW='240px' maxW='360px' zIndex='popover'>
+          <PopoverArrow />
+          <PopoverBody p='6px'>
+            {search_placeholder && (
+              <Input
+                size='xs'
+                placeholder={search_placeholder}
+                value={search}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+                mb='6px'
+              />
+            )}
+            <Checkbox
+              size='sm'
+              isChecked={all_checked}
+              isIndeterminate={!all_checked && !none_checked}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => toggleAllVisible(e.target.checked)}
+            >
+              <Text fontSize='xs' fontStyle='italic'>{select_all_label}</Text>
+            </Checkbox>
+            <Divider my='4px' />
+            <VStack align='stretch' spacing='2px' maxH='220px' overflowY='auto'>
+              {visible_items.map(it => (
+                <Checkbox
+                  key={it.key}
+                  size='sm'
+                  isChecked={it.is_checked}
+                  isDisabled={it.is_disabled}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => it.onChange(e.target.checked)}
+                >
+                  <OSTooltip label={it.tooltip ?? ''}>
+                    <Text fontSize='xs'>{it.label}</Text>
+                  </OSTooltip>
+                </Checkbox>
+              ))}
+              {visible_items.length === 0 && (
+                <Text fontSize='xs' color='gray.500' fontStyle='italic'>—</Text>
+              )}
+            </VStack>
+          </PopoverBody>
+        </PopoverContent>
+      </Portal>
+    </Popover>
+  )
 }
 
 export const CustomFaEyeCheckIcon = (props: CheckboxProps) => {
@@ -822,12 +982,17 @@ export const OverloadedButtonGroup = <T extends string>({
   const fullAttributeKey = `${prefix}_${attributeKey}` as keyof typeof config
   const isOverloaded = isElementAttributeOverloaded(elements, fullAttributeKey, config)
   const tooltipLabel = t(`${String(attributePath)}.tooltips.${String(fullAttributeKey)}`)
+  // Groupe d'icônes (pas de label texte) : on ne laisse pas la grille s'étirer pour
+  // remplir sa colonne, sinon les boutons sont trop larges avec une icône minuscule
+  // centrée. width:fit-content rend les boutons compacts ; les groupes à labels texte
+  // (ex. position_type) gardent leur largeur pleine.
+  const hasOnlyIcons = items.every(item => item.icon)
   return (
     <OverloadIndicatorWrapper
       isOverloaded={isOverloaded}
     >
       <OSTooltip label={tooltipLabel}>
-        <Box layerStyle={`options_${items.length}cols`}>
+        <Box layerStyle={`options_${items.length}cols`} sx={hasOnlyIcons ? { width: 'fit-content' } : undefined}>
           {items.map((item, idx) => {
             const position =
               items.length === 2 ? (idx === 0 ? 'left' : 'right') :
@@ -941,12 +1106,12 @@ export const OverloadIndicatorWrapper = ({
       display='inline-flex'
       sx={{
         '& > *': {
-          boxShadow: '0 0 0 1.5px rgba(66, 153, 225, 0.5)', // blue.400 avec transparence
+          boxShadow: '0 0 0 1.5px rgba(128, 90, 213, 0.7)', // purple.500 = surcharge
           borderRadius: '6px',
           transition: 'box-shadow 0.2s'
         },
         '&:hover > *': {
-          boxShadow: '0 0 0 2px rgba(66, 153, 225, 0.8)', // blue.500 plus opaque
+          boxShadow: '0 0 0 2px rgba(128, 90, 213, 1)', // purple.500 opaque
         },
         cursor: 'help'
       }}
@@ -1233,8 +1398,8 @@ export const InputIndicatorWrapper = ({
 }>) => {
   // Priorité : multiValue > overloaded
   const hasIndicator = isMultiValue || isOverloaded
-  const color = isMultiValue ? 'rgba(237, 137, 54, 0.5)' : 'rgba(66, 153, 225, 0.5)' // orange ou bleu
-  const colorHover = isMultiValue ? 'rgba(237, 137, 54, 0.8)' : 'rgba(66, 153, 225, 0.8)'
+  const color = isMultiValue ? 'rgba(237, 137, 54, 0.5)' : 'rgba(128, 90, 213, 0.7)' // orange (multi) ou violet (surcharge)
+  const colorHover = isMultiValue ? 'rgba(237, 137, 54, 0.8)' : 'rgba(128, 90, 213, 1)'
 
   if (!hasIndicator) {
     return <>{children}</>

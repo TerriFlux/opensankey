@@ -29,6 +29,7 @@ import {
   Box,
   Button,
   Checkbox,
+  Input,
   Select
 } from '@chakra-ui/react'
 
@@ -36,7 +37,7 @@ import { ConfigMenuNumberInput, MenuColorPicker, WrapperBoxSubSectionMenu } from
 import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle, OnDragEndResponder } from 'react-beautiful-dnd'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_DataTagGroup } from '../../types/TagGroup'
-import { CustomFaEyeCheckIcon, OSTooltip } from './MenuCommon'
+import { CustomFaEyeCheckIcon, OSChecklistDropdown, OSTooltip } from './MenuCommon'
 import { Type_PaperFormat, Type_PaperOrientation } from '../../Elements/ElementsAttributesConfig'
 
 // Utils functions -------------------------------------------------------------------
@@ -66,6 +67,8 @@ export const DrawingAreaConfig = ({
   const ref_scale = useRef((_: string | null | undefined) => null)
   const ref_minimum_flux = useRef((_: string | null | undefined) => null)
   const ref_maximum_flux = useRef((_: string | null | undefined) => null)
+  const ref_minimum_node = useRef((_: string | null | undefined) => null)
+  const ref_maximum_node = useRef((_: string | null | undefined) => null)
 
   // Update refs
   if (unit_taggs.length > 0) {
@@ -75,6 +78,8 @@ export const DrawingAreaConfig = ({
   }
   ref_minimum_flux.current(String(app_data.drawing_area.minimum_flux ?? ''))
   ref_maximum_flux.current(String(app_data.drawing_area.maximum_flux ?? ''))
+  ref_minimum_node.current(String(app_data.drawing_area.minimum_node ?? ''))
+  ref_maximum_node.current(String(app_data.drawing_area.maximum_node ?? ''))
 
   const refreshThisAndUpdateRelatedComponents = () => {
     app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
@@ -164,18 +169,25 @@ export const DrawingAreaConfig = ({
   }
 
   const eventMinLinkThickness = (evt: number | null | undefined) => {
-    if (evt == null) return
+    // #200 — le DÉFAUT est 2px (le champ affiche 2 quand aucune valeur n'est
+    // posée). On ne stocke `minimum_flux` que pour une valeur qui s'écarte du
+    // défaut ; sinon on efface la clé (document propre, plancher dur 2px) :
+    //  • vide / 2 (= défaut)     → effacer la clé → plancher 2px ;
+    //  • 0 (saisi explicitement) → flux tracés à leur ÉPAISSEUR RÉELLE ;
+    //  • autre n                 → plancher de n px (au-dessus comme en dessous de 2).
+    const DEFAULT_MIN = 2
+    const new_min = (evt === null || evt === undefined || evt === DEFAULT_MIN) ? undefined : evt
+    if (new_min === app_data.drawing_area.minimum_flux) return // pas de no-op dans l'historique
     const f = (_: number | undefined) => {
-      if (_) {
+      if (_ !== undefined) {
         app_data.drawing_area.minimum_flux = _
-        app_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
       } else {
         app_data.drawing_area.removeMinimumLinkThickness()
-        app_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
       }
+      app_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
       refreshThisAndUpdateRelatedComponents()
     }
-    app_data.setValueAndSaveHistory(app_data.drawing_area, 'minimum_flux', evt, f)
+    app_data.setValueAndSaveHistory(app_data.drawing_area, 'minimum_flux', new_min, f)
   }
 
   const eventStructureForceMin = (evt: React.ChangeEvent<HTMLInputElement>) => {
@@ -207,6 +219,37 @@ export const DrawingAreaConfig = ({
       refreshThisAndUpdateRelatedComponents()
     }
     app_data.setValueAndSaveHistory(app_data.drawing_area, 'maximum_flux', evt, f)
+  }
+
+  // Limite de hauteur des nœuds (px), indépendante de la limite des flux.
+  // Entrer 0 (ou vider) efface la limite. Px fixes (ne suit pas l'échelle).
+  const eventMinNodeHeight = (evt: number | null | undefined) => {
+    const new_min = (evt === null || evt === undefined || evt === 0) ? undefined : evt
+    if (new_min === app_data.drawing_area.minimum_node) return // pas de no-op dans l'historique
+    const f = (_: number | undefined) => {
+      if (_ !== undefined) {
+        app_data.drawing_area.minimum_node = _
+      } else {
+        app_data.drawing_area.removeMinimumNodeHeight()
+      }
+      app_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
+      refreshThisAndUpdateRelatedComponents()
+    }
+    app_data.setValueAndSaveHistory(app_data.drawing_area, 'minimum_node', new_min, f)
+  }
+
+  const eventMaxNodeHeight = (evt: number | null | undefined) => {
+    if (evt == null) return
+    const f = (_: number | undefined) => {
+      if (_) {
+        app_data.drawing_area.maximum_node = _
+      } else {
+        app_data.drawing_area.removeMaximumNodeHeight()
+      }
+      app_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
+      refreshThisAndUpdateRelatedComponents()
+    }
+    app_data.setValueAndSaveHistory(app_data.drawing_area, 'maximum_node', evt, f)
   }
 
   return <>
@@ -419,8 +462,9 @@ export const DrawingAreaConfig = ({
         <OSTooltip label={t('MEP.tooltips.MinFlux')}>
           <ConfigMenuNumberInput
             t={app_data.t}
-            default_value={app_data.drawing_area.minimum_flux}
+            default_value={app_data.drawing_area.minimum_flux ?? 2}
             function_on_blur={eventMinLinkThickness}
+            minimum_value={0}
             maximum_value={app_data.drawing_area.maximum_flux}
             stepper={true}
           />
@@ -444,6 +488,73 @@ export const DrawingAreaConfig = ({
         </OSTooltip>
       </Box>
 
+    </Box>
+
+    {/* Limite min/max de hauteur des nœuds (px), indépendante des flux */}
+    <Box layerStyle='menuconfigpanel_2row_3cols'>
+      <Box
+        layerStyle='menuconfigpanel_option_name'
+        gridColumnStart='1'
+        gridColumnEnd='2'
+        gridRowStart='2'
+        gridRowEnd='3'
+      >
+        {t('MEP.node_size_limit')}
+      </Box>
+      <Box
+        layerStyle='menuconfigpanel_option_name'
+        gridColumnStart='2'
+        gridColumnEnd='3'
+        gridRowStart='1'
+        gridRowEnd='2'
+        alignItems='flex-end'
+      >
+        {t('MEP.MinFlux')}
+      </Box>
+      <Box
+        layerStyle='menuconfigpanel_option_name'
+        gridColumnStart='3'
+        gridColumnEnd='4'
+        gridRowStart='1'
+        gridRowEnd='2'
+        alignItems='flex-end'
+      >
+        {t('MEP.MaxFlux')}
+      </Box>
+      <Box
+        gridColumnStart='2'
+        gridColumnEnd='3'
+        gridRowStart='2'
+        gridRowEnd='3'
+      >
+        <OSTooltip label={t('MEP.tooltips.MinNode')}>
+          <ConfigMenuNumberInput
+            t={app_data.t}
+            default_value={app_data.drawing_area.minimum_node ?? null}
+            function_on_blur={eventMinNodeHeight}
+            minimum_value={0}
+            maximum_value={app_data.drawing_area.maximum_node}
+            stepper={true}
+          />
+        </OSTooltip>
+      </Box>
+      <Box
+        gridColumnStart='3'
+        gridColumnEnd='4'
+        gridRowStart='2'
+        gridRowEnd='3'
+      >
+        <OSTooltip label={t('MEP.tooltips.MaxNode')}>
+          <ConfigMenuNumberInput
+            t={app_data.t}
+            default_value={app_data.drawing_area.maximum_node ?? null}
+            function_on_blur={eventMaxNodeHeight}
+            minimum_value={app_data.drawing_area.minimum_node}
+            stepper={true}
+            unit_text={right_addon_pixel(app_data.drawing_area.maximum_node!)}
+          />
+        </OSTooltip>
+      </Box>
     </Box>
 
     {/* Mode Structure : forcer toutes les épaisseurs à minimum_flux */}
@@ -598,6 +709,23 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
     app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'display_legend_scale', checked, f)
   }
 
+  const eventScaleLegendUnit = (value: string) => {
+    const f = (_: string) => {
+      app_data.drawing_area.legend.scale_legend_unit = _
+      refreshThisAndUpdateRelatedComponents()
+    }
+    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'scale_legend_unit', value, f)
+  }
+
+  const eventScaleLegendRatio = (evt: number | null | undefined) => {
+    const value = (evt && evt !== 0) ? evt : 1
+    const f = (_: number) => {
+      app_data.drawing_area.legend.scale_legend_ratio = _
+      refreshThisAndUpdateRelatedComponents()
+    }
+    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'scale_legend_ratio', value, f)
+  }
+
   const eventLegendDataTag = (checked: boolean) => {
     const f = (_: boolean) => {
       app_data.drawing_area.legend.legend_show_dataTags = _
@@ -612,6 +740,14 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
       refreshThisAndUpdateRelatedComponents()
     }
     app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'legend_show_data_type', checked, f)
+  }
+
+  const eventLegendHorizontal = (checked: boolean) => {
+    const f = (_: boolean) => {
+      app_data.drawing_area.legend.legend_horizontal = _
+      refreshThisAndUpdateRelatedComponents()
+    }
+    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'legend_horizontal', checked, f)
   }
 
   return <Box layerStyle='menu_sub_section'>
@@ -752,27 +888,74 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
       {/* ✅ SECTION CONTENU */}
       <Box as='span' textStyle='title_sub_section'>{t('Menu.content') || 'Contenu'}</Box>
 
-      {/* Contenu : échelle + dataTags + type de données */}
-      <Box as='span' layerStyle='options_3cols'>
+      {/* Contenu : sélecteur déroulant des éléments affichés (échelle / étiquettes /
+          type de données) + bascule d'orientation. Le sélecteur remplace la rangée de
+          boutons toggle qui débordait (wrap) sur les panneaux étroits. */}
+      <Box as='span' layerStyle='options_2cols'>
+        <OSChecklistDropdown
+          placeholder={t('Menu.content') || 'Contenu'}
+          select_all_label={t('Spreadsheet.toolbar.select_all')}
+          items={[
+            {
+              key: 'display_legend_scale',
+              label: t('Menu.display_scale'),
+              is_checked: app_data.drawing_area.legend.display_legend_scale,
+              onChange: eventLegendScale
+            },
+            {
+              key: 'legend_show_dataTags',
+              label: t('MEP.leg_show_dataTags'),
+              is_checked: app_data.drawing_area.legend.legend_show_dataTags,
+              onChange: eventLegendDataTag
+            },
+            {
+              key: 'legend_show_data_type',
+              label: t('MEP.leg_show_data_type'),
+              is_checked: app_data.drawing_area.legend.legend_show_data_type,
+              onChange: eventLegendDataType
+            }
+          ]}
+        />
         <Button
-          variant={app_data.drawing_area.legend.display_legend_scale ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-          onClick={() => eventLegendScale(!app_data.drawing_area.legend.display_legend_scale)}
+          variant={app_data.drawing_area.legend.legend_horizontal ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+          onClick={() => eventLegendHorizontal(!app_data.drawing_area.legend.legend_horizontal)}
         >
-          {t('Menu.display_scale')}
-        </Button>
-        <Button
-          variant={app_data.drawing_area.legend.legend_show_dataTags ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-          onClick={() => eventLegendDataTag(!app_data.drawing_area.legend.legend_show_dataTags)}
-        >
-          {t('MEP.leg_show_dataTags')}
-        </Button>
-        <Button
-          variant={app_data.drawing_area.legend.legend_show_data_type ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-          onClick={() => eventLegendDataType(!app_data.drawing_area.legend.legend_show_data_type)}
-        >
-          {t('MEP.leg_show_data_type')}
+          {t('MEP.leg_horizontal')}
         </Button>
       </Box>
+
+      {/* Échelle de la légende : unité + ratio (affiché uniquement si l'échelle est visible) */}
+      {app_data.drawing_area.legend.display_legend_scale && (
+        <>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <Box layerStyle='menuconfigpanel_option_name'>
+              {t('Menu.scale_legend_unit')}
+            </Box>
+            <Box>
+              <Input
+                variant='menuconfigpanel_option_input'
+                defaultValue={app_data.drawing_area.legend.scale_legend_unit}
+                placeholder={t('Menu.scale_legend_unit_ph')}
+                onBlur={(evt: React.FocusEvent<HTMLInputElement>) => eventScaleLegendUnit(evt.target.value)}
+              />
+            </Box>
+          </Box>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <Box layerStyle='menuconfigpanel_option_name'>
+              {t('Menu.scale_legend_ratio')}
+            </Box>
+            <Box>
+              <ConfigMenuNumberInput
+                t={app_data.t}
+                default_value={app_data.drawing_area.legend.scale_legend_ratio}
+                function_on_blur={eventScaleLegendRatio}
+                stepper={false}
+                fixed_dec={0}
+              />
+            </Box>
+          </Box>
+        </>
+      )}
 
     </Box>
   </Box>
@@ -795,7 +978,9 @@ export const TitleConfig = ({ app_data }: { app_data: Class_ApplicationData }) =
   }
 
   const data_taggs = sankey.data_taggs_list
+  const view_taggs = sankey.view_taggs_list
   const [token_group_id, setTokenGroupId] = useState('')
+  const [view_token_group_id, setViewTokenGroupId] = useState('')
 
   // La visibilité du titre est pilotée ici. Le texte (statique + jetons) et le
   // reste du style s'éditent via l'interface normale des zones de texte.
@@ -817,6 +1002,19 @@ export const TitleConfig = ({ app_data }: { app_data: Class_ApplicationData }) =
     const c = sankey.getOrCreateTitleContainer()
     const token = '{' + grp.name + '}'
     // Le titre édite name_label_text (texte de label indépendant), pas le nom.
+    const current = c.name_label_text
+    c.name_label_text = current ? current + ' ' + token : token
+    app_data.drawing_area.draw()
+    refreshThisAndUpdateRelatedComponents()
+  }
+
+  // Insère le jeton {NomDeLaVue} ; remplacé au rendu par l'étiquette de view tag
+  // sélectionnée (suit la vue affichée).
+  const eventInsertViewToken = () => {
+    const grp = view_taggs.find(g => g.id === view_token_group_id)
+    if (!grp) return
+    const c = sankey.getOrCreateTitleContainer()
+    const token = '{' + grp.name + '}'
     const current = c.name_label_text
     c.name_label_text = current ? current + ' ' + token : token
     app_data.drawing_area.draw()
@@ -865,6 +1063,31 @@ export const TitleConfig = ({ app_data }: { app_data: Class_ApplicationData }) =
             onClick={eventInsertToken}
           >
             {t('Menu.TitleInsertToken')}
+          </Button>
+        </Box>
+      }
+
+      {/* Insertion d'un jeton view tag (suit la vue sélectionnée) */}
+      {view_taggs.length > 0 &&
+        <Box as='span' layerStyle='options_2cols'>
+          <OSTooltip label={t('Menu.tooltips.TitleViewGroupSelect')}>
+            <Select
+              size='sm'
+              value={view_token_group_id}
+              onChange={(evt) => setViewTokenGroupId(evt.target.value)}
+            >
+              <option value=''>{t('Menu.TitleSelectGroup')}</option>
+              {view_taggs.map(tagg => (
+                <option key={tagg.id} value={tagg.id}>{tagg.name}</option>
+              ))}
+            </Select>
+          </OSTooltip>
+          <Button
+            variant='menuconfigpanel_option_button'
+            isDisabled={view_token_group_id === ''}
+            onClick={eventInsertViewToken}
+          >
+            {t('Menu.TitleInsertViewToken')}
           </Button>
         </Box>
       }

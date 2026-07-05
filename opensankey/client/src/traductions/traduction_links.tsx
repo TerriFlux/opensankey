@@ -76,6 +76,7 @@ export const resources_flux = {
           color_source: 'Element defining flow color',
           grad: 'Gradient',
           shape_is_dashed: 'Dashed',
+          shape_visible_when_zero: 'Show if null',
           of: 'Orientation',
           type: 'Type',
           courbe: 'Curve',
@@ -87,6 +88,7 @@ export const resources_flux = {
           display_link_name: 'Display name',
           hide_link_name: 'Hide name',
           data_off_scale: 'Scale',
+          scale_ref_thickness: 'Max scale thickness (px)',
           tooltips: {
             color_source: {
               def: 'Choose what rule define flow color :',
@@ -100,6 +102,7 @@ export const resources_flux = {
             couleur: 'Choose the color for the selected link(s)',
             grad: 'Apply a gradient color effect on the selected link(s). The gradient is done between the color of the start node and the color of the end node',
             shape_is_dashed: 'Applies a hatch effect on the selected link(s)',
+            shape_visible_when_zero: 'Always draw this link even when its value is zero (overrides the null-link filter for this link only)',
             of_vv: 'Allows to orient the beginning of the link vertically and the end of the link vertically',
             of_hh: 'Allows to orient the beginning of the link horizontally and the end of the link horizontally',
             of_hv: 'Allows to orient the beginning of the link horizontally and the end of the link vertically',
@@ -113,7 +116,8 @@ export const resources_flux = {
             ending_tangeant: 'Setting the radius of the ending curvature in case the selected link(s) are represented as Bezier curve(s)',
             arrow_size: 'Change the size of the arrow (from the end of the link to the node)',
             data_off_scale: 'Define a scale for this flow, wich can break the coherence of flow thickness proportionality of value ',
-            local_scale: 'Define a local scaling factor that will be multiplied by the multiplier specified for this flow.'
+            local_scale: 'Define a local scaling factor that will be multiplied by the multiplier specified for this flow.',
+            scale_ref_thickness: 'Maximum thickness (px) for this flow in the current view tag: only when this flow would exceed this thickness, the diagram scale is rescaled so it sits exactly at this value; all other flows and the scale legend follow. Below the threshold, nothing changes. 0 = disabled. One reference flow per view tag.'
           }
         },
         labels: {
@@ -136,12 +140,14 @@ export const resources_flux = {
           l_u_v: 'Unit',
           l_u: 'Unit\'s name',
           name_label_text_source: 'Label content',
+          name_label_tag_group: 'Tag group',
           text_source: {
             custom: 'Custom text',
             none: 'None',
             source: 'Source node',
             target: 'Target node',
             source_target: 'Source → target',
+            tag: 'Flux tag',
           },
           tooltips: {
             name_label_text_source: 'Pick what the link label displays: typed text, nothing, source/target node name, or source → target',
@@ -250,6 +256,7 @@ export const resources_flux = {
           source: 'Noeud source',
           target: 'Noeud cible',
           shape_is_dashed: 'Hachuré',
+          shape_visible_when_zero: 'Afficher si nul',
           of: 'Orientation',
           type: 'Type',
           courbe: 'Courbe',
@@ -261,6 +268,7 @@ export const resources_flux = {
           display_link_name: 'Afficher le texte',
           hide_link_name: 'Masquer le texte',
           data_off_scale: 'Échelle',
+          scale_ref_thickness: 'Épaisseur max d\'échelle (px)',
 
           bezier_path: 'Chemin Bezier',
           bezier_outline: 'Contour Bezier',
@@ -277,6 +285,7 @@ export const resources_flux = {
             },
             grad: 'Applique un effet de gradient de couleur sur le/les flux sélectionné(s). Le gradient est réalisé entre la couleur du noeud de départ et celle du noeud d\'arrivée',
             shape_is_dashed: 'Applique un effet de hachure sur le/les flux sélectionné(s)',
+            shape_visible_when_zero: 'Toujours afficher ce flux même si sa valeur est nulle (outrepasse le masquage des flux nuls, pour ce flux uniquement)',
             of_vv: 'Permet d\'orienter le début du flux verticalement et la fin du flux verticalement',
             of_hh: 'Permet d\'orienter le début du flux horizontalement et la fin du flux horizontalement',
             of_hv: 'Permet d\'orienter le début du flux horizontalement et la fin du flux verticalement',
@@ -286,7 +295,8 @@ export const resources_flux = {
             structure: 'Représente le/les flux sélectionné(s) comme si il n\'avait pas de valeur peu importe leur vraie valeur ',
             arrow_size: 'Modifie la taille de la flèche (largeur entre la fin du flux et le noeud',
             data_off_scale: 'Définie une échelle local pour l\'épaisseur du flux, cela peut casser la cohérence du diagramme au niveau de la proportionalité entre la valeur des flux et leur épaisseur ',
-            local_scale: 'Définissez un facteur d\'échelle local qui sera multiplié par le multiplicateur spécifié pour ce flux.'
+            local_scale: 'Définissez un facteur d\'échelle local qui sera multiplié par le multiplicateur spécifié pour ce flux.',
+            scale_ref_thickness: 'Épaisseur maximale (px) de ce flux pour le view tag courant : uniquement quand ce flux dépasserait cette épaisseur, l\'échelle du diagramme est recalculée pour qu\'il s\'y cale exactement ; tous les autres flux et la légende d\'échelle suivent. En dessous du seuil, rien ne change. 0 = désactivé. Un seul flux de référence par view tag.'
           }
         },
         labels: {
@@ -327,12 +337,14 @@ export const resources_flux = {
           node_value: 'Valeur',
           name_label_is_visible: 'Label',
           name_label_text_source: 'Contenu du label',
+          name_label_tag_group: 'Groupe de tags',
           text_source: {
             custom: 'Texte personnalisé',
             none: 'Aucun',
             source: 'Nœud source',
             target: 'Nœud destination',
             source_target: 'Source → destination',
+            tag: 'Tag de flux',
           },
           lb: 'Blanc',
           pos: 'Position',
@@ -447,6 +459,7 @@ export const resources_flux = {
           color_source: 'Elemento que define el color del flujo',
           grad: 'Gradiente',
           shape_is_dashed: 'Discontinuo',
+          shape_visible_when_zero: 'Mostrar si es nulo',
           of: 'Orientación',
           type: 'Tipo',
           courbe: 'Curva',
@@ -458,6 +471,7 @@ export const resources_flux = {
           display_link_name: 'Mostrar nombre',
           hide_link_name: 'Ocultar nombre',
           data_off_scale: 'Escala',
+          scale_ref_thickness: 'Grosor máx. de escala (px)',
           tooltips: {
             color_source: {
               def: 'Elegir la regla que define el color del flujo:',
@@ -471,6 +485,7 @@ export const resources_flux = {
             couleur: 'Elegir el color para el/los flujo(s) seleccionado(s)',
             grad: 'Aplica un efecto de gradiente de color en el/los flujo(s) seleccionado(s). El gradiente se realiza entre el color del nodo de inicio y el del nodo de fin',
             shape_is_dashed: 'Aplica un efecto de trazo discontinuo en el/los flujo(s) seleccionado(s)',
+            shape_visible_when_zero: 'Mostrar siempre este flujo aunque su valor sea cero (anula el filtrado de flujos nulos solo para este flujo)',
             of_vv: 'Permite orientar el inicio del flujo verticalmente y el final del flujo verticalmente',
             of_hh: 'Permite orientar el inicio del flujo horizontalmente y el final del flujo horizontalmente',
             of_hv: 'Permite orientar el inicio del flujo horizontalmente y el final del flujo verticalmente',
@@ -484,7 +499,8 @@ export const resources_flux = {
             ending_tangeant: 'Configuración del radio de curvatura final en caso de que el/los flujo(s) seleccionado(s) se representen como curva(s) de Bezier',
             arrow_size: 'Cambiar el tamaño de la flecha (desde el final del flujo hasta el nodo)',
             data_off_scale: 'Define una escala local para el grosor del flujo, lo que puede romper la coherencia de proporcionalidad entre el valor y el grosor',
-            local_scale: 'Define un factor de escala local que se multiplicará por el multiplicador especificado para este flujo.'
+            local_scale: 'Define un factor de escala local que se multiplicará por el multiplicador especificado para este flujo.',
+            scale_ref_thickness: 'Grosor máximo (px) de este flujo para la etiqueta de vista actual: solo cuando este flujo superaría este grosor, la escala del diagrama se recalcula para ajustarlo exactamente a este valor; los demás flujos y la leyenda de escala se ajustan. Por debajo del umbral, no cambia nada. 0 = desactivado. Un flujo de referencia por etiqueta de vista.'
           }
         },
         labels: {
@@ -608,6 +624,7 @@ export const resources_flux = {
           color_source: 'Element, das die Flussfarbe definiert',
           grad: 'Farbverlauf',
           shape_is_dashed: 'Gestrichelt',
+          shape_visible_when_zero: 'Anzeigen wenn null',
           of: 'Orientierung',
           type: 'Typ',
           courbe: 'Kurve',
@@ -619,6 +636,7 @@ export const resources_flux = {
           display_link_name: 'Name anzeigen',
           hide_link_name: 'Name ausblenden',
           data_off_scale: 'Skalierung',
+          scale_ref_thickness: 'Max. Skalendicke (px)',
           tooltips: {
             color_source: {
               def: 'Wählen Sie die Regel, die die Flussfarbe definiert:',
@@ -632,6 +650,7 @@ export const resources_flux = {
             couleur: 'Farbe für den/die ausgewählten Fluss/Flüsse wählen',
             grad: 'Wendet einen Farbverlaufseffekt auf den/die ausgewählten Fluss/Flüsse an. Der Verlauf erfolgt zwischen der Farbe des Startknotens und der des Endknotens',
             shape_is_dashed: 'Wendet einen Stricheleffekt auf den/die ausgewählten Fluss/Flüsse an',
+            shape_visible_when_zero: 'Diesen Fluss immer anzeigen, auch wenn sein Wert null ist (überschreibt die Nullfluss-Filterung nur für diesen Fluss)',
             of_vv: 'Ermöglicht es, den Anfang des Flusses vertikal und das Ende vertikal auszurichten',
             of_hh: 'Ermöglicht es, den Anfang des Flusses horizontal und das Ende horizontal auszurichten',
             of_hv: 'Ermöglicht es, den Anfang des Flusses horizontal und das Ende vertikal auszurichten',
@@ -645,7 +664,8 @@ export const resources_flux = {
             ending_tangeant: 'Einstellung des Endkrümmungsradius, falls der/die ausgewählte(n) Fluss/Flüsse als Bezier-Kurve(n) dargestellt werden',
             arrow_size: 'Größe des Pfeils ändern (vom Ende des Flusses zum Knoten)',
             data_off_scale: 'Definiert eine lokale Skalierung für die Flussdicke, was die Proportionalitätskohärenz zwischen Wert und Dicke brechen kann',
-            local_scale: 'Definieren Sie einen lokalen Skalierungsfaktor, der mit dem für diesen Fluss angegebenen Multiplikator multipliziert wird.'
+            local_scale: 'Definieren Sie einen lokalen Skalierungsfaktor, der mit dem für diesen Fluss angegebenen Multiplikator multipliziert wird.',
+            scale_ref_thickness: 'Maximale Dicke (px) dieses Flusses für das aktuelle View-Tag: Nur wenn dieser Fluss diese Dicke überschreiten würde, wird der Diagramm-Maßstab so neu berechnet, dass er genau diesen Wert erreicht; alle anderen Flüsse und die Skalenlegende folgen. Unterhalb des Schwellenwerts ändert sich nichts. 0 = deaktiviert. Ein Referenzfluss pro View-Tag.'
           }
         },
         labels: {
@@ -769,6 +789,7 @@ export const resources_flux = {
           color_source: 'Elemento che definisce il colore del flusso',
           grad: 'Gradiente',
           shape_is_dashed: 'Tratteggiato',
+          shape_visible_when_zero: 'Mostra se nullo',
           of: 'Orientamento',
           type: 'Tipo',
           courbe: 'Curva',
@@ -780,6 +801,7 @@ export const resources_flux = {
           display_link_name: 'Mostra nome',
           hide_link_name: 'Nascondi nome',
           data_off_scale: 'Scala',
+          scale_ref_thickness: 'Spessore max scala (px)',
           tooltips: {
             color_source: {
               def: 'Scegliere la regola che definisce il colore del flusso:',
@@ -793,6 +815,7 @@ export const resources_flux = {
             couleur: 'Scegliere il colore per il/i flusso/i selezionato/i',
             grad: 'Applica un effetto di gradiente di colore sul/sui flusso/i selezionato/i. Il gradiente è realizzato tra il colore del nodo di partenza e quello del nodo di arrivo',
             shape_is_dashed: 'Applica un effetto tratteggiato sul/sui flusso/i selezionato/i',
+            shape_visible_when_zero: 'Mostra sempre questo flusso anche se il suo valore è zero (ignora il filtro dei flussi nulli solo per questo flusso)',
             of_vv: 'Permette di orientare l\'inizio del flusso verticalmente e la fine verticalmente',
             of_hh: 'Permette di orientare l\'inizio del flusso orizzontalmente e la fine orizzontalmente',
             of_hv: 'Permette di orientare l\'inizio del flusso orizzontalmente e la fine verticalmente',
@@ -806,7 +829,8 @@ export const resources_flux = {
             ending_tangeant: 'Impostazione del raggio di curvatura finale nel caso in cui il/i flusso/i selezionato/i siano rappresentati come curva/e di Bezier',
             arrow_size: 'Modifica la dimensione della freccia (dalla fine del flusso al nodo)',
             data_off_scale: 'Definisce una scala locale per lo spessore del flusso, il che può rompere la coerenza della proporzionalità tra valore e spessore',
-            local_scale: 'Definire un fattore di scala locale che sarà moltiplicato per il moltiplicatore specificato per questo flusso.'
+            local_scale: 'Definire un fattore di scala locale che sarà moltiplicato per il moltiplicatore specificato per questo flusso.',
+            scale_ref_thickness: 'Spessore massimo (px) di questo flusso per il tag vista corrente: solo quando questo flusso supererebbe questo spessore, la scala del diagramma viene ricalcolata affinché si attesti esattamente a questo valore; tutti gli altri flussi e la legenda della scala si adeguano. Sotto la soglia, nulla cambia. 0 = disattivato. Un flusso di riferimento per tag vista.'
           }
         },
         labels: {

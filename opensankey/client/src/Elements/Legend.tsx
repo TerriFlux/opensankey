@@ -30,8 +30,9 @@ import { MouseEvent } from 'react'
 
 import {
   default_display_legend_scale, default_element_color, default_info_link_value_void, default_legend_bg_border,
-  default_legend_bg_color, default_legend_bg_opacity, default_legend_police, default_legend_show_constraints,
-  default_legend_show_dataTags, default_masked, default_stick_to_drawing, default_width
+  default_legend_bg_color, default_legend_bg_opacity, default_legend_horizontal, default_legend_police,
+  default_legend_show_constraints, default_legend_show_dataTags, default_masked, default_scale_legend_ratio,
+  default_scale_legend_unit, default_stick_to_drawing, default_width
 } from './ElementsAttributesConfig'
 
 import { Class_DataTag, Class_Tag } from '../types/Tag'
@@ -43,12 +44,15 @@ export class ClassTemplate_Legend extends Class_NodeBase {
   private _stick_to_drawing = default_stick_to_drawing
   private _masked: boolean = default_masked
   private _display_legend_scale: boolean = default_display_legend_scale
+  private _scale_legend_unit: string = default_scale_legend_unit
+  private _scale_legend_ratio: number = default_scale_legend_ratio
   private _legend_police: number = default_legend_police
   private _legend_bg_border: boolean = default_legend_bg_border
   private _legend_bg_color: string = default_legend_bg_color
   private _legend_bg_opacity: number = default_legend_bg_opacity
   private _legend_show_dataTags: boolean = default_legend_show_dataTags
   private _legend_show_constraints: boolean = default_legend_show_constraints
+  private _legend_horizontal: boolean = default_legend_horizontal
   private _width: number = default_width
   private _info_link_value_void: boolean = default_info_link_value_void
   private _legend_show_data_type: boolean = false
@@ -77,12 +81,15 @@ export class ClassTemplate_Legend extends Class_NodeBase {
     this._scale = cast_copy._scale
     this._width = cast_copy._width
     this._display_legend_scale = cast_copy._display_legend_scale
+    this._scale_legend_unit = cast_copy._scale_legend_unit
+    this._scale_legend_ratio = cast_copy._scale_legend_ratio
     this._legend_police = cast_copy._legend_police
     this._legend_bg_border = cast_copy._legend_bg_border
     this._legend_bg_color = cast_copy._legend_bg_color
     this._legend_bg_opacity = cast_copy._legend_bg_opacity
     this._legend_show_dataTags = cast_copy._legend_show_dataTags
     this._legend_show_constraints = cast_copy._legend_show_constraints
+    this._legend_horizontal = cast_copy._legend_horizontal
     this._info_link_value_void = cast_copy._info_link_value_void
     this._legend_show_data_type = cast_copy._legend_show_data_type
     this._stick_to_drawing = cast_copy._stick_to_drawing
@@ -373,16 +380,31 @@ export class ClassTemplate_Legend extends Class_NodeBase {
               .style('fill-opacity', 1)
 
             // Ajout du label
-            tagElement?.append('text')
+            const tag_label = tagElement?.append('text')
               .attr('class', 'name_tag')
               .attr('x', this._legend_police + 5)
               .attr('y', 0)
               .attr('font-size', this._legend_police + 'px')
               .text(tag.display_name)
-              .call(this._wrapper)
+            // En mode horizontal on garde le label sur une seule ligne (pas de wrap)
+            if (!this._legend_horizontal) {
+              tag_label?.call(this._wrapper)
+            }
 
-            this._dy += ((tagElement?.select('.name_tag').selectAll('tspan').nodes().length ?? 0) * this.legend_police) + 2
+            if (this._legend_horizontal) {
+              // Avance horizontale : largeur du carré + espace + largeur du texte + marge
+              const text_node = tag_label?.node() as SVGTextContentElement | null | undefined
+              const text_width = text_node?.getComputedTextLength?.() ?? 0
+              this._dx += this._legend_police + 5 + text_width + 14
+            } else {
+              this._dy += ((tagElement?.select('.name_tag').selectAll('tspan').nodes().length ?? 0) * this.legend_police) + 2
+            }
           })
+        // Fin du groupe : en mode horizontal, retour à la ligne pour le groupe suivant
+        if (this._legend_horizontal && this._dx > 0) {
+          this._dx = 0
+          this._dy += this._legend_police + 4
+        }
       })
     // Show wich data_tag are selected by group
     if (this._legend_show_dataTags) {
@@ -632,6 +654,11 @@ export class ClassTemplate_Legend extends Class_NodeBase {
       }
       unit = selected_unit ? ' ' + selected_unit.name : ''
     }
+    // Apply user-defined ratio and unit on the scale legend
+    scale = scale / this._scale_legend_ratio
+    if (this._scale_legend_unit !== '') {
+      unit = ' ' + this._scale_legend_unit
+    }
 
     const g_draggable = g_scale?.append('g')
       .attr('class', 'g_draggable_scale')
@@ -641,10 +668,16 @@ export class ClassTemplate_Legend extends Class_NodeBase {
       .attr('width', '3px')
       .attr('height', '50px')
       .attr('fill', 'black')
+    // Auto format: integer when >= 1, significant digits when fractional
+    const abs_scale = Math.abs(scale)
+    let formatted_scale: string
+    if (abs_scale >= 1) formatted_scale = String(Number(scale.toFixed(2)))
+    else if (abs_scale > 0) formatted_scale = String(Number(scale.toPrecision(3)))
+    else formatted_scale = '0'
     g_draggable?.append('text')
       .attr('class', 'measurment_scale')
       .attr('transform', 'translate(5,25)')
-      .text(Math.round(scale) + ' ' + unit)
+      .text(formatted_scale + ' ' + unit)
 
     // const that = this
     // // Add drag event for the scale representation
@@ -737,6 +770,12 @@ export class ClassTemplate_Legend extends Class_NodeBase {
   public get display_legend_scale(): boolean { return this._display_legend_scale }
   public set display_legend_scale(_) { this._display_legend_scale = _; this.draw() }
 
+  public get scale_legend_unit(): string { return this._scale_legend_unit }
+  public set scale_legend_unit(_) { this._scale_legend_unit = _; this.draw() }
+
+  public get scale_legend_ratio(): number { return this._scale_legend_ratio }
+  public set scale_legend_ratio(_) { this._scale_legend_ratio = (_ && _ !== 0) ? _ : 1; this.draw() }
+
   public get legend_police(): number { return this._legend_police }
   public set legend_police(_) { this._legend_police = _; this.draw() }
 
@@ -754,6 +793,9 @@ export class ClassTemplate_Legend extends Class_NodeBase {
 
   public get legend_show_constraints(): boolean { return this._legend_show_constraints }
   public set legend_show_constraints(_) { this._legend_show_constraints = _; this.draw() }
+
+  public get legend_horizontal(): boolean { return this._legend_horizontal }
+  public set legend_horizontal(_) { this._legend_horizontal = _; this.draw(); this.drawing_area.areaAutoFit() }
 
   public get width(): number { return this._width }
   public set width(_) { this._width = _; this.draw() }

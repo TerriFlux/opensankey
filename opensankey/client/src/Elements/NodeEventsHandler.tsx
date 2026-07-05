@@ -442,6 +442,13 @@ export class NodeEventsHandler {
             if (n.position_x < min_x) min_x = n.position_x
             if (n.position_y < min_y) min_y = n.position_y
             n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
+            // #1230/#1231 — La position PERSISTÉE d'un nœud est son CENTRE
+            // (_center_x/_center_y, cf. centerForPersistence). En mode absolu un drag
+            // ne déclenche pas de drawElements() complet, donc anchorByCenterIfResized()
+            // ne tourne pas et le centre n'est jamais resynchronisé sur le coin déplacé.
+            // Sans ce commit, sauver juste après un déplacement persiste le centre
+            // d'AVANT le drag → le nœud revient à sa place au rechargement.
+            n.settleCenterAnchor()
           })
       }
     }
@@ -453,8 +460,13 @@ export class NodeEventsHandler {
       else {
         // Set position
         // Update node position
-        if (this._node.shape_position_type !== 'relative')
+        if (this._node.shape_position_type !== 'relative') {
           this._node.setPosXY(this._node.position_x + event.dx, this._node.position_y + event.dy)
+          // #1230/#1231 — Recommit du CENTRE persisté sur le coin déplacé (cf. branche
+          // multi-sélection ci-dessus) : sans ça, sauver après un drag en mode absolu
+          // restaure l'ancienne position au rechargement.
+          this._node.settleCenterAnchor()
+        }
         if (this._node.shape_position_type == 'relative') {
           const node_element = this._node as Class_NodeElement
           if (node_element.hasInputLinks()) {
@@ -496,8 +508,11 @@ export class NodeEventsHandler {
         dict_old_orders[n.id] = n.links_order.map(l => l.id)
       })
 
-      // Apply spatial reorganization.
-      nodes_to_reorganize.forEach(n => n.reorganizeIOLinks())
+      // Apply spatial reorganization. A manual node drag is NOT the explicit
+      // "recalcul automatique" that releases the I/O anchor locks ("cadenas") :
+      // pass release_locks=false so a user-locked arrangement survives the move
+      // (only the unlocked links re-sort around the locked ones).
+      nodes_to_reorganize.forEach(n => n.reorganizeIOLinks(false))
 
       // Snapshot new link orders AFTER reorganization — needed by redo.
       const dict_new_orders: { [nodeId: string]: string[] } = {}
@@ -525,7 +540,8 @@ export class NodeEventsHandler {
         Object.keys(dict_old_pos).forEach(k => {
           let n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeBase
           if (!n) n = _.drawing_area.sankey.containers_dict[k]
-          if (n) n.setPosXY(dict_old_pos[k][0], dict_old_pos[k][1])
+          // #1230/#1231 — recommit du centre persisté après restauration du coin.
+          if (n) { n.setPosXY(dict_old_pos[k][0], dict_old_pos[k][1]); n.settleCenterAnchor() }
         })
         Object.keys(dict_old_sizes).forEach(k => {
           let n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeBase
@@ -549,7 +565,8 @@ export class NodeEventsHandler {
         Object.keys(dict_new_pos).forEach(k => {
           let n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeBase
           if (!n) n = _.drawing_area.sankey.containers_dict[k]
-          if (n) n.setPosXY(dict_new_pos[k][0], dict_new_pos[k][1])
+          // #1230/#1231 — recommit du centre persisté après restauration du coin.
+          if (n) { n.setPosXY(dict_new_pos[k][0], dict_new_pos[k][1]); n.settleCenterAnchor() }
         })
         Object.keys(dict_new_sizes).forEach(k => {
           let n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeBase
@@ -581,6 +598,12 @@ export class NodeEventsHandler {
     if (this._node.sankey.default_style.shape_position_type === 'proportional' ||
         this._node.sankey.default_style.shape_position_type === 'scale_adapted') {
       this._node.drawing_area.setAbsoluteMode()
+      this._node.drawing_area.drawElements()
+    }
+    // Un nœud déplacé peut être l'ancre absolue de nœuds « Ecartement » de sa colonne :
+    // relancer drawElements pour que anchorParametricNodesToAbsolute les recale sous lui.
+    // (else-if : la branche %/échelle ci-dessus a déjà redessiné en absolu.)
+    else if (this._node.sankey.visible_nodes_list.some(n => n.shape_position_type === 'parametric')) {
       this._node.drawing_area.drawElements()
     }
 
@@ -642,6 +665,12 @@ export class NodeEventsHandler {
         target,
         this._node.drawing_area,
       )
+      // Indispensable AVANT le 1er rendu : sans ce drapeau, le ghost_link est
+      // jugé invisible (sa cible est un nœud fantôme masqué → are_source_and_
+      // target_displayed=false) et updateLinksPositions le dé-dessine ; aucun
+      // pointillé n'apparaît pendant le glisser. Le chemin « drag depuis le fond »
+      // le pose déjà ; on s'aligne pour le « drag depuis un nœud ».
+      this._node.drawing_area.drawing_link = true
       // Peuple source._output_links_starting_point[ghost_link.id] pour que le
       // 1er rendu du ghost_link voie son starting_point (sinon drawElements
       // est skip et aucun path n'est tracé pendant le drag initial).
@@ -676,7 +705,8 @@ export class NodeEventsHandler {
    * Define event when mouse moves over element
    */
   public handleMouseOver(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    const show_tooltip = event.shiftKey
+    // Option publish tooltip_on_hover : tooltips au simple survol, sans maintenir Shift.
+    const show_tooltip = event.shiftKey || this._node.drawing_area.application_data.publish_options.tooltip_on_hover
     // ALT + pas de tooltip déjà ouvert pour ce noeud
     if (show_tooltip && (event.target as HTMLElement).tagName !== 'tspan') {
       const existingTooltip = document.querySelector('.sankey-tooltip')

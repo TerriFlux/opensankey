@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { MutableRefObject, useLayoutEffect, useRef, useState } from 'react'
+import React, { MutableRefObject, useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 import Draggable, { DraggableProps } from 'react-draggable'
 
@@ -38,6 +38,7 @@ import {
   Button,
   ButtonGroup,
   CloseButton,
+  Divider,
   Drawer,
   DrawerBody,
   DrawerContent,
@@ -45,11 +46,14 @@ import {
 } from '@chakra-ui/react'
 
 import { ApplyLayoutDialog } from '../dialogs/SankeyMenuDialogs'
-import { DrawerSequenceDataTagg, ToolBarBottom } from './MenuBottom'
+import {
+  DrawerSequenceDataTagg, ToolBarBottom,
+  ComponentMouseMode, ComponentPositionMode, ComponetStretchButtons
+} from './MenuBottom'
 import { useMainZone, mainZoneRightReservedPx } from '../spreadsheet/MainZoneTabs'
 import { modalResolutionPNG, modalResolutionPDF } from './SankeyExports'
 import { MenuTopNavBar } from './MenuTop'
-import { IType_DictHookRefSetterShowDialogComponents, keyTypeConfig, keyTypeElements, Type_AdditionalMenus } from '../../types/MenuConfig'
+import { IType_DictHookRefSetterShowDialogComponents, keyTypeConfig, keyTypeElements, Type_AdditionalMenus, TOOLS_COLUMN_WIDTH_PX } from '../../types/MenuConfig'
 import { DrawingAreaConfig, LegendConfig, TitleConfig } from '../configmenus/SankeyMenuConfigurationLayout'
 import { LinkValueTypeSelector, MenuConfigurationLinksData } from '../configmenus/SankeyMenuConfigurationLinksData'
 import { SankeyContainerSelection, SankeyNodeSelection } from '../configmenus/MenuElementsSelection'
@@ -89,9 +93,40 @@ export const SankeyMenu = (
   const { icon_open_close_config } = icon_library
   const [show_nav, set_show_nav] = useState(false)
   const [, setCount] = useState(0)
+  // Intention d'affichage de la zone principale (doc/tableur) mémorisée à l'ouverture de la config :
+  // config et zone partagent la colonne droite -> ouvrir la config masque la zone ; on restaure
+  // l'intention à la fermeture. null = rien à restaurer.
+  const savedZoneRef = useRef<{ doc: boolean, spreadsheet: boolean } | null>(null)
+
+  // Ouvre/ferme la config en gérant à la fois l'exclusivité avec la zone principale (doc/tableur)
+  // et sa MÉMORISATION : à l'ouverture on sauvegarde l'état doc/tableur puis on les masque ; à la
+  // fermeture on les rouvre. Centralise tous les chemins (bouton, Drawer onClose, raccourcis,
+  // filtre) qui passent par ref_menu_opened.current[1], pour un comportement uniforme.
+  const setConfigOpen = (open: boolean) => {
+    if (open !== show_nav) {
+      if (open) {
+        // Panneau latéral droit unique : ouvrir la config ferme le filtre.
+        menu_configuration.ref_close_filter_drawer.current(false)
+        // Mémoriser l'état doc/tableur puis les masquer (colonne droite partagée) ; garder le diagramme.
+        savedZoneRef.current = {
+          doc: menu_configuration.main_zone_show_doc,
+          spreadsheet: menu_configuration.main_zone_show_spreadsheet
+        }
+        menu_configuration.main_zone_show_spreadsheet = false
+        menu_configuration.main_zone_show_doc = false
+        menu_configuration.main_zone_show_diagram = true
+      } else if (savedZoneRef.current) {
+        // Restaurer l'intention doc/tableur mémorisée à l'ouverture.
+        if (savedZoneRef.current.spreadsheet) menu_configuration.main_zone_show_spreadsheet = true
+        if (savedZoneRef.current.doc) menu_configuration.main_zone_show_doc = true
+        savedZoneRef.current = null
+      }
+    }
+    set_show_nav(open)
+  }
 
   menu_configuration.ref_to_menu_updater.current = () => setCount(a => a + 1)
-  menu_configuration.ref_menu_opened.current = [show_nav, (val) => set_show_nav(val)]
+  menu_configuration.ref_menu_opened.current = [show_nav, setConfigOpen]
 
   // getNavBarHeight() lit le DOM via getBoundingClientRect sur .TopMenu, qui
   // n'existe pas encore au tout premier render -> fallback (~5rem) trop bas.
@@ -114,13 +149,119 @@ export const SankeyMenu = (
     ? 'calc(' + drawer_width_css + ' + ' + (app_data.drawing_area.fit_margin + rightReserve) + 'px)'
     : (app_data.drawing_area.fit_margin + rightReserve)
   //Switch the variable value that handle opening and closing the configuration menu
-  const toggleShow = () => {
-    set_show_nav(!show_nav)
-  }
+  const toggleShow = () => setConfigOpen(!show_nav)
 
   // Aligned with the floating config toggle button (same top as the wrench).
   // The legacy +1.75rem offset was for the now-removed file_name Editable.
   const posTopMenuConfig = app_data.drawing_area.getNavBarHeight() + app_data.drawing_area.fit_margin
+
+  // Colonne d'outils rétractable (éditeur uniquement). On déclare sa disponibilité ici (à chaque
+  // rendu) pour que la réserve de largeur droite (getToolsColumnWidthPx) soit nulle en publish.
+  menu_configuration.tools_column_enabled = !app_data.is_static
+
+  // Panneau de config docké : quand ouvert, sa largeur est réservée par le diagramme
+  // (cf. DrawingArea.side_panel_reserved) → il dock à droite au lieu de recouvrir la zone de dessin.
+  menu_configuration.side_panel_config_open = !app_data.is_static && show_nav
+  // Re-fit du diagramme à l'ouverture/fermeture du panneau de config (la largeur réservée change).
+  const sidePanelDidMount = useRef(false)
+  useEffect(() => {
+    if (!sidePanelDidMount.current) { sidePanelDidMount.current = true; return }
+    app_data.drawing_area.areaAutoFit()
+    app_data.draw()
+  }, [show_nav])
+  // Rafraîchit la colonne sur les changements externes de modes (ex. switchMode au clavier) qui
+  // appelaient l'updater de l'ancienne ToolBarBottom flottante.
+  const refreshToolsColumn = () => setCount(a => a + 1)
+  if (!app_data.is_static) {
+    menu_configuration.ref_to_toolbar_bottom_updater.current = refreshToolsColumn
+  }
+
+  // Barre verticale d'outils rétractable, ancrée à l'extrême droite. Outils du CANVAS uniquement :
+  // ouverture des panneaux (config, filtres) + modes souris / position / ajustement (ex-ToolBarBottom
+  // flottante). Tout le cluster est collé EN BAS (marginTop auto). Les actions document (undo/redo/save)
+  // et le plein écran vivent désormais dans la barre du haut. Sa largeur est réservée par le diagramme
+  // via getToolsColumnWidthPx (cf. MainZoneTabs).
+  const tools_column = !app_data.is_static ? (
+    <Box
+      className='tools_column'
+      position='fixed'
+      right='0'
+      top={app_data.drawing_area.getNavBarHeight() + 'px'}
+      bottom={app_data.drawing_area.getBottomBarHeight() + 'px'}
+      width={TOOLS_COLUMN_WIDTH_PX + 'px'}
+      zIndex={35}
+      bg='white'
+      borderLeft='1px solid #e2e8f0'
+      display={menu_configuration.tools_column_open ? 'flex' : 'none'}
+      flexDirection='column'
+      alignItems='center'
+      gap='0.3rem'
+      paddingY='0.3rem'
+      overflowY='auto'
+      overflowX='hidden'
+    >
+      {/* Sélecteur d'éléments à configurer (Flow/Node/Areas) — CONTEXTUEL : visible seulement quand
+          le panneau de config est ouvert. Ancré EN HAUT de la colonne, aligné avec le panneau de
+          config (ce sont des éléments « quoi configurer », distincts des outils canvas du bas) ; le
+          marginTop:auto du cluster ci-dessous crée volontairement un espace entre les deux.
+          extra_updater rafraîchit la colonne (surlignage) en plus du contenu du panneau. */}
+      {show_nav ? (
+        <ConfigMenuElementToConfig
+          app_data={app_data}
+          additional_menus={additionalMenus}
+          extra_updater={refreshToolsColumn}
+        />
+      ) : <></>}
+      {/* Cluster collé en bas (marginTop auto) : panneaux (config/filtre) + outils canvas. */}
+      <Box
+        marginTop='auto'
+        display='flex'
+        flexDirection='column'
+        alignItems='center'
+        gap='0.3rem'
+      >
+        {/* Configuration (roue crantée). */}
+        <OSTooltip
+          placement='left'
+          label={t('Banner.open_configuration_menu')}
+          isAlwaysOpen={app_data.menu_configuration.show_splashscreen}
+        >
+          <Button
+            id='toggle-check'
+            variant='toolbar_button_open_filter'
+            size='sizeToolbarButton'
+            // Le variant impose position:fixed (ancien bouton flottant) : on le ramène dans le flux de
+            // la colonne pour qu'il ne flotte plus par-dessus le diagramme.
+            position='relative'
+            bg={show_nav ? 'tertiaire.1' : 'primaire.1'}
+            borderColor='secondaire.1'
+            _hover={{ bg: 'tertiaire.1', borderColor: 'secondaire.1' }}
+            _active={{ bg: 'tertiaire.1', borderColor: 'secondaire.1' }}
+            onClick={toggleShow}
+          >
+            {icon_open_close_config}
+          </Button>
+        </OSTooltip>
+        {/* Filtres : pilote le drawer de ToolbarFilter via ref (le bouton flottant est masqué en éditeur). */}
+        {menu_configuration.filter_bar_available ? <OSTooltip placement='left' label={t('Banner.fdn')}>
+          <Button
+            id='buttonOpenFilterDrawerTools'
+            variant='toolbar_button_open_filter'
+            size='sizeToolbarButton'
+            position='relative'
+            onClick={() => menu_configuration.ref_toggle_filter_drawer.current()}
+          >
+            {icon_library.icon_filter_tags}
+          </Button>
+        </OSTooltip> : <></>}
+        <Divider />
+        <ComponentMouseMode app_data={app_data} updateParentComponent={refreshToolsColumn} />
+        <ComponentPositionMode app_data={app_data} updateParentComponent={refreshToolsColumn} />
+        {/* hide_fullscreen : le plein écran est dans la barre du haut en éditeur. */}
+        <ComponetStretchButtons app_data={app_data} updateParentComponent={refreshToolsColumn} hide_fullscreen />
+      </Box>
+    </Box>
+  ) : <></>
 
   // JSX.Elements for the component ----------------------------------------------------------------
 
@@ -181,7 +322,7 @@ export const SankeyMenu = (
             blockScrollOnMount={false}
             isOpen={show_nav}
             placement='right'
-            onClose={() => set_show_nav(false)}
+            onClose={() => setConfigOpen(false)}
             onEsc={() => {
               // Override drawer onEscape() to use Class_applicationData 'escape' keyEvent & not the one by default from the <Drawer> component
               const ev = document
@@ -207,14 +348,19 @@ export const SankeyMenu = (
               }}
             >
               <DrawerBody style={{ overflowX: 'auto' }}>
-                <ConfigMenu app_data={app_data} additional_menus={additionalMenus} />
+                <ConfigMenu
+                  app_data={app_data}
+                  additional_menus={additionalMenus}
+                />
               </DrawerBody>
             </DrawerContent>
           </Drawer></> :
           <></>}
 
 
-      {app_data.is_editable ? (
+      {/* Bouton config flottant conservé UNIQUEMENT en publish-éditable (static + editable) ; en
+          éditeur normal il vit dans la colonne d'outils rétractable (cf. tools_column ci-dessous). */}
+      {app_data.is_static && app_data.is_editable ? (
         <OSTooltip
           placement='left'
           label={t('Banner.open_configuration_menu')}
@@ -244,9 +390,14 @@ export const SankeyMenu = (
       ) : (<></>)}
 
 
-      {(!app_data.is_static || app_data.publish_options.toolbar || app_data.publish_options.fit_toolbar) ? <ToolBarBottom
+      {/* Barre verticale flottante conservée UNIQUEMENT en publish/statique ; en éditeur ses groupes
+          sont rendus dans la colonne d'outils rétractable (tools_column). */}
+      {(app_data.is_static && (app_data.publish_options.toolbar || app_data.publish_options.fit_toolbar || app_data.publish_options.fullscreen)) ? <ToolBarBottom
         new_data={app_data}
+        right_offset={app_data.drawing_area.fit_margin + rightReserve}
       /> : <></>}
+
+      {tools_column}
 
       {/* {
         processFunction.ref_processing.current ? (
@@ -285,7 +436,8 @@ export const SankeyMenu = (
 }
 
 const ConfigMenu = ({ app_data, additional_menus }: {
-  app_data: Class_ApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus>
+  app_data: Class_ApplicationData,
+  additional_menus: MutableRefObject<Type_AdditionalMenus>,
 }) => {
   const { type_menu_configuration_selected, style_config } = app_data.menu_configuration
   const [, setUpdate] = useState(false)
@@ -293,7 +445,8 @@ const ConfigMenu = ({ app_data, additional_menus }: {
   app_data.menu_configuration.ref_to_menu_config_updater.current = () => setUpdate(a => !a)
 
   const sizeBtn = document.getElementsByClassName('buttonGroupTypeConfig')[0]?.getBoundingClientRect().height ?? 30
-  const maxHConfig = window.innerHeight - (app_data.drawing_area.getNavBarHeight() + app_data.drawing_area.getBottomBarHeight() + sizeBtn + (app_data.drawing_area.fit_margin * 2))
+  // Hauteur bornée à l'espace écran restant (panneau ancré).
+  const maxHConfig = 'calc(' + (window.innerHeight - (app_data.drawing_area.getNavBarHeight() + app_data.drawing_area.getBottomBarHeight() + sizeBtn + (app_data.drawing_area.fit_margin * 2))) + 'px - 0.8rem)'
 
   return <Box layerStyle='config_menu_layout' style={{
     background: (style_config[type_menu_configuration_selected].theme),
@@ -301,14 +454,14 @@ const ConfigMenu = ({ app_data, additional_menus }: {
     gridTemplateRows: 'auto 1fr auto',
     alignContent: 'start'
   }}>
-    <Box layerStyle='type_config_box'>
+    <Box layerStyle='type_config_box' style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
       <ConfigMenuTypeConfig app_data={app_data} additional_menus={additional_menus} />
     </Box>
     <Box
       className='config_box'
       layerStyle='config_box'
       style={{
-        maxHeight: 'calc(' + maxHConfig + 'px - 0.8rem)',
+        maxHeight: maxHConfig,
         overflowY: 'auto',
         overflowX: 'hidden'
       }}
@@ -321,9 +474,11 @@ const ConfigMenu = ({ app_data, additional_menus }: {
     >
       <ConfigContent app_data={app_data} additional_menus={additional_menus} />
     </Box>
-    <Box layerStyle='element_box'>
+    {/* Sélecteur d'éléments : en éditeur il est rendu dans la colonne d'outils (contextuel) ; on ne le
+        garde dans le panneau qu'en publish/statique (pas de colonne d'outils là). */}
+    {app_data.is_static ? <Box layerStyle='element_box'>
       <ConfigMenuElementToConfig app_data={app_data} additional_menus={additional_menus} />
-    </Box>
+    </Box> : <></>}
   </Box>
 }
 
@@ -340,6 +495,14 @@ const ConfigMenuTypeConfig = ({ app_data, additional_menus }: {
 }) => {
   const { t } = app_data
   const { type_menu_configuration_selected, ref_to_menu_config_updater } = app_data.menu_configuration
+  // Changer de type (Data / Formatting / Présentation) : rafraîchir le panneau ET la colonne d'outils.
+  // Le sélecteur d'éléments est rendu dans la colonne (contextuel) et ses boutons dépendent du type ;
+  // sans ce second updater, la colonne afficherait les éléments de l'ancien type.
+  const selectType = (key: keyTypeConfig) => {
+    app_data.menu_configuration.type_menu_configuration_selected = key
+    ref_to_menu_config_updater.current()
+    app_data.menu_configuration.ref_to_menu_updater.current()
+  }
   return <ButtonGroup className='buttonGroupTypeConfig' spacing='0.2rem' style={{
     border: '2px solid lightblue',
     borderRadius: '4px',
@@ -349,10 +512,7 @@ const ConfigMenuTypeConfig = ({ app_data, additional_menus }: {
     <Button
       className='button_type_config_data'
       variant={type_menu_configuration_selected == 'data' ? 'button_type_config_activated' : 'button_type_config'}
-      onClick={() => {
-        app_data.menu_configuration.type_menu_configuration_selected = 'data'
-        ref_to_menu_config_updater.current()
-      }}
+      onClick={() => selectType('data')}
     >
       {t('Menu.Config.type_data')}
     </Button>
@@ -360,10 +520,7 @@ const ConfigMenuTypeConfig = ({ app_data, additional_menus }: {
     <Button
       className='button_type_config_style'
       variant={type_menu_configuration_selected == 'style' ? 'button_type_config_activated' : 'button_type_config'}
-      onClick={() => {
-        app_data.menu_configuration.type_menu_configuration_selected = 'style'
-        ref_to_menu_config_updater.current()
-      }}
+      onClick={() => selectType('style')}
     >
       {t('Menu.Config.type_style')}
     </Button>
@@ -378,10 +535,7 @@ const ConfigMenuTypeConfig = ({ app_data, additional_menus }: {
     {Object.entries(additional_menus.current.additional_menu_type).map((el, id) => {
       const keyType = el[0] as keyTypeConfig
       return <Button key={'additional_type_config_' + id} variant={type_menu_configuration_selected == keyType ? 'button_type_config_activated' : 'button_type_config'}
-        onClick={() => {
-          app_data.menu_configuration.type_menu_configuration_selected = keyType
-          ref_to_menu_config_updater.current()
-        }}
+        onClick={() => selectType(keyType)}
       >
         {t('Menu.Config.' + el[1])}
       </Button>
@@ -465,8 +619,8 @@ export type typeButtonElementConfigurable = { [x: string]: { text: string, icon:
  * @param {*} { app_data }
  * @return {*}
  */
-const ConfigMenuElementToConfig = ({ app_data, additional_menus }:
-  { app_data: Class_ApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }) => {
+const ConfigMenuElementToConfig = ({ app_data, additional_menus, extra_updater }:
+  { app_data: Class_ApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus>, extra_updater?: () => void }) => {
   const { t } = app_data
   const { type_menu_configuration_selected, style_config, ref_to_menu_config_updater } = app_data.menu_configuration
   const elements_buttons = style_config[type_menu_configuration_selected].elements_configurable
@@ -501,6 +655,7 @@ const ConfigMenuElementToConfig = ({ app_data, additional_menus }:
           onClick={() => {
             app_data.menu_configuration.toggleElementInConfigEdition(type_menu_configuration_selected, element_typed)
             ref_to_menu_config_updater.current()
+            extra_updater?.()
           }}
         >
           {dict_buttons_element_to_config[el].icon}
@@ -561,7 +716,7 @@ export const MenuDraggable = ({
       position='absolute'
       minW={minW}
       maxW={maxW}
-      zIndex='2'
+      zIndex='40'
     >
       <Box
         className='title_menu'

@@ -43,13 +43,30 @@ export class Class_ContainerElement extends Class_NodeBase {
     const base = super.name_label_effective
     if (!this._is_title || !base.includes('{')) return base
     let out = base
-    this.drawing_area.sankey.data_taggs_list.forEach(grp => {
-      const token = '{' + grp.name + '}'
-      if (out.includes(token)) {
-        const value = grp.selected_tags_list.map(tag => tag.display_name).join(', ')
-        out = out.replaceAll(token, value)
-      }
-    })
+    const interpolateGroups = <T extends { name: string }>(
+      groups: T[],
+      // Valeur à substituer ; null = jeton remplacé par du vide (cas vue complète).
+      resolveValue: (grp: T) => string | null
+    ) => {
+      groups.forEach(grp => {
+        const token = '{' + grp.name + '}'
+        if (out.includes(token)) {
+          out = out.replaceAll(token, resolveValue(grp) ?? '')
+        }
+      })
+    }
+    // Data tags : toujours un tag montré -> on substitue sa valeur.
+    interpolateGroups(
+      this.drawing_area.sankey.data_taggs_list,
+      grp => grp.selected_tags_list.map(tag => tag.display_name).join(', ')
+    )
+    // View tags : la sélection n'a de sens que si le filtre vue est actif (view_mode).
+    // En « vue complète » (view_mode false), le tag reste sélectionné en interne mais
+    // le diagramme n'est pas filtré -> le jeton doit être vide, pas le dernier tag choisi.
+    interpolateGroups(
+      this.drawing_area.sankey.view_taggs_list,
+      grp => grp.view_mode ? grp.selected_tags_list.map(tag => tag.display_name).join(', ') : null
+    )
     return out
   }
 

@@ -1,6 +1,8 @@
 import { applyRandomColors } from '../../Algorithms/Colors'
+import { prepositionAllInPlace, centerChildrenOnParent } from '../../Algorithms/Hierarchies'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { MenuConfig } from './SankeyMenuContext'
+import { downloadImageSource } from './SaveImage'
 
 export const ZDD_MENU_CONFIG: MenuConfig = {
   structure: [
@@ -18,6 +20,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
             { type: 'widget', widgetName: 'MenuContextAutoLayout', widgetProps: {} }
           ]
         },
+        { type: 'button', actionName: 'prepositionInPlace' },
+        { type: 'button', actionName: 'centerChildrenOnParent' },
         // {
         //   type: 'button', actionName: 'toggleAutoX',
         //   visibilityConditions: [{
@@ -110,6 +114,15 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         customCheck: (app_data) => {
           return app_data.drawing_area.sankey.containers_list.length > 0
         }
+      }]
+    },
+    {
+      type: 'button',
+      actionName: 'saveBgImage',
+      visibilityConditions: [{
+        type: 'custom',
+        customCheck: (app_data) =>
+          app_data.drawing_area.show_background_image && !!app_data.drawing_area.background_image
       }]
     }
   ],
@@ -267,6 +280,42 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Transponer el diagrama: intercambiar los ejes horizontal y vertical',
         de: 'Diagramm transponieren: horizontale und vertikale Achsen tauschen',
         it: 'Trasponi il diagramma: scambia gli assi orizzontale e verticale'
+      }
+    },
+
+    prepositionInPlace: {
+      type: 'action',
+      labels: {
+        en: 'Pre-position nodes',
+        fr: 'Pré-positionner les nœuds',
+        es: 'Pre-posicionar nodos',
+        de: 'Knoten vorpositionieren',
+        it: 'Pre-posiziona nodi'
+      },
+      tooltips: {
+        en: 'Recursively disaggregate every node in place then re-aggregate, so all hidden nodes get a position within their ancestor (used by the view filter).',
+        fr: 'Désagrège récursivement chaque nœud in-place puis ré-agrège : tous les nœuds cachés reçoivent une position dans l\'empreinte de leur ancêtre (utilisé par le filtre vue).',
+        es: 'Desagrega recursivamente cada nodo in situ y reagrega: todos los nodos ocultos obtienen una posición dentro de su ancestro (usado por el filtro de vista).',
+        de: 'Zerlegt rekursiv jeden Knoten an Ort und Stelle und aggregiert wieder: alle versteckten Knoten erhalten eine Position innerhalb ihres Vorfahren (vom Ansichtsfilter genutzt).',
+        it: 'Disaggrega ricorsivamente ogni nodo in loco poi riaggrega: tutti i nodi nascosti ottengono una posizione nell\'antenato (usato dal filtro vista).'
+      }
+    },
+
+    centerChildrenOnParent: {
+      type: 'action',
+      labels: {
+        en: 'Center children on parent',
+        fr: 'Centrer les enfants sur le parent',
+        es: 'Centrar los hijos en el padre',
+        de: 'Kinder auf Eltern zentrieren',
+        it: 'Centra i figli sul genitore'
+      },
+      tooltips: {
+        en: 'Place each child\'s center on its parent\'s center (recursively): all descendants end up at their level-1 ancestor\'s position. The view filter then shows leaves stacked on their ancestor (clean static alternative to the ancestor mode).',
+        fr: 'Place le centre de chaque enfant sur celui de son parent (récursivement) : tous les descendants se retrouvent à la position de leur ancêtre niveau 1. Le filtre vue montre alors les feuilles empilées sur leur ancêtre (alternative statique propre au mode ancêtres).',
+        es: 'Coloca el centro de cada hijo en el de su padre (recursivamente): todos los descendientes quedan en la posición de su ancestro de nivel 1.',
+        de: 'Setzt das Zentrum jedes Kindes auf das seines Elternknotens (rekursiv): alle Nachkommen landen an der Position ihres Vorfahren der Ebene 1.',
+        it: 'Posiziona il centro di ogni figlio su quello del genitore (ricorsivamente): tutti i discendenti finiscono nella posizione del loro antenato di livello 1.'
       }
     },
 
@@ -498,6 +547,24 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         it: 'Aprire la finestra di configurazione dello stile visivo dei nodi'
       }
     },
+
+    saveBgImage: {
+      type: 'action',
+      labels: {
+        en: 'Save background image',
+        fr: 'Enregistrer l\'image de fond',
+        es: 'Guardar imagen de fondo',
+        de: 'Hintergrundbild speichern',
+        it: 'Salva immagine di sfondo'
+      },
+      tooltips: {
+        en: 'Download the background image to a file',
+        fr: 'Télécharger l\'image de fond dans un fichier',
+        es: 'Descargar la imagen de fondo a un archivo',
+        de: 'Hintergrundbild in eine Datei herunterladen',
+        it: 'Scarica l\'immagine di sfondo in un file'
+      }
+    },
     // openGraphOrder: {
     //   type: 'action',
     //   labels: {
@@ -569,6 +636,12 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
     deleteAllViews: () => app_data.reinitialization(),
     transposeDA: () => { drawing_area.verticalizeDiagram(); saveToCache() },
     arrangeNodesToGrid: () => { nodePositioning.arrangeNodesToGrid(); saveToCache() },
+    prepositionInPlace: () => {
+      // Opération lourde (désagrégation récursive) : toast spinner + exécution différée
+      // (sendWaitingToast attend ~500 ms pour afficher le spinner avant de bloquer).
+      app_data.sendWaitingToast(() => { prepositionAllInPlace(app_data); saveToCache() })
+    },
+    centerChildrenOnParent: () => { centerChildrenOnParent(app_data); saveToCache() },
     // #1231 — le mode paramétrique n'est plus un mode utilisateur : ce toggle bascule
     // désormais entre pourcentage et absolu.
     toggleParametricMode: () => getNodeStyle().shape_position_type === 'proportional' ? drawing_area.setAbsoluteMode() : drawing_area.setProportionalMode(),
@@ -585,6 +658,8 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
     resetNodeColors: () => { sankey.deleteLocalAttrSelectedElements('shape_color', sankey.nodes_list); saveToCache() },
     resetLinkColors: () => { sankey.deleteLocalAttrSelectedElements('shape_color', sankey.links_list); saveToCache() },
     openStyleModal: () => ref_setter_show_modal_styles.current(true),
+
+    saveBgImage: () => downloadImageSource(drawing_area.background_image, (app_data.file_name || 'sankey') + '_background'),
 
     toggleZDTActivated: () => {
       app_data.drawing_area.sankey.container_activated = !app_data.drawing_area.sankey.container_activated

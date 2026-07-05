@@ -121,6 +121,34 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       children: [
         { type: 'button', actionName: 'editName' },
         { type: 'button', actionName: 'resetAttr' },
+        {
+          type: 'button',
+          actionName: 'applyStyleToChildren',
+          // Visible dès qu'au moins un nœud parent est sélectionné : l'action
+          // propage le style de CHAQUE nœud parent sélectionné à ses propres
+          // enfants (multi-sélection supportée).
+          visibilityConditions: [
+            {
+              type: 'custom',
+              customCheck: (app_data) =>
+                app_data.drawing_area.selected_nodes_list.some(n => n.is_parent)
+            }
+          ]
+        },
+        {
+          type: 'button',
+          actionName: 'assignColumnToChildren',
+          // Visible dès qu'au moins un nœud parent est sélectionné : l'action
+          // assigne la colonne (position_u) de CHAQUE parent sélectionné à ses
+          // propres enfants (multi-sélection supportée).
+          visibilityConditions: [
+            {
+              type: 'custom',
+              customCheck: (app_data) =>
+                app_data.drawing_area.selected_nodes_list.some(n => n.is_parent)
+            }
+          ]
+        },
         { type: 'widget', widgetName: 'ButtonNodeContextAssignStyle' }
       ]
     },
@@ -132,7 +160,16 @@ export const NODE_MENU_CONFIG: MenuConfig = {
         { type: 'button', actionName: 'toggleNameVisibility' },
         { type: 'button', actionName: 'toggleValueVisibility' },
         { type: 'button', actionName: 'moveToFirstPlan' },
-        { type: 'button', actionName: 'moveToLastPlan' }
+        { type: 'button', actionName: 'moveToLastPlan' },
+        { type: 'button', actionName: 'setGlobalMaxNodeToCurrent' },
+        {
+          type: 'button',
+          actionName: 'clearGlobalMaxNode',
+          visibilityConditions: [{
+            type: 'custom',
+            customCheck: (app_data) => app_data.drawing_area.maximum_node !== undefined
+          }]
+        }
       ]
     },
     // Edition hiérarchie (création de dimensions et liens)
@@ -314,8 +351,34 @@ export const NODE_MENU_CONFIG: MenuConfig = {
         { type: 'widget', widgetName: 'MenuContextNodeStock' }
       ]
     },
+    // #1231b — Stock de référence (mode proportionnel / échelle adaptée). Disponible dès
+    // qu'un mode de position « ancré » est actif et que le nœud porte un stock.
+    {
+      type: 'button',
+      actionName: 'setReferenceStock',
+      visibilityConditions: [{
+        type: 'custom',
+        customCheck: (app_data) => {
+          const node = app_data.drawing_area.node_contextualised
+          if (!node?.has_stock) return false
+          const m = app_data.drawing_area.sankey.default_style.shape_position_type
+          return m === 'absolute' || m === 'proportional' || m === 'scale_adapted'
+        }
+      }]
+    },
     { type: 'button', actionName: 'startAnimation' },
-    { type: 'button', actionName: 'copyElement' }
+    { type: 'button', actionName: 'copyElement' },
+    {
+      type: 'button',
+      actionName: 'saveNodeImage',
+      visibilityConditions: [{
+        type: 'custom',
+        customCheck: (app_data) => {
+          const node = app_data.drawing_area.node_contextualised
+          return !!node?.icon_is_image && !!node?.icon_image_src
+        }
+      }]
+    }
   ],
 
   actions: {
@@ -699,6 +762,20 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       undoable: true
     },
 
+    applyStyleToChildren: {
+      type: 'action',
+      labels: { en: 'Apply style to children', fr: 'Appliquer le style aux enfants', es: 'Aplicar estilo a los hijos', de: 'Stil auf Kinder anwenden', it: 'Applica stile ai figli' },
+      tooltips: { en: 'Copy this node\'s style and attributes onto all its descendants in the dimension hierarchy', fr: 'Copier le style et les attributs de ce nœud sur toute sa descendance dans la hiérarchie de dimensions', es: 'Copiar el estilo y los atributos de este nodo en toda su descendencia en la jerarquía de dimensiones', de: 'Stil und Attribute dieses Knotens auf alle Nachfahren in der Dimensionshierarchie kopieren', it: 'Copia lo stile e gli attributi di questo nodo su tutta la sua discendenza nella gerarchia delle dimensioni' },
+      undoable: true
+    },
+
+    assignColumnToChildren: {
+      type: 'action',
+      labels: { en: 'Assign column to children', fr: 'Assigner u,v aux enfants (lignes et colonnes)', es: 'Asignar la columna a los hijos', de: 'Spalte auf Kinder anwenden', it: 'Assegna la colonna ai figli' },
+      tooltips: { en: 'Assign this node\'s column (position) to all its descendants in the dimension hierarchy (locked columns are skipped)', fr: 'Assigner la colonne (position) de ce nœud à toute sa descendance dans la hiérarchie de dimensions (les colonnes verrouillées sont ignorées)', es: 'Asignar la columna (posición) de este nodo a toda su descendencia en la jerarquía de dimensiones (se omiten las columnas bloqueadas)', de: 'Die Spalte (Position) dieses Knotens auf alle Nachfahren in der Dimensionshierarchie anwenden (gesperrte Spalten werden übersprungen)', it: 'Assegna la colonna (posizione) di questo nodo a tutta la sua discendenza nella gerarchia delle dimensioni (le colonne bloccate vengono ignorate)' },
+      undoable: true
+    },
+
     reorg: {
       type: 'action',
       labels: { en: 'Reorganize I/O', fr: 'Réorganiser E/S', es: 'Reorganizar E/S', de: 'E/A reorganisieren', it: 'Riorganizza I/O' },
@@ -734,6 +811,55 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       type: 'action',
       labels: { en: 'Copy element(s)', fr: 'Copier les éléments', es: 'Copiar elemento(s)', de: 'Element(e) kopieren', it: 'Copia elemento/i' },
       tooltips: { en: 'Duplicate the selected element(s) — copies remain selected', fr: 'Dupliquer les éléments sélectionnés — les copies restent sélectionnées', es: 'Duplicar los elementos seleccionados — las copias permanecen seleccionadas', de: 'Ausgewählte Element(e) duplizieren — Kopien bleiben ausgewählt', it: 'Duplicare gli elementi selezionati — le copie rimangono selezionate' }
+    },
+
+    setGlobalMaxNodeToCurrent: {
+      type: 'action',
+      labels: { en: 'Global node max height = this node', fr: 'Hauteur max globale = ce nœud', es: 'Altura máx global = este nodo', de: 'Globale Maximalhöhe = dieser Knoten', it: 'Altezza max globale = questo nodo' },
+      tooltips: { en: 'Set the GLOBAL maximum node height (all nodes) to this node\'s current height', fr: 'Fixe la hauteur maximale GLOBALE des nœuds (tous les nœuds) à la hauteur actuelle de ce nœud', es: 'Fija la altura máxima GLOBAL de los nodos (todos) a la altura actual de este nodo', de: 'Setzt die GLOBALE maximale Knotenhöhe (alle Knoten) auf die aktuelle Höhe dieses Knotens', it: 'Imposta l\'altezza massima GLOBALE dei nodi (tutti) all\'altezza attuale di questo nodo' },
+      undoable: true,
+      closeMenuAfter: true
+    },
+    clearGlobalMaxNode: {
+      type: 'action',
+      labels: { en: 'Clear global node max height', fr: 'Supprimer hauteur max globale', es: 'Quitar altura máx global', de: 'Globale Maximalhöhe entfernen', it: 'Rimuovi altezza max globale' },
+      tooltips: { en: 'Remove the global maximum node height limit', fr: 'Supprimer la limite globale de hauteur des nœuds', es: 'Quitar el límite global de altura de los nodos', de: 'Globale Maximalhöhen-Begrenzung der Knoten entfernen', it: 'Rimuovere il limite globale di altezza dei nodi' },
+      undoable: true,
+      closeMenuAfter: true
+    },
+
+    setReferenceStock: {
+      type: 'toggle',
+      labels: {
+        en: 'Reference stock (proportional)',
+        fr: 'Stock de référence (proportionnel)',
+        es: 'Stock de referencia (proporcional)',
+        de: 'Referenzbestand (proportional)',
+        it: 'Stock di riferimento (proporzionale)'
+      },
+      labelsToggle: {
+        en: { true: 'Unset reference stock', false: 'Set as reference stock' },
+        fr: { true: 'Retirer le stock de référence', false: 'Définir comme stock de référence' },
+        es: { true: 'Quitar stock de referencia', false: 'Definir como stock de referencia' },
+        de: { true: 'Referenzbestand entfernen', false: 'Als Referenzbestand festlegen' },
+        it: { true: 'Rimuovi stock di riferimento', false: 'Imposta come stock di riferimento' }
+      },
+      tooltips: {
+        en: 'In proportional / adapted-scale mode, anchor the diagram on this node\'s stock and scale everything by this stock\'s ratio across data tags.',
+        fr: 'En mode proportionnel / échelle adaptée, ancrer le diagramme sur le stock de ce nœud et dimensionner le reste selon le ratio de ce stock entre les tags de données.',
+        es: 'En modo proporcional / escala adaptada, anclar el diagrama en el stock de este nodo y escalar todo según la relación de este stock entre las etiquetas de datos.',
+        de: 'Im proportionalen / angepassten Maßstab-Modus das Diagramm am Bestand dieses Knotens verankern und alles anhand des Verhältnisses dieses Bestands über die Daten-Tags skalieren.',
+        it: 'In modalità proporzionale / scala adattata, ancorare il diagramma allo stock di questo nodo e ridimensionare tutto in base al rapporto di questo stock tra i tag di dati.'
+      },
+      getToggleValue: 'setReferenceStockValue',
+      closeMenuAfter: true
+    },
+
+    saveNodeImage: {
+      type: 'action',
+      labels: { en: 'Save image', fr: 'Enregistrer l\'image', es: 'Guardar imagen', de: 'Bild speichern', it: 'Salva immagine' },
+      tooltips: { en: 'Download the node image to a file', fr: 'Télécharger l\'image du nœud dans un fichier', es: 'Descargar la imagen del nodo a un archivo', de: 'Knotenbild in eine Datei herunterladen', it: 'Scarica l\'immagine del nodo in un file' },
+      closeMenuAfter: true
     }
   },
 

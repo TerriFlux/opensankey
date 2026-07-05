@@ -55,6 +55,11 @@ export const default_auto_y = false
 export const default_dx = 200
 export const default_dy = 50
 export type Type_Orientation = 'hh' | 'vv' | 'vh' | 'hv'
+// Ancrage de droiture d'un flux (#665, refonte multi-ancrage). 'none' = libre (flux non
+// contraint). 'source'/'target' = l'accroche aval/amont s'aligne sur l'autre (déplace le
+// nœud opposé). 'highest'/'lowest' = les deux accroches s'alignent sur la plus haute / la
+// plus basse. 'absolute' (réservé, 2e passe) = la position propre du flux place les nœuds.
+export type Type_StraightMode = 'none' | 'source' | 'target' | 'highest' | 'lowest' | 'absolute'
 export type Type_PathLabelHPosition = 'left' | 'middle' | 'right'
 export type Type_PathLabelVPosition = 'top' | 'middle' | 'bottom'
 export type Type_customisable_style_attr = keyof typeof ALL_ATTRIBUTES_CONFIG
@@ -125,12 +130,15 @@ export const font_families = [
 export const default_stick_to_drawing = true
 export const default_masked = true
 export const default_display_legend_scale = false
+export const default_scale_legend_unit = ''
+export const default_scale_legend_ratio = 1
 export const default_legend_police = 16
 export const default_legend_bg_border = false
 export const default_legend_bg_color = default_element_color
 export const default_legend_bg_opacity = 0
 export const default_legend_show_dataTags = true
 export const default_legend_show_constraints = false
+export const default_legend_horizontal = false
 export const default_width = 180
 export const default_info_link_value_void = false
 export const default_legend_position_x = 300
@@ -803,6 +811,28 @@ export const BASE_SHAPE_CONFIG = {
       it: 'Raggio del bordo in pixel'
     }
   } satisfies AttributeConfig<number>,
+
+  shadow_visible: {
+    default: false as boolean,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['drawShape'] as BaseActionType[],
+    labels: {
+      en: 'Drop shadow',
+      fr: 'Ombre portée',
+      es: 'Sombra paralela',
+      de: 'Schlagschatten',
+      it: 'Ombra esterna'
+    },
+    tooltips: {
+      en: 'Add a drop shadow behind the element',
+      fr: 'Ajouter une ombre portée derrière l\'élément',
+      es: 'Añadir una sombra paralela detrás del elemento',
+      de: 'Schlagschatten hinter dem Element hinzufügen',
+      it: 'Aggiungere un\'ombra esterna dietro l\'elemento'
+    }
+  } satisfies AttributeConfig<boolean>,
+
   margin_left: {
     default: 0,
     type: (() => 0) as (() => number),
@@ -1644,8 +1674,8 @@ export const BASE_LABEL_CONFIG = {
   } satisfies AttributeConfig<number>,
 
   in_out_display_mode: {
-    default: 'both' as 'both' | 'in' | 'out',
-    type: (() => 'both') as (() => 'both' | 'in' | 'out'),
+    default: 'in' as 'both' | 'in' | 'out',
+    type: (() => 'in') as (() => 'both' | 'in' | 'out'),
     category: 'value_label' as const,
     actions: ['drawValueLabel'] as BaseActionType[],
     labels: {
@@ -1912,6 +1942,94 @@ export const NAME_LABEL_CONFIG = {
       it: 'Posizione del separatore'
     }
   } satisfies AttributeConfig<'before' | 'after'>,
+
+  // Source du contenu du label (cf. Type_NameLabelSource sur Class_NodeBase) :
+  // 'name' (défaut) = nom de l'élément, 'custom' = texte libre (name_label_text),
+  // 'tag' = tag assigné dans le groupe name_label_tag_group_id, 'ancestor' = nom
+  // de l'ancêtre racine le long de la dimension name_label_dimension_id.
+  source: {
+    default: 'name' as 'name' | 'custom' | 'tag' | 'ancestor',
+    type: (() => 'name') as (() => 'name' | 'custom' | 'tag' | 'ancestor'),
+    category: 'name_label' as const,
+    actions: ['drawNameLabel'] as BaseActionType[],
+    labels: {
+      en: 'Label content',
+      fr: 'Contenu du label',
+      es: 'Contenido de la etiqueta',
+      de: 'Beschriftungsinhalt',
+      it: 'Contenuto etichetta'
+    },
+    tooltips: {
+      en: 'Source of the label text (element name, custom text, assigned tag, ancestor name)',
+      fr: 'Source du texte du label (nom de l\'élément, texte personnalisé, tag assigné, nom de l\'ancêtre)',
+      es: 'Origen del texto de la etiqueta (nombre del elemento, texto personalizado, etiqueta asignada, nombre del ancestro)',
+      de: 'Quelle des Beschriftungstextes (Elementname, benutzerdefinierter Text, zugewiesener Tag, Vorfahrenname)',
+      it: 'Origine del testo dell\'etichetta (nome elemento, testo personalizzato, tag assegnato, nome antenato)'
+    }
+  } satisfies AttributeConfig<'name' | 'custom' | 'tag' | 'ancestor'>,
+
+  text: {
+    default: '',
+    type: (() => '') as (() => string),
+    category: 'name_label' as const,
+    actions: ['drawNameLabel'] as BaseActionType[],
+    labels: {
+      en: 'Custom text',
+      fr: 'Texte personnalisé',
+      es: 'Texto personalizado',
+      de: 'Benutzerdefinierter Text',
+      it: 'Testo personalizzato'
+    },
+    tooltips: {
+      en: 'Free text shown when label content is "custom"',
+      fr: 'Texte libre affiché quand le contenu du label est « personnalisé »',
+      es: 'Texto libre mostrado cuando el contenido de la etiqueta es «personalizado»',
+      de: 'Freitext, der angezeigt wird, wenn der Beschriftungsinhalt „benutzerdefiniert“ ist',
+      it: 'Testo libero mostrato quando il contenuto dell\'etichetta è «personalizzato»'
+    }
+  } satisfies AttributeConfig<string>,
+
+  tag_group_id: {
+    default: '',
+    type: (() => '') as (() => string),
+    category: 'name_label' as const,
+    actions: ['drawNameLabel'] as BaseActionType[],
+    labels: {
+      en: 'Tag group',
+      fr: 'Groupe de tags',
+      es: 'Grupo de etiquetas',
+      de: 'Tag-Gruppe',
+      it: 'Gruppo di tag'
+    },
+    tooltips: {
+      en: 'Tag group whose assigned tag is shown when label content is "tag"',
+      fr: 'Groupe de tags dont le tag assigné est affiché quand le contenu du label est « tag »',
+      es: 'Grupo de etiquetas cuya etiqueta asignada se muestra cuando el contenido es «tag»',
+      de: 'Tag-Gruppe, deren zugewiesener Tag bei Inhalt „tag“ angezeigt wird',
+      it: 'Gruppo di tag il cui tag assegnato è mostrato quando il contenuto è «tag»'
+    }
+  } satisfies AttributeConfig<string>,
+
+  dimension_id: {
+    default: '',
+    type: (() => '') as (() => string),
+    category: 'name_label' as const,
+    actions: ['drawNameLabel'] as BaseActionType[],
+    labels: {
+      en: 'Dimension',
+      fr: 'Dimension',
+      es: 'Dimensión',
+      de: 'Dimension',
+      it: 'Dimensione'
+    },
+    tooltips: {
+      en: 'Dimension to climb to the root ancestor when label content is "ancestor" (empty = first)',
+      fr: 'Dimension à remonter jusqu\'à l\'ancêtre racine quand le contenu du label est « ancêtre » (vide = première)',
+      es: 'Dimensión a recorrer hasta el ancestro raíz cuando el contenido es «ancestro» (vacío = primera)',
+      de: 'Dimension bis zum Wurzel-Vorfahren bei Inhalt „Vorfahre“ (leer = erste)',
+      it: 'Dimensione da risalire fino all\'antenato radice quando il contenuto è «antenato» (vuoto = prima)'
+    }
+  } satisfies AttributeConfig<string>,
 } as const
 
 const VALUE_LABEL_BASE_CONFIG = createLabelConfig('value_label', 'value_label', 'drawValueLabel')
@@ -1941,6 +2059,30 @@ export const STOCK_LABEL_CONFIG = {
       it: 'Larghezza di a capo del riquadro stock, in px schermo'
     }
   } satisfies AttributeConfig<number>,
+
+  // Mirror du pos_auto des labels de flux : quand le nœud porteur est trop fin
+  // pour contenir la boite de stock, on bascule la boite au-dessus (ou en
+  // dessous) du nœud au lieu de la laisser le recouvrir.
+  pos_auto: {
+    default: true,
+    type: (() => true) as (() => boolean),
+    category: 'stock_label' as const,
+    actions: ['drawStockBox'] as BaseActionType[],
+    labels: {
+      en: 'Auto position',
+      fr: 'Position verticale ajustée',
+      es: 'Posición automática',
+      de: 'Automatische Position',
+      it: 'Posizione automatica'
+    },
+    tooltips: {
+      en: 'When the node is too thin to hold the box, move it above/below the node instead of overlapping it',
+      fr: 'Quand le nœud est trop fin pour contenir la boite, la placer au-dessus/en dessous au lieu de la recouvrir',
+      es: 'Cuando el nodo es demasiado fino para la caja, colocarla encima/debajo en vez de superponerla',
+      de: 'Wenn der Knoten zu dünn für den Kasten ist, diesen darüber/darunter statt überlappend platzieren',
+      it: 'Quando il nodo è troppo sottile per il riquadro, posizionarlo sopra/sotto invece di sovrapporlo'
+    }
+  } satisfies AttributeConfig<boolean>,
 } as const
 
 export const VALUE_LABEL_CONFIG = {
@@ -2265,7 +2407,9 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
     default: default_position_type,
     type: (() => default_position_type) as (() => Type_Position),
     category: 'shape' as const,
-    actions: ['drawShape'] as BaseActionType[],
+    // drawElements (pas drawShape) : changer le mode d'un nœud relance le placement
+    // global, dont anchorParametricNodesToAbsolute qui (re)cale les nœuds « Ecartement ».
+    actions: ['drawElements'] as BaseActionType[],
 
     labels: {
       en: 'x',
@@ -2286,7 +2430,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
     default: 200,
     type: (() => 200) as (() => number),
     category: 'shape' as const,
-    actions: ['drawShape'] as BaseActionType[],
+    // drawElements : l'écart d'un nœud « Ecartement » repositionne ses voisins de colonne.
+    actions: ['drawElements'] as BaseActionType[],
 
     labels: {
       en: 'Horizontal',
@@ -2307,7 +2452,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
     default: 50,
     type: (() => 50) as (() => number),
     category: 'shape' as const,
-    actions: ['drawShape'] as BaseActionType[],
+    // drawElements : l'écart d'un nœud « Ecartement » repositionne ses voisins de colonne.
+    actions: ['drawElements'] as BaseActionType[],
 
     labels: {
       en: 'Vertical',
@@ -2446,6 +2592,28 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       it: 'Riempie il/i nodo/i selezionato/i con un motivo tratteggiato (nessuno / verticale / orizzontale / diagonale / anti-diagonale)'
     }
   } satisfies AttributeConfig<Type_HatchOrientation>,
+  is_reference_stock: {
+    default: false,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    // Pas d'action au set : le redraw est piloté par le handler (setReferenceStock) ; poser
+    // le marqueur ne doit pas déclencher de dessin (notamment pendant le nettoyage de l'ancien).
+    actions: [] as BaseActionType[],
+    labels: {
+      en: 'Reference stock',
+      fr: 'Stock de référence',
+      es: 'Stock de referencia',
+      de: 'Referenzbestand',
+      it: 'Stock di riferimento'
+    },
+    tooltips: {
+      en: 'In proportional / adapted-scale mode, anchor the diagram on this node\'s stock. Set via right-click "Set as reference stock".',
+      fr: 'En mode proportionnel / échelle adaptée, ancrer le diagramme sur le stock de ce nœud. Activé via clic droit « Définir comme stock de référence ».',
+      es: 'En modo proporcional / escala adaptada, anclar el diagrama en el stock de este nodo. Activado con clic derecho «Definir como stock de referencia».',
+      de: 'Im proportionalen / angepassten Maßstab-Modus das Diagramm am Bestand dieses Knotens verankern. Über Rechtsklick „Als Referenzbestand festlegen" aktiviert.',
+      it: 'In modalità proporzionale / scala adattata, ancorare il diagramma allo stock di questo nodo. Attivato con clic destro «Imposta come stock di riferimento».'
+    }
+  } satisfies AttributeConfig<boolean>,
 } as const
 
 export const LINK_SHAPE_SPECIFIC_CONFIG = {
@@ -2620,6 +2788,48 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       it: 'Mantieni dritti anche i flussi figli (tra i discendenti disaggregati di origine e destinazione), così la rettitudine sopravvive alla disaggregazione.'
     }
   } satisfies AttributeConfig<boolean>,
+
+  straight_mode: {
+    default: 'none' as Type_StraightMode,
+    type: (() => 'none') as (() => Type_StraightMode),
+    category: 'shape' as const,
+    actions: ['drawWithNodes', 'drawElements'] as LinkBaseActionType[],
+    labels: {
+      en: 'Straightness anchor',
+      fr: 'Ancrage de droiture',
+      es: 'Anclaje de rectitud',
+      de: 'Geradheits-Anker',
+      it: 'Ancoraggio rettitudine'
+    },
+    tooltips: {
+      en: 'Where this flow is kept straight: none (free), aligned to source, aligned to target, highest or lowest of the two. Set via right-click "Straightness".',
+      fr: 'Où ce flux est gardé droit : aucun (libre), en face de la source, en face de la destination, le plus haut ou le plus bas des deux. Activé via clic droit « Rectitude ».',
+      es: 'Dónde se mantiene recto este flujo: ninguno (libre), alineado al origen, alineado al destino, el más alto o el más bajo de los dos. Activado con clic derecho «Rectitud».',
+      de: 'Wo dieser Fluss gerade gehalten wird: keine (frei), an Quelle ausgerichtet, an Ziel ausgerichtet, höchster oder niedrigster der beiden. Über Rechtsklick „Geradheit" aktiviert.',
+      it: 'Dove questo flusso è mantenuto dritto: nessuno (libero), allineato all\'origine, allineato alla destinazione, il più alto o il più basso dei due. Attivato con clic destro «Rettitudine».'
+    }
+  } satisfies AttributeConfig<Type_StraightMode>,
+
+  straight_offset: {
+    default: 0,
+    type: (() => 0) as (() => number),
+    category: 'shape' as const,
+    actions: ['drawWithNodes', 'drawElements'] as LinkBaseActionType[],
+    labels: {
+      en: 'Straightness offset',
+      fr: 'Écart de droiture',
+      es: 'Desviación de rectitud',
+      de: 'Geradheits-Versatz',
+      it: 'Scarto di rettitudine'
+    },
+    tooltips: {
+      en: 'Constant vertical offset in pixels kept between the source and target anchors (target below source if positive). 0 = perfectly horizontal. Maintained across all data tags.',
+      fr: 'Écart vertical constant en pixels maintenu entre les accroches source et cible (cible plus bas que la source si positif). 0 = parfaitement horizontal. Conservé pour tous les tags de données.',
+      es: 'Desviación vertical constante en píxeles mantenida entre los anclajes de origen y destino (destino más abajo que el origen si es positivo). 0 = perfectamente horizontal. Se mantiene en todas las etiquetas de datos.',
+      de: 'Konstanter vertikaler Versatz in Pixeln zwischen Quell- und Zielanker (Ziel unterhalb der Quelle bei positivem Wert). 0 = perfekt horizontal. Über alle Daten-Tags hinweg beibehalten.',
+      it: 'Scarto verticale costante in pixel mantenuto tra gli ancoraggi di origine e destinazione (destinazione più in basso dell\'origine se positivo). 0 = perfettamente orizzontale. Mantenuto per tutti i tag di dati.'
+    }
+  } satisfies AttributeConfig<number>,
 
   is_reference_flux: {
     default: false,
@@ -2810,32 +3020,36 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       it: 'Freccia'
     },
     tooltips: {
-      en: 'Represents the selected link(s) with an arrow tip at the end',
-      fr: 'Représente le/les flux sélectionné(s) avec une pointe de flèche à la fin',
-      es: 'Representa el/los flujo(s) seleccionado(s) con una punta de flecha al final',
-      de: 'Stellt den/die ausgewählten Fluss/Flüsse mit einer Pfeilspitze am Ende dar',
-      it: 'Rappresenta il/i flusso/i selezionato/i con una punta di freccia alla fine'
+      en: 'Draw an arrow tip on the target side of the selected link(s)',
+      fr: 'Dessine une pointe de flèche du côté cible du/des flux sélectionné(s)',
+      es: 'Dibuja una punta de flecha en el lado de destino del/los flujo(s) seleccionado(s)',
+      de: 'Zeichnet eine Pfeilspitze auf der Zielseite des/der ausgewählten Flusses/Flüsse',
+      it: 'Disegna una punta di freccia sul lato destinazione del/dei flusso/i selezionato/i'
     }
   } satisfies AttributeConfig<boolean>,
 
-  is_arrow_reversed: {
+  // Flèche côté source, indépendante de is_arrow (flèche côté cible). Un flux peut
+  // donc porter une flèche à chaque extrémité, une seule, ou aucune. Purement
+  // graphique : le sens du flux dans les données est inchangé. (Remplace l'ancien
+  // is_arrow_reversed qui déplaçait l'unique flèche ; migration dans la persistance.)
+  arrow_at_source: {
     default: false,
     type: (() => false) as (() => boolean),
     category: 'shape' as const,
     actions: ['drawElements'] as BaseActionType[],
     labels: {
-      en: 'Reverse arrow',
-      fr: 'Inverser la flèche',
-      es: 'Invertir flecha',
-      de: 'Pfeil umkehren',
-      it: 'Inverti freccia'
+      en: 'Source arrow',
+      fr: 'Flèche source',
+      es: 'Flecha origen',
+      de: 'Quellpfeil',
+      it: 'Freccia sorgente'
     },
     tooltips: {
-      en: 'Draw the arrow tip on the source side instead of the target side (graphical only, the data flow direction is unchanged)',
-      fr: 'Dessine la pointe de flèche du côté source au lieu du côté cible (purement graphique, le sens du flux dans les données reste inchangé)',
-      es: 'Dibuja la punta de flecha en el lado de origen en lugar del lado de destino (solo gráfico, el sentido del flujo no cambia)',
-      de: 'Zeichnet die Pfeilspitze auf der Quellseite statt auf der Zielseite (rein grafisch, die Flussrichtung in den Daten bleibt unverändert)',
-      it: 'Disegna la punta della freccia sul lato sorgente invece che sul lato destinazione (solo grafico, il senso del flusso non cambia)'
+      en: 'Draw an arrow tip on the source side of the selected link(s), independently of the target arrow (graphical only, the data flow direction is unchanged)',
+      fr: 'Dessine une pointe de flèche du côté source du/des flux sélectionné(s), indépendamment de la flèche côté cible (purement graphique, le sens du flux dans les données reste inchangé)',
+      es: 'Dibuja una punta de flecha en el lado de origen del/los flujo(s) seleccionado(s), independientemente de la flecha de destino (solo gráfico, el sentido del flujo no cambia)',
+      de: 'Zeichnet eine Pfeilspitze auf der Quellseite des/der ausgewählten Flusses/Flüsse, unabhängig vom Zielpfeil (rein grafisch, die Flussrichtung in den Daten bleibt unverändert)',
+      it: 'Disegna una punta di freccia sul lato sorgente del/dei flusso/i selezionato/i, indipendentemente dalla freccia di destinazione (solo grafico, il senso del flusso non cambia)'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -2857,6 +3071,48 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Cambiar el tamaño de la flecha (desde el final del flujo al nodo)',
       de: 'Größe des Pfeils ändern (vom Ende des Flusses zum Knoten)',
       it: 'Cambiare la dimensione della freccia (dalla fine del flusso al nodo)'
+    }
+  } satisfies AttributeConfig<number>,
+
+  source_notch: {
+    default: false,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['drawElements'] as BaseActionType[],
+    labels: {
+      en: 'Source notch',
+      fr: 'Encoche source',
+      es: 'Muesca de origen',
+      de: 'Quellkerbe',
+      it: 'Tacca sorgente'
+    },
+    tooltips: {
+      en: 'Carve a chevron notch (reversed arrow tail) into the start of the selected link(s). Links leaving the same node side share a single notch.',
+      fr: 'Creuse une encoche en chevron (flèche en négatif) au départ du/des flux sélectionné(s). Les flux partant du même côté d\'un nœud partagent une seule encoche.',
+      es: 'Talla una muesca en forma de galón (flecha invertida) al inicio del/los flujo(s) seleccionado(s). Los flujos que salen del mismo lado de un nodo comparten una sola muesca.',
+      de: 'Schneidet eine Pfeil-Kerbe (umgekehrte Pfeilspitze) am Anfang des/der ausgewählten Flusses/Flüsse ein. Flüsse, die dieselbe Knotenseite verlassen, teilen sich eine einzige Kerbe.',
+      it: 'Incide una tacca a freccia (freccia invertita) all\'inizio del/dei flusso/i selezionato/i. I flussi che escono dallo stesso lato di un nodo condividono un\'unica tacca.'
+    }
+  } satisfies AttributeConfig<boolean>,
+
+  source_notch_size: {
+    default: 10,
+    type: (() => 10) as (() => number),
+    category: 'shape' as const,
+    actions: ['drawElements'] as BaseActionType[],
+    labels: {
+      en: 'Notch depth',
+      fr: 'Profondeur encoche',
+      es: 'Profundidad de muesca',
+      de: 'Kerbentiefe',
+      it: 'Profondità tacca'
+    },
+    tooltips: {
+      en: 'Depth (in px) of the source notch carved into the start of the link',
+      fr: 'Profondeur (en px) de l\'encoche creusée au départ du flux',
+      es: 'Profundidad (en px) de la muesca tallada al inicio del flujo',
+      de: 'Tiefe (in px) der am Flussanfang eingeschnittenen Kerbe',
+      it: 'Profondità (in px) della tacca incisa all\'inizio del flusso'
     }
   } satisfies AttributeConfig<number>,
 
@@ -2901,6 +3157,50 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       it: 'Scegliere quale regola definisce il colore del flusso'
     }
   } satisfies AttributeConfig<'flow' | 'source' | 'target' | 'gradient' | 'auto'>,
+
+  // #fn — force l'affichage de CE flux même quand sa valeur est nulle, en complément
+  // de l'option globale « flux nuls visibles » (drawing_area.show_zero_links). La
+  // visibilité réelle est décidée dans Link._is_visible_ignoring_container_modes.
+  visible_when_zero: {
+    default: false,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['drawWithNodes', 'drawElements'] as LinkBaseActionType[],
+    labels: {
+      en: 'Show if null',
+      fr: 'Afficher si nul',
+      es: 'Mostrar si es nulo',
+      de: 'Anzeigen wenn null',
+      it: 'Mostra se nullo'
+    },
+    tooltips: {
+      en: 'Always draw this link even when its value is zero (overrides the null-link filter for this link only)',
+      fr: 'Toujours afficher ce flux même si sa valeur est nulle (outrepasse le masquage des flux nuls, pour ce flux uniquement)',
+      es: 'Mostrar siempre este flujo aunque su valor sea cero (anula el filtrado de flujos nulos solo para este flujo)',
+      de: 'Diesen Fluss immer anzeigen, auch wenn sein Wert null ist (überschreibt die Nullfluss-Filterung nur für diesen Fluss)',
+      it: 'Mostra sempre questo flusso anche se il suo valore è zero (ignora il filtro dei flussi nulli solo per questo flusso)'
+    }
+  } satisfies AttributeConfig<boolean>,
+  link_caps: {
+    default: false,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['drawWithNodes', 'drawElements'] as LinkBaseActionType[],
+    labels: {
+      en: 'Cap',
+      fr: 'Raccord',
+      es: 'Empalme',
+      de: 'Übergang',
+      it: 'Raccordo'
+    },
+    tooltips: {
+      en: 'On elliptical source/target nodes, fill the gap between the ellipse edge and this link start with the link color, for a smoother junction.',
+      fr: 'Sur les nœuds source/cible elliptiques, comble l\'espace entre le bord de l\'ellipse et le départ de ce flux avec sa couleur, pour une jonction plus fluide.',
+      es: 'En nodos origen/destino elípticos, rellena el espacio entre el borde de la elipse y el inicio de este flujo con su color, para una unión más fluida.',
+      de: 'Bei elliptischen Quell-/Zielknoten den Zwischenraum zwischen dem Ellipsenrand und dem Beginn dieses Flusses mit dessen Farbe füllen, für einen weicheren Übergang.',
+      it: 'Su nodi sorgente/destinazione ellittici, riempie lo spazio tra il bordo dell\'ellisse e l\'inizio di questo flusso con il suo colore, per un raccordo più fluido.'
+    }
+  } satisfies AttributeConfig<boolean>,
 } as const
 
 export const LINKS_LABEL_SPECIFIC_CONFIG = {
@@ -2952,7 +3252,7 @@ export const LINKS_LABEL_SPECIFIC_CONFIG = {
   // Stocké aussi sur value_label par symétrie de createLinkLabelSpecificConfig
   // mais ignoré côté valeur.
   text_source: {
-    default: 'custom' as 'custom' | 'none' | 'flow' | 'source' | 'target' | 'source_target',
+    default: 'custom' as 'custom' | 'none' | 'flow' | 'source' | 'target' | 'source_target' | 'tag',
     type: (() => 'custom') as (() => string),
     category: '',
     actions: [] as BaseActionType[],
@@ -2964,11 +3264,34 @@ export const LINKS_LABEL_SPECIFIC_CONFIG = {
       it: 'Contenuto etichetta'
     },
     tooltips: {
-      en: 'Pick what the link label displays: typed text, nothing, source/target node name, or source → target',
-      fr: 'Choisir ce qu\'affiche le label du flux : texte saisi, rien, nom du nœud source/destination, ou source → destination',
-      es: 'Elegir lo que muestra la etiqueta: texto, nada, nombre del nodo origen/destino, o origen → destino',
-      de: 'Wählen, was die Beschriftung anzeigt: Text, nichts, Name des Quell-/Zielknotens oder Quelle → Ziel',
-      it: 'Scegli cosa mostra l\'etichetta: testo, nulla, nome del nodo sorgente/destinazione, o sorgente → destinazione'
+      en: 'Pick what the link label displays: typed text, nothing, source/target node name, source → target, or an assigned flux tag',
+      fr: 'Choisir ce qu\'affiche le label du flux : texte saisi, rien, nom du nœud source/destination, source → destination, ou un tag de flux assigné',
+      es: 'Elegir lo que muestra la etiqueta: texto, nada, nombre del nodo origen/destino, origen → destino, o una etiqueta de flujo asignada',
+      de: 'Wählen, was die Beschriftung anzeigt: Text, nichts, Name des Quell-/Zielknotens, Quelle → Ziel oder ein zugewiesener Fluss-Tag',
+      it: 'Scegli cosa mostra l\'etichetta: testo, nulla, nome del nodo sorgente/destinazione, sorgente → destinazione, o un tag di flusso assegnato'
+    }
+  } satisfies AttributeConfig<string>,
+
+  // Source 'tag' : id du groupe de tags de flux dont on affiche le tag assigné
+  // au lien (le premier si plusieurs). Vide si la source n'est pas 'tag'.
+  flux_tag_group_id: {
+    default: '',
+    type: (() => '') as (() => string),
+    category: '',
+    actions: [] as BaseActionType[],
+    labels: {
+      en: 'Tag group',
+      fr: 'Groupe de tags',
+      es: 'Grupo de etiquetas',
+      de: 'Tag-Gruppe',
+      it: 'Gruppo di tag'
+    },
+    tooltips: {
+      en: 'Flux tag group whose assigned tag is shown as the label',
+      fr: 'Groupe de tags de flux dont le tag assigné est affiché comme label',
+      es: 'Grupo de etiquetas de flujo cuya etiqueta asignada se muestra como etiqueta',
+      de: 'Fluss-Tag-Gruppe, deren zugewiesener Tag als Beschriftung angezeigt wird',
+      it: 'Gruppo di tag di flusso il cui tag assegnato è mostrato come etichetta'
     }
   } satisfies AttributeConfig<string>,
 } as const
@@ -3058,7 +3381,25 @@ export function updateElements<
   refreshParentComponent: () => void
 ) {
   const fullKey = prefix ? `${prefix}_${String(key)}` : String(key)
-  // Create a dict of old val for each elements 
+  // #1231 — Changer la hauteur/largeur min d'un nœud depuis le menu redessine la forme en
+  // mode TOP-ancré (action `drawElements` au niveau nœud : le coin haut reste, la boîte
+  // grandit vers le bas → le centre bouge). Or la vérité persistée ET le modèle d'ancrage
+  // (#1230/#1231) sont le CENTRE : au changement de datatag/échelle le centre reste fixe. Pour
+  // rester cohérent, un changement de taille au menu doit aussi garder le CENTRE fixe (le coin
+  // est redérivé du centre stocké → croissance symétrique haut/bas). C'est l'inverse des
+  // poignées de drag, qui gardent volontairement le bord opposé fixe (settleCenterAnchor).
+  const is_size_attr = fullKey === 'shape_min_height' || fullKey === 'shape_min_width'
+  const reCenterNodes = () => {
+    if (!is_size_attr) return
+    elements.forEach(el => {
+      const node = el as { forceDeriveFromCenter?: () => void, draw?: () => void }
+      if (typeof node.forceDeriveFromCenter === 'function') {
+        node.forceDeriveFromCenter() // coin = centre stocké − taille/2 (centre fixe)
+        node.draw?.()
+      }
+    })
+  }
+  // Create a dict of old val for each elements
   const dict_old_val: { [id: string]: ExtractConfigValue<CONFIG[K]> } = {}
   elements.forEach(element => {
     dict_old_val[element.id] = Reflect.get(element, fullKey)
@@ -3069,6 +3410,7 @@ export function updateElements<
     elements.forEach(element => {
       Reflect.set(element, fullKey, value)
     })
+    reCenterNodes()
     refreshParentComponent()
   }
 
@@ -3076,6 +3418,7 @@ export function updateElements<
   const inv_updateElements = () => {
     elements.forEach(element => Reflect.set(element, fullKey, dict_old_val[element.id])
     )
+    reCenterNodes()
     refreshParentComponent()
   }
 
@@ -3145,6 +3488,11 @@ export const getElementsValueLabelValues = (
   prefix: 'name_label' | 'value_label',
   refreshParentComponent: () => void
 ) => getConfigValues(elements, VALUE_LABEL_CONFIG, prefix, refreshParentComponent)
+
+export const getElementsStockLabelValues = (
+  elements: ElementsType,
+  refreshParentComponent: () => void
+) => getConfigValues(elements, STOCK_LABEL_CONFIG, 'stock_label', refreshParentComponent)
 
 export const getElementsNameLabelValues = (
   elements: Class_NodeBase[] | Class_ElementStyle[],

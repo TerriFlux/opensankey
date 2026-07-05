@@ -43,6 +43,8 @@ import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeElement } from './Node'
 import type { Class_NodeDimension } from './NodeDimension'
 import { Type_Side, } from './ElementsAttributesConfig'
+import { transferAnchorLock } from './anchorLockTransfer'
+import { clampLinkThickness } from './flowThickness'
 import { Class_LinkAttribute } from './Element'
 import { LinkDrawNameLabel, LinkDrawValueLabel } from './DrawLabel'
 import { Class_ApplicationData } from '../types/ApplicationData'
@@ -199,7 +201,14 @@ export class Class_LinkElement extends Class_LinkAttribute {
   private _source: Class_NodeElement
   private _target: Class_NodeElement
   private _values: Class_ElementValueTree | Class_LinkValue
+  // Pointe de flèche côté cible (shape_is_arrow) et côté source (shape_arrow_at_source),
+  // indépendantes : un flux peut en porter zéro, une ou deux. Chacune est calculée par
+  // le nœud correspondant (cible / source) puis stockée ici.
   private _arrow_shape: string | undefined
+  private _arrow_shape_source: string | undefined
+  // Source notch (negative arrow) chevron, computed at node level and shared by
+  // every link leaving the same node side (so several links draw a single notch).
+  private _source_notch_shape: string | undefined
 
   // Boolean var only used when enlarging thickness when mouse hovering link
   private _artifical_enlargement: boolean = false
@@ -332,6 +341,24 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this.target_anchor_delta = _.target_anchor_delta
   }
 
+  // I/O anchor lock ("cadenas" of the "Ordre des flux E/S" menu). Carried with
+  // the link ORDER (Node.keepLinkOrderingFrom), not with copyAttrFrom : the lock
+  // and the order it pins are one setting, transferred together when a layout is
+  // re-applied so the locked arrangement survives the next reorg (issue #202).
+  // Both the flag AND the frozen side are copied — see transferAnchorLock.
+  public copyAnchorLockFrom(_: Class_LinkElement): void {
+    const next = transferAnchorLock<Type_Side>({
+      source_side_locked: _._source_side_locked,
+      source_side_frozen: _._source_side_frozen,
+      target_side_locked: _._target_side_locked,
+      target_side_frozen: _._target_side_frozen,
+    })
+    this._source_side_locked = next.source_side_locked
+    this._source_side_frozen = next.source_side_frozen
+    this._target_side_locked = next.target_side_locked
+    this._target_side_frozen = next.target_side_frozen
+  }
+
   //public copyFrom(_: Class_ProtoElement<typeof ALL_ATTRIBUTES_CONFIG>) {
   public copyFrom(_: Class_LinkElement) {
     super.copyFrom(_)
@@ -417,6 +444,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
     super.unDraw()
     this._link_control_points.unDrawControlPoints()
     this._arrow_shape = undefined // reset shape also
+    this._arrow_shape_source = undefined
+    this._source_notch_shape = undefined
   }
 
   public drawShape() {
@@ -428,6 +457,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public drawArrow() {
     if (!this.d3_selection) return
     this._drawArrow()
+    this._orderD3Elements()
+  }
+
+  public drawSourceNotch() {
+    if (!this.d3_selection) return
+    this._drawSourceNotch()
     this._orderD3Elements()
   }
 
@@ -812,6 +847,23 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // Speed-up computing
     if (!this.d3_selection)
       return
+    const draw_target = this.shape_is_arrow && this.is_visible
+    const draw_source = this.shape_arrow_at_source && this.is_visible
+    // Phase 1 — calcul paresseux : si une pointe demandée n'est pas encore connue,
+    // demander au nœud correspondant de la calculer. Ce calcul réinjecte le path via
+    // le setter shape_arrow_path[_source] qui rappelle drawArrow ; on laisse cette
+    // ré-entrée faire le rendu une fois toutes les pointes connues, et on sort ici
+    // pour ne pas dessiner deux fois (cas des deux flèches sur le même flux).
+    let triggered = false
+    if (draw_target && this._arrow_shape === undefined) {
+      this.target.drawLinksArrow(); triggered = true
+    }
+    if (draw_source && this._arrow_shape_source === undefined) {
+      this.source.drawLinksArrow(); triggered = true
+    }
+    if (triggered)
+      return
+    // Phase 2 — rendu : (re)dessiner toutes les pointes connues et demandées.
     const da = this.sankey.drawing_area
     const border_visible = this.shape_border_visible
     const border_color = this.shape_border_color
@@ -819,31 +871,50 @@ export class Class_LinkElement extends Class_LinkAttribute {
     const border_thickness = this.shape_border_thickness
     // Clean previous shape
     this.d3_selection?.selectAll('.link_arrow').remove()
-    // draw arrow if needed
-    if (this.shape_is_arrow && this.is_visible) {
-      if (this._arrow_shape === undefined) {
-        if (this.shape_is_arrow_reversed) {
-          this.source.drawLinksArrow()
-        } else {
-          this.target.drawLinksArrow()
-        }
+    const arrow_color = this.getArrowColorToUse() // Avoid recomputing
+    // Append one arrow path (factorisé pour les deux extrémités).
+    const appendArrowPath = (d: string) => {
+      this.d3_selection?.append('path')
+        .attr('class', 'link_arrow')
+        .attr('d', d)
+        .attr('fill', this.shape_color_visible ? arrow_color : 'none')
+        .attr('fill-opacity', da.type_data == 'data_label' && !this.has_data ? 0.2 : this.shape_opacity)
+        .attr('stroke', border_visible ? border_color : 'none')
+        .attr('stroke-width', border_visible ? border_thickness : 0)
+        .attr('stroke-opacity', border_visible ? 1 : 0)
+        .attr('stroke-dasharray', border_dashed ? '10,2' : '')
+    }
+    if (draw_target && this._arrow_shape !== undefined)
+      appendArrowPath(this._arrow_shape)
+    if (draw_source && this._arrow_shape_source !== undefined)
+      appendArrowPath(this._arrow_shape_source)
+  }
+
+  /**
+   * Draw the "source notch" (negative arrow) on this link's d3 selection.
+   * The chevron is computed once at the source node for ALL links leaving the
+   * same side (so they share a single notch), then drawn as a copy on each
+   * participating link. Filled with the drawing-area background color so it
+   * carves a V out of the link starts, regardless of element z-order.
+   * @protected
+   */
+  protected _drawSourceNotch() {
+    if (!this.d3_selection)
+      return
+    // Clean previous notch
+    this.d3_selection?.selectAll('.link_source_notch').remove()
+    if (this.shape_source_notch && this.is_visible) {
+      if (this._source_notch_shape === undefined) {
+        this.source.drawLinksSourceNotch()
       }
       else {
-        const arrow_color = this.getArrowColorToUse() // Avoid recomputing
         this.d3_selection?.append('path')
-          .attr('class', 'link_arrow')
-          .attr('d', this._arrow_shape)
-          .attr('fill', this.shape_color_visible ? arrow_color : 'none')
-          .attr('fill-opacity', da.type_data == 'data_label' && !this.has_data ? 0.2 : this.shape_opacity)
-          // .attr('stroke', arrow_color)
-          // .attr('stroke-width', 0.1)
-          .attr('stroke', border_visible ? border_color : 'none')
-          .attr('stroke-width', border_visible ? border_thickness : 0)
-          .attr('stroke-opacity', border_visible ? 1 : 0)
-          .attr('stroke-dasharray', border_dashed ? '10,2' : '')
+          .attr('class', 'link_source_notch')
+          .attr('d', this._source_notch_shape)
+          .attr('fill', this.sankey.drawing_area.color)
+          .attr('stroke', 'none')
+          .attr('pointer-events', 'none')
       }
-
-
     }
   }
 
@@ -856,6 +927,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     if (!this._link_shape || !this._link_draw_value || !this._link_draw_label || !this._link_draw_icon) return
     this._link_shape.drawShape()
     this._drawArrow()
+    this._drawSourceNotch()
     // Le nom est dessiné avant la valeur : en mode stick, la valeur se cale sur
     // la bbox du <text> du name_label.
     this._link_draw_label.drawGenericLabel()
@@ -880,6 +952,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this.d3_selection?.selectAll('.link_shape').raise()
     this.d3_selection?.selectAll('.link_path').raise()
     this.d3_selection?.selectAll('.link_arrow').raise()
+    // Above shape/path/arrow (it masks them) but below labels.
+    this.d3_selection?.selectAll('.link_source_notch').raise()
 
     this._link_draw_label.d3_selection?.raise()
     this._link_draw_value.d3_selection?.raise()
@@ -891,6 +965,16 @@ export class Class_LinkElement extends Class_LinkAttribute {
   ) {
     // Apply parent behavior first
     super.eventDoubleLMBClick(event)
+    // Double-clic sur le tracé du flux → éditer sa valeur inline. Marche aussi
+    // quand le flux est encore en pointillé (sans valeur, donc sans label
+    // affiché) : openInlineEditor force le dessin de l'input. Inutile en mode
+    // structure (pas de notion de valeur).
+    const drawing_area = this.drawing_area
+    if (!drawing_area.editable || drawing_area.type_data == 'structure') return
+    if (!this.is_selected) {
+      drawing_area.addElementToSelection(this)
+    }
+    this._link_draw_value.openInlineEditor()
   }
   /**
    * Deal with simple left Mouse Button (LMB) click on given element
@@ -1111,6 +1195,33 @@ export class Class_LinkElement extends Class_LinkAttribute {
     return this.valueCurrent === 0
   }
 
+  /**
+   * #fn — un flux à valeur nulle reste affiché si l'option GLOBALE « flux nuls
+   * visibles » (drawing_area.show_zero_links, Paramètres d'affichage) est active,
+   * OU si ce flux porte l'attribut PAR-FLUX `shape_visible_when_zero`. Lu dans
+   * `_is_visible_ignoring_container_modes` pour outrepasser le filtre `is_not_zero`.
+   */
+  public get is_forced_visible_when_zero(): boolean {
+    // #188 — a structurally-absent flux does not exist for this dataTag: it must
+    // never be revealed by the global "show zero links" option.
+    if (this.is_structurally_absent_for_current_datatags) return false
+    return this.drawing_area.show_zero_links || this.shape_visible_when_zero
+  }
+
+  /**
+   * #188 — true when this flux is structurally absent for the currently selected
+   * dataTags (pruned by the no-propagation option; #161 marker on the leaf). The
+   * flux does not exist for that dataTag, so it must stay hidden even with
+   * "show zero links" on or in structure mode — overriding the null-value path
+   * in is_not_zero (valueCurrent is null for an absent leaf, which would
+   * otherwise read as "!= 0" and reveal the link as a dashed phantom).
+   * Legacy/default files carry no marker, so this is always false there.
+   */
+  public get is_structurally_absent_for_current_datatags(): boolean {
+    if (this._values instanceof Class_LinkValue) return this._values.structurally_absent
+    return this._values.getStructurallyAbsentForDataTags(this.selected_data_tags_list as Class_DataTag[])
+  }
+
   public get child_links() { return this._child_links }
   public get is_multi_link() { return this._is_multi_link }
 
@@ -1120,7 +1231,37 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public set is_expansion_link(v: boolean) { this._is_expansion_link = v }
 
   public get is_visible() {
-    return this.is_visible_ignoring_container_modes && this.is_allowed_by_container_modes
+    if (this.is_visible_ignoring_container_modes && this.is_allowed_by_container_modes) return true
+    // Mode « afficher aussi les flux porteurs de données » : EN PLUS de la vue
+    // courante (union, pas filtre). On court-circuite les portes niveau/dimension/
+    // container pour révéler un flux normalement masqué par son niveau.
+    if (
+      this.drawing_area.application_data.reveal_data_links &&
+      super.is_visible &&
+      Object.values(this._child_links).length == 0
+    ) {
+      // (a) le flux de donnée lui-même
+      if (this.has_collected_data) return true
+      // (b) flux structurel reliant un nœud nouvellement révélé à un nœud déjà
+      //     visible (ou à un autre nœud révélé) → reconnecte le nœud au diagramme.
+      //     On lit is_visible_without_orphan (pas is_visible) pour éviter la
+      //     récursion orphan_visible ↔ is_visible des liens.
+      const src_vis = this._source.is_visible_without_orphan || this._source.is_revealed_by_data
+      const tgt_vis = this._target.is_visible_without_orphan || this._target.is_revealed_by_data
+      if (src_vis && tgt_vis && (this._source.is_revealed_by_data || this._target.is_revealed_by_data)) {
+        return true
+      }
+    }
+    return false
+  }
+
+  /**
+   * Vrai si ce flux porte une valeur collectée SAISIE (donnée mesurée ou borne
+   * min) sur au moins un datatag — à la différence de `has_data` qui inclut
+   * aussi les flux définis par ratio/pourcentage (sans valeur mesurée).
+   */
+  public get has_collected_data(): boolean {
+    return this._values.has_collected_data
   }
 
   /**
@@ -1144,6 +1285,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // ajouter doublerait la taille (bug observé sur deux englobants
     // i_c_o_c reliés enfant↔enfant et sur l'arête parent↔enfant masquée
     // qui retombait sur les enfants externes via la dim sœur).
+    //
+    // #1231 — on ne compte la face MASQUÉE que si la face OPPOSÉE du nœud
+    // n'a aucun lien visible. En `in_children_out_parent` (resp.
+    // `in_parent_out_children`) la face entrée (resp. sortie) reste visible
+    // et porte déjà le débit réel : sommer en plus la face masquée — qui
+    // contient les variantes jumelles à TOUS les niveaux d'agrégation de
+    // l'autre extrémité (agrégé + désagrégés) — gonflait la hauteur d'un
+    // facteur. On ne retombe sur la face masquée que quand les DEUX faces
+    // sont masquées (cas `in_parent_out_parent`, seule source de hauteur).
     const s = this._source
     const t = this._target
     const my_dims = [...node.dimensions_as_parent, ...node.dimensions_as_child]
@@ -1152,12 +1302,16 @@ export class Class_LinkElement extends Class_LinkAttribute {
       if (!d.children.includes(node)) return false
       const mode = d.container_mode
       if (s === node) {
-        // sortie du nœud-enfant masquée par ce mode → à compter pour son sizing
-        return mode === 'in_children_out_parent' || mode === 'in_parent_out_parent'
+        // sortie du nœud-enfant masquée par ce mode → à compter pour son sizing,
+        // mais seulement si la face entrée ne porte rien de visible.
+        return (mode === 'in_children_out_parent' || mode === 'in_parent_out_parent') &&
+          !node.hasVisibleInputLinks()
       }
       if (t === node) {
-        // entrée du nœud-enfant masquée par ce mode → à compter pour son sizing
-        return mode === 'in_parent_out_children' || mode === 'in_parent_out_parent'
+        // entrée du nœud-enfant masquée par ce mode → à compter pour son sizing,
+        // mais seulement si la face sortie ne porte rien de visible.
+        return (mode === 'in_parent_out_children' || mode === 'in_parent_out_parent') &&
+          !node.hasVisibleOutputLinks()
       }
       return false
     })
@@ -1194,10 +1348,16 @@ export class Class_LinkElement extends Class_LinkAttribute {
       const node_type = this.sankey.node_taggs_dict['type de noeud']
       const productTag = node_type?.tags_dict['produit']
       const sectorTag = node_type?.tags_dict['secteur']
-      const source_is_product = this.source.hasGivenTag(productTag)
-      const source_is_sector = this.source.hasGivenTag(sectorTag)
-      const source_unitary_tagg = source_is_product ? 'product_unitary' : source_is_sector ? 'sector_unitary' : 'unitary'
-      const target_unitary_tagg = source_unitary_tagg == 'unitary' ? 'unitary' : source_unitary_tagg == 'product_unitary' ? 'sector_unitary' : 'product_unitary'
+      // Le tagg unitaire d'une extrémité dépend de SON propre type (produit/secteur),
+      // pas de l'opposé de la source. L'ancien code supposait une structure bipartite
+      // produit↔secteur : pour un lien produit→produit (ex. Production biologique →
+      // Bois sur pied), il testait la cible dans 'sector_unitary' (groupe inexistant
+      // pour un nœud produit) → undefined → lien masqué. On teste chaque bout dans son
+      // groupe réel (les cas produit→secteur / secteur→produit restent identiques).
+      const unitaryTaggOf = (node: Class_NodeElement) =>
+        node.hasGivenTag(productTag) ? 'product_unitary' : node.hasGivenTag(sectorTag) ? 'sector_unitary' : 'unitary'
+      const source_unitary_tagg = unitaryTaggOf(this.source)
+      const target_unitary_tagg = unitaryTaggOf(this.target)
       const visible = this.source.grouped_taggs_dict[source_unitary_tagg] &&
         this.source.grouped_taggs_dict[source_unitary_tagg][0].is_selected ||
         this.target.grouped_taggs_dict[target_unitary_tagg] &&
@@ -1209,7 +1369,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       Object.values(this._child_links).length == 0 &&
       this.are_source_and_target_displayed &&
       this.are_related_flux_tags_selected &&
-      (!require_non_zero || this.is_not_zero)
+      (!require_non_zero || this.is_not_zero || this.is_forced_visible_when_zero)
     )
   }
 
@@ -1681,6 +1841,25 @@ export class Class_LinkElement extends Class_LinkAttribute {
       return this._values.getValueForDataTags(this.selected_data_tags_list as Class_DataTag[]) as Class_LinkValue | null
   }
 
+  /**
+   * Épaisseur cible (px) de ce flux quand il est la référence d'échelle du view tag COURANT
+   * (cf. DrawingArea.applyViewTagScaleReference). undefined si ce flux n'est pas la référence
+   * du view tag courant, ou en « vue complète » (aucun view tag sélectionné). La donnée vit
+   * sur la DrawingArea (par view tag), pas comme attribut de flux — la valeur dépend du view
+   * tag affiché.
+   */
+  public get scale_reference_thickness(): number | undefined {
+    const vt_id = this.sankey.current_scale_reference_viewtag_id
+    if (!vt_id) return undefined
+    const ref = this.drawing_area.scale_reference_by_viewtag[vt_id]
+    return (ref && ref.link_id === this.id) ? ref.thickness : undefined
+  }
+  public set scale_reference_thickness(value: number | undefined) {
+    const vt_id = this.sankey.current_scale_reference_viewtag_id
+    if (!vt_id) return
+    this.drawing_area.setScaleReferenceForViewTag(vt_id, (value && value > 0) ? this.id : undefined, value ?? 0)
+  }
+
   private _is_computing = false
   public get valueCurrent() {
     if (this._is_computing) {
@@ -1975,16 +2154,18 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   /**
-   * Clamp a raw pixel thickness to the drawing area min/max limits
+   * Clamp a raw pixel thickness to the drawing area min/max limits.
+   *
+   * Le plancher est `minimum_flux` quand il est défini (0 compris → épaisseur
+   * réelle du flux), sinon le plancher dur historique de 2px (#200). Politique
+   * pure isolée dans flowThickness.ts (testable hors cycle d'imports).
    */
   private _clampThickness(linkValueInPx: number): number {
-    if (this.drawing_area.minimum_flux && linkValueInPx < this.drawing_area.minimum_flux) {
-      return this.drawing_area.minimum_flux
-    }
-    if (this.drawing_area.maximum_flux && linkValueInPx > this.drawing_area.maximum_flux) {
-      return this.drawing_area.maximum_flux
-    }
-    return Math.max(2, linkValueInPx)
+    return clampLinkThickness(
+      linkValueInPx,
+      this.drawing_area.minimum_flux,
+      this.drawing_area.maximum_flux
+    )
   }
 
   /**
@@ -2044,6 +2225,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
   // (e.g. d3 extrapolation, missing domain) cannot produce broken anchor math.
   private _safeRawThickness(raw: number): number {
     if (!Number.isFinite(raw) || raw < 0) return 0
+    // Respect the maximum_flux cap: a flow whose value exceeds the cap is DRAWN
+    // clamped at maximum_flux, so node height and anchor offsets must use the
+    // same capped value — otherwise the node grows past the visible flux stack.
+    // The minimum cap is intentionally NOT applied here (see the comment block
+    // above): summing the per-link 2px/minimum_flux floor would inflate nodes
+    // that carry many thin links.
+    if (this.drawing_area.maximum_flux && raw > this.drawing_area.maximum_flux) {
+      return this.drawing_area.maximum_flux
+    }
     return raw
   }
 
@@ -2086,10 +2276,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
   public get position_x_start() {
     const source_side = this.source_side
-    // Si la flèche est inversée, le trait est raccourci côté source pour laisser
+    // Avec une flèche côté source, le trait est raccourci côté source pour laisser
     // place à la pointe (symétrique de position_x_end côté cible).
     let shifting_start_point_x = 0
-    if (this.shape_is_arrow && this.shape_is_arrow_reversed) {
+    if (this.shape_arrow_at_source) {
       const is_horizontal_at_source = this.is_horizontal || this.is_horizontal_vertical
       const is_revert = (is_horizontal_at_source && source_side === 'right') || (!is_horizontal_at_source && source_side === 'bottom')
       const sign = is_revert ? -1 : 1
@@ -2109,7 +2299,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public get position_y_start() {
     const source_side = this.source_side
     let shifting_start_point_y = 0
-    if (this.shape_is_arrow && this.shape_is_arrow_reversed) {
+    if (this.shape_arrow_at_source) {
       const is_horizontal_at_source = this.is_horizontal || this.is_horizontal_vertical
       const is_revert = (is_horizontal_at_source && source_side === 'right') || (!is_horizontal_at_source && source_side === 'bottom')
       const sign = is_revert ? -1 : 1
@@ -2129,7 +2319,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public get position_x_end() {
     // Calcul du décalage pour la flèche (code existant)
     let shifting_end_point_x = 0
-    if (this.shape_is_arrow && !this.shape_is_arrow_reversed) {
+    if (this.shape_is_arrow) {
       const is_horizontal_at_target = this.is_horizontal || this.is_vertical_horizontal
       const is_revert = (is_horizontal_at_target && this.target_side == 'right') || (!is_horizontal_at_target && this.target_side == 'bottom')
       const sign_shifting_end_point = (is_revert) ? -1 : 1
@@ -2152,7 +2342,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public get position_y_end() {
     // Calcul du décalage pour la flèche (code existant)
     let shifting_end_point_y = 0
-    if (this.shape_is_arrow && !this.shape_is_arrow_reversed) {
+    if (this.shape_is_arrow) {
       const is_horizontal_at_target = this.is_horizontal || this.is_vertical_horizontal
       const is_revert = (is_horizontal_at_target && this.target_side == 'right') || (!is_horizontal_at_target && this.target_side == 'bottom')
       const sign_shifting_end_point = (is_revert) ? -1 : 1
@@ -2193,6 +2383,16 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public set shape_arrow_path(_: string) {
     this._arrow_shape = _
     this.drawArrow()
+  }
+
+  public set shape_arrow_path_source(_: string) {
+    this._arrow_shape_source = _
+    this.drawArrow()
+  }
+
+  public set shape_source_notch_path(_: string) {
+    this._source_notch_shape = _
+    this.drawSourceNotch()
   }
 
   public get value_label_unit_is_reference() { return this._is_unit_reference }
@@ -2247,6 +2447,11 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @memberof Class_LinkElement
    */
   public get is_not_zero(): boolean {
+    // #188 — a flux structurally absent for the current dataTags does not exist
+    // there: it is never "non-zero", so it stays hidden. Checked before the
+    // structure-mode short-circuit (which would otherwise force it visible) and
+    // before the valueCurrent path (null for an absent leaf reads as "!= 0").
+    if (this.is_structurally_absent_for_current_datatags) return false
     if (this.sankey.drawing_area.type_data === 'structure') {
       return true
     }
@@ -2314,11 +2519,38 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @memberof Class_LinkElement
    */
   protected get is_value_above_threshold(): boolean {
+    // Mode pixel (#seuil px) : on compare l'épaisseur rendue, pas la valeur.
+    if (this.drawing_area.filter_unit === 'pixel') {
+      return this.isThicknessAbovePxThreshold(this.drawing_area.filter_link_value_px)
+    }
     if (this.drawing_area.filter_link_value == 0) {
       return true
-    } else {
-      return Number(this.valueCurrent) >= this.drawing_area.filter_link_value
     }
+    // Un flux sans valeur (ghost_link en cours de création au cliquer-glisser,
+    // flux de structure) n'est pas concerné par le filtre de valeur minimale :
+    // Number(null) === 0, donc le seuil le masquerait à tort et le pointillé de
+    // création disparaîtrait dès que le filtre est > 0.
+    if (this.valueCurrent == null) {
+      return true
+    }
+    return Number(this.valueCurrent) >= this.drawing_area.filter_link_value
+  }
+
+  /**
+   * Seuil d'affichage exprimé en pixels (#seuil px). Renvoie true (= le flux passe
+   * le seuil) quand : le seuil est nul/négatif (désactivé), le flux n'a pas de
+   * valeur (ghost/structure — jamais masqué par un seuil), ou son épaisseur
+   * PROPORTIONNELLE (scaleValueToPx, avant plancher de lisibilité minimum_flux)
+   * atteint le seuil. On volontairement ne clampe pas : le seuil doit refléter la
+   * taille réelle de la donnée, pas le plancher de lisibilité.
+   */
+  public isThicknessAbovePxThreshold(px_threshold: number): boolean {
+    if (!(px_threshold > 0)) return true
+    if (this.valueCurrent == null) return true
+    // Pixels ÉCRAN : l'épaisseur locale (repère SVG) est multipliée par le zoom
+    // live `k` pour comparer au seuil exprimé en pixels réellement affichés.
+    const screen_px = this.scaleValueToPx(Number(this.valueCurrent)) * this.drawing_area.getZoomScale()
+    return screen_px >= px_threshold
   }
   public get tooltip_text(): string {
     return this._tooltip_text
