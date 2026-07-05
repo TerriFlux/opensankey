@@ -45,7 +45,8 @@ import { Class_NodeBase, Type_NameLabelSource } from '../Elements/NodeBase'
 import { ClassTemplate_Legend } from '../Elements/Legend'
 import { Class_Sankey, Type_RatioFluxConstraint, Type_RatioStockFluxConstraint, Type_StockChainingConstraint, Type_SpreadsheetState } from '../types/Sankey'
 import { Class_Tag } from '../types/Tag'
-import { node_exchanges_style, elementStyleConfigs, product_sector_styles, ElementStyleKey, LinkStyle, NodeStyle, ContainerStyle } from '../Elements/ElementStyle'
+import { node_exchanges_style, elementStyleConfigs, product_sector_styles, ElementStyleKey, LinkStyle, NodeStyle, ContainerStyle, base_styles } from '../Elements/ElementStyle'
+import { dedupeZOrderKeepFirst } from '../types/zOrder'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
 // Issue #191 — migration de rétro-compat de la césure des libellés, isolée dans
@@ -133,7 +134,12 @@ export class ProtoElementPersistence extends BaseElementPersistence {
     if (!proto_element['_is_visible']) json_object['is_visible'] = proto_element['_is_visible']
 
     // Fill style & local attributes
-    if (proto_element.style.length > 0) json_object['style'] = proto_element.style.map(s => s.id)
+    // Les styles de BASE (NodeStyle, LinkStyle, ContainerStyle...) sont structurels :
+    // (re)attaches a la construction selon le type d'element, ils ne sont pas persistes.
+    // Sans ce filtre, un ContainerStyle re-attache apres lecture s'accumulait dans le
+    // JSON a chaque cycle save/load (round-trip SA#230).
+    const persisted_styles = proto_element.style.map(s => s.id).filter(id => !base_styles.includes(id as ElementStyleKey))
+    if (persisted_styles.length > 0) json_object['style'] = persisted_styles
     //const attr_json = this._display.attributes.toJSON(this, null)
     if (Object.keys(proto_element.attributes).length > 0) {
       json_object['local'] = {} as Type_JSON
@@ -176,7 +182,7 @@ export class ProtoElementPersistence extends BaseElementPersistence {
       }
     } else {
       const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
-      proto_element['_style'] = [...proto_element['_style'], ...style_id.filter(s_id => s_id != 'default' && s_id != LinkStyle && s_id != NodeStyle && proto_element.sankey.styles_dict[s_id])
+      proto_element['_style'] = [...proto_element['_style'], ...style_id.filter(s_id => s_id != 'default' && !base_styles.includes(s_id as ElementStyleKey) && proto_element.sankey.styles_dict[s_id])
         .map(s_id => proto_element.sankey.styles_dict[s_id]) as Class_ElementStyle[]]
     }
   }
@@ -203,7 +209,7 @@ export class ProtoElementPersistence extends BaseElementPersistence {
       }
     } else {
       const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
-      proto_element['_style'] = [...proto_element['_style'], ...style_id.filter(s_id => s_id != 'default' && s_id != LinkStyle && s_id != NodeStyle && proto_element.sankey.styles_dict[s_id])
+      proto_element['_style'] = [...proto_element['_style'], ...style_id.filter(s_id => s_id != 'default' && !base_styles.includes(s_id as ElementStyleKey) && proto_element.sankey.styles_dict[s_id])
         .map(s_id => proto_element.sankey.styles_dict[s_id]) as Class_ElementStyle[]]
     }
     proto_element['_style'].forEach(style => style.addReference(proto_element))
@@ -211,8 +217,13 @@ export class ProtoElementPersistence extends BaseElementPersistence {
     if (json_local_object) {
       (Object.keys(proto_element['_config']) as Array<keyof ConfigType>).forEach(key => {
         if (json_local_object[key as string] !== undefined) {
-          if (json_local_object[key as string] !== proto_element.getStyleProperty(key as keyof ConfigType)) {
-            proto_element.attributes[key] = json_local_object[key as string] as ExtractAttributeValue<ConfigType[typeof key]>
+          const value = json_local_object[key as string] as ExtractAttributeValue<ConfigType[typeof key]>
+          // Symétrie STRICTE avec l'écriture (shouldSaveAttribute) : l'écriture
+          // sauve aussi une valeur égale au style résolu quand plusieurs styles
+          // portent l'attribut ; la lecture doit la garder au même critère,
+          // sinon elle disparaît au rechargement suivant (round-trip SA#230).
+          if (proto_element.shouldSaveAttribute(key as keyof ConfigType, value as string | number | boolean)) {
+            proto_element.attributes[key] = value
           }
         }
       })
@@ -984,7 +995,13 @@ export class NodeElementPersistence extends NodeBasePersistence {
     if (json_local?.label_horiz == 'right') node.name_label_text_align = 'left'
 
     if (json_local?.label_vert_valeur == 'middle') {
-      json_local.value_label_vert_shift = +json_local.value_label_vert_shift + +json_local.value_label_font_size * 0.35
+      // Anciennes cles parfois absentes : +undefined donnerait NaN, serialise en
+      // null au dump puis relu different -> point fixe casse (SA#230).
+      const shift = Number(json_local.value_label_vert_shift ?? 0)
+      const font_size = Number(json_local.value_label_font_size ?? 0)
+      if (Number.isFinite(shift) && Number.isFinite(font_size)) {
+        json_local.value_label_vert_shift = shift + font_size * 0.35
+      }
     }
   }
 
@@ -2073,9 +2090,12 @@ export class DrawingAreaPersistence {
         ...Object.keys((out['links'] as Type_JSON) ?? {}),
         ...Object.keys((out['labels'] as Type_JSON) ?? {})
       ])
-      out['order_g_elements'] = drawing_area.list_g_element.filter(id => saved_ids.has(id))
+      out['order_g_elements'] = dedupeZOrderKeepFirst(drawing_area.list_g_element).filter(id => saved_ids.has(id))
     } else {
-      out['order_g_elements'] = drawing_area.list_g_element
+      // Dédoublonnage défensif (même politique qu'orderElementOnDA) : les liens
+      // d'échange recréés au chargement repoussent leur id déjà présent via
+      // l'ordre JSON — sans dédup, l'ordre gonfle à chaque cycle save/load (SA#230).
+      out['order_g_elements'] = dedupeZOrderKeepFirst(drawing_area.list_g_element)
     }
     return out
   }
@@ -2458,7 +2478,7 @@ export class DrawingAreaPersistence {
     const missing_in_json = current_order.filter(id => !order_from_json.includes(id))
 
     // Fusionner : ordre du JSON + éléments manquants à la fin
-    drawing_area['_list_g_element_id'] = [...order_from_json, ...missing_in_json]
+    drawing_area['_list_g_element_id'] = dedupeZOrderKeepFirst([...order_from_json, ...missing_in_json])
 
     drawing_area['_show_background_image'] = getBooleanFromJSON(json_object, 'show_background_image', drawing_area.show_background_image)
     drawing_area['_background_image'] = getStringFromJSON(json_object, 'background_image', drawing_area.background_image)
