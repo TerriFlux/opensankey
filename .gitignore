@@ -26,6 +26,7 @@ __pycache__
 server/__pycache__
 
 # tooling caches
+.cross-format/
 .pytest_cache/
 .ruff_cache/
 .VSCodeCounter/

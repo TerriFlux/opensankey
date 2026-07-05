@@ -157,8 +157,15 @@ test:
     - (cd submodules/MFAProblem && python -m pytest tests/)
     - (cd packages/opensankey && python -m pytest opensankey/tests/)
     - (cd packages/opensankey/submodules/SankeyExcelParser && python -m pytest tests/)
+    # #231 — tests croises TS<->Python : SEP lit les dumps TS du corpus
+    # (artefact .cross-format du job test:jest). Skip explicite si absent.
+    - python -m pytest tests/ -rs
+  needs:
+    - build
+    - test:jest
   dependencies:
     - build
+    - test:jest
 
 # S3 #16 / #237 — Tests jest (front). Depuis le monorepo, un seul install
 # workspace racine ; `pnpm run test` lance les suites d'OpenSankey (le corpus
@@ -175,6 +182,12 @@ test:jest:
     - bash scripts/build_client.sh -G
     - pnpm install --frozen-lockfile --config.dangerouslyAllowAllBuilds=true
     - CI=true pnpm run test
+  # #231 — dumps TS du corpus (corpusCrossDump) consommes par le job `test`
+  # (pytest tests/test_cross_format.py) : lecture croisee Python via SEP.
+  artifacts:
+    paths:
+      - .cross-format
+    expire_in: 1 day
   dependencies: []
 
 # S5 #234 — Parite des cles FR/EN des catalogues i18n (~13.5k lignes sur 3 couches,
