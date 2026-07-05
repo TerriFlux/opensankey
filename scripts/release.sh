@@ -3,9 +3,11 @@
 #
 # Usage : scripts/release.sh <X.Y.Z>
 #
-# Enchaine : bump (4 package.json + ApplicationData.version) + CHANGELOG + lint/build
-#            + freeze examples (OS + SA) + npm publish open-sankey + commits/tags
-#            + push + merge main->prod + SSH deploy prod.
+# Enchaine : bump (4 package.json paquets + racine + ApplicationData.version)
+#            + CHANGELOG + lint/build + freeze examples (OS + SA)
+#            + commit/tag/push UNIQUES (monorepo #235) + merge main->prod + deploy.
+# Le tag declenche publish:npm (4 paquets @terriflux/* sur le registry GitLab)
+# et publish:python (wheels) en CI — plus de publication manuelle ici.
 #
 # Pre-requis EDITORIAUX a faire AVANT le run :
 #   - client/public/WHATSNEW.md : section `## <date> -- <titre>` en tete de chaque
@@ -26,20 +28,21 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SA_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-# Submodule paths (relatifs a SA_ROOT)
-OS_REL="submodules/OpenSankey+/submodules/OpenSankey"
-OSP_REL="submodules/OpenSankey+"
-LC_REL="submodules/LoginComponent"
+# Paquets du monorepo (relatifs a SA_ROOT) — plus des submodules depuis #235
+OS_REL="packages/opensankey"
+OSP_REL="packages/opensankey-plus"
+LC_REL="packages/login-component"
 
 # Package.json paths (relatifs a SA_ROOT) — 4 versions a aligner
 PKG_OS="$OS_REL/opensankey/client/package.json"
 PKG_OSP="$OSP_REL/client/package.json"
 PKG_LC="$LC_REL/client/package.json"
-PKG_SA="client/package.json"
+PKG_SA="packages/sankeyapplication/package.json"
+PKG_ROOT="package.json"
 
 # Fichiers specifiques
 APPDATA_TSX="$OS_REL/opensankey/client/src/types/ApplicationData.tsx"
-WHATSNEW="client/public/WHATSNEW.md"
+WHATSNEW="packages/sankeyapplication/public/WHATSNEW.md"
 RELEASE_EMAILS_DIR="doc/release-emails"
 
 # CHANGELOG paths
@@ -52,8 +55,6 @@ CHANGELOG_SA="CHANGELOG.md"
 FREEZE_OS="$OS_REL/examples/freeze-current.sh"
 FREEZE_SA="examples/freeze-current.sh"
 
-# npm publish : ouvrir le package open-sankey depuis ce dossier
-NPM_PUBLISH_DIR="$OS_REL/opensankey/client"
 
 # SSH deploy prod
 SSH_DEPLOY_CMD="ssh -p 5378 ubuntu@open-sankey.fr 'cd dev_opensankey/sankeyapplication/ && bash update_opensankey.sh prod'"
@@ -118,20 +119,16 @@ cd "$SA_ROOT"
 
 phase "0 — Pre-flight"
 
-# 4.1 — Sur main partout
-for sub in "." "$OS_REL" "$OSP_REL" "$LC_REL"; do
-  branch="$(git -C "$sub" rev-parse --abbrev-ref HEAD)"
-  [ "$branch" = "main" ] || fail "$sub n'est pas sur main (actuellement '$branch')"
-done
-ok "Branche main partout"
+# 4.1 — Sur main (monorepo : un seul repo)
+branch="$(git rev-parse --abbrev-ref HEAD)"
+[ "$branch" = "main" ] || fail "Le repo n'est pas sur main (actuellement '$branch')"
+ok "Branche main"
 
-# 4.2 — Working trees clean
-for sub in "." "$OS_REL" "$OSP_REL" "$LC_REL"; do
-  if ! git -C "$sub" diff --quiet || ! git -C "$sub" diff --cached --quiet; then
-    fail "$sub a des modifications non commitees"
-  fi
-done
-ok "Working trees clean"
+# 4.2 — Working tree clean
+if ! git diff --quiet || ! git diff --cached --quiet; then
+  fail "Le repo a des modifications non commitees"
+fi
+ok "Working tree clean"
 
 # 4.3 — Versions actuelles toutes egales et < NEW_VERSION
 declare -A CURRENT_VERS
@@ -210,7 +207,7 @@ confirm "Demarrer la release ?"
 
 phase "A — Bump des 4 package.json + ApplicationData.version"
 
-for pkg in "$PKG_OS" "$PKG_OSP" "$PKG_LC" "$PKG_SA"; do
+for pkg in "$PKG_OS" "$PKG_OSP" "$PKG_LC" "$PKG_SA" "$PKG_ROOT"; do
   # sed ciblant `"version": "X.Y.Z"` au top-level (premiere occurrence suffit)
   sed -i.bak -E "0,/\"version\":[[:space:]]*\"[^\"]+\"/s|\"version\":[[:space:]]*\"[^\"]+\"|\"version\": \"$NEW_VERSION\"|" "$pkg"
   rm -f "$pkg.bak"
@@ -334,102 +331,68 @@ ok "SA examples/$NEW_VERSION/ figes"
 # 10. PHASE F — NPM PUBLISH open-sankey
 # ============================================================================
 
-phase "F — npm publish open-sankey@$NEW_VERSION"
+phase "F — Publication (deleguee a la CI sur tag)"
 
-warn "Verifie que tu es loggue npm (compte julien.alapetite) : npm whoami"
-confirm "Lancer npm publish open-sankey@$NEW_VERSION (registry public) ?"
-
-(
-  cd "$SA_ROOT/$NPM_PUBLISH_DIR"
-  npm publish
-)
-ok "open-sankey@$NEW_VERSION publie sur npm"
+log "publish:npm publiera les 4 paquets @terriflux/* sur le registry GitLab au tag v$NEW_VERSION"
+log "publish:python publiera les wheels MFAProblem + SankeyExcelParser"
+warn "DECISION PENDANTE (#237) : le paquet public npmjs open-sankey n est plus"
+warn "publie par ce script (le paquet s appelle desormais @terriflux/opensankey)."
+warn "Si la publication npmjs publique doit continuer, la re-outiller explicitement."
 
 # ============================================================================
 # 11. PHASE G — COMMITS + TAGS (bottom-up)
 # ============================================================================
 
-phase "G — Commits + tags v$NEW_VERSION (OS -> OSP -> LC -> SA)"
+phase "G — Commit + tag v$NEW_VERSION (monorepo, commit unique)"
 
 commit_msg=$(cat <<EOF
 chore: release $NEW_VERSION
 
-Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
 EOF
 )
 
-# G.1 — OS : package.json + ApplicationData.tsx + CHANGELOG + examples/<v>/
-git -C "$OS_REL" add \
-  opensankey/client/package.json \
-  opensankey/client/src/types/ApplicationData.tsx \
-  CHANGELOG.md \
-  "examples/$NEW_VERSION"
-# Inclut aussi les modifs Persistence si presentes (chemin large)
-git -C "$OS_REL" add opensankey/client/src/Persistence/ 2>/dev/null || true
-git -C "$OS_REL" commit -m "$commit_msg"
-git -C "$OS_REL" tag "v$NEW_VERSION"
-ok "OS commit + tag v$NEW_VERSION"
-
-# G.2 — OSP : package.json + CHANGELOG + SHA OS + miroir DrawingAreaOSP.tsx
-git -C "$OSP_REL" add \
-  client/package.json \
-  CHANGELOG.md \
-  submodules/OpenSankey
-git -C "$OSP_REL" add client/src/types/DrawingAreaOSP.tsx 2>/dev/null || true
-git -C "$OSP_REL" commit -m "$commit_msg"
-git -C "$OSP_REL" tag "v$NEW_VERSION"
-ok "OSP commit + tag v$NEW_VERSION"
-
-# G.3 — LC : package.json + CHANGELOG
-git -C "$LC_REL" add client/package.json CHANGELOG.md
-git -C "$LC_REL" commit -m "$commit_msg"
-git -C "$LC_REL" tag "v$NEW_VERSION"
-ok "LC commit + tag v$NEW_VERSION"
-
-# G.4 — SA : tout le reste + SHA OSP/LC + WHATSNEW + mail + examples
 git add \
-  client/package.json \
-  CHANGELOG.md \
+  "$PKG_OS" "$PKG_OSP" "$PKG_LC" "$PKG_SA" "$PKG_ROOT" \
+  "$APPDATA_TSX" \
+  "$CHANGELOG_OS" "$CHANGELOG_OSP" "$CHANGELOG_LC" "$CHANGELOG_SA" \
   "$WHATSNEW" \
   "$RELEASE_EMAILS_DIR" \
-  "examples/$NEW_VERSION" \
-  "$OSP_REL" \
-  "$LC_REL"
+  "$OS_REL/examples/$NEW_VERSION" \
+  "examples/$NEW_VERSION"
+# Stubs Persistence si presents (chemins larges)
+git add "$OS_REL/opensankey/client/src/Persistence/" 2>/dev/null || true
+git add "$OSP_REL/client/src/types/DrawingAreaOSP.tsx" 2>/dev/null || true
 git commit -m "$commit_msg"
 git tag "v$NEW_VERSION"
-ok "SA commit + tag v$NEW_VERSION"
+ok "Commit + tag v$NEW_VERSION"
 
 # ============================================================================
 # 12. PHASE H — PUSH
 # ============================================================================
 
-phase "H — Push (4 repos)"
+phase "H — Push"
 
-confirm "Push main + tags v$NEW_VERSION dans OS, OSP, LC, SA ?"
+confirm "Push main + tag v$NEW_VERSION ?"
 
-for sub in "$OS_REL" "$OSP_REL" "$LC_REL" "."; do
-  git -C "$sub" push origin main
-  git -C "$sub" push origin "v$NEW_VERSION"
-  ok "Push $sub"
-done
+git push origin main
+git push origin "v$NEW_VERSION"
+ok "Push main + v$NEW_VERSION (le tag declenche publish:npm + publish:python en CI)"
 
 # ============================================================================
 # 13. PHASE I — MERGE main -> prod
 # ============================================================================
 
-phase "I — Merge main -> prod (4 repos, ff-only)"
+phase "I — Merge main -> prod (ff-only)"
 
-confirm "Merger main -> prod (ff-only) et pousser dans OS, OSP, LC, SA ?"
+confirm "Merger main -> prod (ff-only) et pousser ?"
 
-for sub in "$OS_REL" "$OSP_REL" "$LC_REL" "."; do
-  log "Merge prod dans $sub"
-  git -C "$sub" checkout prod
-  git -C "$sub" pull --ff-only origin prod
-  git -C "$sub" merge --ff-only main
-  git -C "$sub" push origin prod
-  git -C "$sub" checkout main
-  ok "$sub : main -> prod OK, retour main"
-done
+git checkout prod
+git pull --ff-only origin prod
+git merge --ff-only main
+git push origin prod
+git checkout main
+ok "main -> prod OK, retour main"
 
 # ============================================================================
 # 14. PHASE J — SSH DEPLOY PROD
