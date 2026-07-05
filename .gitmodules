@@ -6,4 +6,4 @@
 	url = https://gitlab.com/su-model/SankeyData.git
 [submodule "packages/opensankey/submodules/SankeyExcelParser"]
 	path = packages/opensankey/submodules/SankeyExcelParser
-	url = https://gitlab.com/su-model/sankeyexcelparser.git
+	url = git@gitlab.com:su-model/sankeyexcelparser.git

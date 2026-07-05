@@ -8,6 +8,7 @@ node_modules/
 # testing
 packages/*/coverage
 packages/*/client/coverage
+packages/opensankey/opensankey/client/coverage
 
 # production
 packages/*/build

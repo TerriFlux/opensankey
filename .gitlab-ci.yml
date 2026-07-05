@@ -239,6 +239,9 @@ dev_opensankey:
     - git config --global --add safe.directory $REPO_FOLDER/packages/opensankey/submodules/SankeyExcelParser
     - git config --global --add safe.directory $REPO_FOLDER/SankeyData
     - git submodule init
+    # sync : reprend les URLs du .gitmodules dans .git/config (sinon un
+    # changement d'URL — ex. SEP passe en ssh — n'est jamais applique sur le VPS)
+    - git submodule sync --recursive
     - git submodule foreach --recursive git reset --hard
     - git submodule foreach --recursive git clean -fdx
     - git submodule update --recursive
@@ -288,6 +291,9 @@ test_opensankey:
     - git fetch
     - git pull
     - git submodule init
+    # sync : reprend les URLs du .gitmodules dans .git/config (sinon un
+    # changement d'URL — ex. SEP passe en ssh — n'est jamais applique sur le VPS)
+    - git submodule sync --recursive
     - git submodule foreach --recursive git reset --hard
     - git submodule foreach --recursive git clean -fdx
     - git submodule update --recursive
@@ -338,6 +344,9 @@ prod_opensankey:
     - git config --global --add safe.directory $REPO_FOLDER/packages/opensankey/submodules/SankeyExcelParser
     - git config --global --add safe.directory $REPO_FOLDER/SankeyData
     - git submodule init
+    # sync : reprend les URLs du .gitmodules dans .git/config (sinon un
+    # changement d'URL — ex. SEP passe en ssh — n'est jamais applique sur le VPS)
+    - git submodule sync --recursive
     - git submodule foreach --recursive git reset --hard
     - git submodule foreach --recursive git clean -fdx
     - git submodule update --recursive
