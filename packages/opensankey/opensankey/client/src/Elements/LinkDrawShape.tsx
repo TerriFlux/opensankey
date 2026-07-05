@@ -45,6 +45,39 @@ const BEZIER_STEEPNESS = 1.5
  */
 const SHOW_AS_PATH_SAFETY = 3
 
+/**
+ * Contour « simple » d'un lien courbe : chaque bord = médiane translatée de ±e le
+ * long de l'axe transverse (y pour hh, x pour vv). Cette translation n'est
+ * perpendiculaire à la courbe que si la pente est faible. Pour le type de forme
+ * 'bezier_outline_exact' (cf. opensankey#1251), au-delà de ce seuil (pente de la
+ * corde de la section courbe) on échantillonne le contour exact ; en dessous les
+ * deux variantes sont visuellement identiques et la simple est moins coûteuse.
+ */
+const SIMPLE_OUTLINE_MAX_SLOPE = 0.2
+
+/**
+ * Nombre d'échantillons par quadratique pour le contour exact (2 quadratiques par
+ * lien, soit ~2×(2N+4) points par path). Plus grand = plus lisse mais plus lourd.
+ */
+const EXACT_OUTLINE_SAMPLES = 25
+
+/** Point d'une Bézier quadratique (p0, contrôle c, p1) au paramètre t */
+function quadBezierPoint(t: number, p0: number[], c: number[], p1: number[]): number[] {
+  const u = 1 - t
+  return [
+    u * u * p0[0] + 2 * u * t * c[0] + t * t * p1[0],
+    u * u * p0[1] + 2 * u * t * c[1] + t * t * p1[1]
+  ]
+}
+
+/** Tangente (non normalisée) d'une Bézier quadratique au paramètre t */
+function quadBezierTangent(t: number, p0: number[], c: number[], p1: number[]): number[] {
+  return [
+    2 * (1 - t) * (c[0] - p0[0]) + 2 * t * (p1[0] - c[0]),
+    2 * (1 - t) * (c[1] - p0[1]) + 2 * t * (p1[1] - c[1])
+  ]
+}
+
 export class LinkDrawShape {
 
   private _link: Class_LinkElement
@@ -139,7 +172,8 @@ export class LinkDrawShape {
       )
 
       // Show as full shape for specific shapes
-      if (!show_as_path && this._link.shape_type !== 'bezier_outline' && this._link.shape_orientation != 'vh' && this._link.shape_orientation != 'hv') {
+      const is_outline_shape_type = this._link.shape_type === 'bezier_outline' || this._link.shape_type === 'bezier_outline_exact'
+      if (!show_as_path && !is_outline_shape_type && this._link.shape_orientation != 'vh' && this._link.shape_orientation != 'hv') {
         const shape = this.getBezierPath(true)
         this._link.d3_selection?.append('path')
           .classed('link', true)
@@ -156,7 +190,7 @@ export class LinkDrawShape {
           .attr('stroke-width', '0')
       }
       else {
-        const bezier_outline = this._link.shape_type == 'bezier_outline' || (this._link.shape_border_visible && !this._link.linkIsStructure()) || this._link.isTapered
+        const bezier_outline = is_outline_shape_type || (this._link.shape_border_visible && !this._link.linkIsStructure()) || this._link.isTapered
         // vh/hv links share the control-point-driven path of hh/vv so their curve
         // and tangent handles are correctly positioned and the curvature editable.
         const path = this.getBezierPath(bezier_outline)
@@ -608,6 +642,27 @@ export class LinkDrawShape {
         const halfSrc = this._link.thicknessSource / 2
         const halfTgt = this._link.thicknessTarget / 2
 
+        if (this._link.shape_type === 'bezier_outline_exact') {
+          // Faisceau de flux parallèles entre les mêmes nœuds : bandes jointives
+          // dérivées de la médiane commune du faisceau
+          const band_path = this.getParallelBandPath()
+          if (band_path !== null) {
+            return band_path
+          }
+          // Lien seul : contour exact seulement si la pente de la corde de la
+          // section courbe dépasse le seuil — en dessous, le contour simple
+          // (translation transverse) est visuellement identique et moins coûteux.
+          const chord_axis = this._link.shape_orientation === 'hh' ? Math.abs(x5 - x1) : Math.abs(y5 - y1)
+          const chord_off = this._link.shape_orientation === 'hh' ? Math.abs(y5 - y1) : Math.abs(x5 - x1)
+          if (chord_off > SIMPLE_OUTLINE_MAX_SLOPE * chord_axis) {
+            return this.getExactBezierOutline(
+              [x0, y0], [x1, y1], [x2, y2], [x3, y3], [x4, y4], [x5, y5], [x6, y6],
+              -halfSrc, -halfTgt, halfSrc, halfTgt,
+              this._link.shape_orientation === 'hh' ? [0, 1] : [1, 0]
+            )
+          }
+        }
+
         // Shift per axis: x2 control point is near source, x4 is near target
         let sx0 = 0, sx1 = 0, sx2 = 0, sx4 = 0, sx5 = 0, sx6 = 0
         let sy0 = 0, sy1 = 0, sy2 = 0, sy4 = 0, sy5 = 0, sy6 = 0
@@ -819,6 +874,161 @@ export class LinkDrawShape {
         + ' L ' + xf + ',' + yf
       return path
     }
+  }
+
+  /**
+   * Contour exact d'un lien courbe hh/vv : échantillonne la médiane (segment droit
+   * d'attache, deux quadratiques, segment droit de sortie) et place les deux bords
+   * le long de la normale locale de la courbe, aux offsets signés off_high (bord
+   * côté -transverse) et off_low (bord côté +transverse). Résultat en polyligne
+   * fermée : l'offset exact d'une Bézier n'est pas une Bézier, on ne peut pas
+   * rester en Q. Chaque offset est interpolé linéairement de sa valeur source à sa
+   * valeur cible le long de la courbe (liens tapered, faisceaux dont l'ordre
+   * diffère aux deux extrémités), et constant sur les segments droits d'extrémité.
+   * Lien seul : off_high = -épaisseur/2, off_low = +épaisseur/2. Bande d'un
+   * faisceau : offsets de la bande par rapport à la médiane commune du faisceau.
+   * p0/p6 : extrémités ; p1/p5 : points de courbure ; p2/p4 : points de contrôle ;
+   * p3 : jonction des deux quadratiques (milieu de p2-p4).
+   * transverse : axe transverse unitaire ([0,1] pour hh, [1,0] pour vv), fixe le
+   * signe des offsets indépendamment du sens de parcours du lien.
+   */
+  private getExactBezierOutline(
+    p0: number[], p1: number[], p2: number[], p3: number[],
+    p4: number[], p5: number[], p6: number[],
+    off_high_src: number, off_high_tgt: number,
+    off_low_src: number, off_low_tgt: number,
+    transverse: number[]
+  ): string {
+    // Échantillons de la médiane : position, tangente, abscisse d'interpolation s∈[0,1]
+    const samples: { p: number[], t: number[], s: number }[] = []
+    const seg_start = [p1[0] - p0[0], p1[1] - p0[1]]
+    const seg_end = [p6[0] - p5[0], p6[1] - p5[1]]
+    // Segment d'extrémité dégénéré (points confondus) : tangente de la courbe
+    const tan_start = (seg_start[0] || seg_start[1]) ? seg_start : [p2[0] - p1[0], p2[1] - p1[1]]
+    const tan_end = (seg_end[0] || seg_end[1]) ? seg_end : [p5[0] - p4[0], p5[1] - p4[1]]
+    samples.push({ p: p0, t: tan_start, s: 0 })
+    samples.push({ p: p1, t: tan_start, s: 0 })
+    for (let i = 1; i <= EXACT_OUTLINE_SAMPLES; i++) {
+      const t = i / EXACT_OUTLINE_SAMPLES
+      samples.push({ p: quadBezierPoint(t, p1, p2, p3), t: quadBezierTangent(t, p1, p2, p3), s: t / 2 })
+    }
+    for (let i = 1; i <= EXACT_OUTLINE_SAMPLES; i++) {
+      const t = i / EXACT_OUTLINE_SAMPLES
+      samples.push({ p: quadBezierPoint(t, p3, p4, p5), t: quadBezierTangent(t, p3, p4, p5), s: 0.5 + t / 2 })
+    }
+    samples.push({ p: p5, t: tan_end, s: 1 })
+    samples.push({ p: p6, t: tan_end, s: 1 })
+
+    // Bord aller construit en avançant, bord retour concaténé à rebours pour
+    // fermer le polygone dans le bon ordre
+    let fwd = ''
+    let bwd = ''
+    let prev_n: number[] | null = null
+    samples.forEach((smp, i) => {
+      const norm = Math.sqrt(smp.t[0] * smp.t[0] + smp.t[1] * smp.t[1])
+      let n: number[]
+      if (norm > 0) {
+        n = [-smp.t[1] / norm, smp.t[0] / norm]
+        // Signe cohérent sur tout le chemin : vers +transverse au départ, puis par
+        // continuité (un lien parcouru à rebours ou une tangente parallèle à l'axe
+        // transverse inverseraient sinon le côté des bords)
+        const flip = prev_n
+          ? (n[0] * prev_n[0] + n[1] * prev_n[1] < 0)
+          : (n[0] * transverse[0] + n[1] * transverse[1] < 0)
+        if (flip) n = [-n[0], -n[1]]
+      }
+      else {
+        n = prev_n ?? transverse
+      }
+      prev_n = n
+      const oh = off_high_src + (off_high_tgt - off_high_src) * smp.s
+      const ol = off_low_src + (off_low_tgt - off_low_src) * smp.s
+      fwd += (i == 0 ? 'M ' : ' L ') + (smp.p[0] + oh * n[0]) + ',' + (smp.p[1] + oh * n[1])
+      bwd = ' L ' + (smp.p[0] + ol * n[0]) + ',' + (smp.p[1] + ol * n[1]) + bwd
+    })
+    return fwd + bwd + ' Z'
+  }
+
+  /**
+   * Faisceau de flux parallèles : si ce lien partage source ET cible avec d'autres
+   * liens visibles du même type 'bezier_outline_exact', toutes les bandes sont
+   * dérivées d'une médiane commune (celle du faisceau complet) avec les offsets
+   * réels de leurs ancrages — les frontières coïncident alors exactement, sans
+   * trou ni chevauchement, quelle que soit la pente (cf. opensankey#1251).
+   * Retourne null si le lien est seul dans son faisceau (contour exact classique).
+   * Les points de contrôle utilisés sont ceux de CE lien reportés sur la médiane :
+   * les bandes restent jointives tant que les liens du faisceau partagent les
+   * mêmes réglages de courbure (cas nominal).
+   */
+  private getParallelBandPath(): string | null {
+    const link = this._link
+    if (!link.source || !link.target) return null
+    const is_hh = link.shape_orientation === 'hh'
+    const group = link.sankey.visible_links_list.filter(l =>
+      l.source?.id === link.source.id &&
+      l.target?.id === link.target.id &&
+      l.shape_type === 'bezier_outline_exact' &&
+      l.shape_is_curved &&
+      !l.shape_is_recycling &&
+      l.shape_orientation === link.shape_orientation
+    )
+    if (group.length < 2) return null
+
+    // Enveloppe du faisceau aux deux extrémités, sur l'axe transverse (y pour hh, x pour vv)
+    const posSrc = (l: Class_LinkElement) => is_hh ? l.position_y_start : l.position_x_start
+    const posTgt = (l: Class_LinkElement) => is_hh ? l.position_y_end : l.position_x_end
+    let src_lo = Infinity, src_hi = -Infinity
+    let tgt_lo = Infinity, tgt_hi = -Infinity
+    group.forEach(l => {
+      src_lo = Math.min(src_lo, posSrc(l) - l.thicknessSource / 2)
+      src_hi = Math.max(src_hi, posSrc(l) + l.thicknessSource / 2)
+      tgt_lo = Math.min(tgt_lo, posTgt(l) - l.thicknessTarget / 2)
+      tgt_hi = Math.max(tgt_hi, posTgt(l) + l.thicknessTarget / 2)
+    })
+    const median_src = (src_lo + src_hi) / 2
+    const median_tgt = (tgt_lo + tgt_hi) / 2
+
+    // Offsets de CE lien par rapport à la médiane du faisceau, à chaque extrémité
+    const off_high_src = (posSrc(link) - link.thicknessSource / 2) - median_src
+    const off_low_src = (posSrc(link) + link.thicknessSource / 2) - median_src
+    const off_high_tgt = (posTgt(link) - link.thicknessTarget / 2) - median_tgt
+    const off_low_tgt = (posTgt(link) + link.thicknessTarget / 2) - median_tgt
+
+    // Médiane du faisceau : structure de contrôle de ce lien, positions transverses
+    // ramenées à la médiane
+    const cp = this._link_control_points_internal.controlPoints
+    const x1 = cp.starting_curve_point.position_x
+    const y1 = cp.starting_curve_point.position_y
+    const x2 = cp.starting_bezier_point.position_x
+    const y2 = cp.starting_bezier_point.position_y
+    const x4 = cp.ending_bezier_point.position_x
+    const y4 = cp.ending_bezier_point.position_y
+    const x5 = cp.ending_curve_point.position_x
+    const y5 = cp.ending_curve_point.position_y
+    let p0, p1, p2, p4, p5, p6
+    if (is_hh) {
+      p0 = [link.position_x_start, median_src]
+      p1 = [x1, median_src]
+      p2 = [x2, median_src]
+      p4 = [x4, median_tgt]
+      p5 = [x5, median_tgt]
+      p6 = [link.position_x_end, median_tgt]
+    }
+    else {
+      p0 = [median_src, link.position_y_start]
+      p1 = [median_src, y1]
+      p2 = [median_src, y2]
+      p4 = [median_tgt, y4]
+      p5 = [median_tgt, y5]
+      p6 = [median_tgt, link.position_y_end]
+    }
+    const p3 = [(p2[0] + p4[0]) / 2, (p2[1] + p4[1]) / 2]
+
+    return this.getExactBezierOutline(
+      p0, p1, p2, p3, p4, p5, p6,
+      off_high_src, off_high_tgt, off_low_src, off_low_tgt,
+      is_hh ? [0, 1] : [1, 0]
+    )
   }
 
   /**

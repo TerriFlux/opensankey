@@ -158,7 +158,7 @@ export class Class_MenuConfig {
   ]
 
   protected _flow_color_origin_type: ('flow' | 'source' | 'target' | 'gradient' | 'auto')[] = ['flow', 'source', 'target']
-  protected _shape_type: string[] = ['bezier_path', 'bezier_outline']
+  protected _shape_type: string[] = ['bezier_path', 'bezier_outline', 'bezier_outline_exact']
 
   /**
    * Variable that determine what kind of element we are configuring in the config menu
