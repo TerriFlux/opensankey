@@ -642,7 +642,11 @@ export class LinkDrawShape {
         const halfSrc = this._link.thicknessSource / 2
         const halfTgt = this._link.thicknessTarget / 2
 
-        if (this._link.shape_type === 'bezier_outline_exact') {
+        // Pendant un drag (nœud ou poignée) le lien est redessiné à chaque frame :
+        // on retombe sur le contour simple, moins coûteux ; le rendu exact est
+        // rétabli par le redraw de fin de drag (setPosXY/drawElements après
+        // setDragState(false), cf. NodeEventsHandler.handleMouseDragEnd).
+        if (this._link.shape_type === 'bezier_outline_exact' && !this.isBeingDragged()) {
           // Faisceau de flux parallèles entre les mêmes nœuds : bandes jointives
           // dérivées de la médiane commune du faisceau
           const band_path = this.getParallelBandPath()
@@ -950,6 +954,16 @@ export class LinkDrawShape {
   }
 
   /**
+   * Vrai pendant un drag qui redessine ce lien en continu : nœud source ou cible
+   * déplacé, ou poignée de contrôle du lien manipulée.
+   */
+  private isBeingDragged(): boolean {
+    return (this._link.source?.getDragState() ?? false)
+      || (this._link.target?.getDragState() ?? false)
+      || this._link_control_points_internal.controlPoints.is_dragged
+  }
+
+  /**
    * Faisceau de flux parallèles : si ce lien partage source ET cible avec d'autres
    * liens visibles du même type 'bezier_outline_exact', toutes les bandes sont
    * dérivées d'une médiane commune (celle du faisceau complet) avec les offsets
@@ -964,8 +978,8 @@ export class LinkDrawShape {
     const link = this._link
     if (!link.source || !link.target) return null
     const is_hh = link.shape_orientation === 'hh'
-    const group = link.sankey.visible_links_list.filter(l =>
-      l.source?.id === link.source.id &&
+    // Recherche restreinte aux sortants du nœud source (O(degré), pas O(liens))
+    const group = link.source.visible_output_links_list.filter(l =>
       l.target?.id === link.target.id &&
       l.shape_type === 'bezier_outline_exact' &&
       l.shape_is_curved &&
