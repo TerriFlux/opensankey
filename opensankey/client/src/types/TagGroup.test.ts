@@ -1,9 +1,13 @@
 import { Class_NodeTagGroup } from './TagGroup'
 import type { Class_Sankey } from './Sankey'
 
-// Minimal stand-in: a tag group only touches sankey.nodeTagsUpdated() when a
-// tag is (un)selected. Everything else under test stays inside the group.
-const fakeSankey = { nodeTagsUpdated: () => { /* no-op */ } } as unknown as Class_Sankey
+// Minimal stand-in: a tag (un)selection touches sankey.nodeTagsUpdated() and,
+// via Class_NodeTag.update(), drawing_area.legend.draw(). Everything else under
+// test stays inside the group.
+const fakeSankey = {
+  nodeTagsUpdated: () => { /* no-op */ },
+  drawing_area: { legend: { draw: () => { /* no-op */ } } },
+} as unknown as Class_Sankey
 
 function makeGroup(
   id: string,
