@@ -2,6 +2,29 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [Unreleased]
+
+### Import & édition texte
+
+- **Import SankeyMATIC natif** : parseur TypeScript complet (flux, couleurs `:Node #hex`, réglages, `[*]`, retours ligne, commentaires) — chargement 100 % front, plus d'appel serveur.
+- **Éditeur texte du Tableur** : sélecteur Tableur/Texte, sérialisation du diagramme au format SankeyMATIC, application en remplacement avec choix de mise en page, resynchronisation sur changement de liens.
+
+### Rendu des flux
+
+- Nouvelle forme « **Contour exact** » avec faisceaux parallèles jointifs (opensankey#1251) ; repli sur le contour simple pendant les drags, recherche du faisceau en O(degré).
+
+### Fiabilité de la persistance (SA#230)
+
+- Les fichiers 0.8 sans liens portés par les nœuds se chargent de nouveau.
+- Les réglages locaux d'un élément (taille de police, bordures, position des étiquettes…) ne sont plus perdus au rechargement quand plusieurs styles portent l'attribut.
+- Les styles de base (ContainerStyle…) ne s'accumulent plus dans le fichier à chaque sauvegarde.
+- L'ordre de superposition (`order_g_elements`) ne gonfle plus à chaque cycle sauvegarde/rechargement ; une migration 0.9 produisait des `NaN`.
+- Nouveau filet permanent : round-trip sur corpus golden multi-époques + dumps croisés lus par SankeyExcelParser, à chaque pipeline (SA#230/#231).
+
+### Interne
+
+- Monorepo : le paquet devient `@terriflux/opensankey` (registry GitLab) ; jest transforme les paquets d3 ESM ; `format_version` (SA#22) ; hooks React sortis des constructeurs (SA#21) ; imports d3 par module (#1249).
+
 ## [1.1.8] — 2026-06-30
 
 ### Mise en page & échelle
