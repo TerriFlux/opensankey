@@ -1,9 +1,9 @@
 [submodule "submodules/MFAProblem"]
 	path = submodules/MFAProblem
-	url = https://gitlab.com/su-model/mfa_problem.git
+	url = git@gitlab.com:su-model/mfa_problem.git
 [submodule "TestData"]
 	path = SankeyData
-	url = https://gitlab.com/su-model/SankeyData.git
+	url = git@gitlab.com:su-model/SankeyData.git
 [submodule "packages/opensankey/submodules/SankeyExcelParser"]
 	path = packages/opensankey/submodules/SankeyExcelParser
 	url = git@gitlab.com:su-model/sankeyexcelparser.git
