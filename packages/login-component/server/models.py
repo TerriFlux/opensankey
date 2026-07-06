@@ -81,24 +81,56 @@ def validate_password(password) -> bool:
 
 
 def stripe_event_already_processed(event_id: str) -> bool:
-    """True si l'événement Stripe a déjà été traité (idempotence webhook)."""
+    """
+    True si l'événement Stripe a déjà été traité (idempotence webhook).
+
+    Best-effort : l'idempotence est une protection contre les rejeux Stripe,
+    pas un prérequis au traitement. Si la table `stripe_events_processed`
+    est absente (base non migrée) ou toute autre erreur DB survient, on
+    rollback la session (pour ne pas casser le commit du handler qui suit)
+    et on considère l'événement comme non traité — le webhook continue.
+    """
     if not event_id:
         return False
-    return ProcessedStripeEvent.query.get(event_id) is not None
+    try:
+        return ProcessedStripeEvent.query.get(event_id) is not None
+    except Exception as e:  # noqa: BLE001 — dégradation volontaire, cause loggée
+        db.session.rollback()
+        print(
+            "WARN stripe idempotence check skipped ({0}: {1}) — "
+            "table 'stripe_events_processed' absente ? webhook traité sans "
+            "protection anti-rejeu".format(type(e).__name__, e)
+        )
+        return False
 
 
 def mark_stripe_event_processed(event_id: str, event_type: str = "") -> None:
-    """Marque un événement Stripe comme traité (no-op si déjà présent)."""
-    if not event_id or ProcessedStripeEvent.query.get(event_id) is not None:
+    """
+    Marque un événement Stripe comme traité (no-op si déjà présent).
+
+    Best-effort comme [stripe_event_already_processed] : une erreur ici ne
+    doit pas invalider un webhook dont le handler a réussi (compte/licence
+    déjà créés). On rollback et on loggue, sans propager.
+    """
+    if not event_id:
         return
-    db.session.add(
-        ProcessedStripeEvent(
-            event_id=event_id,
-            event_type=event_type,
-            processed_at=datetime.now().isoformat(),
+    try:
+        if ProcessedStripeEvent.query.get(event_id) is not None:
+            return
+        db.session.add(
+            ProcessedStripeEvent(
+                event_id=event_id,
+                event_type=event_type,
+                processed_at=datetime.now().isoformat(),
+            )
         )
-    )
-    db.session.commit()
+        db.session.commit()
+    except Exception as e:  # noqa: BLE001 — dégradation volontaire, cause loggée
+        db.session.rollback()
+        print(
+            "WARN stripe idempotence mark skipped ({0}: {1}) — "
+            "table 'stripe_events_processed' absente ?".format(type(e).__name__, e)
+        )
 
 
 # ---------------------------------------------------------------

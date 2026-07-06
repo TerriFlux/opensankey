@@ -6,6 +6,7 @@
 # ---------------------------------------------------------------
 # System imports
 import os
+import traceback
 from datetime import datetime
 
 # Strip imports
@@ -25,6 +26,7 @@ from flask_login import current_user
 
 # ---------------------------------------------------------------
 # Local imports
+from .models import db
 from .models import login_required
 from .models import User
 from .models import create_user_from_stripe
@@ -269,7 +271,20 @@ def stripe_webhook():
             f = event_dispatcher[event["type"]]
             msg, ok = f(event["data"])
         except Exception as e:
-            return "Error dispatching {0} : {1}".format(event["type"], e), 400
+            # Session potentiellement cassée par l'erreur : rollback pour
+            # que les prochains webhooks (rejeux Stripe) repartent propres.
+            try:
+                db.session.rollback()
+            except Exception:  # noqa: BLE001
+                pass
+            # Traceback complet dans les logs serveur + message ciblé renvoyé
+            # à Stripe (visible dans le journal des webhooks du dashboard).
+            traceback.print_exc()
+            detail = "Error handling {0} (event {1}): {2}: {3}".format(
+                event["type"], event.get("id", "?"), type(e).__name__, e
+            )
+            print("ERROR stripe webhook — " + detail)
+            return detail, 400
 
     # Record the event as processed once handled successfully (idempotence)
     if ok:
