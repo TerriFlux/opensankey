@@ -120,10 +120,12 @@ case "$MFADATA_SRC" in
     echo "+ MFAData inlined under ${ENV_DIR} — already copied (step 1)"
     ;;
   *)
-    if [[ -d "$MFADATA_SRC" ]] || [[ $DRY_RUN -eq 1 ]]; then
-      run cp -a "$MFADATA_SRC" "${SLOT_DIR}/MFAData"
-    fi
-    MFADATA_DEST="${SLOT_DIR}/MFAData"
+    # MFAData vit HORS de l'arbre env (ex. /home/ubuntu/MFAData, plusieurs Go de
+    # données recherche). On ne le COPIE PAS par version — ça remplissait le
+    # disque du VPS. Les versions archivées PARTAGENT la MFAData live (données,
+    # pas du code : un ancien front lit sans problème la MFAData courante).
+    echo "+ MFAData hors env (${MFADATA_SRC}) — partagée (pas de copie par version)"
+    MFADATA_DEST="${MFADATA_SRC}"
     ;;
 esac
 
