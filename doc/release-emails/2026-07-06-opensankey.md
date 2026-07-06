@@ -1,4 +1,4 @@
-# Mail du 6 juillet 2026 — Imports SankeyMATIC & STAN, mise en page, fiabilité (v1.2.0)
+# Mail du 6 juillet 2026 : Imports SankeyMATIC & STAN, mise en page, fiabilité (v1.2.0)
 
 > **Statut : brouillon.** Couvre tout ce qui a été livré depuis la v1.1.7
 > (dernier mail envoyé, 26 juin) : versions 1.1.8, 1.1.9 et 1.2.0. À relire /
@@ -10,9 +10,9 @@ Bonjour,
 
 Beaucoup de nouveautés depuis le dernier mail : la version 1.2.0 (et les
 versions intermédiaires 1.1.8 et 1.1.9) ouvre l'application aux **diagrammes
-venus d'autres outils** — SankeyMATIC et STAN s'importent désormais
-nativement — et apporte de nouveaux réglages de mise en page ainsi qu'un
-travail de fond sur la **fiabilité de vos fichiers**.
+venus d'autres outils** (SankeyMATIC et STAN s'importent désormais nativement)
+et apporte de nouveaux réglages de mise en page ainsi qu'un travail de fond sur
+la **fiabilité de vos fichiers**.
 
 ## Importer depuis SankeyMATIC et STAN
 
@@ -23,8 +23,8 @@ Vos diagrammes existants n'ont plus besoin d'être ressaisis :
   d'origine est reconstituée. Des modèles SankeyMATIC sont aussi proposés dans
   la bibliothèque.
 - **STAN** : les fichiers `.smfa` du logiciel STAN s'ouvrent désormais
-  directement — nœuds, flux et valeurs sont importés, prêts à être mis en
-  forme et réconciliés.
+  directement. Nœuds, flux et valeurs sont importés, prêts à être mis en forme
+  et réconciliés.
 
 ## Éditer son diagramme en mode texte
 
@@ -46,7 +46,7 @@ fin de geste.
   et qu'un jeu de données déborde, le dessin se réduit automatiquement pour
   tout garder visible, puis reprend sa taille dès que possible.
 - **Épaisseur maximale par vue** : chaque vue peut plafonner l'épaisseur
-  d'échelle des flux — pratique quand des ordres de grandeur très différents
+  d'échelle des flux, pratique quand des ordres de grandeur très différents
   cohabitent dans un même fichier.
 - **Flux fins jusqu'à zéro** : le plancher d'épaisseur des flux peut descendre
   à 0 pour laisser les petits flux disparaître visuellement au lieu d'être
@@ -63,7 +63,7 @@ fin de geste.
 - **Jetons dynamiques dans les textes** : `{Scale}` insère l'échelle courante
   dans une étiquette ou un titre, et le jeton de view tag affiche la valeur du
   tag actif de la vue.
-- **Exclure un nœud d'une vue** via l'anti-tag « 0 » — sans toucher à la
+- **Exclure un nœud d'une vue** via l'anti-tag « 0 », sans toucher à la
   structure.
 - **Portfolio de publication** : titre personnalisable et logo, bouton plein
   écran dans la barre du haut, correctif du menu de téléchargement.
@@ -74,7 +74,7 @@ La documentation et les tutoriels sont désormais disponibles en **français,
 anglais, espagnol, allemand et italien**, la langue choisie est mémorisée d'une
 session à l'autre, et le tableur est intégralement traduit.
 
-## Vos fichiers, plus fiables — et une plateforme durcie
+## Vos fichiers, plus fiables, et une plateforme durcie
 
 Un important travail de fond sur l'enregistrement :
 
@@ -98,4 +98,4 @@ mail ou écrivez-nous.
 
 Bonne exploration,
 
-L'équipe TerriFlux — [open-sankey.fr](https://open-sankey.fr)
+L'équipe TerriFlux, open-sankey.fr
