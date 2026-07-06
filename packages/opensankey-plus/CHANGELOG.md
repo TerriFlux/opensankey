@@ -2,7 +2,7 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
-## [Unreleased]
+## [1.2.0] — 2026-07-06
 
 ### Interne
 

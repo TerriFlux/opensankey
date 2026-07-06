@@ -11,7 +11,7 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 
 ---
 
-## [Unreleased]
+## [1.2.0] — 2026-07-06
 
 Release alignée (1.2.0 sur les 4 modules front). Principaux changements visibles :
 
