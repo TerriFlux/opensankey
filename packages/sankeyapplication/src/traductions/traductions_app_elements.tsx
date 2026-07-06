@@ -299,6 +299,7 @@ export const resources_app_elements = {
         'win_header_success': 'Thank you for your subscription to OpenSankey+',
         'win_header_error': 'Oops, something went wrong',
         'win_content_success': 'OpenSankey+ is now activated for your account.',
+        'win_content_success_setpw': 'Your licence is active and your account has been created. We sent an email to {{email}} — follow the link inside to set your password and sign in (remember to check your spam folder).',
         'win_content_error': 'Something went wrong during the payment process',
         'btn_checkout': 'I want OpenSankey+ !'
       },
@@ -753,6 +754,7 @@ export const resources_app_elements = {
         'win_header_error': 'Oups, le paiement n\'a pas abouti',
         'win_content_buy': 'Créez et partagez vos diagrammes de Sankey comme un pro.',
         'win_content_success': 'Les fonctionnalités d\'OpenSankey+ sont maintenant activées pour votre compte.',
+        'win_content_success_setpw': 'Votre licence est active et votre compte a été créé. Un email a été envoyé à {{email}} : suivez le lien pour définir votre mot de passe et vous connecter (pensez à vérifier vos spams).',
         'win_content_error': 'Quelque chose s\'est mal passé pendant le processus de paiement.',
         'btn_checkout': 'Je veux OpenSankey+ !'
       },
@@ -1246,6 +1248,7 @@ export const resources_app_elements = {
         'win_header_success': 'Gracias por su suscripción a OpenSankey+',
         'win_header_error': 'Ups, algo salió mal',
         'win_content_success': 'OpenSankey+ está ahora activado para su cuenta.',
+        'win_content_success_setpw': 'Su licencia está activa y su cuenta ha sido creada. Hemos enviado un correo a {{email}}: siga el enlace para definir su contraseña e iniciar sesión (revise su carpeta de spam).',
         'win_content_error': 'Algo salió mal durante el proceso de pago',
         'btn_checkout': '¡Quiero OpenSankey+!'
       },
@@ -1737,6 +1740,7 @@ export const resources_app_elements = {
         'win_header_success': 'Vielen Dank für Ihr Abonnement von OpenSankey+',
         'win_header_error': 'Ups, etwas ist schiefgelaufen',
         'win_content_success': 'OpenSankey+ ist jetzt für Ihr Konto aktiviert.',
+        'win_content_success_setpw': 'Ihre Lizenz ist aktiv und Ihr Konto wurde erstellt. Wir haben eine E-Mail an {{email}} gesendet — folgen Sie dem Link, um Ihr Passwort festzulegen und sich anzumelden (prüfen Sie auch Ihren Spam-Ordner).',
         'win_content_error': 'Beim Zahlungsvorgang ist etwas schiefgelaufen',
         'btn_checkout': 'Ich möchte OpenSankey+!'
       },
@@ -2228,6 +2232,7 @@ export const resources_app_elements = {
         'win_header_success': 'Grazie per il vostro abbonamento a OpenSankey+',
         'win_header_error': 'Ops, qualcosa è andato storto',
         'win_content_success': 'OpenSankey+ è ora attivato per il vostro account.',
+        'win_content_success_setpw': 'La vostra licenza è attiva e il vostro account è stato creato. Abbiamo inviato un\'email a {{email}}: seguite il link per impostare la password e accedere (controllate anche la cartella spam).',
         'win_content_error': 'Qualcosa è andato storto durante il processo di pagamento',
         'btn_checkout': 'Voglio OpenSankey+!'
       },

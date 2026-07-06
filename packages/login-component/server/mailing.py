@@ -280,6 +280,68 @@ def send_pw_reset_email(user, language="fr"):
     send(msg)
 
 
+def send_set_password_email(user, language="fr"):
+    """
+    Welcome mail after an anonymous Stripe checkout : the account was created
+    by webhook without password, invite the customer to set it (link doubles
+    as email verification). Uses the long-lived welcome token (7 days).
+
+    Parameters
+    ----------
+    :param user: User to send the mail to
+    :type user: User
+    """
+    # Protection
+    if not is_email_valid(user.email):
+        return
+    language = (language or "fr").split("-")[0]
+    if language not in ["en", "fr"]:
+        language = "fr"
+    # Get long-lived setup token
+    token = user.get_welcome_token()
+    # Mail object
+    subject = {}
+    subject["en"] = "[OpenSankey] Your licence is active — set your password"
+    subject["fr"] = "[OpenSankey] Votre licence est active — definissez votre mot de passe"
+    # Instanciate msg
+    msg = Message(
+        subject=subject[language],
+        sender=("Contact TerriFlux", MAIL_SENDING_ADRESS),
+        recipients=[user.email],
+    )
+    # Add body to msg
+    file = "set_password_mail/set_password_mail_{}".format(language)
+    url = "{0}login/reset/{1}".format(CLIENT_ROOT_URL, token)
+    msg.body = render_template(file + ".txt", first_name=user.firstname, reset_url=url)
+    msg.html = render_template(
+        file + ".html",
+        logo_OS="cid:logo_OS",
+        logo_TerriFlux="cid:logo_TerriFlux",
+        first_name=user.firstname,
+        reset_url=url,
+    )
+    # Get abs path
+    path = os.path.dirname(os.path.abspath(__file__))
+    # Add openSankey logo
+    msg.attach(
+        "logo_OS.jpg",
+        "image/jpg",
+        open(path + "/templates/logo_OS.jpg", "rb").read(),
+        "inline",
+        headers={"Content-ID": "<logo_OS>"},
+    )
+    # Add TerriFlux logo
+    msg.attach(
+        "logo_TerriFlux.jpg",
+        "image/jpg",
+        open(path + "/templates/logo_TerriFlux.jpg", "rb").read(),
+        "inline",
+        headers={"Content-ID": "<logo_TerriFlux>"},
+    )
+    # Send mail
+    send(msg)
+
+
 def send_pw_modification_email(user, language="fr"):
     """
     Create custom mail for password reseting

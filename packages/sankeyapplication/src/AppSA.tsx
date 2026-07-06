@@ -335,45 +335,32 @@ export const SankeyApp = ({ new_data_app }: { new_data_app: Class_ApplicationDat
                       />
                     }
                   />
+                  {/* Routes volontairement publiques : le checkout doit marcher sans compte
+                      (email collecté par Stripe, compte créé par webhook après paiement) */}
                   <Route
                     path='/license'
                   >
                     <Route
                       index
                       element={
-                        <PrivateRoute
-                          component={
-                            <PaiementPage
-                              t={new_data_app.t}
-                              logo={new_data_app.logo}
-                              returnToApp={returnToApp}
-                              logo_sankey_plus={new_data_app.logo_sankey_plus}
-                            />
-                          }
-                          loginComponent={new_data_app.login_component}
+                        <PaiementPage
+                          t={new_data_app.t}
+                          logo={new_data_app.logo}
+                          returnToApp={returnToApp}
+                          logo_sankey_plus={new_data_app.logo_sankey_plus}
                         />
                       }
                     />
                     <Route
                       path='checkout'
                       element={
-                        <PrivateRoute
-                          component={
-                            <PaiementCheckout />
-                          }
-                          loginComponent={new_data_app.login_component}
-                        />
+                        <PaiementCheckout />
                       }
                     />
                     <Route
                       path='return'
                       element={
-                        <PrivateRoute
-                          component={
-                            <PaiementReturn />
-                          }
-                          loginComponent={new_data_app.login_component}
-                        />
+                        <PaiementReturn />
                       }
                     />
                   </Route>

@@ -311,6 +311,21 @@ class User(UserMixin, db.Model):
         serializer = Serializer(current_app.config["SECRET_KEY"])
         return serializer.dumps(self.id)
 
+    def get_welcome_token(self):
+        """
+        Create a token for initial password setup (account created after an
+        anonymous Stripe checkout). Same reset page/endpoint as the classic
+        reset token, but with a long validity window : the customer may open
+        the welcome email days after paying.
+
+        Returns
+        -------
+        :return: Timed serialized token
+        :rtype: string
+        """
+        serializer = Serializer(current_app.config["SECRET_KEY"])
+        return serializer.dumps({"welcome": self.id})
+
     @staticmethod
     def verify_pwd_reset_token(token):
         """
@@ -329,8 +344,18 @@ class User(UserMixin, db.Model):
         :rtype: db.Integer
         """
         serializer = Serializer(current_app.config["SECRET_KEY"])
+        # Welcome token (payload dict) : valid for 7 days
         try:
-            user_id = serializer.loads(token, max_age=900)  # valid for 15min
+            payload = serializer.loads(token, max_age=60 * 60 * 24 * 7)
+        except Exception:
+            return None
+        if isinstance(payload, dict):
+            if "welcome" not in payload:
+                return None
+            return User.query.get(payload["welcome"])
+        # Classic reset token (plain user id) : valid for 15min
+        try:
+            user_id = serializer.loads(token, max_age=900)
         except Exception:
             return None
         return User.query.get(user_id)
@@ -844,8 +869,17 @@ def set_licence_checkout_completed(user_id, user_email, user_stripe_id, user_lic
     :return: _description_
     :rtype: _type_
     """
-    # Get user
-    user = User.query.filter(func.lower(User.email) == func.lower(user_email), User.id == user_id).first()
+    # Get user. client_reference_id (user_id) n'existe que si l'acheteur était
+    # connecté au moment du checkout ; pour un checkout anonyme (pricing table),
+    # on retombe sur l'email saisi chez Stripe puis sur le customer id
+    # (le compte a été créé par le webhook customer.created).
+    user = None
+    if user_id is not None:
+        user = User.query.filter(func.lower(User.email) == func.lower(user_email), User.id == user_id).first()
+    if (user is None) and user_email:
+        user = User.query.filter(func.lower(User.email) == func.lower(user_email)).first()
+    if (user is None) and user_stripe_id:
+        user = User.query.filter_by(stripe_id=user_stripe_id).first()
     if user is None:
         return "Invalid user", False
 

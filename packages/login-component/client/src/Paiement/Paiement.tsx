@@ -26,6 +26,7 @@ declare global {
         'publishable-key'?: string
         'pricing-table-id'?: string
         'locale'?: string
+        'customer-email'?: string
       };
     }
   }
@@ -38,9 +39,19 @@ declare global {
 export const PaiementCheckout = () => {
   const [publishableKey, setPublishableKey] = useState('')
   const [pricingTableId, setPricingTableId] = useState('')
+  const [customerEmail, setCustomerEmail] = useState('')
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    // Utilisateur connecté : pré-remplir l'email dans le checkout Stripe.
+    // Anonyme : 401 ignoré, Stripe collectera l'email sur sa page de paiement.
+    fetch(window.location.origin + '/user/infos')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((infos) => {
+        if (infos && infos.email) setCustomerEmail(infos.email)
+      })
+      .catch(() => { /* anonyme : rien à pré-remplir */ })
+
     const loadStripeAndKey = async () => {
       try {
         // Récupérer la config Stripe (clé publique + pricing table ID)
@@ -86,6 +97,7 @@ export const PaiementCheckout = () => {
         pricing-table-id={pricingTableId}
         publishable-key={publishableKey}
         locale={'fr'}
+        customer-email={customerEmail || undefined}
       >
       </stripe-pricing-table>
     </Box>
@@ -122,6 +134,8 @@ const notifyTrialConverted = (): void => {
  */
 export const PaiementReturn = () => {
   const [status, setStatus] = useState(null)
+  const [customerEmail, setCustomerEmail] = useState('')
+  const [needsPassword, setNeedsPassword] = useState(false)
   const [searchParams,] = useSearchParams()
 
   useEffect(() => {
@@ -132,6 +146,8 @@ export const PaiementReturn = () => {
         .then((res) => res.json())
         .then((data) => {
           setStatus(data.status)
+          setCustomerEmail(data.customer_email || '')
+          setNeedsPassword(data.needs_password === true)
           if (data.status === 'complete') {
             notifyTrialConverted()
           }
@@ -147,7 +163,14 @@ export const PaiementReturn = () => {
   }
 
   if (status === 'complete') {
-    return <Navigate to="/license?p=success" />
+    // Checkout anonyme : le compte vient d'être créé par webhook, un email
+    // « définissez votre mot de passe » est parti — la page de succès l'explique.
+    const params = new URLSearchParams({ p: 'success' })
+    if (needsPassword && customerEmail) {
+      params.set('email', customerEmail)
+      params.set('setpw', '1')
+    }
+    return <Navigate to={`/license?${params.toString()}`} />
   }
 
   return (
@@ -203,8 +226,13 @@ export const PaiementPage: FC<{
   }
   else if (status === 'success') {
     header = t('Paiement.win_header_success')
+    const setpwEmail = searchParams.get('setpw') === '1' ? searchParams.get('email') : null
     content = <Box>
-      {t('Paiement.win_content_success')}
+      {
+        setpwEmail ?
+          t('Paiement.win_content_success_setpw', { email: setpwEmail }) :
+          t('Paiement.win_content_success')
+      }
     </Box>
   }
   else {

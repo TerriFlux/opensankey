@@ -11,6 +11,9 @@ from datetime import datetime
 # Strip imports
 import stripe
 
+# SQLAlchemy imports
+from sqlalchemy import func
+
 # Flask imports
 from flask import jsonify
 from flask import request
@@ -23,6 +26,7 @@ from flask_login import current_user
 # ---------------------------------------------------------------
 # Local imports
 from .models import login_required
+from .models import User
 from .models import create_user_from_stripe
 from .models import delete_user_from_stripe
 from .models import update_license_name_from_stripe
@@ -36,6 +40,7 @@ from .models import set_license_invoice_created
 from .models import set_licence_invoice_paid
 from .models import stripe_event_already_processed
 from .models import mark_stripe_event_processed
+from .mailing import send_set_password_email
 
 
 # ---------------------------------------------------------------
@@ -86,10 +91,13 @@ def _expected_livemode():
 # ---------------------------------------------------------------
 # Define all routes
 @stripe_blueprint.route("/stripe/config")
-@login_required
 def get_publishable_key():
     """
-    Return the public key to configurate Stripe client
+    Return the public key to configurate Stripe client.
+
+    Volontairement public (pas de @login_required) : le checkout doit être
+    accessible sans compte — l'email est collecté par Stripe, le compte est
+    créé par webhook après paiement. Ne renvoie que des identifiants publics.
 
     Returns
     -------
@@ -166,20 +174,32 @@ def create_customer_portal():
 
 
 @stripe_blueprint.route("/stripe/session-status", methods=["GET"])
-@login_required
 def session_status():
     """
     Verify status of current checkout - called from server
 
+    Public : après un paiement anonyme l'utilisateur n'a pas encore de session ;
+    le session_id Stripe (non devinable) fait office de jeton d'accès.
+    `needs_password` indique si le compte créé par webhook attend encore
+    la définition d'un mot de passe (email envoyé).
+
     Returns
     -------
-    :return: _description_
-    :rtype: _type_
+    :return: status, customer_email, needs_password
+    :rtype: json
     """
     checkout_session = stripe.checkout.Session.retrieve(request.args.get("session_id"))
+    customer_email = None
+    if checkout_session.customer_details is not None:
+        customer_email = checkout_session.customer_details.email
+    needs_password = False
+    if customer_email:
+        user = User.query.filter(func.lower(User.email) == customer_email.lower()).first()
+        needs_password = (user is not None) and (user.password is None)
     return jsonify(
         status=checkout_session.status,
-        customer_email=checkout_session.customer_details.email,
+        customer_email=customer_email,
+        needs_password=needs_password,
     )
 
 
@@ -275,8 +295,11 @@ def handle_customer_creation(session):
     :rtype: (str, boolean)
     """
     object = session["object"]
-    user_name = object["name"].split()
-    return create_user_from_stripe(object["email"], user_name[0], " ".join(user_name[1:]), object["id"])
+    # Le nom peut manquer (customer créé par un checkout anonyme sans billing name)
+    user_name = (object.get("name") or "").split()
+    firstname = user_name[0] if user_name else ""
+    lastname = " ".join(user_name[1:])
+    return create_user_from_stripe(object["email"], firstname, lastname, object["id"])
 
 
 def handle_customer_deletion(session):
@@ -451,12 +474,28 @@ def handle_checkout_session(session):
     """
     object = session["object"]
     if object["payment_status"] == "paid":
-        return set_licence_checkout_completed(
+        # customer_email n'est renseigné que si fourni à la création de la session
+        # (utilisateur connecté). Pour un checkout anonyme via la pricing table,
+        # l'email saisi par le client est dans customer_details.
+        customer_email = object["customer_email"]
+        if not customer_email and object.get("customer_details"):
+            customer_email = object["customer_details"].get("email")
+        msg, ok = set_licence_checkout_completed(
             object["client_reference_id"],
-            object["customer_email"],
+            customer_email,
             object["customer"],
             object["subscription"],
         )
+        # Compte créé par webhook (checkout anonyme) : pas encore de mot de passe.
+        # On envoie l'invitation à le définir — jamais de mot de passe avant paiement.
+        if ok and customer_email:
+            user = User.query.filter(func.lower(User.email) == customer_email.lower()).first()
+            if (user is not None) and (user.password is None):
+                try:
+                    send_set_password_email(user, object.get("locale") or "fr")
+                except Exception as excpt:  # noqa
+                    print("send_set_password_email error : " + str(excpt))
+        return msg, ok
     return "Not paid", False
 
 
