@@ -1244,14 +1244,15 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
         reader.readAsText(files[0])
       }} />
     <Input
-      accept='.smfa'
+      accept='.smfa,.zmfa'
       type='file'
       ref={_load_stan}
       style={{ display: 'none' }}
       onChange={(evt: ChangeEvent) => {
         const files = (evt.target as HTMLFormElement).files
         if (!files || !files[0]) return
-        // .smfa = base SQLite (binaire) : on POST le fichier tel quel.
+        // .smfa (SQLite) et .zmfa (XML gzippé) sont binaires : on POST le
+        // fichier tel quel, le serveur dispatche sur le magic number.
         const form_data = new FormData()
         form_data.append('file_content', files[0])
         fetch(window.location.origin + '/opensankey/open_stan', {
