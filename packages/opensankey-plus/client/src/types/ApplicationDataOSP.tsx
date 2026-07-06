@@ -12,6 +12,7 @@ import { compressJSONToGzip } from '@terriflux/opensankey/src/Persistence/Univer
 import { convert_data_plus_legacy } from '../components/UtilsOSP'
 import { updateFrom } from '@terriflux/opensankey/src/Algorithms/UpdateFrom'
 import { isTrialActive } from '../utils/trial'
+import { migrateHereditedAttr, Type_ViewHereditedJSON } from './hereditedAttrMigration'
 
 /**
  * Override some Class_ApplicationData behaviors for OpenSankey+
@@ -431,14 +432,10 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
           'json': compressJSONToGzip(view_json as Type_JSON) as Uint8Array
         }
         this._parseViewExtraFields(view_id, view_json as Type_JSON)
-        const raw_attr = (view_json as Type_JSON)['heredited_attr']
-        if (Array.isArray(raw_attr)) {
-          // migration ancien format: heredited_attr était string[], source dans heredited_source_id
-          const legacy_src = ((view_json as Type_JSON)['heredited_source_id'] as string | undefined) ?? default_main_sankey_id
-          this._heredited_attr[view_id] = { [legacy_src]: raw_attr as string[] }
-        } else {
-          this._heredited_attr[view_id] = (raw_attr as { [source_id: string]: string[] } | undefined) ?? {}
-        }
+        this._heredited_attr[view_id] = migrateHereditedAttr(
+          view_json as Type_ViewHereditedJSON,
+          default_main_sankey_id
+        )
       })
     let active_view_id = getStringFromJSON(json_object, 'current_view', default_main_sankey_id)
     if (this.is_static && active_view_id == default_main_sankey_id) active_view_id = Object.keys(views_json)[0]
@@ -511,13 +508,10 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         json: compressJSONToGzip(view_json as Type_JSON) as Uint8Array
       }
       this._parseViewExtraFields(view_id, view_json as Type_JSON)
-      const raw_attr = (view_json as Type_JSON)['heredited_attr']
-      if (Array.isArray(raw_attr)) {
-        const legacy_src = ((view_json as Type_JSON)['heredited_source_id'] as string | undefined) ?? default_main_sankey_id
-        this._heredited_attr[view_id] = { [legacy_src]: raw_attr as string[] }
-      } else {
-        this._heredited_attr[view_id] = (raw_attr as { [source_id: string]: string[] } | undefined) ?? {}
-      }
+      this._heredited_attr[view_id] = migrateHereditedAttr(
+        view_json as Type_ViewHereditedJSON,
+        default_main_sankey_id
+      )
       added++
     })
     // Switch to the active view from the source file if it exists in the imported views
