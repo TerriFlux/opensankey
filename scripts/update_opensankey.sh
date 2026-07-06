@@ -13,7 +13,11 @@ set -e
 umask 002
 
 # --- Parse argument ---
-ENV="${1:-dev}"
+# Exporté pour que toute la chaîne de build (deploy_SankeyApp.sh -> build_client.sh
+# -> pnpm run build -> craco.config.cjs) hérite de process.env.ENV et calcule le
+# bon canal de version (prod=stable, test=beta, sinon alpha). Sans export, un
+# déploiement prod produisait un bundle « alpha ». (Porté du hotfix prod 5358a0362.)
+export ENV="${1:-dev}"
 if [[ "$ENV" != "dev" && "$ENV" != "test" && "$ENV" != "prod" ]]; then
     echo "Erreur : choisir dev | test | prod"
     exit 1
