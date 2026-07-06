@@ -73,6 +73,22 @@ stripe_blueprint = Blueprint("stripe_blueprint", __name__)
 stripe.api_key = STRIPE_KEYS["secret_key"]
 
 
+def _sget(obj, key, default=None):
+    """
+    Accès tolérant, type dict, à une clé d'un objet Stripe ou d'un dict.
+
+    Les objets renvoyés par la lib stripe (StripeObject : Event, Session…)
+    exposent leurs champs par indexation (`obj["k"]`) et attribut (`obj.k`),
+    mais PAS via `.get()` — `obj.get(...)` déclenche `AttributeError` car
+    `get` est interprété comme un nom de champ inexistant. Ce helper unifie
+    l'accès pour un StripeObject comme pour un dict standard.
+    """
+    try:
+        return obj[key]
+    except (KeyError, TypeError):
+        return default
+
+
 def _expected_livemode():
     """
     Environnement Stripe attendu, déduit du préfixe de la clé secrète.
@@ -191,15 +207,14 @@ def session_status():
     :rtype: json
     """
     checkout_session = stripe.checkout.Session.retrieve(request.args.get("session_id"))
-    customer_email = None
-    if checkout_session.customer_details is not None:
-        customer_email = checkout_session.customer_details.email
+    customer_details = _sget(checkout_session, "customer_details")
+    customer_email = _sget(customer_details or {}, "email")
     needs_password = False
     if customer_email:
         user = User.query.filter(func.lower(User.email) == customer_email.lower()).first()
         needs_password = (user is not None) and (user.password is None)
     return jsonify(
-        status=checkout_session.status,
+        status=_sget(checkout_session, "status"),
         customer_email=customer_email,
         needs_password=needs_password,
     )
@@ -233,12 +248,12 @@ def stripe_webhook():
 
     # Reject events coming from the wrong Stripe environment (test vs live)
     expected_livemode = _expected_livemode()
-    if expected_livemode is not None and bool(event.get("livemode")) != expected_livemode:
+    if expected_livemode is not None and bool(_sget(event, "livemode")) != expected_livemode:
         # 200 pour que Stripe ne retente pas indéfiniment
         return "ignored (livemode mismatch)", 200
 
     # Idempotence : ne pas re-traiter un event déjà vu (rejeu Stripe)
-    event_id = event.get("id")
+    event_id = _sget(event, "id")
     if stripe_event_already_processed(event_id):
         return "ok (already processed)", 200
 
@@ -281,14 +296,14 @@ def stripe_webhook():
             # à Stripe (visible dans le journal des webhooks du dashboard).
             traceback.print_exc()
             detail = "Error handling {0} (event {1}): {2}: {3}".format(
-                event["type"], event.get("id", "?"), type(e).__name__, e
+                event["type"], _sget(event, "id", "?"), type(e).__name__, e
             )
             print("ERROR stripe webhook — " + detail)
             return detail, 400
 
     # Record the event as processed once handled successfully (idempotence)
     if ok:
-        mark_stripe_event_processed(event_id, event.get("type", ""))
+        mark_stripe_event_processed(event_id, _sget(event, "type", ""))
 
     # Return
     return msg, 200 if ok else 400
@@ -311,7 +326,7 @@ def handle_customer_creation(session):
     """
     object = session["object"]
     # Le nom peut manquer (customer créé par un checkout anonyme sans billing name)
-    user_name = (object.get("name") or "").split()
+    user_name = (_sget(object, "name") or "").split()
     firstname = user_name[0] if user_name else ""
     lastname = " ".join(user_name[1:])
     return create_user_from_stripe(object["email"], firstname, lastname, object["id"])
@@ -492,9 +507,9 @@ def handle_checkout_session(session):
         # customer_email n'est renseigné que si fourni à la création de la session
         # (utilisateur connecté). Pour un checkout anonyme via la pricing table,
         # l'email saisi par le client est dans customer_details.
-        customer_email = object["customer_email"]
-        if not customer_email and object.get("customer_details"):
-            customer_email = object["customer_details"].get("email")
+        customer_email = _sget(object, "customer_email")
+        if not customer_email:
+            customer_email = _sget(_sget(object, "customer_details") or {}, "email")
         msg, ok = set_licence_checkout_completed(
             object["client_reference_id"],
             customer_email,
@@ -507,7 +522,7 @@ def handle_checkout_session(session):
             user = User.query.filter(func.lower(User.email) == customer_email.lower()).first()
             if (user is not None) and (user.password is None):
                 try:
-                    send_set_password_email(user, object.get("locale") or "fr")
+                    send_set_password_email(user, _sget(object, "locale") or "fr")
                 except Exception as excpt:  # noqa
                     print("send_set_password_email error : " + str(excpt))
         return msg, ok
