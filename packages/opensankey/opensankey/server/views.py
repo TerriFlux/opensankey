@@ -1492,15 +1492,16 @@ def menus_tutorials():
 @opensankey.route("/open_stan", methods=["POST"])
 def open_stan():
     """
-    Importe un fichier STAN .smfa (base SQLite) et renvoie une structure
-    OpenSankey. Périmètre v1 : nœuds, flux et valeurs (période/couche par défaut,
-    ou celles passées en paramètres de formulaire period_id/layer_id).
+    Importe un fichier STAN (.smfa SQLite ou .zmfa XML gzippé, détectés par
+    magic number) et renvoie une structure OpenSankey. Périmètre v1 : nœuds,
+    flux et valeurs (période/couche par défaut, ou celles passées en
+    paramètres de formulaire period_id/layer_id).
     """
     try:
         stan_input_file = request.files["file_content"]
 
         tmp_dir = tempfile.mkdtemp()
-        stan_input_filename = os.path.join(tmp_dir, "input.smfa")
+        stan_input_filename = os.path.join(tmp_dir, "input.stan")
         stan_input_file.save(stan_input_filename)
 
         def _to_int(name):
@@ -1510,7 +1511,7 @@ def open_stan():
             except (TypeError, ValueError):
                 return None
 
-        json_obj = stan_smfa.parse_stan_smfa(
+        json_obj = stan_smfa.parse_stan(
             stan_input_filename,
             period_id=_to_int("period_id"),
             layer_id=_to_int("layer_id"),
