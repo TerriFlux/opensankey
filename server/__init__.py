@@ -118,14 +118,20 @@ def create_app():
     from opensankey.server.views import opensankey
     app.register_blueprint(opensankey, url_prefix="/opensankey")
 
-    # Auth SaaS sur les endpoints de TRAITEMENT d'OpenSankey (upload / conversion
-    # / import). OpenSankey (open-source) reste inchangé : la politique d'auth vit
-    # ici, dans la couche SaaS, via un before_request. On protège par liste
-    # explicite de préfixes — le shell de l'app (/opensankey/, /opensankey/<adress>),
-    # les menus, exemples et tutoriels restent publics. En mode publié (site
-    # statique) le serveur ne tourne pas : ces routes ne sont jamais atteintes.
+    # Auth SaaS sur les endpoints de TRAITEMENT d'OpenSankey (conversion / import).
+    # OpenSankey (open-source) reste inchangé : la politique d'auth vit ici, dans la
+    # couche SaaS, via un before_request. On protège par liste explicite de préfixes
+    # — le shell de l'app (/opensankey/, /opensankey/<adress>), les menus, exemples
+    # et tutoriels restent publics. En mode publié (site statique) le serveur ne
+    # tourne pas : ces routes ne sont jamais atteintes.
+    #
+    # NB : on ne protège PAS /opensankey/upload/* — ses 4 routes (check_process,
+    # retrieve_result, retrieve_json, clean) sont des étapes de continuation /
+    # nettoyage purement session-scoped (elles n'opèrent que sur l'état du process
+    # de la session courante et ne reçoivent aucun fichier). Le vrai point d'entrée
+    # d'un upload utilisateur est convert/launch (input_format excel/json), qui
+    # reste protégé ci-dessous ; seul le chargement d'exemple public y est exempté.
     protected_prefixes = (
-        "/opensankey/upload/",
         "/opensankey/convert/",
         "/opensankey/open_sankeymatic",
         "/opensankey/url/load_json",
@@ -138,6 +144,13 @@ def create_app():
 
         path = request.path
         if any(path.startswith(p) for p in protected_prefixes):
+            # Chargement d'un exemple/tutoriel public (sankeythèque) : passe par
+            # convert/launch mais reste accessible sans compte, conformément à la
+            # politique « menus, exemples et tutoriels restent publics ».
+            if path == "/opensankey/convert/launch":
+                input_format = request.form.get("input_format", "")
+                if input_format in ("example_json", "example_excel"):
+                    return
             if not current_user.is_authenticated:
                 return jsonify({"error": "authentication required"}), 401
     # from opensankey.doc import doc as opensankey_doc
