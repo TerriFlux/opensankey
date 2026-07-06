@@ -3,13 +3,29 @@
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Ce fichier agrège les changements visibles pour les utilisateurs de SankeyApplication, avec un récapitulatif consolidé en tête. Les changelogs détaillés par module sont disponibles dans :
 
-- [submodules/OpenSankey+/CHANGELOG.md](submodules/OpenSankey+/CHANGELOG.md)
-- [submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md](submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md)
-- [submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/CHANGELOG.md](submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/CHANGELOG.md)
-- [submodules/LoginComponent/CHANGELOG.md](submodules/LoginComponent/CHANGELOG.md)
+- [packages/opensankey/CHANGELOG.md](packages/opensankey/CHANGELOG.md)
+- [packages/opensankey-plus/CHANGELOG.md](packages/opensankey-plus/CHANGELOG.md)
+- [packages/login-component/CHANGELOG.md](packages/login-component/CHANGELOG.md)
+- [packages/opensankey/submodules/SankeyExcelParser/CHANGELOG.md](packages/opensankey/submodules/SankeyExcelParser/CHANGELOG.md)
 - [submodules/MFAProblem/CHANGELOG.md](submodules/MFAProblem/CHANGELOG.md)
 
 ---
+
+## [Unreleased]
+
+Release alignée (1.2.0 sur les 4 modules front). Principaux changements visibles :
+
+- **Import SankeyMATIC & STAN** : ouverture native des diagrammes SankeyMATIC (fichiers texte, 100 % côté navigateur) et des fichiers STAN `.smfa` ; modèles SankeyMATIC dans la bibliothèque.
+- **Éditeur texte du Tableur** : sélecteur Tableur/Texte, édition du diagramme au format texte SankeyMATIC avec resynchronisation bidirectionnelle.
+- **Rendu des flux** : nouvelle forme « Contour exact » avec faisceaux parallèles jointifs, et repli fluide pendant les déplacements.
+- **Fiabilité des fichiers** : quatre défauts de persistance corrigés (fichiers 0.8 inchargeables, réglages locaux perdus au rechargement, styles et ordre de plan qui dérivaient à chaque sauvegarde) ; le format est désormais verrouillé par des tests de round-trip et des tests croisés TS↔Python sur un corpus multi-époques, à chaque pipeline.
+- **Sous le capot** : les quatre couches front (OpenSankey, OpenSankey+, LoginComponent, SankeyApplication) vivent désormais dans un monorepo pnpm ; paquets npm publiés sous `@terriflux/*` sur le registry GitLab ; `format_version` distinct de la version d'application ; modernisation D3 (imports par module).
+
+Détails par paquet :
+
+- OpenSankey : voir [packages/opensankey/CHANGELOG.md](packages/opensankey/CHANGELOG.md)
+- OpenSankey+ : voir [packages/opensankey-plus/CHANGELOG.md](packages/opensankey-plus/CHANGELOG.md)
+- LoginComponent : voir [packages/login-component/CHANGELOG.md](packages/login-component/CHANGELOG.md)
 
 ## [1.1.8] — 2026-06-30
 

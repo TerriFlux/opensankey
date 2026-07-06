@@ -2,6 +2,12 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [Unreleased]
+
+### Interne
+
+- Monorepo : le paquet devient `@terriflux/login-component` ; import `d3-selection` nommé ; typage du custom element Stripe `stripe-pricing-table` ; résorption des écarts eslint historiques.
+
 ## [1.1.8] — 2026-06-30
 
 ### Changed

@@ -2,6 +2,12 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [Unreleased]
+
+### Interne
+
+- Monorepo : le paquet devient `@terriflux/opensankey-plus` (dépendance `@terriflux/opensankey` en workspace) ; imports d3 via le shim d'OpenSankey (#1249) ; retrait du stub `fromJSON_1_1_1` (SA#17) ; résorption des écarts eslint historiques.
+
 ## [1.1.8] — 2026-06-30
 
 ### Vues

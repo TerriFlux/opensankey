@@ -7,6 +7,47 @@
 
 <!-- LANG:fr -->
 
+## v1.2.0 — Juillet 2026
+
+### Importer depuis SankeyMATIC et STAN
+
+Vos diagrammes existants n'ont plus besoin d'être ressaisis :
+
+- **SankeyMATIC** : ouvrez directement un fichier texte SankeyMATIC (menu Ouvrir). Flux, couleurs et réglages sont repris, et la mise en page d'origine est reconstituée. Des modèles SankeyMATIC sont aussi disponibles dans la bibliothèque.
+- **STAN** : les fichiers `.smfa` du logiciel STAN s'ouvrent désormais directement — nœuds, flux et valeurs sont importés.
+
+### Éditer son diagramme en mode texte
+
+Le panneau Tableur propose un nouveau mode **Texte** : le diagramme s'écrit et se modifie au format texte SankeyMATIC (une ligne par flux), et chaque application met à jour le dessin. Idéal pour saisir rapidement une structure ou copier-coller depuis un autre outil.
+
+### Un tracé des flux plus fidèle
+
+Nouvelle forme de flux « **Contour exact** » : les flux qui partent d'un même nœud s'affichent en faisceaux parallèles et jointifs, sans chevauchement ni interstice. Pendant les déplacements, le tracé reste fluide et se réajuste en fin de geste.
+
+### Mise en page : plus de contrôle
+
+- **Taille verrouillée intelligente** : si un jeu de données déborde d'un diagramme en taille fixe, le dessin se réduit automatiquement pour tout garder visible, puis reprend sa taille dès que possible.
+- **Épaisseur maximale par vue**, **flux fins jusqu'à zéro**, et positionnement automatique des entrées/sorties conscient des colonnes.
+- **Élément de référence généralisé** : l'échelle peut se caler sur un nœud-stock, pas seulement sur un flux.
+
+### Vues, étiquettes et publication
+
+- **Générateur de vues** dans la barre du haut, jetons dynamiques `{Scale}` et view tag dans les étiquettes et titres, exclusion d'un nœud d'une vue via l'anti-tag « 0 ».
+- **Portfolio de publication** : titre personnalisable, logo, bouton plein écran.
+
+### Application multilingue
+
+Documentation et tutoriels en **français, anglais, espagnol, allemand et italien**, langue mémorisée d'une session à l'autre, tableur intégralement traduit.
+
+### Vos fichiers, plus fiables
+
+Un important travail de fond sur l'enregistrement des fichiers :
+
+- des fichiers très anciens (2022) qui ne se chargeaient plus s'ouvrent de nouveau ;
+- des réglages d'apparence qui pouvaient se perdre d'une sauvegarde à l'autre (tailles de police, bordures, position des étiquettes, ordre de superposition) sont désormais conservés à l'identique ;
+- chaque évolution du logiciel est maintenant vérifiée automatiquement contre une collection de fichiers réels de toutes les époques, pour que vos diagrammes restent rechargeables à l'identique.
+
+
 ## v1.1.7 — Juin 2026
 
 ### Détacher les panneaux dans des fenêtres séparées
@@ -137,6 +178,47 @@ C'est le grand changement de cette version. OpenSankey n'oblige plus à passer p
 - **Noms de styles par défaut traduisibles** : les styles créés automatiquement à l'import suivent la langue de l'interface. Les styles renommés manuellement sont préservés.
 
 <!-- LANG:en -->
+
+## v1.2.0 — July 2026
+
+### Import from SankeyMATIC and STAN
+
+No more retyping existing diagrams:
+
+- **SankeyMATIC**: open a SankeyMATIC text file directly (Open menu). Flows, colors and settings are preserved, and the original layout is reconstructed. SankeyMATIC templates are also available in the library.
+- **STAN**: `.smfa` files from the STAN software now open directly — nodes, flows and values are imported.
+
+### Edit your diagram as text
+
+The Spreadsheet panel gets a new **Text** mode: the diagram can be written and edited in the SankeyMATIC text format (one line per flow), and each apply updates the drawing. Great for quickly sketching a structure or pasting from another tool.
+
+### More faithful flow rendering
+
+New "**Exact outline**" flow shape: flows leaving the same node are drawn as parallel, contiguous ribbons with no overlap or gap. While dragging, rendering stays smooth and snaps back at the end of the gesture.
+
+### Layout: more control
+
+- **Smart locked size**: if a dataset overflows a fixed-size diagram, the drawing automatically shrinks to keep everything visible, then grows back as soon as possible.
+- **Per-view maximum thickness**, **thin flows down to zero**, and column-aware automatic input/output positioning.
+- **Generalized reference element**: the scale can be anchored to a stock node, not only a flow.
+
+### Views, labels and publishing
+
+- **View generator** in the top bar, dynamic `{Scale}` and view-tag tokens in labels and titles, exclude a node from a view with the "0" anti-tag.
+- **Publishing portfolio**: customizable title, logo, full-screen button.
+
+### Multilingual application
+
+Documentation and tutorials in **French, English, Spanish, German and Italian**, language remembered across sessions, fully translated spreadsheet.
+
+### Your files, more reliable
+
+Significant groundwork on file saving:
+
+- very old files (2022) that no longer loaded open again;
+- appearance settings that could get lost from one save to the next (font sizes, borders, label positions, z-order) are now preserved identically;
+- every change to the software is now automatically checked against a collection of real files from every era, so your diagrams keep reloading identically.
+
 
 ## v1.1.7 — June 2026
 
