@@ -77,6 +77,7 @@ setup(
             "server/templates/password_modification_mail/*.*",
             "server/templates/password_reset_mail/*.*",
             "server/templates/register_mail/*.*",
+            "server/templates/set_password_mail/*.*",
         ]
     },
     cmdclass={
