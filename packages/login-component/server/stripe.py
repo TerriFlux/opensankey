@@ -593,10 +593,11 @@ def handle_invoice_paid(session):
         prod_id = item["price"]["product"]
         # Check if it's about a subscription
         sub_id = item["subscription"]
+        invoice_email = _sget(object, "customer_email")
         if sub_id is not None:
-            return set_licence_invoice_paid(object["customer"], prod_id, sub_id)
+            return set_licence_invoice_paid(object["customer"], prod_id, sub_id, invoice_email)
         else:
-            return set_licence_invoice_paid(object["customer"], prod_id, object["id"])
+            return set_licence_invoice_paid(object["customer"], prod_id, object["id"], invoice_email)
     return "Not paid", False
 
 

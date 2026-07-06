@@ -912,6 +912,14 @@ def set_licence_checkout_completed(user_id, user_email, user_stripe_id, user_lic
         user = User.query.filter(func.lower(User.email) == func.lower(user_email)).first()
     if (user is None) and user_stripe_id:
         user = User.query.filter_by(stripe_id=user_stripe_id).first()
+    # L'ordre d'arrivée des webhooks Stripe n'est pas garanti : checkout.session
+    # .completed peut être traité avant customer.created. Si le compte n'existe
+    # pas encore, on le crée ici à partir de l'email du checkout (sans mot de
+    # passe). create_user_from_stripe est idempotent -> pas de doublon quand
+    # customer.created arrivera.
+    if (user is None) and user_email:
+        create_user_from_stripe(user_email, "", "", user_stripe_id)
+        user = User.query.filter(func.lower(User.email) == func.lower(user_email)).first()
     if user is None:
         return "Invalid user", False
 
@@ -969,7 +977,12 @@ def set_license_invoice_created(user_email, user_stripe_id, license_stripe_id, u
     return "ok", True
 
 
-def set_licence_invoice_paid(user_stripe_id: str, license_stripe_id: str, user_license_stripe_id: str):
+def set_licence_invoice_paid(
+    user_stripe_id: str,
+    license_stripe_id: str,
+    user_license_stripe_id: str,
+    user_email: str = None,
+):
     """
     Create a license at checkout for given user
 
@@ -984,13 +997,24 @@ def set_licence_invoice_paid(user_stripe_id: str, license_stripe_id: str, user_l
     :param user_license_stripe_id: Stripe subscription ID
     :type user_license_stripe_id: str
 
+    :param user_email: Email client (facture) — repli si le compte n'est pas
+        encore relié au customer id (ordre des webhooks non garanti)
+    :type user_email: str
+
     Returns
     -------
     :return: (message, success)
     :rtype: (str, bool)
     """
-    # Get user
+    # Get user. Repli sur l'email puis création si absent (webhooks hors ordre :
+    # invoice.paid peut précéder customer.created). create_user_from_stripe est
+    # idempotent.
     user = User.query.filter_by(stripe_id=user_stripe_id).first()
+    if (user is None) and user_email:
+        user = User.query.filter(func.lower(User.email) == func.lower(user_email)).first()
+    if (user is None) and user_email:
+        create_user_from_stripe(user_email, "", "", user_stripe_id)
+        user = User.query.filter(func.lower(User.email) == func.lower(user_email)).first()
     if user is None:
         return "No user found for invoice", False
 
