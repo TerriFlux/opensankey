@@ -49,7 +49,12 @@ cd "$APP_DIR"
 # (EACCES quand pnpm recrée node_modules). On répare AVANT le build, en ne
 # touchant que les fichiers fautifs pour rester rapide quand tout est sain.
 if getent group deploy >/dev/null 2>&1 && command -v sudo >/dev/null 2>&1; then
-    echo ">>> réparation droits checkout partagé (groupe deploy, g+w, setgid)"
+    echo ">>> réparation droits checkout partagé (owner, groupe deploy, g+w, setgid)"
+    DEPLOY_USER="$(id -un)"
+    # chmod n'est permis qu'au propriétaire : pnpm fait des chmod +x au link
+    # des binaires -> EPERM sur les fichiers appartenant à l'autre déployeur.
+    # Le déployeur courant prend donc la propriété (le groupe reste deploy).
+    sudo find "$APP_DIR" ! -user "$DEPLOY_USER" -exec chown "$DEPLOY_USER" {} + 2>/dev/null || true
     sudo find "$APP_DIR" ! -group deploy -exec chgrp deploy {} + 2>/dev/null || true
     sudo find "$APP_DIR" -type d ! -perm -2070 -exec chmod g+rwxs {} + 2>/dev/null || true
     sudo find "$APP_DIR" -type f ! -perm -g+w -exec chmod g+w {} + 2>/dev/null || true
