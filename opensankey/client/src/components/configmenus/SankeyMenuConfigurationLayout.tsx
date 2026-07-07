@@ -384,23 +384,6 @@ export const DrawingAreaConfig = ({
       </OSTooltip>
     </Checkbox>
 
-    {/* #1245 — Surbrillance du chemin au survol. Préférence de session, non
-        persistée : pas de setValueAndSaveHistory (ni historique ni indicateur
-        de sauvegarde). */}
-    <Checkbox
-      variant='menuconfigpanel_option_checkbox'
-      isChecked={app_data.drawing_area.hover_path_highlight_enabled}
-      icon={<CustomFaEyeCheckIcon />}
-      onChange={evt => {
-        app_data.drawing_area.hover_path_highlight_enabled = evt.target.checked
-        setCount(a => a + 1)
-      }}
-    >
-      <OSTooltip label={t('MEP.tooltips.HPH')}>
-        {t('MEP.HPH')}
-      </OSTooltip>
-    </Checkbox>
-
     {unit_taggs.length > 0 && (
       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
         <Box as='span' layerStyle='menuconfigpanel_part_title_3'>
