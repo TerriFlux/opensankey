@@ -354,8 +354,13 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       // Une vue light n'a pas de géométrie propre (json minimal) : pas d'extraction possible
       // ni utile en mode « visible only ». On conserve son json minimal + ses champs unifiés.
       if (kwargs && kwargs['save_only_visible_elements'] && !this._views[id].is_light) {
-        this.extractViewFromJSON(this._views[id].json, id)
-        json_entry_views[id] = DrawingAreaPersistenceOSP.toJSON(this._drawing_area as Class_DrawingAreaOSP, kwargs)
+        // #244 : sérialiser une DA temporaire au lieu de basculer this._drawing_area.
+        // L'ancien extractViewFromJSON en boucle laissait l'app pointée sur la dernière
+        // vue itérée (et détruisait la DA affichée via unDraw) — une sauvegarde
+        // « éléments visibles » corrompait donc la vue courante.
+        const view_da = this.buildDrawingAreaFromViewJSON(this._views[id].json, id)
+        json_entry_views[id] = DrawingAreaPersistenceOSP.toJSON(view_da as Class_DrawingAreaOSP, kwargs)
+        view_da.delete()
       }
     })
 
@@ -540,15 +545,18 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
    * @param {Type_JSON} json_object
    * @memberof Class_ApplicationDataOSP
    */
-  public extractViewFromJSON(json_object: Uint8Array, view_id: string) {
-    console.log('Charging ' + view_id)
+  /**
+   * Construit une DA à partir du JSON gzip d'une vue, SANS toucher l'état vivant
+   * (ni `this._drawing_area` ni son rendu). Utilisé par le switch de vue
+   * (`extractViewFromJSON`, qui bascule ensuite dessus) et par `_toJSON` en mode
+   * `save_only_visible_elements` (qui la sérialise puis la jette). C'est la
+   * séparation qui supprime l'effet de bord de `_toJSON` (#244).
+   */
+  private buildDrawingAreaFromViewJSON(json_object: Uint8Array, view_id: string) {
     const drawing_area_view = this.createNewDrawingArea(view_id)
     drawing_area_view.bypass_redraws = true
     const decompressed_string = pako.inflate(new Uint8Array(json_object), { to: 'string' })
     DrawingAreaPersistenceOSP.fromJSON(drawing_area_view, JSON.parse(decompressed_string))
-    //const visible_json = drawing_area_view.toJSON(false,true,false)
-    //this._views[view_id].json = compressJSONToGzip(visible_json)
-    //drawing_area_view.fromJSON(visible_json)
     // Le chemin de bascule/extraction de vue ne repasse PAS par _afterFromJSON (contrairement
     // à l'ouverture du fichier). Or les nœuds Import/Export d'échange sont TRANSITOIRES : non
     // sérialisés, ils sont régénérés à chaque chargement par splitTrade(). Sans ce split, un
@@ -556,6 +564,12 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     // Import/Export scindés (bug : ils disparaissent au retour sur une vue heavy). afterFromJSON
     // scinde (idempotent : un nœud d'échange déjà scindé n'a plus de lien) puis arrangeTrade.
     drawing_area_view.afterFromJSON()
+    return drawing_area_view
+  }
+
+  public extractViewFromJSON(json_object: Uint8Array, view_id: string) {
+    console.log('Charging ' + view_id)
+    const drawing_area_view = this.buildDrawingAreaFromViewJSON(json_object, view_id)
     if (this._drawing_area.d3_selection_zoom_area != null) {
       this._drawing_area.unDraw()
     }
