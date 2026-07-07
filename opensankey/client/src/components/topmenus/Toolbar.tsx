@@ -235,14 +235,17 @@ export const BannerViewTagTopbar = ({ app_data }: { app_data: Class_ApplicationD
   const full_label = tagg.full_view_label || t('Banner.view_full')
 
   const selectValue = (id: string | null) => {
-    drawing_area.bypass_redraws = true
-    if (id === null) {
-      tagg.view_mode = false
-    } else {
-      tagg.activated = true
-      tagg.view_mode = true
-      tagg.selectTagsFromId(id)
-    }
+    // Batch la sélection sous bypass_redraws (applyViewTagFilterRedraw fait le draw
+    // final). withBypassRedraws garantit le reset même si selectTagsFromId throw (#240).
+    drawing_area.withBypassRedraws(() => {
+      if (id === null) {
+        tagg.view_mode = false
+      } else {
+        tagg.activated = true
+        tagg.view_mode = true
+        tagg.selectTagsFromId(id)
+      }
+    }, false)
     applyViewTagFilterRedraw(app_data)
     setCount(c => c + 1)
   }
@@ -1062,124 +1065,131 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
       ? [...drawing_area.sankey.visible_nodes_list]
       : []
 
-    if (values.length > 1) {
-      tagg.selectTagsFromIds(values)
-    } else {
-      drawing_area.bypass_redraws = true
-      tagg.selectTagsFromId(values[0])
-    }
-
     // Actions spécifiques selon le mode
-    switch (mode) {
-    case 'level': {
-      app_data.drawing_area.bypass_redraws = true
-      // #1231 — Désagrégation/agrégation GLOBALE = application des fonctions LOCALES
-      // nœud par nœud (mêmes positions que le clic droit : enfants remplissent le slot
-      // du parent). On part des nœuds visibles du niveau précédent. La contrainte ±1
-      // (dropdown) garantit un seul cran. En désagrégation uniforme « simple »,
-      // `showAccordingToLevelTags()` ci-dessous nettoie les force-flags (visibilité
-      // pilotée par les level-tags) ; en présence d'un type hybride mémorisé
-      // (englobant/expansion) on garde les flags (cf. `any_hybrid`).
-      const new_level_idx = tagg.tags_list.findIndex(t => t.id === values[0])
-      // #1231 — DÉSAGRÉGATION : chaque nœud applique le type qu'il a MÉMORISÉ
-      // (clic droit local : simple / englobant / expansion), au lieu de toujours
-      // désagréger « simple ». La préférence survit aux agrégations et au
-      // rechargement (cf. Class_NodeDimension.preferred_disaggregation).
-      let any_hybrid = false
-      if (old_level_idx >= 0 && new_level_idx > old_level_idx) {
-        nodes_before.forEach(n => {
-          const dim = n.dimensions_as_parent.find(d => d.id === tagg.id) as Class_NodeDimension | undefined
-          if (!dim || dim.children.length === 0) return
-          const pref: Type_DisaggregationKind | null = dim.preferred_disaggregation
-          if (pref === 'expanded_left' || pref === 'expanded_right') {
+    const runModeActions = () => {
+      switch (mode) {
+      case 'level': {
+        app_data.drawing_area.bypass_redraws = true
+        // #1231 — Désagrégation/agrégation GLOBALE = application des fonctions LOCALES
+        // nœud par nœud (mêmes positions que le clic droit : enfants remplissent le slot
+        // du parent). On part des nœuds visibles du niveau précédent. La contrainte ±1
+        // (dropdown) garantit un seul cran. En désagrégation uniforme « simple »,
+        // `showAccordingToLevelTags()` ci-dessous nettoie les force-flags (visibilité
+        // pilotée par les level-tags) ; en présence d'un type hybride mémorisé
+        // (englobant/expansion) on garde les flags (cf. `any_hybrid`).
+        const new_level_idx = tagg.tags_list.findIndex(t => t.id === values[0])
+        // #1231 — DÉSAGRÉGATION : chaque nœud applique le type qu'il a MÉMORISÉ
+        // (clic droit local : simple / englobant / expansion), au lieu de toujours
+        // désagréger « simple ». La préférence survit aux agrégations et au
+        // rechargement (cf. Class_NodeDimension.preferred_disaggregation).
+        let any_hybrid = false
+        if (old_level_idx >= 0 && new_level_idx > old_level_idx) {
+          nodes_before.forEach(n => {
+            const dim = n.dimensions_as_parent.find(d => d.id === tagg.id) as Class_NodeDimension | undefined
+            if (!dim || dim.children.length === 0) return
+            const pref: Type_DisaggregationKind | null = dim.preferred_disaggregation
+            if (pref === 'expanded_left' || pref === 'expanded_right') {
             // Le parent est encore VISIBLE ici (on n'a pas encore appelé
             // showAccordingToLevelTags) → la redistribution des valeurs sur les
             // liens d'expansion a le bon contexte.
-            any_hybrid = true
-            // finalize=false : batch sous bypass_redraws ; un unique draw()+recenter()
-            // est fait après la boucle (sinon un redraw complet par nœud → O(N²)).
-            disaggregationExpansion(app_data, n as Class_NodeElement, pref === 'expanded_left', dim.children[0] as Class_NodeElement, false)
-          } else if (pref && pref !== 'children') {
-            any_hybrid = true
-            applyContainerModeForDim(app_data, dim, pref)
-          } else {
-            disaggregate(app_data, n as Class_NodeElement, dim.children[0].id, false)
-          }
-        })
-      } else if (old_level_idx >= 0 && new_level_idx < old_level_idx) {
-        nodes_before.forEach(n => {
-          const dim = n.dimensions_as_child.find(d => d.id === tagg.id)
-          if (dim) {
-            aggregate(app_data, n as Class_NodeElement, dim.parent.id, false)
-          }
-        })
-      }
-      // #1231 — `showAccordingToLevelTags()` efface TOUS les force-flags (y compris
-      // container/expansion) pour piloter la visibilité par les level-tags. On ne le
-      // fait QUE si la désagrégation est uniforme « simple » : dès qu'un nœud utilise
-      // un type hybride (englobant/expansion), l'état est volontairement hybride et on
-      // garde ses flags. L'agrégation (sens inverse) repasse toujours par le mode propre.
-      if (!any_hybrid) {
-        app_data.drawing_area.sankey.showAccordingToLevelTags()
-      }
-      app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
-      updateUnitaryStyles(app_data.drawing_area)
-      // #1231 — un changement de niveau (désagrégation/agrégation globale) est une commande
-      // de positionnement → mode absolu (réf flux/datatag persistée conservée).
-      app_data.drawing_area.setAbsoluteMode()
-      // Réordonnancement E/S AVANT le draw (sous bypass_redraws=true encore actif) : il ne
-      // réordonne que _links_order (géométrie relative, invariante par la translation du
-      // recenter), donc son draw() interne est bypassé. Ainsi le draw() ci-dessous rend
-      // directement le bon ordre — au lieu d'un 3e rendu complet après recenter (le draw()
-      // réactivait le rendu → une passe entière gaspillée + rendu transitoire mal ordonné).
-      app_data.drawing_area.sankey.nodes_list.forEach(node => node.reorganizeIOLinks())
-      app_data.drawing_area.draw()
-      app_data.drawing_area.to_recenter = true
-      app_data.drawing_area.recenter()
-      app_data.drawing_area.orderElementOnDA()
-
-      break
-    }
-    case 'data':
-      handleDataTagSelection(tagg as unknown as Class_DataTagGroup, values)
-      break
-    case 'element':
-      //app_data.drawing_area.bypass_compute_positions = true
-      app_data.drawing_area.draw()
-      //app_data.drawing_area.bypass_compute_positions = false
-      app_data.drawing_area.orderElementOnDA()
-      break
-    case 'unitary':
-      updateUnitaryStyles(app_data.drawing_area)
-      // Filtre vue générique : la sélection à valeur unique a posé bypass_redraws=true
-      // (l.497) via un <Select> SANS wrapper de reset (contrairement au Menu unitaire)
-      // → forcer false, sinon draw/recenter/computeAutoSankey ne rendent rien et il
-      // faut re-sélectionner pour voir.
-      if (app_data.drawing_area.sankey.view_mode_active) {
-        app_data.drawing_area.bypass_redraws = false
-      }
-      app_data.drawing_area.draw()
-      // Si le changement de valeur révèle des nœuds jamais positionnés (encore à la
-      // position par défaut), relancer une mise en page auto (comme au chargement).
-      // On stabilise d'abord la visibilité (2 passes de is_visible).
-      if (app_data.drawing_area.sankey.view_mode_active) {
-        app_data.drawing_area.sankey.nodes_list.forEach(n => { void n.is_visible })
-        app_data.drawing_area.sankey.nodes_list.forEach(n => { void n.is_visible })
-        // Mise en page auto SEULEMENT en sous-mode GLOBAL 'auto' (pas en 'filter' = on
-        // garde les positions).
-        if (app_data.drawing_area.view_filter_kind === 'auto') {
-          const needs_auto_layout = app_data.drawing_area.sankey.visible_nodes_list.some(n =>
-            n.position_x === const_default_position_x &&
-            n.position_y === const_default_position_y)
-          if (needs_auto_layout) {
-            app_data.drawing_area.nodePositioning.computeAutoSankey(true, true)
-          }
+              any_hybrid = true
+              // finalize=false : batch sous bypass_redraws ; un unique draw()+recenter()
+              // est fait après la boucle (sinon un redraw complet par nœud → O(N²)).
+              disaggregationExpansion(app_data, n as Class_NodeElement, pref === 'expanded_left', dim.children[0] as Class_NodeElement, false)
+            } else if (pref && pref !== 'children') {
+              any_hybrid = true
+              applyContainerModeForDim(app_data, dim, pref)
+            } else {
+              disaggregate(app_data, n as Class_NodeElement, dim.children[0].id, false)
+            }
+          })
+        } else if (old_level_idx >= 0 && new_level_idx < old_level_idx) {
+          nodes_before.forEach(n => {
+            const dim = n.dimensions_as_child.find(d => d.id === tagg.id)
+            if (dim) {
+              aggregate(app_data, n as Class_NodeElement, dim.parent.id, false)
+            }
+          })
         }
-        app_data.drawing_area.bypass_redraws = false
+        // #1231 — `showAccordingToLevelTags()` efface TOUS les force-flags (y compris
+        // container/expansion) pour piloter la visibilité par les level-tags. On ne le
+        // fait QUE si la désagrégation est uniforme « simple » : dès qu'un nœud utilise
+        // un type hybride (englobant/expansion), l'état est volontairement hybride et on
+        // garde ses flags. L'agrégation (sens inverse) repasse toujours par le mode propre.
+        if (!any_hybrid) {
+          app_data.drawing_area.sankey.showAccordingToLevelTags()
+        }
+        app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
+        updateUnitaryStyles(app_data.drawing_area)
+        // #1231 — un changement de niveau (désagrégation/agrégation globale) est une commande
+        // de positionnement → mode absolu (réf flux/datatag persistée conservée).
+        app_data.drawing_area.setAbsoluteMode()
+        // Réordonnancement E/S AVANT le draw (sous bypass_redraws=true encore actif) : il ne
+        // réordonne que _links_order (géométrie relative, invariante par la translation du
+        // recenter), donc son draw() interne est bypassé. Ainsi le draw() ci-dessous rend
+        // directement le bon ordre — au lieu d'un 3e rendu complet après recenter (le draw()
+        // réactivait le rendu → une passe entière gaspillée + rendu transitoire mal ordonné).
+        app_data.drawing_area.sankey.nodes_list.forEach(node => node.reorganizeIOLinks())
+        app_data.drawing_area.draw()
+        app_data.drawing_area.to_recenter = true
+        app_data.drawing_area.recenter()
+        app_data.drawing_area.orderElementOnDA()
+
+        break
       }
-      app_data.drawing_area.to_recenter = true
-      app_data.drawing_area.recenter()
-      break
+      case 'data':
+        handleDataTagSelection(tagg as unknown as Class_DataTagGroup, values)
+        break
+      case 'element':
+      //app_data.drawing_area.bypass_compute_positions = true
+        app_data.drawing_area.draw()
+        //app_data.drawing_area.bypass_compute_positions = false
+        app_data.drawing_area.orderElementOnDA()
+        break
+      case 'unitary':
+        updateUnitaryStyles(app_data.drawing_area)
+        // Filtre vue générique : la sélection à valeur unique a posé bypass_redraws=true
+        // (l.497) via un <Select> SANS wrapper de reset (contrairement au Menu unitaire)
+        // → forcer false, sinon draw/recenter/computeAutoSankey ne rendent rien et il
+        // faut re-sélectionner pour voir.
+        if (app_data.drawing_area.sankey.view_mode_active) {
+          app_data.drawing_area.bypass_redraws = false
+        }
+        app_data.drawing_area.draw()
+        // Si le changement de valeur révèle des nœuds jamais positionnés (encore à la
+        // position par défaut), relancer une mise en page auto (comme au chargement).
+        // On stabilise d'abord la visibilité (2 passes de is_visible).
+        if (app_data.drawing_area.sankey.view_mode_active) {
+          app_data.drawing_area.sankey.nodes_list.forEach(n => { void n.is_visible })
+          app_data.drawing_area.sankey.nodes_list.forEach(n => { void n.is_visible })
+          // Mise en page auto SEULEMENT en sous-mode GLOBAL 'auto' (pas en 'filter' = on
+          // garde les positions).
+          if (app_data.drawing_area.view_filter_kind === 'auto') {
+            const needs_auto_layout = app_data.drawing_area.sankey.visible_nodes_list.some(n =>
+              n.position_x === const_default_position_x &&
+            n.position_y === const_default_position_y)
+            if (needs_auto_layout) {
+              app_data.drawing_area.nodePositioning.computeAutoSankey(true, true)
+            }
+          }
+          app_data.drawing_area.bypass_redraws = false
+        }
+        app_data.drawing_area.to_recenter = true
+        app_data.drawing_area.recenter()
+        break
+      }
+    }
+
+    if (values.length > 1) {
+      tagg.selectTagsFromIds(values)
+      runModeActions()
+    } else {
+      // Sélection à valeur unique : batch sous bypass_redraws (les case redessinent
+      // explicitement). withBypassRedraws garantit le reset même si un case throw (#240).
+      drawing_area.withBypassRedraws(() => {
+        tagg.selectTagsFromId(values[0])
+        runModeActions()
+      }, false)
     }
     updateComponents()
   }
@@ -1274,15 +1284,11 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
                       icon={tag.id === selected_value ? <CheckIcon /> : undefined}
                       onClick={() => {
                         // Preview pendant la navigation
-                        drawing_area.bypass_redraws = true
-                        handleTagSelection(tagg, [tag.id])
-                        drawing_area.bypass_redraws = false
+                        drawing_area.withBypassRedraws(() => handleTagSelection(tagg, [tag.id]), false)
                       }}
                       onFocus={() => {
                         // Preview au survol/focus avec les flèches
-                        drawing_area.bypass_redraws = true
-                        handleTagSelection(tagg, [tag.id])
-                        drawing_area.bypass_redraws = false
+                        drawing_area.withBypassRedraws(() => handleTagSelection(tagg, [tag.id]), false)
                       }}
                     >
                       {tag.display_name}
@@ -1371,15 +1377,15 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
             })
             const selected_tag = level_tagg.selected_tags_list.map(t => t.id)[0]
             level_tagg.selectTagsFromId(level_tagg.tags_list[0]?.id ?? '')
-            app_data.drawing_area.bypass_redraws = true
-            app_data.drawing_area.sankey.showAccordingToLevelTags()
-            app_data.drawing_area.nodePositioning.computeParametricVForTagg(
-              level_tagg.selected_tags_list[0] as Class_LevelTag
-            )
-            app_data.drawing_area.resetAllVerticalIntervals()
-            level_tagg.selectTagsFromId(selected_tag ?? '')
-            app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
-            app_data.drawing_area.draw()
+            app_data.drawing_area.withBypassRedraws(() => {
+              app_data.drawing_area.sankey.showAccordingToLevelTags()
+              app_data.drawing_area.nodePositioning.computeParametricVForTagg(
+                level_tagg.selected_tags_list[0] as Class_LevelTag
+              )
+              app_data.drawing_area.resetAllVerticalIntervals()
+              level_tagg.selectTagsFromId(selected_tag ?? '')
+              app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
+            })
             app_data.drawing_area.sankey.nodes_list.forEach(n => n.reorganizeIOLinks())
             updateComponents()
           }}
@@ -1433,31 +1439,31 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
           onChange={evt => {
             if (evt.target.checked) {
               sankey.nodeTagsUpdated()
-              sankey.drawing_area.bypass_redraws = true
-              // Activer ce groupe
-              view_tagg.activated = true
+              sankey.drawing_area.withBypassRedraws(() => {
+                // Activer ce groupe
+                view_tagg.activated = true
 
-              // Désactiver tous les siblings
-              view_tagg.siblings.forEach(sibling_id => {
-                const sibling = sankey.view_taggs_dict[sibling_id]
-                if (sibling) {
-                  sibling.activated = false
+                // Désactiver tous les siblings
+                view_tagg.siblings.forEach(sibling_id => {
+                  const sibling = sankey.view_taggs_dict[sibling_id]
+                  if (sibling) {
+                    sibling.activated = false
+                  }
+                })
+
+                // Sauvegarder le tag actuellement sélectionné de ce groupe
+                const current_selected = view_tagg.selected_tags_list[0]?.id
+
+                // Sélectionner le premier tag du groupe pour forcer la mise à jour
+                if (view_tagg.tags_list.length > 0) {
+                  // Si on a un tag sélectionné, on le garde, sinon on prend le premier
+                  const tag_to_select = current_selected ?? view_tagg.tags_list[0].id
+                  view_tagg.selectTagsFromId(tag_to_select)
                 }
+
+                // Appliquer les mêmes transformations que dans handleTagSelection pour le mode 'unitary'
+                updateUnitaryStyles(app_data.drawing_area)
               })
-
-              // Sauvegarder le tag actuellement sélectionné de ce groupe
-              const current_selected = view_tagg.selected_tags_list[0]?.id
-
-              // Sélectionner le premier tag du groupe pour forcer la mise à jour
-              if (view_tagg.tags_list.length > 0) {
-                // Si on a un tag sélectionné, on le garde, sinon on prend le premier
-                const tag_to_select = current_selected ?? view_tagg.tags_list[0].id
-                view_tagg.selectTagsFromId(tag_to_select)
-              }
-
-              // Appliquer les mêmes transformations que dans handleTagSelection pour le mode 'unitary'
-              updateUnitaryStyles(app_data.drawing_area)
-              app_data.drawing_area.draw()
               app_data.drawing_area.to_recenter = true
               app_data.drawing_area.recenter()
 

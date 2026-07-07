@@ -383,79 +383,84 @@ export const retrieveJSONResults = (
     }
   }
 
-  app_data.drawing_area.bypass_redraws = true
-  app_data.drawing_area.sankey.nodes_list.forEach(n => {
-    const tagg = app_data.drawing_area.sankey.node_taggs_dict['type de noeud']
-    if (!tagg) {
-      return
-    }
-    const product_tag = tagg.tags_dict['produit']
-    const sector_tag = tagg.tags_dict['secteur']
-    //const echange_tag = tagg.tags_dict['echange']
-    if (n.hasGivenTag(product_tag)) {
-      // Vérifier si les styles corrects ne sont pas déjà appliqués
-      if (!n.hasStyle(NodeProductStyle)) {
-        // Retirer tous les styles personnalisés existants
-        n.removeAllStyles()
-
-        // Ajouter les styles appropriés
-        n.addStyle(app_data.drawing_area.sankey.styles_dict[NodeStyle])
-        n.addStyle(app_data.drawing_area.sankey.styles_dict[NodeProductStyle])
+  // Le chargement ci-dessus a pu laisser bypass_redraws=true (set l.364 en view_only, ou
+  // app_data.fromJSON(draw=false) qui ne le repasse jamais à false). On repart d'un état
+  // propre puis on enveloppe restylage + mise en page ; le draw() final est fait par
+  // withBypassRedraws (#240 : plus de flag bloqué si un restyle/layout throw).
+  app_data.drawing_area.bypass_redraws = false
+  app_data.drawing_area.withBypassRedraws(() => {
+    app_data.drawing_area.sankey.nodes_list.forEach(n => {
+      const tagg = app_data.drawing_area.sankey.node_taggs_dict['type de noeud']
+      if (!tagg) {
+        return
       }
-    }
-    // Pour les noeuds secteur
-    else if (n.hasGivenTag(sector_tag)) {
+      const product_tag = tagg.tags_dict['produit']
+      const sector_tag = tagg.tags_dict['secteur']
+      //const echange_tag = tagg.tags_dict['echange']
+      if (n.hasGivenTag(product_tag)) {
       // Vérifier si les styles corrects ne sont pas déjà appliqués
-      if (!n.hasStyle(NodeSectorStyle)) {
+        if (!n.hasStyle(NodeProductStyle)) {
         // Retirer tous les styles personnalisés existants
-        n.removeAllStyles()
+          n.removeAllStyles()
 
-        // Ajouter les styles appropriés
-        n.addStyle(app_data.drawing_area.sankey.styles_dict[NodeStyle])
-        n.addStyle(app_data.drawing_area.sankey.styles_dict[NodeSectorStyle])
+          // Ajouter les styles appropriés
+          n.addStyle(app_data.drawing_area.sankey.styles_dict[NodeStyle])
+          n.addStyle(app_data.drawing_area.sankey.styles_dict[NodeProductStyle])
+        }
       }
+      // Pour les noeuds secteur
+      else if (n.hasGivenTag(sector_tag)) {
+      // Vérifier si les styles corrects ne sont pas déjà appliqués
+        if (!n.hasStyle(NodeSectorStyle)) {
+        // Retirer tous les styles personnalisés existants
+          n.removeAllStyles()
+
+          // Ajouter les styles appropriés
+          n.addStyle(app_data.drawing_area.sankey.styles_dict[NodeStyle])
+          n.addStyle(app_data.drawing_area.sankey.styles_dict[NodeSectorStyle])
+        }
+      }
+    })
+    app_data.drawing_area.legend.masked = false
+    if (app_data.drawing_area.sankey.flux_taggs_list.length > 0) {
+      app_data.drawing_area.sankey.flux_taggs_list[0].use_colors = true
+    } else if (app_data.drawing_area.sankey.node_taggs_list.filter(tagg => tagg.id != 'type de noeud').length == 0) {
+      app_data.drawing_area.sankey.styles_dict[LinkStyle].shape_color_rule = 'flow'
+      applyRandomColors(app_data, app_data.drawing_area.sankey.links_list)
+    }
+    const unit_taggs = app_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
+    if (unit_taggs.length > 0) {
+      app_data.drawing_area.sankey.styles_dict['default'].value_label_unit_type = 'unit_tag'
+      app_data.drawing_area.sankey.styles_dict['default'].value_label_unit_visible = true
+    }
+
+    // Case 1 : Apply extracted layout if present -> contains positions
+    if (apply_layout_current_sankey) {
+      app_data.drawing_area.nodePositioning.computeScale()
+      // L'échelle vient d'être recalculée sur les nouvelles données : ne pas la réécraser
+      // avec celle stockée dans le layout importé.
+      app_data.updateFromJSON(layout_source_json, { exclude_scale: true } as Type_JSON)
+      // mfa_problem#222 : updateFromJSON merge les positions sans rejouer
+      // afterFromJSON → les nœuds import/export d'échange ne sont ni restylés ni
+      // replacés. setTrade(true) réapplique les styles import/export à TOUS les
+      // échanges (produits ET secteurs) puis appelle arrangeTrade (placement,
+      // secteurs en horizontal). Sinon les import/export secteur restent "collés".
+      app_data.drawing_area.sankey.setTrade(true)
+    } else if (JSON_data['layout']) {
+      app_data.drawing_area.nodePositioning.computeScale()
+      app_data.updateFromJSON(JSON_data['layout'] as Type_JSON, { exclude_scale: true } as Type_JSON)
+      app_data.drawing_area.sankey.setTrade(true)
+    } else {
+      app_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true, optimize_crossing, h_spacing, v_spacing, sources_mode, sinks_mode)
+      app_data.drawing_area.sankey.setTrade(true)
+    }
+    // Réconciliation/complétion d'un diagramme existant : restaurer l'échelle que
+    // l'utilisateur avait calée (computeScale l'aurait clobbérée avec le nouveau
+    // max de flux complété).
+    if (preserve_scale) {
+      app_data.drawing_area.scale = initial_scale
     }
   })
-  app_data.drawing_area.legend.masked = false
-  if (app_data.drawing_area.sankey.flux_taggs_list.length > 0) {
-    app_data.drawing_area.sankey.flux_taggs_list[0].use_colors = true
-  } else if (app_data.drawing_area.sankey.node_taggs_list.filter(tagg => tagg.id != 'type de noeud').length == 0) {
-    app_data.drawing_area.sankey.styles_dict[LinkStyle].shape_color_rule = 'flow'
-    applyRandomColors(app_data, app_data.drawing_area.sankey.links_list)
-  }
-  const unit_taggs = app_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
-  if (unit_taggs.length > 0) {
-    app_data.drawing_area.sankey.styles_dict['default'].value_label_unit_type = 'unit_tag'
-    app_data.drawing_area.sankey.styles_dict['default'].value_label_unit_visible = true
-  }
-
-  // Case 1 : Apply extracted layout if present -> contains positions
-  if (apply_layout_current_sankey) {
-    app_data.drawing_area.nodePositioning.computeScale()
-    // L'échelle vient d'être recalculée sur les nouvelles données : ne pas la réécraser
-    // avec celle stockée dans le layout importé.
-    app_data.updateFromJSON(layout_source_json, { exclude_scale: true } as Type_JSON)
-    // mfa_problem#222 : updateFromJSON merge les positions sans rejouer
-    // afterFromJSON → les nœuds import/export d'échange ne sont ni restylés ni
-    // replacés. setTrade(true) réapplique les styles import/export à TOUS les
-    // échanges (produits ET secteurs) puis appelle arrangeTrade (placement,
-    // secteurs en horizontal). Sinon les import/export secteur restent "collés".
-    app_data.drawing_area.sankey.setTrade(true)
-  } else if (JSON_data['layout']) {
-    app_data.drawing_area.nodePositioning.computeScale()
-    app_data.updateFromJSON(JSON_data['layout'] as Type_JSON, { exclude_scale: true } as Type_JSON)
-    app_data.drawing_area.sankey.setTrade(true)
-  } else {
-    app_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true, optimize_crossing, h_spacing, v_spacing, sources_mode, sinks_mode)
-    app_data.drawing_area.sankey.setTrade(true)
-  }
-  // Réconciliation/complétion d'un diagramme existant : restaurer l'échelle que
-  // l'utilisateur avait calée (computeScale l'aurait clobbérée avec le nouveau
-  // max de flux complété).
-  if (preserve_scale) {
-    app_data.drawing_area.scale = initial_scale
-  }
-  app_data.drawing_area.draw()
   app_data.menu_configuration.updateComponentRelatedToStyles()
 
   // In view_only mode, every mutation above happened on the current view's DA.

@@ -116,11 +116,11 @@ export const OpenSankeyApp = ({
         tmp_DA.bypass_redraws = true
         app_data.loadDrawingAreaFromJSON(tmp_DA, layout_data as Type_JSON)
         tmp_DA.afterFromJSON()
-        app_data.drawing_area.bypass_redraws = true
-        updateFrom(app_data.drawing_area, tmp_DA, layout_mode)
-        app_data.post_apply_layout_callback?.(tmp_DA, layout_data as Type_JSON, layout_mode)
-        // (dédup #draw_zoom désormais centralisée dans DrawingArea._initDraw)
-        app_data.drawing_area.draw()
+        app_data.drawing_area.withBypassRedraws(() => {
+          updateFrom(app_data.drawing_area, tmp_DA, layout_mode)
+          app_data.post_apply_layout_callback?.(tmp_DA, layout_data as Type_JSON, layout_mode)
+          // (dédup #draw_zoom désormais centralisée dans DrawingArea._initDraw)
+        })
         // Le layout fusionne des attributs de la drawing area (verrous taille/police,
         // banner='sequence' & sélection des data tags, etc.) APRÈS le updateAllMenuComponents()
         // déclenché par fromJSON ci-dessus. Sans ce rafraîchissement, les menus/toolbars

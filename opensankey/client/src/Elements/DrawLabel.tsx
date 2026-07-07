@@ -1130,17 +1130,17 @@ export abstract class DrawLabelBase {
   }
 
   protected dragGenericMove(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
-    this._element.drawing_area.bypass_redraws = true
-    if (this._label_values.position_absolute) {
-      // MODE ABSOLU : éditer position_x/position_y
-      this._label_values.position_x = (this._label_values.position_x ?? 0) + event.dx
-      this._label_values.position_y = (this._label_values.position_y ?? 0) + event.dy
-    } else {
-      // MODE RELATIF : éditer horiz_shift/vert_shift
-      this._label_values.horiz_shift = (this._label_values.horiz_shift ?? 0) + event.dx
-      this._label_values.vert_shift = (this._label_values.vert_shift ?? 0) + event.dy
-    }
-    this._element.drawing_area.bypass_redraws = false
+    this._element.drawing_area.withBypassRedraws(() => {
+      if (this._label_values.position_absolute) {
+        // MODE ABSOLU : éditer position_x/position_y
+        this._label_values.position_x = (this._label_values.position_x ?? 0) + event.dx
+        this._label_values.position_y = (this._label_values.position_y ?? 0) + event.dy
+      } else {
+        // MODE RELATIF : éditer horiz_shift/vert_shift
+        this._label_values.horiz_shift = (this._label_values.horiz_shift ?? 0) + event.dx
+        this._label_values.vert_shift = (this._label_values.vert_shift ?? 0) + event.dy
+      }
+    }, false)
     // Mettre à jour la position visuelle
     this.updateGenericPosition()
   }
@@ -1392,10 +1392,10 @@ export abstract class DrawLabelBase {
       .on('click', (evt: MouseEvent) => { evt.stopPropagation() })
       .on('dblclick', (evt: MouseEvent) => { evt.stopPropagation() })
       .on('input', (evt: Event) => {
-        this._element.sankey.drawing_area.bypass_redraws = true
-        const text = (evt.target as HTMLElement).innerText ?? ''
-        this.onInputChange?.(text)
-        this._element.sankey.drawing_area.bypass_redraws = false
+        this._element.sankey.drawing_area.withBypassRedraws(() => {
+          const text = (evt.target as HTMLElement).innerText ?? ''
+          this.onInputChange?.(text)
+        }, false)
       })
       .on('keydown', (evt: KeyboardEvent) => {
         // Enter valide (sans insérer de saut de ligne) ; Shift+Enter insère

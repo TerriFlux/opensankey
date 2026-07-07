@@ -665,6 +665,32 @@ export class Class_DrawingArea {
   }
 
 
+  /**
+   * Exécute `fn` avec `bypass_redraws` posé, puis restaure l'état précédent
+   * dans un `finally`. Corrige le footgun du flag global non-safe (#240) : une
+   * exception entre le `= true` et le `= false` ne laisse plus la DA figée.
+   *
+   * L'état précédent est *restauré* (et non forcé à `false`), ce qui rend les
+   * appels réentrants sûrs : un `withBypassRedraws` imbriqué dans un batch qui a
+   * déjà posé le flag ne le relâche pas prématurément.
+   *
+   * @param redraw  Si `true` (défaut) et qu'on est l'appel le plus externe
+   *   (le flag était `false` en entrée), déclenche un `draw()` final — c'est le
+   *   pattern classique `true → travail → false → draw()`. Passer `false` pour
+   *   les blocs qui ne redessinent pas (construction de tooltip, édition de
+   *   label, preview de tag) ou qui délèguent le rendu à l'appelant.
+   */
+  public withBypassRedraws<T>(fn: () => T, redraw: boolean = true): T {
+    const previous = this.bypass_redraws
+    this.bypass_redraws = true
+    try {
+      return fn()
+    } finally {
+      this.bypass_redraws = previous
+      if (redraw && !previous) this.draw()
+    }
+  }
+
   public draw(
   ) {
     // This function calls explictly for a redraw
@@ -1245,47 +1271,45 @@ export class Class_DrawingArea {
 
   public copyNodes(node_ids: string[]) {
     const sankey = this.sankey
-    this.bypass_redraws = true
-    const offset = 50
-    const source_nodes = node_ids.map(id => sankey.nodes_dict[id]).filter(n => n !== undefined)
-    this.purgeSelection()
-    const selected_node_ids = new Set(node_ids)
-    const matching_link_id: { [_: string]: string } = {}
-    const node_copy_map = new Map<string, Class_NodeElement>()
+    this.withBypassRedraws(() => {
+      const offset = 50
+      const source_nodes = node_ids.map(id => sankey.nodes_dict[id]).filter(n => n !== undefined)
+      this.purgeSelection()
+      const selected_node_ids = new Set(node_ids)
+      const matching_link_id: { [_: string]: string } = {}
+      const node_copy_map = new Map<string, Class_NodeElement>()
 
-    source_nodes.forEach(node => {
-      const new_node = sankey.addNewNode(node.id + '_copy', node.name)
-      node_copy_map.set(node.id, new_node)
-      new_node.copyFrom(node)
-      new_node.position_x = node.position_x + offset
-      new_node.position_y = node.position_y + offset
-      this.addElementToSelection(new_node)
-    })
+      source_nodes.forEach(node => {
+        const new_node = sankey.addNewNode(node.id + '_copy', node.name)
+        node_copy_map.set(node.id, new_node)
+        new_node.copyFrom(node)
+        new_node.position_x = node.position_x + offset
+        new_node.position_y = node.position_y + offset
+        this.addElementToSelection(new_node)
+      })
 
-    source_nodes.forEach(node => {
-      node.output_links_list.forEach(link => {
-        if (selected_node_ids.has(link.target.id)) {
-          const new_source = node_copy_map.get(node.id)
-          const new_target = node_copy_map.get(link.target.id)
-          if (new_source && new_target) {
-            const new_link = sankey.addNewLink(new_source, new_target)
-            new_link.copyFrom(link)
-            new_link.source = new_source
-            new_link.target = new_target
-            matching_link_id[link.id] = new_link.id
-            this.addElementToSelection(new_link)
+      source_nodes.forEach(node => {
+        node.output_links_list.forEach(link => {
+          if (selected_node_ids.has(link.target.id)) {
+            const new_source = node_copy_map.get(node.id)
+            const new_target = node_copy_map.get(link.target.id)
+            if (new_source && new_target) {
+              const new_link = sankey.addNewLink(new_source, new_target)
+              new_link.copyFrom(link)
+              new_link.source = new_source
+              new_link.target = new_target
+              matching_link_id[link.id] = new_link.id
+              this.addElementToSelection(new_link)
+            }
           }
-        }
+        })
+      })
+
+      source_nodes.forEach(node => {
+        const new_node = node_copy_map.get(node.id)
+        if (new_node) new_node.keepLinkOrderingFrom(node, matching_link_id)
       })
     })
-
-    source_nodes.forEach(node => {
-      const new_node = node_copy_map.get(node.id)
-      if (new_node) new_node.keepLinkOrderingFrom(node, matching_link_id)
-    })
-
-    this.bypass_redraws = false
-    this.draw()
   }
 
   public updateScaleAtLinkValueSetting(previously_valued_count?: number) {
@@ -4422,39 +4446,39 @@ export class Class_DrawingArea {
   }
 
   public setParametricMode() {
-    this.bypass_redraws = true
-    const default_style = this.sankey.styles_dict['default']
+    this.withBypassRedraws(() => {
+      const default_style = this.sankey.styles_dict['default']
 
-    // 1. Initialise position_u depuis position_x pour les nœuds non verrouillés.
-    //    Nécessaire car on vient potentiellement du mode absolu où les nœuds
-    //    ont été placés librement.
-    this.nodePositioning.inferPositionUFromX()
+      // 1. Initialise position_u depuis position_x pour les nœuds non verrouillés.
+      //    Nécessaire car on vient potentiellement du mode absolu où les nœuds
+      //    ont été placés librement.
+      this.nodePositioning.inferPositionUFromX()
 
-    // 2. Back-calcul de shape_position_dy depuis les positions absolues actuelles.
-    //    Si overlap détecté, shape_position_dy est clampé à 0 — la bascule provoquera
-    //    un saut visuel pour ces nœuds.
-    const overlap_count = this.nodePositioning.backCalculateShapePositionDyFromY()
-    if (overlap_count > 0) {
-      console.warn(
-        `[setParametricMode] ${overlap_count} nœud(s) en chevauchement détecté(s) en absolu — ` +
-        'shape_position_dy clampé à 0, certaines positions vont changer lors de la bascule.'
-      )
-    }
+      // 2. Back-calcul de shape_position_dy depuis les positions absolues actuelles.
+      //    Si overlap détecté, shape_position_dy est clampé à 0 — la bascule provoquera
+      //    un saut visuel pour ces nœuds.
+      const overlap_count = this.nodePositioning.backCalculateShapePositionDyFromY()
+      if (overlap_count > 0) {
+        console.warn(
+          `[setParametricMode] ${overlap_count} nœud(s) en chevauchement détecté(s) en absolu — ` +
+          'shape_position_dy clampé à 0, certaines positions vont changer lors de la bascule.'
+        )
+      }
 
-    // 3. Bascule du mode et recalcul du V (les Y restent stables car le dy a été
-    //    back-calculé pour reproduire les positions actuelles).
-    default_style.shape_position_type = 'parametric'
-    this.sankey.nodes_list.forEach(n => {
-      if (n.shape_position_v_locked !== true) n.position_v = -1
-    })
-    // #1231 — mode « écart » : capturer le cadre de référence (médiane globale + centre
-    // par colonne + sommes par colonne) sur l'état courant cohérent, comme le mode
-    // proportionnel. Les centres de colonne suivront ensuite le % au changement de
-    // datatag/dimension, avec écarts constants. Fait après backCalculateShapePositionDyFromY
-    // et avant computeParametrization (l'ordre V ne change pas l'étendue géométrique).
-    this.nodePositioning.captureProportionalReference()
-    this.nodePositioning.computeParametrization(false)
-    this.bypass_redraws = false
+      // 3. Bascule du mode et recalcul du V (les Y restent stables car le dy a été
+      //    back-calculé pour reproduire les positions actuelles).
+      default_style.shape_position_type = 'parametric'
+      this.sankey.nodes_list.forEach(n => {
+        if (n.shape_position_v_locked !== true) n.position_v = -1
+      })
+      // #1231 — mode « écart » : capturer le cadre de référence (médiane globale + centre
+      // par colonne + sommes par colonne) sur l'état courant cohérent, comme le mode
+      // proportionnel. Les centres de colonne suivront ensuite le % au changement de
+      // datatag/dimension, avec écarts constants. Fait après backCalculateShapePositionDyFromY
+      // et avant computeParametrization (l'ordre V ne change pas l'étendue géométrique).
+      this.nodePositioning.captureProportionalReference()
+      this.nodePositioning.computeParametrization(false)
+    }, false)
   }
 
   public setAbsoluteMode() {

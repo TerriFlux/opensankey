@@ -805,24 +805,23 @@ export const contract = (
  */
 export const prepositionAllInPlace = (new_data: Class_ApplicationData) => {
   const da = new_data.drawing_area
-  da.bypass_redraws = true
-  const seen = new Set<string>()
-  const visit = (node: Class_NodeElement) => {
-    if (seen.has(node.id)) return
-    seen.add(node.id)
-    // Snapshot des dims/enfants : disaggregate/aggregate mutent la visibilité.
-    node.dimensions_as_parent.slice().forEach((dim: Class_NodeDimension) => {
-      const children = (dim.children as Class_NodeElement[]).slice()
-      if (children.length === 0) return
-      const first = children[0]
-      disaggregate(new_data, node, first.id, false)
-      children.forEach(visit)
-      aggregate(new_data, first, node.id, false)
-    })
-  }
-  da.sankey.nodes_list.filter(n => !n.is_child).slice().forEach(visit)
-  da.bypass_redraws = false
-  da.draw()
+  da.withBypassRedraws(() => {
+    const seen = new Set<string>()
+    const visit = (node: Class_NodeElement) => {
+      if (seen.has(node.id)) return
+      seen.add(node.id)
+      // Snapshot des dims/enfants : disaggregate/aggregate mutent la visibilité.
+      node.dimensions_as_parent.slice().forEach((dim: Class_NodeDimension) => {
+        const children = (dim.children as Class_NodeElement[]).slice()
+        if (children.length === 0) return
+        const first = children[0]
+        disaggregate(new_data, node, first.id, false)
+        children.forEach(visit)
+        aggregate(new_data, first, node.id, false)
+      })
+    }
+    da.sankey.nodes_list.filter(n => !n.is_child).slice().forEach(visit)
+  })
 }
 
 /**
@@ -834,86 +833,84 @@ export const prepositionAllInPlace = (new_data: Class_ApplicationData) => {
  */
 export const centerChildrenOnParent = (new_data: Class_ApplicationData) => {
   const da = new_data.drawing_area
-  da.bypass_redraws = true
+  da.withBypassRedraws(() => {
 
-  // Ancêtre niveau 1 (premier parent non-enfant) d'un nœud quelconque. Calculé via la
-  // hiérarchie de dimensions, donc indépendant des positions : reste valable même quand
-  // un ancrage a été déplacé à la main. Le `guard` casse un éventuel cycle parent/enfant.
-  const level1Ancestor = (node: Class_NodeElement): Class_NodeElement => {
-    let cur = node
-    const guard = new Set<string>()
-    while (cur.is_child && !guard.has(cur.id)) {
-      guard.add(cur.id)
-      const parent = cur.dimensions_as_child[0]?.parent as Class_NodeElement | undefined
-      if (!parent) break
-      cur = parent
+    // Ancêtre niveau 1 (premier parent non-enfant) d'un nœud quelconque. Calculé via la
+    // hiérarchie de dimensions, donc indépendant des positions : reste valable même quand
+    // un ancrage a été déplacé à la main. Le `guard` casse un éventuel cycle parent/enfant.
+    const level1Ancestor = (node: Class_NodeElement): Class_NodeElement => {
+      let cur = node
+      const guard = new Set<string>()
+      while (cur.is_child && !guard.has(cur.id)) {
+        guard.add(cur.id)
+        const parent = cur.dimensions_as_child[0]?.parent as Class_NodeElement | undefined
+        if (!parent) break
+        cur = parent
+      }
+      return cur
     }
-    return cur
-  }
 
-  // Calque l'ordre des ancrages de `child` sur l'ordre d'ancrage RÉEL de `ancestor`
-  // (celui dont il partage désormais le centre). On NE re-trie PAS par géométrie — ce qui
-  // écraserait un ancrage déplacé à la main sur l'ancêtre — mais on range chaque lien de
-  // l'enfant à la place du lien d'ancêtre qui relie les deux mêmes ancêtres niveau 1, du
-  // même côté E/S. Les liens internes au sous-arbre (pas de contrepartie au niveau parent)
-  // sont renvoyés en fin, en conservant leur ordre courant.
-  const reorderAnchorsLikeAncestor = (child: Class_NodeElement, ancestor: Class_NodeElement) => {
-    if (child === ancestor) return
-    const ancestor_links = ancestor.links_order
-    const child_links = child.links_order
-    if (ancestor_links.length === 0 || child_links.length === 0) return
+    // Calque l'ordre des ancrages de `child` sur l'ordre d'ancrage RÉEL de `ancestor`
+    // (celui dont il partage désormais le centre). On NE re-trie PAS par géométrie — ce qui
+    // écraserait un ancrage déplacé à la main sur l'ancêtre — mais on range chaque lien de
+    // l'enfant à la place du lien d'ancêtre qui relie les deux mêmes ancêtres niveau 1, du
+    // même côté E/S. Les liens internes au sous-arbre (pas de contrepartie au niveau parent)
+    // sont renvoyés en fin, en conservant leur ordre courant.
+    const reorderAnchorsLikeAncestor = (child: Class_NodeElement, ancestor: Class_NodeElement) => {
+      if (child === ancestor) return
+      const ancestor_links = ancestor.links_order
+      const child_links = child.links_order
+      if (ancestor_links.length === 0 || child_links.length === 0) return
 
-    const keyed = child_links.map((l, i) => {
-      const is_output = (l.source === child)
-      const other_end = (is_output ? l.target : l.source) as Class_NodeElement
-      const other_ancestor = level1Ancestor(other_end)
-      let rank = ancestor_links.findIndex(al => {
-        const al_output = (al.source === ancestor)
-        if (al_output !== is_output) return false
-        const al_other = (al_output ? al.target : al.source) as Class_NodeElement
-        return level1Ancestor(al_other) === other_ancestor
+      const keyed = child_links.map((l, i) => {
+        const is_output = (l.source === child)
+        const other_end = (is_output ? l.target : l.source) as Class_NodeElement
+        const other_ancestor = level1Ancestor(other_end)
+        let rank = ancestor_links.findIndex(al => {
+          const al_output = (al.source === ancestor)
+          if (al_output !== is_output) return false
+          const al_other = (al_output ? al.target : al.source) as Class_NodeElement
+          return level1Ancestor(al_other) === other_ancestor
+        })
+        if (rank === -1) rank = ancestor_links.length
+        return { id: l.id, rank, i }
       })
-      if (rank === -1) rank = ancestor_links.length
-      return { id: l.id, rank, i }
-    })
-    // Primaire = rang dans l'ordre de l'ancêtre ; secondaire stable = ordre courant de
-    // l'enfant (préserve un réglage manuel entre frères mappés sur le même lien parent).
-    keyed.sort((a, b) => (a.rank - b.rank) || (a.i - b.i))
-    child.reorganizeIOFromListIds(keyed.map(k => k.id))
-  }
+      // Primaire = rang dans l'ordre de l'ancêtre ; secondaire stable = ordre courant de
+      // l'enfant (préserve un réglage manuel entre frères mappés sur le même lien parent).
+      keyed.sort((a, b) => (a.rank - b.rank) || (a.i - b.i))
+      child.reorganizeIOFromListIds(keyed.map(k => k.id))
+    }
 
-  const seen = new Set<string>()
-  // `root` = ancêtre niveau 1 du sous-arbre courant ; il sert à la fois de centre cible
-  // (collapse transitif) et de référence d'ordre d'ancrage pour tous ses descendants.
-  const visit = (node: Class_NodeElement, root: Class_NodeElement) => {
-    if (seen.has(node.id)) return
-    seen.add(node.id)
-    const center = node.centerForPersistence()
-    node.dimensions_as_parent.forEach((dim: Class_NodeDimension) => {
-      (dim.children as Class_NodeElement[]).forEach(c => {
+    const seen = new Set<string>()
+    // `root` = ancêtre niveau 1 du sous-arbre courant ; il sert à la fois de centre cible
+    // (collapse transitif) et de référence d'ordre d'ancrage pour tous ses descendants.
+    const visit = (node: Class_NodeElement, root: Class_NodeElement) => {
+      if (seen.has(node.id)) return
+      seen.add(node.id)
+      const center = node.centerForPersistence()
+      node.dimensions_as_parent.forEach((dim: Class_NodeDimension) => {
+        (dim.children as Class_NodeElement[]).forEach(c => {
         // setStoredCenter pose le centre comme vérité (le coin en est dérivé) ; comme on
         // visite ensuite l'enfant, ses propres enfants hériteront de CE centre → collapse
         // transitif vers l'ancêtre niveau 1.
-        c.setStoredCenter(center.x, center.y)
-        // L'enfant hérite de la colonne/rangée du parent (position_u/v) et on les
-        // VERROUILLE : le regroupement fait alors autorité. Le verrou est ce qui fait
-        // PERSISTER u/v (cf. NodeBasePersistence.toJSON, qui ne sérialise u/v qu'en mode
-        // parametric OU si verrouillé) et empêche un « disposition auto » ultérieur de
-        // ré-éclater les enfants (autosankey/inferPositionUFromX respectent le verrou).
-        // Le centre stocké (ci-dessus) garde l'alignement visuel.
-        c.position_u = node.position_u
-        c.position_v = node.position_v
-        c.shape_position_u_locked = true
-        c.shape_position_v_locked = true
-        // L'enfant partage maintenant le centre de `root` : ses ancrages doivent suivre
-        // l'ordre des ancrages de `root` (réorder « en s'appuyant sur les parents »).
-        reorderAnchorsLikeAncestor(c, root)
-        visit(c, root)
+          c.setStoredCenter(center.x, center.y)
+          // L'enfant hérite de la colonne/rangée du parent (position_u/v) et on les
+          // VERROUILLE : le regroupement fait alors autorité. Le verrou est ce qui fait
+          // PERSISTER u/v (cf. NodeBasePersistence.toJSON, qui ne sérialise u/v qu'en mode
+          // parametric OU si verrouillé) et empêche un « disposition auto » ultérieur de
+          // ré-éclater les enfants (autosankey/inferPositionUFromX respectent le verrou).
+          // Le centre stocké (ci-dessus) garde l'alignement visuel.
+          c.position_u = node.position_u
+          c.position_v = node.position_v
+          c.shape_position_u_locked = true
+          c.shape_position_v_locked = true
+          // L'enfant partage maintenant le centre de `root` : ses ancrages doivent suivre
+          // l'ordre des ancrages de `root` (réorder « en s'appuyant sur les parents »).
+          reorderAnchorsLikeAncestor(c, root)
+          visit(c, root)
+        })
       })
-    })
-  }
-  da.sankey.nodes_list.filter(n => !n.is_child).slice().forEach(n => visit(n, n))
-
-  da.bypass_redraws = false
-  da.draw()
+    }
+    da.sankey.nodes_list.filter(n => !n.is_child).slice().forEach(n => visit(n, n))
+  })
 }
