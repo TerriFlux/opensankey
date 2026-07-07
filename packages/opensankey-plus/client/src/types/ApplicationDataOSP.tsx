@@ -13,6 +13,7 @@ import { convert_data_plus_legacy } from '../components/UtilsOSP'
 import { updateFrom } from '@terriflux/opensankey/src/Algorithms/UpdateFrom'
 import { isTrialActive } from '../utils/trial'
 import { migrateHereditedAttr, Type_ViewHereditedJSON } from './hereditedAttrMigration'
+import { ViewsManager, Type_ViewEntry } from './ViewsManager'
 
 /**
  * Override some Class_ApplicationData behaviors for OpenSankey+
@@ -61,24 +62,13 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     return this._has_sankey_afm || this.is_static
   }
 
+  // Service de gestion des vues (#244) : porte la logique de vues extraite de cette classe.
+  // Première tranche = résolution de vues (pure/testable) ; l'état reste ici pour l'instant,
+  // lu par le service via l'interface ViewsManagerHost (que cette classe satisfait).
+  protected _views_manager = new ViewsManager(this)
+
   protected _master_drawing_area: Class_DrawingArea | undefined
-  protected _views: {
-    [id: string]: {
-      name: string
-      json: Uint8Array
-      // Sélection de visibilité portée par la vue (concept unifié vue ⊕ viewtag).
-      // { [view_tagg_id]: selected_label_id }. Absent/vide = vue complète (aucun filtre).
-      // Appliquée sur le Sankey OS au switch via _applyViewTagSelection (le mécanisme de
-      // visibilité reste en OS : hook ; le concept Vue/sélection vit ici, en OSP).
-      tag_selection?: { [view_tagg_id: string]: string }
-      // Vue « light » : pas d'override géométrie/style propre, seulement une sélection de
-      // visibilité héritée du maître. Promotion light→heavy = acquisition d'un delta d'override.
-      is_light?: boolean
-      // Si la vue a été auto-générée par la migration depuis un groupe de view tags,
-      // l'id de ce groupe (idempotence : ne pas régénérer).
-      generated_from_group_id?: string
-    }
-  }
+  protected _views: { [id: string]: Type_ViewEntry }
   // heredited_attr[target_view_id][source_view_id] = string[] of attr keys to inherit from that source
   protected _heredited_attr: { [target_id: string]: { [source_id: string]: string[] } } = {}
   protected _views_order: string[] = []
@@ -762,13 +752,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
    * @protected
    */
   protected _parseViewExtraFields(view_id: string, view_json: Type_JSON) {
-    const ts = view_json['tag_selection']
-    if (ts && typeof ts === 'object' && !Array.isArray(ts)) {
-      this._views[view_id].tag_selection = ts as { [view_tagg_id: string]: string }
-    }
-    if (view_json['is_light']) this._views[view_id].is_light = true
-    const gfg = view_json['generated_from_group_id']
-    if (typeof gfg === 'string') this._views[view_id].generated_from_group_id = gfg
+    this._views_manager.parseViewExtraFields(view_id, view_json)
   }
 
   /**
@@ -821,23 +805,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   protected _resolveHeavyViewIdFromViewTagSelection(
     selection: Record<string, string>
   ): string | null {
-    if (!this.has_views) return null
-    const base_sankey = (this._master_drawing_area ?? this._drawing_area).sankey
-    for (const [group_key, tag_key] of Object.entries(selection)) {
-      const group = base_sankey.view_taggs_list.find(g => g.id === group_key || g.name === group_key)
-      if (!group) continue
-      const tag = group.tags_list.find(t => t.id === tag_key || t.name === tag_key)
-      if (!tag) continue
-      // 1) id déterministe (migration/promotion depuis un groupe de view tags)
-      const gen_id = `vt__${group.id}__${tag.id}`
-      if (this._views[gen_id] && !this._views[gen_id].is_light) return gen_id
-      // 2) fallback : vue heavy dont la sélection de visibilité désigne ce couple
-      for (const [vid, v] of Object.entries(this._views)) {
-        if (v.is_light) continue
-        if (v.tag_selection && v.tag_selection[group.id] === tag.id) return vid
-      }
-    }
-    return null
+    return this._views_manager.resolveHeavyViewIdFromViewTagSelection(selection)
   }
 
   /**
@@ -849,14 +817,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
    * @protected
    */
   protected _resolveViewIdFromSelection(selection: string): string | null {
-    if (selection === default_main_sankey_id) return default_main_sankey_id
-    if (this._views[selection]) return selection // id exact
-    for (const [vid, v] of Object.entries(this._views)) {
-      if (v.name === selection) return vid // par nom de vue
-    }
-    // Le maître n'est pas une entrée de _views : match sur son libellé éditable.
-    if (this._master_view_name && selection === this._master_view_name) return default_main_sankey_id
-    return null
+    return this._views_manager.resolveViewIdFromSelection(selection)
   }
 
   /**
