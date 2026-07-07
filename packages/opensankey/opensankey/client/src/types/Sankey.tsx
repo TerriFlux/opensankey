@@ -1277,101 +1277,101 @@ export class Class_Sankey {
     // leur style seul ne survit pas ; SplitIOrE lira ce drapeau).
     this.drawing_area.import_export_above_below = !close
 
-    this.drawing_area.bypass_redraws = true
-    const process_nodes = this.nodes_list
-    const echangeTag = this.node_taggs_dict['type de noeud'].tags_dict['echange']
+    this.drawing_area.withBypassRedraws(() => {
+      const process_nodes = this.nodes_list
+      const echangeTag = this.node_taggs_dict['type de noeud'].tags_dict['echange']
 
-    const import_nodes = process_nodes.filter(n =>
-      n.hasGivenTag(echangeTag) && n.output_links_list.length > 0
-    )
-    const export_nodes = process_nodes.filter(n =>
-      n.hasGivenTag(echangeTag) && n.input_links_list.length > 0
-    )
+      const import_nodes = process_nodes.filter(n =>
+        n.hasGivenTag(echangeTag) && n.output_links_list.length > 0
+      )
+      const export_nodes = process_nodes.filter(n =>
+        n.hasGivenTag(echangeTag) && n.input_links_list.length > 0
+      )
 
-    if (close) {
+      if (close) {
       // Mode "close" pour les imports
-      import_nodes.forEach((n, _i) => {
+        import_nodes.forEach((n, _i) => {
         // if (i == 0) n.sibling!.replaceStyles([
         //   node_styles_dict[NodeSectorStyle],
         //   node_styles_dict[NodeImportExportCloseStyle],
         // ])
-        n.replaceStyles([
-          node_styles_dict[NodeStyle],
-          node_styles_dict[NodeImportExportCloseStyle],
-          node_styles_dict[NodeImportCloseStyle]
-        ])
-
-        const firstOutputLink = n.getFirstOutputLink()
-        if (firstOutputLink) {
-          firstOutputLink.replaceStyles([
-            node_styles_dict[LinkStyle],
-            link_styles_dict[LinkImportExportCloseStyle],
-            link_styles_dict[LinkImportCloseStyle]
+          n.replaceStyles([
+            node_styles_dict[NodeStyle],
+            node_styles_dict[NodeImportExportCloseStyle],
+            node_styles_dict[NodeImportCloseStyle]
           ])
-        }
-      })
 
-      // Mode "close" pour les exports
-      export_nodes.forEach(n => {
-        n.replaceStyles([
-          node_styles_dict[NodeStyle],
-          node_styles_dict[NodeImportExportCloseStyle],
-          node_styles_dict[NodeExportCloseStyle]
-        ])
+          const firstOutputLink = n.getFirstOutputLink()
+          if (firstOutputLink) {
+            firstOutputLink.replaceStyles([
+              node_styles_dict[LinkStyle],
+              link_styles_dict[LinkImportExportCloseStyle],
+              link_styles_dict[LinkImportCloseStyle]
+            ])
+          }
+        })
 
-        const firstInputLink = n.getFirstInputLink()
-        if (firstInputLink) {
-          firstInputLink.replaceStyles([
-            node_styles_dict[LinkStyle],
-            link_styles_dict[LinkImportExportCloseStyle],
-            link_styles_dict[LinkExportCloseStyle]
+        // Mode "close" pour les exports
+        export_nodes.forEach(n => {
+          n.replaceStyles([
+            node_styles_dict[NodeStyle],
+            node_styles_dict[NodeImportExportCloseStyle],
+            node_styles_dict[NodeExportCloseStyle]
           ])
-        }
-      })
-    } else {
+
+          const firstInputLink = n.getFirstInputLink()
+          if (firstInputLink) {
+            firstInputLink.replaceStyles([
+              node_styles_dict[LinkStyle],
+              link_styles_dict[LinkImportExportCloseStyle],
+              link_styles_dict[LinkExportCloseStyle]
+            ])
+          }
+        })
+      } else {
       // Mode "above/below" pour les imports
-      import_nodes.forEach((n, _i) => {
+        import_nodes.forEach((n, _i) => {
         // if (i == 0) n.sibling!.replaceStyles([
         //   node_styles_dict[NodeSectorStyle],
         //   node_styles_dict[NodeImportExportAboveBelowStyle],
         // ])
-        n.replaceStyles([
-          node_styles_dict[NodeStyle],
-          node_styles_dict[NodeSectorStyle],
-          node_styles_dict[NodeImportExportAboveBelowStyle],
-          node_styles_dict[NodeImportAboveStyle]
-        ])
-
-        const firstOutputLink = n.getFirstOutputLink()
-        if (firstOutputLink) {
-          firstOutputLink.replaceStyles([
-            node_styles_dict[LinkStyle],
-            link_styles_dict[LinkImportExportAboveBelowStyle]
+          n.replaceStyles([
+            node_styles_dict[NodeStyle],
+            node_styles_dict[NodeSectorStyle],
+            node_styles_dict[NodeImportExportAboveBelowStyle],
+            node_styles_dict[NodeImportAboveStyle]
           ])
-        }
-      })
 
-      // Mode "above/below" pour les exports
-      export_nodes.forEach(n => {
-        n.replaceStyles([
-          node_styles_dict[NodeStyle],
-          node_styles_dict[NodeSectorStyle],
-          node_styles_dict[NodeImportExportAboveBelowStyle],
-          node_styles_dict[NodeExportBelowStyle]
-        ])
+          const firstOutputLink = n.getFirstOutputLink()
+          if (firstOutputLink) {
+            firstOutputLink.replaceStyles([
+              node_styles_dict[LinkStyle],
+              link_styles_dict[LinkImportExportAboveBelowStyle]
+            ])
+          }
+        })
 
-        const firstInputLink = n.getFirstInputLink()
-        if (firstInputLink) {
-          firstInputLink.replaceStyles([
-            node_styles_dict[LinkStyle],
-            link_styles_dict[LinkImportExportAboveBelowStyle]
+        // Mode "above/below" pour les exports
+        export_nodes.forEach(n => {
+          n.replaceStyles([
+            node_styles_dict[NodeStyle],
+            node_styles_dict[NodeSectorStyle],
+            node_styles_dict[NodeImportExportAboveBelowStyle],
+            node_styles_dict[NodeExportBelowStyle]
           ])
-        }
-      })
-    }
 
-    this.drawing_area.nodePositioning.arrangeTrade(true)
-    this.drawing_area.draw()
+          const firstInputLink = n.getFirstInputLink()
+          if (firstInputLink) {
+            firstInputLink.replaceStyles([
+              node_styles_dict[LinkStyle],
+              link_styles_dict[LinkImportExportAboveBelowStyle]
+            ])
+          }
+        })
+      }
+
+      this.drawing_area.nodePositioning.arrangeTrade(true)
+    })
   }
 }
 
