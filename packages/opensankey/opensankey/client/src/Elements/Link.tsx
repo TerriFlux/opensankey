@@ -1083,9 +1083,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
       // Artificially enlarge link thickness if too thin
       this.d3_selection?.select('.link_path').attr('stroke-width', 15)
     }
-    // #1245 — Surbrillance du chemin : amont de la source + aval de la cible.
-    // `event.buttons === 0` exclut les survols pendant un clic maintenu / drag.
-    if (event.buttons === 0) this.drawing_area.highlightLinkedPath(this)
   }
 
   /**
@@ -1123,8 +1120,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
       this.d3_selection?.select('.link_path').attr('stroke-width', this.thickness)
     }
 
-    // #1245 — Retire la surbrillance de chemin.
-    this.drawing_area.clearLinkedPathHighlight()
   }
 
   protected scaleValueToPx(_: number) {
