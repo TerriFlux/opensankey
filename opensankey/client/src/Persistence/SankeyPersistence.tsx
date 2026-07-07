@@ -45,7 +45,7 @@ import { Class_NodeBase, Type_NameLabelSource } from '../Elements/NodeBase'
 import { ClassTemplate_Legend } from '../Elements/Legend'
 import { Class_Sankey, Type_RatioFluxConstraint, Type_RatioStockFluxConstraint, Type_StockChainingConstraint, Type_SpreadsheetState } from '../types/Sankey'
 import { Class_Tag } from '../types/Tag'
-import { node_exchanges_style, elementStyleConfigs, product_sector_styles, ElementStyleKey, LinkStyle, NodeStyle, ContainerStyle, base_styles } from '../Elements/ElementStyle'
+import { node_exchanges_style, elementStyleConfigs, product_sector_styles, ElementStyleKey, LinkStyle, NodeStyle, ContainerStyle, structural_styles } from '../Elements/ElementStyle'
 import { dedupeZOrderKeepFirst } from '../types/zOrder'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
@@ -134,11 +134,13 @@ export class ProtoElementPersistence extends BaseElementPersistence {
     if (!proto_element['_is_visible']) json_object['is_visible'] = proto_element['_is_visible']
 
     // Fill style & local attributes
-    // Les styles de BASE (NodeStyle, LinkStyle, ContainerStyle...) sont structurels :
+    // Les styles STRUCTURELS (NodeStyle, LinkStyle, ContainerStyle, NodeContainerStyle) sont
     // (re)attaches a la construction selon le type d'element, ils ne sont pas persistes.
     // Sans ce filtre, un ContainerStyle re-attache apres lecture s'accumulait dans le
-    // JSON a chaque cycle save/load (round-trip SA#230).
-    const persisted_styles = proto_element.style.map(s => s.id).filter(id => !base_styles.includes(id as ElementStyleKey))
+    // JSON a chaque cycle save/load (round-trip SA#230). NB : on filtre structural_styles et
+    // NON base_styles — ce dernier inclut les styles d'extremite, appliques par l'utilisateur
+    // et donc a persister (sinon perdus au chargement, SA#232).
+    const persisted_styles = proto_element.style.map(s => s.id).filter(id => !structural_styles.includes(id as ElementStyleKey))
     if (persisted_styles.length > 0) json_object['style'] = persisted_styles
     //const attr_json = this._display.attributes.toJSON(this, null)
     if (Object.keys(proto_element.attributes).length > 0) {
@@ -182,7 +184,7 @@ export class ProtoElementPersistence extends BaseElementPersistence {
       }
     } else {
       const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
-      proto_element['_style'] = [...proto_element['_style'], ...style_id.filter(s_id => s_id != 'default' && !base_styles.includes(s_id as ElementStyleKey) && proto_element.sankey.styles_dict[s_id])
+      proto_element['_style'] = [...proto_element['_style'], ...style_id.filter(s_id => s_id != 'default' && !structural_styles.includes(s_id as ElementStyleKey) && proto_element.sankey.styles_dict[s_id])
         .map(s_id => proto_element.sankey.styles_dict[s_id]) as Class_ElementStyle[]]
     }
   }
@@ -209,7 +211,7 @@ export class ProtoElementPersistence extends BaseElementPersistence {
       }
     } else {
       const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
-      proto_element['_style'] = [...proto_element['_style'], ...style_id.filter(s_id => s_id != 'default' && !base_styles.includes(s_id as ElementStyleKey) && proto_element.sankey.styles_dict[s_id])
+      proto_element['_style'] = [...proto_element['_style'], ...style_id.filter(s_id => s_id != 'default' && !structural_styles.includes(s_id as ElementStyleKey) && proto_element.sankey.styles_dict[s_id])
         .map(s_id => proto_element.sankey.styles_dict[s_id]) as Class_ElementStyle[]]
     }
     proto_element['_style'].forEach(style => style.addReference(proto_element))
