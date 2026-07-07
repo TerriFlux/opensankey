@@ -300,6 +300,8 @@ export const resources_app_elements = {
         'win_header_error': 'Oops, something went wrong',
         'win_content_success': 'OpenSankey+ is now activated for your account.',
         'win_content_success_setpw': 'Your licence is active and your account has been created. We sent an email to {{email}} — follow the link inside to set your password and sign in (remember to check your spam folder).',
+        'link_full_pricing': 'Full pricing & feature details on terriflux.com',
+        'link_legal': 'Legal notice',
         'win_content_error': 'Something went wrong during the payment process',
         'btn_checkout': 'I want OpenSankey+ !'
       },
@@ -755,6 +757,8 @@ export const resources_app_elements = {
         'win_content_buy': 'Créez et partagez vos diagrammes de Sankey comme un pro.',
         'win_content_success': 'Les fonctionnalités d\'OpenSankey+ sont maintenant activées pour votre compte.',
         'win_content_success_setpw': 'Votre licence est active et votre compte a été créé. Un email a été envoyé à {{email}} : suivez le lien pour définir votre mot de passe et vous connecter (pensez à vérifier vos spams).',
+        'link_full_pricing': 'Détail des offres et tarifs sur terriflux.com',
+        'link_legal': 'Mentions légales',
         'win_content_error': 'Quelque chose s\'est mal passé pendant le processus de paiement.',
         'btn_checkout': 'Je veux OpenSankey+ !'
       },
@@ -1249,6 +1253,8 @@ export const resources_app_elements = {
         'win_header_error': 'Ups, algo salió mal',
         'win_content_success': 'OpenSankey+ está ahora activado para su cuenta.',
         'win_content_success_setpw': 'Su licencia está activa y su cuenta ha sido creada. Hemos enviado un correo a {{email}}: siga el enlace para definir su contraseña e iniciar sesión (revise su carpeta de spam).',
+        'link_full_pricing': 'Detalle de ofertas y precios en terriflux.com',
+        'link_legal': 'Aviso legal',
         'win_content_error': 'Algo salió mal durante el proceso de pago',
         'btn_checkout': '¡Quiero OpenSankey+!'
       },

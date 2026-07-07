@@ -91,15 +91,30 @@ export const PaiementCheckout = () => {
     )
   }
 
+  // Langue courante (détectée par i18next) : pilote la locale Stripe et les
+  // liens retour vers le site vitrine terriflux.com (source éditoriale unique).
+  const lang = (i18next.language || 'fr').split('-')[0]
+  const stripe_locale = ['en', 'fr', 'es', 'de', 'it'].includes(lang) ? lang : 'auto'
+  const site_pricing_url = lang === 'fr' ? 'https://terriflux.com/fr/tarifs/' : 'https://terriflux.com/pricing/'
+
   return (
     <Box id="checkout" padding="2rem">
       <stripe-pricing-table
         pricing-table-id={pricingTableId}
         publishable-key={publishableKey}
-        locale={'fr'}
+        locale={stripe_locale}
         customer-email={customerEmail || undefined}
       >
       </stripe-pricing-table>
+      <Box textAlign="center" marginTop="1rem" fontSize="0.9rem">
+        <a href={site_pricing_url} target="_blank" rel="noreferrer" style={{ textDecoration: 'underline' }}>
+          {i18next.t('Paiement.link_full_pricing')}
+        </a>
+        {' — '}
+        <a href="https://terriflux.com/fr/mentions-legales/" target="_blank" rel="noreferrer" style={{ textDecoration: 'underline' }}>
+          {i18next.t('Paiement.link_legal')}
+        </a>
+      </Box>
     </Box>
   )
 }
