@@ -41,6 +41,20 @@ export EIGEN_INCLUDE="${APP_DIR}/submodules/MFAProblem/submodules/eigen"
 # --- Go to app dir ---
 cd "$APP_DIR"
 
+# --- Réparation des droits du checkout partagé ---
+# Deux déployeurs écrivent ici : ubuntu (ce script) et gitlab-runner (CI).
+# Malgré umask 002 + groupe deploy + setgid, des fichiers non group-writable
+# réapparaissent (installs antérieurs au réglage, outils qui forcent leurs
+# permissions) et font échouer le déploiement suivant de l'autre utilisateur
+# (EACCES quand pnpm recrée node_modules). On répare AVANT le build, en ne
+# touchant que les fichiers fautifs pour rester rapide quand tout est sain.
+if getent group deploy >/dev/null 2>&1 && command -v sudo >/dev/null 2>&1; then
+    echo ">>> réparation droits checkout partagé (groupe deploy, g+w, setgid)"
+    sudo find "$APP_DIR" ! -group deploy -exec chgrp deploy {} + 2>/dev/null || true
+    sudo find "$APP_DIR" -type d ! -perm -2070 -exec chmod g+rwxs {} + 2>/dev/null || true
+    sudo find "$APP_DIR" -type f ! -perm -g+w -exec chmod g+w {} + 2>/dev/null || true
+fi
+
 # --- Archive currently-deployed version before overwriting it ---
 # Enabled for prod only (pas de snapshot figé sur dev ni test).
 if [[ "$ENV" == "prod" ]]; then
