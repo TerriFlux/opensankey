@@ -923,9 +923,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   }
 
   /** True si la vue courante est une vue light (visibilité seule, géométrie héritée du maître). */
-  public get is_current_view_light(): boolean {
-    return !!this._views[this._current_view_id]?.is_light
-  }
+  public get is_current_view_light(): boolean { return this._views_manager.is_current_view_light }
 
   /**
    * Promotion light → heavy (Phase 3) : « convertir en vue complète ». Matérialise la
@@ -1145,15 +1143,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
    * @param {string} id id of the view to move
    * @memberof Class_ApplicationDataOSP
    */
-  public moveViewUpInOrder(id: string) {
-    if (id !== default_main_sankey_id) {//Can't move position of master in _views_order
-      const idx = this._views_order.indexOf(id)
-      if (idx > 1) {//Can't move up a view before master so index of view must be > 1 (view to move up must be after the second element in _views_order)
-        this._views_order.splice(idx, 1)
-        this._views_order.splice(idx - 1, 0, id)
-      }
-    }
-  }
+  public moveViewUpInOrder(id: string) { this._views_manager.moveViewUpInOrder(id) }
 
   /**
    * Move down view id in _views_order
@@ -1161,15 +1151,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
    * @param {string} id id of the view to move
    * @memberof Class_ApplicationDataOSP
    */
-  public moveViewDownInOrder(id: string) {
-    if (id !== default_main_sankey_id) {//Can't move position of master in _views_order
-      const idx = this._views_order.indexOf(id)
-      if (idx < this._views_order.length - 1) {//Can't move down a view if it's the last in _views_order
-        this._views_order.splice(idx, 1)
-        this._views_order.splice(idx + 1, 0, id)
-      }
-    }
-  }
+  public moveViewDownInOrder(id: string) { this._views_manager.moveViewDownInOrder(id) }
 
   /**
    * Reset current view with the one in the temporary variable
@@ -1238,12 +1220,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
    * @param {string} id
    * @memberof Class_ApplicationDataOSP
    */
-  public pushViewIdInViewOrder(id: string) {
-    if (this._views_order.includes(id)) {
-      this._views_order.splice(this._views_order.indexOf(id), 1)
-    }
-    this._views_order.push(id)
-  }
+  public pushViewIdInViewOrder(id: string) { this._views_manager.pushViewIdInViewOrder(id) }
 
   // GETTERS / SETTERS ==================================================================
   public get logo_sankey_plus(): string { return this._logo_sankey_plus }
@@ -1269,55 +1246,19 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   // Ordre de navigation entre vues (flèches Préc./Suiv. + sélecteur) : le maître y figure en
   // tête UNIQUEMENT si show_master_in_views est actif. Sinon on garde la liste des vues seule
   // (le maître reste atteignable via setCurrentViewToMaster, mais n'est pas dans la liste).
-  public get views_navigation_order(): string[] {
-    return this._show_master_in_views
-      ? [default_main_sankey_id, ...this._views_order]
-      : this._views_order
-  }
+  public get views_navigation_order(): string[] { return this._views_manager.views_navigation_order }
 
-  public get master_view(): Class_DrawingArea | undefined {
-    if (this.has_views)
-      if (this.has_master_sankey)
-        return this._master_drawing_area
-      else
-        return undefined
-    else
-      return this._drawing_area
-  }
+  public get master_view(): Class_DrawingArea | undefined { return this._views_manager.master_view }
 
-  public get has_views(): boolean {
-    //test if length of _views_order is sup. to 1 because by default there is master sankey
-    return (this._views_order.length > 0)
-  }
+  public get has_views(): boolean { return this._views_manager.has_views }
 
-  public get is_view_master(): boolean {
-    // Identité LOGIQUE (et non l'id du Sankey de la DA) : une vue light réutilise la DA
-    // maître mais n'EST pas le maître.
-    return (this._current_view_id === default_main_sankey_id)
-  }
+  public get is_view_master(): boolean { return this._views_manager.is_view_master }
 
-  public get has_view_before(): boolean {
-    if (this.has_views)
-      return (this.views_navigation_order.indexOf(this._current_view_id) > 0)
-    else
-      return false
-  }
+  public get has_view_before(): boolean { return this._views_manager.has_view_before }
 
-  public get has_view_after(): boolean {
-    if (this.has_views) {
-      const order = this.views_navigation_order
-      // indexOf === -1 (courant hors liste, ex. maître non affiché) => Suiv. va vers la 1re vue.
-      return (order.indexOf(this._current_view_id) < (order.length - 1))
-    } else
-      return false
-  }
+  public get has_view_after(): boolean { return this._views_manager.has_view_after }
 
-  public get has_master_sankey(): boolean {
-    if (this.has_views && this._master_drawing_area != undefined)
-      return true
-    else
-      return false
-  }
+  public get has_master_sankey(): boolean { return this._views_manager.has_master_sankey }
 
   public get list_color_palette(): string[] {
     return this._list_color_palette
@@ -1325,19 +1266,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
 
   public get user_preferences() { return this._user_preferences }
 
-  public get layout_view_sources(): Array<{ id: string, name: string }> {
-    if (!this.has_views) return []
-    const sources: Array<{ id: string, name: string }> = []
-    if (this._master_drawing_area) {
-      sources.push({ id: default_main_sankey_id, name: 'Vue principale' })
-    }
-    this._views_order.forEach(id => {
-      if (id !== default_main_sankey_id && this._views[id]) {
-        sources.push({ id, name: this._views[id].name })
-      }
-    })
-    return sources
-  }
+  public get layout_view_sources(): Array<{ id: string, name: string }> { return this._views_manager.layout_view_sources }
 
   /** Doc markdown `view://<id>` links : activer la vue ciblée (no-op si l'id n'existe plus). */
   public navigateToView(id: string): void {

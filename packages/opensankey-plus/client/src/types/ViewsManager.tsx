@@ -39,8 +39,12 @@ export type Type_ViewEntry = {
  */
 export interface ViewsManagerHost {
   readonly views_dict: { [id: string]: Type_ViewEntry }
+  // Ordre des vues (le maître n'y figure pas). Renvoyé par référence : les méthodes
+  // d'ordre (push/move) mutent ce tableau en place.
+  readonly views_order: string[]
+  readonly current_view_id: string
   readonly master_view_name: string
-  readonly has_views: boolean
+  readonly show_master_in_views: boolean
   readonly master_drawing_area: Class_DrawingArea | undefined
   readonly drawing_area: Class_DrawingArea
 }
@@ -83,7 +87,7 @@ export class ViewsManager {
    * viewtag, géré par le chemin de base). `null` si aucune vue heavy ne correspond.
    */
   public resolveHeavyViewIdFromViewTagSelection(selection: Record<string, string>): string | null {
-    if (!this.host.has_views) return null
+    if (!this.has_views) return null
     const views = this.host.views_dict
     const base_sankey = (this.host.master_drawing_area ?? this.host.drawing_area).sankey
     for (const [group_key, tag_key] of Object.entries(selection)) {
@@ -117,5 +121,110 @@ export class ViewsManager {
     if (view_json['is_light']) entry.is_light = true
     const gfg = view_json['generated_from_group_id']
     if (typeof gfg === 'string') entry.generated_from_group_id = gfg
+  }
+
+  // ========================================================================================
+  // REQUÊTES / NAVIGATION — logique pure sur l'état de vues (lu via l'hôte). Aucun effet de
+  // bord sur la DA : sûr à extraire, testable en isolation.
+  // ========================================================================================
+
+  /** Multi-vues actif : au moins une vue est enregistrée (le maître ne compte pas). */
+  public get has_views(): boolean {
+    return this.host.views_order.length > 0
+  }
+
+  /**
+   * Vue courante = maître (identité LOGIQUE, pas l'id du Sankey de la DA : une vue light
+   * réutilise la DA maître mais n'EST pas le maître).
+   */
+  public get is_view_master(): boolean {
+    return this.host.current_view_id === MASTER_VIEW_ID
+  }
+
+  /** Vue courante = vue light (visibilité seule, géométrie héritée du maître). */
+  public get is_current_view_light(): boolean {
+    return !!this.host.views_dict[this.host.current_view_id]?.is_light
+  }
+
+  /**
+   * Ordre de navigation (flèches Préc./Suiv. + sélecteur) : le maître y figure en tête
+   * UNIQUEMENT si show_master_in_views est actif (sinon atteignable via setCurrentViewToMaster).
+   */
+  public get views_navigation_order(): string[] {
+    return this.host.show_master_in_views
+      ? [MASTER_VIEW_ID, ...this.host.views_order]
+      : this.host.views_order
+  }
+
+  public get has_master_sankey(): boolean {
+    return this.has_views && this.host.master_drawing_area != undefined
+  }
+
+  public get master_view(): Class_DrawingArea | undefined {
+    if (this.has_views)
+      return this.has_master_sankey ? this.host.master_drawing_area : undefined
+    return this.host.drawing_area
+  }
+
+  public get has_view_before(): boolean {
+    return this.has_views && this.views_navigation_order.indexOf(this.host.current_view_id) > 0
+  }
+
+  public get has_view_after(): boolean {
+    if (!this.has_views) return false
+    const order = this.views_navigation_order
+    // indexOf === -1 (courant hors liste, ex. maître non affiché) => Suiv. va vers la 1re vue.
+    return order.indexOf(this.host.current_view_id) < (order.length - 1)
+  }
+
+  /** Sources de mise en page disponibles (maître + vues nommées), pour les sélecteurs UI. */
+  public get layout_view_sources(): Array<{ id: string, name: string }> {
+    if (!this.has_views) return []
+    const sources: Array<{ id: string, name: string }> = []
+    if (this.host.master_drawing_area) {
+      sources.push({ id: MASTER_VIEW_ID, name: 'Vue principale' })
+    }
+    this.host.views_order.forEach(id => {
+      if (id !== MASTER_VIEW_ID && this.host.views_dict[id]) {
+        sources.push({ id, name: this.host.views_dict[id].name })
+      }
+    })
+    return sources
+  }
+
+  /**
+   * Pousse (ou re-pousse) un id en fin d'ordre. Dédoublonne d'abord : un id déjà présent
+   * est retiré puis remis en queue (les doublons cassent la navigation). Mute en place le
+   * tableau `views_order` de l'hôte.
+   */
+  public pushViewIdInViewOrder(id: string) {
+    const order = this.host.views_order
+    if (order.includes(id)) {
+      order.splice(order.indexOf(id), 1)
+    }
+    order.push(id)
+  }
+
+  /** Remonte une vue d'un cran dans l'ordre (le maître, position 0, est immuable). */
+  public moveViewUpInOrder(id: string) {
+    if (id === MASTER_VIEW_ID) return // le maître ne bouge pas dans l'ordre
+    const order = this.host.views_order
+    const idx = order.indexOf(id)
+    // > 1 : on ne peut pas remonter une vue avant le maître (idx 0).
+    if (idx > 1) {
+      order.splice(idx, 1)
+      order.splice(idx - 1, 0, id)
+    }
+  }
+
+  /** Descend une vue d'un cran dans l'ordre. */
+  public moveViewDownInOrder(id: string) {
+    if (id === MASTER_VIEW_ID) return // le maître ne bouge pas dans l'ordre
+    const order = this.host.views_order
+    const idx = order.indexOf(id)
+    if (idx < order.length - 1) {
+      order.splice(idx, 1)
+      order.splice(idx + 1, 0, id)
+    }
   }
 }
