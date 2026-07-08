@@ -39,3 +39,30 @@ export function fitTransform(
     .translate(margin / 2 - bounds.x * k, viewport.top_offset + margin / 2 - bounds.y * k)
     .scale(k)
 }
+
+/**
+ * Transform de zoom qui place le point MONDE `world` sous le point ÉCRAN `screen` à l'échelle
+ * `k` (screen = k·world + translate ⇒ translate = screen − k·world). Sert au centrage caméra
+ * (flyToNode : centre d'un nœud amené au centre du viewport).
+ */
+export function centerTransform(
+  world: { x: number, y: number },
+  screen: { x: number, y: number },
+  k: number
+): d3.ZoomTransform {
+  return d3.zoomIdentity.translate(screen.x - k * world.x, screen.y - k * world.y).scale(k)
+}
+
+/**
+ * Décale un transform d'un déplacement MONDE (dx, dy) tout en préservant le rendu à l'écran :
+ * quand toutes les positions monde sont translatées de (dx, dy) (cf. recenter), ce transform
+ * corrigé (x' = x − k·dx) reproduit EXACTEMENT l'image d'avant-décalage sur les nouvelles
+ * positions — point de départ sans saut pour l'animation de recentrage.
+ */
+export function shiftTransformByWorldDelta(
+  t: d3.ZoomTransform,
+  dx: number,
+  dy: number
+): d3.ZoomTransform {
+  return d3.zoomIdentity.translate(t.x - t.k * dx, t.y - t.k * dy).scale(t.k)
+}
