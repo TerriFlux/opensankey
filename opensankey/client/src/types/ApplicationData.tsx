@@ -365,6 +365,13 @@ export class Class_ApplicationData {
 
   protected _file_name = default_file_name
 
+  // Viewer statique (publish) : nom/URL du fichier .gz réellement chargé (diagramme
+  // initial de window.sankey.diagram ou sélection du dropdown multi-diagrammes).
+  // Nécessaire au bouton « Éditer dans OpenSankey » : _file_name ne convient pas,
+  // fromJSON l'écrase avec le `name_file` interne du JSON (nom d'affichage, pas le
+  // fichier servi). Non persisté.
+  protected _static_diagram_file: string | null = null
+
   // Documentation markdown libre attachée au diagramme (onglet « Doc »), persistée en JSON.
   // Stockée par langue { fr, en, ... } : un même diagramme peut embarquer la doc
   // traduite (cf. tutoriels multilingues). Le getter/setter public expose une
@@ -1947,6 +1954,9 @@ export class Class_ApplicationData {
 
   public get file_name(): string { return this._file_name }
   public set file_name(value: string) { this._file_name = value }
+
+  public get static_diagram_file(): string | null { return this._static_diagram_file }
+  public set static_diagram_file(value: string | null) { this._static_diagram_file = value }
 
   // Doc résolue pour la langue active (i18next), repli en→fr→première. Le setter
   // écrit dans le slot de la langue active : éditer en mode 'en' ne touche que la

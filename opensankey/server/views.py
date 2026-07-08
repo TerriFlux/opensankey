@@ -30,11 +30,14 @@ Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlu
 # flake8: noqa
 
 from pathlib import Path
+import ipaddress
+import socket
 import tempfile
 import os
 import json
 import shutil
 from time import perf_counter
+from urllib.parse import urlparse
 
 import pandas as pd
 from .views_utils import cut_layout
@@ -1525,6 +1528,36 @@ def open_stan():
         abort(500)
 
 
+# Garde-fous SSRF pour /url/load_json. Cet endpoint est PUBLIC (pas d'auth) :
+# c'est le relais du paramètre ?url= du front, utilisé notamment par le bouton
+# « Éditer dans OpenSankey » des sites statiques publiés, donc par des visiteurs
+# anonymes. En contrepartie on ne proxifie que des URLs http(s) résolvant vers
+# des IP publiques, en re-validant chaque redirection, avec timeout et taille max.
+_URL_LOAD_MAX_BYTES = 50 * 1024 * 1024
+_URL_LOAD_MAX_REDIRECTS = 5
+_URL_LOAD_TIMEOUT = 10  # secondes
+
+
+def _public_url_error(url):
+    """None si l'URL est http(s) vers une adresse publique, sinon le motif du refus."""
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        return "scheme not allowed"
+    host = parsed.hostname
+    if not host:
+        return "missing host"
+    try:
+        default_port = 443 if parsed.scheme == "https" else 80
+        infos = socket.getaddrinfo(host, parsed.port or default_port)
+    except (socket.gaierror, OverflowError, ValueError):
+        return "unresolvable host"
+    for info in infos:
+        ip = ipaddress.ip_address(info[4][0])
+        if not ip.is_global:
+            return "non-public address"
+    return None
+
+
 @opensankey.route("/url/load_json", methods=["POST"])
 def url_load_json():
     """
@@ -1533,25 +1566,40 @@ def url_load_json():
     Output : file content (raw, let browser handle decompression)
     """
     try:
-        url_front = request.form["url"]
-        # Requête HTTP pour récupérer le fichier
-        response = requests.get(url_front)
+        url = request.form["url"]
+        # Suivi manuel des redirections : chaque saut est re-validé (anti-SSRF,
+        # sinon une URL publique pourrait rediriger vers le réseau interne).
+        for _ in range(_URL_LOAD_MAX_REDIRECTS + 1):
+            error = _public_url_error(url)
+            if error:
+                return {"error": error}, 400
+            response = requests.get(
+                url, timeout=_URL_LOAD_TIMEOUT, allow_redirects=False, stream=True
+            )
+            if response.is_redirect or response.is_permanent_redirect:
+                url = requests.compat.urljoin(url, response.headers.get("Location", ""))
+                continue
+            break
+        else:
+            return {"error": "too many redirects"}, 400
         response.raise_for_status()
 
+        # Lecture plafonnée (décode l'éventuel Content-Encoding, comme .content)
+        content = response.raw.read(_URL_LOAD_MAX_BYTES + 1, decode_content=True)
+        if len(content) > _URL_LOAD_MAX_BYTES:
+            return {"error": "file too large"}, 400
+
         # Retourner le contenu brut du fichier
-        flask_response = make_response(response.content)
+        flask_response = make_response(content)
 
         # Important: NE PAS définir Content-Encoding: gzip
         # Laisser le navigateur gérer automatiquement la décompression
-        if url_front.endswith(".gz"):
-            flask_response.headers["Content-Type"] = "application/json"  # Type final attendu
-        else:
-            flask_response.headers["Content-Type"] = "application/json"
+        flask_response.headers["Content-Type"] = "application/json"
 
         return flask_response
 
     except Exception as e:
-        print(f"Erreur : {e}")
+        current_app.logger.error("URL LOAD JSON | {0}".format(e))
         return {"error": str(e)}, 500
 
 
