@@ -65,6 +65,7 @@ import { Class_ContainerElement } from '../Elements/TextZone'
 import { Class_ApplicationData } from './ApplicationData'
 import { compareZOrder, dedupeZOrderKeepFirst } from './zOrder'
 import * as LabelFilters from './LabelFilters'
+import * as CopyPaste from './copyPaste'
 import { TooltipEventManager } from '../Elements/TooltipsConfig'
 import { Class_NodeBase, sortNodesElements } from '../Elements/NodeBase'
 import {
@@ -1260,48 +1261,7 @@ export class Class_DrawingArea {
     // End Save Redo -----------------------------------
   }
 
-  public copyNodes(node_ids: string[]) {
-    const sankey = this.sankey
-    this.withBypassRedraws(() => {
-      const offset = 50
-      const source_nodes = node_ids.map(id => sankey.nodes_dict[id]).filter(n => n !== undefined)
-      this.purgeSelection()
-      const selected_node_ids = new Set(node_ids)
-      const matching_link_id: { [_: string]: string } = {}
-      const node_copy_map = new Map<string, Class_NodeElement>()
-
-      source_nodes.forEach(node => {
-        const new_node = sankey.addNewNode(node.id + '_copy', node.name)
-        node_copy_map.set(node.id, new_node)
-        new_node.copyFrom(node)
-        new_node.position_x = node.position_x + offset
-        new_node.position_y = node.position_y + offset
-        this.addElementToSelection(new_node)
-      })
-
-      source_nodes.forEach(node => {
-        node.output_links_list.forEach(link => {
-          if (selected_node_ids.has(link.target.id)) {
-            const new_source = node_copy_map.get(node.id)
-            const new_target = node_copy_map.get(link.target.id)
-            if (new_source && new_target) {
-              const new_link = sankey.addNewLink(new_source, new_target)
-              new_link.copyFrom(link)
-              new_link.source = new_source
-              new_link.target = new_target
-              matching_link_id[link.id] = new_link.id
-              this.addElementToSelection(new_link)
-            }
-          }
-        })
-      })
-
-      source_nodes.forEach(node => {
-        const new_node = node_copy_map.get(node.id)
-        if (new_node) new_node.keepLinkOrderingFrom(node, matching_link_id)
-      })
-    })
-  }
+  public copyNodes(node_ids: string[]) { CopyPaste.copyNodes(this, node_ids) }
 
   public updateScaleAtLinkValueSetting(previously_valued_count?: number) {
     // Si une seule valeur existe sur tout le diagramme, elle détermine l'échelle.
