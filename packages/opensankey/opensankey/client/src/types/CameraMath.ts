@@ -66,3 +66,27 @@ export function shiftTransformByWorldDelta(
 ): d3.ZoomTransform {
   return d3.zoomIdentity.translate(t.x - t.k * dx, t.y - t.k * dy).scale(t.k)
 }
+
+/**
+ * Projection d'un point MONDE vers l'ÉCRAN sous le transform de caméra `t`
+ * (screen = t.translate + world·k). Primitive de base du modèle « caméra sur monde immuable ».
+ */
+export function worldToScreen(
+  t: d3.ZoomTransform,
+  x: number,
+  y: number
+): { x: number, y: number } {
+  return { x: t.x + x * t.k, y: t.y + y * t.k }
+}
+
+/**
+ * Projection inverse ÉCRAN → MONDE sous le transform de caméra `t`
+ * (world = (screen − t.translate) / k). Inverse exacte de worldToScreen (k ≠ 0 supposé).
+ */
+export function screenToWorld(
+  t: d3.ZoomTransform,
+  x: number,
+  y: number
+): { x: number, y: number } {
+  return { x: (x - t.x) / t.k, y: (y - t.y) / t.k }
+}

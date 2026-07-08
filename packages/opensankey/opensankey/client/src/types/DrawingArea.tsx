@@ -2330,10 +2330,13 @@ export class Class_DrawingArea {
       if (t.k) {
         const fm = this._fit_margin / 2
         const navH = this.getNavBarHeight()
-        x0 = Math.min(x0, (fm - t.x) / t.k)
-        y0 = Math.min(y0, (navH + fm - t.y) / t.k)
-        x1 = Math.max(x1, (fm + this.window_fitting_width - t.x) / t.k)
-        y1 = Math.max(y1, (navH + fm + this.window_fitting_height - t.y) / t.k)
+        // Coins écran du viewport (haut-gauche / bas-droite) projetés en coords monde.
+        const tl = CameraMath.screenToWorld(t, fm, navH + fm)
+        const br = CameraMath.screenToWorld(t, fm + this.window_fitting_width, navH + fm + this.window_fitting_height)
+        x0 = Math.min(x0, tl.x)
+        y0 = Math.min(y0, tl.y)
+        x1 = Math.max(x1, br.x)
+        y1 = Math.max(y1, br.y)
       }
     }
     return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }
@@ -3127,11 +3130,13 @@ export class Class_DrawingArea {
     // translateExtent above) to screen coordinates using the zoom transform, so the
     // scrollbar reflects exactly what d3-zoom lets the user pan to.
     const transform = d3.zoomTransform(svgNode)
-    // In screen space: point (localX, localY) -> (transform.x + localX * k, transform.y + localY * k)
-    const screenLeft = transform.x + panX0 * transform.k
-    const screenRight = transform.x + panX1 * transform.k
-    const screenTop = transform.y + panY0 * transform.k
-    const screenBottom = transform.y + panY1 * transform.k
+    // Coins de l'extent pannable (monde) projetés à l'écran via la caméra.
+    const scr_tl = CameraMath.worldToScreen(transform, panX0, panY0)
+    const scr_br = CameraMath.worldToScreen(transform, panX1, panY1)
+    const screenLeft = scr_tl.x
+    const screenRight = scr_br.x
+    const screenTop = scr_tl.y
+    const screenBottom = scr_br.y
     const screenW = screenRight - screenLeft
     const screenH = screenBottom - screenTop
 
