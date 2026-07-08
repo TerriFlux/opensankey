@@ -1,5 +1,5 @@
 // Standard libs
-import React, { FC, useEffect, useRef, useState } from 'react'
+import React, { FC, useRef, useState } from 'react'
 import {
   Box,
   CloseButton,
@@ -9,6 +9,7 @@ import {
 } from '@chakra-ui/react'
 
 // OpenSankey Libs
+import { useModelBinding } from '@terriflux/opensankey/src/hooks/useModelBinding'
 import { default_main_sankey_id } from '@terriflux/opensankey/src/types/Utils'
 import { updateFrom } from '@terriflux/opensankey/src/Algorithms/UpdateFrom'
 import { UpdateModeGrid } from '@terriflux/opensankey/src/components/dialogs/SankeyMenuDialogs'
@@ -21,22 +22,22 @@ export const ModalTransparentViewAttrOSP: FC<BaseComponentPropsPlus> = (
 
   const { t } = app_data
   const [display_menu, set_display_menu] = useState(false)
-  const [, setUpdater] = useState(0)
   const [selected_source, set_selected_source] = useState(default_main_sankey_id)
   const nodeRef = useRef(null)
 
-  // Re-rendre (donc recalculer les bornes draggable) au toggle du tableur/doc.
-  useEffect(() => {
-    return app_data.menu_configuration.addMainZoneListener(() => setUpdater(a => a + 1))
-  }, [])
+  // #247 — re-render piloté par le modèle : lie le slot updater + recalcule les bornes draggable
+  // au toggle du tableur/doc (abonnement addMainZoneListener), avec cleanup au démontage.
+  const rerender = useModelBinding(
+    app_data.menu_configuration_osp.ref_to_modal_view_attr_updater,
+    r => app_data.menu_configuration.addMainZoneListener(r)
+  )
 
   const drawing_area_plus = app_data.drawing_area as Class_DrawingAreaOSP
   app_data.menu_configuration_osp.ref_to_modal_view_attributes_switcher.current = set_display_menu
-  app_data.menu_configuration_osp.ref_to_modal_view_attr_updater.current = () => setUpdater((a: number) => a + 1)
 
   const updateComponent = () => {
     app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    setUpdater(a => a + 1)
+    rerender()
   }
 
   const has_sankey_plus = app_data.has_sankey_plus

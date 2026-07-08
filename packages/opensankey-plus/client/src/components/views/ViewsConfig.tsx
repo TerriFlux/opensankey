@@ -1,5 +1,5 @@
 // Standard libs
-import React, { useState } from 'react'
+import React from 'react'
 import {
   Box,
   Input,
@@ -15,6 +15,7 @@ import {
 } from '@chakra-ui/react'
 
 // OpenSankey Libs
+import { useModelBinding } from '@terriflux/opensankey/src/hooks/useModelBinding'
 import { default_main_sankey_id } from '@terriflux/opensankey/src/types/Utils'
 import { WrapperBoxSubSectionMenu } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
 import { Class_DrawingAreaOSP } from '../../types/DrawingAreaOSP'
@@ -39,9 +40,8 @@ export const ViewsConfig = (
 
   // Components updaters ----------------------------------------------------------------
 
-  const [, setCount] = useState(0)
-  const refreshThis = () => setCount(a => a + 1)
-  menu_configuration_osp.ref_to_views_config_updater.current = refreshThis
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  const refreshThis = useModelBinding(menu_configuration_osp.ref_to_views_config_updater)
 
   // Local variables --------------------------------------------------------------------
   const drawing_area_plus = drawing_area as Class_DrawingAreaOSP

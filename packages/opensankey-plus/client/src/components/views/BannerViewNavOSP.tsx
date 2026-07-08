@@ -1,10 +1,11 @@
 // Standard libs
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import {
   Box,
 } from '@chakra-ui/react'
 
 // OpenSankey Libs
+import { useModelBinding } from '@terriflux/opensankey/src/hooks/useModelBinding'
 import { default_main_sankey_id } from '@terriflux/opensankey/src/types/Utils'
 import { Class_ViewTagGroup } from '@terriflux/opensankey/src/types/TagGroup'
 import { Class_ApplicationDataOSP } from '../../types/ApplicationDataOSP'
@@ -18,14 +19,12 @@ import { TopbarNavSelect } from '@terriflux/opensankey/src/components/topmenus/T
  */
 export const BannerViewNavOSP = ({ app_data }: { app_data: Class_ApplicationDataOSP }) => {
   const { t, menu_configuration_osp, drawing_area } = app_data
-  const [, setCount] = useState(0)
-  const refreshThis = () => setCount(a => a + 1)
-  menu_configuration_osp.ref_to_banner_view_nav_updater.current = refreshThis
-
-  // Re-render au toggle du tableur/doc (recentrage topbar).
-  useEffect(() => {
-    return app_data.menu_configuration.addMainZoneListener(refreshThis)
-  }, [])
+  // #247 — re-render piloté par le modèle : lie le slot updater + s'abonne au toggle du
+  // tableur/doc (recentrage topbar), avec cleanup au démontage.
+  useModelBinding(
+    menu_configuration_osp.ref_to_banner_view_nav_updater,
+    r => app_data.menu_configuration.addMainZoneListener(r)
+  )
 
   const has_views = app_data.has_views
   const has_view_before = app_data.has_view_before
