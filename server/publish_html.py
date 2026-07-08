@@ -4,6 +4,7 @@
 # (Module vendorisé depuis MFAData/scripts/generate_html.py : générateur de pages
 #  HTML de navigation portfolio. Lignes HTML longues volontaires -> lint désactivé.)
 import os
+import json
 from pathlib import Path
 from collections import defaultdict
 import markdown
@@ -13,7 +14,7 @@ import re
 
 # Portage serveur : vprint vient du module publish local (remplace
 # l'ancien sankey_common.py de MFAData/scripts).
-from .publish import vprint
+from .publish import vprint, read_names_descriptor
 
 REPORT_DOCUMENT_EXTENSIONS = {'.pdf', '.docx', '.pptx'}
 _DOC_ICONS = {'.pdf': '📕', '.docx': '📘', '.pptx': '📙'}
@@ -128,9 +129,22 @@ _LANG_SWITCHER_CSS = """
 """
 
 
+def localized_folder_name(folder_path, default_name, lang, default_lang=DEFAULT_LANG):
+    """Nom d'affichage d'un dossier dans une langue : entrée "name" du names.json
+    du dossier si présente, sinon le nom par défaut (nom de dossier d'origine)."""
+    names = read_names_descriptor(folder_path).get('name')
+    if isinstance(names, dict):
+        value = names.get(lang)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+        # Traduction absente -> nom par défaut (nom de dossier)
+    return default_name
+
+
 def render_lang_switcher(current_lang, site_langs, default_lang=DEFAULT_LANG):
     """Rend le sélecteur de langue (liens croisés entre index.<lang>.html du même
-    dossier), ou '' si le site est monolingue."""
+    dossier), ou '' si le site est monolingue. Le clic mémorise le choix
+    (localStorage.portfolio_lang) pour désactiver la négociation automatique."""
     if not site_langs or len(site_langs) < 2:
         return ''
     parts = []
@@ -140,9 +154,31 @@ def render_lang_switcher(current_lang, site_langs, default_lang=DEFAULT_LANG):
         if lang == current_lang:
             parts.append(f'<span class="lang-current" title="{name}">{label}</span>')
         else:
-            parts.append(f'<a href="./{index_filename(lang, default_lang)}" title="{name}">{label}</a>')
+            store = f"try{{localStorage.setItem('portfolio_lang','{lang}')}}catch(e){{}}"
+            parts.append(
+                f'<a href="./{index_filename(lang, default_lang)}" title="{name}" onclick="{store}">{label}</a>'
+            )
     joined = '<span class="lang-sep">|</span>'.join(parts)
     return f'<div class="lang-switcher">🌐 {joined}</div>'
+
+
+def render_lang_redirect_script(current_lang, site_langs, default_lang=DEFAULT_LANG):
+    """Script de négociation de langue inséré dans le <head> des pages générées :
+    redirige vers index.<lang>.html du même dossier selon le choix mémorisé
+    (sélecteur) ou, à défaut, la langue du navigateur. '' si monolingue."""
+    if not site_langs or len(site_langs) < 2:
+        return ''
+    langs_js = json.dumps(site_langs)
+    return f'''
+    <script>(function() {{
+        var cur = "{current_lang}", def = "{default_lang}", langs = {langs_js};
+        try {{
+            var want = localStorage.getItem('portfolio_lang') || (navigator.language || '').slice(0, 2);
+            if (want && want !== cur && langs.indexOf(want) >= 0) {{
+                location.replace(want === def ? 'index.html' : 'index.' + want + '.html');
+            }}
+        }} catch (e) {{ /* négociation impossible : rester sur la page courante */ }}
+    }})();</script>'''
 
 _DOCUMENTS_SECTION_CSS = """
         .documents-section {
@@ -455,6 +491,7 @@ def generate_project_readme_page(project_path, project_name, path_mapper, build_
         str: Contenu HTML de la page de readme
     """
     display_name = path_mapper.get_display_name(project_name)
+    display_name = localized_folder_name(project_path, display_name, lang)
     ui = _ui(lang)
 
     # Lire le Readme.md s'il existe (dans la langue demandée, repli sur le défaut)
@@ -482,11 +519,12 @@ def generate_project_readme_page(project_path, project_name, path_mapper, build_
     
     # Structure HTML complète
     lang_switcher = render_lang_switcher(lang, site_langs)
+    lang_redirect = render_lang_redirect_script(lang, site_langs)
     html_content = f'''<!DOCTYPE html>
 <html lang="{lang}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">{lang_redirect}
     <title>{display_name} - {ui['project_desc_title']}</title>
     <style>
         body {{
@@ -842,7 +880,7 @@ def build_tree_structure(public_dir, path_mapper):
     
     return tree, projects
 
-def generate_breadcrumb(path_parts, path_mapper, lang=DEFAULT_LANG):
+def generate_breadcrumb(path_parts, path_mapper, lang=DEFAULT_LANG, public_dir=None):
     """Génère un fil d'Ariane avec des chemins relatifs et propre HTML"""
     ui = _ui(lang)
     # Hors langue par défaut, viser explicitement index.<lang>.html du dossier
@@ -855,6 +893,9 @@ def generate_breadcrumb(path_parts, path_mapper, lang=DEFAULT_LANG):
     for i, part in enumerate(path_parts):
         rel_path = './' + '/'.join(path_parts[:i + 1]) + '/' + index_suffix
         display_name = path_mapper.get_display_name(part)
+        if public_dir:
+            folder = Path(public_dir) / '/'.join(path_parts[:i + 1])
+            display_name = localized_folder_name(folder, display_name, lang)
 
         if i == len(path_parts) - 1:
             # CORRECTION: Ajouter le < manquant dans </span>
@@ -925,16 +966,22 @@ def generate_directory_index(tree_level, current_path_parts, build_info, public_
     # racine du dossier publié, à défaut « Portfolio Sankey ».
     portfolio_title = None
     if not current_path_parts:
-        _title_file = current_folder_path / 'portfolio_title.txt'
-        if _title_file.exists():
-            try:
-                _lines = _title_file.read_text(encoding='utf-8').strip().splitlines()
-                if _lines:
-                    portfolio_title = _lines[0].strip()
-            except Exception:
-                portfolio_title = None
+        # Titre racine par langue (portfolio_title.en.txt), repli portfolio_title.txt
+        _candidates = ['portfolio_title.txt'] if lang == DEFAULT_LANG else \
+            [f'portfolio_title.{lang}.txt', 'portfolio_title.txt']
+        for _title_name in _candidates:
+            _title_file = current_folder_path / _title_name
+            if _title_file.exists():
+                try:
+                    _lines = _title_file.read_text(encoding='utf-8').strip().splitlines()
+                    if _lines:
+                        portfolio_title = _lines[0].strip()
+                        break
+                except Exception:
+                    portfolio_title = None
     if current_path_parts:
         page_title = path_mapper.get_display_name(current_path_parts[-1])
+        page_title = localized_folder_name(current_folder_path, page_title, lang)
     else:
         page_title = portfolio_title or 'Portfolio Sankey'
     # Titre de l'onglet du navigateur (marque conservée hors surcharge racine)
@@ -961,11 +1008,12 @@ def generate_directory_index(tree_level, current_path_parts, build_info, public_
     groups = {k: v for k, v in tree_level.items() if not k.startswith('_') and v.get('_is_group', False)}
     
     lang_switcher = render_lang_switcher(lang, site_langs)
+    lang_redirect = render_lang_redirect_script(lang, site_langs)
     html_content = f'''<!DOCTYPE html>
 <html lang="{lang}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">{lang_redirect}
     <title>{tab_title}</title>
     <style>
         body {{
@@ -1404,7 +1452,7 @@ def generate_directory_index(tree_level, current_path_parts, build_info, public_
 
     if len(current_path_parts) > 1:
         html_content += f'''<div class="breadcrumb">
-            {generate_breadcrumb(current_path_parts, path_mapper, lang)}
+            {generate_breadcrumb(current_path_parts, path_mapper, lang, public_dir)}
         </div>'''
         
     def get_project_versions(public_dir, current_path_parts, project_name):
@@ -1498,6 +1546,7 @@ def generate_directory_index(tree_level, current_path_parts, build_info, public_
 
             for dir_name, dir_info in sorted(directories.items()):
                 display_name = path_mapper.get_display_name(dir_name)
+                display_name = localized_folder_name(current_folder_path / dir_name, display_name, lang)
 
                 html_content += f'''
                 <a href="{dir_name}/{index_suffix}" class="card-link" style="flex: 1; max-width: 300px; text-align: center; padding: 1rem 2rem;">
@@ -1516,6 +1565,7 @@ def generate_directory_index(tree_level, current_path_parts, build_info, public_
 
             for dir_name, dir_info in sorted(directories.items()):
                 display_name = path_mapper.get_display_name(dir_name)
+                display_name = localized_folder_name(current_folder_path / dir_name, display_name, lang)
                 child_count = len([k for k in dir_info.get('_children', {}) if not k.startswith('_')])
 
                 # NOUVEAU: Lire la readme du sous-dossier depuis les artifacts
@@ -1591,16 +1641,18 @@ def generate_group_card(current_path_parts, public_dir, path_mapper, group_name,
     index_suffix = '' if lang == DEFAULT_LANG else index_filename(lang)
     display_name = path_mapper.get_display_name(group_name)
     display_name = re.sub(r'^\d+\s+', '', display_name)
-    
+
     # Récupérer les 2 projets du groupe ET LES TRIER
     group_projects = group_info.get('_group_projects', [])
     group_projects = sorted(group_projects, key=lambda x: x[0])  # Tri par nom de projet
-    
+
     # Construire le chemin vers le dossier du groupe
     if current_path_parts:
         group_path = Path(public_dir) / '/'.join(current_path_parts) / group_name
     else:
         group_path = Path(public_dir) / group_name
+
+    display_name = localized_folder_name(group_path, display_name, lang)
     
     # Vérifier si le groupe est validé
     is_validated = is_project_validated(public_dir, current_path_parts, group_name)
@@ -1653,7 +1705,8 @@ def generate_group_card(current_path_parts, public_dir, path_mapper, group_name,
         # Trouver le vrai chemin vers le diagramme
         proj_display_name = path_mapper.get_display_name(proj_name)
         proj_display_name = re.sub(r'^\d+\s+', '', proj_display_name)
-        
+        proj_display_name = localized_folder_name(group_path / proj_name, proj_display_name, lang)
+
         # Construire le chemin complet
         full_path = proj_info.get('_full_path', '')
         if current_path_parts:
@@ -1732,6 +1785,8 @@ def generate_tab(current_path_parts, public_dir, path_mapper, get_project_versio
         project_path = Path(public_dir) / '/'.join(current_path_parts) / project_name
     else:
         project_path = Path(public_dir) / project_name
+
+    display_name = localized_folder_name(project_path, display_name, lang)
             
     project_desc = read_readme(project_path, lang)
     readme_snippet = ""

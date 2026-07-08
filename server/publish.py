@@ -238,8 +238,9 @@ class PathMapper:
 
 
 def copy_readmes(source_dir, target_dir):
-    """Copie README.md + variantes traduites (README.<lang>.md, casse libre) de
-    source_dir vers target_dir. Retourne le nombre de fichiers copiés."""
+    """Copie README.md + variantes traduites (README.<lang>.md, casse libre) et le
+    descripteur multilingue names.json de source_dir vers target_dir. Retourne le
+    nombre de fichiers copiés."""
     source_dir = Path(source_dir)
     target_dir = Path(target_dir)
     copied = 0
@@ -254,7 +255,31 @@ def copy_readmes(source_dir, target_dir):
             canonical = f"README{(m.group(1) or '').lower()}.md"
             if safe_copy(fp, target_dir / canonical):
                 copied += 1
+    names_src = source_dir / 'names.json'
+    if names_src.is_file():
+        target_dir.mkdir(parents=True, exist_ok=True)
+        if safe_copy(names_src, target_dir / 'names.json'):
+            copied += 1
     return copied
+
+
+def read_names_descriptor(folder):
+    """Lit le descripteur multilingue `names.json` d'un dossier, ou {}.
+
+    Format : {"name": {"en": "Beef", ...}, "header": {"en": "<h1>...</h1>", ...}}
+    - "name"   : nom d'affichage du dossier par langue (navigation portfolio)
+    - "header" : bandeau du viewer (window.sankey.header) par langue
+    """
+    fp = Path(folder) / 'names.json'
+    if not fp.is_file():
+        return {}
+    try:
+        with open(fp, encoding='utf-8') as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except Exception as e:
+        logger.warning("names.json illisible (%s): %s", fp, e)
+        return {}
 
 
 def copy_root_documentation(mfa_path, public_root):
@@ -278,6 +303,10 @@ def copy_root_documentation(mfa_path, public_root):
                   'image_front.png', 'image_front.jpg', 'image_front.jpeg'):
         src = mfa_path / fname
         if src.is_file() and safe_copy(src, public_root / fname):
+            copied += 1
+    # Titres racine traduits (portfolio_title.en.txt, ...)
+    for src in mfa_path.glob('portfolio_title.*.txt'):
+        if src.is_file() and safe_copy(src, public_root / src.name):
             copied += 1
     return copied
 
@@ -976,6 +1005,52 @@ def cleanup_build_dir(artifact_dir):
         logger.warning("Échec nettoyage du dossier de build %s: %s", artifact_dir, e)
 
 
+def _inject_header_i18n(source_dir, final_index):
+    """Injecte `window.sankey.header_i18n` dans l'index viewer publié si le dossier
+    source (ou son parent) porte un names.json avec des traductions de "header".
+    Le front résout header_i18n[langue] avant window.sankey.header (PublishOptions)."""
+    source_dir = Path(source_dir)
+    headers = {}
+    for folder in (source_dir, source_dir.parent):
+        data = read_names_descriptor(folder)
+        h = data.get('header')
+        if isinstance(h, dict) and h:
+            headers = {k: v for k, v in h.items() if isinstance(v, str)}
+            break
+    if not headers:
+        return
+    final_index = Path(final_index)
+    if not final_index.is_file():
+        return
+    try:
+        with open(_longpath(final_index), 'r', encoding='utf-8') as f:
+            content = f.read()
+        if 'header_i18n' in content:
+            return
+        payload = json.dumps(headers, ensure_ascii=False).replace('</', '<\\/')
+        # Après `window.sankey = {…}` si présent (l'assignation écraserait une
+        # injection antérieure), sinon avant </body>.
+        assign = re.search(r'window\.sankey\s*=\s*\{[^;<]*\}\s*;?', content)
+        if assign:
+            insert_at = assign.end()
+            content = (content[:insert_at]
+                       + f'\n    window.sankey.header_i18n = {payload};'
+                       + content[insert_at:])
+        elif '</body>' in content:
+            script = (
+                '  <script>window.sankey = window.sankey || {}; '
+                f'window.sankey.header_i18n = {payload};</script>\n'
+            )
+            content = content.replace('</body>', script + '</body>', 1)
+        else:
+            return
+        with open(_longpath(final_index), 'w', encoding='utf-8') as f:
+            f.write(content)
+        vprint(f"🌐 header_i18n injecté ({', '.join(sorted(headers))}) dans {final_index.name}", 2)
+    except Exception as e:
+        logger.warning("Injection header_i18n échouée (%s): %s", final_index, e)
+
+
 def publish_folder(project_dir, build_dir, publish_name=None, artifacts_base=None,
                    final_dir=None, write_servers=True):
     """Publie un dossier source (contenant index.html viewer + data) en artifact
@@ -1025,6 +1100,7 @@ def publish_folder(project_dir, build_dir, publish_name=None, artifacts_base=Non
             safe_copy(src, final_dir / aux)
 
     _adapt_project_index(project_dir, final_dir, build_dir)
+    _inject_header_i18n(project_dir, final_dir / "index.html")
     _copy_referenced_files(project_dir, final_dir, index_html)
     _copy_excel_files(project_dir, final_dir)
     _update_html_for_compression(final_dir)
