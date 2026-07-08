@@ -33,6 +33,9 @@ export interface SankeyGlobals {
   doc?: boolean          // default false : bouton « Doc » (panneau documentation) dans la topbar en publish, visible seulement si une doc existe
   navigation_help?: boolean  // default false : bouton « Aide à la navigation » dans la topbar en publish
 
+  // Langue
+  language?: string      // force la langue de l'UI ('fr', 'en', ...) ; le paramètre d'URL ?lang= est prioritaire
+
   // Branding
   logo?: string
   header?: string        // HTML brut injecté en haut
@@ -91,6 +94,7 @@ export interface PublishOptions {
   data_filter: boolean
   lock_zoom: boolean
   tooltip_on_hover: boolean
+  language: string | null
   position_mode: Type_PositionMode | null
   data_tag_selection: Record<string, string> | null
   view_tag_selection: Record<string, string> | null
@@ -162,6 +166,7 @@ export const getPublishOptions = (): PublishOptions => {
     data_filter: bool(s.data_filter, true),
     lock_zoom: bool(s.lock_zoom, false),
     tooltip_on_hover: bool(s.tooltip_on_hover, false),
+    language: str(s.language),
     position_mode: posMode(s.position_mode),
     data_tag_selection: strRecord(s.data_tag_selection),
     view_tag_selection: strRecord(s.view_tag_selection),
@@ -217,6 +222,7 @@ export type ViewerSankeyOptions = {
   data_filter?: boolean
   lock_zoom?: boolean
   tooltip_on_hover?: boolean
+  language?: string
   position_mode?: Type_PositionMode
   data_tag_selection?: Record<string, string>
   view_tag_selection?: Record<string, string>  // valeur = VUE (nom/id, light ou heavy, comme le sélecteur de vue) ou tag à filtrer
@@ -240,7 +246,7 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
     'diagrams_list', 'sous_filieres',
     'data_type', 'data_type_intervals', 'value_filter',
     'view_filter', 'level_filter', 'node_filter', 'data_filter',
-    'lock_zoom', 'tooltip_on_hover',
+    'lock_zoom', 'tooltip_on_hover', 'language',
     'position_mode', 'data_tag_selection', 'view_tag_selection',
   ]
   for (const k of keys) {
@@ -254,4 +260,22 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
     }
   }
   w.sankey = next
+}
+
+/**
+ * Langue imposée par la page hôte : paramètre d'URL `?lang=` prioritaire,
+ * sinon `window.sankey.language`. Retourne null si absente ou non supportée.
+ * Utilisé par les index.tsx (OS/SA) AVANT la logique de langue mémorisée :
+ * les pages publiées (portfolio multilingue) lient leurs diagrams.html avec
+ * `?lang=<lang>` pour que le viewer s'ouvre dans la langue de la page.
+ */
+export const getForcedLanguage = (supported_langs: string[]): string | null => {
+  let url_lang: string | null = null
+  try {
+    url_lang = new URLSearchParams(window.location.search).get('lang')
+  } catch {
+    url_lang = null
+  }
+  const lang = url_lang ?? (typeof window.sankey?.language === 'string' ? window.sankey.language : null)
+  return (lang && supported_langs.includes(lang)) ? lang : null
 }
