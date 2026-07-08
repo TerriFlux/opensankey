@@ -1,5 +1,5 @@
 import * as d3 from '../d3Modules'
-import { sameZoomTransform, fitTransform, centerTransform, shiftTransformByWorldDelta } from './CameraMath'
+import { sameZoomTransform, fitTransform, centerTransform, shiftTransformByWorldDelta, worldToScreen, screenToWorld } from './CameraMath'
 
 // #242 — Maths pures de caméra, testées en isolation.
 
@@ -77,5 +77,28 @@ describe('#1250 shiftTransformByWorldDelta', () => {
   it('delta nul = transform inchangé', () => {
     const t0 = d3.zoomIdentity.translate(3, 4).scale(1.5)
     expect(sameZoomTransform(shiftTransformByWorldDelta(t0, 0, 0), t0)).toBe(true)
+  })
+})
+
+describe('#1250 worldToScreen / screenToWorld', () => {
+  const t = d3.zoomIdentity.translate(30, -12).scale(2.5)
+
+  it('worldToScreen coïncide avec d3 applyX/applyY', () => {
+    const s = worldToScreen(t, 40, 18)
+    expect(s.x).toBeCloseTo(t.applyX(40))
+    expect(s.y).toBeCloseTo(t.applyY(18))
+  })
+
+  it('screenToWorld coïncide avec d3 invertX/invertY', () => {
+    const w = screenToWorld(t, 200, 75)
+    expect(w.x).toBeCloseTo(t.invertX(200))
+    expect(w.y).toBeCloseTo(t.invertY(75))
+  })
+
+  it('round-trip world → screen → world', () => {
+    const s = worldToScreen(t, 123, -45)
+    const w = screenToWorld(t, s.x, s.y)
+    expect(w.x).toBeCloseTo(123)
+    expect(w.y).toBeCloseTo(-45)
   })
 })
