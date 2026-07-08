@@ -237,14 +237,31 @@ class PathMapper:
             json.dump(self.export_mapping(), f, ensure_ascii=False, indent=2)
 
 
+def copy_readmes(source_dir, target_dir):
+    """Copie README.md + variantes traduites (README.<lang>.md, casse libre) de
+    source_dir vers target_dir. Retourne le nombre de fichiers copiés."""
+    source_dir = Path(source_dir)
+    target_dir = Path(target_dir)
+    copied = 0
+    if not source_dir.is_dir():
+        return copied
+    pattern = re.compile(r'^readme(\.[a-z]{2})?\.md$', re.IGNORECASE)
+    for fp in source_dir.iterdir():
+        if fp.is_file() and pattern.match(fp.name):
+            target_dir.mkdir(parents=True, exist_ok=True)
+            # Nom canonique README[.lang].md pour que la génération HTML les retrouve
+            m = pattern.match(fp.name)
+            canonical = f"README{(m.group(1) or '').lower()}.md"
+            if safe_copy(fp, target_dir / canonical):
+                copied += 1
+    return copied
+
+
 def copy_root_documentation(mfa_path, public_root):
-    """Copie README.md racine + image_front + dossiers doc vers la racine publique."""
+    """Copie README(s) racine + image_front + dossiers doc vers la racine publique."""
     mfa_path = Path(mfa_path)
     public_root = Path(public_root)
-    copied = 0
-    root_readme = mfa_path / 'README.md'
-    if root_readme.exists() and safe_copy(root_readme, public_root / 'README.md'):
-        copied += 1
+    copied = copy_readmes(mfa_path, public_root)
     for folder in ('doc', 'docs', 'documentation', 'images', 'img', 'assets',
                    'static', 'media', 'files', 'guides', 'help', 'manual'):
         src = mfa_path / folder
@@ -298,11 +315,7 @@ def copy_readme_with_mapping(mfa_data_dir, source_project_path, target_project_p
             continue
         target_norm_dir = public_root / partial_normalized
 
-        readme_src = source_dir / 'README.md'
-        if readme_src.exists():
-            target_norm_dir.mkdir(parents=True, exist_ok=True)
-            if safe_copy(readme_src, target_norm_dir / 'README.md'):
-                copied += 1
+        copied += copy_readmes(source_dir, target_norm_dir)
 
         if source_dir.exists():
             for fp in source_dir.iterdir():

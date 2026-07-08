@@ -10,17 +10,25 @@ import i18next from './traductions/traduction'
 import { SankeyApp } from './AppSA'
 import { Class_ApplicationDataSA } from './ApplicationDataSA'
 import { useTranslation } from 'react-i18next'
+import { getForcedLanguage } from '@terriflux/opensankey/src/types/PublishOptions'
 
 window.React = React
 const browserLang = navigator.language.slice(0, 2)
 const supportedLangs = ['fr', 'en', 'es', 'de', 'it']
-// Ne forcer la langue du navigateur qu'au premier lancement : si l'utilisateur a déjà choisi une
-// langue, le LanguageDetector l'a mise en cache dans localStorage['i18nextLng'] et l'a restaurée à
-// l'init. La réécraser ici réinitialisait la langue à chaque rechargement (bug). On respecte donc
-// la préférence mémorisée et on ne retombe sur le navigateur que si elle est absente/invalide.
-const savedLang = localStorage.getItem('i18nextLng')
-if (!savedLang || !supportedLangs.includes(savedLang))
-  i18next.changeLanguage(supportedLangs.includes(browserLang) ? browserLang : 'en')
+// Langue imposée par la page hôte (?lang= ou window.sankey.language, cf. sites publiés) :
+// prioritaire sur la préférence mémorisée.
+const forcedLang = getForcedLanguage(supportedLangs)
+if (forcedLang) {
+  i18next.changeLanguage(forcedLang)
+} else {
+  // Ne forcer la langue du navigateur qu'au premier lancement : si l'utilisateur a déjà choisi une
+  // langue, le LanguageDetector l'a mise en cache dans localStorage['i18nextLng'] et l'a restaurée à
+  // l'init. La réécraser ici réinitialisait la langue à chaque rechargement (bug). On respecte donc
+  // la préférence mémorisée et on ne retombe sur le navigateur que si elle est absente/invalide.
+  const savedLang = localStorage.getItem('i18nextLng')
+  if (!savedLang || !supportedLangs.includes(savedLang))
+    i18next.changeLanguage(supportedLangs.includes(browserLang) ? browserLang : 'en')
+}
 
 const container = document.getElementById('react-container') as Element | DocumentFragment
 const root = createRoot(container)

@@ -18,6 +18,132 @@ from .publish import vprint
 REPORT_DOCUMENT_EXTENSIONS = {'.pdf', '.docx', '.pptx'}
 _DOC_ICONS = {'.pdf': '📕', '.docx': '📘', '.pptx': '📙'}
 
+# ---------------------------------------------------------------------------
+# Multilingue : README.md = langue par défaut (fr), README.<lang>.md = traductions.
+# Pour chaque langue détectée on génère index.html (défaut) / index.<lang>.html,
+# avec un sélecteur de langue et des liens diagrams.html?lang=<lang> (le viewer
+# lit ?lang= via getForcedLanguage, cf. PublishOptions.tsx côté client).
+# ---------------------------------------------------------------------------
+DEFAULT_LANG = 'fr'
+_LANG_NAMES = {'fr': 'Français', 'en': 'English', 'es': 'Español', 'de': 'Deutsch', 'it': 'Italiano'}
+_README_LANG_RE = re.compile(r'^readme\.([a-z]{2})\.md$', re.IGNORECASE)
+
+
+def index_filename(lang, default_lang=DEFAULT_LANG):
+    """Nom de la page d'index pour une langue : index.html (défaut) ou index.<lang>.html."""
+    return 'index.html' if lang == default_lang else f'index.{lang}.html'
+
+
+def discover_site_languages(public_dir, default_lang=DEFAULT_LANG):
+    """Scanne l'arborescence publiée et retourne la liste des langues du site :
+    la langue par défaut d'abord, puis toute langue ayant au moins un README.<lang>.md."""
+    langs = set()
+    for root, dirs, files in os.walk(public_dir):
+        dirs[:] = [d for d in dirs if not d.startswith('_backup_state')]
+        for fname in files:
+            m = _README_LANG_RE.match(fname)
+            if m:
+                langs.add(m.group(1).lower())
+    langs.discard(default_lang)
+    return [default_lang] + sorted(langs)
+
+
+# Chaînes d'interface des pages générées. Langues sans entrée → fallback anglais.
+_UI_STRINGS = {
+    'fr': {
+        'home': '🏠 Accueil',
+        'project_desc_title': 'Description du projet',
+        'documents_title': '📄 Rapports et documents',
+        'flow_diagram': '📊 Diagramme de flux',
+        'footer_generated_by': 'Généré par OpenSankey',
+        'section_sectors': 'Modèles de filières françaises',
+        'section_subsectors': 'Sous-Filières',
+        'section_transversal': 'Modèles transversaux (toutes filières)',
+        'explore': 'Explorer →',
+        'more': 'Plus',
+        'validated': '✓ EXPERTISÉ',
+        'download': '📥 Téléchargement',
+        'input_file': "📄 Fichier d'entrée",
+        'input_file_missing': "📄 Fichier d'entrée non disponible",
+        'reconciled_file': '📋 Fichier réconcilié',
+        'reconciled_file_missing': '📋 Fichier réconcilié non disponible',
+        'empty_folder': '📭 Ce dossier est vide',
+        'empty_folder_sub': 'Aucun projet ou sous-dossier trouvé',
+        'logo_alt': 'Logo du projet',
+    },
+    'en': {
+        'home': '🏠 Home',
+        'project_desc_title': 'Project description',
+        'documents_title': '📄 Reports and documents',
+        'flow_diagram': '📊 Flow diagram',
+        'footer_generated_by': 'Generated with OpenSankey',
+        'section_sectors': 'Sector models',
+        'section_subsectors': 'Sub-sectors',
+        'section_transversal': 'Cross-cutting models (all sectors)',
+        'explore': 'Explore →',
+        'more': 'More',
+        'validated': '✓ EXPERT-REVIEWED',
+        'download': '📥 Downloads',
+        'input_file': '📄 Input file',
+        'input_file_missing': '📄 Input file not available',
+        'reconciled_file': '📋 Reconciled file',
+        'reconciled_file_missing': '📋 Reconciled file not available',
+        'empty_folder': '📭 This folder is empty',
+        'empty_folder_sub': 'No project or subfolder found',
+        'logo_alt': 'Project logo',
+    },
+}
+
+
+def _ui(lang):
+    return _UI_STRINGS.get(lang, _UI_STRINGS['en'])
+
+
+_LANG_SWITCHER_CSS = """
+        .lang-switcher {
+            position: absolute;
+            top: 1rem;
+            right: 1.5rem;
+            font-size: 0.85rem;
+            color: #6c757d;
+            z-index: 20;
+        }
+        .lang-switcher a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+            margin: 0 0.15rem;
+        }
+        .lang-switcher a:hover {
+            text-decoration: underline;
+        }
+        .lang-switcher .lang-current {
+            color: #2c3e50;
+            font-weight: 700;
+            margin: 0 0.15rem;
+        }
+        .lang-switcher .lang-sep {
+            color: #dee2e6;
+        }
+"""
+
+
+def render_lang_switcher(current_lang, site_langs, default_lang=DEFAULT_LANG):
+    """Rend le sélecteur de langue (liens croisés entre index.<lang>.html du même
+    dossier), ou '' si le site est monolingue."""
+    if not site_langs or len(site_langs) < 2:
+        return ''
+    parts = []
+    for lang in site_langs:
+        label = lang.upper()
+        name = _LANG_NAMES.get(lang, lang)
+        if lang == current_lang:
+            parts.append(f'<span class="lang-current" title="{name}">{label}</span>')
+        else:
+            parts.append(f'<a href="./{index_filename(lang, default_lang)}" title="{name}">{label}</a>')
+    joined = '<span class="lang-sep">|</span>'.join(parts)
+    return f'<div class="lang-switcher">🌐 {joined}</div>'
+
 _DOCUMENTS_SECTION_CSS = """
         .documents-section {
             background: #fff8e1;
@@ -100,7 +226,7 @@ def get_report_documents(folder_path):
     return sorted(fallback, key=lambda e: e['label'].lower())
 
 
-def render_documents_section(folder_path):
+def render_documents_section(folder_path, lang=DEFAULT_LANG):
     """Rend une section HTML listant les documents de rapport, ou '' si aucun."""
     documents = get_report_documents(folder_path)
     if not documents:
@@ -122,7 +248,7 @@ def render_documents_section(folder_path):
 
     return (
         '<div class="documents-section">'
-        '<h2>📄 Rapports et documents</h2>'
+        f'<h2>{_ui(lang)["documents_title"]}</h2>'
         f'<div class="doc-grid">{"".join(items)}</div>'
         '</div>'
     )
@@ -142,21 +268,29 @@ def is_project_validated(public_dir, current_path_parts, project_name):
     
     return False
 
-def read_readme(project_path):
+def read_readme(project_path, lang=None, default_lang=DEFAULT_LANG):
     """
-    NOUVELLE FONCTION: Lit le fichier Readme.md depuis le dossier du projet
-    
+    Lit le README du dossier dans la langue demandée et le convertit en HTML.
+
+    lang absente ou = langue par défaut → README.md (variantes de casse).
+    Sinon → README.<lang>.md d'abord, avec repli sur le README.md par défaut
+    si la traduction n'existe pas dans ce dossier.
+
     Args:
         project_path (Path): Chemin vers le dossier du projet
-        
+        lang (str|None): Code langue demandé ('en', 'es', ...)
+        default_lang (str): Langue du README.md sans suffixe
+
     Returns:
         str|None: Contenu HTML du Readme ou None si non trouvé
     """
-    readme_variants = ['README.md', 'Readme.md', 'readme.md', 'ReadMe.md']
-    
+    readme_variants = []
+    if lang and lang != default_lang:
+        readme_variants += [f'README.{lang}.md', f'Readme.{lang}.md', f'readme.{lang}.md']
+    readme_variants += ['README.md', 'Readme.md', 'readme.md', 'ReadMe.md']
+
     for readme_name in readme_variants:
         readme_file = Path(project_path) / readme_name
-        #print(f"🔍 Tentative lecture: {readme_file}")  # DEBUG
         if readme_file.exists():
             try:
                 with open(readme_file, 'r', encoding='utf-8') as f:
@@ -178,7 +312,7 @@ def read_readme(project_path):
             except Exception as e:
                 vprint(f"Erreur lecture Readme {readme_file}: {e}",1)
                 continue
-    
+
     vprint(f"📭 Aucun README trouvé dans: {project_path}",2)  # DEBUG
     return None
 
@@ -217,45 +351,12 @@ def get_front_image(folder_path, relative_to_path=None):
     
     return None
 
-def generate_project_readme_page(project_path, project_name, path_mapper, build_info):
-    """
-    NOUVELLE FONCTION: Génère une page de readme pour un projet spécifique
-    qui injecte le Readme.md si présent, sinon un contenu minimal
-    
-    Args:
-        project_path (Path): Chemin vers le dossier du projet
-        project_name (str): Nom du projet
-        path_mapper (PathMapper): Mapper pour les noms d'affichage
-        build_info (str): Information de build
-        
-    Returns:
-        str: Contenu HTML de la page de readme
-    """
-    display_name = path_mapper.get_display_name(project_name)
-
-    # Lire le Readme.md s'il existe
-    readme_content = read_readme(project_path)
-
-    # Section des documents de rapport (.pdf, .docx, .pptx) copiés à la racine du projet
-    documents_section = render_documents_section(project_path)
-
-    # Contenu principal
-    if readme_content:
-        main_content = f'''
-        <div class="readme-content">
-            <div class="readme-body">
-                {readme_content}
-            </div>
-        </div>
-        {documents_section}'''
-    else:
-        # Contenu minimal par défaut
-        main_content = f'''
-        <div class="default-content">
+_DEFAULT_PROJECT_CONTENT = {
+    'fr': '''
             <div class="project-overview">
                 <h2>📊 Aperçu du projet</h2>
                 <p>Ce projet présente une <strong>visualisation Sankey interactive</strong> générée avec l'outil OpenSankey (<a href="https://opensankey.fr" target="_blank" style="color: #3498db; text-decoration: none;">opensankey.fr</a>) d'une analyse de flux de matière réalisée avec SankeySuite (<a href="https://app.terriflux.com" target="_blank" style="color: #3498db; text-decoration: none;">app.terriflux.com</a>).</p>
-                
+
                 <div class="features-grid">
                     <div class="feature-item">
                         <h3>🎯 Visualisation interactive</h3>
@@ -275,14 +376,14 @@ def generate_project_readme_page(project_path, project_name, path_mapper, build_
                     </div>
                 </div>
             </div>
-            
+
             <div class="getting-started">
                 <h2>❓ Comment utiliser</h2>
                 <ol>
                     <li><strong>Cliquez sur "Voir la visualisation"</strong> pour accéder à l'interface interactive</li>
                     <li><strong>Explorez les flux</strong> en survolant les éléments du diagramme</li>
                 </ol>
-                
+
                 <div class="tips">
                     <h3>💡 Conseils d'utilisation</h3>
                     <ul>
@@ -291,17 +392,102 @@ def generate_project_readme_page(project_path, project_name, path_mapper, build_
                         <li>Survolez les éléments pour voir les valeurs exactes</li>
                     </ul>
                 </div>
+            </div>''',
+    'en': '''
+            <div class="project-overview">
+                <h2>📊 Project overview</h2>
+                <p>This project presents an <strong>interactive Sankey visualization</strong> generated with OpenSankey (<a href="https://opensankey.fr" target="_blank" style="color: #3498db; text-decoration: none;">opensankey.fr</a>) from a material flow analysis carried out with SankeySuite (<a href="https://app.terriflux.com" target="_blank" style="color: #3498db; text-decoration: none;">app.terriflux.com</a>).</p>
+
+                <div class="features-grid">
+                    <div class="feature-item">
+                        <h3>🎯 Interactive visualization</h3>
+                        <p>Explore material and energy flows through a dynamic interface</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3>📊 Flow analysis</h3>
+                        <p>Clear representation of material transfers and transformations</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3>🔍 Intuitive navigation</h3>
+                        <p>Modern and ergonomic user interface</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3>🌐 Web technology</h3>
+                        <p>Accessible from a browser, no installation required</p>
+                    </div>
+                </div>
             </div>
+
+            <div class="getting-started">
+                <h2>❓ How to use</h2>
+                <ol>
+                    <li><strong>Click on "Flow diagram"</strong> to access the interactive interface</li>
+                    <li><strong>Explore the flows</strong> by hovering over the diagram elements</li>
+                </ol>
+
+                <div class="tips">
+                    <h3>💡 Tips</h3>
+                    <ul>
+                        <li>Use the zoom to examine details</li>
+                        <li>Colors indicate different flow types</li>
+                        <li>Hover over elements to see exact values</li>
+                    </ul>
+                </div>
+            </div>''',
+}
+
+
+def generate_project_readme_page(project_path, project_name, path_mapper, build_info,
+                                 lang=DEFAULT_LANG, site_langs=None):
+    """
+    Génère une page de readme pour un projet spécifique qui injecte le Readme.md
+    (dans la langue demandée) si présent, sinon un contenu minimal.
+
+    Args:
+        project_path (Path): Chemin vers le dossier du projet
+        project_name (str): Nom du projet
+        path_mapper (PathMapper): Mapper pour les noms d'affichage
+        build_info (str): Information de build
+        lang (str): Langue de la page
+        site_langs (list[str]|None): Langues du site (sélecteur si > 1)
+
+    Returns:
+        str: Contenu HTML de la page de readme
+    """
+    display_name = path_mapper.get_display_name(project_name)
+    ui = _ui(lang)
+
+    # Lire le Readme.md s'il existe (dans la langue demandée, repli sur le défaut)
+    readme_content = read_readme(project_path, lang)
+
+    # Section des documents de rapport (.pdf, .docx, .pptx) copiés à la racine du projet
+    documents_section = render_documents_section(project_path, lang)
+
+    # Contenu principal
+    if readme_content:
+        main_content = f'''
+        <div class="readme-content">
+            <div class="readme-body">
+                {readme_content}
+            </div>
+        </div>
+        {documents_section}'''
+    else:
+        # Contenu minimal par défaut (traduit)
+        default_content = _DEFAULT_PROJECT_CONTENT.get(lang, _DEFAULT_PROJECT_CONTENT['en'])
+        main_content = f'''
+        <div class="default-content">{default_content}
         </div>
         {documents_section}'''
     
     # Structure HTML complète
+    lang_switcher = render_lang_switcher(lang, site_langs)
     html_content = f'''<!DOCTYPE html>
-<html lang="fr">
+<html lang="{lang}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{display_name} - Description du projet</title>
+    <title>{display_name} - {ui['project_desc_title']}</title>
     <style>
         body {{
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -503,19 +689,20 @@ def generate_project_readme_page(project_path, project_name, path_mapper, build_
 </head>
 <body>
     <div class="container">
+        {lang_switcher}
         {main_content}
         <div style="text-align: center; margin-bottom: 2rem;">
-            <a href="./diagrams.html" class="card-link" target="_blank">📊 Diagramme de flux</a>
+            <a href="./diagrams.html?lang={lang}" class="card-link" target="_blank">{ui['flow_diagram']}</a>
         </div>
         <div class="footer">
-            <p>Généré par OpenSankey (<a href="https://open-sankey.fr" target="_blank" style="color: #3498db; text-decoration: none;">open-sankey.fr</a>) • Build: {build_info}</p>
+            <p>{ui['footer_generated_by']} (<a href="https://open-sankey.fr" target="_blank" style="color: #3498db; text-decoration: none;">open-sankey.fr</a>) • Build: {build_info}</p>
         </div>
     </div>
 </body>
 </html>'''
 
     # Injecter les styles de la section documents dans le <style> (hors f-string pour éviter les {{ }})
-    html_content = html_content.replace('</style>', _DOCUMENTS_SECTION_CSS + '</style>', 1)
+    html_content = html_content.replace('</style>', _DOCUMENTS_SECTION_CSS + _LANG_SWITCHER_CSS + '</style>', 1)
 
     return html_content
 
@@ -655,15 +842,18 @@ def build_tree_structure(public_dir, path_mapper):
     
     return tree, projects
 
-def generate_breadcrumb(path_parts, path_mapper):
+def generate_breadcrumb(path_parts, path_mapper, lang=DEFAULT_LANG):
     """Génère un fil d'Ariane avec des chemins relatifs et propre HTML"""
+    ui = _ui(lang)
+    # Hors langue par défaut, viser explicitement index.<lang>.html du dossier
+    index_suffix = '' if lang == DEFAULT_LANG else index_filename(lang)
     if not path_parts:
-        return '<span class="breadcrumb-current">Accueil</span>'
-    
-    breadcrumb = '<a href="./" class="breadcrumb-link">🏠 Accueil</a>'
-    
+        return f'<span class="breadcrumb-current">{ui["home"]}</span>'
+
+    breadcrumb = f'<a href="./{index_suffix}" class="breadcrumb-link">{ui["home"]}</a>'
+
     for i, part in enumerate(path_parts):
-        rel_path = './' + '/'.join(path_parts[:i + 1]) + '/'
+        rel_path = './' + '/'.join(path_parts[:i + 1]) + '/' + index_suffix
         display_name = path_mapper.get_display_name(part)
 
         if i == len(path_parts) - 1:
@@ -713,11 +903,15 @@ def get_download_files(public_dir, current_path_parts, project_name):
     return filtered_files
 
 
-def generate_directory_index(tree_level, current_path_parts, build_info, public_dir,path_mapper):
+def generate_directory_index(tree_level, current_path_parts, build_info, public_dir, path_mapper,
+                             lang=DEFAULT_LANG, site_langs=None):
     """
-    Génère une page d'index pour un répertoire avec readmes
+    Génère une page d'index pour un répertoire avec readmes (dans la langue demandée)
     """
-    
+    ui = _ui(lang)
+    # Suffixe de page d'index pour préserver la langue dans les liens de navigation
+    index_suffix = '' if lang == DEFAULT_LANG else index_filename(lang)
+
     current_path = '/'.join(current_path_parts) if current_path_parts else ''
 
     # Dossier courant (dans les artifacts) — utilisé pour readme, logo et titre
@@ -747,8 +941,8 @@ def generate_directory_index(tree_level, current_path_parts, build_info, public_
     tab_title = page_title if (portfolio_title and not current_path_parts) else f'{page_title} - Portfolio Sankey'
 
     vprint(f"🔍 Recherche readme dans artifacts: {current_folder_path}",1)
-    
-    folder_readme = read_readme(current_folder_path)
+
+    folder_readme = read_readme(current_folder_path, lang)
     vprint(f"🔍 Description retournée: {folder_readme is not None}",1)
     
     # NOUVEAU: Détecter le logo du projet (png, jpg ou jpeg)
@@ -766,8 +960,9 @@ def generate_directory_index(tree_level, current_path_parts, build_info, public_
     projects = {k: v for k, v in tree_level.items() if not k.startswith('_') and v.get('_is_project', False)}
     groups = {k: v for k, v in tree_level.items() if not k.startswith('_') and v.get('_is_group', False)}
     
+    lang_switcher = render_lang_switcher(lang, site_langs)
     html_content = f'''<!DOCTYPE html>
-<html lang="fr">
+<html lang="{lang}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1193,13 +1388,14 @@ def generate_directory_index(tree_level, current_path_parts, build_info, public_
     </script>
 </head>
 <body>
-    <div class="container">'''
+    <div class="container">
+        {lang_switcher}'''
 
     # NOUVEAU: Header avec ou sans logo
     if has_logo:
         html_content += f'''
         <div class="header-with-logo">
-            <img src="{logo_filename}" alt="Logo du projet" class="project-logo">
+            <img src="{logo_filename}" alt="{ui['logo_alt']}" class="project-logo">
             <h1 class="with-logo">{page_title}</h1>
         </div>'''
     else:
@@ -1208,7 +1404,7 @@ def generate_directory_index(tree_level, current_path_parts, build_info, public_
 
     if len(current_path_parts) > 1:
         html_content += f'''<div class="breadcrumb">
-            {generate_breadcrumb(current_path_parts,path_mapper)}
+            {generate_breadcrumb(current_path_parts, path_mapper, lang)}
         </div>'''
         
     def get_project_versions(public_dir, current_path_parts, project_name):
@@ -1245,7 +1441,7 @@ def generate_directory_index(tree_level, current_path_parts, build_info, public_
         </div>'''
 
     # Section des documents de rapport (.pdf, .docx, .pptx) à la racine du dossier courant
-    documents_section = render_documents_section(current_folder_path)
+    documents_section = render_documents_section(current_folder_path, lang)
     if documents_section:
         html_content += documents_section
 
@@ -1253,81 +1449,82 @@ def generate_directory_index(tree_level, current_path_parts, build_info, public_
     if projects or groups:
         # En-tête de section pour les filières (uniquement à la racine du portfolio)
         if not current_path_parts:
-            html_content += '''
+            html_content += f'''
         <div class="section">
-            <h2>Modèles de filières françaises</h2>
+            <h2>{ui['section_sectors']}</h2>
             <div class="grid">'''
         else:
             html_content += '''
         <div>
             <div class="grid">'''
-        
+
         # Afficher d'abord les projets normaux
         for i,(project_name, project_info) in enumerate(sorted(projects.items())):
-            html_content += generate_tab(current_path_parts, public_dir, path_mapper, get_project_versions, get_download_files, project_name)
+            html_content += generate_tab(current_path_parts, public_dir, path_mapper, get_project_versions, get_download_files, project_name, lang)
             if len(projects) > 2:
                 break
-        
+
         # Afficher les groupes
         for group_name, group_info in sorted(groups.items()):
-            html_content += generate_group_card(current_path_parts, public_dir, path_mapper, group_name, group_info)
-        
+            html_content += generate_group_card(current_path_parts, public_dir, path_mapper, group_name, group_info, lang)
+
         html_content += '''
             </div>
         </div>'''
 
         if len(projects) > 2:
-            html_content += '''
+            html_content += f'''
             <div class="section">
-                <h2>Sous-Filières</h2>
+                <h2>{ui['section_subsectors']}</h2>
                 <div class="grid">'''
 
             for i,(project_name, project_info) in enumerate(sorted(projects.items())):
                 if i == 0:
                     continue
-                html_content += generate_tab(current_path_parts, public_dir, path_mapper, get_project_versions, get_download_files, project_name)               
+                html_content += generate_tab(current_path_parts, public_dir, path_mapper, get_project_versions, get_download_files, project_name, lang)
             html_content += '''
                 </div>
             </div>'''
 
     # Section des répertoires - MODIFICATION ICI
     if directories:
+        # Lien vers le dossier en préservant la langue (index.<lang>.html hors défaut)
         # CAS SPÉCIAL: Si exactement 2 dossiers, créer des onglets au lieu de cartes
         if len(directories) == 2:
-            html_content += '''
+            html_content += f'''
         <div class="section">
-            <h2>Modèles transversaux (toutes filières)</h2>
+            <h2>{ui['section_transversal']}</h2>
             <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem;">'''
-            
+
             for dir_name, dir_info in sorted(directories.items()):
                 display_name = path_mapper.get_display_name(dir_name)
-                
+
                 html_content += f'''
-                <a href="{dir_name}" class="card-link" style="flex: 1; max-width: 300px; text-align: center; padding: 1rem 2rem;">
+                <a href="{dir_name}/{index_suffix}" class="card-link" style="flex: 1; max-width: 300px; text-align: center; padding: 1rem 2rem;">
                     📂 {display_name}
                 </a>'''
-            
+
             html_content += '''
             </div>
         </div>'''
         else:
             # CAS NORMAL: Plus de 2 dossiers, afficher des cartes
-            html_content += '''
+            html_content += f'''
         <div class="section">
-            <h2>Modèles transversaux (toutes filières)</h2>
+            <h2>{ui['section_transversal']}</h2>
             <div class="grid">'''
-            
+
             for dir_name, dir_info in sorted(directories.items()):
                 display_name = path_mapper.get_display_name(dir_name)
                 child_count = len([k for k in dir_info.get('_children', {}) if not k.startswith('_')])
-                
+
                 # NOUVEAU: Lire la readme du sous-dossier depuis les artifacts
                 if current_path_parts:
                     subdir_path = Path(public_dir) / '/'.join(current_path_parts) / dir_name
                 else:
                     subdir_path = Path(public_dir) / dir_name
-                
-                subdir_desc = read_readme(subdir_path)
+
+                subdir_desc = read_readme(subdir_path, lang)
                 readme_snippet = ""
                 if subdir_desc:
                     # Extraire les 100 premiers caractères de texte (sans HTML)
@@ -1337,58 +1534,61 @@ def generate_directory_index(tree_level, current_path_parts, build_info, public_
                 # NOUVEAU: Détecter l'image de présentation
                 front_image = get_front_image(subdir_path)
                 card_classes = "card directory"
-                
+
                 html_content += f'''
                 <div class="{card_classes}">'''
-                
+
                 # Image APRÈS le type, centrée
                 if front_image:
                     html_content += f'''
                     <div class="card-image-wrapper">
                         <img src="{dir_name}/{front_image}" alt="{display_name}">
                     </div>'''
-                
+
                 html_content += f'''
                     <div class="card-title">{display_name}</div>'''
-                
+
                 if readme_snippet:
                     html_content += f'<div class="card-readme">{readme_snippet}</div>'
-                
+
                 html_content += f'''
-                    <a href="{dir_name}" target="_blank" class="card-link">Explorer →</a>
+                    <a href="{dir_name}/{index_suffix}" target="_blank" class="card-link">{ui['explore']}</a>
                 </div>'''
-            
+
             html_content += '''
             </div>
         </div>'''
-    
+
     # Si vide
     if not directories and not projects and not groups:
-        html_content += '''
+        html_content += f'''
         <div class="empty">
-            <p>📭 Ce dossier est vide</p>
-            <p>Aucun projet ou sous-dossier trouvé</p>
+            <p>{ui['empty_folder']}</p>
+            <p>{ui['empty_folder_sub']}</p>
         </div>'''
-    
- 
+
+
 
     html_content += f'''
         <div class="footer">
-            <p>Généré par OpenSankey (<a href="https://open-sankey.fr" target="_blank" style="color: #3498db; text-decoration: none;">open-sankey.fr</a>) • Build: {build_info}</p>
+            <p>{ui['footer_generated_by']} (<a href="https://open-sankey.fr" target="_blank" style="color: #3498db; text-decoration: none;">open-sankey.fr</a>) • Build: {build_info}</p>
         </div>
     </div>
 </body>
 </html>'''
 
     # Injecter les styles de la section documents dans le <style> (hors f-string pour éviter les {{ }})
-    html_content = html_content.replace('</style>', _DOCUMENTS_SECTION_CSS + '</style>', 1)
+    html_content = html_content.replace('</style>', _DOCUMENTS_SECTION_CSS + _LANG_SWITCHER_CSS + '</style>', 1)
 
     return html_content
 
-def generate_group_card(current_path_parts, public_dir, path_mapper, group_name, group_info):
+def generate_group_card(current_path_parts, public_dir, path_mapper, group_name, group_info,
+                        lang=DEFAULT_LANG):
     """
     Génère une carte pour un groupe de 2 projets
     """
+    ui = _ui(lang)
+    index_suffix = '' if lang == DEFAULT_LANG else index_filename(lang)
     display_name = path_mapper.get_display_name(group_name)
     display_name = re.sub(r'^\d+\s+', '', display_name)
     
@@ -1409,7 +1609,7 @@ def generate_group_card(current_path_parts, public_dir, path_mapper, group_name,
     download_files = get_download_files(public_dir, current_path_parts, group_name)
     
     # Lire le readme du groupe
-    group_desc = read_readme(group_path)
+    group_desc = read_readme(group_path, lang)
     readme_snippet = ""
     if group_desc:
         text_only = re.sub('<[^<]+?>', '', group_desc)
@@ -1437,13 +1637,13 @@ def generate_group_card(current_path_parts, public_dir, path_mapper, group_name,
     
     # Afficher le badge de validation
     if is_validated:
-        html_content += '''
+        html_content += f'''
                     <div class="validation-stamp">
-                        <span class="stamp-text">✓ EXPERTISÉ</span>
+                        <span class="stamp-text">{ui['validated']}</span>
                     </div>'''
-    
+
     if readme_snippet:
-        html_content += f'<div class="card-readme">{readme_snippet}<a href="{group_name}" class="card-link secondary" style="margin-top: 0.5rem;">Plus</a></div>'
+        html_content += f'<div class="card-readme">{readme_snippet}<a href="{group_name}/{index_suffix}" class="card-link secondary" style="margin-top: 0.5rem;">{ui["more"]}</a></div>'
     
     # Créer les boutons pour les 2 projets
     html_content += '''
@@ -1461,11 +1661,11 @@ def generate_group_card(current_path_parts, public_dir, path_mapper, group_name,
         else:
             relative_path = full_path
         
-        # Trouver le diagrams.html
+        # Trouver le diagrams.html (ouvert dans la langue de la page via ?lang=)
         real_link = find_real_project_path(public_dir, current_path_parts, relative_path)
-        
+
         html_content += f'''
-                        <a href="{real_link}" class="card-link" target="_blank">📊 {proj_display_name}</a>'''
+                        <a href="{real_link}?lang={lang}" class="card-link" target="_blank">📊 {proj_display_name}</a>'''
     
     html_content += '''
                     </div>'''
@@ -1475,48 +1675,51 @@ def generate_group_card(current_path_parts, public_dir, path_mapper, group_name,
         html_content += f'''
                     <div class="download-dropdown">
                         <button class="card-link download-btn" onclick="toggleDownloads('{group_name}')">
-                            📥 Téléchargement ({len(download_files)})
+                            {ui['download']} ({len(download_files)})
                         </button>
                         <div class="download-list" id="downloads-{group_name}">'''
-        
+
         for file_base_name, files in download_files.items():
             html_content += f'''
                             <div class="download-section">
                                 <div class="download-section-title">{file_base_name}</div>'''
-            
+
             # Fichier d'entrée
             if 'original' in files:
                 html_content += f'''
                                 <a href="{group_name}/{files['original']}" class="download-link" download>
-                                    📄 Fichier d'entrée
+                                    {ui['input_file']}
                                 </a>'''
             else:
-                html_content += '''
-                                <span class="download-unavailable">📄 Fichier d'entrée non disponible</span>'''
-            
+                html_content += f'''
+                                <span class="download-unavailable">{ui['input_file_missing']}</span>'''
+
             # Fichier réconcilié
             if 'reconciled' in files:
                 html_content += f'''
                                 <a href="{group_name}/{files['reconciled']}" class="download-link" download>
-                                    📋 Fichier réconcilié
+                                    {ui['reconciled_file']}
                                 </a>'''
             else:
-                html_content += '''
-                                <span class="download-unavailable">📋 Fichier réconcilié non disponible</span>'''
-            
+                html_content += f'''
+                                <span class="download-unavailable">{ui['reconciled_file_missing']}</span>'''
+
             html_content += '''
                             </div>'''
-        
+
         html_content += '''
                         </div>
                     </div>'''
-    
+
     html_content += '''
                 </div>'''
-    
+
     return html_content
 
-def generate_tab(current_path_parts, public_dir, path_mapper, get_project_versions, get_download_files, project_name):
+def generate_tab(current_path_parts, public_dir, path_mapper, get_project_versions, get_download_files, project_name,
+                 lang=DEFAULT_LANG):
+    ui = _ui(lang)
+    index_suffix = '' if lang == DEFAULT_LANG else index_filename(lang)
     display_name = path_mapper.get_display_name(project_name)
     display_name = re.sub(r'^\d+\s+', '', display_name)
 
@@ -1530,7 +1733,7 @@ def generate_tab(current_path_parts, public_dir, path_mapper, get_project_versio
     else:
         project_path = Path(public_dir) / project_name
             
-    project_desc = read_readme(project_path)
+    project_desc = read_readme(project_path, lang)
     readme_snippet = ""
     if project_desc:
         text_only = re.sub('<[^<]+?>', '', project_desc)
@@ -1560,17 +1763,17 @@ def generate_tab(current_path_parts, public_dir, path_mapper, get_project_versio
                     <div class="card-title">{display_name}</div>'''
 
     if is_validated:
-        html_content += '''
+        html_content += f'''
                     <div class="validation-stamp">
-                        <span class="stamp-text">✓ EXPERTISÉ</span>
+                        <span class="stamp-text">{ui['validated']}</span>
                     </div>'''
 
     if readme_snippet:
-        html_content += f'<div class="card-readme">{readme_snippet}<a href="{project_name}" class="card-link secondary">Plus</a></div>'
-            
-            # Boutons principaux
+        html_content += f'<div class="card-readme">{readme_snippet}<a href="{project_name}/{index_suffix}" class="card-link secondary">{ui["more"]}</a></div>'
+
+            # Boutons principaux (diagramme ouvert dans la langue de la page via ?lang=)
     html_content += f'''
-                    <a href="{real_link}" class="card-link" target="_blank">📊 Diagramme de flux</a>'''
+                    <a href="{real_link}?lang={lang}" class="card-link" target="_blank">{ui['flow_diagram']}</a>'''
             
             # Versions antérieures
     # if versions:
@@ -1594,38 +1797,38 @@ def generate_tab(current_path_parts, public_dir, path_mapper, get_project_versio
         html_content += f'''
                     <div class="download-dropdown">
                         <button class="card-link download-btn" onclick="toggleDownloads('{project_name}')">
-                            📥 Téléchargement ({len(download_files)})
+                            {ui['download']} ({len(download_files)})
                         </button>
                         <div class="download-list" id="downloads-{project_name}">'''
-                
+
         for file_base_name, files in download_files.items():
             html_content += f'''
                             <div class="download-section">
                                 <div class="download-section-title">{file_base_name}</div>'''
-                    
+
                     # Fichier d'entrée
             if 'original' in files:
                 html_content += f'''
                                 <a href="{project_name}/{files['original']}" class="download-link" download>
-                                    📄 Fichier d'entrée
+                                    {ui['input_file']}
                                 </a>'''
             else:
-                html_content += '''
-                                <span class="download-unavailable">📄 Fichier d'entrée non disponible</span>'''
-                    
+                html_content += f'''
+                                <span class="download-unavailable">{ui['input_file_missing']}</span>'''
+
                     # Fichier réconcilié
             if 'reconciled' in files:
                 html_content += f'''
                                 <a href="{project_name}/{files['reconciled']}" class="download-link" download>
-                                    📋 Fichier réconcilié
+                                    {ui['reconciled_file']}
                                 </a>'''
             else:
-                html_content += '''
-                                <span class="download-unavailable">📋 Fichier réconcilié non disponible</span>'''
-                    
+                html_content += f'''
+                                <span class="download-unavailable">{ui['reconciled_file_missing']}</span>'''
+
             html_content += '''
                             </div>'''
-                
+
         html_content += '''
                         </div>
                     </div>'''
@@ -1674,85 +1877,93 @@ def find_real_project_path(public_dir, current_path_parts, project_name):
     # Fallback: lien vers le nom du projet (même si ça ne marche pas)
     return f"{project_name}/diagrams.html"
 
-def generate_all_index_pages(public_dir, build_info, path_mapper):
+def generate_all_index_pages(public_dir, build_info, path_mapper, default_lang=DEFAULT_LANG):
     """
-    Génère toutes les pages d'index de l'arborescence + pages de readme des projets
-    MODIFIÉ: Ajoute la génération des pages de readme
+    Génère toutes les pages d'index de l'arborescence + pages de readme des projets,
+    dans chaque langue du site (README.md = langue par défaut, README.<lang>.md =
+    traductions → index.html + index.<lang>.html avec sélecteur de langue).
     """
     tree, projects = build_tree_structure(public_dir, path_mapper)
-    
+
     if not tree:
         vprint("❌ Aucun projet trouvé",0)
         return
-    
+
+    site_langs = discover_site_languages(public_dir, default_lang)
+    if len(site_langs) > 1:
+        vprint(f"🌐 Langues du site: {', '.join(site_langs)}", 1)
+
     generated_pages = []
     generated_readmes = []
-    
-    def traverse_and_generate(current_tree, path_parts):
+
+    def traverse_and_generate(current_tree, path_parts, lang):
         """Parcourt récursivement l'arbre et génère les pages d'index + readmes"""
-        
+
         # Générer la page d'index du dossier
-        html_content = generate_directory_index(current_tree, path_parts, build_info, public_dir, path_mapper)
-        
+        html_content = generate_directory_index(current_tree, path_parts, build_info, public_dir, path_mapper,
+                                                lang, site_langs)
+
         # Déterminer le chemin du fichier
+        page_name = index_filename(lang, default_lang)
         if path_parts:
-            index_path = Path(public_dir) / '/'.join(path_parts) / 'index.html'
+            index_path = Path(public_dir) / '/'.join(path_parts) / page_name
         else:
-            index_path = Path(public_dir) / 'index.html'
-        
+            index_path = Path(public_dir) / page_name
+
         # Créer le dossier si nécessaire
         index_path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         # Écrire le fichier
         with open(index_path, 'w', encoding='utf-8') as f:
             f.write(html_content)
-        
+
         generated_pages.append(str(index_path))
-        
+
         # NOUVEAU: Générer les pages de description pour les projets de ce niveau
         for key, value in current_tree.items():
             if not key.startswith('_') and value.get('_is_project', False):
                 # C'est un projet, générer sa page de description
-                
+
                 # CORRECTION: Utiliser le chemin complet normalisé depuis _full_path
                 full_normalized_path = value.get('_full_path', key)
                 project_path = Path(public_dir) / full_normalized_path
-                
-                vprint(f"🔍 Génération description pour: {full_normalized_path}", 3)
+
+                vprint(f"🔍 Génération description pour: {full_normalized_path} [{lang}]", 3)
                 vprint(f"📁 Chemin projet: {project_path}", 3)
-                
+
                 # Générer la page de readme
                 readme_html = generate_project_readme_page(
-                    project_path, key, path_mapper, build_info
+                    project_path, key, path_mapper, build_info, lang, site_langs
                 )
-                
+
                 # Sauvegarder la page de readme
-                readme_file = project_path / 'index.html'
+                readme_file = project_path / page_name
                 readme_file.parent.mkdir(parents=True, exist_ok=True)
-                
+
                 with open(readme_file, 'w', encoding='utf-8') as f:
                     f.write(readme_html)
-                
+
                 generated_readmes.append(str(readme_file))
-        
+
         # Récursion pour les sous-dossiers
         for key, value in current_tree.items():
             if not key.startswith('_') and not value.get('_is_project', False):
                 # C'est un dossier, pas un projet
                 children = value.get('_children', {})
-                traverse_and_generate(children, path_parts + [key])
-    
-    # Lancer la génération
-    traverse_and_generate(tree, [])
-    
+                traverse_and_generate(children, path_parts + [key], lang)
+
+    # Lancer la génération pour chaque langue du site
+    for lang in site_langs:
+        traverse_and_generate(tree, [], lang)
+
     vprint(f"✅ {len(generated_pages)} pages d'index générées",1)
     for page in generated_pages:
         rel_path = Path(page).relative_to(public_dir)
         vprint(f"   📄 {rel_path}")
-    
+
     vprint(f"✅ {len(generated_readmes)} pages de readme générées",1)
     for desc in generated_readmes:
         rel_path = Path(desc).relative_to(public_dir)
         vprint(f"   📖 {rel_path}",3)
-    
+
     return generated_pages + generated_readmes

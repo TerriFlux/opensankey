@@ -114,6 +114,16 @@ const POSITION_MODE_LABELS: Array<{ value: '' | Type_PositionMode, label: string
   { value: 'scale_adapted', label: 'Échelle adaptée' },
 ]
 
+// Langue imposée au viewer publié (window.sankey.language, surchargée par ?lang= dans l'URL).
+const LANGUAGE_LABELS: Array<{ value: string, label: string }> = [
+  { value: '', label: 'Automatique (navigateur du visiteur)' },
+  { value: 'fr', label: 'Français' },
+  { value: 'en', label: 'English' },
+  { value: 'es', label: 'Español' },
+  { value: 'de', label: 'Deutsch' },
+  { value: 'it', label: 'Italiano' },
+]
+
 const sanitizeZipName = (name: string): string =>
   (name || 'sankey_site').replace(/[^\w\-_.]/g, '_') || 'sankey_site'
 
@@ -122,6 +132,7 @@ const sanitizeZipName = (name: string): string =>
 type PersistedPublishOptions = {
   flags?: Record<string, boolean>
   position_mode?: '' | Type_PositionMode
+  language?: string
   header?: string
   publish_name?: string
   logo?: string | null            // data-URI base64 du logo (autonome, voyage avec le diagramme)
@@ -285,6 +296,7 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
   const [header, setHeader] = useState('')
   const [flags, setFlags] = useState<Record<string, boolean>>(defaultFlags())
   const [position_mode, setPositionMode] = useState<'' | Type_PositionMode>('')
+  const [language, setLanguage] = useState<string>('')
   const [logo_file, setLogoFile] = useState<File | null>(null)
   // Logo persisté dans le diagramme (data-URI) + son nom : réutilisé tel quel si l'utilisateur
   // n'en re-sélectionne pas un nouveau.
@@ -343,6 +355,7 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
     setLogoFilename(typeof saved.logo_filename === 'string' ? saved.logo_filename : null)
     setFlags({ ...defaultFlags(), ...(saved.flags || {}) })
     setPositionMode(saved.position_mode || '')
+    setLanguage(saved.language || '')
     setSource('current')
     setDeployedUrl('')
     setDeployForce(false)
@@ -403,6 +416,7 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
   const persistOptions = () => {
     const opts: PersistedPublishOptions = { flags, header, publish_name }
     if (position_mode) opts.position_mode = position_mode
+    if (language) opts.language = language
     if (logo_data_url) { opts.logo = logo_data_url; opts.logo_filename = logo_filename || 'logo.png' }
     app_data.publish_settings = opts as unknown as Type_JSON
     app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
@@ -443,6 +457,7 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
     const diagram = JSON.stringify(app_data.toJSON())
     const globals: Record<string, unknown> = { ...flags, header }
     if (position_mode) globals.position_mode = position_mode
+    if (language) globals.language = language
     const options: Record<string, unknown> = { publish_name: publish_name || 'sankey', globals }
     // Logo : fichier fraîchement choisi en priorité, sinon le logo persisté (reconstruit du data-URI).
     const logo_to_send = logo_file
@@ -738,6 +753,18 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
                     onChange={(e) => setPositionMode(e.target.value as '' | Type_PositionMode)}
                   >
                     {POSITION_MODE_LABELS.map((m) => (
+                      <option key={m.value} value={m.value}>{m.label}</option>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel fontSize='sm' color='gray.600'>Langue du viewer</FormLabel>
+                  <Select
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                  >
+                    {LANGUAGE_LABELS.map((m) => (
                       <option key={m.value} value={m.value}>{m.label}</option>
                     ))}
                   </Select>
