@@ -66,6 +66,7 @@ import { Class_ApplicationData } from './ApplicationData'
 import { compareZOrder, dedupeZOrderKeepFirst } from './zOrder'
 import * as LabelFilters from './LabelFilters'
 import * as CopyPaste from './copyPaste'
+import * as DisplayModes from './displayModes'
 import { TooltipEventManager } from '../Elements/TooltipsConfig'
 import { Class_NodeBase, sortNodesElements } from '../Elements/NodeBase'
 import {
@@ -4288,128 +4289,15 @@ export class Class_DrawingArea {
     }
   }
 
-  public setParametricMode() {
-    this.withBypassRedraws(() => {
-      const default_style = this.sankey.styles_dict['default']
+  public setParametricMode() { DisplayModes.setParametricMode(this) }
 
-      // 1. Initialise position_u depuis position_x pour les nœuds non verrouillés.
-      //    Nécessaire car on vient potentiellement du mode absolu où les nœuds
-      //    ont été placés librement.
-      this.nodePositioning.inferPositionUFromX()
+  public setAbsoluteMode() { DisplayModes.setAbsoluteMode(this) }
 
-      // 2. Back-calcul de shape_position_dy depuis les positions absolues actuelles.
-      //    Si overlap détecté, shape_position_dy est clampé à 0 — la bascule provoquera
-      //    un saut visuel pour ces nœuds.
-      const overlap_count = this.nodePositioning.backCalculateShapePositionDyFromY()
-      if (overlap_count > 0) {
-        console.warn(
-          `[setParametricMode] ${overlap_count} nœud(s) en chevauchement détecté(s) en absolu — ` +
-          'shape_position_dy clampé à 0, certaines positions vont changer lors de la bascule.'
-        )
-      }
+  public setScaleAdaptedMode() { DisplayModes.setScaleAdaptedMode(this) }
 
-      // 3. Bascule du mode et recalcul du V (les Y restent stables car le dy a été
-      //    back-calculé pour reproduire les positions actuelles).
-      default_style.shape_position_type = 'parametric'
-      this.sankey.nodes_list.forEach(n => {
-        if (n.shape_position_v_locked !== true) n.position_v = -1
-      })
-      // #1231 — mode « écart » : capturer le cadre de référence (médiane globale + centre
-      // par colonne + sommes par colonne) sur l'état courant cohérent, comme le mode
-      // proportionnel. Les centres de colonne suivront ensuite le % au changement de
-      // datatag/dimension, avec écarts constants. Fait après backCalculateShapePositionDyFromY
-      // et avant computeParametrization (l'ordre V ne change pas l'étendue géométrique).
-      this.nodePositioning.captureProportionalReference()
-      this.nodePositioning.computeParametrization(false)
-    }, false)
-  }
+  public setProportionalMode() { DisplayModes.setProportionalMode(this) }
 
-  public setAbsoluteMode() {
-    const default_style = this.sankey.styles_dict['default']
-    const prev_mode = default_style.shape_position_type
-    // #1231 — quitter l'« échelle adaptée » restaure l'échelle de base.
-    this.nodePositioning.clearScaleAdaptation()
-    // #1231 — le flux/datatag de référence sont PERSISTÉS et conservés en mode absolu (on ne
-    // les efface plus) : seul le MODE change. Re-entrer en % réutilisera le couple de réf.
-    default_style.shape_position_type = 'absolute'
-    if (prev_mode === 'scale_adapted' || prev_mode === 'proportional') {
-      // #1231 (1.1.5) — sortie d'un mode d'AFFICHAGE (échelle / proportionnel) : le coin
-      // courant est du scratch (rescalé par l'échelle adaptée, ou comprimé par le %). On
-      // FORCE le retour aux vrais centres stockés, sinon les positions d'affichage
-      // deviendraient les positions absolues (le % « collait »). Centres invariants → on
-      // retrouve exactement la position absolue d'avant l'entrée du mode.
-      this.nodePositioning.deriveAbsoluteNodesFromCenter()
-    } else {
-      // #1230 — prev = absolu / parametric (ex. ops structurelles) : le coin courant EST la
-      // nouvelle vérité → on le commit comme centre (settle), pour que le 1er draw n'introduise
-      // aucun saut.
-      this.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
-    }
-  }
-
-  // #1231 — Mode « échelle adaptée » : le flux de référence (clic droit) garde toujours la
-  // même épaisseur ; l'échelle du diagramme s'adapte à chaque datatag en conséquence. Les
-  // nœuds gardent leur centre fixe (comme l'absolu) pendant qu'ils se redimensionnent.
-  public setScaleAdaptedMode() {
-    const default_style = this.sankey.styles_dict['default']
-    // #1231 (1.1.5) — si on vient d'un mode d'AFFICHAGE (proportionnel), le coin courant est
-    // comprimé. On revient d'abord aux VRAIS centres (sinon settleCenterAnchor figerait le
-    // coin comprimé comme centre → centres faussés). L'échelle adaptée part donc des positions
-    // absolues réelles ; le draw applique ensuite le rescale autour des centres invariants.
-    this.nodePositioning.deriveAbsoluteNodesFromCenter()
-    default_style.shape_position_type = 'scale_adapted'
-    this.nodePositioning.captureScaleReference()
-    // #1231 — redessiner immédiatement pour appliquer l'échelle adaptée dès l'entrée du
-    // mode (sinon le rescale n'apparaissait qu'au draw suivant : navigation datatag).
-    this.draw()
-  }
-
-  public setProportionalMode() {
-    const default_style = this.sankey.styles_dict['default']
-    // #1231 — quitter l'« échelle adaptée » restaure l'échelle de base.
-    this.nodePositioning.clearScaleAdaptation()
-    // #1231 (1.1.5) — si on vient d'un mode d'AFFICHAGE (échelle), le coin courant est du
-    // scratch rescalé. On revient d'abord aux VRAIS centres pour que la capture de référence
-    // (médiane, centres de colonne) parte des positions absolues réelles, pas de l'affichage.
-    this.nodePositioning.deriveAbsoluteNodesFromCenter()
-    default_style.shape_position_type = 'proportional'
-    // #1231 — identifier les colonnes (position_u, sans déplacer les nœuds) puis
-    // capturer le cadre de référence (médiane = centre de gravité, haut/bas, sommes
-    // par colonne, centre de réf de chaque nœud). Au datatag courant f=1 → pas de saut
-    // à la bascule ; les autres datatags compriment/dilatent autour de la médiane.
-    this.nodePositioning.inferPositionUFromX()
-    this.nodePositioning.captureProportionalReference()
-  }
-
-  public resetAllVerticalIntervals(v_spacing?: number) {
-    // La clé dans le config prefixée est `shape_position_dy` (cf.
-    // createConfigWithPrefix + NODE_SHAPE_SPECIFIC_CONFIG). Utiliser `position_dy`
-    // supprimait une clé inexistante → les overrides persistaient.
-    const affected_nodes = Object.values(this.sankey.nodes_dict)
-      .filter(node => node.shape_position_type !== 'relative')
-    const snapshots = affected_nodes.map(node => ({ node, snapshot: node.snapshotStorage() }))
-    const default_style = this.sankey.styles_dict['default']
-    const prev_style_dy = default_style.shape_position_dy
-
-    const apply = () => {
-      if (v_spacing !== undefined) {
-        default_style.shape_position_dy = v_spacing
-      }
-      affected_nodes.forEach(node => node.delete_attribute('shape_position_dy'))
-      this.draw()
-    }
-    const revert = () => {
-      if (v_spacing !== undefined) {
-        default_style.shape_position_dy = prev_style_dy
-      }
-      snapshots.forEach(({ node, snapshot }) => node.restoreStorage(snapshot))
-      this.draw()
-    }
-
-    this.application_data.history.saveUndo(revert)
-    this.application_data.history.saveRedo(apply)
-    apply()
-  }
+  public resetAllVerticalIntervals(v_spacing?: number) { DisplayModes.resetAllVerticalIntervals(this, v_spacing) }
 
   public get id() { return this._sankey.id }
   public get name() { return this._sankey.name }
