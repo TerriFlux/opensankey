@@ -144,6 +144,7 @@ export const OpenSankeyApp = ({
       if (typeof opts.diagram === 'string') {
         // URL : fetch + décompression + parse
         app_data.file_name = opts.diagram
+        app_data.static_diagram_file = opts.diagram
         loadUniversalJSON(opts.diagram).then(data => {
           app_data.file_name = opts.diagram as string
           applyDiagramData(data as Type_JSON)

@@ -131,10 +131,13 @@ def create_app():
     # de la session courante et ne reçoivent aucun fichier). Le vrai point d'entrée
     # d'un upload utilisateur est convert/launch (input_format excel/json), qui
     # reste protégé ci-dessous ; seul le chargement d'exemple public y est exempté.
+    # NB : /opensankey/url/load_json n'est PAS protégé — c'est le relais du
+    # paramètre ?url= (bouton « Éditer dans OpenSankey » des sites publiés),
+    # un flux public par conception. Il est durci contre le SSRF à la source
+    # (opensankey/server/views.py : IP publiques uniquement, timeout, taille max).
     protected_prefixes = (
         "/opensankey/convert/",
         "/opensankey/open_sankeymatic",
-        "/opensankey/url/load_json",
     )
 
     @app.before_request
