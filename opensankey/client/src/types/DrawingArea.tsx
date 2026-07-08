@@ -64,6 +64,7 @@ import { Class_Tag } from './Tag'
 import { Class_ContainerElement } from '../Elements/TextZone'
 import { Class_ApplicationData } from './ApplicationData'
 import { compareZOrder, dedupeZOrderKeepFirst } from './zOrder'
+import * as LabelFilters from './LabelFilters'
 import { TooltipEventManager } from '../Elements/TooltipsConfig'
 import { Class_NodeBase, sortNodesElements } from '../Elements/NodeBase'
 import {
@@ -4171,13 +4172,10 @@ export class Class_DrawingArea {
    * @returns true si le nœud passe le seuil (label affiché).
    */
   public nodeLabelPassesThreshold(value: number, height_px: number): boolean {
-    if (this._filter_unit === 'pixel') {
-      if (!(this._filter_node_px > 0)) return true
-      // Pixels ÉCRAN : hauteur de bande locale × zoom live.
-      return height_px * this.getZoomScale() >= this._filter_node_px
-    }
-    if (!(this._filter_node > 0)) return true
-    return value >= this._filter_node
+    return LabelFilters.nodeLabelPassesThreshold(
+      this._filter_unit, this._filter_node_px, this._filter_node,
+      value, height_px, this.getZoomScale()
+    )
   }
 
   /**
@@ -4192,14 +4190,10 @@ export class Class_DrawingArea {
    * @param height_px hauteur de bande RENDUE du stock (repère local, facteur inclus)
    */
   public stockLabelPassesThreshold(abs_value: number | null, height_px: number): boolean {
-    if (abs_value === null) return true
-    if (this._filter_unit === 'pixel') {
-      if (!(this._filter_stock_px > 0)) return true
-      // Pixels ÉCRAN : hauteur rendue locale × zoom live.
-      return height_px * this.getZoomScale() >= this._filter_stock_px
-    }
-    if (!(this._filter_stock > 0)) return true
-    return abs_value >= this._filter_stock
+    return LabelFilters.stockLabelPassesThreshold(
+      this._filter_unit, this._filter_stock_px, this._filter_stock,
+      abs_value, height_px, this.getZoomScale()
+    )
   }
 
   /**
@@ -4208,11 +4202,9 @@ export class Class_DrawingArea {
    * (les pixels écran dépendent du zoom, cf. handlers de zoom).
    */
   public get has_active_pixel_filter(): boolean {
-    return this._filter_unit === 'pixel' && (
-      this._filter_link_value_px > 0 ||
-      this._filter_label_px > 0 ||
-      this._filter_node_px > 0 ||
-      this._filter_stock_px > 0
+    return LabelFilters.hasActivePixelFilter(
+      this._filter_unit, this._filter_link_value_px, this._filter_label_px,
+      this._filter_node_px, this._filter_stock_px
     )
   }
 
