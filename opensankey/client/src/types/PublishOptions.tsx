@@ -39,6 +39,7 @@ export interface SankeyGlobals {
   // Branding
   logo?: string
   header?: string        // HTML brut injecté en haut
+  header_i18n?: Record<string, string>  // variantes du header par langue ({en: '...', ...}) ; prioritaire sur header pour la langue effective
 
   // Diagrammes
   diagram?: string | Record<string, unknown> // URL d'un JSON à charger, OU objet JSON inline
@@ -128,6 +129,23 @@ const strRecord = (v: unknown): Record<string, string> | null => {
 
 let _warned_sous_filieres = false
 
+// Langue effective côté page publiée : ?lang= > window.sankey.language > préférence
+// mémorisée (i18nextLng) > navigateur. Utilisée pour résoudre header_i18n.
+const _effectiveLang = (): string | null => {
+  try {
+    const url_lang = new URLSearchParams(window.location.search).get('lang')
+    if (url_lang) return url_lang
+  } catch { /* environnement sans URL */ }
+  if (typeof window.sankey?.language === 'string') return window.sankey.language
+  try {
+    const saved = localStorage.getItem('i18nextLng')
+    if (saved) return saved.slice(0, 2)
+  } catch { /* localStorage indisponible */ }
+  return (typeof navigator !== 'undefined' && navigator.language)
+    ? navigator.language.slice(0, 2)
+    : null
+}
+
 export const getPublishOptions = (): PublishOptions => {
   const s = window.sankey ?? {}
   // Alias rétrocompat : sous_filieres → diagrams_list
@@ -141,6 +159,13 @@ export const getPublishOptions = (): PublishOptions => {
       // eslint-disable-next-line no-console
       console.warn('[OpenSankey] `window.sankey.sous_filieres` est déprécié, utiliser `diagrams_list`.')
     }
+  }
+  // header : variante traduite (header_i18n[langue effective]) prioritaire
+  let header_value = str(s.header)
+  if (s.header_i18n && typeof s.header_i18n === 'object' && !Array.isArray(s.header_i18n)) {
+    const lang = _effectiveLang()
+    const translated = lang ? (s.header_i18n as Record<string, unknown>)[lang] : undefined
+    if (typeof translated === 'string') header_value = translated
   }
   return {
     publish: bool(s.publish, false),
@@ -171,7 +196,7 @@ export const getPublishOptions = (): PublishOptions => {
     data_tag_selection: strRecord(s.data_tag_selection),
     view_tag_selection: strRecord(s.view_tag_selection),
     logo: str(s.logo),
-    header: str(s.header),
+    header: header_value,
     diagram: (typeof s.diagram === 'string')
       ? s.diagram
       : (s.diagram && typeof s.diagram === 'object' && !Array.isArray(s.diagram))
@@ -223,6 +248,7 @@ export type ViewerSankeyOptions = {
   lock_zoom?: boolean
   tooltip_on_hover?: boolean
   language?: string
+  header_i18n?: Record<string, string>
   position_mode?: Type_PositionMode
   data_tag_selection?: Record<string, string>
   view_tag_selection?: Record<string, string>  // valeur = VUE (nom/id, light ou heavy, comme le sélecteur de vue) ou tag à filtrer
@@ -246,7 +272,7 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
     'diagrams_list', 'sous_filieres',
     'data_type', 'data_type_intervals', 'value_filter',
     'view_filter', 'level_filter', 'node_filter', 'data_filter',
-    'lock_zoom', 'tooltip_on_hover', 'language',
+    'lock_zoom', 'tooltip_on_hover', 'language', 'header_i18n',
     'position_mode', 'data_tag_selection', 'view_tag_selection',
   ]
   for (const k of keys) {
