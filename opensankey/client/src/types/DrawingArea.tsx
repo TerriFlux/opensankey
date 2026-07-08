@@ -2214,9 +2214,7 @@ export class Class_DrawingArea {
     const to = d3.zoomTransform(node)
     const dx = ref ? ref.position_x - bx : 0
     const dy = ref ? ref.position_y - by : 0
-    const from = d3.zoomIdentity
-      .translate(t0.x - t0.k * dx, t0.y - t0.k * dy)
-      .scale(t0.k)
+    const from = CameraMath.shiftTransformByWorldDelta(t0, dx, dy)
     if (this._sameZoomTransform(from, to)) return
     this.setCamera(to, { animate: true, from })
   }
@@ -2237,7 +2235,7 @@ export class Class_DrawingArea {
     // Place le centre du nœud au centre de la fenêtre visible (sous la nav bar).
     const px = this.window_fitting_width / 2
     const py = this.window_fitting_height / 2 + this.getNavBarHeight()
-    const to = d3.zoomIdentity.translate(px - k * cx, py - k * cy).scale(k)
+    const to = CameraMath.centerTransform({ x: cx, y: cy }, { x: px, y: py }, k)
     this.setCamera(to, { animate: true })
   }
 
