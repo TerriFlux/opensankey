@@ -34,7 +34,7 @@ import {
 import { Class_DataTag, Class_LevelTag, Class_Tag } from '../types/Tag'
 import { Class_DataTagGroup } from '../types/TagGroup'
 import { Class_DrawingArea } from '../types/DrawingArea'
-import { Type_DisaggregationGap } from '../types/Utils'
+import * as Geometry from './NodePositioningGeometry'
 import { PAPER_TARGET_FONT_SIZES, Type_StraightMode } from '../Elements/ElementsAttributesConfig'
 import { NodeImportExportAboveBelowStyle, NodeImportExportCloseStyle, NodeLeftExtremityStyle, NodeRightExtremityStyle, NodeSectorStyle } from '../Elements/ElementStyle'
 
@@ -1054,25 +1054,8 @@ export class NodePositioning {
    * recomputeParametricLayout au changement de datatag/dimension. Même définition que
    * le proportionnel (columnGeometricExtents). Reconstruit la map (vide les u périmés).
    */
-  public static columnGeometricExtents(
-    nodes: Class_NodeElement[]
-  ): Map<number, { top: number, bottom: number, center: number }> {
-    const tops = new Map<number, number>()
-    const bottoms = new Map<number, number>()
-    nodes.forEach(n => {
-      const u = n.position_u
-      const top = n.position_y
-      const bottom = n.position_y + n.getShapeHeightToUse()
-      tops.set(u, Math.min(tops.get(u) ?? Infinity, top))
-      bottoms.set(u, Math.max(bottoms.get(u) ?? -Infinity, bottom))
-    })
-    const out = new Map<number, { top: number, bottom: number, center: number }>()
-    tops.forEach((top, u) => {
-      const bottom = bottoms.get(u) ?? top
-      out.set(u, { top, bottom, center: (top + bottom) / 2 })
-    })
-    return out
-  }
+  // #243 — statiques de géométrie pure déplacées dans NodePositioningGeometry.ts (réexports).
+  public static columnGeometricExtents = Geometry.columnGeometricExtents
 
   /**
    * Place verticalement les enfants d'une opération STRUCTURELLE (désagrégation,
@@ -2908,72 +2891,11 @@ export class NodePositioning {
    * L'ordre des nœuds est celui de la liste passée — à trier par le caller selon
    * son propre critère (position_v, position_y, etc.).
    */
-  public static stackNodesVertically(nodes: Class_NodeElement[], anchor_y: number) {
-    let cursor_y = anchor_y
-    nodes.forEach((node, i) => {
-      if (i > 0) cursor_y += node.shape_position_dy ?? 0
-      node.position_y = cursor_y
-      node.applyPosition()
-      cursor_y += node.getShapeHeightToUse()
-    })
-  }
-
-  /**
-   * Hauteur totale de la pile produite par `stackNodesVertically` :
-   * somme des hauteurs + somme des `shape_position_dy` des nœuds (sauf le premier).
-   */
-  public static totalStackHeight(nodes: Class_NodeElement[]): number {
-    return nodes.reduce((sum, n, i) => {
-      return sum + n.getShapeHeightToUse() + (i > 0 ? (n.shape_position_dy ?? 0) : 0)
-    }, 0)
-  }
-
-  /**
-   * Écart vertical AVANT un enfant de cadre englobant, selon le mode d'écart courant :
-   *  - 'constant'  : `const_gap` (lu EN DIRECT sur `disaggregation_gap_value`) — éditer la valeur
-   *                  modifie donc tous les englobements existants au prochain dessin, l'écart
-   *                  n'étant volontairement PAS figé dans `shape_position_dy`.
-   *  - autres modes: `shape_position_dy` de l'enfant (fill = valeur calculée figée au slot ;
-   *                  children_dy = écart propre à l'enfant ; keep = les enfants ne sont pas
-   *                  ré-empilés, cf. appelants).
-   */
-  public static containerChildGap(
-    child: Class_NodeElement,
-    mode: Type_DisaggregationGap,
-    const_gap: number
-  ): number {
-    return mode === 'constant' ? const_gap : (child.shape_position_dy ?? 0)
-  }
-
-  /**
-   * Empile verticalement les enfants d'un cadre englobant, comme `stackNodesVertically` mais avec
-   * l'écart résolu par `containerChildGap` (constant lu en direct). Utilisé par le mode parametric
-   * (Phase C de `recomputeParametricLayout`) et les autres modes (`restackContainerChildren`).
-   */
-  public static stackContainerChildren(
-    nodes: Class_NodeElement[],
-    anchor_y: number,
-    mode: Type_DisaggregationGap,
-    const_gap: number
-  ) {
-    let cursor_y = anchor_y
-    nodes.forEach((node, i) => {
-      if (i > 0) cursor_y += NodePositioning.containerChildGap(node, mode, const_gap)
-      node.position_y = cursor_y
-      node.applyPosition()
-      cursor_y += node.getShapeHeightToUse()
-    })
-  }
-
-  /** Hauteur totale de la pile de `stackContainerChildren` (écart constant lu en direct). */
-  public static totalContainerStackHeight(
-    nodes: Class_NodeElement[],
-    mode: Type_DisaggregationGap,
-    const_gap: number
-  ): number {
-    return nodes.reduce((sum, n, i) =>
-      sum + n.getShapeHeightToUse() + (i > 0 ? NodePositioning.containerChildGap(n, mode, const_gap) : 0), 0)
-  }
+  public static stackNodesVertically = Geometry.stackNodesVertically
+  public static totalStackHeight = Geometry.totalStackHeight
+  public static containerChildGap = Geometry.containerChildGap
+  public static stackContainerChildren = Geometry.stackContainerChildren
+  public static totalContainerStackHeight = Geometry.totalContainerStackHeight
 
   /**
    * Point d'entrée unique pour le recompute du layout paramétrique (PR 3).
@@ -3430,21 +3352,7 @@ export class NodePositioning {
    * (`dimensions_as_parent.children`). Utilisé pour propager la droiture aux flux
    * désagrégés.
    */
-  public static collectNodeDescendants(node: Class_NodeElement): Set<Class_NodeElement> {
-    const out = new Set<Class_NodeElement>()
-    const stack: Class_NodeElement[] = [node]
-    while (stack.length > 0) {
-      const n = stack.pop()!
-      if (out.has(n)) continue
-      out.add(n)
-      n.dimensions_as_parent.forEach(dim => {
-        dim.children.forEach(c => {
-          if (!out.has(c as Class_NodeElement)) stack.push(c as Class_NodeElement)
-        })
-      })
-    }
-    return out
-  }
+  public static collectNodeDescendants = Geometry.collectNodeDescendants
 
   /**
    * Back-calcule `shape_position_dy` de chaque nœud visible depuis sa `position_y`
