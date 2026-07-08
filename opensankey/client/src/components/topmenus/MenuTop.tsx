@@ -111,6 +111,8 @@ export const setDiagram = (
   loadUniversalJSON(diagrams[diagram_url] + '.gz').then(data => {
     app_data.fromJSON(data as Type_JSON)
     app_data.file_name = sankey.diagram as string
+    // Fichier réellement servi pour ce diagramme (cf. bouton « Éditer dans OpenSankey »)
+    app_data.static_diagram_file = diagrams[diagram_url] + '.gz'
   }).catch(e => console.log(e))
   app_data.menu_configuration.ref_toolbar.current()
 }
@@ -1365,13 +1367,14 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
       variant='menutop_button'
       size='sizeMenuTopButton'
       onClick={() => {
-        // Si vous êtes sur: https://terriflux.com/portfolios/SOCLE/Cereales/diagrams.html
-        // Et que new_data.file_name = "SOCLE_FR_Cereales_Ble_tendre."
-
-        const currentPath = window.location.pathname // "/portfolios/SOCLE/Cereales/diagrams.html"
-        const basePath = currentPath.substring(0, currentPath.lastIndexOf('/')) // "/portfolios/SOCLE/Cereales"
-        const fileUrl = window.location.origin + basePath + '/' + new_data.file_name
-        const url = 'https://open-sankey.fr/?url=' + fileUrl
+        // Cible = le fichier .gz réellement servi par le site publié (static_diagram_file),
+        // PAS file_name : fromJSON l'écrase avec le name_file interne du JSON (nom
+        // d'affichage type « Diagramme de Sankey »), qui ne correspond à aucun fichier.
+        const diagram_file = new_data.static_diagram_file ?? new_data.file_name
+        // Résout les chemins relatifs contre la page courante
+        // (ex: "/portfolios/SOCLE/Cereales/diagrams.html" + "X_Resultats.gz")
+        const fileUrl = new URL(diagram_file, window.location.href).href
+        const url = 'https://open-sankey.fr/?url=' + encodeURIComponent(fileUrl)
 
         window.open(url, '_blank')
       }}
