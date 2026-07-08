@@ -1175,23 +1175,94 @@ def zip_artifact(artifact_dir, zip_basename=None):
 # Déploiement en ligne (porté de sankey_deploy.py : scp + ssh unzip)
 # ---------------------------------------------------------------------------
 def get_deploy_config():
-    """Config du serveur de déploiement (portfolios terriflux/OVH).
+    """Config du serveur de déploiement des portfolios (terriflux.com/portfolios).
 
-    Valeurs par défaut = celles du script historique sankey_deploy.py ; l'auth SSH
-    se fait via la clé par défaut ~/.ssh du process Flask (ou SANKEY_DEPLOY_KEY).
-    Tout est surchargeable par variable d'environnement. Mettre SANKEY_DEPLOY_OFF
-    à "1" pour désactiver complètement (le bouton est alors masqué)."""
+    Par défaut = dépôt LOCAL : l'app tourne sur le VPS qui héberge lui-même
+    terriflux.com/portfolios (dossier servi par nginx), donc on copie l'artefact
+    directement dans `path` sans scp/ssh. Renseigner SANKEY_DEPLOY_HOST avec un
+    hôte distant (ancien OVH…) rebascule en mode scp/ssh. L'auth SSH distante se
+    fait via la clé ~/.ssh du process Flask (ou SANKEY_DEPLOY_KEY). Mettre
+    SANKEY_DEPLOY_OFF à "1" pour désactiver (le bouton est alors masqué)."""
     if os.environ.get("SANKEY_DEPLOY_OFF") == "1":
         return None
+    host = os.environ.get("SANKEY_DEPLOY_HOST", "").strip()
+    # local si aucun hôte distant explicite n'est fourni
+    local = host in ("", "local", "localhost", "127.0.0.1")
     return {
-        "host": os.environ.get("SANKEY_DEPLOY_HOST", "ssh.cluster031.hosting.ovh.net"),
-        "user": os.environ.get("SANKEY_DEPLOY_USER", "lwdlgxd"),
-        "path": os.environ.get("SANKEY_DEPLOY_PATH", "/homez.1606/lwdlgxd/www/portfolios"),
+        "local": local,
+        "host": host or "localhost",
+        "user": os.environ.get("SANKEY_DEPLOY_USER", "ubuntu"),
+        "path": os.environ.get("SANKEY_DEPLOY_PATH", "/home/ubuntu/portfolios"),
         "key": os.environ.get("SANKEY_DEPLOY_KEY") or None,
         "port": os.environ.get("SANKEY_DEPLOY_PORT") or "22",
         "url_base": (os.environ.get("SANKEY_DEPLOY_URL_BASE")
                      or "https://terriflux.com/portfolios").rstrip("/"),
     }
+
+
+def _merge_tree(src, dst, skip_rel=frozenset()):
+    """Copie récursive de src dans dst, en sautant les sous-arbres `skip_rel`
+    (chemins relatifs à dst). Utilisé par le mode update local pour préserver
+    les études déjà en ligne (dossiers avec diagrams.html)."""
+    import shutil
+    skip = {os.path.normpath(p) for p in skip_rel}
+
+    def is_skipped(rel):
+        rel = os.path.normpath(rel)
+        return any(rel == s or rel.startswith(s + os.sep) for s in skip)
+
+    for root, dirs, files in os.walk(src):
+        rel_root = os.path.relpath(root, src)
+        if rel_root != "." and is_skipped(rel_root):
+            dirs[:] = []  # ne pas descendre dans une étude préservée
+            continue
+        target_root = dst if rel_root == "." else os.path.join(dst, rel_root)
+        os.makedirs(target_root, exist_ok=True)
+        for f in files:
+            rel_f = f if rel_root == "." else os.path.join(rel_root, f)
+            if is_skipped(rel_f):
+                continue
+            shutil.copy2(os.path.join(root, f), os.path.join(target_root, f))
+
+
+def _deploy_local(artifact_dir, slug, config, force=False, update=False):
+    """Déploiement LOCAL : l'app et les portfolios sont sur la même machine.
+    Copie l'artefact dans <path>/<slug> sans scp/ssh, même sémantique que le
+    mode distant (force = archive daté dans versions/ ; update = fusion additive
+    préservant les études en ligne). Renvoie l'URL publique."""
+    import shutil
+    from datetime import datetime
+    path = config["path"]
+    dest = os.path.join(path, slug)
+    os.makedirs(path, exist_ok=True)
+
+    if update:
+        if os.path.isdir(dest):
+            # Préserver les études déjà en ligne (dossiers contenant diagrams.html)
+            preserved = set()
+            for root, _dirs, files in os.walk(dest):
+                if "diagrams.html" in files:
+                    rel = os.path.relpath(root, dest)
+                    if rel != ".":
+                        preserved.add(rel)
+            _merge_tree(artifact_dir, dest, skip_rel=preserved)
+        else:
+            shutil.copytree(artifact_dir, dest)
+    else:
+        if os.path.isdir(dest):
+            if not force:
+                raise RuntimeError(
+                    f"Le dossier « {slug} » existe déjà en ligne. "
+                    "Cochez « Remplacer » pour l'écraser (sauvegarde datée dans versions/), "
+                    "ou « Mode mise à jour » pour n'ajouter que les nouveautés."
+                )
+            versions = os.path.join(path, "versions")
+            os.makedirs(versions, exist_ok=True)
+            stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            shutil.move(dest, os.path.join(versions, f"{slug}_{stamp}"))
+        shutil.copytree(artifact_dir, dest)
+
+    return f"{config['url_base']}/{slug}"
 
 
 def _run_remote(cmd, timeout=300):
@@ -1215,6 +1286,12 @@ def deploy_artifact_to_server(artifact_dir, slug, config, force=False, update=Fa
              on ajoute seulement les nouveaux dossiers et on rafraîchit les pages de
              navigation. Aucune suppression. force est ignoré dans ce mode."""
     slug = sanitize_filename(slug) or "sankey_site"
+
+    # Dépôt local (app hébergée sur le même serveur que les portfolios) :
+    # copie directe, pas de scp/ssh.
+    if config.get("local"):
+        return _deploy_local(artifact_dir, slug, config, force=force, update=update)
+
     remote_zip = f"{slug}.zip"
     target = f"{config['user']}@{config['host']}"
     path = config["path"]
