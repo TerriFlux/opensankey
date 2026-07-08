@@ -67,6 +67,7 @@ import { compareZOrder, dedupeZOrderKeepFirst } from './zOrder'
 import * as LabelFilters from './LabelFilters'
 import * as CopyPaste from './copyPaste'
 import * as DisplayModes from './displayModes'
+import * as CameraMath from './CameraMath'
 import { TooltipEventManager } from '../Elements/TooltipsConfig'
 import { Class_NodeBase, sortNodesElements } from '../Elements/NodeBase'
 import {
@@ -2135,10 +2136,7 @@ export class Class_DrawingArea {
    * lancer d'animation quand le recadrage ne bouge pas la caméra.
    */
   private _sameZoomTransform(a: d3.ZoomTransform, b: d3.ZoomTransform): boolean {
-    const eps = 1e-6
-    return Math.abs(a.k - b.k) < eps
-      && Math.abs(a.x - b.x) < eps
-      && Math.abs(a.y - b.y) < eps
+    return CameraMath.sameZoomTransform(a, b)
   }
 
   /**
@@ -2287,13 +2285,7 @@ export class Class_DrawingArea {
     viewport: { width: number, height: number, top_offset: number },
     margin: number = this._fit_margin
   ): d3.ZoomTransform {
-    const k_w = (viewport.width - margin) / bounds.width
-    const k_h = (viewport.height - margin) / bounds.height
-    // Bornes identiques au scaleExtent du zoomListener (rendu SVG gelé au-delà).
-    const k = Math.max(0.05, Math.min(20, Math.min(k_w, k_h)))
-    return d3.zoomIdentity
-      .translate(margin / 2 - bounds.x * k, viewport.top_offset + margin / 2 - bounds.y * k)
-      .scale(k)
+    return CameraMath.fitTransform(bounds, viewport, margin)
   }
 
   /**
