@@ -34,6 +34,7 @@ import {
 import { typeButtonElementConfigurable } from '../components/topmenus/SankeyMenus'
 import { Class_DataTagGroup } from './TagGroup'
 import { Class_DataTag } from './Tag'
+import { Class_EventBus, MAIN_ZONE_TOPIC } from './EventBus'
 import {
   ConverterConfig
 } from '../components/dialogs/PersistenceProcessDialogConfigs'
@@ -252,8 +253,9 @@ export class Class_MenuConfig {
   public side_panel_config_open: boolean = false
   public side_panel_filter_open: boolean = false
   protected _tools_column_open: boolean = true
-  protected _main_zone_listeners: Array<() => void> = []
-  protected _notifyMainZone() { this._main_zone_listeners.forEach((l) => l()) }
+  // #248 — bus pub/sub générique par topic (remplace la liste plate `_main_zone_listeners`).
+  protected _event_bus: Class_EventBus = new Class_EventBus()
+  protected _notifyMainZone() { this._event_bus.notify(MAIN_ZONE_TOPIC) }
   public get tools_column_open() { return this._tools_column_open }
   public set tools_column_open(v: boolean) { this._tools_column_open = v; this._notifyMainZone() }
   /** Largeur (px) réservée à droite par la colonne d'outils (0 si absente/fermée). */
@@ -281,12 +283,21 @@ export class Class_MenuConfig {
   public get main_zone_unitary_detached() { return this._main_zone_unitary_detached }
   public set main_zone_unitary_detached(v: boolean) { this._main_zone_unitary_detached = v; this._notifyMainZone() }
   public addMainZoneListener(l: () => void): () => void {
-    this._main_zone_listeners.push(l)
-    return () => { this._main_zone_listeners = this._main_zone_listeners.filter((x) => x !== l) }
+    return this._event_bus.subscribe(MAIN_ZONE_TOPIC, l)
   }
   /** Notifie les abonnés de la grande zone (barre du haut + MainZoneTabs). Exposé pour
    *  que des features injectées (ex. l'onglet « Unit. » OS+) puissent re-rendre le bouton. */
   public notifyMainZone() { this._notifyMainZone() }
+
+  // #248 — API pub/sub générique par topic. Toute nouvelle feature s'abonne à son topic via
+  // `subscribe(topic, listener)` (désabonnement au démontage, cf. useModelBinding) et notifie via
+  // `notify(topic)`, plutôt qu'une ref nue ou la liste globale de la grande zone.
+  public subscribe(topic: string, l: () => void): () => void {
+    return this._event_bus.subscribe(topic, l)
+  }
+  public notify(topic: string): void {
+    this._event_bus.notify(topic)
+  }
 
   // Panneau « Unit. » (sankey unitaire, feature OS+) affiché à côté de Diagramme/Tableur/Doc.
   // `unitary_tab_available` est renseigné par OS+ (ModalUnitarySankeyOSP) ; reste neutre en OS pur.
