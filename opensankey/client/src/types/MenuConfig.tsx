@@ -246,11 +246,6 @@ export class Class_MenuConfig {
   // Disponibilité du panneau de filtres (posée par ToolbarFilter) : conditionne le bouton filtre
   // dans la colonne d'outils.
   public filter_bar_available: boolean = false
-  // Panneaux latéraux droits (config / filtre) ouverts en ÉDITEUR : posés par SankeyMenu / ToolbarFilter.
-  // Quand l'un est ouvert, sa largeur est réservée par le diagramme (cf. DrawingArea.main_zone_right_reserved)
-  // pour qu'il dock à droite au lieu de flotter par-dessus la zone de dessin. Mutuellement exclusifs.
-  public side_panel_config_open: boolean = false
-  public side_panel_filter_open: boolean = false
   protected _tools_column_open: boolean = true
   protected _main_zone_listeners: Array<() => void> = []
   protected _notifyMainZone() { this._main_zone_listeners.forEach((l) => l()) }
