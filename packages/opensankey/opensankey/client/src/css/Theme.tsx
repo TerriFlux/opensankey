@@ -1934,7 +1934,9 @@ export const drawerStyles = {
     dialogContainer: {
       width: 'inherit',
       background: 'none',
-      zIndex: 1
+      // Overlay au-dessus des panneaux de la grande zone (tableur/doc, zIndex 20-25),
+      // comme le panneau de config (drawer_menu_config).
+      zIndex: 30
     },
     body: {
       overflow: 'unset',

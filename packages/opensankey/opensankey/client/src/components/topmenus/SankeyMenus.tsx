@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { MutableRefObject, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import React, { MutableRefObject, useLayoutEffect, useRef, useState } from 'react'
 
 import Draggable, { DraggableProps } from 'react-draggable'
 
@@ -93,34 +93,15 @@ export const SankeyMenu = (
   const { icon_open_close_config } = icon_library
   const [show_nav, set_show_nav] = useState(false)
   const [, setCount] = useState(0)
-  // Intention d'affichage de la zone principale (doc/tableur) mémorisée à l'ouverture de la config :
-  // config et zone partagent la colonne droite -> ouvrir la config masque la zone ; on restaure
-  // l'intention à la fermeture. null = rien à restaurer.
-  const savedZoneRef = useRef<{ doc: boolean, spreadsheet: boolean } | null>(null)
 
-  // Ouvre/ferme la config en gérant à la fois l'exclusivité avec la zone principale (doc/tableur)
-  // et sa MÉMORISATION : à l'ouverture on sauvegarde l'état doc/tableur puis on les masque ; à la
-  // fermeture on les rouvre. Centralise tous les chemins (bouton, Drawer onClose, raccourcis,
-  // filtre) qui passent par ref_menu_opened.current[1], pour un comportement uniforme.
+  // Ouvre/ferme la config. Le panneau est un OVERLAY au-dessus de toute la grande zone
+  // (diagramme, tableur, doc…) : il ne touche PAS à l'état doc/tableur ni au cadrage.
+  // Seule exclusivité conservée : le panneau de filtres (même emplacement à droite).
+  // Centralise tous les chemins (bouton, Drawer onClose, raccourcis, filtre) qui passent
+  // par ref_menu_opened.current[1], pour un comportement uniforme.
   const setConfigOpen = (open: boolean) => {
-    if (open !== show_nav) {
-      if (open) {
-        // Panneau latéral droit unique : ouvrir la config ferme le filtre.
-        menu_configuration.ref_close_filter_drawer.current(false)
-        // Mémoriser l'état doc/tableur puis les masquer (colonne droite partagée) ; garder le diagramme.
-        savedZoneRef.current = {
-          doc: menu_configuration.main_zone_show_doc,
-          spreadsheet: menu_configuration.main_zone_show_spreadsheet
-        }
-        menu_configuration.main_zone_show_spreadsheet = false
-        menu_configuration.main_zone_show_doc = false
-        menu_configuration.main_zone_show_diagram = true
-      } else if (savedZoneRef.current) {
-        // Restaurer l'intention doc/tableur mémorisée à l'ouverture.
-        if (savedZoneRef.current.spreadsheet) menu_configuration.main_zone_show_spreadsheet = true
-        if (savedZoneRef.current.doc) menu_configuration.main_zone_show_doc = true
-        savedZoneRef.current = null
-      }
+    if (open && open !== show_nav) {
+      menu_configuration.ref_close_filter_drawer.current(false)
     }
     set_show_nav(open)
   }
@@ -140,13 +121,18 @@ export const SankeyMenu = (
     ro.observe(navbar)
     return () => ro.disconnect()
   }, [])
-  // Largeur réservée à droite par le tableur (split) : on décale tout le chrome droite vers la
-  // gauche d'autant, comme si l'écran rétrécissait. useMainZone -> re-render au toggle/redimension.
+  // Largeur réservée à droite par le tableur (split) : on décale le chrome droite (bouton config
+  // flottant publish, toolbar publish) vers la gauche d'autant, comme si l'écran rétrécissait.
+  // useMainZone -> re-render au toggle/redimension.
   useMainZone(app_data)
   const rightReserve = mainZoneRightReservedPx(app_data)
+  // Le PANNEAU de config, lui, est un overlay au-dessus de TOUTE la grande zone (tableur/doc
+  // compris, zIndex 30 > panneaux 20-25) : il ne s'écarte que de la colonne d'outils (zIndex 35,
+  // extrême droite), pas des réserves tableur/doc.
+  const toolsReserve = menu_configuration.getToolsColumnWidthPx()
   const drawer_width_css = 'max(' + menu_config_width + '%, ' + menu_config_min_width_px + 'px)'
   const posBtnOpenConfig = menu_configuration.ref_menu_opened.current[0]
-    ? 'calc(' + drawer_width_css + ' + ' + (app_data.drawing_area.fit_margin + rightReserve) + 'px)'
+    ? 'calc(' + drawer_width_css + ' + ' + (app_data.drawing_area.fit_margin + toolsReserve) + 'px)'
     : (app_data.drawing_area.fit_margin + rightReserve)
   //Switch the variable value that handle opening and closing the configuration menu
   const toggleShow = () => setConfigOpen(!show_nav)
@@ -159,16 +145,9 @@ export const SankeyMenu = (
   // rendu) pour que la réserve de largeur droite (getToolsColumnWidthPx) soit nulle en publish.
   menu_configuration.tools_column_enabled = !app_data.is_static
 
-  // Panneau de config docké : quand ouvert, sa largeur est réservée par le diagramme
-  // (cf. DrawingArea.side_panel_reserved) → il dock à droite au lieu de recouvrir la zone de dessin.
-  menu_configuration.side_panel_config_open = !app_data.is_static && show_nav
-  // Re-fit du diagramme à l'ouverture/fermeture du panneau de config (la largeur réservée change).
-  const sidePanelDidMount = useRef(false)
-  useEffect(() => {
-    if (!sidePanelDidMount.current) { sidePanelDidMount.current = true; return }
-    app_data.drawing_area.areaAutoFit()
-    app_data.draw()
-  }, [show_nav])
+  // Panneau de config en OVERLAY : il flotte par-dessus la zone de dessin (comme en publish),
+  // sans réserver de largeur ni re-fitter le diagramme — ouvrir/fermer la config ne doit
+  // jamais faire bouger le dessin. Idem pour le panneau de filtres (cf. Toolbar).
   // Rafraîchit la colonne sur les changements externes de modes (ex. switchMode au clavier) qui
   // appelaient l'updater de l'ancienne ToolBarBottom flottante.
   const refreshToolsColumn = () => setCount(a => a + 1)
@@ -343,8 +322,12 @@ export const SankeyMenu = (
               style={{
                 width: drawer_width_css,
                 height: 'fit-content',
-                right: app_data.drawing_area.fit_margin / 2 + rightReserve,
-                marginTop: posTopMenuConfig
+                right: app_data.drawing_area.fit_margin / 2 + toolsReserve,
+                marginTop: posTopMenuConfig,
+                // Panneau en overlay au-dessus du dessin : ombre portée pour le détacher visuellement
+                // (le variant du thème met boxShadow:unset, hérité de l'époque panneau docké).
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)',
+                borderRadius: '4px'
               }}
             >
               <DrawerBody style={{ overflowX: 'auto' }}>

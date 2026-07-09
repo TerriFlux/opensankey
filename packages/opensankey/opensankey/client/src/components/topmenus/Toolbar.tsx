@@ -1,4 +1,4 @@
-import React, { useState, RefObject, useRef, ReactNode, useReducer, useEffect } from 'react'
+import React, { useState, RefObject, useRef, ReactNode, useReducer } from 'react'
 import {
   Drawer, Button, Collapse, DrawerContent, DrawerBody, Box, useDisclosure,
   Heading, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Text, Select, Checkbox, Switch,
@@ -6,7 +6,7 @@ import {
 } from '@chakra-ui/react'
 import { CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
 import { OSMultiSelect, typeElementSelectable, CustomFaEyeCheckIcon, OSTooltip, ConfigMenuNumberInput } from '../configmenus/MenuCommon'
-import { useMainZone, mainZoneRightReservedPx } from '../spreadsheet/MainZoneTabs'
+import { useMainZone } from '../spreadsheet/MainZoneTabs'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_TagGroup, Class_DataTagGroup, Class_LevelTagGroup, Class_ViewTagGroup } from '../../types/TagGroup'
 import { Class_LevelTag } from '../../types/Tag'
@@ -322,40 +322,22 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
   }
   const [drawerOpen, setDrawerOpen] = useState(app_data.is_static)
   const [, forceUpdate] = useReducer(x => x + 1, 0)
-  // Abonnement à la grande zone : garde l'offset droit (rightReserve) à jour quand la colonne d'outils
-  // ou le tableur change de largeur.
+  // Abonnement à la grande zone : garde l'offset droit à jour quand la colonne d'outils change.
+  // Le panneau est un overlay au-dessus de toute la grande zone (tableur/doc compris, zIndex 30) :
+  // il ne s'écarte que de la colonne d'outils (zIndex 35, extrême droite), comme la config.
   useMainZone(app_data)
-  const rightReserve = mainZoneRightReservedPx(app_data)
+  const toolsReserve = app_data.menu_configuration.getToolsColumnWidthPx()
   // En éditeur, le panneau de filtres s'ouvre à DROITE (à côté de la colonne d'outils, comme la config) ;
   // en publish/statique on garde l'ouverture historique à gauche (bouton flottant gauche).
   const drawer_on_right = !app_data.is_static
   const width_drawer = (drawerOpen ? width_fitler_drawer + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin
-  // Intention doc/tableur mémorisée à l'ouverture du filtre (même principe que la config) : le filtre
-  // partage la colonne droite, donc l'ouvrir masque doc/tableur ; on les restaure à la fermeture.
-  // null = rien à restaurer.
-  const savedZoneRef = useRef<{ doc: boolean, spreadsheet: boolean } | null>(null)
-  // Ouvre/ferme le drawer de filtres en gérant l'exclusivité avec la config ET la mémorisation de la
-  // zone principale (doc/tableur). Centralise tous les chemins (bouton colonne, bouton flottant, Drawer
-  // onClose, raccourcis via ref_close_filter_drawer) pour que doc/tableur se rouvrent à la fermeture.
+  // Ouvre/ferme le drawer de filtres. Comme la config, c'est un OVERLAY au-dessus de toute la
+  // grande zone (diagramme, tableur, doc…) : il ne touche ni à l'état doc/tableur ni au cadrage.
+  // Seule exclusivité conservée : le panneau de config (même emplacement à droite). Centralise
+  // tous les chemins (bouton colonne, bouton flottant, Drawer onClose, ref_close_filter_drawer).
   const setFilterOpen = (open: boolean) => {
-    if (open !== drawerOpen) {
-      if (open) {
-        // Panneau latéral droit unique : ouvrir le filtre ferme la config (qui restaure d'abord son
-        // propre état doc/tableur), puis on mémorise et on masque la zone ; on garde le diagramme.
-        app_data.menu_configuration.ref_menu_opened.current[1](false)
-        savedZoneRef.current = {
-          doc: app_data.menu_configuration.main_zone_show_doc,
-          spreadsheet: app_data.menu_configuration.main_zone_show_spreadsheet
-        }
-        app_data.menu_configuration.main_zone_show_spreadsheet = false
-        app_data.menu_configuration.main_zone_show_doc = false
-        app_data.menu_configuration.main_zone_show_diagram = true
-      } else if (savedZoneRef.current) {
-        // Restaurer l'intention doc/tableur mémorisée à l'ouverture.
-        if (savedZoneRef.current.spreadsheet) app_data.menu_configuration.main_zone_show_spreadsheet = true
-        if (savedZoneRef.current.doc) app_data.menu_configuration.main_zone_show_doc = true
-        savedZoneRef.current = null
-      }
+    if (open && open !== drawerOpen) {
+      app_data.menu_configuration.ref_menu_opened.current[1](false)
     }
     setDrawerOpen(open)
   }
@@ -367,18 +349,6 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
   // retour anticipé pour rester correcte même sans filtre visible.
   const filters_visible = hasVisibleFilters()
   app_data.menu_configuration.filter_bar_available = filters_visible
-
-  // Panneau de filtres docké (éditeur) : sa largeur est réservée par le diagramme quand ouvert
-  // (cf. DrawingArea.side_panel_reserved) → dock à droite au lieu de recouvrir la zone de dessin.
-  app_data.menu_configuration.side_panel_filter_open = drawer_on_right && drawerOpen
-  // Re-fit du diagramme à l'ouverture/fermeture (la largeur réservée change). Éditeur uniquement.
-  const filterDidMount = useRef(false)
-  useEffect(() => {
-    if (!filterDidMount.current) { filterDidMount.current = true; return }
-    if (!drawer_on_right) return
-    app_data.drawing_area.areaAutoFit()
-    app_data.draw()
-  }, [drawerOpen])
 
   if (!filters_visible) return <></>
   return <>
@@ -417,10 +387,12 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
         style={{
           width: 'unset',
           height: 'fit-content',
-          boxShadow: 'unset',
+          // Overlay au-dessus du dessin/tableur : ombre portée pour le détacher visuellement,
+          // comme le panneau de config.
+          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)',
           maxWidth: 'unset',
           ...(drawer_on_right
-            ? { right: app_data.drawing_area.fit_margin / 2 + rightReserve }
+            ? { right: app_data.drawing_area.fit_margin / 2 + toolsReserve }
             : { left: app_data.drawing_area.fit_margin / 2 }),
           maxHeight: app_data.drawing_area.window_fitting_height,
           //overflowY: 'auto',
