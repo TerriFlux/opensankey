@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 import React, { ChangeEvent, useEffect, useRef, useState } from 'react'
-import { Checkbox, Box, Button, Input, Select, Text, Divider, Alert, AlertIcon } from '@chakra-ui/react'
+import { Checkbox, Box, Button, Select, Text, Divider, Alert, AlertIcon } from '@chakra-ui/react'
 import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react'
 import { WarningIcon } from '@chakra-ui/icons'
 import { MenuDraggable } from '../topmenus/SankeyMenus'
@@ -39,7 +39,7 @@ import {
   getInitialFormat, hasOptionsFormat, SOLVER_OPTION_KEYS, INPUT_OPTION_KEYS, OptionGroup, OPTION_GROUP_LABELS
 } from './PersistenceProcessDialogConfigs'
 import { MenuConditionEvaluator } from './SankeyMenuContext'
-import { OSTooltip, WrapperBoxSubSectionMenu } from '../configmenus/MenuCommon'
+import { OSTooltip, WrapperBoxSubSectionMenu, LocalizedFileInput } from '../configmenus/MenuCommon'
 import { AutoLayoutSpacingInputs } from './MenuContextWidgetFactory'
 import { Type_PaperFormat, Type_PaperOrientation, default_paper_format, default_paper_orientation, default_margin_mm } from '../../Elements/ElementsAttributesConfig'
 import { ConfigMenuNumberInput } from '../configmenus/MenuCommon'
@@ -249,15 +249,14 @@ export const FileFormatSection = ({
             pick_file_handle ? (
               <Box display='grid' gridTemplateColumns='1fr 2fr' gap={2} alignItems='center'>
                 <Button size='sm' onClick={() => { void pick_file_handle() }}>
-                  {current_file_name ? 'Changer...' : 'Parcourir...'}
+                  {current_file_name ? t('ProcessDialog.change_file') : t('ProcessDialog.browse')}
                 </Button>
                 <Text fontSize='sm' noOfLines={1} title={current_file_name}>
                   {current_file_name ?? ''}
                 </Text>
               </Box>
             ) : (
-              <Input
-                type="file"
+              <LocalizedFileInput
                 accept={//@ts-expect-error xxx
                   FORMAT_CONFIG[current_format].accept}
                 onChange={(evt: ChangeEvent<HTMLInputElement>) => {
