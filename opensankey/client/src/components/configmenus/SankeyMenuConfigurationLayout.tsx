@@ -38,6 +38,7 @@ import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle,
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_DataTagGroup } from '../../types/TagGroup'
 import { CustomFaEyeCheckIcon, OSChecklistDropdown, OSTooltip } from './MenuCommon'
+import { AVAILABLE_THEMES, themeById } from '../../types/ThemeRegistry'
 import { Type_PaperFormat, Type_PaperOrientation } from '../../Elements/ElementsAttributesConfig'
 
 // Utils functions -------------------------------------------------------------------
@@ -117,6 +118,16 @@ export const DrawingAreaConfig = ({
       refreshThisAndUpdateRelatedComponents()
     }
     app_data.setValueAndSaveHistory(app_data.drawing_area, key, evt, f)
+  }
+
+  // Bascule de thème. `applyTheme` remet les styles de base à zéro avant d'écrire le
+  // patch du nouveau thème : la bascule est donc réversible. Ce que l'utilisateur a
+  // posé sur un ÉLÉMENT (couleur d'un nœud, d'un flux) survit — c'est la cascade qui
+  // le garantit, pas le thème. Cf. NOTE-THEMES.md.
+  const eventTheme = (evt: React.ChangeEvent<HTMLSelectElement>) => {
+    app_data.drawing_area.sankey.applyTheme(themeById(evt.target.value))
+    app_data.drawing_area.draw()
+    refreshThisAndUpdateRelatedComponents()
   }
 
   const eventBgColor = (evt: string) => {
@@ -334,6 +345,24 @@ export const DrawingAreaConfig = ({
       </Box>
 
     </>}
+
+    {/* Theme */}
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('Menu.theme.label')}
+      </Box>
+      <OSTooltip label={t('Menu.theme.tooltip')}>
+        <Select
+          variant='menuconfigpanel_option_select'
+          value={app_data.drawing_area.sankey.theme.id}
+          onChange={eventTheme}
+        >
+          {AVAILABLE_THEMES.map(theme => (
+            <option key={theme.id} value={theme.id}>{t(theme.label_key)}</option>
+          ))}
+        </Select>
+      </OSTooltip>
+    </Box>
 
     <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
       <Box layerStyle='menuconfigpanel_option_name'>

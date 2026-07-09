@@ -31,6 +31,15 @@ import { Class_NodeElement } from '../Elements/Node'
 import { Class_NodeDimension } from '../Elements/NodeDimension'
 import { Class_DataTag } from '../types/Tag'
 import { Class_NodeTagGroup, Class_FluxTagGroup, Class_DataTagGroup, Class_LevelTagGroup, Class_ViewTagGroup } from './TagGroup'
+import { Class_Theme, themeOpenSankey } from './Theme'
+
+/**
+ * Les styles dont un thème est propriétaire : `applyTheme` les remet à zéro avant
+ * d'écrire son patch. Ils sont `is_deletable = true` (donc non pré-remplis des
+ * défauts usine), ce qui rend la remise à zéro équivalente à « revenir au style
+ * `default` ». Cf. NOTE-THEMES.md.
+ */
+const THEME_MANAGED_STYLES: readonly string[] = [NodeStyle, LinkStyle]
 import {
   default_main_sankey_id,
   default_style_id,
@@ -148,6 +157,12 @@ export class Class_Sankey {
   // diagramme. Pure préférence d'UI (n'affecte pas le modèle/calcul). Voir Type_SpreadsheetState.
   private _spreadsheet_state: Type_SpreadsheetState = {}
 
+  // Thème du diagramme (cf. NOTE-THEMES.md). `opensankey` est volontairement vide :
+  // il décrit le comportement historique plutôt qu'il ne le change.
+  private _theme: Class_Theme = themeOpenSankey()
+  /** Table nœud -> teinte de palette, mémoïsée. `null` = à reconstruire. */
+  private _theme_node_colors: { [node_id: string]: string } | null = null
+
   public normalised_link?: Class_LinkElement
 
   constructor(
@@ -219,6 +234,10 @@ export class Class_Sankey {
       sn.delete()
     })
     this._styles = {}
+
+    // Un reset ramène au thème historique : `fromJSON` reposera celui du fichier.
+    this._theme = themeOpenSankey()
+    this.invalidateThemePalette()
 
     this.node_taggs_list.forEach(grp => grp.delete())
     this.flux_taggs_list.forEach(grp => grp.delete())
@@ -474,7 +493,10 @@ export class Class_Sankey {
   public get visible_containers_list() { return this.containers_list.filter(zdt => zdt.is_visible) }
 
   private _addLabel(zdt: Class_ContainerElement) { this._containers[zdt.id] = zdt }
-  private _addNode(node: Class_NodeElement) { this._nodes[node.id] = node }
+  private _addNode(node: Class_NodeElement) {
+    this._nodes[node.id] = node
+    this.invalidateThemePalette()
+  }
   private _addLink(link: Class_LinkElement) { this._links[link.id] = link }
 
   protected createNewNode(id: string, name: string): Class_NodeElement {
@@ -659,6 +681,7 @@ export class Class_Sankey {
       // Delete node in sankey
       const _ = this._nodes[node.id]
       delete this._nodes[node.id]
+      this.invalidateThemePalette()
       _.delete()
     }
   }
@@ -686,6 +709,100 @@ export class Class_Sankey {
   }
 
   public get default_style() { return this._styles[default_style_id] }
+
+  // ------------------------------------------------------------------- Thème
+  // Cf. NOTE-THEMES.md. Le thème n'est PAS un maillon de la cascade de résolution
+  // (le style 'default' est pré-rempli des défauts usine et la masquerait) : il porte
+  // une palette et sa règle, consultées par Node.getShapeColorToUse().
+
+  public get theme(): Class_Theme { return this._theme }
+
+  /** Bascule de thème : pose aussi ses globaux sur la zone de dessin. */
+  public set theme(_: Class_Theme) {
+    this.loadTheme(_)
+    if (_.globals.couleur_fond_sankey !== undefined) {
+      this.drawing_area.color = _.globals.couleur_fond_sankey
+    }
+  }
+
+  /**
+   * Pose le thème SANS appliquer ses globaux ni son patch de styles.
+   *
+   * C'est le chemin du CHARGEMENT : le fichier porte déjà les styles et le fond que
+   * le thème avait produits, et ils font autorité (l'utilisateur a pu les retoucher
+   * après coup). Seule la palette est reprise du thème, puisqu'elle n'est plus cuite.
+   */
+  public loadTheme(theme: Class_Theme): void {
+    this._theme = theme
+    this.invalidateThemePalette()
+  }
+
+  /**
+   * Bascule de thème depuis l'interface : ramène les styles pilotés par le thème à
+   * leur AMORCE, y écrit le patch du nouveau thème, et pose ses globaux.
+   *
+   * Le point délicat est la valeur de repli. Vider ces styles ne restitue PAS
+   * l'apparence OpenSankey, contrairement à ce qu'on pourrait croire : ils sont
+   * amorcés à la création depuis `elementStyleConfigs` (`create_internal_style`), et
+   * c'est cette amorce — pas les défauts usine — qui porte l'identité d'OpenSankey.
+   * Exemple vécu : `value_label_is_visible` vaut `false` en défaut usine, et les
+   * valeurs de flux ne s'affichent que parce que `elementStyleConfigs[LinkStyle]` le
+   * remet à `true`. Vider aurait donc fait disparaître les valeurs de flux en
+   * repassant à `opensankey`. On repart donc de l'amorce, jamais du vide.
+   *
+   * La remise à l'amorce est ce qui rend la bascule RÉVERSIBLE : sans elle, revenir
+   * de `sankeymatic` laisserait en place son opacité 0.45, ses polices et ses labels
+   * masqués.
+   *
+   * Contrepartie assumée (cf. NOTE-THEMES.md) : une personnalisation que
+   * l'utilisateur aurait posée sur `NodeStyle` ou `LinkStyle` eux-mêmes est perdue.
+   * Ce qu'il a posé sur un ÉLÉMENT, en revanche, est intact — c'est là que vit le
+   * « choix de l'utilisateur bat le thème ».
+   */
+  public applyTheme(theme: Class_Theme): void {
+    this.theme = theme
+    THEME_MANAGED_STYLES.forEach(style_id => {
+      const style = this._styles[style_id]
+      if (!style) return
+      const seed = elementStyleConfigs[style_id as ElementStyleKey]?.config ?? {}
+      const patch = theme.styles[style_id] ?? {}
+      // Le setter `attributes` redessine les éléments qui référencent ce style.
+      style.attributes = { ...seed, ...patch }
+    })
+  }
+
+  /**
+   * L'ordre d'attribution des teintes dépend de l'ordre des demandes : toute
+   * modification de la population de nœuds (ou de leurs noms) périme la table.
+   */
+  public invalidateThemePalette(): void {
+    this._theme_node_colors = null
+  }
+
+  /**
+   * Couleur que la palette du thème attribue à ce nœud, ou `undefined` si le thème
+   * ne se prononce pas — l'appelant poursuit alors sa propre cascade.
+   *
+   * La table est construite en une fois, dans l'ordre d'insertion des nœuds (donc
+   * l'ordre du fichier source), et non paresseusement au fil du rendu : appelée
+   * depuis `getShapeColorToUse`, une attribution dans l'ordre des appels de dessin
+   * donnerait des couleurs qui changent d'un rendu à l'autre.
+   *
+   * Un nœud portant une couleur explicite est ignoré et ne consomme donc pas de
+   * teinte, exactement comme dans SankeyMATIC.
+   */
+  public themeNodeColor(node: Class_NodeElement): string | undefined {
+    if (!this._theme_node_colors) {
+      const pick = this._theme.makeNodeColorPicker()
+      if (!pick) return undefined
+      const colors: { [node_id: string]: string } = {}
+      Object.values(this._nodes).forEach(n => {
+        if (n.attributes['shape_color'] === undefined) colors[n.id] = pick(n.name)
+      })
+      this._theme_node_colors = colors
+    }
+    return this._theme_node_colors[node.id]
+  }
 
   public addNewDefaultElementStyle() {
     const _ = String(this.styles_list.length)

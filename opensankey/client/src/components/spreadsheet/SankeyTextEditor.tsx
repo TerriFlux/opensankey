@@ -40,6 +40,15 @@ export const SankeyTextEditor = ({ app_data }: { app_data: Class_ApplicationData
     setText(serializeSankeyToText(app_data.drawing_area.sankey))
   }
 
+  // L'éditeur est pré-rempli par la sérialisation du diagramme, bloc `// === Settings ===`
+  // compris. Coller un diagramme SankeyMATIC PAR-DESSUS sans vider laisserait ces réglages
+  // en place (`node theme none`, `bg color …`), qui s'appliqueraient alors au texte collé.
+  // D'où ce bouton : le texte de l'éditeur doit être le diagramme, en entier et lui seul.
+  const clearEditor = () => {
+    setText('')
+    textareaRef.current?.focus()
+  }
+
   // S'abonne au même canal que le tableur-grille (ref_to_spreadsheet, appelé sur
   // tout changement de liens : tracé de flux, suppression…) pour se resynchroniser.
   // Un seul des deux panneaux (grille/texte) est monté à la fois, donc pas de conflit
@@ -116,6 +125,14 @@ export const SankeyTextEditor = ({ app_data }: { app_data: Class_ApplicationData
             <Button {...layoutBtn('auto')}>{t('Spreadsheet.text.layout_auto')}</Button>
           </ButtonGroup>
         </Box>
+        <Button
+          size='xs'
+          variant='ghost'
+          onClick={clearEditor}
+          title={t('Spreadsheet.text.clear_tooltip')}
+        >
+          {t('Spreadsheet.text.clear')}
+        </Button>
         <Button size='xs' variant='ghost' onClick={refreshFromDiagram}>
           {t('Spreadsheet.text.refresh')}
         </Button>
