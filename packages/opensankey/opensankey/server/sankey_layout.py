@@ -29,6 +29,26 @@ Helpers de construction de diagramme Sankey (JSON front) et calcul de positions
 en colonnes. Module neutre : historiquement issu du convertisseur SankeyMATIC,
 il ne sert plus qu'à l'import STAN (stan_smfa.py) depuis que le parsing
 SankeyMATIC est passé 100 % côté front (client/src/Persistence/sankeymaticParser.ts).
+
+computeSankeyPosition est un portage (simplifié) de `build/sankey.js` de
+SankeyMATIC — https://github.com/nowthis/sankeymatic — Copyright (c) 2014-2024,
+Steve Bogart <sbogart@sankeymatic.com>, distribué sous licence ISC :
+
+    Permission to use, copy, modify, and/or distribute this software for any
+    purpose with or without fee is hereby granted, provided that the above
+    copyright notice and this permission notice appear in all copies.
+
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+    WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+    MERCHANTABILITY AND FITNESS.
+
+    IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING
+    FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
+    NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
+    WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+Cf. THIRD-PARTY-NOTICES.md à la racine du dépôt.
 """
 
 # coding: utf-8
