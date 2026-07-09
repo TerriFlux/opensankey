@@ -3,7 +3,6 @@ import React, { ChangeEvent, FC, useRef, useState, useEffect } from 'react'
 import {
   Box,
   CloseButton,
-  Input,
   Button,
   Spinner,
   Text,
@@ -12,7 +11,7 @@ import {
 
 // OpenSankey Libs
 import { makeId, Type_JSON } from '@terriflux/opensankey/src/types/Utils'
-import { OSMultiSelect, typeElementSelectable, OSTooltip } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
+import { OSMultiSelect, typeElementSelectable, OSTooltip, LocalizedFileInput } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
 import { Class_DrawingAreaOSP, DrawingAreaPersistenceOSP } from '../../types/DrawingAreaOSP'
 import { Class_NodeElement } from '@terriflux/opensankey/src/Elements/Node'
 import { Class_ApplicationDataOSP } from '../../types/ApplicationDataOSP'
@@ -187,7 +186,6 @@ const TabLocalDataForUnitary: FC<{ app_data: Class_ApplicationDataOSP }> = ({ ap
  */
 const TabImportExcelDataForUnitary = ({ app_data }: { app_data: Class_ApplicationDataOSP }) => {
   const { t } = app_data
-  const ref_input_file = useRef<HTMLInputElement>(null)
   const [pending_files, set_pending_files] = useState<File[]>([])
   const [is_processing, set_is_processing] = useState(false)
   const [current_file_name, set_current_file_name] = useState<string>('')
@@ -265,7 +263,6 @@ const TabImportExcelDataForUnitary = ({ app_data }: { app_data: Class_Applicatio
     set_is_processing(false)
     set_current_file_name('')
     set_pending_files([])
-    if (ref_input_file.current) ref_input_file.current.value = ''
     setUpdate(a => a + 1)
   }
 
@@ -294,16 +291,12 @@ const TabImportExcelDataForUnitary = ({ app_data }: { app_data: Class_Applicatio
         {t('Menu.Transformation.sourceFile')}
       </Box>
       <Box display='grid' gridTemplateColumns='1fr auto' gap='0.4rem' alignItems='center'>
-        <Input
-          type='file'
+        <LocalizedFileInput
           accept='.xlsx'
           multiple
-          size='sm'
-          height='1.9rem'
-          padding='0.15rem'
-          ref={ref_input_file}
-          isDisabled={is_processing}
-          onChange={(evt: ChangeEvent) => {
+          disabled={is_processing}
+          currentFileName={pending_files.length ? pending_files.map((f) => f.name).join(', ') : ''}
+          onChange={(evt: ChangeEvent<HTMLInputElement>) => {
             const files = (evt.target as HTMLInputElement).files
             set_pending_files(files ? Array.from(files) : [])
           }}

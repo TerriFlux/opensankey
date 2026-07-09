@@ -27,11 +27,11 @@
 import React, { useState, } from 'react'
 import i18next from 'i18next'
 import pako from 'pako'
-import { Box, Button, Input, Select, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react'
+import { Box, Button, Select, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react'
 import { Type_JSON } from '../../types/Utils'
 import { parseDocMarkdown, resolveDocMarkdown } from '../../Persistence/persistenceMigrations'
 import { MenuDraggable } from '../topmenus/SankeyMenus'
-import { OSTooltip } from '../configmenus/MenuCommon'
+import { OSTooltip, LocalizedFileInput } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_DrawingArea } from '../../types/DrawingArea'
 import { DecompressedJSONData, decompressUploadedFileUniversal } from '../../Persistence/UniversalJSONCompression'
@@ -486,9 +486,7 @@ export const OpenSankeyDiagramSelector = (app_data: Class_ApplicationData) => {
       </Box>}
 
       {source_mode === 'file' ? <Box layerStyle='menuconfigpanel_row_2cols'>
-        <Input
-          type="file"
-          aria-label=''
+        <LocalizedFileInput
           accept=".json,.json.gz,.json.zip,.json.br,.json.deflate,.gz,.zip,.br,.deflate"
           onChange={(evt: React.ChangeEvent<HTMLInputElement>) => set_file_layout(evt.target.files)}
         />

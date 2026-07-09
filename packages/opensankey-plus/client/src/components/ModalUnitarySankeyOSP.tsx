@@ -2,7 +2,7 @@
 import React, { ChangeEvent, FC, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Draggable, { DraggableProps } from 'react-draggable'
-import { Box, Button, ButtonGroup, CloseButton, HStack, IconButton, Input, Select, Spinner, Text, useToast } from '@chakra-ui/react'
+import { Box, Button, ButtonGroup, CloseButton, HStack, IconButton, Select, Spinner, Text, useToast } from '@chakra-ui/react'
 import { ExternalLinkIcon } from '@chakra-ui/icons'
 
 // react-draggable : typings embarqués optionnels vs @types requis (cf. SankeyPlusViews).
@@ -13,6 +13,7 @@ import { Class_NodeElement } from '@terriflux/opensankey/src/Elements/Node'
 import { Class_LinkElement } from '@terriflux/opensankey/src/Elements/Link'
 import { makeId, Type_JSON } from '@terriflux/opensankey/src/types/Utils'
 import { mainZoneUnitaryRect } from '@terriflux/opensankey/src/components/spreadsheet/MainZoneTabs'
+import { LocalizedFileInput } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { Class_DrawingAreaOSP, DrawingAreaPersistenceOSP } from '../types/DrawingAreaOSP'
 import { createUnitarySankeyDetached, refocusUnitaryDrawingArea, UnitaryValueMode } from './UnitaryBoard'
@@ -72,7 +73,6 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
   const local_app_data = useRef<Class_ApplicationDataOSP>(new Class_ApplicationDataOSP(false))
   // Sources chargées : { id -> { name, data(JSON) } }.
   const list_data = useRef<{ [x: string]: { name: string, data: Type_JSON } }>({})
-  const ref_input_file = useRef<HTMLInputElement>(null)
   const [pending_files, setPendingFiles] = useState<File[]>([])
   const [is_processing, setIsProcessing] = useState(false)
   const [current_file_name, setCurrentFileName] = useState('')
@@ -365,7 +365,6 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
     setIsProcessing(false)
     setCurrentFileName('')
     setPendingFiles([])
-    if (ref_input_file.current) ref_input_file.current.value = ''
     // Sélectionner la 1re source chargée si aucune ne l'est encore.
     const keys = Object.keys(list_data.current)
     if (keys.length > 0 && !(selected_data_id in list_data.current)) {
@@ -541,16 +540,12 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
           {editable && source_mode === 'excel' && (
             <Box paddingBottom='2' display='grid' gridRowGap='0.4rem'>
               <Box display='grid' gridTemplateColumns='1fr auto' gap='0.4rem' alignItems='center'>
-                <Input
-                  type='file'
+                <LocalizedFileInput
                   accept='.xlsx'
                   multiple
-                  size='sm'
-                  height='1.9rem'
-                  padding='0.15rem'
-                  ref={ref_input_file}
-                  isDisabled={is_processing}
-                  onChange={(evt: ChangeEvent) => {
+                  disabled={is_processing}
+                  currentFileName={pending_files.length ? pending_files.map((f) => f.name).join(', ') : ''}
+                  onChange={(evt: ChangeEvent<HTMLInputElement>) => {
                     const files = (evt.target as HTMLInputElement).files
                     setPendingFiles(files ? Array.from(files) : [])
                   }}

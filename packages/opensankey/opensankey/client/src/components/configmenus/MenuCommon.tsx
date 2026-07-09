@@ -1901,3 +1901,74 @@ export const getButtonVariant = (
   return `menuconfigpanel_option_button${suffix}`
 }
 
+/**
+ * Sélecteur de fichier localisé.
+ *
+ * Le navigateur rend le bouton et le libellé d'un <input type="file"> natif
+ * ("Parcourir..." / "Aucun fichier sélectionné") dans SA propre langue, non
+ * traduisible via l'i18n de l'app. On masque donc l'input natif et on pilote
+ * nous-mêmes un bouton + un libellé via t(), pour qu'ils suivent la langue de
+ * l'application. La fenêtre système de choix de fichier reste, elle, dans la
+ * langue de l'OS (hors de portée du code web).
+ */
+export const LocalizedFileInput: FC<{
+  accept?: string
+  multiple?: boolean
+  onChange: (evt: ChangeEvent<HTMLInputElement>) => void
+  // Mode contrôlé : si `currentFileName` est fourni (même ''), le parent pilote
+  // le libellé affiché (utile quand il doit réinitialiser l'input après
+  // traitement). S'il est omis (undefined), le composant gère le nom en interne.
+  currentFileName?: string
+  disabled?: boolean
+  buttonSize?: string
+  gridTemplateColumns?: string
+}> = ({
+  accept,
+  multiple,
+  onChange,
+  currentFileName,
+  disabled,
+  buttonSize = 'sm',
+  gridTemplateColumns = '1fr 2fr'
+}) => {
+  const ref = useRef<HTMLInputElement>(null)
+  const [internal_name, set_internal_name] = useState<string | undefined>(undefined)
+  const shown = currentFileName !== undefined ? currentFileName : internal_name
+  return (
+    <Box display='grid' gridTemplateColumns={gridTemplateColumns} gap={2} alignItems='center'>
+      <Input
+        ref={ref}
+        display='none'
+        type='file'
+        accept={accept}
+        multiple={multiple}
+        isDisabled={disabled}
+        onChange={(evt: ChangeEvent<HTMLInputElement>) => {
+          const files = evt.target.files
+          set_internal_name(
+            files && files.length
+              ? Array.from(files).map((f) => f.name).join(', ')
+              : undefined
+          )
+          onChange(evt)
+        }}
+      />
+      <Button
+        size={buttonSize}
+        isDisabled={disabled}
+        onClick={() => {
+          // Vider la valeur avant d'ouvrir le sélecteur pour que choisir à
+          // nouveau le même fichier redéclenche bien onChange.
+          if (ref.current) ref.current.value = ''
+          ref.current?.click()
+        }}
+      >
+        {shown ? t('ProcessDialog.change_file') : t('ProcessDialog.browse')}
+      </Button>
+      <Text fontSize='sm' noOfLines={1} title={shown} color={shown ? undefined : 'gray.500'}>
+        {shown || t('ProcessDialog.no_file_selected')}
+      </Text>
+    </Box>
+  )
+}
+

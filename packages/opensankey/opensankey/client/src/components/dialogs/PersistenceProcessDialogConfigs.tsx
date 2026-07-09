@@ -178,6 +178,34 @@ export const translations = {
       de: 'Format',
       it: 'Formato'
     },
+    browse: {
+      en: 'Browse...',
+      fr: 'Parcourir...',
+      es: 'Examinar...',
+      de: 'Durchsuchen...',
+      it: 'Sfoglia...'
+    },
+    change_file: {
+      en: 'Change...',
+      fr: 'Changer...',
+      es: 'Cambiar...',
+      de: 'Ändern...',
+      it: 'Cambia...'
+    },
+    no_file_selected: {
+      en: 'No file selected',
+      fr: 'Aucun fichier sélectionné',
+      es: 'Ningún archivo seleccionado',
+      de: 'Keine Datei ausgewählt',
+      it: 'Nessun file selezionato'
+    },
+    select_file: {
+      en: 'Please select a file',
+      fr: 'Veuillez sélectionner un fichier',
+      es: 'Seleccione un archivo',
+      de: 'Bitte wählen Sie eine Datei aus',
+      it: 'Selezionare un file'
+    },
     input_excel: {
       en: 'Entering excel file',
       fr: 'Fichier d\'entrée excel',
