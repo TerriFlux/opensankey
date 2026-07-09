@@ -2820,6 +2820,11 @@ export class Class_DrawingArea {
         this._ghost_link = null
         this._ghost_link_source = null
         this._ghost_link_target = null
+        // Reset systématique (idem eventClick) : la 3e branche (relâché dans le vide) oubliait
+        // de le faire, laissant drawing_link=true. Or _is_visible_ignoring_container_modes
+        // court-circuite tous les filtres tant qu'il est vrai : les flux désagrégés restaient
+        // visibles et s'ajoutaient à la bande du nœud (hauteur ×N, labels décalés d'autant).
+        this.drawing_link = false
         this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
         this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
         if (this.sankey.default_style.shape_position_type == 'parametric') {
