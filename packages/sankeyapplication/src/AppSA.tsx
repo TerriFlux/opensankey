@@ -172,6 +172,22 @@ export const SankeyApp = ({ new_data_app }: { new_data_app: Class_ApplicationDat
     new_data_app.has_sankey_afm = has_account && log_component.has_licence_sankeysuite
     new_data_app.has_sankey_dev = has_account && log_component.has_licence_dev
 
+    // Debug : exposer app_data et le Sankey en globales pour l'inspection console.
+    // C'est ICI et pas au `new` : `has_sankey_dev` dépend de la licence, donc vaut
+    // encore false à la construction — la garde d'OpenSankey/index.tsx:95 n'était
+    // jamais franchie et les globales n'existaient nulle part.
+    if (new_data_app.has_sankey_dev) {
+      const globals = window as unknown as Record<string, unknown>
+      globals['app_data'] = new_data_app
+      // ACCESSEUR, pas une valeur : `reset()` remplace la drawing_area (donc le
+      // Sankey), et une référence capturée ici serait périmée dès le premier
+      // chargement de fichier.
+      Object.defineProperty(window, 'sankey_debug', {
+        configurable: true,
+        get: () => new_data_app.drawing_area.sankey,
+      })
+    }
+
     new_data_app.menu_configuration.updateAllMenuComponents()
     new_data_app.menu_configuration.ref_rerender_submodules_menus.current()
   })
