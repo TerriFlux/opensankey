@@ -305,7 +305,12 @@ export class Class_NodeElement extends Class_NodeBase {
       .forEach(link_to_copy => {
         const copied_id = matching_link_id[link_to_copy.id] ?? link_to_copy.id
         const link = this.drawing_area.sankey.links_dict[copied_id] as Class_LinkElement
-        if (link !== undefined) {
+        // Un lien de `_links_order` doit être INCIDENT à ce nœud. Sans cette garde, le repli
+        // `?? link_to_copy.id` (prévu pour la ré-application de layout, où source et courant
+        // partagent les ids de liens) attribue au nœud COPIÉ les liens de l'ORIGINAL lorsqu'ils
+        // n'ont PAS été copiés — cas de `copyNodes`, qui ne duplique que les liens internes à la
+        // sélection. Ces liens fantômes dans l'ordre cassaient le rendu des flux du nœud copié.
+        if (link !== undefined && (link.source === this || link.target === this)) {
           // Carry the I/O anchor lock ("cadenas") with the order it pins, so a
           // re-applied layout keeps the locked arrangement instead of reverting
           // to auto-reorg (#202).
