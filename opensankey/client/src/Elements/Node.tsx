@@ -187,7 +187,21 @@ export class Class_NodeElement extends Class_NodeBase {
   }
 
   /**
-   * Select the right color to use for this node (attribute / style / tags / ...)
+   * Couleur propre du nœud : celle du thème si une palette s'applique, sinon celle
+   * que rend la cascade habituelle (storage de l'élément, styles, défaut usine).
+   *
+   * `themeNodeColor` rend `undefined` dès que le nœud porte une couleur explicite,
+   * ce qui garantit qu'un choix de l'utilisateur bat toujours la palette. Voir
+   * NOTE-THEMES.md : le test porte sur le storage de l'ÉLÉMENT, pas sur la chaîne
+   * de styles — celle-ci définit toujours `shape_color` (pré-remplissage du style
+   * 'default'), donc la consulter rendrait la règle inatteignable.
+   */
+  private _ownShapeColor(): string {
+    return this.sankey.themeNodeColor(this) ?? this.shape_color
+  }
+
+  /**
+   * Select the right color to use for this node (attribute / style / tags / theme / ...)
    */
   public getShapeColorToUse() {
     // Default color
@@ -198,7 +212,7 @@ export class Class_NodeElement extends Class_NodeBase {
       return this.shape_color
     }
     if (!this.sankey.node_taggs_list.some(tagg => tagg.use_colors)) {
-      return this.shape_color
+      return this._ownShapeColor()
     }
     // Is the color defined by tags
     const taggs_activated = this.taggs_list
@@ -215,11 +229,11 @@ export class Class_NodeElement extends Class_NodeBase {
         shape_color = selected_tags_for_colormap[0].color
       } else {
         // 0 or >=2 visible tags: ambiguous or none, keep the node's own color (#1208)
-        shape_color = this.shape_color
+        shape_color = this._ownShapeColor()
       }
     } else {
       // Node doesn't belong to any color-group tag: keep its own color
-      shape_color = this.shape_color
+      shape_color = this._ownShapeColor()
     }
 
     return shape_color

@@ -44,6 +44,7 @@ import { Class_LinkElement } from '../Elements/Link'
 import { Class_NodeBase, Type_NameLabelSource } from '../Elements/NodeBase'
 import { ClassTemplate_Legend } from '../Elements/Legend'
 import { Class_Sankey, Type_RatioFluxConstraint, Type_RatioStockFluxConstraint, Type_StockChainingConstraint, Type_SpreadsheetState } from '../types/Sankey'
+import { DEFAULT_THEME_ID, themeFromJSON } from '../types/Theme'
 import { Class_Tag } from '../types/Tag'
 import { node_exchanges_style, elementStyleConfigs, product_sector_styles, ElementStyleKey, LinkStyle, NodeStyle, ContainerStyle, structural_styles } from '../Elements/ElementStyle'
 import { dedupeZOrderKeepFirst } from '../types/zOrder'
@@ -1497,6 +1498,10 @@ export class SankeyPersistence {
     if (Object.keys(taggs_order).length > 0)
       json_object['taggs_order'] = taggs_order
 
+    // Le thème historique est le défaut à la relecture : ne rien écrire pour lui
+    // garde les fichiers existants octet pour octet identiques.
+    if (sankey.theme.id !== DEFAULT_THEME_ID) json_object['theme'] = sankey.theme.toJSON() as unknown as Type_JSON
+
     json_object['style'] = json_object_styles
     sankey.styles_list.forEach(style => {
       json_object_styles[style.id] = StylePersistence.toJSON(style);
@@ -1697,6 +1702,10 @@ export class SankeyPersistence {
 
     // Id
     sankey.id = getStringFromJSON(json_object, 'id', sankey.id)
+    // Thème AVANT les nœuds : la table de palette se construit sur la population
+    // de nœuds, et l'absence de clé `theme` vaut `opensankey` — donc un fichier
+    // antérieur au thème se charge exactement comme avant. Cf. NOTE-THEMES.md.
+    sankey.loadTheme(themeFromJSON(json_object['theme']))
     // If we use json object only for updateing layout,
     // we need to find correspondances for tags, nodes and links ids
     // from input JSON to this Sankey
