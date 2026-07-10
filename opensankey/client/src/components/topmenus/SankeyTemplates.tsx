@@ -61,22 +61,48 @@ import { loadSankeymaticTemplate } from '../../Persistence/sankeymaticLoad'
 export type Type_TemplateInfos = {
   'title'?: { [lang: string]: string };
   'file_path': string;
-  'img_path': string;
+  'img_path'?: string;
   'lang': string;
-  'themes': string[];
-  'difficulty': string;
+  'category': string;
 };
 export type Type_TemplatesInfos = { [id: string]: Type_TemplateInfos; };
-export type Type_TemplateIndex = { [difficulty: string]: string[]; };
-export type Type_TemplatesIndexes = { [theme: string]: Type_TemplateIndex; };
+export type Type_TemplatesIndexes = { [category: string]: string[]; };
 
 // HELPERS ==============================================================================
 
 export declare const window: Window & typeof globalThis
 
 /**
+ * Charge un modèle STAN (.smfa SQLite / .zmfa XML gzippé) : binaire non-JSON, la
+ * conversion est déléguée au serveur (open_stan), comme l'import fichier de MenuTop.
+ */
+const loadStanTemplate = (
+  new_data: Class_ApplicationData,
+  file_path: string
+) => {
+  const root = window.location.origin
+  fetch(root + '/opensankey/menus/templates_asset/' + file_path)
+    .then(response => response.blob())
+    .then(blob => {
+      const form_data = new FormData()
+      const filename = file_path.split('/').pop() as string
+      form_data.append('file_content', new File([blob], filename))
+      return fetch(root + new_data.url_prefix + 'open_stan', {
+        method: 'POST',
+        body: form_data
+      })
+    })
+    .then(response => response.json())
+    .then(json_data => new_data.fromJSON(json_data))
+    .catch((error) => {
+      console.error('Error in loadStanTemplate - ' + error.toString())
+    })
+}
+
+/**
  * Charge un modèle dans l'application (même chemin que le bouton « Utiliser » de la
- * modale) : parse front pour les modèles SankeyMATIC (.txt), converter JSON sinon.
+ * modale) : parse front pour les modèles SankeyMATIC (.txt), conversion serveur pour
+ * les modèles STAN (.smfa/.zmfa), converter JSON sinon.
  */
 export const loadTemplate = (
   new_data: Class_ApplicationData,
@@ -85,6 +111,8 @@ export const loadTemplate = (
   if (file_path.endsWith('.txt')) {
     // Modèle SankeyMATIC natif : parsé côté front (pas de converter JSON).
     loadSankeymaticTemplate(file_path, new_data)
+  } else if (/\.(smfa|zmfa)$/i.test(file_path)) {
+    loadStanTemplate(new_data, file_path)
   } else {
     new_data.menu_configuration.ref_universal_converter_set_config.current(
       CONVERTER_CONFIGS['load_example_json'], file_path, true
@@ -95,14 +123,15 @@ export const loadTemplate = (
 
 /**
  * Récupère la bibliothèque de modèles auprès du serveur (une fois au montage).
- * Renvoie les modèles, l'index thème -> difficulté -> ids et l'ordre des difficultés.
+ * Renvoie les modèles, l'index catégorie -> ids et l'ordre des catégories. Au sein
+ * d'une catégorie, l'ordre des modèles est celui de `index.json`.
  */
 export const useTemplatesLibrary = (
   additionalMenu: MutableRefObject<Type_AdditionalMenus>
 ) => {
   const [templates, setTemplates] = useState<Type_TemplatesInfos>({})
   const [indexes, setIndexes] = useState<Type_TemplatesIndexes>({})
-  const [difficulties, setDifficulties] = useState<string[]>([])
+  const [categories, setCategories] = useState<string[]>([])
 
   useEffect(() => {
     const url = window.location.origin + '/opensankey/menus/templates'
@@ -117,24 +146,23 @@ export const useTemplatesLibrary = (
       .then(text => {
         const json_data = JSON.parse(text)
         const new_indexes: Type_TemplatesIndexes = {}
-        if ('difficulties' in json_data) {
-          setDifficulties(json_data['difficulties'])
-        }
         if ('templates' in json_data) {
           Object.entries(json_data['templates'] as Type_TemplatesInfos)
             .forEach(([id, template]) => {
-              const themes = template['themes']
-              const difficulty = template['difficulty']
-              themes.forEach(theme => {
-                if (!(theme in new_indexes))
-                  new_indexes[theme] = {}
-                if (!(difficulty in new_indexes[theme]))
-                  new_indexes[theme][difficulty] = []
-                new_indexes[theme][difficulty].push(id)
-              })
+              const category = template['category']
+              if (!(category in new_indexes))
+                new_indexes[category] = []
+              new_indexes[category].push(id)
             })
           setTemplates(json_data['templates'] as Type_TemplatesInfos)
         }
+        // Les categories declarees fixent l'ordre des onglets ; une categorie
+        // presente dans les modeles mais absente de la liste passe a la fin.
+        const declared: string[] = json_data['categories'] ?? []
+        setCategories([
+          ...declared.filter(category => category in new_indexes),
+          ...Object.keys(new_indexes).filter(category => !declared.includes(category))
+        ])
         setIndexes(new_indexes)
       })
       .catch((err) => {
@@ -142,7 +170,38 @@ export const useTemplatesLibrary = (
       })
   }, [])
 
-  return { templates, indexes, difficulties }
+  return { templates, indexes, categories }
+}
+
+/**
+ * Vignette d'un modèle. Certains modèles (formats importés) n'ont pas d'image de
+ * prévisualisation : on affiche alors un aplat portant leur titre.
+ */
+const TemplateThumbnail = ({ title, img_path, max_height, className }:{
+  title: string
+  img_path?: string
+  max_height: string
+  className?: string
+}) => {
+  if (img_path === undefined)
+    return <Box
+      display='flex'
+      alignItems='center'
+      justifyContent='center'
+      height={max_height}
+      background='gray.100'
+      borderRadius='4px'
+      padding='0.5rem'
+    >
+      <Text fontSize='sm' color='gray.600' textAlign='center' margin='0'>
+        {title}
+      </Text>
+    </Box>
+  return <Image
+    className={className}
+    src={window.location.origin + '/opensankey/menus/templates_asset/' + img_path}
+    style={{ 'objectFit': 'contain', 'maxHeight': max_height, 'width': '100%' }}
+  />
 }
 
 /** Titre localisé d'un modèle, avec repli en puis id. */
@@ -170,12 +229,10 @@ export const ModalTemplate = ({ new_data, additionalMenu }:{
 }) => {
 
   const [show_template, set_show_template] = useState(false)
-  const { templates, indexes, difficulties } = useTemplatesLibrary(additionalMenu)
+  const { templates, indexes, categories } = useTemplatesLibrary(additionalMenu)
 
   const { ref_setter_show_modal_templates_lib } = new_data.menu_configuration.dict_setter_show_dialog
   ref_setter_show_modal_templates_lib.current = set_show_template
-
-  const path = window.location.origin
 
   // Tabs for each entries of the template_module_key
   const tabs_of_cards = <Tabs
@@ -185,23 +242,20 @@ export const ModalTemplate = ({ new_data, additionalMenu }:{
     height='100%'
   >
     <TabList>
-      {Object.keys(indexes)
-        .map((theme, idx) => {
+      {categories
+        .map((category, idx) => {
           return <Tab
             key={idx}
           >
-            {new_data.t('templates.themes.' + theme)}
+            {new_data.t('templates.categories.' + category)}
           </Tab>
         })}
     </TabList>
     <TabPanels>
-      {Object.values(indexes)
-        .map((index, idx) => {
+      {categories
+        .map((category, idx) => {
 
-          // Toutes les difficultes du theme, ordonnees du plus simple (en
-          // premier) au plus expert (en dernier) selon l'ordre de `difficulties`.
-          const ordered_ids = difficulties
-            .flatMap(difficulty => (difficulty in index) ? index[difficulty] : [])
+          const ordered_ids = indexes[category]
 
           return <TabPanel key={idx}>
             <Box
@@ -245,12 +299,12 @@ export const ModalTemplate = ({ new_data, additionalMenu }:{
 
                         <CardBody>
                           {/* Get the image from the server */}
-                          <Image
+                          <TemplateThumbnail
                             className='img-card'
-                            src={path + '/opensankey/menus/templates_asset/' + templates[id].img_path}
-                            style={{ 'objectFit': 'contain', 'maxHeight': '150px' }}
-                          >
-                          </Image>
+                            title={templateTitle(new_data, id, templates[id])}
+                            img_path={templates[id].img_path}
+                            max_height='150px'
+                          />
                         </CardBody>
 
                         <CardFooter>
@@ -311,7 +365,7 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
   new_data: Class_ApplicationData
   additionalMenu: MutableRefObject<Type_AdditionalMenus>
 }) => {
-  const { templates, indexes, difficulties } = useTemplatesLibrary(additionalMenu)
+  const { templates, indexes, categories } = useTemplatesLibrary(additionalMenu)
   const [dismissed, setDismissed] = useState(false)
 
   // Première interaction avec la zone de dessin -> la galerie s'efface. Écoute au
@@ -338,7 +392,6 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
   if (Object.keys(indexes).length === 0)
     return <></>
 
-  const path = window.location.origin
   const top = da.getNavBarHeight() + da.fit_margin
   const bottom = da.getBottomBarHeight() + da.fit_margin
   const right = da.fit_margin / 2 + new_data.menu_configuration.getToolsColumnWidthPx()
@@ -380,10 +433,9 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
       {new_data.t('templates.gallery_hint')}
     </Text>
     <Box overflowY='auto' padding='0 0.75rem 0.75rem 0.75rem'>
-      {Object.entries(indexes).map(([theme, index]) => {
-        const ordered_ids = difficulties
-          .flatMap(difficulty => (difficulty in index) ? index[difficulty] : [])
-        return <Box key={theme} marginTop='0.5rem'>
+      {categories.map(category => {
+        const ordered_ids = indexes[category]
+        return <Box key={category} marginTop='0.5rem'>
           <Text
             fontSize='xs'
             fontWeight='bold'
@@ -391,7 +443,7 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
             color='gray.500'
             margin='0 0 0.3rem 0'
           >
-            {new_data.t('templates.themes.' + theme)}
+            {new_data.t('templates.categories.' + category)}
           </Text>
           {ordered_ids.map(id => {
             return <Box
@@ -404,9 +456,10 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
               _hover={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)' }}
               onClick={() => loadTemplate(new_data, templates[id].file_path)}
             >
-              <Image
-                src={path + '/opensankey/menus/templates_asset/' + templates[id].img_path}
-                style={{ 'objectFit': 'contain', 'maxHeight': '90px', 'width': '100%' }}
+              <TemplateThumbnail
+                title={templateTitle(new_data, id, templates[id])}
+                img_path={templates[id].img_path}
+                max_height='90px'
               />
               <Text fontSize='sm' textAlign='center' margin='0.2rem 0 0 0'>
                 {templateTitle(new_data, id, templates[id])}
