@@ -10,9 +10,12 @@ import os
 import re
 
 from flask import redirect
+from flask import request
 from flask import Flask
 from flask import jsonify
 from flask_cors import CORS
+
+from .logging_config import configure_logging, install_request_logging
 
 
 # ---------------------------------------------------------------
@@ -57,6 +60,12 @@ def create_app():
 
     # Instanciate app
     app = Flask(__name__, template_folder="./templates", static_folder=None)
+
+    # Observabilité (issue #256) : logging structuré key=value + request-id.
+    # Configuré tôt pour que tout ce qui suit (init DB, blueprints) logue au
+    # bon format. install_request_logging pose les hooks before/after_request.
+    configure_logging(app)
+    install_request_logging(app)
 
     # Set up CORS (Cross-Origin).
     # - `supports_credentials` (et NON `support_credentials`, kwarg inexistant
@@ -182,12 +191,43 @@ def create_app():
             return jsonify(payload), 503
         return jsonify(payload), 200
 
-    # 404 handler
+    # Catch-all API (issue #256) : une requête /api/* qui ne matche AUCUNE route
+    # définie tombait jusqu'ici dans le catch-all SPA `/<path:path>` (views.goto),
+    # qui répond 301 → "/" — un typo d'endpoint ou un appel obsolète recevait donc
+    # du HTML en 200 au lieu d'un 404, masquant le bug côté front. Cette règle est
+    # plus spécifique que `/<path:path>` (préfixe statique "api/"), donc Werkzeug
+    # la choisit d'abord ; les vraies routes /api/... (entièrement statiques ou
+    # plus spécifiques) restent prioritaires sur elle.
+    @app.route("/api/<path:_unmatched>", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
+    def _api_not_found(_unmatched):
+        app.logger.warning(
+            "http_404_api path=%s method=%s ip=%s",
+            request.path, request.method,
+            request.environ.get("HTTP_X_FORWARDED_FOR", request.remote_addr) or "-",
+        )
+        return jsonify({"error": "not found", "path": request.path}), 404
+
+    # 404 handler : ne redirige plus silencieusement. On loggue toujours le 404,
+    # et pour une requête d'API/XHR on renvoie un vrai 404 JSON ; seule une
+    # navigation classique (page) conserve le repli SPA vers "/".
     def page_not_found(e):
+        app.logger.warning(
+            "http_404 path=%s method=%s referrer=%s ip=%s",
+            request.path, request.method, request.referrer or "-",
+            request.environ.get("HTTP_X_FORWARDED_FOR", request.remote_addr) or "-",
+        )
+        accept = request.headers.get("Accept") or ""
+        wants_json = (
+            request.path.startswith("/api/")
+            or "application/json" in accept
+            or request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        )
+        if wants_json:
+            return jsonify({"error": "not found", "path": request.path}), 404
         try:
             return redirect("/")
         except Exception:
-            return "404 not found"
+            return "404 not found", 404
 
     app.register_error_handler(404, page_not_found)
 
