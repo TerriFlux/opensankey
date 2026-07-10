@@ -168,9 +168,7 @@ export class ProtoElementPersistence extends BaseElementPersistence {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
-    console.log('convert_pre_v_0_91')
     convert_pre_v_0_91(json_object)
-    console.log(json_object.version)
   }
 
   public static fromJSON_0_91(
@@ -1088,9 +1086,7 @@ export class LegendPersistence extends ProtoElementPersistence {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
-    console.log('convert_pre_v_0_91')
     convert_pre_v_0_91(json_object)
-    console.log(json_object.version)
   }
 
   public static fromJSON_0_91(
@@ -2116,7 +2112,6 @@ export class DrawingAreaPersistence {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
-    console.log('convert_data_legacy')
     convert_data_legacy(json_object)
     drawing_area.sankey.styles_dict['default'].shape_color_rule = 'auto'
 
@@ -2131,9 +2126,7 @@ export class DrawingAreaPersistence {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
-    console.log('convert_pre_v_0_91')
     convert_pre_v_0_91(json_object)
-    console.log(json_object.version)
   }
 
   public static fromJSON_0_91(

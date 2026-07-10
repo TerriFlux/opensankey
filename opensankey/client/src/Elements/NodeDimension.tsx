@@ -897,9 +897,7 @@ export class NodeDimensionsManager {
               //   (parent_tag_id === undefined) &&
               (anti_tag)
             ) {
-              if (!this._node.sankey.level_taggs_dict[_]) {
-                console.log('tutu')
-              } else {
+              if (this._node.sankey.level_taggs_dict[_]) {
                 this._node._nodeTagsManager.addAsAntiTagged(this._node.sankey.level_taggs_dict[_])
               }
             }

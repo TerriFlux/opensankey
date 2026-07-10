@@ -268,13 +268,6 @@ export const CutName = (t: string, n: number): string => {
   return (t && t.length > n) ? t.slice(0, n) + '...' : t
 }
 
-export const check_perf = (f: () => void, name: string) => {
-  const s = performance.now()
-  f()
-  const e = performance.now()
-  console.debug(`Execution ${name} took  ${e - s} ms`)
-}
-
 export const GetRandomInt = (max: number) => {
   return Math.floor(Math.random() * max)
 }

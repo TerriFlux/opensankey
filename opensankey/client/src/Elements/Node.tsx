@@ -903,9 +903,7 @@ export class Class_NodeElement extends Class_NodeBase {
   public addInputLink(link: Class_LinkElement) {
     if (!this._input_links[link.id]) {
       this._input_links[link.id] = link
-      if (this._links_order.includes(link)) {
-        console.log('this._links_order.includes(link)')
-      } else {
+      if (!this._links_order.includes(link)) {
         this._links_order.push(link)
       }
       this.addMovingHandleForGivenLink(link, 'input')
@@ -918,9 +916,7 @@ export class Class_NodeElement extends Class_NodeBase {
   public addOutputLink(link: Class_LinkElement) {
     if (!this._output_links[link.id]) {
       this._output_links[link.id] = link
-      if (this._links_order.includes(link)) {
-        console.log('this._links_order.includes(link)')
-      } else {
+      if (!this._links_order.includes(link)) {
         this._links_order.push(link)
       }
       this.addMovingHandleForGivenLink(link, 'output')
