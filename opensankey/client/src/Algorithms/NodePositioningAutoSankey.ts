@@ -101,7 +101,8 @@ export class NodePositioningAutoSankey {
     //     si le DFS choisit ce flux comme back-edge, il restera affiché droit
     //     mais l'index horizontal sera incohérent)
     //   - unlocked       → auto, l'algo décide librement
-    const user_forced_recycling_ids = this.np.cycles.user_forced_recycling_link_ids
+    // Le marquage lui-même relit ces sets depuis le socle (markRecyclingLinks) ; seul le mode
+    // « interdit » est encore consulté ici, à l'ÉTAPE 3.
     const user_forbidden_recycling_ids = this.np.cycles.user_forbidden_recycling_link_ids
 
     if (skip_horizontal) {
@@ -120,27 +121,7 @@ export class NodePositioningAutoSankey {
         if (u > max_horizontal_index) max_horizontal_index = u
       })
       // Mark recycling links — préserver les liens verrouillés par l'utilisateur.
-      nodes_to_process.forEach(node => {
-        const node_index = horizontal_indexes_per_nodes_ids[node.id]
-        node.output_links_list.forEach(link => {
-          const link_data = this.drawingArea.sankey.links_dict[link.id]
-          if (user_forced_recycling_ids.has(link.id)) {
-            link_data.shape_is_recycling = true
-            return
-          }
-          if (user_forbidden_recycling_ids.has(link.id)) {
-            link_data.shape_is_recycling = false
-            return
-          }
-          const target_node_id = link_data.target.id
-          const target_index = horizontal_indexes_per_nodes_ids[target_node_id]
-          if (target_index !== undefined && node_index >= target_index) {
-            link_data.shape_is_recycling = true
-          } else {
-            link_data.shape_is_recycling = false
-          }
-        })
-      })
+      this.np.cycles.markRecyclingLinks(nodes_to_process, horizontal_indexes_per_nodes_ids)
     } else {
       // ÉTAPES 1, 2 et 2 bis : socle commun avec `position_u` (opensankey#1253).
       // Amorçage (dont les liens recyclage forcés par l'utilisateur, que le DFS considère déjà

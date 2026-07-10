@@ -149,6 +149,50 @@ export class NodePositioningCyclesCore {
   }
 
   /**
+   * Reflague `shape_is_recycling` d'apres des colonnes deja connues : un flux est en recyclage
+   * s'il ne progresse pas vers la droite (colonne cible <= colonne source). Le verrouillage
+   * tri-state de l'utilisateur (OpenSankey#711) prime toujours sur la geometrie.
+   *
+   * Utilise par la branche `skip_horizontal` de computeAutoSankey (colonnes issues de position_u)
+   * et par le recalcul incremental apres un deplacement de noeud (sankeyapplication#153, colonnes
+   * deduites des x). Les noeuds hors `horizontal_indexes` (echange) ne contraignent rien.
+   *
+   * @returns pour chaque lien dont le statut a CHANGE, sa valeur precedente (utile a l'undo).
+   */
+  public markRecyclingLinks(
+    nodes_to_process: Class_NodeElement[],
+    horizontal_indexes: { [node_id: string]: number }
+  ): { [link_id: string]: boolean } {
+    const forced = this.user_forced_recycling_link_ids
+    const forbidden = this.user_forbidden_recycling_link_ids
+    const previous_values: { [link_id: string]: boolean } = {}
+
+    const assign = (link: Class_LinkElement, value: boolean) => {
+      if (link.shape_is_recycling === value) return
+      previous_values[link.id] = link.shape_is_recycling
+      link.shape_is_recycling = value
+    }
+
+    nodes_to_process.forEach(node => {
+      const node_index = horizontal_indexes[node.id]
+      node.output_links_list.forEach(link => {
+        const link_data = this.drawingArea.sankey.links_dict[link.id]
+        if (link_data === undefined) return
+        if (forced.has(link.id)) return assign(link_data, true)
+        if (forbidden.has(link.id)) return assign(link_data, false)
+
+        // Extremite sans colonne (noeud d'echange) : jamais du recyclage. C'est deja ce que
+        // pose splitTrade a la creation du noeud d'echange.
+        const target_index = horizontal_indexes[link_data.target.id]
+        if (target_index === undefined || node_index === undefined) return assign(link_data, false)
+        assign(link_data, node_index >= target_index)
+      })
+    })
+
+    return previous_values
+  }
+
+  /**
    * Explore les branches issues de `start_node` et affecte leur index horizontal.
    * DFS iteratif (tri topologique + detection des back-edges) puis relaxation en une passe
    * (plus long chemin). O(V+E). Les back-edges rencontrees sont ajoutees a `recycling_links_ids`.

@@ -191,6 +191,53 @@ describe('#1253 convergence position_x / position_u', () => {
   })
 })
 
+describe('#153 markRecyclingLinks — reflaguage d\'apres les colonnes', () => {
+  /** Colonnes explicites : c'est le contrat de markRecyclingLinks, pas la topologie. */
+  const columns = (g: Graph, cols: { [id: string]: number }) => {
+    g.core.markRecyclingLinks(g.nodes, cols)
+  }
+
+  it('flague un flux qui recule (cible a gauche de la source)', () => {
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B' }])
+    columns(g, { A: 2, B: 0 })
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(true)
+  })
+
+  it('deflague un flux qui progresse a nouveau vers la droite', () => {
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B' }])
+    g.node('A').output_links_list[0].shape_is_recycling = true
+    columns(g, { A: 0, B: 1 })
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(false)
+  })
+
+  it('flague un flux dont la cible est dans la meme colonne', () => {
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B' }])
+    columns(g, { A: 1, B: 1 })
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(true)
+  })
+
+  it('rend les valeurs precedentes des seuls flux modifies (undo)', () => {
+    const g = buildGraph(['A', 'B', 'C'], [{ from: 'A', to: 'B' }, { from: 'B', to: 'C' }])
+    // A->B recule, B->C progresse et etait deja a false : seul A->B change.
+    const previous = g.core.markRecyclingLinks(g.nodes, { A: 2, B: 0, C: 1 })
+    expect(previous).toEqual({ 'A->B': false })
+  })
+
+  it('le verrou utilisateur prime sur la geometrie', () => {
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B', forced_recycling: true }])
+    // A->B progresse vers la droite, mais l'utilisateur l'a verrouille en recyclage.
+    columns(g, { A: 0, B: 1 })
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(true)
+  })
+
+  it('deflague un flux dont une extremite n\'a pas de colonne (noeud d\'echange)', () => {
+    const g = buildGraph(['A', 'ECHANGE'], [{ from: 'A', to: 'ECHANGE' }])
+    g.node('A').output_links_list[0].shape_is_recycling = true
+    columns(g, { A: 0 }) // ECHANGE absent du dictionnaire
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(false)
+  })
+})
+
 describe('#1253 computeHorizontalIndex — appelant externe (SankeyAnimation)', () => {
   it('remplit un dictionnaire d\'index initialement vide', () => {
     // SankeyAnimation passe `{}` : aucun nœud n'est pré-amorcé à -1.
