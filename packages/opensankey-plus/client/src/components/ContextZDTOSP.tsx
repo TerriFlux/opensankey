@@ -5,6 +5,7 @@ import { Class_ApplicationData } from '@terriflux/opensankey/src/types/Applicati
 import { MenuColorPicker } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
 import { ButtonContainerContextAssignStyle } from '@terriflux/opensankey/src/components/dialogs/MenuContextWidgetFactory'
 import { NodeActions } from '@terriflux/opensankey/src/components/dialogs/NodeActions'
+import { useCloseContextMenuOnOutsideMouseDown } from '@terriflux/opensankey/src/components/dialogs/SankeyMenuContext'
 import { downloadImageSource } from '@terriflux/opensankey/src/components/dialogs/SaveImage'
 
 export const ContextZDT = (
@@ -17,6 +18,9 @@ export const ContextZDT = (
 
   const [, setCount] = useState(0)
   app_data.menu_configuration.ref_to_menu_context_container_updater.current = () => setCount(a => a + 1)
+  // Ferme le menu si l'utilisateur clique ailleurs (menu config, toolbar, dialogue…).
+  // Appelé avant le early-return ci-dessous (règles des hooks).
+  const menu_ref = useCloseContextMenuOnOutsideMouseDown(app_data, !!zdt_to_contextualise)
   let style_c_zdd = '0px 0px auto auto'
   let pos_x = app_data.drawing_area.pointer_pos[0] + 10
   let pos_y = app_data.drawing_area.pointer_pos[1] - 20
@@ -274,6 +278,7 @@ export const ContextZDT = (
   </Menu> : <></>
 
   return zdt_to_contextualise ? <Box
+    ref={menu_ref}
     layerStyle='context_menu'
     id="context_zdd_pop_over"
     style={{
