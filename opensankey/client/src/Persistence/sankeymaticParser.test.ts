@@ -6,10 +6,11 @@ import { parseSankeymaticText, buildSankeymaticTheme } from './sankeymaticParser
 // (submodule de SA). En checkout OpenSankey standalone, SankeyData est absent :
 // la suite se met en skip. Comptages de référence = sortie du parseur Python.
 
+/** Modèles natifs SankeyMATIC de SankeyData (submodule de SA). */
 function findTemplates(): string | null {
   let dir = __dirname
   for (let i = 0; i < 12; i++) {
-    const candidate = path.join(dir, 'SankeyData', 'templates')
+    const candidate = path.join(dir, 'SankeyData', 'templates', 'other_formats', 'data')
     if (fs.existsSync(candidate)) return candidate
     const parent = path.dirname(dir)
     if (parent === dir) break
@@ -21,16 +22,16 @@ function findTemplates(): string | null {
 const templates = findTemplates()
 const describeOrSkip = templates ? describe : describe.skip
 
-const readTemplate = (rel: string): string =>
-  fs.readFileSync(path.join(templates as string, rel), 'utf-8')
+const readTemplate = (name: string): string =>
+  fs.readFileSync(path.join(templates as string, name), 'utf-8')
 
-const EXPECTED: { [rel: string]: { nodes: number, links: number } } = {
-  'essential/data/sankeymatic_basic_budget.txt': { nodes: 9, links: 8 },
-  'essential/data/sankeymatic_start_simple.txt': { nodes: 3, links: 2 },
-  'essential/data/sankeymatic_job_search.txt': { nodes: 9, links: 8 },
-  'intermediary/data/sankeymatic_ranked_election.txt': { nodes: 10, links: 12 },
-  'intermediary/data/sankeymatic_financial_results.txt': { nodes: 11, links: 10 },
-  'intermediary/data/sankeymatic_journey.txt': { nodes: 11, links: 12 },
+const EXPECTED: { [name: string]: { nodes: number, links: number } } = {
+  'sankeymatic_basic_budget.txt': { nodes: 9, links: 8 },
+  'sankeymatic_start_simple.txt': { nodes: 3, links: 2 },
+  'sankeymatic_job_search.txt': { nodes: 9, links: 8 },
+  'sankeymatic_ranked_election.txt': { nodes: 10, links: 12 },
+  'sankeymatic_financial_results.txt': { nodes: 11, links: 10 },
+  'sankeymatic_journey.txt': { nodes: 11, links: 12 },
 }
 
 const nodeNamed = (d: ReturnType<typeof parseSankeymaticText>, name: string) =>
@@ -65,7 +66,7 @@ describeOrSkip('parseSankeymaticText — modèles natifs', () => {
   })
 
   test('basic_budget — le premier étage est collé à la marge, le dernier tient dans le canvas', () => {
-    const d = parseSankeymaticText(readTemplate('essential/data/sankeymatic_basic_budget.txt'))
+    const d = parseSankeymaticText(readTemplate('sankeymatic_basic_budget.txt'))
     // `size w 600`, marges par défaut 12/12, `node w 12`.
     const xs = Object.values(d.nodes).map(n => n.x)
     expect(Math.min(...xs)).toBeCloseTo(12, 6)
@@ -73,13 +74,13 @@ describeOrSkip('parseSankeymaticText — modèles natifs', () => {
   })
 
   test('basic_budget — [*] vaut le reste du nœud source', () => {
-    const d = parseSankeymaticText(readTemplate('essential/data/sankeymatic_basic_budget.txt'))
+    const d = parseSankeymaticText(readTemplate('sankeymatic_basic_budget.txt'))
     // Budget reçoit 1750 et distribue 1685 hors `[*]`.
     expect(linkBetween(d, 'Budget', 'Savings')?.value.data_value).toBe(65)
   })
 
   test('basic_budget — seules les couleurs déclarées sont cuites ; la palette part dans le thème', () => {
-    const d = parseSankeymaticText(readTemplate('essential/data/sankeymatic_basic_budget.txt'))
+    const d = parseSankeymaticText(readTemplate('sankeymatic_basic_budget.txt'))
     // Une couleur déclarée descend en local (priorité maximale de la cascade).
     expect(nodeNamed(d, 'Budget')?.local.color).toBe('#057')
     // Les autres NE sont PAS cuites : Sankey.themeNodeColor les dérivera. Cf. NOTE-THEMES.md.
@@ -97,7 +98,7 @@ describeOrSkip('parseSankeymaticText — modèles natifs', () => {
   })
 
   test('financial_results — le marqueur `<<` peint les flux entrants du nœud', () => {
-    const d = parseSankeymaticText(readTemplate('intermediary/data/sankeymatic_financial_results.txt'))
+    const d = parseSankeymaticText(readTemplate('sankeymatic_financial_results.txt'))
     expect(nodeNamed(d, 'Revenue')?.local.color).toBe('#555')
     // `:Cost of Sales #bbb <<` -> le flux entrant prend la couleur de la CIBLE,
     // alors même que le fichier déclare `flow inheritfrom source`. C'est un choix
@@ -115,7 +116,7 @@ describeOrSkip('parseSankeymaticText — modèles natifs', () => {
   })
 
   test('financial_results — `\\n` dans un nom devient un saut de ligne', () => {
-    const d = parseSankeymaticText(readTemplate('intermediary/data/sankeymatic_financial_results.txt'))
+    const d = parseSankeymaticText(readTemplate('sankeymatic_financial_results.txt'))
     expect(nodeNamed(d, 'Selling, General &\nAdministration')).toBeDefined()
   })
 })

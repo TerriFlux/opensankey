@@ -122,6 +122,80 @@ export const themeOpenSankey = (): Class_Theme => new Class_Theme({
 
 export const DEFAULT_THEME_ID = 'opensankey'
 
+/**
+ * Le thème `stan`. Doit rester en phase avec `_stan_theme()` de
+ * `server/stan_smfa.py`, qui le pose sur les diagrammes importés : celui-ci ne sert
+ * qu'à la bascule manuelle depuis l'interface.
+ *
+ * Pas de palette : STAN n'attribue aucune couleur automatiquement. Le noir est son
+ * défaut, et toute couleur y est un choix de l'utilisateur, posé sur l'élément.
+ *
+ * La silhouette de STAN — flux à angle droit — ne vient PAS d'ici. Elle tient au
+ * placement des nœuds et à `shape_orientation` par flux, tous deux lus dans le
+ * fichier à l'import. Un thème ne touche pas aux coordonnées.
+ */
+export const themeStan = (): Class_Theme => new Class_Theme({
+  id: 'stan',
+  palette: { colors: [], offset: 0, node_rule: 'none', link_rule: 'flow' },
+  styles: {
+    NodeStyle: {
+      shape_type: 'rect',
+      shape_color: '#ffffff',
+      shape_border_visible: true,
+      shape_border_color: '#000000',
+      shape_border_thickness: 1,
+      name_label_is_visible: true,
+      name_label_inside_vert: true,
+      name_label_inside_horiz: true,
+      value_label_is_visible: false,
+    },
+    LinkStyle: {
+      shape_color: '#000000',
+      shape_color_rule: 'flow',
+      shape_opacity: 1,
+      shape_is_curved: false,
+      shape_is_arrow: true,
+      // Les pointes de flèche de STAN sont nettement plus allongées que notre défaut (10).
+      shape_arrow_size: 25,
+      // Le nom du flux vient de `value.text_value` : `Class_LinkElement.name` est un
+      // getter calculé « source---cible », sans setter. Le défaut de
+      // `name_label_text_source` étant déjà `custom`, il suffit de rendre le label visible.
+      name_label_is_visible: true,
+      name_label_color: '#000000',
+      // STAN écrit le nom du flux SOUS son tracé, et la valeur dessus, dans l'ellipse.
+      name_label_vert: 'bottom',
+      name_label_on_path: false,
+      value_label_is_visible: true,
+      value_label_on_path: true,
+      value_label_color: '#000000',
+      // STAN écrit des entiers, jamais de décimales.
+      value_label_custom_digit: true,
+      value_label_nb_digit: 0,
+      // L'ellipse blanche à liseré noir demande TROIS attributs, pas un : DrawLabel
+      // ne peint que si `background_color_visible`, et n'utilise la couleur déclarée
+      // que si `background_color_sustainable` l'est aussi — sinon il reprend celle de
+      // l'élément, et l'ellipse blanche devient une ellipse de la couleur du flux.
+      value_label_background_visible: true,
+      value_label_background_type: 'ellipse',
+      value_label_background_color_visible: true,
+      value_label_background_color_sustainable: true,
+      value_label_background_color: '#ffffff',
+      value_label_background_opacity: 1,
+      value_label_background_border_visible: true,
+      value_label_background_border_color: '#000000',
+      value_label_background_border_thickness: 1,
+      // Sans marges, `rx = largeur_texte / 2` : l'ellipse est INSCRITE dans le rectangle
+      // du texte et lui coupe les coins. Ces clés ne sont pas déclarées dans Element.tsx
+      // (typage seul) mais existent bien dans ALL_ATTRIBUTES_CONFIG.
+      value_label_background_margin_left: 8,
+      value_label_background_margin_right: 8,
+      value_label_background_margin_top: 3,
+      value_label_background_margin_bottom: 3,
+    },
+  },
+  globals: { couleur_fond_sankey: '#ffffff' },
+})
+
 /** Reconstruit un thème depuis le JSON d'un diagramme. Absence ⇒ `opensankey`. */
 export const themeFromJSON = (json: unknown): Class_Theme => {
   if (!json || typeof json !== 'object') return themeOpenSankey()
