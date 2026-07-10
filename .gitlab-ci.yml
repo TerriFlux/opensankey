@@ -216,6 +216,13 @@ dev_opensankey:
   stage: deploy
   variables:
     NODE_ENV: "production"
+    # #265 : submodules recuperes en SSH sur le VPS (cle de deploiement). Le
+    # forcage HTTPS global (GIT_SUBMODULE_FORCE_HTTPS ligne ~21) reecrit l'URL
+    # SSH du .gitmodules en HTTPS sans credential -> `git submodule update`
+    # echoue des qu'un pointeur de submodule change (jamais vu avant car le SHA
+    # etait toujours deja en cache). On le desactive pour ce job (cf. le sync
+    # ci-dessous qui reprend justement les URLs SSH du .gitmodules).
+    GIT_SUBMODULE_FORCE_HTTPS: "false"
     ROOT_FOLDER: /home/ubuntu/dev_opensankey
     REPO_FOLDER: $ROOT_FOLDER/sankeyapplication
     ENV: dev
