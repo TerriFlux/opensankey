@@ -935,6 +935,29 @@ export class Class_ApplicationData {
         return response.arrayBuffer() // Utiliser arrayBuffer pour gérer binaire et texte
       })
       .then(arrayBuffer => {
+        const filename = url_data.split('?')[0].split('/').pop() || 'file'
+
+        // Fichiers STAN (.smfa SQLite / .zmfa XML gzippé) : binaires non-JSON,
+        // on délègue la conversion au serveur (open_stan, dispatch par magic
+        // number), comme l'import fichier de MenuTop.
+        if (/\.(smfa|zmfa)$/i.test(filename)) {
+          const form_data = new FormData()
+          form_data.append('file_content', new File([arrayBuffer], filename))
+          return fetch(root + this.url_prefix + 'open_stan', {
+            method: 'POST',
+            body: form_data
+          })
+            .then(response => {
+              if (!response.ok) {
+                throw new Error(`open_stan HTTP error! status: ${response.status}`)
+              }
+              return response.json()
+            })
+            .then(json_data => {
+              this.fromJSON(json_data as Type_JSON)
+            })
+        }
+
         // Convertir en text pour tester JSON
         const decoder = new TextDecoder()
         const text = decoder.decode(arrayBuffer)
@@ -947,7 +970,6 @@ export class Class_ApplicationData {
           console.log('Content is not valid JSON, attempting decompression...')
 
           // Créer un File à partir de l'ArrayBuffer pour la décompression
-          const filename = url_data.split('/').pop() || 'file'
           const file = new File([arrayBuffer], filename)
 
           decompressUploadedFileUniversal(file)
