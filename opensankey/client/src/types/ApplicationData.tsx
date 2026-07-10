@@ -43,6 +43,7 @@ import { Class_IconLibrary } from '../css/IconLibrairie'
 import { Class_DrawingArea } from './DrawingArea'
 import { initializeTooltipSystem } from '../Elements/TooltipsConfig'
 import { compressJSONToGzip, decompressUploadedFileUniversal } from '../Persistence/UniversalJSONCompression'
+import { parseSankeymaticText } from '../Persistence/sankeymaticParser'
 import { updateFrom } from '../Algorithms/UpdateFrom'
 import { centerChildrenOnParent } from '../Algorithms/Hierarchies'
 import { DrawingAreaPersistence } from '../Persistence/SankeyPersistence'
@@ -961,6 +962,13 @@ export class Class_ApplicationData {
         // Convertir en text pour tester JSON
         const decoder = new TextDecoder()
         const text = decoder.decode(arrayBuffer)
+
+        // Format natif SankeyMATIC (.txt) : parsé 100 % côté front, comme
+        // l'import fichier de MenuTop (aucun aller-retour Python).
+        if (/\.txt$/i.test(filename)) {
+          this.fromJSON(parseSankeymaticText(text) as never)
+          return
+        }
 
         // Tester si c'est du JSON valide
         try {
