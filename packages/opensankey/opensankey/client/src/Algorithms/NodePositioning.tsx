@@ -1478,41 +1478,8 @@ export class NodePositioning {
    * au-dessus du bruit pixel et très en dessous d'une demi-colonne.
    */
   public inferPositionUFromX() {
-    const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud'] ?
-      this.drawingArea.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
     const dx = this.drawingArea.sankey.styles_dict['default'].shape_position_dx!
-    const tolerance = Math.max(10, dx * 0.05)
-
-    // Nodes eligible for u assignment: visible and not tagged as "échange".
-    // u-locked nodes are kept in the cluster (they anchor the u value) but
-    // their u is not overwritten below.
-    const eligible = this.drawingArea.sankey.visible_nodes_list.filter(n => {
-      if (!n.is_visible) return false
-      if (echangeTag && n.hasGivenTag(echangeTag)) return false
-      return true
-    })
-    if (eligible.length === 0) return
-
-    // Sliding merge clustering: sort by x, then walk forward and start a new
-    // cluster whenever the gap to the current cluster's max-x exceeds
-    // `tolerance`. The max-x (not the starting x) is the right reference: a
-    // chain of nodes each within `tolerance` of the previous one should form
-    // a single cluster even if the head-to-tail distance exceeds `tolerance`.
-    const sorted = [...eligible].sort((a, b) => a.position_x - b.position_x)
-    const clusters: Class_NodeElement[][] = []
-    let current: Class_NodeElement[] = []
-    let current_max_x = -Infinity
-    for (const node of sorted) {
-      if (current.length === 0 || node.position_x - current_max_x <= tolerance) {
-        current.push(node)
-        if (node.position_x > current_max_x) current_max_x = node.position_x
-      } else {
-        clusters.push(current)
-        current = [node]
-        current_max_x = node.position_x
-      }
-    }
-    if (current.length > 0) clusters.push(current)
+    const clusters = this.clusterNodesByX()
 
     // For each cluster, decide the u once, then apply to every non-locked
     // member. A cluster containing a u-locked node inherits its u; otherwise
@@ -1530,6 +1497,88 @@ export class NodePositioning {
         if (n.shape_position_u_locked !== true) n.position_u = cluster_u
       })
     }
+  }
+
+  /**
+   * Nœuds éligibles à une colonne : visibles et non taggés « échange » (ces derniers sont
+   * placés par arrangeTrade et n'appartiennent à aucune colonne). Les nœuds `u`-verrouillés
+   * restent dans leur cluster — ils en ancrent la valeur.
+   */
+  private nodesEligibleForColumns(): Class_NodeElement[] {
+    const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud'] ?
+      this.drawingArea.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
+    return this.drawingArea.sankey.visible_nodes_list.filter(n => {
+      if (!n.is_visible) return false
+      if (echangeTag && n.hasGivenTag(echangeTag)) return false
+      return true
+    })
+  }
+
+  /**
+   * Regroupe les nœuds en colonnes d'après leur `position_x`, par fusion glissante : on trie par
+   * x puis on ouvre un nouveau cluster dès que l'écart au max-x du cluster courant dépasse la
+   * tolérance. C'est le max-x — et non le x de tête — qui est la bonne référence : une chaîne de
+   * nœuds distants deux à deux de moins que la tolérance forme une seule colonne, même si les
+   * extrêmes en sont plus éloignés.
+   *
+   * Clusters retournés dans l'ordre croissant des x.
+   */
+  private clusterNodesByX(): Class_NodeElement[][] {
+    const dx = this.drawingArea.sankey.styles_dict['default'].shape_position_dx!
+    const tolerance = Math.max(10, dx * 0.05)
+
+    const eligible = this.nodesEligibleForColumns()
+    if (eligible.length === 0) return []
+
+    const sorted = [...eligible].sort((a, b) => a.position_x - b.position_x)
+    const clusters: Class_NodeElement[][] = []
+    let current: Class_NodeElement[] = []
+    let current_max_x = -Infinity
+    for (const node of sorted) {
+      if (current.length === 0 || node.position_x - current_max_x <= tolerance) {
+        current.push(node)
+        if (node.position_x > current_max_x) current_max_x = node.position_x
+      } else {
+        clusters.push(current)
+        current = [node]
+        current_max_x = node.position_x
+      }
+    }
+    if (current.length > 0) clusters.push(current)
+    return clusters
+  }
+
+  /**
+   * Colonnes ORDINALES (0, 1, 2…) déduites des `position_x` courants. Ne mute rien.
+   *
+   * Distinct de `inferPositionUFromX`, qui écrit `position_u` en arrondissant `x / dx` : cet
+   * arrondi peut attribuer le même `u` à deux colonnes voisines ou en sauter une. Pour décider
+   * si un flux « recule », seul l'ORDRE des colonnes compte, et l'ordinal est strictement
+   * monotone en x.
+   */
+  public computeColumnsFromX(): { [node_id: string]: number } {
+    const columns: { [node_id: string]: number } = {}
+    this.clusterNodesByX().forEach((cluster, index) => {
+      cluster.forEach(node => { columns[node.id] = index })
+    })
+    return columns
+  }
+
+  /**
+   * sankeyapplication#153 — Recalcul incrémental du statut recyclage après une action de
+   * l'utilisateur (typiquement un déplacement de nœud). Un flux dont la cible ne se trouve plus
+   * à droite de sa source passe en recyclage, et réciproquement.
+   *
+   * Ne déplace AUCUN nœud et ne touche ni `position_u` ni `position_v` : une mise en page
+   * manuelle est préservée telle quelle. Le verrouillage tri-state de l'utilisateur prime.
+   *
+   * @returns pour chaque flux dont le statut a changé, sa valeur précédente (pour l'undo).
+   */
+  public updateRecyclingFromPositions(): { [link_id: string]: boolean } {
+    return this.cycles.markRecyclingLinks(
+      this.nodesEligibleForColumns(),
+      this.computeColumnsFromX()
+    )
   }
 
   /**
