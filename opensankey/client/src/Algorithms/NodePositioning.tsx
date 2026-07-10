@@ -116,11 +116,11 @@ export class NodePositioning {
 
   // POSITIONING COMPUTATION METHODS ===================================================
 
-  // #243 c8 — Socle « cycles + index horizontal » extrait dans NodePositioningCyclesCore
-  // (sous-service composé, cf. opensankey#1253). Délégateurs conservés : `computeHorizontalIndex`
-  // a un appelant EXTERNE (SankeyAnimation) ; `detectAllCyclesAndOptimize` et
-  // `computeRecyclingHorizontalIndex` sont publics ; `computeHorizontalIndexImproved` et
-  // `repositionNodesWithoutInputs` sont encore appelés par `computeAutoSankey`.
+  // Socle UNIQUE « cycles + index horizontal » : NodePositioningCyclesCore (#243 c8, unifié par
+  // opensankey#1253). `position_x` (computeAutoSankey) et `position_u` (computeParametrization ->
+  // detectAllCyclesAndOptimize) passent tous deux par `computeHorizontalIndexes`.
+  // Délégateurs conservés : `computeHorizontalIndex` a un appelant EXTERNE (SankeyAnimation) ;
+  // `detectAllCyclesAndOptimize` et `computeRecyclingHorizontalIndex` sont publics.
   public detectAllCyclesAndOptimize(nodes_to_process: Class_NodeElement[]): {
     recycling_links: string[],
     horizontal_indexes: { [node_id: string]: number }
@@ -150,20 +150,6 @@ export class NodePositioning {
   ) {
     return this.cycles.computeRecyclingHorizontalIndex(
       nodes_to_process, link, recycling_links_ids, horizontal_indexes_per_nodes_ids
-    )
-  }
-
-  private computeHorizontalIndexImproved(
-    start_node: Class_NodeElement,
-    nodes_to_process: Class_NodeElement[],
-    starting_index: number,
-    _initial_visited: string[],
-    recycling_links_ids: string[],
-    horizontal_indexes_per_nodes_ids: { [node_id: string]: number }
-  ) {
-    return this.cycles.computeHorizontalIndexImproved(
-      start_node, nodes_to_process, starting_index,
-      _initial_visited, recycling_links_ids, horizontal_indexes_per_nodes_ids
     )
   }
 
