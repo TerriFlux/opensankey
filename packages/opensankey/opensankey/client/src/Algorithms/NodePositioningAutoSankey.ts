@@ -47,7 +47,6 @@ export class NodePositioningAutoSankey {
     skip_vertical: boolean = false,
     apply_target_fonts: boolean = true
   ) {
-    console.log('🔧 Calcul automatique des positions - version améliorée')
     this.drawingArea.bypass_redraws = true
     // Recalcul automatique : on relâche tous les cadenas d'ancres E/S posés
     // manuellement par l'utilisateur (drag de poignée / menu "Ordre des flux E/S").
@@ -1017,7 +1016,6 @@ export class NodePositioningAutoSankey {
   private computeRecyclingMiddleShape(
     recycling_links_ids: string[]
   ) {
-    console.log('🔄 Calcul automatique du shape_middle_recycling...')
     const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud'] ?
       this.drawingArea.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
 
@@ -1026,7 +1024,6 @@ export class NodePositioningAutoSankey {
       const source_node = link.source
       const target_node = link.target
 
-      console.log(`🔧 Traitement du lien de recyclage: ${link_id} (${source_node.id} → ${target_node.id})`)
 
       // 1. Identifier les nœuds à gauche du nœud source
       const nodes_to_avoid: Class_NodeElement[] = []
@@ -1087,7 +1084,6 @@ export class NodePositioningAutoSankey {
       // 5. Appliquer la valeur calculée
       link.shape_middle_recycling = calculated_middle_recycling
 
-      console.log(`✅ shape_middle_recycling calculé pour ${link_id}: ${calculated_middle_recycling}`)
     })
   }
 }

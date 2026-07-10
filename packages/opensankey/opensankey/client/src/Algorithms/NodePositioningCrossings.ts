@@ -29,11 +29,9 @@ export function optimizeCrossingsPositioning(
   v_spacing?: number
 ) {
   if (!apply_optimization) {
-    console.log('🔧 Optimisation des croisements désactivée')
     return
   }
 
-  console.log('🔍 Début de l\'optimisation des croisements de flux...')
 
   const echangeTag = da.sankey.node_taggs_dict['type de noeud'] ?
     da.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
@@ -82,16 +80,13 @@ export function optimizeCrossingsPositioning(
 
   // Analyser les croisements
   const crossing_analysis = analyzeCrossingFlows(da, node_id_per_hxv_indexes, max_horizontal_index)
-  console.log('🔍 Croisements détectés:', crossing_analysis.crossing_flows.length)
 
   if (crossing_analysis.crossing_flows.length === 0) {
-    console.log('✅ Aucun croisement détecté, optimisation non nécessaire')
     return
   }
 
   // Appliquer les ajustements pour chaque colonne
   const v_margin = v_spacing ?? da.sankey.styles_dict['default'].shape_position_dy!
-  let total_adjustments = 0
 
   for (let horizontal_index = 0; horizontal_index <= max_horizontal_index; horizontal_index++) {
     if (!node_id_per_hxv_indexes[horizontal_index] || node_id_per_hxv_indexes[horizontal_index].length === 0) {
@@ -116,14 +111,10 @@ export function optimizeCrossingsPositioning(
         const new_y = Math.max(0, current_y + adjustment) // Éviter les Y négatifs
 
         node_ref.position_y = new_y
-        total_adjustments++
-
-        console.log(`📍 Ajustement ${node_id}: ${current_y.toFixed(1)} → ${new_y.toFixed(1)} (${adjustment > 0 ? '+' : ''}${adjustment.toFixed(1)})`)
       }
     })
   }
 
-  console.log(`✅ Optimisation terminée: ${total_adjustments} nœuds ajustés`)
 }
 
 /** Analyse les flux qui traversent d'autres nœuds. */
@@ -209,7 +200,6 @@ function calculateColumnAdjustments(
       const crossing_penalty = crossings.length * v_margin * 0.5
       adjustments[node_id] = crossing_penalty
 
-      console.log(`📍 Nœud ${node_id} traversé par ${crossings.length} flux -> descendre: +${crossing_penalty}`)
     }
   })
 
@@ -226,7 +216,6 @@ function calculateColumnAdjustments(
         adjustments[flow.target_id] = target_adjustment
       }
 
-      console.log(`📍 Nœud target ${flow.target_id} du flux traversant -> monter: ${target_adjustment}`)
     }
 
     // BONUS: Ajuster aussi le nœud source si nécessaire
@@ -239,7 +228,6 @@ function calculateColumnAdjustments(
         adjustments[flow.source_id] = source_adjustment
       }
 
-      console.log(`📍 Nœud source ${flow.source_id} du flux traversant -> ajuster: ${source_adjustment}`)
     }
   })
 

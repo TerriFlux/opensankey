@@ -227,7 +227,6 @@ export const convert_data_plus_legacy = (json_object: Type_JSON) => {
         v.heredited_attr_from_master = []
       }
       // Convert old views that are diff to json
-      console.log('GetOldDataFromView ',v.nom)
       const d_view = GetOldDataFromView(json_object as unknown as OSPData, v.id)
       if (d_view) {
         (json_object.views as Type_JSON)[v.id] = d_view as unknown as Type_JSON

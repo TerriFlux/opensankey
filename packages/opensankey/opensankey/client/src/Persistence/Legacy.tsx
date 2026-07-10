@@ -1750,8 +1750,7 @@ const convert_nodes: convert_nodesFuncType = (
       node.outputLinksId
         .forEach(lid => {
           if (!data.links[lid]) {
-            console.log(lid)
-            console.log(Object.values(data.links).filter(l => l.idLink.includes('Ethanol')))
+            console.warn(`Legacy: flux sortant introuvable (${lid}), nœud ${node.idNode} ignoré`)
             return
           }
           const output_node = data.nodes[data.links[lid].idTarget]

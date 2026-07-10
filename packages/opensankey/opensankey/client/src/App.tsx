@@ -128,7 +128,7 @@ export const OpenSankeyApp = ({
         app_data.menu_configuration.updateAllMenuComponents()
         app_data.applyPublishStateOptions()
         applyPublishRecenter()
-      }).catch(e => console.log(e))
+      }).catch(e => console.error('Erreur lors du chargement de la mise en page:', e))
     } else {
       app_data.applyPublishStateOptions()
       applyPublishRecenter()
@@ -148,7 +148,7 @@ export const OpenSankeyApp = ({
         loadUniversalJSON(opts.diagram).then(data => {
           app_data.file_name = opts.diagram as string
           applyDiagramData(data as Type_JSON)
-        }).catch(e => console.log(e))
+        }).catch(e => console.error('Erreur lors du chargement du diagramme:', e))
       } else {
         // Objet JSON inline : appliqué directement (use case embed HTML one-file)
         applyDiagramData(opts.diagram as unknown as Type_JSON)

@@ -751,7 +751,6 @@ export class Class_ApplicationData {
         ? this._file_name.replace('.json', '.json.gz')
         : this._file_name + '.json.gz'
 
-      console.log(`💾 Sauvegarde compressée: ${gzFilename} (${(blob.size / 1024).toFixed(1)}KB)`)
       FileSaver.saveAs(blob, gzFilename)
     } else {
       const json_data_str = JSON.stringify(json_data, null, 2)
@@ -1003,9 +1002,8 @@ export class Class_ApplicationData {
         try {
           const json_data = JSON.parse(text)
           this.fromJSON(json_data)
-        } catch (jsonError) {
-          console.log('Content is not valid JSON, attempting decompression...')
-
+        } catch {
+          // Contenu non JSON : tenter une décompression
           // Créer un File à partir de l'ArrayBuffer pour la décompression
           const file = new File([arrayBuffer], filename)
 

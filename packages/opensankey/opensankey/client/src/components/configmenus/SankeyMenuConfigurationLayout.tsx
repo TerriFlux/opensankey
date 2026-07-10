@@ -1165,7 +1165,6 @@ export const GraphElementsOrdoner = ({ app_data }: { app_data: Class_Application
     )
   )]
 
-  console.log('Cleaned elements:', cleanedElements)
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>

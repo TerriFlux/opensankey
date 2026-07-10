@@ -85,7 +85,6 @@ export class ViewsManager {
 
   /** Reconstruit la DA d'une vue heavy depuis son snapshot et bascule la DA courante dessus. */
   public extractViewFromJSON(json_object: Uint8Array, view_id: string) {
-    console.log('Charging ' + view_id)
     const drawing_area_view = this.buildDrawingAreaFromViewJSON(json_object, view_id)
     this.host.replaceDrawingArea(drawing_area_view)
   }
@@ -164,30 +163,24 @@ export class ViewsManager {
    * (même id) sont ignorées. Appelé après applySourceDA quand 'copyViews' est demandé.
    */
   public addViewsFromJSON(json_object: Type_JSON): number {
-    console.log('[addViewsFromJSON] called, json keys:', Object.keys(json_object))
     // Apply OSP legacy conversion in-place before reading 'views'
     convert_data_plus_legacy(json_object)
-    console.log('[addViewsFromJSON] after legacy conversion, views key present:', 'views' in json_object)
     const views_json = getJSONOrUndefinedFromJSON(json_object, 'views')
     if (!views_json) {
       console.warn('[addViewsFromJSON] no views key found, aborting')
       return 0
     }
     let added = 0
-    console.log('[addViewsFromJSON] views found:', Object.keys(views_json))
     // Ensure master is set on current app
     if (!this.host.master_drawing_area) {
-      console.log('[addViewsFromJSON] setting master_drawing_area')
       this.host.master_drawing_area = this.host.drawing_area
     }
     // Register each sub-view from the source file
     Object.entries(views_json).forEach(([view_id, view_json]) => {
       if (view_id === MASTER_VIEW_ID) return
       if (this.host.views_dict[view_id]) {
-        console.log('[addViewsFromJSON] view already exists, skipping:', view_id)
         return
       }
-      console.log('[addViewsFromJSON] registering view:', view_id)
       this.host.views_order.push(view_id)
       this.host.views_dict[view_id] = {
         name: (view_json as Type_JSON)['name'] as string,
@@ -202,9 +195,7 @@ export class ViewsManager {
     })
     // Switch to the active view from the source file if it exists in the imported views
     let active_view_id = getStringFromJSON(json_object, 'current_view', MASTER_VIEW_ID)
-    console.log('[addViewsFromJSON] current_view from JSON:', active_view_id)
     if (active_view_id === MASTER_VIEW_ID) active_view_id = Object.keys(views_json).find(id => id !== MASTER_VIEW_ID) ?? MASTER_VIEW_ID
-    console.log('[addViewsFromJSON] active_view_id resolved to:', active_view_id, '— exists:', active_view_id in this.host.views_dict)
     if (active_view_id !== MASTER_VIEW_ID && this.host.views_dict[active_view_id]) {
       this.host.current_view_id = active_view_id
       if (this.host.views_dict[active_view_id].is_light) {
@@ -216,7 +207,6 @@ export class ViewsManager {
       this.host.drawing_area.draw()
     }
     this.host.menu_configuration_osp.updateComponentRelatedToViews()
-    console.log('[addViewsFromJSON] done, views_order:', this.host.views_order)
     return added
   }
 
