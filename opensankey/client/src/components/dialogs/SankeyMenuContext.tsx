@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useRef, useEffect } from 'react'
 import { Box, Button, ButtonGroup, Menu, MenuButton, MenuList, Text } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 import { Class_ApplicationData } from '../../types/ApplicationData'
@@ -191,6 +191,37 @@ export class MenuConditionEvaluator {
 }
 
 // ==================================================================================================
+// FERMETURE AU CLIC EXTÉRIEUR
+// ==================================================================================================
+
+/**
+ * Ferme tous les menus contextuels dès qu'un mousedown a lieu HORS du menu (panneau de
+ * config, toolbar, dialogues… — le canvas SVG a déjà ses propres handlers de fermeture).
+ * Écoute en phase capture pour ne pas dépendre d'un éventuel stopPropagation des panneaux.
+ * Les sous-menus Chakra et les widgets du menu sont rendus inline (pas de Portal), donc le
+ * test d'appartenance au conteneur suffit.
+ * @returns ref à poser sur le conteneur racine du menu contextuel
+ */
+export const useCloseContextMenuOnOutsideMouseDown = (
+  app_data: Class_ApplicationData,
+  enabled: boolean
+) => {
+  const menu_ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!enabled) return
+    const handleMouseDown = (evt: MouseEvent) => {
+      const menu_el = menu_ref.current
+      if (menu_el && evt.target instanceof Node && menu_el.contains(evt.target)) return
+      // drawing_area lue en live : elle peut être remplacée (reset / changement de vue)
+      app_data.drawing_area.closeAllContextMenus()
+    }
+    document.addEventListener('mousedown', handleMouseDown, true)
+    return () => document.removeEventListener('mousedown', handleMouseDown, true)
+  }, [enabled])
+  return menu_ref
+}
+
+// ==================================================================================================
 // RENDERER PRINCIPAL
 // ==================================================================================================
 
@@ -215,6 +246,9 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
 }: ContextMenuRendererProps<T>) => {
   const [forceUpdateCount, setForceUpdate] = useState(0)
   const { t } = app_data
+
+  // Ferme le menu si l'utilisateur clique ailleurs (menu config, toolbar, dialogue…)
+  const menu_ref = useCloseContextMenuOnOutsideMouseDown(app_data, isVisible)
 
   // Callback de refresh unifié
   const handleRefresh = refreshCallback || (() => setForceUpdate(a => a + 1))
@@ -629,6 +663,7 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
 
   return (
     <Box
+      ref={menu_ref}
       layerStyle='context_menu'
       className={`context_popover ${isTop ? '' : 'at_bot'}`}
       style={{
