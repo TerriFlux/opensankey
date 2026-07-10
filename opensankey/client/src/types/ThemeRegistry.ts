@@ -11,7 +11,7 @@
 // `Theme` ne peut pas importer le parseur (pour construire le thème par défaut).
 // Le registre, lui, dépend des deux.
 
-import { Class_Theme, themeOpenSankey } from './Theme'
+import { Class_Theme, themeOpenSankey, themeStan } from './Theme'
 import { buildSankeymaticTheme } from '../Persistence/sankeymaticParser'
 
 export interface Type_ThemeChoice {
@@ -34,6 +34,13 @@ export const AVAILABLE_THEMES: readonly Type_ThemeChoice[] = [
     // pas une règle vivante (cf. NOTE-THEMES.md). Un thème appliqué à la volée ne
     // peut pas le calculer : on retient `source`, la variante la plus proche.
     build: () => new Class_Theme(buildSankeymaticTheme(undefined, 'source')),
+  },
+  {
+    id: 'stan',
+    label_key: 'Menu.theme.stan',
+    // Bascule manuelle seulement : les diagrammes importés depuis un fichier STAN
+    // reçoivent ce thème directement du serveur (stan_smfa._stan_theme).
+    build: themeStan,
   },
 ]
 
