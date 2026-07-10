@@ -634,7 +634,9 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
       style={{
         maxWidth: '100%',
         position: 'absolute',
-        zIndex: '1',
+        // Doit passer au-dessus des panneaux de la zone principale (tableur/doc : 20,
+        // séparateurs : 25, panneaux de config : 30) sans masquer les modales (>= 2000).
+        zIndex: '1400',
         inset: `${posY}px auto auto ${posX}px`
       }}
     >
