@@ -44,6 +44,7 @@ import { Class_DrawingArea } from './DrawingArea'
 import { initializeTooltipSystem } from '../Elements/TooltipsConfig'
 import { compressJSONToGzip, decompressUploadedFileUniversal } from '../Persistence/UniversalJSONCompression'
 import { parseSankeymaticText } from '../Persistence/sankeymaticParser'
+import { loadEsankeyFile } from '../Persistence/esankeyParser'
 import { updateFrom } from '../Algorithms/UpdateFrom'
 import { centerChildrenOnParent } from '../Algorithms/Hierarchies'
 import { DrawingAreaPersistence } from '../Persistence/SankeyPersistence'
@@ -972,6 +973,17 @@ export class Class_ApplicationData {
             })
             .then(json_data => {
               this.fromJSON(json_data as Type_JSON)
+            })
+        }
+
+        // Fichiers e!Sankey (.sankey = ZIP + XML) : binaires, dézippés et
+        // parsés 100 % côté front, comme l'import fichier de MenuTop.
+        // Import direct du parseur (et non esankeyLoad) : esankeyLoad importe
+        // Class_ApplicationData, ce qui créerait un cycle depuis ce fichier.
+        if (/\.sankey$/i.test(filename)) {
+          return loadEsankeyFile(arrayBuffer)
+            .then(diagram => {
+              this.fromJSON(diagram as never)
             })
         }
 
