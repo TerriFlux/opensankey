@@ -234,9 +234,10 @@ elementStyleConfigs[LinkImportExportCloseStyle] = {
 elementStyleConfigs[LinkImportCloseStyle] = {
   name: 'ElementStyle.LinkImportCloseStyle',
   config: {
+    // Ne pas reintroduire 'shape_is_arrow': false : le flux d'import garde la pointe
+    // par defaut (is_arrow), comme son symetrique LinkExportCloseStyle.
     'shape_orientation': 'vh',
-    'shape_ending_tangeant': 1,
-    'shape_is_arrow': false
+    'shape_ending_tangeant': 1
   }
 }
 
