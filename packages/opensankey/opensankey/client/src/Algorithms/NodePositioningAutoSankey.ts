@@ -14,11 +14,12 @@
 // `drawingArea` est expose en getter pour que les corps soient deplaces VERBATIM ; seuls les 8
 // appels SORTANTS ont ete requalifies en `this.np.*` (resp. `this.np.cycles.*`).
 //
-// NB : la passe « paper two-pass » en fin de computeAutoSankey etire le contenu pour remplir la
-// page, ce qui contredit le modele « page = guide au ratio » -> bug de modele, cf. opensankey#1252.
+// Mode papier (opensankey#1252) : le placement se cale sur `paperLayoutTarget()`, une page de
+// REFERENCE au ratio du format, independante du contenu. En fin de course on rejoue
+// `applyPaperDimensions()` : le GUIDE suit le contenu, jamais l'inverse.
 
 import { Class_DrawingArea } from '../types/DrawingArea'
-import { PAPER_TARGET_FONT_SIZES } from '../Elements/ElementsAttributesConfig'
+import { PAPER_DIMENSIONS_MM, PAPER_TARGET_FONT_SIZES } from '../Elements/ElementsAttributesConfig'
 import { NodeLeftExtremityStyle, NodeRightExtremityStyle } from '../Elements/ElementStyle'
 import type { Class_NodeElement } from '../Elements/Node'
 import type { Class_DataTagGroup } from '../types/TagGroup'
@@ -246,47 +247,54 @@ export class NodePositioningAutoSankey {
       !echangeTag || !n.hasGivenTag(echangeTag))
     tmp.forEach(n => this.setNodeLabelPositioning(n))
 
-    // Paper mode: two-pass — render first, measure real bbox, then scale to fill paper
-    if (this.drawingArea.is_paper_mode && this.drawingArea.paper_format !== 'free') {
+    // Mode papier : le placement est deja cale sur la page de reference (paperLayoutTarget).
+    // On redessine, puis on laisse le GUIDE suivre le contenu — et non l'inverse. L'ancienne
+    // passe « two-pass » relisait drawing_area.width/height comme une page fixe et etirait les
+    // positions (scale_x != scale_y) pour la remplir : non idempotent, et deformant puisque ni
+    // les tailles de noeuds ni les epaisseurs de flux ne suivaient (opensankey#1252).
+    if (this.isPaperMode()) {
       this.drawingArea.bypass_redraws = false
       this.drawingArea.drawElements()
+      // `protected` sur Class_DrawingArea : meme acces indirect que SankeyPersistence.
+      this.drawingArea['applyPaperDimensions']()
+      this.drawingArea['drawBackground']()
+      this.drawingArea.drawGrid()
+    }
+  }
 
-      const bbox = this.drawingArea.d3_selection_elements_group?.node()?.getBBox()
-      if (bbox && bbox.width > 0 && bbox.height > 0) {
-        const pad_left = Class_DrawingArea.mmToPx(this.drawingArea.margin_left_mm)
-        const pad_right = Class_DrawingArea.mmToPx(this.drawingArea.margin_right_mm)
-        const pad_top = Class_DrawingArea.mmToPx(this.drawingArea.margin_top_mm)
-        const pad_bottom = Class_DrawingArea.mmToPx(this.drawingArea.margin_bottom_mm)
-        const paper_w = this.drawingArea.width
-        const paper_h = this.drawingArea.height
+  /** Le mode papier n'impose une cible de placement que si un format est choisi. */
+  private isPaperMode(): boolean {
+    return this.drawingArea.is_paper_mode && this.drawingArea.paper_format !== 'free'
+  }
 
-        // Target area: paper minus margins
-        const target_left = pad_left
-        const target_right = paper_w - pad_right
-        const target_top = pad_top
-        const target_bottom = paper_h - pad_bottom
-        const target_w = target_right - target_left
-        const target_h = target_bottom - target_top
-
-        // Current content extent
-        const content_left = bbox.x
-        const content_w = bbox.width
-        const content_top = bbox.y
-        const content_h = bbox.height
-
-        // Scale X: stretch/compress so content fills target width
-        const scale_x = content_w > 0 ? target_w / content_w : 1
-        // Scale Y: stretch/compress so content fills target height
-        const scale_y = content_h > 0 ? target_h / content_h : 1
-
-        // Apply: remap each node position from [content_left..content_right] to [target_left..target_right]
-        nodes_to_process.forEach(n => {
-          n.position_x = (n.position_x - content_left) * scale_x + target_left
-          n.position_y = (n.position_y - content_top) * scale_y + target_top
-        })
-
-        this.drawingArea.drawElements()
-      }
+  /**
+   * Page de REFERENCE sur laquelle l'auto-layout repartit colonnes et lignes, en mode papier.
+   *
+   * Deliberement INDEPENDANTE du contenu : `drawing_area.width/height` derive desormais de la
+   * bbox du diagramme (applyPaperDimensions = guide au ratio), donc s'en servir comme cible
+   * ferait dependre le placement du placement precedent — relancer la disposition automatique
+   * deux fois ne convergeait pas.
+   *
+   * Seul le RATIO du format compte, a surface A4 constante : A3/A4/A5 partagent 1:V2 et donnent
+   * donc le meme placement. Seule l'ORIENTATION le change. Les vrais millimetres restent
+   * l'affaire de l'export (getPaperDimensionsMm).
+   */
+  private paperLayoutTarget(): {
+    width: number, height: number,
+    pad_left: number, pad_right: number, pad_top: number, pad_bottom: number
+  } {
+    const dims = this.drawingArea.getPaperDimensionsMm()
+    const ratio = dims.width / dims.height
+    const reference_area = Class_DrawingArea.mmToPx(PAPER_DIMENSIONS_MM.A4.width) *
+      Class_DrawingArea.mmToPx(PAPER_DIMENSIONS_MM.A4.height)
+    const height = Math.sqrt(reference_area / ratio)
+    return {
+      width: ratio * height,
+      height,
+      pad_left: Class_DrawingArea.mmToPx(this.drawingArea.margin_left_mm),
+      pad_right: Class_DrawingArea.mmToPx(this.drawingArea.margin_right_mm),
+      pad_top: Class_DrawingArea.mmToPx(this.drawingArea.margin_top_mm),
+      pad_bottom: Class_DrawingArea.mmToPx(this.drawingArea.margin_bottom_mm)
     }
   }
 
@@ -328,11 +336,12 @@ export class NodePositioningAutoSankey {
     let prev_col_width = 0
 
     // Paper mode: compute spacing from paper dimensions and apply target fonts
-    const paper_mode = this.drawingArea.is_paper_mode && this.drawingArea.paper_format !== 'free'
+    const paper_mode = this.isPaperMode()
+    const paper_target = paper_mode ? this.paperLayoutTarget() : undefined
     let first_col_x: number
 
-    if (paper_mode) {
-      first_col_x = Class_DrawingArea.mmToPx(this.drawingArea.margin_left_mm)
+    if (paper_target) {
+      first_col_x = paper_target.pad_left
 
       // Apply target font sizes (optional)
       if (apply_target_fonts) {
@@ -353,18 +362,16 @@ export class NodePositioningAutoSankey {
       first_col_x = 200
     }
 
-    if (paper_mode) {
+    if (paper_target) {
       // Paper mode: simple even distribution — each column gets a slot of width dx
-      const pad_left_x = Class_DrawingArea.mmToPx(this.drawingArea.margin_left_mm)
-      const pad_right_x = Class_DrawingArea.mmToPx(this.drawingArea.margin_right_mm)
-      const available_w = this.drawingArea.width - pad_left_x - pad_right_x
+      const available_w = paper_target.width - paper_target.pad_left - paper_target.pad_right
       const num_cols = max_horizontal_index + 1
       const new_dx = available_w / Math.max(num_cols, 1)
 
       for (let h_index = 0; h_index <= max_horizontal_index; h_index++) {
         if (!nodes_per_horizontal_indexes[h_index]) continue
         nodes_per_horizontal_indexes[h_index].forEach(node => {
-          node.position_x = h_index * new_dx + pad_left_x
+          node.position_x = h_index * new_dx + paper_target.pad_left
           node.shape_position_dx = new_dx
         })
       }
@@ -801,13 +808,13 @@ export class NodePositioningAutoSankey {
     const horizontal_spacing = h_spacing ?? this.drawingArea.sankey.nodes_dict[node_id_per_hxv_indexes[0][0]].shape_position_dx
 
     // Paper mode: compute per-column v_spacing to fit within paper height
-    const paper_mode = this.drawingArea.is_paper_mode && this.drawingArea.paper_format !== 'free'
+    const paper_mode = this.isPaperMode()
     let paper_pad_top = 0
     let paper_available_h = 0
     if (paper_mode) {
-      paper_pad_top = Class_DrawingArea.mmToPx(this.drawingArea.margin_top_mm)
-      const paper_pad_bottom = Class_DrawingArea.mmToPx(this.drawingArea.margin_bottom_mm)
-      paper_available_h = this.drawingArea.height - paper_pad_top - paper_pad_bottom
+      const paper_target = this.paperLayoutTarget()
+      paper_pad_top = paper_target.pad_top
+      paper_available_h = paper_target.height - paper_target.pad_top - paper_target.pad_bottom
     }
 
     // Paper mode: precompute spacing to fill available height
