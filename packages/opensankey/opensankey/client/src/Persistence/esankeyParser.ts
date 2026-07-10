@@ -17,13 +17,17 @@
 // e!Sankey devient un tag de flux (groupe unique), et chaque flow d'une
 // flèche devient un flux OpenSankey portant ce tag et la couleur de l'entry.
 //
-// Périmètre v1 : nœuds, flux, valeurs (convergées vers l'unité de base via le
-// coefficient), positions/couleurs des process, couleurs par entry, échelle.
-// Hors périmètre : shapes libres, images embarquées, légende/échelle
-// graphiques, unitTypes multiples avec échelles indépendantes (le 1er
-// unitType utilisé fixe l'échelle), export.
+// Périmètre : nœuds, flux, valeurs (convergées vers l'unité de base via le
+// coefficient), positions/couleurs/visibilité/images des process, couleurs et
+// tags par entry, échelle, unités sur les labels de flux, commentaires de
+// flèche (→ tooltips), zones libres texte/image/rectangle (→ zones de texte),
+// légende, thème esankey.
+// Hors périmètre (listé sur l'issue #264) : lignes libres, dégradé le long du
+// flux, labels en pourcentage, balance labels, formes de process alternatives
+// (shapeType 1/2), échelles indépendantes par unitType, export.
 
 import JSZip from 'jszip'
+import { themeEsankey, Type_ThemeJSON } from '../types/Theme'
 
 type EsLocal = { [k: string]: string | number | boolean }
 
@@ -44,6 +48,9 @@ interface EsNode {
   links_order: string[]
   input_value: number
   output_value: number
+  /** Nœud-image (mappé vers icon_is_image/icon_image_src au chargement). */
+  is_image?: boolean
+  image_src?: string
 }
 
 interface EsFlow {
@@ -68,8 +75,16 @@ interface EsFluxTag {
 interface EsFluxTagGroup {
   name: string
   banner: string
+  use_colors: boolean
   tags: { [id: string]: EsFluxTag }
 }
+
+// Zone libre e!Sankey (texte, image, rectangle) → « zone de texte » OpenSankey
+// (Class_ContainerElement, clé JSON `labels`). Clés 0.9 comprises par
+// ContainerPersistence : name/title, is_image/image_src, color/color_visible/
+// transparent_border/opacity, label_width/label_height, x/y — plus n'importe
+// quel attribut moderne passé tel quel à la racine (name_label_font_size…).
+type EsContainerJSON = { [k: string]: string | number | boolean }
 
 export interface EsParsedDiagram {
   version: string
@@ -81,6 +96,11 @@ export interface EsParsedDiagram {
   style_link: { default: EsLocal }
   grid_visible: boolean
   fluxTags: { [id: string]: EsFluxTagGroup }
+  theme: Type_ThemeJSON
+  /** Zones de texte / images / rectangles importés (clé `labels` du JSON). */
+  labels: { [id: string]: EsContainerJSON }
+  /** Légende affichée si le fichier en contient une (mask_legend: false). */
+  legend?: { mask_legend: boolean, legend_dx: number, legend_dy: number }
 }
 
 // Id du groupe de tags de flux créé depuis les entries e!Sankey.
@@ -118,8 +138,8 @@ const normalizeStringToValidId = (text: string): string =>
 
 // ------------------------------------------------------------- Modèle logique
 
-interface EsUnit { coefficient: number }
-interface EsUnitType { maximumFlow: number, width: number, used: boolean, units: { [id: string]: EsUnit } }
+interface EsUnit { coefficient: number, name: string, isBasic: boolean }
+interface EsUnitType { maximumFlow: number, width: number, used: boolean, showUnit: boolean, units: { [id: string]: EsUnit } }
 interface EsEntry { name: string, color: string | null, tagId: string }
 
 const parseUnitTypes = (netModel: Element): { [id: string]: EsUnitType } => {
@@ -130,12 +150,17 @@ const parseUnitTypes = (netModel: Element): { [id: string]: EsUnitType } => {
     const units: { [id: string]: EsUnit } = {}
     const unitsEl = childByTag(ut, 'units')
     if (unitsEl) childrenByTag(unitsEl, 'unit').forEach(u => {
-      units[u.getAttribute('id') ?? ''] = { coefficient: attrNum(u, 'coefficient', 1) }
+      units[u.getAttribute('id') ?? ''] = {
+        coefficient: attrNum(u, 'coefficient', 1),
+        name: u.getAttribute('name') ?? '',
+        isBasic: u.getAttribute('isBasicUnit') === 'true',
+      }
     })
     out[ut.getAttribute('id') ?? ''] = {
       maximumFlow: attrNum(ut, 'maximumFlow', 0),
       width: attrNum(ut, 'width', 0),
       used: ut.getAttribute('used') === 'true',
+      showUnit: ut.getAttribute('showUnit') === 'true',
       units,
     }
   })
@@ -165,7 +190,16 @@ const parseEntries = (entryGroup: Element, out: { [id: string]: EsEntry }, usedT
 
 // ----------------------------------------------------------- Partie graphique
 
-interface EsGraphicalProcess { x: number, y: number, color: string | null, labelText: string }
+interface EsGraphicalProcess {
+  x: number
+  y: number
+  color: string | null
+  labelText: string
+  /** `visible='false'` : e!Sankey n'affiche que le label (et l'icône libre à côté). */
+  visible: boolean
+  /** Chemin dans le ZIP de l'image du process (ex: `Images\\tmpXX.tmp`), sinon ''. */
+  imageFile: string
+}
 
 const parseGraphicalProcesses = (net: Element): { [id: string]: EsGraphicalProcess } => {
   const out: { [id: string]: EsGraphicalProcess } = {}
@@ -178,9 +212,145 @@ const parseGraphicalProcesses = (net: Element): { [id: string]: EsGraphicalProce
       y: attrNum(p, 'locationY', 0),
       color: argbToHex(childByTag(p, 'brushColor')?.getAttribute('argb') ?? null),
       labelText: (label?.getAttribute('text') ?? '').replace(/\r?\n/g, ' ').trim(),
+      visible: p.getAttribute('visible') !== 'false',
+      imageFile: childByTag(p, 'image')?.getAttribute('filename') ?? '',
     }
   })
   return out
+}
+
+// ------------------------------------------------- Zones libres et légende
+
+// .NET FontStyle : 1 = gras, 2 = italique (combinables).
+const fontStyleBold = (style: number): boolean => (style & 1) !== 0
+const fontStyleItalic = (style: number): boolean => (style & 2) !== 0
+
+/** Chemin d'image du XML (`Images\\tmpXX.tmp`) → clé du dict d'images du ZIP. */
+const imageKey = (filename: string): string => filename.replace(/\\/g, '/')
+
+/**
+ * Shapes libres du `net` → zones de texte OpenSankey (clé JSON `labels`).
+ * Mappés : text (texte, police, couleur), picture (image embarquée du ZIP,
+ * en data URI), rectangle / roundedRectangle (zone à fond coloré).
+ * Non mappés (pas d'équivalent) : line.
+ */
+const parseShapes = (
+  net: Element,
+  images: { [path: string]: string }
+): { [id: string]: EsContainerJSON } => {
+  const out: { [id: string]: EsContainerJSON } = {}
+  const shapes = childByTag(net, 'shapes')
+  if (!shapes) return out
+  let n = 0
+  childrenByTag(shapes, 'shape').forEach(wrapper => {
+    Array.from(wrapper.children).forEach(shape => {
+      const kind = shape.localName
+      const id = 'esankey_shape_' + (++n)
+      const base: EsContainerJSON = {
+        name: '',
+        title: '',
+        x: attrNum(shape, 'locationX', 0),
+        y: attrNum(shape, 'locationY', 0),
+        label_width: attrNum(shape, 'sizeW', 100),
+        label_height: attrNum(shape, 'sizeH', 30),
+        color_visible: false,
+        transparent_border: true,
+      }
+      if (kind === 'text') {
+        const text = (shape.getAttribute('text') ?? '').replace(/\r\n/g, '\n')
+        if (!text.trim()) return
+        base.name = text
+        base.title = text
+        const font = childByTag(shape, 'font')
+        if (font) {
+          base.name_label_font_size = attrNum(font, 'size', 9)
+          const style = attrNum(font, 'style', 0)
+          if (fontStyleBold(style)) base.name_label_bold = true
+          if (fontStyleItalic(style)) base.name_label_italic = true
+        }
+        const textColor = argbToHex(shape.getAttribute('textColor'))
+        if (textColor) base.name_label_color = textColor
+        out[id] = base
+      } else if (kind === 'picture') {
+        const file = childByTag(shape, 'image')?.getAttribute('filename') ?? ''
+        const src = images[imageKey(file)]
+        if (!src) return // image absente du ZIP : rien à afficher
+        base.is_image = true
+        base.image_src = src
+        // `transparency` e!Sankey (0-100) → clé 0.9 `opacity` (en %, mappée
+        // vers shape_opacity, que le rendu applique à l'image).
+        const transparency = attrNum(shape, 'transparency', 0)
+        if (transparency > 0) base.opacity = Math.max(0, 100 - transparency)
+        out[id] = base
+      } else if (kind === 'rectangle' || kind === 'roundedRectangle') {
+        const fill = argbToHex(childByTag(shape, 'brushColor')?.getAttribute('argb') ?? null)
+        if (fill) {
+          base.color = fill
+          base.color_visible = true
+        }
+        base.transparent_border = shape.getAttribute('drawBorder') !== 'true'
+        const transparency = attrNum(shape, 'transparency', 0)
+        if (transparency > 0) base.opacity = Math.max(0, 100 - transparency)
+        out[id] = base
+      }
+      // line : pas d'équivalent OpenSankey (cf. liste des manques, issue #264)
+    })
+  })
+  return out
+}
+
+/**
+ * Première légende du `net` (hors prototypes). e!Sankey y liste les entries ;
+ * côté OpenSankey la légende affiche les tags colorés — nos tags de flux
+ * importés y figurent grâce à `use_colors` sur le groupe.
+ */
+/** Attributs utiles des flèches graphiques (commentaire, réglages du label). */
+interface EsGraphicalArrow {
+  tooltip: string
+  labelVisible: boolean
+  showValue: boolean
+  showUnit: boolean
+}
+
+const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } => {
+  const out: { [id: string]: EsGraphicalArrow } = {}
+  const arrows = childByTag(net, 'arrows')
+  if (!arrows) return out
+  childrenByTag(arrows, 'arrow').forEach(a => {
+    const label = childByTag(a, 'sankeyArrowLabel')
+    const comment = childByTag(a, 'comment')
+    out[a.getAttribute('id') ?? ''] = {
+      tooltip: (comment?.getAttribute('text') ?? '').replace(/\r\n/g, '\n').trim(),
+      labelVisible: label?.getAttribute('visible') !== 'false',
+      showValue: label?.getAttribute('showValue') !== 'false',
+      showUnit: label?.getAttribute('showUnit') === 'true',
+    }
+  })
+  return out
+}
+
+// logicalGraphicalObjectMapping/edges : graphArrowRef (logique) → arrowRef
+// (graphique), pour retrouver commentaire et réglages de label d'une flèche.
+const parseEdgeMapping = (root: Element): { [logicalId: string]: string } => {
+  const out: { [logicalId: string]: string } = {}
+  const mapping = childByTag(root, 'logicalGraphicalObjectMapping')
+  const edges = mapping ? childByTag(mapping, 'edges') : null
+  if (!edges) return out
+  childrenByTag(edges, 'keyValuePair').forEach(kv => {
+    const logical = childByTag(kv, 'graphArrowRef')?.getAttribute('refId')
+    const graphical = childByTag(kv, 'arrowRef')?.getAttribute('refId')
+    if (logical && graphical) out[logical] = graphical
+  })
+  return out
+}
+
+const parseLegendPosition = (net: Element): { x: number, y: number } | null => {
+  const protos = childByTag(net, 'prototypes')
+  const all = Array.from(net.getElementsByTagName('*'))
+  const inProtos = protos ? new Set(Array.from(protos.getElementsByTagName('*'))) : new Set()
+  const legend = all.find(el => el.localName === 'legend' && !inProtos.has(el))
+  if (!legend) return null
+  return { x: attrNum(legend, 'locationX', 0), y: attrNum(legend, 'locationY', 0) }
 }
 
 // logicalGraphicalObjectMapping/nodes : graphProcessRef (logique) → processRef
@@ -206,7 +376,7 @@ const defaultNodeStyle = (): EsLocal => ({
   shape: 'rect',
   node_width: 40,
   node_height: 0,
-  color: '#888888',
+  color: '#D9D9D9',
   colorSustainable: false,
   node_arrow_angle_factor: 30,
   node_arrow_angle_direction: 'right',
@@ -257,7 +427,7 @@ const defaultLinkStyle = (): EsLocal => ({
   label_pos_auto: false,
   arrow: true,
   color: '#999999',
-  opacity: 0.85,
+  opacity: 0.9,
   dashed: false,
   label_visible: false,
   label_font_size: 20,
@@ -280,7 +450,11 @@ const defaultLinkStyle = (): EsLocal => ({
  * Parse le contenu de `esankey.xml` et renvoie la structure JSON (version 0.9)
  * prête pour fromJSON.
  */
-export const parseEsankeyXml = (xmlText: string): EsParsedDiagram => {
+export const parseEsankeyXml = (
+  xmlText: string,
+  /** Images du ZIP en data URI, indexées par chemin (`Images/tmpXX.tmp`). */
+  images: { [path: string]: string } = {}
+): EsParsedDiagram => {
   const doc = new DOMParser().parseFromString(xmlText, 'text/xml')
   const root = doc.documentElement
   if (!root || root.localName !== 'document')
@@ -295,16 +469,21 @@ export const parseEsankeyXml = (xmlText: string): EsParsedDiagram => {
   const rootEntryGroup = childByTag(netModel, 'entryGroup')
   if (rootEntryGroup) parseEntries(rootEntryGroup, entries, new Set())
   const graphicalProcesses = parseGraphicalProcesses(net)
+  const graphicalArrows = parseGraphicalArrows(net)
   const nodeMapping = parseNodeMapping(root)
+  const edgeMapping = parseEdgeMapping(root)
 
-  // Coefficient de conversion vers l'unité de base du unitType porteur.
-  const unitCoefficient = (unitId: string | null): number => {
-    if (unitId === null) return 1
+  // Unité (et son unitType) portée par un flow, pour la conversion et le label.
+  const findUnit = (unitId: string | null): { unit: EsUnit, unitType: EsUnitType } | null => {
+    if (unitId === null) return null
     for (const ut of Object.values(unitTypes)) {
-      if (unitId in ut.units) return ut.units[unitId].coefficient
+      if (unitId in ut.units) return { unit: ut.units[unitId], unitType: ut }
     }
-    return 1
+    return null
   }
+  // Nom de l'unité de base d'un unitType (les valeurs y sont converties).
+  const basicUnitName = (ut: EsUnitType): string =>
+    Object.values(ut.units).find(u => u.isBasic)?.name ?? ''
 
   // Nœuds : un par graphProcess. Nom = nom logique, sinon label graphique.
   const nodes: { [id: string]: EsNode } = {}
@@ -337,6 +516,16 @@ export const parseEsankeyXml = (xmlText: string): EsParsedDiagram => {
       output_value: 0,
     }
     if (graphical?.color) nodes[id].local.color = graphical.color
+    // Process invisible (fréquent dans les diagrammes « décor » : seuls le
+    // label et une icône libre marquent le nœud).
+    if (graphical && !graphical.visible) nodes[id].local.shape_visible = false
+    // Image de process → nœud-image (is_image/image_src à la racine du nœud
+    // 0.9, mappés vers icon_is_image/icon_image_src au chargement).
+    const imgSrc = graphical?.imageFile ? images[imageKey(graphical.imageFile)] : undefined
+    if (imgSrc) {
+      nodes[id].is_image = true
+      nodes[id].image_src = imgSrc
+    }
   })
 
   // Flux : un par flow de compartments (une flèche multi-matériaux e!Sankey
@@ -353,13 +542,14 @@ export const parseEsankeyXml = (xmlText: string): EsParsedDiagram => {
     const sourceId = logicalToNodeId[fromRef ?? '']
     const targetId = logicalToNodeId[toRef ?? '']
     if (!sourceId || !targetId) return
+    const arrowId = ga.getAttribute('id') ?? ''
+    const graphicalArrow = graphicalArrows[edgeMapping[arrowId] ?? ''] ?? null
     const compartments = childByTag(ga, 'compartments')
     const flows = compartments ? childrenByTag(compartments, 'flow') : []
     flows.forEach(flow => {
-      const arrowId = ga.getAttribute('id') ?? ''
       const flowId = flow.getAttribute('id') ?? ''
       const quantity = attrNum(flow, 'quantity', 0)
-      const coefficient = unitCoefficient(childByTag(flow, 'unitRef')?.getAttribute('refId') ?? null)
+      const found = findUnit(childByTag(flow, 'unitRef')?.getAttribute('refId') ?? null)
       const entry = entries[childByTag(flow, 'entryRef')?.getAttribute('refId') ?? ''] ?? null
       const id = sourceId + '-->' + targetId + '_' + arrowId + '_' + flowId
       const link: EsFlow = {
@@ -371,10 +561,11 @@ export const parseEsankeyXml = (xmlText: string): EsParsedDiagram => {
         style: 'default',
         local: {},
         displaying_order: 0,
-        tooltip_text: '',
+        // Commentaire de la flèche e!Sankey → infobulle du flux.
+        tooltip_text: graphicalArrow?.tooltip ?? '',
         value: {
           id: id + '_v',
-          data_value: quantity * coefficient,
+          data_value: quantity * (found?.unit.coefficient ?? 1),
           tags: {},
         },
       }
@@ -382,6 +573,16 @@ export const parseEsankeyXml = (xmlText: string): EsParsedDiagram => {
         link.value.tags[ESANKEY_ENTRIES_TAGG_ID] = [entry.tagId]
         usedEntryIds.add(entry.tagId)
         if (entry.color) link.local.color = entry.color
+      }
+      // AUCUN label de valeur posé sur les flux importés (décision user) : chez
+      // e!Sankey l'étiquette de quantité appartient à la FLÈCHE (somme de ses
+      // matériaux, position sur segment) — la reproduire par flux serait faux ;
+      // manque « label agrégé par flèche » listé en #264. On prépare seulement
+      // l'unité : si l'utilisateur active les valeurs, elle est déjà correcte
+      // (valeurs converties vers l'unité de BASE du unitType).
+      if (graphicalArrow?.showUnit && found && basicUnitName(found.unitType)) {
+        link.local.label_unit_visible = true
+        link.local.label_unit = basicUnitName(found.unitType)
       }
       links[id] = link
       nodes[sourceId].outputLinksId.push(id)
@@ -393,17 +594,23 @@ export const parseEsankeyXml = (xmlText: string): EsParsedDiagram => {
     })
   })
 
+  // Zones libres (textes, images, rectangles) et légende.
+  const labels = parseShapes(net, images)
+  const legendPos = parseLegendPosition(net)
+
   // Normalisation des positions : e!Sankey stocke des coordonnées de document
-  // potentiellement lointaines de l'origine ; on ramène le coin haut-gauche du
-  // diagramme vers (50, 50).
+  // potentiellement lointaines de l'origine ; on ramène le coin haut-gauche de
+  // l'ensemble (nœuds + zones libres + légende) vers (50, 50).
   const nodeList = Object.values(nodes)
-  if (nodeList.length > 0) {
-    const minX = Math.min(...nodeList.map(n => n.x))
-    const minY = Math.min(...nodeList.map(n => n.y))
-    nodeList.forEach(n => {
-      n.x = n.x - minX + 50
-      n.y = n.y - minY + 50
-    })
+  const containerList = Object.values(labels)
+  const allX = [...nodeList.map(n => n.x), ...containerList.map(c => c.x as number), ...(legendPos ? [legendPos.x] : [])]
+  const allY = [...nodeList.map(n => n.y), ...containerList.map(c => c.y as number), ...(legendPos ? [legendPos.y] : [])]
+  if (allX.length > 0) {
+    const dx = 50 - Math.min(...allX)
+    const dy = 50 - Math.min(...allY)
+    nodeList.forEach(n => { n.x += dx; n.y += dy })
+    containerList.forEach(c => { c.x = (c.x as number) + dx; c.y = (c.y as number) + dy })
+    if (legendPos) { legendPos.x += dx; legendPos.y += dy }
   }
 
   // Échelle : un unitType e!Sankey affiche `maximumFlow` (en unité de base)
@@ -421,24 +628,62 @@ export const parseEsankeyXml = (xmlText: string): EsParsedDiagram => {
     usedEntries.forEach(e => {
       tags[e.tagId] = { name: e.name, selected: true, color: e.color ?? '#888888' }
     })
-    fluxTags[ESANKEY_ENTRIES_TAGG_ID] = { name: 'Flux e!Sankey', banner: 'none', tags }
+    // `use_colors` : les tags portent les couleurs des entries → ils
+    // apparaissent dans la légende, et la colormap coïncide avec les couleurs
+    // déjà posées sur les flux.
+    fluxTags[ESANKEY_ENTRIES_TAGG_ID] = { name: 'Flux e!Sankey', banner: 'none', use_colors: true, tags }
   }
 
-  return {
+  const backgroundColor = argbToHex(net.getAttribute('backgroundColor')) ?? '#FFFFFF'
+
+  // Thème e!Sankey posé sur le diagramme importé (repris par loadTheme au
+  // fromJSON), avec le fond du fichier plutôt que le blanc par défaut du thème.
+  const theme: Type_ThemeJSON = {
+    ...themeEsankey().toJSON(),
+    globals: { couleur_fond_sankey: backgroundColor },
+  }
+
+  // Le patch du thème est FUSIONNÉ dans les styles écrits au fichier : à la
+  // lecture, `loadTheme` ne l'applique pas (le fichier fait autorité, cf.
+  // NOTE-THEMES.md) — même recette que l'importeur STAN (stan_smfa). Les clés
+  // du patch portent des noms d'attributs modernes, recopiés verbatim par
+  // StylePersistence ; c'est notamment lui qui éteint les labels de valeur
+  // (value_label_is_visible: false), que l'amorce interne de LinkStyle
+  // allumerait sinon pour tous les flux.
+  const result: EsParsedDiagram = {
     version: '0.9',
     nodes,
     links,
     user_scale: userScale,
-    couleur_fond_sankey: argbToHex(net.getAttribute('backgroundColor')) ?? '#FFFFFF',
-    style_node: { default: defaultNodeStyle() },
-    style_link: { default: defaultLinkStyle() },
+    couleur_fond_sankey: backgroundColor,
+    style_node: { default: { ...defaultNodeStyle(), ...theme.styles.NodeStyle } },
+    style_link: { default: { ...defaultLinkStyle(), ...theme.styles.LinkStyle } },
     grid_visible: false,
     fluxTags,
+    theme,
+    labels,
   }
+  if (legendPos) {
+    result.legend = { mask_legend: false, legend_dx: legendPos.x, legend_dy: legendPos.y }
+  }
+  return result
+}
+
+// ---------------------------------------------------------------- Dézippage
+
+// Signature d'image → type MIME du data URI (les images du ZIP sont stockées
+// sous des noms neutres `Images/tmpXX.tmp`, l'extension ne dit rien).
+const mimeFromMagic = (base64: string): string => {
+  if (base64.startsWith('iVBOR')) return 'image/png'
+  if (base64.startsWith('/9j/')) return 'image/jpeg'
+  if (base64.startsWith('R0lGOD')) return 'image/gif'
+  if (base64.startsWith('Qk')) return 'image/bmp'
+  return 'image/png'
 }
 
 /**
- * Dézippe un fichier `.sankey` (e!Sankey) et parse son `esankey.xml`.
+ * Dézippe un fichier `.sankey` (e!Sankey) et parse son `esankey.xml`, en
+ * extrayant les images embarquées (icônes, décors) en data URIs.
  * La signature XML-DSig embarquée n'est pas vérifiée (lecture seule).
  */
 export const loadEsankeyFile = async (data: ArrayBuffer): Promise<EsParsedDiagram> => {
@@ -446,5 +691,14 @@ export const loadEsankeyFile = async (data: ArrayBuffer): Promise<EsParsedDiagra
   const xmlFile = zip.file('esankey.xml')
   if (!xmlFile)
     throw new Error('Fichier e!Sankey invalide : esankey.xml absent de l\'archive')
-  return parseEsankeyXml(await xmlFile.async('string'))
+  const images: { [path: string]: string } = {}
+  await Promise.all(
+    zip.file(/^Images\//)
+      .filter(f => f.name !== 'Images/preview.png')
+      .map(async f => {
+        const base64 = await f.async('base64')
+        images[f.name] = 'data:' + mimeFromMagic(base64) + ';base64,' + base64
+      })
+  )
+  return parseEsankeyXml(await xmlFile.async('string'), images)
 }
