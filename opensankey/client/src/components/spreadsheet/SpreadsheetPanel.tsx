@@ -1,8 +1,9 @@
-import React, { Suspense, useState } from 'react'
+import React, { Suspense, useEffect, useReducer } from 'react'
 import { Box, Button, ButtonGroup, Center, Spinner } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTableCells, faAlignLeft } from '@fortawesome/free-solid-svg-icons'
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { Type_SheetMode } from '../../types/MenuConfig'
 import { SankeyTextEditor } from './SankeyTextEditor'
 
 // #241 — Sortir Univer du bundle de base : le tableur Univer (et sa dépendance très lourde
@@ -14,19 +15,24 @@ const UniverSpreadSheet = React.lazy(() =>
   import('./UniverSpreadSheet').then(m => ({ default: m.UniverSpreadSheet }))
 )
 
-type Type_SheetMode = 'grid' | 'text'
-
 /**
  * Panneau Tableur avec sélecteur de mode (grille Univer / éditeur texte
  * SankeyMATIC). Le sélecteur est au niveau du Tableur, comme demandé.
  * L'éditeur texte est monté à la volée : il se (re)sérialise sur le diagramme
  * courant à chaque bascule vers le mode Texte (sens « save »).
+ *
+ * Le mode vit dans menu_configuration (et non dans un state local) : ce panneau est
+ * démonté quand le tableur est fermé, et un import SankeyMATIC doit pouvoir l'ouvrir
+ * directement sur l'éditeur texte.
  */
 export const SpreadsheetPanel = (
   { app_data, active }: { app_data: Class_ApplicationData, active: boolean }
 ) => {
   const { t } = app_data
-  const [mode, setMode] = useState<Type_SheetMode>('grid')
+  const [, force] = useReducer((x: number) => x + 1, 0)
+  useEffect(() => app_data.menu_configuration.addMainZoneListener(force), [app_data])
+  const mode = app_data.menu_configuration.main_zone_spreadsheet_mode
+  const setMode = (m: Type_SheetMode) => { app_data.menu_configuration.main_zone_spreadsheet_mode = m }
 
   const tabStyle = (m: Type_SheetMode) => ({
     colorScheme: mode === m ? 'blue' : 'gray',
