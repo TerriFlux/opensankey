@@ -74,6 +74,8 @@ export const DOC_LAYOUTS_WITH_SHEET: Type_MainZoneDocLayout[] =
   ['sheet-right', 'sheet-left', 'sheet-top', 'sheet-bottom']
 // Positions qui placent la doc en bas et raccourcissent le diagramme (réserve verticale).
 export const DOC_LAYOUTS_BOTTOM: Type_MainZoneDocLayout[] = ['diagram-bottom', 'window-bottom']
+// Sous-onglets du panneau Tableur : grille Univer ou éditeur texte (format SankeyMATIC natif).
+export type Type_SheetMode = 'grid' | 'text'
 // Largeur (px) de la colonne d'outils rétractable à droite (barre verticale + config + filtres +
 // undo/redo/save). Quand ouverte, cette largeur est réservée par le diagramme (cf.
 // getToolsColumnWidthPx / getMainZoneRightReservedPx) pour que la zone de dessin ne morde pas dessus.
@@ -240,6 +242,11 @@ export class Class_MenuConfig {
   // Quand vrai, l'unitaire ne réserve plus d'espace in-app (le diagramme/tableur récupèrent la place)
   // et mainZoneUnitaryRect renvoie null ; OS+ le rend alors en Draggable.
   protected _main_zone_unitary_detached: boolean = false
+  // Sous-onglet courant du Tableur (grille/texte). Porté ici et non par un useState de
+  // SpreadsheetPanel : le panneau est démonté quand le tableur est fermé, donc un état local
+  // repartirait toujours sur 'grid'. Permet aussi à un import SankeyMATIC d'ouvrir directement
+  // l'éditeur texte. État TRANSITOIRE : volontairement absent de mainZoneStateToJSON/FromJSON.
+  protected _main_zone_spreadsheet_mode: Type_SheetMode = 'grid'
   // Colonne d'outils rétractable à droite (éditeur uniquement). `tools_column_enabled` est posé par
   // SankeyMenu (= !is_static) : en mode publish/statique la colonne n'existe pas et ne réserve rien.
   // `_tools_column_open` (défaut ouvert) pilote l'affichage ET la réserve de largeur du diagramme.
@@ -277,6 +284,8 @@ export class Class_MenuConfig {
   public set main_zone_unitary_ratio(v: number) { this._main_zone_unitary_ratio = v; this._notifyMainZone() }
   public get main_zone_unitary_detached() { return this._main_zone_unitary_detached }
   public set main_zone_unitary_detached(v: boolean) { this._main_zone_unitary_detached = v; this._notifyMainZone() }
+  public get main_zone_spreadsheet_mode() { return this._main_zone_spreadsheet_mode }
+  public set main_zone_spreadsheet_mode(v: Type_SheetMode) { this._main_zone_spreadsheet_mode = v; this._notifyMainZone() }
   public addMainZoneListener(l: () => void): () => void {
     return this._event_bus.subscribe(MAIN_ZONE_TOPIC, l)
   }

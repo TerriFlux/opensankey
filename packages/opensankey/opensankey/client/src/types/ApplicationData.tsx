@@ -913,6 +913,22 @@ export class Class_ApplicationData {
 
 
   /**
+   * Ouvre le Tableur sur son sous-onglet « Texte » (éditeur SankeyMATIC natif).
+   * Appelé après tout import SankeyMATIC : le texte source reste ainsi sous les yeux
+   * de l'utilisateur, éditable et réappliquable. Sans effet en mode publish/statique,
+   * qui n'a pas de tableur.
+   *
+   * @memberof Class_ApplicationData
+   */
+  public openSpreadsheetTextEditor() {
+    if (this.is_static) return
+    const mc = this._menu_configuration
+    if (!mc) return // _fromJSON peut précéder createNewMenuConfiguration
+    mc.main_zone_spreadsheet_mode = 'text'
+    mc.main_zone_show_spreadsheet = true
+  }
+
+  /**
  * Function to that fetch json data from an url (the file has to be compressed with gzip)
  *
  * @param {string} url_data
@@ -967,6 +983,7 @@ export class Class_ApplicationData {
         // l'import fichier de MenuTop (aucun aller-retour Python).
         if (/\.txt$/i.test(filename)) {
           this.fromJSON(parseSankeymaticText(text) as never)
+          this.openSpreadsheetTextEditor()
           return
         }
 

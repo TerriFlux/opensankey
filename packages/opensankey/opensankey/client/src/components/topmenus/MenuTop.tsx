@@ -80,7 +80,7 @@ import { clickSaveSVG } from './SankeyExports'
 import { ModalTemplate } from './SankeyTemplates'
 import { ModalExcelTemplate } from './ExcelTemplateModal'
 import { ModalImageImport } from './ImageImportModal'
-import { applySankeymaticText } from '../../Persistence/sankeymaticLoad'
+import { importSankeymaticText } from '../../Persistence/sankeymaticLoad'
 import {
   loadUniversalJSON,
 } from '../../Persistence/UniversalJSONCompression'
@@ -1241,7 +1241,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
         // Format natif SankeyMATIC parsé 100 % côté front (plus de POST Python).
         const reader = new FileReader()
         reader.onload = (e: ProgressEvent<FileReader>) => {
-          applySankeymaticText(String((e.target as FileReader).result), new_data)
+          importSankeymaticText(String((e.target as FileReader).result), new_data)
         }
         reader.readAsText(files[0])
       }} />
