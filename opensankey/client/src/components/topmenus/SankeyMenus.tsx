@@ -53,6 +53,7 @@ import {
 import { useMainZone, mainZoneRightReservedPx } from '../spreadsheet/MainZoneTabs'
 import { modalResolutionPNG, modalResolutionPDF } from './SankeyExports'
 import { MenuTopNavBar } from './MenuTop'
+import { TemplateGalleryPanel } from './SankeyTemplates'
 import { IType_DictHookRefSetterShowDialogComponents, keyTypeConfig, keyTypeElements, Type_AdditionalMenus, TOOLS_COLUMN_WIDTH_PX } from '../../types/MenuConfig'
 import { DrawingAreaConfig, LegendConfig, TitleConfig } from '../configmenus/SankeyMenuConfigurationLayout'
 import { LinkValueTypeSelector, MenuConfigurationLinksData } from '../configmenus/SankeyMenuConfigurationLinksData'
@@ -381,6 +382,15 @@ export const SankeyMenu = (
       /> : <></>}
 
       {tools_column}
+
+      {/* Galerie de modèles à l'arrivée (diagramme vide) : vitrine pour le nouveau
+          visiteur, s'efface dès qu'il travaille (cf. TemplateGalleryPanel). */}
+      {(!app_data.is_static && app_data.is_editable) ? (
+        <TemplateGalleryPanel
+          new_data={app_data}
+          additionalMenu={additionalMenus}
+        />
+      ) : <></>}
 
       {/* {
         processFunction.ref_processing.current ? (
