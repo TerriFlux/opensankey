@@ -81,6 +81,7 @@ import { ModalTemplate } from './SankeyTemplates'
 import { ModalExcelTemplate } from './ExcelTemplateModal'
 import { ModalImageImport } from './ImageImportModal'
 import { importSankeymaticText } from '../../Persistence/sankeymaticLoad'
+import { applyEsankeyFile } from '../../Persistence/esankeyLoad'
 import {
   loadUniversalJSON,
 } from '../../Persistence/UniversalJSONCompression'
@@ -490,6 +491,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
   const _load_json = useRef<HTMLInputElement>(null)
   const _load_sankeymatic = useRef<HTMLInputElement>(null)
   const _load_stan = useRef<HTMLInputElement>(null)
+  const _load_esankey = useRef<HTMLInputElement>(null)
 
   // State for Excel template modal
   const [show_excel_template, set_show_excel_template] = useState(false)
@@ -676,6 +678,17 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
       >
         {new_data.icon_library.icon_open_sankey_sankeymatic}
         {t('Menu.open_stan')}
+      </MenuItem>
+      <MenuItem
+        onClick={() => {
+          if (_load_esankey.current) {
+            _load_esankey.current.name = ''
+            _load_esankey.current.click()
+          }
+        }}
+      >
+        {new_data.icon_library.icon_open_sankey_sankeymatic}
+        {t('Menu.open_esankey')}
       </MenuItem>
       <MenuItem
         onClick={() => {
@@ -976,6 +989,15 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
           {new_data.icon_library.icon_open_sankey_sankeymatic}
           {t('Menu.open_stan')}
         </MenuItem>
+        <MenuItem onClick={() => {
+          if (_load_esankey.current) {
+            _load_esankey.current.name = ''
+            _load_esankey.current.click()
+          }
+        }}>
+          {new_data.icon_library.icon_open_sankey_sankeymatic}
+          {t('Menu.open_esankey')}
+        </MenuItem>
       </MenuGroup>
       <MenuDivider />
       <MenuGroup title={t('Menu.enregistrer')}>
@@ -1264,6 +1286,21 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
           .then(json_data => new_data.fromJSON(json_data))
           .catch((error) => {
             console.error('Error in open_stan - ' + error.toString())
+          })
+      }} />
+    <Input
+      accept='.sankey'
+      type='file'
+      ref={_load_esankey}
+      style={{ display: 'none' }}
+      onChange={(evt: ChangeEvent) => {
+        const files = (evt.target as HTMLFormElement).files
+        if (!files || !files[0]) return
+        // .sankey (e!Sankey) = ZIP + XML : dézippé et parsé 100 % côté front.
+        (files[0] as File).arrayBuffer()
+          .then((buffer: ArrayBuffer) => applyEsankeyFile(buffer, new_data))
+          .catch((error: Error) => {
+            console.error('Error in open_esankey - ' + error.toString())
           })
       }} />
   </>

@@ -55,6 +55,7 @@ import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Type_AdditionalMenus } from '../../types/MenuConfig'
 import { CONVERTER_CONFIGS } from '../dialogs/PersistenceProcessDialogConfigs'
 import { loadSankeymaticTemplate } from '../../Persistence/sankeymaticLoad'
+import { applyEsankeyFile } from '../../Persistence/esankeyLoad'
 
 // TYPES ================================================================================
 
@@ -100,9 +101,26 @@ const loadStanTemplate = (
 }
 
 /**
+ * Charge un modèle e!Sankey (.sankey = ZIP + XML) : dézippé et parsé 100 % côté
+ * front, comme l'import fichier de MenuTop.
+ */
+const loadEsankeyTemplate = (
+  new_data: Class_ApplicationData,
+  file_path: string
+) => {
+  const root = window.location.origin
+  fetch(root + '/opensankey/menus/templates_asset/' + file_path)
+    .then(response => response.arrayBuffer())
+    .then(buffer => applyEsankeyFile(buffer, new_data))
+    .catch((error) => {
+      console.error('Error in loadEsankeyTemplate - ' + error.toString())
+    })
+}
+
+/**
  * Charge un modèle dans l'application (même chemin que le bouton « Utiliser » de la
- * modale) : parse front pour les modèles SankeyMATIC (.txt), conversion serveur pour
- * les modèles STAN (.smfa/.zmfa), converter JSON sinon.
+ * modale) : parse front pour les modèles SankeyMATIC (.txt) et e!Sankey (.sankey),
+ * conversion serveur pour les modèles STAN (.smfa/.zmfa), converter JSON sinon.
  */
 export const loadTemplate = (
   new_data: Class_ApplicationData,
@@ -113,6 +131,8 @@ export const loadTemplate = (
     loadSankeymaticTemplate(file_path, new_data)
   } else if (/\.(smfa|zmfa)$/i.test(file_path)) {
     loadStanTemplate(new_data, file_path)
+  } else if (file_path.endsWith('.sankey')) {
+    loadEsankeyTemplate(new_data, file_path)
   } else {
     new_data.menu_configuration.ref_universal_converter_set_config.current(
       CONVERTER_CONFIGS['load_example_json'], file_path, true
