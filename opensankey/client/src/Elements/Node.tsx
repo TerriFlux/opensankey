@@ -1227,9 +1227,16 @@ export class Class_NodeElement extends Class_NodeBase {
    * Function that draw all the arrow of link visible linked to this node
    */
   private _drawLinksArrow() {
+    // NB : ces filtres portaient un `link.isRelatedD3SelectionPresentAndSynced` SANS
+    // parenthèses — une référence de méthode, donc toujours truthy : le garde ne filtrait
+    // rien. Il n'est pas rétabli ici : au premier dessin le groupe SVG du flux n'est pas
+    // encore dans le DOM, et `Class_LinkElement._drawArrow` a déjà posé `triggered` avant de
+    // sortir, donc filtrer ferait perdre la pointe. La vraie protection est le
+    // `if (!this.d3_selection) return` en tête de `_drawArrow`.
+
     // Target arrows: this node is the target, arrow drawn on link.target_side.
     const target_arrows = this.input_links_list
-      .filter(link => link.is_visible && link.shape_is_arrow && link.isRelatedD3SelectionPresentAndSynced)
+      .filter(link => link.is_visible && link.shape_is_arrow)
       .map(link => ({
         link,
         is_source_arrow: false,
@@ -1242,7 +1249,7 @@ export class Class_NodeElement extends Class_NodeBase {
     // (independent of the target arrow — a link can carry both; graphical only,
     // the data flow direction is unchanged).
     const source_arrows = this.output_links_list
-      .filter(link => link.is_visible && link.shape_arrow_at_source && link.isRelatedD3SelectionPresentAndSynced)
+      .filter(link => link.is_visible && link.shape_arrow_at_source)
       .map(link => ({
         link,
         is_source_arrow: true,
@@ -1416,8 +1423,9 @@ export class Class_NodeElement extends Class_NodeBase {
    * carved consistently whatever the global element z-order.
    */
   private _drawLinksSourceNotch() {
+    // Même garde mort (méthode non appelée) qu'en tête de `_drawLinksArrow` : retiré, pas activé.
     const links = this.output_links_list.filter(
-      link => link.is_visible && link.shape_source_notch && link.isRelatedD3SelectionPresentAndSynced
+      link => link.is_visible && link.shape_source_notch
     )
     if (links.length === 0)
       return
