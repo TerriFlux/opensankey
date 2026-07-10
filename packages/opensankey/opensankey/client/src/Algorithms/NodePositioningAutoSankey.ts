@@ -100,16 +100,8 @@ export class NodePositioningAutoSankey {
     //     si le DFS choisit ce flux comme back-edge, il restera affiché droit
     //     mais l'index horizontal sera incohérent)
     //   - unlocked       → auto, l'algo décide librement
-    const user_forced_recycling_ids = new Set<string>(
-      this.drawingArea.sankey.visible_links_list
-        .filter(l => l.shape_is_recycling_locked === true && l.shape_is_recycling === true)
-        .map(l => l.id)
-    )
-    const user_forbidden_recycling_ids = new Set<string>(
-      this.drawingArea.sankey.visible_links_list
-        .filter(l => l.shape_is_recycling_locked === true && l.shape_is_recycling === false)
-        .map(l => l.id)
-    )
+    const user_forced_recycling_ids = this.np.cycles.user_forced_recycling_link_ids
+    const user_forbidden_recycling_ids = this.np.cycles.user_forbidden_recycling_link_ids
 
     if (skip_horizontal) {
       // Skip horizontal recalculation — use existing position_u values
@@ -149,93 +141,18 @@ export class NodePositioningAutoSankey {
         })
       })
     } else {
-      // ÉTAPE 1: Calcul des index horizontaux - VERSION AMÉLIORÉE
-      const possible_recycling_links_ids: string[] = []
-
-      // Pré-amorçage : les liens marqués recyclage par l'utilisateur
-      // (snapshot user_forced_recycling_ids) sont injectés dans la liste des
-      // liens recyclage avant le DFS. Ainsi, la détection de cycles les
-      // considère déjà coupés et ne descend pas par eux pour calculer les
-      // index horizontaux.
-      user_forced_recycling_ids.forEach(link_id => {
-        possible_recycling_links_ids.push(link_id)
-      })
-
-      // Initialiser tous les nœuds à index -1
-      nodes_to_process.forEach(node => {
-        horizontal_indexes_per_nodes_ids[node.id] = -1
-      })
-
-      // Identifier et traiter les nœuds sources en priorité.
-      // On compte les liens « structurels » (is_visible_ignoring_zero) et pas seulement
-      // is_visible : un flux à valeur nulle (souvent fraîchement créé) doit quand même
-      // relier ses nœuds pour l'indexation horizontale, sinon le nœud cible apparaît
-      // comme une source/un nœud isolé et se retrouve mal placé en X (position_u, lui,
-      // ignore déjà la valeur — d'où la divergence X/U observée).
-      const hasLayoutInput = (node: Class_NodeElement) => node.input_links_list.some(l => l.is_visible_ignoring_zero)
-      const hasLayoutOutput = (node: Class_NodeElement) => node.output_links_list.some(l => l.is_visible_ignoring_zero)
-      const source_nodes = nodes_to_process.filter(node => !hasLayoutInput(node) && hasLayoutOutput(node))
-      const lone_nodes = nodes_to_process.filter(node => !hasLayoutInput(node) && !hasLayoutOutput(node))
-
-      console.log('source nodes:', source_nodes.map(n => n.id))
-      console.log('lone nodes:', lone_nodes.map(n => n.id))
-
-      // Traiter les nœuds sources
-      source_nodes.forEach(node => {
-        if (horizontal_indexes_per_nodes_ids[node.id] === -1) {
-          this.np.cycles.computeHorizontalIndexImproved(
-            node,
-            nodes_to_process,
-            0, // Commencer à 0 pour les sources
-            [],
-            possible_recycling_links_ids,
-            horizontal_indexes_per_nodes_ids
-          )
-        }
-      })
-
-      // Traiter les nœuds isolés
-      lone_nodes.forEach(node => {
-        horizontal_indexes_per_nodes_ids[node.id] = 0
-      })
-
-      // Traiter les nœuds restants (composantes isolées avec cycles)
-      nodes_to_process.forEach(node => {
-        if (horizontal_indexes_per_nodes_ids[node.id] === -1) {
-          this.np.cycles.computeHorizontalIndexImproved(
-            node,
-            nodes_to_process,
-            0,
-            [],
-            possible_recycling_links_ids,
-            horizontal_indexes_per_nodes_ids
-          )
-        }
-      })
-
-      // ÉTAPE 2: Double vérification des liens de recyclage (logique existante)
-      const checked_recycling_links_ids: string[] = []
-      possible_recycling_links_ids.forEach(link_id => {
-        this.np.computeRecyclingHorizontalIndex(
-          nodes_to_process,
-          this.drawingArea.sankey.links_dict[link_id],
-          checked_recycling_links_ids,
-          horizontal_indexes_per_nodes_ids
-        )
-      })
-
-      // ÉTAPE 2 bis: Forcer l'index horizontal des nœuds dont la colonne est verrouillée.
-      nodes_to_process.forEach(node => {
-        if (node.shape_position_u_locked === true) {
-          const locked_index = Math.max(0, Math.round(node.position_u) - 1)
-          horizontal_indexes_per_nodes_ids[node.id] = locked_index
-        }
-      })
+      // ÉTAPES 1, 2 et 2 bis : socle commun avec `position_u` (opensankey#1253).
+      // Amorçage (dont les liens recyclage forcés par l'utilisateur, que le DFS considère déjà
+      // coupés), propagation depuis les sources, compaction, puis colonnes verrouillées.
+      const {
+        recycling_links: possible_recycling_links_ids,
+        horizontal_indexes
+      } = this.np.cycles.computeHorizontalIndexes(nodes_to_process)
+      Object.assign(horizontal_indexes_per_nodes_ids, horizontal_indexes)
 
       // Set des liens reconnus comme recyclage par la détection de cycles.
       // possible_recycling_links_ids contient les back-edges trouvées par DFS
-      // (computeHorizontalIndexImproved) ET les liens pré-amorcés par
-      // l'utilisateur (cf. ÉTAPE 1). On utilise cette source de vérité pour
+      // ET les liens pré-amorcés par l'utilisateur. On utilise cette source de vérité pour
       // le marquage final, plutôt qu'une comparaison node_index >= target_index :
       // quand l'utilisateur force UN flux d'un cycle comme recyclage, le DFS
       // coupe à cet endroit et n'identifie PAS d'autres back-edges dans ce
