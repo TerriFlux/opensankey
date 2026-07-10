@@ -10,12 +10,16 @@
 //
 // Points de conception qui ne se devinent pas à la lecture :
 //
-//   - Un thème s'applique en écrivant son patch dans le `_storage` des styles
-//     `NodeStyle` / `LinkStyle`. Ces deux-là sont créés `is_deletable = true`
-//     (Sankey.create_internal_style), donc NON pré-remplis des défauts usine —
-//     contrairement au style `default`, qui l'est (Element.tsx:1279-1283) et qui
-//     rendrait inatteignable tout maillon branché sous lui. C'est la raison pour
-//     laquelle le thème n'est PAS un maillon de la cascade de résolution.
+//   - Le thème n'est PAS un maillon de la cascade de résolution. On ne peut pas le
+//     brancher sous les styles : le style `default` est pré-rempli de TOUS les
+//     défauts usine (Element.tsx:1279-1283, `is_deletable = false`) et sert de repli
+//     à `getStyleWithAttr`, si bien que `getStyleProperty` ne retombe jamais sur
+//     `_config[k].default`. Un maillon placé là ne serait jamais consulté.
+//
+//   - Un thème s'applique donc en écrivant son patch dans le `_storage` des styles
+//     `NodeStyle` / `LinkStyle`. Ces deux-là, eux, sont créés `is_deletable = true`
+//     (Sankey.create_internal_style), donc non pré-remplis : leur storage appartient
+//     au thème, qui peut le remplacer en bloc sans écraser de défauts usine.
 //
 //   - La couleur de nœud ne peut pas passer par les styles : elle dépend du nom
 //     du nœud. Elle est résolue dans Node.getShapeColorToUse() via `nodeColor()`.
@@ -103,9 +107,12 @@ export class Class_Theme {
 
 /**
  * Thème historique d'OpenSankey. Son patch de styles est VIDE, et c'est le point :
- * `applyTheme` remet les styles de base à zéro, ce qui laisse les défauts usine
- * reprendre la main. Son `node_rule: 'by-tag'` décrit le comportement existant
- * plutôt qu'il ne le change.
+ * `applyTheme` ramène les styles de base à leur amorce `elementStyleConfigs`, et un
+ * patch vide les y laisse. C'est bien l'amorce — non les défauts usine — qui porte
+ * l'identité d'OpenSankey : `value_label_is_visible` vaut `false` en défaut usine, et
+ * les valeurs de flux ne s'affichent que parce que l'amorce de `LinkStyle` le remet à
+ * `true`. Son `node_rule: 'by-tag'` décrit le comportement existant plutôt qu'il ne
+ * le change.
  *
  * L'introduire ne doit produire strictement aucun changement d'apparence — c'est le
  * test de non-régression de l'étape 1 de NOTE-THEMES.md. Le fond, lui, est déclaré :
@@ -191,6 +198,49 @@ export const themeStan = (): Class_Theme => new Class_Theme({
       value_label_background_margin_right: 8,
       value_label_background_margin_top: 3,
       value_label_background_margin_bottom: 3,
+    },
+  },
+  globals: { couleur_fond_sankey: '#ffffff' },
+})
+
+/**
+ * Le thème `esankey`. Posé par l'importeur .sankey (`esankeyParser`) sur les
+ * diagrammes importés, et disponible à la bascule manuelle.
+ *
+ * Pas de palette : dans e!Sankey, un flux tient sa couleur de son entry
+ * (matériau/énergie), et l'import la pose sur l'élément — `link_rule: 'flow'`
+ * la respecte. Identité relevée sur les démos d'e!Sankey 5 : fond blanc,
+ * process en boîte grise discrète à liseré noir avec le nom SOUS la boîte,
+ * flèches courbes à pointe, quantité écrite sur la flèche, sans fond.
+ */
+export const themeEsankey = (): Class_Theme => new Class_Theme({
+  id: 'esankey',
+  palette: { colors: [], offset: 0, node_rule: 'none', link_rule: 'flow' },
+  styles: {
+    NodeStyle: {
+      shape_type: 'rect',
+      shape_color: '#D9D9D9',
+      shape_border_visible: true,
+      shape_border_color: '#000000',
+      shape_border_thickness: 1,
+      name_label_is_visible: true,
+      name_label_vert: 'bottom',
+      name_label_horiz: 'middle',
+      value_label_is_visible: false,
+    },
+    LinkStyle: {
+      shape_color_rule: 'flow',
+      shape_opacity: 0.9,
+      shape_is_curved: true,
+      shape_is_arrow: true,
+      shape_arrow_size: 10,
+      name_label_is_visible: false,
+      // Pas de valeurs par défaut : dans e!Sankey la visibilité du label est un
+      // réglage PAR FLÈCHE ; l'importeur pose `label_visible` sur chaque flux
+      // dont la flèche affiche sa quantité.
+      value_label_is_visible: false,
+      value_label_on_path: true,
+      value_label_color: '#000000',
     },
   },
   globals: { couleur_fond_sankey: '#ffffff' },

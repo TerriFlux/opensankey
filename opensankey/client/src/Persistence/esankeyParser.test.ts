@@ -148,11 +148,159 @@ describe('parseEsankeyXml — fixture minimale', () => {
     expect(a?.links_order.length).toBe(2)
   })
 
+  test('thème esankey posé sur le diagramme, fond du fichier repris', () => {
+    expect(d.theme.id).toBe('esankey')
+    expect(d.theme.palette.link_rule).toBe('flow')
+    expect(d.theme.globals.couleur_fond_sankey).toBe('#FFFFFF')
+  })
+
+  test('patch du thème fusionné dans les styles écrits (loadTheme ne l\'applique pas)', () => {
+    // Sans cette fusion, l'amorce interne de LinkStyle rallume les labels de
+    // valeur de TOUS les flux (cf. recette stan_smfa).
+    expect(d.style_link.default.value_label_is_visible).toBe(false)
+    expect(d.style_link.default.shape_color_rule).toBe('flow')
+    expect(d.style_node.default.shape_color).toBe('#D9D9D9')
+    expect(d.style_node.default.shape_border_visible).toBe(true)
+  })
+
   test('échelle et fond : maximumFlow/width → user_scale, backgroundColor -1 → blanc', () => {
     // 40 unités sur 80 px → 50 unités pour 100 px
     expect(d.user_scale).toBe(50)
     expect(d.couleur_fond_sankey).toBe('#FFFFFF')
     expect(d.version).toBe('0.9')
+  })
+})
+
+// Fixture « décor » : process invisible + process-image, commentaire de
+// flèche, unité affichée, zones libres (texte, rectangle, image) et légende.
+const PNG_URI = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUg'
+const FIXTURE_DECOR = `<?xml version="1.0" encoding="utf-8"?>
+<document xmlns="${NS}" generator="e!Sankey">
+  <userSettings netUnitMaximumWidth="200" />
+  <netModel>
+    <unitTypes>
+      <unitType id="10" name="Power" used="true" width="100" maximumFlow="100" showUnit="true">
+        <units><unit id="11" name="kW" coefficient="1" isBasicUnit="true" /></units>
+      </unitType>
+    </unitTypes>
+    <entryGroup id="20" name="Root">
+      <entries>
+        <entry id="21" name="Gas"><unitTypeRef refId="10" /><brushColor argb="-16776961" /></entry>
+      </entries>
+      <entryGroups />
+    </entryGroup>
+    <graphNodes>
+      <graphProcess id="30" name="Source" />
+      <graphProcess id="31" name="Puits" />
+    </graphNodes>
+    <graphArrows>
+      <graphArrow id="40" name="">
+        <from><graphProcessRef refId="30" /></from>
+        <to><graphProcessRef refId="31" /></to>
+        <compartments>
+          <flow id="41" name="Gas" quantity="60" source="0">
+            <entryRef refId="21" /><unitRef refId="11" />
+          </flow>
+        </compartments>
+      </graphArrow>
+    </graphArrows>
+  </netModel>
+  <net backgroundColor="-1">
+    <processes>
+      <process id="50" locationX="200" locationY="400" visible="false">
+        <label text="Source" />
+      </process>
+      <process id="51" locationX="500" locationY="400">
+        <image filename="Images\\tmp1.tmp" />
+        <label text="Puits" />
+      </process>
+    </processes>
+    <arrows>
+      <arrow id="60">
+        <sankeyArrowLabel visible="true" showValue="true" showUnit="true" text="60" />
+        <comment text="Mesure 2025&#xD;&#xA;source: compteur" visible="false" />
+      </arrow>
+    </arrows>
+    <shapes>
+      <shape>
+        <text locationX="100" locationY="100" sizeW="300" sizeH="60" text="Titre du&#xD;&#xA;diagramme" textColor="-16777216">
+          <font name="Arial" size="18" style="1" />
+        </text>
+      </shape>
+      <shape>
+        <rectangle locationX="150" locationY="600" sizeW="400" sizeH="100" drawBorder="false">
+          <brushColor argb="-2039584" />
+        </rectangle>
+      </shape>
+      <shape>
+        <picture locationX="480" locationY="300" sizeW="40" sizeH="40" transparency="88">
+          <image filename="Images\\tmp1.tmp" />
+        </picture>
+      </shape>
+    </shapes>
+    <legend locationX="100" locationY="200" />
+  </net>
+  <logicalGraphicalObjectMapping>
+    <nodes>
+      <keyValuePair><graphProcessRef refId="30" /><processRef refId="50" /></keyValuePair>
+      <keyValuePair><graphProcessRef refId="31" /><processRef refId="51" /></keyValuePair>
+    </nodes>
+    <edges>
+      <keyValuePair><graphArrowRef refId="40" /><arrowRef refId="60" /></keyValuePair>
+    </edges>
+  </logicalGraphicalObjectMapping>
+</document>`
+
+describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)', () => {
+  const d = parseEsankeyXml(FIXTURE_DECOR, { 'Images/tmp1.tmp': PNG_URI })
+
+  test('process invisible → shape_visible false ; process-image → is_image', () => {
+    const source = Object.values(d.nodes).find(n => n.name === 'Source')
+    const puits = Object.values(d.nodes).find(n => n.name === 'Puits')
+    expect(source?.local.shape_visible).toBe(false)
+    expect(puits?.is_image).toBe(true)
+    expect(puits?.image_src).toBe(PNG_URI)
+  })
+
+  test('commentaire de flèche → tooltip du flux (via le mapping edges)', () => {
+    const link = Object.values(d.links)[0]
+    expect(link.tooltip_text).toBe('Mesure 2025\nsource: compteur')
+  })
+
+  test('aucun label de valeur posé sur le flux ; unité préparée si activation manuelle', () => {
+    const link = Object.values(d.links)[0]
+    expect(link.local.label_visible).toBeUndefined()
+    expect(link.local.label_unit_visible).toBe(true)
+    expect(link.local.label_unit).toBe('kW')
+  })
+
+  test('zones libres → labels : texte (police), rectangle (fond), image', () => {
+    const containers = Object.values(d.labels)
+    expect(containers.length).toBe(3)
+    const texte = containers.find(c => c.title === 'Titre du\ndiagramme')
+    expect(texte?.name_label_font_size).toBe(18)
+    expect(texte?.name_label_bold).toBe(true)
+    expect(texte?.name_label_color).toBe('#000000')
+    const rect = containers.find(c => c.color_visible === true)
+    expect(rect?.color).toBe('#E0E0E0') // -2039584
+    expect(rect?.transparent_border).toBe(true)
+    const image = containers.find(c => c.is_image === true)
+    expect(image?.image_src).toBe(PNG_URI)
+    expect(image?.label_width).toBe(40)
+    // transparency e!Sankey 88 → opacity 12 %
+    expect(image?.opacity).toBe(12)
+  })
+
+  test('légende visible, position normalisée avec le reste', () => {
+    // min X/Y de l'ensemble = (100, 100) (le texte) → décalage -50
+    expect(d.legend).toEqual({ mask_legend: false, legend_dx: 50, legend_dy: 150 })
+    const texte = Object.values(d.labels).find(c => c.title === 'Titre du\ndiagramme')
+    expect(texte?.x).toBe(50)
+    expect(texte?.y).toBe(50)
+  })
+
+  test('groupe de tags avec use_colors (colormap = couleurs des entries)', () => {
+    expect(d.fluxTags[ESANKEY_ENTRIES_TAGG_ID].use_colors).toBe(true)
   })
 })
 
@@ -201,4 +349,23 @@ describeDemos('loadEsankeyFile — démos e!Sankey 5 locales', () => {
       expect(bad).toEqual([])
     }
   }, 60000)
+
+  test('Building Energy Footprint : décor complet (zones libres, images, légende, process invisibles)', async () => {
+    const f = 'Building Energy Footprint [en].sankey'
+    if (!files.includes(f)) return
+    const buffer = fs.readFileSync(path.join(DEMOS_DIR, f))
+    const d = await loadEsankeyFile(buffer as unknown as ArrayBuffer)
+    // 27 shapes dont textes, rectangles, images (les lignes sont ignorées)
+    expect(Object.keys(d.labels).length).toBeGreaterThan(8)
+    expect(Object.values(d.labels).some(c => c.is_image === true)).toBe(true)
+    expect(Object.values(d.labels).some(c => typeof c.title === 'string' && (c.title as string).includes('Building Energy'))).toBe(true)
+    // Légende présente et affichée
+    expect(d.legend?.mask_legend).toBe(false)
+    // Tous les process de cette démo sont invisibles (style « décor »)
+    expect(Object.values(d.nodes).every(n => n.local.shape_visible === false)).toBe(true)
+    // Aucun flux importé ne porte de label de valeur (décision user : chez
+    // e!Sankey l'étiquette appartient à la flèche, pas au flux).
+    const labelled = Object.values(d.links).filter(l => l.local.label_visible === true)
+    expect(labelled.length).toBe(0)
+  }, 30000)
 })
