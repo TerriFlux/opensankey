@@ -36,7 +36,10 @@ export async function userSignUp(
   // UTM d'origine transmis par le site (querystring, avant le hash du HashRouter) :
   // persisté à la création du compte pour l'attribution des essais/conversions.
   const utm_campaign = new URLSearchParams(window.location.search).get('utm_campaign') ?? undefined
-  fetch(window.location.origin + '/auth/signup/create', {
+  // IMPORTANT : on RETOURNE la chaîne fetch pour que `await userSignUp(...)` attende
+  // vraiment la fin de l'inscription (et donc que `callback(true)` ait été exécuté)
+  // avant que Register ne décide de revenir dans l'app / démarrer l'essai.
+  return fetch(window.location.origin + '/auth/signup/create', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
