@@ -16,22 +16,25 @@ const PENDING_KEY = 'pending_trial_plan'
 export const normalizeTrialPlan = (raw: string | null | undefined): TrialPlan =>
   raw === 'suite' ? 'suite' : 'plus'
 
+// localStorage (et non sessionStorage) : l'intention doit survivre à la création
+// de compte puis au RETOUR depuis l'email de bienvenue, souvent dans un nouvel
+// onglet/nouvelle session (sessionStorage y serait perdu → essai jamais démarré).
 /** Mémorise l'intention d'essai (avant création/connexion de compte). */
 export const setPendingTrial = (plan: TrialPlan): void => {
-  try { sessionStorage.setItem(PENDING_KEY, plan) } catch { /* sessionStorage indisponible */ }
+  try { localStorage.setItem(PENDING_KEY, plan) } catch { /* localStorage indisponible */ }
 }
 
 /** Lit l'intention d'essai en attente, ou null. */
 export const getPendingTrial = (): TrialPlan | null => {
   try {
-    const v = sessionStorage.getItem(PENDING_KEY)
+    const v = localStorage.getItem(PENDING_KEY)
     return v === 'plus' || v === 'suite' ? v : null
   } catch { return null }
 }
 
 /** Efface l'intention d'essai en attente. */
 export const clearPendingTrial = (): void => {
-  try { sessionStorage.removeItem(PENDING_KEY) } catch { /* ignore */ }
+  try { localStorage.removeItem(PENDING_KEY) } catch { /* ignore */ }
 }
 
 export type TrialStartResult = {

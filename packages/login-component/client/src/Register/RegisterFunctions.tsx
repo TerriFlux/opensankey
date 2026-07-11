@@ -5,6 +5,7 @@ import i18next from 'i18next'
 import { NavigateFunction } from 'react-router-dom'
 import { LoginComponent } from '../LoginComponent'
 import { LicenseType } from '../Paiement/PaiementFunctions'
+import { getPendingTrial } from '../Paiement/trialFlow'
 
 export const app_name_opensankeyplus = 'OpenSankey+'
 export const app_name_sankeysuite = 'SankeySuite'
@@ -70,6 +71,9 @@ export async function userSignUp(
       }
     })
     .then(() => {
+      // Essai en attente : le compte est déjà logué à l'inscription — Register
+      // démarre l'essai et renvoie à l'app (pas de détour par /login ni le mail).
+      if (getPendingTrial()) return
       const next_page = '/login'
       setTimeout(
         () => navigate(next_page),

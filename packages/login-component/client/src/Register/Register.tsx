@@ -24,6 +24,7 @@ import {
 
 import { logError, userSignUp } from './RegisterFunctions'
 import { LoginComponent } from '../LoginComponent'
+import { getPendingTrial, clearPendingTrial, postTrialStart } from '../Paiement/trialFlow'
 
 
 export const email_regex_str = '(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+(\\.[a-zA-Z0-9-]+)*\\.[a-zA-Z]{2,})$'
@@ -97,19 +98,30 @@ const Register = ({
     if (okAccountInfos) {
       // backend SignUp
       setOnWait(true)
+      let created = false
       await userSignUp(
         user_name,
         password,
         firstname,
         lastname,
         (ok: boolean) => {
+          created = ok
           setOkAccountCreated(ok)
         },
         navigate
       )
-        .then(() =>
-          setOnWait(false)
-        )
+      setOnWait(false)
+      // Reprise d'un essai en attente : à l'inscription le compte est déjà
+      // logué (login_user côté serveur) — on démarre l'essai tout de suite,
+      // dans le même onglet, puis on revient à l'app. Aucun retour par mail requis.
+      const pending_plan = getPendingTrial()
+      if (created && pending_plan) {
+        clearPendingTrial()
+        await loginComponent.checkTokens(setLicenses, true)  // établit has_account
+        await postTrialStart(pending_plan)                   // démarre l'essai (session déjà ouverte)
+        await loginComponent.checkTokens(setLicenses, true)  // reflète l'essai (droits + bandeau)
+        returnToApp(navigate)
+      }
     }
     else {
       logError(t('Register.account.msg.err_captcha'))
