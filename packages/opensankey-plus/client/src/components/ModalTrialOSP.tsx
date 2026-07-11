@@ -206,8 +206,23 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
     )
   }
 
-  // Licence OS+ réelle (mais pas Suite) → teaser upgrade vers SankeySuite (inclut OS+).
+  // CTA d'essai CONTEXTUEL : le plan dépend du niveau courant (escalade).
+  //   - licence OS+ réelle (pas Suite) → proposer l'essai SankeySuite (inclut OS+)
+  //   - sinon (gratuit / non connecté)  → proposer l'essai OpenSankey+
+  // On propose tant que l'essai du plan n'a pas été consommé. Le clic ouvre
+  // #/license/trial, qui gère l'inscription/connexion puis démarre l'essai.
+
+  // Licence OS+ réelle (mais pas Suite) : escalade vers l'essai SankeySuite.
   if (app_data.has_real_sankey_plus_licence) {
+    if (!app_data.trial_used_suite) {
+      return textCTA(
+        trLang('Essayer SankeySuite 30 j', 'Try SankeySuite for 30 days'),
+        trLang('Essai gratuit de SankeySuite (AFM), sans carte', 'Free SankeySuite (MFA) trial, no credit card'),
+        app_data.logo_sankey_suite,
+        () => goToTrial('suite'),
+      )
+    }
+    // Essai Suite déjà consommé → CTA abonnement Suite.
     return textCTA(
       t('Trial.banner_subscribe_suite'),
       t('Trial.banner_subscribe_suite_tooltip'),
@@ -216,20 +231,17 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
     )
   }
 
-  // Proposer l'essai 30 jours tant qu'il n'a pas été consommé. Couvre aussi les
-  // visiteurs NON connectés (état d'essai vide → used_plus=false) : le clic ouvre
-  // #/license/trial, qui envoie créer/connecter le compte puis démarre l'essai.
-  // Un compte ayant déjà utilisé son essai (used_plus=true) voit le CTA abonnement.
+  // Gratuit / non connecté : proposer l'essai OpenSankey+ (état vide → used_plus=false).
   if (!app_data.trial_used_plus) {
     return textCTA(
       trLang('Essayer 30 jours gratuitement', 'Start your 30-day free trial'),
-      trLang('Essai gratuit, sans carte bancaire', 'Free trial, no credit card'),
+      trLang('Essai gratuit d’OpenSankey+, sans carte bancaire', 'Free OpenSankey+ trial, no credit card'),
       app_data.logo_sankey_plus,
       () => goToTrial('plus'),
     )
   }
 
-  // Gratuit, essai déjà consommé/expiré → CTA abonnement toujours visible.
+  // Gratuit, essai OS+ déjà consommé → CTA abonnement toujours visible.
   return textCTA(
     t('Trial.banner_subscribe'),
     t('Trial.banner_subscribe_tooltip'),
