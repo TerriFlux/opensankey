@@ -15,6 +15,7 @@ from flask_login import current_user
 from .models import db
 from .models import record_trial_event
 from .mailing import send_trial_welcome_mail
+from .mailing import send_trial_admin_notification
 
 # ---------------------------------------------------------------
 # Blueprint
@@ -57,6 +58,12 @@ def trial_start():
         send_trial_welcome_mail(current_user, plan, lang)
     except Exception as excpt:  # noqa: BLE001 — l'email ne doit pas bloquer le démarrage
         print("send_trial_welcome_mail error : " + str(excpt))
+
+    # Notification admin (best-effort) : « nouvel essai démarré »
+    try:
+        send_trial_admin_notification(current_user, plan)
+    except Exception as excpt:  # noqa: BLE001 — l'email ne doit pas bloquer le démarrage
+        print("send_trial_admin_notification error : " + str(excpt))
 
     return jsonify({"ok": True, "reason": "ok", "trial": current_user.trial_state()}), 200
 

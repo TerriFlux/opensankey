@@ -46,6 +46,8 @@ TRIAL_SUITE_MEETING_URL = os.environ.get(
     "TRIAL_SUITE_MEETING_URL", "https://calendly.com/terriflux/sankeysuite-30min"
 )
 TRIAL_CONTACT_EMAIL = os.environ.get("TRIAL_CONTACT_EMAIL", "contact@terriflux.fr")
+# Destinataire des notifications admin « nouvel essai démarré » (surchargeable).
+TRIAL_NOTIFY_RECIPIENT = os.environ.get("TRIAL_NOTIFY_RECIPIENT", "julien.alapetite@terriflux.fr")
 
 
 # ---------------------------------------------------------------
@@ -465,6 +467,36 @@ def send_trial_reminder_mail(user, days_remaining, language="fr"):
         **ctx,
     )
     _attach_logos(msg)
+    send(msg)
+
+
+def send_trial_admin_notification(user, plan):
+    """
+    Notifie l'admin (TRIAL_NOTIFY_RECIPIENT) qu'un essai gratuit vient de démarrer.
+    Best-effort : email texte simple (client, plan, UTM). Ne bloque jamais l'appelant.
+
+    :param plan: 'plus' | 'suite'
+    """
+    if not TRIAL_NOTIFY_RECIPIENT:
+        return
+    product = "SankeySuite" if plan == "suite" else "OpenSankey+"
+    body = (
+        "Un nouvel essai gratuit vient de démarrer.\n\n"
+        "  Produit : {0}\n"
+        "  Client  : {1}\n"
+        "  UTM     : {2}\n\n"
+        "Détail / export : python scripts/trial_export.py\n"
+    ).format(
+        product,
+        getattr(user, "email", "?"),
+        getattr(user, "utm_campaign", None) or "-",
+    )
+    msg = Message(
+        subject="[{0}] Nouvel essai démarré".format(product),
+        sender=("Contact TerriFlux", MAIL_SENDING_ADRESS) if MAIL_SENDING_ADRESS else None,
+        recipients=[TRIAL_NOTIFY_RECIPIENT],
+        body=body,
+    )
     send(msg)
 
 
