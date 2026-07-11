@@ -19,6 +19,7 @@ import {
   Box,
   Button,
   ButtonGroup,
+  HStack,
   IconButton,
   Image,
   Modal,
@@ -198,12 +199,37 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
     </Tooltip>
   )
 
-  // Essai actif → décompte discret pointant vers l'abonnement.
-  if (app_data.trial_active_plus || app_data.trial_active_suite) {
-    return iconCTA(
-      t('Trial.banner_active', { days: app_data.trial_days_remaining }),
-      () => goToCheckout(app_data),
-    )
+  // Décompte discret (essai en cours) pointant vers l'abonnement.
+  const countdownCTA = () => iconCTA(
+    t('Trial.banner_active', { days: app_data.trial_days_remaining }),
+    () => goToCheckout(app_data),
+  )
+  // Bouton « Essayer SankeySuite » (escalade depuis OS+).
+  const suiteTrialCTA = () => textCTA(
+    trLang('Essayer SankeySuite 30 j', 'Try SankeySuite for 30 days'),
+    trLang('Essai gratuit de SankeySuite (AFM), sans carte', 'Free SankeySuite (MFA) trial, no credit card'),
+    app_data.logo_sankey_suite,
+    () => goToTrial('suite'),
+  )
+
+  // Essai SankeySuite actif → haut de l'échelle : juste le décompte.
+  if (app_data.trial_active_suite) {
+    return countdownCTA()
+  }
+
+  // Essai OpenSankey+ actif → décompte + proposer l'essai SankeySuite (inclut OS+),
+  // tant qu'il n'a pas été consommé. Démarrer l'essai Suite remplace l'essai OS+
+  // en cours (Suite ⊇ OS+ : aucun accès perdu, 30 nouveaux jours).
+  if (app_data.trial_active_plus) {
+    if (!app_data.trial_used_suite) {
+      return (
+        <HStack spacing='0.4rem'>
+          {countdownCTA()}
+          {suiteTrialCTA()}
+        </HStack>
+      )
+    }
+    return countdownCTA()
   }
 
   // CTA d'essai CONTEXTUEL : le plan dépend du niveau courant (escalade).
@@ -215,12 +241,7 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
   // Licence OS+ réelle (mais pas Suite) : escalade vers l'essai SankeySuite.
   if (app_data.has_real_sankey_plus_licence) {
     if (!app_data.trial_used_suite) {
-      return textCTA(
-        trLang('Essayer SankeySuite 30 j', 'Try SankeySuite for 30 days'),
-        trLang('Essai gratuit de SankeySuite (AFM), sans carte', 'Free SankeySuite (MFA) trial, no credit card'),
-        app_data.logo_sankey_suite,
-        () => goToTrial('suite'),
-      )
+      return suiteTrialCTA()
     }
     // Essai Suite déjà consommé → CTA abonnement Suite.
     return textCTA(
@@ -231,7 +252,7 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
     )
   }
 
-  // Gratuit / non connecté : proposer l'essai OpenSankey+ (état vide → used_plus=false).
+  // Gratuit / non connecté, essai OS+ jamais pris → proposer l'essai OpenSankey+.
   if (!app_data.trial_used_plus) {
     return textCTA(
       trLang('Essayer 30 jours gratuitement', 'Start your 30-day free trial'),
@@ -241,7 +262,12 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
     )
   }
 
-  // Gratuit, essai OS+ déjà consommé → CTA abonnement toujours visible.
+  // Essai OS+ déjà consommé mais Suite jamais pris → enchaîner sur l'essai SankeySuite.
+  if (!app_data.trial_used_suite) {
+    return suiteTrialCTA()
+  }
+
+  // Les deux essais consommés → CTA abonnement toujours visible.
   return textCTA(
     t('Trial.banner_subscribe'),
     t('Trial.banner_subscribe_tooltip'),
