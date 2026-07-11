@@ -1,8 +1,8 @@
 Welcome {{ first_name }}
 
-Your OpenSankey account has now been created.
+Your OpenSankey account is now created — and you are already signed in.
 
-To log in, go directly to {{login_url}} or access it via the login menu in the top right-hand corner of the application.
+Next time, or from another device, you can log in at {{login_url}} or via the login menu in the top right-hand corner of the application.
 
 Documentation and tutorials are available from the application's help menu.
 
