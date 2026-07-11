@@ -1,0 +1,11 @@
+Hello {{ first_name }},
+
+{% if ending %}Your {{ product }} free trial ends today.{% else %}You have {{ days_remaining }} days left in your {{ product }} free trial.{% endif %}
+
+To keep access to paid features, subscribe from the app: {{ login_url }}
+
+When the trial ends, your account returns to the free plan. No data is ever deleted: projects using paid features simply become read-only.
+{% if is_suite %}
+Have a question or need a quote? Write to us: {{ contact_email }}
+{% endif %}
+The TerriFlux team

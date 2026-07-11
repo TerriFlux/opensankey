@@ -11,6 +11,7 @@ import hashlib
 
 # System
 from datetime import datetime
+from datetime import timedelta
 from functools import wraps
 
 # Flask imports
@@ -40,6 +41,26 @@ from itsdangerous import URLSafeTimedSerializer as Serializer
 
 connected_user = Blueprint("connected_user", __name__)
 db = SQLAlchemy()
+
+
+# ---------------------------------------------------------------
+# Free trial (essai gratuit) — géré en base, jamais dans Stripe.
+#
+# Un essai « plus » débloque OpenSankey+ ; un essai « suite » débloque
+# SankeySuite (qui inclut OpenSankey+). Sans carte bancaire, un seul essai par
+# plan et par compte, à vie. À expiration, on retombe sur le plan gratuit :
+# aucune donnée n'est supprimée (le front passe les projets payants en lecture
+# seule). Les vérifications de droits lisent ces champs EN PLUS de la licence
+# Stripe — on n'interroge jamais Stripe pour autoriser une fonctionnalité.
+TRIAL_PLANS = ("plus", "suite")
+TRIAL_DURATION_DAYS = 30
+
+# Nom de la licence débloquée par chaque plan d'essai (identique aux produits
+# Stripe, cf. RegisterFunctions.tsx). Un essai « suite » couvre aussi « plus ».
+TRIAL_PLAN_LICENSES = {
+    "plus": ("OpenSankey+",),
+    "suite": ("SankeySuite", "OpenSankey+"),
+}
 
 
 # ---------------------------------------------------------------
@@ -195,6 +216,16 @@ class User(UserMixin, db.Model):
     # Security token
     secret_token = db.Column(db.String(64))
     secret_expiry = db.Column(db.String(128))
+    # Free trial (essai gratuit en base, sans carte). Voir TRIAL_* ci-dessus.
+    trial_plan = db.Column(db.String(16))          # 'plus' | 'suite' | None
+    trial_ends_at = db.Column(db.String(128))      # date ISO de fin de l'essai courant
+    trial_used_plus = db.Column(db.Boolean)        # essai « plus » déjà consommé (à vie)
+    trial_used_suite = db.Column(db.Boolean)       # essai « suite » déjà consommé (à vie)
+    trial_reminded_j7 = db.Column(db.Boolean)      # rappel J-7 envoyé pour l'essai courant
+    trial_reminded_j0 = db.Column(db.Boolean)      # rappel J-0 envoyé pour l'essai courant
+    trial_expired_handled = db.Column(db.Boolean)  # événement 'expired' déjà journalisé
+    # Acquisition — utm_campaign transmis par le site à la création du compte
+    utm_campaign = db.Column(db.String(256))
     # Relationships
     # Cascade - delete entries in UserLicense if this db entry is deleted
     user_licenses = db.relationship("UserLicences", back_populates="user", cascade="all, delete")
@@ -330,6 +361,115 @@ class User(UserMixin, db.Model):
                 ok_license = True
                 break
         return ok_license
+
+    # -----------------------------------------------------------
+    # Free trial (essai gratuit) — helpers
+
+    def has_active_trial(self, plan=None):
+        """
+        True si un essai gratuit est en cours (optionnellement pour un plan
+        donné). Un essai « suite » couvre aussi les fonctionnalités « plus ».
+
+        :param plan: 'plus' | 'suite' | None (n'importe quel essai)
+        :rtype: boolean
+        """
+        if not self.trial_plan or not self.trial_ends_at:
+            return False
+        # Expiré ?
+        try:
+            if datetime.fromisoformat(self.trial_ends_at) < datetime.now():
+                return False
+        except Exception:
+            return False
+        if plan is None:
+            return True
+        if self.trial_plan == plan:
+            return True
+        # Un essai « suite » débloque aussi « plus »
+        return plan == "plus" and self.trial_plan == "suite"
+
+    def trial_grants_license(self, license_name):
+        """True si l'essai en cours débloque la licence nommée (ex. 'OpenSankey+')."""
+        if not self.has_active_trial():
+            return False
+        return license_name in TRIAL_PLAN_LICENSES.get(self.trial_plan, ())
+
+    def trial_days_remaining(self):
+        """Nombre de jours entiers restants avant la fin de l'essai (0 si aucun/expiré)."""
+        if not self.trial_ends_at:
+            return 0
+        try:
+            remaining = (datetime.fromisoformat(self.trial_ends_at) - datetime.now()).total_seconds()
+        except Exception:
+            return 0
+        if remaining <= 0:
+            return 0
+        # Arrondi au jour supérieur (« il reste 1 jour » tant qu'il reste du temps)
+        return int(remaining // 86400) + (1 if remaining % 86400 else 0)
+
+    def trial_already_used(self, plan):
+        """True si l'essai de ce plan a déjà été consommé (à vie)."""
+        if plan == "suite":
+            return bool(self.trial_used_suite)
+        return bool(self.trial_used_plus)
+
+    def can_start_trial(self, plan):
+        """
+        True si l'utilisateur peut démarrer un essai pour ce plan : plan valide,
+        essai jamais consommé, pas déjà une licence réelle pour ce plan.
+        """
+        if plan not in TRIAL_PLANS:
+            return False
+        if self.trial_already_used(plan):
+            return False
+        # Inutile de proposer un essai à qui possède déjà la licence réelle
+        for license_name in TRIAL_PLAN_LICENSES[plan]:
+            if self.has_valid_license(license_name):
+                return False
+        return True
+
+    def start_trial(self, plan):
+        """
+        Démarre un essai gratuit de 30 jours pour le plan donné (sans carte).
+        Un seul essai par plan et par compte, à vie.
+
+        :return: (ok, reason) — reason ∈ {'ok','invalid_plan','already_used','has_license'}
+        :rtype: (boolean, str)
+        """
+        if plan not in TRIAL_PLANS:
+            return False, "invalid_plan"
+        if self.trial_already_used(plan):
+            return False, "already_used"
+        for license_name in TRIAL_PLAN_LICENSES[plan]:
+            if self.has_valid_license(license_name):
+                return False, "has_license"
+        now = datetime.now()
+        self.trial_plan = plan
+        self.trial_ends_at = (now + timedelta(days=TRIAL_DURATION_DAYS)).isoformat()
+        # Réinitialise le suivi des rappels pour ce nouvel essai
+        self.trial_reminded_j7 = False
+        self.trial_reminded_j0 = False
+        self.trial_expired_handled = False
+        if plan == "suite":
+            self.trial_used_suite = True
+        else:
+            self.trial_used_plus = True
+        db.session.commit()
+        return True, "ok"
+
+    def trial_state(self):
+        """État d'essai sérialisable pour le front (bandeau, boutons, droits)."""
+        return {
+            "plan": self.trial_plan if self.has_active_trial() else None,
+            "ends_at": self.trial_ends_at if self.has_active_trial() else None,
+            "days_remaining": self.trial_days_remaining(),
+            "active_plus": self.has_active_trial("plus"),
+            "active_suite": self.has_active_trial("suite"),
+            "used_plus": bool(self.trial_used_plus),
+            "used_suite": bool(self.trial_used_suite),
+            "can_start_plus": self.can_start_trial("plus"),
+            "can_start_suite": self.can_start_trial("suite"),
+        }
 
     def get_pwd_reset_token(self):
         """
@@ -507,6 +647,63 @@ class ProcessedStripeEvent(db.Model):
     event_id = db.Column(db.String(255), primary_key=True)
     event_type = db.Column(db.String(128))
     processed_at = db.Column(db.String(128))
+
+
+class TrialEvent(db.Model):
+    """
+    Journal des événements d'essai gratuit (mesure de conversion).
+
+    Un événement par ligne : 'started' | 'converted' | 'expired', avec le plan
+    et l'UTM d'origine du compte. Un simple export (scripts/trial_stats.py) suffit.
+    """
+
+    __tablename__ = "trial_events"
+    id = db.Column(db.Integer, primary_key=True)
+    # SET NULL : on garde l'événement même si le compte est supprimé
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
+    event = db.Column(db.String(32))          # 'started' | 'converted' | 'expired'
+    plan = db.Column(db.String(16))           # 'plus' | 'suite'
+    utm_campaign = db.Column(db.String(256))  # UTM d'origine du compte, copié au moment de l'event
+    created_at = db.Column(db.String(128))
+
+
+def record_trial_event(user, event, plan):
+    """
+    Journalise un événement d'essai. Best-effort : une erreur ici ne doit
+    jamais casser le flux appelant (démarrage d'essai, webhook, cron).
+    """
+    try:
+        db.session.add(
+            TrialEvent(
+                user_id=(user.id if user is not None else None),
+                event=event,
+                plan=plan,
+                utm_campaign=(user.utm_campaign if user is not None else None),
+                created_at=datetime.now().isoformat(),
+            )
+        )
+        db.session.commit()
+    except Exception as e:  # noqa: BLE001 — dégradation volontaire, cause loggée
+        db.session.rollback()
+        print("WARN record_trial_event skipped ({0}: {1})".format(type(e).__name__, e))
+
+
+def record_trial_conversion(user):
+    """
+    Journalise une conversion essai → abonnement payant, une seule fois par compte.
+    Appelée à l'activation d'une licence (webhook Stripe) : ne fait rien si le compte
+    n'a jamais eu d'essai ou si la conversion a déjà été enregistrée.
+    """
+    if user is None or not user.trial_plan:
+        return
+    try:
+        already = TrialEvent.query.filter_by(user_id=user.id, event="converted").first()
+        if already is not None:
+            return
+    except Exception:  # noqa: BLE001 — table absente / base non migrée : on abandonne
+        db.session.rollback()
+        return
+    record_trial_event(user, "converted", user.trial_plan)
 
 
 # ---------------------------------------------------------------
@@ -936,6 +1133,10 @@ def set_licence_checkout_completed(user_id, user_email, user_stripe_id, user_lic
 
     # Apply modification to database
     db.session.commit()
+
+    # Mesure : si ce compte était en essai, journaliser la conversion (une seule fois)
+    record_trial_conversion(user)
+
     return "ok", True
 
 

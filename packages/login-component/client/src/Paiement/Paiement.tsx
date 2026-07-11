@@ -14,6 +14,17 @@ import {
 
 import { getStripeConfig } from './PaiementFunctions'
 import { Presentation } from '../Register/Presentation'
+import { LoginComponent } from '../LoginComponent'
+import {
+  normalizeTrialPlan,
+  postTrialStart,
+  setPendingTrial,
+  clearPendingTrial,
+} from './trialFlow'
+
+/** Petit helper bilingue local pour le flux d'essai (évite d'éditer les gros bundles i18n). */
+const trLang = (fr: string, en: string): string =>
+  ((i18next.language || 'fr').split('-')[0] === 'en' ? en : fr)
 
 // Déclarer le type pour le custom element Stripe. Le namespace global JSX est
 // LE mécanisme prévu par React (≤18) pour enregistrer un custom element : pas
@@ -120,30 +131,6 @@ export const PaiementCheckout = () => {
 }
 
 /**
- * Notify the OpenSankey+ trial analytics endpoint that the anonymous trial UUID stored in
- * this browser has just converted to a paid licence. Idempotent: only pings once per browser.
- *
- * Inlined here on purpose: LoginComponent must not depend on OpenSankey+. The localStorage
- * keys are documented in submodules/OpenSankey+/client/src/utils/trial.ts and must stay in sync.
- */
-const notifyTrialConverted = (): void => {
-  try {
-    if (localStorage.getItem('os_plus_trial_converted')) return
-    const uuid = localStorage.getItem('os_plus_trial_uuid')
-    if (!uuid) return
-    localStorage.setItem('os_plus_trial_converted', '1')
-    fetch('/api/trial/converted', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ uuid, converted_at: Date.now() }),
-      keepalive: true,
-    }).catch(() => { /* analytics ping is best-effort */ })
-  } catch {
-    // localStorage unavailable — ignore
-  }
-}
-
-/**
  * Create the right redirection after paiement.
  * Ie. if paiement succeeded or not.
  */
@@ -163,9 +150,8 @@ export const PaiementReturn = () => {
           setStatus(data.status)
           setCustomerEmail(data.customer_email || '')
           setNeedsPassword(data.needs_password === true)
-          if (data.status === 'complete') {
-            notifyTrialConverted()
-          }
+          // La conversion d'un essai en abonnement est journalisée côté serveur
+          // (webhook Stripe → record_trial_conversion), pas depuis le navigateur.
         })
         .catch((error) => {
           console.error('Erreur lors de la vérification du statut:', error)
@@ -192,6 +178,118 @@ export const PaiementReturn = () => {
     <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
       <Spinner size="xl" />
     </Box>
+  )
+}
+
+/**
+ * Route d'essai gratuit — #/license/trial?plan=plus|suite (ouverte depuis le site, UTM conservés).
+ * Démarre l'essai 30 jours (POST /trial/start) si un compte est connecté ; sinon mémorise
+ * l'intention et redirige vers la création/connexion de compte (repris au retour dans l'app).
+ */
+export const PaiementTrial: FC<{
+  loginComponent: LoginComponent,
+  setLicenses: React.MutableRefObject<() => void>,
+  logo: string,
+  returnToApp: (navigate: NavigateFunction) => void,
+}> = ({ loginComponent, setLicenses, logo, returnToApp }) => {
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const plan = normalizeTrialPlan(searchParams.get('plan'))
+  const product = plan === 'suite' ? 'SankeySuite' : 'OpenSankey+'
+  const [phase, setPhase] = useState<'checking' | 'starting' | 'started' | 'already' | 'error'>('checking')
+
+  useEffect(() => {
+    let cancelled = false
+    fetch(window.location.origin + '/auth/connected')
+      .then((r) => {
+        if (!r.ok) {
+          // Pas de compte connecté : mémoriser l'intention et aller créer/connecter le compte.
+          setPendingTrial(plan)
+          if (!cancelled) navigate('/register')
+          return null
+        }
+        if (!cancelled) setPhase('starting')
+        return postTrialStart(plan)
+      })
+      .then((res) => {
+        if (cancelled || !res) return
+        clearPendingTrial()
+        if (res.ok) {
+          // Rafraîchir les droits (l'essai débloque le plan) puis revenir à l'app.
+          loginComponent.checkTokens(setLicenses, true).finally(() => {
+            if (cancelled) return
+            setPhase('started')
+            setTimeout(() => returnToApp(navigate), 1600)
+          })
+        } else if (res.reason === 'already_used' || res.reason === 'has_license') {
+          setPhase('already')
+        } else {
+          setPhase('error')
+        }
+      })
+      .catch(() => { if (!cancelled) setPhase('error') })
+    return () => { cancelled = true }
+  }, [plan])
+
+  let message = trLang('Vérification de votre compte…', 'Checking your account…')
+  if (phase === 'starting') message = trLang('Activation de votre essai…', 'Activating your trial…')
+  else if (phase === 'started') {
+    message = trLang(
+      `Votre essai gratuit de 30 jours de ${product} est activé. Redirection…`,
+      `Your 30-day free trial of ${product} is active. Redirecting…`,
+    )
+  } else if (phase === 'already') {
+    message = trLang(
+      `Vous avez déjà utilisé l'essai gratuit de ${product}. Vous pouvez vous abonner.`,
+      `You have already used the ${product} free trial. You can subscribe.`,
+    )
+  } else if (phase === 'error') {
+    message = trLang(
+      'Impossible de démarrer l’essai pour le moment.',
+      'Could not start the trial right now.',
+    )
+  }
+
+  const busy = phase === 'checking' || phase === 'starting'
+
+  return (
+    <div>
+      <Box zIndex="1" position="fixed" top="0" width="100%">
+        <Box layerStyle='menutop_layout_style' gridTemplateColumns='minmax(7vw, 150px) auto 11rem'>
+          <Box margin='0.25rem' alignSelf='center' justifySelf='center'>
+            <Image height='5rem' src={logo} alt='navigation logo' onClick={() => returnToApp(navigate)} />
+          </Box>
+          <Box></Box>
+          <Button variant='btn_lone_navigation' onClick={() => returnToApp(navigate)}>
+            {i18next.t('UserNav.to_app')}
+          </Button>
+        </Box>
+      </Box>
+
+      <div className="login-wrapper">
+        <Card variant='card_register' width='33vw'>
+          <CardHeader style={{ textAlign: 'center' }}>
+            {trLang('Essai gratuit 30 jours', '30-day free trial')} — {product}
+          </CardHeader>
+          <CardBody>
+            <div style={{ textAlign: 'center' }}>
+              {busy ? <Spinner size="lg" /> : null}
+              <Box marginTop="1rem">{message}</Box>
+              {(phase === 'already' || phase === 'error') ? (
+                <Box display="inline-grid" marginTop="1.5rem" gap="0.5rem">
+                  <Button variant='btn_lone_navigation_tertiary' onClick={() => navigate('/license/checkout')}>
+                    {trLang('M’abonner', 'Subscribe')}
+                  </Button>
+                  <Button variant='btn_lone_navigation' onClick={() => returnToApp(navigate)}>
+                    {i18next.t('UserNav.to_app')}
+                  </Button>
+                </Box>
+              ) : null}
+            </div>
+          </CardBody>
+        </Card>
+      </div>
+    </div>
   )
 }
 

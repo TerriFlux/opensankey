@@ -112,13 +112,20 @@ def signup_post():
         return jsonify(response), 200
 
     # create a new user with the form data. Hash the password so the plaintext
-    # version isn't saved.
+    # version isn't saved. On persiste l'UTM d'origine (utm_campaign) transmis
+    # par le site, pour l'attribution des essais/conversions.
+    utm_campaign = user_infos.get("utm_campaign")
+    if isinstance(utm_campaign, str):
+        utm_campaign = utm_campaign[:256]
+    else:
+        utm_campaign = None
     new_user = User(
         email=user_infos["email"].lower(),
         password=hash_password(user_infos["password"]),
         firstname=user_infos["firstname"],
         name=user_infos["lastname"],
         creation=datetime.now().isoformat(),
+        utm_campaign=utm_campaign,
     )
 
     # add the new user to the database
@@ -279,29 +286,32 @@ def has_license():
 
         response = {}
 
-        # Vérifier si l'utilisateur a des licences
-        if not hasattr(current_user, "user_licenses") or not current_user.user_licenses:
-            return jsonify({"licenses": {}, "message": "No licenses found"}), 200
+        # État d'essai gratuit — renvoyé À PART des licences réelles pour que le
+        # front distingue « licence réelle » (has_real_*) de « accès par essai ».
+        # Toujours présent, même sans aucune licence Stripe (un compte en essai
+        # n'a pas d'entrée user_licenses).
+        trial = current_user.trial_state()
 
-        for user_license in current_user.user_licenses:
-            try:
-                # Récupérer le nom de la licence selon votre structure de données
-                license_name = user_license.license.name if hasattr(user_license, "license") else str(user_license)
-                response[license_name] = current_user.has_valid_license(user_license.license.name)
-            except AttributeError as e:
-                return (
-                    jsonify(
-                        {
-                            "error": f"License structure error: {str(e)}",
-                            "code": "LICENSE_STRUCTURE_ERROR",
-                        }
-                    ),
-                    500,
-                )
+        # Licences réelles (Stripe). Peut être vide pour un compte en essai seul.
+        if hasattr(current_user, "user_licenses") and current_user.user_licenses:
+            for user_license in current_user.user_licenses:
+                try:
+                    license_name = user_license.license.name if hasattr(user_license, "license") else str(user_license)
+                    response[license_name] = current_user.has_valid_license(user_license.license.name)
+                except AttributeError as e:
+                    return (
+                        jsonify(
+                            {
+                                "error": f"License structure error: {str(e)}",
+                                "code": "LICENSE_STRUCTURE_ERROR",
+                            }
+                        ),
+                        500,
+                    )
         if current_user.get_is_dev():
             response['dev'] = True
 
-        return jsonify({"licenses": response, "message": "Success"}), 200
+        return jsonify({"licenses": response, "trial": trial, "message": "Success"}), 200
 
     except AttributeError as e:
         return (

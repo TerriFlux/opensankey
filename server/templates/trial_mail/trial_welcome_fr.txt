@@ -1,0 +1,11 @@
+Bonjour {{ first_name }},
+
+Votre essai gratuit de 30 jours de {{ product }} est activé. Vous disposez dès maintenant de toutes les fonctionnalités, sans carte bancaire.
+
+Pour commencer, connectez-vous : {{ login_url }}
+{% if is_suite %}
+Essai accompagné : nous vous offrons 30 minutes de prise en main avec Julien pour démarrer efficacement. Réservez votre créneau : {{ meeting_url }}
+{% endif %}
+À l'issue des 30 jours, votre compte revient au plan gratuit — aucune donnée n'est supprimée.
+
+L'équipe TerriFlux

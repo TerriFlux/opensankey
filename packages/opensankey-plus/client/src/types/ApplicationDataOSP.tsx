@@ -9,8 +9,33 @@ import { Class_ApplicationHistory } from '@terriflux/opensankey/src/types/Applic
 import { Class_DrawingArea } from '@terriflux/opensankey/src/types/DrawingArea'
 import { Class_DrawingAreaOSP, DrawingAreaPersistenceOSP } from './DrawingAreaOSP'
 import { compressJSONToGzip } from '@terriflux/opensankey/src/Persistence/UniversalJSONCompression'
-import { isTrialActive } from '../utils/trial'
 import { ViewsManager, Type_ViewEntry } from './ViewsManager'
+
+/**
+ * État d'essai gratuit côté client (poussé depuis AppSA via LoginComponent).
+ * Structurellement compatible avec la réponse serveur (/auth/license → `trial`).
+ */
+export type TrialClientState = {
+  plan: 'plus' | 'suite' | null
+  days_remaining: number
+  active_plus: boolean
+  active_suite: boolean
+  used_plus: boolean
+  used_suite: boolean
+  can_start_plus: boolean
+  can_start_suite: boolean
+}
+
+export const EMPTY_TRIAL_CLIENT_STATE: TrialClientState = {
+  plan: null,
+  days_remaining: 0,
+  active_plus: false,
+  active_suite: false,
+  used_plus: false,
+  used_suite: false,
+  can_start_plus: false,
+  can_start_suite: false,
+}
 
 /**
  * Override some Class_ApplicationData behaviors for OpenSankey+
@@ -23,15 +48,36 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   public override static_path: string = 'static/sankeyanimation'
 
   /**
-   * OpenSankey+ free trial: as long as the 30-day trial is active, grant OS+
-   * access regardless of the underlying licence flag. A real licence (set via
-   * `has_sankey_plus = true` from the auth layer) always wins on its own merit;
-   * the trial only adds access, never removes it.
+   * Essai gratuit géré en base (colonnes trial_* côté serveur, jamais Stripe) :
+   * tant que l'essai est actif, on débloque l'accès quel que soit le flag de
+   * licence réelle. Une licence réelle (`has_sankey_plus = true` posé par la
+   * couche auth) suffit à elle seule ; l'essai ne fait qu'AJOUTER l'accès.
+   * L'objet complet est poussé depuis AppSA (LoginComponent → /auth/license).
    */
+  protected _trial: TrialClientState = { ...EMPTY_TRIAL_CLIENT_STATE }
+  public get trial(): TrialClientState { return this._trial }
+  public set trial(_: TrialClientState) { this._trial = _ }
+  public get trial_active_plus(): boolean { return this._trial.active_plus }
+  public get trial_active_suite(): boolean { return this._trial.active_suite }
+  public get trial_days_remaining(): number { return this._trial.days_remaining }
+  public get trial_can_start_plus(): boolean { return this._trial.can_start_plus }
+  public get trial_can_start_suite(): boolean { return this._trial.can_start_suite }
+  public get trial_used_plus(): boolean { return this._trial.used_plus }
+  public get trial_used_suite(): boolean { return this._trial.used_suite }
+
   public override get has_sankey_plus(): boolean {
-    return this._has_sankey_plus || this.is_static || isTrialActive()
+    return this._has_sankey_plus || this.is_static || this._trial.active_plus
   }
   public override set has_sankey_plus(_: boolean) { this._has_sankey_plus = _ }
+
+  /**
+   * SankeySuite débloqué par un essai « suite » (couvre aussi OS+ côté serveur).
+   * Comme pour OS+, l'essai n'ajoute que l'accès, sans toucher la licence réelle.
+   */
+  public override get has_sankey_afm(): boolean {
+    return this._has_sankey_afm || this.is_static || this._trial.active_suite
+  }
+  public override set has_sankey_afm(_: boolean) { this._has_sankey_afm = _ }
 
   /**
    * True only when the user holds a real OS+ licence (or runs in static mode),

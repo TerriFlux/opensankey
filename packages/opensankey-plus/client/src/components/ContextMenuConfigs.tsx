@@ -10,7 +10,6 @@ import { CONVERTER_CONFIGS } from '@terriflux/opensankey/src/components/dialogs/
 import { MenuConfig } from '@terriflux/opensankey/src/components/dialogs/SankeyMenuContext'
 import { Class_NodeElement } from '@terriflux/opensankey/src/Elements/Node'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
-import { devOpenTrialDebugPanel } from './DevTrialDebugOSP'
 
 // Extension de la config ZDD
 export const createZDDMenuConfigPlus = (): MenuConfig => {
@@ -37,37 +36,10 @@ export const createZDDMenuConfigPlus = (): MenuConfig => {
             return (app_data as Class_ApplicationDataOSP).has_sankey_afm
           }
         }]
-      },
-      {
-        type: 'button',
-        actionName: 'openTrialDevPanel',
-        visibilityConditions: [{
-          type: 'custom',
-          customCheck: (app_data) => {
-            return (app_data as Class_ApplicationDataOSP).has_sankey_dev
-          }
-        }]
       }
     ],
     actions: {
       ...ZDD_MENU_CONFIG.actions,
-      openTrialDevPanel: {
-        type: 'action',
-        labels: {
-          en: 'Trial (dev)',
-          fr: 'Essai (dev)',
-          es: 'Prueba (dev)',
-          de: 'Test (dev)',
-          it: 'Prova (dev)'
-        },
-        tooltips: {
-          en: 'Open the OpenSankey+ trial / subscription debug panel',
-          fr: 'Ouvrir le panneau de debug essai / abonnement OpenSankey+',
-          es: 'Abrir el panel de depuración de prueba / suscripción OpenSankey+',
-          de: 'Debug-Panel für Test / Abonnement OpenSankey+ öffnen',
-          it: 'Apri il pannello di debug prova / abbonamento OpenSankey+'
-        }
-      },
       afmReconciliation: {
         type: 'action',
         labels: {
@@ -258,12 +230,6 @@ export const createZDDModifierPlus = (app_data: Class_ApplicationDataOSP) => {
       app_data.drawing_area.is_drawing_area_contextualised = false
       app_data.menu_configuration_osp.ref_to_menu_context_drawing_area_updater.current()
     },
-    openTrialDevPanel: () => {
-      // Dev-only: open the trial/subscription debug panel (mounted in ModulesOSP).
-      app_data.drawing_area.is_drawing_area_contextualised = false
-      app_data.menu_configuration_osp.ref_to_menu_context_drawing_area_updater.current()
-      devOpenTrialDebugPanel()
-    }
   }
 }
 

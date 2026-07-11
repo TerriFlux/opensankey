@@ -1,0 +1,11 @@
+Hello {{ first_name }},
+
+Your 30-day free trial of {{ product }} is now active. You have access to every feature, with no credit card required.
+
+To get started, sign in: {{ login_url }}
+{% if is_suite %}
+Guided trial: we offer you a 30-minute onboarding session with Julien to get up to speed quickly. Book your slot: {{ meeting_url }}
+{% endif %}
+After 30 days, your account returns to the free plan — no data is ever deleted.
+
+The TerriFlux team

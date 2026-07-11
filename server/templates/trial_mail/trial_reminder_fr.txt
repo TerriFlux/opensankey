@@ -1,0 +1,11 @@
+Bonjour {{ first_name }},
+
+{% if ending %}Votre essai gratuit de {{ product }} se termine aujourd'hui.{% else %}Il vous reste {{ days_remaining }} jours d'essai gratuit de {{ product }}.{% endif %}
+
+Pour conserver l'accès aux fonctionnalités payantes, abonnez-vous depuis l'application : {{ login_url }}
+
+À l'expiration, votre compte revient au plan gratuit. Aucune donnée n'est supprimée : vos projets utilisant des fonctions payantes passent simplement en lecture seule.
+{% if is_suite %}
+Une question, besoin d'un devis ? Écrivez-nous : {{ contact_email }}
+{% endif %}
+L'équipe TerriFlux

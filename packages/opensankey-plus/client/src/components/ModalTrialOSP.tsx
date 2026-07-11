@@ -1,18 +1,19 @@
 // ==================================================================================================
-// OpenSankey+ free-trial UI
+// Essai gratuit 30 jours — UI (piloté par la base, plus de localStorage)
 // --------------------------------------------------------------------------------------------------
-// Three pieces, all reading from utils/trial.ts:
-//   - ModalTrialWelcomeOSP : shown once on first ever load to offer the 30-day trial.
-//                            Two buttons: "Start trial" (opt-in) / "Maybe later".
-//   - ModalTrialExpiredOSP : shown once when a started trial reaches day 31.
-//                            Two buttons: "Continue free" / "Subscribe".
-//   - BannerTrialOSP       : permanent button in the bottom bar that mirrors the trial state.
-//                            Acts as the entry point to start the trial after the welcome modal
-//                            was dismissed, and as the subscribe CTA otherwise.
-// All three are no-ops as soon as the user holds a real OS+ licence.
+// L'état d'essai vient du serveur (/auth/license → `trial`), poussé sur app_data.trial par AppSA.
+//   - BannerTrialOSP        : CTA de la topbar, reflète l'état d'essai/licence.
+//       · essai actif                → « N jours restants » (décompte discret)   → abonnement
+//       · licence OS+ (pas Suite)    → « Passer à SankeySuite »                   → abonnement
+//       · peut démarrer un essai     → « Essayer 30 jours gratuitement »          → #/license/trial
+//       · sinon (gratuit / expiré)   → « Obtenir une licence »                    → abonnement
+//   - ModalTrialExpiredOSP  : message unique à l'expiration (projets payants en lecture seule),
+//                             explique comment rouvrir (abonnement + « nous écrire pour un devis »).
+// Toutes les pièces s'effacent dès que l'utilisateur détient la licence réelle correspondante.
 // ==================================================================================================
 
 import React, { FC, useEffect, useState } from 'react'
+import i18next from 'i18next'
 import { useTranslation } from 'react-i18next'
 import {
   Box,
@@ -31,171 +32,104 @@ import {
 } from '@chakra-ui/react'
 
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
-import {
-  canStartTrial,
-  getTrialState,
-  hasBeenOffered,
-  hasExpiredBeenAcknowledged,
-  markExpiredAcknowledged,
-  markTrialOffered,
-  startTrial,
-} from '../utils/trial'
 
 interface TrialComponentProps {
   app_data: Class_ApplicationDataOSP
 }
 
-/** Force the menus and the banner to refresh after a trial state change. */
-const refreshAfterTrialChange = (app_data: Class_ApplicationDataOSP) => {
-  try {
-    app_data.menu_configuration.updateAllMenuComponents()
-  } catch { /* menus may not be ready in all contexts */ }
-}
+/** Adresse « nous écrire pour un devis » (mailto — pas de nouveau tunnel pour l'instant). */
+const CONTACT_EMAIL = 'contact@terriflux.fr'
 
-// --- Dev override: force the "has account" answer to preview both CTA destinations
-//     (set by DevTrialDebugOSP). null = use the real login state. ---
-let _dev_force_account: boolean | null = null
-export const devSetForceAccount = (v: boolean | null): void => { _dev_force_account = v }
-export const devGetForceAccount = (): boolean | null => _dev_force_account
+/** Petit helper bilingue local pour les libellés d'essai non encore traduits en 5 langues. */
+const trLang = (fr: string, en: string): string =>
+  ((i18next.language || 'fr').split('-')[0] === 'en' ? en : fr)
 
-/** Where the subscribe CTA points. The app runs under a HashRouter, so client routes
- *  live under `/#/...`. A bare `/license/checkout` hits the Flask server (which doesn't
- *  serve it) and lands nowhere — it must be `#/license/checkout`.
- *  Le checkout est désormais public : sans compte, l'email est collecté par Stripe et
- *  le compte est créé par webhook après paiement — plus de détour par /register. */
+/** Le checkout est public (email collecté par Stripe, compte créé par webhook). */
 export const resolveCheckoutDestination = (_app_data: Class_ApplicationDataOSP): string =>
   '#/license/checkout'
 
-/** Subscribe action shared by the expired modal and the bottom-bar banner. */
+/** Abonnement (partagé par la modale d'expiration et le banner). */
 export const goToCheckout = (app_data: Class_ApplicationDataOSP): void => {
   window.location.hash = resolveCheckoutDestination(app_data)
 }
 
-// --- Dev: force-open the trial modals on demand, bypassing their normal triggers. ---
-type Type_TrialModalKind = 'welcome' | 'expired'
-const _force_open_listeners: Record<Type_TrialModalKind, Array<() => void>> = { welcome: [], expired: [] }
-export const devForceOpenTrialModal = (kind: Type_TrialModalKind): void => {
-  _force_open_listeners[kind].forEach((fn) => { try { fn() } catch { /* ignore */ } })
-}
-const subscribeForceOpen = (kind: Type_TrialModalKind, fn: () => void): (() => void) => {
-  _force_open_listeners[kind].push(fn)
-  return () => {
-    const i = _force_open_listeners[kind].indexOf(fn)
-    if (i >= 0) _force_open_listeners[kind].splice(i, 1)
-  }
+/** Démarrage d'essai depuis l'app (même mécanique que le site : route #/license/trial). */
+export const goToTrial = (plan: 'plus' | 'suite'): void => {
+  window.location.hash = `#/license/trial?plan=${plan}`
 }
 
-// ==================================================================================================
-// Welcome modal — first ever load, offers the 30-day opt-in trial
-// ==================================================================================================
+// --- Rafraîchissement du banner après un changement d'état (re-render forcé). ---
+const banner_listeners: Array<() => void> = []
+const bumpBanner = () => {
+  banner_listeners.forEach((fn) => { try { fn() } catch { /* ignore */ } })
+}
 
-export const ModalTrialWelcomeOSP: FC<TrialComponentProps> = ({ app_data }) => {
-  const { t } = useTranslation()
-  const [show, setShow] = useState(false)
-
-  useEffect(() => {
-    if (app_data.has_real_sankey_plus_licence) return
-    // Enrolment closed (2026-06-22): never offer a new trial.
-    if (!canStartTrial()) return
-    if (hasBeenOffered()) return
-    setShow(true)
-  }, [app_data])
-
-  // Dev panel can force this modal open regardless of the trigger conditions.
-  useEffect(() => subscribeForceOpen('welcome', () => setShow(true)), [])
-
-  const handleStart = () => {
-    startTrial()
-    setShow(false)
-    refreshAfterTrialChange(app_data)
-  }
-
-  const handleLater = () => {
-    markTrialOffered()
-    setShow(false)
-    refreshAfterTrialChange(app_data)
-  }
-
-  return (
-    <Modal
-      isCentered
-      isOpen={show}
-      onClose={handleLater}
-      variant='modal_dialog'
-    >
-      <ModalOverlay />
-      <ModalContent maxWidth='inherit'>
-        <ModalHeader>{t('Trial.welcome_title')}</ModalHeader>
-        <ModalBody textStyle='h4'>
-          <Box>
-            <Text mb='2'>{t('Trial.welcome_body')}</Text>
-            <Text fontStyle='italic' opacity={0.8}>{t('Trial.welcome_hint')}</Text>
-          </Box>
-        </ModalBody>
-        <ModalFooter>
-          <ButtonGroup>
-            <Button
-              variant='menuconfigpanel_del_button'
-              onClick={handleLater}
-            >
-              {t('Trial.welcome_later')}
-            </Button>
-            <Button
-              variant='menuconfigpanel_add_button'
-              onClick={handleStart}
-            >
-              {t('Trial.welcome_start')}
-            </Button>
-          </ButtonGroup>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
-  )
+/** Rafraîchit menus + banner après un changement d'état d'essai. */
+export const refreshTrialUI = (app_data: Class_ApplicationDataOSP): void => {
+  try {
+    app_data.menu_configuration.updateAllMenuComponents()
+  } catch { /* menus may not be ready in all contexts */ }
+  bumpBanner()
 }
 
 // ==================================================================================================
-// Expired modal — shown once when a started trial reaches day 31
+// Modale d'expiration — message unique quand l'essai vient d'expirer sans licence
 // ==================================================================================================
+
+/** Clé de session pour n'afficher la modale d'expiration qu'une fois par session. */
+const EXPIRED_ACK_KEY = 'trial_expired_ack'
+
+/** True si un essai a expiré et que l'utilisateur n'a pas de licence réelle (→ lecture seule). */
+const isTrialExpiredNoLicence = (app_data: Class_ApplicationDataOSP): boolean => {
+  if (app_data.has_real_sankey_plus_licence) return false
+  const used = app_data.trial_used_plus || app_data.trial_used_suite
+  const active = app_data.trial_active_plus || app_data.trial_active_suite
+  return used && !active
+}
 
 export const ModalTrialExpiredOSP: FC<TrialComponentProps> = ({ app_data }) => {
   const { t } = useTranslation()
   const [show, setShow] = useState(false)
 
   useEffect(() => {
-    if (app_data.has_real_sankey_plus_licence) return
-    // One-shot: never show it again once the user has made a choice.
-    if (hasExpiredBeenAcknowledged()) return
-    const state = getTrialState()
-    // Only nag users who actually started the trial. Users who declined never see this.
-    if (state.is_started && state.is_expired) setShow(true)
-  }, [app_data])
-
-  // Dev panel can force this modal open regardless of the trigger conditions.
-  useEffect(() => subscribeForceOpen('expired', () => setShow(true)), [])
+    if (!isTrialExpiredNoLicence(app_data)) return
+    try {
+      if (sessionStorage.getItem(EXPIRED_ACK_KEY)) return
+    } catch { /* sessionStorage indisponible : on affiche */ }
+    setShow(true)
+  }, [app_data, app_data.trial])
 
   const dismiss = () => {
-    markExpiredAcknowledged()
+    try { sessionStorage.setItem(EXPIRED_ACK_KEY, '1') } catch { /* ignore */ }
     setShow(false)
   }
 
   return (
-    <Modal
-      isCentered
-      isOpen={show}
-      onClose={dismiss}
-      variant='modal_dialog'
-    >
+    <Modal isCentered isOpen={show} onClose={dismiss} variant='modal_dialog'>
       <ModalOverlay />
       <ModalContent maxWidth='inherit'>
         <ModalHeader>{t('Trial.expired_title')}</ModalHeader>
         <ModalBody textStyle='h4'>
           <Box>
-            <Text mb='2'>{t('Trial.expired_body')}</Text>
-            <Text fontStyle='italic' opacity={0.8}>{t('Trial.expired_hint')}</Text>
+            <Text mb='2'>
+              {trLang(
+                'Votre essai gratuit est terminé. Vos projets utilisant des fonctions payantes ' +
+                'passent en lecture seule — aucune donnée n’est supprimée. Abonnez-vous pour les rouvrir.',
+                'Your free trial has ended. Projects using paid features are now read-only — ' +
+                'no data is deleted. Subscribe to reopen them.',
+              )}
+            </Text>
           </Box>
         </ModalBody>
         <ModalFooter>
           <ButtonGroup>
+            <Button
+              as='a'
+              href={`mailto:${CONTACT_EMAIL}`}
+              variant='menuconfigpanel_del_button'
+            >
+              {trLang('Nous écrire pour un devis', 'Contact us for a quote')}
+            </Button>
             <Button
               variant='menuconfigpanel_del_button'
               onClick={dismiss}
@@ -216,31 +150,8 @@ export const ModalTrialExpiredOSP: FC<TrialComponentProps> = ({ app_data }) => {
 }
 
 // ==================================================================================================
-// Bottom-bar banner — permanent state-aware CTA
-// --------------------------------------------------------------------------------------------------
-// State machine:
-//   - has real licence              → hidden
-//   - has SankeySuite (top tier)    → hidden
-//   - trial active                  → "✦ OS+ trial — N days left"   click → /license/checkout
-//   - has OS+ but not SankeySuite   → "Upgrade to SankeySuite" CTA  click → /license/checkout
-//   - free tier (no licence)        → "Get a licence" text CTA      click → /license/checkout
-//                                     Always visible so the subscribe entry point is
-//                                     discoverable (enrolment closed 2026-06-22).
+// Banner topbar — CTA reflétant l'état d'essai/licence
 // ==================================================================================================
-
-/** A small ticking "version" so the banner re-renders when the user clicks on it. */
-let _banner_revision = 0
-const banner_listeners: Array<() => void> = []
-const bumpBanner = () => {
-  _banner_revision += 1
-  banner_listeners.forEach((fn) => { try { fn() } catch { /* ignore */ } })
-}
-
-/** Refresh menus + bottom-bar banner after a trial state change (used by the dev panel). */
-export const refreshTrialUI = (app_data: Class_ApplicationDataOSP): void => {
-  refreshAfterTrialChange(app_data)
-  bumpBanner()
-}
 
 export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
   const { t } = useTranslation()
@@ -255,13 +166,9 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
     }
   }, [])
 
-  // Top tier (SankeySuite) already owned → nothing left to sell, hide the banner.
+  // Top tier (SankeySuite) déjà détenu → plus rien à vendre.
   if (app_data.has_real_sankey_suite_licence) return <></>
 
-  const state = getTrialState()
-
-  // Compact icon CTA that matches the surrounding top-bar icon buttons. The
-  // descriptive label lives in the tooltip so the button stays small.
   const iconCTA = (label: string, onClick: () => void) => (
     <Tooltip label={label} placement='top'>
       <IconButton
@@ -272,22 +179,11 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
         w='1.7rem'
         h='1.7rem'
         p='0.2rem'
-        icon={
-          <Image
-            src={app_data.logo_sankey_plus}
-            alt=''
-            h='100%'
-            w='100%'
-            objectFit='contain'
-          />
-        }
+        icon={<Image src={app_data.logo_sankey_plus} alt='' h='100%' w='100%' objectFit='contain' />}
       />
     </Tooltip>
   )
 
-  // Visible text CTA (logo + label) — used for the always-on subscribe button so the
-  // call to action is discoverable without hovering. Matches the accent-coloured pill
-  // style of the surrounding top-bar.
   const textCTA = (label: string, tooltip: string, logo: string, onClick: () => void) => (
     <Tooltip label={tooltip} placement='top'>
       <Button
@@ -295,33 +191,22 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
         variant='button_banner_subscription'
         onClick={onClick}
         h='1.7rem'
-        leftIcon={
-          <Image
-            src={logo}
-            alt=''
-            h='1.2rem'
-            w='1.2rem'
-            objectFit='contain'
-          />
-        }
+        leftIcon={<Image src={logo} alt='' h='1.2rem' w='1.2rem' objectFit='contain' />}
       >
         {label}
       </Button>
     </Tooltip>
   )
 
-  // Trial active — show countdown CTA pointing at the subscription page.
-  // New enrolment is closed (2026-06-22), so this is a residual case for the few users
-  // whose trial is still running.
-  if (state.is_active) {
+  // Essai actif → décompte discret pointant vers l'abonnement.
+  if (app_data.trial_active_plus || app_data.trial_active_suite) {
     return iconCTA(
-      t('Trial.banner_active', { days: state.days_remaining }),
+      t('Trial.banner_active', { days: app_data.trial_days_remaining }),
       () => goToCheckout(app_data),
     )
   }
 
-  // Has a real OS+ licence but not SankeySuite → teaser the upgrade to the top tier
-  // (MFA / reconciliation), which also bundles OS+.
+  // Licence OS+ réelle (mais pas Suite) → teaser upgrade vers SankeySuite (inclut OS+).
   if (app_data.has_real_sankey_plus_licence) {
     return textCTA(
       t('Trial.banner_subscribe_suite'),
@@ -331,8 +216,17 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
     )
   }
 
-  // Free tier — no licence at all: show a permanent, visible "Get a licence" CTA so the
-  // subscription entry point is always reachable from the top-bar.
+  // Gratuit et essai jamais consommé → proposer l'essai 30 jours (même mécanique que le site).
+  if (app_data.trial_can_start_plus) {
+    return textCTA(
+      trLang('Essayer 30 jours gratuitement', 'Start your 30-day free trial'),
+      trLang('Essai gratuit, sans carte bancaire', 'Free trial, no credit card'),
+      app_data.logo_sankey_plus,
+      () => goToTrial('plus'),
+    )
+  }
+
+  // Gratuit, essai déjà consommé/expiré → CTA abonnement toujours visible.
   return textCTA(
     t('Trial.banner_subscribe'),
     t('Trial.banner_subscribe_tooltip'),
@@ -341,5 +235,5 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
   )
 }
 
-// Re-export the legacy name so existing imports keep working.
+// Alias legacy conservé pour les imports existants.
 export const ModalTrialOSP = ModalTrialExpiredOSP

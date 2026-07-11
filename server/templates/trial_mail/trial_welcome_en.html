@@ -1,0 +1,31 @@
+<html xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+  <meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+</head>
+
+<body lang=EN style='word-wrap:break-word'>
+  <div>
+    <p><img width=182 height=108 src={{ logo_OS }}></p>
+    <p>Hello {{ first_name }},</p>
+    <br>
+    <p>Your 30-day free trial of {{ product }} is now active. You have access to
+      every feature, with no credit card required.</p>
+    <br>
+    <p>To get started, <a href={{ login_url }}>sign in to OpenSankey</a>.</p>
+    {% if is_suite %}
+    <br>
+    <p><strong>Guided trial:</strong> we offer you a 30-minute onboarding session
+      with Julien to get up to speed quickly.
+      <a href={{ meeting_url }}>Book your slot</a>.</p>
+    {% endif %}
+    <br>
+    <p>After 30 days, your account returns to the free plan — no data is ever
+      deleted.</p>
+    <br>
+    <p>The TerriFlux team</p>
+    <p><img border=0 width=112 height=34 src={{ logo_TerriFlux }}></p>
+  </div>
+</body>
+
+</html>

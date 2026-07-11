@@ -38,6 +38,15 @@ else:
 
     CLIENT_ROOT_URL = None
 
+# Essai gratuit — liens utilisés dans les emails d'essai.
+# - RDV « essai accompagné » SankeySuite (30 min avec Julien) : lien de prise de
+#   rendez-vous (Calendly ou équivalent), surchargeable par l'environnement.
+# - Devis / contact : mailto de repli (pas de nouveau tunnel pour l'instant).
+TRIAL_SUITE_MEETING_URL = os.environ.get(
+    "TRIAL_SUITE_MEETING_URL", "https://calendly.com/terriflux/sankeysuite-30min"
+)
+TRIAL_CONTACT_EMAIL = os.environ.get("TRIAL_CONTACT_EMAIL", "contact@terriflux.fr")
+
 
 # ---------------------------------------------------------------
 # Shared variables
@@ -94,6 +103,30 @@ def send(msg):
         mail.send(msg)
     else:
         print("To : {0}\nSubject: {1}\nBody: \n{2}".format(msg.recipients, msg.subject, msg.body))
+
+
+def _attach_logos(msg):
+    """Attache les logos OpenSankey / TerriFlux en inline (cid) au message."""
+    path = os.path.dirname(os.path.abspath(__file__))
+    msg.attach(
+        "logo_OS.jpg",
+        "image/jpg",
+        open(path + "/templates/logo_OS.jpg", "rb").read(),
+        "inline",
+        headers={"Content-ID": "<logo_OS>"},
+    )
+    msg.attach(
+        "logo_TerriFlux.jpg",
+        "image/jpg",
+        open(path + "/templates/logo_TerriFlux.jpg", "rb").read(),
+        "inline",
+        headers={"Content-ID": "<logo_TerriFlux>"},
+    )
+
+
+def _normalize_lang(language):
+    language = (language or "fr").split("-")[0]
+    return language if language in ("en", "fr") else "fr"
 
 
 def send_account_confirm_mail(user_infos, confirm_sub_url):
@@ -339,6 +372,99 @@ def send_set_password_email(user, language="fr"):
         headers={"Content-ID": "<logo_TerriFlux>"},
     )
     # Send mail
+    send(msg)
+
+
+# ---------------------------------------------------------------
+# Free trial (essai gratuit) — emails J0 / J-7 / J-0
+
+
+def send_trial_welcome_mail(user, plan, language="fr"):
+    """
+    Email J0 : bienvenue dans l'essai gratuit 30 jours. Pour SankeySuite, propose
+    un créneau de 30 min offert avec Julien (« essai accompagné »).
+
+    :param plan: 'plus' | 'suite'
+    """
+    if not is_email_valid(user.email):
+        return
+    language = _normalize_lang(language)
+    is_suite = plan == "suite"
+    product = "SankeySuite" if is_suite else "OpenSankey+"
+    subject = {
+        "fr": "[{0}] Votre essai gratuit de 30 jours est activé".format(product),
+        "en": "[{0}] Your 30-day free trial is active".format(product),
+    }
+    msg = Message(
+        subject=subject[language],
+        sender=("Contact TerriFlux", MAIL_SENDING_ADRESS),
+        recipients=[user.email],
+    )
+    file = "trial_mail/trial_welcome_{}".format(language)
+    login_url = "{0}login".format(CLIENT_ROOT_URL)
+    ctx = dict(
+        first_name=user.firstname,
+        login_url=login_url,
+        product=product,
+        is_suite=is_suite,
+        meeting_url=TRIAL_SUITE_MEETING_URL,
+    )
+    msg.body = render_template(file + ".txt", **ctx)
+    msg.html = render_template(
+        file + ".html",
+        logo_OS="cid:logo_OS",
+        logo_TerriFlux="cid:logo_TerriFlux",
+        **ctx,
+    )
+    _attach_logos(msg)
+    send(msg)
+
+
+def send_trial_reminder_mail(user, days_remaining, language="fr"):
+    """
+    Email de rappel pendant l'essai (J-7 puis J-0). Rappelle le décompte et le
+    bouton d'abonnement pour ne pas perdre l'accès aux fonctions payantes.
+    """
+    if not is_email_valid(user.email):
+        return
+    language = _normalize_lang(language)
+    is_suite = user.trial_plan == "suite"
+    product = "SankeySuite" if is_suite else "OpenSankey+"
+    ending = days_remaining <= 0
+    if ending:
+        subject = {
+            "fr": "[{0}] Votre essai gratuit se termine aujourd'hui".format(product),
+            "en": "[{0}] Your free trial ends today".format(product),
+        }
+    else:
+        subject = {
+            "fr": "[{0}] Plus que {1} jours d'essai gratuit".format(product, days_remaining),
+            "en": "[{0}] {1} days left in your free trial".format(product, days_remaining),
+        }
+    msg = Message(
+        subject=subject[language],
+        sender=("Contact TerriFlux", MAIL_SENDING_ADRESS),
+        recipients=[user.email],
+    )
+    file = "trial_mail/trial_reminder_{}".format(language)
+    ctx = dict(
+        first_name=user.firstname,
+        login_url="{0}login".format(CLIENT_ROOT_URL),
+        product=product,
+        is_suite=is_suite,
+        days_remaining=days_remaining,
+        ending=ending,
+        meeting_url=TRIAL_SUITE_MEETING_URL,
+        contact_email=TRIAL_CONTACT_EMAIL,
+    )
+    msg.body = render_template(file + ".txt", **ctx)
+    msg.html = render_template(
+        file + ".html",
+        logo_OS="cid:logo_OS",
+        logo_TerriFlux="cid:logo_TerriFlux",
+        **ctx,
+    )
+    _attach_logos(msg)
     send(msg)
 
 

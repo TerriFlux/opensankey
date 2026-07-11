@@ -33,6 +33,9 @@ export async function userSignUp(
   navigate: NavigateFunction,
 ) {
   resetLogs()
+  // UTM d'origine transmis par le site (querystring, avant le hash du HashRouter) :
+  // persisté à la création du compte pour l'attribution des essais/conversions.
+  const utm_campaign = new URLSearchParams(window.location.search).get('utm_campaign') ?? undefined
   fetch(window.location.origin + '/auth/signup/create', {
     method: 'POST',
     headers: {
@@ -43,7 +46,8 @@ export async function userSignUp(
       password: password,
       firstname: firstname,
       lastname: lastname,
-      lang: i18next.language
+      lang: i18next.language,
+      utm_campaign: utm_campaign
     })
   })
     .then((response) => {

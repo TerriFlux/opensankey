@@ -109,6 +109,11 @@ def create_app():
 
     app.register_blueprint(stripe_blueprint)
 
+    # Blueprint for the in-app free trial (essai gratuit 30 jours, sans carte)
+    from logincomponent.server.trial import trial_blueprint
+
+    app.register_blueprint(trial_blueprint)
+
     # Blueprint for User interaction part of app
     from .views import sankeyapp as main_blueprint
 

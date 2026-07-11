@@ -53,8 +53,7 @@ import {
   ModalSelectionIcon
 } from './components/SankeyPlusCatalogIcon'
 import { registerExtraExportMenuItems } from './components/SankeyExportsOSP'
-import { BannerTrialOSP, ModalTrialExpiredOSP, ModalTrialWelcomeOSP } from './components/ModalTrialOSP'
-import { DevTrialDebugOSP } from './components/DevTrialDebugOSP'
+import { BannerTrialOSP, ModalTrialExpiredOSP } from './components/ModalTrialOSP'
 import {SankeyMenuConfigurationNodesTags} from './components/SankeyPlusMenuConfigurationNodesTags'
 import {MenuConfigurationLinksTags} from './components/SankeyPlusMenuConfigurationLinksTags'
 import {SankeySettingsEditionElementTags} from './components/SankeyPlusMenuConfigurationTags'
@@ -110,18 +109,11 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   // (Préc./sélecteur/Suiv.) ; remplace l'ancien panneau « Génération de vues » du tiroir.
   additionalMenus.current.external_top_buttons_item['view_tag_topbar'] = <BannerViewTagTopbar app_data={new_data} />
 
-  // Trial state-aware topbar CTA. Hidden when the user holds a real OS+ licence.
-  // Rendered in the top-right via additional_nav_item, alongside login buttons.
+  // CTA d'essai/abonnement en topbar (reflète l'état d'essai/licence, DB-driven).
+  // Masqué si l'utilisateur détient la licence réelle. Rendu en haut à droite.
   additionalMenus.current.additional_nav_item.push(
     <BannerTrialOSP app_data={new_data_plus} />
   )
-
-  // Dev-only debug panel to drive the whole trial / subscription flow without waiting.
-  if (new_data_plus.has_sankey_dev) {
-    additionalMenus.current.additional_nav_item.push(
-      <DevTrialDebugOSP app_data={new_data_plus} />
-    )
-  }
 
   // Add an option for flow color rule
   if (has_sankey_plus) {
@@ -302,9 +294,6 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
       app_data={app_data}
     />,
     <ModalUnitarySankeyOSP
-      app_data={app_data}
-    />,
-    <ModalTrialWelcomeOSP
       app_data={app_data}
     />,
     <ModalTrialExpiredOSP

@@ -1,0 +1,31 @@
+<html xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+  <meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+</head>
+
+<body lang=FR style='word-wrap:break-word'>
+  <div>
+    <p><img width=182 height=108 src={{ logo_OS }}></p>
+    <p>Bonjour {{ first_name }},</p>
+    <br>
+    <p>Votre essai gratuit de 30 jours de {{ product }} est activé. Vous disposez
+      dès maintenant de toutes les fonctionnalités, sans carte bancaire.</p>
+    <br>
+    <p>Pour commencer, <a href={{ login_url }}>connectez-vous à OpenSankey</a>.</p>
+    {% if is_suite %}
+    <br>
+    <p><strong>Essai accompagné :</strong> nous vous offrons 30 minutes de prise en
+      main avec Julien pour démarrer efficacement.
+      <a href={{ meeting_url }}>Réservez votre créneau</a>.</p>
+    {% endif %}
+    <br>
+    <p>À l'issue des 30 jours, votre compte revient au plan gratuit — aucune donnée
+      n'est supprimée.</p>
+    <br>
+    <p>L'équipe TerriFlux</p>
+    <p><img border=0 width=112 height=34 src={{ logo_TerriFlux }}></p>
+  </div>
+</body>
+
+</html>

@@ -44,7 +44,9 @@ import Register from '@terriflux/login-component/src/Register/Register'
 import { Login } from '@terriflux/login-component/src/Login/Login'
 import { PasswordResetFromMail, PasswordResetFromToken } from '@terriflux/login-component/src/Login/PasswordReset'
 import { PublicRoute } from '@terriflux/login-component/src/Routes/PublicRoutes'
-import { PaiementCheckout, PaiementPage, PaiementReturn } from '@terriflux/login-component/src/Paiement/Paiement'
+import { PaiementCheckout, PaiementPage, PaiementReturn, PaiementTrial } from '@terriflux/login-component/src/Paiement/Paiement'
+import { consumePendingTrial } from '@terriflux/login-component/src/Paiement/trialFlow'
+import { EMPTY_TRIAL_STATE } from '@terriflux/login-component/src/LoginComponent'
 import { MetaTags } from './components/MetaTags'
 import { logo_sankeytheque, ModalSankeyTheque } from './components/SankeyTheque'
 import { UserPagesButtons } from '@terriflux/login-component/src/UserPages/UserPages'
@@ -171,6 +173,20 @@ export const SankeyApp = ({ new_data_app }: { new_data_app: Class_ApplicationDat
     new_data_app.has_sankey_plus = has_account && log_component.has_licence_sankeyplus
     new_data_app.has_sankey_afm = has_account && log_component.has_licence_sankeysuite
     new_data_app.has_sankey_dev = has_account && log_component.has_licence_dev
+
+    // Essai gratuit en base (à part des licences réelles) : débloque le plan
+    // tant qu'il est actif, sans marquer la licence réelle (cf. has_real_*).
+    new_data_app.trial = has_account ? log_component.trial : { ...EMPTY_TRIAL_STATE }
+
+    // Reprise d'un essai déclenché depuis le site AVANT création/connexion du
+    // compte (#/license/trial → register/login). consumePendingTrial efface
+    // l'intention avant l'appel (pas de double démarrage) et ne relance la
+    // vérification qu'en cas de succès (pas de récursion : la clé est déjà vidée).
+    if (has_account) {
+      consumePendingTrial(() => {
+        log_component.checkTokens(setLicenses, true)
+      })
+    }
 
     // Debug : exposer app_data et le Sankey en globales pour l'inspection console.
     // C'est ICI et pas au `new` : `has_sankey_dev` dépend de la licence, donc vaut
@@ -377,6 +393,17 @@ export const SankeyApp = ({ new_data_app }: { new_data_app: Class_ApplicationDat
                       path='return'
                       element={
                         <PaiementReturn />
+                      }
+                    />
+                    <Route
+                      path='trial'
+                      element={
+                        <PaiementTrial
+                          loginComponent={new_data_app.login_component}
+                          setLicenses={setLicenses}
+                          logo={new_data_app.logo}
+                          returnToApp={returnToApp}
+                        />
                       }
                     />
                   </Route>

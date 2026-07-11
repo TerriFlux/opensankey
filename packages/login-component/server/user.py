@@ -81,7 +81,9 @@ def user_infos():
         "firstname": current_user.firstname,
         "license_opensankeyplus_validity": current_user.has_valid_license("OpenSankey+"),
         "license_expiry": license_exp,
-        "license_sankeysuite_validity": current_user.has_valid_license("SankeySuite")
+        "license_sankeysuite_validity": current_user.has_valid_license("SankeySuite"),
+        # Essai gratuit (à part des licences réelles) — bandeau, boutons, droits
+        "trial": current_user.trial_state(),
     }
     # Send back response
     return jsonify(response)
