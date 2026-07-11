@@ -111,15 +111,19 @@ const Register = ({
         navigate
       )
       setOnWait(false)
-      // Reprise d'un essai en attente : à l'inscription le compte est déjà
-      // logué (login_user côté serveur) — on démarre l'essai tout de suite,
-      // dans le même onglet, puis on revient à l'app. Aucun retour par mail requis.
-      const pending_plan = getPendingTrial()
-      if (created && pending_plan) {
-        clearPendingTrial()
+      // À l'inscription le compte est déjà logué (login_user côté serveur) : on
+      // rafraîchit les droits et on revient DIRECTEMENT dans l'app connecté —
+      // plus besoin d'aller se connecter à la main ni d'attendre l'email (qui
+      // n'est qu'une confirmation). Si un essai est en attente, on le démarre
+      // au passage, dans le même onglet.
+      if (created) {
+        const pending_plan = getPendingTrial()
         await loginComponent.checkTokens(setLicenses, true)  // établit has_account
-        await postTrialStart(pending_plan)                   // démarre l'essai (session déjà ouverte)
-        await loginComponent.checkTokens(setLicenses, true)  // reflète l'essai (droits + bandeau)
+        if (pending_plan) {
+          clearPendingTrial()
+          await postTrialStart(pending_plan)                 // démarre l'essai (session ouverte)
+          await loginComponent.checkTokens(setLicenses, true)  // reflète l'essai (droits + bandeau)
+        }
         returnToApp(navigate)
       }
     }
