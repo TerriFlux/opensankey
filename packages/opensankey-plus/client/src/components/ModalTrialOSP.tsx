@@ -216,8 +216,11 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
     )
   }
 
-  // Gratuit et essai jamais consommé → proposer l'essai 30 jours (même mécanique que le site).
-  if (app_data.trial_can_start_plus) {
+  // Proposer l'essai 30 jours tant qu'il n'a pas été consommé. Couvre aussi les
+  // visiteurs NON connectés (état d'essai vide → used_plus=false) : le clic ouvre
+  // #/license/trial, qui envoie créer/connecter le compte puis démarre l'essai.
+  // Un compte ayant déjà utilisé son essai (used_plus=true) voit le CTA abonnement.
+  if (!app_data.trial_used_plus) {
     return textCTA(
       trLang('Essayer 30 jours gratuitement', 'Start your 30-day free trial'),
       trLang('Essai gratuit, sans carte bancaire', 'Free trial, no credit card'),
