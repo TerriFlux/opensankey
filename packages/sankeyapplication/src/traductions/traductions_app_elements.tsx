@@ -271,7 +271,7 @@ export const resources_app_elements = {
           'fn': 'First Name',
           'ln': 'Last Name',
           msg: {
-            'ok': 'Account created - You will receive a confirmation e-mail to validate your account',
+            'ok': 'Account created — you are now signed in. A confirmation email has been sent.',
             'err_captcha': 'Captcha is invalid',
             'err_email_invalid': 'Email is not valid',
             'err_email_exists': 'An account already exists with this e-mail',
@@ -727,7 +727,7 @@ export const resources_app_elements = {
           'fn': 'Prénom',
           'ln': 'Nom',
           msg: {
-            'ok': 'Compte créé - Vous allez recevoir un e-mail afin de valider celui-ci.',
+            'ok': 'Compte créé — vous êtes maintenant connecté. Un e-mail de confirmation vous a été envoyé.',
             'nok': 'Une erreur s\'est produite. Le compte n\'a pas pu être créé',
             'err_captcha': 'Le captcha n\'est pas valide',
             'err_email_invalid': 'L\'adresse e-mail fournie n\'est pas valide',
@@ -1224,7 +1224,7 @@ export const resources_app_elements = {
           'fn': 'Nombre',
           'ln': 'Apellido',
           msg: {
-            'ok': 'Cuenta creada - Recibirá un e-mail de confirmación para validar su cuenta',
+            'ok': 'Cuenta creada — ya has iniciado sesión. Te hemos enviado un e-mail de confirmación.',
             'err_captcha': 'El captcha no es válido',
             'err_email_invalid': 'El e-mail no es válido',
             'err_email_exists': 'Ya existe una cuenta con este e-mail',
@@ -1718,7 +1718,7 @@ export const resources_app_elements = {
           'fn': 'Vorname',
           'ln': 'Nachname',
           msg: {
-            'ok': 'Konto erstellt - Sie erhalten eine Bestätigungs-E-Mail zur Validierung Ihres Kontos',
+            'ok': 'Konto erstellt — Sie sind jetzt angemeldet. Eine Bestätigungs-E-Mail wurde gesendet.',
             'err_captcha': 'Captcha ist ungültig',
             'err_email_invalid': 'E-Mail ist ungültig',
             'err_email_exists': 'Ein Konto mit dieser E-Mail existiert bereits',
@@ -2210,7 +2210,7 @@ export const resources_app_elements = {
           'fn': 'Nome',
           'ln': 'Cognome',
           msg: {
-            'ok': 'Account creato - Riceverete un\'e-mail di conferma per validare il vostro account',
+            'ok': 'Account creato — ora hai effettuato l\'accesso. Ti abbiamo inviato un\'e-mail di conferma.',
             'err_captcha': 'Il captcha non è valido',
             'err_email_invalid': 'L\'e-mail non è valida',
             'err_email_exists': 'Un account con questa e-mail esiste già',
