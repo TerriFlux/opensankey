@@ -73,6 +73,21 @@ export default [
         rules: {
             "@typescript-eslint/no-var-requires": "off"
         }
+    },
+
+    // no-console : interdit console.log/debug ; warn et error restent autorisés (#259)
+    {
+        files: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"],
+        rules: {
+            "no-console": ["error", { allow: ["warn", "error"] }]
+        }
+    },
+
+    // Boilerplate CRA : logs de cycle de vie du service worker (informational, conservés)
+    {
+        files: ["src/registerServiceWorker.js"],
+        rules: {
+            "no-console": "off"
+        }
     }
 ];
-

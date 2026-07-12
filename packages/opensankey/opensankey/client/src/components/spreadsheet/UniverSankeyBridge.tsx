@@ -674,13 +674,6 @@ export const attachSankeyBridge = (
       return
     }
     const ranges = (params && params.effectedRanges) || []
-    // [DEBUG paste-reset] à retirer
-    try {
-      console.log('[bridge] SheetValueChanged ' + JSON.stringify(ranges.map((fr: any) => {
-        const rg = fr.getRange()
-        return { sheet: fr.getSheetId(), sr: rg.startRow, er: rg.endRow, sc: rg.startColumn, ec: rg.endColumn }
-      })))
-    } catch (e) { console.log('[bridge] SheetValueChanged (introspection failed)', e) }
     if (ranges.length === 0) {
       return
     }
@@ -706,9 +699,6 @@ export const attachSankeyBridge = (
       .find((x: any) => x.id === SHEET_ID_FLUX &&
         x.rng.startRow === 1 && x.rng.startColumn === 0 &&
         x.rng.endRow > x.rng.startRow && x.rng.endColumn >= 1)
-    // [DEBUG paste-reset] à retirer
-    console.log('[bridge] fluxPaste match=', !!fluxPaste, 'SHEET_ID_FLUX=', SHEET_ID_FLUX,
-      fluxPaste ? JSON.stringify(fluxPaste) : '')
     if (fluxPaste) {
       const ws = wb.getSheetBySheetId(SHEET_ID_FLUX)
       if (ws) {
@@ -760,9 +750,6 @@ export const attachSankeyBridge = (
             }
           }
         }
-        // [DEBUG paste-reset] à retirer
-        console.log('[bridge] RESET done: nodes=', sankey.nodes_list.length,
-          'links=', sankey.links_list.length, 'rows', fluxPaste.rng.startRow, '..', fluxPaste.rng.endRow)
         // Diagramme reconstruit de zéro -> diagramme « vierge » (0 flux valué avant) : l'échelle se
         // cale sur le plus gros flux collé.
         drawing_area.updateScaleAtLinkValueSetting(0)
@@ -1034,10 +1021,6 @@ export const attachSankeyBridge = (
   const removeDisposable = univerAPI.addEvent(univerAPI.Event.CommandExecuted, (event: any) => {
     if (isSyncing.current) {
       return
-    }
-    // [DEBUG paste-reset] à retirer : tracer les ids de commande (repérer la commande de collage)
-    if (event && event.id && /paste|clipboard|value|set-range/i.test(String(event.id))) {
-      console.log('[bridge] CommandExecuted', event.id)
     }
     if (event.id !== 'sheet.command.remove-row' && event.id !== 'sheet.command.remove-row-by-range') {
       return

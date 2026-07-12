@@ -226,7 +226,6 @@ export const ModalWelcomeContent = (app_data: Class_ApplicationData) => {
         // Vérifier si le fichier existe (status 200)
         if (!response.ok) {
           if (response.status === 404) {
-            console.log('ℹ️ resources.json non trouvé, skip')
             return // Skip silencieusement
           }
           throw new Error(`HTTP ${response.status}`)

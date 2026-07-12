@@ -100,9 +100,8 @@ const App: FC = () => {
       if (opts.diagram) {
         setIsLoading(true)
 
-        newDataApp.sendWaitingToast(() => {
-          console.log('Chargement du diagramme en cours...')
-        })
+        // Toast d'attente seul : le chargement effectif se fait ci-dessous
+        newDataApp.sendWaitingToast(() => { /* no-op */ })
 
         try {
           if (typeof opts.diagram === 'string') {

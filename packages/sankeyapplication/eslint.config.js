@@ -63,7 +63,13 @@ export default [
         rules: {
             "@typescript-eslint/no-var-requires": "off"
         }
+    },
+
+    // no-console : interdit console.log/debug ; warn et error restent autorisés (#259)
+    {
+        files: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"],
+        rules: {
+            "no-console": ["error", { allow: ["warn", "error"] }]
+        }
     }
-
 ];
-
