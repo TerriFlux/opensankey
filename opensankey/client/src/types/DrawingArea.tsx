@@ -29,7 +29,6 @@ import { MouseEvent } from 'react'
 import { Type_JSON, Type_Structure, Type_DataSource, Type_IntervalDisplay, Type_DisaggregationGap, default_main_sankey_id } from '../types/Utils'
 import {
   default_background_color,
-  default_black_color,
   default_DA_marging,
   default_grid_color,
   default_grid_size,
@@ -68,6 +67,7 @@ import * as LabelFilters from './LabelFilters'
 import * as CopyPaste from './copyPaste'
 import * as DisplayModes from './displayModes'
 import * as CameraMath from './CameraMath'
+import { Class_ViewportChrome } from './DrawingAreaViewportChrome'
 import { TooltipEventManager } from '../Elements/TooltipsConfig'
 import { Class_NodeBase, sortNodesElements } from '../Elements/NodeBase'
 import {
@@ -105,13 +105,10 @@ export class Class_DrawingArea {
   public d3_selection_handlers: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_zone_select: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
-  // Scrollbars
-  private _d3_scrollbar_h: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
-  private _d3_scrollbar_v: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
-  // Border drawn directly on the SVG root (outside g_drawing's zoom transform)
-  // so it always frames the visible viewport, regardless of pan/zoom.
-  private _d3_viewport_border: d3.Selection<SVGRectElement, unknown, HTMLElement, unknown> | null = null
-  private _scrollbar_size = 10
+  // #242 — Chrome de viewport (scrollbars + cadre) : posé sur la racine SVG (hors du transform de
+  // zoom de g_drawing), il porte ses propres sélections d3 et ne fait que lire la géométrie de la
+  // DA (cf. DrawingAreaViewportChrome).
+  private _viewport_chrome = new Class_ViewportChrome()
 
 
   public static: boolean = !!window.sankey?.publish
@@ -495,7 +492,7 @@ export class Class_DrawingArea {
    * @private
    * @memberof Class_DrawingArea
    */
-  private zoomListener = d3.zoom<SVGSVGElement, unknown>()
+  private _zoomListener = d3.zoom<SVGSVGElement, unknown>()
     // only trigger zoom event when we scroll (which == 0) &&
     // and drag mouse middle button (which == 2)
     .filter(evt => (evt.which === 2 || evt.which === 0))
@@ -759,7 +756,7 @@ export class Class_DrawingArea {
         this.areaAutoFit(false, true)
       } else {
         this._locked_overflow_shrunk = false
-        this.zoomListener.transform(this.d3_selection_zoom_area, locked_zoom_transform)
+        this._zoomListener.transform(this.d3_selection_zoom_area, locked_zoom_transform)
         this.drawBackground()
         this.drawGrid()
         this._updateScrollbars()
@@ -866,16 +863,8 @@ export class Class_DrawingArea {
         .attr('flood-opacity', 0.35)
     }
 
-    // Scrollbars (outside g_drawing so they stay fixed in viewport)
-    this._initScrollbars()
-
-    // Viewport border (outside g_drawing → fixed frame, unaffected by pan/zoom)
-    this._d3_viewport_border = this.d3_selection_zoom_area.append('rect')
-      .attr('id', 'viewport_border')
-      .attr('fill', 'none')
-      .style('pointer-events', 'none')
-      .style('shape-rendering', 'crispEdges')
-    this._updateViewportBorder()
+    // Chrome de viewport : scrollbars + cadre, posés hors de g_drawing pour rester fixes.
+    this._viewport_chrome.init(this)
   }
 
   /**
@@ -1627,7 +1616,7 @@ export class Class_DrawingArea {
         // des labels dans la zone visible (sous la top bar, marge à gauche).
         if (this._font_size_locked) {
           this._updateScrollbars()
-          this.zoomListener.translateTo(this.d3_selection_zoom_area, 0, 0, [px, py])
+          this._zoomListener.translateTo(this.d3_selection_zoom_area, 0, 0, [px, py])
           // Le ré-ancrage ci-dessus change le transform APRÈS le drawBackground/drawGrid
           // initiaux : on les redessine pour que le fond et la grille suivent le contenu.
           this.drawBackground()
@@ -2040,7 +2029,7 @@ export class Class_DrawingArea {
     if (this.d3_selection_zoom_area) {
       this.d3_selection_zoom_area.remove()
       this.d3_selection_zoom_area = null
-      this._d3_viewport_border = null
+      this._viewport_chrome.reset()
     }
   }
 
@@ -2156,15 +2145,15 @@ export class Class_DrawingArea {
       && typeof window.matchMedia === 'function'
       && window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (!this.zoom_animations_enabled || reduce_motion) {
-      this.zoomListener.transform(sel, target)
+      this._zoomListener.transform(sel, target)
       return
     }
     // Cale le point de départ (émet un event zoom → eventZoom applique le
     // transform) puis anime depuis ce point vers la cible.
-    if (from) this.zoomListener.transform(sel, from)
+    if (from) this._zoomListener.transform(sel, from)
     // Transition SANS nom (défaut) : un geste souris (d3-zoom fait selection.interrupt())
     // ou un nouvel appel l'annule proprement, sans transitions concurrentes.
-    this.zoomListener.transform(
+    this._zoomListener.transform(
       sel.transition().duration(this._zoom_animation_duration_ms).ease(d3.easeCubicInOut),
       target
     )
@@ -2297,7 +2286,7 @@ export class Class_DrawingArea {
     if (opts?.animate) {
       this._animateZoomTo(target, opts.from)
     } else {
-      this.zoomListener.transform(sel, target)
+      this._zoomListener.transform(sel, target)
     }
   }
 
@@ -2314,8 +2303,8 @@ export class Class_DrawingArea {
   private _applyFitCamera(k: number, px: number, py: number): void {
     const sel = this.d3_selection_zoom_area
     if (!sel) return
-    this.zoomListener.scaleTo(sel, k)
-    this.zoomListener.translateTo(sel, 0, 0, [px, py])
+    this._zoomListener.scaleTo(sel, k)
+    this._zoomListener.translateTo(sel, 0, 0, [px, py])
   }
 
   /**
@@ -2386,42 +2375,7 @@ export class Class_DrawingArea {
    * (eventZoom), car le fond n'y est pas redessiné.
    */
   private _updateViewportBorder() {
-    if (!this._d3_viewport_border) return
-    if (!this.editable) {
-      this._d3_viewport_border.attr('visibility', 'hidden')
-      return
-    }
-    let x: number, y: number, w: number, h: number
-    if (this.is_paper_mode) {
-      // Le cadre matérialise la PAGE, pas la fenêtre. On PROJETTE le rectangle de page
-      // (coords monde) en PIXELS-ÉCRAN via la caméra : le cadre porte donc le ratio du
-      // format (les formats ISO A partagent 1:√2, seule l'orientation le change), suit
-      // zoom et pan, et reste tracé sur la racine SVG → trait net, jamais mis à l'échelle.
-      const node = this.d3_selection_zoom_area?.node()
-      if (!node) return
-      const t = d3.zoomTransform(node)
-      const x0 = this._background_d3_groups_shift_x
-      const y0 = this._background_d3_groups_shift_y
-      const tl = CameraMath.worldToScreen(t, x0, y0)
-      const br = CameraMath.worldToScreen(t, x0 + this._zoom_width, y0 + this._zoom_height)
-      x = tl.x; y = tl.y; w = br.x - tl.x; h = br.y - tl.y
-    } else {
-      // viewW/viewH already exclude fit_margin and navbar/bottombar, so they map
-      // directly to the framed area (x=fm, y=navH+fm, w=viewW, h=viewH).
-      const fm = this._fit_margin / 2
-      x = fm
-      y = this.getNavBarHeight() + fm
-      w = this.window_fitting_width
-      h = this.window_fitting_height
-    }
-    this._d3_viewport_border
-      .attr('visibility', 'visible')
-      .attr('x', x)
-      .attr('y', y)
-      .attr('width', Math.max(0, w))
-      .attr('height', Math.max(0, h))
-      .style('stroke', default_black_color)
-      .style('stroke-width', 1)
+    this._viewport_chrome.updateBorder(this)
   }
 
   /**
@@ -2508,7 +2462,7 @@ export class Class_DrawingArea {
     }
     // Zoom behavior(but can also drag drawing area in scroll zone)
     this.d3_selection_zoom_area?.call(
-      this.zoomListener)
+      this._zoomListener)
       .on('dblclick.zoom', null) // deactivate dbl click zoom
       .on('wheel.zoom', (event: WheelEvent) => {
         event.preventDefault()
@@ -2969,257 +2923,16 @@ export class Class_DrawingArea {
   // SCROLLBARS ==========================================================================
 
   /**
-   * Create scrollbar SVG elements (track + thumb) for horizontal and vertical scrolling.
-   * Placed directly in the SVG root so they stay fixed in viewport coordinates.
-   */
-  private _initScrollbars() {
-    if (!this.d3_selection_zoom_area) return
-    const sb = this._scrollbar_size
-
-    // Horizontal scrollbar
-    this._d3_scrollbar_h = this.d3_selection_zoom_area.append('g')
-      .attr('class', 'scrollbar scrollbar-h')
-      .attr('visibility', 'hidden')
-      .style('pointer-events', 'all')
-    // Track
-    this._d3_scrollbar_h.append('rect')
-      .attr('class', 'scrollbar-track')
-      .attr('rx', sb / 2).attr('ry', sb / 2)
-      .attr('height', sb)
-      .style('fill', '#e0e0e0').style('fill-opacity', 0.3)
-    // Thumb
-    this._d3_scrollbar_h.append('rect')
-      .attr('class', 'scrollbar-thumb')
-      .attr('rx', sb / 2).attr('ry', sb / 2)
-      .attr('height', sb)
-      .style('fill', '#78A7C2').style('fill-opacity', 0.85)
-      .style('cursor', 'pointer')
-
-    // Vertical scrollbar
-    this._d3_scrollbar_v = this.d3_selection_zoom_area.append('g')
-      .attr('class', 'scrollbar scrollbar-v')
-      .attr('visibility', 'hidden')
-      .style('pointer-events', 'all')
-    // Track
-    this._d3_scrollbar_v.append('rect')
-      .attr('class', 'scrollbar-track')
-      .attr('rx', sb / 2).attr('ry', sb / 2)
-      .attr('width', sb)
-      .style('fill', '#e0e0e0').style('fill-opacity', 0.3)
-    // Thumb
-    this._d3_scrollbar_v.append('rect')
-      .attr('class', 'scrollbar-thumb')
-      .attr('rx', sb / 2).attr('ry', sb / 2)
-      .attr('width', sb)
-      .style('fill', '#78A7C2').style('fill-opacity', 0.85)
-      .style('cursor', 'pointer')
-
-    // Helper to get content extent via getBBox
-    const getContentScreenExtent = () => {
-      if (!this.d3_selection_zoom_area || !this.d3_selection_elements_group) return null
-      const svgN = this.d3_selection_zoom_area.node()
-      // Measure g_elements, not g_drawing: g_drawing includes the viewport-tracking
-      // background (see _updateScrollbars) which would let the thumb drag into empty space.
-      const gN = this.d3_selection_elements_group.node()
-      if (!svgN || !gN) return null
-      const t = d3.zoomTransform(svgN)
-      let bbox: DOMRect
-      try { bbox = gN.getBBox() } catch { return null }
-      const has_bbox = bbox.width !== 0 || bbox.height !== 0
-      // Union with the canvas rect so the pannable extent matches translateExtent.
-      let cx0: number, cy0: number, cx1: number, cy1: number
-      if (this.is_paper_mode) {
-        cx0 = 0; cy0 = 0; cx1 = this._width; cy1 = this._height
-      } else {
-        cx0 = this._background_d3_groups_shift_x
-        cy0 = this._background_d3_groups_shift_y
-        cx1 = cx0 + this._zoom_width
-        cy1 = cy0 + this._zoom_height
-      }
-      const x0 = has_bbox ? Math.min(bbox.x, cx0) : cx0
-      const y0 = has_bbox ? Math.min(bbox.y, cy0) : cy0
-      const x1 = has_bbox ? Math.max(bbox.x + bbox.width, cx1) : cx1
-      const y1 = has_bbox ? Math.max(bbox.y + bbox.height, cy1) : cy1
-      const r = svgN.getBoundingClientRect()
-      return {
-        screenW: (x1 - x0) * t.k,
-        screenH: (y1 - y0) * t.k,
-        viewW: Math.min(r.width, window.innerWidth - Math.max(0, r.left)),
-        viewH: Math.min(r.height, window.innerHeight - Math.max(0, r.top)),
-        k: t.k
-      }
-    }
-
-    // Drag behavior for horizontal thumb
-    const hThumbNode = this._d3_scrollbar_h.select('.scrollbar-thumb').node() as SVGRectElement | null
-    if (hThumbNode) {
-      d3.select<SVGRectElement, unknown>(hThumbNode).call(
-        d3.drag<SVGRectElement, unknown>()
-          .on('drag', (event: d3.D3DragEvent<SVGRectElement, unknown, unknown>) => {
-            if (!this.d3_selection_zoom_area) return
-            const ext = getContentScreenExtent()
-            if (!ext || ext.screenW <= ext.viewW) return
-            const trackW = ext.viewW - 2 * sb
-            const ratio = ext.screenW / trackW
-            this.zoomListener.translateBy(this.d3_selection_zoom_area, -event.dx * ratio / ext.k, 0)
-            // Sync thumb position to mouse immediately: the zoom event defers _updateScrollbars
-            // by 100ms, which makes the thumb visibly lag behind the cursor during a drag.
-            this._updateScrollbars()
-          })
-      )
-    }
-
-    // Drag behavior for vertical thumb
-    const vThumbNode = this._d3_scrollbar_v.select('.scrollbar-thumb').node() as SVGRectElement | null
-    if (vThumbNode) {
-      d3.select<SVGRectElement, unknown>(vThumbNode).call(
-        d3.drag<SVGRectElement, unknown>()
-          .on('drag', (event: d3.D3DragEvent<SVGRectElement, unknown, unknown>) => {
-            if (!this.d3_selection_zoom_area) return
-            const ext = getContentScreenExtent()
-            if (!ext || ext.screenH <= ext.viewH) return
-            const trackH = ext.viewH - 2 * sb
-            const ratio = ext.screenH / trackH
-            this.zoomListener.translateBy(this.d3_selection_zoom_area, 0, -event.dy * ratio / ext.k)
-            this._updateScrollbars()
-          })
-      )
-    }
-  }
-
-  /**
-   * Update scrollbar positions and sizes based on the current D3 zoom transform.
-   * Uses getBBox() on g_drawing to get the real content extent, then maps it
-   * to viewport coordinates via the zoom transform.
-   * Scrollbars stay visible as long as content overflows the viewport.
+   * Rafraîchit les scrollbars (et, au passage, extent/translateExtent du zoom listener —
+   * cf. Class_ViewportChrome.updateScrollbars, qui calcule l'étendue pannable).
    */
   private _updateScrollbars() {
-    if (!this.d3_selection_zoom_area || !this._d3_scrollbar_h || !this._d3_scrollbar_v) return
-    const svgNode = this.d3_selection_zoom_area.node()
-    if (!svgNode) return
-    // Measure the real content via g_elements, NOT g_drawing: g_drawing contains
-    // g_background, whose rect is sized to the union canvas ∪ visible viewport
-    // (_freeBgBounds). Panning re-runs drawBackground() and grows that rect to cover
-    // the newly revealed viewport, so g_drawing.getBBox() would grow without bound and
-    // make the scrollbar appear over — and pan into — empty space.
-    const gNode = this.d3_selection_elements_group?.node()
-    if (!gNode) return
-
-    const sb = this._scrollbar_size
-    // The SVG has height=window.innerHeight but is placed after the navbar,
-    // so its bottom overflows past the viewport. Use window_fitting dimensions
-    // which correctly account for navbar and bottom bar.
-    const viewW = this.window_fitting_width
-    const viewH = this.window_fitting_height
-    if (viewW <= 0 || viewH <= 0) return
-    // Offset from SVG top to the actual visible area (navbar pushes content down)
-    const navH = this.getNavBarHeight()
-
-    // Get the real bounding box of all content in g_drawing's local coordinate system
-    // This handles negative coordinates correctly since getBBox returns the untransformed extent
-    let bbox: DOMRect | null = null
-    try {
-      bbox = gNode.getBBox()
-    } catch {
-      // getBBox can throw if element has no rendered content; treat as empty
-    }
-    const has_bbox = !!bbox && (bbox.width !== 0 || bbox.height !== 0)
-
-    // Canvas (paper or free-mode background) bounds in world coords
-    let canvasX0: number
-    let canvasY0: number
-    let canvasX1: number
-    let canvasY1: number
-    if (this.is_paper_mode) {
-      canvasX0 = 0
-      canvasY0 = 0
-      canvasX1 = this._width
-      canvasY1 = this._height
-    } else {
-      canvasX0 = this._background_d3_groups_shift_x
-      canvasY0 = this._background_d3_groups_shift_y
-      canvasX1 = canvasX0 + this._zoom_width
-      canvasY1 = canvasY0 + this._zoom_height
-    }
-    // Constrain zoom pan: content bbox in world coords + usable viewport (excludes navbar / bottom bar).
-    // d3-zoom clamps translateBy/scaleBy so the user can't pan past the content edges.
-    // The translateExtent must include the "canvas" rectangle so the custom constrain
-    // (anchor top-left) aligns that canvas to the viewport's top-left.
-    const panX0 = has_bbox ? Math.min(bbox!.x, canvasX0) : canvasX0
-    const panY0 = has_bbox ? Math.min(bbox!.y, canvasY0) : canvasY0
-    const panX1 = has_bbox ? Math.max(bbox!.x + bbox!.width, canvasX1) : canvasX1
-    const panY1 = has_bbox ? Math.max(bbox!.y + bbox!.height, canvasY1) : canvasY1
-    // Inset the viewport extent by fit_margin/2 so the constrain anchors the canvas
-    // top-left at (fit_margin/2, navH + fit_margin/2) — leaving a symmetric margin
-    // on the 4 sides (left/right/bottom = fit_margin/2; top = navbar + fit_margin/2).
-    const fm = this._fit_margin / 2
-    this.zoomListener
-      .extent([[fm, navH + fm], [viewW - fm, navH + viewH - fm]])
-      .translateExtent([[panX0, panY0], [panX1, panY1]])
-    // Without an actual bbox we can't (and don't need to) update scrollbars — they
-    // stay hidden until there is content. The extent / translateExtent above are
-    // enough for the initial draw and for empty-diagram resets to anchor correctly.
-    if (!has_bbox) return
-
-    // Map the pannable extent (union content ∪ canvas — the same rect used for
-    // translateExtent above) to screen coordinates using the zoom transform, so the
-    // scrollbar reflects exactly what d3-zoom lets the user pan to.
-    const transform = d3.zoomTransform(svgNode)
-    // Coins de l'extent pannable (monde) projetés à l'écran via la caméra.
-    const scr_tl = CameraMath.worldToScreen(transform, panX0, panY0)
-    const scr_br = CameraMath.worldToScreen(transform, panX1, panY1)
-    const screenLeft = scr_tl.x
-    const screenRight = scr_br.x
-    const screenTop = scr_tl.y
-    const screenBottom = scr_br.y
-    const screenW = screenRight - screenLeft
-    const screenH = screenBottom - screenTop
-
-    // Horizontal scrollbar: content wider than viewport
-    // interrupt() cancels any pending d3 transition that could override opacity
-    this._d3_scrollbar_h.interrupt()
-    if (screenW > viewW * 1.01) {
-      const trackW = viewW - 2 * sb
-      const thumbW = Math.max(30, (viewW / screenW) * trackW)
-      const scrollFraction = Math.max(0, Math.min(1, -screenLeft / (screenW - viewW)))
-      const thumbX = sb + scrollFraction * (trackW - thumbW)
-
-      this._d3_scrollbar_h
-        .attr('visibility', 'visible')
-        .attr('transform', `translate(0, ${navH + viewH - sb - 4})`)
-      this._d3_scrollbar_h.select('.scrollbar-track')
-        .attr('x', sb).attr('width', trackW)
-      this._d3_scrollbar_h.select('.scrollbar-thumb')
-        .attr('x', thumbX)
-        .attr('width', thumbW)
-    } else {
-      this._d3_scrollbar_h.attr('visibility', 'hidden')
-    }
-
-    // Vertical scrollbar: content taller than viewport
-    this._d3_scrollbar_v.interrupt()
-    if (screenH > viewH * 1.01) {
-      const trackH = viewH - 2 * sb
-      const thumbH = Math.max(30, (viewH / screenH) * trackH)
-      const scrollFraction = Math.max(0, Math.min(1, -screenTop / (screenH - viewH)))
-      const thumbY = sb + scrollFraction * (trackH - thumbH)
-
-      this._d3_scrollbar_v
-        .attr('visibility', 'visible')
-        .attr('transform', `translate(${viewW - sb - 4}, ${navH})`)
-      this._d3_scrollbar_v.select('.scrollbar-track')
-        .attr('y', sb).attr('height', trackH)
-      this._d3_scrollbar_v.select('.scrollbar-thumb')
-        .attr('y', thumbY)
-        .attr('height', thumbH)
-    } else {
-      this._d3_scrollbar_v.attr('visibility', 'hidden')
-    }
+    this._viewport_chrome.updateScrollbars(this)
   }
 
   /**
    * Define event when mouse scrolls in drawing area
-   * Note : Under the hood, this calls eventZoom method throught this.zoomListener
+   * Note : Under the hood, this calls eventZoom method throught this._zoomListener
    * @private
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
    * @memberof Class_DrawingArea
@@ -3244,7 +2957,7 @@ export class Class_DrawingArea {
         // Smooth zoom factor proportional to deltaY magnitude
         const scale = Math.pow(2, -event.deltaY / 300)
         // Apply scaling
-        this.zoomListener.scaleBy(
+        this._zoomListener.scaleBy(
           this.d3_selection_zoom_area,
           scale,
           [event.x, event.y]
@@ -3252,11 +2965,11 @@ export class Class_DrawingArea {
       }
       // Horizontal displacement (Shift+scroll for mouse, or trackpad horizontal swipe via deltaX)
       else if (event.shiftKey) {
-        this.zoomListener.translateBy(this.d3_selection_zoom_area, -event.deltaY, 0)
+        this._zoomListener.translateBy(this.d3_selection_zoom_area, -event.deltaY, 0)
       }
       // Combined / trackpad two-finger pan: use both deltaX and deltaY
       else {
-        this.zoomListener.translateBy(this.d3_selection_zoom_area, -event.deltaX, -event.deltaY)
+        this._zoomListener.translateBy(this.d3_selection_zoom_area, -event.deltaX, -event.deltaY)
       }
     }
   }
@@ -4236,6 +3949,38 @@ export class Class_DrawingArea {
   public set show_orphan_nodes(value: boolean) { this._show_orphan_nodes = value }
 
   public get fit_margin(): number { return this._fit_margin }
+
+  /**
+   * #242 — Comportement de zoom/pan d3, exposé pour le chrome de viewport : le drag d'un pouce de
+   * scrollbar déplace la caméra, et `updateScrollbars` (re)pose extent/translateExtent.
+   */
+  public get zoomListener() { return this._zoomListener }
+
+  /**
+   * #242 — Rectangle du canvas de fond (coords monde) : la PAGE en mode papier, le fond décalé en
+   * mode libre. Sert au cadre de viewport et au tracé du fond.
+   */
+  public get background_canvas_rect(): { x: number, y: number, w: number, h: number } {
+    return {
+      x: this._background_d3_groups_shift_x,
+      y: this._background_d3_groups_shift_y,
+      w: this._zoom_width,
+      h: this._zoom_height
+    }
+  }
+
+  /**
+   * #242 — Rectangle « canvas » (coords monde) servant de plancher à l'étendue pannable : uni au
+   * contenu, il donne le translateExtent de d3-zoom et l'échelle des scrollbars. En mode papier
+   * c'est la page ancrée en (0,0) — et non le fond décalé.
+   */
+  public get pannable_canvas_rect(): { x0: number, y0: number, x1: number, y1: number } {
+    if (this.is_paper_mode) {
+      return { x0: 0, y0: 0, x1: this._width, y1: this._height }
+    }
+    const bg = this.background_canvas_rect
+    return { x0: bg.x, y0: bg.y, x1: bg.x + bg.w, y1: bg.y + bg.h }
+  }
 
   public get magnetic_nodes(): boolean { return this._magnetic_nodes }
   public set magnetic_nodes(value: boolean) { this._magnetic_nodes = value }
