@@ -5,6 +5,7 @@
 // aucune dépendance runtime lourde.
 import type { Class_Sankey } from '../types/Sankey'
 import type { Class_ProtoElement } from '../Elements/Element'
+import { sankeyRootSchema } from './sankeyFormatSchema'
 
 // ---------------------------------------------------------------------------
 // Version de FORMAT (entier), distincte de la version d'app
@@ -133,63 +134,58 @@ export function isVersionBelow(version: string | number | undefined, target: str
 }
 
 // ---------------------------------------------------------------------------
-// #233 — Validation racine au chargement (pare-chocs léger)
+// #233 / #253 — Validation racine au chargement (pare-chocs léger)
 // ---------------------------------------------------------------------------
 // `fromJSON` supposait la forme du JSON racine et plantait avec une erreur
 // cryptique (ex. `Object.values(undefined)`) sur un fichier ancien ou édité à la
 // main dont une clé structurante manque ou a le mauvais type. Cette garde LÉGÈRE
-// (pas un schéma zod exhaustif — cf. item 47 de l'automne) vérifie la racine et le
-// TYPE des clés structurantes, et renvoie la liste lisible des champs
-// problématiques. Le dispatcher lève alors une erreur explicite AVANT le crash.
+// vérifie la racine et le TYPE des clés structurantes, et renvoie la liste
+// lisible des champs problématiques. Le dispatcher lève alors une erreur
+// explicite AVANT le crash.
 //
-// Volontairement permissive : elle ne vérifie que la présence/le type de ce dont
-// l'absence ou le mauvais type ferait échouer la lecture. Une clé simplement
-// absente d'un fichier légitime (diagramme vide sans `nodes`, etc.) n'est PAS une
-// erreur — on ne signale un problème que sur un type INCOMPATIBLE d'une clé
-// présente (ou une racine qui n'est pas un objet).
+// #253 : la validation dérive désormais du schéma zod `sankeyRootSchema`
+// (source de vérité unique, dont est aussi généré le JSON Schema publié). Le
+// contrat public de cette fonction est inchangé (mêmes messages, même contrat
+// « zéro faux positif sur le corpus golden »).
+//
+// Volontairement permissive : le schéma est en `passthrough` et ne contraint que
+// l'enveloppe. Une clé simplement absente d'un fichier légitime (diagramme vide
+// sans `nodes`, etc.) n'est PAS une erreur — on ne signale un problème que sur un
+// type INCOMPATIBLE d'une clé présente (ou une racine qui n'est pas un objet).
 
-/** Vrai pour un objet « dictionnaire » simple (ni null, ni tableau). */
-function isPlainObject(v: unknown): v is Record<string, unknown> {
-  return typeof v === 'object' && v !== null && !Array.isArray(v)
+/** Décrit le type d'une valeur pour un message lisible (ni null ni tableau brut). */
+function kindOf(v: unknown): string {
+  if (v === null) return 'null'
+  if (Array.isArray(v)) return 'un tableau'
+  return typeof v
 }
 
-/** Clés structurantes attendues comme dictionnaires si présentes. */
-const ROOT_OBJECT_KEYS = [
-  'nodes', 'links',
-  'dataTags', 'nodeTags', 'levelTags', 'fluxTags', 'viewTags'
-] as const
-
 /**
- * Valide la forme du JSON racine d'un diagramme Sankey. Renvoie la liste des
- * champs problématiques (vide = OK). Pure et sans dépendance : testable en
+ * Valide la forme du JSON racine d'un diagramme Sankey via `sankeyRootSchema`.
+ * Renvoie la liste des champs problématiques (vide = OK). Pure : testable en
  * isolation et réutilisable côté outillage.
  */
 export function validateSankeyRootJSON(json: unknown): string[] {
+  const result = sankeyRootSchema.safeParse(json)
+  if (result.success) return []
   const problems: string[] = []
-  if (!isPlainObject(json)) {
-    const kind = json === null ? 'null'
-      : Array.isArray(json) ? 'un tableau'
-        : typeof json
-    problems.push(`racine : attendu un objet JSON, reçu ${kind}`)
-    return problems // rien d'autre n'est vérifiable
-  }
-  if ('version' in json && !(typeof json.version === 'string' || typeof json.version === 'number')) {
-    problems.push(`version : attendu une chaîne (ou un nombre), reçu ${typeof json.version}`)
-  }
-  if ('format_version' in json && typeof json.format_version !== 'number') {
-    problems.push(`format_version : attendu un entier, reçu ${typeof json.format_version}`)
-  }
-  for (const key of ROOT_OBJECT_KEYS) {
-    if (key in json && !isPlainObject(json[key])) {
-      const val = json[key]
-      const kind = val === null ? 'null' : Array.isArray(val) ? 'un tableau' : typeof val
-      problems.push(`${key} : attendu un objet, reçu ${kind}`)
+  for (const issue of result.error.issues) {
+    // Racine non-objet (tableau, null, scalaire) : un seul problème, rien
+    // d'autre n'est descendable.
+    if (issue.path.length === 0) {
+      problems.push(`racine : attendu un objet JSON, reçu ${kindOf(json)}`)
+      continue
+    }
+    const key = String(issue.path[0])
+    const value = (json as Record<string, unknown>)[key]
+    if (key === 'version') {
+      problems.push(`version : attendu une chaîne (ou un nombre), reçu ${typeof value}`)
+    } else if (key === 'format_version') {
+      problems.push(`format_version : attendu un entier, reçu ${typeof value}`)
+    } else {
+      problems.push(`${key} : attendu un objet, reçu ${kindOf(value)}`)
     }
   }
-  // NB : `views` (concept OpenSankey+) n'est PAS validé ici. Sa forme varie selon
-  // l'époque (objet keyé par id dans les fichiers anciens, tableau plus tard) et la
-  // couche base OpenSankey ne le relit pas — le contraindre produirait des faux
-  // positifs sur des fichiers légitimes (cf. corpus 0.9→1.1.6).
   return problems
 }
 

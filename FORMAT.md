@@ -56,3 +56,20 @@ Documenter le changement ci-dessous.
 - `views`, `current_view` — vues multiples (concept OpenSankey+).
 
 > À compléter au fil des évolutions du format.
+
+## Schéma machine (issue #253)
+
+La **racine** du format est décrite par un schéma [zod](https://zod.dev)
+(`packages/opensankey/opensankey/client/src/Persistence/sankeyFormatSchema.ts`),
+**source de vérité unique** dont dérivent :
+
+- la validation légère au chargement (`validateSankeyRootJSON`, non bloquante) ;
+- le **JSON Schema draft-07 publié**
+  [`sankey.schema.json`](packages/opensankey/opensankey/client/src/Persistence/sankey.schema.json),
+  généré depuis le zod (régénéré via
+  `UPDATE_FORMAT_SCHEMA=1 … test sankeyFormatSchema`, garde-fou anti-dérive en CI).
+
+Le schéma ne contraint pour l'instant que l'**enveloppe** (clés racines typées ;
+contenu détaillé des nœuds/liens/styles en `additionalProperties: true`), à
+enrichir progressivement. Une validation Python (`jsonschema`) consommant ce
+JSON Schema est prévue en suivi (d'abord en avertissement, puis bloquante).
