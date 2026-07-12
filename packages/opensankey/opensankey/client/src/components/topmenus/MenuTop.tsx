@@ -652,10 +652,10 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
         {new_data.icon_library.icon_open_sankey_excel}
         {t('Menu.open_excel')}
       </MenuItem>
-      <MenuItem onClick={() => { set_show_image_import(true) }}>
+      {new_data.has_sankey_dev && <MenuItem onClick={() => { set_show_image_import(true) }}>
         <Box as='span' mr='0.5em'><FontAwesomeIcon icon={faImage} /></Box>
         {t('Menu.import_image')}
-      </MenuItem>
+      </MenuItem>}
       <MenuItem
         onClick={() => {
           if (_load_sankeymatic.current) {
@@ -967,10 +967,10 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
           {new_data.icon_library.icon_open_sankey_excel}
           {t('Menu.open_excel')}
         </MenuItem>
-        <MenuItem onClick={() => { set_show_image_import(true) }}>
+        {new_data.has_sankey_dev && <MenuItem onClick={() => { set_show_image_import(true) }}>
           <Box as='span' mr='0.5em'><FontAwesomeIcon icon={faImage} /></Box>
           {t('Menu.import_image')}
-        </MenuItem>
+        </MenuItem>}
         <MenuItem onClick={() => {
           if (_load_sankeymatic.current) {
             _load_sankeymatic.current.name = ''
