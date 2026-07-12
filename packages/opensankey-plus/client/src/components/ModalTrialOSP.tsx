@@ -170,7 +170,7 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
   // Top tier (SankeySuite) déjà détenu → plus rien à vendre.
   if (app_data.has_real_sankey_suite_licence) return <></>
 
-  const iconCTA = (label: string, onClick: () => void) => (
+  const iconCTA = (label: string, onClick: () => void, logo: string = app_data.logo_sankey_plus) => (
     <Tooltip label={label} placement='top'>
       <IconButton
         aria-label={label}
@@ -180,7 +180,7 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
         w='1.7rem'
         h='1.7rem'
         p='0.2rem'
-        icon={<Image src={app_data.logo_sankey_plus} alt='' h='100%' w='100%' objectFit='contain' />}
+        icon={<Image src={logo} alt='' h='100%' w='100%' objectFit='contain' />}
       />
     </Tooltip>
   )
@@ -199,11 +199,23 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
     </Tooltip>
   )
 
-  // Décompte discret (essai en cours) pointant vers l'abonnement.
-  const countdownCTA = () => iconCTA(
-    t('Trial.banner_active', { days: app_data.trial_days_remaining }),
-    () => goToCheckout(app_data),
-  )
+  // Décompte discret (essai en cours) pointant vers l'abonnement. L'icône et le
+  // libellé reflètent le plan effectivement en essai (Suite ⊃ OS+).
+  const countdownCTA = () => {
+    const days = app_data.trial_days_remaining
+    if (app_data.trial_active_suite) {
+      return iconCTA(
+        trLang(`Essai SankeySuite — ${days} j restants`, `SankeySuite trial — ${days} days left`),
+        () => goToCheckout(app_data),
+        app_data.logo_sankey_suite,
+      )
+    }
+    return iconCTA(
+      t('Trial.banner_active', { days }),
+      () => goToCheckout(app_data),
+      app_data.logo_sankey_plus,
+    )
+  }
   // Bouton « Essayer SankeySuite » (escalade depuis OS+).
   const suiteTrialCTA = () => textCTA(
     trLang('Essayer SankeySuite 30 j', 'Try SankeySuite for 30 days'),
