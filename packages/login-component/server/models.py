@@ -210,6 +210,11 @@ class User(UserMixin, db.Model):
     license_opensankeyplus = db.Column(db.String(1024))
     license_sankeysuite = db.Column(db.String(1024))
     is_developer = db.Column(db.Boolean)
+    # Visites internes (équipe) : quand ce flag est posé, les passages de cet
+    # utilisateur sur la page d'accueil ne sont PAS comptés dans la table
+    # `metrics` (issue #256). Les comptes `is_developer` sont exclus d'office ;
+    # ce flag permet d'exclure aussi un compte non-développeur (collègue, démo).
+    exclude_from_metrics = db.Column(db.Boolean)
     # Customer infos
     creation = db.Column(db.String(128))
     stripe_id = db.Column(db.String(1024), unique=True)
