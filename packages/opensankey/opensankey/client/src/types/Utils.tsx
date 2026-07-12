@@ -24,8 +24,9 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { useState } from 'react'
+import React from 'react'
 import * as d3 from '../d3Modules'
+import { useModelBinding } from '../hooks/useModelBinding'
 import { Class_ApplicationData } from './ApplicationData'
 import { FType_InitializeAdditionalMenus } from '../Modules'
 import { value_option_percent_constants, unit_stock_percent_constants, ValueOptionType } from '../Elements/LinkValues'
@@ -313,8 +314,8 @@ export const WrapperInitializeAdditionalMenus = ({ new_data, initializeAdditiona
   new_data: Class_ApplicationData,
   initializeAdditionalMenus: FType_InitializeAdditionalMenus,
 }) => {
-  const [, setUpdate] = useState(0)
-  new_data.menu_configuration.ref_rerender_submodules_menus.current = () => setUpdate(a => a + 1)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  useModelBinding(new_data.menu_configuration.ref_rerender_submodules_menus)
 
   new_data.menu_configuration.additionalMenus.current = {
     external_top_buttons_item: {},

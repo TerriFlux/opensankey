@@ -1,5 +1,5 @@
 // Standard libs
-import React, { ChangeEvent, useEffect, useRef, useState } from 'react'
+import React, { ChangeEvent, useRef } from 'react'
 import {
   Box,
   Input,
@@ -16,6 +16,7 @@ import { makeId, Type_JSON } from '@terriflux/opensankey/src/types/Utils'
 import { OSTooltip } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
 import { compressJSONToGzip, decompressUploadedFileUniversal } from '@terriflux/opensankey/src/Persistence/UniversalJSONCompression'
 import { retrieveJSONResults } from '@terriflux/opensankey/src/components/dialogs/PersistenceProcessDialog'
+import { useModelBinding } from '@terriflux/opensankey/src/hooks/useModelBinding'
 import { Class_DrawingAreaOSP } from '../../types/DrawingAreaOSP'
 import { Class_ApplicationDataOSP } from '../../types/ApplicationDataOSP'
 import { loadExcelFileAsSankeyJSON, logo_view } from './viewsShared'
@@ -42,19 +43,15 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
 
   const { t, icon_library, menu_configuration_osp } = app_data
   const { icon_add_element, icon_remove_element, icon_welcome, icon_attr_view, icon_copy, icon_locked } = icon_library
-  const [, setCount] = useState(0)
-  const refreshThis = () => {
-    setCount(a => a + 1)
-  }
+  // #247 — re-render piloté par le modèle : slot updater + abonnement à la grande zone
+  // (re-render au toggle du tableur/doc). Les deux sont relâchés au démontage.
+  const refreshThis = useModelBinding(
+    menu_configuration_osp.ref_to_banner_views_updater,
+    refresh => app_data.menu_configuration.addMainZoneListener(refresh)
+  )
   const drawing_area_plus = app_data.drawing_area as Class_DrawingAreaOSP
 
   menu_configuration_osp.ref_to_banner_views_opened.current = false
-  menu_configuration_osp.ref_to_banner_views_updater.current = refreshThis
-
-  // Re-render au toggle du tableur/doc (la navigation vit dans la topbar).
-  useEffect(() => {
-    return app_data.menu_configuration.addMainZoneListener(refreshThis)
-  }, [])
 
   // Ref to trigger other components ----------------------------------------------------
 

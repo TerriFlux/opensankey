@@ -30,6 +30,7 @@ import {
   Box, Modal, ModalBody, ModalCloseButton, ModalContent, ModalOverlay, ModalHeader,
   Tab, Tabs, Table, TabList, TabPanel, TabPanels, Tbody, Td, Text, Th, Thead, Tr,
 } from '@chakra-ui/react'
+import { useModelBinding } from '../../hooks/useModelBinding'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 
 export const ModalWelcome = ({ app_data, external_pagination, external_content }: {
@@ -100,8 +101,8 @@ export const ModalWelcome = ({ app_data, external_pagination, external_content }
 }
 
 export const ModalWelcomeBuilder = ({ app_data }: { app_data: Class_ApplicationData }) => {
-  const [, setCount] = useState(0)
-  app_data.menu_configuration.dict_setter_show_dialog.ref_setter_modal_welcome_active_page.current = () => setCount(a => a + 1)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  useModelBinding(app_data.menu_configuration.dict_setter_show_dialog.ref_setter_modal_welcome_active_page)
 
   const [page_links, page_content] = ModalWelcomeContent(app_data)
 

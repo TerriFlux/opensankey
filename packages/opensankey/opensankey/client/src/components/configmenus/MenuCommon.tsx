@@ -69,6 +69,7 @@ import { ChevronDownIcon } from '@chakra-ui/icons'
 import { FaSquare } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSquareCheck, faEye, faEyeSlash, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
+import { useModelBinding, useModelSlot } from '../../hooks/useModelBinding'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { FCType_WrapperBoxSubSectionMenu } from '../SankeyMenuTypes'
 import { Class_DataTagGroup } from '../../types/TagGroup'
@@ -1202,7 +1203,7 @@ export const TooltipEditor = ({ app_data, elements, updaterRef }: {
   // Editor state
   const [editor_content_tooltip, setEditorContentTooltip] = useState('')
   const [isInitialized, setIsInitialized] = useState(false)
-  const [, setCount] = useState(0)
+  const refreshThis = useModelBinding()
   const inputRef = useRef() as MutableRefObject<HTMLTextAreaElement>
 
   // Fonction pour obtenir le texte du tooltip selon le type d'élément
@@ -1285,14 +1286,14 @@ export const TooltipEditor = ({ app_data, elements, updaterRef }: {
     updateEditorContent()
   }
 
-  // Link with new_data components updater
-  updaterRef.current = () => {
-    setCount(a => a + 1)
+  // #247 — slot updater piloté par le modèle : handler custom (closure fraîche) + cleanup au démontage.
+  useModelSlot(updaterRef, () => {
+    refreshThis()
     setIsInitialized(false)
     setTimeout(() => {
       updateEditorContent()
     }, 20)
-  }
+  })
 
   // Handle textarea changes
   const handleTextareaChange = (evt: React.ChangeEvent<HTMLTextAreaElement>) => {

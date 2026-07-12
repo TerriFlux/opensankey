@@ -22,6 +22,7 @@ import {
   buildShortcutsContent
 } from '@terriflux/opensankey/src/components/welcome/ModalWelcome'
 import { Class_ApplicationData } from '@terriflux/opensankey/src/types/ApplicationData'
+import { useModelBinding } from '@terriflux/opensankey/src/hooks/useModelBinding'
 import { FeaturesMatrixSA } from './FeaturesMatrixSA'
 
 // WHATSNEW.md is a single file with sections separated by <!-- LANG:xx --> markers.
@@ -80,8 +81,8 @@ const WhatsNewContent = ({ app_data }: { app_data: Class_ApplicationData }) => {
 }
 
 export const ModalWelcomeBuilderSA = ({ app_data }: { app_data: Class_ApplicationData }) => {
-  const [, setCount] = useState(0)
-  app_data.menu_configuration.dict_setter_show_dialog.ref_setter_modal_welcome_active_page.current = () => setCount(a => a + 1)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  useModelBinding(app_data.menu_configuration.dict_setter_show_dialog.ref_setter_modal_welcome_active_page)
 
   const { t } = app_data
   const [page_links, page_content] = ModalWelcomeContent(app_data)

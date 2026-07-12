@@ -1,8 +1,7 @@
 // External libs
 import React, {
   ChangeEvent,
-  useRef,
-  useState
+  useRef
 } from 'react'
 
 import {
@@ -25,6 +24,7 @@ import { OSPData, ViewType } from '../types/LegacyTypes'
 
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { CustomFaEyeCheckIcon, OSTooltip, getButtonVariant } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
+import { useModelBinding } from '@terriflux/opensankey/src/hooks/useModelBinding'
 import { DiffType } from '../types/LegacyTypes'
 import { applyChange } from 'deep-diff'
 
@@ -68,8 +68,8 @@ export const ImportImageAsSvgBg = ({
   new_data_plus: Class_ApplicationDataOSP
 }) => {
   const _load_image = useRef<HTMLInputElement>(null)
-  const [, setCount] = useState(0)
-  new_data_plus.menu_configuration_osp.ref_to_config_DA_bg_image_updater.current = () => setCount(a => a + 1)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  const refreshThis = useModelBinding(new_data_plus.menu_configuration_osp.ref_to_config_DA_bg_image_updater)
 
   const { drawing_area, t, has_sankey_plus, icon_library } = new_data_plus
   const { icon_import_file_image } = icon_library
@@ -87,7 +87,7 @@ export const ImportImageAsSvgBg = ({
         onChange={(evt) => {
           drawing_area.show_background_image = evt.target.checked
           drawing_area.drawBgImage()
-          setCount(a => a + 1)
+          refreshThis()
         }}
       >
         {t('MEP.show_image')}
@@ -98,7 +98,7 @@ export const ImportImageAsSvgBg = ({
         isDisabled={!has_sankey_plus || !drawing_area.show_background_image || drawing_area.is_paper_mode}
         onChange={(evt) => {
           drawing_area.constrain_to_bg_image_ratio = evt.target.checked
-          setCount(a => a + 1)
+          refreshThis()
         }}
       >
         <OSTooltip label={drawing_area.is_paper_mode ? t('MEP.constrain_bg_ratio_disabled_paper') : ''}>
@@ -154,7 +154,7 @@ export const ImportImageAsSvgBg = ({
               isDisabled={!has_sankey_plus || !drawing_area.show_background_image}
               onClick={() => {
                 drawing_area.bg_image_horizontal_align = item.value
-                setCount(a => a + 1)
+                refreshThis()
               }}
               sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
             >

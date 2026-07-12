@@ -1,7 +1,8 @@
-import React, { useState, FC } from 'react'
+import React, { FC } from 'react'
 
 import { Box, Button, Input, InputGroup, InputRightElement, MenuItem } from '@chakra-ui/react'
 import { OSTooltip, WrapperBoxSubSectionMenu } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
+import { useModelBinding } from '@terriflux/opensankey/src/hooks/useModelBinding'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
 interface BaseComponentPropsPlus {
@@ -15,8 +16,8 @@ export const NodeHyperLinkOSP: FC<BaseComponentPropsPlus> = ({
   const selected_nodes = drawing_area.selected_nodes_list
   const is_activated = new_data_plus.has_sankey_plus
 
-  const [, setCount] = useState(0)
-  menu_configuration_osp.ref_to_node_hyperlink_updater.current = () => setCount(a => a + 1)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  const refreshThis = useModelBinding(menu_configuration_osp.ref_to_node_hyperlink_updater)
   if (selected_nodes.length == 0)
     return <></>
 
@@ -35,7 +36,7 @@ export const NodeHyperLinkOSP: FC<BaseComponentPropsPlus> = ({
       selected_nodes.forEach(n => {
         n.hyperlink = _
       })
-      setCount(a => a + 1)
+      refreshThis()
 
     }
 
@@ -43,7 +44,7 @@ export const NodeHyperLinkOSP: FC<BaseComponentPropsPlus> = ({
       selected_nodes.forEach(n => {
         n.hyperlink = dict_old_value[n.id]
       })
-      setCount(a => a + 1)
+      refreshThis()
     }
     // Save undo/redo in data history
     new_data_plus.history.saveUndo(inv_updateHyperlinkValue)

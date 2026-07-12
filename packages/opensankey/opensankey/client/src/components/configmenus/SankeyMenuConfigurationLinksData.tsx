@@ -36,6 +36,7 @@ import {
   BOX2COLS, BOX2COLSTITLEH4,
   ConfigMenuNumberInput, ConfigMenuTextInput
 } from './MenuCommon'
+import { useModelBinding } from '../../hooks/useModelBinding'
 import { getElementsLabelValues } from '../../Elements/ElementsAttributesConfig'
 import { SankeyLinkSelection } from './MenuElementsSelection'
 import { value_option_percent_constants } from '../../Elements/LinkValues'
@@ -274,13 +275,9 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
   const first_link = selected_links[0]
   const first_link_value = first_link?.value
 
-  // Function used to force this component to reload
-  const [, setCount] = useState(0)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  useModelBinding(ref_to_menu_config_links_data_updater)
   const [dataTab, setDataTab] = useState<'basic' | 'afm'>('basic')
-
-  const refreshThis = () => {
-    setCount(a => a + 1)
-  }
 
   // Link this menu's update function
   const refreshThisAndUpdateRelatedComponents = () => {
@@ -290,8 +287,6 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
     // And update this menu also
     menu_configuration.updateComponentRelatedToLinksData()
   }
-
-  ref_to_menu_config_links_data_updater.current = refreshThis
 
   // const shapeValues = selected_links.length > 0
   //   ? getLinkShapeValues(selected_links, refreshThisAndUpdateRelatedComponents)

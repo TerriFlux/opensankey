@@ -26,6 +26,7 @@ import { Class_ApplicationDataSA } from '../ApplicationDataSA'
 import { Type_JSON } from '@terriflux/opensankey/src/types/Utils'
 import { CONVERTER_CONFIGS } from '@terriflux/opensankey/src/components/dialogs/PersistenceProcessDialogConfigs'
 import { OSTooltip } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
+import { useModelBinding } from '@terriflux/opensankey/src/hooks/useModelBinding'
 
 export const logo_sankeytheque = <svg
   xmlns='http://www.w3.org/2000/svg'
@@ -58,8 +59,8 @@ type FCType_SankeyThequeCardsGenerator = {
 
 
 export const ButtonOpenModalSankeyTheque: FC<{ new_data: Class_ApplicationDataSA }> = ({ new_data }) => {
-  const [, setUpdate] = useState(0)
-  new_data.menu_configuration_sa.ref_to_btn_top_sankeytheque_updater.current = () => setUpdate(a => a + 1)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  useModelBinding(new_data.menu_configuration_sa.ref_to_btn_top_sankeytheque_updater)
 
   return <OSTooltip
     placement='bottom'

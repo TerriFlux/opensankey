@@ -33,6 +33,7 @@ import {
   Select
 } from '@chakra-ui/react'
 
+import { useModelBinding } from '../../hooks/useModelBinding'
 import { ConfigMenuNumberInput, MenuColorPicker, WrapperBoxSubSectionMenu } from './MenuCommon'
 import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle, OnDragEndResponder } from 'react-beautiful-dnd'
 import { Class_ApplicationData } from '../../types/ApplicationData'
@@ -59,7 +60,8 @@ export const DrawingAreaConfig = ({
   extra_background_element?: JSX.Element,
 }) => {
   const { t } = app_data
-  const [, setCount] = useState(0)
+  // #247 — re-render forcé d'identité stable (compteur local, ce menu n'a pas de slot updater).
+  const refreshThis = useModelBinding()
 
   const unit_taggs = app_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
   const [selectedTag, setSelectedTag] = useState(unit_taggs.length > 0 ? unit_taggs[0].tags_list.filter(tag => tag.is_selected)[0].id : '')
@@ -84,7 +86,7 @@ export const DrawingAreaConfig = ({
 
   const refreshThisAndUpdateRelatedComponents = () => {
     app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    setCount(a => a + 1)
+    refreshThis()
     app_data.menu_configuration.updateComponentRelatedToLayoutApparence()
   }
 
@@ -627,7 +629,8 @@ export const DrawingAreaConfig = ({
 export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) => {
 
   const { t } = app_data
-  const [, setCount] = useState(0)
+  // #247 — re-render forcé d'identité stable (compteur local, ce menu n'a pas de slot updater).
+  const refreshThis = useModelBinding()
 
   /**
    * Function used to reset menu UI
@@ -636,7 +639,7 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
     // Whatever is done, set saving indicator
     app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // And update this menu also
-    setCount(a => a + 1)
+    refreshThis()
   }
 
   // Event functions -------------------------------------------------------------------
@@ -996,14 +999,15 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
 export const TitleConfig = ({ app_data }: { app_data: Class_ApplicationData }) => {
 
   const { t } = app_data
-  const [, setCount] = useState(0)
+  // #247 — re-render forcé d'identité stable (compteur local, ce menu n'a pas de slot updater).
+  const refreshThis = useModelBinding()
   const sankey = app_data.drawing_area.sankey
   const title = sankey.getTitleContainer()
   const is_shown = !!title && title.is_visible
 
   const refreshThisAndUpdateRelatedComponents = () => {
     app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    setCount(a => a + 1)
+    refreshThis()
   }
 
   const data_taggs = sankey.data_taggs_list

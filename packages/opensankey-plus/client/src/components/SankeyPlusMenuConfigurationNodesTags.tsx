@@ -6,6 +6,7 @@ import type { Class_Tag } from '@terriflux/opensankey/src/types/Tag'
 import { WrapperBoxSubSectionMenu } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
 import { OSTooltip } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
 import { SankeyNodeSelectionSimple } from '@terriflux/opensankey/src/components/configmenus/MenuElementsSelection'
+import { useModelBinding, useModelSlot } from '@terriflux/opensankey/src/hooks/useModelBinding'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
 export interface BaseComponentProps {
@@ -34,18 +35,20 @@ export const SankeyMenuConfigurationNodesTags = ({app_data}:BaseComponentProps) 
 
   const selected_nodes = app_data.drawing_area.selected_nodes_list_sorted
 
-  const [, setCount] = useState(0)
+  // #247 — re-render forcé d'identité stable + slot updater lié au montage (closure fraîche,
+  // cleanup au démontage).
+  const refreshThis = useModelBinding()
   const updateThis = () => {
     // Can just use simple refresh if node_tagg entry exists
     if (app_data.drawing_area.sankey.node_taggs_list[node_tagg_entry_index])
-      setCount(a => a + 1)
+      refreshThis()
     // If not, reset entry index
     else
       setNodeTaggEntryIndex(0)
-    setCount(a => a + 1)
+    refreshThis()
 
   }
-  app_data.menu_configuration.ref_to_menu_config_nodes_tags_updater.current = updateThis
+  useModelSlot(app_data.menu_configuration.ref_to_menu_config_nodes_tags_updater, updateThis)
 
 
   // Utils functions --------------------------------------------------------------------

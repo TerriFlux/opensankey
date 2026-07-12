@@ -1,12 +1,13 @@
 import { Box, Button, ButtonGroup, Divider, Menu, MenuButton, MenuList } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
-import React, { useState } from 'react'
+import React from 'react'
 import { Class_ApplicationData } from '@terriflux/opensankey/src/types/ApplicationData'
 import { MenuColorPicker } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
 import { ButtonContainerContextAssignStyle } from '@terriflux/opensankey/src/components/dialogs/MenuContextWidgetFactory'
 import { NodeActions } from '@terriflux/opensankey/src/components/dialogs/NodeActions'
 import { useCloseContextMenuOnOutsideMouseDown } from '@terriflux/opensankey/src/components/dialogs/SankeyMenuContext'
 import { downloadImageSource } from '@terriflux/opensankey/src/components/dialogs/SaveImage'
+import { useModelBinding } from '@terriflux/opensankey/src/hooks/useModelBinding'
 
 export const ContextZDT = (
   { app_data: app_data }: { app_data: Class_ApplicationData }
@@ -16,8 +17,8 @@ export const ContextZDT = (
   const selected_zdt = app_data.drawing_area.selected_containers_list
   const zdt_to_contextualise = app_data.drawing_area.contextualised_container
 
-  const [, setCount] = useState(0)
-  app_data.menu_configuration.ref_to_menu_context_container_updater.current = () => setCount(a => a + 1)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  const refreshThis = useModelBinding(app_data.menu_configuration.ref_to_menu_context_container_updater)
   // Ferme le menu si l'utilisateur clique ailleurs (menu config, toolbar, dialogue…).
   // Appelé avant le early-return ci-dessous (règles des hooks).
   const menu_ref = useCloseContextMenuOnOutsideMouseDown(app_data, !!zdt_to_contextualise)
@@ -49,13 +50,13 @@ export const ContextZDT = (
     // Redraw selected elements
     selected_zdt.forEach(zdt => zdt.draw())
     // Refresh this menu
-    setCount(a => a + 1)
+    refreshThis()
   }
 
   const closeContextMenu = () => {
     // Unset contextualized node
     app_data.drawing_area.contextualised_container = undefined
-    setCount(a => a + 1)
+    refreshThis()
 
   }
 

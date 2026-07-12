@@ -14,6 +14,7 @@ import { Type_AdditionalMenus } from '@terriflux/opensankey/src/types/MenuConfig
 import { getJSONFromJSON, Type_MacroTagGroup } from '@terriflux/opensankey/src/types/Utils'
 import { Class_ApplicationDataOSP } from '@terriflux/opensankey-plus/src/types/ApplicationDataOSP'
 import { SankeyPersistence } from '@terriflux/opensankey/src/Persistence/SankeyPersistence'
+import { useModelBinding } from '@terriflux/opensankey/src/hooks/useModelBinding'
 
 const paddingBoxPreference = '0.6rem'
 
@@ -22,12 +23,10 @@ export const ModalPreference = ({new_data, additionalMenus: _additionalMenus}:{
   additionalMenus: MutableRefObject<Type_AdditionalMenus>
 }) => {
   // Component updater ------------------------------------------------------------------
-  const [, setUpdate] = useState(0)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  const refreshThis = useModelBinding(new_data.menu_configuration.ref_to_modal_pref_updater)
   const [show_preference, setShowPreference] = useState(false)
   const [openingRender, setOpeningRender] = useState(true)
-  new_data.menu_configuration.ref_to_modal_pref_updater.current = () => {
-    setUpdate(a => a + 1)
-  }
 
   const ghost_data = useRef<Class_ApplicationDataOSP>(new Class_ApplicationDataOSP(true,{no_key_event:true}))
   const toast = useToast()
@@ -95,13 +94,13 @@ export const ModalPreference = ({new_data, additionalMenus: _additionalMenus}:{
     {list_palette.current.map((el, idx) => {
       return <Fragment key={'palette_' + idx}><PaletteCreator data_palette={el} t={t} deletePalette={() => {
         list_palette.current.splice(idx, 1)
-        setUpdate(a => a + 1)
+        refreshThis()
       }} /></Fragment>
     })}
     <Button variant='btn_create_color_palette'
       onClick={() => {
         list_palette.current.push({ name: 'Palette', colors: ['#000000'] })
-        setUpdate(a => a + 1)
+        refreshThis()
       }}>
       <FaPlus />
     </Button>
@@ -202,8 +201,8 @@ const TabsUserTags: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_Ap
   const { ref_to_menu_config_nodes_selection_updater } = menu_configuration
   // Change ref of updater of node selection (not in use user_data) so SankeySettingsEditionElementTags update this composant and children
 
-  const [, setUpdate] = useState(0)
-  ref_to_menu_config_nodes_selection_updater.current = () => setUpdate(a => a + 1)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  useModelBinding(ref_to_menu_config_nodes_selection_updater)
 
   return <Box layerStyle='menuconfigpanel_grid'>
     <WrapperBoxSubSectionMenu new_data={user_data} title={t('Menu.preference_content.tag_head')}>
@@ -246,11 +245,12 @@ const TansferTags: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_App
   const tags_group_dict = user_data.drawing_area.sankey.getTagGroupsAsDict(elementTagNameProp)
   const tags_group_list = user_data.drawing_area.sankey.getTagGroupsAsList(elementTagNameProp)
   const [tags_group_entry_id, setTagsGroupEntryId] = useState(tags_group_list[0]?.id ?? '')
-  const [, setCount] = useState(0)
+  // #247 — re-render forcé d'identité stable (compteur local).
+  const refreshThis = useModelBinding()
 
   const updateThis = () => {
     if (tags_group_dict[tags_group_entry_id])
-      setCount(a => a + 1)
+      refreshThis()
     else
       setTagsGroupEntryId(user_data.drawing_area.sankey.getTagGroupsAsList(elementTagNameProp)[0]?.id ?? '')
   }
@@ -300,9 +300,8 @@ const TansferTags: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_App
 const TabUserStyle: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_ApplicationDataOSP }> = ({ user_data, app_data }) => {
   const { t } = app_data
   user_data.t = t
-  const [, setUpdate] = useState(0)
-  user_data.menu_configuration.ref_to_menu_config_styles_editor_updater.current = () => setUpdate(a => a + 1)
-  user_data.menu_configuration.ref_to_menu_config_styles_editor_updater.current = () => setUpdate(a => a + 1)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  useModelBinding(user_data.menu_configuration.ref_to_menu_config_styles_editor_updater)
 
   return <Box layerStyle='menuconfigpanel_grid'>
     <WrapperBoxSubSectionMenu new_data={user_data} title={t('Menu.preference_content.style_head')}>
@@ -385,11 +384,12 @@ const TansferStyle: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_Ap
   const style_list = Object.values(style_dict)
 
   const [style_entry_id, setStyleEntryId] = useState(style_list[0]?.id ?? '')
-  const [, setCount] = useState(0)
+  // #247 — re-render forcé d'identité stable (compteur local).
+  const refreshThis = useModelBinding()
 
   const updateThis = () => {
     if (style_dict[style_entry_id])
-      setCount(a => a + 1)
+      refreshThis()
     else
       setStyleEntryId(style_list[0]?.id ?? '')
   }
@@ -462,7 +462,8 @@ const TabUserIcon: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_App
   const { t, icon_library } = app_data
   const { icon_new_da } = icon_library
   const _load_svg = useRef<HTMLInputElement>(null)
-  const [, setUpdate] = useState(0)
+  // #247 — re-render forcé d'identité stable (compteur local).
+  const refreshThis = useModelBinding()
 
   const imported_icon = user_data.drawing_area.sankey.icon_catalog
 
@@ -478,7 +479,7 @@ const TabUserIcon: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_App
           <Editable defaultValue={icon[0]} onSubmit={(evt) => {
             if (evt) {
               icon[0] = evt
-              setUpdate(a => a + 1)
+              refreshThis()
             }
           }}
           maxWidth={'8vw'}
@@ -497,7 +498,7 @@ const TabUserIcon: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_App
             variant='preference_del_button'
             onClick={() => {
               delete imported_icon[icon[0]]
-              setUpdate(a => a + 1)
+              refreshThis()
             }}>{t('Menu.suppr')}</Button>
 
         </CardFooter>
@@ -564,7 +565,7 @@ const TabUserIcon: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_App
                   app_data.drawing_area.sankey.icon_catalog[ent[0]] = ent[1]
                   user_data.drawing_area.sankey.icon_catalog[ent[0]] = ent[1]
                 })
-                setUpdate(a => a + 1)
+                refreshThis()
               }
             })()
           }
@@ -591,7 +592,8 @@ type TypeDataPalette = {
  * @return {*} 
  */
 const PaletteCreator: FC<{ data_palette: TypeDataPalette, t: TFunction, deletePalette: () => void }> = ({ data_palette, t, deletePalette }) => {
-  const [, setUpdate] = useState(0)
+  // #247 — re-render forcé d'identité stable (compteur local).
+  const refreshThis = useModelBinding()
   const [colorToEdit, setColorToEdit] = useState(0)
   const [displayColorPicker, setDisplayColorPicker] = useState(false)
   const colorsOfPalette: MutableRefObject<string[]> = useRef(data_palette.colors)
@@ -646,7 +648,7 @@ const PaletteCreator: FC<{ data_palette: TypeDataPalette, t: TFunction, deletePa
     <Editable variant='edit_name_palette' gridArea='name' value={data_palette.name} selectAllOnFocus={false}
       onChange={(evt) => {
         data_palette.name = evt
-        setUpdate(a => a + 1)
+        refreshThis()
       }}
     >
       <EditablePreview />
@@ -668,7 +670,7 @@ const PaletteCreator: FC<{ data_palette: TypeDataPalette, t: TFunction, deletePa
             } else {
               colorsSelected.current.push(idx)
             }
-            setUpdate(a => a + 1)
+            refreshThis()
           }}
           onClick={() => {
             // Open color editor
@@ -686,7 +688,7 @@ const PaletteCreator: FC<{ data_palette: TypeDataPalette, t: TFunction, deletePa
             colorsOfPalette.current.splice(id, 1)
           })
           colorsSelected.current = []
-          setUpdate(a => a + 1)
+          refreshThis()
         }}>
           <FaMinus />
         </Button>
@@ -695,7 +697,7 @@ const PaletteCreator: FC<{ data_palette: TypeDataPalette, t: TFunction, deletePa
       <OSTooltip label={t('Menu.preference_content.addColorPalette_tooltip')}>
         <Button variant='btn_add_color_to_palette' gridArea='addColor' onClick={() => {
           colorsOfPalette.current.push('#000000')
-          setUpdate(a => a + 1)
+          refreshThis()
         }}><FaPlus />
         </Button>
       </OSTooltip>
@@ -712,7 +714,7 @@ const PaletteCreator: FC<{ data_palette: TypeDataPalette, t: TFunction, deletePa
       <Box style={styles.cover} onClick={handleClose} />
       <SketchPicker color={colorsOfPalette.current[colorToEdit]} onChange={(evt) => {
         colorsOfPalette.current[colorToEdit] = evt.hex
-        setUpdate(a => a + 1)
+        refreshThis()
       }} />
     </Box> : null}
   </Box>
@@ -720,8 +722,8 @@ const PaletteCreator: FC<{ data_palette: TypeDataPalette, t: TFunction, deletePa
 }
 
 export const ButtonOpenUSerPreference: FC<{ new_data: Class_ApplicationDataOSP, compact?: boolean }> = ({ new_data, compact }) => {
-  const [, setUpdate] = useState(0)
-  new_data.menu_configuration_osp.ref_to_btn_top_pref_updater.current = () => setUpdate(a => a + 1)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  useModelBinding(new_data.menu_configuration_osp.ref_to_btn_top_pref_updater)
   const { t, menu_configuration } = new_data
   const { ref_setter_show_modal_preference } = menu_configuration.dict_setter_show_dialog
 

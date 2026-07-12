@@ -1,4 +1,4 @@
-import React, { useState, RefObject, useRef, ReactNode, useReducer } from 'react'
+import React, { useState, RefObject, useRef, ReactNode, MutableRefObject } from 'react'
 import {
   Drawer, Button, Collapse, DrawerContent, DrawerBody, Box, useDisclosure,
   Heading, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Text, Select, Checkbox, Switch,
@@ -7,7 +7,9 @@ import {
 import { CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
 import { OSMultiSelect, typeElementSelectable, CustomFaEyeCheckIcon, OSTooltip, ConfigMenuNumberInput } from '../configmenus/MenuCommon'
 import { useMainZone } from '../spreadsheet/MainZoneTabs'
+import { useModelBinding } from '../../hooks/useModelBinding'
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { Class_MenuConfig } from '../../types/MenuConfig'
 import { Class_TagGroup, Class_DataTagGroup, Class_LevelTagGroup, Class_ViewTagGroup } from '../../types/TagGroup'
 import { Class_LevelTag } from '../../types/Tag'
 import { updateUnitaryStyles } from '../../Algorithms/UnitaryBoard'
@@ -139,8 +141,8 @@ export const TopbarNavSelect = ({
 export const BannerDataTagTopbar = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { t, drawing_area } = app_data
   const { sankey } = drawing_area
-  const [, setCount] = useState(0)
-  app_data.menu_configuration.ref_to_toolbar_data_tag_updater.current = () => setCount(c => c + 1)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  const refreshThis = useModelBinding(app_data.menu_configuration.ref_to_toolbar_data_tag_updater)
 
   const topbar_taggs = sankey.getTagGroupsAsList('data_taggs')
     .filter(grp => (grp as unknown as Class_DataTagGroup).banner === 'topbar') as unknown as Class_DataTagGroup[]
@@ -157,7 +159,7 @@ export const BannerDataTagTopbar = ({ app_data }: { app_data: Class_ApplicationD
         tagg.selectTagsFromId(id)
         applyDataTagChildLinks(app_data, tagg, [id])
         app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
-        setCount(c => c + 1)
+        refreshThis()
       }
       return <TopbarNavSelect
         key={tagg.id}
@@ -214,8 +216,8 @@ export const applyViewTagFilterRedraw = (app_data: Class_ApplicationData) => {
 export const BannerViewTagTopbar = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { t, drawing_area } = app_data
   const { sankey } = drawing_area
-  const [, setCount] = useState(0)
-  app_data.menu_configuration.ref_to_unitarytag_filter_updater.current = () => setCount(c => c + 1)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  const refreshThis = useModelBinding(app_data.menu_configuration.ref_to_unitarytag_filter_updater)
 
   // Concept unifié vue ⊕ viewtag : quand la feature Vues remplace le sélecteur viewtag
   // (utilisateurs plus), on masque ce sélecteur topbar (« tout est une vue nommée »).
@@ -247,7 +249,7 @@ export const BannerViewTagTopbar = ({ app_data }: { app_data: Class_ApplicationD
       }
     }, false)
     applyViewTagFilterRedraw(app_data)
-    setCount(c => c + 1)
+    refreshThis()
   }
 
   // « Vue complète » = position la plus à gauche (valeur '') ; les flèches naviguent dans
@@ -321,7 +323,8 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
       app_data.has_sankey_dev // « Toutes données » (dev) suffit à ouvrir le drawer
   }
   const [drawerOpen, setDrawerOpen] = useState(app_data.is_static)
-  const [, forceUpdate] = useReducer(x => x + 1, 0)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  useModelBinding(app_data.menu_configuration.ref_toolbar)
   // Abonnement à la grande zone : garde l'offset droit à jour quand la colonne d'outils change.
   // Le panneau est un overlay au-dessus de toute la grande zone (tableur/doc compris, zIndex 30) :
   // il ne s'écarte que de la colonne d'outils (zIndex 35, extrême droite), comme la config.
@@ -343,7 +346,6 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
   }
   app_data.menu_configuration.ref_close_filter_drawer.current = setFilterOpen
   app_data.menu_configuration.ref_toggle_filter_drawer.current = () => setFilterOpen(!drawerOpen)
-  app_data.menu_configuration.ref_toolbar.current = forceUpdate
 
   // Disponibilité publiée pour la colonne d'outils (bouton filtre conditionnel). Posée AVANT le
   // retour anticipé pour rester correcte même sans filtre visible.
@@ -431,7 +433,8 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
 
   // Get the maximum value a link can have, so it is used as maximum value we wan filter in popover_link_visual_filter
   const max_link_value = Math.max(0, ...app_data.drawing_area.sankey.links_list.map(l => Number(l.getMaxValue()) / (l.shape_local_link_scale ?? 1))) + 1
-  const [, setCount] = useState(0)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  const refreshThis = useModelBinding(app_data.menu_configuration.ref_to_toolbar_link_visual_filter_updater)
 
   // #seuil px — les seuils flux/étiquette peuvent s'exprimer en pixels (épaisseur
   // rendue) plutôt qu'en valeur de donnée. En mode pixel, le curseur va de 0 au
@@ -481,7 +484,6 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
   // Un seuil nœud/stock change la visibilité des labels → re-tracer les nœuds.
   const redraw_nodes = () => app_data.drawing_area.sankey.nodes_list.forEach(n => n.draw())
 
-  app_data.menu_configuration.ref_to_toolbar_link_visual_filter_updater.current = () => setCount(a => a + 1)
 
   // Ref to popover button trigger to trap focus at popover when onBlur of NumberInput
   const ref: RefObject<HTMLButtonElement> = useRef(null)
@@ -501,7 +503,7 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
           value={app_data.drawing_area.filter_unit}
           onChange={evt => {
             app_data.drawing_area.filter_unit = evt.target.value === 'pixel' ? 'pixel' : 'value'
-            setCount(a => a + 1)
+            refreshThis()
             // Le sens des deux seuils change → re-tracer flux ET étiquettes.
             app_data.drawing_area.sankey.draw()
           }}
@@ -528,7 +530,7 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
             value={flux_seuil}
             onChange={evt => {
               set_flux_seuil(+evt)
-              setCount(a => a + 1)
+              refreshThis()
               app_data.drawing_area.sankey.visible_links_list.forEach(link => {
                 link.draw()
                 link.target.drawLinksArrow()
@@ -550,7 +552,7 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
                 }
                 if (value) {
                   set_flux_seuil(value)
-                  setCount(a => a + 1)
+                  refreshThis()
                   app_data.drawing_area.sankey.draw()
                 }
 
@@ -577,7 +579,7 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
             value={label_seuil}
             onChange={(evt) => {
               set_label_seuil(+evt)
-              setCount(a => a + 1)
+              refreshThis()
               app_data.drawing_area.sankey.visible_links_list.forEach(link => link.drawValueLabel())
             }}
           >
@@ -597,7 +599,7 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
                     value = seuil_max
                   }
                   set_label_seuil(value)
-                  setCount(a => a + 1)
+                  refreshThis()
                   app_data.drawing_area.sankey.links_list.forEach(link => link.drawValueLabel())
                 }
 
@@ -628,7 +630,7 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
             value={node_seuil}
             onChange={evt => {
               set_node_seuil(+evt)
-              setCount(a => a + 1)
+              refreshThis()
               redraw_nodes()
             }}
           >
@@ -647,7 +649,7 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
                     value = node_max
                   }
                   set_node_seuil(value)
-                  setCount(a => a + 1)
+                  refreshThis()
                   redraw_nodes()
                 }
                 ref.current?.focus() //avoid closure of popover
@@ -673,7 +675,7 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
             value={stock_seuil}
             onChange={evt => {
               set_stock_seuil(+evt)
-              setCount(a => a + 1)
+              refreshThis()
               redraw_nodes()
             }}
           >
@@ -692,7 +694,7 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
                     value = stock_max
                   }
                   set_stock_seuil(value)
-                  setCount(a => a + 1)
+                  refreshThis()
                   redraw_nodes()
                 }
                 ref.current?.focus() //avoid closure of popover
@@ -716,7 +718,7 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
           onChange={evt => {
             app_data.drawing_area.show_zero_links = evt.target.checked
             app_data.drawing_area.sankey.nodes_list.forEach(n => n.resetLinkVisibilitiesMemorization())
-            setCount(a => a + 1)
+            refreshThis()
             app_data.drawing_area.draw()
             app_data.drawing_area.legend.draw()
           }}
@@ -730,7 +732,7 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
           onChange={evt => {
             app_data.drawing_area.show_orphan_nodes = evt.target.checked
             app_data.drawing_area.sankey.nodes_list.forEach(n => n.resetLinkVisibilitiesMemorization())
-            setCount(a => a + 1)
+            refreshThis()
             app_data.drawing_area.draw()
             app_data.drawing_area.legend.draw()
           }}
@@ -774,8 +776,8 @@ export const FilterWrapperBox = ({ app_data, title, defaultOpen, children }: Rea
 
 export const FilterDataType = ({ app_data, defaultOpen, bare }: { app_data: Class_ApplicationData, defaultOpen?: boolean, bare?: boolean }) => {
   const { t } = app_data
-  const [, setCount] = useState(0)
-  app_data.menu_configuration.ref_to_toolbar_updater.current = () => setCount(a => a + 1)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  const refreshThis = useModelBinding(app_data.menu_configuration.ref_to_toolbar_updater)
 
   // #665 — `relayout=true` relance le PLACEMENT des nœuds (écartement par nœud,
   // droiture des flux) et pas seulement le tracé. Un changement de type de données
@@ -819,7 +821,7 @@ export const FilterDataType = ({ app_data, defaultOpen, bare }: { app_data: Clas
           if (evt.target.value !== 'reconciled') {
             app_data.drawing_area.interval_display = 'structure'
           }
-          setCount(a => a + 1)
+          refreshThis()
           redrawNodeLinkLegend(true)
         }}>
         <option key='structure' value='structure' >{t('Banner.structure')}</option>
@@ -840,7 +842,7 @@ export const FilterDataType = ({ app_data, defaultOpen, bare }: { app_data: Clas
           value={app_data.drawing_area.interval_display}
           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
             app_data.drawing_area.interval_display = evt.target.value as 'structure' | 'free_value' | 'free_interval'
-            setCount(a => a + 1)
+            refreshThis()
             redrawNodeLinkLegend(true)
           }}>
           <option key='none' value='structure' >{t('Banner.structure')}</option>
@@ -944,8 +946,13 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   const config = TAG_FILTER_CONFIGS[mode]
   const { t, drawing_area } = app_data
   const { sankey } = drawing_area
-  // Component updater
-  const [, setCount] = useState(0)
+  // #247 — re-render piloté par le modèle : le slot updater dépend du mode de filtre (clé
+  // dynamique dans menu_configuration), d'où le cast ; lié au montage, relâché au démontage.
+  const refreshThis = useModelBinding(
+    config.ref_updater_key
+      ? (app_data.menu_configuration[config.ref_updater_key as keyof Class_MenuConfig] as MutableRefObject<() => void>)
+      : undefined
+  )
 
   // #1231 — État HYBRIDE LOCAL : des nœuds ont été désagrégés via le clic droit (et NON
   // via le menu Hiérarchies global). On se base sur l'ORIGINE de l'action
@@ -956,12 +963,6 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   // d'abord « Réinitialiser » pour revenir à l'état uniforme du menu.
   const has_local_hierarchy = mode === 'level' &&
     sankey.nodes_list.some(n => n.dimensions_as_parent.some(d => d.forced_by_local_action))
-
-  // Configuration du updater selon le mode
-  if (config.ref_updater_key && app_data.menu_configuration[config.ref_updater_key as keyof typeof app_data.menu_configuration]) {
-    //@ts-expect-error xxx
-    app_data.menu_configuration[config.ref_updater_key as keyof typeof app_data.menu_configuration].current = () => setCount(a => a + 1)
-  }
 
   // Récupération des tags selon le mode — passe par getTagGroupsAsList pour respecter _taggs_order
   const getTagsForMode = (): Class_TagGroup[] => {
@@ -984,7 +985,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   }
 
   const updateComponents = () => {
-    setCount(c => c + 1)
+    refreshThis()
     if (config.update_method == 'updateAllComponentsRelatedToNodeTags') {
       app_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
       app_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
@@ -1637,8 +1638,8 @@ export const NodeTagGroupFilter = ({ app_data, level }: { app_data: Class_Applic
 )
 
 export const LevelTagFilter = ({ app_data }: { app_data: Class_ApplicationData }) => {
-  const [_, setCount] = useState(0)
-  app_data.menu_configuration.ref_to_toolbar_level_tag_filter_updater.current = () => setCount(a => a + 1)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  useModelBinding(app_data.menu_configuration.ref_to_toolbar_level_tag_filter_updater)
   const nb_level_taggs = Object.entries(app_data.drawing_area.sankey.level_taggs_dict).length
   if (nb_level_taggs == 0) {
     return <></>
@@ -1658,8 +1659,8 @@ export const DataTagGroupFilter = ({ app_data }: { app_data: Class_ApplicationDa
   <UnifiedTagGroupFilter app_data={app_data} mode="data" />
 
 export const UnitaryTagGroupFilter = ({ app_data }: { app_data: Class_ApplicationData }) => {
-  const [_, setCount] = useState(0)
-  app_data.menu_configuration.ref_to_unitarytag_filter_updater.current = () => setCount(a => a + 1)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  useModelBinding(app_data.menu_configuration.ref_to_unitarytag_filter_updater)
 
   // MODIFIÉ : vérifier dans view_taggs_dict au lieu de node_taggs_dict
   const view_taggs = Object.values(app_data.drawing_area.sankey.view_taggs_dict)

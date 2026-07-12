@@ -26,6 +26,7 @@ import { Class_LevelTag } from '@terriflux/opensankey/src/types/Tag'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { Class_LevelTagGroup } from '@terriflux/opensankey/src/types/TagGroup'
 import { OSTooltip } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
+import { useModelBinding, useModelSlot } from '@terriflux/opensankey/src/hooks/useModelBinding'
 
 export type FCType_SankeyPlusEditionLevelTag = { new_data: Class_ApplicationDataOSP }
 
@@ -42,14 +43,16 @@ export const MenuConfigurationLevelTags: FC<FCType_SankeyPlusEditionLevelTag> = 
 
   // Trigger reloading of this component ------------------------------------------------
 
-  const [, setCount] = useState(0)
+  // #247 — re-render forcé d'identité stable + slot updater lié au montage (closure fraîche,
+  // cleanup au démontage).
+  const refreshThis = useModelBinding()
   const updateThis = () => {
     if (tags_group_dict[tags_group_entry_id])
-      setCount(a => a + 1)
+      refreshThis()
     else
       setTagsGroupEntryId(new_data.drawing_area.sankey.getTagGroupsAsList('level_taggs')[0]?.id ?? '')
   }
-  new_data.menu_configuration.ref_to_menu_config_tags_updater['level_taggs'].current = updateThis
+  useModelSlot(new_data.menu_configuration.ref_to_menu_config_tags_updater['level_taggs'], updateThis)
 
   // Update function --------------------------------------------------------------------
 

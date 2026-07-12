@@ -9,6 +9,7 @@ import { ExternalLinkIcon } from '@chakra-ui/icons'
 const DraggableComponent = Draggable as unknown as React.ComponentClass<Partial<DraggableProps>>
 
 // OpenSankey / OpenSankey+ libs
+import { useModelBinding } from '@terriflux/opensankey/src/hooks/useModelBinding'
 import { Class_NodeElement } from '@terriflux/opensankey/src/Elements/Node'
 import { Class_LinkElement } from '@terriflux/opensankey/src/Elements/Link'
 import { makeId, Type_JSON } from '@terriflux/opensankey/src/types/Utils'
@@ -79,23 +80,21 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
   const [processed_count, setProcessedCount] = useState(0)
   const [total_to_process, setTotalToProcess] = useState(0)
   const [selected_data_id, setSelectedDataId] = useState('')
-  // Compteur de re-rendu (list_data est un ref → ne déclenche pas de rendu seul).
-  const [, setUpdater] = useState(0)
-  const forceUpdate = () => setUpdater(a => a + 1)
+  // #247 — re-render forcé d'identité stable (list_data est un ref → ne déclenche pas de rendu
+  // seul). Abonnements grande zone + resize relâchés au démontage.
+  const forceUpdate = useModelBinding(undefined, refresh => {
+    const off = app_data.menu_configuration.addMainZoneListener(refresh)
+    window.addEventListener('resize', refresh)
+    return () => { off(); window.removeEventListener('resize', refresh) }
+  })
   // Compteur de RECONSTRUCTION : incrémenté quand les valeurs de la source changent
   // (changement de data tag sélectionné via la topbar). Ajouté aux deps de l'effet de
   // construction pour forcer un toJSON/fromJSON de la source mise à jour.
   const [rebuild_count, setRebuildCount] = useState(0)
 
-  // Re-rendu (donc repositionnement sur mainZoneUnitaryRect) quand la grande zone change (toggle,
-  // ratios, layout doc, tableur…) ou que la fenêtre est redimensionnée. Le panneau étant porté vers
-  // document.body, il ne suit pas naturellement la mise en page de MainZoneTabs : on s'aligne via le
-  // même état (menu_configuration) + window resize.
-  useEffect(() => {
-    const off = app_data.menu_configuration.addMainZoneListener(forceUpdate)
-    window.addEventListener('resize', forceUpdate)
-    return () => { off(); window.removeEventListener('resize', forceUpdate) }
-  }, [])
+  // (Le re-rendu ci-dessus repositionne le panneau sur mainZoneUnitaryRect quand la grande zone
+  // change — toggle, ratios, layout doc, tableur… — ou que la fenêtre est redimensionnée : porté
+  // vers document.body, il ne suit pas naturellement la mise en page de MainZoneTabs.)
 
   // Ref du conteneur draggable (mode détaché en dialogue flottant).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

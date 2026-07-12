@@ -60,6 +60,7 @@ import { LinkValueTypeSelector, MenuConfigurationLinksData } from '../configmenu
 import { SankeyContainerSelection, SankeyNodeSelection } from '../configmenus/MenuElementsSelection'
 import { MenuConfigurationAppearance } from '../configmenus/MenuElementsAppearance'
 import { WrapperContentConfig } from '../configmenus/MenuCommon'
+import { useModelBinding } from '../../hooks/useModelBinding'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { UniversalFileConverter } from '../dialogs/PersistenceProcessDialog'
@@ -93,7 +94,13 @@ export const SankeyMenu = (
   const { t, icon_library, menu_configuration } = app_data
   const { icon_open_close_config } = icon_library
   const [show_nav, set_show_nav] = useState(false)
-  const [, setCount] = useState(0)
+  // #247 — re-render piloté par le modèle : slot du menu, + slot de la colonne d'outils quand
+  // elle est affichée (mode édition). Cleanup des deux au démontage.
+  const refreshThis = useModelBinding(
+    app_data.is_static
+      ? [menu_configuration.ref_to_menu_updater]
+      : [menu_configuration.ref_to_menu_updater, menu_configuration.ref_to_toolbar_bottom_updater]
+  )
 
   // Ouvre/ferme la config. Le panneau est un OVERLAY au-dessus de toute la grande zone
   // (diagramme, tableur, doc…) : il ne touche PAS à l'état doc/tableur ni au cadrage.
@@ -107,7 +114,6 @@ export const SankeyMenu = (
     set_show_nav(open)
   }
 
-  menu_configuration.ref_to_menu_updater.current = () => setCount(a => a + 1)
   menu_configuration.ref_menu_opened.current = [show_nav, setConfigOpen]
 
   // getNavBarHeight() lit le DOM via getBoundingClientRect sur .TopMenu, qui
@@ -115,10 +121,10 @@ export const SankeyMenu = (
   // Force un re-render apres mount (et re-mesure le navbar si sa taille change)
   // pour que le bouton orange et le drawer aient le bon top immediatement.
   useLayoutEffect(() => {
-    setCount(a => a + 1)
+    refreshThis()
     const navbar = document.getElementsByClassName('TopMenu')[0]
     if (!navbar || typeof ResizeObserver === 'undefined') return
-    const ro = new ResizeObserver(() => setCount(a => a + 1))
+    const ro = new ResizeObserver(() => refreshThis())
     ro.observe(navbar)
     return () => ro.disconnect()
   }, [])
@@ -151,10 +157,7 @@ export const SankeyMenu = (
   // jamais faire bouger le dessin. Idem pour le panneau de filtres (cf. Toolbar).
   // Rafraîchit la colonne sur les changements externes de modes (ex. switchMode au clavier) qui
   // appelaient l'updater de l'ancienne ToolBarBottom flottante.
-  const refreshToolsColumn = () => setCount(a => a + 1)
-  if (!app_data.is_static) {
-    menu_configuration.ref_to_toolbar_bottom_updater.current = refreshToolsColumn
-  }
+  const refreshToolsColumn = refreshThis
 
   // Barre verticale d'outils rétractable, ancrée à l'extrême droite. Outils du CANVAS uniquement :
   // ouverture des panneaux (config, filtres) + modes souris / position / ajustement (ex-ToolBarBottom
@@ -433,9 +436,8 @@ const ConfigMenu = ({ app_data, additional_menus }: {
   additional_menus: MutableRefObject<Type_AdditionalMenus>,
 }) => {
   const { type_menu_configuration_selected, style_config } = app_data.menu_configuration
-  const [, setUpdate] = useState(false)
-
-  app_data.menu_configuration.ref_to_menu_config_updater.current = () => setUpdate(a => !a)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  useModelBinding(app_data.menu_configuration.ref_to_menu_config_updater)
 
   const sizeBtn = document.getElementsByClassName('buttonGroupTypeConfig')[0]?.getBoundingClientRect().height ?? 30
   // Hauteur bornée à l'espace écran restant (panneau ancré).

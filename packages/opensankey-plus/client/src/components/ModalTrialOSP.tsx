@@ -13,6 +13,7 @@
 // ==================================================================================================
 
 import React, { FC, useEffect, useState } from 'react'
+import { useModelBinding } from '@terriflux/opensankey/src/hooks/useModelBinding'
 import i18next from 'i18next'
 import { useTranslation } from 'react-i18next'
 import {
@@ -156,16 +157,14 @@ export const ModalTrialExpiredOSP: FC<TrialComponentProps> = ({ app_data }) => {
 
 export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
   const { t } = useTranslation()
-  const [, setRev] = useState(0)
-
-  useEffect(() => {
-    const listener = () => setRev((r) => r + 1)
-    banner_listeners.push(listener)
+  // #247 — re-render forcé (identité stable) sur notification du bandeau ; désabonné au démontage.
+  useModelBinding(undefined, refresh => {
+    banner_listeners.push(refresh)
     return () => {
-      const idx = banner_listeners.indexOf(listener)
+      const idx = banner_listeners.indexOf(refresh)
       if (idx >= 0) banner_listeners.splice(idx, 1)
     }
-  }, [])
+  })
 
   // Top tier (SankeySuite) déjà détenu → plus rien à vendre.
   if (app_data.has_real_sankey_suite_licence) return <></>

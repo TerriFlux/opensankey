@@ -11,6 +11,7 @@ import type { Class_Tag } from '@terriflux/opensankey/src/types/Tag'
 import { SankeyLinkSelectionSimple } from '@terriflux/opensankey/src/components/configmenus/MenuElementsSelection'
 import { WrapperBoxSubSectionMenu } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
 import { OSTooltip } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
+import { useModelBinding, useModelSlot } from '@terriflux/opensankey/src/hooks/useModelBinding'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
 export const MenuConfigurationLinksTags = ({new_data}:{new_data: Class_ApplicationDataOSP}) => {
@@ -23,18 +24,20 @@ export const MenuConfigurationLinksTags = ({new_data}:{new_data: Class_Applicati
   const data_taggs = new_data.drawing_area.sankey.data_taggs_list
   const selected_links = new_data.drawing_area.selected_links_list_sorted
 
-  const [, setCount] = useState(0)
+  // #247 — re-render forcé d'identité stable + slot updater lié au montage (closure fraîche,
+  // cleanup au démontage).
+  const refreshThis = useModelBinding()
   const updateThis = () => {
     // Can just use simple refresh if flux_tagg entry exists
     if (new_data.drawing_area.sankey.flux_taggs_list[flux_tagg_entry_index])
-      setCount(a => a + 1)
+      refreshThis()
     // If not, reset entry
     else
       setFluxTaggEntryIndex(0)
-    setCount(a => a + 1)
+    refreshThis()
 
   }
-  new_data.menu_configuration.ref_to_menu_config_links_tags_updater.current = updateThis
+  useModelSlot(new_data.menu_configuration.ref_to_menu_config_links_tags_updater, updateThis)
 
   // Utils functions --------------------------------------------------------------------
 

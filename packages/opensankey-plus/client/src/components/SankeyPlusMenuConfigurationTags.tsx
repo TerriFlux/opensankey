@@ -39,6 +39,7 @@ import { Class_DataTagGroup, Class_FluxTagGroup, Class_LevelTagGroup, Class_Node
 import { OSTooltip } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { default_grey_color } from '@terriflux/opensankey/src/Elements/ElementsAttributesConfig'
+import { useModelBinding, useModelSlot } from '@terriflux/opensankey/src/hooks/useModelBinding'
 
 export type FType_SankeySettingsEditionElementTags = {
   new_data: Class_ApplicationDataOSP,
@@ -93,14 +94,16 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
 
 
   // Trigger reloading of this component ------------------------------------------------
-  const [, setCount] = useState(0)
+  // #247 — re-render forcé d'identité stable + slot updater lié au montage (closure fraîche,
+  // cleanup au démontage).
+  const refreshThis = useModelBinding()
   const updateThis = () => {
     if (tags_group_dict[tags_group_entry_id])
-      setCount(a => a + 1)
+      refreshThis()
     else
       setTagsGroupEntryId(new_data.drawing_area.sankey.getTagGroupsAsList(elementTagNameProp)[0]?.id ?? '')
   }
-  new_data.menu_configuration.ref_to_menu_config_tags_updater[elementTagNameProp].current = updateThis
+  useModelSlot(new_data.menu_configuration.ref_to_menu_config_tags_updater[elementTagNameProp], updateThis)
 
   // Chosen color palette used ----------------------------------------------------------
   // Couleur issues de : https://github.com/d3/d3-scale-chromatic

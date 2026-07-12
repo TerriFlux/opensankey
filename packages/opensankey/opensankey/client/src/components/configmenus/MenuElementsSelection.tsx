@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { MultiSelect } from 'react-multi-select-component'
 import { Box, Button, Checkbox, Divider, Select } from '@chakra-ui/react'
+import { useModelBinding } from '../../hooks/useModelBinding'
 import { ConfigMenuTextInput, ConfigMenuNumberInput, OSTooltip } from './MenuCommon'
 import { Class_LinkElement } from '../../Elements/Link'
 import { Class_NodeElement } from '../../Elements/Node'
@@ -266,7 +267,12 @@ export const UnifiedElementSelection = ({
   const [activeFilters, setActiveFilters] = useState<Set<ElementType>>(
     new Set(enabledTypes || ['node'])
   )
-  const [, setCount] = useState(0)
+  // #247 — re-render piloté par le modèle : un slot updater par type d'élément géré par ce menu.
+  const refreshThis = useModelBinding(
+    isMultiType
+      ? enabledTypes!.map(type => ALL_CONFIGS[type].getUpdateRef(app_data))
+      : (singleConfig ? [singleConfig.getUpdateRef(app_data)] : [])
+  )
   const [tag_filter_group_id, set_tag_filter_group_id] = useState('')
   const [tag_filter_tag_id, set_tag_filter_tag_id] = useState('')
 
@@ -379,26 +385,12 @@ export const UnifiedElementSelection = ({
     }))
 
   // ==================================================================================
-  // SETUP DES UPDATERS
-  // ==================================================================================
-
-  if (isMultiType) {
-    enabledTypes!.forEach(type => {
-      ALL_CONFIGS[type].getUpdateRef(app_data).current = () => setCount(a => a + 1)
-    })
-  } else if (singleConfig) {
-    singleConfig.getUpdateRef(app_data).current = () => {
-      setCount(a => a + 1)
-    }
-  }
-
-  // ==================================================================================
   // FONCTIONS UTILITAIRES
   // ==================================================================================
 
   const refreshAndToggleSaving = () => {
     menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    setCount(a => a + 1)
+    refreshThis()
   }
 
   const refreshAndUpdateRelated = () => {
@@ -823,8 +815,8 @@ export const UnifiedElementSelection = ({
 // ==================================================================================
 
 export const SankeyNodeSelection = ({ app_data }: { app_data: Class_ApplicationData }) => {
-  const [, setUpdate] = useState(0)
-  app_data.menu_configuration.ref_to_menu_config_nodes_stock_updater.current = () => setUpdate(a => a + 1)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  const refreshThis = useModelBinding(app_data.menu_configuration.ref_to_menu_config_nodes_stock_updater)
 
   const nodes = app_data.drawing_area.selected_nodes_list
   const firstNode = nodes.length > 0 ? nodes[0] : null
@@ -833,7 +825,7 @@ export const SankeyNodeSelection = ({ app_data }: { app_data: Class_ApplicationD
   const refreshStock = () => {
     nodes.forEach(n => n.draw())
     app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    setUpdate(a => a + 1)
+    refreshThis()
   }
 
   return <>

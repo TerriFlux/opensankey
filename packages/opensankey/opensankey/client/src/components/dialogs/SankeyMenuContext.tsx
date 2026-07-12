@@ -24,9 +24,10 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { useState, useMemo, useRef, useEffect } from 'react'
+import React, { useState, useMemo, useRef, useEffect, MutableRefObject } from 'react'
 import { Box, Button, ButtonGroup, Menu, MenuButton, MenuList, Text } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
+import { useModelBinding } from '../../hooks/useModelBinding'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_MenuConfig } from '../../types/MenuConfig'
 import { Class_DrawingArea } from '../../types/DrawingArea'
@@ -706,10 +707,12 @@ export const ContextMenu = <T extends Record<string, unknown>>({
   path
 }: ContextMenuProps<T>) => {
   const { drawing_area, menu_configuration } = app_data
-  const [, setForceUpdate] = useState(0)
 
-  // @ts-expect-error: Dynamic property assignment for updater
-  menu_configuration[attr_updater].current = () => setForceUpdate(a => a + 1)
+  // #247 — re-render piloté par le modèle : le slot updater est désigné dynamiquement par une clé
+  // (attr_updater), d'où le cast ; le hook le lie au montage et le relâche au démontage.
+  const refreshThis = useModelBinding(
+    menu_configuration[attr_updater] as MutableRefObject<() => void>
+  )
   const isVisible = drawing_area[attr_is_contextualised] as boolean
 
   // #1231 — Figer la position À L'OUVERTURE du menu : on dépend UNIQUEMENT de
@@ -740,7 +743,7 @@ export const ContextMenu = <T extends Record<string, unknown>>({
       isVisible={isVisible}
       position={position}
       path={path}
-      refreshCallback={() => setForceUpdate(a => a + 1)}
+      refreshCallback={refreshThis}
     />
   )
 }

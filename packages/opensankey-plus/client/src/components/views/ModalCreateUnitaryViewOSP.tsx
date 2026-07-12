@@ -1,5 +1,5 @@
 // Standard libs
-import React, { ChangeEvent, FC, useRef, useState, useEffect } from 'react'
+import React, { ChangeEvent, FC, useRef, useState } from 'react'
 import {
   Box,
   CloseButton,
@@ -17,6 +17,7 @@ import { Class_NodeElement } from '@terriflux/opensankey/src/Elements/Node'
 import { Class_ApplicationDataOSP } from '../../types/ApplicationDataOSP'
 import { LevelTagFilter } from '@terriflux/opensankey/src/components/topmenus/Toolbar'
 import { decompressGzipDataFixed } from '@terriflux/opensankey/src/Persistence/UniversalJSONCompression'
+import { useModelBinding } from '@terriflux/opensankey/src/hooks/useModelBinding'
 import { createUnitaryNewView } from '../UnitaryBoard'
 import { BaseComponentPropsPlus, DraggableComponent, drawingZoneDraggableBounds } from './viewsShared'
 
@@ -33,21 +34,17 @@ export const ModalCreateUnitaryViewOSP: FC<BaseComponentPropsPlus> = (
   const { t } = app_data
 
   const [display_menu, set_display_menu] = useState(false)
-  const [, setUpdater] = useState(0)
   const [source_mode, set_source_mode] = useState<'local' | 'excel'>('local')
   const nodeRef = useRef(null)
 
-  // Re-rendre (donc recalculer les bornes draggable) au toggle du tableur/doc.
-  useEffect(() => {
-    return app_data.menu_configuration.addMainZoneListener(() => setUpdater(a => a + 1))
-  }, [])
+  // #247 — re-render piloté par le modèle : slot updater + abonnement à la grande zone (recalcule
+  // les bornes draggable au toggle du tableur/doc). Les deux sont relâchés au démontage.
+  useModelBinding(
+    app_data.menu_configuration_osp.ref_update_modal_unitary_view,
+    refresh => app_data.menu_configuration.addMainZoneListener(refresh)
+  )
 
   app_data.menu_configuration_osp.ref_show_modal_unitary_view.current = set_display_menu
-
-  const updateComponent = () => {
-    setUpdater(a => a + 1)
-  }
-  app_data.menu_configuration_osp.ref_update_modal_unitary_view.current = updateComponent
 
   const has_sankey_plus = app_data.has_sankey_plus
   if (!has_sankey_plus) return <></>
@@ -116,12 +113,9 @@ const TabLocalDataForUnitary: FC<{ app_data: Class_ApplicationDataOSP }> = ({ ap
   const drawing_area_plus = app_data.drawing_area as Class_DrawingAreaOSP
 
   const list_selected_nodes_for_unitary = useRef<Class_NodeElement[]>([])
-  const [, setUpdater] = useState(0)
+  // #247 — re-render forcé d'identité stable (compteur local).
+  const updateComponent = useModelBinding()
   const entries_for_nodes: typeElementSelectable = drawing_area_plus.sankey.visible_nodes_list_sorted.map((d) => { return { 'label': d.name, 'value': d.id, selected: list_selected_nodes_for_unitary.current.includes(d) } })
-
-  const updateComponent = () => {
-    setUpdater(a => a + 1)
-  }
 
   const has_level_taggs = Object.keys(drawing_area_plus.sankey.level_taggs_dict).length > 0
 
@@ -192,7 +186,8 @@ const TabImportExcelDataForUnitary = ({ app_data }: { app_data: Class_Applicatio
   const [processed_count, set_processed_count] = useState(0)
   const [total_to_process, set_total_to_process] = useState(0)
   const [selected_data_id, set_selected_data_id] = useState<string>('')
-  const [, setUpdate] = useState(0)
+  // #247 — re-render forcé d'identité stable (compteur local).
+  const refreshThis = useModelBinding()
   const local_app_data = useRef<Class_ApplicationDataOSP>(new Class_ApplicationDataOSP(false))
   const list_data = useRef<{ [x: string]: { name: string, data: Type_JSON } }>({})
   const list_selected_nodes_for_unitary = useRef<Class_NodeElement[]>([])
@@ -263,7 +258,7 @@ const TabImportExcelDataForUnitary = ({ app_data }: { app_data: Class_Applicatio
     set_is_processing(false)
     set_current_file_name('')
     set_pending_files([])
-    setUpdate(a => a + 1)
+    refreshThis()
   }
 
   const removeDataSource = (key: string) => {
@@ -278,7 +273,7 @@ const TabImportExcelDataForUnitary = ({ app_data }: { app_data: Class_Applicatio
         set_selected_data_id('')
       }
     }
-    setUpdate(a => a + 1)
+    refreshThis()
   }
 
   const nb_loaded = Object.keys(list_data.current).length
@@ -381,7 +376,7 @@ const TabImportExcelDataForUnitary = ({ app_data }: { app_data: Class_Applicatio
                 list_selected_nodes_for_unitary.current.splice(n_to_del, 1)
               }
             })
-            setUpdate(a => a + 1)
+            refreshThis()
           }}
         />
       </Box>
