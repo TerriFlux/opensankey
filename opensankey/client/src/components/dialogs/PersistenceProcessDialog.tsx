@@ -924,7 +924,6 @@ export const UniversalFileConverter = ({
       return
     }
     if (!auto_load) {
-      console.log('🔄 Conversion terminée - en attente d\'action utilisateur')
       setStarted(false)
       setProcessing(false)
       setFailure(false)
@@ -1074,7 +1073,6 @@ export const UniversalFileConverter = ({
         const filename = `${root_filename}${ext}`
 
         FileSaver.saveAs(blob, filename)
-        console.log(`✅ Fichier téléchargé: ${filename}`)
       })
       .catch(error => {
         console.error('❌ Erreur téléchargement:', error)
@@ -1215,9 +1213,6 @@ export const UniversalFileConverter = ({
 
     const url = window.location.origin + config.server_endpoint
 
-    console.log(`🔄 Lancement conversion ${input_format} → ${output_format}`)
-    console.log('Options entrée:', input_options)
-    console.log('Options sortie:', output_options)
 
     set_show_terminal(true)
     // Garde-fou : un échec HTTP non-JSON (413/502/504 nginx, etc.) ou un network

@@ -114,7 +114,7 @@ export const setDiagram = (
     app_data.file_name = sankey.diagram as string
     // Fichier réellement servi pour ce diagramme (cf. bouton « Éditer dans OpenSankey »)
     app_data.static_diagram_file = diagrams[diagram_url] + '.gz'
-  }).catch(e => console.log(e))
+  }).catch(e => console.error('Erreur lors du chargement du diagramme:', e))
   app_data.menu_configuration.ref_toolbar.current()
 }
 

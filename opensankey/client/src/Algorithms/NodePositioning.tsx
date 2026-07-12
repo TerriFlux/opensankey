@@ -798,13 +798,6 @@ export class NodePositioning {
       // de v=0) et le push figerait l'inversion. position_v est l'ordre stable (calculé au load,
       // u/v verrouillés). position_y en départage seulement les v égaux (ne devrait pas arriver).
       col.sort((a, b) => (a.position_v - b.position_v) || (a.position_y - b.position_y))
-      // DEBUG #1231 (temporaire) — dump de l'ordre par colonne pour diagnostiquer le non-respect
-      // de position_v en mode échelle adaptée (à retirer une fois la cause confirmée).
-      if (col.length > 1) {
-        // eslint-disable-next-line no-console
-        console.log('[scaleAdapted overlap] u=' + col[0].position_u + ' →',
-          col.map(n => `${n.name}(v=${n.position_v}, y=${Math.round(n.position_y)}, u=${n.position_u})`).join('  |  '))
-      }
       // 1. anti-chevauchement, depuis le haut : descendre les nœuds qui se recouvrent.
       for (let i = 1; i < col.length; i++) {
         const prev = col[i - 1]
