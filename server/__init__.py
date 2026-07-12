@@ -123,6 +123,13 @@ def create_app():
 
     app.register_blueprint(trial_blueprint)
 
+    # Blueprint for the admin users UI (/admin/users), réservé aux comptes
+    # is_developer (cf. dev_required). Complète le dashboard /admin/metrics :
+    # chaque environnement sert SA base, donc dev/test/prod ont chacun leur UI.
+    from .admin_users import admin_users as admin_users_blueprint
+
+    app.register_blueprint(admin_users_blueprint)
+
     # Blueprint for User interaction part of app
     from .views import sankeyapp as main_blueprint
 
