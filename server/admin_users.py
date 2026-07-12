@@ -19,18 +19,15 @@ toute écriture exige de cocher la confirmation et déclenche un backup
 automatique préalable. Un jeton CSRF de session protège tous les formulaires
 (en plus du cookie SameSite=Lax posé par create_app).
 """
-import json
 import os
 import secrets
 import shutil
 import string
 import subprocess
 from datetime import datetime
-from functools import wraps
 
 from flask import (
     Blueprint,
-    Response,
     flash,
     redirect,
     render_template_string,
@@ -38,7 +35,6 @@ from flask import (
     session,
     url_for,
 )
-from flask_login import current_user
 from sqlalchemy import func, or_
 
 from logincomponent.server.models import (
@@ -47,31 +43,12 @@ from logincomponent.server.models import (
     License,
     UserLicences,
     hash_password,
+    user_excluded_from_metrics,
 )
 
-# Auth : on réutilise le décorateur du dashboard metrics (401 si anonyme, 403 si
-# connecté mais non-développeur). Repli local uniquement si le module n'est pas
-# encore présent (arbre non synchronisé) — la logique reste identique.
-try:
-    from .admin_metrics import dev_required
-except Exception:  # noqa
-    def dev_required(view):
-        @wraps(view)
-        def wrapped(*args, **kwargs):
-            if not current_user.is_authenticated:
-                return Response(
-                    json.dumps({"error": "authentication required"}),
-                    status=401,
-                    mimetype="application/json",
-                )
-            if not bool(getattr(current_user, "is_developer", False)):
-                return Response(
-                    json.dumps({"error": "forbidden"}),
-                    status=403,
-                    mimetype="application/json",
-                )
-            return view(*args, **kwargs)
-        return wrapped
+# Auth commune aux surfaces d'admin : 401 si anonyme, 403 si connecté mais
+# non-développeur. Définie une seule fois dans admin_auth (cf. #256).
+from .admin_auth import dev_required
 
 try:
     from logincomponent.server.models import TRIAL_PLANS
@@ -181,11 +158,9 @@ def user_licenses_rows(user):
     return out
 
 
-def excluded_from_metrics(user):
-    """Reflète server/views.py::_visitor_is_internal : is_developer OU le flag."""
-    return bool(getattr(user, "is_developer", False)) or bool(
-        getattr(user, "exclude_from_metrics", False)
-    )
+# La règle d'exclusion vit dans models.user_excluded_from_metrics (source unique,
+# partagée avec server/views.py qui décide de ne pas compter la visite).
+excluded_from_metrics = user_excluded_from_metrics
 
 
 # ---------------------------------------------------------------------------

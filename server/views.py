@@ -46,7 +46,7 @@ import mfa_problem.mfa_problem_main as mfa_problem_main
 
 # ---------------------------------------------------------------
 # Local imports
-from logincomponent.server.models import update_metrics
+from logincomponent.server.models import update_metrics, user_excluded_from_metrics
 from . import publish as publish_lib
 
 # CONSTANTS -----------------------------------------------------
@@ -96,6 +96,9 @@ def _visitor_is_internal() -> bool:
     Sont internes : les comptes développeur (`is_developer`) et ceux marqués
     explicitement `exclude_from_metrics` (collègue non-développeur, compte de démo).
 
+    La règle elle-même vit dans `models.user_excluded_from_metrics` (source unique,
+    partagée avec l'admin) ; ici on n'ajoute que la condition d'authentification.
+
     Limite assumée : la page d'accueil peut être atteinte AVANT authentification —
     dans ce cas on ne sait pas qui est le visiteur et la visite est comptée. Le
     filtre couvre les navigations avec session active, cas courant pour l'équipe
@@ -104,10 +107,7 @@ def _visitor_is_internal() -> bool:
     """
     if not current_user.is_authenticated:
         return False
-    return bool(
-        getattr(current_user, "exclude_from_metrics", False)
-        or getattr(current_user, "is_developer", False)
-    )
+    return user_excluded_from_metrics(current_user)
 
 
 @sankeyapp.route("/")
