@@ -1,0 +1,57 @@
+{
+  "$ref": "#/definitions/SankeyRoot",
+  "definitions": {
+    "SankeyRoot": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": [
+            "string",
+            "number"
+          ]
+        },
+        "format_version": {
+          "type": "integer"
+        },
+        "nodes": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        },
+        "links": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        },
+        "dataTags": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        },
+        "nodeTags": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        },
+        "levelTags": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        },
+        "fluxTags": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        },
+        "viewTags": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        },
+        "views": {}
+      },
+      "additionalProperties": true
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
