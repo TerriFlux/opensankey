@@ -1308,10 +1308,7 @@ export class Class_DrawingArea {
         // Refresh translateExtent BEFORE scaleTo/translateTo so d3-zoom's constrain
         // uses the paper bounds (not the stale elements bbox from the previous format).
         this._updateScrollbars()
-        this.zoomListener.scaleTo(this.d3_selection_zoom_area, new_k)
-        this.zoomListener.translateTo(
-          this.d3_selection_zoom_area, 0, 0,
-          [this._fit_margin / 2, this._fit_margin / 2 + this.getNavBarHeight()])
+        this._applyFitCamera(new_k, this._fit_margin / 2, this._fit_margin / 2 + this.getNavBarHeight())
         this.drawBackground()
         this.drawGrid()
         if (this._k_fit !== prev_k_fit) this._refreshLabelsForFitZoom()
@@ -1435,10 +1432,7 @@ export class Class_DrawingArea {
       this._k_fit = 1
       if (this.d3_selection_zoom_area) {
         this._updateScrollbars()
-        this.zoomListener.scaleTo(this.d3_selection_zoom_area, 1)
-        this.zoomListener.translateTo(
-          this.d3_selection_zoom_area, 0, 0,
-          [this._fit_margin / 2, this._fit_margin / 2 + this.getNavBarHeight()])
+        this._applyFitCamera(1, this._fit_margin / 2, this._fit_margin / 2 + this.getNavBarHeight())
       }
       this.drawBackground()
       this.drawGrid()
@@ -1595,7 +1589,6 @@ export class Class_DrawingArea {
       // uses the current content bbox (e.g. when switching back from paper to free,
       // we don't want the stale paper bounds to clamp the transform).
       this._updateScrollbars()
-      this.zoomListener.scaleTo(this.d3_selection_zoom_area, new_k)
       // Board unitaire (scopé is_unitary pour ne rien changer au diagramme principal) :
       // - avec nœud central → on l'épingle au CENTRE de la fenêtre (translateTo place le
       //   monde (0,0) en pixel [px,py], donc le point monde cnx/cny tombe au centre).
@@ -1616,7 +1609,9 @@ export class Class_DrawingArea {
         : center_v
           ? (this.window_fitting_height - bbox.height * new_k) / 2 - bbox.y * new_k + this.getNavBarHeight()
           : this._fit_margin / 2 + this.getNavBarHeight() + label_overflow_top - this._background_d3_groups_shift_y * new_k
-      this.zoomListener.translateTo(this.d3_selection_zoom_area, 0, 0, [px, py])
+      // Échelle + translation appliquées ensemble (constrain d3 préservé, cf. _applyFitCamera).
+      // px/py ci-dessus ne lisent pas le transform live → réordonnancement sans effet.
+      this._applyFitCamera(new_k, px, py)
       this.drawBackground()
       this.drawGrid()
       if (this._k_fit !== prev_k_fit) {
@@ -2307,6 +2302,23 @@ export class Class_DrawingArea {
   }
 
   /**
+   * Applique un recadrage de fit (#1250) : échelle `k` puis placement du point MONDE
+   * (0,0) au pixel `[px, py]`. Passe DÉLIBÉRÉMENT par scaleTo/translateTo (et non par
+   * setCamera/zoomListener.transform direct) pour conserver le CONSTRAIN de d3-zoom
+   * (clamp selon translateExtent) : ce clamp est load-bearing — le ré-ancrage des
+   * labels en police verrouillée (#165) en dépend. Point d'application UNIQUE des
+   * recadrages d'areaAutoFit ; c'est ici que se branchera la bascule vers le calcul
+   * du transform par le modèle (phase 3). `_updateScrollbars` doit avoir été appelé
+   * AVANT (il pose le translateExtent lu par le constrain).
+   */
+  private _applyFitCamera(k: number, px: number, py: number): void {
+    const sel = this.d3_selection_zoom_area
+    if (!sel) return
+    this.zoomListener.scaleTo(sel, k)
+    this.zoomListener.translateTo(sel, 0, 0, [px, py])
+  }
+
+  /**
    * Draw background for drawing area
    *
    * @param {*} drawing_area
@@ -2368,9 +2380,10 @@ export class Class_DrawingArea {
   }
 
   /**
-   * Position and size the viewport border rect so it frames the visible drawing
-   * area on the SVG root (outside g_drawing). Called on init and on every
-   * drawBackground() so it tracks navbar/bottombar/window changes.
+   * Position and size the viewport border rect on the SVG root (outside g_drawing).
+   * Mode libre : encadre la zone visible (fenêtre). Mode papier : encadre la PAGE.
+   * Appelé à l'init, à chaque drawBackground(), et — en mode papier — à chaque zoom/pan
+   * (eventZoom), car le fond n'y est pas redessiné.
    */
   private _updateViewportBorder() {
     if (!this._d3_viewport_border) return
@@ -2378,18 +2391,35 @@ export class Class_DrawingArea {
       this._d3_viewport_border.attr('visibility', 'hidden')
       return
     }
-    const fm = this._fit_margin / 2
-    const navH = this.getNavBarHeight()
-    const viewW = this.window_fitting_width
-    const viewH = this.window_fitting_height
-    // viewW/viewH already exclude fit_margin and navbar/bottombar, so they map
-    // directly to the framed area (x=fm, y=navH+fm, w=viewW, h=viewH).
+    let x: number, y: number, w: number, h: number
+    if (this.is_paper_mode) {
+      // Le cadre matérialise la PAGE, pas la fenêtre. On PROJETTE le rectangle de page
+      // (coords monde) en PIXELS-ÉCRAN via la caméra : le cadre porte donc le ratio du
+      // format (les formats ISO A partagent 1:√2, seule l'orientation le change), suit
+      // zoom et pan, et reste tracé sur la racine SVG → trait net, jamais mis à l'échelle.
+      const node = this.d3_selection_zoom_area?.node()
+      if (!node) return
+      const t = d3.zoomTransform(node)
+      const x0 = this._background_d3_groups_shift_x
+      const y0 = this._background_d3_groups_shift_y
+      const tl = CameraMath.worldToScreen(t, x0, y0)
+      const br = CameraMath.worldToScreen(t, x0 + this._zoom_width, y0 + this._zoom_height)
+      x = tl.x; y = tl.y; w = br.x - tl.x; h = br.y - tl.y
+    } else {
+      // viewW/viewH already exclude fit_margin and navbar/bottombar, so they map
+      // directly to the framed area (x=fm, y=navH+fm, w=viewW, h=viewH).
+      const fm = this._fit_margin / 2
+      x = fm
+      y = this.getNavBarHeight() + fm
+      w = this.window_fitting_width
+      h = this.window_fitting_height
+    }
     this._d3_viewport_border
       .attr('visibility', 'visible')
-      .attr('x', fm)
-      .attr('y', navH + fm)
-      .attr('width', Math.max(0, viewW))
-      .attr('height', Math.max(0, viewH))
+      .attr('x', x)
+      .attr('y', y)
+      .attr('width', Math.max(0, w))
+      .attr('height', Math.max(0, h))
       .style('stroke', default_black_color)
       .style('stroke-width', 1)
   }
@@ -3273,6 +3303,12 @@ export class Class_DrawingArea {
           this.drawBackground()
           this.drawGrid()
         }, 80)
+      } else {
+        // Mode papier : le fond n'est pas redessiné, mais le cadre de page est calculé en
+        // pixels-écran (projection du rect de page). Il doit donc se réajuster à chaque
+        // zoom/pan, sinon il reste figé sur le transform précédent. 4 attributs, pas de
+        // getBBox : assez léger pour être fait à chaque tick, sans débounce.
+        this._updateViewportBorder()
       }
 
       // Issue #165 — Mode verrouillé : la font-size écran doit rester constante
@@ -3719,6 +3755,9 @@ export class Class_DrawingArea {
     } else if (this.is_bg_image_ratio_mode) {
       this.applyBgImageRatio()
     }
+    // Pas de recadrage caméra : changer de format/orientation ne doit PAS bouger le
+    // diagramme ni le niveau de zoom. applyPaperDimensions recalcule les bornes de page ;
+    // seuls le cadre et la grille s'adaptent.
     this.drawBackground()
     this.drawGrid()
     this.drawBgImage()
@@ -3764,11 +3803,47 @@ export class Class_DrawingArea {
     return { width: Math.min(base.width, base.height), height: Math.max(base.width, base.height) }
   }
 
-  /** Apply paper dimensions to _width/_height (full paper, margins are only used by fitToFormat) */
+  /**
+   * Dimensionne le canvas papier : le plus petit rectangle AU RATIO DU FORMAT qui contient
+   * le diagramme, centré dessus. La dimension contraignante — largeur ou hauteur — est
+   * choisie d'après le contenu (autofit à ratio constant).
+   *
+   * Seul le RATIO compte ici, pas les millimètres : A3/A4/A5 partagent 1:√2 et ne se
+   * distinguent qu'à l'export (qui relit getPaperDimensionsMm(), inchangé). Seule
+   * l'orientation change le rapport (1.414 ↔ 0.707).
+   *
+   * La CAMÉRA n'est pas touchée : changer de format/orientation ne bouge ni le diagramme
+   * ni le zoom. Seuls le fond, la grille et le cadre (tous dimensionnés sur _zoom_* et les
+   * shifts) s'adaptent. Sans contenu, on retombe sur les dimensions physiques du format.
+   */
   protected applyPaperDimensions() {
     const dims = this.getPaperDimensionsMm()
-    this._width = Class_DrawingArea.mmToPx(dims.width)
-    this._height = Class_DrawingArea.mmToPx(dims.height)
+    const ratio = dims.width / dims.height
+    const bbox = this.d3_selection_elements_group?.node()?.getBBox()
+    const has_content = !!bbox && bbox.width > 0 && bbox.height > 0
+    if (!has_content) {
+      this._width = Class_DrawingArea.mmToPx(dims.width)
+      this._height = Class_DrawingArea.mmToPx(dims.height)
+    } else if (bbox.width / bbox.height > ratio) {
+      // Contenu plus « large » que le format : la largeur contraint.
+      this._width = bbox.width
+      this._height = bbox.width / ratio
+    } else {
+      // Contenu plus « haut » que le format : la hauteur contraint.
+      this._height = bbox.height
+      this._width = bbox.height * ratio
+    }
+    if (this.is_paper_mode) {
+      // Le fond, la grille et le cadre se dessinent sur _zoom_* + les shifts, et
+      // _updateScrollbars pose le translateExtent dessus : il faut les resynchroniser ici.
+      this._zoom_width = this._width
+      this._zoom_height = this._height
+      const cx = has_content ? bbox.x + bbox.width / 2 : this._width / 2
+      const cy = has_content ? bbox.y + bbox.height / 2 : this._height / 2
+      this._background_d3_groups_shift_x = cx - this._width / 2
+      this._background_d3_groups_shift_y = cy - this._height / 2
+      this._updateScrollbars()
+    }
   }
 
 
