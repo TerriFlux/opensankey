@@ -90,10 +90,31 @@ def api_login_required(view):
     return wrapped
 
 
+def _visitor_is_internal() -> bool:
+    """Vrai pour une visite de l'équipe, à ne pas compter dans `metrics` (#256).
+
+    Sont internes : les comptes développeur (`is_developer`) et ceux marqués
+    explicitement `exclude_from_metrics` (collègue non-développeur, compte de démo).
+
+    Limite assumée : la page d'accueil peut être atteinte AVANT authentification —
+    dans ce cas on ne sait pas qui est le visiteur et la visite est comptée. Le
+    filtre couvre les navigations avec session active, cas courant pour l'équipe
+    (le cookie de session persiste). Il n'est pas non plus rétroactif : les lignes
+    déjà enregistrées (hash d'IP, sans identité) ne peuvent pas être réattribuées.
+    """
+    if not current_user.is_authenticated:
+        return False
+    return bool(
+        getattr(current_user, "exclude_from_metrics", False)
+        or getattr(current_user, "is_developer", False)
+    )
+
+
 @sankeyapp.route("/")
 def index():
-    # Update website frequentation metrics
-    update_metrics(request.environ.get("HTTP_X_FORWARDED_FOR", request.remote_addr))
+    # Update website frequentation metrics — hors visites internes (équipe).
+    if not _visitor_is_internal():
+        update_metrics(request.environ.get("HTTP_X_FORWARDED_FOR", request.remote_addr))
     # Render site
     return render_template("index.html", filename="", static_site="false")
 

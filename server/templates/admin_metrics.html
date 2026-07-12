@@ -54,6 +54,13 @@
       <span class="warn">(<code>REF_EPOCH</code> absent de l'environnement : fenêtres d'activité indisponibles.)</span>
     {% endif %}
   </p>
+  <p class="hint">
+    <strong>Visites internes exclues</strong> : {{ metrics.excluded_accounts }} compte(s) de l'équipe
+    (développeurs + comptes marqués <code>exclude_from_metrics</code>) ne sont plus comptés.
+    Deux limites : la page d'accueil atteinte <em>avant</em> connexion est comptée (visiteur inconnu),
+    et l'exclusion <strong>n'est pas rétroactive</strong> — les visites enregistrées avant la mise en
+    place restent dans les cumuls (la table ne stocke qu'un hash d'IP, sans identité).
+  </p>
 
   <h2>Essais gratuits</h2>
   <div class="cards">

@@ -20,7 +20,7 @@ from flask import Blueprint, Response, jsonify, render_template
 from flask_login import current_user
 from sqlalchemy import func
 
-from logincomponent.server.models import db, Metrics
+from logincomponent.server.models import db, Metrics, User
 
 # Source unique des chemins de stockage des essais (définis dans views.py).
 from .views import _TRIAL_COUNTER_FILE, _TRIAL_EVENTS_FILE
@@ -74,6 +74,12 @@ def _metrics_summary():
         func.coalesce(func.sum(Metrics.nb_visits), 0)
     ).scalar() or 0
 
+    # Comptes dont les visites ne sont plus comptées (équipe) : développeurs
+    # d'office + comptes marqués exclude_from_metrics (cf. views._visitor_is_internal).
+    excluded_accounts = db.session.query(func.count(User.id)).filter(
+        db.or_(User.is_developer.is_(True), User.exclude_from_metrics.is_(True))
+    ).scalar() or 0
+
     summary = {
         # Nombre d'IP distinctes (hashées) ayant chargé la page d'accueil.
         "total_visitors": int(total_visitors),
@@ -82,6 +88,7 @@ def _metrics_summary():
         "total_visits": int(total_visits),
         "active_7d": None,
         "active_30d": None,
+        "excluded_accounts": int(excluded_accounts),
     }
 
     today = _current_epoch_day()
