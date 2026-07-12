@@ -201,11 +201,18 @@ Deux voies d'implémentation étaient envisagées :
   de repli (`Element.tsx:437-443`) pour interroger `sankey.theme` avant `_config[k].default`.
 
 > **Correction du 2026-07-09 (vérifiée sur le code) : (a) et (b) sont mortes toutes les deux,
-> pour la même raison.** Le pré-remplissage de `Element.tsx:1279-1283` s'applique à tout style
-> `!is_deletable`, ce qui inclut `default`, `NodeStyle`, `LinkStyle`. Donc `getStyleWithAttr(k)`
-> trouve **toujours** `k`, `getStyleProperty` ne retombe **jamais** sur `_config[k].default`, et
-> le maillon de la voie (b) n'est jamais atteint. La voie (b) n'était pas « plus chirurgicale » :
-> elle exigeait exactement la même dé-pré-remplissage que la voie (a).
+> pour la même raison.** Le style `default` est pré-rempli de **tous** les défauts usine à la
+> construction (`Element.tsx:1279-1283`, `is_deletable = false`). Or il est `_style[0]`, et
+> `getStyleWithAttr` s'y replie faute de mieux. Donc `getStyleWithAttr(k)` trouve **toujours**
+> `k`, `getStyleProperty` ne retombe **jamais** sur `_config[k].default`, et le maillon de la
+> voie (b) n'est jamais atteint. La voie (b) n'était pas « plus chirurgicale » : elle exigeait
+> exactement le même dé-pré-remplissage que la voie (a).
+>
+> *Rectifiée le 2026-07-10.* Une première rédaction de cette correction affirmait que le
+> pré-remplissage touchait aussi `NodeStyle` et `LinkStyle`. C'est faux :
+> `Sankey.create_internal_style` les crée avec `is_deletable = true` (`Sankey.tsx:401`), donc
+> leur storage démarre vide. C'est précisément ce qui rend la voie (c) possible — leur `_storage`
+> appartient au thème. Le style `default`, à lui seul, suffit à condamner (b).
 
 **(c) Thème = le contenu des styles de base + une règle de palette. Retenu.**
 

@@ -28,16 +28,18 @@ import { Class_DrawingArea } from './DrawingArea'
 import { base_styles, elementStyleConfigs, ElementStyleConfigsDict, ElementStyleKey, LinkExportCloseStyle, LinkImportCloseStyle, LinkImportExportAboveBelowStyle, LinkImportExportCloseStyle, LinkStyle, NodeExportBelowStyle, NodeExportCloseStyle, NodeImportAboveStyle, NodeImportCloseStyle, NodeImportExportAboveBelowStyle, NodeImportExportCloseStyle, NodeSectorStyle, NodeStyle } from '../Elements/ElementStyle'
 import { Class_LinkElement, defaultLinkId, sortLinksElementsByIds } from '../Elements/Link'
 import { Class_NodeElement } from '../Elements/Node'
+// Type seul : `Class_ContainerElement` en hérite aussi, et `onNodeRenamed` doit
+// pouvoir refuser un conteneur. Pas d'import de valeur, pour ne pas créer de cycle.
+import type { Class_NodeBase } from '../Elements/NodeBase'
 import { Class_NodeDimension } from '../Elements/NodeDimension'
 import { Class_DataTag } from '../types/Tag'
 import { Class_NodeTagGroup, Class_FluxTagGroup, Class_DataTagGroup, Class_LevelTagGroup, Class_ViewTagGroup } from './TagGroup'
 import { Class_Theme, themeOpenSankey } from './Theme'
 
 /**
- * Les styles dont un thème est propriétaire : `applyTheme` les remet à zéro avant
- * d'écrire son patch. Ils sont `is_deletable = true` (donc non pré-remplis des
- * défauts usine), ce qui rend la remise à zéro équivalente à « revenir au style
- * `default` ». Cf. NOTE-THEMES.md.
+ * Les styles dont un thème est propriétaire : `applyTheme` les ramène à leur AMORCE
+ * (`elementStyleConfigs`) avant d'y écrire son patch — surtout pas au vide, qui ne
+ * restituerait pas l'apparence OpenSankey. Cf. `applyTheme` et NOTE-THEMES.md.
  */
 const THEME_MANAGED_STYLES: readonly string[] = [NodeStyle, LinkStyle]
 import {
@@ -777,6 +779,31 @@ export class Class_Sankey {
    */
   public invalidateThemePalette(): void {
     this._theme_node_colors = null
+  }
+
+  /**
+   * Renommage d'un nœud : la table de palette est indexée par `id` mais calculée
+   * depuis les NOMS. Un renommage peut donc changer le regroupement par premier mot,
+   * et c'est toute la table qui est périmée, pas la seule entrée du nœud renommé.
+   *
+   * Le paramètre n'est pas décoratif : `Class_ContainerElement` hérite de
+   * `Class_NodeBase` et passe donc par le même setter, alors qu'il ne participe pas
+   * à la palette. On filtre sur l'appartenance à `_nodes`.
+   *
+   * Le redraw n'a lieu que si la palette dépend réellement des noms — sous
+   * `opensankey` (`by-tag`) ou `stan` (`none`), renommer ne change aucune couleur.
+   * Il est aussi sauté sous `bypass_redraws` : le chargement et les opérations en
+   * masse redessinent à la fin, et `fromJSON` pose le thème AVANT les nœuds.
+   * Les flux sont du lot : sous `shape_color_rule: 'source'` leur couleur suit
+   * celle de leur nœud source.
+   */
+  public onNodeRenamed(node: Class_NodeBase): void {
+    if (this._nodes[node.id] !== node) return
+    this.invalidateThemePalette()
+    if (this._theme.palette.node_rule !== 'by-name-first-word') return
+    if (this.drawing_area.bypass_redraws) return
+    this.nodes_list.forEach(_ => _.draw())
+    this.links_list.forEach(_ => _.draw())
   }
 
   /**

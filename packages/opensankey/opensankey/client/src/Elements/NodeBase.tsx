@@ -569,7 +569,14 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   }
 
   public get name() { return this._name }
-  public set name(_: string) { this._name = _; this.drawNameLabel() }
+  public set name(_: string) {
+    this._name = _
+    // Sous un thème à palette par nom, renommer périme la table des couleurs.
+    // `Class_ContainerElement` hérite de cette classe sans être un nœud : c'est
+    // `Sankey` qui filtre.
+    this.sankey?.onNodeRenamed(this)
+    this.drawNameLabel()
+  }
   public get name_label() {
     if (this.name_label_separator !== '') {
       const splitted_label = this._name.split(this.name_label_separator)
