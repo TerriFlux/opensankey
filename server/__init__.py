@@ -128,6 +128,15 @@ def create_app():
 
     app.register_blueprint(main_blueprint)
 
+    # Mini-dashboard d'observabilité (issue #256, volet 3) : rend exploitable la
+    # table `metrics` (jusqu'ici write-only) et agrège les essais gratuits.
+    # Réservé aux comptes développeur. Enregistré APRÈS le blueprint principal :
+    # ses routes (/admin/metrics, /api/admin/metrics) sont plus spécifiques que
+    # le catch-all SPA `/<path:path>` de views.goto, donc prioritaires.
+    from .admin_metrics import admin_metrics as admin_metrics_blueprint
+
+    app.register_blueprint(admin_metrics_blueprint)
+
     # Blueprint for OpenSankey part of app
     from opensankey.server.views import opensankey
     app.register_blueprint(opensankey, url_prefix="/opensankey")
