@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Observabilité — metrics & essais</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; margin: 2rem auto; max-width: 60rem; color: #1f2933; }
+    h1 { font-size: 1.4rem; margin-bottom: .25rem; }
+    h2 { font-size: 1.05rem; margin-top: 2rem; border-bottom: 1px solid #e4e7eb; padding-bottom: .3rem; }
+    .hint { color: #616e7c; font-size: .85rem; margin-top: 0; }
+    .cards { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1rem; }
+    .card { flex: 1 1 8rem; border: 1px solid #e4e7eb; border-radius: 6px; padding: .75rem 1rem; }
+    .card .value { font-size: 1.6rem; font-weight: 600; }
+    .card .label { color: #616e7c; font-size: .8rem; }
+    table { border-collapse: collapse; width: 100%; margin-top: .75rem; font-size: .9rem; }
+    th, td { text-align: left; padding: .35rem .5rem; border-bottom: 1px solid #f0f2f4; }
+    th { color: #616e7c; font-weight: 600; }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    code { background: #f5f7fa; padding: .05rem .3rem; border-radius: 3px; font-size: .85em; }
+    .warn { color: #a15c07; }
+    .bar { display: inline-block; height: .7rem; background: #3f8cff; border-radius: 2px; vertical-align: middle; }
+  </style>
+</head>
+<body>
+  <h1>Observabilité — metrics &amp; essais</h1>
+  <p class="hint">
+    Lecture seule, réservé aux comptes développeur. Un « visiteur » est un hash d'IP
+    (aucune donnée nominative) ; un essai est identifié par un UUID généré par le navigateur.
+  </p>
+
+  <h2>Fréquentation</h2>
+  <div class="cards">
+    <div class="card">
+      <div class="value">{{ metrics.total_visitors }}</div>
+      <div class="label">visiteurs distincts (IP hashées)</div>
+    </div>
+    <div class="card">
+      <div class="value">{{ metrics.total_visits }}</div>
+      <div class="label">visites-jours cumulées</div>
+    </div>
+    <div class="card">
+      <div class="value">{{ metrics.active_7d if metrics.active_7d is not none else '—' }}</div>
+      <div class="label">actifs 7 jours</div>
+    </div>
+    <div class="card">
+      <div class="value">{{ metrics.active_30d if metrics.active_30d is not none else '—' }}</div>
+      <div class="label">actifs 30 jours</div>
+    </div>
+  </div>
+  <p class="hint">
+    <code>nb_visits</code> n'est incrémenté qu'une fois par jour et par IP : le cumul compte
+    des visites-jours, pas des hits.
+    {% if metrics.active_7d is none %}
+      <span class="warn">(<code>REF_EPOCH</code> absent de l'environnement : fenêtres d'activité indisponibles.)</span>
+    {% endif %}
+  </p>
+
+  <h2>Essais gratuits</h2>
+  <div class="cards">
+    <div class="card">
+      <div class="value">{{ trials.started }}</div>
+      <div class="label">essais démarrés (UUID distincts)</div>
+    </div>
+    <div class="card">
+      <div class="value">{{ trials.converted }}</div>
+      <div class="label">convertis</div>
+    </div>
+    <div class="card">
+      <div class="value">
+        {% if trials.conversion_rate is not none %}{{ '%.1f' % (trials.conversion_rate * 100) }} %{% else %}—{% endif %}
+      </div>
+      <div class="label">taux de conversion</div>
+    </div>
+    <div class="card">
+      <div class="value">{{ trials.started_events_counter if trials.started_events_counter is not none else '—' }}</div>
+      <div class="label">compteur d'événements « started »</div>
+    </div>
+  </div>
+  {% if trials.malformed_lines %}
+    <p class="hint warn">{{ trials.malformed_lines }} ligne(s) illisible(s) dans <code>trial_events.jsonl</code> (ignorées).</p>
+  {% endif %}
+
+  <h2>Démarrages par jour (30 derniers jours)</h2>
+  {% set max_started = trials.daily | map(attribute='started') | max %}
+  <table>
+    <thead><tr><th>Jour</th><th class="num">Démarrages</th><th>&nbsp;</th></tr></thead>
+    <tbody>
+      {% for day in trials.daily %}
+        {% if day.started %}
+          <tr>
+            <td>{{ day.date }}</td>
+            <td class="num">{{ day.started }}</td>
+            <td><span class="bar" style="width: {{ (day.started / max_started * 200) | round | int }}px"></span></td>
+          </tr>
+        {% endif %}
+      {% endfor %}
+      {% if not max_started %}
+        <tr><td colspan="3" class="hint">Aucun démarrage sur la période.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+
+  <h2>Derniers événements</h2>
+  <table>
+    <thead><tr><th>Date (UTC)</th><th>Événement</th><th>UUID</th></tr></thead>
+    <tbody>
+      {% for e in trials.recent %}
+        <tr>
+          <td>{{ e.at }}</td>
+          <td>{{ e.event }}{% if e.catchup %} <span class="hint">(catchup)</span>{% endif %}</td>
+          <td><code>{{ e.uuid }}</code></td>
+        </tr>
+      {% else %}
+        <tr><td colspan="3" class="hint">Aucun événement enregistré.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
