@@ -14,13 +14,14 @@ nominative n'est exposée : un « visiteur » est un hash SHA-256 d'IP (cf.
 import json
 import os
 import time
-from functools import wraps
 
-from flask import Blueprint, Response, jsonify, render_template
-from flask_login import current_user
+from flask import Blueprint, jsonify, render_template
 from sqlalchemy import func
 
 from logincomponent.server.models import db, Metrics, User
+
+# Garde d'accès commune aux surfaces d'admin (cf. #256).
+from .admin_auth import dev_required
 
 # Source unique des chemins de stockage des essais (définis dans views.py).
 from .views import _TRIAL_COUNTER_FILE, _TRIAL_EVENTS_FILE
@@ -31,26 +32,6 @@ admin_metrics = Blueprint("admin_metrics", __name__)
 RECENT_EVENTS_LIMIT = 20
 # Profondeur de la série journalière des démarrages d'essai.
 DAILY_SERIES_DAYS = 30
-
-
-def dev_required(view):
-    """Réserve l'accès aux comptes développeur : 401 si anonyme, 403 sinon."""
-    @wraps(view)
-    def wrapped(*args, **kwargs):
-        if not current_user.is_authenticated:
-            return Response(
-                json.dumps({"error": "authentication required"}),
-                status=401,
-                mimetype="application/json",
-            )
-        if not bool(getattr(current_user, "is_developer", False)):
-            return Response(
-                json.dumps({"error": "forbidden"}),
-                status=403,
-                mimetype="application/json",
-            )
-        return view(*args, **kwargs)
-    return wrapped
 
 
 def _current_epoch_day():

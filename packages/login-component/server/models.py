@@ -776,6 +776,24 @@ def license_required(f):
 # Functions
 
 
+def user_excluded_from_metrics(user) -> bool:
+    """Règle CANONIQUE : ce compte doit-il être exclu du décompte de fréquentation ?
+
+    Un compte est exclu s'il est développeur (`is_developer`, exclusion d'office)
+    ou explicitement marqué (`exclude_from_metrics`, pour un collègue ou un compte
+    de démo non-développeur). Cf. issue #256.
+
+    Source unique de la règle : `server/views.py` (pour ne pas compter la visite)
+    et `server/admin_users.py` (pour l'afficher dans l'admin) l'utilisent tous
+    les deux. Ne pas la redéfinir ailleurs.
+
+    Le `getattr` tolère un objet sans la colonne (base non encore migrée).
+    """
+    return bool(getattr(user, "is_developer", False)) or bool(
+        getattr(user, "exclude_from_metrics", False)
+    )
+
+
 def update_metrics(ip: str):
     """
     Update metrics table
