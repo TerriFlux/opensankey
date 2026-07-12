@@ -34,8 +34,10 @@ describe('#253 — JSON Schema généré depuis le schéma zod', () => {
       fs.writeFileSync(SCHEMA_PATH, generated, 'utf-8')
       return
     }
+    // Fins de ligne normalisées : sur Windows le checkout convertit l'artefact en CRLF alors que
+    // la génération produit des \n — sans ça le test échoue hors CI Linux.
     const committed = fs.existsSync(SCHEMA_PATH)
-      ? fs.readFileSync(SCHEMA_PATH, 'utf-8')
+      ? fs.readFileSync(SCHEMA_PATH, 'utf-8').replace(/\r\n/g, '\n')
       : ''
     expect(generated).toEqual(committed)
   })
