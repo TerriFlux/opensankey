@@ -3,6 +3,7 @@ import React, { useRef, MutableRefObject, forwardRef, useImperativeHandle, useSt
 import ReactQuill from 'react-quill'
 import { Box, Textarea, Checkbox } from '@chakra-ui/react'
 import { MenuDraggable } from '../topmenus/SankeyMenus'
+import { useModelBinding } from '../../hooks/useModelBinding'
 import { getElementsLabelValues } from '../../Elements/ElementsAttributesConfig'
 import { Class_NodeBase } from '../../Elements/NodeBase'
 import { Class_ApplicationData } from '../../types/ApplicationData'
@@ -227,7 +228,8 @@ export const LabelRichTextEditor = ({ app_data }: { app_data: Class_ApplicationD
   const has_osp = app_data.has_sankey_plus
 
   const [, sEditorContentFoNode] = useState('')
-  const [, setCount] = useState(0)
+  // #247 — re-render forcé d'identité stable (compteur local, pas de slot updater dédié).
+  const refreshThis = useModelBinding()
   const [elements, setElements] = useState<Class_NodeBase[] | Class_LinkElement[]>([])
   const [prefix, setPrefix] = useState<'name_label' | 'value_label' | 'icon'>('name_label')
   const [editorMode, setEditorMode] = useState<'node' | 'link' | null>(null)
@@ -257,7 +259,7 @@ export const LabelRichTextEditor = ({ app_data }: { app_data: Class_ApplicationD
   app_data.menu_configuration.r_setter_editor_content_fo_node.current = sEditorContentFoNode
 
   const labelValues = elements.length > 0
-    ? getElementsLabelValues(elements, prefix, () => setCount(a => a + 1))
+    ? getElementsLabelValues(elements, prefix, refreshThis)
     : Object.fromEntries(
       Object.entries(BASE_LABEL_CONFIG).map(([key, value]) => [key, value.default])
     ) as { -readonly [K in keyof typeof BASE_LABEL_CONFIG]: ReturnType<typeof BASE_LABEL_CONFIG[K]['type']> }

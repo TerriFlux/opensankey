@@ -6,6 +6,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLocationDot, faPercent, faRulerVertical } from '@fortawesome/free-solid-svg-icons'
 import { ConfigMenuNumberInput, OSTooltip } from '../configmenus/MenuCommon'
+import { useModelBinding } from '../../hooks/useModelBinding'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_DataTagGroup } from '../../types/TagGroup'
 
@@ -21,12 +22,8 @@ export const ToolBarBottom = ({ new_data, right_offset }: {
   new_data: Class_ApplicationData,
   right_offset?: string | number
 }) => {
-  // Local State to update this & subcomponent
-  const [, setUpdater] = useState(0)
-  const refreshThis = () => {
-    setUpdater(a => a + 1)
-  }
-  new_data.menu_configuration.ref_to_toolbar_bottom_updater.current = refreshThis
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  const refreshThis = useModelBinding(new_data.menu_configuration.ref_to_toolbar_bottom_updater)
 
   let btn_mouse_mode_edition = <></>
   if (!new_data.is_static) {
@@ -297,8 +294,8 @@ export const ComponetStretchButtons = ({ app_data, updateParentComponent, hide_f
 export const DrawerSequenceDataTagg = ({ new_data }: { new_data: Class_ApplicationData }) => {
   const { icon_library } = new_data
   const { icon_repeat_sequence, icon_play, icon_pause, icon_activated, icon_open_selector } = icon_library
-  const [, setUpdate] = useState(0)
-  new_data.menu_configuration.ref_to_drawer_sequence_data_tag_updater.current = () => setUpdate(a => a + 1)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  const refreshThis = useModelBinding(new_data.menu_configuration.ref_to_drawer_sequence_data_tag_updater)
   const [active_grp, setActiveGrp] = useState('')
 
   const list_grp_seq = new_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(grp => (grp as Class_DataTagGroup).banner == 'sequence')
@@ -386,7 +383,7 @@ export const DrawerSequenceDataTagg = ({ new_data }: { new_data: Class_Applicati
               const curr_active_grp = new_data.drawing_area.sankey.getTagGroupsAsDict('data_taggs')[active_grp] as Class_DataTagGroup
               new_data.menu_configuration.launchDataSequence(curr_active_grp)
             }
-            setUpdate(a => a + 1)
+            refreshThis()
           }}
         >
           {logo_btn}
@@ -396,7 +393,7 @@ export const DrawerSequenceDataTagg = ({ new_data }: { new_data: Class_Applicati
           onClick={() => {
             // Switch 'is sequence loop' value
             new_data.menu_configuration.is_sequence_loop = !new_data.menu_configuration.is_sequence_loop
-            setUpdate(a => a + 1)
+            refreshThis()
           }}>
           {icon_repeat_sequence}
         </Button>

@@ -8,6 +8,7 @@ import { Box, Button, Checkbox, InputGroup, Select, Divider, Input } from '@chak
 import { FaAlignCenter, FaAlignLeft, FaAlignRight, FaLock, FaLockOpen, FaRecycle } from 'react-icons/fa'
 import { MdTextRotationAngleup } from 'react-icons/md'
 import { TFunction } from 'i18next'
+import { useModelBinding } from '../../hooks/useModelBinding'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_LinkElement } from '../../Elements/Link'
@@ -1215,7 +1216,8 @@ export const MenuConfigurationAppearance = ({
 }) => {
   const { t, drawing_area, menu_configuration, icon_library } = app_data
   const { sankey } = drawing_area
-  const [, setCount] = useState(0)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  const refreshThis = useModelBinding(menu_configuration.ref_to_menu_config_apparence_updater)
   const { ref_selected_style } = menu_configuration
 
   const display_mode_name_label = useRef<'simple_text' | 'rich_text' | 'value'>('simple_text')
@@ -1255,8 +1257,6 @@ export const MenuConfigurationAppearance = ({
   const links_elements = allElements as Class_LinkElement[] | Class_ElementStyle[]
   const nodes_elements = allElements as Class_NodeBase[] | Class_ElementStyle[]
 
-  menu_configuration.ref_to_menu_config_apparence_updater.current = () => setCount(a => a + 1)
-
   const refreshAll = () => {
     menu_configuration.ref_to_save_in_cache_indicator.current(false)
     if (selection.hasNodes) {
@@ -1271,7 +1271,7 @@ export const MenuConfigurationAppearance = ({
       menu_configuration.updateComponentRelatedToApparence()
       selection.containers.forEach(c => c.draw())
     }
-    setCount(a => a + 1)
+    refreshThis()
   }
 
   // ✅ Valeurs SHAPE

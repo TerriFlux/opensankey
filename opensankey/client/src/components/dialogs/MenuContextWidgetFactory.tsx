@@ -29,6 +29,7 @@ import { MenuList, MenuButton, MenuItem, Menu, Box, Checkbox, Text, Select } fro
 import { ChevronRightIcon } from '@chakra-ui/icons'
 import { Button } from '@chakra-ui/react'
 
+import { useModelBinding } from '../../hooks/useModelBinding'
 import { ConfigMenuNumberInput, OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { default_value_option } from '../configmenus/SankeyMenuConfigurationLinksData'
@@ -66,9 +67,8 @@ export const MenuContextLinksData = ({ app_data }: { app_data: Class_Application
   const default_value = value_option_percent_constants.includes(value_option) ?
     first_link_value?.valueData ?? null :
     first_link?.valueCurrent
-  // Function used to force this component to reload
-  const [, setCount] = useState(0)
-  ref_to_menu_contextual_config_links_data_updater.current = () => setCount(a => a + 1)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  const refreshThis = useModelBinding(ref_to_menu_contextual_config_links_data_updater)
 
   const refreshThisAndUpdateRelatedComponents = () => {
     // Toogle saving indicator
@@ -76,7 +76,7 @@ export const MenuContextLinksData = ({ app_data }: { app_data: Class_Application
     ref_to_save_in_cache_indicator.current(false)
     // Update data menu for link
     menu_configuration.updateComponentRelatedToLinksData()
-    setCount(a => a + 1)
+    refreshThis()
     // And update this menu also
   }
 
@@ -103,7 +103,8 @@ export const MenuContextLinksData = ({ app_data }: { app_data: Class_Application
 
 export const ButtonLinkContextAssignTag = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { t, drawing_area, menu_configuration } = app_data
-  const [, setUpdate] = useState(0)
+  // #247 — re-render forcé d'identité stable (compteur local).
+  const refreshThis = useModelBinding()
   const contextualised_link = drawing_area.link_contextualised
   const has_flux_tags = Object.values(drawing_area.sankey.flux_taggs_dict).length > 0
   return (
@@ -147,7 +148,7 @@ export const ButtonLinkContextAssignTag = ({ app_data }: { app_data: Class_Appli
                               event.preventDefault()
                               drawing_area.updateSelectedLinksTagAssignation(!has_tag, tag)
                               menu_configuration.ref_to_menu_context_links_updater.current()
-                              setUpdate(a => a + 1)
+                              refreshThis()
                             }}
                           >
                             {tag.name}
@@ -166,7 +167,8 @@ export const ButtonLinkContextAssignTag = ({ app_data }: { app_data: Class_Appli
 
 export const ButtonNodeContextAssignTag = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { t, drawing_area, menu_configuration } = app_data
-  const [, setUpdate] = useState(0)
+  // #247 — re-render forcé d'identité stable (compteur local).
+  const refreshThis = useModelBinding()
   const contextualised_node = drawing_area.node_contextualised
   const has_node_tags = Object.values(drawing_area.sankey.node_taggs_dict).length > 0
   return (
@@ -210,7 +212,7 @@ export const ButtonNodeContextAssignTag = ({ app_data }: { app_data: Class_Appli
                             // event.preventDefault()
                               drawing_area.updateSelectedNodesTagAssignation(!has_tag, tag)
                               menu_configuration.ref_to_menu_context_nodes_updater.current()
-                              setUpdate(a => a + 1)
+                              refreshThis()
                             }}
                           >
                             {tag.name}
@@ -229,7 +231,8 @@ export const ButtonNodeContextAssignTag = ({ app_data }: { app_data: Class_Appli
 
 export const ButtonNodeContextAssignStyle = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { drawing_area, t } = app_data
-  const [, setUpdate] = useState(0)
+  // #247 — re-render forcé d'identité stable (compteur local).
+  const refreshThis = useModelBinding()
   const contextualised_node = drawing_area.node_contextualised
   const has_node_style = drawing_area.sankey.styles_list.length > 0
   return (
@@ -259,7 +262,7 @@ export const ButtonNodeContextAssignStyle = ({ app_data }: { app_data: Class_App
                   } else {
                     contextualised_node.removeStyle(_)
                   }
-                  setUpdate(a => a + 1)
+                  refreshThis()
                 }}
               >
                 {t(_.name)}
@@ -274,7 +277,8 @@ export const ButtonNodeContextAssignStyle = ({ app_data }: { app_data: Class_App
 
 export const ButtonContainerContextAssignStyle = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { drawing_area, t } = app_data
-  const [, setUpdate] = useState(0)
+  // #247 — re-render forcé d'identité stable (compteur local).
+  const refreshThis = useModelBinding()
   const contextualised_container = drawing_area.contextualised_container
   const selected_containers = drawing_area.selected_containers_list
   const has_styles = drawing_area.sankey.styles_list.length > 0
@@ -306,7 +310,7 @@ export const ButtonContainerContextAssignStyle = ({ app_data }: { app_data: Clas
                       container.removeStyle(_)
                     }
                   })
-                  setUpdate(a => a + 1)
+                  refreshThis()
                 }}
               >
                 {t(_.name)}
@@ -321,7 +325,8 @@ export const ButtonContainerContextAssignStyle = ({ app_data }: { app_data: Clas
 
 export const ButtonLinkContextAssignStyle = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { drawing_area, t } = app_data
-  const [, setUpdate] = useState(0)
+  // #247 — re-render forcé d'identité stable (compteur local).
+  const refreshThis = useModelBinding()
   const contextualised_link = drawing_area.link_contextualised
   const has_node_style = drawing_area.sankey.styles_list.length > 0
   return (
@@ -352,7 +357,7 @@ export const ButtonLinkContextAssignStyle = ({ app_data }: { app_data: Class_App
                     } else {
                       contextualised_link.removeStyle(_)
                     }
-                    setUpdate(a => a + 1)
+                    refreshThis()
                   }}
                 >
                   {t(_.name)}
@@ -386,8 +391,8 @@ export const AutoLayoutSpacingInputs = ({
   const { drawing_area } = app_data
   const default_dx = drawing_area.sankey.styles_dict['default'].shape_position_dx ?? 0
   const default_dy = drawing_area.sankey.styles_dict['default'].shape_position_dy ?? 0
-  const [, setTick] = useState(0)
-  const redraw = () => setTick((t) => t + 1)
+  // #247 — re-render forcé d'identité stable (compteur local).
+  const redraw = useModelBinding()
 
   const h_value = app_data.layout_h_spacing ?? default_dx
   const v_value = app_data.layout_v_spacing ?? default_dy
@@ -592,7 +597,8 @@ export const MenuContextResetVerticalIntervals = ({ app_data }: { app_data: Clas
 export const MenuContextNodeStock = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { drawing_area, menu_configuration } = app_data
   const node = drawing_area.node_contextualised
-  const [, setUpdate] = useState(0)
+  // #247 — re-render forcé d'identité stable (compteur local).
+  const refreshThis = useModelBinding()
 
   if (!node) return <></>
 
@@ -601,7 +607,7 @@ export const MenuContextNodeStock = ({ app_data }: { app_data: Class_Application
   const refreshAll = () => {
     node.drawStockBox()
     menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    setUpdate(a => a + 1)
+    refreshThis()
   }
 
   return <Box display='flex' flexDirection='column' gap='4px'>
@@ -613,7 +619,7 @@ export const MenuContextNodeStock = ({ app_data }: { app_data: Class_Application
           n.draw()
         })
         menu_configuration.ref_to_save_in_cache_indicator.current(false)
-        setUpdate(a => a + 1)
+        refreshThis()
       }}
     >
       <Text fontSize='sm'>Afficher stocks</Text>

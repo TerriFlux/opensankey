@@ -27,7 +27,6 @@
 // Standard lib
 import React, {
   FC,
-  useState,
 } from 'react'
 import {
   Button,
@@ -40,6 +39,7 @@ import {
   Checkbox,
   ModalFooter
 } from '@chakra-ui/react'
+import { useModelBinding } from '../../hooks/useModelBinding'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { OSTooltip } from '../configmenus/MenuCommon'
 
@@ -63,8 +63,8 @@ export const ModalDocumentation: FC<FCType_ModalDocumentation> = (
   const { never_see_again, show_splashscreen } = app_data.menu_configuration
 
   // Component updater ------------------------------------------------------------------
-  const [, setCount] = useState(0)
-  app_data.menu_configuration.ref_to_splashscreen_updater.current = () => setCount(a => a + 1)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  useModelBinding(app_data.menu_configuration.ref_to_splashscreen_updater)
 
   // Component --------------------------------------------------------------------------
   return <Modal

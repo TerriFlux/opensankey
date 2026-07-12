@@ -85,6 +85,7 @@ import { applyEsankeyFile } from '../../Persistence/esankeyLoad'
 import {
   loadUniversalJSON,
 } from '../../Persistence/UniversalJSONCompression'
+import { useModelBinding } from '../../hooks/useModelBinding'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { BaseApplicationDataType } from '../SankeyMenuTypes'
 import { OSTooltip } from '../configmenus/MenuCommon'
@@ -404,12 +405,11 @@ export const TopBarStateButtons = ({ new_data, vertical = false }: {
  */
 export const TopBarFullscreenButton = ({ new_data }: BaseApplicationDataType) => {
   const { t, icon_library } = new_data
-  const [, force] = useState(0)
-  useEffect(() => {
-    const h = () => force(c => c + 1)
-    document.addEventListener('fullscreenchange', h)
-    return () => document.removeEventListener('fullscreenchange', h)
-  }, [])
+  // #247 — re-render forcé (identité stable) sur l'événement fullscreen ; désabonné au démontage.
+  const refreshThis = useModelBinding(undefined, refresh => {
+    document.addEventListener('fullscreenchange', refresh)
+    return () => document.removeEventListener('fullscreenchange', refresh)
+  })
   const in_fs = !!document.fullscreenElement
   const toggle = async () => {
     if (!document.fullscreenElement) {
@@ -419,7 +419,7 @@ export const TopBarFullscreenButton = ({ new_data }: BaseApplicationDataType) =>
       await document.exitFullscreen()
       new_data.draw()
     }
-    force(c => c + 1)
+    refreshThis()
   }
   return <OSTooltip placement='bottom' label={in_fs ? t('Banner.quit_fullscreen') : t('Banner.fullscreen')}>
     <IconButton
@@ -1316,8 +1316,8 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
   new_data: Class_ApplicationData,
   additionalMenus: MutableRefObject<Type_AdditionalMenus>,
 }) => {
-  const [, setUpdate] = useState(0)
-  new_data.menu_configuration.ref_to_submenu_updater.current = () => setUpdate(b => b + 1)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  useModelBinding(new_data.menu_configuration.ref_to_submenu_updater)
 
 
   const diagrams_list = window.sankey
