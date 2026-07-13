@@ -1,8 +1,9 @@
 Bonjour {{ first_name }},
 
-Cela fait un moment que nous ne vous avons pas vu sur OpenSankey. L'outil a
-beaucoup changé entre-temps, et il y a de bonnes chances que ce qui vous avait
-arrêté à l'époque n'existe plus.
+Vous avez créé un compte sur OpenSankey. Que vous l'utilisiez régulièrement ou
+que vous n'y soyez jamais revenu, l'outil a beaucoup changé depuis — et si
+quelque chose vous avait arrêté à l'époque, il y a de bonnes chances que ce ne
+soit plus le cas.
 
 Ce qui est arrivé depuis :
 
@@ -21,7 +22,7 @@ Ce qui est arrivé depuis :
 
 Toutes les évolutions : {{ changelog_url }}
 
-  Reprendre où j'en étais :
+  Ouvrir OpenSankey :
   {{ login_url }}
 
 Et si ce n'est plus d'actualité ?

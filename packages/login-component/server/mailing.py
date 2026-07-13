@@ -524,9 +524,12 @@ def send_account_review_mail(user, token, language="fr"):
     if not is_email_valid(user.email):
         return
     language = _normalize_lang(language)
+    # L'objet ne présuppose RIEN sur l'activité du destinataire : on ne sait pas s'il
+    # s'est connecté hier ou jamais (`last_login` vient d'être créée, elle est vide
+    # pour tout le monde). La seule chose qu'on connaisse, c'est la date d'inscription.
     subject = {
-        "fr": "[OpenSankey] Ça a beaucoup changé depuis votre dernière visite",
-        "en": "[OpenSankey] A lot has changed since your last visit",
+        "fr": "[OpenSankey] Ce qui a changé depuis votre inscription",
+        "en": "[OpenSankey] What has changed since you signed up",
     }
     msg = Message(
         subject=subject[language],

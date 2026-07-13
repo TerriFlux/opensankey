@@ -1,8 +1,8 @@
 Hello {{ first_name }},
 
-It has been a while since we last saw you on OpenSankey. The tool has changed a
-great deal since then, and there is a fair chance that whatever stopped you back
-then no longer exists.
+You created an account on OpenSankey. Whether you use it regularly or never came
+back, the tool has changed a great deal since — and if something stopped you back
+then, there is a fair chance it no longer applies.
 
 What happened since:
 
@@ -21,7 +21,7 @@ What happened since:
 
 All the changes: {{ changelog_url }}
 
-  Pick up where I left off:
+  Open OpenSankey:
   {{ login_url }}
 
 And if it is no longer relevant?
