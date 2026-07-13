@@ -25,7 +25,6 @@
 // ==================================================================================================
 
 import * as d3 from '../d3Modules'
-import { MouseEvent } from 'react'
 import { Type_JSON, Type_Structure, Type_DataSource, Type_IntervalDisplay, Type_DisaggregationGap, default_main_sankey_id } from '../types/Utils'
 import {
   default_background_color,
@@ -68,7 +67,7 @@ import * as CopyPaste from './copyPaste'
 import * as DisplayModes from './displayModes'
 import * as CameraMath from './CameraMath'
 import { Class_ViewportChrome } from './DrawingAreaViewportChrome'
-import { TooltipEventManager } from '../Elements/TooltipsConfig'
+import { Class_DrawingAreaInteractions } from './DrawingAreaInteractions'
 import { Class_NodeBase, sortNodesElements } from '../Elements/NodeBase'
 import {
   LinkElementPersistence, NodeElementPersistence, SankeyPersistence
@@ -109,6 +108,9 @@ export class Class_DrawingArea {
   // zoom de g_drawing), il porte ses propres sélections d3 et ne fait que lire la géométrie de la
   // DA (cf. DrawingAreaViewportChrome).
   private _viewport_chrome = new Class_ViewportChrome()
+  // #242 — Interactions souris (création de flux au cliquer-glisser, rectangle de sélection,
+  // pan/zoom molette) : le module porte l'état de geste (cf. DrawingAreaInteractions).
+  private _interactions = new Class_DrawingAreaInteractions()
 
 
   public static: boolean = !!window.sankey?.publish
@@ -207,8 +209,6 @@ export class Class_DrawingArea {
 
   private _fit_margin: number = 10
   public _scale: number = default_scale
-  private starting_x_point = 0
-  private starting_y_point = 0
 
   // #1244 — Zoom cinématique. Anime la caméra (transform du zoom) sur les
   // recadrages EXPLICITES déclenchés par l'utilisateur (boutons fit H/V,
@@ -471,8 +471,6 @@ export class Class_DrawingArea {
   private _style_paint_source: Class_ProtoElement | null = null
 
   private _ghost_link: Class_LinkElement | null = null
-  private _ghost_link_source: Class_NodeElement | null = null
-  private _ghost_link_target: Class_NodeElement | null = null
 
 
 
@@ -1953,6 +1951,14 @@ export class Class_DrawingArea {
     _moveElement()
   }
 
+  /**
+   * #242 — Retire un élément de la liste des <g> tracés (utilisé quand le lien fantôme est
+   * détruit à la fin d'un geste de création).
+   */
+  public forgetGElementId(id: string) {
+    this._list_g_element_id = this._list_g_element_id.filter(_ => _ != id)
+  }
+
   public orderElementOnDA() {
     // Dédoublonnage défensif (même politique que moveOrderElementInDA : on garde la
     // 1ʳᵉ occurrence). L'application d'une mise en page (updateFrom) peut laisser des
@@ -2401,7 +2407,7 @@ export class Class_DrawingArea {
    * @return {*}
    * @memberof Class_DrawingArea
    */
-  private isMouseOverAnExistingNode(): boolean {
+  public isMouseOverAnExistingNode(): boolean {
     let node_id: string
     for (node_id in this.sankey.nodes_dict) {
       if (this.sankey.nodes_dict[node_id].isMouseOver())
@@ -2416,508 +2422,7 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   private setEventsListeners() {
-    if (this.d3_selection !== null) {
-      this.d3_selection?.on(
-        'click',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventSimpleLMBClick(event))
-    }
-    if (
-      this.editable &&
-      (this.d3_selection !== null)
-    ) {
-
-      this.d3_selection?.on(
-        'dblclick',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventDoubleLMBClick(event))
-      // Right mouse button maintained
-      this.d3_selection?.on(
-        'mousedown',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventMaintainedClick(event))
-      this.d3_selection?.on(
-        'mouseup',
-        (event: MouseEvent) =>
-          this.eventReleasedClick(event))
-      // Mouse cursor goes over this
-      this.d3_selection?.on(
-        'mouseover',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventMouseOver(event))
-      this.d3_selection?.on(
-        'mouseout',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventMouseOut(event))
-      // Mouse cursor move
-      this.d3_selection?.on(
-        'mousemove',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventMouseMove(event))
-      // Left mouse button click
-      this.d3_selection?.on(
-        'contextmenu',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventSimpleRMBClick(event))
-    }
-    // Zoom behavior(but can also drag drawing area in scroll zone)
-    this.d3_selection_zoom_area?.call(
-      this._zoomListener)
-      .on('dblclick.zoom', null) // deactivate dbl click zoom
-      .on('wheel.zoom', (event: WheelEvent) => {
-        event.preventDefault()
-        this.eventMouseScroll(event)
-      })
-  }
-
-  /**
-   * Deal with simple left Mouse Button (LMB) click on given element
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventSimpleLMBClick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    event.preventDefault()
-    // Fermer les tooltips via le système intégré
-    this.closeAllContextMenus()
-    const tooltipManager = TooltipEventManager.getInstance()
-    tooltipManager.closeTooltip()
-    if (!this.editable) this.purgeSelection()
-  }
-
-  /**
-   * Deal with double left Mouse Button (LMB) click on given element
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventDoubleLMBClick(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    //if (event.ctrlKey) return
-    //this.closeAllMenus()
-    this._selection_zone.reset()
-  }
-
-  /**
-   * Deal with simple right Mouse Button (RMB) click on given element
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventSimpleRMBClick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    event.preventDefault()
-    if (this.eventsEnabled()) {
-      // Fermer les tooltips via le système intégré
-      const tooltipManager = TooltipEventManager.getInstance()
-      tooltipManager.closeTooltip()
-      this.closeAllContextMenus()
-      this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-      this.is_drawing_area_contextualised = true
-      this.application_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
-      this.setSelectionMode()
-    }
-  }
-
-  /**
-   * Define maintained left mouse button click for drawing area
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventMaintainedClick(
-    event: MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    event.preventDefault()
-    // Clear tooltips presents
-    // Fermer les tooltips via le système intégré
-    // const tooltipManager = TooltipEventManager.getInstance();
-    // tooltipManager.closeTooltip();
-    // EDITION MODE =============================================================
-    // event.button==0 check if we use LMB
-    if (this.isInEditionMode() && event.button == 0 && this.eventsEnabled()) {
-      // No more elements must be in selection
-      this.purgeSelection()
-      // Close all menus
-      this.closeAllMenus()
-
-      if (this._ghost_link == null) {// Start creating  a node & a ghost_link + ghost node
-        // Get relative mouse position
-        const mouse_position = d3.pointer(event)
-        // Create default source node
-        const source = this.sankey.addNewDefaultNode()
-        source.draw()
-        // Position center of source node to pointer pos
-        source.setPosXY(
-          mouse_position[0] - (source.getShapeWidthToUse() / 2),
-          mouse_position[1] - (source.getShapeHeightToUse() / 2))
-
-        // Create default target node
-        const target = this.sankey.addNewDefaultNode()
-        target.setPosXY(mouse_position[0] + 2, mouse_position[1] + 2)
-        // Make target a 'ghost' node
-        target.setInvisible()
-        // Ref newly created link this var to be used in other mouse event
-        this._ghost_link = new Class_LinkElement(
-          'ghost_link',
-          source,
-          target,
-          this)
-        this.drawing_link = true
-        // Peuple source._output_links_starting_point[ghost_link.id] pour que le
-        // 1er rendu du ghost_link voie son starting_point (sinon drawElements
-        // est skip et aucun path n'est tracé pendant le drag initial).
-        source.applyPosition()
-        this._ghost_link_source = source
-        this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
-
-      } else {
-        // If by any means we have already a ghost link but we start clicking the DA
-        // (It can occur when we relase the mouse out of DA while we have a ghost link & restart clicking in DA
-
-        // Mouse released on source node
-        if (this._ghost_link.source.isMouseOver()) {
-          // If we release the mouse on the source of the link
-          // then delete the link & target to keep only the source
-          // So we only created 1 node
-          this.deleteNode(this._ghost_link.target as Class_NodeElement)
-          this.drawing_link = false
-          // Sélectionner le nœud fraîchement créé (clic simple sans glisser) :
-          // les branches de création de flux sélectionnent leurs éléments, celle-ci
-          // l'oubliait, laissant le nœud non sélectionné après le dessin.
-          this.purgeSelectionOfElement(false)
-          this.addElementToSelection(this._ghost_link.source)
-          this.application_data.menu_configuration.openConfigMenuElementsNodes()
-        }
-        else if (this.isMouseOverAnExistingNode() === true) {
-          let node_id: string = this._ghost_link?.source.id //in case the loop don't find the hovered node we take the source as default
-          for (node_id in this.sankey.nodes_dict) {
-            if (this.sankey.nodes_dict[node_id].isMouseOver())
-              break //stop the loop when we fint the node hovered
-          }
-          // Create new link
-          this.sankey.addNewLink(
-            this._ghost_link.source as Class_NodeElement,
-            this.sankey.nodes_dict[node_id]
-          )
-          const newLink1 = this.sankey.links_list[this.sankey.links_list.length - 1]
-          this.purgeSelectionOfElement(false)
-          this.addElementToSelection(newLink1)
-          this.addElementToSelection(newLink1.source)
-          this.addElementToSelection(newLink1.target)
-          this.application_data.menu_configuration.openConfigMenuElementsLinks()
-          // Delete old target node
-          this.deleteNode(this._ghost_link?.target as Class_NodeElement)
-          this.drawing_link = false
-        }
-        else {
-          // Make ghost target visible
-          this._ghost_link.target.setVisible()
-
-          // Create new link
-          this.sankey.addNewLink(
-            this._ghost_link.source as Class_NodeElement,
-            this._ghost_link.target as Class_NodeElement
-          )
-          const newLink2 = this.sankey.links_list[this.sankey.links_list.length - 1]
-          this.purgeSelectionOfElement(false)
-          this.addElementToSelection(newLink2)
-          this.addElementToSelection(newLink2.source)
-          this.addElementToSelection(newLink2.target)
-          this.application_data.menu_configuration.openConfigMenuElementsLinks()
-        }
-        // In case we get there still deref ghost link
-        this._ghost_link.delete()
-        this._ghost_link = null
-        // Reset systématique : la 3e branche (relâché dans le vide) oubliait de
-        // le faire, laissant drawing_link=true et faussant la visibilité des
-        // flux normaux + l'aléa du drag suivant. On le remet à false pour TOUTES
-        // les fins de création de flux.
-        this.drawing_link = false
-        this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
-        this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-      }
-
-    }
-    // SELECTION MODE ===========================================================
-    else if (this.isInSelectionMode()) {
-      if (event.button === 0) {
-        // Close context menus
-
-        // Get relative mouse position
-        const mouse_position = d3.pointer(event)
-        // Display the selection zone & set it starting position
-        this._selection_zone.setVisible()
-        this.starting_x_point = mouse_position[0]
-        this.starting_y_point = mouse_position[1]
-        this._selection_zone.draw()
-      }
-    }
-  }
-
-  /**
-   * Define released left mouse button click for drawing area
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventReleasedClick(
-    event: MouseEvent
-  ) {
-    // EDITION MODE =============================================================
-    if (this.isInEditionMode()) {
-      // When we are creating a link with LMB
-      if (this._ghost_link !== null) {
-        let ghost_link_json: Type_JSON | undefined
-        let ghost_src_json: Type_JSON
-        let ghost_trgt_json: Type_JSON
-        let wasGhostSrc = false
-        let wasGhostTrgt = false
-        // Mouse released on source node
-        if (this._ghost_link.source.isMouseOver()) {
-          // If we release the mouse on the source of the link
-          // then delete the link & target to keep only the source
-          // So we only created 1 node
-          this.deleteNode(this._ghost_link.target as Class_NodeElement)
-          this.drawing_link = false
-          // Sélectionner le nœud fraîchement créé (clic simple sans glisser) :
-          // les branches de création de flux sélectionnent leurs éléments, celle-ci
-          // l'oubliait, laissant le nœud non sélectionné après le dessin.
-          this.purgeSelectionOfElement(false)
-          this.addElementToSelection(this._ghost_link.source)
-          this.application_data.menu_configuration.openConfigMenuElementsNodes()
-        }
-        else if (this.isMouseOverAnExistingNode() === true) {
-          let node_id: string = this._ghost_link?.source.id //in case the loop don't find the hovered node we take the source as default
-          for (node_id in this.sankey.nodes_dict) {
-            if (this.sankey.nodes_dict[node_id].isMouseOver())
-              break //stop the loop when we fint the node hovered
-          }
-          // Create new link
-          const l = this.sankey.addNewLink(
-            this._ghost_link.source as Class_NodeElement,
-            this.sankey.nodes_dict[node_id]
-          )
-          ghost_link_json = {}
-          LinkElementPersistence.toJSON(l, ghost_link_json) //For undo/redo
-          this.purgeSelectionOfElement(false)
-          this.addElementToSelection(l)
-          this.addElementToSelection(l.source)
-          this.addElementToSelection(l.target)
-          this.application_data.menu_configuration.openConfigMenuElementsLinks()
-          // Delete old target node
-          this.deleteNode(this._ghost_link?.target as Class_NodeElement)
-          this.drawing_link = false
-        }
-        else {
-          // Make ghost target visible
-          this._ghost_link.target.setVisible()
-
-          // Create new link
-          const l = this.sankey.addNewLink(
-            this._ghost_link.source as Class_NodeElement,
-            this._ghost_link.target as Class_NodeElement
-          )
-          ghost_link_json = { id: l.id }
-          LinkElementPersistence.toJSON(l, ghost_link_json) //For undo/redo
-          this._ghost_link_target = l.target //For undo/redo
-
-          this.purgeSelectionOfElement(false)
-          this.addElementToSelection(l)
-          this.addElementToSelection(l.source)
-          this.addElementToSelection(l.target)
-          this.application_data.menu_configuration.openConfigMenuElementsLinks()
-        }
-
-        // Undo/Redo related instructions ================================
-
-        if (this._ghost_link_source) {
-          // For undo : Set wasGhostSrc to true to delete created the node source when we created a link with the mouse on the DA
-          wasGhostSrc = true
-          // For redo : save ghost source in json to recreate it correctly at redo
-          ghost_src_json = { id: this._ghost_link_source.id }
-          NodeElementPersistence.toJSON(this._ghost_link_source, ghost_src_json)
-        }
-
-        if (this._ghost_link_target) {
-          // For undo : Set wasGhostTrgt to true to delete created the node target when we created a link with the mouse on the DA
-          wasGhostTrgt = true
-          // For redo : save ghost target in json to recreate it correctly at redo
-          ghost_trgt_json = { id: this._ghost_link_target.id }
-          NodeElementPersistence.toJSON(this._ghost_link_target, ghost_trgt_json)
-
-        }
-
-        if (ghost_link_json || wasGhostSrc) {
-          this.saveUndo(() => {
-            if (ghost_link_json) {
-              // Delete ghost link,source and target it they were created for ghost link
-              const g_l = this.sankey.links_dict[ghost_link_json['id'] as string]
-              const t = g_l.target
-              const s = g_l.source
-              this.deleteLink(g_l)
-              if (wasGhostTrgt) {
-                this.deleteNode(t)
-              }
-              if (wasGhostSrc) {
-                this.deleteNode(s)
-              }
-            } else if (wasGhostSrc) {
-              // If we are here it mean we relased the button on the ghost link source so if deleted GL & target but kept source
-              const g_s = this.sankey.nodes_dict[ghost_src_json['id'] as string]
-              this.deleteNode(g_s)
-            }
-          })
-
-          this.saveRedo(() => {
-            // Recreate delete element in undo
-            if (ghost_trgt_json) {
-              const new_n = this.sankey.addNewNode(ghost_trgt_json['id'] as string, ghost_trgt_json['name'] as string)
-              NodeElementPersistence.fromJSON(+this.application_data.version, new_n, ghost_trgt_json)
-              new_n.draw()
-            }
-            if (ghost_src_json) {
-              const new_n = this.sankey.addNewNode(ghost_src_json['id'] as string, ghost_src_json['name'] as string)
-              NodeElementPersistence.fromJSON(+this.application_data.version, new_n, ghost_src_json)
-              new_n.draw()
-            }
-            if (ghost_link_json) {
-              const src = this.sankey.nodes_dict[ghost_link_json['idSource'] as string]
-              const trgt = this.sankey.nodes_dict[ghost_link_json['idTarget'] as string]
-              const new_l = this.sankey.addNewLink(src, trgt)
-              LinkElementPersistence.fromJSON(+this.application_data.version, new_l, ghost_link_json)
-              new_l.draw()
-            }
-          })
-        }
-
-
-        // Deref ghost links & related attr ================================
-
-        // In case we get there still deref ghost link
-        this._ghost_link.delete()
-        this._list_g_element_id = this._list_g_element_id.filter(id => id != this._ghost_link!.id)
-        this._ghost_link = null
-        this._ghost_link_source = null
-        this._ghost_link_target = null
-        // Reset systématique (idem eventClick) : la 3e branche (relâché dans le vide) oubliait
-        // de le faire, laissant drawing_link=true. Or _is_visible_ignoring_container_modes
-        // court-circuite tous les filtres tant qu'il est vrai : les flux désagrégés restaient
-        // visibles et s'ajoutaient à la bande du nœud (hauteur ×N, labels décalés d'autant).
-        this.drawing_link = false
-        this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
-        this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-        if (this.sankey.default_style.shape_position_type == 'parametric') {
-          this.application_data.sendWaitingToast(
-            () => {
-              this.nodePositioning.inferPositionUFromX()
-              this.nodePositioning.computeParametrization(false)
-            })
-        }
-      }
-    } else if (this.isInSelectionMode() && event.button == 0) {
-      if ((!event.shiftKey) && (!event.ctrlKey) && (!event.metaKey)) {
-        const just_closed = this.closeAllContextMenus()
-        if (!just_closed) this.purgeSelection()
-      }
-      // Select element inside the selection zone & reset it (hide the zone)
-      const nb_type_el_sel = this._selection_zone.selectElementsInside()
-      if (event.shiftKey) {
-        // If 2 types of element were selected, open config for nodes & flow
-        if (nb_type_el_sel == 2) {
-          this.application_data.menu_configuration.openConfigMenuElementsNodesLinks()
-        } else if (nb_type_el_sel == 1) {
-          // else if 1 type of element was selected, open config for nodes
-          // (can't select flow without selecting nodes so if we have 1 type of element selected it's the nodes)
-          this.application_data.menu_configuration.openConfigMenuElementsNodes()
-        }
-      }
-      this._selection_zone.reset()
-      this.orderElementOnDA()
-    }
-  }
-
-  /**
-   * Define event when mouse moves over drawing area
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventMouseOver(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    // TODO Definir
-  }
-
-  /**
-   * Define event when mouse moves out of drawing area
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventMouseOut(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    // TODO definir
-  }
-
-  /**
-   * Define event when mouse moves in drawing area
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventMouseMove(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    // Save pointer pos for external access
-    if (!this.is_drawing_area_contextualised)
-      this.pointer_pos = [event.pageX, event.pageY]
-    // EDITION MODE =============================================================
-    if (this.isInEditionMode()) {
-      // When we are creating a link with LMB
-      if (this._ghost_link !== null) {
-        // Get relative mouse position
-        const mouse_position = d3.pointer(event)
-        // Move ghost target
-        const target = this._ghost_link.target
-        target.setPosXY(
-          mouse_position[0] - (target.getShapeWidthToUse() / 2),
-          mouse_position[1] - (target.getShapeHeightToUse() / 2))
-
-        //this.checkAndUpdateAreaSize()
-      }
-    } else if (this.isInSelectionMode()) {
-      if (this._selection_zone.is_visible) {
-        // Get relative mouse position
-        const mouse_position = d3.pointer(event)
-        // Variable that can be modifier if we move the selection zone above or at the left of it starting point
-        let new_x = this.starting_x_point,
-          new_y = this.starting_y_point
-
-        if (mouse_position[0] > this._selection_zone.position_x) {
-          this.selection_zone.width = mouse_position[0] - this._selection_zone.position_x
-        } else {
-          this.selection_zone.width = Math.abs(mouse_position[0] - this.starting_x_point)
-          new_x = mouse_position[0]
-        }
-
-        if (mouse_position[1] > this.starting_y_point) {
-          this.selection_zone.height = mouse_position[1] - this.starting_y_point
-        } else {
-          this.selection_zone.height = Math.abs(this.starting_y_point - mouse_position[1])
-          new_y = mouse_position[1]
-        }
-
-        // Update shape on drawing area
-        this.selection_zone.setPosXY(new_x, new_y)
-        this._selection_zone.setSize()
-      }
-    }
+    this._interactions.setEventsListeners(this)
   }
 
   // SCROLLBARS ==========================================================================
@@ -2928,50 +2433,6 @@ export class Class_DrawingArea {
    */
   private _updateScrollbars() {
     this._viewport_chrome.updateScrollbars(this)
-  }
-
-  /**
-   * Define event when mouse scrolls in drawing area
-   * Note : Under the hood, this calls eventZoom method throught this._zoomListener
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventMouseScroll(
-    event: WheelEvent
-  ) {
-    if (
-      this.d3_selection_zoom_area
-    ) {
-      // Zoom in / out
-      const isMac = navigator.platform.toUpperCase().includes('MAC')
-      if (isMac ? event.metaKey : event.ctrlKey) {
-        // Avoid CTRL + Scroll (or CMD + Scroll on Mac) default behavior in Browser
-        event.preventDefault()
-        // Option publish lock_zoom : zoom molette (Ctrl/Cmd + scroll, y compris pinch trackpad)
-        // désactivé. On garde le preventDefault (pas de zoom navigateur) mais on ne change pas
-        // l'échelle du diagramme. Le pan (scroll simple / shift+scroll) reste actif.
-        if (this.application_data?.publish_options?.lock_zoom) return
-        // Guard: ignore if deltaY is 0 (can happen with touchpad or wheel tilt)
-        if (event.deltaY === 0) return
-        // Smooth zoom factor proportional to deltaY magnitude
-        const scale = Math.pow(2, -event.deltaY / 300)
-        // Apply scaling
-        this._zoomListener.scaleBy(
-          this.d3_selection_zoom_area,
-          scale,
-          [event.x, event.y]
-        )
-      }
-      // Horizontal displacement (Shift+scroll for mouse, or trackpad horizontal swipe via deltaX)
-      else if (event.shiftKey) {
-        this._zoomListener.translateBy(this.d3_selection_zoom_area, -event.deltaY, 0)
-      }
-      // Combined / trackpad two-finger pan: use both deltaX and deltaY
-      else {
-        this._zoomListener.translateBy(this.d3_selection_zoom_area, -event.deltaX, -event.deltaY)
-      }
-    }
   }
 
   /**
@@ -3055,7 +2516,7 @@ export class Class_DrawingArea {
   // Mode
 
   public isInSelectionMode() { return this._mode === 'selection' }
-  protected setSelectionMode() {
+  public setSelectionMode() {
     // forcing are there are some issues sometimes it is not unset
     // this.sankey.links_list.forEach(l => l.unsetMouseOver())
     // this.sankey.nodes_list.forEach(n => n.unsetMouseOver())
