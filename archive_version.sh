@@ -34,6 +34,26 @@ ENV_DIR="${HOME_DIR}/${ENV}_opensankey"
 ENV_APP="${ENV_DIR}/sankeyapplication"
 ENV_VENV_NAME="${ENV}_opensankey"
 
+# --- Garde-fou : incompatible avec le layout par slots (#255) ---------------
+# Après migration vers les slots, `${ENV_APP}/env` est un SYMLINK vers
+# `${ENV_DIR}/shared/env` : les `sed -i` de ce script suivraient le lien et
+# corrompraient l'environnement PARTAGÉ (celui du site en production). Par
+# ailleurs `cp -a "$ENV_DIR"` embarquerait tous les slots (des gigaoctets).
+# On refuse donc de tourner, plutôt que de casser silencieusement.
+if [[ -d "${ENV_DIR}/releases" ]] || [[ -L "${ENV_DIR}/current" ]]; then
+  cat >&2 <<EOF
+archive_version.sh n'est pas encore compatible avec le déploiement par slots (#255).
+
+L'environnement '${ENV}' a été migré (${ENV_DIR}/releases présent). Exécuter ce
+script maintenant corromprait ${ENV_DIR}/shared/env (les sed suivraient les
+symlinks) et copierait tous les slots.
+
+Son adaptation est le suivi immédiat de #255. En attendant, ne pas archiver
+depuis un environnement migré.
+EOF
+  exit 1
+fi
+
 case "$ENV" in
   prod) HOST="open-sankey.fr" ;;
   dev)  HOST="dev.open-sankey.fr" ;;

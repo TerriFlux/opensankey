@@ -241,40 +241,19 @@ dev_opensankey:
   dependencies:
     - build
   script:
-    # DBG
-    - echo $REPO_FOLDER
-    # Clean and pull repo
-    - git config --global --add safe.directory $REPO_FOLDER
-    - cd $REPO_FOLDER
-    # Shared-deploy umask : artefacts group-writable pour que gitlab-runner et
-    # l'utilisateur ubuntu (update_opensankey.sh) puissent s'ecraser mutuellement.
+    # #255 — Le deploiement ne touche PLUS le dossier servi. Tout (code, venv,
+    # build, migrations) est construit dans un slot NEUF, hors du chemin servi ;
+    # on ne bascule le symlink `current` qu'une fois le slot verifie. Si le build
+    # casse, le site en ligne n'a pas bouge ; si le /health post-bascule echoue,
+    # deploy_release.sh revient automatiquement sur le slot precedent.
+    #
+    # La source du slot est le checkout du runner ($CI_PROJECT_DIR), qui a deja
+    # les submodules (GIT_SUBMODULE_STRATEGY: recursive) — d'ou la disparition de
+    # toute la danse git reset/clean/pull/submodule dans le dossier de prod.
+    #
+    # Prerequis (une seule fois par env) : bash scripts/bootstrap_release_layout.sh dev
     - umask 002
-    - rm -f .git/index.lock || true
-    - git reset --hard
-    - git clean -fdx -e env -e cache -e server/db.sqlite -e server/db.sqlite.bk -e server/__pycache__ -e doc/__pycache__ -e __pycache__
-    - git fetch
-    - git pull
-    - git config --global --add safe.directory $REPO_FOLDER/submodules/MFAProblem
-    - git config --global --add safe.directory $REPO_FOLDER/submodules/MFAProblem/submodules/eigen
-    - git config --global --add safe.directory $REPO_FOLDER/packages/opensankey/submodules/SankeyExcelParser
-    - git config --global --add safe.directory $REPO_FOLDER/SankeyData
-    - git submodule init
-    # sync : reprend les URLs du .gitmodules dans .git/config (sinon un
-    # changement d'URL — ex. SEP passe en ssh — n'est jamais applique sur le VPS)
-    - git submodule sync --recursive
-    - git submodule foreach --recursive git reset --hard
-    - git submodule foreach --recursive git clean -fdx
-    - git submodule update --recursive
-    # Build client & server
-    - source $ROOT_FOLDER/dev_opensankey/bin/activate
-    - export EIGEN_INCLUDE=$CI_PROJECT_DIR/submodules/MFAProblem/submodules/eigen
-    - bash scripts/deploy_SankeyApp.sh
-    # Update db
-    - cp server/db.sqlite server/db.sqlite.bk/db_`date --iso-8601='seconds'`.sqlite
-    - find ./server/db.sqlite.bk -mtime +30 -type f -delete
-    - alembic upgrade head
-    # Start app
-    - bash scripts/restart_site.sh $ENV
+    - bash scripts/deploy_release.sh $ENV --from $CI_PROJECT_DIR
 
 test_opensankey:
   stage: deploy
@@ -302,30 +281,10 @@ test_opensankey:
   dependencies:
     - build
   script:
-    # DBG
-    - echo $REPO_FOLDER
-    # Clean and pull repo
-    - cd $REPO_FOLDER
-    - git reset --hard
-    - git clean -fdx -e env -e cache -e server/db.sqlite -e server/db.sqlite.bk -e server/__pycache__ -e doc/__pycache__ -e __pycache__
-    - git fetch
-    - git pull
-    - git submodule init
-    # sync : reprend les URLs du .gitmodules dans .git/config (sinon un
-    # changement d'URL — ex. SEP passe en ssh — n'est jamais applique sur le VPS)
-    - git submodule sync --recursive
-    - git submodule foreach --recursive git reset --hard
-    - git submodule foreach --recursive git clean -fdx
-    - git submodule update --recursive
-    # Build client & server
-    - source $ROOT_FOLDER/test_opensankey/bin/activate
-    - bash scripts/deploy_SankeyApp.sh
-    # Update db
-    - cp server/db.sqlite server/db.sqlite.bk/db_`date --iso-8601='seconds'`.sqlite
-    - find ./server/db.sqlite.bk -mtime +180 -type f -delete
-    - alembic upgrade head
-    # Start app
-    - bash scripts/restart_site.sh $ENV
+    # #255 — deploiement par slot + bascule atomique (cf. dev_opensankey).
+    # Prerequis (une seule fois) : bash scripts/bootstrap_release_layout.sh test
+    - umask 002
+    - bash scripts/deploy_release.sh $ENV --from $CI_PROJECT_DIR --db-keep-days 180
 
 prod_opensankey:
   stage: deploy
@@ -348,37 +307,11 @@ prod_opensankey:
   dependencies:
     - build
   script:
-    # DBG
-    - echo $REPO_FOLDER
-    # Clean and pull repo
-    - git config --global --add safe.directory $REPO_FOLDER
-    - cd $REPO_FOLDER
-    - git reset --hard
-    - git clean -fdx -e env -e cache -e server/db.sqlite -e server/db.sqlite.bk -e server/__pycache__ -e doc/__pycache__ -e __pycache__
-    - git fetch
-    - git pull
-    # Shared-deploy umask : artefacts group-writable (cf. dev_opensankey).
+    # #255 — deploiement par slot + bascule atomique (cf. dev_opensankey).
+    # Rollback en secondes : bash scripts/rollback_release.sh prod
+    # Prerequis (une seule fois) : bash scripts/bootstrap_release_layout.sh prod
     - umask 002
-    - git config --global --add safe.directory $REPO_FOLDER/submodules/MFAProblem
-    - git config --global --add safe.directory $REPO_FOLDER/submodules/MFAProblem/submodules/eigen
-    - git config --global --add safe.directory $REPO_FOLDER/packages/opensankey/submodules/SankeyExcelParser
-    - git config --global --add safe.directory $REPO_FOLDER/SankeyData
-    - git submodule init
-    # sync : reprend les URLs du .gitmodules dans .git/config (sinon un
-    # changement d'URL — ex. SEP passe en ssh — n'est jamais applique sur le VPS)
-    - git submodule sync --recursive
-    - git submodule foreach --recursive git reset --hard
-    - git submodule foreach --recursive git clean -fdx
-    - git submodule update --recursive
-    # Build client & server
-    - source $ROOT_FOLDER/prod_opensankey/bin/activate
-    - bash scripts/deploy_SankeyApp.sh
-    # Update db
-    - cp server/db.sqlite server/db.sqlite.bk/db_`date --iso-8601='seconds'`.sqlite
-    - find ./server/db.sqlite.bk -mtime +365 -type f -delete
-    - alembic upgrade head
-    # Start app
-    - bash scripts/restart_site.sh $ENV
+    - bash scripts/deploy_release.sh $ENV --from $CI_PROJECT_DIR --db-keep-days 365
 
 # =====================================================================
 # build:examples — Builde la lib SA (npm run dist) + les examples React
