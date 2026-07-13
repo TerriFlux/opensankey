@@ -20,6 +20,9 @@ from sqlalchemy import func
 
 from logincomponent.server.models import db, Metrics, User
 
+# Journal des actions métier — l'usage réel, par opposition au trafic (cf. metrics).
+from .usage_events import UsageEvent
+
 # Garde d'accès commune aux surfaces d'admin (cf. #256).
 from .admin_auth import dev_required
 
@@ -177,8 +180,53 @@ def _trials_summary():
     }
 
 
+def _usage_summary():
+    """Agrégats du journal d'actions métier (`usage_events`).
+
+    C'est ici que se lit l'usage réel : `metrics` compte des chargements de page
+    (donc, historiquement, surtout des robots), tandis qu'une ligne d'usage_events
+    correspond à une action qu'aucun crawler n'effectue.
+
+    « Acteurs actifs » = hash d'IP distincts ayant fait AU MOINS UNE action sur la
+    fenêtre : c'est la mesure la plus proche d'un « utilisateur qui se sert de
+    l'outil » que permette une donnée anonyme.
+    """
+    now = int(time.time())
+    windows = {"7d": 7 * 86400, "30d": 30 * 86400}
+
+    summary = {"total": 0, "windows": {}}
+    summary["total"] = int(
+        db.session.query(func.count(UsageEvent.id)).scalar() or 0
+    )
+
+    for label, span in windows.items():
+        since = now - span
+        # Volume par type d'action (import, mfa_solve, publish, ...).
+        per_event = dict(
+            db.session.query(UsageEvent.event, func.count(UsageEvent.id))
+            .filter(UsageEvent.ts >= since)
+            .group_by(UsageEvent.event)
+            .all()
+        )
+        actors = int(
+            db.session.query(func.count(func.distinct(UsageEvent.visitor_hash)))
+            .filter(UsageEvent.ts >= since)
+            .scalar() or 0
+        )
+        summary["windows"][label] = {
+            "actors": actors,
+            "events": int(sum(per_event.values())),
+            "per_event": {k: int(v) for k, v in sorted(per_event.items())},
+        }
+    return summary
+
+
 def _summary():
-    return {"metrics": _metrics_summary(), "trials": _trials_summary()}
+    return {
+        "metrics": _metrics_summary(),
+        "usage": _usage_summary(),
+        "trials": _trials_summary(),
+    }
 
 
 @admin_metrics.route("/api/admin/metrics")
@@ -196,5 +244,6 @@ def admin_metrics_page():
     return render_template(
         "admin_metrics.html",
         metrics=data["metrics"],
+        usage=data["usage"],
         trials=data["trials"],
     )

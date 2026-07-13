@@ -160,6 +160,14 @@ def create_app():
     from opensankey.server.views import opensankey
     app.register_blueprint(opensankey, url_prefix="/opensankey")
 
+    # Journal des actions métier (import, résolution MFA, publication...) : mesure
+    # l'usage réel, là où `metrics` ne mesure que le trafic. Branché APRÈS le
+    # blueprint OpenSankey car il observe aussi ses routes de traitement
+    # (/opensankey/convert/launch) — sans que le paquet open-source en dépende.
+    from .usage_events import install_usage_tracking
+
+    install_usage_tracking(app)
+
     # Auth SaaS sur les endpoints de TRAITEMENT d'OpenSankey (conversion / import).
     # OpenSankey (open-source) reste inchangé : la politique d'auth vit ici, dans la
     # couche SaaS, via un before_request. On protège par liste explicite de préfixes

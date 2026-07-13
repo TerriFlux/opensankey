@@ -8,6 +8,7 @@
 import os
 import time
 import hashlib
+import hmac
 import secrets
 
 # System
@@ -1018,6 +1019,31 @@ def user_excluded_from_metrics(user) -> bool:
     )
 
 
+def hash_visitor_ip(ip: str) -> str:
+    """Pseudonymise une IP de visiteur (source unique du hachage).
+
+    Un SHA-256 *nu* d'adresse IP n'anonymise rien : l'espace IPv4 ne compte que
+    4 milliards de valeurs, qu'on énumère en quelques minutes pour retrouver
+    l'IP d'origine. C'était le cas jusqu'ici, et le RGPD s'applique donc à ces
+    hashs comme à des données personnelles.
+
+    On passe à un HMAC clé par un secret serveur : sans la clé, l'attaque par
+    force brute n'est plus possible. Changer la clé rend d'un coup tous les
+    hashs existants incomparables (rotation = anonymisation de l'historique).
+
+    Clé : METRICS_SALT si défini, à défaut FLASK_SECRET_KEY (obligatoire en
+    déploiement, cf. S1). En dernier recours seulement, on retombe sur le
+    SHA-256 nu — pour qu'un environnement de dev sans secret ne casse pas.
+    """
+    secret = (
+        os.environ.get("METRICS_SALT", "").strip()
+        or os.environ.get("FLASK_SECRET_KEY", "").strip()
+    )
+    if not secret:
+        return hashlib.sha256(ip.encode()).hexdigest()
+    return hmac.new(secret.encode(), ip.encode(), hashlib.sha256).hexdigest()
+
+
 def update_metrics(ip: str):
     """
     Update metrics table
@@ -1030,7 +1056,7 @@ def update_metrics(ip: str):
     Optional parameters
     -------------------
     """
-    id = hashlib.sha256(ip.encode()).hexdigest()
+    id = hash_visitor_ip(ip)
     metric = Metrics.query.filter_by(id=id).first()
     if metric is None:
         metric = Metrics(id=id)

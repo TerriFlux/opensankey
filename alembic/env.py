@@ -17,6 +17,13 @@ if config.config_file_name is not None:
 # add your model's MetaData object here
 # for 'autogenerate' support
 from logincomponent.server import models
+
+# Les modèles propres à SankeyApp (hors LoginComponent) partagent la même
+# `db` — donc la même MetaData. Il faut néanmoins importer le module pour que
+# ses tables soient déclarées avant l'autogenerate, sinon Alembic ne les voit
+# pas et proposerait de les supprimer.
+from server import usage_events  # noqa: E402,F401
+
 target_metadata = models.User.metadata
 
 # other values from the config, defined by the needs of env.py,

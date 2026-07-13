@@ -70,6 +70,53 @@
     la page d'accueil atteinte <em>avant</em> connexion est comptée (visiteur inconnu).
   </p>
 
+  <h2>Usage réel (actions métier)</h2>
+  <p class="hint">
+    Une action = un import, une résolution MFA, une publication, une extraction vision.
+    Aucun robot n'en déclenche : contrairement à la fréquentation ci-dessus, ces chiffres
+    portent sur des gens qui <em>se servent</em> de l'outil. Les actions purement front
+    (export PNG/PDF) ne passent pas par le serveur et ne sont pas comptées.
+  </p>
+  <div class="cards">
+    <div class="card">
+      <div class="value">{{ usage.windows['7d'].actors }}</div>
+      <div class="label">acteurs actifs 7 jours (IP hashées)</div>
+    </div>
+    <div class="card">
+      <div class="value">{{ usage.windows['7d'].events }}</div>
+      <div class="label">actions sur 7 jours</div>
+    </div>
+    <div class="card">
+      <div class="value">{{ usage.windows['30d'].actors }}</div>
+      <div class="label">acteurs actifs 30 jours</div>
+    </div>
+    <div class="card">
+      <div class="value">{{ usage.windows['30d'].events }}</div>
+      <div class="label">actions sur 30 jours</div>
+    </div>
+  </div>
+  {% if usage.total %}
+    <table>
+      <thead>
+        <tr><th>Action</th><th>7 jours</th><th>30 jours</th></tr>
+      </thead>
+      <tbody>
+        {% for event in usage.windows['30d'].per_event %}
+          <tr>
+            <td><code>{{ event }}</code></td>
+            <td>{{ usage.windows['7d'].per_event.get(event, 0) }}</td>
+            <td>{{ usage.windows['30d'].per_event[event] }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="hint">
+      Aucune action enregistrée pour l'instant — le journal démarre au déploiement de
+      cette version (il n'y a pas d'historique à rattraper).
+    </p>
+  {% endif %}
+
   <h2>Essais gratuits</h2>
   <div class="cards">
     <div class="card">
