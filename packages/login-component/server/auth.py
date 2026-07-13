@@ -30,6 +30,7 @@ from .mailing import is_email_valid
 from .models import User
 from .models import login_required
 from .models import db
+from .models import touch_last_seen
 from .models import hash_password
 from .models import password_needs_rehash
 from .models import validate_password
@@ -238,6 +239,9 @@ def login_post():
     # if the above check passes,
     # then we know the user has the right credentials
     login_user(user, remember=remember)
+
+    # #257 — Trace d'activité : ce compte vient d'être utilisé.
+    touch_last_seen(user)
 
     # Upgrade legacy password hashes transparently on successful login
     if password_needs_rehash(user.password):
