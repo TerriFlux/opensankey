@@ -1,5 +1,4 @@
 #  coding: utf-8
-import flaskfilemanager
 import os
 
 # SankeyData (tutoriels/templates servis) est le submodule a la racine de ce
@@ -35,9 +34,14 @@ if not _flask_secret_key:
     )
 app.secret_key = _flask_secret_key
 app.config["SESSION_TYPE"] = "filesystem"
-mfa_data_dir = os.environ.get("MFAData")
-app.config["FLASKFILEMANAGER_FILE_PATH"] = os.path.join(mfa_data_dir)
-flaskfilemanager.init(app)
+
+# Gestionnaire de fichiers /fm (flaskfilemanager) RETIRÉ (#257) : il n'était plus
+# utilisé par le front et exposait toute l'arborescence MFAData (données clients)
+# SANS authentification — listage, téléchargement (/fm/userfiles/<chemin>) ET
+# suppression étaient accessibles en anonyme (la lib ne protège rien par défaut,
+# et sa route userfiles n'est de toute façon jamais gardée). On supprime la
+# surface d'attaque plutôt que de la garder. MFAData reste servi/écrit par le
+# reste de l'app (parser, solveur) via la variable d'environnement MFAData.
 
 if __name__ == "__main__":
     app.run(debug=True)
