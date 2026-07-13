@@ -16,7 +16,12 @@ import { sankeyRootSchema } from './sankeyFormatSchema'
 // version pointée pour NE PAS rejouer les migrations legacy à seuil. C'est ce qui
 // corrige l'import Excel (SEP écrivait "1.0" → migrations < 1.1.4 appliquées à tort).
 // Doit rester alignée avec JSON_FORMAT_VERSION de SEP (io_base.py).
-export const CURRENT_FORMAT_VERSION = 1
+// Historique (cf. FORMAT.md) :
+//   1 — introduction de format_version (#22)
+//   2 — vues persistées en DELTA vs le maître (#254) : une entrée de `views`
+//       porte `__patch` au lieu du snapshot intégral. Incompatible en LECTURE
+//       pour une app antérieure (elle prendrait le patch pour une vue).
+export const CURRENT_FORMAT_VERSION = 2
 
 /**
  * Version « effective » servant à piloter les migrations au chargement.

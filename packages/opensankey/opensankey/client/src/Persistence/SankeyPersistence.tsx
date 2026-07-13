@@ -2338,6 +2338,19 @@ export class DrawingAreaPersistence {
     // version pointée en la traitant comme courante ⇒ aucune migration legacy à
     // seuil ne se rejoue. Les fichiers legacy (sans format_version) sont inchangés.
     const file_format_version = getNumberOrUndefinedFromJSON(json_object, 'format_version')
+    // #254 — Garde-fou vers l'AVANT : un fichier annonçant un format plus récent
+    // que celui que cette app sait lire contient potentiellement des structures
+    // inconnues (ex. vues en delta introduites en format 2). On ne peut pas le
+    // lire correctement — on avertit explicitement plutôt que de le mal lire en
+    // silence.
+    if (file_format_version !== undefined && file_format_version > CURRENT_FORMAT_VERSION) {
+      console.warn(
+        `[format] Ce fichier est au format ${file_format_version}, or cette version de ` +
+        `l'application ne sait lire que jusqu'au format ${CURRENT_FORMAT_VERSION}. ` +
+        'Certains éléments (par exemple les vues) peuvent ne pas se charger correctement. ' +
+        'Mettez à jour l\'application.'
+      )
+    }
     const version = effectiveLoadVersion(
       getStringOrUndefinedFromJSON(json_object, 'version'),
       file_format_version,
