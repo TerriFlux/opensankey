@@ -13,9 +13,10 @@ Ce n'est plus tout à fait le même outil :
     stocks entrent dans le bilan matière. C'est un outil d'analyse de flux, plus
     seulement un outil de figure.
 
-  - Il ne vous enferme pas. Vos données vivent dans Excel, dans les deux sens.
-    Vos anciens travaux SankeyMATIC ou STAN s'ouvrent directement. Ce que vous
-    faites ici, vous pouvez le ressortir.
+  - Il ne vous enferme pas. Vos données restent dans Excel, dans les deux sens :
+    vous importez, vous corrigez dans le tableur, vous réexportez. Rien de ce que
+    vous construisez ici n'est prisonnier de l'outil. (Les fichiers SankeyMATIC
+    et STAN s'ouvrent aussi, au passage.)
 
   - Il produit un livrable, pas juste une image. Un diagramme, ou tout un
     portfolio, se publie comme un site web autonome et consultable — à envoyer à

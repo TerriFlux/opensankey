@@ -11,9 +11,9 @@ It is not quite the same tool anymore:
     works out the rest by closing the balances. Stocks are part of the material
     balance. It is a flow analysis tool now, not just a figure tool.
 
-  - It does not lock you in. Your data lives in Excel, both ways. Your old
-    SankeyMATIC or STAN work opens directly. What you build here, you can take
-    back out.
+  - It does not lock you in. Your data stays in Excel, both ways: import, fix
+    things in the spreadsheet, export again. Nothing you build here is trapped
+    inside the tool. (SankeyMATIC and STAN files open too, by the way.)
 
   - It produces a deliverable, not just a picture. A diagram, or a whole
     portfolio, publishes as a standalone browsable website — to send to a client,
