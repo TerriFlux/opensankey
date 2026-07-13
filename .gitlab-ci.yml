@@ -255,6 +255,30 @@ dev_opensankey:
     - umask 002
     - bash scripts/deploy_release.sh $ENV --from $CI_PROJECT_DIR
 
+# --- one-shot jetable (branche ci-bootstrap-dev) : lance le prerequis #255
+# bootstrap_release_layout.sh dev, jamais execute sur le serveur dev -> le job
+# dev_opensankey echoue ("Layout par slots absent"). Manuel, limite a cette
+# branche (ne pollue pas main). BOOTSTRAP_ARGS=--dry-run par defaut ; relancer
+# avec BOOTSTRAP_ARGS vide (ou --with-nginx) pour l'application reelle.
+bootstrap_dev:
+  stage: deploy
+  variables:
+    GIT_SUBMODULE_STRATEGY: none
+    ROOT_FOLDER: /home/ubuntu/dev_opensankey
+    ENV: dev
+    BOOTSTRAP_ARGS: "--dry-run"
+  tags: [py312]
+  environment:
+    name: dev
+  needs: []
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "ci-bootstrap-dev"
+      when: manual
+      allow_failure: true
+  script:
+    - umask 002
+    - bash scripts/bootstrap_release_layout.sh dev $BOOTSTRAP_ARGS
+
 test_opensankey:
   stage: deploy
   variables:
