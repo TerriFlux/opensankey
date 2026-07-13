@@ -242,7 +242,7 @@ HOME = """
 <div class=card>
   <h2>Comptes {% if q %}(filtre : « {{ q }} »){% endif %} — {{ users|length }} affichés</h2>
   <table><tr><th>#</th><th>Email</th><th>Nom</th><th>Licences valides</th>
-      <th>Essai</th><th>Dev</th><th>Hors stats</th></tr>
+      <th>Essai</th><th>Dev</th><th>Hors stats</th><th>Vu le</th></tr>
   {% for u in users %}
     <tr>
       <td>{{ u.id }}</td>
@@ -252,6 +252,7 @@ HOME = """
       <td>{% if u._trial %}<span class=badge>{{ u._trial }}</span>{% else %}—{% endif %}</td>
       <td>{{ 'oui' if u.is_developer else '' }}</td>
       <td>{% if u._excluded %}✓{% endif %}</td>
+      <td>{% if u.last_seen_at %}{{ u.last_seen_at[:10] }}{% else %}<span class=hint>—</span>{% endif %}</td>
     </tr>
   {% endfor %}
   </table>

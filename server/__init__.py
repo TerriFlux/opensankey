@@ -198,6 +198,22 @@ def create_app():
                     return
             if not current_user.is_authenticated:
                 return jsonify({"error": "authentication required"}), 401
+
+    # #257 — Trace d'activité des comptes, prérequis à toute purge des comptes
+    # inactifs : on ne supprimera jamais un compte sur la foi d'une information
+    # qu'on n'a pas. Tracer au seul login ne suffirait PAS : un utilisateur en
+    # session « remember me », actif tous les jours mais qui ne se reconnecte
+    # jamais, paraîtrait inactif. On note donc l'activité sur toute requête
+    # authentifiée — mais `touch_last_seen` n'écrit qu'UNE FOIS PAR JOUR et par
+    # utilisateur (comparaison sur la date), donc pas d'écriture DB par requête.
+    @app.before_request
+    def _track_user_activity():
+        from flask_login import current_user
+        from logincomponent.server.models import touch_last_seen
+
+        if current_user.is_authenticated:
+            touch_last_seen(current_user)
+
     # from opensankey.doc import doc as opensankey_doc
     # app.register_blueprint(opensankey_doc, url_prefix='/doc')
 

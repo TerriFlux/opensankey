@@ -234,6 +234,12 @@ class User(UserMixin, db.Model):
     exclude_from_metrics = db.Column(db.Boolean)
     # Customer infos
     creation = db.Column(db.String(128))
+    # Dernière activité observée (date ISO). Alimentée au login ET sur toute
+    # requête authentifiée (cf. touch_last_seen) : sans ce second canal, un
+    # utilisateur en session « remember me » — actif tous les jours mais qui ne
+    # se reconnecte jamais — paraîtrait inactif et serait purgé à tort (#257).
+    # NULL = compte antérieur à l'instrumentation, jamais revu depuis.
+    last_seen_at = db.Column(db.String(128))
     stripe_id = db.Column(db.String(1024), unique=True)
     # Security token
     secret_token = db.Column(db.String(64))
@@ -967,6 +973,31 @@ def license_required(f):
 
 # ---------------------------------------------------------------
 # Functions
+
+
+def touch_last_seen(user) -> bool:
+    """Note que ce compte a été vu aujourd'hui (#257). Renvoie True si écrit.
+
+    Appelé au login ET sur toute requête authentifiée. Écriture au plus UNE FOIS
+    PAR JOUR et par utilisateur : on ne compare que la partie DATE, donc une
+    session active ne provoque pas une écriture DB à chaque requête.
+
+    Ne lève jamais : une trace d'activité ne doit pas pouvoir casser une requête
+    utilisateur (ni un login). En cas d'échec, on perd au pire un jour de trace.
+    """
+    today = datetime.now().date().isoformat()
+    try:
+        current = getattr(user, "last_seen_at", None)
+        # `creation` et `last_seen_at` sont des datetime ISO : les 10 premiers
+        # caractères en donnent la date (YYYY-MM-DD).
+        if current and str(current)[:10] == today:
+            return False
+        user.last_seen_at = datetime.now().isoformat()
+        db.session.commit()
+        return True
+    except Exception:
+        db.session.rollback()
+        return False
 
 
 def user_excluded_from_metrics(user) -> bool:
