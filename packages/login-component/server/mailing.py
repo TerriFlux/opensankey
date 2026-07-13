@@ -131,6 +131,23 @@ def _normalize_lang(language):
     return language if language in ("en", "fr") else "fr"
 
 
+def server_root_url():
+    """
+    Racine HTTP du serveur, pour les liens qui visent une route Flask.
+
+    CLIENT_ROOT_URL vise le SPA et contient un fragment en hash-router
+    (ex. `https://dev.open-sankey.fr/#/`) : les mails existants s'en servent pour
+    des routes React (`{CLIENT_ROOT_URL}login/reset/<token>`), et c'est correct.
+
+    Mais un fragment n'est JAMAIS transmis au serveur. Une URL de campagne
+    construite dessus donnerait `https://.../#/campaign/<token>/unsubscribe` :
+    le navigateur appellerait `https://.../` et la route Flask ne serait jamais
+    atteinte — le lien du mail ne ferait rien. On coupe donc le fragment.
+    """
+    root = (CLIENT_ROOT_URL or "").split("#")[0]
+    return root if root.endswith("/") else root + "/"
+
+
 def send_account_confirm_mail(user_infos, confirm_sub_url):
     """
     Send welcome mail for newly created user
@@ -537,12 +554,16 @@ def send_account_review_mail(user, token, language="fr"):
         recipients=[user.email],
     )
     file = "campaign_mail/account_review_{}".format(language)
+    # Les liens de campagne et le changelog visent des routes Flask : ils partent de
+    # la racine SERVEUR (sans fragment). Le lien de connexion vise le SPA, donc il
+    # garde CLIENT_ROOT_URL et son hash. Voir server_root_url().
+    root = server_root_url()
     ctx = dict(
         first_name=user.firstname,
-        keep_url="{0}campaign/{1}/keep".format(CLIENT_ROOT_URL, token),
-        unsubscribe_url="{0}campaign/{1}/unsubscribe".format(CLIENT_ROOT_URL, token),
+        keep_url="{0}campaign/{1}/keep".format(root, token),
+        unsubscribe_url="{0}campaign/{1}/unsubscribe".format(root, token),
         login_url="{0}login".format(CLIENT_ROOT_URL),
-        changelog_url="{0}changelog".format(CLIENT_ROOT_URL),
+        changelog_url="{0}changelog".format(root),
         contact_email=TRIAL_CONTACT_EMAIL,
     )
     msg.body = render_template(file + ".txt", **ctx)
