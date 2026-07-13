@@ -1055,11 +1055,10 @@ export class Class_NodeElement extends Class_NodeBase {
     const recycling_links = this._links_order.filter(l => l.shape_is_recycling)
 
     // Geometry-aware order of the "middle" links (the ones reorganizeIOOrder
-    // re-sorts) : column/row aware so flows fanning out to several columns no
-    // longer cross (cf. ioOrderGeometry.ts). We compute the full desired order
-    // here — it needs the whole same-side set to find column centroids — then
-    // hand reorganizeIOOrder a comparator backed by that order so its locked-
-    // anchor pinning (#197) is preserved.
+    // re-sorts) : each link is ranked per-link by the shape of its bend at this node
+    // so the fan does not cross (cf. ioOrderGeometry.ts). We compute the full desired
+    // order here, then hand reorganizeIOOrder a comparator backed by that order so its
+    // locked-anchor pinning (#197) is preserved.
     const middle = this._links_order.filter(
       l => !import_links.includes(l) && !export_links.includes(l) && !recycling_links.includes(l)
     )
@@ -1079,40 +1078,34 @@ export class Class_NodeElement extends Class_NodeBase {
 
   /**
    * Build a link → display-rank map for the geometry-aware I/O order : each side's
-   * links are grouped into columns and ordered by their barycenter (cf.
-   * ioOrderGeometry.ts) so the bundles do not cross. The column clustering
-   * tolerance is a small fraction of the whole diagram's node width — big enough
-   * to merge the few-px misalignment within a column, small enough to keep
-   * distinct columns apart. All positions are taken at node CENTRES.
+   * links are ranked per-link by the shape of their bend at this node (cf.
+   * ioOrderGeometry.ts) so the fan does not cross. All positions are taken at node
+   * CENTRES ; each link carries the curvature on BOTH its ends (node side + opposite
+   * side), which is what the ordering key needs.
    */
   private _computeIOOrderIndex(
     middle: Class_LinkElement[]
   ): Map<Class_LinkElement, number> {
     const cx = this.position_x + this.getShapeWidthToUse() / 2
     const cy = this.position_y + this.getShapeHeightToUse() / 2
-    let min_x = Infinity, max_x = -Infinity, min_y = Infinity, max_y = -Infinity
-    this.sankey.visible_nodes_list.forEach(n => {
-      min_x = Math.min(min_x, n.position_x); max_x = Math.max(max_x, n.position_x)
-      min_y = Math.min(min_y, n.position_y); max_y = Math.max(max_y, n.position_y)
-    })
-    const span_x = max_x - min_x
-    const span_y = max_y - min_y
     const items = middle.map(l => {
       const is_source = (l.source === this)
       const other = is_source ? l.target : l.source
       const side = is_source ? l.source_side : l.target_side
-      // Curvature factor on THIS node's side : shape_starting_curve when the link
-      // leaves this node (source), shape_ending_curve when it arrives (target).
-      const curve = (is_source ? l.shape_starting_curve : l.shape_ending_curve) ?? 0.05
+      // Curvature on THIS node's side : shape_starting_curve when the link leaves this
+      // node (source), shape_ending_curve when it arrives (target). An explicit 0 (bend
+      // glued to the node) is a real value and is kept — only a missing value falls back
+      // to the default. The order rule uses reach·curve_node as the anchor distance.
+      const curve_node = (is_source ? l.shape_starting_curve : l.shape_ending_curve) ?? 0.05
       const geo: Type_IOGeo = {
         side,
         ox: other.position_x + other.getShapeWidthToUse() / 2,
         oy: other.position_y + other.getShapeHeightToUse() / 2,
-        curve
+        curve_node
       }
       return { item: l, geo }
     })
-    const ordered = orderIOByGeometry(items, cx, cy, span_x, span_y)
+    const ordered = orderIOByGeometry(items, cx, cy)
     const map = new Map<Class_LinkElement, number>()
     ordered.forEach((l, i) => map.set(l, i))
     return map
