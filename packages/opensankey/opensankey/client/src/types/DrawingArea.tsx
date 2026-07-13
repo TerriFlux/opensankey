@@ -66,6 +66,8 @@ import * as LabelFilters from './LabelFilters'
 import * as CopyPaste from './copyPaste'
 import * as DisplayModes from './displayModes'
 import * as CameraMath from './CameraMath'
+import * as StyleCascade from './styleCascade'
+import { Class_ScaleOverrides } from './ScaleOverrides'
 import { Class_ViewportChrome } from './DrawingAreaViewportChrome'
 import { Class_DrawingAreaInteractions } from './DrawingAreaInteractions'
 import { Class_NodeBase, sortNodesElements } from '../Elements/NodeBase'
@@ -108,6 +110,9 @@ export class Class_DrawingArea {
   // zoom de g_drawing), il porte ses propres sélections d3 et ne fait que lire la géométrie de la
   // DA (cf. DrawingAreaViewportChrome).
   private _viewport_chrome = new Class_ViewportChrome()
+  // #242 — Surcharges transitoires d'échelle (référence d'épaisseur par view tag, plafond de
+  // hauteur de nœud) : le module porte les « porteurs » restaurés d'une frame à l'autre.
+  private _scale_overrides = new Class_ScaleOverrides()
   // #242 — Interactions souris (création de flux au cliquer-glisser, rectangle de sélection,
   // pan/zoom molette) : le module porte l'état de geste (cf. DrawingAreaInteractions).
   private _interactions = new Class_DrawingAreaInteractions()
@@ -393,11 +398,6 @@ export class Class_DrawingArea {
   // avant de recalculer). tag_id défini → data tag unitaire ; sinon → échelle de la DA.
   // `original` = valeur naturelle à restaurer ; `applied` = valeur qu'on a posée (sert à
   // détecter si une autre source — applyAdaptedScale, utilisateur — a depuis recalculé l'échelle).
-  private _scale_ref_carrier?: { tag_id?: string, original: number, applied: number }
-  // #1231b — Porteur d'échelle surchargé par le plafond de taille de nœud (applyMaximumNodeScale),
-  // séparé de _scale_ref_carrier. Même logique transitoire : `original` = échelle de base à
-  // restaurer ; `applied` = échelle posée (détecte si une autre source l'a depuis recalculée).
-  private _max_node_scale_carrier?: { original: number, applied: number }
 
   // Limitations of NODE height (px), independent of the flux size limit above.
   // Applied as a final cap/floor on each node's rendered height. Fixed px (does
@@ -2559,216 +2559,45 @@ export class Class_DrawingArea {
 
   public applyStyleFromPaintSource(target: Class_ProtoElement): void {
     if (!this._style_paint_source) return
-    const transition = this._applyStyleFromSourceToTarget(this._style_paint_source, target)
+    const transition = StyleCascade.applyStyleFromSourceToTarget(this._style_paint_source, target)
     if (!transition) return
     this.application_data.history.saveUndo(transition.undo)
     this.application_data.history.saveRedo(transition.redo)
   }
 
   /**
-   * Applique le style (styles custom + attributs) de `source` sur `target` et
-   * renvoie les fonctions undo/redo correspondantes (sans les enregistrer dans
-   * l'historique). Renvoie null si les deux éléments ne sont pas de même nature
-   * (nœud→nœud, flux→flux uniquement).
-   */
-  private _applyStyleFromSourceToTarget(
-    source: Class_ProtoElement,
-    target: Class_ProtoElement
-  ): { undo: () => void, redo: () => void } | null {
-    // Même type uniquement (nœud→nœud, flux→flux)
-    if ((source instanceof Class_NodeElement) !== (target instanceof Class_NodeElement)) return null
-    // Capturer l'état avant pour undo
-    const old_storage = target.snapshotStorage()
-    const old_custom_styles = target.getCustomStyles()
-    // Capturer l'état source pour redo
-    const new_custom_styles = source.style.slice(1)
-    const new_storage = source.snapshotStorage()
-    // Undo : restaurer l'ancien état
-    const undo = () => {
-      target.removeAllStyles()
-      old_custom_styles.forEach(s => target.addStyle(s))
-      target.restoreStorage(old_storage)
-      target.draw()
-    }
-    // Redo : ré-appliquer le style source
-    const redo = () => {
-      target.removeAllStyles()
-      new_custom_styles.forEach(s => target.addStyle(s))
-      target.restoreStorage(new_storage)
-      target.draw()
-    }
-    // Appliquer
-    target.removeAllStyles()
-    new_custom_styles.forEach(s => target.addStyle(s))
-    target.copyAttrFrom(source)
-    target.draw()
-    return { undo, redo }
-  }
-
-  /**
-   * Collecte (sans toucher à l'historique) les transitions de propagation du
-   * style du nœud `source` à toute sa descendance dans la hiérarchie de
-   * dimensions. Partagé par la variante mono- et multi-source.
-   */
-  private _collectStyleToNodeChildren(
-    source: Class_NodeElement,
-    undos: Array<() => void>,
-    redos: Array<() => void>
-  ): void {
-    // collectNodeDescendants inclut le nœud lui-même ; on l'exclut pour ne pas
-    // « réappliquer » le style du parent sur lui-même.
-    const descendants = [...NodePositioning.collectNodeDescendants(source)].filter(n => n !== source)
-    descendants.forEach(target => {
-      const transition = this._applyStyleFromSourceToTarget(source, target)
-      if (transition) {
-        undos.push(transition.undo)
-        redos.push(transition.redo)
-      }
-    })
-  }
-
-  /**
    * Propage le style du nœud `source` à toute sa descendance dans la hiérarchie
    * de dimensions (désagrégation), même si les enfants sont actuellement
-   * agrégés/masqués. Toutes les modifications sont regroupées dans une seule
-   * transition d'historique (un seul undo/redo).
+   * agrégés/masqués, en une seule transition d'historique.
    */
   public applyStyleToNodeChildren(source: Class_NodeElement): void {
-    this.applyStyleToNodesChildren([source])
+    StyleCascade.applyStyleToNodesChildren(this, [source])
   }
 
-  /**
-   * Variante multi-sélection : propage le style de CHAQUE nœud parent de
-   * `sources` à sa propre descendance, le tout regroupé dans une seule
-   * transition d'historique.
-   */
+  /** Variante multi-sélection de {@link applyStyleToNodeChildren}. */
   public applyStyleToNodesChildren(sources: Class_NodeElement[]): void {
-    const undos: Array<() => void> = []
-    const redos: Array<() => void> = []
-    sources.forEach(source => this._collectStyleToNodeChildren(source, undos, redos))
-    if (undos.length === 0) return
-    this.application_data.history.saveUndo(() => undos.forEach(u => u()))
-    this.application_data.history.saveRedo(() => redos.forEach(r => r()))
+    StyleCascade.applyStyleToNodesChildren(this, sources)
   }
 
   /**
-   * Assigne la colonne du nœud parent à toute sa descendance dans la hiérarchie de
-   * dimensions (désagrégation), même si les enfants sont actuellement agrégés/masqués.
-   * Tous les descendants sont réassignés ET reverrouillés (y compris ceux déjà
-   * verrouillés), pour qu'ils suivent le parent même après un déplacement de celui-ci.
-   *
-   * Pour chaque enfant on combine trois choses :
-   * - `position_u` = colonne du parent (l'index de colonne) ;
-   * - `shape_position_u_locked = true` : le verrou est le signal « édité, à garder ».
-   *   C'est lui qui fait persister `position_u` (cf. NodeBasePersistence.toJSON, qui ne
-   *   sérialise u/v qu'en mode parametric OU si verrouillé) et qui empêche autosankey /
-   *   `inferPositionUFromX` de recalculer la colonne depuis x au chargement ;
-   * - le CENTRE stocké (`setStoredCenter`) aligné sur le coin du parent : en mode
-   *   `absolute` le nœud est DESSINÉ d'après sa géométrie, et c'est le centre (pas
-   *   position_x seul) qui est persisté — sans ça l'enfant « reviendrait » à sa place.
-   *
-   * Toutes les modifications sont regroupées dans une seule transition d'historique.
+   * Assigne la colonne du nœud parent à toute sa descendance (cf. styleCascade), en une seule
+   * transition d'historique.
    */
   public assignColumnToNodesChildren(sources: Class_NodeElement[]): void {
-    const undos: Array<() => void> = []
-    const redos: Array<() => void> = []
-    sources.forEach(source => {
-      const target_u = source.position_u
-      const target_x = source.position_x
-      // collectNodeDescendants inclut le nœud lui-même ; on l'exclut.
-      const descendants = [...NodePositioning.collectNodeDescendants(source)].filter(n => n !== source)
-      descendants.forEach(target => {
-        const old_u = target.position_u
-        const old_x = target.position_x
-        const old_u_locked = target.shape_position_u_locked === true
-        // Rien à faire si déjà dans la bonne colonne ET déjà verrouillé.
-        if (old_u === target_u && old_x === target_x && old_u_locked) return
-        // 1) Le nœud est sérialisé par son CENTRE stocké (cf. centerForPersistence),
-        //    pas par position_x : modifier seulement position_x laisse `_center_x`
-        //    périmé et le nœud « revient » à sa place au rechargement (écueil
-        //    documenté dans translateStoredCenter). On passe donc par setStoredCenter
-        //    pour viser un centre tel que le COIN (position_x) s'aligne sur le parent.
-        // 2) On VERROUILLE la colonne (shape_position_u_locked) : c'est ce verrou qui
-        //    fait persister position_u (cf. NodeBasePersistence.toJSON) et empêche
-        //    autosankey/inferPositionUFromX de le recalculer depuis x au chargement.
-        const old_center = target.centerForPersistence()
-        const new_center_x = target_x + target.getShapeWidthToUse() / 2
-        const apply = () => {
-          target.position_u = target_u
-          target.shape_position_u_locked = true
-          target.setStoredCenter(new_center_x, old_center.y)
-          target.draw()
-        }
-        const undo = () => {
-          target.position_u = old_u
-          target.shape_position_u_locked = old_u_locked
-          target.setStoredCenter(old_center.x, old_center.y)
-          target.draw()
-        }
-        undos.push(undo)
-        redos.push(apply)
-        apply()
-      })
-    })
-    if (undos.length === 0) return
-    this.application_data.history.saveUndo(() => undos.forEach(u => u()))
-    this.application_data.history.saveRedo(() => redos.forEach(r => r()))
+    StyleCascade.assignColumnToNodesChildren(this, sources)
   }
 
   /**
-   * Propage le style du flux `source` à tous ses flux enfants : les flux
-   * existants reliant un descendant de la source du flux à un descendant de sa
-   * cible (combinaison des flux entre les nœuds enfants de chaque extrémité).
-   * Toutes les modifications sont regroupées dans une seule transition undo/redo.
+   * Propage le style du flux `source` à ses flux enfants (ceux reliant un descendant de sa source
+   * à un descendant de sa cible), en une seule transition d'historique.
    */
   public applyStyleToLinkChildren(source: Class_LinkElement): void {
-    this.applyStyleToLinksChildren([source])
+    StyleCascade.applyStyleToLinksChildren(this, [source])
   }
 
-  /**
-   * Collecte (sans toucher à l'historique) les transitions de propagation du
-   * style du flux `source` à ses flux enfants. Partagé par la variante mono- et
-   * multi-source.
-   */
-  private _collectStyleToLinkChildren(
-    source: Class_LinkElement,
-    undos: Array<() => void>,
-    redos: Array<() => void>
-  ): void {
-    // Même logique que NodePositioning.collectChildLinks (propagation de la
-    // droiture aux flux désagrégés) : on parcourt TOUS les liens du sankey (les
-    // flux enfants existent même quand le parent est agrégé, juste invisibles) et
-    // on retient ceux reliant un descendant de la source à un descendant de la
-    // cible. collectNodeDescendants inclut le nœud lui-même, donc a→b avec b
-    // désagrégé en b1,b2 cible bien a→b1 et a→b2.
-    const src_descendants = NodePositioning.collectNodeDescendants(source.source as Class_NodeElement)
-    const tgt_descendants = NodePositioning.collectNodeDescendants(source.target as Class_NodeElement)
-    const child_links = this.sankey.links_list.filter(link =>
-      link !== source &&
-      src_descendants.has(link.source as Class_NodeElement) &&
-      tgt_descendants.has(link.target as Class_NodeElement)
-    ) as Class_LinkElement[]
-    child_links.forEach(target => {
-      const transition = this._applyStyleFromSourceToTarget(source, target)
-      if (transition) {
-        undos.push(transition.undo)
-        redos.push(transition.redo)
-      }
-    })
-  }
-
-  /**
-   * Variante multi-sélection : propage le style de CHAQUE flux parent de
-   * `sources` à ses propres flux enfants, le tout regroupé dans une seule
-   * transition d'historique.
-   */
+  /** Variante multi-sélection de {@link applyStyleToLinkChildren}. */
   public applyStyleToLinksChildren(sources: Class_LinkElement[]): void {
-    const undos: Array<() => void> = []
-    const redos: Array<() => void> = []
-    sources.forEach(source => this._collectStyleToLinkChildren(source, undos, redos))
-    if (undos.length === 0) return
-    this.application_data.history.saveUndo(() => undos.forEach(u => u()))
-    this.application_data.history.saveRedo(() => redos.forEach(r => r()))
+    StyleCascade.applyStyleToLinksChildren(this, sources)
   }
 
   public switchMode() {
@@ -3129,119 +2958,20 @@ export class Class_DrawingArea {
     }
   }
 
-  private _findUnitDataTag(tag_id: string) {
-    for (const tagg of this.sankey.data_taggs_list) {
-      const t = tagg.tags_dict[tag_id]
-      if (t) return t
-    }
-    return undefined
-  }
-
   /**
-   * Recalcule l'échelle pour que le flux désigné comme référence du view tag COURANT
-   * atteigne son épaisseur cible (px). Touche uniquement l'échelle (le porteur effectif :
-   * data tag unitaire du flux s'il en a un, sinon l'échelle de la DA), avec prise en compte
-   * du facteur `local_link_scale` du flux. Les autres flux et la légende suivent.
-   *
-   * Transitoire : la valeur naturelle du porteur est capturée puis restaurée à la frame
-   * suivante (avant recalcul) ou dès qu'on passe à un view tag sans référence / vue complète.
-   * Appelé dans `drawElements`, APRÈS applyAdaptedScale (mode « échelle adaptée ») et avant le
-   * positionnement des nœuds ; no-op sans référence pour le view tag courant.
-   *
-   * Compatible mode « échelle adaptée » : on ne restaure la valeur naturelle QUE si le porteur
-   * vaut encore exactement ce qu'on avait posé (`applied`). S'il a changé entre-temps
-   * (applyAdaptedScale a recalculé l'échelle, ou l'utilisateur l'a modifiée), sa valeur
-   * courante EST la nouvelle base → on n'écrase pas, le plafond s'applique par-dessus.
+   * Référence d'épaisseur du view tag courant : recalcule l'échelle pour que le flux de référence
+   * atteigne son épaisseur cible (cf. Class_ScaleOverrides — surcharge transitoire, restaurée à la
+   * frame suivante).
    */
   public applyViewTagScaleReference() {
-    // 1. Restaure le porteur surchargé à la frame précédente, sauf si une autre source l'a
-    // recalculé depuis (cf. doc ci-dessus → sa valeur courante devient la base).
-    if (this._scale_ref_carrier) {
-      const c = this._scale_ref_carrier
-      const tag = c.tag_id ? this._findUnitDataTag(c.tag_id) : undefined
-      const current = c.tag_id ? tag?.scale : this._scale
-      if (current !== undefined && Math.abs(current - c.applied) < 1e-9) {
-        if (c.tag_id) {
-          if (tag) tag.scale = c.original
-        } else {
-          this._scale = c.original
-          this._scaleValueToPx.domain([0, c.original])
-        }
-      }
-      this._scale_ref_carrier = undefined
-    }
-    // 2. Résout la référence du view tag courant.
-    const vt_id = this.sankey.current_scale_reference_viewtag_id
-    if (!vt_id) return
-    const ref = this._scale_reference_by_viewtag[vt_id]
-    if (!ref || !(ref.thickness > 0)) return
-    const link = this.sankey.links_dict[ref.link_id]
-    if (!link) return
-    const v = Math.abs(link.valueCurrent ?? 0)
-    if (!(v > 0)) return
-    const factor = link.shape_local_link_scale || 1
-    // thickness = v / (carrier_scale × factor) × 100 (range [0,100]) → carrier_scale = v×100 / (T×factor)
-    const new_scale = v * 100 / (ref.thickness * factor)
-    if (!(isFinite(new_scale) && new_scale > 0)) return
-    // 3. Sémantique « maximum » : l'épaisseur cible est un SEUIL. On ne recale QUE si, à
-    // l'échelle naturelle, l'épaisseur du flux DÉPASSE ce seuil (sinon le flux est déjà
-    // plus fin que le seuil → on ne touche à rien). Augmenter l'échelle réduit l'épaisseur,
-    // donc « épaisseur naturelle > seuil » ⟺ « new_scale > échelle naturelle du porteur ».
-    const unit_tag = link.value?.unit_data_tag()
-    const carrier_original = unit_tag ? unit_tag.scale : this._scale
-    if (!(new_scale > carrier_original)) return
-    // 4. Applique sur le porteur effectif du flux (cf. Link.scaleValueToPx).
-    if (unit_tag) {
-      this._scale_ref_carrier = { tag_id: unit_tag.id, original: unit_tag.scale, applied: new_scale }
-      unit_tag.scale = new_scale
-    } else {
-      this._scale_ref_carrier = { original: this._scale, applied: new_scale }
-      this._scale = new_scale
-      this._scaleValueToPx.domain([0, new_scale])
-    }
+    this._scale_overrides.applyViewTagScaleReference(this)
   }
 
   /**
-   * #1231b — Plafond de taille de nœud (`maximum_node`, px) appliqué par l'ÉCHELLE et non par
-   * un clamp individuel. Si le nœud le plus HAUT (hauteur naturelle non clampée =
-   * max(stock, bande de flux)) dépasse `maximum_node` à l'échelle courante, on réduit l'échelle
-   * (valeur→px) pour qu'il y rentre exactement. Tout le diagramme suit la même échelle → aucun
-   * flux entrant/sortant ne dépasse de son nœud, et les proportions relatives sont conservées.
-   *
-   * Sémantique « maximum » : no-op si aucun nœud ne dépasse (on ne grossit jamais le diagramme).
-   * Transitoire : l'échelle de base est sauvegardée puis restaurée à la frame suivante (avant
-   * recalcul), ou laissée intacte si une autre source l'a recalculée depuis. Appelé en DERNIER
-   * dans `drawElements` (après applyAdaptedScale + applyViewTagScaleReference), avant le
-   * positionnement des nœuds (qui lit l'échelle courante). Le clamp par-nœud de
-   * `getShapeHeightToUse` devient alors un no-op (natural == max_node) → pas de troncature.
+   * #1231b — Plafond de hauteur de nœud appliqué par l'ÉCHELLE (cf. Class_ScaleOverrides).
    */
   public applyMaximumNodeScale() {
-    // 1. Restaure l'échelle de base posée à la frame précédente, sauf si une autre source l'a
-    // recalculée entre-temps (sa valeur courante devient alors la nouvelle base).
-    if (this._max_node_scale_carrier) {
-      const c = this._max_node_scale_carrier
-      if (Math.abs(this._scale - c.applied) < 1e-9) {
-        this._scale = c.original
-        this._scaleValueToPx.domain([0, c.original])
-      }
-      this._max_node_scale_carrier = undefined
-    }
-    const max_node = this._maximum_node
-    if (!max_node || !(max_node > 0)) return
-    // 2. Hauteur naturelle (non clampée) du nœud le plus haut, à l'échelle courante.
-    let tallest = 0
-    this.sankey.visible_nodes_list.forEach(n => {
-      const h = n.getNaturalShapeHeight()
-      if (h > tallest) tallest = h
-    })
-    if (!(tallest > max_node)) return
-    // 3. scaleValueToPx ∝ 1/scale : multiplier l'échelle par tallest/max_node (> 1) réduit les
-    // px/valeur → le plus haut nœud rend exactement à max_node.
-    const new_scale = this._scale * (tallest / max_node)
-    if (!(isFinite(new_scale) && new_scale > 0)) return
-    this._max_node_scale_carrier = { original: this._scale, applied: new_scale }
-    this._scale = new_scale
-    this._scaleValueToPx.domain([0, new_scale])
+    this._scale_overrides.applyMaximumNodeScale(this)
   }
 
   public get minimum_flux(): number | undefined { return this._minimum_flux }
