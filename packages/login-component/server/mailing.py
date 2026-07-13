@@ -506,8 +506,13 @@ def send_trial_admin_notification(user, plan):
 
 def send_account_review_mail(user, token, language="fr"):
     """
-    Campagne « Gardez-vous votre compte ? » — demande à un compte dormant s'il
-    souhaite le conserver, avec deux liens explicites :
+    Campagne de reprise de contact — s'adresse à un compte dormant.
+
+    Le mail marche dans les deux sens, volontairement : il commence par donner une
+    raison de revenir (ce qui a changé depuis, lien de reprise), et ne pose la
+    question du compte qu'ensuite, sans reproche. Le but est autant de réactiver
+    des utilisateurs que d'assainir la base — un mail qui ne ferait que demander
+    « voulez-vous partir ? » n'obtiendrait que des départs.
 
       - garder    → /campaign/<token>/keep
       - supprimer → /campaign/<token>/unsubscribe (désactive, purge à J+30)
@@ -520,8 +525,8 @@ def send_account_review_mail(user, token, language="fr"):
         return
     language = _normalize_lang(language)
     subject = {
-        "fr": "[OpenSankey] Souhaitez-vous conserver votre compte ?",
-        "en": "[OpenSankey] Do you want to keep your account?",
+        "fr": "[OpenSankey] Ça a beaucoup changé depuis votre dernière visite",
+        "en": "[OpenSankey] A lot has changed since your last visit",
     }
     msg = Message(
         subject=subject[language],
@@ -534,6 +539,7 @@ def send_account_review_mail(user, token, language="fr"):
         keep_url="{0}campaign/{1}/keep".format(CLIENT_ROOT_URL, token),
         unsubscribe_url="{0}campaign/{1}/unsubscribe".format(CLIENT_ROOT_URL, token),
         login_url="{0}login".format(CLIENT_ROOT_URL),
+        changelog_url="{0}changelog".format(CLIENT_ROOT_URL),
         contact_email=TRIAL_CONTACT_EMAIL,
     )
     msg.body = render_template(file + ".txt", **ctx)
