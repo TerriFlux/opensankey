@@ -10,6 +10,7 @@ import { Class_DrawingArea } from '@terriflux/opensankey/src/types/DrawingArea'
 import { Class_DrawingAreaOSP, DrawingAreaPersistenceOSP } from './DrawingAreaOSP'
 import { compressJSONToGzip } from '@terriflux/opensankey/src/Persistence/UniversalJSONCompression'
 import { ViewsManager, Type_ViewEntry } from './ViewsManager'
+import { encodeViewsAsDelta } from './viewDelta'
 
 /**
  * État d'essai gratuit côté client (poussé depuis AppSA via LoginComponent).
@@ -401,6 +402,14 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         view_da.delete()
       }
     })
+
+    // #254 — Les vues ne sont plus persistées en snapshot intégral : chacune est
+    // encodée en DELTA vs le maître (la base = cette racine privée de `views`).
+    // Purement un encodage de sérialisation : en mémoire les vues restent des
+    // snapshots complets, et decodeViewsFromDelta les ré-étend au chargement. Une
+    // vue dont le delta ne la reconstitue pas à l'identique reste en snapshot
+    // intégral (garde-fou dans encodeViewsAsDelta).
+    encodeViewsAsDelta(json_entry)
 
     return json_entry
   }

@@ -44,6 +44,31 @@ Documenter le changement ci-dessous.
 | `format_version` | Changement |
 |------------------|------------|
 | 1 | Introduction de `format_version` (issue #22). Format courant au moment de l'ajout. |
+| 2 | Vues persistées en **delta vs le maître** (issue #254). Une entrée de `views` porte `__patch` (patch structurel) au lieu du snapshot intégral. **Incompatible en lecture** pour une app antérieure, qui prendrait le patch pour une vue. |
+
+### Vues en delta (`format_version` 2)
+
+Une vue ne diffère du maître que par une poignée d'attributs (positions, visibilité,
+styles) : la persister en snapshot intégral dupliquait tout le diagramme. Depuis #254,
+chaque entrée de `views` peut être encodée en **patch structurel** :
+
+```json
+"views": {
+  "vue_2": { "__patch": { "nodes": { "n_12": { "position_x": { "$set": 340 } } } } }
+}
+```
+
+- **Base du patch** : la racine du fichier **privée de sa clé `views`** — définie à
+  l'identique à l'écriture et à la lecture, ce qui garantit qu'un patch se réapplique
+  exactement sur la base contre laquelle il a été calculé.
+- Le delta est un **encodage de sérialisation uniquement** : en mémoire les vues
+  restent des snapshots complets. Un patch ne survit donc jamais à une édition du
+  maître (contrairement au format legacy « diff », abandonné pour cette raison).
+- **Détection structurelle** (présence de `__patch`), pas fondée sur la version : un
+  fichier ancien, ou **mixte**, se relit correctement.
+- Une vue reste en **snapshot intégral** si son patch ne la reconstitue pas à
+  l'identique, ou s'il n'est pas plus petit (cas des tutoriels, où chaque « vue » est
+  en réalité un diagramme différent). L'encodage ne dégrade donc jamais.
 
 ## Clés principales (non exhaustif)
 

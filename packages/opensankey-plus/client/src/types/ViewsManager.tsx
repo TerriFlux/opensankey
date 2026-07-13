@@ -12,6 +12,7 @@ import { getBooleanFromJSON, getJSONOrUndefinedFromJSON, getStringFromJSON, make
 import { updateFrom } from '@terriflux/opensankey/src/Algorithms/UpdateFrom'
 import { Class_DrawingAreaOSP, DrawingAreaPersistenceOSP } from './DrawingAreaOSP'
 import { migrateHereditedAttr, Type_ViewHereditedJSON } from './hereditedAttrMigration'
+import { decodeViewsFromDelta } from './viewDelta'
 import { convert_data_plus_legacy } from '../components/UtilsOSP'
 import { ViewsQuery, MASTER_VIEW_ID } from './ViewsQuery'
 import type { Class_DrawingArea } from '@terriflux/opensankey/src/types/DrawingArea'
@@ -112,6 +113,11 @@ export class ViewsManager {
 
   /** Charge les vues d'un fichier (clé `views`) et rouvre sur la vue active sauvegardée. */
   public viewsFromJSON(json_object: Type_JSON) {
+    // #254 — Ré-étend les vues encodées en delta vs le maître AVANT toute lecture :
+    // tout le code aval voit des snapshots complets, exactement comme avant.
+    // Détection structurelle (clé `__patch`) : un fichier ancien, ou mixte, se
+    // relit sans rien changer.
+    decodeViewsFromDelta(json_object)
     const views_json = getJSONOrUndefinedFromJSON(json_object, 'views')
     if (!views_json) {
       return
@@ -165,6 +171,9 @@ export class ViewsManager {
   public addViewsFromJSON(json_object: Type_JSON): number {
     // Apply OSP legacy conversion in-place before reading 'views'
     convert_data_plus_legacy(json_object)
+    // #254 — Ré-étend les vues en delta. La base est la racine du fichier IMPORTÉ
+    // (pas le maître courant) : un import inter-fichiers reste donc correct.
+    decodeViewsFromDelta(json_object)
     const views_json = getJSONOrUndefinedFromJSON(json_object, 'views')
     if (!views_json) {
       console.warn('[addViewsFromJSON] no views key found, aborting')
