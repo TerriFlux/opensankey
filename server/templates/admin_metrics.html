@@ -58,11 +58,14 @@
     {% endif %}
   </p>
   <p class="hint">
-    <strong>Robots exclus</strong> : la visite est enregistrée par un appel du front une fois
-    l'application montée (<code>POST /api/metrics/visit</code>), et non plus par le simple GET sur
-    <code>/</code>. Les crawlers (indexation, IA, scanners, sondes uptime) n'exécutent pas le JS :
-    ils ne sont plus comptés. Les compteurs ont été remis à zéro à cette occasion — avant, ils
-    cumulaient surtout du trafic robot et ne mesuraient pas l'usage réel.
+    <strong>Robots exclus depuis le passage au beacon</strong> : la visite est enregistrée par un
+    appel du front une fois l'application montée (<code>POST /api/metrics/visit</code>), et non plus
+    par le simple GET sur <code>/</code>. Les crawlers (indexation, IA, scanners, sondes uptime)
+    n'exécutent pas le JS : ils ne sont plus comptés.
+    <strong>Attention aux cumuls antérieurs à cette bascule</strong> : ils comptaient tout GET sur la
+    page d'accueil et sont donc gonflés par le trafic robot. Chaque environnement a sa propre base :
+    tant qu'un <code>DELETE FROM metrics</code> n'y a pas été passé, ses compteurs mélangent encore
+    robots et humains. (Purge faite sur <em>dev</em> le 13/07/2026.)
   </p>
   <p class="hint">
     <strong>Visites internes exclues</strong> : {{ metrics.excluded_accounts }} compte(s) de l'équipe
