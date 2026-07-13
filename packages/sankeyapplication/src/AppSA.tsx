@@ -267,6 +267,14 @@ export const SankeyApp = ({ new_data_app }: { new_data_app: Class_ApplicationDat
   const blockers = {}
 
   useEffect(() => {
+    // Comptage de fréquentation : le serveur ne compte plus les GET sur '/'
+    // (majoritairement des crawlers). Seul un navigateur qui exécute le bundle
+    // atteint ce beacon. Silencieux : une métrique ne doit rien casser.
+    fetch(window.location.origin + '/api/metrics/visit', { method: 'POST' })
+      .catch(() => undefined)
+  }, [])
+
+  useEffect(() => {
     setTimeout(() => {
       new_data_app.login_component.checkTokens(setLicenses)
         .then(() => setApp(

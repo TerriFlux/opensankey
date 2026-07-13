@@ -112,11 +112,30 @@ def _visitor_is_internal() -> bool:
 
 @sankeyapp.route("/")
 def index():
-    # Update website frequentation metrics — hors visites internes (équipe).
+    # Pas de comptage ici : un GET sur la page d'accueil, c'est aussi bien un
+    # crawler qu'un humain. La visite est enregistrée par /api/metrics/visit,
+    # appelé par le front une fois l'app montée (cf. AppSA.tsx).
+    return render_template("index.html", filename="", static_site="false")
+
+
+@sankeyapp.route("/api/metrics/visit", methods=["POST"])
+def metrics_visit():
+    """Enregistre une visite — appelé par le front au montage de l'application.
+
+    Compter côté serveur dans `index()` faisait entrer dans `metrics` tout ce qui
+    émet un GET sur `/` : moteurs d'indexation, crawlers IA, scanners, sondes
+    uptime. D'où des dizaines de milliers de « visiteurs » sans rapport avec
+    l'usage réel. Le beacon exige d'exécuter le bundle JS, ce que les crawlers
+    ne font pas : le bruit disparaît sans liste noire d'User-Agent à maintenir.
+
+    Endpoint public (la home est accessible sans compte) et idempotent : `new_visit`
+    n'incrémente `nb_visits` qu'une fois par jour et par IP, un appel répété ne
+    gonfle donc pas les chiffres. Le site publié en statique n'a pas de serveur ;
+    le front ne l'appelle que hors mode `is_static`.
+    """
     if not _visitor_is_internal():
         update_metrics(request.environ.get("HTTP_X_FORWARDED_FOR", request.remote_addr))
-    # Render site
-    return render_template("index.html", filename="", static_site="false")
+    return Response(status=204)
 
 
 @sankeyapp.route("/fr")
