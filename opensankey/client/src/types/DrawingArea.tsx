@@ -68,6 +68,7 @@ import * as DisplayModes from './displayModes'
 import * as CameraMath from './CameraMath'
 import * as StyleCascade from './styleCascade'
 import { Class_ScaleOverrides } from './ScaleOverrides'
+import * as Camera from './DrawingAreaCamera'
 import { Class_ViewportChrome } from './DrawingAreaViewportChrome'
 import { Class_DrawingAreaInteractions } from './DrawingAreaInteractions'
 import { Class_NodeBase, sortNodesElements } from '../Elements/NodeBase'
@@ -223,7 +224,6 @@ export class Class_DrawingArea {
   // globalement (tests, contextes sans animation souhaitée).
   public zoom_animations_enabled: boolean = true
   // Durée (ms) de l'interpolation de caméra (d3.interpolateZoom via d3-zoom).
-  private readonly _zoom_animation_duration_ms: number = 450
 
   // Effective fit zoom applied by areaAutoFit. Used as a per-label font-size
   // multiplier (1/_k_fit) so requested font-size in px stays constant on screen
@@ -2119,154 +2119,38 @@ export class Class_DrawingArea {
     this.orderElementOnDA()
   }
 
-  // ZOOM CINÉMATIQUE (#1244) ==========================================================
+  // CAMÉRA (#1244 zoom cinématique, #1250 façade) =====================================
+  // Délégations vers types/DrawingAreaCamera.ts. Le cœur géométrique du cadrage (areaAutoFit /
+  // recenter) reste ici : il recalcule les dimensions du canvas et les décalages du monde.
 
-  /**
-   * Deux transforms de zoom sont-ils identiques (à epsilon près) ? Sert à ne pas
-   * lancer d'animation quand le recadrage ne bouge pas la caméra.
-   */
-  private _sameZoomTransform(a: d3.ZoomTransform, b: d3.ZoomTransform): boolean {
-    return CameraMath.sameZoomTransform(a, b)
-  }
-
-  /**
-   * Anime la caméra (transform du zoom) vers `target` via l'interpolation native
-   * de d3-zoom (d3.interpolateZoom : trajectoire dézoom → pan → rezoom). On passe
-   * par zoomListener.transform (et non par un attr('transform') direct) pour que
-   * l'état interne du behavior reste cohérent — d3.zoomTransform, lu ailleurs
-   * (Legend, _freeBgBounds…), reste juste pendant et après l'animation.
-   *
-   * Application INSTANTANÉE (comportement historique) si les animations sont
-   * désactivées, si l'OS demande moins de mouvement (prefers-reduced-motion), ou
-   * s'il n'y a pas de zone de zoom.
-   *
-   * `from` (optionnel) : transform de départ imposé, posé instantanément avant
-   * l'animation pour éviter tout saut d'une frame (cas fit/recenter où l'état
-   * final a déjà été peint par areaAutoFit/recenter).
-   */
-  private _animateZoomTo(target: d3.ZoomTransform, from?: d3.ZoomTransform): void {
-    const sel = this.d3_selection_zoom_area
-    if (!sel || !sel.node()) return
-    const reduce_motion = typeof window !== 'undefined'
-      && typeof window.matchMedia === 'function'
-      && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (!this.zoom_animations_enabled || reduce_motion) {
-      this._zoomListener.transform(sel, target)
-      return
-    }
-    // Cale le point de départ (émet un event zoom → eventZoom applique le
-    // transform) puis anime depuis ce point vers la cible.
-    if (from) this._zoomListener.transform(sel, from)
-    // Transition SANS nom (défaut) : un geste souris (d3-zoom fait selection.interrupt())
-    // ou un nouvel appel l'annule proprement, sans transitions concurrentes.
-    this._zoomListener.transform(
-      sel.transition().duration(this._zoom_animation_duration_ms).ease(d3.easeCubicInOut),
-      target
-    )
-  }
-
-  /**
-   * Variante animée des recadrages EXPLICITES (boutons fit H/V). Calcule le
-   * cadrage cible via areaAutoFit — inchangé, avec tous ses effets de bord
-   * (_k_fit, labels, fond) — puis anime la caméra de l'ancien vers le nouveau
-   * transform. Les recadrages automatiques continuent d'appeler areaAutoFit.
-   */
+  /** Variante animée des recadrages EXPLICITES (boutons fit H/V). */
   public areaAutoFitAnimated(horiz?: boolean, force_when_locked?: boolean): void {
-    const node = this.d3_selection_zoom_area?.node()
-    if (!node) { this.areaAutoFit(horiz, force_when_locked); return }
-    const from = d3.zoomTransform(node)
-    this.areaAutoFit(horiz, force_when_locked) // pose l'état final (node à t1)
-    const to = d3.zoomTransform(node)
-    if (this._sameZoomTransform(from, to)) return
-    this.setCamera(to, { animate: true, from })
+    Camera.areaAutoFitAnimated(this, horiz, force_when_locked)
   }
 
-  /**
-   * Variante animée du bouton « recentrer ». recenter() décale les coordonnées
-   * MONDE de tous les éléments puis refait le fit ; on capture le transform et un
-   * nœud de référence AVANT, on laisse recenter() poser l'état final, puis on
-   * anime la caméra depuis un transform de départ CORRIGÉ du décalage monde. La
-   * correction (X' = X0 − k0·Δ, avec Δ le décalage appliqué aux positions)
-   * reproduit exactement le rendu d'avant-recentrage sur les nouvelles positions,
-   * donc le contenu paraît glisser vers le centre sans saut d'une frame.
-   */
+  /** Variante animée du bouton « recentrer ». */
   public recenterAnimated(force: boolean = false): void {
-    const node = this.d3_selection_zoom_area?.node()
-    // Paper mode / pas de zone : recenter() ne décale rien de recadrable → direct.
-    if (!node || this.is_paper_mode) { this.recenter(force); return }
-    const t0 = d3.zoomTransform(node)
-    // Décalage monde réellement appliqué : mesuré sur un nœud témoin (toutes les
-    // positions sont décalées du même vecteur). 0 si recenter court-circuite.
-    const ref = this.sankey.nodes_list[0]
-    const bx = ref ? ref.position_x : 0
-    const by = ref ? ref.position_y : 0
-    this.recenter(force)
-    const to = d3.zoomTransform(node)
-    const dx = ref ? ref.position_x - bx : 0
-    const dy = ref ? ref.position_y - by : 0
-    const from = CameraMath.shiftTransformByWorldDelta(t0, dx, dy)
-    if (this._sameZoomTransform(from, to)) return
-    this.setCamera(to, { animate: true, from })
+    Camera.recenterAnimated(this, force)
   }
 
-  /**
-   * Centre la caméra sur un nœud avec une animation cinématique (d3-zoom gère
-   * nativement la trajectoire dézoom → pan → rezoom via d3.interpolateZoom).
-   * Utilisable par la recherche / la sélection. Conserve l'échelle courante par
-   * défaut ; `scale` force un niveau de zoom cible.
-   */
+  /** Centre la caméra sur un nœud, avec animation (recherche / sélection). */
   public flyToNode(node: Class_NodeElement, scale?: number): void {
-    const area_node = this.d3_selection_zoom_area?.node()
-    if (!area_node || !node) return
-    const t0 = d3.zoomTransform(area_node)
-    const k = scale ?? t0.k
-    const cx = node.position_x + node.getShapeWidthToUse() / 2
-    const cy = node.position_y + node.getShapeHeightToUse() / 2
-    // Place le centre du nœud au centre de la fenêtre visible (sous la nav bar).
-    const px = this.window_fitting_width / 2
-    const py = this.window_fitting_height / 2 + this.getNavBarHeight()
-    const to = CameraMath.centerTransform({ x: cx, y: cy }, { x: px, y: py }, k)
-    this.setCamera(to, { animate: true })
+    Camera.flyToNode(this, node, scale)
   }
 
-  // FAÇADE CAMÉRA (#1250 — phase 1) ===================================================
-  // Modèle cible : « caméra sur monde immuable ». Le transform d3-zoom est la
-  // seule source de vérité d'échelle/translation ; les opérations de caméra
-  // sont des fonctions qui produisent un transform, appliqué par setCamera().
-  // Phase 1 = amorce : la façade existe et les chemins NOUVEAUX (zoom
-  // cinématique #1244, futurs consommateurs) passent par elle. Le routage des
-  // internals d'areaAutoFit/recenter (et la bascule de contentBounds vers un
-  // calcul MODÈLE sans getBBox) viennent dans les phases suivantes.
-
-  /**
-   * Viewport utile en pixels écran : zone réellement disponible pour le
-   * diagramme (fenêtre ou conteneur hôte, réserves de panneaux déduites via
-   * window_fitting_*), et décalage vertical de la nav bar.
-   */
+  /** Viewport utile en pixels écran (réserves de panneaux déduites) + décalage de la nav bar. */
   public getViewport(): { width: number, height: number, top_offset: number } {
-    return {
-      width: this.window_fitting_width,
-      height: this.window_fitting_height,
-      top_offset: this.getNavBarHeight()
-    }
+    return Camera.getViewport(this)
   }
 
-  /**
-   * Bounds du contenu en coordonnées MONDE. Phase 1 : mesure DOM (getBBox du
-   * groupe des éléments) — l'interface est posée, l'implémentation basculera
-   * vers un calcul depuis le modèle (positions + tailles + labels estimés) en
-   * phase 3, ce qui supprimera les dépendances à l'ordre de rendu.
-   */
+  /** Bounds du contenu en coordonnées MONDE (null si vide). */
   public contentBounds(): { x: number, y: number, width: number, height: number } | null {
-    const bbox = this.d3_selection_elements_group?.node()?.getBBox()
-    if (!bbox || (bbox.width === 0 && bbox.height === 0)) return null
-    return { x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height }
+    return Camera.contentBounds(this)
   }
 
   /**
-   * Fonction PURE : transform de caméra qui cadre `bounds` dans `viewport`
-   * avec la marge donnée (contenu ancré en haut-gauche à margin/2, comme le
-   * fit historique). Ne lit ni n'écrit aucun état — testable unitairement.
+   * Fonction PURE : transform de caméra qui cadre `bounds` dans `viewport` avec la marge donnée
+   * (contenu ancré en haut-gauche à margin/2, comme le fit historique).
    */
   public fitTransform(
     bounds: { x: number, y: number, width: number, height: number },
@@ -2276,41 +2160,21 @@ export class Class_DrawingArea {
     return CameraMath.fitTransform(bounds, viewport, margin)
   }
 
-  /**
-   * Point d'application UNIQUE d'un transform de caméra. Passe toujours par
-   * zoomListener.transform pour garder l'état interne du behavior cohérent
-   * (d3.zoomTransform lu par Legend, _freeBgBounds, scrollbars…).
-   * `animate` : interpolation d3.interpolateZoom (cf. _animateZoomTo) ;
-   * `from` : point de départ imposé, posé instantanément avant l'animation.
-   */
+  /** Point d'application UNIQUE d'un transform de caméra. */
   public setCamera(
     target: d3.ZoomTransform,
     opts?: { animate?: boolean, from?: d3.ZoomTransform }
   ): void {
-    const sel = this.d3_selection_zoom_area
-    if (!sel || !sel.node()) return
-    if (opts?.animate) {
-      this._animateZoomTo(target, opts.from)
-    } else {
-      this._zoomListener.transform(sel, target)
-    }
+    Camera.setCamera(this, target, opts)
   }
 
   /**
-   * Applique un recadrage de fit (#1250) : échelle `k` puis placement du point MONDE
-   * (0,0) au pixel `[px, py]`. Passe DÉLIBÉRÉMENT par scaleTo/translateTo (et non par
-   * setCamera/zoomListener.transform direct) pour conserver le CONSTRAIN de d3-zoom
-   * (clamp selon translateExtent) : ce clamp est load-bearing — le ré-ancrage des
-   * labels en police verrouillée (#165) en dépend. Point d'application UNIQUE des
-   * recadrages d'areaAutoFit ; c'est ici que se branchera la bascule vers le calcul
-   * du transform par le modèle (phase 3). `_updateScrollbars` doit avoir été appelé
-   * AVANT (il pose le translateExtent lu par le constrain).
+   * Recadrage de fit : échelle `k` puis point MONDE (0,0) au pixel [px, py]. Conserve le constrain
+   * de d3-zoom (load-bearing pour le ré-ancrage des labels en police verrouillée, #165) ;
+   * _updateScrollbars doit avoir été appelé AVANT (il pose le translateExtent lu par le constrain).
    */
   private _applyFitCamera(k: number, px: number, py: number): void {
-    const sel = this.d3_selection_zoom_area
-    if (!sel) return
-    this._zoomListener.scaleTo(sel, k)
-    this._zoomListener.translateTo(sel, 0, 0, [px, py])
+    Camera.applyFitCamera(this, k, px, py)
   }
 
   /**
