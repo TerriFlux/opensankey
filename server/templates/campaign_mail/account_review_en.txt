@@ -4,22 +4,28 @@ You created an account on OpenSankey. Whether you use it regularly or never came
 back, the tool has changed a great deal since — and if something stopped you back
 then, there is a fair chance it no longer applies.
 
-What happened since:
+It is not quite the same tool anymore:
 
-  - Import your existing files. OpenSankey now opens SankeyMATIC diagrams and
-    STAN files (.smfa) natively. If you had work in progress elsewhere, you can
-    pick it up here.
+  - It no longer just draws, it computes. OpenSankey reconciles your data: you
+    enter what you know, with its uncertainties and its intervals, and the solver
+    works out the rest by closing the balances. Stocks are part of the material
+    balance. It is a flow analysis tool now, not just a figure tool.
 
-  - Keyboard editing. A text editor alongside the spreadsheet: write your flows
-    in a few lines, the diagram follows — and the other way around.
+  - It does not lock you in. Your data lives in Excel, both ways. Your old
+    SankeyMATIC or STAN work opens directly. What you build here, you can take
+    back out.
 
-  - Publish as a standalone website. A diagram, or a whole portfolio, can be
-    published as a browsable site — to send to a client or put online.
+  - It produces a deliverable, not just a picture. A diagram, or a whole
+    portfolio, publishes as a standalone browsable website — to send to a client,
+    to put online, to embed in an existing page.
 
-  - Rendering and reliability: a new "exact outline" flow shape, and a file
-    format now locked down by tests on every release.
+  - It no longer fights you over placement. Automatic layout, locking for the
+    nodes you want fixed, aggregation levels. You decide, the tool handles the
+    rest.
 
-All the changes: {{ changelog_url }}
+Also: interface and documentation in five languages, built-in guided tour.
+
+The details, release by release: {{ changelog_url }}
 
   Open OpenSankey:
   {{ login_url }}

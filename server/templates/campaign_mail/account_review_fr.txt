@@ -5,22 +5,29 @@ que vous n'y soyez jamais revenu, l'outil a beaucoup changé depuis — et si
 quelque chose vous avait arrêté à l'époque, il y a de bonnes chances que ce ne
 soit plus le cas.
 
-Ce qui est arrivé depuis :
+Ce n'est plus tout à fait le même outil :
 
-  - Import de vos fichiers existants. OpenSankey ouvre désormais nativement les
-    diagrammes SankeyMATIC et les fichiers STAN (.smfa). Si vous aviez un travail
-    en cours ailleurs, vous pouvez le reprendre ici.
+  - Il ne dessine plus seulement, il calcule. OpenSankey réconcilie vos données :
+    vous saisissez ce que vous connaissez, avec ses incertitudes et ses
+    intervalles, et le solveur en déduit le reste en bouclant les bilans. Les
+    stocks entrent dans le bilan matière. C'est un outil d'analyse de flux, plus
+    seulement un outil de figure.
 
-  - Édition au clavier. Un éditeur texte à côté du tableur : vous écrivez vos
-    flux en quelques lignes, le diagramme suit, dans les deux sens.
+  - Il ne vous enferme pas. Vos données vivent dans Excel, dans les deux sens.
+    Vos anciens travaux SankeyMATIC ou STAN s'ouvrent directement. Ce que vous
+    faites ici, vous pouvez le ressortir.
 
-  - Publication en un site web autonome. Un diagramme (ou tout un portfolio) se
-    publie comme un site consultable, à envoyer à un client ou à mettre en ligne.
+  - Il produit un livrable, pas juste une image. Un diagramme, ou tout un
+    portfolio, se publie comme un site web autonome et consultable — à envoyer à
+    un client, à mettre en ligne, à intégrer dans une page existante.
 
-  - Rendu et fiabilité : nouvelle forme de flux « contour exact », et le format
-    de fichier est maintenant verrouillé par des tests à chaque livraison.
+  - Il ne se bat plus avec vous sur le placement. Mise en page automatique,
+    verrouillage des nœuds que vous voulez fixer, niveaux d'agrégation. Vous
+    arbitrez, l'outil s'occupe du reste.
 
-Toutes les évolutions : {{ changelog_url }}
+Et aussi : interface et documentation en cinq langues, visite guidée intégrée.
+
+Le détail, version par version : {{ changelog_url }}
 
   Ouvrir OpenSankey :
   {{ login_url }}
