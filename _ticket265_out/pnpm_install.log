@@ -1,0 +1,87 @@
+packages/opensankey/opensankey/client    |  WARN  The field "pnpm.onlyBuiltDependencies" was found in C:\TerriFlux\sankeyapplication-dev\packages\opensankey\opensankey\client/package.json. This will not take effect. You should configure "pnpm.onlyBuiltDependencies" at the root of the workspace instead.
+Scope: all 5 workspace projects
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +2110
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 2110, reused 38, downloaded 0, added 0
+Progress: resolved 2110, reused 153, downloaded 0, added 0
+Progress: resolved 2110, reused 190, downloaded 0, added 0
+Progress: resolved 2110, reused 194, downloaded 0, added 0
+Progress: resolved 2110, reused 195, downloaded 0, added 0
+
+   ╭───────────────────────────────────────────────────────────────────╮
+   │                                                                   │
+   │                Update available! 9.15.9 → 11.11.0.                │
+   │   Changelog: https://github.com/pnpm/pnpm/releases/tag/v11.11.0   │
+   │                 Run "pnpm add -g pnpm" to update.                 │
+   │                                                                   │
+   ╰───────────────────────────────────────────────────────────────────╯
+
+Progress: resolved 2110, reused 313, downloaded 0, added 0
+Progress: resolved 2110, reused 462, downloaded 0, added 0
+Progress: resolved 2110, reused 646, downloaded 0, added 0
+Progress: resolved 2110, reused 894, downloaded 0, added 0
+Progress: resolved 2110, reused 1022, downloaded 0, added 0
+Progress: resolved 2110, reused 1342, downloaded 0, added 0
+Progress: resolved 2110, reused 1611, downloaded 0, added 0
+Progress: resolved 2110, reused 1758, downloaded 0, added 0
+Progress: resolved 2110, reused 1932, downloaded 3, added 0
+Progress: resolved 2110, reused 1932, downloaded 4, added 20
+Progress: resolved 2110, reused 1932, downloaded 4, added 37
+Progress: resolved 2110, reused 1932, downloaded 5, added 87
+Progress: resolved 2110, reused 1932, downloaded 5, added 135
+Progress: resolved 2110, reused 1932, downloaded 5, added 154
+Progress: resolved 2110, reused 1933, downloaded 5, added 189
+Progress: resolved 2110, reused 1933, downloaded 8, added 241
+Progress: resolved 2110, reused 1933, downloaded 9, added 320
+Progress: resolved 2110, reused 1933, downloaded 11, added 344
+Progress: resolved 2110, reused 1933, downloaded 12, added 384
+Progress: resolved 2110, reused 1933, downloaded 13, added 422
+Progress: resolved 2110, reused 1933, downloaded 13, added 469
+Progress: resolved 2110, reused 1933, downloaded 14, added 639
+Progress: resolved 2110, reused 1933, downloaded 14, added 673
+Progress: resolved 2110, reused 1933, downloaded 15, added 895
+Progress: resolved 2110, reused 1933, downloaded 15, added 950
+Progress: resolved 2110, reused 1933, downloaded 15, added 971
+Progress: resolved 2110, reused 1933, downloaded 15, added 1003
+Progress: resolved 2110, reused 1933, downloaded 15, added 1108
+Progress: resolved 2110, reused 1933, downloaded 15, added 1137
+Progress: resolved 2110, reused 1933, downloaded 15, added 1168
+Progress: resolved 2110, reused 1933, downloaded 15, added 1247
+Progress: resolved 2110, reused 1933, downloaded 15, added 1358
+Progress: resolved 2110, reused 1933, downloaded 15, added 1374
+Progress: resolved 2110, reused 1933, downloaded 15, added 1549
+Progress: resolved 2110, reused 1933, downloaded 15, added 1632
+Progress: resolved 2110, reused 1933, downloaded 15, added 1697
+Progress: resolved 2110, reused 1933, downloaded 15, added 1753
+Progress: resolved 2110, reused 1933, downloaded 15, added 1901
+Progress: resolved 2110, reused 1933, downloaded 15, added 1941
+Progress: resolved 2110, reused 1933, downloaded 20, added 1955
+Progress: resolved 2110, reused 1933, downloaded 27, added 1960
+Progress: resolved 2110, reused 1933, downloaded 30, added 1963
+Progress: resolved 2110, reused 1933, downloaded 31, added 1966
+Progress: resolved 2110, reused 1933, downloaded 38, added 1977
+Progress: resolved 2110, reused 1933, downloaded 47, added 1987
+Progress: resolved 2110, reused 1933, downloaded 49, added 1990
+Progress: resolved 2110, reused 1933, downloaded 60, added 1998
+Progress: resolved 2110, reused 1933, downloaded 76, added 2011
+Progress: resolved 2110, reused 1933, downloaded 81, added 2025
+Progress: resolved 2110, reused 1933, downloaded 90, added 2028
+Progress: resolved 2110, reused 1933, downloaded 97, added 2034
+Progress: resolved 2110, reused 1933, downloaded 99, added 2039
+Progress: resolved 2110, reused 1933, downloaded 105, added 2043
+Progress: resolved 2110, reused 1933, downloaded 110, added 2048
+Progress: resolved 2110, reused 1933, downloaded 119, added 2060
+Progress: resolved 2110, reused 1933, downloaded 125, added 2066
+Progress: resolved 2110, reused 1933, downloaded 141, added 2082
+Progress: resolved 2110, reused 1933, downloaded 156, added 2104
+Progress: resolved 2110, reused 1933, downloaded 157, added 2109
+Progress: resolved 2110, reused 1933, downloaded 157, added 2110, done
+.../node_modules/@parcel/watcher install$ node scripts/build-from-source.js
+.../node_modules/@parcel/watcher install: Done
+
+The following dependencies have build scripts that were ignored: protobufjs
+To allow the execution of build scripts for these packages, add their names to "pnpm.onlyBuiltDependencies" in your "package.json", then run "pnpm rebuild"
+
+Done in 1m 13.5s using pnpm v9.15.9

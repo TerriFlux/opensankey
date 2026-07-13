@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "opensankey-demo",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@terriflux/opensankey", "start"],
+      "port": 3000
+    }
+  ]
+}
