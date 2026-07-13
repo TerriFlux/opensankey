@@ -1,0 +1,30 @@
+Hello {{ first_name }},
+
+You created an account on OpenSankey, the material and energy flow visualisation
+tool built by TerriFlux.
+
+We are tidying up our accounts, and we would rather not clutter the inbox of
+people who have moved on. Hence a simple question:
+
+  Keep my account:
+  {{ keep_url }}
+
+  Delete my account:
+  {{ unsubscribe_url }}
+
+If you do nothing, your account stays. We never delete anything you did not ask us
+to — but you will not receive this kind of message again.
+
+Deleting your account is reversible for 30 days: simply log back in, or click the
+cancellation link we will show you.
+
+Your account gives you access to the OpenSankey app ({{ login_url }}): import your
+Excel data, reconcile flows, export a publishable diagram.
+
+Any question? Write to us: {{ contact_email }}
+
+The TerriFlux team
+
+--
+You are receiving this because you created an account on OpenSankey.
+Unsubscribe: {{ unsubscribe_url }}

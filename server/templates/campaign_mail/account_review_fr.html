@@ -1,0 +1,67 @@
+<html xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+  <meta http-equiv=Content-Type content="text/html; charset=utf-8">
+</head>
+
+<body lang=FR style='word-wrap:break-word'>
+  <div>
+    <p><img width=182 height=108 src={{ logo_OS }}></p>
+    <p>Bonjour {{ first_name }},</p>
+    <br>
+    <p>Vous avez créé un compte sur OpenSankey, l'outil de visualisation de flux
+      de matière et d'énergie développé par TerriFlux.</p>
+    <p>Nous faisons le ménage dans nos comptes et nous ne voulons pas encombrer la
+      boîte mail de gens que cela n'intéresse plus. D'où cette question simple :</p>
+    <br>
+
+    <table cellpadding=0 cellspacing=0 border=0>
+      <tr>
+        <td style="padding-right:12px">
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr><td bgcolor="#2563eb" style="border-radius:6px">
+              <a href="{{ keep_url }}"
+                 style="display:inline-block;padding:12px 22px;color:#ffffff;
+                        text-decoration:none;font-family:sans-serif;font-size:15px">
+                Je garde mon compte
+              </a>
+            </td></tr>
+          </table>
+        </td>
+        <td>
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr><td bgcolor="#eef1f6" style="border-radius:6px">
+              <a href="{{ unsubscribe_url }}"
+                 style="display:inline-block;padding:12px 22px;color:#1a1a1a;
+                        text-decoration:none;font-family:sans-serif;font-size:15px">
+                Supprimer mon compte
+              </a>
+            </td></tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <br>
+    <p><strong>Si vous ne faites rien, votre compte reste en place.</strong> Nous ne
+      supprimons rien sans que vous l'ayez demandé — mais vous ne recevrez plus ce
+      genre de message.</p>
+    <p>Supprimer votre compte est réversible pendant 30 jours : il suffit de vous
+      reconnecter, ou de cliquer sur le lien d'annulation qui vous sera affiché.</p>
+    <br>
+    <p>Votre compte vous donne accès à
+      <a href="{{ login_url }}">l'application OpenSankey</a> : import de vos données
+      Excel, réconciliation de flux, export d'un diagramme publiable.</p>
+    <br>
+    <p>Une question ? <a href="mailto:{{ contact_email }}">Écrivez-nous</a>.</p>
+    <br>
+    <p>L'équipe TerriFlux</p>
+    <p><img border=0 width=112 height=34 src={{ logo_TerriFlux }}></p>
+    <p style="color:#888;font-size:12px">
+      Vous recevez ce message parce que vous avez créé un compte sur OpenSankey.
+      <a href="{{ unsubscribe_url }}" style="color:#888">Me désinscrire</a>.
+    </p>
+  </div>
+</body>
+
+</html>

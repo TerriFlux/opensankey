@@ -210,6 +210,7 @@ LAYOUT = """
 <div class="env-banner env-{{ env }}">
   <span>BASE : {{ env|upper }} · {{ db_path }} · {{ counts.users }} comptes</span>
   <span><a href="{{ url_for('admin_users.home') }}">comptes</a> ·
+        <a href="/admin/campaigns">campagnes ↗</a> ·
         <a href="/admin/metrics">métriques ↗</a></span>
 </div>
 <div class=wrap>
@@ -285,10 +286,25 @@ USER = """
     <div class=meta>Stripe</div><div>{{ u.stripe_id or '—' }}</div>
     <div class=meta>UTM</div><div>{{ u.utm_campaign or '—' }}</div>
     <div class=meta>Essai</div><div>{{ trial }}</div>
+    <div class=meta>Dernière connexion</div><div>{{ u.last_login or 'jamais (ou avant #270)' }}</div>
+    <div class=meta>Compte</div>
+    <div>{% if u.deactivated_at %}<span class="badge off">désactivé</span>
+           <span class=meta>purge prévue le {{ (u.purge_after or '')[:10] }}</span>
+         {% else %}<span class="badge ok">actif</span>{% endif %}</div>
+    <div class=meta>Mails de campagne</div>
+    <div>{% if u.mail_optout %}<span class="badge off">désinscrit</span>
+         {% else %}<span class="badge ok">accepte</span>{% endif %}</div>
     <div class=meta>Compté dans les stats ?</div>
     <div>{% if excluded %}<span class="badge off">non (exclu)</span>
          {% else %}<span class="badge ok">oui</span>{% endif %}</div>
   </div>
+  {% if u.deactivated_at %}
+  <form method=post action="{{ url_for('admin_users.reactivate', uid=u.id) }}" style="margin-top:12px">
+    <input type=hidden name=_csrf value="{{ csrf }}">
+    {% if env=='prod' %}<input type=hidden name=confirm_prod value=on>{% endif %}
+    <button class=ghost>Rétablir ce compte (annuler la purge)</button>
+  </form>
+  {% endif %}
 </div>
 
 <div class=card>
@@ -559,6 +575,32 @@ def delete(uid):
     u.delete()
     flash("Compte #{} {} supprimé.".format(uid, email), "ok")
     return back_home()
+
+
+@admin_users.route("/admin/users/<int:uid>/reactivate", methods=["POST"])
+@dev_required
+def reactivate(uid):
+    """
+    Annule une désactivation demandée via une campagne (issue #270), tant que la
+    purge n'a pas eu lieu. Le recours quand quelqu'un écrit « je n'ai jamais cliqué
+    sur ce lien » — ce qui arrive, les scanners de mail pré-chargent les URLs.
+    `mail_optout` n'est pas levé : rétablir un compte n'est pas consentir à des mails.
+    """
+    u = User.query.get(uid)
+    if u is None:
+        flash("Compte introuvable.", "error")
+        return back_home()
+    ok, msg = guard_write()
+    if not ok:
+        flash(msg, "error")
+        return back_to_user(uid)
+    if not u.is_deactivated():
+        flash("Ce compte n'est pas désactivé.", "info")
+        return back_to_user(uid)
+    u.reactivate()
+    db.session.commit()
+    flash("Compte #{} rétabli, la purge est annulée.".format(uid), "ok")
+    return back_to_user(uid)
 
 
 @admin_users.route("/admin/users/<int:uid>/license/grant", methods=["POST"])

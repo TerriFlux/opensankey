@@ -8,6 +8,7 @@
 import os
 import time
 import hashlib
+import secrets
 
 # System
 from datetime import datetime
@@ -61,6 +62,22 @@ TRIAL_PLAN_LICENSES = {
     "plus": ("OpenSankey+",),
     "suite": ("SankeySuite", "OpenSankey+"),
 }
+
+
+# ---------------------------------------------------------------
+# Campagnes de mail (issue #270) — nettoyage de la base de comptes.
+#
+# Un compte désactivé par l'utilisateur n'est PAS supprimé tout de suite : il est
+# marqué (`deactivated_at`) et purgé physiquement `PURGE_GRACE_DAYS` plus tard par
+# scripts/purge_deactivated.py. Cette fenêtre est la parade au fait qu'un lien GET
+# dans un mail est pré-chargé par les scanners de sécurité (Outlook SafeLinks,
+# antivirus, proxys) : sans elle, une campagne de quelques centaines d'adresses
+# supprimerait des comptes que personne n'a jamais cliqués, sans retour arrière.
+# Une reconnexion pendant la fenêtre annule aussi la désactivation.
+PURGE_GRACE_DAYS = 30
+
+# Actions possibles d'un destinataire de campagne, en réponse au mail.
+CAMPAIGN_ACTIONS = ("kept", "unsubscribed")
 
 
 # ---------------------------------------------------------------
@@ -231,6 +248,22 @@ class User(UserMixin, db.Model):
     trial_expired_handled = db.Column(db.Boolean)  # événement 'expired' déjà journalisé
     # Acquisition — utm_campaign transmis par le site à la création du compte
     utm_campaign = db.Column(db.String(256))
+    # Cycle de vie du compte (issue #270). Alimentés par les campagnes de mail et
+    # par le login. Voir CampaignRecipient pour le flux complet.
+    # - last_login : dernière connexion réussie (ISO). NULL = jamais connecté DEPUIS
+    #   la migration #270 — ce n'est PAS « jamais connecté » tout court, la colonne
+    #   n'existait pas avant. Ne pas cibler dessus tant qu'elle n'a pas quelques mois.
+    # - mail_optout : l'utilisateur ne veut plus de mail de campagne. Définitif :
+    #   même une réactivation du compte ne le lève pas.
+    # - deactivated_at / purge_after : suppression en deux temps. Le clic sur le lien
+    #   de désinscription désactive immédiatement ; le cron scripts/purge_deactivated.py
+    #   supprime physiquement une fois purge_after dépassé. La fenêtre existe parce
+    #   qu'un GET dans un mail est déclenché par les scanners (SafeLinks, antivirus,
+    #   proxys) : sans elle, on perdrait des comptes que personne n'a cliqués.
+    last_login = db.Column(db.String(128))
+    mail_optout = db.Column(db.Boolean)
+    deactivated_at = db.Column(db.String(128))
+    purge_after = db.Column(db.String(128))
     # Relationships
     # Cascade - delete entries in UserLicense if this db entry is deleted
     user_licenses = db.relationship("UserLicences", back_populates="user", cascade="all, delete")
@@ -245,6 +278,16 @@ class User(UserMixin, db.Model):
         :return: _description_
         :rtype: _type_
         """
+        # Les lignes qui référencent ce compte en ON DELETE SET NULL (campagnes,
+        # événements d'essai) sont censées lui survivre en perdant le lien. Mais
+        # SQLite n'applique PAS les clés étrangères par défaut (PRAGMA foreign_keys
+        # est OFF) : sans ce nettoyage explicite, elles gardent l'ancien user_id.
+        # Or les id sont réattribués — un nouvel inscrit peut hériter de l'id d'un
+        # compte purgé et se retrouver rattaché à ses lignes. Dans le cas d'une
+        # campagne, un vieux token encore valide désactiverait alors le compte de
+        # quelqu'un d'autre. On coupe donc le lien à la main, avant la suppression.
+        CampaignRecipient.query.filter_by(user_id=self.id).update({"user_id": None})
+        TrialEvent.query.filter_by(user_id=self.id).update({"user_id": None})
         for user_license in self.user_licenses:
             user_license.delete()
         db.session.delete(self)
@@ -366,6 +409,75 @@ class User(UserMixin, db.Model):
                 ok_license = True
                 break
         return ok_license
+
+    # -----------------------------------------------------------
+    # Cycle de vie du compte (issue #270) — désactivation / purge différée
+
+    def has_any_valid_license(self):
+        """True si au moins une licence est active et non expirée."""
+        for user_license in self.user_licenses:
+            if user_license is None or user_license.license is None:
+                continue
+            if self.has_valid_license(user_license.license.name):
+                return True
+        return False
+
+    def is_deactivated(self):
+        """True si le compte a été désactivé (en attente de purge)."""
+        return bool(self.deactivated_at)
+
+    def deactivate(self, grace_days=PURGE_GRACE_DAYS):
+        """
+        Désactive le compte et programme sa purge physique dans `grace_days`.
+        Idempotent : ne repousse pas la date de purge si déjà désactivé.
+        """
+        if self.is_deactivated():
+            return
+        now = datetime.now()
+        self.deactivated_at = now.isoformat()
+        self.purge_after = (now + timedelta(days=grace_days)).isoformat()
+
+    def reactivate(self):
+        """
+        Annule une désactivation en cours (clic « annuler », ou simple reconnexion).
+        Ne lève PAS `mail_optout` : qui a demandé à ne plus être contacté ne doit pas
+        se remettre à recevoir des mails parce qu'il s'est reconnecté une fois.
+        """
+        self.deactivated_at = None
+        self.purge_after = None
+
+    def is_purge_due(self, now=None):
+        """True si la fenêtre de rétractation est écoulée et le compte purgeable."""
+        if not self.purge_after:
+            return False
+        try:
+            return datetime.fromisoformat(self.purge_after) <= (now or datetime.now())
+        except (TypeError, ValueError):
+            return False
+
+    def campaign_protection(self):
+        """
+        Raison pour laquelle ce compte ne doit JAMAIS recevoir de mail de campagne
+        ni pouvoir être désactivé en un clic, ou None s'il est éligible.
+
+        Ces exclusions sont dures : un compte payant supprimé d'un clic laisserait
+        un abonnement Stripe orphelin, et un compte développeur est un compte
+        interne. Elles sont vérifiées à la constitution du segment ET au moment du
+        clic — la base peut avoir changé entre l'envoi et le clic.
+
+        :rtype: str | None — 'developer' | 'licensed' | 'trialing' | 'stripe' | 'optout'
+        """
+        if self.is_developer:
+            return "developer"
+        if self.has_any_valid_license():
+            return "licensed"
+        if self.has_active_trial():
+            return "trialing"
+        if self.stripe_id:
+            return "stripe"
+        if self.mail_optout:
+            return "optout"
+        return None
 
     # -----------------------------------------------------------
     # Free trial (essai gratuit) — helpers
@@ -670,6 +782,87 @@ class TrialEvent(db.Model):
     plan = db.Column(db.String(16))           # 'plus' | 'suite'
     utm_campaign = db.Column(db.String(256))  # UTM d'origine du compte, copié au moment de l'event
     created_at = db.Column(db.String(128))
+
+
+class Campaign(db.Model):
+    """
+    Une campagne de mail envoyée à un segment de comptes (issue #270).
+
+    Le premier usage est le nettoyage de la base : demander aux comptes dormants
+    s'ils veulent garder leur compte. La table garde le nécessaire pour reprendre
+    un envoi interrompu et pour lire les résultats a posteriori.
+    """
+
+    __tablename__ = "campaign"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(128))
+    # Nom du dossier de template sous server/templates/campaign_mail/
+    template = db.Column(db.String(64))
+    # 'draft' : destinataires figés, rien d'envoyé — 'sending' : envoi en cours
+    # 'done' : envoi terminé — 'failed' : le thread d'envoi est mort
+    status = db.Column(db.String(16), default="draft")
+    created_at = db.Column(db.String(128))
+    created_by = db.Column(db.String(128))
+    # Description lisible du segment qui a servi à constituer les destinataires
+    segment = db.Column(db.String(256))
+    recipients = db.relationship(
+        "CampaignRecipient", back_populates="campaign", cascade="all, delete"
+    )
+
+    def counts(self):
+        """Compteurs d'avancement, pour l'UI d'admin."""
+        total = sent = errors = kept = unsubscribed = 0
+        for r in self.recipients:
+            total += 1
+            if r.error:
+                errors += 1
+            elif r.sent_at:
+                sent += 1
+            if r.action == "kept":
+                kept += 1
+            elif r.action == "unsubscribed":
+                unsubscribed += 1
+        return {
+            "total": total,
+            "sent": sent,
+            "errors": errors,
+            "pending": total - sent - errors,
+            "kept": kept,
+            "unsubscribed": unsubscribed,
+            "no_reply": sent - kept - unsubscribed,
+        }
+
+
+class CampaignRecipient(db.Model):
+    """
+    Un destinataire d'une campagne, et sa réponse.
+
+    `token` est un secret aléatoire par destinataire (pas un token auto-porteur
+    signé type itsdangerous) : il est ainsi révocable, et le clic est traçable
+    sans exposer d'identifiant de compte dans l'URL du mail.
+
+    `email` est recopié ici car le compte peut être purgé : on veut garder trace
+    du fait qu'une adresse a été contactée et s'est désinscrite, pour ne jamais
+    la re-contacter par erreur.
+    """
+
+    __tablename__ = "campaign_recipient"
+    id = db.Column(db.Integer, primary_key=True)
+    campaign_id = db.Column(db.Integer, db.ForeignKey("campaign.id", ondelete="CASCADE"))
+    campaign = db.relationship("Campaign", back_populates="recipients")
+    # SET NULL : la ligne survit à la purge du compte
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
+    email = db.Column(db.String(128))
+    token = db.Column(db.String(64), unique=True, index=True)
+    sent_at = db.Column(db.String(128))
+    error = db.Column(db.String(256))
+    clicked_at = db.Column(db.String(128))
+    action = db.Column(db.String(16))  # 'kept' | 'unsubscribed' | None
+
+
+def new_campaign_token():
+    """Secret d'URL d'un destinataire (43 caractères, 256 bits d'entropie)."""
+    return secrets.token_urlsafe(32)
 
 
 def record_trial_event(user, event, plan):

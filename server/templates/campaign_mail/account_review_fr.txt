@@ -1,0 +1,31 @@
+Bonjour {{ first_name }},
+
+Vous avez créé un compte sur OpenSankey, l'outil de visualisation de flux de
+matière et d'énergie développé par TerriFlux.
+
+Nous faisons le ménage dans nos comptes et nous ne voulons pas encombrer la boîte
+mail de gens que cela n'intéresse plus. D'où cette question simple :
+
+  Je garde mon compte :
+  {{ keep_url }}
+
+  Supprimer mon compte :
+  {{ unsubscribe_url }}
+
+Si vous ne faites rien, votre compte reste en place. Nous ne supprimons rien sans
+que vous l'ayez demandé — mais vous ne recevrez plus ce genre de message.
+
+Supprimer votre compte est réversible pendant 30 jours : il suffit de vous
+reconnecter, ou de cliquer sur le lien d'annulation qui vous sera affiché.
+
+Votre compte vous donne accès à l'application OpenSankey ({{ login_url }}) :
+import de vos données Excel, réconciliation de flux, export d'un diagramme
+publiable.
+
+Une question ? Écrivez-nous : {{ contact_email }}
+
+L'équipe TerriFlux
+
+--
+Vous recevez ce message parce que vous avez créé un compte sur OpenSankey.
+Me désinscrire : {{ unsubscribe_url }}

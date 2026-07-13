@@ -244,6 +244,21 @@ def login_post():
         user.password = hash_password(password)
         db.session.commit()
 
+    # Cycle de vie du compte (issue #270).
+    # `last_login` sert au ciblage des campagnes de nettoyage.
+    # Une reconnexion annule aussi une désactivation en cours : c'est le filet de
+    # sécurité contre les clics fantômes sur le lien de désinscription (scanners de
+    # mail qui pré-chargent les URLs). Quelqu'un qui revient veut son compte —
+    # `mail_optout` n'est pas levé pour autant, un refus de mail reste un refus.
+    user.last_login = datetime.now().isoformat()
+    if user.is_deactivated():
+        print(
+            "INFO campaign: reactivating user {0} on login "
+            "(was deactivated at {1})".format(user.id, user.deactivated_at)
+        )
+        user.reactivate()
+    db.session.commit()
+
     # Clear secret token if needed
     if (user.secret_token is not None) and (user.secret_expiry is not None):
         date_expiry = datetime.fromisoformat(user.secret_expiry)

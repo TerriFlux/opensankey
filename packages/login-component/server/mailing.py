@@ -500,6 +500,61 @@ def send_trial_admin_notification(user, plan):
     send(msg)
 
 
+# ---------------------------------------------------------------
+# Campagnes (issue #270)
+
+
+def send_account_review_mail(user, token, language="fr"):
+    """
+    Campagne « Gardez-vous votre compte ? » — demande à un compte dormant s'il
+    souhaite le conserver, avec deux liens explicites :
+
+      - garder    → /campaign/<token>/keep
+      - supprimer → /campaign/<token>/unsubscribe (désactive, purge à J+30)
+
+    Sans clic, il ne se passe rien : on ne supprime jamais un compte par défaut.
+
+    :param token: secret d'URL du destinataire (CampaignRecipient.token)
+    """
+    if not is_email_valid(user.email):
+        return
+    language = _normalize_lang(language)
+    subject = {
+        "fr": "[OpenSankey] Souhaitez-vous conserver votre compte ?",
+        "en": "[OpenSankey] Do you want to keep your account?",
+    }
+    msg = Message(
+        subject=subject[language],
+        sender=("Contact TerriFlux", MAIL_SENDING_ADRESS),
+        recipients=[user.email],
+    )
+    file = "campaign_mail/account_review_{}".format(language)
+    ctx = dict(
+        first_name=user.firstname,
+        keep_url="{0}campaign/{1}/keep".format(CLIENT_ROOT_URL, token),
+        unsubscribe_url="{0}campaign/{1}/unsubscribe".format(CLIENT_ROOT_URL, token),
+        login_url="{0}login".format(CLIENT_ROOT_URL),
+        contact_email=TRIAL_CONTACT_EMAIL,
+    )
+    msg.body = render_template(file + ".txt", **ctx)
+    msg.html = render_template(
+        file + ".html",
+        logo_OS="cid:logo_OS",
+        logo_TerriFlux="cid:logo_TerriFlux",
+        **ctx,
+    )
+    # En-tête standard RFC 8058 : les clients mail affichent un bouton natif
+    # « Se désabonner », et les filtres anti-spam pénalisent moins un envoi de
+    # masse qui l'expose. List-Unsubscribe-Post permet le désabonnement en un
+    # clic sans quitter le client mail (le POST atterrit sur la même route).
+    msg.extra_headers = {
+        "List-Unsubscribe": "<{0}>".format(ctx["unsubscribe_url"]),
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    }
+    _attach_logos(msg)
+    send(msg)
+
+
 def send_pw_modification_email(user, language="fr"):
     """
     Create custom mail for password reseting
