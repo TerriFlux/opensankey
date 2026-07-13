@@ -1,0 +1,101 @@
+<html xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+  <meta http-equiv=Content-Type content="text/html; charset=utf-8">
+</head>
+
+<body lang=FR style='word-wrap:break-word'>
+  <div>
+    <p><img width=182 height=108 src={{ logo_OS }}></p>
+    <p>Bonjour {{ first_name }},</p>
+    <br>
+    <p>Vous avez créé un compte sur OpenSankey. Que vous l'utilisiez régulièrement ou
+      que vous n'y soyez jamais revenu, l'outil a beaucoup changé depuis — et si
+      quelque chose vous avait arrêté à l'époque, il y a de bonnes chances que ce ne
+      soit plus le cas.</p>
+    <br>
+
+    <p><strong>Ce qui est arrivé depuis</strong></p>
+    <ul>
+      <li style="margin-bottom:8px"><strong>Import de vos fichiers existants.</strong>
+        OpenSankey ouvre désormais nativement les diagrammes SankeyMATIC et les fichiers
+        STAN (<code>.smfa</code>). Si vous aviez un travail en cours ailleurs, vous
+        pouvez le reprendre ici.</li>
+      <li style="margin-bottom:8px"><strong>Édition au clavier.</strong> Un éditeur
+        texte à côté du tableur : vous écrivez vos flux en quelques lignes, le
+        diagramme suit, dans les deux sens.</li>
+      <li style="margin-bottom:8px"><strong>Publication en un site web autonome.</strong>
+        Un diagramme, ou tout un portfolio, se publie comme un site consultable — à
+        envoyer à un client ou à mettre en ligne.</li>
+      <li style="margin-bottom:8px"><strong>Rendu et fiabilité.</strong> Nouvelle forme
+        de flux « contour exact », et un format de fichier verrouillé par des tests à
+        chaque livraison.</li>
+    </ul>
+    <p><a href="{{ changelog_url }}">Voir toutes les évolutions</a></p>
+    <br>
+
+    <table cellpadding=0 cellspacing=0 border=0>
+      <tr><td bgcolor="#2563eb" style="border-radius:6px">
+        <a href="{{ login_url }}"
+           style="display:inline-block;padding:12px 24px;color:#ffffff;
+                  text-decoration:none;font-family:sans-serif;font-size:15px">
+          Ouvrir OpenSankey
+        </a>
+      </td></tr>
+    </table>
+
+    <br>
+    <hr style="border:0;border-top:1px solid #e2e2e2">
+    <br>
+
+    <p><strong>Et si ce n'est plus d'actualité ?</strong></p>
+    <p>Nous préférons une liste d'utilisateurs honnête à une grosse liste. Dites-nous
+      simplement où vous en êtes :</p>
+
+    <table cellpadding=0 cellspacing=0 border=0>
+      <tr>
+        <td style="padding-right:12px">
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr><td bgcolor="#eef1f6" style="border-radius:6px">
+              <a href="{{ keep_url }}"
+                 style="display:inline-block;padding:11px 20px;color:#1a1a1a;
+                        text-decoration:none;font-family:sans-serif;font-size:14px">
+                Je garde mon compte
+              </a>
+            </td></tr>
+          </table>
+        </td>
+        <td>
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr><td bgcolor="#eef1f6" style="border-radius:6px">
+              <a href="{{ unsubscribe_url }}"
+                 style="display:inline-block;padding:11px 20px;color:#1a1a1a;
+                        text-decoration:none;font-family:sans-serif;font-size:14px">
+                Ce n'est plus pour moi, supprimez mon compte
+              </a>
+            </td></tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <br>
+    <p>Si vous ne faites rien, votre compte reste en place — nous ne supprimons jamais
+      un compte sans qu'on nous l'ait demandé.</p>
+    <p class=muted style="color:#888;font-size:13px">La suppression reste réversible
+      pendant 30 jours : il suffit de vous reconnecter, ou de cliquer sur le lien
+      d'annulation qui vous sera affiché.</p>
+    <br>
+    <p>Une question, un besoin particulier ?
+      <a href="mailto:{{ contact_email }}">Écrivez-nous</a>.</p>
+    <br>
+    <p>L'équipe TerriFlux</p>
+    <p><img border=0 width=112 height=34 src={{ logo_TerriFlux }}></p>
+    <p style="color:#888;font-size:12px">
+      Vous recevez ce message parce que vous avez créé un compte sur OpenSankey.
+      <a href="{{ unsubscribe_url }}" style="color:#888">Me désinscrire</a>.
+    </p>
+  </div>
+</body>
+
+</html>

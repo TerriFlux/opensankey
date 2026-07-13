@@ -1,0 +1,50 @@
+Hello {{ first_name }},
+
+You created an account on OpenSankey. Whether you use it regularly or never came
+back, the tool has changed a great deal since — and if something stopped you back
+then, there is a fair chance it no longer applies.
+
+What happened since:
+
+  - Import your existing files. OpenSankey now opens SankeyMATIC diagrams and
+    STAN files (.smfa) natively. If you had work in progress elsewhere, you can
+    pick it up here.
+
+  - Keyboard editing. A text editor alongside the spreadsheet: write your flows
+    in a few lines, the diagram follows — and the other way around.
+
+  - Publish as a standalone website. A diagram, or a whole portfolio, can be
+    published as a browsable site — to send to a client or put online.
+
+  - Rendering and reliability: a new "exact outline" flow shape, and a file
+    format now locked down by tests on every release.
+
+All the changes: {{ changelog_url }}
+
+  Open OpenSankey:
+  {{ login_url }}
+
+And if it is no longer relevant?
+--------------------------------
+
+We would rather have an honest list of users than a big one. Just tell us where
+you stand:
+
+  Keep my account:
+  {{ keep_url }}
+
+  Not for me anymore, delete my account:
+  {{ unsubscribe_url }}
+
+If you do nothing, your account stays — we never delete an account unless asked.
+
+Deletion stays reversible for 30 days: simply log back in, or click the
+cancellation link we will show you.
+
+A question, a specific need? Write to us: {{ contact_email }}
+
+The TerriFlux team
+
+--
+You are receiving this because you created an account on OpenSankey.
+Unsubscribe: {{ unsubscribe_url }}

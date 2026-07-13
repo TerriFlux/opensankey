@@ -500,6 +500,70 @@ def send_trial_admin_notification(user, plan):
     send(msg)
 
 
+# ---------------------------------------------------------------
+# Campagnes (issue #270)
+
+
+def send_account_review_mail(user, token, language="fr"):
+    """
+    Campagne de reprise de contact — s'adresse à un compte dormant.
+
+    Le mail marche dans les deux sens, volontairement : il commence par donner une
+    raison de revenir (ce qui a changé depuis, lien de reprise), et ne pose la
+    question du compte qu'ensuite, sans reproche. Le but est autant de réactiver
+    des utilisateurs que d'assainir la base — un mail qui ne ferait que demander
+    « voulez-vous partir ? » n'obtiendrait que des départs.
+
+      - garder    → /campaign/<token>/keep
+      - supprimer → /campaign/<token>/unsubscribe (désactive, purge à J+30)
+
+    Sans clic, il ne se passe rien : on ne supprime jamais un compte par défaut.
+
+    :param token: secret d'URL du destinataire (CampaignRecipient.token)
+    """
+    if not is_email_valid(user.email):
+        return
+    language = _normalize_lang(language)
+    # L'objet ne présuppose RIEN sur l'activité du destinataire : on ne sait pas s'il
+    # s'est connecté hier ou jamais (`last_login` vient d'être créée, elle est vide
+    # pour tout le monde). La seule chose qu'on connaisse, c'est la date d'inscription.
+    subject = {
+        "fr": "[OpenSankey] Ce qui a changé depuis votre inscription",
+        "en": "[OpenSankey] What has changed since you signed up",
+    }
+    msg = Message(
+        subject=subject[language],
+        sender=("Contact TerriFlux", MAIL_SENDING_ADRESS),
+        recipients=[user.email],
+    )
+    file = "campaign_mail/account_review_{}".format(language)
+    ctx = dict(
+        first_name=user.firstname,
+        keep_url="{0}campaign/{1}/keep".format(CLIENT_ROOT_URL, token),
+        unsubscribe_url="{0}campaign/{1}/unsubscribe".format(CLIENT_ROOT_URL, token),
+        login_url="{0}login".format(CLIENT_ROOT_URL),
+        changelog_url="{0}changelog".format(CLIENT_ROOT_URL),
+        contact_email=TRIAL_CONTACT_EMAIL,
+    )
+    msg.body = render_template(file + ".txt", **ctx)
+    msg.html = render_template(
+        file + ".html",
+        logo_OS="cid:logo_OS",
+        logo_TerriFlux="cid:logo_TerriFlux",
+        **ctx,
+    )
+    # En-tête standard RFC 8058 : les clients mail affichent un bouton natif
+    # « Se désabonner », et les filtres anti-spam pénalisent moins un envoi de
+    # masse qui l'expose. List-Unsubscribe-Post permet le désabonnement en un
+    # clic sans quitter le client mail (le POST atterrit sur la même route).
+    msg.extra_headers = {
+        "List-Unsubscribe": "<{0}>".format(ctx["unsubscribe_url"]),
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    }
+    _attach_logos(msg)
+    send(msg)
+
+
 def send_pw_modification_email(user, language="fr"):
     """
     Create custom mail for password reseting

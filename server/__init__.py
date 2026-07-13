@@ -130,6 +130,18 @@ def create_app():
 
     app.register_blueprint(admin_users_blueprint)
 
+    # Campagnes de mail (issue #270) — deux surfaces :
+    # - /admin/campaigns : composition et envoi, réservé aux comptes is_developer
+    # - /campaign/<token>/... : les liens cliqués DEPUIS le mail, donc publics et
+    #   sans session (la personne visée ne se connecte justement plus). L'autorisation
+    #   tient au secret d'URL. Enregistrés avant le blueprint principal : leurs routes
+    #   sont plus spécifiques que le catch-all SPA `/<path:path>` de views.goto.
+    from .campaign import campaign as campaign_blueprint
+    from .admin_campaign import admin_campaign as admin_campaign_blueprint
+
+    app.register_blueprint(campaign_blueprint)
+    app.register_blueprint(admin_campaign_blueprint)
+
     # Blueprint for User interaction part of app
     from .views import sankeyapp as main_blueprint
 
