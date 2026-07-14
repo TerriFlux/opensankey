@@ -138,6 +138,11 @@ def write_process_status(log_filename, status):
     path = _process_status_path(log_filename)
     if not path:
         return
+    if status == PROCESS_STATUS_RUNNING:
+        # Un même logname est réutilisé d'un run à l'autre : sans ça, la cause de l'échec
+        # PRÉCÉDENT survivrait à un run qui repart, et un run réussi afficherait l'ancienne
+        # erreur si quoi que ce soit relisait le canal.
+        _clear_process_error(log_filename)
     try:
         with open(path, "w", encoding="utf-8") as f:
             f.write(status)
@@ -157,6 +162,58 @@ def read_process_status(log_filename):
             return f.read().strip() or None
     except OSError:
         return None
+
+
+# --- Cause machine-lisible d'un échec (SA#249 / mfa_problem#43) --------------
+# Le fichier de statut ne porte qu'un mot (running/finished/failed) et le client
+# le compare tel quel : y encoder du JSON casserait ce contrat. La CAUSE voyage
+# donc dans un fichier frère (<logname>.error), écrit par le thread juste avant
+# le statut d'échec, et exposé en plus (jamais à la place) du statut par
+# check_process. Un client qui l'ignore garde exactement l'ancien comportement.
+def _process_error_path(log_filename):
+    if not log_filename:
+        return None
+    return log_filename + ".error"
+
+
+def write_process_error(log_filename, error):
+    """
+    Écrit la cause de l'échec. `error` est un dict sérialisable ({code, message, details}),
+    typiquement MFAProblemError.to_dict(). Best-effort, comme le statut.
+    """
+    path = _process_error_path(log_filename)
+    if not path:
+        return
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(error, f, ensure_ascii=False)
+    except (OSError, TypeError, ValueError):
+        # Un échec d'écriture (ou une cause non sérialisable) ne doit pas masquer l'échec
+        # lui-même : le client retombe alors sur le message générique.
+        pass
+
+
+def read_process_error(log_filename):
+    """Relit la cause. None si absente/illisible — le client affiche alors le message générique."""
+    path = _process_error_path(log_filename)
+    if not path or not os.path.isfile(path):
+        return None
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return None
+
+
+def _clear_process_error(log_filename):
+    """Efface la cause d'un run précédent (appelé au passage en RUNNING)."""
+    path = _process_error_path(log_filename)
+    if not path:
+        return
+    try:
+        os.remove(path)
+    except OSError:
+        pass
 
 
 @opensankey.route("/")
@@ -193,6 +250,9 @@ def check_process():
                 # None tant que le thread n'a rien écrit (= traitement en cours) ;
                 # le client s'arrête sur 'finished'/'failed', plus sur le texte.
                 "status": read_process_status(logname),
+                # Cause de l'échec ({code, message, details}), quand le thread en a posé une
+                # (SA#249). None sinon : le client affiche alors son message générique.
+                "error": read_process_error(logname),
             }
             json_data = json.dumps(results_dict)
             # trace.logger.debug('dumps')

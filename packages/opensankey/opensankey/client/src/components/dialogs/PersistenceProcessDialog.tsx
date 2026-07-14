@@ -33,7 +33,7 @@ import { Class_ApplicationData } from '../../types/ApplicationData'
 import FileSaver from 'file-saver'
 import { decompressGzipDataFixed, decompressUploadedFileUniversal } from '../../Persistence/UniversalJSONCompression'
 import { Type_JSON, default_main_sankey_id } from '../../types/Utils'
-import { ActionButtons, ProcessTerminal } from './PersistenceProcessDialogTerminal'
+import { ActionButtons, ProcessTerminal, Type_ProcessError } from './PersistenceProcessDialogTerminal'
 import {
   CONVERTER_CONFIGS, ConverterConfig, FormatConfigStructure, FormatType, getDefaultInputOptions, getDefaultOutputOptions,
   getInitialFormat, hasOptionsFormat, SOLVER_OPTION_KEYS, INPUT_OPTION_KEYS, OptionGroup, OPTION_GROUP_LABELS
@@ -88,6 +88,26 @@ const FORMAT_CONFIG: Record<FileFormat, {
 const stored_file_handles = new Map<string, FileSystemFileHandle>()
 
 const supports_fs_access = typeof window !== 'undefined' && 'showOpenFilePicker' in window
+
+/**
+ * SA#249 — Message d'échec affiché à l'utilisateur.
+ *
+ * Le serveur joint un CODE quand il en connaît un (cf. mfa_problem_error.py) ; on lui associe un
+ * message actionnable. Deux raisons de retomber sur le message générique : aucune cause remontée
+ * (échec sans code), ou code INCONNU du front — un backend plus récent peut introduire un code que
+ * cette version ne traduit pas encore, et il vaut mieux un message vague qu'une clé i18n crue
+ * affichée telle quelle.
+ */
+const failureMessage = (
+  t: (_: string) => string,
+  generic_message: string,
+  error?: Type_ProcessError
+): string => {
+  if (!error?.code) return generic_message
+  const key = 'ProcessDialog.error_' + error.code
+  const translated = t(key)
+  return translated === key ? generic_message : translated
+}
 
 const pickerTypesForFormat = (format: FormatType): Array<{ description: string; accept: Record<string, string[]> }> | undefined => {
   if (format === 'excel') {
@@ -586,6 +606,9 @@ export const UniversalFileConverter = ({
 
   const [file_path, setFilePath] = useState('')
   const [failure, setFailure] = useState(false)
+  // SA#249 — cause de l'échec remontée par le serveur (code MFAProblem). Quand elle est là, elle
+  // remplace le message d'échec générique par un message actionnable.
+  const [failure_error, setFailureError] = useState<Type_ProcessError | undefined>(undefined)
 
   // Restore a previously-picked file handle when the modal is reopened.
   // The handle survives in the module-level Map even after unmount.
@@ -814,6 +837,7 @@ export const UniversalFileConverter = ({
     setStarted(false)
     setProcessing(false)
     setFailure(false)
+    setFailureError(undefined)
     setResult('')
     // [#188] Fresh dialog opening: clear manual-override tracking so the
     // workbook's recorded options pre-fill the buckets cleanly.
@@ -900,6 +924,7 @@ export const UniversalFileConverter = ({
     setStarted(false)
     setProcessing(false)
     setFailure(false)
+    setFailureError(undefined)
     setAutoLoad(!config.output.required /*&& !config.input.format.options!.includes('blob')*/)
 
     set_show_terminal(false)
@@ -911,6 +936,7 @@ export const UniversalFileConverter = ({
   const launch = (file_path: string) => {
     setFilePath(file_path)
     setFailure(false)
+    setFailureError(undefined)
     setStarted(true)
     setProcessing(true)
     setResult('')
@@ -1578,7 +1604,9 @@ export const UniversalFileConverter = ({
       {started && !processing && failure ? (
         <Alert status='warning'>
           <AlertIcon />
-          {failure_status}
+          {/* SA#249 — message par code quand le serveur en a remonté un (et que le front connaît ce
+              code) ; sinon on garde le message d'échec générique du dialogue. */}
+          {failureMessage(t, failure_status, failure_error)}
         </Alert>
       ) : (<></>)}
       {/* Terminal inline si configuré */}
@@ -1643,6 +1671,7 @@ export const UniversalFileConverter = ({
             auto_load={auto_load}
             failure={failure}
             setFailure={setFailure}
+            setFailureError={setFailureError}
             processing={processing}
             setProcessing={setProcessing}
             started={started}

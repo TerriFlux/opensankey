@@ -33,6 +33,7 @@ from threading import Lock
 from opensankey.server.views import (
     set_process_state,
     write_process_status,
+    write_process_error,
     PROCESS_STATUS_RUNNING,
     PROCESS_STATUS_FINISHED,
     PROCESS_STATUS_FAILED,
@@ -43,6 +44,7 @@ import SankeyExcelParser.su_trace as trace
 # from SankeyExcelParser.classes.sankey import Sankey
 
 import mfa_problem.mfa_problem_main as mfa_problem_main
+from mfa_problem.mfa_problem_error import MFAProblemError, MFAProblemErrorCode
 
 # ---------------------------------------------------------------
 # Local imports
@@ -610,6 +612,10 @@ def solve_optimisation_problem_unified(
         if not ok:
             trace.logger.error(f"-- ERROR loading sankey from JSON: {msg}")
             trace.logger.info("{:-<{w}}".format(" [FAILED] Could not load sankey", w=MAX_LINE_LENGTH))
+            # SA#249 — erreur de SAISIE : le diagramme fourni n'est pas exploitable.
+            write_process_error(logname, {
+                "code": MFAProblemErrorCode.BAD_DATA, "message": msg, "details": {},
+            })
             write_process_status(logname, PROCESS_STATUS_FAILED)
             return
         io_input.sankey.autocompute_mat_balance()
@@ -654,6 +660,10 @@ def solve_optimisation_problem_unified(
                 trace.logger.error(f"ERROR {line}")
             trace.logger.info(
                 "{:-<{w}}".format("[FAILED] Could not extract datas from input file", w=MAX_LINE_LENGTH))
+            # SA#249 — erreur de SAISIE : le fichier fourni n'est pas exploitable.
+            write_process_error(logname, {
+                "code": MFAProblemErrorCode.BAD_DATA, "message": msg, "details": {},
+            })
             write_process_status(logname, PROCESS_STATUS_FAILED)
             return
 
@@ -734,29 +744,38 @@ def solve_optimisation_problem_unified(
 
     try:
         if with_reconciled:
-            ok = _run_pass(remove_redundancy_flag=False, target_field="data_value", skip_reset=False)
-            if ok and with_completed:
+            _run_pass(remove_redundancy_flag=False, target_field="data_value", skip_reset=False)
+            if with_completed:
                 # Second pass: results go into alterego.completed_value, alterego
                 # already exists from the first pass — don't reset.
-                ok = _run_pass(
+                _run_pass(
                     remove_redundancy_flag=True, target_field="completed_value", skip_reset=True,
                 )
         else:
             # Only the completed pass requested. Standard single-pass write into
             # data_value (preserves the legacy "Compléter le diagramme" UX).
-            ok = _run_pass(remove_redundancy_flag=True, target_field="data_value", skip_reset=False)
+            _run_pass(remove_redundancy_flag=True, target_field="data_value", skip_reset=False)
+    except MFAProblemError as e:
+        # SA#249 — l'échec porte un code (INFEASIBLE, INCONSISTENT_STOCK_GRID, SOLVER_ERROR…) :
+        # on le transmet au client, qui en tire un message actionnable plutôt qu'un « échec ».
+        # L'ordre compte : la cause AVANT le statut, car c'est le passage à 'failed' qui déclenche
+        # la lecture côté client.
+        trace.logger.error(f"-- ERROR in optimisation process: {e}")
+        trace.logger.info("{:-<{w}}".format(" [FAILED] Optimization was not successful", w=MAX_LINE_LENGTH))
+        write_process_error(logname, e.to_dict())
+        write_process_status(logname, PROCESS_STATUS_FAILED)
+        return
     except Exception as e:
         trace.logger.error("-- UNEXPECTED ERROR in optimisation process.")
         trace.logger.error("-- Please report this issue to support@open-sankey.fr")
         trace.logger.debug(f"-- UNEXPECTED ERROR {e}")
         trace.logger.debug(traceback.format_exc())
         trace.logger.info("{:-<{w}}".format(" [FAILED] Optimization was not successful", w=MAX_LINE_LENGTH))
-        write_process_status(logname, PROCESS_STATUS_FAILED)
-        return
-
-    if not ok:
-        trace.logger.error("-- ERROR in optimisation process.")
-        trace.logger.info("{:-<{w}}".format(" [FAILED] Optimization was not successful", w=MAX_LINE_LENGTH))
+        write_process_error(logname, {
+            "code": MFAProblemErrorCode.INTERNAL,
+            "message": str(e),
+            "details": {},
+        })
         write_process_status(logname, PROCESS_STATUS_FAILED)
         return
 
