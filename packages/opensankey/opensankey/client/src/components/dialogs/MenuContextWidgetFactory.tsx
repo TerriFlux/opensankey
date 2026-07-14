@@ -380,12 +380,14 @@ export const AutoLayoutSpacingInputs = ({
   show_horizontal = true,
   show_extremities = false,
   show_optimize_mode = false,
+  show_recycling_mode = false,
   label_min_width = '100px'
 }: {
   app_data: Class_ApplicationData,
   show_horizontal?: boolean,
   show_extremities?: boolean,
   show_optimize_mode?: boolean,
+  show_recycling_mode?: boolean,
   label_min_width?: string
 }) => {
   const { drawing_area } = app_data
@@ -406,6 +408,9 @@ export const AutoLayoutSpacingInputs = ({
     }
     if (show_optimize_mode) {
       app_data.layout_optimize_crossing = true
+    }
+    if (show_recycling_mode) {
+      app_data.layout_auto_recycling = true
     }
     redraw()
   }
@@ -496,6 +501,23 @@ export const AutoLayoutSpacingInputs = ({
         <option value='minimize'>{t('ProcessDialog.layout_minimize')}</option>
       </Select>
     </Box>}
+    {/* #153 — Recalcul auto du recyclage après un déplacement de nœud. */}
+    {show_recycling_mode && <Box display='flex' alignItems='center' gap='4px'>
+      <OSTooltip label={t('ProcessDialog.layout_recycling_tt')}>
+        <Text fontSize='xs' whiteSpace='nowrap' minW={label_min_width}>{t('ProcessDialog.layout_recycling')}</Text>
+      </OSTooltip>
+      <Select
+        size='xs'
+        value={app_data.layout_auto_recycling ? 'auto' : 'frozen'}
+        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+          app_data.layout_auto_recycling = e.target.value === 'auto'
+          redraw()
+        }}
+      >
+        <option value='auto'>{t('ProcessDialog.layout_recycling_auto')}</option>
+        <option value='frozen'>{t('ProcessDialog.layout_recycling_frozen')}</option>
+      </Select>
+    </Box>}
     <OSTooltip label={t('ProcessDialog.layout_reset_tt')}>
       <Button
         variant='menuconfigpanel_option_button'
@@ -532,7 +554,7 @@ export const MenuContextAutoLayout = ({ app_data }: { app_data: Class_Applicatio
   }
 
   return <Box display='flex' flexDirection='column' gap='4px' p='8px' minW='280px'>
-    <AutoLayoutSpacingInputs app_data={app_data} show_extremities show_optimize_mode />
+    <AutoLayoutSpacingInputs app_data={app_data} show_extremities show_optimize_mode show_recycling_mode />
     <Box display='flex' alignItems='center' gap='4px'>
       <Checkbox
         size='sm'
