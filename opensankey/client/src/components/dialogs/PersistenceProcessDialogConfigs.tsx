@@ -66,6 +66,73 @@ export const translations = {
       de: 'Starten',
       it: 'Avvia'
     },
+    // SA#249 — messages par CODE d'erreur remonté par MFAProblem (mfa_problem_error.py). La
+    // distinction qui compte pour l'utilisateur : « votre modèle est en cause, voici quoi
+    // corriger » vs « c'est de notre côté, signalez-le nous ». Un code inconnu (version de
+    // MFAProblem plus récente que le front) retombe sur le message générique d'échec.
+    error_INFEASIBLE: {
+      en: 'The model has no solution: its constraints contradict each other. Check the measured values and the constraints (ratios, min/max bounds) of the flows involved.',
+      fr: 'Le modèle n\'a pas de solution : ses contraintes se contredisent. Vérifiez les valeurs mesurées et les contraintes (ratios, bornes min/max) des flux concernés.',
+      es: 'El modelo no tiene solución: sus restricciones se contradicen. Revise los valores medidos y las restricciones (ratios, límites mín/máx) de los flujos implicados.',
+      de: 'Das Modell hat keine Lösung: Seine Nebenbedingungen widersprechen sich. Prüfen Sie die Messwerte und die Nebenbedingungen (Verhältnisse, Min/Max-Grenzen) der betroffenen Flüsse.',
+      it: 'Il modello non ha soluzione: i suoi vincoli si contraddicono. Verificate i valori misurati e i vincoli (rapporti, limiti min/max) dei flussi coinvolti.'
+    },
+    error_UNBOUNDED: {
+      en: 'The model is under-constrained: the solution is unbounded. Add measured values or bounds to the free flows.',
+      fr: 'Le modèle est sous-contraint : la solution est non bornée. Ajoutez des valeurs mesurées ou des bornes sur les flux libres.',
+      es: 'El modelo está poco restringido: la solución no está acotada. Añada valores medidos o límites a los flujos libres.',
+      de: 'Das Modell ist unterbestimmt: Die Lösung ist unbeschränkt. Fügen Sie Messwerte oder Grenzen für die freien Flüsse hinzu.',
+      it: 'Il modello è sotto-vincolato: la soluzione non è limitata. Aggiungete valori misurati o limiti sui flussi liberi.'
+    },
+    error_BAD_CONSTRAINT: {
+      en: 'The constraints could not be built from the model. Check the constraint sheets (ratios, min/max) and the node/flow names they reference.',
+      fr: 'Les contraintes n\'ont pas pu être construites à partir du modèle. Vérifiez les feuilles de contraintes (ratios, min/max) et les noms de nœuds/flux qu\'elles référencent.',
+      es: 'No se pudieron construir las restricciones a partir del modelo. Revise las hojas de restricciones (ratios, mín/máx) y los nombres de nodos/flujos que referencian.',
+      de: 'Die Nebenbedingungen konnten nicht aus dem Modell erstellt werden. Prüfen Sie die Bedingungsblätter (Verhältnisse, Min/Max) und die dort referenzierten Knoten-/Flussnamen.',
+      it: 'Non è stato possibile costruire i vincoli dal modello. Verificate i fogli dei vincoli (rapporti, min/max) e i nomi di nodi/flussi a cui fanno riferimento.'
+    },
+    error_BAD_DATA: {
+      en: 'The model data could not be loaded. Check the input file (or diagram) for missing or malformed values.',
+      fr: 'Les données du modèle n\'ont pas pu être chargées. Vérifiez le fichier d\'entrée (ou le diagramme) : valeurs manquantes ou mal formées.',
+      es: 'No se pudieron cargar los datos del modelo. Revise el archivo de entrada (o el diagrama): valores faltantes o mal formados.',
+      de: 'Die Modelldaten konnten nicht geladen werden. Prüfen Sie die Eingabedatei (oder das Diagramm) auf fehlende oder fehlerhafte Werte.',
+      it: 'Non è stato possibile caricare i dati del modello. Verificate il file di input (o il diagramma): valori mancanti o mal formati.'
+    },
+    error_INCONSISTENT_STOCK_GRID: {
+      en: 'A stock node declares a stock for only some of the data tag combinations. Make every stock node cover all combinations, or re-import the source file rather than an already-reconciled one.',
+      fr: 'Un nœud de stock ne déclare un stock que pour une partie des combinaisons d\'étiquettes de données. Faites couvrir toutes les combinaisons à chaque nœud de stock, ou réimportez le fichier source plutôt qu\'un fichier déjà réconcilié.',
+      es: 'Un nodo de stock declara stock solo para algunas combinaciones de etiquetas de datos. Haga que cada nodo de stock cubra todas las combinaciones, o reimporte el archivo fuente en lugar de uno ya reconciliado.',
+      de: 'Ein Bestandsknoten deklariert einen Bestand nur für einen Teil der Daten-Tag-Kombinationen. Lassen Sie jeden Bestandsknoten alle Kombinationen abdecken, oder importieren Sie die Quelldatei erneut statt einer bereits abgeglichenen.',
+      it: 'Un nodo di stock dichiara uno stock solo per alcune combinazioni di etichette dati. Fate coprire tutte le combinazioni a ogni nodo di stock, oppure reimportate il file sorgente invece di uno già riconciliato.'
+    },
+    error_SINGULAR: {
+      en: 'The system of equations is singular or ill-conditioned (often redundant or degenerate constraints). Try removing duplicate constraints; if it persists, report it to us.',
+      fr: 'Le système d\'équations est singulier ou mal conditionné (souvent des contraintes redondantes ou dégénérées). Essayez de retirer les contraintes en double ; si cela persiste, signalez-le nous.',
+      es: 'El sistema de ecuaciones es singular o está mal condicionado (a menudo restricciones redundantes o degeneradas). Intente eliminar las restricciones duplicadas; si persiste, comuníquenoslo.',
+      de: 'Das Gleichungssystem ist singulär oder schlecht konditioniert (häufig redundante oder entartete Nebenbedingungen). Entfernen Sie doppelte Bedingungen; falls es bestehen bleibt, melden Sie es uns.',
+      it: 'Il sistema di equazioni è singolare o mal condizionato (spesso vincoli ridondanti o degeneri). Provate a rimuovere i vincoli duplicati; se persiste, segnalatecelo.'
+    },
+    error_TIMEOUT: {
+      en: 'The solver ran out of its computation budget. Try simplifying the model, or reduce the number of Monte-Carlo draws.',
+      fr: 'Le solveur a épuisé son budget de calcul. Essayez de simplifier le modèle, ou réduisez le nombre de tirages Monte-Carlo.',
+      es: 'El solucionador agotó su presupuesto de cálculo. Intente simplificar el modelo o reduzca el número de sorteos de Monte-Carlo.',
+      de: 'Der Solver hat sein Rechenbudget erschöpft. Vereinfachen Sie das Modell oder verringern Sie die Anzahl der Monte-Carlo-Ziehungen.',
+      it: 'Il solutore ha esaurito il suo budget di calcolo. Provate a semplificare il modello o riducete il numero di estrazioni Monte-Carlo.'
+    },
+    error_SOLVER_ERROR: {
+      en: 'The solver failed for a reason we could not identify. This is likely on our side: please send us the log (support@open-sankey.fr).',
+      fr: 'Le solveur a échoué pour une raison que nous n\'avons pas su identifier. C\'est probablement de notre côté : envoyez-nous le journal (support@open-sankey.fr).',
+      es: 'El solucionador falló por un motivo que no pudimos identificar. Probablemente sea de nuestro lado: envíenos el registro (support@open-sankey.fr).',
+      de: 'Der Solver ist aus einem Grund gescheitert, den wir nicht ermitteln konnten. Das liegt wahrscheinlich an uns: Senden Sie uns bitte das Protokoll (support@open-sankey.fr).',
+      it: 'Il solutore è fallito per un motivo che non siamo riusciti a identificare. Probabilmente è dalla nostra parte: inviateci il registro (support@open-sankey.fr).'
+    },
+    error_INTERNAL: {
+      en: 'An unexpected error occurred. This is on our side: please send us the log (support@open-sankey.fr).',
+      fr: 'Une erreur inattendue s\'est produite. C\'est de notre côté : envoyez-nous le journal (support@open-sankey.fr).',
+      es: 'Se produjo un error inesperado. Es de nuestro lado: envíenos el registro (support@open-sankey.fr).',
+      de: 'Ein unerwarteter Fehler ist aufgetreten. Das liegt an uns: Senden Sie uns bitte das Protokoll (support@open-sankey.fr).',
+      it: 'Si è verificato un errore imprevisto. È dalla nostra parte: inviateci il registro (support@open-sankey.fr).'
+    },
     with_reconciled_label: {
       en: 'Reconcile',
       fr: 'Réconcilier',

@@ -10,6 +10,17 @@ import { WarningIcon } from '@chakra-ui/icons'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { TFunction } from 'i18next'
 
+/**
+ * SA#249 — Cause machine-lisible d'un échec, remontée par le serveur (<logname>.error) et produite
+ * par MFAProblem (mfa_problem_error.py). Le CODE pilote le message affiché ; `message` et `details`
+ * restent techniques (logs, support).
+ */
+export type Type_ProcessError = {
+  code: string,
+  message?: string,
+  details?: Record<string, unknown>,
+}
+
 interface ProcessTerminalProps {
   url_prefix: string
   app_data: Class_ApplicationData
@@ -19,6 +30,7 @@ interface ProcessTerminalProps {
   auto_load: boolean,
   failure: boolean,
   setFailure: (_:boolean)=>void,
+  setFailureError: (_: Type_ProcessError | undefined) => void,
   processing: boolean,
   setProcessing: (_:boolean)=>void,
   started: boolean,
@@ -34,6 +46,7 @@ export const ProcessTerminal = ({
   handleFinish,
   failure,
   setFailure,
+  setFailureError,
   processing,
   setProcessing,
   started,
@@ -74,9 +87,10 @@ export const ProcessTerminal = ({
       {started && processing ? (
         <Counter
           url_prefix={url_prefix}
-          finishProcess={(failed: boolean) => {
+          finishProcess={(failed: boolean, error?: Type_ProcessError) => {
             setProcessing(false)
             setFailure(failed)
+            setFailureError(error)
           }}
           value={value}
           result={result}
@@ -308,7 +322,7 @@ const Counter = ({
   set_result
 }: {
   url_prefix: string,
-  finishProcess: (failed: boolean) => void,
+  finishProcess: (failed: boolean, error?: Type_ProcessError) => void,
   value: number[],
   result: string,
   set_result: (_: string) => void
@@ -340,7 +354,9 @@ const Counter = ({
                     finishProcess(false)
                   } else if (data.status === 'failed') {
                     finished_ref.current = true
-                    finishProcess(true)
+                    // SA#249 — le serveur joint la cause (code) quand il en connaît une ; sinon
+                    // undefined, et le dialogue garde son message d'échec générique.
+                    finishProcess(true, data.error ?? undefined)
                   }
                 }
               }
