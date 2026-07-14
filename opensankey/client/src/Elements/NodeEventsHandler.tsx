@@ -520,6 +520,33 @@ export class NodeEventsHandler {
         dict_new_orders[n.id] = n.links_order.map(l => l.id)
       })
 
+      // sankeyapplication#153 — Recalcul auto du recyclage : déplacer un nœud en amont de la
+      // source d'un de ses flux entrants doit faire passer ce flux en recyclage, et
+      // réciproquement. Aucun nœud n'est déplacé ici (une mise en page manuelle survit), et
+      // le verrou par flux (#711) prime toujours sur la géométrie.
+      //
+      // Les flux impactés ne sont pas seulement ceux des nœuds déplacés : bouger un nœud
+      // change son ORDINAL de colonne, ce qui peut décaler les colonnes de tous les autres.
+      // On rejoue donc le marquage sur l'ensemble du diagramme — c'est O(V+E), négligeable.
+      const dict_old_recycling = drawing_area.application_data.layout_auto_recycling
+        ? drawing_area.nodePositioning.updateRecyclingFromPositions()
+        : {}
+      const recycling_changed = Object.keys(dict_old_recycling)
+      if (recycling_changed.length > 0) {
+        recycling_changed.forEach(id => drawing_area.sankey.links_dict[id]?.draw())
+      }
+
+      const applyRecycling = (_: Class_ProtoElement, use_old: boolean) => {
+        recycling_changed.forEach(id => {
+          const link = _.drawing_area.sankey.links_dict[id]
+          if (!link) return
+          // dict_old_recycling porte la valeur d'AVANT ; la valeur d'après en est la négation
+          // (markRecyclingLinks ne rapporte que les flux dont le statut a bel et bien changé).
+          link.shape_is_recycling = use_old ? dict_old_recycling[id] : !dict_old_recycling[id]
+          link.draw()
+        })
+      }
+
       // Snapshot final positions for redo (captures the true post-drag state,
       // including any late setPosXY adjustments above).
       const dict_new_pos: { [x: string]: [number, number] } = {}
@@ -559,6 +586,7 @@ export class NodeEventsHandler {
             n.draw()
           }
         })
+        applyRecycling(_, true)
       }
 
       function redo(_: Class_ProtoElement) {
@@ -584,6 +612,7 @@ export class NodeEventsHandler {
             n.draw()
           }
         })
+        applyRecycling(_, false)
         _.drawing_area.areaAutoFit()
       }
 

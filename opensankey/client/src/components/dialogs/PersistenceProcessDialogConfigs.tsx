@@ -575,6 +575,34 @@ export const translations = {
       de: 'Kreuzungen minimieren',
       it: 'Minimizza incroci'
     },
+    layout_recycling: {
+      en: 'Recycling',
+      fr: 'Recyclage',
+      es: 'Reciclaje',
+      de: 'Recycling',
+      it: 'Riciclo'
+    },
+    layout_recycling_tt: {
+      en: 'Auto: after a node is moved, a flow whose target is no longer to the right of its source becomes a recycling flow, and vice versa. No node is moved, and flows you locked keep their status. Frozen: recycling statuses stay as they are.',
+      fr: 'Auto : après un déplacement de nœud, un flux dont la cible n\'est plus à droite de sa source passe en recyclage, et inversement. Aucun nœud n\'est déplacé, et les flux que vous avez verrouillés gardent leur statut. Figé : les statuts de recyclage restent en l\'état.',
+      es: 'Auto: tras mover un nodo, un flujo cuyo destino ya no está a la derecha de su origen pasa a reciclaje, y viceversa. No se mueve ningún nodo y los flujos bloqueados mantienen su estado. Fijo: los estados de reciclaje no cambian.',
+      de: 'Auto: Nach dem Verschieben eines Knotens wird ein Fluss, dessen Ziel nicht mehr rechts von seiner Quelle liegt, zum Recycling-Fluss und umgekehrt. Kein Knoten wird verschoben, gesperrte Flüsse behalten ihren Status. Eingefroren: Recycling-Status bleibt unverändert.',
+      it: 'Auto: dopo lo spostamento di un nodo, un flusso la cui destinazione non è più a destra della sorgente passa a riciclo, e viceversa. Nessun nodo viene spostato e i flussi bloccati mantengono il loro stato. Congelato: gli stati di riciclo restano invariati.'
+    },
+    layout_recycling_auto: {
+      en: 'Auto',
+      fr: 'Auto',
+      es: 'Auto',
+      de: 'Auto',
+      it: 'Auto'
+    },
+    layout_recycling_frozen: {
+      en: 'Frozen',
+      fr: 'Figé',
+      es: 'Fijo',
+      de: 'Eingefroren',
+      it: 'Congelato'
+    },
     layout_reset: {
       en: 'Reset to default',
       fr: 'Réinitialiser au défaut',

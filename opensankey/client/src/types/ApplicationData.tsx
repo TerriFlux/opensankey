@@ -559,6 +559,20 @@ export class Class_ApplicationData {
   public layout_optimize_crossing: boolean = true
 
   /**
+   * sankeyapplication#153 — Recalcul automatique du statut recyclage après un déplacement
+   * de nœud : un flux dont la cible ne se trouve plus à droite de sa source passe en
+   * recyclage, et réciproquement.
+   *
+   * `true` (défaut) = « Recalcul auto », `false` = « Mise en page figée » — indispensable
+   * sur un diagramme particulier dont l'utilisateur a réglé le recyclage à la main (le
+   * verrou par flux reste de toute façon prioritaire sur la géométrie).
+   *
+   * Ne déplace AUCUN nœud : une mise en page manuelle survit au recalcul. Mode de session,
+   * non persisté (comme layout_sources_mode / layout_optimize_crossing).
+   */
+  public layout_auto_recycling: boolean = true
+
+  /**
    * Mode « afficher aussi les flux porteurs de données » : quand actif, EN PLUS de
    * la vue courante, on révèle les flux portant une valeur collectée saisie
    * (`Class_LinkElement.has_collected_data`) et leurs nœuds, tous niveaux
