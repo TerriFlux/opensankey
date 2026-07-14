@@ -53,6 +53,13 @@ import { convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
 // Issue #191 — migration de rétro-compat de la césure des libellés, isolée dans
 // son propre module pour rester testable sans le graphe d'imports lourd d'ici.
 import { applyWrapLongWordsRetrocompat, CURRENT_FORMAT_VERSION, effectiveLoadVersion, isVersionBelow, validateSankeyRootJSON } from './persistenceMigrations'
+import {
+  CONTAINER_KEY_MAP,
+  LINK_LOCAL_KEY_MAP,
+  NODE_ICON_KEY_MAP,
+  NODE_LOCAL_KEY_MAP,
+  STYLE_KEY_MAP
+} from './persistenceLegacyKeyMaps'
 
 
 export class BaseElementPersistence {
@@ -363,13 +370,7 @@ export class ContainerPersistence extends NodeBasePersistence {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
-    const fromJsonMapping_0_91_to_0_92: { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG } = {
-      'label_height': 'shape_min_height',
-      'label_width': 'shape_min_width',
-      //'has_fo': 'name_label_has_fo',
-      'content': 'name_label_fo_content'
-    }
-    Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
+    Object.entries(CONTAINER_KEY_MAP).forEach(([jsonKey, attrKey]) => {
       if (json_object[jsonKey] !== undefined) {
         const key = attrKey as keyof ConfigType
         const currentValue = container.getStyleProperty(key)
@@ -614,50 +615,6 @@ export class LinkElementPersistence extends ProtoElementPersistence {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
-    const fromJsonMapping_0_91_to_0_92: { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG } = {
-      'user_scale': 'shape_local_link_scale',
-      'curved': 'shape_is_curved',
-      'curvature': 'shape_curvature',
-      'recycling': 'shape_is_recycling',
-      'is_structur': 'shape_is_structure',
-      'orientation': 'shape_orientation',
-      'left_horiz_shift': 'shape_starting_curve',
-      'right_horiz_shift': 'shape_ending_curve',
-      'starting_tangeant': 'shape_starting_tangeant',
-      'ending_tangeant': 'shape_ending_tangeant',
-      'vert_shift': 'shape_middle_recycling',
-      'arrow': 'shape_is_arrow',
-      'arrow_size': 'shape_arrow_size',
-      'dashed': 'shape_is_dashed',
-      'color': 'shape_color',
-      'color_rule': 'shape_color_rule',
-      'opacity': 'shape_opacity',
-      // legacy
-      'label_visible': 'value_label_is_visible',
-      'font_family': 'value_label_font_family',
-      'label_font_size': 'value_label_font_size',
-      'text_color': 'value_label_color',
-      'label_position': 'value_label_horiz',
-      'orthogonal_label_position': 'value_label_vert',
-      'label_on_path': 'value_label_on_path',
-      'label_pos_auto': 'value_label_pos_auto',
-      'to_precision': 'value_label_scientific_notation',
-      'scientific_precision': 'value_label_nb_significant_digits',
-      //'nb_scientific_precision': 'value_label_nb_significant_digits',
-      'custom_digit': 'value_label_custom_digit',
-      'nb_digit': 'value_label_nb_digit',
-      'label_unit_visible': 'value_label_unit_visible',
-      'label_unit': 'value_label_unit',
-      'label_unit_factor': 'value_label_unit_factor',
-      'font_size': 'name_label_font_size',
-      'uppercase': 'name_label_uppercase',
-      'bold': 'name_label_bold',
-      'italic': 'name_label_italic',
-      'label_color': 'name_label_color',
-      'label_horiz': 'name_label_horiz',
-      'label_vert': 'name_label_vert',
-
-    }
 
     const json_local = json_object.local as Type_JSON
     if (json_local) {
@@ -665,7 +622,7 @@ export class LinkElementPersistence extends ProtoElementPersistence {
       if (was_gradient) {
         link.attributes['shape_color_rule'] = 'gradient'
       }
-      Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
+      Object.entries(LINK_LOCAL_KEY_MAP).forEach(([jsonKey, attrKey]) => {
         if (json_local[jsonKey] !== undefined) {
           const key = attrKey as keyof ConfigType
           //const currentValue = link.getStyleProperty(key)
@@ -911,55 +868,9 @@ export class NodeElementPersistence extends NodeBasePersistence {
     kwargs?: Type_JSON
   ) {
     super.fromJSON_0_91(node, json_object, kwargs)
-    const fromJsonMapping_0_91_to_0_92Local: { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG } = {
-      // Name label legacy
-      'label_visible': 'name_label_is_visible',
-      'font_family': 'name_label_font_family',
-      'font_size': 'name_label_font_size',
-      'uppercase': 'name_label_uppercase',
-      'bold': 'name_label_bold',
-      'italic': 'name_label_italic',
-      'label_color': 'name_label_color',
-      'label_horiz': 'name_label_horiz',
-      'label_vert': 'name_label_vert',
-      'label_background': 'name_label_background_visible',
-      'label_background_color': 'name_label_background_color',
-      'label_box_width': 'name_label_box_width',
-
-      // Value label legacy
-      'show_value': 'value_label_is_visible',
-      'value_font_size': 'value_label_font_size',
-      'label_horiz_valeur': 'value_label_horiz',
-      'label_vert_valeur': 'value_label_vert',
-      //'to_precision': 'value_label_scientific_notation',
-      'scientific_precision': 'value_label_significant_digits',
-      'nb_scientific_precision': 'value_label_nb_significant_digits',
-      'custom_digit': 'value_label_custom_digit',
-      'nb_digit': 'value_label_nb_digit',
-      'label_unit_visible': 'value_label_unit_visible',
-      'label_unit': 'value_label_unit',
-      'label_unit_factor': 'value_label_unit_factor',
-
-      // Shape legacy (fusion avec MAIN_MAPPING)
-      'shape': 'shape_type',
-      'node_width': 'shape_min_width',
-      'node_height': 'shape_min_height',
-      'color': 'shape_color',
-      'opacity': 'shape_opacity',
-      'colorSustainable': 'shape_color_sustainable'
-    }
-    const fromJsonMapping_0_91_to_0_92: { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG } = {
-      'iconName': 'icon_icon_name',
-      'iconColor': 'icon_color',
-      'iconVisible': 'icon_is_visible',
-      'iconViewBox': 'icon_view_box',
-      'iconColorSustainable': 'icon_color_sustainable',
-      'is_image': 'icon_is_image',
-      'image_src': 'icon_image_src'
-    }
     const json_local = json_object.local as Type_JSON
     if (json_local) {
-      Object.entries(fromJsonMapping_0_91_to_0_92Local).forEach(([jsonKey, attrKey]) => {
+      Object.entries(NODE_LOCAL_KEY_MAP).forEach(([jsonKey, attrKey]) => {
         if (json_local[jsonKey] !== undefined) {
           const key = attrKey as keyof ConfigType
           const currentValue = node.getStyleProperty(key)
@@ -970,7 +881,7 @@ export class NodeElementPersistence extends NodeBasePersistence {
       })
     }
 
-    Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
+    Object.entries(NODE_ICON_KEY_MAP).forEach(([jsonKey, attrKey]) => {
       if (json_object[jsonKey] !== undefined) {
         const key = attrKey as keyof ConfigType
         const currentValue = node.getStyleProperty(key)
@@ -1158,92 +1069,9 @@ export class StylePersistence {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
-    const fromJsonMapping_0_91_to_0_92: { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG } = {
-      // Nodes
-      'user_scale': 'shape_local_link_scale',
-      'curved': 'shape_is_curved',
-      'curvature': 'shape_curvature',
-      'recycling': 'shape_is_recycling',
-      'is_structur': 'shape_is_structure',
-      'orientation': 'shape_orientation',
-      'left_horiz_shift': 'shape_starting_curve',
-      'right_horiz_shift': 'shape_ending_curve',
-      'starting_tangeant': 'shape_starting_tangeant',
-      'ending_tangeant': 'shape_ending_tangeant',
-      'vert_shift': 'shape_middle_recycling',
-      'arrow': 'shape_is_arrow',
-      'arrow_size': 'shape_arrow_size',
-      //'dashed': 'shape_is_dashed',
-      'color': 'shape_color',
-      'color_rule': 'shape_color_rule',
-      'opacity': 'shape_opacity',
-      // legacy
-      //'label_visible': 'value_label_is_visible',
-      //'font_family': 'value_label_font_family',
-      'label_font_size': 'value_label_font_size',
-      'text_color': 'value_label_color',
-      'label_position': 'value_label_horiz',
-      'orthogonal_label_position': 'value_label_vert',
-      'label_on_path': 'value_label_on_path',
-      'label_pos_auto': 'value_label_pos_auto',
-      //'to_precision': 'value_label_scientific_notation',
-      'scientific_precision': 'value_label_nb_significant_digits',
-      //'nb_scientific_precision': 'value_label_nb_significant_digits',
-      'custom_digit': 'value_label_custom_digit',
-      'nb_digit': 'value_label_nb_digit',
-      'label_unit_visible': 'value_label_unit_visible',
-      'label_unit': 'value_label_unit',
-      'label_unit_factor': 'value_label_unit_factor',
-      //'font_size': 'name_label_font_size',
-      //'uppercase': 'name_label_uppercase',
-      //'bold': 'name_label_bold',
-      'italic': 'name_label_italic',
-      'label_color': 'name_label_color',
-      'label_horiz': 'name_label_horiz',
-      'label_vert': 'name_label_vert',
-      // Links
-      // Name label legacy
-      'label_visible': 'name_label_is_visible',
-      'font_family': 'name_label_font_family',
-      'font_size': 'name_label_font_size',
-      'uppercase': 'name_label_uppercase',
-      'bold': 'name_label_bold',
-      //'italic': 'name_label_italic',
-      //'label_color': 'name_label_color',
-      //'label_horiz': 'name_label_horiz',
-      //'label_vert': 'name_label_vert',
-      'label_background': 'name_label_background_visible',
-      'label_background_color': 'name_label_background_color',
-      'label_box_width': 'name_label_box_width',
-
-      // Value label legacy
-      'show_value': 'value_label_is_visible',
-      'value_font_size': 'value_label_font_size',
-      'label_horiz_valeur': 'value_label_horiz',
-      'label_vert_valeur': 'value_label_vert',
-      //'to_precision': 'value_label_scientific_notation',
-      //'scientific_precision': 'value_label_significant_digits',
-      //'nb_scientific_precision': 'value_label_nb_significant_digits',
-      //'custom_digit': 'value_label_custom_digit',
-      //'nb_digit': 'value_label_nb_digit',
-      //'label_unit_visible': 'value_label_unit_visible',
-      //'label_unit': 'value_label_unit',
-      //'label_unit_factor': 'value_label_unit_factor',
-
-      // Shape legacy (fusion avec MAIN_MAPPING)
-      'shape': 'shape_type',
-      'node_width': 'shape_min_width',
-      'node_height': 'shape_min_height',
-      //'color': 'shape_color',
-      //'opacity': 'shape_opacity',
-      colorSustainable: 'shape_color_sustainable',
-      value_label_background: 'value_label_background_color_visible',
-      dashed: 'shape_border_dashed',
-      thickness: 'shape_border_thickness'
-    }
 
     const default_style = style.drawing_area.sankey.default_style
-    Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
+    Object.entries(STYLE_KEY_MAP).forEach(([jsonKey, attrKey]) => {
       if (json_object[jsonKey] == undefined) {
         return
       }
