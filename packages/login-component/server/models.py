@@ -668,6 +668,13 @@ class UserLicences(db.Model):
     """
 
     __tablename__ = "user_licenses"
+    # Au plus une ligne par couple (user, license) : voir resolve_user_license().
+    # Les lignes encore incomplètes (user ou license à NULL, le temps que le
+    # webhook Stripe manquant arrive) échappent à la contrainte, NULL n'entrant
+    # pas en collision.
+    __table_args__ = (
+        db.UniqueConstraint("user_id", "license_id", name="uq_user_licenses_user_license"),
+    )
     # primary keys are required by SQLAlchemy
     id = db.Column(db.Integer(), primary_key=True)
     # Db relation for user - at least one entry is needed + relationship
@@ -1239,6 +1246,92 @@ def delete_license_from_stripe(license_stripe_id: str):
     return "ok", True
 
 
+# ---------------------------------------------------------------------------
+# Licences utilisateur : au plus une ligne user_licenses par couple (user, license)
+#
+# Les webhooks Stripe arrivent dans un ordre non garanti et chacun ne connaît
+# qu'une partie du couple : subscription.created a la licence mais pas encore
+# l'utilisateur, checkout.session.completed a l'utilisateur mais pas encore la
+# licence. Ils se retrouvent donc sur le seul identifiant qu'ils partagent, le
+# stripe_id de l'abonnement — si bien que deux abonnements successifs pour la
+# même licence (essai puis achat, ou ré-abonnement) fabriquaient deux lignes
+# pour le même couple. L'admin n'en révoquait alors qu'une, via get_license()
+# qui fait un .first(), pendant que has_valid_license() restait vrai grâce à
+# l'autre : la révocation ne révoquait rien.
+
+
+def _expiry_rank(expiry):
+    """Ordonne des expirations : 'never' > date la plus lointaine > None."""
+    if expiry == "never":
+        return (2, "")
+    if expiry:
+        return (1, expiry)
+    return (0, "")
+
+
+def resolve_user_license(user=None, license=None, stripe_id=None):
+    """
+    Retourne l'unique ligne user_licenses du couple, en fusionnant s'il le faut
+    la ligne partielle posée par un webhook précédent. Ne commit pas.
+
+    Parameters
+    ----------
+    :param user: Utilisateur, ou None si le webhook courant ne le connaît pas
+    :type user: User
+
+    :param license: Licence, ou None si le webhook courant ne la connaît pas
+    :type license: License
+
+    :param stripe_id: Id d'abonnement Stripe
+    :type stripe_id: str
+
+    Returns
+    -------
+    :return: La ligne d'association, créée ou retrouvée
+    :rtype: UserLicences
+    """
+    by_stripe = None
+    if stripe_id:
+        by_stripe = UserLicences.query.filter_by(stripe_id=stripe_id).first()
+        # La moitié du couple que le webhook courant ignore a pu être posée sur
+        # cette même ligne par un webhook précédent.
+        if by_stripe is not None:
+            user = user if user is not None else by_stripe.user
+            license = license if license is not None else by_stripe.license
+
+    by_pair = None
+    if (user is not None) and (license is not None):
+        by_pair = UserLicences.query.filter_by(user=user, license=license).order_by(UserLicences.id).first()
+
+    # Deux lignes pour la même réalité : on garde celle qui porte le couple —
+    # c'est elle que voient l'admin et has_valid_license — et on y replie
+    # l'abonnement Stripe.
+    if (by_stripe is not None) and (by_pair is not None) and (by_stripe.id != by_pair.id):
+        if _expiry_rank(by_stripe.expiry) > _expiry_rank(by_pair.expiry):
+            by_pair.expiry = by_stripe.expiry
+        by_pair.activated = bool(by_pair.activated) or bool(by_stripe.activated)
+        by_pair.creation = by_pair.creation or by_stripe.creation
+        db.session.delete(by_stripe)
+        # stripe_id est unique : le doublon doit avoir quitté la table avant
+        # qu'on réattribue son identifiant.
+        db.session.flush()
+        by_pair.stripe_id = stripe_id
+        return by_pair
+
+    user_license = by_pair if by_pair is not None else by_stripe
+    if user_license is None:
+        user_license = UserLicences(creation=datetime.now().isoformat(), activated=False)
+        db.session.add(user_license)
+
+    if user is not None:
+        user_license.user = user
+    if license is not None:
+        user_license.license = license
+    if stripe_id:
+        user_license.stripe_id = stripe_id
+    return user_license
+
+
 def create_user_license_subscription(
     license_stripe_id,
     user_license_stripe_id,
@@ -1272,14 +1365,10 @@ def create_user_license_subscription(
         db.session.add(license)
 
     # Get or create user license
-    user_license = UserLicences.query.filter_by(stripe_id=user_license_stripe_id).first()
-    if user_license is None:
-        user_license = UserLicences(stripe_id=user_license_stripe_id, activated=False)
-        db.session.add(user_license)
+    user_license = resolve_user_license(license=license, stripe_id=user_license_stripe_id)
 
     # Update infos
     user_license.creation = user_license_creation_date
-    user_license.license = license
     user_license.expiry = user_license_expiry
 
     # Apply modification to database
@@ -1394,14 +1483,10 @@ def set_licence_checkout_completed(user_id, user_email, user_stripe_id, user_lic
         return "Invalid user", False
 
     # Get subcription license
-    user_license = UserLicences.query.filter_by(stripe_id=user_license_stripe_id).first()
-    if user_license is None:
-        user_license = UserLicences(creation=datetime.now().isoformat(), stripe_id=user_license_stripe_id)
-        db.session.add(user_license)
+    user.stripe_id = user_stripe_id
+    user_license = resolve_user_license(user=user, stripe_id=user_license_stripe_id)
 
     # Update infos
-    user.stripe_id = user_stripe_id
-    user_license.user = user
     user_license.activated = True
 
     # Apply modification to database
@@ -1437,14 +1522,7 @@ def set_license_invoice_created(user_email, user_stripe_id, license_stripe_id, u
         return "Could not find related license", False
 
     # Get subcription license
-    user_license = UserLicences.query.filter_by(stripe_id=user_license_stripe_id).first()
-    if user_license is None:
-        user_license = UserLicences(creation=datetime.now().isoformat(), stripe_id=user_license_stripe_id)
-        db.session.add(user_license)
-
-    # Update infos
-    user_license.user = user
-    user_license.license = license
+    resolve_user_license(user=user, license=license, stripe_id=user_license_stripe_id)
 
     # Apply modification to database
     db.session.commit()
@@ -1497,42 +1575,12 @@ def set_licence_invoice_paid(
     if license is None:
         return "No license found for invoice", False
 
-    # Try to find user_license with all 3 criteria (ideal case)
-    user_license = UserLicences.query.filter_by(
+    # Get subcription license
+    user_license = resolve_user_license(
         user=user,
         license=license,
-        stripe_id=user_license_stripe_id
-    ).first()
-
-    if user_license is None:
-        # Alternative 1: Search by stripe_id only (maybe user/license not yet set)
-        user_license = UserLicences.query.filter_by(stripe_id=user_license_stripe_id).first()
-
-        if user_license is not None:
-            # Update the user and license links
-            user_license.user = user
-            user_license.license = license
-        else:
-            # Alternative 2: Search by user and license (maybe stripe_id not yet set)
-            user_license = UserLicences.query.filter_by(
-                user=user,
-                license=license
-            ).order_by(UserLicences.id.desc()).first()
-
-            if user_license is not None:
-                # Update the stripe_id
-                user_license.stripe_id = user_license_stripe_id
-            else:
-                # Alternative 3: Create new entry if nothing found
-                user_license = UserLicences(
-                    user=user,
-                    license=license,
-                    stripe_id=user_license_stripe_id,
-                    creation=datetime.now().isoformat(),
-                    expiry="never",
-                    activated=False
-                )
-                db.session.add(user_license)
+        stripe_id=user_license_stripe_id,
+    )
 
     # Update infos - mark as activated and paid
     user_license.activated = True
