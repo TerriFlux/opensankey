@@ -767,7 +767,13 @@ export const ReturnValueNode: ReturnValueNodeFuncType = (
   let value = ReturnLocalNodeValue(n, k as keyof SankeyNodeAttrLocal)
   if (value === undefined || value === null) {
     const ks = k as keyof SankeyNodeStyle
-    value = n.style in data.style_node ? data.style_node[n.style][ks] : data.style_node['default'][ks]
+    // #276 — Un fichier 0.5 ne porte AUCUN style : `style_node['default']` n'existe pas, et cette
+    // ligne jetait « Cannot read properties of undefined ». On se replie sur le style par defaut
+    // EN MEMOIRE, sans jamais l'ecrire dans le JSON : l'injecter ferait heriter des attributs
+    // legacy (police, tailles) a tout fichier sans styles — y compris des 0.8 qui n'en demandaient
+    // pas, et dont le rendu changerait (constate sur 0.8/example_reg.json, 41 attributs ajoutes).
+    const default_style = data.style_node['default'] ?? DefaultNodeStyle()
+    value = n.style in data.style_node ? data.style_node[n.style][ks] : default_style[ks]
   }
   return value
 }
@@ -957,6 +963,14 @@ const convert_tags: convert_tagsFuncType = (
   data: SankeyData
 ): void => {
   const data_to_convert = data as SankeyData & ConvertSankeyData
+  // #276 — Les fichiers les plus anciens (0.5) rangent leurs tags dans `tags_catalog` et ne portent
+  // AUCUN de ces dictionnaires. La suite ecrit pourtant dedans sans les creer
+  // (`data.fluxTags['flux_types'] = ...`) : charger une publication de 2021 jetait
+  // « Cannot set properties of undefined ». `levelTags` etait deja protege plus bas ; les trois
+  // autres ne l'etaient pas. Creation idempotente : un fichier qui les porte n'est pas touche.
+  if (data.nodeTags === undefined) data.nodeTags = {} as TagsCatalog
+  if (data.fluxTags === undefined) data.fluxTags = {} as TagsCatalog
+  if (data.dataTags === undefined) data.dataTags = {} as TagsCatalog
   if (data_to_convert.tags_catalog) {
     data.nodeTags = Object.assign(data_to_convert.tags_catalog)
   }
