@@ -25,7 +25,7 @@ TD="$SA_ROOT/SankeyData"
 [ -d "$TD" ] || { echo "ERR: $TD introuvable" >&2; exit 1; }
 
 SEP="$SA_ROOT/packages/opensankey/submodules/SankeyExcelParser"
-OS="$SA_ROOT/submodules/OpenSankey+/submodules/OpenSankey"
+OS="$SA_ROOT/packages/opensankey"
 MFA="$SA_ROOT/submodules/MFAProblem"
 
 export TESTS_DIR="$TD/tests"
