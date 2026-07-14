@@ -19,11 +19,19 @@ import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { Class_DrawingAreaOSP, DrawingAreaPersistenceOSP } from '../types/DrawingAreaOSP'
 import { createUnitarySankeyDetached, refocusUnitaryDrawingArea, UnitaryValueMode } from './UnitaryBoard'
 import { loadExcelFileAsSankeyJSON } from './SankeyPlusViews'
+import { drawBarChart, drawDonutChart } from '@terriflux/opensankey/src/Charts/NodeStatsCharts'
+import { Class_DataTagGroup } from '@terriflux/opensankey/src/types/TagGroup'
+import { buildDataTagSeries, buildFlowSlices } from './NodeStatsData'
 
 // Conteneur DOM (id fixe) de la zone de dessin du panneau unitaire singleton.
 const UNITARY_MODAL_CONTAINER_ID = 'unitary_sankey_app_singleton'
 
 type SourceMode = 'local' | 'excel'
+
+// Mode d'affichage du panneau : sankey unitaire (défaut) ou graphiques
+// statistiques du nœud central (couronne des flux E/S, histogramme par data tag
+// — cf. Charts/NodeStatsCharts OS base).
+type UnitaryDisplayMode = 'sankey' | 'donut' | 'bars'
 
 // ===========================================================================
 // Panneau « Sankey unitaire » (singleton) — fusion local + Excel
@@ -58,6 +66,12 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
   // Mode d'affichage des valeurs de flux : pourcentage (défaut), valeur brute, ou
   // normalisé (un flux de référence fixé à 1). Reconstruit l'unitaire à chaque changement.
   const [value_mode, setValueMode] = useState<UnitaryValueMode>('percent')
+  // Mode d'affichage du panneau : sankey unitaire ou graphique statistique du nœud.
+  const [display_mode, setDisplayMode] = useState<UnitaryDisplayMode>('sankey')
+  // Côté des flux représentés par la couronne et les couronnes emboîtées : entrées ou sorties.
+  const [flow_side, setFlowSide] = useState<'in' | 'out'>('out')
+  // Groupe de data tags de l'histogramme (si le sankey en a plusieurs).
+  const [bars_tagg_id, setBarsTaggId] = useState<string | null>(null)
   // Flux de référence (id) pour le mode normalisé.
   const [normalize_link_id, setNormalizeLinkId] = useState<string | null>(null)
 
@@ -108,8 +122,6 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
   // de node_id (sinon il reconstruirait tout à chaque changement de nœud).
   const node_live = useRef<Class_NodeElement | null>(null)
   node_live.current = node
-  // Débounce du survol : ne reconstruit/refocalise qu'une fois la souris posée.
-  const hover_timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   // Initialiser le menu config de l'app_data temporaire (requis par fromJSON/dessin).
   // La config ne dépend plus de hooks React ; on lui injecte le toast Chakra acquis ici
@@ -197,6 +209,9 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
   // par l'effet de refocus juste après.
   useEffect(() => {
     if (!open) return
+    // Mode graphique : pas de board sankey — le cleanup du run précédent a démonté la
+    // DA détachée, l'effet de dessin des graphiques (ci-dessous) prend le conteneur.
+    if (display_mode !== 'sankey') return
     const src = source_app_data
     const nodes = centralCandidates(src)
     if (nodes.length === 0) return
@@ -257,7 +272,53 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
     // référence par défaut, cf. effet plus bas) et le remettre ici reconstruisait tout le
     // diagramme (toJSON/fromJSON) à chaque changement de nœud — par-dessus le refocus léger,
     // d'où la lenteur. Le mode normalisé est mis à jour par l'effet léger dédié ci-dessous.
-  }, [open, value_mode, source_mode, selected_data_id, rebuild_count])
+  }, [open, value_mode, source_mode, selected_data_id, rebuild_count, display_mode])
+
+  // DESSIN DES GRAPHIQUES statistiques du nœud central (couronne / histogramme)
+  // dans le conteneur partagé avec le sankey unitaire (dont la construction est
+  // suspendue quand display_mode !== 'sankey'). Redessin léger (pas de
+  // toJSON/fromJSON) à chaque changement de nœud / réglage / data tag.
+  useEffect(() => {
+    if (!open || display_mode === 'sankey') return
+    const el = document.getElementById(UNITARY_MODAL_CONTAINER_ID)
+    if (!el) return
+    const chart_opts = {
+      others_label: t('view.unit_chart_others'),
+      empty_label: t('view.unit_chart_empty')
+    }
+    const drawChart = () => {
+      const n = node_live.current
+      if (!n) return
+      if (display_mode === 'donut') {
+        drawDonutChart(el, buildFlowSlices(n, flow_side), chart_opts)
+      } else {
+        const sankey = (source_app_data.drawing_area as Class_DrawingAreaOSP).sankey
+        const tagg = ((bars_tagg_id ? sankey.data_taggs_dict[bars_tagg_id] : undefined)
+          ?? sankey.data_taggs_list[0]) as Class_DataTagGroup | undefined
+        drawBarChart(el, tagg ? buildDataTagSeries(n, tagg) : [], chart_opts)
+      }
+    }
+    drawChart()
+    // Recadrage au redimensionnement du conteneur (dock / dialogue flottant), même
+    // patron que le mode sankey (redessin complet : les graphiques sont bon marché).
+    let ro: ResizeObserver | null = null
+    let raf = 0
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(() => {
+        if (raf) cancelAnimationFrame(raf)
+        raf = requestAnimationFrame(drawChart)
+      })
+      ro.observe(el)
+    }
+    return () => {
+      if (raf) cancelAnimationFrame(raf)
+      ro?.disconnect()
+      el.innerHTML = ''
+    }
+    // Pas de dep sur la géométrie du dock : tout changement de taille du conteneur
+    // (dock, flottant, séparateurs) passe par le ResizeObserver ci-dessus.
+  }, [open, display_mode, node_id, flow_side, bars_tagg_id,
+    source_mode, selected_data_id, rebuild_count])
 
   // MODE NORMALISÉ — MAJ LÉGÈRE du flux de référence sans reconstruction. Seul
   // sankey.normalised_link dépend de normalize_link_id (les types d'unité des styles sont
@@ -308,12 +369,6 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
       console.error('[unitary] re-focalisation du sankey unitaire échouée:', e)
     }
   }, [node_id])
-
-  // Annuler une présélection de survol en attente à la fermeture / au démontage.
-  useEffect(() => {
-    if (open) return
-    if (hover_timer.current) clearTimeout(hover_timer.current)
-  }, [open])
 
   // Flux de référence par défaut : au changement de nœud central (ou de source), on
   // restaure le flux mémorisé sur le nœud s'il est encore visible, sinon le 1er flux
@@ -418,17 +473,10 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
 
   const handleModeChange = (mode: UnitaryValueMode) => setValueMode(mode)
 
-  // Survol d'un nœud de la liste : présélection débouncée (~120 ms). Évite de
-  // refocaliser le board pour chaque nœud effleuré au passage de la souris ; ne
-  // déclenche qu'une fois la souris posée. Le clic, lui, sélectionne sans délai.
-  const hoverNode = (n: Class_NodeElement) => {
-    if (hover_timer.current) clearTimeout(hover_timer.current)
-    hover_timer.current = setTimeout(() => setNode(n), 120)
-  }
-  const pickNode = (n: Class_NodeElement) => {
-    if (hover_timer.current) clearTimeout(hover_timer.current)
-    setNode(n)
-  }
+  // Sélection du nœud central AU CLIC uniquement. L'ancienne présélection au survol
+  // (débounce 120 ms) refocalisait le board au moindre passage de souris sur la liste
+  // → affichage instable et sélections accidentelles.
+  const pickNode = (n: Class_NodeElement) => setNode(n)
 
   // Choix d'un flux de référence : on le mémorise SUR le nœud central (restauré quand
   // on revient sur ce nœud, cf. effet « ref par défaut »), en plus de l'état local.
@@ -462,6 +510,34 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
       {label}
     </Button>
   )
+
+  const displayButton = (mode: UnitaryDisplayMode, label: string) => (
+    <Button
+      size='sm'
+      variant={display_mode === mode
+        ? 'menuconfigpanel_option_button_activated'
+        : 'menuconfigpanel_option_button'}
+      onClick={() => setDisplayMode(mode)}
+    >
+      {label}
+    </Button>
+  )
+
+  const flowSideButton = (side: 'in' | 'out', label: string) => (
+    <Button
+      size='sm'
+      variant={flow_side === side
+        ? 'menuconfigpanel_option_button_activated'
+        : 'menuconfigpanel_option_button'}
+      onClick={() => setFlowSide(side)}
+    >
+      {label}
+    </Button>
+  )
+
+  // Sous-contrôle du mode histogramme : groupes de data tags du sankey source.
+  const data_taggs = (source_app_data.drawing_area as Class_DrawingAreaOSP)
+    .sankey.data_taggs_list as Class_DataTagGroup[]
 
   const detached = app_data.menu_configuration.main_zone_unitary_detached
   // Géométrie du bloc réservé (mode docké, partagée avec MainZoneTabs). En détaché, pas de rect :
@@ -595,37 +671,74 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
             </Box>
           )}
 
-          {/* Mode d'affichage des valeurs de flux : pourcentage (défaut), valeur brute,
-                ou normalisé (un flux de référence fixé à 1, choisi dans le dropdown). */}
+          {/* Type d'affichage : sankey unitaire ou graphiques statistiques du nœud
+                central (couronne des flux E/S, histogramme par data tag) +
+                sous-contrôles du mode graphique actif. */}
           <HStack gap='3' flexWrap='wrap'>
             <Text fontSize='sm' fontWeight='600' color='gray.600' minWidth='6rem'>
-              {t('view.choose_link_ref_sankey_unit')}
+              {t('view.unit_display_mode')}
             </Text>
             <ButtonGroup size='sm' spacing='1'>
-              {modeButton('percent', t('view.unit_value_mode_percent'))}
-              {modeButton('value', t('view.unit_value_mode_value'))}
-              {modeButton('normalized', t('view.unit_value_mode_normalized'))}
+              {displayButton('sankey', t('view.unit_display_sankey'))}
+              {displayButton('donut', t('view.unit_display_donut'))}
+              {displayButton('bars', t('view.unit_display_bars'))}
             </ButtonGroup>
-            {value_mode === 'normalized' && (
+            {display_mode === 'donut' && (
+              <ButtonGroup size='sm' spacing='1'>
+                {flowSideButton('in', t('view.unit_flow_in'))}
+                {flowSideButton('out', t('view.unit_flow_out'))}
+              </ButtonGroup>
+            )}
+            {display_mode === 'bars' && data_taggs.length > 1 && (
               <Select
                 size='sm'
                 maxWidth='18rem'
                 bg='white'
-                value={normalize_link_id ?? ''}
-                onChange={(e) => handleRefChange(e.target.value || null)}
-                placeholder={t('view.unit_value_mode_ref')}
+                value={bars_tagg_id ?? ''}
+                onChange={(e) => setBarsTaggId(e.target.value || null)}
+                placeholder={t('view.unit_tagg_choice')}
               >
-                {central_links.map((l) => (
-                  <option key={l.id} value={l.id}>{link_label(l)}</option>
+                {data_taggs.map((tagg) => (
+                  <option key={tagg.id} value={tagg.id}>{tagg.name}</option>
                 ))}
               </Select>
             )}
           </HStack>
+
+          {/* Mode d'affichage des valeurs de flux : pourcentage (défaut), valeur brute,
+                ou normalisé (un flux de référence fixé à 1, choisi dans le dropdown).
+                Propre au sankey unitaire — masqué dans les modes graphiques. */}
+          {display_mode === 'sankey' && (
+            <HStack gap='3' flexWrap='wrap'>
+              <Text fontSize='sm' fontWeight='600' color='gray.600' minWidth='6rem'>
+                {t('view.choose_link_ref_sankey_unit')}
+              </Text>
+              <ButtonGroup size='sm' spacing='1'>
+                {modeButton('percent', t('view.unit_value_mode_percent'))}
+                {modeButton('value', t('view.unit_value_mode_value'))}
+                {modeButton('normalized', t('view.unit_value_mode_normalized'))}
+              </ButtonGroup>
+              {value_mode === 'normalized' && (
+                <Select
+                  size='sm'
+                  maxWidth='18rem'
+                  bg='white'
+                  value={normalize_link_id ?? ''}
+                  onChange={(e) => handleRefChange(e.target.value || null)}
+                  placeholder={t('view.unit_value_mode_ref')}
+                >
+                  {central_links.map((l) => (
+                    <option key={l.id} value={l.id}>{link_label(l)}</option>
+                  ))}
+                </Select>
+              )}
+            </HStack>
+          )}
         </Box>
 
         {/* Sélecteur de nœud central À GAUCHE de la zone de dessin (flex row, remplit la
-              hauteur restante). Le SURVOL d'un nœud reconstruit l'unitaire (aperçu immédiat) ;
-              le clic le sélectionne aussi. */}
+              hauteur restante). Sélection au CLIC uniquement (pas de présélection au
+              survol : refocalisations intempestives). */}
         <Box display='flex' flexDirection='row' alignItems='stretch' gap='2' flex='1 1 0' minHeight={0}>
           <Box
             width='12rem'
@@ -652,7 +765,6 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
                 {g.nodes.map((n) => (
                   <Box
                     key={n.id}
-                    onMouseEnter={() => hoverNode(n as Class_NodeElement)}
                     onClick={() => pickNode(n as Class_NodeElement)}
                     cursor='pointer'
                     paddingX='2'
