@@ -174,6 +174,37 @@ const isPublishableUpload = (rel: string): boolean => {
 const relPathOf = (f: File): string =>
   (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name
 
+// --- Mots-clés d'exclusion (#278) -------------------------------------------------
+// Mémorisés PAR SOURCE dans le navigateur : la dernière liste saisie est reproposée
+// à l'export suivant, sans qu'une liste « métier » saisie pour un dossier serveur
+// ne resurgisse sur l'export d'une étude ouverte (qui ne suit pas la convention
+// SOCLE). Hors du diagramme, donc : ces réglages décrivent une publication, pas une
+// étude, et publish_settings n'est de toute façon persisté que pour l'étude ouverte.
+const EXCLUDE_STORAGE_KEY = 'sankey.publish.exclude_keywords'
+
+const readStoredKeywords = (src: PublishSource): string | null => {
+  try {
+    const raw = window.localStorage.getItem(EXCLUDE_STORAGE_KEY)
+    const stored = (raw ? JSON.parse(raw) : null) as Record<string, unknown> | null
+    const value = stored?.[src]
+    return typeof value === 'string' ? value : null
+  } catch { return null }
+}
+
+const storeKeywords = (src: PublishSource, value: string): void => {
+  try {
+    const raw = window.localStorage.getItem(EXCLUDE_STORAGE_KEY)
+    let stored: Record<string, string> = {}
+    try { stored = raw ? JSON.parse(raw) : {} } catch { stored = {} }
+    window.localStorage.setItem(EXCLUDE_STORAGE_KEY, JSON.stringify({ ...stored, [src]: value }))
+  } catch { /* stockage indisponible : la mémorisation n'est qu'un confort */ }
+}
+
+// Défauts : seul un dossier du serveur suit la convention SOCLE (racine publique /
+// Consortium/ / Interne/). Les défauts viennent du serveur (/api/publish/folders).
+const keywordsFor = (src: PublishSource, server_defaults: string[]): string =>
+  readStoredKeywords(src) ?? (src === 'folder' ? server_defaults.join(', ') : '')
+
 const filterClientFiles = (files: FileList | null): { files: File[]; bytes: number } => {
   const out: File[] = []
   let bytes = 0
@@ -302,6 +333,8 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
   // n'en re-sélectionne pas un nouveau.
   const [logo_data_url, setLogoDataUrl] = useState<string | null>(null)
   const [logo_filename, setLogoFilename] = useState<string | null>(null)
+  const [exclude_keywords, setExcludeKeywords] = useState('')
+  const [default_exclude_keywords, setDefaultExcludeKeywords] = useState<string[]>([])
   const [folders_available, setFoldersAvailable] = useState(false)
   const [selected_folder, setSelectedFolder] = useState('')
   // Explorateur de l'arbre des dossiers serveur (navigation montée/descente).
@@ -323,13 +356,12 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
   // Bind l'ouverture pour que le menu puisse appeler ref.current(true).
   app_data.menu_configuration_osp.ref_show_modal_publish.current = setIsOpen
 
-  // Charge le contenu d'un dossier de l'arbre serveur et en fait la sélection
-  // courante (le nom de publication suit le dernier segment).
-  const loadBrowse = (path: string) => {
-    setSelectedFolder(path)
-    const seg = path.split('/').filter(Boolean)
-    setPublishName(seg.length ? seg[seg.length - 1] : 'portfolio')
-    fetch(window.location.origin + '/api/publish/browse?path=' + encodeURIComponent(path))
+  // Rafraîchit le contenu affiché d'un dossier de l'arbre serveur. Les mots-clés
+  // sont passés explicitement : à la bascule de source, l'état React n'est pas
+  // encore à jour au moment de l'appel.
+  const fetchBrowse = (path: string, keywords: string) => {
+    fetch(window.location.origin + '/api/publish/browse?path=' + encodeURIComponent(path)
+      + '&exclude_keywords=' + encodeURIComponent(keywords))
       .then((r) => r.json())
       .then((d) => {
         setBrowseLoaded(true)
@@ -339,6 +371,15 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
         setBrowseHasIndex(!!d.has_index)
       })
       .catch(() => { setBrowseEntries([]); setBrowseLoaded(true) })
+  }
+
+  // Navigue vers un dossier et en fait la sélection courante (le nom de publication
+  // suit le dernier segment).
+  const loadBrowse = (path: string, keywords?: string) => {
+    setSelectedFolder(path)
+    const seg = path.split('/').filter(Boolean)
+    setPublishName(seg.length ? seg[seg.length - 1] : 'portfolio')
+    fetchBrowse(path, keywords ?? exclude_keywords)
   }
 
   // (Re)initialise à l'ouverture + charge la liste des dossiers serveur.
@@ -357,6 +398,7 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
     setPositionMode(saved.position_mode || '')
     setLanguage(saved.language || '')
     setSource('current')
+    setExcludeKeywords(keywordsFor('current', []))
     setDeployedUrl('')
     setDeployForce(false)
     setDeployUpdate(false)
@@ -372,12 +414,28 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
       .then((data) => {
         setFoldersAvailable(!!data.available)
         setDeployAvailable(!!data.deploy_available)
+        setDefaultExcludeKeywords(
+          Array.isArray(data.default_exclude_keywords) ? data.default_exclude_keywords : []
+        )
       })
       .catch(() => {
         setFoldersAvailable(false)
         setDeployAvailable(false)
+        setDefaultExcludeKeywords([])
       })
   }, [is_open])
+
+  // L'explorateur montre ce qui serait publié : toute saisie de mots-clés le
+  // rafraîchit (temporisé, pour ne pas requêter à chaque frappe). fetchBrowse et
+  // non loadBrowse : re-naviguer réécraserait le nom de publication saisi.
+  // `selected_folder` fait partie des dépendances pour que le tir différé vise
+  // toujours le dossier courant : sans lui, naviguer dans les 400 ms suivant une
+  // frappe repeindrait la liste avec le contenu du dossier précédent.
+  useEffect(() => {
+    if (!is_open || source !== 'folder' || !browse_loaded) return
+    const timer = setTimeout(() => fetchBrowse(selected_folder, exclude_keywords), 400)
+    return () => clearTimeout(timer)
+  }, [exclude_keywords, selected_folder])
 
   // Escape ferme.
   useEffect(() => {
@@ -437,6 +495,7 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
           force: deploy_force,
           update: deploy_update,
           tree: tree_mode,
+          exclude_keywords: exclude_keywords,
         }),
       })
     }
@@ -446,6 +505,7 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
       form.append('force', deploy_force ? '1' : '0')
       form.append('update', deploy_update ? '1' : '0')
       form.append('tree', tree_mode ? '1' : '0')
+      form.append('exclude_keywords', exclude_keywords)
       const paths: string[] = []
       filterClientFiles(client_files).files.forEach((f) => {
         form.append('files', f)
@@ -491,6 +551,7 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
   const handlePublish = () => {
     setRunning(true)
     if (source === 'current') persistOptions()
+    storeKeywords(source, exclude_keywords)
     const endpoint = source === 'current' ? '/api/publish/current' : '/api/publish/folder'
     const run = buildRequest(endpoint)
       .then((r) => downloadZip(r, sanitizeZipName(publish_name || selected_folder) + '.zip'))
@@ -507,6 +568,7 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
   const handleDeploy = () => {
     setRunning(true)
     if (source === 'current') persistOptions()
+    storeKeywords(source, exclude_keywords)
     setDeployedUrl('')
     const run = buildRequest('/api/publish/deploy').then(async (r) => {
       if (!r.ok) {
@@ -567,7 +629,12 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
                 onChange={(v) => {
                   const s = v as PublishSource
                   setSource(s)
-                  if (s === 'folder' && !browse_loaded) loadBrowse('')
+                  const kw = keywordsFor(s, default_exclude_keywords)
+                  setExcludeKeywords(kw)
+                  if (s === 'folder') {
+                    if (browse_loaded) fetchBrowse(selected_folder, kw)
+                    else loadBrowse('', kw)
+                  }
                 }}
               >
                 <Stack direction='column' spacing={1}>
@@ -702,6 +769,21 @@ export const ModalPublishOSP: FC<Props> = ({ app_data }) => {
                 </Text>
               </Checkbox>
             )}
+
+            <FormControl>
+              <FormLabel>Mots-clés d'exclusion</FormLabel>
+              <Input
+                value={exclude_keywords}
+                placeholder='ex. : Consortium, Interne, reconciled'
+                onChange={(e) => setExcludeKeywords(e.target.value)}
+              />
+              <Text fontSize='xs' color='gray.500' mt={1}>
+                Séparés par des virgules. Tout fichier ou dossier dont le nom contient
+                l'un de ces mots reste hors du zip (casse indifférente, correspondance
+                partielle) ; un dossier exclu emporte tout son contenu.
+                {source === 'folder' && ' L\'explorateur ci-dessus masque ce qui est exclu.'}
+              </Text>
+            </FormControl>
 
             {source === 'current' && (
               <>

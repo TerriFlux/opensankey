@@ -80,26 +80,120 @@ def safe_copy(src, dst):
         return False
 
 
-# Dossiers à ne jamais lister comme publiables.
-_EXCLUDED_DIRS = {
-    "Tous", "mfadata", "artifacts", "artefacts", "Archives",
-    "public", "Documents", "Livrables", "Partenaires", "Interne",
-}
+# ---------------------------------------------------------------------------
+# Exclusions de publication (#194, généralisées en mots-clés par #278)
+#
+# Deux étages, qui se CUMULENT (union), jamais ne se remplacent :
+#   - les dossiers techniques ci-dessous, exclus en dur : répertoires de travail
+#     du pipeline ou de l'app, qu'aucune saisie utilisateur ne doit pouvoir
+#     réintroduire (garde-fou : vider le champ ne casse pas la publication) ;
+#   - des mots-clés fournis par l'appelant, appliqués aux fichiers ET aux
+#     dossiers, en correspondance PARTIELLE et insensible à la casse — c'est ce
+#     qui permet de faire varier les exclusions selon le portfolio publié
+#     (public / consortium) sans toucher au code.
+# ---------------------------------------------------------------------------
+_TECHNICAL_EXCLUDED_DIRS = {"Tous", "mfadata", "artifacts", "artefacts", "public"}
+
+# Mots-clés proposés par défaut quand on publie un dossier du serveur (convention
+# SOCLE : racine = portfolio public, Consortium/ = portfolio consortium,
+# Consortium/Interne/ = travail jamais publié).
+#
+# ⚠️ « Partenaires » (ancien nom de « Consortium », #194) est délibérément ABSENT :
+# la correspondance est partielle, donc ce mot-clé exclurait aussi l'étude
+# « Détail pays partenaires commerciaux », qui est publique. Cf. test dédié.
+#
+# Rétro-compatibilité #194 : ces défauts s'appliquent dès que l'appelant ne dit rien
+# (scripts de publication des sessions d'études, anciens clients) — cf.
+# resolve_exclude_keywords. C'est là, et non dans une liste figée, que vit désormais
+# la garantie du #194.
+DEFAULT_EXCLUDE_KEYWORDS = ("Consortium", "Interne", "Archives", "Documents", "Livrables")
+
+_KEYWORD_SEPARATORS = re.compile(r"[,;\r\n]+")
 
 
-def find_index_folders(base_path, current_path=""):
-    """Liste les dossiers (récursif) contenant un fichier index.html."""
+def normalize_exclude_keywords(raw):
+    """Normalise des mots-clés d'exclusion en liste de minuscules, ou None.
+
+    Accepte une chaîne saisie par l'utilisateur (« Consortium, Interne ; reconciled »)
+    ou une liste. Renvoie None si `raw` est None — un champ ABSENT et un champ VIDE
+    ne veulent pas dire la même chose (cf. resolve_exclude_keywords)."""
+    if raw is None:
+        return None
+    parts = []
+    for item in ([raw] if isinstance(raw, str) else list(raw)):
+        parts.extend(_KEYWORD_SEPARATORS.split(str(item)))
+    return [p.strip().lower() for p in parts if p and p.strip()]
+
+
+def resolve_exclude_keywords(raw):
+    """Mots-clés effectivement appliqués.
+
+    None (champ absent de la requête) -> défauts métier : un appelant qui ignore
+    la fonctionnalité garde la protection du #194. Une liste ou une chaîne, même
+    VIDE, est prise telle quelle : l'utilisateur a le droit de tout publier (les
+    dossiers techniques restent exclus par ailleurs)."""
+    keywords = normalize_exclude_keywords(raw)
+    if keywords is None:
+        return [k.lower() for k in DEFAULT_EXCLUDE_KEYWORDS]
+    return keywords
+
+
+def is_excluded_file(name, keywords):
+    """True si le nom de fichier contient l'un des mots-clés (casse indifférente).
+
+    Les mots-clés sont remis en minuscules ici et pas seulement à la normalisation :
+    un appelant qui passerait la saisie brute obtiendrait sinon un prédicat toujours
+    faux — donc une fuite silencieuse, exactement ce que ce module doit empêcher."""
+    low = name.lower()
+    return any(k.lower() in low for k in keywords or ())
+
+
+def is_excluded_dir(name, keywords):
+    """True si le dossier est technique (nom exact) ou porte un mot-clé (partiel).
+    Un dossier exclu n'est ni publié ni exploré : tout son contenu est écarté."""
+    return name in _TECHNICAL_EXCLUDED_DIRS or is_excluded_file(name, keywords)
+
+
+def _ignore_excluded(keywords):
+    """Fabrique un `ignore` pour shutil.copytree écartant les noms exclus.
+
+    Réservé aux arbres de CONTENU (doc/, images/… d'un dossier d'étude). À ne
+    surtout pas appliquer au build React recopié dans l'artifact : un mot-clé
+    malheureux ("main", "static") y détruirait le bundle."""
+    def _ignore(dirpath, names):
+        excluded = set()
+        for name in names:
+            if os.path.isdir(os.path.join(dirpath, name)):
+                if is_excluded_dir(name, keywords):
+                    excluded.add(name)
+            elif is_excluded_file(name, keywords):
+                excluded.add(name)
+        return excluded
+    return _ignore
+
+
+def find_index_folders(base_path, current_path="", exclude_keywords=None):
+    """Liste les dossiers (récursif) contenant un fichier index.html.
+
+    exclude_keywords : cf. resolve_exclude_keywords. Les dossiers exclus ne sont
+    ni listés ni explorés — c'est ce qui protège réellement leur contenu."""
+    return _find_index_folders(
+        base_path, current_path, resolve_exclude_keywords(exclude_keywords)
+    )
+
+
+def _find_index_folders(base_path, current_path, keywords):
     folders = []
     full = os.path.join(base_path, current_path) if current_path else base_path
     try:
         for item in os.listdir(full):
             item_path = os.path.join(full, item)
-            if not os.path.isdir(item_path) or item in _EXCLUDED_DIRS:
+            if not os.path.isdir(item_path) or is_excluded_dir(item, keywords):
                 continue
             rel = os.path.join(current_path, item) if current_path else item
             if os.path.isfile(os.path.join(item_path, "index.html")):
                 folders.append(rel.replace("\\", "/"))
-            folders.extend(find_index_folders(base_path, rel))
+            folders.extend(_find_index_folders(base_path, rel, keywords))
     except (PermissionError, FileNotFoundError):
         pass
     return folders
@@ -237,7 +331,7 @@ class PathMapper:
             json.dump(self.export_mapping(), f, ensure_ascii=False, indent=2)
 
 
-def copy_readmes(source_dir, target_dir):
+def copy_readmes(source_dir, target_dir, keywords=()):
     """Copie README.md + variantes traduites (README.<lang>.md, casse libre) et le
     descripteur multilingue names.json de source_dir vers target_dir. Retourne le
     nombre de fichiers copiés."""
@@ -248,7 +342,7 @@ def copy_readmes(source_dir, target_dir):
         return copied
     pattern = re.compile(r'^readme(\.[a-z]{2})?\.md$', re.IGNORECASE)
     for fp in source_dir.iterdir():
-        if fp.is_file() and pattern.match(fp.name):
+        if fp.is_file() and pattern.match(fp.name) and not is_excluded_file(fp.name, keywords):
             target_dir.mkdir(parents=True, exist_ok=True)
             # Nom canonique README[.lang].md pour que la génération HTML les retrouve
             m = pattern.match(fp.name)
@@ -256,7 +350,7 @@ def copy_readmes(source_dir, target_dir):
             if safe_copy(fp, target_dir / canonical):
                 copied += 1
     names_src = source_dir / 'names.json'
-    if names_src.is_file():
+    if names_src.is_file() and not is_excluded_file(names_src.name, keywords):
         target_dir.mkdir(parents=True, exist_ok=True)
         if safe_copy(names_src, target_dir / 'names.json'):
             copied += 1
@@ -282,45 +376,49 @@ def read_names_descriptor(folder):
         return {}
 
 
-def copy_root_documentation(mfa_path, public_root):
+def copy_root_documentation(mfa_path, public_root, keywords=()):
     """Copie README(s) racine + image_front + dossiers doc vers la racine publique."""
     mfa_path = Path(mfa_path)
     public_root = Path(public_root)
-    copied = copy_readmes(mfa_path, public_root)
+    copied = copy_readmes(mfa_path, public_root, keywords)
     for folder in ('doc', 'docs', 'documentation', 'images', 'img', 'assets',
                    'static', 'media', 'files', 'guides', 'help', 'manual'):
         src = mfa_path / folder
-        if src.is_dir():
+        if src.is_dir() and not is_excluded_dir(folder, keywords):
             try:
                 dst = public_root / folder
                 if dst.exists():
                     shutil.rmtree(dst)
-                shutil.copytree(src, dst)
+                # Un dossier doc peut abriter des sous-dossiers/fichiers exclus.
+                shutil.copytree(src, dst, ignore=_ignore_excluded(keywords))
                 copied += 1
             except Exception as e:
                 logger.warning("Erreur copie dossier doc %s: %s", folder, e)
     for fname in ('CHANGELOG.md', 'LICENSE', 'LICENSE.md', 'portfolio_title.txt',
                   'image_front.png', 'image_front.jpg', 'image_front.jpeg'):
         src = mfa_path / fname
-        if src.is_file() and safe_copy(src, public_root / fname):
+        if (src.is_file() and not is_excluded_file(fname, keywords)
+                and safe_copy(src, public_root / fname)):
             copied += 1
     # Titres racine traduits (portfolio_title.en.txt, ...)
     for src in mfa_path.glob('portfolio_title.*.txt'):
-        if src.is_file() and safe_copy(src, public_root / src.name):
+        if (src.is_file() and not is_excluded_file(src.name, keywords)
+                and safe_copy(src, public_root / src.name)):
             copied += 1
     return copied
 
 
 def copy_readme_with_mapping(mfa_data_dir, source_project_path, target_project_path,
-                             target_dir, path_mapper, public_root):
+                             target_dir, path_mapper, public_root, exclude_keywords=None):
     """Copie README.md + images + documents (.pdf/.docx/.pptx) à chaque niveau du
     chemin, vers le dossier normalisé correspondant. Porté de path_mapper.py."""
+    keywords = resolve_exclude_keywords(exclude_keywords)
     mfa_path = Path(mfa_data_dir)
     public_root = Path(public_root)
     source_parts = [p for p in source_project_path.replace('\\', '/').split('/') if p]
     target_parts = [p for p in target_project_path.replace('\\', '/').split('/') if p]
 
-    copied = copy_root_documentation(mfa_path, public_root)
+    copied = copy_root_documentation(mfa_path, public_root, keywords)
 
     # Décalage source/cible (cas base relative)
     offset = 0
@@ -344,11 +442,12 @@ def copy_readme_with_mapping(mfa_data_dir, source_project_path, target_project_p
             continue
         target_norm_dir = public_root / partial_normalized
 
-        copied += copy_readmes(source_dir, target_norm_dir)
+        copied += copy_readmes(source_dir, target_norm_dir, keywords)
 
         if source_dir.exists():
             for fp in source_dir.iterdir():
-                if fp.is_file() and fp.suffix.lower() in image_exts:
+                if (fp.is_file() and fp.suffix.lower() in image_exts
+                        and not is_excluded_file(fp.name, keywords)):
                     target_norm_dir.mkdir(parents=True, exist_ok=True)
                     safe_copy(fp, target_norm_dir / f"{fp.stem}{fp.suffix.lower()}")
 
@@ -356,7 +455,8 @@ def copy_readme_with_mapping(mfa_data_dir, source_project_path, target_project_p
         if source_dir.exists() and source_dir.name == 'Etude':
             manifest = []
             for fp in source_dir.iterdir():
-                if fp.is_file() and fp.suffix.lower() in document_exts:
+                if (fp.is_file() and fp.suffix.lower() in document_exts
+                        and not is_excluded_file(fp.name, keywords)):
                     target_norm_dir.mkdir(parents=True, exist_ok=True)
                     safe = sanitize_filename(fp.name)
                     if safe_copy(fp, target_norm_dir / safe):
@@ -761,9 +861,22 @@ def _copy_case_insensitive(project_dir, final_dir, file_ref):
     return False
 
 
-def _copy_referenced_files(project_dir, final_dir, html_file_path):
+def _is_excluded_ref(ref, keywords):
+    """True si un chemin référencé par le HTML traverse un dossier exclu ou porte
+    lui-même un mot-clé (ex. `window.sankey.excel` -> ..._reconciled.xlsx)."""
+    parts = [p for p in ref.replace("\\", "/").split("/") if p]
+    if not parts:
+        return False
+    return (any(is_excluded_dir(p, keywords) for p in parts[:-1])
+            or is_excluded_file(parts[-1], keywords))
+
+
+def _copy_referenced_files(project_dir, final_dir, html_file_path, keywords=()):
     copied = 0
     for ref in _extract_referenced_files(html_file_path):
+        if _is_excluded_ref(ref, keywords):
+            vprint(f"Exclu de la publication (mot-clé) : {ref}", 2)
+            continue
         if ref.endswith(".json"):
             ok = _copy_json_smart(project_dir, final_dir, ref)
         else:
@@ -775,11 +888,14 @@ def _copy_referenced_files(project_dir, final_dir, html_file_path):
     return copied
 
 
-def _copy_excel_files(project_dir, final_dir):
+def _copy_excel_files(project_dir, final_dir, keywords=()):
     copied = 0
-    for root, _dirs, files in os.walk(project_dir):
+    for root, dirs, files in os.walk(project_dir):
+        # os.walk en top-down : élaguer `dirs` sur place empêche la descente.
+        dirs[:] = [d for d in dirs if not is_excluded_dir(d, keywords)]
         for file in files:
-            if Path(file).suffix.lower() in (".xlsx", ".xls"):
+            if (Path(file).suffix.lower() in (".xlsx", ".xls")
+                    and not is_excluded_file(file, keywords)):
                 source = Path(root) / file
                 try:
                     rel = source.relative_to(project_dir)
@@ -792,11 +908,13 @@ def _copy_excel_files(project_dir, final_dir):
     return copied
 
 
-def _copy_logos(source_dir, target_dir):
+def _copy_logos(source_dir, target_dir, keywords=()):
     copied = 0
-    for _root, _dirs, files in os.walk(source_dir):
+    for _root, dirs, files in os.walk(source_dir):
+        dirs[:] = [d for d in dirs if not is_excluded_dir(d, keywords)]
         for file in files:
-            if os.path.splitext(file.lower())[1] in (".png", ".jpg", ".jpeg"):
+            if (os.path.splitext(file.lower())[1] in (".png", ".jpg", ".jpeg")
+                    and not is_excluded_file(file, keywords)):
                 if safe_copy(Path(source_dir) / file, Path(target_dir) / file.lower()):
                     copied += 1
     return copied
@@ -1052,7 +1170,7 @@ def _inject_header_i18n(source_dir, final_index):
 
 
 def publish_folder(project_dir, build_dir, publish_name=None, artifacts_base=None,
-                   final_dir=None, write_servers=True):
+                   final_dir=None, write_servers=True, exclude_keywords=None):
     """Publie un dossier source (contenant index.html viewer + data) en artifact
     statique autonome. Renvoie le chemin du dossier artifact créé.
 
@@ -1062,7 +1180,12 @@ def publish_folder(project_dir, build_dir, publish_name=None, artifacts_base=Non
                     la génération d'arborescence) au lieu de <base>/<publish_name>.
     write_servers : ajoute les lanceurs locaux (server.bat/...). Désactivé pour les
                     sous-projets d'une arborescence (lanceurs uniquement à la racine).
+    exclude_keywords : mots-clés d'exclusion appliqués aux fichiers et dossiers du
+                    dossier source (cf. resolve_exclude_keywords). L'index.html
+                    viewer et les assets compilés n'y sont jamais soumis : ils font
+                    le site, pas son contenu.
     """
+    keywords = resolve_exclude_keywords(exclude_keywords)
     project_dir = Path(project_dir)
     index_html = project_dir / "index.html"
     if not index_html.exists():
@@ -1093,7 +1216,7 @@ def publish_folder(project_dir, build_dir, publish_name=None, artifacts_base=Non
         shutil.rmtree(final_dir)
     final_dir.mkdir(parents=True, exist_ok=True)
 
-    _copy_logos(project_dir, final_dir)
+    _copy_logos(project_dir, final_dir, keywords)
     for aux in (".stamped", "resources.json"):
         src = project_dir / aux
         if src.is_file():
@@ -1101,8 +1224,8 @@ def publish_folder(project_dir, build_dir, publish_name=None, artifacts_base=Non
 
     _adapt_project_index(project_dir, final_dir, build_dir)
     _inject_header_i18n(project_dir, final_dir / "index.html")
-    _copy_referenced_files(project_dir, final_dir, index_html)
-    _copy_excel_files(project_dir, final_dir)
+    _copy_referenced_files(project_dir, final_dir, index_html, keywords)
+    _copy_excel_files(project_dir, final_dir, keywords)
     _update_html_for_compression(final_dir)
     normalize_files_and_update_html(final_dir)
     _compress_json_files(final_dir)
@@ -1112,7 +1235,7 @@ def publish_folder(project_dir, build_dir, publish_name=None, artifacts_base=Non
 
 
 def publish_tree(parent_dir, build_dir, publish_name=None, artifacts_base=None,
-                 build_info=None):
+                 build_info=None, exclude_keywords=None):
     """Publie une ARBORESCENCE (portfolio) : tous les sous-dossiers contenant un
     index.html viewer sous parent_dir, avec pages de navigation/README à chaque
     niveau (remplace gitlab_pipeline + generate_html de MFAData).
@@ -1123,6 +1246,7 @@ def publish_tree(parent_dir, build_dir, publish_name=None, artifacts_base=None,
     sont recopiés dans chaque projet (pas de partage racine possible sans rebuild)."""
     from . import publish_html
 
+    keywords = resolve_exclude_keywords(exclude_keywords)
     parent_dir = Path(parent_dir)
     base = Path(artifacts_base) if artifacts_base else _artifacts_base()
     pub_name = re.sub(r"[^\w\-_.]", "_", publish_name or parent_dir.name) or "portfolio"
@@ -1132,7 +1256,7 @@ def publish_tree(parent_dir, build_dir, publish_name=None, artifacts_base=None,
     public_dir.mkdir(parents=True, exist_ok=True)
 
     mapper = PathMapper()
-    projects = find_index_folders(str(parent_dir))
+    projects = find_index_folders(str(parent_dir), exclude_keywords=keywords)
     if (parent_dir / "index.html").exists():
         projects = ["."] + projects
     if not projects:
@@ -1146,13 +1270,15 @@ def publish_tree(parent_dir, build_dir, publish_name=None, artifacts_base=None,
         norm = "" if rel == "." else mapper.normalize_path(rel)
         target = public_dir if not norm else public_dir / norm
         try:
-            publish_folder(proj_abs, build_dir, final_dir=target, write_servers=False)
+            publish_folder(proj_abs, build_dir, final_dir=target, write_servers=False,
+                           exclude_keywords=keywords)
             published += 1
         except Exception as e:
             logger.warning("Échec publication projet %s: %s", rel, e)
             continue
         src_rel = "" if rel == "." else rel
-        copy_readme_with_mapping(str(parent_dir), src_rel, src_rel, target, mapper, public_dir)
+        copy_readme_with_mapping(str(parent_dir), src_rel, src_rel, target, mapper, public_dir,
+                                 exclude_keywords=keywords)
 
     if published == 0:
         raise RuntimeError("Aucun projet publié dans l'arborescence")
@@ -1247,7 +1373,12 @@ def publish_current_study(diagram_json, build_dir, options=None, artifacts_base=
     with open(source_dir / "index.html", "w", encoding="utf-8") as f:
         f.write(_build_viewer_index(title, data_basename, options))
 
-    return publish_folder(source_dir, build_dir, publish_name=publish_name, artifacts_base=base)
+    # exclude_keywords=[] : le dossier source est SYNTHÉTISÉ ici (données + index +
+    # logo) et ne contient rien à filtrer. Laisser jouer les défauts métier ferait
+    # dépendre la publication du nom choisi par l'utilisateur (une étude nommée
+    # « Documents » y perdrait son propre JSON de données).
+    return publish_folder(source_dir, build_dir, publish_name=publish_name,
+                          artifacts_base=base, exclude_keywords=[])
 
 
 def zip_artifact(artifact_dir, zip_basename=None):
