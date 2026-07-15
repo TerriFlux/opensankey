@@ -316,11 +316,25 @@ def _read_bool_field(name):
     return bool(data.get(name))
 
 
-def _build_folder_artifact(project_dir, publish_name, tree):
+def _read_exclude_keywords():
+    """Mots-clés d'exclusion de la requête (#278).
+
+    Renvoie None si le champ est ABSENT — un appelant qui ignore la fonctionnalité
+    (script de publication, ancien client) retombe alors sur les défauts métier du
+    #194 côté publish. Une saisie vide arrive comme "" et vaut « ne rien exclure »."""
+    if request.content_type and "multipart/form-data" in request.content_type:
+        return request.form.get("exclude_keywords")
+    data = request.get_json(silent=True) or {}
+    return data.get("exclude_keywords")
+
+
+def _build_folder_artifact(project_dir, publish_name, tree, exclude_keywords=None):
     """Publie un dossier en mode étude unique ou arborescence (portfolio)."""
     if tree:
-        return publish_lib.publish_tree(project_dir, template_folder, publish_name=publish_name)
-    return publish_lib.publish_folder(project_dir, template_folder, publish_name=publish_name)
+        return publish_lib.publish_tree(project_dir, template_folder, publish_name=publish_name,
+                                        exclude_keywords=exclude_keywords)
+    return publish_lib.publish_folder(project_dir, template_folder, publish_name=publish_name,
+                                      exclude_keywords=exclude_keywords)
 
 
 def _resolve_publish_folder():
@@ -369,6 +383,9 @@ def publish_folders():
         "folders": folders,
         "deploy_available": deploy_cfg is not None,
         "deploy_url_base": deploy_cfg["url_base"] if deploy_cfg else None,
+        # Mots-clés proposés par le dialogue quand la source est le serveur (#278) :
+        # le serveur reste la source de vérité, le client ne les recopie pas.
+        "default_exclude_keywords": list(publish_lib.DEFAULT_EXCLUDE_KEYWORDS),
     })
 
 
@@ -378,7 +395,11 @@ def publish_browse():
     """Navigation dans l'arbre des dossiers serveur (explorateur). Renvoie les
     sous-dossiers immédiats de `path` (relatif à la racine MFAData), pour permettre
     de remonter/descendre et sélectionner n'importe quel dossier — y compris un
-    conteneur sans index.html, pour déployer toute son arborescence."""
+    conteneur sans index.html, pour déployer toute son arborescence.
+
+    L'explorateur reflète les mots-clés d'exclusion en cours (#278) : ce qu'il
+    montre est exactement ce qui serait publié. Pour publier un dossier exclu (le
+    portfolio consortium, p. ex.), on retire son mot-clé du champ et il réapparaît."""
     root = _publish_data_root()
     if not root or not os.path.isdir(root):
         return jsonify({"available": False, "entries": []})
@@ -386,12 +407,15 @@ def publish_browse():
     cur = _safe_under(root, rel) if rel else os.path.realpath(root)
     if not cur or not os.path.isdir(cur):
         return jsonify({"error": "Dossier introuvable"}), 404
+    keywords = publish_lib.resolve_exclude_keywords(
+        request.args.get("exclude_keywords")
+    )
 
     def _listed_subdirs(d):
         out = []
         try:
             for name in os.listdir(d):
-                if name.startswith(".") or name in publish_lib._EXCLUDED_DIRS:
+                if name.startswith(".") or publish_lib.is_excluded_dir(name, keywords):
                     continue
                 if os.path.isdir(os.path.join(d, name)):
                     out.append(name)
@@ -431,7 +455,8 @@ def publish_folder_route():
         return jsonify({"error": str(e)}), e.code
     tree = _read_bool_field("tree")
     try:
-        artifact = _build_folder_artifact(project_dir, publish_name, tree)
+        artifact = _build_folder_artifact(project_dir, publish_name, tree,
+                                          _read_exclude_keywords())
         zip_path = publish_lib.zip_artifact(artifact, publish_lib.sanitize_filename(publish_name))
     except Exception:
         traceback.print_exc()
@@ -539,7 +564,8 @@ def publish_deploy_route():
         else:
             # Dossier client (upload) ou dossier serveur (JSON), étude unique ou arborescence.
             project_dir, publish_name = _resolve_publish_folder()
-            artifact = _build_folder_artifact(project_dir, publish_name, _read_bool_field("tree"))
+            artifact = _build_folder_artifact(project_dir, publish_name, _read_bool_field("tree"),
+                                              _read_exclude_keywords())
         url = publish_lib.deploy_artifact_to_server(
             artifact, publish_name, cfg, force=force, update=update)
     except _PublishError as e:
