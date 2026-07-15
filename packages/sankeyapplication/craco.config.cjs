@@ -20,8 +20,12 @@ const suffix = channel === 'beta' ? '.b' : channel === 'alpha' ? '.a' : ''
 let commit = ''
 let commitDate = ''
 try {
-    commit = execSync('git rev-parse --short HEAD').toString().trim()
-    commitDate = execSync('git log -1 --format=%cI').toString().trim().slice(0, 10)
+    // stdio: stderr ignoré — sans .git (rsync des slots de déploiement),
+    // git écrirait « fatal: not a git repository » sur le terminal. On veut
+    // juste la valeur si elle existe, sinon rien, en silence.
+    const gitOpts = { stdio: ['ignore', 'pipe', 'ignore'] }
+    commit = execSync('git rev-parse --short HEAD', gitOpts).toString().trim()
+    commitDate = execSync('git log -1 --format=%cI', gitOpts).toString().trim().slice(0, 10)
 } catch (e) { /* no git metadata available — leave empty */ }
 
 process.env.REACT_APP_VERSION = pkg.version + suffix

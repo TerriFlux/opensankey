@@ -85,6 +85,28 @@ if [[ -L "$CURRENT" ]]; then
   PREVIOUS="$(readlink -f "$CURRENT")"
 fi
 
+# --- Précondition : nginx proxifie bien le socket stable --------------------
+# La bascule (étape 6) restart le service sur le socket défini par UWSGI_SOCKET
+# (shared/env). Si la conf nginx pointe encore ailleurs — typiquement quand le
+# bootstrap a été lancé SANS --with-nginx — le restart réussit mais nginx renvoie
+# 502 : /health échoue et on rollback pour rien, après avoir construit tout le
+# slot. On attrape ce désalignement ICI, avant de rien construire.
+NGINX_SITE="/etc/nginx/sites-enabled/${ENV}_opensankey"
+if [[ $DRY_RUN -eq 0 ]]; then
+  SOCKET_ENV="$(set -a; . "${SHARED}/env"; set +a; echo "${UWSGI_SOCKET:-}")"
+  [[ -n "$SOCKET_ENV" ]] || fail \
+    "UWSGI_SOCKET absent de ${SHARED}/env — relancer bootstrap_release_layout.sh ${ENV}"
+  if [[ -f "$NGINX_SITE" ]]; then
+    grep -qF "unix:${SOCKET_ENV}" "$NGINX_SITE" || fail \
+"nginx (${NGINX_SITE}) ne proxifie PAS le socket ${SOCKET_ENV}.
+   La bascule provoquerait un 502 puis un rollback inutile. Corriger d'abord :
+     sudo sed -i 's#uwsgi_pass unix:[^;]*;#uwsgi_pass unix:${SOCKET_ENV};#' ${NGINX_SITE}
+     sudo nginx -t && sudo systemctl reload nginx"
+  else
+    echo "[WARN] Conf nginx introuvable (${NGINX_SITE}) — vérification socket ignorée."
+  fi
+fi
+
 SHA="$(git -C "$SRC_DIR" rev-parse --short HEAD 2>/dev/null || echo nogit)"
 RELEASE_ID="$(date -u +%Y%m%dT%H%M%SZ)_${SHA}"
 NEW="${RELEASES}/${RELEASE_ID}"
