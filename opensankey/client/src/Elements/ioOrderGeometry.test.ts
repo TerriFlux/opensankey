@@ -1,4 +1,4 @@
-import { orderIOByGeometry, Type_IOGeo } from './ioOrderGeometry'
+import { orderIOByGeometry, recyclingBellyCentre, Type_IOGeo } from './ioOrderGeometry'
 
 // Geometry-aware I/O ordering — direction split + anchor-distance rule (#266).
 //   1. up-going links (opposite node above the reorg node) are all placed above the
@@ -10,10 +10,16 @@ import { orderIOByGeometry, Type_IOGeo } from './ioOrderGeometry'
 //      position. Coordinates are node centres from the real SOCLE diagrams.
 
 type L = { id: string }
-// row = [id, side, ox, oy, curve_node?]  (curve_node default 0.05)
-const make = (rows: [string, Type_IOGeo['side'], number, number, number?][]) =>
-  rows.map(([id, side, ox, oy, cn]) =>
-    ({ item: { id } as L, geo: { side, ox, oy, curve_node: cn ?? 0.05 } }))
+// row = [id, side, ox, oy, curve_node?, stack_ref?]  (curve_node default 0.05 ;
+// stack_ref set only for recycling links — the centre of their loop's belly)
+const make = (rows: [string, Type_IOGeo['side'], number, number, number?, number?][]) =>
+  rows.map(([id, side, ox, oy, cn, sr]) => ({
+    item: { id } as L,
+    geo: {
+      side, ox, oy, curve_node: cn ?? 0.05,
+      ...(sr !== undefined ? { stack_ref: sr } : {})
+    } as Type_IOGeo
+  }))
 const run = (items: ReturnType<typeof make>, nx: number, ny: number) =>
   orderIOByGeometry(items, nx, ny).map(l => l.id)
 
@@ -128,5 +134,67 @@ describe('#266 — real SOCLE nodes (validated in-app on Œufs, ovine-caprine, V
       'Protéines animales transformées', 'Corps gras animaux',
       'C3 et alimentaire', 'Agneaux', 'Ovins de réforme', 'Caprins de réforme'
     ])
+  })
+})
+
+// Recycling links run BACKWARDS : the opposite node sits beyond the reorg node and the
+// flow loops around, so the node says nothing about where the loop actually passes.
+// Criteria 1 (up/down) and 3 (tie-break) therefore key on the centre of the loop's
+// central run — its belly — instead. Criterion 2 (the anchor distance) is unchanged.
+describe('recycling links — keyed on the loop belly, not on the opposite node', () => {
+  it('belly of a horizontal loop hangs below the LOWER end, by offset + 2·thickness', () => {
+    // Real link : Mélasses (2050, 661) -> Distillerie de betterave (1090, 1106).
+    const b = recyclingBellyCentre(2050.3, 660.9, 1090.2, 1106.5, 6.75, 10, 'hh')
+    expect(b.y).toBeCloseTo(1106.5 + 6.75 + 20, 5) // below the distillerie, the lower end
+    expect(b.x).toBeCloseTo((2050.3 + 1090.2) / 2, 5)
+  })
+
+  it('a negative offset lifts the belly above the ends', () => {
+    const b = recyclingBellyCentre(2050.3, 660.9, 1090.2, 1106.5, -600, 10, 'hh')
+    expect(b.y).toBeCloseTo(1106.5 - 600 + 20, 5)
+  })
+
+  it('a vertical loop offsets x and keeps the belly at the lower end', () => {
+    const b = recyclingBellyCentre(100, 200, 300, 900, 50, 8, 'vv')
+    expect(b.x).toBeCloseTo((100 + 300) / 2 + 50, 5)
+    expect(b.y).toBeCloseTo(900, 5)
+  })
+
+  it('Distillerie de betterave (Sucre) : the mélasses loop dives below → it sits last', () => {
+    // The Mélasses NODE is HIGH (y=661, well above the distillerie at 1106), yet its loop
+    // hangs BELOW it (shape_middle_recycling = +6.75). The belly decides, not the node :
+    // the flow lands in the down group, i.e. below the betteraves inflow. Real coords.
+    const node = { x: 1090.2, y: 1106.5 }
+    const belly = recyclingBellyCentre(2050.3, 660.9, node.x, node.y, 6.75, 10, 'hh')
+    const items = make([
+      ['Betteraves sucrières', 'left', 617.5, 732.8],
+      ['Mélasses', 'left', 2050.3, 660.9, 0.013923195805218593, belly.y],
+    ])
+    expect(run(items, node.x, node.y)).toEqual(['Betteraves sucrières', 'Mélasses'])
+  })
+
+  it('same node, same nodes : a loop lifted above the distillerie rises to the top', () => {
+    // Only the sign of shape_middle_recycling changes — and the flow switches direction
+    // group. This is what proves the rule keys on the belly and not on the node.
+    const node = { x: 1090.2, y: 1106.5 }
+    const belly = recyclingBellyCentre(2050.3, 660.9, node.x, node.y, -600, 10, 'hh')
+    const items = make([
+      ['Betteraves sucrières', 'left', 617.5, 732.8],
+      ['Mélasses', 'left', 2050.3, 660.9, 0.013923195805218593, belly.y],
+    ])
+    expect(run(items, node.x, node.y)).toEqual(['Mélasses', 'Betteraves sucrières'])
+  })
+
+  it('criterion 2 keeps measuring toward the opposite node, not the belly', () => {
+    // Two recycling links sharing one belly line (so criteria 1 and 3 tie) : only the
+    // anchor distance reach·curve_node separates them, and `reach` is the span to the
+    // opposite node. Down group → the nearest anchor goes to the bottom extremity.
+    const node = { x: 1000, y: 1000 }
+    const belly = 1200 // both loops pass below the node
+    const items = make([
+      ['far', 'left', 2000, 900, 0.02, belly],  // reach 1000 → anchor 20
+      ['near', 'left', 1500, 900, 0.02, belly], // reach  500 → anchor 10
+    ])
+    expect(run(items, node.x, node.y)).toEqual(['far', 'near'])
   })
 })
