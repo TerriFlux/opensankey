@@ -4,7 +4,7 @@
 // L'état d'essai vient du serveur (/auth/license → `trial`), poussé sur app_data.trial par AppSA.
 //   - BannerTrialOSP        : CTA de la topbar, reflète l'état d'essai/licence.
 //       · essai actif                → « N jours restants » (décompte discret)   → abonnement
-//       · licence OS+ (pas Suite)    → « Passer à SankeySuite »                   → abonnement
+//       · licence OS+ (pas Suite)    → « Passer à MFASankey »                   → abonnement
 //       · peut démarrer un essai     → « Essayer 30 jours gratuitement »          → #/license/trial
 //       · sinon (gratuit / expiré)   → « Obtenir une licence »                    → abonnement
 //   - ModalTrialExpiredOSP  : message unique à l'expiration (projets payants en lecture seule),
@@ -166,7 +166,7 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
     }
   })
 
-  // Top tier (SankeySuite) déjà détenu → plus rien à vendre.
+  // Top tier (MFASankey) déjà détenu → plus rien à vendre.
   if (app_data.has_real_sankey_suite_licence) return <></>
 
   const iconCTA = (label: string, onClick: () => void, logo: string = app_data.logo_sankey_plus) => (
@@ -204,7 +204,7 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
     const days = app_data.trial_days_remaining
     if (app_data.trial_active_suite) {
       return iconCTA(
-        trLang(`Essai SankeySuite — ${days} j restants`, `SankeySuite trial — ${days} days left`),
+        trLang(`Essai MFASankey — ${days} j restants`, `MFASankey trial — ${days} days left`),
         () => goToCheckout(app_data),
         app_data.logo_sankey_suite,
       )
@@ -215,20 +215,20 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
       app_data.logo_sankey_plus,
     )
   }
-  // Bouton « Essayer SankeySuite » (escalade depuis OS+).
+  // Bouton « Essayer MFASankey » (escalade depuis OS+).
   const suiteTrialCTA = () => textCTA(
-    trLang('Essayer SankeySuite 30 j', 'Try SankeySuite for 30 days'),
-    trLang('Essai gratuit de SankeySuite (AFM), sans carte', 'Free SankeySuite (MFA) trial, no credit card'),
+    trLang('Essayer MFASankey 30 j', 'Try MFASankey for 30 days'),
+    trLang('Essai gratuit de MFASankey, sans carte', 'Free MFASankey trial, no credit card'),
     app_data.logo_sankey_suite,
     () => goToTrial('suite'),
   )
 
-  // Essai SankeySuite actif → haut de l'échelle : juste le décompte.
+  // Essai MFASankey actif → haut de l'échelle : juste le décompte.
   if (app_data.trial_active_suite) {
     return countdownCTA()
   }
 
-  // Essai OpenSankey+ actif → décompte + proposer l'essai SankeySuite (inclut OS+),
+  // Essai OpenSankey+ actif → décompte + proposer l'essai MFASankey (inclut OS+),
   // tant qu'il n'a pas été consommé. Démarrer l'essai Suite remplace l'essai OS+
   // en cours (Suite ⊇ OS+ : aucun accès perdu, 30 nouveaux jours).
   if (app_data.trial_active_plus) {
@@ -244,12 +244,12 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
   }
 
   // CTA d'essai CONTEXTUEL : le plan dépend du niveau courant (escalade).
-  //   - licence OS+ réelle (pas Suite) → proposer l'essai SankeySuite (inclut OS+)
+  //   - licence OS+ réelle (pas Suite) → proposer l'essai MFASankey (inclut OS+)
   //   - sinon (gratuit / non connecté)  → proposer l'essai OpenSankey+
   // On propose tant que l'essai du plan n'a pas été consommé. Le clic ouvre
   // #/license/trial, qui gère l'inscription/connexion puis démarre l'essai.
 
-  // Licence OS+ réelle (mais pas Suite) : escalade vers l'essai SankeySuite.
+  // Licence OS+ réelle (mais pas Suite) : escalade vers l'essai MFASankey.
   if (app_data.has_real_sankey_plus_licence) {
     if (!app_data.trial_used_suite) {
       return suiteTrialCTA()
@@ -273,7 +273,7 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
     )
   }
 
-  // Essai OS+ déjà consommé mais Suite jamais pris → enchaîner sur l'essai SankeySuite.
+  // Essai OS+ déjà consommé mais Suite jamais pris → enchaîner sur l'essai MFASankey.
   if (!app_data.trial_used_suite) {
     return suiteTrialCTA()
   }

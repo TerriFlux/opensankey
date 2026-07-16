@@ -1,6 +1,6 @@
 # coding: utf-8
 #
-# Essai gratuit 30 jours (OpenSankey+ / SankeySuite) — géré en base, sans carte.
+# Essai gratuit 30 jours (OpenSankey+ / MFASankey) — géré en base, sans carte.
 # Le déclenchement et l'état d'essai vivent ici ; les droits d'accès sont lus
 # depuis les colonnes trial_* du modèle User (jamais depuis Stripe).
 
@@ -53,7 +53,7 @@ def trial_start():
     # Journalise l'événement de mesure (plan + UTM d'origine du compte)
     record_trial_event(current_user, "started", plan)
 
-    # Email J0 (bienvenue). Pour SankeySuite : propose le créneau accompagné.
+    # Email J0 (bienvenue). Pour MFASankey : propose le créneau accompagné.
     try:
         send_trial_welcome_mail(current_user, plan, lang)
     except Exception as excpt:  # noqa: BLE001 — l'email ne doit pas bloquer le démarrage
