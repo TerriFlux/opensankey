@@ -201,7 +201,6 @@ export const applyViewTagFilterRedraw = (app_data: Class_ApplicationData) => {
       n.position_y === const_default_position_y)
     if (needs_auto_layout) drawing_area.nodePositioning.computeAutoSankey(true, true)
   }
-  drawing_area.to_recenter = true
   drawing_area.recenter()
   drawing_area.draw()
 }
@@ -1104,7 +1103,6 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
         // réactivait le rendu → une passe entière gaspillée + rendu transitoire mal ordonné).
         app_data.drawing_area.sankey.nodes_list.forEach(node => node.reorganizeIOLinks())
         app_data.drawing_area.draw()
-        app_data.drawing_area.to_recenter = true
         app_data.drawing_area.recenter()
         app_data.drawing_area.orderElementOnDA()
 
@@ -1147,7 +1145,6 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
           }
           app_data.drawing_area.bypass_redraws = false
         }
-        app_data.drawing_area.to_recenter = true
         app_data.drawing_area.recenter()
         break
       }
@@ -1451,7 +1448,6 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
                 // Appliquer les mêmes transformations que dans handleTagSelection pour le mode 'unitary'
                 updateUnitaryStyles(app_data.drawing_area)
               })
-              app_data.drawing_area.to_recenter = true
               app_data.drawing_area.recenter()
 
               updateComponents()

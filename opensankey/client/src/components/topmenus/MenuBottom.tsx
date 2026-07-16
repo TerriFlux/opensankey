@@ -245,7 +245,6 @@ export const ComponetStretchButtons = ({ app_data, updateParentComponent, hide_f
       <Button variant='toolbar_button_6'
         size={size}
         onClick={() => {
-          app_data.drawing_area.to_recenter = true
           // Bouton explicite : recadre même quand le verrou de taille est actif (#1240).
           // #1244 : recentrage animé (glissement de caméra vers le centre).
           app_data.drawing_area.recenterAnimated(true)
