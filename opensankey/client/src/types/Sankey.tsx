@@ -24,6 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
+import * as d3 from '../d3Modules'
 import { Class_DrawingArea } from './DrawingArea'
 import { base_styles, elementStyleConfigs, ElementStyleConfigsDict, ElementStyleKey, LinkExportCloseStyle, LinkImportCloseStyle, LinkImportExportAboveBelowStyle, LinkImportExportCloseStyle, LinkStyle, NodeExportBelowStyle, NodeExportCloseStyle, NodeImportAboveStyle, NodeImportCloseStyle, NodeImportExportAboveBelowStyle, NodeImportExportCloseStyle, NodeSectorStyle, NodeStyle } from '../Elements/ElementStyle'
 import { Class_LinkElement, defaultLinkId, sortLinksElementsByIds } from '../Elements/Link'
@@ -444,11 +445,110 @@ export class Class_Sankey {
     // // Draw links
     // this.links_list.forEach(link => link.draw())
     // Draw nodes
-    this.nodes_list.forEach(node => node.draw())
-    this.containers_list.forEach(container => container.draw())
+    this._drawNodesJoin()
+    // Réconciliation des flux APRÈS le dessin des nœuds (qui crée/remplit les
+    // <g class="gg_links"> via node._drawLinks).
+    this._drawLinksJoin()
+    this._drawContainersJoin()
     //this.nodes_list.forEach(node => node.unDraw())
-    //this.visible_nodes_list_sorted.forEach(node => node.draw()) 
+    //this.visible_nodes_list_sorted.forEach(node => node.draw())
     this.drawing_area.orderElementOnDA()
+  }
+
+  /**
+   * OS#1246 — join keyé des zones de texte (`gg_labels`). Même forme que les
+   * nœuds : Class_ContainerElement hérite de Class_NodeBase (donc même parent
+   * `g_elements_sankey`, `datum(this)` posé dans _initDraw) et la boucle de
+   * dessin est INCONDITIONNELLE — le join peut donc posséder le cycle de vie du
+   * <g> racine (enter/update/exit), contrairement aux flux.
+   */
+  private _drawContainersJoin() {
+    const parent = this.drawing_area.d3_selection_elements_sankey_group
+    if (parent) {
+      parent.selectAll<SVGGElement, Class_ContainerElement>('.gg_labels')
+        .data(this.containers_list.filter(c => c._shouldBeDrawn()), d => d.id)
+        .join(
+          enter => enter.append('g')
+            .attr('class', 'gg_labels')
+            .attr('id', d => d.svg_group)
+            .each(function (d) {
+              d.d3_selection = d3.select(this) as unknown as
+                d3.Selection<SVGGElement, unknown, SVGGElement, unknown>
+            }),
+          update => update,
+          exit => exit.each(function (d) { d.unDraw() }).remove()
+        )
+    }
+    // Contenu : toutes les zones (les non-dessinables se retirent via _shouldBeDrawn).
+    this.containers_list.forEach(container => container.draw())
+  }
+
+  /**
+   * OS#1246 — join keyé des flux, en mode RÉCONCILIATION (pas de pré-création).
+   * Les <g class="gg_links"> sont créés/remplis par node._drawLinks selon une
+   * optimisation de redraw conditionnel (isRelatedD3SelectionPresentAndSynced :
+   * un <g> présent = pas de redraw). Pré-créer un <g> vide via un enter casserait
+   * cette heuristique (flux non redessiné → <g> vide). On lance donc le join
+   * APRÈS le dessin, keyé sur les flux dessinables : update = flux déjà présents,
+   * exit = flux devenus invisibles/sous seuil → nettoyage (unDraw) + retrait.
+   * L'enter n'est qu'un filet (un flux dessinable sans <g> est redessiné). Les
+   * <g class="gg_links"> portent leur datum(this) (Link._initDraw), donc le join
+   * les reconnaît par id.
+   */
+  private _drawLinksJoin() {
+    const parent = this.drawing_area.d3_selection_elements_sankey_group
+    if (!parent) return
+    const drawable_links = this.links_list.filter(l => l._shouldBeDrawn())
+    parent.selectAll<SVGGElement, Class_LinkElement>('.gg_links')
+      .data(drawable_links, d => d.id)
+      .join(
+        // Filet : un flux dessinable dont le <g> manque (jamais dessiné par le
+        // nœud) est dessiné ici. `this` (placeholder d'enter) est ignoré.
+        enter => enter.each(function (d) {
+          if (!d.isRelatedD3SelectionPresentAndSynced()) d.draw()
+        }),
+        update => update,
+        // exit : le flux n'est plus dessinable — nettoyage complet + retrait du <g>.
+        exit => exit.each(function (d) { d.unDraw() }).remove()
+      )
+  }
+
+  /**
+   * OS#1246 — premier vrai data-join keyé de la lib. Le join possède le cycle
+   * de vie du <g> racine des nœuds : enter l'append, exit le retire, update le
+   * conserve. Le CONTENU reste dessiné par node.draw() (qui réutilise ce <g>
+   * via Element._initDraw idempotent) — migration « groupe par groupe » sans
+   * casser l'architecture par classes. Les <g class="gg_nodes"> existants
+   * portent leur datum(this) (posé dans NodeBase._initDraw), donc le join les
+   * reconnaît par id (update) au lieu de les recréer. Prérequis des transitions
+   * animées : enter/update/exit sont désormais des sélections nommées.
+   */
+  private _drawNodesJoin() {
+    const parent = this.drawing_area.d3_selection_elements_sankey_group
+    if (parent) {
+      parent.selectAll<SVGGElement, Class_NodeElement>('.gg_nodes')
+        .data(this.visible_nodes_list, d => d.id)
+        .join(
+          enter => enter.append('g')
+            .attr('class', 'gg_nodes')
+            .attr('id', d => d.svg_group)
+            .each(function (d) {
+              // select() sur un nœud type le parent à null → recast vers le
+              // type du champ (phantom type, sans incidence runtime).
+              d.d3_selection = d3.select(this) as unknown as
+                d3.Selection<SVGGElement, unknown, SVGGElement, unknown>
+            }),
+          update => update,
+          // exit : nœud devenu invisible/supprimé — nettoyage complet (retrait
+          // DOM + caches + cascade des flux) via unDraw, puis retrait du <g>.
+          exit => exit.each(function (d) { d.unDraw() }).remove()
+        )
+    }
+    // Contenu de chaque nœud. On parcourt TOUS les nœuds (pas seulement les
+    // visibles) : un nœud invisible non capté par l'exit ci-dessus (jamais
+    // entré dans le DOM) doit quand même passer par draw()→unDraw pour ses
+    // dépendances (flux, poignées). No-op DOM si déjà retiré.
+    this.nodes_list.forEach(node => node.draw())
   }
   public linkValueHasReconciliedData = () => {
     return this.links_list.some(link => link.has_result)

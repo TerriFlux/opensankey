@@ -829,7 +829,32 @@ export class Class_DrawingArea {
 
     // Add specific groups for nodes, link and others
     this.d3_selection_elements_group = this.d3_selection.append('g').attr('id', 'g_elements')
-    this.d3_selection_elements_sankey_group = this.d3_selection_elements_group.append('g').attr('id', 'g_elements_sankey')
+    // OS#1246 — persistance du sous-arbre nœuds/flux. unDraw() ne détache que
+    // #draw_zoom (et NE remet PAS d3_selection_elements_sankey_group à null) :
+    // le <g id=g_elements_sankey> précédent survit donc, détaché mais intact
+    // avec tous ses <g> enfants. On le ré-attache au nouveau scaffold au lieu
+    // d'en recréer un vide, pour que la réutilisation par élément
+    // (Element._initDraw) retrouve les <g> et que le DOM persiste entre draws.
+    // Reste inerte au 1er draw (ref null) et au changement de vue
+    // (createNewDrawingArea → nouvelle instance, ref null) : build frais.
+    const preserved_sankey_group = this.d3_selection_elements_sankey_group?.node() ?? null
+    const new_elements_group_node = this.d3_selection_elements_group.node()
+    if (
+      preserved_sankey_group &&
+      new_elements_group_node &&
+      preserved_sankey_group.ownerDocument === new_elements_group_node.ownerDocument
+    ) {
+      new_elements_group_node.appendChild(preserved_sankey_group)
+      // select() sur un nœud type le parent à `null` ; on recaste vers le parent
+      // HTMLElement du champ (phantom type sans incidence runtime — même motif que
+      // pour d3_selection_zoom_area plus haut dans _initDraw).
+      this.d3_selection_elements_sankey_group =
+        d3.select(preserved_sankey_group) as unknown as
+          d3.Selection<SVGGElement, unknown, HTMLElement, unknown>
+    } else {
+      this.d3_selection_elements_sankey_group =
+        this.d3_selection_elements_group.append('g').attr('id', 'g_elements_sankey')
+    }
     this.d3_selection_handlers = this.d3_selection_elements_group.append('g').attr('id', 'g_handlers')
     this.d3_selection_zone_select = this.d3_selection_elements_group.append('g').attr('id', 'g_select_zone')
 
@@ -994,10 +1019,41 @@ export class Class_DrawingArea {
         this.nodePositioning.enforceStraightLinks()) {
       this._sankey.draw()
     }
+    // OS#1246 — passe « exit » du data-join. Le sous-arbre #g_elements_sankey étant
+    // désormais réutilisé (non rasé), un <g> dont l'élément n'a pas été (re)dessiné
+    // — nœud/flux devenu invisible sans passer par unDraw, flux sous seuil non
+    // parcouru, etc. — resterait fantôme. On retire donc tout <g gg_...> qui ne
+    // correspond pas à un élément vivant (d3_selection connectée à ce draw).
+    this._sweepOrphanElementGroups()
     // Draw legend
     //this._legend.draw()
     this.drawBgImage()
 
+  }
+
+  /**
+   * OS#1246 — supprime du DOM les <g> racine d'éléments (nœuds/flux/conteneurs)
+   * qui ne correspondent plus à un élément affiché. Complément « exit » de la
+   * réutilisation du sous-arbre #g_elements_sankey (cf. _initDraw). Un élément
+   * effectivement dessiné a une d3_selection dont le nœud est connecté ; les
+   * autres (invisibles, supprimés, sous seuil) ne sont pas dans l'ensemble
+   * attendu et leur <g> résiduel est retiré.
+   */
+  private _sweepOrphanElementGroups() {
+    const group_node = this.d3_selection_elements_sankey_group?.node()
+    if (!group_node) return
+    const expected = new Set<string>()
+    this._sankey.elements_list.forEach(el => {
+      const el_node = el.d3_selection?.node()
+      if (el_node && el_node.isConnected) expected.add(el.svg_group)
+    })
+    // Copie du live HTMLCollection avant mutation (remove() la modifie).
+    Array.from(group_node.children).forEach(child => {
+      const id = (child as SVGElement).id
+      if (id && id.startsWith('gg_') && !expected.has(id)) {
+        child.remove()
+      }
+    })
   }
 
   public drawSelected() {
