@@ -249,11 +249,9 @@ viewTags, tags séparants).
 ## 5. Découpage proposé
 
 1. **Phase 0 — préalables** : décider les points ouverts restants (§6).
-   Dépendance SA#246 nuancée : le filet golden (`corpusFirstLoad`) dont notre
-   migration a besoin est déjà en place ; le reste de #246 (déplacement de
-   `convert_data_legacy`, bloqué par #277) concerne le legacy pré-0.8,
-   orthogonal. Seule contrainte : ne pas restructurer la même plomberie de
-   migration en parallèle — se coordonner avec #246 au moment de la phase 1.
+   SA#246 est terminée (2026-07-16) : le filet golden (`corpusFirstLoad`) dont
+   notre migration a besoin est en place. Éventuel follow-up sur les fichiers
+   0.5 (#277), non bloquant pour ce chantier.
 2. **Phase 1 — fusion du modèle** (OS) : classe unifiée + flag `is_dimension`,
    modèle partition (§3.0) inclus d'emblée (une seule migration de format),
    migration fromJSON, bump de format, menu Étiquettes fusionné. Pas de bascule
