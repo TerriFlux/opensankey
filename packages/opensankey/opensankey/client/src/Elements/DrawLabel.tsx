@@ -143,6 +143,12 @@ export abstract class DrawLabelBase {
   // atterrir sur le MÊME nœud DOM — non garanti sur Mac). Timestamp en ms.
   private _last_label_click_ts: number = 0
 
+  // Valeur du modèle à l'ouverture de l'éditeur inline, ou null hors édition.
+  // Sert à coalescer toute la session de frappe en UNE entrée d'historique : le
+  // listener 'input' écrit le modèle à chaque caractère, donc enregistrer là
+  // saturerait la table (history_size slots) au bout de 10 lettres.
+  private _edit_value_before: string | null = null
+
   public d3_selection: d3_selection_type | null = null
 
   // Poignées de redimensionnement de la "boîte" du label (label.box_width).
@@ -1265,6 +1271,7 @@ export abstract class DrawLabelBase {
     const inputId = `${this.prefix}_input_${this.getElementId()}`
     const input = document.getElementById(inputId) as HTMLElement | null
     if (!input) return
+    this._edit_value_before = this.getInputInitialValue()
     input.focus()
     const sel = window.getSelection()
     const range = document.createRange()
@@ -1281,6 +1288,32 @@ export abstract class DrawLabelBase {
 
   public setInputLabelInvisible() {
     this.drawGenericLabel()
+  }
+
+  /**
+   * Fin d'édition inline : enregistre la session de frappe comme UNE entrée
+   * d'historique. On rejoue `onInputChange` — seul écrivain du modèle pendant
+   * l'édition — avec l'ancienne puis la nouvelle valeur, ce qui évite de dupliquer
+   * ici la logique propre à chaque label (renommage vs label custom vs valeur de flux).
+   * Rien n'est enregistré si le texte n'a pas bougé : ouvrir l'éditeur puis en sortir
+   * ne doit pas consommer un slot d'historique.
+   */
+  protected commitEditToHistory() {
+    const before = this._edit_value_before
+    this._edit_value_before = null
+    if (before === null || !this.onInputChange) return
+    const inputId = `${this.prefix}_input_${this.getElementId()}`
+    const input = document.getElementById(inputId) as HTMLElement | null
+    // Lu avant setInputLabelInvisible : le redraw détruit l'input.
+    const after = input?.innerText ?? before
+    if (after === before) return
+    const apply = (value: string) => {
+      this.onInputChange?.(value)
+      this.setInputLabelInvisible()
+    }
+    const history = this._element.drawing_area.application_data.history
+    history.saveUndo(() => apply(before))
+    history.saveRedo(() => apply(after))
   }
 
   /**
@@ -1407,7 +1440,10 @@ export abstract class DrawLabelBase {
           (evt.target as HTMLElement).blur()
         }
       })
-      .on('blur', () => this.setInputLabelInvisible())
+      .on('blur', () => {
+        this.commitEditToHistory()
+        this.setInputLabelInvisible()
+      })
   }
 
   protected getInputInitialValue(): string {

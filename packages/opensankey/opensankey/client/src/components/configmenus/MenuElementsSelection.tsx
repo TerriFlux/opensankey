@@ -897,8 +897,24 @@ export const SankeyNodeSelection = ({ app_data }: { app_data: Class_ApplicationD
                     // result, so in reconciled/calculated mode the displayed
                     // value (and the stock shape height) updates immediately;
                     // a later reconciliation recomputes the result.
-                    nodes.forEach(n => { const s = n.stock_value; if (s) { s.stockInitialData = v; s.stockInitialResult = null } })
-                    refreshStock()
+                    // L'undo restaure les DEUX (donnée + résultat effacé).
+                    const before = nodes.map(n => {
+                      const s = n.stock_value
+                      return { n, data: s?.stockInitialData ?? null, result: s?.stockInitialResult ?? null }
+                    })
+                    const apply = () => {
+                      nodes.forEach(n => { const s = n.stock_value; if (s) { s.stockInitialData = v; s.stockInitialResult = null } })
+                      refreshStock()
+                    }
+                    const undo = () => {
+                      before.forEach(({ n, data, result }) => {
+                        const s = n.stock_value; if (s) { s.stockInitialData = data; s.stockInitialResult = result }
+                      })
+                      refreshStock()
+                    }
+                    app_data.history.saveUndo(undo)
+                    app_data.history.saveRedo(apply)
+                    apply()
                   }}
                   stepper={true}
                   step={1}
@@ -911,8 +927,24 @@ export const SankeyNodeSelection = ({ app_data }: { app_data: Class_ApplicationD
                   t={app_data.t}
                   default_value={stock_variation_shown}
                   function_on_blur={(v) => {
-                    nodes.forEach(n => { const s = n.stock_value; if (s) { s.stockVariationData = v; s.stockVariationResult = null } })
-                    refreshStock()
+                    // Idem stock initial : donnée + résultat restaurés.
+                    const before = nodes.map(n => {
+                      const s = n.stock_value
+                      return { n, data: s?.stockVariationData ?? null, result: s?.stockVariationResult ?? null }
+                    })
+                    const apply = () => {
+                      nodes.forEach(n => { const s = n.stock_value; if (s) { s.stockVariationData = v; s.stockVariationResult = null } })
+                      refreshStock()
+                    }
+                    const undo = () => {
+                      before.forEach(({ n, data, result }) => {
+                        const s = n.stock_value; if (s) { s.stockVariationData = data; s.stockVariationResult = result }
+                      })
+                      refreshStock()
+                    }
+                    app_data.history.saveUndo(undo)
+                    app_data.history.saveRedo(apply)
+                    apply()
                   }}
                   stepper={true}
                   step={1}

@@ -129,10 +129,16 @@ export const ViewsConfig = (
                       variant='menuconfigpanel_del_button_in_table'
                       isDisabled={!is_activated || (view_id == default_main_sankey_id)}
                       onClick={
-                        // Delete the view
+                        // Delete the view. Une vue emporte toute sa géométrie propre :
+                        // snapshot avant/après (les vues sont dans le _toJSON OSP).
                         () => {
-                          app_data.deleteView(view_id)
-                          menu_configuration_osp.updateComponentRelatedToViews()
+                          app_data.runWithSnapshotUndo(
+                            () => {
+                              app_data.deleteView(view_id)
+                              menu_configuration_osp.updateComponentRelatedToViews()
+                            },
+                            () => menu_configuration_osp.updateComponentRelatedToViews()
+                          )
                         }
                       }
                     >

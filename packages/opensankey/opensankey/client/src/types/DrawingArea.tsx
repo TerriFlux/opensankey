@@ -73,7 +73,7 @@ import { Class_ViewportChrome } from './DrawingAreaViewportChrome'
 import { Class_DrawingAreaInteractions } from './DrawingAreaInteractions'
 import { Class_NodeBase, sortNodesElements } from '../Elements/NodeBase'
 import {
-  LinkElementPersistence, NodeElementPersistence, SankeyPersistence
+  ContainerPersistence, LinkElementPersistence, NodeElementPersistence, SankeyPersistence
 } from '../Persistence/SankeyPersistence'
 
 
@@ -1247,7 +1247,12 @@ export class Class_DrawingArea {
     // --- Init
     const json_hist_nodes: { [_: string]: Type_JSON } = {}
     const json_hist_links: { [_: string]: Type_JSON } = {}
+    const json_hist_containers: { [_: string]: Type_JSON } = {}
     const json_hist_links_order: { [_: string]: string[] } = {}
+    // Ordre Z d'avant suppression : une ZDT recréée par addNewContainer est
+    // repoussée en fin de liste, donc au premier plan. Sans ça, annuler la
+    // suppression d'un cadre de fond le ferait revenir par-dessus le diagramme.
+    const z_order_before = [...this.list_g_element]
 
     // --- Selected nodes
     //if (deleteSelectedNodes) {
@@ -1276,15 +1281,27 @@ export class Class_DrawingArea {
       json_hist_links_order[link.target.id] = link.target.links_order.map(link => link.id)//save IO order of nodes affected by links suppression
     })
     //}
+    // --- Selected containers (zones de texte)
+    this.selected_containers_list.forEach(container => {
+      json_hist_containers[container.id] = {}
+      ContainerPersistence.toJSON(container, json_hist_containers[container.id])
+    })
 
     // --- Undo function
     const undo = (_: Class_DrawingArea) => {
       const json_hist: Type_JSON = {
         'nodes': json_hist_nodes,
-        'links': json_hist_links
+        'links': json_hist_links,
+        // Clé 'labels' : celle sous laquelle SankeyPersistence lit les containers.
+        'labels': json_hist_containers
       }
       SankeyPersistence.fromJSON(+this.application_data.version, _.sankey, json_hist)
       Object.entries(json_hist_links_order).forEach(ent => _.sankey.nodes_dict[ent[0]].reorganizeIOFromListIds(ent[1]))//Organise correctly nodes IO
+      // Les éléments créés depuis la suppression sont absents du snapshot : on les
+      // conserve en fin de liste plutôt que de les faire disparaître de l'ordre Z.
+      const restored = new Set(z_order_before)
+      const created_since = _.list_g_element.filter(id => !restored.has(id))
+      _.list_g_element = dedupeZOrderKeepFirst([...z_order_before, ...created_since])
       _.sankey.draw()
     }
     this.saveUndo(undo)
@@ -1301,6 +1318,12 @@ export class Class_DrawingArea {
         .forEach(link_id => _.deleteLink(_.sankey.links_dict[link_id]))
       Object.keys(json_hist_nodes)
         .forEach(node_id => _.deleteNode(_.sankey.nodes_dict[node_id]))
+      Object.keys(json_hist_containers)
+        .forEach(container_id => {
+          const container = _.sankey.containers_dict[container_id]
+          if (container) _.deleteContainer(container)
+        })
+      _.sankey.draw()
     }
     this.saveRedo(redo)
     // End Save Redo -----------------------------------

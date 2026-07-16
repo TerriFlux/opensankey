@@ -2,6 +2,7 @@ import { Box, Button, ButtonGroup, Divider, Menu, MenuButton, MenuList } from '@
 import { ChevronRightIcon } from '@chakra-ui/icons'
 import React from 'react'
 import { Class_ApplicationData } from '@terriflux/opensankey/src/types/ApplicationData'
+import { Class_ContainerElement } from '@terriflux/opensankey/src/Elements/TextZone'
 import { MenuColorPicker } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
 import { ButtonContainerContextAssignStyle } from '@terriflux/opensankey/src/components/dialogs/MenuContextWidgetFactory'
 import { NodeActions } from '@terriflux/opensankey/src/components/dialogs/NodeActions'
@@ -58,6 +59,41 @@ export const ContextZDT = (
     app_data.drawing_area.contextualised_container = undefined
     refreshThis()
 
+  }
+
+  // Instantané de tout ce que les actions d'attache / cadrage mutent sur une ZDT :
+  // le drapeau tied, les nœuds attachés et la géométrie. L'attache est un lien
+  // bidirectionnel (zdt.attached_node <-> node.attached_container), d'où le passage
+  // obligé par attachNodeToCont / dettachNodeFromCont plutôt qu'une copie de tableau.
+  const captureZdtState = (zdt: Class_ContainerElement) => ({
+    zdt,
+    tied: zdt.tied_to_nodes,
+    attached: [...zdt.attached_node],
+    x: zdt.position_x, y: zdt.position_y,
+    w: zdt.shape_min_width, h: zdt.shape_min_height,
+  })
+
+  const restoreZdtState = (s: ReturnType<typeof captureZdtState>) => {
+    for (let i = s.zdt.attached_node.length - 1; i >= 0; i--) {
+      s.zdt.dettachNodeFromCont(s.zdt.attached_node[i])
+    }
+    s.attached.forEach(n => s.zdt.attachNodeToCont(n))
+    s.zdt.tied_to_nodes = s.tied
+    s.zdt.position_x = s.x
+    s.zdt.position_y = s.y
+    s.zdt.shape_min_width = s.w
+    s.zdt.shape_min_height = s.h
+    s.zdt.draw()
+  }
+
+  // saveUndo PUIS saveRedo : l'ordre compte, saveRedo écrit sur le slot ouvert par
+  // saveUndo (cf. Class_ApplicationHistory). Au redo l'état est revenu à `before`,
+  // donc rejouer l'action telle quelle suffit.
+  const runWithZdtUndo = (action: () => void) => {
+    const before = captureZdtState(zdt_to_contextualise)
+    app_data.history.saveUndo(() => restoreZdtState(before))
+    app_data.history.saveRedo(action)
+    action()
   }
 
   /**
@@ -120,12 +156,14 @@ export const ContextZDT = (
   // </>
 
   const button_detach_all_tied_nodes = <Button onClick={() => {
-    // Loop throught attached nodes in reverse index order to avoid problem when deleting element from array
-    for (let i = zdt_to_contextualise.attached_node.length - 1; i >= 0; i--) {
-      zdt_to_contextualise.dettachNodeFromCont(zdt_to_contextualise.attached_node[i])
-    }
-    zdt_to_contextualise.tied_to_nodes = false
-    zdt_to_contextualise.draw()
+    runWithZdtUndo(() => {
+      // Loop throught attached nodes in reverse index order to avoid problem when deleting element from array
+      for (let i = zdt_to_contextualise.attached_node.length - 1; i >= 0; i--) {
+        zdt_to_contextualise.dettachNodeFromCont(zdt_to_contextualise.attached_node[i])
+      }
+      zdt_to_contextualise.tied_to_nodes = false
+      zdt_to_contextualise.draw()
+    })
     closeContextMenu()
   }}
   variant='contextmenu_button'
@@ -133,20 +171,22 @@ export const ContextZDT = (
 
   // Select nodes 'inside' zdt
   const btn_select_node_inside = <Button onClick={() => {
-    zdt_to_contextualise.tied_to_nodes = true
-    app_data.drawing_area.purgeSelection()
-    getNodeInsideContextZDT()
-      .forEach(n => {
-        n.getListDescendantOfNode().forEach(node => {
-          zdt_to_contextualise.attachNodeToCont(node)
+    runWithZdtUndo(() => {
+      zdt_to_contextualise.tied_to_nodes = true
+      app_data.drawing_area.purgeSelection()
+      getNodeInsideContextZDT()
+        .forEach(n => {
+          n.getListDescendantOfNode().forEach(node => {
+            zdt_to_contextualise.attachNodeToCont(node)
+          })
+          n.getListAncestorOfNode().forEach(node => {
+            zdt_to_contextualise.attachNodeToCont(node)
+          })
+          zdt_to_contextualise.attachNodeToCont(n)
+          zdt_to_contextualise.computeSizeAndPositionFromAttachedNodes()
         })
-        n.getListAncestorOfNode().forEach(node => {
-          zdt_to_contextualise.attachNodeToCont(node)
-        })
-        zdt_to_contextualise.attachNodeToCont(n)
-        zdt_to_contextualise.computeSizeAndPositionFromAttachedNodes()
-      })
-    zdt_to_contextualise.draw()
+      zdt_to_contextualise.draw()
+    })
     closeContextMenu()
   }}
   variant='contextmenu_button'
@@ -156,8 +196,10 @@ export const ContextZDT = (
   const btn_fit_frame_to_attached = <Button
     variant='contextmenu_button'
     onClick={() => {
-      zdt_to_contextualise.computeSizeAndPositionFromAttachedNodes()
-      zdt_to_contextualise.draw()
+      runWithZdtUndo(() => {
+        zdt_to_contextualise.computeSizeAndPositionFromAttachedNodes()
+        zdt_to_contextualise.draw()
+      })
       closeContextMenu()
     }}>
     {t('Menu.fitFrameToAttached')}
@@ -179,15 +221,31 @@ export const ContextZDT = (
     onClick={() => {
       const sankey = drawing_area.sankey
       const offset = 50
-      drawing_area.purgeSelection()
-      selected_zdt.forEach(container => {
-        const new_container = sankey.addNewContainer(container.id + '_copy', container.name)
-        new_container.copyFrom(container)
-        new_container.position_x = container.position_x + offset
-        new_container.position_y = container.position_y + offset
-        new_container.draw()
-        drawing_area.addElementToSelection(new_container)
-      })
+      // Le redo rejoue la copie : on retient les ZDT réellement créées au dernier
+      // passage pour que l'undo supprime celles-là, pas des instances périmées.
+      let new_containers: Class_ContainerElement[] = []
+
+      const copy = () => {
+        drawing_area.purgeSelection()
+        new_containers = selected_zdt.map(container => {
+          const new_container = sankey.addNewContainer(container.id + '_copy', container.name)
+          new_container.copyFrom(container)
+          new_container.position_x = container.position_x + offset
+          new_container.position_y = container.position_y + offset
+          new_container.draw()
+          drawing_area.addElementToSelection(new_container)
+          return new_container
+        })
+      }
+
+      const undo = () => {
+        new_containers.forEach(c => drawing_area.deleteContainer(c))
+        drawing_area.draw()
+      }
+
+      app_data.history.saveUndo(undo)
+      app_data.history.saveRedo(copy)
+      copy()
       closeContextMenu()
     }}>
     {t('Menu.copyElement')}

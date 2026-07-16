@@ -260,12 +260,29 @@ export const ButtonNodeContextAssignStyle = ({ app_data }: { app_data: Class_App
                 display='flex'
                 closeOnSelect={false}
                 onClick={() => {
-                  if (!has_style) {
-                    contextualised_node.addStyle(_)
-                  } else {
-                    contextualised_node.removeStyle(_)
+                  // Action sur le seul nœud contextualisé : has_style EST son état,
+                  // l'undo est donc l'opération inverse (pas besoin de snapshot).
+                  const apply = () => {
+                    if (!has_style) {
+                      contextualised_node.addStyle(_)
+                    } else {
+                      contextualised_node.removeStyle(_)
+                    }
+                    refreshThis()
                   }
-                  refreshThis()
+
+                  const undo = () => {
+                    if (!has_style) {
+                      contextualised_node.removeStyle(_)
+                    } else {
+                      contextualised_node.addStyle(_)
+                    }
+                    refreshThis()
+                  }
+
+                  app_data.history.saveUndo(undo)
+                  app_data.history.saveRedo(apply)
+                  apply()
                 }}
               >
                 {t(_.name)}
@@ -307,14 +324,35 @@ export const ButtonContainerContextAssignStyle = ({ app_data }: { app_data: Clas
                 display='flex'
                 closeOnSelect={false}
                 onClick={() => {
-                  selected_containers.forEach(container => {
-                    if (!has_style) {
-                      container.addStyle(_)
-                    } else {
-                      container.removeStyle(_)
-                    }
-                  })
-                  refreshThis()
+                  // has_style est lu sur la ZDT contextualisée, mais l'action porte sur
+                  // toute la sélection : les autres ZDT n'étaient pas forcément dans le
+                  // même état, on mémorise donc le leur pour un undo exact.
+                  const before = selected_containers.map(
+                    container => ({ container, had: container.style.includes(_) })
+                  )
+
+                  const apply = () => {
+                    selected_containers.forEach(container => {
+                      if (!has_style) {
+                        container.addStyle(_)
+                      } else {
+                        container.removeStyle(_)
+                      }
+                    })
+                    refreshThis()
+                  }
+
+                  const undo = () => {
+                    before.forEach(({ container, had }) => {
+                      if (had && !container.style.includes(_)) container.addStyle(_)
+                      else if (!had && container.style.includes(_)) container.removeStyle(_)
+                    })
+                    refreshThis()
+                  }
+
+                  app_data.history.saveUndo(undo)
+                  app_data.history.saveRedo(apply)
+                  apply()
                 }}
               >
                 {t(_.name)}
@@ -357,12 +395,28 @@ export const ButtonLinkContextAssignStyle = ({ app_data }: { app_data: Class_App
                   display='flex'
                   closeOnSelect={false}
                   onClick={() => {
-                    if (!has_style) {
-                      contextualised_link.addStyle(_)
-                    } else {
-                      contextualised_link.removeStyle(_)
+                    // Idem nœud : un seul flux contextualisé, undo = opération inverse.
+                    const apply = () => {
+                      if (!has_style) {
+                        contextualised_link.addStyle(_)
+                      } else {
+                        contextualised_link.removeStyle(_)
+                      }
+                      refreshThis()
                     }
-                    refreshThis()
+
+                    const undo = () => {
+                      if (!has_style) {
+                        contextualised_link.removeStyle(_)
+                      } else {
+                        contextualised_link.addStyle(_)
+                      }
+                      refreshThis()
+                    }
+
+                    app_data.history.saveUndo(undo)
+                    app_data.history.saveRedo(apply)
+                    apply()
                   }}
                 >
                   {t(_.name)}
@@ -657,10 +711,24 @@ export const MenuContextNodeStock = ({ app_data }: { app_data: Class_Application
         t={app_data.t}
         default_value={stock_val?.stockInitialData ?? null}
         function_on_blur={(v) => {
-          drawing_area.selected_nodes_list.forEach(n => {
-            const s = n.stock_value; if (s) s.stockInitialData = v
-          })
-          refreshAll()
+          // Donnée métier saisie à la main : on mémorise l'ancienne, nœud par nœud.
+          const nodes = [...drawing_area.selected_nodes_list]
+          const before = nodes.map(n => ({ n, value: n.stock_value?.stockInitialData ?? null }))
+          const apply = () => {
+            nodes.forEach(n => {
+              const s = n.stock_value; if (s) s.stockInitialData = v
+            })
+            refreshAll()
+          }
+          const undo = () => {
+            before.forEach(({ n, value }) => {
+              const s = n.stock_value; if (s) s.stockInitialData = value
+            })
+            refreshAll()
+          }
+          app_data.history.saveUndo(undo)
+          app_data.history.saveRedo(apply)
+          apply()
         }}
         stepper={true}
         step={1}
@@ -672,10 +740,24 @@ export const MenuContextNodeStock = ({ app_data }: { app_data: Class_Application
         t={app_data.t}
         default_value={stock_val?.stockVariationData ?? null}
         function_on_blur={(v) => {
-          drawing_area.selected_nodes_list.forEach(n => {
-            const s = n.stock_value; if (s) s.stockVariationData = v
-          })
-          refreshAll()
+          // Idem stock initial.
+          const nodes = [...drawing_area.selected_nodes_list]
+          const before = nodes.map(n => ({ n, value: n.stock_value?.stockVariationData ?? null }))
+          const apply = () => {
+            nodes.forEach(n => {
+              const s = n.stock_value; if (s) s.stockVariationData = v
+            })
+            refreshAll()
+          }
+          const undo = () => {
+            before.forEach(({ n, value }) => {
+              const s = n.stock_value; if (s) s.stockVariationData = value
+            })
+            refreshAll()
+          }
+          app_data.history.saveUndo(undo)
+          app_data.history.saveRedo(apply)
+          apply()
         }}
         stepper={true}
         step={1}

@@ -12,14 +12,24 @@
 
 import type { Class_DrawingArea } from './DrawingArea'
 import type { Class_NodeElement } from '../Elements/Node'
+import type { Class_LinkElement } from '../Elements/Link'
 
 /**
  * Duplique les nœuds `node_ids` (et les liens internes à la sélection) avec un offset de 50 px,
  * puis sélectionne les copies. Tout se fait sous `withBypassRedraws` (un seul rendu final).
+ *
+ * Annulable : l'undo supprime les copies créées. Le redo rejoue la duplication — les ids
+ * `_copy` étant libérés par l'undo, il recrée exactement les mêmes. On retient les éléments
+ * du DERNIER passage, sinon l'undo d'après viserait des instances périmées.
  */
 export function copyNodes(da: Class_DrawingArea, node_ids: string[]) {
   const sankey = da.sankey
-  da.withBypassRedraws(() => {
+  let created_nodes: Class_NodeElement[] = []
+  let created_links: Class_LinkElement[] = []
+
+  const copy = () => da.withBypassRedraws(() => {
+    created_nodes = []
+    created_links = []
     const offset = 50
     const source_nodes = node_ids.map(id => sankey.nodes_dict[id]).filter(n => n !== undefined)
     da.purgeSelection()
@@ -34,6 +44,7 @@ export function copyNodes(da: Class_DrawingArea, node_ids: string[]) {
       new_node.position_x = node.position_x + offset
       new_node.position_y = node.position_y + offset
       da.addElementToSelection(new_node)
+      created_nodes.push(new_node)
     })
 
     source_nodes.forEach(node => {
@@ -48,6 +59,7 @@ export function copyNodes(da: Class_DrawingArea, node_ids: string[]) {
             new_link.target = new_target
             matching_link_id[link.id] = new_link.id
             da.addElementToSelection(new_link)
+            created_links.push(new_link)
           }
         }
       })
@@ -58,4 +70,15 @@ export function copyNodes(da: Class_DrawingArea, node_ids: string[]) {
       if (new_node) new_node.keepLinkOrderingFrom(node, matching_link_id)
     })
   })
+
+  // Liens puis nœuds, comme deleteSelection : deleteNode supprime en cascade les liens
+  // attachés, les retirer d'abord évite de repasser sur des liens déjà détruits.
+  const undo = () => da.withBypassRedraws(() => {
+    created_links.forEach(link => da.deleteLink(link))
+    created_nodes.forEach(node => da.deleteNode(node))
+  })
+
+  da.saveUndo(undo)
+  da.saveRedo(copy)
+  copy()
 }

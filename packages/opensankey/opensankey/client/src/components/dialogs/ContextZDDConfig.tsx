@@ -639,9 +639,15 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
     prepositionInPlace: () => {
       // Opération lourde (désagrégation récursive) : toast spinner + exécution différée
       // (sendWaitingToast attend ~500 ms pour afficher le spinner avant de bloquer).
-      app_data.sendWaitingToast(() => { prepositionAllInPlace(app_data); saveToCache() })
+      // Repositionne TOUS les nœuds → snapshot avant/après, sinon rien ne le rattrape.
+      app_data.sendWaitingToast(() => {
+        app_data.runWithSnapshotUndo(() => { prepositionAllInPlace(app_data); saveToCache() })
+      })
     },
-    centerChildrenOnParent: () => { centerChildrenOnParent(app_data); saveToCache() },
+    centerChildrenOnParent: () => {
+      // Écrase les positions de toute la descendance + réordonne les ancres.
+      app_data.runWithSnapshotUndo(() => { centerChildrenOnParent(app_data); saveToCache() })
+    },
     // #1231 — le mode paramétrique n'est plus un mode utilisateur : ce toggle bascule
     // désormais entre pourcentage et absolu.
     toggleParametricMode: () => getNodeStyle().shape_position_type === 'proportional' ? drawing_area.setAbsoluteMode() : drawing_area.setProportionalMode(),
@@ -651,7 +657,12 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
     // toggleAutoXValue: () => null,//getNodeStyle().position.auto_x,
     // toggleAutoY: () => { },//getNodeStyle().position.auto_y = !getNodeStyle().position.auto_y },
     // toggleAutoYValue: () => null, //getNodeStyle().position.auto_y,
-    toggleTradeMode: () => { sankey.tradeOption() == 'above_below' ? sankey.setTrade(true) : sankey.setTrade(false); saveToCache() },
+    // setTrade fait un replaceStyles massif + bascule import_export_above_below :
+    // withBypassRedraws ne groupait que les rendus, il n'y avait aucun undo.
+    toggleTradeMode: () => app_data.runWithSnapshotUndo(() => {
+      sankey.tradeOption() == 'above_below' ? sankey.setTrade(true) : sankey.setTrade(false)
+      saveToCache()
+    }),
     toggleTradeValue: () => sankey.tradeOption() == 'above_below',
     applyRandomNodeColors: () => { applyRandomColors(app_data, sankey.nodes_list); saveToCache() },
     applyRandomLinkColors: () => { applyRandomColors(app_data, sankey.links_list); saveToCache() },
