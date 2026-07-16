@@ -174,6 +174,26 @@ export class Class_DrawingArea {
   public bypass_redraws: boolean = false
   public bypass_compute_positions: boolean = false
 
+  private _in_full_draw: boolean = false
+
+  /**
+   * OS#1246 — « sommes-nous dans un draw() complet de la zone de dessin ? ».
+   *
+   * Node.updateLinksPositions ne redessine un flux que si son ancrage a bougé
+   * ≥1px ou si son DOM manque. Ce garde-fou ignore les changements de VALEUR —
+   * il ne posait pas problème tant que Node.unDraw() cascadait link.unDraw() sur
+   * tous les flux à chaque dessin de nœud : leur DOM disparaissait, donc ils
+   * étaient tous redessinés et l'optimisation ne servait jamais sur un draw
+   * complet. Depuis que les <g> sont réutilisés (data-join keyé), elle est
+   * devenue active et gelait la valeur et l'épaisseur des flux d'un data tag à
+   * l'autre.
+   *
+   * On restaure donc la sémantique d'origine : un draw complet redessine tous
+   * les flux ; l'optimisation ne s'applique plus qu'aux redraws partiels (drag),
+   * son usage réel.
+   */
+  public isInFullDraw(): boolean { return this._in_full_draw }
+
   /**
    * Documentation (onglet Doc, SA#167) importée depuis un fichier source lors d'un
    * transfert de mise en page. La doc vit sur l'ApplicationData (partagée), or la DA
@@ -684,6 +704,22 @@ export class Class_DrawingArea {
   ) {
     // This function calls explictly for a redraw
     this.bypass_redraws = false
+
+    // OS#1246 — signale aux éléments qu'on est dans un draw COMPLET (cf.
+    // isInFullDraw) : les flux doivent alors tous être redessinés.
+    this._in_full_draw = true
+    try {
+      this._drawBody()
+    } finally {
+      this._in_full_draw = false
+    }
+  }
+
+  /**
+   * Corps du draw complet. Extrait de draw() pour que `_in_full_draw` soit
+   * refermé par un finally quoi qu'il arrive.
+   */
+  private _drawBody() {
 
     // #1240 — Verrou de taille : _initDraw recrée le SVG de zoom et perd le
     // transform (zoom/pan) ; areaAutoFit étant inerte quand verrouillé, on
