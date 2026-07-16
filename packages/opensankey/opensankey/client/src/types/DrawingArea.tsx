@@ -1478,24 +1478,18 @@ export class Class_DrawingArea {
       // plus visible quand le fit collapse à ~1e-4 (grand user_scale).
       const k_live = this.getZoomScale()
       // OS#1250 phase 1 — bounds du contenu (labels INCLUS) via la façade caméra.
-      // Même mesure qu'avant (getBBox du groupe des éléments) ; l'implémentation
-      // basculera vers un calcul depuis le MODÈLE en phase 3, ici sans changement.
       const full_bbox = this.contentBounds() ?? undefined
-      // On masque TOUTES les parties de label qui vivent dans le repère zoomé avec la
-      // compensation 1/k (police verrouillée) — sinon elles dominent le getBBox et le
-      // fit diverge / sous-estime :
-      //  - <text> (labels simples + textPath des flux) ;
-      //  - <foreignObject class="element_fo"> (labels rich-text #1232) ;
-      //  - leurs fonds <rect class="name_label_bg / value_label_bg"> qui portent le
-      //    MÊME transform scale(1/k) et la même taille que le label.
-      // Ne masquer que les <text>/.element_fo laissait le fond gonfler la bbox (cas
-      // Cartofob : rect element_fo_background scale ~2) → débordement non réservé →
-      // labels qui dépassent au (re)chargement en cadrage figé.
-      const hidden_texts = this.d3_selection_elements_group?.selectAll<SVGGraphicsElement, unknown>(
-        'text, .element_fo, .name_label_bg, .value_label_bg')
-      hidden_texts?.style('display', 'none')
-      bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
-      hidden_texts?.style('display', null)
+      // OS#1250 phase 3a — bounds des FORMES (labels exclus) calculés depuis le MODÈLE.
+      //
+      // Avant, on masquait en DOM tout ce qui vit dans le repère zoomé avec la
+      // compensation 1/k (<text>, <foreignObject class="element_fo">, et leurs fonds
+      // .name_label_bg/.value_label_bg qui portent le MÊME scale(1/k)), on mesurait, puis
+      // on restaurait — deux calculs de layout et une mutation du DOM pour le mesurer.
+      // Le modèle donne directement les formes, sans toucher au rendu : par construction
+      // il n'inclut aucun label, donc plus rien à masquer ni à oublier de masquer (le
+      // fond des labels rich-text avait justement été oublié une première fois, cas
+      // Cartofob → débordement non réservé).
+      bbox = Camera.contentBoundsFromModel(this) ?? undefined
       if (full_bbox && bbox) {
         label_overflow_left = Math.max(0, bbox.x - full_bbox.x) * k_live
         label_overflow_right = Math.max(0, (full_bbox.x + full_bbox.width) - (bbox.x + bbox.width)) * k_live
