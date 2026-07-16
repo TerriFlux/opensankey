@@ -198,11 +198,43 @@ export abstract class Class_BaseElement {
 
   public draw() {
     this._process_or_bypass(() => {
-      this.unDraw()
-      if (this.is_visible && !this._is_currently_deleted)
+      // OS#1246 — data-join keyé (réutilisation du <g> racine) au lieu de
+      // remove/re-append systématique : si l'élément reste affichable on
+      // réutilise son <g> existant (via _initDraw), sinon on le retire (exit).
+      if (this._shouldBeDrawn()) {
+        // Avant, draw() appelait unDraw() à chaque passage, ce qui invalidait
+        // aussi les caches de géométrie par-draw (ex. Link._arrow_shape). Le <g>
+        // racine étant désormais réutilisé (plus d'unDraw systématique), on
+        // conserve CETTE invalidation-là explicitement, sinon les sous-formes
+        // calculées paresseusement (pointes de flèche, encoche source) sont
+        // redessinées depuis un cache périmé → mauvaise taille/position.
+        this._invalidateDrawCaches()
         this._draw()
+      } else {
+        this.unDraw()
+      }
     })
   }
+
+  /**
+   * OS#1246 — invalide les caches de géométrie recalculés à chaque draw.
+   * Auparavant porté par les surcharges de unDraw() (appelé à chaque draw) ;
+   * extrait ici pour rester exécuté malgré la réutilisation du <g> racine.
+   * No-op par défaut ; surchargé là où existe un cache paresseux (Link).
+   */
+  protected _invalidateDrawCaches() { }
+
+  /**
+   * Gate affichage pour le data-join (OS#1246). Détermine si l'élément doit
+   * avoir un <g> dans le DOM. Surchargée par les sous-classes qui ont des
+   * conditions d'affichage supplémentaires (ex. seuil de valeur des flux),
+   * de sorte que le passage sous condition déclenche bien un exit (unDraw)
+   * au lieu de laisser un <g> orphelin dans le DOM réutilisé.
+   */
+  public _shouldBeDrawn(): boolean {
+    return this.is_visible && !this._is_currently_deleted
+  }
+
   protected _draw() {
     this._initDraw()
     this.setEventsListeners()
@@ -218,10 +250,26 @@ export abstract class Class_BaseElement {
   protected _initDraw() {
     const d3_drawing_area = this.drawing_area.d3_selection
     if (d3_drawing_area !== null) {
+      // drawing_area est relue en live (jamais capturée en closure) : au
+      // reset()/changement de vue (createNewDrawingArea) le parent ci-dessous
+      // est le nouveau groupe, donc select() ne trouve rien et on re-append.
       const d3_drawing_area_selection = d3_drawing_area.selectAll(' #' + this._svg_parent_group)
       if (d3_drawing_area_selection.nodes().length > 0) {
-        this.d3_selection = d3_drawing_area_selection.append('g')
-        this.d3_selection.attr('id', this.svg_group)
+        // Data-join keyé par id : on réutilise le <g> racine existant s'il est
+        // déjà dans le DOM (enter/update), sinon on l'append (enter). Le <g>
+        // racine — qui porte l'id, la classe, le transform et les handlers —
+        // persiste ainsi entre deux draw() ; seules ses sous-formes sont
+        // vidées puis reconstruites (remove/re-append interne conservé pour
+        // l'instant, cf. OS#1246). selectAll('*') ne cible que les descendants,
+        // donc le root et ses listeners d'événements survivent.
+        const existing = d3_drawing_area_selection.select<SVGGElement>('#' + this.svg_group)
+        if (!existing.empty()) {
+          this.d3_selection = existing
+          this.d3_selection.selectAll('*').remove()
+        } else {
+          this.d3_selection = d3_drawing_area_selection.append('g')
+          this.d3_selection.attr('id', this.svg_group)
+        }
       }
     }
   }

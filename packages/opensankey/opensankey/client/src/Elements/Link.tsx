@@ -443,6 +443,16 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public unDraw() {
     super.unDraw()
     this._link_control_points.unDrawControlPoints()
+    this._invalidateDrawCaches()
+  }
+
+  /**
+   * OS#1246 — caches de géométrie du flux recalculés paresseusement à chaque
+   * draw (cf. _drawArrow / _drawSourceNotch : recalcul seulement si undefined).
+   * Doit être vidé à chaque (re)dessin pour suivre les changements de position/
+   * taille des nœuds ; appelé par draw() (réutilisation du <g>) ET par unDraw().
+   */
+  protected _invalidateDrawCaches() {
     this._arrow_shape = undefined // reset shape also
     this._arrow_shape_source = undefined
     this._source_notch_shape = undefined
@@ -802,6 +812,16 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @private
    * @memberof Class_LinkElement
    */
+  /**
+   * OS#1246 — le flux ne doit avoir un <g> que s'il est visible ET au-dessus
+   * du seuil de valeur. Sans ce gate, un flux passant sous le seuil garderait
+   * son <g> racine réutilisé dans le DOM (l'ancien early-return de _draw ne le
+   * supprimait pas). Le retour false fait déclencher un unDraw (exit) par draw().
+   */
+  public _shouldBeDrawn(): boolean {
+    return super._shouldBeDrawn() && this.is_value_above_threshold
+  }
+
   protected _draw() {
     if (!this.is_value_above_threshold) {
       return
