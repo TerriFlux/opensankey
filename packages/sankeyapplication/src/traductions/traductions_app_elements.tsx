@@ -45,7 +45,7 @@ export const resources_app_elements = {
         'presentation_OS': 'OpenSankey is a web application that makes it easy to create Sankey diagrams.\n\n It\'s available free of charge and includes simple functions for creating nodes, flows, and labeling them to aggregate or filter their display on the diagram.\n\n The 15-node limit for use without an account can be lifted by creating a license-free account.\n\n',
         'presentation_OS_limit_node': 'The 15-node limit for use without an account can be lifted by creating a free account.\n\n',
         'presentation_OSP': 'OpenSankey+ is a paid license that unlocks new features for creating beautiful Sankey diagrams for presentations.\n\nThis license includes advanced formatting features such as the addition of illustrative images or icons for nodes, the addition of color gradients on flows and animations, and more.\n\n But above all, OpenSankey+ lets you generate slideshows to explain your Sankey diagrams, thanks to the "Views" mechanism, which records their visual states (with / without certain filters activated, for example) to simplify navigation between them.\n\n',
-        'presentation_OSS': 'SankeySuite is a paid license that unlocks all the advanced charting and analysis features of Sankey.\n\n This license includes flow data reconciliation functionalities to identify inconsistencies or calculate flows whose values are not directly accessible.\n\n It also includes OpenSankey+ functionalities.\n\n',
+        'presentation_OSS': 'MFASankey is a paid license that unlocks all the advanced charting and analysis features of Sankey.\n\n This license includes flow data reconciliation functionalities to identify inconsistencies or calculate flows whose values are not directly accessible.\n\n It also includes OpenSankey+ functionalities.\n\n',
         sankeytheque: 'Sankeytheque',
         afm_reconcil: 'MFA',
         afm_reconcil_excel: 'Reconciling an excel file',
@@ -409,7 +409,7 @@ export const resources_app_elements = {
           },
         },
         'OS+_lic': 'OpenSankey+ license',
-        'SS_lic': 'SankeySuite license',
+        'SS_lic': 'MFASankey license',
         'update_lic': 'Register new license number',
         'win_acc_infos': 'Account details',
         'win_db_template': 'Available templates',
@@ -423,7 +423,7 @@ export const resources_app_elements = {
         'usr_lic_err': 'License number invalid',
         'err_get_user_infos': 'Error while trying to access the user\'s information',
         'err_get_OS+_infos': 'Error while trying to access the OpenSankey+ license server',
-        'err_get_SS_infos': 'Error while trying to access the SankeySuite license server'
+        'err_get_SS_infos': 'Error while trying to access the MFASankey license server'
       },
 
       welcome: {
@@ -431,10 +431,10 @@ export const resources_app_elements = {
         news_unavailable: 'Release notes are not available.',
         view: 'Buttons to navigate through the different views of the Sankey',
         features: 'Feature recap by licence',
-        features_intro: 'This table summarises the features unlocked by each licence — OpenSankey+, SankeySuite (MFA) and developer access.',
+        features_intro: 'This table summarises the features unlocked by each licence — OpenSankey+, MFASankey and developer access.',
         features_col_feature: 'Feature',
         features_col_plus: 'OpenSankey+',
-        features_col_afm: 'SankeySuite',
+        features_col_afm: 'MFASankey',
         features_col_dev: 'Dev',
         breadcrumbs: {
           intro: 'Overview',
@@ -469,7 +469,7 @@ export const resources_app_elements = {
           }
         },
         caroussel: {
-          Image0: 'Welcome to TerriFlux\'s toolsuite OpenSankey, OpenSankey+, and SankeySuite',
+          Image0: 'Welcome to SankeySuite, TerriFlux\'s tool family: OpenSankey, OpenSankey+ and MFASankey',
           Image1: 'Understand your flows, represent them with Sankey diagrams',
           Image2: 'Quickly import your data or draw your diagrams directly',
           Image3: 'Clarify the information represented',
@@ -540,7 +540,7 @@ export const resources_app_elements = {
         'presentation_OS': 'OpenSankey et une application web qui permet de réaliser simplement des diagrammes de Sankey.\n\nCelle-ci est accessible gratuitement, et inclut les fonctionnalités simples de création de nœuds, de flux et leur étiquetage afin d\'agréger ou de filtrer leur affichage sur le diagramme.\n\n',
         'presentation_OS_limit_node': 'La création d\'un compte gratuit permet de lever la limitation de 15 nœuds fixée pour un usage sans compte.\n\n',
         'presentation_OSP': 'OpenSankey+ est une licence payante qui permet de débloquer de nouvelles fonctionnalités pour la réalisation de beaux diagrammes de Sankey pour des présentations.\n\n Cette licence inclut des fonctionnalités de mise en forme avancées comme l\'ajout d\'images ou d\'icônes illustratifs pour les noeuds, l\'ajout de gradients de couleurs sur les flux et d\'animations, etc.\n\n Mais surtout, OpenSankey+ permet de générer des diaporamas explicatifs de vos diagrammes de Sankey grâce au mécanisme des "Vues", qui enregistre les états visuel de celui-ci (avec / sans certains filtres activés par exemple) pour simplifier la navigation entre eux.\n\n',
-        'presentation_OSS': 'SankeySuite est une licence payante qui permet de débloquer toutes les usages avancés de réalisation et d\'analyse des diagrammes de Sankey.\n\nCette licence inclut les fonctionnalités de réconciliation des données de flux afin de relever des incohérences ou de calculer des flux dont les valeurs ne sont pas accessibles directement.\n\n Elle inclut aussi les fonctionnalités de OpenSankey+.\n\n',
+        'presentation_OSS': 'MFASankey est une licence payante qui permet de débloquer toutes les usages avancés de réalisation et d\'analyse des diagrammes de Sankey.\n\nCette licence inclut les fonctionnalités de réconciliation des données de flux afin de relever des incohérences ou de calculer des flux dont les valeurs ne sont pas accessibles directement.\n\n Elle inclut aussi les fonctionnalités de OpenSankey+.\n\n',
         sankeytheque: 'Sankeythèque',
         afm_reconcil: 'AFM',
         afm_reconcil_excel: 'Réconcilier un fichier Excel',
@@ -870,7 +870,7 @@ export const resources_app_elements = {
           },
         },
         'OS+_lic': 'Licence OpenSankey+',
-        'SS_lic': 'Licence SankeySuite',
+        'SS_lic': 'Licence MFASankey',
         'update_lic': 'Enregistrer',
         'win_acc_infos': 'Informations du compte',
         'win_db_template': 'Modèles proposés',
@@ -884,17 +884,17 @@ export const resources_app_elements = {
         'usr_lic_err': 'Erreur numéro licence',
         'err_get_user_infos': 'Erreur lors de l\'accès aux données de l\'utilisateur',
         'err_get_OS+_infos': 'Erreur lors de l\'accès au serveur de licences OpenSankey+',
-        'err_get_SS_infos': 'Erreur lors de l\'accès au serveur de licences SankeySuite'
+        'err_get_SS_infos': 'Erreur lors de l\'accès au serveur de licences MFASankey'
       },
       welcome: {
         news: 'Nouveautés et Améliorations récentes',
         news_unavailable: 'Les notes de version ne sont pas disponibles.',
         view: 'Boutons permettant de naviguer entre les différentes vues du diagramme',
         features: 'Récapitulatif des fonctionnalités par licence',
-        features_intro: 'Ce tableau récapitule les fonctionnalités débloquées par chacune des licences — OpenSankey+, SankeySuite (AFM) et accès développeur.',
+        features_intro: 'Ce tableau récapitule les fonctionnalités débloquées par chacune des licences — OpenSankey+, MFASankey et accès développeur.',
         features_col_feature: 'Fonctionnalité',
         features_col_plus: 'OpenSankey+',
-        features_col_afm: 'SankeySuite',
+        features_col_afm: 'MFASankey',
         features_col_dev: 'Dev',
         breadcrumbs: {
           features: 'Récap licences',
@@ -928,7 +928,7 @@ export const resources_app_elements = {
           }
         },
         caroussel: {
-          Image0: 'Bienvenue sur la suite d\'outils OpenSankey, OpenSankey+ et SankeySuite de TerriFlux',
+          Image0: 'Bienvenue sur SankeySuite, la suite d\'outils de TerriFlux : OpenSankey, OpenSankey+ et MFASankey',
           Image1: 'Comprenez vos flux, Représentez les avec des diagrammes de Sankey',
           Image2: 'Importez rapidement vos données ou tracez directement vos diagrammes',
           Image3: 'Clarifiez l\'information représentée',
@@ -999,7 +999,7 @@ export const resources_app_elements = {
         'presentation_OS': 'OpenSankey es una aplicación web que permite crear fácilmente diagramas de Sankey.\n\nEstá disponible de forma gratuita e incluye funciones simples para crear nodos, flujos y etiquetarlos para agregar o filtrar su visualización en el diagrama.\n\n',
         'presentation_OS_limit_node': 'El límite de 15 nodos para el uso sin cuenta puede eliminarse creando una cuenta gratuita.\n\n',
         'presentation_OSP': 'OpenSankey+ es una licencia de pago que desbloquea nuevas funcionalidades para crear hermosos diagramas de Sankey para presentaciones.\n\nEsta licencia incluye funciones avanzadas de formato como la adición de imágenes o iconos ilustrativos para nodos, gradientes de color en los flujos y animaciones, etc.\n\nSobre todo, OpenSankey+ permite generar presentaciones explicativas de sus diagramas de Sankey gracias al mecanismo de "Vistas", que registra los estados visuales del mismo (con/sin ciertos filtros activados, por ejemplo) para simplificar la navegación entre ellos.\n\n',
-        'presentation_OSS': 'SankeySuite es una licencia de pago que desbloquea todos los usos avanzados de creación y análisis de diagramas de Sankey.\n\nEsta licencia incluye funcionalidades de reconciliación de datos de flujo para identificar inconsistencias o calcular flujos cuyos valores no son directamente accesibles.\n\nTambién incluye las funcionalidades de OpenSankey+.\n\n',
+        'presentation_OSS': 'MFASankey es una licencia de pago que desbloquea todos los usos avanzados de creación y análisis de diagramas de Sankey.\n\nEsta licencia incluye funcionalidades de reconciliación de datos de flujo para identificar inconsistencias o calcular flujos cuyos valores no son directamente accesibles.\n\nTambién incluye las funcionalidades de OpenSankey+.\n\n',
         sankeytheque: 'Sankeytheque',
         afm_reconcil: 'AFM',
         afm_reconcil_excel: 'Reconciliar un archivo Excel',
@@ -1362,7 +1362,7 @@ export const resources_app_elements = {
           },
         },
         'OS+_lic': 'Licencia OpenSankey+',
-        'SS_lic': 'Licencia SankeySuite',
+        'SS_lic': 'Licencia MFASankey',
         'update_lic': 'Registrar nuevo número de licencia',
         'win_acc_infos': 'Detalles de la cuenta',
         'win_db_template': 'Plantillas disponibles',
@@ -1376,7 +1376,7 @@ export const resources_app_elements = {
         'usr_lic_err': 'Número de licencia no válido',
         'err_get_user_infos': 'Error al intentar acceder a la información del usuario',
         'err_get_OS+_infos': 'Error al intentar acceder al servidor de licencias OpenSankey+',
-        'err_get_SS_infos': 'Error al intentar acceder al servidor de licencias SankeySuite'
+        'err_get_SS_infos': 'Error al intentar acceder al servidor de licencias MFASankey'
       },
 
       welcome: {
@@ -1384,10 +1384,10 @@ export const resources_app_elements = {
         news_unavailable: 'Las notas de la versión no están disponibles.',
         view: 'Botones para navegar entre las diferentes vistas del Sankey',
         features: 'Resumen de funcionalidades por licencia',
-        features_intro: 'Esta tabla resume las funcionalidades habilitadas por cada licencia — OpenSankey+, SankeySuite (MFA) y acceso desarrollador.',
+        features_intro: 'Esta tabla resume las funcionalidades habilitadas por cada licencia — OpenSankey+, MFASankey y acceso desarrollador.',
         features_col_feature: 'Funcionalidad',
         features_col_plus: 'OpenSankey+',
-        features_col_afm: 'SankeySuite',
+        features_col_afm: 'MFASankey',
         features_col_dev: 'Dev',
         breadcrumbs: {
           intro: 'Resumen',
@@ -1422,7 +1422,7 @@ export const resources_app_elements = {
           }
         },
         caroussel: {
-          Image0: 'Bienvenido a la suite de herramientas OpenSankey, OpenSankey+ y SankeySuite de TerriFlux',
+          Image0: 'Bienvenido a SankeySuite, la suite de herramientas de TerriFlux: OpenSankey, OpenSankey+ y MFASankey',
           Image1: 'Comprenda sus flujos, represéntelos con diagramas de Sankey',
           Image2: 'Importe rápidamente sus datos o dibuje directamente sus diagramas',
           Image3: 'Clarifique la información representada',
@@ -1493,7 +1493,7 @@ export const resources_app_elements = {
         'presentation_OS': 'OpenSankey ist eine Webanwendung, mit der Sie einfach Sankey-Diagramme erstellen können.\n\nSie ist kostenlos verfügbar und enthält einfache Funktionen zum Erstellen von Knoten, Flüssen und deren Beschriftung, um ihre Anzeige im Diagramm zu aggregieren oder zu filtern.\n\n',
         'presentation_OS_limit_node': 'Die Begrenzung auf 15 Knoten für die Nutzung ohne Konto kann durch die Erstellung eines kostenlosen Kontos aufgehoben werden.\n\n',
         'presentation_OSP': 'OpenSankey+ ist eine kostenpflichtige Lizenz, die neue Funktionen für die Erstellung schöner Sankey-Diagramme für Präsentationen freischaltet.\n\nDiese Lizenz umfasst erweiterte Formatierungsfunktionen wie das Hinzufügen von illustrativen Bildern oder Symbolen für Knoten, Farbverläufe auf Flüssen und Animationen usw.\n\nVor allem ermöglicht OpenSankey+ die Erstellung von erklärenden Präsentationen Ihrer Sankey-Diagramme dank des "Ansichten"-Mechanismus, der die visuellen Zustände aufzeichnet (mit/ohne bestimmte aktivierte Filter, zum Beispiel), um die Navigation zwischen ihnen zu vereinfachen.\n\n',
-        'presentation_OSS': 'SankeySuite ist eine kostenpflichtige Lizenz, die alle fortgeschrittenen Erstellungs- und Analysefunktionen von Sankey-Diagrammen freischaltet.\n\nDiese Lizenz umfasst Funktionen zur Abstimmung von Flussdaten, um Inkonsistenzen zu erkennen oder Flüsse zu berechnen, deren Werte nicht direkt zugänglich sind.\n\nSie enthält auch die Funktionen von OpenSankey+.\n\n',
+        'presentation_OSS': 'MFASankey ist eine kostenpflichtige Lizenz, die alle fortgeschrittenen Erstellungs- und Analysefunktionen von Sankey-Diagrammen freischaltet.\n\nDiese Lizenz umfasst Funktionen zur Abstimmung von Flussdaten, um Inkonsistenzen zu erkennen oder Flüsse zu berechnen, deren Werte nicht direkt zugänglich sind.\n\nSie enthält auch die Funktionen von OpenSankey+.\n\n',
         sankeytheque: 'Sankeytheque',
         afm_reconcil: 'AFM',
         afm_reconcil_excel: 'Eine Excel-Datei abstimmen',
@@ -1854,7 +1854,7 @@ export const resources_app_elements = {
           },
         },
         'OS+_lic': 'OpenSankey+-Lizenz',
-        'SS_lic': 'SankeySuite-Lizenz',
+        'SS_lic': 'MFASankey-Lizenz',
         'update_lic': 'Neue Lizenznummer registrieren',
         'win_acc_infos': 'Kontodetails',
         'win_db_template': 'Verfügbare Vorlagen',
@@ -1868,7 +1868,7 @@ export const resources_app_elements = {
         'usr_lic_err': 'Ungültige Lizenznummer',
         'err_get_user_infos': 'Fehler beim Zugriff auf die Benutzerinformationen',
         'err_get_OS+_infos': 'Fehler beim Zugriff auf den OpenSankey+-Lizenzserver',
-        'err_get_SS_infos': 'Fehler beim Zugriff auf den SankeySuite-Lizenzserver'
+        'err_get_SS_infos': 'Fehler beim Zugriff auf den MFASankey-Lizenzserver'
       },
 
       welcome: {
@@ -1876,10 +1876,10 @@ export const resources_app_elements = {
         news_unavailable: 'Die Versionshinweise sind nicht verfügbar.',
         view: 'Schaltflächen zum Navigieren zwischen den verschiedenen Ansichten des Sankey',
         features: 'Funktionsübersicht nach Lizenz',
-        features_intro: 'Diese Tabelle fasst die Funktionen zusammen, die durch die jeweilige Lizenz freigeschaltet werden — OpenSankey+, SankeySuite (MFA) und Entwicklerzugang.',
+        features_intro: 'Diese Tabelle fasst die Funktionen zusammen, die durch die jeweilige Lizenz freigeschaltet werden — OpenSankey+, MFASankey und Entwicklerzugang.',
         features_col_feature: 'Funktion',
         features_col_plus: 'OpenSankey+',
-        features_col_afm: 'SankeySuite',
+        features_col_afm: 'MFASankey',
         features_col_dev: 'Dev',
         breadcrumbs: {
           intro: 'Übersicht',
@@ -1914,7 +1914,7 @@ export const resources_app_elements = {
           }
         },
         caroussel: {
-          Image0: 'Willkommen bei der Werkzeugsuite OpenSankey, OpenSankey+ und SankeySuite von TerriFlux',
+          Image0: 'Willkommen bei SankeySuite, der Werkzeugfamilie von TerriFlux: OpenSankey, OpenSankey+ und MFASankey',
           Image1: 'Verstehen Sie Ihre Flüsse, stellen Sie sie mit Sankey-Diagrammen dar',
           Image2: 'Importieren Sie schnell Ihre Daten oder zeichnen Sie Ihre Diagramme direkt',
           Image3: 'Klären Sie die dargestellten Informationen',
@@ -1985,7 +1985,7 @@ export const resources_app_elements = {
         'presentation_OS': 'OpenSankey è un\'applicazione web che permette di creare facilmente diagrammi di Sankey.\n\nÈ disponibile gratuitamente e include funzioni semplici per creare nodi, flussi e etichettarli per aggregare o filtrare la loro visualizzazione nel diagramma.\n\n',
         'presentation_OS_limit_node': 'Il limite di 15 nodi per l\'uso senza account può essere rimosso creando un account gratuito.\n\n',
         'presentation_OSP': 'OpenSankey+ è una licenza a pagamento che sblocca nuove funzionalità per creare bellissimi diagrammi di Sankey per le presentazioni.\n\nQuesta licenza include funzionalità avanzate di formattazione come l\'aggiunta di immagini o icone illustrative per i nodi, gradienti di colore sui flussi e animazioni, ecc.\n\nSoprattutto, OpenSankey+ permette di generare presentazioni esplicative dei vostri diagrammi di Sankey grazie al meccanismo delle "Viste", che registra gli stati visivi dello stesso (con/senza certi filtri attivati, per esempio) per semplificare la navigazione tra di essi.\n\n',
-        'presentation_OSS': 'SankeySuite è una licenza a pagamento che sblocca tutti gli usi avanzati di creazione e analisi di diagrammi di Sankey.\n\nQuesta licenza include funzionalità di riconciliazione dei dati di flusso per identificare incoerenze o calcolare flussi i cui valori non sono direttamente accessibili.\n\nInclude anche le funzionalità di OpenSankey+.\n\n',
+        'presentation_OSS': 'MFASankey è una licenza a pagamento che sblocca tutti gli usi avanzati di creazione e analisi di diagrammi di Sankey.\n\nQuesta licenza include funzionalità di riconciliazione dei dati di flusso per identificare incoerenze o calcolare flussi i cui valori non sono direttamente accessibili.\n\nInclude anche le funzionalità di OpenSankey+.\n\n',
         sankeytheque: 'Sankeytheque',
         afm_reconcil: 'AFM',
         afm_reconcil_excel: 'Riconciliare un file Excel',
@@ -2346,7 +2346,7 @@ export const resources_app_elements = {
           },
         },
         'OS+_lic': 'Licenza OpenSankey+',
-        'SS_lic': 'Licenza SankeySuite',
+        'SS_lic': 'Licenza MFASankey',
         'update_lic': 'Registrare nuovo numero di licenza',
         'win_acc_infos': 'Dettagli dell\'account',
         'win_db_template': 'Modelli disponibili',
@@ -2360,7 +2360,7 @@ export const resources_app_elements = {
         'usr_lic_err': 'Numero di licenza non valido',
         'err_get_user_infos': 'Errore durante l\'accesso alle informazioni dell\'utente',
         'err_get_OS+_infos': 'Errore durante l\'accesso al server di licenze OpenSankey+',
-        'err_get_SS_infos': 'Errore durante l\'accesso al server di licenze SankeySuite'
+        'err_get_SS_infos': 'Errore durante l\'accesso al server di licenze MFASankey'
       },
 
       welcome: {
@@ -2368,10 +2368,10 @@ export const resources_app_elements = {
         news_unavailable: 'Le note di rilascio non sono disponibili.',
         view: 'Pulsanti per navigare tra le diverse viste del Sankey',
         features: 'Riepilogo delle funzionalità per licenza',
-        features_intro: 'Questa tabella riepiloga le funzionalità sbloccate da ciascuna licenza — OpenSankey+, SankeySuite (MFA) e accesso sviluppatore.',
+        features_intro: 'Questa tabella riepiloga le funzionalità sbloccate da ciascuna licenza — OpenSankey+, MFASankey e accesso sviluppatore.',
         features_col_feature: 'Funzionalità',
         features_col_plus: 'OpenSankey+',
-        features_col_afm: 'SankeySuite',
+        features_col_afm: 'MFASankey',
         features_col_dev: 'Dev',
         breadcrumbs: {
           intro: 'Panoramica',
@@ -2406,7 +2406,7 @@ export const resources_app_elements = {
           }
         },
         caroussel: {
-          Image0: 'Benvenuti nella suite di strumenti OpenSankey, OpenSankey+ e SankeySuite di TerriFlux',
+          Image0: 'Benvenuti in SankeySuite, la famiglia di strumenti di TerriFlux: OpenSankey, OpenSankey+ e MFASankey',
           Image1: 'Comprendete i vostri flussi, rappresentateli con diagrammi di Sankey',
           Image2: 'Importate rapidamente i vostri dati o disegnate direttamente i vostri diagrammi',
           Image3: 'Chiarite l\'informazione rappresentata',
