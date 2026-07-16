@@ -66,17 +66,6 @@ for %%S in (packages\opensankey packages\login-component submodules\MFAProblem) 
     popd
 )
 
-rem === Restauration des tests suivis par git dans les submodules ===
-rem Les setup.py de SEP et MFAProblem recopient l'arbre tests\ racine dans le
-rem package (rmtree + copytree des commandes egg_info/install/bdist_wheel), ce
-rem qui efface au passage les tests unitaires suivis par git a cette place.
-rem Sans effet runtime, mais laisse le submodule sale apres chaque install
-rem editable. Restauration ici : les .bat sont dev-local uniquement.
-set "SEP_DIR=%REPO_ROOT%\packages\opensankey\submodules\SankeyExcelParser"
-set "MFA_DIR=%REPO_ROOT%\submodules\MFAProblem"
-if exist "%SEP_DIR%\.git" git -C "%SEP_DIR%" checkout -- SankeyExcelParser/tests/unit
-if exist "%MFA_DIR%\.git" git -C "%MFA_DIR%" checkout -- mfa_problem/tests/unit
-
 rem === Check PEP (flake8) ===
 pushd "%REPO_ROOT%\server"
 flake8
