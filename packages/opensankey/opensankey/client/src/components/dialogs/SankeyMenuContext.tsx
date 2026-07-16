@@ -615,7 +615,7 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
               {sectionTitle}
             </Box>
           </MenuButton>
-          <MenuList as={Box} layerStyle='context_menu'>
+          <MenuList layerStyle='context_menu'>
             {visibleChildren.map((child, childIndex) =>
               renderStructureItem(child, childIndex, depth + 1)
             )}

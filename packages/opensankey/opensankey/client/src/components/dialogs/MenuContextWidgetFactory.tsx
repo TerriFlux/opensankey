@@ -141,6 +141,7 @@ export const ButtonLinkContextAssignTag = ({ app_data }: { app_data: Class_Appli
                         .map(tag => {
                           const has_tag = contextualised_link.hasGivenTag(tag)
                           return <MenuItem
+                            key={tag.id}
                             display='flex'
                             closeOnSelect={false}
                             onClick={(event) => {
@@ -205,6 +206,7 @@ export const ButtonNodeContextAssignTag = ({ app_data }: { app_data: Class_Appli
                         .map(tag => {
                           const has_tag = contextualised_node.hasGivenTag(tag)
                           return <MenuItem
+                            key={tag.id}
                             display='flex'
                             closeOnSelect={false}
                             onClick={() => {
@@ -254,6 +256,7 @@ export const ButtonNodeContextAssignStyle = ({ app_data }: { app_data: Class_App
             .map((_) => {
               const has_style = contextualised_node.style.includes(_)
               return <MenuItem
+                key={_.id}
                 display='flex'
                 closeOnSelect={false}
                 onClick={() => {
@@ -300,6 +303,7 @@ export const ButtonContainerContextAssignStyle = ({ app_data }: { app_data: Clas
             .map((_) => {
               const has_style = contextualised_container.style.includes(_)
               return <MenuItem
+                key={_.id}
                 display='flex'
                 closeOnSelect={false}
                 onClick={() => {
@@ -349,6 +353,7 @@ export const ButtonLinkContextAssignStyle = ({ app_data }: { app_data: Class_App
               .map((_) => {
                 const has_style = contextualised_link.style.includes(_)
                 return <MenuItem
+                  key={_.id}
                   display='flex'
                   closeOnSelect={false}
                   onClick={() => {

@@ -245,7 +245,7 @@ export const ContextZDT = (
       className='dropdown-basic'>
       {t('ContextMenuNodes.' + titleKey)}
     </MenuButton>
-    <MenuList as={Box} layerStyle='context_menu'>
+    <MenuList layerStyle='context_menu'>
       {buttons.map(([action, glyph, fn]) => alignButton(action, glyph, fn))}
     </MenuList>
   </Menu>
@@ -258,7 +258,7 @@ export const ContextZDT = (
       className='dropdown-basic'>
       {t('ContextMenuNodes.align')}
     </MenuButton>
-    <MenuList as={Box} layerStyle='context_menu'>
+    <MenuList layerStyle='context_menu'>
       {alignSubmenu('alignHorizontal', [
         ['alignHorizMinLeft', '←▌□', align_modifier.alignHorizMinLeft],
         ['alignHorizMinCenter', '←▐□▌', align_modifier.alignHorizMinCenter],

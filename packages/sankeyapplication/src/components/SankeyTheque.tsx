@@ -181,7 +181,7 @@ const SankeyThequeAccordionGenerator: FC<FCType_SankeyThequeAccordionGenerator> 
     const child_etudes = Object.entries(ent[1]).filter(e => e[0] == 'Etude')
     if (child_etudes.length > 0) {
       if (Object.keys(ent[1]['Etude']).length == 1) {
-        return <AccordionItem>
+        return <AccordionItem key={ent[0]}>
           <Button
             variant='button_open_card_sankeytheque'
             rightIcon={icon_popup_menu}
@@ -194,7 +194,7 @@ const SankeyThequeAccordionGenerator: FC<FCType_SankeyThequeAccordionGenerator> 
     }
     const child_files = Object.entries(ent[1]).filter(e => e[0] == 'Files')
     if (child_files.length > 0 && Object.keys(ent[1]).length == 1) {
-      return <AccordionItem>
+      return <AccordionItem key={ent[0]}>
         <Button
           variant='button_open_card_sankeytheque'
           rightIcon={icon_popup_menu}
@@ -213,7 +213,7 @@ const SankeyThequeAccordionGenerator: FC<FCType_SankeyThequeAccordionGenerator> 
         {ent[0]}
       </Button>
     }
-    return <AccordionItem>
+    return <AccordionItem key={ent[0]}>
       <AccordionButton>
         {ent[0]}
         <AccordionIcon />
