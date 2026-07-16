@@ -1666,7 +1666,15 @@ export class Class_NodeElement extends Class_NodeBase {
             dx_bottom = dx_bottom + thickness
           }
           // Draw link if position has not been set before
+          // OS#1246 — isInFullDraw() : un draw complet redessine TOUJOURS le flux.
+          // Le test de position ci-dessous ignore les changements de VALEUR (un
+          // flux dont la valeur change sans que son ancrage bouge gardait une
+          // étiquette et une épaisseur périmées d'un data tag à l'autre). Ce cas
+          // n'existait pas tant que Node.unDraw() supprimait le DOM de tous les
+          // flux à chaque dessin ; l'optimisation ne vaut donc que pour les
+          // redraws partiels (drag), son usage réel.
           let need_to_draw = (
+            this.drawing_area.isInFullDraw() ||
             (this._output_links_starting_point[link.id] === undefined) ||
             (!link.isRelatedD3SelectionPresentAndSynced())
           )
@@ -1729,7 +1737,9 @@ export class Class_NodeElement extends Class_NodeBase {
             dx_bottom = dx_bottom + thickness
           }
           // Draw link if position has not been set before
+          // OS#1246 — isInFullDraw() : cf. la branche « source » ci-dessus.
           let need_to_draw = (
+            this.drawing_area.isInFullDraw() ||
             (this._input_links_ending_point[link.id] === undefined) ||
             (!link.isRelatedD3SelectionPresentAndSynced())
           )
