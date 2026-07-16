@@ -819,6 +819,28 @@ export class Class_ApplicationData {
   ) {
   }
 
+  /**
+   * Enregistre un geste LOURD (hiérarchies, pré-positionnement global, import/export…)
+   * comme UNE seule entrée d'historique, par snapshots avant/après.
+   *
+   * Pourquoi ne pas rejouer l'action au redo, comme le fait executeWithUndo ? Parce que
+   * fromJSON() passe par reset(), qui REMPLACE la drawing_area : après un undo, toute
+   * référence capturée (nœud, tag group, drawing_area) pointe sur des instances mortes.
+   * Restaurer l'état sérialisé des deux côtés évite complètement le problème.
+   *
+   * À réserver aux gestes qui mutent large : deux toJSON complets par appel.
+   * `onRestore` sert à rafraîchir les menus après restauration.
+   */
+  public runWithSnapshotUndo(action: () => void, onRestore?: () => void) {
+    const before = this.toJSON()
+    action()
+    const after = this.toJSON()
+    // saveUndo PUIS saveRedo, après l'action : saveUndo ouvre le slot, saveRedo écrit
+    // sur celui-là (cf. Class_ApplicationHistory).
+    this.history.saveUndo(() => { this.fromJSON(before); onRestore?.() })
+    this.history.saveRedo(() => { this.fromJSON(after); onRestore?.() })
+  }
+
   public toJSON(kwargs?: Type_JSON) {
     return this._toJSON(kwargs)
   }
@@ -1623,8 +1645,11 @@ export class Class_ApplicationData {
     const evtKeyEnter = (evt.key === 'Enter')
     const evtKeyA = ((evt.key === 'a') || (evt.key === 'A')) && evtOnDrawingArea
     const evtKeyS = ((evt.key === 's') || (evt.key === 'S')) && evtOnDrawingArea
-    const evtKeyZ = ((evt.key === 'z') || (evt.key === 'Z'))
-    const evtKeyY = ((evt.key === 'y') || (evt.key === 'Y'))
+    // Comme A/S/C/V : pendant une édition inline (contenteditable) ou dans un input
+    // de menu, Ctrl+Z/Y doit rester l'undo natif du champ. Sans ce garde-fou, le
+    // preventDefault plus bas bloquait la frappe ET annulait l'action Sankey d'avant.
+    const evtKeyZ = ((evt.key === 'z') || (evt.key === 'Z')) && evtOnDrawingArea
+    const evtKeyY = ((evt.key === 'y') || (evt.key === 'Y')) && evtOnDrawingArea
     const evtKeyC = ((evt.key === 'c') || (evt.key === 'C')) && evtOnDrawingArea
     const evtKeyV = ((evt.key === 'v') || (evt.key === 'V')) && evtOnDrawingArea
     const evtCtrlA = evtCtrl && evtKeyA

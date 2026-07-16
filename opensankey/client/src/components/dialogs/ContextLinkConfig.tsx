@@ -683,16 +683,33 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
 
     copyElement: () => {
       const sankey = drawing_area.sankey
-      drawing_area.purgeSelection()
-      selected_links.forEach(link => {
-        const new_link = sankey.addNewLink(link.source, link.target)
-        new_link.copyFrom(link)
-        new_link.draw()
-        drawing_area.addElementToSelection(new_link)
-      })
-      drawing_area.link_contextualised = undefined
-      menu_configuration.ref_to_save_in_cache_indicator.current(false)
-      menu_configuration.ref_to_menu_context_links_updater.current()
+      // Les copies pointent sur des nœuds existants (non recréés) : pas besoin de
+      // snapshot, l'undo se contente de supprimer les flux créés au dernier passage.
+      let created: typeof selected_links = []
+
+      const copy = () => {
+        drawing_area.purgeSelection()
+        created = selected_links.map(link => {
+          const new_link = sankey.addNewLink(link.source, link.target)
+          new_link.copyFrom(link)
+          new_link.draw()
+          drawing_area.addElementToSelection(new_link)
+          return new_link
+        })
+        drawing_area.link_contextualised = undefined
+        menu_configuration.ref_to_save_in_cache_indicator.current(false)
+        menu_configuration.ref_to_menu_context_links_updater.current()
+      }
+
+      const undo = () => {
+        created.forEach(link => drawing_area.deleteLink(link))
+        drawing_area.draw()
+        menu_configuration.ref_to_menu_context_links_updater.current()
+      }
+
+      history.saveUndo(undo)
+      history.saveRedo(copy)
+      copy()
     },
 
     splitLink: () => {

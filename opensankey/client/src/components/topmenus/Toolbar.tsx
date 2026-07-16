@@ -1153,18 +1153,32 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
       }
     }
 
-    if (values.length > 1) {
-      tagg.selectTagsFromIds(values)
-      runModeActions()
-    } else {
-      // Sélection à valeur unique : batch sous bypass_redraws (les case redessinent
-      // explicitement). withBypassRedraws garantit le reset même si un case throw (#240).
-      drawing_area.withBypassRedraws(() => {
-        tagg.selectTagsFromId(values[0])
+    const run = () => {
+      if (values.length > 1) {
+        tagg.selectTagsFromIds(values)
         runModeActions()
-      }, false)
+      } else {
+        // Sélection à valeur unique : batch sous bypass_redraws (les case redessinent
+        // explicitement). withBypassRedraws garantit le reset même si un case throw (#240).
+        drawing_area.withBypassRedraws(() => {
+          tagg.selectTagsFromId(values[0])
+          runModeActions()
+        }, false)
+      }
+      updateComponents()
     }
-    updateComponents()
+
+    // Le mode 'level' agrège/désagrège nœud par nœud avec register_history=false : c'est
+    // volontaire (un undo par nœud saturerait la pile de 10 et casserait le redo, cf.
+    // Hierarchies.tsx:281), mais le geste entier n'était alors annulable en rien alors
+    // qu'il déplace tout le diagramme et crée/détruit des liens d'expansion. Un seul
+    // snapshot pour tout le geste rétablit « un geste utilisateur = un undo ».
+    // Les autres modes ne font que filtrer/redessiner : pas de snapshot (trop coûteux).
+    if (mode === 'level') {
+      app_data.runWithSnapshotUndo(run, updateComponents)
+    } else {
+      run()
+    }
   }
 
   // Filtre vue : (ré)applique après un changement d'activation (œil) ou de sous-mode
@@ -1518,8 +1532,12 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
           size='xs'
           variant='menuconfigpanel_option_button'
           onClick={() => {
-            resetLocalHierarchy(app_data)
-            updateComponents()
+            // Détruit les liens d'expansion et efface tous les force-flags, donc tout le
+            // travail de clic droit local : snapshot avant/après.
+            app_data.runWithSnapshotUndo(
+              () => { resetLocalHierarchy(app_data); updateComponents() },
+              updateComponents
+            )
           }}>
           {t('Banner.resetHierarchy')}
         </Button>

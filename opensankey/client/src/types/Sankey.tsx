@@ -798,13 +798,38 @@ export class Class_Sankey {
   ////////////////////////////////////////////////////////////////////////////
 
   public deleteLocalAttrSelectedElements(k: keyof typeof ALL_ATTRIBUTES_CONFIG, selected_elements_list: Class_ProtoElement[]) {
-    selected_elements_list.forEach(link => {
-      if (k in ALL_ATTRIBUTES_CONFIG) {
-        link.delete_attribute(k)
-        link.draw()
-      }
-    })
-    this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+    // `attributes` expose _storage PAR RÉFÉRENCE et delete_attribute le mute en place :
+    // mémoriser l'objet (comme le fait resetAttrSelectedElements) ne restaurerait rien.
+    // On retient donc la valeur de la clé élément par élément ; `had` distingue « pas de
+    // surcharge » de « surcharge à undefined », pour ne pas en recréer une à l'undo.
+    const before = selected_elements_list.map(element => ({
+      element,
+      had: k in element.attributes,
+      value: element.attributes[k],
+    }))
+
+    const apply = () => {
+      selected_elements_list.forEach(element => {
+        if (k in ALL_ATTRIBUTES_CONFIG) {
+          element.delete_attribute(k)
+          element.draw()
+        }
+      })
+      this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+    }
+
+    const undo = () => {
+      before.forEach(({ element, had, value }) => {
+        if (had) element.attributes[k] = value
+        else delete element.attributes[k]
+        element.draw()
+      })
+      this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+    }
+
+    this.drawing_area.application_data.history.saveUndo(undo)
+    this.drawing_area.application_data.history.saveRedo(apply)
+    apply()
   }
 
   public createNewElementStyle(id: string, name: string, is_deletable?: boolean): Class_ElementStyle {
@@ -1079,13 +1104,34 @@ export class Class_Sankey {
 
   /** Enlève une surcharge précise d'un style (équivalent deleteLocalAttrSelectedElements). */
   public deleteLocalAttrStyle(style: Class_ElementStyle, k: keyof typeof ALL_ATTRIBUTES_CONFIG) {
-    if (k in ALL_ATTRIBUTES_CONFIG) {
-      style.deleteAttribute(k as string)
-      style.redrawReferences()
-    }
     const menu = this.drawing_area.application_data.menu_configuration
-    menu.updateAllComponentsRelatedToNodes()
-    menu.updateComponentRelatedToStyles()
+    // Même piège de référence que deleteLocalAttrSelectedElements : on retient la
+    // valeur de la clé, pas l'objet. Le setter `attributes` redessine les références.
+    const key = k as string
+    const had = key in style.attributes
+    const value = style.attributes[key]
+
+    const apply = () => {
+      if (k in ALL_ATTRIBUTES_CONFIG) {
+        style.deleteAttribute(key)
+        style.redrawReferences()
+      }
+      menu.updateAllComponentsRelatedToNodes()
+      menu.updateComponentRelatedToStyles()
+    }
+
+    const undo = () => {
+      const restored = { ...style.attributes }
+      if (had) restored[key] = value
+      else delete restored[key]
+      style.attributes = restored
+      menu.updateAllComponentsRelatedToNodes()
+      menu.updateComponentRelatedToStyles()
+    }
+
+    this.drawing_area.application_data.history.saveUndo(undo)
+    this.drawing_area.application_data.history.saveRedo(apply)
+    apply()
   }
 
 

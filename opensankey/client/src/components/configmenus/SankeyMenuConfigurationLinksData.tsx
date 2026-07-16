@@ -417,8 +417,19 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
               onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
                 const new_source = sankey.nodes_dict[event.target.value]
                 if (new_source !== null) {
-                  selected_links.forEach(link => link.source = new_source)
-                  refreshThisAndUpdateRelatedComponents()
+                  // Retopologie du graphe : on mémorise l'ancienne origine flux par flux.
+                  const before = selected_links.map(link => ({ link, source: link.source }))
+                  const apply = () => {
+                    selected_links.forEach(link => link.source = new_source)
+                    refreshThisAndUpdateRelatedComponents()
+                  }
+                  const undo = () => {
+                    before.forEach(({ link, source }) => link.source = source)
+                    refreshThisAndUpdateRelatedComponents()
+                  }
+                  app_data.history.saveUndo(undo)
+                  app_data.history.saveRedo(apply)
+                  apply()
                 }
               }}
               value={selected_links.length > 0 ? selected_links[0].source.id : ''}
@@ -442,8 +453,19 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
               onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
                 const new_target = sankey.nodes_dict[event.target.value]
                 if (new_target !== null) {
-                  selected_links.forEach(link => link.target = new_target)
-                  refreshThisAndUpdateRelatedComponents()
+                  // Idem origine : ancienne destination mémorisée flux par flux.
+                  const before = selected_links.map(link => ({ link, target: link.target }))
+                  const apply = () => {
+                    selected_links.forEach(link => link.target = new_target)
+                    refreshThisAndUpdateRelatedComponents()
+                  }
+                  const undo = () => {
+                    before.forEach(({ link, target }) => link.target = target)
+                    refreshThisAndUpdateRelatedComponents()
+                  }
+                  app_data.history.saveUndo(undo)
+                  app_data.history.saveRedo(apply)
+                  apply()
                 }
               }}
               value={selected_links.length > 0 ? selected_links[0].target.id : ''}
@@ -470,8 +492,14 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
           padding='0'
           isDisabled={selected_links.length !== 1}
           onClick={() => {
-            selected_links.forEach(link => link.swapSourceAndTarget())
-            refreshThisAndUpdateRelatedComponents()
+            // L'inversion est sa propre inverse : undo et redo sont la même fonction.
+            const swap = () => {
+              selected_links.forEach(link => link.swapSourceAndTarget())
+              refreshThisAndUpdateRelatedComponents()
+            }
+            app_data.history.saveUndo(swap)
+            app_data.history.saveRedo(swap)
+            swap()
           }}
         >
           <FaExchangeAlt size='1rem' style={{ transform: 'rotate(90deg)' }} />

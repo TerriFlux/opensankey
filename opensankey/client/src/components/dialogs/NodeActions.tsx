@@ -5,6 +5,7 @@
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_NodeBase } from '../../Elements/NodeBase'
+import { Class_ContainerElement } from '../../Elements/TextZone'
 import {
   aggregate,
   disaggregate,
@@ -138,28 +139,25 @@ export class NodeActions {
     }
   }
 
+  // Symétriques de expandLeft/expandRight : mêmes mutations lourdes du graphe, donc
+  // même filet (snapshot complet). Le garde est posé AVANT _runExpansionWithUndo pour
+  // ne pas consommer un slot d'historique quand il n'y a rien à agréger.
   aggregateLeft = (_dim_name: string) => {
-    if (!this.contextualised_node) return
-
-    const parentDims = this.contextualised_node.dimensions_as_child
-
-    if (parentDims.length > 0) {
-      const parent = parentDims[0].parent
-      aggregationExpansion(this.app_data, this.contextualised_node, true, parent)
-      this._restackEnglobingChain(this.contextualised_node)
-    }
+    if (!this.contextualised_node?.dimensions_as_child.length) return
+    this._runExpansionWithUndo((node) => {
+      const parentDims = node.dimensions_as_child
+      if (parentDims.length === 0) return
+      aggregationExpansion(this.app_data, node, true, parentDims[0].parent)
+    })
   }
 
   aggregateRight = (_dim_name: string) => {
-    if (!this.contextualised_node) return
-
-    const parentDims = this.contextualised_node.dimensions_as_child
-
-    if (parentDims.length > 0) {
-      const parent = parentDims[0].parent
-      aggregationExpansion(this.app_data, this.contextualised_node, false, parent)
-      this._restackEnglobingChain(this.contextualised_node)
-    }
+    if (!this.contextualised_node?.dimensions_as_child.length) return
+    this._runExpansionWithUndo((node) => {
+      const parentDims = node.dimensions_as_child
+      if (parentDims.length === 0) return
+      aggregationExpansion(this.app_data, node, false, parentDims[0].parent)
+    })
   }
 
   disaggregate = (dim_name: string) => {
@@ -468,6 +466,12 @@ export class NodeActions {
   createFluxOnChildren = () => {
     if (!this.contextualised_node || !this.contextualised_node.is_parent) return
 
+    // Crée N liens en cascade sur toute la descendance : inverse symbolique trop
+    // fragile, on reprend le snapshot complet de _runExpansionWithUndo (sans passer
+    // par lui : il ajoute un _restackEnglobingChain que cette action ne fait pas).
+    const ctx_id = this.contextualised_node.id
+    const snapshot = this.app_data.toJSON()
+
     const addNewLinks = (n: Class_NodeElement) => {
       n.dimensions_as_parent.forEach(dim => {
         dim.children.forEach(c => {
@@ -484,11 +488,22 @@ export class NodeActions {
       })
     }
 
-    addNewLinks(this.contextualised_node)
-    this.drawing_area.purgeSelection()
-    this.drawing_area.node_contextualised = undefined
-    this.drawing_area.areaAutoFit()
-    this.refreshAndSave()
+    const apply = () => {
+      const node = this.drawing_area.sankey.nodes_dict[ctx_id]
+      if (!node) return
+      addNewLinks(node)
+      this.drawing_area.purgeSelection()
+      this.drawing_area.node_contextualised = undefined
+      this.drawing_area.areaAutoFit()
+      this.refreshAndSave()
+    }
+
+    const undo = () => {
+      this.app_data.fromJSON(snapshot)
+      this.refreshAndSave()
+    }
+
+    this.executeWithUndo(apply, undo)
   }
 
   // Actions dynamiques pour les dimensions
@@ -825,19 +840,32 @@ export class NodeActions {
   }
 
   createTiedZdt = () => {
-    const cont = this.drawing_area.sankey.addNewDefaultContainer()
-    cont.tied_to_nodes = true
-    this.drawing_area.selected_nodes_list.forEach(n => {
-      n.getListDescendantOfNode().forEach(node => {
-        cont.attachNodeToCont(node)
+    // Le redo rejoue create : on garde la dernière ZDT créée pour que l'undo
+    // supprime bien celle-ci et pas une instance périmée.
+    let cont: Class_ContainerElement
+
+    const create = () => {
+      cont = this.drawing_area.sankey.addNewDefaultContainer()
+      cont.tied_to_nodes = true
+      this.drawing_area.selected_nodes_list.forEach(n => {
+        n.getListDescendantOfNode().forEach(node => {
+          cont.attachNodeToCont(node)
+        })
+        n.getListAncestorOfNode().forEach(node => {
+          cont.attachNodeToCont(node)
+        })
+        cont.attachNodeToCont(n)
+        cont.computeSizeAndPositionFromAttachedNodes()
       })
-      n.getListAncestorOfNode().forEach(node => {
-        cont.attachNodeToCont(node)
-      })
-      cont.attachNodeToCont(n)
-      cont.computeSizeAndPositionFromAttachedNodes()
-    })
-    this.drawing_area.draw()
+      this.drawing_area.draw()
+    }
+
+    const undo = () => {
+      this.drawing_area.deleteContainer(cont)
+      this.drawing_area.draw()
+    }
+
+    this.executeWithUndo(create, undo)
   }
 
   // Cadre géométrique sur le nœud lui-même : attache les nœuds géométriquement
