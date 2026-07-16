@@ -40,6 +40,15 @@ import { applyEsankeyFile } from '../../Persistence/esankeyLoad'
 
 // TYPES ================================================================================
 
+/**
+ * Source d'une galerie. Les deux ont le même index (categories + templates) et le
+ * même panneau ; seules changent la racine des fichiers et les dialogues de
+ * chargement :
+ *  - 'sankeydata' : les modèles, dans le submodule SankeyData ;
+ *  - 'mfadata'    : la sankeythèque, nos études publiées, dans MFAData.
+ */
+export type Type_TemplateSource = 'sankeydata' | 'mfadata'
+
 export type Type_TemplateInfos = {
   'title'?: { [lang: string]: string };
   'file_path': string;
@@ -54,6 +63,12 @@ export type Type_TemplatesIndexes = { [category: string]: string[]; };
 
 export declare const window: Window & typeof globalThis
 
+/** URL de service d'un fichier de galerie (vignette, modèle binaire...). */
+const assetUrl = (path: string, source: Type_TemplateSource) => {
+  const url = window.location.origin + '/opensankey/menus/templates_asset/' + path
+  return source === 'mfadata' ? url + '?source=mfadata' : url
+}
+
 /**
  * Charge un modèle STAN (.smfa SQLite / .zmfa XML gzippé) : binaire non-JSON, la
  * conversion est déléguée au serveur (open_stan), comme l'import fichier de MenuTop.
@@ -63,7 +78,7 @@ const loadStanTemplate = (
   file_path: string
 ) => {
   const root = window.location.origin
-  fetch(root + '/opensankey/menus/templates_asset/' + file_path)
+  fetch(assetUrl(file_path, 'sankeydata'))
     .then(response => response.blob())
     .then(blob => {
       const form_data = new FormData()
@@ -89,8 +104,7 @@ const loadEsankeyTemplate = (
   new_data: Class_ApplicationData,
   file_path: string
 ) => {
-  const root = window.location.origin
-  fetch(root + '/opensankey/menus/templates_asset/' + file_path)
+  fetch(assetUrl(file_path, 'sankeydata'))
     .then(response => response.arrayBuffer())
     .then(buffer => applyEsankeyFile(buffer, new_data))
     .catch((error) => {
@@ -99,27 +113,40 @@ const loadEsankeyTemplate = (
 }
 
 /**
- * Charge un modèle dans l'application (même chemin que le bouton « Utiliser » de la
- * modale) : parse front pour les modèles SankeyMATIC (.txt) et e!Sankey (.sankey),
- * conversion serveur pour les modèles STAN (.smfa/.zmfa), converter JSON sinon.
+ * Charge une entrée de galerie dans l'application.
+ *
+ * Les formats importés (SankeyMATIC .txt, e!Sankey .sankey, STAN .smfa/.zmfa) ne
+ * concernent que les modèles : parse front pour les deux premiers, conversion
+ * serveur pour STAN. Sinon on passe par le converter, avec les dialogues de la
+ * source : `load_example_*` résout contre SankeyData, `load_sankeytheque_*`
+ * contre MFAData (example_root).
  */
 export const loadTemplate = (
   new_data: Class_ApplicationData,
-  file_path: string
+  file_path: string,
+  source: Type_TemplateSource = 'sankeydata'
 ) => {
-  if (file_path.endsWith('.txt')) {
+  if (source === 'sankeydata' && file_path.endsWith('.txt')) {
     // Modèle SankeyMATIC natif : parsé côté front (pas de converter JSON).
     loadSankeymaticTemplate(file_path, new_data)
-  } else if (/\.(smfa|zmfa)$/i.test(file_path)) {
-    loadStanTemplate(new_data, file_path)
-  } else if (file_path.endsWith('.sankey')) {
-    loadEsankeyTemplate(new_data, file_path)
-  } else {
-    new_data.menu_configuration.ref_universal_converter_set_config.current(
-      CONVERTER_CONFIGS['load_example_json'], file_path, true
-    )
-    new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
+    return
   }
+  if (source === 'sankeydata' && /\.(smfa|zmfa)$/i.test(file_path)) {
+    loadStanTemplate(new_data, file_path)
+    return
+  }
+  if (source === 'sankeydata' && file_path.endsWith('.sankey')) {
+    loadEsankeyTemplate(new_data, file_path)
+    return
+  }
+  // Un .xlsx doit passer par le parser (dialogue excel) ; un .json / .json.gz
+  // s'ouvre directement.
+  const is_excel = /\.xlsx$/i.test(file_path)
+  const config = source === 'mfadata'
+    ? (is_excel ? CONVERTER_CONFIGS['load_sankeytheque_excel'] : CONVERTER_CONFIGS['load_sankeytheque_json'])
+    : CONVERTER_CONFIGS['load_example_json']
+  new_data.menu_configuration.ref_universal_converter_set_config.current(config, file_path, true)
+  new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
 }
 
 /**
@@ -128,7 +155,8 @@ export const loadTemplate = (
  * d'une catégorie, l'ordre des modèles est celui de `index.json`.
  */
 export const useTemplatesLibrary = (
-  additionalMenu: MutableRefObject<Type_AdditionalMenus>
+  additionalMenu: MutableRefObject<Type_AdditionalMenus>,
+  source: Type_TemplateSource = 'sankeydata'
 ) => {
   const [templates, setTemplates] = useState<Type_TemplatesInfos>({})
   const [indexes, setIndexes] = useState<Type_TemplatesIndexes>({})
@@ -141,7 +169,10 @@ export const useTemplatesLibrary = (
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ module: additionalMenu.current.template_module_key })
+      body: JSON.stringify({
+        module: additionalMenu.current.template_module_key,
+        source
+      })
     })
       .then(response => response.text())
       .then(text => {
@@ -169,7 +200,7 @@ export const useTemplatesLibrary = (
       .catch((err) => {
         console.error('Error in fetch templates - ' + err.toString())
       })
-  }, [])
+  }, [source])
 
   return { templates, indexes, categories }
 }
@@ -178,11 +209,12 @@ export const useTemplatesLibrary = (
  * Vignette d'un modèle. Certains modèles (formats importés) n'ont pas d'image de
  * prévisualisation : on affiche alors un aplat portant leur titre.
  */
-const TemplateThumbnail = ({ title, img_path, max_height, className }:{
+const TemplateThumbnail = ({ title, img_path, max_height, className, source }:{
   title: string
   img_path?: string
   max_height: string
   className?: string
+  source: Type_TemplateSource
 }) => {
   if (img_path === undefined)
     return <Box
@@ -200,7 +232,7 @@ const TemplateThumbnail = ({ title, img_path, max_height, className }:{
     </Box>
   return <Image
     className={className}
-    src={window.location.origin + '/opensankey/menus/templates_asset/' + img_path}
+    src={assetUrl(img_path, source)}
     style={{ 'objectFit': 'contain', 'maxHeight': max_height, 'width': '100%' }}
   />
 }
@@ -234,13 +266,25 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
   new_data: Class_ApplicationData
   additionalMenu: MutableRefObject<Type_AdditionalMenus>
 }) => {
-  const { templates, indexes, categories } = useTemplatesLibrary(additionalMenu)
   const [dismissed, setDismissed] = useState(false)
-  const [forced_open, setForcedOpen] = useState(false)
+  // Source ouverte explicitement, null si aucune. Un seul panneau pour les deux
+  // galeries : elles occupent le même ancrage, donc ouvrir l'une ferme l'autre
+  // par construction, sans exclusion mutuelle à tenir à jour.
+  const [forced_source, setForcedSource] = useState<Type_TemplateSource | null>(null)
 
   // Ouverture depuis le menu / le splash screen : le panneau remplace l'ancienne modale.
   new_data.menu_configuration.dict_setter_show_dialog
-    .ref_setter_show_modal_templates_lib.current = setForcedOpen
+    .ref_setter_show_modal_templates_lib.current = (open) => {
+      const is_open = typeof open === 'function' ? open(forced_source === 'sankeydata') : open
+      setForcedSource(is_open ? 'sankeydata' : null)
+    }
+  // Ouverture d'une galerie quelconque (la sankeythèque, côté SA).
+  new_data.menu_configuration.dict_setter_show_dialog
+    .ref_setter_show_gallery_source.current = setForcedSource
+
+  // Hors ouverture explicite, seuls les modèles s'affichent d'eux-mêmes.
+  const source: Type_TemplateSource = forced_source ?? 'sankeydata'
+  const { templates, indexes, categories } = useTemplatesLibrary(additionalMenu, source)
 
   // Première interaction avec la zone de dessin -> la galerie s'efface. Écoute au
   // niveau document (capture) : #draw_zoom est recréé à chaque draw(), un listener
@@ -263,7 +307,7 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
 
   if (new_data.is_static || !new_data.is_editable)
     return <></>
-  if (!forced_open && (dismissed || !diagram_empty))
+  if (forced_source === null && (dismissed || !diagram_empty))
     return <></>
   if (Object.keys(indexes).length === 0)
     return <></>
@@ -296,11 +340,11 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
       borderBottom='1px solid #e2e8f0'
     >
       <Text fontWeight='bold' margin='0'>
-        {new_data.t('Menu.templates')}
+        {new_data.t(source === 'mfadata' ? 'Menu.sankeytheque' : 'Menu.templates')}
       </Text>
       <CloseButton
         size='sm'
-        onClick={() => { setForcedOpen(false); setDismissed(true) }}
+        onClick={() => { setForcedSource(null); setDismissed(true) }}
       />
     </Box>
     <Text
@@ -309,7 +353,7 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
       margin='0'
       padding='0.4rem 0.75rem'
     >
-      {new_data.t('templates.gallery_hint')}
+      {new_data.t(source === 'mfadata' ? 'templates.sankeytheque_hint' : 'templates.gallery_hint')}
     </Text>
     <Box overflowY='auto' padding='0 0.75rem 0.75rem 0.75rem'>
       {categories.map(category => {
@@ -334,14 +378,15 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
               marginBottom='0.4rem'
               _hover={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)' }}
               onClick={() => {
-                loadTemplate(new_data, templates[id].file_path)
-                setForcedOpen(false)
+                loadTemplate(new_data, templates[id].file_path, source)
+                setForcedSource(null)
               }}
             >
               <TemplateThumbnail
                 title={templateTitle(new_data, id, templates[id])}
                 img_path={templates[id].img_path}
                 max_height='90px'
+                source={source}
               />
               <Text fontSize='sm' textAlign='center' margin='0.2rem 0 0 0'>
                 {templateTitle(new_data, id, templates[id])}
