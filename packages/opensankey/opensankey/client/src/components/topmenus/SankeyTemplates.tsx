@@ -26,28 +26,9 @@
 
 import React, { useState, useEffect, MutableRefObject } from 'react'
 import {
-  Tabs,
-  TabList,
-  Tab,
-  TabPanels,
-  TabPanel,
   Box,
-  Button,
-  ButtonGroup,
-  Card,
-  CardHeader,
   CloseButton,
-  Heading,
-  Divider,
-  CardBody,
   Image,
-  CardFooter,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
   Text
 } from '@chakra-ui/react'
 
@@ -238,148 +219,16 @@ const templateTitle = (
 // COMPONENTS ===========================================================================
 
 /**
- * Modal containing templates to create sankey
- *
- * @param {*} { new_data, additionalMenu }
- * @return {*}
- */
-export const ModalTemplate = ({ new_data, additionalMenu }:{
-  new_data: Class_ApplicationData
-  additionalMenu: MutableRefObject<Type_AdditionalMenus>
-}) => {
-
-  const [show_template, set_show_template] = useState(false)
-  const { templates, indexes, categories } = useTemplatesLibrary(additionalMenu)
-
-  const { ref_setter_show_modal_templates_lib } = new_data.menu_configuration.dict_setter_show_dialog
-  ref_setter_show_modal_templates_lib.current = set_show_template
-
-  // Tabs for each entries of the template_module_key
-  const tabs_of_cards = <Tabs
-    orientation='vertical'
-    align='start'
-    variant='tabs_variant_template'
-    height='100%'
-  >
-    <TabList>
-      {categories
-        .map((category, idx) => {
-          return <Tab
-            key={idx}
-          >
-            {new_data.t('templates.categories.' + category)}
-          </Tab>
-        })}
-    </TabList>
-    <TabPanels>
-      {categories
-        .map((category, idx) => {
-
-          const ordered_ids = indexes[category]
-
-          return <TabPanel key={idx}>
-            <Box
-              display='grid'
-              gridAutoFlow='row'
-              gridRowGap='1rem'
-              height='100%'
-            >
-              <Box
-                display="block"
-                overflow='scroll'
-                height='100%'
-              >
-                <Box
-                  display='grid'
-                  gridTemplateColumns='1fr 1fr 1fr'
-                  gridTemplateRows='0.5fr'
-                  gridRowGap='0.25rem'
-                  gridColumnGap='0.25rem'
-                  height='100%'
-                >
-                  {ordered_ids
-                    .map((id, idx) => {
-                      return <Card
-                        key={idx}
-                        variant='cards_template'
-                        onClick={() => {
-                          // Cliquer la carte charge le modèle (même action que le bouton
-                          // « Utiliser ») : l'ancien comportement réinitialisait le
-                          // diagramme sans rien charger.
-                          loadTemplate(new_data, templates[id].file_path)
-                          set_show_template(false)
-                        }}
-                      >
-                        <CardHeader>
-                          <Heading variant='heading_template_sankey'>
-                            {templateTitle(new_data, id, templates[id])}
-                          </Heading>
-                          <Divider />
-                        </CardHeader>
-
-                        <CardBody>
-                          {/* Get the image from the server */}
-                          <TemplateThumbnail
-                            className='img-card'
-                            title={templateTitle(new_data, id, templates[id])}
-                            img_path={templates[id].img_path}
-                            max_height='150px'
-                          />
-                        </CardBody>
-
-                        <CardFooter>
-                          <ButtonGroup
-                            //ButtonGroup don't have variants theming so we modify directly the style
-                            style={{
-                              margin: 'auto'
-                            }}>
-                            <Button variant='menuconfigpanel_option_button'
-                              onClick={() => {
-                                loadTemplate(new_data, templates[id].file_path)
-                                set_show_template(false)
-                              }}>
-                              {new_data.t('useTemplate')}
-                            </Button>
-
-                          </ButtonGroup>
-                        </CardFooter>
-                      </Card>
-                    })}
-
-                </Box>
-              </Box>
-            </Box>
-          </TabPanel>
-        })}
-    </TabPanels>
-  </Tabs>
-
-
-  return <Modal
-    isOpen={show_template}
-    blockScrollOnMount={false}
-    onClose={() => set_show_template(false)}
-  >
-    <ModalOverlay />
-    <ModalContent
-      maxWidth='inherit'
-    >
-      <ModalHeader>{new_data.t('Menu.templates')}</ModalHeader>
-      <ModalCloseButton />
-      <ModalBody>
-        {tabs_of_cards}
-      </ModalBody>
-    </ModalContent>
-  </Modal>
-}
-
-/**
- * Galerie de modèles ancrée à droite, visible à l'ARRIVÉE tant que le diagramme est
- * vide : vitrine pour le nouveau visiteur (un clic charge un exemple riche). Elle
- * s'efface d'elle-même dès que l'utilisateur travaille : diagramme non vide (modèle
- * chargé, fichier ouvert, cache restauré), première interaction avec le canvas
- * (création manuelle) ou fermeture explicite. La modale (ModalTemplate) reste le
- * parcours Menu -> Nouveau -> « À partir d'un modèle ».
+ * Galerie de modèles ancrée à droite. Deux façons de l'obtenir :
+ *  - automatiquement à l'ARRIVÉE tant que le diagramme est vide : vitrine pour le
+ *    nouveau visiteur (un clic charge un exemple riche). Elle s'efface d'elle-même
+ *    dès que l'utilisateur travaille : diagramme non vide (modèle chargé, fichier
+ *    ouvert, cache restauré), première interaction avec le canvas (création
+ *    manuelle) ou fermeture explicite ;
+ *  - explicitement, via Menu -> Nouveau -> « À partir d'un modèle » (et le splash
+ *    screen), qui passent par ref_setter_show_modal_templates_lib. Ouverte ainsi,
+ *    elle reste affichée même sur un diagramme non vide, jusqu'au choix d'un modèle
+ *    ou à sa fermeture.
  */
 export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
   new_data: Class_ApplicationData
@@ -387,6 +236,11 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
 }) => {
   const { templates, indexes, categories } = useTemplatesLibrary(additionalMenu)
   const [dismissed, setDismissed] = useState(false)
+  const [forced_open, setForcedOpen] = useState(false)
+
+  // Ouverture depuis le menu / le splash screen : le panneau remplace l'ancienne modale.
+  new_data.menu_configuration.dict_setter_show_dialog
+    .ref_setter_show_modal_templates_lib.current = setForcedOpen
 
   // Première interaction avec la zone de dessin -> la galerie s'efface. Écoute au
   // niveau document (capture) : #draw_zoom est recréé à chaque draw(), un listener
@@ -407,7 +261,9 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
   const da = new_data.drawing_area
   const diagram_empty = (da.sankey?.nodes_list?.length ?? 0) === 0
 
-  if (dismissed || !diagram_empty || new_data.is_static || !new_data.is_editable)
+  if (new_data.is_static || !new_data.is_editable)
+    return <></>
+  if (!forced_open && (dismissed || !diagram_empty))
     return <></>
   if (Object.keys(indexes).length === 0)
     return <></>
@@ -442,7 +298,10 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
       <Text fontWeight='bold' margin='0'>
         {new_data.t('Menu.templates')}
       </Text>
-      <CloseButton size='sm' onClick={() => setDismissed(true)} />
+      <CloseButton
+        size='sm'
+        onClick={() => { setForcedOpen(false); setDismissed(true) }}
+      />
     </Box>
     <Text
       fontSize='sm'
@@ -474,7 +333,10 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
               padding='0.4rem'
               marginBottom='0.4rem'
               _hover={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)' }}
-              onClick={() => loadTemplate(new_data, templates[id].file_path)}
+              onClick={() => {
+                loadTemplate(new_data, templates[id].file_path)
+                setForcedOpen(false)
+              }}
             >
               <TemplateThumbnail
                 title={templateTitle(new_data, id, templates[id])}
