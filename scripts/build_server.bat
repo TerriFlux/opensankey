@@ -49,9 +49,13 @@ if "%install%"=="true" (
 )
 
 rem === Install deps ===
-for %%S in (OpenSankey+ LoginComponent MFAProblem) do (
-    pushd "%REPO_ROOT%\submodules\%%S" || (
-        echo ERROR: pushd vers submodules\%%S a echoue
+rem Depuis le monorepo (#235), les couches front/Python vivent dans packages\
+rem (OpenSankey+ etait un simple passe-plat vers OpenSankey) ; MFAProblem reste
+rem un submodule (chemin inchange). SankeyExcelParser n'apparait pas ici : il est
+rem installe en premier par packages\opensankey\build_server.bat, qui en depend.
+for %%S in (packages\opensankey packages\login-component submodules\MFAProblem) do (
+    pushd "%REPO_ROOT%\%%S" || (
+        echo ERROR: pushd vers %%S a echoue
         exit /b 1
     )
     if "%install%"=="true" (

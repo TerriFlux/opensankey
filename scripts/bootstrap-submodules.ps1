@@ -10,9 +10,7 @@ git submodule update --init --recursive
 # Parents of nested TestData submodules — deinit must run from each parent.
 $nestedParents = @(
     "submodules/MFAProblem",
-    "submodules/OpenSankey+",
-    "submodules/OpenSankey+/submodules/OpenSankey",
-    "submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser"
+    "packages/opensankey/submodules/SankeyExcelParser"
 )
 
 foreach ($parent in $nestedParents) {
