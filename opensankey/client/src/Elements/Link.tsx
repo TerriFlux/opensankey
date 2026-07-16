@@ -2307,6 +2307,18 @@ export class Class_LinkElement extends Class_LinkAttribute {
     return this.valueCurrentTarget !== null && this.thicknessSource !== this.thicknessTarget
   }
 
+  /**
+   * OS#1250 phase 3 — points de contrôle du tracé, en coordonnées MONDE.
+   *
+   * Exposés pour borner le flux SANS mesurer le DOM : une Bézier est contenue dans
+   * l'enveloppe convexe de ses points de contrôle, donc ces points (élargis de la
+   * demi-épaisseur) majorent le tracé — y compris les flux de recyclage, qui bouclent
+   * franchement hors du segment source→cible.
+   */
+  public get control_points_position() {
+    return this._link_control_points.control_points_position
+  }
+
   public get position_x_start() {
     const source_side = this.source_side
     // Avec une flèche côté source, le trait est raccourci côté source pour laisser

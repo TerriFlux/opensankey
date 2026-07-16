@@ -187,3 +187,65 @@ export function contentBounds(da: Class_DrawingArea): { x: number, y: number, wi
   if (!bbox) return null
   return { x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height }
 }
+
+/**
+ * OS#1250 phase 3a — bounds des FORMES (labels EXCLUS) calculés depuis le MODÈLE.
+ *
+ * Remplace la mesure masquée du fit (`display:none` sur les labels → getBBox → restauration),
+ * qui forçait deux calculs de layout et mutait le DOM pour le mesurer.
+ *
+ * Contrat : MAJORER le tracé, jamais le sous-estimer — un cadrage trop large est bénin, trop
+ * étroit fait déborder le contenu. D'où l'enveloppe convexe pour les Béziers (cf.
+ * Link.control_points_position) plutôt qu'un échantillonnage.
+ *
+ * `null` = rien de visible à mesurer (même contrat que contentBounds : pas « vide » mais
+ * « rien à mesurer » — l'appelant décide).
+ */
+export function contentBoundsFromModel(
+  da: Class_DrawingArea
+): { x: number, y: number, width: number, height: number } | null {
+  let min_x = Infinity, min_y = Infinity, max_x = -Infinity, max_y = -Infinity
+  let has_content = false
+  const push = (x: number, y: number) => {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return
+    has_content = true
+    if (x < min_x) min_x = x
+    if (x > max_x) max_x = x
+    if (y < min_y) min_y = y
+    if (y > max_y) max_y = y
+  }
+
+  // Nœuds et zones de texte (toutes deux des Class_NodeBase). La forme est translatée de
+  // (-margin_left, -margin_top) et mesure getShapeWidthToUse() + les marges (cf.
+  // NodeDrawShape.drawShape) : elle s'étend donc de position − margin_left/top à
+  // position + taille + margin_right/bottom.
+  const shape_holders = [
+    ...da.sankey.visible_nodes_list,
+    ...da.sankey.containers_list.filter(c => c.is_visible)
+  ]
+  shape_holders.forEach(n => {
+    push(n.position_x - n.shape_margin_left, n.position_y - n.shape_margin_top)
+    push(
+      n.position_x + n.getShapeWidthToUse() + n.shape_margin_right,
+      n.position_y + n.getShapeHeightToUse() + n.shape_margin_bottom
+    )
+  })
+
+  // Flux : extrémités + points de contrôle, élargis de la demi-épaisseur (le tracé est
+  // centré sur la ligne, qu'il soit en mode trait — stroke-width — ou en forme pleine).
+  da.sankey.visible_links_list.forEach(l => {
+    const half = Math.abs(l.thickness) / 2
+    const points: number[][] = [
+      [l.position_x_start, l.position_y_start],
+      [l.position_x_end, l.position_y_end],
+      ...Object.values(l.control_points_position)
+    ]
+    points.forEach(([x, y]) => {
+      push(x - half, y - half)
+      push(x + half, y + half)
+    })
+  })
+
+  if (!has_content) return null
+  return { x: min_x, y: min_y, width: max_x - min_x, height: max_y - min_y }
+}
