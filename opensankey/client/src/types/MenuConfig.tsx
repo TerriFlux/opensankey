@@ -437,6 +437,12 @@ export class Class_MenuConfig {
   // Update component OpenSankeyConfigurationsMenus
   protected _ref_to_menu_config_updater: MutableRefObject<() => void>
 
+  // #1243 — Update de l'inspecteur piloté par la sélection. Slot dédié : déclenché
+  // à chaque changement de composition de la sélection (add/remove/purge) pour que
+  // l'inspecteur re-résolve sa cible. Distinct des updaters de sous-menus (que
+  // l'inspecteur réutilise en tant qu'enfants) pour éviter tout vol de slot.
+  private _ref_to_inspector_updater: MutableRefObject<() => void>
+
   private _ref_to_menu_config_layout_updater: MutableRefObject<() => void>
   private _ref_to_menu_contextual_config_layout_updater: MutableRefObject<() => void>
 
@@ -591,6 +597,7 @@ export class Class_MenuConfig {
     this._ref_to_spreadsheet = { current: () => null }
     this._ref_to_doc = { current: () => null }
     this._ref_to_menu_config_updater = { current: () => null }
+    this._ref_to_inspector_updater = { current: () => null }
     this._ref_menu_opened = { current: [false, () => null] }
 
     // Layout
@@ -998,6 +1005,7 @@ export class Class_MenuConfig {
     //  for now OpenSankeyMenusDictBuilder is a function so the updater crash the app because the re-render is out of the correct scope
     // this._ref_to_submenu_updater.current()
     this.updateMenuConfigComponent()
+    this.updateInspector() // #1243
     this.updateComponentRelatedToLayoutApparence()
     this.updateAllComponentsRelatedToNodes()
     this.updateAllComponentsRelatedToLinks()
@@ -1049,6 +1057,7 @@ export class Class_MenuConfig {
     this.updateComponentRelatedToNodesSelection()
     this.updateAllComponentsRelatedToNodesConfig()
     this.updateComponentRelatedToStyles()
+    this.updateInspector() // #1243 — re-résoudre la cible sur changement de sélection
   }
 
   /**
@@ -1079,11 +1088,13 @@ export class Class_MenuConfig {
     this.updateComponentRelatedToLinksSelection()
     this.updateAllComponentsRelatedToLinksConfig()
     this.updateComponentRelatedToStyles()
+    this.updateInspector() // #1243 — re-résoudre la cible sur changement de sélection
   }
 
   public updateAllComponentsRelatedToContainers() {
     this._ref_to_menu_config_container_updater.current()
     this._ref_to_menu_config_containers_selection_updater.current()
+    this.updateInspector() // #1243 — re-résoudre la cible sur changement de sélection
   }
 
   public updateAllComponentsRelatedToContainersStyles() {
@@ -1378,6 +1389,21 @@ export class Class_MenuConfig {
 
   public get ref_to_menu_config_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_config_updater
+  }
+
+  // #1243 — Slot de re-render de l'inspecteur piloté par la sélection.
+  public get ref_to_inspector_updater(): MutableRefObject<() => void> {
+    return this._ref_to_inspector_updater
+  }
+
+  // #1243 — Déclenche un re-render de l'inspecteur (résolution de cible). Appelé
+  // sur chaque changement de composition de sélection. Debouncé comme les autres
+  // updaters pour absorber les rafales (sélection au lasso, add/remove multiples).
+  public updateInspector() {
+    this._add_waiting_process(
+      'updateInspector',
+      (_this: Class_MenuConfig) => { _this._ref_to_inspector_updater.current() }
+    )
   }
 
   public get ref_universal_converter_set_config() {
