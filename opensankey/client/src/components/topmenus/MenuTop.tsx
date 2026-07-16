@@ -77,7 +77,6 @@ import { useTour } from '@reactour/tour'
 import { Type_JSON } from '../../types/Utils'
 
 import { clickSaveSVG } from './SankeyExports'
-import { ModalTemplate } from './SankeyTemplates'
 import { ModalExcelTemplate } from './ExcelTemplateModal'
 import { ModalImageImport } from './ImageImportModal'
 import { importSankeymaticText } from '../../Persistence/sankeymaticLoad'
@@ -1235,10 +1234,6 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
           })
       }
     </Box>
-    <ModalTemplate
-      new_data={new_data}
-      additionalMenu={additionalMenus}
-    />
     <ModalExcelTemplate
       new_data={new_data}
       show={show_excel_template}
