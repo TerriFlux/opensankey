@@ -102,16 +102,21 @@ produit cartésien ni la complétude. Aujourd'hui ça force la duplication du
 flux (cf. §2.1).
 
 Un groupe `is_dimension=false` ne se contente donc pas d'annoter la feuille :
-il la **partitionne** en sous-valeurs (feuilles éparses, une par tag présent,
-sans croisement avec les autres groupes optionnels). L'affichage simultané
-réutilise le mécanisme multi-link existant (bannière `multi`), généralisé aux
-groupes optionnels. La différence obligatoire/optionnel devient alors :
+la feuille porte une **liste de sous-valeurs**, chacune munie d'une
+**coordonnée éparse** — au plus un tag par groupe optionnel, sur zéro ou
+plusieurs groupes (précision utilisateur 2026-07-16 : multi-flux où chaque
+ruban porte plusieurs tags, possiblement différents d'un ruban à l'autre ;
+ex. flux A→B = 6 tagué {acier, route} + 4 tagué {cuivre, rail}). La
+« partition par groupe » est une lecture dérivée : regrouper les sous-valeurs
+par leur tag du groupe G. L'affichage simultané réutilise le mécanisme
+multi-link existant (bannière `multi`), généralisé : un ruban par sous-valeur.
+La différence obligatoire/optionnel devient alors :
 
-| | dimension (obligatoire) | partition (optionnel) |
+| | dimension (obligatoire) | sous-valeurs (optionnel) |
 |---|---|---|
-| feuilles | une par tag, produit cartésien entre groupes | éparses, seulement les tags présents, à plat |
+| stockage | une feuille par tag, produit cartésien entre groupes | liste de sous-valeurs à coordonnée éparse (≤1 tag par groupe, groupes libres) |
 | complétude | requise (modulo `propagate_structure`) | libre |
-| affichage | une valeur sélectionnée (ou multi-banner) | tous les tags cochés, rubans parallèles |
+| affichage | une valeur sélectionnée (ou multi-banner) | un ruban par sous-valeur dont les tags passent le filtre |
 
 Avantages : supprime le contournement « flux dupliqués », rend la conversion
 optionnel→obligatoire presque triviale (compléter les feuilles manquantes),
@@ -119,25 +124,28 @@ unifie réellement le stockage (tout est feuille). Coûts : migration des
 fluxTags existants (cf. §3.1 pour les valeurs multi-taguées) et UI d'édition
 de la partition.
 
-Subtilité assumée : deux groupes optionnels partitionnant le même flux ne se
-croisent pas (pas de produit cartésien entre eux). Leurs partitions sont
-indépendantes et chacune doit sommer à la valeur de la feuille — la cohérence
-inter-groupes n'est pas garantie par le modèle, seulement par groupe.
+Subtilité assumée : le modèle ne garantit aucune complétude — la somme des
+sous-valeurs peut différer de la valeur de la feuille (sous-valeurs = détail
+facultatif), et un groupe donné peut ne taguer qu'une partie des sous-valeurs.
+Une contrainte de cohérence (somme = valeur de la feuille) pourra être offerte
+en option (contrôle type check MFA), pas imposée par le stockage.
 
 ### 3.1 Contrainte de cardinalité
 
-Tranchée par l'adoption du modèle partition (§3.0) : une **sous-valeur porte
-exactement un tag** du groupe qui la partitionne (comme une feuille de
-dimension), et un flux peut n'avoir aucune sous-valeur pour un tag donné
-(éparse). Il n'y a plus de valeur « multi-taguée » dans le modèle cible.
+Tranchée par l'adoption du modèle sous-valeurs (§3.0) : une sous-valeur porte
+**au plus un tag par groupe optionnel**, sur autant de groupes qu'on veut
+(coordonnée éparse). Deux tags de groupes différents sur la même sous-valeur :
+normal ({acier, route}). Deux tags du même groupe sur la même sous-valeur :
+interdit dans le modèle cible.
 
 La question devient une question de **migration** : les fichiers existants où
-une valeur porte plusieurs fluxTags du même groupe (autorisé aujourd'hui,
+une valeur porte plusieurs fluxTags du MÊME groupe (autorisé aujourd'hui,
 `_flux_tags: Class_Tag[]`) doivent être convertis — soit en dupliquant la
 valeur en une sous-valeur par tag (surestime les totaux), soit en créant un
 tag combiné « acier+cuivre » à la volée (préserve les totaux, pollue le
 groupe). **Recommandation : tag combiné**, avec avertissement listant les
-flux concernés à la migration.
+flux concernés à la migration. Les tags de groupes différents migrent tels
+quels vers une seule sous-valeur à coordonnée multiple.
 
 ### 3.2 Persistance (JSON)
 
