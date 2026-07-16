@@ -476,7 +476,7 @@ export class Class_ApplicationData {
    * @type {string}
    * @memberof Class_ApplicationData
    */
-  private _app_name: string = 'SankeySuite'
+  private _app_name: string = 'MFASankey'
 
   /**
    * Path prefix for backend server requests
