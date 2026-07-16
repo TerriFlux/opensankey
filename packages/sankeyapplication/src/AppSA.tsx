@@ -48,7 +48,7 @@ import { PaiementCheckout, PaiementPage, PaiementReturn, PaiementTrial } from '@
 import { consumePendingTrial } from '@terriflux/login-component/src/Paiement/trialFlow'
 import { EMPTY_TRIAL_STATE } from '@terriflux/login-component/src/LoginComponent'
 import { MetaTags } from './components/MetaTags'
-import { logo_sankeytheque, ModalSankeyTheque } from './components/SankeyTheque'
+import { logo_sankeytheque, ModalMFADataBrowser, openSankeyTheque } from './components/SankeyTheque'
 import { UserPagesButtons } from '@terriflux/login-component/src/UserPages/UserPages'
 import { FType_ModuleDialogs } from '@terriflux/opensankey/src/Modules'
 import { Type_AdditionalMenus } from '@terriflux/opensankey/src/types/MenuConfig'
@@ -126,8 +126,16 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
         key: 'sankeytheque',
         label: new_data_app.t('Menu.sankeytheque'),
         icon: logo_sankeytheque,
-        onClick: () => new_data_app.menu_configuration_sa.dict_setter_show_dialog_SA.ref_setter_show_modal_sankeytheque.current(true),
+        onClick: () => openSankeyTheque(new_data_app),
       },
+      // Explorateur brut de MFAData : outil interne, jamais proposé au client.
+      ...(new_data_app.has_sankey_dev ? [{
+        key: 'mfadata_browser',
+        label: 'MFAData',
+        icon: logo_sankeytheque,
+        onClick: () => new_data_app.menu_configuration_sa
+          .dict_setter_show_dialog_SA.ref_setter_show_modal_mfadata_browser.current(true),
+      }] : []),
     ]
   } else {
     new_data_app.menu_configuration.extra_help_menu_items = undefined
@@ -152,8 +160,11 @@ export const moduleDialogsSA: FType_ModuleDialogs = (
   const moduleDialogsSA: JSX.Element[] = []
 
   if (new_data_SA.has_sankey_plus) {
+    // L'explorateur MFAData n'est monté que pour les comptes développeur : il ne
+    // sert pas du contenu publié mais notre répertoire de travail.
+    if (new_data_SA.has_sankey_dev)
+      moduleDialogsSA.push(<ModalMFADataBrowser new_data={new_data_SA} />)
     moduleDialogsSA.push(
-      <ModalSankeyTheque new_data={new_data_SA} />,
       <ModalPreference new_data={new_data_SA} additionalMenus={additional_menus} />
     )
   }

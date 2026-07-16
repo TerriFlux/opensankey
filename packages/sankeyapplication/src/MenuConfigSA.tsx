@@ -3,7 +3,10 @@ import { Class_MenuConfigOSP } from '@terriflux/opensankey-plus/src/types/MenuCo
 //import {Class_MenuConfigLoginComponent } from '@terriflux/login-component/src/MenuConfigLoginComponent'
 
 type SAShowMenuComponentsVarType = {
-  ref_setter_show_modal_sankeytheque: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  // Explorateur interne de MFAData (dev). La sankeythèque, elle, n'a pas de
+  // setter propre : elle ouvre le panneau de galerie d'OpenSankey sur la source
+  // 'mfadata' (cf. openSankeyTheque).
+  ref_setter_show_modal_mfadata_browser: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
 }
 export class Class_MenuConfigSA extends Class_MenuConfigOSP {
   private _ref_to_btn_top_sankeytheque_updater: MutableRefObject<(() => void)>
@@ -20,7 +23,7 @@ export class Class_MenuConfigSA extends Class_MenuConfigOSP {
     super()
     this._ref_to_btn_top_sankeytheque_updater = { current: () => null }
     this._dict_setter_show_dialog_SA = {
-      ref_setter_show_modal_sankeytheque: { current: () => null }
+      ref_setter_show_modal_mfadata_browser: { current: () => null }
     }
   }
 

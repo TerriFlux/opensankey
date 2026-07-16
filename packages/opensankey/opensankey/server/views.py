@@ -1419,24 +1419,74 @@ def _generate_excel_template(filepath, sheets, lang="fr"):
     wb.save(filepath)
 
 
-@opensankey.route("/menus/templates", methods=["POST"])
-def menus_templates():
+def templates_index_path(source):
     """
-    Renvoie l'index des modeles (templates).
+    Chemin de l'index d'une galerie, selon sa source.
 
-    Les modeles migres vivent dans le submodule SankeyData (env SANKEY_DATA,
-    sous-dossier templates/) ; repli sur MFAData/Modeles/Template/ tant que la
-    migration n'est pas deployee partout. Les chemins file_path / img_path de
-    l'index sont relatifs a la racine SANKEY_DATA (ex. templates/<diff>/...) et
-    sont servis : data via /opensankey/convert/launch (example_json), images via
-    /opensankey/menus/templates_asset/<path>.
+    - 'sankeydata' (defaut) : les modeles, dans le submodule SankeyData (env
+      SANKEY_DATA, sous-dossier templates/) ; repli sur MFAData/Modeles/Template/
+      tant que la migration n'est pas deployee partout.
+    - 'mfadata' : la sankeytheque, index a la racine de MFAData (env MFAData),
+      qui liste nos etudes publiees.
     """
+    if source == "mfadata":
+        mfa_data = os.environ.get("MFAData")
+        return os.path.join(mfa_data, "index.json") if mfa_data else None
     sankey_data = os.environ.get("SANKEY_DATA")
     index_path = os.path.join(sankey_data, "templates", "index.json") if sankey_data else None
     if not (index_path and os.path.exists(index_path)):
-        index_path = os.path.join(os.environ.get("MFAData"), "Modèles", "Template", "index.json")
+        mfa_data = os.environ.get("MFAData")
+        index_path = os.path.join(mfa_data, "Modèles", "Template", "index.json") if mfa_data else None
+    return index_path
+
+
+def templates_index_load(source):
+    """Charge l'index d'une galerie, ou None s'il n'existe pas."""
+    index_path = templates_index_path(source)
+    if not (index_path and os.path.exists(index_path)):
+        return None
     with open(index_path, encoding="utf-8") as file_index:
-        data_index = json.load(file_index)
+        return json.load(file_index)
+
+
+def templates_declared_assets(source):
+    """
+    Ensemble des chemins declares par l'index d'une galerie (file_path + img_path).
+
+    Sert de liste blanche a /menus/templates_asset. Indispensable pour 'mfadata' :
+    la racine MFAData contient aussi des dossiers non publies, une simple regle
+    de prefixe ne suffirait pas a les proteger.
+    """
+    data_index = templates_index_load(source)
+    if not data_index:
+        return set()
+    declared = set()
+    for template in (data_index.get("templates") or {}).values():
+        for key in ("file_path", "img_path"):
+            value = template.get(key)
+            if value:
+                declared.add(value.replace("\\", "/"))
+    return declared
+
+
+@opensankey.route("/menus/templates", methods=["POST"])
+def menus_templates():
+    """
+    Renvoie l'index d'une galerie : les modeles (source 'sankeydata', defaut) ou
+    la sankeytheque (source 'mfadata').
+
+    Les chemins file_path / img_path de l'index sont relatifs a la racine de la
+    source et sont servis : data via /opensankey/convert/launch (example_json,
+    parametre example_root), images via /opensankey/menus/templates_asset/<path>
+    (parametre source).
+    """
+    payload = request.get_json(silent=True) or {}
+    source = "mfadata" if payload.get("source") == "mfadata" else "sankeydata"
+    data_index = templates_index_load(source)
+    if data_index is None:
+        # Pas d'index pour cette source (ex. MFAData absent d'un deploiement) :
+        # galerie vide plutot qu'une 500, le front n'affiche alors rien.
+        data_index = {"categories": [], "templates": {}}
     response = Response(response=json.dumps(data_index), status=200, mimetype="application/json")
     return response
 
@@ -1444,30 +1494,56 @@ def menus_templates():
 @opensankey.route("/menus/templates_asset/<path:asset>", methods=["GET"])
 def menus_templates_asset(asset):
     """
-    Sert un fichier (image de previsualisation, ...) depuis la racine SANKEY_DATA.
+    Sert un fichier (image de previsualisation, ...) d'une galerie.
 
-    Le chemin `asset` est relatif a SANKEY_DATA (ex. templates/essential/image/
-    business_simple.png) ; send_from_directory neutralise les remontees de chemin.
+    Le chemin `asset` est relatif a la racine de la source : SANKEY_DATA pour les
+    modeles (defaut), MFAData pour la sankeytheque (?source=mfadata).
+    send_from_directory neutralise les remontees de chemin ; en plus, on n'accepte
+    que des chemins effectivement declares par l'index (liste blanche exacte),
+    pour ne rien exposer d'autre que le contenu publie.
     """
-    sankey_data = os.environ.get("SANKEY_DATA")
-    if not sankey_data:
+    source = "mfadata" if request.args.get("source") == "mfadata" else "sankeydata"
+    root = os.environ.get("MFAData" if source == "mfadata" else "SANKEY_DATA")
+    if not root:
         abort(404)
-    # Route GET publique : on ne sert que le contenu des modeles (templates/).
-    if not asset.replace("\\", "/").startswith("templates/"):
+    normalized = asset.replace("\\", "/")
+    if source == "mfadata":
+        if normalized not in templates_declared_assets("mfadata"):
+            abort(404)
+    # Modeles : tout SankeyData/templates/ est publiable, la regle de prefixe suffit.
+    elif not normalized.startswith("templates/"):
         abort(404)
-    return send_from_directory(sankey_data, asset)
+    return send_from_directory(root, asset)
+
+
+def is_developer_user():
+    """
+    Vrai si la requete vient d'un compte developpeur.
+
+    OpenSankey (open-source) ne depend pas du login-component : on interroge
+    flask_login s'il est la, sinon on refuse. Les routes gardees par ce test ne
+    sont utilisees que par SankeyApplication, ou le login-component est monte ;
+    OpenSankey autonome ne les appelle pas.
+    """
+    try:
+        from flask_login import current_user
+
+        return bool(getattr(current_user, "is_developer", False))
+    except Exception:
+        return False
 
 
 @opensankey.route("/menus/examples", methods=["POST"])
 def menus_examples():
     """
-    _summary_
+    Arborescence brute de MFAData (dossiers + fichiers), pour l'explorateur interne.
 
-    Returns
-    -------
-    :return: _description_
-    :rtype: _type_
+    Reserve aux comptes developpeur : c'est un parcours de notre repertoire de
+    travail, pas du contenu publie. Ce qui est publie passe par l'index
+    (/menus/templates?source=mfadata), qui fait liste blanche.
     """
+    if not is_developer_user():
+        abort(403)
     data_folder = os.environ.get("MFAData")
     menus = {}
     # try:
