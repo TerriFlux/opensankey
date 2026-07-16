@@ -49,9 +49,13 @@ if "%install%"=="true" (
 )
 
 rem === Install deps ===
-for %%S in (OpenSankey+ LoginComponent MFAProblem) do (
-    pushd "%REPO_ROOT%\submodules\%%S" || (
-        echo ERROR: pushd vers submodules\%%S a echoue
+rem Depuis le monorepo (#235), les couches front/Python vivent dans packages\
+rem (OpenSankey+ etait un simple passe-plat vers OpenSankey) ; MFAProblem reste
+rem un submodule (chemin inchange). SankeyExcelParser n'apparait pas ici : il est
+rem installe en premier par packages\opensankey\build_server.bat, qui en depend.
+for %%S in (packages\opensankey packages\login-component submodules\MFAProblem) do (
+    pushd "%REPO_ROOT%\%%S" || (
+        echo ERROR: pushd vers %%S a echoue
         exit /b 1
     )
     if "%install%"=="true" (
@@ -61,6 +65,17 @@ for %%S in (OpenSankey+ LoginComponent MFAProblem) do (
     )
     popd
 )
+
+rem === Restauration des tests suivis par git dans les submodules ===
+rem Les setup.py de SEP et MFAProblem recopient l'arbre tests\ racine dans le
+rem package (rmtree + copytree des commandes egg_info/install/bdist_wheel), ce
+rem qui efface au passage les tests unitaires suivis par git a cette place.
+rem Sans effet runtime, mais laisse le submodule sale apres chaque install
+rem editable. Restauration ici : les .bat sont dev-local uniquement.
+set "SEP_DIR=%REPO_ROOT%\packages\opensankey\submodules\SankeyExcelParser"
+set "MFA_DIR=%REPO_ROOT%\submodules\MFAProblem"
+if exist "%SEP_DIR%\.git" git -C "%SEP_DIR%" checkout -- SankeyExcelParser/tests/unit
+if exist "%MFA_DIR%\.git" git -C "%MFA_DIR%" checkout -- mfa_problem/tests/unit
 
 rem === Check PEP (flake8) ===
 pushd "%REPO_ROOT%\server"
