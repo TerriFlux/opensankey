@@ -38,6 +38,7 @@ import { Class_EventBus, MAIN_ZONE_TOPIC } from './EventBus'
 import {
   ConverterConfig
 } from '../components/dialogs/PersistenceProcessDialogConfigs'
+import type { Type_TemplateSource } from '../components/topmenus/SankeyTemplates'
 import { Class_NodeBase } from '../Elements/NodeBase'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_ElementStyle } from '../Elements/Element'
@@ -108,6 +109,10 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   // Other modals
   ref_setter_show_modal_preference: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_templates_lib: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  // Ouvre le panneau de galerie sur une source donnée, null pour le fermer. Les
+  // modèles ont leur propre setter booléen ci-dessus (rétro-compat) ; celui-ci
+  // sert aux galeries des couches supérieures (la sankeythèque, côté SA).
+  ref_setter_show_gallery_source: MutableRefObject<Dispatch<SetStateAction<Type_TemplateSource | null>>>
   ref_setter_show_spreadsheet: MutableRefObject<Dispatch<SetStateAction<boolean>>>
 
   ref_setter_show_menu_node_icon: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
@@ -690,6 +695,7 @@ export class Class_MenuConfig {
       // Other modals
       ref_setter_show_modal_preference: { current: () => null },
       ref_setter_show_modal_templates_lib: { current: () => null },
+      ref_setter_show_gallery_source: { current: () => null },
       ref_setter_show_spreadsheet: { current: () => null },
 
       ref_setter_show_menu_node_icon: { current: () => null },
@@ -733,6 +739,7 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_modal_styles_containers.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_preference.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_templates_lib.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_gallery_source.current(null)
     this._dict_setter_show_dialog.ref_setter_show_spreadsheet.current(false)
     this._ref_close_filter_drawer.current(false)
   }

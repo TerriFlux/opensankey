@@ -40,7 +40,7 @@ export const logo_sankeytheque = <svg
 </svg>
 
 
-type FCType_ModalSankeyTheque = {
+type FCType_ModalMFADataBrowser = {
   new_data: Class_ApplicationDataSA
 }
 
@@ -58,6 +58,15 @@ type FCType_SankeyThequeCardsGenerator = {
 }
 
 
+/**
+ * Ouvre la sankeythèque : le panneau de galerie d'OpenSankey, sur la source
+ * 'mfadata' (nos études publiées, index à la racine de MFAData).
+ */
+export const openSankeyTheque = (new_data: Class_ApplicationDataSA) => {
+  new_data.menu_configuration.dict_setter_show_dialog
+    .ref_setter_show_gallery_source.current('mfadata')
+}
+
 export const ButtonOpenModalSankeyTheque: FC<{ new_data: Class_ApplicationDataSA }> = ({ new_data }) => {
   // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
   useModelBinding(new_data.menu_configuration_sa.ref_to_btn_top_sankeytheque_updater)
@@ -69,9 +78,7 @@ export const ButtonOpenModalSankeyTheque: FC<{ new_data: Class_ApplicationDataSA
     <Button
       variant='menutop_button'
       size='sizeMenuTopButton'
-      onClick={() => {
-        new_data.menu_configuration_sa.dict_setter_show_dialog_SA.ref_setter_show_modal_sankeytheque.current(true)
-      }}
+      onClick={() => openSankeyTheque(new_data)}
     >
       <Box
         layerStyle='menutop_button_style'
@@ -95,19 +102,23 @@ export const ButtonOpenModalSankeyTheque: FC<{ new_data: Class_ApplicationDataSA
 
 
 /**
- * Modal containing sankeytheque
+ * Explorateur interne de MFAData : parcourt l'arborescence brute du répertoire de
+ * travail (dossiers + fichiers) et devine les paires JSON / Excel / réconcilié par
+ * suffixe de nom.
  *
- * @param {*} { new_data, additionalMenu }
- * @return {*}
+ * RÉSERVÉ AUX COMPTES DÉVELOPPEUR (monté sous `has_sankey_dev`, et la route
+ * /menus/examples refuse les autres) : ce n'est pas du contenu publié. La
+ * sankeythèque, elle, est la galerie des études publiées, décrites par
+ * MFAData/index.json et servies par le panneau d'OpenSankey.
  */
-export const ModalSankeyTheque: FC<FCType_ModalSankeyTheque> = ({ new_data }) => {
+export const ModalMFADataBrowser: FC<FCType_ModalMFADataBrowser> = ({ new_data }) => {
   const [show_sankeytheque, set_show_sankeytheque] = useState(false)
   const [firstRender, setFirstRender] = useState(true)
   const [sankeytheque, setSankeyTheque] = useState({})
 
   const [path_to_card, setPathToCard] = useState<string[]>([])
 
-  new_data.menu_configuration_sa.dict_setter_show_dialog_SA.ref_setter_show_modal_sankeytheque.current = set_show_sankeytheque
+  new_data.menu_configuration_sa.dict_setter_show_dialog_SA.ref_setter_show_modal_mfadata_browser.current = set_show_sankeytheque
 
 
   const path = window.location.origin
@@ -153,7 +164,8 @@ export const ModalSankeyTheque: FC<FCType_ModalSankeyTheque> = ({ new_data }) =>
     <ModalContent
       maxWidth='inherit'
     >
-      <ModalHeader>{new_data.t('Menu.demo')}</ModalHeader>
+      {/* Nom du répertoire, pas un libellé produit : outil interne, non traduit. */}
+      <ModalHeader>MFAData</ModalHeader>
       <ModalCloseButton />
       <ModalBody>
         <Box layerStyle='accordion_sankeytheque'>
@@ -320,7 +332,7 @@ const SankeyThequeCardsGenerator: FC<FCType_SankeyThequeCardsGenerator> = ({ new
               onClick={() => {
                 // Button that open file in JSON version
                 const file_name = [...path, cardStruct[1].is_json].join('/')
-                new_data.menu_configuration_sa.dict_setter_show_dialog_SA.ref_setter_show_modal_sankeytheque.current(false)
+                new_data.menu_configuration_sa.dict_setter_show_dialog_SA.ref_setter_show_modal_mfadata_browser.current(false)
                 new_data.menu_configuration.ref_universal_converter_set_config.current(
                   CONVERTER_CONFIGS['load_sankeytheque_json'], file_name!, true
                 )
@@ -332,7 +344,7 @@ const SankeyThequeCardsGenerator: FC<FCType_SankeyThequeCardsGenerator> = ({ new
               variant='button_sankey_open_excel'
               onClick={() => {
                 const file_name = [...path, cardStruct[1].is_reconciled ? cardStruct[1].is_reconciled : cardStruct[1].is_excel].join('/')
-                new_data.menu_configuration_sa.dict_setter_show_dialog_SA.ref_setter_show_modal_sankeytheque.current(false)
+                new_data.menu_configuration_sa.dict_setter_show_dialog_SA.ref_setter_show_modal_mfadata_browser.current(false)
                 new_data.menu_configuration.ref_universal_converter_set_config.current(
                   CONVERTER_CONFIGS['load_sankeytheque_excel'], file_name!, true
                 )
