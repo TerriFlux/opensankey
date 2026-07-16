@@ -60,6 +60,7 @@ import { LinkValueTypeSelector, MenuConfigurationLinksData } from '../configmenu
 import { SankeyContainerSelection, SankeyNodeSelection } from '../configmenus/MenuElementsSelection'
 import { MenuConfigurationAppearance } from '../configmenus/MenuElementsAppearance'
 import { WrapperContentConfig } from '../configmenus/MenuCommon'
+import { InspectorPanel } from '../configmenus/inspector/InspectorPanel'
 import { useModelBinding } from '../../hooks/useModelBinding'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { OSTooltip } from '../configmenus/MenuCommon'
@@ -442,6 +443,29 @@ const ConfigMenu = ({ app_data, additional_menus }: {
   const sizeBtn = document.getElementsByClassName('buttonGroupTypeConfig')[0]?.getBoundingClientRect().height ?? 30
   // Hauteur bornée à l'espace écran restant (panneau ancré).
   const maxHConfig = 'calc(' + (window.innerHeight - (app_data.drawing_area.getNavBarHeight() + app_data.drawing_area.getBottomBarHeight() + sizeBtn + (app_data.drawing_area.fit_margin * 2))) + 'px - 0.8rem)'
+
+  // #1243 — Bascule dev : l'inspecteur piloté par la sélection remplace la matrice
+  // type×élément. Gardé derrière has_sankey_dev le temps de valider l'ergonomie
+  // (prototype Nœud + Vue) avant de basculer par défaut et déposer la matrice.
+  if (app_data.has_sankey_dev) {
+    return <Box layerStyle='config_menu_layout' style={{
+      background: (style_config[type_menu_configuration_selected].theme),
+      height: '100%',
+      alignContent: 'start'
+    }}>
+      <Box
+        className='config_box'
+        style={{ maxHeight: maxHConfig, overflowY: 'auto', overflowX: 'hidden' }}
+        onMouseDownCapture={() => {
+          if (app_data.drawing_area.isInEditionMode()) {
+            app_data.drawing_area.switchMode()
+          }
+        }}
+      >
+        <InspectorPanel app_data={app_data} />
+      </Box>
+    </Box>
+  }
 
   return <Box layerStyle='config_menu_layout' style={{
     background: (style_config[type_menu_configuration_selected].theme),
