@@ -674,18 +674,29 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
     this.updateVisibilityFingerprint()
   }
 
+  /**
+   * OS#1246 — « la représentation DOM de cet élément est-elle à jour ? ».
+   *
+   * Cherchait auparavant un <g id=...> sous le groupe parent : l'EXISTENCE de
+   * l'id valait « synchronisé ». Insuffisant depuis les data-joins — un enter
+   * peut pré-créer un <g> VIDE, que l'ancienne version déclarait synchronisé,
+   * si bien que le nœud sautait le dessin et laissait un flux invisible.
+   * On vérifie donc la sélection vivante ET un marqueur de CONTENU. Au passage
+   * c'est moins cher : plus de double requête DOM par élément et par frame.
+   */
   public isRelatedD3SelectionPresentAndSynced() {
-    const d3_drawing_area = this.drawing_area.d3_selection
-    if (d3_drawing_area !== null) {
-      const d3_drawing_area_selection = d3_drawing_area.selectAll(' #' + this._svg_parent_group)
-      if (d3_drawing_area_selection.nodes().length > 0) {
-        const d3_selection = d3_drawing_area_selection.selectAll(' #' + this.svg_group)
-        if (d3_selection && d3_selection.nodes().length > 0)
-          return true
-      }
-    }
-    return false
+    const node = this.d3_selection?.node()
+    if (!node || !node.isConnected)
+      return false
+    return this._hasDrawnContent()
   }
+
+  /**
+   * Marqueur de contenu dessiné, complément de
+   * isRelatedD3SelectionPresentAndSynced(). Base : la présence du <g> suffit.
+   * Surchargé là où un <g> peut légitimement être présent mais vide (Link).
+   */
+  protected _hasDrawnContent(): boolean { return true }
 
   protected _process_or_bypass(
     process_func: () => void

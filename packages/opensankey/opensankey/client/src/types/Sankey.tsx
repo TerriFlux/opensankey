@@ -445,10 +445,10 @@ export class Class_Sankey {
     // // Draw links
     // this.links_list.forEach(link => link.draw())
     // Draw nodes
-    this._drawNodesJoin()
-    // Réconciliation des flux APRÈS le dessin des nœuds (qui crée/remplit les
-    // <g class="gg_links"> via node._drawLinks).
+    // Le join des flux passe AVANT celui des nœuds : il pose les <g> racine
+    // (enter) que node._drawLinks remplit ensuite pendant le dessin des nœuds.
     this._drawLinksJoin()
+    this._drawNodesJoin()
     this._drawContainersJoin()
     //this.nodes_list.forEach(node => node.unDraw())
     //this.visible_nodes_list_sorted.forEach(node => node.draw())
@@ -484,16 +484,17 @@ export class Class_Sankey {
   }
 
   /**
-   * OS#1246 — join keyé des flux, en mode RÉCONCILIATION (pas de pré-création).
-   * Les <g class="gg_links"> sont créés/remplis par node._drawLinks selon une
-   * optimisation de redraw conditionnel (isRelatedD3SelectionPresentAndSynced :
-   * un <g> présent = pas de redraw). Pré-créer un <g> vide via un enter casserait
-   * cette heuristique (flux non redessiné → <g> vide). On lance donc le join
-   * APRÈS le dessin, keyé sur les flux dessinables : update = flux déjà présents,
-   * exit = flux devenus invisibles/sous seuil → nettoyage (unDraw) + retrait.
-   * L'enter n'est qu'un filet (un flux dessinable sans <g> est redessiné). Les
-   * <g class="gg_links"> portent leur datum(this) (Link._initDraw), donc le join
-   * les reconnaît par id.
+   * OS#1246 — join keyé LITTÉRAL des flux. Le join possède le cycle de vie du
+   * <g> racine (enter/update/exit), comme pour les nœuds et les ZDT.
+   *
+   * Le contenu, lui, reste posé par le nœud source/cible (node._drawLinks →
+   * updateLinksPositions), qui ne redessine un flux que si sa position a bougé
+   * ≥1px OU si isRelatedD3SelectionPresentAndSynced() est faux. C'est pour ça
+   * que ce join ne pouvait pas pré-créer les <g> tant que cette sync se résumait
+   * à « l'id existe-t-il ? » : un <g> vide passait pour synchronisé et le flux
+   * n'était jamais tracé. La sync vérifie désormais un marqueur de CONTENU
+   * (Link._hasDrawnContent : .link_shape / .link_path), donc un <g> pré-créé
+   * vide est bien vu comme « à dessiner ».
    */
   private _drawLinksJoin() {
     const parent = this.drawing_area.d3_selection_elements_sankey_group
@@ -502,11 +503,13 @@ export class Class_Sankey {
     parent.selectAll<SVGGElement, Class_LinkElement>('.gg_links')
       .data(drawable_links, d => d.id)
       .join(
-        // Filet : un flux dessinable dont le <g> manque (jamais dessiné par le
-        // nœud) est dessiné ici. `this` (placeholder d'enter) est ignoré.
-        enter => enter.each(function (d) {
-          if (!d.isRelatedD3SelectionPresentAndSynced()) d.draw()
-        }),
+        enter => enter.append('g')
+          .attr('class', 'gg_links')
+          .attr('id', d => d.svg_group)
+          .each(function (d) {
+            d.d3_selection = d3.select(this) as unknown as
+              d3.Selection<SVGGElement, unknown, SVGGElement, unknown>
+          }),
         update => update,
         // exit : le flux n'est plus dessinable — nettoyage complet + retrait du <g>.
         exit => exit.each(function (d) { d.unDraw() }).remove()
