@@ -91,6 +91,22 @@ export function applyFitCamera(da: Class_DrawingArea, k: number, px: number, py:
 }
 
 /**
+ * Ré-ancre la caméra : place le point MONDE `(wx, wy)` au pixel `[px, py]`, SANS toucher à
+ * l'échelle.
+ *
+ * Comme applyFitCamera, passe délibérément par `translateTo` et non par setCamera : c'est le
+ * CONSTRAIN de d3-zoom (clamp selon translateExtent) qui fait le travail — le ré-ancrage des
+ * labels en police verrouillée (#165) en dépend, et `zoomListener.transform` le contournerait.
+ * Les scrollbars doivent avoir été rafraîchies AVANT (elles posent le translateExtent lu par le
+ * constrain).
+ */
+export function anchorCamera(da: Class_DrawingArea, wx: number, wy: number, px: number, py: number): void {
+  const sel = da.d3_selection_zoom_area
+  if (!sel) return
+  da.zoomListener.translateTo(sel, wx, wy, [px, py])
+}
+
+/**
  * Variante animée des recadrages EXPLICITES (boutons fit H/V). Calcule le cadrage cible via
  * areaAutoFit — inchangé, avec tous ses effets de bord (_k_fit, labels, fond) — puis anime la caméra
  * de l'ancien vers le nouveau transform. Les recadrages automatiques appellent areaAutoFit direct.
@@ -106,28 +122,21 @@ export function areaAutoFitAnimated(da: Class_DrawingArea, horiz?: boolean, forc
 }
 
 /**
- * Variante animée du bouton « recentrer ». recenter() décale les coordonnées MONDE de tous les
- * éléments puis refait le fit ; on capture le transform et un nœud témoin AVANT, on laisse
- * recenter() poser l'état final, puis on anime la caméra depuis un transform de départ CORRIGÉ du
- * décalage monde. La correction (X' = X0 − k0·Δ, avec Δ le décalage appliqué aux positions)
- * reproduit exactement le rendu d'avant-recentrage sur les nouvelles positions : le contenu paraît
- * glisser vers le centre, sans saut d'une frame.
+ * Variante animée du bouton « recentrer ».
+ *
+ * OS#1250 phase 2 — recenter() ne déplace plus les coordonnées MONDE : ce n'est
+ * plus qu'un cadrage de caméra. La compensation qui existait ici (capture d'un
+ * nœud témoin avant/après pour corriger le transform de départ du décalage monde,
+ * via shiftTransformByWorldDelta) n'a donc plus d'objet — le delta serait
+ * toujours nul. On anime simplement de la caméra courante vers celle du fit.
  */
 export function recenterAnimated(da: Class_DrawingArea, force: boolean = false): void {
   const node = da.d3_selection_zoom_area?.node()
-  // Paper mode / pas de zone : recenter() ne décale rien de recadrable → direct.
+  // Paper mode / pas de zone : rien à animer → direct.
   if (!node || da.is_paper_mode) { da.recenter(force); return }
-  const t0 = d3.zoomTransform(node)
-  // Décalage monde réellement appliqué : mesuré sur un nœud témoin (toutes les
-  // positions sont décalées du même vecteur). 0 si recenter court-circuite.
-  const ref = da.sankey.nodes_list[0]
-  const bx = ref ? ref.position_x : 0
-  const by = ref ? ref.position_y : 0
-  da.recenter(force)
+  const from = d3.zoomTransform(node)
+  da.recenter(force) // pose l'état final
   const to = d3.zoomTransform(node)
-  const dx = ref ? ref.position_x - bx : 0
-  const dy = ref ? ref.position_y - by : 0
-  const from = CameraMath.shiftTransformByWorldDelta(t0, dx, dy)
   if (CameraMath.sameZoomTransform(from, to)) return
   setCamera(da, to, { animate: true, from })
 }
@@ -166,9 +175,15 @@ export function getViewport(da: Class_DrawingArea): { width: number, height: num
  * Bounds du contenu en coordonnées MONDE. Phase 1 : mesure DOM (getBBox du groupe des éléments) —
  * l'interface est posée, l'implémentation basculera vers un calcul depuis le modèle (positions +
  * tailles + labels estimés) en phase 3, ce qui supprimera les dépendances à l'ordre de rendu.
+ *
+ * `null` signifie « pas de zone à mesurer » (SVG absent), PAS « contenu vide ». Un contenu vide
+ * renvoie un rect à zéro, fidèlement à getBBox : areaAutoFit distingue les deux cas — une bbox
+ * vide y déclenche une remise à l'état « diagramme neuf » (indispensable au basculement
+ * papier→libre sur une vue vide), qu'un `null` ferait sauter. Un appelant qui veut traiter le
+ * contenu vide teste `width === 0 && height === 0`.
  */
 export function contentBounds(da: Class_DrawingArea): { x: number, y: number, width: number, height: number } | null {
   const bbox = da.d3_selection_elements_group?.node()?.getBBox()
-  if (!bbox || (bbox.width === 0 && bbox.height === 0)) return null
+  if (!bbox) return null
   return { x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height }
 }

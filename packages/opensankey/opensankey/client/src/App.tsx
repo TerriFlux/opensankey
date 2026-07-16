@@ -94,12 +94,10 @@ export const OpenSankeyApp = ({
     if (app_data.is_static && opts.recenter) {
       const doRecenter = () => {
         const da = app_data.drawing_area
-        da.to_recenter = true
         // force=true : en mode size_locked, draw() a déjà consommé le drapeau dirty,
         // donc un recenter() non forcé sortirait immédiatement (garde ligne ~2066) et
         // le cadrage figé (calculé trop tôt) resterait. On force le re-cadrage.
         da.recenter(true)
-        da.to_recenter = false
       }
       // Différé de 2 frames : au tout premier chargement, le conteneur hôte
       // (#sankey_app) peut ne pas avoir sa hauteur finale — quand l'embarqueur ajoute
@@ -181,9 +179,7 @@ export const OpenSankeyApp = ({
       if (initial) { initial = false; return }
       const da = app_data.drawing_area
       if (!da || el.clientHeight <= 0) return
-      da.to_recenter = true
       da.recenter(true) // force : le cadrage initial a pu figer le verrou de taille
-      da.to_recenter = false
       // Débranche une fois le diagramme réellement chargé et recadré.
       if (da.sankey?.nodes_list?.length > 0) ro.disconnect()
     })

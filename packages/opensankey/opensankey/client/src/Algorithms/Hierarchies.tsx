@@ -723,9 +723,7 @@ export const disaggregationExpansion = (
   // fait un unique draw()+recenter() après la boucle. Sinon rendu immédiat (clic droit).
   if (finalize) {
     new_data.drawing_area.draw()
-    new_data.drawing_area.to_recenter = true
     new_data.drawing_area.recenter()
-    new_data.drawing_area.to_recenter = false
   }
 }
 

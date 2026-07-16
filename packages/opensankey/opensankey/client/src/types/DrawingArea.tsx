@@ -120,8 +120,24 @@ export class Class_DrawingArea {
 
 
   public static: boolean = !!window.sankey?.publish
-  public to_recenter = false
   public is_unitary = false
+
+  /**
+   * OS#1250 phase 2 — le fichier chargé est antérieur à 0.92 et ses coordonnées
+   * doivent être normalisées UNE FOIS (ramenées près de l'origine).
+   *
+   * Remplace l'ancien drapeau public `to_recenter`, qui armait le garde de
+   * recenter(). Ce protocole était BUGUÉ : `to_recenter` n'était jamais remis à
+   * false par le bouton « recentrer », les 4 chemins de Toolbar, ni la migration
+   * legacy — il restait donc collant. Or ViewsManager appelle recenter() sans
+   * jamais l'armer : une fois le drapeau collé à true, chaque changement de vue
+   * se mettait à décaler les positions des nœuds ET à réécrire les centres
+   * persistés (#1231), silencieusement, selon ce que l'utilisateur avait fait
+   * avant. La normalisation est désormais explicite, ponctuelle, et recenter()
+   * ne touche plus au document.
+   */
+  private _needs_legacy_normalization = false
+  public markForLegacyNormalization() { this._needs_legacy_normalization = true }
 
   /** id du nœud central d'un board unitaire (is_unitary). Posé par updateUnitaryStyles
    * à chaque (re)focalisation. areaAutoFit s'en sert pour caler ce nœud au CENTRE de la
@@ -399,8 +415,10 @@ export class Class_DrawingArea {
     .range([0, 100])
 
   // Shifting of d3 elements
-  private _elements_d3_groups_shift_x: number = 0
-  private _elements_d3_groups_shift_y: number = 0
+  // OS#1250 phase 2 — `_elements_d3_groups_shift_x/y` supprimés : ils n'étaient
+  // que la trace du déplacement du monde par recenter(), et ne servaient nulle
+  // part ailleurs. Le décalage est désormais local à la migration legacy
+  // (normalizeLegacyWorldCoordinates).
   private _background_d3_groups_shift_x: number = 0
   private _background_d3_groups_shift_y: number = 0
 
@@ -790,7 +808,7 @@ export class Class_DrawingArea {
         this.areaAutoFit(false, true)
       } else {
         this._locked_overflow_shrunk = false
-        this._zoomListener.transform(this.d3_selection_zoom_area, locked_zoom_transform)
+        this.setCamera(locked_zoom_transform)
         this.drawBackground()
         this.drawGrid()
         this._updateScrollbars()
@@ -1381,7 +1399,13 @@ export class Class_DrawingArea {
     }
   }
 
-  public areaAutoFit(horiz?: boolean, force_when_locked?: boolean) {
+  /**
+   * @param center_on_content OS#1250 phase 2 — centre le contenu dans le viewport sur les
+   * axes où il a du mou, au lieu de l'ancrer en haut à gauche avec les marges. Posé par
+   * recenter() : c'est la définition même de « recentrer ». Les autres fits (changement de
+   * data tag, redimensionnement…) gardent leur cadrage habituel.
+   */
+  public areaAutoFit(horiz?: boolean, force_when_locked?: boolean, center_on_content?: boolean) {
 
     // Verrou de taille (#1240) : cadrage (hauteur, largeur, zoom) figé tel quel —
     // aucun auto-fit au changement de dataTag. Exception : au tout premier rendu
@@ -1443,7 +1467,9 @@ export class Class_DrawingArea {
     let label_overflow_right = 0
     let label_overflow_top = 0
     let label_overflow_bottom = 0
-    let bbox: DOMRect | undefined
+    // OS#1250 phase 1 — rect structurel (et non DOMRect) : c'est le type rendu par
+    // la façade contentBounds(), qui cessera de mesurer le DOM en phase 3.
+    let bbox: { x: number, y: number, width: number, height: number } | undefined
     if (skip_text_in_bbox) {
       // Conversion monde→écran : les labels sont contre-scalés par
       // font_compensation = 1/getZoomScale() (zoom LIVE), donc débordement monde
@@ -1451,7 +1477,10 @@ export class Class_DrawingArea {
       // live (molette depuis le dernier fit) et fausser la réserve — d'autant
       // plus visible quand le fit collapse à ~1e-4 (grand user_scale).
       const k_live = this.getZoomScale()
-      const full_bbox = this.d3_selection_elements_group?.node()?.getBBox()
+      // OS#1250 phase 1 — bounds du contenu (labels INCLUS) via la façade caméra.
+      // Même mesure qu'avant (getBBox du groupe des éléments) ; l'implémentation
+      // basculera vers un calcul depuis le MODÈLE en phase 3, ici sans changement.
+      const full_bbox = this.contentBounds() ?? undefined
       // On masque TOUTES les parties de label qui vivent dans le repère zoomé avec la
       // compensation 1/k (police verrouillée) — sinon elles dominent le getBBox et le
       // fit diverge / sous-estime :
@@ -1474,7 +1503,8 @@ export class Class_DrawingArea {
         label_overflow_bottom = Math.max(0, (full_bbox.y + full_bbox.height) - (bbox.y + bbox.height)) * k_live
       }
     } else {
-      bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
+      // OS#1250 phase 1 — même mesure qu'avant, via la façade caméra.
+      bbox = this.contentBounds() ?? undefined
     }
 
     if (bbox == undefined)
@@ -1687,6 +1717,25 @@ export class Class_DrawingArea {
         this._zoom_width = 2 * half_view_w
         this._zoom_height = 2 * half_view_h
       }
+      else if (center_on_content && !this.is_paper_mode) {
+        // OS#1250 phase 2 — « recentrer » sur le diagramme principal : MÊME technique que
+        // le board unitaire ci-dessus, centrée sur le milieu de la bbox au lieu d'un nœud.
+        //
+        // Calculer un px/py centré NE SUFFIT PAS : le constrain custom ancre en haut-gauche
+        // dès que le contenu est plus petit que le viewport, et re-plaque le diagramme dans
+        // le coin (le translateTo d'_applyFitCamera passe par lui). En calant le canvas sur
+        // la vue centrée, dx0/dx1 du constrain s'annulent → il devient inerte et le centrage
+        // tient. C'est ce que faisait implicitement l'ancien recenter(), mais en déplaçant
+        // le MONDE ; ici on ne déplace que le cadre de référence du fond/des extents.
+        const cx = bbox.x + bbox.width / 2
+        const cy = bbox.y + bbox.height / 2
+        const half_view_w = this.window_fitting_width / (2 * new_k)
+        const half_view_h = this.window_fitting_height / (2 * new_k)
+        this._background_d3_groups_shift_x = cx - half_view_w
+        this._background_d3_groups_shift_y = cy - half_view_h
+        this._zoom_width = 2 * half_view_w
+        this._zoom_height = 2 * half_view_h
+      }
       // Refresh translateExtent BEFORE scaleTo/translateTo so d3-zoom's constrain
       // uses the current content bbox (e.g. when switching back from paper to free,
       // we don't want the stale paper bounds to clamp the transform).
@@ -1699,8 +1748,14 @@ export class Class_DrawingArea {
       //   y a du mou (contenu plus petit que la fenêtre). On ne se base PAS sur is_horiz :
       //   pour un board compact dans un grand modal, _width/_height valent la fenêtre →
       //   ratio_h==ratio_v → is_horiz=false → seul l'horizontal serait centré.
-      const center_h = this.is_unitary && bbox.width * new_k < this.window_fitting_width
-      const center_v = this.is_unitary && bbox.height * new_k < this.window_fitting_height
+      // OS#1250 phase 2 — `center_on_content` ouvre ce centrage (jusque-là réservé au
+      // board unitaire) au recentrage explicite du diagramme principal. C'est le
+      // mécanisme éprouvé : on centre sur les axes où le contenu a du mou, en laissant
+      // le constrain inerte. Le mode papier est exclu — son ancrage haut-gauche est
+      // voulu (cf. le constrain custom, ajouté pour que A3/A4/A5 ne parte pas du coin).
+      const may_center = (this.is_unitary || !!center_on_content) && !this.is_paper_mode
+      const center_h = may_center && bbox.width * new_k < this.window_fitting_width
+      const center_v = may_center && bbox.height * new_k < this.window_fitting_height
       const px = unitary_center_node
         ? this.window_fitting_width / 2 - cnx * new_k
         : center_h
@@ -1729,7 +1784,7 @@ export class Class_DrawingArea {
         // des labels dans la zone visible (sous la top bar, marge à gauche).
         if (this._font_size_locked) {
           this._updateScrollbars()
-          this._zoomListener.translateTo(this.d3_selection_zoom_area, 0, 0, [px, py])
+          this._anchorCamera(0, 0, px, py)
           // Le ré-ancrage ci-dessus change le transform APRÈS le drawBackground/drawGrid
           // initiaux : on les redessine pour que le fond et la grille suivent le contenu.
           this.drawBackground()
@@ -2154,76 +2209,114 @@ export class Class_DrawingArea {
     }
   }
 
-  public recenter(force: boolean = false) {
-    if (!this.to_recenter) return
+  /**
+   * OS#1250 phase 2 — NORMALISATION des coordonnées monde. Migration PONCTUELLE
+   * des fichiers antérieurs à 0.92, dont le cadrage d'origine reposait sur le
+   * recentrage mutant fait au chargement (invariant #1231 : ils doivent
+   * toujours s'ouvrir cadrés).
+   *
+   * C'est le SEUL endroit qui déplace encore le monde. Le code ci-dessous est
+   * celui de l'ancien recenter(), extrait tel quel : il ramène le contenu près
+   * de l'origine. Il tourne après le premier draw (cf. ApplicationData.fromJSON),
+   * donc la bbox DOM est disponible — la mesure depuis le MODÈLE viendra en
+   * phase 3.
+   */
+  public normalizeLegacyWorldCoordinates() {
+    if (!this._needs_legacy_normalization) return
+    this._needs_legacy_normalization = false // migration ponctuelle
     // In paper mode, positions are already computed for the format — don't shift
     if (this.is_paper_mode) return
-    // Verrou de taille (#1240) : une fois le cadrage figé (_locked_fit_dirty=false),
-    // un changement de dataTag/viewTag/niveau NE DOIT plus rien recadrer. recenter()
-    // décale les positions ET force un areaAutoFit (force_when_locked) — donc un
-    // reflow visible à chaque sélection, ce qui contredit le verrou. On le neutralise
-    // pour ces recadrages AUTOMATIQUES. Exceptions : le tout premier recenter
-    // (chargement, dirty=true, cf. ApplicationData.fromJSON draw→recenter→draw) qui
-    // établit le cadrage initial, et le bouton « recentrer » explicite (force=true).
-    if (this._size_locked && !this._locked_fit_dirty && !force) return
     const bbox = this.d3_selection_elements_group?.node()?.getBBox()
     if (!bbox) return
     if ((bbox.width == 0) && (bbox.height == 0)) {
       return
     }
 
+    // Dimensions du canvas visées par le décalage. Locales : areaAutoFit les
+    // recalcule de toute façon (même formule, cf. son corps) juste après, via le
+    // recenter() de fin.
     const new_lefter_x = Math.min(0, bbox.x - default_DA_marging)
     const new_righter_x = Math.max(this.window_fitting_width, bbox.x + bbox.width + default_DA_marging)
-    this.width = new_righter_x - new_lefter_x
+    const canvas_width = new_righter_x - new_lefter_x
 
     const new_upper_y = Math.min(0, bbox.y - default_DA_marging)
     const new_bottom_y = Math.max(this.window_fitting_height, bbox.y + bbox.height + default_DA_marging)
-    this.height = new_bottom_y - new_upper_y
+    const canvas_height = new_bottom_y - new_upper_y
 
-
-    this._elements_d3_groups_shift_x = (new_lefter_x - bbox.x) + (this.width - bbox.width) / 2
-    this._elements_d3_groups_shift_y = (new_upper_y - bbox.y) + (this.height - bbox.height) / 2
+    const shift_x = (new_lefter_x - bbox.x) + (canvas_width - bbox.width) / 2
+    const shift_y = (new_upper_y - bbox.y) + (canvas_height - bbox.height) / 2
     this.sankey.nodes_list.forEach(n => {
-      n.position_x += this._elements_d3_groups_shift_x
-      n.position_y += this._elements_d3_groups_shift_y
+      n.position_x += shift_x
+      n.position_y += shift_y
       // #1231 — La position persistée d'un nœud est son CENTRE (_center_x/_center_y, cf.
-      // centerForPersistence). recenter() ne décale que le coin ; sans ce report, le centre
-      // stocké reste périmé et le nœud « revient » à sa place pré-recenter au rechargement
-      // (régression visible sur les vieux fichiers v0.91 qui forcent un recenter au load).
-      n.translateStoredCenter(this._elements_d3_groups_shift_x, this._elements_d3_groups_shift_y)
-      if (n.value_label_position_x) n.value_label_position_x += this._elements_d3_groups_shift_x
-      if (n.value_label_position_y) n.value_label_position_y += this._elements_d3_groups_shift_y
-      if (n.name_label_position_x) n.name_label_position_x += this._elements_d3_groups_shift_x
-      if (n.name_label_position_y) n.name_label_position_y += this._elements_d3_groups_shift_y
+      // centerForPersistence). Le décalage ne touche que le coin ; sans ce report, le centre
+      // stocké reste périmé et le nœud « revient » à sa place d'origine au rechargement
+      // (régression visible sur les vieux fichiers v0.91).
+      n.translateStoredCenter(shift_x, shift_y)
+      if (n.value_label_position_x) n.value_label_position_x += shift_x
+      if (n.value_label_position_y) n.value_label_position_y += shift_y
+      if (n.name_label_position_x) n.name_label_position_x += shift_x
+      if (n.name_label_position_y) n.name_label_position_y += shift_y
     })
     this.sankey.links_list.forEach(n => {
-      if (n.value_label_position_x) n.value_label_position_x += this._elements_d3_groups_shift_x
-      if (n.value_label_position_y) n.value_label_position_y += this._elements_d3_groups_shift_y
-      if (n.name_label_position_x) n.name_label_position_x += this._elements_d3_groups_shift_x
-      if (n.name_label_position_y) n.name_label_position_y += this._elements_d3_groups_shift_y
+      if (n.value_label_position_x) n.value_label_position_x += shift_x
+      if (n.value_label_position_y) n.value_label_position_y += shift_y
+      if (n.name_label_position_x) n.name_label_position_x += shift_x
+      if (n.name_label_position_y) n.name_label_position_y += shift_y
     })
     this.sankey.nodes_list.forEach(n => {
       n.draw()
     })
     this.sankey.containers_list.forEach(n => {
-      n.position_x += this._elements_d3_groups_shift_x
-      n.position_y += this._elements_d3_groups_shift_y
+      n.position_x += shift_x
+      n.position_y += shift_y
     })
     this.sankey.containers_list.forEach(n => {
       n.draw()
     })
     if (this.legend.stick_to_drawing) {
-      this.legend.position_x += this._elements_d3_groups_shift_x
-      this.legend.position_y += this._elements_d3_groups_shift_y 
+      this.legend.position_x += shift_x
+      this.legend.position_y += shift_y
       this.legend.draw()
     }
 
-    // recenter a décalé les positions et redessiné les éléments : la bbox reflète
-    // désormais le layout FINAL. En mode verrouillé on recalcule donc ici un fit
-    // VERTICAL sur ces positions définitives (et on lève le drapeau dirty), ce qui
-    // fige le bon cadrage — y compris dans les flux sans draw ultérieur. Sinon, fit
-    // normal (heuristique horiz/vert).
-    this.areaAutoFit(this._size_locked ? false : undefined, this._size_locked)
+    // Les positions sont définitives : on cadre dessus (force = le verrou de taille
+    // ne doit pas empêcher le cadrage initial d'un fichier legacy).
+    this.recenter(true)
+  }
+
+  /**
+   * OS#1250 phase 2 — recenter est désormais une opération de CAMÉRA : il cadre
+   * le contenu, il ne le DÉPLACE plus.
+   *
+   * Avant, il décalait `position_x/y` de tous les nœuds, les centres persistés
+   * (#1231), les positions de labels, les containers et la légende — donc un
+   * clic sur « recentrer » modifiait le document, et une opération de navigation
+   * touchait la persistance. Ce décalage ne survit que comme migration ponctuelle
+   * des fichiers < 0.92 (normalizeLegacyWorldCoordinates).
+   *
+   * L'ancien garde `if (!this.to_recenter) return` a disparu avec le protocole :
+   * cf. `_needs_legacy_normalization` pour le bug de drapeau collant qu'il
+   * causait. Le calcul de canvas (width/height) a lui aussi disparu : areaAutoFit
+   * le refait avec la même formule juste en dessous.
+   */
+  public recenter(force: boolean = false) {
+    // In paper mode, positions are already computed for the format — don't refit
+    if (this.is_paper_mode) return
+    // Verrou de taille (#1240) : une fois le cadrage figé (_locked_fit_dirty=false),
+    // un changement de dataTag/viewTag/niveau NE DOIT plus rien recadrer, sinon
+    // reflow visible à chaque sélection. On neutralise donc ces recadrages
+    // AUTOMATIQUES. Exceptions : le tout premier cadrage (chargement, dirty=true)
+    // et le bouton « recentrer » explicite (force=true).
+    if (this._size_locked && !this._locked_fit_dirty && !force) return
+
+    // En mode verrouillé on recalcule un fit VERTICAL et on lève le drapeau dirty,
+    // ce qui fige le bon cadrage — y compris dans les flux sans draw ultérieur.
+    // Sinon, fit normal (heuristique horiz/vert).
+    // center_on_content : c'est CE que « recentrer » veut dire. Le centrage venait
+    // auparavant du décalage du MONDE (contenu recentré dans un canvas plaqué en
+    // haut-gauche) ; il devient un paramètre du fit — donc de la caméra.
+    this.areaAutoFit(this._size_locked ? false : undefined, this._size_locked, true)
     if (this._size_locked) {
       this._locked_fit_dirty = false
       // Le recentrage (auto au 1er rendu, ou bouton « recentrer ») rétablit le
@@ -2288,6 +2381,12 @@ export class Class_DrawingArea {
    * de d3-zoom (load-bearing pour le ré-ancrage des labels en police verrouillée, #165) ;
    * _updateScrollbars doit avoir été appelé AVANT (il pose le translateExtent lu par le constrain).
    */
+  /** OS#1250 phase 1 — ré-ancrage sans changement d'échelle (cf. Camera.anchorCamera). */
+  private _anchorCamera(wx: number, wy: number, px: number, py: number): void {
+    Camera.anchorCamera(this, wx, wy, px, py)
+  }
+
+
   private _applyFitCamera(k: number, px: number, py: number): void {
     Camera.applyFitCamera(this, k, px, py)
   }

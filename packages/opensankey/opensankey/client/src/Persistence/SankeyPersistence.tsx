@@ -2205,7 +2205,10 @@ export class DrawingAreaPersistence {
       isVersionBelow(version, '0.92')
     ) {
       this.fromJSON_0_91(drawing_area, json_object, kwargs)
-      drawing_area.to_recenter = true
+      // OS#1250 phase 2 — le cadrage de ces fichiers reposait sur le recentrage
+      // MUTANT fait au chargement. C'était déjà une migration, mais déguisée en
+      // opération de navigation (drapeau `to_recenter` + recenter()). On la nomme.
+      drawing_area.markForLegacyNormalization()
     }
     if (
       (version === undefined) ||

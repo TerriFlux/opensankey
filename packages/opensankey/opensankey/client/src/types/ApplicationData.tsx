@@ -913,7 +913,10 @@ export class Class_ApplicationData {
         centerChildrenOnParent(this)
       }
       this._drawing_area.draw()
-      this._drawing_area.recenter()
+      // OS#1250 phase 2 — no-op sauf fichier < 0.92 (cf. markForLegacyNormalization).
+      // C'était déjà le cas avant : le garde `to_recenter` de recenter() n'était armé
+      // au chargement que par la migration legacy ; l'appel est juste devenu explicite.
+      this._drawing_area.normalizeLegacyWorldCoordinates()
     }
     // })
   }
