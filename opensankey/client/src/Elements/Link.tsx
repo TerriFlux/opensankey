@@ -458,6 +458,19 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this._source_notch_shape = undefined
   }
 
+  /**
+   * OS#1246 — un <g class="gg_links"> peut exister sans tracé : il est pré-créé
+   * par l'enter du data-join, et c'est le nœud source/cible qui le remplit
+   * (updateLinksPositions). Le contenu qui fait foi est la forme posée par
+   * LinkDrawShape.drawShape : `.link_shape` (forme pleine) ou `.link_path`
+   * (simple trait), selon le mode de tracé.
+   */
+  protected _hasDrawnContent(): boolean {
+    const node = this.d3_selection?.node()
+    if (!node) return false
+    return node.querySelector('.link_shape, .link_path') !== null
+  }
+
   public drawShape() {
     if (!this._link_shape) return
     this._link_shape.drawShape()
