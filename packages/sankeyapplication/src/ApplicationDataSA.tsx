@@ -19,7 +19,7 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
     // OVERRIDE
     //this._menu_configuration = this.menu_configuration
     // Get MFA logo
-    this._logo_mfa = 'logos/logo_OSS.png'
+    this._logo_mfa = 'logos/logo_MFASankey.png'
     this._login_component = new LoginComponent
   }
 

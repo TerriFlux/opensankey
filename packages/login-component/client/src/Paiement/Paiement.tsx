@@ -195,7 +195,7 @@ export const PaiementTrial: FC<{
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const plan = normalizeTrialPlan(searchParams.get('plan'))
-  const product = plan === 'suite' ? 'SankeySuite' : 'OpenSankey+'
+  const product = plan === 'suite' ? 'MFASankey' : 'OpenSankey+'
   const [phase, setPhase] = useState<'checking' | 'starting' | 'started' | 'already' | 'error'>('checking')
 
   useEffect(() => {

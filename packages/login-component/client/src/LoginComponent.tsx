@@ -147,6 +147,6 @@ export class LoginComponent {
   public get trial() { return this._trial }
   /** Essai actif débloquant OpenSankey+ (essai « plus » ou « suite »). */
   public get trial_active_plus() { return this._trial.active_plus }
-  /** Essai actif débloquant SankeySuite (essai « suite »). */
+  /** Essai actif débloquant MFASankey (essai « suite »). */
   public get trial_active_suite() { return this._trial.active_suite }
 }

@@ -824,7 +824,7 @@ const Account = ({
                           justifySelf='left'
                           margin='0'
                         >
-                          {user_data.license_sankeysuite_active ? 'SankeySuite Active' : (user_data.license_opensankeyplus_active ? 'OpenSankey+ Active' : 'No Licence Active')}
+                          {user_data.license_sankeysuite_active ? 'MFASankey Active' : (user_data.license_opensankeyplus_active ? 'OpenSankey+ Active' : 'No Licence Active')}
                         </Text>
                         {
                           user_data.license_opensankeyplus_active || user_data.license_sankeysuite_active ?

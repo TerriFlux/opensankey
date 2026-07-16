@@ -72,7 +72,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   public override set has_sankey_plus(_: boolean) { this._has_sankey_plus = _ }
 
   /**
-   * SankeySuite débloqué par un essai « suite » (couvre aussi OS+ côté serveur).
+   * MFASankey débloqué par un essai « suite » (couvre aussi OS+ côté serveur).
    * Comme pour OS+, l'essai n'ajoute que l'accès, sans toucher la licence réelle.
    */
   public override get has_sankey_afm(): boolean {
@@ -97,8 +97,8 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   public override get views_replace_viewtag_topbar(): boolean { return this.has_sankey_plus }
 
   /**
-   * True when the user holds a real SankeySuite licence (the tier above OS+, which
-   * unlocks MFA/reconciliation) or runs in static mode. SankeySuite has no free trial,
+   * True when the user holds a real MFASankey licence (the tier above OS+, which
+   * unlocks MFA/reconciliation) or runs in static mode. MFASankey has no free trial,
    * so unlike OS+ there is no trial bonus to strip out. Used by the subscribe CTA to
    * decide whether to keep teasing the upgrade.
    */
@@ -241,8 +241,8 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
 
     // Get OpenSankey+ logo
     this._logo_sankey_plus = 'logos/logo_opensankeyplus.png'
-    // Get SankeySuite logo (next tier above OS+)
-    this._logo_sankey_suite = 'logos/logo_OSS.png'
+    // Get MFASankey logo (next tier above OS+)
+    this._logo_sankey_suite = 'logos/logo_MFASankey.png'
 
     if (this.has_sankey_plus && !this._drawing_area.static) {
       // Update user palette when connected

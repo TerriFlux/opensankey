@@ -39,7 +39,7 @@ else:
     CLIENT_ROOT_URL = None
 
 # Essai gratuit — liens utilisés dans les emails d'essai.
-# - RDV « essai accompagné » SankeySuite (30 min avec Julien) : lien de prise de
+# - RDV « essai accompagné » MFASankey (30 min avec Julien) : lien de prise de
 #   rendez-vous (Calendly ou équivalent), surchargeable par l'environnement.
 # - Devis / contact : mailto de repli (pas de nouveau tunnel pour l'instant).
 TRIAL_SUITE_MEETING_URL = os.environ.get(
@@ -400,7 +400,7 @@ def send_set_password_email(user, language="fr"):
 
 def send_trial_welcome_mail(user, plan, language="fr"):
     """
-    Email J0 : bienvenue dans l'essai gratuit 30 jours. Pour SankeySuite, propose
+    Email J0 : bienvenue dans l'essai gratuit 30 jours. Pour MFASankey, propose
     un créneau de 30 min offert avec Julien (« essai accompagné »).
 
     :param plan: 'plus' | 'suite'
@@ -409,7 +409,7 @@ def send_trial_welcome_mail(user, plan, language="fr"):
         return
     language = _normalize_lang(language)
     is_suite = plan == "suite"
-    product = "SankeySuite" if is_suite else "OpenSankey+"
+    product = "MFASankey" if is_suite else "OpenSankey+"
     subject = {
         "fr": "[{0}] Votre essai gratuit de 30 jours est activé".format(product),
         "en": "[{0}] Your 30-day free trial is active".format(product),
@@ -448,7 +448,7 @@ def send_trial_reminder_mail(user, days_remaining, language="fr"):
         return
     language = _normalize_lang(language)
     is_suite = user.trial_plan == "suite"
-    product = "SankeySuite" if is_suite else "OpenSankey+"
+    product = "MFASankey" if is_suite else "OpenSankey+"
     ending = days_remaining <= 0
     if ending:
         subject = {
@@ -496,7 +496,7 @@ def send_trial_admin_notification(user, plan):
     """
     if not TRIAL_NOTIFY_RECIPIENT:
         return
-    product = "SankeySuite" if plan == "suite" else "OpenSankey+"
+    product = "MFASankey" if plan == "suite" else "OpenSankey+"
     body = (
         "Un nouvel essai gratuit vient de démarrer.\n\n"
         "  Produit : {0}\n"

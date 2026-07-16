@@ -391,7 +391,7 @@ _DEFAULT_PROJECT_CONTENT = {
     'fr': '''
             <div class="project-overview">
                 <h2>📊 Aperçu du projet</h2>
-                <p>Ce projet présente une <strong>visualisation Sankey interactive</strong> générée avec l'outil OpenSankey (<a href="https://opensankey.fr" target="_blank" style="color: #3498db; text-decoration: none;">opensankey.fr</a>) d'une analyse de flux de matière réalisée avec SankeySuite (<a href="https://app.terriflux.com" target="_blank" style="color: #3498db; text-decoration: none;">app.terriflux.com</a>).</p>
+                <p>Ce projet présente une <strong>visualisation Sankey interactive</strong> générée avec l'outil OpenSankey (<a href="https://opensankey.fr" target="_blank" style="color: #3498db; text-decoration: none;">opensankey.fr</a>) d'une analyse de flux de matière réalisée avec MFASankey (<a href="https://app.terriflux.com" target="_blank" style="color: #3498db; text-decoration: none;">app.terriflux.com</a>).</p>
 
                 <div class="features-grid">
                     <div class="feature-item">
@@ -432,7 +432,7 @@ _DEFAULT_PROJECT_CONTENT = {
     'en': '''
             <div class="project-overview">
                 <h2>📊 Project overview</h2>
-                <p>This project presents an <strong>interactive Sankey visualization</strong> generated with OpenSankey (<a href="https://opensankey.fr" target="_blank" style="color: #3498db; text-decoration: none;">opensankey.fr</a>) from a material flow analysis carried out with SankeySuite (<a href="https://app.terriflux.com" target="_blank" style="color: #3498db; text-decoration: none;">app.terriflux.com</a>).</p>
+                <p>This project presents an <strong>interactive Sankey visualization</strong> generated with OpenSankey (<a href="https://opensankey.fr" target="_blank" style="color: #3498db; text-decoration: none;">opensankey.fr</a>) from a material flow analysis carried out with MFASankey (<a href="https://app.terriflux.com" target="_blank" style="color: #3498db; text-decoration: none;">app.terriflux.com</a>).</p>
 
                 <div class="features-grid">
                     <div class="feature-item">
