@@ -100,7 +100,7 @@ export class NodeDrawShape {
     // Do the rest only if shape is visible
     // Compute shape attributes
     const width = this._node.getShapeWidthToUse()+this._node.shape_margin_left+this._node.shape_margin_right
-    const height = this._node.getShapeHeightToUse()+this._node.shape_margin_top+this._node.shape_margin_bottom 
+    const height = this._node.getShapeHeightToUse()+this._node.shape_margin_top+this._node.shape_margin_bottom
     const color = this._node.getShapeColorToUse()
 
     // Apply shape value
