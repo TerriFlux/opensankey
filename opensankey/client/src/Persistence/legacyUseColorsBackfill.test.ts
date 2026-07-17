@@ -47,7 +47,7 @@ describeIfData('backfill use_colors (fichiers < 0.92)', () => {
     const json = readJSON(path.join(TEMPLATES as string, 'personal_budget_with_tags.json.gz'))
     expect(json['version']).toBe('0.9')
     // Le fichier ne porte QUE show_legend : c'est bien le rétro-portage qui est sous test.
-    expect((json['nodeTags'] as Type_JSON)['node_taggs0']['use_colors']).toBeUndefined()
+    expect(((json['nodeTags'] as Type_JSON)['node_taggs0'] as Type_JSON)['use_colors']).toBeUndefined()
 
     const sankey = load(json).drawing_area.sankey
 
@@ -67,7 +67,7 @@ describeIfData('backfill use_colors (fichiers < 0.92)', () => {
 
   test('un groupe portant déjà use_colors n\'est pas réécrit par show_legend', () => {
     const json = readJSON(path.join(TEMPLATES as string, 'personal_budget_with_tags.json.gz'));
-    (json['nodeTags'] as Type_JSON)['node_taggs0']['use_colors'] = false
+    ((json['nodeTags'] as Type_JSON)['node_taggs0'] as Type_JSON)['use_colors'] = false
 
     const sankey = load(json).drawing_area.sankey
     expect(sankey.node_taggs_list[0].use_colors).toBe(false)
