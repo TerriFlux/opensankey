@@ -2445,6 +2445,16 @@ export class Class_DrawingArea {
   }
 
   /**
+   * OS#1250 — recale le translateExtent et les scrollbars sur la bbox de contenu
+   * courante SANS toucher à la caméra. À utiliser quand le contenu s'étend (drag
+   * d'un nœud au-delà de l'ancienne bbox) : le monde grandit, la vue reste où
+   * l'utilisateur l'a mise.
+   */
+  public refreshPanExtent() {
+    this._updateScrollbars()
+  }
+
+  /**
    * Define behavior when we scroll in drawing area (or scroll zone around)
    * && when we drag mouse middle button in drawing area (or scroll zone around)
    *

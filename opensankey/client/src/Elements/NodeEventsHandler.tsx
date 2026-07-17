@@ -35,7 +35,6 @@ import { Class_NodeElement } from './Node'
 export class NodeEventsHandler {
 
   private _node: Class_NodeBase
-  private bbox: DOMRect | undefined = undefined
 
   // Shift+drag axis lock (SankeyMatic-style): while shift is held, once enough
   // motion has accumulated, the drag is constrained to whichever axis was
@@ -301,9 +300,6 @@ export class NodeEventsHandler {
     this._node.setDragStartPositions(dict_old_pos)
     this._node.setDragStartSizes(dict_old_sizes)
     this._node.setDragState(true)
-    this.bbox = this._node.drawing_area.d3_selection_elements_group?.node()?.getBBox() ?? undefined
-    // OS#1254 — la légende est faite de conteneurs ordinaires, déjà dans
-    // g_elements : plus de bbox dédiée à combiner.
   }
 
   /**
@@ -648,7 +644,9 @@ export class NodeEventsHandler {
           }
         })
         applyRecycling(_, false)
-        _.drawing_area.areaAutoFit()
+        // OS#1250 — même traitement qu'en fin de drag : pas de recadrage caméra
+        // au redo, seulement l'extent de pan.
+        _.drawing_area.refreshPanExtent()
       }
 
       this._node.saveUndo(undo)
@@ -671,19 +669,11 @@ export class NodeEventsHandler {
       this._node.drawing_area.drawElements()
     }
 
-    const new_bbox = this._node.drawing_area.d3_selection_elements_group?.node()?.getBBox() ?? undefined
-
-    if (new_bbox == undefined)
-      return
-    // OS#1254 — la légende est faite de conteneurs ordinaires, déjà dans
-    // g_elements : plus de bbox dédiée à combiner.
-
-    if (this.bbox && (
-      new_bbox.x < this.bbox.x || new_bbox.y < this.bbox.y || 
-      new_bbox.x + new_bbox.width > (this.bbox.x + this.bbox.width) || new_bbox.y + new_bbox.height > (this.bbox.y + this.bbox.height)
-    )) {
-      this._node.drawing_area.areaAutoFit()
-    }
+    // OS#1250 — le monde est immuable, la caméra appartient à l'utilisateur : plus
+    // d'areaAutoFit quand le drag étend le contenu au-delà de l'ancienne bbox (le
+    // recadrage sautait à chaque dépôt de nœud). On recale seulement l'extent de
+    // pan et les scrollbars pour que le contenu étendu reste atteignable.
+    this._node.drawing_area.refreshPanExtent()
     this._node.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
   }
 
@@ -778,36 +768,35 @@ export class NodeEventsHandler {
     node_to_move: Class_NodeBase[]
   ) {
     const drawing_area = this._node.drawing_area
-    const limit_magnetic_node = drawing_area.grid_size / 4
+    const step = drawing_area.grid_size / 4
 
+    // Delta cumulé (brut) depuis le début du drag
     this._node.updateNodeCurrentDelta(event.dx, event.dy)
-    const { dx: node_current_dx, dy: node_current_dy } = this._node.getNodeCurrentDeltas()
+    const { dx: total_dx, dy: total_dy } = this._node.getNodeCurrentDeltas()
 
-    const shift_x = Math.abs(node_current_dx)
-    const shift_y = Math.abs(node_current_dy)
-    const sign_x = Math.sign(node_current_dx)
-    const sign_y = Math.sign(node_current_dy)
+    // Ancre : position du nœud tenu au début du drag. On arrondit la cible
+    // en absolu (position de départ + delta cumulé) au multiple de step le
+    // plus proche, plutôt que d'accumuler des pas relatifs à une position de
+    // départ arbitraire — sinon le déphasage initial n'est jamais rattrapé
+    // et le nœud ne coïncide jamais avec les lignes de la grille affichée.
+    const start_positions = this._node.getDragStartPositions()
+    const start_pos = start_positions[this._node.id]
+    if (!start_pos) return
 
-    // if event shift is greater than twice the limit_magnetic_node then keep track of how much step we move at once
-    const multi_shift_x = Math.floor(shift_x / limit_magnetic_node)
-    const multi_shift_y = Math.floor(shift_y / limit_magnetic_node)
+    const target_x = Math.round((start_pos[0] + total_dx) / step) * step
+    const target_y = Math.round((start_pos[1] + total_dy) / step) * step
+    const applied_dx = target_x - start_pos[0]
+    const applied_dy = target_y - start_pos[1]
 
-    // Update node position if threshold is exceeded
-    if (shift_x >= limit_magnetic_node) {
-      node_to_move.forEach(node => {
-        node.setPosXY(node.position_x + (limit_magnetic_node * sign_x * multi_shift_x), node.position_y)
-      })
-      // Reset delta modulo limit
-      this._node.updateNodeCurrentDelta(-(Math.floor(shift_x / limit_magnetic_node) * limit_magnetic_node * sign_x), 0)
-    }
-
-    if (shift_y >= limit_magnetic_node) {
-      node_to_move.forEach(node => {
-        node.setPosXY(node.position_x, node.position_y + (limit_magnetic_node * sign_y * multi_shift_y))
-      })
-      // Reset delta modulo limit
-      this._node.updateNodeCurrentDelta(0, -(Math.floor(shift_y / limit_magnetic_node) * limit_magnetic_node * sign_y))
-    }
+    node_to_move.forEach(node => {
+      const node_start = start_positions[node.id]
+      if (!node_start) return
+      const new_x = node_start[0] + applied_dx
+      const new_y = node_start[1] + applied_dy
+      if (new_x !== node.position_x || new_y !== node.position_y) {
+        node.setPosXY(new_x, new_y)
+      }
+    })
   }
 
 }
