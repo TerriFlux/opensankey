@@ -1,4 +1,4 @@
-// ==================================================================================================
+﻿// ==================================================================================================
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
@@ -538,7 +538,11 @@ export const ElementAttrSetterSelect2Cols = <
       prefix={prefix}
       isOverloaded={isOverloaded}
       t={t}>
-      <InputIndicatorWrapper isOverloaded={isOverloaded} t={t}>
+      <InputIndicatorWrapper
+        isOverloaded={isOverloaded}
+        provenance={elementAttributeProvenance(elements, fullAttributeKey, config)}
+        t={t}
+      >
         <Select
           value={attribute_values[attributeKey] as string}
           onChange={(evt) => {
@@ -606,6 +610,11 @@ export const ElementAttrSetterTextInput2Cols = <
         menu_for_style={menu_for_style}
         multiValue={isConfigValueIndeterminate(elements, config, attributeKey, prefix)}
         isOverloaded={isOverloaded}
+        provenance={elementAttributeProvenance(
+          elements,
+          (prefix ? `${prefix}_${String(attributeKey)}` : String(attributeKey)) as keyof CONFIG,
+          config
+        )}
       />
     </ElementAttrSetter2Cols>
   )
@@ -666,7 +675,11 @@ export const ElementAttrSetterNumberInput2Cols = <
         stepper={stepper}
         multiValue={isConfigValueIndeterminate(elements, config, attributeKey, prefix)}
         isOverloaded={isOverloaded}
-
+        provenance={elementAttributeProvenance(
+          elements,
+          (prefix ? `${prefix}_${String(attributeKey)}` : String(attributeKey)) as keyof CONFIG,
+          config
+        )}
       />
     </ElementAttrSetter2Cols>
   )
@@ -874,6 +887,52 @@ export const CustomFaEyeCheckIcon = (props: CheckboxProps) => {
     : <FontAwesomeIcon icon={faEyeSlash} />
 }
 /**
+ * #1243 — PROVENANCE d'un attribut : d'où vient la valeur affichée ?
+ *
+ * Modèle de la cascade (cf. Class_ProtoElement) :
+ *   surcharge locale  >  dernier style de la cascade qui définit l'attribut
+ *                     >  valeur d'usine (config.default)
+ *
+ * Rendue en TOOLTIP du contrôle (pas en étiquette permanente : le panneau est
+ * déjà dense, et le retrait/liseré porte déjà l'information principale). Le
+ * nom du style répond à la question que le retrait seul laisse ouverte :
+ * « hérité, oui — mais de QUI ? ».
+ *
+ * @returns un libellé traduit, ou undefined si non pertinent (édition de style,
+ *   sélection vide, valeurs divergentes entre éléments).
+ */
+export const elementAttributeProvenance = <
+  CONFIG extends Record<string, AttributeConfig<unknown>>,
+  K extends keyof CONFIG
+>(
+    elements: ElementsType,
+    attr: K,
+    _config: CONFIG
+  ): string | undefined => {
+  if (elements.length === 0) return undefined
+  // Édition d'un style : « hérité de » n'a pas de sens (un style définit).
+  if (elements.some(el => el instanceof Class_ElementStyle)) return undefined
+
+  const provenanceOf = (element: ElementsType[number]): string => {
+    //@ts-expect-error même convention que isElementAttributeOverloaded
+    if (element.isAttributeOverloaded(attr)) return t('inspector.provenance.local')
+    //@ts-expect-error idem : getStyleWithAttr est porté par Class_ProtoElement
+    const style = element.getStyleWithAttr(attr) as Class_ElementStyle | undefined
+    // getStyleWithAttr retombe sur le 1er style (défaut) même s'il ne définit
+    // pas l'attribut : dans ce cas la valeur vient de la config (usine).
+    if (!style || style[attr as keyof Class_ElementStyle] === undefined) {
+      return t('inspector.provenance.factory')
+    }
+    return t('inspector.provenance.from_style', { style: t(style.name) })
+  }
+
+  const first = provenanceOf(elements[0])
+  // Sélection multiple aux provenances divergentes : ne rien affirmer.
+  if (elements.some(el => provenanceOf(el) !== first)) return undefined
+  return first
+}
+
+/**
  * Check if given attribute is overloaded in at least one link
  * @export
  * @param {Class_LinkElement[]} links
@@ -1023,6 +1082,7 @@ export const OverloadedButtonGroup = <T extends string>({
 }: OverloadedButtonGroupProps<T>) => {
   const fullAttributeKey = `${prefix}_${attributeKey}` as keyof typeof config
   const isOverloaded = isElementAttributeOverloaded(elements, fullAttributeKey, config)
+  const provenance = elementAttributeProvenance(elements, fullAttributeKey, config)
   const tooltipLabel = t(`${String(attributePath)}.tooltips.${String(fullAttributeKey)}`)
   // Groupe d'icônes (pas de label texte) : on ne laisse pas la grille s'étirer pour
   // remplir sa colonne, sinon les boutons sont trop larges avec une icône minuscule
@@ -1032,6 +1092,7 @@ export const OverloadedButtonGroup = <T extends string>({
   return (
     <OverloadIndicatorWrapper
       isOverloaded={isOverloaded}
+      provenance={provenance}
     >
       <OSTooltip label={tooltipLabel}>
         <Box layerStyle={`options_${items.length}cols`} sx={hasOnlyIcons ? { width: 'fit-content' } : undefined}>
@@ -1133,11 +1194,14 @@ export const OverloadedCheckbox = ({
  */
 export const OverloadIndicatorWrapper = ({
   isOverloaded,
+  provenance,
   children
 }: React.PropsWithChildren<{
   // Tri-état (cf. InputIndicatorWrapper) : true = surchargé (liseré violet),
   // false = hérité de la cascade (retrait), undefined = hors sujet (style…).
   isOverloaded?: boolean
+  // #1243 — provenance de la valeur, en tooltip (cf. InputIndicatorWrapper).
+  provenance?: string
   children: React.ReactNode
 }>) => {
   if (isOverloaded !== true) {
@@ -1147,10 +1211,12 @@ export const OverloadIndicatorWrapper = ({
       return (
         <Box
           display='inline-flex'
+          title={provenance}
           sx={{
             opacity: 0.65,
             transition: 'opacity 0.12s',
-            '&:hover, &:focus-within': { opacity: 1 }
+            '&:hover, &:focus-within': { opacity: 1 },
+            ...(provenance ? { cursor: 'help' } : {})
           }}
         >
           {children}
@@ -1164,6 +1230,7 @@ export const OverloadIndicatorWrapper = ({
     <Box
       position='relative'
       display='inline-flex'
+      title={provenance}
       sx={{
         '& > *': {
           boxShadow: '0 0 0 1.5px rgba(128, 90, 213, 0.7)', // purple.500 = surcharge
@@ -1465,11 +1532,16 @@ export const MenuConfigurationLinksTooltip = ({ app_data, hide_selector = false 
 export const InputIndicatorWrapper = ({
   isOverloaded,
   isMultiValue = false,
+  provenance,
   children,
   t: _t
 }: React.PropsWithChildren<{
   isOverloaded?: boolean
   isMultiValue?: boolean
+  // #1243 — d'où vient la valeur (cf. elementAttributeProvenance) : rendu en
+  // TOOLTIP, jamais en étiquette — le panneau est déjà dense et le
+  // retrait/liseré porte déjà l'information principale.
+  provenance?: string
   children: React.ReactNode
   t: (key: string) => string
 }>) => {
@@ -1486,10 +1558,12 @@ export const InputIndicatorWrapper = ({
         <Box
           display='inline-flex'
           width='100%'
+          title={provenance}
           sx={{
             opacity: 0.65,
             transition: 'opacity 0.12s',
-            '&:hover, &:focus-within': { opacity: 1 }
+            '&:hover, &:focus-within': { opacity: 1 },
+            ...(provenance ? { cursor: 'help' } : {})
           }}
         >
           {children}
@@ -1504,6 +1578,7 @@ export const InputIndicatorWrapper = ({
       position='relative'
       display='inline-flex'
       width='100%'
+      title={provenance}
       sx={{
         '& > *': {
           boxShadow: `0 0 0 1.5px ${color}`,
@@ -1550,7 +1625,8 @@ export const ConfigMenuNumberInput = ({
   multiValue = false,
   // Tri-état (cf. InputIndicatorWrapper) : surtout NE PAS défauter à false,
   // undefined signifie « contrôle non stylable » et doit le rester.
-  isOverloaded
+  isOverloaded,
+  provenance
 }: FCType_ConfigMenuNumberInput) => {
   const ref_input = useRef<HTMLInputElement>(null)
   const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
@@ -1578,7 +1654,7 @@ export const ConfigMenuNumberInput = ({
   const input_unit = unit_text ? <InputRightAddon>{unit_text}</InputRightAddon> : <></>
 
   return (
-    <InputIndicatorWrapper isOverloaded={isOverloaded} isMultiValue={multiValue} t={t}>
+    <InputIndicatorWrapper isOverloaded={isOverloaded} isMultiValue={multiValue} provenance={provenance} t={t}>
       <InputGroup>
         <NumberInput
           allowMouseWheel
@@ -1641,6 +1717,8 @@ export type FCType_ConfigMenuNumberInput = {
   disabled?: boolean,
   multiValue?: boolean,
   isOverloaded?: boolean,
+  // #1243 — provenance de la valeur, rendue en tooltip par le wrapper.
+  provenance?: string,
 }
 
 /**
@@ -1663,6 +1741,7 @@ export const ConfigMenuTextInput: FC<FCType_ConfigMenuTextInput> = ({
   // Tri-état (cf. InputIndicatorWrapper) : pas de défaut à false —
   // undefined = « contrôle non stylable », à ne pas mettre en retrait.
   isOverloaded,
+  provenance,
   t
 }: FCType_ConfigMenuTextInput) => {
   const ref_input = useRef<HTMLInputElement>(null)
@@ -1674,7 +1753,7 @@ export const ConfigMenuTextInput: FC<FCType_ConfigMenuTextInput> = ({
   }, [default_value])
 
   return (
-    <InputIndicatorWrapper isOverloaded={isOverloaded} isMultiValue={multiValue} t={t}>
+    <InputIndicatorWrapper isOverloaded={isOverloaded} isMultiValue={multiValue} provenance={provenance} t={t}>
       <InputGroup>
         <Input
           isDisabled={disabled}
@@ -1718,6 +1797,8 @@ export type FCType_ConfigMenuTextInput = {
   disabled?: boolean,
   multiValue?: boolean,
   isOverloaded?: boolean
+  // #1243 — provenance de la valeur, rendue en tooltip par le wrapper.
+  provenance?: string
 }
 
 
