@@ -5,7 +5,8 @@ import {
   Menu, MenuButton, MenuList, MenuItem, HStack, VStack, Divider
 } from '@chakra-ui/react'
 import { CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
-import { OSMultiSelect, typeElementSelectable, CustomFaEyeCheckIcon, OSTooltip, ConfigMenuNumberInput } from '../configmenus/MenuCommon'
+import { OSMultiSelect, typeElementSelectable, CustomFaEyeCheckIcon, OSTooltip, ConfigMenuNumberInput, WrapperContentConfig } from '../configmenus/MenuCommon'
+import { filter_panel_registry } from './FilterPanelRegistry'
 import { useMainZone } from '../spreadsheet/MainZoneTabs'
 import { useModelBinding } from '../../hooks/useModelBinding'
 import { Class_ApplicationData } from '../../types/ApplicationData'
@@ -19,6 +20,9 @@ import { Class_NodeDimension, Type_DisaggregationKind } from '../../Elements/Nod
 import { Type_DisaggregationGap, const_default_position_x, const_default_position_y } from '../../types/Utils'
 
 const width_fitler_drawer = 270
+// #1243 — l'onglet « Éditer » (groupes de tags, vues) accueille des éditeurs
+// bien plus riches que les filtres : le tiroir s'élargit dans ce mode.
+const width_filter_drawer_edit = 420
 
 /**
  * Reconstruit les child links et redessine après un changement de sélection d'un
@@ -323,6 +327,10 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
       app_data.has_sankey_dev // « Toutes données » (dev) suffit à ouvrir le drawer
   }
   const [drawerOpen, setDrawerOpen] = useState(app_data.is_static)
+  // #1243 — deux modes : « Filtrer » (historique) et « Éditer » (groupes de
+  // tags, vues — relogés ici depuis la matrice, cf. règle R3). L'édition n'a
+  // pas de sens en publish/statique.
+  const [filterTab, setFilterTab] = useState<'filter' | 'edit'>('filter')
   // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
   useModelBinding(app_data.menu_configuration.ref_toolbar)
   // Abonnement à la grande zone : garde l'offset droit à jour quand la colonne d'outils change.
@@ -333,7 +341,13 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
   // En éditeur, le panneau de filtres s'ouvre à DROITE (à côté de la colonne d'outils, comme la config) ;
   // en publish/statique on garde l'ouverture historique à gauche (bouton flottant gauche).
   const drawer_on_right = !app_data.is_static
-  const width_drawer = (drawerOpen ? width_fitler_drawer + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin
+  // #1243 — sections « Éditer » injectées par les couches supérieures (OSP :
+  // groupes de tags, vues). Onglet masqué s'il n'y en a aucune (OS pur/publish).
+  const edit_sections = app_data.is_static ? [] : filter_panel_registry.getSections(app_data)
+  const has_edit_tab = edit_sections.length > 0
+  const in_edit_tab = has_edit_tab && filterTab === 'edit'
+  const drawer_width_px = in_edit_tab ? width_filter_drawer_edit : width_fitler_drawer
+  const width_drawer = (drawerOpen ? drawer_width_px + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin
   // Ouvre/ferme le drawer de filtres. Comme la config, c'est un OVERLAY au-dessus de toute la
   // grande zone (diagramme, tableur, doc…) : il ne touche ni à l'état doc/tableur ni au cadrage.
   // Seule exclusivité conservée : le panneau de config (même emplacement à droite). Centralise
@@ -402,25 +416,64 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
         }}>
         <DrawerBody
           id='drawer_filter'
-          style={{ padding: '0', width: width_fitler_drawer }}
+          style={{ padding: '0', width: drawer_width_px }}
         >
-          <Box layerStyle='drawerFilterBox'>
-            {
-              (app_data.publish_options.data_type || app_data.publish_options.value_filter)
-                ? <FilterDisplay app_data={app_data} /> : <></>
-            }
-            {/* « Génération de vues » (view tags) déplacé dans la topbar
-                (cf. BannerViewTagTopbar) — retiré du tiroir de filtres. */}
-            {
-              app_data.publish_options.level_filter ? <LevelTagFilter app_data={app_data} /> : <></>
-            }
-            {
-              app_data.publish_options.node_filter ? <NodeTagGroupFilter app_data={app_data} level={false} /> : <></>
-            }
-            {
-              app_data.publish_options.data_filter ? <DataTagGroupFilter app_data={app_data} /> : <></>
-            }
-          </Box>
+          {/* #1243 — Filtrer / Éditer : les GROUPES de tags s'éditent là où ils
+              sont consommés (règle R3), l'inspecteur ne fait qu'assigner. */}
+          {has_edit_tab ? (
+            <Box style={{
+              display: 'grid', gridTemplateColumns: '1fr 1fr',
+              gap: '0.15rem', padding: '0.3rem 0.3rem 0'
+            }}>
+              <Button
+                size='xs'
+                variant={filterTab === 'filter'
+                  ? 'menuconfigpanel_option_button_activated'
+                  : 'menuconfigpanel_option_button'}
+                sx={{ paddingInline: '0.25rem', minWidth: 'auto' }}
+                onClick={() => setFilterTab('filter')}
+              >
+                {app_data.t('Banner.fdn')}
+              </Button>
+              <Button
+                size='xs'
+                variant={filterTab === 'edit'
+                  ? 'menuconfigpanel_option_button_activated'
+                  : 'menuconfigpanel_option_button'}
+                sx={{ paddingInline: '0.25rem', minWidth: 'auto' }}
+                onClick={() => setFilterTab('edit')}
+              >
+                {'Éditer'}
+              </Button>
+            </Box>
+          ) : <></>}
+          {in_edit_tab ? (
+            <Box layerStyle='drawerFilterBox' style={{ overflowY: 'auto' }}>
+              {edit_sections.map(section => (
+                <WrapperContentConfig key={section.id} title={section.title(app_data)}>
+                  {section.render(app_data) ?? <></>}
+                </WrapperContentConfig>
+              ))}
+            </Box>
+          ) : (
+            <Box layerStyle='drawerFilterBox'>
+              {
+                (app_data.publish_options.data_type || app_data.publish_options.value_filter)
+                  ? <FilterDisplay app_data={app_data} /> : <></>
+              }
+              {/* « Génération de vues » (view tags) déplacé dans la topbar
+                  (cf. BannerViewTagTopbar) — retiré du tiroir de filtres. */}
+              {
+                app_data.publish_options.level_filter ? <LevelTagFilter app_data={app_data} /> : <></>
+              }
+              {
+                app_data.publish_options.node_filter ? <NodeTagGroupFilter app_data={app_data} level={false} /> : <></>
+              }
+              {
+                app_data.publish_options.data_filter ? <DataTagGroupFilter app_data={app_data} /> : <></>
+              }
+            </Box>
+          )}
         </DrawerBody>
       </DrawerContent>
     </Drawer></>

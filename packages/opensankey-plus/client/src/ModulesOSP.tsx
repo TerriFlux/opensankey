@@ -27,6 +27,7 @@
 import React from 'react'
 import { WrapperContentConfig } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
 import { inspector_registry } from '@terriflux/opensankey/src/components/configmenus/inspector/InspectorRegistry'
+import { filter_panel_registry } from '@terriflux/opensankey/src/components/topmenus/FilterPanelRegistry'
 import {
   FType_InitializeAdditionalMenus,
   FType_ModuleDialogs,
@@ -165,8 +166,12 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   additionalMenus.current.template_module_key.push('advanced')
 
 
+  // #1243 — la matrice type×élément ne survit que pour l'ancien panneau (hors
+  // licence dev) : ses cases « presentation » sont désormais servies par
+  // l'inspecteur (onglet Tags = assignation) et le panneau Filtres (onglet
+  // Éditer = groupes de tags + vues). L'ensemble tombera avec la matrice.
   additionalMenus.current.additional_menu_type['presentation'] = 'presentation'
- 
+
   additionalMenus.current.additional_menu_button_element_configurable['view'] = { icon: icon_library.icon_view, text: t('Menu.Config.element_view'), disabled: !has_sankey_plus }
   additionalMenus.current.additional_menu_button_element_configurable['data_tag'] = { icon: has_sankey_plus ? icon_library.icon_data_tag_unselected : icon_library.icon_data_tag_diabled, text: t('Menu.Config.element_data_tag'), disabled: !has_sankey_plus }
   additionalMenus.current.additional_menu_button_element_configurable['flow_tag'] = { icon: has_sankey_plus ? icon_library.icon_flow_tag : icon_library.icon_flow_tag_diabled, text: t('Menu.Config.element_flow_tag'), disabled: !has_sankey_plus }
@@ -244,6 +249,58 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   // (règle R3 — panneau Filtres, à reloger en phase de bascule). Première
   // extension de couche : OSP enregistre son onglet dans le registre OS
   // (idempotent par id, donc sans risque au re-init/hot reload).
+  // #1243 (règle R3) — l'édition des GROUPES de tags et les vues ne sont pas
+  // des propriétés d'un élément : elles vivent dans le panneau Filtres (onglet
+  // « Éditer »), là où ces groupes sont consommés. Remplace les cases
+  // presentation × {node_tag, flow_tag, data_tag, level_tag, view} de la matrice.
+  filter_panel_registry.register({
+    id: 'osp.filter_edit.node_taggs',
+    order: 10,
+    title: () => t('Menu.EN'),
+    gate: (app) => app.has_sankey_plus,
+    render: (app) => <SankeySettingsEditionElementTags
+      new_data={app as Class_ApplicationDataOSP}
+      elementTagNameProp='node_taggs'
+    />
+  })
+  filter_panel_registry.register({
+    id: 'osp.filter_edit.flux_taggs',
+    order: 20,
+    title: () => t('Menu.EF'),
+    gate: (app) => app.has_sankey_plus,
+    render: (app) => <SankeySettingsEditionElementTags
+      new_data={app as Class_ApplicationDataOSP}
+      elementTagNameProp='flux_taggs'
+    />
+  })
+  filter_panel_registry.register({
+    id: 'osp.filter_edit.data_taggs',
+    order: 30,
+    title: () => t('Menu.ED'),
+    gate: (app) => app.has_sankey_plus,
+    render: (app) => <SankeySettingsEditionElementTags
+      new_data={app as Class_ApplicationDataOSP}
+      elementTagNameProp='data_taggs'
+    />
+  })
+  filter_panel_registry.register({
+    id: 'osp.filter_edit.level_taggs',
+    order: 40,
+    title: () => t('Menu.Hierarchy'),
+    gate: (app) => app.has_sankey_plus && app.has_sankey_dev,
+    render: (app) => <SankeySettingsEditionElementTags
+      new_data={app as Class_ApplicationDataOSP}
+      elementTagNameProp='level_taggs'
+    />
+  })
+  filter_panel_registry.register({
+    id: 'osp.filter_edit.views',
+    order: 50,
+    title: () => t('view.storytelling'),
+    gate: (app) => app.has_sankey_plus,
+    render: (app) => <ViewsConfig app_data={app as Class_ApplicationDataOSP} />
+  })
+
   inspector_registry.register({
     id: 'osp.tab.tags',
     target: ['node', 'link', 'mixed'],
