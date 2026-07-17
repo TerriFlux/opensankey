@@ -1049,8 +1049,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
         // CTRL (or CMD on Mac)
         if (event.ctrlKey || event.metaKey) {
           this.addOrRemoveLinkFromSelection()
-          this.drawing_area.application_data.menu_configuration.elements_configurable_selected.data = ['flow']
-          this.drawing_area.application_data.menu_configuration.elements_configurable_selected.style = ['element']
+          // #1243 — matrice déposée : l'inspecteur dérive sa cible de la sélection.
           this.drawing_area.application_data.menu_configuration.ref_to_menu_config_updater.current()
           this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
         }

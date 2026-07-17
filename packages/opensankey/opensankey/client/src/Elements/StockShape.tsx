@@ -146,8 +146,7 @@ export class Class_StockShape extends Class_NodeBase {
     const mc = da.application_data.menu_configuration
     da.purgeSelection()
     da.addElementToSelection(this)
-    mc.elements_configurable_selected.style = ['element']
-    mc.type_menu_configuration_selected = 'style'
+    // #1243 — matrice déposée : l'inspecteur dérive sa cible de la sélection.
     mc.openConfigMenu()
     mc.tab_selected = 'shape'
     mc.ref_to_menu_config_updater.current()

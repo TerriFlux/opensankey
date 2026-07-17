@@ -1,4 +1,4 @@
-// ==================================================================================================
+﻿// ==================================================================================================
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
@@ -75,6 +75,8 @@ import { FCType_WrapperBoxSubSectionMenu } from '../SankeyMenuTypes'
 import { Class_DataTagGroup } from '../../types/TagGroup'
 import { SankeyLinkSelectionSimple, SankeyNodeSelectionSimple } from './MenuElementsSelection'
 import { AttributeConfig, ElementsType, ExtractConfigValue, getConfigValues, isConfigValueIndeterminate, ALL_ATTRIBUTES_CONFIG, updateElements, useElementAttributeConfig, ShapePrefix } from '../../Elements/ElementsAttributesConfig'
+import { Class_ElementStyle } from '../../Elements/Element'
+import { default_style_id } from '../../types/Utils'
 
 // Déclaration du type pour l'EyeDropper API
 declare global {
@@ -164,7 +166,8 @@ export const MenuSectionCheckbox = <
   K extends keyof CONFIG
 >({
     elements, attributePath, attributeKey, config,
-    prefix = '', refreshParentComponent, children, rightComponent
+    prefix = '', refreshParentComponent, children, rightComponent, compact = false,
+    compact_label
   }: React.PropsWithChildren<{
   elements: ElementsType
   attributePath: string,
@@ -174,6 +177,15 @@ export const MenuSectionCheckbox = <
   refreshParentComponent: () => void
   children: React.ReactNode
   rightComponent?: React.ReactNode  // ✅ Nouveau paramètre optionnel
+  // #1243 — mode inspecteur : l'onglet porte déjà le nom (Valeur, Libellé…),
+  // le bandeau-titre ferait doublon. On ne garde que l'œil de visibilité,
+  // et le rightComponent reste visible même quand l'attribut est décoché
+  // (le contenu n'est plus caché : on peut régler AVANT de rendre visible).
+  compact?: boolean
+  // Libellé de l'œil en mode compact (défaut : inspector.visible) — ex.
+  // « Libellés visibles » quand la case ne gouverne qu'une partie de l'onglet
+  // (Stock). Passer une chaîne DÉJÀ traduite.
+  compact_label?: string
 }>) => {
   const attribute_values = getConfigValues(elements, config, prefix, refreshParentComponent)
   const fullKey = (prefix ? `${prefix}_${String(attributeKey)}` : String(attributeKey))
@@ -182,7 +194,7 @@ export const MenuSectionCheckbox = <
   return (
     <Box layerStyle='menu_sub_section'>
       <Box
-        layerStyle='menu_sub_section_head'
+        layerStyle={compact ? undefined : 'menu_sub_section_head'}
         display="flex"
         alignItems="center"
         justifyContent="space-between"  // ✅ Espace entre checkbox et rightComponent
@@ -202,13 +214,15 @@ export const MenuSectionCheckbox = <
             }}
           >
             <OSTooltip label={t(`${String(attributePath)}.tooltips.${fullKey}`)}>
-              {t(`${String(attributePath)}.${fullKey}`)}
+              {compact
+                ? (compact_label ?? t('inspector.visible'))
+                : t(`${String(attributePath)}.${fullKey}`)}
             </OSTooltip>
           </Checkbox>
         </InputIndicatorWrapper>
 
         {/* ✅ Composant optionnel à droite */}
-        {rightComponent && attribute_values[attributeKey] && (
+        {rightComponent && (compact || attribute_values[attributeKey]) && (
           <Box flexShrink={0}>
             {rightComponent}
           </Box>
@@ -448,7 +462,7 @@ export const ElementAttrSetter2Cols = <
   K extends keyof CONFIG
 >({
     attributePath, attributeKey,
-    prefix = '', t, children
+    prefix = '', t, isOverloaded, children
   }: React.PropsWithChildren<{
   attributePath: string,
   attributeKey: K
@@ -457,6 +471,9 @@ export const ElementAttrSetter2Cols = <
 
   t: TFunction; // Fonction de traduction
   showTooltipOverload?: boolean; // Optionnel - afficher le tooltip overload
+  // #1243 — tri-état (cf. InputIndicatorWrapper) : false = hérité de la
+  // cascade → le LIBELLÉ recule aussi (le contrôle recule via son wrapper).
+  isOverloaded?: boolean
   children: React.ReactNode; // Le composant enfant (Select, Input, etc.)
 }>) => {
   const fullKey = (prefix ? `${prefix}_${String(attributeKey)}` : String(attributeKey)) as K
@@ -467,7 +484,10 @@ export const ElementAttrSetter2Cols = <
     <OSTooltip label={tooltip}>
       <span>
         <BOX2COLS>
-          <Box layerStyle='menuconfigpanel_option_name'>
+          <Box
+            layerStyle='menuconfigpanel_option_name'
+            sx={isOverloaded === false ? { opacity: 0.65 } : undefined}
+          >
             {label}
           </Box>
           {children}
@@ -506,6 +526,9 @@ export const ElementAttrSetterSelect2Cols = <
 }) => {
   const { t } = useElementAttributeConfig<CONFIG>(app_data, elements)
   const attribute_values = getConfigValues(elements, config, prefix, refreshParentComponent)
+  // #1243 — statut de surcharge, pour le liseré violet ET le retrait « hérité ».
+  const fullAttributeKey = (prefix ? `${prefix}_${String(attributeKey)}` : String(attributeKey)) as keyof CONFIG
+  const isOverloaded = isElementAttributeOverloaded(elements, fullAttributeKey, config)
 
   return (
     <ElementAttrSetter2Cols
@@ -513,27 +536,34 @@ export const ElementAttrSetterSelect2Cols = <
       attributeKey={attributeKey}
       config={config}
       prefix={prefix}
+      isOverloaded={isOverloaded}
       t={t}>
-      <Select
-        value={attribute_values[attributeKey] as string}
-        onChange={(evt) => {
-          updateElements(
-            app_data,
-            elements,
-            config,
-            prefix,
-            attributeKey,
-            evt.target.value as ExtractConfigValue<CONFIG[K]>,
-            refreshParentComponent
-          )
-        }}
+      <InputIndicatorWrapper
+        isOverloaded={isOverloaded}
+        provenance={elementAttributeProvenance(elements, fullAttributeKey, config)}
+        t={t}
       >
-        {options.map(option => (
-          <option key={option.key} value={option.value as string}>
-            {option.label}
-          </option>
-        ))}
-      </Select>
+        <Select
+          value={attribute_values[attributeKey] as string}
+          onChange={(evt) => {
+            updateElements(
+              app_data,
+              elements,
+              config,
+              prefix,
+              attributeKey,
+              evt.target.value as ExtractConfigValue<CONFIG[K]>,
+              refreshParentComponent
+            )
+          }}
+        >
+          {options.map(option => (
+            <option key={option.key} value={option.value as string}>
+              {option.label}
+            </option>
+          ))}
+        </Select>
+      </InputIndicatorWrapper>
     </ElementAttrSetter2Cols>
   )
 }
@@ -558,7 +588,8 @@ export const ElementAttrSetterTextInput2Cols = <
   config: CONFIG,
   prefix?: string,
   refreshParentComponent: () => void
-  isOverloaded: boolean
+  // Tri-état : undefined = édition de style (ni retrait ni liseré).
+  isOverloaded?: boolean
 }) => {
   const { menu_for_style, t } = useElementAttributeConfig<CONFIG>(app_data, elements)
   const attribute_values = getConfigValues(elements, config, prefix, refreshParentComponent)
@@ -568,6 +599,7 @@ export const ElementAttrSetterTextInput2Cols = <
       attributeKey={attributeKey}
       config={config}
       prefix={prefix}
+      isOverloaded={isOverloaded}
       t={t}>
       <ConfigMenuTextInput
         t={t}
@@ -578,6 +610,11 @@ export const ElementAttrSetterTextInput2Cols = <
         menu_for_style={menu_for_style}
         multiValue={isConfigValueIndeterminate(elements, config, attributeKey, prefix)}
         isOverloaded={isOverloaded}
+        provenance={elementAttributeProvenance(
+          elements,
+          (prefix ? `${prefix}_${String(attributeKey)}` : String(attributeKey)) as keyof CONFIG,
+          config
+        )}
       />
     </ElementAttrSetter2Cols>
   )
@@ -609,7 +646,8 @@ export const ElementAttrSetterNumberInput2Cols = <
   stepper?: boolean
   percent?: boolean,
   unit_text?: string,
-  isOverloaded: boolean
+  // Tri-état : undefined = édition de style (ni retrait ni liseré).
+  isOverloaded?: boolean
 }) => {
 
   const { menu_for_style, t } = useElementAttributeConfig<CONFIG>(app_data, elements)
@@ -621,6 +659,7 @@ export const ElementAttrSetterNumberInput2Cols = <
       attributeKey={attributeKey}
       config={config}
       prefix={prefix}
+      isOverloaded={isOverloaded}
       t={t}>
       <ConfigMenuNumberInput
         t={t}
@@ -636,7 +675,11 @@ export const ElementAttrSetterNumberInput2Cols = <
         stepper={stepper}
         multiValue={isConfigValueIndeterminate(elements, config, attributeKey, prefix)}
         isOverloaded={isOverloaded}
-
+        provenance={elementAttributeProvenance(
+          elements,
+          (prefix ? `${prefix}_${String(attributeKey)}` : String(attributeKey)) as keyof CONFIG,
+          config
+        )}
       />
     </ElementAttrSetter2Cols>
   )
@@ -844,6 +887,52 @@ export const CustomFaEyeCheckIcon = (props: CheckboxProps) => {
     : <FontAwesomeIcon icon={faEyeSlash} />
 }
 /**
+ * #1243 — PROVENANCE d'un attribut : d'où vient la valeur affichée ?
+ *
+ * Modèle de la cascade (cf. Class_ProtoElement) :
+ *   surcharge locale  >  dernier style de la cascade qui définit l'attribut
+ *                     >  valeur d'usine (config.default)
+ *
+ * Rendue en TOOLTIP du contrôle (pas en étiquette permanente : le panneau est
+ * déjà dense, et le retrait/liseré porte déjà l'information principale). Le
+ * nom du style répond à la question que le retrait seul laisse ouverte :
+ * « hérité, oui — mais de QUI ? ».
+ *
+ * @returns un libellé traduit, ou undefined si non pertinent (édition de style,
+ *   sélection vide, valeurs divergentes entre éléments).
+ */
+export const elementAttributeProvenance = <
+  CONFIG extends Record<string, AttributeConfig<unknown>>,
+  K extends keyof CONFIG
+>(
+    elements: ElementsType,
+    attr: K,
+    _config: CONFIG
+  ): string | undefined => {
+  if (elements.length === 0) return undefined
+  // Édition d'un style : « hérité de » n'a pas de sens (un style définit).
+  if (elements.some(el => el instanceof Class_ElementStyle)) return undefined
+
+  const provenanceOf = (element: ElementsType[number]): string => {
+    //@ts-expect-error même convention que isElementAttributeOverloaded
+    if (element.isAttributeOverloaded(attr)) return t('inspector.provenance.local')
+    //@ts-expect-error idem : getStyleWithAttr est porté par Class_ProtoElement
+    const style = element.getStyleWithAttr(attr) as Class_ElementStyle | undefined
+    // getStyleWithAttr retombe sur le 1er style (défaut) même s'il ne définit
+    // pas l'attribut : dans ce cas la valeur vient de la config (usine).
+    if (!style || style[attr as keyof Class_ElementStyle] === undefined) {
+      return t('inspector.provenance.factory')
+    }
+    return t('inspector.provenance.from_style', { style: t(style.name) })
+  }
+
+  const first = provenanceOf(elements[0])
+  // Sélection multiple aux provenances divergentes : ne rien affirmer.
+  if (elements.some(el => provenanceOf(el) !== first)) return undefined
+  return first
+}
+
+/**
  * Check if given attribute is overloaded in at least one link
  * @export
  * @param {Class_LinkElement[]} links
@@ -858,8 +947,8 @@ export const isElementAttributeOverloaded = <
     elements: ElementsType,
     attr: K,
     _config: CONFIG
-  ) => {
-  return elements.some(element => {
+  ): boolean | undefined => {
+  const some_overloaded = elements.some(element => {
     //if (element instanceof Class_LinkElement) {
     //@ts-expect-error xxx
     return element.isAttributeOverloaded(attr)
@@ -870,6 +959,17 @@ export const isElementAttributeOverloaded = <
     // }
     // return false
   })
+  // #1243 — même lecture dans les deux portées (validé UX) :
+  // - éléments : violet = surchargé localement, retrait = hérité de la cascade ;
+  // - style édité : violet = le style surcharge l'attribut (vs style par
+  //   défaut), retrait = il ne le définit pas.
+  // EXCEPTION : le style PAR DÉFAUT est la racine de la cascade — rien
+  // au-dessus de lui, donc pas de « hérité » : violet conservé (personnalisé
+  // vs réglages d'usine), jamais de retrait (undefined au lieu de false).
+  if (elements.some(el => el instanceof Class_ElementStyle && el.id === default_style_id)) {
+    return some_overloaded ? true : undefined
+  }
+  return some_overloaded
 }
 
 export const TooltipElementOverloaded = <
@@ -982,6 +1082,7 @@ export const OverloadedButtonGroup = <T extends string>({
 }: OverloadedButtonGroupProps<T>) => {
   const fullAttributeKey = `${prefix}_${attributeKey}` as keyof typeof config
   const isOverloaded = isElementAttributeOverloaded(elements, fullAttributeKey, config)
+  const provenance = elementAttributeProvenance(elements, fullAttributeKey, config)
   const tooltipLabel = t(`${String(attributePath)}.tooltips.${String(fullAttributeKey)}`)
   // Groupe d'icônes (pas de label texte) : on ne laisse pas la grille s'étirer pour
   // remplir sa colonne, sinon les boutons sont trop larges avec une icône minuscule
@@ -991,6 +1092,7 @@ export const OverloadedButtonGroup = <T extends string>({
   return (
     <OverloadIndicatorWrapper
       isOverloaded={isOverloaded}
+      provenance={provenance}
     >
       <OSTooltip label={tooltipLabel}>
         <Box layerStyle={`options_${items.length}cols`} sx={hasOnlyIcons ? { width: 'fit-content' } : undefined}>
@@ -1092,12 +1194,35 @@ export const OverloadedCheckbox = ({
  */
 export const OverloadIndicatorWrapper = ({
   isOverloaded,
+  provenance,
   children
 }: React.PropsWithChildren<{
-  isOverloaded: boolean
+  // Tri-état (cf. InputIndicatorWrapper) : true = surchargé (liseré violet),
+  // false = hérité de la cascade (retrait), undefined = hors sujet (style…).
+  isOverloaded?: boolean
+  // #1243 — provenance de la valeur, en tooltip (cf. InputIndicatorWrapper).
+  provenance?: string
   children: React.ReactNode
 }>) => {
-  if (!isOverloaded) {
+  if (isOverloaded !== true) {
+    // #1243 — false = hérité de la cascade → même retrait que
+    // InputIndicatorWrapper (remonte au survol/focus, cibles inchangées).
+    if (isOverloaded === false) {
+      return (
+        <Box
+          display='inline-flex'
+          title={provenance}
+          sx={{
+            opacity: 0.65,
+            transition: 'opacity 0.12s',
+            '&:hover, &:focus-within': { opacity: 1 },
+            ...(provenance ? { cursor: 'help' } : {})
+          }}
+        >
+          {children}
+        </Box>
+      )
+    }
     return <>{children}</>
   }
 
@@ -1105,6 +1230,7 @@ export const OverloadIndicatorWrapper = ({
     <Box
       position='relative'
       display='inline-flex'
+      title={provenance}
       sx={{
         '& > *': {
           boxShadow: '0 0 0 1.5px rgba(128, 90, 213, 0.7)', // purple.500 = surcharge
@@ -1351,12 +1477,16 @@ const LinkTooltipEditor: FC<{
   updaterRef: React.MutableRefObject<(() => void) | null>
 }> = (props) => <TooltipEditor {...props} />
 
-export const MenuConfigurationNodesTooltip = ({ new_data }: { new_data: Class_ApplicationData }) => {
+export const MenuConfigurationNodesTooltip = ({ new_data, hide_selector = false }: {
+  new_data: Class_ApplicationData
+  // #1243 — inspecteur : pas de sélecteur embarqué (canvas = sélecteur).
+  hide_selector?: boolean
+}) => {
   const selected_nodes = new_data.drawing_area.selected_nodes_list_sorted
 
   return (
     <>
-      <SankeyNodeSelectionSimple app_data={new_data} />
+      {!hide_selector && <SankeyNodeSelectionSimple app_data={new_data} />}
       <NodeTooltipEditor
         app_data={new_data}
         elements={selected_nodes}
@@ -1366,12 +1496,16 @@ export const MenuConfigurationNodesTooltip = ({ new_data }: { new_data: Class_Ap
   )
 }
 
-export const MenuConfigurationLinksTooltip = ({ app_data }: { app_data: Class_ApplicationData }) => {
+export const MenuConfigurationLinksTooltip = ({ app_data, hide_selector = false }: {
+  app_data: Class_ApplicationData
+  // #1243 — inspecteur : pas de sélecteur embarqué (canvas = sélecteur).
+  hide_selector?: boolean
+}) => {
   const selected_links = app_data.drawing_area.selected_links_list_sorted
 
   return (
     <>
-      <SankeyLinkSelectionSimple app_data={app_data} />
+      {!hide_selector && <SankeyLinkSelectionSimple app_data={app_data} />}
       <LinkTooltipEditor
         app_data={app_data}
         elements={selected_links}
@@ -1385,24 +1519,57 @@ export const MenuConfigurationLinksTooltip = ({ app_data }: { app_data: Class_Ap
  * Wrapper universel qui gère à la fois :
  * - L'encadrement bleu pour les attributs overloadés
  * - L'encadrement orange pour les valeurs multiples (indéterminées)
+ * - #1243 : la mise en RETRAIT des attributs hérités de la cascade de styles.
+ *
+ * `isOverloaded` est TRI-ÉTAT :
+ * - `true`      → attribut stylable SURCHARGÉ localement (liseré violet) ;
+ * - `false`     → attribut stylable dont la valeur VIENT de la cascade
+ *                 (hérité) : contrôle en léger retrait, remonte au survol/focus ;
+ * - `undefined` → contrôle non stylable (donnée…) : rendu intact.
+ * Ne passer `false` que là où la surcharge a réellement été calculée
+ * (isElementAttributeOverloaded) — sinon laisser undefined.
  */
 export const InputIndicatorWrapper = ({
-  isOverloaded = false,
+  isOverloaded,
   isMultiValue = false,
+  provenance,
   children,
   t: _t
 }: React.PropsWithChildren<{
   isOverloaded?: boolean
   isMultiValue?: boolean
+  // #1243 — d'où vient la valeur (cf. elementAttributeProvenance) : rendu en
+  // TOOLTIP, jamais en étiquette — le panneau est déjà dense et le
+  // retrait/liseré porte déjà l'information principale.
+  provenance?: string
   children: React.ReactNode
   t: (key: string) => string
 }>) => {
   // Priorité : multiValue > overloaded
-  const hasIndicator = isMultiValue || isOverloaded
+  const hasIndicator = isMultiValue || isOverloaded === true
   const color = isMultiValue ? 'rgba(237, 137, 54, 0.5)' : 'rgba(128, 90, 213, 0.7)' // orange (multi) ou violet (surcharge)
   const colorHover = isMultiValue ? 'rgba(237, 137, 54, 0.8)' : 'rgba(128, 90, 213, 1)'
 
   if (!hasIndicator) {
+    // Hérité de la cascade : en retrait, cibles inchangées, pleine visibilité
+    // au survol ou au focus clavier.
+    if (isOverloaded === false) {
+      return (
+        <Box
+          display='inline-flex'
+          width='100%'
+          title={provenance}
+          sx={{
+            opacity: 0.65,
+            transition: 'opacity 0.12s',
+            '&:hover, &:focus-within': { opacity: 1 },
+            ...(provenance ? { cursor: 'help' } : {})
+          }}
+        >
+          {children}
+        </Box>
+      )
+    }
     return <>{children}</>
   }
 
@@ -1411,6 +1578,7 @@ export const InputIndicatorWrapper = ({
       position='relative'
       display='inline-flex'
       width='100%'
+      title={provenance}
       sx={{
         '& > *': {
           boxShadow: `0 0 0 1.5px ${color}`,
@@ -1455,7 +1623,10 @@ export const ConfigMenuNumberInput = ({
   fixed_dec = 2,
   disabled = false,
   multiValue = false,
-  isOverloaded = false  // ✅ Nouveau paramètre
+  // Tri-état (cf. InputIndicatorWrapper) : surtout NE PAS défauter à false,
+  // undefined signifie « contrôle non stylable » et doit le rester.
+  isOverloaded,
+  provenance
 }: FCType_ConfigMenuNumberInput) => {
   const ref_input = useRef<HTMLInputElement>(null)
   const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
@@ -1483,7 +1654,7 @@ export const ConfigMenuNumberInput = ({
   const input_unit = unit_text ? <InputRightAddon>{unit_text}</InputRightAddon> : <></>
 
   return (
-    <InputIndicatorWrapper isOverloaded={isOverloaded} isMultiValue={multiValue} t={t}>
+    <InputIndicatorWrapper isOverloaded={isOverloaded} isMultiValue={multiValue} provenance={provenance} t={t}>
       <InputGroup>
         <NumberInput
           allowMouseWheel
@@ -1546,6 +1717,8 @@ export type FCType_ConfigMenuNumberInput = {
   disabled?: boolean,
   multiValue?: boolean,
   isOverloaded?: boolean,
+  // #1243 — provenance de la valeur, rendue en tooltip par le wrapper.
+  provenance?: string,
 }
 
 /**
@@ -1565,7 +1738,10 @@ export const ConfigMenuTextInput: FC<FCType_ConfigMenuTextInput> = ({
   menu_for_style = false,
   disabled = false,
   multiValue = false,
-  isOverloaded = false,  // ✅ Nouveau paramètre
+  // Tri-état (cf. InputIndicatorWrapper) : pas de défaut à false —
+  // undefined = « contrôle non stylable », à ne pas mettre en retrait.
+  isOverloaded,
+  provenance,
   t
 }: FCType_ConfigMenuTextInput) => {
   const ref_input = useRef<HTMLInputElement>(null)
@@ -1577,7 +1753,7 @@ export const ConfigMenuTextInput: FC<FCType_ConfigMenuTextInput> = ({
   }, [default_value])
 
   return (
-    <InputIndicatorWrapper isOverloaded={isOverloaded} isMultiValue={multiValue} t={t}>
+    <InputIndicatorWrapper isOverloaded={isOverloaded} isMultiValue={multiValue} provenance={provenance} t={t}>
       <InputGroup>
         <Input
           isDisabled={disabled}
@@ -1621,6 +1797,8 @@ export type FCType_ConfigMenuTextInput = {
   disabled?: boolean,
   multiValue?: boolean,
   isOverloaded?: boolean
+  // #1243 — provenance de la valeur, rendue en tooltip par le wrapper.
+  provenance?: string
 }
 
 

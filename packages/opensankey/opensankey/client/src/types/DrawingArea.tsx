@@ -1214,6 +1214,10 @@ export class Class_DrawingArea {
     this.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
   }
 
+  // OS#1254 — addLegendToSelection/removeLegendFromSelection supprimées avec
+  // Class_Legend : la légende n'est plus un objet unique sélectionnable, c'est
+  // un GÉNÉRATEUR (Class_LegendConfig) qui produit des zones de texte. Elles se
+  // sélectionnent donc comme des zones ordinaires (#1243 : cible `container`).
   public removeElementFromSelection(element: Class_ProtoElement) {
     if (this._selection[element.id] !== undefined) {
       // Update selection list

@@ -1,4 +1,4 @@
-// ==================================================================================================
+﻿// ==================================================================================================
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
@@ -25,7 +25,8 @@
 // ==================================================================================================
 
 import React from 'react'
-import { WrapperContentConfig } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
+import { inspector_registry } from '@terriflux/opensankey/src/components/configmenus/inspector/InspectorRegistry'
+import { filter_panel_registry } from '@terriflux/opensankey/src/components/topmenus/FilterPanelRegistry'
 import {
   FType_InitializeAdditionalMenus,
   FType_ModuleDialogs,
@@ -95,7 +96,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
 
   // Data -------------------------------------------------------------------------------
   const new_data_plus = new_data as Class_ApplicationDataOSP
-  const { t, has_sankey_plus, has_sankey_afm, icon_library } = new_data_plus
+  const { t, has_sankey_plus, has_sankey_afm } = new_data_plus
 
 
 
@@ -164,79 +165,101 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   additionalMenus.current.template_module_key.push('advanced')
 
 
-  additionalMenus.current.additional_menu_type['presentation'] = 'presentation'
- 
-  additionalMenus.current.additional_menu_button_element_configurable['view'] = { icon: icon_library.icon_view, text: t('Menu.Config.element_view'), disabled: !has_sankey_plus }
-  additionalMenus.current.additional_menu_button_element_configurable['data_tag'] = { icon: has_sankey_plus ? icon_library.icon_data_tag_unselected : icon_library.icon_data_tag_diabled, text: t('Menu.Config.element_data_tag'), disabled: !has_sankey_plus }
-  additionalMenus.current.additional_menu_button_element_configurable['flow_tag'] = { icon: has_sankey_plus ? icon_library.icon_flow_tag : icon_library.icon_flow_tag_diabled, text: t('Menu.Config.element_flow_tag'), disabled: !has_sankey_plus }
-  additionalMenus.current.additional_menu_button_element_configurable['node_tag'] = { icon: has_sankey_plus ? icon_library.icon_node_tag : icon_library.icon_node_tag_diabled, text: t('Menu.Config.element_node_tag'), disabled: !has_sankey_plus }
-  if (new_data_plus.has_sankey_dev) additionalMenus.current.additional_menu_button_element_configurable['level_tag'] = { icon: has_sankey_plus ? icon_library.icon_level_tag : icon_library.icon_level_tag_diabled, text: t('Menu.Config.element_level_tag'), disabled: !has_sankey_plus }
+  // #1243 — La matrice type×élément est DÉPOSÉE : l'axe « Présentation » et ses
+  // cases (node_tag, flow_tag, data_tag, level_tag, view) n'existent plus. Leur
+  // contenu est réparti selon sa NATURE :
+  //  - assignation des tags à la sélection -> onglet Tags de l'inspecteur
+  //    (inspector_registry, plus bas) ;
+  //  - édition des GROUPES de tags + vues -> panneau Filtres, onglet « Éditer »
+  //    (filter_panel_registry, ci-dessous) — règle R3 : un groupe de tags n'est
+  //    pas une propriété d'élément mais un contexte global de lecture.
 
-  // Add menu for new menu type 'Présentation'
-  additionalMenus.current.additional_new_menu_config_content['presentation'] = {
-    // 'object': <WrapperContentConfig title={t('Menu.Config.element_object')} hide={!has_sankey_plus}>
-    //   <MenuConfigurationContainersOSP app_data={new_data_plus} />
-    // </WrapperContentConfig>,
+  // #1243 — Onglet TAGS de l'inspecteur : ASSIGNATION des tags existants aux
+  // éléments sélectionnés. L'édition des GROUPES de tags reste hors inspecteur
+  // (règle R3 — panneau Filtres, à reloger en phase de bascule). Première
+  // extension de couche : OSP enregistre son onglet dans le registre OS
+  // (idempotent par id, donc sans risque au re-init/hot reload).
+  // #1243 (règle R3) — l'édition des GROUPES de tags et les vues ne sont pas
+  // des propriétés d'un élément : elles vivent dans le panneau Filtres (onglet
+  // « Éditer »), là où ces groupes sont consommés. Remplace les cases
+  // presentation × {node_tag, flow_tag, data_tag, level_tag, view} de la matrice.
+  filter_panel_registry.register({
+    id: 'osp.filter_edit.node_taggs',
+    order: 10,
+    title: () => t('Menu.EN'),
+    short_title: () => t('filter_panel.short.node'),
+    gate: (app) => app.has_sankey_plus,
+    render: (app) => <SankeySettingsEditionElementTags
+      new_data={app as Class_ApplicationDataOSP}
+      elementTagNameProp='node_taggs'
+    />
+  })
+  filter_panel_registry.register({
+    id: 'osp.filter_edit.flux_taggs',
+    order: 20,
+    title: () => t('Menu.EF'),
+    short_title: () => t('filter_panel.short.link'),
+    gate: (app) => app.has_sankey_plus,
+    render: (app) => <SankeySettingsEditionElementTags
+      new_data={app as Class_ApplicationDataOSP}
+      elementTagNameProp='flux_taggs'
+    />
+  })
+  filter_panel_registry.register({
+    id: 'osp.filter_edit.data_taggs',
+    order: 30,
+    title: () => t('Menu.ED'),
+    short_title: () => t('filter_panel.short.data'),
+    gate: (app) => app.has_sankey_plus,
+    render: (app) => <SankeySettingsEditionElementTags
+      new_data={app as Class_ApplicationDataOSP}
+      elementTagNameProp='data_taggs'
+    />
+  })
+  filter_panel_registry.register({
+    id: 'osp.filter_edit.level_taggs',
+    order: 40,
+    title: () => t('Menu.Hierarchy'),
+    short_title: () => t('filter_panel.short.level'),
+    gate: (app) => app.has_sankey_plus && app.has_sankey_dev,
+    render: (app) => <SankeySettingsEditionElementTags
+      new_data={app as Class_ApplicationDataOSP}
+      elementTagNameProp='level_taggs'
+    />
+  })
+  filter_panel_registry.register({
+    id: 'osp.filter_edit.views',
+    order: 50,
+    title: () => t('view.storytelling'),
+    short_title: () => t('filter_panel.short.views'),
+    gate: (app) => app.has_sankey_plus,
+    render: (app) => <ViewsConfig app_data={app as Class_ApplicationDataOSP} />
+  })
 
-    // 'node': <WrapperContentConfig title={t('Flux.IS')}><>
-    //   <MenuConfigurationNodesTooltip new_data={new_data_plus} />
-    //   <NodeHyperLinkOSP new_data_plus={new_data_plus} />
-    // </>
-    // </WrapperContentConfig>,
-
-    // 'flow': <WrapperContentConfig title={t('Noeud.IS')}>
-    //   <MenuConfigurationLinksTooltip app_data={new_data_plus} />
-    // </WrapperContentConfig>,
-    'node_tag': <WrapperContentConfig title={t('Menu.EN')} >
-      <>
-        <SankeySettingsEditionElementTags
-          new_data={new_data_plus}
-          elementTagNameProp='node_taggs'
-        />
-        <SankeyMenuConfigurationNodesTags
-          app_data={new_data_plus}
-        /></>
-    </WrapperContentConfig>,
-    'flow_tag': <WrapperContentConfig title={t('Menu.EF')} >
-      <><SankeySettingsEditionElementTags
-        new_data={new_data_plus}
-        elementTagNameProp='flux_taggs'
-      />
-      <MenuConfigurationLinksTags
-        new_data={new_data_plus}
-      />
+  inspector_registry.register({
+    id: 'osp.tab.tags',
+    target: ['node', 'link', 'mixed'],
+    order: 55,
+    hue: 'presentation',
+    title: (app) => app.t('inspector.tab.tags'),
+    data_only: true,
+    gate: (app) => app.has_sankey_plus && (
+      (app.drawing_area.selected_nodes_list.length > 0
+        && app.drawing_area.sankey.node_taggs_list.length > 0)
+      || (app.drawing_area.selected_links_list.length > 0
+        && app.drawing_area.sankey.flux_taggs_list.length > 0)),
+    render: (app) => {
+      const app_osp = app as Class_ApplicationDataOSP
+      return <>
+        {app.drawing_area.selected_nodes_list.length > 0
+          && app.drawing_area.sankey.node_taggs_list.length > 0
+          && <SankeyMenuConfigurationNodesTags app_data={app_osp} />}
+        {app.drawing_area.selected_links_list.length > 0
+          && app.drawing_area.sankey.flux_taggs_list.length > 0
+          && <MenuConfigurationLinksTags new_data={app_osp} />}
       </>
-    </WrapperContentConfig>,
-    'data_tag': <WrapperContentConfig title={t('Menu.ED')} >
-      <SankeySettingsEditionElementTags
-        new_data={new_data_plus}
-        elementTagNameProp='data_taggs'
-      />
-    </WrapperContentConfig>,
-    'view': <WrapperContentConfig title={t('view.storytelling')}>
-      <ViewsConfig app_data={new_data_plus}
-      />
-    </WrapperContentConfig>,
-  }
-
-  // Add menu for menu type 'data'
-  // additionalMenus.current.additional_menu_config_content['data'] = {
-  //   'data_tag': <WrapperContentConfig title={t('Menu.ED')} >
-  //     <SankeySettingsEditionElementTags
-  //       new_data={new_data_plus}
-  //       elementTagNameProp='data_taggs'
-  //     />
-  //   </WrapperContentConfig>
-  // }
-  if (new_data_plus.has_sankey_dev) {
-    additionalMenus.current.additional_new_menu_config_content['presentation']['level_tag'] = <WrapperContentConfig title={t('Menu.Hierarchy')} >
-      <><SankeySettingsEditionElementTags
-        new_data={new_data_plus}
-        elementTagNameProp='level_taggs'
-      />
-      </>
-    </WrapperContentConfig>
-  }
+    }
+  })
 }
 
 // module_dialogsType return a JSX.Element array wich is a react type

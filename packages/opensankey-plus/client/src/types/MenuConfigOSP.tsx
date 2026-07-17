@@ -1,10 +1,12 @@
 import { MutableRefObject } from 'react'
-import { Class_MenuConfig, keyTypeConfig, keyTypeElements } from '@terriflux/opensankey/src/types/MenuConfig'
+import { Class_MenuConfig } from '@terriflux/opensankey/src/types/MenuConfig'
 import { Class_NodeElement } from '@terriflux/opensankey/src/Elements/Node'
 import { OSPShowMenuComponentsVarType } from './LegacyTypes'
 
-export type keyTypeConfigOSP = keyTypeConfig | 'presentation'
-export type keyTypeElementsOSP = keyTypeElements | 'data_tag' | 'tag_flow' | 'tag_node' | 'view'
+// #1243 — `keyTypeConfigOSP` / `keyTypeElementsOSP` étendaient les coordonnées
+// de la MATRICE type×élément du menu de config (l'axe « Présentation » d'OSP) :
+// supprimés avec elle. OSP enregistre désormais ses contenus dans les registres
+// (inspector_registry / filter_panel_registry, cf. ModulesOSP).
 export class Class_MenuConfigOSP extends Class_MenuConfig {
   // OSP inserts the Vues/AFM/edit group after the OS document group, pushes the
   // "Aide" dropdown after it, and isolates the view NAVIGATION (Préc./sélecteur/
@@ -73,8 +75,10 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
 
     this._dict_setter_show_dialog_plus = {ref_setter_show_menu_view_not_saved: { current: () => null }}
 
-    //this._style_config.data.elements_configurable.push('data_tag')
-    this._style_config.presentation.elements_configurable.push('level_tag')
+    // #1243 — `_style_config` était l'état de la matrice type×élément (thème +
+    // éléments configurables par type) : déposé avec elle. OSP n'a plus à y
+    // pousser 'level_tag' — l'édition des niveaux vit dans le panneau Filtres
+    // (onglet « Éditer », cf. filter_panel_registry dans ModulesOSP).
   }
 
   updateAllMenuComponents(): void {
