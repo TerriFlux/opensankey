@@ -272,6 +272,36 @@ export class NodeEventsHandler {
         if (!(c.id in dict_old_pos)) dict_old_pos[c.id] = [c.position_x, c.position_y]
         if (!(c.id in dict_old_sizes)) dict_old_sizes[c.id] = [c.shape_min_width, c.shape_min_height]
       })
+      // OS#1257 — drag DÉLÉGUÉ (une ZDT attachée à un cadre déplace le cadre le
+      // plus englobant et toute sa descendance, cf. TextZone.eventMouseDrag) :
+      // capturer positions et tailles de TOUT l'arbre du cadre racine, sinon
+      // l'annulation ne restaure que l'élément saisi et ses parents directs.
+      // Sans effet parasite pour un drag non délégué : les positions capturées
+      // en trop n'auront pas bougé, leur restauration est un no-op.
+      const seen_up = new Set<Class_NodeBase>([n])
+      let root: Class_NodeBase | null = null
+      let cur: Class_NodeBase = n
+      for (;;) {
+        const parent: Class_NodeBase | undefined =
+          cur.attached_container.find(c => c.tied_to_nodes && !seen_up.has(c))
+        if (!parent) break
+        seen_up.add(parent)
+        root = parent
+        cur = parent
+      }
+      if (root) {
+        const visited = new Set<Class_NodeBase>()
+        const captureTree = (el: Class_NodeBase) => {
+          if (visited.has(el)) return
+          visited.add(el)
+          if (!(el.id in dict_old_pos)) dict_old_pos[el.id] = [el.position_x, el.position_y]
+          if (el.tied_to_nodes) {
+            if (!(el.id in dict_old_sizes)) dict_old_sizes[el.id] = [el.shape_min_width, el.shape_min_height]
+            el.attached_node.forEach(child => captureTree(child))
+          }
+        }
+        captureTree(root)
+      }
     })
 
     // ✅ Utiliser les nouvelles méthodes d'accès
