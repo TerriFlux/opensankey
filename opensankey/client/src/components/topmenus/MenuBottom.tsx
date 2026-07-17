@@ -96,10 +96,13 @@ export const ComponentMouseMode = (
         id='button_selection_edition'
         size={size}
         onClick={() => {
+          // Sortir d'abord du mode « placer une zone de texte » (switchMode ne gère
+          // que édition⇄sélection) : on repasse en sélection, puis la bascule ci-dessous.
+          if (drawing_area.isInPlaceContainerMode()) drawing_area.exitPlaceContainerMode()
           if (!drawing_area.isInEditionMode()) {
             drawing_area.switchMode()
-            updateParentComponent()
           }
+          updateParentComponent()
         }}>
         {icon_library.icon_DA_edit}
       </Button>
@@ -108,10 +111,11 @@ export const ComponentMouseMode = (
         id='button_selection_edition'
         size={size}
         onClick={() => {
+          if (drawing_area.isInPlaceContainerMode()) drawing_area.exitPlaceContainerMode()
           if (!drawing_area.isInSelectionMode()) {
             drawing_area.switchMode()
-            updateParentComponent()
           }
+          updateParentComponent()
         }}>
         {icon_library.icon_DA_selection}
       </Button>
