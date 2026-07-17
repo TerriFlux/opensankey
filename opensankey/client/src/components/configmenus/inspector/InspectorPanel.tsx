@@ -151,7 +151,11 @@ export const InspectorPanel = ({ app_data }: { app_data: Class_ApplicationData }
   // Style, les onglets 100% données disparaissent (R2).
   const tabs = inspector_registry.getSectionsFor(target, app_data)
     .filter(tab => scope === 'selection' || !tab.data_only)
-  const active_tab = tabs.find(tab => tab.id === active_tab_id) ?? tabs[0] ?? null
+  // #1255 — une demande d'onglet (visite guidée) prime sur l'onglet local : elle doit survivre à
+  // la réinitialisation ci-dessus, que la sélection faite par le tour vient justement de déclencher.
+  const requested_tab_id = app_data.menu_configuration.inspector_requested_tab_id
+  const active_tab = tabs.find(tab => tab.id === (requested_tab_id ?? active_tab_id))
+    ?? tabs[0] ?? null
   // Portée Styles aussi en sélection hétérogène (nœud+flux) : les styles sont
   // PARTAGÉS entre types (même styles_list, défaut commun) — la note
   // « cascades divergentes » de la cascade couvre l'ambiguïté d'affichage.
@@ -256,7 +260,11 @@ export const InspectorPanel = ({ app_data }: { app_data: Class_ApplicationData }
                     : {})
                 }}
                 title={rollup === true ? app_data.t('inspector.tab_overloaded') : undefined}
-                onClick={() => setActiveTabId(tab.id)}
+                onClick={() => {
+                  // Un clic explicite reprend la main sur une demande d'onglet du tour (#1255).
+                  app_data.menu_configuration.inspector_requested_tab_id = null
+                  setActiveTabId(tab.id)
+                }}
               >
                 {tab.title(app_data)}
               </Button>

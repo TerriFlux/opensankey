@@ -1356,6 +1356,20 @@ export class Class_MenuConfig {
     return this._ref_to_inspector_updater
   }
 
+  /**
+   * #1255 — Onglet que l'inspecteur doit tenir ouvert, demandé par la visite guidée (l'onglet
+   * actif est un état local d'InspectorPanel, inatteignable depuis le modèle).
+   *
+   * C'est une demande PERSISTANTE, pas une commande ponctuelle : l'inspecteur réinitialise son
+   * onglet à chaque changement de composition de sélection, et le tour sélectionne justement un
+   * élément avant de demander son onglet — une commande ponctuelle serait écrasée par cette
+   * réinitialisation. Tant que la demande est posée, elle l'emporte ; un clic de l'utilisateur sur
+   * un onglet la lève (il reprend la main), tout comme la fin de l'étape ou du tour.
+   */
+  private _inspector_requested_tab_id: string | null = null
+  public get inspector_requested_tab_id(): string | null { return this._inspector_requested_tab_id }
+  public set inspector_requested_tab_id(_: string | null) { this._inspector_requested_tab_id = _ }
+
   // #1243 — Déclenche un re-render de l'inspecteur (résolution de cible). Appelé
   // sur chaque changement de composition de sélection. Debouncé comme les autres
   // updaters pour absorber les rafales (sélection au lasso, add/remove multiples).

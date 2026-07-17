@@ -33,6 +33,7 @@ import * as d3 from '../d3Modules'
 import FileSaver from 'file-saver'
 
 import { StepType } from '@reactour/tour'
+import { Class_GuidedTour } from './GuidedTour'
 import { CreateToastFnReturn } from '@chakra-ui/react'
 
 import { Class_MenuConfig } from '../types/MenuConfig'
@@ -524,6 +525,14 @@ export class Class_ApplicationData {
    * @memberof Class_ApplicationData
    */
   private _steps: StepType[] = []
+
+  /**
+   * #1255 — Scénario de la visite guidée (cf. Class_GuidedTour). Porte l'état du tour en cours :
+   * gestes attendus, contenu de repli créé, nettoyage de fin.
+   * @private
+   * @memberof Class_ApplicationData
+   */
+  private _guided_tour: Class_GuidedTour = new Class_GuidedTour(this)
 
   /**
    * Session-only horizontal spacing for auto-layout. `null` = use style default.
@@ -1349,188 +1358,19 @@ export class Class_ApplicationData {
     return svg_with_header
   }
 
+  /**
+   * (Re)construit le scénario de la visite guidée. Appelé à chaque lancement du tour (bouton Aide,
+   * écran d'accueil) car le scénario dépend de l'état du diagramme au moment du lancement.
+   *
+   * `_steps` est muté EN PLACE : le TourProvider reçoit `app_data.steps` et garde la même
+   * référence de tableau d'un lancement à l'autre.
+   */
   public setSteps() {
     this._steps.splice(0, this._steps.length) // Reset list
-    const openConfigDrawer = () => {
-      if (this.menu_configuration.ref_menu_opened.current?.[0] === false) {
-        this.menu_configuration.ref_menu_opened.current[1](true)
-      }
-    }
-    const closeConfigDrawer = () => {
-      if (this.menu_configuration.ref_menu_opened.current?.[0] === true) {
-        this.menu_configuration.ref_menu_opened.current[1](false)
-      }
-    }
-    // #1243 — la matrice type×élément est déposée : le tour ne pilote plus de
-    // type/élément (switchConfigTab / ensureElementSelected supprimés). Le
-    // panneau EST l'inspecteur : pour le montrer sur un cas réel, on
-    // sélectionne un nœud de démo — l'inspecteur bascule alors sur sa cible.
-    const selectDemoNode = () => {
-      const node = this.drawing_area.sankey.nodes_list[0]
-      if (!node) return
-      this.drawing_area.purgeSelection()
-      this.drawing_area.addElementToSelection(node)
-      this.menu_configuration.ref_to_menu_config_updater.current?.()
-    }
-    const setFilterDrawer = (open: boolean) => {
-      this.menu_configuration.ref_close_filter_drawer.current?.(open)
-    }
-    const demoRefs: {
-      created: boolean
-      node_ids: string[]
-      node_tagg_id: string | null
-      flux_tagg_id: string | null
-      data_tagg_id: string | null
-    } = {
-      created: false,
-      node_ids: [],
-      node_tagg_id: null,
-      flux_tagg_id: null,
-      data_tagg_id: null,
-    }
-    const ensureDemoContent = () => {
-      // Create two nodes, a flow with a value and one tag group per type (node/flux/data)
-      // so the user sees a concrete diagram and can explore all sub menus during the tour
-      if (demoRefs.created) return
-      if (this.drawing_area.sankey.nodes_list.length !== 0) return
-      const sankey = this.drawing_area.sankey
-      sankey.addNewDefaultLink()
-      const link = sankey.links_list[0]
-      if (link) {
-        link.valueCurrent = 100
-      }
-      const node_tagg = sankey.addNodeTagGroup('tour_demo_node_tagg', this.t('guide.demo_node_tagg_name'))
-      const flux_tagg = sankey.addFluxTagGroup('tour_demo_flux_tagg', this.t('guide.demo_flux_tagg_name'))
-      const data_tagg = sankey.addDataTagGroup('tour_demo_data_tagg', this.t('guide.demo_data_tagg_name'))
-      demoRefs.node_ids = sankey.nodes_list.map(n => n.id)
-      demoRefs.node_tagg_id = node_tagg.id
-      demoRefs.flux_tagg_id = flux_tagg.id
-      demoRefs.data_tagg_id = data_tagg.id
-      demoRefs.created = true
-      sankey.draw()
-      this.drawing_area.areaAutoFit()
-    }
-    const cleanupDemoContent = () => {
-      if (!demoRefs.created) return
-      const sankey = this.drawing_area.sankey
-      demoRefs.node_ids.forEach(id => {
-        const node = sankey.nodes_dict[id]
-        if (node) sankey.deleteNode(node)
-      })
-      if (demoRefs.node_tagg_id) sankey.removeTagGroupWithId('node_taggs', demoRefs.node_tagg_id)
-      if (demoRefs.flux_tagg_id) sankey.removeTagGroupWithId('flux_taggs', demoRefs.flux_tagg_id)
-      if (demoRefs.data_tagg_id) sankey.removeTagGroupWithId('data_taggs', demoRefs.data_tagg_id)
-      demoRefs.created = false
-      demoRefs.node_ids = []
-      demoRefs.node_tagg_id = null
-      demoRefs.flux_tagg_id = null
-      demoRefs.data_tagg_id = null
-      sankey.draw()
-    }
-    const has_filter_toolbar = document.getElementById('buttonOpenFilterDrawer') !== null
-    const steps = [
-      {
-        selector: '#g_drawing',
-        content: this.t('guide.drawing_area'),
-        action: () => {
-          ensureDemoContent()
-        }
-      },
-      {
-        selector: '.TopMenu',
-        content: this.t('guide.nav_menu'),
-      },
-      {
-        selector: '.menutop_button_fichier',
-        content: this.t('guide.menutop_fichier'),
-      },
-      {
-        selector: '.menutop_button_export',
-        content: this.t('guide.menutop_export'),
-      },
-      {
-        selector: '.menutop_button_edition',
-        content: this.t('guide.menutop_edition'),
-      },
-      {
-        // Save-in-cache moved to the topbar document-state block (undo/redo/save).
-        selector: '.topbar_button_save_in_cache',
-        content: this.t('guide.save_in_cache'),
-      },
-      {
-        // Visite guidée + Tutoriels (+ Sankeythèque) now live in the "Aide" dropdown.
-        selector: '.menutop_button_aide',
-        content: this.t('guide.tutorials_button'),
-      },
-      ...(has_filter_toolbar ? [
-        {
-          selector: '#buttonOpenFilterDrawer',
-          content: this.t('guide.filter_toolbar_button'),
-          action: () => {
-            setFilterDrawer(true)
-          }
-        },
-        {
-          selector: '#drawer_filter',
-          content: this.t('guide.filter_toolbar_drawer'),
-          action: () => {
-            setFilterDrawer(true)
-          },
-          actionAfter: () => {
-            setFilterDrawer(false)
-          }
-        },
-      ] : []),
-      {
-        selector: '.toolbar_bottom_mouse_mode',
-        content: this.t('guide.toolbar_bottom_mouse_mode'),
-      },
-      {
-        selector: '.toolbar_bottom_position_mode',
-        content: this.t('guide.toolbar_bottom_position_mode'),
-      },
-      {
-        selector: '.toolbar_bottom_stretch',
-        content: this.t('guide.toolbar_bottom_stretch'),
-      },
-      {
-        selector: '.menutop_button_aide',
-        content: this.t('guide.toolbar_bottom_help'),
-      },
-      {
-        selector: '.sideToolBar',
-        content: this.t('guide.toolbar'),
-        actionAfter: () => {
-          // Ouvre le panneau ET sélectionne un nœud : l'inspecteur est piloté
-          // par la sélection, sans elle il montrerait les réglages de la Vue.
-          openConfigDrawer()
-          selectDemoNode()
-        }
-      },
-      {
-        selector: '.drawer_menu_config',
-        content: this.t('guide.menu_config'),
-      },
-      {
-        // Fil d'Ariane « Vue › Nœud » : c'est lui qui matérialise le nouveau
-        // modèle (la sélection choisit la cible), à la place des ex-boutons de
-        // type/élément de la matrice.
-        selector: '.inspector_breadcrumb',
-        content: this.t('guide.inspector_breadcrumb'),
-        actionAfter: () => {
-          closeConfigDrawer()
-        }
-      },
-      {
-        selector: '#g_drawing',
-        content: this.t('guide.demo_cleanup'),
-        actionAfter: () => {
-          cleanupDemoContent()
-        }
-      },
-    ]
-    steps.forEach(step => this._steps.push(step))
+    this._guided_tour.buildSteps().forEach(step => this._steps.push(step))
   }
+
+  public get guided_tour(): Class_GuidedTour { return this._guided_tour }
 
   /**
    * Generatric function used to save undo/redo of some basic attribute mutation
