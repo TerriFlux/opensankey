@@ -954,11 +954,8 @@ export class Class_DrawingArea {
   public drawGrid() {
     // Clean if needed
     this.d3_selection_grid?.selectAll('.line').remove()
-    // Mêmes bornes que le fond : canvas en mode papier, union canvas ∪ viewport en
-    // mode libre (la grille remplit toute la fenêtre, comme le fond).
-    const b = this.is_paper_mode
-      ? { x: this._background_d3_groups_shift_x, y: this._background_d3_groups_shift_y, w: this._zoom_width, h: this._zoom_height }
-      : this._freeBgBounds()
+    // Mêmes bornes que le fond (cf. drawBackground).
+    const b = this.is_paper_mode ? this.paper_world_rect : this._freeBgBounds()
     // Draw only if asked OR outside publishing mode
     if (this.grid_visible && this.editable) {
       // Draw horizontal lines
@@ -2386,37 +2383,47 @@ export class Class_DrawingArea {
    * ou le ré-ancrage (#165) — le canvas figé, lui, ne couvre plus la fenêtre après un
    * ré-ancrage ou quand le contenu est plus petit qu'elle.
    */
+  /**
+   * OS#1250 phase 4 — CANVAS INFINI : bornes du fond et de la grille en mode libre.
+   *
+   * C'est exactement le viewport projeté en coordonnées monde : le fond couvre ce qu'on
+   * voit, ni plus ni moins. Il n'y a plus de « canvas » — ce rectangle fini, dimensionné
+   * sur la fenêtre puis unionné ici, n'existait que pour être ancré par le constrain
+   * custom (supprimé en phase 5). Le fond suivait donc une géométrie dont personne
+   * n'avait plus besoin, et grossissait au fil des pans.
+   *
+   * Le résultat dépend de la caméra (et non de l'inverse) : c'est le sens du modèle.
+   * Marge de sécurité d'un demi-viewport de chaque côté pour absorber les pans/zooms
+   * entre deux redraws (le zoom n'applique qu'un transform ; le fond n'est redessiné
+   * qu'en différé, cf. eventZoom) sans laisser apparaître de bande vide.
+   */
   private _freeBgBounds(): { x: number, y: number, w: number, h: number } {
-    let x0 = this._background_d3_groups_shift_x
-    let y0 = this._background_d3_groups_shift_y
-    let x1 = x0 + this._zoom_width
-    let y1 = y0 + this._zoom_height
     const node = this.d3_selection_zoom_area?.node()
-    if (node) {
-      const t = d3.zoomTransform(node)
-      if (t.k) {
-        const fm = this._fit_margin / 2
-        const navH = this.getNavBarHeight()
-        // Coins écran du viewport (haut-gauche / bas-droite) projetés en coords monde.
-        const tl = CameraMath.screenToWorld(t, fm, navH + fm)
-        const br = CameraMath.screenToWorld(t, fm + this.window_fitting_width, navH + fm + this.window_fitting_height)
-        x0 = Math.min(x0, tl.x)
-        y0 = Math.min(y0, tl.y)
-        x1 = Math.max(x1, br.x)
-        y1 = Math.max(y1, br.y)
-      }
+    const fm = this._fit_margin / 2
+    const navH = this.getNavBarHeight()
+    const vw = this.window_fitting_width
+    const vh = this.window_fitting_height
+    if (!node) return { x: 0, y: 0, w: vw, h: vh }
+    const t = d3.zoomTransform(node)
+    if (!t.k) return { x: 0, y: 0, w: vw, h: vh }
+    const tl = CameraMath.screenToWorld(t, fm, navH + fm)
+    const br = CameraMath.screenToWorld(t, fm + vw, navH + fm + vh)
+    const pad_x = (br.x - tl.x) / 2
+    const pad_y = (br.y - tl.y) / 2
+    return {
+      x: tl.x - pad_x,
+      y: tl.y - pad_y,
+      w: (br.x - tl.x) + 2 * pad_x,
+      h: (br.y - tl.y) + 2 * pad_y
     }
-    return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }
   }
 
   protected drawBackground() {
     // Clean if needed
     this.d3_selection_bg?.selectAll('.bg').remove()
-    // Bornes du fond : en mode papier, le canvas figé (taille papier). En mode libre,
-    // l'union canvas ∪ viewport (cf. _freeBgBounds) pour remplir toute la fenêtre.
-    const b = this.is_paper_mode
-      ? { x: this._background_d3_groups_shift_x, y: this._background_d3_groups_shift_y, w: this._zoom_width, h: this._zoom_height }
-      : this._freeBgBounds()
+    // OS#1250 phase 4 — bornes du fond. Mode papier : la PAGE, rect fixe en coordonnées
+    // monde (cf. paper_world_rect). Mode libre : le viewport projeté (canvas infini).
+    const b = this.is_paper_mode ? this.paper_world_rect : this._freeBgBounds()
     // Draw background (fill only — the editable-canvas border is drawn separately
     // on the SVG root via _updateViewportBorder so it stays anchored to the viewport
     // and doesn't slide off-screen when the user pans content).
@@ -3225,6 +3232,17 @@ export class Class_DrawingArea {
    * contenu, il donne le translateExtent de d3-zoom et l'échelle des scrollbars. En mode papier
    * c'est la page ancrée en (0,0) — et non le fond décalé.
    */
+  /**
+   * OS#1250 phase 4 — la PAGE, rect fixe en coordonnées monde. Le mode papier n'est
+   * plus un « canvas » à ancrer : c'est un rectangle comme un autre, qui participe aux
+   * bounds (cf. Class_ViewportChrome.updateScrollbars) et sert de bornes au fond/grille.
+   * Origine (0,0) par construction : les positions du mode papier sont calculées pour
+   * le format.
+   */
+  public get paper_world_rect(): { x: number, y: number, w: number, h: number } {
+    return { x: 0, y: 0, w: this._width, h: this._height }
+  }
+
   public get pannable_canvas_rect(): { x0: number, y0: number, x1: number, y1: number } {
     if (this.is_paper_mode) {
       return { x0: 0, y0: 0, x1: this._width, y1: this._height }
