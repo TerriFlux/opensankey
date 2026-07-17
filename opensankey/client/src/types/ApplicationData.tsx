@@ -1765,9 +1765,9 @@ export class Class_ApplicationData {
       // Prevent default event on ctrl + a
       evt.preventDefault()
 
-      // Select all node & links
+      // Select all node & links (les zones de la légende sont des conteneurs,
+      // déjà couvertes par addAllVisibleElementsToSelection — OS#1254)
       app_ref.drawing_area.addAllVisibleElementsToSelection()
-      app_ref.drawing_area.addLegendToSelection()
     }
     // Event to save current diagram in cache -----------------------------------------
     else if (evtCtrlS) {

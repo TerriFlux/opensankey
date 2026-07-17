@@ -33,13 +33,11 @@ body {
 	} */
 
   /* Hovering link control points  in selection mode */
-  #g_handlers,
-  #grp_legend {
+  #g_handlers {
     cursor: grab;
   }
 
-  #g_handlers:active,
-  #grp_legend:active {
+  #g_handlers:active {
     cursor: grabbing;
   }
 
