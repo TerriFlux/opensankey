@@ -259,7 +259,144 @@ export const LinkValueTypeSelector = ({
 /*************************************************************************************************/
 export const default_value_option = 'value'
 
-export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_ApplicationData }) => {
+// #1243 — Origine / destination / inversion d'un flux, extrait pour servir
+// d'EN-TÊTE D'IDENTITÉ à l'inspecteur (l'identité n'est pas un onglet).
+// `refresh` : rafraîchissement post-retopologie, fourni par l'hôte (le panneau
+// historique passe le sien ; l'inspecteur notifie les menus liés aux flux).
+export const LinkOriginDestEditor = ({ app_data, refresh }: {
+  app_data: Class_ApplicationData
+  refresh: () => void
+}) => {
+  const { t, drawing_area, history } = app_data
+  const { sankey } = drawing_area
+  const selected_links = drawing_area.selected_links_list_sorted
+  return <Box
+    display='grid'
+    gridTemplateColumns='9fr 1fr'
+    gridTemplateRows='1fr 1fr'
+    gridColumnGap='0.25rem'
+    gridRowGap='0.25rem'
+    height='4.25rem'
+  >
+    <Box
+      display='grid'
+      gridColumn='1'
+      gridRow='1 / 3'
+      gridTemplateColumns='1fr'
+      gridTemplateRows='1fr 1fr'
+      gridRowGap='0.25rem'
+    >
+      <OSTooltip label={t('Flux.tooltips.src')}>
+        <InputGroup variant='menuconfigpanel_option_input'>
+          <InputLeftAddon height='1.5rem' width='5rem'>
+            {t('Flux.src')}
+          </InputLeftAddon>
+          <Select
+            variant='select_custom_style'
+            isDisabled={selected_links.length !== 1}
+            onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+              const new_source = sankey.nodes_dict[event.target.value]
+              if (new_source !== null) {
+                // Retopologie du graphe : on mémorise l'ancienne origine flux par flux.
+                const before = selected_links.map(link => ({ link, source: link.source }))
+                const apply = () => {
+                  selected_links.forEach(link => link.source = new_source)
+                  refresh()
+                }
+                const undo = () => {
+                  before.forEach(({ link, source }) => link.source = source)
+                  refresh()
+                }
+                history.saveUndo(undo)
+                history.saveRedo(apply)
+                apply()
+              }
+            }}
+            value={selected_links.length > 0 ? selected_links[0].source.id : ''}
+          >
+            <>
+              <option hidden key={'no_source'} value=''> </option>
+              {sankey.nodes_list.map((n, i) => <option key={i} value={n.id}>{n.name}</option>)}
+            </>
+          </Select>
+        </InputGroup>
+      </OSTooltip>
+
+      <OSTooltip label={t('Flux.tooltips.trgt')}>
+        <InputGroup variant='menuconfigpanel_option_input'>
+          <InputLeftAddon height='1.5rem' width='5rem'>
+            {t('Flux.trgt')}
+          </InputLeftAddon>
+          <Select
+            variant='select_custom_style'
+            isDisabled={selected_links.length !== 1}
+            onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+              const new_target = sankey.nodes_dict[event.target.value]
+              if (new_target !== null) {
+                // Idem origine : ancienne destination mémorisée flux par flux.
+                const before = selected_links.map(link => ({ link, target: link.target }))
+                const apply = () => {
+                  selected_links.forEach(link => link.target = new_target)
+                  refresh()
+                }
+                const undo = () => {
+                  before.forEach(({ link, target }) => link.target = target)
+                  refresh()
+                }
+                history.saveUndo(undo)
+                history.saveRedo(apply)
+                apply()
+              }
+            }}
+            value={selected_links.length > 0 ? selected_links[0].target.id : ''}
+          >
+            <>
+              <option hidden key={'no_target'} value=''> </option>
+              {sankey.nodes_list.map((n, i) => <option key={i} value={n.id}>{n.name}</option>)}
+            </>
+          </Select>
+        </InputGroup>
+      </OSTooltip>
+    </Box>
+    {/* Bouton inversion origine <-> destination */}
+    <OSTooltip label={t('Flux.tooltips.if')}>
+      <Button
+        variant='menuconfigpanel_option_button'
+        gridColumn='2'
+        gridRow='1 / 3'
+        alignSelf='center'
+        justifySelf='stretch'
+        height='2.25rem'
+        width='100%'
+        minWidth='unset'
+        padding='0'
+        isDisabled={selected_links.length !== 1}
+        onClick={() => {
+          // L'inversion est sa propre inverse : undo et redo sont la même fonction.
+          const swap = () => {
+            selected_links.forEach(link => link.swapSourceAndTarget())
+            refresh()
+          }
+          history.saveUndo(swap)
+          history.saveRedo(swap)
+          swap()
+        }}
+      >
+        <FaExchangeAlt size='1rem' style={{ transform: 'rotate(90deg)' }} />
+      </Button>
+    </OSTooltip>
+  </Box>
+}
+
+export const MenuConfigurationLinksData = ({ app_data, hide_selector = false, hide_origin_dest = false }: {
+  app_data: Class_ApplicationData
+  // #1243 — inspecteur : le sélecteur unifié est rendu une seule fois en tête de
+  // panneau ; on masque alors celui embarqué ici (doublon).
+  hide_selector?: boolean
+  // #1243 — inspecteur : origine/destination vivent dans l'en-tête d'identité
+  // du panneau (LinkOriginDestEditor), pas dans l'onglet Valeur.
+  hide_origin_dest?: boolean
+}) => {
   const { t, drawing_area, menu_configuration } = app_data
   const { sankey } = drawing_area
   const { data_taggs_list } = sankey
@@ -388,124 +525,10 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
   }
 
   return <Box layerStyle='menu_sub_section'>
-    <SankeyLinkSelection app_data={app_data} />
-    {/* Édition origine / destination du flux */}
-    <Box
-      display='grid'
-      gridTemplateColumns='9fr 1fr'
-      gridTemplateRows='1fr 1fr'
-      gridColumnGap='0.25rem'
-      gridRowGap='0.25rem'
-      height='4.25rem'
-    >
-      <Box
-        display='grid'
-        gridColumn='1'
-        gridRow='1 / 3'
-        gridTemplateColumns='1fr'
-        gridTemplateRows='1fr 1fr'
-        gridRowGap='0.25rem'
-      >
-        <OSTooltip label={t('Flux.tooltips.src')}>
-          <InputGroup variant='menuconfigpanel_option_input'>
-            <InputLeftAddon height='1.5rem' width='5rem'>
-              {t('Flux.src')}
-            </InputLeftAddon>
-            <Select
-              variant='select_custom_style'
-              isDisabled={selected_links.length !== 1}
-              onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
-                const new_source = sankey.nodes_dict[event.target.value]
-                if (new_source !== null) {
-                  // Retopologie du graphe : on mémorise l'ancienne origine flux par flux.
-                  const before = selected_links.map(link => ({ link, source: link.source }))
-                  const apply = () => {
-                    selected_links.forEach(link => link.source = new_source)
-                    refreshThisAndUpdateRelatedComponents()
-                  }
-                  const undo = () => {
-                    before.forEach(({ link, source }) => link.source = source)
-                    refreshThisAndUpdateRelatedComponents()
-                  }
-                  app_data.history.saveUndo(undo)
-                  app_data.history.saveRedo(apply)
-                  apply()
-                }
-              }}
-              value={selected_links.length > 0 ? selected_links[0].source.id : ''}
-            >
-              <>
-                <option hidden key={'no_source'} value=''> </option>
-                {sankey.nodes_list.map((n, i) => <option key={i} value={n.id}>{n.name}</option>)}
-              </>
-            </Select>
-          </InputGroup>
-        </OSTooltip>
-
-        <OSTooltip label={t('Flux.tooltips.trgt')}>
-          <InputGroup variant='menuconfigpanel_option_input'>
-            <InputLeftAddon height='1.5rem' width='5rem'>
-              {t('Flux.trgt')}
-            </InputLeftAddon>
-            <Select
-              variant='select_custom_style'
-              isDisabled={selected_links.length !== 1}
-              onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
-                const new_target = sankey.nodes_dict[event.target.value]
-                if (new_target !== null) {
-                  // Idem origine : ancienne destination mémorisée flux par flux.
-                  const before = selected_links.map(link => ({ link, target: link.target }))
-                  const apply = () => {
-                    selected_links.forEach(link => link.target = new_target)
-                    refreshThisAndUpdateRelatedComponents()
-                  }
-                  const undo = () => {
-                    before.forEach(({ link, target }) => link.target = target)
-                    refreshThisAndUpdateRelatedComponents()
-                  }
-                  app_data.history.saveUndo(undo)
-                  app_data.history.saveRedo(apply)
-                  apply()
-                }
-              }}
-              value={selected_links.length > 0 ? selected_links[0].target.id : ''}
-            >
-              <>
-                <option hidden key={'no_target'} value=''> </option>
-                {sankey.nodes_list.map((n, i) => <option key={i} value={n.id}>{n.name}</option>)}
-              </>
-            </Select>
-          </InputGroup>
-        </OSTooltip>
-      </Box>
-      {/* Bouton inversion origine <-> destination */}
-      <OSTooltip label={t('Flux.tooltips.if')}>
-        <Button
-          variant='menuconfigpanel_option_button'
-          gridColumn='2'
-          gridRow='1 / 3'
-          alignSelf='center'
-          justifySelf='stretch'
-          height='2.25rem'
-          width='100%'
-          minWidth='unset'
-          padding='0'
-          isDisabled={selected_links.length !== 1}
-          onClick={() => {
-            // L'inversion est sa propre inverse : undo et redo sont la même fonction.
-            const swap = () => {
-              selected_links.forEach(link => link.swapSourceAndTarget())
-              refreshThisAndUpdateRelatedComponents()
-            }
-            app_data.history.saveUndo(swap)
-            app_data.history.saveRedo(swap)
-            swap()
-          }}
-        >
-          <FaExchangeAlt size='1rem' style={{ transform: 'rotate(90deg)' }} />
-        </Button>
-      </OSTooltip>
-    </Box>
+    {!hide_selector && <SankeyLinkSelection app_data={app_data} />}
+    {/* Édition origine / destination du flux (dans l'inspecteur : en-tête d'identité) */}
+    {!hide_origin_dest &&
+      <LinkOriginDestEditor app_data={app_data} refresh={refreshThisAndUpdateRelatedComponents} />}
     {/* Data tags selector */}
     {data_taggs_list.map(data_tagg => {
       return <BOX2COLSTITLEH4 key={data_tagg.id} title={data_tagg.name}>

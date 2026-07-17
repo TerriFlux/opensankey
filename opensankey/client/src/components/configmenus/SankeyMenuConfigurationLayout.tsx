@@ -626,7 +626,12 @@ export const DrawingAreaConfig = ({
  * @param {*} { app_data }
  * @return {*} 
  */
-export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) => {
+export const LegendConfig = ({ app_data, compact = false }: {
+  app_data: Class_ApplicationData
+  // #1243 — inspecteur : l'onglet porte déjà le nom (« Légende ») → l'œil dit
+  // juste « Visible », et les attributs restent éditables même œil fermé.
+  compact?: boolean
+}) => {
 
   const { t } = app_data
   // #247 — re-render forcé d'identité stable (compteur local, ce menu n'a pas de slot updater).
@@ -792,7 +797,7 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
         isChecked={!app_data.drawing_area.legend.masked}
         onChange={eventLegendMasked}
       >
-        {t('Menu.Leg')}
+        {compact ? 'Visible' : t('Menu.Leg')}
       </Checkbox>
     </Box>
 
@@ -815,7 +820,16 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
 
     <Box
       layerStyle='menuconfigpanel_grid'
-      style={{ display: ((app_data.drawing_area.legend.masked || legend_broken) ? 'none' : '') }}
+      // Deux raisons distinctes de masquer les paramètres :
+      //  - OS#1254 : légende « cassée » (personnalisée à la main) — le bandeau
+      //    « Régénérer » les remplace, ils n'ont plus de prise ;
+      //  - légende masquée — SAUF en mode compact (#1243, inspecteur) où l'on
+      //    peut régler avant d'afficher, comme partout ailleurs dans le panneau.
+      style={{
+        display: (legend_broken || (!compact && app_data.drawing_area.legend.masked))
+          ? 'none'
+          : ''
+      }}
     >
       {/* Couleur + Opacité du fond */}
       <Box as='span' layerStyle='options_2cols'>
@@ -1001,7 +1015,12 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
  * Composant de configuration du titre du diagramme (cf. ClassTemplate_DrawingTitle).
  * Affiché à côté de la légende dans l'onglet style.
  */
-export const TitleConfig = ({ app_data }: { app_data: Class_ApplicationData }) => {
+export const TitleConfig = ({ app_data, compact = false }: {
+  app_data: Class_ApplicationData
+  // #1243 — inspecteur : l'onglet porte déjà le nom (« Titre ») → l'œil dit
+  // juste « Visible », et le contenu reste éditable même œil fermé.
+  compact?: boolean
+}) => {
 
   const { t } = app_data
   // #247 — re-render forcé d'identité stable (compteur local, ce menu n'a pas de slot updater).
@@ -1067,13 +1086,13 @@ export const TitleConfig = ({ app_data }: { app_data: Class_ApplicationData }) =
         isChecked={is_shown}
         onChange={eventTitleShown}
       >
-        {t('Menu.TitleSection')}
+        {compact ? 'Visible' : t('Menu.TitleSection')}
       </Checkbox>
     </Box>
 
     <Box
       layerStyle='menuconfigpanel_grid'
-      style={{ display: (is_shown ? '' : 'none') }}
+      style={{ display: (compact || is_shown ? '' : 'none') }}
     >
       {/* Édition du texte via l'interface ZDT */}
       <Box layerStyle='menuconfigpanel_option_name'>

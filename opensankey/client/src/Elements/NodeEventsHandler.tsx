@@ -101,7 +101,6 @@ export class NodeEventsHandler {
   private selectElementAndOpenTab(labelType: 'shape' | 'name_label' | 'value_label' | 'icon', ctrlKey: boolean) {
     const drawing_area = this._node.drawing_area
     const menu_config = drawing_area.application_data.menu_configuration
-    const elements_configurable_selected = menu_config.elements_configurable_selected
 
     // ✅ Ajouter/Retirer de la sélection
     if (ctrlKey) {
@@ -111,25 +110,9 @@ export class NodeEventsHandler {
       drawing_area.addElementToSelection(this._node)
     }
 
-    // ✅ Mettre à jour elements_configurable_selected.data
-    if (drawing_area.selected_nodes_list.length > 0 && !elements_configurable_selected.data.includes('node')) {
-      elements_configurable_selected.data.push('node')
-    }
-    if (drawing_area.selected_containers_list.length > 0 && !elements_configurable_selected.data.includes('object')) {
-      elements_configurable_selected.data.push('object')
-    }
-
-    // ✅ Configurer le style et l'onglet
-    elements_configurable_selected.style = ['element']
-  
-    // // ✅ Mapper le type de label vers l'onglet correspondant
-    // const tabMap: Record<string, 'background' | 'shape' | 'name' | 'value' | 'icon'> = {
-    //   'shape': 'shape',
-    //   'name_label': 'name',
-    //   'value_label': 'value',
-    //   'icon': 'icon'
-    // }
-  
+    // #1243 — plus d'axe « élément » à forcer (matrice déposée) : l'inspecteur
+    // dérive sa cible de la sélection qu'on vient de poser. On ne garde que
+    // l'onglet visé (cliquer un label ouvre l'onglet de ce label).
     menu_config.tab_selected = labelType
 
     // ✅ Mettre à jour les composants
@@ -207,16 +190,11 @@ export class NodeEventsHandler {
   private selectFrameTarget(target: Class_NodeBase) {
     const drawing_area = this._node.drawing_area
     const menu_config = drawing_area.application_data.menu_configuration
-    const elements_configurable_selected = menu_config.elements_configurable_selected
     drawing_area.purgeSelection()
     drawing_area.addElementToSelection(target)
-    if (drawing_area.selected_nodes_list.length > 0 && !elements_configurable_selected.data.includes('node')) {
-      elements_configurable_selected.data.push('node')
-    }
-    if (drawing_area.selected_containers_list.length > 0 && !elements_configurable_selected.data.includes('object')) {
-      elements_configurable_selected.data.push('object')
-    }
-    elements_configurable_selected.style = ['element']
+    // #1243 — la matrice type×élément est déposée : plus d'axe « élément » à
+    // forcer, l'inspecteur dérive sa cible de la sélection qu'on vient de poser
+    // (ici le cadre englobant : une zone de texte -> cible `container`).
     menu_config.ref_to_menu_config_updater.current()
     menu_config.updateAllComponentsRelatedToNodes()
   }
