@@ -101,6 +101,16 @@ body {
   }
 }
 
+/* Cursor when placing a text zone (drag a rectangle to size/position it) */
+.place_container_mode {
+  #g_background,
+  .gg_nodes,
+  .gg_labels,
+  .link {
+    cursor: crosshair;
+  }
+}
+
 
 
 

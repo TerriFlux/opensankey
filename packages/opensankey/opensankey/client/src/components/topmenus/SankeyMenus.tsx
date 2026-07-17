@@ -112,7 +112,10 @@ export const SankeyMenu = (
     // sa largeur : le tiroir de filtres se place à sa gauche, les deux
     // cohabitent (indispensable à « Filtres > Sélectionner » qui alimente
     // l'inspecteur — sinon on sélectionne à l'aveugle).
-    if (open && open !== show_nav && !menu_configuration.config_panel_pinned) {
+    // #1258 — un tiroir de filtres ÉPINGLÉ est docké (il réserve sa largeur) :
+    // il cohabite avec la config, on ne le ferme plus.
+    if (open && open !== show_nav && !menu_configuration.config_panel_pinned
+      && !menu_configuration.filter_panel_pinned) {
       menu_configuration.ref_close_filter_drawer.current(false)
     }
     set_show_nav(open)
@@ -241,6 +244,29 @@ export const SankeyMenu = (
         </OSTooltip> : <></>}
         <Divider />
         <ComponentMouseMode app_data={app_data} updateParentComponent={refreshToolsColumn} />
+        {/* Zone de texte : à côté de l'outil de tracé (mode édition). Active le mode
+            « placer une zone de texte » — glisser un rectangle sur le fond pose la ZDT
+            à cette position/taille (cf. DrawingArea.enterPlaceContainerMode). Re-clic =
+            sortie du mode. Seule porte d'entrée restante pour créer une ZDT depuis l'UI. */}
+        <OSTooltip placement='left' label={t('Banner.create_text_zone')}>
+          <Button
+            id='button_create_text_zone'
+            variant={app_data.drawing_area.isInPlaceContainerMode()
+              ? 'toolbar_button_mouse_mode_activated'
+              : 'toolbar_button_mouse_mode'}
+            size='sizeToolbarButton'
+            onClick={() => {
+              if (app_data.drawing_area.isInPlaceContainerMode()) {
+                app_data.drawing_area.exitPlaceContainerMode()
+              } else {
+                app_data.drawing_area.enterPlaceContainerMode()
+              }
+              refreshToolsColumn()
+            }}
+          >
+            {icon_library.icon_object}
+          </Button>
+        </OSTooltip>
         <ComponentPositionMode app_data={app_data} updateParentComponent={refreshToolsColumn} />
         {/* hide_fullscreen : le plein écran est dans la barre du haut en éditeur. */}
         <ComponetStretchButtons app_data={app_data} updateParentComponent={refreshToolsColumn} hide_fullscreen />
