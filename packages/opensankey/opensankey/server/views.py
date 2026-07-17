@@ -34,6 +34,7 @@ import ipaddress
 import socket
 import tempfile
 import os
+import posixpath
 import json
 import shutil
 from time import perf_counter
@@ -58,6 +59,7 @@ from flask import Response
 from flask import send_file
 from flask import send_from_directory
 from flask import session
+from werkzeug.utils import safe_join
 
 import SankeyExcelParser.su_trace as trace
 from SankeyExcelParser.io_base import IOExcel, IOJson
@@ -1503,7 +1505,9 @@ def menus_templates():
 @opensankey.route("/menus/templates_asset/<path:asset>", methods=["GET"])
 def menus_templates_asset(asset):
     """
-    Sert un fichier (image de previsualisation, ...) d'une galerie.
+    Sert un fichier d'une galerie : image de previsualisation, ou le modele
+    lui-meme (JSON, mais aussi .xlsx / .sankey / .zmfa, recuperes bruts et
+    parses par le front).
 
     Le chemin `asset` est relatif a la racine de la source : SANKEY_DATA pour les
     modeles (defaut), MFAData pour la sankeytheque (?source=mfadata).
@@ -1515,14 +1519,39 @@ def menus_templates_asset(asset):
     root = os.environ.get("MFAData" if source == "mfadata" else "SANKEY_DATA")
     if not root:
         abort(404)
-    normalized = asset.replace("\\", "/")
+    # Normaliser AVANT de filtrer, sinon "templates/../tests/x" passe la regle de
+    # prefixe (la chaine brute commence bien par "templates/") alors que le chemin
+    # reellement ouvert, lui, est normalise ensuite — et sort de templates/ tout en
+    # restant sous la racine, donc sans que safe_join / send_from_directory n'y
+    # voient une remontee. Le filtre doit porter sur le chemin final.
+    normalized = posixpath.normpath(asset.replace("\\", "/"))
     if source == "mfadata":
         if normalized not in templates_declared_assets("mfadata"):
             abort(404)
     # Modeles : tout SankeyData/templates/ est publiable, la regle de prefixe suffit.
     elif not normalized.startswith("templates/"):
         abort(404)
-    return send_from_directory(root, asset)
+    if normalized.endswith(".json") or normalized.endswith(".json.gz"):
+        # L'index declare "x.json" alors que, le plus souvent, seul "x.json.gz"
+        # existe sur disque. handle_json_or_compressed applique la meme tolerance
+        # .json/.json.gz que convert/launch (avec compression a la volee mise en
+        # cache au premier acces) et renvoie le chemin a servir — sinon une
+        # Response 404 ou False.
+        #
+        # safe_join reste la ceinture de securite : send_from_directory
+        # neutralisait les remontees, pas os.path.join.
+        full_path = safe_join(root, normalized)
+        if full_path is None:
+            abort(404)
+        resolved = handle_json_or_compressed(full_path)
+        if not isinstance(resolved, str):
+            abort(404)
+        # Servi BRUT, sans Content-Encoding : le client degzippe lui-meme (regle
+        # etablie pour les portfolios, ou l'en-tete faisait double decompression).
+        # conditional=True ajoute ETag / Last-Modified, donc un 304 quand le
+        # navigateur a deja le modele.
+        return send_file(resolved, mimetype="application/gzip", conditional=True)
+    return send_from_directory(root, normalized)
 
 
 def is_developer_user():
