@@ -1,4 +1,4 @@
-// ==================================================================================================
+﻿// ==================================================================================================
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
@@ -35,7 +35,7 @@ import FileSaver from 'file-saver'
 import { StepType } from '@reactour/tour'
 import { CreateToastFnReturn } from '@chakra-ui/react'
 
-import { Class_MenuConfig, keyTypeConfig, keyTypeElements } from '../types/MenuConfig'
+import { Class_MenuConfig } from '../types/MenuConfig'
 import { const_default_position_x, const_default_position_y, default_file_name, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, randomId, toast_bypass, Type_JSON } from './Utils'
 import { getPublishOptions, PublishOptions } from './PublishOptions'
 import { Class_ApplicationHistory } from './ApplicationHistory'
@@ -1352,16 +1352,16 @@ export class Class_ApplicationData {
         this.menu_configuration.ref_menu_opened.current[1](false)
       }
     }
-    const switchConfigTab = (tab: 'data' | 'style') => {
-      this.menu_configuration.type_menu_configuration_selected = tab
+    // #1243 — la matrice type×élément est déposée : le tour ne pilote plus de
+    // type/élément (switchConfigTab / ensureElementSelected supprimés). Le
+    // panneau EST l'inspecteur : pour le montrer sur un cas réel, on
+    // sélectionne un nœud de démo — l'inspecteur bascule alors sur sa cible.
+    const selectDemoNode = () => {
+      const node = this.drawing_area.sankey.nodes_list[0]
+      if (!node) return
+      this.drawing_area.purgeSelection()
+      this.drawing_area.addElementToSelection(node)
       this.menu_configuration.ref_to_menu_config_updater.current?.()
-    }
-    const ensureElementSelected = (type: keyTypeConfig, element: keyTypeElements) => {
-      const list = this.menu_configuration.elements_configurable_selected[type] as keyTypeElements[]
-      if (!list.includes(element)) {
-        this.menu_configuration.toggleElementInConfigEdition(type, element)
-        this.menu_configuration.ref_to_menu_config_updater.current?.()
-      }
     }
     const setFilterDrawer = (open: boolean) => {
       this.menu_configuration.ref_close_filter_drawer.current?.(open)
@@ -1492,11 +1492,10 @@ export class Class_ApplicationData {
         selector: '.sideToolBar',
         content: this.t('guide.toolbar'),
         actionAfter: () => {
-          // Open the configuration drawer so next steps can target its internals
+          // Ouvre le panneau ET sélectionne un nœud : l'inspecteur est piloté
+          // par la sélection, sans elle il montrerait les réglages de la Vue.
           openConfigDrawer()
-          switchConfigTab('data')
-          ensureElementSelected('data', 'node')
-          ensureElementSelected('data', 'flow')
+          selectDemoNode()
         }
       },
       {
@@ -1504,32 +1503,11 @@ export class Class_ApplicationData {
         content: this.t('guide.menu_config'),
       },
       {
-        selector: '.buttonGroupTypeConfig',
+        // Fil d'Ariane « Vue › Nœud » : c'est lui qui matérialise le nouveau
+        // modèle (la sélection choisit la cible), à la place des ex-boutons de
+        // type/élément de la matrice.
+        selector: '.inspector_breadcrumb',
         content: this.t('guide.config_tabs'),
-      },
-      {
-        selector: '.button_type_config_data',
-        content: this.t('guide.config_tab_data'),
-        actionAfter: () => {
-          switchConfigTab('data')
-        }
-      },
-      {
-        selector: '.config_box',
-        content: this.t('guide.config_content_data'),
-        actionAfter: () => {
-          switchConfigTab('style')
-          ensureElementSelected('style', 'DA')
-          ensureElementSelected('style', 'element')
-        }
-      },
-      {
-        selector: '.button_type_config_style',
-        content: this.t('guide.config_tab_style'),
-      },
-      {
-        selector: '.config_box',
-        content: this.t('guide.config_content_style'),
         actionAfter: () => {
           closeConfigDrawer()
         }
