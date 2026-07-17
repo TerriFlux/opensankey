@@ -37,6 +37,13 @@ export type Type_InspectorSection = {
   gate?: (app_data: Class_ApplicationData) => boolean
   // Section repliée par défaut.
   collapsed?: boolean
+  // Onglet 100% « données » (tags, infobulle…) : masqué en portée Style,
+  // qui ne montre que ce qu'un style sait porter (R2).
+  data_only?: boolean
+  // #1243 — préfixes d'attributs stylables portés par cet onglet (ex. ['shape'],
+  // ['name_label']) : sert au ROLL-UP sur le bouton d'onglet (liseré violet si
+  // au moins un attribut surchargé, retrait sinon). Absent = onglet données.
+  overload_prefixes?: string[]
 }
 
 // Portée d'édition : la sélection courante, ou le style/défaut qu'elle suit.

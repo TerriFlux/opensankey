@@ -1,20 +1,31 @@
-// #1243 — Inspecteur piloté par la sélection.
+// #1243 — Inspecteur piloté par la sélection : la « grille unique ».
 //
-// Remplaçant du panneau de config matriciel (type×élément). L'utilisateur ne
-// choisit plus deux axes : la sélection sur le canvas détermine la cible, et
-// l'inspecteur empile les sections enregistrées pour cette cible (cf.
-// InspectorRegistry). Toujours un état valide — aucune sélection = réglages de
-// la vue.
+// Structure (proposition validée sur l'issue) :
+//   fil d'Ariane  →  EN-TÊTE D'IDENTITÉ  →  portée (Sélection / Styles)  →
+//   rangée d'ONGLETS fixes  →  contenu de l'onglet actif.
 //
-// Monté derrière un flag dev, À CÔTÉ de la matrice historique (bascule dans
-// ConfigMenu). Aucun composant de contenu n'est réécrit : ce panneau ne fait
-// que router et présenter les composants existants en sections.
+// - L'identité (nom / origine→destination) n'est pas un onglet.
+// - Le canvas est le sélecteur : aucun sélecteur d'éléments ici, pas de
+//   création (gestes canvas).
+// - Un élément suit une CASCADE de styles : la portée « Styles (N) » liste la
+//   cascade et on choisit LEQUEL éditer (ref_selected_style). En portée Style,
+//   les onglets 100% données (data_only) disparaissent, ainsi que les blocs
+//   de données des onglets mixtes (les render() reçoivent la portée).
+// - Multi-sélection : règle du modèle (lecture 1er, écriture tous) ; le
+//   multi-type garde les mêmes onglets, chaque bloc s'applique à son
+//   sous-ensemble.
 
 import React, { useRef, useState } from 'react'
-import { Box, Button, Text } from '@chakra-ui/react'
+import { Box, Button, Input, Menu, MenuButton, MenuItem, MenuList, Text } from '@chakra-ui/react'
+import { FaThumbtack } from 'react-icons/fa'
 
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
+import { default_style_id } from '../../../types/Utils'
+import { elementStyleConfigs } from '../../../Elements/ElementStyle'
+import type { Class_ElementStyle } from '../../../Elements/Element'
+import { ALL_ATTRIBUTES_CONFIG } from '../../../Elements/ElementsAttributesConfig'
 import { useModelBinding } from '../../../hooks/useModelBinding'
+import { default_font_size } from '../../../css/Theme'
 import {
   resolveInspectorTarget,
   type Type_InspectorTarget,
@@ -22,21 +33,15 @@ import {
 } from './InspectorResolver'
 import {
   inspector_registry,
-  type Type_InspectorScope,
-  type Type_InspectorSectionHue
+  type Type_InspectorScope
 } from './InspectorRegistry'
 import { registerBaseInspectorSections } from './registerBaseSections'
+import { ElementNameRow } from '../MenuElementsSelection'
+import { LinkOriginDestEditor } from '../SankeyMenuConfigurationLinksData'
 
-// Enregistre les sections de base dès l'import du panneau (idempotent). Les
+// Enregistre les onglets de base dès l'import du panneau (idempotent). Les
 // couches supérieures enregistreront les leurs à leur propre init.
 registerBaseInspectorSections()
-
-// Couleurs de thème par famille (continuité avec _style_config historique).
-const HUE_COLOR: Record<Type_InspectorSectionHue, string> = {
-  data: '#78a7c2',
-  style: '#78c2ad',
-  presentation: '#778a95'
-}
 
 // Libellés FR des cibles. i18n complet = suivi (ce panneau est dev-gated).
 const TARGET_NOUN: Record<Type_InspectorTarget, { one: string; many: string }> = {
@@ -65,70 +70,188 @@ function readSelectionCounts(app_data: Class_ApplicationData): Type_SelectionCou
   }
 }
 
+/**
+ * Premier élément stylable de la sélection : porteur de la cascade affichée
+ * par la portée Styles.
+ */
+function firstStyledElement(app_data: Class_ApplicationData) {
+  const da = app_data.drawing_area
+  return da.selected_nodes_list[0] ?? da.selected_links_list[0] ?? null
+}
+
+/**
+ * #1243 — Roll-up de surcharge au niveau d'un ONGLET : true si au moins un
+ * attribut stylable de l'onglet (préfixes déclarés au registre) est surchargé
+ * sur la cible courante (sélection, ou style édité en portée Styles).
+ * undefined = onglet sans attributs stylables (Infobulle…) ou hors sujet.
+ */
+function tabOverloadRollup(
+  app_data: Class_ApplicationData,
+  prefixes: string[] | undefined,
+  scope: Type_InspectorScope
+): boolean | undefined {
+  if (!prefixes || prefixes.length === 0) return undefined
+  const da = app_data.drawing_area
+  const targets = scope === 'style'
+    ? [da.sankey.styles_dict[app_data.menu_configuration.ref_selected_style.current]].filter(Boolean)
+    : [...da.selected_nodes_list, ...da.selected_links_list, ...da.selected_containers_list]
+  if (targets.length === 0) return undefined
+  const keys = Object.keys(ALL_ATTRIBUTES_CONFIG)
+    .filter(k => prefixes.some(p => k === p || k.startsWith(p + '_')))
+  return targets.some(el =>
+    keys.some(k => el.isAttributeOverloaded(k as Parameters<typeof el.isAttributeOverloaded>[0])))
+}
+
 export const InspectorPanel = ({ app_data }: { app_data: Class_ApplicationData }) => {
   // Re-render sur chaque changement de composition de sélection.
-  useModelBinding(app_data.menu_configuration.ref_to_inspector_updater)
+  const refreshThis = useModelBinding(app_data.menu_configuration.ref_to_inspector_updater)
 
   // Fil d'Ariane : atteindre la Vue sans purger la sélection.
   const [view_override, setViewOverride] = useState(false)
-  // Portée d'édition : sélection vs style/défaut.
+  // Portée d'édition : sélection vs style de la cascade.
   const [scope, setScope] = useState<Type_InspectorScope>('selection')
+  // Onglet actif (id d'entrée du registre).
+  const [active_tab_id, setActiveTabId] = useState<string | null>(null)
 
   const counts = readSelectionCounts(app_data)
   const { target, count } = resolveInspectorTarget(counts, view_override)
 
-  // Réinitialise view_override quand la composition de la sélection change (une
-  // nouvelle sélection doit montrer l'élément, pas rester bloquée sur la Vue).
+  // Réinitialise portée/fil d'Ariane quand la composition de la sélection
+  // change (une nouvelle sélection doit montrer l'élément, portée Sélection).
   const sig = `${counts.nodes}/${counts.links}/${counts.containers}/${counts.legend}/${counts.title}`
   const last_sig = useRef(sig)
   if (last_sig.current !== sig) {
     last_sig.current = sig
     if (view_override) setViewOverride(false)
     if (scope === 'style') setScope('selection')
+    // #1243 — ouvrir sur le premier onglet « violet » (contenant au moins une
+    // surcharge) : on montre d'abord ce qui a été personnalisé. Sinon null →
+    // retombe sur le premier onglet applicable.
+    const first_violet = inspector_registry.getSectionsFor(target, app_data)
+      .find(tb => tabOverloadRollup(app_data, tb.overload_prefixes, 'selection') === true)
+    setActiveTabId(first_violet ? first_violet.id : null)
   }
 
-  const sections = inspector_registry.getSectionsFor(target, app_data)
-  const scope_capable = target === 'node' || target === 'link' || target === 'container'
+  // Onglets applicables : registre filtré par cible + gating ; en portée
+  // Style, les onglets 100% données disparaissent (R2).
+  const tabs = inspector_registry.getSectionsFor(target, app_data)
+    .filter(tab => scope === 'selection' || !tab.data_only)
+  const active_tab = tabs.find(tab => tab.id === active_tab_id) ?? tabs[0] ?? null
+  // Portée Styles aussi en sélection hétérogène (nœud+flux) : les styles sont
+  // PARTAGÉS entre types (même styles_list, défaut commun) — la note
+  // « cascades divergentes » de la cascade couvre l'ambiguïté d'affichage.
+  const scope_capable = (target === 'node' || target === 'link' || target === 'mixed')
+    && firstStyledElement(app_data) !== null
 
   return (
     <Box
       className="inspector_panel"
-      style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', height: '100%' }}
+      style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', height: '100%' }}
     >
-      <InspectorBreadcrumb
-        target={target}
-        count={count}
-        has_selection={counts.nodes + counts.links + counts.containers > 0 || counts.legend}
-        view_override={view_override}
-        onGoView={() => setViewOverride(true)}
-        onGoSelection={() => setViewOverride(false)}
-      />
+      <Box style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+        <Box style={{ flex: 1, minWidth: 0 }}>
+          <InspectorBreadcrumb
+            target={target}
+            count={count}
+            has_selection={counts.nodes + counts.links + counts.containers > 0 || counts.legend}
+            view_override={view_override}
+            onGoView={() => setViewOverride(true)}
+            onGoSelection={() => setViewOverride(false)}
+          />
+        </Box>
+        {/* #1243 — épingler : docke le panneau à droite (réserve sa largeur,
+            le dessin se recadre) pour l'édition intense ; dé-épinglé = overlay. */}
+        <Button
+          size='xs'
+          variant={app_data.menu_configuration.config_panel_pinned
+            ? 'menuconfigpanel_option_button_activated'
+            : 'menuconfigpanel_option_button'}
+          sx={{ paddingInline: '0.3rem', minWidth: 'auto', width: 'auto', flex: 'none' }}
+          title={app_data.menu_configuration.config_panel_pinned
+            ? 'Détacher le panneau (survol du dessin)'
+            : 'Épingler le panneau (le dessin se recadre à gauche)'}
+          onClick={() => {
+            app_data.menu_configuration.config_panel_pinned =
+              !app_data.menu_configuration.config_panel_pinned
+          }}
+        >
+          <FaThumbtack style={{
+            transform: app_data.menu_configuration.config_panel_pinned ? 'none' : 'rotate(45deg)'
+          }} />
+        </Button>
+      </Box>
+
+      <InspectorIdentity app_data={app_data} target={target} counts={counts} />
 
       {scope_capable && (
         <InspectorScopeBand
-          target={target}
+          app_data={app_data}
           count={count}
           scope={scope}
           onScope={setScope}
+          onCascadeChange={refreshThis}
         />
       )}
 
-      <Box style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', overflowY: 'auto' }}>
-        {sections.length === 0 ? (
+      {/* Légende de lecture — pour TOUTE cible élément (y compris mixte, qui
+          n'a pas de bandeau de portée) : dire d'où viennent les valeurs. */}
+      {scope === 'selection'
+        && (target === 'node' || target === 'link' || target === 'container' || target === 'mixed') && (
+        <Text style={{ fontSize: default_font_size, opacity: 0.75, padding: '0 0.1rem' }}>
+          {'Attributs en retrait : hérités des styles (cascade). ' +
+            'Liseré violet : surchargé sur la sélection. Liseré orange : valeurs multiples.'}
+        </Text>
+      )}
+
+      {/* Rangée d'onglets fixes — la même grille pour tous les types. Grille à
+          N colonnes égales (le variant du thème met width:100%, un flex-wrap
+          empilerait donc les boutons l'un sous l'autre).
+          Roll-up de surcharge : liseré violet = l'onglet contient au moins un
+          attribut surchargé ; retrait = aucun (sauf l'onglet actif). */}
+      {tabs.length > 1 && (
+        <Box style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${tabs.length}, 1fr)`,
+          gap: '0.15rem',
+          padding: '2px'
+        }}>
+          {tabs.map(tab => {
+            const rollup = tabOverloadRollup(app_data, tab.overload_prefixes, scope)
+            const is_active = tab.id === active_tab?.id
+            return (
+              <Button
+                key={tab.id}
+                size='xs'
+                variant={is_active
+                  ? 'menuconfigpanel_option_button_activated'
+                  : 'menuconfigpanel_option_button'}
+                sx={{
+                  paddingInline: '0.25rem',
+                  minWidth: 'auto',
+                  ...(rollup === true
+                    ? { boxShadow: '0 0 0 1.5px rgba(128, 90, 213, 0.7)' }
+                    : {}),
+                  ...(!is_active && rollup !== true
+                    ? { opacity: 0.65, '&:hover': { opacity: 1 } }
+                    : {})
+                }}
+                title={rollup === true ? 'Contient des attributs surchargés' : undefined}
+                onClick={() => setActiveTabId(tab.id)}
+              >
+                {tab.title(app_data)}
+              </Button>
+            )
+          })}
+        </Box>
+      )}
+
+      <Box style={{ overflowY: 'auto', flex: 1 }}>
+        {active_tab ? (
+          active_tab.render(app_data, scope)
+        ) : (
           <Box layerStyle="empty_config_text" textStyle="h2">
             <span>{`Aucun réglage disponible pour : ${TARGET_NOUN[target].one}.`}</span>
           </Box>
-        ) : (
-          sections.map(sec => (
-            <InspectorSection
-              key={sec.id}
-              hue={HUE_COLOR[sec.hue]}
-              title={sec.title(app_data)}
-              default_collapsed={!!sec.collapsed}
-            >
-              {sec.render(app_data, scope)}
-            </InspectorSection>
-          ))
         )}
       </Box>
     </Box>
@@ -136,6 +259,27 @@ export const InspectorPanel = ({ app_data }: { app_data: Class_ApplicationData }
 }
 
 // --- Fil d'Ariane ----------------------------------------------------------
+
+// Lien discret du fil d'Ariane. Bouton natif stylé inline : les variants Button
+// du thème Chakra (pensés pour la matrice) rendent ici des pilules pleine
+// largeur — on n'en veut aucun.
+const CrumbButton = ({ onClick, children }: React.PropsWithChildren<{ onClick: () => void }>) => (
+  <Box
+    as="button"
+    onClick={onClick}
+    style={{
+      background: 'none',
+      border: 'none',
+      padding: 0,
+      font: 'inherit',
+      color: '#1f6fae',
+      cursor: 'pointer',
+      textDecoration: 'underline'
+    }}
+  >
+    {children}
+  </Box>
+)
 
 const InspectorBreadcrumb = ({
   target, count, has_selection, view_override, onGoView, onGoSelection
@@ -158,7 +302,7 @@ const InspectorBreadcrumb = ({
       className="inspector_breadcrumb"
       style={{
         display: 'flex', alignItems: 'center', gap: '0.25rem',
-        fontSize: '0.8rem', padding: '0.15rem 0.1rem'
+        fontSize: default_font_size, padding: '0.15rem 0.1rem'
       }}
     >
       {showing_view ? (
@@ -167,15 +311,13 @@ const InspectorBreadcrumb = ({
           {has_selection && view_override && (
             <>
               <Text as="span" style={{ opacity: 0.5 }}>›</Text>
-              <Button variant="link" size="xs" onClick={onGoSelection}>
-                Retour à la sélection
-              </Button>
+              <CrumbButton onClick={onGoSelection}>Retour à la sélection</CrumbButton>
             </>
           )}
         </>
       ) : (
         <>
-          <Button variant="link" size="xs" onClick={onGoView}>Vue</Button>
+          <CrumbButton onClick={onGoView}>Vue</CrumbButton>
           <Text as="span" style={{ opacity: 0.5 }}>›</Text>
           <Text as="span" style={{ fontWeight: 600 }}>{sel_label}</Text>
         </>
@@ -184,72 +326,312 @@ const InspectorBreadcrumb = ({
   )
 }
 
-// --- Bandeau de portée (sélection / style) ---------------------------------
+// --- En-tête d'identité ------------------------------------------------------
+
+// L'identité n'est pas un onglet : nom pour nœud/zone, origine→destination
+// pour un flux (sélection unique — désactivé sinon, comme les composants
+// sous-jacents le garantissent déjà).
+const InspectorIdentity = ({ app_data, target, counts }: {
+  app_data: Class_ApplicationData
+  target: Type_InspectorTarget
+  counts: Type_SelectionCounts
+}) => {
+  const da = app_data.drawing_area
+
+  if (target === 'node') {
+    return <ElementNameRow
+      app_data={app_data}
+      elements={da.selected_nodes_list_sorted}
+      labelKey='Noeud.Nom'
+      tooltipKey='Noeud.tooltips.Nom'
+    />
+  }
+  if (target === 'container') {
+    return <ElementNameRow
+      app_data={app_data}
+      elements={da.selected_containers_list_sorted}
+      labelKey='Container.Nom'
+      tooltipKey='Container.tooltips.Nom'
+    />
+  }
+  if (target === 'link') {
+    return <LinkOriginDestEditor
+      app_data={app_data}
+      refresh={() => {
+        app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+        app_data.menu_configuration.updateAllComponentsRelatedToLinks()
+      }}
+    />
+  }
+  if (target === 'mixed') {
+    const parts: string[] = []
+    if (counts.nodes) parts.push(`${counts.nodes} nœud(s)`)
+    if (counts.links) parts.push(`${counts.links} flux`)
+    if (counts.containers) parts.push(`${counts.containers} zone(s)`)
+    if (counts.legend) parts.push('légende')
+    return (
+      <Text style={{ fontSize: default_font_size, fontWeight: 600, padding: '0 0.1rem' }}>
+        {parts.join(' + ')}
+      </Text>
+    )
+  }
+  return <></>
+}
+
+// --- Bandeau de portée + cascade de styles -----------------------------------
 
 const InspectorScopeBand = ({
-  target, count, scope, onScope
+  app_data, count, scope, onScope, onCascadeChange
 }: {
-  target: Type_InspectorTarget
+  app_data: Class_ApplicationData
   count: number
   scope: Type_InspectorScope
   onScope: (s: Type_InspectorScope) => void
-}) => (
-  <Box className="inspector_scope">
-    <Box style={{ display: 'flex', border: '1px solid #cbd5e0', borderRadius: '6px', overflow: 'hidden' }}>
-      <Button
-        flex="1" size="xs" borderRadius="0"
-        variant={scope === 'selection' ? 'button_type_config_activated' : 'button_type_config'}
-        onClick={() => onScope('selection')}
-      >
-        {count > 1 ? `Sélection (${count})` : 'Sélection'}
-      </Button>
-      <Button
-        flex="1" size="xs" borderRadius="0"
-        variant={scope === 'style' ? 'button_type_config_activated' : 'button_type_config'}
-        onClick={() => onScope('style')}
-      >
-        Style : défaut
-      </Button>
-    </Box>
-    {scope === 'style' && (
-      <Text style={{ fontSize: '0.72rem', opacity: 0.75, padding: '0.25rem 0.1rem' }}>
-        {`Édition du style suivi par ${count > 1 ? 'ces' : 'ce'} ${TARGET_NOUN[target].many} : ` +
-          'tous ceux qui le suivent seront modifiés.'}
-      </Text>
-    )}
-  </Box>
-)
+  onCascadeChange: () => void
+}) => {
+  const menu_configuration = app_data.menu_configuration
+  const first = firstStyledElement(app_data)
+  // Cascade du premier élément : ordre d'application (le dernier qui définit
+  // un attribut gagne). C'est elle qu'affiche la portée Styles.
+  const cascade = first ? [...first.style] : []
+  const edited_id = menu_configuration.ref_selected_style.current
 
-// --- Section repliable ------------------------------------------------------
+  const enterStyleScope = () => {
+    // On cale le style édité sur le PLUS SPÉCIFIQUE de la cascade (le dernier),
+    // sauf s'il pointe déjà un style de la cascade.
+    if (cascade.length > 0 && !cascade.some(s => s.id === edited_id)) {
+      menu_configuration.ref_selected_style.current = cascade[cascade.length - 1].id
+    }
+    onScope('style')
+  }
 
-const InspectorSection = ({
-  hue, title, default_collapsed, children
-}: React.PropsWithChildren<{
-  hue: string
-  title: string
-  default_collapsed: boolean
-}>) => {
-  const [open, setOpen] = useState(!default_collapsed)
   return (
-    <Box
-      className="inspector_section"
-      style={{ border: '1px solid #e2e8f0', borderRadius: '6px', overflow: 'hidden' }}
-    >
-      <Box
-        as="button"
-        onClick={() => setOpen(o => !o)}
-        style={{
-          display: 'flex', alignItems: 'center', gap: '0.4rem', width: '100%',
-          padding: '0.4rem 0.5rem', background: '#f7fafc', cursor: 'pointer',
-          fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.03em',
-          textTransform: 'uppercase', color: '#4a5568'
-        }}
-      >
-        <Box style={{ width: '8px', height: '8px', borderRadius: '2px', background: hue, flex: 'none' }} />
-        <span>{title}</span>
-        <Box as="span" style={{ marginLeft: 'auto', opacity: 0.5 }}>{open ? '▾' : '▸'}</Box>
+    <Box className="inspector_scope">
+      <Box style={{ display: 'flex', border: '1px solid #cbd5e0', borderRadius: '6px', overflow: 'hidden' }}>
+        <Button
+          flex="1" size="xs" borderRadius="0"
+          variant={scope === 'selection' ? 'button_type_config_activated' : 'button_type_config'}
+          onClick={() => onScope('selection')}
+        >
+          {count > 1 ? `Sélection (${count})` : 'Sélection'}
+        </Button>
+        <Button
+          flex="1" size="xs" borderRadius="0"
+          variant={scope === 'style' ? 'button_type_config_activated' : 'button_type_config'}
+          onClick={enterStyleScope}
+        >
+          {`Styles (${Math.max(cascade.length, 1)})`}
+        </Button>
       </Box>
-      {open && <Box style={{ padding: '0.4rem 0.35rem' }}>{children}</Box>}
+      {scope === 'style' && (
+        <InspectorStyleCascade
+          app_data={app_data}
+          cascade={cascade}
+          edited_id={edited_id}
+          onChanged={onCascadeChange}
+        />
+      )}
     </Box>
   )
+}
+
+// --- Cascade : tout se gère IN SITU (plus de modale de styles ici) -----------
+// Puce = style de la cascade (clic : l'éditer ; × : le détacher de la sélection).
+// « + » : attacher un style existant ou en créer un (fin de cascade, prioritaire).
+// Sous la cascade : renommage inline du style édité, suppression si style
+// utilisateur. Mêmes gestes/undo que le menu contextuel « Assigner styles ».
+
+const isPredefinedStyle = (id: string) => id === default_style_id || id in elementStyleConfigs
+
+const InspectorStyleCascade = ({ app_data, cascade, edited_id, onChanged }: {
+  app_data: Class_ApplicationData
+  cascade: Class_ElementStyle[]
+  edited_id: string
+  onChanged: () => void
+}) => {
+  const { t, drawing_area, history, menu_configuration } = app_data
+  // Attache/détache sur TOUTE la sélection stylable (pas que le 1er élément).
+  const styled_selection = [
+    ...drawing_area.selected_nodes_list,
+    ...drawing_area.selected_links_list,
+    ...drawing_area.selected_containers_list
+  ]
+  // La cascade AFFICHÉE est celle du 1er élément ; si d'autres éléments de la
+  // sélection suivent une cascade différente, on le dit explicitement.
+  const cascade_sig = cascade.map(s => s.id).join('|')
+  const divergent = styled_selection.some(el => [...el.style].map(s => s.id).join('|') !== cascade_sig)
+  const refresh = () => {
+    menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    menu_configuration.updateComponentRelatedToApparence()
+    onChanged()
+  }
+  const editStyle = (id: string) => {
+    menu_configuration.ref_selected_style.current = id
+    refresh()
+  }
+  const attach = (style: Class_ElementStyle) => {
+    // L'attachement est involutif avec le détachement : undo = inverse.
+    const apply = () => { styled_selection.forEach(el => el.addStyle(style)); refresh() }
+    const undo = () => { styled_selection.forEach(el => el.removeStyle(style)); refresh() }
+    history.saveUndo(undo)
+    history.saveRedo(apply)
+    apply()
+    editStyle(style.id)
+  }
+  const detach = (style: Class_ElementStyle) => {
+    const apply = () => { styled_selection.forEach(el => el.removeStyle(style)); refresh() }
+    const undo = () => { styled_selection.forEach(el => el.addStyle(style)); refresh() }
+    history.saveUndo(undo)
+    history.saveRedo(apply)
+    apply()
+    if (edited_id === style.id) editStyle(cascade[0]?.id ?? default_style_id)
+  }
+
+  const edited_style = drawing_area.sankey.styles_dict[edited_id]
+  const attachable = drawing_area.sankey.styles_list
+    .filter(style => !cascade.some(s => s.id === style.id))
+
+  return <>
+    {/* Cascade : puce surlignée = style en cours d'édition. */}
+    <Box style={{
+      display: 'flex', alignItems: 'center', flexWrap: 'wrap',
+      gap: '0.25rem', padding: '0.3rem 0.1rem 0'
+    }}>
+      <Text as="span" style={{
+        fontSize: '0.6rem', letterSpacing: '0.05em',
+        textTransform: 'uppercase', opacity: 0.6
+      }}>Cascade</Text>
+      {cascade.map((style, i) => (
+        <React.Fragment key={style.id}>
+          {i > 0 && <Text as="span" style={{ opacity: 0.5, fontSize: default_font_size }}>→</Text>}
+          {/* Emphase double (pas la couleur seule) : la puce éditée est pleine,
+              grasse et cerclée ; les autres reculent en opacité (avec leur ×)
+              et remontent au survol. Cibles de clic identiques. */}
+          <Box
+            style={{
+              display: 'inline-flex',
+              alignItems: 'stretch',
+              opacity: style.id === edited_id ? 1 : 0.55,
+              transition: 'opacity 0.1s'
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1' }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.opacity = style.id === edited_id ? '1' : '0.55'
+            }}
+          >
+            <Button
+              size="xs"
+              variant={style.id === edited_id
+                ? 'menuconfigpanel_option_button_activated'
+                : 'menuconfigpanel_option_button'}
+              sx={style.id === edited_id
+                ? {
+                  paddingInline: '0.4rem', minWidth: 'auto', height: '1.2rem',
+                  fontWeight: 700, outline: '2px solid', outlineColor: 'primaire.2',
+                  outlineOffset: '1px'
+                }
+                : { paddingInline: '0.4rem', minWidth: 'auto', height: '1.2rem' }}
+              // Puces compactes S1..SN (5-6 styles tiennent sur une ligne) ;
+              // le nom complet est dans le tooltip et dans le champ ci-dessous.
+              // (Les styles prédéfinis stockent une CLÉ de traduction comme nom.)
+              title={t(style.name)}
+              onClick={() => editStyle(style.id)}
+            >
+              {`S${i + 1}`}
+            </Button>
+            {/* Le style par défaut est indétachable (protégé par removeStyleById). */}
+            {style.id !== default_style_id && (
+              <Button
+                size="xs"
+                variant='menuconfigpanel_option_button'
+                sx={{ paddingInline: '0.2rem', minWidth: 'auto', height: '1.2rem' }}
+                title='Détacher ce style de la sélection'
+                onClick={() => detach(style)}
+              >
+                ×
+              </Button>
+            )}
+          </Box>
+        </React.Fragment>
+      ))}
+      {/* Attacher : styles existants hors cascade, ou nouveau style. À DROITE
+          de la cascade : le variant du thème impose width:100%, qu'on annule
+          ici pour que le bouton ne prenne pas sa propre ligne. */}
+      <Menu>
+        <MenuButton
+          as={Button}
+          size="xs"
+          variant='menuconfigpanel_option_button'
+          sx={{ paddingInline: '0.4rem', minWidth: 'auto', width: 'auto', flex: 'none', height: '1.2rem' }}
+          title='Attacher un style à la sélection (fin de cascade, prioritaire)'
+        >
+          +
+        </MenuButton>
+        <MenuList>
+          {attachable.map(style => (
+            <MenuItem key={style.id} onClick={() => attach(style)}>
+              {t(style.name)}
+            </MenuItem>
+          ))}
+          <MenuItem
+            onClick={() => {
+              const new_style = drawing_area.sankey.addNewDefaultElementStyle()
+              attach(new_style)
+            }}
+          >
+            {'+ Nouveau style'}
+          </MenuItem>
+        </MenuList>
+      </Menu>
+    </Box>
+    {/* Style édité : renommage inline ; suppression pour les styles utilisateur. */}
+    {edited_style && (
+      <Box style={{
+        display: 'flex', alignItems: 'center', gap: '0.25rem',
+        padding: '0.25rem 0.1rem 0'
+      }}>
+        <Input
+          // defaultValue n'est lu qu'au montage : sans key, changer de puce
+          // (S1→S3) laisserait l'ancien nom affiché dans l'input réutilisé.
+          key={edited_id}
+          size="xs"
+          variant='menuconfigpanel_option_input'
+          isDisabled={edited_id === default_style_id}
+          defaultValue={t(edited_style.name)}
+          // Même geste que la modale historique : écriture directe du nom.
+          onBlur={(evt) => {
+            if (evt.target.value.trim()) {
+              edited_style.name = evt.target.value.trim()
+              refresh()
+            }
+          }}
+        />
+        {!isPredefinedStyle(edited_id) && (
+          <Button
+            size="xs"
+            variant='menuconfigpanel_del_button'
+            sx={{ paddingInline: '0.4rem', minWidth: 'auto' }}
+            title='Supprimer ce style (les éléments qui le suivaient retombent sur le reste de leur cascade)'
+            onClick={() => {
+              // Suppression projet : snapshot (retisser les références serait fragile).
+              app_data.runWithSnapshotUndo(() => {
+                drawing_area.sankey.deleteElementStyle(edited_style)
+                menu_configuration.ref_selected_style.current = default_style_id
+              })
+              refresh()
+            }}
+          >
+            {'Supprimer'}
+          </Button>
+        )}
+      </Box>
+    )}
+    <Text style={{ fontSize: default_font_size, opacity: 0.75, padding: '0.25rem 0.1rem' }}>
+      {(divergent
+        ? 'Cascade du 1er élément — d’autres éléments sélectionnés suivent une cascade différente. '
+        : '') +
+        'Édition du style surligné : tous les éléments qui le suivent seront modifiés. ' +
+        'Le dernier de la cascade gagne ; une surcharge locale gagne toujours.'}
+    </Text>
+  </>
 }

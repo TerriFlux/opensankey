@@ -81,6 +81,11 @@ export type Type_SheetMode = 'grid' | 'text'
 // undo/redo/save). Quand ouverte, cette largeur est réservée par le diagramme (cf.
 // getToolsColumnWidthPx / getMainZoneRightReservedPx) pour que la zone de dessin ne morde pas dessus.
 export const TOOLS_COLUMN_WIDTH_PX = 48
+// Dimensions du panneau de configuration (drawer/inspecteur). Source de vérité
+// ici (et non dans SankeyMenus) : getConfigPanelPinnedReservedPx en a besoin
+// pour la réserve de largeur du mode épinglé (#1243).
+export const MENU_CONFIG_WIDTH_PCT = 20
+export const MENU_CONFIG_MIN_WIDTH_PX = 420
 export type keyTypeConfig = 'data' | 'style'
 export type keyTypeElements = 'data' | 'DA' | 'flow' | 'node' | 'element' | 'object' | 'legend'
 export interface IType_DictHookRefSetterShowDialogComponents {
@@ -94,6 +99,9 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   ref_setter_show_modal_rich_text_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_shape_attribute_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_value_type_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  // #1243 — éditeur d'infobulle en panneau draggable (l'onglet Infobulle de
+  // l'inspecteur n'embarque qu'un texte simple + ce bouton d'ouverture).
+  ref_setter_show_tooltip_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
 
   ref_setter_show_modal_png_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_png_saver_res_h: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>
@@ -269,6 +277,28 @@ export class Class_MenuConfig {
   public getToolsColumnWidthPx(): number {
     return (this.tools_column_enabled && this._tools_column_open) ? TOOLS_COLUMN_WIDTH_PX : 0
   }
+
+  // #1243 — Panneau de config ÉPINGLÉ (mode « édition intense ») : au lieu de
+  // flotter en overlay au-dessus du dessin, le panneau se docke à droite comme
+  // le tableur et RÉSERVE sa largeur — la zone de dessin se recadre à gauche.
+  // État TRANSITOIRE (non sérialisé) ; le mode survol reste le défaut.
+  protected _config_panel_pinned: boolean = false
+  public get config_panel_pinned() { return this._config_panel_pinned }
+  public set config_panel_pinned(v: boolean) { this._config_panel_pinned = v; this._notifyMainZone() }
+  /** Largeur (px) réservée à droite par le panneau de config épinglé (0 si
+   *  non épinglé ou fermé). Même calcul de largeur que le drawer. */
+  public getConfigPanelPinnedReservedPx(): number {
+    if (!this._config_panel_pinned) return 0
+    if (!this.ref_menu_opened.current[0]) return 0
+    return Math.max(window.innerWidth * MENU_CONFIG_WIDTH_PCT / 100, MENU_CONFIG_MIN_WIDTH_PX)
+  }
+  /** Réserve TOTALE de « chrome » à droite : colonne d'outils + panneau de
+   *  config épinglé. C'est l'offset commun de la colonne tableur/doc/unitaire
+   *  (MainZoneTabs) et de la réserve du diagramme — même système de fenêtrage
+   *  pour tous les panneaux dockés (#1243). */
+  public getRightChromeReservedPx(): number {
+    return this.getToolsColumnWidthPx() + this.getConfigPanelPinnedReservedPx()
+  }
   public get main_zone_show_diagram() { return this._main_zone_show_diagram }
   public set main_zone_show_diagram(v: boolean) { this._main_zone_show_diagram = v; this._notifyMainZone() }
   public get main_zone_show_spreadsheet() { return this._main_zone_show_spreadsheet }
@@ -331,9 +361,10 @@ export class Class_MenuConfig {
     // SAUF s'il est détaché en dialogue flottant (il ne réserve alors plus d'espace).
     const unitaryDocked = this._main_zone_show_unitary && !this._main_zone_unitary_detached
     const rightColumnShown = this._main_zone_show_spreadsheet || docInRightColumn || unitaryDocked
-    // La colonne d'outils s'ajoute toujours à la réserve droite (qu'il y ait ou non un tableur/doc) :
-    // elle occupe l'extrême droite et le tableur/doc se décale d'autant vers la gauche (cf. MainZoneTabs).
-    const tools = this.getToolsColumnWidthPx()
+    // Le chrome droit (colonne d'outils + panneau de config épinglé #1243) s'ajoute toujours à la
+    // réserve (qu'il y ait ou non un tableur/doc) : il occupe l'extrême droite et le tableur/doc se
+    // décale d'autant vers la gauche (cf. MainZoneTabs).
+    const tools = this.getRightChromeReservedPx()
     if (!(this._main_zone_show_diagram && rightColumnShown)) return tools
     const MIN_SPREADSHEET_PX = 320
     const MIN_DIAGRAM_PX = 160
@@ -687,6 +718,7 @@ export class Class_MenuConfig {
       ref_setter_show_modal_rich_text_editor: { current: () => null },
       ref_setter_show_shape_attribute_editor: { current: () => null },
       ref_setter_show_value_type_editor: { current: () => null },
+      ref_setter_show_tooltip_editor: { current: () => null },
 
       ref_setter_show_modal_png_saver: { current: () => null },
       ref_setter_png_saver_res_h: { current: () => null },
@@ -739,6 +771,7 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_modal_rich_text_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_shape_attribute_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_value_type_editor.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_tooltip_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_png_saver.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_pdf_saver.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_styles.current(false)

@@ -1212,6 +1212,7 @@ export class Class_DrawingArea {
     // Update selection list
     this._selection['legend'] = this._legend
     this._legend.setSelected()
+    this.application_data.menu_configuration.updateInspector() // #1243
   }
 
   public removeElementFromSelection(element: Class_ProtoElement) {
@@ -1231,6 +1232,7 @@ export class Class_DrawingArea {
       delete this._selection['legend']
       // Update selection attribute on legend
       this._legend.setUnSelected()
+      this.application_data.menu_configuration.updateInspector() // #1243
     }
   }
 
