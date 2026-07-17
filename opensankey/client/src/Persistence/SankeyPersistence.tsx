@@ -49,7 +49,7 @@ import { Class_Tag } from '../types/Tag'
 import { node_exchanges_style, elementStyleConfigs, product_sector_styles, ElementStyleKey, LinkStyle, NodeStyle, ContainerStyle, structural_styles } from '../Elements/ElementStyle'
 import { dedupeZOrderKeepFirst } from '../types/zOrder'
 import { Class_DrawingArea } from '../types/DrawingArea'
-import { convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
+import { backfillTagGroupUseColors, convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
 // Issue #191 — migration de rétro-compat de la césure des libellés, isolée dans
 // son propre module pour rester testable sans le graphe d'imports lourd d'ici.
 import { applyWrapLongWordsRetrocompat, CURRENT_FORMAT_VERSION, effectiveLoadVersion, isVersionBelow, validateSankeyRootJSON } from './persistenceMigrations'
@@ -1953,6 +1953,7 @@ export class DrawingAreaPersistence {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
+    backfillTagGroupUseColors(json_object)
     LegendPersistence.fromJSON_0_91(drawing_area.legend, json_object)
     SankeyPersistence.fromJSON_0_91(drawing_area.sankey, json_object)
   }
