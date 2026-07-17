@@ -45,6 +45,7 @@ Documenter le changement ci-dessous.
 |------------------|------------|
 | 1 | Introduction de `format_version` (issue #22). Format courant au moment de l'ajout. |
 | 2 | Vues persistées en **delta vs le maître** (issue #254). Une entrée de `views` porte `__patch` (patch structurel) au lieu du snapshot intégral. **Incompatible en lecture** pour une app antérieure, qui prendrait le patch pour une vue. |
+| 3 | Légende = **zones de texte générées** (opensankey#1254). Le sous-objet `legend` ne porte plus que les **paramètres du générateur** (mêmes clés qu'avant + `legend_managed`, absent = `true` ; `legend_stick_to_drawing` supprimé, ignoré en lecture). Les zones de la légende (`legend`, `legend-*`) sont des **conteneurs ordinaires** dans `labels`, le cadre les référence via `attachedNodes`. **Incompatible en lecture** pour une app antérieure (elle afficherait l'ancienne légende-objet en plus des zones). |
 
 ### Vues en delta (`format_version` 2)
 
