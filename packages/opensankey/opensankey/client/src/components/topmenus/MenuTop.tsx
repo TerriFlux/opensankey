@@ -1105,7 +1105,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
       </MenuItem>
       <MenuItem
         icon={helpMenuIcon(logo_tour)}
-        onClick={() => { new_data.setSteps(); setIsOpen(true) }}
+        onClick={() => new_data.guided_tour.start(() => setIsOpen(true))}
       >
         {t('guide.guide')}
       </MenuItem>
@@ -1785,10 +1785,7 @@ export const ButtonLaunchGuide = ({ new_data }: { new_data: Class_ApplicationDat
     <Button
       variant='menutop_button'
       size='sizeMenuTopButton'
-      onClick={() => {
-        new_data.setSteps()
-        setIsOpen(true)
-      }}
+      onClick={() => new_data.guided_tour.start(() => setIsOpen(true))}
     >
       <Box
         layerStyle='menutop_button_style'

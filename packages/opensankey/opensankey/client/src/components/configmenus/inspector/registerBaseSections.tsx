@@ -15,7 +15,7 @@
 
 import React from 'react'
 import { Box, Button, Checkbox } from '@chakra-ui/react'
-import { inspector_registry } from './InspectorRegistry'
+import { inspector_registry, INSPECTOR_TAB_VALUE_ID } from './InspectorRegistry'
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import { SankeyNodeSelection, NodeMaterialBalanceCheckbox } from '../MenuElementsSelection'
 import { MenuConfigurationAppearance } from '../MenuElementsAppearance'
@@ -80,7 +80,7 @@ export function registerBaseInspectorSections(): void {
   // ---- Onglet VALEUR : la DONNÉE (valeur, type, incertitude, texte) au-dessus
   // de son AFFICHAGE (format, unité, position) — fusion de l'ex-« Data flux ».
   inspector_registry.register({
-    id: 'os.tab.valeur',
+    id: INSPECTOR_TAB_VALUE_ID,
     target: ['node', 'link', 'mixed'],
     order: 30,
     overload_prefixes: ['value_label'],
