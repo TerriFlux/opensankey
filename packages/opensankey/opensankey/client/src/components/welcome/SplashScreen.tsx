@@ -39,6 +39,7 @@ import {
   Checkbox,
   ModalFooter
 } from '@chakra-ui/react'
+import { useTour } from '@reactour/tour'
 import { useModelBinding } from '../../hooks/useModelBinding'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { OSTooltip } from '../configmenus/MenuCommon'
@@ -61,6 +62,9 @@ export const ModalDocumentation: FC<FCType_ModalDocumentation> = (
 ) => {
   // Data -------------------------------------------------------------------------------
   const { never_see_again, show_splashscreen } = app_data.menu_configuration
+  // Lanceur de la visite guidée — OK ici : ModalDocumentation est rendu sous le
+  // TourProvider (App.tsx).
+  const { setIsOpen: set_tour_open } = useTour()
 
   // Component updater ------------------------------------------------------------------
   // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
@@ -79,13 +83,13 @@ export const ModalDocumentation: FC<FCType_ModalDocumentation> = (
         <Center>
           <Box layerStyle='menuconfigpanel_grid'>
             <Box
-              layerStyle='options_2cols'
+              layerStyle='options_3cols'
               height='fit-content'
               gridColumnGap='0.5rem'
             >
               <OSTooltip
                 placement='left-end'
-                label={app_data.t('tooltip.start')}
+                label={app_data.t('tooltip.start_template')}
                 isAlwaysOpen={show_splashscreen}>
                 <Button
                   variant='btn_documentation'
@@ -93,20 +97,32 @@ export const ModalDocumentation: FC<FCType_ModalDocumentation> = (
                     app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_templates_lib.current!(true)
                     app_data.menu_configuration.show_splashscreen = false
                   }}>
-                  {app_data.t('start')}
+                  {app_data.t('start_template')}
                 </Button>
               </OSTooltip>
               <OSTooltip
-                placement='right-end'
-                label={app_data.t('tooltip.diaporama')}
+                placement='top'
+                label={app_data.t('tooltip.start_tour')}
                 isAlwaysOpen={show_splashscreen}>
                 <Button
                   variant='btn_documentation'
                   onClick={() => {
-                    app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current!(true)
+                    app_data.menu_configuration.show_splashscreen = false
+                    app_data.guided_tour.start(() => set_tour_open(true))
+                  }}>
+                  {app_data.t('start_tour')}
+                </Button>
+              </OSTooltip>
+              <OSTooltip
+                placement='right-end'
+                label={app_data.t('tooltip.start_blank')}
+                isAlwaysOpen={show_splashscreen}>
+                <Button
+                  variant='btn_documentation'
+                  onClick={() => {
                     app_data.menu_configuration.show_splashscreen = false
                   }}>
-                  {app_data.t('diaporama')}
+                  {app_data.t('start_blank')}
                 </Button>
               </OSTooltip>
             </Box>
