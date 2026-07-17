@@ -26,6 +26,7 @@
 
 import React from 'react'
 import { WrapperContentConfig } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
+import { inspector_registry } from '@terriflux/opensankey/src/components/configmenus/inspector/InspectorRegistry'
 import {
   FType_InitializeAdditionalMenus,
   FType_ModuleDialogs,
@@ -237,6 +238,36 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
       </>
     </WrapperContentConfig>
   }
+
+  // #1243 — Onglet TAGS de l'inspecteur : ASSIGNATION des tags existants aux
+  // éléments sélectionnés. L'édition des GROUPES de tags reste hors inspecteur
+  // (règle R3 — panneau Filtres, à reloger en phase de bascule). Première
+  // extension de couche : OSP enregistre son onglet dans le registre OS
+  // (idempotent par id, donc sans risque au re-init/hot reload).
+  inspector_registry.register({
+    id: 'osp.tab.tags',
+    target: ['node', 'link', 'mixed'],
+    order: 55,
+    hue: 'presentation',
+    title: () => 'Tags',
+    data_only: true,
+    gate: (app) => app.has_sankey_plus && (
+      (app.drawing_area.selected_nodes_list.length > 0
+        && app.drawing_area.sankey.node_taggs_list.length > 0)
+      || (app.drawing_area.selected_links_list.length > 0
+        && app.drawing_area.sankey.flux_taggs_list.length > 0)),
+    render: (app) => {
+      const app_osp = app as Class_ApplicationDataOSP
+      return <>
+        {app.drawing_area.selected_nodes_list.length > 0
+          && app.drawing_area.sankey.node_taggs_list.length > 0
+          && <SankeyMenuConfigurationNodesTags app_data={app_osp} />}
+        {app.drawing_area.selected_links_list.length > 0
+          && app.drawing_area.sankey.flux_taggs_list.length > 0
+          && <MenuConfigurationLinksTags new_data={app_osp} />}
+      </>
+    }
+  })
 }
 
 // module_dialogsType return a JSX.Element array wich is a react type
