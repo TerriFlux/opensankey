@@ -1295,21 +1295,27 @@ export class Class_ApplicationData {
     // sits inside the export viewport with comfortable padding on every side.
     const edge_pad = Class_ApplicationData.export_edge_padding
     let export_width: number, export_height: number
+    // OS#1250 phase 4 — la taille d'export dérive du CONTENU (bounds via la façade
+    // caméra), plus du canvas. Doit rester d'accord avec le translate posé par
+    // _pre_process_export_svg : même origine, même padding.
+    const bounds = this.drawing_area.contentBounds()
     if (this.drawing_area.is_paper_mode) {
-      // Paper mode: use paper dimensions, but expand if content (labels) extends beyond
-      // Measure bbox on the ORIGINAL rendered SVG (not the clone) for accurate layout
+      // Paper mode: use paper dimensions, but expand if content (labels) extends beyond.
+      // La page est ancrée à (0,0) : on mesure donc jusqu'où le contenu va à droite/en bas.
       const dims = this.drawing_area.getPaperDimensionsMm()
       const paper_w = Class_DrawingArea.mmToPx(dims.width)
       const paper_h = Class_DrawingArea.mmToPx(dims.height)
-      const bbox = this.drawing_area.d3_selection_elements_group?.node()?.getBBox()
-      const content_right = bbox ? bbox.x + bbox.width : 0
-      const content_bottom = bbox ? bbox.y + bbox.height : 0
+      const content_right = bounds ? bounds.x + bounds.width : 0
+      const content_bottom = bounds ? bounds.y + bounds.height : 0
       export_width = Math.max(paper_w, content_right + 5) + 2 * edge_pad
       export_height = Math.max(paper_h, content_bottom + 5) + 2 * edge_pad
     } else {
+      // Mode libre : le contenu est ancré à son coin haut-gauche, donc la taille est celle
+      // du contenu — et non plus celle du canvas, qui valait au minimum la fenêtre et
+      // faisait embarquer ses marges vides dans l'export.
       const scale_da = this.drawing_area.getZoomScale()
-      export_width = (this.drawing_area.width * scale_da) + legend_w + 5 + 2 * edge_pad
-      export_height = this.drawing_area.height * scale_da + 5 + 2 * edge_pad
+      export_width = ((bounds?.width ?? this.drawing_area.width) * scale_da) + legend_w + 5 + 2 * edge_pad
+      export_height = ((bounds?.height ?? this.drawing_area.height) * scale_da) + 5 + 2 * edge_pad
     }
 
     // Watermark "réalisé avec OpenSankey.fr" for raster/PDF exports without
@@ -1920,15 +1926,25 @@ export class Class_ApplicationData {
     // In free mode, use the current zoom scale
     const scale_da = this.drawing_area.is_paper_mode ? 1 : this.drawing_area.getZoomScale()
 
-    // areaAutoFit may shift the canvas origin to negative coordinates when content
-    // (e.g. value labels above flows) extends past y=0; counter-translate g_drawing
-    // so the canvas top-left maps to (0,0) in the export SVG instead of clipping.
-    // The extra export_edge_padding px absorbs the bg rect stroke-width (5 px → 2.5 px
-    // half-stroke outside the rect bounds) and font ascender heights so nothing peeks
-    // outside the export viewport. The matching padding on export_width/height keeps
-    // bottom/right unaffected.
-    const tx = -this.drawing_area.background_shift_x * scale_da + Class_ApplicationData.export_edge_padding
-    const ty = -this.drawing_area.background_shift_y * scale_da + Class_ApplicationData.export_edge_padding
+    // OS#1250 phase 4 — l'export s'ancre sur l'origine du CONTENU, plus sur celle du
+    // canvas (background_shift), qui n'existe plus : le canvas était un rectangle fini
+    // dimensionné sur la fenêtre, sans rapport avec ce qu'on exporte. Le contenu peut
+    // vivre en coordonnées négatives (labels de valeur au-dessus des flux) : on
+    // contre-translate pour que son coin haut-gauche tombe à (0,0) au lieu d'être rogné.
+    //
+    // Mode papier : c'est la PAGE qu'on exporte, ancrée à son origine (0,0) — pas le
+    // contenu, qui peut déborder d'un côté sans devoir décaler la page.
+    //
+    // Le export_edge_padding absorbe le stroke du rect de fond (5 px → 2,5 px de
+    // demi-trait hors bornes) et les hauteurs d'ascendantes, pour que rien ne dépasse du
+    // viewport d'export. Le padding correspondant sur export_width/height laisse
+    // bas/droite inchangés (cf. pre_process_export_svg, qui doit rester d'accord avec ce
+    // calcul).
+    const export_bounds = this.drawing_area.contentBounds()
+    const origin_x = this.drawing_area.is_paper_mode ? 0 : (export_bounds?.x ?? 0)
+    const origin_y = this.drawing_area.is_paper_mode ? 0 : (export_bounds?.y ?? 0)
+    const tx = -origin_x * scale_da + Class_ApplicationData.export_edge_padding
+    const ty = -origin_y * scale_da + Class_ApplicationData.export_edge_padding
     svg_clone?.select('#g_drawing').attr('transform', `translate(${tx},${ty}) scale(${scale_da})`)
     svg_clone?.selectAll('input').remove()
 

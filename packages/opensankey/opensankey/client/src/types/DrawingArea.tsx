@@ -1735,16 +1735,22 @@ export class Class_DrawingArea {
       const may_center = (this.is_unitary || !!center_on_content) && !this.is_paper_mode
       const center_h = may_center && bbox.width * new_k < this.window_fitting_width
       const center_v = may_center && bbox.height * new_k < this.window_fitting_height
+      // OS#1250 phase 4 — la branche par défaut ancre le coin haut-gauche du CONTENU à la
+      // marge. Elle y plaçait l'origine du CANVAS (`- _background_d3_groups_shift_x * k`,
+      // soit `min(0, bbox.x - marge)`) : le contenu flottait donc à son décalage monde par
+      // rapport à l'origine, ce qui n'a plus de sens sans canvas. Les deux convergent de
+      // toute façon, le constrain (actif sur les bounds du CONTENU depuis la phase 5)
+      // clampant le contenu dans l'extent écran déjà rétréci de fit_margin/2.
       const px = unitary_center_node
         ? this.window_fitting_width / 2 - cnx * new_k
         : center_h
           ? (this.window_fitting_width - bbox.width * new_k) / 2 - bbox.x * new_k
-          : this._fit_margin / 2 + label_overflow_left - this._background_d3_groups_shift_x * new_k
+          : this._fit_margin / 2 + label_overflow_left - bbox.x * new_k
       const py = unitary_center_node
         ? this.window_fitting_height / 2 + this.getNavBarHeight() - cny * new_k
         : center_v
           ? (this.window_fitting_height - bbox.height * new_k) / 2 - bbox.y * new_k + this.getNavBarHeight()
-          : this._fit_margin / 2 + this.getNavBarHeight() + label_overflow_top - this._background_d3_groups_shift_y * new_k
+          : this._fit_margin / 2 + this.getNavBarHeight() + label_overflow_top - bbox.y * new_k
       // Échelle + translation appliquées ensemble (constrain d3 préservé, cf. _applyFitCamera).
       // px/py ci-dessus ne lisent pas le transform live → réordonnancement sans effet.
       this._applyFitCamera(new_k, px, py)
@@ -2751,8 +2757,8 @@ export class Class_DrawingArea {
   // Read-only exposure of the canvas origin shifts so consumers (e.g. SVG export)
   // can align the export viewport on the actual content origin instead of (0,0)
   // when areaAutoFit has pushed content to negative coordinates.
-  public get background_shift_x(): number { return this._background_d3_groups_shift_x }
-  public get background_shift_y(): number { return this._background_d3_groups_shift_y }
+  // OS#1250 phase 4 — background_shift_x/y supprimés : ils n'exposaient l'origine du
+  // canvas que pour l'export, qui s'ancre désormais sur celle du CONTENU (contentBounds).
 
   public get height() { return this._height }
   public set height(_: number) {
