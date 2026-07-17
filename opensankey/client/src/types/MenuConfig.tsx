@@ -83,6 +83,10 @@ export const TOOLS_COLUMN_WIDTH_PX = 48
 // pour la réserve de largeur du mode épinglé (#1243).
 export const MENU_CONFIG_WIDTH_PCT = 20
 export const MENU_CONFIG_MIN_WIDTH_PX = 420
+// Largeur (px) de la galerie de modèles. Source de vérité ici (et non dans
+// SankeyTemplates) : getTemplateGalleryPinnedReservedPx en a besoin pour la
+// réserve de largeur du mode épinglé.
+export const TEMPLATE_GALLERY_WIDTH_PX = 300
 // #1243 — `keyTypeConfig` (axe Type) et `keyTypeElements` (axe Élément) étaient
 // les coordonnées de la matrice du menu de config : supprimés avec elle.
 export interface IType_DictHookRefSetterShowDialogComponents {
@@ -264,12 +268,27 @@ export class Class_MenuConfig {
     if (!this.ref_menu_opened.current[0]) return 0
     return Math.max(window.innerWidth * MENU_CONFIG_WIDTH_PCT / 100, MENU_CONFIG_MIN_WIDTH_PX)
   }
+  // Galerie de modèles ÉPINGLÉE : même principe que le panneau de config
+  // ci-dessus. Non épinglée, elle flotte en overlay et s'efface dès que
+  // l'utilisateur travaille ; épinglée, elle se docke à droite, réserve sa
+  // largeur et ne se ferme plus que par sa croix (on enchaîne alors les essais
+  // de modèles). État TRANSITOIRE (non sérialisé) ; l'overlay reste le défaut.
+  protected _template_gallery_pinned: boolean = false
+  public get template_gallery_pinned() { return this._template_gallery_pinned }
+  public set template_gallery_pinned(v: boolean) { this._template_gallery_pinned = v; this._notifyMainZone() }
+  /** Largeur (px) réservée à droite par la galerie de modèles épinglée (0 si
+   *  non épinglée). Même largeur que l'overlay. */
+  public getTemplateGalleryPinnedReservedPx(): number {
+    return this._template_gallery_pinned ? TEMPLATE_GALLERY_WIDTH_PX : 0
+  }
   /** Réserve TOTALE de « chrome » à droite : colonne d'outils + panneau de
-   *  config épinglé. C'est l'offset commun de la colonne tableur/doc/unitaire
-   *  (MainZoneTabs) et de la réserve du diagramme — même système de fenêtrage
-   *  pour tous les panneaux dockés (#1243). */
+   *  config épinglé + galerie de modèles épinglée. C'est l'offset commun de la
+   *  colonne tableur/doc/unitaire (MainZoneTabs) et de la réserve du diagramme
+   *  — même système de fenêtrage pour tous les panneaux dockés (#1243). */
   public getRightChromeReservedPx(): number {
-    return this.getToolsColumnWidthPx() + this.getConfigPanelPinnedReservedPx()
+    return this.getToolsColumnWidthPx() +
+      this.getConfigPanelPinnedReservedPx() +
+      this.getTemplateGalleryPinnedReservedPx()
   }
   public get main_zone_show_diagram() { return this._main_zone_show_diagram }
   public set main_zone_show_diagram(v: boolean) { this._main_zone_show_diagram = v; this._notifyMainZone() }
