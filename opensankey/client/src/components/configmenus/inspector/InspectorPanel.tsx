@@ -1,4 +1,4 @@
-// #1243 — Inspecteur piloté par la sélection : la « grille unique ».
+﻿// #1243 — Inspecteur piloté par la sélection : la « grille unique ».
 //
 // Structure (proposition validée sur l'issue) :
 //   fil d'Ariane  →  EN-TÊTE D'IDENTITÉ  →  portée (Sélection / Styles)  →
@@ -43,16 +43,22 @@ import { LinkOriginDestEditor } from '../SankeyMenuConfigurationLinksData'
 // couches supérieures enregistreront les leurs à leur propre init.
 registerBaseInspectorSections()
 
-// Libellés FR des cibles. i18n complet = suivi (ce panneau est dev-gated).
-const TARGET_NOUN: Record<Type_InspectorTarget, { one: string; many: string }> = {
-  view: { one: 'Vue', many: 'Vue' },
-  node: { one: 'Nœud', many: 'nœuds' },
-  link: { one: 'Flux', many: 'flux' },
-  container: { one: 'Zone', many: 'zones' },
-  legend: { one: 'Légende', many: 'légendes' },
-  title: { one: 'Titre', many: 'titres' },
-  mixed: { one: 'Sélection mixte', many: 'éléments' }
+// Libellés des cibles (i18n : inspector.target.*). `one` = singulier du fil
+// d'Ariane, `many` = pluriel accompagné du compte (« 3 nœuds »).
+const TARGET_I18N: Record<Type_InspectorTarget, { one: string; many: string }> = {
+  view: { one: 'view', many: 'view' },
+  node: { one: 'node', many: 'nodes' },
+  link: { one: 'link', many: 'links' },
+  container: { one: 'container', many: 'containers' },
+  legend: { one: 'legend', many: 'legends' },
+  title: { one: 'title', many: 'titles' },
+  mixed: { one: 'mixed', many: 'elements' }
 }
+const targetNoun = (
+  app_data: Class_ApplicationData,
+  target: Type_InspectorTarget,
+  plural = false
+) => app_data.t('inspector.target.' + TARGET_I18N[target][plural ? 'many' : 'one'])
 
 /**
  * Décompte la sélection courante par type, pour le résolveur.
@@ -60,13 +66,18 @@ const TARGET_NOUN: Record<Type_InspectorTarget, { one: string; many: string }> =
 function readSelectionCounts(app_data: Class_ApplicationData): Type_SelectionCounts {
   const da = app_data.drawing_area
   const legend_selected = da.selected_elements_list.some(e => e === da.legend)
+  // #1243 — le titre EST une zone de texte (Class_ContainerElement.is_title) :
+  // le cliquer au canvas le sélectionne déjà. On le compte à part pour que
+  // l'inspecteur le nomme « Titre » et lui serve ses réglages propres
+  // (visibilité, jetons data/view tag) plutôt que ceux d'une zone quelconque.
+  const containers = da.selected_containers_list
+  const title_selected = containers.some(c => c.is_title)
   return {
     nodes: da.selected_nodes_list.length,
     links: da.selected_links_list.length,
-    containers: da.selected_containers_list.length,
+    containers: containers.filter(c => !c.is_title).length,
     legend: legend_selected,
-    // Le titre n'est pas encore un objet sélectionnable (phase ultérieure).
-    title: false
+    title: title_selected
   }
 }
 
@@ -151,6 +162,7 @@ export const InspectorPanel = ({ app_data }: { app_data: Class_ApplicationData }
       <Box style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
         <Box style={{ flex: 1, minWidth: 0 }}>
           <InspectorBreadcrumb
+            app_data={app_data}
             target={target}
             count={count}
             has_selection={counts.nodes + counts.links + counts.containers > 0 || counts.legend}
@@ -168,8 +180,8 @@ export const InspectorPanel = ({ app_data }: { app_data: Class_ApplicationData }
             : 'menuconfigpanel_option_button'}
           sx={{ paddingInline: '0.3rem', minWidth: 'auto', width: 'auto', flex: 'none' }}
           title={app_data.menu_configuration.config_panel_pinned
-            ? 'Détacher le panneau (survol du dessin)'
-            : 'Épingler le panneau (le dessin se recadre à gauche)'}
+            ? app_data.t('inspector.unpin')
+            : app_data.t('inspector.pin')}
           onClick={() => {
             const mc = app_data.menu_configuration
             const next_pinned = !mc.config_panel_pinned
@@ -203,8 +215,7 @@ export const InspectorPanel = ({ app_data }: { app_data: Class_ApplicationData }
       {scope === 'selection'
         && (target === 'node' || target === 'link' || target === 'container' || target === 'mixed') && (
         <Text style={{ fontSize: default_font_size, opacity: 0.75, padding: '0 0.1rem' }}>
-          {'Attributs en retrait : hérités des styles (cascade). ' +
-            'Liseré violet : surchargé sur la sélection. Liseré orange : valeurs multiples.'}
+          {app_data.t('inspector.selection_hint')}
         </Text>
       )}
 
@@ -240,7 +251,7 @@ export const InspectorPanel = ({ app_data }: { app_data: Class_ApplicationData }
                     ? { opacity: 0.65, '&:hover': { opacity: 1 } }
                     : {})
                 }}
-                title={rollup === true ? 'Contient des attributs surchargés' : undefined}
+                title={rollup === true ? app_data.t('inspector.tab_overloaded') : undefined}
                 onClick={() => setActiveTabId(tab.id)}
               >
                 {tab.title(app_data)}
@@ -255,7 +266,7 @@ export const InspectorPanel = ({ app_data }: { app_data: Class_ApplicationData }
           active_tab.render(app_data, scope)
         ) : (
           <Box layerStyle="empty_config_text" textStyle="h2">
-            <span>{`Aucun réglage disponible pour : ${TARGET_NOUN[target].one}.`}</span>
+            <span>{app_data.t('inspector.nothing_here', { target: targetNoun(app_data, target) })}</span>
           </Box>
         )}
       </Box>
@@ -287,8 +298,9 @@ const CrumbButton = ({ onClick, children }: React.PropsWithChildren<{ onClick: (
 )
 
 const InspectorBreadcrumb = ({
-  target, count, has_selection, view_override, onGoView, onGoSelection
+  app_data, target, count, has_selection, view_override, onGoView, onGoSelection
 }: {
+  app_data: Class_ApplicationData
   target: Type_InspectorTarget
   count: number
   has_selection: boolean
@@ -299,8 +311,8 @@ const InspectorBreadcrumb = ({
   const showing_view = target === 'view'
   const sel_label =
     count > 1
-      ? `${count} ${TARGET_NOUN[target].many}`
-      : TARGET_NOUN[target].one
+      ? `${count} ${targetNoun(app_data, target, true)}`
+      : targetNoun(app_data, target)
 
   return (
     <Box
@@ -312,17 +324,19 @@ const InspectorBreadcrumb = ({
     >
       {showing_view ? (
         <>
-          <Text as="span" style={{ fontWeight: 600 }}>Vue</Text>
+          <Text as="span" style={{ fontWeight: 600 }}>{app_data.t('inspector.view')}</Text>
           {has_selection && view_override && (
             <>
               <Text as="span" style={{ opacity: 0.5 }}>›</Text>
-              <CrumbButton onClick={onGoSelection}>Retour à la sélection</CrumbButton>
+              <CrumbButton onClick={onGoSelection}>
+                {app_data.t('inspector.back_to_selection')}
+              </CrumbButton>
             </>
           )}
         </>
       ) : (
         <>
-          <CrumbButton onClick={onGoView}>Vue</CrumbButton>
+          <CrumbButton onClick={onGoView}>{app_data.t('inspector.view')}</CrumbButton>
           <Text as="span" style={{ opacity: 0.5 }}>›</Text>
           <Text as="span" style={{ fontWeight: 600 }}>{sel_label}</Text>
         </>
@@ -418,14 +432,16 @@ const InspectorScopeBand = ({
           variant={scope === 'selection' ? 'button_type_config_activated' : 'button_type_config'}
           onClick={() => onScope('selection')}
         >
-          {count > 1 ? `Sélection (${count})` : 'Sélection'}
+          {count > 1
+            ? app_data.t('inspector.selection_count', { count })
+            : app_data.t('inspector.selection')}
         </Button>
         <Button
           flex="1" size="xs" borderRadius="0"
           variant={scope === 'style' ? 'button_type_config_activated' : 'button_type_config'}
           onClick={enterStyleScope}
         >
-          {`Styles (${Math.max(cascade.length, 1)})`}
+          {app_data.t('inspector.styles_count', { count: Math.max(cascade.length, 1) })}
         </Button>
       </Box>
       {scope === 'style' && (
@@ -505,7 +521,7 @@ const InspectorStyleCascade = ({ app_data, cascade, edited_id, onChanged }: {
       <Text as="span" style={{
         fontSize: '0.6rem', letterSpacing: '0.05em',
         textTransform: 'uppercase', opacity: 0.6
-      }}>Cascade</Text>
+      }}>{t('inspector.cascade')}</Text>
       {cascade.map((style, i) => (
         <React.Fragment key={style.id}>
           {i > 0 && <Text as="span" style={{ opacity: 0.5, fontSize: default_font_size }}>→</Text>}
@@ -550,7 +566,7 @@ const InspectorStyleCascade = ({ app_data, cascade, edited_id, onChanged }: {
                 size="xs"
                 variant='menuconfigpanel_option_button'
                 sx={{ paddingInline: '0.2rem', minWidth: 'auto', height: '1.2rem' }}
-                title='Détacher ce style de la sélection'
+                title={t('inspector.detach_style')}
                 onClick={() => detach(style)}
               >
                 ×
@@ -568,7 +584,7 @@ const InspectorStyleCascade = ({ app_data, cascade, edited_id, onChanged }: {
           size="xs"
           variant='menuconfigpanel_option_button'
           sx={{ paddingInline: '0.4rem', minWidth: 'auto', width: 'auto', flex: 'none', height: '1.2rem' }}
-          title='Attacher un style à la sélection (fin de cascade, prioritaire)'
+          title={t('inspector.attach_style')}
         >
           +
         </MenuButton>
@@ -584,7 +600,7 @@ const InspectorStyleCascade = ({ app_data, cascade, edited_id, onChanged }: {
               attach(new_style)
             }}
           >
-            {'+ Nouveau style'}
+            {t('inspector.new_style')}
           </MenuItem>
         </MenuList>
       </Menu>
@@ -616,7 +632,7 @@ const InspectorStyleCascade = ({ app_data, cascade, edited_id, onChanged }: {
             size="xs"
             variant='menuconfigpanel_del_button'
             sx={{ paddingInline: '0.4rem', minWidth: 'auto' }}
-            title='Supprimer ce style (les éléments qui le suivaient retombent sur le reste de leur cascade)'
+            title={t('inspector.delete_style_tooltip')}
             onClick={() => {
               // Suppression projet : snapshot (retisser les références serait fragile).
               app_data.runWithSnapshotUndo(() => {
@@ -626,17 +642,13 @@ const InspectorStyleCascade = ({ app_data, cascade, edited_id, onChanged }: {
               refresh()
             }}
           >
-            {'Supprimer'}
+            {t('inspector.delete_style')}
           </Button>
         )}
       </Box>
     )}
     <Text style={{ fontSize: default_font_size, opacity: 0.75, padding: '0.25rem 0.1rem' }}>
-      {(divergent
-        ? 'Cascade du 1er élément — d’autres éléments sélectionnés suivent une cascade différente. '
-        : '') +
-        'Édition du style surligné : tous les éléments qui le suivent seront modifiés. ' +
-        'Le dernier de la cascade gagne ; une surcharge locale gagne toujours.'}
+      {(divergent ? t('inspector.divergent_cascade') : '') + t('inspector.edited_style_hint')}
     </Text>
   </>
 }

@@ -2497,7 +2497,7 @@ export const MenuConfigurationAppearance = ({
                     refreshAll()
                   }}
                 >
-                  {'Forme de stock visible'}
+                  {t('inspector.stock_shape_visible')}
                 </Checkbox>
                 <MenuSectionCheckbox
                   elements={elements}

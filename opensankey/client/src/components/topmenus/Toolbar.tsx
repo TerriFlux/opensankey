@@ -1,4 +1,4 @@
-import React, { useState, RefObject, useRef, ReactNode, MutableRefObject } from 'react'
+﻿import React, { useState, RefObject, useRef, ReactNode, MutableRefObject } from 'react'
 import {
   Drawer, Button, Collapse, DrawerContent, DrawerBody, Box, useDisclosure,
   Heading, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Text, Select, Checkbox, Switch,
@@ -453,7 +453,7 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
               >
                 {/* Libellé COURT : t('Banner.fdn') (« Légende et filtres »)
                     écrase les autres onglets ; le texte long va au tooltip. */}
-                {'Filtrer'}
+                {app_data.t('filter_panel.filter')}
               </Button>
               {has_select_tab ? (
                 <Button
@@ -462,10 +462,10 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
                     ? 'menuconfigpanel_option_button_activated'
                     : 'menuconfigpanel_option_button'}
                   sx={{ paddingInline: '0.25rem', minWidth: 'auto' }}
-                  title='Sélectionner des éléments par type et par tag (opérations groupées)'
+                  title={app_data.t('filter_panel.select_tooltip')}
                   onClick={() => setFilterTab('select')}
                 >
-                  {'Sélectionner'}
+                  {app_data.t('filter_panel.select')}
                 </Button>
               ) : <></>}
               {has_edit_tab ? (
@@ -477,7 +477,7 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
                   sx={{ paddingInline: '0.25rem', minWidth: 'auto' }}
                   onClick={() => setFilterTab('edit')}
                 >
-                  {'Éditer'}
+                  {app_data.t('filter_panel.edit')}
                 </Button>
               ) : <></>}
             </Box>
@@ -487,7 +487,7 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
             // son conteneur ; sans hauteur réservée, le tiroir (height:fit-content)
             // la rogne.
             <Box layerStyle='drawerFilterBox' style={{ minHeight: '22rem' }}>
-              <WrapperContentConfig title={'Sélectionner des éléments'}>
+              <WrapperContentConfig title={app_data.t('filter_panel.select_elements')}>
                 <ElementSelectionTool app_data={app_data} />
               </WrapperContentConfig>
             </Box>
