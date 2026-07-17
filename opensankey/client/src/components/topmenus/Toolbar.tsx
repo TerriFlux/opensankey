@@ -21,8 +21,9 @@ import { Class_NodeDimension, Type_DisaggregationKind } from '../../Elements/Nod
 import { Type_DisaggregationGap, const_default_position_x, const_default_position_y } from '../../types/Utils'
 
 const width_fitler_drawer = 270
-// #1243 — l'onglet « Éditer » (groupes de tags, vues) accueille des éditeurs
-// bien plus riches que les filtres : le tiroir s'élargit dans ce mode.
+// #1243 — les onglets « Sélectionner » (liste + recherche) et « Éditer »
+// (groupes de tags, vues) accueillent des contenus bien plus riches que les
+// filtres : le tiroir s'élargit dans ces modes.
 const width_filter_drawer_edit = 420
 
 /**
@@ -353,7 +354,7 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
   const has_tabs = has_edit_tab || has_select_tab
   const in_edit_tab = has_edit_tab && filterTab === 'edit'
   const in_select_tab = has_select_tab && filterTab === 'select'
-  const drawer_width_px = in_edit_tab ? width_filter_drawer_edit : width_fitler_drawer
+  const drawer_width_px = (in_edit_tab || in_select_tab) ? width_filter_drawer_edit : width_fitler_drawer
   const width_drawer = (drawerOpen ? drawer_width_px + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin
   // Ouvre/ferme le drawer de filtres. Comme la config, c'est un OVERLAY au-dessus de toute la
   // grande zone (diagramme, tableur, doc…) : il ne touche ni à l'état doc/tableur ni au cadrage.
@@ -439,9 +440,12 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
                   ? 'menuconfigpanel_option_button_activated'
                   : 'menuconfigpanel_option_button'}
                 sx={{ paddingInline: '0.25rem', minWidth: 'auto' }}
+                title={app_data.t('Banner.fdn')}
                 onClick={() => setFilterTab('filter')}
               >
-                {app_data.t('Banner.fdn')}
+                {/* Libellé COURT : t('Banner.fdn') (« Légende et filtres »)
+                    écrase les autres onglets ; le texte long va au tooltip. */}
+                {'Filtrer'}
               </Button>
               {has_select_tab ? (
                 <Button
@@ -471,7 +475,10 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
             </Box>
           ) : <></>}
           {in_select_tab ? (
-            <Box layerStyle='drawerFilterBox'>
+            // minHeight : la liste déroulante du sélecteur s'ouvre EN FLUX dans
+            // son conteneur ; sans hauteur réservée, le tiroir (height:fit-content)
+            // la rogne.
+            <Box layerStyle='drawerFilterBox' style={{ minHeight: '22rem' }}>
               <WrapperContentConfig title={'Sélectionner des éléments'}>
                 <ElementSelectionTool app_data={app_data} />
               </WrapperContentConfig>

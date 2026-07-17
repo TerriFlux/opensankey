@@ -14,6 +14,16 @@
 /** Topic de la « grande zone » (barre du haut + MainZoneTabs). Conservé pour rétro-compat. */
 export const MAIN_ZONE_TOPIC = 'main_zone'
 
+/**
+ * #1243 — Topic « composition de la sélection » (add/remove/purge d'éléments).
+ * Notifié par Class_MenuConfig.updateInspector(), donc à chaque changement de
+ * sélection. Contrairement aux slots ref (un seul titulaire), ce topic accepte
+ * PLUSIEURS abonnés : l'inspecteur garde son slot dédié, et tout autre
+ * composant qui doit suivre la sélection (ex. le récapitulatif de l'outil de
+ * sélection du panneau Filtres) s'abonne ici sans voler de slot.
+ */
+export const SELECTION_TOPIC = 'selection'
+
 export class Class_EventBus {
   private _listeners: Map<string, Set<() => void>> = new Map()
 
