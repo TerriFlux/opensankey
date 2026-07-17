@@ -167,7 +167,7 @@ export const MenuSectionCheckbox = <
 >({
     elements, attributePath, attributeKey, config,
     prefix = '', refreshParentComponent, children, rightComponent, compact = false,
-    compact_label = 'Visible'
+    compact_label
   }: React.PropsWithChildren<{
   elements: ElementsType
   attributePath: string,
@@ -182,8 +182,9 @@ export const MenuSectionCheckbox = <
   // et le rightComponent reste visible même quand l'attribut est décoché
   // (le contenu n'est plus caché : on peut régler AVANT de rendre visible).
   compact?: boolean
-  // Libellé de l'œil en mode compact (défaut « Visible ») — ex. « Libellés
-  // visibles » quand la case ne gouverne qu'une partie de l'onglet (Stock).
+  // Libellé de l'œil en mode compact (défaut : inspector.visible) — ex.
+  // « Libellés visibles » quand la case ne gouverne qu'une partie de l'onglet
+  // (Stock). Passer une chaîne DÉJÀ traduite.
   compact_label?: string
 }>) => {
   const attribute_values = getConfigValues(elements, config, prefix, refreshParentComponent)
@@ -213,7 +214,9 @@ export const MenuSectionCheckbox = <
             }}
           >
             <OSTooltip label={t(`${String(attributePath)}.tooltips.${fullKey}`)}>
-              {compact ? compact_label : t(`${String(attributePath)}.${fullKey}`)}
+              {compact
+                ? (compact_label ?? t('inspector.visible'))
+                : t(`${String(attributePath)}.${fullKey}`)}
             </OSTooltip>
           </Checkbox>
         </InputIndicatorWrapper>

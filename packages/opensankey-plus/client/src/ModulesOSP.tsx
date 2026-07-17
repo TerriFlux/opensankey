@@ -187,7 +187,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     id: 'osp.filter_edit.node_taggs',
     order: 10,
     title: () => t('Menu.EN'),
-    short_title: () => t('Menu.Config.element_node'),
+    short_title: () => t('filter_panel.short.node'),
     gate: (app) => app.has_sankey_plus,
     render: (app) => <SankeySettingsEditionElementTags
       new_data={app as Class_ApplicationDataOSP}
@@ -198,7 +198,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     id: 'osp.filter_edit.flux_taggs',
     order: 20,
     title: () => t('Menu.EF'),
-    short_title: () => t('Menu.Config.element_flow'),
+    short_title: () => t('filter_panel.short.link'),
     gate: (app) => app.has_sankey_plus,
     render: (app) => <SankeySettingsEditionElementTags
       new_data={app as Class_ApplicationDataOSP}
@@ -209,7 +209,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     id: 'osp.filter_edit.data_taggs',
     order: 30,
     title: () => t('Menu.ED'),
-    short_title: () => t('Menu.Config.element_data'),
+    short_title: () => t('filter_panel.short.data'),
     gate: (app) => app.has_sankey_plus,
     render: (app) => <SankeySettingsEditionElementTags
       new_data={app as Class_ApplicationDataOSP}
@@ -220,7 +220,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     id: 'osp.filter_edit.level_taggs',
     order: 40,
     title: () => t('Menu.Hierarchy'),
-    short_title: () => 'Niveaux',
+    short_title: () => t('filter_panel.short.level'),
     gate: (app) => app.has_sankey_plus && app.has_sankey_dev,
     render: (app) => <SankeySettingsEditionElementTags
       new_data={app as Class_ApplicationDataOSP}
@@ -231,7 +231,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     id: 'osp.filter_edit.views',
     order: 50,
     title: () => t('view.storytelling'),
-    short_title: () => 'Vues',
+    short_title: () => t('filter_panel.short.views'),
     gate: (app) => app.has_sankey_plus,
     render: (app) => <ViewsConfig app_data={app as Class_ApplicationDataOSP} />
   })
@@ -241,7 +241,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     target: ['node', 'link', 'mixed'],
     order: 55,
     hue: 'presentation',
-    title: () => 'Tags',
+    title: (app) => app.t('inspector.tab.tags'),
     data_only: true,
     gate: (app) => app.has_sankey_plus && (
       (app.drawing_area.selected_nodes_list.length > 0

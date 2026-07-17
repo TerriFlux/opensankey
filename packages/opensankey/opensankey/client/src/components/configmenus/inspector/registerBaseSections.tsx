@@ -50,7 +50,10 @@ export function registerBaseInspectorSections(): void {
   if (_registered) return
   _registered = true
 
-  const ELEMENT_TARGETS = ['node', 'link', 'container', 'mixed'] as const
+  // `title` est une ZONE DE TEXTE (Class_ContainerElement.is_title) : elle a
+  // donc les mêmes onglets d'apparence que les zones, plus un onglet « Titre »
+  // pour ses réglages propres (visibilité, jetons data/view tag).
+  const ELEMENT_TARGETS = ['node', 'link', 'container', 'title', 'mixed'] as const
 
   // ---- Onglet FORME (géométrie + habillage ; contient déjà u/v, attaches) --
   inspector_registry.register({
@@ -118,7 +121,7 @@ export function registerBaseInspectorSections(): void {
     order: 50,
     overload_prefixes: ['stock_label'],
     hue: 'data',
-    title: () => 'Stock',
+    title: (app_data) => app_data.t('inspector.tab.stock'),
     // Même gating que l'onglet historique (dev) ; il faut des nœuds pour
     // pouvoir ACTIVER un stock (l'œil « Activé » de l'en-tête).
     gate: (app_data) => app_data.has_sankey_dev
@@ -136,12 +139,29 @@ export function registerBaseInspectorSections(): void {
     target: ['node', 'link', 'mixed'],
     order: 60,
     hue: 'data',
-    title: () => 'Infobulle',
+    title: (app_data) => app_data.t('inspector.tab.tooltip'),
     data_only: true,
     render: (app_data) => <InspectorTooltipTab app_data={app_data} />
   })
 
+  // ---- Onglet TITRE (réglages propres de la zone de texte « titre ») -------
+  // Le titre sélectionné au canvas obtient Forme/Libellé (c'est une ZDT) PLUS
+  // cet onglet : visibilité + insertion de jetons data/view tag.
+  inspector_registry.register({
+    id: 'os.tab.titre',
+    target: 'title',
+    order: 5,
+    hue: 'data',
+    title: (app_data) => app_data.t('inspector.tab.title'),
+    data_only: true,
+    render: (app_data) => <TitleConfig app_data={app_data} compact />
+  })
+
   // ---- Cible LEGEND ----------------------------------------------------------
+  // PROVISOIRE — ne pas investir ici : OS#1254 refond la légende en zones de
+  // texte générées. « La légende » cessera d'être un objet unique sélectionnable
+  // (ce seront des ZDT), donc cette cible et l'onglet Légende de la Vue seront à
+  // reprendre à la fusion avec ce chantier.
   inspector_registry.register({
     id: 'os.legend.config',
     target: 'legend',
@@ -172,7 +192,7 @@ export function registerBaseInspectorSections(): void {
     target: 'view',
     order: 20,
     hue: 'style',
-    title: () => 'Titre',
+    title: (app_data) => app_data.t('inspector.tab.title'),
     render: (app_data) => <TitleConfig app_data={app_data} compact />
   })
 
@@ -197,7 +217,7 @@ const InspectorStockTab = ({ app_data, scope }: {
   app_data: Class_ApplicationData
   scope: 'selection' | 'style'
 }) => {
-  const { drawing_area, menu_configuration } = app_data
+  const { t, drawing_area, menu_configuration } = app_data
   const nodes = drawing_area.selected_nodes_list
   const first = nodes[0]
   const stock_nodes = nodes.filter(n => n.has_stock)
@@ -223,10 +243,10 @@ const InspectorStockTab = ({ app_data, scope }: {
             refresh()
           }}
         >
-          {'Activé'}
+          {t('inspector.stock_enabled')}
         </Checkbox>
         <Box layerStyle='options_2cols' width='fit-content'>
-          <OSTooltip label={'Afficher la forme de stock'}>
+          <OSTooltip label={app_data.t('inspector.stock_shape_tooltip')}>
             <Button
               variant={shape_visible ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
               sx={{ padding: '4px', paddingInline: '0.5rem', minWidth: 'auto', height: 'auto' }}
@@ -236,10 +256,10 @@ const InspectorStockTab = ({ app_data, scope }: {
                 refresh()
               }}
             >
-              {'Forme'}
+              {app_data.t('inspector.stock_shape')}
             </Button>
           </OSTooltip>
-          <OSTooltip label={'Afficher les libellés du stock'}>
+          <OSTooltip label={app_data.t('inspector.stock_labels_tooltip')}>
             <Button
               variant={labels_visible ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
               sx={{ padding: '4px', paddingInline: '0.5rem', minWidth: 'auto', height: 'auto' }}
@@ -249,7 +269,7 @@ const InspectorStockTab = ({ app_data, scope }: {
                 refresh()
               }}
             >
-              {'Libellés'}
+              {app_data.t('inspector.stock_labels')}
             </Button>
           </OSTooltip>
         </Box>
@@ -334,7 +354,7 @@ const InspectorTooltipTab = ({ app_data }: { app_data: Class_ApplicationData }) 
         size='xs'
         onClick={setModeRich}
       >
-        {'Ouvrir l’éditeur…'}
+        {t('inspector.open_editor')}
       </Button>
     ) : (
       <ConfigMenuTextInput

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+﻿import React, { useState } from 'react'
 import { MultiSelect } from 'react-multi-select-component'
 import { Box, Button, Checkbox, Divider, Select } from '@chakra-ui/react'
 import { useModelBinding } from '../../hooks/useModelBinding'
@@ -1196,7 +1196,7 @@ export const ElementSelectionTool = ({ app_data }: { app_data: Class_Application
       fontSize: '0.7rem', paddingTop: '0.2rem'
     }}>
       <Box as='span' style={{ opacity: 0.75 }}>
-        {total > 0 ? `Sélection : ${summary}` : t('Noeud.NS')}
+        {total > 0 ? t('filter_panel.selection_summary', { summary }) : t('Noeud.NS')}
       </Box>
       <Button
         size='xs'
@@ -1210,7 +1210,7 @@ export const ElementSelectionTool = ({ app_data }: { app_data: Class_Application
           app_data.menu_configuration.updateAllComponentsRelatedToContainers()
         }}
       >
-        {'Tout désélectionner'}
+        {t('filter_panel.deselect_all')}
       </Button>
     </Box>
   </Box>
