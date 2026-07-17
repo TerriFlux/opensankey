@@ -8,7 +8,6 @@ import {
 
 // Local types
 import type { Class_Tag } from '@terriflux/opensankey/src/types/Tag'
-import { SankeyLinkSelectionSimple } from '@terriflux/opensankey/src/components/configmenus/MenuElementsSelection'
 import { WrapperBoxSubSectionMenu } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
 import { OSTooltip } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
 import { useModelBinding, useModelSlot } from '@terriflux/opensankey/src/hooks/useModelBinding'
@@ -165,13 +164,11 @@ export const MenuConfigurationLinksTags = ({new_data}:{new_data: Class_Applicati
     }</>
 
 
+  // #1258 — plus de sélecteur embarqué : dans l'inspecteur, le canvas EST le
+  // sélecteur.
   return <WrapperBoxSubSectionMenu new_data={new_data} title={t('Menu.flow_associated_tag')}>
     <OSTooltip label={new_data.has_sankey_plus ? '' : t('Menu.sankeyOSPDisabled')}>
-      <>
-        <SankeyLinkSelectionSimple app_data={new_data} />
-        {content}
-      </>
+      {content}
     </OSTooltip>
-
   </WrapperBoxSubSectionMenu>
 }

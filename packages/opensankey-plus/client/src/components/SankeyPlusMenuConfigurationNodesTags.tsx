@@ -5,7 +5,6 @@ import {Box,Checkbox,Select,} from '@chakra-ui/react'
 import type { Class_Tag } from '@terriflux/opensankey/src/types/Tag'
 import { WrapperBoxSubSectionMenu } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
 import { OSTooltip } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
-import { SankeyNodeSelectionSimple } from '@terriflux/opensankey/src/components/configmenus/MenuElementsSelection'
 import { useModelBinding, useModelSlot } from '@terriflux/opensankey/src/hooks/useModelBinding'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
@@ -78,13 +77,9 @@ export const SankeyMenuConfigurationNodesTags = ({app_data}:BaseComponentProps) 
   if (!has_node_taggs || selected_nodes.length==0)
     return <></>
 
+  // #1258 — plus de titre interne (doublon du titre de section) ni de
+  // sélecteur embarqué : dans l'inspecteur, le canvas EST le sélecteur.
   const content = <>
-    <Box
-      as='span'
-      layerStyle='menu_sub_section_title'>
-      {t('Menu.node_associated_tag')}
-    </Box>
-    <SankeyNodeSelectionSimple app_data={app_data} />
     <Box layerStyle='menuconfigpanel_grid' >
       {/* Groupe d'étiquettes  */}
       <Select

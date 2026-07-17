@@ -1037,7 +1037,7 @@ export const OverloadedButton = ({
         <Button
           variant={variant}
           onClick={onClick}
-          sx={{ padding: '4px', minWidth: 'auto', height: 'auto', ...buttonSx }}
+          sx={buttonSx}
         >
           {children}
         </Button>
@@ -1151,6 +1151,8 @@ interface OverloadedCheckboxProps {
   tooltipLabel?: string
   children: React.ReactNode
   t: (key: string) => string
+  // #1258 — bascule à ICÔNE seule : bouton carré 1.5rem (pas une pilule).
+  icon_button?: boolean
 }
 
 export const OverloadedCheckbox = ({
@@ -1163,20 +1165,23 @@ export const OverloadedCheckbox = ({
   getIsIndeterminate,
   tooltipLabel,
   children,
-  t
+  t,
+  icon_button = false
 }: React.PropsWithChildren<OverloadedCheckboxProps>) => {
   const fullAttributeKey = `${prefix}_${attributeKey}` as keyof typeof config
-  
+
   return (
     <InputIndicatorWrapper
       isOverloaded={isElementAttributeOverloaded(elements, fullAttributeKey, config)}
       isMultiValue={getIsIndeterminate()}
+      fit={icon_button}
       t={t}
     >
       <Button
-        variant={isChecked ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+        variant={icon_button
+          ? (isChecked ? 'menuconfigpanel_icon_button_activated' : 'menuconfigpanel_icon_button')
+          : (isChecked ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button')}
         onClick={() => onChange(!isChecked)}
-        sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
       >
         {tooltipLabel ? (
           <OSTooltip label={tooltipLabel}>
@@ -1534,6 +1539,7 @@ export const InputIndicatorWrapper = ({
   isMultiValue = false,
   provenance,
   children,
+  fit = false,
   t: _t
 }: React.PropsWithChildren<{
   isOverloaded?: boolean
@@ -1543,6 +1549,9 @@ export const InputIndicatorWrapper = ({
   // retrait/liseré porte déjà l'information principale.
   provenance?: string
   children: React.ReactNode
+  // #1258 — bouton-icône carré : le wrapper épouse le contenu au lieu
+  // d'occuper toute la cellule (sinon le carré se cale à gauche d'un vide).
+  fit?: boolean
   t: (key: string) => string
 }>) => {
   // Priorité : multiValue > overloaded
@@ -1557,7 +1566,7 @@ export const InputIndicatorWrapper = ({
       return (
         <Box
           display='inline-flex'
-          width='100%'
+          width={fit ? 'fit-content' : '100%'}
           title={provenance}
           sx={{
             opacity: 0.65,
@@ -1577,7 +1586,7 @@ export const InputIndicatorWrapper = ({
     <Box
       position='relative'
       display='inline-flex'
-      width='100%'
+      width={fit ? 'fit-content' : '100%'}
       title={provenance}
       sx={{
         '& > *': {
@@ -2040,16 +2049,9 @@ export const ColorPickerWithSustainable = <T extends Record<string, AttributeCon
       >
         <OSTooltip label={sustainableValue ? t('color_lock.locked') : t('color_lock.unlocked')}>
           <Button
-            variant={sustainableValue ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+            variant={sustainableValue ? 'menuconfigpanel_icon_button_activated' : 'menuconfigpanel_icon_button'}
             onClick={() => {
               values[sustainableAttributeKey as string] = !sustainableValue
-            }}
-            sx={{
-              padding: '0px',
-              width: '20px',
-              height: '20px',
-              display: 'flex',
-              alignItems: 'center'
             }}
           >
             {sustainableValue ? icon_locked : icon_unlocked}
