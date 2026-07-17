@@ -1129,6 +1129,47 @@ export const SankeyMultiTypeSelectionSimple = ({
   />
 )
 
+// #1243 — OUTIL de sélection par critères (panneau Filtres, onglet
+// « Sélectionner »). L'inspecteur n'a plus de sélecteur (le canvas est le
+// sélecteur), mais sélectionner 50 nœuds à la main pour une opération groupée
+// n'est pas praticable : cet outil sélectionne par TYPE + TAG + liste
+// (recherche), et l'inspecteur édite ensuite la sélection obtenue.
+// Mode 'simple' volontaire : c'est un outil de sélection, pas de création
+// (créer reste un geste de canvas).
+export const ElementSelectionTool = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const { t } = app_data
+  const [type, setType] = useState<'node' | 'link' | 'container'>('node')
+  const types: { key: 'node' | 'link' | 'container', label: string }[] = [
+    { key: 'node', label: t('Menu.Config.element_node') },
+    { key: 'link', label: t('Menu.Config.element_flow') },
+    { key: 'container', label: t('Menu.Config.element_object0') }
+  ]
+  return <Box layerStyle='menuconfigpanel_grid'>
+    {/* Type : en single-type, le sélecteur unifié expose AUSSI le filtre par
+        groupe de tags (indisponible en multi-type) — c'est le critère clé. */}
+    <Box style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.15rem' }}>
+      {types.map(({ key, label }) => (
+        <Button
+          key={key}
+          size='xs'
+          variant={type === key
+            ? 'menuconfigpanel_option_button_activated'
+            : 'menuconfigpanel_option_button'}
+          sx={{ paddingInline: '0.25rem', minWidth: 'auto' }}
+          onClick={() => setType(key)}
+        >
+          {label}
+        </Button>
+      ))}
+    </Box>
+    <UnifiedElementSelection
+      app_data={app_data}
+      config={ALL_CONFIGS[type] as ElementConfig<Class_NodeElement | Class_LinkElement | Class_ContainerElement>}
+      mode='simple'
+    />
+  </Box>
+}
+
 // 🎯 NOUVEAU : Multi-type en mode full !
 export const SankeyMultiTypeSelectionFull = ({
   app_data,

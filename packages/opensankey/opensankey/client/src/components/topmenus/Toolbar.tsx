@@ -7,6 +7,7 @@ import {
 import { CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
 import { OSMultiSelect, typeElementSelectable, CustomFaEyeCheckIcon, OSTooltip, ConfigMenuNumberInput, WrapperContentConfig } from '../configmenus/MenuCommon'
 import { filter_panel_registry } from './FilterPanelRegistry'
+import { ElementSelectionTool } from '../configmenus/MenuElementsSelection'
 import { useMainZone } from '../spreadsheet/MainZoneTabs'
 import { useModelBinding } from '../../hooks/useModelBinding'
 import { Class_ApplicationData } from '../../types/ApplicationData'
@@ -330,7 +331,7 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
   // #1243 — deux modes : « Filtrer » (historique) et « Éditer » (groupes de
   // tags, vues — relogés ici depuis la matrice, cf. règle R3). L'édition n'a
   // pas de sens en publish/statique.
-  const [filterTab, setFilterTab] = useState<'filter' | 'edit'>('filter')
+  const [filterTab, setFilterTab] = useState<'filter' | 'select' | 'edit'>('filter')
   // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
   useModelBinding(app_data.menu_configuration.ref_toolbar)
   // Abonnement à la grande zone : garde l'offset droit à jour quand la colonne d'outils change.
@@ -345,7 +346,13 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
   // groupes de tags, vues). Onglet masqué s'il n'y en a aucune (OS pur/publish).
   const edit_sections = app_data.is_static ? [] : filter_panel_registry.getSections(app_data)
   const has_edit_tab = edit_sections.length > 0
+  // #1243 — onglet « Sélectionner » : sélection par critères (type + tag +
+  // liste) pour les opérations groupées, l'inspecteur éditant ensuite la
+  // sélection obtenue. Éditeur uniquement (en publish on ne sélectionne pas).
+  const has_select_tab = !app_data.is_static
+  const has_tabs = has_edit_tab || has_select_tab
   const in_edit_tab = has_edit_tab && filterTab === 'edit'
+  const in_select_tab = has_select_tab && filterTab === 'select'
   const drawer_width_px = in_edit_tab ? width_filter_drawer_edit : width_fitler_drawer
   const width_drawer = (drawerOpen ? drawer_width_px + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin
   // Ouvre/ferme le drawer de filtres. Comme la config, c'est un OVERLAY au-dessus de toute la
@@ -420,9 +427,10 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
         >
           {/* #1243 — Filtrer / Éditer : les GROUPES de tags s'éditent là où ils
               sont consommés (règle R3), l'inspecteur ne fait qu'assigner. */}
-          {has_edit_tab ? (
+          {has_tabs ? (
             <Box style={{
-              display: 'grid', gridTemplateColumns: '1fr 1fr',
+              display: 'grid',
+              gridTemplateColumns: `repeat(${1 + (has_select_tab ? 1 : 0) + (has_edit_tab ? 1 : 0)}, 1fr)`,
               gap: '0.15rem', padding: '0.3rem 0.3rem 0'
             }}>
               <Button
@@ -435,19 +443,40 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
               >
                 {app_data.t('Banner.fdn')}
               </Button>
-              <Button
-                size='xs'
-                variant={filterTab === 'edit'
-                  ? 'menuconfigpanel_option_button_activated'
-                  : 'menuconfigpanel_option_button'}
-                sx={{ paddingInline: '0.25rem', minWidth: 'auto' }}
-                onClick={() => setFilterTab('edit')}
-              >
-                {'Éditer'}
-              </Button>
+              {has_select_tab ? (
+                <Button
+                  size='xs'
+                  variant={filterTab === 'select'
+                    ? 'menuconfigpanel_option_button_activated'
+                    : 'menuconfigpanel_option_button'}
+                  sx={{ paddingInline: '0.25rem', minWidth: 'auto' }}
+                  title='Sélectionner des éléments par type et par tag (opérations groupées)'
+                  onClick={() => setFilterTab('select')}
+                >
+                  {'Sélectionner'}
+                </Button>
+              ) : <></>}
+              {has_edit_tab ? (
+                <Button
+                  size='xs'
+                  variant={filterTab === 'edit'
+                    ? 'menuconfigpanel_option_button_activated'
+                    : 'menuconfigpanel_option_button'}
+                  sx={{ paddingInline: '0.25rem', minWidth: 'auto' }}
+                  onClick={() => setFilterTab('edit')}
+                >
+                  {'Éditer'}
+                </Button>
+              ) : <></>}
             </Box>
           ) : <></>}
-          {in_edit_tab ? (
+          {in_select_tab ? (
+            <Box layerStyle='drawerFilterBox'>
+              <WrapperContentConfig title={'Sélectionner des éléments'}>
+                <ElementSelectionTool app_data={app_data} />
+              </WrapperContentConfig>
+            </Box>
+          ) : in_edit_tab ? (
             <Box layerStyle='drawerFilterBox' style={{ overflowY: 'auto' }}>
               {edit_sections.map(section => (
                 <WrapperContentConfig key={section.id} title={section.title(app_data)}>
