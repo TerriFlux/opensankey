@@ -589,7 +589,16 @@ def launch_conversion():
                 # Pas de thread ici (chargement direct d'un exemple JSON) : on
                 # marque le statut terminé tout de suite pour arrêter le polling.
                 write_process_status(log_filename, PROCESS_STATUS_FINISHED)
-                return Response(response="{}", status=200, mimetype="application/json")
+                # Le statut voyage aussi dans la réponse : le client enchaîne
+                # alors directement sur retrieve_result au lieu d'attendre le
+                # premier tick de check_process (5 s d'attente sur un travail
+                # déjà terminé). Les autres formats renvoient {} et gardent le
+                # polling, leur conversion tournant dans un thread.
+                return Response(
+                    response=json.dumps({"status": PROCESS_STATUS_FINISHED}),
+                    status=200,
+                    mimetype="application/json",
+                )
                 # return handle_json_or_compressed(data_folder, exemple, input_file_name)
 
         elif input_format != 'example_excel' and input_format != 'example_json' and input_format != 'blob':

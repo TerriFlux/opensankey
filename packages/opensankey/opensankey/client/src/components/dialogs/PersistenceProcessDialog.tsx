@@ -1255,7 +1255,19 @@ export const UniversalFileConverter = ({
         const content_type = response.headers.get('content-type') || ''
         const is_json = content_type.includes('application/json')
         if (response.ok && is_json) {
-          // Succès — le Counter prend le relais via check_process.
+          // Chargement direct d'un exemple JSON : le serveur a déjà tout fait
+          // avant de répondre et nous le dit. On termine sur-le-champ plutôt
+          // que d'attendre un tick de check_process — c'était 5 s d'attente
+          // sur un travail terminé. setProcessing(false) démonte le Counter
+          // (donc aucun poll) et déclenche handleFinish côté ProcessTerminal,
+          // exactement comme le faisait finishProcess(false).
+          const data = await response.json().catch(() => null)
+          if (data?.status === 'finished') {
+            setProcessing(false)
+            return
+          }
+          // Sinon la conversion tourne dans un thread : le Counter prend le
+          // relais via check_process.
           return
         }
         if (response.status === 413) {
