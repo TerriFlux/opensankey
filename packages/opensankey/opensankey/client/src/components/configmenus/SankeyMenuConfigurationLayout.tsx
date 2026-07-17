@@ -696,20 +696,10 @@ export const LegendConfig = ({ app_data, compact = false }: {
   }
 
   // ✅ Position
-  const eventLegendStickDrawing = (checked: boolean) => {
-    const f = (_: boolean) => {
-      const { drawing_area } = app_data
-      drawing_area.legend.stick_to_drawing = _
-      refreshThisAndUpdateRelatedComponents()
-    }
-    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'stick_to_drawing', checked, f)
-  }
-
   const eventLegendPosX = (evt: number | undefined | null) => {
     if (evt !== undefined && evt !== null) {
       const f = (_: number) => {
         app_data.drawing_area.legend.position_x = _
-        app_data.drawing_area.legend.applyPosition()
         refreshThisAndUpdateRelatedComponents()
       }
       app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'position_x', evt, f)
@@ -720,7 +710,6 @@ export const LegendConfig = ({ app_data, compact = false }: {
     if (evt !== undefined && evt !== null) {
       const f = (_: number) => {
         app_data.drawing_area.legend.position_y = _
-        app_data.drawing_area.legend.applyPosition()
         refreshThisAndUpdateRelatedComponents()
       }
       app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'position_y', evt, f)
@@ -787,6 +776,15 @@ export const LegendConfig = ({ app_data, compact = false }: {
     app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'legend_horizontal', checked, f)
   }
 
+  // OS#1254 — légende cassée (zones éditées individuellement) : les paramètres
+  // ne pilotent plus rien ; « Régénérer » reconstruit tout (destructif, pas
+  // d'annulation) et repasse en mode géré.
+  const legend_broken = !app_data.drawing_area.legend.managed
+  const eventLegendRegenerate = () => {
+    app_data.drawing_area.legend.regenerate()
+    refreshThisAndUpdateRelatedComponents()
+  }
+
   return <Box layerStyle='menu_sub_section'>
     {/* ✅ TITRE AVEC CHECKBOX DE VISIBILITÉ */}
     <Box
@@ -803,9 +801,35 @@ export const LegendConfig = ({ app_data, compact = false }: {
       </Checkbox>
     </Box>
 
+    {/* OS#1254 — légende personnalisée : bandeau + bouton Régénérer à la place des paramètres */}
+    {legend_broken && (
+      <Box layerStyle='menuconfigpanel_grid'>
+        <Box as='span' layerStyle='menuconfigpanel_option_name'>
+          {t('Menu.leg_broken')}
+        </Box>
+        <OSTooltip label={t('Menu.tooltips.leg_regenerate')}>
+          <Button
+            variant='menuconfigpanel_option_button'
+            onClick={eventLegendRegenerate}
+          >
+            {t('Menu.leg_regenerate')}
+          </Button>
+        </OSTooltip>
+      </Box>
+    )}
+
     <Box
       layerStyle='menuconfigpanel_grid'
-      style={{ display: (!compact && app_data.drawing_area.legend.masked ? 'none' : '') }}
+      // Deux raisons distinctes de masquer les paramètres :
+      //  - OS#1254 : légende « cassée » (personnalisée à la main) — le bandeau
+      //    « Régénérer » les remplace, ils n'ont plus de prise ;
+      //  - légende masquée — SAUF en mode compact (#1243, inspecteur) où l'on
+      //    peut régler avant d'afficher, comme partout ailleurs dans le panneau.
+      style={{
+        display: (legend_broken || (!compact && app_data.drawing_area.legend.masked))
+          ? 'none'
+          : ''
+      }}
     >
       {/* Couleur + Opacité du fond */}
       <Box as='span' layerStyle='options_2cols'>
@@ -860,32 +884,22 @@ export const LegendConfig = ({ app_data, compact = false }: {
       {/* ✅ SECTION POSITION */}
       <Box as='span' textStyle='title_sub_section'>{t('Menu.position') || 'Position'}</Box>
 
-      {/* Solidaire du diagramme + Largeur */}
-      <Box as='span' layerStyle='options_2cols'>
-        <OSTooltip label={t('Menu.tooltips.LegStickDrawing')}>
-          <Button
-            variant={app_data.drawing_area.legend.stick_to_drawing ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-            onClick={() => eventLegendStickDrawing(!app_data.drawing_area.legend.stick_to_drawing)}
-          >
-            {t('Menu.LegStickDrawing')}
-          </Button>
-        </OSTooltip>
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-          <Box layerStyle='menuconfigpanel_option_name'>
-            {t('Menu.LegWidth')}
-          </Box>
-          <OSTooltip label={t('Menu.tooltips.LegWidth')}>
-            <ConfigMenuNumberInput
-              t={app_data.t}
-              default_value={app_data.drawing_area.legend.width}
-              function_on_blur={eventLegendWidth}
-              minimum_value={0}
-              step={1}
-              stepper={true}
-              unit_text={right_addon_pixel(app_data.drawing_area.legend.width)}
-            />
-          </OSTooltip>
+      {/* Largeur d'enveloppement du texte (OS#1254 : plus de mode « fixe à l'écran ») */}
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('Menu.LegWidth')}
         </Box>
+        <OSTooltip label={t('Menu.tooltips.LegWidth')}>
+          <ConfigMenuNumberInput
+            t={app_data.t}
+            default_value={app_data.drawing_area.legend.width}
+            function_on_blur={eventLegendWidth}
+            minimum_value={0}
+            step={1}
+            stepper={true}
+            unit_text={right_addon_pixel(app_data.drawing_area.legend.width)}
+          />
+        </OSTooltip>
       </Box>
 
       {/* Position X + Y */}

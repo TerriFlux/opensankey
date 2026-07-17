@@ -402,7 +402,6 @@ export const createUnitaryView = (
 
   // Dessiner et centrer
   new_drawing_area.draw()
-  new_drawing_area.to_recenter = true
   new_drawing_area.recenter()
   new_drawing_area.unDraw()
 
@@ -461,7 +460,6 @@ export const createUnitarySankeyDetached = (
   // board unitaire (is_unitary) il centre désormais l'axe non-dominant. Pas de
   // recenter() ici (il décale les positions puis areaAutoFit recadre par-dessus →
   // conflit ; et il étendait la zone à la fenêtre, ce qui faisait « suivre » le resize).
-  new_drawing_area.to_recenter = false
   new_drawing_area.draw()
   return new_drawing_area
 }

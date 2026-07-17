@@ -976,9 +976,7 @@ export class NodePositioningAutoSankey {
     }
 
     this.drawingArea.draw()
-    this.drawingArea.to_recenter = true
     this.drawingArea.recenter()
-    this.drawingArea.to_recenter = false
     // this.drawingArea.draw()
     // Update area
     this.drawingArea.areaAutoFit()

@@ -1378,11 +1378,22 @@ export const MenuConfigurationAppearance = ({
   const showContent = allElements.length > 0 || menu_for_style
   const container_element = elements[0] as Class_ContainerElement
   const options_selector_node_tied = !menu_for_style
-    ? app_data.drawing_area.sankey.nodes_list_sorted.map((node) => ({
-      'label': node.name,
-      'value': node.id,
-      selected: !selection.hasContainers ? false : selection.containers[0].attached_node.includes(node)
-    }))
+    ? [
+      ...app_data.drawing_area.sankey.nodes_list_sorted.map((node) => ({
+        'label': node.name,
+        'value': node.id,
+        selected: !selection.hasContainers ? false : selection.containers[0].attached_node.includes(node)
+      })),
+      // OS#1254 — un cadre peut aussi englober d'autres zones de texte (cas des
+      // blocs de la légende : titre + entrées d'un groupe de tags).
+      ...app_data.drawing_area.sankey.containers_list_sorted
+        .filter(c => !selection.hasContainers || c !== selection.containers[0])
+        .map((c) => ({
+          'label': '[ZDT] ' + c.name,
+          'value': c.id,
+          selected: !selection.hasContainers ? false : selection.containers[0].attached_node.includes(c)
+        }))
+    ]
     : []
   // Tied-frame options for the contextual node (excluding the node itself).
   const node_tied_element = selection.hasNodes ? selection.nodes[0] : undefined
@@ -2325,6 +2336,19 @@ export const MenuConfigurationAppearance = ({
                                 } else {
                                   containerElements.forEach(zdt => { zdt.dettachNodeFromCont(node) })
                                 }
+                              })
+                              // OS#1254 — attache/détache aussi des zones de texte (un cadre
+                              // peut englober d'autres ZDT, cf. blocs de la légende). Garde
+                              // anti-cycle : jamais soi-même ni un cadre qui nous contient déjà.
+                              app_data.drawing_area.sankey.containers_list.forEach(cont => {
+                                containerElements.forEach(zdt => {
+                                  if (zdt === cont) return
+                                  if (entries_values.includes(cont.id)) {
+                                    if (!cont.attached_node.includes(zdt)) zdt.attachNodeToCont(cont)
+                                  } else {
+                                    zdt.dettachNodeFromCont(cont)
+                                  }
+                                })
                               })
                               refreshAll()
                             }
