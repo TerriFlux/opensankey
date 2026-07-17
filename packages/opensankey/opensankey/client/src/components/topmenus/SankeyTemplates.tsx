@@ -27,13 +27,16 @@
 import React, { useState, useEffect, MutableRefObject } from 'react'
 import {
   Box,
+  Button,
   CloseButton,
   Image,
   Text
 } from '@chakra-ui/react'
+import { FaThumbtack } from 'react-icons/fa'
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { Type_AdditionalMenus } from '../../types/MenuConfig'
+import { Type_AdditionalMenus, TEMPLATE_GALLERY_WIDTH_PX } from '../../types/MenuConfig'
+import { useMainZone } from '../spreadsheet/MainZoneTabs'
 import { CONVERTER_CONFIGS } from '../dialogs/PersistenceProcessDialogConfigs'
 import { loadSankeymaticTemplate } from '../../Persistence/sankeymaticLoad'
 import { applyEsankeyFile } from '../../Persistence/esankeyLoad'
@@ -261,12 +264,25 @@ const templateTitle = (
  *    screen), qui passent par ref_setter_show_modal_templates_lib. Ouverte ainsi,
  *    elle reste affichée même sur un diagramme non vide, jusqu'au choix d'un modèle
  *    ou à sa fermeture.
+ *
+ * L'épingle neutralise TOUTES les fermetures implicites (clic canvas, diagramme
+ * non vide, choix d'un modèle) : on peut ainsi essayer les modèles l'un après
+ * l'autre. Seul le bouton de fermeture la referme alors. Comme le panneau de
+ * config (#1243), épinglée elle quitte l'overlay et entre dans le système de
+ * fenêtrage : dockée à droite, elle réserve sa largeur (getRightChromeReservedPx)
+ * et la zone de dessin se recadre à gauche.
  */
 export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
   new_data: Class_ApplicationData
   additionalMenu: MutableRefObject<Type_AdditionalMenus>
 }) => {
   const [dismissed, setDismissed] = useState(false)
+  // L'épinglage vit dans le modèle (et non en useState) : il réserve de la
+  // largeur, donc le diagramme et la colonne tableur/doc doivent le lire.
+  // useMainZone -> re-render quand la réserve change (ici comme ailleurs).
+  useMainZone(new_data)
+  const pinned = new_data.menu_configuration.template_gallery_pinned
+  const setPinned = (v: boolean) => { new_data.menu_configuration.template_gallery_pinned = v }
   // Source ouverte explicitement, null si aucune. Un seul panneau pour les deux
   // galeries : elles occupent le même ancrage, donc ouvrir l'une ferme l'autre
   // par construction, sans exclusion mutuelle à tenir à jour.
@@ -307,27 +323,36 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
 
   if (new_data.is_static || !new_data.is_editable)
     return <></>
-  if (forced_source === null && (dismissed || !diagram_empty))
+  if (!pinned && forced_source === null && (dismissed || !diagram_empty))
     return <></>
   if (Object.keys(indexes).length === 0)
     return <></>
 
-  const top = da.getNavBarHeight() + da.fit_margin
-  const bottom = da.getBottomBarHeight() + da.fit_margin
-  const right = da.fit_margin / 2 + new_data.menu_configuration.getToolsColumnWidthPx()
+  const mc = new_data.menu_configuration
+  // Épinglée, la galerie se docke à GAUCHE du chrome déjà réservé (colonne
+  // d'outils + config épinglée) : de droite à gauche, outils | config | galerie
+  // | dessin. Sa propre largeur n'entre pas dans cet offset (elle la réserve).
+  const docked_right = mc.getToolsColumnWidthPx() + mc.getConfigPanelPinnedReservedPx()
+  const top = da.getNavBarHeight() + (pinned ? 0 : da.fit_margin)
+  const bottom = da.getBottomBarHeight() + (pinned ? 0 : da.fit_margin)
+  const right = pinned ? docked_right : da.fit_margin / 2 + mc.getToolsColumnWidthPx()
 
   return <Box
-    className='template_gallery_panel'
+    className={pinned ? 'template_gallery_panel_pinned' : 'template_gallery_panel'}
     position='fixed'
     top={top + 'px'}
     right={right + 'px'}
-    width='300px'
-    maxHeight={'calc(100vh - ' + (top + bottom) + 'px)'}
-    zIndex={20}
+    width={TEMPLATE_GALLERY_WIDTH_PX + 'px'}
+    // Dockée : elle occupe toute la hauteur entre les barres, comme le panneau
+    // de config épinglé. Flottante : elle s'arrête à son contenu.
+    bottom={pinned ? bottom + 'px' : undefined}
+    maxHeight={pinned ? undefined : 'calc(100vh - ' + (top + bottom) + 'px)'}
+    zIndex={pinned ? 26 : 20}
     background='white'
-    border='1px solid #e2e8f0'
-    borderRadius='6px'
-    boxShadow='0 4px 16px rgba(0, 0, 0, 0.25)'
+    border={pinned ? undefined : '1px solid #e2e8f0'}
+    borderLeft='1px solid #e2e8f0'
+    borderRadius={pinned ? undefined : '6px'}
+    boxShadow={pinned ? undefined : '0 4px 16px rgba(0, 0, 0, 0.25)'}
     display='flex'
     flexDirection='column'
     overflow='hidden'
@@ -342,10 +367,23 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
       <Text fontWeight='bold' margin='0'>
         {new_data.t(source === 'mfadata' ? 'Menu.sankeytheque' : 'Menu.templates')}
       </Text>
-      <CloseButton
-        size='sm'
-        onClick={() => { setForcedSource(null); setDismissed(true) }}
-      />
+      <Box display='flex' alignItems='center' gap='0.25rem'>
+        <Button
+          size='xs'
+          variant={pinned
+            ? 'menuconfigpanel_option_button_activated'
+            : 'menuconfigpanel_option_button'}
+          sx={{ paddingInline: '0.3rem', minWidth: 'auto', width: 'auto', flex: 'none' }}
+          title={new_data.t(pinned ? 'templates.unpin' : 'templates.pin')}
+          onClick={() => setPinned(!pinned)}
+        >
+          <FaThumbtack style={{ transform: pinned ? 'none' : 'rotate(45deg)' }} />
+        </Button>
+        <CloseButton
+          size='sm'
+          onClick={() => { setForcedSource(null); setDismissed(true); setPinned(false) }}
+        />
+      </Box>
     </Box>
     <Text
       fontSize='sm'
@@ -379,7 +417,8 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
               _hover={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)' }}
               onClick={() => {
                 loadTemplate(new_data, templates[id].file_path, source)
-                setForcedSource(null)
+                // Épinglée, la galerie survit au chargement : on enchaîne les essais.
+                if (!pinned) setForcedSource(null)
               }}
             >
               <TemplateThumbnail
