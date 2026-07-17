@@ -26,7 +26,7 @@
 
 // Local types
 import { Class_LinkElement } from '../Elements/Link'
-import { Class_ElementValue } from '../Elements/LinkValues'
+import { Class_ElementValue, Class_ElementSubValue } from '../Elements/LinkValues'
 import { Class_NodeElement } from '../Elements/Node'
 import {
   Type_JSON,
@@ -307,7 +307,7 @@ export abstract class Class_Tag extends Class_ProtoTag {
   // PRIVATE ATTRIBUTES =================================================================
 
   // List of elements that relates to this tag
-  protected _references: { [_: string]: Class_NodeElement | Class_LinkElement | Class_ElementValue } = {}
+  protected _references: { [_: string]: Class_NodeElement | Class_LinkElement | Class_ElementValue | Class_ElementSubValue } = {}
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -358,18 +358,18 @@ export abstract class Class_Tag extends Class_ProtoTag {
     this._ref_sankey.drawing_area.legend.draw()
   }
 
-  public hasGivenReference(_: Class_NodeElement | Class_LinkElement | Class_ElementValue) {
+  public hasGivenReference(_: Class_NodeElement | Class_LinkElement | Class_ElementValue | Class_ElementSubValue) {
     return (this._references[_.id] !== undefined)
   }
 
-  public addReference(_: Class_NodeElement | Class_LinkElement | Class_ElementValue) {
+  public addReference(_: Class_NodeElement | Class_LinkElement | Class_ElementValue | Class_ElementSubValue) {
     if (!this.hasGivenReference(_)) {
       this._references[_.id] = _
       _.addTag(this)
     }
   }
 
-  public removeReference(_: Class_NodeElement | Class_LinkElement | Class_ElementValue) {
+  public removeReference(_: Class_NodeElement | Class_LinkElement | Class_ElementValue | Class_ElementSubValue) {
     if (this.hasGivenReference(_)) {
       delete this._references[_.id]
       _.removeTag(this)

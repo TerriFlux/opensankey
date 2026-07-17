@@ -1,6 +1,6 @@
 import colormap from 'colormap'
 import { Class_LinkElement } from '../Elements/Link'
-import { Class_ElementValue } from '../Elements/LinkValues'
+import { Class_ElementValue, Class_ElementSubValue } from '../Elements/LinkValues'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_Sankey } from './Sankey'
 import { tag_banner_type, Class_ProtoTag, Class_Tag, Class_NodeTag, Class_FluxTag, Class_DataTag, Class_LevelTag, Class_ViewTag } from './Tag'
@@ -438,7 +438,7 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
 
   // PUBLIC METHODS =====================================================================
   public updateTagsReferences(): void {
-    const ref_updated: (Class_NodeElement | Class_LinkElement | Class_ElementValue)[] = []
+    const ref_updated: (Class_NodeElement | Class_LinkElement | Class_ElementValue | Class_ElementSubValue)[] = []
     Object.values(this._tags)
       .forEach(tag => {
         tag.references
@@ -549,6 +549,12 @@ export class Class_NodeTagGroup extends Class_TagGroup {
 
 export class Class_FluxTagGroup extends Class_TagGroup {
 
+  // #284 — concept unifié (NOTE-FUSION-TAGS.md §3) : un groupe de tags de flux
+  // est soit une dimension (ex-dataTag, structure l'arbre de valeurs), soit un
+  // groupe optionnel (annote/partitionne les feuilles). Le flag est porté par
+  // la classe (pas de bascule dynamique en phase 1).
+  public get is_dimension(): boolean { return false }
+
   // PROTECTED ATTRIBUTES ===============================================================
   protected _tags: { [_: string]: Class_FluxTag; }
 
@@ -591,6 +597,9 @@ export class Class_FluxTagGroup extends Class_TagGroup {
  */
 
 export class Class_DataTagGroup extends Class_ProtoTagGroup {
+
+  // #284 — pendant dimension du concept unifié (cf. Class_FluxTagGroup.is_dimension)
+  public get is_dimension(): boolean { return true }
 
   // PRIVATE ATTRIBUTES =================================================================
   // Display attributes

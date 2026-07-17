@@ -499,6 +499,11 @@ export class Class_ElementValue {
   private _id: string
   private _flux_tags: Class_Tag[] = []
   private _taggs_dict: { [x: string]: Class_Tag[]; } = {}
+  // #284 — sous-valeurs à coordonnée éparse (NOTE-FUSION-TAGS.md §3.0). Une
+  // feuille sans sous-valeur explicite équivaut à une unique sous-valeur
+  // implicite portant toute la quantité avec les tags de la feuille
+  // (_flux_tags). La somme des sous-valeurs n'est PAS contrainte par le modèle.
+  private _sub_values: Class_ElementSubValue[] = []
   private _is_currently_deleted = false
 
   // CONSTRUCTOR ========================================================================
@@ -527,6 +532,8 @@ export class Class_ElementValue {
       this.flux_tags_list.forEach(tag => tag.removeReference(this))
       this._flux_tags = []
       this._taggs_dict = {}
+      this._sub_values.slice().forEach(sub => sub.delete())
+      this._sub_values = []
     }
   }
 
@@ -553,6 +560,13 @@ export class Class_ElementValue {
       .forEach(flux_tag => {
         flux_tag.addReference(this)
       })
+    // Sub-values (#284)
+    this._sub_values.slice().forEach(sub => sub.delete())
+    this._sub_values = []
+    element.sub_values_list
+      .forEach(sub => {
+        this.addSubValue().copyFrom(sub)
+      })
   }
 
   public addFrom(_element: Class_ElementValue) {
@@ -572,6 +586,9 @@ export class Class_ElementValue {
               .filter(tag => (tag.group === tagg))
               .map(tag => tag.id)
           ]))
+    }
+    if (this._sub_values.length > 0) {
+      json_object['sub_values'] = this._sub_values.map(sub => sub.toJSON()) as unknown as Type_JSON
     }
     return json_object
   }
@@ -600,6 +617,15 @@ export class Class_ElementValue {
           .filter(tag => tag_ids.includes(tag.id))
           .forEach(tag => this.addTag(tag))
       })
+    // Sub-values (#284)
+    const sub_values_json = json_object['sub_values']
+    if (Array.isArray(sub_values_json)) {
+      sub_values_json
+        .filter(sub_json => typeof sub_json === 'object' && sub_json !== null)
+        .forEach(sub_json => {
+          this.addSubValue().fromJSON(sub_json as Type_JSON)
+        })
+    }
   }
 
   // PUBLIC METHODS =====================================================================
@@ -640,6 +666,25 @@ export class Class_ElementValue {
       this.draw()
     }
   }
+
+  // SUB-VALUES (#284) ==================================================================
+  public addSubValue(id: string | undefined = undefined): Class_ElementSubValue {
+    const sub = new Class_ElementSubValue(this, id)
+    this._sub_values.push(sub)
+    return sub
+  }
+
+  public removeSubValue(sub: Class_ElementSubValue) {
+    const idx = this._sub_values.indexOf(sub)
+    if (idx >= 0) {
+      this._sub_values.splice(idx, 1)
+      sub.delete()
+    }
+  }
+
+  public get sub_values_list(): Class_ElementSubValue[] { return [...this._sub_values] }
+
+  public get has_sub_values(): boolean { return this._sub_values.length > 0 }
 
   public get has_result(): boolean { return false }
   public get has_intervals(): boolean { return false }
@@ -741,6 +786,119 @@ export class Class_ElementValue {
     else
       return null
   }
+}
+
+// CLASS ELEMENT SUB VALUE **************************************************************
+/**
+ * #284 — Sous-valeur d'une feuille (NOTE-FUSION-TAGS.md §3.0) : détail facultatif
+ * d'une Class_ElementValue portant une quantité et une coordonnée éparse — au
+ * plus UN tag par groupe de tags de flux, sur zéro ou plusieurs groupes.
+ * Permet plusieurs quantités étiquetées différemment sur un même flux sans
+ * dupliquer le lien (ex. A→B = 6 {acier, route} + 4 {cuivre, rail}).
+ *
+ * @export
+ * @class Class_ElementSubValue
+ */
+export class Class_ElementSubValue {
+
+  // PUBLIC ATTRIBUTES ==================================================================
+  public parent: Class_ElementValue
+
+  // PRIVATE ATTRIBUTES =================================================================
+  private _id: string
+  private _value: number | null = null
+  private _tags: Class_Tag[] = []
+  private _is_currently_deleted = false
+
+  // CONSTRUCTOR ========================================================================
+  constructor(
+    parent: Class_ElementValue,
+    id: string | undefined = undefined
+  ) {
+    this.parent = parent
+    this._id = id ?? makeId(parent.id + '_sub')
+  }
+
+  // CLEANING METHODS ===================================================================
+  public delete() {
+    if (!this._is_currently_deleted) {
+      this._is_currently_deleted = true
+      this._tags.slice().forEach(tag => tag.removeReference(this))
+      this._tags = []
+      this.parent.removeSubValue(this)
+    }
+  }
+
+  // COPY METHODS =======================================================================
+  public copyFrom(sub_to_copy: Class_ElementSubValue) {
+    this._value = sub_to_copy._value
+    this._tags.slice().forEach(tag => tag.removeReference(this))
+    this._tags = []
+    sub_to_copy.tags_list.forEach(tag => tag.addReference(this))
+  }
+
+  // SERIALIZATION ======================================================================
+  public toJSON(): Type_JSON {
+    const json_object: Type_JSON = {}
+    json_object['id'] = this._id
+    if (this._value !== null) json_object['value'] = this._value
+    if (this._tags.length > 0)
+      json_object['tags'] = Object.fromEntries(
+        this._tags.map(tag => [tag.group.id, tag.id]))
+    return json_object
+  }
+
+  public fromJSON(json_object: Type_JSON) {
+    this._id = getStringFromJSON(json_object, 'id', this._id)
+    this._value = getNumberOrNullFromJSON(json_object, 'value')
+    const flux_taggs_dict = (this.parent.link?.drawing_area.sankey.flux_taggs_dict ?? {})
+    Object.entries((json_object['tags'] ?? {}) as { [_: string]: string })
+      .forEach(([tagg_id, tag_id]) => {
+        const tagg = flux_taggs_dict[tagg_id]
+        const tag = tagg?.tags_dict[tag_id]
+        if (tag) (tag as Class_Tag).addReference(this)
+      })
+  }
+
+  // PUBLIC METHODS =====================================================================
+  public draw() { this.parent.draw() }
+
+  public hasGivenTag(tag: Class_Tag) { return this._tags.includes(tag) }
+
+  /**
+   * Ajoute un tag à la coordonnée. Contrainte du modèle : au plus un tag par
+   * groupe — un tag existant du même groupe est remplacé.
+   */
+  public addTag(tag: Class_Tag) {
+    if (!this.hasGivenTag(tag)) {
+      this._tags
+        .filter(t => t.group === tag.group)
+        .forEach(t => t.removeReference(this))
+      this._tags.push(tag)
+      tag.addReference(this)
+      this.draw()
+    }
+  }
+
+  public removeTag(tag: Class_Tag) {
+    if (this.hasGivenTag(tag)) {
+      this._tags.splice(this._tags.indexOf(tag), 1)
+      tag.removeReference(this)
+      this.draw()
+    }
+  }
+
+  public getTagForGroup(tagg: Class_TagGroup): Class_Tag | undefined {
+    return this._tags.find(tag => tag.group === tagg)
+  }
+
+  // GETTERS / SETTERS ==================================================================
+  public get id() { return this._id }
+
+  public get value(): number | null { return this._value }
+  public set value(_: number | null) { this._value = _ }
+
+  public get tags_list(): Class_Tag[] { return [...this._tags] }
 }
 
 // CLASS LINK VALUE *********************************************************************

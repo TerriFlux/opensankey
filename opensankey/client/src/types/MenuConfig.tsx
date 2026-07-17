@@ -202,7 +202,8 @@ export class Class_MenuConfig {
   protected _style_config: { [x: string]: { theme: string; elements_configurable: string[] } } = {
     'data': { 'theme': '#78a7c2', elements_configurable: ['flow', 'node', 'object'] },
     'style': { 'theme': '#78c2ad', elements_configurable: ['DA', 'legend', 'element', 'tag_flow', 'tag_node'] },
-    'presentation': { 'theme': '#778a95', elements_configurable: ['node_tag', 'flow_tag', 'data_tag', 'view'] }
+    // #284 — 'data_tag' fusionné dans 'flow_tag' (concept unifié des étiquettes de flux)
+    'presentation': { 'theme': '#778a95', elements_configurable: ['node_tag', 'flow_tag', 'view'] }
   }
 
   protected _tab_selected: 'shape' | 'name_label' | 'value_label' | 'icon' | 'stock' = 'shape'
