@@ -361,6 +361,11 @@ export class Class_Sankey {
   }
 
   public create_child_links() {
+    this.create_data_tag_child_links()
+    this.create_sub_value_child_links()
+  }
+
+  private create_data_tag_child_links() {
     const data_tagg = Object.values(this._data_taggs).filter(tagg => tagg.banner == 'multi')[0]
     if (!data_tagg) return
     const selected_tags = data_tagg.tags_list.map(tag => tag.is_selected)
@@ -384,6 +389,38 @@ export class Class_Sankey {
         const child_link = this.addNewLink(l.source, l.target)
         child_link.copyFrom(l)
         l.addChildLink(child_link, tag)
+      })
+    })
+  }
+
+  /**
+   * #284 — un ruban par sous-valeur de la feuille courante (NOTE-FUSION-TAGS.md
+   * §3.0). Synchronise création ET suppression : les rubans dont la sous-valeur
+   * n'existe plus dans la feuille courante (sous-valeur supprimée, ou feuille
+   * changée par la sélection des dataTags) sont retirés. Les enfants par dataTag
+   * (bannière `multi`) sont prioritaires : un lien qui en porte n'expanse pas
+   * ses sous-valeurs.
+   */
+  public create_sub_value_child_links() {
+    this.links_list.forEach(l => {
+      if (l.is_multi_link) return
+      const has_data_tag_children = Object.values(l.child_links)
+        .some(child => !child.multi_link_sub_value)
+      const subs = has_data_tag_children ? [] : (l.value?.sub_values_list ?? [])
+      // Suppression des rubans périmés
+      Object.keys(l.child_links).forEach(key => {
+        const child = l.child_links[key]
+        if (child.multi_link_sub_value && !subs.some(sub => sub.id === key)) {
+          child.delete()
+          delete l.child_links[key]
+        }
+      })
+      // Création des rubans manquants
+      subs.forEach(sub => {
+        if (sub.id in l.child_links) return
+        const child_link = this.addNewLink(l.source, l.target)
+        child_link.copyFrom(l)
+        l.addChildLinkForSubValue(child_link, sub)
       })
     })
   }

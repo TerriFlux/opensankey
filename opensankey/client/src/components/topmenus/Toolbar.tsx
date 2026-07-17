@@ -1588,6 +1588,9 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
             tagg.banner = evt.target.checked ? 'multi' : 'one'
             if (tagg.banner === 'one') {
               app_data.drawing_area.sankey.remove_child_links()
+              // #284 — remove_child_links retire aussi les rubans de
+              // sous-valeurs : les resynchroniser
+              app_data.drawing_area.sankey.create_sub_value_child_links()
             }
             tagg.selectTagsFromId(tagg.tags_list[0].id)
             updateComponents()

@@ -32,10 +32,10 @@ import type {
   Class_ProtoTag,
   Class_Tag,
 } from '../types/Tag'
-import type { Class_DataTagGroup } from '../types/TagGroup'
+import type { Class_DataTagGroup, Class_TagGroup } from '../types/TagGroup'
 
 import { Type_BaseElementPosition, link_data_label } from '../types/Utils'
-import { Class_ElementValueTree, Class_LinkValue } from './LinkValues'
+import { Class_ElementValueTree, Class_LinkValue, Class_ElementSubValue } from './LinkValues'
 import { LinkDrawShape } from './LinkDrawShape'
 import { LinkControlPoints } from './LinkControlPoints'
 import { LinkTooltip } from './TooltipsLink'
@@ -175,6 +175,9 @@ export class Class_LinkElement extends Class_LinkAttribute {
   private _child_links: { [tag_name: string]: Class_LinkElement } = {}
   private _is_multi_link = false
   private _multi_link_tag: Class_DataTag | undefined
+  // #284 — ruban d'une sous-valeur : le lien enfant référence la sous-valeur
+  // VIVANTE du parent (valeur et tags lus en direct, pas de copie).
+  private _multi_link_sub_value: Class_ElementSubValue | undefined
   private _is_unit_reference = false
 
   // Visibility memorized - source & target
@@ -810,6 +813,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this._multi_link_tag = tag
   }
 
+  // #284 — marque ce lien comme ruban d'une sous-valeur du parent
+  public setAsChildLinkForSubValue(sub: Class_ElementSubValue) {
+    this._is_multi_link = true
+    this._multi_link_sub_value = sub
+  }
+
   // PROTECTED METHODS ==================================================================
   public addChildLink(l: Class_LinkElement, tag: Class_DataTag) {
     this._child_links[tag.id] = l
@@ -818,6 +827,16 @@ export class Class_LinkElement extends Class_LinkAttribute {
     l.setAsChildLink(tag)
     l.shape_type = 'bezier_outline'
     tag.group.use_colors = true
+  }
+
+  // #284 — un ruban par sous-valeur (clé = id de la sous-valeur, même dict que
+  // les enfants par dataTag : le parent est masqué dès qu'il a des enfants)
+  public addChildLinkForSubValue(l: Class_LinkElement, sub: Class_ElementSubValue) {
+    this._child_links[sub.id] = l
+    this.source.addOutputLink(l)
+    this.target.addInputLink(l)
+    l.setAsChildLinkForSubValue(sub)
+    l.shape_type = 'bezier_outline'
   }
 
   /**
@@ -1198,6 +1217,9 @@ export class Class_LinkElement extends Class_LinkAttribute {
     target: Class_NodeElement
   ) {
     // coherent with code in python (Constructor of flux)
+    // #284 — ruban d'une sous-valeur : nommé par sa coordonnée (tags)
+    if (this._multi_link_sub_value)
+      return source.name + '---' + target.name + '(' + this._multi_link_sub_value.tags_list.map(tag => tag.name).join(', ') + ')'
     if (this.is_multi_link) return source.name + '---' + target.name + '(' + this._multi_link_tag?.name + ')'
     return source.name + '---' + target.name
   }
@@ -1256,6 +1278,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
   public get child_links() { return this._child_links }
   public get is_multi_link() { return this._is_multi_link }
+  // #284 — sous-valeur du parent dont ce lien est le ruban (undefined sinon)
+  public get multi_link_sub_value() { return this._multi_link_sub_value }
 
   // Transient marker for expansion links — set by Hierarchies.disaggregationExpansion,
   // read by contract() to know which links to delete. Not persisted.
@@ -1907,6 +1931,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
       this._is_computing = false
       return v
     }
+    // #284 — ruban d'une sous-valeur : la quantité est celle de la sous-valeur
+    // du parent, lue en direct (identique en mode données et résultats).
+    if (this._is_multi_link && this._multi_link_sub_value) {
+      this._is_computing = false
+      return this._multi_link_sub_value.value
+    }
     let value_current = null
     if (this.drawing_area.type_data === 'data') value_current = this.value?.valueData ?? null
     else value_current = this.value?.valueResult ?? ((this.value?.value_option == 'value' || this.value?.value_option == 'intervals') ? this.value?.valueData : null) ?? null
@@ -2124,6 +2154,9 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @memberof Class_LinkElement
    */
   public get flux_tags_dict() {
+    // #284 — ruban d'une sous-valeur : les tags sont ceux de sa coordonnée
+    if (this._multi_link_sub_value)
+      return this._multi_link_sub_value.tags_list
     const value = this.value
     if (value)
       return this.value.flux_tags_dict
@@ -2136,6 +2169,9 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @memberof Class_LinkElement
    */
   public get flux_tags_list() {
+    // #284 — ruban d'une sous-valeur : les tags sont ceux de sa coordonnée
+    if (this._multi_link_sub_value)
+      return this._multi_link_sub_value.tags_list
     const value = this.value
     if (value)
       return this.value.flux_tags_list
@@ -2148,6 +2184,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @memberof Class_LinkElement
    */
   public get flux_taggs_dict() {
+    // #284 — ruban d'une sous-valeur : groupes dérivés de sa coordonnée
+    if (this._multi_link_sub_value) {
+      const taggs: { [_: string]: Class_TagGroup } = {}
+      this._multi_link_sub_value.tags_list
+        .forEach(tag => {
+          if (!taggs[tag.group.id]) taggs[tag.group.id] = tag.group
+        })
+      return taggs
+    }
     const value = this.value
     if (value)
       return this.value.flux_taggs_dict
