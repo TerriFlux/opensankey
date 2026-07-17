@@ -161,6 +161,7 @@ export const resources_nodes = {
             custom: 'Custom text',
             tag: 'Tag long name',
             ancestor: 'Ancestor node name',
+            name_part: 'Name part (separator)',
           },
 
           tooltips: {
@@ -410,6 +411,7 @@ export const resources_nodes = {
             custom: 'Texte personnalisé',
             tag: 'Nom long d\'un tag',
             ancestor: 'Nom du nœud ancêtre',
+            name_part: 'Partie du nom (séparateur)',
           },
           tooltips: {
             name_label_text_source: 'Choisir ce qu\'affiche le label du nœud : le nom du nœud, ou un texte personnalisé indépendant (éditable sans renommer le nœud)',
@@ -656,6 +658,7 @@ export const resources_nodes = {
             custom: 'Texto personalizado',
             tag: 'Nombre largo de una etiqueta',
             ancestor: 'Nombre del nodo ancestro',
+            name_part: 'Parte del nombre (separador)',
           },
           tooltips: {
             name_label_text_source: 'Elegir lo que muestra la etiqueta del nodo: el nombre del nodo, o un texto personalizado independiente (editable sin renombrar el nodo)',
@@ -904,6 +907,7 @@ export const resources_nodes = {
             custom: 'Benutzerdefinierter Text',
             tag: 'Langer Tag-Name',
             ancestor: 'Name des Vorfahrknotens',
+            name_part: 'Namensteil (Trennzeichen)',
           },
           tooltips: {
             name_label_text_source: 'Wählen, was die Knotenbeschriftung anzeigt: den Knotennamen oder einen unabhängigen benutzerdefinierten Text (bearbeitbar, ohne den Knoten umzubenennen)',
@@ -1152,6 +1156,7 @@ export const resources_nodes = {
             custom: 'Testo personalizzato',
             tag: 'Nome lungo di un tag',
             ancestor: 'Nome del nodo antenato',
+            name_part: 'Parte del nome (separatore)',
           },
           tooltips: {
             name_label_text_source: 'Scegli cosa mostra l\'etichetta del nodo: il nome del nodo, o un testo personalizzato indipendente (modificabile senza rinominare il nodo)',

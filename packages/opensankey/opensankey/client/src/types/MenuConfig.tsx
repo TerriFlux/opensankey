@@ -268,6 +268,23 @@ export class Class_MenuConfig {
     if (!this.ref_menu_opened.current[0]) return 0
     return Math.max(window.innerWidth * MENU_CONFIG_WIDTH_PCT / 100, MENU_CONFIG_MIN_WIDTH_PX)
   }
+  // #1258 — Tiroir de FILTRES épinglé : même principe que le panneau de config.
+  // Épinglé + ouvert, il RÉSERVE sa largeur (le dessin se recadre à gauche) au
+  // lieu de flotter au-dessus. État TRANSITOIRE (non sérialisé).
+  protected _filter_panel_pinned: boolean = false
+  public get filter_panel_pinned() { return this._filter_panel_pinned }
+  public set filter_panel_pinned(v: boolean) { this._filter_panel_pinned = v; this._notifyMainZone() }
+  // État/largeur publiés par la Toolbar (la largeur du tiroir varie selon
+  // l'onglet actif : filtres 270px, sélection/édition 420px).
+  public filter_drawer_open: boolean = false
+  public filter_drawer_width_px: number = 0
+  /** Largeur (px) réservée à droite par le tiroir de filtres épinglé (0 si
+   *  non épinglé ou fermé). */
+  public getFilterPanelPinnedReservedPx(): number {
+    if (!this._filter_panel_pinned || !this.filter_drawer_open) return 0
+    return this.filter_drawer_width_px
+  }
+
   // Galerie de modèles ÉPINGLÉE : même principe que le panneau de config
   // ci-dessus. Non épinglée, elle flotte en overlay et s'efface dès que
   // l'utilisateur travaille ; épinglée, elle se docke à droite, réserve sa
@@ -288,7 +305,8 @@ export class Class_MenuConfig {
   public getRightChromeReservedPx(): number {
     return this.getToolsColumnWidthPx() +
       this.getConfigPanelPinnedReservedPx() +
-      this.getTemplateGalleryPinnedReservedPx()
+      this.getTemplateGalleryPinnedReservedPx() +
+      this.getFilterPanelPinnedReservedPx()
   }
   public get main_zone_show_diagram() { return this._main_zone_show_diagram }
   public set main_zone_show_diagram(v: boolean) { this._main_zone_show_diagram = v; this._notifyMainZone() }

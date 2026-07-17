@@ -1,4 +1,5 @@
-﻿import React, { useState, RefObject, useRef, ReactNode, MutableRefObject } from 'react'
+﻿import React, { useState, useEffect, RefObject, useRef, ReactNode, MutableRefObject } from 'react'
+import { FaThumbtack } from 'react-icons/fa'
 import {
   Drawer, Button, Collapse, DrawerContent, DrawerBody, Box, useDisclosure,
   Heading, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Text, Select, Checkbox, Switch,
@@ -342,7 +343,10 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
   useMainZone(app_data)
   // #1243 — chrome droit = colonne d'outils + panneau de config ÉPINGLÉ : ce
   // tiroir s'en écarte pour se placer à leur gauche (cohabitation config/filtres).
+  // #1258 — moins sa PROPRE réserve quand il est lui-même épinglé (sinon il se
+  // décalerait de sa propre largeur).
   const toolsReserve = app_data.menu_configuration.getRightChromeReservedPx()
+    - app_data.menu_configuration.getFilterPanelPinnedReservedPx()
   // En éditeur, le panneau de filtres s'ouvre à DROITE (à côté de la colonne d'outils, comme la config) ;
   // en publish/statique on garde l'ouverture historique à gauche (bouton flottant gauche).
   const drawer_on_right = !app_data.is_static
@@ -371,7 +375,10 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
     if (open && open !== drawerOpen && !app_data.menu_configuration.config_panel_pinned) {
       app_data.menu_configuration.ref_menu_opened.current[1](false)
     }
+    // #1258 — publier l'état pour la réserve de largeur du mode épinglé.
+    app_data.menu_configuration.filter_drawer_open = open
     setDrawerOpen(open)
+    if (app_data.menu_configuration.filter_panel_pinned) app_data.menu_configuration.notifyMainZone()
   }
   app_data.menu_configuration.ref_close_filter_drawer.current = setFilterOpen
   app_data.menu_configuration.ref_toggle_filter_drawer.current = () => setFilterOpen(!drawerOpen)
@@ -381,104 +388,84 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
   const filters_visible = hasVisibleFilters()
   app_data.menu_configuration.filter_bar_available = filters_visible
 
-  if (!filters_visible) return <></>
-  return <>
-    {!hide_floating_button ? <Button
-      id='buttonOpenFilterDrawer'
-      variant='toolbar_button_open_filter'
-      size='sizeToolbarButton'
-      style={{
-        left: width_drawer,
-        top: app_data.drawing_area.getNavBarHeight() + (app_data.drawing_area.fit_margin)
-      }}
-      onClick={() => setFilterOpen(!drawerOpen)}
-    >
-      {
-        app_data.icon_library.icon_filter_tags
-      }
-    </Button> : <></>}
+  // #1258 — mode épinglé : publier la largeur courante (elle varie selon
+  // l'onglet actif) pour que la réserve du dessin suive. Hook AVANT le retour
+  // anticipé (règle des hooks).
+  const pinned = app_data.menu_configuration.filter_panel_pinned
+  useEffect(() => {
+    app_data.menu_configuration.filter_drawer_width_px = drawer_width_px
+    if (pinned && drawerOpen) app_data.menu_configuration.notifyMainZone()
+  }, [drawer_width_px, pinned, drawerOpen])
 
-    <Drawer
-      placement={drawer_on_right ? 'right' : 'left'}
-      isOpen={drawerOpen}
-      onClose={() => setFilterOpen(false)}
-      blockScrollOnMount={false}
-      variant='drawer_menu_filter'
-      trapFocus={false}
-      onEsc={() => {
-        // Override drawer onEscape() to use Class_applicationData 'escape' keyEvent & not the one by default from the <Drawer> component
-        const ev = document
-        const tmp = new KeyboardEvent('keydown', { key: 'Escape' })
-        if (ev.onkeydown) {
-          ev.onkeydown(tmp as KeyboardEvent)
-        }
-      }}
-    >
-      <DrawerContent
-        style={{
-          width: 'unset',
-          height: 'fit-content',
-          // Overlay au-dessus du dessin/tableur : ombre portée pour le détacher visuellement,
-          // comme le panneau de config.
-          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)',
-          maxWidth: 'unset',
-          ...(drawer_on_right
-            ? { right: app_data.drawing_area.fit_margin / 2 + toolsReserve }
-            : { left: app_data.drawing_area.fit_margin / 2 }),
-          maxHeight: app_data.drawing_area.window_fitting_height,
-          //overflowY: 'auto',
-          marginTop: (app_data.drawing_area.fit_margin) + document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().y + document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height
-        }}>
-        <DrawerBody
-          id='drawer_filter'
-          style={{ padding: '0', width: drawer_width_px }}
-        >
+  if (!filters_visible) return <></>
+
+  // #1258 — contenu du panneau, PARTAGÉ entre le tiroir overlay (Drawer) et le
+  // mode ÉPINGLÉ (panneau docké pleine hauteur qui réserve sa largeur, comme
+  // la config épinglée).
+  const panel_content = <>
           {/* #1243 — Filtrer / Éditer : les GROUPES de tags s'éditent là où ils
               sont consommés (règle R3), l'inspecteur ne fait qu'assigner. */}
           {has_tabs ? (
             <Box style={{
               display: 'grid',
-              gridTemplateColumns: `repeat(${1 + (has_select_tab ? 1 : 0) + (has_edit_tab ? 1 : 0)}, 1fr)`,
-              gap: '0.15rem', padding: '0.3rem 0.3rem 0'
+              gridTemplateColumns: `repeat(${1 + (has_select_tab ? 1 : 0) + (has_edit_tab ? 1 : 0)}, 1fr) auto`,
+              gap: '0.15rem', padding: '0.3rem 0.3rem 0', alignItems: 'stretch'
             }}>
+              {/* #1258 — même langage que la rangée d'onglets de l'inspecteur :
+                  icône + libellé court empilés (variant inspector_tab). */}
               <Button
                 size='xs'
-                variant={filterTab === 'filter'
-                  ? 'menuconfigpanel_option_button_activated'
-                  : 'menuconfigpanel_option_button'}
-                sx={{ paddingInline: '0.25rem', minWidth: 'auto' }}
+                variant={filterTab === 'filter' ? 'inspector_tab_activated' : 'inspector_tab'}
                 title={app_data.t('Banner.fdn')}
                 onClick={() => setFilterTab('filter')}
               >
-                {/* Libellé COURT : t('Banner.fdn') (« Légende et filtres »)
-                    écrase les autres onglets ; le texte long va au tooltip. */}
-                {app_data.t('filter_panel.filter')}
+                {app_data.icon_library.icon_filter_tags}
+                <Box as='span' style={{ fontSize: '0.62rem', lineHeight: 1 }}>
+                  {/* Libellé COURT : t('Banner.fdn') (« Légende et filtres »)
+                      écrase les autres onglets ; le texte long va au tooltip. */}
+                  {app_data.t('filter_panel.filter')}
+                </Box>
               </Button>
               {has_select_tab ? (
                 <Button
                   size='xs'
-                  variant={filterTab === 'select'
-                    ? 'menuconfigpanel_option_button_activated'
-                    : 'menuconfigpanel_option_button'}
-                  sx={{ paddingInline: '0.25rem', minWidth: 'auto' }}
+                  variant={filterTab === 'select' ? 'inspector_tab_activated' : 'inspector_tab'}
                   title={app_data.t('filter_panel.select_tooltip')}
                   onClick={() => setFilterTab('select')}
                 >
-                  {app_data.t('filter_panel.select')}
+                  {app_data.icon_library.icon_DA_selection}
+                  <Box as='span' style={{ fontSize: '0.62rem', lineHeight: 1 }}>
+                    {app_data.t('filter_panel.select')}
+                  </Box>
                 </Button>
               ) : <></>}
               {has_edit_tab ? (
                 <Button
                   size='xs'
-                  variant={filterTab === 'edit'
-                    ? 'menuconfigpanel_option_button_activated'
-                    : 'menuconfigpanel_option_button'}
-                  sx={{ paddingInline: '0.25rem', minWidth: 'auto' }}
+                  variant={filterTab === 'edit' ? 'inspector_tab_activated' : 'inspector_tab'}
                   onClick={() => setFilterTab('edit')}
                 >
-                  {app_data.t('filter_panel.edit')}
+                  {app_data.icon_library.icon_edit_style}
+                  <Box as='span' style={{ fontSize: '0.62rem', lineHeight: 1 }}>
+                    {app_data.t('filter_panel.edit')}
+                  </Box>
                 </Button>
               ) : <></>}
+              {/* #1258 — épingler : le tiroir réserve sa largeur, le dessin se
+                  recadre (même geste que le panneau de config). */}
+              <Button
+                size='xs'
+                variant={pinned ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                sx={{ paddingInline: '0.3rem', minWidth: 'auto', width: 'auto', flex: 'none', height: 'auto' }}
+                title={pinned ? app_data.t('inspector.unpin') : app_data.t('inspector.pin')}
+                onClick={() => {
+                  const mc = app_data.menu_configuration
+                  mc.filter_drawer_width_px = drawer_width_px
+                  mc.filter_panel_pinned = !pinned
+                }}
+              >
+                <FaThumbtack style={{ transform: pinned ? 'none' : 'rotate(45deg)' }} />
+              </Button>
             </Box>
           ) : <></>}
           {in_select_tab ? (
@@ -504,14 +491,14 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
                   <Button
                     key={section.id}
                     size='xs'
-                    variant={section.id === active_edit_section?.id
-                      ? 'menuconfigpanel_option_button_activated'
-                      : 'menuconfigpanel_option_button'}
-                    sx={{ paddingInline: '0.2rem', minWidth: 'auto' }}
+                    variant={section.id === active_edit_section?.id ? 'inspector_tab_activated' : 'inspector_tab'}
                     title={section.title(app_data)}
                     onClick={() => setEditSectionId(section.id)}
                   >
-                    {(section.short_title ?? section.title)(app_data)}
+                    {section.icon?.(app_data)}
+                    <Box as='span' style={{ fontSize: '0.62rem', lineHeight: 1 }}>
+                      {(section.short_title ?? section.title)(app_data)}
+                    </Box>
                   </Button>
                 ))}
               </Box>
@@ -542,9 +529,84 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
               }
             </Box>
           )}
-        </DrawerBody>
-      </DrawerContent>
-    </Drawer></>
+  </>
+
+  return <>
+    {!hide_floating_button ? <Button
+      id='buttonOpenFilterDrawer'
+      variant='toolbar_button_open_filter'
+      size='sizeToolbarButton'
+      style={{
+        left: width_drawer,
+        top: app_data.drawing_area.getNavBarHeight() + (app_data.drawing_area.fit_margin)
+      }}
+      onClick={() => setFilterOpen(!drawerOpen)}
+    >
+      {
+        app_data.icon_library.icon_filter_tags
+      }
+    </Button> : <></>}
+
+    {pinned && drawerOpen ? (
+      /* #1258 — mode ÉPINGLÉ : panneau docké pleine hauteur à droite (comme la
+         config épinglée), il réserve sa largeur et le dessin se recadre. */
+      <Box
+        className='filter_panel_pinned'
+        id='drawer_filter'
+        position='fixed'
+        right={(app_data.drawing_area.fit_margin / 2 + toolsReserve) + 'px'}
+        top={app_data.drawing_area.getNavBarHeight() + 'px'}
+        bottom={app_data.drawing_area.getBottomBarHeight() + 'px'}
+        width={drawer_width_px + 'px'}
+        zIndex={26}
+        bg='white'
+        borderLeft='1px solid #e2e8f0'
+        overflowY='auto'
+        overflowX='hidden'
+      >
+        {panel_content}
+      </Box>
+    ) : (
+      <Drawer
+        placement={drawer_on_right ? 'right' : 'left'}
+        isOpen={drawerOpen}
+        onClose={() => setFilterOpen(false)}
+        blockScrollOnMount={false}
+        variant='drawer_menu_filter'
+        trapFocus={false}
+        onEsc={() => {
+          // Override drawer onEscape() to use Class_applicationData 'escape' keyEvent & not the one by default from the <Drawer> component
+          const ev = document
+          const tmp = new KeyboardEvent('keydown', { key: 'Escape' })
+          if (ev.onkeydown) {
+            ev.onkeydown(tmp as KeyboardEvent)
+          }
+        }}
+      >
+        <DrawerContent
+          style={{
+            width: 'unset',
+            height: 'fit-content',
+            // Overlay au-dessus du dessin/tableur : ombre portée pour le détacher visuellement,
+            // comme le panneau de config.
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)',
+            maxWidth: 'unset',
+            ...(drawer_on_right
+              ? { right: app_data.drawing_area.fit_margin / 2 + toolsReserve }
+              : { left: app_data.drawing_area.fit_margin / 2 }),
+            maxHeight: app_data.drawing_area.window_fitting_height,
+            //overflowY: 'auto',
+            marginTop: (app_data.drawing_area.fit_margin) + document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().y + document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height
+          }}>
+          <DrawerBody
+            id='drawer_filter'
+            style={{ padding: '0', width: drawer_width_px }}
+          >
+            {panel_content}
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
+    )}</>
 }
 
 // Contenu « Paramètres d'affichage » (seuils flux/étiquettes + flux nuls), rendu

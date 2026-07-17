@@ -112,7 +112,10 @@ export const SankeyMenu = (
     // sa largeur : le tiroir de filtres se place à sa gauche, les deux
     // cohabitent (indispensable à « Filtres > Sélectionner » qui alimente
     // l'inspecteur — sinon on sélectionne à l'aveugle).
-    if (open && open !== show_nav && !menu_configuration.config_panel_pinned) {
+    // #1258 — un tiroir de filtres ÉPINGLÉ est docké (il réserve sa largeur) :
+    // il cohabite avec la config, on ne le ferme plus.
+    if (open && open !== show_nav && !menu_configuration.config_panel_pinned
+      && !menu_configuration.filter_panel_pinned) {
       menu_configuration.ref_close_filter_drawer.current(false)
     }
     set_show_nav(open)

@@ -188,6 +188,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     order: 10,
     title: () => t('Menu.EN'),
     short_title: () => t('filter_panel.short.node'),
+    icon: (app) => app.icon_library.icon_node,
     gate: (app) => app.has_sankey_plus,
     render: (app) => <SankeySettingsEditionElementTags
       new_data={app as Class_ApplicationDataOSP}
@@ -199,6 +200,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     order: 20,
     title: () => t('Menu.EF'),
     short_title: () => t('filter_panel.short.link'),
+    icon: (app) => app.icon_library.icon_flow,
     gate: (app) => app.has_sankey_plus,
     render: (app) => <SankeySettingsEditionElementTags
       new_data={app as Class_ApplicationDataOSP}
@@ -210,6 +212,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     order: 30,
     title: () => t('Menu.ED'),
     short_title: () => t('filter_panel.short.data'),
+    icon: (app) => app.icon_library.icon_tab_value,
     gate: (app) => app.has_sankey_plus,
     render: (app) => <SankeySettingsEditionElementTags
       new_data={app as Class_ApplicationDataOSP}
@@ -221,6 +224,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     order: 40,
     title: () => t('Menu.Hierarchy'),
     short_title: () => t('filter_panel.short.level'),
+    icon: (app) => app.icon_library.icon_filter_level,
     gate: (app) => app.has_sankey_plus && app.has_sankey_dev,
     render: (app) => <SankeySettingsEditionElementTags
       new_data={app as Class_ApplicationDataOSP}
@@ -232,6 +236,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     order: 50,
     title: () => t('view.storytelling'),
     short_title: () => t('filter_panel.short.views'),
+    icon: (app) => app.icon_library.icon_element_visible,
     gate: (app) => app.has_sankey_plus,
     render: (app) => <ViewsConfig app_data={app as Class_ApplicationDataOSP} />
   })
@@ -242,6 +247,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     order: 55,
     hue: 'presentation',
     title: (app) => app.t('inspector.tab.tags'),
+    icon: (app) => app.icon_library.icon_tab_tags,
     data_only: true,
     gate: (app) => app.has_sankey_plus && (
       (app.drawing_area.selected_nodes_list.length > 0

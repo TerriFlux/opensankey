@@ -296,9 +296,12 @@ export const modalStyles = {
 // ===============================
 
 // Base styles pour menu config panel
+// #1258 — hauteur UNIQUE de 1.5rem (celle des selects/inputs xs) et minWidth
+// carré : plus aucun call site ne doit surcharger padding/height en sx.
 export const menuconfigBaseButton = {
   height: '1.5rem',
-  padding: '0.5rem',
+  minWidth: '1.5rem',
+  padding: '0 0.4rem',
   fontSize: 'unset',
   backgroundColor: 'white',
   color: 'tertiaire.3',
@@ -595,6 +598,78 @@ export const buttonStyles = {
 
   // Base menu config panel buttons
   menuconfigpanel_option_button: defineStyle(menuconfigBaseButton),
+
+  // #1258 — Bouton d'onglet de l'inspecteur : icône au-dessus d'un libellé
+  // court, hauteur auto. Centralise ce que la rangée d'onglets posait en sx.
+  inspector_tab: defineStyle({
+    ...menuconfigBaseButton,
+    height: 'auto',
+    minWidth: 'auto',
+    padding: '0.3rem 0.1rem 0.25rem',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '0.2rem',
+    position: 'relative',
+    fontWeight: 'normal',
+  }),
+
+  // #1258 — bouton-icône CARRÉ (cadenas, tireté, ombre…) : le baseStyle global
+  // des Button impose width:100% (pilules pleine largeur) — ce variant fixe la
+  // taille unique 1.5rem×1.5rem pour toutes les bascules à icône du panneau.
+  menuconfigpanel_icon_button: defineStyle({
+    ...menuconfigBaseButton,
+    width: 'auto',
+    minWidth: '1.5rem',
+    padding: '0 0.25rem',
+    flex: 'none',
+  }),
+
+  menuconfigpanel_icon_button_activated: defineStyle({
+    ...menuconfigBaseButton,
+    width: 'auto',
+    minWidth: '1.5rem',
+    padding: '0 0.25rem',
+    flex: 'none',
+    color: 'white',
+    fill: 'white',
+    borderColor: 'white',
+    backgroundColor: 'tertiaire.3',
+  }),
+
+  // #1258 — lien discret du fil d'Ariane de l'inspecteur (pas une pilule).
+  inspector_crumb: defineStyle({
+    background: 'none',
+    backgroundColor: 'transparent',
+    border: 'none',
+    padding: 0,
+    height: 'auto',
+    minWidth: 'auto',
+    width: 'auto',
+    fontSize: 'inherit',
+    fontWeight: 'normal',
+    color: '#1f6fae',
+    textDecoration: 'underline',
+    _hover: { color: '#155a8f', backgroundColor: 'transparent' },
+    _active: { backgroundColor: 'transparent' },
+  }),
+
+  inspector_tab_activated: defineStyle({
+    ...menuconfigBaseButton,
+    height: 'auto',
+    minWidth: 'auto',
+    padding: '0.3rem 0.1rem 0.25rem',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '0.2rem',
+    position: 'relative',
+    fontWeight: 'normal',
+    color: 'white',
+    fill: 'white',
+    borderColor: 'white',
+    backgroundColor: 'tertiaire.3',
+  }),
 
   menuconfigpanel_option_button_activated: defineStyle({
     ...menuconfigBaseButton,
@@ -3135,7 +3210,8 @@ const layerStyles = {
     overflowY: 'auto',
     padding: '0.3rem',
     color: 'primaire.5',
-
+    // #1258 — même corps de texte que le panneau de config (homogénéité).
+    fontSize: default_font_size,
   },
   filter_head_box: {
     display: 'grid',
