@@ -226,6 +226,17 @@ fi
 
 # --- 8. Prune : garder les N derniers slots --------------------------------
 # On ne supprime jamais le slot courant ni le précédent (filet de rollback).
+#
+# `sudo` + tolérance aux échecs, pour deux raisons apprises le 2026-07-17 :
+#  - DEUX déployeurs écrivent ici (ubuntu via ce script, gitlab-runner via la
+#    CI). Purger un slot de l'autre échoue en « Permission denied » : ce qui
+#    compte pour `rm`, c'est le droit d'écriture sur le RÉPERTOIRE parent, que
+#    ni umask 002 ni le groupe `deploy` ne garantissent sur tout l'arbre (pip
+#    et rsync reposent leurs propres permissions).
+#  - Le prune arrive APRÈS la bascule : le site tourne déjà sur le slot neuf.
+#    Le faire échouer le déploiement (set -e) transformait un succès réel en
+#    sortie non-zéro anxiogène. Un slot non purgé n'est qu'un peu de disque —
+#    on le signale, on ne casse pas le déploiement pour autant.
 if [[ $DRY_RUN -eq 0 ]]; then
   mapfile -t SLOTS < <(ls -1d "${RELEASES}"/*/ 2>/dev/null | sort -r)
   KEPT=0
@@ -235,8 +246,17 @@ if [[ $DRY_RUN -eq 0 ]]; then
     if [[ $KEPT -le $KEEP ]] || [[ "$slot" == "$PREVIOUS" ]] || [[ "$slot" == "$NEW" ]]; then
       continue
     fi
+    # Garde-fou : `sudo rm -rf` sur un chemin CALCULÉ — on n'efface que sous
+    # RELEASES, et jamais RELEASES lui-même. Le rejet de `..` n'est pas
+    # théorique : sans lui, « ${RELEASES}/../../.. » satisfait le motif de
+    # préfixe et vaut /home (vérifié).
+    case "$slot" in
+      *..*)             echo "[WARN] prune ignoré (chemin suspect) : ${slot}" >&2; continue ;;
+      "${RELEASES}"/?*) ;;
+      *)                echo "[WARN] prune ignoré (hors ${RELEASES}) : ${slot}" >&2; continue ;;
+    esac
     echo "+ prune ${slot}"
-    rm -rf "$slot"
+    sudo rm -rf "$slot" || echo "[WARN] prune de ${slot} impossible — slot conservé." >&2
   done
 fi
 
