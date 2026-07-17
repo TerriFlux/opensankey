@@ -32,6 +32,7 @@ import { Class_ElementStyle } from './Element'
 import { Class_LinkElement } from './Link'
 import { UnitType } from './LinkValues'
 import { Class_NodeBase } from './NodeBase'
+import { isLegendElementId } from './legendIds'
 
 // Types spécifiques
 export type Type_Shape = 'ellipse' | 'rect' | 'bezier_outline' | 'bezier_outline_exact' | 'bezier_path' | 'capsule' | 'capsule_h'
@@ -3409,6 +3410,10 @@ export function updateElements<
   const _updateElements = () => {
     elements.forEach(element => {
       Reflect.set(element, fullKey, value)
+      // OS#1254 — restyler une zone de la légende via le menu casse la mise en
+      // forme générée (snapshot statique, cf. LegendGenerator).
+      const el = element as { id?: string, drawing_area?: { legend?: { markBroken: () => void } } }
+      if (el.id && isLegendElementId(el.id)) el.drawing_area?.legend?.markBroken()
     })
     reCenterNodes()
     refreshParentComponent()
