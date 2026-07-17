@@ -559,12 +559,18 @@ export const UnifiedElementSelection = ({
   // Dans le composant UnifiedElementSelection
   // ==================================================================================
 
-  const renderTagFilter = () => {
-    if (!isSingleType || !singleConfig) return null
-    if (singleConfig.type !== 'node' && singleConfig.type !== 'link') return null
-    if (tagGroups.length === 0) return null
+  // Le filtre par tag n'existe que pour les nœuds et les flux en single-type,
+  // et seulement s'il y a des groupes : les colonnes de la ligne compacte
+  // dépendent donc de ce booléen.
+  const has_tag_filter = isSingleType && !!singleConfig &&
+    (singleConfig.type === 'node' || singleConfig.type === 'link') &&
+    tagGroups.length > 0
+
+  // Les deux selects seuls (sans ligne porteuse) : le mode compact les pose sur
+  // la ligne du sélecteur, le mode full leur garde une ligne à eux.
+  const renderTagSelects = () => {
     return (
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+      <>
         <Select
           size='xs'
           variant='menuconfigpanel_option_select'
@@ -591,6 +597,15 @@ export const UnifiedElementSelection = ({
             <option key={tag.id} value={tag.id}>{tag.display_name}</option>
           ))}
         </Select>
+      </>
+    )
+  }
+
+  const renderTagFilter = () => {
+    if (!has_tag_filter) return null
+    return (
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        {renderTagSelects()}
       </Box>
     )
   }
@@ -706,9 +721,19 @@ export const UnifiedElementSelection = ({
   // ==================================================================================
 
   if (mode === 'simple') {
+    // Colonnes calculées : une cellule absente ne doit décaler personne. Le
+    // sélecteur prend l'essentiel ; l'œil est un bouton étroit dimensionné par
+    // son icône. Sa liste s'ouvre sur toute la largeur de la ligne (cf.
+    // layerStyle), donc le comprimer à la fermeture ne coûte rien.
+    const columns = [
+      isMultiType ? 'auto' : null,
+      'minmax(0, 3fr)',
+      ...(has_tag_filter ? ['minmax(0, 2fr)', 'minmax(0, 2fr)'] : []),
+      'auto'
+    ].filter(Boolean).join(' ')
     return (
       <Box layerStyle='menuconfigpanel_grid'>
-        <Box as='span' layerStyle='menuconfigpanel_row_droplist_simple'>
+        <Box as='span' layerStyle='menuconfigpanel_row_droplist_inline' gridTemplateColumns={columns}>
           {/* Filtres multi-type */}
           {isMultiType && renderFilters()}
 
@@ -717,17 +742,21 @@ export const UnifiedElementSelection = ({
             {renderDropdown()}
           </OSTooltip>
 
+          {/* Filtre par tag — sur la MÊME ligne que le sélecteur : les trois
+              contrôles composent un seul critère de sélection. */}
+          {has_tag_filter && renderTagSelects()}
+
           {/* Bouton visibilité */}
           <OSTooltip label={t(isMultiType ? 'Menu.toggle_visibility' : singleConfig!.translationKeys.tooltipVisibility)}>
             <Button
               variant='menuconfigpanel_option_button'
               onClick={toggleVisibility}
+              sx={{ minWidth: 'auto', width: 'auto', paddingInline: '0.3rem' }}
             >
               {only_visible ? icon_element_visible : icon_element_invisible}
             </Button>
           </OSTooltip>
         </Box>
-        {renderTagFilter()}
       </Box>
     )
   }

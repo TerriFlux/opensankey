@@ -2742,6 +2742,24 @@ const layerStyles = {
     '& > *': { minWidth: 0 },
   },
 
+  // Ligne de sélection compacte : sélecteur + filtres par tag + œil sur UNE
+  // ligne. Les colonnes sont calculées par le composant (elles dépendent des
+  // contrôles réellement rendus) — surtout pas figées ici, sinon une cellule
+  // absente décale tout (c'est le bug de _simple, où l'œil héritait du 6fr).
+  // position:relative + .dropdown-container en static : le panneau déroulant du
+  // rmsc s'ancre alors sur la LIGNE et s'ouvre sur toute la largeur du panneau,
+  // au lieu d'être bridé à la largeur du sélecteur fermé.
+  menuconfigpanel_row_droplist_inline: {
+    display: 'grid',
+    gridColumnGap: '0.25rem',
+    alignItems: 'center',
+    position: 'relative',
+    minWidth: 0,
+    '& > *': { minWidth: 0 },
+    '.rmsc .dropdown-container': { position: 'static' },
+    '.rmsc .dropdown-content': { left: 0, right: 0, width: 'auto' },
+  },
+
   menuconfigpanel_zdt_row_droplist: {
     display: 'grid',
     gridTemplateColumns: '1fr 6fr 1fr 1fr 1fr',
