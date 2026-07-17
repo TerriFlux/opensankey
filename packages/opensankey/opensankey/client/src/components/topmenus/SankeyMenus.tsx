@@ -112,7 +112,12 @@ export const SankeyMenu = (
   // Centralise tous les chemins (bouton, Drawer onClose, raccourcis, filtre) qui passent
   // par ref_menu_opened.current[1], pour un comportement uniforme.
   const setConfigOpen = (open: boolean) => {
-    if (open && open !== show_nav) {
+    // #1243 — l'exclusivité config/filtres n'existait que parce que les deux
+    // sont des overlays au MÊME coin. Épinglé, le panneau est docké et réserve
+    // sa largeur : le tiroir de filtres se place à sa gauche, les deux
+    // cohabitent (indispensable à « Filtres > Sélectionner » qui alimente
+    // l'inspecteur — sinon on sélectionne à l'aveugle).
+    if (open && open !== show_nav && !menu_configuration.config_panel_pinned) {
       menu_configuration.ref_close_filter_drawer.current(false)
     }
     set_show_nav(open)

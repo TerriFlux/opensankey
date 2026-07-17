@@ -341,7 +341,9 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
   // Le panneau est un overlay au-dessus de toute la grande zone (tableur/doc compris, zIndex 30) :
   // il ne s'écarte que de la colonne d'outils (zIndex 35, extrême droite), comme la config.
   useMainZone(app_data)
-  const toolsReserve = app_data.menu_configuration.getToolsColumnWidthPx()
+  // #1243 — chrome droit = colonne d'outils + panneau de config ÉPINGLÉ : ce
+  // tiroir s'en écarte pour se placer à leur gauche (cohabitation config/filtres).
+  const toolsReserve = app_data.menu_configuration.getRightChromeReservedPx()
   // En éditeur, le panneau de filtres s'ouvre à DROITE (à côté de la colonne d'outils, comme la config) ;
   // en publish/statique on garde l'ouverture historique à gauche (bouton flottant gauche).
   const drawer_on_right = !app_data.is_static
@@ -364,7 +366,10 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
   // Seule exclusivité conservée : le panneau de config (même emplacement à droite). Centralise
   // tous les chemins (bouton colonne, bouton flottant, Drawer onClose, ref_close_filter_drawer).
   const setFilterOpen = (open: boolean) => {
-    if (open && open !== drawerOpen) {
+    // #1243 — symétrique de setConfigOpen : on ne ferme la config que si elle
+    // est en OVERLAY (même coin). Épinglée, elle est dockée et réserve sa
+    // largeur : ce tiroir s'ouvre à sa gauche et les deux cohabitent.
+    if (open && open !== drawerOpen && !app_data.menu_configuration.config_panel_pinned) {
       app_data.menu_configuration.ref_menu_opened.current[1](false)
     }
     setDrawerOpen(open)
