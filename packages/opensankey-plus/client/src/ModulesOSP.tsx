@@ -257,6 +257,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     id: 'osp.filter_edit.node_taggs',
     order: 10,
     title: () => t('Menu.EN'),
+    short_title: () => t('Menu.Config.element_node'),
     gate: (app) => app.has_sankey_plus,
     render: (app) => <SankeySettingsEditionElementTags
       new_data={app as Class_ApplicationDataOSP}
@@ -267,6 +268,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     id: 'osp.filter_edit.flux_taggs',
     order: 20,
     title: () => t('Menu.EF'),
+    short_title: () => t('Menu.Config.element_flow'),
     gate: (app) => app.has_sankey_plus,
     render: (app) => <SankeySettingsEditionElementTags
       new_data={app as Class_ApplicationDataOSP}
@@ -277,6 +279,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     id: 'osp.filter_edit.data_taggs',
     order: 30,
     title: () => t('Menu.ED'),
+    short_title: () => t('Menu.Config.element_data'),
     gate: (app) => app.has_sankey_plus,
     render: (app) => <SankeySettingsEditionElementTags
       new_data={app as Class_ApplicationDataOSP}
@@ -287,6 +290,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     id: 'osp.filter_edit.level_taggs',
     order: 40,
     title: () => t('Menu.Hierarchy'),
+    short_title: () => 'Niveaux',
     gate: (app) => app.has_sankey_plus && app.has_sankey_dev,
     render: (app) => <SankeySettingsEditionElementTags
       new_data={app as Class_ApplicationDataOSP}
@@ -297,6 +301,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     id: 'osp.filter_edit.views',
     order: 50,
     title: () => t('view.storytelling'),
+    short_title: () => 'Vues',
     gate: (app) => app.has_sankey_plus,
     render: (app) => <ViewsConfig app_data={app as Class_ApplicationDataOSP} />
   })

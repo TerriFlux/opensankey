@@ -21,6 +21,9 @@ export type Type_FilterPanelSection = {
   order: number
   // Titre de la section (fonction : i18n résolue au rendu).
   title: (app_data: Class_ApplicationData) => string
+  // Libellé COURT pour le bouton d'onglet (le tiroir est étroit : « Étiquettes
+  // des nœuds » y écrase ses voisins). Défaut : `title`.
+  short_title?: (app_data: Class_ApplicationData) => string
   // Affichage conditionnel (licence, présence de groupes…).
   gate?: (app_data: Class_ApplicationData) => boolean
   render: (app_data: Class_ApplicationData) => JSX.Element | null

@@ -333,6 +333,8 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
   // tags, vues — relogés ici depuis la matrice, cf. règle R3). L'édition n'a
   // pas de sens en publish/statique.
   const [filterTab, setFilterTab] = useState<'filter' | 'select' | 'edit'>('filter')
+  // Sous-onglet actif de « Éditer » (un éditeur à la fois ; null = le premier).
+  const [edit_section_id, setEditSectionId] = useState<string | null>(null)
   // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
   useModelBinding(app_data.menu_configuration.ref_toolbar)
   // Abonnement à la grande zone : garde l'offset droit à jour quand la colonne d'outils change.
@@ -354,6 +356,7 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
   const has_tabs = has_edit_tab || has_select_tab
   const in_edit_tab = has_edit_tab && filterTab === 'edit'
   const in_select_tab = has_select_tab && filterTab === 'select'
+  const active_edit_section = edit_sections.find(s => s.id === edit_section_id) ?? edit_sections[0]
   const drawer_width_px = (in_edit_tab || in_select_tab) ? width_filter_drawer_edit : width_fitler_drawer
   const width_drawer = (drawerOpen ? drawer_width_px + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin
   // Ouvre/ferme le drawer de filtres. Comme la config, c'est un OVERLAY au-dessus de toute la
@@ -484,12 +487,37 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
               </WrapperContentConfig>
             </Box>
           ) : in_edit_tab ? (
-            <Box layerStyle='drawerFilterBox' style={{ overflowY: 'auto' }}>
-              {edit_sections.map(section => (
-                <WrapperContentConfig key={section.id} title={section.title(app_data)}>
-                  {section.render(app_data) ?? <></>}
-                </WrapperContentConfig>
-              ))}
+            // Sous-onglets : empiler les 5 éditeurs (groupes de tags, vues)
+            // rendait le bas du tiroir inatteignable. Un contenu à la fois,
+            // comme la rangée d'onglets de l'inspecteur.
+            <Box layerStyle='drawerFilterBox' style={{ display: 'grid', gap: '0.3rem' }}>
+              <Box style={{
+                display: 'grid',
+                gridTemplateColumns: `repeat(${edit_sections.length}, 1fr)`,
+                gap: '0.15rem'
+              }}>
+                {edit_sections.map(section => (
+                  <Button
+                    key={section.id}
+                    size='xs'
+                    variant={section.id === active_edit_section?.id
+                      ? 'menuconfigpanel_option_button_activated'
+                      : 'menuconfigpanel_option_button'}
+                    sx={{ paddingInline: '0.2rem', minWidth: 'auto' }}
+                    title={section.title(app_data)}
+                    onClick={() => setEditSectionId(section.id)}
+                  >
+                    {(section.short_title ?? section.title)(app_data)}
+                  </Button>
+                ))}
+              </Box>
+              {active_edit_section ? (
+                <Box style={{ overflowY: 'auto', maxHeight: '70vh' }}>
+                  <WrapperContentConfig title={active_edit_section.title(app_data)}>
+                    {active_edit_section.render(app_data) ?? <></>}
+                  </WrapperContentConfig>
+                </Box>
+              ) : <></>}
             </Box>
           ) : (
             <Box layerStyle='drawerFilterBox'>
