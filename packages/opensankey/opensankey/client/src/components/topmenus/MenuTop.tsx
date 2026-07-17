@@ -1730,7 +1730,7 @@ const AppInfoPopover = ({ new_data }: { new_data: Class_ApplicationData }) => {
           <VStack align='start' spacing='0.25rem' fontSize='sm'>
             <HStack spacing='0.4rem' alignSelf='center'>
               <Text color='gray.500'>Édité par</Text>
-              <Link href='https://terriflux.fr' isExternal>
+              <Link href='https://terriflux.com' isExternal>
                 <Image src={new_data.logo_terriflux} height='1rem' objectFit='contain' alt='TerriFlux' />
               </Link>
             </HStack>
@@ -1755,8 +1755,8 @@ const AppInfoPopover = ({ new_data }: { new_data: Class_ApplicationData }) => {
             {changelog_url && <Link href={changelog_url} color='blue.500' isExternal>
               Changelog
             </Link>}
-            <Link href='https://terriflux.fr' color='blue.500' isExternal>
-              terriflux.fr
+            <Link href='https://terriflux.com' color='blue.500' isExternal>
+              terriflux.com
             </Link>
             <Link href='mailto:support@terriflux.fr' color='blue.500'>
               support@terriflux.fr
