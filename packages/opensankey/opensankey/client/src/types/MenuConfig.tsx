@@ -34,7 +34,7 @@ import {
 import { typeButtonElementConfigurable } from '../components/topmenus/SankeyMenus'
 import { Class_DataTagGroup } from './TagGroup'
 import { Class_DataTag } from './Tag'
-import { Class_EventBus, MAIN_ZONE_TOPIC } from './EventBus'
+import { Class_EventBus, MAIN_ZONE_TOPIC, SELECTION_TOPIC } from './EventBus'
 import {
   ConverterConfig
 } from '../components/dialogs/PersistenceProcessDialogConfigs'
@@ -1435,7 +1435,12 @@ export class Class_MenuConfig {
   public updateInspector() {
     this._add_waiting_process(
       'updateInspector',
-      (_this: Class_MenuConfig) => { _this._ref_to_inspector_updater.current() }
+      (_this: Class_MenuConfig) => {
+        _this._ref_to_inspector_updater.current()
+        // Multi-abonnés (bus #248) : tout composant qui suit la sélection sans
+        // posséder de slot (ex. récapitulatif de l'outil de sélection).
+        _this._event_bus.notify(SELECTION_TOPIC)
+      }
     )
   }
 

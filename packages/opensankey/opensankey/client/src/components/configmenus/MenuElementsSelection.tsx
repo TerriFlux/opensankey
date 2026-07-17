@@ -9,6 +9,7 @@ import { Class_ContainerElement } from '../../Elements/TextZone'
 import { Class_StockShape } from '../../Elements/StockShape'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_NodeBase } from '../../Elements/NodeBase'
+import { SELECTION_TOPIC } from '../../types/EventBus'
 
 // ==================================================================================
 // TYPES & CONFIGURATION
@@ -1137,16 +1138,37 @@ export const SankeyMultiTypeSelectionSimple = ({
 // Mode 'simple' volontaire : c'est un outil de sélection, pas de création
 // (créer reste un geste de canvas).
 export const ElementSelectionTool = ({ app_data }: { app_data: Class_ApplicationData }) => {
-  const { t } = app_data
+  const { t, drawing_area } = app_data
   const [type, setType] = useState<'node' | 'link' | 'container'>('node')
+  // Récapitulatif de la sélection TOTALE (tous types) : abonnement au topic
+  // pub/sub (multi-abonnés) — l'inspecteur garde son slot ref dédié, et le
+  // sélecteur unifié enfant garde le slot du type courant. Pas de vol de slot.
+  useModelBinding(undefined, (r) =>
+    app_data.menu_configuration.subscribe(SELECTION_TOPIC, r))
+
   const types: { key: 'node' | 'link' | 'container', label: string }[] = [
     { key: 'node', label: t('Menu.Config.element_node') },
     { key: 'link', label: t('Menu.Config.element_flow') },
     { key: 'container', label: t('Menu.Config.element_object0') }
   ]
+  const counts = {
+    node: drawing_area.selected_nodes_list.length,
+    link: drawing_area.selected_links_list.length,
+    container: drawing_area.selected_containers_list.length
+  }
+  const total = counts.node + counts.link + counts.container
+  const summary = [
+    counts.node ? `${counts.node} ${t('Menu.Config.element_node')}` : null,
+    counts.link ? `${counts.link} ${t('Menu.Config.element_flow')}` : null,
+    counts.container ? `${counts.container} ${t('Menu.Config.element_object0')}` : null
+  ].filter(Boolean).join(' + ')
+
   return <Box layerStyle='menuconfigpanel_grid'>
-    {/* Type : en single-type, le sélecteur unifié expose AUSSI le filtre par
-        groupe de tags (indisponible en multi-type) — c'est le critère clé. */}
+    {/* Type = dans QUEL type on pioche. La sélection est CUMULATIVE : changer
+        de type n'efface pas les autres, on compose donc une sélection
+        HÉTÉROGÈNE (nœuds + flux) pour éditer leurs attributs communs.
+        Single-type volontaire : le sélecteur unifié n'expose le filtre par
+        groupe de tags que dans ce mode — c'est le critère clé. */}
     <Box style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.15rem' }}>
       {types.map(({ key, label }) => (
         <Button
@@ -1167,6 +1189,30 @@ export const ElementSelectionTool = ({ app_data }: { app_data: Class_Application
       config={ALL_CONFIGS[type] as ElementConfig<Class_NodeElement | Class_LinkElement | Class_ContainerElement>}
       mode='simple'
     />
+    {/* Récapitulatif : rend VISIBLE le cumul entre types (sinon on croit que
+        changer de type remet à zéro) + désélection globale. */}
+    <Box style={{
+      display: 'flex', alignItems: 'center', gap: '0.4rem',
+      fontSize: '0.7rem', paddingTop: '0.2rem'
+    }}>
+      <Box as='span' style={{ opacity: 0.75 }}>
+        {total > 0 ? `Sélection : ${summary}` : t('Noeud.NS')}
+      </Box>
+      <Button
+        size='xs'
+        variant='menuconfigpanel_option_button'
+        sx={{ paddingInline: '0.4rem', minWidth: 'auto', width: 'auto', flex: 'none', marginLeft: 'auto' }}
+        isDisabled={total === 0}
+        onClick={() => {
+          drawing_area.purgeSelection()
+          app_data.menu_configuration.updateAllComponentsRelatedToNodes()
+          app_data.menu_configuration.updateAllComponentsRelatedToLinks()
+          app_data.menu_configuration.updateAllComponentsRelatedToContainers()
+        }}
+      >
+        {'Tout désélectionner'}
+      </Button>
+    </Box>
   </Box>
 }
 
