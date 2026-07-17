@@ -171,8 +171,13 @@ export const InspectorPanel = ({ app_data }: { app_data: Class_ApplicationData }
             ? 'Détacher le panneau (survol du dessin)'
             : 'Épingler le panneau (le dessin se recadre à gauche)'}
           onClick={() => {
-            app_data.menu_configuration.config_panel_pinned =
-              !app_data.menu_configuration.config_panel_pinned
+            const mc = app_data.menu_configuration
+            const next_pinned = !mc.config_panel_pinned
+            // Dé-épingler : le panneau redevient un OVERLAY au même coin que le
+            // tiroir de filtres — on referme ce dernier pour ne pas les
+            // superposer (l'exclusivité des overlays reprend, cf. setConfigOpen).
+            if (!next_pinned) mc.ref_close_filter_drawer.current(false)
+            mc.config_panel_pinned = next_pinned
           }}
         >
           <FaThumbtack style={{
