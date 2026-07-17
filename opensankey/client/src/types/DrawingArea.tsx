@@ -52,7 +52,8 @@ import {
   Class_LinkElement,
   sortLinksElementsByIds
 } from '../Elements/Link'
-import { ClassTemplate_Legend } from '../Elements/Legend'
+import { Class_LegendConfig } from '../Elements/LegendGenerator'
+import { isLegendElementId } from '../Elements/legendIds'
 import { Class_BaseElement, Class_ProtoElement } from '../Elements/Element'
 import { Class_ElementStyle } from '../Elements/Element'
 import { NodePositioning } from '../Algorithms/NodePositioning'
@@ -103,7 +104,6 @@ export class Class_DrawingArea {
   public d3_selection_grid: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_elements_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_elements_sankey_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
-  public d3_selection_legend: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_handlers: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_zone_select: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
@@ -120,8 +120,24 @@ export class Class_DrawingArea {
 
 
   public static: boolean = !!window.sankey?.publish
-  public to_recenter = false
   public is_unitary = false
+
+  /**
+   * OS#1250 phase 2 — le fichier chargé est antérieur à 0.92 et ses coordonnées
+   * doivent être normalisées UNE FOIS (ramenées près de l'origine).
+   *
+   * Remplace l'ancien drapeau public `to_recenter`, qui armait le garde de
+   * recenter(). Ce protocole était BUGUÉ : `to_recenter` n'était jamais remis à
+   * false par le bouton « recentrer », les 4 chemins de Toolbar, ni la migration
+   * legacy — il restait donc collant. Or ViewsManager appelle recenter() sans
+   * jamais l'armer : une fois le drapeau collé à true, chaque changement de vue
+   * se mettait à décaler les positions des nœuds ET à réécrire les centres
+   * persistés (#1231), silencieusement, selon ce que l'utilisateur avait fait
+   * avant. La normalisation est désormais explicite, ponctuelle, et recenter()
+   * ne touche plus au document.
+   */
+  private _needs_legacy_normalization = false
+  public markForLegacyNormalization() { this._needs_legacy_normalization = true }
 
   /** id du nœud central d'un board unitaire (is_unitary). Posé par updateUnitaryStyles
    * à chaque (re)focalisation. areaAutoFit s'en sert pour caler ce nœud au CENTRE de la
@@ -230,7 +246,7 @@ export class Class_DrawingArea {
   protected _margin_left_mm: number = default_margin_mm
 
   protected _sankey: Class_Sankey
-  protected _legend: ClassTemplate_Legend
+  protected _legend: Class_LegendConfig
 
 
   private _fit_margin: number = 10
@@ -399,8 +415,10 @@ export class Class_DrawingArea {
     .range([0, 100])
 
   // Shifting of d3 elements
-  private _elements_d3_groups_shift_x: number = 0
-  private _elements_d3_groups_shift_y: number = 0
+  // OS#1250 phase 2 — `_elements_d3_groups_shift_x/y` supprimés : ils n'étaient
+  // que la trace du déplacement du monde par recenter(), et ne servaient nulle
+  // part ailleurs. Le décalage est désormais local à la migration legacy
+  // (normalizeLegacyWorldCoordinates).
   private _background_d3_groups_shift_x: number = 0
   private _background_d3_groups_shift_y: number = 0
 
@@ -516,19 +534,21 @@ export class Class_DrawingArea {
     .filter(evt => (evt.which === 2 || evt.which === 0))
     // Prevent extreme zoom levels that freeze SVG rendering
     .scaleExtent([0.05, 20])
-    // Custom constrain: anchor top-left when content is smaller than the viewport
-    // (d3-zoom default centers in that case, which pushed the A3/A4/A5 paper off
-    // the top-left corner). Larger-than-viewport behaviour is unchanged.
-    .constrain((transform, extent, translateExtent) => {
-      const dx0 = transform.invertX(extent[0][0]) - translateExtent[0][0]
-      const dx1 = transform.invertX(extent[1][0]) - translateExtent[1][0]
-      const dy0 = transform.invertY(extent[0][1]) - translateExtent[0][1]
-      const dy1 = transform.invertY(extent[1][1]) - translateExtent[1][1]
-      return transform.translate(
-        dx1 > dx0 ? dx0 : Math.min(0, dx0) || Math.max(0, dx1),
-        dy1 > dy0 ? dy0 : Math.min(0, dy0) || Math.max(0, dy1)
-      )
-    })
+    // OS#1250 phase 5 — constrain d3 par DÉFAUT.
+    //
+    // Il y avait ici un constrain custom qui forçait l'ancrage haut-gauche quand le
+    // contenu était plus petit que le viewport (le défaut d3 centre : `(dx0+dx1)/2`
+    // au lieu de `dx0`), parce que le translateExtent portait le CANVAS — un rectangle
+    // dimensionné sur la fenêtre — et que centrer ce canvas poussait la page A3/A4/A5
+    // hors du coin.
+    //
+    // Le translateExtent dérive désormais du CONTENU (cf. Class_ViewportChrome
+    // .updateScrollbars) et non plus du canvas : il n'y a donc plus de canvas à ancrer,
+    // et le comportement du défaut d3 est exactement celui qu'on veut —
+    //   - contenu plus petit que la fenêtre -> centré ;
+    //   - contenu plus grand               -> déplacement borné par ses bords.
+    // En mode papier, la page participe simplement aux bounds : elle est donc centrée
+    // au lieu d'être poussée hors du coin, ce qui était la raison d'être du custom.
     // Change cursor in teh beginning to 'move' to show we can shift drawing area
     .on('start', () => this.d3_selection_zoom_area?.attr('cursor', 'move'))
     .on('zoom', (event) => this.eventZoom(event))
@@ -555,7 +575,7 @@ export class Class_DrawingArea {
     this._zoom_height = this.window_fitting_height
     this._zoom_width = this.window_fitting_width
     this._sankey = this.createNewSankey(id)
-    this._legend = new ClassTemplate_Legend(this, this._sankey)
+    this._legend = new Class_LegendConfig(this)
     this._selection_zone = this.createNewSelectionZone()
     this.nodePositioning = new NodePositioning(this)
 
@@ -575,7 +595,6 @@ export class Class_DrawingArea {
     this._contextualised_free_label = undefined
     // Clean Elements
     // this._sankey.delete() TODO Trop lourd + bug suppression vues
-    this._legend.delete()
     this._selection_zone.unDraw()
 
     // Clean drawing area
@@ -592,9 +611,9 @@ export class Class_DrawingArea {
     // Copy Sankey
     this._sankey.copyFrom(drawing_area_to_copy._sankey)
 
-    //create new ClassTemplate_Legend after deleting previous in 'this.delete()'
-    this._legend = new ClassTemplate_Legend(this, this._sankey)
-    // Copy Legend
+    // Copie des paramètres du générateur de légende (les zones 'legend-*'
+    // elles-mêmes sont des conteneurs, copiés avec le sankey ci-dessus)
+    this._legend = new Class_LegendConfig(this)
     this._legend.copyFrom(drawing_area_to_copy._legend)
 
     //create new selection zone after deleting previous in 'this.delete()'
@@ -790,7 +809,7 @@ export class Class_DrawingArea {
         this.areaAutoFit(false, true)
       } else {
         this._locked_overflow_shrunk = false
-        this._zoomListener.transform(this.d3_selection_zoom_area, locked_zoom_transform)
+        this.setCamera(locked_zoom_transform)
         this.drawBackground()
         this.drawGrid()
         this._updateScrollbars()
@@ -859,10 +878,6 @@ export class Class_DrawingArea {
     this.d3_selection_bg = this.d3_selection_bg_group.append('g').attr('id', 'g_color_bg')
     this.d3_selection_grid = this.d3_selection_bg_group.append('g').attr('id', 'g_grid')
 
-    // Since legend can't be affected by zoom, it outside g_drawing
-
-
-
     // Add specific groups for nodes, link and others
     this.d3_selection_elements_group = this.d3_selection.append('g').attr('id', 'g_elements')
     // OS#1246 — persistance du sous-arbre nœuds/flux. unDraw() ne détache que
@@ -893,12 +908,6 @@ export class Class_DrawingArea {
     }
     this.d3_selection_handlers = this.d3_selection_elements_group.append('g').attr('id', 'g_handlers')
     this.d3_selection_zone_select = this.d3_selection_elements_group.append('g').attr('id', 'g_select_zone')
-
-    if (this._legend.stick_to_drawing) {
-      this.d3_selection_legend = this.d3_selection.append('g').attr('id', 'grp_legend')
-    } else {
-      this.d3_selection_legend = this.d3_selection_zoom_area.append('g').attr('id', 'grp_legend')
-    }
 
     this.d3_selection_def_gradient = this.d3_selection_elements_group?.append('g').attr('id', 'def_gradient') ?? null
 
@@ -934,11 +943,8 @@ export class Class_DrawingArea {
   public drawGrid() {
     // Clean if needed
     this.d3_selection_grid?.selectAll('.line').remove()
-    // Mêmes bornes que le fond : canvas en mode papier, union canvas ∪ viewport en
-    // mode libre (la grille remplit toute la fenêtre, comme le fond).
-    const b = this.is_paper_mode
-      ? { x: this._background_d3_groups_shift_x, y: this._background_d3_groups_shift_y, w: this._zoom_width, h: this._zoom_height }
-      : this._freeBgBounds()
+    // Mêmes bornes que le fond (cf. drawBackground).
+    const b = this.is_paper_mode ? this.paper_world_rect : this._freeBgBounds()
     // Draw only if asked OR outside publishing mode
     if (this.grid_visible && this.editable) {
       // Draw horizontal lines
@@ -1142,9 +1148,6 @@ export class Class_DrawingArea {
         return false
     }
 
-    if (this._legend.isMouseOver()) {
-      return false
-    }
     if (!this.sankey.container_activated) return true
 
     mouse_over_nodes = this.sankey.isMouseOverAnExistingContainer()
@@ -1178,6 +1181,9 @@ export class Class_DrawingArea {
     this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
   }
   public deleteContainer(c: Class_ContainerElement) {
+    // OS#1254 — supprimer une zone de la légende (ou son cadre) la « casse » :
+    // elle devient un snapshot statique, plus de régénération automatique.
+    if (isLegendElementId(c.id)) this._legend.markBroken()
     // Remove link from selection if necessary
     this.removeElementFromSelection(c)
     // Remove link from sankey
@@ -1208,13 +1214,10 @@ export class Class_DrawingArea {
     this.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
   }
 
-  public addLegendToSelection(): void {
-    // Update selection list
-    this._selection['legend'] = this._legend
-    this._legend.setSelected()
-    this.application_data.menu_configuration.updateInspector() // #1243
-  }
-
+  // OS#1254 — addLegendToSelection/removeLegendFromSelection supprimées avec
+  // Class_Legend : la légende n'est plus un objet unique sélectionnable, c'est
+  // un GÉNÉRATEUR (Class_LegendConfig) qui produit des zones de texte. Elles se
+  // sélectionnent donc comme des zones ordinaires (#1243 : cible `container`).
   public removeElementFromSelection(element: Class_ProtoElement) {
     if (this._selection[element.id] !== undefined) {
       // Update selection list
@@ -1223,16 +1226,6 @@ export class Class_DrawingArea {
       element.setUnSelected()
       // Update related menus
       this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
-    }
-  }
-
-  public removeLegendFromSelection() {
-    if (this._selection['legend'] !== undefined) {
-      // Update selection list
-      delete this._selection['legend']
-      // Update selection attribute on legend
-      this._legend.setUnSelected()
-      this.application_data.menu_configuration.updateInspector() // #1243
     }
   }
 
@@ -1383,7 +1376,13 @@ export class Class_DrawingArea {
     }
   }
 
-  public areaAutoFit(horiz?: boolean, force_when_locked?: boolean) {
+  /**
+   * @param center_on_content OS#1250 phase 2 — centre le contenu dans le viewport sur les
+   * axes où il a du mou, au lieu de l'ancrer en haut à gauche avec les marges. Posé par
+   * recenter() : c'est la définition même de « recentrer ». Les autres fits (changement de
+   * data tag, redimensionnement…) gardent leur cadrage habituel.
+   */
+  public areaAutoFit(horiz?: boolean, force_when_locked?: boolean, center_on_content?: boolean) {
 
     // Verrou de taille (#1240) : cadrage (hauteur, largeur, zoom) figé tel quel —
     // aucun auto-fit au changement de dataTag. Exception : au tout premier rendu
@@ -1445,7 +1444,9 @@ export class Class_DrawingArea {
     let label_overflow_right = 0
     let label_overflow_top = 0
     let label_overflow_bottom = 0
-    let bbox: DOMRect | undefined
+    // OS#1250 phase 1 — rect structurel (et non DOMRect) : c'est le type rendu par
+    // la façade contentBounds(), qui cessera de mesurer le DOM en phase 3.
+    let bbox: { x: number, y: number, width: number, height: number } | undefined
     if (skip_text_in_bbox) {
       // Conversion monde→écran : les labels sont contre-scalés par
       // font_compensation = 1/getZoomScale() (zoom LIVE), donc débordement monde
@@ -1453,22 +1454,19 @@ export class Class_DrawingArea {
       // live (molette depuis le dernier fit) et fausser la réserve — d'autant
       // plus visible quand le fit collapse à ~1e-4 (grand user_scale).
       const k_live = this.getZoomScale()
-      const full_bbox = this.d3_selection_elements_group?.node()?.getBBox()
-      // On masque TOUTES les parties de label qui vivent dans le repère zoomé avec la
-      // compensation 1/k (police verrouillée) — sinon elles dominent le getBBox et le
-      // fit diverge / sous-estime :
-      //  - <text> (labels simples + textPath des flux) ;
-      //  - <foreignObject class="element_fo"> (labels rich-text #1232) ;
-      //  - leurs fonds <rect class="name_label_bg / value_label_bg"> qui portent le
-      //    MÊME transform scale(1/k) et la même taille que le label.
-      // Ne masquer que les <text>/.element_fo laissait le fond gonfler la bbox (cas
-      // Cartofob : rect element_fo_background scale ~2) → débordement non réservé →
-      // labels qui dépassent au (re)chargement en cadrage figé.
-      const hidden_texts = this.d3_selection_elements_group?.selectAll<SVGGraphicsElement, unknown>(
-        'text, .element_fo, .name_label_bg, .value_label_bg')
-      hidden_texts?.style('display', 'none')
-      bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
-      hidden_texts?.style('display', null)
+      // OS#1250 phase 1 — bounds du contenu (labels INCLUS) via la façade caméra.
+      const full_bbox = this.contentBounds() ?? undefined
+      // OS#1250 phase 3a — bounds des FORMES (labels exclus) calculés depuis le MODÈLE.
+      //
+      // Avant, on masquait en DOM tout ce qui vit dans le repère zoomé avec la
+      // compensation 1/k (<text>, <foreignObject class="element_fo">, et leurs fonds
+      // .name_label_bg/.value_label_bg qui portent le MÊME scale(1/k)), on mesurait, puis
+      // on restaurait — deux calculs de layout et une mutation du DOM pour le mesurer.
+      // Le modèle donne directement les formes, sans toucher au rendu : par construction
+      // il n'inclut aucun label, donc plus rien à masquer ni à oublier de masquer (le
+      // fond des labels rich-text avait justement été oublié une première fois, cas
+      // Cartofob → débordement non réservé).
+      bbox = Camera.contentBoundsFromModel(this) ?? undefined
       if (full_bbox && bbox) {
         label_overflow_left = Math.max(0, bbox.x - full_bbox.x) * k_live
         label_overflow_right = Math.max(0, (full_bbox.x + full_bbox.width) - (bbox.x + bbox.width)) * k_live
@@ -1476,49 +1474,14 @@ export class Class_DrawingArea {
         label_overflow_bottom = Math.max(0, (full_bbox.y + full_bbox.height) - (bbox.y + bbox.height)) * k_live
       }
     } else {
-      bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
+      // OS#1250 phase 1 — même mesure qu'avant, via la façade caméra.
+      bbox = this.contentBounds() ?? undefined
     }
 
     if (bbox == undefined)
       return
-    // Issue #165 — Anti-divergence : la legend stick_to_drawing est contre-
-    // scalée par 1/k_fit dans son transform (cf. Legend.applyPosition). Sa
-    // bbox locale est donc démultipliée par le même facteur, et l'inclure
-    // ici ferait diverger les fits successifs comme pour les <text>. On
-    // l'exclut quand la compensation est active.
-    if (!skip_text_in_bbox && this.legend.is_visible && this.legend.stick_to_drawing) {
-      const legendBbox = this.d3_selection_legend?.node()?.getBBox()
-      if (legendBbox) {
-        // Une légende stick_to_drawing peut être glissée arbitrairement loin du
-        // contenu (souvent par accident, ou héritée d'une position obsolète).
-        // L'inclure inconditionnellement gonflait la bbox de cadrage : l'auto-fit
-        // gardait alors une zone géante impossible à rapetisser, la légende
-        // restant hors écran sans retour possible. On ne l'inclut donc dans le
-        // cadrage que si elle est proche du contenu (à fit_margin près) ; sinon
-        // on fitte uniquement sur les éléments.
-        const tol = this._fit_margin
-        const legend_near_content =
-          legendBbox.x <= bbox.x + bbox.width + tol &&
-          legendBbox.x + legendBbox.width >= bbox.x - tol &&
-          legendBbox.y <= bbox.y + bbox.height + tol &&
-          legendBbox.y + legendBbox.height >= bbox.y - tol
-        if (legend_near_content) {
-          // Calculer la bounding box englobante
-          const minX = Math.min(bbox.x, legendBbox.x)
-          const minY = Math.min(bbox.y, legendBbox.y)
-          const maxX = Math.max(bbox.x + bbox.width, legendBbox.x + legendBbox.width)
-          const maxY = Math.max(bbox.y + bbox.height, legendBbox.y + legendBbox.height)
-
-          // Créer une nouvelle bbox combinée
-          bbox = {
-            x: minX,
-            y: minY,
-            width: maxX - minX,
-            height: maxY - minY
-          } as DOMRect
-        }
-      }
-    }
+    // OS#1254 — plus de cas particulier légende : ses zones sont des conteneurs
+    // ordinaires, déjà couverts par la mesure du contenu ci-dessus.
 
     // Bounding box with no element -> reset to fresh-diagram state (full fitting window,
     // scale 1, origin at top-left). Needed e.g. when switching A3/A4/A5 -> free on an
@@ -1689,6 +1652,11 @@ export class Class_DrawingArea {
         this._zoom_width = 2 * half_view_w
         this._zoom_height = 2 * half_view_h
       }
+      // OS#1250 phase 5 — le calage du canvas sur la vue centrée qui se trouvait ici
+      // (phase 2) a disparu : il ne servait qu'à neutraliser le constrain custom, qui
+      // re-plaquait le diagramme en haut-gauche. Le constrain est revenu au défaut d3
+      // sur des bounds de CONTENU : il centre donc lui-même quand le contenu tient dans
+      // la fenêtre, en accord avec le px/py calculé plus bas (center_h/center_v).
       // Refresh translateExtent BEFORE scaleTo/translateTo so d3-zoom's constrain
       // uses the current content bbox (e.g. when switching back from paper to free,
       // we don't want the stale paper bounds to clamp the transform).
@@ -1701,18 +1669,30 @@ export class Class_DrawingArea {
       //   y a du mou (contenu plus petit que la fenêtre). On ne se base PAS sur is_horiz :
       //   pour un board compact dans un grand modal, _width/_height valent la fenêtre →
       //   ratio_h==ratio_v → is_horiz=false → seul l'horizontal serait centré.
-      const center_h = this.is_unitary && bbox.width * new_k < this.window_fitting_width
-      const center_v = this.is_unitary && bbox.height * new_k < this.window_fitting_height
+      // OS#1250 phase 2 — `center_on_content` ouvre ce centrage (jusque-là réservé au
+      // board unitaire) au recentrage explicite du diagramme principal. C'est le
+      // mécanisme éprouvé : on centre sur les axes où le contenu a du mou, en laissant
+      // le constrain inerte. Le mode papier est exclu — son ancrage haut-gauche est
+      // voulu (cf. le constrain custom, ajouté pour que A3/A4/A5 ne parte pas du coin).
+      const may_center = (this.is_unitary || !!center_on_content) && !this.is_paper_mode
+      const center_h = may_center && bbox.width * new_k < this.window_fitting_width
+      const center_v = may_center && bbox.height * new_k < this.window_fitting_height
+      // OS#1250 phase 4 — la branche par défaut ancre le coin haut-gauche du CONTENU à la
+      // marge. Elle y plaçait l'origine du CANVAS (`- _background_d3_groups_shift_x * k`,
+      // soit `min(0, bbox.x - marge)`) : le contenu flottait donc à son décalage monde par
+      // rapport à l'origine, ce qui n'a plus de sens sans canvas. Les deux convergent de
+      // toute façon, le constrain (actif sur les bounds du CONTENU depuis la phase 5)
+      // clampant le contenu dans l'extent écran déjà rétréci de fit_margin/2.
       const px = unitary_center_node
         ? this.window_fitting_width / 2 - cnx * new_k
         : center_h
           ? (this.window_fitting_width - bbox.width * new_k) / 2 - bbox.x * new_k
-          : this._fit_margin / 2 + label_overflow_left - this._background_d3_groups_shift_x * new_k
+          : this._fit_margin / 2 + label_overflow_left - bbox.x * new_k
       const py = unitary_center_node
         ? this.window_fitting_height / 2 + this.getNavBarHeight() - cny * new_k
         : center_v
           ? (this.window_fitting_height - bbox.height * new_k) / 2 - bbox.y * new_k + this.getNavBarHeight()
-          : this._fit_margin / 2 + this.getNavBarHeight() + label_overflow_top - this._background_d3_groups_shift_y * new_k
+          : this._fit_margin / 2 + this.getNavBarHeight() + label_overflow_top - bbox.y * new_k
       // Échelle + translation appliquées ensemble (constrain d3 préservé, cf. _applyFitCamera).
       // px/py ci-dessus ne lisent pas le transform live → réordonnancement sans effet.
       this._applyFitCamera(new_k, px, py)
@@ -1731,7 +1711,7 @@ export class Class_DrawingArea {
         // des labels dans la zone visible (sous la top bar, marge à gauche).
         if (this._font_size_locked) {
           this._updateScrollbars()
-          this._zoomListener.translateTo(this.d3_selection_zoom_area, 0, 0, [px, py])
+          this._anchorCamera(0, 0, px, py)
           // Le ré-ancrage ci-dessus change le transform APRÈS le drawBackground/drawGrid
           // initiaux : on les redessine pour que le fond et la grille suivent le contenu.
           this.drawBackground()
@@ -1777,11 +1757,8 @@ export class Class_DrawingArea {
     this._sankey.containers_list.forEach(c => {
       c.drawNameLabel()
     })
-    // Legend : pas de compensation par-attribut (font-size hardcodée à
-    // _legend_police partout). À la place, on contre-scale son groupe racine
-    // via Legend.applyPosition() qui lit k_fit. Suffit de re-déclencher la
-    // pose du transform.
-    this._legend.applyPosition()
+    // OS#1254 — la légende est faite de conteneurs ordinaires ('legend-*'),
+    // couverts par la boucle ci-dessus : plus de compensation dédiée.
   }
 
   /**
@@ -2156,76 +2133,115 @@ export class Class_DrawingArea {
     }
   }
 
-  public recenter(force: boolean = false) {
-    if (!this.to_recenter) return
+  /**
+   * OS#1250 phase 2 — NORMALISATION des coordonnées monde. Migration PONCTUELLE
+   * des fichiers antérieurs à 0.92, dont le cadrage d'origine reposait sur le
+   * recentrage mutant fait au chargement (invariant #1231 : ils doivent
+   * toujours s'ouvrir cadrés).
+   *
+   * C'est le SEUL endroit qui déplace encore le monde. Le code ci-dessous est
+   * celui de l'ancien recenter(), extrait tel quel : il ramène le contenu près
+   * de l'origine. Il tourne après le premier draw (cf. ApplicationData.fromJSON),
+   * donc la bbox DOM est disponible — la mesure depuis le MODÈLE viendra en
+   * phase 3.
+   */
+  public normalizeLegacyWorldCoordinates() {
+    if (!this._needs_legacy_normalization) return
+    this._needs_legacy_normalization = false // migration ponctuelle
     // In paper mode, positions are already computed for the format — don't shift
     if (this.is_paper_mode) return
-    // Verrou de taille (#1240) : une fois le cadrage figé (_locked_fit_dirty=false),
-    // un changement de dataTag/viewTag/niveau NE DOIT plus rien recadrer. recenter()
-    // décale les positions ET force un areaAutoFit (force_when_locked) — donc un
-    // reflow visible à chaque sélection, ce qui contredit le verrou. On le neutralise
-    // pour ces recadrages AUTOMATIQUES. Exceptions : le tout premier recenter
-    // (chargement, dirty=true, cf. ApplicationData.fromJSON draw→recenter→draw) qui
-    // établit le cadrage initial, et le bouton « recentrer » explicite (force=true).
-    if (this._size_locked && !this._locked_fit_dirty && !force) return
     const bbox = this.d3_selection_elements_group?.node()?.getBBox()
     if (!bbox) return
     if ((bbox.width == 0) && (bbox.height == 0)) {
       return
     }
 
+    // Dimensions du canvas visées par le décalage. Locales : areaAutoFit les
+    // recalcule de toute façon (même formule, cf. son corps) juste après, via le
+    // recenter() de fin.
     const new_lefter_x = Math.min(0, bbox.x - default_DA_marging)
     const new_righter_x = Math.max(this.window_fitting_width, bbox.x + bbox.width + default_DA_marging)
-    this.width = new_righter_x - new_lefter_x
+    const canvas_width = new_righter_x - new_lefter_x
 
     const new_upper_y = Math.min(0, bbox.y - default_DA_marging)
     const new_bottom_y = Math.max(this.window_fitting_height, bbox.y + bbox.height + default_DA_marging)
-    this.height = new_bottom_y - new_upper_y
+    const canvas_height = new_bottom_y - new_upper_y
 
-
-    this._elements_d3_groups_shift_x = (new_lefter_x - bbox.x) + (this.width - bbox.width) / 2
-    this._elements_d3_groups_shift_y = (new_upper_y - bbox.y) + (this.height - bbox.height) / 2
+    const shift_x = (new_lefter_x - bbox.x) + (canvas_width - bbox.width) / 2
+    const shift_y = (new_upper_y - bbox.y) + (canvas_height - bbox.height) / 2
     this.sankey.nodes_list.forEach(n => {
-      n.position_x += this._elements_d3_groups_shift_x
-      n.position_y += this._elements_d3_groups_shift_y
+      n.position_x += shift_x
+      n.position_y += shift_y
       // #1231 — La position persistée d'un nœud est son CENTRE (_center_x/_center_y, cf.
-      // centerForPersistence). recenter() ne décale que le coin ; sans ce report, le centre
-      // stocké reste périmé et le nœud « revient » à sa place pré-recenter au rechargement
-      // (régression visible sur les vieux fichiers v0.91 qui forcent un recenter au load).
-      n.translateStoredCenter(this._elements_d3_groups_shift_x, this._elements_d3_groups_shift_y)
-      if (n.value_label_position_x) n.value_label_position_x += this._elements_d3_groups_shift_x
-      if (n.value_label_position_y) n.value_label_position_y += this._elements_d3_groups_shift_y
-      if (n.name_label_position_x) n.name_label_position_x += this._elements_d3_groups_shift_x
-      if (n.name_label_position_y) n.name_label_position_y += this._elements_d3_groups_shift_y
+      // centerForPersistence). Le décalage ne touche que le coin ; sans ce report, le centre
+      // stocké reste périmé et le nœud « revient » à sa place d'origine au rechargement
+      // (régression visible sur les vieux fichiers v0.91).
+      n.translateStoredCenter(shift_x, shift_y)
+      if (n.value_label_position_x) n.value_label_position_x += shift_x
+      if (n.value_label_position_y) n.value_label_position_y += shift_y
+      if (n.name_label_position_x) n.name_label_position_x += shift_x
+      if (n.name_label_position_y) n.name_label_position_y += shift_y
     })
     this.sankey.links_list.forEach(n => {
-      if (n.value_label_position_x) n.value_label_position_x += this._elements_d3_groups_shift_x
-      if (n.value_label_position_y) n.value_label_position_y += this._elements_d3_groups_shift_y
-      if (n.name_label_position_x) n.name_label_position_x += this._elements_d3_groups_shift_x
-      if (n.name_label_position_y) n.name_label_position_y += this._elements_d3_groups_shift_y
+      if (n.value_label_position_x) n.value_label_position_x += shift_x
+      if (n.value_label_position_y) n.value_label_position_y += shift_y
+      if (n.name_label_position_x) n.name_label_position_x += shift_x
+      if (n.name_label_position_y) n.name_label_position_y += shift_y
     })
     this.sankey.nodes_list.forEach(n => {
       n.draw()
     })
     this.sankey.containers_list.forEach(n => {
-      n.position_x += this._elements_d3_groups_shift_x
-      n.position_y += this._elements_d3_groups_shift_y
+      n.position_x += shift_x
+      n.position_y += shift_y
     })
     this.sankey.containers_list.forEach(n => {
       n.draw()
     })
-    if (this.legend.stick_to_drawing) {
-      this.legend.position_x += this._elements_d3_groups_shift_x
-      this.legend.position_y += this._elements_d3_groups_shift_y 
-      this.legend.draw()
+    // OS#1254 — les zones de la légende sont des conteneurs, décalées ci-dessus.
+    // Reporter aussi la position d'apparition (cadre pas encore généré).
+    this.legend.initial_position = {
+      x: this.legend.initial_position.x + shift_x,
+      y: this.legend.initial_position.y + shift_y
     }
 
-    // recenter a décalé les positions et redessiné les éléments : la bbox reflète
-    // désormais le layout FINAL. En mode verrouillé on recalcule donc ici un fit
-    // VERTICAL sur ces positions définitives (et on lève le drapeau dirty), ce qui
-    // fige le bon cadrage — y compris dans les flux sans draw ultérieur. Sinon, fit
-    // normal (heuristique horiz/vert).
-    this.areaAutoFit(this._size_locked ? false : undefined, this._size_locked)
+    // Les positions sont définitives : on cadre dessus (force = le verrou de taille
+    // ne doit pas empêcher le cadrage initial d'un fichier legacy).
+    this.recenter(true)
+  }
+
+  /**
+   * OS#1250 phase 2 — recenter est désormais une opération de CAMÉRA : il cadre
+   * le contenu, il ne le DÉPLACE plus.
+   *
+   * Avant, il décalait `position_x/y` de tous les nœuds, les centres persistés
+   * (#1231), les positions de labels, les containers et la légende — donc un
+   * clic sur « recentrer » modifiait le document, et une opération de navigation
+   * touchait la persistance. Ce décalage ne survit que comme migration ponctuelle
+   * des fichiers < 0.92 (normalizeLegacyWorldCoordinates).
+   *
+   * L'ancien garde `if (!this.to_recenter) return` a disparu avec le protocole :
+   * cf. `_needs_legacy_normalization` pour le bug de drapeau collant qu'il
+   * causait. Le calcul de canvas (width/height) a lui aussi disparu : areaAutoFit
+   * le refait avec la même formule juste en dessous.
+   */
+  public recenter(force: boolean = false) {
+    // In paper mode, positions are already computed for the format — don't refit
+    if (this.is_paper_mode) return
+    // Verrou de taille (#1240) : une fois le cadrage figé (_locked_fit_dirty=false),
+    // un changement de dataTag/viewTag/niveau NE DOIT plus rien recadrer, sinon
+    // reflow visible à chaque sélection. On neutralise donc ces recadrages
+    // AUTOMATIQUES. Exceptions : le tout premier cadrage (chargement, dirty=true)
+    // et le bouton « recentrer » explicite (force=true).
+    if (this._size_locked && !this._locked_fit_dirty && !force) return
+
+    // En mode verrouillé on recalcule un fit VERTICAL et on lève le drapeau dirty,
+    // ce qui fige le bon cadrage — y compris dans les flux sans draw ultérieur.
+    // Sinon, fit normal (heuristique horiz/vert).
+    // center_on_content : c'est CE que « recentrer » veut dire. Le centrage venait
+    // auparavant du décalage du MONDE (contenu recentré dans un canvas plaqué en
+    // haut-gauche) ; il devient un paramètre du fit — donc de la caméra.
+    this.areaAutoFit(this._size_locked ? false : undefined, this._size_locked, true)
     if (this._size_locked) {
       this._locked_fit_dirty = false
       // Le recentrage (auto au 1er rendu, ou bouton « recentrer ») rétablit le
@@ -2290,6 +2306,12 @@ export class Class_DrawingArea {
    * de d3-zoom (load-bearing pour le ré-ancrage des labels en police verrouillée, #165) ;
    * _updateScrollbars doit avoir été appelé AVANT (il pose le translateExtent lu par le constrain).
    */
+  /** OS#1250 phase 1 — ré-ancrage sans changement d'échelle (cf. Camera.anchorCamera). */
+  private _anchorCamera(wx: number, wy: number, px: number, py: number): void {
+    Camera.anchorCamera(this, wx, wy, px, py)
+  }
+
+
   private _applyFitCamera(k: number, px: number, py: number): void {
     Camera.applyFitCamera(this, k, px, py)
   }
@@ -2307,37 +2329,47 @@ export class Class_DrawingArea {
    * ou le ré-ancrage (#165) — le canvas figé, lui, ne couvre plus la fenêtre après un
    * ré-ancrage ou quand le contenu est plus petit qu'elle.
    */
+  /**
+   * OS#1250 phase 4 — CANVAS INFINI : bornes du fond et de la grille en mode libre.
+   *
+   * C'est exactement le viewport projeté en coordonnées monde : le fond couvre ce qu'on
+   * voit, ni plus ni moins. Il n'y a plus de « canvas » — ce rectangle fini, dimensionné
+   * sur la fenêtre puis unionné ici, n'existait que pour être ancré par le constrain
+   * custom (supprimé en phase 5). Le fond suivait donc une géométrie dont personne
+   * n'avait plus besoin, et grossissait au fil des pans.
+   *
+   * Le résultat dépend de la caméra (et non de l'inverse) : c'est le sens du modèle.
+   * Marge de sécurité d'un demi-viewport de chaque côté pour absorber les pans/zooms
+   * entre deux redraws (le zoom n'applique qu'un transform ; le fond n'est redessiné
+   * qu'en différé, cf. eventZoom) sans laisser apparaître de bande vide.
+   */
   private _freeBgBounds(): { x: number, y: number, w: number, h: number } {
-    let x0 = this._background_d3_groups_shift_x
-    let y0 = this._background_d3_groups_shift_y
-    let x1 = x0 + this._zoom_width
-    let y1 = y0 + this._zoom_height
     const node = this.d3_selection_zoom_area?.node()
-    if (node) {
-      const t = d3.zoomTransform(node)
-      if (t.k) {
-        const fm = this._fit_margin / 2
-        const navH = this.getNavBarHeight()
-        // Coins écran du viewport (haut-gauche / bas-droite) projetés en coords monde.
-        const tl = CameraMath.screenToWorld(t, fm, navH + fm)
-        const br = CameraMath.screenToWorld(t, fm + this.window_fitting_width, navH + fm + this.window_fitting_height)
-        x0 = Math.min(x0, tl.x)
-        y0 = Math.min(y0, tl.y)
-        x1 = Math.max(x1, br.x)
-        y1 = Math.max(y1, br.y)
-      }
+    const fm = this._fit_margin / 2
+    const navH = this.getNavBarHeight()
+    const vw = this.window_fitting_width
+    const vh = this.window_fitting_height
+    if (!node) return { x: 0, y: 0, w: vw, h: vh }
+    const t = d3.zoomTransform(node)
+    if (!t.k) return { x: 0, y: 0, w: vw, h: vh }
+    const tl = CameraMath.screenToWorld(t, fm, navH + fm)
+    const br = CameraMath.screenToWorld(t, fm + vw, navH + fm + vh)
+    const pad_x = (br.x - tl.x) / 2
+    const pad_y = (br.y - tl.y) / 2
+    return {
+      x: tl.x - pad_x,
+      y: tl.y - pad_y,
+      w: (br.x - tl.x) + 2 * pad_x,
+      h: (br.y - tl.y) + 2 * pad_y
     }
-    return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }
   }
 
   protected drawBackground() {
     // Clean if needed
     this.d3_selection_bg?.selectAll('.bg').remove()
-    // Bornes du fond : en mode papier, le canvas figé (taille papier). En mode libre,
-    // l'union canvas ∪ viewport (cf. _freeBgBounds) pour remplir toute la fenêtre.
-    const b = this.is_paper_mode
-      ? { x: this._background_d3_groups_shift_x, y: this._background_d3_groups_shift_y, w: this._zoom_width, h: this._zoom_height }
-      : this._freeBgBounds()
+    // OS#1250 phase 4 — bornes du fond. Mode papier : la PAGE, rect fixe en coordonnées
+    // monde (cf. paper_world_rect). Mode libre : le viewport projeté (canvas infini).
+    const b = this.is_paper_mode ? this.paper_world_rect : this._freeBgBounds()
     // Draw background (fill only — the editable-canvas border is drawn separately
     // on the SVG root via _updateViewportBorder so it stays anchored to the viewport
     // and doesn't slide off-screen when the user pans content).
@@ -2524,7 +2556,6 @@ export class Class_DrawingArea {
     this.sankey.visible_nodes_list.forEach(n => n.setEventsListeners())
     this.sankey.visible_links_list.forEach(n => n.setEventsListeners())
     this.sankey.visible_containers_list.forEach(n => n.setEventsListeners())
-    this._legend.setEventsListeners()
     this.application_data.menu_configuration.updateAllComponentsRelatedToToolbar()
   }
 
@@ -2534,7 +2565,6 @@ export class Class_DrawingArea {
     this.sankey.visible_nodes_list.forEach(n => n.setEventsListeners())
     this.sankey.visible_links_list.forEach(n => n.setEventsListeners())
     this.sankey.visible_containers_list.forEach(n => n.setEventsListeners())
-    this._legend.setEventsListeners()
     this.application_data.menu_configuration.updateAllComponentsRelatedToToolbar()
   }
 
@@ -2587,7 +2617,6 @@ export class Class_DrawingArea {
     this.sankey.visible_nodes_list.forEach(n => n.setEventsListeners())
     this.sankey.visible_links_list.forEach(n => n.setEventsListeners())
     this.sankey.visible_containers_list.forEach(n => n.setEventsListeners())  // drag event is disabled in edition mode so we have to reset eventListener when we switch mode
-    this._legend.setEventsListeners()
     this.application_data.menu_configuration.updateAllComponentsRelatedToToolbar()
     //this.containers_list.forEach(lab => lab.setEventsListeners())
   }
@@ -2614,8 +2643,8 @@ export class Class_DrawingArea {
   }
 
   public get sankey() { return this._sankey }
-  public get legend(): ClassTemplate_Legend { return this._legend }
-  public set legend(value: ClassTemplate_Legend) { this._legend = value }
+  public get legend(): Class_LegendConfig { return this._legend }
+  public set legend(value: Class_LegendConfig) { this._legend = value }
   public get ghost_link() { return this._ghost_link }
   public set ghost_link(value) { this._ghost_link = value }
 
@@ -2665,8 +2694,8 @@ export class Class_DrawingArea {
   // Read-only exposure of the canvas origin shifts so consumers (e.g. SVG export)
   // can align the export viewport on the actual content origin instead of (0,0)
   // when areaAutoFit has pushed content to negative coordinates.
-  public get background_shift_x(): number { return this._background_d3_groups_shift_x }
-  public get background_shift_y(): number { return this._background_d3_groups_shift_y }
+  // OS#1250 phase 4 — background_shift_x/y supprimés : ils n'exposaient l'origine du
+  // canvas que pour l'export, qui s'ancre désormais sur celle du CONTENU (contentBounds).
 
   public get height() { return this._height }
   public set height(_: number) {
@@ -3146,6 +3175,17 @@ export class Class_DrawingArea {
    * contenu, il donne le translateExtent de d3-zoom et l'échelle des scrollbars. En mode papier
    * c'est la page ancrée en (0,0) — et non le fond décalé.
    */
+  /**
+   * OS#1250 phase 4 — la PAGE, rect fixe en coordonnées monde. Le mode papier n'est
+   * plus un « canvas » à ancrer : c'est un rectangle comme un autre, qui participe aux
+   * bounds (cf. Class_ViewportChrome.updateScrollbars) et sert de bornes au fond/grille.
+   * Origine (0,0) par construction : les positions du mode papier sont calculées pour
+   * le format.
+   */
+  public get paper_world_rect(): { x: number, y: number, w: number, h: number } {
+    return { x: 0, y: 0, w: this._width, h: this._height }
+  }
+
   public get pannable_canvas_rect(): { x0: number, y0: number, x1: number, y1: number } {
     if (this.is_paper_mode) {
       return { x0: 0, y0: 0, x1: this._width, y1: this._height }

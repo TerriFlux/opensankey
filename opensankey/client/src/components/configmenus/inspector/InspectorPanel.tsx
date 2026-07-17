@@ -65,7 +65,6 @@ const targetNoun = (
  */
 function readSelectionCounts(app_data: Class_ApplicationData): Type_SelectionCounts {
   const da = app_data.drawing_area
-  const legend_selected = da.selected_elements_list.some(e => e === da.legend)
   // #1243 — le titre EST une zone de texte (Class_ContainerElement.is_title) :
   // le cliquer au canvas le sélectionne déjà. On le compte à part pour que
   // l'inspecteur le nomme « Titre » et lui serve ses réglages propres
@@ -76,7 +75,12 @@ function readSelectionCounts(app_data: Class_ApplicationData): Type_SelectionCou
     nodes: da.selected_nodes_list.length,
     links: da.selected_links_list.length,
     containers: containers.filter(c => !c.is_title).length,
-    legend: legend_selected,
+    // OS#1254 — la légende n'est plus un objet unique sélectionnable : c'est un
+    // GÉNÉRATEUR (drawing_area.legend = Class_LegendConfig) qui produit des
+    // zones de texte. Celles-ci se sélectionnent comme des zones ordinaires et
+    // tombent donc dans `containers` ci-dessus. Les PARAMÈTRES du générateur
+    // vivent dans l'inspecteur de la Vue (onglet Légende).
+    legend: false,
     title: title_selected
   }
 }

@@ -100,12 +100,18 @@ export class Class_ViewportChrome {
       let bbox: DOMRect
       try { bbox = gN.getBBox() } catch { return null }
       const has_bbox = bbox.width !== 0 || bbox.height !== 0
-      // Union with the canvas rect so the pannable extent matches translateExtent.
-      const canvas = da.pannable_canvas_rect
-      const x0 = has_bbox ? Math.min(bbox.x, canvas.x0) : canvas.x0
-      const y0 = has_bbox ? Math.min(bbox.y, canvas.y0) : canvas.y0
-      const x1 = has_bbox ? Math.max(bbox.x + bbox.width, canvas.x1) : canvas.x1
-      const y1 = has_bbox ? Math.max(bbox.y + bbox.height, canvas.y1) : canvas.y1
+      // OS#1250 phase 5 — même définition du CONTENU que updateScrollbars (contenu ∪ page
+      // en mode papier), et surtout pas le pannable : le ratio de défilement du pouce doit
+      // porter sur ce que l'utilisateur voit, pas sur la marge de caméra.
+      const paper = da.is_paper_mode ? da.pannable_canvas_rect : null
+      const x0 = has_bbox ? (paper ? Math.min(bbox.x, paper.x0) : bbox.x) : (paper?.x0 ?? 0)
+      const y0 = has_bbox ? (paper ? Math.min(bbox.y, paper.y0) : bbox.y) : (paper?.y0 ?? 0)
+      const x1 = has_bbox
+        ? (paper ? Math.max(bbox.x + bbox.width, paper.x1) : bbox.x + bbox.width)
+        : (paper?.x1 ?? 0)
+      const y1 = has_bbox
+        ? (paper ? Math.max(bbox.y + bbox.height, paper.y1) : bbox.y + bbox.height)
+        : (paper?.y1 ?? 0)
       const r = svgN.getBoundingClientRect()
       return {
         screenW: (x1 - x0) * t.k,
@@ -191,15 +197,51 @@ export class Class_ViewportChrome {
     }
     const has_bbox = !!bbox && (bbox.width !== 0 || bbox.height !== 0)
 
-    // Constrain zoom pan: content bbox in world coords + usable viewport (excludes navbar / bottom bar).
-    // d3-zoom clamps translateBy/scaleBy so the user can't pan past the content edges.
-    // The translateExtent must include the "canvas" rectangle so the custom constrain
-    // (anchor top-left) aligns that canvas to the viewport's top-left.
-    const canvas = da.pannable_canvas_rect
-    const panX0 = has_bbox ? Math.min(bbox!.x, canvas.x0) : canvas.x0
-    const panY0 = has_bbox ? Math.min(bbox!.y, canvas.y0) : canvas.y0
-    const panX1 = has_bbox ? Math.max(bbox!.x + bbox!.width, canvas.x1) : canvas.x1
-    const panY1 = has_bbox ? Math.max(bbox!.y + bbox!.height, canvas.y1) : canvas.y1
+    // OS#1250 phase 5 — l'étendue pannable dérive du CONTENU, plus du canvas.
+    //
+    // Avant, elle unionnait la bbox avec le canvas (un rectangle dimensionné sur la
+    // fenêtre) parce que le constrain custom s'en servait pour ancrer en haut-gauche.
+    // Le constrain est revenu au défaut d3 : on lui donne des bounds de contenu élargis
+    // d'une marge GÉNÉREUSE, si bien que l'étendue reste plus grande que le viewport,
+    // que le constrain ne clampe plus et que le cadrage est piloté par le seul px/py du
+    // fit. La marge est proportionnelle au contenu (donc indépendante du zoom) : une
+    // marge exprimée en pixels écran varierait avec k et rendrait l'étendue instable.
+    //
+    // Mode papier : la page participe simplement aux bounds (pannable_canvas_rect vaut
+    // alors le rect de page en coordonnées monde). C'est ce qui remplace l'ancrage
+    // haut-gauche : on ne contraint plus la caméra, on inclut la page dans ce qu'elle
+    // doit pouvoir atteindre.
+    // Deux étendues DISTINCTES, et il ne faut pas les confondre :
+    //  - le CONTENU (contenu ∪ page en mode papier) : ce que l'utilisateur doit voir.
+    //    C'est lui qui pilote les scrollbars — elles ne doivent apparaître que s'il
+    //    déborde réellement de la fenêtre.
+    //  - le PANNABLE (contenu + marge généreuse) : jusqu'où la caméra peut aller.
+    //    Les confondre affichait les scrollbars en permanence, la marge faisant
+    //    croire à du contenu hors écran.
+    const paper = da.is_paper_mode ? da.pannable_canvas_rect : null
+    let cX0: number, cY0: number, cX1: number, cY1: number
+    if (has_bbox) {
+      cX0 = bbox!.x; cY0 = bbox!.y
+      cX1 = bbox!.x + bbox!.width; cY1 = bbox!.y + bbox!.height
+      if (paper) {
+        cX0 = Math.min(cX0, paper.x0); cY0 = Math.min(cY0, paper.y0)
+        cX1 = Math.max(cX1, paper.x1); cY1 = Math.max(cY1, paper.y1)
+      }
+    } else {
+      const fallback = paper ?? da.pannable_canvas_rect
+      cX0 = fallback.x0; cY0 = fallback.y0
+      cX1 = fallback.x1; cY1 = fallback.y1
+    }
+    // Pannable == contenu, SANS marge ajoutée. L'issue suggérait une « grande marge »,
+    // mais elle rend le constrain inerte : on peut alors pousser le diagramme entièrement
+    // hors de l'écran, sans plus rien pour le retenir. Le constrain d3 par défaut est donc
+    // laissé ACTIF sur les bounds du contenu :
+    //   - contenu plus petit que la fenêtre  -> il le centre (le custom l'ancrait en haut-gauche) ;
+    //   - contenu plus grand                 -> déplacement borné par ses bords, comme avant.
+    // La marge visuelle ne vient pas d'ici : l'`extent` ÉCRAN posé juste en dessous est déjà
+    // rétréci de fit_margin/2 sur les 4 côtés, donc le contenu ne colle jamais au bord.
+    const panX0 = cX0, panY0 = cY0
+    const panX1 = cX1, panY1 = cY1
     // Inset the viewport extent by fit_margin/2 so the constrain anchors the canvas
     // top-left at (fit_margin/2, navH + fit_margin/2) — leaving a symmetric margin
     // on the 4 sides (left/right/bottom = fit_margin/2; top = navbar + fit_margin/2).
@@ -212,13 +254,13 @@ export class Class_ViewportChrome {
     // enough for the initial draw and for empty-diagram resets to anchor correctly.
     if (!has_bbox) return
 
-    // Map the pannable extent (union content ∪ canvas — the same rect used for
-    // translateExtent above) to screen coordinates using the zoom transform, so the
-    // scrollbar reflects exactly what d3-zoom lets the user pan to.
+    // OS#1250 phase 5 — les scrollbars sont une vue dérivée de (contentBounds, caméra,
+    // viewport) : on projette l'étendue du CONTENU (et non le pannable, qui porte une
+    // marge délibérément généreuse). Elles ne s'affichent donc que si le contenu déborde
+    // vraiment de la fenêtre, pas dès qu'il reste de la marge à parcourir.
     const transform = d3.zoomTransform(svgNode)
-    // Coins de l'extent pannable (monde) projetés à l'écran via la caméra.
-    const scr_tl = CameraMath.worldToScreen(transform, panX0, panY0)
-    const scr_br = CameraMath.worldToScreen(transform, panX1, panY1)
+    const scr_tl = CameraMath.worldToScreen(transform, cX0, cY0)
+    const scr_br = CameraMath.worldToScreen(transform, cX1, cY1)
     const screenLeft = scr_tl.x
     const screenRight = scr_br.x
     const screenTop = scr_tl.y

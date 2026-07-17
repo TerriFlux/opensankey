@@ -33,6 +33,7 @@ import { NodeDrawShape } from './NodeDrawShape'
 import { Class_Handler } from './Handler'
 import { Class_BaseShape } from './Element'
 import { NodeEventsHandler } from './NodeEventsHandler'
+import { isLegendElementId } from './legendIds'
 
 export const default_selected_stroke_width = 3
 //export const label_margin = 0
@@ -639,6 +640,10 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     if (idx_n >= 0) this._attached_node.splice(idx_n, 1)
     const idx_c = node._attached_container.indexOf(this)
     if (idx_c >= 0) node._attached_container.splice(idx_c, 1)
+    // OS#1254 — désolidariser une zone d'un cadre de la légende (racine ou
+    // bloc de groupe) casse la mise en forme générée (markBroken est inerte
+    // pendant la régénération elle-même).
+    if (isLegendElementId(this.id)) this.drawing_area.legend.markBroken()
   }
 
   public dettachContFromNode(node: Class_NodeBase) {

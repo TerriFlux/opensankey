@@ -157,19 +157,12 @@ export function registerBaseInspectorSections(): void {
     render: (app_data) => <TitleConfig app_data={app_data} compact />
   })
 
-  // ---- Cible LEGEND ----------------------------------------------------------
-  // PROVISOIRE — ne pas investir ici : OS#1254 refond la légende en zones de
-  // texte générées. « La légende » cessera d'être un objet unique sélectionnable
-  // (ce seront des ZDT), donc cette cible et l'onglet Légende de la Vue seront à
-  // reprendre à la fusion avec ce chantier.
-  inspector_registry.register({
-    id: 'os.legend.config',
-    target: 'legend',
-    order: 10,
-    hue: 'style',
-    title: (app_data) => app_data.t('Menu.Config.title_legend'),
-    render: (app_data) => <LegendConfig app_data={app_data} compact />
-  })
+  // ---- Cible LEGEND : SUPPRIMÉE (OS#1254) ----------------------------------
+  // La légende n'est plus un objet unique sélectionnable : c'est un GÉNÉRATEUR
+  // (Class_LegendConfig) qui produit des zones de texte. Ces zones se
+  // sélectionnent comme des zones ordinaires -> cible `container`, rien de
+  // spécifique à enregistrer. Ses PARAMÈTRES vivent dans l'onglet Légende de la
+  // Vue (ci-dessous) — ce qui est cohérent : ils règlent la vue, pas un objet.
 
   // ---- Cible VIEW (aucune sélection) ---------------------------------------
   inspector_registry.register({
