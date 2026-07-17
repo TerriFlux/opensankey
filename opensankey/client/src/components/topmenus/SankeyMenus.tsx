@@ -1,4 +1,4 @@
-// ==================================================================================================
+﻿// ==================================================================================================
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
@@ -36,7 +36,6 @@ const DraggableComponent = Draggable as unknown as React.ComponentClass<Partial<
 import {
   Box,
   Button,
-  ButtonGroup,
   CloseButton,
   Divider,
   Drawer,
@@ -54,22 +53,22 @@ import { useMainZone, mainZoneRightReservedPx } from '../spreadsheet/MainZoneTab
 import { modalResolutionPNG, modalResolutionPDF } from './SankeyExports'
 import { MenuTopNavBar } from './MenuTop'
 import { TemplateGalleryPanel } from './SankeyTemplates'
-import { IType_DictHookRefSetterShowDialogComponents, keyTypeConfig, keyTypeElements, Type_AdditionalMenus, TOOLS_COLUMN_WIDTH_PX } from '../../types/MenuConfig'
-import { DrawingAreaConfig, LegendConfig, TitleConfig } from '../configmenus/SankeyMenuConfigurationLayout'
-import { LinkValueTypeSelector, MenuConfigurationLinksData } from '../configmenus/SankeyMenuConfigurationLinksData'
-import { SankeyContainerSelection, SankeyNodeSelection } from '../configmenus/MenuElementsSelection'
-import { MenuConfigurationAppearance } from '../configmenus/MenuElementsAppearance'
-import { WrapperContentConfig } from '../configmenus/MenuCommon'
+import { IType_DictHookRefSetterShowDialogComponents, Type_AdditionalMenus, TOOLS_COLUMN_WIDTH_PX, MENU_CONFIG_WIDTH_PCT, MENU_CONFIG_MIN_WIDTH_PX } from '../../types/MenuConfig'
+import { LinkValueTypeSelector } from '../configmenus/SankeyMenuConfigurationLinksData'
+import { InspectorPanel } from '../configmenus/inspector/InspectorPanel'
+import { default_font_size } from '../../css/Theme'
 import { useModelBinding } from '../../hooks/useModelBinding'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { UniversalFileConverter } from '../dialogs/PersistenceProcessDialog'
 import { FormatConfigStructure, } from '../dialogs/PersistenceProcessDialogConfigs'
-import { LabelRichTextEditor } from '../dialogs/RichTextEditor'
+import { LabelRichTextEditor, TooltipRichTextEditor } from '../dialogs/RichTextEditor'
 //import { MenuUnit } from '../configmenus/MenuElementsLabelValue'
 
-export const menu_config_width = 20
-export const menu_config_min_width_px = 420
+// #1243 — source de vérité déplacée dans MenuConfig (le mode épinglé calcule
+// sa réserve de largeur côté modèle) ; réexport pour compatibilité.
+export const menu_config_width = MENU_CONFIG_WIDTH_PCT
+export const menu_config_min_width_px = MENU_CONFIG_MIN_WIDTH_PX
 
 /**
  * Description placeholder
@@ -108,10 +107,22 @@ export const SankeyMenu = (
   // Centralise tous les chemins (bouton, Drawer onClose, raccourcis, filtre) qui passent
   // par ref_menu_opened.current[1], pour un comportement uniforme.
   const setConfigOpen = (open: boolean) => {
-    if (open && open !== show_nav) {
+    // #1243 — l'exclusivité config/filtres n'existait que parce que les deux
+    // sont des overlays au MÊME coin. Épinglé, le panneau est docké et réserve
+    // sa largeur : le tiroir de filtres se place à sa gauche, les deux
+    // cohabitent (indispensable à « Filtres > Sélectionner » qui alimente
+    // l'inspecteur — sinon on sélectionne à l'aveugle).
+    if (open && open !== show_nav && !menu_configuration.config_panel_pinned) {
       menu_configuration.ref_close_filter_drawer.current(false)
     }
     set_show_nav(open)
+    // #1243 — en mode épinglé, ouvrir/fermer change la RÉSERVE de largeur :
+    // pose l'état tout de suite (le render l'écrasera à l'identique) puis
+    // notifie la grande zone pour que le diagramme se recadre.
+    if (menu_configuration.config_panel_pinned) {
+      menu_configuration.ref_menu_opened.current = [open, setConfigOpen]
+      menu_configuration.notifyMainZone()
+    }
   }
 
   menu_configuration.ref_menu_opened.current = [show_nav, setConfigOpen]
@@ -183,18 +194,9 @@ export const SankeyMenu = (
       overflowY='auto'
       overflowX='hidden'
     >
-      {/* Sélecteur d'éléments à configurer (Flow/Node/Areas) — CONTEXTUEL : visible seulement quand
-          le panneau de config est ouvert. Ancré EN HAUT de la colonne, aligné avec le panneau de
-          config (ce sont des éléments « quoi configurer », distincts des outils canvas du bas) ; le
-          marginTop:auto du cluster ci-dessous crée volontairement un espace entre les deux.
-          extra_updater rafraîchit la colonne (surlignage) en plus du contenu du panneau. */}
-      {show_nav ? (
-        <ConfigMenuElementToConfig
-          app_data={app_data}
-          additional_menus={additionalMenus}
-          extra_updater={refreshToolsColumn}
-        />
-      ) : <></>}
+      {/* #1243 — l'axe « élément » est porté par la SÉLECTION : le sélecteur
+          d'éléments de la matrice a disparu de la colonne avec elle. Ne restent
+          ici que les outils de canvas (cluster collé en bas). */}
       {/* Cluster collé en bas (marginTop auto) : panneaux (config/filtre) + outils canvas. */}
       <Box
         marginTop='auto'
@@ -299,8 +301,32 @@ export const SankeyMenu = (
         </Box>
       }
 
+      {/* #1243 — mode ÉPINGLÉ : le panneau se docke à droite (comme le tableur)
+          et réserve sa largeur — la zone de dessin se recadre à gauche. Pour
+          l'édition intense ; le mode survol (Drawer overlay) reste le défaut. */}
+      {app_data.is_editable && menu_configuration.config_panel_pinned && show_nav ? (
+        <Box
+          className='config_panel_pinned'
+          position='fixed'
+          right={toolsReserve + 'px'}
+          top={app_data.drawing_area.getNavBarHeight() + 'px'}
+          bottom={app_data.drawing_area.getBottomBarHeight() + 'px'}
+          width={drawer_width_css}
+          zIndex={26}
+          bg='white'
+          borderLeft='1px solid #e2e8f0'
+          overflowY='auto'
+          overflowX='hidden'
+          padding='0.2rem'
+        >
+          <ConfigMenu
+            app_data={app_data}
+          />
+        </Box>
+      ) : <></>}
+
       {
-        app_data.is_editable ? <>
+        app_data.is_editable && !menu_configuration.config_panel_pinned ? <>
           <Drawer
             blockScrollOnMount={false}
             isOpen={show_nav}
@@ -337,7 +363,6 @@ export const SankeyMenu = (
               <DrawerBody style={{ overflowX: 'auto' }}>
                 <ConfigMenu
                   app_data={app_data}
-                  additional_menus={additionalMenus}
                 />
               </DrawerBody>
             </DrawerContent>
@@ -423,6 +448,10 @@ export const SankeyMenu = (
         minW={'25vw'}
         maxW={'25vw'}
       />
+      {/* #1243 — éditeur d'infobulle : le MÊME Rich Text Editor que les
+          libellés, pointé sur tooltip_text, en panneau draggable. L'onglet
+          Infobulle de l'inspecteur n'embarque qu'un texte simple + le bouton. */}
+      <TooltipRichTextEditor app_data={app_data} />
 
       {modal_support}
       {modal_resolution_png}
@@ -431,35 +460,30 @@ export const SankeyMenu = (
   )
 }
 
-const ConfigMenu = ({ app_data, additional_menus }: {
+// #1243 — Le panneau de configuration EST l'inspecteur piloté par la sélection.
+// La matrice type×élément (boutons Data/Formatting/Présentation × sélecteur
+// d'éléments + dict_config_windows) est déposée : son contenu vit désormais
+// dans les onglets de l'inspecteur (éléments + Vue), le panneau Filtres
+// (groupes de tags, vues, sélection par critères) et les gestes de canvas.
+const ConfigMenu = ({ app_data }: {
   app_data: Class_ApplicationData,
-  additional_menus: MutableRefObject<Type_AdditionalMenus>,
 }) => {
-  const { type_menu_configuration_selected, style_config } = app_data.menu_configuration
   // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
   useModelBinding(app_data.menu_configuration.ref_to_menu_config_updater)
 
-  const sizeBtn = document.getElementsByClassName('buttonGroupTypeConfig')[0]?.getBoundingClientRect().height ?? 30
   // Hauteur bornée à l'espace écran restant (panneau ancré).
-  const maxHConfig = 'calc(' + (window.innerHeight - (app_data.drawing_area.getNavBarHeight() + app_data.drawing_area.getBottomBarHeight() + sizeBtn + (app_data.drawing_area.fit_margin * 2))) + 'px - 0.8rem)'
+  const maxHConfig = 'calc(' + (window.innerHeight - (app_data.drawing_area.getNavBarHeight() + app_data.drawing_area.getBottomBarHeight() + (app_data.drawing_area.fit_margin * 2))) + 'px - 0.8rem)'
 
-  return <Box layerStyle='config_menu_layout' style={{
-    background: (style_config[type_menu_configuration_selected].theme),
+  return <Box style={{
+    background: 'white',
+    borderRadius: '5px',
+    padding: '0.4rem',
     height: '100%',
-    gridTemplateRows: 'auto 1fr auto',
-    alignContent: 'start'
+    fontSize: default_font_size,
+    color: '#444'
   }}>
-    <Box layerStyle='type_config_box' style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-      <ConfigMenuTypeConfig app_data={app_data} additional_menus={additional_menus} />
-    </Box>
     <Box
-      className='config_box'
-      layerStyle='config_box'
-      style={{
-        maxHeight: maxHConfig,
-        overflowY: 'auto',
-        overflowX: 'hidden'
-      }}
+      style={{ maxHeight: maxHConfig, overflowY: 'auto', overflowX: 'hidden' }}
       onMouseDownCapture={() => {
         // Auto-exit edition mode as soon as the user interacts with the configuration menu
         if (app_data.drawing_area.isInEditionMode()) {
@@ -467,205 +491,18 @@ const ConfigMenu = ({ app_data, additional_menus }: {
         }
       }}
     >
-      <ConfigContent app_data={app_data} additional_menus={additional_menus} />
+      <InspectorPanel app_data={app_data} />
     </Box>
-    {/* Sélecteur d'éléments : en éditeur il est rendu dans la colonne d'outils (contextuel) ; on ne le
-        garde dans le panneau qu'en publish/statique (pas de colonne d'outils là). */}
-    {app_data.is_static ? <Box layerStyle='element_box'>
-      <ConfigMenuElementToConfig app_data={app_data} additional_menus={additional_menus} />
-    </Box> : <></>}
   </Box>
 }
 
-/**
- * Buttons to choose what kind of configuration we want the menu to be.
- * For each kind of menu there is a set of configurable elements (node, flow, drawing area, ...)
- *
- * @param {*} { app_data, additional_menus }
- * @return {*}
- */
-const ConfigMenuTypeConfig = ({ app_data, additional_menus }: {
-  app_data: Class_ApplicationData,
-  additional_menus: MutableRefObject<Type_AdditionalMenus>
-}) => {
-  const { t } = app_data
-  const { type_menu_configuration_selected, ref_to_menu_config_updater } = app_data.menu_configuration
-  // Changer de type (Data / Formatting / Présentation) : rafraîchir le panneau ET la colonne d'outils.
-  // Le sélecteur d'éléments est rendu dans la colonne (contextuel) et ses boutons dépendent du type ;
-  // sans ce second updater, la colonne afficherait les éléments de l'ancien type.
-  const selectType = (key: keyTypeConfig) => {
-    app_data.menu_configuration.type_menu_configuration_selected = key
-    ref_to_menu_config_updater.current()
-    app_data.menu_configuration.ref_to_menu_updater.current()
-  }
-  return <ButtonGroup className='buttonGroupTypeConfig' spacing='0.2rem' style={{
-    border: '2px solid lightblue',
-    borderRadius: '4px',
-    background: 'white',
-    width: '100%'
-  }} >
-    <Button
-      className='button_type_config_data'
-      variant={type_menu_configuration_selected == 'data' ? 'button_type_config_activated' : 'button_type_config'}
-      onClick={() => selectType('data')}
-    >
-      {t('Menu.Config.type_data')}
-    </Button>
 
-    <Button
-      className='button_type_config_style'
-      variant={type_menu_configuration_selected == 'style' ? 'button_type_config_activated' : 'button_type_config'}
-      onClick={() => selectType('style')}
-    >
-      {t('Menu.Config.type_style')}
-    </Button>
-    {/* <Button variant={type_menu_configuration_selected == 'context' ? 'button_type_config_activated' : 'button_type_config'}
-      onClick={() => {
-        app_data.menu_configuration.type_menu_configuration_selected = 'context'
-        ref_to_menu_config_updater.current()
-      }}
-    >
-      {t('Menu.Config.type_context')}
-    </Button> */}
-    {Object.entries(additional_menus.current.additional_menu_type).map((el, id) => {
-      const keyType = el[0] as keyTypeConfig
-      return <Button key={'additional_type_config_' + id} variant={type_menu_configuration_selected == keyType ? 'button_type_config_activated' : 'button_type_config'}
-        onClick={() => selectType(keyType)}
-      >
-        {t('Menu.Config.' + el[1])}
-      </Button>
-    })}
-  </ButtonGroup>
-}
-
-
-/**
- * Return the content of displayed sub menus from a type of configuration
- *
- * @param {*} { app_data, additional_menus }
- * @return {*}
- */
-const ConfigContent = ({ app_data, additional_menus }:
-  { app_data: Class_ApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }) => {
-  const { t } = app_data
-  const { type_menu_configuration_selected, elements_configurable_selected } = app_data.menu_configuration
-  const elements_in_menu_configuration = elements_configurable_selected[type_menu_configuration_selected]
-
-  const dict_config_windows: { [x: string]: { [x: string]: JSX.Element } } = {
-    // Menus related to data config
-    data: {
-      // Le tableur (ex-reactgrid) a migré dans la grande zone (onglet "Tableur" de MainZoneTabs) ;
-      // il n'est plus exposé dans le panneau de config.
-      node: <WrapperContentConfig title={t('Menu.Config.title_node')}>
-        <SankeyNodeSelection app_data={app_data} />
-      </WrapperContentConfig>,
-
-      flow: <WrapperContentConfig title={t('Menu.Config.title_flow')} >
-        <MenuConfigurationLinksData app_data={app_data} />
-      </WrapperContentConfig>,
-
-      object: <WrapperContentConfig title={t('Menu.Config.element_object')}>
-        <SankeyContainerSelection app_data={app_data} />
-      </WrapperContentConfig>,
-    },
-    style: {
-      DA: <WrapperContentConfig title={t('Menu.Config.title_graph')}>
-        <>
-          <DrawingAreaConfig
-            app_data={app_data}
-            extra_background_element={additional_menus.current.extra_background_element}
-          />
-        </>
-      </WrapperContentConfig>,
-      legend: <WrapperContentConfig title={t('Menu.Config.title_legend')}>
-        <>
-          <LegendConfig app_data={app_data} />
-          <TitleConfig app_data={app_data} />
-        </>
-      </WrapperContentConfig>,
-      element: <WrapperContentConfig title={t('Menu.Config.title_elements')}>
-        <MenuConfigurationAppearance app_data={app_data} menu_for_style={false} />
-      </WrapperContentConfig>,
-    },
-
-    presentation: {
-      ...additional_menus.current.additional_new_menu_config_content.presentation
-    }
-  }
-  const content_empty_config = elements_in_menu_configuration.length == 0 ?
-    <>
-      <Box layerStyle='empty_config_text' textStyle='h2'><span>{t('Menu.empty_config')}</span> </Box>
-    </>
-    : <></>
-  return <>
-    {content_empty_config}
-    {elements_in_menu_configuration.map((el, i) => {
-      return <React.Fragment key={'content_config_' + i}>{dict_config_windows[type_menu_configuration_selected][el]}</React.Fragment>
-    })}
-  </>
-}
-
-
-export type typeButtonElementConfigurable = { [x: string]: { text: string, icon: JSX.Element, disabled: boolean } }
-
-/**
- * Component for selecting which configurable elements sub menu we want to display in <ConfigContent />
- *
- * @param {*} { app_data }
- * @return {*}
- */
-const ConfigMenuElementToConfig = ({ app_data, additional_menus, extra_updater }:
-  { app_data: Class_ApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus>, extra_updater?: () => void }) => {
-  const { t } = app_data
-  const { type_menu_configuration_selected, style_config, ref_to_menu_config_updater } = app_data.menu_configuration
-  const elements_buttons = style_config[type_menu_configuration_selected].elements_configurable
-
-  const dict_buttons_element_to_config: typeButtonElementConfigurable = {
-    'element': { icon: app_data.icon_library.icon_object, text: t('Menu.Config.element_element'), disabled: false },
-    'object': { icon: app_data.icon_library.icon_object, text: t('Menu.Config.element_object0'), disabled: false },
-    'flow': { icon: app_data.icon_library.icon_flow, text: t('Menu.Config.element_flow'), disabled: false },
-    'DA': { icon: app_data.icon_library.icon_graph, text: t('Menu.Config.element_graph'), disabled: false },
-    'legend': { icon: app_data.icon_library.icon_graph, text: t('Menu.Config.element_legend'), disabled: false },
-    'node': { icon: app_data.icon_library.icon_node, text: t('Menu.Config.element_node'), disabled: false },
-    'data': { icon: app_data.icon_library.icon_tableau, text: t('Menu.Config.element_data'), disabled: false },
-
-    ...additional_menus.current.additional_menu_button_element_configurable
-  }
-
-  return <ButtonGroup spacing='0.2rem' orientation='vertical' style={{
-    border: 'none',
-    borderRadius: '4px',
-    background: 'white',
-    width: '2.7rem',
-    padding: '0.1rem',
-  }}>
-    {
-      elements_buttons.filter(el => el in dict_buttons_element_to_config).map((el, i) => {
-        const element_typed = el as keyTypeElements
-        const activated = app_data.menu_configuration.elements_configurable_selected[type_menu_configuration_selected].includes(element_typed)
-        return <Button
-          key={'btn_element_' + i}
-          isDisabled={dict_buttons_element_to_config[el].disabled}
-          variant={activated ? 'button_config_element_activated' : 'button_config_element'}
-          onClick={() => {
-            app_data.menu_configuration.toggleElementInConfigEdition(type_menu_configuration_selected, element_typed)
-            ref_to_menu_config_updater.current()
-            extra_updater?.()
-          }}
-        >
-          {dict_buttons_element_to_config[el].icon}
-          <Box
-            style={{ fontSize: '0.5rem'}}
-            as='span'
-            padding='0rem 0.0rem 0rem 0.0rem'
-          >
-            {dict_buttons_element_to_config[el].text}
-          </Box>
-        </Button>
-      })
-    }
-  </ButtonGroup>
-}
+// #1243 — La matrice type×élément est DÉPOSÉE : ConfigMenuTypeConfig (boutons
+// Data/Formatting/Présentation), ConfigContent (dict_config_windows),
+// ConfigMenuElementToConfig (sélecteur d'éléments) et le type
+// `typeButtonElementConfigurable` de ses boutons sont supprimés. Leur contenu
+// vit dans l'inspecteur (onglets par cible), le panneau Filtres (groupes de
+// tags, vues, sélection par critères) et les gestes de canvas.
 
 /**
  *

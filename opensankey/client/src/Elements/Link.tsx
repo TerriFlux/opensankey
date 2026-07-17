@@ -1049,8 +1049,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
         // CTRL (or CMD on Mac)
         if (event.ctrlKey || event.metaKey) {
           this.addOrRemoveLinkFromSelection()
-          this.drawing_area.application_data.menu_configuration.elements_configurable_selected.data = ['flow']
-          this.drawing_area.application_data.menu_configuration.elements_configurable_selected.style = ['element']
+          // #1243 — matrice déposée : l'inspecteur dérive sa cible de la sélection.
           this.drawing_area.application_data.menu_configuration.ref_to_menu_config_updater.current()
           this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
         }
@@ -2305,6 +2304,18 @@ export class Class_LinkElement extends Class_LinkAttribute {
    */
   public get isTapered() {
     return this.valueCurrentTarget !== null && this.thicknessSource !== this.thicknessTarget
+  }
+
+  /**
+   * OS#1250 phase 3 — points de contrôle du tracé, en coordonnées MONDE.
+   *
+   * Exposés pour borner le flux SANS mesurer le DOM : une Bézier est contenue dans
+   * l'enveloppe convexe de ses points de contrôle, donc ces points (élargis de la
+   * demi-épaisseur) majorent le tracé — y compris les flux de recyclage, qui bouclent
+   * franchement hors du segment source→cible.
+   */
+  public get control_points_position() {
+    return this._link_control_points.control_points_position
   }
 
   public get position_x_start() {

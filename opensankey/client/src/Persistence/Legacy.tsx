@@ -2757,6 +2757,32 @@ const normalizeName = (name: string) => {
 
 
 /**
+ * Rétro-portage de `use_colors` sur les groupes de tags (fichiers < 0.92).
+ *
+ * Avant l'introduction de `use_colors`, c'est `show_legend` qui commandait à la
+ * fois l'affichage de la légende ET l'application de la palette du groupe. Le
+ * rétro-portage existait déjà dans `convert_tags`, mais uniquement sur le
+ * chemin `fromJSON_pre_0_9` : un fichier estampillé exactement '0.9' ou '0.91'
+ * passait au travers et chargeait `use_colors = false` (défaut de classe). Les
+ * tags y restaient sélectionnés sans colorer quoi que ce soit, et le mode
+ * `auto` des flux, qui filtre les tags des extrémités sur `group.use_colors`,
+ * retombait sur la couleur propre du flux (gris du style par défaut).
+ *
+ * Uniquement un défaut : un groupe portant déjà `use_colors` (fichier réenregistré
+ * après l'introduction du champ) n'est jamais réécrit.
+ */
+export const backfillTagGroupUseColors = (data: Type_JSON) => {
+  (['nodeTags', 'fluxTags', 'dataTags', 'levelTags'] as const).forEach(tagg_key => {
+    const taggs = data[tagg_key] as { [_: string]: Type_JSON } | undefined
+    if (!taggs) return
+    Object.values(taggs).forEach(tagg => {
+      if (tagg && typeof tagg === 'object' && tagg['use_colors'] === undefined)
+        tagg['use_colors'] = (tagg['show_legend'] === true) || (tagg['show_legend'] === 1)
+    })
+  })
+}
+
+/**
  * Convert JSON from App that are previous to 0.91,
  *
  * Since 0.91 :

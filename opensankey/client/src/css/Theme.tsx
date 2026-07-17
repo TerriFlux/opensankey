@@ -2720,18 +2720,44 @@ const layerStyles = {
   menuconfigpanel_grid: {
     display: 'grid',
     gridRowGap: '0.25rem',
+    minWidth: 0,
   },
 
+  // minWidth:0 (ici et sur les cellules) : sans lui l'auto-minimum d'un item de
+  // grille vaut son min-content, et un libellé long élargit tout le panneau au
+  // lieu de se faire ellipser.
   menuconfigpanel_row_droplist: {
     display: 'grid',
     gridTemplateColumns: '1fr 10fr 1fr 1fr',
     gridColumnGap: '0.25rem',
+    minWidth: 0,
+    '& > *': { minWidth: 0 },
   },
 
   menuconfigpanel_row_droplist_simple: {
     display: 'grid',
     gridColumnGap: '0.25rem',
     gridTemplateColumns: '2fr 6fr 1fr',
+    minWidth: 0,
+    '& > *': { minWidth: 0 },
+  },
+
+  // Ligne de sélection compacte : sélecteur + filtres par tag + œil sur UNE
+  // ligne. Les colonnes sont calculées par le composant (elles dépendent des
+  // contrôles réellement rendus) — surtout pas figées ici, sinon une cellule
+  // absente décale tout (c'est le bug de _simple, où l'œil héritait du 6fr).
+  // position:relative + .dropdown-container en static : le panneau déroulant du
+  // rmsc s'ancre alors sur la LIGNE et s'ouvre sur toute la largeur du panneau,
+  // au lieu d'être bridé à la largeur du sélecteur fermé.
+  menuconfigpanel_row_droplist_inline: {
+    display: 'grid',
+    gridColumnGap: '0.25rem',
+    alignItems: 'center',
+    position: 'relative',
+    minWidth: 0,
+    '& > *': { minWidth: 0 },
+    '.rmsc .dropdown-container': { position: 'static' },
+    '.rmsc .dropdown-content': { left: 0, right: 0, width: 'auto' },
   },
 
   menuconfigpanel_zdt_row_droplist: {
@@ -2999,13 +3025,24 @@ const layerStyles = {
   // de la lib est `position:absolute; z-index:1` : sans ce relèvement il passe
   // derrière les sections de menu qui suivent (qui créent leurs propres
   // contextes d'empilement) et paraît tronqué juste après « Tout sélectionner ».
+  // Un nom d'élément long ne doit JAMAIS élargir le panneau : le rmsc ellipse
+  // son en-tête, mais seulement si la cellule de grille peut rétrécir — d'où
+  // minWidth:0 (l'auto-minimum d'un item de grille vaut son min-content).
+  // Idem pour la liste déroulante : un nom sans espace (« Bois d'œuvre---Prod »)
+  // n'a aucun point de césure et pousse le scroll horizontal du tiroir.
   submenuconfig_droplist: {
     width: '100%',
+    minWidth: 0,
+    maxWidth: '100%',
     '.rmsc .dropdown-content': {
       zIndex: 'dropdown',
+      maxWidth: '100%',
     },
     '.rmsc .options': {
       maxHeight: '18rem',
+    },
+    '.rmsc .select-item': {
+      overflowWrap: 'anywhere',
     },
   },
 

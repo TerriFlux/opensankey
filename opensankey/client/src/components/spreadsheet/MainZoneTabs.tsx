@@ -75,9 +75,9 @@ export const mainZoneUnitaryRect = (
   const docBottomMode = docInApp && DOC_LAYOUTS_BOTTOM.includes(mc.main_zone_doc_layout)
   const sheetGroupShown = mc.main_zone_show_spreadsheet || docWithSheet
 
-  // Largeur de la colonne d'outils rétractable (extrême droite) : la colonne droite tableur/doc se
-  // décale d'autant vers la gauche pour ne pas passer dessous.
-  const toolsW = mc.getToolsColumnWidthPx()
+  // Chrome droit (colonne d'outils + panneau de config épinglé #1243) : la colonne droite
+  // tableur/doc se décale d'autant vers la gauche pour ne pas passer dessous.
+  const toolsW = mc.getRightChromeReservedPx()
   const rightSlotW = spreadsheetWidthPx(mc.main_zone_split_ratio)
   const left = showDiagram ? (W - rightSlotW - toolsW) : 0
   const width = showDiagram ? rightSlotW : (W - toolsW)
@@ -216,9 +216,10 @@ export const MainZoneTabs = (
   const bottomH = drawing_area.getBottomBarHeight ? drawing_area.getBottomBarHeight() : 0
 
   const W = window.innerWidth
-  // Largeur réservée à l'extrême droite par la colonne d'outils rétractable (0 si fermée/publish).
-  // La colonne droite (tableur/doc/unitaire) et les séparateurs se décalent d'autant vers la gauche.
-  const toolsW = app_data.menu_configuration.getToolsColumnWidthPx()
+  // Chrome réservé à l'extrême droite : colonne d'outils rétractable + panneau de config
+  // épinglé (#1243). La colonne droite (tableur/doc/unitaire) et les séparateurs se
+  // décalent d'autant vers la gauche.
+  const toolsW = app_data.menu_configuration.getRightChromeReservedPx()
   const contentTop = navH
   const contentBottom = window.innerHeight - bottomH
   const contentH = Math.max(0, contentBottom - contentTop)
@@ -263,6 +264,14 @@ export const MainZoneTabs = (
   // On saute le premier run (montage) : App.tsx fait déjà le dessin initial. Ne redessiner que
   // sur un VRAI changement de disposition, sinon double draw/toast « zone de dessin prête ».
   const didMount = useRef(false)
+  // #1243 — le panneau de config ÉPINGLÉ fait partie du même système de fenêtrage :
+  // sa réserve entre dans les deps pour déclencher le re-fit du diagramme comme
+  // un toggle de tableur (épingler/dé-épingler, ouvrir/fermer en mode épinglé).
+  const configPinnedW = app_data.menu_configuration.getConfigPanelPinnedReservedPx()
+  // Idem pour la galerie de modèles épinglée : même système de fenêtrage, donc
+  // sa réserve doit elle aussi déclencher le re-fit (sinon on épingle et le
+  // dessin garde sa largeur, la galerie se posant par-dessus).
+  const galleryPinnedW = app_data.menu_configuration.getTemplateGalleryPinnedReservedPx()
   useEffect(() => {
     if (!didMount.current) {
       didMount.current = true
@@ -273,7 +282,7 @@ export const MainZoneTabs = (
     // showUnitary : ouvrir/fermer le panneau change la réserve de largeur droite quand il est le seul
     // occupant de la colonne (pas de tableur/doc) -> re-fit. Le RATIO unitaire ne change pas la largeur
     // réservée (partage vertical interne), il est donc volontairement hors deps (pas de re-fit au drag).
-  }, [showDiagram, showSpreadsheet, showDoc, showUnitary, unitaryDetached, docDetached, docLayout, splitRatio, docBottomPx])
+  }, [showDiagram, showSpreadsheet, showDoc, showUnitary, unitaryDetached, docDetached, docLayout, splitRatio, docBottomPx, configPinnedW, galleryPinnedW])
 
   // --- Séparateur vertical : largeur de la colonne droite ---
   const onVDividerDown = (e: React.MouseEvent) => {

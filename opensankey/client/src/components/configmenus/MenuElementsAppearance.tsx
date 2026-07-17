@@ -86,6 +86,15 @@ import { unit_constants } from '../../Elements/LinkValues'
 import { NodeIOReorganizer } from '../dialogs/NodeIOReorganizer'
 import { STRAIGHT_MENU_MODES, straightActionKey, Type_StraightMenuMode } from '../dialogs/ContextLinkConfig'
 
+// #1243 — Retrait des LIBELLÉS artisanaux quand l'attribut est hérité de la
+// cascade de styles. Les fabriques (ElementAttrSetter2Cols, OverloadedButtonGroup,
+// wrappers) le font déjà pour leurs contrôles ; ce helper couvre les lignes
+// construites à la main (label Box + contrôle custom).
+// Tri-état : seul `false` (attribut STYLABLE hérité de la cascade) met en
+// retrait ; `undefined` (donnée, ou édition de style) laisse intact.
+const dimLabelSx = (is_overloaded: boolean | undefined) =>
+  (is_overloaded === false ? { opacity: 0.65 } : undefined)
+
 /**
  * Widget d'angle du texte du label (−180°..180°) : remplace l'ancien toggle
  * "texte vertical". Icône (texte incliné) en guise de libellé + champ numérique
@@ -484,7 +493,8 @@ const LabelContentComponent = ({
   prefix,
   displayMode,
   menu_style: _menu_style,
-  refreshParentComponent
+  refreshParentComponent,
+  always_show_sections = false
 }: {
   app_data: Class_ApplicationData
   elements: ElementsType
@@ -492,6 +502,9 @@ const LabelContentComponent = ({
   displayMode: 'simple_text' | 'rich_text' | 'icon' | 'image' | 'value'
   menu_style: boolean
   refreshParentComponent: () => void
+  // #1243 — inspecteur : les sections à œil (Fond…) restent éditables même
+  // décochées, comme la visibilité au niveau de l'onglet.
+  always_show_sections?: boolean
 }) => {
   const { t } = app_data
   const labelValues = elements.length > 0
@@ -560,9 +573,10 @@ const LabelContentComponent = ({
       </>
       )}
       <Box as='span' layerStyle='options_2_1_2cols'>
-        {/* Section TEXT */}
+        {/* Section TEXT — la TYPOGRAPHIE (police, graisse…) n'a pas de sens
+            pour une icône ou une image (#1243). */}
 
-        <InputIndicatorWrapper
+        {displayMode !== 'icon' && displayMode !== 'image' && <InputIndicatorWrapper
           isOverloaded={isElementAttributeOverloaded(
             elements,
             `${prefix}_font_family` as keyof typeof BASE_LABEL_CONFIG,
@@ -587,7 +601,7 @@ const LabelContentComponent = ({
               <option style={{ fontFamily: d }} key={'ff-' + d} value={d}>{d}</option>
             ))}
           </Select>
-        </InputIndicatorWrapper>
+        </InputIndicatorWrapper>}
         {(displayMode === 'simple_text' || displayMode === 'value') && (<>
           <ConfigMenuNumberInput
             t={app_data.t}
@@ -698,7 +712,9 @@ const LabelContentComponent = ({
       {displayMode === 'icon' && (
         <>
           <Box layerStyle='menuconfigpanel_row_2cols'>
-            <Box as='span' layerStyle='menuconfigpanel_option_name'>{t('Menu.sections.icon_catalog')}</Box>
+            <Box as='span' layerStyle='menuconfigpanel_option_name'
+              sx={dimLabelSx(isElementAttributeOverloaded(base_elements, 'icon_icon_name' as keyof typeof BASE_LABEL_CONFIG, BASE_LABEL_CONFIG))}
+            >{t('Menu.sections.icon_catalog')}</Box>
             <Button
               variant='menuconfigpanel_option_button'
               onClick={() => {
@@ -711,7 +727,9 @@ const LabelContentComponent = ({
           </Box>
 
           <Box layerStyle='menuconfigpanel_row_3cols'>
-            <Box as='span' layerStyle='menuconfigpanel_option_name'>{t('Menu.sections.icon_color')}</Box>
+            <Box as='span' layerStyle='menuconfigpanel_option_name'
+              sx={dimLabelSx(isElementAttributeOverloaded(base_elements, 'icon_color' as keyof typeof BASE_LABEL_CONFIG, BASE_LABEL_CONFIG))}
+            >{t('Menu.sections.icon_color')}</Box>
             <MenuColorPicker
               initialColor={iconColor}
               onColorChange={(new_color) => {
@@ -749,7 +767,9 @@ const LabelContentComponent = ({
         <>
           <Divider />
           <Box layerStyle='menuconfigpanel_row_2cols'>
-            <Box as='span' layerStyle='menuconfigpanel_option_name'>{t('Menu.sections.image_source')}</Box>
+            <Box as='span' layerStyle='menuconfigpanel_option_name'
+              sx={dimLabelSx(isElementAttributeOverloaded(base_elements, prefix + '_image_src' as keyof typeof BASE_LABEL_CONFIG, BASE_LABEL_CONFIG))}
+            >{t('Menu.sections.image_source')}</Box>
             <Box as='span' layerStyle='options_2cols'>
               <Button
                 variant='menuconfigpanel_option_button_left'
@@ -948,7 +968,8 @@ const LabelContentComponent = ({
           unit_text='px'
           isOverloaded={isElementAttributeOverloaded(elements, prefix + '_' + String('box_width') as keyof typeof BASE_LABEL_CONFIG, BASE_LABEL_CONFIG)}
         />
-        <OverloadedButton
+        {/* Coupure des mots longs : du TEXTE — sans objet pour icône/image (#1243). */}
+        {displayMode !== 'icon' && displayMode !== 'image' && <OverloadedButton
           elements={elements}
           config={BASE_LABEL_CONFIG}
           attributePath={attributePath}
@@ -958,7 +979,7 @@ const LabelContentComponent = ({
           onClick={() => { labelValues.wrap_long_words = !labelValues.wrap_long_words }}
         >
           <span style={{ fontSize: '0.85em', fontWeight: 600 }}>ab-</span>
-        </OverloadedButton>
+        </OverloadedButton>}
       </Box>
       {(displayMode === 'simple_text' && selection.hasNodes && prefix !== 'value_label' || menu_for_style && prefix == 'name_label') ? <Box as='span' layerStyle='options_2cols'>
         <ElementAttrSetterTextInput2Cols
@@ -1000,7 +1021,12 @@ const LabelContentComponent = ({
               <Box as='span'
                 layerStyle='menuconfigpanel_option_name'
                 display="flex"
-                alignItems="center">{t('Menu.sections.link_label_position')}</Box>
+                alignItems="center"
+                sx={(() => {
+                  const a = isElementAttributeOverloaded(links_elements, `${prefix}_on_path` as keyof typeof LINKS_LABEL_SPECIFIC_CONFIG, LINKS_LABEL_SPECIFIC_CONFIG)
+                  const b = isElementAttributeOverloaded(links_elements, `${prefix}_pos_auto` as keyof typeof LINKS_LABEL_SPECIFIC_CONFIG, LINKS_LABEL_SPECIFIC_CONFIG)
+                  return dimLabelSx(a === undefined ? undefined : (a || b))
+                })()}>{t('Menu.sections.link_label_position')}</Box>
               <OverloadedButton
                 elements={links_elements}
                 config={LINKS_LABEL_SPECIFIC_CONFIG}
@@ -1030,7 +1056,9 @@ const LabelContentComponent = ({
           </Box>
           {prefix === 'name_label' && (<>
             <Box layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name'>
+              <Box layerStyle='menuconfigpanel_option_name'
+                sx={dimLabelSx(isElementAttributeOverloaded(links_elements, `${prefix}_text_source` as keyof typeof LINKS_LABEL_SPECIFIC_CONFIG, LINKS_LABEL_SPECIFIC_CONFIG))}
+              >
                 {t('Flux.labels.name_label_text_source')}
               </Box>
               <InputIndicatorWrapper
@@ -1053,7 +1081,9 @@ const LabelContentComponent = ({
             </Box>
             {linkLabelValues.text_source === 'tag' && (
               <Box layerStyle='menuconfigpanel_row_2cols'>
-                <Box layerStyle='menuconfigpanel_option_name'>
+                <Box layerStyle='menuconfigpanel_option_name'
+                  sx={dimLabelSx(isElementAttributeOverloaded(links_elements, `${prefix}_flux_tag_group_id` as keyof typeof LINKS_LABEL_SPECIFIC_CONFIG, LINKS_LABEL_SPECIFIC_CONFIG))}
+                >
                   {t('Flux.labels.name_label_tag_group')}
                 </Box>
                 <Select
@@ -1093,7 +1123,9 @@ const LabelContentComponent = ({
           : t('Noeud.labels.text_source.name_container')
         return <>
           <Box layerStyle='menuconfigpanel_row_2cols'>
-            <Box layerStyle='menuconfigpanel_option_name'>
+            <Box layerStyle='menuconfigpanel_option_name'
+              sx={dimLabelSx(isElementAttributeOverloaded(name_label_elements, 'name_label_source' as keyof typeof NAME_LABEL_CONFIG, NAME_LABEL_CONFIG))}
+            >
               {t('Noeud.labels.name_label_text_source')}
             </Box>
             <OSTooltip label={t('Noeud.labels.tooltips.name_label_text_source')}>
@@ -1123,7 +1155,9 @@ const LabelContentComponent = ({
           </Box>
           {source === 'custom' && displayMode === 'simple_text' ? (
             <Box layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name'>
+              <Box layerStyle='menuconfigpanel_option_name'
+                sx={dimLabelSx(isElementAttributeOverloaded(name_label_elements, 'name_label_text' as keyof typeof NAME_LABEL_CONFIG, NAME_LABEL_CONFIG))}
+              >
                 {t('Noeud.labels.name_label_text')}
               </Box>
               <Input
@@ -1137,7 +1171,9 @@ const LabelContentComponent = ({
           ) : null}
           {source === 'tag' ? (
             <Box layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name'>
+              <Box layerStyle='menuconfigpanel_option_name'
+                sx={dimLabelSx(isElementAttributeOverloaded(name_label_elements, 'name_label_tag_group_id' as keyof typeof NAME_LABEL_CONFIG, NAME_LABEL_CONFIG))}
+              >
                 {t('Noeud.labels.name_label_tag_group')}
               </Box>
               <Select
@@ -1154,7 +1190,9 @@ const LabelContentComponent = ({
           ) : null}
           {source === 'ancestor' && dimension_groups.length > 1 ? (
             <Box layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name'>
+              <Box layerStyle='menuconfigpanel_option_name'
+                sx={dimLabelSx(isElementAttributeOverloaded(name_label_elements, 'name_label_dimension_id' as keyof typeof NAME_LABEL_CONFIG, NAME_LABEL_CONFIG))}
+              >
                 {t('Noeud.labels.name_label_dimension')}
               </Box>
               <Select
@@ -1187,7 +1225,7 @@ const LabelContentComponent = ({
           refreshUI={refreshParentComponent} />
         }
       >
-        {getShapeValues(elements, `${prefix}_background` as ShapePrefix, refreshParentComponent).visible && (<>
+        {(always_show_sections || getShapeValues(elements, `${prefix}_background` as ShapePrefix, refreshParentComponent).visible) && (<>
           <MarginEditor
             app_data={app_data}
             elements={elements}
@@ -1209,10 +1247,21 @@ const LabelContentComponent = ({
 // ✅ COMPOSANT PRINCIPAL UNIFIÉ
 export const MenuConfigurationAppearance = ({
   app_data,
-  menu_for_style
+  menu_for_style,
+  hide_selector = false,
+  active_tab,
+  hide_tabs = false
 }: {
   app_data: Class_ApplicationData
   menu_for_style: boolean
+  // #1243 — inspecteur : le sélecteur unifié est rendu une seule fois en tête de
+  // panneau ; on masque alors celui embarqué ici (doublon).
+  hide_selector?: boolean
+  // #1243 — inspecteur : l'onglet actif est piloté de l'EXTÉRIEUR (la rangée
+  // d'onglets de l'inspecteur), ce composant ne rend alors qu'un seul onglet.
+  active_tab?: 'shape' | 'name_label' | 'value_label' | 'icon' | 'stock'
+  // #1243 — masque la rangée d'onglets interne (l'inspecteur rend la sienne).
+  hide_tabs?: boolean
 }) => {
   const { t, drawing_area, menu_configuration, icon_library } = app_data
   const { sankey } = drawing_area
@@ -1224,7 +1273,11 @@ export const MenuConfigurationAppearance = ({
   // ✅ State pour l'onglet actif : 5 onglets
   type ActiveTab = 'shape' | 'name_label' | 'value_label' | 'icon' | 'stock'
   const [activeTab, setActiveTab] = useState<ActiveTab>('shape')
-  if (activeTab !== app_data.menu_configuration.tab_selected)
+  // #1243 — piloté de l'extérieur (inspecteur) : le prop gagne ; sinon on garde
+  // la synchronisation historique sur menu_configuration.tab_selected.
+  if (active_tab !== undefined) {
+    if (activeTab !== active_tab) setActiveTab(active_tab)
+  } else if (activeTab !== app_data.menu_configuration.tab_selected)
     setActiveTab(app_data.menu_configuration.tab_selected)
   // ✅ Récupération éléments
   const getAllSelectedElements = (): (Class_NodeElement | Class_LinkElement | Class_ContainerElement)[] => {
@@ -1325,11 +1378,22 @@ export const MenuConfigurationAppearance = ({
   const showContent = allElements.length > 0 || menu_for_style
   const container_element = elements[0] as Class_ContainerElement
   const options_selector_node_tied = !menu_for_style
-    ? app_data.drawing_area.sankey.nodes_list_sorted.map((node) => ({
-      'label': node.name,
-      'value': node.id,
-      selected: !selection.hasContainers ? false : selection.containers[0].attached_node.includes(node)
-    }))
+    ? [
+      ...app_data.drawing_area.sankey.nodes_list_sorted.map((node) => ({
+        'label': node.name,
+        'value': node.id,
+        selected: !selection.hasContainers ? false : selection.containers[0].attached_node.includes(node)
+      })),
+      // OS#1254 — un cadre peut aussi englober d'autres zones de texte (cas des
+      // blocs de la légende : titre + entrées d'un groupe de tags).
+      ...app_data.drawing_area.sankey.containers_list_sorted
+        .filter(c => !selection.hasContainers || c !== selection.containers[0])
+        .map((c) => ({
+          'label': '[ZDT] ' + c.name,
+          'value': c.id,
+          selected: !selection.hasContainers ? false : selection.containers[0].attached_node.includes(c)
+        }))
+    ]
     : []
   // Tied-frame options for the contextual node (excluding the node itself).
   const node_tied_element = selection.hasNodes ? selection.nodes[0] : undefined
@@ -1352,12 +1416,13 @@ export const MenuConfigurationAppearance = ({
       style={!showContent ? { minHeight: '18rem' } : undefined}
     >
       {/* ✅ SÉLECTEUR MULTI-TYPE */}
-      {!menu_for_style && (
+      {!menu_for_style && !hide_selector && (
         <SankeyMultiTypeSelectionSimple app_data={app_data} enabledTypes={['node', 'link', 'container', 'stock']} />
       )}
 
-      {/* ✅ ConfigMenuStyleElement */}
-      {!menu_for_style && allElements.length > 0 && (
+      {/* ✅ ConfigMenuStyleElement — masqué en mode inspecteur (hide_tabs) :
+          la portée « Styles » + cascade du panneau le remplace (#1243). */}
+      {!menu_for_style && !hide_tabs && allElements.length > 0 && (
         <ConfigMenuStyleElement
           app_data={app_data}
           selected_elements={base_elements}
@@ -1369,7 +1434,7 @@ export const MenuConfigurationAppearance = ({
       {/* ✅ 5 ONGLETS */}
       {showContent && (
         <>
-          <Box layerStyle='options_5cols'>
+          {!hide_tabs && <Box layerStyle='options_5cols'>
             <Button
               variant={activeTab === 'shape' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
               sx={{ paddingInline: '0.25rem', minWidth: 'auto' }}
@@ -1425,7 +1490,7 @@ export const MenuConfigurationAppearance = ({
                 {'Stock'}
               </Button>
             )}
-          </Box>
+          </Box>}
 
           {/* ========== ONGLET FORME ========== */}
           {activeTab === 'shape' && (
@@ -1492,7 +1557,12 @@ export const MenuConfigurationAppearance = ({
                       />
                       {selection.hasNodes || menu_for_style ? <>
                         <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                          <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.geometry')}</Box>
+                          {/* #1243 — libellé en retrait quand l'attribut est hérité de la
+                              cascade (les fabriques 2Cols le font ; ligne artisanale ici). */}
+                          <Box
+                            layerStyle='menuconfigpanel_option_name'
+                            sx={dimLabelSx(isElementAttributeOverloaded(nodes_elements, 'shape_position_type' as keyof typeof NODE_SHAPE_SPECIFIC_CONFIG, NODE_SHAPE_SPECIFIC_CONFIG))}
+                          >{t('Noeud.apparence.geometry')}</Box>
                           <OverloadedButtonGroup
                             elements={nodes_elements}
                             config={NODE_SHAPE_SPECIFIC_CONFIG}
@@ -1551,7 +1621,15 @@ export const MenuConfigurationAppearance = ({
                           />
                         </Box>
                         <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                          <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.anchor_align')}</Box>
+                          <Box
+                            layerStyle='menuconfigpanel_option_name'
+                            sx={(() => {
+                              // Deux attributs pour un libellé : hérité seulement si les deux le sont.
+                              const v = isElementAttributeOverloaded(nodes_elements, 'shape_anchor_align_vertical' as keyof typeof NODE_SHAPE_SPECIFIC_CONFIG, NODE_SHAPE_SPECIFIC_CONFIG)
+                              const h = isElementAttributeOverloaded(nodes_elements, 'shape_anchor_align_horizontal' as keyof typeof NODE_SHAPE_SPECIFIC_CONFIG, NODE_SHAPE_SPECIFIC_CONFIG)
+                              return dimLabelSx(v === undefined ? undefined : (v || h))
+                            })()}
+                          >{t('Noeud.apparence.anchor_align')}</Box>
                           <Box display='flex' alignItems='center' gap='2'>
                             <OverloadedButtonGroup
                               elements={nodes_elements}
@@ -1746,7 +1824,9 @@ export const MenuConfigurationAppearance = ({
                           <Divider />
                           <Box layerStyle='options_2cols'>
                             <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-                              <Box layerStyle='menuconfigpanel_option_name'>
+                              <Box layerStyle='menuconfigpanel_option_name'
+                                sx={dimLabelSx(isElementAttributeOverloaded(links_elements, 'shape_color_rule' as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG))}
+                              >
                                 {app_data.t('Flux.apparence.shape_color_rule')}
                                 <TooltipElementOverloaded
                                   prefix={'shape'} attributeKey={'color_rule'} elements={elements} config={LINK_SHAPE_SPECIFIC_CONFIG} t={app_data.t}
@@ -2061,7 +2141,9 @@ export const MenuConfigurationAppearance = ({
                       {/* Value of link local scale to override scale from DA, can be undefined */}
                       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
                         <OSTooltip label={t('Flux.apparence.tooltips.local_scale')}>
-                          <Box layerStyle='menuconfigpanel_option_name' >
+                          <Box layerStyle='menuconfigpanel_option_name'
+                            sx={dimLabelSx(isElementAttributeOverloaded(links_elements, 'local_link_scale', LINK_SHAPE_SPECIFIC_CONFIG))}
+                          >
                             {t('Flux.apparence.shape_local_link_scale')}
                           </Box>
                         </OSTooltip>
@@ -2113,7 +2195,9 @@ export const MenuConfigurationAppearance = ({
                           enfants. Pendant menu du clic droit « Rectitude ». */}
                       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
                         <OSTooltip label={t('Flux.apparence.tooltips.shape_straight_mode')}>
-                          <Box layerStyle='menuconfigpanel_option_name'>
+                          <Box layerStyle='menuconfigpanel_option_name'
+                            sx={dimLabelSx(isElementAttributeOverloaded(links_elements, 'shape_straight_mode' as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG))}
+                          >
                             {t('Flux.apparence.shape_straight_mode')}
                           </Box>
                         </OSTooltip>
@@ -2137,7 +2221,9 @@ export const MenuConfigurationAppearance = ({
                       </Box>
                       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
                         <OSTooltip label={t('Flux.apparence.tooltips.shape_straight_include_children')}>
-                          <Box layerStyle='menuconfigpanel_option_name'>
+                          <Box layerStyle='menuconfigpanel_option_name'
+                            sx={dimLabelSx(isElementAttributeOverloaded(links_elements, 'shape_straight_include_children' as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG))}
+                          >
                             {t('Flux.apparence.shape_straight_include_children')}
                           </Box>
                         </OSTooltip>
@@ -2251,6 +2337,19 @@ export const MenuConfigurationAppearance = ({
                                   containerElements.forEach(zdt => { zdt.dettachNodeFromCont(node) })
                                 }
                               })
+                              // OS#1254 — attache/détache aussi des zones de texte (un cadre
+                              // peut englober d'autres ZDT, cf. blocs de la légende). Garde
+                              // anti-cycle : jamais soi-même ni un cadre qui nous contient déjà.
+                              app_data.drawing_area.sankey.containers_list.forEach(cont => {
+                                containerElements.forEach(zdt => {
+                                  if (zdt === cont) return
+                                  if (entries_values.includes(cont.id)) {
+                                    if (!cont.attached_node.includes(zdt)) zdt.attachNodeToCont(cont)
+                                  } else {
+                                    zdt.dettachNodeFromCont(cont)
+                                  }
+                                })
+                              })
                               refreshAll()
                             }
                             const revert = () => {
@@ -2343,6 +2442,7 @@ export const MenuConfigurationAppearance = ({
               config={NAME_LABEL_CONFIG}
               prefix={'name_label'}
               refreshParentComponent={refreshAll}
+              compact={hide_tabs}
               rightComponent={<LabelDisplayModeSelector
                 prefix='name_label'
                 elements={elements}
@@ -2354,7 +2454,9 @@ export const MenuConfigurationAppearance = ({
               />
               }
             >
-              {nameLabelValues.is_visible && (
+              {/* #1243 (inspecteur) : le contenu reste éditable même invisible —
+                  on peut caler les réglages AVANT d'activer l'œil. */}
+              {(hide_tabs || nameLabelValues.is_visible) && (
                 <LabelContentComponent
                   app_data={app_data}
                   elements={elements}
@@ -2362,6 +2464,7 @@ export const MenuConfigurationAppearance = ({
                   displayMode={display_mode_name_label.current}
                   menu_style={menu_for_style}
                   refreshParentComponent={refreshAll}
+                  always_show_sections={hide_tabs}
                 />
               )}
             </MenuSectionCheckbox>
@@ -2375,8 +2478,9 @@ export const MenuConfigurationAppearance = ({
               config={VALUE_LABEL_CONFIG}
               prefix={'value_label'}
               refreshParentComponent={refreshAll}
+              compact={hide_tabs}
             >
-              {valueLabelValues.is_visible && (
+              {(hide_tabs || valueLabelValues.is_visible) && (
                 <LabelContentComponent
                   app_data={app_data}
                   elements={elements}
@@ -2384,6 +2488,7 @@ export const MenuConfigurationAppearance = ({
                   displayMode='value'
                   menu_style={menu_for_style}
                   refreshParentComponent={refreshAll}
+                  always_show_sections={hide_tabs}
                 />
               )}
             </MenuSectionCheckbox>
@@ -2391,37 +2496,51 @@ export const MenuConfigurationAppearance = ({
 
           {/* ========== ONGLET STOCK (SA#1229) ========== */}
           {activeTab === 'stock' && (<>
-            {selection.hasNodes && selection.nodes.some(n => n.has_stock) ? (<>
-              {/* Visibility of the node-like stock shape, independent of the
-                  legacy stock box label (stock_label_is_visible). */}
-              <Checkbox
-                isChecked={selection.nodes.find(n => n.has_stock)?.stock_shape_is_visible ?? false}
-                onChange={(e) => {
-                  selection.nodes.forEach(n => {
-                    if (n.has_stock) { n.stock_shape_is_visible = e.target.checked; n.draw() }
-                  })
-                  refreshAll()
-                }}
-              >
-                {'Afficher la forme de stock'}
-              </Checkbox>
-              <MenuSectionCheckbox
-                elements={elements}
-                attributePath='Noeud.labels'
-                attributeKey={'is_visible'}
-                config={STOCK_LABEL_CONFIG}
-                prefix={'stock_label'}
-                refreshParentComponent={refreshAll}
-              >
-                {stockLabelValues.is_visible && (
-                  <StockTabContent
-                    app_data={app_data}
-                    nodes={selection.nodes}
-                    refreshAll={refreshAll}
-                  />
-                )}
-              </MenuSectionCheckbox>
-            </>) : (
+            {selection.hasNodes && selection.nodes.some(n => n.has_stock) ? (
+              hide_tabs ? (
+                // #1243 (inspecteur) : les bascules Activé / Forme / Libellés
+                // vivent dans l'EN-TÊTE de l'onglet (InspectorStockTab) —
+                // ici uniquement le contenu, toujours éditable.
+                <StockTabContent
+                  app_data={app_data}
+                  nodes={selection.nodes}
+                  refreshAll={refreshAll}
+                  always_show_sections
+                />
+              ) : (<>
+                {/* Visibility of the node-like stock shape, independent of the
+                    legacy stock box label (stock_label_is_visible). */}
+                <Checkbox
+                  variant='menuconfigpanel_part_title_1_checkbox'
+                  icon={<CustomFaEyeCheckIcon />}
+                  isChecked={selection.nodes.find(n => n.has_stock)?.stock_shape_is_visible ?? false}
+                  onChange={(e) => {
+                    selection.nodes.forEach(n => {
+                      if (n.has_stock) { n.stock_shape_is_visible = e.target.checked; n.draw() }
+                    })
+                    refreshAll()
+                  }}
+                >
+                  {t('inspector.stock_shape_visible')}
+                </Checkbox>
+                <MenuSectionCheckbox
+                  elements={elements}
+                  attributePath='Noeud.labels'
+                  attributeKey={'is_visible'}
+                  config={STOCK_LABEL_CONFIG}
+                  prefix={'stock_label'}
+                  refreshParentComponent={refreshAll}
+                >
+                  {stockLabelValues.is_visible && (
+                    <StockTabContent
+                      app_data={app_data}
+                      nodes={selection.nodes}
+                      refreshAll={refreshAll}
+                    />
+                  )}
+                </MenuSectionCheckbox>
+              </>)
+            ) : (
               <Box as='span'>{'Sélectionnez un nœud portant un stock.'}</Box>
             )}
           </>)}
@@ -2434,6 +2553,7 @@ export const MenuConfigurationAppearance = ({
               config={ICON_LABEL_BASE_CONFIG}
               prefix={'icon'}
               refreshParentComponent={refreshAll}
+              compact={hide_tabs}
               rightComponent={<LabelDisplayModeSelector
                 prefix='icon'
                 app_data={app_data}
@@ -2445,7 +2565,7 @@ export const MenuConfigurationAppearance = ({
               />}
             >
               {
-                iconValues.is_visible && (
+                (hide_tabs || iconValues.is_visible) && (
                   <LabelContentComponent
                     app_data={app_data}
                     elements={elements}
@@ -2453,6 +2573,7 @@ export const MenuConfigurationAppearance = ({
                     displayMode={iconValues.is_icon ? 'icon' : 'image'}
                     menu_style={menu_for_style}
                     refreshParentComponent={refreshAll}
+                    always_show_sections={hide_tabs}
                   />
                 )
               }
@@ -2472,11 +2593,14 @@ export const MenuConfigurationAppearance = ({
 const StockTabContent = ({
   app_data,
   nodes,
-  refreshAll
+  refreshAll,
+  always_show_sections = false
 }: {
   app_data: Class_ApplicationData
   nodes: Class_NodeElement[]
   refreshAll: () => void
+  // #1243 — inspecteur : sections à œil toujours éditables (cf. LabelContentComponent).
+  always_show_sections?: boolean
 }) => {
   const firstNode = nodes[0]
   if (!firstNode) return <></>
@@ -2517,6 +2641,7 @@ const StockTabContent = ({
         displayMode='value'
         menu_style={false}
         refreshParentComponent={refresh}
+        always_show_sections={always_show_sections}
       />
     </Box>
   )
@@ -2698,12 +2823,16 @@ export const MenuShapeAttributes = ({
             ? shapeValues.box_width
             : labelValues.box_width
           const lock_tooltip = t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'width_locked')}`)
+          // Tri-état préservé : en édition de style (undefined) on ne force pas false.
+          const bw_overloaded = isElementAttributeOverloaded(elements, prefix + '_' + 'box_width' as keyof typeof BASE_SHAPE_CONFIG, BASE_SHAPE_CONFIG)
+          const bw_state = bw_overloaded === undefined ? undefined : (shapeValues.width_locked && bw_overloaded)
           return (
             <ElementAttrSetter2Cols
               attributePath={attributePath}
               attributeKey={'box_width'}
               config={BASE_SHAPE_CONFIG}
               prefix={prefix}
+              isOverloaded={bw_state}
               t={t}
             >
               <Box display='flex' alignItems='center' gap={1}>
@@ -2721,7 +2850,7 @@ export const MenuShapeAttributes = ({
                       shapeValues.box_width = value ?? 0
                     }
                   }}
-                  isOverloaded={shapeValues.width_locked && isElementAttributeOverloaded(elements, prefix + '_' + 'box_width' as keyof typeof BASE_SHAPE_CONFIG, BASE_SHAPE_CONFIG)}
+                  isOverloaded={bw_state}
                 />
                 <OSTooltip label={lock_tooltip}>
                   <Button

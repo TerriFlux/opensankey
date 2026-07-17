@@ -1,11 +1,13 @@
-import React, { useState, RefObject, useRef, ReactNode, MutableRefObject } from 'react'
+﻿import React, { useState, RefObject, useRef, ReactNode, MutableRefObject } from 'react'
 import {
   Drawer, Button, Collapse, DrawerContent, DrawerBody, Box, useDisclosure,
   Heading, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Text, Select, Checkbox, Switch,
   Menu, MenuButton, MenuList, MenuItem, HStack, VStack, Divider
 } from '@chakra-ui/react'
 import { CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
-import { OSMultiSelect, typeElementSelectable, CustomFaEyeCheckIcon, OSTooltip, ConfigMenuNumberInput } from '../configmenus/MenuCommon'
+import { OSMultiSelect, typeElementSelectable, CustomFaEyeCheckIcon, OSTooltip, ConfigMenuNumberInput, WrapperContentConfig } from '../configmenus/MenuCommon'
+import { filter_panel_registry } from './FilterPanelRegistry'
+import { ElementSelectionTool } from '../configmenus/MenuElementsSelection'
 import { useMainZone } from '../spreadsheet/MainZoneTabs'
 import { useModelBinding } from '../../hooks/useModelBinding'
 import { Class_ApplicationData } from '../../types/ApplicationData'
@@ -19,6 +21,10 @@ import { Class_NodeDimension, Type_DisaggregationKind } from '../../Elements/Nod
 import { Type_DisaggregationGap, const_default_position_x, const_default_position_y } from '../../types/Utils'
 
 const width_fitler_drawer = 270
+// #1243 — les onglets « Sélectionner » (liste + recherche) et « Éditer »
+// (groupes de tags, vues) accueillent des contenus bien plus riches que les
+// filtres : le tiroir s'élargit dans ces modes.
+const width_filter_drawer_edit = 420
 
 /**
  * Reconstruit les child links et redessine après un changement de sélection d'un
@@ -201,7 +207,6 @@ export const applyViewTagFilterRedraw = (app_data: Class_ApplicationData) => {
       n.position_y === const_default_position_y)
     if (needs_auto_layout) drawing_area.nodePositioning.computeAutoSankey(true, true)
   }
-  drawing_area.to_recenter = true
   drawing_area.recenter()
   drawing_area.draw()
 }
@@ -323,23 +328,47 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
       app_data.has_sankey_dev // « Toutes données » (dev) suffit à ouvrir le drawer
   }
   const [drawerOpen, setDrawerOpen] = useState(app_data.is_static)
+  // #1243 — deux modes : « Filtrer » (historique) et « Éditer » (groupes de
+  // tags, vues — relogés ici depuis la matrice, cf. règle R3). L'édition n'a
+  // pas de sens en publish/statique.
+  const [filterTab, setFilterTab] = useState<'filter' | 'select' | 'edit'>('filter')
+  // Sous-onglet actif de « Éditer » (un éditeur à la fois ; null = le premier).
+  const [edit_section_id, setEditSectionId] = useState<string | null>(null)
   // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
   useModelBinding(app_data.menu_configuration.ref_toolbar)
   // Abonnement à la grande zone : garde l'offset droit à jour quand la colonne d'outils change.
   // Le panneau est un overlay au-dessus de toute la grande zone (tableur/doc compris, zIndex 30) :
   // il ne s'écarte que de la colonne d'outils (zIndex 35, extrême droite), comme la config.
   useMainZone(app_data)
-  const toolsReserve = app_data.menu_configuration.getToolsColumnWidthPx()
+  // #1243 — chrome droit = colonne d'outils + panneau de config ÉPINGLÉ : ce
+  // tiroir s'en écarte pour se placer à leur gauche (cohabitation config/filtres).
+  const toolsReserve = app_data.menu_configuration.getRightChromeReservedPx()
   // En éditeur, le panneau de filtres s'ouvre à DROITE (à côté de la colonne d'outils, comme la config) ;
   // en publish/statique on garde l'ouverture historique à gauche (bouton flottant gauche).
   const drawer_on_right = !app_data.is_static
-  const width_drawer = (drawerOpen ? width_fitler_drawer + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin
+  // #1243 — sections « Éditer » injectées par les couches supérieures (OSP :
+  // groupes de tags, vues). Onglet masqué s'il n'y en a aucune (OS pur/publish).
+  const edit_sections = app_data.is_static ? [] : filter_panel_registry.getSections(app_data)
+  const has_edit_tab = edit_sections.length > 0
+  // #1243 — onglet « Sélectionner » : sélection par critères (type + tag +
+  // liste) pour les opérations groupées, l'inspecteur éditant ensuite la
+  // sélection obtenue. Éditeur uniquement (en publish on ne sélectionne pas).
+  const has_select_tab = !app_data.is_static
+  const has_tabs = has_edit_tab || has_select_tab
+  const in_edit_tab = has_edit_tab && filterTab === 'edit'
+  const in_select_tab = has_select_tab && filterTab === 'select'
+  const active_edit_section = edit_sections.find(s => s.id === edit_section_id) ?? edit_sections[0]
+  const drawer_width_px = (in_edit_tab || in_select_tab) ? width_filter_drawer_edit : width_fitler_drawer
+  const width_drawer = (drawerOpen ? drawer_width_px + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin
   // Ouvre/ferme le drawer de filtres. Comme la config, c'est un OVERLAY au-dessus de toute la
   // grande zone (diagramme, tableur, doc…) : il ne touche ni à l'état doc/tableur ni au cadrage.
   // Seule exclusivité conservée : le panneau de config (même emplacement à droite). Centralise
   // tous les chemins (bouton colonne, bouton flottant, Drawer onClose, ref_close_filter_drawer).
   const setFilterOpen = (open: boolean) => {
-    if (open && open !== drawerOpen) {
+    // #1243 — symétrique de setConfigOpen : on ne ferme la config que si elle
+    // est en OVERLAY (même coin). Épinglée, elle est dockée et réserve sa
+    // largeur : ce tiroir s'ouvre à sa gauche et les deux cohabitent.
+    if (open && open !== drawerOpen && !app_data.menu_configuration.config_panel_pinned) {
       app_data.menu_configuration.ref_menu_opened.current[1](false)
     }
     setDrawerOpen(open)
@@ -402,25 +431,117 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
         }}>
         <DrawerBody
           id='drawer_filter'
-          style={{ padding: '0', width: width_fitler_drawer }}
+          style={{ padding: '0', width: drawer_width_px }}
         >
-          <Box layerStyle='drawerFilterBox'>
-            {
-              (app_data.publish_options.data_type || app_data.publish_options.value_filter)
-                ? <FilterDisplay app_data={app_data} /> : <></>
-            }
-            {/* « Génération de vues » (view tags) déplacé dans la topbar
-                (cf. BannerViewTagTopbar) — retiré du tiroir de filtres. */}
-            {
-              app_data.publish_options.level_filter ? <LevelTagFilter app_data={app_data} /> : <></>
-            }
-            {
-              app_data.publish_options.node_filter ? <NodeTagGroupFilter app_data={app_data} level={false} /> : <></>
-            }
-            {
-              app_data.publish_options.data_filter ? <DataTagGroupFilter app_data={app_data} /> : <></>
-            }
-          </Box>
+          {/* #1243 — Filtrer / Éditer : les GROUPES de tags s'éditent là où ils
+              sont consommés (règle R3), l'inspecteur ne fait qu'assigner. */}
+          {has_tabs ? (
+            <Box style={{
+              display: 'grid',
+              gridTemplateColumns: `repeat(${1 + (has_select_tab ? 1 : 0) + (has_edit_tab ? 1 : 0)}, 1fr)`,
+              gap: '0.15rem', padding: '0.3rem 0.3rem 0'
+            }}>
+              <Button
+                size='xs'
+                variant={filterTab === 'filter'
+                  ? 'menuconfigpanel_option_button_activated'
+                  : 'menuconfigpanel_option_button'}
+                sx={{ paddingInline: '0.25rem', minWidth: 'auto' }}
+                title={app_data.t('Banner.fdn')}
+                onClick={() => setFilterTab('filter')}
+              >
+                {/* Libellé COURT : t('Banner.fdn') (« Légende et filtres »)
+                    écrase les autres onglets ; le texte long va au tooltip. */}
+                {app_data.t('filter_panel.filter')}
+              </Button>
+              {has_select_tab ? (
+                <Button
+                  size='xs'
+                  variant={filterTab === 'select'
+                    ? 'menuconfigpanel_option_button_activated'
+                    : 'menuconfigpanel_option_button'}
+                  sx={{ paddingInline: '0.25rem', minWidth: 'auto' }}
+                  title={app_data.t('filter_panel.select_tooltip')}
+                  onClick={() => setFilterTab('select')}
+                >
+                  {app_data.t('filter_panel.select')}
+                </Button>
+              ) : <></>}
+              {has_edit_tab ? (
+                <Button
+                  size='xs'
+                  variant={filterTab === 'edit'
+                    ? 'menuconfigpanel_option_button_activated'
+                    : 'menuconfigpanel_option_button'}
+                  sx={{ paddingInline: '0.25rem', minWidth: 'auto' }}
+                  onClick={() => setFilterTab('edit')}
+                >
+                  {app_data.t('filter_panel.edit')}
+                </Button>
+              ) : <></>}
+            </Box>
+          ) : <></>}
+          {in_select_tab ? (
+            // minHeight : la liste déroulante du sélecteur s'ouvre EN FLUX dans
+            // son conteneur ; sans hauteur réservée, le tiroir (height:fit-content)
+            // la rogne.
+            <Box layerStyle='drawerFilterBox' style={{ minHeight: '22rem' }}>
+              <WrapperContentConfig title={app_data.t('filter_panel.select_elements')}>
+                <ElementSelectionTool app_data={app_data} />
+              </WrapperContentConfig>
+            </Box>
+          ) : in_edit_tab ? (
+            // Sous-onglets : empiler les 5 éditeurs (groupes de tags, vues)
+            // rendait le bas du tiroir inatteignable. Un contenu à la fois,
+            // comme la rangée d'onglets de l'inspecteur.
+            <Box layerStyle='drawerFilterBox' style={{ display: 'grid', gap: '0.3rem' }}>
+              <Box style={{
+                display: 'grid',
+                gridTemplateColumns: `repeat(${edit_sections.length}, 1fr)`,
+                gap: '0.15rem'
+              }}>
+                {edit_sections.map(section => (
+                  <Button
+                    key={section.id}
+                    size='xs'
+                    variant={section.id === active_edit_section?.id
+                      ? 'menuconfigpanel_option_button_activated'
+                      : 'menuconfigpanel_option_button'}
+                    sx={{ paddingInline: '0.2rem', minWidth: 'auto' }}
+                    title={section.title(app_data)}
+                    onClick={() => setEditSectionId(section.id)}
+                  >
+                    {(section.short_title ?? section.title)(app_data)}
+                  </Button>
+                ))}
+              </Box>
+              {active_edit_section ? (
+                <Box style={{ overflowY: 'auto', maxHeight: '70vh' }}>
+                  <WrapperContentConfig title={active_edit_section.title(app_data)}>
+                    {active_edit_section.render(app_data) ?? <></>}
+                  </WrapperContentConfig>
+                </Box>
+              ) : <></>}
+            </Box>
+          ) : (
+            <Box layerStyle='drawerFilterBox'>
+              {
+                (app_data.publish_options.data_type || app_data.publish_options.value_filter)
+                  ? <FilterDisplay app_data={app_data} /> : <></>
+              }
+              {/* « Génération de vues » (view tags) déplacé dans la topbar
+                  (cf. BannerViewTagTopbar) — retiré du tiroir de filtres. */}
+              {
+                app_data.publish_options.level_filter ? <LevelTagFilter app_data={app_data} /> : <></>
+              }
+              {
+                app_data.publish_options.node_filter ? <NodeTagGroupFilter app_data={app_data} level={false} /> : <></>
+              }
+              {
+                app_data.publish_options.data_filter ? <DataTagGroupFilter app_data={app_data} /> : <></>
+              }
+            </Box>
+          )}
         </DrawerBody>
       </DrawerContent>
     </Drawer></>
@@ -1104,7 +1225,6 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
         // réactivait le rendu → une passe entière gaspillée + rendu transitoire mal ordonné).
         app_data.drawing_area.sankey.nodes_list.forEach(node => node.reorganizeIOLinks())
         app_data.drawing_area.draw()
-        app_data.drawing_area.to_recenter = true
         app_data.drawing_area.recenter()
         app_data.drawing_area.orderElementOnDA()
 
@@ -1147,7 +1267,6 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
           }
           app_data.drawing_area.bypass_redraws = false
         }
-        app_data.drawing_area.to_recenter = true
         app_data.drawing_area.recenter()
         break
       }
@@ -1451,7 +1570,6 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
                 // Appliquer les mêmes transformations que dans handleTagSelection pour le mode 'unitary'
                 updateUnitaryStyles(app_data.drawing_area)
               })
-              app_data.drawing_area.to_recenter = true
               app_data.drawing_area.recenter()
 
               updateComponents()

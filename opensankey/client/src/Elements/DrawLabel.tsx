@@ -16,6 +16,7 @@ import {
 } from './ElementsAttributesConfig'
 import { Class_NodeBase, default_selected_stroke_width } from './NodeBase'
 import { Class_NodeElement } from './Node'
+import { isLegendChildId } from './legendIds'
 import { Class_LinkElement } from './Link'
 import { LinkControlPoints } from './LinkControlPoints'
 import { Class_BaseShape } from './Element'
@@ -2187,6 +2188,10 @@ export class NodeDrawNameLabel extends NodeDrawLabelBase {
     if (this._label_values.has_fo) {
       this.node.name_label_fo_content = `<p>${value}</p>`
     }
+    // OS#1256 — éditer inline le texte d'une zone de la légende est une
+    // personnalisation : la mise en forme générée est cassée (sinon la saisie
+    // serait écrasée en silence à la prochaine régénération).
+    if (isLegendChildId(this.node.id)) this.node.drawing_area.legend.markBroken()
   }
 }
 

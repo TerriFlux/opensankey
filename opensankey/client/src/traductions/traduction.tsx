@@ -5,6 +5,7 @@ import { resources_app_elements } from './traduction_app_elements'
 import { resources_nodes } from './traduction_nodes'
 import { resources_flux } from './traduction_links'
 import { resources_guided_tour } from './traduction_guided_tour'
+import { resources_inspector } from './traduction_inspector'
 import { resources_loading_toasts } from './traduction_loading_toasts'
 import { resources_template } from './traduction_templates'
 import { resources_welcome } from './traduction_welcome'
@@ -464,6 +465,7 @@ deep_assign_resources(resources_nodes as Record<string, unknown>, resources_open
 deep_assign_resources(resources_flux as Record<string, unknown>, resources_opensankey)
 deep_assign_resources(resources_welcome as Record<string, unknown>, resources_opensankey)
 deep_assign_resources(resources_guided_tour as Record<string, unknown>, resources_opensankey)
+deep_assign_resources(resources_inspector as Record<string, unknown>, resources_opensankey)
 deep_assign_resources(resources_loading_toasts as Record<string, unknown>, resources_opensankey)
 deep_assign_resources(resources_template as Record<string, unknown>, resources_opensankey)
 deep_assign_resources(resources_spreadsheet as Record<string, unknown>, resources_opensankey)

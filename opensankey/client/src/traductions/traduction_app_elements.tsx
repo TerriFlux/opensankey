@@ -154,7 +154,8 @@ export const resources_app_elements = {
         type_selection: 'Multi selection',
         LegBgOpacity: 'Opacity',
         LegBgBorder: 'Border',
-        LegStickDrawing: 'Stick to diagram',
+        leg_regenerate: 'Regenerate legend',
+        leg_broken: 'Customized legend — settings no longer apply',
         LegBgColor: 'Color',
 
         Config: {
@@ -281,7 +282,7 @@ export const resources_app_elements = {
           tuto: 'Explore tutorials',
           LegBgOpacity: 'Choose background color',
           LegBgBorder: 'Add a border to the legend area',
-          LegStickDrawing: 'Follow zoom in drawing area',
+          leg_regenerate: 'Rebuild the legend from current tags and settings (overwrites customizations)',
           TitleText: 'Custom text for the diagram title',
           TitleGroupSelect: 'The title shows the selected value of this data tag group',
           TitleViewGroupSelect: 'The title shows the selected value of this view tag group',
@@ -738,7 +739,8 @@ export const resources_app_elements = {
         LegBgOpacity: 'Opacité',
         LegBgBorder: 'Bordure',
         LegBgColor: 'Couleur',
-        LegStickDrawing: 'Solidaire de la zone de dessin',
+        leg_regenerate: 'Régénérer la légende',
+        leg_broken: 'Légende personnalisée — les paramètres ne s\'appliquent plus',
 
 
         Config: {
@@ -871,7 +873,7 @@ export const resources_app_elements = {
           tuto: 'Explorer les tutoriels',
           LegBgOpacity: 'Modifie l\'opacité de la couleur de fond de la légende',
           LegBgBorder: 'Ajoute une bordure à la légende',
-          LegStickDrawing: 'Si sélectionné,Le zoom agit aussi sur la légende',
+          leg_regenerate: 'Reconstruit la légende depuis les tags et paramètres courants (écrase les personnalisations)',
           TitleText: 'Texte personnalisé du titre du diagramme',
           TitleGroupSelect: 'Le titre affiche la valeur sélectionnée de ce groupe de data tags',
           TitleViewGroupSelect: 'Le titre affiche la valeur sélectionnée de ce groupe de view tags',
@@ -1344,7 +1346,8 @@ export const resources_app_elements = {
         LegBgOpacity: 'Opacidad',
         LegBgBorder: 'Borde',
         LegBgColor: 'Color',
-        LegStickDrawing: 'Solidario con la zona de dibujo',
+        leg_regenerate: 'Regenerar la leyenda',
+        leg_broken: 'Leyenda personalizada — los parámetros ya no se aplican',
 
         Config: {
           type_data: 'Estructura/Datos',
@@ -1464,7 +1467,7 @@ export const resources_app_elements = {
           tuto: 'Explorar tutoriales',
           LegBgOpacity: 'Modificar la opacidad del color de fondo de la leyenda',
           LegBgBorder: 'Añadir un borde a la leyenda',
-          LegStickDrawing: 'Si está seleccionado, el zoom también afecta a la leyenda',
+          leg_regenerate: 'Reconstruye la leyenda a partir de las etiquetas y parámetros actuales (sobrescribe las personalizaciones)',
           TitleText: 'Texto personalizado del título del diagrama',
           TitleGroupSelect: 'El título muestra el valor seleccionado de este grupo de etiquetas de datos',
           TitleViewGroupSelect: 'El título muestra el valor seleccionado de este grupo de etiquetas de vista',
@@ -1934,7 +1937,8 @@ export const resources_app_elements = {
         LegBgOpacity: 'Deckkraft',
         LegBgBorder: 'Rand',
         LegBgColor: 'Farbe',
-        LegStickDrawing: 'Mit Zeichenfläche verbunden',
+        leg_regenerate: 'Legende neu erzeugen',
+        leg_broken: 'Angepasste Legende — Einstellungen wirken nicht mehr',
 
         Config: {
           type_data: 'Struktur/Daten',
@@ -2054,7 +2058,7 @@ export const resources_app_elements = {
           tuto: 'Tutorials erkunden',
           LegBgOpacity: 'Deckkraft der Legendenhintergrundfarbe ändern',
           LegBgBorder: 'Rand zur Legende hinzufügen',
-          LegStickDrawing: 'Wenn ausgewählt, wirkt der Zoom auch auf die Legende',
+          leg_regenerate: 'Erzeugt die Legende aus aktuellen Tags und Einstellungen neu (überschreibt Anpassungen)',
           TitleText: 'Benutzerdefinierter Text für den Diagrammtitel',
           TitleGroupSelect: 'Der Titel zeigt den ausgewählten Wert dieser Daten-Tag-Gruppe an',
           TitleViewGroupSelect: 'Der Titel zeigt den ausgewählten Wert dieser Ansichts-Tag-Gruppe an',
@@ -2522,7 +2526,8 @@ export const resources_app_elements = {
         LegBgOpacity: 'Opacità',
         LegBgBorder: 'Bordo',
         LegBgColor: 'Colore',
-        LegStickDrawing: 'Solidale con l\'area di disegno',
+        leg_regenerate: 'Rigenera la legenda',
+        leg_broken: 'Legenda personalizzata — i parametri non si applicano più',
 
         Config: {
           type_data: 'Struttura/Dati',
@@ -2642,7 +2647,7 @@ export const resources_app_elements = {
           tuto: 'Esplorare i tutorial',
           LegBgOpacity: 'Modificare l\'opacità del colore di sfondo della legenda',
           LegBgBorder: 'Aggiungere un bordo alla legenda',
-          LegStickDrawing: 'Se selezionato, lo zoom agisce anche sulla legenda',
+          leg_regenerate: 'Ricostruisce la legenda dai tag e parametri correnti (sovrascrive le personalizzazioni)',
           TitleText: 'Testo personalizzato del titolo del diagramma',
           TitleGroupSelect: 'Il titolo mostra il valore selezionato di questo gruppo di tag dati',
           TitleViewGroupSelect: 'Il titolo mostra il valore selezionato di questo gruppo di tag vista',

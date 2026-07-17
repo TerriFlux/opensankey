@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+﻿import React, { useState } from 'react'
 import { MultiSelect } from 'react-multi-select-component'
 import { Box, Button, Checkbox, Divider, Select } from '@chakra-ui/react'
 import { useModelBinding } from '../../hooks/useModelBinding'
@@ -9,6 +9,7 @@ import { Class_ContainerElement } from '../../Elements/TextZone'
 import { Class_StockShape } from '../../Elements/StockShape'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_NodeBase } from '../../Elements/NodeBase'
+import { SELECTION_TOPIC } from '../../types/EventBus'
 
 // ==================================================================================
 // TYPES & CONFIGURATION
@@ -558,12 +559,18 @@ export const UnifiedElementSelection = ({
   // Dans le composant UnifiedElementSelection
   // ==================================================================================
 
-  const renderTagFilter = () => {
-    if (!isSingleType || !singleConfig) return null
-    if (singleConfig.type !== 'node' && singleConfig.type !== 'link') return null
-    if (tagGroups.length === 0) return null
+  // Le filtre par tag n'existe que pour les nœuds et les flux en single-type,
+  // et seulement s'il y a des groupes : les colonnes de la ligne compacte
+  // dépendent donc de ce booléen.
+  const has_tag_filter = isSingleType && !!singleConfig &&
+    (singleConfig.type === 'node' || singleConfig.type === 'link') &&
+    tagGroups.length > 0
+
+  // Les deux selects seuls (sans ligne porteuse) : le mode compact les pose sur
+  // la ligne du sélecteur, le mode full leur garde une ligne à eux.
+  const renderTagSelects = () => {
     return (
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+      <>
         <Select
           size='xs'
           variant='menuconfigpanel_option_select'
@@ -590,6 +597,15 @@ export const UnifiedElementSelection = ({
             <option key={tag.id} value={tag.id}>{tag.display_name}</option>
           ))}
         </Select>
+      </>
+    )
+  }
+
+  const renderTagFilter = () => {
+    if (!has_tag_filter) return null
+    return (
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        {renderTagSelects()}
       </Box>
     )
   }
@@ -705,9 +721,19 @@ export const UnifiedElementSelection = ({
   // ==================================================================================
 
   if (mode === 'simple') {
+    // Colonnes calculées : une cellule absente ne doit décaler personne. Le
+    // sélecteur prend l'essentiel ; l'œil est un bouton étroit dimensionné par
+    // son icône. Sa liste s'ouvre sur toute la largeur de la ligne (cf.
+    // layerStyle), donc le comprimer à la fermeture ne coûte rien.
+    const columns = [
+      isMultiType ? 'auto' : null,
+      'minmax(0, 3fr)',
+      ...(has_tag_filter ? ['minmax(0, 2fr)', 'minmax(0, 2fr)'] : []),
+      'auto'
+    ].filter(Boolean).join(' ')
     return (
       <Box layerStyle='menuconfigpanel_grid'>
-        <Box as='span' layerStyle='menuconfigpanel_row_droplist_simple'>
+        <Box as='span' layerStyle='menuconfigpanel_row_droplist_inline' gridTemplateColumns={columns}>
           {/* Filtres multi-type */}
           {isMultiType && renderFilters()}
 
@@ -716,17 +742,21 @@ export const UnifiedElementSelection = ({
             {renderDropdown()}
           </OSTooltip>
 
+          {/* Filtre par tag — sur la MÊME ligne que le sélecteur : les trois
+              contrôles composent un seul critère de sélection. */}
+          {has_tag_filter && renderTagSelects()}
+
           {/* Bouton visibilité */}
           <OSTooltip label={t(isMultiType ? 'Menu.toggle_visibility' : singleConfig!.translationKeys.tooltipVisibility)}>
             <Button
               variant='menuconfigpanel_option_button'
               onClick={toggleVisibility}
+              sx={{ minWidth: 'auto', width: 'auto', paddingInline: '0.3rem' }}
             >
               {only_visible ? icon_element_visible : icon_element_invisible}
             </Button>
           </OSTooltip>
         </Box>
-        {renderTagFilter()}
       </Box>
     )
   }
@@ -814,7 +844,62 @@ export const UnifiedElementSelection = ({
 // EXPORTS DE COMPATIBILITÉ
 // ==================================================================================
 
-export const SankeyNodeSelection = ({ app_data }: { app_data: Class_ApplicationData }) => {
+// #1243 — Ligne « Nom » autonome (avec undo), pour les sections d'inspecteur où
+// le sélecteur unifié est porté par le panneau (hide_selector) mais où le
+// renommage de l'élément sélectionné doit rester accessible.
+export const ElementNameRow = ({ app_data, elements, labelKey, tooltipKey }: {
+  app_data: Class_ApplicationData
+  elements: (Class_NodeBase | Class_ContainerElement)[]
+  labelKey: string
+  tooltipKey: string
+}) => {
+  const { t, history, menu_configuration } = app_data
+  const handleNameUpdate = (newName: string | null | undefined) => {
+    if (!newName || elements.length !== 1) return
+    const el = elements[0]
+    const oldName = el.name
+    const execute = () => {
+      el.name = newName
+      menu_configuration.ref_to_save_in_cache_indicator.current(false)
+      menu_configuration.updateAllComponentsRelatedToNodesConfig()
+    }
+    const undo = () => {
+      el.name = oldName
+      menu_configuration.ref_to_save_in_cache_indicator.current(false)
+      menu_configuration.updateAllComponentsRelatedToNodesConfig()
+    }
+    history.saveUndo(undo)
+    history.saveRedo(execute)
+    execute()
+  }
+  return (
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols' gridTemplateColumns='1fr 9fr'>
+      <Box layerStyle='menuconfigpanel_option_name' textStyle='h3'>
+        {t(labelKey)}
+      </Box>
+      <Box>
+        <OSTooltip label={t(tooltipKey)}>
+          <ConfigMenuTextInput
+            t={t}
+            default_value={(elements.length !== 1) ? '' : elements[0].name}
+            function_on_blur={handleNameUpdate}
+            disabled={elements.length !== 1}
+          />
+        </OSTooltip>
+      </Box>
+    </Box>
+  )
+}
+
+export const SankeyNodeSelection = ({ app_data, hide_selector = false, stock_only = false }: {
+  app_data: Class_ApplicationData
+  // #1243 — inspecteur : le sélecteur unifié est rendu une seule fois en tête de
+  // panneau ; la section ne garde que le nom et les extras (stock).
+  hide_selector?: boolean
+  // #1243 — onglet Stock de l'inspecteur : seulement les DONNÉES de stock
+  // (le nom vit dans l'en-tête d'identité, le sélecteur n'existe plus).
+  stock_only?: boolean
+}) => {
   // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
   const refreshThis = useModelBinding(app_data.menu_configuration.ref_to_menu_config_nodes_stock_updater)
 
@@ -829,13 +914,24 @@ export const SankeyNodeSelection = ({ app_data }: { app_data: Class_ApplicationD
   }
 
   return <>
-    <UnifiedElementSelection app_data={app_data} config={NODE_CONFIG} mode="full" />
+    {stock_only
+      ? <></>
+      : hide_selector
+        ? <ElementNameRow
+          app_data={app_data}
+          elements={nodes}
+          labelKey='Noeud.Nom'
+          tooltipKey='Noeud.tooltips.Nom'
+        />
+        : <UnifiedElementSelection app_data={app_data} config={NODE_CONFIG} mode="full" />}
     {showStock && (() => {
       const sv = firstNode.stock_value
       const data_taggs_list = app_data.drawing_area.sankey.data_taggs_list
       return <>
-        <Divider my={2} />
-        <Checkbox
+        {!stock_only && <Divider my={2} />}
+        {/* #1243 — dans l'inspecteur (stock_only), l'activation du stock vit
+            dans l'EN-TÊTE de l'onglet (œil « Activé »), pas ici. */}
+        {!stock_only && <Checkbox
           size='sm'
           isChecked={firstNode.has_stock}
           onChange={(e) => {
@@ -844,7 +940,7 @@ export const SankeyNodeSelection = ({ app_data }: { app_data: Class_ApplicationD
           }}
         >
           <Box as='span' fontSize='xs'>Stock</Box>
-        </Checkbox>
+        </Checkbox>}
         {firstNode.has_stock && <>
           {data_taggs_list.length > 0 &&
             <Box layerStyle='options_2cols'>
@@ -984,23 +1080,39 @@ export const SankeyNodeSelection = ({ app_data }: { app_data: Class_ApplicationD
             </>
           })()}
         </>}
-        {app_data.has_sankey_afm &&
-          <Checkbox
-            size='sm'
-            isChecked={firstNode.has_material_balance}
-            onChange={(e) => {
-              nodes.forEach(n => { n.has_material_balance = e.target.checked })
-              refreshStock()
-            }}
-          >
-            <OSTooltip label={'Si actif, le bilan mati\u00e8re de ce noeud sera respect\u00e9 lors de la r\u00e9conciliation'}>
-              <Box as='span' fontSize='xs'>{'Bilan mati\u00e8re'}</Box>
-            </OSTooltip>
-          </Checkbox>
-        }
+        {/* #1243 \u2014 le bilan mati\u00e8re est une propri\u00e9t\u00e9 du N\u0152UD (r\u00e9conciliation),
+            pas du stock : dans l'inspecteur (stock_only) il vit dans l'onglet
+            Valeur ; on ne le garde ici que pour le panneau historique. */}
+        {!stock_only && <NodeMaterialBalanceCheckbox app_data={app_data} />}
       </>
     })()}
   </>
+}
+
+// #1243 \u2014 Bilan mati\u00e8re : contrainte de r\u00e9conciliation port\u00e9e par le N\u0152UD
+// (pas par le stock). Rendue par l'onglet Valeur de l'inspecteur et par le
+// panneau historique. Se masque seule sans licence AFM ou sans n\u0153ud.
+export const NodeMaterialBalanceCheckbox = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  // Re-render local (pas de slot d\u00e9di\u00e9 : le slot stock est tenu par SankeyNodeSelection).
+  const refreshThis = useModelBinding()
+  const nodes = app_data.drawing_area.selected_nodes_list
+  const firstNode = nodes[0]
+  if (!app_data.has_sankey_afm || !firstNode) return <></>
+  return (
+    <Checkbox
+      size='sm'
+      isChecked={firstNode.has_material_balance}
+      onChange={(e) => {
+        nodes.forEach(n => { n.has_material_balance = e.target.checked })
+        app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+        refreshThis()
+      }}
+    >
+      <OSTooltip label={'Si actif, le bilan mati\u00e8re de ce noeud sera respect\u00e9 lors de la r\u00e9conciliation'}>
+        <Box as='span' fontSize='xs'>{'Bilan mati\u00e8re'}</Box>
+      </OSTooltip>
+    </Checkbox>
+  )
 }
 
 export const SankeyNodeSelectionSimple = ({ app_data }: { app_data: Class_ApplicationData }) => (
@@ -1015,8 +1127,19 @@ export const SankeyLinkSelectionSimple = ({ app_data }: { app_data: Class_Applic
   <UnifiedElementSelection app_data={app_data} config={LINK_CONFIG} mode="simple" />
 )
 
-export const SankeyContainerSelection = ({ app_data }: { app_data: Class_ApplicationData }) => (
-  <UnifiedElementSelection app_data={app_data} config={CONTAINER_CONFIG} mode="full" />
+export const SankeyContainerSelection = ({ app_data, hide_selector = false }: {
+  app_data: Class_ApplicationData
+  // #1243 — inspecteur : sélecteur porté par le panneau, la section garde le nom.
+  hide_selector?: boolean
+}) => (
+  hide_selector
+    ? <ElementNameRow
+      app_data={app_data}
+      elements={app_data.drawing_area.selected_containers_list}
+      labelKey='Container.Nom'
+      tooltipKey='Container.tooltips.Nom'
+    />
+    : <UnifiedElementSelection app_data={app_data} config={CONTAINER_CONFIG} mode="full" />
 )
 
 export const SankeyContainerSelectionSimple = ({ app_data }: { app_data: Class_ApplicationData }) => (
@@ -1035,6 +1158,92 @@ export const SankeyMultiTypeSelectionSimple = ({
     dropdownWidth={dropdownWidth}
   />
 )
+
+// #1243 — OUTIL de sélection par critères (panneau Filtres, onglet
+// « Sélectionner »). L'inspecteur n'a plus de sélecteur (le canvas est le
+// sélecteur), mais sélectionner 50 nœuds à la main pour une opération groupée
+// n'est pas praticable : cet outil sélectionne par TYPE + TAG + liste
+// (recherche), et l'inspecteur édite ensuite la sélection obtenue.
+// Mode 'simple' volontaire : c'est un outil de sélection, pas de création
+// (créer reste un geste de canvas).
+export const ElementSelectionTool = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const { t, drawing_area } = app_data
+  const [type, setType] = useState<'node' | 'link' | 'container'>('node')
+  // Récapitulatif de la sélection TOTALE (tous types) : abonnement au topic
+  // pub/sub (multi-abonnés) — l'inspecteur garde son slot ref dédié, et le
+  // sélecteur unifié enfant garde le slot du type courant. Pas de vol de slot.
+  useModelBinding(undefined, (r) =>
+    app_data.menu_configuration.subscribe(SELECTION_TOPIC, r))
+
+  const types: { key: 'node' | 'link' | 'container', label: string }[] = [
+    { key: 'node', label: t('Menu.Config.element_node') },
+    { key: 'link', label: t('Menu.Config.element_flow') },
+    { key: 'container', label: t('Menu.Config.element_object0') }
+  ]
+  const counts = {
+    node: drawing_area.selected_nodes_list.length,
+    link: drawing_area.selected_links_list.length,
+    container: drawing_area.selected_containers_list.length
+  }
+  const total = counts.node + counts.link + counts.container
+  const summary = [
+    counts.node ? `${counts.node} ${t('Menu.Config.element_node')}` : null,
+    counts.link ? `${counts.link} ${t('Menu.Config.element_flow')}` : null,
+    counts.container ? `${counts.container} ${t('Menu.Config.element_object0')}` : null
+  ].filter(Boolean).join(' + ')
+
+  return <Box layerStyle='menuconfigpanel_grid'>
+    {/* Type = dans QUEL type on pioche. La sélection est CUMULATIVE : changer
+        de type n'efface pas les autres, on compose donc une sélection
+        HÉTÉROGÈNE (nœuds + flux) pour éditer leurs attributs communs.
+        Single-type volontaire : le sélecteur unifié n'expose le filtre par
+        groupe de tags que dans ce mode — c'est le critère clé. */}
+    <Box style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.15rem' }}>
+      {types.map(({ key, label }) => (
+        <Button
+          key={key}
+          size='xs'
+          variant={type === key
+            ? 'menuconfigpanel_option_button_activated'
+            : 'menuconfigpanel_option_button'}
+          sx={{ paddingInline: '0.25rem', minWidth: 'auto' }}
+          onClick={() => setType(key)}
+        >
+          {label}
+        </Button>
+      ))}
+    </Box>
+    <UnifiedElementSelection
+      app_data={app_data}
+      config={ALL_CONFIGS[type] as ElementConfig<Class_NodeElement | Class_LinkElement | Class_ContainerElement>}
+      mode='simple'
+    />
+    {/* Récapitulatif : rend VISIBLE le cumul entre types (sinon on croit que
+        changer de type remet à zéro) + désélection globale. */}
+    <Box style={{
+      display: 'flex', alignItems: 'center', gap: '0.4rem',
+      fontSize: '0.7rem', paddingTop: '0.2rem'
+    }}>
+      <Box as='span' style={{ opacity: 0.75 }}>
+        {total > 0 ? t('filter_panel.selection_summary', { summary }) : t('Noeud.NS')}
+      </Box>
+      <Button
+        size='xs'
+        variant='menuconfigpanel_option_button'
+        sx={{ paddingInline: '0.4rem', minWidth: 'auto', width: 'auto', flex: 'none', marginLeft: 'auto' }}
+        isDisabled={total === 0}
+        onClick={() => {
+          drawing_area.purgeSelection()
+          app_data.menu_configuration.updateAllComponentsRelatedToNodes()
+          app_data.menu_configuration.updateAllComponentsRelatedToLinks()
+          app_data.menu_configuration.updateAllComponentsRelatedToContainers()
+        }}
+      >
+        {t('filter_panel.deselect_all')}
+      </Button>
+    </Box>
+  </Box>
+}
 
 // 🎯 NOUVEAU : Multi-type en mode full !
 export const SankeyMultiTypeSelectionFull = ({

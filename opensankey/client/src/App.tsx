@@ -27,7 +27,7 @@
 import React, { useEffect } from 'react'
 import { useToast } from '@chakra-ui/react'
 import LZString from 'lz-string'
-import { TourProvider } from '@reactour/tour'
+import { TourProvider, useTour } from '@reactour/tour'
 
 /*************************************************************************************************/
 
@@ -49,6 +49,21 @@ import { LinkModifierType } from './components/dialogs/ContextLinkConfig'
 import { NodeModifierType } from './components/dialogs/NodeActions'
 import { ToolbarFilter } from './components/topmenus/Toolbar'
 import { FormatConfigStructure } from './components/dialogs/PersistenceProcessDialogConfigs'
+
+/**
+ * #1255 — Pont entre le tour (React) et le modèle. `setCurrentStep` n'existe que sous le
+ * `TourProvider` via `useTour` ; la visite guidée en a besoin pour avancer toute seule quand elle
+ * détecte que l'utilisateur a fait le geste demandé. Ce composant ne rend rien : il dépose le
+ * contrôle dans le modèle et le retire au démontage.
+ */
+const TourBridge = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const { setCurrentStep } = useTour()
+  useEffect(() => {
+    app_data.guided_tour.control = { goToStep: (index: number) => setCurrentStep(index) }
+    return () => { app_data.guided_tour.control = null }
+  }, [app_data, setCurrentStep])
+  return null
+}
 
 export const OpenSankeyApp = ({
   initializeApplicationData,
@@ -94,12 +109,10 @@ export const OpenSankeyApp = ({
     if (app_data.is_static && opts.recenter) {
       const doRecenter = () => {
         const da = app_data.drawing_area
-        da.to_recenter = true
         // force=true : en mode size_locked, draw() a déjà consommé le drapeau dirty,
         // donc un recenter() non forcé sortirait immédiatement (garde ligne ~2066) et
         // le cadrage figé (calculé trop tôt) resterait. On force le re-cadrage.
         da.recenter(true)
-        da.to_recenter = false
       }
       // Différé de 2 frames : au tout premier chargement, le conteneur hôte
       // (#sankey_app) peut ne pas avoir sa hauteur finale — quand l'embarqueur ajoute
@@ -181,9 +194,7 @@ export const OpenSankeyApp = ({
       if (initial) { initial = false; return }
       const da = app_data.drawing_area
       if (!da || el.clientHeight <= 0) return
-      da.to_recenter = true
       da.recenter(true) // force : le cadrage initial a pu figer le verrou de taille
-      da.to_recenter = false
       // Débranche une fois le diagramme réellement chargé et recadré.
       if (da.sankey?.nodes_list?.length > 0) ro.disconnect()
     })
@@ -224,7 +235,18 @@ export const OpenSankeyApp = ({
   const background_color = app_data.is_static ? 'white' : 'WhiteSmoke'
 
   /*************************************************************************************************/
-  return <TourProvider steps={app_data.steps}>
+  return <TourProvider
+    steps={app_data.steps}
+    // Couvre la fin normale du tour COMME l'abandon (croix, ESC) : le tour se démonte dans tous ces
+    // cas. On y retire le contenu de repli créé par le tour et on referme le tiroir de config s'il
+    // ne l'était pas avant.
+    beforeClose={() => app_data.guided_tour.finish()}
+    // Sans ça, @reactour ferme le tour au moindre clic sur le masque — c'est-à-dire partout
+    // ailleurs que sur la zone mise en avant. Rédhibitoire pour une visite qui demande de dessiner
+    // et de saisir : un clic à côté et tout s'arrête. On ne ferme donc que par la croix ou Échap.
+    onClickMask={() => { /* le masque n'est pas un bouton de fermeture */ }}
+  >
+    <TourBridge app_data={app_data} />
     <div id='sankey_app' style={{ 'backgroundColor': background_color, 'height': '100%' }}>
       <div className='div-Menu' style={{ 'backgroundColor': 'WhiteSmoke' }} >
         <WrapperInitializeAdditionalMenus
