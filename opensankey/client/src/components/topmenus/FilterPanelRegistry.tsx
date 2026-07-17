@@ -10,7 +10,7 @@
 // enregistrent leurs sections par id (idempotent, remplacement par id), avec
 // un gate de licence déclaratif. OS ne connaît rien de leur contenu.
 
-import type { JSX } from 'react'
+import type { JSX, ReactNode } from 'react'
 import type { Class_ApplicationData } from '../../types/ApplicationData'
 
 export type Type_FilterPanelSection = {
@@ -24,6 +24,9 @@ export type Type_FilterPanelSection = {
   // Libellé COURT pour le bouton d'onglet (le tiroir est étroit : « Étiquettes
   // des nœuds » y écrase ses voisins). Défaut : `title`.
   short_title?: (app_data: Class_ApplicationData) => string
+  // #1258 — icône du bouton d'onglet (servie par app_data.icon_library), même
+  // rangée icône + libellé court que l'inspecteur. Absente : texte seul.
+  icon?: (app_data: Class_ApplicationData) => ReactNode
   // Affichage conditionnel (licence, présence de groupes…).
   gate?: (app_data: Class_ApplicationData) => boolean
   render: (app_data: Class_ApplicationData) => JSX.Element | null

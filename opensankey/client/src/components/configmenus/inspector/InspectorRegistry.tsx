@@ -37,14 +37,18 @@ export type Type_InspectorSection = {
   hue: Type_InspectorSectionHue
   // Libellé de l'entête (déjà traduit).
   title: (app_data: Class_ApplicationData) => string
+  // #1258 — Icône du bouton d'onglet (servie par app_data.icon_library, jamais
+  // de SVG inline chez l'appelant). Absente : le bouton retombe en texte seul.
+  icon?: (app_data: Class_ApplicationData) => React.ReactNode
+  // #1258 — Couleur d'accent du bouton d'onglet (zone spécialisée, ex. MFA en
+  // ambre) : teinte le bouton inactif, colore le fond du bouton actif.
+  accent?: string
   // Rendu du corps. `scope` distingue l'édition de la sélection de celle du
   // style/défaut (bandeau de portée). Les sections qui ignorent la portée
   // reçoivent 'selection' par défaut.
   render: (app_data: Class_ApplicationData, scope: Type_InspectorScope) => React.ReactNode
   // Gating de licence déclaratif : la section n'apparaît que si vrai.
   gate?: (app_data: Class_ApplicationData) => boolean
-  // Section repliée par défaut.
-  collapsed?: boolean
   // Onglet 100% « données » (tags, infobulle…) : masqué en portée Style,
   // qui ne montre que ce qu'un style sait porter (R2).
   data_only?: boolean

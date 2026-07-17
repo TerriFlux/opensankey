@@ -52,7 +52,23 @@ export const resources_inspector = {
           stock: 'Stock',
           tooltip: 'Tooltip',
           tags: 'Tags',
-          title: 'Title'
+          title: 'Title',
+          mfa: 'MFA'
+        },
+        // #1258 — Onglet MFA (espace AFM unifié).
+        mfa: {
+          reconciliation: 'Reconciliation',
+          open_spreadsheet: 'Open the spreadsheet (constraints)',
+          run_reconciliation: 'Reconcile via Excel…',
+          value_in_mfa: 'Value type, bounds and uncertainty are edited in the MFA tab.'
+        },
+        // #1258 — Titres des sections repliables des onglets.
+        section: {
+          page: 'Page',
+          dressing: 'Background & grid',
+          scale_sizes: 'Scale & sizes',
+          advanced: 'Advanced',
+          advanced_geometry: 'Advanced — geometry'
         },
         visible: 'Visible',
         labels_visible: 'Labels visible',
@@ -62,6 +78,9 @@ export const resources_inspector = {
         stock_labels: 'Labels',
         stock_labels_tooltip: 'Show the stock labels',
         stock_shape_visible: 'Stock shape visible',
+        stock_select_node: 'Select a node carrying a stock.',
+        stock_caption: 'Stock caption',
+        stock_delta_caption: 'Δ stock caption',
         advanced_editor: 'Advanced editor…',
         open_editor: 'Open the editor…',
         tags_assign_hint: 'Assignment (groups are edited in Filters)'
@@ -127,7 +146,21 @@ export const resources_inspector = {
           stock: 'Stock',
           tooltip: 'Infobulle',
           tags: 'Tags',
-          title: 'Titre'
+          title: 'Titre',
+          mfa: 'AFM'
+        },
+        mfa: {
+          reconciliation: 'Réconciliation',
+          open_spreadsheet: 'Ouvrir le tableur (contraintes)',
+          run_reconciliation: 'Réconcilier via Excel…',
+          value_in_mfa: 'Type de valeur, bornes et incertitude s’éditent dans l’onglet AFM.'
+        },
+        section: {
+          page: 'Page',
+          dressing: 'Habillage',
+          scale_sizes: 'Échelle & tailles',
+          advanced: 'Avancé',
+          advanced_geometry: 'Avancé — géométrie'
         },
         visible: 'Visible',
         labels_visible: 'Libellés visibles',
@@ -137,6 +170,9 @@ export const resources_inspector = {
         stock_labels: 'Libellés',
         stock_labels_tooltip: 'Afficher les libellés du stock',
         stock_shape_visible: 'Forme de stock visible',
+        stock_select_node: 'Sélectionnez un nœud portant un stock.',
+        stock_caption: 'Libellé stock',
+        stock_delta_caption: 'Libellé Δ stock',
         advanced_editor: 'Éditeur avancé…',
         open_editor: 'Ouvrir l’éditeur…',
         tags_assign_hint: 'Assignation (les groupes s’éditent dans Filtres)'
@@ -202,7 +238,21 @@ export const resources_inspector = {
           stock: 'Stock',
           tooltip: 'Información',
           tags: 'Etiquetas',
-          title: 'Título'
+          title: 'Título',
+          mfa: 'AFM'
+        },
+        mfa: {
+          reconciliation: 'Conciliación',
+          open_spreadsheet: 'Abrir la hoja de cálculo (restricciones)',
+          run_reconciliation: 'Conciliar vía Excel…',
+          value_in_mfa: 'El tipo de valor, los límites y la incertidumbre se editan en la pestaña AFM.'
+        },
+        section: {
+          page: 'Página',
+          dressing: 'Fondo y cuadrícula',
+          scale_sizes: 'Escala y tamaños',
+          advanced: 'Avanzado',
+          advanced_geometry: 'Avanzado — geometría'
         },
         visible: 'Visible',
         labels_visible: 'Etiquetas visibles',
@@ -212,6 +262,9 @@ export const resources_inspector = {
         stock_labels: 'Etiquetas',
         stock_labels_tooltip: 'Mostrar las etiquetas de stock',
         stock_shape_visible: 'Forma de stock visible',
+        stock_select_node: 'Seleccione un nodo que lleve un stock.',
+        stock_caption: 'Etiqueta de stock',
+        stock_delta_caption: 'Etiqueta Δ stock',
         advanced_editor: 'Editor avanzado…',
         open_editor: 'Abrir el editor…',
         tags_assign_hint: 'Asignación (los grupos se editan en Filtros)'
@@ -277,7 +330,21 @@ export const resources_inspector = {
           stock: 'Bestand',
           tooltip: 'Tooltip',
           tags: 'Tags',
-          title: 'Titel'
+          title: 'Titel',
+          mfa: 'MFA'
+        },
+        mfa: {
+          reconciliation: 'Abgleich',
+          open_spreadsheet: 'Tabelle öffnen (Nebenbedingungen)',
+          run_reconciliation: 'Abgleich über Excel…',
+          value_in_mfa: 'Werttyp, Grenzen und Unsicherheit werden im MFA-Tab bearbeitet.'
+        },
+        section: {
+          page: 'Seite',
+          dressing: 'Hintergrund & Raster',
+          scale_sizes: 'Maßstab & Größen',
+          advanced: 'Erweitert',
+          advanced_geometry: 'Erweitert — Geometrie'
         },
         visible: 'Sichtbar',
         labels_visible: 'Beschriftungen sichtbar',
@@ -287,6 +354,9 @@ export const resources_inspector = {
         stock_labels: 'Beschriftungen',
         stock_labels_tooltip: 'Die Bestandsbeschriftungen anzeigen',
         stock_shape_visible: 'Bestandsform sichtbar',
+        stock_select_node: 'Wählen Sie einen Knoten mit Bestand.',
+        stock_caption: 'Bestandsbeschriftung',
+        stock_delta_caption: 'Δ-Bestandsbeschriftung',
         advanced_editor: 'Erweiterter Editor…',
         open_editor: 'Editor öffnen…',
         tags_assign_hint: 'Zuweisung (Gruppen werden in Filter bearbeitet)'
@@ -352,7 +422,21 @@ export const resources_inspector = {
           stock: 'Stock',
           tooltip: 'Tooltip',
           tags: 'Tag',
-          title: 'Titolo'
+          title: 'Titolo',
+          mfa: 'AFM'
+        },
+        mfa: {
+          reconciliation: 'Riconciliazione',
+          open_spreadsheet: 'Aprire il foglio di calcolo (vincoli)',
+          run_reconciliation: 'Riconciliare via Excel…',
+          value_in_mfa: 'Tipo di valore, limiti e incertezza si modificano nella scheda AFM.'
+        },
+        section: {
+          page: 'Pagina',
+          dressing: 'Sfondo e griglia',
+          scale_sizes: 'Scala e dimensioni',
+          advanced: 'Avanzate',
+          advanced_geometry: 'Avanzate — geometria'
         },
         visible: 'Visibile',
         labels_visible: 'Etichette visibili',
@@ -362,6 +446,9 @@ export const resources_inspector = {
         stock_labels: 'Etichette',
         stock_labels_tooltip: 'Mostrare le etichette di stock',
         stock_shape_visible: 'Forma di stock visibile',
+        stock_select_node: 'Selezionare un nodo con uno stock.',
+        stock_caption: 'Etichetta stock',
+        stock_delta_caption: 'Etichetta Δ stock',
         advanced_editor: 'Editor avanzato…',
         open_editor: 'Aprire l’editor…',
         tags_assign_hint: 'Assegnazione (i gruppi si modificano in Filtri)'

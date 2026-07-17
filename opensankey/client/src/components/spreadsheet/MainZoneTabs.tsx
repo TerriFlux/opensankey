@@ -272,6 +272,9 @@ export const MainZoneTabs = (
   // sa réserve doit elle aussi déclencher le re-fit (sinon on épingle et le
   // dessin garde sa largeur, la galerie se posant par-dessus).
   const galleryPinnedW = app_data.menu_configuration.getTemplateGalleryPinnedReservedPx()
+  // #1258 — idem pour le tiroir de FILTRES épinglé : sa réserve déclenche le
+  // re-fit (épingler/dé-épingler, ouvrir/fermer, changement d'onglet 270↔420px).
+  const filterPinnedW = app_data.menu_configuration.getFilterPanelPinnedReservedPx()
   useEffect(() => {
     if (!didMount.current) {
       didMount.current = true
@@ -282,7 +285,7 @@ export const MainZoneTabs = (
     // showUnitary : ouvrir/fermer le panneau change la réserve de largeur droite quand il est le seul
     // occupant de la colonne (pas de tableur/doc) -> re-fit. Le RATIO unitaire ne change pas la largeur
     // réservée (partage vertical interne), il est donc volontairement hors deps (pas de re-fit au drag).
-  }, [showDiagram, showSpreadsheet, showDoc, showUnitary, unitaryDetached, docDetached, docLayout, splitRatio, docBottomPx, configPinnedW, galleryPinnedW])
+  }, [showDiagram, showSpreadsheet, showDoc, showUnitary, unitaryDetached, docDetached, docLayout, splitRatio, docBottomPx, configPinnedW, galleryPinnedW, filterPinnedW])
 
   // --- Séparateur vertical : largeur de la colonne droite ---
   const onVDividerDown = (e: React.MouseEvent) => {
