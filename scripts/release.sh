@@ -56,8 +56,13 @@ FREEZE_OS="$OS_REL/examples/freeze-current.sh"
 FREEZE_SA="examples/freeze-current.sh"
 
 
-# SSH deploy prod
-SSH_DEPLOY_CMD="ssh -p 5378 ubuntu@open-sankey.fr 'cd dev_opensankey/sankeyapplication/ && bash update_opensankey.sh prod'"
+# SSH deploy prod — deploiement par SLOTS (#255) : uWSGI sert <env>_opensankey/current
+# (symlink vers releases/<horodatage>_<sha>), PAS le checkout. On lance donc
+# deploy_release.sh, qui construit un slot neuf hors du chemin servi et ne bascule
+# `current` qu'une fois le slot verifie (rollback auto si /health echoue).
+# L'ex-update_opensankey.sh rebuildait EN PLACE dans le checkout : depuis #255 il
+# ne changeait plus rien au site tout en affichant un succes (supprime 2026-07-17).
+SSH_DEPLOY_CMD="ssh -p 5378 ubuntu@open-sankey.fr 'cd prod_opensankey/sankeyapplication/ && git pull && bash scripts/deploy_release.sh prod --db-keep-days 365'"
 
 TODAY="$(date +%Y-%m-%d)"
 
@@ -400,8 +405,9 @@ ok "main -> prod OK, retour main"
 
 phase "J — Deploy prod via SSH"
 
-warn "Cette commande lance update_opensankey.sh prod sur open-sankey.fr"
+warn "Cette commande lance deploy_release.sh prod sur open-sankey.fr"
 warn "  $SSH_DEPLOY_CMD"
+warn "Alternative : job CI manuel 'prod_opensankey' (meme script, source = runner)"
 confirm "Lancer le deploy prod ?"
 
 eval "$SSH_DEPLOY_CMD"

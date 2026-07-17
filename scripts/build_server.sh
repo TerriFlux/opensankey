@@ -1,4 +1,4 @@
-#!/bin/bash
+﻿#!/bin/bash
 
 exit_if_error() {
   local exit_code=$1
@@ -41,7 +41,7 @@ fi
 # Install requirements
 # S3 #18 — builds reproductibles : si un requirements_frozen.txt (fige par
 # `pip freeze` sur la cible) est present, on l'utilise en priorite sur la cible
-# Linux (CI dev/test/prod + update_opensankey.sh). On garde requirements.txt en
+# Linux (CI dev/test/prod + deploy_release.sh). On garde requirements.txt en
 # fallback et sur les autres plateformes (dev local Windows/macOS) pour ne pas
 # imposer un freeze Linux-specifique. Regenerer apres tout changement de deps :
 #   pip freeze > requirements_frozen.txt   (dans le venv de deploiement)

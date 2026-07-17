@@ -21,7 +21,7 @@ Liste complète et ordonnancée de tout ce qu'il y a à faire, issue de la revue
 | 1 | **Révoquer le token `glpat-…`** de `.gitlab-ci.yml` (~l.700), supprimer le bloc, décider purge d'historique | ½ j |
 | 2 | **Backup quotidien hors-site** : cron `sqlite3 .backup` + tar `USER_PREF_REP` + `cache/` + MFAData, poussé vers le mutualisé OVH (clé scp de publish.py déjà en place) | ½ j |
 | 3 | **`/health`** (version + `SELECT 1`) + `curl -f` en fin de job CI et de `restart_site.sh` (deploy échoue si KO) | ½ j |
-| 4 | **Aligner `update_opensankey.sh` sur la CI** : backup db.sqlite + `alembic upgrade head` | 1 h |
+| 4 | ~~**Aligner `update_opensankey.sh` sur la CI**~~ — sans objet : le script est **supprimé** (2026-07-17). Depuis #255 (déploiement par slots) il rebuildait le checkout, que uWSGI ne sert plus, tout en affichant un succès : un déploiement qui ne déployait rien. La CI et `release.sh` passent par `deploy_release.sh`, qui fait déjà backup + `alembic upgrade head`. | fait |
 | 5 | **Uptime monitoring externe** (3 hosts + alerte mail) | 1 h |
 | 6 | **Auth des endpoints** : inventaire des routes qui doivent rester publiques (viewer publié, cartofob), puis `@login_required` sur `/api/publish/*` (deploy en premier), `/optimize/launch_optim`, `/api/vision/build` | 1,5 j |
 | 7 | **`secure_filename`** sur `launch_optim` (`views.py:847`) | ¼ j |
