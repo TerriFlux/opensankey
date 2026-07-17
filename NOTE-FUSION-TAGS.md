@@ -254,23 +254,28 @@ tag — il faudra unifier le vocabulaire et si possible le mécanisme de stockag
 (`heredited_attr` par tag) pour ne pas avoir trois systèmes d'override (vues,
 viewTags, tags séparants).
 
-## 5. Découpage proposé
+## 5. Découpage — état d'avancement (2026-07-17)
 
-1. **Phase 0 — préalables** : décider les points ouverts restants (§6).
-   SA#246 est terminée (2026-07-16) : le filet golden (`corpusFirstLoad`) dont
-   notre migration a besoin est en place. Éventuel follow-up sur les fichiers
-   0.5 (#277), non bloquant pour ce chantier.
-2. **Phase 1 — fusion du modèle** (OS) : classe unifiée + flag `is_dimension`,
-   modèle partition (§3.0) inclus d'emblée (une seule migration de format),
-   migration fromJSON, bump de format, menu Étiquettes fusionné. Pas de bascule
-   dynamique du flag dans cette phase (le flag est fixé par la migration/l'import).
-3. **Phase 2 — bascule dimension↔annotation** : transitions du §3.3 avec
-   confirmations UI et undo.
+Toutes les phases s'empilent sur la branche `284-fusion-tags-modele`
+(décision 2026-07-17) ; merge sur main en fin de chantier.
+
+1. **Phase 0 — FAIT.**
+2. **Phase 1 — FAIT** (SA#284, tag `cp-284-fusion-tags-phase1`) : `is_dimension`
+   sur les deux classes (pas de fusion de classes — la bascule est une
+   conversion), sous-valeurs à coordonnée éparse (`sub_values`, clé additive,
+   pas de bump de format), menu fusionné, éditeur, rendu multi-ruban, undo/redo.
+   Écarts au plan initial : sections JSON `dataTags`/`fluxTags` conservées
+   (contrainte SEP/solveur, cf. §3.5) — donc ni migration fromJSON ni bump.
+3. **Phase 2 — bascule dimension↔annotation** (SA#285, EN COURS) :
+   sens dimension→annotation FAIT (sans perte grâce aux sous-valeurs : feuilles
+   par tag → sous-valeurs coordonnées, somme sur la feuille fusionnée — la
+   question « somme ou tag sélectionné » du §3.3 se dissout) ; case « Dimension »
+   dans l'éditeur de groupes ; tags/sous-valeurs des flux déplacés dans l'onglet
+   Valeur de l'inspecteur (décision UX 2026-07-17). Sens annotation→dimension À
+   FAIRE (débloqué par l'arbitrage §6.2 ci-dessous).
 4. **Phase 3 — séparation géométrique** : `is_geometric`, positions par tag,
-   data-join `node×tag`, drag par facette, layout auto des facettes.
+   data-join `node×tag`, drag par facette, layout auto des facettes. À FAIRE.
 5. **Phase 4 (optionnelle, différée)** — unification du format Excel côté SEP.
-
-Chaque phase = une issue GitLab SA + worktree dédié (workflow habituel).
 
 ## 6. Questions ouvertes
 
@@ -279,18 +284,21 @@ cardinalité en découle (§3.1, exactement un tag par sous-valeur ; migration
 des valeurs multi-taguées par tag combiné, à confirmer) ; option B (positions
 par tag) pour la géométrie.
 
+Tranchée le 2026-07-17 : §6.2 (ex-question 2) — à la promotion d'un groupe
+libre en dimension, la quantité sans tag du groupe va sur un tag
+**« non affecté » créé automatiquement** dans le groupe (totaux préservés,
+réversible).
+
 Restent ouvertes :
 
 1. §3.1 : migration des valeurs multi-taguées — tag combiné (recommandé) ou
-   duplication ?
-2. §3.3 : valeur sans annotation lors d'annotation→dimension — premier tag ou tag
-   « non affecté » auto-créé ?
-3. §3.2 : ordre des groupes après migration (dataTags d'abord ?).
-4. §4.2 : nom et portée du flag séparant ; V1 limitée à un seul groupe séparant —
+   duplication ? (Sans objet tant que les fichiers existants ne sont pas
+   migrés vers des sous-valeurs — l'annotation de feuille reste supportée.)
+2. §4.2 : nom et portée du flag séparant ; V1 limitée à un seul groupe séparant —
    acceptable ?
-5. §4.4 : faut-il fusionner le stockage des overrides par tag avec le mécanisme
+3. §4.4 : faut-il fusionner le stockage des overrides par tag avec le mécanisme
    heredited_attr des vues dès la phase 3, ou accepter deux mécanismes le temps de
    converger ?
-6. Nommage utilisateur : comment appeler les deux modes dans l'UI ? (« étiquette de
+4. Nommage utilisateur : comment appeler les deux modes dans l'UI ? (« étiquette de
    donnée » vs « étiquette libre » ? « dimension » est parlant pour un profil MFA,
    moins pour un utilisateur lambda.)
