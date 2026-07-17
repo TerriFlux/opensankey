@@ -534,19 +534,21 @@ export class Class_DrawingArea {
     .filter(evt => (evt.which === 2 || evt.which === 0))
     // Prevent extreme zoom levels that freeze SVG rendering
     .scaleExtent([0.05, 20])
-    // Custom constrain: anchor top-left when content is smaller than the viewport
-    // (d3-zoom default centers in that case, which pushed the A3/A4/A5 paper off
-    // the top-left corner). Larger-than-viewport behaviour is unchanged.
-    .constrain((transform, extent, translateExtent) => {
-      const dx0 = transform.invertX(extent[0][0]) - translateExtent[0][0]
-      const dx1 = transform.invertX(extent[1][0]) - translateExtent[1][0]
-      const dy0 = transform.invertY(extent[0][1]) - translateExtent[0][1]
-      const dy1 = transform.invertY(extent[1][1]) - translateExtent[1][1]
-      return transform.translate(
-        dx1 > dx0 ? dx0 : Math.min(0, dx0) || Math.max(0, dx1),
-        dy1 > dy0 ? dy0 : Math.min(0, dy0) || Math.max(0, dy1)
-      )
-    })
+    // OS#1250 phase 5 — constrain d3 par DÉFAUT.
+    //
+    // Il y avait ici un constrain custom qui forçait l'ancrage haut-gauche quand le
+    // contenu était plus petit que le viewport (le défaut d3 centre : `(dx0+dx1)/2`
+    // au lieu de `dx0`), parce que le translateExtent portait le CANVAS — un rectangle
+    // dimensionné sur la fenêtre — et que centrer ce canvas poussait la page A3/A4/A5
+    // hors du coin.
+    //
+    // Le translateExtent dérive désormais du CONTENU (cf. Class_ViewportChrome
+    // .updateScrollbars) et non plus du canvas : il n'y a donc plus de canvas à ancrer,
+    // et le comportement du défaut d3 est exactement celui qu'on veut —
+    //   - contenu plus petit que la fenêtre -> centré ;
+    //   - contenu plus grand               -> déplacement borné par ses bords.
+    // En mode papier, la page participe simplement aux bounds : elle est donc centrée
+    // au lieu d'être poussée hors du coin, ce qui était la raison d'être du custom.
     // Change cursor in teh beginning to 'move' to show we can shift drawing area
     .on('start', () => this.d3_selection_zoom_area?.attr('cursor', 'move'))
     .on('zoom', (event) => this.eventZoom(event))
@@ -1711,25 +1713,11 @@ export class Class_DrawingArea {
         this._zoom_width = 2 * half_view_w
         this._zoom_height = 2 * half_view_h
       }
-      else if (center_on_content && !this.is_paper_mode) {
-        // OS#1250 phase 2 — « recentrer » sur le diagramme principal : MÊME technique que
-        // le board unitaire ci-dessus, centrée sur le milieu de la bbox au lieu d'un nœud.
-        //
-        // Calculer un px/py centré NE SUFFIT PAS : le constrain custom ancre en haut-gauche
-        // dès que le contenu est plus petit que le viewport, et re-plaque le diagramme dans
-        // le coin (le translateTo d'_applyFitCamera passe par lui). En calant le canvas sur
-        // la vue centrée, dx0/dx1 du constrain s'annulent → il devient inerte et le centrage
-        // tient. C'est ce que faisait implicitement l'ancien recenter(), mais en déplaçant
-        // le MONDE ; ici on ne déplace que le cadre de référence du fond/des extents.
-        const cx = bbox.x + bbox.width / 2
-        const cy = bbox.y + bbox.height / 2
-        const half_view_w = this.window_fitting_width / (2 * new_k)
-        const half_view_h = this.window_fitting_height / (2 * new_k)
-        this._background_d3_groups_shift_x = cx - half_view_w
-        this._background_d3_groups_shift_y = cy - half_view_h
-        this._zoom_width = 2 * half_view_w
-        this._zoom_height = 2 * half_view_h
-      }
+      // OS#1250 phase 5 — le calage du canvas sur la vue centrée qui se trouvait ici
+      // (phase 2) a disparu : il ne servait qu'à neutraliser le constrain custom, qui
+      // re-plaquait le diagramme en haut-gauche. Le constrain est revenu au défaut d3
+      // sur des bounds de CONTENU : il centre donc lui-même quand le contenu tient dans
+      // la fenêtre, en accord avec le px/py calculé plus bas (center_h/center_v).
       // Refresh translateExtent BEFORE scaleTo/translateTo so d3-zoom's constrain
       // uses the current content bbox (e.g. when switching back from paper to free,
       // we don't want the stale paper bounds to clamp the transform).
