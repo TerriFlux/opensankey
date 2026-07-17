@@ -1507,7 +1507,7 @@ export class Class_ApplicationData {
         // modèle (la sélection choisit la cible), à la place des ex-boutons de
         // type/élément de la matrice.
         selector: '.inspector_breadcrumb',
-        content: this.t('guide.config_tabs'),
+        content: this.t('guide.inspector_breadcrumb'),
         actionAfter: () => {
           closeConfigDrawer()
         }
