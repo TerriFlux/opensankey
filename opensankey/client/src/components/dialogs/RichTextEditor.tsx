@@ -176,7 +176,7 @@ ForeignObjectEditor.displayName = 'ForeignObjectEditor'
  * Check if HTML content contains rich formatting beyond simple <p> tags.
  * Returns true if there are tags other than <p>, </p>, <br>, <br/>.
  */
-const isRichContent = (html: string): boolean => {
+export const isRichContent = (html: string): boolean => {
   if (!html) return false
   // Remove <p>, </p>, <br>, <br/>, <br /> tags and check if any other tags remain
   const stripped = html
@@ -360,6 +360,85 @@ export const LabelRichTextEditor = ({ app_data }: { app_data: Class_ApplicationD
       dialog_name={'ref_setter_show_modal_rich_text_editor'}
       content={content}
       title={'Rich Text Editor'}
+      minW={'25vw'}
+      maxW={'50vw'}
+    />
+  )
+}
+
+// #1243 — Éditeur d'INFOBULLE : le même Rich Text Editor que les libellés
+// (Quill + éditeur brut OSP), pointé sur `tooltip_text` des nœuds et flux
+// sélectionnés, dans son propre panneau draggable. L'onglet Infobulle de
+// l'inspecteur n'embarque qu'un texte simple + le bouton d'ouverture.
+export const TooltipRichTextEditor = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const { t, drawing_area, menu_configuration } = app_data
+  const has_osp = app_data.has_sankey_plus
+  // #247 — re-render forcé d'identité stable (compteur local).
+  const refreshThis = useModelBinding()
+  const [is_raw, setIsRaw] = useState(false)
+
+  const elements = [
+    ...drawing_area.selected_nodes_list_sorted,
+    ...drawing_area.selected_links_list_sorted
+  ]
+  const current = elements[0]?.tooltip_text ?? ''
+
+  const applyContent = (newContent: string) => {
+    // Sans OSP : texte brut seulement (même règle que les libellés).
+    const sanitized = has_osp ? newContent : wrapInParagraph(stripHtmlTags(newContent))
+    elements.forEach(el => { el.tooltip_text = sanitized })
+    menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    refreshThis()
+  }
+
+  const content = (
+    <Box layerStyle='menu_sub_section'>
+      {elements.length > 0 ? (
+        <>
+          <ForeignObjectEditor
+            isRawMode={false}
+            value={current}
+            onChange={applyContent}
+            onBlur={applyContent}
+            isActivated={true}
+            showToolbar={has_osp}
+            rows={5}
+          />
+          {has_osp && (
+            <>
+              <Checkbox
+                variant='menuconfigpanel_option_checkbox'
+                isChecked={is_raw}
+                onChange={(evt) => setIsRaw(evt.target.checked)}
+                mt={2}
+              >
+                {t('Noeud.foreign_object.raw')}
+              </Checkbox>
+              {is_raw && (
+                <ForeignObjectEditor
+                  isRawMode={true}
+                  value={current}
+                  onChange={applyContent}
+                  onBlur={applyContent}
+                  isActivated={true}
+                  rows={5}
+                />
+              )}
+            </>
+          )}
+        </>
+      ) : (
+        <>{t('Noeud.NS')}</>
+      )}
+    </Box>
+  )
+
+  return (
+    <MenuDraggable
+      dict_hook_ref_setter_show_dialog_components={app_data.menu_configuration.dict_setter_show_dialog}
+      dialog_name={'ref_setter_show_tooltip_editor'}
+      content={content}
+      title={t('Noeud.IB')}
       minW={'25vw'}
       maxW={'50vw'}
     />

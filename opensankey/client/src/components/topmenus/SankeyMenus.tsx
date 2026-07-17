@@ -54,23 +54,26 @@ import { useMainZone, mainZoneRightReservedPx } from '../spreadsheet/MainZoneTab
 import { modalResolutionPNG, modalResolutionPDF } from './SankeyExports'
 import { MenuTopNavBar } from './MenuTop'
 import { TemplateGalleryPanel } from './SankeyTemplates'
-import { IType_DictHookRefSetterShowDialogComponents, keyTypeConfig, keyTypeElements, Type_AdditionalMenus, TOOLS_COLUMN_WIDTH_PX } from '../../types/MenuConfig'
+import { IType_DictHookRefSetterShowDialogComponents, keyTypeConfig, keyTypeElements, Type_AdditionalMenus, TOOLS_COLUMN_WIDTH_PX, MENU_CONFIG_WIDTH_PCT, MENU_CONFIG_MIN_WIDTH_PX } from '../../types/MenuConfig'
 import { DrawingAreaConfig, LegendConfig, TitleConfig } from '../configmenus/SankeyMenuConfigurationLayout'
 import { LinkValueTypeSelector, MenuConfigurationLinksData } from '../configmenus/SankeyMenuConfigurationLinksData'
 import { SankeyContainerSelection, SankeyNodeSelection } from '../configmenus/MenuElementsSelection'
 import { MenuConfigurationAppearance } from '../configmenus/MenuElementsAppearance'
 import { WrapperContentConfig } from '../configmenus/MenuCommon'
 import { InspectorPanel } from '../configmenus/inspector/InspectorPanel'
+import { default_font_size } from '../../css/Theme'
 import { useModelBinding } from '../../hooks/useModelBinding'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { UniversalFileConverter } from '../dialogs/PersistenceProcessDialog'
 import { FormatConfigStructure, } from '../dialogs/PersistenceProcessDialogConfigs'
-import { LabelRichTextEditor } from '../dialogs/RichTextEditor'
+import { LabelRichTextEditor, TooltipRichTextEditor } from '../dialogs/RichTextEditor'
 //import { MenuUnit } from '../configmenus/MenuElementsLabelValue'
 
-export const menu_config_width = 20
-export const menu_config_min_width_px = 420
+// #1243 — source de vérité déplacée dans MenuConfig (le mode épinglé calcule
+// sa réserve de largeur côté modèle) ; réexport pour compatibilité.
+export const menu_config_width = MENU_CONFIG_WIDTH_PCT
+export const menu_config_min_width_px = MENU_CONFIG_MIN_WIDTH_PX
 
 /**
  * Description placeholder
@@ -113,6 +116,13 @@ export const SankeyMenu = (
       menu_configuration.ref_close_filter_drawer.current(false)
     }
     set_show_nav(open)
+    // #1243 — en mode épinglé, ouvrir/fermer change la RÉSERVE de largeur :
+    // pose l'état tout de suite (le render l'écrasera à l'identique) puis
+    // notifie la grande zone pour que le diagramme se recadre.
+    if (menu_configuration.config_panel_pinned) {
+      menu_configuration.ref_menu_opened.current = [open, setConfigOpen]
+      menu_configuration.notifyMainZone()
+    }
   }
 
   menu_configuration.ref_menu_opened.current = [show_nav, setConfigOpen]
@@ -189,7 +199,9 @@ export const SankeyMenu = (
           config (ce sont des éléments « quoi configurer », distincts des outils canvas du bas) ; le
           marginTop:auto du cluster ci-dessous crée volontairement un espace entre les deux.
           extra_updater rafraîchit la colonne (surlignage) en plus du contenu du panneau. */}
-      {show_nav ? (
+      {/* #1243 — en mode inspecteur (dev), l'axe « élément » est porté par la
+          sélection : le sélecteur n'a plus de rôle et disparaît de la colonne. */}
+      {show_nav && !app_data.has_sankey_dev ? (
         <ConfigMenuElementToConfig
           app_data={app_data}
           additional_menus={additionalMenus}
@@ -300,8 +312,33 @@ export const SankeyMenu = (
         </Box>
       }
 
+      {/* #1243 — mode ÉPINGLÉ : le panneau se docke à droite (comme le tableur)
+          et réserve sa largeur — la zone de dessin se recadre à gauche. Pour
+          l'édition intense ; le mode survol (Drawer overlay) reste le défaut. */}
+      {app_data.is_editable && menu_configuration.config_panel_pinned && show_nav ? (
+        <Box
+          className='config_panel_pinned'
+          position='fixed'
+          right={toolsReserve + 'px'}
+          top={app_data.drawing_area.getNavBarHeight() + 'px'}
+          bottom={app_data.drawing_area.getBottomBarHeight() + 'px'}
+          width={drawer_width_css}
+          zIndex={26}
+          bg='white'
+          borderLeft='1px solid #e2e8f0'
+          overflowY='auto'
+          overflowX='hidden'
+          padding='0.2rem'
+        >
+          <ConfigMenu
+            app_data={app_data}
+            additional_menus={additionalMenus}
+          />
+        </Box>
+      ) : <></>}
+
       {
-        app_data.is_editable ? <>
+        app_data.is_editable && !menu_configuration.config_panel_pinned ? <>
           <Drawer
             blockScrollOnMount={false}
             isOpen={show_nav}
@@ -424,6 +461,10 @@ export const SankeyMenu = (
         minW={'25vw'}
         maxW={'25vw'}
       />
+      {/* #1243 — éditeur d'infobulle : le MÊME Rich Text Editor que les
+          libellés, pointé sur tooltip_text, en panneau draggable. L'onglet
+          Infobulle de l'inspecteur n'embarque qu'un texte simple + le bouton. */}
+      <TooltipRichTextEditor app_data={app_data} />
 
       {modal_support}
       {modal_resolution_png}
@@ -447,14 +488,19 @@ const ConfigMenu = ({ app_data, additional_menus }: {
   // #1243 — Bascule dev : l'inspecteur piloté par la sélection remplace la matrice
   // type×élément. Gardé derrière has_sankey_dev le temps de valider l'ergonomie
   // (prototype Nœud + Vue) avant de basculer par défaut et déposer la matrice.
+  // PAS de layerStyle 'config_menu_layout' ici : cette grille réserve une colonne
+  // « sidebar » (8fr 1fr) pour le sélecteur d'éléments et un fond thémé par type —
+  // deux concepts que l'inspecteur supprime (bande vide + fond bleu sinon).
   if (app_data.has_sankey_dev) {
-    return <Box layerStyle='config_menu_layout' style={{
-      background: (style_config[type_menu_configuration_selected].theme),
+    return <Box style={{
+      background: 'white',
+      borderRadius: '5px',
+      padding: '0.4rem',
       height: '100%',
-      alignContent: 'start'
+      fontSize: default_font_size,
+      color: '#444'
     }}>
       <Box
-        className='config_box'
         style={{ maxHeight: maxHConfig, overflowY: 'auto', overflowX: 'hidden' }}
         onMouseDownCapture={() => {
           if (app_data.drawing_area.isInEditionMode()) {

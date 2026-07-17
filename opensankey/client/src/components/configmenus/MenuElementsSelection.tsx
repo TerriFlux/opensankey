@@ -814,7 +814,62 @@ export const UnifiedElementSelection = ({
 // EXPORTS DE COMPATIBILITÉ
 // ==================================================================================
 
-export const SankeyNodeSelection = ({ app_data }: { app_data: Class_ApplicationData }) => {
+// #1243 — Ligne « Nom » autonome (avec undo), pour les sections d'inspecteur où
+// le sélecteur unifié est porté par le panneau (hide_selector) mais où le
+// renommage de l'élément sélectionné doit rester accessible.
+export const ElementNameRow = ({ app_data, elements, labelKey, tooltipKey }: {
+  app_data: Class_ApplicationData
+  elements: (Class_NodeBase | Class_ContainerElement)[]
+  labelKey: string
+  tooltipKey: string
+}) => {
+  const { t, history, menu_configuration } = app_data
+  const handleNameUpdate = (newName: string | null | undefined) => {
+    if (!newName || elements.length !== 1) return
+    const el = elements[0]
+    const oldName = el.name
+    const execute = () => {
+      el.name = newName
+      menu_configuration.ref_to_save_in_cache_indicator.current(false)
+      menu_configuration.updateAllComponentsRelatedToNodesConfig()
+    }
+    const undo = () => {
+      el.name = oldName
+      menu_configuration.ref_to_save_in_cache_indicator.current(false)
+      menu_configuration.updateAllComponentsRelatedToNodesConfig()
+    }
+    history.saveUndo(undo)
+    history.saveRedo(execute)
+    execute()
+  }
+  return (
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols' gridTemplateColumns='1fr 9fr'>
+      <Box layerStyle='menuconfigpanel_option_name' textStyle='h3'>
+        {t(labelKey)}
+      </Box>
+      <Box>
+        <OSTooltip label={t(tooltipKey)}>
+          <ConfigMenuTextInput
+            t={t}
+            default_value={(elements.length !== 1) ? '' : elements[0].name}
+            function_on_blur={handleNameUpdate}
+            disabled={elements.length !== 1}
+          />
+        </OSTooltip>
+      </Box>
+    </Box>
+  )
+}
+
+export const SankeyNodeSelection = ({ app_data, hide_selector = false, stock_only = false }: {
+  app_data: Class_ApplicationData
+  // #1243 — inspecteur : le sélecteur unifié est rendu une seule fois en tête de
+  // panneau ; la section ne garde que le nom et les extras (stock).
+  hide_selector?: boolean
+  // #1243 — onglet Stock de l'inspecteur : seulement les DONNÉES de stock
+  // (le nom vit dans l'en-tête d'identité, le sélecteur n'existe plus).
+  stock_only?: boolean
+}) => {
   // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
   const refreshThis = useModelBinding(app_data.menu_configuration.ref_to_menu_config_nodes_stock_updater)
 
@@ -829,13 +884,24 @@ export const SankeyNodeSelection = ({ app_data }: { app_data: Class_ApplicationD
   }
 
   return <>
-    <UnifiedElementSelection app_data={app_data} config={NODE_CONFIG} mode="full" />
+    {stock_only
+      ? <></>
+      : hide_selector
+        ? <ElementNameRow
+          app_data={app_data}
+          elements={nodes}
+          labelKey='Noeud.Nom'
+          tooltipKey='Noeud.tooltips.Nom'
+        />
+        : <UnifiedElementSelection app_data={app_data} config={NODE_CONFIG} mode="full" />}
     {showStock && (() => {
       const sv = firstNode.stock_value
       const data_taggs_list = app_data.drawing_area.sankey.data_taggs_list
       return <>
-        <Divider my={2} />
-        <Checkbox
+        {!stock_only && <Divider my={2} />}
+        {/* #1243 — dans l'inspecteur (stock_only), l'activation du stock vit
+            dans l'EN-TÊTE de l'onglet (œil « Activé »), pas ici. */}
+        {!stock_only && <Checkbox
           size='sm'
           isChecked={firstNode.has_stock}
           onChange={(e) => {
@@ -844,7 +910,7 @@ export const SankeyNodeSelection = ({ app_data }: { app_data: Class_ApplicationD
           }}
         >
           <Box as='span' fontSize='xs'>Stock</Box>
-        </Checkbox>
+        </Checkbox>}
         {firstNode.has_stock && <>
           {data_taggs_list.length > 0 &&
             <Box layerStyle='options_2cols'>
@@ -984,23 +1050,39 @@ export const SankeyNodeSelection = ({ app_data }: { app_data: Class_ApplicationD
             </>
           })()}
         </>}
-        {app_data.has_sankey_afm &&
-          <Checkbox
-            size='sm'
-            isChecked={firstNode.has_material_balance}
-            onChange={(e) => {
-              nodes.forEach(n => { n.has_material_balance = e.target.checked })
-              refreshStock()
-            }}
-          >
-            <OSTooltip label={'Si actif, le bilan mati\u00e8re de ce noeud sera respect\u00e9 lors de la r\u00e9conciliation'}>
-              <Box as='span' fontSize='xs'>{'Bilan mati\u00e8re'}</Box>
-            </OSTooltip>
-          </Checkbox>
-        }
+        {/* #1243 \u2014 le bilan mati\u00e8re est une propri\u00e9t\u00e9 du N\u0152UD (r\u00e9conciliation),
+            pas du stock : dans l'inspecteur (stock_only) il vit dans l'onglet
+            Valeur ; on ne le garde ici que pour le panneau historique. */}
+        {!stock_only && <NodeMaterialBalanceCheckbox app_data={app_data} />}
       </>
     })()}
   </>
+}
+
+// #1243 \u2014 Bilan mati\u00e8re : contrainte de r\u00e9conciliation port\u00e9e par le N\u0152UD
+// (pas par le stock). Rendue par l'onglet Valeur de l'inspecteur et par le
+// panneau historique. Se masque seule sans licence AFM ou sans n\u0153ud.
+export const NodeMaterialBalanceCheckbox = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  // Re-render local (pas de slot d\u00e9di\u00e9 : le slot stock est tenu par SankeyNodeSelection).
+  const refreshThis = useModelBinding()
+  const nodes = app_data.drawing_area.selected_nodes_list
+  const firstNode = nodes[0]
+  if (!app_data.has_sankey_afm || !firstNode) return <></>
+  return (
+    <Checkbox
+      size='sm'
+      isChecked={firstNode.has_material_balance}
+      onChange={(e) => {
+        nodes.forEach(n => { n.has_material_balance = e.target.checked })
+        app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+        refreshThis()
+      }}
+    >
+      <OSTooltip label={'Si actif, le bilan mati\u00e8re de ce noeud sera respect\u00e9 lors de la r\u00e9conciliation'}>
+        <Box as='span' fontSize='xs'>{'Bilan mati\u00e8re'}</Box>
+      </OSTooltip>
+    </Checkbox>
+  )
 }
 
 export const SankeyNodeSelectionSimple = ({ app_data }: { app_data: Class_ApplicationData }) => (
@@ -1015,8 +1097,19 @@ export const SankeyLinkSelectionSimple = ({ app_data }: { app_data: Class_Applic
   <UnifiedElementSelection app_data={app_data} config={LINK_CONFIG} mode="simple" />
 )
 
-export const SankeyContainerSelection = ({ app_data }: { app_data: Class_ApplicationData }) => (
-  <UnifiedElementSelection app_data={app_data} config={CONTAINER_CONFIG} mode="full" />
+export const SankeyContainerSelection = ({ app_data, hide_selector = false }: {
+  app_data: Class_ApplicationData
+  // #1243 — inspecteur : sélecteur porté par le panneau, la section garde le nom.
+  hide_selector?: boolean
+}) => (
+  hide_selector
+    ? <ElementNameRow
+      app_data={app_data}
+      elements={app_data.drawing_area.selected_containers_list}
+      labelKey='Container.Nom'
+      tooltipKey='Container.tooltips.Nom'
+    />
+    : <UnifiedElementSelection app_data={app_data} config={CONTAINER_CONFIG} mode="full" />
 )
 
 export const SankeyContainerSelectionSimple = ({ app_data }: { app_data: Class_ApplicationData }) => (
