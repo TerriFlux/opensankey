@@ -35,11 +35,13 @@ import {
 import { FaThumbtack } from 'react-icons/fa'
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { Type_JSON } from '../../types/Utils'
 import { Type_AdditionalMenus, TEMPLATE_GALLERY_WIDTH_PX } from '../../types/MenuConfig'
 import { useMainZone } from '../spreadsheet/MainZoneTabs'
 import { CONVERTER_CONFIGS } from '../dialogs/PersistenceProcessDialogConfigs'
 import { loadSankeymaticTemplate } from '../../Persistence/sankeymaticLoad'
 import { applyEsankeyFile } from '../../Persistence/esankeyLoad'
+import { decompressGzipDataFixed } from '../../Persistence/UniversalJSONCompression'
 
 // TYPES ================================================================================
 
@@ -116,12 +118,45 @@ const loadEsankeyTemplate = (
 }
 
 /**
+ * Charge un modèle JSON : récupéré en un seul GET, dézippé et chargé côté front.
+ *
+ * Le serveur n'a rien à convertir ici — il ne fait que servir un fichier — d'où
+ * le court-circuit du converter (convert/launch + polling check_process +
+ * retrieve_result, soit 3 aller-retours et un état en session Flask pour ouvrir
+ * puis refermer un dialogue). templates_asset applique la tolérance
+ * .json/.json.gz, sert le .gz brut et le rend cacheable (304).
+ */
+const loadJsonTemplate = (
+  new_data: Class_ApplicationData,
+  file_path: string,
+  source: Type_TemplateSource
+) => {
+  new_data.sendWaitingToast(
+    async () => {
+      const response = await fetch(assetUrl(file_path, source))
+      if (!response.ok) {
+        throw new Error('chargement: ' + response.status + ' ' + response.statusText)
+      }
+      const buffer = await response.arrayBuffer()
+      const decompressed = await decompressGzipDataFixed(buffer)
+      new_data.fromJSON(JSON.parse(decompressed) as Type_JSON, {})
+    },
+    {
+      success: { title: new_data.t('toast.load_json.success.title') },
+      loading: { title: new_data.t('toast.load_json.loading.title') },
+      error: { title: new_data.t('toast.load_json.error.title') }
+    }
+  )
+}
+
+/**
  * Charge une entrée de galerie dans l'application.
  *
  * Les formats importés (SankeyMATIC .txt, e!Sankey .sankey, STAN .smfa/.zmfa) ne
  * concernent que les modèles : parse front pour les deux premiers, conversion
- * serveur pour STAN. Sinon on passe par le converter, avec les dialogues de la
- * source : `load_example_*` résout contre SankeyData, `load_sankeytheque_*`
+ * serveur pour STAN. Le JSON se charge en direct (loadJsonTemplate). Seul le
+ * .xlsx passe encore par le converter, avec les dialogues de la source :
+ * `load_example_json` résout contre SankeyData, `load_sankeytheque_excel`
  * contre MFAData (example_root).
  */
 export const loadTemplate = (
@@ -142,11 +177,18 @@ export const loadTemplate = (
     loadEsankeyTemplate(new_data, file_path)
     return
   }
-  // Un .xlsx doit passer par le parser (dialogue excel) ; un .json / .json.gz
-  // s'ouvre directement.
-  const is_excel = /\.xlsx$/i.test(file_path)
+  // Un .json / .json.gz s'ouvre directement, sans dialogue : le serveur ne
+  // convertit rien. Un .xlsx doit passer par le parser (dialogue excel), dont la
+  // conversion tourne vraiment dans un thread — le converter garde tout son sens.
+  if (!/\.xlsx$/i.test(file_path)) {
+    loadJsonTemplate(new_data, file_path, source)
+    return
+  }
+  // Mapping inchangé pour le .xlsx : côté sankeydata, c'est bien load_example_json
+  // qui était utilisé, convert/launch basculant en input_format='excel' d'après
+  // l'extension. (Aucun .xlsx dans l'index des modèles à ce jour.)
   const config = source === 'mfadata'
-    ? (is_excel ? CONVERTER_CONFIGS['load_sankeytheque_excel'] : CONVERTER_CONFIGS['load_sankeytheque_json'])
+    ? CONVERTER_CONFIGS['load_sankeytheque_excel']
     : CONVERTER_CONFIGS['load_example_json']
   new_data.menu_configuration.ref_universal_converter_set_config.current(config, file_path, true)
   new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
