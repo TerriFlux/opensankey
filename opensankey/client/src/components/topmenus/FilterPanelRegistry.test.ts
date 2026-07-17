@@ -53,4 +53,17 @@ describe('#1243 Class_FilterPanelRegistry', () => {
     const reg = new Class_FilterPanelRegistry()
     expect(reg.getSections(fake_app)).toHaveLength(0)
   })
+
+  it('short_title est optionnel : le bouton d’onglet retombe sur title', () => {
+    const reg = new Class_FilterPanelRegistry()
+    reg.register(section({ id: 'long', title: () => 'Étiquettes des nœuds' }))
+    reg.register(section({
+      id: 'short', order: 20,
+      title: () => 'Étiquettes des flux',
+      short_title: () => 'Flux'
+    }))
+    const [a, b] = reg.getSections(fake_app)
+    expect((a.short_title ?? a.title)(fake_app)).toBe('Étiquettes des nœuds')
+    expect((b.short_title ?? b.title)(fake_app)).toBe('Flux')
+  })
 })
