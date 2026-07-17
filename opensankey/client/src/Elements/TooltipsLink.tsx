@@ -204,6 +204,19 @@ export class LinkTooltip {
       html += '</tr>'
     })
 
+    // #284 — sous-valeurs de la feuille courante : une ligne par sous-valeur,
+    // libellée par sa coordonnée (tags, un par groupe).
+    const sub_values = this._link.value?.sub_values_list ?? []
+    sub_values.forEach(sub => {
+      const coord = sub.tags_list
+        .map(tag => tag.display_name)
+        .join(', ')
+      html += '<tr>'
+      html += `<th>${this.escapeHtml(coord || '-')}</th>`
+      html += `<td class="value">${sub.value ?? '-'}</td>`
+      html += '</tr>'
+    })
+
     html += '</table>'
     return html
   }
