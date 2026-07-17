@@ -1,4 +1,4 @@
-// #1243 — Libellés de l'INSPECTEUR piloté par la sélection et des onglets du
+﻿// #1243 — Libellés de l'INSPECTEUR piloté par la sélection et des onglets du
 // panneau de filtres. Fichier dédié (comme traduction_guided_tour), fusionné
 // par deep_assign_resources dans traduction.tsx.
 //
@@ -42,6 +42,11 @@ export const resources_inspector = {
         divergent_cascade: 'Cascade of the 1st element — other selected elements follow a different cascade. ',
         selection_hint: 'Dimmed attributes: inherited from styles (cascade). Purple outline: overridden on the selection. Orange outline: multiple values.',
         tab_overloaded: 'Contains overridden attributes',
+        provenance: {
+          local: 'Overridden here (on the selection)',
+          from_style: 'Inherited from style « {{style}} »',
+          factory: 'Factory default value'
+        },
         // Onglets
         tab: {
           stock: 'Stock',
@@ -113,6 +118,11 @@ export const resources_inspector = {
         divergent_cascade: 'Cascade du 1er élément — d’autres éléments sélectionnés suivent une cascade différente. ',
         selection_hint: 'Attributs en retrait : hérités des styles (cascade). Liseré violet : surchargé sur la sélection. Liseré orange : valeurs multiples.',
         tab_overloaded: 'Contient des attributs surchargés',
+        provenance: {
+          local: 'Surchargé ici (sur la sélection)',
+          from_style: 'Hérité du style « {{style}} »',
+          factory: 'Valeur d’usine'
+        },
         tab: {
           stock: 'Stock',
           tooltip: 'Infobulle',
@@ -183,6 +193,11 @@ export const resources_inspector = {
         divergent_cascade: 'Cascada del 1.er elemento — otros elementos seleccionados siguen una cascada diferente. ',
         selection_hint: 'Atributos atenuados: heredados de los estilos (cascada). Borde morado: anulado en la selección. Borde naranja: valores múltiples.',
         tab_overloaded: 'Contiene atributos anulados',
+        provenance: {
+          local: 'Anulado aquí (en la selección)',
+          from_style: 'Heredado del estilo « {{style}} »',
+          factory: 'Valor de fábrica'
+        },
         tab: {
           stock: 'Stock',
           tooltip: 'Información',
@@ -253,6 +268,11 @@ export const resources_inspector = {
         divergent_cascade: 'Kaskade des 1. Elements — andere ausgewählte Elemente folgen einer anderen Kaskade. ',
         selection_hint: 'Abgeblendete Attribute: von den Stilen geerbt (Kaskade). Violetter Rahmen: in der Auswahl überschrieben. Oranger Rahmen: mehrere Werte.',
         tab_overloaded: 'Enthält überschriebene Attribute',
+        provenance: {
+          local: 'Hier überschrieben (in der Auswahl)',
+          from_style: 'Vom Stil « {{style}} » geerbt',
+          factory: 'Werkseinstellung'
+        },
         tab: {
           stock: 'Bestand',
           tooltip: 'Tooltip',
@@ -323,6 +343,11 @@ export const resources_inspector = {
         divergent_cascade: 'Cascata del 1º elemento — altri elementi selezionati seguono una cascata diversa. ',
         selection_hint: 'Attributi attenuati: ereditati dagli stili (cascata). Bordo viola: sovrascritto sulla selezione. Bordo arancione: valori multipli.',
         tab_overloaded: 'Contiene attributi sovrascritti',
+        provenance: {
+          local: 'Sovrascritto qui (sulla selezione)',
+          from_style: 'Ereditato dallo stile « {{style}} »',
+          factory: 'Valore di fabbrica'
+        },
         tab: {
           stock: 'Stock',
           tooltip: 'Tooltip',
