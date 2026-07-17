@@ -42,7 +42,7 @@ import { ConfigType } from '../Elements/ElementsAttributesConfig'
 import { Class_BaseElement, Class_ElementStyle, Class_ProtoElement, ExtractAttributeValue } from '../Elements/Element'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_NodeBase, Type_NameLabelSource } from '../Elements/NodeBase'
-import { ClassTemplate_Legend } from '../Elements/Legend'
+import { Class_LegendConfig } from '../Elements/LegendGenerator'
 import { Class_Sankey, Type_RatioFluxConstraint, Type_RatioStockFluxConstraint, Type_StockChainingConstraint, Type_SpreadsheetState } from '../types/Sankey'
 import { DEFAULT_THEME_ID, themeFromJSON } from '../types/Theme'
 import { Class_Tag } from '../types/Tag'
@@ -517,17 +517,19 @@ export class ContainerPersistence extends NodeBasePersistence {
       container.tied_to_nodes
     )
 
+    // OS#1254 — un cadre peut englober des NŒUDS ou d'autres CONTENEURS (cas du
+    // cadre de la légende, dont les enfants sont des zones de texte) : la
+    // résolution cherche dans les deux registres.
     const list_id_nodes = (json_object['attachedNodes'] as string[]) || []
     const nodes_dict = container.drawing_area.sankey.nodes_dict
+    const containers_dict = container.drawing_area.sankey.containers_dict
 
     list_id_nodes.forEach(node_id => {
-      if (node_id in nodes_dict) {
-        const node = nodes_dict[node_id]
-        container.attachContToNode(node)
+      const target: Class_NodeBase | undefined = nodes_dict[node_id] ?? containers_dict[node_id]
+      if (target && target !== container) {
+        container.attachNodeToCont(target)
       }
     })
-
-
   }
 }
 
@@ -955,20 +957,31 @@ export class NodeElementPersistence extends NodeBasePersistence {
 }
 
 
-export class LegendPersistence extends ProtoElementPersistence {
+/**
+ * OS#1254 — persistance des PARAMÈTRES du générateur de légende.
+ *
+ * Les zones de la légende elles-mêmes ('legend', 'legend-*') sont des
+ * conteneurs ordinaires, sérialisés dans 'labels' comme les autres. Le
+ * sous-objet 'legend' ne porte plus que les paramètres du générateur ; les
+ * clés reprennent celles de l'ancienne légende-objet pour que la lecture des
+ * anciens fichiers soit directe. Nouveauté : 'legend_managed' (absent = true).
+ * L'ancien mode « fixe à l'écran » ('legend_stick_to_drawing' /
+ * 'legacy_legend') est supprimé : ignoré en lecture, la légende vit dans le
+ * monde. En mode géré, les zones sont régénérées au premier draw ; en mode
+ * cassé, elles sont simplement relues depuis 'labels'.
+ */
+export class LegendPersistence {
 
   public static toJSON(
-    legend: ClassTemplate_Legend,
+    legend: Class_LegendConfig,
     json_object: Type_JSON
   ) {
     json_object['legend'] = {}
-    const json_legend = json_object['legend']
-    ProtoElementPersistence.toJSON(legend, json_legend)
-    //if (this.position_x != const_default_position_x || this.position_x != const_default_position_y) json_legend['legend_position'] = [String(this.position_x), String(this.position_y)]
+    const json_legend = json_object['legend'] as Type_JSON
+    json_legend['x'] = legend.position_x
+    json_legend['y'] = legend.position_y
+    if (!legend.managed) json_legend['legend_managed'] = false
     if (!legend.masked) json_legend['mask_legend'] = legend.masked
-    if (legend.shape_position_dx) json_legend['legend_dx'] = legend.shape_position_dx
-    if (legend.shape_position_dy) json_legend['legend_dy'] = legend.shape_position_dy
-    if (legend.display_legend_scale) json_legend['legend_scale'] = legend.display_legend_scale
     if (legend.width != default_width) json_legend['legend_width'] = legend.width
     if (legend.display_legend_scale) json_legend['display_legend_scale'] = legend.display_legend_scale
     if (legend.scale_legend_unit !== '') json_legend['scale_legend_unit'] = legend.scale_legend_unit
@@ -980,28 +993,13 @@ export class LegendPersistence extends ProtoElementPersistence {
     if (!legend.legend_show_dataTags) json_legend['legend_show_dataTags'] = legend.legend_show_dataTags
     if (legend.legend_show_constraints) json_legend['legend_show_constraints'] = legend.legend_show_constraints
     if (legend.legend_horizontal) json_legend['legend_horizontal'] = legend.legend_horizontal
-    if (legend.stick_to_drawing != undefined) json_legend['legend_stick_to_drawing'] = legend.stick_to_drawing
     if (legend.info_link_value_void) json_legend['info_link_value_void'] = legend.info_link_value_void
-    if (!legend.legend_show_data_type) json_legend['legend_show_data_type'] = legend.legend_show_data_type
+    if (legend.legend_show_data_type) json_legend['legend_show_data_type'] = legend.legend_show_data_type
     return json_object
-  }
-  public static fromJSON_pre_0_9(
-    _legend: ClassTemplate_Legend,
-    _json_object: Type_JSON,
-    _kwargs?: Type_JSON
-  ) {
-  }
-
-  public static fromJSON_0_9(
-    _legend: ClassTemplate_Legend,
-    json_object: Type_JSON,
-    _kwargs?: Type_JSON
-  ) {
-    convert_pre_v_0_91(json_object)
   }
 
   public static fromJSON_0_91(
-    _legend: ClassTemplate_Legend,
+    _legend: Class_LegendConfig,
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
@@ -1013,23 +1011,22 @@ export class LegendPersistence extends ProtoElementPersistence {
   }
 
   public static fromJSON(
-    version: number,
-    legend: ClassTemplate_Legend,
+    _version: number,
+    legend: Class_LegendConfig,
     json_object: Type_JSON,
-    kwargs?: Type_JSON
+    _kwargs?: Type_JSON
   ): void {
-
     const json_legend = getJSONFromJSON(json_object, 'legend', {})
-    ProtoElementPersistence.fromJSON(version, legend, json_legend, kwargs)
-    // const legend_position = getStringListFromJSON(
-    //   json_legend, 'legend_position', [String(default_legend_position_x), String(default_legend_position_y)]
-    // )
-    // this._position_x = +legend_position[0]
-    // legend.position_y = +legend_position[1]
+    // Position d'apparition du cadre. Anciens fichiers « fixes à l'écran » :
+    // les coordonnées écran sont reprises telles quelles comme coordonnées
+    // monde (la légende apparaît près du coin haut-gauche de la vue).
+    // Repli sur legend_dx/dy (import e!Sankey et vieux fichiers sans x/y).
+    legend.initial_position = {
+      x: getNumberFromJSON(json_legend, 'x', getNumberFromJSON(json_legend, 'legend_dx', legend.initial_position.x)),
+      y: getNumberFromJSON(json_legend, 'y', getNumberFromJSON(json_legend, 'legend_dy', legend.initial_position.y))
+    }
+    legend.managed = getBooleanFromJSON(json_legend, 'legend_managed', true)
     legend['_masked'] = getBooleanFromJSON(json_legend, 'mask_legend', legend.masked)
-    legend['_dx'] = getNumberFromJSON(json_legend, 'legend_dx', legend.shape_position_dx)
-    legend['_dy'] = getNumberFromJSON(json_legend, 'legend_dy', legend.shape_position_dy)
-    legend['_scale'] = getNumberFromJSON(json_legend, 'legend_scale', legend['_scale'])
     legend['_width'] = getNumberFromJSON(json_legend, 'legend_width', legend.width)
     legend['_display_legend_scale'] = getBooleanFromJSON(json_legend, 'display_legend_scale', legend.display_legend_scale)
     legend['_scale_legend_unit'] = getStringFromJSON(json_legend, 'scale_legend_unit', legend.scale_legend_unit)
@@ -1043,11 +1040,6 @@ export class LegendPersistence extends ProtoElementPersistence {
     legend['_legend_horizontal'] = getBooleanFromJSON(json_legend, 'legend_horizontal', legend.legend_horizontal)
     legend['_info_link_value_void'] = getBooleanFromJSON(json_legend, 'info_link_value_void', legend.info_link_value_void)
     legend['_legend_show_data_type'] = getBooleanFromJSON(json_legend, 'legend_show_data_type', legend.legend_show_data_type)
-    legend['_stick_to_drawing'] = getBooleanFromJSON(json_legend, 'legend_stick_to_drawing', legend.stick_to_drawing)
-    // Var only present if json is legacy
-    if (!legend.stick_to_drawing) {
-      legend['_stick_to_drawing'] = getBooleanFromJSON(json_legend, 'legacy_legend', legend.stick_to_drawing)
-    }
   }
 }
 
@@ -1154,21 +1146,20 @@ export class SankeyPersistence {
     kwargs?: Type_JSON
   ) {
     const json_container_object = getJSONFromJSON(json_object, 'labels', {})
-    if (json_object.version == 0.8 && (json_object.file_name as string)?.includes('Agricole Référentiel Flux')) {
-      Object.entries(json_container_object).reverse()
-        .forEach(([_, container_json]) => {
-          const name = (container_json as Type_JSON)['name'] as string
-          const container = sankey.containers_dict[_] ?? sankey.addNewContainer(_, name)
-          fromJSON(container, container_json as Type_JSON, kwargs)
-        })
-    } else {
-      Object.entries(json_container_object)
-        .forEach(([_, container_json]) => {
-          const name = (container_json as Type_JSON)['name'] as string
-          const container = sankey.containers_dict[_] ?? sankey.addNewContainer(_, name)
-          fromJSON(container, container_json as Type_JSON, kwargs)
-        })        
-    }
+    const entries = (json_object.version == 0.8 && (json_object.file_name as string)?.includes('Agricole Référentiel Flux'))
+      ? Object.entries(json_container_object).reverse()
+      : Object.entries(json_container_object)
+    // Passe 1 : créer TOUS les conteneurs avant de les charger — un cadre peut
+    // référencer (attachedNodes) un conteneur défini plus loin dans le JSON
+    // (cas du cadre de la légende, OS#1254).
+    entries.forEach(([_, container_json]) => {
+      const name = (container_json as Type_JSON)['name'] as string
+      if (!sankey.containers_dict[_]) sankey.addNewContainer(_, name)
+    })
+    // Passe 2 : charger.
+    entries.forEach(([_, container_json]) => {
+      fromJSON(sankey.containers_dict[_], container_json as Type_JSON, kwargs)
+    })
   }
 
   private static load_nodes(

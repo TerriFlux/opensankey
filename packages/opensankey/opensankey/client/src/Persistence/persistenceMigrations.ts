@@ -21,7 +21,12 @@ import { sankeyRootSchema } from './sankeyFormatSchema'
 //   2 — vues persistées en DELTA vs le maître (#254) : une entrée de `views`
 //       porte `__patch` au lieu du snapshot intégral. Incompatible en LECTURE
 //       pour une app antérieure (elle prendrait le patch pour une vue).
-export const CURRENT_FORMAT_VERSION = 2
+//   3 — légende = zones de texte générées (OS#1254) : le sous-objet `legend` ne
+//       porte plus que les paramètres du générateur (+ `legend_managed`) ; les
+//       zones ('legend', 'legend-*') sont des conteneurs ordinaires dans
+//       `labels`. Incompatible en LECTURE pour une app antérieure (elle
+//       afficherait l'ancienne légende-objet EN PLUS des zones).
+export const CURRENT_FORMAT_VERSION = 3
 
 /**
  * Version « effective » servant à piloter les migrations au chargement.
