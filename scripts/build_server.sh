@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 
 exit_if_error() {
   local exit_code=$1

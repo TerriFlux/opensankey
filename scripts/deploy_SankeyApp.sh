@@ -1,4 +1,4 @@
-﻿#! /bin/bash
+#! /bin/bash
 
 # --- Shared-deploy umask ---
 # Ce build est lance a la fois par deploy_release.sh (utilisateur ubuntu) et

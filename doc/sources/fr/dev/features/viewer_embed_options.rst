@@ -146,7 +146,7 @@ Interaction
        maintenir la touche Shift.
 
 État initial
-~~~~~~~~~~~
+~~~~~~~~~~~~
 
 .. list-table::
    :header-rows: 1
