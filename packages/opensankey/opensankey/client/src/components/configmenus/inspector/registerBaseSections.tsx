@@ -158,7 +158,13 @@ export function registerBaseInspectorSections(): void {
     order: 10,
     hue: 'style',
     title: (app_data) => app_data.t('Menu.Config.title_graph'),
-    render: (app_data) => <DrawingAreaConfig app_data={app_data} />
+    // `extra_background_element` (import d'image de fond, injecté par OSP) était
+    // passé par l'ex-ConfigContent de la matrice : on le relaie ici, sinon la
+    // fonctionnalité disparaît avec elle.
+    render: (app_data) => <DrawingAreaConfig
+      app_data={app_data}
+      extra_background_element={app_data.menu_configuration.additionalMenus.current.extra_background_element}
+    />
   })
 
   inspector_registry.register({

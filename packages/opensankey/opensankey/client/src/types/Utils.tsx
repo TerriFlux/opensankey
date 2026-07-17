@@ -320,11 +320,8 @@ export const WrapperInitializeAdditionalMenus = ({ new_data, initializeAdditiona
   new_data.menu_configuration.additionalMenus.current = {
     external_top_buttons_item: {},
 
-    additional_menu_type: {},
-    additional_menu_button_element_configurable: {},
-    // additional_menu_config_content: { data: {}, style: {}, presentation:{} },
-    additional_new_menu_config_content: {},
-
+    // #1243 — les champs d'injection du menu de config sont déposés avec la
+    // matrice : les couches passent par inspector_registry / filter_panel_registry.
     extra_background_element: <></>,
     additional_nav_item: [],
     additional_bottom_item: [],

@@ -1,4 +1,4 @@
-// ==================================================================================================
+﻿// ==================================================================================================
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
@@ -25,7 +25,6 @@
 // ==================================================================================================
 
 import React from 'react'
-import { WrapperContentConfig } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
 import { inspector_registry } from '@terriflux/opensankey/src/components/configmenus/inspector/InspectorRegistry'
 import { filter_panel_registry } from '@terriflux/opensankey/src/components/topmenus/FilterPanelRegistry'
 import {
@@ -97,7 +96,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
 
   // Data -------------------------------------------------------------------------------
   const new_data_plus = new_data as Class_ApplicationDataOSP
-  const { t, has_sankey_plus, has_sankey_afm, icon_library } = new_data_plus
+  const { t, has_sankey_plus, has_sankey_afm } = new_data_plus
 
 
 
@@ -166,83 +165,14 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   additionalMenus.current.template_module_key.push('advanced')
 
 
-  // #1243 — la matrice type×élément ne survit que pour l'ancien panneau (hors
-  // licence dev) : ses cases « presentation » sont désormais servies par
-  // l'inspecteur (onglet Tags = assignation) et le panneau Filtres (onglet
-  // Éditer = groupes de tags + vues). L'ensemble tombera avec la matrice.
-  additionalMenus.current.additional_menu_type['presentation'] = 'presentation'
-
-  additionalMenus.current.additional_menu_button_element_configurable['view'] = { icon: icon_library.icon_view, text: t('Menu.Config.element_view'), disabled: !has_sankey_plus }
-  additionalMenus.current.additional_menu_button_element_configurable['data_tag'] = { icon: has_sankey_plus ? icon_library.icon_data_tag_unselected : icon_library.icon_data_tag_diabled, text: t('Menu.Config.element_data_tag'), disabled: !has_sankey_plus }
-  additionalMenus.current.additional_menu_button_element_configurable['flow_tag'] = { icon: has_sankey_plus ? icon_library.icon_flow_tag : icon_library.icon_flow_tag_diabled, text: t('Menu.Config.element_flow_tag'), disabled: !has_sankey_plus }
-  additionalMenus.current.additional_menu_button_element_configurable['node_tag'] = { icon: has_sankey_plus ? icon_library.icon_node_tag : icon_library.icon_node_tag_diabled, text: t('Menu.Config.element_node_tag'), disabled: !has_sankey_plus }
-  if (new_data_plus.has_sankey_dev) additionalMenus.current.additional_menu_button_element_configurable['level_tag'] = { icon: has_sankey_plus ? icon_library.icon_level_tag : icon_library.icon_level_tag_diabled, text: t('Menu.Config.element_level_tag'), disabled: !has_sankey_plus }
-
-  // Add menu for new menu type 'Présentation'
-  additionalMenus.current.additional_new_menu_config_content['presentation'] = {
-    // 'object': <WrapperContentConfig title={t('Menu.Config.element_object')} hide={!has_sankey_plus}>
-    //   <MenuConfigurationContainersOSP app_data={new_data_plus} />
-    // </WrapperContentConfig>,
-
-    // 'node': <WrapperContentConfig title={t('Flux.IS')}><>
-    //   <MenuConfigurationNodesTooltip new_data={new_data_plus} />
-    //   <NodeHyperLinkOSP new_data_plus={new_data_plus} />
-    // </>
-    // </WrapperContentConfig>,
-
-    // 'flow': <WrapperContentConfig title={t('Noeud.IS')}>
-    //   <MenuConfigurationLinksTooltip app_data={new_data_plus} />
-    // </WrapperContentConfig>,
-    'node_tag': <WrapperContentConfig title={t('Menu.EN')} >
-      <>
-        <SankeySettingsEditionElementTags
-          new_data={new_data_plus}
-          elementTagNameProp='node_taggs'
-        />
-        <SankeyMenuConfigurationNodesTags
-          app_data={new_data_plus}
-        /></>
-    </WrapperContentConfig>,
-    'flow_tag': <WrapperContentConfig title={t('Menu.EF')} >
-      <><SankeySettingsEditionElementTags
-        new_data={new_data_plus}
-        elementTagNameProp='flux_taggs'
-      />
-      <MenuConfigurationLinksTags
-        new_data={new_data_plus}
-      />
-      </>
-    </WrapperContentConfig>,
-    'data_tag': <WrapperContentConfig title={t('Menu.ED')} >
-      <SankeySettingsEditionElementTags
-        new_data={new_data_plus}
-        elementTagNameProp='data_taggs'
-      />
-    </WrapperContentConfig>,
-    'view': <WrapperContentConfig title={t('view.storytelling')}>
-      <ViewsConfig app_data={new_data_plus}
-      />
-    </WrapperContentConfig>,
-  }
-
-  // Add menu for menu type 'data'
-  // additionalMenus.current.additional_menu_config_content['data'] = {
-  //   'data_tag': <WrapperContentConfig title={t('Menu.ED')} >
-  //     <SankeySettingsEditionElementTags
-  //       new_data={new_data_plus}
-  //       elementTagNameProp='data_taggs'
-  //     />
-  //   </WrapperContentConfig>
-  // }
-  if (new_data_plus.has_sankey_dev) {
-    additionalMenus.current.additional_new_menu_config_content['presentation']['level_tag'] = <WrapperContentConfig title={t('Menu.Hierarchy')} >
-      <><SankeySettingsEditionElementTags
-        new_data={new_data_plus}
-        elementTagNameProp='level_taggs'
-      />
-      </>
-    </WrapperContentConfig>
-  }
+  // #1243 — La matrice type×élément est DÉPOSÉE : l'axe « Présentation » et ses
+  // cases (node_tag, flow_tag, data_tag, level_tag, view) n'existent plus. Leur
+  // contenu est réparti selon sa NATURE :
+  //  - assignation des tags à la sélection -> onglet Tags de l'inspecteur
+  //    (inspector_registry, plus bas) ;
+  //  - édition des GROUPES de tags + vues -> panneau Filtres, onglet « Éditer »
+  //    (filter_panel_registry, ci-dessous) — règle R3 : un groupe de tags n'est
+  //    pas une propriété d'élément mais un contexte global de lecture.
 
   // #1243 — Onglet TAGS de l'inspecteur : ASSIGNATION des tags existants aux
   // éléments sélectionnés. L'édition des GROUPES de tags reste hors inspecteur

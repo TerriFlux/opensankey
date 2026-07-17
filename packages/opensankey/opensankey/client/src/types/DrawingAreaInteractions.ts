@@ -1,4 +1,4 @@
-// ==================================================================================================
+﻿// ==================================================================================================
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
@@ -186,7 +186,7 @@ export class Class_DrawingAreaInteractions {
           // l'oubliait, laissant le nœud non sélectionné après le dessin.
           da.purgeSelectionOfElement(false)
           da.addElementToSelection(da.ghost_link.source)
-          da.application_data.menu_configuration.openConfigMenuElementsNodes()
+          da.application_data.menu_configuration.openConfigMenu()
         }
         else if (da.isMouseOverAnExistingNode() === true) {
           let node_id: string = da.ghost_link?.source.id //in case the loop don't find the hovered node we take the source as default
@@ -204,7 +204,7 @@ export class Class_DrawingAreaInteractions {
           da.addElementToSelection(newLink1)
           da.addElementToSelection(newLink1.source)
           da.addElementToSelection(newLink1.target)
-          da.application_data.menu_configuration.openConfigMenuElementsLinks()
+          da.application_data.menu_configuration.openConfigMenu()
           // Delete old target node
           da.deleteNode(da.ghost_link?.target as Class_NodeElement)
           da.drawing_link = false
@@ -223,7 +223,7 @@ export class Class_DrawingAreaInteractions {
           da.addElementToSelection(newLink2)
           da.addElementToSelection(newLink2.source)
           da.addElementToSelection(newLink2.target)
-          da.application_data.menu_configuration.openConfigMenuElementsLinks()
+          da.application_data.menu_configuration.openConfigMenu()
         }
         // In case we get there still deref ghost link
         da.ghost_link.delete()
@@ -280,7 +280,7 @@ export class Class_DrawingAreaInteractions {
           // l'oubliait, laissant le nœud non sélectionné après le dessin.
           da.purgeSelectionOfElement(false)
           da.addElementToSelection(da.ghost_link.source)
-          da.application_data.menu_configuration.openConfigMenuElementsNodes()
+          da.application_data.menu_configuration.openConfigMenu()
         }
         else if (da.isMouseOverAnExistingNode() === true) {
           let node_id: string = da.ghost_link?.source.id //in case the loop don't find the hovered node we take the source as default
@@ -299,7 +299,7 @@ export class Class_DrawingAreaInteractions {
           da.addElementToSelection(l)
           da.addElementToSelection(l.source)
           da.addElementToSelection(l.target)
-          da.application_data.menu_configuration.openConfigMenuElementsLinks()
+          da.application_data.menu_configuration.openConfigMenu()
           // Delete old target node
           da.deleteNode(da.ghost_link?.target as Class_NodeElement)
           da.drawing_link = false
@@ -321,7 +321,7 @@ export class Class_DrawingAreaInteractions {
           da.addElementToSelection(l)
           da.addElementToSelection(l.source)
           da.addElementToSelection(l.target)
-          da.application_data.menu_configuration.openConfigMenuElementsLinks()
+          da.application_data.menu_configuration.openConfigMenu()
         }
 
         // Undo/Redo related instructions ================================
@@ -421,11 +421,11 @@ export class Class_DrawingAreaInteractions {
       if (event.shiftKey) {
         // If 2 types of element were selected, open config for nodes & flow
         if (nb_type_el_sel == 2) {
-          da.application_data.menu_configuration.openConfigMenuElementsNodesLinks()
+          da.application_data.menu_configuration.openConfigMenu()
         } else if (nb_type_el_sel == 1) {
           // else if 1 type of element was selected, open config for nodes
           // (can't select flow without selecting nodes so if we have 1 type of element selected it's the nodes)
-          da.application_data.menu_configuration.openConfigMenuElementsNodes()
+          da.application_data.menu_configuration.openConfigMenu()
         }
       }
       da.selection_zone.reset()

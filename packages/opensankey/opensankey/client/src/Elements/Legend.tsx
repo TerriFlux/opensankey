@@ -251,11 +251,11 @@ export class ClassTemplate_Legend extends Class_NodeBase {
       // Add node to selection
       drawing_area.addLegendToSelection()
 
-      // If shift key is pressed then open config menu to type config context & sub menu graph
+      // Shift : ouvre le panneau de config. #1243 — plus besoin de forcer le
+      // type/élément de la matrice : la légende vient d'entrer dans la
+      // sélection, l'inspecteur bascule sur sa cible tout seul.
       if (event.shiftKey) {
         this.drawing_area.application_data.menu_configuration.openConfigMenu()
-        this.drawing_area.application_data.menu_configuration.type_menu_configuration_selected = 'style'
-        this.drawing_area.application_data.menu_configuration.elements_configurable_selected.context = ['legend']
         this.drawing_area.application_data.menu_configuration.ref_to_menu_config_updater.current()
       }
     }

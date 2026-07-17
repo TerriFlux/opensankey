@@ -1,4 +1,4 @@
-// ==================================================================================================
+﻿// ==================================================================================================
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
@@ -31,7 +31,6 @@ import {
   Type_MacroTagGroup, Type_JSON,
   getBooleanFromJSON, getNumberFromJSON, getStringFromJSON
 } from '../types/Utils'
-import { typeButtonElementConfigurable } from '../components/topmenus/SankeyMenus'
 import { Class_DataTagGroup } from './TagGroup'
 import { Class_DataTag } from './Tag'
 import { Class_EventBus, MAIN_ZONE_TOPIC, SELECTION_TOPIC } from './EventBus'
@@ -46,15 +45,13 @@ import { Class_ElementStyle } from '../Elements/Element'
 export type Type_AdditionalMenus = {
   external_top_buttons_item: { [x: string]: JSX.Element },
 
-  // Config menu
-  additional_menu_type: { [x: string]: string }
-  additional_menu_button_element_configurable: typeButtonElementConfigurable
-  // additional_menu_config_content: {
-  //   data: { [x: string]: JSX.Element },
-  //   style: { [x: string]: JSX.Element },
-  //   presentation: { [x: string]: JSX.Element }
-  // }
-  additional_new_menu_config_content: { [x: string]: { [x: string]: JSX.Element } }
+  // #1243 — Le contrat d'injection du menu de config (additional_menu_type,
+  // additional_menu_button_element_configurable, additional_new_menu_config_content)
+  // est DÉPOSÉ avec la matrice type×élément qu'il alimentait. Les couches
+  // supérieures enregistrent désormais leurs contenus dans les REGISTRES :
+  //  - inspector_registry     (onglets de l'inspecteur, par cible)
+  //  - filter_panel_registry  (sections « Éditer » du panneau Filtres)
+  // — id idempotent, ordre, gate de licence, au lieu de dictionnaires imbriqués.
 
   extra_background_element: JSX.Element
   additional_nav_item: JSX.Element[],
@@ -86,8 +83,8 @@ export const TOOLS_COLUMN_WIDTH_PX = 48
 // pour la réserve de largeur du mode épinglé (#1243).
 export const MENU_CONFIG_WIDTH_PCT = 20
 export const MENU_CONFIG_MIN_WIDTH_PX = 420
-export type keyTypeConfig = 'data' | 'style'
-export type keyTypeElements = 'data' | 'DA' | 'flow' | 'node' | 'element' | 'object' | 'legend'
+// #1243 — `keyTypeConfig` (axe Type) et `keyTypeElements` (axe Élément) étaient
+// les coordonnées de la matrice du menu de config : supprimés avec elle.
 export interface IType_DictHookRefSetterShowDialogComponents {
   // Config menu - Layout
   // Modal - Welcome
@@ -176,14 +173,6 @@ export class Class_MenuConfig {
   protected _flow_color_origin_type: ('flow' | 'source' | 'target' | 'gradient' | 'auto')[] = ['flow', 'source', 'target']
   protected _shape_type: string[] = ['bezier_path', 'bezier_outline', 'bezier_outline_exact']
 
-  /**
-   * Variable that determine what kind of element we are configuring in the config menu
-   *
-   * @protected
-   * @memberof Class_MenuConfig
-   */
-  protected _type_menu_configuration_selected: keyTypeConfig = 'data'
-
   protected _spreadsheet_freeze = false
 
   // Mode de placement des nœuds créés depuis le tableur (ajout de flux/nœud) :
@@ -200,27 +189,10 @@ export class Class_MenuConfig {
   // Réglage de session (non persisté).
   protected _spreadsheet_matrix_mode: 'cross' | 'value' = 'cross'
 
-  /**
-   * Dict containing theme of menu according to _type_menu_configuration_selected & elements configurable
-   *
-   * @protected
-   * @type {{ [x: string]: { theme: string; elements_configurable: string[] } }}
-   * @memberof Class_MenuConfig
-   */
-  protected _style_config: { [x: string]: { theme: string; elements_configurable: string[] } } = {
-    'data': { 'theme': '#78a7c2', elements_configurable: ['flow', 'node', 'object'] },
-    'style': { 'theme': '#78c2ad', elements_configurable: ['DA', 'legend', 'element', 'tag_flow', 'tag_node'] },
-    'presentation': { 'theme': '#778a95', elements_configurable: ['node_tag', 'flow_tag', 'data_tag', 'view'] }
-  }
-
+  // #1243 — `_style_config` (thème + éléments configurables par type) et
+  // `_elements_configurable_selected` étaient l'état de la MATRICE type×élément :
+  // déposés avec elle. L'inspecteur dérive sa cible de la sélection.
   protected _tab_selected: 'shape' | 'name_label' | 'value_label' | 'icon' | 'stock' = 'shape'
-  protected _elements_configurable_selected: { [x: string]: keyTypeElements[] } = {
-    'data': [],
-    'style': [],
-    'presentation': []
-  }
-
-  public get elements_configurable_selected() { return this._elements_configurable_selected }
   public get tab_selected() { return this._tab_selected }
   public set tab_selected(tab_selected) { this._tab_selected = tab_selected }
 
@@ -604,11 +576,8 @@ export class Class_MenuConfig {
   private _additionalMenus: MutableRefObject<Type_AdditionalMenus> = { current: {
     external_top_buttons_item: {},
 
-    // Menu config
-    additional_menu_type: {},
-    additional_menu_button_element_configurable: {},
-    // additional_menu_config_content: { data: {}, style:{}, presentation:{} },
-    additional_new_menu_config_content: {},
+    // Menu config : cf. Type_AdditionalMenus — l'injection du panneau de config
+    // passe désormais par les registres (#1243).
     extra_background_element: <></>,
 
     additional_nav_item: [],
@@ -784,18 +753,6 @@ export class Class_MenuConfig {
     this._ref_close_filter_drawer.current(false)
   }
 
-  public openConfigMenuElementsContainers() {
-    this.openConfigMenu()
-    // Leave enough time for menus to open
-    setTimeout(() => {
-      // this._type_menu_configuration_selected = 'presentation' as keyTypeConfig
-      this._elements_configurable_selected.data = ['object' as keyTypeElements]
-      this._elements_configurable_selected.style = ['element']
-      this._elements_configurable_selected.presentation = ['object' as keyTypeElements]
-      this._ref_to_menu_config_updater.current()
-    }, 200)
-  }
-
   /**
    * Open menu configuration
    * @memberof Class_MenuConfig
@@ -829,60 +786,11 @@ export class Class_MenuConfig {
 
 
 
-  /**
-   * Open config menu if closed and show sub-menu node in type config data
-   * @memberof Class_MenuConfig
-   */
-  public openConfigMenuElementsNodes() {
-    // Element config menu must be opened first
-    this.openConfigMenu()
-    // Leave enough time for menus to open
-    setTimeout(() => {
-      this._type_menu_configuration_selected = 'style'
-      this._elements_configurable_selected.data = ['node']
-      this._elements_configurable_selected.style = ['element']
-      this._ref_to_menu_config_updater.current()
-    }, 200)
-  }
-
-  /**
-  * Open config menu if closed and show sub-menu node and flow in type config data
-  * @memberof Class_MenuConfig
-  */
-  public openConfigMenuElementsNodesLinks() {
-    // Element config menu must be opened first
-    this.openConfigMenu()
-    // Leave enough time for menus to open
-    setTimeout(() => {
-      this._elements_configurable_selected.data = ['node', 'flow']
-      this._elements_configurable_selected.style = ['element']
-      this._ref_to_menu_config_updater.current()
-    }, 200)
-  }
-
-  /**
-   * Open config menu if closed and show sub-menu flow in type config data
-   * @memberof Class_MenuConfig
-   */
-  public openConfigMenuElementsLinks() {
-    // Element config menu must be opened first
-    this.openConfigMenu()
-    // Leave enough time for menus to open
-    setTimeout(() => {
-      this._elements_configurable_selected.data = ['node', 'flow']
-      this._elements_configurable_selected.style = ['element']
-      this._ref_to_menu_config_updater.current()
-    }, 200)
-  }
-
-  public toggleElementInConfigEdition(kt: keyTypeConfig, ke: keyTypeElements) {
-    if (this._elements_configurable_selected[kt].includes(ke)) {
-      const idx = this._elements_configurable_selected[kt].indexOf(ke)
-      this._elements_configurable_selected[kt].splice(idx, 1)
-    } else {
-      this._elements_configurable_selected[kt].splice(0, 0, ke)
-    }
-  }
+  // #1243 — La matrice est déposée : les ex-openConfigMenuElementsNodes/Links/
+  // NodesLinks/Containers, qui ouvraient le panneau PUIS forçaient (après 200 ms)
+  // le type et l'élément de la matrice, n'ont plus d'objet — l'inspecteur dérive
+  // sa cible de la sélection. Leurs appelants (interactions de canvas, légende,
+  // stock) appellent désormais openConfigMenu() tout court.
 
   public updateComponentRelatedToLayoutApparence() {
     this._add_waiting_process(
@@ -1661,10 +1569,8 @@ export class Class_MenuConfig {
   public get spreadsheet_matrix_mode() { return this._spreadsheet_matrix_mode }
   public set spreadsheet_matrix_mode(_: 'cross' | 'value') { this._spreadsheet_matrix_mode = _ }
 
-  public get type_menu_configuration_selected() { return this._type_menu_configuration_selected }
-  public set type_menu_configuration_selected(value) { this._type_menu_configuration_selected = value }
-
-  public get style_config(): { [x: string]: { theme: string; elements_configurable: string[] } } { return this._style_config }
+  // #1243 — accesseurs de la matrice (type_menu_configuration_selected,
+  // style_config, elements_configurable_selected) supprimés avec elle.
   public get flow_color_origin_type(): string[] { return this._flow_color_origin_type }
   public get shape_type(): string[] { return this._shape_type }
 
