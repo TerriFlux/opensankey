@@ -388,7 +388,9 @@ export const LinkOriginDestEditor = ({ app_data, refresh }: {
   </Box>
 }
 
-export const MenuConfigurationLinksData = ({ app_data, hide_selector = false, hide_origin_dest = false }: {
+export const MenuConfigurationLinksData = ({
+  app_data, hide_selector = false, hide_origin_dest = false, afm_only = false, hide_afm = false
+}: {
   app_data: Class_ApplicationData
   // #1243 — inspecteur : le sélecteur unifié est rendu une seule fois en tête de
   // panneau ; on masque alors celui embarqué ici (doublon).
@@ -396,6 +398,12 @@ export const MenuConfigurationLinksData = ({ app_data, hide_selector = false, hi
   // #1243 — inspecteur : origine/destination vivent dans l'en-tête d'identité
   // du panneau (LinkOriginDestEditor), pas dans l'onglet Valeur.
   hide_origin_dest?: boolean
+  // #1258 — onglet MFA de l'inspecteur : ne rendre QUE le panneau AFM (type de
+  // valeur, bornes, incertitude), sans rangée Basique/AFM ni sélecteurs.
+  afm_only?: boolean
+  // #1258 — onglet Valeur : le panneau AFM vit désormais dans l'onglet MFA ;
+  // on masque ici la rangée Basique/AFM et son contenu.
+  hide_afm?: boolean
 }) => {
   const { t, drawing_area, menu_configuration } = app_data
   const { sankey } = drawing_area
@@ -449,7 +457,9 @@ export const MenuConfigurationLinksData = ({ app_data, hide_selector = false, hi
 
   const value_option = first_link_value?.value_option ?? default_value_option
   // Force AFM tab when value_option is not 'value' (basic tab disabled)
-  if (dataTab === 'basic' && value_option !== 'value' && app_data.has_sankey_afm) setDataTab('afm')
+  if (!afm_only && !hide_afm && dataTab === 'basic' && value_option !== 'value' && app_data.has_sankey_afm) setDataTab('afm')
+  // #1258 — l'onglet appelant impose le panneau : MFA → 'afm', Valeur → 'basic'.
+  const effective_tab = afm_only ? 'afm' : hide_afm ? 'basic' : dataTab
 
   const unit_text = value_option_percent_constants.includes(value_option) ?
     '%' :
@@ -525,12 +535,12 @@ export const MenuConfigurationLinksData = ({ app_data, hide_selector = false, hi
   }
 
   return <Box layerStyle='menu_sub_section'>
-    {!hide_selector && <SankeyLinkSelection app_data={app_data} />}
+    {!hide_selector && !afm_only && <SankeyLinkSelection app_data={app_data} />}
     {/* Édition origine / destination du flux (dans l'inspecteur : en-tête d'identité) */}
-    {!hide_origin_dest &&
+    {!hide_origin_dest && !afm_only &&
       <LinkOriginDestEditor app_data={app_data} refresh={refreshThisAndUpdateRelatedComponents} />}
     {/* Data tags selector */}
-    {data_taggs_list.map(data_tagg => {
+    {!afm_only && data_taggs_list.map(data_tagg => {
       return <BOX2COLSTITLEH4 key={data_tagg.id} title={data_tagg.name}>
         <Select
           name={data_tagg.id}
@@ -546,8 +556,9 @@ export const MenuConfigurationLinksData = ({ app_data, hide_selector = false, hi
       </BOX2COLSTITLEH4>
     })}
 
-    {/* Tab selector: Basique / AFM */}
-    {app_data.has_sankey_afm && (
+    {/* Tab selector: Basique / AFM — masqué quand l'onglet appelant impose le
+        panneau (#1258 : Valeur → basic, MFA → afm). */}
+    {app_data.has_sankey_afm && !afm_only && !hide_afm && (
       <Box layerStyle='options_2cols'>
         <OSTooltip label={value_option !== 'value' ? t('Flux.data.tooltips.tab_basic_disabled') : ''}>
           <Button
@@ -567,8 +578,17 @@ export const MenuConfigurationLinksData = ({ app_data, hide_selector = false, hi
       </Box>
     )}
 
+    {/* #1258 — en mode hide_afm (onglet Valeur), un type de valeur non basique
+        s'édite dans l'onglet MFA : on l'indique au lieu d'afficher un champ
+        de valeur inadapté. */}
+    {effective_tab === 'basic' && value_option !== 'value' && app_data.has_sankey_afm && (
+      <Box layerStyle='menuconfigpanel_option_name' opacity={0.7}>
+        {t('inspector.mfa.value_in_mfa')}
+      </Box>
+    )}
+
     {/* ===== Panel "Basique" ===== */}
-    {dataTab === 'basic' && (<>
+    {effective_tab === 'basic' && (value_option === 'value' || !app_data.has_sankey_afm) && (<>
       {/* Value */}
       <RowSetter2Cols
         attributePath={'Flux.labels'}
@@ -596,6 +616,7 @@ export const MenuConfigurationLinksData = ({ app_data, hide_selector = false, hi
           <BOX2COLS>
             <Button
               variant={default_value_target !== null ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+              sx={{ width: 'fit-content', paddingInline: '0.6rem' }}
               isDisabled={!app_data.has_sankey_plus}
               onClick={() => {
                 if (default_value_target !== null) {
@@ -632,7 +653,7 @@ export const MenuConfigurationLinksData = ({ app_data, hide_selector = false, hi
     </>)}
 
     {/* ===== Panel "AFM" ===== */}
-    {dataTab === 'afm' && app_data.has_sankey_afm && (<>
+    {effective_tab === 'afm' && app_data.has_sankey_afm && (<>
       {/* Data type selector */}
       <RowSetter2Cols
         attributePath={'Flux.data'}
@@ -799,6 +820,7 @@ export const MenuConfigurationLinksData = ({ app_data, hide_selector = false, hi
             <BOX2COLS>
               <Button
                 variant={first_link?.dataUncertainty !== null ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                sx={{ width: 'fit-content', paddingInline: '0.6rem' }}
                 onClick={() => {
                   if (first_link?.dataUncertainty !== null) {
                     Class_LinkElement.updateLinks(
@@ -835,7 +857,7 @@ export const MenuConfigurationLinksData = ({ app_data, hide_selector = false, hi
     </>)}
 
     {/* Text display and mode selector */}
-    <Box layerStyle='options_2cols'>
+    {!afm_only && <Box layerStyle='options_2cols'>
       <RowSetter2Cols
         attributePath={'Flux.data'}
         attributeKey={'affichage'}
@@ -856,10 +878,11 @@ export const MenuConfigurationLinksData = ({ app_data, hide_selector = false, hi
       </RowSetter2Cols>
       <Button
         variant={(displayMode === 'simple_text' || displayMode === 'rich_text') ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
+        sx={{ width: 'fit-content', justifySelf: 'end', paddingInline: '0.8rem' }}
         onClick={setModeText}
       >
         {t('Menu.display_mode.editor')}
       </Button>
-    </Box>
+    </Box>}
   </Box>
 }

@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import { MutableRefObject } from 'react'
+import { MutableRefObject, ReactNode } from 'react'
 import { Class_ApplicationData } from '../types/ApplicationData'
 import { Type_AdditionalMenus } from '../types/MenuConfig'
 
@@ -42,7 +42,9 @@ export type FCType_WrapperBoxSubSectionMenu = {
   title: string,
   is_open?: boolean,
   with_border?:boolean,
-  children: JSX.Element
+  // #1258 — ReactNode : une section accepte plusieurs enfants (fragments,
+  // conditions), pas seulement un Element unique.
+  children: ReactNode
 }
 
 export type FType_DiagramSelector = (
