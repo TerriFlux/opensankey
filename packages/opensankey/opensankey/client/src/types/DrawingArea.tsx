@@ -52,7 +52,8 @@ import {
   Class_LinkElement,
   sortLinksElementsByIds
 } from '../Elements/Link'
-import { ClassTemplate_Legend } from '../Elements/Legend'
+import { Class_LegendConfig } from '../Elements/LegendGenerator'
+import { isLegendElementId } from '../Elements/legendIds'
 import { Class_BaseElement, Class_ProtoElement } from '../Elements/Element'
 import { Class_ElementStyle } from '../Elements/Element'
 import { NodePositioning } from '../Algorithms/NodePositioning'
@@ -103,7 +104,6 @@ export class Class_DrawingArea {
   public d3_selection_grid: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_elements_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_elements_sankey_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
-  public d3_selection_legend: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_handlers: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_zone_select: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
@@ -246,7 +246,7 @@ export class Class_DrawingArea {
   protected _margin_left_mm: number = default_margin_mm
 
   protected _sankey: Class_Sankey
-  protected _legend: ClassTemplate_Legend
+  protected _legend: Class_LegendConfig
 
 
   private _fit_margin: number = 10
@@ -575,7 +575,7 @@ export class Class_DrawingArea {
     this._zoom_height = this.window_fitting_height
     this._zoom_width = this.window_fitting_width
     this._sankey = this.createNewSankey(id)
-    this._legend = new ClassTemplate_Legend(this, this._sankey)
+    this._legend = new Class_LegendConfig(this)
     this._selection_zone = this.createNewSelectionZone()
     this.nodePositioning = new NodePositioning(this)
 
@@ -595,7 +595,6 @@ export class Class_DrawingArea {
     this._contextualised_free_label = undefined
     // Clean Elements
     // this._sankey.delete() TODO Trop lourd + bug suppression vues
-    this._legend.delete()
     this._selection_zone.unDraw()
 
     // Clean drawing area
@@ -612,9 +611,9 @@ export class Class_DrawingArea {
     // Copy Sankey
     this._sankey.copyFrom(drawing_area_to_copy._sankey)
 
-    //create new ClassTemplate_Legend after deleting previous in 'this.delete()'
-    this._legend = new ClassTemplate_Legend(this, this._sankey)
-    // Copy Legend
+    // Copie des paramètres du générateur de légende (les zones 'legend-*'
+    // elles-mêmes sont des conteneurs, copiés avec le sankey ci-dessus)
+    this._legend = new Class_LegendConfig(this)
     this._legend.copyFrom(drawing_area_to_copy._legend)
 
     //create new selection zone after deleting previous in 'this.delete()'
@@ -879,10 +878,6 @@ export class Class_DrawingArea {
     this.d3_selection_bg = this.d3_selection_bg_group.append('g').attr('id', 'g_color_bg')
     this.d3_selection_grid = this.d3_selection_bg_group.append('g').attr('id', 'g_grid')
 
-    // Since legend can't be affected by zoom, it outside g_drawing
-
-
-
     // Add specific groups for nodes, link and others
     this.d3_selection_elements_group = this.d3_selection.append('g').attr('id', 'g_elements')
     // OS#1246 — persistance du sous-arbre nœuds/flux. unDraw() ne détache que
@@ -913,12 +908,6 @@ export class Class_DrawingArea {
     }
     this.d3_selection_handlers = this.d3_selection_elements_group.append('g').attr('id', 'g_handlers')
     this.d3_selection_zone_select = this.d3_selection_elements_group.append('g').attr('id', 'g_select_zone')
-
-    if (this._legend.stick_to_drawing) {
-      this.d3_selection_legend = this.d3_selection.append('g').attr('id', 'grp_legend')
-    } else {
-      this.d3_selection_legend = this.d3_selection_zoom_area.append('g').attr('id', 'grp_legend')
-    }
 
     this.d3_selection_def_gradient = this.d3_selection_elements_group?.append('g').attr('id', 'def_gradient') ?? null
 
@@ -1159,9 +1148,6 @@ export class Class_DrawingArea {
         return false
     }
 
-    if (this._legend.isMouseOver()) {
-      return false
-    }
     if (!this.sankey.container_activated) return true
 
     mouse_over_nodes = this.sankey.isMouseOverAnExistingContainer()
@@ -1195,6 +1181,9 @@ export class Class_DrawingArea {
     this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
   }
   public deleteContainer(c: Class_ContainerElement) {
+    // OS#1254 — supprimer une zone de la légende (ou son cadre) la « casse » :
+    // elle devient un snapshot statique, plus de régénération automatique.
+    if (isLegendElementId(c.id)) this._legend.markBroken()
     // Remove link from selection if necessary
     this.removeElementFromSelection(c)
     // Remove link from sankey
@@ -1225,12 +1214,6 @@ export class Class_DrawingArea {
     this.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
   }
 
-  public addLegendToSelection(): void {
-    // Update selection list
-    this._selection['legend'] = this._legend
-    this._legend.setSelected()
-  }
-
   public removeElementFromSelection(element: Class_ProtoElement) {
     if (this._selection[element.id] !== undefined) {
       // Update selection list
@@ -1239,15 +1222,6 @@ export class Class_DrawingArea {
       element.setUnSelected()
       // Update related menus
       this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
-    }
-  }
-
-  public removeLegendFromSelection() {
-    if (this._selection['legend'] !== undefined) {
-      // Update selection list
-      delete this._selection['legend']
-      // Update selection attribute on legend
-      this._legend.setUnSelected()
     }
   }
 
@@ -1502,44 +1476,8 @@ export class Class_DrawingArea {
 
     if (bbox == undefined)
       return
-    // Issue #165 — Anti-divergence : la legend stick_to_drawing est contre-
-    // scalée par 1/k_fit dans son transform (cf. Legend.applyPosition). Sa
-    // bbox locale est donc démultipliée par le même facteur, et l'inclure
-    // ici ferait diverger les fits successifs comme pour les <text>. On
-    // l'exclut quand la compensation est active.
-    if (!skip_text_in_bbox && this.legend.is_visible && this.legend.stick_to_drawing) {
-      const legendBbox = this.d3_selection_legend?.node()?.getBBox()
-      if (legendBbox) {
-        // Une légende stick_to_drawing peut être glissée arbitrairement loin du
-        // contenu (souvent par accident, ou héritée d'une position obsolète).
-        // L'inclure inconditionnellement gonflait la bbox de cadrage : l'auto-fit
-        // gardait alors une zone géante impossible à rapetisser, la légende
-        // restant hors écran sans retour possible. On ne l'inclut donc dans le
-        // cadrage que si elle est proche du contenu (à fit_margin près) ; sinon
-        // on fitte uniquement sur les éléments.
-        const tol = this._fit_margin
-        const legend_near_content =
-          legendBbox.x <= bbox.x + bbox.width + tol &&
-          legendBbox.x + legendBbox.width >= bbox.x - tol &&
-          legendBbox.y <= bbox.y + bbox.height + tol &&
-          legendBbox.y + legendBbox.height >= bbox.y - tol
-        if (legend_near_content) {
-          // Calculer la bounding box englobante
-          const minX = Math.min(bbox.x, legendBbox.x)
-          const minY = Math.min(bbox.y, legendBbox.y)
-          const maxX = Math.max(bbox.x + bbox.width, legendBbox.x + legendBbox.width)
-          const maxY = Math.max(bbox.y + bbox.height, legendBbox.y + legendBbox.height)
-
-          // Créer une nouvelle bbox combinée
-          bbox = {
-            x: minX,
-            y: minY,
-            width: maxX - minX,
-            height: maxY - minY
-          } as DOMRect
-        }
-      }
-    }
+    // OS#1254 — plus de cas particulier légende : ses zones sont des conteneurs
+    // ordinaires, déjà couverts par la mesure du contenu ci-dessus.
 
     // Bounding box with no element -> reset to fresh-diagram state (full fitting window,
     // scale 1, origin at top-left). Needed e.g. when switching A3/A4/A5 -> free on an
@@ -1815,11 +1753,8 @@ export class Class_DrawingArea {
     this._sankey.containers_list.forEach(c => {
       c.drawNameLabel()
     })
-    // Legend : pas de compensation par-attribut (font-size hardcodée à
-    // _legend_police partout). À la place, on contre-scale son groupe racine
-    // via Legend.applyPosition() qui lit k_fit. Suffit de re-déclencher la
-    // pose du transform.
-    this._legend.applyPosition()
+    // OS#1254 — la légende est faite de conteneurs ordinaires ('legend-*'),
+    // couverts par la boucle ci-dessus : plus de compensation dédiée.
   }
 
   /**
@@ -2259,10 +2194,11 @@ export class Class_DrawingArea {
     this.sankey.containers_list.forEach(n => {
       n.draw()
     })
-    if (this.legend.stick_to_drawing) {
-      this.legend.position_x += shift_x
-      this.legend.position_y += shift_y
-      this.legend.draw()
+    // OS#1254 — les zones de la légende sont des conteneurs, décalées ci-dessus.
+    // Reporter aussi la position d'apparition (cadre pas encore généré).
+    this.legend.initial_position = {
+      x: this.legend.initial_position.x + shift_x,
+      y: this.legend.initial_position.y + shift_y
     }
 
     // Les positions sont définitives : on cadre dessus (force = le verrou de taille
@@ -2616,7 +2552,6 @@ export class Class_DrawingArea {
     this.sankey.visible_nodes_list.forEach(n => n.setEventsListeners())
     this.sankey.visible_links_list.forEach(n => n.setEventsListeners())
     this.sankey.visible_containers_list.forEach(n => n.setEventsListeners())
-    this._legend.setEventsListeners()
     this.application_data.menu_configuration.updateAllComponentsRelatedToToolbar()
   }
 
@@ -2626,7 +2561,6 @@ export class Class_DrawingArea {
     this.sankey.visible_nodes_list.forEach(n => n.setEventsListeners())
     this.sankey.visible_links_list.forEach(n => n.setEventsListeners())
     this.sankey.visible_containers_list.forEach(n => n.setEventsListeners())
-    this._legend.setEventsListeners()
     this.application_data.menu_configuration.updateAllComponentsRelatedToToolbar()
   }
 
@@ -2679,7 +2613,6 @@ export class Class_DrawingArea {
     this.sankey.visible_nodes_list.forEach(n => n.setEventsListeners())
     this.sankey.visible_links_list.forEach(n => n.setEventsListeners())
     this.sankey.visible_containers_list.forEach(n => n.setEventsListeners())  // drag event is disabled in edition mode so we have to reset eventListener when we switch mode
-    this._legend.setEventsListeners()
     this.application_data.menu_configuration.updateAllComponentsRelatedToToolbar()
     //this.containers_list.forEach(lab => lab.setEventsListeners())
   }
@@ -2706,8 +2639,8 @@ export class Class_DrawingArea {
   }
 
   public get sankey() { return this._sankey }
-  public get legend(): ClassTemplate_Legend { return this._legend }
-  public set legend(value: ClassTemplate_Legend) { this._legend = value }
+  public get legend(): Class_LegendConfig { return this._legend }
+  public set legend(value: Class_LegendConfig) { this._legend = value }
   public get ghost_link() { return this._ghost_link }
   public set ghost_link(value) { this._ghost_link = value }
 

@@ -1,3 +1,4 @@
+import * as d3 from '../d3Modules'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeBase } from './NodeBase'
 import { ContainerStyle } from './ElementStyle'
@@ -101,6 +102,43 @@ export class Class_ContainerElement extends Class_NodeBase {
   public applyPosition() {
     super.applyPosition()
     this.drawShape()
+  }
+
+  // OS#1254 — une zone ATTACHÉE à un cadre géométrique forme un BLOC avec lui :
+  // son drag déplace le cadre le plus englobant et tout son contenu. Pour la
+  // déplacer seule, il faut d'abord la désolidariser du cadre (ce qui, pour la
+  // légende, casse la mise en forme générée). Le drag lui-même ne casse rien.
+  protected eventMouseDrag(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+    if (this.drawing_area.isInSelectionMode()) {
+      const parent_frame = this.attached_container.find(c => c.tied_to_nodes)
+      if (parent_frame) {
+        // Remonte au cadre le plus englobant (blocs emboîtés de la légende)
+        let root: Class_NodeBase = parent_frame
+        const seen = new Set<Class_NodeBase>([root])
+        for (;;) {
+          const upper = root.attached_container.find(c => c.tied_to_nodes && !seen.has(c))
+          if (!upper) break
+          seen.add(upper)
+          root = upper
+        }
+        // Déplace le cadre racine et toute sa descendance (une seule fois chacun)
+        const moved = new Set<Class_NodeBase>()
+        const moveTree = (el: Class_NodeBase) => {
+          if (moved.has(el)) return
+          moved.add(el)
+          el.position_x += event.dx
+          el.position_y += event.dy
+          el.applyPosition()
+          if (el.tied_to_nodes) {
+            el.attached_node.forEach(child => { if (child.is_visible) moveTree(child) })
+          }
+        }
+        moveTree(root)
+        this.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+        return
+      }
+    }
+    super.eventMouseDrag(event)
   }
 
   public draw() {
