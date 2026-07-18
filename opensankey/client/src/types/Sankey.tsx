@@ -37,6 +37,7 @@ import { Class_NodeElement } from '../Elements/Node'
 import type { Class_NodeBase } from '../Elements/NodeBase'
 import { Class_NodeDimension } from '../Elements/NodeDimension'
 import { Class_DataTag } from '../types/Tag'
+import type { Class_Tag } from '../types/Tag'
 import type { Class_FluxTag } from '../types/Tag'
 import { Class_NodeTagGroup, Class_FluxTagGroup, Class_DataTagGroup, Class_LevelTagGroup, Class_ViewTagGroup } from './TagGroup'
 import { Class_Theme, themeOpenSankey } from './Theme'
@@ -433,6 +434,115 @@ export class Class_Sankey {
     //    synchroniser.
     this.removeTagGroupWithId('data_taggs', data_tagg.id)
     return flux_tagg
+  }
+
+  /**
+   * #285 (§3.3/§6.2) — bascule annotation→DIMENSION : un groupe libre porteur
+   * devient un groupe de dataTags. Chaque valeur coordonnée par un tag du
+   * groupe devient la valeur de la tranche correspondante (ses autres
+   * coordonnées restent des valeurs coordonnées dans la tranche) ; la
+   * quantité SANS tag du groupe (scalaire hérité ou valeur non coordonnée)
+   * va sur un tag « Non affecté » créé automatiquement (totaux préservés,
+   * réversible). Un groupe à échelles distinctes devient un groupe unité
+   * (échelles transférées).
+   *
+   * Piège structurel : addDataTagGroup étend l'arbre de valeurs de chaque
+   * lien en DÉTRUISANT les feuilles (expand copie puis delete) — on
+   * snapshotte donc tout AVANT, puis on réécrit dans les tranches.
+   */
+  public convertFluxTagGroupToDataTagGroup(flux_tagg: Class_FluxTagGroup): Class_DataTagGroup | null {
+    if (flux_tagg.is_dimension) return null
+    const group_tag_ids = new Set(flux_tagg.tags_list.map(tag => tag.id))
+    const tags_meta = flux_tagg.tags_list.map(tag => ({
+      id: tag.id, name: tag.name, long_name: tag.long_name, color: tag.color,
+      scale: (tag as Class_FluxTag).scale
+    }))
+
+    // 1) Snapshot de toutes les feuilles de tous les liens porteurs
+    type TvSnap = { value: number | null, own: string | null, others: Class_Tag[] }
+    type LeafSnap = { link: Class_LinkElement, path: Class_DataTag[], scalar: number | null, tvs: TvSnap[] }
+    const snaps: LeafSnap[] = []
+    let needs_unassigned = false
+    const path_tags_from_ids = (ids: string[]): Class_DataTag[] =>
+      this.data_taggs_list.map((tagg, idx) => tagg.tags_dict[ids[idx]] as Class_DataTag).filter(tag => tag !== undefined)
+    this.links_list.forEach(l => {
+      if (l.is_multi_link) return
+      Object.values(l.getAllValues()).forEach(([leaf]) => {
+        const lv = leaf as Class_LinkValue
+        const scalar = lv.valueData ?? lv.valueResult
+        const tvs: TvSnap[] = lv.tagged_values_list.map(tv => {
+          const own = tv.tags_list.find(tag => group_tag_ids.has(tag.id))?.id ?? null
+          const others = tv.tags_list.filter(tag => !group_tag_ids.has(tag.id))
+          return { value: tv.value, own, others }
+        })
+        // §3.0ter — avec un groupe porteur, le scalaire n'est qu'un CACHE de
+        // la valeur sélectionnée : il ne compte comme quantité non ventilée
+        // que si le flux n'a AUCUNE valeur coordonnée (flux vierge).
+        if ((scalar !== null && tvs.length === 0) || tvs.some(tv => tv.own === null)) needs_unassigned = true
+        if (scalar !== null || tvs.length > 0)
+          snaps.push({ link: l, path: path_tags_from_ids(leaf.data_tags_id), scalar, tvs })
+      })
+    })
+
+    // 2) Créer la dimension (mêmes tags ; « Non affecté » si nécessaire).
+    //    L'expansion détruit les feuilles — les snapshots font foi.
+    const data_tagg = this.addDataTagGroup(flux_tagg.id, flux_tagg.name, false)
+    const to_unit = flux_tagg.has_own_scales
+    if (to_unit) data_tagg.is_unit = true
+    tags_meta.forEach(meta => {
+      const tag = data_tagg.addTag(meta.name, meta.id) as Class_DataTag
+      tag.color = meta.color
+      tag.long_name = meta.long_name
+      if (to_unit && meta.scale !== undefined) tag.scale = meta.scale
+    })
+    const UNASSIGNED_ID = flux_tagg.id + '_unassigned'
+    if (needs_unassigned) {
+      const tag = data_tagg.addTag('Non affecté', UNASSIGNED_ID) as Class_DataTag
+      tag.color = '#b0b0b0'
+    }
+    ;(data_tagg.tags_list[0] as Class_DataTag)?.setSelected()
+
+    // 3) Réécrire les tranches depuis les snapshots
+    const bucket_of = (snap: LeafSnap, tag_id: string): Class_LinkValue | null =>
+      snap.link.valueForTags([...snap.path, data_tagg.tags_dict[tag_id] as Class_DataTag]) as Class_LinkValue | null
+    snaps.forEach(snap => {
+      // par tag du groupe : les valeurs qui le portent
+      tags_meta.forEach(meta => {
+        const carried = snap.tvs.filter(tv => tv.own === meta.id)
+        const slice = bucket_of(snap, meta.id)
+        if (!slice || carried.length === 0) return
+        if (carried.length === 1 && carried[0].others.length === 0) {
+          slice.valueData = carried[0].value
+          slice.valueResult = null
+        }
+        else {
+          carried.forEach(tv => {
+            const recreated = slice.addTaggedValue()
+            recreated.value = tv.value
+            tv.others.forEach(tag => tag.addReference(recreated))
+          })
+        }
+      })
+      // le non-ventilé : scalaire hérité + valeurs sans tag du groupe
+      if (needs_unassigned) {
+        const slice = bucket_of(snap, UNASSIGNED_ID)
+        if (slice) {
+          if (snap.scalar !== null && snap.tvs.length === 0) {
+            slice.valueData = snap.scalar
+            slice.valueResult = null
+          }
+          snap.tvs.filter(tv => tv.own === null).forEach(tv => {
+            const recreated = slice.addTaggedValue()
+            recreated.value = tv.value
+            tv.others.forEach(tag => tag.addReference(recreated))
+          })
+        }
+      }
+    })
+
+    // 4) Supprimer le groupe libre (ses tags ne coordonnent plus rien)
+    this.removeTagGroupWithId('flux_taggs', flux_tagg.id)
+    return data_tagg
   }
 
   /**

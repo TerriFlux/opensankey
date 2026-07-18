@@ -92,6 +92,68 @@ describe('convertDataTagGroupToFluxTagGroup — dimension → annotation', () =>
     expect(simple!.tags_list.map(t => t.id)).toEqual(['t2021'])
   })
 
+  it('promotes a carrying free group to a dimension (annotation→dimension)', () => {
+    const { sankey, link } = makeApp()
+    const matiere = sankey.addFluxTagGroup('matiere', 'Matière', false)
+    matiere.carries_values = true
+    const acier = matiere.addTag('Acier', 'acier') as Class_Tag
+    const cuivre = matiere.addTag('Cuivre', 'cuivre') as Class_Tag
+
+    // Flux ventilé : 6 sur acier, 4 sur cuivre (le scalaire 10 n'est qu'un
+    // cache de la valeur sélectionnée — il ne doit PAS partir en Non affecté)
+    link.valueCurrent = 10
+    const tv1 = link.value!.addTaggedValue()
+    tv1.value = 6
+    tv1.addTag(acier)
+    const tv2 = link.value!.addTaggedValue()
+    tv2.value = 4
+    tv2.addTag(cuivre)
+    // Second flux VIERGE (scalaire seul) : sa quantité va sur « Non affecté »
+    const c = sankey.addNewNodeWithName('C')
+    const link2 = sankey.addNewLink(link.target, c)
+    link2.valueCurrent = 102
+
+    const data_tagg = sankey.convertFluxTagGroupToDataTagGroup(matiere)
+
+    expect(data_tagg).not.toBeNull()
+    // Le groupe libre a disparu, la dimension existe avec « Non affecté »
+    expect(sankey.flux_taggs_list).toHaveLength(0)
+    expect(sankey.data_taggs_list.map(g => g.id)).toEqual(['matiere'])
+    expect(data_tagg!.tags_list.map(t => t.id)).toEqual(['acier', 'cuivre', 'matiere_unassigned'])
+    // Tranches : valeurs par tag ; pas de double comptage du cache
+    const t_acier = data_tagg!.tags_dict['acier'] as Class_DataTag
+    const t_cuivre = data_tagg!.tags_dict['cuivre'] as Class_DataTag
+    const t_un = data_tagg!.tags_dict['matiere_unassigned'] as Class_DataTag
+    expect(link.valueForTag(t_acier)!.valueData).toBe(6)
+    expect(link.valueForTag(t_cuivre)!.valueData).toBe(4)
+    expect(link.valueForTag(t_un)!.valueData).toBe(null)
+    // Le flux vierge garde sa quantité sur « Non affecté »
+    expect(link2.valueForTag(t_un)!.valueData).toBe(102)
+  })
+
+  it('round-trips dimension→annotation→dimension', () => {
+    const { sankey, link } = makeApp()
+    const annee = sankey.addDataTagGroup('annee', 'Année', false)
+    const t2020 = annee.addTag('2020', 't2020') as Class_DataTag
+    const t2021 = annee.addTag('2021', 't2021') as Class_DataTag
+    t2020.setSelected()
+    link.valueForTag(t2020)!.valueData = 10
+    link.valueForTag(t2021)!.valueData = 12
+
+    const free = sankey.convertDataTagGroupToFluxTagGroup(annee)
+    expect(free.carries_values).toBe(true)
+    const back = sankey.convertFluxTagGroupToDataTagGroup(free)
+
+    expect(back).not.toBeNull()
+    // Pas de « Non affecté » : tout était ventilé (le scalaire de l'aller est
+    // un cache de la tranche sélectionnée, pas une quantité indépendante)
+    expect(back!.tags_list.map(t => t.id)).toEqual(['t2020', 't2021'])
+    const b2020 = back!.tags_dict['t2020'] as Class_DataTag
+    const b2021 = back!.tags_dict['t2021'] as Class_DataTag
+    expect(link.valueForTag(b2020)!.valueData).toBe(10)
+    expect(link.valueForTag(b2021)!.valueData).toBe(12)
+  })
+
   it('collapses only the targeted level in a two-group tree', () => {
     const { sankey, link } = makeApp()
     const annee = sankey.addDataTagGroup('annee', 'Année', false)
