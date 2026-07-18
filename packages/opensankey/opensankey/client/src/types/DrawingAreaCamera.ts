@@ -160,6 +160,25 @@ export function flyToNode(da: Class_DrawingArea, node: Class_NodeElement, scale?
 }
 
 /**
+ * Centre la caméra sur un point MONDE `(wx, wy)` avec une animation cinématique. Conserve
+ * l'échelle courante par défaut ; `scale` force un niveau de zoom cible.
+ *
+ * Généralisation de flyToNode aux éléments qui ne sont pas des nœuds (flux, zones de texte) :
+ * la recherche (OS#1273) calcule le centre de l'élément trouvé et recadre dessus.
+ */
+export function flyToPoint(da: Class_DrawingArea, wx: number, wy: number, scale?: number): void {
+  const area_node = da.d3_selection_zoom_area?.node()
+  if (!area_node || !Number.isFinite(wx) || !Number.isFinite(wy)) return
+  const t0 = d3.zoomTransform(area_node)
+  const k = scale ?? t0.k
+  // Place le point monde au centre de la fenêtre visible (sous la nav bar).
+  const px = da.window_fitting_width / 2
+  const py = da.window_fitting_height / 2 + da.getNavBarHeight()
+  const to = CameraMath.centerTransform({ x: wx, y: wy }, { x: px, y: py }, k)
+  setCamera(da, to, { animate: true })
+}
+
+/**
  * Viewport utile en pixels écran : zone réellement disponible pour le diagramme (fenêtre ou
  * conteneur hôte, réserves de panneaux déduites), et décalage vertical de la nav bar.
  */

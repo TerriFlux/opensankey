@@ -448,6 +448,9 @@ export class Class_MenuConfig {
   // Bascule (ouvre/ferme) le drawer de filtres depuis la colonne d'outils (le bouton flottant
   // historique étant masqué en éditeur). Renseigné par ToolbarFilter.
   private _ref_toggle_filter_drawer: MutableRefObject<(() => void)>
+  // OS#1273 — Ouvre/bascule la barre de recherche d'élément (Ctrl+F). Renseigné
+  // par le composant ElementSearchOverlay ; appelé depuis le gestionnaire clavier.
+  private _ref_toggle_search: MutableRefObject<(() => void)>
   private _ref_toolbar: MutableRefObject<(() => void)>
 
   private _ref_rerender_submodules_menus: MutableRefObject<() => void>
@@ -764,6 +767,7 @@ export class Class_MenuConfig {
 
     this._ref_close_filter_drawer = { current: () => null }
     this._ref_toggle_filter_drawer = { current: () => undefined }
+    this._ref_toggle_search = { current: () => undefined }
     this._ref_toolbar = { current: () => null }
   }
 
@@ -1593,6 +1597,7 @@ export class Class_MenuConfig {
 
   public get ref_close_filter_drawer(): MutableRefObject<((_: boolean) => void)> { return this._ref_close_filter_drawer }
   public get ref_toggle_filter_drawer(): MutableRefObject<(() => void)> { return this._ref_toggle_filter_drawer }
+  public get ref_toggle_search(): MutableRefObject<(() => void)> { return this._ref_toggle_search }
   public get ref_toolbar(): MutableRefObject<(() => void)> { return this._ref_toolbar }
   public get ref_to_toolbar_node_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_node_tag_updater }
   public get ref_to_toolbar_link_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_link_tag_updater }

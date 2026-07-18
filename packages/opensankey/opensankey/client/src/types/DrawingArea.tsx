@@ -2271,6 +2271,11 @@ export class Class_DrawingArea {
     Camera.flyToNode(this, node, scale)
   }
 
+  /** Centre la caméra sur un point MONDE, avec animation (recherche flux / zone — OS#1273). */
+  public flyToPoint(wx: number, wy: number, scale?: number): void {
+    Camera.flyToPoint(this, wx, wy, scale)
+  }
+
   /** Viewport utile en pixels écran (réserves de panneaux déduites) + décalage de la nav bar. */
   public getViewport(): { width: number, height: number, top_offset: number } {
     return Camera.getViewport(this)
