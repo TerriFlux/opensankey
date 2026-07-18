@@ -49,10 +49,15 @@ import { decompressGzipDataFixed } from '../../Persistence/UniversalJSONCompress
  * Source d'une galerie. Les deux ont le même index (categories + templates) et le
  * même panneau ; seules changent la racine des fichiers et les dialogues de
  * chargement :
- *  - 'sankeydata' : les modèles, dans le submodule SankeyData ;
- *  - 'mfadata'    : la sankeythèque, nos études publiées, dans MFAData.
+ *  - 'sankeydata'    : les modèles, dans le submodule SankeyData ;
+ *  - 'mfadata'       : la sankeythèque, nos études publiées, dans MFAData ;
+ *  - 'esankey-local' : galerie locale de DÉVELOPPEMENT (os#1281), les démos
+ *    e!Sankey d'un dossier pointé par ESANKEY_CORPUS_DIR côté serveur. Corpus
+ *    propriétaire : jamais committé ni déployé. La source n'existe que si le
+ *    backend est en mode debug avec ESANKEY_CORPUS_DIR défini (sinon 404, la
+ *    galerie n'apparaît pas).
  */
-export type Type_TemplateSource = 'sankeydata' | 'mfadata'
+export type Type_TemplateSource = 'sankeydata' | 'mfadata' | 'esankey-local'
 
 export type Type_TemplateInfos = {
   'title'?: { [lang: string]: string };
@@ -71,7 +76,9 @@ export declare const window: Window & typeof globalThis
 /** URL de service d'un fichier de galerie (vignette, modèle binaire...). */
 const assetUrl = (path: string, source: Type_TemplateSource) => {
   const url = window.location.origin + '/opensankey/menus/templates_asset/' + path
-  return source === 'mfadata' ? url + '?source=mfadata' : url
+  if (source === 'mfadata') return url + '?source=mfadata'
+  if (source === 'esankey-local') return url + '?source=esankey-local'
+  return url
 }
 
 /**
@@ -107,9 +114,10 @@ const loadStanTemplate = (
  */
 const loadEsankeyTemplate = (
   new_data: Class_ApplicationData,
-  file_path: string
+  file_path: string,
+  source: Type_TemplateSource = 'sankeydata'
 ) => {
-  fetch(assetUrl(file_path, 'sankeydata'))
+  fetch(assetUrl(file_path, source))
     .then(response => response.arrayBuffer())
     .then(buffer => applyEsankeyFile(buffer, new_data))
     .catch((error) => {
@@ -173,8 +181,10 @@ export const loadTemplate = (
     loadStanTemplate(new_data, file_path)
     return
   }
-  if (source === 'sankeydata' && file_path.endsWith('.sankey')) {
-    loadEsankeyTemplate(new_data, file_path)
+  // e!Sankey (.sankey) : depuis les modèles SankeyData ou la galerie locale de
+  // dev (os#1281). Le loader passe la source à assetUrl pour cibler la bonne racine.
+  if ((source === 'sankeydata' || source === 'esankey-local') && file_path.endsWith('.sankey')) {
+    loadEsankeyTemplate(new_data, file_path, source)
     return
   }
   // Un .json / .json.gz s'ouvre directement, sans dialogue : le serveur ne
@@ -414,7 +424,9 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
       borderBottom='1px solid #e2e8f0'
     >
       <Text fontWeight='bold' margin='0'>
-        {new_data.t(source === 'mfadata' ? 'Menu.sankeytheque' : 'Menu.templates')}
+        {source === 'esankey-local'
+          ? 'e!Sankey (dev)'
+          : new_data.t(source === 'mfadata' ? 'Menu.sankeytheque' : 'Menu.templates')}
       </Text>
       <Box display='flex' alignItems='center' gap='0.25rem'>
         <Button
@@ -440,7 +452,9 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
       margin='0'
       padding='0.4rem 0.75rem'
     >
-      {new_data.t(source === 'mfadata' ? 'templates.sankeytheque_hint' : 'templates.gallery_hint')}
+      {source === 'esankey-local'
+        ? 'Galerie locale de développement (ESANKEY_CORPUS_DIR) — corpus propriétaire, non déployé.'
+        : new_data.t(source === 'mfadata' ? 'templates.sankeytheque_hint' : 'templates.gallery_hint')}
     </Text>
     <Box overflowY='auto' padding='0 0.75rem 0.75rem 0.75rem'>
       {categories.map(category => {
