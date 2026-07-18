@@ -47,25 +47,38 @@ _DEFAULT_VIEWPORT = {"width": 1280, "height": 800}
 _DIAGRAM_SVG_SELECTOR = "svg#draw_zoom"
 # Le groupe de dessin ne reçoit ses formes (nœuds/flux) qu'une fois le rendu fait.
 _DIAGRAM_DRAWN_SELECTOR = "svg#draw_zoom g#g_drawing *"
+# Groupe des éléments dessinés (nœuds, flux, labels) : sert à recadrer la vignette
+# sur le diagramme seul, une fois la légende masquée.
+_DIAGRAM_CONTENT_SELECTOR = "svg#draw_zoom g#g_elements_sankey"
+# Marge (px) autour du diagramme recadré.
+_CROP_PADDING_PX = 6
 
 # Délais (ms) : temps max d'attente du rendu, puis courte stabilisation avant capture.
 _RENDER_TIMEOUT_MS = 25_000
 _SETTLE_MS = 600
 
-# Masquage du « chrome » du viewer avant capture : titre, barres d'outils, timeline,
-# et surtout tout menu/dialogue ouvert par défaut (ex. le sélecteur de hiérarchies,
-# qui s'ouvre seul et masquerait une partie du diagramme). Règle robuste et
-# indépendante des noms de classes générés (hachages emotion, instables entre
-# builds) : on masque tout élément HTML (non-SVG) positionné en overlay au-dessus
-# du diagramme, en préservant toujours le SVG lui-même et ses ancêtres. Il ne reste
-# alors que le diagramme dessiné (nœuds, flux, légende, tout ce qui est rendu DANS
-# le SVG).
-_HIDE_CHROME_JS = r"""() => {
+# Préparation de la capture, en deux temps, pour obtenir une VRAIE miniature où le
+# diagramme occupe toute la place :
+#
+# 1. Masquer le « chrome » du viewer (titre, barres d'outils, timeline, et surtout
+#    tout menu/dialogue ouvert par défaut — ex. le sélecteur de hiérarchies, qui
+#    s'ouvre seul et masquerait une partie du diagramme). Règle robuste et
+#    indépendante des noms de classes générés (hachages emotion, instables entre
+#    builds) : on masque tout élément HTML (non-SVG) positionné en overlay au-dessus
+#    du diagramme, en préservant toujours le SVG et ses ancêtres.
+# 2. Masquer la LÉGENDE dans le SVG. Placée à côté du diagramme, elle le
+#    rétrécirait dans la vignette. Ses éléments portent des identifiants réservés
+#    (OS#1254 : cadre `legend`, enfants `legend-*`) ; dans le DOM ces ids sont
+#    « sanitizés » (tirets retirés, préfixes `gg_`/`name_label_text_`). On masque
+#    donc tout élément du SVG dont l'id, une fois réduit aux alphanumériques,
+#    contient « legend ». Le recadrage ultérieur sur le diagramme restant fait
+#    remplir la vignette.
+_PREPARE_CAPTURE_JS = r"""() => {
   const svg = document.querySelector('svg#draw_zoom');
-  if (!svg) return 0;
+  if (!svg) return {chrome: 0, legend: 0};
   const keep = new Set();
   for (let el = svg; el; el = el.parentElement) keep.add(el);
-  let hidden = 0;
+  let chrome = 0;
   document.querySelectorAll('body *').forEach(el => {
     if (el.namespaceURI === 'http://www.w3.org/2000/svg') return;  // jamais le contenu SVG
     if (keep.has(el)) return;                                       // ni le SVG ni ses ancetres
@@ -73,10 +86,18 @@ _HIDE_CHROME_JS = r"""() => {
     const cs = getComputedStyle(el);
     if (cs.position === 'fixed' || cs.position === 'absolute') {
       el.style.setProperty('display', 'none', 'important');
-      hidden++;
+      chrome++;
     }
   });
-  return hidden;
+  let legend = 0;
+  svg.querySelectorAll('[id]').forEach(el => {
+    const norm = el.id.replace(/[^a-z0-9]/gi, '').toLowerCase();
+    if (norm.includes('legend')) {
+      el.style.setProperty('display', 'none', 'important');
+      legend++;
+    }
+  });
+  return {chrome, legend};
 }"""
 
 
@@ -189,15 +210,47 @@ def _capture_folder(page, base_url, rel_path, out_file,
                            state="attached")
     # Courte stabilisation (fit/zoom initial, transitions).
     page.wait_for_timeout(settle_ms)
-    # Retirer le chrome du viewer (barres, timeline, menus ouverts) pour ne garder
-    # que le diagramme, puis laisser le navigateur repeindre.
-    page.evaluate(_HIDE_CHROME_JS)
+    # Retirer le chrome du viewer et la légende, puis laisser le navigateur repeindre.
+    page.evaluate(_PREPARE_CAPTURE_JS)
     page.wait_for_timeout(150)
+
+    # Recadrer sur le diagramme restant (légende masquée) pour qu'il remplisse la
+    # vignette. La bbox écran du groupe des éléments exclut ce qui est masqué.
+    clip = _content_clip(page)
+    if clip is not None:
+        page.screenshot(path=str(out_file), type="png", clip=clip)
+        return True
+
+    # Repli : si la bbox du diagramme est indisponible, capturer le SVG entier.
     svg = page.query_selector(_DIAGRAM_SVG_SELECTOR)
     if svg is None:
         return False
     svg.screenshot(path=str(out_file), type="png")
     return True
+
+
+def _content_clip(page):
+    """Rectangle écran (px) du diagramme, borné au viewport et légèrement margé,
+    pour recadrer la capture. None si indisponible ou dégénéré."""
+    rect = page.evaluate(
+        """() => {
+          const g = document.querySelector('svg#draw_zoom g#g_elements_sankey');
+          if (!g) return null;
+          const r = g.getBoundingClientRect();
+          return {x: r.x, y: r.y, w: r.width, h: r.height};
+        }""")
+    if not rect or rect["w"] < 1 or rect["h"] < 1:
+        return None
+    vp = page.viewport_size or {"width": _DEFAULT_VIEWPORT["width"],
+                                "height": _DEFAULT_VIEWPORT["height"]}
+    pad = _CROP_PADDING_PX
+    x0 = max(0, rect["x"] - pad)
+    y0 = max(0, rect["y"] - pad)
+    x1 = min(vp["width"], rect["x"] + rect["w"] + pad)
+    y1 = min(vp["height"], rect["y"] + rect["h"] + pad)
+    if x1 - x0 < 1 or y1 - y0 < 1:
+        return None
+    return {"x": x0, "y": y0, "width": x1 - x0, "height": y1 - y0}
 
 
 def generate_missing_thumbnails(public_dir, viewport=None,
