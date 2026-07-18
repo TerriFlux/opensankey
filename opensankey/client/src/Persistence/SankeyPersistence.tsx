@@ -1855,6 +1855,11 @@ export class DrawingAreaPersistence {
       json_object['disaggregation_gap_value'] = drawing_area['_disaggregation_gap_value']
     if (!drawing_area.structure_mode_force_min) json_object['structure_mode_force_min'] = false
     if (drawing_area.arrow_use_standalone_layout) json_object['arrow_use_standalone_layout'] = true
+    // Pointe accentuée « arrow spikes » (#1270) — sérialisé seulement si non défaut
+    // (défauts : always=false, max_thickness=0, base_factor=2).
+    if (drawing_area.arrow_spike_always) json_object['arrow_spike_always'] = true
+    if (drawing_area.arrow_spike_max_thickness) json_object['arrow_spike_max_thickness'] = drawing_area.arrow_spike_max_thickness
+    if (drawing_area.arrow_spike_base_factor !== 2) json_object['arrow_spike_base_factor'] = drawing_area.arrow_spike_base_factor
     // Issue #165 — toujours sérialisé : l'absence du flag identifie un fichier
     // antérieur à la feature (chargé en déverrouillé pour préserver son rendu).
     json_object['font_size_locked'] = drawing_area.font_size_locked
@@ -2262,6 +2267,10 @@ export class DrawingAreaPersistence {
       getNumberOrUndefinedFromJSON(json_object, 'disaggregation_gap_value') ?? null
     drawing_area['_structure_mode_force_min'] = getBooleanFromJSON(json_object, 'structure_mode_force_min', true)
     drawing_area['_arrow_use_standalone_layout'] = getBooleanFromJSON(json_object, 'arrow_use_standalone_layout', false)
+    // Pointe accentuée « arrow spikes » (#1270)
+    drawing_area['_arrow_spike_always'] = getBooleanFromJSON(json_object, 'arrow_spike_always', false)
+    drawing_area['_arrow_spike_max_thickness'] = getNumberFromJSON(json_object, 'arrow_spike_max_thickness', 0)
+    drawing_area['_arrow_spike_base_factor'] = getNumberFromJSON(json_object, 'arrow_spike_base_factor', 2)
     drawing_area['_scale'] = getNumberFromJSON(json_object, 'user_scale', drawing_area.scale)
     drawing_area.scaleValueToPx.domain([0, drawing_area.scale])
     drawing_area['_type_data'] = getStringFromJSON(json_object, 'show_structure', drawing_area.type_data) as Type_Structure
