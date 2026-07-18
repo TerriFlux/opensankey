@@ -196,9 +196,12 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
   // HISTOGRAMME selon le choix de la fenêtre d'analyse (descripteur). Peut porter
   // sur les dataTags (comparaison → barres) autant que sur une décomposition.
   // Couleurs TOUJOURS du modèle.
+  // Renvoie true si un graphique a été dessiné ; false → NodeDrawShape retombe sur
+  // la forme normale (sinon un descripteur pointant une dimension/tag supprimé
+  // laisserait le nœud invisible).
   app_data.draw_node_analysis_overlay = (node: Class_NodeElement, group_el: SVGGElement, width: number, height: number) => {
     const descriptor = node.getElementProperty('analysis_descriptor') as Type_AnalysisDescriptor | undefined
-    if (!descriptor || (!descriptor.decompose && !descriptor.compare)) return
+    if (!descriptor || (!descriptor.decompose && !descriptor.compare)) return false
     const data = buildAnalysisChartData({ kind: 'node', node }, descriptor)
     // Offset de marge : la forme normale du nœud est translatée de (-margin_left,
     // -margin_top) ; le graphique reprend ce calage pour rester dans ses bornes.
@@ -206,10 +209,9 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
     // Couronne seulement pour une décomposition pure sans override barres ; sinon
     // histogramme (comparaison pure, croisement, ou override).
     if (deduceRepr(descriptor) === 'donut') {
-      drawNodeDonutOnGroup(group_el, data.series[0]?.parts ?? [], geom)
-    } else {
-      drawNodeBarsOnGroup(group_el, data.series, geom)
+      return drawNodeDonutOnGroup(group_el, data.series[0]?.parts ?? [], geom)
     }
+    return drawNodeBarsOnGroup(group_el, data.series, geom)
   }
 
   const node_id = node?.id
