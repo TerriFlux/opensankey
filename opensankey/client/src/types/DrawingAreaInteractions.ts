@@ -25,6 +25,7 @@ import * as d3 from '../d3Modules'
 import type { Class_DrawingArea } from './DrawingArea'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_NodeElement } from '../Elements/Node'
+import { Class_ContainerElement } from '../Elements/TextZone'
 import { LinkElementPersistence, NodeElementPersistence } from '../Persistence/SankeyPersistence'
 import { TooltipEventManager } from '../Elements/TooltipsConfig'
 import { Type_JSON } from './Utils'
@@ -250,6 +251,23 @@ export class Class_DrawingAreaInteractions {
         da.selection_zone.draw()
       }
     }
+    // PLACE CONTAINER MODE =====================================================
+    // On réutilise la zone de sélection comme rectangle de placement : même geste
+    // (fond → glisser), mais au relâché on crée une ZDT au lieu de sélectionner.
+    else if (da.isInPlaceContainerMode()) {
+      if (event.button === 0) {
+        const mouse_position = d3.pointer(event)
+        da.selection_zone.setVisible()
+        da.selection_zone.setPosXY(mouse_position[0], mouse_position[1])
+        // Repart d'un rectangle nul (sinon un résidu de taille d'une sélection
+        // précédente s'afficherait avant le premier déplacement).
+        da.selection_zone.width = 0
+        da.selection_zone.height = 0
+        this._starting_x_point = mouse_position[0]
+        this._starting_y_point = mouse_position[1]
+        da.selection_zone.draw()
+      }
+    }
   }
 
   /**
@@ -431,6 +449,47 @@ export class Class_DrawingAreaInteractions {
       da.selection_zone.reset()
       da.orderElementOnDA()
     }
+    // PLACE CONTAINER MODE =====================================================
+    // Relâché du glisser de placement : on crée une zone de texte à la position /
+    // taille du rectangle tracé, on la sélectionne, on ouvre l'inspecteur, puis on
+    // ressort du mode (retour en sélection).
+    else if (da.isInPlaceContainerMode() && event.button == 0) {
+      const zone = da.selection_zone
+      const x = zone.position_x
+      const y = zone.position_y
+      const w = zone.width
+      const h = zone.height
+      // Sous ce seuil on considère un simple clic (pas de glisser) : ZDT à taille
+      // par défaut, centrée sur le point cliqué.
+      const MIN_DRAG_SIZE = 20
+      let cont: Class_ContainerElement
+      const create = () => {
+        cont = da.sankey.addNewDefaultContainer()
+        if (w < MIN_DRAG_SIZE && h < MIN_DRAG_SIZE) {
+          cont.setPosXY(
+            x - cont.getShapeWidthToUse() / 2,
+            y - cont.getShapeHeightToUse() / 2)
+        } else {
+          cont.setPosXY(x, y)
+          cont.shape_min_width = w
+          cont.shape_min_height = h
+        }
+        cont.draw()
+        da.purgeSelectionOfElement(false)
+        da.addElementToSelection(cont)
+        da.application_data.menu_configuration.updateAllComponentsRelatedToContainersConfig()
+        da.application_data.menu_configuration.openConfigMenu()
+      }
+      const undo = () => {
+        da.deleteContainer(cont)
+        da.application_data.menu_configuration.updateAllComponentsRelatedToContainersConfig()
+      }
+      da.saveUndo(undo)
+      da.saveRedo(create)
+      create()
+      da.exitPlaceContainerMode()
+      da.orderElementOnDA()
+    }
   }
 
   /**
@@ -455,7 +514,9 @@ export class Class_DrawingAreaInteractions {
           mouse_position[0] - (target.getShapeWidthToUse() / 2),
           mouse_position[1] - (target.getShapeHeightToUse() / 2))
       }
-    } else if (da.isInSelectionMode()) {
+    } else if (da.isInSelectionMode() || da.isInPlaceContainerMode()) {
+      // Même géométrie de rectangle par glisser pour la sélection et pour le
+      // placement d'une zone de texte (cf. isInPlaceContainerMode).
       if (da.selection_zone.is_visible) {
         // Get relative mouse position
         const mouse_position = d3.pointer(event)

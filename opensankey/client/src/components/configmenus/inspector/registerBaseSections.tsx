@@ -20,8 +20,9 @@ import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import { SankeyNodeSelection, NodeMaterialBalanceCheckbox } from '../MenuElementsSelection'
 import { MenuConfigurationAppearance } from '../MenuElementsAppearance'
 import { MenuConfigurationLinksData } from '../SankeyMenuConfigurationLinksData'
-import { ConfigMenuTextInput, OSTooltip, CustomFaEyeCheckIcon } from '../MenuCommon'
+import { ConfigMenuTextInput, OSTooltip, CustomFaEyeCheckIcon, WrapperBoxSubSectionMenu } from '../MenuCommon'
 import { stripHtmlTags, isRichContent } from '../../dialogs/RichTextEditor'
+import { CONVERTER_CONFIGS } from '../../dialogs/PersistenceProcessDialogConfigs'
 import {
   DrawingAreaConfig,
   LegendConfig,
@@ -31,6 +32,9 @@ import {
 // Idempotent : `register` remplace par id, donc un double appel (hot reload,
 // re-init) ne duplique rien. On garde une garde explicite pour lisibilité.
 let _registered = false
+
+// #1258 — accent de la zone spécialisée MFA (ambre, Chakra yellow.600).
+const MFA_ACCENT = '#B7791F'
 
 // Raccourci : un onglet d'apparence piloté (rangée d'onglets interne masquée,
 // sélecteur masqué, portée propagée sur menu_for_style).
@@ -73,6 +77,7 @@ export function registerBaseInspectorSections(): void {
     overload_prefixes: ['shape'],
     hue: 'style',
     title: (app_data) => app_data.t('Menu.tabs.shape'),
+    icon: (app_data) => app_data.icon_library.icon_tab_shape,
     render: appearanceTab('shape')
   })
 
@@ -84,6 +89,7 @@ export function registerBaseInspectorSections(): void {
     overload_prefixes: ['name_label'],
     hue: 'style',
     title: (app_data) => app_data.t('Menu.tabs.name'),
+    icon: (app_data) => app_data.icon_library.icon_tab_label,
     render: appearanceTab('name_label')
   })
 
@@ -96,36 +102,38 @@ export function registerBaseInspectorSections(): void {
     overload_prefixes: ['value_label'],
     hue: 'data',
     title: (app_data) => app_data.t('Menu.tabs.value'),
+    icon: (app_data) => app_data.icon_library.icon_tab_value,
     render: (app_data, scope) => (
       <>
+        {/* #1258 — le panneau AFM (type de valeur, bornes, incertitude) et le
+            bilan matière vivent désormais dans l'onglet MFA. */}
         {scope === 'selection' && app_data.drawing_area.selected_links_list.length > 0 && (
-          <MenuConfigurationLinksData app_data={app_data} hide_selector hide_origin_dest />
+          <MenuConfigurationLinksData app_data={app_data} hide_selector hide_origin_dest hide_afm />
         )}
         {/* #285 — extensions de couche supérieure (OSP : tags du flux +
-            sous-valeurs, à leur place parmi les données de valeur) */}
+            valeurs coordonnées, à leur place parmi les données de valeur) */}
         {Object.entries(inspector_value_tab_extras).map(([id, render_extra]) => (
           <React.Fragment key={id}>{render_extra(app_data, scope)}</React.Fragment>
         ))}
-        {/* Bilan matière : contrainte de réconciliation du NŒUD (pas du stock),
-            à sa place parmi les données de valeur. Se masque seul (AFM/nœuds). */}
-        {scope === 'selection' && (
-          <NodeMaterialBalanceCheckbox app_data={app_data} />
-        )}
         {appearanceTab('value_label')(app_data, scope)}
       </>
     )
   })
 
   // ---- Onglet ICÔNE (OSP) --------------------------------------------------
+  // #1258 — les ZONES (formes, zones de texte, titre) sont des Class_NodeBase :
+  // elles portent une icône comme les nœuds, l'onglet leur est donc servi aussi.
   inspector_registry.register({
     id: 'os.tab.icone',
-    target: ['node', 'mixed'],
+    target: ['node', 'container', 'title', 'mixed'],
     order: 40,
     overload_prefixes: ['icon'],
     hue: 'style',
     title: (app_data) => app_data.t('Menu.tabs.icon'),
+    icon: (app_data) => app_data.icon_library.icon_tab_icon,
     gate: (app_data) => app_data.has_sankey_plus
-      && app_data.drawing_area.selected_nodes_list.length > 0,
+      && (app_data.drawing_area.selected_nodes_list.length > 0
+        || app_data.drawing_area.selected_containers_list.length > 0),
     render: appearanceTab('icon')
   })
 
@@ -137,6 +145,7 @@ export function registerBaseInspectorSections(): void {
     overload_prefixes: ['stock_label'],
     hue: 'data',
     title: (app_data) => app_data.t('inspector.tab.stock'),
+    icon: (app_data) => app_data.icon_library.icon_tab_stock,
     // Même gating que l'onglet historique (dev) ; il faut des nœuds pour
     // pouvoir ACTIVER un stock (l'œil « Activé » de l'en-tête).
     gate: (app_data) => app_data.has_sankey_dev
@@ -155,8 +164,27 @@ export function registerBaseInspectorSections(): void {
     order: 60,
     hue: 'data',
     title: (app_data) => app_data.t('inspector.tab.tooltip'),
+    icon: (app_data) => app_data.icon_library.icon_tab_tooltip,
     data_only: true,
     render: (app_data) => <InspectorTooltipTab app_data={app_data} />
+  })
+
+  // ---- Onglet MFA : l'espace AFM unifié (#1258) ----------------------------
+  // Rassemble ce qui était éclaté : bilan matière du nœud (ex-onglet Valeur),
+  // données AFM du flux (type de valeur, bornes, incertitude — ex-sous-onglet
+  // AFM de Valeur), et les actions globales (tableur des contraintes,
+  // réconciliation). Teinté ambre : zone spécialisée, gated par la licence.
+  inspector_registry.register({
+    id: 'os.tab.mfa',
+    target: ['node', 'link', 'mixed', 'view'],
+    order: 70,
+    hue: 'data',
+    title: (app_data) => app_data.t('inspector.tab.mfa'),
+    icon: (app_data) => app_data.icon_library.icon_afm,
+    accent: MFA_ACCENT,
+    data_only: true,
+    gate: (app_data) => app_data.has_sankey_afm,
+    render: (app_data) => <InspectorMFATab app_data={app_data} />
   })
 
   // ---- Onglet TITRE (réglages propres de la zone de texte « titre ») -------
@@ -168,6 +196,7 @@ export function registerBaseInspectorSections(): void {
     order: 5,
     hue: 'data',
     title: (app_data) => app_data.t('inspector.tab.title'),
+    icon: (app_data) => app_data.icon_library.icon_tab_title,
     data_only: true,
     render: (app_data) => <TitleConfig app_data={app_data} compact />
   })
@@ -186,6 +215,7 @@ export function registerBaseInspectorSections(): void {
     order: 10,
     hue: 'style',
     title: (app_data) => app_data.t('Menu.Config.title_graph'),
+    icon: (app_data) => app_data.icon_library.icon_tab_layout,
     // `extra_background_element` (import d'image de fond, injecté par OSP) était
     // passé par l'ex-ConfigContent de la matrice : on le relaie ici, sinon la
     // fonctionnalité disparaît avec elle.
@@ -201,6 +231,7 @@ export function registerBaseInspectorSections(): void {
     order: 20,
     hue: 'style',
     title: (app_data) => app_data.t('inspector.tab.title'),
+    icon: (app_data) => app_data.icon_library.icon_tab_title,
     render: (app_data) => <TitleConfig app_data={app_data} compact />
   })
 
@@ -213,6 +244,7 @@ export function registerBaseInspectorSections(): void {
     order: 30,
     hue: 'presentation',
     title: (app_data) => app_data.t('Menu.Config.element_legend'),
+    icon: (app_data) => app_data.icon_library.icon_tab_legend,
     render: (app_data) => <LegendConfig app_data={app_data} compact />
   })
 }
@@ -256,9 +288,7 @@ const InspectorStockTab = ({ app_data, scope }: {
         <Box layerStyle='options_2cols' width='fit-content'>
           <OSTooltip label={app_data.t('inspector.stock_shape_tooltip')}>
             <Button
-              variant={shape_visible ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
-              sx={{ padding: '4px', paddingInline: '0.5rem', minWidth: 'auto', height: 'auto' }}
-              isDisabled={stock_nodes.length === 0}
+              variant={shape_visible ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}              isDisabled={stock_nodes.length === 0}
               onClick={() => {
                 stock_nodes.forEach(n => { n.stock_shape_is_visible = !shape_visible; n.draw() })
                 refresh()
@@ -269,9 +299,7 @@ const InspectorStockTab = ({ app_data, scope }: {
           </OSTooltip>
           <OSTooltip label={app_data.t('inspector.stock_labels_tooltip')}>
             <Button
-              variant={labels_visible ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
-              sx={{ padding: '4px', paddingInline: '0.5rem', minWidth: 'auto', height: 'auto' }}
-              isDisabled={stock_nodes.length === 0}
+              variant={labels_visible ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}              isDisabled={stock_nodes.length === 0}
               onClick={() => {
                 stock_nodes.forEach(n => { n.stock_label_is_visible = !labels_visible; n.draw() })
                 refresh()
@@ -287,6 +315,57 @@ const InspectorStockTab = ({ app_data, scope }: {
       <SankeyNodeSelection app_data={app_data} hide_selector stock_only />
     )}
     {appearanceTab('stock')(app_data, scope)}
+  </>
+}
+
+// #1258 — Onglet MFA : contextuel à la sélection.
+// - Nœud(s)  : équilibre matière (contrainte de réconciliation).
+// - Flux     : données AFM (type de valeur, bornes, incertitude).
+// - Toujours : actions globales — tableur des contraintes, réconciliation via
+//   le convertisseur universel (mêmes refs que le menu topbar AFM d'OSP).
+//   Masquées en mode statique (diagramme publié : rien à résoudre).
+const InspectorMFATab = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const { t, drawing_area, menu_configuration } = app_data
+  const has_nodes = drawing_area.selected_nodes_list.length > 0
+  const has_links = drawing_area.selected_links_list.length > 0
+
+  const openSpreadsheet = () => {
+    menu_configuration.main_zone_show_spreadsheet = true
+  }
+  const openReconciliation = () => {
+    menu_configuration.ref_universal_converter_set_config.current(
+      CONVERTER_CONFIGS['reconciliation'], '', false
+    )
+    menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
+  }
+
+  return <>
+    {/* Bilan matière du nœud (ex-onglet Valeur) — se masque seul hors nœuds. */}
+    {has_nodes && <NodeMaterialBalanceCheckbox app_data={app_data} />}
+
+    {/* Données AFM du flux (ex-sous-onglet AFM de l'onglet Valeur). */}
+    {has_links && (
+      <MenuConfigurationLinksData app_data={app_data} hide_selector hide_origin_dest afm_only />
+    )}
+
+    {!app_data.is_static && (
+      <WrapperBoxSubSectionMenu title={t('inspector.mfa.reconciliation')} new_data={app_data}>
+        <Button
+          variant='menuconfigpanel_option_button'
+          size='xs'
+          onClick={openSpreadsheet}
+        >
+          {t('inspector.mfa.open_spreadsheet')}
+        </Button>
+        <Button
+          variant='menuconfigpanel_option_button'
+          size='xs'
+          onClick={openReconciliation}
+        >
+          {t('inspector.mfa.run_reconciliation')}
+        </Button>
+      </WrapperBoxSubSectionMenu>
+    )}
   </>
 }
 
@@ -335,9 +414,7 @@ const InspectorTooltipTab = ({ app_data }: { app_data: Class_ApplicationData }) 
       <Box layerStyle='options_2cols' width='fit-content'>
         <OSTooltip label={t('Menu.display_mode.tooltips.simple_text')}>
           <Button
-            variant={!content_is_rich ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
-            sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
-            isDisabled={elements.length === 0}
+            variant={!content_is_rich ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}            isDisabled={elements.length === 0}
             onClick={setModeSimple}
           >
             {icon_library.icon_text_mode_simple}
@@ -345,9 +422,7 @@ const InspectorTooltipTab = ({ app_data }: { app_data: Class_ApplicationData }) 
         </OSTooltip>
         <OSTooltip label={t('Menu.display_mode.tooltips.rich_text')}>
           <Button
-            variant={content_is_rich ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
-            sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
-            isDisabled={elements.length === 0}
+            variant={content_is_rich ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}            isDisabled={elements.length === 0}
             onClick={setModeRich}
           >
             {icon_library.icon_text_mode_rich}

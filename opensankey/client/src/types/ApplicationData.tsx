@@ -1558,6 +1558,9 @@ export class Class_ApplicationData {
       // Exit style paint mode if active
       if (app_ref.drawing_area.isInStylePaintMode())
         app_ref.drawing_area.exitStylePaintMode()
+      // Exit « placer une zone de texte » mode if active
+      else if (app_ref.drawing_area.isInPlaceContainerMode())
+        app_ref.drawing_area.exitPlaceContainerMode()
       // Set app in selection mode
       else if (app_ref.drawing_area.isInEditionMode())
         app_ref.drawing_area.switchMode()

@@ -538,6 +538,7 @@ export const resources_app_elements = {
         hlp_link_tag_filter: 'Filter link and apply color of tagds',
         hlp_data_tag_filter: 'Choose data and apply color of tagds',
         open_configuration_menu: 'Open configuration menu.',
+        create_text_zone: 'Add a text zone',
         detach_configuration_menu: 'Detach the configuration panel into a separate window',
         reattach_configuration_menu: 'Reattach the configuration panel into the main window'
       },
@@ -1157,6 +1158,7 @@ export const resources_app_elements = {
         hlp_link_tag_filter: 'Filtrer les flux et appliquer la couleur des étiquettes',
         hlp_data_tag_filter: 'Choisir les données et appliquer la couleur des étiquettes',
         open_configuration_menu: 'Ouvrez le menu de configuration.',
+        create_text_zone: 'Ajouter une zone de texte',
         detach_configuration_menu: 'Détacher le panneau de configuration dans une fenêtre séparée',
         reattach_configuration_menu: 'Ré-attacher le panneau de configuration dans la fenêtre principale'
       },
@@ -1754,6 +1756,7 @@ export const resources_app_elements = {
         hlp_link_tag_filter: 'Filtrar flujos y aplicar el color de las etiquetas',
         hlp_data_tag_filter: 'Elegir datos y aplicar el color de las etiquetas',
         open_configuration_menu: 'Abrir el menú de configuración.',
+        create_text_zone: 'Añadir una zona de texto',
         detach_configuration_menu: 'Separar el panel de configuración en una ventana aparte',
         reattach_configuration_menu: 'Volver a anclar el panel de configuración en la ventana principal'
       },
@@ -2351,6 +2354,7 @@ export const resources_app_elements = {
         hlp_link_tag_filter: 'Flüsse filtern und Beschriftungsfarben anwenden',
         hlp_data_tag_filter: 'Daten wählen und Beschriftungsfarben anwenden',
         open_configuration_menu: 'Konfigurationsmenü öffnen.',
+        create_text_zone: 'Textzone hinzufügen',
         detach_configuration_menu: 'Konfigurationsbereich in einem separaten Fenster lösen',
         reattach_configuration_menu: 'Konfigurationsbereich wieder im Hauptfenster andocken'
       },
@@ -2948,6 +2952,7 @@ export const resources_app_elements = {
         hlp_link_tag_filter: 'Filtrare i flussi e applicare il colore delle etichette',
         hlp_data_tag_filter: 'Scegliere i dati e applicare il colore delle etichette',
         open_configuration_menu: 'Aprire il menu di configurazione.',
+        create_text_zone: 'Aggiungere una zona di testo',
         detach_configuration_menu: 'Stacca il pannello di configurazione in una finestra separata',
         reattach_configuration_menu: 'Riaggancia il pannello di configurazione nella finestra principale'
       },

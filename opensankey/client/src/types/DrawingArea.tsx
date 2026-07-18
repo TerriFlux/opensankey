@@ -505,7 +505,7 @@ export class Class_DrawingArea {
 
   protected _group_to_select: string = '.gg_nodes,.gg_links,.gg_labels'
 
-  private _mode: 'edition' | 'selection' | 'style_paint' = 'edition'
+  private _mode: 'edition' | 'selection' | 'style_paint' | 'place_container' = 'edition'
   private _style_paint_source: Class_ProtoElement | null = null
 
   private _ghost_link: Class_LinkElement | null = null
@@ -2578,6 +2578,27 @@ export class Class_DrawingArea {
     this.application_data.menu_configuration.updateAllComponentsRelatedToToolbar()
   }
 
+  // Mode « placer une zone de texte » : l'utilisateur glisse un rectangle sur le
+  // fond pour poser une ZDT à cette position/taille (cf. DrawingAreaInteractions,
+  // branches isInPlaceContainerMode). On purge la sélection pour neutraliser le
+  // drag des nœuds (qui n'agit que sur un élément déjà sélectionné) ; le fond
+  // capture ainsi le glisser sans interférence.
+  public isInPlaceContainerMode(): boolean { return this._mode === 'place_container' }
+
+  public enterPlaceContainerMode(): void {
+    this.purgeSelection()
+    this._mode = 'place_container'
+    this.drawCursor()
+    // Rafraîchit la colonne d'outils (bouton mode placement actif/inactif).
+    this.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
+  }
+
+  public exitPlaceContainerMode(): void {
+    this.selection_zone.reset()
+    this.setSelectionMode()
+    this.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
+  }
+
   public applyStyleFromPaintSource(target: Class_ProtoElement): void {
     if (!this._style_paint_source) return
     const transition = StyleCascade.applyStyleFromSourceToTarget(this._style_paint_source, target)
@@ -2647,9 +2668,11 @@ export class Class_DrawingArea {
   public drawCursor() {
     const mode_edition = this.isInEditionMode()
     const mode_style_paint = this.isInStylePaintMode()
+    const mode_place_container = this.isInPlaceContainerMode()
     this.d3_selection?.classed('edition_mode', mode_edition)
-    this.d3_selection?.classed('selection_mode', !mode_edition && !mode_style_paint)
+    this.d3_selection?.classed('selection_mode', !mode_edition && !mode_style_paint && !mode_place_container)
     this.d3_selection?.classed('style_paint_mode', mode_style_paint)
+    this.d3_selection?.classed('place_container_mode', mode_place_container)
   }
 
   public get sankey() { return this._sankey }

@@ -333,7 +333,9 @@ const logo_flow = <svg
       <g transform="translate(-129.04874,-98.029683)">
         <g transform="translate(-2.2918162,28.479156)">
           <path
-            style={{ fill: 'none', strokeWidth: 1.365, strokeMiterlimit: 4, }}
+            // #1258 — sans stroke la courbe était invisible (fill:none) dès que
+            // le contexte ne posait pas de couleur de trait.
+            style={{ fill: 'none', stroke: 'currentColor', strokeWidth: 1.365, strokeMiterlimit: 4, }}
             d="m 701.39112,568.3244 c 1.81779,0.0677 2.42357,3e-5 3.16365,-2.12758 0.48699,-1.58472 1.13563,-2.44566 3.19742,-2.41194"
           />
         </g>
@@ -1679,6 +1681,89 @@ export class Class_IconLibrary {
   protected _icon_collapse_up = <FaCaretUp />
   protected _icon_collapse_down = <FaCaretDown />
 
+  // #1258 — Icônes des onglets de l'inspecteur (rangée icône + libellé court).
+  // Trait 2px sur viewBox 24, currentColor : héritent de la couleur du bouton.
+  protected _icon_tab_shape = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.1em" height="1.1em"
+      fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="4" width="16" height="16" rx="2" />
+    </svg>
+  )
+  protected _icon_tab_label = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.1em" height="1.1em"
+      fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 5h12M12 5v14M9 19h6" />
+    </svg>
+  )
+  protected _icon_tab_value = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.1em" height="1.1em"
+      fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 9h14M5 15h14M10 4 8 20M16 4l-2 16" />
+    </svg>
+  )
+  protected _icon_tab_icon = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.1em" height="1.1em"
+      fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="4" width="16" height="16" rx="2" />
+      <circle cx="9" cy="9" r="1.6" />
+      <path d="m5 17 4-4 3 3 3-3 4 4" />
+    </svg>
+  )
+  protected _icon_tab_stock = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.1em" height="1.1em"
+      fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 8 12 4l8 4-8 4-8-4Z" />
+      <path d="M4 8v8l8 4 8-4V8" />
+      <path d="M12 12v8" />
+    </svg>
+  )
+  protected _icon_tab_tags = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.1em" height="1.1em"
+      fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 12V5a1 1 0 0 1 1-1h7l8 8-8 8-8-8Z" />
+      <circle cx="9" cy="9" r="1.4" />
+    </svg>
+  )
+  protected _icon_tab_tooltip = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.1em" height="1.1em"
+      fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-5 4v-4H6a2 2 0 0 1-2-2V6Z" />
+    </svg>
+  )
+  protected _icon_tab_title = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.1em" height="1.1em"
+      fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 6h16M8 12h8M10 18h4" />
+    </svg>
+  )
+  protected _icon_tab_layout = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.1em" height="1.1em"
+      fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="5" y="3" width="14" height="18" rx="2" />
+      <path d="M8 7h8M8 11h8M8 15h5" />
+    </svg>
+  )
+  protected _icon_tab_legend = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.1em" height="1.1em"
+      fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="4" width="4" height="4" rx="1" />
+      <path d="M11 6h9" />
+      <rect x="4" y="14" width="4" height="4" rx="1" />
+      <path d="M11 16h9" />
+    </svg>
+  )
+  // Balance : icône du MFA (onglet inspecteur + menu topbar AFM) — remplace à
+  // terme le SVG inline codé en dur d'AFMSankeyMenu.
+  protected _icon_afm = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.1em" height="1.1em"
+      fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 4v16M8 20h8" />
+      <path d="M6 6 3 12h6L6 6Zm12 0-3 6h6l-3-6Z" />
+      <path d="M3 12a3 3 0 0 0 6 0m6 0a3 3 0 0 0 6 0" />
+      <path d="M6 6h12" />
+    </svg>
+  )
+
 
   protected _icon_flow = logo_flow
   protected _icon_graph = logo_graph
@@ -1829,6 +1914,17 @@ export class Class_IconLibrary {
   public get icon_element_invisible() { return this._icon_element_invisible }
   public get icon_collapse_up() { return this._icon_collapse_up }
   public get icon_collapse_down() { return this._icon_collapse_down }
+  public get icon_tab_shape() { return this._icon_tab_shape }
+  public get icon_tab_label() { return this._icon_tab_label }
+  public get icon_tab_value() { return this._icon_tab_value }
+  public get icon_tab_icon() { return this._icon_tab_icon }
+  public get icon_tab_stock() { return this._icon_tab_stock }
+  public get icon_tab_tags() { return this._icon_tab_tags }
+  public get icon_tab_tooltip() { return this._icon_tab_tooltip }
+  public get icon_tab_title() { return this._icon_tab_title }
+  public get icon_tab_layout() { return this._icon_tab_layout }
+  public get icon_tab_legend() { return this._icon_tab_legend }
+  public get icon_afm() { return this._icon_afm }
   public get icon_open_close_config() { return this._icon_open_close_config }
 
   public get icon_repeat_sequence() { return this._icon_repeat_sequence }

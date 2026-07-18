@@ -670,7 +670,7 @@ export const UnifiedElementSelection = ({
             <Button
               variant={activeFilters.has('node') ? 'button_config_element_activated' : 'button_config_element'}
               onClick={() => toggleFilter('node')}
-              sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '10px', height: '10px' } }}
+              sx={{ '& svg': { width: '10px', height: '10px' } }}
             >
               {typeIcons.node}
             </Button>
@@ -682,7 +682,7 @@ export const UnifiedElementSelection = ({
             <Button
               variant={activeFilters.has('link') ? 'button_config_element_activated' : 'button_config_element'}
               onClick={() => toggleFilter('link')}
-              sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '10px', height: '10px' } }}
+              sx={{ '& svg': { width: '10px', height: '10px' } }}
             >
               {typeIcons.link}
             </Button>
@@ -694,7 +694,7 @@ export const UnifiedElementSelection = ({
             <Button
               variant={activeFilters.has('container') ? 'button_config_element_activated' : 'button_config_element'}
               onClick={() => toggleFilter('container')}
-              sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '10px', height: '10px' } }}
+              sx={{ '& svg': { width: '10px', height: '10px' } }}
             >
               {typeIcons.container}
             </Button>
@@ -706,7 +706,7 @@ export const UnifiedElementSelection = ({
             <Button
               variant={activeFilters.has('stock') ? 'button_config_element_activated' : 'button_config_element'}
               onClick={() => toggleFilter('stock')}
-              sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '10px', height: '10px' } }}
+              sx={{ '& svg': { width: '10px', height: '10px' } }}
             >
               {typeIcons.stock}
             </Button>

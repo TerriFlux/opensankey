@@ -87,11 +87,12 @@ function readSelectionCounts(app_data: Class_ApplicationData): Type_SelectionCou
 
 /**
  * Premier élément stylable de la sélection : porteur de la cascade affichée
- * par la portée Styles.
+ * par la portée Styles. #1258 — les zones (Class_NodeBase) sont stylables
+ * comme les nœuds : la cascade les gère déjà, on les inclut ici aussi.
  */
 function firstStyledElement(app_data: Class_ApplicationData) {
   const da = app_data.drawing_area
-  return da.selected_nodes_list[0] ?? da.selected_links_list[0] ?? null
+  return da.selected_nodes_list[0] ?? da.selected_links_list[0] ?? da.selected_containers_list[0] ?? null
 }
 
 /**
@@ -159,7 +160,9 @@ export const InspectorPanel = ({ app_data }: { app_data: Class_ApplicationData }
   // Portée Styles aussi en sélection hétérogène (nœud+flux) : les styles sont
   // PARTAGÉS entre types (même styles_list, défaut commun) — la note
   // « cascades divergentes » de la cascade couvre l'ambiguïté d'affichage.
-  const scope_capable = (target === 'node' || target === 'link' || target === 'mixed')
+  // #1258 — les zones (et le titre, qui EST une zone) y ont droit aussi.
+  const scope_capable = (target === 'node' || target === 'link' || target === 'container'
+    || target === 'title' || target === 'mixed')
     && firstStyledElement(app_data) !== null
 
   return (
@@ -230,8 +233,10 @@ export const InspectorPanel = ({ app_data }: { app_data: Class_ApplicationData }
       {/* Rangée d'onglets fixes — la même grille pour tous les types. Grille à
           N colonnes égales (le variant du thème met width:100%, un flex-wrap
           empilerait donc les boutons l'un sous l'autre).
-          Roll-up de surcharge : liseré violet = l'onglet contient au moins un
-          attribut surchargé ; retrait = aucun (sauf l'onglet actif). */}
+          #1258 — icône + libellé court empilés (variant inspector_tab) : la
+          rangée tient sur une ligne quel que soit le nombre d'onglets.
+          Roll-up de surcharge : pastille violette = l'onglet contient au moins
+          un attribut surchargé ; retrait = aucun (sauf l'onglet actif). */}
       {tabs.length > 1 && (
         <Box style={{
           display: 'grid',
@@ -242,31 +247,63 @@ export const InspectorPanel = ({ app_data }: { app_data: Class_ApplicationData }
           {tabs.map(tab => {
             const rollup = tabOverloadRollup(app_data, tab.overload_prefixes, scope)
             const is_active = tab.id === active_tab?.id
+            const icon = tab.icon?.(app_data)
             return (
               <Button
                 key={tab.id}
                 size='xs'
-                variant={is_active
-                  ? 'menuconfigpanel_option_button_activated'
-                  : 'menuconfigpanel_option_button'}
+                variant={is_active ? 'inspector_tab_activated' : 'inspector_tab'}
                 sx={{
-                  paddingInline: '0.25rem',
-                  minWidth: 'auto',
-                  ...(rollup === true
-                    ? { boxShadow: '0 0 0 1.5px rgba(128, 90, 213, 0.7)' }
-                    : {}),
                   ...(!is_active && rollup !== true
                     ? { opacity: 0.65, '&:hover': { opacity: 1 } }
+                    : {}),
+                  // #1258 — accent de zone spécialisée (MFA en ambre) : teinte
+                  // le bouton inactif, colore le fond du bouton actif.
+                  ...(tab.accent
+                    ? is_active
+                      ? { backgroundColor: tab.accent, borderColor: tab.accent }
+                      : { color: tab.accent, fill: tab.accent }
                     : {})
                 }}
-                title={rollup === true ? app_data.t('inspector.tab_overloaded') : undefined}
+                title={rollup === true
+                  ? `${tab.title(app_data)} — ${app_data.t('inspector.tab_overloaded')}`
+                  : tab.title(app_data)}
                 onClick={() => {
                   // Un clic explicite reprend la main sur une demande d'onglet du tour (#1255).
                   app_data.menu_configuration.inspector_requested_tab_id = null
                   setActiveTabId(tab.id)
                 }}
               >
-                {tab.title(app_data)}
+                {icon}
+                <Box
+                  as='span'
+                  style={{
+                    fontSize: '0.62rem',
+                    lineHeight: 1,
+                    maxWidth: '100%',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {tab.title(app_data)}
+                </Box>
+                {rollup === true && (
+                  // Pastille de roll-up : purple.500, la couleur du liseré de
+                  // surcharge des rangées (OverloadIndicatorWrapper).
+                  <Box
+                    as='span'
+                    style={{
+                      position: 'absolute',
+                      top: '2px',
+                      right: '3px',
+                      width: '6px',
+                      height: '6px',
+                      borderRadius: '50%',
+                      background: '#805AD5'
+                    }}
+                  />
+                )}
               </Button>
             )
           })}
@@ -288,25 +325,13 @@ export const InspectorPanel = ({ app_data }: { app_data: Class_ApplicationData }
 
 // --- Fil d'Ariane ----------------------------------------------------------
 
-// Lien discret du fil d'Ariane. Bouton natif stylé inline : les variants Button
-// du thème Chakra (pensés pour la matrice) rendent ici des pilules pleine
-// largeur — on n'en veut aucun.
+// Lien discret du fil d'Ariane — variant Chakra dédié (#1258, fin du bouton
+// natif stylé à la main : les variants historiques rendaient des pilules
+// pleine largeur).
 const CrumbButton = ({ onClick, children }: React.PropsWithChildren<{ onClick: () => void }>) => (
-  <Box
-    as="button"
-    onClick={onClick}
-    style={{
-      background: 'none',
-      border: 'none',
-      padding: 0,
-      font: 'inherit',
-      color: '#1f6fae',
-      cursor: 'pointer',
-      textDecoration: 'underline'
-    }}
-  >
+  <Button variant='inspector_crumb' onClick={onClick}>
     {children}
-  </Box>
+  </Button>
 )
 
 const InspectorBreadcrumb = ({
@@ -395,11 +420,12 @@ const InspectorIdentity = ({ app_data, target, counts }: {
     />
   }
   if (target === 'mixed') {
+    // #1258 — libellés servis par i18n (inspector.target.*), plus de français en dur.
     const parts: string[] = []
-    if (counts.nodes) parts.push(`${counts.nodes} nœud(s)`)
-    if (counts.links) parts.push(`${counts.links} flux`)
-    if (counts.containers) parts.push(`${counts.containers} zone(s)`)
-    if (counts.legend) parts.push('légende')
+    if (counts.nodes) parts.push(`${counts.nodes} ${targetNoun(app_data, 'node', counts.nodes > 1)}`)
+    if (counts.links) parts.push(`${counts.links} ${targetNoun(app_data, 'link', counts.links > 1)}`)
+    if (counts.containers) parts.push(`${counts.containers} ${targetNoun(app_data, 'container', counts.containers > 1)}`)
+    if (counts.legend) parts.push(targetNoun(app_data, 'legend'))
     return (
       <Text style={{ fontSize: default_font_size, fontWeight: 600, padding: '0 0.1rem' }}>
         {parts.join(' + ')}
