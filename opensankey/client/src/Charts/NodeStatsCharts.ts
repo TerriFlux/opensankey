@@ -425,26 +425,36 @@ const NODE_CHART_CLASS = 'node_analysis_chart'
 export interface Type_NodeChartGeom {
   width: number
   height: number
+  // Décalage d'origine du groupe (ox, oy) : reprend le translate de marge de la
+  // forme du nœud pour que le graphique se cale exactement sur ses bornes. Défaut 0.
+  ox?: number
+  oy?: number
 }
 
+const chartOrigin = (geom: Type_NodeChartGeom) => `translate(${geom.ox ?? 0},${geom.oy ?? 0})`
+
 // COURONNE (donut) : décomposition d'un tout en secteurs, dans les bornes du nœud.
+// Renvoie true si quelque chose a été dessiné (false → l'appelant retombe sur la
+// forme normale du nœud plutôt que de le laisser invisible).
 export const drawNodeDonutOnGroup = (
   group_el: SVGGElement,
   parts: Type_StatSlice[],
   geom: Type_NodeChartGeom
-): void => {
+): boolean => {
   const sel = d3.select(group_el)
   sel.selectAll('.' + NODE_CHART_CLASS).remove()
   const total = parts.reduce((s, p) => s + p.value, 0)
   const radius = Math.min(geom.width, geom.height) / 2
-  if (parts.length === 0 || total <= 0 || radius <= 0) return
+  if (parts.length === 0 || total <= 0 || radius <= 0) return false
 
-  const g = sel.append('g')
-    .classed(NODE_CHART_CLASS, true)
-    .attr('transform', `translate(${geom.width / 2},${geom.height / 2})`)
+  // Groupe externe calé sur les bornes du nœud (offset de marge), puis groupe
+  // interne centré pour les secteurs.
+  const outer = sel.append('g').classed(NODE_CHART_CLASS, true).attr('transform', chartOrigin(geom))
+  const inner_r = radius * 0.55
+  const g = outer.append('g').attr('transform', `translate(${geom.width / 2},${geom.height / 2})`)
   const pie = d3.pie<Type_StatSlice>().value(d => d.value).sort(null)
   const arc = d3.arc<d3.PieArcDatum<Type_StatSlice>>()
-    .innerRadius(radius * 0.55).outerRadius(radius)
+    .innerRadius(inner_r).outerRadius(radius)
   g.selectAll('path')
     .data(pie(parts))
     .enter().append('path')
@@ -454,6 +464,19 @@ export const drawNodeDonutOnGroup = (
     .attr('stroke-width', 1)
     .append('title')
     .text(d => `${d.data.label}\n${DEFAULT_FORMAT(d.data.value)} (${pctText(d.data.value, total)})`)
+
+  // Total au centre du trou (si le trou est assez grand pour être lisible).
+  if (inner_r >= 12) {
+    g.append('text')
+      .attr('text-anchor', 'middle')
+      .attr('dominant-baseline', 'central')
+      .attr('font-size', Math.max(8, Math.min(inner_r * 0.5, 14)))
+      .attr('font-weight', 'bold')
+      .attr('fill', '#2D3748')
+      .attr('pointer-events', 'none')
+      .text(DEFAULT_FORMAT(total))
+  }
+  return true
 }
 
 // HISTOGRAMME : une barre par série (empilée par ses parts). Cas d'usage :
@@ -465,7 +488,7 @@ export const drawNodeBarsOnGroup = (
   group_el: SVGGElement,
   series: Type_StatSeries[],
   geom: Type_NodeChartGeom
-): void => {
+): boolean => {
   const sel = d3.select(group_el)
   sel.selectAll('.' + NODE_CHART_CLASS).remove()
 
@@ -478,9 +501,9 @@ export const drawNodeBarsOnGroup = (
   const totals = bars.map(b => b.segments.reduce((a, s) => a + s.value, 0))
   const max = totals.reduce((m, v) => Math.max(m, v), 0)
   const n = bars.length
-  if (n === 0 || max <= 0 || geom.width <= 0 || geom.height <= 0) return
+  if (n === 0 || max <= 0 || geom.width <= 0 || geom.height <= 0) return false
 
-  const g = sel.append('g').classed(NODE_CHART_CLASS, true)
+  const g = sel.append('g').classed(NODE_CHART_CLASS, true).attr('transform', chartOrigin(geom))
   const slot = geom.width / n
   const pad = slot * 0.2
   const bw = slot - pad
@@ -504,4 +527,5 @@ export const drawNodeBarsOnGroup = (
       acc += seg.value
     })
   })
+  return true
 }

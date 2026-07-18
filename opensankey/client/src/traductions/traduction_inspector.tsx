@@ -89,7 +89,25 @@ export const resources_inspector = {
         stock_delta_caption: 'Δ stock caption',
         advanced_editor: 'Advanced editor…',
         open_editor: 'Open the editor…',
-        tags_assign_hint: 'Assignment (groups are edited in Filters)'
+        tags_assign_hint: 'Assignment (groups are edited in Filters)',
+        // OS#1278 — section « Analyse » (graphiques couronne / histogramme).
+        analysis: {
+          decompose_by: 'Decompose by',
+          compare_by: 'Compare across',
+          none: '— none —',
+          inputs: 'Incoming flows',
+          outputs: 'Outgoing flows',
+          inputs_by: 'Incoming flows by {{group}}',
+          outputs_by: 'Outgoing flows by {{group}}',
+          node_children: 'Child nodes ({{dim}})',
+          flux_children: 'Child flows ({{dim}})',
+          repr_auto: 'Auto',
+          repr_donut: 'Donut',
+          repr_bars: 'Bars',
+          show_in_tooltip: 'Show in tooltip',
+          show_on_node: 'Show on the node (donut / histogram)',
+          select_subject: 'Select a node or a flow.'
+        }
       },
       filter_panel: {
         filter: 'Filter',
@@ -187,7 +205,25 @@ export const resources_inspector = {
         stock_delta_caption: 'Libellé Δ stock',
         advanced_editor: 'Éditeur avancé…',
         open_editor: 'Ouvrir l’éditeur…',
-        tags_assign_hint: 'Assignation (les groupes s’éditent dans Filtres)'
+        tags_assign_hint: 'Assignation (les groupes s’éditent dans Filtres)',
+        // OS#1278 — section « Analyse » (graphiques couronne / histogramme).
+        analysis: {
+          decompose_by: 'Décomposer par',
+          compare_by: 'Comparer selon',
+          none: '— aucune —',
+          inputs: 'Flux entrants',
+          outputs: 'Flux sortants',
+          inputs_by: 'Flux entrants par {{group}}',
+          outputs_by: 'Flux sortants par {{group}}',
+          node_children: 'Nœuds enfants ({{dim}})',
+          flux_children: 'Flux enfants ({{dim}})',
+          repr_auto: 'Auto',
+          repr_donut: 'Couronne',
+          repr_bars: 'Barres',
+          show_in_tooltip: 'Afficher dans l’info-bulle',
+          show_on_node: 'Afficher sur le nœud (couronne / histogramme)',
+          select_subject: 'Sélectionner un nœud ou un flux.'
+        }
       },
       filter_panel: {
         filter: 'Filtrer',
@@ -285,7 +321,25 @@ export const resources_inspector = {
         stock_delta_caption: 'Etiqueta Δ stock',
         advanced_editor: 'Editor avanzado…',
         open_editor: 'Abrir el editor…',
-        tags_assign_hint: 'Asignación (los grupos se editan en Filtros)'
+        tags_assign_hint: 'Asignación (los grupos se editan en Filtros)',
+        // OS#1278 — sección « Análisis » (gráficos anillo / histograma).
+        analysis: {
+          decompose_by: 'Descomponer por',
+          compare_by: 'Comparar según',
+          none: '— ninguna —',
+          inputs: 'Flujos entrantes',
+          outputs: 'Flujos salientes',
+          inputs_by: 'Flujos entrantes por {{group}}',
+          outputs_by: 'Flujos salientes por {{group}}',
+          node_children: 'Nodos hijos ({{dim}})',
+          flux_children: 'Flujos hijos ({{dim}})',
+          repr_auto: 'Auto',
+          repr_donut: 'Anillo',
+          repr_bars: 'Barras',
+          show_in_tooltip: 'Mostrar en el tooltip',
+          show_on_node: 'Mostrar en el nodo (anillo / histograma)',
+          select_subject: 'Seleccione un nodo o un flujo.'
+        }
       },
       filter_panel: {
         filter: 'Filtrar',
@@ -383,7 +437,25 @@ export const resources_inspector = {
         stock_delta_caption: 'Δ-Bestandsbeschriftung',
         advanced_editor: 'Erweiterter Editor…',
         open_editor: 'Editor öffnen…',
-        tags_assign_hint: 'Zuweisung (Gruppen werden in Filter bearbeitet)'
+        tags_assign_hint: 'Zuweisung (Gruppen werden in Filter bearbeitet)',
+        // OS#1278 — Abschnitt „Analyse“ (Ring- / Histogramm-Diagramme).
+        analysis: {
+          decompose_by: 'Zerlegen nach',
+          compare_by: 'Vergleichen über',
+          none: '— keine —',
+          inputs: 'Eingehende Flüsse',
+          outputs: 'Ausgehende Flüsse',
+          inputs_by: 'Eingehende Flüsse nach {{group}}',
+          outputs_by: 'Ausgehende Flüsse nach {{group}}',
+          node_children: 'Kindknoten ({{dim}})',
+          flux_children: 'Kindflüsse ({{dim}})',
+          repr_auto: 'Auto',
+          repr_donut: 'Ring',
+          repr_bars: 'Balken',
+          show_in_tooltip: 'Im Tooltip anzeigen',
+          show_on_node: 'Am Knoten anzeigen (Ring / Histogramm)',
+          select_subject: 'Wählen Sie einen Knoten oder einen Fluss.'
+        }
       },
       filter_panel: {
         filter: 'Filtern',
@@ -481,7 +553,25 @@ export const resources_inspector = {
         stock_delta_caption: 'Etichetta Δ stock',
         advanced_editor: 'Editor avanzato…',
         open_editor: 'Aprire l’editor…',
-        tags_assign_hint: 'Assegnazione (i gruppi si modificano in Filtri)'
+        tags_assign_hint: 'Assegnazione (i gruppi si modificano in Filtri)',
+        // OS#1278 — sezione « Analisi » (grafici anello / istogramma).
+        analysis: {
+          decompose_by: 'Scomporre per',
+          compare_by: 'Confrontare per',
+          none: '— nessuna —',
+          inputs: 'Flussi entranti',
+          outputs: 'Flussi uscenti',
+          inputs_by: 'Flussi entranti per {{group}}',
+          outputs_by: 'Flussi uscenti per {{group}}',
+          node_children: 'Nodi figli ({{dim}})',
+          flux_children: 'Flussi figli ({{dim}})',
+          repr_auto: 'Auto',
+          repr_donut: 'Anello',
+          repr_bars: 'Barre',
+          show_in_tooltip: 'Mostra nel tooltip',
+          show_on_node: 'Mostra sul nodo (anello / istogramma)',
+          select_subject: 'Seleziona un nodo o un flusso.'
+        }
       },
       filter_panel: {
         filter: 'Filtrare',

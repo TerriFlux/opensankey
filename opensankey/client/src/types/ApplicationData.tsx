@@ -380,7 +380,7 @@ export class Class_ApplicationData {
     group_el: SVGGElement,
     width: number,
     height: number
-  ) => void = undefined
+  ) => boolean = undefined
 
   protected _waiting_processes: { [id: string]: NodeJS.Timeout } = {}
   protected _waiting_time_for_processes: number = 50 // ms
