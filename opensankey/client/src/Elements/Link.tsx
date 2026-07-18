@@ -700,19 +700,31 @@ export class Class_LinkElement extends Class_LinkAttribute {
       if (source_color_tags.length > 0 && target_color_tags.length === 0) return this.source.getShapeColorToUse()
       if (target_color_tags.length > 0 && source_color_tags.length === 0) return this.target.getShapeColorToUse()
 
-      // 3. Both have color tags (no common) → prefer the product node
-      if (source_color_tags.length > 0 && target_color_tags.length > 0) {
-        if (this.source.hasGivenTag(productTag)) return this.source.getShapeColorToUse()
-        if (this.target.hasGivenTag(productTag)) return this.target.getShapeColorToUse()
+      // Un noeud est une "extremite" s'il n'a de liens que d'un seul cote (source
+      // pure ou puits pur). Quand aucune regle de tag n'a tranche, on prend la
+      // couleur de l'extremite : sur un modele en etoile (un hub qui redistribue),
+      // les flux suivent ainsi la couleur du noeud feuille plutot que celle du hub.
+      const source_is_extremity = this.source.hasInputLinks() !== this.source.hasOutputLinks()
+      const target_is_extremity = this.target.hasInputLinks() !== this.target.hasOutputLinks()
+      const colorFromExtremityOrSource = () => {
+        if (target_is_extremity && !source_is_extremity) return this.target.getShapeColorToUse()
+        if (source_is_extremity && !target_is_extremity) return this.source.getShapeColorToUse()
         return this.source.getShapeColorToUse()
       }
 
-      // 4. No color tags → prefer the product node
+      // 3. Both have color tags (no common) → prefer the product node, sinon l'extremite
+      if (source_color_tags.length > 0 && target_color_tags.length > 0) {
+        if (this.source.hasGivenTag(productTag)) return this.source.getShapeColorToUse()
+        if (this.target.hasGivenTag(productTag)) return this.target.getShapeColorToUse()
+        return colorFromExtremityOrSource()
+      }
+
+      // 4. No color tags → prefer the product node, sinon l'extremite
       if (this.source.hasGivenTag(productTag)) return this.source.getShapeColorToUse()
       if (this.target.hasGivenTag(productTag)) return this.target.getShapeColorToUse()
 
-      // 5. Fallback: source color
-      return this.shape_color //this.source.getShapeColorToUse()
+      // 5. Fallback: extremite (feuille) sinon la source
+      return colorFromExtremityOrSource()
     }
     const type_source = this.shape_color_rule
     if (type_source == 'source') {
