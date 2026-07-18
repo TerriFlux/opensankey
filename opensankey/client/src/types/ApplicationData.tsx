@@ -942,6 +942,15 @@ export class Class_ApplicationData {
         // les centres, pas de désagrégation/ré-agrégation récursive — bien plus rapide au
         // chargement) pour que le filtre vue révèle des nœuds déjà placés.
         centerChildrenOnParent(this)
+      } else {
+        // sankeyapplication#153 — le fichier fait foi sur le statut recyclage : tout flux dont
+        // le statut chargé diverge de ce que la géométrie recalculerait est verrouillé
+        // (tristate #711), sinon le recalcul auto au premier drag le rebasculerait. Réservé
+        // aux fichiers porteurs d'une géométrie (sinon computeAutoSankey ci-dessus vient de
+        // poser des statuts cohérents) et au chargement pour affichage (draw) : les flux
+        // internes en draw=false (réconciliation, tests corpus) réappliquent leur propre
+        // mise en page derrière.
+        this._drawing_area.nodePositioning.lockRecyclingStatusDivergences()
       }
       this._drawing_area.draw()
       // OS#1250 phase 2 — no-op sauf fichier < 0.92 (cf. markForLegacyNormalization).

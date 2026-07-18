@@ -236,6 +236,64 @@ describe('#153 markRecyclingLinks — reflaguage d\'apres les colonnes', () => {
     columns(g, { A: 0 }) // ECHANGE absent du dictionnaire
     expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(false)
   })
+
+  it('ne touche pas un flux dont aucune extremite n\'a bouge (only_touching_nodes)', () => {
+    // C->D est un flux arriere voulu, loin du drag de A : il doit garder son statut
+    // meme si les colonnes globales le donnent en recyclage.
+    const g = buildGraph(['A', 'B', 'C', 'D'],
+      [{ from: 'A', to: 'B' }, { from: 'C', to: 'D' }])
+    const previous = g.core.markRecyclingLinks(g.nodes,
+      { A: 2, B: 0, C: 2, D: 0 }, new Set(['A']))
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(true)
+    expect(g.node('C').output_links_list[0].shape_is_recycling).toBe(false)
+    expect(previous).toEqual({ 'A->B': false })
+  })
+
+  it('reflague un flux dont la cible seulement a bouge', () => {
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B' }])
+    g.core.markRecyclingLinks(g.nodes, { A: 2, B: 0 }, new Set(['B']))
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(true)
+  })
+})
+
+describe('#153 lockRecyclingStatusDivergences — passe post-chargement', () => {
+  it('verrouille un flux arriere sauve non-recyclage sans changer sa valeur', () => {
+    // La geometrie donnerait recyclage (A a droite de B) mais le fichier dit non-recyclage :
+    // le fichier fait foi, le flux est verrouille pour que l'auto ne le rebascule pas.
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B' }])
+    const locked = g.core.lockRecyclingStatusDivergences(g.nodes, { A: 2, B: 0 })
+    expect(locked).toEqual(['A->B'])
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(false)
+    expect(g.node('A').output_links_list[0].shape_is_recycling_locked).toBe(true)
+  })
+
+  it('ne verrouille pas un flux dont le statut colle a la geometrie', () => {
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B' }])
+    const locked = g.core.lockRecyclingStatusDivergences(g.nodes, { A: 0, B: 1 })
+    expect(locked).toEqual([])
+    expect(g.node('A').output_links_list[0].shape_is_recycling_locked).toBe(false)
+  })
+
+  it('verrouille un flux sauve recyclage que la geometrie donnerait non-recyclage', () => {
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B' }])
+    g.node('A').output_links_list[0].shape_is_recycling = true
+    const locked = g.core.lockRecyclingStatusDivergences(g.nodes, { A: 0, B: 1 })
+    expect(locked).toEqual(['A->B'])
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(true)
+  })
+
+  it('ignore un flux deja verrouille par l\'utilisateur', () => {
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B', forced_recycling: true }])
+    const locked = g.core.lockRecyclingStatusDivergences(g.nodes, { A: 0, B: 1 })
+    expect(locked).toEqual([])
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(true)
+  })
+
+  it('est idempotente (second passage sans effet)', () => {
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B' }])
+    g.core.lockRecyclingStatusDivergences(g.nodes, { A: 2, B: 0 })
+    expect(g.core.lockRecyclingStatusDivergences(g.nodes, { A: 2, B: 0 })).toEqual([])
+  })
 })
 
 describe('#1253 computeHorizontalIndex — appelant externe (SankeyAnimation)', () => {

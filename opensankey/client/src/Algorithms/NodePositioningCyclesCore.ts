@@ -157,11 +157,15 @@ export class NodePositioningCyclesCore {
    * et par le recalcul incremental apres un deplacement de noeud (sankeyapplication#153, colonnes
    * deduites des x). Les noeuds hors `horizontal_indexes` (echange) ne contraignent rien.
    *
+   * @param only_touching_nodes Si fourni, seuls les flux dont la source OU la cible est dans cet
+   * ensemble sont reflagues ; les autres gardent leur statut (un flux arriere voulu loin du drag
+   * ne doit pas basculer parce que les colonnes globales ont bouge).
    * @returns pour chaque lien dont le statut a CHANGE, sa valeur precedente (utile a l'undo).
    */
   public markRecyclingLinks(
     nodes_to_process: Class_NodeElement[],
-    horizontal_indexes: { [node_id: string]: number }
+    horizontal_indexes: { [node_id: string]: number },
+    only_touching_nodes?: Set<string>
   ): { [link_id: string]: boolean } {
     const forced = this.user_forced_recycling_link_ids
     const forbidden = this.user_forbidden_recycling_link_ids
@@ -178,6 +182,11 @@ export class NodePositioningCyclesCore {
       node.output_links_list.forEach(link => {
         const link_data = this.drawingArea.sankey.links_dict[link.id]
         if (link_data === undefined) return
+        if (
+          only_touching_nodes !== undefined &&
+          !only_touching_nodes.has(link_data.source.id) &&
+          !only_touching_nodes.has(link_data.target.id)
+        ) return
         if (forced.has(link.id)) return assign(link_data, true)
         if (forbidden.has(link.id)) return assign(link_data, false)
 
@@ -190,6 +199,35 @@ export class NodePositioningCyclesCore {
     })
 
     return previous_values
+  }
+
+  /**
+   * Verrouille (tristate OpenSankey#711) les flux dont le statut recyclage CHARGE diverge de ce
+   * que la geometrie calculerait : le fichier fait foi, la detection auto ne doit jamais
+   * rebasculer un flux arriere voulu par l'auteur (sankeyapplication#153). Appele apres le
+   * chargement d'un fichier qui contient une geometrie. Les flux deja verrouilles sont ignores.
+   *
+   * @returns les ids des flux verrouilles par la passe.
+   */
+  public lockRecyclingStatusDivergences(
+    nodes_to_process: Class_NodeElement[],
+    horizontal_indexes: { [node_id: string]: number }
+  ): string[] {
+    const locked: string[] = []
+    nodes_to_process.forEach(node => {
+      const node_index = horizontal_indexes[node.id]
+      node.output_links_list.forEach(link => {
+        const link_data = this.drawingArea.sankey.links_dict[link.id]
+        if (link_data === undefined || link_data.shape_is_recycling_locked === true) return
+        const target_index = horizontal_indexes[link_data.target.id]
+        const geometric = node_index !== undefined && target_index !== undefined && node_index >= target_index
+        if (link_data.shape_is_recycling !== geometric) {
+          link_data.shape_is_recycling_locked = true
+          locked.push(link_data.id)
+        }
+      })
+    })
+    return locked
   }
 
   /**
