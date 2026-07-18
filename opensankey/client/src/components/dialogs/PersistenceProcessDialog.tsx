@@ -32,6 +32,7 @@ import { MenuDraggable } from '../topmenus/SankeyMenus'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import FileSaver from 'file-saver'
 import { decompressGzipDataFixed, decompressUploadedFileUniversal } from '../../Persistence/UniversalJSONCompression'
+import { applyEsankeyFile } from '../../Persistence/esankeyLoad'
 import { Type_JSON, default_main_sankey_id } from '../../types/Utils'
 import { ActionButtons, ProcessTerminal, Type_ProcessError } from './PersistenceProcessDialogTerminal'
 import {
@@ -109,7 +110,14 @@ const failureMessage = (
   return translated === key ? generic_message : translated
 }
 
-const pickerTypesForFormat = (format: FormatType): Array<{ description: string; accept: Record<string, string[]> }> | undefined => {
+const pickerTypesForFormat = (
+  format: FormatType,
+  // N'autoriser .sankey (e!Sankey, ZIP+XML) que lorsque la sélection charge
+  // directement le diagramme (input json -> output blob) : dans les autres
+  // dialogues partageant le format 'json' (conversion, réconciliation...), un
+  // .sankey n'a pas de sens côté serveur.
+  allow_esankey: boolean = false
+): Array<{ description: string; accept: Record<string, string[]> }> | undefined => {
   if (format === 'excel') {
     return [{
       description: 'Excel',
@@ -122,7 +130,11 @@ const pickerTypesForFormat = (format: FormatType): Array<{ description: string; 
   if (format === 'json') {
     return [{
       description: 'JSON',
-      accept: { 'application/json': ['.json'], 'application/gzip': ['.gz'] }
+      accept: {
+        'application/json': ['.json'],
+        'application/gzip': ['.gz'],
+        ...(allow_esankey ? { 'application/octet-stream': ['.sankey'] } : {})
+      }
     }]
   }
   return undefined
@@ -278,7 +290,11 @@ export const FileFormatSection = ({
             ) : (
               <LocalizedFileInput
                 accept={//@ts-expect-error xxx
-                  FORMAT_CONFIG[current_format].accept}
+                  FORMAT_CONFIG[current_format].accept
+                  // Un .sankey (e!Sankey) peut être ouvert ici comme un .json : ne
+                  // l'autoriser que lorsque ce sélecteur charge directement le
+                  // diagramme (input json -> output blob), pas en conversion.
+                  + (current_format === 'json' && output_format === 'blob' ? ',.sankey' : '')}
                 onChange={(evt: ChangeEvent<HTMLInputElement>) => {
                   const files = (evt.target as HTMLInputElement).files
                   set_file(files?.[0])
@@ -763,7 +779,7 @@ export const UniversalFileConverter = ({
       // @ts-expect-error showOpenFilePicker is not in all TS lib.dom versions
       const [handle] = await window.showOpenFilePicker({
         multiple: false,
-        types: pickerTypesForFormat(input_format)
+        types: pickerTypesForFormat(input_format, input_format === 'json' && output_format === 'blob')
       }) as [FileSystemFileHandle]
       stored_file_handles.set(dialog_name, handle)
       const file = await handle.getFile()
@@ -1219,9 +1235,17 @@ export const UniversalFileConverter = ({
       app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current!(false)
       return
     } else if (input_format == 'json' && output_format == 'blob') {
-      decompressUploadedFileUniversal(current_input_file as File).then(JSON_data => {
-        app_data.fromJSON(JSON_data as Type_JSON, input_options as Type_JSON)
-      })
+      const picked_file = current_input_file as File
+      if (/\.sankey$/i.test(picked_file.name ?? '')) {
+        // Un .sankey (e!Sankey) peut être choisi dans ce même sélecteur "Ouvrir
+        // un fichier JSON" : dézippé et parsé 100 % côté front, comme le fait
+        // le raccourci dédié du menu Ouvrir (MenuTop._load_esankey).
+        void picked_file.arrayBuffer().then((buffer: ArrayBuffer) => applyEsankeyFile(buffer, app_data))
+      } else {
+        decompressUploadedFileUniversal(picked_file).then(JSON_data => {
+          app_data.fromJSON(JSON_data as Type_JSON, input_options as Type_JSON)
+        })
+      }
       setStarted(false)
       setProcessing(false)
       setFailure(false)
