@@ -87,11 +87,12 @@ function readSelectionCounts(app_data: Class_ApplicationData): Type_SelectionCou
 
 /**
  * Premier élément stylable de la sélection : porteur de la cascade affichée
- * par la portée Styles.
+ * par la portée Styles. #1258 — les zones (Class_NodeBase) sont stylables
+ * comme les nœuds : la cascade les gère déjà, on les inclut ici aussi.
  */
 function firstStyledElement(app_data: Class_ApplicationData) {
   const da = app_data.drawing_area
-  return da.selected_nodes_list[0] ?? da.selected_links_list[0] ?? null
+  return da.selected_nodes_list[0] ?? da.selected_links_list[0] ?? da.selected_containers_list[0] ?? null
 }
 
 /**
@@ -159,7 +160,9 @@ export const InspectorPanel = ({ app_data }: { app_data: Class_ApplicationData }
   // Portée Styles aussi en sélection hétérogène (nœud+flux) : les styles sont
   // PARTAGÉS entre types (même styles_list, défaut commun) — la note
   // « cascades divergentes » de la cascade couvre l'ambiguïté d'affichage.
-  const scope_capable = (target === 'node' || target === 'link' || target === 'mixed')
+  // #1258 — les zones (et le titre, qui EST une zone) y ont droit aussi.
+  const scope_capable = (target === 'node' || target === 'link' || target === 'container'
+    || target === 'title' || target === 'mixed')
     && firstStyledElement(app_data) !== null
 
   return (
