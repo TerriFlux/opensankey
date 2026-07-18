@@ -6,6 +6,11 @@ import { Class_DataTag } from '../types/Tag'
 import { TOOLTIP_STYLES, TooltipBehaviorManager } from './TooltipsCSS'
 import { link_data_label, format_value, link_ratio_constraint, ratio_flux_constraint_traduction } from '../types/Utils'
 import { getNameLabelValues } from './ElementsAttributesConfig'
+import { Type_AnalysisDescriptor } from '../Charts/AnalysisDescriptor'
+
+// Conteneur (id fixe) de l'onglet « Analyse » (OS#1278) du tooltip de flux. Un
+// seul tooltip à la fois → id unique suffisant.
+const ANALYSIS_LINK_TOOLTIP_CONTAINER_ID = 'analysis_link_tooltip_chart_container'
 
 export class LinkTooltip {
 
@@ -14,8 +19,23 @@ export class LinkTooltip {
   // ✅ AJOUT : Propriété pour stocker la position de la souris
   public mousePosition: { x: number; y: number } = { x: 0, y: 0 }
 
+  // Onglet « Analyse » (OS#1278) : dessin paresseux à la 1re activation, via le
+  // hook OS+ (draw_analysis_in_container).
+  private _analysisHandle?: { redraw: () => void, cleanup: () => void }
+  private _analysisResizeObserver?: ResizeObserver
+  private _analysisDrawn = false
+
   constructor(link: Class_LinkElement) {
     this._link = link
+  }
+
+  /** Détruit le graphique d'analyse embarqué (observer + conteneur) s'il existe. */
+  private cleanupAnalysis() {
+    this._analysisResizeObserver?.disconnect()
+    this._analysisResizeObserver = undefined
+    this._analysisHandle?.cleanup()
+    this._analysisHandle = undefined
+    this._analysisDrawn = false
   }
 
   private initTooltipBehavior() {
@@ -28,6 +48,7 @@ export class LinkTooltip {
 
   public drawTooltip() {
     // Clean previous tooltips
+    this.cleanupAnalysis()
     d3.selectAll('.sankey-tooltip').remove()
 
     // Position initiale = souris (ou milieu source/target en fallback)
@@ -81,6 +102,7 @@ export class LinkTooltip {
 
   public removeTooltip() {
     this.behaviorManager?.cleanup()
+    this.cleanupAnalysis()
     d3.selectAll('.sankey-tooltip').remove()
   }
 
@@ -97,11 +119,44 @@ export class LinkTooltip {
         tabContents.forEach(content => content.classList.remove('active'))
 
         button.classList.add('active')
-        if (tabContents[index]) {
-          tabContents[index].classList.add('active')
+        const content = tabContents[index] as HTMLElement | undefined
+        if (content) {
+          content.classList.add('active')
+          // L'onglet « Analyse » se dessine paresseusement (conteneur mesuré une
+          // fois affiché, cf. tooltip de nœud).
+          if (content.getAttribute('data-tab-key') === 'analysis') {
+            this.drawAnalysisTab()
+          }
         }
       })
     })
+  }
+
+  /**
+   * Dessine (une seule fois) le graphique d'analyse du flux via le hook OS+
+   * (draw_analysis_in_container). Observe le redimensionnement pour recadrer.
+   */
+  private drawAnalysisTab() {
+    if (this._analysisDrawn) return
+    const hook = this._link.drawing_area.application_data.draw_analysis_in_container
+    if (typeof hook !== 'function') return
+    const container = document.getElementById(ANALYSIS_LINK_TOOLTIP_CONTAINER_ID)
+    if (!container) return
+    this._analysisDrawn = true
+
+    const handle = hook(this._link, '#' + ANALYSIS_LINK_TOOLTIP_CONTAINER_ID)
+    if (handle) this._analysisHandle = handle
+
+    if (typeof ResizeObserver !== 'undefined') {
+      let raf = 0
+      let first = true
+      this._analysisResizeObserver = new ResizeObserver(() => {
+        if (first) { first = false; return }
+        if (raf) cancelAnimationFrame(raf)
+        raf = requestAnimationFrame(() => this._analysisHandle?.redraw())
+      })
+      this._analysisResizeObserver.observe(container)
+    }
   }
 
   private getTooltipHTML(): string {
@@ -113,12 +168,26 @@ export class LinkTooltip {
     const combos = this.getValueComboEntries(this._link)
     const has_series = combos.length > 1
 
+    // Onglet analyse (OS#1278) : hook OS+ présent ET le flux publie un graphique
+    // dans l'info-bulle (surfaces.tooltip du descripteur résolu).
+    const app_data = this._link.drawing_area.application_data
+    const analysis_descriptor = this._link.getElementProperty('analysis_descriptor') as Type_AnalysisDescriptor | undefined
+    const has_analysis = typeof app_data.draw_analysis_in_container === 'function'
+      && !!analysis_descriptor?.surfaces?.tooltip
+      && (!!analysis_descriptor.decompose || !!analysis_descriptor.compare)
+
     // Construction des onglets présents.
-    const tabs: { label: string, html: string }[] = []
+    const tabs: { label: string, html: string, key?: string }[] = []
     tabs.push({ label: 'Flux', html: this.getMainTabHTML() })
     if (has_series) tabs.push({ label: 'Séries flux', html: this.getSeriesFluxHTML(combos) })
     if (has_children) tabs.push({ label: 'Données', html: this.getDataTabHTML(groups) })
     if (has_children && has_series) tabs.push({ label: 'Séries données', html: this.getSeriesDataHTML(groups, combos) })
+    if (has_analysis) tabs.push({
+      label: app_data.t('Noeud.drawing_area_tooltip.analysis_tab') || 'Analyse',
+      key: 'analysis',
+      // Conteneur vide : OS+ y dessine le graphique à l'activation de l'onglet.
+      html: `<div class="analysis-link-tooltip-container" id="${ANALYSIS_LINK_TOOLTIP_CONTAINER_ID}"></div>`
+    })
 
     let html = '<style>' + TOOLTIP_STYLES + this.getTabStyles() + '</style>'
 
@@ -144,7 +213,8 @@ export class LinkTooltip {
     html += '<div class="tooltip-content">'
     if (tabs.length > 1) {
       tabs.forEach((t, i) => {
-        html += `<div class="tab-content${i === 0 ? ' active' : ''}">${t.html}</div>`
+        const key_attr = t.key ? ` data-tab-key="${t.key}"` : ''
+        html += `<div class="tab-content${i === 0 ? ' active' : ''}"${key_attr}>${t.html}</div>`
       })
     } else {
       html += tabs[0].html
@@ -647,6 +717,20 @@ export class LinkTooltip {
         font-weight: 600;
         color: #555;
         margin-bottom: 6px;
+      }
+      /* Onglet analyse (OS#1278) : conteneur de dessin dimensionné (le tooltip de
+         flux n'est pas flex pleine hauteur comme celui du nœud → taille explicite
+         pour que la couronne/l'histogramme aient la place de se dessiner). */
+      .tab-content[data-tab-key="analysis"].active {
+        display: block;
+      }
+      .analysis-link-tooltip-container {
+        position: relative;
+        width: 100%;
+        min-width: 320px;
+        height: 260px;
+        background: white;
+        overflow: hidden;
       }
     `
   }
