@@ -1980,6 +1980,23 @@ export class Class_LinkElement extends Class_LinkAttribute {
     let value_current = null
     if (this.drawing_area.type_data === 'data') value_current = this.value?.valueData ?? null
     else value_current = this.value?.valueResult ?? ((this.value?.value_option == 'value' || this.value?.value_option == 'intervals') ? this.value?.valueData : null) ?? null
+    // #285 (§3.0ter, acompte) — pas de valeur principale obligatoire : un flux
+    // dont le scalaire est vide mais qui porte des valeurs coordonnées n'est
+    // PAS un flux de structure. Valeur affichée : somme des visibles en
+    // bannière multi, première valeur sinon (la sélection par tag porteur
+    // arrive avec la refonte §3.0ter complète).
+    if (value_current === null) {
+      const tvs = (this.value?.tagged_values_list ?? []).filter(tv => tv.value !== null)
+      if (tvs.length > 0) {
+        const multi = this.sankey.flux_taggs_list.some(tagg => tagg.banner === 'multi')
+        if (multi) {
+          const visible = tvs.filter(tv => tv.tags_list.every(tag => tag.is_selected))
+          if (visible.length > 0)
+            value_current = visible.reduce((acc, tv) => acc + (tv.value as number), 0)
+        }
+        if (value_current === null) value_current = tvs[0].value
+      }
+    }
     this._is_computing = false
     return value_current
   }
