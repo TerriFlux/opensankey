@@ -564,11 +564,15 @@ export class NodeEventsHandler {
       // réciproquement. Aucun nœud n'est déplacé ici (une mise en page manuelle survit), et
       // le verrou par flux (#711) prime toujours sur la géométrie.
       //
-      // Les flux impactés ne sont pas seulement ceux des nœuds déplacés : bouger un nœud
-      // change son ORDINAL de colonne, ce qui peut décaler les colonnes de tous les autres.
-      // On rejoue donc le marquage sur l'ensemble du diagramme — c'est O(V+E), négligeable.
-      const dict_old_recycling = drawing_area.application_data.layout_auto_recycling
-        ? drawing_area.nodePositioning.updateRecyclingFromPositions()
+      // Le marquage est restreint aux flux dont une extrémité a été déplacée : les colonnes
+      // globales bougent avec l'ordinal du nœud, mais reflaguer tout le diagramme faisait
+      // basculer des flux arrière voulus loin du drag. Ceux-là gardent leur statut.
+      const moved_node_ids = new Set(Object.keys(dict_old_pos).filter(id => {
+        const n = (drawing_area.sankey.nodes_dict[id] ?? drawing_area.sankey.containers_dict[id]) as Class_NodeBase | undefined
+        return n !== undefined && (n.position_x !== dict_old_pos[id][0] || n.position_y !== dict_old_pos[id][1])
+      }))
+      const dict_old_recycling = drawing_area.application_data.layout_auto_recycling && moved_node_ids.size > 0
+        ? drawing_area.nodePositioning.updateRecyclingFromPositions(moved_node_ids)
         : {}
       const recycling_changed = Object.keys(dict_old_recycling)
       if (recycling_changed.length > 0) {
