@@ -41,6 +41,7 @@ import {
   Type_Orientation,
   Type_PaperFormat,
   Type_PaperOrientation,
+  Type_Shape,
   Type_TextHPos,
   Type_TextVPos
 } from '../Elements/ElementsAttributesConfig'
@@ -507,6 +508,9 @@ export class Class_DrawingArea {
 
   private _mode: 'edition' | 'selection' | 'style_paint' | 'place_container' = 'edition'
   private _style_paint_source: Class_ProtoElement | null = null
+  // OS#1276 — forme du conteneur à créer en mode « placement » : 'rect' pour une
+  // zone de texte classique, 'line' pour une ligne libre (cf. enterPlaceContainerMode).
+  private _place_container_shape: Type_Shape = 'rect'
 
   private _ghost_link: Class_LinkElement | null = null
 
@@ -2585,8 +2589,13 @@ export class Class_DrawingArea {
   // capture ainsi le glisser sans interférence.
   public isInPlaceContainerMode(): boolean { return this._mode === 'place_container' }
 
-  public enterPlaceContainerMode(): void {
+  // OS#1276 — forme à créer au relâché du glisser de placement ('rect' = zone de
+  // texte, 'line' = ligne libre). Lue par DrawingAreaInteractions.
+  public get place_container_shape(): Type_Shape { return this._place_container_shape }
+
+  public enterPlaceContainerMode(shape: Type_Shape = 'rect'): void {
     this.purgeSelection()
+    this._place_container_shape = shape
     this._mode = 'place_container'
     this.drawCursor()
     // Rafraîchit la colonne d'outils (bouton mode placement actif/inactif).
