@@ -581,6 +581,16 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
   // Position mode toggles --------------------------------------------------------------
   const [showTagPositionMode, setShowTagPositionMode] = useState(false)
   const [showGrpPositionMode, setShowGrpPositionMode] = useState(false)
+  // #1283 — nom long fusionné dans la colonne « Nom » : révélé par ligne (bouton
+  // Aa) ou d'office quand il diffère du nom court (sinon redondant, place perdue).
+  const [longNameShown, setLongNameShown] = useState<Set<string>>(new Set())
+  const isLongShown = (tag: { id: string, name: string, long_name: string }) =>
+    longNameShown.has(tag.id) || (!!tag.long_name && tag.long_name !== tag.name)
+  const toggleLong = (tag_id: string) => setLongNameShown(prev => {
+    const next = new Set(prev)
+    if (next.has(tag_id)) next.delete(tag_id); else next.add(tag_id)
+    return next
+  })
 
   // Tags tables ------------------------------------------------------------------------
   let variant_table_edit_tag = 'table_edit_tag_node'
@@ -694,13 +704,10 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                   </OSTooltip>
                 </Box>
               </Th>
-              {/* Nom de l'étqiuette (nom court = id) */}
+              {/* #1283 — colonne « Nom » unique ; le nom long (affiché sur le
+                  diagramme) se déplie dans la même cellule via le bouton Aa. */}
               <Th>
                 {t('Tags.Nom')}
-              </Th>
-              {/* Nom long de l'étiquette (affiché sur le diagramme) */}
-              <Th>
-                {t('Tags.NomLong')}
               </Th>
               {showTagPositionMode ?
                 <Th>{t('Tags.Position')}</Th>
@@ -740,48 +747,55 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                           </Button>
                         </OSTooltip>
                       </Td>
-                      {/* Renommer l'étiquette (nom court = id) */}
+                      {/* #1283 — cellule « Nom » unique : nom court + bouton Aa
+                          révélant le nom long (affiché sur le diagramme), qui ne
+                          s'affiche d'office que s'il diffère (sinon redondant). */}
                       <Td >
-                        <InputGroup variant='menuconfigpanel_option_input_table' >
-                          {/* TODO change with ConfigMenuTextInput */}
-                          <Input
-                            variant='menuconfigpanel_option_input_table'
-                            id={tag.id}
-                            type="text"
-                            value={tag.name}
-                            onChange={
-                              (evt: React.ChangeEvent) => {
-                                // Change tag name
-                                tag.name = (evt.target as HTMLInputElement).value
-                                // Update all related menus
-                                updateThisAndRelatedComponents()
-                              }
-                            } />
-                        </InputGroup>
-                      </Td>
-                      {/* Renommer le nom long de l'étiquette (affiché sur le diagramme) */}
-                      <Td >
-                        <InputGroup variant='menuconfigpanel_option_input_table' >
-                          <Input
-                            // Champ non-contrôlé (defaultValue + onBlur) : le setter long_name
-                            // appelle update() qui redessine, ce qui en mode contrôlé renvoyait
-                            // le curseur en début de champ à chaque frappe. La key force le
-                            // remontage si long_name change de l'extérieur (reset, etc.).
-                            key={tag.id + '_long_' + tag.long_name}
-                            variant='menuconfigpanel_option_input_table'
-                            id={tag.id + '_long'}
-                            type="text"
-                            defaultValue={tag.long_name}
-                            placeholder={tag.name}
-                            onBlur={
-                              (evt: React.FocusEvent) => {
-                                // Change tag long name (display name on the diagram)
-                                tag.long_name = (evt.target as HTMLInputElement).value
-                                // Update all related menus
-                                updateThisAndRelatedComponents()
-                              }
-                            } />
-                        </InputGroup>
+                        <Box display='flex' flexDirection='column' gap='0.15rem'>
+                          <Box display='flex' alignItems='center' gap='0.2rem'>
+                            <InputGroup variant='menuconfigpanel_option_input_table' flex='1'>
+                              <Input
+                                variant='menuconfigpanel_option_input_table'
+                                id={tag.id}
+                                type="text"
+                                value={tag.name}
+                                onChange={
+                                  (evt: React.ChangeEvent) => {
+                                    tag.name = (evt.target as HTMLInputElement).value
+                                    updateThisAndRelatedComponents()
+                                  }
+                                } />
+                            </InputGroup>
+                            <OSTooltip label={t('Tags.NomLong')}>
+                              <Button
+                                variant={isLongShown(tag) ? 'menuconfigpanel_icon_button_activated' : 'menuconfigpanel_icon_button'}
+                                onClick={() => toggleLong(tag.id)}
+                              >
+                                <Box as='span' fontWeight='600'>Aa</Box>
+                              </Button>
+                            </OSTooltip>
+                          </Box>
+                          {isLongShown(tag) && (
+                            <InputGroup variant='menuconfigpanel_option_input_table'>
+                              <Input
+                                // Non-contrôlé (defaultValue + onBlur) : le setter long_name
+                                // redessine ; en contrôlé le curseur sautait au début. La key
+                                // force le remontage si long_name change de l'extérieur.
+                                key={tag.id + '_long_' + tag.long_name}
+                                variant='menuconfigpanel_option_input_table'
+                                id={tag.id + '_long'}
+                                type="text"
+                                defaultValue={tag.long_name}
+                                placeholder={tag.name}
+                                onBlur={
+                                  (evt: React.FocusEvent) => {
+                                    tag.long_name = (evt.target as HTMLInputElement).value
+                                    updateThisAndRelatedComponents()
+                                  }
+                                } />
+                            </InputGroup>
+                          )}
+                        </Box>
                       </Td>
                       {showTagPositionMode ?
                         /* Boutons monter/descendre l'étiquette */
