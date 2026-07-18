@@ -130,6 +130,43 @@ facultatif), et un groupe donné peut ne taguer qu'une partie des sous-valeurs.
 Une contrainte de cohérence (somme = valeur de la feuille) pourra être offerte
 en option (contrôle type check MFA), pas imposée par le stockage.
 
+### 3.0bis Clarification (2026-07-18) : des « valeurs », pas des « sous-valeurs »
+
+Précision utilisateur : les valeurs multiples d'un flux ne sont **pas
+additives** et il n'y a **pas de hiérarchie** entre elles. L'exemple type est
+un jeu d'unités — le même flux vaut 120 kWh, 0,4 t et 300 € : ce ne sont pas
+des parts d'un tout, ce sont des valeurs parallèles. « La » valeur du flux est
+simplement la première de la liste (celle que voit le solveur). Le terme
+« sous-valeur » est donc impropre — dire **« les valeurs du flux »**.
+
+Confrontation au modèle d'e!Sankey (manuel 5, ch. 5/8/9), très proche :
+
+- une **flèche** (arrow) ne porte pas une valeur mais une **liste de flows** =
+  (entrée, quantité) — l'équivalent exact de nos valeurs coordonnées ;
+- une **entrée** (entry) = matière/énergie/coût défini dans une liste globale,
+  avec couleur — l'équivalent d'un tag libre ;
+- les **Unit Types** (Masse, Énergie…) portent chacun : unités convertibles,
+  format d'affichage, palette, bilan matière propre, **échelle propre**
+  (slider px/quantité) et visibilité — c'est ce qui rend l'affichage simultané
+  de kWh et de tonnes cohérent (chaque type proportionné à sa règle, et on
+  masque un type d'un clic). Nos dataTags `is_unit` + ScaleOverrides jouent
+  déjà ce rôle côté dimensions.
+
+Conséquences actées (2026-07-18) :
+
+1. **Éclatement en rubans = choix d'affichage**, pas un automatisme : porté
+   par la **bannière `multi`** du groupe libre (cohérent avec les dataTags).
+   `multi` (défaut des groupes libres) → un ruban par valeur ; `Unique` → le
+   flux affiche sa valeur principale, les autres valeurs restant en
+   tooltip/éditeur (cas unités).
+2. **Conversion dimension→annotation** : la valeur principale devient celle de
+   la **tranche sélectionnée** (plus de somme).
+3. **Piste de suivi** (équivalent Unit Types complet) : échelle et visibilité
+   par groupe libre — à rapprocher de ScaleOverrides. Non planifié.
+4. Renommage « sous-valeurs » → « valeurs du flux » : à trancher (UI seule ou
+   aussi code/JSON `sub_values`, encore possible tant que la branche n'est pas
+   mergée).
+
 ### 3.1 Contrainte de cardinalité
 
 Tranchée par l'adoption du modèle sous-valeurs (§3.0) : une sous-valeur porte
