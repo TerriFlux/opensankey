@@ -43,7 +43,10 @@ import { useModelBinding, useModelSlot } from '@terriflux/opensankey/src/hooks/u
 
 export type FType_SankeySettingsEditionElementTags = {
   new_data: Class_ApplicationDataOSP,
-  elementTagNameProp: Type_MacroTagGroup
+  elementTagNameProp: Type_MacroTagGroup,
+  // #1283 — mode « groupe fixe » (édition en place depuis une carte de filtre) :
+  // édite CE groupe, sans sélecteur de groupe ni table de gestion des groupes.
+  fixed_group_id?: string
 }
 
 const list_palette_color = [
@@ -74,6 +77,7 @@ const list_palette_color = [
 const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTags> = ({
   new_data,
   elementTagNameProp,
+  fixed_group_id,
 }) => {
 
   // Data -------------------------------------------------------------------------------
@@ -84,12 +88,14 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
 
   const tags_group_dict = new_data.drawing_area.sankey.getTagGroupsAsDict(elementTagNameProp)
   const tags_group_list = new_data.drawing_area.sankey.getTagGroupsAsList(elementTagNameProp)
-  const [tags_group_entry_id, setTagsGroupEntryId] = useState(tags_group_list[0]?.id ?? '')
+  const [tags_group_entry_id_state, setTagsGroupEntryId] = useState(tags_group_list[0]?.id ?? '')
+  // #1283 — en mode groupe fixe, l'id est imposé par la carte (pas de sélecteur).
+  const tags_group_entry_id = fixed_group_id ?? tags_group_entry_id_state
   const tags_group_entry = tags_group_dict[tags_group_entry_id]
   const tags_entry = tags_group_entry?.tags_list ?? []
 
-  // Failsafe if selected tag group is not in dict of group 
-  if (tags_group_list.length > 0 && !(tags_group_entry_id in tags_group_dict))
+  // Failsafe if selected tag group is not in dict of group (état interne seul)
+  if (!fixed_group_id && tags_group_list.length > 0 && !(tags_group_entry_id_state in tags_group_dict))
     setTagsGroupEntryId(new_data.drawing_area.sankey.getTagGroupsAsList(elementTagNameProp)[0]?.id ?? '')
 
 
@@ -588,9 +594,10 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
   const variant_table_edit_grp = elementTagNameProp == 'data_taggs' ? 'table_edit_grp_tag_data' : 'table_edit_grp_tag_node_link'
   const variant_table_edit_grp_final = showGrpPositionMode ? variant_table_edit_grp + '_pos' : variant_table_edit_grp
 
-  const tagSetting = (<WrapperBoxSubSectionMenu new_data={new_data} title={title}>
+  const tagSettingInner = (
     <>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+      {/* #1283 — sélecteur de groupe masqué en mode groupe fixe (la carte impose le groupe). */}
+      {!fixed_group_id && <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <span>{elementTagNameProp == 'level_taggs' ? t('Tags.Dimension') : t('Tags.GE')}:</span>
         <Select
           variant='menuconfigpanel_option_select'
@@ -610,7 +617,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                 </option>
             )}
         </Select>
-      </Box>
+      </Box>}
 
       {elementTagNameProp !== 'level_taggs' ? <Box display='grid' gridTemplateColumns='1fr 1fr 1fr'>
         {/* Boutons des palettes de couleur  -------------------------------------------- */}
@@ -866,12 +873,101 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
         </Table>
       </TableContainer>
     </>
-  </WrapperBoxSubSectionMenu>
   )
+  // #1283 — en mode groupe fixe : pas de sous-section titrée (la carte identifie
+  // déjà le groupe), contenu direct. Sinon, collapsible titré historique.
+  const tagSetting = fixed_group_id
+    ? tagSettingInner
+    : <WrapperBoxSubSectionMenu new_data={new_data} title={title}>{tagSettingInner}</WrapperBoxSubSectionMenu>
 
   // Tag group menu ---------------------------------------------------------------------
-  return (<Box layerStyle='menuconfigpanel_grid'>
-    <WrapperBoxSubSectionMenu new_data={new_data} title={elementTagNameProp == 'level_taggs' ? t('Tags.EditDimension') : t('Tags.EGE')}>
+  // #1283 — mode groupe fixe : en-tête COMPACT d'édition du GROUPE lui-même
+  // (nom, bannière, unité pour les data, suppression), à la place de la table de
+  // gestion multi-groupes. Réutilise les mêmes mutations que la table.
+  const fixedGroupHeader = (fixed_group_id && tags_group_entry) ? (
+    <Box display='grid' gridTemplateColumns={
+      `1fr ${elementTagNameProp !== 'level_taggs' ? 'auto' : ''} ${elementTagNameProp === 'data_taggs' ? 'auto' : ''} auto`
+    } gap='0.3rem' alignItems='center' marginBottom='0.3rem'>
+      <OSTooltip label={t('Tags.tooltips.nom_grp')}>
+        <Input
+          variant='menuconfigpanel_option_input'
+          value={tags_group_entry.name}
+          onChange={(evt: React.ChangeEvent<HTMLInputElement>) => {
+            tags_group_entry.name = evt.target.value
+            updateThisAndRelatedComponents()
+          }}
+        />
+      </OSTooltip>
+      {elementTagNameProp !== 'level_taggs' && (
+        <OSTooltip label={t('Tags.tooltips.banner')}>
+          <Select
+            variant='menuconfigpanel_option_select'
+            value={(tags_group_entry as Class_ProtoTagGroup).banner}
+            onChange={(evt: React.ChangeEvent<HTMLSelectElement>) =>
+              handleBanner(tags_group_entry as Class_NodeTagGroup | Class_FluxTagGroup | Class_DataTagGroup, evt.target.value as tag_banner_type)}
+          >
+            <option value='none'>{t('Menu.Aucun')}</option>
+            <option value='one'>{t('Tags.Unique')}</option>
+            <option value='multi'>{t('Tags.Multiple')}</option>
+            {elementTagNameProp === 'data_taggs' && <option value='sequence'>{t('Tags.sequence')}</option>}
+            {elementTagNameProp === 'data_taggs' && <option value='topbar'>{t('Tags.topbar')}</option>}
+          </Select>
+        </OSTooltip>
+      )}
+      {elementTagNameProp === 'data_taggs' && (
+        <OSTooltip label={t('Tags.tooltips.unit')}>
+          <Switch
+            isChecked={(tags_group_entry as Class_DataTagGroup).is_unit}
+            onChange={(evt) => {
+              (tags_group_entry as Class_DataTagGroup).is_unit = evt.target.checked
+              new_data.drawing_area.draw()
+              updateThisAndRelatedComponents()
+            }}
+          />
+        </OSTooltip>
+      )}
+      <OSTooltip label={t('Tags.tooltips.rm_grp')}>
+        <Button
+          size='xs'
+          variant='menuconfigpanel_del_button'
+          sx={{ minWidth: 'auto', paddingInline: '0.4rem' }}
+          onClick={() => handleDelGroupTag(tags_group_entry as Class_NodeTagGroup | Class_FluxTagGroup | Class_DataTagGroup)}
+        >
+          {icon_remove_element}
+        </Button>
+      </OSTooltip>
+    </Box>
+  ) : null
+
+  // #1283 — grammaire compacte UNIQUE pour l'édition en place (mode groupe fixe) :
+  // une seule règle normalise boutons carrés, inputs/selects xs, en-têtes de
+  // colonne discrets et cellules serrées — plus rien n'est surdimensionné.
+  const compact_sx = fixed_group_id ? {
+    fontSize: '0.7rem',
+    '& th': {
+      fontSize: '0.56rem', letterSpacing: 0, textTransform: 'none',
+      padding: '0.1rem 0.3rem', height: 'auto', color: 'gray.500'
+    },
+    '& td': { padding: '0.1rem 0.25rem' },
+    '& button': {
+      minWidth: '1.4rem', width: '1.4rem', height: '1.4rem',
+      padding: 0, fontSize: '0.7rem'
+    },
+    '& button svg': { width: '0.8rem', height: '0.8rem' },
+    '& input, & select': {
+      height: '1.4rem', minHeight: 'unset', fontSize: '0.7rem', paddingInline: '0.3rem'
+    },
+    // La rangée de palettes (3 col) : boutons non carrés (texte/select), on
+    // laisse le select respirer.
+    '& select': { width: 'auto', minWidth: '3rem' }
+  } : undefined
+
+  return (<Box layerStyle='menuconfigpanel_grid' sx={compact_sx}>
+    {fixedGroupHeader}
+    {/* #1283 — table de GESTION des groupes (ajout/suppression/renommage/bannière
+        de tous les groupes) masquée en mode groupe fixe : la carte n'édite qu'UN
+        groupe. On ne garde que l'édition de ses étiquettes (tagSetting). */}
+    {!fixed_group_id && <WrapperBoxSubSectionMenu new_data={new_data} title={elementTagNameProp == 'level_taggs' ? t('Tags.EditDimension') : t('Tags.EGE')}>
       {/* Groupe d'étiquette  */}
       <TableContainer>
         <Table variant={variant_table_edit_grp_final}>
@@ -1060,7 +1156,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
           </Tbody>
         </Table>
       </TableContainer>
-    </WrapperBoxSubSectionMenu>
+    </WrapperBoxSubSectionMenu>}
     {tags_group_list.length > 0 ? tagSetting : <></>}
 
   </Box>

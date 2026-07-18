@@ -26,7 +26,6 @@
 
 import React from 'react'
 import { inspector_registry } from '@terriflux/opensankey/src/components/configmenus/inspector/InspectorRegistry'
-import { filter_panel_registry } from '@terriflux/opensankey/src/components/topmenus/FilterPanelRegistry'
 import {
   FType_InitializeAdditionalMenus,
   FType_ModuleDialogs,
@@ -58,6 +57,7 @@ import { BannerTrialOSP, ModalTrialExpiredOSP } from './components/ModalTrialOSP
 import {SankeyMenuConfigurationNodesTags} from './components/SankeyPlusMenuConfigurationNodesTags'
 import {MenuConfigurationLinksTags} from './components/SankeyPlusMenuConfigurationLinksTags'
 import {SankeySettingsEditionElementTags} from './components/SankeyPlusMenuConfigurationTags'
+import type { Type_MacroTagGroup } from '@terriflux/opensankey/src/types/Utils'
 import {ImportImageAsSvgBg} from './components/UtilsOSP'
 import { AFMEditionMenu } from './components/AFMSankeyMenu'
 import { AnalysisChartInspector } from './components/AnalysisChartInspector'
@@ -184,59 +184,17 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   // des propriétés d'un élément : elles vivent dans le panneau Filtres (onglet
   // « Éditer »), là où ces groupes sont consommés. Remplace les cases
   // presentation × {node_tag, flow_tag, data_tag, level_tag, view} de la matrice.
-  filter_panel_registry.register({
-    id: 'osp.filter_edit.node_taggs',
-    order: 10,
-    title: () => t('Menu.EN'),
-    short_title: () => t('filter_panel.short.node'),
-    icon: (app) => app.icon_library.icon_node,
-    gate: (app) => app.has_sankey_plus,
-    render: (app) => <SankeySettingsEditionElementTags
-      new_data={app as Class_ApplicationDataOSP}
-      elementTagNameProp='node_taggs'
-    />
-  })
-  filter_panel_registry.register({
-    id: 'osp.filter_edit.flux_taggs',
-    order: 20,
-    title: () => t('Menu.EF'),
-    short_title: () => t('filter_panel.short.link'),
-    icon: (app) => app.icon_library.icon_flow,
-    gate: (app) => app.has_sankey_plus,
-    render: (app) => <SankeySettingsEditionElementTags
-      new_data={app as Class_ApplicationDataOSP}
-      elementTagNameProp='flux_taggs'
-    />
-  })
-  filter_panel_registry.register({
-    id: 'osp.filter_edit.data_taggs',
-    order: 30,
-    title: () => t('Menu.ED'),
-    short_title: () => t('filter_panel.short.data'),
-    icon: (app) => app.icon_library.icon_tab_value,
-    gate: (app) => app.has_sankey_plus,
-    render: (app) => <SankeySettingsEditionElementTags
-      new_data={app as Class_ApplicationDataOSP}
-      elementTagNameProp='data_taggs'
-    />
-  })
-  filter_panel_registry.register({
-    id: 'osp.filter_edit.level_taggs',
-    order: 40,
-    title: () => t('Menu.Hierarchy'),
-    short_title: () => t('filter_panel.short.level'),
-    icon: (app) => app.icon_library.icon_filter_level,
-    gate: (app) => app.has_sankey_plus && app.has_sankey_dev,
-    render: (app) => <SankeySettingsEditionElementTags
-      new_data={app as Class_ApplicationDataOSP}
-      elementTagNameProp='level_taggs'
-    />
-  })
-  filter_panel_registry.register({
-    id: 'osp.filter_edit.views',
-    order: 50,
-    title: () => t('view.storytelling'),
-    short_title: () => t('filter_panel.short.views'),
+  // #1283 — le tiroir de filtres ne fait plus QUE filtrer : les éditeurs de
+  // groupes de tags s'ouvrent en place depuis chaque carte (render_tag_group_editor),
+  // et « Vues » (réglage de niveau diagramme) devient un onglet de l'inspecteur
+  // (cible « Vue »), à côté de Graphe/Titre/Légende/AFM. Le registre de filtres
+  // n'est donc plus alimenté par OSP.
+  inspector_registry.register({
+    id: 'osp.view.views',
+    target: 'view',
+    order: 60, // juste avant AFM (70) — « à côté d'AFM », AFM reste en dernier.
+    hue: 'presentation',
+    title: (app) => app.t('view.storytelling'),
     icon: (app) => app.icon_library.icon_element_visible,
     gate: (app) => app.has_sankey_plus,
     render: (app) => <ViewsConfig app_data={app as Class_ApplicationDataOSP} />
@@ -313,6 +271,18 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
     disabled: () => !app_data.has_sankey_plus,
     render: (attrs: string[], onToggle: (key: string) => void, t: (key: string) => string) => renderApplyLayoutExtraTabOSP(app_data, attrs, onToggle, t)
   }
+
+  // #1283 — éditeur de groupe de tags injecté pour l'édition EN PLACE depuis une
+  // carte de filtre (fusion usage/édition). OS appelle ce renderer avec le prop
+  // du groupe et son id ; OSP fournit l'éditeur en mode « groupe fixe ».
+  mc.render_tag_group_editor = (element_tag_name_prop: string, group_id: string) =>
+    app_data.has_sankey_plus
+      ? <SankeySettingsEditionElementTags
+        new_data={app_data}
+        elementTagNameProp={element_tag_name_prop as Type_MacroTagGroup}
+        fixed_group_id={group_id}
+      />
+      : null
 
   // Inject OSP "export all views" items into the top export dropdown (PNG zip + merged PDF)
   registerExtraExportMenuItems(app_data)
