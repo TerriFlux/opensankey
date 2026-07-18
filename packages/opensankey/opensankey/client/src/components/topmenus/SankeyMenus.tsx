@@ -267,19 +267,44 @@ export const SankeyMenu = (
           <Button
             id='button_create_text_zone'
             variant={app_data.drawing_area.isInPlaceContainerMode()
+              && app_data.drawing_area.place_container_shape !== 'line'
               ? 'toolbar_button_mouse_mode_activated'
               : 'toolbar_button_mouse_mode'}
             size='sizeToolbarButton'
             onClick={() => {
-              if (app_data.drawing_area.isInPlaceContainerMode()) {
+              if (app_data.drawing_area.isInPlaceContainerMode()
+                && app_data.drawing_area.place_container_shape !== 'line') {
                 app_data.drawing_area.exitPlaceContainerMode()
               } else {
-                app_data.drawing_area.enterPlaceContainerMode()
+                app_data.drawing_area.enterPlaceContainerMode('rect')
               }
               refreshToolsColumn()
             }}
           >
             {icon_library.icon_object}
+          </Button>
+        </OSTooltip>
+        {/* OS#1276 — ligne libre : même mode « placement » que la zone de texte, mais
+            le glisser pose un trait décoratif (diagonale de la boîte tracée). */}
+        <OSTooltip placement='left' label={t('Banner.create_line')}>
+          <Button
+            id='button_create_line'
+            variant={app_data.drawing_area.isInPlaceContainerMode()
+              && app_data.drawing_area.place_container_shape === 'line'
+              ? 'toolbar_button_mouse_mode_activated'
+              : 'toolbar_button_mouse_mode'}
+            size='sizeToolbarButton'
+            onClick={() => {
+              if (app_data.drawing_area.isInPlaceContainerMode()
+                && app_data.drawing_area.place_container_shape === 'line') {
+                app_data.drawing_area.exitPlaceContainerMode()
+              } else {
+                app_data.drawing_area.enterPlaceContainerMode('line')
+              }
+              refreshToolsColumn()
+            }}
+          >
+            {icon_library.icon_line_shape}
           </Button>
         </OSTooltip>
         <ComponentPositionMode app_data={app_data} updateParentComponent={refreshToolsColumn} />

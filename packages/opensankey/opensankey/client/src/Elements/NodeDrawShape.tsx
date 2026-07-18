@@ -96,6 +96,8 @@ export class NodeDrawShape {
     // Clean previous shape and its associated clip-path wrapper
     this._node.d3_selection_g_shape?.selectAll('.node_shape').remove()
     this._node.d3_selection_g_shape?.selectAll('.node_border_clip_def').remove()
+    // OS#1276 — trait de préhension transparent d'une ligne libre (cf. branche 'line').
+    this._node.d3_selection_g_shape?.selectAll('.node_line_hit').remove()
 
     // Do the rest only if shape is visible
     // Compute shape attributes
@@ -130,6 +132,33 @@ export class NodeDrawShape {
         .classed('node', true)
         .classed('node_shape', true)
         .attr('d', this.getHorizontalCapsulePath())
+    } else if (this._node.shape_type === 'line') {
+      // OS#1276 — ligne libre : trait décoratif, diagonale de la boîte englobante.
+      // Sens donné par shape_line_flip. Pas de remplissage ; l'apparence (couleur,
+      // épaisseur, pointillés) reprend les attributs de bordure via le bloc commun
+      // ci-dessous (le <line> porte la classe node_shape).
+      const g = this._node.d3_selection_g_shape
+      if (g) {
+        const pts = this._node.shape_line_flip
+          ? { x1: 0, y1: height, x2: width, y2: 0 }
+          : { x1: 0, y1: 0, x2: width, y2: height }
+        // Trait de préhension transparent, plus large, pour rendre une ligne fine
+        // sélectionnable au clic (le trait visible ne fait que quelques pixels).
+        const hit_width = Math.max(this._node.shape_border_thickness * 3, 12)
+        g.append('line')
+          .classed('node_line_hit', true)
+          .attr('x1', pts.x1).attr('y1', pts.y1)
+          .attr('x2', pts.x2).attr('y2', pts.y2)
+          .attr('stroke', 'transparent')
+          .attr('stroke-width', hit_width)
+          .attr('fill', 'none')
+          .attr('pointer-events', 'stroke')
+        g.append('line')
+          .classed('node', true)
+          .classed('node_shape', true)
+          .attr('x1', pts.x1).attr('y1', pts.y1)
+          .attr('x2', pts.x2).attr('y2', pts.y2)
+      }
     }
     let margin_top = this._node.shape_margin_top
     if (this._node.shape_type === 'capsule') {
@@ -172,7 +201,9 @@ export class NodeDrawShape {
     // margin here would double-count it and shift the clip up-left by one margin,
     // cropping the border on the right/bottom edges (visible when margins != 0).
     let clip_attr: string | null = null
-    if (!acts_as_frame && base_thickness > 0 && this._node.shape_border_visible) {
+    // OS#1276 — pas de clip de bordure interne pour une ligne (le trait n'a pas
+    // d'aire de remplissage à confiner ; le clip utiliserait la géométrie capsule).
+    if (!acts_as_frame && base_thickness > 0 && this._node.shape_border_visible && this._node.shape_type !== 'line') {
       const g_shape = this._node.d3_selection_g_shape
       if (g_shape) {
         const clip_id = `clip-node-border-${this._node.id}`

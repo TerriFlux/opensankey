@@ -40,6 +40,9 @@ export class Class_DrawingAreaInteractions {
   // État de geste — coin de départ du rectangle de sélection (le coin opposé suit la souris).
   private _starting_x_point = 0
   private _starting_y_point = 0
+  // OS#1276 — sens de la diagonale d'une ligne libre en cours de tracé (mode
+  // placement). true = « / » (bas-gauche → haut-droit), déduit du sens du glisser.
+  private _place_line_flip = false
 
   /**
    * Pose les écouteurs sur la zone de dessin. Les gestes d'édition (création de flux, sélection)
@@ -462,13 +465,35 @@ export class Class_DrawingAreaInteractions {
       // Sous ce seuil on considère un simple clic (pas de glisser) : ZDT à taille
       // par défaut, centrée sur le point cliqué.
       const MIN_DRAG_SIZE = 20
+      // OS#1276 — la forme à créer dépend de l'outil actif (zone de texte ou ligne).
+      const is_line = da.place_container_shape === 'line'
+      const line_flip = this._place_line_flip
       let cont: Class_ContainerElement
       const create = () => {
         cont = da.sankey.addNewDefaultContainer()
+        if (is_line) {
+          // Ligne libre : trait décoratif sans remplissage ni label. L'apparence
+          // (couleur, épaisseur, pointillés) est portée par les attributs de bordure.
+          cont.shape_type = 'line'
+          cont.shape_line_flip = line_flip
+          cont.shape_color_visible = false
+          cont.shape_border_visible = true
+          cont.shape_border_color_sustainable = true
+          cont.shape_border_color = '#000000'
+          cont.shape_border_thickness = 2
+          cont.name_label_is_visible = false
+        }
         if (w < MIN_DRAG_SIZE && h < MIN_DRAG_SIZE) {
-          cont.setPosXY(
-            x - cont.getShapeWidthToUse() / 2,
-            y - cont.getShapeHeightToUse() / 2)
+          if (is_line) {
+            // Simple clic sans glisser : ligne diagonale de taille par défaut.
+            cont.shape_min_width = 100
+            cont.shape_min_height = 100
+            cont.setPosXY(x - 50, y - 50)
+          } else {
+            cont.setPosXY(
+              x - cont.getShapeWidthToUse() / 2,
+              y - cont.getShapeHeightToUse() / 2)
+          }
         } else {
           cont.setPosXY(x, y)
           cont.shape_min_width = w
@@ -536,6 +561,14 @@ export class Class_DrawingAreaInteractions {
         } else {
           da.selection_zone.height = Math.abs(this._starting_y_point - mouse_position[1])
           new_y = mouse_position[1]
+        }
+
+        // OS#1276 — sens de la diagonale d'une ligne libre : « / » quand le glisser
+        // change de signe entre x et y (haut-droit⇄bas-gauche), « \ » sinon.
+        if (da.isInPlaceContainerMode() && da.place_container_shape === 'line') {
+          const dx = mouse_position[0] - this._starting_x_point
+          const dy = mouse_position[1] - this._starting_y_point
+          this._place_line_flip = (dx * dy) < 0
         }
 
         // Update shape on drawing area
