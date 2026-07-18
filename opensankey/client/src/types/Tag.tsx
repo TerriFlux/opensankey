@@ -430,6 +430,36 @@ export class Class_NodeTag extends Class_Tag {
  */
 export class Class_FluxTag extends Class_Tag {
 
+  // #285 (§3.0ter) — échelle propre du tag, pendant de Class_DataTag._scale
+  // pour les groupes PORTEURS DE VALEURS : la largeur de bande d'une valeur
+  // coordonnée vaut valeur convertie avec l'échelle de SON tag, ce qui rend
+  // affichables ensemble des valeurs non additives (kWh/t/€).
+  // undefined = échelle du dessin.
+  private _scale: number | undefined = undefined
+
+  public get scale(): number | undefined { return this._scale }
+  public set scale(_: number | undefined) { this._scale = _ }
+
+  protected _toJSON(
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    super._toJSON(json_object, _kwargs)
+    if (this._scale !== undefined) json_object['scale'] = this._scale
+  }
+
+  protected _fromJSON(
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ): void {
+    super._fromJSON(json_object, _kwargs)
+    if (json_object['scale'] !== undefined) this._scale = getNumberFromJSON(json_object, 'scale', 0)
+  }
+
+  protected _copyFrom(tag_to_copy: Class_ProtoTag) {
+    super._copyFrom(tag_to_copy)
+    if (tag_to_copy instanceof Class_FluxTag) this._scale = tag_to_copy._scale
+  }
 
   // PUBLIC METHODS =====================================================================
 

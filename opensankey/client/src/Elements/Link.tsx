@@ -29,6 +29,7 @@ import * as d3 from '../d3Modules'
 
 import type {
   Class_DataTag,
+  Class_FluxTag,
   Class_ProtoTag,
   Class_Tag,
 } from '../types/Tag'
@@ -842,7 +843,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * somme des valeurs visibles — les valeurs d'un flux ne sont PAS additives,
    * l'épaisseur du flux reste pilotée par la valeur principale.
    */
-  public get tagged_value_bands(): { tagged_value: Class_ElementTaggedValue, share: number }[] {
+  public get tagged_value_bands(): { tagged_value: Class_ElementTaggedValue, share: number, px: number }[] {
     if (this._is_multi_link) return []
     const expand = this.sankey.flux_taggs_list.some(tagg => tagg.banner === 'multi')
     if (!expand) return []
@@ -850,9 +851,32 @@ export class Class_LinkElement extends Class_LinkAttribute {
       tv.value !== null &&
       tv.value > 0 &&
       tv.tags_list.every(tag => tag.is_selected))
-    const total = tvs.reduce((acc, tv) => acc + (tv.value as number), 0)
+    // §3.0ter — largeur de bande = valeur convertie avec l'échelle DE SON TAG
+    // (cas unitTag généralisé : rend affichables ensemble des valeurs non
+    // additives). Tag sans échelle propre = échelle du dessin.
+    const px_for = (tv: Class_ElementTaggedValue): number => {
+      const v = tv.value as number
+      const scale_tag = tv.tags_list
+        .map(tag => tag as Class_FluxTag)
+        .find(tag => tag.scale !== undefined)
+      if (scale_tag?.scale) {
+        this.setDomainLocalScale(scale_tag.scale)
+        return this._scaleValueToPx(v)
+      }
+      return this.scaleValueToPx(v)
+    }
+    const bands = tvs.map(tv => ({ tagged_value: tv, px: Math.max(0, px_for(tv)) }))
+    const total = bands.reduce((acc, band) => acc + band.px, 0)
     if (total <= 0) return []
-    return tvs.map(tv => ({ tagged_value: tv, share: (tv.value as number) / total }))
+    return bands.map(band => ({ ...band, share: band.px / total }))
+  }
+
+  /** §3.0ter — épaisseur totale quand le flux s'affiche en bandes : somme des
+   *  largeurs de bandes (chacune à l'échelle de son tag). */
+  private get _bands_total_px(): number | null {
+    const bands = this.tagged_value_bands
+    if (bands.length === 0) return null
+    return bands.reduce((acc, band) => acc + band.px, 0)
   }
 
   /**
@@ -1980,19 +2004,30 @@ export class Class_LinkElement extends Class_LinkAttribute {
     let value_current = null
     if (this.drawing_area.type_data === 'data') value_current = this.value?.valueData ?? null
     else value_current = this.value?.valueResult ?? ((this.value?.value_option == 'value' || this.value?.value_option == 'intervals') ? this.value?.valueData : null) ?? null
-    // #285 (§3.0ter, acompte) — pas de valeur principale obligatoire : un flux
-    // dont le scalaire est vide mais qui porte des valeurs coordonnées n'est
-    // PAS un flux de structure. Valeur affichée : somme des visibles en
-    // bannière multi, première valeur sinon (la sélection par tag porteur
-    // arrive avec la refonte §3.0ter complète).
+    // #285 (§3.0ter) — pas de valeur principale : quand le scalaire est vide,
+    // la valeur affichée est celle du TAG SÉLECTIONNÉ des groupes porteurs de
+    // valeurs (comme pour les dataTags). À défaut : somme des visibles en
+    // bannière multi, puis première valeur (compat fichiers sans flag porteur).
     if (value_current === null) {
       const tvs = (this.value?.tagged_values_list ?? []).filter(tv => tv.value !== null)
       if (tvs.length > 0) {
-        const multi = this.sankey.flux_taggs_list.some(tagg => tagg.banner === 'multi')
-        if (multi) {
-          const visible = tvs.filter(tv => tv.tags_list.every(tag => tag.is_selected))
-          if (visible.length > 0)
-            value_current = visible.reduce((acc, tv) => acc + (tv.value as number), 0)
+        const carrying = this.sankey.flux_taggs_list.filter(tagg => tagg.carries_values)
+        if (carrying.length > 0) {
+          const matches_selection = (tv: Class_ElementTaggedValue) => carrying.every(tagg => {
+            const mine = tv.getTagForGroup(tagg)
+            return !mine || mine.is_selected
+          })
+          const selected_tv = tvs.find(tv =>
+            matches_selection(tv) && carrying.some(tagg => tv.getTagForGroup(tagg)))
+          if (selected_tv) value_current = selected_tv.value
+        }
+        if (value_current === null) {
+          const multi = this.sankey.flux_taggs_list.some(tagg => tagg.banner === 'multi')
+          if (multi) {
+            const visible = tvs.filter(tv => tv.tags_list.every(tag => tag.is_selected))
+            if (visible.length > 0)
+              value_current = visible.reduce((acc, tv) => acc + (tv.value as number), 0)
+          }
         }
         if (value_current === null) value_current = tvs[0].value
       }
@@ -2305,6 +2340,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
     ) {
       return this._clampThickness(0)
     }
+    const bands_px = this._bands_total_px
+    if (bands_px !== null) return this._clampThickness(bands_px)
     const data_value = this.valueCurrent
     const linkValueInPx = (data_value !== null) ? this.scaleValueToPx(data_value) : 2
     return this._clampThickness(linkValueInPx)
@@ -2329,6 +2366,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
     ) {
       return this._clampThickness(0)
     }
+    const bands_px = this._bands_total_px
+    if (bands_px !== null) return this._clampThickness(bands_px)
     const target_value = this.valueCurrentTarget
     if (target_value === null) return this.thickness
     const linkValueInPx = this.scaleValueToPx(target_value)
@@ -2368,6 +2407,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
     ) {
       return 0
     }
+    const bands_px = this._bands_total_px
+    if (bands_px !== null) return this._safeRawThickness(bands_px)
     const data_value = this.valueCurrent
     if (data_value === null) return 2
     return this._safeRawThickness(this.scaleValueToPx(data_value))
@@ -2381,6 +2422,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
     ) {
       return 0
     }
+    const bands_px = this._bands_total_px
+    if (bands_px !== null) return this._safeRawThickness(bands_px)
     const target_value = this.valueCurrentTarget
     if (target_value === null) return this.thicknessSourceRaw
     return this._safeRawThickness(this.scaleValueToPx(target_value))

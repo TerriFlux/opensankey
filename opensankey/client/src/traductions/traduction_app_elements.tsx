@@ -412,6 +412,10 @@ export const resources_app_elements = {
 
       Tags: {
         Nom: 'Name',
+        carries_values: 'Carries values',
+        carries_values_tooltip: 'Value-carrying group: each value of a flux is attached to one of its tags (sparse). Unchecked: plain labelling of the flux.',
+        scale: 'Scale',
+        scale_tooltip: 'Own scale of this tag for band widths (empty = diagram scale). Makes non-additive values (kWh/t/€) displayable together.',
         dimension: 'Dimension',
         dimension_tooltip: 'Dimension group: every flux holds one value per tag. Uncheck to turn it into a free tag group — per-tag values become coordinated link values (lossless).',
         dimension_to_annotation_confirm: 'Turn this dimension into a free tag group? Per-tag values become values of each flux (data preserved, reconciliation results dropped). This cannot be undone.',
@@ -1013,6 +1017,10 @@ export const resources_app_elements = {
       },
       Tags: {
         Nom: 'Nom',
+        carries_values: 'Porteur de valeurs',
+        carries_values_tooltip: 'Groupe porteur : chaque valeur du flux est attachée à un de ses tags (épars). Décoché : simple étiquetage du flux.',
+        scale: 'Échelle',
+        scale_tooltip: 'Échelle propre du tag pour la largeur des bandes (vide = échelle du dessin). Rend affichables ensemble des valeurs non additives (kWh/t/€).',
         dimension: 'Dimension',
         dimension_tooltip: 'Groupe dimension : chaque flux porte une valeur par étiquette. Décocher le transforme en groupe d\'étiquettes libres — les valeurs par étiquette deviennent des valeurs coordonnées du flux (sans perte).',
         dimension_to_annotation_confirm: 'Transformer cette dimension en groupe d\'étiquettes libres ? Les valeurs par étiquette deviennent des valeurs de chaque flux (données conservées, résultats de réconciliation abandonnés). Action non annulable.',
@@ -1613,6 +1621,10 @@ export const resources_app_elements = {
       },
       Tags: {
         Nom: 'Nombre',
+        carries_values: 'Portador de valores',
+        carries_values_tooltip: 'Grupo portador: cada valor de un flujo se asocia a una de sus etiquetas (disperso). Desmarcado: simple etiquetado del flujo.',
+        scale: 'Escala',
+        scale_tooltip: 'Escala propia de la etiqueta para el ancho de las bandas (vacío = escala del dibujo).',
         dimension: 'Dimensión',
         dimension_tooltip: 'Grupo dimensión: cada flujo tiene un valor por etiqueta. Desmarcar lo convierte en un grupo de etiquetas libres — los valores por etiqueta se vuelven valores coordinados del flujo (sin pérdida).',
         dimension_to_annotation_confirm: '¿Convertir esta dimensión en grupo de etiquetas libres? Los valores por etiqueta se vuelven valores de cada flujo (datos conservados, resultados de conciliación descartados). Acción no reversible.',
@@ -2213,6 +2225,10 @@ export const resources_app_elements = {
       },
       Tags: {
         Nom: 'Name',
+        carries_values: 'Trägt Werte',
+        carries_values_tooltip: 'Wertetragende Gruppe: jeder Wert eines Flusses ist einer ihrer Beschriftungen zugeordnet (spärlich). Abgewählt: einfache Beschriftung des Flusses.',
+        scale: 'Skala',
+        scale_tooltip: 'Eigene Skala der Beschriftung für Bandbreiten (leer = Zeichnungsskala).',
         dimension: 'Dimension',
         dimension_tooltip: 'Dimensionsgruppe: jeder Fluss trägt einen Wert pro Beschriftung. Abwählen macht daraus eine freie Beschriftungsgruppe — die Werte pro Beschriftung werden koordinierte Werte des Flusses (verlustfrei).',
         dimension_to_annotation_confirm: 'Diese Dimension in eine freie Beschriftungsgruppe umwandeln? Die Werte pro Beschriftung werden Werte jedes Flusses (Daten erhalten, Abgleichsergebnisse verworfen). Nicht rückgängig machbar.',
@@ -2813,6 +2829,10 @@ export const resources_app_elements = {
       },
       Tags: {
         Nom: 'Nome',
+        carries_values: 'Porta valori',
+        carries_values_tooltip: 'Gruppo portatore: ogni valore di un flusso è associato a una delle sue etichette (sparso). Deselezionato: semplice etichettatura del flusso.',
+        scale: 'Scala',
+        scale_tooltip: 'Scala propria del tag per la larghezza delle bande (vuoto = scala del disegno).',
         dimension: 'Dimensione',
         dimension_tooltip: 'Gruppo dimensione: ogni flusso ha un valore per etichetta. Deselezionare lo trasforma in un gruppo di etichette libere — i valori per etichetta diventano valori coordinati del flusso (senza perdita).',
         dimension_to_annotation_confirm: 'Trasformare questa dimensione in un gruppo di etichette libere? I valori per etichetta diventano valori di ogni flusso (dati conservati, risultati di riconciliazione scartati). Azione non annullabile.',

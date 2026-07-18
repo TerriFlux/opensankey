@@ -555,6 +555,32 @@ export class Class_FluxTagGroup extends Class_TagGroup {
   // la classe (pas de bascule dynamique en phase 1).
   public get is_dimension(): boolean { return false }
 
+  // #285 (§3.0ter) — un groupe libre est soit PORTEUR DE VALEURS (chaque
+  // valeur du flux est attachée à un tag du groupe — dataTag-light, épars),
+  // soit pure étiquette (annotation du flux entier). Porté par les
+  // conversions (dimension→annotation, fusion de flux parallèles) ou réglé
+  // dans l'éditeur de groupes.
+  private _carries_values: boolean = false
+
+  public get carries_values(): boolean { return this._carries_values }
+  public set carries_values(_: boolean) { this._carries_values = _ }
+
+  protected _toJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    super._toJSON(json_object, kwargs)
+    if (this._carries_values) json_object['carries_values'] = true
+  }
+
+  protected _fromJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    super._fromJSON(json_object, kwargs)
+    this._carries_values = getBooleanFromJSON(json_object, 'carries_values', this._carries_values)
+  }
+
   // PROTECTED ATTRIBUTES ===============================================================
   protected _tags: { [_: string]: Class_FluxTag; }
 

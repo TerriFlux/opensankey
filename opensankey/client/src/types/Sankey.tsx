@@ -37,6 +37,7 @@ import { Class_NodeElement } from '../Elements/Node'
 import type { Class_NodeBase } from '../Elements/NodeBase'
 import { Class_NodeDimension } from '../Elements/NodeDimension'
 import { Class_DataTag } from '../types/Tag'
+import type { Class_FluxTag } from '../types/Tag'
 import { Class_NodeTagGroup, Class_FluxTagGroup, Class_DataTagGroup, Class_LevelTagGroup, Class_ViewTagGroup } from './TagGroup'
 import { Class_Theme, themeOpenSankey } from './Theme'
 
@@ -407,11 +408,15 @@ export class Class_Sankey {
   public convertDataTagGroupToFluxTagGroup(data_tagg: Class_DataTagGroup): Class_FluxTagGroup {
     // 1) Groupe libre miroir (les dicts data/flux sont séparés : même id possible)
     const flux_tagg = this.addFluxTagGroup(data_tagg.id, data_tagg.name, false)
+    // §3.0ter — le groupe issu d'une dimension PORTE des valeurs ; un groupe
+    // unité transfère l'échelle de chaque tag (cas unitTag généralisé).
+    flux_tagg.carries_values = true
     data_tagg.tags_list.forEach(data_tag => {
-      const tag = flux_tagg.addTag(data_tag.name, data_tag.id)
+      const tag = flux_tagg.addTag(data_tag.name, data_tag.id) as Class_FluxTag
       tag.color = data_tag.color
       tag.long_name = data_tag.long_name
       tag.setSelected(false)
+      if (data_tagg.is_unit) tag.scale = (data_tag as Class_DataTag).scale
     })
     flux_tagg.use_colors = data_tagg.use_colors
     // 2) Replier les arbres de valeurs (liens porteurs seulement, pas les
@@ -492,7 +497,12 @@ export class Class_Sankey {
         total = (total ?? 0) + v
         const tv = (base.value as Class_LinkValue).addTaggedValue()
         tv.value = v
-        leaf.flux_tags_list.forEach(tag => tag.addReference(tv))
+        leaf.flux_tags_list.forEach(tag => {
+          tag.addReference(tv)
+          // §3.0ter — les groupes dont les tags coordonnent des valeurs
+          // deviennent PORTEURS
+          ;(tag.group as Class_FluxTagGroup).carries_values = true
+        })
       }
     })
     // Les étiquettes « flux entier » du lien conservé ont migré sur sa valeur
