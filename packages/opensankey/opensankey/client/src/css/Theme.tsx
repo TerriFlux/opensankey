@@ -2169,16 +2169,18 @@ export const tableStyles = {
   base: table.definePartsStyle({}),
   table_edit_grp_tag_node_link: createTableStyle('0.5fr 2fr 1.5fr'),
   table_edit_grp_tag_data: createTableStyle('0.75fr 2fr 1.5fr 1.5fr'),
-  // supprimer + nom court + nom long + visible + couleur
-  table_edit_tag_node: createTableStyle('0.5fr 1fr 2fr 0.75fr 0.5fr'),
-  table_edit_tag_link: createTableStyle('0.5fr 1fr 2fr 0.5fr 0.75fr'),
-  table_edit_tag_data: createTableStyle('0.5fr 1fr 2fr 0.75fr'),
-  // Variants position : supprimer + nom court + nom long + flèches
+  // #1283 — nom court + nom long fusionnés en 1 colonne : suppr + NOM(flexible) +
+  // visible + couleur. `auto` = colonnes au contenu (elles se touchent, zéro
+  // vide) ; `1fr` sur le NOM = il prend toute la largeur restante.
+  table_edit_tag_node: createTableStyle('auto 1fr auto auto'),
+  table_edit_tag_link: createTableStyle('auto 1fr auto auto'),
+  table_edit_tag_data: createTableStyle('auto 1fr auto'), // data : pas de colonne visible
+  // Variants position : suppr + NOM(flexible) + flèches
   table_edit_grp_tag_node_link_pos: createTableStyle('0.5fr 2fr 1fr'),
   table_edit_grp_tag_data_pos: createTableStyle('0.5fr 2fr 1fr'),
-  table_edit_tag_node_pos: createTableStyle('0.5fr 1fr 2fr 1fr'),
-  table_edit_tag_link_pos: createTableStyle('0.5fr 1fr 2fr 1fr'),
-  table_edit_tag_data_pos: createTableStyle('0.5fr 1fr 2fr 1fr'),
+  table_edit_tag_node_pos: createTableStyle('auto 1fr auto'),
+  table_edit_tag_link_pos: createTableStyle('auto 1fr auto'),
+  table_edit_tag_data_pos: createTableStyle('auto 1fr auto'),
   table_edit_node_io: createTableStyle('3fr 1fr 0.7fr 1.3fr'),
 
   table_welcome_buttons: table.definePartsStyle({

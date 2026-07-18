@@ -738,7 +738,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                       key={tag.id}
                     >
                       {/* Supprimer une etiquette  */}
-                      <Td>
+                      <Td w='1%'>
                         <OSTooltip label={t('Tags.tooltips.rm')}>
                           <Button
                             variant='menuconfigpanel_del_button_in_table'
@@ -749,8 +749,9 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                       </Td>
                       {/* #1283 — cellule « Nom » unique : nom court + bouton Aa
                           révélant le nom long (affiché sur le diagramme), qui ne
-                          s'affiche d'office que s'il diffère (sinon redondant). */}
-                      <Td >
+                          s'affiche d'office que s'il diffère (sinon redondant).
+                          Colonne FLEXIBLE (w=100%) : c'est elle qui prend la place. */}
+                      <Td w='100%'>
                         <Box display='flex' flexDirection='column' gap='0.15rem'>
                           <Box display='flex' alignItems='center' gap='0.2rem'>
                             <InputGroup variant='menuconfigpanel_option_input_table' flex='1'>
@@ -799,7 +800,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                       </Td>
                       {showTagPositionMode ?
                         /* Boutons monter/descendre l'étiquette */
-                        <Td>
+                        <Td w='1%'>
                           <Box layerStyle="options_2cols">
                             <Button
                               variant='menuconfigpanel_option_button_in_table'
@@ -843,7 +844,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                           {/* Rendre ou non visible  */}
                           {
                             elementTagNameProp !== 'data_taggs' ?
-                              <Td >
+                              <Td w='1%'>
                                 <OSTooltip label={t('Tags.tooltips.visible')}>
                                   <Button
                                     variant='menuconfigpanel_option_button_in_table'
@@ -860,12 +861,20 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                               </Td> :
                               <></>
                           }
-                          {/* Choix de la couleur*/}
+                          {/* Choix de la couleur — colonne au CONTENU (w='1%'), la
+                              largeur flexible va au Nom. Picker borné pour que
+                              l'aperçu et la pipette restent collés. */}
                           {
                             elementTagNameProp !== 'level_taggs' ?
-                              <Td w='100%'>
+                              <Td w='1%'>
                                 <OSTooltip label={t('Tags.tooltips.couleur')}>
-                                  <Box>
+                                  {/* Picker borné + on annule ici la mise en carré
+                                      globale des boutons (compact_sx) qui déformait
+                                      la pipette et écartait l'aperçu. */}
+                                  <Box
+                                    width='3rem'
+                                    sx={{ '& button': { width: 'auto', minWidth: 'auto', height: 'auto', padding: 0 } }}
+                                  >
                                     <MenuColorPicker
                                       initialColor={tag.color}
                                       onColorChange={(new_color) => {

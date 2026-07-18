@@ -10,7 +10,7 @@ import { OSMultiSelect, typeElementSelectable, CustomFaEyeCheckIcon, OSTooltip, 
 import { useMainZone } from '../spreadsheet/MainZoneTabs'
 import { useModelBinding } from '../../hooks/useModelBinding'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { Class_MenuConfig, MENU_CONFIG_WIDTH_PCT, MENU_CONFIG_MIN_WIDTH_PX } from '../../types/MenuConfig'
+import { Class_MenuConfig } from '../../types/MenuConfig'
 import { Class_TagGroup, Class_DataTagGroup, Class_LevelTagGroup, Class_ViewTagGroup } from '../../types/TagGroup'
 import { Class_LevelTag } from '../../types/Tag'
 import { updateUnitaryStyles } from '../../Algorithms/UnitaryBoard'
@@ -18,6 +18,9 @@ import { disaggregate, aggregate, resetLocalHierarchy, disaggregationExpansion, 
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_NodeDimension, Type_DisaggregationKind } from '../../Elements/NodeDimension'
 import { Type_DisaggregationGap, const_default_position_x, const_default_position_y } from '../../types/Utils'
+
+// #1283 — largeur du tiroir de filtres (comme avant : compact).
+const width_fitler_drawer = 270
 
 
 /**
@@ -342,10 +345,7 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
   const drawer_on_right = !app_data.is_static
   // #1243 — sections « Éditer » injectées par les couches supérieures (OSP :
   // groupes de tags, vues). Onglet masqué s'il n'y en a aucune (OS pur/publish).
-  // #1283 — même largeur que le panneau de config (il héberge maintenant
-  // l'édition des groupes en place, qui a besoin de place comme la config).
-  const drawer_width_px = Math.max(
-    window.innerWidth * MENU_CONFIG_WIDTH_PCT / 100, MENU_CONFIG_MIN_WIDTH_PX)
+  const drawer_width_px = width_fitler_drawer
   const width_drawer = (drawerOpen ? drawer_width_px + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin
   // Ouvre/ferme le drawer de filtres. Comme la config, c'est un OVERLAY au-dessus de toute la
   // grande zone (diagramme, tableur, doc…) : il ne touche ni à l'état doc/tableur ni au cadrage.
