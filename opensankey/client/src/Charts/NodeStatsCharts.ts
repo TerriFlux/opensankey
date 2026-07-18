@@ -288,3 +288,168 @@ export const drawBarChart = (
     .append('title')
     .text(bar_title)
 }
+
+// ==================================================================================================
+// Histogramme EMPILÉ — croisement décomposer × comparer (OS#1278)
+// Une barre par série (ex. une année) ; chaque barre empile ses parts (ex. flux
+// sortants). L'ordre et la couleur des catégories sont fixés globalement pour que
+// la même catégorie soit lisible d'une barre à l'autre.
+// ==================================================================================================
+
+export interface Type_StatSeries {
+  id: string
+  label: string
+  parts: Type_StatSlice[]
+}
+
+export const drawStackedBarChart = (
+  container: HTMLElement,
+  series: Type_StatSeries[],
+  opts: Type_ChartOptions = {}
+) => {
+  const fmt = opts.format ?? DEFAULT_FORMAT
+  const { sel, width, height } = prepareContainer(container)
+  const series_total = (s: Type_StatSeries) => s.parts.reduce((a, p) => a + p.value, 0)
+  const max_total = series.reduce((m, s) => Math.max(m, series_total(s)), 0)
+  if (series.length === 0 || max_total <= 0 || width < 80 || height < 80) {
+    drawEmptyLabel(sel, opts.empty_label ?? '')
+    return
+  }
+
+  // Ordre GLOBAL des catégories (parts) : par total décroissant sur toutes les
+  // séries. Au-delà de MAX_SLICES, on replie dans « Autres ».
+  const totals = new Map<string, { label: string, value: number, color?: string }>()
+  series.forEach(s => s.parts.forEach(p => {
+    const acc = totals.get(p.id)
+    if (acc) acc.value += p.value
+    else totals.set(p.id, { label: p.label, value: p.value, color: p.color })
+  }))
+  const ordered = [...totals.entries()].sort((a, b) => b[1].value - a[1].value)
+  const kept = ordered.slice(0, MAX_SLICES)
+  const has_others = ordered.length > MAX_SLICES
+  const category_order: { id: string, label: string, color: string }[] = kept.map(([id, v], i) => ({
+    id,
+    label: v.label,
+    color: v.color ?? paletteColor(i)
+  }))
+  if (has_others) {
+    category_order.push({ id: '__others__', label: opts.others_label ?? 'Others', color: OTHERS_COLOR })
+  }
+  const kept_ids = new Set(kept.map(([id]) => id))
+
+  // Mise en page : barres à gauche, légende des catégories à droite (comme le donut).
+  const root = sel.append('div')
+    .style('display', 'flex').style('align-items', 'stretch')
+    .style('gap', '0.5rem').style('width', '100%').style('height', '100%')
+  const legend_width = Math.min(200, width * 0.35)
+  const chart_width = Math.max(80, width - legend_width - 12)
+
+  const rotate_labels = series.length > 6 || series.some(s => s.label.length > 8)
+  const margin = { top: 18, right: 8, bottom: rotate_labels ? 46 : 22, left: 8 }
+  const w = chart_width - margin.left - margin.right
+  const h = height - margin.top - margin.bottom
+
+  const x = d3.scaleBand<string>().domain(series.map(s => s.id)).range([0, w]).padding(0.25)
+  const y = d3.scaleLinear().domain([0, max_total]).range([h, 0])
+
+  const svg = root.append('svg')
+    .attr('width', chart_width).attr('height', height).style('flex', '0 0 auto')
+  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
+
+  // Empilement d'une série dans l'ordre global des catégories.
+  series.forEach(s => {
+    const by_id = new Map(s.parts.map(p => [p.id, p.value]))
+    const kept_sum = s.parts.filter(p => kept_ids.has(p.id)).reduce((a, p) => a + p.value, 0)
+    let acc = 0
+    const bx = x(s.id) ?? 0
+    category_order.forEach(cat => {
+      const value = cat.id === '__others__'
+        ? series_total(s) - kept_sum
+        : (by_id.get(cat.id) ?? 0)
+      if (value <= 0) return
+      const y0 = y(acc)
+      const y1 = y(acc + value)
+      g.append('rect')
+        .attr('x', bx).attr('y', y1)
+        .attr('width', x.bandwidth()).attr('height', Math.max(0, y0 - y1))
+        .attr('fill', cat.color).attr('stroke', 'white').attr('stroke-width', 0.5)
+        .append('title').text(`${s.label} · ${cat.label}\n${fmt(value)}`)
+      acc += value
+    })
+    // Total au-dessus de la barre.
+    g.append('text')
+      .attr('x', bx + x.bandwidth() / 2).attr('y', y(acc) - 4)
+      .attr('text-anchor', 'middle').attr('font-size', 10).attr('fill', '#2D3748')
+      .text(fmt(acc))
+  })
+
+  // Ligne de base + labels de série.
+  g.append('line').attr('x1', 0).attr('x2', w).attr('y1', h).attr('y2', h).attr('stroke', '#CBD5E0')
+  g.selectAll('text.node_stats_bar_label')
+    .data(series).enter().append('text')
+    .attr('class', 'node_stats_bar_label').attr('font-size', 10).attr('fill', '#4A5568')
+    .attr('transform', s => {
+      const cx = (x(s.id) ?? 0) + x.bandwidth() / 2
+      return rotate_labels ? `translate(${cx},${h + 8}) rotate(-35)` : `translate(${cx},${h + 14})`
+    })
+    .attr('text-anchor', rotate_labels ? 'end' : 'middle')
+    .text(s => s.label.length > 14 ? s.label.slice(0, 13) + '…' : s.label)
+
+  // Légende des catégories (parts).
+  const legend = root.append('div')
+    .style('flex', '1 1 0').style('min-width', '0')
+    .style('align-self', 'center').style('max-height', '100%')
+    .style('overflow-y', 'auto').style('font-size', '0.75rem')
+  const items = legend.selectAll('div').data(category_order).enter().append('div')
+    .style('display', 'flex').style('align-items', 'center')
+    .style('gap', '0.35rem').style('padding', '0.1rem 0.2rem')
+  items.append('span')
+    .style('flex', '0 0 auto').style('width', '0.7rem').style('height', '0.7rem')
+    .style('border-radius', '2px').style('background', c => c.color)
+  items.append('span')
+    .style('flex', '1 1 auto').style('overflow', 'hidden')
+    .style('text-overflow', 'ellipsis').style('white-space', 'nowrap')
+    .attr('title', c => c.label).text(c => c.label)
+}
+
+// ==================================================================================================
+// Camembert SUR LE NŒUD (OS#1278) — le nœud dessiné comme un camembert/couronne
+// (réf. Haas et al., économie circulaire). Dessine dans un groupe SVG EXISTANT du
+// diagramme (pas un conteneur HTML) : les couleurs sont celles du diagramme (le
+// graphique fait partie du langage visuel), fournies par l'appelant via part.color.
+// ==================================================================================================
+
+export interface Type_NodePieGeom {
+  cx: number
+  cy: number
+  radius: number
+  // Rayon intérieur (couronne) ; 0 = camembert plein. Défaut 0.
+  inner?: number
+}
+
+export const drawNodePieOnGroup = (
+  group_el: SVGGElement,
+  parts: Type_StatSlice[],
+  geom: Type_NodePieGeom
+): void => {
+  const sel = d3.select(group_el)
+  sel.selectAll('.node_analysis_pie').remove()
+  const total = parts.reduce((s, p) => s + p.value, 0)
+  if (parts.length === 0 || total <= 0 || geom.radius <= 0) return
+
+  const g = sel.append('g')
+    .classed('node_analysis_pie', true)
+    .attr('transform', `translate(${geom.cx},${geom.cy})`)
+  const pie = d3.pie<Type_StatSlice>().value(d => d.value).sort(null)
+  const arc = d3.arc<d3.PieArcDatum<Type_StatSlice>>()
+    .innerRadius(geom.inner ?? 0).outerRadius(geom.radius)
+  g.selectAll('path')
+    .data(pie(parts))
+    .enter().append('path')
+    .attr('d', arc)
+    .attr('fill', (d, i) => d.data.color ?? paletteColor(i))
+    .attr('stroke', 'white')
+    .attr('stroke-width', 1)
+    .append('title')
+    .text(d => `${d.data.label}\n${DEFAULT_FORMAT(d.data.value)} (${pctText(d.data.value, total)})`)
+}
