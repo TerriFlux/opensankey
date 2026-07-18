@@ -19,12 +19,17 @@
 //
 // Périmètre : nœuds, flux, valeurs (convergées vers l'unité de base via le
 // coefficient), positions/couleurs/visibilité/images des process, couleurs et
-// tags par entry, échelle, unités sur les labels de flux, commentaires de
-// flèche (→ tooltips), zones libres texte/image/rectangle (→ zones de texte),
+// tags par entry, échelle (globale + par unitType, cf. A5), unités sur les
+// labels de flux, labels en pourcentage (format personnalisé
+// {PercentProcessSource}/{PercentProcessDestination}, cf. A2), formes de
+// process alternatives (shapeType 0/1/2, cf. A4), commentaires de flèche
+// (→ tooltips), zones libres texte/image/rectangle (→ zones de texte),
 // légende, thème esankey.
 // Hors périmètre (listé sur l'issue #264) : lignes libres, dégradé le long du
-// flux, labels en pourcentage, balance labels, formes de process alternatives
-// (shapeType 1/2), échelles indépendantes par unitType, export.
+// flux, balance labels, pourcentages « Arrow »/« Model » (bascule simple
+// showPercentage, sans équivalent chez nous — seul le format personnalisé à
+// mots-clés {PercentProcessSource}/{PercentProcessDestination} est mappé),
+// export.
 
 import JSZip from 'jszip'
 import { themeEsankey, Type_ThemeJSON } from '../types/Theme'
@@ -199,6 +204,12 @@ interface EsGraphicalProcess {
   visible: boolean
   /** Chemin dans le ZIP de l'image du process (ex: `Images\\tmpXX.tmp`), sinon ''. */
   imageFile: string
+  /**
+   * Forme du process (manuel e!Sankey 5 §"Options for Processes", p.45) :
+   * 0 = rectangle (défaut), 1 = rectangle arrondi, 2 = ellipse/cercle.
+   * Vérifié sur les démos officielles (`shapeType="0|1|2"` sur `<process>`).
+   */
+  shapeType: number
 }
 
 const parseGraphicalProcesses = (net: Element): { [id: string]: EsGraphicalProcess } => {
@@ -214,6 +225,7 @@ const parseGraphicalProcesses = (net: Element): { [id: string]: EsGraphicalProce
       labelText: (label?.getAttribute('text') ?? '').replace(/\r?\n/g, ' ').trim(),
       visible: p.getAttribute('visible') !== 'false',
       imageFile: childByTag(p, 'image')?.getAttribute('filename') ?? '',
+      shapeType: attrNum(p, 'shapeType', 0),
     }
   })
   return out
@@ -310,6 +322,13 @@ interface EsGraphicalArrow {
   labelVisible: boolean
   showValue: boolean
   showUnit: boolean
+  /**
+   * Gabarit du label (`sankeyArrowLabel/@labelFormat`) : toujours présent, même
+   * hors mode « Custom » (e!Sankey l'auto-génère aussi pour ses modes intégrés,
+   * vérifié sur les démos officielles). Sert à repérer les mots-clés
+   * `{PercentProcessSource}`/`{PercentProcessDestination}` (cf. A2).
+   */
+  labelFormat: string
 }
 
 const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } => {
@@ -324,6 +343,7 @@ const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } 
       labelVisible: label?.getAttribute('visible') !== 'false',
       showValue: label?.getAttribute('showValue') !== 'false',
       showUnit: label?.getAttribute('showUnit') === 'true',
+      labelFormat: label?.getAttribute('labelFormat') ?? '',
     }
   })
   return out
@@ -465,6 +485,23 @@ export const parseEsankeyXml = (
     throw new Error('Fichier e!Sankey invalide : sections netModel/net absentes')
 
   const unitTypes = parseUnitTypes(netModel)
+
+  // Échelle : un unitType e!Sankey affiche `maximumFlow` (en unité de base) sur
+  // `width` pixels. user_scale du front = unités pour 100 px. On retient un
+  // unitType de RÉFÉRENCE (le premier `used`) pour l'échelle globale du
+  // diagramme, comme avant. A5 — les AUTRES unitTypes ayant leur propre ratio
+  // maximumFlow/width (différent de la référence) gardent leur échelle PROPRE :
+  // posée en local sur chaque flux concerné (`shape_local_link_scale`,
+  // multiplicateur de l'échelle globale — cf. Link.scaleValueToPx), sans toucher
+  // à l'échelle globale ni au système de tags d'unité (is_unit) : ce dernier
+  // FILTRE/sélectionne un unitType à la fois pour tout le diagramme (comme une
+  // vue), il ne superpose pas des échelles indépendantes — inadapté ici, cf.
+  // NOTE-ESANKEY-COMPARATIF §2.4.
+  const unitTypeOwnScale = (ut: EsUnitType): number => (ut.maximumFlow / ut.width) * 100
+  let userScale = 100
+  const referenceUnitType = Object.values(unitTypes).find(ut => ut.used && ut.maximumFlow > 0 && ut.width > 0) ?? null
+  if (referenceUnitType) userScale = unitTypeOwnScale(referenceUnitType)
+
   const entries: { [id: string]: EsEntry } = {}
   const rootEntryGroup = childByTag(netModel, 'entryGroup')
   if (rootEntryGroup) parseEntries(rootEntryGroup, entries, new Set())
@@ -519,6 +556,17 @@ export const parseEsankeyXml = (
     // Process invisible (fréquent dans les diagrammes « décor » : seuls le
     // label et une icône libre marquent le nœud).
     if (graphical && !graphical.visible) nodes[id].local.shape_visible = false
+    // A4 — Forme alternative du process (0 = rect, notre défaut : rien à poser).
+    // 1 = rectangle arrondi → on garde 'rect' et on pose un rayon de coin visible
+    // (`shape_border_radius`, clé moderne appliquée telle quelle par le loader
+    // générique — pas d'équivalent legacy). 2 = ellipse/cercle → `shape_type`.
+    // La capsule (forme OpenSankey en plus, cf. NOTE-ESANKEY-COMPARATIF §2.3)
+    // n'a pas d'équivalent e!Sankey : jamais ciblée à l'import.
+    if (graphical?.shapeType === 1) {
+      nodes[id].local.shape_border_radius = 10
+    } else if (graphical?.shapeType === 2) {
+      nodes[id].local.shape = 'ellipse'
+    }
     // Image de process → nœud-image (is_image/image_src à la racine du nœud
     // 0.9, mappés vers icon_is_image/icon_image_src au chargement).
     const imgSrc = graphical?.imageFile ? images[imageKey(graphical.imageFile)] : undefined
@@ -584,6 +632,34 @@ export const parseEsankeyXml = (
         link.local.label_unit_visible = true
         link.local.label_unit = basicUnitName(found.unitType)
       }
+      // A2 — Labels en pourcentage (format personnalisé à mots-clés, manuel
+      // e!Sankey 5 p.34) : {PercentProcessSource} = % de la SORTIE totale du
+      // process source, {PercentProcessDestination} = % de l'ENTRÉE totale du
+      // process destination. Purement un attribut d'AFFICHAGE
+      // (`value_label_unit_type`, calculé à la volée par format_value à partir
+      // des sommes d'entrée/sortie des nœuds) : `value_option` n'est PAS touché
+      // et reste 'value' — data_value importé demeure la quantité physique
+      // réelle (`value_option` en %, lui, ferait traiter data_value comme une
+      // contrainte MFA en % et masquerait le flux tant qu'il n'est pas résolu).
+      // {PercentArrow} (% au sein de la flèche multi-matériaux) et
+      // {PercentModel} (% du plus gros flux du même unitType dans tout le
+      // modèle) n'ont pas d'équivalent nœud-relatif chez nous : non mappés.
+      const labelFormat = graphicalArrow?.labelFormat ?? ''
+      if (labelFormat.includes('{PercentProcessSource}')) {
+        link.local.value_label_unit_type = '%OS'
+      } else if (labelFormat.includes('{PercentProcessDestination}')) {
+        link.local.value_label_unit_type = '%ID'
+      }
+      // A5 — échelle indépendante par unitType (cf. calcul de `userScale` plus
+      // haut) : ce flux appartient à un unitType dont le ratio
+      // maximumFlow/width diffère de la référence du diagramme → échelle
+      // locale (multiplicateur) plutôt que l'échelle globale.
+      if (found && found.unitType.maximumFlow > 0 && found.unitType.width > 0) {
+        const ownScale = unitTypeOwnScale(found.unitType)
+        if (Math.abs(ownScale - userScale) > 1e-9) {
+          link.local.shape_local_link_scale = ownScale / userScale
+        }
+      }
       links[id] = link
       nodes[sourceId].outputLinksId.push(id)
       nodes[sourceId].output_value += link.value.data_value
@@ -613,11 +689,7 @@ export const parseEsankeyXml = (
     if (legendPos) { legendPos.x += dx; legendPos.y += dy }
   }
 
-  // Échelle : un unitType e!Sankey affiche `maximumFlow` (en unité de base)
-  // sur `width` pixels. user_scale du front = unités pour 100 px.
-  let userScale = 100
-  const usedUnitType = Object.values(unitTypes).find(ut => ut.used && ut.maximumFlow > 0 && ut.width > 0)
-  if (usedUnitType) userScale = (usedUnitType.maximumFlow / usedUnitType.width) * 100
+  // (Échelle globale `userScale` déjà calculée plus haut, avant les flux — A5.)
 
   // Groupe de tags de flux : une entry = un tag (nom + couleur e!Sankey).
   // Seules les entries réellement portées par un flux sont conservées.
