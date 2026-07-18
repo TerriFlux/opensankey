@@ -37,7 +37,7 @@ import { format_value, Type_JSON } from '../types/Utils'
 import { default_element_color } from './ElementsAttributesConfig'
 import { SankeyAnimation } from '../Algorithms/SankeyAnimation'
 import { draw_arrow_part } from './NodeDrawShape'
-import { computeArrowPlacement } from './arrowLayout'
+import { computeArrowPlacement, arrowSpikeApplies, computeArrowSpikePlacement } from './arrowLayout'
 import { Class_Sankey } from '../types/Sankey'
 import { Class_DataTag, Class_Tag } from '../types/Tag'
 import { NodeTooltip } from './TooltipsNode'
@@ -1280,6 +1280,14 @@ export class Class_NodeElement extends Class_NodeBase {
     //   base = link's clamped thickness, base center = link's actual visible end
     //   center. No fan, no cumulative offset.
     const use_standalone = this.drawing_area.arrow_use_standalone_layout
+    // Pointe accentuée « arrow spikes » (#1270) : lue une fois pour la passe. Défaut
+    // désactivé (always=false, max_thickness=0) ⇒ arrowSpikeApplies() toujours false
+    // ⇒ aucune modification du rendu (rétrocompat).
+    const spike_cfg = {
+      always: this.drawing_area.arrow_spike_always,
+      max_thickness: this.drawing_area.arrow_spike_max_thickness,
+      base_factor: this.drawing_area.arrow_spike_base_factor
+    }
     let cum_v_left = 0
     let cum_h_top = 0
     let cum_v_right = 0
@@ -1387,6 +1395,36 @@ export class Class_NodeElement extends Class_NodeBase {
           arrow_already_computed = placement.arrow_already_computed
           arrow_slice = placement.slice
         }
+        // Pointe accentuée « arrow spikes » (#1270) : si applicable, remplacer la
+        // géométrie calculée par un triangle INDÉPENDANT (base = base_factor ×
+        // épaisseur visible, longueur = base_factor × taille de pointe), centré sur
+        // l'extrémité réelle du flux — comme le mode standalone mais élargi/allongé.
+        // Les cumuls de l'éventail ne sont pas modifiés : les pointes voisines non
+        // accentuées gardent exactement leur position d'origine.
+        let final_arrow_length = arrow_length
+        if (arrowSpikeApplies(spike_cfg, link_value)) {
+          const spike = computeArrowSpikePlacement(spike_cfg.base_factor, link_value)
+          arrow_half_height = spike.arrow_half_height
+          arrow_already_computed = spike.arrow_already_computed
+          arrow_slice = spike.slice
+          final_arrow_length = link.shape_arrow_size * Math.max(1, spike_cfg.base_factor)
+          if (link_arrow_side_left) {
+            xt = + this.position_x - this.shape_margin_left
+            yt = is_reversed ? link.position_y_start : link.position_y_end
+          }
+          else if (link_arrow_side_right) {
+            xt = + this.position_x + node_width + this.shape_margin_right
+            yt = is_reversed ? link.position_y_start : link.position_y_end
+          }
+          else if (link_arrow_side_top) {
+            xt = is_reversed ? link.position_x_start : link.position_x_end
+            yt = + this.position_y
+          }
+          else {
+            xt = is_reversed ? link.position_x_start : link.position_x_end
+            yt = + this.position_y + node_height
+          }
+        }
         const p5 = [xt, yt]
 
         const is_horizontal_at_target = item.is_horizontal_at_anchor
@@ -1399,7 +1437,7 @@ export class Class_NodeElement extends Class_NodeBase {
           arrow_already_computed,
           is_horizontal_at_target,
           is_revert,
-          arrow_length,
+          final_arrow_length,
           node_arrow_shift,
           arrows_adjustment
         )

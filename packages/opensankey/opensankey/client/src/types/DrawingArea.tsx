@@ -458,6 +458,17 @@ export class Class_DrawingArea {
   // centered on the link's actual visible end (independent triangles, no fan).
   private _arrow_use_standalone_layout: boolean = false
 
+  // Pointe accentuée « arrow spikes » (issue #1270) : rendre visibles les flux fins
+  // en dessinant une pointe plus large/longue que l'épaisseur du flux, sans changer
+  // la valeur. Défaut = désactivé (aucun changement de rendu, rétrocompat) :
+  //  - _arrow_spike_always      : toujours accentuer (false par défaut) ;
+  //  - _arrow_spike_max_thickness : accentuer les flux dont l'épaisseur visible ≤ N px
+  //    (0 = seuil désactivé) ;
+  //  - _arrow_spike_base_factor : facteur de largeur/longueur de la pointe accentuée.
+  private _arrow_spike_always: boolean = false
+  private _arrow_spike_max_thickness: number = 0
+  private _arrow_spike_base_factor: number = 2
+
   // Filter out link inferior to this value (when filter value is at 0 doesn't filter link even null)
   private _filter_link_value: number = 0
 
@@ -646,6 +657,9 @@ export class Class_DrawingArea {
     this._minimum_node = drawing_area_to_copy._minimum_node
     this._structure_mode_force_min = drawing_area_to_copy._structure_mode_force_min
     this._arrow_use_standalone_layout = drawing_area_to_copy._arrow_use_standalone_layout
+    this._arrow_spike_always = drawing_area_to_copy._arrow_spike_always
+    this._arrow_spike_max_thickness = drawing_area_to_copy._arrow_spike_max_thickness
+    this._arrow_spike_base_factor = drawing_area_to_copy._arrow_spike_base_factor
     this._scale = drawing_area_to_copy._scale
     this._scaleValueToPx.domain([0, this._scale])
     this._type_data = drawing_area_to_copy._type_data
@@ -3054,6 +3068,25 @@ export class Class_DrawingArea {
   public get arrow_use_standalone_layout(): boolean { return this._arrow_use_standalone_layout }
   public set arrow_use_standalone_layout(value: boolean) {
     this._arrow_use_standalone_layout = value
+    this.drawElements()
+  }
+
+  // Pointe accentuée « arrow spikes » (#1270)
+  public get arrow_spike_always(): boolean { return this._arrow_spike_always }
+  public set arrow_spike_always(value: boolean) {
+    this._arrow_spike_always = value
+    this.drawElements()
+  }
+
+  public get arrow_spike_max_thickness(): number { return this._arrow_spike_max_thickness }
+  public set arrow_spike_max_thickness(value: number) {
+    this._arrow_spike_max_thickness = value
+    this.drawElements()
+  }
+
+  public get arrow_spike_base_factor(): number { return this._arrow_spike_base_factor }
+  public set arrow_spike_base_factor(value: number) {
+    this._arrow_spike_base_factor = value
     this.drawElements()
   }
 
