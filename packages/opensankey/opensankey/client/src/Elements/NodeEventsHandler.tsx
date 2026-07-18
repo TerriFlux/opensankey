@@ -686,6 +686,22 @@ export class NodeEventsHandler {
     // recadrage sautait à chaque dépôt de nœud). On recale seulement l'extent de
     // pan et les scrollbars pour que le contenu étendu reste atteignable.
     this._node.drawing_area.refreshPanExtent()
+    // Pendant le drag les formes de liens retombent sur le contour SIMPLE
+    // (moins coûteux, cf. LinkDrawShape/isBeingDragged). areaAutoFit assurait
+    // au passage le redraw final qui restaurait le contour exact ; depuis sa
+    // suppression, plus personne ne le fait en mode absolu (les autres modes
+    // passent par drawElements ci-dessus). On redessine donc explicitement les
+    // formes des liens des nœuds déplacés — leurs partenaires de faisceau
+    // partagent les mêmes nœuds, ils sont donc couverts.
+    const moved_nodes = nodes_selected.includes(this._node) ? nodes_selected : [this._node]
+    const links_to_redraw = new Set<Class_LinkElement>()
+    moved_nodes.forEach(n => {
+      const as_node = n as Class_NodeElement
+      if (typeof as_node.input_links_list === 'undefined') return
+      as_node.input_links_list.forEach(l => links_to_redraw.add(l as Class_LinkElement))
+      as_node.output_links_list.forEach(l => links_to_redraw.add(l as Class_LinkElement))
+    })
+    links_to_redraw.forEach(l => l.drawShape())
     this._node.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
   }
 
