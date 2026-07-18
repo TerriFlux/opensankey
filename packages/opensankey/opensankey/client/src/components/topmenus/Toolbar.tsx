@@ -386,38 +386,38 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
   // mode ÉPINGLÉ (panneau docké pleine hauteur qui réserve sa largeur, comme
   // la config épinglée).
   const panel_content = <>
-          {/* #1283 — panneau unique : en-tête avec seulement l'épingle (plus
+    {/* #1283 — panneau unique : en-tête avec seulement l'épingle (plus
               d'onglets). Épinglé, le tiroir réserve sa largeur, le dessin se recadre. */}
-          <Box style={{ display: 'flex', justifyContent: 'flex-end', padding: '0.3rem 0.3rem 0' }}>
-            <Button
-              size='xs'
-              variant={pinned ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-              sx={{ paddingInline: '0.3rem', minWidth: 'auto', width: 'auto', flex: 'none', height: 'auto' }}
-              title={pinned ? app_data.t('inspector.unpin') : app_data.t('inspector.pin')}
-              onClick={() => {
-                const mc = app_data.menu_configuration
-                mc.filter_drawer_width_px = drawer_width_px
-                mc.filter_panel_pinned = !pinned
-              }}
-            >
-              <FaThumbtack style={{ transform: pinned ? 'none' : 'rotate(45deg)' }} />
-            </Button>
-          </Box>
-          <Box layerStyle='drawerFilterBox'>
-            {
-              (app_data.publish_options.data_type || app_data.publish_options.value_filter)
-                ? <FilterDisplay app_data={app_data} /> : <></>
-            }
-            {
-              app_data.publish_options.level_filter ? <LevelTagFilter app_data={app_data} /> : <></>
-            }
-            {
-              app_data.publish_options.node_filter ? <NodeTagGroupFilter app_data={app_data} level={false} /> : <></>
-            }
-            {
-              app_data.publish_options.data_filter ? <DataTagGroupFilter app_data={app_data} /> : <></>
-            }
-          </Box>
+    <Box style={{ display: 'flex', justifyContent: 'flex-end', padding: '0.3rem 0.3rem 0' }}>
+      <Button
+        size='xs'
+        variant={pinned ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+        sx={{ paddingInline: '0.3rem', minWidth: 'auto', width: 'auto', flex: 'none', height: 'auto' }}
+        title={pinned ? app_data.t('inspector.unpin') : app_data.t('inspector.pin')}
+        onClick={() => {
+          const mc = app_data.menu_configuration
+          mc.filter_drawer_width_px = drawer_width_px
+          mc.filter_panel_pinned = !pinned
+        }}
+      >
+        <FaThumbtack style={{ transform: pinned ? 'none' : 'rotate(45deg)' }} />
+      </Button>
+    </Box>
+    <Box layerStyle='drawerFilterBox'>
+      {
+        (app_data.publish_options.data_type || app_data.publish_options.value_filter)
+          ? <FilterDisplay app_data={app_data} /> : <></>
+      }
+      {
+        app_data.publish_options.level_filter ? <LevelTagFilter app_data={app_data} /> : <></>
+      }
+      {
+        app_data.publish_options.node_filter ? <NodeTagGroupFilter app_data={app_data} level={false} /> : <></>
+      }
+      {
+        app_data.publish_options.data_filter ? <DataTagGroupFilter app_data={app_data} /> : <></>
+      }
+    </Box>
   </>
 
   return <>
