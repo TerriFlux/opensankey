@@ -413,36 +413,38 @@ export const drawStackedBarChart = (
 }
 
 // ==================================================================================================
-// Camembert SUR LE NŒUD (OS#1278) — le nœud dessiné comme un camembert/couronne
-// (réf. Haas et al., économie circulaire). Dessine dans un groupe SVG EXISTANT du
-// diagramme (pas un conteneur HTML) : les couleurs sont celles du diagramme (le
-// graphique fait partie du langage visuel), fournies par l'appelant via part.color.
+// Graphique SUR LE NŒUD (OS#1278) — le nœud dessiné en COURONNE (donut) ou en
+// HISTOGRAMME, selon le choix de la fenêtre d'analyse. Dessine dans un groupe SVG
+// EXISTANT du diagramme (pas un conteneur HTML) : les couleurs sont TOUJOURS celles
+// du modèle (nœud / dataTag / tag), fournies par l'appelant via part.color. La
+// classe commune `.node_analysis_chart` permet un nettoyage unique.
 // ==================================================================================================
 
-export interface Type_NodePieGeom {
-  cx: number
-  cy: number
-  radius: number
-  // Rayon intérieur (couronne) ; 0 = camembert plein. Défaut 0.
-  inner?: number
+const NODE_CHART_CLASS = 'node_analysis_chart'
+
+export interface Type_NodeChartGeom {
+  width: number
+  height: number
 }
 
-export const drawNodePieOnGroup = (
+// COURONNE (donut) : décomposition d'un tout en secteurs, dans les bornes du nœud.
+export const drawNodeDonutOnGroup = (
   group_el: SVGGElement,
   parts: Type_StatSlice[],
-  geom: Type_NodePieGeom
+  geom: Type_NodeChartGeom
 ): void => {
   const sel = d3.select(group_el)
-  sel.selectAll('.node_analysis_pie').remove()
+  sel.selectAll('.' + NODE_CHART_CLASS).remove()
   const total = parts.reduce((s, p) => s + p.value, 0)
-  if (parts.length === 0 || total <= 0 || geom.radius <= 0) return
+  const radius = Math.min(geom.width, geom.height) / 2
+  if (parts.length === 0 || total <= 0 || radius <= 0) return
 
   const g = sel.append('g')
-    .classed('node_analysis_pie', true)
-    .attr('transform', `translate(${geom.cx},${geom.cy})`)
+    .classed(NODE_CHART_CLASS, true)
+    .attr('transform', `translate(${geom.width / 2},${geom.height / 2})`)
   const pie = d3.pie<Type_StatSlice>().value(d => d.value).sort(null)
   const arc = d3.arc<d3.PieArcDatum<Type_StatSlice>>()
-    .innerRadius(geom.inner ?? 0).outerRadius(geom.radius)
+    .innerRadius(radius * 0.55).outerRadius(radius)
   g.selectAll('path')
     .data(pie(parts))
     .enter().append('path')
@@ -452,4 +454,54 @@ export const drawNodePieOnGroup = (
     .attr('stroke-width', 1)
     .append('title')
     .text(d => `${d.data.label}\n${DEFAULT_FORMAT(d.data.value)} (${pctText(d.data.value, total)})`)
+}
+
+// HISTOGRAMME : une barre par série (empilée par ses parts). Cas d'usage :
+//  - décomposition seule (repr barres) → 1 série, N parts → N barres ;
+//  - comparaison pure → N séries d'1 part → N barres (couleur du dataTag) ;
+//  - croisement → N séries × M parts → N barres empilées.
+// Remplit les bornes width × height du nœud.
+export const drawNodeBarsOnGroup = (
+  group_el: SVGGElement,
+  series: Type_StatSeries[],
+  geom: Type_NodeChartGeom
+): void => {
+  const sel = d3.select(group_el)
+  sel.selectAll('.' + NODE_CHART_CLASS).remove()
+
+  // Série unique → une barre par part ; sinon une barre (empilée) par série.
+  const single = series.length === 1
+  const bars: { key: string, segments: Type_StatSlice[] }[] = single
+    ? (series[0]?.parts ?? []).map(p => ({ key: p.id, segments: [p] }))
+    : series.map(s => ({ key: s.id, segments: s.parts }))
+
+  const totals = bars.map(b => b.segments.reduce((a, s) => a + s.value, 0))
+  const max = totals.reduce((m, v) => Math.max(m, v), 0)
+  const n = bars.length
+  if (n === 0 || max <= 0 || geom.width <= 0 || geom.height <= 0) return
+
+  const g = sel.append('g').classed(NODE_CHART_CLASS, true)
+  const slot = geom.width / n
+  const pad = slot * 0.2
+  const bw = slot - pad
+  bars.forEach((b, i) => {
+    const x = i * slot + pad / 2
+    let acc = 0
+    b.segments.forEach((seg, j) => {
+      if (seg.value <= 0) return
+      const y0 = (acc / max) * geom.height
+      const y1 = ((acc + seg.value) / max) * geom.height
+      g.append('rect')
+        .attr('x', x)
+        .attr('y', geom.height - y1)
+        .attr('width', bw)
+        .attr('height', y1 - y0)
+        .attr('fill', seg.color ?? paletteColor(single ? i : j))
+        .attr('stroke', 'white')
+        .attr('stroke-width', 0.5)
+        .append('title')
+        .text(`${seg.label}\n${DEFAULT_FORMAT(seg.value)}`)
+      acc += seg.value
+    })
+  })
 }
