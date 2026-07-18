@@ -161,8 +161,17 @@ Conséquences actées (2026-07-18) :
    tooltip/éditeur (cas unités).
 2. **Conversion dimension→annotation** : la valeur principale devient celle de
    la **tranche sélectionnée** (plus de somme).
-3. **Piste de suivi** (équivalent Unit Types complet) : échelle et visibilité
-   par groupe libre — à rapprocher de ScaleOverrides. Non planifié.
+3. **Unités = groupes libres à échelle par tag** (validé user 2026-07-18) :
+   le cas unitTag (un tag porteur d'une unité et d'une échelle) est couvert
+   par ce modèle — mieux que les dataTags `is_unit` actuels qui forcent les
+   unités en dimension (cartésien complet). Un groupe libre « Unité »
+   {kWh, t, €} porte des valeurs éparses ; bannière `Unique` = bascule
+   d'affichage par sélection ; `multi` + échelle PAR TAG = coexistence à la
+   e!Sankey (Unit Types). Briques restantes : échelle par tag libre appliquée
+   à la largeur des rubans (pendant de `Class_DataTag._scale`), unité dans
+   labels/tooltips, migration des groupes `is_unit` via la bascule
+   dimension→annotation + transfert des échelles. Réaligne avec le type
+   `unitTags` natif de SEP.
 4. Renommage « sous-valeurs » → « valeurs du flux » : à trancher (UI seule ou
    aussi code/JSON `sub_values`, encore possible tant que la branche n'est pas
    mergée).
