@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 
-import React, { FC, useRef, useState, ChangeEvent, ReactNode, useEffect, MutableRefObject, CSSProperties, JSX } from 'react'
+import React, { FC, useRef, useState, ChangeEvent, ReactNode, useEffect, MutableRefObject, CSSProperties, JSX, forwardRef } from 'react'
 import { ColorResult, SketchPicker } from 'react-color'
 import {
   Text,
@@ -1619,7 +1619,9 @@ export const InputIndicatorWrapper = ({
   * }
   * @return {*}
   */
-export const ConfigMenuNumberInput = ({
+// forwardRef : parfois enfant direct d'un Tooltip Chakra (qui a besoin d'un
+// ref DOM pour se positionner) — même motif que ConfigMenuTextInput.
+export const ConfigMenuNumberInput = forwardRef<HTMLInputElement, FCType_ConfigMenuNumberInput>(({
   t,
   default_value,
   function_on_blur,
@@ -1636,7 +1638,7 @@ export const ConfigMenuNumberInput = ({
   // undefined signifie « contrôle non stylable » et doit le rester.
   isOverloaded,
   provenance
-}: FCType_ConfigMenuNumberInput) => {
+}: FCType_ConfigMenuNumberInput, forwarded_ref) => {
   const ref_input = useRef<HTMLInputElement>(null)
   const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
   const variant = unit_text ? 'menuconfigpanel_option_numberinput_with_right_addon' : 'menuconfigpanel_option_numberinput'
@@ -1692,7 +1694,11 @@ export const ConfigMenuNumberInput = ({
           }}
         >
           <NumberInputField
-            ref={ref_input}
+            ref={(el: HTMLInputElement | null) => {
+              (ref_input as MutableRefObject<HTMLInputElement | null>).current = el
+              if (typeof forwarded_ref === 'function') forwarded_ref(el)
+              else if (forwarded_ref) forwarded_ref.current = el
+            }}
             onBlur={() => {
               if (!menu_for_style) {
                 clearTimeout(is_modifying.current)
@@ -1710,7 +1716,8 @@ export const ConfigMenuNumberInput = ({
       </InputGroup>
     </InputIndicatorWrapper>
   )
-}
+})
+ConfigMenuNumberInput.displayName = 'ConfigMenuNumberInput'
 
 export type FCType_ConfigMenuNumberInput = {
   t: TFunction,
@@ -1740,7 +1747,11 @@ export type FCType_ConfigMenuNumberInput = {
  * }
  * @return {*}
  */
-export const ConfigMenuTextInput: FC<FCType_ConfigMenuTextInput> = ({
+// forwardRef : le composant est parfois enfant direct d'un Tooltip Chakra
+// (ex. ElementNameRow de l'inspecteur), qui a besoin d'un ref DOM pour se
+// positionner — sans lui, React émet « Function components cannot be given
+// refs ». Le ref exposé pointe sur l'<Input>.
+export const ConfigMenuTextInput = forwardRef<HTMLInputElement, FCType_ConfigMenuTextInput>(({
 
   default_value,
   function_on_blur,
@@ -1752,7 +1763,7 @@ export const ConfigMenuTextInput: FC<FCType_ConfigMenuTextInput> = ({
   isOverloaded,
   provenance,
   t
-}: FCType_ConfigMenuTextInput) => {
+}: FCType_ConfigMenuTextInput, forwarded_ref) => {
   const ref_input = useRef<HTMLInputElement>(null)
   const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
   const [value, setValue] = useState<string | null | undefined>(default_value)
@@ -1766,7 +1777,11 @@ export const ConfigMenuTextInput: FC<FCType_ConfigMenuTextInput> = ({
       <InputGroup>
         <Input
           isDisabled={disabled}
-          ref={ref_input}
+          ref={(el: HTMLInputElement | null) => {
+            (ref_input as MutableRefObject<HTMLInputElement | null>).current = el
+            if (typeof forwarded_ref === 'function') forwarded_ref(el)
+            else if (forwarded_ref) forwarded_ref.current = el
+          }}
           variant='menuconfigpanel_option_input'
           value={value ?? ''}
           onChange={evt => {
@@ -1796,7 +1811,8 @@ export const ConfigMenuTextInput: FC<FCType_ConfigMenuTextInput> = ({
       </InputGroup>
     </InputIndicatorWrapper>
   )
-}
+})
+ConfigMenuTextInput.displayName = 'ConfigMenuTextInput'
 
 export type FCType_ConfigMenuTextInput = {
   t: TFunction,
