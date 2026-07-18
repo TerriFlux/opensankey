@@ -1430,35 +1430,31 @@ export const MenuConfigurationAppearance = ({
     : Object.fromEntries(Object.entries(STOCK_LABEL_CONFIG).map(([key, value]) => [key, value.default]))
 
   const showContent = allElements.length > 0 || menu_for_style
-  const container_element = elements[0] as Class_ContainerElement
-  const options_selector_node_tied = !menu_for_style
+  // #1259 (groupes, P1) — section « Groupe » unifiée : porteurs = zones de texte
+  // ET nœuds sélectionnés (ex-« Cadre géométrique » dédoublé ZDT/nœuds). Membres
+  // proposés : tous les nœuds + les autres ZDT (un groupe peut englober des
+  // zones de texte, OS#1254). L'état affiché est celui du premier porteur.
+  const group_carriers: Class_NodeBase[] = !menu_for_style
+    ? [...selection.containers, ...selection.nodes]
+    : []
+  const group_ref = group_carriers.length > 0 ? group_carriers[0] : undefined
+  const group_member_options = group_ref
     ? [
-      ...app_data.drawing_area.sankey.nodes_list_sorted.map((node) => ({
-        'label': node.name,
-        'value': node.id,
-        selected: !selection.hasContainers ? false : selection.containers[0].attached_node.includes(node)
-      })),
-      // OS#1254 — un cadre peut aussi englober d'autres zones de texte (cas des
-      // blocs de la légende : titre + entrées d'un groupe de tags).
+      ...app_data.drawing_area.sankey.nodes_list_sorted
+        .filter(n => n !== group_ref)
+        .map((node) => ({
+          'label': node.name,
+          'value': node.id,
+          selected: group_ref.attached_node.includes(node)
+        })),
       ...app_data.drawing_area.sankey.containers_list_sorted
-        .filter(c => !selection.hasContainers || c !== selection.containers[0])
+        .filter(c => c !== group_ref)
         .map((c) => ({
           'label': '[ZDT] ' + c.name,
           'value': c.id,
-          selected: !selection.hasContainers ? false : selection.containers[0].attached_node.includes(c)
+          selected: group_ref.attached_node.includes(c)
         }))
     ]
-    : []
-  // Tied-frame options for the contextual node (excluding the node itself).
-  const node_tied_element = selection.hasNodes ? selection.nodes[0] : undefined
-  const options_selector_for_node_tied = (!menu_for_style && node_tied_element)
-    ? app_data.drawing_area.sankey.nodes_list_sorted
-      .filter(n => n !== node_tied_element)
-      .map((node) => ({
-        'label': node.name,
-        'value': node.id,
-        selected: node_tied_element.attached_node.includes(node)
-      }))
     : []
 
   return (
@@ -2366,139 +2362,82 @@ export const MenuConfigurationAppearance = ({
                     </Box>
                   </Box>
                 )}
-                {(selection.hasContainers) && (
-                  <>
-                    <Box layerStyle='menu_sub_section'>
-                      <Checkbox
-                        variant='menuconfigpanel_option_checkbox'
-                        iconColor={'white'}
-                        isChecked={elements.length > 0 ? container_element.tied_to_nodes : false}
-                        onChange={(evt) => {
-                          const target = evt.target.checked
-                          const containerElements = elements.filter(e => e instanceof Class_ContainerElement) as Class_ContainerElement[]
-                          const before = containerElements.map(c => ({ c, tied: c.tied_to_nodes }))
+                {/* #1259 (groupes, P1) — section « Groupe » UNIQUE, partagée par les
+                    zones de texte et les nœuds (remplace les deux blocs « Cadre
+                    géométrique » qui se dédoublaient en sélection mixte). */}
+                {group_ref && (
+                  <Box layerStyle='menu_sub_section'>
+                    <Checkbox
+                      variant='menuconfigpanel_option_checkbox'
+                      iconColor={'white'}
+                      isChecked={group_ref.tied_to_nodes}
+                      onChange={(evt) => {
+                        const target = evt.target.checked
+                        const before = group_carriers.map(el => ({ el, tied: el.tied_to_nodes }))
+                        const apply = () => {
+                          group_carriers.forEach(el => { el.tied_to_nodes = target })
+                          refreshAll()
+                        }
+                        const revert = () => {
+                          before.forEach(({ el, tied }) => { el.tied_to_nodes = tied })
+                          refreshAll()
+                        }
+                        app_data.history.saveUndo(revert)
+                        app_data.history.saveRedo(apply)
+                        apply()
+                      }}>
+                      <OSTooltip label={t('inspector.group.tooltip')} placement='left'>{t('inspector.group.title')}</OSTooltip>
+                    </Checkbox>
+
+                    {group_ref.tied_to_nodes && <Box>
+                      <OSMultiSelect
+                        t={app_data.t}
+                        elements={group_member_options}
+                        onClick={(entries) => {
+                          const entries_values = entries.map(d => d.value)
+                          const before = group_carriers.map(el => ({ el, attached: [...el.attached_node] }))
                           const apply = () => {
-                            containerElements.forEach(c => { c.tied_to_nodes = target })
+                            app_data.drawing_area.sankey.nodes_list.forEach(node => {
+                              group_carriers.forEach(el => {
+                                if (el === node) return
+                                if (entries_values.includes(node.id)) el.attachNodeToCont(node)
+                                else el.dettachNodeFromCont(node)
+                              })
+                            })
+                            // OS#1254 — un groupe peut aussi englober des zones de texte
+                            // (cf. blocs de la légende). Garde anti-cycle : jamais soi-même
+                            // ni un cadre qui contient déjà le porteur.
+                            app_data.drawing_area.sankey.containers_list.forEach(cont => {
+                              group_carriers.forEach(el => {
+                                if (el === cont) return
+                                if (entries_values.includes(cont.id)) {
+                                  if (!cont.attached_node.includes(el)) el.attachNodeToCont(cont)
+                                } else {
+                                  el.dettachNodeFromCont(cont)
+                                }
+                              })
+                            })
+                            // #1259 — chaque cadre passe derrière ses membres
+                            // pour ne pas capter leurs clics.
+                            group_carriers.forEach(el => app_data.drawing_area.sendFrameBehindMembers(el))
                             refreshAll()
                           }
                           const revert = () => {
-                            before.forEach(({ c, tied }) => { c.tied_to_nodes = tied })
+                            before.forEach(({ el, attached }) => {
+                              for (let i = el.attached_node.length - 1; i >= 0; i--) {
+                                el.dettachNodeFromCont(el.attached_node[i])
+                              }
+                              attached.forEach(a => el.attachNodeToCont(a))
+                            })
                             refreshAll()
                           }
                           app_data.history.saveUndo(revert)
                           app_data.history.saveRedo(apply)
                           apply()
-                        }}>
-                        <OSTooltip label={t('LL.tooltips.tiedToNodes')} placement='left'>{t('LL.tiedToNodes')}</OSTooltip>
-                      </Checkbox>
-
-                      {elements.length > 0 && container_element.tied_to_nodes ? <Box>
-                        <OSMultiSelect
-                          t={app_data.t}
-                          elements={options_selector_node_tied}
-                          onClick={(entries) => {
-                            const entries_values = entries.map(d => d.value)
-                            const containerElements = elements.filter(e => e instanceof Class_ContainerElement) as Class_ContainerElement[]
-                            const before = containerElements.map(zdt => ({ zdt, attached: [...zdt.attached_node] }))
-                            const apply = () => {
-                              app_data.drawing_area.sankey.nodes_list.forEach(node => {
-                                if (entries_values.includes(node.id)) {
-                                  containerElements.forEach(zdt => { zdt.attachNodeToCont(node) })
-                                } else {
-                                  containerElements.forEach(zdt => { zdt.dettachNodeFromCont(node) })
-                                }
-                              })
-                              // OS#1254 — attache/détache aussi des zones de texte (un cadre
-                              // peut englober d'autres ZDT, cf. blocs de la légende). Garde
-                              // anti-cycle : jamais soi-même ni un cadre qui nous contient déjà.
-                              app_data.drawing_area.sankey.containers_list.forEach(cont => {
-                                containerElements.forEach(zdt => {
-                                  if (zdt === cont) return
-                                  if (entries_values.includes(cont.id)) {
-                                    if (!cont.attached_node.includes(zdt)) zdt.attachNodeToCont(cont)
-                                  } else {
-                                    zdt.dettachNodeFromCont(cont)
-                                  }
-                                })
-                              })
-                              refreshAll()
-                            }
-                            const revert = () => {
-                              before.forEach(({ zdt, attached }) => {
-                                for (let i = zdt.attached_node.length - 1; i >= 0; i--) {
-                                  zdt.dettachNodeFromCont(zdt.attached_node[i])
-                                }
-                                attached.forEach(n => zdt.attachNodeToCont(n))
-                              })
-                              refreshAll()
-                            }
-                            app_data.history.saveUndo(revert)
-                            app_data.history.saveRedo(apply)
-                            apply()
-                          }}
-                        />
-
-                      </Box> : <></>}
-                    </Box></>
-                )}
-                {(selection.hasNodes && node_tied_element) && (
-                  <>
-                    <Box layerStyle='menu_sub_section'>
-                      <Checkbox
-                        variant='menuconfigpanel_option_checkbox'
-                        iconColor={'white'}
-                        isChecked={node_tied_element.tied_to_nodes}
-                        onChange={(evt) => {
-                          const target = evt.target.checked
-                          const before = selection.nodes.map(n => ({ n, tied: n.tied_to_nodes }))
-                          const apply = () => {
-                            selection.nodes.forEach(n => { n.tied_to_nodes = target })
-                            refreshAll()
-                          }
-                          const revert = () => {
-                            before.forEach(({ n, tied }) => { n.tied_to_nodes = tied })
-                            refreshAll()
-                          }
-                          app_data.history.saveUndo(revert)
-                          app_data.history.saveRedo(apply)
-                          apply()
-                        }}>
-                        <OSTooltip label={t('LL.tooltips.tiedToNodes')} placement='left'>{t('LL.tiedToNodes')}</OSTooltip>
-                      </Checkbox>
-
-                      {node_tied_element.tied_to_nodes ? <Box>
-                        <OSMultiSelect
-                          t={app_data.t}
-                          elements={options_selector_for_node_tied}
-                          onClick={(entries) => {
-                            const entries_values = entries.map(d => d.value)
-                            const before = selection.nodes.map(n => ({ n, attached: [...n.attached_node] }))
-                            const apply = () => {
-                              app_data.drawing_area.sankey.nodes_list.forEach(node => {
-                                if (entries_values.includes(node.id)) {
-                                  selection.nodes.forEach(n => { if (n !== node) n.attachNodeToCont(node) })
-                                } else {
-                                  selection.nodes.forEach(n => n.dettachNodeFromCont(node))
-                                }
-                              })
-                              refreshAll()
-                            }
-                            const revert = () => {
-                              before.forEach(({ n, attached }) => {
-                                for (let i = n.attached_node.length - 1; i >= 0; i--) {
-                                  n.dettachNodeFromCont(n.attached_node[i])
-                                }
-                                attached.forEach(a => n.attachNodeToCont(a))
-                              })
-                              refreshAll()
-                            }
-                            app_data.history.saveUndo(revert)
-                            app_data.history.saveRedo(apply)
-                            apply()
-                          }}
-                        />
-                      </Box> : <></>}
-                    </Box></>
+                        }}
+                      />
+                    </Box>}
+                  </Box>
                 )}
               </>
             </>
