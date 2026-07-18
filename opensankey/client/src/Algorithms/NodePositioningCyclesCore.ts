@@ -202,6 +202,35 @@ export class NodePositioningCyclesCore {
   }
 
   /**
+   * Verrouille (tristate OpenSankey#711) les flux dont le statut recyclage CHARGE diverge de ce
+   * que la geometrie calculerait : le fichier fait foi, la detection auto ne doit jamais
+   * rebasculer un flux arriere voulu par l'auteur (sankeyapplication#153). Appele apres le
+   * chargement d'un fichier qui contient une geometrie. Les flux deja verrouilles sont ignores.
+   *
+   * @returns les ids des flux verrouilles par la passe.
+   */
+  public lockRecyclingStatusDivergences(
+    nodes_to_process: Class_NodeElement[],
+    horizontal_indexes: { [node_id: string]: number }
+  ): string[] {
+    const locked: string[] = []
+    nodes_to_process.forEach(node => {
+      const node_index = horizontal_indexes[node.id]
+      node.output_links_list.forEach(link => {
+        const link_data = this.drawingArea.sankey.links_dict[link.id]
+        if (link_data === undefined || link_data.shape_is_recycling_locked === true) return
+        const target_index = horizontal_indexes[link_data.target.id]
+        const geometric = node_index !== undefined && target_index !== undefined && node_index >= target_index
+        if (link_data.shape_is_recycling !== geometric) {
+          link_data.shape_is_recycling_locked = true
+          locked.push(link_data.id)
+        }
+      })
+    })
+    return locked
+  }
+
+  /**
    * Explore les branches issues de `start_node` et affecte leur index horizontal.
    * DFS iteratif (tri topologique + detection des back-edges) puis relaxation en une passe
    * (plus long chemin). O(V+E). Les back-edges rencontrees sont ajoutees a `recycling_links_ids`.

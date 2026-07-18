@@ -467,6 +467,10 @@ export class NodePositioning {
     return this._parametric.updateRecyclingFromPositions(only_touching_nodes)
   }
 
+  public lockRecyclingStatusDivergences(): string[] {
+    return this._parametric.lockRecyclingStatusDivergences()
+  }
+
   public computeParametrization(use_horizontal_index: boolean) {
     this._parametric.computeParametrization(use_horizontal_index)
   }
