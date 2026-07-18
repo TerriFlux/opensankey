@@ -3,11 +3,15 @@ import { Class_NodeElement } from './Node'
 import { Class_LinkElement } from './Link'
 import { TOOLTIP_STYLES, TooltipBehaviorManager } from './TooltipsCSS'
 import { getNameLabelValues } from './ElementsAttributesConfig'
+import { Type_AnalysisDescriptor } from '../Charts/AnalysisDescriptor'
 import { TFunction } from 'i18next'
 
 // Conteneur DOM (id fixe) de la zone de dessin du sankey unitaire embarqué dans
 // l'onglet du tooltip. Un seul tooltip à la fois → id unique suffisant.
 const UNITARY_TOOLTIP_CONTAINER_ID = 'unitary_tooltip_sankey_container'
+// Conteneur (id fixe) de l'onglet « Analyse » (OS#1278) — graphique couronne /
+// histogramme décrit par analysis_descriptor. Un seul tooltip à la fois.
+const ANALYSIS_TOOLTIP_CONTAINER_ID = 'analysis_tooltip_chart_container'
 
 
 export class NodeTooltip {
@@ -20,6 +24,11 @@ export class NodeTooltip {
   private _unitaryHandle?: { redraw: () => void, cleanup: () => void }
   private _unitaryResizeObserver?: ResizeObserver
   private _unitaryDrawn = false
+
+  // Onglet « Analyse » (OS#1278) : même patron paresseux que l'unitaire.
+  private _analysisHandle?: { redraw: () => void, cleanup: () => void }
+  private _analysisResizeObserver?: ResizeObserver
+  private _analysisDrawn = false
 
   constructor(node: Class_NodeElement) {
     this._node = node
@@ -34,6 +43,7 @@ export class NodeTooltip {
   public removeTooltip() {
     this.behaviorManager?.cleanup()
     this.cleanupUnitary()
+    this.cleanupAnalysis()
     d3.selectAll('.sankey-tooltip').remove()
     this._node.d3_selection?.classed('tooltip_shown', false)
   }
@@ -47,8 +57,18 @@ export class NodeTooltip {
     this._unitaryDrawn = false
   }
 
+  /** Détruit le graphique d'analyse embarqué (observer + conteneur) s'il existe. */
+  private cleanupAnalysis() {
+    this._analysisResizeObserver?.disconnect()
+    this._analysisResizeObserver = undefined
+    this._analysisHandle?.cleanup()
+    this._analysisHandle = undefined
+    this._analysisDrawn = false
+  }
+
   public drawTooltip() {
     this.cleanupUnitary()
+    this.cleanupAnalysis()
     d3.selectAll('.sankey-tooltip').remove()
 
     let x = this.mousePosition.x || this._node.position_x
@@ -104,12 +124,44 @@ export class NodeTooltip {
           content.classList.add('active')
           // L'onglet « Sankey unitaire » se dessine paresseusement : son conteneur
           // n'a une taille non nulle qu'une fois affiché (display:block).
-          if (content.getAttribute('data-tab-key') === 'unitary') {
+          const key = content.getAttribute('data-tab-key')
+          if (key === 'unitary') {
             this.drawUnitaryTab()
+          } else if (key === 'analysis') {
+            this.drawAnalysisTab()
           }
         }
       })
     })
+  }
+
+  /**
+   * Dessine (une seule fois) le graphique d'analyse dans le conteneur de l'onglet,
+   * via le hook OS+ (draw_analysis_in_container). Observe le redimensionnement pour
+   * recadrer. Pas d'épingle : le graphique est statique (pas d'interaction lourde).
+   */
+  private drawAnalysisTab() {
+    if (this._analysisDrawn) return
+    const hook = this._node.drawing_area.application_data.draw_analysis_in_container
+    if (typeof hook !== 'function') return
+    const container = document.getElementById(ANALYSIS_TOOLTIP_CONTAINER_ID)
+    if (!container) return
+    this._analysisDrawn = true
+
+    const handle = hook(this._node, '#' + ANALYSIS_TOOLTIP_CONTAINER_ID)
+    if (handle) this._analysisHandle = handle
+
+    // Recadrage au redimensionnement du tooltip (poignée resize CSS).
+    if (typeof ResizeObserver !== 'undefined') {
+      let raf = 0
+      let first = true
+      this._analysisResizeObserver = new ResizeObserver(() => {
+        if (first) { first = false; return }
+        if (raf) cancelAnimationFrame(raf)
+        raf = requestAnimationFrame(() => this._analysisHandle?.redraw())
+      })
+      this._analysisResizeObserver.observe(container)
+    }
   }
 
   /**
@@ -183,6 +235,12 @@ export class NodeTooltip {
       const hasTags = this._node.sankey.flux_taggs_list.length > 0
       // Onglet unitaire : seulement si OS+ a injecté le hook de dessin.
       const hasUnitary = app_data.has_sankey_plus && typeof app_data.draw_unitary_in_container === 'function'
+      // Onglet analyse (OS#1278) : hook OS+ présent ET le nœud publie un graphique
+      // d'analyse dans l'info-bulle (surfaces.tooltip du descripteur résolu).
+      const analysis_descriptor = this._node.getElementProperty('analysis_descriptor') as Type_AnalysisDescriptor | undefined
+      const hasAnalysis = typeof app_data.draw_analysis_in_container === 'function'
+        && !!analysis_descriptor?.surfaces?.tooltip
+        && (!!analysis_descriptor.decompose || !!analysis_descriptor.compare)
 
       // Définition des onglets disponibles (clé, libellé, contenu HTML).
       const tabs: { key: string, label: string, content: string }[] = [{
@@ -203,6 +261,14 @@ export class NodeTooltip {
           label: t('Noeud.drawing_area_tooltip.unitary_tab') || 'Sankey unitaire',
           // Conteneur vide : OS+ y dessine la DA unitaire à l'activation de l'onglet.
           content: `<div class="unitary-tooltip-container" id="${UNITARY_TOOLTIP_CONTAINER_ID}"></div>`
+        })
+      }
+      if (hasAnalysis) {
+        tabs.push({
+          key: 'analysis',
+          label: t('Noeud.drawing_area_tooltip.analysis_tab') || 'Analyse',
+          // Conteneur vide : OS+ y dessine le graphique d'analyse à l'activation.
+          content: `<div class="analysis-tooltip-container" id="${ANALYSIS_TOOLTIP_CONTAINER_ID}"></div>`
         })
       }
 
@@ -462,6 +528,25 @@ export class NodeTooltip {
          fit cadre sur les formes seules) ne sont que du bruit visuel ici. */
       .unitary-tooltip-container .scrollbar {
         display: none !important;
+      }
+      /* Onglet analyse (OS#1278) : même stratégie flex pleine hauteur que l'unitaire
+         pour que le graphique suive le redimensionnement du tooltip. */
+      .tab-content[data-tab-key="analysis"].active {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        box-sizing: border-box;
+      }
+      .analysis-tooltip-container {
+        position: relative;
+        flex: 1 1 auto;
+        width: 100%;
+        min-width: 0;
+        /* Hauteur mini pour que la couronne/l'histogramme aient la place de se
+           dessiner même dans un tooltip non redimensionné. */
+        min-height: 220px;
+        background: white;
+        overflow: hidden;
       }
     `
   }
