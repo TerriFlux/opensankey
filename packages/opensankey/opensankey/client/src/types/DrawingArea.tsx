@@ -2046,6 +2046,27 @@ export class Class_DrawingArea {
   }
 
   /**
+   * #1259 — Envoie un cadre de groupe DERRIÈRE ses membres dans l'ordre Z
+   * (fin de liste = premier plan). Sans ça, un cadre dessiné après ses membres
+   * capte leurs clics (cas ZDT dans ZDT : impossible d'attraper la ZDT membre).
+   */
+  public sendFrameBehindMembers(frame: Class_NodeBase) {
+    const list = dedupeZOrderKeepFirst(this._list_g_element_id)
+    const frame_idx = list.indexOf(frame.id)
+    if (frame_idx < 0) return
+    const member_idx = frame.attached_node
+      .map(m => list.indexOf(m.id))
+      .filter(i => i >= 0)
+    if (member_idx.length === 0) return
+    const min_idx = Math.min(...member_idx)
+    if (frame_idx < min_idx) return
+    list.splice(frame_idx, 1)
+    list.splice(min_idx, 0, frame.id)
+    this._list_g_element_id = list
+    this.orderElementOnDA()
+  }
+
+  /**
    * #242 — Retire un élément de la liste des <g> tracés (utilisé quand le lien fantôme est
    * détruit à la fin d'un geste de création).
    */
