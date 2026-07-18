@@ -700,8 +700,13 @@ export class NodeEventsHandler {
       target.setPosXY(this._node.position_x, this._node.position_y)
       // Make target a 'ghost' node
       target.setInvisible()
-      // Close the menu config the time to draw place target
-      this._node.drawing_area.closeAllMenus()
+      // Close the menu config the time to draw place target — SAUF s'il est
+      // épinglé : docké (il réserve sa largeur, cf. #1243), il ne recouvre pas
+      // la zone de dessin, il n'y a donc rien à dégager et le refermer était
+      // une régression (le panneau doit rester ouvert pendant le tracé).
+      if (!this._node.drawing_area.application_data.menu_configuration.config_panel_pinned) {
+        this._node.drawing_area.closeAllMenus()
+      }
 
       // Ref newly created link this var to be used in other mouse event
       this._node.drawing_area.ghost_link = new Class_LinkElement(
