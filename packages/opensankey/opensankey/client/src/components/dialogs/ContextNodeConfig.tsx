@@ -781,28 +781,28 @@ export const NODE_MENU_CONFIG: MenuConfig = {
     },
     createTiedZdt: {
       type: 'action',
-      labels: { en: 'Wrap in geometric frame (ZDT)', fr: 'Envelopper dans un cadre (ZDT)', es: 'Envolver en marco (ZDT)', de: 'In Rahmen einhüllen (ZDT)', it: 'Avvolgi in cornice (ZDT)' },
-      tooltips: { en: 'Create a geometric frame (ZDT) tied to this node and its descendants/ancestors', fr: 'Créer un cadre géométrique (ZDT) lié à ce nœud et à ses descendants/ancêtres', es: 'Crear un marco geométrico (ZDT) vinculado a este nodo y sus descendientes/ancestros', de: 'Geometrischen Rahmen (ZDT) verknüpft mit diesem Knoten und seinen Nachfahren/Vorfahren erstellen', it: 'Crea una cornice geometrica (ZDT) legata a questo nodo e ai suoi discendenti/antenati' },
+      labels: { en: 'Wrap in a group (ZDT)', fr: 'Envelopper dans un groupe (ZDT)', es: 'Envolver en un grupo (ZDT)', de: 'In eine Gruppe einhüllen (ZDT)', it: 'Avvolgi in un gruppo (ZDT)' },
+      tooltips: { en: 'Create a text zone grouped with this node and its descendants/ancestors', fr: 'Créer une zone de texte groupée avec ce nœud et ses descendants/ancêtres', es: 'Crear una zona de texto agrupada con este nodo y sus descendientes/ancestros', de: 'Textzone erstellen, gruppiert mit diesem Knoten und seinen Nachfahren/Vorfahren', it: 'Crea una zona di testo raggruppata con questo nodo e i suoi discendenti/antenati' },
       closeMenuAfter: true
     },
     setTiedFrame: {
       type: 'action',
-      labels: { en: 'Use as geometric frame', fr: 'Utiliser comme cadre géométrique', es: 'Usar como marco geométrico', de: 'Als geometrischen Rahmen verwenden', it: 'Usa come cornice geometrica' },
-      tooltips: { en: 'Tie this node to its descendants — size and position auto-fit the enclosed nodes', fr: 'Lier ce nœud à ses descendants — taille et position s\'ajustent automatiquement aux nœuds englobés', es: 'Vincular este nodo a sus descendientes — tamaño y posición se ajustan automáticamente', de: 'Knoten an Nachfahren binden — Größe und Position passen sich automatisch an', it: 'Lega questo nodo ai discendenti — dimensione e posizione si adattano automaticamente' },
+      labels: { en: 'Group contained elements', fr: 'Grouper les éléments contenus', es: 'Agrupar los elementos contenidos', de: 'Enthaltene Elemente gruppieren', it: 'Raggruppa gli elementi contenuti' },
+      tooltips: { en: 'Attach the geometrically contained elements (nodes and text zones) to this node — the frame then follows its members', fr: 'Attache au nœud les éléments géométriquement contenus (nœuds et zones de texte) — le cadre suit ensuite ses membres', es: 'Adjunta al nodo los elementos contenidos geométricamente (nodos y zonas de texto) — el marco sigue después a sus miembros', de: 'Hängt die geometrisch enthaltenen Elemente (Knoten und Textzonen) an diesen Knoten an — der Rahmen folgt dann seinen Mitgliedern', it: 'Collega al nodo gli elementi geometricamente contenuti (nodi e zone di testo) — la cornice segue poi i suoi membri' },
       undoable: true,
       closeMenuAfter: true
     },
     unsetTiedFrame: {
       type: 'action',
-      labels: { en: 'Use as simple frame', fr: 'Utiliser comme cadre simple', es: 'Usar como marco simple', de: 'Als einfachen Rahmen verwenden', it: 'Usa come cornice semplice' },
-      tooltips: { en: 'Detach all tied nodes — size and position become fixed', fr: 'Détacher tous les nœuds liés — taille et position deviennent fixes', es: 'Desvincular todos los nodos atados — tamaño y posición se vuelven fijos', de: 'Alle verbundenen Knoten lösen — Größe und Position werden fest', it: 'Scollega tutti i nodi legati — dimensione e posizione diventano fisse' },
+      labels: { en: 'Ungroup', fr: 'Dissocier le groupe', es: 'Desagrupar', de: 'Gruppierung aufheben', it: 'Separa il gruppo' },
+      tooltips: { en: 'Detach all members — size and position become fixed', fr: 'Détache tous les membres — taille et position deviennent fixes', es: 'Desvincula todos los miembros — tamaño y posición se vuelven fijos', de: 'Löst alle Mitglieder — Größe und Position werden fest', it: 'Scollega tutti i membri — dimensione e posizione diventano fisse' },
       undoable: true,
       closeMenuAfter: true
     },
     fitFrameToAttached: {
       type: 'action',
-      labels: { en: 'Fit frame to attached', fr: 'Ajuster le cadre aux nœuds attachés', es: 'Ajustar marco a los nodos vinculados', de: 'Rahmen an verbundene Knoten anpassen', it: 'Adatta cornice ai nodi legati' },
-      tooltips: { en: 'Snap every side of the frame onto the attached nodes bbox', fr: 'Ajuster les quatre bords du cadre sur la bbox des nœuds attachés', es: 'Ajustar los cuatro lados del marco a la bbox de los nodos vinculados', de: 'Alle vier Seiten des Rahmens an die Bbox der verbundenen Knoten anpassen', it: 'Allinea tutti i lati della cornice alla bbox dei nodi legati' },
+      labels: { en: 'Fit frame to group', fr: 'Ajuster le cadre au groupe', es: 'Ajustar el marco al grupo', de: 'Rahmen an Gruppe anpassen', it: 'Adatta la cornice al gruppo' },
+      tooltips: { en: 'Snap every side of the frame onto the members bbox', fr: 'Ajuster les quatre bords du cadre sur la bbox des membres', es: 'Ajustar los cuatro lados del marco a la bbox de los miembros', de: 'Alle vier Seiten des Rahmens an die Bbox der Mitglieder anpassen', it: 'Allinea tutti i lati della cornice alla bbox dei membri' },
       undoable: true,
       closeMenuAfter: true
     },

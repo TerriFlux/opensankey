@@ -565,10 +565,11 @@ export class NodePositioningParametric {
    *
    * @returns pour chaque flux dont le statut a changé, sa valeur précédente (pour l'undo).
    */
-  public updateRecyclingFromPositions(): { [link_id: string]: boolean } {
+  public updateRecyclingFromPositions(only_touching_nodes?: Set<string>): { [link_id: string]: boolean } {
     return this.np.cycles.markRecyclingLinks(
       this.nodesEligibleForColumns(),
-      this.computeColumnsFromX()
+      this.computeColumnsFromX(),
+      only_touching_nodes
     )
   }
 
