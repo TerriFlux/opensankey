@@ -939,23 +939,58 @@ export class Class_LinkElement extends Class_LinkAttribute {
     const border_thickness = this.shape_border_thickness
     // Clean previous shape
     this.d3_selection?.selectAll('.link_arrow').remove()
+    this.d3_selection?.selectAll('.link_arrow_clip').remove()
     const arrow_color = this.getArrowColorToUse() // Avoid recomputing
     // Append one arrow path (factorisé pour les deux extrémités).
-    const appendArrowPath = (d: string) => {
-      this.d3_selection?.append('path')
+    const appendArrowPath = (d: string, fill: string = arrow_color, clip_id?: string) => {
+      const path = this.d3_selection?.append('path')
         .attr('class', 'link_arrow')
         .attr('d', d)
-        .attr('fill', this.shape_color_visible ? arrow_color : 'none')
+        .attr('fill', this.shape_color_visible ? fill : 'none')
         .attr('fill-opacity', da.type_data == 'data_label' && !this.has_data ? 0.2 : this.shape_opacity)
         .attr('stroke', border_visible ? border_color : 'none')
         .attr('stroke-width', border_visible ? border_thickness : 0)
         .attr('stroke-opacity', border_visible ? 1 : 0)
         .attr('stroke-dasharray', border_dashed ? '10,2' : '')
+      if (clip_id) path?.attr('clip-path', `url(#${clip_id})`)
     }
-    if (draw_target && this._arrow_shape !== undefined)
-      appendArrowPath(this._arrow_shape)
-    if (draw_source && this._arrow_shape_source !== undefined)
-      appendArrowPath(this._arrow_shape_source)
+    // #285 — flèche par bandes : quand le flux affiche ses valeurs en bandes,
+    // la pointe est dessinée une fois PAR bande, clippée sur la tranche
+    // transverse de la bande et peinte à sa couleur.
+    const bands = this.tagged_value_bands
+    const appendBandArrows = (d: string, at_source: boolean) => {
+      const full = at_source ? this.thicknessSource : this.thicknessTarget
+      const x_end = at_source ? this.position_x_start : this.position_x_end
+      const y_end = at_source ? this.position_y_start : this.position_y_end
+      const is_hh = this.shape_orientation === 'hh'
+      const safe_id = this.id.replace(/[^a-zA-Z0-9_-]/g, '_')
+      let cum = 0
+      bands.forEach(({ tagged_value, share }, band_idx) => {
+        const lo = cum
+        cum += share
+        const clip_id = `arrowband_${safe_id}_${at_source ? 's' : 't'}_${band_idx}`
+        const reach = full + 100 // couvre largement la profondeur de la pointe
+        this.d3_selection?.append('clipPath')
+          .attr('class', 'link_arrow_clip')
+          .attr('id', clip_id)
+          .append('rect')
+          .attr('x', is_hh ? x_end - reach : x_end - full / 2 + lo * full)
+          .attr('y', is_hh ? y_end - full / 2 + lo * full : y_end - reach)
+          .attr('width', is_hh ? 2 * reach : share * full)
+          .attr('height', is_hh ? share * full : 2 * reach)
+        const colored_tag = tagged_value.tags_list
+          .find(tag => (tag.group as Class_TagGroup).use_colors) ?? tagged_value.tags_list[0]
+        appendArrowPath(d, colored_tag?.color ?? arrow_color, clip_id)
+      })
+    }
+    if (draw_target && this._arrow_shape !== undefined) {
+      if (bands.length > 0) appendBandArrows(this._arrow_shape, false)
+      else appendArrowPath(this._arrow_shape)
+    }
+    if (draw_source && this._arrow_shape_source !== undefined) {
+      if (bands.length > 0) appendBandArrows(this._arrow_shape_source, true)
+      else appendArrowPath(this._arrow_shape_source)
+    }
   }
 
   /**

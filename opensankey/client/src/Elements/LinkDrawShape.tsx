@@ -769,7 +769,11 @@ export class LinkDrawShape {
         // on retombe sur le contour simple, moins coûteux ; le rendu exact est
         // rétabli par le redraw de fin de drag (setPosXY/drawElements après
         // setDragState(false), cf. NodeEventsHandler.handleMouseDragEnd).
-        if (this._link.shape_type === 'bezier_outline_exact' && !this.isBeingDragged()) {
+        // #285 — un flux porteur de bandes suit TOUJOURS la géométrie exacte :
+        // ses bandes internes sont exactes, l'enveloppe (et la bordure) doivent
+        // coïncider avec leur union, quel que soit le shape_type du lien.
+        const has_bands = this._link.tagged_value_bands.length > 0
+        if ((this._link.shape_type === 'bezier_outline_exact' || has_bands) && !this.isBeingDragged()) {
           // Faisceau de flux parallèles entre les mêmes nœuds : bandes jointives
           // dérivées de la médiane commune du faisceau
           const band_path = this.getParallelBandPath()
@@ -779,9 +783,11 @@ export class LinkDrawShape {
           // Lien seul : contour exact seulement si la pente de la corde de la
           // section courbe dépasse le seuil — en dessous, le contour simple
           // (translation transverse) est visuellement identique et moins coûteux.
+          // Avec des bandes : exact sans seuil (les frontières internes doivent
+          // coïncider avec l'enveloppe).
           const chord_axis = this._link.shape_orientation === 'hh' ? Math.abs(x5 - x1) : Math.abs(y5 - y1)
           const chord_off = this._link.shape_orientation === 'hh' ? Math.abs(y5 - y1) : Math.abs(x5 - x1)
-          if (chord_off > SIMPLE_OUTLINE_MAX_SLOPE * chord_axis) {
+          if (has_bands || chord_off > SIMPLE_OUTLINE_MAX_SLOPE * chord_axis) {
             return this.getExactBezierOutline(
               [x0, y0], [x1, y1], [x2, y2], [x3, y3], [x4, y4], [x5, y5], [x6, y6],
               -halfSrc, -halfTgt, halfSrc, halfTgt,
