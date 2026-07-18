@@ -385,9 +385,14 @@ describe('loadEsankeyFile — dézippage', () => {
   })
 })
 
-// Suite bonus, locale uniquement : parse toutes les démos de l'installation
-// e!Sankey 5 si présente (jamais en CI — fichiers propriétaires non committés).
-const DEMOS_DIR = 'C:/Program Files/iPoint-systems/e!Sankey 5/demos'
+// Suite bonus, locale uniquement : parse toutes les démos e!Sankey si un corpus
+// est disponible. Les fichiers .sankey livrés par e!Sankey sont propriétaires
+// (et les cliparts sont sous licence tierce) : ils ne sont JAMAIS committés ni
+// redistribués. Pointer le corpus via la variable d'environnement
+// ESANKEY_CORPUS_DIR ; à défaut, on tente le dossier d'installation par défaut.
+// Absent (cas CI) → la suite est skippée.
+const DEMOS_DIR = process.env.ESANKEY_CORPUS_DIR
+  || 'C:/Program Files/iPoint-systems/e!Sankey 5/demos'
 const describeDemos = fs.existsSync(DEMOS_DIR) ? describe : describe.skip
 
 describeDemos('loadEsankeyFile — démos e!Sankey 5 locales', () => {
