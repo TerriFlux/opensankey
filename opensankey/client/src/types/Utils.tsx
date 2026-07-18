@@ -646,6 +646,22 @@ export const format_value = (
     target.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
     data_value = data_value && total_source ? data_value / total_source * 100 : null
     is_percent = true
+  } else if (label_values.unit_type == '%PS' || label_values.unit_type == '%PD') {
+    // Part du flux dans le total (débit) du nœud « parent » : nœud amont (source)
+    // pour %PS, nœud aval (destination) pour %PD. Contrairement aux modes
+    // directionnels (%IS/%OS côté source, %ID/%OD côté destination) qui ne
+    // rapportent qu'aux entrées OU aux sorties, le total « parent » d'un nœud est
+    // son débit propre = max(somme des entrées, somme des sorties). Sur un nœud
+    // équilibré (entrées = sorties) %PD coïncide avec %ID et %PS avec %OS ; ils
+    // divergent sur les nœuds déséquilibrés (sources, puits, import/export).
+    const ref_node = label_values.unit_type == '%PS' ? source : target
+    let total_in = 0
+    let total_out = 0
+    ref_node.input_links_list.filter(l => l.is_visible).forEach(l => total_in += l.valueCurrent ?? 0)
+    ref_node.output_links_list.filter(l => l.is_visible).forEach(l => total_out += l.valueCurrent ?? 0)
+    const total_node = Math.max(total_in, total_out)
+    data_value = data_value && total_node ? data_value / total_node * 100 : null
+    is_percent = true
   } else if (label_values.unit_type == '%SS' || label_values.unit_type == '%SD') {
     // Display-only: link value as a percent of a node's stock level.
     // '%SS' = source node ("en sortie"), '%SD' = destination node ("en entrée").
