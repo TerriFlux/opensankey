@@ -219,9 +219,16 @@ export const useTemplatesLibrary = (
         source
       })
     })
-      .then(response => response.text())
-      .then(text => {
-        const json_data = JSON.parse(text)
+      .then(response => {
+        // Un backend sans route modèles (ou une page d'erreur HTML) ne doit pas
+        // finir dans JSON.parse : on ne parse que du JSON annoncé comme tel.
+        if (!response.ok || !(response.headers.get('content-type') ?? '').includes('application/json')) {
+          return null
+        }
+        return response.json()
+      })
+      .then(json_data => {
+        if (!json_data) return
         const new_indexes: Type_TemplatesIndexes = {}
         if ('templates' in json_data) {
           Object.entries(json_data['templates'] as Type_TemplatesInfos)

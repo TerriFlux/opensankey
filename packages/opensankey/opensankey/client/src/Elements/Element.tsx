@@ -117,28 +117,28 @@ export abstract class Class_BaseElement {
       // Left mouse button click
 
       // Changed call of drag, we have to use only on time call because otherwise each .call erase the previous .call event
-      if (this.drawing_area.isInSelectionMode()) {
-        this.d3_selection?.call(
-          d3.drag<SVGGElement, unknown>()
-            .on('start',
-              (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
-                this.eventMouseDragStart(event))
-            .on('drag',
-              (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
-                this.eventMouseDrag(event))
-            .on('end',
-              (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
-                this.eventMouseDragEnd(event))
-        )
-      }
-      // In edition mode we don't use drag event on elements
-      else if (this.drawing_area.isInEditionMode()) {
-        this.d3_selection?.on('mousedown.drag', null) // Remove dag event
-      }
-      // In style paint mode we don't use drag event on elements
-      else if (this.drawing_area.isInStylePaintMode()) {
-        this.d3_selection?.on('mousedown.drag', null)
-      }
+      // #1259 — le drag est TOUJOURS câblé ; c'est le `filter` qui décide PAR
+      // GESTE selon le mode courant. Avant, le câblage dépendait du mode au
+      // moment du draw : une ZDT dessinée pendant le chargement (mode sélection
+      // pas encore actif) restait non draggable tant qu'un redraw — typiquement
+      // sa sélection — ne re-câblait pas ses listeners. Le filter reprend le
+      // défaut d3 (!ctrlKey && !button) + exclut édition et pot de peinture.
+      this.d3_selection?.call(
+        d3.drag<SVGGElement, unknown>()
+          .filter((event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+            !event.ctrlKey && !event.button
+            && this.drawing_area.isInSelectionMode()
+            && !this.drawing_area.isInStylePaintMode())
+          .on('start',
+            (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
+              this.eventMouseDragStart(event))
+          .on('drag',
+            (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
+              this.eventMouseDrag(event))
+          .on('end',
+            (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
+              this.eventMouseDragEnd(event))
+      )
     }
     // Right mouse button maintained
     this.d3_selection?.on(
