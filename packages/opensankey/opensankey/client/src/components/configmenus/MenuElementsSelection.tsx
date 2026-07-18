@@ -10,6 +10,7 @@ import { Class_StockShape } from '../../Elements/StockShape'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_NodeBase } from '../../Elements/NodeBase'
 import { SELECTION_TOPIC } from '../../types/EventBus'
+import { NodeActions } from '../dialogs/NodeActions'
 
 // ==================================================================================
 // TYPES & CONFIGURATION
@@ -891,6 +892,52 @@ export const ElementNameRow = ({ app_data, elements, labelKey, tooltipKey }: {
   )
 }
 
+// #1274 lot E2 — Section « Disposition » : aligner / répartir / caler la taille
+// des éléments sélectionnés depuis l'inspecteur (les mêmes commandes existent au
+// clic droit). Chaque commande instancie un NodeActions frais pour capturer la
+// sélection courante ; la logique géométrique + l'undo vivent dans NodeActions.
+const NodeDispositionSection = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const da = app_data.drawing_area
+  const count = da.selected_nodes_list.length + da.selected_containers_list.length
+  // Aligner/répartir opèrent sur nœuds + zones de texte ; il faut au moins 2 éléments.
+  if (count < 2) return <></>
+
+  const run = (fn: (na: NodeActions) => void) => () => fn(new NodeActions(app_data))
+  const canDistribute = count > 2
+  const canMatchSize = da.selected_nodes_list.length > 1
+
+  const btn = (label: string, tooltip: string, onClick: () => void, isDisabled = false) => (
+    <OSTooltip label={tooltip}>
+      <Button
+        size='xs'
+        variant='menuconfigpanel_option_button'
+        minW='2.2rem'
+        fontSize='sm'
+        isDisabled={isDisabled}
+        onClick={onClick}
+      >{label}</Button>
+    </OSTooltip>
+  )
+
+  return <>
+    <Divider my={2} />
+    <Box fontSize='xs' fontWeight='semibold' mb={1}>Disposition</Box>
+    <Box display='flex' flexWrap='wrap' gap='0.25rem' mb={1}>
+      {btn('←▌□', 'Aligner les bords gauches', run(na => na.alignHorizMinLeft()))}
+      {btn('←▐□▌', 'Aligner les centres horizontalement', run(na => na.alignHorizMinCenter()))}
+      {btn('□▐→', 'Aligner les bords droits', run(na => na.alignHorizMaxRight()))}
+      {btn('↑▀', 'Aligner les bords hauts', run(na => na.alignVertMinTop()))}
+      {btn('↑▄▀', 'Aligner les centres verticalement', run(na => na.alignVertMinCenter()))}
+      {btn('▄↓', 'Aligner les bords bas', run(na => na.alignVertMaxBottom()))}
+    </Box>
+    <Box display='flex' flexWrap='wrap' gap='0.25rem'>
+      {btn('↔', 'Répartir à distance égale (horizontal)', run(na => na.distributeHorizontal()), !canDistribute)}
+      {btn('↕', 'Répartir à distance égale (vertical)', run(na => na.distributeVertical()), !canDistribute)}
+      {btn('⇱⇲', 'Caler la taille sur le premier nœud sélectionné', run(na => na.matchSizeToRef()), !canMatchSize)}
+    </Box>
+  </>
+}
+
 export const SankeyNodeSelection = ({ app_data, hide_selector = false, stock_only = false }: {
   app_data: Class_ApplicationData
   // #1243 — inspecteur : le sélecteur unifié est rendu une seule fois en tête de
@@ -924,6 +971,9 @@ export const SankeyNodeSelection = ({ app_data, hide_selector = false, stock_onl
           tooltipKey='Noeud.tooltips.Nom'
         />
         : <UnifiedElementSelection app_data={app_data} config={NODE_CONFIG} mode="full" />}
+    {/* #1274 lot E2 — commandes d'alignement / distribution / taille (masquées
+        dans l'onglet Stock de l'inspecteur, qui ne montre que les données). */}
+    {!stock_only && <NodeDispositionSection app_data={app_data} />}
     {showStock && (() => {
       const sv = firstNode.stock_value
       const data_taggs_list = app_data.drawing_area.sankey.data_taggs_list
