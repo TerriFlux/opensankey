@@ -33,7 +33,7 @@ import type {
   Class_ProtoTag,
   Class_Tag,
 } from '../types/Tag'
-import type { Class_DataTagGroup, Class_TagGroup } from '../types/TagGroup'
+import type { Class_DataTagGroup, Class_FluxTagGroup, Class_TagGroup } from '../types/TagGroup'
 
 import { Type_BaseElementPosition, link_data_label } from '../types/Utils'
 import { Class_ElementValueTree, Class_LinkValue, Class_ElementTaggedValue } from './LinkValues'
@@ -870,7 +870,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
       const v = tv.value as number
       const scale_tag = tv.tags_list
         .map(tag => tag as Class_FluxTag)
-        .find(tag => tag.scale !== undefined)
+        .find(tag => tag.scale !== undefined
+          && (tag.group as Class_FluxTagGroup).has_own_scales)
       if (scale_tag?.scale) {
         this.setDomainLocalScale(scale_tag.scale)
         return this._scaleValueToPx(v)

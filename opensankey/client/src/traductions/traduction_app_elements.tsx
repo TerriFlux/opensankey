@@ -412,6 +412,8 @@ export const resources_app_elements = {
 
       Tags: {
         Nom: 'Name',
+        own_scales: 'Own scales',
+        own_scales_tooltip: 'Each tag has its own scale for band widths (unit sets like kWh/t/EUR). Off: all tags follow the diagram scale.',
         carries_values: 'Carries values',
         carries_values_tooltip: 'Value-carrying group: each value of a flux is attached to one of its tags (sparse). Unchecked: plain labelling of the flux.',
         scale: 'Scale',
@@ -1017,6 +1019,8 @@ export const resources_app_elements = {
       },
       Tags: {
         Nom: 'Nom',
+        own_scales: 'Échelles distinctes',
+        own_scales_tooltip: 'Chaque tag a sa propre échelle pour la largeur des bandes (unités kWh/t/€). Décoché : tous les tags suivent la même échelle du dessin.',
         carries_values: 'Porteur de valeurs',
         carries_values_tooltip: 'Groupe porteur : chaque valeur du flux est attachée à un de ses tags (épars). Décoché : simple étiquetage du flux.',
         scale: 'Échelle',
@@ -1621,6 +1625,8 @@ export const resources_app_elements = {
       },
       Tags: {
         Nom: 'Nombre',
+        own_scales: 'Escalas distintas',
+        own_scales_tooltip: 'Cada etiqueta tiene su propia escala para el ancho de las bandas (unidades kWh/t/€).',
         carries_values: 'Portador de valores',
         carries_values_tooltip: 'Grupo portador: cada valor de un flujo se asocia a una de sus etiquetas (disperso). Desmarcado: simple etiquetado del flujo.',
         scale: 'Escala',
@@ -2225,6 +2231,8 @@ export const resources_app_elements = {
       },
       Tags: {
         Nom: 'Name',
+        own_scales: 'Eigene Skalen',
+        own_scales_tooltip: 'Jede Beschriftung hat ihre eigene Skala für die Bandbreiten (Einheiten kWh/t/€).',
         carries_values: 'Trägt Werte',
         carries_values_tooltip: 'Wertetragende Gruppe: jeder Wert eines Flusses ist einer ihrer Beschriftungen zugeordnet (spärlich). Abgewählt: einfache Beschriftung des Flusses.',
         scale: 'Skala',
@@ -2829,6 +2837,8 @@ export const resources_app_elements = {
       },
       Tags: {
         Nom: 'Nome',
+        own_scales: 'Scale distinte',
+        own_scales_tooltip: 'Ogni tag ha la propria scala per la larghezza delle bande (unità kWh/t/€).',
         carries_values: 'Porta valori',
         carries_values_tooltip: 'Gruppo portatore: ogni valore di un flusso è associato a una delle sue etichette (sparso). Deselezionato: semplice etichettatura del flusso.',
         scale: 'Scala',

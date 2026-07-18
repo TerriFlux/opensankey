@@ -562,8 +562,16 @@ export class Class_FluxTagGroup extends Class_TagGroup {
   // dans l'éditeur de groupes.
   private _carries_values: boolean = false
 
+  // §3.0ter — échelles DIFFÉRENTES par tag (cas jeu d'unités kWh/t/€) : la
+  // colonne échelle et l'usage des échelles propres ne s'activent que si le
+  // groupe le déclare — sinon tous les tags suivent l'échelle du dessin.
+  private _has_own_scales: boolean = false
+
   public get carries_values(): boolean { return this._carries_values }
   public set carries_values(_: boolean) { this._carries_values = _ }
+
+  public get has_own_scales(): boolean { return this._has_own_scales }
+  public set has_own_scales(_: boolean) { this._has_own_scales = _ }
 
   protected _toJSON(
     json_object: Type_JSON,
@@ -571,6 +579,7 @@ export class Class_FluxTagGroup extends Class_TagGroup {
   ) {
     super._toJSON(json_object, kwargs)
     if (this._carries_values) json_object['carries_values'] = true
+    if (this._has_own_scales) json_object['has_own_scales'] = true
   }
 
   protected _fromJSON(
@@ -579,6 +588,7 @@ export class Class_FluxTagGroup extends Class_TagGroup {
   ) {
     super._fromJSON(json_object, kwargs)
     this._carries_values = getBooleanFromJSON(json_object, 'carries_values', this._carries_values)
+    this._has_own_scales = getBooleanFromJSON(json_object, 'has_own_scales', this._has_own_scales)
   }
 
   // PROTECTED ATTRIBUTES ===============================================================
