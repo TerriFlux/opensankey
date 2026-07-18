@@ -101,6 +101,11 @@ export class Class_NodeElement extends Class_NodeBase {
   // by this factor (larger factor = shorter node). Default 1.
   public stock_height_scale_factor: number = 1
   public has_material_balance: boolean = true
+  // OS#1272 — Mode d'affichage du marqueur d'avertissement de bilan pour CE nœud.
+  // 'inherit' suit le réglage global (drawing_area.balance_marker_enabled) ;
+  // 'on'/'off' forcent l'affichage/masquage. Contrôle VISUEL, DISTINCT de
+  // has_material_balance (contrainte du solveur MFA). Défaut 'inherit'.
+  public balance_marker_mode: 'inherit' | 'on' | 'off' = 'inherit'
   public _stock_values: Class_StockValue | Class_ElementValueTree
 
   // Sankey unitaire : id du flux de référence choisi pour le mode « normalisé » quand
@@ -406,6 +411,7 @@ export class Class_NodeElement extends Class_NodeBase {
     this._nodeDrawNameLabel.refreshStickLayout()
     this.drawStockBox()
     this._drawStockShape()
+    this.drawBalanceMarker()
   }
 
   /**
@@ -2421,6 +2427,113 @@ export class Class_NodeElement extends Class_NodeBase {
     if (fmt_in === fmt_out) return fmt_in
     return fmt_in + '\u2192' + fmt_out
   }
+
+  // OS#1272 \u2014 MARQUEUR VISUEL DE BILAN (\u03a3 entr\u00e9e \u2260 \u03a3 sortie) =========================
+  // Contr\u00f4le d'AFFICHAGE l\u00e9ger, distinct de la contrainte de r\u00e9conciliation
+  // has_material_balance. Les sommes r\u00e9utilisent exactement les valeurs RENDUES
+  // (m\u00eames filtres de visibilit\u00e9 que _computeValueLabelText, valeur ARRIV\u00c9E c\u00f4t\u00e9
+  // entr\u00e9e / valeur PARTIE c\u00f4t\u00e9 sortie). Comme ces valeurs d\u00e9pendent d\u00e9j\u00e0 de
+  // l'unit\u00e9/datatag s\u00e9lectionn\u00e9(e), le bilan est de fait \u00ab par type d'unit\u00e9 \u00bb.
+
+  /**
+   * Somme des valeurs de flux VISIBLES entrant et sortant du n\u0153ud, au datatag/unit\u00e9
+   * courant. C\u00f4t\u00e9 entr\u00e9e : valeur arrivant \u00e0 la cible (valueCurrentTarget ?? valueCurrent).
+   * C\u00f4t\u00e9 sortie : valeur quittant la source (valueCurrent).
+   */
+  public getFluxBalance(): { input: number, output: number, diff: number, has_in: boolean, has_out: boolean } {
+    const visible = (l: Class_LinkElement) => l.is_visible
+    const visible_user = (l: Class_LinkElement) => l.is_visible_ignoring_container_modes
+    const has_any_visible =
+      this.input_links_list.some(visible) || this.output_links_list.some(visible)
+    const filt = has_any_visible ? visible : visible_user
+
+    const link_in = this.input_links_list.filter(filt)
+    const link_out = this.output_links_list.filter(filt)
+    let input = 0
+    link_in.forEach(l => { input += (l.valueCurrentTarget ?? l.valueCurrent) ?? 0 })
+    let output = 0
+    link_out.forEach(l => { output += l.valueCurrent ?? 0 })
+    return {
+      input, output, diff: input - output,
+      has_in: link_in.length > 0, has_out: link_out.length > 0
+    }
+  }
+
+  /** Marqueur de bilan effectivement actif pour ce n\u0153ud (override par n\u0153ud sinon global). */
+  public get balance_marker_effective_enabled(): boolean {
+    if (this.balance_marker_mode === 'on') return true
+    if (this.balance_marker_mode === 'off') return false
+    return this.drawing_area.balance_marker_enabled
+  }
+
+  /**
+   * \u00c9tat du bilan du n\u0153ud si le marqueur est actif ET que le n\u0153ud porte des flux des
+   * DEUX c\u00f4t\u00e9s (un pur puits/source n'a pas de bilan \u00e0 v\u00e9rifier). null sinon (rien \u00e0
+   * signaler). `violated` selon la strat\u00e9gie/tol\u00e9rance globale de la zone de dessin.
+   */
+  public get balance_status(): { input: number, output: number, diff: number, violated: boolean } | null {
+    if (!this.balance_marker_effective_enabled) return null
+    const b = this.getFluxBalance()
+    if (!b.has_in || !b.has_out) return null
+    const abs_diff = Math.abs(b.diff)
+    const strategy = this.drawing_area.balance_marker_strategy
+    const tol = this.drawing_area.balance_marker_tolerance
+    let violated: boolean
+    if (strategy === 'absolute') {
+      violated = abs_diff > tol
+    } else if (strategy === 'relative') {
+      const ref = Math.max(Math.abs(b.input), Math.abs(b.output))
+      violated = ref > 0 ? abs_diff > (tol / 100) * ref : abs_diff > 1e-9
+    } else {
+      // 'exact' : toute diff\u00e9rence non nulle (epsilon anti-bruit flottant).
+      violated = abs_diff > 1e-9
+    }
+    return { input: b.input, output: b.output, diff: b.diff, violated }
+  }
+
+  /**
+   * Dessine (ou retire) le marqueur d'avertissement \u00ab \u26a0 \u00bb dans le coin haut-droit
+   * de la forme lorsque le bilan entr\u00e9e/sortie n'est pas respect\u00e9. Idempotent :
+   * nettoie toujours le marqueur pr\u00e9c\u00e9dent ; ne dessine rien si le marqueur est
+   * inactif, le n\u0153ud sans double flux, ou le bilan respect\u00e9. Un <title> SVG donne
+   * entr\u00e9e / sortie / diff\u00e9rence au survol direct de l'ic\u00f4ne.
+   */
+  public drawBalanceMarker() {
+    this.d3_selection?.selectAll('.node_balance_marker').remove()
+    if (!this.d3_selection) return
+    const status = this.balance_status
+    if (!status || !status.violated) return
+
+    const w = this.getShapeWidthToUse() + this.shape_margin_right
+    // Police en px \u00e9cran en mode verrouill\u00e9 : pr\u00e9compens\u00e9e par font_compensation
+    // (1/k live) comme les labels/stock, sinon 1 en mode d\u00e9verrouill\u00e9.
+    const k_inv = this.drawing_area?.font_compensation ?? 1
+    const size = 16 * k_inv
+
+    const g = this.d3_selection.append('g').classed('node_balance_marker', true)
+    const marker = g.append('text')
+      .attr('x', w + 2 * k_inv)
+      .attr('y', -2 * k_inv)
+      .attr('text-anchor', 'start')
+      .attr('font-size', size)
+      .attr('fill', '#d97706')
+      .style('cursor', 'default')
+      .style('pointer-events', 'none')
+      .text('\u26a0')
+
+    // R\u00e9sum\u00e9 au survol de l'ic\u00f4ne (en plus du tooltip enrichi du n\u0153ud).
+    const app_data = this.drawing_area.application_data
+    const t = app_data?.t?.bind(app_data)
+    const label = (key: string, fallback: string) => (t ? (t(key) || fallback) : fallback)
+    const round = (n: number) => Math.round(n * 1000) / 1000
+    const title = [
+      `${label('Noeud.drawing_area_tooltip.inputs', 'Entr\u00e9es')} : ${round(status.input)}`,
+      `${label('Noeud.drawing_area_tooltip.outputs', 'Sorties')} : ${round(status.output)}`,
+      `${label('Noeud.drawing_area_tooltip.balance_diff', 'Diff\u00e9rence (E \u2212 S)')} : ${round(status.diff)}`
+    ].join('\n')
+    marker.append('title').text(title)
+  }
+
   public get selected_elements_list() {
     return this.sankey.drawing_area.selected_nodes_list
   }
