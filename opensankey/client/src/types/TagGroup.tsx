@@ -1,6 +1,6 @@
 import colormap from 'colormap'
 import { Class_LinkElement } from '../Elements/Link'
-import { Class_ElementValue, Class_ElementSubValue } from '../Elements/LinkValues'
+import { Class_ElementValue, Class_ElementTaggedValue } from '../Elements/LinkValues'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_Sankey } from './Sankey'
 import { tag_banner_type, Class_ProtoTag, Class_Tag, Class_NodeTag, Class_FluxTag, Class_DataTag, Class_LevelTag, Class_ViewTag } from './Tag'
@@ -438,7 +438,7 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
 
   // PUBLIC METHODS =====================================================================
   public updateTagsReferences(): void {
-    const ref_updated: (Class_NodeElement | Class_LinkElement | Class_ElementValue | Class_ElementSubValue)[] = []
+    const ref_updated: (Class_NodeElement | Class_LinkElement | Class_ElementValue | Class_ElementTaggedValue)[] = []
     Object.values(this._tags)
       .forEach(tag => {
         tag.references
@@ -716,7 +716,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   public updateTagsReferences(): void {
     // #284 — la sélection des dataTags change la feuille courante : les rubans
     // de sous-valeurs doivent suivre (création/suppression) avant le redraw.
-    this._ref_sankey.create_sub_value_child_links()
+    this._ref_sankey.create_tagged_value_child_links()
     // On datatags update everything is impacted
     this._ref_sankey.drawing_area.draw()
   }

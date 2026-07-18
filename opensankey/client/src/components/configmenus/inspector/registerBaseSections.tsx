@@ -46,6 +46,16 @@ const appearanceTab = (
   />
 )
 
+/**
+ * #285 — extensions de l'onglet VALEUR par une couche supérieure (clé = id,
+ * idempotent au re-init/hot reload). OSP y loge les tags du flux et les
+ * sous-valeurs : ils appartiennent aux données de valeur, pas à un onglet
+ * « Tags » séparé (décision UX 2026-07-17).
+ */
+export const inspector_value_tab_extras: {
+  [id: string]: (app_data: Class_ApplicationData, scope: string) => React.ReactNode
+} = {}
+
 export function registerBaseInspectorSections(): void {
   if (_registered) return
   _registered = true
@@ -91,6 +101,11 @@ export function registerBaseInspectorSections(): void {
         {scope === 'selection' && app_data.drawing_area.selected_links_list.length > 0 && (
           <MenuConfigurationLinksData app_data={app_data} hide_selector hide_origin_dest />
         )}
+        {/* #285 — extensions de couche supérieure (OSP : tags du flux +
+            sous-valeurs, à leur place parmi les données de valeur) */}
+        {Object.entries(inspector_value_tab_extras).map(([id, render_extra]) => (
+          <React.Fragment key={id}>{render_extra(app_data, scope)}</React.Fragment>
+        ))}
         {/* Bilan matière : contrainte de réconciliation du NŒUD (pas du stock),
             à sa place parmi les données de valeur. Se masque seul (AFM/nœuds). */}
         {scope === 'selection' && (

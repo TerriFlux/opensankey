@@ -362,7 +362,7 @@ export class Class_Sankey {
 
   public create_child_links() {
     this.create_data_tag_child_links()
-    this.create_sub_value_child_links()
+    this.create_tagged_value_child_links()
   }
 
   private create_data_tag_child_links() {
@@ -394,6 +394,41 @@ export class Class_Sankey {
   }
 
   /**
+   * #285 — bascule dimension→annotation SANS PERTE (NOTE-FUSION-TAGS.md §3.3) :
+   * le groupe de dataTags devient un groupe d'étiquettes libres (mêmes tags,
+   * mêmes couleurs), et sur chaque lien le niveau d'arbre correspondant est
+   * replié — chaque tranche devient des sous-valeurs coordonnées, la feuille
+   * fusionnée porte la somme des données. Les résultats de résolution des
+   * tranches sont abandonnés. Le sens inverse (annotation→dimension) attend
+   * l'arbitrage §6.2.
+   */
+  public convertDataTagGroupToFluxTagGroup(data_tagg: Class_DataTagGroup): Class_FluxTagGroup {
+    // 1) Groupe libre miroir (les dicts data/flux sont séparés : même id possible)
+    const flux_tagg = this.addFluxTagGroup(data_tagg.id, data_tagg.name, false)
+    data_tagg.tags_list.forEach(data_tag => {
+      const tag = flux_tagg.addTag(data_tag.name, data_tag.id)
+      tag.color = data_tag.color
+      tag.long_name = data_tag.long_name
+      tag.setSelected(false)
+    })
+    flux_tagg.use_colors = data_tagg.use_colors
+    // 2) Replier les arbres de valeurs (liens porteurs seulement, pas les
+    //    rubans). La valeur principale de chaque flux reste celle de la
+    //    tranche SÉLECTIONNÉE (valeurs non additives — pas de somme).
+    const tag_for = (tag_id: string) => flux_tagg.tags_dict[tag_id]
+    const selected_tag_id = data_tagg.selected_tags_list[0]?.id
+    this.links_list.forEach(l => {
+      if (l.is_multi_link) return
+      l.collapseDataTagGroup(data_tagg, tag_for, selected_tag_id)
+    })
+    // 3) Supprimer la dimension : prune() conserve la tranche fusionnée (la première)
+    this.removeTagGroupWithId('data_taggs', data_tagg.id)
+    // 4) Rubans : un par sous-valeur héritée
+    this.create_tagged_value_child_links()
+    return flux_tagg
+  }
+
+  /**
    * #284 — un ruban par sous-valeur de la feuille courante (NOTE-FUSION-TAGS.md
    * §3.0). Synchronise création ET suppression : les rubans dont la sous-valeur
    * n'existe plus dans la feuille courante (sous-valeur supprimée, ou feuille
@@ -401,16 +436,22 @@ export class Class_Sankey {
    * (bannière `multi`) sont prioritaires : un lien qui en porte n'expanse pas
    * ses sous-valeurs.
    */
-  public create_sub_value_child_links() {
+  public create_tagged_value_child_links() {
+    // 2026-07-18 — les valeurs multiples d'un flux ne sont PAS additives (ex.
+    // un jeu d'unités kWh/t/€) : l'éclatement en rubans parallèles est un CHOIX
+    // d'affichage, déclenché comme pour les dataTags par la bannière `multi`
+    // d'un groupe libre. Sans groupe multi, le flux affiche sa valeur
+    // principale, les autres valeurs restant visibles en tooltip/éditeur.
+    const expand = this.flux_taggs_list.some(tagg => tagg.banner === 'multi')
     this.links_list.forEach(l => {
       if (l.is_multi_link) return
       const has_data_tag_children = Object.values(l.child_links)
-        .some(child => !child.multi_link_sub_value)
-      const subs = has_data_tag_children ? [] : (l.value?.sub_values_list ?? [])
+        .some(child => !child.multi_link_tagged_value)
+      const subs = (has_data_tag_children || !expand) ? [] : (l.value?.tagged_values_list ?? [])
       // Suppression des rubans périmés
       Object.keys(l.child_links).forEach(key => {
         const child = l.child_links[key]
-        if (child.multi_link_sub_value && !subs.some(sub => sub.id === key)) {
+        if (child.multi_link_tagged_value && !subs.some(sub => sub.id === key)) {
           child.delete()
           delete l.child_links[key]
         }
@@ -420,7 +461,7 @@ export class Class_Sankey {
         if (sub.id in l.child_links) return
         const child_link = this.addNewLink(l.source, l.target)
         child_link.copyFrom(l)
-        l.addChildLinkForSubValue(child_link, sub)
+        l.addChildLinkForTaggedValue(child_link, sub)
       })
     })
   }

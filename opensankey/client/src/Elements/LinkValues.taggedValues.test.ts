@@ -50,13 +50,13 @@ describe('is_dimension — concept unifié des groupes de tags de flux', () => {
   })
 })
 
-describe('Class_ElementSubValue — coordonnée éparse', () => {
+describe('Class_ElementTaggedValue — coordonnée éparse', () => {
   it('holds at most one tag per group (same-group add replaces)', () => {
     const matiere = makeFluxGroup('matiere', [['acier', 'Acier'], ['cuivre', 'Cuivre']])
     const transport = makeFluxGroup('transport', [['route', 'Route'], ['rail', 'Rail']])
     const value = new Class_ElementValue(fakeLink)
 
-    const sub = value.addSubValue()
+    const sub = value.addTaggedValue()
     sub.value = 6
     sub.addTag(matiere.tags_dict['acier'])
     sub.addTag(transport.tags_dict['route'])
@@ -73,28 +73,28 @@ describe('Class_ElementSubValue — coordonnée éparse', () => {
     const matiere = makeFluxGroup('matiere2', [['acier', 'Acier'], ['cuivre', 'Cuivre']])
     const value = new Class_ElementValue(fakeLink)
 
-    const sub1 = value.addSubValue()
+    const sub1 = value.addTaggedValue()
     sub1.value = 6
     sub1.addTag(matiere.tags_dict['acier'])
-    const sub2 = value.addSubValue()
+    const sub2 = value.addTaggedValue()
     sub2.value = 4
     sub2.addTag(matiere.tags_dict['cuivre'])
 
-    expect(value.sub_values_list).toHaveLength(2)
-    expect(value.sub_values_list.map(s => s.value)).toEqual([6, 4])
+    expect(value.tagged_values_list).toHaveLength(2)
+    expect(value.tagged_values_list.map(s => s.value)).toEqual([6, 4])
   })
 
   it('serializes and deserializes through value JSON', () => {
     const matiere = makeFluxGroup('matiere3', [['acier', 'Acier']])
     const transport = makeFluxGroup('transport3', [['rail', 'Rail']])
     const value = new Class_ElementValue(fakeLink)
-    const sub = value.addSubValue('sub_a')
+    const sub = value.addTaggedValue('sub_a')
     sub.value = 6
     sub.addTag(matiere.tags_dict['acier'])
     sub.addTag(transport.tags_dict['rail'])
 
     const json = value.toJSON()
-    expect(json['sub_values']).toEqual([
+    expect(json['tagged_values']).toEqual([
       { id: 'sub_a', value: 6, tags: { matiere3: 'acier', transport3: 'rail' } },
     ])
 
@@ -104,8 +104,8 @@ describe('Class_ElementSubValue — coordonnée éparse', () => {
     env2.makeFluxGroup('transport3', [['rail', 'Rail']])
     const reloaded = new Class_ElementValue(env2.link)
     reloaded.fromJSON(json)
-    expect(reloaded.sub_values_list).toHaveLength(1)
-    const rsub = reloaded.sub_values_list[0]
+    expect(reloaded.tagged_values_list).toHaveLength(1)
+    const rsub = reloaded.tagged_values_list[0]
     expect(rsub.id).toBe('sub_a')
     expect(rsub.value).toBe(6)
     expect(rsub.tags_list.map(t => t.id).sort()).toEqual(['acier', 'rail'])
@@ -114,7 +114,7 @@ describe('Class_ElementSubValue — coordonnée éparse', () => {
   it('tag deletion detaches it from sub-values', () => {
     const matiere = makeFluxGroup('matiere4', [['acier', 'Acier'], ['cuivre', 'Cuivre']])
     const value = new Class_ElementValue(fakeLink)
-    const sub = value.addSubValue()
+    const sub = value.addTaggedValue()
     sub.addTag(matiere.tags_dict['acier'])
     sub.addTag(matiere.tags_dict['cuivre']) // remplace acier
 
@@ -127,21 +127,21 @@ describe('Class_ElementSubValue — coordonnée éparse', () => {
     const matiere = makeFluxGroup('matiere5', [['acier', 'Acier']])
     const acier = matiere.tags_dict['acier']
     const value = new Class_ElementValue(fakeLink)
-    const sub = value.addSubValue()
+    const sub = value.addTaggedValue()
     sub.value = 3
     sub.addTag(acier)
 
     const copy = new Class_ElementValue(fakeLink)
     copy.copyFrom(value)
-    expect(copy.sub_values_list).toHaveLength(1)
-    expect(copy.sub_values_list[0].value).toBe(3)
-    expect(copy.sub_values_list[0].tags_list.map(t => t.id)).toEqual(['acier'])
+    expect(copy.tagged_values_list).toHaveLength(1)
+    expect(copy.tagged_values_list[0].value).toBe(3)
+    expect(copy.tagged_values_list[0].tags_list.map(t => t.id)).toEqual(['acier'])
 
     // La suppression de la valeur d'origine détache SES sous-valeurs du tag,
     // sans toucher celles de la copie.
     value.delete()
-    expect(value.sub_values_list).toHaveLength(0)
-    expect(copy.sub_values_list[0].tags_list.map(t => t.id)).toEqual(['acier'])
+    expect(value.tagged_values_list).toHaveLength(0)
+    expect(copy.tagged_values_list[0].tags_list.map(t => t.id)).toEqual(['acier'])
     expect(acier.references).toHaveLength(1)
   })
 })

@@ -285,6 +285,97 @@ export class Class_ElementValueTree {
     if (id) this.removeChildFromDataTagId(id)
   }
 
+  /**
+   * #285 — replie le niveau d'arbre du groupe donné SANS PERTE avant un
+   * prune(group) : chaque tranche (feuille sous un tag du groupe) est
+   * « remontée » en valeurs coordonnées par le tag libre correspondant, puis
+   * les valeurs des autres tranches sont transférées dans la tranche
+   * SÉLECTIONNÉE, qui est placée en première position (celle que prune()
+   * conserve). Les valeurs des flux n'étant pas additives (2026-07-18, ex.
+   * unités parallèles), la valeur principale du flux reste celle de la tranche
+   * sélectionnée — pas une somme. Les résultats de résolution des autres
+   * tranches sont abandonnés.
+   */
+  public collapseGroup(
+    group: Class_DataTagGroup,
+    tag_for: (tag_id: string) => Class_Tag | undefined,
+    selected_tag_id: string | undefined = undefined
+  ) {
+    if (this.data_tag_group === group) {
+      const keys = Object.keys(this.children)
+      if (keys.length === 0) return
+      const sel_key = (selected_tag_id && keys.includes(selected_tag_id)) ? selected_tag_id : keys[0]
+      keys.forEach(key => this._liftSlice(this.children[key], tag_for(key)))
+      const selected = this.children[sel_key]
+      keys.filter(key => key !== sel_key)
+        .forEach(key => this._mergeSliceInto(selected, this.children[key]))
+      // prune() conserve la PREMIÈRE clé : y placer la tranche sélectionnée
+      if (sel_key !== keys[0]) {
+        const first = this.children[keys[0]]
+        this.children[keys[0]] = selected
+        this.children[sel_key] = first
+      }
+    }
+    else {
+      Object.values(this.children)
+        .forEach(child => {
+          if (child instanceof Class_ElementValueTree) child.collapseGroup(group, tag_for, selected_tag_id)
+        })
+    }
+  }
+
+  /**
+   * Annote une tranche avec son tag libre : les sous-valeurs existantes
+   * reçoivent la coordonnée en plus ; une feuille sans sous-valeur mais avec
+   * une donnée devient une sous-valeur unique portant cette donnée.
+   */
+  private _liftSlice(
+    node: Class_ElementValue | Class_ElementValueTree,
+    tag: Class_Tag | undefined
+  ) {
+    if (node instanceof Class_ElementValueTree) {
+      Object.values(node.children).forEach(child => this._liftSlice(child, tag))
+      return
+    }
+    if (node.has_tagged_values) {
+      if (tag) node.tagged_values_list.forEach(sub => sub.addTag(tag))
+      return
+    }
+    if (node instanceof Class_LinkValue) {
+      const v = node.valueData ?? node.valueResult
+      if (v !== null) {
+        const sub = node.addTaggedValue()
+        sub.value = v
+        if (tag) tag.addReference(sub)
+      }
+    }
+  }
+
+  /**
+   * Fusionne la tranche source dans la cible (feuille à feuille) : transfert
+   * des valeurs coordonnées UNIQUEMENT — les scalaires de la cible (tranche
+   * sélectionnée) sont conservés tels quels, pas de somme (valeurs non
+   * additives).
+   */
+  private _mergeSliceInto(
+    target: Class_ElementValue | Class_ElementValueTree,
+    source: Class_ElementValue | Class_ElementValueTree
+  ) {
+    if ((target instanceof Class_ElementValueTree) && (source instanceof Class_ElementValueTree)) {
+      Object.keys(source.children).forEach(key => {
+        if (target.children[key] !== undefined)
+          this._mergeSliceInto(target.children[key], source.children[key])
+      })
+      return
+    }
+    if ((target instanceof Class_ElementValue) && (source instanceof Class_ElementValue)) {
+      // Transfert des valeurs coordonnées (déjà étiquetées par _liftSlice)
+      source.tagged_values_list.forEach(sub => {
+        target.addTaggedValue().copyFrom(sub)
+      })
+    }
+  }
+
   public getValueForDataTags(data_tags: Class_DataTag[]): Class_ElementValue | null {
     if (data_tags.length === 0) return null
     const matching_tags = data_tags.filter(tag => (tag.group === this.data_tag_group))
@@ -503,7 +594,7 @@ export class Class_ElementValue {
   // feuille sans sous-valeur explicite équivaut à une unique sous-valeur
   // implicite portant toute la quantité avec les tags de la feuille
   // (_flux_tags). La somme des sous-valeurs n'est PAS contrainte par le modèle.
-  private _sub_values: Class_ElementSubValue[] = []
+  private _tagged_values: Class_ElementTaggedValue[] = []
   private _is_currently_deleted = false
 
   // CONSTRUCTOR ========================================================================
@@ -532,8 +623,8 @@ export class Class_ElementValue {
       this.flux_tags_list.forEach(tag => tag.removeReference(this))
       this._flux_tags = []
       this._taggs_dict = {}
-      this._sub_values.slice().forEach(sub => sub.delete())
-      this._sub_values = []
+      this._tagged_values.slice().forEach(sub => sub.delete())
+      this._tagged_values = []
     }
   }
 
@@ -561,11 +652,11 @@ export class Class_ElementValue {
         flux_tag.addReference(this)
       })
     // Sub-values (#284)
-    this._sub_values.slice().forEach(sub => sub.delete())
-    this._sub_values = []
-    element.sub_values_list
+    this._tagged_values.slice().forEach(sub => sub.delete())
+    this._tagged_values = []
+    element.tagged_values_list
       .forEach(sub => {
-        this.addSubValue().copyFrom(sub)
+        this.addTaggedValue().copyFrom(sub)
       })
   }
 
@@ -587,8 +678,8 @@ export class Class_ElementValue {
               .map(tag => tag.id)
           ]))
     }
-    if (this._sub_values.length > 0) {
-      json_object['sub_values'] = this._sub_values.map(sub => sub.toJSON()) as unknown as Type_JSON
+    if (this._tagged_values.length > 0) {
+      json_object['tagged_values'] = this._tagged_values.map(sub => sub.toJSON()) as unknown as Type_JSON
     }
     return json_object
   }
@@ -618,12 +709,12 @@ export class Class_ElementValue {
           .forEach(tag => this.addTag(tag))
       })
     // Sub-values (#284)
-    const sub_values_json = json_object['sub_values']
-    if (Array.isArray(sub_values_json)) {
-      sub_values_json
+    const tagged_values_json = json_object['tagged_values']
+    if (Array.isArray(tagged_values_json)) {
+      tagged_values_json
         .filter(sub_json => typeof sub_json === 'object' && sub_json !== null)
         .forEach(sub_json => {
-          this.addSubValue().fromJSON(sub_json as Type_JSON)
+          this.addTaggedValue().fromJSON(sub_json as Type_JSON)
         })
     }
   }
@@ -668,23 +759,23 @@ export class Class_ElementValue {
   }
 
   // SUB-VALUES (#284) ==================================================================
-  public addSubValue(id: string | undefined = undefined): Class_ElementSubValue {
-    const sub = new Class_ElementSubValue(this, id)
-    this._sub_values.push(sub)
+  public addTaggedValue(id: string | undefined = undefined): Class_ElementTaggedValue {
+    const sub = new Class_ElementTaggedValue(this, id)
+    this._tagged_values.push(sub)
     return sub
   }
 
-  public removeSubValue(sub: Class_ElementSubValue) {
-    const idx = this._sub_values.indexOf(sub)
+  public removeTaggedValue(sub: Class_ElementTaggedValue) {
+    const idx = this._tagged_values.indexOf(sub)
     if (idx >= 0) {
-      this._sub_values.splice(idx, 1)
+      this._tagged_values.splice(idx, 1)
       sub.delete()
     }
   }
 
-  public get sub_values_list(): Class_ElementSubValue[] { return [...this._sub_values] }
+  public get tagged_values_list(): Class_ElementTaggedValue[] { return [...this._tagged_values] }
 
-  public get has_sub_values(): boolean { return this._sub_values.length > 0 }
+  public get has_tagged_values(): boolean { return this._tagged_values.length > 0 }
 
   public get has_result(): boolean { return false }
   public get has_intervals(): boolean { return false }
@@ -797,9 +888,9 @@ export class Class_ElementValue {
  * dupliquer le lien (ex. A→B = 6 {acier, route} + 4 {cuivre, rail}).
  *
  * @export
- * @class Class_ElementSubValue
+ * @class Class_ElementTaggedValue
  */
-export class Class_ElementSubValue {
+export class Class_ElementTaggedValue {
 
   // PUBLIC ATTRIBUTES ==================================================================
   public parent: Class_ElementValue
@@ -825,12 +916,12 @@ export class Class_ElementSubValue {
       this._is_currently_deleted = true
       this._tags.slice().forEach(tag => tag.removeReference(this))
       this._tags = []
-      this.parent.removeSubValue(this)
+      this.parent.removeTaggedValue(this)
     }
   }
 
   // COPY METHODS =======================================================================
-  public copyFrom(sub_to_copy: Class_ElementSubValue) {
+  public copyFrom(sub_to_copy: Class_ElementTaggedValue) {
     this._value = sub_to_copy._value
     this._tags.slice().forEach(tag => tag.removeReference(this))
     this._tags = []
