@@ -47,11 +47,13 @@ export { deduceRepr }
 export type Type_ChartPart = Type_StatSlice
 
 // Une série regroupe des parts comparables entre elles (ex. une année, un scénario).
-// Sans axe de comparaison, il y a une série unique de label vide.
+// Sans axe de comparaison, il y a une série unique de label vide. `color` = couleur
+// du tag de la série (axe de comparaison) : sert aux barres « comparaison pure ».
 export interface Type_ChartSerie {
   id: string
   label: string
   parts: Type_ChartPart[]
+  color?: string
 }
 
 export interface Type_AnalysisChartData {
@@ -65,13 +67,9 @@ export interface Type_AnalysisChartData {
 // ci-dessus. Pilote les quatre surfaces (inspecteur, tooltip, camembert sur nœud,
 // zone canevas).
 
-export interface Type_ExtractOptions {
-  // Couleurs du diagramme imposées aux parts (surface « sur le nœud » : le graphique
-  // fait partie du langage visuel du diagramme). Défaut : false → palette
-  // catégorielle propre au moteur de rendu (lisibilité des surfaces détachées).
-  // Le regroupement par fluxTag utilise TOUJOURS les couleurs des tags.
-  use_diagram_colors?: boolean
-}
+// Couleurs : TOUJOURS celles du modèle (couleur du nœud d'en face, du nœud enfant,
+// du fluxTag, du dataTag) — jamais une palette arbitraire. Le moteur de rendu ne
+// retombe sur une couleur générée qu'en dernier recours (élément sans couleur).
 
 // Sujet du graphique : un nœud ou un flux.
 export type Type_ChartSubject =
@@ -91,8 +89,7 @@ const linkCarriesTag = (link: Class_LinkElement, tag_id: string): boolean =>
 const decomposeNodeFlows = (
   node: Class_NodeElement,
   side: 'inputs' | 'outputs',
-  group_by: Class_FluxTagGroup | undefined,
-  opts: Type_ExtractOptions
+  group_by: Class_FluxTagGroup | undefined
 ): Type_ChartPart[] => {
   const links = (side === 'inputs' ? node.input_links_list : node.output_links_list)
     .filter(l => l.is_visible) as Class_LinkElement[]
@@ -113,7 +110,7 @@ const decomposeNodeFlows = (
       .filter(p => p.value > 0)
   }
 
-  // Défaut : une part par flux, libellée par le nœud d'en face.
+  // Défaut : une part par flux, libellée ET colorée par le nœud d'en face.
   return links
     .map(l => {
       const other = side === 'inputs' ? l.source : l.target
@@ -121,7 +118,7 @@ const decomposeNodeFlows = (
         id: l.id,
         label: other.name,
         value: l.valueCurrent ?? 0,
-        color: opts.use_diagram_colors ? l.getShapeColorToUse() : undefined
+        color: other.getShapeColorToUse()
       }
     })
     .filter(p => p.value > 0)
@@ -129,8 +126,7 @@ const decomposeNodeFlows = (
 
 const decomposeNodeChildren = (
   node: Class_NodeElement,
-  dimension_id: string,
-  opts: Type_ExtractOptions
+  dimension_id: string
 ): Type_ChartPart[] => {
   const dim = node.dimensions_as_parent.find(d => d.id === dimension_id)
   if (!dim) return []
@@ -139,15 +135,14 @@ const decomposeNodeChildren = (
       id: child.id,
       label: child.name,
       value: child.data_value,
-      color: opts.use_diagram_colors ? child.getShapeColorToUse() : undefined
+      color: child.getShapeColorToUse()
     }))
     .filter(p => p.value > 0)
 }
 
 const decomposeFluxChildren = (
   link: Class_LinkElement,
-  dimension_id: string,
-  opts: Type_ExtractOptions
+  dimension_id: string
 ): Type_ChartPart[] => {
   // Flux enfants : les liens de grain plus fin qui composent le flux agrégé le long
   // de la dimension. On NE filtre PAS sur is_visible : quand l'agrégat est affiché,
@@ -176,7 +171,7 @@ const decomposeFluxChildren = (
         id: l.id,
         label: `${l.source.name} → ${l.target.name}`,
         value: l.valueCurrent ?? 0,
-        color: opts.use_diagram_colors ? l.getShapeColorToUse() : undefined
+        color: l.getShapeColorToUse()
       })
     })
   })
@@ -187,8 +182,7 @@ const decomposeFluxChildren = (
 // s'applique pas au sujet (ex. inputs sur un flux).
 const decomposeSubject = (
   subject: Type_ChartSubject,
-  spec: Type_DecomposeSpec,
-  opts: Type_ExtractOptions
+  spec: Type_DecomposeSpec
 ): Type_ChartPart[] => {
   if (subject.kind === 'node') {
     const node = subject.node
@@ -196,16 +190,16 @@ const decomposeSubject = (
       const group_by = spec.group_by_flux_tagg_id
         ? (node.sankey.flux_taggs_dict[spec.group_by_flux_tagg_id] as Class_FluxTagGroup | undefined)
         : undefined
-      return decomposeNodeFlows(node, spec.kind, group_by, opts)
+      return decomposeNodeFlows(node, spec.kind, group_by)
     }
     if (spec.kind === 'node_children') {
-      return decomposeNodeChildren(node, spec.dimension_id, opts)
+      return decomposeNodeChildren(node, spec.dimension_id)
     }
     return []
   }
   // Sujet flux : seule la décomposition en flux enfants a un sens.
   if (spec.kind === 'flux_children') {
-    return decomposeFluxChildren(subject.link, spec.dimension_id, opts)
+    return decomposeFluxChildren(subject.link, spec.dimension_id)
   }
   return []
 }
@@ -232,8 +226,7 @@ const subjectLabel = (subject: Type_ChartSubject): string =>
  */
 export const buildAnalysisChartData = (
   subject: Type_ChartSubject,
-  descriptor: Type_AnalysisDescriptor,
-  opts: Type_ExtractOptions = {}
+  descriptor: Type_AnalysisDescriptor
 ): Type_AnalysisChartData => {
   const sankey = subject.kind === 'node' ? subject.node.sankey : subject.link.sankey
   const has_decompose = descriptor.decompose != null
@@ -243,7 +236,7 @@ export const buildAnalysisChartData = (
   // du sujet (comparaison pure).
   const partsAtCurrentTag = (): Type_ChartPart[] => {
     if (descriptor.decompose) {
-      return decomposeSubject(subject, descriptor.decompose, opts)
+      return decomposeSubject(subject, descriptor.decompose)
     }
     const v = subjectValue(subject)
     return v > 0 ? [{ id: subject.kind === 'node' ? subject.node.id : subject.link.id, label: subjectLabel(subject), value: v }] : []
@@ -260,14 +253,16 @@ export const buildAnalysisChartData = (
   }
 
   // Balayage transitoire : on désélectionne tout le groupe, on sélectionne chaque
-  // tag à tour de rôle, on lit, on restaure la sélection initiale à la fin.
+  // tag à tour de rôle, on lit, on restaure la sélection initiale à la fin. La
+  // série (et, en comparaison pure, sa part unique) prend la COULEUR DU DATATAG.
   const initially_selected = tagg.tags_list.filter(t => t.is_selected)
   tagg.tags_list.forEach(t => t.setUnSelected())
   const series: Type_ChartSerie[] = tagg.tags_list.map(tag => {
     tag.setSelected()
     const parts = partsAtCurrentTag()
     tag.setUnSelected()
-    return { id: tag.id, label: tag.name, parts }
+    if (!descriptor.decompose) parts.forEach(p => { p.color = tag.color })
+    return { id: tag.id, label: tag.name, parts, color: tag.color }
   })
   initially_selected.forEach(t => t.setSelected())
 

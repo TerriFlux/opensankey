@@ -262,16 +262,16 @@ export const AnalysisChartInspector = ({ app_data, scope }: { app_data: Class_Ap
         <Text as="span" style={{ fontSize: '0.75rem' }}>Afficher dans l'info-bulle</Text>
       </Checkbox>
 
-      {/* « Afficher sur le nœud » : le nœud est dessiné en camembert (décomposition
-          seule, couleurs du diagramme). Réservé au sujet nœud avec une décomposition. */}
+      {/* « Afficher sur le nœud » : le nœud est dessiné en couronne ou histogramme
+          selon le choix ci-dessus (couleurs du modèle). Réservé au sujet nœud. */}
       {subject.kind === 'node' && (
         <Checkbox
           size="sm"
           isChecked={show_on_node}
-          isDisabled={!effective.decompose}
+          isDisabled={isDescriptorEmpty(effective)}
           onChange={e => setOnNode(e.target.checked)}
         >
-          <Text as="span" style={{ fontSize: '0.75rem' }}>Afficher sur le nœud (camembert)</Text>
+          <Text as="span" style={{ fontSize: '0.75rem' }}>Afficher sur le nœud (couronne / histogramme)</Text>
         </Checkbox>
       )}
 

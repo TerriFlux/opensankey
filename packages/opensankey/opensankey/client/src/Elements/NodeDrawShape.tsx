@@ -98,9 +98,10 @@ export class NodeDrawShape {
     // Clean previous shape and its associated clip-path wrapper
     this._node.d3_selection_g_shape?.selectAll('.node_shape').remove()
     this._node.d3_selection_g_shape?.selectAll('.node_border_clip_def').remove()
-    // OS#1278 — nettoyer un éventuel camembert précédent (le nœud a pu repasser de
-    // « camembert » à forme normale : sa suppression ne passe pas par .node_shape).
-    this._node.d3_selection_g_shape?.selectAll('.node_analysis_pie').remove()
+    // OS#1278 — nettoyer un éventuel graphique sur nœud précédent (le nœud a pu
+    // repasser de « couronne/histogramme » à forme normale : sa suppression ne
+    // passe pas par .node_shape).
+    this._node.d3_selection_g_shape?.selectAll('.node_analysis_chart').remove()
 
     // Do the rest only if shape is visible
     // Compute shape attributes

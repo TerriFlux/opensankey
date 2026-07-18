@@ -19,9 +19,9 @@ import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { Class_DrawingAreaOSP, DrawingAreaPersistenceOSP } from '../types/DrawingAreaOSP'
 import { createUnitarySankeyDetached, refocusUnitaryDrawingArea, UnitaryValueMode } from './UnitaryBoard'
 import { loadExcelFileAsSankeyJSON } from './SankeyPlusViews'
-import { drawNodePieOnGroup } from '@terriflux/opensankey/src/Charts/NodeStatsCharts'
+import { drawNodeDonutOnGroup, drawNodeBarsOnGroup } from '@terriflux/opensankey/src/Charts/NodeStatsCharts'
 import { drawAnalysisChart } from './AnalysisChartRender'
-import { buildAnalysisChartData } from './AnalysisChartData'
+import { buildAnalysisChartData, deduceRepr } from './AnalysisChartData'
 import { Type_AnalysisDescriptor } from '@terriflux/opensankey/src/Charts/AnalysisDescriptor'
 
 // Conteneur DOM (id fixe) de la zone de dessin du panneau unitaire singleton.
@@ -192,16 +192,22 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
     return { redraw: draw, cleanup: () => { el.innerHTML = '' } }
   }
 
-  // Hook consommé par NodeDrawShape (OS#1278) : dessine le nœud EN CAMEMBERT quand
-  // son descripteur a surfaces.on_node. Décomposition SEULE (pas de comparaison sur
-  // une forme de nœud) ; couleurs du DIAGRAMME (use_diagram_colors).
+  // Hook consommé par NodeDrawShape (OS#1278) : dessine le nœud EN COURONNE ou EN
+  // HISTOGRAMME selon le choix de la fenêtre d'analyse (descripteur). Peut porter
+  // sur les dataTags (comparaison → barres) autant que sur une décomposition.
+  // Couleurs TOUJOURS du modèle.
   app_data.draw_node_analysis_overlay = (node: Class_NodeElement, group_el: SVGGElement, width: number, height: number) => {
     const descriptor = node.getElementProperty('analysis_descriptor') as Type_AnalysisDescriptor | undefined
-    if (!descriptor?.decompose) return
-    const data = buildAnalysisChartData({ kind: 'node', node }, { decompose: descriptor.decompose, compare: null }, { use_diagram_colors: true })
-    const parts = data.series[0]?.parts ?? []
-    const radius = Math.min(width, height) / 2
-    drawNodePieOnGroup(group_el, parts, { cx: width / 2, cy: height / 2, radius })
+    if (!descriptor || (!descriptor.decompose && !descriptor.compare)) return
+    const data = buildAnalysisChartData({ kind: 'node', node }, descriptor)
+    const geom = { width, height }
+    // Couronne seulement pour une décomposition pure sans override barres ; sinon
+    // histogramme (comparaison pure, croisement, ou override).
+    if (deduceRepr(descriptor) === 'donut') {
+      drawNodeDonutOnGroup(group_el, data.series[0]?.parts ?? [], geom)
+    } else {
+      drawNodeBarsOnGroup(group_el, data.series, geom)
+    }
   }
 
   const node_id = node?.id

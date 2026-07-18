@@ -31,9 +31,9 @@ export const drawAnalysisChart = (
     // Croisement → histogramme empilé (barre = série, empilement = décomposition).
     drawStackedBarChart(el, data.series, opts)
   } else if (descriptor.compare) {
-    // Comparaison pure → une barre par série (valeur du sujet par tag).
+    // Comparaison pure → une barre par série (valeur du sujet par tag), couleur du tag.
     const slices = data.series
-      .map(s => ({ id: s.id, label: s.label, value: s.parts[0]?.value ?? 0 }))
+      .map(s => ({ id: s.id, label: s.label, value: s.parts[0]?.value ?? 0, color: s.color }))
       .filter(s => s.value > 0)
     drawBarChart(el, slices, opts)
   } else {
