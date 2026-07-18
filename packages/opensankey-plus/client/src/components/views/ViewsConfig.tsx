@@ -17,7 +17,6 @@ import {
 // OpenSankey Libs
 import { useModelBinding } from '@terriflux/opensankey/src/hooks/useModelBinding'
 import { default_main_sankey_id } from '@terriflux/opensankey/src/types/Utils'
-import { WrapperBoxSubSectionMenu } from '@terriflux/opensankey/src/components/configmenus/MenuCommon'
 import { Class_DrawingAreaOSP } from '../../types/DrawingAreaOSP'
 import { Class_ApplicationDataOSP } from '../../types/ApplicationDataOSP'
 import { SelecteurView } from './SelecteurView'
@@ -53,8 +52,23 @@ export const ViewsConfig = (
 
   // Popover used to select a view or master we want to take the layout from. (color,font-size,position,...)
 
-  return <WrapperBoxSubSectionMenu new_data={app_data} title={t('view.storytelling')}>
-    <Box layerStyle='menuconfigpanel_grid'>
+  // #1283 — Vues est un onglet d'inspecteur (plus de titre « Vues » redondant) et
+  // partage la grammaire compacte de l'édition en place : boutons carrés, inputs
+  // xs, en-têtes discrets, cellules serrées.
+  const compact_sx = {
+    fontSize: '0.7rem',
+    '& th': {
+      fontSize: '0.56rem', letterSpacing: 0, textTransform: 'none',
+      padding: '0.1rem 0.3rem', height: 'auto', color: 'gray.500'
+    },
+    '& td': { padding: '0.1rem 0.25rem' },
+    '& button': {
+      minWidth: '1.4rem', width: '1.4rem', height: '1.4rem', padding: 0, fontSize: '0.7rem'
+    },
+    '& button svg': { width: '0.8rem', height: '0.8rem' },
+    '& input': { height: '1.4rem', minHeight: 'unset', fontSize: '0.7rem', paddingInline: '0.3rem' }
+  }
+  return <Box layerStyle='menuconfigpanel_grid' sx={compact_sx}>
 
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name' >
@@ -152,6 +166,4 @@ export const ViewsConfig = (
         </Tbody>
       </Table>
     </Box>
-
-  </WrapperBoxSubSectionMenu>
 }
