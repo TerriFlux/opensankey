@@ -281,6 +281,34 @@ export const NODE_MENU_CONFIG: MenuConfig = {
             { type: 'button', actionName: 'alignVertMaxCenter' },
             { type: 'button', actionName: 'alignVertMaxBottom' }
           ]
+        },
+        // #1274 lot E2 — répartir à distance égale (≥ 3 éléments) et caler la taille.
+        {
+          type: 'submenu',
+          titleKey: 'distribute',
+          visibilityConditions: [
+            {
+              type: 'custom',
+              customCheck: (app_data) =>
+                app_data.drawing_area.selected_nodes_list.length +
+                app_data.drawing_area.selected_containers_list.length > 2
+            }
+          ],
+          children: [
+            { type: 'button', actionName: 'distributeHorizontal' },
+            { type: 'button', actionName: 'distributeVertical' }
+          ]
+        },
+        {
+          type: 'button',
+          actionName: 'matchSizeToRef',
+          visibilityConditions: [
+            {
+              type: 'custom',
+              customCheck: (app_data) =>
+                app_data.drawing_area.selected_nodes_list.length > 1
+            }
+          ]
         }
       ]
     },
@@ -668,6 +696,29 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       undoable: true,
       closeMenuAfter: true
     },
+    // #1274 lot E2 — distribution à distance égale
+    distributeHorizontal: {
+      type: 'action',
+      labels: { en: 'Horizontally', fr: 'Horizontalement', es: 'Horizontalmente', de: 'Horizontal', it: 'Orizzontalmente' },
+      tooltips: { en: 'Distribute selected elements with equal horizontal spacing', fr: 'Répartir les éléments sélectionnés à espacement horizontal égal', es: 'Distribuir los elementos seleccionados con espaciado horizontal uniforme', de: 'Ausgewählte Elemente mit gleichem horizontalen Abstand verteilen', it: 'Distribuire gli elementi selezionati con spaziatura orizzontale uniforme' },
+      undoable: true,
+      closeMenuAfter: true
+    },
+    distributeVertical: {
+      type: 'action',
+      labels: { en: 'Vertically', fr: 'Verticalement', es: 'Verticalmente', de: 'Vertikal', it: 'Verticalmente' },
+      tooltips: { en: 'Distribute selected elements with equal vertical spacing', fr: 'Répartir les éléments sélectionnés à espacement vertical égal', es: 'Distribuir los elementos seleccionados con espaciado vertical uniforme', de: 'Ausgewählte Elemente mit gleichem vertikalen Abstand verteilen', it: 'Distribuire gli elementi selezionati con spaziatura verticale uniforme' },
+      undoable: true,
+      closeMenuAfter: true
+    },
+    // #1274 lot E2 — caler la taille sur l'élément de référence (le nœud cliqué)
+    matchSizeToRef: {
+      type: 'action',
+      labels: { en: 'Match size to this node', fr: 'Caler la taille sur ce nœud', es: 'Igualar el tamaño a este nodo', de: 'Größe an diesen Knoten angleichen', it: 'Adatta la dimensione a questo nodo' },
+      tooltips: { en: 'Apply this node\'s width and height to all other selected nodes', fr: 'Appliquer la largeur et la hauteur de ce nœud à tous les autres nœuds sélectionnés', es: 'Aplicar el ancho y alto de este nodo a los demás nodos seleccionados', de: 'Breite und Höhe dieses Knotens auf alle anderen ausgewählten Knoten anwenden', it: 'Applicare larghezza e altezza di questo nodo a tutti gli altri nodi selezionati' },
+      undoable: true,
+      closeMenuAfter: true
+    },
     // Actions de visibilité avec toggle
     toggleShapeVisibility: {
       type: 'toggle',
@@ -877,6 +928,7 @@ export const NODE_MENU_CONFIG: MenuConfig = {
     alignHorizMax: { en: 'Relative to the selected node furthest to the right', fr: 'Par rapport au nœud sélectionné le + à droite', es: 'Respecto al nodo seleccionado más a la derecha', de: 'Relativ zum am weitesten rechts liegenden ausgewählten Knoten', it: 'Rispetto al nodo selezionato più a destra' },
     alignVertMin: { en: 'Relative to the selected topmost node', fr: 'Par rapport au nœud sélectionné le + en haut', es: 'Respecto al nodo seleccionado más arriba', de: 'Relativ zum obersten ausgewählten Knoten', it: 'Rispetto al nodo selezionato più in alto' },
     alignVertMax: { en: 'Relative to the selected node furthest down', fr: 'Par rapport au nœud sélectionné le + en bas', es: 'Respecto al nodo seleccionado más abajo', de: 'Relativ zum untersten ausgewählten Knoten', it: 'Rispetto al nodo selezionato più in basso' },
+    distribute: { en: 'Distribute evenly', fr: 'Répartir à distance égale', es: 'Distribuir uniformemente', de: 'Gleichmäßig verteilen', it: 'Distribuire uniformemente' },
     editStyle: { en: 'Edition', fr: 'Édition', es: 'Edición', de: 'Bearbeitung', it: 'Modifica' },
     maskAttr: { en: 'Display', fr: 'Affichage', es: 'Visualización', de: 'Anzeige', it: 'Visualizzazione' },
     changePlan: { en: 'Change plan', fr: 'Changer plan', es: 'Cambiar plano', de: 'Ebene ändern', it: 'Cambia piano' },
