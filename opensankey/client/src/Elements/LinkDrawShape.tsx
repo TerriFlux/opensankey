@@ -248,9 +248,18 @@ export class LinkDrawShape {
       }
 
       // #285 — bandes internes : les valeurs coordonnées visibles subdivisent
-      // l'épaisseur du flux (superposées au tracé principal, qui reste le
-      // support des interactions).
-      this.drawTaggedValueBands(shape_opacity)
+      // l'épaisseur du flux. Quand elles couvrent le flux, le tracé principal
+      // devient INVISIBLE (opacité 0) mais reste en place : c'est lui qui porte
+      // les interactions (survol, clic, tooltip) — sinon sa peinture se
+      // mélangerait aux bandes à travers l'opacité.
+      if (this.drawTaggedValueBands(shape_opacity)) {
+        this._link.d3_selection?.selectAll('.link_path')
+          .attr('opacity', 0)
+          .attr('fill-opacity', 0)
+          .attr('stroke-opacity', 0)
+        this._link.d3_selection?.selectAll('.link_shape')
+          .attr('opacity', 0)
+      }
     }
   }
 
@@ -260,19 +269,21 @@ export class LinkDrawShape {
    * offsets transverses cumulés proportionnels aux parts (bandes jointives par
    * construction — le contour exact #1251 du flux entier, subdivisé). Les
    * bandes sont décoratives : pointer-events none, les interactions restent
-   * portées par le tracé principal.
-   * V1 : flux courbes hh/vv, hors recyclage et hors drag (comme le faisceau
-   * #1251) — sinon le flux garde son tracé simple.
+   * portées par le tracé principal (invisible sous les bandes).
+   * Pendant un drag, la géométrie EXACTE (échantillonnée) serait trop coûteuse
+   * à chaque frame : on bascule sur le contour simple (translation transverse),
+   * comme le tracé principal — l'exact est rétabli au redraw de fin de drag.
+   * V1 : flux courbes hh/vv, hors recyclage. Retourne true si des bandes ont
+   * été dessinées.
    */
-  private drawTaggedValueBands(shape_opacity: number | string) {
+  private drawTaggedValueBands(shape_opacity: number | string): boolean {
     const link = this._link
     const bands = link.tagged_value_bands
-    if (bands.length === 0) return
-    if (!link.shape_is_curved) return
-    if (link.shape_orientation !== 'hh' && link.shape_orientation !== 'vv') return
-    if (link.shape_is_recycling) return
-    if (link.linkIsStructure()) return
-    if (this.isBeingDragged()) return
+    if (bands.length === 0) return false
+    if (!link.shape_is_curved) return false
+    if (link.shape_orientation !== 'hh' && link.shape_orientation !== 'vv') return false
+    if (link.shape_is_recycling) return false
+    if (link.linkIsStructure()) return false
 
     // Mêmes points de contrôle que le tracé principal
     this._link_control_points.computeControlPoints()
@@ -294,17 +305,54 @@ export class LinkDrawShape {
     const full_src = link.thicknessSource
     const full_tgt = link.thicknessTarget
     const transverse = link.shape_orientation === 'hh' ? [0, 1] : [1, 0]
+    const is_hh = link.shape_orientation === 'hh'
+    const use_exact = !this.isBeingDragged()
+
+    // Contour simple d'une bande : mêmes points de contrôle décalés
+    // transversalement (géométrie du tracé principal hors mode exact) —
+    // suffisant pendant le drag, où tout le flux est déjà en contour simple.
+    const simpleBandPath = (
+      off_src_a: number, off_tgt_a: number,
+      off_src_b: number, off_tgt_b: number
+    ): string => {
+      const sh = (x: number, y: number, off: number): number[] => is_hh ? [x, y + off] : [x + off, y]
+      const edge = (off_src: number, off_tgt: number) => {
+        const p0 = sh(x0, y0, off_src), p1 = sh(x1, y1, off_src), p2 = sh(x2, y2, off_src)
+        const p4 = sh(x4, y4, off_tgt), p5 = sh(x5, y5, off_tgt), p6 = sh(x6, y6, off_tgt)
+        const p3 = [(p2[0] + p4[0]) / 2, (p2[1] + p4[1]) / 2]
+        return { p0, p1, p2, p3, p4, p5, p6 }
+      }
+      const a = edge(off_src_a, off_tgt_a)
+      const b = edge(off_src_b, off_tgt_b)
+      return 'M ' + a.p0[0] + ',' + a.p0[1]
+        + ' L ' + a.p1[0] + ',' + a.p1[1]
+        + ' Q ' + a.p2[0] + ',' + a.p2[1] + ' ' + a.p3[0] + ',' + a.p3[1]
+        + ' Q ' + a.p4[0] + ',' + a.p4[1] + ' ' + a.p5[0] + ',' + a.p5[1]
+        + ' L ' + a.p6[0] + ',' + a.p6[1]
+        + ' L ' + b.p6[0] + ',' + b.p6[1]
+        + ' L ' + b.p5[0] + ',' + b.p5[1]
+        + ' Q ' + b.p4[0] + ',' + b.p4[1] + ' ' + b.p3[0] + ',' + b.p3[1]
+        + ' Q ' + b.p2[0] + ',' + b.p2[1] + ' ' + b.p1[0] + ',' + b.p1[1]
+        + ' L ' + b.p0[0] + ',' + b.p0[1]
+        + ' Z'
+    }
 
     let cum = 0
     bands.forEach(({ tagged_value, share }) => {
       const lo = cum
       cum += share
-      const path = this.getExactBezierOutline(
-        [x0, y0], [x1, y1], [x2, y2], [x3, y3], [x4, y4], [x5, y5], [x6, y6],
-        -full_src / 2 + lo * full_src, -full_tgt / 2 + lo * full_tgt,
-        -full_src / 2 + cum * full_src, -full_tgt / 2 + cum * full_tgt,
-        transverse
-      )
+      const off_lo_src = -full_src / 2 + lo * full_src
+      const off_lo_tgt = -full_tgt / 2 + lo * full_tgt
+      const off_hi_src = -full_src / 2 + cum * full_src
+      const off_hi_tgt = -full_tgt / 2 + cum * full_tgt
+      const path = use_exact
+        ? this.getExactBezierOutline(
+          [x0, y0], [x1, y1], [x2, y2], [x3, y3], [x4, y4], [x5, y5], [x6, y6],
+          off_lo_src, off_lo_tgt,
+          off_hi_src, off_hi_tgt,
+          transverse
+        )
+        : simpleBandPath(off_lo_src, off_lo_tgt, off_hi_src, off_hi_tgt)
       // Couleur : premier tag d'un groupe en mode couleurs, sinon premier tag
       const colored_tag = tagged_value.tags_list
         .find(tag => (tag.group as Class_TagGroup).use_colors) ?? tagged_value.tags_list[0]
@@ -319,6 +367,7 @@ export class LinkDrawShape {
         .attr('stroke', 'none')
         .attr('pointer-events', 'none')
     })
+    return true
   }
 
   // PATH GENERATION METHODS ============================================================
