@@ -107,6 +107,18 @@ export const resources_inspector = {
           show_in_tooltip: 'Show in tooltip',
           show_on_node: 'Show on the node (donut / histogram)',
           select_subject: 'Select a node or a flow.'
+        },
+        // OS#1285 — visibilité des blocs d'info-bulle.
+        tooltip_blocks: {
+          title: 'Visible blocks',
+          values: 'Values',
+          flux: 'Flow',
+          tags: 'Tags',
+          series_flux: 'Flow series',
+          data: 'Data',
+          series_data: 'Data series',
+          unitary: 'Unitary Sankey',
+          analysis: 'Analysis chart'
         }
       },
       filter_panel: {
@@ -223,6 +235,18 @@ export const resources_inspector = {
           show_in_tooltip: 'Afficher dans l’info-bulle',
           show_on_node: 'Afficher sur le nœud (couronne / histogramme)',
           select_subject: 'Sélectionner un nœud ou un flux.'
+        },
+        // OS#1285 — visibilité des blocs d'info-bulle.
+        tooltip_blocks: {
+          title: 'Blocs visibles',
+          values: 'Valeurs',
+          flux: 'Flux',
+          tags: 'Tags',
+          series_flux: 'Séries flux',
+          data: 'Données',
+          series_data: 'Séries données',
+          unitary: 'Sankey unitaire',
+          analysis: 'Graphique d\'analyse'
         }
       },
       filter_panel: {
@@ -339,6 +363,18 @@ export const resources_inspector = {
           show_in_tooltip: 'Mostrar en el tooltip',
           show_on_node: 'Mostrar en el nodo (anillo / histograma)',
           select_subject: 'Seleccione un nodo o un flujo.'
+        },
+        // OS#1285 — visibilidad de los bloques del tooltip.
+        tooltip_blocks: {
+          title: 'Bloques visibles',
+          values: 'Valores',
+          flux: 'Flujo',
+          tags: 'Etiquetas',
+          series_flux: 'Series de flujo',
+          data: 'Datos',
+          series_data: 'Series de datos',
+          unitary: 'Sankey unitario',
+          analysis: 'Gráfico de análisis'
         }
       },
       filter_panel: {
@@ -455,6 +491,18 @@ export const resources_inspector = {
           show_in_tooltip: 'Im Tooltip anzeigen',
           show_on_node: 'Am Knoten anzeigen (Ring / Histogramm)',
           select_subject: 'Wählen Sie einen Knoten oder einen Fluss.'
+        },
+        // OS#1285 — Sichtbarkeit der Tooltip-Blöcke.
+        tooltip_blocks: {
+          title: 'Sichtbare Blöcke',
+          values: 'Werte',
+          flux: 'Fluss',
+          tags: 'Tags',
+          series_flux: 'Fluss-Serien',
+          data: 'Daten',
+          series_data: 'Daten-Serien',
+          unitary: 'Einheits-Sankey',
+          analysis: 'Analysediagramm'
         }
       },
       filter_panel: {
@@ -571,6 +619,18 @@ export const resources_inspector = {
           show_in_tooltip: 'Mostra nel tooltip',
           show_on_node: 'Mostra sul nodo (anello / istogramma)',
           select_subject: 'Seleziona un nodo o un flusso.'
+        },
+        // OS#1285 — visibilità dei blocchi del tooltip.
+        tooltip_blocks: {
+          title: 'Blocchi visibili',
+          values: 'Valori',
+          flux: 'Flusso',
+          tags: 'Tag',
+          series_flux: 'Serie di flusso',
+          data: 'Dati',
+          series_data: 'Serie di dati',
+          unitary: 'Sankey unitario',
+          analysis: 'Grafico di analisi'
         }
       },
       filter_panel: {

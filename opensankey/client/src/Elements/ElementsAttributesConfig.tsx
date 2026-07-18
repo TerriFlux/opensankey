@@ -34,6 +34,7 @@ import { UnitType } from './LinkValues'
 import { Class_NodeBase } from './NodeBase'
 import { isLegendElementId } from './legendIds'
 import { Type_AnalysisDescriptor } from '../Charts/AnalysisDescriptor'
+import { Type_TooltipHiddenBlocks } from './TooltipBlocks'
 
 // Types spécifiques
 export type Type_Shape = 'ellipse' | 'rect' | 'bezier_outline' | 'bezier_outline_exact' | 'bezier_path' | 'capsule' | 'capsule_h'
@@ -2164,6 +2165,32 @@ export const ANALYSIS_CONFIG = {
   } satisfies AttributeConfig<Type_AnalysisDescriptor | undefined>
 } as const
 
+// OS#1285 — visibilité des blocs d'info-bulle (record des blocs masqués). Attribut
+// de STYLE (héritable, applicable en lot), même patron objet que analysis_descriptor
+// (overload jugé par présence, pas par égalité).
+export const TOOLTIP_BLOCKS_CONFIG = {
+  tooltip_hidden_blocks: {
+    default: undefined as Type_TooltipHiddenBlocks | undefined,
+    type: (() => undefined) as (() => Type_TooltipHiddenBlocks | undefined),
+    category: 'tooltip' as const,
+    actions: undefined,
+    labels: {
+      en: 'Tooltip blocks',
+      fr: 'Blocs d\'info-bulle',
+      es: 'Bloques del tooltip',
+      de: 'Tooltip-Blöcke',
+      it: 'Blocchi del tooltip'
+    },
+    tooltips: {
+      en: 'Which tooltip blocks are hidden for this element',
+      fr: 'Blocs d\'info-bulle masqués pour cet élément',
+      es: 'Bloques del tooltip ocultos para este elemento',
+      de: 'Für dieses Element ausgeblendete Tooltip-Blöcke',
+      it: 'Blocchi del tooltip nascosti per questo elemento'
+    }
+  } satisfies AttributeConfig<Type_TooltipHiddenBlocks | undefined>
+} as const
+
 export type LabelValues<T extends typeof BASE_LABEL_CONFIG> = {
   -readonly [K in keyof T]: ExtractConfigValue<T[K]>
 }
@@ -3373,6 +3400,7 @@ export const ALL_ATTRIBUTES_CONFIG = {
     }),
   ...HYPER_LINK_CONFIG,
   ...ANALYSIS_CONFIG,
+  ...TOOLTIP_BLOCKS_CONFIG,
 } as const
 
 export type ElementsType = Class_LinkElement[] | Class_NodeBase[] | Class_ElementStyle[]

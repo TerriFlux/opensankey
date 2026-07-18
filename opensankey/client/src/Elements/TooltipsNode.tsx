@@ -4,6 +4,7 @@ import { Class_LinkElement } from './Link'
 import { TOOLTIP_STYLES, TooltipBehaviorManager } from './TooltipsCSS'
 import { getNameLabelValues } from './ElementsAttributesConfig'
 import { Type_AnalysisDescriptor } from '../Charts/AnalysisDescriptor'
+import { isTooltipBlockVisible, Type_TooltipHiddenBlocks } from './TooltipBlocks'
 import { TFunction } from 'i18next'
 
 // Conteneur DOM (id fixe) de la zone de dessin du sankey unitaire embarqué dans
@@ -242,20 +243,27 @@ export class NodeTooltip {
         && !!analysis_descriptor?.surfaces?.tooltip
         && (!!analysis_descriptor.decompose || !!analysis_descriptor.compare)
 
+      // OS#1285 — visibilité configurable des blocs (attribut de style résolu).
+      const hidden_blocks = this._node.getElementProperty('tooltip_hidden_blocks') as Type_TooltipHiddenBlocks | undefined
+      const vis = (id: string) => isTooltipBlockVisible(hidden_blocks, id)
+
       // Définition des onglets disponibles (clé, libellé, contenu HTML).
-      const tabs: { key: string, label: string, content: string }[] = [{
-        key: 'values',
-        label: t('Noeud.drawing_area_tooltip.values_tab') || 'Valeurs & Ratios',
-        content: this.getValuesTabHTML(hasInputs, hasOutputs, input_val, output_val, t)
-      }]
-      if (hasTags) {
+      const tabs: { key: string, label: string, content: string }[] = []
+      if (vis('values')) {
+        tabs.push({
+          key: 'values',
+          label: t('Noeud.drawing_area_tooltip.values_tab') || 'Valeurs & Ratios',
+          content: this.getValuesTabHTML(hasInputs, hasOutputs, input_val, output_val, t)
+        })
+      }
+      if (hasTags && vis('tags')) {
         tabs.push({
           key: 'tags',
           label: t('Noeud.drawing_area_tooltip.tags_tab') || 'Tags de flux',
           content: this.getTagsTabHTML(hasInputs, hasOutputs, input_val, output_val, t)
         })
       }
-      if (hasUnitary) {
+      if (hasUnitary && vis('unitary')) {
         tabs.push({
           key: 'unitary',
           label: t('Noeud.drawing_area_tooltip.unitary_tab') || 'Sankey unitaire',
@@ -263,7 +271,7 @@ export class NodeTooltip {
           content: `<div class="unitary-tooltip-container" id="${UNITARY_TOOLTIP_CONTAINER_ID}"></div>`
         })
       }
-      if (hasAnalysis) {
+      if (hasAnalysis && vis('analysis')) {
         tabs.push({
           key: 'analysis',
           label: t('Noeud.drawing_area_tooltip.analysis_tab') || 'Analyse',
@@ -302,8 +310,9 @@ export class NodeTooltip {
         tabs.forEach((tab, i) => {
           html += `<div class="tab-content${i === 0 ? ' active' : ''}" data-tab-key="${tab.key}">${tab.content}</div>`
         })
-      } else {
-      // Un seul onglet : affichage direct du contenu (valeurs)
+      } else if (tabs.length === 1) {
+        // Un seul onglet : affichage direct du contenu. (0 onglet = tout masqué
+        // par la config OS#1285 → header/titre seuls.)
         html += tabs[0].content
       }
 

@@ -7,6 +7,7 @@ import { TOOLTIP_STYLES, TooltipBehaviorManager } from './TooltipsCSS'
 import { link_data_label, format_value, link_ratio_constraint, ratio_flux_constraint_traduction } from '../types/Utils'
 import { getNameLabelValues } from './ElementsAttributesConfig'
 import { Type_AnalysisDescriptor } from '../Charts/AnalysisDescriptor'
+import { isTooltipBlockVisible, Type_TooltipHiddenBlocks } from './TooltipBlocks'
 
 // Conteneur (id fixe) de l'onglet « Analyse » (OS#1278) du tooltip de flux. Un
 // seul tooltip à la fois → id unique suffisant.
@@ -176,13 +177,17 @@ export class LinkTooltip {
       && !!analysis_descriptor?.surfaces?.tooltip
       && (!!analysis_descriptor.decompose || !!analysis_descriptor.compare)
 
+    // OS#1285 — visibilité configurable des blocs (attribut de style résolu).
+    const hidden_blocks = this._link.getElementProperty('tooltip_hidden_blocks') as Type_TooltipHiddenBlocks | undefined
+    const vis = (id: string) => isTooltipBlockVisible(hidden_blocks, id)
+
     // Construction des onglets présents.
     const tabs: { label: string, html: string, key?: string }[] = []
-    tabs.push({ label: 'Flux', html: this.getMainTabHTML() })
-    if (has_series) tabs.push({ label: 'Séries flux', html: this.getSeriesFluxHTML(combos) })
-    if (has_children) tabs.push({ label: 'Données', html: this.getDataTabHTML(groups) })
-    if (has_children && has_series) tabs.push({ label: 'Séries données', html: this.getSeriesDataHTML(groups, combos) })
-    if (has_analysis) tabs.push({
+    if (vis('flux')) tabs.push({ label: 'Flux', html: this.getMainTabHTML() })
+    if (has_series && vis('series_flux')) tabs.push({ label: 'Séries flux', html: this.getSeriesFluxHTML(combos) })
+    if (has_children && vis('data')) tabs.push({ label: 'Données', html: this.getDataTabHTML(groups) })
+    if (has_children && has_series && vis('series_data')) tabs.push({ label: 'Séries données', html: this.getSeriesDataHTML(groups, combos) })
+    if (has_analysis && vis('analysis')) tabs.push({
       label: app_data.t('Noeud.drawing_area_tooltip.analysis_tab') || 'Analyse',
       key: 'analysis',
       // Conteneur vide : OS+ y dessine le graphique à l'activation de l'onglet.
@@ -216,9 +221,10 @@ export class LinkTooltip {
         const key_attr = t.key ? ` data-tab-key="${t.key}"` : ''
         html += `<div class="tab-content${i === 0 ? ' active' : ''}"${key_attr}>${t.html}</div>`
       })
-    } else {
+    } else if (tabs.length === 1) {
       html += tabs[0].html
     }
+    // 0 onglet = tous masqués par la config OS#1285 → header/titre seuls.
     html += '</div>'
 
     return html
