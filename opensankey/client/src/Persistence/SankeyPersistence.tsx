@@ -1610,6 +1610,12 @@ export class SankeyPersistence {
       )
     )
 
+    // #285 — migration des fichiers d'avant la fusion des tags : l'ancien
+    // contournement « n flux parallèles, un par étiquette » devient un flux
+    // unique à n valeurs coordonnées. Idempotent (un fichier déjà converti n'a
+    // plus de parallèles tagués) ; les parallèles NON tagués sont un choix de
+    // dessin et ne sont pas touchés.
+    sankey.migrateParallelTaggedLinks()
     sankey.create_child_links()
     // Icon catalog
     sankey['_icon_catalog'] = getJSONFromJSON(json_object, 'icon_catalog', sankey.icon_catalog) as { [x: string]: string }

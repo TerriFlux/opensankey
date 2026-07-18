@@ -124,6 +124,34 @@ describe('tagged_value_bands — bandes internes des valeurs du flux', () => {
     expect(Object.values(link.child_links)).toHaveLength(0)
   })
 
+  it('migrates all tagged parallel groups at load, leaving untagged pairs alone', () => {
+    const { sankey, link, acier, cuivre } = makeApp()
+    // Paire taguée : link (10) + un parallèle tagué
+    link.value!.addTag(acier)
+    const l2 = sankey.addNewLink(link.source, link.target)
+    l2.valueCurrent = 4
+    l2.value!.addTag(cuivre)
+    // Paire NON taguée entre deux autres nœuds : à laisser telle quelle
+    const a = sankey.addNewNodeWithName('A')
+    const b = sankey.addNewNodeWithName('B')
+    const u1 = sankey.addNewLink(a, b)
+    u1.valueCurrent = 1
+    const u2 = sankey.addNewLink(a, b)
+    u2.valueCurrent = 2
+
+    sankey.migrateParallelTaggedLinks()
+
+    // La paire taguée est fusionnée
+    expect(Object.values(sankey.links_dict)).not.toContain(l2)
+    expect(link.value!.tagged_values_list).toHaveLength(2)
+    // La paire non taguée survit
+    expect(Object.values(sankey.links_dict)).toContain(u1)
+    expect(Object.values(sankey.links_dict)).toContain(u2)
+    // Idempotence
+    sankey.migrateParallelTaggedLinks()
+    expect(link.value!.tagged_values_list).toHaveLength(2)
+  })
+
   it('round-trips tagged values through app toJSON', () => {
     const { app, link, acier } = makeApp()
     const tv = link.value!.addTaggedValue('tv_fixed_id')

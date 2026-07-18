@@ -442,6 +442,30 @@ export class Class_Sankey {
    * V1 : liens sans dimensions (pas d'arbre de valeurs) — le cas des fichiers
    * construits avec le contournement. Retourne null si la fusion est refusée.
    */
+  /**
+   * #285 — migration au chargement : fusionne TOUS les groupes de flux
+   * parallèles (même source, même cible — même direction) dont au moins un
+   * membre porte des étiquettes de flux, en un flux à n valeurs coordonnées.
+   * Idempotent ; sans effet si le fichier a des dimensions (V1 de
+   * mergeParallelLinks) ou si les parallèles ne sont pas tagués (choix de
+   * dessin respecté).
+   */
+  public migrateParallelTaggedLinks() {
+    if (this.data_taggs_list.length > 0) return
+    const groups: { [pair: string]: Class_LinkElement[] } = {}
+    this.links_list.forEach(l => {
+      if (l.is_multi_link) return
+      const key = l.source.id + '→' + l.target.id
+      if (!groups[key]) groups[key] = []
+      groups[key].push(l)
+    })
+    Object.values(groups).forEach(group => {
+      if (group.length < 2) return
+      if (!group.some(l => (l.value?.flux_tags_list.length ?? 0) > 0)) return
+      this.mergeParallelLinks(group)
+    })
+  }
+
   public mergeParallelLinks(links: Class_LinkElement[]): Class_LinkElement | null {
     if (links.length < 2) return null
     const base = links[0]
