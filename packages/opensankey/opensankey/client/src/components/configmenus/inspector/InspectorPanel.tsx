@@ -36,8 +36,8 @@ import {
   type Type_InspectorScope
 } from './InspectorRegistry'
 import { registerBaseInspectorSections } from './registerBaseSections'
-import { MenuResetAttrLocal } from '../MenuCommon'
-import { ElementNameRow } from '../MenuElementsSelection'
+import { MenuResetAttrLocal, WrapperBoxSubSectionMenu } from '../MenuCommon'
+import { ElementNameRow, ElementSelectionTool } from '../MenuElementsSelection'
 import { LinkOriginDestEditor } from '../SankeyMenuConfigurationLinksData'
 
 // Enregistre les onglets de base dès l'import du panneau (idempotent). Les
@@ -209,6 +209,20 @@ export const InspectorPanel = ({ app_data }: { app_data: Class_ApplicationData }
           }} />
         </Button>
       </Box>
+
+      {/* #1258 — sélection par critères EN HAUT du panneau (repliée par défaut) :
+          le config menu est piloté par la sélection, l'outil pour la COMPOSER
+          doit donc être ici, pas dans le tiroir de filtres (contre-intuitif).
+          Éditeur seul (en publish/statique on ne compose pas de sélection). */}
+      {!app_data.is_static && (
+        <WrapperBoxSubSectionMenu
+          new_data={app_data}
+          title={app_data.t('filter_panel.select_elements')}
+          is_open={false}
+        >
+          <ElementSelectionTool app_data={app_data} />
+        </WrapperBoxSubSectionMenu>
+      )}
 
       <InspectorIdentity app_data={app_data} target={target} counts={counts} />
 
