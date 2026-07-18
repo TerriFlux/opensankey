@@ -564,11 +564,15 @@ export class NodeEventsHandler {
       // réciproquement. Aucun nœud n'est déplacé ici (une mise en page manuelle survit), et
       // le verrou par flux (#711) prime toujours sur la géométrie.
       //
-      // Les flux impactés ne sont pas seulement ceux des nœuds déplacés : bouger un nœud
-      // change son ORDINAL de colonne, ce qui peut décaler les colonnes de tous les autres.
-      // On rejoue donc le marquage sur l'ensemble du diagramme — c'est O(V+E), négligeable.
-      const dict_old_recycling = drawing_area.application_data.layout_auto_recycling
-        ? drawing_area.nodePositioning.updateRecyclingFromPositions()
+      // Le marquage est restreint aux flux dont une extrémité a été déplacée : les colonnes
+      // globales bougent avec l'ordinal du nœud, mais reflaguer tout le diagramme faisait
+      // basculer des flux arrière voulus loin du drag. Ceux-là gardent leur statut.
+      const moved_node_ids = new Set(Object.keys(dict_old_pos).filter(id => {
+        const n = (drawing_area.sankey.nodes_dict[id] ?? drawing_area.sankey.containers_dict[id]) as Class_NodeBase | undefined
+        return n !== undefined && (n.position_x !== dict_old_pos[id][0] || n.position_y !== dict_old_pos[id][1])
+      }))
+      const dict_old_recycling = drawing_area.application_data.layout_auto_recycling && moved_node_ids.size > 0
+        ? drawing_area.nodePositioning.updateRecyclingFromPositions(moved_node_ids)
         : {}
       const recycling_changed = Object.keys(dict_old_recycling)
       if (recycling_changed.length > 0) {
@@ -682,6 +686,22 @@ export class NodeEventsHandler {
     // recadrage sautait à chaque dépôt de nœud). On recale seulement l'extent de
     // pan et les scrollbars pour que le contenu étendu reste atteignable.
     this._node.drawing_area.refreshPanExtent()
+    // Pendant le drag les formes de liens retombent sur le contour SIMPLE
+    // (moins coûteux, cf. LinkDrawShape/isBeingDragged). areaAutoFit assurait
+    // au passage le redraw final qui restaurait le contour exact ; depuis sa
+    // suppression, plus personne ne le fait en mode absolu (les autres modes
+    // passent par drawElements ci-dessus). On redessine donc explicitement les
+    // formes des liens des nœuds déplacés — leurs partenaires de faisceau
+    // partagent les mêmes nœuds, ils sont donc couverts.
+    const moved_nodes = nodes_selected.includes(this._node) ? nodes_selected : [this._node]
+    const links_to_redraw = new Set<Class_LinkElement>()
+    moved_nodes.forEach(n => {
+      const as_node = n as Class_NodeElement
+      if (typeof as_node.input_links_list === 'undefined') return
+      as_node.input_links_list.forEach(l => links_to_redraw.add(l as Class_LinkElement))
+      as_node.output_links_list.forEach(l => links_to_redraw.add(l as Class_LinkElement))
+    })
+    links_to_redraw.forEach(l => l.drawShape())
     this._node.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
   }
 

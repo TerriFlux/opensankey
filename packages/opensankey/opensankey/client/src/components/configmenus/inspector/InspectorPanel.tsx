@@ -36,7 +36,8 @@ import {
   type Type_InspectorScope
 } from './InspectorRegistry'
 import { registerBaseInspectorSections } from './registerBaseSections'
-import { ElementNameRow } from '../MenuElementsSelection'
+import { MenuResetAttrLocal, WrapperBoxSubSectionMenu } from '../MenuCommon'
+import { ElementNameRow, ElementSelectionTool } from '../MenuElementsSelection'
 import { LinkOriginDestEditor } from '../SankeyMenuConfigurationLinksData'
 
 // Enregistre les onglets de base dès l'import du panneau (idempotent). Les
@@ -208,6 +209,20 @@ export const InspectorPanel = ({ app_data }: { app_data: Class_ApplicationData }
           }} />
         </Button>
       </Box>
+
+      {/* #1258 — sélection par critères EN HAUT du panneau (repliée par défaut) :
+          le config menu est piloté par la sélection, l'outil pour la COMPOSER
+          doit donc être ici, pas dans le tiroir de filtres (contre-intuitif).
+          Éditeur seul (en publish/statique on ne compose pas de sélection). */}
+      {!app_data.is_static && (
+        <WrapperBoxSubSectionMenu
+          new_data={app_data}
+          title={app_data.t('filter_panel.select_elements')}
+          is_open={false}
+        >
+          <ElementSelectionTool app_data={app_data} />
+        </WrapperBoxSubSectionMenu>
+      )}
 
       <InspectorIdentity app_data={app_data} target={target} counts={counts} />
 
@@ -462,25 +477,70 @@ const InspectorScopeBand = ({
     onScope('style')
   }
 
+  // #1258 — réintégration du reset des SURCHARGES de la sélection (perdu à la
+  // dépose de la matrice #1243 : MenuResetAttrLocal ne survivait que dans la
+  // modale de styles). Une surcharge est posée si AU MOINS un élément
+  // sélectionné surcharge l'attribut.
+  const da = app_data.drawing_area
+  const lang = (app_data.language ?? 'fr') as 'fr' | 'en'
+  const computeOverloadedAttr = () => {
+    const els = [...da.selected_nodes_list, ...da.selected_links_list, ...da.selected_containers_list]
+    const dict: { [_: string]: { overloaded: boolean, name: string } } = {}
+    Object.entries(ALL_ATTRIBUTES_CONFIG).forEach(([key, cfg]) => {
+      if (els.some(el => el.isAttributeOverloaded(key as keyof typeof ALL_ATTRIBUTES_CONFIG))) {
+        dict[key] = {
+          overloaded: true,
+          name: (cfg as { labels?: { fr: string, en: string } }).labels?.[lang] ?? key
+        }
+      }
+    })
+    return dict
+  }
+  const refreshAfterReset = () => {
+    menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    menu_configuration.updateComponentRelatedToApparence()
+    onCascadeChange()
+  }
+
   return (
     <Box className="inspector_scope">
-      <Box style={{ display: 'flex', border: '1px solid #cbd5e0', borderRadius: '6px', overflow: 'hidden' }}>
-        <Button
-          flex="1" size="xs" borderRadius="0"
-          variant={scope === 'selection' ? 'button_type_config_activated' : 'button_type_config'}
-          onClick={() => onScope('selection')}
-        >
-          {count > 1
-            ? app_data.t('inspector.selection_count', { count })
-            : app_data.t('inspector.selection')}
-        </Button>
-        <Button
-          flex="1" size="xs" borderRadius="0"
-          variant={scope === 'style' ? 'button_type_config_activated' : 'button_type_config'}
-          onClick={enterStyleScope}
-        >
-          {app_data.t('inspector.styles_count', { count: Math.max(cascade.length, 1) })}
-        </Button>
+      <Box style={{ display: 'flex', alignItems: 'stretch', gap: '0.25rem' }}>
+        <Box style={{ display: 'flex', flex: 1, border: '1px solid #cbd5e0', borderRadius: '6px', overflow: 'hidden' }}>
+          <Button
+            flex="1" size="xs" borderRadius="0"
+            variant={scope === 'selection' ? 'button_type_config_activated' : 'button_type_config'}
+            onClick={() => onScope('selection')}
+          >
+            {count > 1
+              ? app_data.t('inspector.selection_count', { count })
+              : app_data.t('inspector.selection')}
+          </Button>
+          <Button
+            flex="1" size="xs" borderRadius="0"
+            variant={scope === 'style' ? 'button_type_config_activated' : 'button_type_config'}
+            onClick={enterStyleScope}
+          >
+            {app_data.t('inspector.styles_count', { count: Math.max(cascade.length, 1) })}
+          </Button>
+        </Box>
+        {scope === 'selection' && (
+          <Box style={{ flex: 'none' }}>
+            <MenuResetAttrLocal
+              new_data={app_data}
+              dict_overwritted_attr={{}}
+              computeOverloadedAttr={computeOverloadedAttr}
+              onResetAll={() => {
+                da.sankey.resetAttrSelectedElements()
+                refreshAfterReset()
+              }}
+              onResetLocal={(k) => {
+                da.sankey.deleteLocalAttrSelectedElements(
+                  k as keyof typeof ALL_ATTRIBUTES_CONFIG, da.selected_elements_list)
+                refreshAfterReset()
+              }}
+            />
+          </Box>
+        )}
       </Box>
       {scope === 'style' && (
         <InspectorStyleCascade

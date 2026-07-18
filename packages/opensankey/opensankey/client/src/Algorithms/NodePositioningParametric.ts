@@ -565,8 +565,17 @@ export class NodePositioningParametric {
    *
    * @returns pour chaque flux dont le statut a changé, sa valeur précédente (pour l'undo).
    */
-  public updateRecyclingFromPositions(): { [link_id: string]: boolean } {
+  public updateRecyclingFromPositions(only_touching_nodes?: Set<string>): { [link_id: string]: boolean } {
     return this.np.cycles.markRecyclingLinks(
+      this.nodesEligibleForColumns(),
+      this.computeColumnsFromX(),
+      only_touching_nodes
+    )
+  }
+
+  /** Cf. NodePositioningCyclesCore.lockRecyclingStatusDivergences (passe post-chargement #153). */
+  public lockRecyclingStatusDivergences(): string[] {
+    return this.np.cycles.lockRecyclingStatusDivergences(
       this.nodesEligibleForColumns(),
       this.computeColumnsFromX()
     )

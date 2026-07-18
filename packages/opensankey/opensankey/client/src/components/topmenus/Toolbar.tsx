@@ -8,7 +8,6 @@ import {
 import { CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
 import { OSMultiSelect, typeElementSelectable, CustomFaEyeCheckIcon, OSTooltip, ConfigMenuNumberInput, WrapperContentConfig } from '../configmenus/MenuCommon'
 import { filter_panel_registry } from './FilterPanelRegistry'
-import { ElementSelectionTool } from '../configmenus/MenuElementsSelection'
 import { useMainZone } from '../spreadsheet/MainZoneTabs'
 import { useModelBinding } from '../../hooks/useModelBinding'
 import { Class_ApplicationData } from '../../types/ApplicationData'
@@ -332,7 +331,7 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
   // #1243 — deux modes : « Filtrer » (historique) et « Éditer » (groupes de
   // tags, vues — relogés ici depuis la matrice, cf. règle R3). L'édition n'a
   // pas de sens en publish/statique.
-  const [filterTab, setFilterTab] = useState<'filter' | 'select' | 'edit'>('filter')
+  const [filterTab, setFilterTab] = useState<'filter' | 'edit'>('filter')
   // Sous-onglet actif de « Éditer » (un éditeur à la fois ; null = le premier).
   const [edit_section_id, setEditSectionId] = useState<string | null>(null)
   // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
@@ -354,15 +353,13 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
   // groupes de tags, vues). Onglet masqué s'il n'y en a aucune (OS pur/publish).
   const edit_sections = app_data.is_static ? [] : filter_panel_registry.getSections(app_data)
   const has_edit_tab = edit_sections.length > 0
-  // #1243 — onglet « Sélectionner » : sélection par critères (type + tag +
-  // liste) pour les opérations groupées, l'inspecteur éditant ensuite la
-  // sélection obtenue. Éditeur uniquement (en publish on ne sélectionne pas).
-  const has_select_tab = !app_data.is_static
-  const has_tabs = has_edit_tab || has_select_tab
+  // #1258 — l'onglet « Sélectionner » a migré EN HAUT du config menu (section
+  // repliable de l'inspecteur) : composer une sélection depuis le tiroir de
+  // filtres était contre-intuitif. Le tiroir ne garde que Filtrer / Éditer.
+  const has_tabs = has_edit_tab
   const in_edit_tab = has_edit_tab && filterTab === 'edit'
-  const in_select_tab = has_select_tab && filterTab === 'select'
   const active_edit_section = edit_sections.find(s => s.id === edit_section_id) ?? edit_sections[0]
-  const drawer_width_px = (in_edit_tab || in_select_tab) ? width_filter_drawer_edit : width_fitler_drawer
+  const drawer_width_px = in_edit_tab ? width_filter_drawer_edit : width_fitler_drawer
   const width_drawer = (drawerOpen ? drawer_width_px + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin
   // Ouvre/ferme le drawer de filtres. Comme la config, c'est un OVERLAY au-dessus de toute la
   // grande zone (diagramme, tableur, doc…) : il ne touche ni à l'état doc/tableur ni au cadrage.
@@ -408,7 +405,7 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
           {has_tabs ? (
             <Box style={{
               display: 'grid',
-              gridTemplateColumns: `repeat(${1 + (has_select_tab ? 1 : 0) + (has_edit_tab ? 1 : 0)}, 1fr) auto`,
+              gridTemplateColumns: `repeat(${1 + (has_edit_tab ? 1 : 0)}, 1fr) auto`,
               gap: '0.15rem', padding: '0.3rem 0.3rem 0', alignItems: 'stretch'
             }}>
               {/* #1258 — même langage que la rangée d'onglets de l'inspecteur :
@@ -426,19 +423,6 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
                   {app_data.t('filter_panel.filter')}
                 </Box>
               </Button>
-              {has_select_tab ? (
-                <Button
-                  size='xs'
-                  variant={filterTab === 'select' ? 'inspector_tab_activated' : 'inspector_tab'}
-                  title={app_data.t('filter_panel.select_tooltip')}
-                  onClick={() => setFilterTab('select')}
-                >
-                  {app_data.icon_library.icon_DA_selection}
-                  <Box as='span' style={{ fontSize: '0.62rem', lineHeight: 1 }}>
-                    {app_data.t('filter_panel.select')}
-                  </Box>
-                </Button>
-              ) : <></>}
               {has_edit_tab ? (
                 <Button
                   size='xs'
@@ -468,16 +452,7 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
               </Button>
             </Box>
           ) : <></>}
-          {in_select_tab ? (
-            // minHeight : la liste déroulante du sélecteur s'ouvre EN FLUX dans
-            // son conteneur ; sans hauteur réservée, le tiroir (height:fit-content)
-            // la rogne.
-            <Box layerStyle='drawerFilterBox' style={{ minHeight: '22rem' }}>
-              <WrapperContentConfig title={app_data.t('filter_panel.select_elements')}>
-                <ElementSelectionTool app_data={app_data} />
-              </WrapperContentConfig>
-            </Box>
-          ) : in_edit_tab ? (
+          {in_edit_tab ? (
             // Sous-onglets : empiler les 5 éditeurs (groupes de tags, vues)
             // rendait le bas du tiroir inatteignable. Un contenu à la fois,
             // comme la rangée d'onglets de l'inspecteur.

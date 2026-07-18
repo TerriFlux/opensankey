@@ -174,7 +174,31 @@ Conséquences actées (2026-07-18) :
    `unitTags` natif de SEP.
 4. Renommage « sous-valeurs » → « valeurs du flux » : à trancher (UI seule ou
    aussi code/JSON `sub_values`, encore possible tant que la branche n'est pas
-   mergée).
+   mergée). [Fait : `tagged_values` partout.]
+
+### 3.0ter Modèle final (2026-07-18) : PAS de valeur principale
+
+Précision utilisateur qui invalide la « valeur principale » conservée jusqu'ici
+(première ligne du tableau, pilote de l'épaisseur) :
+
+- Un groupe d'étiquettes de flux est **soit PORTEUR DE VALEURS, soit pure
+  étiquette** (flag de groupe, remplace la distinction implicite actuelle).
+- Groupe porteur : **chaque valeur du flux est attachée à un tag** du groupe —
+  valeurs keyées par tags, éparses (pas de combinatoire, pas de complétude).
+  C'est un dataTag-light ; la dernière asymétrie avec les dimensions disparaît.
+- **Pas de flux parent** : le flux n'a pas de scalaire privilégié au-dessus de
+  la liste. Cas dégénéré : un flux sans groupe porteur a UNE valeur à
+  coordonnée vide (invisible pour l'utilisateur).
+- **Valeur affichée** (épaisseur en bannière Unique, libellé) = celle du tag
+  sélectionné du/des groupes porteurs ; à défaut la valeur à coordonnée vide.
+- **Solveur/SEP** (validé user) : le champ scalaire historique `value` du JSON
+  sérialise la **valeur du tag sélectionné** — le solveur voit la tranche
+  courante, comme pour les dataTags.
+- **Épaisseur en bannière multi** (validé user) : chaque bande fait
+  `valeur × échelle DE SON TAG` (pendant de `Class_DataTag._scale`, cas
+  unitTag généralisé) ; l'épaisseur totale est la somme des largeurs de bandes.
+  Groupes additifs : échelles égales → parts naturelles ; jeux d'unités :
+  échelles réglées par tag, coexistence à la e!Sankey.
 
 ### 3.1 Contrainte de cardinalité
 

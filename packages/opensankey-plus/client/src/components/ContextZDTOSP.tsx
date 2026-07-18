@@ -118,6 +118,19 @@ export const ContextZDT = (
       return (is_node_horizontally_in_zone && is_node_vertically_in_zone)
     })
 
+  // #1259 — un cadre peut aussi englober d'autres ZDT (cohérent avec la section
+  // « Groupe » de l'inspecteur, OS#1254). Garde anti-cycle : jamais soi-même ni
+  // un cadre qui contient déjà celui-ci.
+  const getContainersInsideContextZDT = () => app_data.drawing_area.sankey.containers_list
+    .filter(c => c !== zdt_to_contextualise)
+    .filter(c => !c.attached_node.includes(zdt_to_contextualise))
+    .filter(c => (
+      (c.position_x >= zdt_to_contextualise.position_x) &&
+      ((c.position_x + c.getShapeWidthToUse()) <= (zdt_to_contextualise.position_x + zdt_to_contextualise.shape_min_width)) &&
+      (c.position_y >= zdt_to_contextualise.position_y) &&
+      ((c.position_y + c.getShapeHeightToUse()) <= (zdt_to_contextualise.position_y + zdt_to_contextualise.shape_min_height))
+    ))
+
   const moveToFirstPlan = () => {
     drawing_area.selected_containers_list.forEach(cont => {
       const idx_to_shift = drawing_area.list_g_element.indexOf(cont.id)
@@ -174,6 +187,8 @@ export const ContextZDT = (
     runWithZdtUndo(() => {
       zdt_to_contextualise.tied_to_nodes = true
       app_data.drawing_area.purgeSelection()
+      // #1259 — grouper n'ajuste PAS le cadre : « Ajuster le cadre au groupe »
+      // est une commande séparée (btn_fit_frame_to_attached).
       getNodeInsideContextZDT()
         .forEach(n => {
           n.getListDescendantOfNode().forEach(node => {
@@ -183,8 +198,13 @@ export const ContextZDT = (
             zdt_to_contextualise.attachNodeToCont(node)
           })
           zdt_to_contextualise.attachNodeToCont(n)
-          zdt_to_contextualise.computeSizeAndPositionFromAttachedNodes()
         })
+      // #1259 — attache aussi les ZDT géométriquement contenues dans le cadre.
+      getContainersInsideContextZDT().forEach(c => {
+        zdt_to_contextualise.attachNodeToCont(c)
+      })
+      // #1259 — le cadre passe derrière ses membres, sinon il capte leurs clics.
+      drawing_area.sendFrameBehindMembers(zdt_to_contextualise)
       zdt_to_contextualise.draw()
     })
     closeContextMenu()

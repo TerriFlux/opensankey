@@ -463,8 +463,12 @@ export class NodePositioning {
     return this._parametric.computeColumnsFromX()
   }
 
-  public updateRecyclingFromPositions(): { [link_id: string]: boolean } {
-    return this._parametric.updateRecyclingFromPositions()
+  public updateRecyclingFromPositions(only_touching_nodes?: Set<string>): { [link_id: string]: boolean } {
+    return this._parametric.updateRecyclingFromPositions(only_touching_nodes)
+  }
+
+  public lockRecyclingStatusDivergences(): string[] {
+    return this._parametric.lockRecyclingStatusDivergences()
   }
 
   public computeParametrization(use_horizontal_index: boolean) {
