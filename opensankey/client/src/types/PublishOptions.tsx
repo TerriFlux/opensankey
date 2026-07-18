@@ -32,6 +32,7 @@ export interface SankeyGlobals {
   unitary?: boolean      // default false : onglet « Unit. » (sankey unitaire OS+) dans la topbar en publish
   doc?: boolean          // default false : bouton « Doc » (panneau documentation) dans la topbar en publish, visible seulement si une doc existe
   navigation_help?: boolean  // default false : bouton « Aide à la navigation » dans la topbar en publish
+  badge?: boolean        // default true : badge « Made with OpenSankey » (lien terriflux.com) en bas à gauche en publish
 
   // Langue
   language?: string      // force la langue de l'UI ('fr', 'en', ...) ; le paramètre d'URL ?lang= est prioritaire
@@ -86,6 +87,7 @@ export interface PublishOptions {
   unitary: boolean
   doc: boolean
   navigation_help: boolean
+  badge: boolean
   data_type: boolean
   data_type_intervals: boolean
   value_filter: boolean
@@ -182,6 +184,7 @@ export const getPublishOptions = (): PublishOptions => {
     unitary: bool(s.unitary, false),
     doc: bool(s.doc, false),
     navigation_help: bool(s.navigation_help, false),
+    badge: bool(s.badge, true),
     data_type: bool(s.data_type, true),
     data_type_intervals: bool(s.data_type_intervals, true),
     value_filter: bool(s.value_filter, true),
@@ -230,6 +233,7 @@ export type ViewerSankeyOptions = {
   unitary?: boolean
   doc?: boolean
   navigation_help?: boolean
+  badge?: boolean
   logo?: string
   header?: string
   diagram?: string | Record<string, unknown>
@@ -267,7 +271,7 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
 
   const keys: Array<keyof ViewerSankeyOptions> = [
     'editable', 'topbar', 'footer', 'toolbar', 'fit_toolbar', 'fullscreen', 'filter_bar', 'embedded', 'recenter',
-    'edit_button', 'unitary', 'doc', 'navigation_help',
+    'edit_button', 'unitary', 'doc', 'navigation_help', 'badge',
     'logo', 'header', 'diagram', 'diagram_layout', 'diagram_layout_options',
     'diagrams_list', 'sous_filieres',
     'data_type', 'data_type_intervals', 'value_filter',
