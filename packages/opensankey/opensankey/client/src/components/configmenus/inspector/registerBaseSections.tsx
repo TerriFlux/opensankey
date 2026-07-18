@@ -106,16 +106,19 @@ export function registerBaseInspectorSections(): void {
   })
 
   // ---- Onglet ICÔNE (OSP) --------------------------------------------------
+  // #1258 — les ZONES (formes, zones de texte, titre) sont des Class_NodeBase :
+  // elles portent une icône comme les nœuds, l'onglet leur est donc servi aussi.
   inspector_registry.register({
     id: 'os.tab.icone',
-    target: ['node', 'mixed'],
+    target: ['node', 'container', 'title', 'mixed'],
     order: 40,
     overload_prefixes: ['icon'],
     hue: 'style',
     title: (app_data) => app_data.t('Menu.tabs.icon'),
     icon: (app_data) => app_data.icon_library.icon_tab_icon,
     gate: (app_data) => app_data.has_sankey_plus
-      && app_data.drawing_area.selected_nodes_list.length > 0,
+      && (app_data.drawing_area.selected_nodes_list.length > 0
+        || app_data.drawing_area.selected_containers_list.length > 0),
     render: appearanceTab('icon')
   })
 
