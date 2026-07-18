@@ -426,6 +426,18 @@ export class Class_DrawingArea {
   private _maximum_flux?: number
   private _minimum_flux?: number
 
+  // OS#1272 — Marqueur visuel d'avertissement de bilan par nœud (Σ flux entrants ≠
+  // Σ flux sortants). Réglage GLOBAL, simple contrôle d'AFFICHAGE, DISTINCT de
+  // Class_NodeElement.has_material_balance (contrainte du solveur MFA de
+  // réconciliation). Désactivé par défaut → aucun changement de rendu.
+  private _balance_marker_enabled: boolean = false
+  // Stratégie de tolérance : 'exact' (toute différence non nulle), 'absolute'
+  // (|Δ| > seuil, dans l'unité des flux) ou 'relative' (|Δ| > seuil% × max(Σentrée, Σsortie)).
+  private _balance_marker_strategy: 'exact' | 'absolute' | 'relative' = 'relative'
+  // Seuil de tolérance : ignoré en 'exact' ; unité de flux en 'absolute' ;
+  // pourcentage (0–100) en 'relative'. Défaut 1 (= 1 %).
+  private _balance_marker_tolerance: number = 1
+
   // Référence d'échelle par view tag : pour un view tag donné (clé = id de l'étiquette),
   // le flux `link_id` est calé à `thickness` px. Quand ce view tag est sélectionné,
   // l'échelle du diagramme est recalculée (applyViewTagScaleReference) pour que ce flux
@@ -653,6 +665,9 @@ export class Class_DrawingArea {
     this._height = drawing_area_to_copy._height
     this._maximum_flux = drawing_area_to_copy._maximum_flux
     this._minimum_flux = drawing_area_to_copy._minimum_flux
+    this._balance_marker_enabled = drawing_area_to_copy._balance_marker_enabled
+    this._balance_marker_strategy = drawing_area_to_copy._balance_marker_strategy
+    this._balance_marker_tolerance = drawing_area_to_copy._balance_marker_tolerance
     this._maximum_node = drawing_area_to_copy._maximum_node
     this._minimum_node = drawing_area_to_copy._minimum_node
     this._structure_mode_force_min = drawing_area_to_copy._structure_mode_force_min
@@ -3034,6 +3049,25 @@ export class Class_DrawingArea {
    */
   public applyMaximumNodeScale() {
     this._scale_overrides.applyMaximumNodeScale(this)
+  }
+
+  // OS#1272 — Réglages globaux du marqueur de bilan (voir champs privés).
+  public get balance_marker_enabled(): boolean { return this._balance_marker_enabled }
+  public set balance_marker_enabled(value: boolean) {
+    this._balance_marker_enabled = value
+    this.drawElements()
+  }
+  public get balance_marker_strategy(): 'exact' | 'absolute' | 'relative' { return this._balance_marker_strategy }
+  public set balance_marker_strategy(value: 'exact' | 'absolute' | 'relative') {
+    this._balance_marker_strategy = value
+    this.drawElements()
+  }
+  public get balance_marker_tolerance(): number { return this._balance_marker_tolerance }
+  public set balance_marker_tolerance(value: number) {
+    if (value >= 0) {
+      this._balance_marker_tolerance = value
+      this.drawElements()
+    }
   }
 
   public get minimum_flux(): number | undefined { return this._minimum_flux }
