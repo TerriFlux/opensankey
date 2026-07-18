@@ -43,6 +43,7 @@ import {
   DrawerContent,
   Text
 } from '@chakra-ui/react'
+import { SearchIcon } from '@chakra-ui/icons'
 
 import { ApplyLayoutDialog } from '../dialogs/SankeyMenuDialogs'
 import {
@@ -242,6 +243,20 @@ export const SankeyMenu = (
             {icon_library.icon_filter_tags}
           </Button>
         </OSTooltip> : <></>}
+        {/* OS#1273 — recherche d'élément (nœud / flux / zone). Bascule la barre de
+            recherche (même slot que le raccourci Ctrl+F). */}
+        <OSTooltip placement='left' label={t('search.tooltip')}>
+          <Button
+            id='buttonOpenElementSearch'
+            variant='toolbar_button_open_filter'
+            size='sizeToolbarButton'
+            position='relative'
+            aria-label={t('search.title')}
+            onClick={() => menu_configuration.ref_toggle_search.current()}
+          >
+            <SearchIcon />
+          </Button>
+        </OSTooltip>
         <Divider />
         <ComponentMouseMode app_data={app_data} updateParentComponent={refreshToolsColumn} />
         {/* Zone de texte : à côté de l'outil de tracé (mode édition). Active le mode
