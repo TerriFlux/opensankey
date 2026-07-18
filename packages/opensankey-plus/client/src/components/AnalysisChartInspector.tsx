@@ -41,23 +41,26 @@ const ATTR = 'analysis_descriptor'
 const readDesc = (t: DescTarget): Type_AnalysisDescriptor | undefined =>
   t.attributes[ATTR] as Type_AnalysisDescriptor | undefined
 
+// Fonction de traduction (signature app_data.t).
+type TFn = Class_ApplicationData['t']
+
 // Un choix de décomposition présenté dans le select (option ↔ spec).
 type DecomposeOption = { key: string, label: string, spec: Type_DecomposeSpec | null }
 
 // Options de décomposition selon le sujet (nœud : flux E/S, regroupables par
 // fluxTag, + nœuds enfants par dimension ; flux : flux enfants par dimension).
-const buildDecomposeOptions = (subject: Type_ChartSubject): DecomposeOption[] => {
-  const opts: DecomposeOption[] = [{ key: 'none', label: '— aucune —', spec: null }]
+const buildDecomposeOptions = (subject: Type_ChartSubject, t: TFn): DecomposeOption[] => {
+  const opts: DecomposeOption[] = [{ key: 'none', label: t('inspector.analysis.none'), spec: null }]
   if (subject.kind === 'node') {
     const node = subject.node
-    opts.push({ key: 'inputs', label: 'Flux entrants', spec: { kind: 'inputs' } })
-    opts.push({ key: 'outputs', label: 'Flux sortants', spec: { kind: 'outputs' } })
+    opts.push({ key: 'inputs', label: t('inspector.analysis.inputs'), spec: { kind: 'inputs' } })
+    opts.push({ key: 'outputs', label: t('inspector.analysis.outputs'), spec: { kind: 'outputs' } })
     node.sankey.flux_taggs_list.forEach(g => {
-      opts.push({ key: `in_by_${g.id}`, label: `Flux entrants par ${g.name}`, spec: { kind: 'inputs', group_by_flux_tagg_id: g.id } })
-      opts.push({ key: `out_by_${g.id}`, label: `Flux sortants par ${g.name}`, spec: { kind: 'outputs', group_by_flux_tagg_id: g.id } })
+      opts.push({ key: `in_by_${g.id}`, label: t('inspector.analysis.inputs_by', { group: g.name }), spec: { kind: 'inputs', group_by_flux_tagg_id: g.id } })
+      opts.push({ key: `out_by_${g.id}`, label: t('inspector.analysis.outputs_by', { group: g.name }), spec: { kind: 'outputs', group_by_flux_tagg_id: g.id } })
     })
     node.dimensions_as_parent.forEach(dim => {
-      opts.push({ key: `children_${dim.id}`, label: `Nœuds enfants (${dim.name})`, spec: { kind: 'node_children', dimension_id: dim.id } })
+      opts.push({ key: `children_${dim.id}`, label: t('inspector.analysis.node_children', { dim: dim.name }), spec: { kind: 'node_children', dimension_id: dim.id } })
     })
   } else {
     const link = subject.link
@@ -65,7 +68,7 @@ const buildDecomposeOptions = (subject: Type_ChartSubject): DecomposeOption[] =>
     link.source.dimensions_as_parent.forEach(d => dims.set(d.id, d.name))
     link.target.dimensions_as_parent.forEach(d => dims.set(d.id, d.name))
     dims.forEach((name, id) => {
-      opts.push({ key: `flux_children_${id}`, label: `Flux enfants (${name})`, spec: { kind: 'flux_children', dimension_id: id } })
+      opts.push({ key: `flux_children_${id}`, label: t('inspector.analysis.flux_children', { dim: name }), spec: { kind: 'flux_children', dimension_id: id } })
     })
   }
   return opts
@@ -106,10 +109,11 @@ const currentSubject = (app_data: Class_ApplicationData): Type_ChartSubject | nu
 }
 
 export const AnalysisChartInspector = ({ app_data, scope }: { app_data: Class_ApplicationData, scope: Scope }) => {
+  const t = app_data.t
   const subject = currentSubject(app_data)
   const container_ref = useRef<HTMLDivElement>(null)
   const [, forceTick] = useState(0)
-  const refresh = () => forceTick(t => t + 1)
+  const refresh = () => forceTick(n => n + 1)
 
   const da = app_data.drawing_area
   const mc = app_data.menu_configuration
@@ -127,7 +131,7 @@ export const AnalysisChartInspector = ({ app_data, scope }: { app_data: Class_Ap
     : 'none'
 
   const decompose_options = useMemo(
-    () => (subject ? buildDecomposeOptions(subject) : []),
+    () => (subject ? buildDecomposeOptions(subject, t) : []),
     [sig] // eslint-disable-line -- rebâti au changement de sujet, pas d'autre dép.
   )
   const data_taggs = subject
@@ -203,7 +207,10 @@ export const AnalysisChartInspector = ({ app_data, scope }: { app_data: Class_Ap
   useEffect(() => {
     const el = container_ref.current
     if (!el || !subject) return
-    const draw = () => drawAnalysisChart(el, subject, effective, { others_label: 'Autres', empty_label: 'Rien à afficher' })
+    const draw = () => drawAnalysisChart(el, subject, effective, {
+      others_label: t('view.unit_chart_others'),
+      empty_label: t('view.unit_chart_empty')
+    })
     draw()
     let raf = 0
     const ro = new ResizeObserver(() => {
@@ -216,7 +223,7 @@ export const AnalysisChartInspector = ({ app_data, scope }: { app_data: Class_Ap
   }, [sig, JSON.stringify(effective), subject]) // eslint-disable-line
 
   if (!subject) {
-    return <Box layerStyle="empty_config_text"><span>Sélectionner un nœud ou un flux.</span></Box>
+    return <Box layerStyle="empty_config_text"><span>{t('inspector.analysis.select_subject')}</span></Box>
   }
 
   const is_cross = !!(effective.decompose && effective.compare)
@@ -224,16 +231,16 @@ export const AnalysisChartInspector = ({ app_data, scope }: { app_data: Class_Ap
   return (
     <Box style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.2rem' }}>
       <Box>
-        <Text style={{ fontSize: '0.7rem', opacity: 0.7 }}>Décomposer par</Text>
+        <Text style={{ fontSize: '0.7rem', opacity: 0.7 }}>{t('inspector.analysis.decompose_by')}</Text>
         <Select size="xs" value={decompose_key} onChange={e => setDecompose(e.target.value)}>
           {decompose_options.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
         </Select>
       </Box>
 
       <Box>
-        <Text style={{ fontSize: '0.7rem', opacity: 0.7 }}>Comparer selon</Text>
+        <Text style={{ fontSize: '0.7rem', opacity: 0.7 }}>{t('inspector.analysis.compare_by')}</Text>
         <Select size="xs" value={compare_id} onChange={e => setCompare(e.target.value)}>
-          <option value="none">— aucune —</option>
+          <option value="none">{t('inspector.analysis.none')}</option>
           {data_taggs.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
         </Select>
       </Box>
@@ -247,7 +254,9 @@ export const AnalysisChartInspector = ({ app_data, scope }: { app_data: Class_Ap
               variant={repr_value === r ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
               onClick={() => setRepr(r)}
             >
-              {r === 'auto' ? 'Auto' : r === 'donut' ? 'Couronne' : 'Barres'}
+              {r === 'auto'
+                ? t('inspector.analysis.repr_auto')
+                : r === 'donut' ? t('inspector.analysis.repr_donut') : t('inspector.analysis.repr_bars')}
             </Button>
           ))}
         </ButtonGroup>
@@ -259,7 +268,7 @@ export const AnalysisChartInspector = ({ app_data, scope }: { app_data: Class_Ap
         isDisabled={isDescriptorEmpty(effective)}
         onChange={e => setTooltip(e.target.checked)}
       >
-        <Text as="span" style={{ fontSize: '0.75rem' }}>Afficher dans l'info-bulle</Text>
+        <Text as="span" style={{ fontSize: '0.75rem' }}>{t('inspector.analysis.show_in_tooltip')}</Text>
       </Checkbox>
 
       {/* « Afficher sur le nœud » : le nœud est dessiné en couronne ou histogramme
@@ -271,7 +280,7 @@ export const AnalysisChartInspector = ({ app_data, scope }: { app_data: Class_Ap
           isDisabled={isDescriptorEmpty(effective)}
           onChange={e => setOnNode(e.target.checked)}
         >
-          <Text as="span" style={{ fontSize: '0.75rem' }}>Afficher sur le nœud (couronne / histogramme)</Text>
+          <Text as="span" style={{ fontSize: '0.75rem' }}>{t('inspector.analysis.show_on_node')}</Text>
         </Checkbox>
       )}
 
