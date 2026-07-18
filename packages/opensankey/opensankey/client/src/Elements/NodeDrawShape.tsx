@@ -25,6 +25,8 @@
 // ==================================================================================================
 
 import { Class_NodeBase } from './NodeBase'
+import type { Class_NodeElement } from './Node'
+import { Type_AnalysisDescriptor } from '../Charts/AnalysisDescriptor'
 
 type draw_arrow_partFType = (
   node_face_size: number,
@@ -96,12 +98,30 @@ export class NodeDrawShape {
     // Clean previous shape and its associated clip-path wrapper
     this._node.d3_selection_g_shape?.selectAll('.node_shape').remove()
     this._node.d3_selection_g_shape?.selectAll('.node_border_clip_def').remove()
+    // OS#1278 — nettoyer un éventuel camembert précédent (le nœud a pu repasser de
+    // « camembert » à forme normale : sa suppression ne passe pas par .node_shape).
+    this._node.d3_selection_g_shape?.selectAll('.node_analysis_pie').remove()
 
     // Do the rest only if shape is visible
     // Compute shape attributes
     const width = this._node.getShapeWidthToUse()+this._node.shape_margin_left+this._node.shape_margin_right
     const height = this._node.getShapeHeightToUse()+this._node.shape_margin_top+this._node.shape_margin_bottom
     const color = this._node.getShapeColorToUse()
+
+    // OS#1278 — CAMEMBERT SUR LE NŒUD : si le descripteur du nœud a surfaces.on_node,
+    // le nœud EST un camembert (dessiné par le hook OS+ avec les couleurs du
+    // diagramme). On saute alors la forme normale. Gardé aux VRAIS nœuds (pas les
+    // zones) : la décomposition lit input/output_links_list.
+    const app_data = this._node.drawing_area.application_data
+    const analysis = this._node.getElementProperty('analysis_descriptor') as Type_AnalysisDescriptor | undefined
+    const g_shape_el = this._node.d3_selection_g_shape?.node() as SVGGElement | null
+    if (g_shape_el
+      && analysis?.surfaces?.on_node && analysis.decompose
+      && typeof app_data.draw_node_analysis_overlay === 'function'
+      && 'input_links_list' in this._node) {
+      app_data.draw_node_analysis_overlay(this._node as unknown as Class_NodeElement, g_shape_el, width, height)
+      return
+    }
 
     // Apply shape value
     if (this._node.shape_type === 'rect') {

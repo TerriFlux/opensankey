@@ -19,19 +19,15 @@ import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { Class_DrawingAreaOSP, DrawingAreaPersistenceOSP } from '../types/DrawingAreaOSP'
 import { createUnitarySankeyDetached, refocusUnitaryDrawingArea, UnitaryValueMode } from './UnitaryBoard'
 import { loadExcelFileAsSankeyJSON } from './SankeyPlusViews'
-import { drawBarChart, drawDonutChart } from '@terriflux/opensankey/src/Charts/NodeStatsCharts'
-import { Class_DataTagGroup } from '@terriflux/opensankey/src/types/TagGroup'
-import { buildDataTagSeries, buildFlowSlices } from './NodeStatsData'
+import { drawNodePieOnGroup } from '@terriflux/opensankey/src/Charts/NodeStatsCharts'
+import { drawAnalysisChart } from './AnalysisChartRender'
+import { buildAnalysisChartData } from './AnalysisChartData'
+import { Type_AnalysisDescriptor } from '@terriflux/opensankey/src/Charts/AnalysisDescriptor'
 
 // Conteneur DOM (id fixe) de la zone de dessin du panneau unitaire singleton.
 const UNITARY_MODAL_CONTAINER_ID = 'unitary_sankey_app_singleton'
 
 type SourceMode = 'local' | 'excel'
-
-// Mode d'affichage du panneau : sankey unitaire (défaut) ou graphiques
-// statistiques du nœud central (couronne des flux E/S, histogramme par data tag
-// — cf. Charts/NodeStatsCharts OS base).
-type UnitaryDisplayMode = 'sankey' | 'donut' | 'bars'
 
 // ===========================================================================
 // Panneau « Sankey unitaire » (singleton) — fusion local + Excel
@@ -66,12 +62,6 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
   // Mode d'affichage des valeurs de flux : pourcentage (défaut), valeur brute, ou
   // normalisé (un flux de référence fixé à 1). Reconstruit l'unitaire à chaque changement.
   const [value_mode, setValueMode] = useState<UnitaryValueMode>('percent')
-  // Mode d'affichage du panneau : sankey unitaire ou graphique statistique du nœud.
-  const [display_mode, setDisplayMode] = useState<UnitaryDisplayMode>('sankey')
-  // Côté des flux représentés par la couronne et les couronnes emboîtées : entrées ou sorties.
-  const [flow_side, setFlowSide] = useState<'in' | 'out'>('out')
-  // Groupe de data tags de l'histogramme (si le sankey en a plusieurs).
-  const [bars_tagg_id, setBarsTaggId] = useState<string | null>(null)
   // Flux de référence (id) pour le mode normalisé.
   const [normalize_link_id, setNormalizeLinkId] = useState<string | null>(null)
 
@@ -183,6 +173,37 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
     }
   }
 
+  // Hook consommé par l'onglet « Analyse » du tooltip de nœud (OS#1278) : dessine
+  // le graphique décrit par l'attribut analysis_descriptor du nœud (couronne /
+  // histogramme) dans le conteneur DOM passé. Redessin léger (pas de reconstruction).
+  app_data.draw_analysis_in_container = (element: Class_NodeElement | Class_LinkElement, container_selector: string) => {
+    const el = document.querySelector(container_selector) as HTMLElement | null
+    if (!el) return
+    const descriptor = element.getElementProperty('analysis_descriptor') as Type_AnalysisDescriptor | undefined
+    if (!descriptor) return
+    const subject = element instanceof Class_NodeElement
+      ? { kind: 'node' as const, node: element }
+      : { kind: 'flux' as const, link: element as Class_LinkElement }
+    const draw = () => drawAnalysisChart(el, subject, descriptor, {
+      others_label: app_data.t('view.unit_chart_others'),
+      empty_label: app_data.t('view.unit_chart_empty')
+    })
+    draw()
+    return { redraw: draw, cleanup: () => { el.innerHTML = '' } }
+  }
+
+  // Hook consommé par NodeDrawShape (OS#1278) : dessine le nœud EN CAMEMBERT quand
+  // son descripteur a surfaces.on_node. Décomposition SEULE (pas de comparaison sur
+  // une forme de nœud) ; couleurs du DIAGRAMME (use_diagram_colors).
+  app_data.draw_node_analysis_overlay = (node: Class_NodeElement, group_el: SVGGElement, width: number, height: number) => {
+    const descriptor = node.getElementProperty('analysis_descriptor') as Type_AnalysisDescriptor | undefined
+    if (!descriptor?.decompose) return
+    const data = buildAnalysisChartData({ kind: 'node', node }, { decompose: descriptor.decompose, compare: null }, { use_diagram_colors: true })
+    const parts = data.series[0]?.parts ?? []
+    const radius = Math.min(width, height) / 2
+    drawNodePieOnGroup(group_el, parts, { cx: width / 2, cy: height / 2, radius })
+  }
+
   const node_id = node?.id
 
   // Nœud par défaut : à l'ouverture / au changement de source / de fichier, on
@@ -209,9 +230,6 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
   // par l'effet de refocus juste après.
   useEffect(() => {
     if (!open) return
-    // Mode graphique : pas de board sankey — le cleanup du run précédent a démonté la
-    // DA détachée, l'effet de dessin des graphiques (ci-dessous) prend le conteneur.
-    if (display_mode !== 'sankey') return
     const src = source_app_data
     const nodes = centralCandidates(src)
     if (nodes.length === 0) return
@@ -272,53 +290,7 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
     // référence par défaut, cf. effet plus bas) et le remettre ici reconstruisait tout le
     // diagramme (toJSON/fromJSON) à chaque changement de nœud — par-dessus le refocus léger,
     // d'où la lenteur. Le mode normalisé est mis à jour par l'effet léger dédié ci-dessous.
-  }, [open, value_mode, source_mode, selected_data_id, rebuild_count, display_mode])
-
-  // DESSIN DES GRAPHIQUES statistiques du nœud central (couronne / histogramme)
-  // dans le conteneur partagé avec le sankey unitaire (dont la construction est
-  // suspendue quand display_mode !== 'sankey'). Redessin léger (pas de
-  // toJSON/fromJSON) à chaque changement de nœud / réglage / data tag.
-  useEffect(() => {
-    if (!open || display_mode === 'sankey') return
-    const el = document.getElementById(UNITARY_MODAL_CONTAINER_ID)
-    if (!el) return
-    const chart_opts = {
-      others_label: t('view.unit_chart_others'),
-      empty_label: t('view.unit_chart_empty')
-    }
-    const drawChart = () => {
-      const n = node_live.current
-      if (!n) return
-      if (display_mode === 'donut') {
-        drawDonutChart(el, buildFlowSlices(n, flow_side), chart_opts)
-      } else {
-        const sankey = (source_app_data.drawing_area as Class_DrawingAreaOSP).sankey
-        const tagg = ((bars_tagg_id ? sankey.data_taggs_dict[bars_tagg_id] : undefined)
-          ?? sankey.data_taggs_list[0]) as Class_DataTagGroup | undefined
-        drawBarChart(el, tagg ? buildDataTagSeries(n, tagg) : [], chart_opts)
-      }
-    }
-    drawChart()
-    // Recadrage au redimensionnement du conteneur (dock / dialogue flottant), même
-    // patron que le mode sankey (redessin complet : les graphiques sont bon marché).
-    let ro: ResizeObserver | null = null
-    let raf = 0
-    if (typeof ResizeObserver !== 'undefined') {
-      ro = new ResizeObserver(() => {
-        if (raf) cancelAnimationFrame(raf)
-        raf = requestAnimationFrame(drawChart)
-      })
-      ro.observe(el)
-    }
-    return () => {
-      if (raf) cancelAnimationFrame(raf)
-      ro?.disconnect()
-      el.innerHTML = ''
-    }
-    // Pas de dep sur la géométrie du dock : tout changement de taille du conteneur
-    // (dock, flottant, séparateurs) passe par le ResizeObserver ci-dessus.
-  }, [open, display_mode, node_id, flow_side, bars_tagg_id,
-    source_mode, selected_data_id, rebuild_count])
+  }, [open, value_mode, source_mode, selected_data_id, rebuild_count])
 
   // MODE NORMALISÉ — MAJ LÉGÈRE du flux de référence sans reconstruction. Seul
   // sankey.normalised_link dépend de normalize_link_id (les types d'unité des styles sont
@@ -511,34 +483,6 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
     </Button>
   )
 
-  const displayButton = (mode: UnitaryDisplayMode, label: string) => (
-    <Button
-      size='sm'
-      variant={display_mode === mode
-        ? 'menuconfigpanel_option_button_activated'
-        : 'menuconfigpanel_option_button'}
-      onClick={() => setDisplayMode(mode)}
-    >
-      {label}
-    </Button>
-  )
-
-  const flowSideButton = (side: 'in' | 'out', label: string) => (
-    <Button
-      size='sm'
-      variant={flow_side === side
-        ? 'menuconfigpanel_option_button_activated'
-        : 'menuconfigpanel_option_button'}
-      onClick={() => setFlowSide(side)}
-    >
-      {label}
-    </Button>
-  )
-
-  // Sous-contrôle du mode histogramme : groupes de data tags du sankey source.
-  const data_taggs = (source_app_data.drawing_area as Class_DrawingAreaOSP)
-    .sankey.data_taggs_list as Class_DataTagGroup[]
-
   const detached = app_data.menu_configuration.main_zone_unitary_detached
   // Géométrie du bloc réservé (mode docké, partagée avec MainZoneTabs). En détaché, pas de rect :
   // le panneau est rendu en dialogue flottant draggable.
@@ -671,69 +615,34 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
             </Box>
           )}
 
-          {/* Type d'affichage : sankey unitaire ou graphiques statistiques du nœud
-                central (couronne des flux E/S, histogramme par data tag) +
-                sous-contrôles du mode graphique actif. */}
+          {/* Mode d'affichage des valeurs de flux : pourcentage (défaut), valeur brute,
+                ou normalisé (un flux de référence fixé à 1, choisi dans le dropdown).
+                (Les graphiques couronne/histogramme sont désormais dans l'onglet
+                Analyse de l'inspecteur, cf. OS#1278.) */}
           <HStack gap='3' flexWrap='wrap'>
             <Text fontSize='sm' fontWeight='600' color='gray.600' minWidth='6rem'>
-              {t('view.unit_display_mode')}
+              {t('view.choose_link_ref_sankey_unit')}
             </Text>
             <ButtonGroup size='sm' spacing='1'>
-              {displayButton('sankey', t('view.unit_display_sankey'))}
-              {displayButton('donut', t('view.unit_display_donut'))}
-              {displayButton('bars', t('view.unit_display_bars'))}
+              {modeButton('percent', t('view.unit_value_mode_percent'))}
+              {modeButton('value', t('view.unit_value_mode_value'))}
+              {modeButton('normalized', t('view.unit_value_mode_normalized'))}
             </ButtonGroup>
-            {display_mode === 'donut' && (
-              <ButtonGroup size='sm' spacing='1'>
-                {flowSideButton('in', t('view.unit_flow_in'))}
-                {flowSideButton('out', t('view.unit_flow_out'))}
-              </ButtonGroup>
-            )}
-            {display_mode === 'bars' && data_taggs.length > 1 && (
+            {value_mode === 'normalized' && (
               <Select
                 size='sm'
                 maxWidth='18rem'
                 bg='white'
-                value={bars_tagg_id ?? ''}
-                onChange={(e) => setBarsTaggId(e.target.value || null)}
-                placeholder={t('view.unit_tagg_choice')}
+                value={normalize_link_id ?? ''}
+                onChange={(e) => handleRefChange(e.target.value || null)}
+                placeholder={t('view.unit_value_mode_ref')}
               >
-                {data_taggs.map((tagg) => (
-                  <option key={tagg.id} value={tagg.id}>{tagg.name}</option>
+                {central_links.map((l) => (
+                  <option key={l.id} value={l.id}>{link_label(l)}</option>
                 ))}
               </Select>
             )}
           </HStack>
-
-          {/* Mode d'affichage des valeurs de flux : pourcentage (défaut), valeur brute,
-                ou normalisé (un flux de référence fixé à 1, choisi dans le dropdown).
-                Propre au sankey unitaire — masqué dans les modes graphiques. */}
-          {display_mode === 'sankey' && (
-            <HStack gap='3' flexWrap='wrap'>
-              <Text fontSize='sm' fontWeight='600' color='gray.600' minWidth='6rem'>
-                {t('view.choose_link_ref_sankey_unit')}
-              </Text>
-              <ButtonGroup size='sm' spacing='1'>
-                {modeButton('percent', t('view.unit_value_mode_percent'))}
-                {modeButton('value', t('view.unit_value_mode_value'))}
-                {modeButton('normalized', t('view.unit_value_mode_normalized'))}
-              </ButtonGroup>
-              {value_mode === 'normalized' && (
-                <Select
-                  size='sm'
-                  maxWidth='18rem'
-                  bg='white'
-                  value={normalize_link_id ?? ''}
-                  onChange={(e) => handleRefChange(e.target.value || null)}
-                  placeholder={t('view.unit_value_mode_ref')}
-                >
-                  {central_links.map((l) => (
-                    <option key={l.id} value={l.id}>{link_label(l)}</option>
-                  ))}
-                </Select>
-              )}
-            </HStack>
-          )}
         </Box>
 
         {/* Sélecteur de nœud central À GAUCHE de la zone de dessin (flex row, remplit la

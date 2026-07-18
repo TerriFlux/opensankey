@@ -60,6 +60,7 @@ import {MenuConfigurationLinksTags} from './components/SankeyPlusMenuConfigurati
 import {SankeySettingsEditionElementTags} from './components/SankeyPlusMenuConfigurationTags'
 import {ImportImageAsSvgBg} from './components/UtilsOSP'
 import { AFMEditionMenu } from './components/AFMSankeyMenu'
+import { AnalysisChartInspector } from './components/AnalysisChartInspector'
 import { Class_ApplicationDataOSP } from './types/ApplicationDataOSP'
 import { Class_MenuConfigOSP } from './types/MenuConfigOSP'
 
@@ -265,6 +266,22 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
           && <MenuConfigurationLinksTags new_data={app_osp} />}
       </>
     }
+  })
+
+  // OS#1278 — onglet ANALYSE : graphiques d'analyse (couronne / histogramme /
+  // histogramme empilé) pilotés par la grammaire décomposer × comparer.
+  inspector_registry.register({
+    id: 'osp.tab.analyse',
+    target: ['node', 'link'],
+    order: 60,
+    hue: 'data',
+    data_only: true,
+    title: (app) => app.t('inspector.tab.analysis'),
+    icon: (app) => app.icon_library.icon_tab_analysis,
+    gate: (app) => app.has_sankey_plus && (
+      app.drawing_area.selected_nodes_list.length > 0
+      || app.drawing_area.selected_links_list.length > 0),
+    render: (app, scope) => <AnalysisChartInspector app_data={app} scope={scope} />
   })
 }
 

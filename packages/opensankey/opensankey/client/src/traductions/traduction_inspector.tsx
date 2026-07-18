@@ -52,6 +52,7 @@ export const resources_inspector = {
           stock: 'Stock',
           tooltip: 'Tooltip',
           tags: 'Tags',
+          analysis: 'Analysis',
           title: 'Title',
           mfa: 'MFA'
         },
@@ -146,6 +147,7 @@ export const resources_inspector = {
           stock: 'Stock',
           tooltip: 'Infobulle',
           tags: 'Tags',
+          analysis: 'Analyse',
           title: 'Titre',
           mfa: 'AFM'
         },
@@ -238,6 +240,7 @@ export const resources_inspector = {
           stock: 'Stock',
           tooltip: 'Información',
           tags: 'Etiquetas',
+          analysis: 'Análisis',
           title: 'Título',
           mfa: 'AFM'
         },
@@ -330,6 +333,7 @@ export const resources_inspector = {
           stock: 'Bestand',
           tooltip: 'Tooltip',
           tags: 'Tags',
+          analysis: 'Analyse',
           title: 'Titel',
           mfa: 'MFA'
         },
@@ -422,6 +426,7 @@ export const resources_inspector = {
           stock: 'Stock',
           tooltip: 'Tooltip',
           tags: 'Tag',
+          analysis: 'Analisi',
           title: 'Titolo',
           mfa: 'AFM'
         },
