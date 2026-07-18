@@ -337,6 +337,26 @@ export class NodeTooltip {
       html += renderTotalRow(output_val, outputLinks[0])
     }
 
+    // OS#1272 — Section « Bilan » : entrée / sortie / différence. Toujours affichée
+    // quand le nœud a des flux des deux côtés (indépendante de l'activation du
+    // marqueur). Signale l'état si le marqueur est actif (⚠ déséquilibré / ✓ ok).
+    if (hasInputs && hasOutputs) {
+      const bal = this._node.getFluxBalance()
+      const sampleLink = this._node.input_links_list.filter(l => l.is_visible)[0]
+        ?? this._node.output_links_list.filter(l => l.is_visible)[0]
+      const status = this._node.balance_status
+      html += `<tr class="section-header"><td colspan="3">${t('Noeud.drawing_area_tooltip.balance') || 'Bilan'}</td></tr>`
+      html += `<tr><td>${t('Noeud.drawing_area_tooltip.prov') || 'Entrées'}</td><td class="value">${this.formatValue(bal.input, sampleLink)}</td><td></td></tr>`
+      html += `<tr><td>${t('Noeud.drawing_area_tooltip.dest') || 'Sorties'}</td><td class="value">${this.formatValue(bal.output, sampleLink)}</td><td></td></tr>`
+      let statusCell = ''
+      if (status) {
+        statusCell = status.violated
+          ? `⚠ ${t('Noeud.drawing_area_tooltip.balance_ko') || 'Déséquilibré'}`
+          : `✓ ${t('Noeud.drawing_area_tooltip.balance_ok') || 'Équilibré'}`
+      }
+      html += `<tr class="total-row"><td>${t('Noeud.drawing_area_tooltip.balance_diff') || 'Différence (E − S)'}</td><td class="value">${this.formatValue(bal.diff, sampleLink)}</td><td>${statusCell}</td></tr>`
+    }
+
     html += '</tbody></table>'
     return html
   }

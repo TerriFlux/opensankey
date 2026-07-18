@@ -1115,6 +1115,77 @@ export const NodeMaterialBalanceCheckbox = ({ app_data }: { app_data: Class_Appl
   )
 }
 
+// OS#1272 \u2014 Marqueur VISUEL d'avertissement de bilan (\u03a3 flux entrants \u2260 sortants).
+// Distinct de la contrainte AFM ci-dessus : simple contr\u00f4le d'affichage. R\u00e9glage
+// global (activation + strat\u00e9gie/tol\u00e9rance) port\u00e9 par la zone de dessin, plus un
+// override par n\u0153ud pour la ou les s\u00e9lection(s).
+export const NodeBalanceMarkerConfig = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const refresh = useModelBinding()
+  const da = app_data.drawing_area
+  const nodes = da.selected_nodes_list
+  const firstNode = nodes[0]
+  if (!firstNode) return <></>
+  const markDirty = () => app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+  return (
+    <Box>
+      <Checkbox
+        size='sm'
+        isChecked={da.balance_marker_enabled}
+        onChange={(e) => { da.balance_marker_enabled = e.target.checked; markDirty(); refresh() }}
+      >
+        <OSTooltip label={'Affiche un marqueur \u26a0 sur les n\u0153uds dont la somme des flux entrants diff\u00e8re de celle des sortants (contr\u00f4le visuel, distinct de la r\u00e9conciliation AFM).'}>
+          <Box as='span' fontSize='xs'>{'Marqueur de bilan (global)'}</Box>
+        </OSTooltip>
+      </Checkbox>
+      {da.balance_marker_enabled && (
+        <Box layerStyle='options_2cols'>
+          <Box as='span' fontSize='xs'>{'Strat\u00e9gie'}</Box>
+          <Select
+            size='xs'
+            variant='menuconfigpanel_option_select'
+            value={da.balance_marker_strategy}
+            onChange={(e) => { da.balance_marker_strategy = e.target.value as 'exact' | 'absolute' | 'relative'; markDirty(); refresh() }}
+          >
+            <option value='exact'>{'Exact'}</option>
+            <option value='absolute'>{'Tol\u00e9rance absolue'}</option>
+            <option value='relative'>{'Tol\u00e9rance relative (%)'}</option>
+          </Select>
+          {da.balance_marker_strategy !== 'exact' && (
+            <>
+              <Box as='span' fontSize='xs'>{da.balance_marker_strategy === 'relative' ? 'Tol\u00e9rance (%)' : 'Tol\u00e9rance'}</Box>
+              <ConfigMenuNumberInput
+                t={app_data.t}
+                default_value={da.balance_marker_tolerance}
+                minimum_value={0}
+                function_on_blur={(v) => { da.balance_marker_tolerance = v ?? 0; markDirty(); refresh() }}
+              />
+            </>
+          )}
+        </Box>
+      )}
+      <Box layerStyle='options_2cols'>
+        <Box as='span' fontSize='xs'>{'Ce(s) n\u0153ud(s)'}</Box>
+        <Select
+          size='xs'
+          variant='menuconfigpanel_option_select'
+          value={firstNode.balance_marker_mode}
+          onChange={(e) => {
+            const m = e.target.value as 'inherit' | 'on' | 'off'
+            nodes.forEach(n => { n.balance_marker_mode = m })
+            markDirty()
+            da.drawElements()
+            refresh()
+          }}
+        >
+          <option value='inherit'>{'Suivre le r\u00e9glage global'}</option>
+          <option value='on'>{'Toujours afficher'}</option>
+          <option value='off'>{'Ne jamais afficher'}</option>
+        </Select>
+      </Box>
+    </Box>
+  )
+}
+
 export const SankeyNodeSelectionSimple = ({ app_data }: { app_data: Class_ApplicationData }) => (
   <UnifiedElementSelection app_data={app_data} config={NODE_CONFIG} mode="simple" />
 )
