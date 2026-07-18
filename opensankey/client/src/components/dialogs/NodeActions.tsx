@@ -957,6 +957,9 @@ export class NodeActions {
         cont.attachNodeToCont(n)
         cont.computeSizeAndPositionFromAttachedNodes()
       })
+      // #1259 — le cadre créé passe derrière ses membres (sinon il capte
+      // leurs clics : nœuds inatteignables sous le cadre).
+      this.drawing_area.sendFrameBehindMembers(cont)
       this.drawing_area.draw()
     }
 
@@ -968,9 +971,9 @@ export class NodeActions {
     this.executeWithUndo(create, undo)
   }
 
-  // Cadre géométrique sur le nœud lui-même : attache les nœuds géométriquement
-  // à l'intérieur des bornes du nœud (mêmes règles que ZDT — cf.
-  // ContextZDTOSP.btn_select_node_inside), puis auto-resize.
+  // Groupe porté par le nœud lui-même : attache les éléments (nœuds + ZDT)
+  // géométriquement à l'intérieur des bornes du nœud (mêmes règles que ZDT —
+  // cf. ContextZDTOSP.btn_select_node_inside). Sans auto-resize.
   setTiedFrame = () => {
     const nodes = [...this.drawing_area.selected_nodes_list]
     const before = this._captureTiedFrameState(nodes)
@@ -1000,7 +1003,22 @@ export class NodeActions {
               inside.getListAncestorOfNode().forEach(a => { if (a !== n) n.attachNodeToCont(a) })
               n.attachNodeToCont(inside)
             })
-          n.computeSizeAndPositionFromAttachedNodes()
+          // #1259 — attache aussi les ZDT géométriquement contenues (cohérent
+          // avec le cadre ZDT et la section « Groupe » de l'inspecteur). Garde
+          // anti-cycle : jamais un cadre qui contient déjà ce nœud.
+          this.drawing_area.sankey.containers_list
+            .filter(cont => !cont.attached_node.includes(n))
+            .filter(cont => (
+              cont.position_x >= frame_x &&
+              (cont.position_x + cont.getShapeWidthToUse()) <= (frame_x + frame_w) &&
+              cont.position_y >= frame_y &&
+              (cont.position_y + cont.getShapeHeightToUse()) <= (frame_y + frame_h)
+            ))
+            .forEach(cont => n.attachNodeToCont(cont))
+          // #1259 — grouper n'ajuste pas le cadre (« Ajuster le cadre au
+          // groupe » est une commande séparée, fitFrameToAttached) ; le cadre
+          // passe derrière ses membres pour ne pas capter leurs clics.
+          this.drawing_area.sendFrameBehindMembers(n)
         })
         this.drawing_area.draw()
       },
