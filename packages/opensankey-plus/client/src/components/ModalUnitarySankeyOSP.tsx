@@ -200,7 +200,9 @@ export const ModalUnitarySankeyOSP: FC<{ app_data: Class_ApplicationDataOSP }> =
     const descriptor = node.getElementProperty('analysis_descriptor') as Type_AnalysisDescriptor | undefined
     if (!descriptor || (!descriptor.decompose && !descriptor.compare)) return
     const data = buildAnalysisChartData({ kind: 'node', node }, descriptor)
-    const geom = { width, height }
+    // Offset de marge : la forme normale du nœud est translatée de (-margin_left,
+    // -margin_top) ; le graphique reprend ce calage pour rester dans ses bornes.
+    const geom = { width, height, ox: -node.shape_margin_left, oy: -node.shape_margin_top }
     // Couronne seulement pour une décomposition pure sans override barres ; sinon
     // histogramme (comparaison pure, croisement, ou override).
     if (deduceRepr(descriptor) === 'donut') {
