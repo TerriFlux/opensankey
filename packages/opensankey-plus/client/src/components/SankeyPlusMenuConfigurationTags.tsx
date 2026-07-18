@@ -972,11 +972,13 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
       padding: '0.1rem 0.3rem', height: 'auto', color: 'gray.500'
     },
     '& td': { padding: '0.1rem 0.25rem' },
-    '& button': {
+    // Boutons carrés : SEULEMENT dans la table (suppr/visible/position tag). Les
+    // boutons d'en-tête (nouveau groupe pleine largeur, suppr groupe) restent libres.
+    '& table button': {
       minWidth: '1.4rem', width: '1.4rem', height: '1.4rem',
       padding: 0, fontSize: '0.7rem'
     },
-    '& button svg': { width: '0.8rem', height: '0.8rem' },
+    '& table button svg': { width: '0.8rem', height: '0.8rem' },
     '& input, & select': {
       height: '1.4rem', minHeight: 'unset', fontSize: '0.7rem', paddingInline: '0.3rem'
     },
@@ -986,6 +988,22 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
   } : undefined
 
   return (<Box layerStyle='menuconfigpanel_grid' sx={compact_sx}>
+    {/* #1283 — création de groupe : la table de gestion multi-groupes étant
+        masquée en mode fixe, on réexpose « Nouveau groupe » ici (crée un groupe
+        frère du même type ; il apparaît comme une nouvelle carte de filtre). */}
+    {fixed_group_id && (
+      <OSTooltip label={t('Tags.tooltips.add_grp')}>
+        <Button
+          size='xs'
+          variant='menuconfigpanel_add_button'
+          sx={{ width: '100%', justifyContent: 'center', gap: '0.3rem', marginBottom: '0.2rem' }}
+          onClick={handleAddTagGrpButton}
+        >
+          {icon_add_element}
+          <Box as='span'>{t('Tags.GE')}</Box>
+        </Button>
+      </OSTooltip>
+    )}
     {fixedGroupHeader}
     {/* #1283 — table de GESTION des groupes (ajout/suppression/renommage/bannière
         de tous les groupes) masquée en mode groupe fixe : la carte n'édite qu'UN
