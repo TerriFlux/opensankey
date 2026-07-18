@@ -434,16 +434,18 @@ export interface Type_NodeChartGeom {
 const chartOrigin = (geom: Type_NodeChartGeom) => `translate(${geom.ox ?? 0},${geom.oy ?? 0})`
 
 // COURONNE (donut) : décomposition d'un tout en secteurs, dans les bornes du nœud.
+// Renvoie true si quelque chose a été dessiné (false → l'appelant retombe sur la
+// forme normale du nœud plutôt que de le laisser invisible).
 export const drawNodeDonutOnGroup = (
   group_el: SVGGElement,
   parts: Type_StatSlice[],
   geom: Type_NodeChartGeom
-): void => {
+): boolean => {
   const sel = d3.select(group_el)
   sel.selectAll('.' + NODE_CHART_CLASS).remove()
   const total = parts.reduce((s, p) => s + p.value, 0)
   const radius = Math.min(geom.width, geom.height) / 2
-  if (parts.length === 0 || total <= 0 || radius <= 0) return
+  if (parts.length === 0 || total <= 0 || radius <= 0) return false
 
   // Groupe externe calé sur les bornes du nœud (offset de marge), puis groupe
   // interne centré pour les secteurs.
@@ -474,6 +476,7 @@ export const drawNodeDonutOnGroup = (
       .attr('pointer-events', 'none')
       .text(DEFAULT_FORMAT(total))
   }
+  return true
 }
 
 // HISTOGRAMME : une barre par série (empilée par ses parts). Cas d'usage :
@@ -485,7 +488,7 @@ export const drawNodeBarsOnGroup = (
   group_el: SVGGElement,
   series: Type_StatSeries[],
   geom: Type_NodeChartGeom
-): void => {
+): boolean => {
   const sel = d3.select(group_el)
   sel.selectAll('.' + NODE_CHART_CLASS).remove()
 
@@ -498,7 +501,7 @@ export const drawNodeBarsOnGroup = (
   const totals = bars.map(b => b.segments.reduce((a, s) => a + s.value, 0))
   const max = totals.reduce((m, v) => Math.max(m, v), 0)
   const n = bars.length
-  if (n === 0 || max <= 0 || geom.width <= 0 || geom.height <= 0) return
+  if (n === 0 || max <= 0 || geom.width <= 0 || geom.height <= 0) return false
 
   const g = sel.append('g').classed(NODE_CHART_CLASS, true).attr('transform', chartOrigin(geom))
   const slot = geom.width / n
@@ -524,4 +527,5 @@ export const drawNodeBarsOnGroup = (
       acc += seg.value
     })
   })
+  return true
 }

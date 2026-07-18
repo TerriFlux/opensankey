@@ -109,19 +109,21 @@ export class NodeDrawShape {
     const height = this._node.getShapeHeightToUse()+this._node.shape_margin_top+this._node.shape_margin_bottom
     const color = this._node.getShapeColorToUse()
 
-    // OS#1278 — CAMEMBERT SUR LE NŒUD : si le descripteur du nœud a surfaces.on_node,
-    // le nœud EST un camembert (dessiné par le hook OS+ avec les couleurs du
-    // diagramme). On saute alors la forme normale. Gardé aux VRAIS nœuds (pas les
-    // zones) : la décomposition lit input/output_links_list.
+    // OS#1278 — GRAPHIQUE SUR LE NŒUD : si le descripteur du nœud a surfaces.on_node,
+    // le nœud EST une couronne / un histogramme (dessiné par le hook OS+ avec les
+    // couleurs du modèle). On saute alors la forme normale — SAUF si le hook n'a
+    // rien pu dessiner (données vides : dimension/tag supprimé), auquel cas on
+    // retombe sur la forme normale pour ne pas laisser le nœud invisible. Gardé aux
+    // VRAIS nœuds (pas les zones) : la décomposition lit input/output_links_list.
     const app_data = this._node.drawing_area.application_data
     const analysis = this._node.getElementProperty('analysis_descriptor') as Type_AnalysisDescriptor | undefined
     const g_shape_el = this._node.d3_selection_g_shape?.node() as SVGGElement | null
     if (g_shape_el
-      && analysis?.surfaces?.on_node && analysis.decompose
+      && analysis?.surfaces?.on_node && (analysis.decompose || analysis.compare)
       && typeof app_data.draw_node_analysis_overlay === 'function'
       && 'input_links_list' in this._node) {
-      app_data.draw_node_analysis_overlay(this._node as unknown as Class_NodeElement, g_shape_el, width, height)
-      return
+      const drew = app_data.draw_node_analysis_overlay(this._node as unknown as Class_NodeElement, g_shape_el, width, height)
+      if (drew) return
     }
 
     // Le style peut être partagé entre nœuds et flux (style 'default', fichiers
