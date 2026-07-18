@@ -236,6 +236,24 @@ describe('#153 markRecyclingLinks — reflaguage d\'apres les colonnes', () => {
     columns(g, { A: 0 }) // ECHANGE absent du dictionnaire
     expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(false)
   })
+
+  it('ne touche pas un flux dont aucune extremite n\'a bouge (only_touching_nodes)', () => {
+    // C->D est un flux arriere voulu, loin du drag de A : il doit garder son statut
+    // meme si les colonnes globales le donnent en recyclage.
+    const g = buildGraph(['A', 'B', 'C', 'D'],
+      [{ from: 'A', to: 'B' }, { from: 'C', to: 'D' }])
+    const previous = g.core.markRecyclingLinks(g.nodes,
+      { A: 2, B: 0, C: 2, D: 0 }, new Set(['A']))
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(true)
+    expect(g.node('C').output_links_list[0].shape_is_recycling).toBe(false)
+    expect(previous).toEqual({ 'A->B': false })
+  })
+
+  it('reflague un flux dont la cible seulement a bouge', () => {
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B' }])
+    g.core.markRecyclingLinks(g.nodes, { A: 2, B: 0 }, new Set(['B']))
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(true)
+  })
 })
 
 describe('#1253 computeHorizontalIndex — appelant externe (SankeyAnimation)', () => {
