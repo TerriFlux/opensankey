@@ -2015,11 +2015,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
     let value_current = null
     if (this.drawing_area.type_data === 'data') value_current = this.value?.valueData ?? null
     else value_current = this.value?.valueResult ?? ((this.value?.value_option == 'value' || this.value?.value_option == 'intervals') ? this.value?.valueData : null) ?? null
-    // #285 (§3.0ter) — pas de valeur principale : quand le scalaire est vide,
-    // la valeur affichée est celle du TAG SÉLECTIONNÉ des groupes porteurs de
-    // valeurs (comme pour les dataTags). À défaut : somme des visibles en
-    // bannière multi, puis première valeur (compat fichiers sans flag porteur).
-    if (value_current === null) {
+    // #285 (§3.0ter) — pas de valeur principale : avec des groupes PORTEURS,
+    // la valeur affichée est celle du TAG SÉLECTIONNÉ (comme pour les
+    // dataTags), même si un scalaire hérité subsiste (il ne sert plus que de
+    // secours solveur). À défaut : somme des visibles en bannière multi, puis
+    // première valeur (compat fichiers sans flag porteur).
+    {
       const tvs = (this.value?.tagged_values_list ?? []).filter(tv => tv.value !== null)
       if (tvs.length > 0) {
         const carrying = this.sankey.flux_taggs_list.filter(tagg => tagg.carries_values)
