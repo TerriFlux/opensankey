@@ -70,6 +70,11 @@ export const resources_inspector = {
           advanced: 'Advanced',
           advanced_geometry: 'Advanced — geometry'
         },
+        // #1259 — Section « Groupe » unifiée (ex-« Cadre géométrique » ZDT + nœuds).
+        group: {
+          title: 'Group',
+          tooltip: 'Attaches nodes or text zones to the selected element: the frame positions itself to encompass its members and moves with them'
+        },
         visible: 'Visible',
         labels_visible: 'Labels visible',
         stock_enabled: 'Enabled',
@@ -161,6 +166,10 @@ export const resources_inspector = {
           scale_sizes: 'Échelle & tailles',
           advanced: 'Avancé',
           advanced_geometry: 'Avancé — géométrie'
+        },
+        group: {
+          title: 'Groupe',
+          tooltip: 'Associe des nœuds ou des zones de texte à l’élément sélectionné : le cadre se positionne pour englober ses membres et se déplace avec eux'
         },
         visible: 'Visible',
         labels_visible: 'Libellés visibles',
@@ -254,6 +263,10 @@ export const resources_inspector = {
           advanced: 'Avanzado',
           advanced_geometry: 'Avanzado — geometría'
         },
+        group: {
+          title: 'Grupo',
+          tooltip: 'Asocia nodos o zonas de texto al elemento seleccionado: el marco se posiciona para abarcar a sus miembros y se desplaza con ellos'
+        },
         visible: 'Visible',
         labels_visible: 'Etiquetas visibles',
         stock_enabled: 'Activado',
@@ -346,6 +359,10 @@ export const resources_inspector = {
           advanced: 'Erweitert',
           advanced_geometry: 'Erweitert — Geometrie'
         },
+        group: {
+          title: 'Gruppe',
+          tooltip: 'Verknüpft Knoten oder Textzonen mit dem ausgewählten Element: der Rahmen umschließt seine Mitglieder und bewegt sich mit ihnen'
+        },
         visible: 'Sichtbar',
         labels_visible: 'Beschriftungen sichtbar',
         stock_enabled: 'Aktiviert',
@@ -437,6 +454,10 @@ export const resources_inspector = {
           scale_sizes: 'Scala e dimensioni',
           advanced: 'Avanzate',
           advanced_geometry: 'Avanzate — geometria'
+        },
+        group: {
+          title: 'Gruppo',
+          tooltip: 'Associa nodi o zone di testo all’elemento selezionato: la cornice si posiziona per racchiudere i suoi membri e si sposta con essi'
         },
         visible: 'Visibile',
         labels_visible: 'Etichette visibili',
