@@ -403,132 +403,132 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
   // mode ÉPINGLÉ (panneau docké pleine hauteur qui réserve sa largeur, comme
   // la config épinglée).
   const panel_content = <>
-          {/* #1243 — Filtrer / Éditer : les GROUPES de tags s'éditent là où ils
+    {/* #1243 — Filtrer / Éditer : les GROUPES de tags s'éditent là où ils
               sont consommés (règle R3), l'inspecteur ne fait qu'assigner. */}
-          {has_tabs ? (
-            <Box style={{
-              display: 'grid',
-              gridTemplateColumns: `repeat(${1 + (has_select_tab ? 1 : 0) + (has_edit_tab ? 1 : 0)}, 1fr) auto`,
-              gap: '0.15rem', padding: '0.3rem 0.3rem 0', alignItems: 'stretch'
-            }}>
-              {/* #1258 — même langage que la rangée d'onglets de l'inspecteur :
+    {has_tabs ? (
+      <Box style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${1 + (has_select_tab ? 1 : 0) + (has_edit_tab ? 1 : 0)}, 1fr) auto`,
+        gap: '0.15rem', padding: '0.3rem 0.3rem 0', alignItems: 'stretch'
+      }}>
+        {/* #1258 — même langage que la rangée d'onglets de l'inspecteur :
                   icône + libellé court empilés (variant inspector_tab). */}
-              <Button
-                size='xs'
-                variant={filterTab === 'filter' ? 'inspector_tab_activated' : 'inspector_tab'}
-                title={app_data.t('Banner.fdn')}
-                onClick={() => setFilterTab('filter')}
-              >
-                {app_data.icon_library.icon_filter_tags}
-                <Box as='span' style={{ fontSize: '0.62rem', lineHeight: 1 }}>
-                  {/* Libellé COURT : t('Banner.fdn') (« Légende et filtres »)
+        <Button
+          size='xs'
+          variant={filterTab === 'filter' ? 'inspector_tab_activated' : 'inspector_tab'}
+          title={app_data.t('Banner.fdn')}
+          onClick={() => setFilterTab('filter')}
+        >
+          {app_data.icon_library.icon_filter_tags}
+          <Box as='span' style={{ fontSize: '0.62rem', lineHeight: 1 }}>
+            {/* Libellé COURT : t('Banner.fdn') (« Légende et filtres »)
                       écrase les autres onglets ; le texte long va au tooltip. */}
-                  {app_data.t('filter_panel.filter')}
-                </Box>
-              </Button>
-              {has_select_tab ? (
-                <Button
-                  size='xs'
-                  variant={filterTab === 'select' ? 'inspector_tab_activated' : 'inspector_tab'}
-                  title={app_data.t('filter_panel.select_tooltip')}
-                  onClick={() => setFilterTab('select')}
-                >
-                  {app_data.icon_library.icon_DA_selection}
-                  <Box as='span' style={{ fontSize: '0.62rem', lineHeight: 1 }}>
-                    {app_data.t('filter_panel.select')}
-                  </Box>
-                </Button>
-              ) : <></>}
-              {has_edit_tab ? (
-                <Button
-                  size='xs'
-                  variant={filterTab === 'edit' ? 'inspector_tab_activated' : 'inspector_tab'}
-                  onClick={() => setFilterTab('edit')}
-                >
-                  {app_data.icon_library.icon_edit_style}
-                  <Box as='span' style={{ fontSize: '0.62rem', lineHeight: 1 }}>
-                    {app_data.t('filter_panel.edit')}
-                  </Box>
-                </Button>
-              ) : <></>}
-              {/* #1258 — épingler : le tiroir réserve sa largeur, le dessin se
+            {app_data.t('filter_panel.filter')}
+          </Box>
+        </Button>
+        {has_select_tab ? (
+          <Button
+            size='xs'
+            variant={filterTab === 'select' ? 'inspector_tab_activated' : 'inspector_tab'}
+            title={app_data.t('filter_panel.select_tooltip')}
+            onClick={() => setFilterTab('select')}
+          >
+            {app_data.icon_library.icon_DA_selection}
+            <Box as='span' style={{ fontSize: '0.62rem', lineHeight: 1 }}>
+              {app_data.t('filter_panel.select')}
+            </Box>
+          </Button>
+        ) : <></>}
+        {has_edit_tab ? (
+          <Button
+            size='xs'
+            variant={filterTab === 'edit' ? 'inspector_tab_activated' : 'inspector_tab'}
+            onClick={() => setFilterTab('edit')}
+          >
+            {app_data.icon_library.icon_edit_style}
+            <Box as='span' style={{ fontSize: '0.62rem', lineHeight: 1 }}>
+              {app_data.t('filter_panel.edit')}
+            </Box>
+          </Button>
+        ) : <></>}
+        {/* #1258 — épingler : le tiroir réserve sa largeur, le dessin se
                   recadre (même geste que le panneau de config). */}
-              <Button
-                size='xs'
-                variant={pinned ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                sx={{ paddingInline: '0.3rem', minWidth: 'auto', width: 'auto', flex: 'none', height: 'auto' }}
-                title={pinned ? app_data.t('inspector.unpin') : app_data.t('inspector.pin')}
-                onClick={() => {
-                  const mc = app_data.menu_configuration
-                  mc.filter_drawer_width_px = drawer_width_px
-                  mc.filter_panel_pinned = !pinned
-                }}
-              >
-                <FaThumbtack style={{ transform: pinned ? 'none' : 'rotate(45deg)' }} />
-              </Button>
-            </Box>
-          ) : <></>}
-          {in_select_tab ? (
-            // minHeight : la liste déroulante du sélecteur s'ouvre EN FLUX dans
-            // son conteneur ; sans hauteur réservée, le tiroir (height:fit-content)
-            // la rogne.
-            <Box layerStyle='drawerFilterBox' style={{ minHeight: '22rem' }}>
-              <WrapperContentConfig title={app_data.t('filter_panel.select_elements')}>
-                <ElementSelectionTool app_data={app_data} />
-              </WrapperContentConfig>
-            </Box>
-          ) : in_edit_tab ? (
-            // Sous-onglets : empiler les 5 éditeurs (groupes de tags, vues)
-            // rendait le bas du tiroir inatteignable. Un contenu à la fois,
-            // comme la rangée d'onglets de l'inspecteur.
-            <Box layerStyle='drawerFilterBox' style={{ display: 'grid', gap: '0.3rem' }}>
-              <Box style={{
-                display: 'grid',
-                gridTemplateColumns: `repeat(${edit_sections.length}, 1fr)`,
-                gap: '0.15rem'
-              }}>
-                {edit_sections.map(section => (
-                  <Button
-                    key={section.id}
-                    size='xs'
-                    variant={section.id === active_edit_section?.id ? 'inspector_tab_activated' : 'inspector_tab'}
-                    title={section.title(app_data)}
-                    onClick={() => setEditSectionId(section.id)}
-                  >
-                    {section.icon?.(app_data)}
-                    <Box as='span' style={{ fontSize: '0.62rem', lineHeight: 1 }}>
-                      {(section.short_title ?? section.title)(app_data)}
-                    </Box>
-                  </Button>
-                ))}
+        <Button
+          size='xs'
+          variant={pinned ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+          sx={{ paddingInline: '0.3rem', minWidth: 'auto', width: 'auto', flex: 'none', height: 'auto' }}
+          title={pinned ? app_data.t('inspector.unpin') : app_data.t('inspector.pin')}
+          onClick={() => {
+            const mc = app_data.menu_configuration
+            mc.filter_drawer_width_px = drawer_width_px
+            mc.filter_panel_pinned = !pinned
+          }}
+        >
+          <FaThumbtack style={{ transform: pinned ? 'none' : 'rotate(45deg)' }} />
+        </Button>
+      </Box>
+    ) : <></>}
+    {in_select_tab ? (
+    // minHeight : la liste déroulante du sélecteur s'ouvre EN FLUX dans
+    // son conteneur ; sans hauteur réservée, le tiroir (height:fit-content)
+    // la rogne.
+      <Box layerStyle='drawerFilterBox' style={{ minHeight: '22rem' }}>
+        <WrapperContentConfig title={app_data.t('filter_panel.select_elements')}>
+          <ElementSelectionTool app_data={app_data} />
+        </WrapperContentConfig>
+      </Box>
+    ) : in_edit_tab ? (
+    // Sous-onglets : empiler les 5 éditeurs (groupes de tags, vues)
+    // rendait le bas du tiroir inatteignable. Un contenu à la fois,
+    // comme la rangée d'onglets de l'inspecteur.
+      <Box layerStyle='drawerFilterBox' style={{ display: 'grid', gap: '0.3rem' }}>
+        <Box style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${edit_sections.length}, 1fr)`,
+          gap: '0.15rem'
+        }}>
+          {edit_sections.map(section => (
+            <Button
+              key={section.id}
+              size='xs'
+              variant={section.id === active_edit_section?.id ? 'inspector_tab_activated' : 'inspector_tab'}
+              title={section.title(app_data)}
+              onClick={() => setEditSectionId(section.id)}
+            >
+              {section.icon?.(app_data)}
+              <Box as='span' style={{ fontSize: '0.62rem', lineHeight: 1 }}>
+                {(section.short_title ?? section.title)(app_data)}
               </Box>
-              {active_edit_section ? (
-                <Box style={{ overflowY: 'auto', maxHeight: '70vh' }}>
-                  <WrapperContentConfig title={active_edit_section.title(app_data)}>
-                    {active_edit_section.render(app_data) ?? <></>}
-                  </WrapperContentConfig>
-                </Box>
-              ) : <></>}
-            </Box>
-          ) : (
-            <Box layerStyle='drawerFilterBox'>
-              {
-                (app_data.publish_options.data_type || app_data.publish_options.value_filter)
-                  ? <FilterDisplay app_data={app_data} /> : <></>
-              }
-              {/* « Génération de vues » (view tags) déplacé dans la topbar
+            </Button>
+          ))}
+        </Box>
+        {active_edit_section ? (
+          <Box style={{ overflowY: 'auto', maxHeight: '70vh' }}>
+            <WrapperContentConfig title={active_edit_section.title(app_data)}>
+              {active_edit_section.render(app_data) ?? <></>}
+            </WrapperContentConfig>
+          </Box>
+        ) : <></>}
+      </Box>
+    ) : (
+      <Box layerStyle='drawerFilterBox'>
+        {
+          (app_data.publish_options.data_type || app_data.publish_options.value_filter)
+            ? <FilterDisplay app_data={app_data} /> : <></>
+        }
+        {/* « Génération de vues » (view tags) déplacé dans la topbar
                   (cf. BannerViewTagTopbar) — retiré du tiroir de filtres. */}
-              {
-                app_data.publish_options.level_filter ? <LevelTagFilter app_data={app_data} /> : <></>
-              }
-              {
-                app_data.publish_options.node_filter ? <NodeTagGroupFilter app_data={app_data} level={false} /> : <></>
-              }
-              {
-                app_data.publish_options.data_filter ? <DataTagGroupFilter app_data={app_data} /> : <></>
-              }
-            </Box>
-          )}
+        {
+          app_data.publish_options.level_filter ? <LevelTagFilter app_data={app_data} /> : <></>
+        }
+        {
+          app_data.publish_options.node_filter ? <NodeTagGroupFilter app_data={app_data} level={false} /> : <></>
+        }
+        {
+          app_data.publish_options.data_filter ? <DataTagGroupFilter app_data={app_data} /> : <></>
+        }
+      </Box>
+    )}
   </>
 
   return <>
@@ -1650,9 +1650,6 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
             tagg.banner = evt.target.checked ? 'multi' : 'one'
             if (tagg.banner === 'one') {
               app_data.drawing_area.sankey.remove_child_links()
-              // #284 — remove_child_links retire aussi les rubans de
-              // sous-valeurs : les resynchroniser
-              app_data.drawing_area.sankey.create_tagged_value_child_links()
             }
             tagg.selectTagsFromId(tagg.tags_list[0].id)
             updateComponents()

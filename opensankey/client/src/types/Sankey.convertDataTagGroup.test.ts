@@ -51,8 +51,13 @@ describe('convertDataTagGroupToFluxTagGroup — dimension → annotation', () =>
     expect(by_tag('t2020')?.value).toBe(10)
     expect(by_tag('t2021')?.value).toBe(12)
 
-    // Rubans resynchronisés (groupe créé en bannière multi par défaut)
-    expect(Object.values(link.child_links)).toHaveLength(2)
+    // Bandes dérivées au draw (groupe créé en bannière multi par défaut),
+    // aucun lien enfant
+    expect(Object.values(link.child_links)).toHaveLength(0)
+    const bands = link.tagged_value_bands
+    expect(bands).toHaveLength(2)
+    // La tranche sélectionnée est en tête (c'est celle que prune conserve)
+    expect(bands.map(b => b.tagged_value.value).sort()).toEqual([10, 12])
   })
 
   it('lifts pre-existing sub-values with the slice coordinate', () => {

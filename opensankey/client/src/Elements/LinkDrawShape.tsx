@@ -25,6 +25,7 @@
 // ==================================================================================================
 
 import { Class_LinkElement } from './Link'
+import type { Class_TagGroup } from '../types/TagGroup'
 import { LinkControlPoints } from './LinkControlPoints'
 import { Class_Handler } from './Handler'
 
@@ -118,6 +119,7 @@ export class LinkDrawShape {
     this._link.d3_selection?.selectAll('.link_path').remove()
     this._link.d3_selection?.selectAll('.link_path_border').remove()
     this._link.d3_selection?.selectAll('.link_shape').remove()
+    this._link.d3_selection?.selectAll('.link_band').remove()
 
     // Failsafe
     if (this._link.source && this._link.target) {
@@ -244,7 +246,79 @@ export class LinkDrawShape {
             .attr('dasharray', show_as_dash ? '10,2' : '')
         }
       }
+
+      // #285 — bandes internes : les valeurs coordonnées visibles subdivisent
+      // l'épaisseur du flux (superposées au tracé principal, qui reste le
+      // support des interactions).
+      this.drawTaggedValueBands(shape_opacity)
     }
+  }
+
+  /**
+   * #285 — dessine une bande par valeur coordonnée visible du flux, dans le
+   * contour du flux lui-même : mêmes points de contrôle que le tracé principal,
+   * offsets transverses cumulés proportionnels aux parts (bandes jointives par
+   * construction — le contour exact #1251 du flux entier, subdivisé). Les
+   * bandes sont décoratives : pointer-events none, les interactions restent
+   * portées par le tracé principal.
+   * V1 : flux courbes hh/vv, hors recyclage et hors drag (comme le faisceau
+   * #1251) — sinon le flux garde son tracé simple.
+   */
+  private drawTaggedValueBands(shape_opacity: number | string) {
+    const link = this._link
+    const bands = link.tagged_value_bands
+    if (bands.length === 0) return
+    if (!link.shape_is_curved) return
+    if (link.shape_orientation !== 'hh' && link.shape_orientation !== 'vv') return
+    if (link.shape_is_recycling) return
+    if (link.linkIsStructure()) return
+    if (this.isBeingDragged()) return
+
+    // Mêmes points de contrôle que le tracé principal
+    this._link_control_points.computeControlPoints()
+    const x0 = link.position_x_start
+    const y0 = link.position_y_start
+    const x6 = link.position_x_end
+    const y6 = link.position_y_end
+    const x1 = this._link_control_points_internal.controlPoints.starting_curve_point.position_x
+    const y1 = this._link_control_points_internal.controlPoints.starting_curve_point.position_y
+    const x2 = this._link_control_points_internal.controlPoints.starting_bezier_point.position_x
+    const y2 = this._link_control_points_internal.controlPoints.starting_bezier_point.position_y
+    const x4 = this._link_control_points_internal.controlPoints.ending_bezier_point.position_x
+    const y4 = this._link_control_points_internal.controlPoints.ending_bezier_point.position_y
+    const x5 = this._link_control_points_internal.controlPoints.ending_curve_point.position_x
+    const y5 = this._link_control_points_internal.controlPoints.ending_curve_point.position_y
+    const x3 = (x2 + x4) / 2
+    const y3 = (y2 + y4) / 2
+
+    const full_src = link.thicknessSource
+    const full_tgt = link.thicknessTarget
+    const transverse = link.shape_orientation === 'hh' ? [0, 1] : [1, 0]
+
+    let cum = 0
+    bands.forEach(({ tagged_value, share }) => {
+      const lo = cum
+      cum += share
+      const path = this.getExactBezierOutline(
+        [x0, y0], [x1, y1], [x2, y2], [x3, y3], [x4, y4], [x5, y5], [x6, y6],
+        -full_src / 2 + lo * full_src, -full_tgt / 2 + lo * full_tgt,
+        -full_src / 2 + cum * full_src, -full_tgt / 2 + cum * full_tgt,
+        transverse
+      )
+      // Couleur : premier tag d'un groupe en mode couleurs, sinon premier tag
+      const colored_tag = tagged_value.tags_list
+        .find(tag => (tag.group as Class_TagGroup).use_colors) ?? tagged_value.tags_list[0]
+      const color = colored_tag?.color ?? link.getShapeColorToUse()
+      this._link.d3_selection?.append('path')
+        .classed('link', true)
+        .classed('link_band', true)
+        .attr('id', `${link.id}_band_${tagged_value.id}`)
+        .attr('d', path)
+        .attr('fill', color)
+        .attr('fill-opacity', shape_opacity)
+        .attr('stroke', 'none')
+        .attr('pointer-events', 'none')
+    })
   }
 
   // PATH GENERATION METHODS ============================================================

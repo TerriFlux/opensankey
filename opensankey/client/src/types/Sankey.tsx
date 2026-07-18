@@ -28,6 +28,9 @@ import * as d3 from '../d3Modules'
 import { Class_DrawingArea } from './DrawingArea'
 import { base_styles, elementStyleConfigs, ElementStyleConfigsDict, ElementStyleKey, LinkExportCloseStyle, LinkImportCloseStyle, LinkImportExportAboveBelowStyle, LinkImportExportCloseStyle, LinkStyle, NodeExportBelowStyle, NodeExportCloseStyle, NodeImportAboveStyle, NodeImportCloseStyle, NodeImportExportAboveBelowStyle, NodeImportExportCloseStyle, NodeSectorStyle, NodeStyle } from '../Elements/ElementStyle'
 import { Class_LinkElement, defaultLinkId, sortLinksElementsByIds } from '../Elements/Link'
+// Type seul (cast dans mergeParallelLinks) : pas d'import de valeur, pour ne
+// pas créer de cycle Sankey -> LinkValues -> Link -> Sankey.
+import type { Class_LinkValue } from '../Elements/LinkValues'
 import { Class_NodeElement } from '../Elements/Node'
 // Type seul : `Class_ContainerElement` en hérite aussi, et `onNodeRenamed` doit
 // pouvoir refuser un conteneur. Pas d'import de valeur, pour ne pas créer de cycle.
@@ -362,7 +365,6 @@ export class Class_Sankey {
 
   public create_child_links() {
     this.create_data_tag_child_links()
-    this.create_tagged_value_child_links()
   }
 
   private create_data_tag_child_links() {
@@ -421,49 +423,63 @@ export class Class_Sankey {
       if (l.is_multi_link) return
       l.collapseDataTagGroup(data_tagg, tag_for, selected_tag_id)
     })
-    // 3) Supprimer la dimension : prune() conserve la tranche fusionnée (la première)
+    // 3) Supprimer la dimension : prune() conserve la tranche fusionnée (la
+    //    première). Les bandes d'affichage sont dérivées au draw — rien à
+    //    synchroniser.
     this.removeTagGroupWithId('data_taggs', data_tagg.id)
-    // 4) Rubans : un par sous-valeur héritée
-    this.create_tagged_value_child_links()
     return flux_tagg
   }
 
   /**
-   * #284 — un ruban par sous-valeur de la feuille courante (NOTE-FUSION-TAGS.md
-   * §3.0). Synchronise création ET suppression : les rubans dont la sous-valeur
-   * n'existe plus dans la feuille courante (sous-valeur supprimée, ou feuille
-   * changée par la sélection des dataTags) sont retirés. Les enfants par dataTag
-   * (bannière `multi`) sont prioritaires : un lien qui en porte n'expanse pas
-   * ses sous-valeurs.
+   * #285 — fusionne des flux PARALLÈLES (même source, même cible — l'ancien
+   * contournement « n flux pour n étiquettes », cf. NOTE-FUSION-TAGS.md §2.1)
+   * en UN flux à n valeurs coordonnées : la valeur de chaque lien devient une
+   * valeur du flux conservé, coordonnée par ses étiquettes ; la valeur
+   * principale porte le total (partition assumée par l'utilisateur qui
+   * déclenche la fusion) ; le premier lien garde sa géométrie et son style,
+   * les autres sont supprimés.
+   *
+   * V1 : liens sans dimensions (pas d'arbre de valeurs) — le cas des fichiers
+   * construits avec le contournement. Retourne null si la fusion est refusée.
    */
-  public create_tagged_value_child_links() {
-    // 2026-07-18 — les valeurs multiples d'un flux ne sont PAS additives (ex.
-    // un jeu d'unités kWh/t/€) : l'éclatement en rubans parallèles est un CHOIX
-    // d'affichage, déclenché comme pour les dataTags par la bannière `multi`
-    // d'un groupe libre. Sans groupe multi, le flux affiche sa valeur
-    // principale, les autres valeurs restant visibles en tooltip/éditeur.
-    const expand = this.flux_taggs_list.some(tagg => tagg.banner === 'multi')
-    this.links_list.forEach(l => {
-      if (l.is_multi_link) return
-      const has_data_tag_children = Object.values(l.child_links)
-        .some(child => !child.multi_link_tagged_value)
-      const subs = (has_data_tag_children || !expand) ? [] : (l.value?.tagged_values_list ?? [])
-      // Suppression des rubans périmés
-      Object.keys(l.child_links).forEach(key => {
-        const child = l.child_links[key]
-        if (child.multi_link_tagged_value && !subs.some(sub => sub.id === key)) {
-          child.delete()
-          delete l.child_links[key]
-        }
-      })
-      // Création des rubans manquants
-      subs.forEach(sub => {
-        if (sub.id in l.child_links) return
-        const child_link = this.addNewLink(l.source, l.target)
-        child_link.copyFrom(l)
-        l.addChildLinkForTaggedValue(child_link, sub)
-      })
+  public mergeParallelLinks(links: Class_LinkElement[]): Class_LinkElement | null {
+    if (links.length < 2) return null
+    const base = links[0]
+    // Garde : même paire source→cible, pas de rubans, pas de dimensions
+    const compatible = links.every(l =>
+      l.source === base.source &&
+      l.target === base.target &&
+      !l.is_multi_link &&
+      (l.value !== null))
+    if (!compatible || this.data_taggs_list.length > 0) return null
+
+    let total: number | null = null
+    links.forEach(l => {
+      const leaf = l.value as Class_LinkValue
+      // Les valeurs coordonnées déjà présentes sont transférées telles quelles
+      if (l !== base) {
+        leaf.tagged_values_list.forEach(tv => {
+          (base.value as Class_LinkValue).addTaggedValue().copyFrom(tv)
+        })
+      }
+      // Le scalaire du lien devient une valeur coordonnée par SES étiquettes
+      const v = leaf.valueData ?? leaf.valueResult
+      if (v !== null) {
+        total = (total ?? 0) + v
+        const tv = (base.value as Class_LinkValue).addTaggedValue()
+        tv.value = v
+        leaf.flux_tags_list.forEach(tag => tag.addReference(tv))
+      }
     })
+    // Les étiquettes « flux entier » du lien conservé ont migré sur sa valeur
+    // coordonnée ; la valeur principale porte le total
+    const base_leaf = base.value as Class_LinkValue
+    base_leaf.flux_tags_list.slice().forEach(tag => base_leaf.removeTag(tag))
+    base_leaf.valueData = total
+    base_leaf.valueResult = null
+    // Suppression des liens absorbés (les bandes sont dérivées au draw)
+    links.slice(1).forEach(l => this.drawing_area.deleteLink(l))
+    return base
   }
 
   public remove_child_links() {

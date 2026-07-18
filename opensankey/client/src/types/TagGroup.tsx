@@ -714,10 +714,8 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   }
 
   public updateTagsReferences(): void {
-    // #284 — la sélection des dataTags change la feuille courante : les rubans
-    // de sous-valeurs doivent suivre (création/suppression) avant le redraw.
-    this._ref_sankey.create_tagged_value_child_links()
-    // On datatags update everything is impacted
+    // On datatags update everything is impacted (les bandes de valeurs
+    // coordonnées sont dérivées au draw — rien à synchroniser)
     this._ref_sankey.drawing_area.draw()
   }
 
