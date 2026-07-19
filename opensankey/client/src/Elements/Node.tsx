@@ -28,11 +28,11 @@ import * as d3 from '../d3Modules'
 import { Class_NodeBase } from './NodeBase'
 
 import {
-  Class_LinkElement
+  Class_LinkElement,
+  sortLinksElementsByRelativeNodesPositions
 } from './Link'
 import { Class_Handler } from './Handler'
 import { reorganizeIOOrder } from './reorganizeIOOrder'
-import { orderIOByGeometry, recyclingBellyCentre, Type_IOGeo } from './ioOrderGeometry'
 import { format_value, Type_JSON } from '../types/Utils'
 import { default_element_color } from './ElementsAttributesConfig'
 import { SankeyAnimation } from '../Algorithms/SankeyAnimation'
@@ -1058,76 +1058,18 @@ export class Class_NodeElement extends Class_NodeBase {
     const echangeTag = this.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
     const import_links = this.input_links_list.filter(l => l.source.hasGivenTag(echangeTag as Class_Tag))
     const export_links = this.output_links_list.filter(l => l.target.hasGivenTag(echangeTag as Class_Tag))
-
-    // Geometry-aware order of the "middle" links (the ones reorganizeIOOrder
-    // re-sorts) : each link is ranked per-link by the shape of its bend at this node
-    // so the fan does not cross (cf. ioOrderGeometry.ts). Recycling links take part in
-    // that order too — they stack on a side like any other link, and leaving them out
-    // used to park them in a fixed block whose position ignored the geometry. We compute
-    // the full desired order here, then hand reorganizeIOOrder a comparator backed by
-    // that order so its locked-anchor pinning (#197) is preserved.
-    const middle = this._links_order.filter(
-      l => !import_links.includes(l) && !export_links.includes(l)
-    )
-    const order_index = this._computeIOOrderIndex(middle)
+    const recycling_links = this._links_order.filter(l => l.shape_is_recycling)
 
     this._links_order = reorganizeIOOrder(
       this._links_order,
       import_links,
       export_links,
+      recycling_links,
       (l) => l.getAnchorLockedForNode(this),
-      (link_a, link_b) => (order_index.get(link_a) ?? 0) - (order_index.get(link_b) ?? 0),
+      (link_a, link_b) => sortLinksElementsByRelativeNodesPositions(link_a, link_b, this),
       release_locks
     )
     this.draw()
-  }
-
-  /**
-   * Build a link → display-rank map for the geometry-aware I/O order : each side's
-   * links are ranked per-link by the shape of their bend at this node (cf.
-   * ioOrderGeometry.ts) so the fan does not cross. All positions are taken at node
-   * CENTRES ; each link carries the curvature on its node-side end, which is what the
-   * ordering key needs. A recycling link additionally carries `stack_ref`, the centre of
-   * its loop's belly, because its opposite node — which sits backwards, beyond this node
-   * — says nothing about where the loop actually passes.
-   */
-  private _computeIOOrderIndex(
-    middle: Class_LinkElement[]
-  ): Map<Class_LinkElement, number> {
-    const cx = this.position_x + this.getShapeWidthToUse() / 2
-    const cy = this.position_y + this.getShapeHeightToUse() / 2
-    const centre = (n: Class_NodeElement): [number, number] => [
-      n.position_x + n.getShapeWidthToUse() / 2,
-      n.position_y + n.getShapeHeightToUse() / 2
-    ]
-    const items = middle.map(l => {
-      const is_source = (l.source === this)
-      const other = is_source ? l.target : l.source
-      const side = is_source ? l.source_side : l.target_side
-      // Curvature on THIS node's side : shape_starting_curve when the link leaves this
-      // node (source), shape_ending_curve when it arrives (target). An explicit 0 (bend
-      // glued to the node) is a real value and is kept — only a missing value falls back
-      // to the default. The order rule uses reach·curve_node as the anchor distance.
-      const curve_node = (is_source ? l.shape_starting_curve : l.shape_ending_curve) ?? 0.05
-      const [ox, oy] = centre(other)
-      const geo: Type_IOGeo = { side, ox, oy, curve_node }
-      if (l.shape_is_recycling) {
-        const [sx, sy] = centre(l.source)
-        const [tx, ty] = centre(l.target)
-        const belly = recyclingBellyCentre(
-          sx, sy, tx, ty,
-          l.shape_middle_recycling ?? 100, // 100 = middle_recycling config default
-          l.thickness,
-          l.shape_orientation
-        )
-        geo.stack_ref = (side === 'left' || side === 'right') ? belly.y : belly.x
-      }
-      return { item: l, geo }
-    })
-    const ordered = orderIOByGeometry(items, cx, cy)
-    const map = new Map<Class_LinkElement, number>()
-    ordered.forEach((l, i) => map.set(l, i))
-    return map
   }
 
   public reorganizeIOFromListIds(l: string[]) {
