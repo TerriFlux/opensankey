@@ -397,12 +397,20 @@ export class Class_Sankey {
     // §3.0ter — le groupe issu d'une dimension PORTE des valeurs ; un groupe
     // unité transfère l'échelle de chaque tag (cas unitTag généralisé).
     flux_tagg.carries_values = true
+    // OS#1286 — un ancien groupe unité (is_unit) devient un groupe « de type
+    // unité » : chaque tag référence l'unité du registre correspondant à son
+    // symbole (créée dans « Unités du fichier » si absente). L'ancienne échelle
+    // libre est conservée en repli, la largeur de bande dérive du coefficient.
+    if (data_tagg.is_unit) flux_tagg.is_unit_type = true
     data_tagg.tags_list.forEach(data_tag => {
       const tag = flux_tagg.addTag(data_tag.name, data_tag.id) as Class_FluxTag
       tag.color = data_tag.color
       tag.long_name = data_tag.long_name
       tag.setSelected(false)
-      if (data_tagg.is_unit) tag.scale = (data_tag as Class_DataTag).scale
+      if (data_tagg.is_unit) {
+        tag.scale = (data_tag as Class_DataTag).scale
+        tag.unit_ref = this.units.getOrCreateLegacyUnit(data_tag.name, 1).unit.id
+      }
     })
     flux_tagg.use_colors = data_tagg.use_colors
     // 2) Replier les arbres de valeurs (liens porteurs seulement, pas les
@@ -439,7 +447,9 @@ export class Class_Sankey {
     const group_tag_ids = new Set(flux_tagg.tags_list.map(tag => tag.id))
     const tags_meta = flux_tagg.tags_list.map(tag => ({
       id: tag.id, name: tag.name, long_name: tag.long_name, color: tag.color,
-      scale: (tag as Class_FluxTag).scale
+      scale: (tag as Class_FluxTag).scale,
+      unit_coeff: (tag as Class_FluxTag).resolved_unit?.unit.coefficient,
+      unit_grandeur_scale: (tag as Class_FluxTag).resolved_unit?.unit_type.display_scale
     }))
 
     // 1) Snapshot de toutes les feuilles de tous les liens porteurs
@@ -470,13 +480,20 @@ export class Class_Sankey {
     // 2) Créer la dimension (mêmes tags ; « Non affecté » si nécessaire).
     //    L'expansion détruit les feuilles — les snapshots font foi.
     const data_tagg = this.addDataTagGroup(flux_tagg.id, flux_tagg.name, false)
-    const to_unit = flux_tagg.has_own_scales
+    // OS#1286 — un groupe « de type unité » (ou à échelles distinctes) redevient
+    // une dimension unité ; l'échelle de tranche dérive du coefficient de
+    // l'unité (échelle du dessin / coefficient) pour préserver la largeur.
+    const to_unit = flux_tagg.is_unit_type || flux_tagg.has_own_scales
     if (to_unit) data_tagg.is_unit = true
     tags_meta.forEach(meta => {
       const tag = data_tagg.addTag(meta.name, meta.id) as Class_DataTag
       tag.color = meta.color
       tag.long_name = meta.long_name
-      if (to_unit && meta.scale !== undefined) tag.scale = meta.scale
+      if (to_unit) {
+        if (meta.unit_coeff !== undefined && meta.unit_coeff !== 0)
+          tag.scale = (meta.unit_grandeur_scale ?? this.drawing_area.scale) / meta.unit_coeff
+        else if (meta.scale !== undefined) tag.scale = meta.scale
+      }
     })
     const UNASSIGNED_ID = flux_tagg.id + '_unassigned'
     if (needs_unassigned) {

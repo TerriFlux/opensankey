@@ -163,3 +163,75 @@ describe('tagged_value_bands — bandes internes des valeurs du flux', () => {
     expect(Object.keys(links_json as object)).toHaveLength(1)
   })
 })
+
+describe('OS#1286 — unite attachee au fluxTag (groupe de type unite)', () => {
+  it('derives band px from the unit coefficient (t vs kt coherents)', () => {
+    const { sankey, link, tagg, acier, cuivre } = makeApp()
+    tagg.banner = 'multi'
+    tagg.carries_values = true
+    tagg.is_unit_type = true
+    const t_unit = sankey.units.getOrCreateLegacyUnit('t', 1).unit
+    const kt_unit = sankey.units.getOrCreateLegacyUnit('kt', 1000).unit
+    ;(acier as unknown as { unit_ref?: string }).unit_ref = t_unit.id
+    ;(cuivre as unknown as { unit_ref?: string }).unit_ref = kt_unit.id
+    const value = link.value!
+    const tv1 = value.addTaggedValue()
+    tv1.value = 1000 // 1000 t
+    tv1.addTag(acier)
+    const tv2 = value.addTaggedValue()
+    tv2.value = 1 // 1 kt = 1000 t -> meme largeur que tv1
+    tv2.addTag(cuivre)
+
+    const bands = link.tagged_value_bands
+    expect(bands).toHaveLength(2)
+    // 1000 t et 1 kt representent la meme masse -> parts egales
+    expect(bands[0].share).toBeCloseTo(0.5)
+    expect(bands[1].share).toBeCloseTo(0.5)
+    // symbole d'unite porte par la bande
+    expect(bands[0].unit).toBe('t')
+    expect(bands[1].unit).toBe('kt')
+  })
+
+  it('rebalances two grandeurs via the per-quantity display_scale (e!Sankey style)', () => {
+    const { sankey, link, tagg, acier, cuivre } = makeApp()
+    tagg.banner = 'multi'
+    tagg.carries_values = true
+    tagg.is_unit_type = true
+    // deux grandeurs distinctes : Masse (base t) et Energie (base MWh)
+    const mass = sankey.units.addUnitType('Masse', 'ut_mass')
+    const t_unit = mass.addUnit('t', 1)
+    const energy = sankey.units.addUnitType('Energie', 'ut_energy')
+    const mwh_unit = energy.addUnit('MWh', 1)
+    ;(acier as unknown as { unit_ref?: string }).unit_ref = t_unit.id
+    ;(cuivre as unknown as { unit_ref?: string }).unit_ref = mwh_unit.id
+    const value = link.value!
+    const tv1 = value.addTaggedValue(); tv1.value = 100; tv1.addTag(acier) // 100 t
+    const tv2 = value.addTaggedValue(); tv2.value = 100; tv2.addTag(cuivre) // 100 MWh
+
+    // sans echelle propre : memes parts (meme echelle du dessin)
+    expect(link.tagged_value_bands[0].share).toBeCloseTo(0.5)
+
+    // on donne a l'energie une echelle 4x plus fine (100 base pour 100px / 4)
+    // -> ses bandes deviennent 4x plus larges pour la meme quantite
+    energy.display_scale = sankey.drawing_area.scale / 4
+    const bands = link.tagged_value_bands
+    // energie (tv2) doit peser 4x la masse (tv1) : 1/5 vs 4/5
+    expect(bands[0].share).toBeCloseTo(0.2)
+    expect(bands[1].share).toBeCloseTo(0.8)
+  })
+
+  it('converts an is_unit dataTag dimension into a unit-type flux group', () => {
+    const { sankey } = makeApp()
+    const dim = sankey.addDataTagGroup('grandeur', 'Grandeur', false)
+    dim.is_unit = true
+    ;(dim.addTag('t', 'g_t') as Class_DataTag)
+    ;(dim.addTag('kWh', 'g_kwh') as Class_DataTag)
+
+    const flux = sankey.convertDataTagGroupToFluxTagGroup(dim)
+    expect(flux.is_unit_type).toBe(true)
+    expect(flux.carries_values).toBe(true)
+    flux.tags_list.forEach(tag => {
+      expect((tag as unknown as { unit_ref?: string }).unit_ref).toBeTruthy()
+    })
+  })
+})

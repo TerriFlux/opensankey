@@ -440,12 +440,28 @@ export class Class_FluxTag extends Class_Tag {
   public get scale(): number | undefined { return this._scale }
   public set scale(_: number | undefined) { this._scale = _ }
 
+  // OS#1286 (fusion §3.0ter) — quand le groupe est « de type unité », le tag
+  // référence une unité du registre du diagramme (id d'unité). L'unité fournit
+  // le symbole affiché ET le coefficient de conversion : la largeur de bande
+  // d'une valeur exprimée dans cette unité vaut valeur × coefficient à
+  // l'échelle du dessin (t/kt/Mt deviennent cohérents automatiquement).
+  private _unit_ref: string | undefined = undefined
+
+  public get unit_ref(): string | undefined { return this._unit_ref }
+  public set unit_ref(_: string | undefined) { this._unit_ref = _ }
+
+  /** Unité résolue depuis le registre du diagramme (OS#1286), ou undefined. */
+  public get resolved_unit() {
+    return this._unit_ref ? this._ref_sankey.units.resolve(this._unit_ref) : undefined
+  }
+
   protected _toJSON(
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
     super._toJSON(json_object, _kwargs)
     if (this._scale !== undefined) json_object['scale'] = this._scale
+    if (this._unit_ref !== undefined) json_object['unit'] = this._unit_ref
   }
 
   protected _fromJSON(
@@ -454,11 +470,15 @@ export class Class_FluxTag extends Class_Tag {
   ): void {
     super._fromJSON(json_object, _kwargs)
     if (json_object['scale'] !== undefined) this._scale = getNumberFromJSON(json_object, 'scale', 0)
+    if (json_object['unit'] !== undefined) this._unit_ref = getStringFromJSON(json_object, 'unit', '')
   }
 
   protected _copyFrom(tag_to_copy: Class_ProtoTag) {
     super._copyFrom(tag_to_copy)
-    if (tag_to_copy instanceof Class_FluxTag) this._scale = tag_to_copy._scale
+    if (tag_to_copy instanceof Class_FluxTag) {
+      this._scale = tag_to_copy._scale
+      this._unit_ref = tag_to_copy._unit_ref
+    }
   }
 
   // PUBLIC METHODS =====================================================================

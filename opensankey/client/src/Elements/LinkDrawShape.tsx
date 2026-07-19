@@ -25,6 +25,7 @@
 // ==================================================================================================
 
 import { Class_LinkElement } from './Link'
+import { getNameLabelValues } from './ElementsAttributesConfig'
 import type { Class_TagGroup } from '../types/TagGroup'
 import { LinkControlPoints } from './LinkControlPoints'
 import { Class_Handler } from './Handler'
@@ -374,8 +375,13 @@ export class LinkDrawShape {
 
     const da = link.sankey.drawing_area
     const band_label_visible = da.type_data !== 'structure'
+    // #285 — le label de bande suit la MÊME police que le label de valeur du
+    // flux (réglage font_size), compensée du zoom local comme les autres labels
+    // (mode police verrouillée) : plus de taille 8-11 px codée en dur.
+    const value_lv = getNameLabelValues(link, 'value_label') as { font_size?: number }
+    const band_font_size = (value_lv.font_size ?? 12) * (da.font_compensation ?? 1)
     let cum = 0
-    bands.forEach(({ id, color, share, value }) => {
+    bands.forEach(({ id, color, share, value, unit }) => {
       const lo = cum
       cum += share
       const off_lo_src = -full_src / 2 + lo * full_src
@@ -411,10 +417,10 @@ export class LinkDrawShape {
           .attr('y', y3 + n_mid_label[1] * off_mid)
           .attr('text-anchor', 'middle')
           .attr('dominant-baseline', 'middle')
-          .attr('font-size', Math.min(11, Math.max(8, share * (full_src + full_tgt) / 2 * 0.6)))
+          .attr('font-size', band_font_size)
           .attr('fill', '#000')
           .attr('pointer-events', 'none')
-          .text(String(value))
+          .text(unit ? `${value} ${unit}` : String(value))
       }
     })
     return true

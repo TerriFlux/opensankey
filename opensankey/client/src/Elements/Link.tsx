@@ -43,7 +43,7 @@ import { LinkTooltip } from './TooltipsLink'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeElement } from './Node'
 import type { Class_NodeDimension } from './NodeDimension'
-import { Type_Side, } from './ElementsAttributesConfig'
+import { Type_Side, getNameLabelValues } from './ElementsAttributesConfig'
 import { transferAnchorLock } from './anchorLockTransfer'
 import { clampLinkThickness } from './flowThickness'
 import { Class_LinkAttribute } from './Element'
@@ -499,7 +499,23 @@ export class Class_LinkElement extends Class_LinkAttribute {
     if (this.value_label_stick_to_label && this._link_draw_label) {
       this._link_draw_label.refreshStickLayout()
     }
+    // #285 — les labels de bande vivent dans le repère zoomé (dessinés au
+    // drawShape) : le refresh de labels (zoom / verrou de police) ne les
+    // recrée pas, on remet donc leur font-size compensée ici pour qu'ils
+    // suivent le mode « police verrouillée » comme les labels normaux.
+    this.refreshBandLabelsFontSize()
     this._orderD3Elements()
+  }
+
+  /** #285 — remet la font-size compensée du zoom sur les labels de bande déjà
+   *  présents dans le DOM (cf. LinkDrawShape.drawTaggedValueBands), sans les
+   *  reconstruire : suit la police du label de valeur + font_compensation. */
+  public refreshBandLabelsFontSize() {
+    const labels = this.d3_selection?.selectAll('.link_band_label')
+    if (!labels || labels.empty()) return
+    const value_lv = getNameLabelValues(this, 'value_label') as { font_size?: number }
+    const fs = (value_lv.font_size ?? 12) * (this.drawing_area.font_compensation ?? 1)
+    labels.attr('font-size', fs)
   }
 
   public drawNameLabel() {
@@ -833,7 +849,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * somme des valeurs visibles — les valeurs d'un flux ne sont PAS additives,
    * l'épaisseur du flux reste pilotée par la valeur principale.
    */
-  public get tagged_value_bands(): { id: string, px: number, share: number, color: string | null, value: number }[] {
+  public get tagged_value_bands(): { id: string, px: number, share: number, color: string | null, value: number, unit?: string }[] {
     if (this._is_expansion_link) return []
     // 1) Dimension en bannière `multi` : une bande par tag SÉLECTIONNÉ, à la
     //    valeur de sa tranche (remplace l'ancien mécanisme de liens enfants —
@@ -865,10 +881,28 @@ export class Class_LinkElement extends Class_LinkAttribute {
       tv.value !== null &&
       tv.value > 0 &&
       tv.tags_list.every(tag => tag.is_selected))
+    // OS#1286 — unité du registre attachée au tag (groupe « de type unité ») :
+    // le coefficient convertit la valeur exprimée dans l'unité vers l'unité de
+    // base, à l'échelle du dessin (t/kt/Mt cohérents automatiquement).
+    const unit_tag_of = (tv: Class_ElementTaggedValue): Class_FluxTag | undefined =>
+      tv.tags_list
+        .map(tag => tag as Class_FluxTag)
+        .find(tag => (tag.group as Class_FluxTagGroup).is_unit_type && tag.resolved_unit)
     // §3.0ter — largeur de bande = valeur convertie avec l'échelle DE SON TAG
     // (si le groupe déclare des échelles distinctes) ; sinon échelle du dessin.
     const px_for = (tv: Class_ElementTaggedValue): number => {
       const v = tv.value as number
+      const unit_tag = unit_tag_of(tv)
+      if (unit_tag) {
+        const resolved = unit_tag.resolved_unit
+        const coeff = resolved?.unit.coefficient ?? 1
+        // Échelle PROPRE à la grandeur (façon e!Sankey) si définie, sinon
+        // échelle globale du dessin ; le coefficient convertit vers l'unité
+        // de base sur laquelle l'échelle s'exprime.
+        const base_scale = resolved?.unit_type.display_scale ?? this.sankey.drawing_area.scale
+        this.setDomainLocalScale(base_scale / (coeff || 1))
+        return this._scaleValueToPx(v)
+      }
       const scale_tag = tv.tags_list
         .map(tag => tag as Class_FluxTag)
         .find(tag => tag.scale !== undefined
@@ -884,7 +918,9 @@ export class Class_LinkElement extends Class_LinkAttribute {
         .find(tag => (tag.group as Class_TagGroup).use_colors) ?? tv.tags_list[0]
       return colored_tag?.color ?? null
     }
-    const bands = tvs.map(tv => ({ id: tv.id, px: Math.max(0, px_for(tv)), color: color_for(tv), value: tv.value as number }))
+    const unit_for = (tv: Class_ElementTaggedValue): string | undefined =>
+      unit_tag_of(tv)?.resolved_unit?.unit.name
+    const bands = tvs.map(tv => ({ id: tv.id, px: Math.max(0, px_for(tv)), color: color_for(tv), value: tv.value as number, unit: unit_for(tv) }))
     const total = bands.reduce((acc, band) => acc + band.px, 0)
     if (total <= 0) return []
     return bands.map(band => ({ ...band, share: band.px / total }))

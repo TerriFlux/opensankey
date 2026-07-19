@@ -2,7 +2,8 @@ import * as d3 from '../d3Modules'
 import { Class_LinkElement } from './Link'
 import { Class_NodeElement } from './Node'
 import { Class_LinkValue } from './LinkValues'
-import { Class_DataTag } from '../types/Tag'
+import { Class_DataTag, Class_FluxTag } from '../types/Tag'
+import { Class_FluxTagGroup } from '../types/TagGroup'
 import { TOOLTIP_STYLES, TooltipBehaviorManager } from './TooltipsCSS'
 import { link_data_label, format_value, link_ratio_constraint, ratio_flux_constraint_traduction } from '../types/Utils'
 import { getNameLabelValues } from './ElementsAttributesConfig'
@@ -313,9 +314,15 @@ export class LinkTooltip {
       const coord = sub.tags_list
         .map(tag => tag.display_name)
         .join(', ')
+      // OS#1286 — suffixe d'unité du tag « de type unité » de la sous-valeur.
+      const unit_sym = sub.tags_list
+        .map(tag => tag as Class_FluxTag)
+        .find(tag => (tag.group as Class_FluxTagGroup).is_unit_type && tag.resolved_unit)
+        ?.resolved_unit?.unit.name
+      const value_txt = sub.value === null ? '-' : `${sub.value}${unit_sym ? ' ' + this.escapeHtml(unit_sym) : ''}`
       html += '<tr>'
       html += `<th>${this.escapeHtml(coord || '-')}</th>`
-      html += `<td class="value">${sub.value ?? '-'}</td>`
+      html += `<td class="value">${value_txt}</td>`
       html += '</tr>'
     })
 
