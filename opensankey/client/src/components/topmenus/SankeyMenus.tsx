@@ -435,6 +435,35 @@ export const SankeyMenu = (
         right_offset={app_data.drawing_area.fit_margin + rightReserve}
       /> : <></>}
 
+      {/* Badge « Made with OpenSankey » sur les pages publiées (window.sankey.badge,
+          désactivable dans le dialogue de publication) : lien vers le site TerriFlux,
+          dans la langue de l'UI. Volontairement sans rel=nofollow (backlink). */}
+      {(app_data.is_static && app_data.publish_options.badge) ? (
+        <a
+          href={'https://terriflux.com/'
+            + ((app_data.language ?? '').startsWith('fr') ? 'fr/' : '')
+            + '?utm_source=opensankey&utm_medium=badge&utm_campaign=published-diagram'}
+          target='_blank'
+          rel='noopener'
+          style={{
+            position: 'fixed',
+            bottom: '4px',
+            left: '8px',
+            zIndex: 15,
+            fontSize: '11px',
+            lineHeight: '18px',
+            color: '#456',
+            background: 'rgba(255, 255, 255, 0.85)',
+            border: '1px solid rgba(0, 0, 0, 0.15)',
+            borderRadius: '6px',
+            padding: '1px 8px',
+            textDecoration: 'none',
+          }}
+        >
+          {'Made with '}<b>OpenSankey</b>
+        </a>
+      ) : <></>}
+
       {tools_column}
 
       {/* Galerie de modèles à l'arrivée (diagramme vide) : vitrine pour le nouveau

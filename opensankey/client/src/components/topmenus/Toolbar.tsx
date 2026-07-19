@@ -17,7 +17,7 @@ import { updateUnitaryStyles } from '../../Algorithms/UnitaryBoard'
 import { disaggregate, aggregate, resetLocalHierarchy, disaggregationExpansion, applyContainerModeForDim } from '../../Algorithms/Hierarchies'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_NodeDimension, Type_DisaggregationKind } from '../../Elements/NodeDimension'
-import { Type_DisaggregationGap, const_default_position_x, const_default_position_y } from '../../types/Utils'
+import { Type_DisaggregationGap, const_default_position_x, const_default_position_y, Type_MacroTagGroup } from '../../types/Utils'
 
 // #1283 — largeur du tiroir de filtres (comme avant : compact).
 const width_fitler_drawer = 270
@@ -331,13 +331,54 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
 
   if (!filters_visible) return <></>
 
+  // #1283 — création de groupe TOUJOURS accessible (même si aucun groupe n'existe
+  // encore, donc aucune carte à éditer). createTagGroup vit sur le modèle Sankey
+  // (OS base) ; on l'expose ici pour n'importe quel type. Gated licence/éditeur.
+  const createGroup = (type: Type_MacroTagGroup) => {
+    app_data.runWithSnapshotUndo(
+      () => {
+        app_data.drawing_area.sankey.createTagGroup(type)
+        app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+        app_data.menu_configuration.updateAllComponentsRelatedToTags()
+      },
+      () => app_data.menu_configuration.updateAllComponentsRelatedToTags()
+    )
+  }
+  const can_create_groups = !app_data.is_static && app_data.has_sankey_plus
+  const group_types: { type: Type_MacroTagGroup, label: string, dev?: boolean }[] = [
+    { type: 'node_taggs', label: app_data.t('filter_panel.short.node') },
+    { type: 'flux_taggs', label: app_data.t('filter_panel.short.link') },
+    { type: 'data_taggs', label: app_data.t('filter_panel.short.data') },
+    { type: 'level_taggs', label: app_data.t('filter_panel.short.level'), dev: true }
+  ]
+
   // #1258 — contenu du panneau, PARTAGÉ entre le tiroir overlay (Drawer) et le
   // mode ÉPINGLÉ (panneau docké pleine hauteur qui réserve sa largeur, comme
   // la config épinglée).
   const panel_content = <>
-    {/* #1283 — panneau unique : en-tête avec seulement l'épingle (plus
-              d'onglets). Épinglé, le tiroir réserve sa largeur, le dessin se recadre. */}
-    <Box style={{ display: 'flex', justifyContent: 'flex-end', padding: '0.3rem 0.3rem 0' }}>
+    {/* #1283 — en-tête : « + Groupe » (création, toujours dispo) à gauche,
+        épingle à droite. */}
+    <Box style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.3rem 0.3rem 0' }}>
+      {can_create_groups ? (
+        <Menu placement='bottom-start'>
+          <MenuButton
+            as={Button}
+            size='xs'
+            variant='menuconfigpanel_add_button'
+            sx={{ height: 'auto', paddingBlock: '0.15rem', paddingInline: '0.5rem' }}
+            leftIcon={app_data.icon_library.icon_add_element}
+          >
+            {app_data.t('Tags.GE')}
+          </MenuButton>
+          <MenuList>
+            {group_types.filter(g => !g.dev || app_data.has_sankey_dev).map(g => (
+              <MenuItem key={g.type} onClick={() => createGroup(g.type)}>
+                {g.label}
+              </MenuItem>
+            ))}
+          </MenuList>
+        </Menu>
+      ) : <Box />}
       <Button
         size='xs'
         variant={pinned ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
