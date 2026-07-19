@@ -1579,10 +1579,12 @@ def esankey_local_index():
             # file_path relatif a la racine du corpus (servi par templates_asset).
             "img_path": file_path + "/preview.png",
             "lang": preferred,
-            "category": "esankey_local",
+            # Meme categorie que les modeles e!Sankey publies de SankeyData : dans
+            # le panneau consolide, tout finit sous l'onglet "e!Sankey".
+            "category": "esankey",
             "variants": {lang: variants[lang][0] for lang in ordered_langs},
         }
-    return {"categories": ["esankey_local"], "templates": templates}
+    return {"categories": ["esankey"], "templates": templates}
 
 
 def templates_declared_assets(source):
