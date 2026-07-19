@@ -75,6 +75,11 @@ interface EsFlow {
   local: EsLocal
   displaying_order: number
   tooltip_text: string
+  // Ordre des ancres E/S FIGÉ à l'import (cadenas #197 sur les deux bouts) :
+  // e!Sankey a déjà rangé les flux autour de chaque nœud, on ne veut pas que le
+  // ré-agencement géométrique OpenSankey les réordonne au chargement.
+  source_side_locked: boolean
+  target_side_locked: boolean
   value: { id: string, data_value: number, tags: { [grp: string]: string[] } }
 }
 
@@ -331,6 +336,18 @@ interface EsGraphicalProcess {
 /** Axe de raccordement d'un flux à un nœud, depuis `arrowDirection` e!Sankey. */
 const linkAxis = (arrowDirection: number): 'h' | 'v' =>
   (arrowDirection === 1 || arrowDirection === 4) ? 'v' : 'h'
+
+/** Fond blanc / quasi-blanc (WhiteSmoke #F5F5F5, White #FFFFFF…). En e!Sankey
+ *  une boîte terminale de cette couleur sert d'ANCRE invisible sur le canevas
+ *  (blanc) : le flux s'y raccorde sans qu'aucun rectangle ne soit dessiné. À
+ *  l'import, un tel nœud sans image est donc rendu invisible (`shape_visible`
+ *  false) plutôt qu'en rectangle bordé. Seuil 0xF0 sur les trois canaux. */
+const isNearWhiteFill = (hex?: string | null): boolean => {
+  const m = hex ? /^#?([0-9a-fA-F]{6})$/.exec(hex.trim()) : null
+  if (!m) return false
+  const n = parseInt(m[1], 16)
+  return ((n >> 16) & 0xff) >= 0xf0 && ((n >> 8) & 0xff) >= 0xf0 && (n & 0xff) >= 0xf0
+}
 
 const parseGraphicalProcesses = (net: Element, palette: EsBrushPalette): { [id: string]: EsGraphicalProcess } => {
   const out: { [id: string]: EsGraphicalProcess } = {}
@@ -973,8 +990,13 @@ export const parseEsankeyXml = (
     if (graphical && graphical.width > 0) nodes[id].local.node_width = graphical.width
     if (graphical && graphical.height > 0) nodes[id].local.node_height = graphical.height
     // Process invisible (fréquent dans les diagrammes « décor » : seuls le
-    // label et une icône libre marquent le nœud).
+    // label et une icône libre marquent le nœud). Une boîte VISIBLE mais à fond
+    // blanc/quasi-blanc SANS image est aussi une ancre invisible e!Sankey (le
+    // rectangle se fond dans le canevas) → on la rend invisible.
     if (graphical && !graphical.visible) nodes[id].local.shape_visible = false
+    else if (graphical?.visible && !graphical.imageFile && isNearWhiteFill(graphical.color)) {
+      nodes[id].local.shape_visible = false
+    }
     // A4 — Forme alternative du process (0 = rect, notre défaut : rien à poser).
     // 1 = rectangle arrondi → on garde 'rect' et on pose un rayon de coin visible
     // (`shape_border_radius`, clé moderne appliquée telle quelle par le loader
@@ -1032,6 +1054,9 @@ export const parseEsankeyXml = (
     }
     if (graphical?.color) nodes[id].local.color = graphical.color
     if (graphical && !graphical.visible) nodes[id].local.shape_visible = false
+    else if (graphical?.visible && !graphical.imageFile && isNearWhiteFill(graphical.color)) {
+      nodes[id].local.shape_visible = false
+    }
     if (graphical?.shapeType === 1) nodes[id].local.shape_border_radius = 10
     else if (graphical?.shapeType === 2) nodes[id].local.shape = 'ellipse'
     const imgSrc = graphical?.imageFile ? images[imageKey(graphical.imageFile)] : undefined
@@ -1089,6 +1114,10 @@ export const parseEsankeyXml = (
         style: 'default',
         local: {},
         displaying_order: 0,
+        // Ordre des ancres verrouillé des deux côtés : préserve le rangement
+        // e!Sankey (cf. interface EsFlow).
+        source_side_locked: true,
+        target_side_locked: true,
         // Commentaire de la flèche e!Sankey → infobulle du flux.
         tooltip_text: graphicalArrow?.tooltip ?? '',
         value: {
@@ -1103,17 +1132,17 @@ export const parseEsankeyXml = (
         if (entry.color) link.local.color = entry.color
       }
       if (orientation !== 'hh') link.local.orientation = orientation
-      // Label de valeur : affiché quand e!Sankey l'affiche (`showValue` de la
-      // flèche, défaut vrai). Sur les diagrammes mono-matériau (1 flow/flèche,
-      // cas courant, ex. Bus) la valeur du flux = celle de la flèche. Sur une
-      // flèche multi-matériaux, chaque flux porte alors SA part (≠ somme e!Sankey
-      // affichée sur la flèche) — écart mineur assumé.
-      if (graphicalArrow?.showValue !== false) {
-        link.local.value_label_is_visible = true
-        // e!Sankey affiche les valeurs TOUJOURS à l'horizontale (jamais alignées
-        // sur la tangente du tracé, même pour les flux verticaux In/Out).
-        link.local.value_label_on_path = false
-      }
+      // Label de valeur : MASQUÉ à l'import (décision utilisateur). Chez e!Sankey
+      // la quantité appartient à la FLÈCHE (somme de ses matériaux, posée sur un
+      // segment) ; la reproduire PAR flux est faux — sur une flèche
+      // multi-matériaux chaque flux afficherait SA part et les N valeurs se
+      // chevauchent (illisible). On laisse donc les valeurs éteintes ; seul le
+      // titre du nœud reste visible. Les réglages de style du label (#1287 :
+      // taille/couleur/offset ci-dessous) sont tout de même posés : ils
+      // s'appliqueront si l'utilisateur réactive les valeurs à la main. e!Sankey
+      // affiche les valeurs TOUJOURS à l'horizontale (jamais sur la tangente).
+      link.local.value_label_is_visible = false
+      link.local.value_label_on_path = false
       // Unité du label : référence au REGISTRE d'unités (mode unit_model, OS#1286)
       // pointant l'unité D'ORIGINE du flow. data_value étant converti vers l'unité
       // de base, l'affichage re-divise par le coefficient et restitue la quantité

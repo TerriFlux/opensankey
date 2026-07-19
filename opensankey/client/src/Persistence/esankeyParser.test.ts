@@ -481,7 +481,7 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
 
   test('aucun label de valeur posé sur le flux ; unité préparée si activation manuelle', () => {
     const link = Object.values(d.links)[0]
-    expect(link.local.value_label_is_visible).toBe(true)
+    expect(link.local.value_label_is_visible).toBe(false)
     expect(link.local.label_unit_visible).toBe(true)
     // OS#1286 — la référence d'unité (id du registre) est posée, mais le
     // format pourcentage ({PercentProcessSource}) garde la PRIORITÉ sur le
