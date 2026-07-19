@@ -2,6 +2,12 @@ import * as fs from 'fs'
 import * as path from 'path'
 import JSZip from 'jszip'
 import { parseEsankeyXml, loadEsankeyFile, ESANKEY_ENTRIES_TAGG_ID } from './esankeyParser'
+import { Class_ApplicationData } from '../types/ApplicationData'
+
+// jest 27/jsdom n'expose pas structuredClone (utilisé par Link.copyFrom).
+if (typeof globalThis.structuredClone !== 'function') {
+  globalThis.structuredClone = <T>(o: T): T => JSON.parse(JSON.stringify(o)) as T
+}
 
 // Valide le parseur e!Sankey sur des fixtures minimales fabriquées main (les
 // démos livrées avec e!Sankey sont propriétaires : jamais committées). Une
@@ -155,6 +161,10 @@ describe('parseEsankeyXml — fixture minimale', () => {
   test('entries → tags de flux (groupe unique), couleur reprise sur le flux', () => {
     const group = d.fluxTags[ESANKEY_ENTRIES_TAGG_ID]
     expect(group).toBeDefined()
+    // SA#285 (fusion) — groupe porteur, banner multi : la flèche multi-matériaux
+    // se fusionne en UN flux à bandes au chargement (migrateParallelTaggedLinks).
+    expect(group.banner).toBe('multi')
+    expect(group.carries_values).toBe(true)
     expect(Object.values(group.tags).map(t => t.name).sort()).toEqual(['Electricity', 'Heat'])
     const elec = Object.values(d.links).find(l => l.value.data_value === 36)
     expect(elec?.local.color).toBe('#FFFF00') // -256 = jaune
@@ -162,6 +172,36 @@ describe('parseEsankeyXml — fixture minimale', () => {
     const heat = Object.values(d.links).find(l => l.value.data_value === 5)
     expect(heat?.local.color).toBe('#FF0000') // -65536 = rouge
     expect(heat?.value.tags[ESANKEY_ENTRIES_TAGG_ID]).toEqual(['id_Heat'])
+  })
+
+  test('transparence e!Sankey (alpha ARGB de l\'entry) → couleur aplatie sur le fond', () => {
+    // -1073774768 = Coral (255,127,80) alpha 191 (~0.75). Aplati sur fond blanc
+    // → couleur solide équivalente #FF9F7C (chaque entry a sa propre teinte).
+    const withAlpha = FIXTURE.replace('argb="-256"', 'argb="-1073774768"')
+    const dd = parseEsankeyXml(withAlpha)
+    const tags = dd.fluxTags[ESANKEY_ENTRIES_TAGG_ID].tags
+    expect(tags['id_Electricity'].color).toBe('#FF9F7C')
+    // Le flux porte aussi la couleur aplatie.
+    const elec = Object.values(dd.links)
+      .find(l => l.value.tags[ESANKEY_ENTRIES_TAGG_ID]?.[0] === 'id_Electricity')
+    expect(elec?.local.color).toBe('#FF9F7C')
+    // Entry opaque (Heat, alpha 255) : couleur brute inchangée.
+    expect(tags['id_Heat'].color).toBe('#FF0000')
+  })
+
+  test('fusion au chargement : les 2 flux parallèles deviennent UN flux à 2 bandes', () => {
+    // Le parseur produit N flux parallèles (un par matériau) ; fromJSON applique
+    // migrateParallelTaggedLinks -> UN flux dont l'épaisseur est ventilée en
+    // bandes (une par entry). C'est le comportement fusion attendu à l'import.
+    const app = new Class_ApplicationData(false)
+    app.fromJSON(d as never)
+    const links = app.drawing_area.sankey.links_list
+    expect(links.length).toBe(1)
+    const bands = links[0].tagged_value_bands
+    expect(bands.map(b => b.value).sort((x, y) => x - y)).toEqual([5, 36])
+    const grp = app.drawing_area.sankey.flux_taggs_list
+      .find(g => g.id === ESANKEY_ENTRIES_TAGG_ID)
+    expect(grp?.carries_values).toBe(true)
   })
 
   test('valeurs agrégées des nœuds cohérentes', () => {
@@ -916,5 +956,8 @@ describeDemos('loadEsankeyFile — démos e!Sankey 5 locales', () => {
     // e!Sankey l'étiquette appartient à la flèche, pas au flux).
     const labelled = Object.values(d.links).filter(l => l.local.label_visible === true)
     expect(labelled.length).toBe(0)
+    // Texture : les rectangles hachurés (<brushColor hasPattern pattern="3">)
+    // importent shape_hatch = antidiagonal (\) sur la zone de texte.
+    expect(Object.values(d.labels).some(c => c.shape_hatch === 'antidiagonal')).toBe(true)
   }, 30000)
 })

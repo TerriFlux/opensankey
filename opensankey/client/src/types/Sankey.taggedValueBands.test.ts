@@ -46,6 +46,12 @@ describe('tagged_value_bands — bandes internes des valeurs du flux', () => {
     // Valeur vivante : les parts suivent sans resynchronisation
     tv1.value = 12
     expect(link.tagged_value_bands[0].share).toBeCloseTo(0.75)
+
+    // #285 (fusion/légende) — un tag porté par une valeur coordonnée doit être
+    // vu par hasGivenTag (sinon la légende, qui teste l'usage via ce prédicat,
+    // fait disparaître les tags des flux fusionnés, ex. import e!Sankey).
+    expect(link.hasGivenTag(acier)).toBe(true)
+    expect(link.hasGivenTag(cuivre)).toBe(true)
   })
 
   it('hides bands of deselected tags and renormalizes shares', () => {

@@ -606,7 +606,9 @@ export class Class_Sankey {
         const tv = (base.value as Class_LinkValue).addTaggedValue()
         tv.value = v
         leaf.flux_tags_list.forEach(tag => {
-          tag.addReference(tv)
+          // addTag (pas seulement addReference) : sinon tv.tags_list reste vide
+          // → couleur de bande en repli (fallback) et tag absent de la légende.
+          tv.addTag(tag)
           // §3.0ter — les groupes dont les tags coordonnent des valeurs
           // deviennent PORTEURS
           ;(tag.group as Class_FluxTagGroup).carries_values = true

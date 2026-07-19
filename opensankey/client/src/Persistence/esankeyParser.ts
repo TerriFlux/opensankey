@@ -93,6 +93,11 @@ interface EsFluxTagGroup {
   name: string
   banner: string
   use_colors: boolean
+  // SA#285 (fusion) — le groupe des entries PORTE des valeurs : chaque flèche
+  // multi-matériaux devient UN flux dont les valeurs sont ventilées par tag
+  // (bandes), au lieu de N flux parallèles. Fusionné à la migration au
+  // chargement (migrateParallelTaggedLinks), banner 'multi' pour l'éclatement.
+  carries_values?: boolean
   tags: { [id: string]: EsFluxTag }
 }
 
@@ -166,13 +171,38 @@ const attrNum = (el: Element | null, attr: string, fallback: number): number => 
 }
 
 // Couleurs e!Sankey : entier ARGB signé 32 bits (ex: -1073774768 = Coral
-// avec alpha). On ne garde que le RGB.
+// avec alpha). On ne garde que le RGB pour la couleur.
 const argbToHex = (argb: string | null): string | null => {
   if (argb === null) return null
   const parsed = parseInt(argb, 10)
   if (!Number.isFinite(parsed)) return null
   const rgb = (parsed >>> 0) & 0xFFFFFF
   return '#' + rgb.toString(16).padStart(6, '0').toUpperCase()
+}
+
+// e!Sankey encode la transparence dans l'alpha de la couleur d'entry
+// (ex. « RGB:70 190 205 (30%) » = 30 % transparent = alpha 178). Chaque entry a
+// SA transparence ; comme les bandes n'ont pas d'opacité propre, on APLATIT
+// l'alpha dans une couleur RGB équivalente (mélange sur le fond du diagramme) :
+// chaque bande obtient ainsi la teinte exacte rendue par e!Sankey, sans
+// plomberie d'opacité par bande.
+const flattenArgbOverBg = (argb: string | null, bgHex: string): string | null => {
+  if (argb === null) return null
+  const parsed = parseInt(argb, 10)
+  if (!Number.isFinite(parsed)) return null
+  const n = parsed >>> 0
+  const a = ((n >>> 24) & 0xFF) / 255
+  if (a >= 1) return argbToHex(argb) // opaque : rien à mélanger
+  const r = (n >>> 16) & 0xFF
+  const g = (n >>> 8) & 0xFF
+  const b = n & 0xFF
+  const bg = parseInt(bgHex.replace('#', ''), 16)
+  const br = (bg >> 16) & 0xFF
+  const bgg = (bg >> 8) & 0xFF
+  const bb = bg & 0xFF
+  const mix = (c: number, bc: number) => Math.round(a * c + (1 - a) * bc)
+  const out = (mix(r, br) << 16) | (mix(g, bgg) << 8) | mix(b, bb)
+  return '#' + out.toString(16).padStart(6, '0').toUpperCase()
 }
 
 const normalizeStringToValidId = (text: string): string =>
@@ -209,6 +239,33 @@ const resolveBrushColorHex = (el: Element | null, palette: EsBrushPalette): stri
   if (direct !== null && direct !== undefined) return argbToHex(direct)
   const refId = childByTag(el, 'brushColorRef')?.getAttribute('refId')
   if (refId !== null && refId !== undefined && refId in palette) return argbToHex(palette[refId])
+  return null
+}
+
+// Hachurage e!Sankey → orientation de hachure OpenSankey. Le motif est porté
+// par la <brushColor hasPattern="true" pattern="N"> de l'élément ; N suit
+// l'enum .NET HatchStyle (0 Horizontal, 1 Vertical, 2 ForwardDiagonal /,
+// 3 BackwardDiagonal \). Rendu par shape_hatch (zones de texte, nœuds).
+const hatchFromBrush = (el: Element | null): string | null => {
+  const bc = el ? childByTag(el, 'brushColor') : null
+  if (!bc || bc.getAttribute('hasPattern') !== 'true') return null
+  switch (attrNum(bc, 'pattern', -1)) {
+    case 0: return 'horizontal'
+    case 1: return 'vertical'
+    case 2: return 'diagonal'
+    case 3: return 'antidiagonal'
+    default: return 'diagonal'
+  }
+}
+
+// ARGB brut d'un élément (direct ou via la palette) — pour en extraire l'alpha
+// (opacité), que resolveBrushColorHex écarte.
+const resolveBrushArgb = (el: Element | null, palette: EsBrushPalette): string | null => {
+  if (!el) return null
+  const direct = childByTag(el, 'brushColor')?.getAttribute('argb')
+  if (direct !== null && direct !== undefined) return direct
+  const refId = childByTag(el, 'brushColorRef')?.getAttribute('refId')
+  if (refId !== null && refId !== undefined && refId in palette) return palette[refId]
   return null
 }
 
@@ -277,7 +334,7 @@ const parseUnitTypes = (netModel: Element): { [id: string]: EsUnitType } => {
 
 // Les entries (matériaux/énergies) peuvent être imbriquées dans des
 // entryGroups : aplatissement récursif.
-const parseEntries = (entryGroup: Element, out: { [id: string]: EsEntry }, usedTagIds: Set<string>, palette: EsBrushPalette): void => {
+const parseEntries = (entryGroup: Element, out: { [id: string]: EsEntry }, usedTagIds: Set<string>, palette: EsBrushPalette, bgHex: string): void => {
   const entriesEl = childByTag(entryGroup, 'entries')
   if (entriesEl) childrenByTag(entriesEl, 'entry').forEach(entry => {
     const id = entry.getAttribute('id') ?? ''
@@ -288,12 +345,15 @@ const parseEntries = (entryGroup: Element, out: { [id: string]: EsEntry }, usedT
     usedTagIds.add(tagId)
     out[id] = {
       name,
-      color: resolveBrushColorHex(entry, palette),
+      // Transparence e!Sankey (alpha) aplatie dans la couleur (mélange sur le
+      // fond) : chaque entry a sa propre teinte semi-transparente rendue en
+      // couleur solide équivalente.
+      color: flattenArgbOverBg(resolveBrushArgb(entry, palette), bgHex),
       tagId,
     }
   })
   const subGroups = childByTag(entryGroup, 'entryGroups')
-  if (subGroups) childrenByTag(subGroups, 'entryGroup').forEach(g => parseEntries(g, out, usedTagIds, palette))
+  if (subGroups) childrenByTag(subGroups, 'entryGroup').forEach(g => parseEntries(g, out, usedTagIds, palette, bgHex))
 }
 
 // ----------------------------------------------------------- Partie graphique
@@ -555,6 +615,9 @@ const parseShapes = (
       if (transparency > 0) base.opacity = Math.max(0, 100 - transparency)
       // OS#1290 — trait pointillé de la bordure (<penColor Pattern="…">).
       if (isPenColorPatternDashed(childByTag(shape, 'penColor'))) base.shape_border_dashed = true
+      // Hachurage e!Sankey (<brushColor hasPattern pattern>) → shape_hatch.
+      const hatch = hatchFromBrush(shape)
+      if (hatch) base.shape_hatch = hatch
       // Texte absorbé (boîte e!Sankey en 2 objets) : le fond porte le texte.
       const t = textOfRect.get(it)
       if (t) applyTextToContainer(base, t.el)
@@ -937,9 +1000,12 @@ export const parseEsankeyXml = (
   // process, shapes) vers leur <brushColor argb>.
   const brushPalette = buildBrushColorPalette(root)
 
+  // Fond du diagramme (pour aplatir la transparence des couleurs d'entry).
+  const bgHex = argbToHex(net.getAttribute('backgroundColor')) ?? '#FFFFFF'
+
   const entries: { [id: string]: EsEntry } = {}
   const rootEntryGroup = childByTag(netModel, 'entryGroup')
-  if (rootEntryGroup) parseEntries(rootEntryGroup, entries, new Set(), brushPalette)
+  if (rootEntryGroup) parseEntries(rootEntryGroup, entries, new Set(), brushPalette, bgHex)
   const graphicalProcesses = parseGraphicalProcesses(net, brushPalette)
   // OS#1291 — les places graphiques rejoignent le même dictionnaire (ids
   // uniques) : orientation/couleur/position des flux place↔process réutilisent
@@ -1367,7 +1433,10 @@ export const parseEsankeyXml = (
     // `use_colors` : les tags portent les couleurs des entries → ils
     // apparaissent dans la légende, et la colormap coïncide avec les couleurs
     // déjà posées sur les flux.
-    fluxTags[ESANKEY_ENTRIES_TAGG_ID] = { name: 'Flux e!Sankey', banner: 'none', use_colors: true, tags }
+    // SA#285 (fusion) — banner 'multi' + porteur de valeurs : après la fusion
+    // des flux parallèles au chargement, la flèche multi-matériaux s'affiche en
+    // UN flux dont l'épaisseur est ventilée en bandes (une par entry).
+    fluxTags[ESANKEY_ENTRIES_TAGG_ID] = { name: 'Flux e!Sankey', banner: 'multi', use_colors: true, carries_values: true, tags }
   }
 
   const backgroundColor = argbToHex(net.getAttribute('backgroundColor')) ?? '#FFFFFF'

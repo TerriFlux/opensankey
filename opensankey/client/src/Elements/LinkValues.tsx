@@ -739,7 +739,12 @@ export class Class_ElementValue {
   }
 
   public hasGivenTag(tag: Class_Tag) {
-    return this._flux_tags.includes(tag)
+    // #285 (fusion) — un tag peut être porté par le flux ENTIER (_flux_tags) ou,
+    // sur un flux ventilé, par une de ses valeurs coordonnées. La légende et le
+    // filtrage comptent l'usage via ce test : sans les tagged_values, un flux
+    // fusionné (ex. import e!Sankey) ferait disparaître ses tags de la légende.
+    return this._flux_tags.includes(tag) ||
+      this._tagged_values.some(tv => tv.tags_list.includes(tag))
   }
 
   public addTag(tag: Class_Tag) {
