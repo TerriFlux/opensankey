@@ -141,6 +141,34 @@ const argbToHex = (argb: string | null): string | null => {
 const normalizeStringToValidId = (text: string): string =>
   'id_' + text.replace(/[^0-9a-zA-Z]+/g, '_')
 
+// Palette de couleurs partagée du document : les entries (et parfois process /
+// shapes) ne portent pas toujours un <brushColor argb> en clair — souvent un
+// <brushColorRef refId="…"> pointant une <brushColor id="…" argb="…"> définie
+// ailleurs (démos « Bus Passengers » p.ex.). On indexe toutes les brushColor
+// nommées (avec id) une fois, pour résoudre ces références.
+type EsBrushPalette = { [id: string]: string }
+const buildBrushColorPalette = (root: Element): EsBrushPalette => {
+  const out: EsBrushPalette = {}
+  Array.from(root.getElementsByTagName('*')).forEach(el => {
+    if (el.localName !== 'brushColor') return
+    const id = el.getAttribute('id')
+    const argb = el.getAttribute('argb')
+    if (id && argb !== null) out[id] = argb
+  })
+  return out
+}
+
+// Couleur de remplissage d'un élément : <brushColor argb> direct si présent,
+// sinon <brushColorRef refId> résolu via la palette. Renvoie un hex #RRGGBB.
+const resolveBrushColorHex = (el: Element | null, palette: EsBrushPalette): string | null => {
+  if (!el) return null
+  const direct = childByTag(el, 'brushColor')?.getAttribute('argb')
+  if (direct !== null && direct !== undefined) return argbToHex(direct)
+  const refId = childByTag(el, 'brushColorRef')?.getAttribute('refId')
+  if (refId !== null && refId !== undefined && refId in palette) return argbToHex(palette[refId])
+  return null
+}
+
 // ------------------------------------------------------------- Modèle logique
 
 interface EsUnit { coefficient: number, name: string, isBasic: boolean }
@@ -174,7 +202,7 @@ const parseUnitTypes = (netModel: Element): { [id: string]: EsUnitType } => {
 
 // Les entries (matériaux/énergies) peuvent être imbriquées dans des
 // entryGroups : aplatissement récursif.
-const parseEntries = (entryGroup: Element, out: { [id: string]: EsEntry }, usedTagIds: Set<string>): void => {
+const parseEntries = (entryGroup: Element, out: { [id: string]: EsEntry }, usedTagIds: Set<string>, palette: EsBrushPalette): void => {
   const entriesEl = childByTag(entryGroup, 'entries')
   if (entriesEl) childrenByTag(entriesEl, 'entry').forEach(entry => {
     const id = entry.getAttribute('id') ?? ''
@@ -185,12 +213,12 @@ const parseEntries = (entryGroup: Element, out: { [id: string]: EsEntry }, usedT
     usedTagIds.add(tagId)
     out[id] = {
       name,
-      color: argbToHex(childByTag(entry, 'brushColor')?.getAttribute('argb') ?? null),
+      color: resolveBrushColorHex(entry, palette),
       tagId,
     }
   })
   const subGroups = childByTag(entryGroup, 'entryGroups')
-  if (subGroups) childrenByTag(subGroups, 'entryGroup').forEach(g => parseEntries(g, out, usedTagIds))
+  if (subGroups) childrenByTag(subGroups, 'entryGroup').forEach(g => parseEntries(g, out, usedTagIds, palette))
 }
 
 // ----------------------------------------------------------- Partie graphique
@@ -212,7 +240,7 @@ interface EsGraphicalProcess {
   shapeType: number
 }
 
-const parseGraphicalProcesses = (net: Element): { [id: string]: EsGraphicalProcess } => {
+const parseGraphicalProcesses = (net: Element, palette: EsBrushPalette): { [id: string]: EsGraphicalProcess } => {
   const out: { [id: string]: EsGraphicalProcess } = {}
   const processes = childByTag(net, 'processes')
   if (!processes) return out
@@ -221,7 +249,7 @@ const parseGraphicalProcesses = (net: Element): { [id: string]: EsGraphicalProce
     out[p.getAttribute('id') ?? ''] = {
       x: attrNum(p, 'locationX', 0),
       y: attrNum(p, 'locationY', 0),
-      color: argbToHex(childByTag(p, 'brushColor')?.getAttribute('argb') ?? null),
+      color: resolveBrushColorHex(p, palette),
       labelText: (label?.getAttribute('text') ?? '').replace(/\r?\n/g, ' ').trim(),
       visible: p.getAttribute('visible') !== 'false',
       imageFile: childByTag(p, 'image')?.getAttribute('filename') ?? '',
@@ -248,7 +276,8 @@ const imageKey = (filename: string): string => filename.replace(/\\/g, '/')
  */
 const parseShapes = (
   net: Element,
-  images: { [path: string]: string }
+  images: { [path: string]: string },
+  palette: EsBrushPalette
 ): { [id: string]: EsContainerJSON } => {
   const out: { [id: string]: EsContainerJSON } = {}
   const shapes = childByTag(net, 'shapes')
@@ -273,6 +302,12 @@ const parseShapes = (
         if (!text.trim()) return
         base.name = text
         base.title = text
+        // Affichage réel du texte d'une zone : source 'custom' + name_label_text
+        // + visibilité explicite. Poser seulement `name`/`title` ne suffit PAS
+        // (le label reste masqué) — même recette que LegendGenerator.
+        base.name_label_source = 'custom'
+        base.name_label_text = text
+        base.name_label_is_visible = true
         const font = childByTag(shape, 'font')
         if (font) {
           base.name_label_font_size = attrNum(font, 'size', 9)
@@ -295,7 +330,7 @@ const parseShapes = (
         if (transparency > 0) base.opacity = Math.max(0, 100 - transparency)
         out[id] = base
       } else if (kind === 'rectangle' || kind === 'roundedRectangle') {
-        const fill = argbToHex(childByTag(shape, 'brushColor')?.getAttribute('argb') ?? null)
+        const fill = resolveBrushColorHex(shape, palette)
         if (fill) {
           base.color = fill
           base.color_visible = true
@@ -502,10 +537,14 @@ export const parseEsankeyXml = (
   const referenceUnitType = Object.values(unitTypes).find(ut => ut.used && ut.maximumFlow > 0 && ut.width > 0) ?? null
   if (referenceUnitType) userScale = unitTypeOwnScale(referenceUnitType)
 
+  // Palette de couleurs partagée : résout les <brushColorRef refId> (entries,
+  // process, shapes) vers leur <brushColor argb>.
+  const brushPalette = buildBrushColorPalette(root)
+
   const entries: { [id: string]: EsEntry } = {}
   const rootEntryGroup = childByTag(netModel, 'entryGroup')
-  if (rootEntryGroup) parseEntries(rootEntryGroup, entries, new Set())
-  const graphicalProcesses = parseGraphicalProcesses(net)
+  if (rootEntryGroup) parseEntries(rootEntryGroup, entries, new Set(), brushPalette)
+  const graphicalProcesses = parseGraphicalProcesses(net, brushPalette)
   const graphicalArrows = parseGraphicalArrows(net)
   const nodeMapping = parseNodeMapping(root)
   const edgeMapping = parseEdgeMapping(root)
@@ -671,7 +710,7 @@ export const parseEsankeyXml = (
   })
 
   // Zones libres (textes, images, rectangles) et légende.
-  const labels = parseShapes(net, images)
+  const labels = parseShapes(net, images, brushPalette)
   const legendPos = parseLegendPosition(net)
 
   // Normalisation des positions : e!Sankey stocke des coordonnées de document

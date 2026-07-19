@@ -278,6 +278,21 @@ const FIXTURE_DECOR = `<?xml version="1.0" encoding="utf-8"?>
   </logicalGraphicalObjectMapping>
 </document>`
 
+describe('parseEsankeyXml — couleurs par référence', () => {
+  // Beaucoup de démos (« Bus Passengers On_Off » p.ex.) ne portent pas la couleur
+  // d'une entry en clair mais via <brushColorRef refId> → <brushColor id argb>
+  // définie ailleurs. On résout la référence via la palette du document.
+  test('brushColorRef d\'une entry résolu via la palette (couleur du tag + du flux)', () => {
+    const withRef = FIXTURE
+      .replace('<brushColor argb="-256" />', '<brushColorRef refId="900" />')
+      .replace('<net backgroundColor="-1">', '<net backgroundColor="-1"><brushColor id="900" name="Teal" argb="-16744320" />')
+    const d2 = parseEsankeyXml(withRef)
+    expect(d2.fluxTags[ESANKEY_ENTRIES_TAGG_ID].tags['id_Electricity'].color).toBe('#008080')
+    const link = Object.values(d2.links).find(l => l.value.tags[ESANKEY_ENTRIES_TAGG_ID]?.[0] === 'id_Electricity')
+    expect(link?.local.color).toBe('#008080')
+  })
+})
+
 describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)', () => {
   const d = parseEsankeyXml(FIXTURE_DECOR, { 'Images/tmp1.tmp': PNG_URI })
 
@@ -308,6 +323,11 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     expect(texte?.name_label_font_size).toBe(18)
     expect(texte?.name_label_bold).toBe(true)
     expect(texte?.name_label_color).toBe('#000000')
+    // Le texte doit être RENDU : source 'custom' + name_label_text + visibilité
+    // (le simple name/title laisse le label masqué au chargement).
+    expect(texte?.name_label_source).toBe('custom')
+    expect(texte?.name_label_text).toBe('Titre du\ndiagramme')
+    expect(texte?.name_label_is_visible).toBe(true)
     const rect = containers.find(c => c.color_visible === true)
     expect(rect?.color).toBe('#E0E0E0') // -2039584
     expect(rect?.transparent_border).toBe(true)
