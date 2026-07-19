@@ -313,6 +313,18 @@ interface EsGraphicalProcess {
   height: number
   color: string | null
   labelText: string
+  /**
+   * Position PROPRE du label du process (e!Sankey stocke un `<label locationX/Y
+   * sizeW/H>` déplaçable, souvent décalé du nœud pour se caler sous une icône
+   * libre). `labelHasPos` = un locationX est présent ; coordonnées en repère
+   * e!Sankey (mêmes unités que x/y du nœud). Sert à poser le name label en mode
+   * ABSOLU (indépendant de la hauteur rendue du nœud). NaN/0 si absent.
+   */
+  labelHasPos: boolean
+  labelX: number
+  labelY: number
+  labelW: number
+  labelH: number
   /** `visible='false'` : e!Sankey n'affiche que le label (et l'icône libre à côté). */
   visible: boolean
   /** Chemin dans le ZIP de l'image du process (ex: `Images\\tmpXX.tmp`), sinon ''. */
@@ -367,6 +379,11 @@ const parseGraphicalProcesses = (net: Element, palette: EsBrushPalette): { [id: 
       height,
       color: resolveBrushColorHex(p, palette),
       labelText: (label?.getAttribute('text') ?? '').replace(/\r?\n/g, ' ').trim(),
+      labelHasPos: !!label && label.hasAttribute('locationX'),
+      labelX: attrNum(label, 'locationX', 0),
+      labelY: attrNum(label, 'locationY', 0),
+      labelW: attrNum(label, 'sizeW', 0),
+      labelH: attrNum(label, 'sizeH', 0),
       visible: p.getAttribute('visible') !== 'false',
       imageFile: childByTag(p, 'image')?.getAttribute('filename') ?? '',
       shapeType: attrNum(p, 'shapeType', 0),
@@ -399,6 +416,11 @@ const parseGraphicalPlaces = (net: Element, palette: EsBrushPalette): { [id: str
       y: attrNum(p, 'locationY', 0),
       color: resolveBrushColorHex(p, palette),
       labelText: (label?.getAttribute('text') ?? '').replace(/\r?\n/g, ' ').trim(),
+      labelHasPos: !!label && label.hasAttribute('locationX'),
+      labelX: attrNum(label, 'locationX', 0),
+      labelY: attrNum(label, 'locationY', 0),
+      labelW: attrNum(label, 'sizeW', 0),
+      labelH: attrNum(label, 'sizeH', 0),
       visible: p.getAttribute('visible') !== 'false',
       imageFile: childByTag(p, 'image')?.getAttribute('filename') ?? '',
       shapeType: attrNum(p, 'shapeType', 0),
@@ -1196,33 +1218,14 @@ export const parseEsankeyXml = (
       //    défaut vrai) ; toArrow=false → pas de pointe cible.
       //  - @fromArrow (côté SOURCE) → e!Sankey ne dessine PAS une pointe qui
       //    ressort mais une « flèche en négatif » : une ENCOCHE en chevron
-      //    creusée dans le départ du flux (fromArrowStyle=1). L'équivalent exact
-      //    OpenSankey est shape_source_notch (et non shape_arrow_at_source, qui
-      //    ferait ressortir une pointe).
-      // Dimensions : e!Sankey garde un ANGLE de chevron CONSTANT — la profondeur
-      // suit l'épaisseur du flux, pas une taille fixe (à 10 px fixes, un gros flux
-      // a un chevron ridicule). On active donc le MODE RATIO d'OpenSankey
-      // (shape_*_size_ratio : depth = ratio × épaisseur), calé via une constante
-      // sur l'allure des démos (apex ~55°, chevron ≈ 0,3 × épaisseur pour une
-      // longueur e!Sankey de 10). Réglable ensuite dans l'inspecteur (Ratio pointe
-      // / Ratio encoche).
-      // On applique le MÊME ratio à la pointe cible ET à l'encoche source (dérivé
-      // de la plus grande des deux longueurs e!Sankey) : au raccord d'un nœud, la
-      // pointe entrante et l'encoche des flux sortants ont ainsi le même angle et
-      // s'IMBRIQUENT proprement (une pointe plus plate que l'encoche ne la
-      // remplirait pas). Réglable indépendamment ensuite.
-      const CHEVRON_RATIO_PER_PX = 0.03
-      const chevronLen = Math.max(
-        graphicalArrow?.fromArrowLength ?? 0,
-        graphicalArrow?.toArrowLength ?? 0,
-      )
-      const chevronRatio = chevronLen > 0 ? chevronLen * CHEVRON_RATIO_PER_PX : 0
+      //    creusée dans le départ du flux (fromArrowStyle=1) → shape_source_notch.
+      // Dimensions : taille par défaut OpenSankey. NOTE : le mode « angle constant »
+      // (shape_*_size_ratio, depth ∝ épaisseur) existe dans OpenSankey mais N'EST
+      // PAS appliqué à l'import : sur un nœud multi-flux collapsé, une encoche
+      // proportionnelle à la bande épaisse creusait un énorme triangle de fond
+      // (trou blanc). À recaler prudemment (profondeur plafonnée) avant réactivation.
       if (graphicalArrow?.toArrow === false) link.local.shape_is_arrow = false
-      else if (chevronRatio) link.local.shape_arrow_size_ratio = chevronRatio
-      if (graphicalArrow?.fromArrow === true) {
-        link.local.shape_source_notch = true
-        if (chevronRatio) link.local.shape_source_notch_size_ratio = chevronRatio
-      }
+      if (graphicalArrow?.fromArrow === true) link.local.shape_source_notch = true
       // OS#1290 — trait pointillé (dashStyle/dashPattern du pen de la
       // sankeyLink) → bordure pointillée du flux.
       if (graphicalArrow?.dashed) link.local.shape_border_dashed = true
