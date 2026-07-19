@@ -147,7 +147,6 @@ export const ElementSearchOverlay = ({ app_data }: { app_data: Class_Application
   const results = useMemo(
     () => collectResults(app_data, query, only_visible),
     // app_data.language : rebâtit les sous-libellés traduits si la langue change.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [app_data, query, only_visible, app_data.language]
   )
 
