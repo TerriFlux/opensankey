@@ -223,6 +223,18 @@ const BAKE_LABEL_KEYS = new Set([
 ])
 // Porteur d'échelle valeur→px des flux : épaisseur ∝ 1/user_scale → divisé par r.
 const BAKE_INVERSE_KEYS = new Set(['user_scale'])
+// Champs texte RICH (HTML Quill) : les tailles y sont inline (`font-size:Npx`), pas dans un
+// attribut numérique. À l'échelle ×r comme les autres labels, donc UNIQUEMENT si police non
+// verrouillée (verrouillée = le foreignObject entier est contre-scalé 1/k, déjà constant à l'écran).
+const BAKE_RICH_TEXT_KEYS = new Set(['name_label_text', 'value_label_text'])
+
+/** Multiplie par r les tailles inline (font-size / line-height en px) d'un HTML rich text. */
+function scaleRichTextPx(html: string, r: number): string {
+  return html.replace(/(font-size|line-height)(\s*:\s*)([\d.]+)px/gi, (m, prop, sep, num) => {
+    const v = parseFloat(num)
+    return Number.isFinite(v) ? `${prop}${sep}${v * r}px` : m
+  })
+}
 // Attributs de FORME (px) INJECTÉS depuis le modèle avant le scaling (cf. injectResolvedGeometry).
 const INJECT_GEOM_KEYS = [
   'shape_min_width', 'shape_min_height',
@@ -283,6 +295,8 @@ export function scaleGeometryJSON(obj: unknown, r: number, include_labels: boole
       if (BAKE_SHAPE_KEYS.has(k)) rec[k] = v * r
       else if (include_labels && BAKE_LABEL_KEYS.has(k)) rec[k] = v * r
       else if (BAKE_INVERSE_KEYS.has(k)) rec[k] = v / r
+    } else if (include_labels && typeof v === 'string' && BAKE_RICH_TEXT_KEYS.has(k)) {
+      rec[k] = scaleRichTextPx(v, r)
     } else {
       scaleGeometryJSON(v, r, include_labels)
     }
