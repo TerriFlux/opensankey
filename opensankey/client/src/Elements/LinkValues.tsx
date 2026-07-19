@@ -1150,10 +1150,34 @@ export class Class_LinkValue extends Class_ElementValue {
   }
 
   // SERIALIZATION ======================================================================
+  /**
+   * §3.0ter — valeur que doit voir le solveur (champ scalaire historique) :
+   * quand le flux est ventilé par des groupes PORTEURS, c'est la valeur du
+   * TAG SÉLECTIONNÉ (le scalaire interne n'est qu'un cache) ; null sinon
+   * (le scalaire fait foi).
+   */
+  private solverDataValue(): number | null {
+    const sankey = this.link?.drawing_area.sankey
+    if (!sankey) return null
+    const carrying = sankey.flux_taggs_list.filter(tagg => tagg.carries_values)
+    if (carrying.length === 0) return null
+    const tvs = this.tagged_values_list.filter(tv => tv.value !== null)
+    if (tvs.length === 0) return null
+    const match = tvs.find(tv =>
+      carrying.every(tagg => {
+        const mine = tv.getTagForGroup(tagg)
+        return !mine || mine.is_selected
+      }) && carrying.some(tagg => tv.getTagForGroup(tagg)))
+    return match?.value ?? this._data_value[Class_LinkValue.SRC] ?? tvs[0].value
+  }
+
   public toJSON(_kwargs?: Type_JSON) {
     const json_object = super.toJSON(_kwargs)
-    // Source values (index 0)
-    if (this._data_value[Class_LinkValue.SRC] != null) json_object['data_value'] = this._data_value[Class_LinkValue.SRC] as number
+    // Source values (index 0) — §3.0ter : le scalaire sérialisé est la valeur
+    // du tag sélectionné quand le flux est ventilé (cf. solverDataValue)
+    const solver_value = this.solverDataValue()
+    if (solver_value !== null) json_object['data_value'] = solver_value
+    else if (this._data_value[Class_LinkValue.SRC] != null) json_object['data_value'] = this._data_value[Class_LinkValue.SRC] as number
     if (this._data_min[Class_LinkValue.SRC] != null) json_object['data_min'] = this._data_min[Class_LinkValue.SRC] as number
     if (this._data_max[Class_LinkValue.SRC] != null) json_object['data_max'] = this._data_max[Class_LinkValue.SRC] as number
     if (this._data_uncertainty[Class_LinkValue.SRC] != null) json_object['data_uncertainty'] = this._data_uncertainty[Class_LinkValue.SRC] as number
