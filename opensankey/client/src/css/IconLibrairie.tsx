@@ -1745,6 +1745,16 @@ export class Class_IconLibrary {
       <circle cx="9" cy="9" r="1.4" />
     </svg>
   )
+  // OS#1278 — onglet Analyse (graphiques couronne / histogramme).
+  protected _icon_tab_analysis = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.1em" height="1.1em"
+      fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 20V10" />
+      <path d="M10 20V4" />
+      <path d="M16 20v-7" />
+      <path d="M20 20H3" />
+    </svg>
+  )
   protected _icon_tab_tooltip = (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.1em" height="1.1em"
       fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1941,6 +1951,7 @@ export class Class_IconLibrary {
   public get icon_tab_icon() { return this._icon_tab_icon }
   public get icon_tab_stock() { return this._icon_tab_stock }
   public get icon_tab_tags() { return this._icon_tab_tags }
+  public get icon_tab_analysis() { return this._icon_tab_analysis }
   public get icon_tab_tooltip() { return this._icon_tab_tooltip }
   public get icon_tab_title() { return this._icon_tab_title }
   public get icon_tab_layout() { return this._icon_tab_layout }

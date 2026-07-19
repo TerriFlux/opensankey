@@ -54,6 +54,7 @@ import {
   resolveDocMarkdown, normalizeDocLang
 } from '../Persistence/persistenceMigrations'
 import type { Class_NodeElement } from '../Elements/Node'
+import type { Class_LinkElement } from '../Elements/Link'
 
 // SPECIFIC TYPES **********************************************************************/
 
@@ -359,6 +360,27 @@ export class Class_ApplicationData {
     node: Class_NodeElement,
     container_selector: string
   ) => { redraw: () => void, cleanup: () => void } | void = undefined
+
+  /** Hook injecté par OS+ (cf. ModalUnitarySankeyOSP) : dessine le GRAPHIQUE
+   * D'ANALYSE (couronne / histogramme) décrit par l'attribut analysis_descriptor
+   * de l'élément (nœud OU flux) dans le conteneur DOM `container_selector`.
+   * Alimente l'onglet « Analyse » des tooltips de nœud et de flux quand
+   * surfaces.tooltip est activé (OS#1278). Absent hors OS+. */
+  public draw_analysis_in_container?: (
+    element: Class_NodeElement | Class_LinkElement,
+    container_selector: string
+  ) => { redraw: () => void, cleanup: () => void } | void = undefined
+
+  /** Hook injecté par OS+ : dessine le nœud EN CAMEMBERT (surface on_node, OS#1278)
+   * dans le groupe SVG `group_el` du nœud, aux dimensions passées. Utilisé par
+   * NodeDrawShape quand le descripteur du nœud a surfaces.on_node. Couleurs du
+   * diagramme (le graphique fait partie du langage visuel). Absent hors OS+. */
+  public draw_node_analysis_overlay?: (
+    node: Class_NodeElement,
+    group_el: SVGGElement,
+    width: number,
+    height: number
+  ) => boolean = undefined
 
   protected _waiting_processes: { [id: string]: NodeJS.Timeout } = {}
   protected _waiting_time_for_processes: number = 50 // ms
@@ -920,6 +942,15 @@ export class Class_ApplicationData {
         // les centres, pas de désagrégation/ré-agrégation récursive — bien plus rapide au
         // chargement) pour que le filtre vue révèle des nœuds déjà placés.
         centerChildrenOnParent(this)
+      } else {
+        // sankeyapplication#153 — le fichier fait foi sur le statut recyclage : tout flux dont
+        // le statut chargé diverge de ce que la géométrie recalculerait est verrouillé
+        // (tristate #711), sinon le recalcul auto au premier drag le rebasculerait. Réservé
+        // aux fichiers porteurs d'une géométrie (sinon computeAutoSankey ci-dessus vient de
+        // poser des statuts cohérents) et au chargement pour affichage (draw) : les flux
+        // internes en draw=false (réconciliation, tests corpus) réappliquent leur propre
+        // mise en page derrière.
+        this._drawing_area.nodePositioning.lockRecyclingStatusDivergences()
       }
       this._drawing_area.draw()
       // OS#1250 phase 2 — no-op sauf fichier < 0.92 (cf. markForLegacyNormalization).

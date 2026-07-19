@@ -700,10 +700,20 @@ export class Class_LinkElement extends Class_LinkAttribute {
       if (source_color_tags.length > 0 && target_color_tags.length === 0) return this.source.getShapeColorToUse()
       if (target_color_tags.length > 0 && source_color_tags.length === 0) return this.target.getShapeColorToUse()
 
-      // 3. Both have color tags (no common) → prefer the product node
+      // 3. Both have color tags (no common) → prefer the product node, sinon
+      // l'extremite. Un noeud est une "extremite" s'il n'a de liens que d'un
+      // seul cote (source pure ou puits pur) : sur un modele en etoile (un hub
+      // qui redistribue), le flux suit alors la couleur du noeud feuille plutot
+      // que celle du hub. Ce departage ne sert qu'a choisir entre deux couleurs
+      // de tags deja actives — il ne s'applique pas quand aucun tag ne colore
+      // (use_colors off), auquel cas le flux garde sa couleur propre (regle 5).
       if (source_color_tags.length > 0 && target_color_tags.length > 0) {
         if (this.source.hasGivenTag(productTag)) return this.source.getShapeColorToUse()
         if (this.target.hasGivenTag(productTag)) return this.target.getShapeColorToUse()
+        const source_is_extremity = this.source.hasInputLinks() !== this.source.hasOutputLinks()
+        const target_is_extremity = this.target.hasInputLinks() !== this.target.hasOutputLinks()
+        if (target_is_extremity && !source_is_extremity) return this.target.getShapeColorToUse()
+        if (source_is_extremity && !target_is_extremity) return this.source.getShapeColorToUse()
         return this.source.getShapeColorToUse()
       }
 
@@ -711,7 +721,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       if (this.source.hasGivenTag(productTag)) return this.source.getShapeColorToUse()
       if (this.target.hasGivenTag(productTag)) return this.target.getShapeColorToUse()
 
-      // 5. Fallback: source color
+      // 5. Fallback: couleur propre du flux
       return this.shape_color //this.source.getShapeColorToUse()
     }
     const type_source = this.shape_color_rule

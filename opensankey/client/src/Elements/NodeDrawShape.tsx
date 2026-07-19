@@ -25,6 +25,8 @@
 // ==================================================================================================
 
 import { Class_NodeBase } from './NodeBase'
+import type { Class_NodeElement } from './Node'
+import { Type_AnalysisDescriptor } from '../Charts/AnalysisDescriptor'
 
 type draw_arrow_partFType = (
   node_face_size: number,
@@ -98,6 +100,10 @@ export class NodeDrawShape {
     this._node.d3_selection_g_shape?.selectAll('.node_border_clip_def').remove()
     // OS#1276 — trait de préhension transparent d'une ligne libre (cf. branche 'line').
     this._node.d3_selection_g_shape?.selectAll('.node_line_hit').remove()
+    // OS#1278 — nettoyer un éventuel graphique sur nœud précédent (le nœud a pu
+    // repasser de « couronne/histogramme » à forme normale : sa suppression ne
+    // passe pas par .node_shape).
+    this._node.d3_selection_g_shape?.selectAll('.node_analysis_chart').remove()
 
     // Do the rest only if shape is visible
     // Compute shape attributes
@@ -105,8 +111,32 @@ export class NodeDrawShape {
     const height = this._node.getShapeHeightToUse()+this._node.shape_margin_top+this._node.shape_margin_bottom
     const color = this._node.getShapeColorToUse()
 
+    // OS#1278 — GRAPHIQUE SUR LE NŒUD : si le descripteur du nœud a surfaces.on_node,
+    // le nœud EST une couronne / un histogramme (dessiné par le hook OS+ avec les
+    // couleurs du modèle). On saute alors la forme normale — SAUF si le hook n'a
+    // rien pu dessiner (données vides : dimension/tag supprimé), auquel cas on
+    // retombe sur la forme normale pour ne pas laisser le nœud invisible. Gardé aux
+    // VRAIS nœuds (pas les zones) : la décomposition lit input/output_links_list.
+    const app_data = this._node.drawing_area.application_data
+    const analysis = this._node.getElementProperty('analysis_descriptor') as Type_AnalysisDescriptor | undefined
+    const g_shape_el = this._node.d3_selection_g_shape?.node() as SVGGElement | null
+    if (g_shape_el
+      && analysis?.surfaces?.on_node && (analysis.decompose || analysis.compare)
+      && typeof app_data.draw_node_analysis_overlay === 'function'
+      && 'input_links_list' in this._node) {
+      const drew = app_data.draw_node_analysis_overlay(this._node as unknown as Class_NodeElement, g_shape_el, width, height)
+      if (drew) return
+    }
+
+    // Le style peut être partagé entre nœuds et flux (style 'default', fichiers
+    // legacy) : shape_type peut alors porter une forme de FLUX (bezier_*), qu'on
+    // ne sait pas dessiner ici — on retombe sur 'rect' plutôt que de ne rien
+    // dessiner (nœuds invisibles).
+    const shape_type = (['rect', 'ellipse', 'capsule', 'capsule_h'] as const)
+      .find(s => s === this._node.shape_type) ?? 'rect'
+
     // Apply shape value
-    if (this._node.shape_type === 'rect') {
+    if (shape_type === 'rect') {
       this._node.d3_selection_g_shape?.append('rect')
         .classed('node', true)
         .classed('node_shape', true)
@@ -114,7 +144,7 @@ export class NodeDrawShape {
         .attr('height', height)
         .attr('rx', this._node.shape_border_radius)
     }
-    else if (this._node.shape_type === 'ellipse') {
+    else if (shape_type === 'ellipse') {
       this._node.d3_selection_g_shape?.append('ellipse')
         .classed('node', true)
         .classed('node_shape', true)
@@ -122,12 +152,12 @@ export class NodeDrawShape {
         .attr('cy', height / 2)
         .attr('rx', width / 2)
         .attr('ry', height / 2)
-    } else if (this._node.shape_type === 'capsule') {
+    } else if (shape_type === 'capsule') {
       this._node.d3_selection_g_shape?.append('path')
         .classed('node', true)
         .classed('node_shape', true)
         .attr('d', this.getCapsulePath())
-    } else if (this._node.shape_type === 'capsule_h') {
+    } else if (shape_type === 'capsule_h') {
       this._node.d3_selection_g_shape?.append('path')
         .classed('node', true)
         .classed('node_shape', true)
@@ -161,11 +191,11 @@ export class NodeDrawShape {
       }
     }
     let margin_top = this._node.shape_margin_top
-    if (this._node.shape_type === 'capsule') {
+    if (shape_type === 'capsule') {
       margin_top = this._node.getShapeWidthToUse()/2
     }
     let margin_left = this._node.shape_margin_left
-    if (this._node.shape_type === 'capsule_h') {
+    if (shape_type === 'capsule_h') {
       margin_left = this._node.getShapeHeightToUse()/2
     }
     this._node.d3_selection_g_shape?.selectAll('.node_shape')
@@ -209,12 +239,12 @@ export class NodeDrawShape {
         const clip_id = `clip-node-border-${this._node.id}`
         const clip_g = g_shape.append('g').classed('node_border_clip_def', true)
         const clip = clip_g.append('clipPath').attr('id', clip_id)
-        if (this._node.shape_type === 'rect') {
+        if (shape_type === 'rect') {
           clip.append('rect')
             .attr('width', width)
             .attr('height', height)
             .attr('rx', this._node.shape_border_radius)
-        } else if (this._node.shape_type === 'ellipse') {
+        } else if (shape_type === 'ellipse') {
           clip.append('ellipse')
             .attr('cx', width / 2)
             .attr('cy', height / 2)
@@ -223,7 +253,7 @@ export class NodeDrawShape {
         } else {
           // capsule / capsule_h — reuse the same path geometry
           clip.append('path')
-            .attr('d', this._node.shape_type === 'capsule' ? this.getCapsulePath() : this.getHorizontalCapsulePath())
+            .attr('d', shape_type === 'capsule' ? this.getCapsulePath() : this.getHorizontalCapsulePath())
         }
         clip_attr = `url(#${clip_id})`
       }

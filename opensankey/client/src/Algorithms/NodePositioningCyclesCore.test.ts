@@ -256,6 +256,46 @@ describe('#153 markRecyclingLinks — reflaguage d\'apres les colonnes', () => {
   })
 })
 
+describe('#153 lockRecyclingStatusDivergences — passe post-chargement', () => {
+  it('verrouille un flux arriere sauve non-recyclage sans changer sa valeur', () => {
+    // La geometrie donnerait recyclage (A a droite de B) mais le fichier dit non-recyclage :
+    // le fichier fait foi, le flux est verrouille pour que l'auto ne le rebascule pas.
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B' }])
+    const locked = g.core.lockRecyclingStatusDivergences(g.nodes, { A: 2, B: 0 })
+    expect(locked).toEqual(['A->B'])
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(false)
+    expect(g.node('A').output_links_list[0].shape_is_recycling_locked).toBe(true)
+  })
+
+  it('ne verrouille pas un flux dont le statut colle a la geometrie', () => {
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B' }])
+    const locked = g.core.lockRecyclingStatusDivergences(g.nodes, { A: 0, B: 1 })
+    expect(locked).toEqual([])
+    expect(g.node('A').output_links_list[0].shape_is_recycling_locked).toBe(false)
+  })
+
+  it('verrouille un flux sauve recyclage que la geometrie donnerait non-recyclage', () => {
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B' }])
+    g.node('A').output_links_list[0].shape_is_recycling = true
+    const locked = g.core.lockRecyclingStatusDivergences(g.nodes, { A: 0, B: 1 })
+    expect(locked).toEqual(['A->B'])
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(true)
+  })
+
+  it('ignore un flux deja verrouille par l\'utilisateur', () => {
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B', forced_recycling: true }])
+    const locked = g.core.lockRecyclingStatusDivergences(g.nodes, { A: 0, B: 1 })
+    expect(locked).toEqual([])
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(true)
+  })
+
+  it('est idempotente (second passage sans effet)', () => {
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B' }])
+    g.core.lockRecyclingStatusDivergences(g.nodes, { A: 2, B: 0 })
+    expect(g.core.lockRecyclingStatusDivergences(g.nodes, { A: 2, B: 0 })).toEqual([])
+  })
+})
+
 describe('#1253 computeHorizontalIndex — appelant externe (SankeyAnimation)', () => {
   it('remplit un dictionnaire d\'index initialement vide', () => {
     // SankeyAnimation passe `{}` : aucun nœud n'est pré-amorcé à -1.
