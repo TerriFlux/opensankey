@@ -287,6 +287,10 @@ const FIXTURE_DECOR = `<?xml version="1.0" encoding="utf-8"?>
       <arrow id="60">
         <sankeyArrowLabel visible="true" showValue="true" showUnit="true" text="60" labelFormat="{EntryName}: {PercentProcessSource} %" />
         <comment text="Mesure 2025&#xD;&#xA;source: compteur" visible="false" />
+        <!-- os#1289 — pointe SOURCE seulement (toArrow=false, fromArrow=true) : le
+             flux 40 (Source->Puits) doit perdre sa pointe cible par défaut et gagner
+             une pointe source, taille reprise sur fromArrowLength (18). -->
+        <sankeyLink toArrow="false" fromArrow="true" toArrowWidth="6" toArrowLength="10" fromArrowWidth="8" fromArrowLength="18" />
       </arrow>
       <arrow id="61">
         <sankeyArrowLabel visible="true" showValue="true" showUnit="true" text="20" labelFormat="{PercentProcessDestination}" />
@@ -416,6 +420,23 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
   })
 
   test('label de valeur affiché (showValue) + unité préparée', () => {
+  // os#1289 — têtes de flèche : sankeyLink/@toArrow, @fromArrow (+ longueurs)
+  // → shape_is_arrow / shape_arrow_at_source / shape_arrow_size.
+  test('os#1289 — sankeyLink : pointe cible désactivée, pointe source posée, taille reprise', () => {
+    const withArrow = Object.values(d.links).find(l => l.value.data_value === 60) // graphArrow 40, arrow 60
+    expect(withArrow?.local.shape_is_arrow).toBe(false)
+    expect(withArrow?.local.shape_arrow_at_source).toBe(true)
+    expect(withArrow?.local.shape_arrow_size).toBe(18) // fromArrowLength (côté qui porte la pointe)
+  })
+
+  test('os#1289 — sankeyLink absent : défauts du style non touchés (pas de shape_is_arrow local)', () => {
+    const withoutArrow = Object.values(d.links).find(l => l.value.data_value === 20) // graphArrow 42, arrow 61
+    expect(withoutArrow?.local.shape_is_arrow).toBeUndefined()
+    expect(withoutArrow?.local.shape_arrow_at_source).toBeUndefined()
+    expect(withoutArrow?.local.shape_arrow_size).toBeUndefined()
+  })
+
+  test('aucun label de valeur posé sur le flux ; unité préparée si activation manuelle', () => {
     const link = Object.values(d.links)[0]
     expect(link.local.value_label_is_visible).toBe(true)
     expect(link.local.label_unit_visible).toBe(true)
