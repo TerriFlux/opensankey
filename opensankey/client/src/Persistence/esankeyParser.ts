@@ -386,6 +386,9 @@ const parseGraphicalPlaces = (net: Element, palette: EsBrushPalette): { [id: str
       imageFile: childByTag(p, 'image')?.getAttribute('filename') ?? '',
       shapeType: attrNum(p, 'shapeType', 0),
       arrowDirection: attrNum(p, 'arrowDirection', 0),
+      // Boîte de la place (OS#1298), même schéma que le process.
+      width: attrNum(p, 'backgroundSizeW', 0),
+      height: attrNum(p, 'backgroundSizeH', 0),
     }
   })
   return out
@@ -650,7 +653,6 @@ const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } 
     // toArrowLength (px). fromArrowWidth/toArrowWidth, *ArrowStyle,
     // *ArrowFilled, *ArrowShaftLength existent côté e!Sankey mais n'ont pas
     // d'équivalent OpenSankey (une seule forme de pointe, pleine) : non lus.
-    const sankeyLink = childByTag(a, 'sankeyLink')
     const toArrow = sankeyLink ? sankeyLink.getAttribute('toArrow') === 'true' : null
     const fromArrow = sankeyLink ? sankeyLink.getAttribute('fromArrow') === 'true' : null
     const toArrowLength = sankeyLink?.hasAttribute('toArrowLength') ? attrNum(sankeyLink, 'toArrowLength', 0) : null
@@ -658,7 +660,6 @@ const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } 
     const arrowSize = toArrow ? toArrowLength : (fromArrow ? fromArrowLength : null)
     // OS#1290 — le pen du tracé vit sous <sankeyLink>, pas directement sous
     // <arrow> (qui ne porte qu'un <penColor> de repli, non pointillable).
-    const sankeyLink = childByTag(a, 'sankeyLink')
     const pen = sankeyLink ? childByTag(sankeyLink, 'pen') : null
     out[a.getAttribute('id') ?? ''] = {
       tooltip: (comment?.getAttribute('text') ?? '').replace(/\r\n/g, '\n').trim(),
