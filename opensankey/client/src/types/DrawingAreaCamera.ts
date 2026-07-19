@@ -259,7 +259,8 @@ function injectResolvedGeometry(da: Class_DrawingArea, json: unknown): void {
     if (!obj || typeof obj !== 'object') return
     const rec = obj as Record<string, unknown>
     if (rec.nodes && typeof rec.nodes === 'object' && !Array.isArray(rec.nodes)) injectInto(rec.nodes as Record<string, unknown>, nodes)
-    if (rec.containers && typeof rec.containers === 'object' && !Array.isArray(rec.containers)) injectInto(rec.containers as Record<string, unknown>, containers)
+    // Conteneurs/ZDT : sérialisés sous 'labels' (SankeyPersistence), pas 'containers'.
+    if (rec.labels && typeof rec.labels === 'object' && !Array.isArray(rec.labels)) injectInto(rec.labels as Record<string, unknown>, containers)
     Object.values(rec).forEach(visit)
   }
   visit(json)
