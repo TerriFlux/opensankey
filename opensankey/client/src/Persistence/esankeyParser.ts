@@ -268,11 +268,50 @@ const fontStyleItalic = (style: number): boolean => (style & 2) !== 0
 /** Chemin d'image du XML (`Images\\tmpXX.tmp`) → clé du dict d'images du ZIP. */
 const imageKey = (filename: string): string => filename.replace(/\\/g, '/')
 
+// Applique le texte d'un <text> e!Sankey à une zone (base). Le contenu (et son
+// multi-ligne) vit en rich-text (name_label_fo_content, un <p> par ligne non
+// vide — pas de <br>, qui casse le rendu) ; les champs plats name/name_label_text
+// portent le texte SANS \n (un \n y casse l'affichage et l'éditeur). Renvoie
+// false si le <text> est vide (rien posé).
+const applyTextToContainer = (base: EsContainerJSON, textEl: Element): boolean => {
+  const text = (textEl.getAttribute('text') ?? '').replace(/\r\n/g, '\n')
+  if (!text.trim()) return false
+  const escapeHtml = (s: string): string =>
+    s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const oneLine = text.replace(/\s*\n+\s*/g, ' ').trim()
+  base.name = oneLine
+  base.title = oneLine
+  base.name_label_source = 'custom'
+  base.name_label_text = oneLine
+  base.name_label_is_visible = true
+  base.name_label_fo_content = text.split('\n')
+    .filter(line => line.trim() !== '')
+    .map(line => `<p>${escapeHtml(line)}</p>`).join('')
+  const font = childByTag(textEl, 'font')
+  if (font) {
+    base.name_label_font_size = attrNum(font, 'size', 9)
+    const style = attrNum(font, 'style', 0)
+    if (fontStyleBold(style)) base.name_label_bold = true
+    if (fontStyleItalic(style)) base.name_label_italic = true
+  }
+  const textColor = argbToHex(textEl.getAttribute('textColor'))
+  if (textColor) base.name_label_color = textColor
+  return true
+}
+
+interface EsShapeBox { el: Element, kind: string, x: number, y: number, w: number, h: number }
+
 /**
  * Shapes libres du `net` → zones de texte OpenSankey (clé JSON `labels`).
  * Mappés : text (texte, police, couleur), picture (image embarquée du ZIP,
  * en data URI), rectangle / roundedRectangle (zone à fond coloré).
  * Non mappés (pas d'équivalent) : line.
+ *
+ * FUSION texte-dans-rectangle : e!Sankey fabrique une « boîte » (p.ex. un profil)
+ * en DEUX objets superposés — un rectangle de fond + un texte séparé. Chaque
+ * <text> géométriquement contenu dans un <rectangle>/<roundedRectangle> est
+ * absorbé par ce rectangle → UNE seule zone (fond + texte), éditable. Sinon le
+ * fond, plus grand, recouvre le texte et intercepte les clics.
  */
 const parseShapes = (
   net: Element,
@@ -282,77 +321,70 @@ const parseShapes = (
   const out: { [id: string]: EsContainerJSON } = {}
   const shapes = childByTag(net, 'shapes')
   if (!shapes) return out
-  let n = 0
+  // Collecte de tous les shapes graphiques avec leur boîte englobante.
+  const items: EsShapeBox[] = []
   childrenByTag(shapes, 'shape').forEach(wrapper => {
     Array.from(wrapper.children).forEach(shape => {
-      const kind = shape.localName
-      const id = 'esankey_shape_' + (++n)
-      const base: EsContainerJSON = {
-        name: '',
-        title: '',
-        x: attrNum(shape, 'locationX', 0),
-        y: attrNum(shape, 'locationY', 0),
-        label_width: attrNum(shape, 'sizeW', 100),
-        label_height: attrNum(shape, 'sizeH', 30),
-        color_visible: false,
-        transparent_border: true,
-      }
-      if (kind === 'text') {
-        const text = (shape.getAttribute('text') ?? '').replace(/\r\n/g, '\n')
-        if (!text.trim()) return
-        // Le container est en rich-text (has_fo=true) : le texte (et son
-        // multi-ligne) vit UNIQUEMENT dans name_label_fo_content (HTML). On ne
-        // met RIEN dans name / name_label_text — un \n y casse l'affichage et
-        // l'éditeur, et le rendu ne les utilise pas en mode FO.
-        const escapeHtml = (s: string): string =>
-          s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        // Champs texte plats : le texte SANS les \n (sur une ligne) — un \n y
-        // casse l'affichage et l'éditeur. Le multi-ligne vit dans le rich text.
-        const oneLine = text.replace(/\s*\n+\s*/g, ' ').trim()
-        base.name = oneLine
-        base.title = oneLine
-        base.name_label_source = 'custom'
-        base.name_label_text = oneLine
-        base.name_label_is_visible = true
-        // Rich text (format Quill) : un <p> par ligne NON VIDE. Pas de <p><br></p>
-        // pour les lignes vides (ça casse le rendu du label) — on les ignore.
-        base.name_label_fo_content = text.split('\n')
-          .filter(line => line.trim() !== '')
-          .map(line => `<p>${escapeHtml(line)}</p>`).join('')
-        const font = childByTag(shape, 'font')
-        if (font) {
-          base.name_label_font_size = attrNum(font, 'size', 9)
-          const style = attrNum(font, 'style', 0)
-          if (fontStyleBold(style)) base.name_label_bold = true
-          if (fontStyleItalic(style)) base.name_label_italic = true
-        }
-        const textColor = argbToHex(shape.getAttribute('textColor'))
-        if (textColor) base.name_label_color = textColor
-        out[id] = base
-      } else if (kind === 'picture') {
-        const file = childByTag(shape, 'image')?.getAttribute('filename') ?? ''
-        const src = images[imageKey(file)]
-        if (!src) return // image absente du ZIP : rien à afficher
-        base.is_image = true
-        base.image_src = src
-        // `transparency` e!Sankey (0-100) → clé 0.9 `opacity` (en %, mappée
-        // vers shape_opacity, que le rendu applique à l'image).
-        const transparency = attrNum(shape, 'transparency', 0)
-        if (transparency > 0) base.opacity = Math.max(0, 100 - transparency)
-        out[id] = base
-      } else if (kind === 'rectangle' || kind === 'roundedRectangle') {
-        const fill = resolveBrushColorHex(shape, palette)
-        if (fill) {
-          base.color = fill
-          base.color_visible = true
-        }
-        base.transparent_border = shape.getAttribute('drawBorder') !== 'true'
-        const transparency = attrNum(shape, 'transparency', 0)
-        if (transparency > 0) base.opacity = Math.max(0, 100 - transparency)
-        out[id] = base
-      }
-      // line : pas d'équivalent OpenSankey (cf. liste des manques, issue #264)
+      items.push({
+        el: shape, kind: shape.localName,
+        x: attrNum(shape, 'locationX', 0), y: attrNum(shape, 'locationY', 0),
+        w: attrNum(shape, 'sizeW', 100), h: attrNum(shape, 'sizeH', 30),
+      })
     })
+  })
+  // Appariement texte → plus petit rectangle englobant (tolérance 1 px).
+  const isRect = (k: string): boolean => k === 'rectangle' || k === 'roundedRectangle'
+  const contains = (r: EsShapeBox, t: EsShapeBox): boolean =>
+    t.x >= r.x - 1 && t.y >= r.y - 1 &&
+    t.x + t.w <= r.x + r.w + 1 && t.y + t.h <= r.y + r.h + 1
+  const textOfRect = new Map<EsShapeBox, EsShapeBox>()
+  const absorbed = new Set<EsShapeBox>()
+  items.filter(it => it.kind === 'text').forEach(t => {
+    const host = items
+      .filter(r => isRect(r.kind) && !textOfRect.has(r) && contains(r, t))
+      .sort((a, b) => (a.w * a.h) - (b.w * b.h))[0]
+    if (host) { textOfRect.set(host, t); absorbed.add(t) }
+  })
+  let n = 0
+  items.forEach(it => {
+    if (it.kind === 'text' && absorbed.has(it)) return // fusionné dans son rectangle
+    const shape = it.el
+    const kind = it.kind
+    const id = 'esankey_shape_' + (++n)
+    const base: EsContainerJSON = {
+      name: '', title: '',
+      x: it.x, y: it.y,
+      label_width: it.w || 100, label_height: it.h || 30,
+      color_visible: false, transparent_border: true,
+    }
+    if (kind === 'text') {
+      if (!applyTextToContainer(base, shape)) return
+      out[id] = base
+    } else if (kind === 'picture') {
+      const file = childByTag(shape, 'image')?.getAttribute('filename') ?? ''
+      const src = images[imageKey(file)]
+      if (!src) return // image absente du ZIP : rien à afficher
+      base.is_image = true
+      base.image_src = src
+      // `transparency` e!Sankey (0-100) → clé 0.9 `opacity` (%, → shape_opacity).
+      const transparency = attrNum(shape, 'transparency', 0)
+      if (transparency > 0) base.opacity = Math.max(0, 100 - transparency)
+      out[id] = base
+    } else if (isRect(kind)) {
+      const fill = resolveBrushColorHex(shape, palette)
+      if (fill) {
+        base.color = fill
+        base.color_visible = true
+      }
+      base.transparent_border = shape.getAttribute('drawBorder') !== 'true'
+      const transparency = attrNum(shape, 'transparency', 0)
+      if (transparency > 0) base.opacity = Math.max(0, 100 - transparency)
+      // Texte absorbé (boîte e!Sankey en 2 objets) : le fond porte le texte.
+      const t = textOfRect.get(it)
+      if (t) applyTextToContainer(base, t.el)
+      out[id] = base
+    }
+    // line : pas d'équivalent OpenSankey (cf. liste des manques, issue #264)
   })
   return out
 }

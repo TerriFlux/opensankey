@@ -340,6 +340,23 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     expect(image?.opacity).toBe(12)
   })
 
+  // Fusion : un <text> contenu dans un rectangle est absorbé (le fond porte le
+  // texte) — sinon le fond recouvre le texte et intercepte les clics.
+  test('fusion texte-dans-rectangle : une seule zone (fond + texte)', () => {
+    const merged = FIXTURE_DECOR.replace(
+      '<rectangle locationX="150" locationY="600" sizeW="400" sizeH="100" drawBorder="false">',
+      '<rectangle locationX="80" locationY="90" sizeW="400" sizeH="120" drawBorder="false">'
+    )
+    const dm = parseEsankeyXml(merged, { 'Images/tmp1.tmp': PNG_URI })
+    const containers = Object.values(dm.labels)
+    // 2 zones au lieu de 3 : le texte est absorbé par le rectangle.
+    expect(containers.length).toBe(2)
+    const box = containers.find(c => c.color_visible === true)
+    expect(box?.color).toBe('#E0E0E0') // le fond est conservé
+    expect(box?.name_label_source).toBe('custom')
+    expect(box?.name_label_fo_content).toBe('<p>Titre du</p><p>diagramme</p>')
+  })
+
   test('légende visible, position normalisée avec le reste', () => {
     // min X/Y de l'ensemble = (100, 100) (le texte) → décalage -50
     expect(d.legend).toEqual({ mask_legend: false, legend_dx: 50, legend_dy: 150 })
