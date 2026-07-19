@@ -20,7 +20,9 @@
 // Périmètre : nœuds, flux, valeurs (convergées vers l'unité de base via le
 // coefficient), positions/couleurs/visibilité/images des process, couleurs et
 // tags par entry, échelle (globale + par unitType, cf. A5), unités sur les
-// labels de flux, labels en pourcentage (format personnalisé
+// labels de flux (via le REGISTRE d'unités OS#1286, clé `units` : chaque
+// unitType devient une grandeur, chaque flux garde son unité d'origine en
+// mode unit_model), labels en pourcentage (format personnalisé
 // {PercentProcessSource}/{PercentProcessDestination}, cf. A2), formes de
 // process alternatives (shapeType 0/1/2, cf. A4), commentaires de flèche
 // (→ tooltips), zones libres texte/image/rectangle (→ zones de texte),
@@ -33,6 +35,7 @@
 
 import JSZip from 'jszip'
 import { themeEsankey, Type_ThemeJSON } from '../types/Theme'
+import { Type_UnitTypeJSON } from '../types/Units'
 
 type EsLocal = { [k: string]: string | number | boolean }
 
@@ -106,6 +109,8 @@ export interface EsParsedDiagram {
   labels: { [id: string]: EsContainerJSON }
   /** Légende affichée si le fichier en contient une (mask_legend: false). */
   legend?: { mask_legend: boolean, legend_dx: number, legend_dy: number }
+  /** OS#1286 — registre d'unités reconstruit depuis les unitTypes e!Sankey. */
+  units?: Type_UnitTypeJSON[]
 }
 
 // Id du groupe de tags de flux créé depuis les entries e!Sankey.
@@ -141,10 +146,38 @@ const argbToHex = (argb: string | null): string | null => {
 const normalizeStringToValidId = (text: string): string =>
   'id_' + text.replace(/[^0-9a-zA-Z]+/g, '_')
 
+// Palette de couleurs partagée du document : les entries (et parfois process /
+// shapes) ne portent pas toujours un <brushColor argb> en clair — souvent un
+// <brushColorRef refId="…"> pointant une <brushColor id="…" argb="…"> définie
+// ailleurs (démos « Bus Passengers » p.ex.). On indexe toutes les brushColor
+// nommées (avec id) une fois, pour résoudre ces références.
+type EsBrushPalette = { [id: string]: string }
+const buildBrushColorPalette = (root: Element): EsBrushPalette => {
+  const out: EsBrushPalette = {}
+  Array.from(root.getElementsByTagName('*')).forEach(el => {
+    if (el.localName !== 'brushColor') return
+    const id = el.getAttribute('id')
+    const argb = el.getAttribute('argb')
+    if (id && argb !== null) out[id] = argb
+  })
+  return out
+}
+
+// Couleur de remplissage d'un élément : <brushColor argb> direct si présent,
+// sinon <brushColorRef refId> résolu via la palette. Renvoie un hex #RRGGBB.
+const resolveBrushColorHex = (el: Element | null, palette: EsBrushPalette): string | null => {
+  if (!el) return null
+  const direct = childByTag(el, 'brushColor')?.getAttribute('argb')
+  if (direct !== null && direct !== undefined) return argbToHex(direct)
+  const refId = childByTag(el, 'brushColorRef')?.getAttribute('refId')
+  if (refId !== null && refId !== undefined && refId in palette) return argbToHex(palette[refId])
+  return null
+}
+
 // ------------------------------------------------------------- Modèle logique
 
-interface EsUnit { coefficient: number, name: string, isBasic: boolean }
-interface EsUnitType { maximumFlow: number, width: number, used: boolean, showUnit: boolean, units: { [id: string]: EsUnit } }
+interface EsUnit { id: string, coefficient: number, name: string, isBasic: boolean }
+interface EsUnitType { id: string, name: string, maximumFlow: number, width: number, used: boolean, showUnit: boolean, units: { [id: string]: EsUnit } }
 interface EsEntry { name: string, color: string | null, tagId: string }
 
 const parseUnitTypes = (netModel: Element): { [id: string]: EsUnitType } => {
@@ -155,13 +188,18 @@ const parseUnitTypes = (netModel: Element): { [id: string]: EsUnitType } => {
     const units: { [id: string]: EsUnit } = {}
     const unitsEl = childByTag(ut, 'units')
     if (unitsEl) childrenByTag(unitsEl, 'unit').forEach(u => {
-      units[u.getAttribute('id') ?? ''] = {
+      const unit_id = u.getAttribute('id') ?? ''
+      units[unit_id] = {
+        id: unit_id,
         coefficient: attrNum(u, 'coefficient', 1),
         name: u.getAttribute('name') ?? '',
         isBasic: u.getAttribute('isBasicUnit') === 'true',
       }
     })
-    out[ut.getAttribute('id') ?? ''] = {
+    const type_id = ut.getAttribute('id') ?? ''
+    out[type_id] = {
+      id: type_id,
+      name: ut.getAttribute('name') ?? '',
       maximumFlow: attrNum(ut, 'maximumFlow', 0),
       width: attrNum(ut, 'width', 0),
       used: ut.getAttribute('used') === 'true',
@@ -174,7 +212,7 @@ const parseUnitTypes = (netModel: Element): { [id: string]: EsUnitType } => {
 
 // Les entries (matériaux/énergies) peuvent être imbriquées dans des
 // entryGroups : aplatissement récursif.
-const parseEntries = (entryGroup: Element, out: { [id: string]: EsEntry }, usedTagIds: Set<string>): void => {
+const parseEntries = (entryGroup: Element, out: { [id: string]: EsEntry }, usedTagIds: Set<string>, palette: EsBrushPalette): void => {
   const entriesEl = childByTag(entryGroup, 'entries')
   if (entriesEl) childrenByTag(entriesEl, 'entry').forEach(entry => {
     const id = entry.getAttribute('id') ?? ''
@@ -185,12 +223,12 @@ const parseEntries = (entryGroup: Element, out: { [id: string]: EsEntry }, usedT
     usedTagIds.add(tagId)
     out[id] = {
       name,
-      color: argbToHex(childByTag(entry, 'brushColor')?.getAttribute('argb') ?? null),
+      color: resolveBrushColorHex(entry, palette),
       tagId,
     }
   })
   const subGroups = childByTag(entryGroup, 'entryGroups')
-  if (subGroups) childrenByTag(subGroups, 'entryGroup').forEach(g => parseEntries(g, out, usedTagIds))
+  if (subGroups) childrenByTag(subGroups, 'entryGroup').forEach(g => parseEntries(g, out, usedTagIds, palette))
 }
 
 // ----------------------------------------------------------- Partie graphique
@@ -210,9 +248,21 @@ interface EsGraphicalProcess {
    * Vérifié sur les démos officielles (`shapeType="0|1|2"` sur `<process>`).
    */
   shapeType: number
+  /**
+   * `arrowDirection` e!Sankey : axe de raccordement des flux à ce nœud/ancre.
+   * 2 = horizontal (le flux arrive/part par un CÔTÉ gauche/droite) ; 1 ou 4 =
+   * vertical (par le HAUT/BAS). Donne l'orientation OpenSankey d'un flux :
+   * [axe du nœud source][axe du nœud cible] (cf. `linkAxis`). Vérifié sur les
+   * démos (Bus : In=vh, Out=hv, on-board=hh).
+   */
+  arrowDirection: number
 }
 
-const parseGraphicalProcesses = (net: Element): { [id: string]: EsGraphicalProcess } => {
+/** Axe de raccordement d'un flux à un nœud, depuis `arrowDirection` e!Sankey. */
+const linkAxis = (arrowDirection: number): 'h' | 'v' =>
+  (arrowDirection === 1 || arrowDirection === 4) ? 'v' : 'h'
+
+const parseGraphicalProcesses = (net: Element, palette: EsBrushPalette): { [id: string]: EsGraphicalProcess } => {
   const out: { [id: string]: EsGraphicalProcess } = {}
   const processes = childByTag(net, 'processes')
   if (!processes) return out
@@ -221,11 +271,12 @@ const parseGraphicalProcesses = (net: Element): { [id: string]: EsGraphicalProce
     out[p.getAttribute('id') ?? ''] = {
       x: attrNum(p, 'locationX', 0),
       y: attrNum(p, 'locationY', 0),
-      color: argbToHex(childByTag(p, 'brushColor')?.getAttribute('argb') ?? null),
+      color: resolveBrushColorHex(p, palette),
       labelText: (label?.getAttribute('text') ?? '').replace(/\r?\n/g, ' ').trim(),
       visible: p.getAttribute('visible') !== 'false',
       imageFile: childByTag(p, 'image')?.getAttribute('filename') ?? '',
       shapeType: attrNum(p, 'shapeType', 0),
+      arrowDirection: attrNum(p, 'arrowDirection', 2),
     }
   })
   return out
@@ -240,73 +291,149 @@ const fontStyleItalic = (style: number): boolean => (style & 2) !== 0
 /** Chemin d'image du XML (`Images\\tmpXX.tmp`) → clé du dict d'images du ZIP. */
 const imageKey = (filename: string): string => filename.replace(/\\/g, '/')
 
+// Applique le texte d'un <text> e!Sankey à une zone (base). Le contenu (et son
+// multi-ligne) vit en rich-text (name_label_fo_content, un <p> par ligne non
+// vide — pas de <br>, qui casse le rendu) ; les champs plats name/name_label_text
+// portent le texte SANS \n (un \n y casse l'affichage et l'éditeur). Renvoie
+// false si le <text> est vide (rien posé).
+const applyTextToContainer = (base: EsContainerJSON, textEl: Element): boolean => {
+  const text = (textEl.getAttribute('text') ?? '').replace(/\r\n/g, '\n')
+  if (!text.trim()) return false
+  const escapeHtml = (s: string): string =>
+    s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const oneLine = text.replace(/\s*\n+\s*/g, ' ').trim()
+  base.name = oneLine
+  base.title = oneLine
+  base.name_label_source = 'custom'
+  base.name_label_text = oneLine
+  base.name_label_is_visible = true
+  base.name_label_fo_content = text.split('\n')
+    .filter(line => line.trim() !== '')
+    .map(line => `<p>${escapeHtml(line)}</p>`).join('')
+  const font = childByTag(textEl, 'font')
+  if (font) {
+    base.name_label_font_size = attrNum(font, 'size', 9)
+    const style = attrNum(font, 'style', 0)
+    if (fontStyleBold(style)) base.name_label_bold = true
+    if (fontStyleItalic(style)) base.name_label_italic = true
+  }
+  const textColor = argbToHex(textEl.getAttribute('textColor'))
+  if (textColor) base.name_label_color = textColor
+  return true
+}
+
+interface EsShapeBox { el: Element, kind: string, x: number, y: number, w: number, h: number }
+
 /**
  * Shapes libres du `net` → zones de texte OpenSankey (clé JSON `labels`).
  * Mappés : text (texte, police, couleur), picture (image embarquée du ZIP,
- * en data URI), rectangle / roundedRectangle (zone à fond coloré).
- * Non mappés (pas d'équivalent) : line.
+ * en data URI), rectangle / roundedRectangle (zone à fond coloré), line (trait
+ * décoratif → ligne libre, élément OS#1276).
+ *
+ * FUSION texte-dans-rectangle : e!Sankey fabrique une « boîte » (p.ex. un profil)
+ * en DEUX objets superposés — un rectangle de fond + un texte séparé. Chaque
+ * <text> géométriquement contenu dans un <rectangle>/<roundedRectangle> est
+ * absorbé par ce rectangle → UNE seule zone (fond + texte), éditable. Sinon le
+ * fond, plus grand, recouvre le texte et intercepte les clics.
  */
 const parseShapes = (
   net: Element,
-  images: { [path: string]: string }
+  images: { [path: string]: string },
+  palette: EsBrushPalette
 ): { [id: string]: EsContainerJSON } => {
   const out: { [id: string]: EsContainerJSON } = {}
   const shapes = childByTag(net, 'shapes')
   if (!shapes) return out
-  let n = 0
+  // Collecte de tous les shapes graphiques avec leur boîte englobante.
+  const items: EsShapeBox[] = []
   childrenByTag(shapes, 'shape').forEach(wrapper => {
     Array.from(wrapper.children).forEach(shape => {
-      const kind = shape.localName
-      const id = 'esankey_shape_' + (++n)
-      const base: EsContainerJSON = {
-        name: '',
-        title: '',
-        x: attrNum(shape, 'locationX', 0),
-        y: attrNum(shape, 'locationY', 0),
-        label_width: attrNum(shape, 'sizeW', 100),
-        label_height: attrNum(shape, 'sizeH', 30),
-        color_visible: false,
-        transparent_border: true,
-      }
-      if (kind === 'text') {
-        const text = (shape.getAttribute('text') ?? '').replace(/\r\n/g, '\n')
-        if (!text.trim()) return
-        base.name = text
-        base.title = text
-        const font = childByTag(shape, 'font')
-        if (font) {
-          base.name_label_font_size = attrNum(font, 'size', 9)
-          const style = attrNum(font, 'style', 0)
-          if (fontStyleBold(style)) base.name_label_bold = true
-          if (fontStyleItalic(style)) base.name_label_italic = true
-        }
-        const textColor = argbToHex(shape.getAttribute('textColor'))
-        if (textColor) base.name_label_color = textColor
-        out[id] = base
-      } else if (kind === 'picture') {
-        const file = childByTag(shape, 'image')?.getAttribute('filename') ?? ''
-        const src = images[imageKey(file)]
-        if (!src) return // image absente du ZIP : rien à afficher
-        base.is_image = true
-        base.image_src = src
-        // `transparency` e!Sankey (0-100) → clé 0.9 `opacity` (en %, mappée
-        // vers shape_opacity, que le rendu applique à l'image).
-        const transparency = attrNum(shape, 'transparency', 0)
-        if (transparency > 0) base.opacity = Math.max(0, 100 - transparency)
-        out[id] = base
-      } else if (kind === 'rectangle' || kind === 'roundedRectangle') {
-        const fill = argbToHex(childByTag(shape, 'brushColor')?.getAttribute('argb') ?? null)
-        if (fill) {
-          base.color = fill
-          base.color_visible = true
-        }
-        base.transparent_border = shape.getAttribute('drawBorder') !== 'true'
-        const transparency = attrNum(shape, 'transparency', 0)
-        if (transparency > 0) base.opacity = Math.max(0, 100 - transparency)
-        out[id] = base
-      }
-      // line : pas d'équivalent OpenSankey (cf. liste des manques, issue #264)
+      items.push({
+        el: shape, kind: shape.localName,
+        x: attrNum(shape, 'locationX', 0), y: attrNum(shape, 'locationY', 0),
+        w: attrNum(shape, 'sizeW', 100), h: attrNum(shape, 'sizeH', 30),
+      })
     })
+  })
+  // Appariement texte → plus petit rectangle englobant (tolérance 1 px).
+  const isRect = (k: string): boolean => k === 'rectangle' || k === 'roundedRectangle'
+  const contains = (r: EsShapeBox, t: EsShapeBox): boolean =>
+    t.x >= r.x - 1 && t.y >= r.y - 1 &&
+    t.x + t.w <= r.x + r.w + 1 && t.y + t.h <= r.y + r.h + 1
+  const textOfRect = new Map<EsShapeBox, EsShapeBox>()
+  const absorbed = new Set<EsShapeBox>()
+  items.filter(it => it.kind === 'text').forEach(t => {
+    const host = items
+      .filter(r => isRect(r.kind) && !textOfRect.has(r) && contains(r, t))
+      .sort((a, b) => (a.w * a.h) - (b.w * b.h))[0]
+    if (host) { textOfRect.set(host, t); absorbed.add(t) }
+  })
+  let n = 0
+  items.forEach(it => {
+    if (it.kind === 'text' && absorbed.has(it)) return // fusionné dans son rectangle
+    const shape = it.el
+    const kind = it.kind
+    const id = 'esankey_shape_' + (++n)
+    const base: EsContainerJSON = {
+      name: '', title: '',
+      x: it.x, y: it.y,
+      label_width: it.w || 100, label_height: it.h || 30,
+      color_visible: false, transparent_border: true,
+    }
+    if (kind === 'text') {
+      if (!applyTextToContainer(base, shape)) return
+      out[id] = base
+    } else if (kind === 'picture') {
+      const file = childByTag(shape, 'image')?.getAttribute('filename') ?? ''
+      const src = images[imageKey(file)]
+      if (!src) return // image absente du ZIP : rien à afficher
+      base.is_image = true
+      base.image_src = src
+      // `transparency` e!Sankey (0-100) → clé 0.9 `opacity` (%, → shape_opacity).
+      const transparency = attrNum(shape, 'transparency', 0)
+      if (transparency > 0) base.opacity = Math.max(0, 100 - transparency)
+      out[id] = base
+    } else if (isRect(kind)) {
+      const fill = resolveBrushColorHex(shape, palette)
+      if (fill) {
+        base.color = fill
+        base.color_visible = true
+      }
+      base.transparent_border = shape.getAttribute('drawBorder') !== 'true'
+      const transparency = attrNum(shape, 'transparency', 0)
+      if (transparency > 0) base.opacity = Math.max(0, 100 - transparency)
+      // Texte absorbé (boîte e!Sankey en 2 objets) : le fond porte le texte.
+      const t = textOfRect.get(it)
+      if (t) applyTextToContainer(base, t.el)
+      out[id] = base
+    } else if (kind === 'line') {
+      // Ligne libre (élément OS#1276, débloque l'import #1266) : trait décoratif.
+      // e!Sankey fournit 2 points ; on en tire la boîte englobante + le sens de la
+      // diagonale (shape_line_flip), et l'apparence du trait (penColor/width →
+      // bordure, qui EST le trait pour shape_type 'line').
+      const pts = childByTag(shape, 'points')
+      const values = pts ? childrenByTag(pts, 'value') : []
+      let x1 = it.x, y1 = it.y, x2 = it.x + it.w, y2 = it.y + it.h
+      if (values.length >= 2) {
+        x1 = attrNum(values[0], 'X', x1); y1 = attrNum(values[0], 'Y', y1)
+        x2 = attrNum(values[values.length - 1], 'X', x2); y2 = attrNum(values[values.length - 1], 'Y', y2)
+      }
+      base.x = Math.min(x1, x2)
+      base.y = Math.min(y1, y2)
+      base.label_width = Math.abs(x2 - x1) || 1
+      base.label_height = Math.abs(y2 - y1) || 1
+      base.shape_type = 'line'
+      // '\' (flip false) = coin haut-gauche → bas-droit ; '/' (flip true) sinon.
+      base.shape_line_flip = (x1 < x2) !== (y1 < y2)
+      base.color_visible = false
+      base.transparent_border = false
+      const pen = childByTag(shape, 'penColor')
+      const penHex = argbToHex(pen?.getAttribute('argb') ?? null)
+      if (penHex) base.shape_border_color = penHex
+      const penWidth = attrNum(pen, 'width', 1)
+      if (penWidth) base.shape_border_thickness = penWidth
+      out[id] = base
+    }
   })
   return out
 }
@@ -502,10 +629,14 @@ export const parseEsankeyXml = (
   const referenceUnitType = Object.values(unitTypes).find(ut => ut.used && ut.maximumFlow > 0 && ut.width > 0) ?? null
   if (referenceUnitType) userScale = unitTypeOwnScale(referenceUnitType)
 
+  // Palette de couleurs partagée : résout les <brushColorRef refId> (entries,
+  // process, shapes) vers leur <brushColor argb>.
+  const brushPalette = buildBrushColorPalette(root)
+
   const entries: { [id: string]: EsEntry } = {}
   const rootEntryGroup = childByTag(netModel, 'entryGroup')
-  if (rootEntryGroup) parseEntries(rootEntryGroup, entries, new Set())
-  const graphicalProcesses = parseGraphicalProcesses(net)
+  if (rootEntryGroup) parseEntries(rootEntryGroup, entries, new Set(), brushPalette)
+  const graphicalProcesses = parseGraphicalProcesses(net, brushPalette)
   const graphicalArrows = parseGraphicalArrows(net)
   const nodeMapping = parseNodeMapping(root)
   const edgeMapping = parseEdgeMapping(root)
@@ -518,9 +649,17 @@ export const parseEsankeyXml = (
     }
     return null
   }
-  // Nom de l'unité de base d'un unitType (les valeurs y sont converties).
-  const basicUnitName = (ut: EsUnitType): string =>
-    Object.values(ut.units).find(u => u.isBasic)?.name ?? ''
+  // OS#1286 — registre d'unités du diagramme reconstruit depuis les unitTypes
+  // (unité par défaut = unité de base, celle dans laquelle les valeurs sont
+  // converties à l'import). Consommé par SankeyPersistence.fromJSON (clé `units`).
+  const unitsRegistry: Type_UnitTypeJSON[] = Object.values(unitTypes)
+    .filter(ut => Object.keys(ut.units).length > 0)
+    .map((ut, i) => ({
+      id: ut.id || 'esankey_unit_type_' + i,
+      name: ut.name || 'Unités ' + (i + 1),
+      default_unit: (Object.values(ut.units).find(u => u.isBasic) ?? Object.values(ut.units)[0]).id,
+      units: Object.values(ut.units).map(u => ({ id: u.id, name: u.name, coefficient: u.coefficient })),
+    }))
 
   // Nœuds : un par graphProcess. Nom = nom logique, sinon label graphique.
   const nodes: { [id: string]: EsNode } = {}
@@ -592,6 +731,14 @@ export const parseEsankeyXml = (
     if (!sourceId || !targetId) return
     const arrowId = ga.getAttribute('id') ?? ''
     const graphicalArrow = graphicalArrows[edgeMapping[arrowId] ?? ''] ?? null
+    // Orientation OpenSankey depuis l'`arrowDirection` des nœuds source/cible :
+    // axe d'accroche du flux à chaque bout (h = côté, v = haut/bas). Sur les
+    // démos : In = vh, Out = hv, flux principal = hh. Défaut 'hh' → non posé.
+    const srcProc = graphicalProcesses[nodeMapping[fromRef ?? ''] ?? '']
+    const tgtProc = graphicalProcesses[nodeMapping[toRef ?? ''] ?? '']
+    const orientation = (srcProc && tgtProc)
+      ? linkAxis(srcProc.arrowDirection) + linkAxis(tgtProc.arrowDirection)
+      : 'hh'
     const compartments = childByTag(ga, 'compartments')
     const flows = compartments ? childrenByTag(compartments, 'flow') : []
     flows.forEach(flow => {
@@ -622,15 +769,20 @@ export const parseEsankeyXml = (
         usedEntryIds.add(entry.tagId)
         if (entry.color) link.local.color = entry.color
       }
+      if (orientation !== 'hh') link.local.orientation = orientation
       // AUCUN label de valeur posé sur les flux importés (décision user) : chez
       // e!Sankey l'étiquette de quantité appartient à la FLÈCHE (somme de ses
       // matériaux, position sur segment) — la reproduire par flux serait faux ;
       // manque « label agrégé par flèche » listé en #264. On prépare seulement
-      // l'unité : si l'utilisateur active les valeurs, elle est déjà correcte
-      // (valeurs converties vers l'unité de BASE du unitType).
-      if (graphicalArrow?.showUnit && found && basicUnitName(found.unitType)) {
+      // l'unité : si l'utilisateur active les valeurs, elle est déjà correcte.
+      // OS#1286 — l'unité est désormais une référence au REGISTRE d'unités
+      // (mode unit_model) pointant l'unité D'ORIGINE du flow : data_value étant
+      // converti vers l'unité de base, l'affichage re-divise par le coefficient
+      // et restitue la quantité saisie dans e!Sankey, avec son symbole.
+      if (graphicalArrow?.showUnit && found) {
         link.local.label_unit_visible = true
-        link.local.label_unit = basicUnitName(found.unitType)
+        link.local.value_label_unit_type = 'unit_model'
+        link.local.label_unit = found.unit.id
       }
       // A2 — Labels en pourcentage (format personnalisé à mots-clés, manuel
       // e!Sankey 5 p.34) : {PercentProcessSource} = % de la SORTIE totale du
@@ -671,7 +823,7 @@ export const parseEsankeyXml = (
   })
 
   // Zones libres (textes, images, rectangles) et légende.
-  const labels = parseShapes(net, images)
+  const labels = parseShapes(net, images, brushPalette)
   const legendPos = parseLegendPosition(net)
 
   // Normalisation des positions : e!Sankey stocke des coordonnées de document
@@ -737,6 +889,10 @@ export const parseEsankeyXml = (
   }
   if (legendPos) {
     result.legend = { mask_legend: false, legend_dx: legendPos.x, legend_dy: legendPos.y }
+  }
+  // OS#1286 — registre d'unités (grandeurs e!Sankey), lu par fromJSON.
+  if (unitsRegistry.length > 0) {
+    result.units = unitsRegistry
   }
   return result
 }

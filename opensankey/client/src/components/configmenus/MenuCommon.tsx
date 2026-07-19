@@ -65,7 +65,7 @@ import {
   Portal,
   VStack
 } from '@chakra-ui/react'
-import { ChevronDownIcon } from '@chakra-ui/icons'
+import { ChevronDownIcon, SmallCloseIcon } from '@chakra-ui/icons'
 import { FaSquare } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSquareCheck, faEye, faEyeSlash, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
@@ -256,11 +256,30 @@ export const WrapperContentConfig = ({ title, children, hide = false }: React.Pr
   </Box>
 }
 
+// Regroupement des surcharges par onglet du panneau de config (Forme · Libellé ·
+// Valeur · Icône · Stock · Infobulle). La clé d'attribut est déjà préfixée par
+// l'onglet qui l'édite (`shape_*`, `name_label_*`…), on s'en sert pour situer
+// chaque surcharge sous l'en-tête de son onglet plutôt que de répéter
+// « Suppr. surcharge : » sur chaque ligne. L'ordre suit celui de la rangée d'onglets.
+type Type_ResetAttrGroup = {
+  match: string
+  titleKey: string
+  getIcon: (lib: Class_ApplicationData['icon_library']) => JSX.Element
+}
+const RESET_ATTR_GROUPS: Type_ResetAttrGroup[] = [
+  { match: 'shape_', titleKey: 'Menu.tabs.shape', getIcon: (l) => l.icon_tab_shape },
+  { match: 'name_label_', titleKey: 'Menu.tabs.name', getIcon: (l) => l.icon_tab_label },
+  { match: 'value_label_', titleKey: 'Menu.tabs.value', getIcon: (l) => l.icon_tab_value },
+  { match: 'icon_', titleKey: 'Menu.tabs.icon', getIcon: (l) => l.icon_tab_icon },
+  { match: 'stock_label_', titleKey: 'inspector.tab.stock', getIcon: (l) => l.icon_tab_stock },
+  { match: 'tooltip_', titleKey: 'inspector.tab.tooltip', getIcon: (l) => l.icon_tab_tooltip },
+]
+
 /**
  * Menu select to delete local attribute value of nodes/links
  *
  * @param {*} { app_data, nodesOrLinks, dict_overwritted_attr }
- * @return {*} 
+ * @return {*}
  */
 export const MenuResetAttrLocal = (
   {
@@ -312,14 +331,55 @@ export const MenuResetAttrLocal = (
       <ChevronDownIcon />
     </MenuButton>
 
-    <MenuList>
-      <MenuItem onClick={resetAll}>{t('Menu.reset_all_attr')} </MenuItem>
-      <MenuDivider />
-      {
-        Object.entries(dict_to_use).filter(ent => ent[1].overloaded).map(ent => {
-          return <MenuItem key={ent[0]} onClick={() => resetLocal(ent[0])}>{t('Menu.reset_attr')}{ent[1].name}</MenuItem>
+    <MenuList maxH='60vh' minW='13rem' overflowY='auto' py={1}>
+      <MenuItem onClick={resetAll} fontWeight='semibold'>{t('Menu.reset_all_attr')}</MenuItem>
+      {(() => {
+        type Entry = [string, { overloaded: boolean, name: string }]
+        const overloaded = (Object.entries(dict_to_use) as Entry[]).filter(([, v]) => v.overloaded)
+        const buckets = RESET_ATTR_GROUPS.map(g => ({ g, items: [] as Entry[] }))
+        const others: Entry[] = []
+        overloaded.forEach(entry => {
+          const b = buckets.find(b => entry[0].startsWith(b.g.match))
+          if (b) b.items.push(entry)
+          else others.push(entry)
         })
-      }
+
+        // Le thème force `MenuItem { display: grid }` : on n'y met donc qu'UN
+        // enfant (un flex plein-largeur) pour aligner nom + croix sur une ligne.
+        const renderItem = ([k, v]: Entry) => (
+          <MenuItem key={k} onClick={() => resetLocal(k)} py='0.2rem' pl='1.9rem' pr='0.75rem'>
+            <Box display='flex' alignItems='center' justifyContent='space-between' w='100%' gap={3}>
+              <Box as='span' overflow='hidden' textOverflow='ellipsis' whiteSpace='nowrap'>{v.name}</Box>
+              <SmallCloseIcon boxSize='0.6em' color='gray.400' flexShrink={0} />
+            </Box>
+          </MenuItem>
+        )
+        const renderHeader = (g: Type_ResetAttrGroup) => (
+          <Box
+            display='flex' alignItems='center' gap='0.4rem'
+            px='0.75rem' pt='0.45rem' pb='0.15rem'
+            color='gray.500' fontSize='0.65rem' fontWeight='bold'
+            letterSpacing='0.04em' textTransform='uppercase'
+            sx={{ svg: { width: '0.95em', height: '0.95em' } }}>
+            {g.getIcon(icon_library)}
+            <span>{t(g.titleKey)}</span>
+          </Box>
+        )
+
+        return <>
+          {buckets.filter(b => b.items.length > 0).map(({ g, items }) => (
+            <React.Fragment key={g.match}>
+              <MenuDivider my={1} />
+              {renderHeader(g)}
+              {items.map(renderItem)}
+            </React.Fragment>
+          ))}
+          {others.length > 0 && <>
+            <MenuDivider my={1} />
+            {others.map(renderItem)}
+          </>}
+        </>
+      })()}
     </MenuList>
   </Menu>
 }

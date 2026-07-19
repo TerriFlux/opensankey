@@ -1400,6 +1400,10 @@ export class SankeyPersistence {
     if (Object.keys(sankey.spreadsheet_state).length > 0)
       json_object['spreadsheet_state'] = sankey.spreadsheet_state as unknown as Type_JSON
 
+    // OS#1286 — registre d'unités (grandeurs/unités/défauts). Additif : sérialisé
+    // seulement s'il diffère du catalogue par défaut (fichiers existants inchangés).
+    if (!sankey.units.equalsDefaultCatalog())
+      json_object['units'] = sankey.units.toJSON() as unknown as Type_JSON
     // Out
     return json_object
   }
@@ -1659,9 +1663,61 @@ export class SankeyPersistence {
         : {}
     ) as unknown as Type_SpreadsheetState
 
+    // OS#1286 — registre d'unités. Additif : clé absente → catalogue par défaut
+    // (le registre du Sankey fraîchement reset est déjà au catalogue, on repose
+    // explicitement pour couvrir les rechargements sans reset préalable).
+    if (Array.isArray(json_object['units']))
+      sankey.units.fromJSON(json_object['units'])
+    else
+      sankey.units.resetToDefault()
+
     // Legacy migration: older files store the %IS/%OS/... family per-link via
     // value_option; fold them into the canonical list (sankeyexcelparser#116).
     SankeyPersistence.migrate_legacy_link_ratios(sankey)
+
+    // OS#1286 — migration des « unités personnalisées » (texte libre) vers le
+    // registre d'unités : le mode unit_name est retiré du sélecteur.
+    SankeyPersistence.migrate_legacy_unit_names(sankey)
+  }
+
+  /**
+   * OS#1286 — convertit chaque unité « texte libre » (unit_type effectif
+   * `unit_name` avec un texte non vide) des éléments ET des styles vers une
+   * référence du registre (`unit_model`) :
+   * - correspondance intelligente d'abord (symbole exact puis normalisé/alias
+   *   — « tonne » → t — À coefficient == unit_factor, condition d'un affichage
+   *   identique : l'ancien mode divisait la valeur par unit_factor) ;
+   * - sinon l'unité est AJOUTÉE à la grandeur « Unités du fichier » avec
+   *   coefficient = unit_factor, et référencée.
+   * Idempotente (après migration le type est `unit_model`) ; un texte vide est
+   * laissé tel quel (rien n'était affiché, rien ne l'est avec le nouveau
+   * défaut `unit_model` à référence vide).
+   */
+  private static migrate_legacy_unit_names(sankey: Class_Sankey) {
+    const prefixes = ['name_label', 'value_label', 'stock_label'] as const
+    const migrateTarget = (attrs: Record<string, unknown>) => {
+      prefixes.forEach(prefix => {
+        const type_key = prefix + '_unit_type'
+        const unit_key = prefix + '_unit'
+        const type = attrs[type_key]
+        // Attribut absent = ancien défaut `unit_name` : à migrer aussi.
+        if (type !== undefined && type !== 'unit_name') return
+        const text = attrs[unit_key]
+        if (typeof text !== 'string' || text.trim() === '') return
+        // Déjà une référence du registre (fichier récent, type par défaut).
+        if (sankey.units.resolve(text)) return
+        // L'ancien affichage ne divisait que pour unit_factor > 1.
+        const factor_raw = attrs[prefix + '_unit_factor']
+        const factor = (typeof factor_raw === 'number' && Number.isFinite(factor_raw) && factor_raw > 1)
+          ? factor_raw : 1
+        const resolved = sankey.units.getOrCreateLegacyUnit(text, factor)
+        attrs[type_key] = 'unit_model'
+        attrs[unit_key] = resolved.unit.id
+      })
+    }
+    sankey.styles_list.forEach(style => migrateTarget(style.attributes as unknown as Record<string, unknown>))
+    ;[...sankey.nodes_list, ...sankey.links_list, ...sankey.containers_list]
+      .forEach(el => migrateTarget(el.attributes as unknown as Record<string, unknown>))
   }
 
   // Convert each legacy per-link %-type (value_option in %IS/%OS/%PS/%ID/%OD/%PD)

@@ -250,7 +250,9 @@ export class LinkTooltip {
       html += '<tr>'
       html += '<th>Valeur</th>'
       const tmp = this._link.value_label_unit_type
-      this._link.value_label_unit_type = 'unit_name'
+      // OS#1286 — unit_model conservé (valeur convertie + symbole du registre) ;
+      // les autres modes sont ramenés à l'unité nommée comme avant.
+      if (tmp !== 'unit_model') this._link.value_label_unit_type = 'unit_name'
       html += `<td>${link_data_label('free_value', this._link, 'value_label')}</td>`
       this._link.value_label_unit_type = tmp
       html += '</tr>'
@@ -406,7 +408,7 @@ export class LinkTooltip {
     const data_label_visible = link.value_label_is_visible
     link.value_label_is_visible = true
     const tmp = link.value_label_unit_type
-    link.value_label_unit_type = 'unit_name'
+    if (tmp !== 'unit_model') link.value_label_unit_type = 'unit_name'
     const label = link_data_label('free_value', link, 'value_label')
     link.value_label_unit_type = tmp
     link.value_label_is_visible = data_label_visible
@@ -422,7 +424,7 @@ export class LinkTooltip {
     const data_label_visible = link.value_label_is_visible
     link.value_label_is_visible = true
     const tmp = link.value_label_unit_type
-    link.value_label_unit_type = 'unit_name'
+    if (tmp !== 'unit_model') link.value_label_unit_type = 'unit_name'
     const label = link_data_label('data', link, 'value_label')
     link.value_label_unit_type = tmp
     link.value_label_is_visible = data_label_visible
@@ -437,7 +439,7 @@ export class LinkTooltip {
     const data_label_visible = this._link.value_label_is_visible
     this._link.value_label_is_visible = true
     const tmp = this._link.value_label_unit_type
-    this._link.value_label_unit_type = 'unit_name'
+    if (tmp !== 'unit_model') this._link.value_label_unit_type = 'unit_name'
     const label = format_value('free_value', total, this._link, this._link.unit_name('value_label'), 'value_label')
     this._link.value_label_unit_type = tmp
     this._link.value_label_is_visible = data_label_visible
@@ -550,7 +552,11 @@ export class LinkTooltip {
     if (n === null || n === undefined) return '-'
     const lv = getNameLabelValues(this._link, 'value_label')
     let v = n
-    if (lv.unit_factor && lv.unit_factor > 1) {
+    // OS#1286 — en mode unit_model le facteur est le coefficient de l'unité du registre.
+    const model = lv.unit_type === 'unit_model' ? this._link.sankey.units.resolve(lv.unit) : undefined
+    if (model) {
+      if (model.unit.coefficient !== 0) v = v / model.unit.coefficient
+    } else if (lv.unit_factor && lv.unit_factor > 1) {
       v = v / lv.unit_factor
     }
     let text: string
@@ -572,8 +578,12 @@ export class LinkTooltip {
   /** Libellé « Unité : X » à afficher au-dessus des séries (vide si pas d'unité visible). */
   private getSeriesUnitLabelHTML(): string {
     const lv = getNameLabelValues(this._link, 'value_label')
-    if (!lv.unit_visible || !lv.unit) return ''
-    return `<div class="series-unit">Unité : ${lv.unit}</div>`
+    // OS#1286 — en mode unit_model, `unit` porte un id : afficher le symbole résolu.
+    const unit = lv.unit_type === 'unit_model'
+      ? (this._link.sankey.units.resolve(lv.unit)?.unit.name ?? '')
+      : lv.unit
+    if (!lv.unit_visible || !unit) return ''
+    return `<div class="series-unit">Unité : ${unit}</div>`
   }
 
   /** Onglet Séries flux : valeur du flux par combinaison de dataTags (combinaisons en colonnes). */

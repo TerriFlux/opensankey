@@ -685,10 +685,18 @@ export const format_value = (
   // Second step. value formatting
   let text_value = ''
   // Create data label
+  // OS#1286 — mode « unit_model » : l'unité d'affichage vient du registre
+  // d'unités du diagramme ; le facteur de conversion est son coefficient
+  // (data_value est stocké dans l'unité de base, coefficient 1).
+  const model_unit = (label_values.unit_type == 'unit_model')
+    ? element.sankey.units.resolve(label_values.unit)
+    : undefined
   if (data_value !== null && data_value !== undefined && label_values.is_visible) {
     // Apply unit factor regardless of whether the unit is visible/named,
     // so the displayed value reflects the chosen scale even when the unit itself is hidden.
-    if (!is_percent && label_values.unit_factor > 1) {
+    if (!is_percent && model_unit) {
+      if (model_unit.unit.coefficient !== 0) data_value /= model_unit.unit.coefficient
+    } else if (!is_percent && label_values.unit_factor > 1) {
       data_value /= label_values.unit_factor
     }
 
@@ -725,6 +733,10 @@ export const format_value = (
   if ((data_type == 'data' || data_type == 'data_label') && link.value!.value_option == 'unit_ratio') return text_value
   if (label_values.unit_type == 'unit_ratio') { text_value = link.value?.valueData + ' ' + unit_name + '/' + link.value?.ratio_unit_tag!.name }
   else if (label_values.unit_type == 'unit_name') text_value = text_value + ' ' + label_values.unit
+  else if (label_values.unit_type == 'unit_model') {
+    // OS#1286 — symbole de l'unité résolue depuis le registre (rien si registre vide).
+    if (model_unit) text_value = text_value + ' ' + model_unit.unit.name
+  }
   else if (label_values.unit_type == 'unit_tag' && unit_taggs.length > 0) {
     //const label_unit = unit_taggs[0].first_selected_tags!.name
     text_value = text_value + ' ' + unit_name

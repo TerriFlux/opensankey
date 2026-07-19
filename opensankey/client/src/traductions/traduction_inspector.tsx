@@ -119,6 +119,24 @@ export const resources_inspector = {
           series_data: 'Data series',
           unitary: 'Unitary Sankey',
           analysis: 'Analysis chart'
+        },
+        // OS#1286 — registre d'unités du diagramme (grandeurs/unités/défauts).
+        units: {
+          title: 'Diagram units',
+          none: '— none —',
+          type_default: 'default',
+          open_editor: 'Edit…',
+          open_editor_tooltip: 'Edit the diagram units (quantities, units, coefficients, defaults)',
+          symbol: 'Symbol',
+          coefficient: 'Coefficient',
+          coefficient_tooltip: 'Value of this unit expressed in the base unit of its quantity (base unit = 1). Values are stored in the base unit.',
+          default: 'Default',
+          default_tooltip: 'Default display unit of this quantity (inherited by flows without an explicit unit)',
+          add_unit: '+ Unit',
+          add_unit_type: '+ Quantity',
+          new_unit_name: 'unit',
+          new_unit_type_name: 'New quantity',
+          empty: 'No quantity in the registry — add one.'
         }
       },
       filter_panel: {
@@ -247,6 +265,24 @@ export const resources_inspector = {
           series_data: 'Séries données',
           unitary: 'Sankey unitaire',
           analysis: 'Graphique d\'analyse'
+        },
+        // OS#1286 — registre d'unités du diagramme (grandeurs/unités/défauts).
+        units: {
+          title: 'Unités du diagramme',
+          none: '— aucune —',
+          type_default: 'défaut',
+          open_editor: 'Éditer…',
+          open_editor_tooltip: 'Éditer les unités du diagramme (grandeurs, unités, coefficients, défauts)',
+          symbol: 'Symbole',
+          coefficient: 'Coefficient',
+          coefficient_tooltip: 'Valeur de cette unité exprimée dans l\'unité de base de sa grandeur (unité de base = 1). Les valeurs sont stockées dans l\'unité de base.',
+          default: 'Défaut',
+          default_tooltip: 'Unité d\'affichage par défaut de cette grandeur (héritée par les flux sans unité explicite)',
+          add_unit: '+ Unité',
+          add_unit_type: '+ Grandeur',
+          new_unit_name: 'unité',
+          new_unit_type_name: 'Nouvelle grandeur',
+          empty: 'Aucune grandeur dans le registre — ajoutez-en une.'
         }
       },
       filter_panel: {
@@ -375,6 +411,24 @@ export const resources_inspector = {
           series_data: 'Series de datos',
           unitary: 'Sankey unitario',
           analysis: 'Gráfico de análisis'
+        },
+        // OS#1286 — registro de unidades del diagrama.
+        units: {
+          title: 'Unidades del diagrama',
+          none: '— ninguna —',
+          type_default: 'por defecto',
+          open_editor: 'Editar…',
+          open_editor_tooltip: 'Editar las unidades del diagrama (magnitudes, unidades, coeficientes, valores por defecto)',
+          symbol: 'Símbolo',
+          coefficient: 'Coeficiente',
+          coefficient_tooltip: 'Valor de esta unidad expresado en la unidad base de su magnitud (unidad base = 1). Los valores se almacenan en la unidad base.',
+          default: 'Por defecto',
+          default_tooltip: 'Unidad de visualización por defecto de esta magnitud (heredada por los flujos sin unidad explícita)',
+          add_unit: '+ Unidad',
+          add_unit_type: '+ Magnitud',
+          new_unit_name: 'unidad',
+          new_unit_type_name: 'Nueva magnitud',
+          empty: 'Ninguna magnitud en el registro — añada una.'
         }
       },
       filter_panel: {
@@ -503,6 +557,24 @@ export const resources_inspector = {
           series_data: 'Daten-Serien',
           unitary: 'Einheits-Sankey',
           analysis: 'Analysediagramm'
+        },
+        // OS#1286 — Einheitenregister des Diagramms.
+        units: {
+          title: 'Einheiten des Diagramms',
+          none: '— keine —',
+          type_default: 'Standard',
+          open_editor: 'Bearbeiten…',
+          open_editor_tooltip: 'Einheiten des Diagramms bearbeiten (Größen, Einheiten, Koeffizienten, Standards)',
+          symbol: 'Symbol',
+          coefficient: 'Koeffizient',
+          coefficient_tooltip: 'Wert dieser Einheit in der Basiseinheit ihrer Größe (Basiseinheit = 1). Werte werden in der Basiseinheit gespeichert.',
+          default: 'Standard',
+          default_tooltip: 'Standard-Anzeigeeinheit dieser Größe (von Flüssen ohne explizite Einheit geerbt)',
+          add_unit: '+ Einheit',
+          add_unit_type: '+ Größe',
+          new_unit_name: 'Einheit',
+          new_unit_type_name: 'Neue Größe',
+          empty: 'Keine Größe im Register — fügen Sie eine hinzu.'
         }
       },
       filter_panel: {
@@ -631,6 +703,24 @@ export const resources_inspector = {
           series_data: 'Serie di dati',
           unitary: 'Sankey unitario',
           analysis: 'Grafico di analisi'
+        },
+        // OS#1286 — registro delle unità del diagramma.
+        units: {
+          title: 'Unità del diagramma',
+          none: '— nessuna —',
+          type_default: 'predefinita',
+          open_editor: 'Modifica…',
+          open_editor_tooltip: 'Modificare le unità del diagramma (grandezze, unità, coefficienti, predefinite)',
+          symbol: 'Simbolo',
+          coefficient: 'Coefficiente',
+          coefficient_tooltip: 'Valore di questa unità espresso nell\'unità base della sua grandezza (unità base = 1). I valori sono memorizzati nell\'unità base.',
+          default: 'Predefinita',
+          default_tooltip: 'Unità di visualizzazione predefinita di questa grandezza (ereditata dai flussi senza unità esplicita)',
+          add_unit: '+ Unità',
+          add_unit_type: '+ Grandezza',
+          new_unit_name: 'unità',
+          new_unit_type_name: 'Nuova grandezza',
+          empty: 'Nessuna grandezza nel registro — aggiungine una.'
         }
       },
       filter_panel: {

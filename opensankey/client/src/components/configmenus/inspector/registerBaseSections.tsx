@@ -119,11 +119,6 @@ export function registerBaseInspectorSections(): void {
         {Object.entries(inspector_value_tab_extras).map(([id, render_extra]) => (
           <React.Fragment key={id}>{render_extra(app_data, scope)}</React.Fragment>
         ))}
-        {/* OS#1272 — Marqueur visuel d'avertissement de bilan (Σ entrée ≠ sortie).
-            Contrôle d'affichage, disponible sans licence AFM. */}
-        {scope === 'selection' && app_data.drawing_area.selected_nodes_list.length > 0 && (
-          <NodeBalanceMarkerConfig app_data={app_data} />
-        )}
         {appearanceTab('value_label')(app_data, scope)}
       </>
     )
@@ -352,6 +347,10 @@ const InspectorMFATab = ({ app_data }: { app_data: Class_ApplicationData }) => {
   return <>
     {/* Bilan matière du nœud (ex-onglet Valeur) — se masque seul hors nœuds. */}
     {has_nodes && <NodeMaterialBalanceCheckbox app_data={app_data} />}
+
+    {/* OS#1272 — Marqueur visuel d'avertissement de bilan (Σ entrée ≠ sortie).
+        Réglage global + override par nœud ; désormais gated AFM comme l'onglet. */}
+    {has_nodes && <NodeBalanceMarkerConfig app_data={app_data} />}
 
     {/* Données AFM du flux (ex-sous-onglet AFM de l'onglet Valeur). */}
     {has_links && (

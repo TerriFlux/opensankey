@@ -331,7 +331,11 @@ export class NodeTooltip {
     if (!sampleLink) return addSep(String(n))
     const lv = getNameLabelValues(sampleLink, 'value_label')
     let v = n
-    if (lv.unit_factor && lv.unit_factor > 1) {
+    // OS#1286 — en mode unit_model le facteur est le coefficient de l'unité du registre.
+    const model = lv.unit_type === 'unit_model' ? sampleLink.sankey.units.resolve(lv.unit) : undefined
+    if (model) {
+      if (model.unit.coefficient !== 0) v = v / model.unit.coefficient
+    } else if (lv.unit_factor && lv.unit_factor > 1) {
       v = v / lv.unit_factor
     }
     let text: string
@@ -358,7 +362,12 @@ export class NodeTooltip {
     let unit = ''
     if (sampleLink) {
       const lv = getNameLabelValues(sampleLink, 'value_label')
-      if (lv.unit_visible) unit = (lv.unit ?? '').toString().trim()
+      if (lv.unit_visible) {
+        // OS#1286 — en mode unit_model, `unit` porte un id : symbole résolu.
+        unit = lv.unit_type === 'unit_model'
+          ? (sampleLink.sankey.units.resolve(lv.unit)?.unit.name ?? '')
+          : (lv.unit ?? '').toString().trim()
+      }
     }
     const valHeader = unit
       ? `${t('Noeud.drawing_area_tooltip.val')} (${unit})`

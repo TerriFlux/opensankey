@@ -76,7 +76,11 @@ const FIXTURE = `<?xml version="1.0" encoding="utf-8"?>
         <label text="Cible B" />
       </process>
     </processes>
-    <arrows />
+    <arrows>
+      <arrow id="60">
+        <sankeyArrowLabel visible="true" showValue="true" showUnit="true" labelFormat="{Quantity} {Unit}" />
+      </arrow>
+    </arrows>
   </net>
   <logicalGraphicalObjectMapping>
     <nodes>
@@ -89,7 +93,12 @@ const FIXTURE = `<?xml version="1.0" encoding="utf-8"?>
         <processRef refId="51" />
       </keyValuePair>
     </nodes>
-    <edges />
+    <edges>
+      <keyValuePair>
+        <graphArrowRef refId="40" />
+        <arrowRef refId="60" />
+      </keyValuePair>
+    </edges>
   </logicalGraphicalObjectMapping>
 </document>`
 
@@ -168,6 +177,28 @@ describe('parseEsankeyXml — fixture minimale', () => {
     expect(d.user_scale).toBe(50)
     expect(d.couleur_fond_sankey).toBe('#FFFFFF')
     expect(d.version).toBe('0.9')
+  })
+
+  test('OS#1286 — registre d\'unités : coefficients conservés, défaut = unité de base', () => {
+    expect(d.units).toBeDefined()
+    const energy = d.units!.find(ut => ut.name === 'Energy')!
+    expect(energy.default_unit).toBe('11') // MJ, isBasicUnit
+    expect(energy.units).toEqual([
+      { id: '11', name: 'MJ', coefficient: 1 },
+      { id: '12', name: 'kWh', coefficient: 3.6 },
+    ])
+  })
+
+  test('OS#1286 — showUnit → mode unit_model pointant l\'unité D\'ORIGINE du flow', () => {
+    // Valeurs converties en base (MJ) mais chaque flux garde sa référence
+    // d'unité d'origine : l'affichage reconvertit (÷ coefficient) et restitue
+    // la quantité saisie dans e!Sankey avec son symbole.
+    const elec = Object.values(d.links).find(l => l.value.data_value === 36)
+    expect(elec?.local.label_unit_visible).toBe(true)
+    expect(elec?.local.value_label_unit_type).toBe('unit_model')
+    expect(elec?.local.label_unit).toBe('12') // kWh (10 kWh saisis)
+    const heat = Object.values(d.links).find(l => l.value.data_value === 5)
+    expect(heat?.local.label_unit).toBe('11') // MJ
   })
 })
 
@@ -278,6 +309,37 @@ const FIXTURE_DECOR = `<?xml version="1.0" encoding="utf-8"?>
   </logicalGraphicalObjectMapping>
 </document>`
 
+describe('parseEsankeyXml — couleurs par référence', () => {
+  // Beaucoup de démos (« Bus Passengers On_Off » p.ex.) ne portent pas la couleur
+  // d'une entry en clair mais via <brushColorRef refId> → <brushColor id argb>
+  // définie ailleurs. On résout la référence via la palette du document.
+  test('brushColorRef d\'une entry résolu via la palette (couleur du tag + du flux)', () => {
+    const withRef = FIXTURE
+      .replace('<brushColor argb="-256" />', '<brushColorRef refId="900" />')
+      .replace('<net backgroundColor="-1">', '<net backgroundColor="-1"><brushColor id="900" name="Teal" argb="-16744320" />')
+    const d2 = parseEsankeyXml(withRef)
+    expect(d2.fluxTags[ESANKEY_ENTRIES_TAGG_ID].tags['id_Electricity'].color).toBe('#008080')
+    const link = Object.values(d2.links).find(l => l.value.tags[ESANKEY_ENTRIES_TAGG_ID]?.[0] === 'id_Electricity')
+    expect(link?.local.color).toBe('#008080')
+  })
+})
+
+describe('parseEsankeyXml — orientation des flux (arrowDirection)', () => {
+  // arrowDirection e!Sankey : 2 = raccord horizontal (côté), 1/4 = vertical
+  // (haut/bas). L'orientation d'un flux = [axe source][axe cible].
+  test('nœud source vertical (1) → cible horizontale (2) = vh', () => {
+    const withDir = FIXTURE
+      .replace('<process id="50" locationX="100" locationY="300">', '<process id="50" locationX="100" locationY="300" arrowDirection="1">')
+      .replace('<process id="51" locationX="400" locationY="320">', '<process id="51" locationX="400" locationY="320" arrowDirection="2">')
+    const dv = parseEsankeyXml(withDir)
+    expect(Object.values(dv.links)[0].local.orientation).toBe('vh')
+  })
+  test('deux nœuds horizontaux (défaut 2) → hh non posé', () => {
+    const dv = parseEsankeyXml(FIXTURE)
+    expect(Object.values(dv.links)[0].local.orientation).toBeUndefined()
+  })
+})
+
 describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)', () => {
   const d = parseEsankeyXml(FIXTURE_DECOR, { 'Images/tmp1.tmp': PNG_URI })
 
@@ -298,16 +360,36 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     const link = Object.values(d.links)[0]
     expect(link.local.label_visible).toBeUndefined()
     expect(link.local.label_unit_visible).toBe(true)
-    expect(link.local.label_unit).toBe('kW')
+    // OS#1286 — la référence d'unité (id du registre) est posée, mais le
+    // format pourcentage ({PercentProcessSource}) garde la PRIORITÉ sur le
+    // type d'affichage : %OS écrase unit_model.
+    expect(link.local.label_unit).toBe('11')
+    expect(link.local.value_label_unit_type).toBe('%OS')
+  })
+
+  test('OS#1286 — unitTypes → registre d\'unités (clé units)', () => {
+    expect(d.units).toBeDefined()
+    expect(d.units!.map(ut => ut.name)).toEqual(['Power', 'Mass'])
+    const power = d.units!.find(ut => ut.name === 'Power')!
+    expect(power.id).toBe('10')
+    expect(power.default_unit).toBe('11') // unité de base kW
+    expect(power.units).toEqual([{ id: '11', name: 'kW', coefficient: 1 }])
   })
 
   test('zones libres → labels : texte (police), rectangle (fond), image', () => {
     const containers = Object.values(d.labels)
     expect(containers.length).toBe(3)
-    const texte = containers.find(c => c.title === 'Titre du\ndiagramme')
+    const texte = containers.find(c => String(c.name_label_fo_content ?? '').includes('Titre'))
     expect(texte?.name_label_font_size).toBe(18)
     expect(texte?.name_label_bold).toBe(true)
     expect(texte?.name_label_color).toBe('#000000')
+    // Multi-ligne dans le rich text (foreignObject) ; name/name_label_text portent
+    // le texte SANS les \n (une ligne), source 'custom', visible.
+    expect(texte?.name_label_source).toBe('custom')
+    expect(texte?.name_label_is_visible).toBe(true)
+    expect(texte?.name).toBe('Titre du diagramme')
+    expect(texte?.name_label_text).toBe('Titre du diagramme')
+    expect(texte?.name_label_fo_content).toBe('<p>Titre du</p><p>diagramme</p>')
     const rect = containers.find(c => c.color_visible === true)
     expect(rect?.color).toBe('#E0E0E0') // -2039584
     expect(rect?.transparent_border).toBe(true)
@@ -318,10 +400,45 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     expect(image?.opacity).toBe(12)
   })
 
+  // Fusion : un <text> contenu dans un rectangle est absorbé (le fond porte le
+  // texte) — sinon le fond recouvre le texte et intercepte les clics.
+  test('fusion texte-dans-rectangle : une seule zone (fond + texte)', () => {
+    const merged = FIXTURE_DECOR.replace(
+      '<rectangle locationX="150" locationY="600" sizeW="400" sizeH="100" drawBorder="false">',
+      '<rectangle locationX="80" locationY="90" sizeW="400" sizeH="120" drawBorder="false">'
+    )
+    const dm = parseEsankeyXml(merged, { 'Images/tmp1.tmp': PNG_URI })
+    const containers = Object.values(dm.labels)
+    // 2 zones au lieu de 3 : le texte est absorbé par le rectangle.
+    expect(containers.length).toBe(2)
+    const box = containers.find(c => c.color_visible === true)
+    expect(box?.color).toBe('#E0E0E0') // le fond est conservé
+    expect(box?.name_label_source).toBe('custom')
+    expect(box?.name_label_fo_content).toBe('<p>Titre du</p><p>diagramme</p>')
+  })
+
+  // Import d'un trait <line> → ligne libre (shape_type 'line', élément OS#1276).
+  test('ligne : <line> → shape_type line (sens, couleur, épaisseur)', () => {
+    const withLine = FIXTURE_DECOR.replace('</shapes>',
+      '<shape><line locationX="10" locationY="20" sizeW="100" sizeH="50">' +
+      '<penColor argb="-65536" width="3" />' +
+      '<points length="2"><value X="10" Y="70" /><value X="110" Y="20" /></points>' +
+      '</line></shape></shapes>')
+    const dl = parseEsankeyXml(withLine, { 'Images/tmp1.tmp': PNG_URI })
+    const line = Object.values(dl.labels).find(c => c.shape_type === 'line')
+    expect(line).toBeDefined()
+    expect(line?.shape_border_color).toBe('#FF0000') // argb -65536 = rouge
+    expect(line?.shape_border_thickness).toBe(3)
+    expect(line?.label_width).toBe(100)
+    expect(line?.label_height).toBe(50)
+    // points (10,70) → (110,20) : x monte, y descend → diagonale '/' (flip)
+    expect(line?.shape_line_flip).toBe(true)
+  })
+
   test('légende visible, position normalisée avec le reste', () => {
     // min X/Y de l'ensemble = (100, 100) (le texte) → décalage -50
     expect(d.legend).toEqual({ mask_legend: false, legend_dx: 50, legend_dy: 150 })
-    const texte = Object.values(d.labels).find(c => c.title === 'Titre du\ndiagramme')
+    const texte = Object.values(d.labels).find(c => c.title === 'Titre du diagramme')
     expect(texte?.x).toBe(50)
     expect(texte?.y).toBe(50)
   })

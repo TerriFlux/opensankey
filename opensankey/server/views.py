@@ -1464,29 +1464,31 @@ def esankey_corpus_dir():
     """
     Dossier du corpus e!Sankey pour la galerie locale de DEVELOPPEMENT (os#1281).
 
-    STRICTEMENT dev-only. Les demos e!Sankey (et les cliparts tiers qu'elles
-    embarquent) sont PROPRIETAIRES : elles ne doivent JAMAIS etre committees ni
-    deployees. Cette galerie n'est donc active QUE si les DEUX conditions suivantes
-    sont reunies :
+    Les demos e!Sankey (et les cliparts tiers qu'elles embarquent) sont
+    PROPRIETAIRES : elles ne doivent JAMAIS etre committees ni publiees — le
+    corpus est transporte a la main sur les serveurs (jamais via git). La galerie
+    n'est donc active QUE si les DEUX conditions suivantes sont reunies :
       - la variable d'environnement ESANKEY_CORPUS_DIR est definie cote serveur et
         pointe un dossier existant (opt-in explicite du developpeur — aucune valeur
         par defaut, pour ne rien exposer par accident), ET
-      - l'application tourne en mode debug (current_app.debug) — jamais en prod.
+      - l'application tourne en mode debug (current_app.debug — poste de dev), OU
+        la requete vient d'un compte developpeur (is_developer_user — serveurs
+        deployes, ou le login-component est monte).
 
     Si l'une manque, renvoie None : les routes /menus/templates et
     /menus/templates_asset repondent alors 404 pour cette source, et le front
     n'affiche meme pas la galerie (la source disparait). La fonctionnalite est donc
-    totalement inerte sans ESANKEY_CORPUS_DIR.
+    totalement inerte sans ESANKEY_CORPUS_DIR, et invisible hors comptes dev.
     """
-    try:
-        if not current_app.debug:
-            return None
-    except Exception:
-        return None
     corpus = os.environ.get("ESANKEY_CORPUS_DIR")
     if not corpus or not os.path.isdir(corpus):
         return None
-    return corpus
+    try:
+        if current_app.debug or is_developer_user():
+            return corpus
+    except Exception:
+        return None
+    return None
 
 
 def esankey_local_index():
