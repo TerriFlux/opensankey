@@ -1267,16 +1267,21 @@ export class Class_NodeElement extends Class_NodeBase {
         // Côté source ou cible : déterminé par la nature de cette entrée (un flux
         // peut porter une flèche aux deux extrémités), pas par un drapeau du flux.
         const is_reversed = item.is_source_arrow
-        // Arrow length : in fan mode, the user-set shape_arrow_size is used
-        // as-is. In standalone, cap the length to link_value so a wide flow
-        // doesn't end with a squashed triangle (height/base <<1) — unless
-        // the link is structural, in which case keep the full length to
-        // produce a "needle" signalling "no quantity" rather than a
-        // vanishing 2×2 dot.
+        // Arrow length : normally the fixed user size (shape_arrow_size, px). When
+        // shape_arrow_size_ratio > 0 the depth scales with the link thickness
+        // (depth = ratio × épaisseur) so the arrow keeps a CONSTANT ANGLE whatever
+        // the flow value — comportement e!Sankey (un gros flux → pointe profonde).
+        const base_arrow_size = link.shape_arrow_size_ratio > 0
+          ? link.shape_arrow_size_ratio * link_value_raw
+          : link.shape_arrow_size
+        // In fan mode, the size is used as-is. In standalone, cap the length to
+        // link_value so a wide flow doesn't end with a squashed triangle
+        // (height/base <<1) — unless the link is structural, in which case keep
+        // the full length to produce a "needle" signalling "no quantity".
         const cap_arrow_length = use_standalone && !link.linkIsStructure()
         const arrow_length = cap_arrow_length
-          ? Math.min(link.shape_arrow_size, link_value)
-          : link.shape_arrow_size
+          ? Math.min(base_arrow_size, link_value)
+          : base_arrow_size
 
         let xt: number
         let yt: number
@@ -1424,9 +1429,13 @@ export class Class_NodeElement extends Class_NodeBase {
       if (side_links.length === 0)
         return
 
-      const depth = Math.max(...side_links.map(link => link.shape_source_notch_size ?? 0))
-      if (!(depth > 0))
-        return
+      // Profondeur du chevron : soit fixe (source_notch_size, px), soit — quand
+      // source_notch_size_ratio > 0 — proportionnelle à l'ÉPAISSEUR de la bande
+      // (depth = ratio × épaisseur), ce qui garde un ANGLE constant quelle que
+      // soit la valeur du flux (comportement e!Sankey). On calcule d'abord
+      // l'étendue de la bande (span des attaches), puis la profondeur.
+      const ratio = Math.max(...side_links.map(link => link.shape_source_notch_size_ratio ?? 0))
+      const fixed = Math.max(...side_links.map(link => link.shape_source_notch_size ?? 0))
 
       let path: string
       if (side === 'left' || side === 'right') {
@@ -1438,6 +1447,8 @@ export class Class_NodeElement extends Class_NodeBase {
           y_min = Math.min(y_min, link.position_y_start - half)
           y_max = Math.max(y_max, link.position_y_start + half)
         })
+        const depth = ratio > 0 ? ratio * (y_max - y_min) : fixed
+        if (!(depth > 0)) return
         const apex_x = x_base + (side === 'right' ? depth : -depth)
         const y_mid = (y_min + y_max) / 2
         path = 'M ' + x_base + ',' + y_min
@@ -1454,6 +1465,8 @@ export class Class_NodeElement extends Class_NodeBase {
           x_min = Math.min(x_min, link.position_x_start - half)
           x_max = Math.max(x_max, link.position_x_start + half)
         })
+        const depth = ratio > 0 ? ratio * (x_max - x_min) : fixed
+        if (!(depth > 0)) return
         const apex_y = y_base + (side === 'bottom' ? depth : -depth)
         const x_mid = (x_min + x_max) / 2
         path = 'M ' + x_min + ',' + y_base

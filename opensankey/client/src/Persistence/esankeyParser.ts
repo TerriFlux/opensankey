@@ -1199,15 +1199,29 @@ export const parseEsankeyXml = (
       //    creusée dans le départ du flux (fromArrowStyle=1). L'équivalent exact
       //    OpenSankey est shape_source_notch (et non shape_arrow_at_source, qui
       //    ferait ressortir une pointe).
-      // Dimensions REPRISES d'e!Sankey (le défaut OpenSankey 10 px ne correspond
-      // pas) : la profondeur du chevron = to/fromArrowLength. shape_arrow_size pour
-      // la pointe cible, shape_source_notch_size pour l'encoche source. Absent →
-      // défaut du style conservé.
+      // Dimensions : e!Sankey garde un ANGLE de chevron CONSTANT — la profondeur
+      // suit l'épaisseur du flux, pas une taille fixe (à 10 px fixes, un gros flux
+      // a un chevron ridicule). On active donc le MODE RATIO d'OpenSankey
+      // (shape_*_size_ratio : depth = ratio × épaisseur), calé via une constante
+      // sur l'allure des démos (apex ~55°, chevron ≈ 0,3 × épaisseur pour une
+      // longueur e!Sankey de 10). Réglable ensuite dans l'inspecteur (Ratio pointe
+      // / Ratio encoche).
+      // On applique le MÊME ratio à la pointe cible ET à l'encoche source (dérivé
+      // de la plus grande des deux longueurs e!Sankey) : au raccord d'un nœud, la
+      // pointe entrante et l'encoche des flux sortants ont ainsi le même angle et
+      // s'IMBRIQUENT proprement (une pointe plus plate que l'encoche ne la
+      // remplirait pas). Réglable indépendamment ensuite.
+      const CHEVRON_RATIO_PER_PX = 0.03
+      const chevronLen = Math.max(
+        graphicalArrow?.fromArrowLength ?? 0,
+        graphicalArrow?.toArrowLength ?? 0,
+      )
+      const chevronRatio = chevronLen > 0 ? chevronLen * CHEVRON_RATIO_PER_PX : 0
       if (graphicalArrow?.toArrow === false) link.local.shape_is_arrow = false
-      else if (graphicalArrow?.toArrowLength) link.local.shape_arrow_size = graphicalArrow.toArrowLength
+      else if (chevronRatio) link.local.shape_arrow_size_ratio = chevronRatio
       if (graphicalArrow?.fromArrow === true) {
         link.local.shape_source_notch = true
-        if (graphicalArrow.fromArrowLength) link.local.shape_source_notch_size = graphicalArrow.fromArrowLength
+        if (chevronRatio) link.local.shape_source_notch_size_ratio = chevronRatio
       }
       // OS#1290 — trait pointillé (dashStyle/dashPattern du pen de la
       // sankeyLink) → bordure pointillée du flux.

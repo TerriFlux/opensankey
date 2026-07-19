@@ -3288,6 +3288,53 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     }
   } satisfies AttributeConfig<number>,
 
+  // Angle CONSTANT du chevron (pointe cible / encoche source) : quand > 0, la
+  // PROFONDEUR du chevron n'est plus fixe (arrow_size / source_notch_size en px)
+  // mais proportionnelle à l'épaisseur du flux (depth = ratio × épaisseur) — un
+  // gros flux a un chevron profond, un petit un chevron court, l'angle reste
+  // identique (comportement e!Sankey). 0 = mode fixe (px). ~0.3 ≈ angle d'apex 31°.
+  arrow_size_ratio: {
+    default: 0,
+    type: (() => 0) as (() => number),
+    category: 'shape' as const,
+    actions: ['drawElements'] as BaseActionType[],
+    labels: {
+      en: 'Arrow ratio',
+      fr: 'Ratio pointe',
+      es: 'Proporción flecha',
+      de: 'Pfeil-Verhältnis',
+      it: 'Rapporto freccia'
+    },
+    tooltips: {
+      en: 'When > 0, the target arrow depth scales with link thickness (constant angle) instead of the fixed pixel size.',
+      fr: 'Si > 0, la profondeur de la pointe cible suit l\'épaisseur du flux (angle constant) au lieu de la taille fixe en pixels.',
+      es: 'Si > 0, la profundidad de la flecha destino escala con el grosor del flujo (ángulo constante) en lugar del tamaño fijo en píxeles.',
+      de: 'Wenn > 0, skaliert die Tiefe der Zielpfeilspitze mit der Flussdicke (konstanter Winkel) statt der festen Pixelgröße.',
+      it: 'Se > 0, la profondità della freccia destinazione scala con lo spessore del flusso (angolo costante) invece della dimensione fissa in pixel.'
+    }
+  } satisfies AttributeConfig<number>,
+
+  source_notch_size_ratio: {
+    default: 0,
+    type: (() => 0) as (() => number),
+    category: 'shape' as const,
+    actions: ['drawElements'] as BaseActionType[],
+    labels: {
+      en: 'Notch ratio',
+      fr: 'Ratio encoche',
+      es: 'Proporción muesca',
+      de: 'Kerben-Verhältnis',
+      it: 'Rapporto tacca'
+    },
+    tooltips: {
+      en: 'When > 0, the source notch depth scales with link thickness (constant angle) instead of the fixed pixel depth.',
+      fr: 'Si > 0, la profondeur de l\'encoche source suit l\'épaisseur du flux (angle constant) au lieu de la profondeur fixe en pixels.',
+      es: 'Si > 0, la profundidad de la muesca origen escala con el grosor del flujo (ángulo constante) en lugar de la profundidad fija en píxeles.',
+      de: 'Wenn > 0, skaliert die Tiefe der Quellkerbe mit der Flussdicke (konstanter Winkel) statt der festen Pixeltiefe.',
+      it: 'Se > 0, la profondità della tacca origine scala con lo spessore del flusso (angolo costante) invece della profondità fissa in pixel.'
+    }
+  } satisfies AttributeConfig<number>,
+
   is_dashed: {
     default: false,
     type: (() => false) as (() => boolean),

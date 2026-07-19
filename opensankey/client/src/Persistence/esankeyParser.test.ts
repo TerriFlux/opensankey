@@ -463,25 +463,25 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     expect(link.tooltip_text).toBe('Mesure 2025\nsource: compteur')
   })
 
-  // os#1289 — têtes de flux : sankeyLink/@toArrow → pointe cible (shape_is_arrow,
-  // taille = toArrowLength) ; @fromArrow → « flèche en négatif » = encoche source
-  // (shape_source_notch, profondeur = fromArrowLength). Dimensions REPRISES
-  // d'e!Sankey, pas le défaut OpenSankey 10 px.
-  test('os#1289 — sankeyLink : pointe cible désactivée, encoche source + profondeur reprise', () => {
+  // os#1289 — têtes de flux : sankeyLink/@toArrow → pointe cible (shape_is_arrow) ;
+  // @fromArrow → « flèche en négatif » = encoche source (shape_source_notch). La
+  // PROFONDEUR passe en mode RATIO (angle constant, comportement e!Sankey) :
+  // shape_source_notch_size_ratio = fromArrowLength × 0.03.
+  test('os#1289 — sankeyLink : pointe cible désactivée, encoche source + ratio d\'angle', () => {
     const withArrow = Object.values(d.links).find(l => l.value.data_value === 60) // graphArrow 40, arrow 60
     expect(withArrow?.local.shape_is_arrow).toBe(false)
     expect(withArrow?.local.shape_source_notch).toBe(true)
-    expect(withArrow?.local.shape_source_notch_size).toBe(18) // fromArrowLength
-    // Pas de pointe cible → pas de taille de pointe.
-    expect(withArrow?.local.shape_arrow_size).toBeUndefined()
+    expect(withArrow?.local.shape_source_notch_size_ratio as number).toBeCloseTo(0.54, 5) // 18 × 0.03
+    // Pas de pointe cible → pas de ratio de pointe.
+    expect(withArrow?.local.shape_arrow_size_ratio).toBeUndefined()
   })
 
   test('os#1289 — sankeyLink absent : défauts du style non touchés (pas de shape_is_arrow local)', () => {
     const withoutArrow = Object.values(d.links).find(l => l.value.data_value === 20) // graphArrow 42, arrow 61
     expect(withoutArrow?.local.shape_is_arrow).toBeUndefined()
     expect(withoutArrow?.local.shape_source_notch).toBeUndefined()
-    expect(withoutArrow?.local.shape_source_notch_size).toBeUndefined()
-    expect(withoutArrow?.local.shape_arrow_size).toBeUndefined()
+    expect(withoutArrow?.local.shape_source_notch_size_ratio).toBeUndefined()
+    expect(withoutArrow?.local.shape_arrow_size_ratio).toBeUndefined()
   })
 
   test('aucun label de valeur posé sur le flux ; unité préparée si activation manuelle', () => {
