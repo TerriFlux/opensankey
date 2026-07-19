@@ -1037,6 +1037,32 @@ export const parseEsankeyXml = (
       units: Object.values(ut.units).map(u => ({ id: u.id, name: u.name, coefficient: u.coefficient })),
     }))
 
+  // Placement du LABEL de nom : e!Sankey donne sa position ABSOLUE (labelX/Y =
+  // coin haut-gauche de la boîte de label). Pour que le décalage OpenSankey soit
+  // indépendant de la bbox RENDUE du nœud (taille pilotée par les flux, inconnue
+  // à l'import), on ancre le label au COIN HAUT-GAUCHE du nœud : horiz='left' +
+  // vert='top' + inside → la référence devient l'origine locale du nœud
+  // (= node.x/node.y monde), pas son centre. Le décalage vaut alors label − node
+  // (coins), exact quelle que soit la taille rendue.
+  const applyNameLabelPos = (node: EsNode, graphical: EsGraphicalProcess | null): void => {
+    if (!graphical?.labelHasPos) return
+    node.local.name_label_horiz = 'left'
+    node.local.name_label_inside_horiz = true
+    node.local.name_label_vert = 'top'
+    node.local.name_label_inside_vert = true
+    node.local.name_label_horiz_shift = Math.round(graphical.labelX - node.x)
+    node.local.name_label_vert_shift = Math.round(graphical.labelY - node.y)
+    // Largeur de la boîte de label depuis e!Sankey (sinon défaut 150).
+    if (graphical.labelW > 0) node.local.name_label_box_width = Math.round(graphical.labelW)
+    // e!Sankey rend ses labels avec césure (wrapping) dans leur boîte : on
+    // active le retour à la ligne + coupure des mots longs pour tenir la largeur.
+    node.local.name_label_wrap_long_words = true
+    // e!Sankey centre le texte dans sa boîte (alignment 2/32 = TopCenter/Middle
+    // Center) : le centre du texte s'aligne alors sur le centre de la boîte (=
+    // centre de l'image du nœud). Sinon left-aligné → texte décalé à droite.
+    node.local.name_label_text_align = 'middle'
+  }
+
   // Nœuds : un par graphProcess. Nom = nom logique, sinon label graphique.
   const nodes: { [id: string]: EsNode } = {}
   const logicalToNodeId: { [logicalId: string]: string } = {}
@@ -1095,6 +1121,7 @@ export const parseEsankeyXml = (
       if (graphical && graphical.width > 0) nodes[id].local.node_width = graphical.width
       if (graphical && graphical.height > 0) nodes[id].local.node_height = graphical.height
     }
+    applyNameLabelPos(nodes[id], graphical)
     // A4 — Forme alternative du process (0 = rect, notre défaut : rien à poser).
     // 1 = rectangle arrondi → on garde 'rect' et on pose un rayon de coin visible
     // (`shape_border_radius`, clé moderne appliquée telle quelle par le loader
@@ -1159,6 +1186,7 @@ export const parseEsankeyXml = (
     }
     if (graphical?.shapeType === 1) nodes[id].local.shape_border_radius = 10
     else if (graphical?.shapeType === 2) nodes[id].local.shape = 'ellipse'
+    applyNameLabelPos(nodes[id], graphical)
     const imgSrc = graphical?.imageFile ? images[imageKey(graphical.imageFile)] : undefined
     if (imgSrc) {
       nodes[id].is_image = true
@@ -1490,6 +1518,10 @@ const mimeFromMagic = (base64: string): string => {
   if (base64.startsWith('/9j/')) return 'image/jpeg'
   if (base64.startsWith('R0lGOD')) return 'image/gif'
   if (base64.startsWith('Qk')) return 'image/bmp'
+  // TIFF (II*\0 little-endian = 'SUkq…', MM\0* big-endian = 'TU0A…'). NB : les
+  // navigateurs ne savent PAS afficher le TIFF nativement (image cassée sans
+  // décodeur JS) — mais on émet le bon type MIME plutôt que du faux PNG.
+  if (base64.startsWith('SUkq') || base64.startsWith('TU0A')) return 'image/tiff'
   return 'image/png'
 }
 
