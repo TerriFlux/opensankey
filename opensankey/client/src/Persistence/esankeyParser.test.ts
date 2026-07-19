@@ -76,7 +76,11 @@ const FIXTURE = `<?xml version="1.0" encoding="utf-8"?>
         <label text="Cible B" />
       </process>
     </processes>
-    <arrows />
+    <arrows>
+      <arrow id="60">
+        <sankeyArrowLabel visible="true" showValue="true" showUnit="true" labelFormat="{Quantity} {Unit}" />
+      </arrow>
+    </arrows>
   </net>
   <logicalGraphicalObjectMapping>
     <nodes>
@@ -89,7 +93,12 @@ const FIXTURE = `<?xml version="1.0" encoding="utf-8"?>
         <processRef refId="51" />
       </keyValuePair>
     </nodes>
-    <edges />
+    <edges>
+      <keyValuePair>
+        <graphArrowRef refId="40" />
+        <arrowRef refId="60" />
+      </keyValuePair>
+    </edges>
   </logicalGraphicalObjectMapping>
 </document>`
 
@@ -168,6 +177,28 @@ describe('parseEsankeyXml — fixture minimale', () => {
     expect(d.user_scale).toBe(50)
     expect(d.couleur_fond_sankey).toBe('#FFFFFF')
     expect(d.version).toBe('0.9')
+  })
+
+  test('OS#1286 — registre d\'unités : coefficients conservés, défaut = unité de base', () => {
+    expect(d.units).toBeDefined()
+    const energy = d.units!.find(ut => ut.name === 'Energy')!
+    expect(energy.default_unit).toBe('11') // MJ, isBasicUnit
+    expect(energy.units).toEqual([
+      { id: '11', name: 'MJ', coefficient: 1 },
+      { id: '12', name: 'kWh', coefficient: 3.6 },
+    ])
+  })
+
+  test('OS#1286 — showUnit → mode unit_model pointant l\'unité D\'ORIGINE du flow', () => {
+    // Valeurs converties en base (MJ) mais chaque flux garde sa référence
+    // d'unité d'origine : l'affichage reconvertit (÷ coefficient) et restitue
+    // la quantité saisie dans e!Sankey avec son symbole.
+    const elec = Object.values(d.links).find(l => l.value.data_value === 36)
+    expect(elec?.local.label_unit_visible).toBe(true)
+    expect(elec?.local.value_label_unit_type).toBe('unit_model')
+    expect(elec?.local.label_unit).toBe('12') // kWh (10 kWh saisis)
+    const heat = Object.values(d.links).find(l => l.value.data_value === 5)
+    expect(heat?.local.label_unit).toBe('11') // MJ
   })
 })
 
@@ -329,7 +360,20 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     const link = Object.values(d.links)[0]
     expect(link.local.label_visible).toBeUndefined()
     expect(link.local.label_unit_visible).toBe(true)
-    expect(link.local.label_unit).toBe('kW')
+    // OS#1286 — la référence d'unité (id du registre) est posée, mais le
+    // format pourcentage ({PercentProcessSource}) garde la PRIORITÉ sur le
+    // type d'affichage : %OS écrase unit_model.
+    expect(link.local.label_unit).toBe('11')
+    expect(link.local.value_label_unit_type).toBe('%OS')
+  })
+
+  test('OS#1286 — unitTypes → registre d\'unités (clé units)', () => {
+    expect(d.units).toBeDefined()
+    expect(d.units!.map(ut => ut.name)).toEqual(['Power', 'Mass'])
+    const power = d.units!.find(ut => ut.name === 'Power')!
+    expect(power.id).toBe('10')
+    expect(power.default_unit).toBe('11') // unité de base kW
+    expect(power.units).toEqual([{ id: '11', name: 'kW', coefficient: 1 }])
   })
 
   test('zones libres → labels : texte (police), rectangle (fond), image', () => {

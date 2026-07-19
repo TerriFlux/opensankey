@@ -103,6 +103,9 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   // #1243 — éditeur d'infobulle en panneau draggable (l'onglet Infobulle de
   // l'inspecteur n'embarque qu'un texte simple + ce bouton d'ouverture).
   ref_setter_show_tooltip_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  // OS#1286 — éditeur du registre d'unités (grandeurs/unités/défauts) en
+  // panneau draggable, ouvert depuis l'onglet Valeur de l'inspecteur.
+  ref_setter_show_units_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
 
   ref_setter_show_modal_png_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_png_saver_res_h: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>
@@ -735,6 +738,7 @@ export class Class_MenuConfig {
       ref_setter_show_shape_attribute_editor: { current: () => null },
       ref_setter_show_value_type_editor: { current: () => null },
       ref_setter_show_tooltip_editor: { current: () => null },
+      ref_setter_show_units_editor: { current: () => null },
 
       ref_setter_show_modal_png_saver: { current: () => null },
       ref_setter_png_saver_res_h: { current: () => null },
@@ -789,6 +793,7 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_shape_attribute_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_value_type_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_tooltip_editor.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_units_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_png_saver.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_pdf_saver.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_styles.current(false)

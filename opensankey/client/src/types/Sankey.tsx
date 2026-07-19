@@ -36,6 +36,7 @@ import { Class_NodeDimension } from '../Elements/NodeDimension'
 import { Class_DataTag } from '../types/Tag'
 import { Class_NodeTagGroup, Class_FluxTagGroup, Class_DataTagGroup, Class_LevelTagGroup, Class_ViewTagGroup } from './TagGroup'
 import { Class_Theme, themeOpenSankey } from './Theme'
+import { Class_UnitsRegistry } from './Units'
 
 /**
  * Les styles dont un thème est propriétaire : `applyTheme` les ramène à leur AMORCE
@@ -160,6 +161,11 @@ export class Class_Sankey {
   // diagramme. Pure préférence d'UI (n'affecte pas le modèle/calcul). Voir Type_SpreadsheetState.
   private _spreadsheet_state: Type_SpreadsheetState = {}
 
+  // OS#1286 — registre d'unités du diagramme (grandeurs → unités + défauts).
+  // Amorcé au catalogue par défaut ; clé JSON `units` sérialisée seulement s'il
+  // en diffère (additivité — les anciens fichiers restent inchangés).
+  private _units: Class_UnitsRegistry = new Class_UnitsRegistry()
+
   // Thème du diagramme (cf. NOTE-THEMES.md). `opensankey` est volontairement vide :
   // il décrit le comportement historique plutôt qu'il ne le change.
   private _theme: Class_Theme = themeOpenSankey()
@@ -184,6 +190,7 @@ export class Class_Sankey {
     this._ratio_stock_flux_constraints = []
     this._stock_chaining_constraints = []
     this._spreadsheet_state = {}
+    this._units.resetToDefault()
 
     this._styles[default_style_id] = this.createNewElementStyle(default_style_id, default_style_name, false)
     base_styles.forEach(style_id => this.create_internal_style(style_id, elementStyleConfigs))
@@ -225,6 +232,11 @@ export class Class_Sankey {
     this._spreadsheet_state = _ ?? {}
   }
 
+  /** OS#1286 — registre d'unités (grandeurs/unités/défauts) du diagramme. */
+  public get units(): Class_UnitsRegistry {
+    return this._units
+  }
+
   public delete() {
     // Properly delete all nodes & link
     this.nodes_list.forEach(n => { n.delete() /* Will also trigger delete() on links*/ })
@@ -241,6 +253,9 @@ export class Class_Sankey {
     // Un reset ramène au thème historique : `fromJSON` reposera celui du fichier.
     this._theme = themeOpenSankey()
     this.invalidateThemePalette()
+
+    // OS#1286 — reset du registre d'unités : `fromJSON` reposera celui du fichier.
+    this._units.resetToDefault()
 
     this.node_taggs_list.forEach(grp => grp.delete())
     this.flux_taggs_list.forEach(grp => grp.delete())
@@ -346,6 +361,8 @@ export class Class_Sankey {
       .forEach(([idx, icon_path]) => {
         this._icon_catalog[idx] = icon_path
       })
+    // OS#1286 — copie du registre d'unités
+    this._units.copyFrom(sankey_to_copy.units)
   }
 
   public get container_activated() { return this._container_activated }

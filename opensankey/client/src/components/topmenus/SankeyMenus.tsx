@@ -64,6 +64,7 @@ import { OSTooltip } from '../configmenus/MenuCommon'
 import { UniversalFileConverter } from '../dialogs/PersistenceProcessDialog'
 import { FormatConfigStructure, } from '../dialogs/PersistenceProcessDialogConfigs'
 import { LabelRichTextEditor, TooltipRichTextEditor } from '../dialogs/RichTextEditor'
+import { UnitsEditorDialog } from '../dialogs/UnitsEditor'
 //import { MenuUnit } from '../configmenus/MenuElementsLabelValue'
 
 // #1243 — source de vérité déplacée dans MenuConfig (le mode épinglé calcule
@@ -547,6 +548,9 @@ export const SankeyMenu = (
           libellés, pointé sur tooltip_text, en panneau draggable. L'onglet
           Infobulle de l'inspecteur n'embarque qu'un texte simple + le bouton. */}
       <TooltipRichTextEditor app_data={app_data} />
+      {/* OS#1286 — éditeur du registre d'unités (grandeurs/unités/défauts),
+          ouvert depuis le sélecteur d'unité de l'onglet Valeur. */}
+      <UnitsEditorDialog app_data={app_data} />
 
       {modal_support}
       {modal_resolution_png}
