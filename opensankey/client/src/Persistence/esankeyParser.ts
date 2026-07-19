@@ -1148,6 +1148,7 @@ export const parseEsankeyXml = (
         link.local.starting_tangeant = bend
         link.local.ending_tangeant = bend
         link.local.curvature = bend
+      }
       // os#1289 — têtes de flèche du flux (sankeyLink/@toArrow et @fromArrow,
       // lues par flèche graphique dans parseGraphicalArrows) → pointes
       // OpenSankey shape_is_arrow (côté cible) / shape_arrow_at_source (côté

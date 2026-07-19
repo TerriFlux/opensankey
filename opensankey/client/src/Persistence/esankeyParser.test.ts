@@ -736,6 +736,9 @@ describe('parseEsankeyXml — OS#1287 taille/couleur/position du label de valeur
     expect(base.local.value_label_color).toBeUndefined()
     expect(base.local.value_label_horiz).toBeUndefined()
     expect(base.local.value_label_vert).toBeUndefined()
+  })
+})
+
 // OS#1291 — Places (E/S externes). Un process « Usine » émet un flux vers une
 // place de SORTIE (invisible) et reçoit un flux d'une place d'ENTRÉE (verte).
 // Côté logique les places sont des <graphPlace> (frères des <graphProcess>
