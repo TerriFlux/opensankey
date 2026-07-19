@@ -308,6 +308,15 @@ const parseShapes = (
         base.name_label_source = 'custom'
         base.name_label_text = text
         base.name_label_is_visible = true
+        // Les containers ont has_fo=true (rendu en foreignObject/rich-text) : le
+        // texte affiché vient de name_label_fo_content (HTML), PAS de name_label_text
+        // — sans lui, drawFO() ne dessine rien (cf. DrawLabel §drawFO, garde
+        // `!fo_content`). On génère donc le HTML (format Quill : un <p> par ligne,
+        // ligne vide = <p><br></p>), même contenu que la synchro d'édition.
+        const escapeHtml = (s: string): string =>
+          s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        base.name_label_fo_content = text.split('\n')
+          .map(line => `<p>${line ? escapeHtml(line) : '<br>'}</p>`).join('')
         const font = childByTag(shape, 'font')
         if (font) {
           base.name_label_font_size = attrNum(font, 'size', 9)

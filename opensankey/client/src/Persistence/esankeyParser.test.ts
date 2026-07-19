@@ -328,6 +328,9 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     expect(texte?.name_label_source).toBe('custom')
     expect(texte?.name_label_text).toBe('Titre du\ndiagramme')
     expect(texte?.name_label_is_visible).toBe(true)
+    // Contenu HTML (foreignObject) : sans lui drawFO ne dessine rien (has_fo=true
+    // par défaut). Un <p> par ligne du texte e!Sankey.
+    expect(texte?.name_label_fo_content).toBe('<p>Titre du</p><p>diagramme</p>')
     const rect = containers.find(c => c.color_visible === true)
     expect(rect?.color).toBe('#E0E0E0') // -2039584
     expect(rect?.transparent_border).toBe(true)
