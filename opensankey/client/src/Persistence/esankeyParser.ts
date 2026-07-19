@@ -456,6 +456,20 @@ interface EsGraphicalArrow {
    * `{PercentProcessSource}`/`{PercentProcessDestination}` (cf. A2).
    */
   labelFormat: string
+  // os#1289 — têtes de flèche, portées par `sankeyLink` (enfant de `arrow`,
+  // indépendant de `sankeyArrowLabel`) : `toArrow`/`fromArrow` = présence
+  // d'une pointe à chaque bout (cible / source). `null` = `sankeyLink` absent
+  // (versions/diagrammes sans réglage de pointe explicite) : à distinguer
+  // d'un `false` explicite, sous peine d'éteindre à tort la pointe cible par
+  // défaut d'OpenSankey (`shape_is_arrow` vaut `true` par défaut, cf.
+  // ElementsAttributesConfig) sur des flux qui n'ont simplement pas cette
+  // info. `arrowSize` = longueur du bout qui porte effectivement une pointe
+  // (cible en priorité — pas de taille séparée par bout côté OpenSankey, une
+  // seule `shape_arrow_size` sur `Class_LinkElement`), `null` si non
+  // exploitable : le défaut du style (10) s'applique alors.
+  toArrow: boolean | null
+  fromArrow: boolean | null
+  arrowSize: number | null
 }
 
 const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } => {
@@ -465,12 +479,25 @@ const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } 
   childrenByTag(arrows, 'arrow').forEach(a => {
     const label = childByTag(a, 'sankeyArrowLabel')
     const comment = childByTag(a, 'comment')
+    // os#1289 — sankeyLink : fromArrow/toArrow (bool) + fromArrowLength/
+    // toArrowLength (px). fromArrowWidth/toArrowWidth, *ArrowStyle,
+    // *ArrowFilled, *ArrowShaftLength existent côté e!Sankey mais n'ont pas
+    // d'équivalent OpenSankey (une seule forme de pointe, pleine) : non lus.
+    const sankeyLink = childByTag(a, 'sankeyLink')
+    const toArrow = sankeyLink ? sankeyLink.getAttribute('toArrow') === 'true' : null
+    const fromArrow = sankeyLink ? sankeyLink.getAttribute('fromArrow') === 'true' : null
+    const toArrowLength = sankeyLink?.hasAttribute('toArrowLength') ? attrNum(sankeyLink, 'toArrowLength', 0) : null
+    const fromArrowLength = sankeyLink?.hasAttribute('fromArrowLength') ? attrNum(sankeyLink, 'fromArrowLength', 0) : null
+    const arrowSize = toArrow ? toArrowLength : (fromArrow ? fromArrowLength : null)
     out[a.getAttribute('id') ?? ''] = {
       tooltip: (comment?.getAttribute('text') ?? '').replace(/\r\n/g, '\n').trim(),
       labelVisible: label?.getAttribute('visible') !== 'false',
       showValue: label?.getAttribute('showValue') !== 'false',
       showUnit: label?.getAttribute('showUnit') === 'true',
       labelFormat: label?.getAttribute('labelFormat') ?? '',
+      toArrow,
+      fromArrow,
+      arrowSize: (arrowSize !== null && arrowSize > 0) ? arrowSize : null,
     }
   })
   return out
@@ -770,6 +797,19 @@ export const parseEsankeyXml = (
         if (entry.color) link.local.color = entry.color
       }
       if (orientation !== 'hh') link.local.orientation = orientation
+      // os#1289 — têtes de flèche du flux (sankeyLink/@toArrow et @fromArrow,
+      // lues par flèche graphique dans parseGraphicalArrows) → pointes
+      // OpenSankey shape_is_arrow (côté cible) / shape_arrow_at_source (côté
+      // source), indépendantes l'une de l'autre comme côté e!Sankey (un flux
+      // peut porter zéro, une ou deux pointes). `null` (sankeyLink absent) ne
+      // pose rien : le défaut du style s'applique (is_arrow=true côté cible,
+      // arrow_at_source=false côté source — cf. ElementsAttributesConfig). On
+      // ne pose localement que les écarts au défaut, comme le reste du fichier.
+      if (graphicalArrow?.toArrow === false) link.local.shape_is_arrow = false
+      if (graphicalArrow?.fromArrow === true) link.local.shape_arrow_at_source = true
+      if (graphicalArrow?.arrowSize !== null && graphicalArrow?.arrowSize !== undefined) {
+        link.local.shape_arrow_size = graphicalArrow.arrowSize
+      }
       // AUCUN label de valeur posé sur les flux importés (décision user) : chez
       // e!Sankey l'étiquette de quantité appartient à la FLÈCHE (somme de ses
       // matériaux, position sur segment) — la reproduire par flux serait faux ;
