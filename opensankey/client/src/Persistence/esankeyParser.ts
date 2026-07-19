@@ -456,6 +456,20 @@ interface EsGraphicalArrow {
    * `{PercentProcessSource}`/`{PercentProcessDestination}` (cf. A2).
    */
   labelFormat: string
+  // ----------------------------------------------------- OS#1287 label (T/P)
+  // e!Sankey stocke la mise en forme du label de VALEUR dans le
+  // `<sankeyArrowLabel>` graphique (et son enfant `<font>`). Ces champs
+  // alimentent la TAILLE, la COULEUR et la POSITION du label côté OpenSankey
+  // (cf. boucle de création des flux). Valeurs neutres = « attribut absent »
+  // (on ne pose alors rien, le style par défaut décide).
+  /** Taille de police du label (`<font>/@size`), 0 = absente. */
+  labelFontSize: number
+  /** Décalage PERPENDICULAIRE au tracé (`@offsetH`), px signés (0 = absent). */
+  labelOffsetH: number
+  /** Position LE LONG du tracé (`@segmentPercentage`, 0→100), NaN = absente. */
+  labelSegmentPercentage: number
+  /** Couleur du texte (`@textColor` argb → hex #RRGGBB), null = absente. */
+  labelColor: string | null
 }
 
 const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } => {
@@ -465,12 +479,20 @@ const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } 
   childrenByTag(arrows, 'arrow').forEach(a => {
     const label = childByTag(a, 'sankeyArrowLabel')
     const comment = childByTag(a, 'comment')
+    // OS#1287 — la taille de police vit dans un enfant `<font>` du label ;
+    // offsetH/segmentPercentage/textColor sont des attributs du label lui-même.
+    // childByTag/attrNum tolèrent `label`/`labelFont` null (attribut absent).
+    const labelFont = label ? childByTag(label, 'font') : null
     out[a.getAttribute('id') ?? ''] = {
       tooltip: (comment?.getAttribute('text') ?? '').replace(/\r\n/g, '\n').trim(),
       labelVisible: label?.getAttribute('visible') !== 'false',
       showValue: label?.getAttribute('showValue') !== 'false',
       showUnit: label?.getAttribute('showUnit') === 'true',
       labelFormat: label?.getAttribute('labelFormat') ?? '',
+      labelFontSize: attrNum(labelFont, 'size', 0),
+      labelOffsetH: attrNum(label, 'offsetH', 0),
+      labelSegmentPercentage: attrNum(label, 'segmentPercentage', NaN),
+      labelColor: argbToHex(label?.getAttribute('textColor') ?? null),
     }
   })
   return out
@@ -801,6 +823,43 @@ export const parseEsankeyXml = (
         link.local.value_label_unit_type = '%OS'
       } else if (labelFormat.includes('{PercentProcessDestination}')) {
         link.local.value_label_unit_type = '%ID'
+      }
+      // OS#1287 — TAILLE, COULEUR et POSITION du label de VALEUR, repris du
+      // `<sankeyArrowLabel>` graphique de la flèche (retrouvé via edgeMapping).
+      // On ne DÉCIDE PAS ici de la visibilité du label (arbitrée ailleurs, selon
+      // la stratégie e!Sankey « l'étiquette appartient à la flèche ») : on se
+      // contente, quand la flèche affiche sa valeur (`showValue`), de préparer la
+      // mise en forme pour qu'un label activé soit fidèle — sinon le style par
+      // défaut impose une police trop grosse (~20 px) et un placement générique.
+      if (graphicalArrow && graphicalArrow.showValue !== false) {
+        // TAILLE de police (<font size>). Absente (0) → le style décide.
+        if (graphicalArrow.labelFontSize > 0) {
+          link.local.value_label_font_size = graphicalArrow.labelFontSize
+        }
+        // COULEUR du texte (argb → hex).
+        if (graphicalArrow.labelColor) {
+          link.local.value_label_color = graphicalArrow.labelColor
+        }
+        // POSITION LE LONG du tracé (segmentPercentage : 0 = près de la source,
+        // 100 = près de la cible). e!Sankey affiche la valeur À PLAT, hors tracé
+        // (jamais sur la tangente) : il n'existe alors pas d'attribut « % le long
+        // du chemin » côté OpenSankey — l'axe le long du flux est piloté par
+        // value_label_horiz (left = source, middle = centre, right = cible ; cf.
+        // Class_LinkLabelDrawer.getLabelPos, off-path). On approxime par tiers ;
+        // couvre les flux In/Out (vh/hv) dont e!Sankey colle le label près du nœud.
+        if (Number.isFinite(graphicalArrow.labelSegmentPercentage)) {
+          const seg = graphicalArrow.labelSegmentPercentage
+          link.local.value_label_horiz = seg < 33 ? 'left' : seg > 66 ? 'right' : 'middle'
+        }
+        // DÉCALAGE PERPENDICULAIRE au tracé (offsetH) : côté du flux où poser le
+        // label. offsetH >= 0 → sous le flux horizontal (value_label_vert =
+        // 'bottom'), < 0 → au-dessus ('top'). Seul le CÔTÉ est repris : OpenSankey
+        // réserve déjà un écart perpendiculaire hors tracé (demi-épaisseur +
+        // police) ; reporter l'amplitude d'offsetH en vert_shift éloignerait trop
+        // le label (double comptage) — approximation assumée, cf. #1287.
+        if (graphicalArrow.labelOffsetH !== 0) {
+          link.local.value_label_vert = graphicalArrow.labelOffsetH >= 0 ? 'bottom' : 'top'
+        }
       }
       // A5 — échelle indépendante par unitType (cf. calcul de `userScale` plus
       // haut) : ce flux appartient à un unitType dont le ratio
