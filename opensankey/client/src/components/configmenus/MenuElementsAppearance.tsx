@@ -353,9 +353,18 @@ const NumberFormatComponent = ({ app_data, elements, prefix, config, attributePa
             value={labelValues.unit_type}
             onChange={(evt) => { labelValues.unit_type = evt.target.value }}
           >
-            {unit_constants.map(el => (
-              <option key={'value_' + el} value={el}>{app_data.t('Flux.labels.' + el)}</option>
-            ))}
+            {/* OS#1286 — 'unit_name' (texte libre) retiré : remplacé par le
+                registre (migration au chargement). Les modes « naturels »
+                (unit_tag/other_unit_tag) ne valent que si un groupe de
+                dataTags is_unit existe : masqués sinon. La valeur courante
+                est toujours listée (fichier legacy non migré). */}
+            {unit_constants
+              .filter(el =>
+                (el === labelValues.unit_type) ||
+                (el !== 'unit_name' && (unit_tagg !== undefined || (el !== 'unit_tag' && el !== 'other_unit_tag'))))
+              .map(el => (
+                <option key={'value_' + el} value={el}>{app_data.t('Flux.labels.' + el)}</option>
+              ))}
           </Select>
         </InputIndicatorWrapper>
 
@@ -386,6 +395,47 @@ const NumberFormatComponent = ({ app_data, elements, prefix, config, attributePa
               onBlur={(evt) => { labelValues.unit = evt.target.value || '' }}
             />
           </InputIndicatorWrapper>
+        )}
+
+        {/* OS#1286 — mode « unité du modèle » : choix d'une unité du registre
+            (groupée par grandeur ; choisir la grandeur = hériter de son unité
+            par défaut), + bouton d'ouverture de l'éditeur du registre. */}
+        {labelValues.unit_type == 'unit_model' && (
+          <Box display='flex' alignItems='center' gap='0.25rem'>
+            <InputIndicatorWrapper
+              isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_unit` as keyof typeof config, config)}
+              isMultiValue={isConfigValueIndeterminate(elements, config, 'unit', prefix)}
+              t={app_data.t}
+            >
+              <Select
+                value={labelValues.unit ?? ''}
+                onChange={(evt) => { labelValues.unit = evt.target.value }}
+              >
+                <option value=''>{app_data.t('inspector.units.none')}</option>
+                {app_data.drawing_area.sankey.units.unit_types.map(ut => (
+                  <optgroup key={'ut_' + ut.id} label={ut.name}>
+                    <option value={ut.id}>
+                      {ut.name + ' — ' + app_data.t('inspector.units.type_default') + (ut.default_unit ? ' (' + ut.default_unit.name + ')' : '')}
+                    </option>
+                    {ut.units.map(u => (
+                      <option key={'u_' + u.id} value={u.id}>{u.name}</option>
+                    ))}
+                  </optgroup>
+                ))}
+              </Select>
+            </InputIndicatorWrapper>
+            <OSTooltip label={app_data.t('inspector.units.open_editor_tooltip')}>
+              <Button
+                size='xs'
+                variant='menuconfigpanel_option_button'
+                onClick={() => {
+                  app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_units_editor.current(true)
+                }}
+              >
+                {app_data.t('inspector.units.open_editor')}
+              </Button>
+            </OSTooltip>
+          </Box>
         )}
       </> : <></>}
     </Box>
@@ -469,19 +519,23 @@ const NumberFormatComponent = ({ app_data, elements, prefix, config, attributePa
       )}
     </Box>
 
-    <Box layerStyle='options_2cols'>
-      <ElementAttrSetterNumberInput2Cols
-        app_data={app_data}
-        elements={elements}
-        attributePath={attributePath}
-        attributeKey={'unit_factor'}
-        config={config}
-        prefix={prefix}
-        refreshParentComponent={refreshParentComponent}
-        stepper={false}
-        isOverloaded={isElementAttributeOverloaded(elements, prefix + '_unit_factor' as keyof typeof config, config)}
-      />
-    </Box>
+    {/* OS#1286 — en mode « unité du modèle » le facteur est le coefficient de
+        l'unité du registre : le facteur manuel n'a pas de sens, on le masque. */}
+    {labelValues.unit_type !== 'unit_model' && (
+      <Box layerStyle='options_2cols'>
+        <ElementAttrSetterNumberInput2Cols
+          app_data={app_data}
+          elements={elements}
+          attributePath={attributePath}
+          attributeKey={'unit_factor'}
+          config={config}
+          prefix={prefix}
+          refreshParentComponent={refreshParentComponent}
+          stepper={false}
+          isOverloaded={isElementAttributeOverloaded(elements, prefix + '_unit_factor' as keyof typeof config, config)}
+        />
+      </Box>
+    )}
   </>)
 }
 

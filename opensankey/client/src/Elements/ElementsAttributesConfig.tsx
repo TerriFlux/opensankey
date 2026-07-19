@@ -1723,8 +1723,11 @@ export const BASE_LABEL_CONFIG = {
   } satisfies AttributeConfig<boolean>,
 
   unit_type: {
-    default: 'unit_name',
-    type: (() => 'unit_name') as (() => UnitType),
+    // OS#1286 — le mode « texte libre » (unit_name) est retiré du sélecteur :
+    // le défaut devient l'unité du registre (réf. vide = aucune unité affichée,
+    // donc affichage inchangé tant qu'aucune unité n'est choisie).
+    default: 'unit_model',
+    type: (() => 'unit_model') as (() => UnitType),
     category: 'value_label' as const,
     actions: ['drawValueLabel'] as BaseActionType[],
     labels: {

@@ -20,7 +20,9 @@
 // Périmètre : nœuds, flux, valeurs (convergées vers l'unité de base via le
 // coefficient), positions/couleurs/visibilité/images des process, couleurs et
 // tags par entry, échelle (globale + par unitType, cf. A5), unités sur les
-// labels de flux, labels en pourcentage (format personnalisé
+// labels de flux (via le REGISTRE d'unités OS#1286, clé `units` : chaque
+// unitType devient une grandeur, chaque flux garde son unité d'origine en
+// mode unit_model), labels en pourcentage (format personnalisé
 // {PercentProcessSource}/{PercentProcessDestination}, cf. A2), formes de
 // process alternatives (shapeType 0/1/2, cf. A4), commentaires de flèche
 // (→ tooltips), zones libres texte/image/rectangle (→ zones de texte),
@@ -33,6 +35,7 @@
 
 import JSZip from 'jszip'
 import { themeEsankey, Type_ThemeJSON } from '../types/Theme'
+import { Type_UnitTypeJSON } from '../types/Units'
 
 type EsLocal = { [k: string]: string | number | boolean }
 
@@ -106,6 +109,8 @@ export interface EsParsedDiagram {
   labels: { [id: string]: EsContainerJSON }
   /** Légende affichée si le fichier en contient une (mask_legend: false). */
   legend?: { mask_legend: boolean, legend_dx: number, legend_dy: number }
+  /** OS#1286 — registre d'unités reconstruit depuis les unitTypes e!Sankey. */
+  units?: Type_UnitTypeJSON[]
 }
 
 // Id du groupe de tags de flux créé depuis les entries e!Sankey.
@@ -143,8 +148,8 @@ const normalizeStringToValidId = (text: string): string =>
 
 // ------------------------------------------------------------- Modèle logique
 
-interface EsUnit { coefficient: number, name: string, isBasic: boolean }
-interface EsUnitType { maximumFlow: number, width: number, used: boolean, showUnit: boolean, units: { [id: string]: EsUnit } }
+interface EsUnit { id: string, coefficient: number, name: string, isBasic: boolean }
+interface EsUnitType { id: string, name: string, maximumFlow: number, width: number, used: boolean, showUnit: boolean, units: { [id: string]: EsUnit } }
 interface EsEntry { name: string, color: string | null, tagId: string }
 
 const parseUnitTypes = (netModel: Element): { [id: string]: EsUnitType } => {
@@ -155,13 +160,18 @@ const parseUnitTypes = (netModel: Element): { [id: string]: EsUnitType } => {
     const units: { [id: string]: EsUnit } = {}
     const unitsEl = childByTag(ut, 'units')
     if (unitsEl) childrenByTag(unitsEl, 'unit').forEach(u => {
-      units[u.getAttribute('id') ?? ''] = {
+      const unit_id = u.getAttribute('id') ?? ''
+      units[unit_id] = {
+        id: unit_id,
         coefficient: attrNum(u, 'coefficient', 1),
         name: u.getAttribute('name') ?? '',
         isBasic: u.getAttribute('isBasicUnit') === 'true',
       }
     })
-    out[ut.getAttribute('id') ?? ''] = {
+    const type_id = ut.getAttribute('id') ?? ''
+    out[type_id] = {
+      id: type_id,
+      name: ut.getAttribute('name') ?? '',
       maximumFlow: attrNum(ut, 'maximumFlow', 0),
       width: attrNum(ut, 'width', 0),
       used: ut.getAttribute('used') === 'true',
@@ -518,9 +528,17 @@ export const parseEsankeyXml = (
     }
     return null
   }
-  // Nom de l'unité de base d'un unitType (les valeurs y sont converties).
-  const basicUnitName = (ut: EsUnitType): string =>
-    Object.values(ut.units).find(u => u.isBasic)?.name ?? ''
+  // OS#1286 — registre d'unités du diagramme reconstruit depuis les unitTypes
+  // (unité par défaut = unité de base, celle dans laquelle les valeurs sont
+  // converties à l'import). Consommé par SankeyPersistence.fromJSON (clé `units`).
+  const unitsRegistry: Type_UnitTypeJSON[] = Object.values(unitTypes)
+    .filter(ut => Object.keys(ut.units).length > 0)
+    .map((ut, i) => ({
+      id: ut.id || 'esankey_unit_type_' + i,
+      name: ut.name || 'Unités ' + (i + 1),
+      default_unit: (Object.values(ut.units).find(u => u.isBasic) ?? Object.values(ut.units)[0]).id,
+      units: Object.values(ut.units).map(u => ({ id: u.id, name: u.name, coefficient: u.coefficient })),
+    }))
 
   // Nœuds : un par graphProcess. Nom = nom logique, sinon label graphique.
   const nodes: { [id: string]: EsNode } = {}
@@ -626,11 +644,15 @@ export const parseEsankeyXml = (
       // e!Sankey l'étiquette de quantité appartient à la FLÈCHE (somme de ses
       // matériaux, position sur segment) — la reproduire par flux serait faux ;
       // manque « label agrégé par flèche » listé en #264. On prépare seulement
-      // l'unité : si l'utilisateur active les valeurs, elle est déjà correcte
-      // (valeurs converties vers l'unité de BASE du unitType).
-      if (graphicalArrow?.showUnit && found && basicUnitName(found.unitType)) {
+      // l'unité : si l'utilisateur active les valeurs, elle est déjà correcte.
+      // OS#1286 — l'unité est désormais une référence au REGISTRE d'unités
+      // (mode unit_model) pointant l'unité D'ORIGINE du flow : data_value étant
+      // converti vers l'unité de base, l'affichage re-divise par le coefficient
+      // et restitue la quantité saisie dans e!Sankey, avec son symbole.
+      if (graphicalArrow?.showUnit && found) {
         link.local.label_unit_visible = true
-        link.local.label_unit = basicUnitName(found.unitType)
+        link.local.value_label_unit_type = 'unit_model'
+        link.local.label_unit = found.unit.id
       }
       // A2 — Labels en pourcentage (format personnalisé à mots-clés, manuel
       // e!Sankey 5 p.34) : {PercentProcessSource} = % de la SORTIE totale du
@@ -737,6 +759,10 @@ export const parseEsankeyXml = (
   }
   if (legendPos) {
     result.legend = { mask_legend: false, legend_dx: legendPos.x, legend_dy: legendPos.y }
+  }
+  // OS#1286 — registre d'unités (grandeurs e!Sankey), lu par fromJSON.
+  if (unitsRegistry.length > 0) {
+    result.units = unitsRegistry
   }
   return result
 }

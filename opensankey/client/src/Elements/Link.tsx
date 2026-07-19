@@ -2108,6 +2108,9 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public unit_name(prefix: 'name_label' | 'value_label') {
     if (prefix == 'value_label') {
       if (this.value_label_unit_type == 'unit_name') return this.value_label_unit
+      // OS#1286 — unité résolue depuis le registre d'unités du diagramme.
+      if (this.value_label_unit_type == 'unit_model')
+        return this.sankey.units.resolve(this.value_label_unit)?.unit.name ?? ''
       const unit_taggs = this.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
       if (unit_taggs.length > 0) {
         if (!this.selected_data_tags_list) return unit_taggs[0].selected_tags_list[0].name
@@ -2116,6 +2119,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
       return ''
     }
     if (this.name_label_unit_type == 'unit_name') return this.name_label_unit
+    if (this.name_label_unit_type == 'unit_model')
+      return this.sankey.units.resolve(this.name_label_unit)?.unit.name ?? ''
     const unit_taggs = this.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
     if (unit_taggs.length > 0) {
       if (!this.selected_data_tags_list) return unit_taggs[0].selected_tags_list[0].name
