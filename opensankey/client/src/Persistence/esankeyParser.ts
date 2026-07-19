@@ -238,7 +238,19 @@ interface EsGraphicalProcess {
    * Vérifié sur les démos officielles (`shapeType="0|1|2"` sur `<process>`).
    */
   shapeType: number
+  /**
+   * `arrowDirection` e!Sankey : axe de raccordement des flux à ce nœud/ancre.
+   * 2 = horizontal (le flux arrive/part par un CÔTÉ gauche/droite) ; 1 ou 4 =
+   * vertical (par le HAUT/BAS). Donne l'orientation OpenSankey d'un flux :
+   * [axe du nœud source][axe du nœud cible] (cf. `linkAxis`). Vérifié sur les
+   * démos (Bus : In=vh, Out=hv, on-board=hh).
+   */
+  arrowDirection: number
 }
+
+/** Axe de raccordement d'un flux à un nœud, depuis `arrowDirection` e!Sankey. */
+const linkAxis = (arrowDirection: number): 'h' | 'v' =>
+  (arrowDirection === 1 || arrowDirection === 4) ? 'v' : 'h'
 
 const parseGraphicalProcesses = (net: Element, palette: EsBrushPalette): { [id: string]: EsGraphicalProcess } => {
   const out: { [id: string]: EsGraphicalProcess } = {}
@@ -254,6 +266,7 @@ const parseGraphicalProcesses = (net: Element, palette: EsBrushPalette): { [id: 
       visible: p.getAttribute('visible') !== 'false',
       imageFile: childByTag(p, 'image')?.getAttribute('filename') ?? '',
       shapeType: attrNum(p, 'shapeType', 0),
+      arrowDirection: attrNum(p, 'arrowDirection', 2),
     }
   })
   return out
@@ -304,8 +317,8 @@ interface EsShapeBox { el: Element, kind: string, x: number, y: number, w: numbe
 /**
  * Shapes libres du `net` → zones de texte OpenSankey (clé JSON `labels`).
  * Mappés : text (texte, police, couleur), picture (image embarquée du ZIP,
- * en data URI), rectangle / roundedRectangle (zone à fond coloré).
- * Non mappés (pas d'équivalent) : line.
+ * en data URI), rectangle / roundedRectangle (zone à fond coloré), line (trait
+ * décoratif → ligne libre, élément OS#1276).
  *
  * FUSION texte-dans-rectangle : e!Sankey fabrique une « boîte » (p.ex. un profil)
  * en DEUX objets superposés — un rectangle de fond + un texte séparé. Chaque
@@ -383,8 +396,34 @@ const parseShapes = (
       const t = textOfRect.get(it)
       if (t) applyTextToContainer(base, t.el)
       out[id] = base
+    } else if (kind === 'line') {
+      // Ligne libre (élément OS#1276, débloque l'import #1266) : trait décoratif.
+      // e!Sankey fournit 2 points ; on en tire la boîte englobante + le sens de la
+      // diagonale (shape_line_flip), et l'apparence du trait (penColor/width →
+      // bordure, qui EST le trait pour shape_type 'line').
+      const pts = childByTag(shape, 'points')
+      const values = pts ? childrenByTag(pts, 'value') : []
+      let x1 = it.x, y1 = it.y, x2 = it.x + it.w, y2 = it.y + it.h
+      if (values.length >= 2) {
+        x1 = attrNum(values[0], 'X', x1); y1 = attrNum(values[0], 'Y', y1)
+        x2 = attrNum(values[values.length - 1], 'X', x2); y2 = attrNum(values[values.length - 1], 'Y', y2)
+      }
+      base.x = Math.min(x1, x2)
+      base.y = Math.min(y1, y2)
+      base.label_width = Math.abs(x2 - x1) || 1
+      base.label_height = Math.abs(y2 - y1) || 1
+      base.shape_type = 'line'
+      // '\' (flip false) = coin haut-gauche → bas-droit ; '/' (flip true) sinon.
+      base.shape_line_flip = (x1 < x2) !== (y1 < y2)
+      base.color_visible = false
+      base.transparent_border = false
+      const pen = childByTag(shape, 'penColor')
+      const penHex = argbToHex(pen?.getAttribute('argb') ?? null)
+      if (penHex) base.shape_border_color = penHex
+      const penWidth = attrNum(pen, 'width', 1)
+      if (penWidth) base.shape_border_thickness = penWidth
+      out[id] = base
     }
-    // line : pas d'équivalent OpenSankey (cf. liste des manques, issue #264)
   })
   return out
 }
@@ -674,6 +713,14 @@ export const parseEsankeyXml = (
     if (!sourceId || !targetId) return
     const arrowId = ga.getAttribute('id') ?? ''
     const graphicalArrow = graphicalArrows[edgeMapping[arrowId] ?? ''] ?? null
+    // Orientation OpenSankey depuis l'`arrowDirection` des nœuds source/cible :
+    // axe d'accroche du flux à chaque bout (h = côté, v = haut/bas). Sur les
+    // démos : In = vh, Out = hv, flux principal = hh. Défaut 'hh' → non posé.
+    const srcProc = graphicalProcesses[nodeMapping[fromRef ?? ''] ?? '']
+    const tgtProc = graphicalProcesses[nodeMapping[toRef ?? ''] ?? '']
+    const orientation = (srcProc && tgtProc)
+      ? linkAxis(srcProc.arrowDirection) + linkAxis(tgtProc.arrowDirection)
+      : 'hh'
     const compartments = childByTag(ga, 'compartments')
     const flows = compartments ? childrenByTag(compartments, 'flow') : []
     flows.forEach(flow => {
@@ -704,6 +751,7 @@ export const parseEsankeyXml = (
         usedEntryIds.add(entry.tagId)
         if (entry.color) link.local.color = entry.color
       }
+      if (orientation !== 'hh') link.local.orientation = orientation
       // AUCUN label de valeur posé sur les flux importés (décision user) : chez
       // e!Sankey l'étiquette de quantité appartient à la FLÈCHE (somme de ses
       // matériaux, position sur segment) — la reproduire par flux serait faux ;

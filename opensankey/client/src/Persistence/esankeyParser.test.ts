@@ -293,6 +293,22 @@ describe('parseEsankeyXml — couleurs par référence', () => {
   })
 })
 
+describe('parseEsankeyXml — orientation des flux (arrowDirection)', () => {
+  // arrowDirection e!Sankey : 2 = raccord horizontal (côté), 1/4 = vertical
+  // (haut/bas). L'orientation d'un flux = [axe source][axe cible].
+  test('nœud source vertical (1) → cible horizontale (2) = vh', () => {
+    const withDir = FIXTURE
+      .replace('<process id="50" locationX="100" locationY="300">', '<process id="50" locationX="100" locationY="300" arrowDirection="1">')
+      .replace('<process id="51" locationX="400" locationY="320">', '<process id="51" locationX="400" locationY="320" arrowDirection="2">')
+    const dv = parseEsankeyXml(withDir)
+    expect(Object.values(dv.links)[0].local.orientation).toBe('vh')
+  })
+  test('deux nœuds horizontaux (défaut 2) → hh non posé', () => {
+    const dv = parseEsankeyXml(FIXTURE)
+    expect(Object.values(dv.links)[0].local.orientation).toBeUndefined()
+  })
+})
+
 describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)', () => {
   const d = parseEsankeyXml(FIXTURE_DECOR, { 'Images/tmp1.tmp': PNG_URI })
 
@@ -355,6 +371,24 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     expect(box?.color).toBe('#E0E0E0') // le fond est conservé
     expect(box?.name_label_source).toBe('custom')
     expect(box?.name_label_fo_content).toBe('<p>Titre du</p><p>diagramme</p>')
+  })
+
+  // Import d'un trait <line> → ligne libre (shape_type 'line', élément OS#1276).
+  test('ligne : <line> → shape_type line (sens, couleur, épaisseur)', () => {
+    const withLine = FIXTURE_DECOR.replace('</shapes>',
+      '<shape><line locationX="10" locationY="20" sizeW="100" sizeH="50">' +
+      '<penColor argb="-65536" width="3" />' +
+      '<points length="2"><value X="10" Y="70" /><value X="110" Y="20" /></points>' +
+      '</line></shape></shapes>')
+    const dl = parseEsankeyXml(withLine, { 'Images/tmp1.tmp': PNG_URI })
+    const line = Object.values(dl.labels).find(c => c.shape_type === 'line')
+    expect(line).toBeDefined()
+    expect(line?.shape_border_color).toBe('#FF0000') // argb -65536 = rouge
+    expect(line?.shape_border_thickness).toBe(3)
+    expect(line?.label_width).toBe(100)
+    expect(line?.label_height).toBe(50)
+    // points (10,70) → (110,20) : x monte, y descend → diagonale '/' (flip)
+    expect(line?.shape_line_flip).toBe(true)
   })
 
   test('légende visible, position normalisée avec le reste', () => {
