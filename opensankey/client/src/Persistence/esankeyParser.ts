@@ -418,13 +418,19 @@ const parseShapes = (
         x1 = attrNum(values[0], 'X', x1); y1 = attrNum(values[0], 'Y', y1)
         x2 = attrNum(values[values.length - 1], 'X', x2); y2 = attrNum(values[values.length - 1], 'Y', y2)
       }
-      base.x = Math.min(x1, x2)
-      base.y = Math.min(y1, y2)
+      const minX = Math.min(x1, x2)
+      const minY = Math.min(y1, y2)
+      base.x = minX
+      base.y = minY
       base.label_width = Math.abs(x2 - x1) || 1
       base.label_height = Math.abs(y2 - y1) || 1
       base.shape_type = 'line'
-      // '\' (flip false) = coin haut-gauche → bas-droit ; '/' (flip true) sinon.
-      base.shape_line_flip = (x1 < x2) !== (y1 < y2)
+      // 2 extrémités exactes dans le repère local (boîte normalisée à min=0) —
+      // modèle OS#1276b (segment orientable), plus fidèle que la diagonale de boîte.
+      base.shape_line_x1 = x1 - minX
+      base.shape_line_y1 = y1 - minY
+      base.shape_line_x2 = x2 - minX
+      base.shape_line_y2 = y2 - minY
       base.color_visible = false
       base.transparent_border = false
       const pen = childByTag(shape, 'penColor')

@@ -431,8 +431,11 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     expect(line?.shape_border_thickness).toBe(3)
     expect(line?.label_width).toBe(100)
     expect(line?.label_height).toBe(50)
-    // points (10,70) → (110,20) : x monte, y descend → diagonale '/' (flip)
-    expect(line?.shape_line_flip).toBe(true)
+    // 2 extrémités exactes (repère local, min=0) : (10,70)→(110,20) = (0,50)→(100,0)
+    expect(line?.shape_line_x1).toBe(0)
+    expect(line?.shape_line_y1).toBe(50)
+    expect(line?.shape_line_x2).toBe(100)
+    expect(line?.shape_line_y2).toBe(0)
   })
 
   test('légende visible, position normalisée avec le reste', () => {
