@@ -254,6 +254,13 @@ export class Class_MenuConfig {
     return (this.tools_column_enabled && this._tools_column_open) ? TOOLS_COLUMN_WIDTH_PX : 0
   }
 
+  // #1283 — Éditeur de groupe de tags injecté par OSP (l'édition vit dans OSP,
+  // le filtre dans OS base). Le filtre appelle ce renderer pour déplier l'édition
+  // d'un groupe EN PLACE, sous sa rangée de filtre (fusion usage/édition). Null
+  // en OS pur / sans licence : le crayon d'édition ne s'affiche pas.
+  public render_tag_group_editor:
+    ((element_tag_name_prop: string, group_id: string) => JSX.Element | null) | null = null
+
   // #1243 — Panneau de config ÉPINGLÉ (mode « édition intense ») : au lieu de
   // flotter en overlay au-dessus du dessin, le panneau se docke à droite comme
   // le tableur et RÉSERVE sa largeur — la zone de dessin se recadre à gauche.

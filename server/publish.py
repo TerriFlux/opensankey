@@ -1283,6 +1283,20 @@ def publish_tree(parent_dir, build_dir, publish_name=None, artifacts_base=None,
     if published == 0:
         raise RuntimeError("Aucun projet publié dans l'arborescence")
 
+    # Miniatures des cartes : capter la 1ʳᵉ vue du diagramme là où aucun
+    # image_front.* n'a été déposé à la main (fallback rétro-compatible). À faire
+    # AVANT generate_all_index_pages, qui renomme les index.html viewer en
+    # diagrams.html (ici, chaque index.html est encore un viewer rendable). Isolé
+    # et sans échec dur : un environnement sans Playwright/Chromium publie comme
+    # avant (cartes sans image).
+    try:
+        from . import publish_thumbnails
+        n_thumbs = publish_thumbnails.generate_missing_thumbnails(str(public_dir))
+        if n_thumbs:
+            logger.info("%d miniature(s) de carte générée(s) depuis le JSON.", n_thumbs)
+    except Exception as e:
+        logger.warning("Génération des miniatures ignorée: %s", e)
+
     # Pages de navigation + README (renomme chaque index.html viewer en diagrams.html)
     publish_html.generate_all_index_pages(str(public_dir), build_info or "portfolio", mapper)
     _write_local_servers(public_dir)

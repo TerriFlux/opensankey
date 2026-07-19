@@ -74,7 +74,8 @@ export const resources_nodes = {
           balance: 'Balance',
           balance_diff: 'Difference (In − Out)',
           balance_ok: 'Balanced',
-          balance_ko: 'Imbalanced'
+          balance_ko: 'Imbalanced',
+          analysis_tab: 'Analysis'
         },
         tabs: {
           apparence: 'Appearence',
@@ -333,7 +334,8 @@ export const resources_nodes = {
           balance: 'Bilan',
           balance_diff: 'Différence (E − S)',
           balance_ok: 'Équilibré',
-          balance_ko: 'Déséquilibré'
+          balance_ko: 'Déséquilibré',
+          analysis_tab: 'Analyse'
         },
         tabs: {
           apparence: 'Apparence',
@@ -579,7 +581,8 @@ export const resources_nodes = {
           balance: 'Balance',
           balance_diff: 'Diferencia (E − S)',
           balance_ok: 'Equilibrado',
-          balance_ko: 'Desequilibrado'
+          balance_ko: 'Desequilibrado',
+          analysis_tab: 'Análisis'
         },
         tabs: {
           apparence: 'Apariencia',
@@ -832,7 +835,8 @@ export const resources_nodes = {
           balance: 'Bilanz',
           balance_diff: 'Differenz (Ein − Aus)',
           balance_ok: 'Ausgeglichen',
-          balance_ko: 'Unausgeglichen'
+          balance_ko: 'Unausgeglichen',
+          analysis_tab: 'Analyse'
         },
         tabs: {
           apparence: 'Darstellung',
@@ -1085,7 +1089,8 @@ export const resources_nodes = {
           balance: 'Bilancio',
           balance_diff: 'Differenza (In − Out)',
           balance_ok: 'Bilanciato',
-          balance_ko: 'Sbilanciato'
+          balance_ko: 'Sbilanciato',
+          analysis_tab: 'Analisi'
         },
         tabs: {
           apparence: 'Aspetto',

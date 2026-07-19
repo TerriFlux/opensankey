@@ -6,9 +6,7 @@ import {
   Menu, MenuButton, MenuList, MenuItem, HStack, VStack, Divider
 } from '@chakra-ui/react'
 import { CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
-import { OSMultiSelect, typeElementSelectable, CustomFaEyeCheckIcon, OSTooltip, ConfigMenuNumberInput, WrapperContentConfig } from '../configmenus/MenuCommon'
-import { filter_panel_registry } from './FilterPanelRegistry'
-import { ElementSelectionTool } from '../configmenus/MenuElementsSelection'
+import { OSMultiSelect, typeElementSelectable, CustomFaEyeCheckIcon, OSTooltip, ConfigMenuNumberInput } from '../configmenus/MenuCommon'
 import { useMainZone } from '../spreadsheet/MainZoneTabs'
 import { useModelBinding } from '../../hooks/useModelBinding'
 import { Class_ApplicationData } from '../../types/ApplicationData'
@@ -19,13 +17,11 @@ import { updateUnitaryStyles } from '../../Algorithms/UnitaryBoard'
 import { disaggregate, aggregate, resetLocalHierarchy, disaggregationExpansion, applyContainerModeForDim } from '../../Algorithms/Hierarchies'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_NodeDimension, Type_DisaggregationKind } from '../../Elements/NodeDimension'
-import { Type_DisaggregationGap, const_default_position_x, const_default_position_y } from '../../types/Utils'
+import { Type_DisaggregationGap, const_default_position_x, const_default_position_y, Type_MacroTagGroup } from '../../types/Utils'
 
+// #1283 — largeur du tiroir de filtres (comme avant : compact).
 const width_fitler_drawer = 270
-// #1243 — les onglets « Sélectionner » (liste + recherche) et « Éditer »
-// (groupes de tags, vues) accueillent des contenus bien plus riches que les
-// filtres : le tiroir s'élargit dans ces modes.
-const width_filter_drawer_edit = 420
+
 
 /**
  * Reconstruit les child links et redessine après un changement de sélection d'un
@@ -329,12 +325,9 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
       app_data.has_sankey_dev // « Toutes données » (dev) suffit à ouvrir le drawer
   }
   const [drawerOpen, setDrawerOpen] = useState(app_data.is_static)
-  // #1243 — deux modes : « Filtrer » (historique) et « Éditer » (groupes de
-  // tags, vues — relogés ici depuis la matrice, cf. règle R3). L'édition n'a
-  // pas de sens en publish/statique.
-  const [filterTab, setFilterTab] = useState<'filter' | 'select' | 'edit'>('filter')
-  // Sous-onglet actif de « Éditer » (un éditeur à la fois ; null = le premier).
-  const [edit_section_id, setEditSectionId] = useState<string | null>(null)
+  // #1283 — le tiroir de filtres ne fait plus QUE filtrer (panneau unique, sans
+  // onglet) : les groupes de tags s'éditent EN PLACE (crayon par carte) et les
+  // Vues sont devenues un onglet de l'inspecteur (cible « Vue »).
   // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
   useModelBinding(app_data.menu_configuration.ref_toolbar)
   // Abonnement à la grande zone : garde l'offset droit à jour quand la colonne d'outils change.
@@ -352,17 +345,7 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
   const drawer_on_right = !app_data.is_static
   // #1243 — sections « Éditer » injectées par les couches supérieures (OSP :
   // groupes de tags, vues). Onglet masqué s'il n'y en a aucune (OS pur/publish).
-  const edit_sections = app_data.is_static ? [] : filter_panel_registry.getSections(app_data)
-  const has_edit_tab = edit_sections.length > 0
-  // #1243 — onglet « Sélectionner » : sélection par critères (type + tag +
-  // liste) pour les opérations groupées, l'inspecteur éditant ensuite la
-  // sélection obtenue. Éditeur uniquement (en publish on ne sélectionne pas).
-  const has_select_tab = !app_data.is_static
-  const has_tabs = has_edit_tab || has_select_tab
-  const in_edit_tab = has_edit_tab && filterTab === 'edit'
-  const in_select_tab = has_select_tab && filterTab === 'select'
-  const active_edit_section = edit_sections.find(s => s.id === edit_section_id) ?? edit_sections[0]
-  const drawer_width_px = (in_edit_tab || in_select_tab) ? width_filter_drawer_edit : width_fitler_drawer
+  const drawer_width_px = width_fitler_drawer
   const width_drawer = (drawerOpen ? drawer_width_px + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin
   // Ouvre/ferme le drawer de filtres. Comme la config, c'est un OVERLAY au-dessus de toute la
   // grande zone (diagramme, tableur, doc…) : il ne touche ni à l'état doc/tableur ni au cadrage.
@@ -399,136 +382,83 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
 
   if (!filters_visible) return <></>
 
+  // #1283 — création de groupe TOUJOURS accessible (même si aucun groupe n'existe
+  // encore, donc aucune carte à éditer). createTagGroup vit sur le modèle Sankey
+  // (OS base) ; on l'expose ici pour n'importe quel type. Gated licence/éditeur.
+  const createGroup = (type: Type_MacroTagGroup) => {
+    app_data.runWithSnapshotUndo(
+      () => {
+        app_data.drawing_area.sankey.createTagGroup(type)
+        app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+        app_data.menu_configuration.updateAllComponentsRelatedToTags()
+      },
+      () => app_data.menu_configuration.updateAllComponentsRelatedToTags()
+    )
+  }
+  const can_create_groups = !app_data.is_static && app_data.has_sankey_plus
+  const group_types: { type: Type_MacroTagGroup, label: string, dev?: boolean }[] = [
+    { type: 'node_taggs', label: app_data.t('filter_panel.short.node') },
+    { type: 'flux_taggs', label: app_data.t('filter_panel.short.link') },
+    { type: 'data_taggs', label: app_data.t('filter_panel.short.data') },
+    { type: 'level_taggs', label: app_data.t('filter_panel.short.level'), dev: true }
+  ]
+
   // #1258 — contenu du panneau, PARTAGÉ entre le tiroir overlay (Drawer) et le
   // mode ÉPINGLÉ (panneau docké pleine hauteur qui réserve sa largeur, comme
   // la config épinglée).
   const panel_content = <>
-          {/* #1243 — Filtrer / Éditer : les GROUPES de tags s'éditent là où ils
-              sont consommés (règle R3), l'inspecteur ne fait qu'assigner. */}
-          {has_tabs ? (
-            <Box style={{
-              display: 'grid',
-              gridTemplateColumns: `repeat(${1 + (has_select_tab ? 1 : 0) + (has_edit_tab ? 1 : 0)}, 1fr) auto`,
-              gap: '0.15rem', padding: '0.3rem 0.3rem 0', alignItems: 'stretch'
-            }}>
-              {/* #1258 — même langage que la rangée d'onglets de l'inspecteur :
-                  icône + libellé court empilés (variant inspector_tab). */}
-              <Button
-                size='xs'
-                variant={filterTab === 'filter' ? 'inspector_tab_activated' : 'inspector_tab'}
-                title={app_data.t('Banner.fdn')}
-                onClick={() => setFilterTab('filter')}
-              >
-                {app_data.icon_library.icon_filter_tags}
-                <Box as='span' style={{ fontSize: '0.62rem', lineHeight: 1 }}>
-                  {/* Libellé COURT : t('Banner.fdn') (« Légende et filtres »)
-                      écrase les autres onglets ; le texte long va au tooltip. */}
-                  {app_data.t('filter_panel.filter')}
-                </Box>
-              </Button>
-              {has_select_tab ? (
-                <Button
-                  size='xs'
-                  variant={filterTab === 'select' ? 'inspector_tab_activated' : 'inspector_tab'}
-                  title={app_data.t('filter_panel.select_tooltip')}
-                  onClick={() => setFilterTab('select')}
-                >
-                  {app_data.icon_library.icon_DA_selection}
-                  <Box as='span' style={{ fontSize: '0.62rem', lineHeight: 1 }}>
-                    {app_data.t('filter_panel.select')}
-                  </Box>
-                </Button>
-              ) : <></>}
-              {has_edit_tab ? (
-                <Button
-                  size='xs'
-                  variant={filterTab === 'edit' ? 'inspector_tab_activated' : 'inspector_tab'}
-                  onClick={() => setFilterTab('edit')}
-                >
-                  {app_data.icon_library.icon_edit_style}
-                  <Box as='span' style={{ fontSize: '0.62rem', lineHeight: 1 }}>
-                    {app_data.t('filter_panel.edit')}
-                  </Box>
-                </Button>
-              ) : <></>}
-              {/* #1258 — épingler : le tiroir réserve sa largeur, le dessin se
-                  recadre (même geste que le panneau de config). */}
-              <Button
-                size='xs'
-                variant={pinned ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                sx={{ paddingInline: '0.3rem', minWidth: 'auto', width: 'auto', flex: 'none', height: 'auto' }}
-                title={pinned ? app_data.t('inspector.unpin') : app_data.t('inspector.pin')}
-                onClick={() => {
-                  const mc = app_data.menu_configuration
-                  mc.filter_drawer_width_px = drawer_width_px
-                  mc.filter_panel_pinned = !pinned
-                }}
-              >
-                <FaThumbtack style={{ transform: pinned ? 'none' : 'rotate(45deg)' }} />
-              </Button>
-            </Box>
-          ) : <></>}
-          {in_select_tab ? (
-            // minHeight : la liste déroulante du sélecteur s'ouvre EN FLUX dans
-            // son conteneur ; sans hauteur réservée, le tiroir (height:fit-content)
-            // la rogne.
-            <Box layerStyle='drawerFilterBox' style={{ minHeight: '22rem' }}>
-              <WrapperContentConfig title={app_data.t('filter_panel.select_elements')}>
-                <ElementSelectionTool app_data={app_data} />
-              </WrapperContentConfig>
-            </Box>
-          ) : in_edit_tab ? (
-            // Sous-onglets : empiler les 5 éditeurs (groupes de tags, vues)
-            // rendait le bas du tiroir inatteignable. Un contenu à la fois,
-            // comme la rangée d'onglets de l'inspecteur.
-            <Box layerStyle='drawerFilterBox' style={{ display: 'grid', gap: '0.3rem' }}>
-              <Box style={{
-                display: 'grid',
-                gridTemplateColumns: `repeat(${edit_sections.length}, 1fr)`,
-                gap: '0.15rem'
-              }}>
-                {edit_sections.map(section => (
-                  <Button
-                    key={section.id}
-                    size='xs'
-                    variant={section.id === active_edit_section?.id ? 'inspector_tab_activated' : 'inspector_tab'}
-                    title={section.title(app_data)}
-                    onClick={() => setEditSectionId(section.id)}
-                  >
-                    {section.icon?.(app_data)}
-                    <Box as='span' style={{ fontSize: '0.62rem', lineHeight: 1 }}>
-                      {(section.short_title ?? section.title)(app_data)}
-                    </Box>
-                  </Button>
-                ))}
-              </Box>
-              {active_edit_section ? (
-                <Box style={{ overflowY: 'auto', maxHeight: '70vh' }}>
-                  <WrapperContentConfig title={active_edit_section.title(app_data)}>
-                    {active_edit_section.render(app_data) ?? <></>}
-                  </WrapperContentConfig>
-                </Box>
-              ) : <></>}
-            </Box>
-          ) : (
-            <Box layerStyle='drawerFilterBox'>
-              {
-                (app_data.publish_options.data_type || app_data.publish_options.value_filter)
-                  ? <FilterDisplay app_data={app_data} /> : <></>
-              }
-              {/* « Génération de vues » (view tags) déplacé dans la topbar
-                  (cf. BannerViewTagTopbar) — retiré du tiroir de filtres. */}
-              {
-                app_data.publish_options.level_filter ? <LevelTagFilter app_data={app_data} /> : <></>
-              }
-              {
-                app_data.publish_options.node_filter ? <NodeTagGroupFilter app_data={app_data} level={false} /> : <></>
-              }
-              {
-                app_data.publish_options.data_filter ? <DataTagGroupFilter app_data={app_data} /> : <></>
-              }
-            </Box>
-          )}
+    {/* #1283 — en-tête : « + Groupe » (création, toujours dispo) à gauche,
+        épingle à droite. */}
+    <Box style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.3rem 0.3rem 0' }}>
+      {can_create_groups ? (
+        <Menu placement='bottom-start'>
+          <MenuButton
+            as={Button}
+            size='xs'
+            variant='menuconfigpanel_add_button'
+            sx={{ height: 'auto', paddingBlock: '0.15rem', paddingInline: '0.5rem' }}
+            leftIcon={app_data.icon_library.icon_add_element}
+          >
+            {app_data.t('Tags.GE')}
+          </MenuButton>
+          <MenuList>
+            {group_types.filter(g => !g.dev || app_data.has_sankey_dev).map(g => (
+              <MenuItem key={g.type} onClick={() => createGroup(g.type)}>
+                {g.label}
+              </MenuItem>
+            ))}
+          </MenuList>
+        </Menu>
+      ) : <Box />}
+      <Button
+        size='xs'
+        variant={pinned ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+        sx={{ paddingInline: '0.3rem', minWidth: 'auto', width: 'auto', flex: 'none', height: 'auto' }}
+        title={pinned ? app_data.t('inspector.unpin') : app_data.t('inspector.pin')}
+        onClick={() => {
+          const mc = app_data.menu_configuration
+          mc.filter_drawer_width_px = drawer_width_px
+          mc.filter_panel_pinned = !pinned
+        }}
+      >
+        <FaThumbtack style={{ transform: pinned ? 'none' : 'rotate(45deg)' }} />
+      </Button>
+    </Box>
+    <Box layerStyle='drawerFilterBox'>
+      {
+        (app_data.publish_options.data_type || app_data.publish_options.value_filter)
+          ? <FilterDisplay app_data={app_data} /> : <></>
+      }
+      {
+        app_data.publish_options.level_filter ? <LevelTagFilter app_data={app_data} /> : <></>
+      }
+      {
+        app_data.publish_options.node_filter ? <NodeTagGroupFilter app_data={app_data} level={false} /> : <></>
+      }
+      {
+        app_data.publish_options.data_filter ? <DataTagGroupFilter app_data={app_data} /> : <></>
+      }
+    </Box>
   </>
 
   return <>
@@ -1137,6 +1067,20 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
       : undefined
   )
 
+  // #1283 — fusion usage/édition : un seul groupe édité à la fois, déplié EN PLACE
+  // sous sa rangée de filtre. Le renderer d'éditeur est injecté par OSP (null en
+  // OS pur / sans licence → pas de crayon). Le prop du groupe se déduit de son
+  // appartenance (element = node+flux, d'où pas de mapping mode→prop fiable).
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null)
+  const renderGroupEditor = app_data.menu_configuration.render_tag_group_editor
+  const groupProp = (group_id: string): string | null => {
+    if (group_id in sankey.node_taggs_dict) return 'node_taggs'
+    if (group_id in sankey.flux_taggs_dict) return 'flux_taggs'
+    if (group_id in sankey.data_taggs_dict) return 'data_taggs'
+    if (group_id in sankey.level_taggs_dict) return 'level_taggs'
+    return null
+  }
+
   // #1231 — État HYBRIDE LOCAL : des nœuds ont été désagrégés via le clic droit (et NON
   // via le menu Hiérarchies global). On se base sur l'ORIGINE de l'action
   // (`forced_by_local_action`), pas sur l'état d'affichage : une désagrégation globale
@@ -1666,12 +1610,30 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
     }
     const selector = createSelector(tagg)
     const actionButton = createActionButton(tagg)
+    // #1283 — crayon d'édition en place : visible si OSP a injecté un éditeur
+    // et que ce groupe est éditable (level 'Primaire' exclu, comme son titre).
+    const editable = renderGroupEditor !== null
+      && groupProp(tagg.id) !== null
+      && !(mode === 'level' && tagg.name === 'Primaire')
+    const is_editing = editingGroupId === tagg.id
 
     return (
       <Box key={tagg.id} layerStyle={mode === 'data' ? 'menuconfigpanel_grid' : 'menuconfig_grid'}>
         {mode === 'level' && tagg.name === 'Primaire' ? <></> :
-          <Box layerStyle='menuconfigpanel_option_name'>
-            {tagg.name}
+          <Box layerStyle='menuconfigpanel_option_name' display='flex' alignItems='center' gap='0.3rem'>
+            <Box as='span'>{tagg.name}</Box>
+            {editable && (
+              <OSTooltip label={t('filter_panel.edit_group')}>
+                <Button
+                  variant={is_editing ? 'menuconfigpanel_icon_button_activated' : 'menuconfigpanel_icon_button'}
+                  size='xs'
+                  sx={{ marginLeft: 'auto' }}
+                  onClick={() => setEditingGroupId(is_editing ? null : tagg.id)}
+                >
+                  {app_data.icon_library.icon_edit_style}
+                </Button>
+              </OSTooltip>
+            )}
           </Box>}
         <Box layerStyle='filter_grid_row'>
           <OSTooltip label={t('Banner.ndd_lst')}>
@@ -1683,6 +1645,19 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
             </Box>
           </OSTooltip>
         </Box>
+        {/* #1283 — édition du groupe dépliée EN PLACE (renderer OSP). */}
+        {editable && is_editing && renderGroupEditor && (
+          <Box
+            marginTop='0.3rem'
+            padding='0.3rem'
+            borderRadius='6px'
+            border='1px dashed'
+            borderColor='gray.200'
+            background='gray.50'
+          >
+            {renderGroupEditor(groupProp(tagg.id) as string, tagg.id)}
+          </Box>
+        )}
       </Box>
     )
   })

@@ -43,7 +43,10 @@ import { useModelBinding, useModelSlot } from '@terriflux/opensankey/src/hooks/u
 
 export type FType_SankeySettingsEditionElementTags = {
   new_data: Class_ApplicationDataOSP,
-  elementTagNameProp: Type_MacroTagGroup
+  elementTagNameProp: Type_MacroTagGroup,
+  // #1283 — mode « groupe fixe » (édition en place depuis une carte de filtre) :
+  // édite CE groupe, sans sélecteur de groupe ni table de gestion des groupes.
+  fixed_group_id?: string
 }
 
 const list_palette_color = [
@@ -74,6 +77,7 @@ const list_palette_color = [
 const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTags> = ({
   new_data,
   elementTagNameProp,
+  fixed_group_id,
 }) => {
 
   // Data -------------------------------------------------------------------------------
@@ -84,12 +88,14 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
 
   const tags_group_dict = new_data.drawing_area.sankey.getTagGroupsAsDict(elementTagNameProp)
   const tags_group_list = new_data.drawing_area.sankey.getTagGroupsAsList(elementTagNameProp)
-  const [tags_group_entry_id, setTagsGroupEntryId] = useState(tags_group_list[0]?.id ?? '')
+  const [tags_group_entry_id_state, setTagsGroupEntryId] = useState(tags_group_list[0]?.id ?? '')
+  // #1283 — en mode groupe fixe, l'id est imposé par la carte (pas de sélecteur).
+  const tags_group_entry_id = fixed_group_id ?? tags_group_entry_id_state
   const tags_group_entry = tags_group_dict[tags_group_entry_id]
   const tags_entry = tags_group_entry?.tags_list ?? []
 
-  // Failsafe if selected tag group is not in dict of group 
-  if (tags_group_list.length > 0 && !(tags_group_entry_id in tags_group_dict))
+  // Failsafe if selected tag group is not in dict of group (état interne seul)
+  if (!fixed_group_id && tags_group_list.length > 0 && !(tags_group_entry_id_state in tags_group_dict))
     setTagsGroupEntryId(new_data.drawing_area.sankey.getTagGroupsAsList(elementTagNameProp)[0]?.id ?? '')
 
 
@@ -575,6 +581,16 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
   // Position mode toggles --------------------------------------------------------------
   const [showTagPositionMode, setShowTagPositionMode] = useState(false)
   const [showGrpPositionMode, setShowGrpPositionMode] = useState(false)
+  // #1283 — nom long fusionné dans la colonne « Nom » : révélé par ligne (bouton
+  // Aa) ou d'office quand il diffère du nom court (sinon redondant, place perdue).
+  const [longNameShown, setLongNameShown] = useState<Set<string>>(new Set())
+  const isLongShown = (tag: { id: string, name: string, long_name: string }) =>
+    longNameShown.has(tag.id) || (!!tag.long_name && tag.long_name !== tag.name)
+  const toggleLong = (tag_id: string) => setLongNameShown(prev => {
+    const next = new Set(prev)
+    if (next.has(tag_id)) next.delete(tag_id); else next.add(tag_id)
+    return next
+  })
 
   // Tags tables ------------------------------------------------------------------------
   let variant_table_edit_tag = 'table_edit_tag_node'
@@ -588,9 +604,10 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
   const variant_table_edit_grp = elementTagNameProp == 'data_taggs' ? 'table_edit_grp_tag_data' : 'table_edit_grp_tag_node_link'
   const variant_table_edit_grp_final = showGrpPositionMode ? variant_table_edit_grp + '_pos' : variant_table_edit_grp
 
-  const tagSetting = (<WrapperBoxSubSectionMenu new_data={new_data} title={title}>
+  const tagSettingInner = (
     <>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+      {/* #1283 — sélecteur de groupe masqué en mode groupe fixe (la carte impose le groupe). */}
+      {!fixed_group_id && <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <span>{elementTagNameProp == 'level_taggs' ? t('Tags.Dimension') : t('Tags.GE')}:</span>
         <Select
           variant='menuconfigpanel_option_select'
@@ -610,7 +627,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                 </option>
             )}
         </Select>
-      </Box>
+      </Box>}
 
       {elementTagNameProp !== 'level_taggs' ? <Box display='grid' gridTemplateColumns='1fr 1fr 1fr'>
         {/* Boutons des palettes de couleur  -------------------------------------------- */}
@@ -687,13 +704,10 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                   </OSTooltip>
                 </Box>
               </Th>
-              {/* Nom de l'étqiuette (nom court = id) */}
+              {/* #1283 — colonne « Nom » unique ; le nom long (affiché sur le
+                  diagramme) se déplie dans la même cellule via le bouton Aa. */}
               <Th>
                 {t('Tags.Nom')}
-              </Th>
-              {/* Nom long de l'étiquette (affiché sur le diagramme) */}
-              <Th>
-                {t('Tags.NomLong')}
               </Th>
               {showTagPositionMode ?
                 <Th>{t('Tags.Position')}</Th>
@@ -724,7 +738,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                       key={tag.id}
                     >
                       {/* Supprimer une etiquette  */}
-                      <Td>
+                      <Td w='1%'>
                         <OSTooltip label={t('Tags.tooltips.rm')}>
                           <Button
                             variant='menuconfigpanel_del_button_in_table'
@@ -733,52 +747,60 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                           </Button>
                         </OSTooltip>
                       </Td>
-                      {/* Renommer l'étiquette (nom court = id) */}
-                      <Td >
-                        <InputGroup variant='menuconfigpanel_option_input_table' >
-                          {/* TODO change with ConfigMenuTextInput */}
-                          <Input
-                            variant='menuconfigpanel_option_input_table'
-                            id={tag.id}
-                            type="text"
-                            value={tag.name}
-                            onChange={
-                              (evt: React.ChangeEvent) => {
-                                // Change tag name
-                                tag.name = (evt.target as HTMLInputElement).value
-                                // Update all related menus
-                                updateThisAndRelatedComponents()
-                              }
-                            } />
-                        </InputGroup>
-                      </Td>
-                      {/* Renommer le nom long de l'étiquette (affiché sur le diagramme) */}
-                      <Td >
-                        <InputGroup variant='menuconfigpanel_option_input_table' >
-                          <Input
-                            // Champ non-contrôlé (defaultValue + onBlur) : le setter long_name
-                            // appelle update() qui redessine, ce qui en mode contrôlé renvoyait
-                            // le curseur en début de champ à chaque frappe. La key force le
-                            // remontage si long_name change de l'extérieur (reset, etc.).
-                            key={tag.id + '_long_' + tag.long_name}
-                            variant='menuconfigpanel_option_input_table'
-                            id={tag.id + '_long'}
-                            type="text"
-                            defaultValue={tag.long_name}
-                            placeholder={tag.name}
-                            onBlur={
-                              (evt: React.FocusEvent) => {
-                                // Change tag long name (display name on the diagram)
-                                tag.long_name = (evt.target as HTMLInputElement).value
-                                // Update all related menus
-                                updateThisAndRelatedComponents()
-                              }
-                            } />
-                        </InputGroup>
+                      {/* #1283 — cellule « Nom » unique : nom court + bouton Aa
+                          révélant le nom long (affiché sur le diagramme), qui ne
+                          s'affiche d'office que s'il diffère (sinon redondant).
+                          Colonne FLEXIBLE (w=100%) : c'est elle qui prend la place. */}
+                      <Td w='100%'>
+                        <Box display='flex' flexDirection='column' gap='0.15rem'>
+                          <Box display='flex' alignItems='center' gap='0.2rem'>
+                            <InputGroup variant='menuconfigpanel_option_input_table' flex='1'>
+                              <Input
+                                variant='menuconfigpanel_option_input_table'
+                                id={tag.id}
+                                type="text"
+                                value={tag.name}
+                                onChange={
+                                  (evt: React.ChangeEvent) => {
+                                    tag.name = (evt.target as HTMLInputElement).value
+                                    updateThisAndRelatedComponents()
+                                  }
+                                } />
+                            </InputGroup>
+                            <OSTooltip label={t('Tags.NomLong')}>
+                              <Button
+                                variant={isLongShown(tag) ? 'menuconfigpanel_icon_button_activated' : 'menuconfigpanel_icon_button'}
+                                onClick={() => toggleLong(tag.id)}
+                              >
+                                <Box as='span' fontWeight='600'>Aa</Box>
+                              </Button>
+                            </OSTooltip>
+                          </Box>
+                          {isLongShown(tag) && (
+                            <InputGroup variant='menuconfigpanel_option_input_table'>
+                              <Input
+                                // Non-contrôlé (defaultValue + onBlur) : le setter long_name
+                                // redessine ; en contrôlé le curseur sautait au début. La key
+                                // force le remontage si long_name change de l'extérieur.
+                                key={tag.id + '_long_' + tag.long_name}
+                                variant='menuconfigpanel_option_input_table'
+                                id={tag.id + '_long'}
+                                type="text"
+                                defaultValue={tag.long_name}
+                                placeholder={tag.name}
+                                onBlur={
+                                  (evt: React.FocusEvent) => {
+                                    tag.long_name = (evt.target as HTMLInputElement).value
+                                    updateThisAndRelatedComponents()
+                                  }
+                                } />
+                            </InputGroup>
+                          )}
+                        </Box>
                       </Td>
                       {showTagPositionMode ?
                         /* Boutons monter/descendre l'étiquette */
-                        <Td>
+                        <Td w='1%'>
                           <Box layerStyle="options_2cols">
                             <Button
                               variant='menuconfigpanel_option_button_in_table'
@@ -822,7 +844,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                           {/* Rendre ou non visible  */}
                           {
                             elementTagNameProp !== 'data_taggs' ?
-                              <Td >
+                              <Td w='1%'>
                                 <OSTooltip label={t('Tags.tooltips.visible')}>
                                   <Button
                                     variant='menuconfigpanel_option_button_in_table'
@@ -839,12 +861,20 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                               </Td> :
                               <></>
                           }
-                          {/* Choix de la couleur*/}
+                          {/* Choix de la couleur — colonne au CONTENU (w='1%'), la
+                              largeur flexible va au Nom. Picker borné pour que
+                              l'aperçu et la pipette restent collés. */}
                           {
                             elementTagNameProp !== 'level_taggs' ?
-                              <Td w='100%'>
+                              <Td w='1%'>
                                 <OSTooltip label={t('Tags.tooltips.couleur')}>
-                                  <Box>
+                                  {/* Picker borné + on annule ici la mise en carré
+                                      globale des boutons (compact_sx) qui déformait
+                                      la pipette et écartait l'aperçu. */}
+                                  <Box
+                                    width='3rem'
+                                    sx={{ '& button': { width: 'auto', minWidth: 'auto', height: 'auto', padding: 0 } }}
+                                  >
                                     <MenuColorPicker
                                       initialColor={tag.color}
                                       onColorChange={(new_color) => {
@@ -866,12 +896,106 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
         </Table>
       </TableContainer>
     </>
-  </WrapperBoxSubSectionMenu>
   )
+  // #1283 — en mode groupe fixe : pas de sous-section titrée (la carte identifie
+  // déjà le groupe), contenu direct. Sinon, collapsible titré historique.
+  const tagSetting = fixed_group_id
+    ? tagSettingInner
+    : <WrapperBoxSubSectionMenu new_data={new_data} title={title}>{tagSettingInner}</WrapperBoxSubSectionMenu>
 
   // Tag group menu ---------------------------------------------------------------------
-  return (<Box layerStyle='menuconfigpanel_grid'>
-    <WrapperBoxSubSectionMenu new_data={new_data} title={elementTagNameProp == 'level_taggs' ? t('Tags.EditDimension') : t('Tags.EGE')}>
+  // #1283 — mode groupe fixe : en-tête COMPACT d'édition du GROUPE lui-même
+  // (nom, bannière, unité pour les data, suppression), à la place de la table de
+  // gestion multi-groupes. Réutilise les mêmes mutations que la table.
+  const fixedGroupHeader = (fixed_group_id && tags_group_entry) ? (
+    <Box display='grid' gridTemplateColumns={
+      `1fr ${elementTagNameProp !== 'level_taggs' ? 'auto' : ''} ${elementTagNameProp === 'data_taggs' ? 'auto' : ''} auto`
+    } gap='0.3rem' alignItems='center' marginBottom='0.3rem'>
+      <OSTooltip label={t('Tags.tooltips.nom_grp')}>
+        <Input
+          variant='menuconfigpanel_option_input'
+          value={tags_group_entry.name}
+          onChange={(evt: React.ChangeEvent<HTMLInputElement>) => {
+            tags_group_entry.name = evt.target.value
+            updateThisAndRelatedComponents()
+          }}
+        />
+      </OSTooltip>
+      {elementTagNameProp !== 'level_taggs' && (
+        <OSTooltip label={t('Tags.tooltips.banner')}>
+          <Select
+            variant='menuconfigpanel_option_select'
+            value={(tags_group_entry as Class_ProtoTagGroup).banner}
+            onChange={(evt: React.ChangeEvent<HTMLSelectElement>) =>
+              handleBanner(tags_group_entry as Class_NodeTagGroup | Class_FluxTagGroup | Class_DataTagGroup, evt.target.value as tag_banner_type)}
+          >
+            <option value='none'>{t('Menu.Aucun')}</option>
+            <option value='one'>{t('Tags.Unique')}</option>
+            <option value='multi'>{t('Tags.Multiple')}</option>
+            {elementTagNameProp === 'data_taggs' && <option value='sequence'>{t('Tags.sequence')}</option>}
+            {elementTagNameProp === 'data_taggs' && <option value='topbar'>{t('Tags.topbar')}</option>}
+          </Select>
+        </OSTooltip>
+      )}
+      {elementTagNameProp === 'data_taggs' && (
+        <OSTooltip label={t('Tags.tooltips.unit')}>
+          <Switch
+            isChecked={(tags_group_entry as Class_DataTagGroup).is_unit}
+            onChange={(evt) => {
+              (tags_group_entry as Class_DataTagGroup).is_unit = evt.target.checked
+              new_data.drawing_area.draw()
+              updateThisAndRelatedComponents()
+            }}
+          />
+        </OSTooltip>
+      )}
+      <OSTooltip label={t('Tags.tooltips.rm_grp')}>
+        <Button
+          size='xs'
+          variant='menuconfigpanel_del_button'
+          sx={{ minWidth: 'auto', paddingInline: '0.4rem' }}
+          onClick={() => handleDelGroupTag(tags_group_entry as Class_NodeTagGroup | Class_FluxTagGroup | Class_DataTagGroup)}
+        >
+          {icon_remove_element}
+        </Button>
+      </OSTooltip>
+    </Box>
+  ) : null
+
+  // #1283 — grammaire compacte UNIQUE pour l'édition en place (mode groupe fixe) :
+  // une seule règle normalise boutons carrés, inputs/selects xs, en-têtes de
+  // colonne discrets et cellules serrées — plus rien n'est surdimensionné.
+  const compact_sx = fixed_group_id ? {
+    fontSize: '0.7rem',
+    '& th': {
+      fontSize: '0.56rem', letterSpacing: 0, textTransform: 'none',
+      padding: '0.1rem 0.3rem', height: 'auto', color: 'gray.500'
+    },
+    '& td': { padding: '0.1rem 0.25rem' },
+    // Boutons carrés : SEULEMENT dans la table (suppr/visible/position tag). Les
+    // boutons d'en-tête (nouveau groupe pleine largeur, suppr groupe) restent libres.
+    '& table button': {
+      minWidth: '1.4rem', width: '1.4rem', height: '1.4rem',
+      padding: 0, fontSize: '0.7rem'
+    },
+    '& table button svg': { width: '0.8rem', height: '0.8rem' },
+    '& input, & select': {
+      height: '1.4rem', minHeight: 'unset', fontSize: '0.7rem', paddingInline: '0.3rem'
+    },
+    // La rangée de palettes (3 col) : boutons non carrés (texte/select), on
+    // laisse le select respirer.
+    '& select': { width: 'auto', minWidth: '3rem' }
+  } : undefined
+
+  return (<Box layerStyle='menuconfigpanel_grid' sx={compact_sx}>
+    {/* #1283 — la création de groupe vit dans l'en-tête du tiroir de filtres
+        (« + Groupe », toujours accessible même sans groupe existant) : pas de
+        bouton de création ici, seulement l'édition du groupe de la carte. */}
+    {fixedGroupHeader}
+    {/* #1283 — table de GESTION des groupes (ajout/suppression/renommage/bannière
+        de tous les groupes) masquée en mode groupe fixe : la carte n'édite qu'UN
+        groupe. On ne garde que l'édition de ses étiquettes (tagSetting). */}
+    {!fixed_group_id && <WrapperBoxSubSectionMenu new_data={new_data} title={elementTagNameProp == 'level_taggs' ? t('Tags.EditDimension') : t('Tags.EGE')}>
       {/* Groupe d'étiquette  */}
       <TableContainer>
         <Table variant={variant_table_edit_grp_final}>
@@ -1060,7 +1184,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
           </Tbody>
         </Table>
       </TableContainer>
-    </WrapperBoxSubSectionMenu>
+    </WrapperBoxSubSectionMenu>}
     {tags_group_list.length > 0 ? tagSetting : <></>}
 
   </Box>

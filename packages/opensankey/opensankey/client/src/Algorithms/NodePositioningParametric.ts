@@ -573,6 +573,14 @@ export class NodePositioningParametric {
     )
   }
 
+  /** Cf. NodePositioningCyclesCore.lockRecyclingStatusDivergences (passe post-chargement #153). */
+  public lockRecyclingStatusDivergences(): string[] {
+    return this.np.cycles.lockRecyclingStatusDivergences(
+      this.nodesEligibleForColumns(),
+      this.computeColumnsFromX()
+    )
+  }
+
   /**
   * Computes u,v for nodes in the drawing area
   * Utilise l'algorithme amélioré

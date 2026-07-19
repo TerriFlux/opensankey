@@ -22,6 +22,10 @@ import { MenuConfigurationAppearance } from '../MenuElementsAppearance'
 import { MenuConfigurationLinksData } from '../SankeyMenuConfigurationLinksData'
 import { ConfigMenuTextInput, OSTooltip, CustomFaEyeCheckIcon, WrapperBoxSubSectionMenu } from '../MenuCommon'
 import { stripHtmlTags, isRichContent } from '../../dialogs/RichTextEditor'
+import {
+  NODE_TOOLTIP_BLOCKS, LINK_TOOLTIP_BLOCKS, tooltipBlockLabelKey,
+  isTooltipBlockVisible, Type_TooltipHiddenBlocks
+} from '../../../Elements/TooltipBlocks'
 import { CONVERTER_CONFIGS } from '../../dialogs/PersistenceProcessDialogConfigs'
 import {
   DrawingAreaConfig,
@@ -155,8 +159,9 @@ export function registerBaseInspectorSections(): void {
     hue: 'data',
     title: (app_data) => app_data.t('inspector.tab.tooltip'),
     icon: (app_data) => app_data.icon_library.icon_tab_tooltip,
-    data_only: true,
-    render: (app_data) => <InspectorTooltipTab app_data={app_data} />
+    // Pas data_only : la VISIBILITÉ des blocs (OS#1285) est un attribut de style,
+    // éditable en portée Style ; le texte libre reste propre à la sélection.
+    render: (app_data, scope) => <InspectorTooltipTab app_data={app_data} scope={scope} />
   })
 
   // ---- Onglet MFA : l'espace AFM unifié (#1258) ----------------------------
@@ -362,7 +367,7 @@ const InspectorMFATab = ({ app_data }: { app_data: Class_ApplicationData }) => {
 // #1243 — Onglet Infobulle : MÊME interface que le Libellé — en-tête avec les
 // boutons de MODE à droite (texte simple / texte riche), texte simple édité en
 // ligne, le mode riche ouvrant l'éditeur complet en panneau draggable.
-const InspectorTooltipTab = ({ app_data }: { app_data: Class_ApplicationData }) => {
+const InspectorTooltipTab = ({ app_data, scope }: { app_data: Class_ApplicationData, scope: 'selection' | 'style' }) => {
   const { t, drawing_area, history, menu_configuration, icon_library } = app_data
   const elements = [
     ...drawing_area.selected_nodes_list_sorted,
@@ -399,44 +404,105 @@ const InspectorTooltipTab = ({ app_data }: { app_data: Class_ApplicationData }) 
   }
 
   return <>
-    <Box display='flex' alignItems='center' justifyContent='space-between' gap={2}>
-      <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.IB')}</Box>
-      <Box layerStyle='options_2cols' width='fit-content'>
-        <OSTooltip label={t('Menu.display_mode.tooltips.simple_text')}>
-          <Button
-            variant={!content_is_rich ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}            isDisabled={elements.length === 0}
-            onClick={setModeSimple}
-          >
-            {icon_library.icon_text_mode_simple}
-          </Button>
-        </OSTooltip>
-        <OSTooltip label={t('Menu.display_mode.tooltips.rich_text')}>
-          <Button
-            variant={content_is_rich ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}            isDisabled={elements.length === 0}
-            onClick={setModeRich}
-          >
-            {icon_library.icon_text_mode_rich}
-          </Button>
-        </OSTooltip>
+    {/* Texte libre : propre à l'élément → portée Sélection uniquement. */}
+    {scope === 'selection' && <>
+      <Box display='flex' alignItems='center' justifyContent='space-between' gap={2}>
+        <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.IB')}</Box>
+        <Box layerStyle='options_2cols' width='fit-content'>
+          <OSTooltip label={t('Menu.display_mode.tooltips.simple_text')}>
+            <Button
+              variant={!content_is_rich ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}            isDisabled={elements.length === 0}
+              onClick={setModeSimple}
+            >
+              {icon_library.icon_text_mode_simple}
+            </Button>
+          </OSTooltip>
+          <OSTooltip label={t('Menu.display_mode.tooltips.rich_text')}>
+            <Button
+              variant={content_is_rich ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}            isDisabled={elements.length === 0}
+              onClick={setModeRich}
+            >
+              {icon_library.icon_text_mode_rich}
+            </Button>
+          </OSTooltip>
+        </Box>
       </Box>
-    </Box>
-    {content_is_rich ? (
-      // Contenu riche : édité dans le panneau (comme le libellé en mode riche).
-      <Button
-        variant='menuconfigpanel_option_button'
-        size='xs'
-        onClick={setModeRich}
-      >
-        {t('inspector.open_editor')}
-      </Button>
-    ) : (
-      <ConfigMenuTextInput
-        t={t}
-        default_value={first ? stripHtmlTags(current) : ''}
-        function_on_blur={applyText}
-        disabled={elements.length === 0}
-      />
-    )}
+      {content_is_rich ? (
+        // Contenu riche : édité dans le panneau (comme le libellé en mode riche).
+        <Button
+          variant='menuconfigpanel_option_button'
+          size='xs'
+          onClick={setModeRich}
+        >
+          {t('inspector.open_editor')}
+        </Button>
+      ) : (
+        <ConfigMenuTextInput
+          t={t}
+          default_value={first ? stripHtmlTags(current) : ''}
+          function_on_blur={applyText}
+          disabled={elements.length === 0}
+        />
+      )}
+    </>}
+
+    {/* OS#1285 — visibilité des blocs de l'info-bulle (attribut de style). */}
+    <TooltipBlocksToggles app_data={app_data} scope={scope} />
   </>
+}
+
+// OS#1285 — cases de visibilité des blocs d'info-bulle. Écrit l'attribut de style
+// `tooltip_hidden_blocks` sur la sélection ou le style édité (undo), selon la portée.
+type BlockTarget = { attributes: Record<string, unknown>, getElementProperty: (k: 'tooltip_hidden_blocks') => unknown }
+const TooltipBlocksToggles = ({ app_data, scope }: { app_data: Class_ApplicationData, scope: 'selection' | 'style' }) => {
+  const { t, drawing_area, history, menu_configuration } = app_data
+  const nodes = drawing_area.selected_nodes_list
+  const links = drawing_area.selected_links_list
+
+  // Blocs pertinents selon les types sélectionnés (analysis dédupliqué).
+  const block_ids: string[] = []
+  if (nodes.length) NODE_TOOLTIP_BLOCKS.forEach(b => block_ids.push(b))
+  if (links.length) LINK_TOOLTIP_BLOCKS.forEach(b => { if (!block_ids.includes(b)) block_ids.push(b) })
+  if (block_ids.length === 0) return null
+
+  const targets = (scope === 'style'
+    ? [drawing_area.sankey.styles_dict[menu_configuration.ref_selected_style.current]].filter(Boolean)
+    : [...nodes, ...links]) as unknown as BlockTarget[]
+  const read_target = targets[0]
+  const hidden = (read_target?.getElementProperty('tooltip_hidden_blocks') as Type_TooltipHiddenBlocks | undefined) ?? {}
+
+  const setHidden = (block_id: string, hide: boolean) => {
+    if (targets.length === 0) return
+    const next: Type_TooltipHiddenBlocks = { ...hidden }
+    if (hide) next[block_id] = true
+    else delete next[block_id]
+    const value = Object.keys(next).length ? next : undefined
+    const before = targets.map(el => ({ el, v: el.attributes['tooltip_hidden_blocks'] }))
+    const commit = () => {
+      menu_configuration.ref_to_save_in_cache_indicator.current(false)
+      menu_configuration.updateInspector()
+    }
+    const apply = () => { targets.forEach(el => { el.attributes['tooltip_hidden_blocks'] = value }); commit() }
+    const undo = () => { before.forEach(({ el, v }) => { el.attributes['tooltip_hidden_blocks'] = v }); commit() }
+    history.saveUndo(undo)
+    history.saveRedo(apply)
+    apply()
+  }
+
+  return <Box style={{ marginTop: '0.4rem' }}>
+    <Box layerStyle='menuconfigpanel_option_name'>{t('inspector.tooltip_blocks.title')}</Box>
+    <Box style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem', paddingTop: '0.2rem' }}>
+      {block_ids.map(id => (
+        <Checkbox
+          key={id}
+          size='sm'
+          isChecked={isTooltipBlockVisible(hidden, id)}
+          onChange={e => setHidden(id, !e.target.checked)}
+        >
+          <Box as='span' style={{ fontSize: '0.75rem' }}>{t(tooltipBlockLabelKey(id))}</Box>
+        </Checkbox>
+      ))}
+    </Box>
+  </Box>
 }
 

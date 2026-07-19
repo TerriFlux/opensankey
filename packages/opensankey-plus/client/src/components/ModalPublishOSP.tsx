@@ -77,6 +77,7 @@ const OPTION_GROUPS: Array<{ title: string, options: FlagOpt[] }> = [
     options: [
       { key: 'topbar', label: 'Barre du haut (topbar)', def: true },
       { key: 'edit_button', label: 'Bouton « Éditer » (renvoi vers open-sankey.fr)', def: true },
+      { key: 'badge', label: 'Badge « Made with OpenSankey » (lien terriflux.com)', def: true },
       { key: 'footer', label: 'Pied de page', def: false },
       { key: 'toolbar', label: 'Barre d\'outils — modes de position (absolu/proportionnel/échelle)', def: false },
       { key: 'fit_toolbar', label: 'Barre d\'outils — ajustement / verrous / plein écran', def: false },

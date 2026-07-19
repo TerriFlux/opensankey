@@ -33,6 +33,8 @@ import { Class_LinkElement } from './Link'
 import { UnitType } from './LinkValues'
 import { Class_NodeBase } from './NodeBase'
 import { isLegendElementId } from './legendIds'
+import { Type_AnalysisDescriptor } from '../Charts/AnalysisDescriptor'
+import { Type_TooltipHiddenBlocks } from './TooltipBlocks'
 
 // Types spécifiques
 // 'line' (OS#1276) : trait libre décoratif porté par un conteneur. La forme est
@@ -2138,6 +2140,60 @@ export const HYPER_LINK_CONFIG = {
   } satisfies AttributeConfig<string | undefined>
 } as const
 
+// OS#1278 — descripteur de graphique d'analyse (couronne / histogramme). Attribut
+// de STYLE (héritable, applicable en lot) porté par nœuds et flux. Valeur objet :
+// contrairement aux attributs scalaires, l'overload se juge par présence dans le
+// storage (isAttributeExplicit), pas par égalité de valeur — ce qui suffit ici (on
+// n'édite un descripteur QUE via l'inspecteur, jamais de duplication silencieuse).
+export const ANALYSIS_CONFIG = {
+  analysis_descriptor: {
+    default: undefined as Type_AnalysisDescriptor | undefined,
+    type: (() => undefined) as (() => Type_AnalysisDescriptor | undefined),
+    category: 'analysis' as const,
+    actions: undefined,
+    labels: {
+      en: 'Analysis chart',
+      fr: 'Graphique d\'analyse',
+      es: 'Gráfico de análisis',
+      de: 'Analysediagramm',
+      it: 'Grafico di analisi'
+    },
+    tooltips: {
+      en: 'Analysis chart descriptor (donut / histogram)',
+      fr: 'Descripteur de graphique d\'analyse (couronne / histogramme)',
+      es: 'Descriptor de gráfico de análisis (anillo / histograma)',
+      de: 'Analysediagramm-Deskriptor (Ring / Histogramm)',
+      it: 'Descrittore del grafico di analisi (anello / istogramma)'
+    }
+  } satisfies AttributeConfig<Type_AnalysisDescriptor | undefined>
+} as const
+
+// OS#1285 — visibilité des blocs d'info-bulle (record des blocs masqués). Attribut
+// de STYLE (héritable, applicable en lot), même patron objet que analysis_descriptor
+// (overload jugé par présence, pas par égalité).
+export const TOOLTIP_BLOCKS_CONFIG = {
+  tooltip_hidden_blocks: {
+    default: undefined as Type_TooltipHiddenBlocks | undefined,
+    type: (() => undefined) as (() => Type_TooltipHiddenBlocks | undefined),
+    category: 'tooltip' as const,
+    actions: undefined,
+    labels: {
+      en: 'Tooltip blocks',
+      fr: 'Blocs d\'info-bulle',
+      es: 'Bloques del tooltip',
+      de: 'Tooltip-Blöcke',
+      it: 'Blocchi del tooltip'
+    },
+    tooltips: {
+      en: 'Which tooltip blocks are hidden for this element',
+      fr: 'Blocs d\'info-bulle masqués pour cet élément',
+      es: 'Bloques del tooltip ocultos para este elemento',
+      de: 'Für dieses Element ausgeblendete Tooltip-Blöcke',
+      it: 'Blocchi del tooltip nascosti per questo elemento'
+    }
+  } satisfies AttributeConfig<Type_TooltipHiddenBlocks | undefined>
+} as const
+
 export type LabelValues<T extends typeof BASE_LABEL_CONFIG> = {
   -readonly [K in keyof T]: ExtractConfigValue<T[K]>
 }
@@ -3369,6 +3425,8 @@ export const ALL_ATTRIBUTES_CONFIG = {
       }
     }),
   ...HYPER_LINK_CONFIG,
+  ...ANALYSIS_CONFIG,
+  ...TOOLTIP_BLOCKS_CONFIG,
 } as const
 
 export type ElementsType = Class_LinkElement[] | Class_NodeBase[] | Class_ElementStyle[]
