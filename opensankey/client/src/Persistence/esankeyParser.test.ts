@@ -513,6 +513,63 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
   })
 })
 
+// OS#1287 — le <sankeyArrowLabel> porte la mise en forme du label de VALEUR :
+// taille (<font size>), couleur (textColor argb), décalage perpendiculaire au
+// tracé (offsetH) et position le long du tracé (segmentPercentage). On ne pose
+// ces réglages QUE quand la flèche affiche sa valeur (showValue) ; ils
+// complètent (sans en décider) la visibilité du label. Attributs vérifiés sur
+// les démos officielles e!Sankey 5.
+describe('parseEsankeyXml — OS#1287 taille/couleur/position du label de valeur', () => {
+  // On enrichit le <sankeyArrowLabel> auto-fermant de la FIXTURE : taille de
+  // police 9 (<font>), couleur bleue (-16776961), décalage perpendiculaire
+  // positif (offsetH 15.5 → sous le flux) et position 91 % le long du tracé
+  // (près de la cible).
+  const withLabel = FIXTURE.replace(
+    '<sankeyArrowLabel visible="true" showValue="true" showUnit="true" labelFormat="{Quantity} {Unit}" />',
+    '<sankeyArrowLabel visible="true" showValue="true" showUnit="true" labelFormat="{Quantity} {Unit}"' +
+    ' offsetH="15.5" segmentPercentage="91" textColor="-16776961">' +
+    '<font name="Calibri" size="9" /></sankeyArrowLabel>'
+  )
+  const d = parseEsankeyXml(withLabel)
+  const link = Object.values(d.links)[0]
+
+  test('taille de police reprise de <font size>', () => {
+    expect(link.local.value_label_font_size).toBe(9)
+  })
+
+  test('couleur du texte reprise de textColor (argb signé → hex RGB)', () => {
+    expect(link.local.value_label_color).toBe('#0000FF') // -16776961 = bleu
+  })
+
+  test('segmentPercentage 91 (près de la cible) → value_label_horiz = right', () => {
+    expect(link.local.value_label_horiz).toBe('right')
+  })
+
+  test('offsetH positif (sous le flux horizontal) → value_label_vert = bottom', () => {
+    expect(link.local.value_label_vert).toBe('bottom')
+  })
+
+  test('segmentPercentage bas → left ; offsetH négatif → top', () => {
+    const withOther = FIXTURE.replace(
+      '<sankeyArrowLabel visible="true" showValue="true" showUnit="true" labelFormat="{Quantity} {Unit}" />',
+      '<sankeyArrowLabel visible="true" showValue="true" showUnit="true" labelFormat="{Quantity} {Unit}"' +
+      ' offsetH="-8" segmentPercentage="5"><font size="7" /></sankeyArrowLabel>'
+    )
+    const other = Object.values(parseEsankeyXml(withOther).links)[0]
+    expect(other.local.value_label_horiz).toBe('left')
+    expect(other.local.value_label_vert).toBe('top')
+    expect(other.local.value_label_font_size).toBe(7)
+  })
+
+  test('label sans mise en forme (FIXTURE brute) : aucune clé T/P/C posée', () => {
+    const base = Object.values(parseEsankeyXml(FIXTURE).links)[0]
+    expect(base.local.value_label_font_size).toBeUndefined()
+    expect(base.local.value_label_color).toBeUndefined()
+    expect(base.local.value_label_horiz).toBeUndefined()
+    expect(base.local.value_label_vert).toBeUndefined()
+  })
+})
+
 describe('parseEsankeyXml — erreurs', () => {
   test('XML non e!Sankey rejeté', () => {
     expect(() => parseEsankeyXml('<foo><bar/></foo>')).toThrow()
