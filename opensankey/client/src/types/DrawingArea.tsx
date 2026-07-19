@@ -2341,6 +2341,16 @@ export class Class_DrawingArea {
     Camera.bakeZoomIntoGeometry(this, opts)
   }
 
+  /**
+   * Rebase la référence de zoom verrouillé (#1240) sur le transform courant : le prochain draw()
+   * réappliquera CE cadrage au lieu de l'ancien. Utilisé par le bake in-place après setCamera(k=1)
+   * pour que la remise à 100 % survive au redraw en mode `size_locked`.
+   */
+  public rebaseSizeLockToCurrentCamera(): void {
+    this._captureLockedReference()
+    this._locked_fit_dirty = false
+  }
+
   /** Centre la caméra sur un point MONDE, avec animation (recherche flux / zone — OS#1273). */
   public flyToPoint(wx: number, wy: number, scale?: number): void {
     Camera.flyToPoint(this, wx, wy, scale)
