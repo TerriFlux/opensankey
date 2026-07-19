@@ -234,24 +234,48 @@ export class LinkTooltip {
   private getMainTabHTML(): string {
     let html = '<table class="tooltip-table">'
 
+    // #285 — flux ventilé : pas de ligne « Valeur » isolée (elle ne ferait que
+    // recopier la valeur du tag sélectionné) — la liste par tag fait foi.
+    const tagged_values = this._link.value?.tagged_values_list ?? []
+    const has_carrying_values = tagged_values.length > 0
+      && this._link.sankey.flux_taggs_list.some(tagg => tagg.carries_values)
+    // Dimension en bannière multi : mêmes lignes par tranche que les fluxTags
+    const multi_dim = this._link.sankey.data_taggs_list.find(tagg =>
+      tagg.banner === 'multi' && tagg.tags_list.length > 1)
+
     const data_label_visible = this._link.value_label_is_visible
     this._link.value_label_is_visible = true
-    // Valeur du lien
-    html += '<tr>'
-    html += '<th>Valeur</th>'
-    const tmp = this._link.value_label_unit_type
-    this._link.value_label_unit_type = 'unit_name'
-    html += `<td>${link_data_label('free_value', this._link, 'value_label')}</td>`
-    this._link.value_label_unit_type = tmp
-    html += '</tr>'
-
-    if (this._link.value?.valueData !== null && this._link.value?.valueResult !== null) {
+    if (!has_carrying_values && !multi_dim) {
+      // Valeur du lien
       html += '<tr>'
-      html += `<th>${this._link.drawing_area.application_data.t('Noeud.drawing_area_tooltip.data_value')}</th>`
-      html += `<td>${link_data_label('data', this._link, 'value_label')}</td>`
+      html += '<th>Valeur</th>'
+      const tmp = this._link.value_label_unit_type
+      this._link.value_label_unit_type = 'unit_name'
+      html += `<td>${link_data_label('free_value', this._link, 'value_label')}</td>`
+      this._link.value_label_unit_type = tmp
       html += '</tr>'
+
+      if (this._link.value?.valueData !== null && this._link.value?.valueResult !== null) {
+        html += '<tr>'
+        html += `<th>${this._link.drawing_area.application_data.t('Noeud.drawing_area_tooltip.data_value')}</th>`
+        html += `<td>${link_data_label('data', this._link, 'value_label')}</td>`
+        html += '</tr>'
+      }
     }
     this._link.value_label_is_visible = data_label_visible
+
+    // Une ligne par tranche sélectionnée de la dimension multi (comme la liste
+    // par tag des fluxTags)
+    if (multi_dim) {
+      multi_dim.selected_tags_list.forEach(tag => {
+        const leaf = this._link.valueForTag(tag as Class_DataTag) as Class_LinkValue | null
+        const v = leaf === null ? null : (leaf.valueData ?? leaf.valueResult)
+        html += '<tr>'
+        html += `<th>${this.escapeHtml(tag.display_name)}</th>`
+        html += `<td class="value">${v ?? '-'}</td>`
+        html += '</tr>'
+      })
+    }
 
     // #116 — contrainte de ratio dont ce flux est le terme principal : on affiche sa
     // traduction (générée par défaut si absente au chargement).
@@ -264,8 +288,9 @@ export class LinkTooltip {
     // Source / URL / Hypothèse de la donnée courante (colonnes "Source"/"URL"/"Hypothèse" de l'onglet Données)
     html += this.getDataSourceUrlRows()
 
-    // Contexte dataTags courant (Année, région…)
-    html += this.getDataTagContextRows()
+    // Contexte dataTags courant (Année, région…) — hors groupe multi, dont
+    // les tranches sont déjà listées ligne à ligne
+    html += this.getDataTagContextRows(multi_dim?.id)
 
     // Tags de flux
     this._link.flux_taggs_list.forEach(tagg => {
@@ -282,7 +307,6 @@ export class LinkTooltip {
 
     // #284 — sous-valeurs de la feuille courante : une ligne par sous-valeur,
     // libellée par sa coordonnée (tags, un par groupe).
-    const tagged_values = this._link.value?.tagged_values_list ?? []
     tagged_values.forEach(sub => {
       const coord = sub.tags_list
         .map(tag => tag.display_name)
@@ -473,9 +497,10 @@ export class LinkTooltip {
   }
 
   /** Lignes <tr> du contexte dataTags courant : un groupe par ligne (tag(s) sélectionné(s)). */
-  private getDataTagContextRows(): string {
+  private getDataTagContextRows(skip_tagg_id?: string): string {
     let html = ''
     this._link.drawing_area.sankey.data_taggs_list.forEach(tagg => {
+      if (tagg.id === skip_tagg_id) return
       const sel = tagg.selected_tags_list.map(t => t.display_name).join(', ')
       html += `<tr><th>${tagg.name}</th><td>${sel || '-'}</td></tr>`
     })
