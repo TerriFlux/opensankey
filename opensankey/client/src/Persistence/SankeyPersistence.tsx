@@ -39,7 +39,7 @@ import { ratio_flux_constraint_traduction } from '../types/Utils'
 import { Class_ContainerElement } from '../Elements/TextZone'
 import { Class_NodeElement } from '../Elements/Node'
 import { ConfigType } from '../Elements/ElementsAttributesConfig'
-import { Class_BaseElement, Class_ElementStyle, Class_ProtoElement, ExtractAttributeValue } from '../Elements/Element'
+import { Class_BaseElement, Class_ElementStyle, Class_ProtoElement, ExtractAttributeValue, TRANSLATABLE_TEXT_ATTRIBUTES } from '../Elements/Element'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_NodeBase, Type_NameLabelSource } from '../Elements/NodeBase'
 import { Class_LegendConfig } from '../Elements/LegendGenerator'
@@ -52,7 +52,7 @@ import { Class_DrawingArea } from '../types/DrawingArea'
 import { backfillTagGroupUseColors, convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
 // Issue #191 — migration de rétro-compat de la césure des libellés, isolée dans
 // son propre module pour rester testable sans le graphe d'imports lourd d'ici.
-import { applyWrapLongWordsRetrocompat, CURRENT_FORMAT_VERSION, effectiveLoadVersion, isVersionBelow, validateSankeyRootJSON } from './persistenceMigrations'
+import { applyWrapLongWordsRetrocompat, CURRENT_FORMAT_VERSION, effectiveLoadVersion, isVersionBelow, parseLangMap, resolveLangMap, serializeLangMap, Type_LangMap, validateSankeyRootJSON } from './persistenceMigrations'
 import {
   CONTAINER_KEY_MAP,
   LINK_LOCAL_KEY_MAP,
@@ -155,7 +155,12 @@ export class ProtoElementPersistence extends BaseElementPersistence {
       json_object['local'] = {} as Type_JSON
       (Object.entries(proto_element.attributes) as Array<[keyof ConfigType, boolean | number | string]>).forEach(([key, value]) => {
         if (proto_element.shouldSaveAttribute(key as keyof ConfigType, value)) {
-          (json_object['local'] as Type_JSON)[key] = value
+          // OS#1299 — texte traduisible stocké en map { langue -> texte } :
+          // string si monolingue (format historique, rétro-compatible), map sinon.
+          const out_value = (TRANSLATABLE_TEXT_ATTRIBUTES.has(key as string) && value !== null && typeof value === 'object')
+            ? (serializeLangMap(value as Type_LangMap) ?? '')
+            : value;
+          (json_object['local'] as Type_JSON)[key] = out_value
         }
       })
     }
@@ -225,7 +230,16 @@ export class ProtoElementPersistence extends BaseElementPersistence {
     if (json_local_object) {
       (Object.keys(proto_element['_config']) as Array<keyof ConfigType>).forEach(key => {
         if (json_local_object[key as string] !== undefined) {
-          const value = json_local_object[key as string] as ExtractAttributeValue<ConfigType[typeof key]>
+          let value = json_local_object[key as string] as ExtractAttributeValue<ConfigType[typeof key]>
+          // OS#1299 — texte traduisible : accepte la string historique (rangée
+          // sous la langue déclarée du fichier) ou la map { langue -> texte }.
+          // Stocké en map ; le getter dynamique résout la langue active.
+          if (TRANSLATABLE_TEXT_ATTRIBUTES.has(key as string)) {
+            value = parseLangMap(
+              value,
+              proto_element.drawing_area.application_data.language
+            ) as unknown as ExtractAttributeValue<ConfigType[typeof key]>
+          }
           // Symétrie STRICTE avec l'écriture (shouldSaveAttribute) : l'écriture
           // sauve aussi une valeur égale au style résolu quand plusieurs styles
           // portent l'attribut ; la lecture doit la garder au même critère,
@@ -243,7 +257,10 @@ export class ProtoElementPersistence extends BaseElementPersistence {
 export class NodeBasePersistence extends ProtoElementPersistence {
   public static toJSON(node_base: Class_NodeBase, json_object: Type_JSON, kwargs?: Type_JSON) {
     super.toJSON(node_base, json_object, kwargs)
-    json_object['name'] = node_base.name
+    // OS#1299 — nom multilingue : string si une seule langue (format historique,
+    // rétro-compatible), map { fr, en, ... } si le diagramme est traduit. Un nom
+    // vide reste sérialisé '' (la clé est toujours présente, comme avant).
+    json_object['name'] = serializeLangMap(node_base.name_lang_map) ?? ''
     // Le contenu du label (name_label_source/text/tag_group_id/dimension_id) est
     // désormais un attribut de style (_storage) : il est sérialisé génériquement
     // sous json_object['local'] par ProtoElementPersistence.toJSON. Plus rien à
@@ -289,7 +306,16 @@ export class NodeBasePersistence extends ProtoElementPersistence {
   public static fromJSON(version: number, node_base: Class_NodeBase, json_node_object: Type_JSON, kwargs?: Type_JSON) {
     super.fromJSON(version, node_base, json_node_object, kwargs)
 
-    node_base['_name'] = getStringFromJSON(json_node_object, 'name', node_base.name)
+    // OS#1299 — nom multilingue : accepte la string historique (rangée sous la
+    // langue déclarée du fichier, lue AVANT les nœuds — cf. l'ordre dans
+    // DrawingAreaPersistence.fromJSON) ou la map { langue -> nom }. Clé absente
+    // (nœud implicite créé par un flux) -> on garde le nom de création (= id).
+    if (json_node_object['name'] !== undefined) {
+      node_base['_name_map'] = parseLangMap(
+        json_node_object['name'],
+        node_base.drawing_area.application_data.language
+      )
+    }
     // Rétro-compat : le contenu du label est maintenant un attribut de style,
     // chargé génériquement depuis `local` par super.fromJSON ci-dessus. Les
     // anciens fichiers stockaient ces valeurs à la RACINE du nœud (et le booléen
@@ -433,82 +459,94 @@ export class ContainerPersistence extends NodeBasePersistence {
       }
     })
     if (container.attributes['name_label_fo_content']) {
-      const html = container.attributes['name_label_fo_content'] as string
+      // OS#1299 — le contenu peut être une map multilingue { langue -> html } :
+      // le nettoyage Quill ci-dessous s'applique à CHAQUE langue (cf. fin de bloc).
+      const raw_fo = container.attributes['name_label_fo_content']
 
+      const cleanQuillHtml = (html: string): string => {
       // Parse HTML avec DOMParser
-      const parser = new DOMParser()
-      const doc = parser.parseFromString(html, 'text/html')
+        const parser = new DOMParser()
+        const doc = parser.parseFromString(html, 'text/html')
 
-      // Fonction pour fusionner un nouveau style dans l'attribut style existant
-      const mergeStyle = (element: Element, newStyleRule: string) => {
-        const existingStyle = element.getAttribute('style') || ''
-        const styles = new Map<string, string>()
+        // Fonction pour fusionner un nouveau style dans l'attribut style existant
+        const mergeStyle = (element: Element, newStyleRule: string) => {
+          const existingStyle = element.getAttribute('style') || ''
+          const styles = new Map<string, string>()
 
-        // Parse les styles existants
-        existingStyle.split(';').forEach(rule => {
-          const [prop, value] = rule.split(':').map(s => s.trim())
+          // Parse les styles existants
+          existingStyle.split(';').forEach(rule => {
+            const [prop, value] = rule.split(':').map(s => s.trim())
+            if (prop && value) {
+              styles.set(prop, value)
+            }
+          })
+
+          // Ajoute le nouveau style
+          const [prop, value] = newStyleRule.split(':').map(s => s.trim())
           if (prop && value) {
             styles.set(prop, value)
           }
-        })
 
-        // Ajoute le nouveau style
-        const [prop, value] = newStyleRule.split(':').map(s => s.trim())
-        if (prop && value) {
-          styles.set(prop, value)
-        }
+          // Reconstruit l'attribut style
+          const merged = Array.from(styles.entries())
+            .map(([p, v]) => `${p}: ${v}`)
+            .join('; ')
 
-        // Reconstruit l'attribut style
-        const merged = Array.from(styles.entries())
-          .map(([p, v]) => `${p}: ${v}`)
-          .join('; ')
-
-        if (merged) {
-          element.setAttribute('style', merged)
-        }
-      }
-
-      // Map des conversions Quill class -> CSS style
-      const classToStyle: Record<string, string> = {
-        'ql-align-center': 'text-align: center',
-        'ql-align-right': 'text-align: right',
-        'ql-align-left': 'text-align: left',
-        'ql-align-justify': 'text-align: justify',
-        'ql-size-small': 'font-size: 0.75em',
-        'ql-size-large': 'font-size: 1.5em',
-        'ql-size-huge': 'font-size: 2.5em',
-        'ql-font-serif': 'font-family: serif',
-        'ql-font-monospace': 'font-family: monospace'
-      }
-
-      // Traite tous les éléments qui ont des classes
-      doc.body.querySelectorAll('[class]').forEach(element => {
-        const classes = Array.from(element.classList)
-
-        classes.forEach(className => {
-          // Classes standard
-          if (className in classToStyle) {
-            mergeStyle(element, classToStyle[className])
-            element.classList.remove(className)
+          if (merged) {
+            element.setAttribute('style', merged)
           }
-          // Classes custom font-size (ql-size-25px)
-          else if (/^ql-size-(\d+)px$/.test(className)) {
-            const match = className.match(/^ql-size-(\d+)px$/)
-            if (match) {
-              mergeStyle(element, `font-size: ${match[1]}px`)
+        }
+
+        // Map des conversions Quill class -> CSS style
+        const classToStyle: Record<string, string> = {
+          'ql-align-center': 'text-align: center',
+          'ql-align-right': 'text-align: right',
+          'ql-align-left': 'text-align: left',
+          'ql-align-justify': 'text-align: justify',
+          'ql-size-small': 'font-size: 0.75em',
+          'ql-size-large': 'font-size: 1.5em',
+          'ql-size-huge': 'font-size: 2.5em',
+          'ql-font-serif': 'font-family: serif',
+          'ql-font-monospace': 'font-family: monospace'
+        }
+
+        // Traite tous les éléments qui ont des classes
+        doc.body.querySelectorAll('[class]').forEach(element => {
+          const classes = Array.from(element.classList)
+
+          classes.forEach(className => {
+          // Classes standard
+            if (className in classToStyle) {
+              mergeStyle(element, classToStyle[className])
               element.classList.remove(className)
             }
+            // Classes custom font-size (ql-size-25px)
+            else if (/^ql-size-(\d+)px$/.test(className)) {
+              const match = className.match(/^ql-size-(\d+)px$/)
+              if (match) {
+                mergeStyle(element, `font-size: ${match[1]}px`)
+                element.classList.remove(className)
+              }
+            }
+          })
+
+          // Supprime l'attribut class s'il est vide
+          if (element.classList.length === 0) {
+            element.removeAttribute('class')
           }
         })
 
-        // Supprime l'attribut class s'il est vide
-        if (element.classList.length === 0) {
-          element.removeAttribute('class')
-        }
-      })
+        // Récupère le HTML nettoyé
+        return doc.body.innerHTML
+      }
 
-      // Récupère le HTML nettoyé
-      container.attributes['name_label_fo_content'] = doc.body.innerHTML
+      if (raw_fo !== null && typeof raw_fo === 'object') {
+        const cleaned: Type_LangMap = {}
+        Object.entries(raw_fo as Type_LangMap).forEach(([l, h]) => { cleaned[l] = cleanQuillHtml(h) })
+        container.attributes['name_label_fo_content'] = cleaned as unknown as ExtractAttributeValue<ConfigType['name_label_fo_content']>
+      } else {
+        container.attributes['name_label_fo_content'] = cleanQuillHtml(raw_fo as string)
+      }
     }
     // Load tied_to_nodes flag
     container['_tied_to_nodes'] = getBooleanFromJSON(
@@ -1167,7 +1205,12 @@ export class SankeyPersistence {
     // référencer (attachedNodes) un conteneur défini plus loin dans le JSON
     // (cas du cadre de la légende, OS#1254).
     entries.forEach(([_, container_json]) => {
-      const name = (container_json as Type_JSON)['name'] as string
+      // OS#1299 — 'name' peut être une map multilingue : on résout une string
+      // pour le constructeur ; la map complète est restaurée en passe 2 (fromJSON).
+      const raw_name = (container_json as Type_JSON)['name']
+      const name = typeof raw_name === 'string'
+        ? raw_name
+        : resolveLangMap(parseLangMap(raw_name, sankey.drawing_area.application_data.language), undefined)
       if (!sankey.containers_dict[_]) sankey.addNewContainer(_, name)
     })
     // Passe 2 : charger.
