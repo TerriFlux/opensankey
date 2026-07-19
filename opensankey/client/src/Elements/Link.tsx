@@ -833,7 +833,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * somme des valeurs visibles — les valeurs d'un flux ne sont PAS additives,
    * l'épaisseur du flux reste pilotée par la valeur principale.
    */
-  public get tagged_value_bands(): { id: string, px: number, share: number, color: string | null }[] {
+  public get tagged_value_bands(): { id: string, px: number, share: number, color: string | null, value: number }[] {
     if (this._is_expansion_link) return []
     // 1) Dimension en bannière `multi` : une bande par tag SÉLECTIONNÉ, à la
     //    valeur de sa tranche (remplace l'ancien mécanisme de liens enfants —
@@ -841,17 +841,17 @@ export class Class_LinkElement extends Class_LinkAttribute {
     const multi_dim = this.sankey.data_taggs_list.find(tagg =>
       tagg.banner === 'multi' && tagg.tags_list.length > 1)
     if (multi_dim) {
-      const bands: { id: string, px: number, color: string | null }[] = []
+      const bands: { id: string, px: number, color: string | null, value: number }[] = []
       multi_dim.selected_tags_list.forEach(tag => {
         const leaf = this.valueForTag(tag as Class_DataTag) as Class_LinkValue | null
         const v = leaf === null ? null : (leaf.valueData ?? leaf.valueResult)
         if (v === null || v <= 0) return
         if (multi_dim.is_unit && (tag as Class_DataTag).scale) {
           this.setDomainLocalScale((tag as Class_DataTag).scale)
-          bands.push({ id: tag.id, px: Math.max(0, this._scaleValueToPx(v)), color: tag.color })
+          bands.push({ id: tag.id, px: Math.max(0, this._scaleValueToPx(v)), color: tag.color, value: v })
         }
         else {
-          bands.push({ id: tag.id, px: Math.max(0, this.scaleValueToPx(v)), color: tag.color })
+          bands.push({ id: tag.id, px: Math.max(0, this.scaleValueToPx(v)), color: tag.color, value: v })
         }
       })
       const dim_total = bands.reduce((acc, band) => acc + band.px, 0)
@@ -884,7 +884,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
         .find(tag => (tag.group as Class_TagGroup).use_colors) ?? tv.tags_list[0]
       return colored_tag?.color ?? null
     }
-    const bands = tvs.map(tv => ({ id: tv.id, px: Math.max(0, px_for(tv)), color: color_for(tv) }))
+    const bands = tvs.map(tv => ({ id: tv.id, px: Math.max(0, px_for(tv)), color: color_for(tv), value: tv.value as number }))
     const total = bands.reduce((acc, band) => acc + band.px, 0)
     if (total <= 0) return []
     return bands.map(band => ({ ...band, share: band.px / total }))

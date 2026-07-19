@@ -2879,6 +2879,10 @@ export class LinkDrawValueLabel extends LinkDrawLabelBase {
     const da = this._element.drawing_area
 
     if (da.type_data === 'structure') return false
+    // #285 — flux affiché en bandes : la valeur unique n'a aucun sens (elle
+    // recopierait la première) ; les bandes portent chacune leur label
+    // (cf. LinkDrawShape.drawTaggedValueBands).
+    if (this.link.tagged_value_bands.length > 0) return false
     // Seuil d'affichage des valeurs : mode pixel (#seuil px) → épaisseur rendue,
     // sinon valeur de donnée (comportement historique).
     if (da.filter_unit === 'pixel') {

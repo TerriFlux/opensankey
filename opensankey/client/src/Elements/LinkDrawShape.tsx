@@ -120,6 +120,7 @@ export class LinkDrawShape {
     this._link.d3_selection?.selectAll('.link_path_border').remove()
     this._link.d3_selection?.selectAll('.link_shape').remove()
     this._link.d3_selection?.selectAll('.link_band').remove()
+    this._link.d3_selection?.selectAll('.link_band_label').remove()
 
     // Failsafe
     if (this._link.source && this._link.target) {
@@ -371,8 +372,10 @@ export class LinkDrawShape {
         + ' Z'
     }
 
+    const da = link.sankey.drawing_area
+    const band_label_visible = da.type_data !== 'structure'
     let cum = 0
-    bands.forEach(({ id, color, share }) => {
+    bands.forEach(({ id, color, share, value }) => {
       const lo = cum
       cum += share
       const off_lo_src = -full_src / 2 + lo * full_src
@@ -396,6 +399,23 @@ export class LinkDrawShape {
         .attr('fill-opacity', shape_opacity)
         .attr('stroke', 'none')
         .attr('pointer-events', 'none')
+      // #285 — un label de valeur PAR bande (la valeur unique du flux n'a pas
+      // de sens sur un flux ventilé) : au milieu de la bande, suit l'œil
+      // « valeur » du flux et le seuil d'affichage.
+      if (link.value_label_is_visible && band_label_visible) {
+        const n_mid_label = perp(x2, y2, x4, y4)
+        const off_mid = ((off_lo_src + off_hi_src) / 2 + (off_lo_tgt + off_hi_tgt) / 2) / 2
+        this._link.d3_selection?.append('text')
+          .classed('link_band_label', true)
+          .attr('x', x3 + n_mid_label[0] * off_mid)
+          .attr('y', y3 + n_mid_label[1] * off_mid)
+          .attr('text-anchor', 'middle')
+          .attr('dominant-baseline', 'middle')
+          .attr('font-size', Math.min(11, Math.max(8, share * (full_src + full_tgt) / 2 * 0.6)))
+          .attr('fill', '#000')
+          .attr('pointer-events', 'none')
+          .text(String(value))
+      }
     })
     return true
   }
