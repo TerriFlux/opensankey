@@ -463,7 +463,6 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     expect(link.tooltip_text).toBe('Mesure 2025\nsource: compteur')
   })
 
-  test('label de valeur affiché (showValue) + unité préparée', () => {
   // os#1289 — têtes de flèche : sankeyLink/@toArrow, @fromArrow (+ longueurs)
   // → shape_is_arrow / shape_arrow_at_source / shape_arrow_size.
   test('os#1289 — sankeyLink : pointe cible désactivée, pointe source posée, taille reprise', () => {
