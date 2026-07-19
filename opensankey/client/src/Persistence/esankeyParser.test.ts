@@ -67,13 +67,14 @@ const FIXTURE = `<?xml version="1.0" encoding="utf-8"?>
   </netModel>
   <net backgroundColor="-1">
     <processes>
-      <process id="50" locationX="100" locationY="300">
+      <process id="50" locationX="100" locationY="300" backgroundLocationX="100" backgroundLocationY="300" backgroundSizeW="48" backgroundSizeH="112">
         <brushColor argb="-1073774768" />
         <label text="Source A" />
       </process>
       <process id="51" locationX="400" locationY="320">
         <brushColor argb="-16777216" />
         <label text="Cible B" />
+        <selectionNode boundaryX="400" boundaryY="320" boundaryW="72" boundaryH="64" />
       </process>
     </processes>
     <arrows>
@@ -123,6 +124,20 @@ describe('parseEsankeyXml — fixture minimale', () => {
     const b = Object.values(d.nodes).find(n => n.name === 'Cible B')
     expect(a?.local.color).toBe('#FF7F50') // Coral, alpha ignoré
     expect(b?.local.color).toBe('#000000') // -16777216 = noir opaque
+  })
+
+  // OS#1298 — la boîte réelle du process (backgroundSizeW/H, ou boundaryW/H du
+  // <selectionNode> en fallback) dimensionne le nœud via node_width/node_height
+  // (mappés vers shape_min_width/shape_min_height), sinon le nœud serait un point.
+  test('OS#1298 — taille du nœud depuis la boîte (backgroundSize et fallback selectionNode)', () => {
+    const a = Object.values(d.nodes).find(n => n.name === 'Source A')
+    const b = Object.values(d.nodes).find(n => n.name === 'Cible B')
+    // Source A : backgroundSizeW/H sur le <process>
+    expect(a?.local.node_width).toBe(48)
+    expect(a?.local.node_height).toBe(112)
+    // Cible B : pas de backgroundSize → boundaryW/H du <selectionNode>
+    expect(b?.local.node_width).toBe(72)
+    expect(b?.local.node_height).toBe(64)
   })
 
   test('flèche multi-matériaux → un flux par flow, valeurs en unité de base', () => {
@@ -272,6 +287,10 @@ const FIXTURE_DECOR = `<?xml version="1.0" encoding="utf-8"?>
       <arrow id="60">
         <sankeyArrowLabel visible="true" showValue="true" showUnit="true" text="60" labelFormat="{EntryName}: {PercentProcessSource} %" />
         <comment text="Mesure 2025&#xD;&#xA;source: compteur" visible="false" />
+        <!-- os#1289 — pointe SOURCE seulement (toArrow=false, fromArrow=true) : le
+             flux 40 (Source->Puits) doit perdre sa pointe cible par défaut et gagner
+             une pointe source, taille reprise sur fromArrowLength (18). -->
+        <sankeyLink toArrow="false" fromArrow="true" toArrowWidth="6" toArrowLength="10" fromArrowWidth="8" fromArrowLength="18" />
       </arrow>
       <arrow id="61">
         <sankeyArrowLabel visible="true" showValue="true" showUnit="true" text="20" labelFormat="{PercentProcessDestination}" />
@@ -294,7 +313,10 @@ const FIXTURE_DECOR = `<?xml version="1.0" encoding="utf-8"?>
         </picture>
       </shape>
     </shapes>
-    <legend locationX="100" locationY="200" />
+    <legend locationX="100" locationY="200">
+      <textFont name="Tahoma" size="12" style="0" unit="3" charset="0" verticalFont="false" />
+      <captionFont name="Tahoma" size="9" style="1" unit="3" charset="0" verticalFont="false" />
+    </legend>
   </net>
   <logicalGraphicalObjectMapping>
     <nodes>
@@ -324,12 +346,56 @@ describe('parseEsankeyXml — couleurs par référence', () => {
   })
 })
 
+describe('parseEsankeyXml — palettes (OS#1294, jeux de couleurs)', () => {
+  // Les jeux de couleurs e!Sankey (<colorSets>/<colorSet>/<colors>/<brushColor
+  // id argb>) sont des <brushColor> à id comme les autres : la palette partagée
+  // les indexe, donc un <brushColorRef> d'entry pointant une couleur de PALETTE
+  // (et non une couleur définie « à plat ») est résolu sans traitement dédié.
+  test('brushColorRef d\'une entry pointant une couleur de colorSet est résolu', () => {
+    const withColorSet = FIXTURE
+      .replace('<colorSets />',
+        '<colorSets><colorSet id="800" name="Mass"><colors>' +
+        '<brushColor id="901" name="Teal" argb="-16744320" hasBaseColor="false" />' +
+        '</colors></colorSet></colorSets>')
+      .replace('<brushColor argb="-256" />', '<brushColorRef refId="901" />')
+    const d = parseEsankeyXml(withColorSet)
+    expect(d.fluxTags[ESANKEY_ENTRIES_TAGG_ID].tags['id_Electricity'].color).toBe('#008080')
+    const link = Object.values(d.links).find(l => l.value.tags[ESANKEY_ENTRIES_TAGG_ID]?.[0] === 'id_Electricity')
+    expect(link?.local.color).toBe('#008080')
+  })
+})
+
+describe('parseEsankeyXml — dégradé le long du flux (OS#1294)', () => {
+  // gradientFromSource + gradientToDestination sur la flèche graphique → règle de
+  // couleur 'gradient' d'OpenSankey (source→cible), posée via la clé legacy
+  // `color_rule` du bloc local (→ shape_color_rule au chargement).
+  test('gradientFromSource + gradientToDestination → color_rule gradient', () => {
+    const withGradient = FIXTURE.replace(
+      '<arrow id="60">',
+      '<arrow id="60" gradientFromSource="true" gradientToDestination="true">')
+    const d = parseEsankeyXml(withGradient)
+    Object.values(d.links).forEach(l => {
+      expect(l.local.color_rule).toBe('gradient')
+    })
+  })
+  test('un seul bout de dégradé (ou aucun) → pas de color_rule posé', () => {
+    const oneSide = FIXTURE.replace(
+      '<arrow id="60">',
+      '<arrow id="60" gradientFromSource="true">')
+    const d1 = parseEsankeyXml(oneSide)
+    expect(Object.values(d1.links)[0].local.color_rule).toBeUndefined()
+    // Défaut (aucun attribut de dégradé) : rien posé.
+    const d0 = parseEsankeyXml(FIXTURE)
+    expect(Object.values(d0.links)[0].local.color_rule).toBeUndefined()
+  })
+})
+
 describe('parseEsankeyXml — orientation des flux (arrowDirection)', () => {
   // arrowDirection e!Sankey : 2 = raccord horizontal (côté), 1/4 = vertical
   // (haut/bas). L'orientation d'un flux = [axe source][axe cible].
   test('nœud source vertical (1) → cible horizontale (2) = vh', () => {
     const withDir = FIXTURE
-      .replace('<process id="50" locationX="100" locationY="300">', '<process id="50" locationX="100" locationY="300" arrowDirection="1">')
+      .replace('<process id="50" locationX="100" locationY="300"', '<process id="50" locationX="100" locationY="300" arrowDirection="1"')
       .replace('<process id="51" locationX="400" locationY="320">', '<process id="51" locationX="400" locationY="320" arrowDirection="2">')
     const dv = parseEsankeyXml(withDir)
     expect(Object.values(dv.links)[0].local.orientation).toBe('vh')
@@ -337,6 +403,47 @@ describe('parseEsankeyXml — orientation des flux (arrowDirection)', () => {
   test('deux nœuds horizontaux (défaut 2) → hh non posé', () => {
     const dv = parseEsankeyXml(FIXTURE)
     expect(Object.values(dv.links)[0].local.orientation).toBeUndefined()
+  })
+})
+
+describe('parseEsankeyXml — coude droit (OS#1288)', () => {
+  // Le `<sankeyLink>` du `<arrow>` porte la géométrie du tracé e!Sankey :
+  // segment droit (px) à chaque bout puis virage court. On la mappe vers les
+  // attributs de tangente/ancre OpenSankey pour raidir le coude des flux vh/hv.
+  // Nœuds A(100,300) et B(400,320) → portée ≈ hypot(300,20) ≈ 300.67.
+  const withElbow = (extra: string): string => FIXTURE
+    .replace('<process id="50" locationX="100" locationY="300"', '<process id="50" locationX="100" locationY="300" arrowDirection="1"')
+    .replace('<process id="51" locationX="400" locationY="320">', '<process id="51" locationX="400" locationY="320" arrowDirection="2">')
+    .replace('<arrow id="60">', `<arrow id="60">${extra}`)
+
+  test('flux vh : segment droit (horiz_shift) et virage court (tangeant) posés', () => {
+    const d = parseEsankeyXml(withElbow(
+      '<sankeyLink sankeyStartSegmentLength="18" sankeyEndSegmentLength="18" curviness="10" orthogonal="false" adjustingStyle="Manual" />'))
+    const link = Object.values(d.links)[0]
+    expect(link.local.orientation).toBe('vh')
+    // Segments droits 18 px / portée ≈ 300.67 ≈ 0.0599 (ratio de longueur).
+    expect(link.local.left_horiz_shift as number).toBeCloseTo(0.0599, 3)
+    expect(link.local.right_horiz_shift as number).toBeCloseTo(0.0599, 3)
+    // Virage court : tangente ≈ 10/300.67 ≈ 0.0333, bien sous le défaut 0.3.
+    expect(link.local.starting_tangeant as number).toBeCloseTo(0.0333, 3)
+    expect(link.local.ending_tangeant as number).toBeCloseTo(0.0333, 3)
+    expect(link.local.starting_tangeant as number).toBeLessThan(0.3)
+  })
+
+  test('orthogonal=true → tangente encore plus serrée (≤ 0.06)', () => {
+    const d = parseEsankeyXml(withElbow(
+      '<sankeyLink sankeyStartSegmentLength="18" sankeyEndSegmentLength="18" curviness="40" orthogonal="true" />'))
+    const link = Object.values(d.links)[0]
+    // curviness 40/300.67 ≈ 0.133 mais orthogonal plafonne à 0.06.
+    expect(link.local.starting_tangeant as number).toBeLessThanOrEqual(0.06)
+    expect(link.local.ending_tangeant as number).toBeLessThanOrEqual(0.06)
+  })
+
+  test('sans <sankeyLink> : aucun attribut de coude posé (rétrocompat)', () => {
+    const d = parseEsankeyXml(FIXTURE)
+    const link = Object.values(d.links)[0]
+    expect(link.local.left_horiz_shift).toBeUndefined()
+    expect(link.local.starting_tangeant).toBeUndefined()
   })
 })
 
@@ -356,9 +463,25 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     expect(link.tooltip_text).toBe('Mesure 2025\nsource: compteur')
   })
 
-  test('label de valeur affiché (showValue) + unité préparée', () => {
+  // os#1289 — têtes de flèche : sankeyLink/@toArrow, @fromArrow (+ longueurs)
+  // → shape_is_arrow / shape_arrow_at_source / shape_arrow_size.
+  test('os#1289 — sankeyLink : pointe cible désactivée, pointe source posée, taille reprise', () => {
+    const withArrow = Object.values(d.links).find(l => l.value.data_value === 60) // graphArrow 40, arrow 60
+    expect(withArrow?.local.shape_is_arrow).toBe(false)
+    expect(withArrow?.local.shape_arrow_at_source).toBe(true)
+    expect(withArrow?.local.shape_arrow_size).toBe(18) // fromArrowLength (côté qui porte la pointe)
+  })
+
+  test('os#1289 — sankeyLink absent : défauts du style non touchés (pas de shape_is_arrow local)', () => {
+    const withoutArrow = Object.values(d.links).find(l => l.value.data_value === 20) // graphArrow 42, arrow 61
+    expect(withoutArrow?.local.shape_is_arrow).toBeUndefined()
+    expect(withoutArrow?.local.shape_arrow_at_source).toBeUndefined()
+    expect(withoutArrow?.local.shape_arrow_size).toBeUndefined()
+  })
+
+  test('aucun label de valeur posé sur le flux ; unité préparée si activation manuelle', () => {
     const link = Object.values(d.links)[0]
-    expect(link.local.value_label_is_visible).toBe(true)
+    expect(link.local.value_label_is_visible).toBe(false)
     expect(link.local.label_unit_visible).toBe(true)
     // OS#1286 — la référence d'unité (id du registre) est posée, mais le
     // format pourcentage ({PercentProcessSource}) garde la PRIORITÉ sur le
@@ -438,12 +561,85 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     expect(line?.shape_line_y2).toBe(0)
   })
 
+  // OS#1290 — traits pointillés : penColor@Pattern (shapes rectangle/line) et
+  // sankeyLink/pen@dashStyle ou dashPattern (flux).
+  describe('OS#1290 — traits pointillés', () => {
+    test('rectangle : penColor Pattern!=0 → shape_border_dashed ; Pattern=0/absent → non posé', () => {
+      const withDashedRect = FIXTURE_DECOR.replace(
+        '<rectangle locationX="150" locationY="600" sizeW="400" sizeH="100" drawBorder="false">\n          <brushColor argb="-2039584" />\n        </rectangle>',
+        '<rectangle locationX="150" locationY="600" sizeW="400" sizeH="100" drawBorder="true">' +
+        '<brushColor argb="-2039584" />' +
+        '<penColor name="Black (LineWidth: 3, Dash)" argb="-16777216" hasBaseColor="false" hasPattern="true" Pattern="1" width="3" />' +
+        '</rectangle>'
+      )
+      const dd = parseEsankeyXml(withDashedRect, { 'Images/tmp1.tmp': PNG_URI })
+      const rect = Object.values(dd.labels).find(c => c.color_visible === true)
+      expect(rect?.shape_border_dashed).toBe(true)
+      // Fixture de base (rectangle sans <penColor>, ou Pattern="0") : pas posé.
+      const base = Object.values(d.labels).find(c => c.color_visible === true)
+      expect(base?.shape_border_dashed).toBeUndefined()
+    })
+
+    test('ligne : penColor Pattern!=0 → shape_border_dashed sur la ligne', () => {
+      const withDashedLine = FIXTURE_DECOR.replace('</shapes>',
+        '<shape><line locationX="10" locationY="20" sizeW="100" sizeH="50">' +
+        '<penColor argb="-65536" hasPattern="true" Pattern="1" width="3" />' +
+        '<points length="2"><value X="10" Y="70" /><value X="110" Y="20" /></points>' +
+        '</line></shape></shapes>')
+      const dl = parseEsankeyXml(withDashedLine, { 'Images/tmp1.tmp': PNG_URI })
+      const line = Object.values(dl.labels).find(c => c.shape_type === 'line')
+      expect(line?.shape_border_dashed).toBe(true)
+      // La ligne du test précédent (Pattern absent) ne pose rien.
+      expect(Object.values(d.labels).find(c => c.shape_type === 'line')).toBeUndefined()
+    })
+
+    test('flux : sankeyLink/pen dashStyle!=0 → shape_border_dashed sur le flux', () => {
+      // Arrow 60 porte déjà un <sankeyLink> (têtes de flèche, os#1289) : on lui
+      // ajoute un <pen dashStyle="1"> pour valider la détection du pointillé.
+      const withDashedArrow = FIXTURE_DECOR.replace(
+        '<sankeyLink toArrow="false" fromArrow="true" toArrowWidth="6" toArrowLength="10" fromArrowWidth="8" fromArrowLength="18" />',
+        '<sankeyLink toArrow="false" fromArrow="true" toArrowWidth="6" toArrowLength="10" fromArrowWidth="8" fromArrowLength="18"><pen dashStyle="1" width="1"><dashPattern length="0" /></pen></sankeyLink>'
+      )
+      const dArrow = parseEsankeyXml(withDashedArrow, { 'Images/tmp1.tmp': PNG_URI })
+      const gasLink = Object.values(dArrow.links).find(l => l.value.data_value === 60)
+      expect(gasLink?.local.shape_border_dashed).toBe(true)
+      // Fixture de base (pas de <sankeyLink>) : rien posé.
+      const baseLink = Object.values(d.links).find(l => l.value.data_value === 60)
+      expect(baseLink?.local.shape_border_dashed).toBeUndefined()
+    })
+
+    test('flux : dashStyle=0 mais dashPattern non vide (Custom) → aussi détecté pointillé', () => {
+      const withCustomDash = FIXTURE_DECOR.replace(
+        '<arrow id="61">\n        <sankeyArrowLabel visible="true" showValue="true" showUnit="true" text="20" labelFormat="{PercentProcessDestination}" />\n      </arrow>',
+        '<arrow id="61">' +
+        '<sankeyArrowLabel visible="true" showValue="true" showUnit="true" text="20" labelFormat="{PercentProcessDestination}" />' +
+        '<sankeyLink><pen dashStyle="0" width="1"><dashPattern length="2"><value V="4" /><value V="2" /></dashPattern></pen></sankeyLink>' +
+        '</arrow>'
+      )
+      const dCustom = parseEsankeyXml(withCustomDash, { 'Images/tmp1.tmp': PNG_URI })
+      const metalLink = Object.values(dCustom.links).find(l => l.value.data_value === 20)
+      expect(metalLink?.local.shape_border_dashed).toBe(true)
+    })
+  })
+
   test('légende visible, position normalisée avec le reste', () => {
     // min X/Y de l'ensemble = (100, 100) (le texte) → décalage -50
-    expect(d.legend).toEqual({ mask_legend: false, legend_dx: 50, legend_dy: 150 })
+    // legend_police = 12 : lu sur <legend><textFont size="12">. Le
+    // <captionFont> voisin (taille du titre "Legend" du cadre) n'a pas
+    // d'équivalent OpenSankey (cf. commentaire EsParsedDiagram.legend) : non repris.
+    expect(d.legend).toEqual({ mask_legend: false, legend_dx: 50, legend_dy: 150, legend_police: 12 })
     const texte = Object.values(d.labels).find(c => c.title === 'Titre du diagramme')
     expect(texte?.x).toBe(50)
     expect(texte?.y).toBe(50)
+  })
+
+  test('OS#1296 — légende sans <textFont> : legend_police absent (pas de valeur inventée)', () => {
+    const withoutFont = FIXTURE_DECOR.replace(
+      /<legend locationX="100" locationY="200">[\s\S]*?<\/legend>/,
+      '<legend locationX="100" locationY="200" />'
+    )
+    const dNoFont = parseEsankeyXml(withoutFont, { 'Images/tmp1.tmp': PNG_URI })
+    expect(dNoFont.legend?.legend_police).toBeUndefined()
   })
 
   test('groupe de tags avec use_colors (colormap = couleurs des entries)', () => {
@@ -480,6 +676,173 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     expect(gas?.local.shape_local_link_scale).toBeUndefined()
     // Mass : 200 maximumFlow / 50 width * 100 = 400 → multiplicateur 400/100 = 4
     expect(metal?.local.shape_local_link_scale).toBe(4)
+  })
+})
+
+// OS#1287 — le <sankeyArrowLabel> porte la mise en forme du label de VALEUR :
+// taille (<font size>), couleur (textColor argb), décalage perpendiculaire au
+// tracé (offsetH) et position le long du tracé (segmentPercentage). On ne pose
+// ces réglages QUE quand la flèche affiche sa valeur (showValue) ; ils
+// complètent (sans en décider) la visibilité du label. Attributs vérifiés sur
+// les démos officielles e!Sankey 5.
+describe('parseEsankeyXml — OS#1287 taille/couleur/position du label de valeur', () => {
+  // On enrichit le <sankeyArrowLabel> auto-fermant de la FIXTURE : taille de
+  // police 9 (<font>), couleur bleue (-16776961), décalage perpendiculaire
+  // positif (offsetH 15.5 → sous le flux) et position 91 % le long du tracé
+  // (près de la cible).
+  const withLabel = FIXTURE.replace(
+    '<sankeyArrowLabel visible="true" showValue="true" showUnit="true" labelFormat="{Quantity} {Unit}" />',
+    '<sankeyArrowLabel visible="true" showValue="true" showUnit="true" labelFormat="{Quantity} {Unit}"' +
+    ' offsetH="15.5" segmentPercentage="91" textColor="-16776961">' +
+    '<font name="Calibri" size="9" /></sankeyArrowLabel>'
+  )
+  const d = parseEsankeyXml(withLabel)
+  const link = Object.values(d.links)[0]
+
+  test('taille de police reprise de <font size>', () => {
+    expect(link.local.value_label_font_size).toBe(9)
+  })
+
+  test('couleur du texte reprise de textColor (argb signé → hex RGB)', () => {
+    expect(link.local.value_label_color).toBe('#0000FF') // -16776961 = bleu
+  })
+
+  test('segmentPercentage 91 (près de la cible) → value_label_horiz = right', () => {
+    expect(link.local.value_label_horiz).toBe('right')
+  })
+
+  test('offsetH positif (sous le flux horizontal) → value_label_vert = bottom', () => {
+    expect(link.local.value_label_vert).toBe('bottom')
+  })
+
+  test('segmentPercentage bas → left ; offsetH négatif → top', () => {
+    const withOther = FIXTURE.replace(
+      '<sankeyArrowLabel visible="true" showValue="true" showUnit="true" labelFormat="{Quantity} {Unit}" />',
+      '<sankeyArrowLabel visible="true" showValue="true" showUnit="true" labelFormat="{Quantity} {Unit}"' +
+      ' offsetH="-8" segmentPercentage="5"><font size="7" /></sankeyArrowLabel>'
+    )
+    const other = Object.values(parseEsankeyXml(withOther).links)[0]
+    expect(other.local.value_label_horiz).toBe('left')
+    expect(other.local.value_label_vert).toBe('top')
+    expect(other.local.value_label_font_size).toBe(7)
+  })
+
+  test('label sans mise en forme (FIXTURE brute) : aucune clé T/P/C posée', () => {
+    const base = Object.values(parseEsankeyXml(FIXTURE).links)[0]
+    expect(base.local.value_label_font_size).toBeUndefined()
+    expect(base.local.value_label_color).toBeUndefined()
+    expect(base.local.value_label_horiz).toBeUndefined()
+    expect(base.local.value_label_vert).toBeUndefined()
+  })
+})
+
+// OS#1291 — Places (E/S externes). Un process « Usine » émet un flux vers une
+// place de SORTIE (invisible) et reçoit un flux d'une place d'ENTRÉE (verte).
+// Côté logique les places sont des <graphPlace> (frères des <graphProcess>
+// dans <graphNodes>), référencées dans <from>/<to> par <graphPlaceRef> ;
+// côté graphique elles vivent dans <net>/<places>/<place> ; le mapping les
+// relie dans la sous-section <nodes> via <graphPlaceRef>/<placeRef>.
+const FIXTURE_PLACES = `<?xml version="1.0" encoding="utf-8"?>
+<document xmlns="${NS}" generator="e!Sankey">
+  <netModel>
+    <unitTypes>
+      <unitType id="10" name="Energy" used="true" width="80" maximumFlow="40">
+        <units><unit id="11" name="MJ" coefficient="1" isBasicUnit="true" /></units>
+      </unitType>
+    </unitTypes>
+    <entryGroup id="20" name="Root">
+      <entries>
+        <entry id="21" name="Elec"><unitTypeRef refId="10" /><brushColor argb="-256" /></entry>
+      </entries>
+      <entryGroups />
+    </entryGroup>
+    <graphNodes>
+      <graphProcess id="30" name="Usine" />
+      <graphPlace id="32" name="Sortie" />
+      <graphPlace id="33" name="Entree" />
+    </graphNodes>
+    <graphArrows>
+      <graphArrow id="40" name="">
+        <from><graphProcessRef refId="30" /></from>
+        <to><graphPlaceRef refId="32" /></to>
+        <compartments>
+          <flow id="41" name="Elec" quantity="7" source="0">
+            <entryRef refId="21" /><unitRef refId="11" />
+          </flow>
+        </compartments>
+      </graphArrow>
+      <graphArrow id="42" name="">
+        <from><graphPlaceRef refId="33" /></from>
+        <to><graphProcessRef refId="30" /></to>
+        <compartments>
+          <flow id="43" name="Elec" quantity="4" source="0">
+            <entryRef refId="21" /><unitRef refId="11" />
+          </flow>
+        </compartments>
+      </graphArrow>
+    </graphArrows>
+  </netModel>
+  <net backgroundColor="-1">
+    <processes>
+      <process id="50" locationX="300" locationY="200"><label text="Usine" /></process>
+    </processes>
+    <places>
+      <place id="52" locationX="600" locationY="200" visible="false"><label text="Sortie" /></place>
+      <place id="53" locationX="100" locationY="200"><brushColor argb="-16711936" /><label text="Entree" /></place>
+    </places>
+    <arrows />
+  </net>
+  <logicalGraphicalObjectMapping>
+    <nodes>
+      <keyValuePair><graphProcessRef refId="30" /><processRef refId="50" /></keyValuePair>
+      <keyValuePair><graphPlaceRef refId="32" /><placeRef refId="52" /></keyValuePair>
+      <keyValuePair><graphPlaceRef refId="33" /><placeRef refId="53" /></keyValuePair>
+    </nodes>
+    <edges />
+  </logicalGraphicalObjectMapping>
+</document>`
+
+describe('parseEsankeyXml — places (OS#1291)', () => {
+  const d = parseEsankeyXml(FIXTURE_PLACES)
+
+  test('une place → un nœud (process + 2 places = 3 nœuds)', () => {
+    expect(Object.keys(d.nodes).length).toBe(3)
+    const names = Object.values(d.nodes).map(n => n.name).sort()
+    expect(names).toEqual(['Entree', 'Sortie', 'Usine'])
+  })
+
+  test('flux process→place et place→process créés', () => {
+    expect(Object.keys(d.links).length).toBe(2)
+    const usine = Object.values(d.nodes).find(n => n.name === 'Usine')!
+    const sortie = Object.values(d.nodes).find(n => n.name === 'Sortie')!
+    const entree = Object.values(d.nodes).find(n => n.name === 'Entree')!
+    const out = Object.values(d.links).find(l => l.value.data_value === 7)!
+    const inp = Object.values(d.links).find(l => l.value.data_value === 4)!
+    expect(out.idSource).toBe(usine.id)
+    expect(out.idTarget).toBe(sortie.id)
+    expect(inp.idSource).toBe(entree.id)
+    expect(inp.idTarget).toBe(usine.id)
+    expect(usine.output_value).toBe(7)
+    expect(usine.input_value).toBe(4)
+  })
+
+  test('place : nœud compact (node_width), position normalisée, couleur/visibilité graphiques', () => {
+    const usine = Object.values(d.nodes).find(n => n.name === 'Usine')!
+    const sortie = Object.values(d.nodes).find(n => n.name === 'Sortie')!
+    const entree = Object.values(d.nodes).find(n => n.name === 'Entree')!
+    // Place sans image → stub compact ; le process garde sa largeur par défaut.
+    expect(sortie.local.node_width).toBe(12)
+    expect(entree.local.node_width).toBe(12)
+    expect(usine.local.node_width).toBeUndefined()
+    // visible="false" sur la place de sortie → shape_visible false.
+    expect(sortie.local.shape_visible).toBe(false)
+    // brushColor argb -16711936 = vert sur la place d'entrée.
+    expect(entree.local.color).toBe('#00FF00')
+    // Normalisation : min (100, 200) ramené à (50, 50).
+    expect(entree.x).toBe(50)
+    expect(entree.y).toBe(50)
+    expect(usine.x).toBe(250)
+    expect(sortie.x).toBe(550)
   })
 })
 
@@ -543,8 +906,11 @@ describeDemos('loadEsankeyFile — démos e!Sankey 5 locales', () => {
     expect(Object.keys(d.labels).length).toBeGreaterThan(8)
     expect(Object.values(d.labels).some(c => c.is_image === true)).toBe(true)
     expect(Object.values(d.labels).some(c => typeof c.title === 'string' && (c.title as string).includes('Building Energy'))).toBe(true)
-    // Légende présente et affichée
+    // Légende présente et affichée ; OS#1296 — cette démo porte un <textFont
+    // size="11.25"> (Arial) distinct du <captionFont size="9"> (Tahoma, non
+    // repris) : vérifie que c'est bien le textFont du contenu qui est lu.
     expect(d.legend?.mask_legend).toBe(false)
+    expect(d.legend?.legend_police).toBe(11.25)
     // Tous les process de cette démo sont invisibles (style « décor »)
     expect(Object.values(d.nodes).every(n => n.local.shape_visible === false)).toBe(true)
     // Aucun flux importé ne porte de label de valeur (décision user : chez

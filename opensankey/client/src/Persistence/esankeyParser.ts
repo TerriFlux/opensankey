@@ -26,9 +26,13 @@
 // {PercentProcessSource}/{PercentProcessDestination}, cf. A2), formes de
 // process alternatives (shapeType 0/1/2, cf. A4), commentaires de flèche
 // (→ tooltips), zones libres texte/image/rectangle (→ zones de texte),
-// légende, thème esankey.
-// Hors périmètre (listé sur l'issue #264) : lignes libres, dégradé le long du
-// flux, balance labels, pourcentages « Arrow »/« Model » (bascule simple
+// légende, thème esankey, dégradé le long du flux (OS#1294 :
+// gradientFromSource+gradientToDestination → shape_color_rule='gradient',
+// couleur du nœud source → couleur du nœud cible). Les jeux de couleurs
+// (<colorSets>) sont des <brushColor> à id, résolus par la palette partagée
+// (cf. buildBrushColorPalette).
+// Hors périmètre (listé sur l'issue #264) : lignes libres, balance labels,
+// pourcentages « Arrow »/« Model » (bascule simple
 // showPercentage, sans équivalent chez nous — seul le format personnalisé à
 // mots-clés {PercentProcessSource}/{PercentProcessDestination} est mappé),
 // export.
@@ -71,6 +75,11 @@ interface EsFlow {
   local: EsLocal
   displaying_order: number
   tooltip_text: string
+  // Ordre des ancres E/S FIGÉ à l'import (cadenas #197 sur les deux bouts) :
+  // e!Sankey a déjà rangé les flux autour de chaque nœud, on ne veut pas que le
+  // ré-agencement géométrique OpenSankey les réordonne au chargement.
+  source_side_locked: boolean
+  target_side_locked: boolean
   value: { id: string, data_value: number, tags: { [grp: string]: string[] } }
 }
 
@@ -107,8 +116,18 @@ export interface EsParsedDiagram {
   theme: Type_ThemeJSON
   /** Zones de texte / images / rectangles importés (clé `labels` du JSON). */
   labels: { [id: string]: EsContainerJSON }
-  /** Légende affichée si le fichier en contient une (mask_legend: false). */
-  legend?: { mask_legend: boolean, legend_dx: number, legend_dy: number }
+  /**
+   * Légende affichée si le fichier en contient une (mask_legend: false).
+   * `legend_police` (OS#1296, optionnel) : taille de police du CONTENU de la
+   * légende e!Sankey (`<legend><textFont size>`), reprise telle quelle par
+   * `LegendPersistence.fromJSON` (clé `legend_police` — seul réglage de police
+   * que porte la légende OpenSankey, partagé entre entrées et titres de
+   * groupe). La police du TITRE du cadre e!Sankey (`<captionFont>`, le mot
+   * "Legend" en en-tête) n'a pas d'équivalent : le cadre généré n'a pas de
+   * titre visible (frame.name_label_is_visible = false, cf.
+   * LegendGenerator.regenerateLegend) — non reprise.
+   */
+  legend?: { mask_legend: boolean, legend_dx: number, legend_dy: number, legend_police?: number }
   /** OS#1286 — registre d'unités reconstruit depuis les unitTypes e!Sankey. */
   units?: Type_UnitTypeJSON[]
 }
@@ -125,6 +144,19 @@ const childrenByTag = (el: Element, name: string): Element[] =>
 
 const childByTag = (el: Element, name: string): Element | null =>
   childrenByTag(el, name)[0] ?? null
+
+// OS#1291 — refId d'un point de raccordement d'une flèche (<from>/<to>) : le
+// premier enfant portant un `refId`, quelle que soit sa balise
+// (<graphProcessRef> vers un process, <graphPlaceRef> vers une place). Robuste
+// aux variantes de nommage des références de nœud.
+const refIdOfEndpoint = (container: Element | null): string | null => {
+  if (!container) return null
+  for (const c of Array.from(container.children)) {
+    const refId = c.getAttribute('refId')
+    if (refId !== null) return refId
+  }
+  return null
+}
 
 const attrNum = (el: Element | null, attr: string, fallback: number): number => {
   const raw = el?.getAttribute(attr)
@@ -151,6 +183,12 @@ const normalizeStringToValidId = (text: string): string =>
 // <brushColorRef refId="…"> pointant une <brushColor id="…" argb="…"> définie
 // ailleurs (démos « Bus Passengers » p.ex.). On indexe toutes les brushColor
 // nommées (avec id) une fois, pour résoudre ces références.
+// OS#1294 — les jeux de couleurs (<colorSets>/<colorSet>/<colors>/<brushColor
+// id argb>) sont eux aussi de simples <brushColor> à id : ce balayage global les
+// capture, donc un <brushColorRef> pointant une couleur de palette est résolu
+// sans traitement dédié. Le <colorSetRef> porté par un <unitType> n'est qu'un
+// choix de palette par défaut pour la saisie (aucune couleur d'élément à
+// résoudre) : il n'est pas exploité à l'import.
 type EsBrushPalette = { [id: string]: string }
 const buildBrushColorPalette = (root: Element): EsBrushPalette => {
   const out: EsBrushPalette = {}
@@ -172,6 +210,33 @@ const resolveBrushColorHex = (el: Element | null, palette: EsBrushPalette): stri
   const refId = childByTag(el, 'brushColorRef')?.getAttribute('refId')
   if (refId !== null && refId !== undefined && refId in palette) return argbToHex(palette[refId])
   return null
+}
+
+// OS#1290 — trait pointillé. e!Sankey code le style de trait de deux façons
+// selon l'élément :
+// - `<penColor … hasPattern="true" Pattern="N">` (bordures de process/shapes,
+//   `<rectangle>`/`<line>` dans `parseShapes`) : N=0 solide (vérifié sur le
+//   corpus de démos officielles, seule valeur non nulle rencontrée : Pattern="1"
+//   sur un `<penColor name="… (LineWidth: 3, Dash)" …>`, confirmant que
+//   Pattern!=0 = pointillé). L'attribut Pattern est absent quand hasPattern=false.
+// - `<pen … dashStyle="N"><dashPattern length="M" /></pen>` (tracé d'un flux,
+//   dans `<arrow><sankeyLink>`) : dashStyle reprend l'énumération .NET
+//   System.Drawing.Drawing2D.DashStyle (0=Solid, 1=Dash, 2=Dot, 3=DashDot,
+//   4=DashDotDot, 5=Custom — jamais vu !=0 dans le corpus de démos, toutes en
+//   trait plein) ; dashStyle=5 (Custom) s'accompagne d'un `<dashPattern>` non
+//   vide (length>0) décrivant le motif. On traite les deux comme équivalents :
+//   dashStyle!=0 OU dashPattern non vide → pointillé.
+const isPenColorPatternDashed = (penColorEl: Element | null): boolean => {
+  const pattern = penColorEl?.getAttribute('Pattern')
+  if (pattern === null || pattern === undefined) return false
+  const n = parseInt(pattern, 10)
+  return Number.isFinite(n) && n !== 0
+}
+
+const isDashStylePenDashed = (penEl: Element | null): boolean => {
+  if (!penEl) return false
+  if (attrNum(penEl, 'dashStyle', 0) !== 0) return true
+  return attrNum(childByTag(penEl, 'dashPattern'), 'length', 0) > 0
 }
 
 // ------------------------------------------------------------- Modèle logique
@@ -236,6 +301,16 @@ const parseEntries = (entryGroup: Element, out: { [id: string]: EsEntry }, usedT
 interface EsGraphicalProcess {
   x: number
   y: number
+  // OS#1298 — Boîte réelle du process (sinon le nœud importé est réduit à un
+  // point). Le `<process>` porte `backgroundSizeW/H` (taille du fond) ; l'enfant
+  // `<selectionNode boundaryW/H>` donne la même boîte (fallback). Vérifié sur
+  // toutes les démos e!Sankey 5 : locationX/Y == backgroundLocationX/Y ==
+  // boundaryX/Y (coin haut-gauche) et backgroundSizeW/H == boundaryW/H. La
+  // position `x/y` (= locationX/Y) étant donc le COIN haut-gauche de cette
+  // boîte, elle reste cohérente avec la sémantique « coin » du JSON 0.9 (pas de
+  // node_pos_is_center) : poser la taille ne décale pas le nœud. 0 = inconnue.
+  width: number
+  height: number
   color: string | null
   labelText: string
   /** `visible='false'` : e!Sankey n'affiche que le label (et l'icône libre à côté). */
@@ -262,11 +337,62 @@ interface EsGraphicalProcess {
 const linkAxis = (arrowDirection: number): 'h' | 'v' =>
   (arrowDirection === 1 || arrowDirection === 4) ? 'v' : 'h'
 
+/** Fond blanc / quasi-blanc (WhiteSmoke #F5F5F5, White #FFFFFF…). En e!Sankey
+ *  une boîte terminale de cette couleur sert d'ANCRE invisible sur le canevas
+ *  (blanc) : le flux s'y raccorde sans qu'aucun rectangle ne soit dessiné. À
+ *  l'import, un tel nœud sans image est donc rendu invisible (`shape_visible`
+ *  false) plutôt qu'en rectangle bordé. Seuil 0xF0 sur les trois canaux. */
+const isNearWhiteFill = (hex?: string | null): boolean => {
+  const m = hex ? /^#?([0-9a-fA-F]{6})$/.exec(hex.trim()) : null
+  if (!m) return false
+  const n = parseInt(m[1], 16)
+  return ((n >> 16) & 0xff) >= 0xf0 && ((n >> 8) & 0xff) >= 0xf0 && (n & 0xff) >= 0xf0
+}
+
 const parseGraphicalProcesses = (net: Element, palette: EsBrushPalette): { [id: string]: EsGraphicalProcess } => {
   const out: { [id: string]: EsGraphicalProcess } = {}
   const processes = childByTag(net, 'processes')
   if (!processes) return out
   childrenByTag(processes, 'process').forEach(p => {
+    const label = childByTag(p, 'label')
+    // OS#1298 — taille de la boîte : backgroundSizeW/H sur le <process>, sinon
+    // les boundaryW/H de l'enfant <selectionNode> (même valeur ; fallback).
+    const selNode = childByTag(p, 'selectionNode')
+    const width = attrNum(p, 'backgroundSizeW', attrNum(selNode, 'boundaryW', 0))
+    const height = attrNum(p, 'backgroundSizeH', attrNum(selNode, 'boundaryH', 0))
+    out[p.getAttribute('id') ?? ''] = {
+      x: attrNum(p, 'locationX', 0),
+      y: attrNum(p, 'locationY', 0),
+      width,
+      height,
+      color: resolveBrushColorHex(p, palette),
+      labelText: (label?.getAttribute('text') ?? '').replace(/\r?\n/g, ' ').trim(),
+      visible: p.getAttribute('visible') !== 'false',
+      imageFile: childByTag(p, 'image')?.getAttribute('filename') ?? '',
+      shapeType: attrNum(p, 'shapeType', 0),
+      arrowDirection: attrNum(p, 'arrowDirection', 2),
+    }
+  })
+  return out
+}
+
+// -------------------------------------------------- OS#1291 — PLACES (E/S ext.)
+// Beaucoup de diagrammes e!Sankey raccordent leurs flux non pas à un
+// <graphProcess> mais à une PLACE : point d'entrée/sortie/connexion/stockage
+// externe (prototypes <placeInput>/<placeOutput>/<placeConnection>/
+// <placeStorage>). Côté GRAPHIQUE (net), ces places vivent dans un conteneur
+// <places> frère de <processes> et portent EXACTEMENT le même schéma
+// d'attributs qu'un <process> (locationX/Y, visible, shapeType, brushColor,
+// image, label). On les parse donc à l'identique et on les FUSIONNE dans le
+// dictionnaire des process graphiques (ids uniques dans tout le document) —
+// la résolution d'orientation, de couleur et de position s'applique alors aux
+// places sans code supplémentaire. Défaut arrowDirection = 0 (les places n'en
+// portent pas toujours) → axe horizontal via linkAxis.
+const parseGraphicalPlaces = (net: Element, palette: EsBrushPalette): { [id: string]: EsGraphicalProcess } => {
+  const out: { [id: string]: EsGraphicalProcess } = {}
+  const places = childByTag(net, 'places')
+  if (!places) return out
+  childrenByTag(places, 'place').forEach(p => {
     const label = childByTag(p, 'label')
     out[p.getAttribute('id') ?? ''] = {
       x: attrNum(p, 'locationX', 0),
@@ -276,7 +402,10 @@ const parseGraphicalProcesses = (net: Element, palette: EsBrushPalette): { [id: 
       visible: p.getAttribute('visible') !== 'false',
       imageFile: childByTag(p, 'image')?.getAttribute('filename') ?? '',
       shapeType: attrNum(p, 'shapeType', 0),
-      arrowDirection: attrNum(p, 'arrowDirection', 2),
+      arrowDirection: attrNum(p, 'arrowDirection', 0),
+      // Boîte de la place (OS#1298), même schéma que le process.
+      width: attrNum(p, 'backgroundSizeW', 0),
+      height: attrNum(p, 'backgroundSizeH', 0),
     }
   })
   return out
@@ -402,6 +531,8 @@ const parseShapes = (
       base.transparent_border = shape.getAttribute('drawBorder') !== 'true'
       const transparency = attrNum(shape, 'transparency', 0)
       if (transparency > 0) base.opacity = Math.max(0, 100 - transparency)
+      // OS#1290 — trait pointillé de la bordure (<penColor Pattern="…">).
+      if (isPenColorPatternDashed(childByTag(shape, 'penColor'))) base.shape_border_dashed = true
       // Texte absorbé (boîte e!Sankey en 2 objets) : le fond porte le texte.
       const t = textOfRect.get(it)
       if (t) applyTextToContainer(base, t.el)
@@ -438,6 +569,9 @@ const parseShapes = (
       if (penHex) base.shape_border_color = penHex
       const penWidth = attrNum(pen, 'width', 1)
       if (penWidth) base.shape_border_thickness = penWidth
+      // OS#1290 — trait pointillé (<penColor Pattern="…">, EST le trait pour
+      // shape_type 'line', cf. commentaire plus haut).
+      if (isPenColorPatternDashed(pen)) base.shape_border_dashed = true
       out[id] = base
     }
   })
@@ -462,6 +596,61 @@ interface EsGraphicalArrow {
    * `{PercentProcessSource}`/`{PercentProcessDestination}` (cf. A2).
    */
   labelFormat: string
+  // ----------------------------------------------------- OS#1287 label (T/P)
+  // e!Sankey stocke la mise en forme du label de VALEUR dans le
+  // `<sankeyArrowLabel>` graphique (et son enfant `<font>`). Ces champs
+  // alimentent la TAILLE, la COULEUR et la POSITION du label côté OpenSankey
+  // (cf. boucle de création des flux). Valeurs neutres = « attribut absent »
+  // (on ne pose alors rien, le style par défaut décide).
+  /** Taille de police du label (`<font>/@size`), 0 = absente. */
+  labelFontSize: number
+  /** Décalage PERPENDICULAIRE au tracé (`@offsetH`), px signés (0 = absent). */
+  labelOffsetH: number
+  /** Position LE LONG du tracé (`@segmentPercentage`, 0→100), NaN = absente. */
+  labelSegmentPercentage: number
+  /** Couleur du texte (`@textColor` argb → hex #RRGGBB), null = absente. */
+  labelColor: string | null
+  // OS#1288 — COUDE DROIT. Géométrie du tracé portée par le `<sankeyLink>`
+  // (enfant du `<arrow>` graphique). e!Sankey trace des coudes quasi à angle
+  // droit : un SEGMENT DROIT (px) part de chaque nœud, puis un virage COURT
+  // rejoint l'autre bout. Nos flux vh/hv (In/Out) sont, eux, trop arrondis.
+  /** `<sankeyLink>` présent : on ne pose la géométrie de coude que dans ce cas. */
+  hasSankeyLink: boolean
+  /** `sankeyStartSegmentLength` (px) : segment droit avant la courbure côté source. */
+  startSegmentLength: number
+  /** `sankeyEndSegmentLength` (px) : segment droit avant la courbure côté cible. */
+  endSegmentLength: number
+  /** `curviness` (px) : rayon/longueur du virage (petit = coude serré). */
+  curviness: number
+  /** `orthogonal` : tracé à angle droit strict → coude encore plus serré. */
+  orthogonal: boolean
+  /** `adjustingStyle` : mode d'ajustement e!Sankey (repris pour information). */
+  adjustingStyle: string
+  // os#1289 — têtes de flèche, portées par `sankeyLink` (enfant de `arrow`,
+  // indépendant de `sankeyArrowLabel`) : `toArrow`/`fromArrow` = présence
+  // d'une pointe à chaque bout (cible / source). `null` = `sankeyLink` absent
+  // (versions/diagrammes sans réglage de pointe explicite) : à distinguer
+  // d'un `false` explicite, sous peine d'éteindre à tort la pointe cible par
+  // défaut d'OpenSankey (`shape_is_arrow` vaut `true` par défaut, cf.
+  // ElementsAttributesConfig) sur des flux qui n'ont simplement pas cette
+  // info. `arrowSize` = longueur du bout qui porte effectivement une pointe
+  // (cible en priorité — pas de taille séparée par bout côté OpenSankey, une
+  // seule `shape_arrow_size` sur `Class_LinkElement`), `null` si non
+  // exploitable : le défaut du style (10) s'applique alors.
+  toArrow: boolean | null
+  fromArrow: boolean | null
+  arrowSize: number | null
+  /** OS#1290 — trait pointillé (`sankeyLink/pen@dashStyle` ou `dashPattern`). */
+  dashed: boolean
+  /**
+   * OS#1294 — dégradé le long du flux. Les booléens `gradientFromSource` /
+   * `gradientToDestination` sont portés par la flèche GRAPHIQUE (`<arrow>` du
+   * `net`, à côté de `drawBorder`). Vrais tous les deux, le flux est un dégradé
+   * de la couleur du nœud source à celle du nœud cible (démos « Distribution
+   * diagram », « Traffic Visualization », « Efficiency diagram »).
+   */
+  gradientFromSource: boolean
+  gradientToDestination: boolean
 }
 
 const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } => {
@@ -471,12 +660,47 @@ const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } 
   childrenByTag(arrows, 'arrow').forEach(a => {
     const label = childByTag(a, 'sankeyArrowLabel')
     const comment = childByTag(a, 'comment')
+    // OS#1287 — la taille de police vit dans un enfant `<font>` du label ;
+    // offsetH/segmentPercentage/textColor sont des attributs du label lui-même.
+    // childByTag/attrNum tolèrent `label`/`labelFont` null (attribut absent).
+    const labelFont = label ? childByTag(label, 'font') : null
+    // OS#1288 — géométrie du coude portée par le `<sankeyLink>` du `<arrow>`.
+    const sankeyLink = childByTag(a, 'sankeyLink')
+    // os#1289 — sankeyLink : fromArrow/toArrow (bool) + fromArrowLength/
+    // toArrowLength (px). fromArrowWidth/toArrowWidth, *ArrowStyle,
+    // *ArrowFilled, *ArrowShaftLength existent côté e!Sankey mais n'ont pas
+    // d'équivalent OpenSankey (une seule forme de pointe, pleine) : non lus.
+    const toArrow = sankeyLink ? sankeyLink.getAttribute('toArrow') === 'true' : null
+    const fromArrow = sankeyLink ? sankeyLink.getAttribute('fromArrow') === 'true' : null
+    const toArrowLength = sankeyLink?.hasAttribute('toArrowLength') ? attrNum(sankeyLink, 'toArrowLength', 0) : null
+    const fromArrowLength = sankeyLink?.hasAttribute('fromArrowLength') ? attrNum(sankeyLink, 'fromArrowLength', 0) : null
+    const arrowSize = toArrow ? toArrowLength : (fromArrow ? fromArrowLength : null)
+    // OS#1290 — le pen du tracé vit sous <sankeyLink>, pas directement sous
+    // <arrow> (qui ne porte qu'un <penColor> de repli, non pointillable).
+    const pen = sankeyLink ? childByTag(sankeyLink, 'pen') : null
     out[a.getAttribute('id') ?? ''] = {
       tooltip: (comment?.getAttribute('text') ?? '').replace(/\r\n/g, '\n').trim(),
       labelVisible: label?.getAttribute('visible') !== 'false',
       showValue: label?.getAttribute('showValue') !== 'false',
       showUnit: label?.getAttribute('showUnit') === 'true',
       labelFormat: label?.getAttribute('labelFormat') ?? '',
+      labelFontSize: attrNum(labelFont, 'size', 0),
+      labelOffsetH: attrNum(label, 'offsetH', 0),
+      labelSegmentPercentage: attrNum(label, 'segmentPercentage', NaN),
+      labelColor: argbToHex(label?.getAttribute('textColor') ?? null),
+      hasSankeyLink: sankeyLink !== null,
+      startSegmentLength: attrNum(sankeyLink, 'sankeyStartSegmentLength', 0),
+      endSegmentLength: attrNum(sankeyLink, 'sankeyEndSegmentLength', 0),
+      curviness: attrNum(sankeyLink, 'curviness', 0),
+      orthogonal: sankeyLink?.getAttribute('orthogonal') === 'true',
+      adjustingStyle: sankeyLink?.getAttribute('adjustingStyle') ?? '',
+      toArrow,
+      fromArrow,
+      arrowSize: (arrowSize !== null && arrowSize > 0) ? arrowSize : null,
+      dashed: isDashStylePenDashed(pen),
+      // OS#1294 — dégradé source→cible (lu sur la flèche graphique).
+      gradientFromSource: a.getAttribute('gradientFromSource') === 'true',
+      gradientToDestination: a.getAttribute('gradientToDestination') === 'true',
     }
   })
   return out
@@ -497,13 +721,32 @@ const parseEdgeMapping = (root: Element): { [logicalId: string]: string } => {
   return out
 }
 
-const parseLegendPosition = (net: Element): { x: number, y: number } | null => {
+// Factorisé entre parseLegendPosition et parseLegendFontSize (OS#1296) : la
+// première <legend> du `net` hors prototypes.
+const findLegendElement = (net: Element): Element | null => {
   const protos = childByTag(net, 'prototypes')
   const all = Array.from(net.getElementsByTagName('*'))
   const inProtos = protos ? new Set(Array.from(protos.getElementsByTagName('*'))) : new Set()
-  const legend = all.find(el => el.localName === 'legend' && !inProtos.has(el))
+  return all.find(el => el.localName === 'legend' && !inProtos.has(el)) ?? null
+}
+
+const parseLegendPosition = (net: Element): { x: number, y: number } | null => {
+  const legend = findLegendElement(net)
   if (!legend) return null
   return { x: attrNum(legend, 'locationX', 0), y: attrNum(legend, 'locationY', 0) }
+}
+
+/**
+ * OS#1296 — taille de police du contenu de la légende (`<legend><textFont
+ * size>`, enfant direct — à ne pas confondre avec le `<textFont>` du `<scale>`
+ * voisin). `null` si absent (légende sans police explicite, ou sans légende).
+ */
+const parseLegendFontSize = (net: Element): number | null => {
+  const legend = findLegendElement(net)
+  const textFont = legend ? childByTag(legend, 'textFont') : null
+  if (!textFont) return null
+  const size = attrNum(textFont, 'size', NaN)
+  return Number.isFinite(size) ? size : null
 }
 
 // logicalGraphicalObjectMapping/nodes : graphProcessRef (logique) → processRef
@@ -517,6 +760,23 @@ const parseNodeMapping = (root: Element): { [logicalId: string]: string } => {
   childrenByTag(nodes, 'keyValuePair').forEach(kv => {
     const logical = childByTag(kv, 'graphProcessRef')?.getAttribute('refId')
     const graphical = childByTag(kv, 'processRef')?.getAttribute('refId')
+    if (logical && graphical) out[logical] = graphical
+  })
+  return out
+}
+
+// OS#1291 — Mapping des PLACES : les places logiques (<graphPlace>) sont mappées
+// vers leur place graphique (<place>) dans la MÊME sous-section <nodes> du
+// mapping (une place est un nœud), mais via <graphPlaceRef>/<placeRef> que
+// parseNodeMapping ignore. On les récupère ici pour fusionner dans nodeMapping.
+const parsePlaceNodeMapping = (root: Element): { [logicalId: string]: string } => {
+  const out: { [logicalId: string]: string } = {}
+  const mapping = childByTag(root, 'logicalGraphicalObjectMapping')
+  const nodes = mapping ? childByTag(mapping, 'nodes') : null
+  if (!nodes) return out
+  childrenByTag(nodes, 'keyValuePair').forEach(kv => {
+    const logical = childByTag(kv, 'graphPlaceRef')?.getAttribute('refId')
+    const graphical = childByTag(kv, 'placeRef')?.getAttribute('refId')
     if (logical && graphical) out[logical] = graphical
   })
   return out
@@ -635,6 +895,21 @@ export const parseEsankeyXml = (
   const referenceUnitType = Object.values(unitTypes).find(ut => ut.used && ut.maximumFlow > 0 && ut.width > 0) ?? null
   if (referenceUnitType) userScale = unitTypeOwnScale(referenceUnitType)
 
+  // os#1297 — <scale>/<sectionFactors>/<quantityFactors> (`<net><prototypes>`) :
+  // PAS d'échelle supplémentaire, RIEN à mapper. Vérifié sur les 101 démos
+  // officielles (e!Sankey 5 demos/) : ce n'est pas un facteur d'échelle global
+  // ni un facteur par section, mais le PROTOTYPE (gabarit par défaut, jamais
+  // placé sur le canevas — locationX=locationY=0 et absent de <shapes> dans
+  // les 101 fichiers) de la légende « Scale » — l'équivalent e!Sankey de notre
+  // `display_legend_scale` (cf. NOTE-ESANKEY-COMPARATIF §2.5, ligne « Légende,
+  // élément échelle (3 magnitudes) » déjà listée OK). sectionFactors
+  // (ex. [0.4, 0.32, 0.28], somme=1) sont les largeurs relatives des 3
+  // segments du bandeau ; quantityFactors (ex. [1, 0.2, 0.05]) les fractions
+  // de `maximumFlow` affichées sur chacun — mais ces 6 valeurs sont
+  // IDENTIQUES dans les 101 démos (constante d'appli, pas dérivée du
+  // diagramme), et maximumFlow/width (unitType) sont déjà captés ci-dessus.
+  // Aucune info supplémentaire : non mappé, sciemment.
+
   // Palette de couleurs partagée : résout les <brushColorRef refId> (entries,
   // process, shapes) vers leur <brushColor argb>.
   const brushPalette = buildBrushColorPalette(root)
@@ -643,8 +918,14 @@ export const parseEsankeyXml = (
   const rootEntryGroup = childByTag(netModel, 'entryGroup')
   if (rootEntryGroup) parseEntries(rootEntryGroup, entries, new Set(), brushPalette)
   const graphicalProcesses = parseGraphicalProcesses(net, brushPalette)
+  // OS#1291 — les places graphiques rejoignent le même dictionnaire (ids
+  // uniques) : orientation/couleur/position des flux place↔process réutilisent
+  // le code existant sans modification.
+  Object.assign(graphicalProcesses, parseGraphicalPlaces(net, brushPalette))
   const graphicalArrows = parseGraphicalArrows(net)
   const nodeMapping = parseNodeMapping(root)
+  // OS#1291 — mapping logique→graphique des places, fusionné dans nodeMapping.
+  Object.assign(nodeMapping, parsePlaceNodeMapping(root))
   const edgeMapping = parseEdgeMapping(root)
 
   // Unité (et son unitType) portée par un flow, pour la conversion et le label.
@@ -698,9 +979,24 @@ export const parseEsankeyXml = (
       output_value: 0,
     }
     if (graphical?.color) nodes[id].local.color = graphical.color
+    // OS#1298 — Taille réelle du nœud depuis la boîte du process (sinon un point).
+    // node_width/node_height (clés du JSON 0.9) sont mappées vers
+    // shape_min_width/shape_min_height (cf. persistenceLegacyKeyMaps) : elles
+    // fixent la taille PLANCHER du nœud (getShapeWidthToUse/getShapeHeightToUse
+    // renvoient max(shape_min_*, épaisseurs des flux/enveloppe)), donc le nœud
+    // n'est jamais plus petit que sa boîte e!Sankey. La boîte ayant pour coin
+    // haut-gauche locationX/Y (= x/y déjà posé), aucun décalage : cohérent avec la
+    // sémantique « coin » du JSON (pas de node_pos_is_center).
+    if (graphical && graphical.width > 0) nodes[id].local.node_width = graphical.width
+    if (graphical && graphical.height > 0) nodes[id].local.node_height = graphical.height
     // Process invisible (fréquent dans les diagrammes « décor » : seuls le
-    // label et une icône libre marquent le nœud).
+    // label et une icône libre marquent le nœud). Une boîte VISIBLE mais à fond
+    // blanc/quasi-blanc SANS image est aussi une ancre invisible e!Sankey (le
+    // rectangle se fond dans le canevas) → on la rend invisible.
     if (graphical && !graphical.visible) nodes[id].local.shape_visible = false
+    else if (graphical?.visible && !graphical.imageFile && isNearWhiteFill(graphical.color)) {
+      nodes[id].local.shape_visible = false
+    }
     // A4 — Forme alternative du process (0 = rect, notre défaut : rien à poser).
     // 1 = rectangle arrondi → on garde 'rect' et on pose un rayon de coin visible
     // (`shape_border_radius`, clé moderne appliquée telle quelle par le loader
@@ -721,6 +1017,58 @@ export const parseEsankeyXml = (
     }
   })
 
+  // OS#1291 — Nœuds de PLACES : un par <graphPlace> (frère de <graphProcess>
+  // dans <graphNodes>). Même construction qu'un process, avec deux différences
+  // volontaires reflétant leur rôle de point d'entrée/sortie externe :
+  //  - largeur réduite par défaut (`node_width` petit) → « stub » d'E/S, comme
+  //    e!Sankey les dessine (petits carrés 48px), à moins de porter une image ;
+  //  - visibilité/couleur/forme honorées depuis la place graphique si présente.
+  // Le nœud entre dans `logicalToNodeId`/`nodes` : la boucle des flux ci-dessous
+  // raccorde alors les flèches place↔process exactement comme process↔process.
+  const graphPlaceList = graphNodes ? childrenByTag(graphNodes, 'graphPlace') : []
+  graphPlaceList.forEach(gp => {
+    const logicalId = gp.getAttribute('id') ?? ''
+    // `nodeMapping` inclut désormais les places (cf. parsePlaceNodeMapping) ;
+    // repli sur l'id logique si la place graphique partage le même id.
+    const graphical = graphicalProcesses[nodeMapping[logicalId] ?? logicalId] ?? null
+    const name = (gp.getAttribute('name') || graphical?.labelText || 'Place ' + logicalId).trim()
+    let id = normalizeStringToValidId(name)
+    if (usedNodeIds.has(id)) id = id + '_' + logicalId
+    usedNodeIds.add(id)
+    logicalToNodeId[logicalId] = id
+    nodes[id] = {
+      id, name,
+      svg_parent_group: 'g_nodes',
+      x: graphical?.x ?? 0,
+      y: graphical?.y ?? 0,
+      u: 0, v: 0,
+      style: 'default',
+      local: {},
+      tags: {},
+      dimensions: {},
+      inputLinksId: [],
+      outputLinksId: [],
+      links_order: [],
+      input_value: 0,
+      output_value: 0,
+    }
+    if (graphical?.color) nodes[id].local.color = graphical.color
+    if (graphical && !graphical.visible) nodes[id].local.shape_visible = false
+    else if (graphical?.visible && !graphical.imageFile && isNearWhiteFill(graphical.color)) {
+      nodes[id].local.shape_visible = false
+    }
+    if (graphical?.shapeType === 1) nodes[id].local.shape_border_radius = 10
+    else if (graphical?.shapeType === 2) nodes[id].local.shape = 'ellipse'
+    const imgSrc = graphical?.imageFile ? images[imageKey(graphical.imageFile)] : undefined
+    if (imgSrc) {
+      nodes[id].is_image = true
+      nodes[id].image_src = imgSrc
+    } else {
+      // Point d'E/S sans image : forme compacte pour ne pas masquer le flux.
+      nodes[id].local.node_width = 12
+    }
+  })
+
   // Flux : un par flow de compartments (une flèche multi-matériaux e!Sankey
   // devient N flux parallèles même source/cible, chacun tagué par son entry).
   const links: { [id: string]: EsFlow } = {}
@@ -730,8 +1078,12 @@ export const parseEsankeyXml = (
   graphArrowList.forEach(ga => {
     const fromEl = childByTag(ga, 'from')
     const toEl = childByTag(ga, 'to')
-    const fromRef = fromEl ? childByTag(fromEl, 'graphProcessRef')?.getAttribute('refId') : null
-    const toRef = toEl ? childByTag(toEl, 'graphProcessRef')?.getAttribute('refId') : null
+    // OS#1291 — <from>/<to> peut pointer un process (<graphProcessRef>) OU une
+    // place (<graphPlaceRef>) : on lit le refId de n'importe quel enfant <…Ref>
+    // présent. `logicalToNodeId` contient désormais process ET places, donc le
+    // flux se raccorde des deux côtés sans distinction.
+    const fromRef = refIdOfEndpoint(fromEl)
+    const toRef = refIdOfEndpoint(toEl)
     const sourceId = logicalToNodeId[fromRef ?? '']
     const targetId = logicalToNodeId[toRef ?? '']
     if (!sourceId || !targetId) return
@@ -762,6 +1114,10 @@ export const parseEsankeyXml = (
         style: 'default',
         local: {},
         displaying_order: 0,
+        // Ordre des ancres verrouillé des deux côtés : préserve le rangement
+        // e!Sankey (cf. interface EsFlow).
+        source_side_locked: true,
+        target_side_locked: true,
         // Commentaire de la flèche e!Sankey → infobulle du flux.
         tooltip_text: graphicalArrow?.tooltip ?? '',
         value: {
@@ -776,21 +1132,93 @@ export const parseEsankeyXml = (
         if (entry.color) link.local.color = entry.color
       }
       if (orientation !== 'hh') link.local.orientation = orientation
-      // Label de valeur : affiché quand e!Sankey l'affiche (`showValue` de la
-      // flèche, défaut vrai). Sur les diagrammes mono-matériau (1 flow/flèche,
-      // cas courant, ex. Bus) la valeur du flux = celle de la flèche. Sur une
-      // flèche multi-matériaux, chaque flux porte alors SA part (≠ somme e!Sankey
-      // affichée sur la flèche) — écart mineur assumé.
-      if (graphicalArrow?.showValue !== false) {
-        link.local.value_label_is_visible = true
-        // e!Sankey affiche les valeurs TOUJOURS à l'horizontale (jamais alignées
-        // sur la tangente du tracé, même pour les flux verticaux In/Out).
-        link.local.value_label_on_path = false
-      }
+      // Label de valeur : MASQUÉ à l'import (décision utilisateur). Chez e!Sankey
+      // la quantité appartient à la FLÈCHE (somme de ses matériaux, posée sur un
+      // segment) ; la reproduire PAR flux est faux — sur une flèche
+      // multi-matériaux chaque flux afficherait SA part et les N valeurs se
+      // chevauchent (illisible). On laisse donc les valeurs éteintes ; seul le
+      // titre du nœud reste visible. Les réglages de style du label (#1287 :
+      // taille/couleur/offset ci-dessous) sont tout de même posés : ils
+      // s'appliqueront si l'utilisateur réactive les valeurs à la main. e!Sankey
+      // affiche les valeurs TOUJOURS à l'horizontale (jamais sur la tangente).
+      link.local.value_label_is_visible = false
+      link.local.value_label_on_path = false
       // Unité du label : référence au REGISTRE d'unités (mode unit_model, OS#1286)
       // pointant l'unité D'ORIGINE du flow. data_value étant converti vers l'unité
       // de base, l'affichage re-divise par le coefficient et restitue la quantité
       // saisie dans e!Sankey, avec son symbole.
+      // OS#1288 — COUDE DROIT. Reproduit l'allure e!Sankey (segment droit puis
+      // virage court), surtout sur les flux In/Out vh/hv trop arrondis chez
+      // nous. Modèle OpenSankey du tracé (LinkControlPoints) :
+      //  - `left/right_horiz_shift` (= shape_starting/ending_curve, ratio de la
+      //    longueur du flux) = SEGMENT DROIT collé à l'ancre avant la courbure ;
+      //  - `starting/ending_tangeant` = rayon du virage : PETIT ⇒ coude serré
+      //    (notre défaut 0.3 arrondit trop) ;
+      //  - `curvature` = courbure générale (secondaire, posée pour cohérence).
+      // e!Sankey exprime segment et virage en PIXELS ; on les convertit en
+      // ratios via la portée du flux (distance source→cible, invariante par la
+      // normalisation de positions faite plus bas).
+      if (graphicalArrow?.hasSankeyLink) {
+        const span = Math.hypot(
+          nodes[targetId].x - nodes[sourceId].x,
+          nodes[targetId].y - nodes[sourceId].y,
+        ) || 1
+        const clamp = (v: number, lo: number, hi: number): number =>
+          Math.min(hi, Math.max(lo, v))
+        if (graphicalArrow.startSegmentLength > 0) {
+          link.local.left_horiz_shift = clamp(graphicalArrow.startSegmentLength / span, 0.01, 0.45)
+        }
+        if (graphicalArrow.endSegmentLength > 0) {
+          link.local.right_horiz_shift = clamp(graphicalArrow.endSegmentLength / span, 0.01, 0.45)
+        }
+        // Virage court : tangente petite (dérivée de `curviness`, défaut 10 px).
+        // `orthogonal` (angle droit strict) ⇒ tangente encore plus serrée.
+        const tangent = clamp((graphicalArrow.curviness || 10) / span, 0.02, 0.2)
+        const bend = graphicalArrow.orthogonal ? Math.min(tangent, 0.06) : tangent
+        link.local.starting_tangeant = bend
+        link.local.ending_tangeant = bend
+        link.local.curvature = bend
+      }
+      // os#1289 — têtes de flèche du flux (sankeyLink/@toArrow et @fromArrow,
+      // lues par flèche graphique dans parseGraphicalArrows) → pointes
+      // OpenSankey shape_is_arrow (côté cible) / shape_arrow_at_source (côté
+      // source), indépendantes l'une de l'autre comme côté e!Sankey (un flux
+      // peut porter zéro, une ou deux pointes). `null` (sankeyLink absent) ne
+      // pose rien : le défaut du style s'applique (is_arrow=true côté cible,
+      // arrow_at_source=false côté source — cf. ElementsAttributesConfig). On
+      // ne pose localement que les écarts au défaut, comme le reste du fichier.
+      if (graphicalArrow?.toArrow === false) link.local.shape_is_arrow = false
+      if (graphicalArrow?.fromArrow === true) link.local.shape_arrow_at_source = true
+      if (graphicalArrow?.arrowSize !== null && graphicalArrow?.arrowSize !== undefined) {
+        link.local.shape_arrow_size = graphicalArrow.arrowSize
+      }
+      // OS#1290 — trait pointillé (dashStyle/dashPattern du pen de la
+      // sankeyLink) → bordure pointillée du flux.
+      if (graphicalArrow?.dashed) link.local.shape_border_dashed = true
+      // OS#1294 — dégradé le long du flux. Quand la flèche e!Sankey a À LA FOIS
+      // `gradientFromSource` et `gradientToDestination`, le tracé va de la
+      // couleur du nœud source à celle du nœud cible : c'est exactement la règle
+      // 'gradient' d'OpenSankey (`shape_color_rule`, posée ici via la clé legacy
+      // `color_rule` du bloc local → LINK_LOCAL_KEY_MAP → shape_color_rule ;
+      // getShapeColorToUse construit alors un linearGradient source→cible à
+      // partir des couleurs des deux nœuds). La couleur d'entry reste posée sur
+      // `local.color` (elle sert au tag) mais le rendu du flux passe au dégradé.
+      // Un dégradé À UN SEUL bout (source→couleur propre du flux, ou l'inverse)
+      // n'a pas d'équivalent chez nous : on ne le mappe pas, le flux garde sa
+      // couleur plate. Idem pour une flèche multi-matériaux (flux parallèles =
+      // multi-links) : getShapeColorToUse ignore le dégradé sur ces flux.
+      if (graphicalArrow?.gradientFromSource && graphicalArrow?.gradientToDestination) {
+        link.local.color_rule = 'gradient'
+      }
+      // AUCUN label de valeur posé sur les flux importés (décision user) : chez
+      // e!Sankey l'étiquette de quantité appartient à la FLÈCHE (somme de ses
+      // matériaux, position sur segment) — la reproduire par flux serait faux ;
+      // manque « label agrégé par flèche » listé en #264. On prépare seulement
+      // l'unité : si l'utilisateur active les valeurs, elle est déjà correcte.
+      // OS#1286 — l'unité est désormais une référence au REGISTRE d'unités
+      // (mode unit_model) pointant l'unité D'ORIGINE du flow : data_value étant
+      // converti vers l'unité de base, l'affichage re-divise par le coefficient
+      // et restitue la quantité saisie dans e!Sankey, avec son symbole.
       if (graphicalArrow?.showUnit && found) {
         link.local.label_unit_visible = true
         link.local.value_label_unit_type = 'unit_model'
@@ -813,6 +1241,43 @@ export const parseEsankeyXml = (
         link.local.value_label_unit_type = '%OS'
       } else if (labelFormat.includes('{PercentProcessDestination}')) {
         link.local.value_label_unit_type = '%ID'
+      }
+      // OS#1287 — TAILLE, COULEUR et POSITION du label de VALEUR, repris du
+      // `<sankeyArrowLabel>` graphique de la flèche (retrouvé via edgeMapping).
+      // On ne DÉCIDE PAS ici de la visibilité du label (arbitrée ailleurs, selon
+      // la stratégie e!Sankey « l'étiquette appartient à la flèche ») : on se
+      // contente, quand la flèche affiche sa valeur (`showValue`), de préparer la
+      // mise en forme pour qu'un label activé soit fidèle — sinon le style par
+      // défaut impose une police trop grosse (~20 px) et un placement générique.
+      if (graphicalArrow && graphicalArrow.showValue !== false) {
+        // TAILLE de police (<font size>). Absente (0) → le style décide.
+        if (graphicalArrow.labelFontSize > 0) {
+          link.local.value_label_font_size = graphicalArrow.labelFontSize
+        }
+        // COULEUR du texte (argb → hex).
+        if (graphicalArrow.labelColor) {
+          link.local.value_label_color = graphicalArrow.labelColor
+        }
+        // POSITION LE LONG du tracé (segmentPercentage : 0 = près de la source,
+        // 100 = près de la cible). e!Sankey affiche la valeur À PLAT, hors tracé
+        // (jamais sur la tangente) : il n'existe alors pas d'attribut « % le long
+        // du chemin » côté OpenSankey — l'axe le long du flux est piloté par
+        // value_label_horiz (left = source, middle = centre, right = cible ; cf.
+        // Class_LinkLabelDrawer.getLabelPos, off-path). On approxime par tiers ;
+        // couvre les flux In/Out (vh/hv) dont e!Sankey colle le label près du nœud.
+        if (Number.isFinite(graphicalArrow.labelSegmentPercentage)) {
+          const seg = graphicalArrow.labelSegmentPercentage
+          link.local.value_label_horiz = seg < 33 ? 'left' : seg > 66 ? 'right' : 'middle'
+        }
+        // DÉCALAGE PERPENDICULAIRE au tracé (offsetH) : côté du flux où poser le
+        // label. offsetH >= 0 → sous le flux horizontal (value_label_vert =
+        // 'bottom'), < 0 → au-dessus ('top'). Seul le CÔTÉ est repris : OpenSankey
+        // réserve déjà un écart perpendiculaire hors tracé (demi-épaisseur +
+        // police) ; reporter l'amplitude d'offsetH en vert_shift éloignerait trop
+        // le label (double comptage) — approximation assumée, cf. #1287.
+        if (graphicalArrow.labelOffsetH !== 0) {
+          link.local.value_label_vert = graphicalArrow.labelOffsetH >= 0 ? 'bottom' : 'top'
+        }
       }
       // A5 — échelle indépendante par unitType (cf. calcul de `userScale` plus
       // haut) : ce flux appartient à un unitType dont le ratio
@@ -837,6 +1302,7 @@ export const parseEsankeyXml = (
   // Zones libres (textes, images, rectangles) et légende.
   const labels = parseShapes(net, images, brushPalette)
   const legendPos = parseLegendPosition(net)
+  const legendFontSize = parseLegendFontSize(net) // OS#1296
 
   // Normalisation des positions : e!Sankey stocke des coordonnées de document
   // potentiellement lointaines de l'origine ; on ramène le coin haut-gauche de
@@ -901,6 +1367,9 @@ export const parseEsankeyXml = (
   }
   if (legendPos) {
     result.legend = { mask_legend: false, legend_dx: legendPos.x, legend_dy: legendPos.y }
+    // OS#1296 — police du contenu de la légende (`legend_police`, lue telle
+    // quelle par LegendPersistence.fromJSON via la clé `legend` du JSON 0.9).
+    if (legendFontSize !== null) result.legend.legend_police = legendFontSize
   }
   // OS#1286 — registre d'unités (grandeurs e!Sankey), lu par fromJSON.
   if (unitsRegistry.length > 0) {
