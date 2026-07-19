@@ -294,7 +294,10 @@ const FIXTURE_DECOR = `<?xml version="1.0" encoding="utf-8"?>
         </picture>
       </shape>
     </shapes>
-    <legend locationX="100" locationY="200" />
+    <legend locationX="100" locationY="200">
+      <textFont name="Tahoma" size="12" style="0" unit="3" charset="0" verticalFont="false" />
+      <captionFont name="Tahoma" size="9" style="1" unit="3" charset="0" verticalFont="false" />
+    </legend>
   </net>
   <logicalGraphicalObjectMapping>
     <nodes>
@@ -437,10 +440,22 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
 
   test('légende visible, position normalisée avec le reste', () => {
     // min X/Y de l'ensemble = (100, 100) (le texte) → décalage -50
-    expect(d.legend).toEqual({ mask_legend: false, legend_dx: 50, legend_dy: 150 })
+    // legend_police = 12 : lu sur <legend><textFont size="12">. Le
+    // <captionFont> voisin (taille du titre "Legend" du cadre) n'a pas
+    // d'équivalent OpenSankey (cf. commentaire EsParsedDiagram.legend) : non repris.
+    expect(d.legend).toEqual({ mask_legend: false, legend_dx: 50, legend_dy: 150, legend_police: 12 })
     const texte = Object.values(d.labels).find(c => c.title === 'Titre du diagramme')
     expect(texte?.x).toBe(50)
     expect(texte?.y).toBe(50)
+  })
+
+  test('OS#1296 — légende sans <textFont> : legend_police absent (pas de valeur inventée)', () => {
+    const withoutFont = FIXTURE_DECOR.replace(
+      /<legend locationX="100" locationY="200">[\s\S]*?<\/legend>/,
+      '<legend locationX="100" locationY="200" />'
+    )
+    const dNoFont = parseEsankeyXml(withoutFont, { 'Images/tmp1.tmp': PNG_URI })
+    expect(dNoFont.legend?.legend_police).toBeUndefined()
   })
 
   test('groupe de tags avec use_colors (colormap = couleurs des entries)', () => {
@@ -540,8 +555,11 @@ describeDemos('loadEsankeyFile — démos e!Sankey 5 locales', () => {
     expect(Object.keys(d.labels).length).toBeGreaterThan(8)
     expect(Object.values(d.labels).some(c => c.is_image === true)).toBe(true)
     expect(Object.values(d.labels).some(c => typeof c.title === 'string' && (c.title as string).includes('Building Energy'))).toBe(true)
-    // Légende présente et affichée
+    // Légende présente et affichée ; OS#1296 — cette démo porte un <textFont
+    // size="11.25"> (Arial) distinct du <captionFont size="9"> (Tahoma, non
+    // repris) : vérifie que c'est bien le textFont du contenu qui est lu.
     expect(d.legend?.mask_legend).toBe(false)
+    expect(d.legend?.legend_police).toBe(11.25)
     // Tous les process de cette démo sont invisibles (style « décor »)
     expect(Object.values(d.nodes).every(n => n.local.shape_visible === false)).toBe(true)
     // Aucun flux importé ne porte de label de valeur (décision user : chez
