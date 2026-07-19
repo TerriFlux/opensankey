@@ -1510,11 +1510,15 @@ export class Class_ApplicationData {
     const evtKeyY = ((evt.key === 'y') || (evt.key === 'Y')) && evtOnDrawingArea
     const evtKeyC = ((evt.key === 'c') || (evt.key === 'C')) && evtOnDrawingArea
     const evtKeyV = ((evt.key === 'v') || (evt.key === 'V')) && evtOnDrawingArea
+    // OS#1273 — Ctrl+F ouvre la barre de recherche d'élément. Contrairement aux
+    // autres raccourcis, il reste actif même hors zone de dessin (dans un input),
+    // pour rester déclenchable quand le focus est ailleurs — comme un Ctrl+F natif.
+    const evtKeyF = (evt.key === 'f') || (evt.key === 'F')
     const evtCtrlA = evtCtrl && evtKeyA
     const evtCtrlS = evtCtrl && evtKeyS
     const evtCtrlShiftS = evtCtrlShift && evtKeyS
     const evtCtrlAltS = evtCtrlAlt && evtKeyS
-    //const evtCtrlF = evtCtrl && evtKeyF
+    const evtCtrlF = evtCtrl && evtKeyF
     const evtCtrlZ = evtCtrl && evtKeyZ
     const evtCtrlY = evtCtrl && evtKeyY
     const evtCtrlShiftZ = evtCtrlShift && evtKeyZ
@@ -1648,18 +1652,13 @@ export class Class_ApplicationData {
       // Trigger saving via Excel saving button
       this.saveToExcel('/opensankey/', {})
     }
-    // Fullscreen --------------------------------------------------------------------
-    // else if (evtCtrlF) {
-    //   // Prevent default event
-    //   evt.preventDefault()
-    //   // Toggle fullscreen
-    //   if (!document.fullscreenElement) {
-    //     document.documentElement.requestFullscreen()
-    //   }
-    //   else if (document.exitFullscreen) {
-    //     document.exitFullscreen()
-    //   }
-    // }
+    // Search an element in the diagram (OS#1273) ------------------------------------
+    else if (evtCtrlF) {
+      // Prevent default event (browser find bar)
+      evt.preventDefault()
+      // Toggle the element search bar (registered by ElementSearchOverlay)
+      app_ref.menu_configuration.ref_toggle_search.current()
+    }
     // Undo
     else if (evtCtrlZ) {
       evt.preventDefault()

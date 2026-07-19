@@ -637,6 +637,26 @@ const CapsuleHShapeIcon: React.FC<ShapeIconProps> = ({
   </svg>
 )
 
+// OS#1276 — icône de la ligne libre (outil de tracé + sélecteur de forme).
+const LineShapeIcon: React.FC<ShapeIconProps> = ({
+  stroke = 'currentColor',
+  width = '1rem',
+  height = '1rem'
+}) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill='none'
+    stroke={stroke}
+    strokeWidth={2}
+    strokeLinecap='round'
+    viewBox='0 0 17 17'
+    width={width}
+    height={height}
+  >
+    <line x1="2" y1="15" x2="15" y2="2" />
+  </svg>
+)
+
 // Icônes de hachure : carré contour + traits parallèles selon l'orientation.
 // Utilisées par le sélecteur d'orientation de hachure du nœud.
 interface HatchIconProps {
@@ -1510,6 +1530,7 @@ export class Class_IconLibrary {
   protected _icon_ellipse_shape = <EllipseShapeIcon />
   protected _icon_capsule_shape = <CapsuleShapeIcon />
   protected _icon_capsule_h_shape = <CapsuleHShapeIcon />
+  protected _icon_line_shape = <LineShapeIcon />
   protected _icon_hatch_vertical = <HatchVerticalIcon />
   protected _icon_hatch_horizontal = <HatchHorizontalIcon />
   protected _icon_hatch_diagonal = <HatchDiagonalIcon />
@@ -2022,6 +2043,7 @@ export class Class_IconLibrary {
   public get icon_ellipse_shape() { return this.normalizeIcon(this._icon_ellipse_shape) }
   public get icon_rect_shape() { return this.normalizeIcon(this._icon_rect_shape) }
   public get icon_capsule_shape() { return this.normalizeIcon(this._icon_capsule_shape) }
+  public get icon_line_shape() { return this.normalizeIcon(this._icon_line_shape) }
   public get icon_hatch_vertical() { return this.normalizeIcon(this._icon_hatch_vertical) }
   public get icon_hatch_horizontal() { return this.normalizeIcon(this._icon_hatch_horizontal) }
   public get icon_hatch_diagonal() { return this.normalizeIcon(this._icon_hatch_diagonal) }

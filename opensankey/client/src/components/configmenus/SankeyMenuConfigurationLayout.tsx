@@ -219,6 +219,32 @@ export const DrawingAreaConfig = ({
     app_data.setValueAndSaveHistory(app_data.drawing_area, 'arrow_use_standalone_layout', evt.target.checked, f)
   }
 
+  // Pointe accentuée « arrow spikes » (#1270)
+  const eventArrowSpikeAlways = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    const f = (_: boolean) => {
+      app_data.drawing_area.arrow_spike_always = _
+      refreshThisAndUpdateRelatedComponents()
+    }
+    app_data.setValueAndSaveHistory(app_data.drawing_area, 'arrow_spike_always', evt.target.checked, f)
+  }
+
+  const eventArrowSpikeMaxThickness = (evt: number | null | undefined) => {
+    const f = (_: number) => {
+      app_data.drawing_area.arrow_spike_max_thickness = _
+      refreshThisAndUpdateRelatedComponents()
+    }
+    app_data.setValueAndSaveHistory(app_data.drawing_area, 'arrow_spike_max_thickness', evt ?? 0, f)
+  }
+
+  const eventArrowSpikeBaseFactor = (evt: number | null | undefined) => {
+    if (evt == null) return
+    const f = (_: number) => {
+      app_data.drawing_area.arrow_spike_base_factor = _
+      refreshThisAndUpdateRelatedComponents()
+    }
+    app_data.setValueAndSaveHistory(app_data.drawing_area, 'arrow_spike_base_factor', evt, f)
+  }
+
   const eventMaxLinkThickness = (evt: number | null | undefined) => {
     if (evt == null) return
     const f = (_: number | undefined) => {
@@ -624,6 +650,42 @@ export const DrawingAreaConfig = ({
           {t('MEP.ArrowStandaloneLayout')}
         </OSTooltip>
       </Checkbox>
+
+      {/* Pointe accentuée « arrow spikes » (#1270) : rendre visibles les flux fins. */}
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={app_data.drawing_area.arrow_spike_always}
+        icon={<CustomFaEyeCheckIcon />}
+        onChange={eventArrowSpikeAlways}
+      >
+        <OSTooltip label={t('MEP.tooltips.ArrowSpikeAlways')}>
+          {t('MEP.ArrowSpikeAlways')}
+        </OSTooltip>
+      </Checkbox>
+      <Box display='grid' gridTemplateColumns='1fr auto' gap='0.5rem' alignItems='center'>
+        <Box as='span'>{t('MEP.ArrowSpikeMaxThickness')}</Box>
+        <OSTooltip label={t('MEP.tooltips.ArrowSpikeMaxThickness')}>
+          <ConfigMenuNumberInput
+            t={app_data.t}
+            default_value={app_data.drawing_area.arrow_spike_max_thickness}
+            function_on_blur={eventArrowSpikeMaxThickness}
+            minimum_value={0}
+            stepper={true}
+            unit_text={right_addon_pixel(app_data.drawing_area.arrow_spike_max_thickness)}
+          />
+        </OSTooltip>
+        <Box as='span'>{t('MEP.ArrowSpikeBaseFactor')}</Box>
+        <OSTooltip label={t('MEP.tooltips.ArrowSpikeBaseFactor')}>
+          <ConfigMenuNumberInput
+            t={app_data.t}
+            default_value={app_data.drawing_area.arrow_spike_base_factor}
+            function_on_blur={eventArrowSpikeBaseFactor}
+            minimum_value={1}
+            step={0.5}
+            stepper={true}
+          />
+        </OSTooltip>
+      </Box>
 
       {/* Ordre d'empilement des éléments (ex-sous-section dédiée). */}
       <Box as='span' layerStyle='menuconfigpanel_part_title_3'>

@@ -47,3 +47,44 @@ export function computeArrowPlacement(
     return { arrow_half_height: clamped_thickness / 2, arrow_already_computed: 0, slice: clamped_thickness }
   return { arrow_half_height: side_sum_raw / 2, arrow_already_computed: running_cumul_raw, slice: raw_thickness }
 }
+
+// ── Arrow spikes (issue #1270) ───────────────────────────────────────────────
+// « Pointe accentuée » façon e!Sankey : rendre visibles les flux fins en dessinant
+// une pointe plus large/longue que l'épaisseur du flux, SANS toucher à la valeur.
+// Deux déclencheurs :
+//  - always  : toujours accentuer la pointe ;
+//  - max_thickness (px) : accentuer seulement les flux dont l'épaisseur visible
+//    (clampée, ≥ minimum_flux) est ≤ ce seuil.
+// Défaut = désactivé (always=false, max_thickness=0) → arrowSpikeApplies renvoie
+// toujours false, donc AUCUN changement de rendu (rétrocompat).
+
+export type Type_ArrowSpikeConfig = {
+  /** toujours accentuer la pointe */
+  always: boolean
+  /** seuil d'épaisseur visible (px) sous lequel la pointe est accentuée ; 0 = désactivé */
+  max_thickness: number
+  /** facteur de largeur de base (et de longueur) de la pointe accentuée ; 1 = neutre */
+  base_factor: number
+}
+
+/**
+ * Décide si la pointe accentuée s'applique à un flux dont l'épaisseur VISIBLE
+ * (clampée à minimum_flux) vaut `clamped_thickness`.
+ * Défaut (always=false, max_thickness=0) ⇒ false ⇒ rendu inchangé.
+ */
+export function arrowSpikeApplies(cfg: Type_ArrowSpikeConfig, clamped_thickness: number): boolean {
+  if (cfg.always) return true
+  return cfg.max_thickness > 0 && clamped_thickness <= cfg.max_thickness
+}
+
+/**
+ * Géométrie d'UNE pointe accentuée : un triangle indépendant (pas d'éventail, pas
+ * de cumul) dont la base = `base_factor` × l'épaisseur visible du flux. À combiner
+ * avec une longueur de pointe elle aussi multipliée par `base_factor` (cf. Node.tsx).
+ * On plancher le facteur à 1 pour ne jamais rétrécir la pointe sous l'épaisseur.
+ */
+export function computeArrowSpikePlacement(base_factor: number, clamped_thickness: number): Type_ArrowPlacement {
+  const factor = Math.max(1, base_factor)
+  const base = clamped_thickness * factor
+  return { arrow_half_height: base / 2, arrow_already_computed: 0, slice: base }
+}

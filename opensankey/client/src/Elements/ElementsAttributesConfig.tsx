@@ -37,7 +37,10 @@ import { Type_AnalysisDescriptor } from '../Charts/AnalysisDescriptor'
 import { Type_TooltipHiddenBlocks } from './TooltipBlocks'
 
 // Types spécifiques
-export type Type_Shape = 'ellipse' | 'rect' | 'bezier_outline' | 'bezier_outline_exact' | 'bezier_path' | 'capsule' | 'capsule_h'
+// 'line' (OS#1276) : trait libre décoratif porté par un conteneur. La forme est
+// la diagonale de la boîte englobante du conteneur (cf. NodeDrawShape) ; le sens
+// de la diagonale est donné par shape_line_flip.
+export type Type_Shape = 'ellipse' | 'rect' | 'bezier_outline' | 'bezier_outline_exact' | 'bezier_path' | 'capsule' | 'capsule_h' | 'line'
 export type Type_TextHPos = 'left' | 'middle' | 'right'
 export type Type_TextVPos = 'top' | 'middle' | 'bottom'
 export type Type_Side = 'right' | 'left' | 'top' | 'bottom'
@@ -2627,6 +2630,29 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Si está bloqueado, el cálculo autosankey conserva el orden vertical relativo (v) de este nodo dentro de su columna en lugar de recalcularlo.',
       de: 'Wenn gesperrt, behält die Autosankey-Berechnung die relative vertikale Reihenfolge (v) dieses Knotens innerhalb seiner Spalte bei, anstatt sie neu zu berechnen.',
       it: 'Se bloccato, il calcolo autosankey preserva l\'ordine verticale relativo (v) di questo nodo nella sua colonna invece di ricalcolarlo.'
+    }
+  } satisfies AttributeConfig<boolean>,
+  // OS#1276 — sens de la diagonale pour shape_type === 'line'.
+  // false : ligne du coin haut-gauche (0,0) au coin bas-droit (w,h) « \ ».
+  // true  : ligne du coin bas-gauche (0,h) au coin haut-droit (w,0) « / ».
+  line_flip: {
+    default: false as boolean,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['drawShape'] as BaseActionType[],
+    labels: {
+      en: 'Line direction',
+      fr: 'Sens de la ligne',
+      es: 'Sentido de la línea',
+      de: 'Linienrichtung',
+      it: 'Direzione della linea'
+    },
+    tooltips: {
+      en: 'Diagonal direction of a free line',
+      fr: 'Sens de la diagonale d\'une ligne libre',
+      es: 'Sentido de la diagonal de una línea libre',
+      de: 'Diagonalrichtung einer freien Linie',
+      it: 'Direzione diagonale di una linea libera'
     }
   } satisfies AttributeConfig<boolean>,
   hatch: {

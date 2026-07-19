@@ -17,7 +17,6 @@ import { Class_DrawingArea } from '../../types/DrawingArea'
 import { Class_ApplicationHistory } from '../../types/ApplicationHistory'
 import { StorageType } from '../../Elements/Element'
 import { ALL_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
-import { NodePositioning } from '../../Algorithms/NodePositioning'
 import { Class_NodeDimension } from '../../Elements/NodeDimension'
 import { downloadImageSource } from './SaveImage'
 
@@ -673,6 +672,107 @@ export class NodeActions {
   alignVertMaxBottom = () => this.alignNode('max', 'position_y', 'a')
 
   // ==================================================================================================
+  // ACTIONS DE DISTRIBUTION (#1274 lot E2) — répartir à distance égale
+  // ==================================================================================================
+
+  // Répartit les éléments sélectionnés à espacement égal le long d'un axe.
+  // 'position_x' distribue horizontalement, 'position_y' verticalement. Les
+  // deux éléments extrêmes restent fixes ; ceux du milieu sont replacés pour
+  // égaliser les intervalles (gaps entre bords). No-op en dessous de 3 éléments.
+  // Comme alignNode : opère sur nœuds + zones de texte, ignore les nœuds en
+  // position 'relative', mute directement position_x/y puis draw() (une simple
+  // translation ne change pas la taille, donc anchorByCenterIfResized recommit
+  // le centre depuis le nouveau coin sans réintroduire de dérive #1230).
+  private distributeNodes = (attr: 'position_x' | 'position_y') => {
+    const elements: Class_NodeBase[] = [
+      ...this.selected_nodes,
+      ...this.drawing_area.selected_containers_list,
+    ].filter(n => n.shape_position_type != 'relative')
+
+    if (elements.length < 3) return
+
+    const dict_old_pos: { [x: string]: [number, number] } = {}
+    elements.forEach(n => dict_old_pos[n.id] = [n.position_x, n.position_y])
+
+    const sizeOf = (n: Class_NodeBase) =>
+      attr === 'position_x' ? n.getShapeWidthToUse() : n.getShapeHeightToUse()
+
+    const doDistribute = () => {
+      const sorted = [...elements].sort((a, b) => a[attr] - b[attr])
+      const first = sorted[0]
+      const last = sorted[sorted.length - 1]
+      const span = (last[attr] + sizeOf(last)) - first[attr]
+      const total = sorted.reduce((s, n) => s + sizeOf(n), 0)
+      const gap = (span - total) / (sorted.length - 1)
+      let cursor = first[attr] + sizeOf(first) + gap
+      for (let i = 1; i < sorted.length - 1; i++) {
+        sorted[i][attr] = cursor
+        sorted[i].draw()
+        cursor += sizeOf(sorted[i]) + gap
+      }
+      this.refreshAndSave()
+    }
+
+    const undoDistribute = () => {
+      elements.forEach(n => n.setPosXY(dict_old_pos[n.id][0], dict_old_pos[n.id][1]))
+    }
+
+    this.executeWithUndo(doDistribute, undoDistribute)
+  }
+
+  distributeHorizontal = () => this.distributeNodes('position_x')
+  distributeVertical = () => this.distributeNodes('position_y')
+
+  // ==================================================================================================
+  // CALER LA TAILLE SUR CET ÉLÉMENT (#1274 lot E2)
+  // ==================================================================================================
+
+  // Applique la taille de rendu (largeur + hauteur) du nœud de RÉFÉRENCE à tous
+  // les autres nœuds sélectionnés. Référence = nœud contextualisé (clic droit)
+  // sinon 1er de la sélection. On écrit shape_min_width/height (même levier que
+  // les poignées de resize) puis settleCenterAnchor() (#1230) : le coin reste
+  // fixe, la forme croît vers le bas-droite, et le centre est ré-ancré pour que
+  // le prochain redraw ne recentre pas. NB : shape_min_* est un PLANCHER — un
+  // nœud dont l'enveloppe (épaisseur des flux) dépasse ne rétrécira pas en deçà.
+  matchSizeToRef = () => {
+    const ref = this.contextualised_node ?? this.selected_nodes[0]
+    if (!ref) return
+    const targets = this.selected_nodes.filter(
+      n => n != ref && n.shape_position_type != 'relative'
+    )
+    if (targets.length === 0) return
+
+    const w = ref.getShapeWidthToUse()
+    const h = ref.getShapeHeightToUse()
+
+    const dict_old: { [x: string]: [number, number] } = {}
+    targets.forEach(n => dict_old[n.id] = [n.shape_min_width, n.shape_min_height])
+
+    const doMatch = () => {
+      targets.forEach(n => {
+        n.shape_min_width = w
+        n.shape_min_height = h
+        n.settleCenterAnchor()
+        n.draw()
+      })
+      this.refreshAndSave()
+    }
+
+    const undoMatch = () => {
+      targets.forEach(n => {
+        const s = dict_old[n.id]
+        if (!s) return
+        n.shape_min_width = s[0]
+        n.shape_min_height = s[1]
+        n.settleCenterAnchor()
+        n.draw()
+      })
+    }
+
+    this.executeWithUndo(doMatch, undoMatch)
+  }
+
+  // ==================================================================================================
   // ACTIONS DE VISIBILITÉ
   // ==================================================================================================
 
@@ -1115,6 +1215,12 @@ export class NodeActions {
       alignVertMaxTop: nodeActions.alignVertMaxTop,
       alignVertMaxCenter: nodeActions.alignVertMaxCenter,
       alignVertMaxBottom: nodeActions.alignVertMaxBottom,
+
+      // Actions de distribution (#1274 lot E2)
+      distributeHorizontal: nodeActions.distributeHorizontal,
+      distributeVertical: nodeActions.distributeVertical,
+      // Caler la taille sur l'élément de référence (#1274 lot E2)
+      matchSizeToRef: nodeActions.matchSizeToRef,
 
       // Actions de visibilité
       toggleShapeVisibility: nodeActions.toggleShapeVisibility,

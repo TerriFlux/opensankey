@@ -41,6 +41,7 @@ import {
   Type_Orientation,
   Type_PaperFormat,
   Type_PaperOrientation,
+  Type_Shape,
   Type_TextHPos,
   Type_TextVPos
 } from '../Elements/ElementsAttributesConfig'
@@ -426,6 +427,18 @@ export class Class_DrawingArea {
   private _maximum_flux?: number
   private _minimum_flux?: number
 
+  // OS#1272 — Marqueur visuel d'avertissement de bilan par nœud (Σ flux entrants ≠
+  // Σ flux sortants). Réglage GLOBAL, simple contrôle d'AFFICHAGE, DISTINCT de
+  // Class_NodeElement.has_material_balance (contrainte du solveur MFA de
+  // réconciliation). Désactivé par défaut → aucun changement de rendu.
+  private _balance_marker_enabled: boolean = false
+  // Stratégie de tolérance : 'exact' (toute différence non nulle), 'absolute'
+  // (|Δ| > seuil, dans l'unité des flux) ou 'relative' (|Δ| > seuil% × max(Σentrée, Σsortie)).
+  private _balance_marker_strategy: 'exact' | 'absolute' | 'relative' = 'relative'
+  // Seuil de tolérance : ignoré en 'exact' ; unité de flux en 'absolute' ;
+  // pourcentage (0–100) en 'relative'. Défaut 1 (= 1 %).
+  private _balance_marker_tolerance: number = 1
+
   // Référence d'échelle par view tag : pour un view tag donné (clé = id de l'étiquette),
   // le flux `link_id` est calé à `thickness` px. Quand ce view tag est sélectionné,
   // l'échelle du diagramme est recalculée (applyViewTagScaleReference) pour que ce flux
@@ -457,6 +470,17 @@ export class Class_DrawingArea {
   // instead a standalone triangle whose base = its link's clamped thickness,
   // centered on the link's actual visible end (independent triangles, no fan).
   private _arrow_use_standalone_layout: boolean = false
+
+  // Pointe accentuée « arrow spikes » (issue #1270) : rendre visibles les flux fins
+  // en dessinant une pointe plus large/longue que l'épaisseur du flux, sans changer
+  // la valeur. Défaut = désactivé (aucun changement de rendu, rétrocompat) :
+  //  - _arrow_spike_always      : toujours accentuer (false par défaut) ;
+  //  - _arrow_spike_max_thickness : accentuer les flux dont l'épaisseur visible ≤ N px
+  //    (0 = seuil désactivé) ;
+  //  - _arrow_spike_base_factor : facteur de largeur/longueur de la pointe accentuée.
+  private _arrow_spike_always: boolean = false
+  private _arrow_spike_max_thickness: number = 0
+  private _arrow_spike_base_factor: number = 2
 
   // Filter out link inferior to this value (when filter value is at 0 doesn't filter link even null)
   private _filter_link_value: number = 0
@@ -507,6 +531,9 @@ export class Class_DrawingArea {
 
   private _mode: 'edition' | 'selection' | 'style_paint' | 'place_container' = 'edition'
   private _style_paint_source: Class_ProtoElement | null = null
+  // OS#1276 — forme du conteneur à créer en mode « placement » : 'rect' pour une
+  // zone de texte classique, 'line' pour une ligne libre (cf. enterPlaceContainerMode).
+  private _place_container_shape: Type_Shape = 'rect'
 
   private _ghost_link: Class_LinkElement | null = null
 
@@ -642,10 +669,16 @@ export class Class_DrawingArea {
     this._height = drawing_area_to_copy._height
     this._maximum_flux = drawing_area_to_copy._maximum_flux
     this._minimum_flux = drawing_area_to_copy._minimum_flux
+    this._balance_marker_enabled = drawing_area_to_copy._balance_marker_enabled
+    this._balance_marker_strategy = drawing_area_to_copy._balance_marker_strategy
+    this._balance_marker_tolerance = drawing_area_to_copy._balance_marker_tolerance
     this._maximum_node = drawing_area_to_copy._maximum_node
     this._minimum_node = drawing_area_to_copy._minimum_node
     this._structure_mode_force_min = drawing_area_to_copy._structure_mode_force_min
     this._arrow_use_standalone_layout = drawing_area_to_copy._arrow_use_standalone_layout
+    this._arrow_spike_always = drawing_area_to_copy._arrow_spike_always
+    this._arrow_spike_max_thickness = drawing_area_to_copy._arrow_spike_max_thickness
+    this._arrow_spike_base_factor = drawing_area_to_copy._arrow_spike_base_factor
     this._scale = drawing_area_to_copy._scale
     this._scaleValueToPx.domain([0, this._scale])
     this._type_data = drawing_area_to_copy._type_data
@@ -2292,6 +2325,11 @@ export class Class_DrawingArea {
     Camera.flyToNode(this, node, scale)
   }
 
+  /** Centre la caméra sur un point MONDE, avec animation (recherche flux / zone — OS#1273). */
+  public flyToPoint(wx: number, wy: number, scale?: number): void {
+    Camera.flyToPoint(this, wx, wy, scale)
+  }
+
   /** Viewport utile en pixels écran (réserves de panneaux déduites) + décalage de la nav bar. */
   public getViewport(): { width: number, height: number, top_offset: number } {
     return Camera.getViewport(this)
@@ -2606,8 +2644,13 @@ export class Class_DrawingArea {
   // capture ainsi le glisser sans interférence.
   public isInPlaceContainerMode(): boolean { return this._mode === 'place_container' }
 
-  public enterPlaceContainerMode(): void {
+  // OS#1276 — forme à créer au relâché du glisser de placement ('rect' = zone de
+  // texte, 'line' = ligne libre). Lue par DrawingAreaInteractions.
+  public get place_container_shape(): Type_Shape { return this._place_container_shape }
+
+  public enterPlaceContainerMode(shape: Type_Shape = 'rect'): void {
     this.purgeSelection()
+    this._place_container_shape = shape
     this._mode = 'place_container'
     this.drawCursor()
     // Rafraîchit la colonne d'outils (bouton mode placement actif/inactif).
@@ -3038,6 +3081,25 @@ export class Class_DrawingArea {
     this._scale_overrides.applyMaximumNodeScale(this)
   }
 
+  // OS#1272 — Réglages globaux du marqueur de bilan (voir champs privés).
+  public get balance_marker_enabled(): boolean { return this._balance_marker_enabled }
+  public set balance_marker_enabled(value: boolean) {
+    this._balance_marker_enabled = value
+    this.drawElements()
+  }
+  public get balance_marker_strategy(): 'exact' | 'absolute' | 'relative' { return this._balance_marker_strategy }
+  public set balance_marker_strategy(value: 'exact' | 'absolute' | 'relative') {
+    this._balance_marker_strategy = value
+    this.drawElements()
+  }
+  public get balance_marker_tolerance(): number { return this._balance_marker_tolerance }
+  public set balance_marker_tolerance(value: number) {
+    if (value >= 0) {
+      this._balance_marker_tolerance = value
+      this.drawElements()
+    }
+  }
+
   public get minimum_flux(): number | undefined { return this._minimum_flux }
   public set minimum_flux(value: number | undefined) {
     // value >= 0 : 0 est une valeur VALIDE (#200 — plancher 0 = flux tracés à
@@ -3075,6 +3137,25 @@ export class Class_DrawingArea {
   public get arrow_use_standalone_layout(): boolean { return this._arrow_use_standalone_layout }
   public set arrow_use_standalone_layout(value: boolean) {
     this._arrow_use_standalone_layout = value
+    this.drawElements()
+  }
+
+  // Pointe accentuée « arrow spikes » (#1270)
+  public get arrow_spike_always(): boolean { return this._arrow_spike_always }
+  public set arrow_spike_always(value: boolean) {
+    this._arrow_spike_always = value
+    this.drawElements()
+  }
+
+  public get arrow_spike_max_thickness(): number { return this._arrow_spike_max_thickness }
+  public set arrow_spike_max_thickness(value: number) {
+    this._arrow_spike_max_thickness = value
+    this.drawElements()
+  }
+
+  public get arrow_spike_base_factor(): number { return this._arrow_spike_base_factor }
+  public set arrow_spike_base_factor(value: number) {
+    this._arrow_spike_base_factor = value
     this.drawElements()
   }
 

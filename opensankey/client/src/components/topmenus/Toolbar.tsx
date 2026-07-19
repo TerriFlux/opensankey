@@ -1050,8 +1050,11 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
       return sankey.getTagGroupsAsList('level_taggs')
         .filter(tagg => tagg.has_tags && tagg.banner !== 'none') as unknown as Class_TagGroup[]
     case 'data':
+      // #1283 — inclut aussi sequence/topbar : consommés par la timeline/topbar,
+      // mais on les liste en carte ÉDITION SEULE (nom + crayon) pour pouvoir
+      // rechanger leur mode (sinon aucun accès à leur éditeur). 'none' exclu.
       return sankey.getTagGroupsAsList('data_taggs')
-        .filter(tagg => tagg.banner === 'one' || tagg.banner === 'multi') as unknown as Class_TagGroup[]
+        .filter(tagg => tagg.banner !== 'none') as unknown as Class_TagGroup[]
     case 'unitary':
       return sankey.getTagGroupsAsList('view_taggs')
         .filter(tagg => tagg.banner !== 'none') as unknown as Class_TagGroup[]
@@ -1562,6 +1565,10 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
       && groupProp(tagg.id) !== null
       && !(mode === 'level' && tagg.name === 'Primaire')
     const is_editing = editingGroupId === tagg.id
+    // #1283 — séquence/topbar : filtrés via la timeline/topbar, pas ici. On ne
+    // montre que nom + crayon (édition du groupe, ex. rechanger son mode), sans
+    // le sélecteur de filtrage qui ferait doublon.
+    const edit_only = tagg.banner === 'sequence' || tagg.banner === 'topbar'
 
     return (
       <Box key={tagg.id} layerStyle={mode === 'data' ? 'menuconfigpanel_grid' : 'menuconfig_grid'}>
@@ -1581,16 +1588,18 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
               </OSTooltip>
             )}
           </Box>}
-        <Box layerStyle='filter_grid_row'>
-          <OSTooltip label={t('Banner.ndd_lst')}>
-            {selector}
-          </OSTooltip>
-          <OSTooltip label={t('Banner.ndd_chk')}>
-            <Box justifySelf='end' alignSelf='center'>
-              {actionButton}
-            </Box>
-          </OSTooltip>
-        </Box>
+        {!edit_only && (
+          <Box layerStyle='filter_grid_row'>
+            <OSTooltip label={t('Banner.ndd_lst')}>
+              {selector}
+            </OSTooltip>
+            <OSTooltip label={t('Banner.ndd_chk')}>
+              <Box justifySelf='end' alignSelf='center'>
+                {actionButton}
+              </Box>
+            </OSTooltip>
+          </Box>
+        )}
         {/* #1283 — édition du groupe dépliée EN PLACE (renderer OSP). */}
         {editable && is_editing && renderGroupEditor && (
           <Box
