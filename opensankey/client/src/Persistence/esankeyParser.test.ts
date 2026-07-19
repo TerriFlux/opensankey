@@ -412,7 +412,7 @@ describe('parseEsankeyXml — coude droit (OS#1288)', () => {
   // attributs de tangente/ancre OpenSankey pour raidir le coude des flux vh/hv.
   // Nœuds A(100,300) et B(400,320) → portée ≈ hypot(300,20) ≈ 300.67.
   const withElbow = (extra: string): string => FIXTURE
-    .replace('<process id="50" locationX="100" locationY="300">', '<process id="50" locationX="100" locationY="300" arrowDirection="1">')
+    .replace('<process id="50" locationX="100" locationY="300"', '<process id="50" locationX="100" locationY="300" arrowDirection="1"')
     .replace('<process id="51" locationX="400" locationY="320">', '<process id="51" locationX="400" locationY="320" arrowDirection="2">')
     .replace('<arrow id="60">', `<arrow id="60">${extra}`)
 
@@ -594,13 +594,11 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     })
 
     test('flux : sankeyLink/pen dashStyle!=0 → shape_border_dashed sur le flux', () => {
+      // Arrow 60 porte déjà un <sankeyLink> (têtes de flèche, os#1289) : on lui
+      // ajoute un <pen dashStyle="1"> pour valider la détection du pointillé.
       const withDashedArrow = FIXTURE_DECOR.replace(
-        '<arrow id="60">\n        <sankeyArrowLabel visible="true" showValue="true" showUnit="true" text="60" labelFormat="{EntryName}: {PercentProcessSource} %" />\n        <comment text="Mesure 2025&#xD;&#xA;source: compteur" visible="false" />\n      </arrow>',
-        '<arrow id="60">' +
-        '<sankeyArrowLabel visible="true" showValue="true" showUnit="true" text="60" labelFormat="{EntryName}: {PercentProcessSource} %" />' +
-        '<comment text="Mesure 2025&#xD;&#xA;source: compteur" visible="false" />' +
-        '<sankeyLink><pen dashStyle="1" width="1"><dashPattern length="0" /></pen></sankeyLink>' +
-        '</arrow>'
+        '<sankeyLink toArrow="false" fromArrow="true" toArrowWidth="6" toArrowLength="10" fromArrowWidth="8" fromArrowLength="18" />',
+        '<sankeyLink toArrow="false" fromArrow="true" toArrowWidth="6" toArrowLength="10" fromArrowWidth="8" fromArrowLength="18"><pen dashStyle="1" width="1"><dashPattern length="0" /></pen></sankeyLink>'
       )
       const dArrow = parseEsankeyXml(withDashedArrow, { 'Images/tmp1.tmp': PNG_URI })
       const gasLink = Object.values(dArrow.links).find(l => l.value.data_value === 60)
