@@ -635,6 +635,21 @@ export const parseEsankeyXml = (
   const referenceUnitType = Object.values(unitTypes).find(ut => ut.used && ut.maximumFlow > 0 && ut.width > 0) ?? null
   if (referenceUnitType) userScale = unitTypeOwnScale(referenceUnitType)
 
+  // os#1297 — <scale>/<sectionFactors>/<quantityFactors> (`<net><prototypes>`) :
+  // PAS d'échelle supplémentaire, RIEN à mapper. Vérifié sur les 101 démos
+  // officielles (e!Sankey 5 demos/) : ce n'est pas un facteur d'échelle global
+  // ni un facteur par section, mais le PROTOTYPE (gabarit par défaut, jamais
+  // placé sur le canevas — locationX=locationY=0 et absent de <shapes> dans
+  // les 101 fichiers) de la légende « Scale » — l'équivalent e!Sankey de notre
+  // `display_legend_scale` (cf. NOTE-ESANKEY-COMPARATIF §2.5, ligne « Légende,
+  // élément échelle (3 magnitudes) » déjà listée OK). sectionFactors
+  // (ex. [0.4, 0.32, 0.28], somme=1) sont les largeurs relatives des 3
+  // segments du bandeau ; quantityFactors (ex. [1, 0.2, 0.05]) les fractions
+  // de `maximumFlow` affichées sur chacun — mais ces 6 valeurs sont
+  // IDENTIQUES dans les 101 démos (constante d'appli, pas dérivée du
+  // diagramme), et maximumFlow/width (unitType) sont déjà captés ci-dessus.
+  // Aucune info supplémentaire : non mappé, sciemment.
+
   // Palette de couleurs partagée : résout les <brushColorRef refId> (entries,
   // process, shapes) vers leur <brushColor argb>.
   const brushPalette = buildBrushColorPalette(root)
