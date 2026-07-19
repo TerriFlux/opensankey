@@ -770,15 +770,21 @@ export const parseEsankeyXml = (
         if (entry.color) link.local.color = entry.color
       }
       if (orientation !== 'hh') link.local.orientation = orientation
-      // AUCUN label de valeur posé sur les flux importés (décision user) : chez
-      // e!Sankey l'étiquette de quantité appartient à la FLÈCHE (somme de ses
-      // matériaux, position sur segment) — la reproduire par flux serait faux ;
-      // manque « label agrégé par flèche » listé en #264. On prépare seulement
-      // l'unité : si l'utilisateur active les valeurs, elle est déjà correcte.
-      // OS#1286 — l'unité est désormais une référence au REGISTRE d'unités
-      // (mode unit_model) pointant l'unité D'ORIGINE du flow : data_value étant
-      // converti vers l'unité de base, l'affichage re-divise par le coefficient
-      // et restitue la quantité saisie dans e!Sankey, avec son symbole.
+      // Label de valeur : affiché quand e!Sankey l'affiche (`showValue` de la
+      // flèche, défaut vrai). Sur les diagrammes mono-matériau (1 flow/flèche,
+      // cas courant, ex. Bus) la valeur du flux = celle de la flèche. Sur une
+      // flèche multi-matériaux, chaque flux porte alors SA part (≠ somme e!Sankey
+      // affichée sur la flèche) — écart mineur assumé.
+      if (graphicalArrow?.showValue !== false) {
+        link.local.value_label_is_visible = true
+        // e!Sankey affiche les valeurs TOUJOURS à l'horizontale (jamais alignées
+        // sur la tangente du tracé, même pour les flux verticaux In/Out).
+        link.local.value_label_on_path = false
+      }
+      // Unité du label : référence au REGISTRE d'unités (mode unit_model, OS#1286)
+      // pointant l'unité D'ORIGINE du flow. data_value étant converti vers l'unité
+      // de base, l'affichage re-divise par le coefficient et restitue la quantité
+      // saisie dans e!Sankey, avec son symbole.
       if (graphicalArrow?.showUnit && found) {
         link.local.label_unit_visible = true
         link.local.value_label_unit_type = 'unit_model'

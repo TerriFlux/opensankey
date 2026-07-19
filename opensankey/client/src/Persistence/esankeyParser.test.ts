@@ -356,9 +356,9 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     expect(link.tooltip_text).toBe('Mesure 2025\nsource: compteur')
   })
 
-  test('aucun label de valeur posé sur le flux ; unité préparée si activation manuelle', () => {
+  test('label de valeur affiché (showValue) + unité préparée', () => {
     const link = Object.values(d.links)[0]
-    expect(link.local.label_visible).toBeUndefined()
+    expect(link.local.value_label_is_visible).toBe(true)
     expect(link.local.label_unit_visible).toBe(true)
     // OS#1286 — la référence d'unité (id du registre) est posée, mais le
     // format pourcentage ({PercentProcessSource}) garde la PRIORITÉ sur le
