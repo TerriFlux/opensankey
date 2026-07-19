@@ -633,13 +633,10 @@ interface EsGraphicalArrow {
   // d'un `false` explicite, sous peine d'éteindre à tort la pointe cible par
   // défaut d'OpenSankey (`shape_is_arrow` vaut `true` par défaut, cf.
   // ElementsAttributesConfig) sur des flux qui n'ont simplement pas cette
-  // info. `arrowSize` = longueur du bout qui porte effectivement une pointe
-  // (cible en priorité — pas de taille séparée par bout côté OpenSankey, une
-  // seule `shape_arrow_size` sur `Class_LinkElement`), `null` si non
-  // exploitable : le défaut du style (10) s'applique alors.
+  // info. Les longueurs e!Sankey (from/toArrowLength) ne sont PAS reprises : la
+  // taille de pointe / d'encoche garde le défaut OpenSankey (10 px).
   toArrow: boolean | null
   fromArrow: boolean | null
-  arrowSize: number | null
   /** OS#1290 — trait pointillé (`sankeyLink/pen@dashStyle` ou `dashPattern`). */
   dashed: boolean
   /**
@@ -672,9 +669,6 @@ const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } 
     // d'équivalent OpenSankey (une seule forme de pointe, pleine) : non lus.
     const toArrow = sankeyLink ? sankeyLink.getAttribute('toArrow') === 'true' : null
     const fromArrow = sankeyLink ? sankeyLink.getAttribute('fromArrow') === 'true' : null
-    const toArrowLength = sankeyLink?.hasAttribute('toArrowLength') ? attrNum(sankeyLink, 'toArrowLength', 0) : null
-    const fromArrowLength = sankeyLink?.hasAttribute('fromArrowLength') ? attrNum(sankeyLink, 'fromArrowLength', 0) : null
-    const arrowSize = toArrow ? toArrowLength : (fromArrow ? fromArrowLength : null)
     // OS#1290 — le pen du tracé vit sous <sankeyLink>, pas directement sous
     // <arrow> (qui ne porte qu'un <penColor> de repli, non pointillable).
     const pen = sankeyLink ? childByTag(sankeyLink, 'pen') : null
@@ -696,7 +690,6 @@ const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } 
       adjustingStyle: sankeyLink?.getAttribute('adjustingStyle') ?? '',
       toArrow,
       fromArrow,
-      arrowSize: (arrowSize !== null && arrowSize > 0) ? arrowSize : null,
       dashed: isDashStylePenDashed(pen),
       // OS#1294 — dégradé source→cible (lu sur la flèche graphique).
       gradientFromSource: a.getAttribute('gradientFromSource') === 'true',
@@ -987,15 +980,24 @@ export const parseEsankeyXml = (
     // n'est jamais plus petit que sa boîte e!Sankey. La boîte ayant pour coin
     // haut-gauche locationX/Y (= x/y déjà posé), aucun décalage : cohérent avec la
     // sémantique « coin » du JSON (pas de node_pos_is_center).
-    if (graphical && graphical.width > 0) nodes[id].local.node_width = graphical.width
-    if (graphical && graphical.height > 0) nodes[id].local.node_height = graphical.height
-    // Process invisible (fréquent dans les diagrammes « décor » : seuls le
-    // label et une icône libre marquent le nœud). Une boîte VISIBLE mais à fond
-    // blanc/quasi-blanc SANS image est aussi une ancre invisible e!Sankey (le
-    // rectangle se fond dans le canevas) → on la rend invisible.
-    if (graphical && !graphical.visible) nodes[id].local.shape_visible = false
-    else if (graphical?.visible && !graphical.imageFile && isNearWhiteFill(graphical.color)) {
+    // Un nœud INVISIBLE (process caché e!Sankey, ou boîte blanche/quasi-blanche
+    // sans image = ancre fondue dans le canevas) : on masque forme ET bordure
+    // (shape_visible ne masque que le remplissage — NodeDrawShape : fill-opacity ;
+    // la bordure suit shape_border_visible, indépendant) ET on ne lui donne AUCUNE
+    // largeur/hauteur de boîte. Sinon sa largeur (backgroundSizeW, ex. 133 px pour
+    // le process central) écarte la pointe entrante de l'encoche des flux sortants
+    // et empêche leur imbrication : c'est l'équivalent de la « Distance » e!Sankey
+    // (écart process→flèches) mise à 0/négatif. Un nœud invisible collapse donc à
+    // un point, les flux convergent et pointe/encoche s'emboîtent.
+    const nodeHidden = (graphical && !graphical.visible) ||
+      (graphical?.visible && !graphical.imageFile && isNearWhiteFill(graphical.color))
+    if (nodeHidden) {
       nodes[id].local.shape_visible = false
+      nodes[id].local.shape_border_visible = false
+    } else {
+      // OS#1298 — taille de boîte réelle, uniquement pour un nœud VISIBLE.
+      if (graphical && graphical.width > 0) nodes[id].local.node_width = graphical.width
+      if (graphical && graphical.height > 0) nodes[id].local.node_height = graphical.height
     }
     // A4 — Forme alternative du process (0 = rect, notre défaut : rien à poser).
     // 1 = rectangle arrondi → on garde 'rect' et on pose un rayon de coin visible
@@ -1053,9 +1055,11 @@ export const parseEsankeyXml = (
       output_value: 0,
     }
     if (graphical?.color) nodes[id].local.color = graphical.color
-    if (graphical && !graphical.visible) nodes[id].local.shape_visible = false
-    else if (graphical?.visible && !graphical.imageFile && isNearWhiteFill(graphical.color)) {
+    // Idem process : masquer forme ET bordure (shape_border_visible indépendant).
+    if ((graphical && !graphical.visible) ||
+        (graphical?.visible && !graphical.imageFile && isNearWhiteFill(graphical.color))) {
       nodes[id].local.shape_visible = false
+      nodes[id].local.shape_border_visible = false
     }
     if (graphical?.shapeType === 1) nodes[id].local.shape_border_radius = 10
     else if (graphical?.shapeType === 2) nodes[id].local.shape = 'ellipse'
@@ -1179,19 +1183,20 @@ export const parseEsankeyXml = (
         link.local.ending_tangeant = bend
         link.local.curvature = bend
       }
-      // os#1289 — têtes de flèche du flux (sankeyLink/@toArrow et @fromArrow,
-      // lues par flèche graphique dans parseGraphicalArrows) → pointes
-      // OpenSankey shape_is_arrow (côté cible) / shape_arrow_at_source (côté
-      // source), indépendantes l'une de l'autre comme côté e!Sankey (un flux
-      // peut porter zéro, une ou deux pointes). `null` (sankeyLink absent) ne
-      // pose rien : le défaut du style s'applique (is_arrow=true côté cible,
-      // arrow_at_source=false côté source — cf. ElementsAttributesConfig). On
-      // ne pose localement que les écarts au défaut, comme le reste du fichier.
+      // os#1289 — têtes de flux e!Sankey (sankeyLink/@toArrow et @fromArrow) :
+      //  - @toArrow (côté CIBLE) → pointe classique qui RESSORT (shape_is_arrow,
+      //    défaut vrai) ; toArrow=false → pas de pointe cible.
+      //  - @fromArrow (côté SOURCE) → e!Sankey ne dessine PAS une pointe qui
+      //    ressort mais une « flèche en négatif » : une ENCOCHE en chevron
+      //    creusée dans le départ du flux (fromArrowStyle=1). L'équivalent exact
+      //    OpenSankey est shape_source_notch (et non shape_arrow_at_source, qui
+      //    ferait ressortir une pointe).
+      // Dimensions : on garde les défauts OpenSankey (arrow_size / notch_size =
+      // 10 px, calés sur l'allure e!Sankey). Les longueurs e!Sankey (from/to
+      // ArrowLength) sont deux valeurs minuscules (jusqu'à 3 px) et peu fiables
+      // comme taille UNIQUE : les reprendre rendait la pointe/encoche invisible.
       if (graphicalArrow?.toArrow === false) link.local.shape_is_arrow = false
-      if (graphicalArrow?.fromArrow === true) link.local.shape_arrow_at_source = true
-      if (graphicalArrow?.arrowSize !== null && graphicalArrow?.arrowSize !== undefined) {
-        link.local.shape_arrow_size = graphicalArrow.arrowSize
-      }
+      if (graphicalArrow?.fromArrow === true) link.local.shape_source_notch = true
       // OS#1290 — trait pointillé (dashStyle/dashPattern du pen de la
       // sankeyLink) → bordure pointillée du flux.
       if (graphicalArrow?.dashed) link.local.shape_border_dashed = true

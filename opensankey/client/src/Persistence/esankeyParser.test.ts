@@ -463,19 +463,21 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     expect(link.tooltip_text).toBe('Mesure 2025\nsource: compteur')
   })
 
-  // os#1289 — têtes de flèche : sankeyLink/@toArrow, @fromArrow (+ longueurs)
-  // → shape_is_arrow / shape_arrow_at_source / shape_arrow_size.
-  test('os#1289 — sankeyLink : pointe cible désactivée, pointe source posée, taille reprise', () => {
+  // os#1289 — têtes de flux : sankeyLink/@toArrow → pointe cible (shape_is_arrow) ;
+  // @fromArrow → « flèche en négatif » = encoche source (shape_source_notch), pas
+  // une pointe qui ressort. Dimensions laissées aux défauts OpenSankey (10 px).
+  test('os#1289 — sankeyLink : pointe cible désactivée, encoche source posée', () => {
     const withArrow = Object.values(d.links).find(l => l.value.data_value === 60) // graphArrow 40, arrow 60
     expect(withArrow?.local.shape_is_arrow).toBe(false)
-    expect(withArrow?.local.shape_arrow_at_source).toBe(true)
-    expect(withArrow?.local.shape_arrow_size).toBe(18) // fromArrowLength (côté qui porte la pointe)
+    expect(withArrow?.local.shape_source_notch).toBe(true)
+    // Taille non forcée : on garde le défaut OpenSankey.
+    expect(withArrow?.local.shape_arrow_size).toBeUndefined()
   })
 
   test('os#1289 — sankeyLink absent : défauts du style non touchés (pas de shape_is_arrow local)', () => {
     const withoutArrow = Object.values(d.links).find(l => l.value.data_value === 20) // graphArrow 42, arrow 61
     expect(withoutArrow?.local.shape_is_arrow).toBeUndefined()
-    expect(withoutArrow?.local.shape_arrow_at_source).toBeUndefined()
+    expect(withoutArrow?.local.shape_source_notch).toBeUndefined()
     expect(withoutArrow?.local.shape_arrow_size).toBeUndefined()
   })
 
