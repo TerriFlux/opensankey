@@ -43,6 +43,7 @@ import {
   DrawerContent,
   Text
 } from '@chakra-ui/react'
+import { SearchIcon } from '@chakra-ui/icons'
 
 import { ApplyLayoutDialog } from '../dialogs/SankeyMenuDialogs'
 import {
@@ -242,6 +243,20 @@ export const SankeyMenu = (
             {icon_library.icon_filter_tags}
           </Button>
         </OSTooltip> : <></>}
+        {/* OS#1273 — recherche d'élément (nœud / flux / zone). Bascule la barre de
+            recherche (même slot que le raccourci Ctrl+F). */}
+        <OSTooltip placement='left' label={t('search.tooltip')}>
+          <Button
+            id='buttonOpenElementSearch'
+            variant='toolbar_button_open_filter'
+            size='sizeToolbarButton'
+            position='relative'
+            aria-label={t('search.title')}
+            onClick={() => menu_configuration.ref_toggle_search.current()}
+          >
+            <SearchIcon />
+          </Button>
+        </OSTooltip>
         <Divider />
         <ComponentMouseMode app_data={app_data} updateParentComponent={refreshToolsColumn} />
         {/* Zone de texte : à côté de l'outil de tracé (mode édition). Active le mode
@@ -252,19 +267,44 @@ export const SankeyMenu = (
           <Button
             id='button_create_text_zone'
             variant={app_data.drawing_area.isInPlaceContainerMode()
+              && app_data.drawing_area.place_container_shape !== 'line'
               ? 'toolbar_button_mouse_mode_activated'
               : 'toolbar_button_mouse_mode'}
             size='sizeToolbarButton'
             onClick={() => {
-              if (app_data.drawing_area.isInPlaceContainerMode()) {
+              if (app_data.drawing_area.isInPlaceContainerMode()
+                && app_data.drawing_area.place_container_shape !== 'line') {
                 app_data.drawing_area.exitPlaceContainerMode()
               } else {
-                app_data.drawing_area.enterPlaceContainerMode()
+                app_data.drawing_area.enterPlaceContainerMode('rect')
               }
               refreshToolsColumn()
             }}
           >
             {icon_library.icon_object}
+          </Button>
+        </OSTooltip>
+        {/* OS#1276 — ligne libre : même mode « placement » que la zone de texte, mais
+            le glisser pose un trait décoratif (diagonale de la boîte tracée). */}
+        <OSTooltip placement='left' label={t('Banner.create_line')}>
+          <Button
+            id='button_create_line'
+            variant={app_data.drawing_area.isInPlaceContainerMode()
+              && app_data.drawing_area.place_container_shape === 'line'
+              ? 'toolbar_button_mouse_mode_activated'
+              : 'toolbar_button_mouse_mode'}
+            size='sizeToolbarButton'
+            onClick={() => {
+              if (app_data.drawing_area.isInPlaceContainerMode()
+                && app_data.drawing_area.place_container_shape === 'line') {
+                app_data.drawing_area.exitPlaceContainerMode()
+              } else {
+                app_data.drawing_area.enterPlaceContainerMode('line')
+              }
+              refreshToolsColumn()
+            }}
+          >
+            {icon_library.icon_line_shape}
           </Button>
         </OSTooltip>
         <ComponentPositionMode app_data={app_data} updateParentComponent={refreshToolsColumn} />

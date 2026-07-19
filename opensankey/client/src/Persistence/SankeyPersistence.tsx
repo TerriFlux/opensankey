@@ -776,6 +776,10 @@ export class NodeElementPersistence extends NodeBasePersistence {
     if (!node.has_material_balance) {
       json_object['has_material_balance'] = false
     }
+    // OS#1272 — Override par nœud du marqueur de bilan ('inherit' = suit le global).
+    if (node.balance_marker_mode !== 'inherit') {
+      json_object['balance_marker_mode'] = node.balance_marker_mode
+    }
 
     if (kwargs && kwargs['save_only_elements_with_tags']) {
       if (node.input_links_list.length > 0) {
@@ -951,6 +955,10 @@ export class NodeElementPersistence extends NodeBasePersistence {
     }
     if (json_node_object['has_material_balance'] !== undefined) {
       node.has_material_balance = json_node_object['has_material_balance'] as boolean
+    }
+    // OS#1272 — Override par nœud du marqueur de bilan.
+    if (json_node_object['balance_marker_mode'] !== undefined) {
+      node.balance_marker_mode = json_node_object['balance_marker_mode'] as 'inherit' | 'on' | 'off'
     }
 
   }
@@ -1855,6 +1863,15 @@ export class DrawingAreaPersistence {
       json_object['disaggregation_gap_value'] = drawing_area['_disaggregation_gap_value']
     if (!drawing_area.structure_mode_force_min) json_object['structure_mode_force_min'] = false
     if (drawing_area.arrow_use_standalone_layout) json_object['arrow_use_standalone_layout'] = true
+    // Pointe accentuée « arrow spikes » (#1270) — sérialisé seulement si non défaut
+    // (défauts : always=false, max_thickness=0, base_factor=2).
+    if (drawing_area.arrow_spike_always) json_object['arrow_spike_always'] = true
+    if (drawing_area.arrow_spike_max_thickness) json_object['arrow_spike_max_thickness'] = drawing_area.arrow_spike_max_thickness
+    if (drawing_area.arrow_spike_base_factor !== 2) json_object['arrow_spike_base_factor'] = drawing_area.arrow_spike_base_factor
+    // OS#1272 — Marqueur de bilan (réglages globaux). Sérialisés seulement hors défaut.
+    if (drawing_area.balance_marker_enabled) json_object['balance_marker_enabled'] = true
+    if (drawing_area.balance_marker_strategy !== 'relative') json_object['balance_marker_strategy'] = drawing_area.balance_marker_strategy
+    if (drawing_area.balance_marker_tolerance !== 1) json_object['balance_marker_tolerance'] = drawing_area.balance_marker_tolerance
     // Issue #165 — toujours sérialisé : l'absence du flag identifie un fichier
     // antérieur à la feature (chargé en déverrouillé pour préserver son rendu).
     json_object['font_size_locked'] = drawing_area.font_size_locked
@@ -2262,6 +2279,14 @@ export class DrawingAreaPersistence {
       getNumberOrUndefinedFromJSON(json_object, 'disaggregation_gap_value') ?? null
     drawing_area['_structure_mode_force_min'] = getBooleanFromJSON(json_object, 'structure_mode_force_min', true)
     drawing_area['_arrow_use_standalone_layout'] = getBooleanFromJSON(json_object, 'arrow_use_standalone_layout', false)
+    // Pointe accentuée « arrow spikes » (#1270)
+    drawing_area['_arrow_spike_always'] = getBooleanFromJSON(json_object, 'arrow_spike_always', false)
+    drawing_area['_arrow_spike_max_thickness'] = getNumberFromJSON(json_object, 'arrow_spike_max_thickness', 0)
+    drawing_area['_arrow_spike_base_factor'] = getNumberFromJSON(json_object, 'arrow_spike_base_factor', 2)
+    // OS#1272 — Marqueur de bilan (réglages globaux).
+    drawing_area['_balance_marker_enabled'] = getBooleanFromJSON(json_object, 'balance_marker_enabled', false)
+    drawing_area['_balance_marker_strategy'] = getStringFromJSON(json_object, 'balance_marker_strategy', 'relative') as 'exact' | 'absolute' | 'relative'
+    drawing_area['_balance_marker_tolerance'] = getNumberFromJSON(json_object, 'balance_marker_tolerance', 1)
     drawing_area['_scale'] = getNumberFromJSON(json_object, 'user_scale', drawing_area.scale)
     drawing_area.scaleValueToPx.domain([0, drawing_area.scale])
     drawing_area['_type_data'] = getStringFromJSON(json_object, 'show_structure', drawing_area.type_data) as Type_Structure

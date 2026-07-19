@@ -1460,6 +1460,62 @@ def templates_index_load(source):
         return json.load(file_index)
 
 
+def esankey_corpus_dir():
+    """
+    Dossier du corpus e!Sankey pour la galerie locale de DEVELOPPEMENT (os#1281).
+
+    STRICTEMENT dev-only. Les demos e!Sankey (et les cliparts tiers qu'elles
+    embarquent) sont PROPRIETAIRES : elles ne doivent JAMAIS etre committees ni
+    deployees. Cette galerie n'est donc active QUE si les DEUX conditions suivantes
+    sont reunies :
+      - la variable d'environnement ESANKEY_CORPUS_DIR est definie cote serveur et
+        pointe un dossier existant (opt-in explicite du developpeur — aucune valeur
+        par defaut, pour ne rien exposer par accident), ET
+      - l'application tourne en mode debug (current_app.debug) — jamais en prod.
+
+    Si l'une manque, renvoie None : les routes /menus/templates et
+    /menus/templates_asset repondent alors 404 pour cette source, et le front
+    n'affiche meme pas la galerie (la source disparait). La fonctionnalite est donc
+    totalement inerte sans ESANKEY_CORPUS_DIR.
+    """
+    try:
+        if not current_app.debug:
+            return None
+    except Exception:
+        return None
+    corpus = os.environ.get("ESANKEY_CORPUS_DIR")
+    if not corpus or not os.path.isdir(corpus):
+        return None
+    return corpus
+
+
+def esankey_local_index():
+    """
+    Genere a la volee l'index de la galerie locale e!Sankey (os#1281).
+
+    Une seule categorie, un template par fichier `.sankey` du corpus, titre = nom
+    de fichier, SANS img_path (le front affiche alors un aplat au titre du modele).
+    Renvoie None si la galerie n'est pas active (voir esankey_corpus_dir).
+    """
+    corpus = esankey_corpus_dir()
+    if corpus is None:
+        return None
+    templates = {}
+    for name in sorted(os.listdir(corpus)):
+        if not name.lower().endswith(".sankey"):
+            continue
+        if not os.path.isfile(os.path.join(corpus, name)):
+            continue
+        # file_path relatif a la racine du corpus (servi par templates_asset).
+        templates[name] = {
+            "title": {"en": name, "fr": name},
+            "file_path": name,
+            "lang": "en",
+            "category": "esankey_local",
+        }
+    return {"categories": ["esankey_local"], "templates": templates}
+
+
 def templates_declared_assets(source):
     """
     Ensemble des chemins declares par l'index d'une galerie (file_path + img_path).
@@ -1492,7 +1548,18 @@ def menus_templates():
     (parametre source).
     """
     payload = request.get_json(silent=True) or {}
-    source = "mfadata" if payload.get("source") == "mfadata" else "sankeydata"
+    requested = payload.get("source")
+    # Galerie locale e!Sankey (dev-only) : index genere a la volee. 404 si la
+    # source n'est pas active (ESANKEY_CORPUS_DIR absente ou hors mode debug) —
+    # le front n'affiche alors rien pour cette source.
+    if requested == "esankey-local":
+        data_index = esankey_local_index()
+        if data_index is None:
+            abort(404)
+        return Response(
+            response=json.dumps(data_index), status=200, mimetype="application/json"
+        )
+    source = "mfadata" if requested == "mfadata" else "sankeydata"
     data_index = templates_index_load(source)
     if data_index is None:
         # Pas d'index pour cette source (ex. MFAData absent d'un deploiement) :
@@ -1515,7 +1582,28 @@ def menus_templates_asset(asset):
     que des chemins effectivement declares par l'index (liste blanche exacte),
     pour ne rien exposer d'autre que le contenu publie.
     """
-    source = "mfadata" if request.args.get("source") == "mfadata" else "sankeydata"
+    requested = request.args.get("source")
+    # Galerie locale e!Sankey (dev-only, os#1281) : sert un `.sankey` du corpus.
+    # Actif uniquement si ESANKEY_CORPUS_DIR est definie ET en mode debug, sinon
+    # 404. On restreint aux fichiers `.sankey` et on neutralise toute remontee de
+    # chemin (normalisation + refus de "..", safe_join, send_from_directory).
+    if requested == "esankey-local":
+        corpus = esankey_corpus_dir()
+        if corpus is None:
+            abort(404)
+        normalized = posixpath.normpath(asset.replace("\\", "/"))
+        if (
+            normalized.startswith("/")
+            or normalized.startswith("../")
+            or ".." in normalized.split("/")
+            or not normalized.lower().endswith(".sankey")
+        ):
+            abort(404)
+        full_path = safe_join(corpus, normalized)
+        if full_path is None or not os.path.isfile(full_path):
+            abort(404)
+        return send_from_directory(corpus, normalized)
+    source = "mfadata" if requested == "mfadata" else "sankeydata"
     root = os.environ.get("MFAData" if source == "mfadata" else "SANKEY_DATA")
     if not root:
         abort(404)

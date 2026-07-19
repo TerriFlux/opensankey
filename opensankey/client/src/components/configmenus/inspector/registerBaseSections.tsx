@@ -17,7 +17,7 @@ import React from 'react'
 import { Box, Button, Checkbox } from '@chakra-ui/react'
 import { inspector_registry, INSPECTOR_TAB_VALUE_ID } from './InspectorRegistry'
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
-import { SankeyNodeSelection, NodeMaterialBalanceCheckbox } from '../MenuElementsSelection'
+import { SankeyNodeSelection, NodeMaterialBalanceCheckbox, NodeBalanceMarkerConfig } from '../MenuElementsSelection'
 import { MenuConfigurationAppearance } from '../MenuElementsAppearance'
 import { MenuConfigurationLinksData } from '../SankeyMenuConfigurationLinksData'
 import { ConfigMenuTextInput, OSTooltip, CustomFaEyeCheckIcon, WrapperBoxSubSectionMenu } from '../MenuCommon'
@@ -103,6 +103,11 @@ export function registerBaseInspectorSections(): void {
             bilan matière vivent désormais dans l'onglet MFA. */}
         {scope === 'selection' && app_data.drawing_area.selected_links_list.length > 0 && (
           <MenuConfigurationLinksData app_data={app_data} hide_selector hide_origin_dest hide_afm />
+        )}
+        {/* OS#1272 — Marqueur visuel d'avertissement de bilan (Σ entrée ≠ sortie).
+            Contrôle d'affichage, disponible sans licence AFM. */}
+        {scope === 'selection' && app_data.drawing_area.selected_nodes_list.length > 0 && (
+          <NodeBalanceMarkerConfig app_data={app_data} />
         )}
         {appearanceTab('value_label')(app_data, scope)}
       </>

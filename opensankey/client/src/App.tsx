@@ -48,6 +48,7 @@ import { ZDDModifierType } from './components/dialogs/ContextZDDConfig'
 import { LinkModifierType } from './components/dialogs/ContextLinkConfig'
 import { NodeModifierType } from './components/dialogs/NodeActions'
 import { ToolbarFilter } from './components/topmenus/Toolbar'
+import { ElementSearchOverlay } from './components/topmenus/ElementSearch'
 import { FormatConfigStructure } from './components/dialogs/PersistenceProcessDialogConfigs'
 
 /**
@@ -275,6 +276,9 @@ export const OpenSankeyApp = ({
             app_data={app_data}
             hide_floating_button={!app_data.is_static}
           /> : <></>}
+        {/* OS#1273 — recherche d'élément (Ctrl+F). Se monte toujours ; invisible
+            tant qu'elle n'est pas ouverte (raccourci ou bouton de la colonne d'outils). */}
+        <ElementSearchOverlay app_data={app_data} />
         <>
           <SankeyMenu
             app_data={app_data}

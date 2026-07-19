@@ -173,6 +173,11 @@ describe('parseEsankeyXml — fixture minimale', () => {
 
 // Fixture « décor » : process invisible + process-image, commentaire de
 // flèche, unité affichée, zones libres (texte, rectangle, image) et légende.
+// Étendue pour A2/A4/A5 (attributs vérifiés sur les démos officielles e!Sankey
+// 5 installées localement, cf. rapport de l'agent) : un 2e unitType (Mass,
+// ratio maximumFlow/width différent du 1er → échelle locale attendue sur son
+// flux), un process en forme arrondie (shapeType=1) et un en ellipse
+// (shapeType=2), et deux `labelFormat` avec les mots-clés pourcentage.
 const PNG_URI = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUg'
 const FIXTURE_DECOR = `<?xml version="1.0" encoding="utf-8"?>
 <document xmlns="${NS}" generator="e!Sankey">
@@ -182,16 +187,21 @@ const FIXTURE_DECOR = `<?xml version="1.0" encoding="utf-8"?>
       <unitType id="10" name="Power" used="true" width="100" maximumFlow="100" showUnit="true">
         <units><unit id="11" name="kW" coefficient="1" isBasicUnit="true" /></units>
       </unitType>
+      <unitType id="12" name="Mass" used="true" width="50" maximumFlow="200" showUnit="true">
+        <units><unit id="13" name="kg" coefficient="1" isBasicUnit="true" /></units>
+      </unitType>
     </unitTypes>
     <entryGroup id="20" name="Root">
       <entries>
         <entry id="21" name="Gas"><unitTypeRef refId="10" /><brushColor argb="-16776961" /></entry>
+        <entry id="25" name="Metal"><unitTypeRef refId="12" /><brushColor argb="-16711936" /></entry>
       </entries>
       <entryGroups />
     </entryGroup>
     <graphNodes>
       <graphProcess id="30" name="Source" />
       <graphProcess id="31" name="Puits" />
+      <graphProcess id="32" name="Rond" />
     </graphNodes>
     <graphArrows>
       <graphArrow id="40" name="">
@@ -203,22 +213,37 @@ const FIXTURE_DECOR = `<?xml version="1.0" encoding="utf-8"?>
           </flow>
         </compartments>
       </graphArrow>
+      <graphArrow id="42" name="">
+        <from><graphProcessRef refId="31" /></from>
+        <to><graphProcessRef refId="32" /></to>
+        <compartments>
+          <flow id="43" name="Metal" quantity="20" source="0">
+            <entryRef refId="25" /><unitRef refId="13" />
+          </flow>
+        </compartments>
+      </graphArrow>
     </graphArrows>
   </netModel>
   <net backgroundColor="-1">
     <processes>
-      <process id="50" locationX="200" locationY="400" visible="false">
+      <process id="50" locationX="200" locationY="400" visible="false" shapeType="1">
         <label text="Source" />
       </process>
       <process id="51" locationX="500" locationY="400">
         <image filename="Images\\tmp1.tmp" />
         <label text="Puits" />
       </process>
+      <process id="52" locationX="800" locationY="400" shapeType="2">
+        <label text="Rond" />
+      </process>
     </processes>
     <arrows>
       <arrow id="60">
-        <sankeyArrowLabel visible="true" showValue="true" showUnit="true" text="60" />
+        <sankeyArrowLabel visible="true" showValue="true" showUnit="true" text="60" labelFormat="{EntryName}: {PercentProcessSource} %" />
         <comment text="Mesure 2025&#xD;&#xA;source: compteur" visible="false" />
+      </arrow>
+      <arrow id="61">
+        <sankeyArrowLabel visible="true" showValue="true" showUnit="true" text="20" labelFormat="{PercentProcessDestination}" />
       </arrow>
     </arrows>
     <shapes>
@@ -244,9 +269,11 @@ const FIXTURE_DECOR = `<?xml version="1.0" encoding="utf-8"?>
     <nodes>
       <keyValuePair><graphProcessRef refId="30" /><processRef refId="50" /></keyValuePair>
       <keyValuePair><graphProcessRef refId="31" /><processRef refId="51" /></keyValuePair>
+      <keyValuePair><graphProcessRef refId="32" /><processRef refId="52" /></keyValuePair>
     </nodes>
     <edges>
       <keyValuePair><graphArrowRef refId="40" /><arrowRef refId="60" /></keyValuePair>
+      <keyValuePair><graphArrowRef refId="42" /><arrowRef refId="61" /></keyValuePair>
     </edges>
   </logicalGraphicalObjectMapping>
 </document>`
@@ -302,6 +329,38 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
   test('groupe de tags avec use_colors (colormap = couleurs des entries)', () => {
     expect(d.fluxTags[ESANKEY_ENTRIES_TAGG_ID].use_colors).toBe(true)
   })
+
+  // A4 — formes de process alternatives (shapeType 1/2, manuel e!Sankey 5 p.45).
+  test('shapeType=1 (rectangle arrondi) → border_radius ; shapeType=2 (ellipse) → shape', () => {
+    const source = Object.values(d.nodes).find(n => n.name === 'Source')
+    const rond = Object.values(d.nodes).find(n => n.name === 'Rond')
+    expect(source?.local.shape_border_radius).toBe(10)
+    expect(source?.local.shape).toBeUndefined() // reste 'rect' (défaut), pas de clé posée
+    expect(rond?.local.shape).toBe('ellipse')
+    expect(rond?.local.shape_border_radius).toBeUndefined()
+  })
+
+  // A2 — labels en pourcentage (format personnalisé à mots-clés, manuel p.34).
+  test('{PercentProcessSource}/{PercentProcessDestination} → value_label_unit_type, value_option inchangé', () => {
+    const gas = Object.values(d.links).find(l => l.value.data_value === 60)
+    const metal = Object.values(d.links).find(l => l.value.data_value === 20)
+    expect(gas?.local.value_label_unit_type).toBe('%OS')
+    expect(metal?.local.value_label_unit_type).toBe('%ID')
+    // value_option n'existe pas côté EsFlow (jamais posé) : data_value reste la
+    // quantité physique, pas une contrainte MFA en %.
+    expect(gas?.local.value_option).toBeUndefined()
+  })
+
+  // A5 — échelle indépendante par unitType (Power = référence, Mass a un ratio
+  // maximumFlow/width différent → échelle locale sur son flux uniquement).
+  test('unitType secondaire à ratio différent → shape_local_link_scale local, flux de référence inchangé', () => {
+    const gas = Object.values(d.links).find(l => l.value.data_value === 60) // Power (référence)
+    const metal = Object.values(d.links).find(l => l.value.data_value === 20) // Mass
+    expect(d.user_scale).toBe(100) // Power : 100 maximumFlow / 100 width * 100
+    expect(gas?.local.shape_local_link_scale).toBeUndefined()
+    // Mass : 200 maximumFlow / 50 width * 100 = 400 → multiplicateur 400/100 = 4
+    expect(metal?.local.shape_local_link_scale).toBe(4)
+  })
 })
 
 describe('parseEsankeyXml — erreurs', () => {
@@ -326,9 +385,14 @@ describe('loadEsankeyFile — dézippage', () => {
   })
 })
 
-// Suite bonus, locale uniquement : parse toutes les démos de l'installation
-// e!Sankey 5 si présente (jamais en CI — fichiers propriétaires non committés).
-const DEMOS_DIR = 'C:/Program Files/iPoint-systems/e!Sankey 5/demos'
+// Suite bonus, locale uniquement : parse toutes les démos e!Sankey si un corpus
+// est disponible. Les fichiers .sankey livrés par e!Sankey sont propriétaires
+// (et les cliparts sont sous licence tierce) : ils ne sont JAMAIS committés ni
+// redistribués. Pointer le corpus via la variable d'environnement
+// ESANKEY_CORPUS_DIR ; à défaut, on tente le dossier d'installation par défaut.
+// Absent (cas CI) → la suite est skippée.
+const DEMOS_DIR = process.env.ESANKEY_CORPUS_DIR
+  || 'C:/Program Files/iPoint-systems/e!Sankey 5/demos'
 const describeDemos = fs.existsSync(DEMOS_DIR) ? describe : describe.skip
 
 describeDemos('loadEsankeyFile — démos e!Sankey 5 locales', () => {
