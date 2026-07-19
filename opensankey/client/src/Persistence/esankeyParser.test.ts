@@ -319,17 +319,16 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
   test('zones libres → labels : texte (police), rectangle (fond), image', () => {
     const containers = Object.values(d.labels)
     expect(containers.length).toBe(3)
-    const texte = containers.find(c => c.title === 'Titre du\ndiagramme')
+    const texte = containers.find(c => String(c.name_label_fo_content ?? '').includes('Titre'))
     expect(texte?.name_label_font_size).toBe(18)
     expect(texte?.name_label_bold).toBe(true)
     expect(texte?.name_label_color).toBe('#000000')
-    // Le texte doit être RENDU : source 'custom' + name_label_text + visibilité
-    // (le simple name/title laisse le label masqué au chargement).
+    // Multi-ligne dans le rich text (foreignObject) ; name/name_label_text portent
+    // le texte SANS les \n (une ligne), source 'custom', visible.
     expect(texte?.name_label_source).toBe('custom')
-    expect(texte?.name_label_text).toBe('Titre du\ndiagramme')
     expect(texte?.name_label_is_visible).toBe(true)
-    // Contenu HTML (foreignObject) : sans lui drawFO ne dessine rien (has_fo=true
-    // par défaut). Un <p> par ligne du texte e!Sankey.
+    expect(texte?.name).toBe('Titre du diagramme')
+    expect(texte?.name_label_text).toBe('Titre du diagramme')
     expect(texte?.name_label_fo_content).toBe('<p>Titre du</p><p>diagramme</p>')
     const rect = containers.find(c => c.color_visible === true)
     expect(rect?.color).toBe('#E0E0E0') // -2039584
@@ -344,7 +343,7 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
   test('légende visible, position normalisée avec le reste', () => {
     // min X/Y de l'ensemble = (100, 100) (le texte) → décalage -50
     expect(d.legend).toEqual({ mask_legend: false, legend_dx: 50, legend_dy: 150 })
-    const texte = Object.values(d.labels).find(c => c.title === 'Titre du\ndiagramme')
+    const texte = Object.values(d.labels).find(c => c.title === 'Titre du diagramme')
     expect(texte?.x).toBe(50)
     expect(texte?.y).toBe(50)
   })

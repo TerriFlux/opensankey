@@ -300,23 +300,25 @@ const parseShapes = (
       if (kind === 'text') {
         const text = (shape.getAttribute('text') ?? '').replace(/\r\n/g, '\n')
         if (!text.trim()) return
-        base.name = text
-        base.title = text
-        // Affichage réel du texte d'une zone : source 'custom' + name_label_text
-        // + visibilité explicite. Poser seulement `name`/`title` ne suffit PAS
-        // (le label reste masqué) — même recette que LegendGenerator.
-        base.name_label_source = 'custom'
-        base.name_label_text = text
-        base.name_label_is_visible = true
-        // Les containers ont has_fo=true (rendu en foreignObject/rich-text) : le
-        // texte affiché vient de name_label_fo_content (HTML), PAS de name_label_text
-        // — sans lui, drawFO() ne dessine rien (cf. DrawLabel §drawFO, garde
-        // `!fo_content`). On génère donc le HTML (format Quill : un <p> par ligne,
-        // ligne vide = <p><br></p>), même contenu que la synchro d'édition.
+        // Le container est en rich-text (has_fo=true) : le texte (et son
+        // multi-ligne) vit UNIQUEMENT dans name_label_fo_content (HTML). On ne
+        // met RIEN dans name / name_label_text — un \n y casse l'affichage et
+        // l'éditeur, et le rendu ne les utilise pas en mode FO.
         const escapeHtml = (s: string): string =>
           s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        // Champs texte plats : le texte SANS les \n (sur une ligne) — un \n y
+        // casse l'affichage et l'éditeur. Le multi-ligne vit dans le rich text.
+        const oneLine = text.replace(/\s*\n+\s*/g, ' ').trim()
+        base.name = oneLine
+        base.title = oneLine
+        base.name_label_source = 'custom'
+        base.name_label_text = oneLine
+        base.name_label_is_visible = true
+        // Rich text (format Quill) : un <p> par ligne NON VIDE. Pas de <p><br></p>
+        // pour les lignes vides (ça casse le rendu du label) — on les ignore.
         base.name_label_fo_content = text.split('\n')
-          .map(line => `<p>${line ? escapeHtml(line) : '<br>'}</p>`).join('')
+          .filter(line => line.trim() !== '')
+          .map(line => `<p>${escapeHtml(line)}</p>`).join('')
         const font = childByTag(shape, 'font')
         if (font) {
           base.name_label_font_size = attrNum(font, 'size', 9)
