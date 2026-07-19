@@ -36,7 +36,7 @@ import {
   type Type_InspectorScope
 } from './InspectorRegistry'
 import { registerBaseInspectorSections } from './registerBaseSections'
-import { MenuResetAttrLocal, WrapperBoxSubSectionMenu } from '../MenuCommon'
+import { MenuResetAttrLocal } from '../MenuCommon'
 import { ElementNameRow, ElementSelectionTool } from '../MenuElementsSelection'
 import { LinkOriginDestEditor } from '../SankeyMenuConfigurationLinksData'
 
@@ -129,6 +129,10 @@ export const InspectorPanel = ({ app_data }: { app_data: Class_ApplicationData }
   const [scope, setScope] = useState<Type_InspectorScope>('selection')
   // Onglet actif (id d'entrée du registre).
   const [active_tab_id, setActiveTabId] = useState<string | null>(null)
+  // #1283 — repli du sélecteur d'éléments. NON géré par WrapperBoxSubSectionMenu
+  // (son Collapse a overflow:hidden, qui rognait la liste déroulante en position
+  // absolue du MultiSelect) : repli conditionnel, overflow visible.
+  const [selector_open, setSelectorOpen] = useState(false)
 
   const counts = readSelectionCounts(app_data)
   const { target, count } = resolveInspectorTarget(counts, view_override)
@@ -215,13 +219,30 @@ export const InspectorPanel = ({ app_data }: { app_data: Class_ApplicationData }
           doit donc être ici, pas dans le tiroir de filtres (contre-intuitif).
           Éditeur seul (en publish/statique on ne compose pas de sélection). */}
       {!app_data.is_static && (
-        <WrapperBoxSubSectionMenu
-          new_data={app_data}
-          title={app_data.t('filter_panel.select_elements')}
-          is_open={false}
-        >
-          <ElementSelectionTool app_data={app_data} />
-        </WrapperBoxSubSectionMenu>
+        <Box layerStyle='menu_sub_section' style={{ overflow: 'visible' }}>
+          <Box layerStyle='menu_sub_section_head'>
+            <Button
+              variant='menu_sub_section_collapse_button'
+              size='sizeCollapseButton'
+              onClick={() => setSelectorOpen(o => !o)}
+            >
+              {selector_open
+                ? app_data.icon_library.icon_collapse_up
+                : app_data.icon_library.icon_collapse_down}
+            </Button>
+            <Box as='span' layerStyle='menu_sub_section_title' textStyle='title_sub_section'>
+              {app_data.t('filter_panel.select_elements')}
+            </Box>
+          </Box>
+          {/* Rendu conditionnel (pas de Collapse) : la liste du MultiSelect est en
+              position absolue et se superpose au contenu en dessous — plus besoin
+              de réserver de l'espace, il suffit de ne plus la rogner. */}
+          {selector_open && (
+            <Box layerStyle='menuconfigpanel_grid' style={{ overflow: 'visible' }}>
+              <ElementSelectionTool app_data={app_data} />
+            </Box>
+          )}
+        </Box>
       )}
 
       <InspectorIdentity app_data={app_data} target={target} counts={counts} />

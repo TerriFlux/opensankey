@@ -988,22 +988,9 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
   } : undefined
 
   return (<Box layerStyle='menuconfigpanel_grid' sx={compact_sx}>
-    {/* #1283 — création de groupe : la table de gestion multi-groupes étant
-        masquée en mode fixe, on réexpose « Nouveau groupe » ici (crée un groupe
-        frère du même type ; il apparaît comme une nouvelle carte de filtre). */}
-    {fixed_group_id && (
-      <OSTooltip label={t('Tags.tooltips.add_grp')}>
-        <Button
-          size='xs'
-          variant='menuconfigpanel_add_button'
-          sx={{ width: '100%', justifyContent: 'center', gap: '0.3rem', marginBottom: '0.2rem' }}
-          onClick={handleAddTagGrpButton}
-        >
-          {icon_add_element}
-          <Box as='span'>{t('Tags.GE')}</Box>
-        </Button>
-      </OSTooltip>
-    )}
+    {/* #1283 — la création de groupe vit dans l'en-tête du tiroir de filtres
+        (« + Groupe », toujours accessible même sans groupe existant) : pas de
+        bouton de création ici, seulement l'édition du groupe de la carte. */}
     {fixedGroupHeader}
     {/* #1283 — table de GESTION des groupes (ajout/suppression/renommage/bannière
         de tous les groupes) masquée en mode groupe fixe : la carte n'édite qu'UN
