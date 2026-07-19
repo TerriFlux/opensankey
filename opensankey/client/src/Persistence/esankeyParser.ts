@@ -633,10 +633,12 @@ interface EsGraphicalArrow {
   // d'un `false` explicite, sous peine d'éteindre à tort la pointe cible par
   // défaut d'OpenSankey (`shape_is_arrow` vaut `true` par défaut, cf.
   // ElementsAttributesConfig) sur des flux qui n'ont simplement pas cette
-  // info. Les longueurs e!Sankey (from/toArrowLength) ne sont PAS reprises : la
-  // taille de pointe / d'encoche garde le défaut OpenSankey (10 px).
+  // info. `to/fromArrowLength` = PROFONDEUR (px) du chevron cible/source, reprise
+  // sur shape_arrow_size / shape_source_notch_size (`null` si absent → défaut 10).
   toArrow: boolean | null
   fromArrow: boolean | null
+  toArrowLength: number | null
+  fromArrowLength: number | null
   /** OS#1290 — trait pointillé (`sankeyLink/pen@dashStyle` ou `dashPattern`). */
   dashed: boolean
   /**
@@ -664,11 +666,15 @@ const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } 
     // OS#1288 — géométrie du coude portée par le `<sankeyLink>` du `<arrow>`.
     const sankeyLink = childByTag(a, 'sankeyLink')
     // os#1289 — sankeyLink : fromArrow/toArrow (bool) + fromArrowLength/
-    // toArrowLength (px). fromArrowWidth/toArrowWidth, *ArrowStyle,
-    // *ArrowFilled, *ArrowShaftLength existent côté e!Sankey mais n'ont pas
-    // d'équivalent OpenSankey (une seule forme de pointe, pleine) : non lus.
+    // toArrowLength (px = PROFONDEUR du chevron, ce que pilote shape_arrow_size /
+    // shape_source_notch_size côté OpenSankey ; la largeur y est auto-calée sur
+    // l'épaisseur du flux). On reprend donc ces longueurs à l'import pour coller à
+    // la dimension e!Sankey plutôt qu'au défaut OpenSankey (10). *ArrowWidth,
+    // *ArrowStyle, *ArrowFilled, *ArrowShaftLength : pas d'équivalent, non lus.
     const toArrow = sankeyLink ? sankeyLink.getAttribute('toArrow') === 'true' : null
     const fromArrow = sankeyLink ? sankeyLink.getAttribute('fromArrow') === 'true' : null
+    const toArrowLength = sankeyLink?.hasAttribute('toArrowLength') ? attrNum(sankeyLink, 'toArrowLength', 0) : null
+    const fromArrowLength = sankeyLink?.hasAttribute('fromArrowLength') ? attrNum(sankeyLink, 'fromArrowLength', 0) : null
     // OS#1290 — le pen du tracé vit sous <sankeyLink>, pas directement sous
     // <arrow> (qui ne porte qu'un <penColor> de repli, non pointillable).
     const pen = sankeyLink ? childByTag(sankeyLink, 'pen') : null
@@ -689,6 +695,8 @@ const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } 
       orthogonal: sankeyLink?.getAttribute('orthogonal') === 'true',
       adjustingStyle: sankeyLink?.getAttribute('adjustingStyle') ?? '',
       toArrow,
+      toArrowLength,
+      fromArrowLength,
       fromArrow,
       dashed: isDashStylePenDashed(pen),
       // OS#1294 — dégradé source→cible (lu sur la flèche graphique).
@@ -1191,12 +1199,16 @@ export const parseEsankeyXml = (
       //    creusée dans le départ du flux (fromArrowStyle=1). L'équivalent exact
       //    OpenSankey est shape_source_notch (et non shape_arrow_at_source, qui
       //    ferait ressortir une pointe).
-      // Dimensions : on garde les défauts OpenSankey (arrow_size / notch_size =
-      // 10 px, calés sur l'allure e!Sankey). Les longueurs e!Sankey (from/to
-      // ArrowLength) sont deux valeurs minuscules (jusqu'à 3 px) et peu fiables
-      // comme taille UNIQUE : les reprendre rendait la pointe/encoche invisible.
+      // Dimensions REPRISES d'e!Sankey (le défaut OpenSankey 10 px ne correspond
+      // pas) : la profondeur du chevron = to/fromArrowLength. shape_arrow_size pour
+      // la pointe cible, shape_source_notch_size pour l'encoche source. Absent →
+      // défaut du style conservé.
       if (graphicalArrow?.toArrow === false) link.local.shape_is_arrow = false
-      if (graphicalArrow?.fromArrow === true) link.local.shape_source_notch = true
+      else if (graphicalArrow?.toArrowLength) link.local.shape_arrow_size = graphicalArrow.toArrowLength
+      if (graphicalArrow?.fromArrow === true) {
+        link.local.shape_source_notch = true
+        if (graphicalArrow.fromArrowLength) link.local.shape_source_notch_size = graphicalArrow.fromArrowLength
+      }
       // OS#1290 — trait pointillé (dashStyle/dashPattern du pen de la
       // sankeyLink) → bordure pointillée du flux.
       if (graphicalArrow?.dashed) link.local.shape_border_dashed = true
