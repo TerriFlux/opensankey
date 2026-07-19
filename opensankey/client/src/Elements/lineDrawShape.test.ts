@@ -22,17 +22,17 @@ describe('OS#1276b — rendu de la ligne libre', () => {
     // d3_selection_g_shape (cible des appends) — pas de DrawingArea montée.
     const svg = d3.select(document.body).append('svg')
     const root = svg.append('g')
+    const g_shape = root.append('g')
     cont['d3_selection'] = root as never
-    cont.d3_selection_g_shape = root.append('g') as never
+    cont.d3_selection_g_shape = g_shape as never
 
     cont['_nodeDrawShape'].drawShape()
 
-    const g = cont.d3_selection_g_shape as Exclude<typeof cont.d3_selection_g_shape, null>
-    expect(g.selectAll('line.node_shape').size()).toBe(1)
-    expect(g.selectAll('rect.node_shape').size()).toBe(0)
+    expect(g_shape.selectAll('line.node_shape').size()).toBe(1)
+    expect(g_shape.selectAll('rect.node_shape').size()).toBe(0)
     // Trait de préhension transparent présent lui aussi
-    expect(g.selectAll('line.node_line_hit').size()).toBe(1)
-    const line = g.select('line.node_shape')
+    expect(g_shape.selectAll('line.node_line_hit').size()).toBe(1)
+    const line = g_shape.select('line.node_shape')
     expect(+line.attr('x1')).toBe(0)
     expect(+line.attr('y1')).toBe(50)
     expect(+line.attr('x2')).toBe(100)
