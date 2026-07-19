@@ -107,8 +107,18 @@ export interface EsParsedDiagram {
   theme: Type_ThemeJSON
   /** Zones de texte / images / rectangles importés (clé `labels` du JSON). */
   labels: { [id: string]: EsContainerJSON }
-  /** Légende affichée si le fichier en contient une (mask_legend: false). */
-  legend?: { mask_legend: boolean, legend_dx: number, legend_dy: number }
+  /**
+   * Légende affichée si le fichier en contient une (mask_legend: false).
+   * `legend_police` (OS#1296, optionnel) : taille de police du CONTENU de la
+   * légende e!Sankey (`<legend><textFont size>`), reprise telle quelle par
+   * `LegendPersistence.fromJSON` (clé `legend_police` — seul réglage de police
+   * que porte la légende OpenSankey, partagé entre entrées et titres de
+   * groupe). La police du TITRE du cadre e!Sankey (`<captionFont>`, le mot
+   * "Legend" en en-tête) n'a pas d'équivalent : le cadre généré n'a pas de
+   * titre visible (frame.name_label_is_visible = false, cf.
+   * LegendGenerator.regenerateLegend) — non reprise.
+   */
+  legend?: { mask_legend: boolean, legend_dx: number, legend_dy: number, legend_police?: number }
   /** OS#1286 — registre d'unités reconstruit depuis les unitTypes e!Sankey. */
   units?: Type_UnitTypeJSON[]
 }
@@ -514,13 +524,32 @@ const parseEdgeMapping = (root: Element): { [logicalId: string]: string } => {
   return out
 }
 
-const parseLegendPosition = (net: Element): { x: number, y: number } | null => {
+// Factorisé entre parseLegendPosition et parseLegendFontSize (OS#1296) : la
+// première <legend> du `net` hors prototypes.
+const findLegendElement = (net: Element): Element | null => {
   const protos = childByTag(net, 'prototypes')
   const all = Array.from(net.getElementsByTagName('*'))
   const inProtos = protos ? new Set(Array.from(protos.getElementsByTagName('*'))) : new Set()
-  const legend = all.find(el => el.localName === 'legend' && !inProtos.has(el))
+  return all.find(el => el.localName === 'legend' && !inProtos.has(el)) ?? null
+}
+
+const parseLegendPosition = (net: Element): { x: number, y: number } | null => {
+  const legend = findLegendElement(net)
   if (!legend) return null
   return { x: attrNum(legend, 'locationX', 0), y: attrNum(legend, 'locationY', 0) }
+}
+
+/**
+ * OS#1296 — taille de police du contenu de la légende (`<legend><textFont
+ * size>`, enfant direct — à ne pas confondre avec le `<textFont>` du `<scale>`
+ * voisin). `null` si absent (légende sans police explicite, ou sans légende).
+ */
+const parseLegendFontSize = (net: Element): number | null => {
+  const legend = findLegendElement(net)
+  const textFont = legend ? childByTag(legend, 'textFont') : null
+  if (!textFont) return null
+  const size = attrNum(textFont, 'size', NaN)
+  return Number.isFinite(size) ? size : null
 }
 
 // logicalGraphicalObjectMapping/nodes : graphProcessRef (logique) → processRef
@@ -879,6 +908,7 @@ export const parseEsankeyXml = (
   // Zones libres (textes, images, rectangles) et légende.
   const labels = parseShapes(net, images, brushPalette)
   const legendPos = parseLegendPosition(net)
+  const legendFontSize = parseLegendFontSize(net) // OS#1296
 
   // Normalisation des positions : e!Sankey stocke des coordonnées de document
   // potentiellement lointaines de l'origine ; on ramène le coin haut-gauche de
@@ -943,6 +973,9 @@ export const parseEsankeyXml = (
   }
   if (legendPos) {
     result.legend = { mask_legend: false, legend_dx: legendPos.x, legend_dy: legendPos.y }
+    // OS#1296 — police du contenu de la légende (`legend_police`, lue telle
+    // quelle par LegendPersistence.fromJSON via la clé `legend` du JSON 0.9).
+    if (legendFontSize !== null) result.legend.legend_police = legendFontSize
   }
   // OS#1286 — registre d'unités (grandeurs e!Sankey), lu par fromJSON.
   if (unitsRegistry.length > 0) {
