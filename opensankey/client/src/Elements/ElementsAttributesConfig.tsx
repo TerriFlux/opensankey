@@ -2658,6 +2658,92 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       it: 'Direzione diagonale di una linea libera'
     }
   } satisfies AttributeConfig<boolean>,
+  // OS#1276b — extrémités A(x1,y1) et B(x2,y2) d'une ligne libre (shape_type === 'line'),
+  // exprimées dans le repère local du groupe de forme (déjà translaté à position_x/y),
+  // normalisées pour que min(x1,x2)=0 et min(y1,y2)=0. La boîte englobante est dérivée :
+  // shape_min_width = max(x1,x2), shape_min_height = max(y1,y2). Sérialisation automatique
+  // via json_object['local'] (préfixe shape_ ⇒ shape_line_x1…). shape_line_flip est conservé
+  // pour la rétrocompat (ancien format sans extrémités explicites).
+  line_x1: {
+    default: 0,
+    type: (() => 0) as (() => number),
+    category: 'shape' as const,
+    actions: ['drawShape'] as BaseActionType[],
+    labels: {
+      en: 'Line start X',
+      fr: 'X début de ligne',
+      es: 'X inicio de línea',
+      de: 'Linienstart X',
+      it: 'X inizio linea'
+    },
+    tooltips: {
+      en: 'X coordinate of the first endpoint of a free line',
+      fr: 'Coordonnée X de la première extrémité d\'une ligne libre',
+      es: 'Coordenada X del primer extremo de una línea libre',
+      de: 'X-Koordinate des ersten Endpunkts einer freien Linie',
+      it: 'Coordinata X del primo estremo di una linea libera'
+    }
+  } satisfies AttributeConfig<number>,
+  line_y1: {
+    default: 0,
+    type: (() => 0) as (() => number),
+    category: 'shape' as const,
+    actions: ['drawShape'] as BaseActionType[],
+    labels: {
+      en: 'Line start Y',
+      fr: 'Y début de ligne',
+      es: 'Y inicio de línea',
+      de: 'Linienstart Y',
+      it: 'Y inizio linea'
+    },
+    tooltips: {
+      en: 'Y coordinate of the first endpoint of a free line',
+      fr: 'Coordonnée Y de la première extrémité d\'une ligne libre',
+      es: 'Coordenada Y del primer extremo de una línea libre',
+      de: 'Y-Koordinate des ersten Endpunkts einer freien Linie',
+      it: 'Coordinata Y del primo estremo di una linea libera'
+    }
+  } satisfies AttributeConfig<number>,
+  line_x2: {
+    default: 0,
+    type: (() => 0) as (() => number),
+    category: 'shape' as const,
+    actions: ['drawShape'] as BaseActionType[],
+    labels: {
+      en: 'Line end X',
+      fr: 'X fin de ligne',
+      es: 'X fin de línea',
+      de: 'Linienende X',
+      it: 'X fine linea'
+    },
+    tooltips: {
+      en: 'X coordinate of the second endpoint of a free line',
+      fr: 'Coordonnée X de la seconde extrémité d\'une ligne libre',
+      es: 'Coordenada X del segundo extremo de una línea libre',
+      de: 'X-Koordinate des zweiten Endpunkts einer freien Linie',
+      it: 'Coordinata X del secondo estremo di una linea libera'
+    }
+  } satisfies AttributeConfig<number>,
+  line_y2: {
+    default: 0,
+    type: (() => 0) as (() => number),
+    category: 'shape' as const,
+    actions: ['drawShape'] as BaseActionType[],
+    labels: {
+      en: 'Line end Y',
+      fr: 'Y fin de ligne',
+      es: 'Y fin de línea',
+      de: 'Linienende Y',
+      it: 'Y fine linea'
+    },
+    tooltips: {
+      en: 'Y coordinate of the second endpoint of a free line',
+      fr: 'Coordonnée Y de la seconde extrémité d\'une ligne libre',
+      es: 'Coordenada Y del segundo extremo de una línea libre',
+      de: 'Y-Koordinate des zweiten Endpunkts einer freien Linie',
+      it: 'Coordinata Y del secondo estremo di una linea libera'
+    }
+  } satisfies AttributeConfig<number>,
   hatch: {
     default: default_hatch_orientation,
     type: (() => default_hatch_orientation) as (() => Type_HatchOrientation),

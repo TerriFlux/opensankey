@@ -58,6 +58,10 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     left: Class_Handler,
     right: Class_Handler,
   }
+  // OS#1276b — poignées d'extrémité pour une ligne libre (shape_type === 'line').
+  // Créées paresseusement (la plupart des nœuds ne sont pas des lignes) ; en mode
+  // ligne elles REMPLACENT les 4 poignées de redimensionnement de boîte ci-dessus.
+  private _line_endpoint_handler: { a: Class_Handler, b: Class_Handler } | null = null
   public _nodeEventsHandler: NodeEventsHandler
   public d3_selection_g_shape: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
 
@@ -719,10 +723,21 @@ export abstract class Class_NodeBase extends Class_BaseShape {
         y: this.position_y,
         w: this.getShapeWidthToUse(),
         h: this.getShapeHeightToUse(),
+        // OS#1276b — offsets d'extrémité de ligne : sans eux, l'undo d'un drag de
+        // poignée d'extrémité ne restaurerait que la boîte, pas la géométrie du
+        // segment. No-op pour un resize de boîte (les offsets n'y changent pas).
+        x1: this.shape_line_x1,
+        y1: this.shape_line_y1,
+        x2: this.shape_line_x2,
+        y2: this.shape_line_y2,
       }
       this.drawing_area.application_data.history.saveUndo(() => {
         this.shape_min_width = old_val.w
         this.shape_min_height = old_val.h
+        this.shape_line_x1 = old_val.x1
+        this.shape_line_y1 = old_val.y1
+        this.shape_line_x2 = old_val.x2
+        this.shape_line_y2 = old_val.y2
         this._position.x = old_val.x
         this._position.y = old_val.y
         this.settleCenterAnchor() // #1230 restauration taille+position : ré-ancre le centre
@@ -746,10 +761,19 @@ export abstract class Class_NodeBase extends Class_BaseShape {
         y: this.position_y,
         w: this.getShapeWidthToUse(),
         h: this.getShapeHeightToUse(),
+        // OS#1276b — cf. dragHandleStart : le redo doit aussi rétablir le segment.
+        x1: this.shape_line_x1,
+        y1: this.shape_line_y1,
+        x2: this.shape_line_x2,
+        y2: this.shape_line_y2,
       }
       this.drawing_area.application_data.history.saveRedo(() => {
         this.shape_min_width = old_val.w
         this.shape_min_height = old_val.h
+        this.shape_line_x1 = old_val.x1
+        this.shape_line_y1 = old_val.y1
+        this.shape_line_x2 = old_val.x2
+        this.shape_line_y2 = old_val.y2
         this._position.x = old_val.x
         this._position.y = old_val.y
         this.settleCenterAnchor() // #1230 restauration taille+position : ré-ancre le centre
@@ -885,12 +909,113 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   }
 
   /**
+   * OS#1276b — garantit que les 4 offsets d'extrémité (shape_line_x1…y2) décrivent
+   * un vrai segment. Idempotent : si le segment est déjà non dégénéré (A ≠ B) on ne
+   * touche à rien. S'il est dégénéré (cas d'un ancien fichier « diagonale de boîte »
+   * où les offsets valent 0, ou d'une création qui n'a posé que shape_line_flip), on
+   * les dérive de la boîte (w = shape_min_width, h = shape_min_height) et du sens
+   * historique shape_line_flip :
+   *   flip=false → A=(0,0), B=(w,h)   « \ »
+   *   flip=true  → A=(0,h), B=(w,0)   « / »
+   * La boîte et position_x/y restent inchangées (les offsets sont déjà normalisés
+   * min=0). Appelé au chargement (ContainerPersistence.fromJSON) et à la création.
+   */
+  public ensureLineEndpoints() {
+    if (this.shape_type !== 'line') return
+    const x1 = this.shape_line_x1, y1 = this.shape_line_y1
+    const x2 = this.shape_line_x2, y2 = this.shape_line_y2
+    // Segment déjà défini (extrémités distinctes) : rien à faire.
+    if (x1 !== x2 || y1 !== y2) return
+    const w = this.shape_min_width
+    const h = this.shape_min_height
+    if (this.shape_line_flip) {
+      this.shape_line_x1 = 0; this.shape_line_y1 = h
+      this.shape_line_x2 = w; this.shape_line_y2 = 0
+    } else {
+      this.shape_line_x1 = 0; this.shape_line_y1 = 0
+      this.shape_line_x2 = w; this.shape_line_y2 = h
+    }
+  }
+
+  /**
+   * OS#1276b — drag d'une extrémité de ligne libre. Recalcule la position monde de
+   * l'extrémité déplacée (offset local + event.dx/dy), puis RENORMALISE tout le
+   * segment pour que min(x1,x2)=0 et min(y1,y2)=0 : le décalage est absorbé par
+   * position_x/y (le coin haut-gauche suit le min), les 4 offsets et la boîte dérivée
+   * (shape_min_width/height) sont réécrits. Ainsi tous les invariants « position =
+   * coin haut-gauche, boîte = max des offsets » restent vrais (resize, hit, ordre-Z).
+   */
+  protected dragEndpointHandler(which: 'a' | 'b') {
+    return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
+      let x1 = this.shape_line_x1, y1 = this.shape_line_y1
+      let x2 = this.shape_line_x2, y2 = this.shape_line_y2
+      if (which === 'a') { x1 += event.dx; y1 += event.dy }
+      else { x2 += event.dx; y2 += event.dy }
+      // Renormalisation : le coin haut-gauche encaisse le min, les offsets repartent de 0.
+      const min_x = Math.min(x1, x2)
+      const min_y = Math.min(y1, y2)
+      this.setPosXY(this.position_x + min_x, this.position_y + min_y)
+      x1 -= min_x; x2 -= min_x
+      y1 -= min_y; y2 -= min_y
+      this.shape_line_x1 = x1; this.shape_line_y1 = y1
+      this.shape_line_x2 = x2; this.shape_line_y2 = y2
+      this.shape_min_width = Math.max(x1, x2)
+      this.shape_min_height = Math.max(y1, y2)
+      this.settleCenterAnchor() // #1230 : la géométrie a changé, ré-ancre le centre
+      this.draw()
+      this.drawDragHandlers()
+    }
+  }
+
+  private _ensureLineEndpointHandlers(): { a: Class_Handler, b: Class_Handler } {
+    if (this._line_endpoint_handler) return this._line_endpoint_handler
+    this._line_endpoint_handler = {
+      a: new Class_Handler(
+        'line_a_handle_' + this.id,
+        this.drawing_area,
+        this,
+        this.dragHandleStart(),
+        this.dragEndpointHandler('a'),
+        this.dragHandleEnd(),
+        { class: 'line_endpoint_handle' }),
+      b: new Class_Handler(
+        'line_b_handle_' + this.id,
+        this.drawing_area,
+        this,
+        this.dragHandleStart(),
+        this.dragEndpointHandler('b'),
+        this.dragHandleEnd(),
+        { class: 'line_endpoint_handle' }),
+    }
+    return this._line_endpoint_handler
+  }
+
+  /**
    * Draw all control points
    *
    * @private
    * @memberof Class_ContainerElement
    */
   public drawDragHandlers() {
+    // OS#1276b — ligne libre : deux poignées aux extrémités absolues (position + offset
+    // local), en lieu et place des 4 poignées de boîte. Chaque poignée renormalise le
+    // segment (cf. dragEndpointHandler). Le drag du CORPS de la ligne reste le drag
+    // normal du conteneur (eventMouseDrag), rien de spécial ici.
+    if (this.shape_type === 'line') {
+      // Masque les 4 poignées de boîte si elles avaient été dessinées.
+      this._drag_handler.top.unDraw()
+      this._drag_handler.bottom.unDraw()
+      this._drag_handler.left.unDraw()
+      this._drag_handler.right.unDraw()
+      const h = this._ensureLineEndpointHandlers()
+      h.a.position_x = this.position_x + this.shape_line_x1
+      h.a.position_y = this.position_y + this.shape_line_y1
+      h.b.position_x = this.position_x + this.shape_line_x2
+      h.b.position_y = this.position_y + this.shape_line_y2
+      h.a.draw()
+      h.b.draw()
+      return
+    }
     // Compute positions
     this.computeTopHandlerPos()
     this.computeBottomHandlerPos()

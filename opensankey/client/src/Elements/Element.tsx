@@ -919,6 +919,10 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   shape_hatch!: NodeShapeSpecificAttributeTypes['hatch']
   shape_is_reference_stock!: NodeShapeSpecificAttributeTypes['is_reference_stock']
   shape_line_flip!: NodeShapeSpecificAttributeTypes['line_flip']
+  shape_line_x1!: NodeShapeSpecificAttributeTypes['line_x1']
+  shape_line_y1!: NodeShapeSpecificAttributeTypes['line_y1']
+  shape_line_x2!: NodeShapeSpecificAttributeTypes['line_x2']
+  shape_line_y2!: NodeShapeSpecificAttributeTypes['line_y2']
   shape_position_u_locked!: boolean
   shape_position_v_locked!: boolean
   shape_margin_bottom!: ShapeAttributeTypes['margin_bottom']
@@ -1307,6 +1311,10 @@ export class Class_ElementStyle {
   shape_hatch!: NodeShapeSpecificAttributeTypes['hatch']
   shape_is_reference_stock!: NodeShapeSpecificAttributeTypes['is_reference_stock']
   shape_line_flip!: NodeShapeSpecificAttributeTypes['line_flip']
+  shape_line_x1!: NodeShapeSpecificAttributeTypes['line_x1']
+  shape_line_y1!: NodeShapeSpecificAttributeTypes['line_y1']
+  shape_line_x2!: NodeShapeSpecificAttributeTypes['line_x2']
+  shape_line_y2!: NodeShapeSpecificAttributeTypes['line_y2']
   shape_position_u_locked!: boolean
   shape_position_v_locked!: boolean
   shape_margin_bottom!: ShapeAttributeTypes['margin_bottom']
