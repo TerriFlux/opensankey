@@ -36,7 +36,9 @@ import tempfile
 import os
 import posixpath
 import json
+import re
 import shutil
+import zipfile
 from time import perf_counter
 from urllib.parse import urlparse
 
@@ -1491,31 +1493,98 @@ def esankey_corpus_dir():
     return None
 
 
+# Suffixe de langue des demos e!Sankey : "Nom du modele [fr].sankey".
+_ESANKEY_NAME_RE = re.compile(r"^(?P<base>.+?)\s*\[(?P<lang>[A-Za-z]{2})\]\.sankey$")
+
+# Ordre de preference des variantes : langue servie par defaut et ordre des
+# boutons de langue sur la vignette.
+_ESANKEY_LANG_ORDER = ["en", "fr", "de", "es", "pt", "zh"]
+
+# Les demos traduites ne portent pas toutes le meme nom de base selon la langue
+# ("Goldmarkt 2013 [de]" = "Gold Market 2013 [en]") : table des noms traduits
+# vers le nom canonique (anglais), verifiee en comparant les diagrammes
+# (memes nombres de processus / flux / liens par groupe).
+_ESANKEY_TITLE_ALIASES = {
+    "Buslinie Fahrgastzaehlung": "Bus Passengers On_Off",
+    "Depuracao Cloro": "Effluent Gas Treatment",
+    "Depuracion Cloro": "Effluent Gas Treatment",
+    "Depuration de Chlore": "Effluent Gas Treatment",
+    "Rauchgasreinigung": "Effluent Gas Treatment",
+    "ELV Energiezyklus (pro version)": "EV Energy Cycle (pro version)",
+    "Einfache Verteilungen": "Set of Simple Branchouts",
+    "Energiebilanz für ein Land": "Energy Balance for a Country",
+    "Energiemanagement Firma Beispiel": "Energy Management Company",
+    "Erdoel (pro version)": "Petroleum (pro version)",
+    "Facility Management Krankenhaus": "Facility Management Hospital",
+    "Gestao da Energia Hospital": "Facility Management Hospital",
+    "Gestion Energetique Hopital (Example)": "Facility Management Hospital",
+    "Gestion de Energia Hospital": "Facility Management Hospital",
+    "Gebaeude Footprint": "Building Energy Footprint",
+    "Flujos Globales Fosforo": "Global Phosphorus Streams",
+    "Flux Globale Phosphore": "Global Phosphorus Streams",
+    "Fluxos Globais Fosforo": "Global Phosphorus Streams",
+    "Globale Phosphor Stroeme": "Global Phosphorus Streams",
+    "Goldmarkt 2013": "Gold Market 2013",
+    "KWK Krankenhaus": "CHP Hospital",
+    "Oxyfuel Verbrennung": "Oxy-fuel Combustion",
+    "Produktionskosten (pro version)": "Production Cost (pro version)",
+    "Prozess mit Bestandsaenderungen (pro version)": "Processes with Stocks (pro version)",
+}
+
+
 def esankey_local_index():
     """
     Genere a la volee l'index de la galerie locale e!Sankey (os#1281).
 
-    Une seule categorie, un template par fichier `.sankey` du corpus, titre = nom
-    de fichier, SANS img_path (le front affiche alors un aplat au titre du modele).
+    Une seule categorie ; les fichiers `.sankey` sont REGROUPES par diagramme :
+    les demos existent en plusieurs langues (suffixe "[xx]" du nom, parfois nom
+    de base traduit — voir _ESANKEY_TITLE_ALIASES). Chaque groupe donne UN
+    template : file_path = variante preferee (_ESANKEY_LANG_ORDER), et un champ
+    `variants` {lang: file_path} que le front affiche en petite liste de langues
+    sous la vignette. img_path pointe la preview.png embarquee dans le zip
+    (servie par templates_asset via le chemin virtuel "<modele>/preview.png").
     Renvoie None si la galerie n'est pas active (voir esankey_corpus_dir).
     """
     corpus = esankey_corpus_dir()
     if corpus is None:
         return None
-    templates = {}
+    # canonical -> {lang: (file_path, base_traduit)}
+    groups = {}
     for name in sorted(os.listdir(corpus)):
         if not name.lower().endswith(".sankey"):
             continue
         if not os.path.isfile(os.path.join(corpus, name)):
             continue
-        # file_path relatif a la racine du corpus (servi par templates_asset).
-        templates[name] = {
-            "title": {"en": name, "fr": name},
-            "file_path": name,
-            "lang": "en",
-            "category": "esankey_local",
+        match = _ESANKEY_NAME_RE.match(name)
+        base = match.group("base").strip() if match else name[: -len(".sankey")]
+        lang = match.group("lang").lower() if match else "en"
+        canonical = _ESANKEY_TITLE_ALIASES.get(base, base)
+        # setdefault : en cas de doublon de langue improbable, le premier gagne.
+        groups.setdefault(canonical, {}).setdefault(lang, (name, base))
+    lang_rank = {lang: i for i, lang in enumerate(_ESANKEY_LANG_ORDER)}
+    templates = {}
+    for canonical in sorted(groups):
+        variants = groups[canonical]
+        ordered_langs = sorted(variants, key=lambda lg: lang_rank.get(lg, len(lang_rank)))
+        preferred = ordered_langs[0]
+        file_path = variants[preferred][0]
+        # Titre localise a partir du nom de base de la variante correspondante
+        # (le nom traduit quand il existe, sinon le canonique).
+        templates[canonical] = {
+            "title": {
+                "en": canonical,
+                "fr": variants.get("fr", (None, canonical))[1],
+            },
+            "file_path": file_path,
+            # file_path relatif a la racine du corpus (servi par templates_asset).
+            "img_path": file_path + "/preview.png",
+            "lang": preferred,
+            # Meme categorie que les modeles e!Sankey publies de SankeyData : dans
+            # le panneau consolide, tout finit sous l'onglet "e!Sankey".
+            "category": "esankey",
+            "variants": {lang: variants[lang][0] for lang in ordered_langs},
         }
-    return {"categories": ["esankey_local"], "templates": templates}
+    return {"categories": ["esankey"], "templates": templates}
 
 
 def templates_declared_assets(source):
@@ -1598,8 +1667,22 @@ def menus_templates_asset(asset):
             normalized.startswith("/")
             or normalized.startswith("../")
             or ".." in normalized.split("/")
-            or not normalized.lower().endswith(".sankey")
         ):
+            abort(404)
+        # Vignette : chemin virtuel "<modele>.sankey/preview.png", la preview
+        # embarquee dans le zip e!Sankey est extraite a la volee.
+        if normalized.lower().endswith(".sankey/preview.png"):
+            model_rel = normalized[: -len("/preview.png")]
+            full_path = safe_join(corpus, model_rel)
+            if full_path is None or not os.path.isfile(full_path):
+                abort(404)
+            try:
+                with zipfile.ZipFile(full_path) as archive:
+                    preview = archive.read("Images/preview.png")
+            except (zipfile.BadZipFile, KeyError, OSError):
+                abort(404)
+            return Response(preview, status=200, mimetype="image/png")
+        if not normalized.lower().endswith(".sankey"):
             abort(404)
         full_path = safe_join(corpus, normalized)
         if full_path is None or not os.path.isfile(full_path):

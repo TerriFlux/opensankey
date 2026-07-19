@@ -499,6 +499,12 @@ export class Class_DrawingAreaInteractions {
           cont.shape_min_width = w
           cont.shape_min_height = h
         }
+        // OS#1276b — ligne libre : initialise les 4 offsets d'extrémité (A/B) depuis
+        // la boîte tracée et le sens du glisser (shape_line_flip). ensureLineEndpoints
+        // dérive A/B de w/h + flip ; ensuite chaque extrémité est déplaçable seule.
+        if (is_line) {
+          cont.ensureLineEndpoints()
+        }
         cont.draw()
         da.purgeSelectionOfElement(false)
         da.addElementToSelection(cont)

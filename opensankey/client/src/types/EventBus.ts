@@ -24,6 +24,14 @@ export const MAIN_ZONE_TOPIC = 'main_zone'
  */
 export const SELECTION_TOPIC = 'selection'
 
+/**
+ * Topic « niveau de zoom de la caméra ». Notifié par Class_DrawingArea.eventZoom à chaque tick de
+ * zoom (molette, boutons -/+, recadrages), pour que l'indicateur de zoom de la barre d'outils
+ * (MenuBottom) affiche l'échelle courante en direct. Abonné isolé : un re-render par tick ne touche
+ * que ce petit widget.
+ */
+export const ZOOM_TOPIC = 'zoom'
+
 export class Class_EventBus {
   private _listeners: Map<string, Set<() => void>> = new Map()
 

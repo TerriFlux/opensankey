@@ -12,6 +12,7 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       type: 'submenu',
       titleKey: 'Positionnement',
       children: [
+        { type: 'button', actionName: 'bakeZoomTo100' },
         { type: 'button', actionName: 'transposeDA' },
         {
           type: 'submenu',
@@ -263,6 +264,24 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         it: 'Attiva/disattiva la visibilità della legenda'
       },
       getToggleValue: 'maskLegendValue'
+    },
+
+    bakeZoomTo100: {
+      type: 'action',
+      labels: {
+        en: 'Reset zoom to 100% (keep appearance)',
+        fr: 'Ramener le zoom à 100 % (aspect conservé)',
+        es: 'Restablecer el zoom al 100 % (conservar aspecto)',
+        de: 'Zoom auf 100 % zurücksetzen (Aussehen behalten)',
+        it: 'Riporta lo zoom al 100% (aspetto invariato)'
+      },
+      tooltips: {
+        en: 'Bake the current zoom into the geometry: multiply node/text-zone sizes, fonts, positions and flow scale by the current ratio, then set the camera back to 100%. The diagram looks identical but stored pixel sizes reflect the real scale. Undoable.',
+        fr: 'Fige le zoom courant dans la géométrie : multiplie les tailles des nœuds/zones de texte, les polices, les positions et l\'échelle des flux par le ratio courant, puis remet la caméra à 100 %. Le diagramme reste identique mais les tailles px stockées reflètent l\'échelle réelle. Annulable.',
+        es: 'Fija el zoom actual en la geometría: multiplica los tamaños de nodos/zonas de texto, fuentes, posiciones y escala de flujos por el ratio actual, y vuelve la cámara al 100 %. El diagrama se ve igual pero los tamaños px almacenados reflejan la escala real. Reversible.',
+        de: 'Fixiert den aktuellen Zoom in der Geometrie: multipliziert Knoten-/Textzonengrößen, Schriften, Positionen und Flussskala mit dem aktuellen Verhältnis und setzt die Kamera auf 100 %. Das Diagramm sieht identisch aus, gespeicherte Pixelgrößen entsprechen dem realen Maßstab. Umkehrbar.',
+        it: 'Fissa lo zoom corrente nella geometria: moltiplica dimensioni di nodi/zone di testo, font, posizioni e scala dei flussi per il rapporto corrente, poi riporta la camera al 100%. Il diagramma resta identico ma le dimensioni px memorizzate riflettono la scala reale. Annullabile.'
+      }
     },
 
     transposeDA: {
@@ -634,6 +653,9 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
   return {
     clearCurrentView: () => { app_data.reset({ only_current_view: true }); app_data.drawing_area.draw() },
     deleteAllViews: () => app_data.reinitialization(),
+    // Fige le zoom courant dans la géométrie puis remet la caméra à 100 % (historique interne
+    // à bakeZoomIntoGeometry : snapshots avant/après). saveToCache après pour persister le geste.
+    bakeZoomTo100: () => { drawing_area.bakeZoomIntoGeometry(); saveToCache() },
     transposeDA: () => { drawing_area.verticalizeDiagram(); saveToCache() },
     arrangeNodesToGrid: () => { nodePositioning.arrangeNodesToGrid(); saveToCache() },
     prepositionInPlace: () => {

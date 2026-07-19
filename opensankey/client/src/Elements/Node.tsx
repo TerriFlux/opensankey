@@ -28,11 +28,11 @@ import * as d3 from '../d3Modules'
 import { Class_NodeBase } from './NodeBase'
 
 import {
-  Class_LinkElement
+  Class_LinkElement,
+  sortLinksElementsByRelativeNodesPositions
 } from './Link'
 import { Class_Handler } from './Handler'
 import { reorganizeIOOrder } from './reorganizeIOOrder'
-import { orderIOByGeometry, recyclingBellyCentre, Type_IOGeo } from './ioOrderGeometry'
 import { format_value, Type_JSON } from '../types/Utils'
 import { default_element_color } from './ElementsAttributesConfig'
 import { SankeyAnimation } from '../Algorithms/SankeyAnimation'
@@ -1058,76 +1058,18 @@ export class Class_NodeElement extends Class_NodeBase {
     const echangeTag = this.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
     const import_links = this.input_links_list.filter(l => l.source.hasGivenTag(echangeTag as Class_Tag))
     const export_links = this.output_links_list.filter(l => l.target.hasGivenTag(echangeTag as Class_Tag))
-
-    // Geometry-aware order of the "middle" links (the ones reorganizeIOOrder
-    // re-sorts) : each link is ranked per-link by the shape of its bend at this node
-    // so the fan does not cross (cf. ioOrderGeometry.ts). Recycling links take part in
-    // that order too — they stack on a side like any other link, and leaving them out
-    // used to park them in a fixed block whose position ignored the geometry. We compute
-    // the full desired order here, then hand reorganizeIOOrder a comparator backed by
-    // that order so its locked-anchor pinning (#197) is preserved.
-    const middle = this._links_order.filter(
-      l => !import_links.includes(l) && !export_links.includes(l)
-    )
-    const order_index = this._computeIOOrderIndex(middle)
+    const recycling_links = this._links_order.filter(l => l.shape_is_recycling)
 
     this._links_order = reorganizeIOOrder(
       this._links_order,
       import_links,
       export_links,
+      recycling_links,
       (l) => l.getAnchorLockedForNode(this),
-      (link_a, link_b) => (order_index.get(link_a) ?? 0) - (order_index.get(link_b) ?? 0),
+      (link_a, link_b) => sortLinksElementsByRelativeNodesPositions(link_a, link_b, this),
       release_locks
     )
     this.draw()
-  }
-
-  /**
-   * Build a link → display-rank map for the geometry-aware I/O order : each side's
-   * links are ranked per-link by the shape of their bend at this node (cf.
-   * ioOrderGeometry.ts) so the fan does not cross. All positions are taken at node
-   * CENTRES ; each link carries the curvature on its node-side end, which is what the
-   * ordering key needs. A recycling link additionally carries `stack_ref`, the centre of
-   * its loop's belly, because its opposite node — which sits backwards, beyond this node
-   * — says nothing about where the loop actually passes.
-   */
-  private _computeIOOrderIndex(
-    middle: Class_LinkElement[]
-  ): Map<Class_LinkElement, number> {
-    const cx = this.position_x + this.getShapeWidthToUse() / 2
-    const cy = this.position_y + this.getShapeHeightToUse() / 2
-    const centre = (n: Class_NodeElement): [number, number] => [
-      n.position_x + n.getShapeWidthToUse() / 2,
-      n.position_y + n.getShapeHeightToUse() / 2
-    ]
-    const items = middle.map(l => {
-      const is_source = (l.source === this)
-      const other = is_source ? l.target : l.source
-      const side = is_source ? l.source_side : l.target_side
-      // Curvature on THIS node's side : shape_starting_curve when the link leaves this
-      // node (source), shape_ending_curve when it arrives (target). An explicit 0 (bend
-      // glued to the node) is a real value and is kept — only a missing value falls back
-      // to the default. The order rule uses reach·curve_node as the anchor distance.
-      const curve_node = (is_source ? l.shape_starting_curve : l.shape_ending_curve) ?? 0.05
-      const [ox, oy] = centre(other)
-      const geo: Type_IOGeo = { side, ox, oy, curve_node }
-      if (l.shape_is_recycling) {
-        const [sx, sy] = centre(l.source)
-        const [tx, ty] = centre(l.target)
-        const belly = recyclingBellyCentre(
-          sx, sy, tx, ty,
-          l.shape_middle_recycling ?? 100, // 100 = middle_recycling config default
-          l.thickness,
-          l.shape_orientation
-        )
-        geo.stack_ref = (side === 'left' || side === 'right') ? belly.y : belly.x
-      }
-      return { item: l, geo }
-    })
-    const ordered = orderIOByGeometry(items, cx, cy)
-    const map = new Map<Class_LinkElement, number>()
-    ordered.forEach((l, i) => map.set(l, i))
-    return map
   }
 
   public reorganizeIOFromListIds(l: string[]) {
@@ -1325,16 +1267,21 @@ export class Class_NodeElement extends Class_NodeBase {
         // Côté source ou cible : déterminé par la nature de cette entrée (un flux
         // peut porter une flèche aux deux extrémités), pas par un drapeau du flux.
         const is_reversed = item.is_source_arrow
-        // Arrow length : in fan mode, the user-set shape_arrow_size is used
-        // as-is. In standalone, cap the length to link_value so a wide flow
-        // doesn't end with a squashed triangle (height/base <<1) — unless
-        // the link is structural, in which case keep the full length to
-        // produce a "needle" signalling "no quantity" rather than a
-        // vanishing 2×2 dot.
+        // Arrow length : normally the fixed user size (shape_arrow_size, px). When
+        // shape_arrow_size_ratio > 0 the depth scales with the link thickness
+        // (depth = ratio × épaisseur) so the arrow keeps a CONSTANT ANGLE whatever
+        // the flow value — comportement e!Sankey (un gros flux → pointe profonde).
+        const base_arrow_size = link.shape_arrow_size_ratio > 0
+          ? link.shape_arrow_size_ratio * link_value_raw
+          : link.shape_arrow_size
+        // In fan mode, the size is used as-is. In standalone, cap the length to
+        // link_value so a wide flow doesn't end with a squashed triangle
+        // (height/base <<1) — unless the link is structural, in which case keep
+        // the full length to produce a "needle" signalling "no quantity".
         const cap_arrow_length = use_standalone && !link.linkIsStructure()
         const arrow_length = cap_arrow_length
-          ? Math.min(link.shape_arrow_size, link_value)
-          : link.shape_arrow_size
+          ? Math.min(base_arrow_size, link_value)
+          : base_arrow_size
 
         let xt: number
         let yt: number
@@ -1482,9 +1429,13 @@ export class Class_NodeElement extends Class_NodeBase {
       if (side_links.length === 0)
         return
 
-      const depth = Math.max(...side_links.map(link => link.shape_source_notch_size ?? 0))
-      if (!(depth > 0))
-        return
+      // Profondeur du chevron : soit fixe (source_notch_size, px), soit — quand
+      // source_notch_size_ratio > 0 — proportionnelle à l'ÉPAISSEUR de la bande
+      // (depth = ratio × épaisseur), ce qui garde un ANGLE constant quelle que
+      // soit la valeur du flux (comportement e!Sankey). On calcule d'abord
+      // l'étendue de la bande (span des attaches), puis la profondeur.
+      const ratio = Math.max(...side_links.map(link => link.shape_source_notch_size_ratio ?? 0))
+      const fixed = Math.max(...side_links.map(link => link.shape_source_notch_size ?? 0))
 
       let path: string
       if (side === 'left' || side === 'right') {
@@ -1496,6 +1447,8 @@ export class Class_NodeElement extends Class_NodeBase {
           y_min = Math.min(y_min, link.position_y_start - half)
           y_max = Math.max(y_max, link.position_y_start + half)
         })
+        const depth = ratio > 0 ? ratio * (y_max - y_min) : fixed
+        if (!(depth > 0)) return
         const apex_x = x_base + (side === 'right' ? depth : -depth)
         const y_mid = (y_min + y_max) / 2
         path = 'M ' + x_base + ',' + y_min
@@ -1512,6 +1465,8 @@ export class Class_NodeElement extends Class_NodeBase {
           x_min = Math.min(x_min, link.position_x_start - half)
           x_max = Math.max(x_max, link.position_x_start + half)
         })
+        const depth = ratio > 0 ? ratio * (x_max - x_min) : fixed
+        if (!(depth > 0)) return
         const apex_y = y_base + (side === 'bottom' ? depth : -depth)
         const x_mid = (x_min + x_max) / 2
         path = 'M ' + x_min + ',' + y_base

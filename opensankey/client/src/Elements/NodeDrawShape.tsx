@@ -131,8 +131,10 @@ export class NodeDrawShape {
     // Le style peut être partagé entre nœuds et flux (style 'default', fichiers
     // legacy) : shape_type peut alors porter une forme de FLUX (bezier_*), qu'on
     // ne sait pas dessiner ici — on retombe sur 'rect' plutôt que de ne rien
-    // dessiner (nœuds invisibles).
-    const shape_type = (['rect', 'ellipse', 'capsule', 'capsule_h'] as const)
+    // dessiner (nœuds invisibles). NB : 'line' (ligne libre OS#1276) est une
+    // forme de nœud légitime et doit figurer dans la liste, sinon le fallback
+    // la remplace par un rectangle et court-circuite sa branche de rendu.
+    const shape_type = (['rect', 'ellipse', 'capsule', 'capsule_h', 'line'] as const)
       .find(s => s === this._node.shape_type) ?? 'rect'
 
     // Apply shape value
@@ -162,16 +164,22 @@ export class NodeDrawShape {
         .classed('node', true)
         .classed('node_shape', true)
         .attr('d', this.getHorizontalCapsulePath())
-    } else if (this._node.shape_type === 'line') {
-      // OS#1276 — ligne libre : trait décoratif, diagonale de la boîte englobante.
-      // Sens donné par shape_line_flip. Pas de remplissage ; l'apparence (couleur,
-      // épaisseur, pointillés) reprend les attributs de bordure via le bloc commun
-      // ci-dessous (le <line> porte la classe node_shape).
+    } else if (shape_type === 'line') {
+      // OS#1276b — ligne libre : VRAI segment à 2 extrémités A(x1,y1)/B(x2,y2)
+      // déplaçables indépendamment (repère local du groupe de forme, normalisé
+      // pour que min(x1,x2)=0 et min(y1,y2)=0 ⇒ boîte dérivée width=max(x1,x2),
+      // height=max(y1,y2)). Pas de remplissage ; l'apparence (couleur, épaisseur,
+      // pointillés) reprend les attributs de bordure via le bloc commun ci-dessous
+      // (le <line> porte la classe node_shape). shape_line_flip est conservé
+      // uniquement pour la rétrocompat au chargement (cf. ensureLineEndpoints).
       const g = this._node.d3_selection_g_shape
       if (g) {
-        const pts = this._node.shape_line_flip
-          ? { x1: 0, y1: height, x2: width, y2: 0 }
-          : { x1: 0, y1: 0, x2: width, y2: height }
+        const pts = {
+          x1: this._node.shape_line_x1,
+          y1: this._node.shape_line_y1,
+          x2: this._node.shape_line_x2,
+          y2: this._node.shape_line_y2
+        }
         // Trait de préhension transparent, plus large, pour rendre une ligne fine
         // sélectionnable au clic (le trait visible ne fait que quelques pixels).
         const hit_width = Math.max(this._node.shape_border_thickness * 3, 12)

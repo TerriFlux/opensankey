@@ -481,7 +481,6 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
   const { setIsOpen } = useTour()
   const {
     ref_setter_show_modal_templates_lib,
-    ref_setter_show_gallery_source,
     ref_setter_show_modal_file_converter,
     ref_setter_png_saver_res_h, ref_setter_png_saver_res_v, ref_setter_show_modal_png_saver,
     ref_setter_show_modal_pdf_saver,
@@ -591,13 +590,6 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
         {new_data.icon_library.icon_new_da}
         {t('Menu.from_model')}
       </MenuItem>
-      {/* Galerie locale e!Sankey — DEV UNIQUEMENT (os#1281). Visible seulement pour
-          les comptes développeur ; le backend ne répond que si ESANKEY_CORPUS_DIR
-          est défini en mode debug (sinon la galerie reste vide et se masque). */}
-      {new_data.has_sankey_dev && <MenuItem onClick={() => { ref_setter_show_gallery_source.current('esankey-local') }}>
-        {new_data.icon_library.icon_new_da}
-        e!Sankey (dev)
-      </MenuItem>}
       <MenuItem onClick={() => { set_show_excel_template(true) }}>
         {new_data.icon_library.icon_open_sankey_excel}
         {t('Menu.new_excel_template')}
@@ -959,11 +951,6 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
           {new_data.icon_library.icon_new_da}
           {t('Menu.from_model')}
         </MenuItem>
-        {/* Galerie locale e!Sankey — DEV UNIQUEMENT (os#1281), cf. ci-dessus. */}
-        {new_data.has_sankey_dev && <MenuItem onClick={() => { ref_setter_show_gallery_source.current('esankey-local') }}>
-          {new_data.icon_library.icon_new_da}
-          e!Sankey (dev)
-        </MenuItem>}
         <MenuItem onClick={() => { set_show_excel_template(true) }}>
           {new_data.icon_library.icon_open_sankey_excel}
           {t('Menu.new_excel_template')}

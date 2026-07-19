@@ -178,6 +178,190 @@ export function flyToPoint(da: Class_DrawingArea, wx: number, wy: number, scale?
   setCamera(da, to, { animate: true })
 }
 
+/** Centre pixel du viewport visible (sous la nav bar) — point d'ancrage des zooms explicites. */
+function viewportCenter(da: Class_DrawingArea): [number, number] {
+  return [
+    da.window_fitting_width / 2,
+    da.window_fitting_height / 2 + da.getNavBarHeight()
+  ]
+}
+
+function prefersReducedMotion(): boolean {
+  return typeof window !== 'undefined'
+    && typeof window.matchMedia === 'function'
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+// « Figer le zoom dans la géométrie » (baking) : mettre le diagramme à l'échelle du zoom courant r
+// puis remettre la caméra à k=1, pour un rendu pixel-identique mais un indicateur à 100 % et des
+// tailles px « réelles » persistées. Réalisé par un ALLER-RETOUR JSON (contrat de persistance,
+// chemin éprouvé par l'undo) : c'est le seul qui, en fin de course, laisse fromJSON poser son fit
+// PUIS setCamera(k=1) en dernier — un scaling « en place » se fait écraser par les areaAutoFit
+// internes (setter `scale`, draw) et la caméra reste bloquée. Tout ce qui est dessiné sous
+// g_drawing suit le zoom (monde), donc toutes les longueurs px sont ×r — SAUF `user_scale`
+// (épaisseur ∝ 1/user_scale → ÷r) et le groupe LABEL quand la police est verrouillée (déjà
+// compensée 1/k, constante à l'écran).
+
+// Longueurs de FORME (px), à l'échelle ×r partout où la clé apparaît (styles, local, points…).
+const BAKE_SHAPE_KEYS = new Set([
+  'x', 'y',
+  'shape_min_width', 'shape_min_height',
+  'shape_arrow_size', 'shape_border_radius', 'shape_border_thickness',
+  'shape_margin_top', 'shape_margin_bottom', 'shape_margin_left', 'shape_margin_right',
+  'shape_middle_recycling',
+  'shape_line_x1', 'shape_line_y1', 'shape_line_x2', 'shape_line_y2',
+  // Bornes d'épaisseur des flux, en px : elles clampent l'épaisseur ET le « band » qui dimensionne
+  // la largeur/hauteur des nœuds (getSideBandExtent). Sans les scaler, un nœud dimensionné par les
+  // flux resterait plafonné → sa taille ne suivrait pas.
+  'minimum_flux', 'maximum_flux'
+])
+// Géométrie des LABELS, ×r UNIQUEMENT si la police n'est pas verrouillée.
+const BAKE_LABEL_KEYS = new Set([
+  'name_label_font_size', 'value_label_font_size',
+  'name_label_box_width', 'value_label_box_width',
+  'value_label_position_offset', 'value_label_horiz_shift', 'value_label_vert_shift'
+])
+// Porteur d'échelle valeur→px des flux : épaisseur ∝ 1/user_scale → divisé par r.
+const BAKE_INVERSE_KEYS = new Set(['user_scale'])
+// Attributs de FORME (px) INJECTÉS depuis le modèle avant le scaling (cf. injectResolvedGeometry).
+const INJECT_GEOM_KEYS = [
+  'shape_min_width', 'shape_min_height',
+  'shape_margin_top', 'shape_margin_bottom', 'shape_margin_left', 'shape_margin_right',
+  'shape_border_thickness', 'shape_border_radius', 'shape_arrow_size'
+]
+
+/**
+ * Injecte dans le JSON la géométrie de FORME RÉSOLUE (défaut compris) de chaque nœud/conteneur, là
+ * où elle est absente. INDISPENSABLE : la sérialisation omet les attributs égaux au défaut de
+ * style/usine (shouldSaveAttribute) — un nœud legacy sans `shape_min_width` n'en porte AUCUN dans
+ * le JSON, donc le scaler le raterait et la largeur « triplerait » à la remise k=1. On écrit la
+ * valeur lue sur le modèle vivant (nodes_dict/containers_dict) dans `local`, où le scaler la ×r.
+ */
+function injectResolvedGeometry(da: Class_DrawingArea, json: unknown): void {
+  const nodes = da.sankey.nodes_dict as Record<string, unknown>
+  const containers = da.sankey.containers_dict as Record<string, unknown>
+  const injectInto = (map: Record<string, unknown>, live: Record<string, unknown>) => {
+    for (const [id, entry] of Object.entries(map)) {
+      const el = live[id] as Record<string, unknown> | undefined
+      if (!el || !entry || typeof entry !== 'object') continue
+      const e = entry as Record<string, unknown>
+      const local = (e.local && typeof e.local === 'object') ? e.local as Record<string, unknown> : (e.local = {} as Record<string, unknown>)
+      INJECT_GEOM_KEYS.forEach(k => {
+        if (local[k] === undefined) {
+          const v = el[k]
+          if (typeof v === 'number' && Number.isFinite(v)) local[k] = v
+        }
+      })
+    }
+  }
+  const visit = (obj: unknown) => {
+    if (Array.isArray(obj)) { obj.forEach(visit); return }
+    if (!obj || typeof obj !== 'object') return
+    const rec = obj as Record<string, unknown>
+    if (rec.nodes && typeof rec.nodes === 'object' && !Array.isArray(rec.nodes)) injectInto(rec.nodes as Record<string, unknown>, nodes)
+    if (rec.containers && typeof rec.containers === 'object' && !Array.isArray(rec.containers)) injectInto(rec.containers as Record<string, unknown>, containers)
+    Object.values(rec).forEach(visit)
+  }
+  visit(json)
+}
+
+/**
+ * Multiplie récursivement, en place, les champs GÉOMÉTRIQUES d'un JSON de diagramme par `r` (et
+ * divise `user_scale`). Données, ratios de courbe Bézier et layouts laissés intacts.
+ */
+export function scaleGeometryJSON(obj: unknown, r: number, include_labels: boolean): void {
+  if (Array.isArray(obj)) {
+    obj.forEach(v => scaleGeometryJSON(v, r, include_labels))
+    return
+  }
+  if (!obj || typeof obj !== 'object') return
+  const rec = obj as Record<string, unknown>
+  for (const k of Object.keys(rec)) {
+    const v = rec[k]
+    if (typeof v === 'number' && Number.isFinite(v)) {
+      if (BAKE_SHAPE_KEYS.has(k)) rec[k] = v * r
+      else if (include_labels && BAKE_LABEL_KEYS.has(k)) rec[k] = v * r
+      else if (BAKE_INVERSE_KEYS.has(k)) rec[k] = v / r
+    } else {
+      scaleGeometryJSON(v, r, include_labels)
+    }
+  }
+}
+
+/**
+ * « Figer le zoom à 100 % à diagramme constant » : met toute la géométrie à l'échelle du zoom
+ * courant r via un aller-retour JSON, puis remet la caméra à k=1 en conservant la translation →
+ * rendu pixel-identique, indicateur à 100 %, tailles px stockées « réelles ». Enregistré comme UNE
+ * entrée d'historique, sauf `record_history=false` (geste englobé, ex. import Excel).
+ */
+export function bakeZoomIntoGeometry(da: Class_DrawingArea, opts?: { record_history?: boolean }): void {
+  const node = da.d3_selection_zoom_area?.node()
+  if (!node) return
+  const t0 = d3.zoomTransform(node)
+  const r = t0.k
+  if (!Number.isFinite(r) || r <= 0 || Math.abs(r - 1) < 1e-6) return
+  const record_history = opts?.record_history !== false
+  const app = da.application_data
+  const tx = t0.x
+  const ty = t0.y
+  // Police verrouillée (défaut) : labels compensés 1/k, déjà constants à l'écran → ne pas scaler.
+  const include_labels = !da.font_size_locked
+  const before = app.toJSON()
+  const after = app.toJSON()
+  // Solidifier les tailles par défaut AVANT le scaling (sinon la largeur des nœuds legacy est ratée).
+  injectResolvedGeometry(da, after)
+  scaleGeometryJSON(after, r, include_labels)
+  app.fromJSON(after)
+  const restore = () => app.menu_configuration?.updateAllMenuComponents()
+  if (record_history) {
+    app.history.saveUndo(() => { app.fromJSON(before); restore() })
+    app.history.saveRedo(() => { app.fromJSON(after); restore() })
+  }
+  // fromJSON a remplacé la drawing_area (reset) : relire l'instance fraîche pour la caméra, et poser
+  // k=1 EN DERNIER (le fit de fromJSON a déjà eu lieu). Monde ×r + k=1 (même translation) ⇒
+  // screen = 1·(monde·r) + t = r·monde + t = rendu d'origine.
+  const da2 = app.drawing_area
+  da2.setCamera(d3.zoomIdentity.translate(tx, ty))
+  restore()
+}
+
+/**
+ * Zoom EXPLICITE par facteur multiplicatif (boutons -/+), ancré au centre du viewport visible.
+ * Passe par zoomListener.scaleBy pour conserver le scaleExtent (clamp [0.05, 20]) et le constrain
+ * de d3-zoom (load-bearing, cf. applyFitCamera). Animé sauf reduced-motion / animations coupées.
+ */
+export function zoomByFactor(da: Class_DrawingArea, factor: number): void {
+  const sel = da.d3_selection_zoom_area
+  if (!sel || !sel.node()) return
+  const center = viewportCenter(da)
+  if (!da.zoom_animations_enabled || prefersReducedMotion()) {
+    da.zoomListener.scaleBy(sel, factor, center)
+  } else {
+    da.zoomListener.scaleBy(
+      sel.transition().duration(ZOOM_ANIMATION_DURATION_MS).ease(d3.easeCubicInOut),
+      factor, center
+    )
+  }
+}
+
+/**
+ * Zoom EXPLICITE vers une échelle absolue `k` (ex. clic sur l'indicateur → 100% = k=1), ancré au
+ * centre du viewport visible. Même canal (scaleTo) que zoomByFactor pour garder extent + constrain.
+ */
+export function zoomToScale(da: Class_DrawingArea, k: number): void {
+  const sel = da.d3_selection_zoom_area
+  if (!sel || !sel.node()) return
+  const center = viewportCenter(da)
+  if (!da.zoom_animations_enabled || prefersReducedMotion()) {
+    da.zoomListener.scaleTo(sel, k, center)
+  } else {
+    da.zoomListener.scaleTo(
+      sel.transition().duration(ZOOM_ANIMATION_DURATION_MS).ease(d3.easeCubicInOut),
+      k, center
+    )
+  }
+}
+
 /**
  * Viewport utile en pixels écran : zone réellement disponible pour le diagramme (fenêtre ou
  * conteneur hôte, réserves de panneaux déduites), et décalage vertical de la nav bar.

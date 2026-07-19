@@ -30,14 +30,14 @@ describe("AFMBase issue #197 — reorganizeIOOrder préserve les ancres verrouil
 
   it('release_locks=true : re-trie tout le groupe selon les positions (comportement nominal)', () => {
     const [a, b, c] = order()
-    const out = reorganizeIOOrder([a, b, c], [], [], isLocked, byKey, true)
+    const out = reorganizeIOOrder([a, b, c], [], [], [], isLocked, byKey, true)
     expect(ids(out)).toEqual(['B', 'C', 'A'])
   })
 
   it("release_locks=false : un lien verrouillé en TÊTE garde sa place, les autres se trient autour", () => {
     const [a, b, c] = order()
     a.locked = true // A reste à l'index 0 alors qu'il devrait spatialement finir dernier
-    const out = reorganizeIOOrder([a, b, c], [], [], isLocked, byKey, false)
+    const out = reorganizeIOOrder([a, b, c], [], [], [], isLocked, byKey, false)
     // A épinglé en 0 ; B,C triés dans les emplacements restants 1,2.
     expect(ids(out)).toEqual(['A', 'B', 'C'])
   })
@@ -45,43 +45,27 @@ describe("AFMBase issue #197 — reorganizeIOOrder préserve les ancres verrouil
   it('release_locks=false : un lien verrouillé au MILIEU reste épinglé, les autres se trient autour', () => {
     const [a, b, c] = order()
     b.locked = true // B épinglé à l'index 1
-    const out = reorganizeIOOrder([a, b, c], [], [], isLocked, byKey, false)
+    const out = reorganizeIOOrder([a, b, c], [], [], [], isLocked, byKey, false)
     // Emplacements libres 0 et 2 reçoivent A,C triés par key = [C(2), A(3)].
     expect(ids(out)).toEqual(['C', 'B', 'A'])
   })
 
   it('release_locks=false sans aucun verrou : équivaut au tri complet', () => {
     const [a, b, c] = order()
-    const out = reorganizeIOOrder([a, b, c], [], [], isLocked, byKey, false)
+    const out = reorganizeIOOrder([a, b, c], [], [], [], isLocked, byKey, false)
     expect(ids(out)).toEqual(['B', 'C', 'A'])
   })
 
-  it('structure préservée : import en tête, export en queue, milieu seul re-trié', () => {
+  it('structure préservée : import en tête, recyclage avant export, milieu seul re-trié', () => {
     const I: FakeLink = { id: 'I', key: 9 } // import echange
     const E: FakeLink = { id: 'E', key: 0 } // export echange
+    const R: FakeLink = { id: 'R', key: 5 } // recyclage
     const a: FakeLink = { id: 'A', key: 2 }
     const b: FakeLink = { id: 'B', key: 1 }
-    // links_order mélangé ; import/export fournis à part (comme la méthode les calcule
-    // depuis input/output_links_list). Les échanges gardent leur bloc quelle que soit
-    // leur key : seul le milieu est trié.
-    const out = reorganizeIOOrder([I, a, b, E], [I], [E], isLocked, byKey, true)
-    expect(ids(out)).toEqual(['I', 'B', 'A', 'E'])
-  })
-
-  it('un flux de recyclage est trié DANS le milieu, plus parqué en bloc avant les exports', () => {
-    // Avant : les recyclages étaient concaténés entre le milieu et les exports, donc
-    // toujours sous tous les autres flux de leur côté, quoi que dise la géométrie (nœud
-    // « Distillerie de betterave » du diagramme SOCLE Sucre : le flux de mélasses était
-    // cloué en bas). Désormais ils passent par `compare` comme les autres —
-    // ioOrderGeometry leur donne seulement un point de référence à eux (le ventre de la
-    // boucle) au lieu du nœud opposé.
-    const I: FakeLink = { id: 'I', key: 9 }
-    const E: FakeLink = { id: 'E', key: 0 }
-    const R: FakeLink = { id: 'R', key: 1.5 } // recyclage, spatialement entre B(1) et A(2)
-    const a: FakeLink = { id: 'A', key: 2 }
-    const b: FakeLink = { id: 'B', key: 1 }
-    const out = reorganizeIOOrder([I, a, R, b, E], [I], [E], isLocked, byKey, true)
-    // [import] + [milieu trié B, R, A — le recyclage à sa place géométrique] + [export].
-    expect(ids(out)).toEqual(['I', 'B', 'R', 'A', 'E'])
+    // links_order mélangé ; import/export/recycling fournis à part (comme la méthode
+    // les calcule depuis input/output_links_list et shape_is_recycling).
+    const out = reorganizeIOOrder([I, a, R, b, E], [I], [E], [R], isLocked, byKey, true)
+    // [import] + [milieu trié B,A] + [recyclage] + [export].
+    expect(ids(out)).toEqual(['I', 'B', 'A', 'R', 'E'])
   })
 })

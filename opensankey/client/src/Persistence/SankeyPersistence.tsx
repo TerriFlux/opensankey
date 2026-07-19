@@ -530,6 +530,12 @@ export class ContainerPersistence extends NodeBasePersistence {
         container.attachNodeToCont(target)
       }
     })
+
+    // OS#1276b — rétrocompat « diagonale de boîte » → segment à 2 extrémités.
+    // Les anciens fichiers ne portent que shape_line_flip (offsets absents ⇒ tous
+    // à 0, segment dégénéré). ensureLineEndpoints() les dérive de la boîte + du sens
+    // historique. Idempotent : ne touche rien si les offsets sont déjà chargés.
+    container.ensureLineEndpoints()
   }
 }
 

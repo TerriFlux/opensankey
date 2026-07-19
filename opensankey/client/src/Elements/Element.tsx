@@ -919,6 +919,10 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   shape_hatch!: NodeShapeSpecificAttributeTypes['hatch']
   shape_is_reference_stock!: NodeShapeSpecificAttributeTypes['is_reference_stock']
   shape_line_flip!: NodeShapeSpecificAttributeTypes['line_flip']
+  shape_line_x1!: NodeShapeSpecificAttributeTypes['line_x1']
+  shape_line_y1!: NodeShapeSpecificAttributeTypes['line_y1']
+  shape_line_x2!: NodeShapeSpecificAttributeTypes['line_x2']
+  shape_line_y2!: NodeShapeSpecificAttributeTypes['line_y2']
   shape_position_u_locked!: boolean
   shape_position_v_locked!: boolean
   shape_margin_bottom!: ShapeAttributeTypes['margin_bottom']
@@ -965,8 +969,10 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   shape_is_arrow!: LinkShapeSpecificValues['is_arrow']
   shape_arrow_at_source!: LinkShapeSpecificValues['arrow_at_source']
   shape_arrow_size!: LinkShapeSpecificValues['arrow_size']
+  shape_arrow_size_ratio!: LinkShapeSpecificValues['arrow_size_ratio']
   shape_source_notch!: LinkShapeSpecificValues['source_notch']
   shape_source_notch_size!: LinkShapeSpecificValues['source_notch_size']
+  shape_source_notch_size_ratio!: LinkShapeSpecificValues['source_notch_size_ratio']
   shape_is_dashed!: LinkShapeSpecificValues['is_dashed']
   shape_color_rule!: LinkShapeSpecificValues['color_rule']
   shape_visible_when_zero!: LinkShapeSpecificValues['visible_when_zero']
@@ -1268,8 +1274,10 @@ export class Class_ElementStyle {
   shape_is_arrow!: LinkShapeSpecificValues['is_arrow']
   shape_arrow_at_source!: LinkShapeSpecificValues['arrow_at_source']
   shape_arrow_size!: LinkShapeSpecificValues['arrow_size']
+  shape_arrow_size_ratio!: LinkShapeSpecificValues['arrow_size_ratio']
   shape_source_notch!: LinkShapeSpecificValues['source_notch']
   shape_source_notch_size!: LinkShapeSpecificValues['source_notch_size']
+  shape_source_notch_size_ratio!: LinkShapeSpecificValues['source_notch_size_ratio']
   shape_is_dashed!: LinkShapeSpecificValues['is_dashed']
   shape_color_rule!: LinkShapeSpecificValues['color_rule']
   shape_visible_when_zero!: LinkShapeSpecificValues['visible_when_zero']
@@ -1307,6 +1315,10 @@ export class Class_ElementStyle {
   shape_hatch!: NodeShapeSpecificAttributeTypes['hatch']
   shape_is_reference_stock!: NodeShapeSpecificAttributeTypes['is_reference_stock']
   shape_line_flip!: NodeShapeSpecificAttributeTypes['line_flip']
+  shape_line_x1!: NodeShapeSpecificAttributeTypes['line_x1']
+  shape_line_y1!: NodeShapeSpecificAttributeTypes['line_y1']
+  shape_line_x2!: NodeShapeSpecificAttributeTypes['line_x2']
+  shape_line_y2!: NodeShapeSpecificAttributeTypes['line_y2']
   shape_position_u_locked!: boolean
   shape_position_v_locked!: boolean
   shape_margin_bottom!: ShapeAttributeTypes['margin_bottom']
