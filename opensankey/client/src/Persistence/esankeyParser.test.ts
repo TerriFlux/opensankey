@@ -164,6 +164,21 @@ describe('parseEsankeyXml — fixture minimale', () => {
     expect(heat?.value.tags[ESANKEY_ENTRIES_TAGG_ID]).toEqual(['id_Heat'])
   })
 
+  test('transparence e!Sankey (alpha ARGB de l\'entry) → couleur aplatie sur le fond', () => {
+    // -1073774768 = Coral (255,127,80) alpha 191 (~0.75). Aplati sur fond blanc
+    // → couleur solide équivalente #FF9F7C (chaque entry a sa propre teinte).
+    const withAlpha = FIXTURE.replace('argb="-256"', 'argb="-1073774768"')
+    const dd = parseEsankeyXml(withAlpha)
+    const tags = dd.fluxTags[ESANKEY_ENTRIES_TAGG_ID].tags
+    expect(tags['id_Electricity'].color).toBe('#FF9F7C')
+    // Le flux porte aussi la couleur aplatie.
+    const elec = Object.values(dd.links)
+      .find(l => l.value.tags[ESANKEY_ENTRIES_TAGG_ID]?.[0] === 'id_Electricity')
+    expect(elec?.local.color).toBe('#FF9F7C')
+    // Entry opaque (Heat, alpha 255) : couleur brute inchangée.
+    expect(tags['id_Heat'].color).toBe('#FF0000')
+  })
+
   test('valeurs agrégées des nœuds cohérentes', () => {
     const a = Object.values(d.nodes).find(n => n.name === 'Source A')
     const b = Object.values(d.nodes).find(n => n.name === 'Cible B')
@@ -916,5 +931,8 @@ describeDemos('loadEsankeyFile — démos e!Sankey 5 locales', () => {
     // e!Sankey l'étiquette appartient à la flèche, pas au flux).
     const labelled = Object.values(d.links).filter(l => l.local.label_visible === true)
     expect(labelled.length).toBe(0)
+    // Texture : les rectangles hachurés (<brushColor hasPattern pattern="3">)
+    // importent shape_hatch = antidiagonal (\) sur la zone de texte.
+    expect(Object.values(d.labels).some(c => c.shape_hatch === 'antidiagonal')).toBe(true)
   }, 30000)
 })
