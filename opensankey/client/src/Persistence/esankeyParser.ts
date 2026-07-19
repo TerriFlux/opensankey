@@ -456,6 +456,22 @@ interface EsGraphicalArrow {
    * `{PercentProcessSource}`/`{PercentProcessDestination}` (cf. A2).
    */
   labelFormat: string
+  // OS#1288 — COUDE DROIT. Géométrie du tracé portée par le `<sankeyLink>`
+  // (enfant du `<arrow>` graphique). e!Sankey trace des coudes quasi à angle
+  // droit : un SEGMENT DROIT (px) part de chaque nœud, puis un virage COURT
+  // rejoint l'autre bout. Nos flux vh/hv (In/Out) sont, eux, trop arrondis.
+  /** `<sankeyLink>` présent : on ne pose la géométrie de coude que dans ce cas. */
+  hasSankeyLink: boolean
+  /** `sankeyStartSegmentLength` (px) : segment droit avant la courbure côté source. */
+  startSegmentLength: number
+  /** `sankeyEndSegmentLength` (px) : segment droit avant la courbure côté cible. */
+  endSegmentLength: number
+  /** `curviness` (px) : rayon/longueur du virage (petit = coude serré). */
+  curviness: number
+  /** `orthogonal` : tracé à angle droit strict → coude encore plus serré. */
+  orthogonal: boolean
+  /** `adjustingStyle` : mode d'ajustement e!Sankey (repris pour information). */
+  adjustingStyle: string
 }
 
 const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } => {
@@ -465,12 +481,20 @@ const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } 
   childrenByTag(arrows, 'arrow').forEach(a => {
     const label = childByTag(a, 'sankeyArrowLabel')
     const comment = childByTag(a, 'comment')
+    // OS#1288 — géométrie du coude portée par le `<sankeyLink>` du `<arrow>`.
+    const sankeyLink = childByTag(a, 'sankeyLink')
     out[a.getAttribute('id') ?? ''] = {
       tooltip: (comment?.getAttribute('text') ?? '').replace(/\r\n/g, '\n').trim(),
       labelVisible: label?.getAttribute('visible') !== 'false',
       showValue: label?.getAttribute('showValue') !== 'false',
       showUnit: label?.getAttribute('showUnit') === 'true',
       labelFormat: label?.getAttribute('labelFormat') ?? '',
+      hasSankeyLink: sankeyLink !== null,
+      startSegmentLength: attrNum(sankeyLink, 'sankeyStartSegmentLength', 0),
+      endSegmentLength: attrNum(sankeyLink, 'sankeyEndSegmentLength', 0),
+      curviness: attrNum(sankeyLink, 'curviness', 0),
+      orthogonal: sankeyLink?.getAttribute('orthogonal') === 'true',
+      adjustingStyle: sankeyLink?.getAttribute('adjustingStyle') ?? '',
     }
   })
   return out
@@ -770,6 +794,38 @@ export const parseEsankeyXml = (
         if (entry.color) link.local.color = entry.color
       }
       if (orientation !== 'hh') link.local.orientation = orientation
+      // OS#1288 — COUDE DROIT. Reproduit l'allure e!Sankey (segment droit puis
+      // virage court), surtout sur les flux In/Out vh/hv trop arrondis chez
+      // nous. Modèle OpenSankey du tracé (LinkControlPoints) :
+      //  - `left/right_horiz_shift` (= shape_starting/ending_curve, ratio de la
+      //    longueur du flux) = SEGMENT DROIT collé à l'ancre avant la courbure ;
+      //  - `starting/ending_tangeant` = rayon du virage : PETIT ⇒ coude serré
+      //    (notre défaut 0.3 arrondit trop) ;
+      //  - `curvature` = courbure générale (secondaire, posée pour cohérence).
+      // e!Sankey exprime segment et virage en PIXELS ; on les convertit en
+      // ratios via la portée du flux (distance source→cible, invariante par la
+      // normalisation de positions faite plus bas).
+      if (graphicalArrow?.hasSankeyLink) {
+        const span = Math.hypot(
+          nodes[targetId].x - nodes[sourceId].x,
+          nodes[targetId].y - nodes[sourceId].y,
+        ) || 1
+        const clamp = (v: number, lo: number, hi: number): number =>
+          Math.min(hi, Math.max(lo, v))
+        if (graphicalArrow.startSegmentLength > 0) {
+          link.local.left_horiz_shift = clamp(graphicalArrow.startSegmentLength / span, 0.01, 0.45)
+        }
+        if (graphicalArrow.endSegmentLength > 0) {
+          link.local.right_horiz_shift = clamp(graphicalArrow.endSegmentLength / span, 0.01, 0.45)
+        }
+        // Virage court : tangente petite (dérivée de `curviness`, défaut 10 px).
+        // `orthogonal` (angle droit strict) ⇒ tangente encore plus serrée.
+        const tangent = clamp((graphicalArrow.curviness || 10) / span, 0.02, 0.2)
+        const bend = graphicalArrow.orthogonal ? Math.min(tangent, 0.06) : tangent
+        link.local.starting_tangeant = bend
+        link.local.ending_tangeant = bend
+        link.local.curvature = bend
+      }
       // AUCUN label de valeur posé sur les flux importés (décision user) : chez
       // e!Sankey l'étiquette de quantité appartient à la FLÈCHE (somme de ses
       // matériaux, position sur segment) — la reproduire par flux serait faux ;

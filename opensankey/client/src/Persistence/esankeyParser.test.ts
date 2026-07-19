@@ -340,6 +340,47 @@ describe('parseEsankeyXml — orientation des flux (arrowDirection)', () => {
   })
 })
 
+describe('parseEsankeyXml — coude droit (OS#1288)', () => {
+  // Le `<sankeyLink>` du `<arrow>` porte la géométrie du tracé e!Sankey :
+  // segment droit (px) à chaque bout puis virage court. On la mappe vers les
+  // attributs de tangente/ancre OpenSankey pour raidir le coude des flux vh/hv.
+  // Nœuds A(100,300) et B(400,320) → portée ≈ hypot(300,20) ≈ 300.67.
+  const withElbow = (extra: string): string => FIXTURE
+    .replace('<process id="50" locationX="100" locationY="300">', '<process id="50" locationX="100" locationY="300" arrowDirection="1">')
+    .replace('<process id="51" locationX="400" locationY="320">', '<process id="51" locationX="400" locationY="320" arrowDirection="2">')
+    .replace('<arrow id="60">', `<arrow id="60">${extra}`)
+
+  test('flux vh : segment droit (horiz_shift) et virage court (tangeant) posés', () => {
+    const d = parseEsankeyXml(withElbow(
+      '<sankeyLink sankeyStartSegmentLength="18" sankeyEndSegmentLength="18" curviness="10" orthogonal="false" adjustingStyle="Manual" />'))
+    const link = Object.values(d.links)[0]
+    expect(link.local.orientation).toBe('vh')
+    // Segments droits 18 px / portée ≈ 300.67 ≈ 0.0599 (ratio de longueur).
+    expect(link.local.left_horiz_shift as number).toBeCloseTo(0.0599, 3)
+    expect(link.local.right_horiz_shift as number).toBeCloseTo(0.0599, 3)
+    // Virage court : tangente ≈ 10/300.67 ≈ 0.0333, bien sous le défaut 0.3.
+    expect(link.local.starting_tangeant as number).toBeCloseTo(0.0333, 3)
+    expect(link.local.ending_tangeant as number).toBeCloseTo(0.0333, 3)
+    expect(link.local.starting_tangeant as number).toBeLessThan(0.3)
+  })
+
+  test('orthogonal=true → tangente encore plus serrée (≤ 0.06)', () => {
+    const d = parseEsankeyXml(withElbow(
+      '<sankeyLink sankeyStartSegmentLength="18" sankeyEndSegmentLength="18" curviness="40" orthogonal="true" />'))
+    const link = Object.values(d.links)[0]
+    // curviness 40/300.67 ≈ 0.133 mais orthogonal plafonne à 0.06.
+    expect(link.local.starting_tangeant as number).toBeLessThanOrEqual(0.06)
+    expect(link.local.ending_tangeant as number).toBeLessThanOrEqual(0.06)
+  })
+
+  test('sans <sankeyLink> : aucun attribut de coude posé (rétrocompat)', () => {
+    const d = parseEsankeyXml(FIXTURE)
+    const link = Object.values(d.links)[0]
+    expect(link.local.left_horiz_shift).toBeUndefined()
+    expect(link.local.starting_tangeant).toBeUndefined()
+  })
+})
+
 describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)', () => {
   const d = parseEsankeyXml(FIXTURE_DECOR, { 'Images/tmp1.tmp': PNG_URI })
 
