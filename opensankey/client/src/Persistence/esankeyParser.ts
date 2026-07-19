@@ -140,6 +140,19 @@ const childrenByTag = (el: Element, name: string): Element[] =>
 const childByTag = (el: Element, name: string): Element | null =>
   childrenByTag(el, name)[0] ?? null
 
+// OS#1291 — refId d'un point de raccordement d'une flèche (<from>/<to>) : le
+// premier enfant portant un `refId`, quelle que soit sa balise
+// (<graphProcessRef> vers un process, <graphPlaceRef> vers une place). Robuste
+// aux variantes de nommage des références de nœud.
+const refIdOfEndpoint = (container: Element | null): string | null => {
+  if (!container) return null
+  for (const c of Array.from(container.children)) {
+    const refId = c.getAttribute('refId')
+    if (refId !== null) return refId
+  }
+  return null
+}
+
 const attrNum = (el: Element | null, attr: string, fallback: number): number => {
   const raw = el?.getAttribute(attr)
   if (raw === null || raw === undefined) return fallback
@@ -341,6 +354,38 @@ const parseGraphicalProcesses = (net: Element, palette: EsBrushPalette): { [id: 
       imageFile: childByTag(p, 'image')?.getAttribute('filename') ?? '',
       shapeType: attrNum(p, 'shapeType', 0),
       arrowDirection: attrNum(p, 'arrowDirection', 2),
+    }
+  })
+  return out
+}
+
+// -------------------------------------------------- OS#1291 — PLACES (E/S ext.)
+// Beaucoup de diagrammes e!Sankey raccordent leurs flux non pas à un
+// <graphProcess> mais à une PLACE : point d'entrée/sortie/connexion/stockage
+// externe (prototypes <placeInput>/<placeOutput>/<placeConnection>/
+// <placeStorage>). Côté GRAPHIQUE (net), ces places vivent dans un conteneur
+// <places> frère de <processes> et portent EXACTEMENT le même schéma
+// d'attributs qu'un <process> (locationX/Y, visible, shapeType, brushColor,
+// image, label). On les parse donc à l'identique et on les FUSIONNE dans le
+// dictionnaire des process graphiques (ids uniques dans tout le document) —
+// la résolution d'orientation, de couleur et de position s'applique alors aux
+// places sans code supplémentaire. Défaut arrowDirection = 0 (les places n'en
+// portent pas toujours) → axe horizontal via linkAxis.
+const parseGraphicalPlaces = (net: Element, palette: EsBrushPalette): { [id: string]: EsGraphicalProcess } => {
+  const out: { [id: string]: EsGraphicalProcess } = {}
+  const places = childByTag(net, 'places')
+  if (!places) return out
+  childrenByTag(places, 'place').forEach(p => {
+    const label = childByTag(p, 'label')
+    out[p.getAttribute('id') ?? ''] = {
+      x: attrNum(p, 'locationX', 0),
+      y: attrNum(p, 'locationY', 0),
+      color: resolveBrushColorHex(p, palette),
+      labelText: (label?.getAttribute('text') ?? '').replace(/\r?\n/g, ' ').trim(),
+      visible: p.getAttribute('visible') !== 'false',
+      imageFile: childByTag(p, 'image')?.getAttribute('filename') ?? '',
+      shapeType: attrNum(p, 'shapeType', 0),
+      arrowDirection: attrNum(p, 'arrowDirection', 0),
     }
   })
   return out
@@ -702,6 +747,23 @@ const parseNodeMapping = (root: Element): { [logicalId: string]: string } => {
   return out
 }
 
+// OS#1291 — Mapping des PLACES : les places logiques (<graphPlace>) sont mappées
+// vers leur place graphique (<place>) dans la MÊME sous-section <nodes> du
+// mapping (une place est un nœud), mais via <graphPlaceRef>/<placeRef> que
+// parseNodeMapping ignore. On les récupère ici pour fusionner dans nodeMapping.
+const parsePlaceNodeMapping = (root: Element): { [logicalId: string]: string } => {
+  const out: { [logicalId: string]: string } = {}
+  const mapping = childByTag(root, 'logicalGraphicalObjectMapping')
+  const nodes = mapping ? childByTag(mapping, 'nodes') : null
+  if (!nodes) return out
+  childrenByTag(nodes, 'keyValuePair').forEach(kv => {
+    const logical = childByTag(kv, 'graphPlaceRef')?.getAttribute('refId')
+    const graphical = childByTag(kv, 'placeRef')?.getAttribute('refId')
+    if (logical && graphical) out[logical] = graphical
+  })
+  return out
+}
+
 // -------------------------------------------------------- Styles par défaut
 
 const defaultNodeStyle = (): EsLocal => ({
@@ -838,8 +900,14 @@ export const parseEsankeyXml = (
   const rootEntryGroup = childByTag(netModel, 'entryGroup')
   if (rootEntryGroup) parseEntries(rootEntryGroup, entries, new Set(), brushPalette)
   const graphicalProcesses = parseGraphicalProcesses(net, brushPalette)
+  // OS#1291 — les places graphiques rejoignent le même dictionnaire (ids
+  // uniques) : orientation/couleur/position des flux place↔process réutilisent
+  // le code existant sans modification.
+  Object.assign(graphicalProcesses, parseGraphicalPlaces(net, brushPalette))
   const graphicalArrows = parseGraphicalArrows(net)
   const nodeMapping = parseNodeMapping(root)
+  // OS#1291 — mapping logique→graphique des places, fusionné dans nodeMapping.
+  Object.assign(nodeMapping, parsePlaceNodeMapping(root))
   const edgeMapping = parseEdgeMapping(root)
 
   // Unité (et son unitType) portée par un flow, pour la conversion et le label.
@@ -926,6 +994,55 @@ export const parseEsankeyXml = (
     }
   })
 
+  // OS#1291 — Nœuds de PLACES : un par <graphPlace> (frère de <graphProcess>
+  // dans <graphNodes>). Même construction qu'un process, avec deux différences
+  // volontaires reflétant leur rôle de point d'entrée/sortie externe :
+  //  - largeur réduite par défaut (`node_width` petit) → « stub » d'E/S, comme
+  //    e!Sankey les dessine (petits carrés 48px), à moins de porter une image ;
+  //  - visibilité/couleur/forme honorées depuis la place graphique si présente.
+  // Le nœud entre dans `logicalToNodeId`/`nodes` : la boucle des flux ci-dessous
+  // raccorde alors les flèches place↔process exactement comme process↔process.
+  const graphPlaceList = graphNodes ? childrenByTag(graphNodes, 'graphPlace') : []
+  graphPlaceList.forEach(gp => {
+    const logicalId = gp.getAttribute('id') ?? ''
+    // `nodeMapping` inclut désormais les places (cf. parsePlaceNodeMapping) ;
+    // repli sur l'id logique si la place graphique partage le même id.
+    const graphical = graphicalProcesses[nodeMapping[logicalId] ?? logicalId] ?? null
+    const name = (gp.getAttribute('name') || graphical?.labelText || 'Place ' + logicalId).trim()
+    let id = normalizeStringToValidId(name)
+    if (usedNodeIds.has(id)) id = id + '_' + logicalId
+    usedNodeIds.add(id)
+    logicalToNodeId[logicalId] = id
+    nodes[id] = {
+      id, name,
+      svg_parent_group: 'g_nodes',
+      x: graphical?.x ?? 0,
+      y: graphical?.y ?? 0,
+      u: 0, v: 0,
+      style: 'default',
+      local: {},
+      tags: {},
+      dimensions: {},
+      inputLinksId: [],
+      outputLinksId: [],
+      links_order: [],
+      input_value: 0,
+      output_value: 0,
+    }
+    if (graphical?.color) nodes[id].local.color = graphical.color
+    if (graphical && !graphical.visible) nodes[id].local.shape_visible = false
+    if (graphical?.shapeType === 1) nodes[id].local.shape_border_radius = 10
+    else if (graphical?.shapeType === 2) nodes[id].local.shape = 'ellipse'
+    const imgSrc = graphical?.imageFile ? images[imageKey(graphical.imageFile)] : undefined
+    if (imgSrc) {
+      nodes[id].is_image = true
+      nodes[id].image_src = imgSrc
+    } else {
+      // Point d'E/S sans image : forme compacte pour ne pas masquer le flux.
+      nodes[id].local.node_width = 12
+    }
+  })
+
   // Flux : un par flow de compartments (une flèche multi-matériaux e!Sankey
   // devient N flux parallèles même source/cible, chacun tagué par son entry).
   const links: { [id: string]: EsFlow } = {}
@@ -935,8 +1052,12 @@ export const parseEsankeyXml = (
   graphArrowList.forEach(ga => {
     const fromEl = childByTag(ga, 'from')
     const toEl = childByTag(ga, 'to')
-    const fromRef = fromEl ? childByTag(fromEl, 'graphProcessRef')?.getAttribute('refId') : null
-    const toRef = toEl ? childByTag(toEl, 'graphProcessRef')?.getAttribute('refId') : null
+    // OS#1291 — <from>/<to> peut pointer un process (<graphProcessRef>) OU une
+    // place (<graphPlaceRef>) : on lit le refId de n'importe quel enfant <…Ref>
+    // présent. `logicalToNodeId` contient désormais process ET places, donc le
+    // flux se raccorde des deux côtés sans distinction.
+    const fromRef = refIdOfEndpoint(fromEl)
+    const toRef = refIdOfEndpoint(toEl)
     const sourceId = logicalToNodeId[fromRef ?? '']
     const targetId = logicalToNodeId[toRef ?? '']
     if (!sourceId || !targetId) return

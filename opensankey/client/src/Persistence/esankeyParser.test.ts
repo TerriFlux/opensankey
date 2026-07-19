@@ -736,6 +736,113 @@ describe('parseEsankeyXml — OS#1287 taille/couleur/position du label de valeur
     expect(base.local.value_label_color).toBeUndefined()
     expect(base.local.value_label_horiz).toBeUndefined()
     expect(base.local.value_label_vert).toBeUndefined()
+// OS#1291 — Places (E/S externes). Un process « Usine » émet un flux vers une
+// place de SORTIE (invisible) et reçoit un flux d'une place d'ENTRÉE (verte).
+// Côté logique les places sont des <graphPlace> (frères des <graphProcess>
+// dans <graphNodes>), référencées dans <from>/<to> par <graphPlaceRef> ;
+// côté graphique elles vivent dans <net>/<places>/<place> ; le mapping les
+// relie dans la sous-section <nodes> via <graphPlaceRef>/<placeRef>.
+const FIXTURE_PLACES = `<?xml version="1.0" encoding="utf-8"?>
+<document xmlns="${NS}" generator="e!Sankey">
+  <netModel>
+    <unitTypes>
+      <unitType id="10" name="Energy" used="true" width="80" maximumFlow="40">
+        <units><unit id="11" name="MJ" coefficient="1" isBasicUnit="true" /></units>
+      </unitType>
+    </unitTypes>
+    <entryGroup id="20" name="Root">
+      <entries>
+        <entry id="21" name="Elec"><unitTypeRef refId="10" /><brushColor argb="-256" /></entry>
+      </entries>
+      <entryGroups />
+    </entryGroup>
+    <graphNodes>
+      <graphProcess id="30" name="Usine" />
+      <graphPlace id="32" name="Sortie" />
+      <graphPlace id="33" name="Entree" />
+    </graphNodes>
+    <graphArrows>
+      <graphArrow id="40" name="">
+        <from><graphProcessRef refId="30" /></from>
+        <to><graphPlaceRef refId="32" /></to>
+        <compartments>
+          <flow id="41" name="Elec" quantity="7" source="0">
+            <entryRef refId="21" /><unitRef refId="11" />
+          </flow>
+        </compartments>
+      </graphArrow>
+      <graphArrow id="42" name="">
+        <from><graphPlaceRef refId="33" /></from>
+        <to><graphProcessRef refId="30" /></to>
+        <compartments>
+          <flow id="43" name="Elec" quantity="4" source="0">
+            <entryRef refId="21" /><unitRef refId="11" />
+          </flow>
+        </compartments>
+      </graphArrow>
+    </graphArrows>
+  </netModel>
+  <net backgroundColor="-1">
+    <processes>
+      <process id="50" locationX="300" locationY="200"><label text="Usine" /></process>
+    </processes>
+    <places>
+      <place id="52" locationX="600" locationY="200" visible="false"><label text="Sortie" /></place>
+      <place id="53" locationX="100" locationY="200"><brushColor argb="-16711936" /><label text="Entree" /></place>
+    </places>
+    <arrows />
+  </net>
+  <logicalGraphicalObjectMapping>
+    <nodes>
+      <keyValuePair><graphProcessRef refId="30" /><processRef refId="50" /></keyValuePair>
+      <keyValuePair><graphPlaceRef refId="32" /><placeRef refId="52" /></keyValuePair>
+      <keyValuePair><graphPlaceRef refId="33" /><placeRef refId="53" /></keyValuePair>
+    </nodes>
+    <edges />
+  </logicalGraphicalObjectMapping>
+</document>`
+
+describe('parseEsankeyXml — places (OS#1291)', () => {
+  const d = parseEsankeyXml(FIXTURE_PLACES)
+
+  test('une place → un nœud (process + 2 places = 3 nœuds)', () => {
+    expect(Object.keys(d.nodes).length).toBe(3)
+    const names = Object.values(d.nodes).map(n => n.name).sort()
+    expect(names).toEqual(['Entree', 'Sortie', 'Usine'])
+  })
+
+  test('flux process→place et place→process créés', () => {
+    expect(Object.keys(d.links).length).toBe(2)
+    const usine = Object.values(d.nodes).find(n => n.name === 'Usine')!
+    const sortie = Object.values(d.nodes).find(n => n.name === 'Sortie')!
+    const entree = Object.values(d.nodes).find(n => n.name === 'Entree')!
+    const out = Object.values(d.links).find(l => l.value.data_value === 7)!
+    const inp = Object.values(d.links).find(l => l.value.data_value === 4)!
+    expect(out.idSource).toBe(usine.id)
+    expect(out.idTarget).toBe(sortie.id)
+    expect(inp.idSource).toBe(entree.id)
+    expect(inp.idTarget).toBe(usine.id)
+    expect(usine.output_value).toBe(7)
+    expect(usine.input_value).toBe(4)
+  })
+
+  test('place : nœud compact (node_width), position normalisée, couleur/visibilité graphiques', () => {
+    const usine = Object.values(d.nodes).find(n => n.name === 'Usine')!
+    const sortie = Object.values(d.nodes).find(n => n.name === 'Sortie')!
+    const entree = Object.values(d.nodes).find(n => n.name === 'Entree')!
+    // Place sans image → stub compact ; le process garde sa largeur par défaut.
+    expect(sortie.local.node_width).toBe(12)
+    expect(entree.local.node_width).toBe(12)
+    expect(usine.local.node_width).toBeUndefined()
+    // visible="false" sur la place de sortie → shape_visible false.
+    expect(sortie.local.shape_visible).toBe(false)
+    // brushColor argb -16711936 = vert sur la place d'entrée.
+    expect(entree.local.color).toBe('#00FF00')
+    // Normalisation : min (100, 200) ramené à (50, 50).
+    expect(entree.x).toBe(50)
+    expect(entree.y).toBe(50)
+    expect(usine.x).toBe(250)
+    expect(sortie.x).toBe(550)
   })
 })
 
