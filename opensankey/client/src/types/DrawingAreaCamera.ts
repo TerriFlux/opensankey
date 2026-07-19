@@ -224,15 +224,22 @@ const BAKE_LABEL_KEYS = new Set([
 // Porteur d'échelle valeur→px des flux : épaisseur ∝ 1/user_scale → divisé par r.
 const BAKE_INVERSE_KEYS = new Set(['user_scale'])
 // Champs texte RICH (HTML Quill) : les tailles y sont inline (`font-size:Npx`), pas dans un
-// attribut numérique. À l'échelle ×r comme les autres labels, donc UNIQUEMENT si police non
-// verrouillée (verrouillée = le foreignObject entier est contre-scalé 1/k, déjà constant à l'écran).
-const BAKE_RICH_TEXT_KEYS = new Set(['name_label_text', 'value_label_text'])
+// attribut numérique. Le HTML est stocké dans *_fo_content (pas *_text, qui est le texte brut).
+// À l'échelle ×r comme les autres labels, donc UNIQUEMENT si police non verrouillée (verrouillée =
+// le foreignObject entier est contre-scalé 1/k, déjà constant à l'écran).
+const BAKE_RICH_TEXT_KEYS = new Set(['name_label_fo_content', 'value_label_fo_content'])
 
-/** Multiplie par r les tailles inline (font-size / line-height en px) d'un HTML rich text. */
+/**
+ * Multiplie par r les tailles inline d'un HTML rich text (font-size / line-height). Unités
+ * ABSOLUES dans le repère du FO : px, pt, ET em/rem — en rendu déverrouillé le div n'hérite pas de
+ * name_label_font_size (base CSS fixe), donc un em ne se met pas à l'échelle tout seul et doit être
+ * scalé comme un px. Une line-height SANS unité (multiplicateur) est laissée telle quelle (elle
+ * suit déjà la font).
+ */
 function scaleRichTextPx(html: string, r: number): string {
-  return html.replace(/(font-size|line-height)(\s*:\s*)([\d.]+)px/gi, (m, prop, sep, num) => {
+  return html.replace(/(font-size|line-height)(\s*:\s*)([\d.]+)(px|pt|em|rem)/gi, (m, prop, sep, num, unit) => {
     const v = parseFloat(num)
-    return Number.isFinite(v) ? `${prop}${sep}${v * r}px` : m
+    return Number.isFinite(v) ? `${prop}${sep}${v * r}${unit}` : m
   })
 }
 // Attributs de FORME (px) INJECTÉS depuis le modèle avant le scaling (cf. injectResolvedGeometry).
