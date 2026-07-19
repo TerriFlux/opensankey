@@ -65,6 +65,9 @@ export type Type_TemplateInfos = {
   'img_path'?: string;
   'lang': string;
   'category': string;
+  // Variantes de langue d'un meme diagramme (galerie e!Sankey locale) :
+  // lang -> file_path. file_path reste la variante par defaut.
+  'variants'?: { [lang: string]: string };
 };
 export type Type_TemplatesInfos = { [id: string]: Type_TemplateInfos; };
 export type Type_TemplatesIndexes = { [category: string]: string[]; };
@@ -299,6 +302,17 @@ const TemplateThumbnail = ({ title, img_path, max_height, className, source }:{
   />
 }
 
+/**
+ * Fichier à charger pour un modèle : la variante dans la langue de l'application
+ * quand elle existe, sinon la variante par défaut (file_path).
+ */
+const templateFilePath = (
+  new_data: Class_ApplicationData,
+  template: Type_TemplateInfos
+) => {
+  return template.variants?.[new_data.i18n.language] ?? template.file_path
+}
+
 /** Titre localisé d'un modèle, avec repli en puis id. */
 const templateTitle = (
   new_data: Class_ApplicationData,
@@ -382,7 +396,7 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
     const id = ordered_all[idx]
     play_index_ref.current = idx
     setCurrentId(id)
-    loadTemplate(new_data, templates[id].file_path, source)
+    loadTemplate(new_data, templateFilePath(new_data, templates[id]), source)
   }
 
   // Lecture automatique : un intervalle avance d'un cran à chaque tick. Snapshot de la
@@ -397,7 +411,7 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
       const id = flat[idx]
       play_index_ref.current = idx
       setCurrentId(id)
-      loadTemplate(new_data, templates[id].file_path, source)
+      loadTemplate(new_data, templateFilePath(new_data, templates[id]), source)
     }
     show(play_index_ref.current)
     const timer = window.setInterval(() => show(play_index_ref.current + 1), 3500)
@@ -569,6 +583,17 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
           </Text>
           {ordered_ids.map(id => {
             const is_current = id === current_id
+            const template = templates[id]
+            const variant_langs = Object.keys(template.variants ?? {})
+            // Charge une variante du modèle, avec les mêmes effets de bord que le
+            // clic sur la vignette (surlignage, reprise du player, fermeture).
+            const openTemplate = (file_path: string) => {
+              play_index_ref.current = ordered_all.indexOf(id)
+              setCurrentId(id)
+              loadTemplate(new_data, file_path, source)
+              // Épinglée ou en lecture, la galerie survit au chargement : on enchaîne.
+              if (!pinned && !playing) setForcedSource(null)
+            }
             return <Box
               key={id}
               ref={(el: HTMLElement | null) => { cards_ref.current[id] = el }}
@@ -579,24 +604,35 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
               padding='0.4rem'
               marginBottom='0.4rem'
               _hover={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)' }}
-              onClick={() => {
-                // Clic manuel : le player suit la sélection (surlignage + reprise ici).
-                play_index_ref.current = ordered_all.indexOf(id)
-                setCurrentId(id)
-                loadTemplate(new_data, templates[id].file_path, source)
-                // Épinglée ou en lecture, la galerie survit au chargement : on enchaîne.
-                if (!pinned && !playing) setForcedSource(null)
-              }}
+              // Clic manuel : le player suit la sélection (surlignage + reprise ici).
+              onClick={() => openTemplate(templateFilePath(new_data, template))}
             >
               <TemplateThumbnail
-                title={templateTitle(new_data, id, templates[id])}
-                img_path={templates[id].img_path}
+                title={templateTitle(new_data, id, template)}
+                img_path={template.img_path}
                 max_height='90px'
                 source={source}
               />
               <Text fontSize='sm' textAlign='center' margin='0.2rem 0 0 0'>
-                {templateTitle(new_data, id, templates[id])}
+                {templateTitle(new_data, id, template)}
               </Text>
+              {variant_langs.length > 1 &&
+                <Box display='flex' justifyContent='center' gap='0.5rem' marginTop='0.15rem'>
+                  {variant_langs.map(lang =>
+                    <Text
+                      key={lang}
+                      fontSize='xs'
+                      color='blue.600'
+                      margin='0'
+                      _hover={{ textDecoration: 'underline', color: 'blue.800' }}
+                      onClick={evt => {
+                        evt.stopPropagation()
+                        openTemplate(template.variants![lang])
+                      }}
+                    >
+                      {lang.toUpperCase()}
+                    </Text>)}
+                </Box>}
             </Box>
           })}
         </Box>
