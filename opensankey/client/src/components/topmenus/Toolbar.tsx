@@ -24,72 +24,21 @@ const width_fitler_drawer = 270
 
 
 /**
- * Reconstruit les child links et redessine après un changement de sélection d'un
- * groupe de data tags. Suppose que la sélection (selectTagsFromId/Ids) a déjà été
- * appliquée sur `tagg`. Factorisé pour être partagé entre le panneau de filtres et
- * le sélecteur de data tags en topbar (banner 'topbar').
+ * Redessine après un changement de sélection d'un groupe de data tags (les
+ * bandes par tranche sont dérivées au draw — plus de liens enfants à
+ * reconstruire). Suppose la sélection déjà appliquée sur `tagg`.
  */
 export const applyDataTagChildLinks = (
   app_data: Class_ApplicationData,
-  tagg: Class_DataTagGroup,
-  entries: string[]
+  _tagg: Class_DataTagGroup,
+  _entries: string[]
 ) => {
   // La sélection à valeur unique a pu poser bypass_redraws=true (preview Menu
-  // unitaire) — ici le draw() final serait un no-op et le changement d'unité (scale
-  // par tag) ne se verrait pas. On le remet à false pour que le redraw réapplique
-  // l'échelle par dataTag.
+  // unitaire) — on le remet à false pour que le redraw réapplique l'échelle.
   app_data.drawing_area.bypass_redraws = false
-  app_data.drawing_area.sankey.links_list.forEach(l => {
-    if (l.is_multi_link) return
-
-    if (entries.length === 1) {
-      Object.keys(l.child_links).forEach(key => {
-        l.child_links[key].delete()
-        delete l.child_links[key]
-      })
-    } else {
-      tagg.tags_list.forEach(tag => {
-        if (!tag.is_selected && tag.id in l.child_links) {
-          l.child_links[tag.id].delete()
-          delete l.child_links[tag.id]
-        }
-      })
-      tagg.selected_tags_list.forEach(tag => {
-        if (tag.id in l.child_links || l.is_multi_link) return
-        const child_link = app_data.drawing_area.sankey.addNewLink(l.source, l.target)
-        child_link.copyFrom(l)
-        l.addChildLink(child_link, tag)
-      })
-    }
-  })
-
-  // Les hauteurs de nœuds dépendent des valeurs des liens (qui viennent de changer
-  // avec le data tag). En mode paramétrique il faut donc rejouer la chaîne de
-  // positionnement pour que l'écart entre nœuds reste cohérent avec les nouvelles
-  // hauteurs.
-  if (app_data.drawing_area.sankey.default_style.shape_position_type === 'parametric') {
-    app_data.drawing_area.nodePositioning.computeParametrization(false)
-  }
-
   app_data.drawing_area.draw()
-  app_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.reorganizeIOLinks())
-  app_data.drawing_area.orderElementOnDA()
 }
 
-/**
- * Sélecteur de data tags rendu dans la topbar (groupes dont la bannière vaut
- * 'topbar'), pensé pour être placé à côté de la navigation entre vues. Rend un
- * <Select> mono-sélection par groupe ; le changement applique la même
- * reconstruction de child links + redraw que la sélection mono-valeur du panneau
- * de filtres (cf. applyDataTagChildLinks).
- */
-/**
- * Bloc topbar « Préc. / <Select> / Suiv. » partagé par les sélecteurs de data tags et de
- * view tags (« générateur de vues »), sur le modèle de la navigation entre vues. Le nom du
- * groupe est calé EN PETIT AU-DESSUS du sélecteur (pas à gauche) : on gagne en largeur sans
- * épaissir la topbar (qui réserve déjà deux lignes pour ses boutons). Sélecteur élargi et
- * flèches compactes. La logique de navigation (bornes, options) est portée par l'appelant.
- */
 export const TopbarNavSelect = ({
   prefix, options, value, onChange, onPrev, onNext, prev_disabled, next_disabled, select_label, t
 }: {
@@ -1551,9 +1500,6 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
           isChecked={tagg.banner === 'multi'}
           onChange={evt => {
             tagg.banner = evt.target.checked ? 'multi' : 'one'
-            if (tagg.banner === 'one') {
-              app_data.drawing_area.sankey.remove_child_links()
-            }
             tagg.selectTagsFromId(tagg.tags_list[0].id)
             updateComponents()
           }} />

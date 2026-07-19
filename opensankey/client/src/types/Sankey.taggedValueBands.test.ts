@@ -37,13 +37,11 @@ describe('tagged_value_bands — bandes internes des valeurs du flux', () => {
 
     const bands = link.tagged_value_bands
     expect(bands).toHaveLength(2)
-    expect(bands[0].tagged_value).toBe(tv1)
+    expect(bands[0].id).toBe(tv1.id)
     expect(bands[0].share).toBeCloseTo(0.6)
-    expect(bands[1].tagged_value).toBe(tv2)
+    expect(bands[1].id).toBe(tv2.id)
     expect(bands[1].share).toBeCloseTo(0.4)
 
-    // AUCUN lien fantôme : le modèle ne contient que le flux lui-même
-    expect(Object.values(link.child_links)).toHaveLength(0)
 
     // Valeur vivante : les parts suivent sans resynchronisation
     tv1.value = 12
@@ -63,7 +61,7 @@ describe('tagged_value_bands — bandes internes des valeurs du flux', () => {
     cuivre.setUnSelected()
     const bands = link.tagged_value_bands
     expect(bands).toHaveLength(1)
-    expect(bands[0].tagged_value).toBe(tv1)
+    expect(bands[0].id).toBe(tv1.id)
     expect(bands[0].share).toBeCloseTo(1)
   })
 
@@ -78,8 +76,8 @@ describe('tagged_value_bands — bandes internes des valeurs du flux', () => {
     expect(link.tagged_value_bands).toHaveLength(0)
   })
 
-  it('keeps dataTag multi children unaffected and band-free', () => {
-    const { sankey, link, acier } = makeApp()
+  it('renders a dataTag multi banner as one band per selected slice (no child links)', () => {
+    const { sankey, link } = makeApp()
     const data_tagg = sankey.addDataTagGroup('annee', 'Année', false)
     const t2020 = data_tagg.addTag('2020', 't2020') as Class_DataTag
     const t2021 = data_tagg.addTag('2021', 't2021') as Class_DataTag
@@ -87,21 +85,23 @@ describe('tagged_value_bands — bandes internes des valeurs du flux', () => {
     t2021.setSelected()
     data_tagg.banner = 'multi'
 
-    const leaf = link.valueForTag(t2020)!
-    const tv = leaf.addTaggedValue()
-    tv.value = 3
-    tv.addTag(acier)
+    link.valueForTag(t2020)!.valueData = 30
+    link.valueForTag(t2021)!.valueData = 10
 
-    sankey.create_child_links()
-
-    // Les enfants par dataTag existent, en contour exact par défaut, et aucun
-    // n'est porteur de bandes (is_multi_link court-circuite)
-    const children = Object.values(link.child_links)
-    expect(children.length).toBeGreaterThan(0)
-    children.forEach(child => {
-      expect(child.tagged_value_bands).toHaveLength(0)
-      expect(child.shape_type).toBe('bezier_outline_exact')
-    })
+    // Une bande par tranche sélectionnée, colorée par le tag ; priorité sur
+    // les valeurs coordonnées des groupes libres
+    const bands = link.tagged_value_bands
+    expect(bands).toHaveLength(2)
+    expect(bands.map(b => b.id)).toEqual(['t2020', 't2021'])
+    expect(bands[0].share).toBeCloseTo(0.75)
+    expect(bands[1].share).toBeCloseTo(0.25)
+    expect(bands[0].color).toBe(t2020.color)
+    // La valeur affichée est la somme des tranches sélectionnées
+    expect(link.valueCurrent).toBe(40)
+    // Désélection : la bande disparaît, la valeur suit
+    t2021.setUnSelected()
+    expect(link.tagged_value_bands).toHaveLength(1)
+    expect(link.valueCurrent).toBe(30)
   })
 
   it('merges parallel links into one link whose bands reproduce the old ribbons', () => {
@@ -119,9 +119,8 @@ describe('tagged_value_bands — bandes internes des valeurs du flux', () => {
     expect(link.value!.valueData).toBe(10)
     const bands = link.tagged_value_bands
     expect(bands).toHaveLength(2)
-    expect(bands.find(b => b.tagged_value.tags_list.some(t => t.id === 'acier'))?.share).toBeCloseTo(0.6)
-    expect(bands.find(b => b.tagged_value.tags_list.some(t => t.id === 'cuivre'))?.share).toBeCloseTo(0.4)
-    expect(Object.values(link.child_links)).toHaveLength(0)
+    expect(bands.find(b => b.id === link.value!.tagged_values_list[0].id)?.share).toBeCloseTo(0.6)
+    expect(bands.find(b => b.id === link.value!.tagged_values_list[1].id)?.share).toBeCloseTo(0.4)
   })
 
   it('migrates all tagged parallel groups at load, leaving untagged pairs alone', () => {

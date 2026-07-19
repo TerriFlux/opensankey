@@ -2335,10 +2335,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     // Comparaison vs link.thickness en coords locales : on raisonne en taille
     // logique puis on compense le fit-zoom à la fin pour garder une police
     // constante à l'écran (issue #165).
-    let font_size = this._label_values.font_size
-    if (font_size > this.link.thickness && this.link.is_multi_link) {
-      font_size = this.link.thickness
-    }
+    const font_size = this._label_values.font_size
     const comp = this._element.drawing_area?.font_compensation ?? 1
     return font_size * comp
   }

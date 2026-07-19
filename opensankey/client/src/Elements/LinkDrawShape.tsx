@@ -280,8 +280,6 @@ export class LinkDrawShape {
     const link = this._link
     const bands = link.tagged_value_bands
     if (bands.length === 0) return false
-    if (!link.shape_is_curved) return false
-    if (link.shape_orientation !== 'hh' && link.shape_orientation !== 'vv') return false
     if (link.shape_is_recycling) return false
     if (link.linkIsStructure()) return false
 
@@ -305,40 +303,76 @@ export class LinkDrawShape {
     const full_src = link.thicknessSource
     const full_tgt = link.thicknessTarget
     const transverse = link.shape_orientation === 'hh' ? [0, 1] : [1, 0]
-    const is_hh = link.shape_orientation === 'hh'
-    const use_exact = !this.isBeingDragged()
+    // Contour exact réservé aux courbes hh/vv hors drag (comme le tracé
+    // principal) ; tous les autres cas — flux droits, orientations vh/hv,
+    // pendant un drag — passent par le constructeur générique ci-dessous.
+    const use_exact = link.shape_is_curved
+      && (link.shape_orientation === 'hh' || link.shape_orientation === 'vv')
+      && !this.isBeingDragged()
 
-    // Contour simple d'une bande : mêmes points de contrôle décalés
-    // transversalement (géométrie du tracé principal hors mode exact) —
-    // suffisant pendant le drag, où tout le flux est déjà en contour simple.
-    const simpleBandPath = (
+    // Contour approché d'une bande, générique : chaque groupe de points est
+    // décalé le long de la PERPENDICULAIRE de son segment (technique de la
+    // branche vh/hv du tracé principal), l'offset étant interpolé
+    // source→cible. Couvre courbes (Q) et flux droits (L).
+    const perp = (ax: number, ay: number, bx: number, by: number): number[] => {
+      const dx = bx - ax
+      const dy = by - ay
+      const len = Math.sqrt(dx * dx + dy * dy)
+      if (len === 0) return transverse
+      return [-dy / len, dx / len]
+    }
+    const genericBandPath = (
       off_src_a: number, off_tgt_a: number,
       off_src_b: number, off_tgt_b: number
     ): string => {
-      const sh = (x: number, y: number, off: number): number[] => is_hh ? [x, y + off] : [x + off, y]
+      const n_start = perp(x0, y0, x1, y1)
+      const n_mid = perp(x2, y2, x4, y4)
+      const n_end = perp(x5, y5, x6, y6)
       const edge = (off_src: number, off_tgt: number) => {
-        const p0 = sh(x0, y0, off_src), p1 = sh(x1, y1, off_src), p2 = sh(x2, y2, off_src)
-        const p4 = sh(x4, y4, off_tgt), p5 = sh(x5, y5, off_tgt), p6 = sh(x6, y6, off_tgt)
+        const off_mid = (off_src + off_tgt) / 2
+        const p0 = [x0 + n_start[0] * off_src, y0 + n_start[1] * off_src]
+        const p1 = [x1 + n_start[0] * off_src, y1 + n_start[1] * off_src]
+        const p2 = [x2 + n_mid[0] * off_mid, y2 + n_mid[1] * off_mid]
+        const p4 = [x4 + n_mid[0] * off_mid, y4 + n_mid[1] * off_mid]
+        const p5 = [x5 + n_end[0] * off_tgt, y5 + n_end[1] * off_tgt]
+        const p6 = [x6 + n_end[0] * off_tgt, y6 + n_end[1] * off_tgt]
         const p3 = [(p2[0] + p4[0]) / 2, (p2[1] + p4[1]) / 2]
         return { p0, p1, p2, p3, p4, p5, p6 }
       }
       const a = edge(off_src_a, off_tgt_a)
       const b = edge(off_src_b, off_tgt_b)
+      if (link.shape_is_curved) {
+        return 'M ' + a.p0[0] + ',' + a.p0[1]
+          + ' L ' + a.p1[0] + ',' + a.p1[1]
+          + ' Q ' + a.p2[0] + ',' + a.p2[1] + ' ' + a.p3[0] + ',' + a.p3[1]
+          + ' Q ' + a.p4[0] + ',' + a.p4[1] + ' ' + a.p5[0] + ',' + a.p5[1]
+          + ' L ' + a.p6[0] + ',' + a.p6[1]
+          + ' L ' + b.p6[0] + ',' + b.p6[1]
+          + ' L ' + b.p5[0] + ',' + b.p5[1]
+          + ' Q ' + b.p4[0] + ',' + b.p4[1] + ' ' + b.p3[0] + ',' + b.p3[1]
+          + ' Q ' + b.p2[0] + ',' + b.p2[1] + ' ' + b.p1[0] + ',' + b.p1[1]
+          + ' L ' + b.p0[0] + ',' + b.p0[1]
+          + ' Z'
+      }
+      // Flux droit : polyline par les mêmes points (jonctions approchées,
+      // même barre de qualité que la branche vh/hv du tracé principal)
       return 'M ' + a.p0[0] + ',' + a.p0[1]
         + ' L ' + a.p1[0] + ',' + a.p1[1]
-        + ' Q ' + a.p2[0] + ',' + a.p2[1] + ' ' + a.p3[0] + ',' + a.p3[1]
-        + ' Q ' + a.p4[0] + ',' + a.p4[1] + ' ' + a.p5[0] + ',' + a.p5[1]
+        + ' L ' + a.p2[0] + ',' + a.p2[1]
+        + ' L ' + a.p4[0] + ',' + a.p4[1]
+        + ' L ' + a.p5[0] + ',' + a.p5[1]
         + ' L ' + a.p6[0] + ',' + a.p6[1]
         + ' L ' + b.p6[0] + ',' + b.p6[1]
         + ' L ' + b.p5[0] + ',' + b.p5[1]
-        + ' Q ' + b.p4[0] + ',' + b.p4[1] + ' ' + b.p3[0] + ',' + b.p3[1]
-        + ' Q ' + b.p2[0] + ',' + b.p2[1] + ' ' + b.p1[0] + ',' + b.p1[1]
+        + ' L ' + b.p4[0] + ',' + b.p4[1]
+        + ' L ' + b.p2[0] + ',' + b.p2[1]
+        + ' L ' + b.p1[0] + ',' + b.p1[1]
         + ' L ' + b.p0[0] + ',' + b.p0[1]
         + ' Z'
     }
 
     let cum = 0
-    bands.forEach(({ tagged_value, share }) => {
+    bands.forEach(({ id, color, share }) => {
       const lo = cum
       cum += share
       const off_lo_src = -full_src / 2 + lo * full_src
@@ -352,17 +386,13 @@ export class LinkDrawShape {
           off_hi_src, off_hi_tgt,
           transverse
         )
-        : simpleBandPath(off_lo_src, off_lo_tgt, off_hi_src, off_hi_tgt)
-      // Couleur : premier tag d'un groupe en mode couleurs, sinon premier tag
-      const colored_tag = tagged_value.tags_list
-        .find(tag => (tag.group as Class_TagGroup).use_colors) ?? tagged_value.tags_list[0]
-      const color = colored_tag?.color ?? link.getShapeColorToUse()
+        : genericBandPath(off_lo_src, off_lo_tgt, off_hi_src, off_hi_tgt)
       this._link.d3_selection?.append('path')
         .classed('link', true)
         .classed('link_band', true)
-        .attr('id', `${link.id}_band_${tagged_value.id}`)
+        .attr('id', `${link.id}_band_${id}`)
         .attr('d', path)
-        .attr('fill', color)
+        .attr('fill', color ?? link.getShapeColorToUse())
         .attr('fill-opacity', shape_opacity)
         .attr('stroke', 'none')
         .attr('pointer-events', 'none')

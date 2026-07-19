@@ -365,38 +365,6 @@ export class Class_Sankey {
     return false
   }
 
-  public create_child_links() {
-    this.create_data_tag_child_links()
-  }
-
-  private create_data_tag_child_links() {
-    const data_tagg = Object.values(this._data_taggs).filter(tagg => tagg.banner == 'multi')[0]
-    if (!data_tagg) return
-    const selected_tags = data_tagg.tags_list.map(tag => tag.is_selected)
-    if (selected_tags.length == 1) return
-    this.links_list.forEach(l => {
-      if (l.is_multi_link) {
-        return
-      }
-      data_tagg.tags_list.forEach(tag => {
-        if (!tag.is_selected) {
-          if (tag.id in l.child_links) {
-            l.child_links[tag.id].delete()
-            delete l.child_links[tag.id]
-          }
-        }
-      })
-      data_tagg.selected_tags_list.forEach(tag => {
-        if (tag.id in l.child_links || l.is_multi_link) {
-          return
-        }
-        const child_link = this.addNewLink(l.source, l.target)
-        child_link.copyFrom(l)
-        l.addChildLink(child_link, tag)
-      })
-    })
-  }
-
   /**
    * #285 — bascule dimension→annotation SANS PERTE (NOTE-FUSION-TAGS.md §3.3) :
    * le groupe de dataTags devient un groupe d'étiquettes libres (mêmes tags,
@@ -426,7 +394,6 @@ export class Class_Sankey {
     const tag_for = (tag_id: string) => flux_tagg.tags_dict[tag_id]
     const selected_tag_id = data_tagg.selected_tags_list[0]?.id
     this.links_list.forEach(l => {
-      if (l.is_multi_link) return
       l.collapseDataTagGroup(data_tagg, tag_for, selected_tag_id)
     })
     // 3) Supprimer la dimension : prune() conserve la tranche fusionnée (la
@@ -466,7 +433,6 @@ export class Class_Sankey {
     const path_tags_from_ids = (ids: string[]): Class_DataTag[] =>
       this.data_taggs_list.map((tagg, idx) => tagg.tags_dict[ids[idx]] as Class_DataTag).filter(tag => tag !== undefined)
     this.links_list.forEach(l => {
-      if (l.is_multi_link) return
       Object.values(l.getAllValues()).forEach(([leaf]) => {
         const lv = leaf as Class_LinkValue
         const scalar = lv.valueData ?? lv.valueResult
@@ -569,7 +535,6 @@ export class Class_Sankey {
     if (this.data_taggs_list.length > 0) return
     const groups: { [pair: string]: Class_LinkElement[] } = {}
     this.links_list.forEach(l => {
-      if (l.is_multi_link) return
       const key = l.source.id + '→' + l.target.id
       if (!groups[key]) groups[key] = []
       groups[key].push(l)
@@ -588,7 +553,6 @@ export class Class_Sankey {
     const compatible = links.every(l =>
       l.source === base.source &&
       l.target === base.target &&
-      !l.is_multi_link &&
       (l.value !== null))
     if (!compatible || this.data_taggs_list.length > 0) return null
 
@@ -626,15 +590,6 @@ export class Class_Sankey {
     return base
   }
 
-  public remove_child_links() {
-    this.links_list.filter(l => Object.values(l.child_links).length > 0).forEach(l => {
-      Object.keys(l.child_links).forEach(key => {
-        l.child_links[key].delete()
-        delete l.child_links[key]
-        //delete this.links_dict[key]
-      })
-    })
-  }
   public create_internal_style(id: ElementStyleKey, configs: ElementStyleConfigsDict) {
     if (this._styles[id]) {
       return
