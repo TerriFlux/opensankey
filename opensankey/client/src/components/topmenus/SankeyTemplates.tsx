@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { useState, useEffect, MutableRefObject } from 'react'
+import React, { useState, useEffect, useRef, MutableRefObject } from 'react'
 import {
   Box,
   Button,
@@ -32,7 +32,7 @@ import {
   Image,
   Text
 } from '@chakra-ui/react'
-import { FaThumbtack } from 'react-icons/fa'
+import { FaThumbtack, FaPlay, FaPause, FaStepBackward, FaStepForward } from 'react-icons/fa'
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Type_JSON } from '../../types/Utils'
@@ -347,6 +347,15 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
   // par construction, sans exclusion mutuelle à tenir à jour.
   const [forced_source, setForcedSource] = useState<Type_TemplateSource | null>(null)
 
+  // Player (diaporama) : enchaîne les modèles l'un après l'autre. `playing` pilote
+  // la temporisation ; `current_id` sert au surlignage et au repli automatique de la
+  // liste sur la vignette en cours. L'index courant vit dans une ref (l'intervalle
+  // ne se réabonne pas à chaque avance).
+  const [playing, setPlaying] = useState(false)
+  const [current_id, setCurrentId] = useState<string | null>(null)
+  const play_index_ref = useRef(0)
+  const cards_ref = useRef<{ [id: string]: HTMLElement | null }>({})
+
   // Ouverture depuis le menu / le splash screen : le panneau remplace l'ancienne modale.
   new_data.menu_configuration.dict_setter_show_dialog
     .ref_setter_show_modal_templates_lib.current = (open) => {
@@ -360,6 +369,61 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
   // Hors ouverture explicite, seuls les modèles s'affichent d'eux-mêmes.
   const source: Type_TemplateSource = forced_source ?? 'sankeydata'
   const { templates, indexes, categories } = useTemplatesLibrary(additionalMenu, source)
+
+  // Liste à plat des modèles, dans l'ordre d'affichage (catégorie puis index.json) :
+  // c'est la séquence que parcourt le player.
+  const ordered_all = categories.flatMap(category => indexes[category] ?? [])
+  const current_pos = current_id ? ordered_all.indexOf(current_id) : -1
+
+  // Charge le modèle à la position `i` (bouclage) et le marque comme courant.
+  const showTemplateAt = (i: number) => {
+    if (ordered_all.length === 0) return
+    const idx = ((i % ordered_all.length) + ordered_all.length) % ordered_all.length
+    const id = ordered_all[idx]
+    play_index_ref.current = idx
+    setCurrentId(id)
+    loadTemplate(new_data, templates[id].file_path, source)
+  }
+
+  // Lecture automatique : un intervalle avance d'un cran à chaque tick. Snapshot de la
+  // bibliothèque pris au démarrage (elle ne change pas tant que la galerie est ouverte),
+  // d'où l'intervalle qui ne dépend que de `playing`.
+  useEffect(() => {
+    if (!playing) return
+    const flat = categories.flatMap(category => indexes[category] ?? [])
+    if (flat.length === 0) { setPlaying(false); return }
+    const show = (i: number) => {
+      const idx = ((i % flat.length) + flat.length) % flat.length
+      const id = flat[idx]
+      play_index_ref.current = idx
+      setCurrentId(id)
+      loadTemplate(new_data, templates[id].file_path, source)
+    }
+    show(play_index_ref.current)
+    const timer = window.setInterval(() => show(play_index_ref.current + 1), 3500)
+    return () => window.clearInterval(timer)
+  }, [playing])
+
+  // Replie la liste sur la vignette en cours (player ou navigation manuelle).
+  useEffect(() => {
+    if (current_id)
+      cards_ref.current[current_id]?.scrollIntoView({ block: 'nearest' })
+  }, [current_id])
+
+  // Changement de galerie : on repart d'une séquence vierge.
+  useEffect(() => {
+    setPlaying(false)
+    setCurrentId(null)
+    play_index_ref.current = 0
+  }, [source])
+
+  // Démarrer/arrêter le player. Au démarrage, on force la source ouverte pour que le
+  // panneau survive aux chargements successifs (sinon il se referme sur un diagramme
+  // non vide) sans pour autant le docker comme l'épingle.
+  const togglePlay = () => {
+    if (!playing && forced_source === null) setForcedSource(source)
+    setPlaying(p => !p)
+  }
 
   // Première interaction avec la zone de dessin -> la galerie s'efface. Écoute au
   // niveau document (capture) : #draw_zoom est recréé à chaque draw(), un listener
@@ -429,6 +493,40 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
           : new_data.t(source === 'mfadata' ? 'Menu.sankeytheque' : 'Menu.templates')}
       </Text>
       <Box display='flex' alignItems='center' gap='0.25rem'>
+        {ordered_all.length > 1 && <>
+          <Button
+            size='xs'
+            variant='menuconfigpanel_option_button'
+            sx={{ paddingInline: '0.3rem', minWidth: 'auto', width: 'auto', flex: 'none' }}
+            title={new_data.t('templates.prev')}
+            onClick={() => showTemplateAt((current_pos < 0 ? 0 : current_pos) - 1)}
+          >
+            <FaStepBackward />
+          </Button>
+          <Button
+            size='xs'
+            variant={playing
+              ? 'menuconfigpanel_option_button_activated'
+              : 'menuconfigpanel_option_button'}
+            sx={{ paddingInline: '0.3rem', minWidth: 'auto', width: 'auto', flex: 'none' }}
+            title={new_data.t(playing ? 'templates.pause' : 'templates.play')}
+            onClick={togglePlay}
+          >
+            {playing ? <FaPause /> : <FaPlay />}
+          </Button>
+          <Button
+            size='xs'
+            variant='menuconfigpanel_option_button'
+            sx={{ paddingInline: '0.3rem', minWidth: 'auto', width: 'auto', flex: 'none' }}
+            title={new_data.t('templates.next')}
+            onClick={() => showTemplateAt((current_pos < 0 ? -1 : current_pos) + 1)}
+          >
+            <FaStepForward />
+          </Button>
+          {current_pos >= 0 && <Text fontSize='xs' color='gray.500' margin='0 0.15rem'>
+            {(current_pos + 1) + '/' + ordered_all.length}
+          </Text>}
+        </>}
         <Button
           size='xs'
           variant={pinned
@@ -442,7 +540,7 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
         </Button>
         <CloseButton
           size='sm'
-          onClick={() => { setForcedSource(null); setDismissed(true); setPinned(false) }}
+          onClick={() => { setPlaying(false); setForcedSource(null); setDismissed(true); setPinned(false) }}
         />
       </Box>
     </Box>
@@ -470,18 +568,24 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
             {new_data.t('templates.categories.' + category)}
           </Text>
           {ordered_ids.map(id => {
+            const is_current = id === current_id
             return <Box
               key={id}
+              ref={(el: HTMLElement | null) => { cards_ref.current[id] = el }}
               cursor='pointer'
-              border='1px solid #e2e8f0'
+              border={is_current ? '1px solid #3182ce' : '1px solid #e2e8f0'}
+              boxShadow={is_current ? '0 0 0 1px #3182ce' : undefined}
               borderRadius='6px'
               padding='0.4rem'
               marginBottom='0.4rem'
               _hover={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)' }}
               onClick={() => {
+                // Clic manuel : le player suit la sélection (surlignage + reprise ici).
+                play_index_ref.current = ordered_all.indexOf(id)
+                setCurrentId(id)
                 loadTemplate(new_data, templates[id].file_path, source)
-                // Épinglée, la galerie survit au chargement : on enchaîne les essais.
-                if (!pinned) setForcedSource(null)
+                // Épinglée ou en lecture, la galerie survit au chargement : on enchaîne.
+                if (!pinned && !playing) setForcedSource(null)
               }}
             >
               <TemplateThumbnail
