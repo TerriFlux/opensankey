@@ -435,6 +435,69 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     expect(line?.shape_line_flip).toBe(true)
   })
 
+  // OS#1290 — traits pointillés : penColor@Pattern (shapes rectangle/line) et
+  // sankeyLink/pen@dashStyle ou dashPattern (flux).
+  describe('OS#1290 — traits pointillés', () => {
+    test('rectangle : penColor Pattern!=0 → shape_border_dashed ; Pattern=0/absent → non posé', () => {
+      const withDashedRect = FIXTURE_DECOR.replace(
+        '<rectangle locationX="150" locationY="600" sizeW="400" sizeH="100" drawBorder="false">\n          <brushColor argb="-2039584" />\n        </rectangle>',
+        '<rectangle locationX="150" locationY="600" sizeW="400" sizeH="100" drawBorder="true">' +
+        '<brushColor argb="-2039584" />' +
+        '<penColor name="Black (LineWidth: 3, Dash)" argb="-16777216" hasBaseColor="false" hasPattern="true" Pattern="1" width="3" />' +
+        '</rectangle>'
+      )
+      const dd = parseEsankeyXml(withDashedRect, { 'Images/tmp1.tmp': PNG_URI })
+      const rect = Object.values(dd.labels).find(c => c.color_visible === true)
+      expect(rect?.shape_border_dashed).toBe(true)
+      // Fixture de base (rectangle sans <penColor>, ou Pattern="0") : pas posé.
+      const base = Object.values(d.labels).find(c => c.color_visible === true)
+      expect(base?.shape_border_dashed).toBeUndefined()
+    })
+
+    test('ligne : penColor Pattern!=0 → shape_border_dashed sur la ligne', () => {
+      const withDashedLine = FIXTURE_DECOR.replace('</shapes>',
+        '<shape><line locationX="10" locationY="20" sizeW="100" sizeH="50">' +
+        '<penColor argb="-65536" hasPattern="true" Pattern="1" width="3" />' +
+        '<points length="2"><value X="10" Y="70" /><value X="110" Y="20" /></points>' +
+        '</line></shape></shapes>')
+      const dl = parseEsankeyXml(withDashedLine, { 'Images/tmp1.tmp': PNG_URI })
+      const line = Object.values(dl.labels).find(c => c.shape_type === 'line')
+      expect(line?.shape_border_dashed).toBe(true)
+      // La ligne du test précédent (Pattern absent) ne pose rien.
+      expect(Object.values(d.labels).find(c => c.shape_type === 'line')).toBeUndefined()
+    })
+
+    test('flux : sankeyLink/pen dashStyle!=0 → shape_border_dashed sur le flux', () => {
+      const withDashedArrow = FIXTURE_DECOR.replace(
+        '<arrow id="60">\n        <sankeyArrowLabel visible="true" showValue="true" showUnit="true" text="60" labelFormat="{EntryName}: {PercentProcessSource} %" />\n        <comment text="Mesure 2025&#xD;&#xA;source: compteur" visible="false" />\n      </arrow>',
+        '<arrow id="60">' +
+        '<sankeyArrowLabel visible="true" showValue="true" showUnit="true" text="60" labelFormat="{EntryName}: {PercentProcessSource} %" />' +
+        '<comment text="Mesure 2025&#xD;&#xA;source: compteur" visible="false" />' +
+        '<sankeyLink><pen dashStyle="1" width="1"><dashPattern length="0" /></pen></sankeyLink>' +
+        '</arrow>'
+      )
+      const dArrow = parseEsankeyXml(withDashedArrow, { 'Images/tmp1.tmp': PNG_URI })
+      const gasLink = Object.values(dArrow.links).find(l => l.value.data_value === 60)
+      expect(gasLink?.local.shape_border_dashed).toBe(true)
+      // Fixture de base (pas de <sankeyLink>) : rien posé.
+      const baseLink = Object.values(d.links).find(l => l.value.data_value === 60)
+      expect(baseLink?.local.shape_border_dashed).toBeUndefined()
+    })
+
+    test('flux : dashStyle=0 mais dashPattern non vide (Custom) → aussi détecté pointillé', () => {
+      const withCustomDash = FIXTURE_DECOR.replace(
+        '<arrow id="61">\n        <sankeyArrowLabel visible="true" showValue="true" showUnit="true" text="20" labelFormat="{PercentProcessDestination}" />\n      </arrow>',
+        '<arrow id="61">' +
+        '<sankeyArrowLabel visible="true" showValue="true" showUnit="true" text="20" labelFormat="{PercentProcessDestination}" />' +
+        '<sankeyLink><pen dashStyle="0" width="1"><dashPattern length="2"><value V="4" /><value V="2" /></dashPattern></pen></sankeyLink>' +
+        '</arrow>'
+      )
+      const dCustom = parseEsankeyXml(withCustomDash, { 'Images/tmp1.tmp': PNG_URI })
+      const metalLink = Object.values(dCustom.links).find(l => l.value.data_value === 20)
+      expect(metalLink?.local.shape_border_dashed).toBe(true)
+    })
+  })
+
   test('légende visible, position normalisée avec le reste', () => {
     // min X/Y de l'ensemble = (100, 100) (le texte) → décalage -50
     expect(d.legend).toEqual({ mask_legend: false, legend_dx: 50, legend_dy: 150 })
