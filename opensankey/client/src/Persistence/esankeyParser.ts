@@ -184,6 +184,33 @@ const resolveBrushColorHex = (el: Element | null, palette: EsBrushPalette): stri
   return null
 }
 
+// OS#1290 — trait pointillé. e!Sankey code le style de trait de deux façons
+// selon l'élément :
+// - `<penColor … hasPattern="true" Pattern="N">` (bordures de process/shapes,
+//   `<rectangle>`/`<line>` dans `parseShapes`) : N=0 solide (vérifié sur le
+//   corpus de démos officielles, seule valeur non nulle rencontrée : Pattern="1"
+//   sur un `<penColor name="… (LineWidth: 3, Dash)" …>`, confirmant que
+//   Pattern!=0 = pointillé). L'attribut Pattern est absent quand hasPattern=false.
+// - `<pen … dashStyle="N"><dashPattern length="M" /></pen>` (tracé d'un flux,
+//   dans `<arrow><sankeyLink>`) : dashStyle reprend l'énumération .NET
+//   System.Drawing.Drawing2D.DashStyle (0=Solid, 1=Dash, 2=Dot, 3=DashDot,
+//   4=DashDotDot, 5=Custom — jamais vu !=0 dans le corpus de démos, toutes en
+//   trait plein) ; dashStyle=5 (Custom) s'accompagne d'un `<dashPattern>` non
+//   vide (length>0) décrivant le motif. On traite les deux comme équivalents :
+//   dashStyle!=0 OU dashPattern non vide → pointillé.
+const isPenColorPatternDashed = (penColorEl: Element | null): boolean => {
+  const pattern = penColorEl?.getAttribute('Pattern')
+  if (pattern === null || pattern === undefined) return false
+  const n = parseInt(pattern, 10)
+  return Number.isFinite(n) && n !== 0
+}
+
+const isDashStylePenDashed = (penEl: Element | null): boolean => {
+  if (!penEl) return false
+  if (attrNum(penEl, 'dashStyle', 0) !== 0) return true
+  return attrNum(childByTag(penEl, 'dashPattern'), 'length', 0) > 0
+}
+
 // ------------------------------------------------------------- Modèle logique
 
 interface EsUnit { id: string, coefficient: number, name: string, isBasic: boolean }
@@ -429,6 +456,8 @@ const parseShapes = (
       base.transparent_border = shape.getAttribute('drawBorder') !== 'true'
       const transparency = attrNum(shape, 'transparency', 0)
       if (transparency > 0) base.opacity = Math.max(0, 100 - transparency)
+      // OS#1290 — trait pointillé de la bordure (<penColor Pattern="…">).
+      if (isPenColorPatternDashed(childByTag(shape, 'penColor'))) base.shape_border_dashed = true
       // Texte absorbé (boîte e!Sankey en 2 objets) : le fond porte le texte.
       const t = textOfRect.get(it)
       if (t) applyTextToContainer(base, t.el)
@@ -465,6 +494,9 @@ const parseShapes = (
       if (penHex) base.shape_border_color = penHex
       const penWidth = attrNum(pen, 'width', 1)
       if (penWidth) base.shape_border_thickness = penWidth
+      // OS#1290 — trait pointillé (<penColor Pattern="…">, EST le trait pour
+      // shape_type 'line', cf. commentaire plus haut).
+      if (isPenColorPatternDashed(pen)) base.shape_border_dashed = true
       out[id] = base
     }
   })
@@ -533,6 +565,8 @@ interface EsGraphicalArrow {
   toArrow: boolean | null
   fromArrow: boolean | null
   arrowSize: number | null
+  /** OS#1290 — trait pointillé (`sankeyLink/pen@dashStyle` ou `dashPattern`). */
+  dashed: boolean
 }
 
 const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } => {
@@ -558,6 +592,10 @@ const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } 
     const toArrowLength = sankeyLink?.hasAttribute('toArrowLength') ? attrNum(sankeyLink, 'toArrowLength', 0) : null
     const fromArrowLength = sankeyLink?.hasAttribute('fromArrowLength') ? attrNum(sankeyLink, 'fromArrowLength', 0) : null
     const arrowSize = toArrow ? toArrowLength : (fromArrow ? fromArrowLength : null)
+    // OS#1290 — le pen du tracé vit sous <sankeyLink>, pas directement sous
+    // <arrow> (qui ne porte qu'un <penColor> de repli, non pointillable).
+    const sankeyLink = childByTag(a, 'sankeyLink')
+    const pen = sankeyLink ? childByTag(sankeyLink, 'pen') : null
     out[a.getAttribute('id') ?? ''] = {
       tooltip: (comment?.getAttribute('text') ?? '').replace(/\r\n/g, '\n').trim(),
       labelVisible: label?.getAttribute('visible') !== 'false',
@@ -577,6 +615,7 @@ const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } 
       toArrow,
       fromArrow,
       arrowSize: (arrowSize !== null && arrowSize > 0) ? arrowSize : null,
+      dashed: isDashStylePenDashed(pen),
     }
   })
   return out
@@ -979,6 +1018,9 @@ export const parseEsankeyXml = (
       if (graphicalArrow?.arrowSize !== null && graphicalArrow?.arrowSize !== undefined) {
         link.local.shape_arrow_size = graphicalArrow.arrowSize
       }
+      // OS#1290 — trait pointillé (dashStyle/dashPattern du pen de la
+      // sankeyLink) → bordure pointillée du flux.
+      if (graphicalArrow?.dashed) link.local.shape_border_dashed = true
       // AUCUN label de valeur posé sur les flux importés (décision user) : chez
       // e!Sankey l'étiquette de quantité appartient à la FLÈCHE (somme de ses
       // matériaux, position sur segment) — la reproduire par flux serait faux ;
