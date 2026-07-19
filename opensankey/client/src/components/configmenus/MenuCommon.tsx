@@ -331,7 +331,7 @@ export const MenuResetAttrLocal = (
       <ChevronDownIcon />
     </MenuButton>
 
-    <MenuList maxH='60vh' overflowY='auto'>
+    <MenuList maxH='60vh' minW='13rem' overflowY='auto' py={1}>
       <MenuItem onClick={resetAll} fontWeight='semibold'>{t('Menu.reset_all_attr')}</MenuItem>
       {(() => {
         type Entry = [string, { overloaded: boolean, name: string }]
@@ -344,16 +344,23 @@ export const MenuResetAttrLocal = (
           else others.push(entry)
         })
 
+        // Le thème force `MenuItem { display: grid }` : on n'y met donc qu'UN
+        // enfant (un flex plein-largeur) pour aligner nom + croix sur une ligne.
         const renderItem = ([k, v]: Entry) => (
-          <MenuItem key={k} onClick={() => resetLocal(k)} pl={6} justifyContent='space-between' gap={3}>
-            <span>{v.name}</span>
-            <SmallCloseIcon opacity={0.5} boxSize='0.7em' />
+          <MenuItem key={k} onClick={() => resetLocal(k)} py='0.2rem' pl='1.9rem' pr='0.75rem'>
+            <Box display='flex' alignItems='center' justifyContent='space-between' w='100%' gap={3}>
+              <Box as='span' overflow='hidden' textOverflow='ellipsis' whiteSpace='nowrap'>{v.name}</Box>
+              <SmallCloseIcon boxSize='0.6em' color='gray.400' flexShrink={0} />
+            </Box>
           </MenuItem>
         )
         const renderHeader = (g: Type_ResetAttrGroup) => (
           <Box
-            px={3} pt={2} pb={1} display='flex' alignItems='center' gap={2}
-            fontSize='xs' fontWeight='bold' textTransform='uppercase' opacity={0.6}>
+            display='flex' alignItems='center' gap='0.4rem'
+            px='0.75rem' pt='0.45rem' pb='0.15rem'
+            color='gray.500' fontSize='0.65rem' fontWeight='bold'
+            letterSpacing='0.04em' textTransform='uppercase'
+            sx={{ svg: { width: '0.95em', height: '0.95em' } }}>
             {g.getIcon(icon_library)}
             <span>{t(g.titleKey)}</span>
           </Box>
@@ -362,13 +369,13 @@ export const MenuResetAttrLocal = (
         return <>
           {buckets.filter(b => b.items.length > 0).map(({ g, items }) => (
             <React.Fragment key={g.match}>
-              <MenuDivider />
+              <MenuDivider my={1} />
               {renderHeader(g)}
               {items.map(renderItem)}
             </React.Fragment>
           ))}
           {others.length > 0 && <>
-            <MenuDivider />
+            <MenuDivider my={1} />
             {others.map(renderItem)}
           </>}
         </>
