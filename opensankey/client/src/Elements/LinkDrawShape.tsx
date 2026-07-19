@@ -954,13 +954,17 @@ export class LinkDrawShape {
   }
 
   /**
-   * Vrai pendant un drag qui redessine ce lien en continu : nœud source ou cible
-   * déplacé, ou poignée de contrôle du lien manipulée.
+   * Vrai pendant un drag de NŒUD (source ou cible) qui redessine ce lien en
+   * continu : dans ce cas on retombe sur le contour simple, moins coûteux, car
+   * plusieurs flux peuvent être redessinés à chaque frame.
+   *
+   * Le drag d'une poignée du flux (controlPoints.is_dragged) est volontairement
+   * exclu : un seul flux est recalculé, et l'utilisateur reshape précisément ce
+   * flux — on garde donc le contour exact en direct (opensankey#1251).
    */
   private isBeingDragged(): boolean {
     return (this._link.source?.getDragState() ?? false)
       || (this._link.target?.getDragState() ?? false)
-      || this._link_control_points_internal.controlPoints.is_dragged
   }
 
   /**

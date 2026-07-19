@@ -491,6 +491,11 @@ export class LinkControlPoints {
     return () => {
       this._control_points.is_dragged = false
 
+      // Redraw the link body now that is_dragged is false: pendant le drag,
+      // getLinkShape retombe sur le contour simple (isBeingDragged) ; sans ce
+      // redraw, le tracé « simple » du dernier frame reste figé et le contour
+      // exact (bezier_outline_exact, opensankey#1251) ne revient pas au relâchement.
+      this.link.drawShape()
       this.drawControlPoint()
       this.link.drawing_area.application_data.menu_configuration.updateComponentRelatedToApparence()
       //this.link.drawing_area.areaAutoFit()
