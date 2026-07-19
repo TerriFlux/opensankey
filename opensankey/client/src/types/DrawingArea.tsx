@@ -1442,6 +1442,18 @@ export class Class_DrawingArea {
     // initial, qui restera ensuite figé (force_when_locked).
     if (this._size_locked && !force_when_locked) return
 
+    // #292 — Le calcul de cadrage doit viser la zone de dessin PLEINE (sans gouttière de
+    // scrollbar) : on annule la réserve le temps du fit et on empêche le _updateScrollbars interne
+    // de la reposer (`suppress`), sinon le fit lirait un window_fitting déjà rétréci et cadrerait
+    // ~14 px trop petit (marge asymétrique sur tout diagramme chargé). La réserve est ré-évaluée à
+    // la fin, sur le CADRAGE FINAL. try/finally garantit le rétablissement du flag même en sortie
+    // anticipée (mode papier) ou sur exception. NB : le corps n'est volontairement pas ré-indenté
+    // (diff minimal ; le try/finally n'ajoute qu'un niveau logique).
+    this._scrollbar_reserve_right = 0
+    this._scrollbar_reserve_bottom = 0
+    this._suppress_scrollbar_reserve = true
+    try {
+
     const prev_k_fit = this._k_fit
 
     // Paper mode: dimensions are fixed, only adjust zoom to fit canvas in viewport
@@ -1769,6 +1781,13 @@ export class Class_DrawingArea {
           this.drawGrid()
         }
       }
+    }
+    } finally {
+      // #292 — rétablit le flag et ré-évalue la réserve de gouttière sur le CADRAGE FINAL :
+      // contenu qui tient (cas normal d'un fit) -> aucune barre ni gouttière ; contenu qui
+      // déborde encore (fit contraint) -> la ou les barres apparaissent avec leur gouttière.
+      this._suppress_scrollbar_reserve = false
+      this._updateScrollbars()
     }
   }
 
@@ -2856,7 +2875,7 @@ export class Class_DrawingArea {
     // DA détachée : on cadre dans le conteneur hôte (modal), pas la fenêtre.
     if (this.is_detached) {
       const h = this.getContainerNode()?.clientHeight ?? 0
-      if (h > 0) return h - this._fit_margin
+      if (h > 0) return h - this._fit_margin - this._scrollbar_reserve_bottom
     }
     // Mode embarqué (embedded) : le SVG fait 100% du conteneur hôte (#sankey_app),
     // qui peut être plus court que la fenêtre quand l'embarqueur ajoute sa PROPRE
@@ -2866,9 +2885,9 @@ export class Class_DrawingArea {
     // on retranche le footer (BottomMenu) et la réserve doc s'ils sont dans le conteneur.
     if (this.application_data.publish_options.embedded) {
       const h = this.getContainerNode()?.clientHeight ?? 0
-      if (h > 0) return h - this._fit_margin - this.getBottomBarHeight() - this.main_zone_bottom_reserved
+      if (h > 0) return h - this._fit_margin - this.getBottomBarHeight() - this.main_zone_bottom_reserved - this._scrollbar_reserve_bottom
     }
-    return window.innerHeight - this._fit_margin - this.getNavBarHeight() - this.getBottomBarHeight() - this.main_zone_bottom_reserved
+    return window.innerHeight - this._fit_margin - this.getNavBarHeight() - this.getBottomBarHeight() - this.main_zone_bottom_reserved - this._scrollbar_reserve_bottom
   }
   // Hauteur réservée en bas de la grande zone pour la doc (modes diagram-bottom / window-bottom).
   // Source globale (menu_configuration), symétrique de main_zone_right_reserved. Null-safe : la
@@ -2889,20 +2908,41 @@ export class Class_DrawingArea {
     if (!mc) return 0
     return mc.getMainZoneRightReservedPx()
   }
+  // #292 — Gouttière de scrollbar réservée DYNAMIQUEMENT (droite pour la barre verticale,
+  // bas pour l'horizontale). Vaut 0 quand la barre correspondante est masquée, et l'épaisseur
+  // de gouttière quand elle est visible. Posée par Class_ViewportChrome.updateScrollbars selon
+  // le débordement du contenu : quand une barre apparaît, la zone de dessin (window_fitting)
+  // se réduit d'autant du côté concerné, ce qui loge la barre HORS du dessin — elle ne recouvre
+  // plus jamais le diagramme. Réserve CONDITIONNELLE : aucun retrait quand tout le contenu tient
+  // dans la fenêtre. Champ par instance (et non source globale) car chaque scrollbar est propre
+  // à sa DA. updateBorder / l'extent d3-zoom / le fit lisent tous window_fitting → cohérence
+  // automatique du cadre et du cadrage avec la zone rétrécie.
+  private _scrollbar_reserve_right: number = 0
+  private _scrollbar_reserve_bottom: number = 0
+  public get scrollbar_reserve_right(): number { return this._scrollbar_reserve_right }
+  public set scrollbar_reserve_right(v: number) { this._scrollbar_reserve_right = v }
+  public get scrollbar_reserve_bottom(): number { return this._scrollbar_reserve_bottom }
+  public set scrollbar_reserve_bottom(v: number) { this._scrollbar_reserve_bottom = v }
+  // #292 — Vrai pendant un areaAutoFit : le calcul de cadrage doit viser la zone PLEINE (sans
+  // gouttière). updateScrollbars ne pose alors PAS la réserve (sinon le fit lirait un window_fitting
+  // déjà rétréci et cadrerait 14 px trop petit) ; areaAutoFit remet le flag à faux et ré-évalue la
+  // réserve à la fin, sur le cadrage final.
+  private _suppress_scrollbar_reserve: boolean = false
+  public get suppress_scrollbar_reserve(): boolean { return this._suppress_scrollbar_reserve }
   public get window_fitting_width(): number {
     // DA détachée : on cadre dans le conteneur hôte (modal), pas la fenêtre.
     if (this.is_detached) {
       const w = this.getContainerNode()?.clientWidth ?? 0
-      if (w > 0) return w - this._fit_margin
+      if (w > 0) return w - this._fit_margin - this._scrollbar_reserve_right
     }
     // Mode embarqué : cadre dans la largeur RÉELLE du conteneur hôte (l'embarqueur
     // peut le rendre plus étroit que la fenêtre). Full-window => clientWidth ==
     // innerWidth, comportement inchangé.
     if (this.application_data.publish_options.embedded) {
       const w = this.getContainerNode()?.clientWidth ?? 0
-      if (w > 0) return w - this._fit_margin - this.main_zone_right_reserved
+      if (w > 0) return w - this._fit_margin - this.main_zone_right_reserved - this._scrollbar_reserve_right
     }
-    return window.innerWidth - this._fit_margin - this.main_zone_right_reserved
+    return window.innerWidth - this._fit_margin - this.main_zone_right_reserved - this._scrollbar_reserve_right
   }
 
   // Paper format getters/setters

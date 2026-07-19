@@ -10,10 +10,18 @@
 // le cadre de viewport. Ces éléments vivent sur la RACINE SVG (hors g_drawing) : ils restent donc
 // en coordonnées écran, non affectés par le pan/zoom, et se contentent de LIRE la géométrie de la
 // DA (caméra, canvas, fenêtre utile). Ils ne mutent rien du modèle — seule exception assumée : le
-// drag d'un pouce de scrollbar déplace la caméra via `da.zoomListener`.
+// drag d'un pouce de scrollbar (ou un clic de flèche) déplace la caméra via `da.zoomListener`.
 //
 // La classe porte ses propres sélections d3 (elles étaient 4 champs privés de la DA) ; la DA garde
 // des méthodes-délégatrices privées.
+//
+// #292 — Les barres sont désormais logées HORS de la zone de dessin, dans une gouttière RÉSERVÉE
+// dynamiquement : quand une barre apparaît (contenu débordant), updateScrollbars pose une réserve
+// (`da.scrollbar_reserve_right/bottom`) qui rétrécit window_fitting du côté concerné ; la barre
+// occupe la bande ainsi libérée et ne recouvre plus jamais le diagramme. La réserve est
+// CONDITIONNELLE : nulle tant que le contenu tient dans la fenêtre. Chaque barre porte en outre
+// des flèches de défilement cliquables à ses deux extrémités (◄ ► / ▲ ▼), qui pan la caméra d'un
+// pas (répétition au maintien).
 
 import * as d3 from '../d3Modules'
 
@@ -28,12 +36,19 @@ export class Class_ViewportChrome {
   private _d3_viewport_border: d3.Selection<SVGRectElement, unknown, HTMLElement, unknown> | null = null
   // #291 — <rect> intérieur du <clipPath> qui découpe le contenu de g_drawing au cadre.
   private _d3_viewport_clip_rect: d3.Selection<SVGRectElement, unknown, HTMLElement, unknown> | null = null
-  private readonly _scrollbar_size = 10
+  private readonly _scrollbar_size = 10   // épaisseur de la barre (px)
+  private readonly _arrow_size = 12       // longueur des boutons-flèches aux extrémités, le long de la barre (px)
+  private readonly _gutter = 14           // épaisseur de la gouttière réservée (> _scrollbar_size : ~2 px de marge de part et d'autre)
+  private readonly _step_px = 60          // pan par déclenchement de flèche (px écran) ; répété au maintien
+
+  // Minuteries de la répétition au maintien d'une flèche (une seule flèche pressée à la fois).
+  private _repeat_delay: ReturnType<typeof setTimeout> | null = null
+  private _repeat_timer: ReturnType<typeof setInterval> | null = null
 
   /**
-   * Crée les éléments SVG du chrome : pistes + pouces des deux scrollbars, le cadre de viewport,
-   * puis le clipPath du contenu. Posés directement sur la racine SVG pour rester en coordonnées
-   * écran (le clipPath, lui, dans un <defs> de la racine, mais référencé par #g_clip non transformé).
+   * Crée les éléments SVG du chrome : pistes + pouces + flèches des deux scrollbars, le cadre de
+   * viewport, puis le clipPath du contenu. Posés directement sur la racine SVG pour rester en
+   * coordonnées écran (le clipPath dans un <defs> de la racine, référencé par #g_clip non transformé).
    */
   public init(da: Class_DrawingArea) {
     this._initScrollbars(da)
@@ -43,6 +58,7 @@ export class Class_ViewportChrome {
 
   /** La racine SVG a été retirée : les sélections pendantes ne valent plus rien. */
   public reset() {
+    this._clearRepeat()
     this._d3_scrollbar_h = null
     this._d3_scrollbar_v = null
     this._d3_viewport_border = null
@@ -51,49 +67,134 @@ export class Class_ViewportChrome {
 
   // SCROLLBARS ==========================================================================
 
+  /** Arrête la répétition au maintien (relâchement, sortie, ou démontage). */
+  private _clearRepeat() {
+    if (this._repeat_delay) { clearTimeout(this._repeat_delay); this._repeat_delay = null }
+    if (this._repeat_timer) { clearInterval(this._repeat_timer); this._repeat_timer = null }
+  }
+
+  /**
+   * Ajoute un bouton-flèche (fond + triangle) à un groupe de scrollbar. La forme est constante
+   * (seule sa POSITION varie selon la longueur de barre, posée dans updateScrollbars) ; le triangle
+   * pointe vers l'extérieur de la piste (◄ ► en horizontal, ▲ ▼ en vertical).
+   */
+  private _appendArrow(
+    parent: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>,
+    cls: string,
+    orientation: 'h' | 'v',
+    dir: 'start' | 'end'
+  ): d3.Selection<SVGGElement, unknown, HTMLElement, unknown> {
+    const sb = this._scrollbar_size
+    const a = this._arrow_size
+    const g = parent.append('g')
+      .attr('class', `scrollbar-arrow ${cls}`)
+      .style('cursor', 'pointer')
+      .style('pointer-events', 'all')
+    g.append('rect')
+      .attr('class', 'scrollbar-arrow-bg')
+      .attr('width', orientation === 'h' ? a : sb)
+      .attr('height', orientation === 'h' ? sb : a)
+      .attr('rx', 2).attr('ry', 2)
+      .style('fill', '#e0e0e0').style('fill-opacity', 0.3)
+    let pts: string
+    if (orientation === 'h' && dir === 'start') pts = `${a * 0.68},${sb * 0.18} ${a * 0.30},${sb * 0.5} ${a * 0.68},${sb * 0.82}` // ◄
+    else if (orientation === 'h') pts = `${a * 0.32},${sb * 0.18} ${a * 0.70},${sb * 0.5} ${a * 0.32},${sb * 0.82}` // ►
+    else if (dir === 'start') pts = `${sb * 0.18},${a * 0.68} ${sb * 0.5},${a * 0.30} ${sb * 0.82},${a * 0.68}` // ▲
+    else pts = `${sb * 0.18},${a * 0.32} ${sb * 0.5},${a * 0.70} ${sb * 0.82},${a * 0.32}` // ▼
+    g.append('polygon')
+      .attr('class', 'scrollbar-arrow-icon')
+      .attr('points', pts)
+      .style('fill', '#555').style('pointer-events', 'none')
+    return g
+  }
+
+  /**
+   * Câble une flèche : `action` est exécutée une fois au press, puis en boucle après un court délai
+   * tant que le bouton reste enfoncé. stopPropagation empêche le mousedown de démarrer un pan d3-zoom
+   * (le behavior est branché sur la racine SVG, ancêtre du bouton).
+   */
+  private _bindArrow(sel: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>, action: () => void) {
+    const start = (event: Event) => {
+      event.preventDefault()
+      event.stopPropagation()
+      this._clearRepeat()
+      action()
+      this._repeat_delay = setTimeout(() => {
+        this._repeat_timer = setInterval(action, 60)
+      }, 300)
+      const stop = () => {
+        this._clearRepeat()
+        window.removeEventListener('mouseup', stop)
+        window.removeEventListener('touchend', stop)
+        window.removeEventListener('touchcancel', stop)
+      }
+      window.addEventListener('mouseup', stop)
+      window.addEventListener('touchend', stop)
+      window.addEventListener('touchcancel', stop)
+    }
+    sel.on('mousedown', start).on('touchstart', start)
+  }
+
   private _initScrollbars(da: Class_DrawingArea) {
     if (!da.d3_selection_zoom_area) return
     const sb = this._scrollbar_size
+    const arrow = this._arrow_size
+    const step = this._step_px
 
-    // Horizontal scrollbar
+    // --- Barre horizontale : piste, pouce, flèches (◄ ►) ---
     this._d3_scrollbar_h = da.d3_selection_zoom_area.append('g')
       .attr('class', 'scrollbar scrollbar-h')
       .attr('visibility', 'hidden')
       .style('pointer-events', 'all')
-    // Track
     this._d3_scrollbar_h.append('rect')
       .attr('class', 'scrollbar-track')
       .attr('rx', sb / 2).attr('ry', sb / 2)
       .attr('height', sb)
       .style('fill', '#e0e0e0').style('fill-opacity', 0.3)
-    // Thumb
     this._d3_scrollbar_h.append('rect')
       .attr('class', 'scrollbar-thumb')
       .attr('rx', sb / 2).attr('ry', sb / 2)
       .attr('height', sb)
       .style('fill', '#78A7C2').style('fill-opacity', 0.85)
       .style('cursor', 'pointer')
+    const hArrowStart = this._appendArrow(this._d3_scrollbar_h, 'arrow-start', 'h', 'start')
+    const hArrowEnd = this._appendArrow(this._d3_scrollbar_h, 'arrow-end', 'h', 'end')
 
-    // Vertical scrollbar
+    // --- Barre verticale : piste, pouce, flèches (▲ ▼) ---
     this._d3_scrollbar_v = da.d3_selection_zoom_area.append('g')
       .attr('class', 'scrollbar scrollbar-v')
       .attr('visibility', 'hidden')
       .style('pointer-events', 'all')
-    // Track
     this._d3_scrollbar_v.append('rect')
       .attr('class', 'scrollbar-track')
       .attr('rx', sb / 2).attr('ry', sb / 2)
       .attr('width', sb)
       .style('fill', '#e0e0e0').style('fill-opacity', 0.3)
-    // Thumb
     this._d3_scrollbar_v.append('rect')
       .attr('class', 'scrollbar-thumb')
       .attr('rx', sb / 2).attr('ry', sb / 2)
       .attr('width', sb)
       .style('fill', '#78A7C2').style('fill-opacity', 0.85)
       .style('cursor', 'pointer')
+    const vArrowStart = this._appendArrow(this._d3_scrollbar_v, 'arrow-start', 'v', 'start')
+    const vArrowEnd = this._appendArrow(this._d3_scrollbar_v, 'arrow-end', 'v', 'end')
 
-    // Étendue du contenu projetée à l'écran, pour convertir un déplacement de pouce en pan.
+    // Pan d'un pas fixe (px écran) converti en monde via k courant, borné par le constrain d3-zoom.
+    // Convention de signe alignée sur le drag du pouce : révéler à gauche/haut => translate positif.
+    const panStep = (sx: number, sy: number) => {
+      if (!da.d3_selection_zoom_area) return
+      const node = da.d3_selection_zoom_area.node()
+      if (!node) return
+      const k = d3.zoomTransform(node).k || 1
+      da.zoomListener.translateBy(da.d3_selection_zoom_area, sx / k, sy / k)
+      this.updateScrollbars(da)
+    }
+    this._bindArrow(hArrowStart, () => panStep(step, 0))   // ◄ révèle le contenu à gauche
+    this._bindArrow(hArrowEnd, () => panStep(-step, 0))    // ► révèle le contenu à droite
+    this._bindArrow(vArrowStart, () => panStep(0, step))   // ▲ révèle le contenu au-dessus
+    this._bindArrow(vArrowEnd, () => panStep(0, -step))    // ▼ révèle le contenu en dessous
+
+    // Étendue du CONTENU projetée à l'écran, pour convertir un déplacement de pouce en pan.
     const getContentScreenExtent = () => {
       if (!da.d3_selection_zoom_area || !da.d3_selection_elements_group) return null
       const svgN = da.d3_selection_zoom_area.node()
@@ -117,17 +218,10 @@ export class Class_ViewportChrome {
       const y1 = has_bbox
         ? (paper ? Math.max(bbox.y + bbox.height, paper.y1) : bbox.y + bbox.height)
         : (paper?.y1 ?? 0)
-      const r = svgN.getBoundingClientRect()
-      return {
-        screenW: (x1 - x0) * t.k,
-        screenH: (y1 - y0) * t.k,
-        viewW: Math.min(r.width, window.innerWidth - Math.max(0, r.left)),
-        viewH: Math.min(r.height, window.innerHeight - Math.max(0, r.top)),
-        k: t.k
-      }
+      return { screenW: (x1 - x0) * t.k, screenH: (y1 - y0) * t.k, k: t.k }
     }
 
-    // Drag behavior for horizontal thumb
+    // Drag du pouce horizontal. La piste utile = largeur de la zone de dessin moins les 2 flèches.
     const hThumbNode = this._d3_scrollbar_h.select('.scrollbar-thumb').node() as SVGRectElement | null
     if (hThumbNode) {
       d3.select<SVGRectElement, unknown>(hThumbNode).call(
@@ -135,8 +229,10 @@ export class Class_ViewportChrome {
           .on('drag', (event: d3.D3DragEvent<SVGRectElement, unknown, unknown>) => {
             if (!da.d3_selection_zoom_area) return
             const ext = getContentScreenExtent()
-            if (!ext || ext.screenW <= ext.viewW) return
-            const trackW = ext.viewW - 2 * sb
+            const viewW = da.window_fitting_width
+            if (!ext || ext.screenW <= viewW) return
+            const trackW = viewW - 2 * arrow
+            if (trackW <= 0) return
             const ratio = ext.screenW / trackW
             da.zoomListener.translateBy(da.d3_selection_zoom_area, -event.dx * ratio / ext.k, 0)
             // Sync thumb position to mouse immediately: the zoom event defers updateScrollbars
@@ -146,7 +242,7 @@ export class Class_ViewportChrome {
       )
     }
 
-    // Drag behavior for vertical thumb
+    // Drag du pouce vertical.
     const vThumbNode = this._d3_scrollbar_v.select('.scrollbar-thumb').node() as SVGRectElement | null
     if (vThumbNode) {
       d3.select<SVGRectElement, unknown>(vThumbNode).call(
@@ -154,8 +250,10 @@ export class Class_ViewportChrome {
           .on('drag', (event: d3.D3DragEvent<SVGRectElement, unknown, unknown>) => {
             if (!da.d3_selection_zoom_area) return
             const ext = getContentScreenExtent()
-            if (!ext || ext.screenH <= ext.viewH) return
-            const trackH = ext.viewH - 2 * sb
+            const viewH = da.window_fitting_height
+            if (!ext || ext.screenH <= viewH) return
+            const trackH = viewH - 2 * arrow
+            if (trackH <= 0) return
             const ratio = ext.screenH / trackH
             da.zoomListener.translateBy(da.d3_selection_zoom_area, 0, -event.dy * ratio / ext.k)
             this.updateScrollbars(da)
@@ -165,10 +263,9 @@ export class Class_ViewportChrome {
   }
 
   /**
-   * Repositionne/redimensionne les scrollbars d'après la caméra courante, et — effet de bord
-   * assumé, historique — (re)pose `extent` / `translateExtent` sur le zoom listener : c'est ici
-   * qu'est calculée l'étendue pannable (contenu ∪ canvas), qui sert aux deux.
-   * Les scrollbars restent visibles tant que le contenu déborde de la fenêtre utile.
+   * Repositionne/redimensionne les scrollbars d'après la caméra courante, pose la réserve de
+   * gouttière (#292) et — effet de bord assumé, historique — (re)pose `extent` / `translateExtent`
+   * sur le zoom listener. Les scrollbars restent visibles tant que le contenu déborde de la fenêtre.
    */
   public updateScrollbars(da: Class_DrawingArea) {
     if (!da.d3_selection_zoom_area || !this._d3_scrollbar_h || !this._d3_scrollbar_v) return
@@ -183,14 +280,11 @@ export class Class_ViewportChrome {
     if (!gNode) return
 
     const sb = this._scrollbar_size
-    // The SVG has height=window.innerHeight but is placed after the navbar,
-    // so its bottom overflows past the viewport. Use window_fitting dimensions
-    // which correctly account for navbar and bottom bar.
-    const viewW = da.window_fitting_width
-    const viewH = da.window_fitting_height
-    if (viewW <= 0 || viewH <= 0) return
+    const arrow = this._arrow_size
+    const gutter = this._gutter
     // Offset from SVG top to the actual visible area (navbar pushes content down)
     const navH = da.getNavBarHeight()
+    const fm = da.fit_margin / 2
 
     // Get the real bounding box of all content in g_drawing's local coordinate system
     // This handles negative coordinates correctly since getBBox returns the untransformed extent
@@ -202,27 +296,10 @@ export class Class_ViewportChrome {
     }
     const has_bbox = !!bbox && (bbox.width !== 0 || bbox.height !== 0)
 
-    // OS#1250 phase 5 — l'étendue pannable dérive du CONTENU, plus du canvas.
-    //
-    // Avant, elle unionnait la bbox avec le canvas (un rectangle dimensionné sur la
-    // fenêtre) parce que le constrain custom s'en servait pour ancrer en haut-gauche.
-    // Le constrain est revenu au défaut d3 : on lui donne des bounds de contenu élargis
-    // d'une marge GÉNÉREUSE, si bien que l'étendue reste plus grande que le viewport,
-    // que le constrain ne clampe plus et que le cadrage est piloté par le seul px/py du
-    // fit. La marge est proportionnelle au contenu (donc indépendante du zoom) : une
-    // marge exprimée en pixels écran varierait avec k et rendrait l'étendue instable.
-    //
-    // Mode papier : la page participe simplement aux bounds (pannable_canvas_rect vaut
-    // alors le rect de page en coordonnées monde). C'est ce qui remplace l'ancrage
-    // haut-gauche : on ne contraint plus la caméra, on inclut la page dans ce qu'elle
-    // doit pouvoir atteindre.
-    // Deux étendues DISTINCTES, et il ne faut pas les confondre :
-    //  - le CONTENU (contenu ∪ page en mode papier) : ce que l'utilisateur doit voir.
-    //    C'est lui qui pilote les scrollbars — elles ne doivent apparaître que s'il
-    //    déborde réellement de la fenêtre.
-    //  - le PANNABLE (contenu + marge généreuse) : jusqu'où la caméra peut aller.
-    //    Les confondre affichait les scrollbars en permanence, la marge faisant
-    //    croire à du contenu hors écran.
+    // OS#1250 phase 5 — l'étendue pannable dérive du CONTENU (∪ page en mode papier), plus du
+    // canvas. Le constrain d3 par défaut reste ACTIF sur ces bounds de contenu : contenu plus
+    // petit que la fenêtre -> centré ; plus grand -> déplacement borné par ses bords. La marge
+    // visuelle vient de l'`extent` écran (rétréci de fit_margin/2 sur les 4 côtés).
     const paper = da.is_paper_mode ? da.pannable_canvas_rect : null
     let cX0: number, cY0: number, cX1: number, cY1: number
     if (has_bbox) {
@@ -237,81 +314,105 @@ export class Class_ViewportChrome {
       cX0 = fallback.x0; cY0 = fallback.y0
       cX1 = fallback.x1; cY1 = fallback.y1
     }
-    // Pannable == contenu, SANS marge ajoutée. L'issue suggérait une « grande marge »,
-    // mais elle rend le constrain inerte : on peut alors pousser le diagramme entièrement
-    // hors de l'écran, sans plus rien pour le retenir. Le constrain d3 par défaut est donc
-    // laissé ACTIF sur les bounds du contenu :
-    //   - contenu plus petit que la fenêtre  -> il le centre (le custom l'ancrait en haut-gauche) ;
-    //   - contenu plus grand                 -> déplacement borné par ses bords, comme avant.
-    // La marge visuelle ne vient pas d'ici : l'`extent` ÉCRAN posé juste en dessous est déjà
-    // rétréci de fit_margin/2 sur les 4 côtés, donc le contenu ne colle jamais au bord.
     const panX0 = cX0, panY0 = cY0
     const panX1 = cX1, panY1 = cY1
+
+    // Étendue du CONTENU projetée à l'écran (caméra courante). Indépendante de la réserve de
+    // gouttière (elle ne dépend que du transform et du contenu) : calculée une seule fois, elle
+    // pilote la décision d'affichage ci-dessous.
+    const transform = d3.zoomTransform(svgNode)
+    let screenLeft = 0, screenTop = 0, screenW = 0, screenH = 0
+    if (has_bbox) {
+      const scr_tl = CameraMath.worldToScreen(transform, cX0, cY0)
+      const scr_br = CameraMath.worldToScreen(transform, cX1, cY1)
+      screenLeft = scr_tl.x
+      screenTop = scr_tl.y
+      screenW = scr_br.x - scr_tl.x
+      screenH = scr_br.y - scr_tl.y
+    }
+
+    // #292 — Réserve de gouttière CONDITIONNELLE. Une barre apparaît si le contenu déborde de la
+    // zone de dessin PLEINE (gouttière exclue) ; sa présence rétrécit window_fitting du côté
+    // concerné (barre H -> gouttière basse, barre V -> gouttière droite) pour la loger hors du
+    // dessin. On décide contre `fullW/fullH` (= window_fitting + réserve courante = dimension
+    // pleine, INVARIANTE à la réserve) : chaque axe est ainsi indépendant de sa propre réserve ET
+    // de l'autre -> ni couplage croisé, ni clignotement au seuil (le deadband 1 % suffit).
+    // Pendant un fit (suppress), on ne touche pas la réserve : le fit vise la zone pleine, et
+    // areaAutoFit ré-évalue la réserve à la fin, sur le cadrage final.
+    const prevRight = da.scrollbar_reserve_right
+    const prevBottom = da.scrollbar_reserve_bottom
+    if (!da.suppress_scrollbar_reserve) {
+      const fullW = da.window_fitting_width + da.scrollbar_reserve_right
+      const fullH = da.window_fitting_height + da.scrollbar_reserve_bottom
+      da.scrollbar_reserve_bottom = (has_bbox && screenW > fullW * 1.01) ? gutter : 0
+      da.scrollbar_reserve_right = (has_bbox && screenH > fullH * 1.01) ? gutter : 0
+    }
+    const reserve_changed = prevRight !== da.scrollbar_reserve_right || prevBottom !== da.scrollbar_reserve_bottom
+    const showH = da.scrollbar_reserve_bottom > 0
+    const showV = da.scrollbar_reserve_right > 0
+
+    // Dimensions DÉFINITIVES de la zone de dessin (réserve appliquée).
+    const viewW = da.window_fitting_width
+    const viewH = da.window_fitting_height
+    if (viewW <= 0 || viewH <= 0) return
+
     // Inset the viewport extent by fit_margin/2 so the constrain anchors the canvas
     // top-left at (fit_margin/2, navH + fit_margin/2) — leaving a symmetric margin
     // on the 4 sides (left/right/bottom = fit_margin/2; top = navbar + fit_margin/2).
-    const fm = da.fit_margin / 2
     da.zoomListener
       .extent([[fm, navH + fm], [viewW - fm, navH + viewH - fm]])
       .translateExtent([[panX0, panY0], [panX1, panY1]])
-    // Without an actual bbox we can't (and don't need to) update scrollbars — they
-    // stay hidden until there is content. The extent / translateExtent above are
-    // enough for the initial draw and for empty-diagram resets to anchor correctly.
-    if (!has_bbox) return
 
-    // OS#1250 phase 5 — les scrollbars sont une vue dérivée de (contentBounds, caméra,
-    // viewport) : on projette l'étendue du CONTENU (et non le pannable, qui porte une
-    // marge délibérément généreuse). Elles ne s'affichent donc que si le contenu déborde
-    // vraiment de la fenêtre, pas dès qu'il reste de la marge à parcourir.
-    const transform = d3.zoomTransform(svgNode)
-    const scr_tl = CameraMath.worldToScreen(transform, cX0, cY0)
-    const scr_br = CameraMath.worldToScreen(transform, cX1, cY1)
-    const screenLeft = scr_tl.x
-    const screenRight = scr_br.x
-    const screenTop = scr_tl.y
-    const screenBottom = scr_br.y
-    const screenW = screenRight - screenLeft
-    const screenH = screenBottom - screenTop
-
-    // Horizontal scrollbar: content wider than viewport
-    // interrupt() cancels any pending d3 transition that could override opacity
+    // Barre horizontale : logée dans la gouttière SOUS le cadre, sur la largeur de la zone.
     this._d3_scrollbar_h.interrupt()
-    if (screenW > viewW * 1.01) {
-      const trackW = viewW - 2 * sb
-      const thumbW = Math.max(30, (viewW / screenW) * trackW)
+    if (showH) {
+      const barLen = viewW
+      const trackW = Math.max(0, barLen - 2 * arrow)
+      const thumbW = Math.max(0, Math.min(trackW, Math.max(30, (viewW / screenW) * trackW)))
       const scrollFraction = Math.max(0, Math.min(1, -screenLeft / (screenW - viewW)))
-      const thumbX = sb + scrollFraction * (trackW - thumbW)
-
+      const thumbX = arrow + scrollFraction * (trackW - thumbW)
+      const barY = navH + fm + viewH + (gutter - sb) / 2
       this._d3_scrollbar_h
         .attr('visibility', 'visible')
-        .attr('transform', `translate(0, ${navH + viewH - sb - 4})`)
+        .attr('transform', `translate(${fm}, ${barY})`)
       this._d3_scrollbar_h.select('.scrollbar-track')
-        .attr('x', sb).attr('width', trackW)
+        .attr('x', arrow).attr('y', 0).attr('width', trackW).attr('height', sb)
       this._d3_scrollbar_h.select('.scrollbar-thumb')
-        .attr('x', thumbX)
-        .attr('width', thumbW)
+        .attr('x', thumbX).attr('y', 0).attr('width', thumbW).attr('height', sb)
+      this._d3_scrollbar_h.select('.arrow-start').attr('transform', 'translate(0, 0)')
+      this._d3_scrollbar_h.select('.arrow-end').attr('transform', `translate(${barLen - arrow}, 0)`)
     } else {
       this._d3_scrollbar_h.attr('visibility', 'hidden')
     }
 
-    // Vertical scrollbar: content taller than viewport
+    // Barre verticale : logée dans la gouttière À DROITE du cadre, sur la hauteur de la zone.
     this._d3_scrollbar_v.interrupt()
-    if (screenH > viewH * 1.01) {
-      const trackH = viewH - 2 * sb
-      const thumbH = Math.max(30, (viewH / screenH) * trackH)
+    if (showV) {
+      const barLen = viewH
+      const trackH = Math.max(0, barLen - 2 * arrow)
+      const thumbH = Math.max(0, Math.min(trackH, Math.max(30, (viewH / screenH) * trackH)))
       const scrollFraction = Math.max(0, Math.min(1, -screenTop / (screenH - viewH)))
-      const thumbY = sb + scrollFraction * (trackH - thumbH)
-
+      const thumbY = arrow + scrollFraction * (trackH - thumbH)
+      const barX = fm + viewW + (gutter - sb) / 2
       this._d3_scrollbar_v
         .attr('visibility', 'visible')
-        .attr('transform', `translate(${viewW - sb - 4}, ${navH})`)
+        .attr('transform', `translate(${barX}, ${navH + fm})`)
       this._d3_scrollbar_v.select('.scrollbar-track')
-        .attr('y', sb).attr('height', trackH)
+        .attr('x', 0).attr('y', arrow).attr('width', sb).attr('height', trackH)
       this._d3_scrollbar_v.select('.scrollbar-thumb')
-        .attr('y', thumbY)
-        .attr('height', thumbH)
+        .attr('x', 0).attr('y', thumbY).attr('width', sb).attr('height', thumbH)
+      this._d3_scrollbar_v.select('.arrow-start').attr('transform', 'translate(0, 0)')
+      this._d3_scrollbar_v.select('.arrow-end').attr('transform', `translate(0, ${barLen - arrow})`)
     } else {
       this._d3_scrollbar_v.attr('visibility', 'hidden')
+    }
+
+    // Le cadre ET le clip du contenu (#291) suivent la zone de dessin rétrécie : les redessiner
+    // quand la réserve change, sinon ils resteraient à l'ancienne taille jusqu'au prochain
+    // drawBackground() — le contenu déborderait alors sous la gouttière de scrollbar.
+    if (reserve_changed) {
+      this.updateBorder(da)
+      this.updateClip(da)
     }
   }
 
