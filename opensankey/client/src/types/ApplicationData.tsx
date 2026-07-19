@@ -1806,6 +1806,11 @@ export class Class_ApplicationData {
     // the export, shifted down by the top menu height.
     svg_clone?.select('#viewport_border').remove()
 
+    // #291 — Le clip du contenu (groupe #g_clip enveloppant g_drawing) découpe l'affichage éditeur
+    // au cadre de la fenêtre. À l'export, on veut le diagramme COMPLET (le contenu peut vivre
+    // hors de la fenêtre courante après un pan/zoom) : on neutralise donc le clip-path sur le clone.
+    svg_clone?.select('#g_clip').attr('clip-path', null)
+
     // wkhtmltoimage doesn't honor `dominant-baseline` consistently — node labels
     // render fine but link labels collide with their value-label sibling. We
     // convert non-default baselines to an equivalent y-offset (and drop the

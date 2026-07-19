@@ -26,15 +26,19 @@ export class Class_ViewportChrome {
   private _d3_scrollbar_h: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   private _d3_scrollbar_v: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   private _d3_viewport_border: d3.Selection<SVGRectElement, unknown, HTMLElement, unknown> | null = null
+  // #291 — <rect> intérieur du <clipPath> qui découpe le contenu de g_drawing au cadre.
+  private _d3_viewport_clip_rect: d3.Selection<SVGRectElement, unknown, HTMLElement, unknown> | null = null
   private readonly _scrollbar_size = 10
 
   /**
-   * Crée les éléments SVG du chrome : pistes + pouces des deux scrollbars, puis le cadre de
-   * viewport. Posés directement sur la racine SVG pour rester en coordonnées écran.
+   * Crée les éléments SVG du chrome : pistes + pouces des deux scrollbars, le cadre de viewport,
+   * puis le clipPath du contenu. Posés directement sur la racine SVG pour rester en coordonnées
+   * écran (le clipPath, lui, dans un <defs> de la racine, mais référencé par #g_clip non transformé).
    */
   public init(da: Class_DrawingArea) {
     this._initScrollbars(da)
     this._initBorder(da)
+    this._initClip(da)
   }
 
   /** La racine SVG a été retirée : les sélections pendantes ne valent plus rien. */
@@ -42,6 +46,7 @@ export class Class_ViewportChrome {
     this._d3_scrollbar_h = null
     this._d3_scrollbar_v = null
     this._d3_viewport_border = null
+    this._d3_viewport_clip_rect = null
   }
 
   // SCROLLBARS ==========================================================================
@@ -324,6 +329,40 @@ export class Class_ViewportChrome {
   }
 
   /**
+   * Géométrie du cadre de viewport, en PIXELS-ÉCRAN (repère de la racine SVG, hors zoom).
+   * Mode libre : la fenêtre utile (x=fm, y=navH+fm, w/h = window_fitting). Mode papier : le
+   * rectangle de PAGE projeté via la caméra (suit zoom/pan). Retourne `null` quand il n'y a pas
+   * de cadre à tracer (DA non éditable, ou racine SVG absente) — le cadre et le clip s'y adaptent.
+   * Source unique partagée par updateBorder (trace le cadre) et updateClip (découpe le contenu) :
+   * les deux restent ainsi rigoureusement alignés.
+   */
+  private _computeFrameRect(da: Class_DrawingArea): { x: number, y: number, w: number, h: number } | null {
+    if (!da.editable) return null
+    if (da.is_paper_mode) {
+      // Le cadre matérialise la PAGE, pas la fenêtre. On PROJETTE le rectangle de page
+      // (coords monde) en PIXELS-ÉCRAN via la caméra : le cadre porte donc le ratio du
+      // format (les formats ISO A partagent 1:√2, seule l'orientation le change), suit
+      // zoom et pan, et reste tracé sur la racine SVG → trait net, jamais mis à l'échelle.
+      const node = da.d3_selection_zoom_area?.node()
+      if (!node) return null
+      const t = d3.zoomTransform(node)
+      const page = da.background_canvas_rect
+      const tl = CameraMath.worldToScreen(t, page.x, page.y)
+      const br = CameraMath.worldToScreen(t, page.x + page.w, page.y + page.h)
+      return { x: tl.x, y: tl.y, w: br.x - tl.x, h: br.y - tl.y }
+    }
+    // viewW/viewH already exclude fit_margin and navbar/bottombar, so they map
+    // directly to the framed area (x=fm, y=navH+fm, w=viewW, h=viewH).
+    const fm = da.fit_margin / 2
+    return {
+      x: fm,
+      y: da.getNavBarHeight() + fm,
+      w: da.window_fitting_width,
+      h: da.window_fitting_height
+    }
+  }
+
+  /**
    * Position and size the viewport border rect on the SVG root (outside g_drawing).
    * Mode libre : encadre la zone visible (fenêtre). Mode papier : encadre la PAGE.
    * Appelé à l'init, à chaque drawBackground(), et — en mode papier — à chaque zoom/pan
@@ -331,40 +370,59 @@ export class Class_ViewportChrome {
    */
   public updateBorder(da: Class_DrawingArea) {
     if (!this._d3_viewport_border) return
-    if (!da.editable) {
+    const r = this._computeFrameRect(da)
+    if (!r) {
       this._d3_viewport_border.attr('visibility', 'hidden')
       return
     }
-    let x: number, y: number, w: number, h: number
-    if (da.is_paper_mode) {
-      // Le cadre matérialise la PAGE, pas la fenêtre. On PROJETTE le rectangle de page
-      // (coords monde) en PIXELS-ÉCRAN via la caméra : le cadre porte donc le ratio du
-      // format (les formats ISO A partagent 1:√2, seule l'orientation le change), suit
-      // zoom et pan, et reste tracé sur la racine SVG → trait net, jamais mis à l'échelle.
-      const node = da.d3_selection_zoom_area?.node()
-      if (!node) return
-      const t = d3.zoomTransform(node)
-      const page = da.background_canvas_rect
-      const tl = CameraMath.worldToScreen(t, page.x, page.y)
-      const br = CameraMath.worldToScreen(t, page.x + page.w, page.y + page.h)
-      x = tl.x; y = tl.y; w = br.x - tl.x; h = br.y - tl.y
-    } else {
-      // viewW/viewH already exclude fit_margin and navbar/bottombar, so they map
-      // directly to the framed area (x=fm, y=navH+fm, w=viewW, h=viewH).
-      const fm = da.fit_margin / 2
-      x = fm
-      y = da.getNavBarHeight() + fm
-      w = da.window_fitting_width
-      h = da.window_fitting_height
-    }
     this._d3_viewport_border
       .attr('visibility', 'visible')
-      .attr('x', x)
-      .attr('y', y)
-      .attr('width', Math.max(0, w))
-      .attr('height', Math.max(0, h))
+      .attr('x', r.x)
+      .attr('y', r.y)
+      .attr('width', Math.max(0, r.w))
+      .attr('height', Math.max(0, r.h))
       .style('stroke', default_black_color)
       .style('stroke-width', 1)
+  }
+
+  // CLIP DU CONTENU =====================================================================
+
+  /**
+   * Crée le <clipPath> (dans un <defs> de la racine SVG) dont le <rect> découpe le contenu de
+   * g_drawing au cadre. Il est référencé par le groupe #g_clip qui enveloppe g_drawing (créé dans
+   * DrawingArea._initDraw), non transformé → le rect s'interprète bien en coordonnées écran
+   * (clipPathUnits=userSpaceOnUse par défaut). L'id, unique par instance de DA, vient de la DA.
+   */
+  private _initClip(da: Class_DrawingArea) {
+    if (!da.d3_selection_zoom_area || !da.viewport_clip_id) return
+    this._d3_viewport_clip_rect = da.d3_selection_zoom_area
+      .append('defs')
+      .append('clipPath')
+      .attr('id', da.viewport_clip_id)
+      .append('rect')
+    this.updateClip(da)
+  }
+
+  /**
+   * Met le <rect> du clipPath à la géométrie du cadre (mêmes valeurs, mêmes moments que
+   * updateBorder). Hors cadre (DA non éditable, ex. diagramme publié / embarqué), le clip est
+   * NEUTRALISÉ via un rect immense : le diagramme publié ne doit jamais être rogné à la fenêtre.
+   */
+  public updateClip(da: Class_DrawingArea) {
+    if (!this._d3_viewport_clip_rect) return
+    const r = this._computeFrameRect(da)
+    if (!r) {
+      // Rect couvrant très largement l'écran : aucun découpage effectif.
+      this._d3_viewport_clip_rect
+        .attr('x', -1e6).attr('y', -1e6)
+        .attr('width', 2e6).attr('height', 2e6)
+      return
+    }
+    this._d3_viewport_clip_rect
+      .attr('x', r.x)
+      .attr('y', r.y)
+      .attr('width', Math.max(0, r.w))
+      .attr('height', Math.max(0, r.h))
   }
 
 }
