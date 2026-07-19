@@ -1525,6 +1525,38 @@ const mimeFromMagic = (base64: string): string => {
   return 'image/png'
 }
 
+// Conversion TIFF → PNG À LA DEMANDE : les navigateurs ne rendent pas le TIFF.
+// Le décodeur (utif2) est chargé en import DYNAMIQUE (jamais dans le bundle
+// principal — uniquement quand un .sankey embarque une image TIFF), décodé puis
+// rasterisé en PNG via un canvas. Renvoie null si indisponible (hors DOM, ex.
+// tests) ou en cas d'échec — l'appelant retombe alors sur le TIFF brut.
+const tiffToPngDataUri = async (bytes: Uint8Array): Promise<string | null> => {
+  try {
+    if (typeof document === 'undefined') return null
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mod: any = await import('utif2')
+    const UTIF = mod.default ?? mod
+    const buf = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)
+    const ifds = UTIF.decode(buf)
+    if (!ifds || ifds.length === 0) return null
+    UTIF.decodeImage(buf, ifds[0])
+    const rgba: Uint8Array = UTIF.toRGBA8(ifds[0])
+    const w: number = ifds[0].width, h: number = ifds[0].height
+    if (!w || !h) return null
+    const canvas = document.createElement('canvas')
+    canvas.width = w
+    canvas.height = h
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return null
+    const img = ctx.createImageData(w, h)
+    img.data.set(rgba)
+    ctx.putImageData(img, 0, 0)
+    return canvas.toDataURL('image/png')
+  } catch {
+    return null
+  }
+}
+
 /**
  * Dézippe un fichier `.sankey` (e!Sankey) et parse son `esankey.xml`, en
  * extrayant les images embarquées (icônes, décors) en data URIs.
@@ -1541,7 +1573,14 @@ export const loadEsankeyFile = async (data: ArrayBuffer): Promise<EsParsedDiagra
       .filter(f => f.name !== 'Images/preview.png')
       .map(async f => {
         const base64 = await f.async('base64')
-        images[f.name] = 'data:' + mimeFromMagic(base64) + ';base64,' + base64
+        const mime = mimeFromMagic(base64)
+        if (mime === 'image/tiff') {
+          // TIFF non affichable tel quel : converti en PNG à la demande.
+          const png = await tiffToPngDataUri(await f.async('uint8array'))
+          images[f.name] = png ?? ('data:image/tiff;base64,' + base64)
+        } else {
+          images[f.name] = 'data:' + mime + ';base64,' + base64
+        }
       })
   )
   return parseEsankeyXml(await xmlFile.async('string'), images)
