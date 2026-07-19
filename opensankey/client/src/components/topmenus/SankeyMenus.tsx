@@ -48,7 +48,7 @@ import { SearchIcon } from '@chakra-ui/icons'
 import { ApplyLayoutDialog } from '../dialogs/SankeyMenuDialogs'
 import {
   DrawerSequenceDataTagg, ToolBarBottom,
-  ComponentMouseMode, ComponentPositionMode, ComponetStretchButtons
+  ComponentMouseMode, ComponentPositionMode, ComponetStretchButtons, ComponentZoomControl
 } from './MenuBottom'
 import { useMainZone, mainZoneRightReservedPx } from '../spreadsheet/MainZoneTabs'
 import { modalResolutionPNG, modalResolutionPDF } from './SankeyExports'
@@ -311,6 +311,8 @@ export const SankeyMenu = (
         <ComponentPositionMode app_data={app_data} updateParentComponent={refreshToolsColumn} />
         {/* hide_fullscreen : le plein écran est dans la barre du haut en éditeur. */}
         <ComponetStretchButtons app_data={app_data} updateParentComponent={refreshToolsColumn} hide_fullscreen />
+        {/* Indicateur de zoom + boutons -/+ (molette = Ctrl/Cmd+scroll). */}
+        <ComponentZoomControl app_data={app_data} />
       </Box>
     </Box>
   ) : <></>

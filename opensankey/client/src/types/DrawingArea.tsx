@@ -71,6 +71,7 @@ import * as CameraMath from './CameraMath'
 import * as StyleCascade from './styleCascade'
 import { Class_ScaleOverrides } from './ScaleOverrides'
 import * as Camera from './DrawingAreaCamera'
+import { ZOOM_TOPIC } from './EventBus'
 import { Class_ViewportChrome } from './DrawingAreaViewportChrome'
 import { Class_DrawingAreaInteractions } from './DrawingAreaInteractions'
 import { Class_NodeBase, sortNodesElements } from '../Elements/NodeBase'
@@ -2325,6 +2326,21 @@ export class Class_DrawingArea {
     Camera.flyToNode(this, node, scale)
   }
 
+  /** Zoom explicite par facteur multiplicatif (boutons -/+), ancré au centre du viewport. */
+  public zoomByFactor(factor: number): void {
+    Camera.zoomByFactor(this, factor)
+  }
+
+  /** Zoom explicite vers une échelle absolue (clic indicateur → 100% = k=1). */
+  public zoomToScale(k: number): void {
+    Camera.zoomToScale(this, k)
+  }
+
+  /** Fige le zoom courant dans la géométrie (tailles ×ratio) et remet la caméra à 100 %. */
+  public bakeZoomIntoGeometry(opts?: { record_history?: boolean }): void {
+    Camera.bakeZoomIntoGeometry(this, opts)
+  }
+
   /** Centre la caméra sur un point MONDE, avec animation (recherche flux / zone — OS#1273). */
   public flyToPoint(wx: number, wy: number, scale?: number): void {
     Camera.flyToPoint(this, wx, wy, scale)
@@ -2532,6 +2548,12 @@ export class Class_DrawingArea {
       // Apply translation
       this.d3_selection
         .attr('transform', event.transform.toString())
+
+      // Indicateur de zoom (MenuBottom) : re-render du seul widget abonné à ZOOM_TOPIC. L'échelle
+      // vient du transform relu (getZoomScale), pas d'un état dupliqué. Notification directe par
+      // tick : coût = un forceRerender d'un petit composant isolé (les process lourds sont débouncés
+      // plus bas). menu_configuration peut être absent aux tout premiers constructeurs.
+      this.application_data.menu_configuration?.notify(ZOOM_TOPIC)
 
       // Launch waiting process to redraw handler with corresponding size (it take into account DA zoom scale)
       // only lauch draw for handler visible since those not visible don't create a <g> (therefore selectAll can't select them)

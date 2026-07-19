@@ -496,6 +496,17 @@ export const retrieveJSONResults = (
       app_data.drawing_area.scale = initial_scale
     }
   })
+
+  // Import Excel avec mise en page auto (aucun layout fourni, hors réconciliation) : garantir un
+  // zoom à 100 %. areaAutoFit ne peut structurellement pas donner k=1 (fit_margin + plancher
+  // Math.max bornent k sous 1) ; on fige donc le fit dans la géométrie (tailles px ×ratio, échelle
+  // des flux ÷ratio) puis caméra à k=1 — rendu identique, indicateur à 100 %, tailles « réelles ».
+  // Hors historique (l'import gère le sien) et hors view_only (le bake sérialise TOUT l'app : on
+  // évite de mettre à l'échelle d'autres vues d'un document multi-vues).
+  if (!apply_layout_current_sankey && !JSON_data['layout'] && !preserve_scale && !view_only) {
+    app_data.drawing_area.bakeZoomIntoGeometry({ record_history: false })
+  }
+
   app_data.menu_configuration.updateComponentRelatedToStyles()
 
   // In view_only mode, every mutation above happened on the current view's DA.
