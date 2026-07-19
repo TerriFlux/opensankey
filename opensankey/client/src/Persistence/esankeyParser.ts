@@ -236,6 +236,16 @@ const parseEntries = (entryGroup: Element, out: { [id: string]: EsEntry }, usedT
 interface EsGraphicalProcess {
   x: number
   y: number
+  // OS#1298 — Boîte réelle du process (sinon le nœud importé est réduit à un
+  // point). Le `<process>` porte `backgroundSizeW/H` (taille du fond) ; l'enfant
+  // `<selectionNode boundaryW/H>` donne la même boîte (fallback). Vérifié sur
+  // toutes les démos e!Sankey 5 : locationX/Y == backgroundLocationX/Y ==
+  // boundaryX/Y (coin haut-gauche) et backgroundSizeW/H == boundaryW/H. La
+  // position `x/y` (= locationX/Y) étant donc le COIN haut-gauche de cette
+  // boîte, elle reste cohérente avec la sémantique « coin » du JSON 0.9 (pas de
+  // node_pos_is_center) : poser la taille ne décale pas le nœud. 0 = inconnue.
+  width: number
+  height: number
   color: string | null
   labelText: string
   /** `visible='false'` : e!Sankey n'affiche que le label (et l'icône libre à côté). */
@@ -268,9 +278,16 @@ const parseGraphicalProcesses = (net: Element, palette: EsBrushPalette): { [id: 
   if (!processes) return out
   childrenByTag(processes, 'process').forEach(p => {
     const label = childByTag(p, 'label')
+    // OS#1298 — taille de la boîte : backgroundSizeW/H sur le <process>, sinon
+    // les boundaryW/H de l'enfant <selectionNode> (même valeur ; fallback).
+    const selNode = childByTag(p, 'selectionNode')
+    const width = attrNum(p, 'backgroundSizeW', attrNum(selNode, 'boundaryW', 0))
+    const height = attrNum(p, 'backgroundSizeH', attrNum(selNode, 'boundaryH', 0))
     out[p.getAttribute('id') ?? ''] = {
       x: attrNum(p, 'locationX', 0),
       y: attrNum(p, 'locationY', 0),
+      width,
+      height,
       color: resolveBrushColorHex(p, palette),
       labelText: (label?.getAttribute('text') ?? '').replace(/\r?\n/g, ' ').trim(),
       visible: p.getAttribute('visible') !== 'false',
@@ -713,6 +730,16 @@ export const parseEsankeyXml = (
       output_value: 0,
     }
     if (graphical?.color) nodes[id].local.color = graphical.color
+    // OS#1298 — Taille réelle du nœud depuis la boîte du process (sinon un point).
+    // node_width/node_height (clés du JSON 0.9) sont mappées vers
+    // shape_min_width/shape_min_height (cf. persistenceLegacyKeyMaps) : elles
+    // fixent la taille PLANCHER du nœud (getShapeWidthToUse/getShapeHeightToUse
+    // renvoient max(shape_min_*, épaisseurs des flux/enveloppe)), donc le nœud
+    // n'est jamais plus petit que sa boîte e!Sankey. La boîte ayant pour coin
+    // haut-gauche locationX/Y (= x/y déjà posé), aucun décalage : cohérent avec la
+    // sémantique « coin » du JSON (pas de node_pos_is_center).
+    if (graphical && graphical.width > 0) nodes[id].local.node_width = graphical.width
+    if (graphical && graphical.height > 0) nodes[id].local.node_height = graphical.height
     // Process invisible (fréquent dans les diagrammes « décor » : seuls le
     // label et une icône libre marquent le nœud).
     if (graphical && !graphical.visible) nodes[id].local.shape_visible = false

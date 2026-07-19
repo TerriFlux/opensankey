@@ -67,13 +67,14 @@ const FIXTURE = `<?xml version="1.0" encoding="utf-8"?>
   </netModel>
   <net backgroundColor="-1">
     <processes>
-      <process id="50" locationX="100" locationY="300">
+      <process id="50" locationX="100" locationY="300" backgroundLocationX="100" backgroundLocationY="300" backgroundSizeW="48" backgroundSizeH="112">
         <brushColor argb="-1073774768" />
         <label text="Source A" />
       </process>
       <process id="51" locationX="400" locationY="320">
         <brushColor argb="-16777216" />
         <label text="Cible B" />
+        <selectionNode boundaryX="400" boundaryY="320" boundaryW="72" boundaryH="64" />
       </process>
     </processes>
     <arrows>
@@ -123,6 +124,20 @@ describe('parseEsankeyXml — fixture minimale', () => {
     const b = Object.values(d.nodes).find(n => n.name === 'Cible B')
     expect(a?.local.color).toBe('#FF7F50') // Coral, alpha ignoré
     expect(b?.local.color).toBe('#000000') // -16777216 = noir opaque
+  })
+
+  // OS#1298 — la boîte réelle du process (backgroundSizeW/H, ou boundaryW/H du
+  // <selectionNode> en fallback) dimensionne le nœud via node_width/node_height
+  // (mappés vers shape_min_width/shape_min_height), sinon le nœud serait un point.
+  test('OS#1298 — taille du nœud depuis la boîte (backgroundSize et fallback selectionNode)', () => {
+    const a = Object.values(d.nodes).find(n => n.name === 'Source A')
+    const b = Object.values(d.nodes).find(n => n.name === 'Cible B')
+    // Source A : backgroundSizeW/H sur le <process>
+    expect(a?.local.node_width).toBe(48)
+    expect(a?.local.node_height).toBe(112)
+    // Cible B : pas de backgroundSize → boundaryW/H du <selectionNode>
+    expect(b?.local.node_width).toBe(72)
+    expect(b?.local.node_height).toBe(64)
   })
 
   test('flèche multi-matériaux → un flux par flow, valeurs en unité de base', () => {
@@ -329,7 +344,7 @@ describe('parseEsankeyXml — orientation des flux (arrowDirection)', () => {
   // (haut/bas). L'orientation d'un flux = [axe source][axe cible].
   test('nœud source vertical (1) → cible horizontale (2) = vh', () => {
     const withDir = FIXTURE
-      .replace('<process id="50" locationX="100" locationY="300">', '<process id="50" locationX="100" locationY="300" arrowDirection="1">')
+      .replace('<process id="50" locationX="100" locationY="300"', '<process id="50" locationX="100" locationY="300" arrowDirection="1"')
       .replace('<process id="51" locationX="400" locationY="320">', '<process id="51" locationX="400" locationY="320" arrowDirection="2">')
     const dv = parseEsankeyXml(withDir)
     expect(Object.values(dv.links)[0].local.orientation).toBe('vh')
