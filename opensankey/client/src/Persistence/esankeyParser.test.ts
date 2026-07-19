@@ -346,6 +346,50 @@ describe('parseEsankeyXml — couleurs par référence', () => {
   })
 })
 
+describe('parseEsankeyXml — palettes (OS#1294, jeux de couleurs)', () => {
+  // Les jeux de couleurs e!Sankey (<colorSets>/<colorSet>/<colors>/<brushColor
+  // id argb>) sont des <brushColor> à id comme les autres : la palette partagée
+  // les indexe, donc un <brushColorRef> d'entry pointant une couleur de PALETTE
+  // (et non une couleur définie « à plat ») est résolu sans traitement dédié.
+  test('brushColorRef d\'une entry pointant une couleur de colorSet est résolu', () => {
+    const withColorSet = FIXTURE
+      .replace('<colorSets />',
+        '<colorSets><colorSet id="800" name="Mass"><colors>' +
+        '<brushColor id="901" name="Teal" argb="-16744320" hasBaseColor="false" />' +
+        '</colors></colorSet></colorSets>')
+      .replace('<brushColor argb="-256" />', '<brushColorRef refId="901" />')
+    const d = parseEsankeyXml(withColorSet)
+    expect(d.fluxTags[ESANKEY_ENTRIES_TAGG_ID].tags['id_Electricity'].color).toBe('#008080')
+    const link = Object.values(d.links).find(l => l.value.tags[ESANKEY_ENTRIES_TAGG_ID]?.[0] === 'id_Electricity')
+    expect(link?.local.color).toBe('#008080')
+  })
+})
+
+describe('parseEsankeyXml — dégradé le long du flux (OS#1294)', () => {
+  // gradientFromSource + gradientToDestination sur la flèche graphique → règle de
+  // couleur 'gradient' d'OpenSankey (source→cible), posée via la clé legacy
+  // `color_rule` du bloc local (→ shape_color_rule au chargement).
+  test('gradientFromSource + gradientToDestination → color_rule gradient', () => {
+    const withGradient = FIXTURE.replace(
+      '<arrow id="60">',
+      '<arrow id="60" gradientFromSource="true" gradientToDestination="true">')
+    const d = parseEsankeyXml(withGradient)
+    Object.values(d.links).forEach(l => {
+      expect(l.local.color_rule).toBe('gradient')
+    })
+  })
+  test('un seul bout de dégradé (ou aucun) → pas de color_rule posé', () => {
+    const oneSide = FIXTURE.replace(
+      '<arrow id="60">',
+      '<arrow id="60" gradientFromSource="true">')
+    const d1 = parseEsankeyXml(oneSide)
+    expect(Object.values(d1.links)[0].local.color_rule).toBeUndefined()
+    // Défaut (aucun attribut de dégradé) : rien posé.
+    const d0 = parseEsankeyXml(FIXTURE)
+    expect(Object.values(d0.links)[0].local.color_rule).toBeUndefined()
+  })
+})
+
 describe('parseEsankeyXml — orientation des flux (arrowDirection)', () => {
   // arrowDirection e!Sankey : 2 = raccord horizontal (côté), 1/4 = vertical
   // (haut/bas). L'orientation d'un flux = [axe source][axe cible].

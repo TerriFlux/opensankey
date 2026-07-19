@@ -26,9 +26,13 @@
 // {PercentProcessSource}/{PercentProcessDestination}, cf. A2), formes de
 // process alternatives (shapeType 0/1/2, cf. A4), commentaires de flèche
 // (→ tooltips), zones libres texte/image/rectangle (→ zones de texte),
-// légende, thème esankey.
-// Hors périmètre (listé sur l'issue #264) : lignes libres, dégradé le long du
-// flux, balance labels, pourcentages « Arrow »/« Model » (bascule simple
+// légende, thème esankey, dégradé le long du flux (OS#1294 :
+// gradientFromSource+gradientToDestination → shape_color_rule='gradient',
+// couleur du nœud source → couleur du nœud cible). Les jeux de couleurs
+// (<colorSets>) sont des <brushColor> à id, résolus par la palette partagée
+// (cf. buildBrushColorPalette).
+// Hors périmètre (listé sur l'issue #264) : lignes libres, balance labels,
+// pourcentages « Arrow »/« Model » (bascule simple
 // showPercentage, sans équivalent chez nous — seul le format personnalisé à
 // mots-clés {PercentProcessSource}/{PercentProcessDestination} est mappé),
 // export.
@@ -161,6 +165,12 @@ const normalizeStringToValidId = (text: string): string =>
 // <brushColorRef refId="…"> pointant une <brushColor id="…" argb="…"> définie
 // ailleurs (démos « Bus Passengers » p.ex.). On indexe toutes les brushColor
 // nommées (avec id) une fois, pour résoudre ces références.
+// OS#1294 — les jeux de couleurs (<colorSets>/<colorSet>/<colors>/<brushColor
+// id argb>) sont eux aussi de simples <brushColor> à id : ce balayage global les
+// capture, donc un <brushColorRef> pointant une couleur de palette est résolu
+// sans traitement dédié. Le <colorSetRef> porté par un <unitType> n'est qu'un
+// choix de palette par défaut pour la saisie (aucune couleur d'élément à
+// résoudre) : il n'est pas exploité à l'import.
 type EsBrushPalette = { [id: string]: string }
 const buildBrushColorPalette = (root: Element): EsBrushPalette => {
   const out: EsBrushPalette = {}
@@ -567,6 +577,15 @@ interface EsGraphicalArrow {
   arrowSize: number | null
   /** OS#1290 — trait pointillé (`sankeyLink/pen@dashStyle` ou `dashPattern`). */
   dashed: boolean
+  /**
+   * OS#1294 — dégradé le long du flux. Les booléens `gradientFromSource` /
+   * `gradientToDestination` sont portés par la flèche GRAPHIQUE (`<arrow>` du
+   * `net`, à côté de `drawBorder`). Vrais tous les deux, le flux est un dégradé
+   * de la couleur du nœud source à celle du nœud cible (démos « Distribution
+   * diagram », « Traffic Visualization », « Efficiency diagram »).
+   */
+  gradientFromSource: boolean
+  gradientToDestination: boolean
 }
 
 const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } => {
@@ -616,6 +635,9 @@ const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } 
       fromArrow,
       arrowSize: (arrowSize !== null && arrowSize > 0) ? arrowSize : null,
       dashed: isDashStylePenDashed(pen),
+      // OS#1294 — dégradé source→cible (lu sur la flèche graphique).
+      gradientFromSource: a.getAttribute('gradientFromSource') === 'true',
+      gradientToDestination: a.getAttribute('gradientToDestination') === 'true',
     }
   })
   return out
@@ -1021,6 +1043,21 @@ export const parseEsankeyXml = (
       // OS#1290 — trait pointillé (dashStyle/dashPattern du pen de la
       // sankeyLink) → bordure pointillée du flux.
       if (graphicalArrow?.dashed) link.local.shape_border_dashed = true
+      // OS#1294 — dégradé le long du flux. Quand la flèche e!Sankey a À LA FOIS
+      // `gradientFromSource` et `gradientToDestination`, le tracé va de la
+      // couleur du nœud source à celle du nœud cible : c'est exactement la règle
+      // 'gradient' d'OpenSankey (`shape_color_rule`, posée ici via la clé legacy
+      // `color_rule` du bloc local → LINK_LOCAL_KEY_MAP → shape_color_rule ;
+      // getShapeColorToUse construit alors un linearGradient source→cible à
+      // partir des couleurs des deux nœuds). La couleur d'entry reste posée sur
+      // `local.color` (elle sert au tag) mais le rendu du flux passe au dégradé.
+      // Un dégradé À UN SEUL bout (source→couleur propre du flux, ou l'inverse)
+      // n'a pas d'équivalent chez nous : on ne le mappe pas, le flux garde sa
+      // couleur plate. Idem pour une flèche multi-matériaux (flux parallèles =
+      // multi-links) : getShapeColorToUse ignore le dégradé sur ces flux.
+      if (graphicalArrow?.gradientFromSource && graphicalArrow?.gradientToDestination) {
+        link.local.color_rule = 'gradient'
+      }
       // AUCUN label de valeur posé sur les flux importés (décision user) : chez
       // e!Sankey l'étiquette de quantité appartient à la FLÈCHE (somme de ses
       // matériaux, position sur segment) — la reproduire par flux serait faux ;
