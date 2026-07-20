@@ -210,6 +210,11 @@ const BAKE_SHAPE_KEYS = new Set([
   'shape_margin_top', 'shape_margin_bottom', 'shape_margin_left', 'shape_margin_right',
   'shape_middle_recycling',
   'shape_line_x1', 'shape_line_y1', 'shape_line_x2', 'shape_line_y2',
+  // Décalage des nœuds en positionnement relatif / d'échange : arrangeTrade re-dérive au load
+  // `position = voisin + shape_position_dx/dy`. Sans les scaler, les nœuds d'échange (cartes MFA)
+  // se replacent sur `voisin_scalé + dx_NON_scalé` → décalage énorme. (Injectés aussi ci-dessous
+  // car le défaut 200 n'est pas sérialisé.)
+  'shape_position_dx', 'shape_position_dy',
   // Bornes d'épaisseur des flux, en px : elles clampent l'épaisseur ET le « band » qui dimensionne
   // la largeur/hauteur des nœuds (getSideBandExtent). Sans les scaler, un nœud dimensionné par les
   // flux resterait plafonné → sa taille ne suivrait pas.
@@ -246,7 +251,10 @@ function scaleRichTextPx(html: string, r: number): string {
 const INJECT_GEOM_KEYS = [
   'shape_min_width', 'shape_min_height',
   'shape_margin_top', 'shape_margin_bottom', 'shape_margin_left', 'shape_margin_right',
-  'shape_border_thickness', 'shape_border_radius', 'shape_arrow_size'
+  'shape_border_thickness', 'shape_border_radius', 'shape_arrow_size',
+  // Décalage relatif/échange (défaut 200 non sérialisé) : injecté résolu pour être scalé, sinon
+  // arrangeTrade re-dérive la position des nœuds d'échange depuis un dx non scalé.
+  'shape_position_dx', 'shape_position_dy'
 ]
 
 /**
