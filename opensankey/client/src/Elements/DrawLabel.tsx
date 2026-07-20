@@ -1488,6 +1488,10 @@ export abstract class DrawLabelBase {
         // Set APRÈS addElementToSelection (qui passe par drawAsSelected →
         // clear de selected_label_prefix).
         el.selected_label_prefix = this.prefix as 'name_label' | 'value_label' | 'icon'
+        // Masque les poignées de la FORME : sous-sélection d'un label → on ne
+        // montre QUE les poignées de la boîte du label. drawDragHandlers, désormais
+        // sensible à selected_label_prefix, les unDraw. (Absent sur les liens.)
+        ;(el as unknown as { drawDragHandlers?: () => void }).drawDragHandlers?.()
         this.refreshLabelResizeHandles()
       })
       .on('dblclick', (evt: MouseEvent) => {
@@ -2161,6 +2165,17 @@ export class NodeDrawNameLabel extends NodeDrawLabelBase {
       return this.node.name_value_label
     }
     return this.node.name_label_effective
+  }
+
+  // Valeur initiale de l'input d'édition inline : miroir de getLabelText, mais on
+  // édite le texte BRUT du titre (jetons {Tag} non interpolés — ex. « {Month} »)
+  // et non la valeur affichée au rendu (« January »).
+  protected override getInputInitialValue(): string {
+    if (this._label_values.has_fo) return ''
+    if (this.prefix === 'name_label' && this._label_values.is_value && this.node instanceof Class_NodeElement) {
+      return String(this.node.name_value_label)
+    }
+    return String(this.node.name_label_effective_editable ?? '')
   }
 
   protected shouldDrawLabel(): boolean {

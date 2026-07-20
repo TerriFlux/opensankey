@@ -219,15 +219,17 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     // _nodeDrawShape/_nodeDrawNameLabel/_nodeDrawIcon ne soient assignés.
     if (!this._nodeDrawShape) return
     this._nodeDrawShape.drawShape()
-    this.drawDragHandlers()
+    // On clear la sub-sélection du label AVANT drawDragHandlers : une sélection
+    // au niveau ÉLÉMENT (typiquement clic sur la forme) doit (ré)afficher les
+    // poignées de forme, que drawDragHandlers masque tant qu'un label est
+    // sous-sélectionné.
     // NB: on NE redessine PAS les labels ici. Sinon un simple clic
     // (re-sélection) détruit et recrée le <text> entre les deux clics d'un
     // double-clic → le dblclick natif ne déclenche pas l'éditeur du label.
-    // drawAsSelected reflète un changement de sélection au niveau ÉLÉMENT
-    // (typiquement clic sur la forme). On clear la sub-sélection du label
-    // dans tous les cas — l'utilisateur doit cliquer sur le <text> du label
-    // pour faire (ré)apparaître les poignées.
+    // L'utilisateur doit cliquer sur le <text> du label pour faire
+    // (ré)apparaître les poignées de boîte de label.
     this.selected_label_prefix = null
+    this.drawDragHandlers()
     // Poignées dans `g_handlers` (Class_Handler) — refresh appelle unDraw si
     // le label n'est plus sub-sélectionné.
     this._nodeDrawNameLabel?.refreshLabelResizeHandles()
@@ -632,6 +634,14 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     }
   }
 
+  // Texte BRUT à éditer : identique au libellé effectif pour un élément normal,
+  // mais surchargé par le titre (Class_ContainerElement) pour préserver les
+  // jetons {Tag} au lieu de leur valeur interpolée. Sert aux chemins d'édition
+  // (input inline, init rich text) : on édite « {Month} », pas « January ».
+  public get name_label_effective_editable(): string {
+    return this.name_label_effective
+  }
+
   // Sources 'tag' et 'ancestor' : surchargées par Class_NodeElement (qui porte
   // les tags et les dimensions). Par défaut (zone de texte / base) → nom de
   // l'élément, car un container n'a ni tags assignés ni dimensions.
@@ -1021,6 +1031,18 @@ export abstract class Class_NodeBase extends Class_BaseShape {
    * @memberof Class_ContainerElement
    */
   public drawDragHandlers() {
+    // Sous-sélection d'un label (clic sur son <text>) : on ne montre QUE les
+    // poignées de la boîte du label, pas celles de la forme. On masque donc tout
+    // jeu de poignées de forme tant qu'un label est sous-sélectionné.
+    if (this.selected_label_prefix != null) {
+      this._drag_handler.top.unDraw()
+      this._drag_handler.bottom.unDraw()
+      this._drag_handler.left.unDraw()
+      this._drag_handler.right.unDraw()
+      this._line_endpoint_handler?.a.unDraw()
+      this._line_endpoint_handler?.b.unDraw()
+      return
+    }
     // OS#1276b — ligne libre : deux poignées aux extrémités absolues (position + offset
     // local), en lieu et place des 4 poignées de boîte. Chaque poignée renormalise le
     // segment (cf. dragEndpointHandler). Le drag du CORPS de la ligne reste le drag
