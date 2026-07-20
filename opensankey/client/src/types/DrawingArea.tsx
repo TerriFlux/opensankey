@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 import * as d3 from '../d3Modules'
-import { Type_JSON, Type_Structure, Type_DataSource, Type_IntervalDisplay, Type_DisaggregationGap, default_main_sankey_id } from '../types/Utils'
+import { Type_JSON, Type_Structure, Type_DataSource, Type_IntervalDisplay, Type_DisaggregationGap, default_main_sankey_id, randomId } from '../types/Utils'
 import {
   default_background_color,
   default_DA_marging,
@@ -108,6 +108,11 @@ export class Class_DrawingArea {
   public d3_selection_elements_sankey_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_handlers: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_zone_select: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+
+  // #291 — Identifiant (unique par instance de DA) du clipPath qui découpe le contenu au cadre.
+  // Généré à chaque _initDraw (le #draw_zoom est recréé) ; référencé par le groupe #g_clip qui
+  // enveloppe g_drawing, et servi à Class_ViewportChrome pour retrouver le <rect> à mettre à jour.
+  public viewport_clip_id: string = ''
 
   // #242 — Chrome de viewport (scrollbars + cadre) : posé sur la racine SVG (hors du transform de
   // zoom de g_drawing), il porte ses propres sélections d3 et ne fait que lire la géométrie de la
@@ -902,7 +907,19 @@ export class Class_DrawingArea {
     // Init drawing area
     const x = this._fit_margin / 2
     const y = this._fit_margin / 2 + this.getNavBarHeight() // init drawing area zone with a margin for taking into account the navbar
-    this.d3_selection = this.d3_selection_zoom_area
+    // #291 — Groupe d'enveloppe interposé entre la racine SVG et g_drawing. Il ne porte AUCUN
+    // transform (donc reste en coordonnées écran, comme le cadre #viewport_border), et porte le
+    // clip-path qui découpe le contenu au rectangle du cadre. g_drawing conserve, lui, le transform
+    // de zoom/pan : un clip posé directement sur lui serait zoomé avec le contenu et ne clipperait
+    // jamais au cadre écran. Le <clipPath> associé (et son <rect>, mis à jour aux mêmes moments que
+    // le cadre) est créé par Class_ViewportChrome. À l'export, le clip est neutralisé
+    // (_pre_process_export_svg) pour ne pas rogner le diagramme complet.
+    this.viewport_clip_id = 'viewport_clip_' + randomId()
+    const g_clip = this.d3_selection_zoom_area
+      .append('g')
+      .attr('id', 'g_clip')
+      .attr('clip-path', 'url(#' + this.viewport_clip_id + ')')
+    this.d3_selection = g_clip
       .append('g')
       .attr('id', 'g_drawing')
       .attr('transform', 'translate(' + x + ',' + y + ')')
@@ -2480,6 +2497,9 @@ export class Class_DrawingArea {
    */
   private _updateViewportBorder() {
     this._viewport_chrome.updateBorder(this)
+    // #291 — Le clip du contenu partage la géométrie du cadre : on le rafraîchit ici, donc à
+    // l'init, à chaque drawBackground() (draw / resize) et — en mode papier — à chaque zoom/pan.
+    this._viewport_chrome.updateClip(this)
   }
 
   /**
