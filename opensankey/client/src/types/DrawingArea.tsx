@@ -1442,17 +1442,32 @@ export class Class_DrawingArea {
     // initial, qui restera ensuite figé (force_when_locked).
     if (this._size_locked && !force_when_locked) return
 
-    // #292 — Le calcul de cadrage doit viser la zone de dessin PLEINE (sans gouttière de
-    // scrollbar) : on annule la réserve le temps du fit et on empêche le _updateScrollbars interne
-    // de la reposer (`suppress`), sinon le fit lirait un window_fitting déjà rétréci et cadrerait
-    // ~14 px trop petit (marge asymétrique sur tout diagramme chargé). La réserve est ré-évaluée à
-    // la fin, sur le CADRAGE FINAL. try/finally garantit le rétablissement du flag même en sortie
-    // anticipée (mode papier) ou sur exception. NB : le corps n'est volontairement pas ré-indenté
-    // (diff minimal ; le try/finally n'ajoute qu'un niveau logique).
+    // #292 — Le calcul de cadrage doit viser la zone de dessin PLEINE (sans gouttière de scrollbar) :
+    // on annule la réserve le temps du fit et on empêche le _updateScrollbars interne de la reposer
+    // (`suppress`), sinon le fit lirait un window_fitting déjà rétréci et cadrerait ~14 px trop petit
+    // (marge asymétrique sur tout diagramme chargé). La réserve est ré-évaluée à la fin, sur le
+    // CADRAGE FINAL. Le corps vit dans _areaAutoFitCore pour que le try/finally (qui garantit le
+    // rétablissement du flag même en sortie anticipée — mode papier — ou sur exception) n'oblige pas
+    // à réindenter tout le corps.
     this._scrollbar_reserve_right = 0
     this._scrollbar_reserve_bottom = 0
     this._suppress_scrollbar_reserve = true
     try {
+      this._areaAutoFitCore(horiz, force_when_locked, center_on_content)
+    } finally {
+      // Contenu qui tient (cas normal d'un fit) -> aucune barre ni gouttière ; contenu qui déborde
+      // encore (fit contraint) -> la ou les barres apparaissent avec leur gouttière.
+      this._suppress_scrollbar_reserve = false
+      this._updateScrollbars()
+    }
+  }
+
+  /**
+   * #292 — Corps du cadrage automatique, extrait pour que areaAutoFit l'enveloppe dans un try/finally
+   * (garde de réserve de gouttière : le fit vise la zone PLEINE) sans réindenter tout le corps.
+   * Comportement strictement inchangé — ne pas appeler directement (passer par areaAutoFit).
+   */
+  private _areaAutoFitCore(horiz?: boolean, force_when_locked?: boolean, center_on_content?: boolean) {
 
     const prev_k_fit = this._k_fit
 
@@ -1781,13 +1796,6 @@ export class Class_DrawingArea {
           this.drawGrid()
         }
       }
-    }
-    } finally {
-      // #292 — rétablit le flag et ré-évalue la réserve de gouttière sur le CADRAGE FINAL :
-      // contenu qui tient (cas normal d'un fit) -> aucune barre ni gouttière ; contenu qui
-      // déborde encore (fit contraint) -> la ou les barres apparaissent avec leur gouttière.
-      this._suppress_scrollbar_reserve = false
-      this._updateScrollbars()
     }
   }
 
