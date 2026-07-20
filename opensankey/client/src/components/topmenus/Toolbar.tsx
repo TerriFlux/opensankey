@@ -1072,6 +1072,10 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   // OS pur / sans licence → pas de crayon). Le prop du groupe se déduit de son
   // appartenance (element = node+flux, d'où pas de mapping mode→prop fiable).
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null)
+  // #1283b — groupes en bannière « Aucun » : masqués du tiroir par défaut (sinon
+  // il se remplit de cartes inertes). Un bouton unique les révèle à la demande,
+  // en carte ÉDITION SEULE, pour rester éditables une fois cachés.
+  const [showHiddenGroups, setShowHiddenGroups] = useState(false)
   const renderGroupEditor = app_data.menu_configuration.render_tag_group_editor
   const groupProp = (group_id: string): string | null => {
     if (group_id in sankey.node_taggs_dict) return 'node_taggs'
@@ -1091,24 +1095,28 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   const has_local_hierarchy = mode === 'level' &&
     sankey.nodes_list.some(n => n.dimensions_as_parent.some(d => d.forced_by_local_action))
 
-  // Récupération des tags selon le mode — passe par getTagGroupsAsList pour respecter _taggs_order
-  const getTagsForMode = (): Class_TagGroup[] => {
+  // Récupération des tags selon le mode — passe par getTagGroupsAsList pour respecter _taggs_order.
+  // #1283b — `include_hidden` : inclut ou non les groupes en bannière « Aucun ».
+  // Par défaut ils sont exclus (tiroir épuré) ; le bouton bascule les révèle en
+  // carte ÉDITION SEULE (cf. `edit_only`), seul accès à leur éditeur une fois cachés.
+  const getTagsForMode = (include_hidden: boolean): Class_TagGroup[] => {
+    const keep = (tagg: { banner: string }) => include_hidden || tagg.banner !== 'none'
     switch (mode) {
     case 'element':
       return [...sankey.getTagGroupsAsList('node_taggs'), ...sankey.getTagGroupsAsList('flux_taggs')]
-        .filter(tagg => tagg.banner !== 'none' && !tagg.id.includes('unitary')) as unknown as Class_TagGroup[]
+        .filter(tagg => keep(tagg) && !tagg.id.includes('unitary')) as unknown as Class_TagGroup[]
     case 'level':
       return sankey.getTagGroupsAsList('level_taggs')
-        .filter(tagg => tagg.has_tags && tagg.banner !== 'none') as unknown as Class_TagGroup[]
+        .filter(tagg => tagg.has_tags && keep(tagg)) as unknown as Class_TagGroup[]
     case 'data':
       // #1283 — inclut aussi sequence/topbar : consommés par la timeline/topbar,
       // mais on les liste en carte ÉDITION SEULE (nom + crayon) pour pouvoir
-      // rechanger leur mode (sinon aucun accès à leur éditeur). 'none' exclu.
+      // rechanger leur mode (sinon aucun accès à leur éditeur).
       return sankey.getTagGroupsAsList('data_taggs')
-        .filter(tagg => tagg.banner !== 'none') as unknown as Class_TagGroup[]
+        .filter(keep) as unknown as Class_TagGroup[]
     case 'unitary':
       return sankey.getTagGroupsAsList('view_taggs')
-        .filter(tagg => tagg.banner !== 'none') as unknown as Class_TagGroup[]
+        .filter(keep) as unknown as Class_TagGroup[]
     default:
       return [] as unknown as Class_TagGroup[]
     }
@@ -1126,7 +1134,11 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
     }
   }
 
-  const taggs_in_banner = getTagsForMode()
+  // #1283b — liste affichée = groupes visibles, + les cachés si l'utilisateur les
+  // a révélés. `nb_hidden` pilote la présence du bouton bascule.
+  const visible_taggs = getTagsForMode(false)
+  const nb_hidden = getTagsForMode(true).length - visible_taggs.length
+  const taggs_in_banner = showHiddenGroups ? getTagsForMode(true) : visible_taggs
 
   // Fonction générique pour appliquer une palette
   const setApplyTagGroupPalette = (tagg: Class_TagGroup, checked: boolean) => {
@@ -1622,7 +1634,9 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
     // #1283 — séquence/topbar : filtrés via la timeline/topbar, pas ici. On ne
     // montre que nom + crayon (édition du groupe, ex. rechanger son mode), sans
     // le sélecteur de filtrage qui ferait doublon.
-    const edit_only = tagg.banner === 'sequence' || tagg.banner === 'topbar'
+    // #1283b — bannière « Aucun » : groupe caché du bandeau, présenté lui aussi
+    // en carte édition seule pour rester éditable (et pouvoir le ré-afficher).
+    const edit_only = tagg.banner === 'sequence' || tagg.banner === 'topbar' || tagg.banner === 'none'
 
     return (
       <Box key={tagg.id} layerStyle={mode === 'data' ? 'menuconfigpanel_grid' : 'menuconfig_grid'}>
@@ -1800,13 +1814,38 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   // La logique sous-jacente (app_data.reveal_data_links) est conservée.
   const RevealAllDataControl = null
 
+  // #1283b — bouton UNIQUE de bascule des groupes cachés (bannière « Aucun »).
+  // Présent seulement s'il existe des groupes cachés ; discret, pleine largeur.
+  const HiddenGroupsToggle = nb_hidden > 0 ? (
+    <Box layerStyle='filter_grid_row'>
+      <OSTooltip label={showHiddenGroups ? t('filter_panel.hide_hidden') : t('filter_panel.show_hidden', { count: nb_hidden })}>
+        <Button
+          size='xs'
+          variant='menuconfigpanel_option_button'
+          width='100%'
+          leftIcon={showHiddenGroups
+            ? app_data.icon_library.icon_element_visible
+            : app_data.icon_library.icon_element_invisible}
+          onClick={() => setShowHiddenGroups(v => !v)}
+        >
+          {showHiddenGroups
+            ? t('filter_panel.hide_hidden')
+            : t('filter_panel.show_hidden', { count: nb_hidden })}
+        </Button>
+      </OSTooltip>
+    </Box>
+  ) : null
+
   // Rendu final
-  return SelectorOfTagsByGroup.length > 0 ? (
+  // #1283b — la section s'affiche aussi quand il n'y a QUE des groupes cachés
+  // (nb_hidden > 0), sinon le bouton bascule disparaîtrait avec elle (re-dead-end).
+  return (SelectorOfTagsByGroup.length > 0 || nb_hidden > 0) ? (
     <FilterWrapperBox app_data={app_data} title={t(`Banner.${title_key}`)} defaultOpen={app_data.is_static}>
       {ResetHierarchyButton}
       {config.show_title_column ? title_filter_column(app_data) : null}
       {TypeSelectionHeader}
       {SelectorOfTagsByGroup}
+      {HiddenGroupsToggle}
       {ViewFilterKindControl}
       {GapModeControl}
       {RevealAllDataControl}
@@ -1844,9 +1883,11 @@ export const UnitaryTagGroupFilter = ({ app_data }: { app_data: Class_Applicatio
   // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
   useModelBinding(app_data.menu_configuration.ref_to_unitarytag_filter_updater)
 
-  // MODIFIÉ : vérifier dans view_taggs_dict au lieu de node_taggs_dict
+  // MODIFIÉ : vérifier dans view_taggs_dict au lieu de node_taggs_dict.
+  // #1283b — on ne filtre PLUS les bannières « Aucun » ici : sinon un jeu de vues
+  // entièrement caché n'afficherait pas la section, donc pas le bouton bascule qui
+  // permet de les rééditer. Le filtrage réel se fait dans UnifiedTagGroupFilter.
   const view_taggs = Object.values(app_data.drawing_area.sankey.view_taggs_dict)
-    .filter(tagg => tagg.banner !== 'none')
 
   if (view_taggs.length === 0) {
     return <></>
