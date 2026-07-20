@@ -216,7 +216,7 @@ export const LabelDisplayModeSelector = ({
     // pas le nœud.
     if (!labelValues.fo_content) {
       (elements as Class_NodeBase[]).forEach(node => {
-        node.name_label_fo_content = `<p>${node.name_label_effective}</p>`
+        node.name_label_fo_content = `<p>${node.name_label_effective_editable}</p>`
       })
     }
     labelValues.has_fo = true

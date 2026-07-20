@@ -71,6 +71,13 @@ export class Class_ContainerElement extends Class_NodeBase {
     return out
   }
 
+  // À l'édition (input inline, init rich text) on veut le texte BRUT avec les
+  // jetons {Tag} tels que saisis, pas leur valeur interpolée : on court-circuite
+  // l'interpolation de name_label_effective ci-dessus et on renvoie la base.
+  public override get name_label_effective_editable(): string {
+    return super.name_label_effective
+  }
+
   // GETTERS / SETTERS ===========================================================
   public get is_title(): boolean { return this._is_title }
   public set is_title(_: boolean) { this._is_title = _ }
