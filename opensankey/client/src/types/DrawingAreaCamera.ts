@@ -193,53 +193,36 @@ function prefersReducedMotion(): boolean {
 }
 
 // « Figer le zoom dans la géométrie » (baking) : mettre le diagramme à l'échelle du zoom courant r
-// puis remettre la caméra à k=1, pour un rendu pixel-identique mais un indicateur à 100 % et des
-// tailles px « réelles » persistées. Réalisé par un ALLER-RETOUR JSON (contrat de persistance,
-// chemin éprouvé par l'undo) : c'est le seul qui, en fin de course, laisse fromJSON poser son fit
-// PUIS setCamera(k=1) en dernier — un scaling « en place » se fait écraser par les areaAutoFit
-// internes (setter `scale`, draw) et la caméra reste bloquée. Tout ce qui est dessiné sous
-// g_drawing suit le zoom (monde), donc toutes les longueurs px sont ×r — SAUF `user_scale`
-// (épaisseur ∝ 1/user_scale → ÷r) et le groupe LABEL quand la police est verrouillée (déjà
-// compensée 1/k, constante à l'écran).
+// puis remettre la caméra à k=1 — rendu pixel-identique, indicateur à 100 %, tailles px « réelles ».
+// Réalisé EN PLACE sur le modèle vivant (pas de round-trip JSON, qui rate les défauts usine et
+// relance arrangeTrade). PRÉ-REQUIS : on passe d'abord en MODE ABSOLU (setAbsoluteMode) — les x/y
+// stockés deviennent la vérité, plus de positionnement relatif/paramétrique ni d'auto-placement des
+// nœuds d'échange qui re-calculeraient (et écraseraient) les positions. On peut alors scaler les
+// x/y directement. Tout ce qui est sous g_drawing suit le zoom (monde) → longueurs px ×r, SAUF
+// `user_scale` (épaisseur ∝ 1/user_scale → ÷r) et le groupe LABEL en police verrouillée (déjà 1/k).
 
-// Longueurs de FORME (px), à l'échelle ×r partout où la clé apparaît (styles, local, points…).
-const BAKE_SHAPE_KEYS = new Set([
-  'x', 'y',
+// Attributs de FORME (px) des nœuds ET conteneurs/ZDT. Position traitée à part (_position).
+const SHAPE_ATTR_KEYS = [
   'shape_min_width', 'shape_min_height',
-  'shape_arrow_size', 'shape_border_radius', 'shape_border_thickness',
   'shape_margin_top', 'shape_margin_bottom', 'shape_margin_left', 'shape_margin_right',
-  'shape_middle_recycling',
-  'shape_line_x1', 'shape_line_y1', 'shape_line_x2', 'shape_line_y2',
-  // Décalage des nœuds en positionnement relatif / d'échange : arrangeTrade re-dérive au load
-  // `position = voisin + shape_position_dx/dy`. Sans les scaler, les nœuds d'échange (cartes MFA)
-  // se replacent sur `voisin_scalé + dx_NON_scalé` → décalage énorme. (Injectés aussi ci-dessous
-  // car le défaut 200 n'est pas sérialisé.)
+  'shape_border_thickness', 'shape_border_radius', 'shape_arrow_size',
   'shape_position_dx', 'shape_position_dy',
-  // Bornes d'épaisseur des flux, en px : elles clampent l'épaisseur ET le « band » qui dimensionne
-  // la largeur/hauteur des nœuds (getSideBandExtent). Sans les scaler, un nœud dimensionné par les
-  // flux resterait plafonné → sa taille ne suivrait pas.
-  'minimum_flux', 'maximum_flux'
-])
-// Géométrie des LABELS, ×r UNIQUEMENT si la police n'est pas verrouillée.
-const BAKE_LABEL_KEYS = new Set([
+  'shape_line_x1', 'shape_line_y1', 'shape_line_x2', 'shape_line_y2'
+]
+// Attributs numériques de LABEL (px), nœuds/conteneurs/flux — ×r si police non verrouillée.
+const LABEL_NUM_KEYS = [
   'name_label_font_size', 'value_label_font_size',
   'name_label_box_width', 'value_label_box_width',
   'value_label_position_offset', 'value_label_horiz_shift', 'value_label_vert_shift'
-])
-// Porteur d'échelle valeur→px des flux : épaisseur ∝ 1/user_scale → divisé par r.
-const BAKE_INVERSE_KEYS = new Set(['user_scale'])
-// Champs texte RICH (HTML Quill) : les tailles y sont inline (`font-size:Npx`), pas dans un
-// attribut numérique. Le HTML est stocké dans *_fo_content (pas *_text, qui est le texte brut).
-// À l'échelle ×r comme les autres labels, donc UNIQUEMENT si police non verrouillée (verrouillée =
-// le foreignObject entier est contre-scalé 1/k, déjà constant à l'écran).
-const BAKE_RICH_TEXT_KEYS = new Set(['name_label_fo_content', 'value_label_fo_content'])
+]
+// HTML rich text (tailles inline) — ×r si police non verrouillée (sinon FO contre-scalé 1/k).
+const LABEL_RICH_KEYS = ['name_label_fo_content', 'value_label_fo_content']
 
 /**
- * Multiplie par r les tailles inline d'un HTML rich text (font-size / line-height). Unités
- * ABSOLUES dans le repère du FO : px, pt, ET em/rem — en rendu déverrouillé le div n'hérite pas de
- * name_label_font_size (base CSS fixe), donc un em ne se met pas à l'échelle tout seul et doit être
- * scalé comme un px. Une line-height SANS unité (multiplicateur) est laissée telle quelle (elle
- * suit déjà la font).
+ * Multiplie par r les tailles inline d'un HTML rich text (font-size / line-height). Unités ABSOLUES
+ * dans le repère du FO : px, pt, ET em/rem — le div de rendu n'hérite pas de name_label_font_size
+ * (base CSS fixe), donc un em ne se met pas à l'échelle seul. line-height sans unité laissée telle
+ * quelle (elle suit déjà la font).
  */
 function scaleRichTextPx(html: string, r: number): string {
   return html.replace(/(font-size|line-height)(\s*:\s*)([\d.]+)(px|pt|em|rem)/gi, (m, prop, sep, num, unit) => {
@@ -247,82 +230,60 @@ function scaleRichTextPx(html: string, r: number): string {
     return Number.isFinite(v) ? `${prop}${sep}${v * r}${unit}` : m
   })
 }
-// Attributs de FORME (px) INJECTÉS depuis le modèle avant le scaling (cf. injectResolvedGeometry).
-const INJECT_GEOM_KEYS = [
-  'shape_min_width', 'shape_min_height',
-  'shape_margin_top', 'shape_margin_bottom', 'shape_margin_left', 'shape_margin_right',
-  'shape_border_thickness', 'shape_border_radius', 'shape_arrow_size',
-  // Décalage relatif/échange (défaut 200 non sérialisé) : injecté résolu pour être scalé, sinon
-  // arrangeTrade re-dérive la position des nœuds d'échange depuis un dx non scalé.
-  'shape_position_dx', 'shape_position_dy'
-]
 
-/**
- * Injecte dans le JSON la géométrie de FORME RÉSOLUE (défaut compris) de chaque nœud/conteneur, là
- * où elle est absente. INDISPENSABLE : la sérialisation omet les attributs égaux au défaut de
- * style/usine (shouldSaveAttribute) — un nœud legacy sans `shape_min_width` n'en porte AUCUN dans
- * le JSON, donc le scaler le raterait et la largeur « triplerait » à la remise k=1. On écrit la
- * valeur lue sur le modèle vivant (nodes_dict/containers_dict) dans `local`, où le scaler la ×r.
- */
-function injectResolvedGeometry(da: Class_DrawingArea, json: unknown): void {
-  const nodes = da.sankey.nodes_dict as Record<string, unknown>
-  const containers = da.sankey.containers_dict as Record<string, unknown>
-  const injectInto = (map: Record<string, unknown>, live: Record<string, unknown>) => {
-    for (const [id, entry] of Object.entries(map)) {
-      const el = live[id] as Record<string, unknown> | undefined
-      if (!el || !entry || typeof entry !== 'object') continue
-      const e = entry as Record<string, unknown>
-      const local = (e.local && typeof e.local === 'object') ? e.local as Record<string, unknown> : (e.local = {} as Record<string, unknown>)
-      INJECT_GEOM_KEYS.forEach(k => {
-        if (local[k] === undefined) {
-          const v = el[k]
-          if (typeof v === 'number' && Number.isFinite(v)) local[k] = v
-        }
-      })
-    }
-  }
-  const visit = (obj: unknown) => {
-    if (Array.isArray(obj)) { obj.forEach(visit); return }
-    if (!obj || typeof obj !== 'object') return
-    const rec = obj as Record<string, unknown>
-    if (rec.nodes && typeof rec.nodes === 'object' && !Array.isArray(rec.nodes)) injectInto(rec.nodes as Record<string, unknown>, nodes)
-    // Conteneurs/ZDT : sérialisés sous 'labels' (SankeyPersistence), pas 'containers'.
-    if (rec.labels && typeof rec.labels === 'object' && !Array.isArray(rec.labels)) injectInto(rec.labels as Record<string, unknown>, containers)
-    Object.values(rec).forEach(visit)
-  }
-  visit(json)
+/** Lit l'attribut numérique RÉSOLU `key` (défaut compris) et écrit sa valeur ×r (override). */
+function scaleNumAttr(el: object, key: string, r: number): void {
+  const rec = el as Record<string, unknown>
+  const v = rec[key]
+  if (typeof v === 'number' && Number.isFinite(v)) rec[key] = v * r
+}
+/** Idem pour un attribut HTML rich text (tailles inline ×r). */
+function scaleRichAttr(el: object, key: string, r: number): void {
+  const rec = el as Record<string, unknown>
+  const v = rec[key]
+  if (typeof v === 'string' && v) rec[key] = scaleRichTextPx(v, r)
 }
 
 /**
- * Multiplie récursivement, en place, les champs GÉOMÉTRIQUES d'un JSON de diagramme par `r` (et
- * divise `user_scale`). Données, ratios de courbe Bézier et layouts laissés intacts.
+ * Met à l'échelle EN PLACE la géométrie du modèle vivant par `r`. À appeler APRÈS setAbsoluteMode
+ * (positions figées en absolu). Les extrémités et points de contrôle des flux ANCRÉS dérivent des
+ * positions de nœuds (déjà ×r) et de tangentes en RATIO → recalculés à la bonne échelle au redraw.
  */
-export function scaleGeometryJSON(obj: unknown, r: number, include_labels: boolean): void {
-  if (Array.isArray(obj)) {
-    obj.forEach(v => scaleGeometryJSON(v, r, include_labels))
-    return
-  }
-  if (!obj || typeof obj !== 'object') return
-  const rec = obj as Record<string, unknown>
-  for (const k of Object.keys(rec)) {
-    const v = rec[k]
-    if (typeof v === 'number' && Number.isFinite(v)) {
-      if (BAKE_SHAPE_KEYS.has(k)) rec[k] = v * r
-      else if (include_labels && BAKE_LABEL_KEYS.has(k)) rec[k] = v * r
-      else if (BAKE_INVERSE_KEYS.has(k)) rec[k] = v / r
-    } else if (include_labels && typeof v === 'string' && BAKE_RICH_TEXT_KEYS.has(k)) {
-      rec[k] = scaleRichTextPx(v, r)
-    } else {
-      scaleGeometryJSON(v, r, include_labels)
+function scaleModelGeometry(da: Class_DrawingArea, r: number, include_labels: boolean): void {
+  const sankey = da.sankey
+  const shape_holders: Array<{ position_x: number, position_y: number }> = [
+    ...sankey.nodes_list,
+    ...sankey.containers_list
+  ]
+  shape_holders.forEach(el => {
+    el.position_x = el.position_x * r
+    el.position_y = el.position_y * r
+    SHAPE_ATTR_KEYS.forEach(k => scaleNumAttr(el, k, r))
+    if (include_labels) {
+      LABEL_NUM_KEYS.forEach(k => scaleNumAttr(el, k, r))
+      LABEL_RICH_KEYS.forEach(k => scaleRichAttr(el, k, r))
     }
-  }
+  })
+  sankey.links_list.forEach(l => {
+    scaleNumAttr(l, 'shape_border_thickness', r)
+    scaleNumAttr(l, 'shape_middle_recycling', r)
+    if (include_labels) {
+      LABEL_NUM_KEYS.forEach(k => scaleNumAttr(l, k, r))
+      LABEL_RICH_KEYS.forEach(k => scaleRichAttr(l, k, r))
+    }
+  })
+  // Échelle valeur→px des flux : épaisseur ∝ 1/scale → scale ÷ r pour épaissir ×r.
+  if (da.scale > 0) da.scale = da.scale / r
+  // Bornes d'épaisseur en px (clampent aussi le « band » qui dimensionne les nœuds) : ×r.
+  if (da.minimum_flux !== undefined) da.minimum_flux = da.minimum_flux * r
+  if (da.maximum_flux !== undefined) da.maximum_flux = da.maximum_flux * r
 }
 
 /**
- * « Figer le zoom à 100 % à diagramme constant » : met toute la géométrie à l'échelle du zoom
- * courant r via un aller-retour JSON, puis remet la caméra à k=1 en conservant la translation →
- * rendu pixel-identique, indicateur à 100 %, tailles px stockées « réelles ». Enregistré comme UNE
- * entrée d'historique, sauf `record_history=false` (geste englobé, ex. import Excel).
+ * « Figer le zoom à 100 % à diagramme constant » : bascule en MODE ABSOLU (positions figées, plus
+ * de recompute paramétrique / auto-placement d'échange), scaling EN PLACE de toute la géométrie par
+ * le zoom courant r, puis caméra à k=1 (translation conservée). Historique par snapshots
+ * avant/après, sauf `record_history=false` (geste englobé, ex. import Excel).
  */
 export function bakeZoomIntoGeometry(da: Class_DrawingArea, opts?: { record_history?: boolean }): void {
   const node = da.d3_selection_zoom_area?.node()
@@ -334,24 +295,28 @@ export function bakeZoomIntoGeometry(da: Class_DrawingArea, opts?: { record_hist
   const app = da.application_data
   const tx = t0.x
   const ty = t0.y
-  // Police verrouillée (défaut) : labels compensés 1/k, déjà constants à l'écran → ne pas scaler.
   const include_labels = !da.font_size_locked
-  const before = app.toJSON()
-  const after = app.toJSON()
-  // Solidifier les tailles par défaut AVANT le scaling (sinon la largeur des nœuds legacy est ratée).
-  injectResolvedGeometry(da, after)
-  scaleGeometryJSON(after, r, include_labels)
-  app.fromJSON(after)
+  const before = record_history ? app.toJSON() : undefined
+  // 0. MODE ABSOLU : fige les positions courantes en x/y absolus (settle des centres) et coupe le
+  //    positionnement relatif/paramétrique + l'auto-placement des nœuds d'échange, sinon un redraw
+  //    re-calculerait les positions et écraserait le scaling.
+  da.setAbsoluteMode()
+  // 1. Scaling EN PLACE (pas de fromJSON), redraws groupés SANS draw final (ordre caméra maîtrisé).
+  da.withBypassRedraws(() => scaleModelGeometry(da, r, include_labels), false)
+  // 2. Caméra → k=1, translation conservée : screen = 1·(monde·r) + t = r·monde + t = rendu d'origine.
+  //    On la pose AVANT le draw : en mode size_locked, draw() capture le transform live courant
+  //    comme nouvelle référence verrouillée (DrawingArea.draw, ~l.787) → k=1 devient le cadrage figé.
+  const target = d3.zoomIdentity.translate(tx, ty)
+  da.setCamera(target)
+  // 3. Rendu de la géométrie scalée. En déverrouillé, areaAutoFit recadre → on ré-affirme k=1 après.
+  da.draw()
+  if (!da.size_locked) da.setCamera(target)
   const restore = () => app.menu_configuration?.updateAllMenuComponents()
-  if (record_history) {
+  if (record_history && before) {
+    const after = app.toJSON()
     app.history.saveUndo(() => { app.fromJSON(before); restore() })
     app.history.saveRedo(() => { app.fromJSON(after); restore() })
   }
-  // fromJSON a remplacé la drawing_area (reset) : relire l'instance fraîche pour la caméra, et poser
-  // k=1 EN DERNIER (le fit de fromJSON a déjà eu lieu). Monde ×r + k=1 (même translation) ⇒
-  // screen = 1·(monde·r) + t = r·monde + t = rendu d'origine.
-  const da2 = app.drawing_area
-  da2.setCamera(d3.zoomIdentity.translate(tx, ty))
   restore()
 }
 
