@@ -24,6 +24,7 @@ import * as d3 from '../d3Modules'
 import type { Class_DrawingArea } from './DrawingArea'
 import * as CameraMath from './CameraMath'
 import { Class_NodeElement } from '../Elements/Node'
+import { Class_NodeBase } from '../Elements/NodeBase'
 
 // Durée de l'interpolation d3 (dézoom → pan → rezoom) des recadrages animés.
 const ZOOM_ANIMATION_DURATION_MS = 450
@@ -249,15 +250,22 @@ function scaleRichAttr(el: object, key: string, r: number): void {
  * (positions figées en absolu). Les extrémités et points de contrôle des flux ANCRÉS dérivent des
  * positions de nœuds (déjà ×r) et de tangentes en RATIO → recalculés à la bonne échelle au redraw.
  */
-function scaleModelGeometry(da: Class_DrawingArea, r: number, include_labels: boolean): void {
+export function scaleModelGeometry(da: Class_DrawingArea, r: number, include_labels: boolean): void {
   const sankey = da.sankey
-  const shape_holders: Array<{ position_x: number, position_y: number }> = [
+  const shape_holders: Class_NodeBase[] = [
     ...sankey.nodes_list,
     ...sankey.containers_list
   ]
   shape_holders.forEach(el => {
+    // Ancrage par centre (#1230, node_pos_is_center) : au draw, position_x est RECALCULÉE depuis le
+    // centre (`position_x = center_x − w/2`), donc scaler position_x seul serait écrasé. Pour les
+    // éléments ancrés par centre (center_x défini — les nœuds), on lit le centre AVANT de scaler la
+    // position, puis on scale le centre stocké. Les conteneurs (pas de centre stocké) suivent
+    // simplement position_x. Lire le centre AVANT est crucial : après, il vaudrait position·r+w/2.
+    const anchored_center = el.center_x !== undefined ? el.centerForPersistence() : null
     el.position_x = el.position_x * r
     el.position_y = el.position_y * r
+    if (anchored_center) el.setStoredCenter(anchored_center.x * r, anchored_center.y * r)
     SHAPE_ATTR_KEYS.forEach(k => scaleNumAttr(el, k, r))
     if (include_labels) {
       LABEL_NUM_KEYS.forEach(k => scaleNumAttr(el, k, r))
