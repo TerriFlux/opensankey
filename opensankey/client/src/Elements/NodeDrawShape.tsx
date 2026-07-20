@@ -104,6 +104,9 @@ export class NodeDrawShape {
     // repasser de « couronne/histogramme » à forme normale : sa suppression ne
     // passe pas par .node_shape).
     this._node.d3_selection_g_shape?.selectAll('.node_analysis_chart').remove()
+    // Liseré de sélection (cf. bloc en fin de méthode) : nettoyé à chaque redraw
+    // — pas balayé par le remove de .node_shape (classe distincte).
+    this._node.d3_selection_g_shape?.selectAll('.node_selection_outline').remove()
 
     // Do the rest only if shape is visible
     // Compute shape attributes
@@ -291,6 +294,32 @@ export class NodeDrawShape {
         .on('mouseleave.tied_frame', (event: Event) => {
           (event.currentTarget as SVGElement).setAttribute('stroke-width', String(base_thickness))
         })
+    }
+
+    // Liseré de sélection discret : une forme sans bordure visible (nœud sans
+    // contour, zone de texte) n'a aucun repère d'emprise une fois sélectionnée
+    // — seules les poignées de coin apparaissent. On clone alors la géométrie de
+    // la forme en un contour gris pointillé, non capteur d'events, purement
+    // visuel. Sauté pour la « ligne » (elle EST son propre trait) et dès qu'une
+    // vraie bordure est affichée (elle matérialise déjà l'emprise).
+    const border_shown = this._node.shape_border_visible && base_thickness > 0
+    if (this._node.is_selected && !border_shown && shape_type !== 'line') {
+      const g_shape = this._node.d3_selection_g_shape
+      const shape_node = g_shape?.select<SVGGraphicsElement>('.node_shape').node() ?? null
+      if (g_shape && shape_node) {
+        const outline = shape_node.cloneNode(false) as SVGElement
+        outline.setAttribute('class', 'node_selection_outline')
+        outline.removeAttribute('id')
+        outline.removeAttribute('clip-path')
+        outline.setAttribute('fill', 'none')
+        outline.setAttribute('fill-opacity', '0')
+        outline.setAttribute('stroke', '#9ca3af')
+        outline.setAttribute('stroke-width', '1')
+        outline.setAttribute('stroke-dasharray', '4,3')
+        outline.setAttribute('stroke-opacity', '0.9')
+        outline.setAttribute('pointer-events', 'none')
+        g_shape.node()?.appendChild(outline)
+      }
     }
   }
 
