@@ -398,6 +398,19 @@ interface EsGraphicalProcess {
    * démos (Bus : In=vh, Out=hv, on-board=hh).
    */
   arrowDirection: number
+  // Mise en forme du label de NOM du process (`<label><font>` + `@textColor`).
+  // e!Sankey met souvent ces titres en gras (démos « Bus Passengers » : tous les
+  // process/places en style="1"). Sans ces champs, le nom importé retombait sur le
+  // style OpenSankey par défaut (maigre) alors qu'il était gras chez e!Sankey.
+  // Neutres = « absent » (on ne pose rien, le style par défaut décide).
+  /** `<label><font>/@style` gras (bit 1 de FontStyle .NET). */
+  labelBold: boolean
+  /** `<label><font>/@style` italique (bit 2). */
+  labelItalic: boolean
+  /** Taille de police du nom (`<label><font>/@size`), 0 = absente. */
+  labelFontSize: number
+  /** Couleur du texte du nom (`<label>/@textColor` argb → hex), null = absente. */
+  labelColor: string | null
 }
 
 /** Axe de raccordement d'un flux à un nœud, depuis `arrowDirection` e!Sankey. */
@@ -414,6 +427,21 @@ const isNearWhiteFill = (hex?: string | null): boolean => {
   if (!m) return false
   const n = parseInt(m[1], 16)
   return ((n >> 16) & 0xff) >= 0xf0 && ((n >> 8) & 0xff) >= 0xf0 && (n & 0xff) >= 0xf0
+}
+
+/** Mise en forme du label de NOM d'un `<process>`/`<place>` : gras/italique/taille
+ *  depuis son `<label><font>`, couleur depuis `<label>/@textColor`. Commun aux deux
+ *  parseurs. `label` null (aucun label) → tout neutre. .NET FontStyle : bit 1 gras,
+ *  bit 2 italique. */
+const parseGraphicalLabelFont = (label: Element | null): Pick<EsGraphicalProcess, 'labelBold' | 'labelItalic' | 'labelFontSize' | 'labelColor'> => {
+  const font = label ? childByTag(label, 'font') : null
+  const style = attrNum(font, 'style', 0)
+  return {
+    labelBold: (style & 1) !== 0,
+    labelItalic: (style & 2) !== 0,
+    labelFontSize: attrNum(font, 'size', 0),
+    labelColor: argbToHex(label?.getAttribute('textColor') ?? null),
+  }
 }
 
 const parseGraphicalProcesses = (net: Element, palette: EsBrushPalette): { [id: string]: EsGraphicalProcess } => {
@@ -443,6 +471,7 @@ const parseGraphicalProcesses = (net: Element, palette: EsBrushPalette): { [id: 
       imageFile: childByTag(p, 'image')?.getAttribute('filename') ?? '',
       shapeType: attrNum(p, 'shapeType', 0),
       arrowDirection: attrNum(p, 'arrowDirection', 2),
+      ...parseGraphicalLabelFont(label),
     }
   })
   return out
@@ -483,6 +512,7 @@ const parseGraphicalPlaces = (net: Element, palette: EsBrushPalette): { [id: str
       // Boîte de la place (OS#1298), même schéma que le process.
       width: attrNum(p, 'backgroundSizeW', 0),
       height: attrNum(p, 'backgroundSizeH', 0),
+      ...parseGraphicalLabelFont(label),
     }
   })
   return out
@@ -497,12 +527,22 @@ const fontStyleItalic = (style: number): boolean => (style & 2) !== 0
 /** Chemin d'image du XML (`Images\\tmpXX.tmp`) → clé du dict d'images du ZIP. */
 const imageKey = (filename: string): string => filename.replace(/\\/g, '/')
 
-// Applique le texte d'un <text> e!Sankey à une zone (base). Le contenu (et son
-// multi-ligne) vit en rich-text (name_label_fo_content, un <p> par ligne non
-// vide — pas de <br>, qui casse le rendu) ; les champs plats name/name_label_text
-// portent le texte SANS \n (un \n y casse l'affichage et l'éditeur). Renvoie
-// false si le <text> est vide (rien posé).
-const applyTextToContainer = (base: EsContainerJSON, textEl: Element): boolean => {
+// Padding/interligne du .ql-editor (quill.snow.css, chargé par react-quill) qui
+// rend le rich-text des zones : padding 12px vertical (×2) + 15px horizontal (×2),
+// line-height 1.42, `p { margin:0 }`. Sert à dimensionner la boîte pour englober
+// EXACTEMENT le texte rendu (le foreignObject clippe à shape_min_height).
+const QL_PAD_V = 24
+const QL_PAD_H = 30
+const QL_LINE_HEIGHT = 1.42
+
+// Applique le texte d'un <text> e!Sankey à une zone (base). Le contenu multi-ligne
+// vit en rich-text (name_label_fo_content, un <p> par ligne, `<p><br></p>` pour une
+// ligne vide — e!Sankey sépare des blocs par des lignes blanches, qu'on préserve
+// pour garder l'espacement) ; les champs plats name/name_label_text portent le texte
+// SANS \n (un \n y casse l'affichage et l'éditeur). `resize` (défaut vrai) agrandit
+// la boîte pour englober le texte rendu — désactivé quand le texte est absorbé par
+// un rectangle (le fond garde sa géométrie propre). Renvoie false si <text> vide.
+const applyTextToContainer = (base: EsContainerJSON, textEl: Element, resize = true): boolean => {
   const text = (textEl.getAttribute('text') ?? '').replace(/\r\n/g, '\n')
   if (!text.trim()) return false
   const escapeHtml = (s: string): string =>
@@ -513,18 +553,50 @@ const applyTextToContainer = (base: EsContainerJSON, textEl: Element): boolean =
   base.name_label_source = 'custom'
   base.name_label_text = oneLine
   base.name_label_is_visible = true
-  base.name_label_fo_content = text.split('\n')
-    .filter(line => line.trim() !== '')
-    .map(line => `<p>${escapeHtml(line)}</p>`).join('')
+  // Mise en forme (gras/italique/taille/couleur) reprise du <font> + textColor.
+  // On la pose sur les attributs plats ET dans le HTML du rich-text : les zones
+  // de texte forcent `name_label_has_fo` (ContainerPersistence.applyBaseJSON) — le
+  // rendu passe donc TOUJOURS par le foreignObject, qui affiche le HTML brut du
+  // fo_content et IGNORE les attributs plats. Sans style inline dans le <p>, gras
+  // et taille e!Sankey (ex. titre gras) étaient aplatis au style par défaut du
+  // rich-text. On bake donc le style dans chaque <p>.
   const font = childByTag(textEl, 'font')
-  if (font) {
-    base.name_label_font_size = attrNum(font, 'size', 9)
-    const style = attrNum(font, 'style', 0)
-    if (fontStyleBold(style)) base.name_label_bold = true
-    if (fontStyleItalic(style)) base.name_label_italic = true
-  }
   const textColor = argbToHex(textEl.getAttribute('textColor'))
-  if (textColor) base.name_label_color = textColor
+  const fontSize = attrNum(font, 'size', 9)
+  const inlineStyle: string[] = []
+  if (font) {
+    base.name_label_font_size = fontSize
+    if (fontSize > 0) inlineStyle.push(`font-size:${fontSize}px`)
+    const style = attrNum(font, 'style', 0)
+    if (fontStyleBold(style)) { base.name_label_bold = true; inlineStyle.push('font-weight:bold') }
+    if (fontStyleItalic(style)) { base.name_label_italic = true; inlineStyle.push('font-style:italic') }
+  }
+  if (textColor) { base.name_label_color = textColor; inlineStyle.push(`color:${textColor}`) }
+  const styleAttr = inlineStyle.length ? ` style="${inlineStyle.join(';')}"` : ''
+  // Lignes vides préservées (`<p><br></p>`) : e!Sankey sépare des blocs par des
+  // lignes blanches ; les filtrer collait les lignes (la ligne du bas remontait).
+  const lines = text.split('\n')
+  base.name_label_fo_content = lines
+    .map(line => line.trim() === '' ? '<p><br></p>' : `<p${styleAttr}>${escapeHtml(line)}</p>`)
+    .join('')
+  // Boîte : la boîte e!Sankey (sizeH), calibrée au plus juste pour SA police, coupe
+  // le bas du texte agrandi car le .ql-editor ajoute padding + interligne. On
+  // l'agrandit pour englober le rendu exact, et on RECENTRE (le loader force
+  // name_label_horiz/vert='middle' + inside : le texte est centré dans la boîte)
+  // pour ne pas déplacer le texte de sa place e!Sankey. Décalage x/y appliqué avant
+  // la normalisation : translation relative de la zone, que la normalisation suit.
+  if (resize) {
+    const contentH = Math.ceil(lines.length * fontSize * QL_LINE_HEIGHT + QL_PAD_V)
+    const oldH = Number(base.label_height) || 0
+    if (contentH > oldH) {
+      base.y = Math.round((Number(base.y) || 0) - (contentH - oldH) / 2)
+      base.label_height = contentH
+    }
+    // Largeur : compense le padding horizontal pour garder l'aire de texte = sizeW
+    // (sinon le texte se replierait, ajoutant des lignes → re-débordement).
+    base.label_width = (Number(base.label_width) || 0) + QL_PAD_H
+    base.x = Math.round((Number(base.x) || 0) - QL_PAD_H / 2)
+  }
   return true
 }
 
@@ -614,8 +686,10 @@ const parseShapes = (
       const hatch = hatchFromBrush(shape)
       if (hatch) base.shape_hatch = hatch
       // Texte absorbé (boîte e!Sankey en 2 objets) : le fond porte le texte.
+      // resize=false : le rectangle garde SA géométrie (position/taille du fond),
+      // on ne l'agrandit pas pour le texte.
       const t = textOfRect.get(it)
-      if (t) applyTextToContainer(base, t.el)
+      if (t) applyTextToContainer(base, t.el, false)
       out[id] = base
     } else if (kind === 'line') {
       // Ligne libre (élément OS#1276, débloque l'import #1266) : trait décoratif.
@@ -1060,6 +1134,19 @@ export const parseEsankeyXml = (
     node.local.name_label_text_align = 'middle'
   }
 
+  // Mise en forme du LABEL de nom (gras/italique/taille/couleur) reprise du
+  // `<label><font>` e!Sankey. Indépendante de la position : e!Sankey met souvent
+  // ces titres en gras (démos « Bus Passengers »), sinon le nom retombe sur le
+  // style OpenSankey maigre par défaut. Clés modernes `name_label_*` (mêmes que
+  // les zones de texte) appliquées telles quelles par le loader.
+  const applyNameLabelFont = (node: EsNode, graphical: EsGraphicalProcess | null): void => {
+    if (!graphical) return
+    if (graphical.labelBold) node.local.name_label_bold = true
+    if (graphical.labelItalic) node.local.name_label_italic = true
+    if (graphical.labelFontSize > 0) node.local.name_label_font_size = graphical.labelFontSize
+    if (graphical.labelColor) node.local.name_label_color = graphical.labelColor
+  }
+
   // Nœuds : un par graphProcess. Nom = nom logique, sinon label graphique.
   const nodes: { [id: string]: EsNode } = {}
   const logicalToNodeId: { [logicalId: string]: string } = {}
@@ -1119,6 +1206,7 @@ export const parseEsankeyXml = (
       if (graphical && graphical.height > 0) nodes[id].local.node_height = graphical.height
     }
     applyNameLabelPos(nodes[id], graphical)
+    applyNameLabelFont(nodes[id], graphical)
     // A4 — Forme alternative du process (0 = rect, notre défaut : rien à poser).
     // 1 = rectangle arrondi → on garde 'rect' et on pose un rayon de coin visible
     // (`shape_border_radius`, clé moderne appliquée telle quelle par le loader
@@ -1184,6 +1272,7 @@ export const parseEsankeyXml = (
     if (graphical?.shapeType === 1) nodes[id].local.shape_border_radius = 10
     else if (graphical?.shapeType === 2) nodes[id].local.shape = 'ellipse'
     applyNameLabelPos(nodes[id], graphical)
+    applyNameLabelFont(nodes[id], graphical)
     const imgSrc = graphical?.imageFile ? images[imageKey(graphical.imageFile)] : undefined
     if (imgSrc) {
       nodes[id].is_image = true

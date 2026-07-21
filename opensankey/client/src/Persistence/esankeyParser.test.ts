@@ -126,6 +126,27 @@ describe('parseEsankeyXml — fixture minimale', () => {
     expect(b?.local.color).toBe('#000000') // -16777216 = noir opaque
   })
 
+  // Le <label><font> du process → gras/taille/couleur du name label du nœud
+  // (e!Sankey met souvent ces titres en gras : sans ça, ils étaient rendus maigres).
+  test('label de nom : <label><font style/size> + textColor → name_label_bold/font_size/color', () => {
+    const withFont = FIXTURE.replace(
+      '<label text="Source A" />',
+      '<label text="Source A" textColor="-16776961"><font name="Arial" size="12" style="1" /></label>'
+    )
+    const df = parseEsankeyXml(withFont)
+    const a = Object.values(df.nodes).find(n => n.name === 'Source A')
+    const b = Object.values(df.nodes).find(n => n.name === 'Cible B')
+    // Source A : font style=1 (gras), size 12, textColor bleu
+    expect(a?.local.name_label_bold).toBe(true)
+    expect(a?.local.name_label_italic).toBeUndefined()
+    expect(a?.local.name_label_font_size).toBe(12)
+    expect(a?.local.name_label_color).toBe('#0000FF')
+    // Cible B : label sans <font> ni textColor → aucune mise en forme posée
+    expect(b?.local.name_label_bold).toBeUndefined()
+    expect(b?.local.name_label_font_size).toBeUndefined()
+    expect(b?.local.name_label_color).toBeUndefined()
+  })
+
   // OS#1298 — la boîte réelle du process (backgroundSizeW/H, ou boundaryW/H du
   // <selectionNode> en fallback) dimensionne le nœud via node_width/node_height
   // (mappés vers shape_min_width/shape_min_height), sinon le nœud serait un point.
@@ -548,7 +569,15 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     expect(texte?.name_label_is_visible).toBe(true)
     expect(texte?.name).toBe('Titre du diagramme')
     expect(texte?.name_label_text).toBe('Titre du diagramme')
-    expect(texte?.name_label_fo_content).toBe('<p>Titre du</p><p>diagramme</p>')
+    // Style baké dans chaque <p> du rich-text (les conteneurs forcent has_fo, le
+    // rendu FO ignore les attributs plats) : taille/gras/couleur e!Sankey.
+    expect(texte?.name_label_fo_content).toBe(
+      '<p style="font-size:18px;font-weight:bold;color:#000000">Titre du</p>' +
+      '<p style="font-size:18px;font-weight:bold;color:#000000">diagramme</p>')
+    // Boîte agrandie pour englober le rich-text (padding 24 + 2 lignes × 18 px ×
+    // 1.42 = 75.12 → 76) et largeur +30 (padding horizontal) : 300 → 330.
+    expect(texte?.label_height).toBe(76)
+    expect(texte?.label_width).toBe(330)
     const rect = containers.find(c => c.color_visible === true)
     expect(rect?.color).toBe('#E0E0E0') // -2039584
     expect(rect?.transparent_border).toBe(true)
@@ -573,7 +602,27 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     const box = containers.find(c => c.color_visible === true)
     expect(box?.color).toBe('#E0E0E0') // le fond est conservé
     expect(box?.name_label_source).toBe('custom')
-    expect(box?.name_label_fo_content).toBe('<p>Titre du</p><p>diagramme</p>')
+    expect(box?.name_label_fo_content).toBe(
+      '<p style="font-size:18px;font-weight:bold;color:#000000">Titre du</p>' +
+      '<p style="font-size:18px;font-weight:bold;color:#000000">diagramme</p>')
+  })
+
+  // Lignes vides préservées : e!Sankey sépare des blocs par des lignes blanches
+  // (ex. démo Buslinie). On les rend en `<p><br></p>` pour garder l'espacement
+  // (les filtrer remontait la ligne du bas), et la hauteur de boîte les compte.
+  test('ligne vide dans un texte → <p><br></p> préservé, hauteur inclut la ligne vide', () => {
+    const withBlank = FIXTURE_DECOR.replace(
+      'text="Titre du&#xD;&#xA;diagramme"',
+      'text="Haut&#xD;&#xA;&#xD;&#xA;Bas"'
+    )
+    const db = parseEsankeyXml(withBlank, { 'Images/tmp1.tmp': PNG_URI })
+    const texte = Object.values(db.labels).find(c => String(c.name_label_fo_content ?? '').includes('Haut'))
+    expect(texte?.name_label_fo_content).toBe(
+      '<p style="font-size:18px;font-weight:bold;color:#000000">Haut</p>' +
+      '<p><br></p>' +
+      '<p style="font-size:18px;font-weight:bold;color:#000000">Bas</p>')
+    // 3 lignes (dont la vide) × 18 px × 1.42 + 24 = 100.68 → 101.
+    expect(texte?.label_height).toBe(101)
   })
 
   // Import d'un trait <line> → ligne libre (shape_type 'line', élément OS#1276).
@@ -659,11 +708,14 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
   })
 
   test('légende visible, position normalisée avec le reste', () => {
-    // min X/Y de l'ensemble = (100, 100) (le texte) → décalage -50
+    // La zone de texte est agrandie pour englober le rich-text (padding/interligne
+    // .ql-editor) et RECENTRÉE : son coin haut-gauche passe de (100,100) à (85,92)
+    // — c'est le nouveau min de l'ensemble → décalage (-35,-42). Le texte, restant
+    // le min, retombe à (50,50) ; la légende suit (legend_dx 100-35, legend_dy 200-42).
     // legend_police = 12 : lu sur <legend><textFont size="12">. Le
     // <captionFont> voisin (taille du titre "Legend" du cadre) n'a pas
     // d'équivalent OpenSankey (cf. commentaire EsParsedDiagram.legend) : non repris.
-    expect(d.legend).toEqual({ mask_legend: false, legend_dx: 50, legend_dy: 150, legend_police: 12 })
+    expect(d.legend).toEqual({ mask_legend: false, legend_dx: 65, legend_dy: 158, legend_police: 12 })
     const texte = Object.values(d.labels).find(c => c.title === 'Titre du diagramme')
     expect(texte?.x).toBe(50)
     expect(texte?.y).toBe(50)
