@@ -1949,8 +1949,8 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
 
     compression: {
       group: 'content',
-      default: 'none',
-      type: (() => 'none') as (() => string),
+      default: 'gzip',
+      type: (() => 'gzip') as (() => string),
       labels: {
         en: 'Compression',
         fr: 'Compression',
