@@ -365,6 +365,11 @@ export const SankeyMenu = (
           position='fixed'
           bottom='0'
           layerStyle='menubottom_layout_style'
+          // #298 — la colonne d'outils de droite (`.tools_column`, dont le bas porte le zoom) flotte
+          // au-dessus du coin bas-droit. Sans réserve, la frise de séquence (`width:100%`) passe
+          // dessous et se chevauche avec le zoom. On recadre la frise en réservant à sa droite la
+          // largeur de la colonne d'outils (0 en publish / quand la colonne est fermée → pas de régression).
+          paddingRight={menu_configuration.getToolsColumnWidthPx() + 'px'}
         >
           <DrawerSequenceDataTagg new_data={app_data} />
         </Box>
