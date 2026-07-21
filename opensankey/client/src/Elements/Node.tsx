@@ -1213,6 +1213,12 @@ export class Class_NodeElement extends Class_NodeBase {
 
     const node_height = this.getShapeHeightToUse()
     const node_width = this.getShapeWidthToUse()
+    // Écart d'accroche (shape_link_inset) : même décalage que updateLinksPositions,
+    // pour que la BASE de la pointe suive l'ancre décalée (sinon la flèche reste
+    // collée au bord alors que le flux rentre dans le nœud). Clamp identique.
+    const raw_inset = this.shape_link_inset
+    const inset_x = raw_inset === 0 ? 0 : Math.max(-node_width, Math.min(node_width / 2, raw_inset))
+    const inset_y = raw_inset === 0 ? 0 : Math.max(-node_height, Math.min(node_height / 2, raw_inset))
 
     // Two layout modes, driven by drawing_area.arrow_use_standalone_layout :
     //
@@ -1296,26 +1302,26 @@ export class Class_NodeElement extends Class_NodeBase {
           let total_cumul_of_side = 0
           let current_cumul_of_side = 0
           if (link_arrow_side_left) {
-            xt = + this.position_x - this.shape_margin_left
+            xt = + this.position_x - this.shape_margin_left + inset_x
             yt = + this.position_y + node_height / 2
             current_cumul_of_side = cum_v_left ; total_cumul_of_side = sumLinkLeft
             cum_v_left += link_value_raw
           }
           else if (link_arrow_side_right) {
-            xt = + this.position_x + node_width + this.shape_margin_right
+            xt = + this.position_x + node_width + this.shape_margin_right - inset_x
             yt = + this.position_y + node_height / 2
             current_cumul_of_side = cum_v_right ; total_cumul_of_side = sumLinkRight
             cum_v_right += link_value_raw
           }
           else if (link_arrow_side_top) {
             xt = + this.position_x + node_width / 2
-            yt = + this.position_y
+            yt = + this.position_y + inset_y
             current_cumul_of_side = cum_h_top ; total_cumul_of_side = sumLinkTop
             cum_h_top += link_value_raw
           }
           else {
             xt = + this.position_x + node_width / 2
-            yt = + this.position_y + node_height
+            yt = + this.position_y + node_height - inset_y
             current_cumul_of_side = cum_h_bottom ; total_cumul_of_side = sumLinkBottom
             cum_h_bottom += link_value_raw
           }
@@ -1328,20 +1334,20 @@ export class Class_NodeElement extends Class_NodeBase {
           // Standalone : base centered on link's actual visible end, half_height = link/2,
           // no cumulative offset → draw_arrow_part renders a clean pointed triangle.
           if (link_arrow_side_left) {
-            xt = + this.position_x - this.shape_margin_left
+            xt = + this.position_x - this.shape_margin_left + inset_x
             yt = is_reversed ? link.position_y_start : link.position_y_end
           }
           else if (link_arrow_side_right) {
-            xt = + this.position_x + node_width + this.shape_margin_right
+            xt = + this.position_x + node_width + this.shape_margin_right - inset_x
             yt = is_reversed ? link.position_y_start : link.position_y_end
           }
           else if (link_arrow_side_top) {
             xt = is_reversed ? link.position_x_start : link.position_x_end
-            yt = + this.position_y
+            yt = + this.position_y + inset_y
           }
           else {
             xt = is_reversed ? link.position_x_start : link.position_x_end
-            yt = + this.position_y + node_height
+            yt = + this.position_y + node_height - inset_y
           }
           const placement = computeArrowPlacement(true, link_value_raw, link_value, 0, 0)
           arrow_half_height = placement.arrow_half_height
@@ -1362,20 +1368,20 @@ export class Class_NodeElement extends Class_NodeBase {
           arrow_slice = spike.slice
           final_arrow_length = link.shape_arrow_size * Math.max(1, spike_cfg.base_factor)
           if (link_arrow_side_left) {
-            xt = + this.position_x - this.shape_margin_left
+            xt = + this.position_x - this.shape_margin_left + inset_x
             yt = is_reversed ? link.position_y_start : link.position_y_end
           }
           else if (link_arrow_side_right) {
-            xt = + this.position_x + node_width + this.shape_margin_right
+            xt = + this.position_x + node_width + this.shape_margin_right - inset_x
             yt = is_reversed ? link.position_y_start : link.position_y_end
           }
           else if (link_arrow_side_top) {
             xt = is_reversed ? link.position_x_start : link.position_x_end
-            yt = + this.position_y
+            yt = + this.position_y + inset_y
           }
           else {
             xt = is_reversed ? link.position_x_start : link.position_x_end
-            yt = + this.position_y + node_height
+            yt = + this.position_y + node_height - inset_y
           }
         }
         const p5 = [xt, yt]
