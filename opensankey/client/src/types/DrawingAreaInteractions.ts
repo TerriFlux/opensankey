@@ -471,6 +471,12 @@ export class Class_DrawingAreaInteractions {
       let cont: Class_ContainerElement
       const create = () => {
         cont = da.sankey.addNewDefaultContainer()
+        // OS#1259 — une ZDT fraîchement DESSINÉE doit apparaître au PREMIER PLAN.
+        // Le constructeur l'enregistre en FIN de liste ; or orderElementOnDA trie
+        // sur la liste inversée -> fin de liste = arrière-plan. On la ramène en
+        // TÊTE (début = devant). Ciblé sur la création interactive : au
+        // chargement / updateFrom l'ordre Z est pré-amorcé et ne doit pas bouger.
+        da.list_g_element = [cont.id, ...da.list_g_element.filter(id => id !== cont.id)]
         if (is_line) {
           // Ligne libre : trait décoratif sans remplissage ni label. L'apparence
           // (couleur, épaisseur, pointillés) est portée par les attributs de bordure.

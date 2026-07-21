@@ -1479,6 +1479,23 @@ export abstract class DrawLabelBase {
         }
         const el = this._element as Class_BaseShape
         const drawing_area = el.drawing_area
+        // OS#1259 — clic « façon PowerPoint » par CLICS SUCCESSIFS sur le label
+        // d'une ZDT membre d'un groupe : 1er clic = groupe englobant, clic
+        // suivant = un niveau plus profond (drill-down). Le clic sur le label
+        // court-circuite le <g> du nœud via stopPropagation, la logique est donc
+        // rejouée ici. Sauté si Ctrl/Cmd (multi) ; null hors groupe de ZDT.
+        if (!evt.ctrlKey && !evt.metaKey) {
+          const group_target = drawing_area.resolveContainerGroupClickTarget(
+            el as unknown as Class_NodeBase)
+          if (group_target) {
+            drawing_area.purgeSelection()
+            drawing_area.addElementToSelection(group_target)
+            const menu_config = drawing_area.application_data.menu_configuration
+            menu_config.ref_to_menu_config_updater.current()
+            menu_config.updateAllComponentsRelatedToNodes()
+            return
+          }
+        }
         // Sélectionne l'élément (via _selection) sinon Escape/purgeSelection
         // n'itère pas dessus et la sub-sélection reste collée (poignées qui
         // ne disparaissent pas en clic ailleurs / Escape).

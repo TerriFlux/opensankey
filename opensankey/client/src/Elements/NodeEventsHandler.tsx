@@ -145,14 +145,15 @@ export class NodeEventsHandler {
 
       if (!labelType) return
 
-      // OS#1254 — Alt+clic : sélection REMONTANTE du cadre géométrique
-      // englobant. Cycle : élément → cadre direct → cadre supérieur → ... →
-      // élément. Indispensable pour saisir un cadre invisible (trait 1 px),
-      // ex. les blocs de la légende. Ctrl+clic reste la multi-sélection.
-      if (event.altKey) {
-        const target = this.resolveEnclosingFrameTarget()
-        if (target) {
-          this.selectFrameTarget(target)
+      // OS#1259 — clic « façon PowerPoint » par CLICS SUCCESSIFS sur un groupe de
+      // zones de texte : 1er clic = groupe le plus englobant, chaque clic suivant
+      // descend d'un niveau vers l'élément cliqué (drill-down), puis reboucle.
+      // Scopé aux ZDT ; la sélection d'un nœud dans un cadre géométrique reste
+      // inchangée. Ctrl/Cmd = multi-sélection -> comportement « feuille ».
+      if (!event.ctrlKey && !event.metaKey) {
+        const group_target = this._node.drawing_area.resolveContainerGroupClickTarget(this._node)
+        if (group_target) {
+          this.selectFrameTarget(group_target)
           return
         }
       }
@@ -162,31 +163,7 @@ export class NodeEventsHandler {
     }
   }
 
-  /**
-   * OS#1254 — Cible du Alt+clic : le premier cadre englobant non encore
-   * sélectionné en remontant la chaîne `attached_container` ; si le sommet de
-   * la chaîne est déjà sélectionné, on redescend à l'élément cliqué (cycle).
-   * Renvoie null si l'élément n'est englobé par aucun cadre.
-   */
-  private resolveEnclosingFrameTarget(): Class_NodeBase | null {
-    const chain: Class_NodeBase[] = []
-    const seen = new Set<Class_NodeBase>([this._node])
-    let cur: Class_NodeBase = this._node
-    for (;;) {
-      const parent = cur.attached_container.find(c => c.tied_to_nodes && !seen.has(c))
-      if (!parent) break
-      chain.push(parent)
-      seen.add(parent)
-      cur = parent
-    }
-    if (chain.length === 0) return null
-    const idx = chain.findIndex(c => c.is_selected)
-    if (idx === -1) return chain[0]
-    if (idx + 1 < chain.length) return chain[idx + 1]
-    return this._node
-  }
-
-  /** Sélectionne un cadre (ou l'élément de retour de cycle) + met à jour les menus. */
+  /** Sélectionne un cadre (groupe) + met à jour les menus. */
   private selectFrameTarget(target: Class_NodeBase) {
     const drawing_area = this._node.drawing_area
     const menu_config = drawing_area.application_data.menu_configuration
