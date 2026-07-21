@@ -464,37 +464,23 @@ describe('parseEsankeyXml — coude droit (OS#1288)', () => {
   })
 })
 
-describe('parseEsankeyXml — OS#1298b : ancre masquée accrochée au bord face au voisin', () => {
-  // Une ancre In/Out invisible (process visible="false" avec une boîte) est
-  // collapsée en point. e!Sankey raccorde son flux au MILIEU du bord tourné vers
-  // le voisin (ex. bas-centre d'un In posé au-dessus du process), pas au coin
-  // haut-gauche : garder le coin décalait le départ d'une demi-boîte, si bien que
-  // le flux partait AU-DESSUS du label au lieu de dessous. On vérifie le recalage
-  // du point d'accroche ET du décalage du label de nom.
-  // Boîte de l'ancre (process 50) : x=100 y=300 w=48 h=112 → centre (124, 356),
-  // bord bas (124, 412), bord droit (148, 356). Label absolu = (110, 320).
-  const hidden = (proc51: string): string => FIXTURE
-    .replace('<process id="50" locationX="100"', '<process id="50" visible="false" locationX="100"')
+describe('parseEsankeyXml — placement vertical du label de nom (centré)', () => {
+  // Un nœud Sankey grandit verticalement avec l'épaisseur de ses flux : son bord
+  // haut RENDU est inconnu à l'import. On centre donc le label sur le nœud
+  // (vert='middle', shift 0) au lieu de l'ancrer en 'top' + shift, qui le renvoyait
+  // très au-dessus des nœuds épais (labels « envolés » sur CHP Hospital).
+  // L'horizontal reste ancré à gauche avec un décalage (largeur du nœud prévisible).
+  const withLabelPos = FIXTURE
     .replace('<label text="Source A" />', '<label text="Source A" locationX="110" locationY="320" sizeW="20" sizeH="22" />')
-    .replace('<process id="51" locationX="400" locationY="320">', proc51)
 
-  test('voisin en dessous → bord BAS-centre, label recalé au-dessus du départ', () => {
-    // Cible sous l'ancre (x≈centre, y=600) → axe vertical dominant → bord bas y=412.
-    const d = parseEsankeyXml(hidden('<process id="51" locationX="118" locationY="600">'))
-    const inNode = Object.values(d.nodes).find(n => n.name === 'Source A')
-    expect(inNode?.local.shape_visible).toBe(false)
-    // Décalage du label depuis le bord bas-centre (124, 412) : NÉGATIF en vertical
-    // → label AU-DESSUS du départ du flux. Le bug (coin 100,300) donnait +20.
-    expect(inNode?.local.name_label_vert_shift).toBe(-92)   // 320 − 412
-    expect(inNode?.local.name_label_horiz_shift).toBe(-14)  // 110 − 124 (centré en x)
-  })
-
-  test('voisin à droite → bord DROIT-centre', () => {
-    // Cible par défaut (400, 320), à droite → axe horizontal dominant → bord droit x=148.
-    const d = parseEsankeyXml(hidden('<process id="51" locationX="400" locationY="320">'))
-    const inNode = Object.values(d.nodes).find(n => n.name === 'Source A')
-    expect(inNode?.local.name_label_horiz_shift).toBe(-38)  // 110 − 148
-    expect(inNode?.local.name_label_vert_shift).toBe(-36)   // 320 − 356 (centré en y)
+  test('label positionné → vert=middle + shift 0 ; horiz ancré à gauche avec décalage', () => {
+    const d = parseEsankeyXml(withLabelPos)
+    const a = Object.values(d.nodes).find(n => n.name === 'Source A')
+    expect(a?.local.name_label_vert).toBe('middle')
+    expect(a?.local.name_label_vert_shift).toBe(0)
+    expect(a?.local.name_label_horiz).toBe('left')
+    // Source A : node x = 100 (coin), labelX = 110 → décalage horizontal +10.
+    expect(a?.local.name_label_horiz_shift).toBe(10)
   })
 })
 

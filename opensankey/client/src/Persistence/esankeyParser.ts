@@ -1032,21 +1032,23 @@ export const parseEsankeyXml = (
       units: Object.values(ut.units).map(u => ({ id: u.id, name: u.name, coefficient: u.coefficient })),
     }))
 
-  // Placement du LABEL de nom : e!Sankey donne sa position ABSOLUE (labelX/Y =
-  // coin haut-gauche de la boîte de label). Pour que le décalage OpenSankey soit
-  // indépendant de la bbox RENDUE du nœud (taille pilotée par les flux, inconnue
-  // à l'import), on ancre le label au COIN HAUT-GAUCHE du nœud : horiz='left' +
-  // vert='top' + inside → la référence devient l'origine locale du nœud
-  // (= node.x/node.y monde), pas son centre. Le décalage vaut alors label − node
-  // (coins), exact quelle que soit la taille rendue.
+  // Placement du LABEL de nom. HORIZONTAL : e!Sankey donne la position absolue
+  // (labelX = coin gauche de la boîte de label) ; on ancre à gauche (horiz='left'
+  // + inside) avec un décalage label − node, stable car la largeur du nœud est
+  // prévisible. VERTICAL : on CENTRE le label sur le nœud (vert='middle', décalage
+  // 0). Un nœud Sankey grandit verticalement avec l'épaisseur de ses flux, donc
+  // son bord haut RENDU est inconnu à l'import : ancrer le label en 'top' + shift
+  // (référence = bord haut) l'envoyait très au-dessus du nœud sur les nœuds épais
+  // (labels « envolés » sur CHP Hospital). Le CENTRE, lui, est stable ⇒ label
+  // centré, fidèle au placement e!Sankey (label centré dans la boîte du process).
   const applyNameLabelPos = (node: EsNode, graphical: EsGraphicalProcess | null): void => {
     if (!graphical?.labelHasPos) return
     node.local.name_label_horiz = 'left'
     node.local.name_label_inside_horiz = true
-    node.local.name_label_vert = 'top'
+    node.local.name_label_vert = 'middle'
     node.local.name_label_inside_vert = true
     node.local.name_label_horiz_shift = Math.round(graphical.labelX - node.x)
-    node.local.name_label_vert_shift = Math.round(graphical.labelY - node.y)
+    node.local.name_label_vert_shift = 0
     // Largeur de la boîte de label depuis e!Sankey (sinon défaut 150).
     if (graphical.labelW > 0) node.local.name_label_box_width = Math.round(graphical.labelW)
     // e!Sankey rend ses labels avec césure (wrapping) dans leur boîte : on
@@ -1060,16 +1062,6 @@ export const parseEsankeyXml = (
 
   // Nœuds : un par graphProcess. Nom = nom logique, sinon label graphique.
   const nodes: { [id: string]: EsNode } = {}
-  // OS#1298b — Boîte e!Sankey des nœuds MASQUÉS (In/Out, ancres collapsées en
-  // point). On la mémorise pour recaler, une fois le voisin connu, le point
-  // d'accroche du flux sur le BORD de la boîte face au voisin (cf.
-  // recenterHiddenAnchor plus bas) au lieu du coin haut-gauche. e!Sankey
-  // raccorde le flux au milieu du bord (ex. bas-centre d'une ancre In posée
-  // au-dessus du process) ; garder le coin décalait le départ d'une demi-boîte
-  // — le flux partait au-dessus/à-côté du label au lieu de dessous.
-  const hiddenNodeBox: {
-    [id: string]: { x: number, y: number, w: number, h: number, labelX: number, labelY: number, labelHasPos: boolean }
-  } = {}
   const logicalToNodeId: { [logicalId: string]: string } = {}
   const usedNodeIds = new Set<string>()
   const graphNodes = childByTag(netModel, 'graphNodes')
@@ -1121,14 +1113,6 @@ export const parseEsankeyXml = (
     if (nodeHidden) {
       nodes[id].local.shape_visible = false
       nodes[id].local.shape_border_visible = false
-      // OS#1298b — on garde la boîte pour recaler le point d'accroche sur son
-      // bord (le nœud reste collapsé en point, la boîte n'est PAS posée).
-      if (graphical && graphical.width > 0 && graphical.height > 0) {
-        hiddenNodeBox[id] = {
-          x: graphical.x, y: graphical.y, w: graphical.width, h: graphical.height,
-          labelX: graphical.labelX, labelY: graphical.labelY, labelHasPos: graphical.labelHasPos,
-        }
-      }
     } else {
       // OS#1298 — taille de boîte réelle, uniquement pour un nœud VISIBLE.
       if (graphical && graphical.width > 0) nodes[id].local.node_width = graphical.width
@@ -1210,40 +1194,6 @@ export const parseEsankeyXml = (
     }
   })
 
-  // OS#1298b — Recalage du point d'accroche d'une ancre MASQUÉE sur le BORD de sa
-  // boîte e!Sankey face à son voisin, l'ancre restant collapsée en point. e!Sankey
-  // raccorde le flux au milieu du bord tourné vers le nœud connecté (ex. bas-centre
-  // d'un In posé au-dessus du process) ; le coin haut-gauche décalait le départ
-  // d'une demi-boîte, si bien que le flux partait AU-DESSUS du label au lieu de
-  // dessous. On choisit le bord sur l'axe dominant (vertical si le voisin est
-  // surtout au-dessus/dessous, horizontal sinon), puis on recale le décalage du
-  // label de nom sur le nouveau point. Idempotent (une ancre = un flux).
-  const anchorRecentered = new Set<string>()
-  const recenterHiddenAnchor = (id: string, neighbor: EsNode | undefined): void => {
-    const box = hiddenNodeBox[id]
-    if (!box || !neighbor || anchorRecentered.has(id)) return
-    anchorRecentered.add(id)
-    const cx = box.x + box.w / 2
-    const cy = box.y + box.h / 2
-    let px = cx
-    let py = cy
-    if (Math.abs(neighbor.y - cy) >= Math.abs(neighbor.x - cx)) {
-      // Voisin surtout au-dessus/dessous → bord haut ou bas, centré en x.
-      py = neighbor.y >= cy ? box.y + box.h : box.y
-    } else {
-      // Voisin surtout à gauche/droite → bord gauche ou droit, centré en y.
-      px = neighbor.x >= cx ? box.x + box.w : box.x
-    }
-    nodes[id].x = px
-    nodes[id].y = py
-    // Le label de nom est ancré au point du nœud (name_label_vert='top' + inside) :
-    // son décalage doit suivre le nouveau point pour rester à sa place absolue.
-    if (box.labelHasPos) {
-      nodes[id].local.name_label_horiz_shift = Math.round(box.labelX - px)
-      nodes[id].local.name_label_vert_shift = Math.round(box.labelY - py)
-    }
-  }
-
   // Flux : un par flow de compartments (une flèche multi-matériaux e!Sankey
   // devient N flux parallèles même source/cible, chacun tagué par son entry).
   const links: { [id: string]: EsFlow } = {}
@@ -1262,10 +1212,6 @@ export const parseEsankeyXml = (
     const sourceId = logicalToNodeId[fromRef ?? '']
     const targetId = logicalToNodeId[toRef ?? '']
     if (!sourceId || !targetId) return
-    // OS#1298b — recale les ancres masquées de CETTE flèche sur le bord face au
-    // voisin AVANT toute géométrie de coude (qui lit les positions des nœuds).
-    recenterHiddenAnchor(sourceId, nodes[targetId])
-    recenterHiddenAnchor(targetId, nodes[sourceId])
     const arrowId = ga.getAttribute('id') ?? ''
     const graphicalArrow = graphicalArrows[edgeMapping[arrowId] ?? ''] ?? null
     // Orientation OpenSankey depuis l'`arrowDirection` des nœuds source/cible :
