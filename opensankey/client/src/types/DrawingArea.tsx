@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 import * as d3 from '../d3Modules'
-import { Type_JSON, Type_Structure, Type_DataSource, Type_IntervalDisplay, Type_DisaggregationGap, default_main_sankey_id } from '../types/Utils'
+import { Type_JSON, Type_Structure, Type_DataSource, Type_IntervalDisplay, Type_DisaggregationGap, default_main_sankey_id, randomId } from '../types/Utils'
 import {
   default_background_color,
   default_DA_marging,
@@ -108,6 +108,11 @@ export class Class_DrawingArea {
   public d3_selection_elements_sankey_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_handlers: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_zone_select: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+
+  // #291 — Identifiant (unique par instance de DA) du clipPath qui découpe le contenu au cadre.
+  // Généré à chaque _initDraw (le #draw_zoom est recréé) ; référencé par le groupe #g_clip qui
+  // enveloppe g_drawing, et servi à Class_ViewportChrome pour retrouver le <rect> à mettre à jour.
+  public viewport_clip_id: string = ''
 
   // #242 — Chrome de viewport (scrollbars + cadre) : posé sur la racine SVG (hors du transform de
   // zoom de g_drawing), il porte ses propres sélections d3 et ne fait que lire la géométrie de la
@@ -902,7 +907,19 @@ export class Class_DrawingArea {
     // Init drawing area
     const x = this._fit_margin / 2
     const y = this._fit_margin / 2 + this.getNavBarHeight() // init drawing area zone with a margin for taking into account the navbar
-    this.d3_selection = this.d3_selection_zoom_area
+    // #291 — Groupe d'enveloppe interposé entre la racine SVG et g_drawing. Il ne porte AUCUN
+    // transform (donc reste en coordonnées écran, comme le cadre #viewport_border), et porte le
+    // clip-path qui découpe le contenu au rectangle du cadre. g_drawing conserve, lui, le transform
+    // de zoom/pan : un clip posé directement sur lui serait zoomé avec le contenu et ne clipperait
+    // jamais au cadre écran. Le <clipPath> associé (et son <rect>, mis à jour aux mêmes moments que
+    // le cadre) est créé par Class_ViewportChrome. À l'export, le clip est neutralisé
+    // (_pre_process_export_svg) pour ne pas rogner le diagramme complet.
+    this.viewport_clip_id = 'viewport_clip_' + randomId()
+    const g_clip = this.d3_selection_zoom_area
+      .append('g')
+      .attr('id', 'g_clip')
+      .attr('clip-path', 'url(#' + this.viewport_clip_id + ')')
+    this.d3_selection = g_clip
       .append('g')
       .attr('id', 'g_drawing')
       .attr('transform', 'translate(' + x + ',' + y + ')')
@@ -1424,6 +1441,33 @@ export class Class_DrawingArea {
     // réappliquer ; on autorise alors un fit unique pour établir le cadrage
     // initial, qui restera ensuite figé (force_when_locked).
     if (this._size_locked && !force_when_locked) return
+
+    // #292 — Le calcul de cadrage doit viser la zone de dessin PLEINE (sans gouttière de scrollbar) :
+    // on annule la réserve le temps du fit et on empêche le _updateScrollbars interne de la reposer
+    // (`suppress`), sinon le fit lirait un window_fitting déjà rétréci et cadrerait ~14 px trop petit
+    // (marge asymétrique sur tout diagramme chargé). La réserve est ré-évaluée à la fin, sur le
+    // CADRAGE FINAL. Le corps vit dans _areaAutoFitCore pour que le try/finally (qui garantit le
+    // rétablissement du flag même en sortie anticipée — mode papier — ou sur exception) n'oblige pas
+    // à réindenter tout le corps.
+    this._scrollbar_reserve_right = 0
+    this._scrollbar_reserve_bottom = 0
+    this._suppress_scrollbar_reserve = true
+    try {
+      this._areaAutoFitCore(horiz, force_when_locked, center_on_content)
+    } finally {
+      // Contenu qui tient (cas normal d'un fit) -> aucune barre ni gouttière ; contenu qui déborde
+      // encore (fit contraint) -> la ou les barres apparaissent avec leur gouttière.
+      this._suppress_scrollbar_reserve = false
+      this._updateScrollbars()
+    }
+  }
+
+  /**
+   * #292 — Corps du cadrage automatique, extrait pour que areaAutoFit l'enveloppe dans un try/finally
+   * (garde de réserve de gouttière : le fit vise la zone PLEINE) sans réindenter tout le corps.
+   * Comportement strictement inchangé — ne pas appeler directement (passer par areaAutoFit).
+   */
+  private _areaAutoFitCore(horiz?: boolean, force_when_locked?: boolean, center_on_content?: boolean) {
 
     const prev_k_fit = this._k_fit
 
@@ -2470,6 +2514,9 @@ export class Class_DrawingArea {
    */
   private _updateViewportBorder() {
     this._viewport_chrome.updateBorder(this)
+    // #291 — Le clip du contenu partage la géométrie du cadre : on le rafraîchit ici, donc à
+    // l'init, à chaque drawBackground() (draw / resize) et — en mode papier — à chaque zoom/pan.
+    this._viewport_chrome.updateClip(this)
   }
 
   /**
@@ -2826,7 +2873,7 @@ export class Class_DrawingArea {
     // DA détachée : on cadre dans le conteneur hôte (modal), pas la fenêtre.
     if (this.is_detached) {
       const h = this.getContainerNode()?.clientHeight ?? 0
-      if (h > 0) return h - this._fit_margin
+      if (h > 0) return h - this._fit_margin - this._scrollbar_reserve_bottom
     }
     // Mode embarqué (embedded) : le SVG fait 100% du conteneur hôte (#sankey_app),
     // qui peut être plus court que la fenêtre quand l'embarqueur ajoute sa PROPRE
@@ -2836,9 +2883,9 @@ export class Class_DrawingArea {
     // on retranche le footer (BottomMenu) et la réserve doc s'ils sont dans le conteneur.
     if (this.application_data.publish_options.embedded) {
       const h = this.getContainerNode()?.clientHeight ?? 0
-      if (h > 0) return h - this._fit_margin - this.getBottomBarHeight() - this.main_zone_bottom_reserved
+      if (h > 0) return h - this._fit_margin - this.getBottomBarHeight() - this.main_zone_bottom_reserved - this._scrollbar_reserve_bottom
     }
-    return window.innerHeight - this._fit_margin - this.getNavBarHeight() - this.getBottomBarHeight() - this.main_zone_bottom_reserved
+    return window.innerHeight - this._fit_margin - this.getNavBarHeight() - this.getBottomBarHeight() - this.main_zone_bottom_reserved - this._scrollbar_reserve_bottom
   }
   // Hauteur réservée en bas de la grande zone pour la doc (modes diagram-bottom / window-bottom).
   // Source globale (menu_configuration), symétrique de main_zone_right_reserved. Null-safe : la
@@ -2859,20 +2906,41 @@ export class Class_DrawingArea {
     if (!mc) return 0
     return mc.getMainZoneRightReservedPx()
   }
+  // #292 — Gouttière de scrollbar réservée DYNAMIQUEMENT (droite pour la barre verticale,
+  // bas pour l'horizontale). Vaut 0 quand la barre correspondante est masquée, et l'épaisseur
+  // de gouttière quand elle est visible. Posée par Class_ViewportChrome.updateScrollbars selon
+  // le débordement du contenu : quand une barre apparaît, la zone de dessin (window_fitting)
+  // se réduit d'autant du côté concerné, ce qui loge la barre HORS du dessin — elle ne recouvre
+  // plus jamais le diagramme. Réserve CONDITIONNELLE : aucun retrait quand tout le contenu tient
+  // dans la fenêtre. Champ par instance (et non source globale) car chaque scrollbar est propre
+  // à sa DA. updateBorder / l'extent d3-zoom / le fit lisent tous window_fitting → cohérence
+  // automatique du cadre et du cadrage avec la zone rétrécie.
+  private _scrollbar_reserve_right: number = 0
+  private _scrollbar_reserve_bottom: number = 0
+  public get scrollbar_reserve_right(): number { return this._scrollbar_reserve_right }
+  public set scrollbar_reserve_right(v: number) { this._scrollbar_reserve_right = v }
+  public get scrollbar_reserve_bottom(): number { return this._scrollbar_reserve_bottom }
+  public set scrollbar_reserve_bottom(v: number) { this._scrollbar_reserve_bottom = v }
+  // #292 — Vrai pendant un areaAutoFit : le calcul de cadrage doit viser la zone PLEINE (sans
+  // gouttière). updateScrollbars ne pose alors PAS la réserve (sinon le fit lirait un window_fitting
+  // déjà rétréci et cadrerait 14 px trop petit) ; areaAutoFit remet le flag à faux et ré-évalue la
+  // réserve à la fin, sur le cadrage final.
+  private _suppress_scrollbar_reserve: boolean = false
+  public get suppress_scrollbar_reserve(): boolean { return this._suppress_scrollbar_reserve }
   public get window_fitting_width(): number {
     // DA détachée : on cadre dans le conteneur hôte (modal), pas la fenêtre.
     if (this.is_detached) {
       const w = this.getContainerNode()?.clientWidth ?? 0
-      if (w > 0) return w - this._fit_margin
+      if (w > 0) return w - this._fit_margin - this._scrollbar_reserve_right
     }
     // Mode embarqué : cadre dans la largeur RÉELLE du conteneur hôte (l'embarqueur
     // peut le rendre plus étroit que la fenêtre). Full-window => clientWidth ==
     // innerWidth, comportement inchangé.
     if (this.application_data.publish_options.embedded) {
       const w = this.getContainerNode()?.clientWidth ?? 0
-      if (w > 0) return w - this._fit_margin - this.main_zone_right_reserved
+      if (w > 0) return w - this._fit_margin - this.main_zone_right_reserved - this._scrollbar_reserve_right
     }
-    return window.innerWidth - this._fit_margin - this.main_zone_right_reserved
+    return window.innerWidth - this._fit_margin - this.main_zone_right_reserved - this._scrollbar_reserve_right
   }
 
   // Paper format getters/setters

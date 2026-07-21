@@ -2574,6 +2574,34 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       it: 'Allineamento orizzontale delle ancore di flusso sui lati superiore/inferiore del nodo (sinistra / centro / destra).'
     }
   } satisfies AttributeConfig<Type_AnchorAlignHorizontal>,
+  // Écart d'accroche des flux, en px, perpendiculaire au côté du nœud (équivalent
+  // de la « Distance » d'e!Sankey). POSITIF = les ancres rentrent DANS la boîte
+  // (les flux entrants/sortants se rejoignent à travers le nœud) ; négatif = elles
+  // s'en écartent vers l'extérieur. Découplé de la taille de la boîte, qui garde
+  // son rendu : seules les ancres se déplacent (cf. Node.updateLinksPositions).
+  // 0 = comportement historique (accroche sur le bord). Appliqué avec un clamp
+  // à mi-dimension pour que les ancres opposées ne se croisent pas au-delà du
+  // centre (les flux « se touchent » au maximum).
+  link_inset: {
+    default: 0,
+    type: (() => 0) as (() => number),
+    category: 'shape' as const,
+    actions: ['applyPosition'] as BaseActionType[],
+    labels: {
+      en: 'Link distance',
+      fr: 'Distance des flux',
+      es: 'Distancia de flujos',
+      de: 'Flussabstand',
+      it: 'Distanza dei flussi'
+    },
+    tooltips: {
+      en: 'Perpendicular offset of link anchors relative to the node border, in px. Positive pulls the anchors INSIDE the box (incoming/outgoing links meet through the node), negative pushes them outside. The box keeps its size.',
+      fr: 'Décalage perpendiculaire des ancres de flux par rapport au bord du nœud, en px. Positif fait rentrer les ancres DANS la boîte (les flux entrants/sortants se rejoignent à travers le nœud), négatif les écarte vers l\'extérieur. La boîte garde sa taille.',
+      es: 'Desplazamiento perpendicular de las anclas de flujo respecto al borde del nodo, en px. Positivo mete las anclas DENTRO de la caja (los flujos entrantes/salientes se unen a través del nodo), negativo las aleja. La caja conserva su tamaño.',
+      de: 'Senkrechter Versatz der Flussanker relativ zum Knotenrand, in px. Positiv zieht die Anker IN die Box (ein-/ausgehende Flüsse treffen sich durch den Knoten), negativ schiebt sie nach außen. Die Box behält ihre Größe.',
+      it: 'Scostamento perpendicolare delle ancore di flusso rispetto al bordo del nodo, in px. Positivo porta le ancore DENTRO la scatola (i flussi entranti/uscenti si incontrano attraverso il nodo), negativo le allontana. La scatola mantiene la sua dimensione.'
+    }
+  } satisfies AttributeConfig<number>,
   // =================== AUTRES ATTRIBUTS ===================
   orphan_node_visible: {
     default: true as boolean,

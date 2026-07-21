@@ -1,4 +1,6 @@
 import colormap from 'colormap'
+import i18next from 'i18next'
+import { Type_LangMap, normalizeLang, parseLangMap, resolveLangMap, serializeLangMap } from '../Persistence/persistenceMigrations'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_ElementValue, Class_ElementTaggedValue } from '../Elements/LinkValues'
 import { Class_NodeElement } from '../Elements/Node'
@@ -18,7 +20,9 @@ export abstract class Class_ProtoTagGroup {
   // PRIVATE ATTRIBUTES =================================================================
   // Name
   private _id: string
-  private _name: string
+  // OS#1299 — nom multilingue { langue -> nom } (cf. Class_ProtoTag) : le
+  // getter/setter name résout/écrit la langue active de l'app.
+  private _name_map: Type_LangMap
 
   // List of tags
   private _tag_count: number = 0
@@ -49,7 +53,7 @@ export abstract class Class_ProtoTagGroup {
    */
   constructor(id: string, name: string, sankey: Class_Sankey) {
     this._id = id
-    this._name = name
+    this._name_map = { [normalizeLang(i18next.language)]: name }
     this._ref_sankey = sankey
   }
 
@@ -88,7 +92,8 @@ export abstract class Class_ProtoTagGroup {
     const revert_matching_id: { [id: string]: string; } = {}
     Object.entries(matching_tags_id).forEach(([k, v]) => revert_matching_id[v] = k)
     // Common attributes
-    this._name = tagg_to_copy._name
+    // Map complète (pas la string résolue) : les traductions survivent à la copie.
+    this._name_map = { ...tagg_to_copy._name_map }
     this._banner = tagg_to_copy._banner
     this._tag_count = tagg_to_copy._tag_count
     // tagg_to_copy._tags_order holds the SOURCE group's tag ids. When the two
@@ -135,7 +140,8 @@ export abstract class Class_ProtoTagGroup {
     _kwargs?: Type_JSON
   ) {
     // Fill group attributes
-    json_object['name'] = this._name
+    // OS#1299 — string si monolingue (format historique), map { fr, en, ... } sinon.
+    json_object['name'] = serializeLangMap(this._name_map) ?? ''
     json_object['banner'] = this._banner
     json_object['tags_order'] = this._tags_order
     // Update tags infos
@@ -161,7 +167,14 @@ export abstract class Class_ProtoTagGroup {
     // Read legacy JSON
     this.fromLegacyJSON(json_object)
     // Read group attributes
-    this._name = getStringFromJSON(json_object, 'name', this._name)
+    // OS#1299 — accepte la string historique (rangée sous la langue déclarée du
+    // fichier) ou la map { langue -> nom }.
+    if (json_object['name'] !== undefined) {
+      this._name_map = parseLangMap(
+        json_object['name'],
+        this._ref_sankey.drawing_area.application_data.language
+      )
+    }
     this._banner = getStringFromJSON(json_object, 'banner', this._banner) as tag_banner_type
     // Create new tags & read their attributes
     const matching_tags_id: { [_: string]: string; } = (kwargs && kwargs['matching_tags_id']) ? kwargs['matching_tags_id'] as { [_: string]: string; } : {}
@@ -206,7 +219,12 @@ export abstract class Class_ProtoTagGroup {
   }
 
   private fromLegacyJSON(json_object: Type_JSON) {
-    this._name = getStringFromJSON(json_object, 'group_name', this._name)
+    if (json_object['group_name'] !== undefined) {
+      this._name_map = parseLangMap(
+        json_object['group_name'],
+        this._ref_sankey.drawing_area.application_data.language
+      )
+    }
   }
 
   // PUBLIC METHODS =====================================================================
@@ -315,7 +333,7 @@ export abstract class Class_ProtoTagGroup {
    * @type {string}
    * @memberof Class_ProtoTagGroup
    */
-  public get name(): string { return this._name }
+  public get name(): string { return resolveLangMap(this._name_map ?? {}, i18next.language) }
 
   /**
    * Return dict tag from the current group
@@ -373,7 +391,13 @@ export abstract class Class_ProtoTagGroup {
   public get banner(): tag_banner_type { return this._banner }
 
   // SETTERS ============================================================================
-  public set name(value: string) { this._name = value }
+  public set name(value: string) {
+    const lang = normalizeLang(i18next.language)
+    if (!this._name_map) this._name_map = {}
+    // Vider dans une langue alors que d'autres existent = supprimer la traduction.
+    if (value === '' && Object.keys(this._name_map).some(l => l !== lang)) delete this._name_map[lang]
+    else this._name_map[lang] = value
+  }
   public set banner(value: tag_banner_type) { this._banner = value }
 }
 // CLASS TAGGROUP ***********************************************************************

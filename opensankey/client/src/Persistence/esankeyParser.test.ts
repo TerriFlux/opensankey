@@ -75,10 +75,12 @@ const FIXTURE = `<?xml version="1.0" encoding="utf-8"?>
     <processes>
       <process id="50" locationX="100" locationY="300" backgroundLocationX="100" backgroundLocationY="300" backgroundSizeW="48" backgroundSizeH="112">
         <brushColor argb="-1073774768" />
+        <penColor name="Black" argb="-16777216" hasPattern="true" Pattern="0" width="3" />
         <label text="Source A" />
       </process>
       <process id="51" locationX="400" locationY="320">
         <brushColor argb="-16777216" />
+        <penColor name="Black" argb="-16777216" hasPattern="false" width="1" />
         <label text="Cible B" />
         <selectionNode boundaryX="400" boundaryY="320" boundaryW="72" boundaryH="64" />
       </process>
@@ -130,6 +132,40 @@ describe('parseEsankeyXml — fixture minimale', () => {
     const b = Object.values(d.nodes).find(n => n.name === 'Cible B')
     expect(a?.local.color).toBe('#FF7F50') // Coral, alpha ignoré
     expect(b?.local.color).toBe('#000000') // -16777216 = noir opaque
+  })
+
+  test('bordure de nœud : width/Pattern de <penColor> → shape_border_*', () => {
+    const a = Object.values(d.nodes).find(n => n.name === 'Source A')
+    const b = Object.values(d.nodes).find(n => n.name === 'Cible B')
+    // Source A : width 3, Pattern 0 (solide), noir
+    expect(a?.local.shape_border_visible).toBe(true)
+    expect(a?.local.shape_border_thickness).toBe(3)
+    expect(a?.local.shape_border_dashed).toBe(false)
+    expect(a?.local.shape_border_color).toBe('#000000')
+    expect(a?.local.shape_border_color_sustainable).toBe(true)
+    // Cible B : width 1 (et pas le défaut 3 pointillés de l'appli)
+    expect(b?.local.shape_border_thickness).toBe(1)
+  })
+
+  // Le <label><font> du process → gras/taille/couleur du name label du nœud
+  // (e!Sankey met souvent ces titres en gras : sans ça, ils étaient rendus maigres).
+  test('label de nom : <label><font style/size> + textColor → name_label_bold/font_size/color', () => {
+    const withFont = FIXTURE.replace(
+      '<label text="Source A" />',
+      '<label text="Source A" textColor="-16776961"><font name="Arial" size="12" style="1" /></label>'
+    )
+    const df = parseEsankeyXml(withFont)
+    const a = Object.values(df.nodes).find(n => n.name === 'Source A')
+    const b = Object.values(df.nodes).find(n => n.name === 'Cible B')
+    // Source A : font style=1 (gras), size 12 pt → 16 px (×4/3), textColor bleu
+    expect(a?.local.name_label_bold).toBe(true)
+    expect(a?.local.name_label_italic).toBeUndefined()
+    expect(a?.local.name_label_font_size).toBe(16)
+    expect(a?.local.name_label_color).toBe('#0000FF')
+    // Cible B : label sans <font> ni textColor → aucune mise en forme posée
+    expect(b?.local.name_label_bold).toBeUndefined()
+    expect(b?.local.name_label_font_size).toBeUndefined()
+    expect(b?.local.name_label_color).toBeUndefined()
   })
 
   // OS#1298 — la boîte réelle du process (backgroundSizeW/H, ou boundaryW/H du
@@ -446,6 +482,69 @@ describe('parseEsankeyXml — orientation des flux (arrowDirection)', () => {
   })
 })
 
+describe('parseEsankeyXml — jonction masquée à Distance négative (shape_link_inset)', () => {
+  // e!Sankey n'emploie de « Distance » (port nodePadding) négative que sur des
+  // process MASQUÉS : des jonctions fines et hautes qui rassemblent les flux
+  // (vérifié sur les 120 démos ; CHP Hospital : boîte 16×160, padding -8). Le
+  // nœud doit alors GARDER sa boîte (invisible) + recevoir l'inset — sinon il
+  // collapserait en point, écrasant l'étalement vertical des flux. Les `<port>`
+  // sont des enfants DIRECTS du `<process>` (pas de wrapper `<ports>`).
+  const FIXTURE_HIDDEN_JUNCTION = `<?xml version="1.0" encoding="utf-8"?>
+<document xmlns="${NS}" generator="e!Sankey" generatorVersion="5.2.0.16">
+  <netModel>
+    <unitTypes><unitType id="10" name="E" used="true" width="80" maximumFlow="40">
+      <units><unit id="11" name="MJ" coefficient="1" isBasicUnit="true" /></units>
+    </unitType></unitTypes>
+    <entryGroup id="20" name="Root"><entries>
+      <entry id="21" name="Flux"><unitTypeRef refId="10" /><brushColor argb="-256" /></entry>
+    </entries></entryGroup>
+    <graphNodes>
+      <graphProcess id="30" name="Src" />
+      <graphProcess id="31" name="Junction" />
+    </graphNodes>
+    <graphArrows>
+      <graphArrow id="40" name="">
+        <from><graphProcessRef refId="30" /></from>
+        <to><graphProcessRef refId="31" /></to>
+        <compartments><flow id="41" name="Flux" quantity="10"><entryRef refId="21" /><unitRef refId="11" /></flow></compartments>
+      </graphArrow>
+    </graphArrows>
+  </netModel>
+  <net backgroundColor="-1">
+    <processes>
+      <process id="50" locationX="100" locationY="300" backgroundSizeW="48" backgroundSizeH="48"><label text="Src" /></process>
+      <process id="51" locationX="400" locationY="300" backgroundSizeW="16" backgroundSizeH="160" visible="false"><label text="Junction" />
+        <port id="52" nodePadding="-8" />
+      </process>
+    </processes>
+  </net>
+  <logicalGraphicalObjectMapping>
+    <nodes>
+      <keyValuePair><graphProcessRef refId="30" /><processRef refId="50" /></keyValuePair>
+      <keyValuePair><graphProcessRef refId="31" /><processRef refId="51" /></keyValuePair>
+    </nodes>
+  </logicalGraphicalObjectMapping>
+</document>`
+
+  const d = parseEsankeyXml(FIXTURE_HIDDEN_JUNCTION)
+
+  test('jonction masquée + padding négatif → boîte CONSERVÉE (pas collapsée) + inset', () => {
+    const j = Object.values(d.nodes).find(n => n.name === 'Junction')
+    // Masquée (forme + bordure éteintes) mais boîte 16×160 posée → étalement vertical.
+    expect(j?.local.shape_visible).toBe(false)
+    expect(j?.local.shape_border_visible).toBe(false)
+    expect(j?.local.node_width).toBe(16)
+    expect(j?.local.node_height).toBe(160)
+    // padding -8 → inset 8 (= demi-largeur : les flux se rejoignent au centre en x).
+    expect(j?.local.shape_link_inset).toBe(8)
+  })
+
+  test('process visible sans port → aucun inset (défaut)', () => {
+    const src = Object.values(d.nodes).find(n => n.name === 'Src')
+    expect(src?.local.shape_link_inset).toBeUndefined()
+  })
+})
+
 describe('parseEsankeyXml — coude droit (OS#1288)', () => {
   // Le `<sankeyLink>` du `<arrow>` porte la géométrie du tracé e!Sankey :
   // segment droit (px) à chaque bout puis virage court. On la mappe vers les
@@ -456,7 +555,7 @@ describe('parseEsankeyXml — coude droit (OS#1288)', () => {
     .replace('<process id="51" locationX="400" locationY="320">', '<process id="51" locationX="400" locationY="320" arrowDirection="2">')
     .replace('<arrow id="60">', `<arrow id="60">${extra}`)
 
-  test('flux vh : segment droit (horiz_shift) et virage court (tangeant) posés', () => {
+  test('flux vh : segment droit (horiz_shift), tangente de départ = 1, virage court côté cible', () => {
     const d = parseEsankeyXml(withElbow(
       '<sankeyLink sankeyStartSegmentLength="18" sankeyEndSegmentLength="18" curviness="10" orthogonal="false" adjustingStyle="Manual" />'))
     const link = Object.values(d.links)[0]
@@ -464,18 +563,20 @@ describe('parseEsankeyXml — coude droit (OS#1288)', () => {
     // Segments droits 18 px / portée ≈ 300.67 ≈ 0.0599 (ratio de longueur).
     expect(link.local.left_horiz_shift as number).toBeCloseTo(0.0599, 3)
     expect(link.local.right_horiz_shift as number).toBeCloseTo(0.0599, 3)
-    // Virage court : tangente ≈ 10/300.67 ≈ 0.0333, bien sous le défaut 0.3.
-    expect(link.local.starting_tangeant as number).toBeCloseTo(0.0333, 3)
+    // COUDE (vh) : la tangente de départ doit atteindre le coin → forcée à 1,
+    // sinon la courbe file en diagonale molle. Côté cible : virage court
+    // (≈ 10/300.67 ≈ 0.0333).
+    expect(link.local.starting_tangeant as number).toBe(1)
     expect(link.local.ending_tangeant as number).toBeCloseTo(0.0333, 3)
-    expect(link.local.starting_tangeant as number).toBeLessThan(0.3)
   })
 
-  test('orthogonal=true → tangente encore plus serrée (≤ 0.06)', () => {
+  test('orthogonal=true : tangente de départ = 1, tangente cible serrée (≤ 0.06)', () => {
     const d = parseEsankeyXml(withElbow(
       '<sankeyLink sankeyStartSegmentLength="18" sankeyEndSegmentLength="18" curviness="40" orthogonal="true" />'))
     const link = Object.values(d.links)[0]
-    // curviness 40/300.67 ≈ 0.133 mais orthogonal plafonne à 0.06.
-    expect(link.local.starting_tangeant as number).toBeLessThanOrEqual(0.06)
+    // Coude vh : départ forcé à 1 pour un angle net.
+    expect(link.local.starting_tangeant as number).toBe(1)
+    // curviness 40/300.67 ≈ 0.133 mais orthogonal plafonne à 0.06 côté cible.
     expect(link.local.ending_tangeant as number).toBeLessThanOrEqual(0.06)
   })
 
@@ -486,6 +587,45 @@ describe('parseEsankeyXml — coude droit (OS#1288)', () => {
     expect(link.local.starting_tangeant).toBeUndefined()
   })
 })
+
+describe('parseEsankeyXml — SA#294 : ancre masquée recalée (accroche verticale)', () => {
+  // Une ancre In/Out invisible (process visible="false" avec une boîte) est
+  // collapsée en point. Pour un voisin AU-DESSUS/DESSOUS (accroche verticale),
+  // on recale le point sur le MILIEU du bord face au voisin (le coin décalait le
+  // départ d'une demi-boîte → flux trop haut), et le label est ré-ancré au CENTRE
+  // du point (name_label='middle'), stable quand le nœud grossit. Pour un voisin
+  // LATÉRAL (flux horizontal), on NE recale PAS (sinon le flux droit descendrait).
+  // Boîte de l'ancre (process 50) : x=100 y=300 w=48 h=112 → centre (124,356),
+  // bord bas (124,412). Label absolu (110,320) taille 20×22 → centre (120,331).
+  const hidden = (proc51: string): string => FIXTURE
+    .replace('<process id="50" locationX="100"', '<process id="50" visible="false" locationX="100"')
+    .replace('<label text="Source A" />', '<label text="Source A" locationX="110" locationY="320" sizeW="20" sizeH="22" />')
+    .replace('<process id="51" locationX="400" locationY="320">', proc51)
+
+  test('voisin en dessous → bord BAS-centre, label ancré au centre au-dessus du départ', () => {
+    // Cible sous l'ancre (x≈centre, y=600) → axe vertical dominant → bord bas.
+    const d = parseEsankeyXml(hidden('<process id="51" locationX="118" locationY="600">'))
+    const inNode = Object.values(d.nodes).find(n => n.name === 'Source A')
+    expect(inNode?.local.shape_visible).toBe(false)
+    expect(inNode?.local.name_label_vert).toBe('middle')
+    expect(inNode?.local.name_label_horiz).toBe('middle')
+    // shift = centre du label − point d'accroche (bord bas-centre 124,412).
+    expect(inNode?.local.name_label_horiz_shift).toBe(-4)  // 120 − 124
+    expect(inNode?.local.name_label_vert_shift).toBe(-81)  // 331 − 412 (label AU-DESSUS)
+  })
+
+  test('voisin à droite → PAS de recalage (flux horizontal reste droit)', () => {
+    // Cible par défaut (400,320), à droite → axe horizontal dominant → skip.
+    const d = parseEsankeyXml(hidden('<process id="51" locationX="400" locationY="320">'))
+    const inNode = Object.values(d.nodes).find(n => n.name === 'Source A')
+    // Le label garde l'ancrage coin haut-gauche (applyNameLabelPos), non recentré.
+    expect(inNode?.local.name_label_vert).toBe('top')
+    expect(inNode?.local.name_label_horiz).toBe('left')
+    expect(inNode?.local.name_label_horiz_shift).toBe(10)  // 110 − 100 (coin)
+    expect(inNode?.local.name_label_vert_shift).toBe(20)   // 320 − 300 (coin)
+  })
+})
+
 
 describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)', () => {
   const d = parseEsankeyXml(FIXTURE_DECOR, { 'Images/tmp1.tmp': PNG_URI })
@@ -542,7 +682,7 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     const containers = Object.values(d.labels)
     expect(containers.length).toBe(3)
     const texte = containers.find(c => String(c.name_label_fo_content ?? '').includes('Titre'))
-    expect(texte?.name_label_font_size).toBe(18)
+    expect(texte?.name_label_font_size).toBe(24) // 18 pt → 24 px (×4/3)
     expect(texte?.name_label_bold).toBe(true)
     expect(texte?.name_label_color).toBe('#000000')
     // Multi-ligne dans le rich text (foreignObject) ; name/name_label_text portent
@@ -551,7 +691,15 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     expect(texte?.name_label_is_visible).toBe(true)
     expect(texte?.name).toBe('Titre du diagramme')
     expect(texte?.name_label_text).toBe('Titre du diagramme')
-    expect(texte?.name_label_fo_content).toBe('<p>Titre du</p><p>diagramme</p>')
+    // Style baké dans chaque <p> du rich-text (les conteneurs forcent has_fo, le
+    // rendu FO ignore les attributs plats) : taille/gras/couleur e!Sankey.
+    expect(texte?.name_label_fo_content).toBe(
+      '<p style="font-size:24px;font-weight:bold;color:#000000">Titre du</p>' +
+      '<p style="font-size:24px;font-weight:bold;color:#000000">diagramme</p>')
+    // Boîte agrandie pour englober le rich-text (padding 24 + 2 lignes × 24 px ×
+    // 1.42, police convertie pt→px) et largeur +30 (padding horizontal) : 300 → 330.
+    expect(texte?.label_height).toBe(93)
+    expect(texte?.label_width).toBe(330)
     const rect = containers.find(c => c.color_visible === true)
     expect(rect?.color).toBe('#E0E0E0') // -2039584
     expect(rect?.transparent_border).toBe(true)
@@ -576,7 +724,27 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     const box = containers.find(c => c.color_visible === true)
     expect(box?.color).toBe('#E0E0E0') // le fond est conservé
     expect(box?.name_label_source).toBe('custom')
-    expect(box?.name_label_fo_content).toBe('<p>Titre du</p><p>diagramme</p>')
+    expect(box?.name_label_fo_content).toBe(
+      '<p style="font-size:24px;font-weight:bold;color:#000000">Titre du</p>' +
+      '<p style="font-size:24px;font-weight:bold;color:#000000">diagramme</p>')
+  })
+
+  // Lignes vides préservées : e!Sankey sépare des blocs par des lignes blanches
+  // (ex. démo Buslinie). On les rend en `<p><br></p>` pour garder l'espacement
+  // (les filtrer remontait la ligne du bas), et la hauteur de boîte les compte.
+  test('ligne vide dans un texte → <p><br></p> préservé, hauteur inclut la ligne vide', () => {
+    const withBlank = FIXTURE_DECOR.replace(
+      'text="Titre du&#xD;&#xA;diagramme"',
+      'text="Haut&#xD;&#xA;&#xD;&#xA;Bas"'
+    )
+    const db = parseEsankeyXml(withBlank, { 'Images/tmp1.tmp': PNG_URI })
+    const texte = Object.values(db.labels).find(c => String(c.name_label_fo_content ?? '').includes('Haut'))
+    expect(texte?.name_label_fo_content).toBe(
+      '<p style="font-size:24px;font-weight:bold;color:#000000">Haut</p>' +
+      '<p><br></p>' +
+      '<p style="font-size:24px;font-weight:bold;color:#000000">Bas</p>')
+    // 3 lignes (dont la vide) × 24 px × 1.42 + 24 (police convertie pt→px).
+    expect(texte?.label_height).toBe(127)
   })
 
   // Import d'un trait <line> → ligne libre (shape_type 'line', élément OS#1276).
@@ -662,11 +830,17 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
   })
 
   test('légende visible, position normalisée avec le reste', () => {
-    // min X/Y de l'ensemble = (100, 100) (le texte) → décalage -50
-    // legend_police = 12 : lu sur <legend><textFont size="12">. Le
+    // La zone de texte est agrandie pour englober le rich-text (padding/interligne
+    // .ql-editor) et RECENTRÉE : son coin haut-gauche passe de (100,100) à (85,92)
+    // — c'est le nouveau min de l'ensemble → décalage (-35,-42). Le texte, restant
+    // le min, retombe à (50,50) ; la légende suit (legend_dx 100-35, legend_dy 200-42).
+    // legend_police = 12 : lu BRUT sur <legend><textFont size="12"> — PAS de
+    // conversion pt→px sur la légende (agrandir décalerait sa disposition). Le
     // <captionFont> voisin (taille du titre "Legend" du cadre) n'a pas
     // d'équivalent OpenSankey (cf. commentaire EsParsedDiagram.legend) : non repris.
-    expect(d.legend).toEqual({ mask_legend: false, legend_dx: 50, legend_dy: 150, legend_police: 12 })
+    // legend_dy dépend de la boîte de la zone de texte (dont la police EST
+    // convertie ×4/3) : plus haute → recentrage décalé (158 → 166).
+    expect(d.legend).toEqual({ mask_legend: false, legend_dx: 65, legend_dy: 166, legend_police: 12 })
     const texte = Object.values(d.labels).find(c => c.title === 'Titre du diagramme')
     expect(texte?.x).toBe(50)
     expect(texte?.y).toBe(50)
@@ -739,7 +913,7 @@ describe('parseEsankeyXml — OS#1287 taille/couleur/position du label de valeur
   const link = Object.values(d.links)[0]
 
   test('taille de police reprise de <font size>', () => {
-    expect(link.local.value_label_font_size).toBe(9)
+    expect(link.local.value_label_font_size).toBe(12) // 9 pt → 12 px (×4/3)
   })
 
   test('couleur du texte reprise de textColor (argb signé → hex RGB)', () => {
@@ -763,7 +937,7 @@ describe('parseEsankeyXml — OS#1287 taille/couleur/position du label de valeur
     const other = Object.values(parseEsankeyXml(withOther).links)[0]
     expect(other.local.value_label_horiz).toBe('left')
     expect(other.local.value_label_vert).toBe('top')
-    expect(other.local.value_label_font_size).toBe(7)
+    expect(other.local.value_label_font_size).toBe(9) // 7 pt → 9 px (round(7×4/3))
   })
 
   test('label sans mise en forme (FIXTURE brute) : aucune clé T/P/C posée', () => {
@@ -917,9 +1091,30 @@ const DEMOS_DIR = process.env.ESANKEY_CORPUS_DIR
   || 'C:/Program Files/iPoint-systems/e!Sankey 5/demos'
 const describeDemos = fs.existsSync(DEMOS_DIR) ? describe : describe.skip
 
+// Le corpus e!Sankey livre le MÊME diagramme en plusieurs langues (suffixe
+// ` [xx]` : `Efficiency diagram example [en].sankey`, `… [de].sankey`…). On n'en
+// garde qu'UNE variante par diagramme (langue préférée, anglais d'abord) : les
+// autres langues ne parseraient rien de neuf. Même tri que la galerie e!Sankey
+// (esankey_local_index / _ESANKEY_LANG_ORDER côté serveur).
+const ESANKEY_LANG_ORDER = ['en', 'de', 'fr', 'es', 'it', 'zh', 'ja', 'pt', 'nl']
+const dedupeByLanguage = (names: string[]): string[] => {
+  const langRank = (lang: string): number => {
+    const i = ESANKEY_LANG_ORDER.indexOf(lang)
+    return i === -1 ? ESANKEY_LANG_ORDER.length : i
+  }
+  const best: { [base: string]: { name: string, rank: number } } = {}
+  for (const name of names) {
+    const m = /^(.*?)\s*\[([a-z]{2})\]\.sankey$/i.exec(name)
+    const base = m ? m[1].trim() : name.replace(/\.sankey$/i, '')
+    const rank = m ? langRank(m[2].toLowerCase()) : ESANKEY_LANG_ORDER.length
+    if (!best[base] || rank < best[base].rank) best[base] = { name, rank }
+  }
+  return Object.values(best).map(b => b.name).sort()
+}
+
 describeDemos('loadEsankeyFile — démos e!Sankey 5 locales', () => {
   const files = fs.existsSync(DEMOS_DIR)
-    ? fs.readdirSync(DEMOS_DIR).filter(f => f.endsWith('.sankey'))
+    ? dedupeByLanguage(fs.readdirSync(DEMOS_DIR).filter(f => f.endsWith('.sankey')))
     : []
 
   test(`toutes les démos (${files.length}) parsent sans erreur`, async () => {

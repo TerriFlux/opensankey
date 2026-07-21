@@ -25,7 +25,9 @@
 // ==================================================================================================
 
 import * as d3 from '../d3Modules'
+import i18next from 'i18next'
 
+import { Type_LangMap, normalizeLang, resolveLangMap } from '../Persistence/persistenceMigrations'
 import { Class_ElementStyle } from './Element'
 import { NodeDrawNameLabel } from './DrawLabel'
 import { Class_DrawingArea } from '../types/DrawingArea'
@@ -68,7 +70,12 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   private _position_u: number
   private _position_v: number
 
-  protected _name: string
+  // OS#1299 — nom multilingue : map { langue -> nom }, comme la documentation
+  // markdown (cf. persistenceMigrations). Le getter/setter `name` expose une
+  // string résolue/écrite pour la langue ACTIVE de l'app (i18next) : traduire un
+  // diagramme = basculer la langue de l'app puis renommer. Une seule langue =
+  // comportement historique inchangé (sérialisée en string).
+  protected _name_map: Type_LangMap
   // Le contenu du label de nom (source, texte libre, groupe de tags, dimension)
   // est désormais porté par le système d'attributs/styles (_storage) :
   // name_label_source / name_label_text / name_label_tag_group_id /
@@ -137,7 +144,7 @@ export abstract class Class_NodeBase extends Class_BaseShape {
       default_style
     )
 
-    this._name = name
+    this._name_map = { [normalizeLang(i18next.language)]: name }
     this._nodeDrawShape = new NodeDrawShape(this)
     this._nodeDrawNameLabel = new NodeDrawNameLabel(this, 'name_label')
     this._nodeDrawIcon = new NodeDrawNameLabel(this, 'icon')
@@ -196,7 +203,9 @@ export abstract class Class_NodeBase extends Class_BaseShape {
 
   protected _copyFrom(_: Class_NodeBase): void {
     super._copyFrom(_)
-    this._name = _.name
+    // Copie de la MAP complète (pas la string résolue) : les traductions non
+    // actives doivent survivre à la copie (vues, duplication, undo).
+    this._name_map = { ..._._name_map }
     // name_label_source/text/tag_group_id/dimension_id sont des attributs _storage,
     // déjà copiés par copyAttrFrom (appelé dans Element._copyFrom via super).
     this._position_u = _._position_u
@@ -210,15 +219,17 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     // _nodeDrawShape/_nodeDrawNameLabel/_nodeDrawIcon ne soient assignés.
     if (!this._nodeDrawShape) return
     this._nodeDrawShape.drawShape()
-    this.drawDragHandlers()
+    // On clear la sub-sélection du label AVANT drawDragHandlers : une sélection
+    // au niveau ÉLÉMENT (typiquement clic sur la forme) doit (ré)afficher les
+    // poignées de forme, que drawDragHandlers masque tant qu'un label est
+    // sous-sélectionné.
     // NB: on NE redessine PAS les labels ici. Sinon un simple clic
     // (re-sélection) détruit et recrée le <text> entre les deux clics d'un
     // double-clic → le dblclick natif ne déclenche pas l'éditeur du label.
-    // drawAsSelected reflète un changement de sélection au niveau ÉLÉMENT
-    // (typiquement clic sur la forme). On clear la sub-sélection du label
-    // dans tous les cas — l'utilisateur doit cliquer sur le <text> du label
-    // pour faire (ré)apparaître les poignées.
+    // L'utilisateur doit cliquer sur le <text> du label pour faire
+    // (ré)apparaître les poignées de boîte de label.
     this.selected_label_prefix = null
+    this.drawDragHandlers()
     // Poignées dans `g_handlers` (Class_Handler) — refresh appelle unDraw si
     // le label n'est plus sub-sélectionné.
     this._nodeDrawNameLabel?.refreshLabelResizeHandles()
@@ -573,21 +584,36 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     this._nodeEventsHandler.handleMouseOut()
   }
 
-  public get name() { return this._name }
+  // Nom résolu pour la langue active de l'app (repli en→fr→première dispo).
+  // Avec une seule langue dans la map (cas historique), renvoie toujours cette
+  // valeur quelle que soit la langue active. Le `?? {}` protège les accès
+  // pendant la chaîne super() du constructeur (map pas encore assignée).
+  public get name() { return resolveLangMap(this._name_map ?? {}, i18next.language) }
   public set name(_: string) {
-    this._name = _
+    const lang = normalizeLang(i18next.language)
+    if (!this._name_map) this._name_map = {}
+    // Vider le nom dans une langue alors que d'autres langues existent =
+    // SUPPRIMER cette traduction (le nom retombe sur l'autre langue). Vider le
+    // nom quand c'est la seule langue = nom vide (comportement historique).
+    const other_langs = Object.keys(this._name_map).filter(l => l !== lang)
+    if (_ === '' && other_langs.length > 0) delete this._name_map[lang]
+    else this._name_map[lang] = _
     // Sous un thème à palette par nom, renommer périme la table des couleurs.
     // `Class_ContainerElement` hérite de cette classe sans être un nœud : c'est
     // `Sankey` qui filtre.
     this.sankey?.onNodeRenamed(this)
     this.drawNameLabel()
   }
+  /** Map complète { langue -> nom } (persistance / copie). */
+  public get name_lang_map(): Type_LangMap { return this._name_map }
+  public set name_lang_map(_: Type_LangMap) { this._name_map = _ }
   public get name_label() {
+    const resolved_name = this.name
     if (this.name_label_separator !== '') {
-      const splitted_label = this._name.split(this.name_label_separator)
+      const splitted_label = resolved_name.split(this.name_label_separator)
       return (splitted_label.length > 1 && this.name_label_separator_part == 'after') ? splitted_label[splitted_label.length - 1] : splitted_label[0]
     }
-    return this._name
+    return resolved_name
   }
 
   // Compat historique : name_label_custom <=> source 'custom'. Conserve le
@@ -606,6 +632,14 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     case 'ancestor': return this.resolveAncestorLabel()
     default: return this.name_label
     }
+  }
+
+  // Texte BRUT à éditer : identique au libellé effectif pour un élément normal,
+  // mais surchargé par le titre (Class_ContainerElement) pour préserver les
+  // jetons {Tag} au lieu de leur valeur interpolée. Sert aux chemins d'édition
+  // (input inline, init rich text) : on édite « {Month} », pas « January ».
+  public get name_label_effective_editable(): string {
+    return this.name_label_effective
   }
 
   // Sources 'tag' et 'ancestor' : surchargées par Class_NodeElement (qui porte
@@ -997,6 +1031,18 @@ export abstract class Class_NodeBase extends Class_BaseShape {
    * @memberof Class_ContainerElement
    */
   public drawDragHandlers() {
+    // Sous-sélection d'un label (clic sur son <text>) : on ne montre QUE les
+    // poignées de la boîte du label, pas celles de la forme. On masque donc tout
+    // jeu de poignées de forme tant qu'un label est sous-sélectionné.
+    if (this.selected_label_prefix != null) {
+      this._drag_handler.top.unDraw()
+      this._drag_handler.bottom.unDraw()
+      this._drag_handler.left.unDraw()
+      this._drag_handler.right.unDraw()
+      this._line_endpoint_handler?.a.unDraw()
+      this._line_endpoint_handler?.b.unDraw()
+      return
+    }
     // OS#1276b — ligne libre : deux poignées aux extrémités absolues (position + offset
     // local), en lieu et place des 4 poignées de boîte. Chaque poignée renormalise le
     // segment (cf. dragEndpointHandler). Le drag du CORPS de la ligne reste le drag

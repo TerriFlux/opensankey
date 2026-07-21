@@ -30,7 +30,8 @@ import {
   Button,
   Checkbox,
   Input,
-  Select
+  Select,
+  Textarea
 } from '@chakra-ui/react'
 
 import { useModelBinding } from '../../hooks/useModelBinding'
@@ -40,7 +41,7 @@ import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_DataTagGroup } from '../../types/TagGroup'
 import { CustomFaEyeCheckIcon, OSChecklistDropdown, OSTooltip } from './MenuCommon'
 import { AVAILABLE_THEMES, themeById } from '../../types/ThemeRegistry'
-import { Type_PaperFormat, Type_PaperOrientation } from '../../Elements/ElementsAttributesConfig'
+import { Type_PaperFormat, Type_PaperOrientation, default_title_text } from '../../Elements/ElementsAttributesConfig'
 
 // Utils functions -------------------------------------------------------------------
 
@@ -1112,6 +1113,8 @@ export const TitleConfig = ({ app_data, compact = false }: {
 
   const data_taggs = sankey.data_taggs_list
   const view_taggs = sankey.view_taggs_list
+  // Simple choix de jeton à insérer : défaut « Choose a group » (vide). L'état des
+  // datatags utilisés est déjà lisible dans le champ texte du titre ci-dessous.
   const [token_group_id, setTokenGroupId] = useState('')
   const [view_token_group_id, setViewTokenGroupId] = useState('')
 
@@ -1123,6 +1126,16 @@ export const TitleConfig = ({ app_data, compact = false }: {
     } else {
       title?.setInvisible()
     }
+    app_data.drawing_area.draw()
+    refreshThisAndUpdateRelatedComponents()
+  }
+
+  // Édition directe du texte du titre depuis le panneau (en plus du double-clic
+  // sur le diagramme). On écrit le texte BRUT (avec les jetons {Groupe}), stocké
+  // dans name_label_text — jamais le nom interne de la zone de texte.
+  const eventTitleTextChange = (evt: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const c = sankey.getOrCreateTitleContainer()
+    c.name_label_text = evt.target.value
     app_data.drawing_area.draw()
     refreshThisAndUpdateRelatedComponents()
   }
@@ -1170,10 +1183,18 @@ export const TitleConfig = ({ app_data, compact = false }: {
       layerStyle='menuconfigpanel_grid'
       style={{ display: (compact || is_shown ? '' : 'none') }}
     >
-      {/* Édition du texte via l'interface ZDT */}
+      {/* Édition directe du texte du titre (jetons {Groupe} visibles tels quels),
+          en plus du double-clic sur le diagramme. */}
       <Box layerStyle='menuconfigpanel_option_name'>
         {t('Menu.TitleEditHint')}
       </Box>
+      <Textarea
+        size='sm'
+        rows={2}
+        placeholder={default_title_text}
+        value={title?.name_label_text ?? ''}
+        onChange={eventTitleTextChange}
+      />
 
       {/* Insertion d'un jeton data tag (combine statique + data tag) */}
       {data_taggs.length > 0 &&

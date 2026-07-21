@@ -75,9 +75,9 @@ interface EsFlow {
   local: EsLocal
   displaying_order: number
   tooltip_text: string
-  // Ordre des ancres E/S FIGÉ à l'import (cadenas #197 sur les deux bouts) :
-  // e!Sankey a déjà rangé les flux autour de chaque nœud, on ne veut pas que le
-  // ré-agencement géométrique OpenSankey les réordonne au chargement.
+  // SA#294 — cadenas d'ancre (#197). Posé à false : on préfère l'auto-positionnement
+  // dynamique d'OpenSankey (le rangement e!Sankey était mal reconstitué à l'import et
+  // le figer produisait des inversions selon vh/hv).
   source_side_locked: boolean
   target_side_locked: boolean
   value: { id: string, data_value: number, tags: { [grp: string]: string[] } }
@@ -169,6 +169,15 @@ const attrNum = (el: Element | null, attr: string, fallback: number): number => 
   const parsed = parseFloat(raw)
   return Number.isFinite(parsed) ? parsed : fallback
 }
+
+// Tailles de police : e!Sankey (.NET) exprime `<font size>` en POINTS
+// typographiques (pt, 1/72") — vérifié : tous les `<font>` du corpus portent
+// `unit="3"` (GraphicsUnit.Point). OpenSankey rend `font_size` en PIXELS CSS
+// (1/96"). Sans conversion, un « 12 » e!Sankey (= 16 px réels) devient un
+// « 12 px » et le texte importé est ~25 % trop petit. Facteur 96/72 = 4/3.
+// 0 (absent) reste 0 pour ne pas déclencher les gardes `> 0`.
+const PT_TO_PX = 96 / 72
+const ptToPx = (pt: number): number => pt > 0 ? Math.round(pt * PT_TO_PX) : pt
 
 // Couleurs e!Sankey : entier ARGB signé 32 bits (ex: -1073774768 = Coral
 // avec alpha). On ne garde que le RGB pour la couleur.
@@ -403,11 +412,56 @@ interface EsGraphicalProcess {
    * démos (Bus : In=vh, Out=hv, on-board=hh).
    */
   arrowDirection: number
+  // Mise en forme du label de NOM du process (`<label><font>` + `@textColor`).
+  // e!Sankey met souvent ces titres en gras (démos « Bus Passengers » : tous les
+  // process/places en style="1"). Sans ces champs, le nom importé retombait sur le
+  // style OpenSankey par défaut (maigre) alors qu'il était gras chez e!Sankey.
+  // Neutres = « absent » (on ne pose rien, le style par défaut décide).
+  /** `<label><font>/@style` gras (bit 1 de FontStyle .NET). */
+  labelBold: boolean
+  /** `<label><font>/@style` italique (bit 2). */
+  labelItalic: boolean
+  /** Taille de police du nom (`<label><font>/@size`), 0 = absente. */
+  labelFontSize: number
+  /** Couleur du texte du nom (`<label>/@textColor` argb → hex), null = absente. */
+  labelColor: string | null
+  /**
+   * Écart d'accroche des flux = « Distance » e!Sankey, portée par les `<port>`
+   * enfants DIRECTS du process/place (attribut `nodePadding`, souvent négatif :
+   * -8, -30, -80…). Négatif = les flèches RENTRENT dans la boîte (les flux
+   * entrants/sortants se rejoignent à travers le nœud). Un process peut avoir
+   * plusieurs ports : on retient le plus PROFOND (nodePadding minimal). 0 si aucun
+   * port ou tous à 0. Mappé vers `shape_link_inset = -linkPadding` (OpenSankey :
+   * positif = vers l'intérieur, cf. NODE_SHAPE_SPECIFIC_CONFIG).
+   */
+  linkPadding: number
+  /**
+   * Bordure du process : `<penColor argb width Pattern>` (« Nom/couleur »,
+   * « Largeur » et « Style du trait » de la boîte de dialogue e!Sankey). e!Sankey
+   * varie ces largeurs par nœud (Bus : width 1 ET 3) ; ignorées, tous les nœuds
+   * importés retombaient sur la bordure par défaut (3px pointillés). borderWidth
+   * 0 = pas de trait (bordure masquée). borderColor null si absent.
+   */
+  borderColor: string | null
+  borderWidth: number
+  borderDashed: boolean
 }
 
 /** Axe de raccordement d'un flux à un nœud, depuis `arrowDirection` e!Sankey. */
 const linkAxis = (arrowDirection: number): 'h' | 'v' =>
   (arrowDirection === 1 || arrowDirection === 4) ? 'v' : 'h'
+
+/** nodePadding minimal (le plus profond) parmi les `<port>` d'un process/place.
+ *  Les `<port>` sont des enfants DIRECTS du `<process>`/`<place>` (pas de wrapper
+ *  `<ports>` — vérifié sur le corpus e!Sankey 5). */
+const deepestPortPadding = (el: Element): number => {
+  let min = 0
+  childrenByTag(el, 'port').forEach(p => {
+    const pad = attrNum(p, 'nodePadding', 0)
+    if (pad < min) min = pad
+  })
+  return min
+}
 
 /** Fond blanc / quasi-blanc (WhiteSmoke #F5F5F5, White #FFFFFF…). En e!Sankey
  *  une boîte terminale de cette couleur sert d'ANCRE invisible sur le canevas
@@ -419,6 +473,33 @@ const isNearWhiteFill = (hex?: string | null): boolean => {
   if (!m) return false
   const n = parseInt(m[1], 16)
   return ((n >> 16) & 0xff) >= 0xf0 && ((n >> 8) & 0xff) >= 0xf0 && (n & 0xff) >= 0xf0
+}
+
+/** Mise en forme du label de NOM d'un `<process>`/`<place>` : gras/italique/taille
+ *  depuis son `<label><font>`, couleur depuis `<label>/@textColor`. Commun aux deux
+ *  parseurs. `label` null (aucun label) → tout neutre. .NET FontStyle : bit 1 gras,
+ *  bit 2 italique. */
+const parseGraphicalLabelFont = (label: Element | null): Pick<EsGraphicalProcess, 'labelBold' | 'labelItalic' | 'labelFontSize' | 'labelColor'> => {
+  const font = label ? childByTag(label, 'font') : null
+  const style = attrNum(font, 'style', 0)
+  return {
+    labelBold: (style & 1) !== 0,
+    labelItalic: (style & 2) !== 0,
+    labelFontSize: ptToPx(attrNum(font, 'size', 0)),
+    labelColor: argbToHex(label?.getAttribute('textColor') ?? null),
+  }
+}
+
+/** Bordure d'un `<process>`/`<place>` depuis son `<penColor>`. Commun aux deux
+ *  parseurs. Absente → largeur 0 (pas de trait), la construction du nœud
+ *  masquera la bordure. */
+const parseGraphicalBorder = (el: Element): Pick<EsGraphicalProcess, 'borderColor' | 'borderWidth' | 'borderDashed'> => {
+  const pen = childByTag(el, 'penColor')
+  return {
+    borderColor: argbToHex(pen?.getAttribute('argb') ?? null),
+    borderWidth: attrNum(pen, 'width', 0),
+    borderDashed: isPenColorPatternDashed(pen),
+  }
 }
 
 const parseGraphicalProcesses = (net: Element, palette: EsBrushPalette): { [id: string]: EsGraphicalProcess } => {
@@ -448,6 +529,9 @@ const parseGraphicalProcesses = (net: Element, palette: EsBrushPalette): { [id: 
       imageFile: childByTag(p, 'image')?.getAttribute('filename') ?? '',
       shapeType: attrNum(p, 'shapeType', 0),
       arrowDirection: attrNum(p, 'arrowDirection', 2),
+      linkPadding: deepestPortPadding(p),
+      ...parseGraphicalLabelFont(label),
+      ...parseGraphicalBorder(p),
     }
   })
   return out
@@ -485,9 +569,12 @@ const parseGraphicalPlaces = (net: Element, palette: EsBrushPalette): { [id: str
       imageFile: childByTag(p, 'image')?.getAttribute('filename') ?? '',
       shapeType: attrNum(p, 'shapeType', 0),
       arrowDirection: attrNum(p, 'arrowDirection', 0),
+      linkPadding: deepestPortPadding(p),
       // Boîte de la place (OS#1298), même schéma que le process.
       width: attrNum(p, 'backgroundSizeW', 0),
       height: attrNum(p, 'backgroundSizeH', 0),
+      ...parseGraphicalLabelFont(label),
+      ...parseGraphicalBorder(p),
     }
   })
   return out
@@ -502,12 +589,22 @@ const fontStyleItalic = (style: number): boolean => (style & 2) !== 0
 /** Chemin d'image du XML (`Images\\tmpXX.tmp`) → clé du dict d'images du ZIP. */
 const imageKey = (filename: string): string => filename.replace(/\\/g, '/')
 
-// Applique le texte d'un <text> e!Sankey à une zone (base). Le contenu (et son
-// multi-ligne) vit en rich-text (name_label_fo_content, un <p> par ligne non
-// vide — pas de <br>, qui casse le rendu) ; les champs plats name/name_label_text
-// portent le texte SANS \n (un \n y casse l'affichage et l'éditeur). Renvoie
-// false si le <text> est vide (rien posé).
-const applyTextToContainer = (base: EsContainerJSON, textEl: Element): boolean => {
+// Padding/interligne du .ql-editor (quill.snow.css, chargé par react-quill) qui
+// rend le rich-text des zones : padding 12px vertical (×2) + 15px horizontal (×2),
+// line-height 1.42, `p { margin:0 }`. Sert à dimensionner la boîte pour englober
+// EXACTEMENT le texte rendu (le foreignObject clippe à shape_min_height).
+const QL_PAD_V = 24
+const QL_PAD_H = 30
+const QL_LINE_HEIGHT = 1.42
+
+// Applique le texte d'un <text> e!Sankey à une zone (base). Le contenu multi-ligne
+// vit en rich-text (name_label_fo_content, un <p> par ligne, `<p><br></p>` pour une
+// ligne vide — e!Sankey sépare des blocs par des lignes blanches, qu'on préserve
+// pour garder l'espacement) ; les champs plats name/name_label_text portent le texte
+// SANS \n (un \n y casse l'affichage et l'éditeur). `resize` (défaut vrai) agrandit
+// la boîte pour englober le texte rendu — désactivé quand le texte est absorbé par
+// un rectangle (le fond garde sa géométrie propre). Renvoie false si <text> vide.
+const applyTextToContainer = (base: EsContainerJSON, textEl: Element, resize = true): boolean => {
   const text = (textEl.getAttribute('text') ?? '').replace(/\r\n/g, '\n')
   if (!text.trim()) return false
   const escapeHtml = (s: string): string =>
@@ -518,18 +615,50 @@ const applyTextToContainer = (base: EsContainerJSON, textEl: Element): boolean =
   base.name_label_source = 'custom'
   base.name_label_text = oneLine
   base.name_label_is_visible = true
-  base.name_label_fo_content = text.split('\n')
-    .filter(line => line.trim() !== '')
-    .map(line => `<p>${escapeHtml(line)}</p>`).join('')
+  // Mise en forme (gras/italique/taille/couleur) reprise du <font> + textColor.
+  // On la pose sur les attributs plats ET dans le HTML du rich-text : les zones
+  // de texte forcent `name_label_has_fo` (ContainerPersistence.applyBaseJSON) — le
+  // rendu passe donc TOUJOURS par le foreignObject, qui affiche le HTML brut du
+  // fo_content et IGNORE les attributs plats. Sans style inline dans le <p>, gras
+  // et taille e!Sankey (ex. titre gras) étaient aplatis au style par défaut du
+  // rich-text. On bake donc le style dans chaque <p>.
   const font = childByTag(textEl, 'font')
-  if (font) {
-    base.name_label_font_size = attrNum(font, 'size', 9)
-    const style = attrNum(font, 'style', 0)
-    if (fontStyleBold(style)) base.name_label_bold = true
-    if (fontStyleItalic(style)) base.name_label_italic = true
-  }
   const textColor = argbToHex(textEl.getAttribute('textColor'))
-  if (textColor) base.name_label_color = textColor
+  const fontSize = ptToPx(attrNum(font, 'size', 9)) // pt e!Sankey → px (×4/3)
+  const inlineStyle: string[] = []
+  if (font) {
+    base.name_label_font_size = fontSize
+    if (fontSize > 0) inlineStyle.push(`font-size:${fontSize}px`)
+    const style = attrNum(font, 'style', 0)
+    if (fontStyleBold(style)) { base.name_label_bold = true; inlineStyle.push('font-weight:bold') }
+    if (fontStyleItalic(style)) { base.name_label_italic = true; inlineStyle.push('font-style:italic') }
+  }
+  if (textColor) { base.name_label_color = textColor; inlineStyle.push(`color:${textColor}`) }
+  const styleAttr = inlineStyle.length ? ` style="${inlineStyle.join(';')}"` : ''
+  // Lignes vides préservées (`<p><br></p>`) : e!Sankey sépare des blocs par des
+  // lignes blanches ; les filtrer collait les lignes (la ligne du bas remontait).
+  const lines = text.split('\n')
+  base.name_label_fo_content = lines
+    .map(line => line.trim() === '' ? '<p><br></p>' : `<p${styleAttr}>${escapeHtml(line)}</p>`)
+    .join('')
+  // Boîte : la boîte e!Sankey (sizeH), calibrée au plus juste pour SA police, coupe
+  // le bas du texte agrandi car le .ql-editor ajoute padding + interligne. On
+  // l'agrandit pour englober le rendu exact, et on RECENTRE (le loader force
+  // name_label_horiz/vert='middle' + inside : le texte est centré dans la boîte)
+  // pour ne pas déplacer le texte de sa place e!Sankey. Décalage x/y appliqué avant
+  // la normalisation : translation relative de la zone, que la normalisation suit.
+  if (resize) {
+    const contentH = Math.ceil(lines.length * fontSize * QL_LINE_HEIGHT + QL_PAD_V)
+    const oldH = Number(base.label_height) || 0
+    if (contentH > oldH) {
+      base.y = Math.round((Number(base.y) || 0) - (contentH - oldH) / 2)
+      base.label_height = contentH
+    }
+    // Largeur : compense le padding horizontal pour garder l'aire de texte = sizeW
+    // (sinon le texte se replierait, ajoutant des lignes → re-débordement).
+    base.label_width = (Number(base.label_width) || 0) + QL_PAD_H
+    base.x = Math.round((Number(base.x) || 0) - QL_PAD_H / 2)
+  }
   return true
 }
 
@@ -619,8 +748,10 @@ const parseShapes = (
       const hatch = hatchFromBrush(shape)
       if (hatch) base.shape_hatch = hatch
       // Texte absorbé (boîte e!Sankey en 2 objets) : le fond porte le texte.
+      // resize=false : le rectangle garde SA géométrie (position/taille du fond),
+      // on ne l'agrandit pas pour le texte.
       const t = textOfRect.get(it)
-      if (t) applyTextToContainer(base, t.el)
+      if (t) applyTextToContainer(base, t.el, false)
       out[id] = base
     } else if (kind === 'line') {
       // Ligne libre (élément OS#1276, débloque l'import #1266) : trait décoratif.
@@ -769,7 +900,7 @@ const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } 
       showValue: label?.getAttribute('showValue') !== 'false',
       showUnit: label?.getAttribute('showUnit') === 'true',
       labelFormat: label?.getAttribute('labelFormat') ?? '',
-      labelFontSize: attrNum(labelFont, 'size', 0),
+      labelFontSize: ptToPx(attrNum(labelFont, 'size', 0)),
       labelOffsetH: attrNum(label, 'offsetH', 0),
       labelSegmentPercentage: attrNum(label, 'segmentPercentage', NaN),
       labelColor: argbToHex(label?.getAttribute('textColor') ?? null),
@@ -831,6 +962,8 @@ const parseLegendFontSize = (net: Element): number | null => {
   const legend = findLegendElement(net)
   const textFont = legend ? childByTag(legend, 'textFont') : null
   if (!textFont) return null
+  // NB : PAS de conversion pt→px ici pour l'instant — legend_police pilote la
+  // disposition de la légende (agrandir crée des sauts de ligne). À traiter plus tard.
   const size = attrNum(textFont, 'size', NaN)
   return Number.isFinite(size) ? size : null
 }
@@ -877,6 +1010,15 @@ const defaultNodeStyle = (): EsLocal => ({
   node_height: 0,
   color: '#D9D9D9',
   colorSustainable: false,
+  // Bordure : e!Sankey trace un trait fin plein noir par défaut (jamais le
+  // pointillé 3px de l'appli). shape_border_color_sustainable = true pour que la
+  // couleur de bordure soit indépendante du remplissage (sinon NodeDrawShape
+  // recolore le trait avec la couleur du nœud). Surchargé par nœud via penColor.
+  shape_border_visible: true,
+  shape_border_color: 'black',
+  shape_border_color_sustainable: true,
+  shape_border_thickness: 1,
+  shape_border_dashed: false,
   node_arrow_angle_factor: 30,
   node_arrow_angle_direction: 'right',
   label_visible: true,
@@ -1063,8 +1205,56 @@ export const parseEsankeyXml = (
     node.local.name_label_text_align = 'middle'
   }
 
+  // Mise en forme du LABEL de nom (gras/italique/taille/couleur) reprise du
+  // `<label><font>` e!Sankey. Indépendante de la position : e!Sankey met souvent
+  // ces titres en gras (démos « Bus Passengers »), sinon le nom retombe sur le
+  // style OpenSankey maigre par défaut. Clés modernes `name_label_*` (mêmes que
+  // les zones de texte) appliquées telles quelles par le loader.
+  const applyNameLabelFont = (node: EsNode, graphical: EsGraphicalProcess | null): void => {
+    if (!graphical) return
+    if (graphical.labelBold) node.local.name_label_bold = true
+    if (graphical.labelItalic) node.local.name_label_italic = true
+    if (graphical.labelFontSize > 0) node.local.name_label_font_size = graphical.labelFontSize
+    if (graphical.labelColor) node.local.name_label_color = graphical.labelColor
+  }
+
+  // Bordure du nœud depuis la <penColor> du process/place (« Largeur » + couleur
+  // + « Style du trait »). width 0 = pas de trait → bordure masquée.
+  const applyGraphicalBorder = (node: EsNode, graphical: EsGraphicalProcess | null): void => {
+    if (!graphical) return
+    if (graphical.borderWidth > 0) {
+      node.local.shape_border_visible = true
+      node.local.shape_border_thickness = graphical.borderWidth
+      node.local.shape_border_dashed = graphical.borderDashed
+      if (graphical.borderColor) {
+        node.local.shape_border_color = graphical.borderColor
+        node.local.shape_border_color_sustainable = true
+      }
+    } else {
+      node.local.shape_border_visible = false
+    }
+  }
+
+  // « Distance » e!Sankey (port nodePadding NÉGATIF) → shape_link_inset POSITIF :
+  // les ancres de flux rentrent dans la boîte, les flux entrants/sortants se
+  // rejoignent à travers le nœud (Node.updateLinksPositions clampe à mi-boîte).
+  // Padding >= 0 (gap externe e!Sankey) : pas d'équivalent utile à l'import, ignoré.
+  const applyLinkInset = (node: EsNode, graphical: EsGraphicalProcess | null): void => {
+    if (!graphical || graphical.linkPadding >= 0) return
+    node.local.shape_link_inset = -graphical.linkPadding
+  }
+
   // Nœuds : un par graphProcess. Nom = nom logique, sinon label graphique.
   const nodes: { [id: string]: EsNode } = {}
+  // S2 (SA#294) — Boîte e!Sankey des ancres In/Out collapsées en point. Mémorisée
+  // pour recaler, une fois le voisin connu, le point d'accroche du flux sur le BORD
+  // de la boîte face au voisin (cf. recenterHiddenAnchor) au lieu du coin haut-gauche.
+  const hiddenNodeBox: {
+    [id: string]: {
+      x: number, y: number, w: number, h: number,
+      labelX: number, labelY: number, labelW: number, labelH: number, labelHasPos: boolean
+    }
+  } = {}
   const logicalToNodeId: { [logicalId: string]: string } = {}
   const usedNodeIds = new Set<string>()
   const graphNodes = childByTag(netModel, 'graphNodes')
@@ -1116,12 +1306,40 @@ export const parseEsankeyXml = (
     if (nodeHidden) {
       nodes[id].local.shape_visible = false
       nodes[id].local.shape_border_visible = false
+      // « Distance » e!Sankey NÉGATIVE sur une jonction masquée. e!Sankey ne pose
+      // JAMAIS de Distance négative sur un process VISIBLE (vérifié sur les 120
+      // démos) : c'est toujours une jonction cachée, fine et HAUTE, qui rassemble
+      // plusieurs flux sur sa hauteur (ex. CHP Hospital : boîte 16×160, padding -8
+      // = demi-largeur). On garde alors sa BOÎTE (invisible) + l'inset : les flux
+      // s'étalent le long de la hauteur et se rejoignent au centre en x, fidèle à
+      // e!Sankey. Sans ça, le nœud collapserait en un point, écrasant AUSSI cet
+      // étalement vertical (tous les flux convergeraient au même endroit).
+      if (graphical && graphical.linkPadding < 0 && graphical.width > 0 && graphical.height > 0) {
+        nodes[id].local.node_width = graphical.width
+        nodes[id].local.node_height = graphical.height
+        applyLinkInset(nodes[id], graphical)
+      } else if (graphical && graphical.width > 0 && graphical.height > 0) {
+        // S2 (SA#294) — ancre In/Out collapsée en point : on mémorise la boîte pour
+        // recaler, une fois le voisin connu, le point d'accroche sur le bord face au
+        // voisin (recenterHiddenAnchor). Un nœud-point rend le choix du bord
+        // (target_side/source_side) SANS OBJET (haut=bas), donc l'accroche est
+        // robuste même quand la barre grossit et remonte au-dessus de l'ancre.
+        hiddenNodeBox[id] = {
+          x: graphical.x, y: graphical.y, w: graphical.width, h: graphical.height,
+          labelX: graphical.labelX, labelY: graphical.labelY,
+          labelW: graphical.labelW, labelH: graphical.labelH,
+          labelHasPos: graphical.labelHasPos,
+        }
+      }
     } else {
       // OS#1298 — taille de boîte réelle, uniquement pour un nœud VISIBLE.
       if (graphical && graphical.width > 0) nodes[id].local.node_width = graphical.width
       if (graphical && graphical.height > 0) nodes[id].local.node_height = graphical.height
+      applyLinkInset(nodes[id], graphical)
+      applyGraphicalBorder(nodes[id], graphical)
     }
     applyNameLabelPos(nodes[id], graphical)
+    applyNameLabelFont(nodes[id], graphical)
     // A4 — Forme alternative du process (0 = rect, notre défaut : rien à poser).
     // 1 = rectangle arrondi → on garde 'rect' et on pose un rayon de coin visible
     // (`shape_border_radius`, clé moderne appliquée telle quelle par le loader
@@ -1183,10 +1401,15 @@ export const parseEsankeyXml = (
         (graphical?.visible && !graphical.imageFile && isNearWhiteFill(graphical.color))) {
       nodes[id].local.shape_visible = false
       nodes[id].local.shape_border_visible = false
+    } else {
+      applyGraphicalBorder(nodes[id], graphical)
     }
+    // « Distance » e!Sankey (no-op pour les places du corpus, toutes à padding 0).
+    applyLinkInset(nodes[id], graphical)
     if (graphical?.shapeType === 1) nodes[id].local.shape_border_radius = 10
     else if (graphical?.shapeType === 2) nodes[id].local.shape = 'ellipse'
     applyNameLabelPos(nodes[id], graphical)
+    applyNameLabelFont(nodes[id], graphical)
     const imgSrc = graphical?.imageFile ? images[imageKey(graphical.imageFile)] : undefined
     if (imgSrc) {
       nodes[id].is_image = true
@@ -1196,6 +1419,44 @@ export const parseEsankeyXml = (
       nodes[id].local.node_width = 12
     }
   })
+
+  // S2 (SA#294) — Recalage du point d'accroche d'une ancre collapsée sur le MILIEU
+  // du bord de sa boîte e!Sankey face à son voisin. e!Sankey raccorde le flux au
+  // milieu de ce bord (bas d'un In posé au-dessus, bas d'un Out dont la barre est
+  // dessous) ; le coin haut-gauche décalait le départ d'une demi-boîte (flux trop
+  // haut). Le nœud restant un POINT, le choix du bord côté rendu (source/target_side)
+  // est sans objet (haut=bas) : accroche robuste même quand la barre grossit. Le
+  // label de nom est ré-ancré au CENTRE du point (name_label='middle' + shift =
+  // centre du label e!Sankey − point) : stable quel que soit l'épaississement.
+  // Idempotent (une ancre = un flux). Positions e!Sankey (pré-croissance) au moment
+  // de l'appel → comparaison de bord fiable.
+  const anchorRecentered = new Set<string>()
+  const recenterHiddenAnchor = (id: string, neighbor: EsNode | undefined): void => {
+    const box = hiddenNodeBox[id]
+    if (!box || !neighbor || anchorRecentered.has(id)) return
+    const cx = box.x + box.w / 2
+    const cy = box.y + box.h / 2
+    // Recalage UNIQUEMENT pour un voisin surtout au-DESSUS/DESSOUS (accroche
+    // verticale = le cas « flux trop haut » des stubs In/Out). Pour un voisin
+    // LATÉRAL (flux horizontal), on NE touche PAS l'ancre : la déplacer au milieu
+    // du bord la ferait descendre d'une demi-boîte alors que la source ne suit pas
+    // (ex. Building Energy « Transmission », qui doit rester droit et horizontal).
+    if (Math.abs(neighbor.y - cy) < Math.abs(neighbor.x - cx)) return
+    anchorRecentered.add(id)
+    const px = cx
+    const py = neighbor.y >= cy ? box.y + box.h : box.y // bord bas si voisin dessous, sinon haut
+    nodes[id].x = px
+    nodes[id].y = py
+    // Label ré-ancré au centre du point (invariant à la croissance en largeur).
+    if (box.labelHasPos) {
+      nodes[id].local.name_label_horiz = 'middle'
+      nodes[id].local.name_label_vert = 'middle'
+      nodes[id].local.name_label_inside_horiz = false
+      nodes[id].local.name_label_inside_vert = false
+      nodes[id].local.name_label_horiz_shift = Math.round(box.labelX + box.labelW / 2 - px)
+      nodes[id].local.name_label_vert_shift = Math.round(box.labelY + box.labelH / 2 - py)
+    }
+  }
 
   // Flux : un par flow de compartments (une flèche multi-matériaux e!Sankey
   // devient N flux parallèles même source/cible, chacun tagué par son entry).
@@ -1215,6 +1476,10 @@ export const parseEsankeyXml = (
     const sourceId = logicalToNodeId[fromRef ?? '']
     const targetId = logicalToNodeId[toRef ?? '']
     if (!sourceId || !targetId) return
+    // S2 (SA#294) — recale les ancres collapsées de CETTE flèche sur le bord face
+    // au voisin AVANT toute géométrie de coude (qui lit les positions des nœuds).
+    recenterHiddenAnchor(sourceId, nodes[targetId])
+    recenterHiddenAnchor(targetId, nodes[sourceId])
     const arrowId = ga.getAttribute('id') ?? ''
     const graphicalArrow = graphicalArrows[edgeMapping[arrowId] ?? ''] ?? null
     // Orientation OpenSankey depuis l'`arrowDirection` des nœuds source/cible :
@@ -1242,10 +1507,13 @@ export const parseEsankeyXml = (
         style: 'default',
         local: {},
         displaying_order: 0,
-        // Ordre des ancres verrouillé des deux côtés : préserve le rangement
-        // e!Sankey (cf. interface EsFlow).
-        source_side_locked: true,
-        target_side_locked: true,
+        // SA#294 — ancres NON verrouillées : on laisse l'auto-positionnement
+        // d'OpenSankey (côté + ordre calculés depuis les positions des nœuds) placer
+        // les ancres. Verrouiller figeait un rangement e!Sankey mal reconstitué
+        // (ordre des flèches, côté calculé au chargement) → inversions selon vh/hv.
+        // L'auto-positionnement dynamique restitue le bon rangement (cf. export EV-B).
+        source_side_locked: false,
+        target_side_locked: false,
         // Commentaire de la flèche e!Sankey → infobulle du flux.
         tooltip_text: graphicalArrow?.tooltip ?? '',
         value: {
@@ -1303,7 +1571,15 @@ export const parseEsankeyXml = (
         // `orthogonal` (angle droit strict) ⇒ tangente encore plus serrée.
         const tangent = clamp((graphicalArrow.curviness || 10) / span, 0.02, 0.2)
         const bend = graphicalArrow.orthogonal ? Math.min(tangent, 0.06) : tangent
-        link.local.starting_tangeant = bend
+        // COUDE (orientation mixte vh/hv) : la poignée de Bézier CÔTÉ SOURCE doit
+        // atteindre le coin pour dessiner un angle net. Contrairement à l'intuition
+        // « petit = serré », une tangente de départ PETITE raccourcit cette poignée
+        // et la courbe file en diagonale molle (computeStartingBezierPoint :
+        // P2 = P1 + (P5-P1)·starting_tangeant). On force donc la tangente de départ
+        // à 1 sur les flux en coude (In→process = vh, process→Out = hv), le côté
+        // cible gardant le petit virage. Les flux droits (hh) restent inchangés.
+        const isElbow = orientation === 'vh' || orientation === 'hv'
+        link.local.starting_tangeant = isElbow ? 1 : bend
         link.local.ending_tangeant = bend
         link.local.curvature = bend
       }

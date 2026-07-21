@@ -442,9 +442,19 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
         zone.shape_border_radius = 0
         zone.shape_min_width = Math.max(2, layout_values.police / 8)
         zone.shape_min_height = SCALE_BAR_HEIGHT_FACTOR * layout_values.police
-      } else {
+      } else if (item.swatch_color !== undefined) {
         // Pastille en px monde effectifs (suit la compensation de police)
         zone.shape_min_width = layout_values.police
+        zone.shape_min_height = layout_values.police
+      } else {
+        // Pas de pastille (titre de groupe, ligne d'info, rappel de data tag) :
+        // la forme est invisible mais réservait quand même une colonne large de
+        // `police` — le libellé, posé à droite de cette boîte d'ancrage, était
+        // décalé vers la droite et désaligné des autres lignes sans pastille.
+        // Largeur nulle → le libellé colle à l'origine de la zone. Hauteur
+        // conservée pour garder le rythme vertical et le centrage du libellé
+        // cohérents avec les lignes à pastille.
+        zone.shape_min_width = 0
         zone.shape_min_height = layout_values.police
       }
       zone.name_label_horiz = 'right'

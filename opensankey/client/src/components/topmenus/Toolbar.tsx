@@ -274,6 +274,10 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
       app_data.has_sankey_dev // « Toutes données » (dev) suffit à ouvrir le drawer
   }
   const [drawerOpen, setDrawerOpen] = useState(app_data.is_static)
+  // #1283b — bascule GLOBALE de révélation des groupes de tags cachés (bannière
+  // « Aucun »), partagée par toutes les sections du tiroir. Pilotée par le bouton
+  // unique de l'en-tête (à côté du pin) et transmise en prop aux filtres.
+  const [showHiddenGroups, setShowHiddenGroups] = useState(false)
   // #1283 — le tiroir de filtres ne fait plus QUE filtrer (panneau unique, sans
   // onglet) : les groupes de tags s'éditent EN PLACE (crayon par carte) et les
   // Vues sont devenues un onglet de l'inspecteur (cible « Vue »).
@@ -355,6 +359,27 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
     { type: 'level_taggs', label: app_data.t('filter_panel.short.level'), dev: true }
   ]
 
+  // #1283b — nombre de groupes CACHÉS (bannière « Aucun ») ayant au moins un tag,
+  // parmi les types rendus dans ce tiroir (élément node/flux, données, niveaux).
+  // Pilote la présence du bouton GLOBAL de révélation dans l'en-tête.
+  const countHiddenTagGroups = () => {
+    const { sankey } = app_data.drawing_area
+    const hasTags = (tagg: { tags_dict?: object }) => Object.keys(tagg.tags_dict || {}).length >= 1
+    let n = 0
+    if (app_data.publish_options.node_filter) {
+      n += [...Object.values(sankey.node_taggs_dict), ...Object.values(sankey.flux_taggs_dict)]
+        .filter(t => t.banner === 'none' && !t.id.includes('unitary') && hasTags(t)).length
+    }
+    if (app_data.publish_options.data_filter) {
+      n += Object.values(sankey.data_taggs_dict).filter(t => t.banner === 'none' && hasTags(t)).length
+    }
+    if (app_data.publish_options.level_filter) {
+      n += Object.values(sankey.level_taggs_dict).filter(t => t.banner === 'none' && t.has_tags).length
+    }
+    return n
+  }
+  const nb_hidden_groups = countHiddenTagGroups()
+
   // #1258 — contenu du panneau, PARTAGÉ entre le tiroir overlay (Drawer) et le
   // mode ÉPINGLÉ (panneau docké pleine hauteur qui réserve sa largeur, comme
   // la config épinglée).
@@ -382,19 +407,37 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
           </MenuList>
         </Menu>
       ) : <Box />}
-      <Button
-        size='xs'
-        variant={pinned ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-        sx={{ paddingInline: '0.3rem', minWidth: 'auto', width: 'auto', flex: 'none', height: 'auto' }}
-        title={pinned ? app_data.t('inspector.unpin') : app_data.t('inspector.pin')}
-        onClick={() => {
-          const mc = app_data.menu_configuration
-          mc.filter_drawer_width_px = drawer_width_px
-          mc.filter_panel_pinned = !pinned
-        }}
-      >
-        <FaThumbtack style={{ transform: pinned ? 'none' : 'rotate(45deg)' }} />
-      </Button>
+      <Box style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+        {/* #1283b — bouton GLOBAL unique : révèle/masque les groupes de tags cachés
+            (bannière « Aucun ») de toutes les sections. Présent seulement s'il en
+            existe ; le compteur indique combien. */}
+        {nb_hidden_groups > 0 ? (
+          <OSTooltip label={showHiddenGroups ? app_data.t('filter_panel.hide_hidden') : app_data.t('filter_panel.show_hidden', { count: nb_hidden_groups })}>
+            <Button
+              size='xs'
+              variant={showHiddenGroups ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+              sx={{ paddingInline: '0.3rem', minWidth: 'auto', width: 'auto', flex: 'none', height: 'auto' }}
+              leftIcon={showHiddenGroups ? app_data.icon_library.icon_element_visible : app_data.icon_library.icon_element_invisible}
+              onClick={() => setShowHiddenGroups(v => !v)}
+            >
+              {nb_hidden_groups}
+            </Button>
+          </OSTooltip>
+        ) : null}
+        <Button
+          size='xs'
+          variant={pinned ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+          sx={{ paddingInline: '0.3rem', minWidth: 'auto', width: 'auto', flex: 'none', height: 'auto' }}
+          title={pinned ? app_data.t('inspector.unpin') : app_data.t('inspector.pin')}
+          onClick={() => {
+            const mc = app_data.menu_configuration
+            mc.filter_drawer_width_px = drawer_width_px
+            mc.filter_panel_pinned = !pinned
+          }}
+        >
+          <FaThumbtack style={{ transform: pinned ? 'none' : 'rotate(45deg)' }} />
+        </Button>
+      </Box>
     </Box>
     <Box layerStyle='drawerFilterBox'>
       {
@@ -402,16 +445,16 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
           ? <FilterDisplay app_data={app_data} /> : <></>
       }
       {
-        app_data.publish_options.level_filter ? <LevelTagFilter app_data={app_data} /> : <></>
+        app_data.publish_options.level_filter ? <LevelTagFilter app_data={app_data} show_hidden_groups={showHiddenGroups} /> : <></>
       }
       {
-        app_data.publish_options.node_filter ? <NodeTagGroupFilter app_data={app_data} level={false} /> : <></>
+        app_data.publish_options.node_filter ? <NodeTagGroupFilter app_data={app_data} level={false} show_hidden_groups={showHiddenGroups} /> : <></>
       }
       {
         // #285 — section « Flux » unifiée (étiquettes de flux + dimensions) ;
         // remplace l'ancienne section « Données » séparée.
         (app_data.publish_options.node_filter || app_data.publish_options.data_filter)
-          ? <FluxTagGroupFilter app_data={app_data} /> : <></>
+          ? <FluxTagGroupFilter app_data={app_data} show_hidden_groups={showHiddenGroups} /> : <></>
       }
     </Box>
   </>
@@ -1023,10 +1066,15 @@ const TAG_FILTER_CONFIGS: Record<TagFilterMode, TagFilterConfig> = {
 /**
  * Composant unifié pour filtrer tous les types de tags
  */
-export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
+export const UnifiedTagGroupFilter = ({ app_data, mode, show_hidden_groups }: {
   app_data: Class_ApplicationData
   mode: TagFilterMode
+  // #1283b — piloté par le bouton GLOBAL unique de l'en-tête du tiroir (à côté du
+  // pin) : révèle les groupes cachés (bannière « Aucun ») de TOUTES les sections
+  // d'un coup. Non fourni = masqués.
+  show_hidden_groups?: boolean
 }) => {
+  const showHiddenGroups = show_hidden_groups ?? false
   const config = TAG_FILTER_CONFIGS[mode]
   const { t, drawing_area } = app_data
   const { sankey } = drawing_area
@@ -1068,29 +1116,33 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   const groupEffectiveMode = (tagg: Class_TagGroup): TagFilterMode =>
     mode === 'flux' ? (isDataGroup(tagg) ? 'data' : 'element') : mode
 
-  // Récupération des tags selon le mode — passe par getTagGroupsAsList pour respecter _taggs_order
-  const getTagsForMode = (): Class_TagGroup[] => {
+  // Récupération des tags selon le mode — passe par getTagGroupsAsList pour respecter _taggs_order.
+  // #1283b — `include_hidden` : inclut ou non les groupes en bannière « Aucun ».
+  // Par défaut ils sont exclus (tiroir épuré) ; le bouton bascule les révèle en
+  // carte ÉDITION SEULE (cf. `edit_only`), seul accès à leur éditeur une fois cachés.
+  const getTagsForMode = (include_hidden: boolean): Class_TagGroup[] => {
+    const keep = (tagg: { banner: string }) => include_hidden || tagg.banner !== 'none'
     switch (mode) {
     case 'element':
       // #285 — nœuds seuls ; les étiquettes de flux ont leur section 'flux'.
       return sankey.getTagGroupsAsList('node_taggs')
-        .filter(tagg => tagg.banner !== 'none' && !tagg.id.includes('unitary')) as unknown as Class_TagGroup[]
+        .filter(tagg => keep(tagg) && !tagg.id.includes('unitary')) as unknown as Class_TagGroup[]
     case 'flux':
       // #285 — étiquettes de flux + dimensions ensemble.
       return [...sankey.getTagGroupsAsList('flux_taggs'), ...sankey.getTagGroupsAsList('data_taggs')]
-        .filter(tagg => tagg.banner !== 'none' && !tagg.id.includes('unitary')) as unknown as Class_TagGroup[]
+        .filter(tagg => keep(tagg) && !tagg.id.includes('unitary')) as unknown as Class_TagGroup[]
     case 'level':
       return sankey.getTagGroupsAsList('level_taggs')
-        .filter(tagg => tagg.has_tags && tagg.banner !== 'none') as unknown as Class_TagGroup[]
+        .filter(tagg => tagg.has_tags && keep(tagg)) as unknown as Class_TagGroup[]
     case 'data':
       // #1283 — inclut aussi sequence/topbar : consommés par la timeline/topbar,
       // mais on les liste en carte ÉDITION SEULE (nom + crayon) pour pouvoir
-      // rechanger leur mode (sinon aucun accès à leur éditeur). 'none' exclu.
+      // rechanger leur mode (sinon aucun accès à leur éditeur).
       return sankey.getTagGroupsAsList('data_taggs')
-        .filter(tagg => tagg.banner !== 'none') as unknown as Class_TagGroup[]
+        .filter(keep) as unknown as Class_TagGroup[]
     case 'unitary':
       return sankey.getTagGroupsAsList('view_taggs')
-        .filter(tagg => tagg.banner !== 'none') as unknown as Class_TagGroup[]
+        .filter(keep) as unknown as Class_TagGroup[]
     default:
       return [] as unknown as Class_TagGroup[]
     }
@@ -1112,7 +1164,9 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
     }
   }
 
-  const taggs_in_banner = getTagsForMode()
+  // #1283b — liste affichée = groupes visibles, + les cachés si l'utilisateur les
+  // a révélés via le bouton GLOBAL de l'en-tête.
+  const taggs_in_banner = getTagsForMode(showHiddenGroups)
 
   // Fonction générique pour appliquer une palette
   const setApplyTagGroupPalette = (tagg: Class_TagGroup, checked: boolean) => {
@@ -1617,7 +1671,9 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
     // #1283 — séquence/topbar : filtrés via la timeline/topbar, pas ici. On ne
     // montre que nom + crayon (édition du groupe, ex. rechanger son mode), sans
     // le sélecteur de filtrage qui ferait doublon.
-    const edit_only = tagg.banner === 'sequence' || tagg.banner === 'topbar'
+    // #1283b — bannière « Aucun » : groupe caché du bandeau, présenté lui aussi
+    // en carte édition seule pour rester éditable (et pouvoir le ré-afficher).
+    const edit_only = tagg.banner === 'sequence' || tagg.banner === 'topbar' || tagg.banner === 'none'
 
     return (
       <Box key={tagg.id} layerStyle={groupEffectiveMode(tagg) === 'data' ? 'menuconfigpanel_grid' : 'menuconfig_grid'}>
@@ -1796,6 +1852,9 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   const RevealAllDataControl = null
 
   // Rendu final
+  // #1283b — la section entière est masquée quand aucun groupe n'est affiché
+  // (aucun visible, et cachés non révélés) : c'est le bouton GLOBAL de l'en-tête
+  // qui les fait réapparaître, section comprise.
   return SelectorOfTagsByGroup.length > 0 ? (
     <FilterWrapperBox app_data={app_data} title={t(`Banner.${title_key}`)} defaultOpen={app_data.is_static}>
       {ResetHierarchyButton}
@@ -1809,12 +1868,13 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   ) : <></>
 }
 
-// Composants wrapper pour maintenir la compatibilité avec l'API existante
-export const NodeTagGroupFilter = ({ app_data, level }: { app_data: Class_ApplicationData, level: boolean }) => (
-  <UnifiedTagGroupFilter app_data={app_data} mode={level ? 'level' : 'element'} />
+// Composants wrapper pour maintenir la compatibilité avec l'API existante.
+// #1283b — `show_hidden_groups` transmis par ToolbarFilter (bouton global).
+export const NodeTagGroupFilter = ({ app_data, level, show_hidden_groups }: { app_data: Class_ApplicationData, level: boolean, show_hidden_groups?: boolean }) => (
+  <UnifiedTagGroupFilter app_data={app_data} mode={level ? 'level' : 'element'} show_hidden_groups={show_hidden_groups} />
 )
 
-export const LevelTagFilter = ({ app_data }: { app_data: Class_ApplicationData }) => {
+export const LevelTagFilter = ({ app_data, show_hidden_groups }: { app_data: Class_ApplicationData, show_hidden_groups?: boolean }) => {
   // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
   useModelBinding(app_data.menu_configuration.ref_to_toolbar_level_tag_filter_updater)
   const nb_level_taggs = Object.entries(app_data.drawing_area.sankey.level_taggs_dict).length
@@ -1827,30 +1887,32 @@ export const LevelTagFilter = ({ app_data }: { app_data: Class_ApplicationData }
       return <></>
     }
   }
-  const content_popover = <UnifiedTagGroupFilter app_data={app_data} mode="level" />
+  const content_popover = <UnifiedTagGroupFilter app_data={app_data} mode="level" show_hidden_groups={show_hidden_groups} />
 
   return content_popover
 }
 
-export const DataTagGroupFilter = ({ app_data }: { app_data: Class_ApplicationData }) =>
-  <UnifiedTagGroupFilter app_data={app_data} mode="data" />
+export const DataTagGroupFilter = ({ app_data, show_hidden_groups }: { app_data: Class_ApplicationData, show_hidden_groups?: boolean }) =>
+  <UnifiedTagGroupFilter app_data={app_data} mode="data" show_hidden_groups={show_hidden_groups} />
 
 // #285 (fusion) — section d'édition unifiée « Flux » : étiquettes de flux +
 // dimensions dans une seule liste, chacune avec sa case Dimension.
-export const FluxTagGroupFilter = ({ app_data }: { app_data: Class_ApplicationData }) =>
-  <UnifiedTagGroupFilter app_data={app_data} mode="flux" />
+export const FluxTagGroupFilter = ({ app_data, show_hidden_groups }: { app_data: Class_ApplicationData, show_hidden_groups?: boolean }) =>
+  <UnifiedTagGroupFilter app_data={app_data} mode="flux" show_hidden_groups={show_hidden_groups} />
 
-export const UnitaryTagGroupFilter = ({ app_data }: { app_data: Class_ApplicationData }) => {
+export const UnitaryTagGroupFilter = ({ app_data, show_hidden_groups }: { app_data: Class_ApplicationData, show_hidden_groups?: boolean }) => {
   // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
   useModelBinding(app_data.menu_configuration.ref_to_unitarytag_filter_updater)
 
-  // MODIFIÉ : vérifier dans view_taggs_dict au lieu de node_taggs_dict
+  // MODIFIÉ : vérifier dans view_taggs_dict au lieu de node_taggs_dict.
+  // #1283b — on ne filtre PLUS les bannières « Aucun » ici : sinon un jeu de vues
+  // entièrement caché n'afficherait pas la section, donc pas le bouton global qui
+  // permet de les rééditer. Le filtrage réel se fait dans UnifiedTagGroupFilter.
   const view_taggs = Object.values(app_data.drawing_area.sankey.view_taggs_dict)
-    .filter(tagg => tagg.banner !== 'none')
 
   if (view_taggs.length === 0) {
     return <></>
   }
 
-  return <UnifiedTagGroupFilter app_data={app_data} mode="unitary" />
+  return <UnifiedTagGroupFilter app_data={app_data} mode="unitary" show_hidden_groups={show_hidden_groups} />
 }

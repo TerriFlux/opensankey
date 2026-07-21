@@ -39,7 +39,8 @@ import {
   InputIndicatorWrapper,
   OverloadIndicatorWrapper,
   CustomFaEyeCheckIcon,
-  WrapperBoxSubSectionMenu
+  WrapperBoxSubSectionMenu,
+  ConfigMenuTextInput
 } from './MenuCommon'
 
 // Imports des configs
@@ -216,7 +217,7 @@ export const LabelDisplayModeSelector = ({
     // pas le nœud.
     if (!labelValues.fo_content) {
       (elements as Class_NodeBase[]).forEach(node => {
-        node.name_label_fo_content = `<p>${node.name_label_effective}</p>`
+        node.name_label_fo_content = `<p>${node.name_label_effective_editable}</p>`
       })
     }
     labelValues.has_fo = true
@@ -382,19 +383,17 @@ const NumberFormatComponent = ({ app_data, elements, prefix, config, attributePa
         )}
 
         {labelValues.unit_type == 'unit_name' && (
-          <InputIndicatorWrapper
-            isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_unit` as keyof typeof config, config)}
-            isMultiValue={isConfigValueIndeterminate(elements, config, 'unit', prefix)}
+          // #297 — champ d'unité personnalisée : passe par ConfigMenuTextInput
+          // (état local, commit UNIQUEMENT au blur/Entrée). L'ancien <Input>
+          // écrivait dans le modèle à chaque frappe → refreshParentComponent
+          // remontait le champ → perte de focus dès le 1er caractère.
+          <ConfigMenuTextInput
             t={app_data.t}
-          >
-            <Input
-              variant='menuconfigpanel_option_input'
-              value={labelValues.unit ?? ''}
-              placeholder="nom de l'unité"
-              onChange={(evt) => { labelValues.unit = evt.target.value }}
-              onBlur={(evt) => { labelValues.unit = evt.target.value || '' }}
-            />
-          </InputIndicatorWrapper>
+            default_value={labelValues.unit ?? ''}
+            function_on_blur={(v) => { labelValues.unit = v ?? '' }}
+            isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_unit` as keyof typeof config, config)}
+            multiValue={isConfigValueIndeterminate(elements, config, 'unit', prefix)}
+          />
         )}
 
         {/* OS#1286 — mode « unité du modèle » : choix d'une unité du registre
@@ -1776,6 +1775,18 @@ export const MenuConfigurationAppearance = ({
                               />
                             </Box>
                           </Box>
+                          <ElementAttrSetterNumberInput2Cols
+                            app_data={app_data}
+                            config={NODE_SHAPE_SPECIFIC_CONFIG}
+                            elements={elements}
+                            attributePath='Noeud.apparence'
+                            attributeKey={'link_inset'}
+                            prefix={'shape'}
+                            refreshParentComponent={refreshAll}
+                            unit_text='pixels'
+                            minimum_value={-500}
+                            stepper={true}
+                            isOverloaded={isElementAttributeOverloaded(elements, 'shape_link_inset' as keyof typeof NODE_SHAPE_SPECIFIC_CONFIG, NODE_SHAPE_SPECIFIC_CONFIG)} />
                           {nodeShapeValues.position_type == 'parametric' ? <>
                             <ElementAttrSetterNumberInput2Cols
                               app_data={app_data}

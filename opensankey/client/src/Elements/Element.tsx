@@ -25,8 +25,10 @@
 // ==================================================================================================
 
 import * as d3 from '../d3Modules'
+import i18next from 'i18next'
 import { MouseEvent } from 'react'
 
+import { Type_LangMap, normalizeLang, resolveLangMap } from '../Persistence/persistenceMigrations'
 import {
   const_default_position_x,
   const_default_position_y,
@@ -43,6 +45,18 @@ import {
   Type_Orientation, ValueLabelAttributeTypes,
   ConfigType
 } from './ElementsAttributesConfig'
+
+// OS#1299 — attributs portant du TEXTE AFFICHÉ traduisible (même modèle que le
+// nom des nœuds/zones de texte) : stockés en interne comme string (historique)
+// OU map { langue -> texte }. Le getter dynamique des ÉLÉMENTS résout la langue
+// active de l'app ; le setter écrit sous la langue active en préservant les
+// autres langues. La persistance `local` sérialise string si monolingue
+// (rétro-compatible), map sinon (cf. ProtoElementPersistence).
+// NB : les STYLES gardent des strings brutes (leurs menus lisent/écrivent direct).
+export const TRANSLATABLE_TEXT_ATTRIBUTES: ReadonlySet<string> = new Set([
+  'name_label_text',
+  'name_label_fo_content',
+])
 
 export abstract class Class_BaseElement {
   public d3_selection: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
@@ -433,18 +447,43 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
 
   protected createDynamicProperties() {
     (Object.keys(this._config) as Array<keyof ConfigType>).forEach(key => {
+      const is_translatable = TRANSLATABLE_TEXT_ATTRIBUTES.has(key as string)
       Object.defineProperty(this, key, {
-        get: () => this.getElementProperty(key as keyof ConfigType),
+        get: () => {
+          const raw = this.getElementProperty(key as keyof ConfigType)
+          // OS#1299 — texte traduisible : une map { langue -> texte } est résolue
+          // pour la langue active (les strings historiques passent telles quelles).
+          if (is_translatable && raw !== null && typeof raw === 'object') {
+            return resolveLangMap(raw as Type_LangMap, i18next.language)
+          }
+          return raw
+        },
         set: (value: ExtractAttributeValue<ConfigType[typeof key]>) => {
           const attribute = this._config[key]
+          let store_value: unknown = value
+
+          // OS#1299 — texte traduisible : écrire = poser la valeur sous la langue
+          // active, en préservant les traductions existantes (héritées du storage
+          // local OU d'un style). Vider alors que d'autres langues existent =
+          // supprimer cette traduction (repli à l'affichage). Une string
+          // historique (langue inconnue) est simplement remplacée.
+          if (is_translatable && typeof value === 'string') {
+            const lang = normalizeLang(i18next.language)
+            const raw = this.getElementProperty(key as keyof ConfigType)
+            const map: Type_LangMap =
+              (raw !== null && typeof raw === 'object') ? { ...(raw as Type_LangMap) } : {}
+            if (value === '' && Object.keys(map).some(l => l !== lang)) delete map[lang]
+            else map[lang] = value
+            store_value = map
+          }
 
           if (attribute.setter) {
             const setter = this[attribute.setter as keyof this]
             if (typeof setter === 'function') {
-              setter.call(this, value)
+              setter.call(this, store_value)
             }
           } else {
-            this._storage[key] = value
+            this._storage[key] = store_value as ExtractAttributeValue<ConfigType[typeof key]>
           }
 
           if (attribute.callback) {
@@ -916,6 +955,7 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   shape_position_dy!: NodeShapeSpecificAttributeTypes['position_dy']
   shape_anchor_align_vertical!: NodeShapeSpecificAttributeTypes['anchor_align_vertical']
   shape_anchor_align_horizontal!: NodeShapeSpecificAttributeTypes['anchor_align_horizontal']
+  shape_link_inset!: NodeShapeSpecificAttributeTypes['link_inset']
   shape_hatch!: NodeShapeSpecificAttributeTypes['hatch']
   shape_is_reference_stock!: NodeShapeSpecificAttributeTypes['is_reference_stock']
   shape_line_flip!: NodeShapeSpecificAttributeTypes['line_flip']
@@ -1312,6 +1352,7 @@ export class Class_ElementStyle {
   shape_position_dy!: NodeShapeSpecificAttributeTypes['position_dy']
   shape_anchor_align_vertical!: NodeShapeSpecificAttributeTypes['anchor_align_vertical']
   shape_anchor_align_horizontal!: NodeShapeSpecificAttributeTypes['anchor_align_horizontal']
+  shape_link_inset!: NodeShapeSpecificAttributeTypes['link_inset']
   shape_hatch!: NodeShapeSpecificAttributeTypes['hatch']
   shape_is_reference_stock!: NodeShapeSpecificAttributeTypes['is_reference_stock']
   shape_line_flip!: NodeShapeSpecificAttributeTypes['line_flip']

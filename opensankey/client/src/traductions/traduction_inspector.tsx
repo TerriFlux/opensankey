@@ -54,7 +54,8 @@ export const resources_inspector = {
           tags: 'Tags',
           analysis: 'Analysis',
           title: 'Title',
-          mfa: 'MFA'
+          mfa: 'MFA',
+          styles: 'Styles'
         },
         // #1258 — Onglet MFA (espace AFM unifié).
         mfa: {
@@ -147,6 +148,8 @@ export const resources_inspector = {
         select_tooltip: 'Select elements by type and tag (bulk operations)',
         edit: 'Edit',
         edit_group: 'Edit this group',
+        show_hidden: 'Show hidden groups ({{count}})',
+        hide_hidden: 'Hide hidden groups',
         select_elements: 'Select elements',
         deselect_all: 'Deselect all',
         selection_summary: 'Selection: {{summary}}',
@@ -205,7 +208,8 @@ export const resources_inspector = {
           tags: 'Tags',
           analysis: 'Analyse',
           title: 'Titre',
-          mfa: 'AFM'
+          mfa: 'AFM',
+          styles: 'Styles'
         },
         mfa: {
           reconciliation: 'Réconciliation',
@@ -295,6 +299,8 @@ export const resources_inspector = {
         select_tooltip: 'Sélectionner des éléments par type et par tag (opérations groupées)',
         edit: 'Éditer',
         edit_group: 'Éditer ce groupe',
+        show_hidden: 'Afficher les groupes cachés ({{count}})',
+        hide_hidden: 'Masquer les groupes cachés',
         select_elements: 'Sélectionner des éléments',
         deselect_all: 'Tout désélectionner',
         selection_summary: 'Sélection : {{summary}}',
@@ -353,7 +359,8 @@ export const resources_inspector = {
           tags: 'Etiquetas',
           analysis: 'Análisis',
           title: 'Título',
-          mfa: 'AFM'
+          mfa: 'AFM',
+          styles: 'Estilos'
         },
         mfa: {
           reconciliation: 'Conciliación',
@@ -443,6 +450,8 @@ export const resources_inspector = {
         select_tooltip: 'Seleccionar elementos por tipo y etiqueta (operaciones en grupo)',
         edit: 'Editar',
         edit_group: 'Editar este grupo',
+        show_hidden: 'Mostrar grupos ocultos ({{count}})',
+        hide_hidden: 'Ocultar grupos ocultos',
         select_elements: 'Seleccionar elementos',
         deselect_all: 'Deseleccionar todo',
         selection_summary: 'Selección: {{summary}}',
@@ -501,7 +510,8 @@ export const resources_inspector = {
           tags: 'Tags',
           analysis: 'Analyse',
           title: 'Titel',
-          mfa: 'MFA'
+          mfa: 'MFA',
+          styles: 'Stile'
         },
         mfa: {
           reconciliation: 'Abgleich',
@@ -591,6 +601,8 @@ export const resources_inspector = {
         select_tooltip: 'Elemente nach Typ und Tag auswählen (Sammelvorgänge)',
         edit: 'Bearbeiten',
         edit_group: 'Diese Gruppe bearbeiten',
+        show_hidden: 'Ausgeblendete Gruppen anzeigen ({{count}})',
+        hide_hidden: 'Ausgeblendete Gruppen verbergen',
         select_elements: 'Elemente auswählen',
         deselect_all: 'Auswahl aufheben',
         selection_summary: 'Auswahl: {{summary}}',
@@ -649,7 +661,8 @@ export const resources_inspector = {
           tags: 'Tag',
           analysis: 'Analisi',
           title: 'Titolo',
-          mfa: 'AFM'
+          mfa: 'AFM',
+          styles: 'Stili'
         },
         mfa: {
           reconciliation: 'Riconciliazione',
@@ -739,6 +752,8 @@ export const resources_inspector = {
         select_tooltip: 'Selezionare elementi per tipo e tag (operazioni di gruppo)',
         edit: 'Modificare',
         edit_group: 'Modificare questo gruppo',
+        show_hidden: 'Mostra gruppi nascosti ({{count}})',
+        hide_hidden: 'Nascondi gruppi nascosti',
         select_elements: 'Selezionare elementi',
         deselect_all: 'Deselezionare tutto',
         selection_summary: 'Selezione: {{summary}}',

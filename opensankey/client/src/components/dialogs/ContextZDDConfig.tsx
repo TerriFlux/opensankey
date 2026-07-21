@@ -99,10 +99,9 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         { type: 'button', actionName: 'resetLinkColors' }
       ]
     },
-    {
-      type: 'button',
-      actionName: 'openStyleModal'
-    },
+    // OS#1243 — « Styles des éléments » retiré du menu contextuel : les styles
+    // s'éditent désormais dans l'inspecteur (portée Styles sur une sélection,
+    // onglet Styles de la cible « Vue » quand rien n'est sélectionné).
     // {
     //   type: 'button',
     //   actionName: 'openGraphOrder'
