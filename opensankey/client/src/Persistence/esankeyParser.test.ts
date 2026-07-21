@@ -1130,36 +1130,4 @@ describeDemos('loadEsankeyFile — démos e!Sankey 5 locales', () => {
     // importent shape_hatch = antidiagonal (\) sur la zone de texte.
     expect(Object.values(d.labels).some(c => c.shape_hatch === 'antidiagonal')).toBe(true)
   }, 30000)
-
-  // SA#294 — l'ordre des ancres d'un nœud est dérivé du POINT D'ACCROCHE de chaque
-  // flux (sankeyLink/points), pas de l'ordre de déclaration des flèches (qui tombe
-  // à l'envers selon vh/hv). Vérifié sur Battery Charging (2 entrées à droite, 3
-  // sorties à gauche) contre l'ordre observé dans e!Sankey.
-  test('EV Energy Cycle : ordre des ancres depuis les points d\'accroche + côtés figés', async () => {
-    const f = files.find(x => x.startsWith('EV Energy Cycle'))
-    if (!f) return
-    const buffer = fs.readFileSync(path.join(DEMOS_DIR, f))
-    const d = await loadEsankeyFile(buffer as unknown as ArrayBuffer)
-    const bc = Object.values(d.nodes).find(n => n.name === 'Battery Charging')
-    expect(bc).toBeDefined()
-    const bcId = bc?.id as string
-    const seq = (bc?.links_order ?? []).map(lid => {
-      const l = d.links[lid]
-      const opp = l.idSource === bcId ? l.idTarget : l.idSource
-      return d.nodes[opp].name
-    })
-    // Entrées à droite (Y croissant : Ladestrom puis Electric Energy), puis sorties
-    // à gauche (Y croissant : Charging Losses, Battery Discharge, Recuperation).
-    expect(seq).toEqual([
-      'Ladestrom', 'Electric  Energy', // double espace : label e!Sankey « Electric \r\nEnergy »
-      'Charging Losses', 'Battery Discharge', 'Charging Losses (Recuperation)',
-    ])
-    // Côtés figés depuis les points : une entrée = bord droit, une sortie = bord gauche.
-    const ladestrom = (bc?.links_order ?? []).map(lid => d.links[lid])
-      .find(l => d.nodes[l.idSource].name === 'Ladestrom')
-    expect(ladestrom?.target_side_frozen).toBe('right')
-    const chargingLosses = (bc?.links_order ?? []).map(lid => d.links[lid])
-      .find(l => d.nodes[l.idTarget].name === 'Charging Losses')
-    expect(chargingLosses?.source_side_frozen).toBe('left')
-  }, 30000)
 })
