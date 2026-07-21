@@ -43,6 +43,10 @@ import { Type_UnitTypeJSON } from '../types/Units'
 
 type EsLocal = { [k: string]: string | number | boolean }
 
+// Bord d'accroche d'un flux (SA#294). Miroir de Type_Side côté rendu, gardé local
+// pour ne pas coupler le parseur au module Link.
+type EsSide = 'left' | 'right' | 'top' | 'bottom'
+
 interface EsNode {
   id: string
   name: string
@@ -80,6 +84,11 @@ interface EsFlow {
   // ré-agencement géométrique OpenSankey les réordonne au chargement.
   source_side_locked: boolean
   target_side_locked: boolean
+  // SA#294 — côté d'accroche figé, DÉDUIT du point d'accroche e!Sankey (pas de
+  // l'ordre des flèches). Posé par la passe d'ordonnancement ci-dessous ; absent
+  // si la flèche n'a pas de tracé (points), le loader le recalcule alors.
+  source_side_frozen?: string
+  target_side_frozen?: string
   value: { id: string, data_value: number, tags: { [grp: string]: string[] } }
 }
 
@@ -861,6 +870,15 @@ interface EsGraphicalArrow {
    */
   gradientFromSource: boolean
   gradientToDestination: boolean
+  /**
+   * SA#294 — points d'accroche du tracé (`sankeyLink/points/value X Y`). Le PREMIER
+   * point est l'accroche côté SOURCE, le DERNIER côté CIBLE. Sert à ordonner les
+   * ancres d'un nœud (empilement le long du bord) et à figer le côté d'accroche
+   * (source/target_side_frozen), fidèlement à e!Sankey — au lieu de l'ordre de
+   * déclaration des flèches, qui tombe à l'envers selon vh/hv. null si absent.
+   */
+  sourceAnchor: [number, number] | null
+  targetAnchor: [number, number] | null
 }
 
 const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } => {
@@ -889,6 +907,12 @@ const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } 
     // OS#1290 — le pen du tracé vit sous <sankeyLink>, pas directement sous
     // <arrow> (qui ne porte qu'un <penColor> de repli, non pointillable).
     const pen = sankeyLink ? childByTag(sankeyLink, 'pen') : null
+    // SA#294 — points d'accroche du tracé (sous <sankeyLink>). 1er = source, dernier = cible.
+    const pointsEl = sankeyLink ? childByTag(sankeyLink, 'points') : null
+    const pts = pointsEl
+      ? childrenByTag(pointsEl, 'value').map(v => [attrNum(v, 'X', NaN), attrNum(v, 'Y', NaN)] as [number, number])
+        .filter(p => Number.isFinite(p[0]) && Number.isFinite(p[1]))
+      : []
     out[a.getAttribute('id') ?? ''] = {
       tooltip: (comment?.getAttribute('text') ?? '').replace(/\r\n/g, '\n').trim(),
       labelVisible: label?.getAttribute('visible') !== 'false',
@@ -913,6 +937,9 @@ const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } 
       // OS#1294 — dégradé source→cible (lu sur la flèche graphique).
       gradientFromSource: a.getAttribute('gradientFromSource') === 'true',
       gradientToDestination: a.getAttribute('gradientToDestination') === 'true',
+      // SA#294 — accroches source (1er point) / cible (dernier point).
+      sourceAnchor: pts.length > 0 ? pts[0] : null,
+      targetAnchor: pts.length > 0 ? pts[pts.length - 1] : null,
     }
   })
   return out
@@ -1250,6 +1277,9 @@ export const parseEsankeyXml = (
       labelX: number, labelY: number, labelW: number, labelH: number, labelHasPos: boolean
     }
   } = {}
+  // SA#294 — boîte e!Sankey (repère brut) de CHAQUE nœud, pour déduire le côté
+  // d'accroche d'un flux depuis son point d'accroche (bord le plus proche).
+  const nodeBox: { [id: string]: { x: number, y: number, w: number, h: number } } = {}
   const logicalToNodeId: { [logicalId: string]: string } = {}
   const usedNodeIds = new Set<string>()
   const graphNodes = childByTag(netModel, 'graphNodes')
@@ -1279,6 +1309,7 @@ export const parseEsankeyXml = (
       output_value: 0,
     }
     if (graphical?.color) nodes[id].local.color = graphical.color
+    if (graphical) nodeBox[id] = { x: graphical.x, y: graphical.y, w: graphical.width, h: graphical.height }
     // OS#1298 — Taille réelle du nœud depuis la boîte du process (sinon un point).
     // node_width/node_height (clés du JSON 0.9) sont mappées vers
     // shape_min_width/shape_min_height (cf. persistenceLegacyKeyMaps) : elles
@@ -1391,6 +1422,7 @@ export const parseEsankeyXml = (
       output_value: 0,
     }
     if (graphical?.color) nodes[id].local.color = graphical.color
+    if (graphical) nodeBox[id] = { x: graphical.x, y: graphical.y, w: graphical.width, h: graphical.height }
     // Idem process : masquer forme ET bordure (shape_border_visible indépendant).
     if ((graphical && !graphical.visible) ||
         (graphical?.visible && !graphical.imageFile && isNearWhiteFill(graphical.color))) {
@@ -1456,6 +1488,9 @@ export const parseEsankeyXml = (
   // Flux : un par flow de compartments (une flèche multi-matériaux e!Sankey
   // devient N flux parallèles même source/cible, chacun tagué par son entry).
   const links: { [id: string]: EsFlow } = {}
+  // SA#294 — point d'accroche e!Sankey de chaque flux à sa source / sa cible
+  // (1er / dernier point du tracé), pour l'ordonnancement des ancres ci-dessous.
+  const linkConn: { [id: string]: { src: [number, number] | null, tgt: [number, number] | null } } = {}
   const usedEntryIds = new Set<string>()
   const graphArrows = childByTag(netModel, 'graphArrows')
   const graphArrowList = graphArrows ? childrenByTag(graphArrows, 'graphArrow') : []
@@ -1686,6 +1721,7 @@ export const parseEsankeyXml = (
         }
       }
       links[id] = link
+      linkConn[id] = { src: graphicalArrow?.sourceAnchor ?? null, tgt: graphicalArrow?.targetAnchor ?? null }
       nodes[sourceId].outputLinksId.push(id)
       nodes[sourceId].output_value += link.value.data_value
       nodes[sourceId].links_order.push(id)
@@ -1693,6 +1729,45 @@ export const parseEsankeyXml = (
       nodes[targetId].input_value += link.value.data_value
       nodes[targetId].links_order.push(id)
     })
+  })
+
+  // SA#294 — ORDRE DES ANCRES par point d'accroche e!Sankey (et non par ordre de
+  // déclaration des flèches, qui tombe à l'envers selon vh/hv). Pour chaque nœud,
+  // on déduit du point d'accroche de chaque flux à CE nœud le CÔTÉ (bord le plus
+  // proche de la boîte) et la COORDONNÉE le long du bord, puis on FIGE le côté
+  // (source/target_side_frozen — juste, contrairement au calcul par positions du
+  // loader) et on TRIE links_order par (côté, coordonnée) = empilement fidèle.
+  // Ne s'applique qu'aux nœuds dont TOUS les flux ont un tracé (points) ; sinon on
+  // laisse l'ordre de déclaration (le loader recalcule alors le côté au chargement).
+  const sideOf = (box: { x: number, y: number, w: number, h: number }, px: number, py: number): EsSide => {
+    const dl = Math.abs(px - box.x), dr = Math.abs(px - (box.x + box.w))
+    const dt = Math.abs(py - box.y), db = Math.abs(py - (box.y + box.h))
+    const m = Math.min(dl, dr, dt, db)
+    if (m === dl) return 'left'
+    if (m === dr) return 'right'
+    if (m === dt) return 'top'
+    return 'bottom'
+  }
+  const sidePriority: { [k in EsSide]: number } = { top: 0, right: 1, bottom: 2, left: 3 }
+  Object.values(nodes).forEach(node => {
+    if (node.links_order.length < 2) return
+    const box = nodeBox[node.id]
+    if (!box || box.w <= 0 || box.h <= 0) return
+    const conns = node.links_order.map(lid => {
+      const isSrc = links[lid].idSource === node.id
+      return { lid, isSrc, conn: isSrc ? linkConn[lid]?.src : linkConn[lid]?.tgt }
+    })
+    if (conns.some(c => !c.conn)) return // un flux sans tracé → on ne réordonne pas ce nœud
+    const keyed = conns.map(({ lid, isSrc, conn }) => {
+      const [px, py] = conn as [number, number]
+      const side = sideOf(box, px, py)
+      if (isSrc) links[lid].source_side_frozen = side
+      else links[lid].target_side_frozen = side
+      const along = (side === 'left' || side === 'right') ? py : px
+      return { lid, side, along }
+    })
+    keyed.sort((a, b) => sidePriority[a.side] - sidePriority[b.side] || a.along - b.along)
+    node.links_order = keyed.map(k => k.lid)
   })
 
   // Zones libres (textes, images, rectangles) et légende.
