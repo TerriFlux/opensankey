@@ -123,12 +123,10 @@ export abstract class Class_BaseElement {
         this.eventSimpleLMBClick(event)
       })
     if (this.drawing_area.editable) {
-
-      this.d3_selection?.on(
-        'dblclick',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventDoubleLMBClick(event))
-      // Left mouse button click
+      // P1 (refonte événements) — plus de `dblclick` NATIF : le double-clic est
+      // désambiguïsé par le SEUL discriminateur `eventSimpleLMBClick`
+      // (Class_ProtoElement) qui appelle onDoubleLMBClick. Garder le dblclick
+      // natif ici doublerait le déclenchement (le navigateur émet click+dblclick).
 
       // Changed call of drag, we have to use only on time call because otherwise each .call erase the previous .call event
       // #1259 — le drag est TOUJOURS câblé ; c'est le `filter` qui décide PAR
@@ -443,6 +441,41 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
     this._config = ALL_ATTRIBUTES_CONFIG
     this._style.forEach(s => s.addReference(this))
     this.createDynamicProperties()
+  }
+
+  // ============================================================================
+  // P1 (refonte événements) — UNIQUE discriminateur simple/double-clic. C'est le
+  // SEUL gestionnaire du `click` du <g> PERSISTANT (câblé dans
+  // setEventsListeners via eventSimpleLMBClick). Un 2e clic dans `_clickDelay` ms
+  // annule le simple en attente et déclenche le double ; sinon le simple part
+  // après le délai. Remplace les timers dupliqués de NodeBase et Link (et, en P2,
+  // la détection manuelle du label). Les feuilles surchargent
+  // `onSingleLMBClick` / `onDoubleLMBClick` — plus jamais le timer lui-même.
+  // ============================================================================
+  public override eventSimpleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    // Tout clic (simple ou 1er d'un double) purge les tooltips (ex-comportement
+    // de Class_BaseElement.eventSimpleLMBClick, désormais court-circuité).
+    d3.selectAll('.sankey-tooltip').remove()
+    if (this._clickTimer) {
+      clearTimeout(this._clickTimer)
+      this._clickTimer = null
+      this.onDoubleLMBClick(event)
+      return
+    }
+    this._clickTimer = setTimeout(() => {
+      this._clickTimer = null
+      this.onSingleLMBClick(event)
+    }, this._clickDelay)
+  }
+
+  /** Simple clic CONFIRMÉ (après désambiguïsation). Surchargé par les feuilles. */
+  protected onSingleLMBClick(_event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    /* no-op par défaut */
+  }
+
+  /** Double clic CONFIRMÉ. Surchargé par les feuilles (édition, etc.). */
+  protected onDoubleLMBClick(_event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    /* no-op par défaut */
   }
 
   protected createDynamicProperties() {
