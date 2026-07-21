@@ -151,10 +151,10 @@ describe('parseEsankeyXml — fixture minimale', () => {
     const df = parseEsankeyXml(withFont)
     const a = Object.values(df.nodes).find(n => n.name === 'Source A')
     const b = Object.values(df.nodes).find(n => n.name === 'Cible B')
-    // Source A : font style=1 (gras), size 12, textColor bleu
+    // Source A : font style=1 (gras), size 12 pt → 16 px (×4/3), textColor bleu
     expect(a?.local.name_label_bold).toBe(true)
     expect(a?.local.name_label_italic).toBeUndefined()
-    expect(a?.local.name_label_font_size).toBe(12)
+    expect(a?.local.name_label_font_size).toBe(16)
     expect(a?.local.name_label_color).toBe('#0000FF')
     // Cible B : label sans <font> ni textColor → aucune mise en forme posée
     expect(b?.local.name_label_bold).toBeUndefined()
@@ -619,7 +619,7 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     const containers = Object.values(d.labels)
     expect(containers.length).toBe(3)
     const texte = containers.find(c => String(c.name_label_fo_content ?? '').includes('Titre'))
-    expect(texte?.name_label_font_size).toBe(18)
+    expect(texte?.name_label_font_size).toBe(24) // 18 pt → 24 px (×4/3)
     expect(texte?.name_label_bold).toBe(true)
     expect(texte?.name_label_color).toBe('#000000')
     // Multi-ligne dans le rich text (foreignObject) ; name/name_label_text portent
@@ -631,11 +631,11 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     // Style baké dans chaque <p> du rich-text (les conteneurs forcent has_fo, le
     // rendu FO ignore les attributs plats) : taille/gras/couleur e!Sankey.
     expect(texte?.name_label_fo_content).toBe(
-      '<p style="font-size:18px;font-weight:bold;color:#000000">Titre du</p>' +
-      '<p style="font-size:18px;font-weight:bold;color:#000000">diagramme</p>')
-    // Boîte agrandie pour englober le rich-text (padding 24 + 2 lignes × 18 px ×
-    // 1.42 = 75.12 → 76) et largeur +30 (padding horizontal) : 300 → 330.
-    expect(texte?.label_height).toBe(76)
+      '<p style="font-size:24px;font-weight:bold;color:#000000">Titre du</p>' +
+      '<p style="font-size:24px;font-weight:bold;color:#000000">diagramme</p>')
+    // Boîte agrandie pour englober le rich-text (padding 24 + 2 lignes × 24 px ×
+    // 1.42, police convertie pt→px) et largeur +30 (padding horizontal) : 300 → 330.
+    expect(texte?.label_height).toBe(93)
     expect(texte?.label_width).toBe(330)
     const rect = containers.find(c => c.color_visible === true)
     expect(rect?.color).toBe('#E0E0E0') // -2039584
@@ -662,8 +662,8 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     expect(box?.color).toBe('#E0E0E0') // le fond est conservé
     expect(box?.name_label_source).toBe('custom')
     expect(box?.name_label_fo_content).toBe(
-      '<p style="font-size:18px;font-weight:bold;color:#000000">Titre du</p>' +
-      '<p style="font-size:18px;font-weight:bold;color:#000000">diagramme</p>')
+      '<p style="font-size:24px;font-weight:bold;color:#000000">Titre du</p>' +
+      '<p style="font-size:24px;font-weight:bold;color:#000000">diagramme</p>')
   })
 
   // Lignes vides préservées : e!Sankey sépare des blocs par des lignes blanches
@@ -677,11 +677,11 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     const db = parseEsankeyXml(withBlank, { 'Images/tmp1.tmp': PNG_URI })
     const texte = Object.values(db.labels).find(c => String(c.name_label_fo_content ?? '').includes('Haut'))
     expect(texte?.name_label_fo_content).toBe(
-      '<p style="font-size:18px;font-weight:bold;color:#000000">Haut</p>' +
+      '<p style="font-size:24px;font-weight:bold;color:#000000">Haut</p>' +
       '<p><br></p>' +
-      '<p style="font-size:18px;font-weight:bold;color:#000000">Bas</p>')
-    // 3 lignes (dont la vide) × 18 px × 1.42 + 24 = 100.68 → 101.
-    expect(texte?.label_height).toBe(101)
+      '<p style="font-size:24px;font-weight:bold;color:#000000">Bas</p>')
+    // 3 lignes (dont la vide) × 24 px × 1.42 + 24 (police convertie pt→px).
+    expect(texte?.label_height).toBe(127)
   })
 
   // Import d'un trait <line> → ligne libre (shape_type 'line', élément OS#1276).
@@ -771,10 +771,13 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     // .ql-editor) et RECENTRÉE : son coin haut-gauche passe de (100,100) à (85,92)
     // — c'est le nouveau min de l'ensemble → décalage (-35,-42). Le texte, restant
     // le min, retombe à (50,50) ; la légende suit (legend_dx 100-35, legend_dy 200-42).
-    // legend_police = 12 : lu sur <legend><textFont size="12">. Le
+    // legend_police = 12 : lu BRUT sur <legend><textFont size="12"> — PAS de
+    // conversion pt→px sur la légende (agrandir décalerait sa disposition). Le
     // <captionFont> voisin (taille du titre "Legend" du cadre) n'a pas
     // d'équivalent OpenSankey (cf. commentaire EsParsedDiagram.legend) : non repris.
-    expect(d.legend).toEqual({ mask_legend: false, legend_dx: 65, legend_dy: 158, legend_police: 12 })
+    // legend_dy dépend de la boîte de la zone de texte (dont la police EST
+    // convertie ×4/3) : plus haute → recentrage décalé (158 → 166).
+    expect(d.legend).toEqual({ mask_legend: false, legend_dx: 65, legend_dy: 166, legend_police: 12 })
     const texte = Object.values(d.labels).find(c => c.title === 'Titre du diagramme')
     expect(texte?.x).toBe(50)
     expect(texte?.y).toBe(50)
@@ -847,7 +850,7 @@ describe('parseEsankeyXml — OS#1287 taille/couleur/position du label de valeur
   const link = Object.values(d.links)[0]
 
   test('taille de police reprise de <font size>', () => {
-    expect(link.local.value_label_font_size).toBe(9)
+    expect(link.local.value_label_font_size).toBe(12) // 9 pt → 12 px (×4/3)
   })
 
   test('couleur du texte reprise de textColor (argb signé → hex RGB)', () => {
@@ -871,7 +874,7 @@ describe('parseEsankeyXml — OS#1287 taille/couleur/position du label de valeur
     const other = Object.values(parseEsankeyXml(withOther).links)[0]
     expect(other.local.value_label_horiz).toBe('left')
     expect(other.local.value_label_vert).toBe('top')
-    expect(other.local.value_label_font_size).toBe(7)
+    expect(other.local.value_label_font_size).toBe(9) // 7 pt → 9 px (round(7×4/3))
   })
 
   test('label sans mise en forme (FIXTURE brute) : aucune clé T/P/C posée', () => {

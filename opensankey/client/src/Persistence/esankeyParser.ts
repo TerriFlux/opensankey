@@ -165,6 +165,15 @@ const attrNum = (el: Element | null, attr: string, fallback: number): number => 
   return Number.isFinite(parsed) ? parsed : fallback
 }
 
+// Tailles de police : e!Sankey (.NET) exprime `<font size>` en POINTS
+// typographiques (pt, 1/72") — vérifié : tous les `<font>` du corpus portent
+// `unit="3"` (GraphicsUnit.Point). OpenSankey rend `font_size` en PIXELS CSS
+// (1/96"). Sans conversion, un « 12 » e!Sankey (= 16 px réels) devient un
+// « 12 px » et le texte importé est ~25 % trop petit. Facteur 96/72 = 4/3.
+// 0 (absent) reste 0 pour ne pas déclencher les gardes `> 0`.
+const PT_TO_PX = 96 / 72
+const ptToPx = (pt: number): number => pt > 0 ? Math.round(pt * PT_TO_PX) : pt
+
 // Couleurs e!Sankey : entier ARGB signé 32 bits (ex: -1073774768 = Coral
 // avec alpha). On ne garde que le RGB pour la couleur.
 const argbToHex = (argb: string | null): string | null => {
@@ -471,7 +480,7 @@ const parseGraphicalLabelFont = (label: Element | null): Pick<EsGraphicalProcess
   return {
     labelBold: (style & 1) !== 0,
     labelItalic: (style & 2) !== 0,
-    labelFontSize: attrNum(font, 'size', 0),
+    labelFontSize: ptToPx(attrNum(font, 'size', 0)),
     labelColor: argbToHex(label?.getAttribute('textColor') ?? null),
   }
 }
@@ -610,7 +619,7 @@ const applyTextToContainer = (base: EsContainerJSON, textEl: Element, resize = t
   // rich-text. On bake donc le style dans chaque <p>.
   const font = childByTag(textEl, 'font')
   const textColor = argbToHex(textEl.getAttribute('textColor'))
-  const fontSize = attrNum(font, 'size', 9)
+  const fontSize = ptToPx(attrNum(font, 'size', 9)) // pt e!Sankey → px (×4/3)
   const inlineStyle: string[] = []
   if (font) {
     base.name_label_font_size = fontSize
@@ -886,7 +895,7 @@ const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } 
       showValue: label?.getAttribute('showValue') !== 'false',
       showUnit: label?.getAttribute('showUnit') === 'true',
       labelFormat: label?.getAttribute('labelFormat') ?? '',
-      labelFontSize: attrNum(labelFont, 'size', 0),
+      labelFontSize: ptToPx(attrNum(labelFont, 'size', 0)),
       labelOffsetH: attrNum(label, 'offsetH', 0),
       labelSegmentPercentage: attrNum(label, 'segmentPercentage', NaN),
       labelColor: argbToHex(label?.getAttribute('textColor') ?? null),
@@ -948,6 +957,8 @@ const parseLegendFontSize = (net: Element): number | null => {
   const legend = findLegendElement(net)
   const textFont = legend ? childByTag(legend, 'textFont') : null
   if (!textFont) return null
+  // NB : PAS de conversion pt→px ici pour l'instant — legend_police pilote la
+  // disposition de la légende (agrandir crée des sauts de ligne). À traiter plus tard.
   const size = attrNum(textFont, 'size', NaN)
   return Number.isFinite(size) ? size : null
 }
