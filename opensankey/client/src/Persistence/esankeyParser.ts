@@ -75,9 +75,9 @@ interface EsFlow {
   local: EsLocal
   displaying_order: number
   tooltip_text: string
-  // Ordre des ancres E/S FIGÉ à l'import (cadenas #197 sur les deux bouts) :
-  // e!Sankey a déjà rangé les flux autour de chaque nœud, on ne veut pas que le
-  // ré-agencement géométrique OpenSankey les réordonne au chargement.
+  // SA#294 — cadenas d'ancre (#197). Posé à false : on préfère l'auto-positionnement
+  // dynamique d'OpenSankey (le rangement e!Sankey était mal reconstitué à l'import et
+  // le figer produisait des inversions selon vh/hv).
   source_side_locked: boolean
   target_side_locked: boolean
   value: { id: string, data_value: number, tags: { [grp: string]: string[] } }
@@ -1502,10 +1502,13 @@ export const parseEsankeyXml = (
         style: 'default',
         local: {},
         displaying_order: 0,
-        // Ordre des ancres verrouillé des deux côtés : préserve le rangement
-        // e!Sankey (cf. interface EsFlow).
-        source_side_locked: true,
-        target_side_locked: true,
+        // SA#294 — ancres NON verrouillées : on laisse l'auto-positionnement
+        // d'OpenSankey (côté + ordre calculés depuis les positions des nœuds) placer
+        // les ancres. Verrouiller figeait un rangement e!Sankey mal reconstitué
+        // (ordre des flèches, côté calculé au chargement) → inversions selon vh/hv.
+        // L'auto-positionnement dynamique restitue le bon rangement (cf. export EV-B).
+        source_side_locked: false,
+        target_side_locked: false,
         // Commentaire de la flèche e!Sankey → infobulle du flux.
         tooltip_text: graphicalArrow?.tooltip ?? '',
         value: {
