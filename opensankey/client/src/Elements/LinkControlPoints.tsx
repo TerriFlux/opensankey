@@ -497,6 +497,17 @@ export class LinkControlPoints {
       // exact (bezier_outline_exact, opensankey#1251) ne revient pas au relâchement.
       this.link.drawShape()
       this.drawControlPoint()
+      // Déplacer un coude change la courbure du flux (shape_starting/ending_curve), qui
+      // nourrit l'ordre géométrique des flux E/S (mode 'advanced'). On le recalcule sur
+      // les deux extrémités — comme le fait un drag de nœud — pour éviter à l'utilisateur
+      // de cliquer « Réorganiser ». release_locks=false : on préserve les ancres
+      // verrouillées manuellement (#197). Seules les extrémités en mode 'advanced'
+      // réagissent ; en 'simple'/'none' l'ordre n'est pas touché par un drag de coude.
+      ;[this.link.source, this.link.target].forEach(n => {
+        const node = n as { reorganizeIOLinks?: (release_locks?: boolean) => void, shape_io_reorg_mode?: string }
+        if (node && typeof node.reorganizeIOLinks === 'function' && node.shape_io_reorg_mode === 'advanced')
+          node.reorganizeIOLinks(false)
+      })
       this.link.drawing_area.application_data.menu_configuration.updateComponentRelatedToApparence()
       //this.link.drawing_area.areaAutoFit()
       // Save current attribute val after mutating them in dragHandlers events

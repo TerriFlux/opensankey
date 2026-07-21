@@ -50,6 +50,14 @@ export type Type_AnchorAlignVertical = 'top' | 'center' | 'bottom'
 export type Type_AnchorAlignHorizontal = 'left' | 'center' | 'right'
 export const default_anchor_align_vertical: Type_AnchorAlignVertical = 'center'
 export const default_anchor_align_horizontal: Type_AnchorAlignHorizontal = 'center'
+// Mode de réorganisation automatique de l'ordre des flux E/S d'un nœud quand le
+// diagramme est modifié (cf. Class_NodeElement.reorganizeIOLinks) :
+//  'none'     = jamais recalculé (ordre figé) ;
+//  'simple'   = tri par la position du nœud opposé (comportement par défaut) ;
+//  'advanced' = ordre géométrique par la courbure (os#205/#266 — « qui tourne le
+//               plus tôt va à l'extrémité »), adapté aux diagrammes rigoureux.
+export type Type_IOReorgMode = 'none' | 'simple' | 'advanced'
+export const default_io_reorg_mode: Type_IOReorgMode = 'simple'
 // Orientation des hachures de remplissage d'un nœud ('none' = pas de hachure).
 export type Type_HatchOrientation = 'none' | 'vertical' | 'horizontal' | 'diagonal' | 'antidiagonal'
 export const default_hatch_orientation: Type_HatchOrientation = 'none'
@@ -2574,6 +2582,27 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       it: 'Allineamento orizzontale delle ancore di flusso sui lati superiore/inferiore del nodo (sinistra / centro / destra).'
     }
   } satisfies AttributeConfig<Type_AnchorAlignHorizontal>,
+  // =================== RÉORGANISATION AUTO DE L'ORDRE DES FLUX E/S ===================
+  io_reorg_mode: {
+    default: default_io_reorg_mode,
+    type: (() => default_io_reorg_mode) as (() => Type_IOReorgMode),
+    category: 'shape' as const,
+    actions: ['drawElements'] as BaseActionType[],
+    labels: {
+      en: 'Auto-reordering',
+      fr: 'Réorganisation auto',
+      es: 'Reorganización auto',
+      de: 'Auto-Neuordnung',
+      it: 'Riordino automatico'
+    },
+    tooltips: {
+      en: 'How the incoming/outgoing link order is recomputed when the diagram changes. None: never recomputed (order stays frozen). Simple: sorted by the opposite node position (default). Advanced: geometric order by curvature — the link that turns earliest goes to the extremity (best on rigorous/auto-aligned diagrams).',
+      fr: 'Comment l\'ordre des flux entrants/sortants est recalculé quand le diagramme change. Aucune : jamais recalculé (l\'ordre reste figé). Simple : trié par la position du nœud opposé (par défaut). Avancée : ordre géométrique par la courbure — le flux qui tourne le plus tôt va à l\'extrémité (idéal sur des diagrammes rigoureux ou alignés automatiquement).',
+      es: 'Cómo se recalcula el orden de los flujos entrantes/salientes cuando cambia el diagrama. Ninguna: nunca se recalcula (el orden queda fijo). Simple: ordenado por la posición del nodo opuesto (por defecto). Avanzada: orden geométrico por curvatura — el flujo que gira antes va al extremo (ideal en diagramas rigurosos o alineados automáticamente).',
+      de: 'Wie die Reihenfolge der ein-/ausgehenden Flüsse bei Änderungen am Diagramm neu berechnet wird. Keine: nie neu berechnet (Reihenfolge bleibt fest). Einfach: sortiert nach der Position des gegenüberliegenden Knotens (Standard). Erweitert: geometrische Reihenfolge nach Krümmung — der zuerst abbiegende Fluss geht ans Ende (ideal bei präzisen oder automatisch ausgerichteten Diagrammen).',
+      it: 'Come viene ricalcolato l\'ordine dei flussi entranti/uscenti quando il diagramma cambia. Nessuno: mai ricalcolato (l\'ordine resta fisso). Semplice: ordinato per la posizione del nodo opposto (predefinito). Avanzato: ordine geometrico per curvatura — il flusso che curva prima va all\'estremità (ideale su diagrammi rigorosi o allineati automaticamente).'
+    }
+  } satisfies AttributeConfig<Type_IOReorgMode>,
   // Écart d'accroche des flux, en px, perpendiculaire au côté du nœud (équivalent
   // de la « Distance » d'e!Sankey). POSITIF = les ancres rentrent DANS la boîte
   // (les flux entrants/sortants se rejoignent à travers le nœud) ; négatif = elles

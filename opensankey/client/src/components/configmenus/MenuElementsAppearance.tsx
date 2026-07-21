@@ -79,7 +79,8 @@ import {
   getConfigValues,
   Type_AnchorAlignVertical,
   Type_AnchorAlignHorizontal,
-  Type_HatchOrientation
+  Type_HatchOrientation,
+  Type_IOReorgMode
 } from '../../Elements/ElementsAttributesConfig'
 import { SankeyMultiTypeSelectionSimple } from './MenuElementsSelection'
 import { unit_constants } from '../../Elements/LinkValues'
@@ -1925,11 +1926,38 @@ export const MenuConfigurationAppearance = ({
                               {t(`Noeud.apparence.${getNodeShapeAttributeKey('shape', 'orphan_node_visible')}`)}
                             </OverloadedCheckbox>
                           </Box>
-                          {selection.hasNodes && !menu_for_style && !(nodes_elements[0] instanceof Class_StockShape) && <>
+                          {!(nodes_elements[0] instanceof Class_StockShape) && <>
                             <Box as='span' layerStyle='menuconfigpanel_part_title_3'>
                               {t('Noeud.Reorg_title')}
                             </Box>
-                            <NodeIOReorganizer app_data={app_data} node={nodes_elements[0] as Class_NodeElement} />
+                            {/* Mode de réorganisation auto (attribut stylé) : visible dans le menu du
+                                nœud ET dans l'onglet Styles (régler sur le style par défaut = global). */}
+                            <ElementAttrSetterSelect2Cols
+                              app_data={app_data}
+                              elements={nodes_elements}
+                              attributePath={'Noeud.apparence'}
+                              attributeKey={'io_reorg_mode'}
+                              config={NODE_SHAPE_SPECIFIC_CONFIG}
+                              prefix={'shape'}
+                              options={[
+                                { key: 'io_reorg_none', value: 'none' as Type_IOReorgMode, label: t('Noeud.apparence.io_reorg_mode_none') },
+                                { key: 'io_reorg_simple', value: 'simple' as Type_IOReorgMode, label: t('Noeud.apparence.io_reorg_mode_simple') },
+                                { key: 'io_reorg_advanced', value: 'advanced' as Type_IOReorgMode, label: t('Noeud.apparence.io_reorg_mode_advanced') }
+                              ]}
+                              refreshParentComponent={refreshAll}
+                              onAfterChange={() => {
+                                // Appliquer tout de suite le nouveau mode aux nœuds sélectionnés
+                                // (release_locks=false : on préserve les cadenas #197). En onglet
+                                // Styles, `nodes_elements` sont des styles → le garde-fou saute.
+                                nodes_elements.forEach(n => {
+                                  const node = n as { reorganizeIOLinks?: (release_locks?: boolean) => void }
+                                  if (typeof node.reorganizeIOLinks === 'function') node.reorganizeIOLinks(false)
+                                })
+                                refreshAll()
+                              }}
+                            />
+                            {selection.hasNodes && !menu_for_style &&
+                              <NodeIOReorganizer app_data={app_data} node={nodes_elements[0] as Class_NodeElement} />}
                           </>}
                         </WrapperBoxSubSectionMenu>
                       )}
