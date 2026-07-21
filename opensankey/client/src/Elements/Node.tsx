@@ -1601,6 +1601,14 @@ export class Class_NodeElement extends Class_NodeBase {
     // Compute width & Height (based on links values)
     const width = this.getShapeWidthToUse()
     const height = this.getShapeHeightToUse()
+    // Écart d'accroche des flux (« Distance » e!Sankey, shape_link_inset) :
+    // décalage perpendiculaire des ancres par rapport au bord, DÉCOUPLÉ de la
+    // taille de la boîte (elle garde son rendu). Positif = vers l'intérieur (les
+    // flux rentrent dans le nœud), négatif = vers l'extérieur. Clamp à mi-dimension
+    // pour que les ancres opposées ne se croisent pas au-delà du centre.
+    const raw_inset = this.shape_link_inset
+    const inset_x = raw_inset === 0 ? 0 : Math.max(-width, Math.min(width / 2, raw_inset))
+    const inset_y = raw_inset === 0 ? 0 : Math.max(-height, Math.min(height / 2, raw_inset))
     // Offsets positions : based on others links + node's heigth / width
     let dy_right = this.getLinksStartingPositionOffSet('right')
     let dy_left = this.getLinksStartingPositionOffSet('left')
@@ -1642,25 +1650,25 @@ export class Class_NodeElement extends Class_NodeBase {
           const anchor_delta = link.source_anchor_delta
           if (link.source_side === 'right') {
             dy_right = dy_right + anchor_delta
-            link_starting_point = { x: (x0 + width), y: (y0 + dy_right + thickness / 2) }
+            link_starting_point = { x: (x0 + width - inset_x), y: (y0 + dy_right + thickness / 2) }
             link_starting_handle_point = { x: (link_starting_point.x + handle_position_shift), y: link_starting_point.y }
             dy_right = dy_right + thickness
           }
           else if (link.source_side === 'left') {
             dy_left = dy_left + anchor_delta
-            link_starting_point = { x: x0, y: (y0 + dy_left + thickness / 2) }
+            link_starting_point = { x: (x0 + inset_x), y: (y0 + dy_left + thickness / 2) }
             link_starting_handle_point = { x: (link_starting_point.x - handle_position_shift), y: link_starting_point.y }
             dy_left = dy_left + thickness
           }
           else if (link.source_side === 'top') {
             dx_top = dx_top + anchor_delta
-            link_starting_point = { x: (x0 + dx_top + thickness / 2), y: y0 }
+            link_starting_point = { x: (x0 + dx_top + thickness / 2), y: (y0 + inset_y) }
             link_starting_handle_point = { x: link_starting_point.x, y: link_starting_point.y - handle_position_shift }
             dx_top = dx_top + thickness
           }
           else {  // link.source_side === 'bottom'
             dx_bottom = dx_bottom + anchor_delta
-            link_starting_point = { x: (x0 + dx_bottom + thickness / 2), y: (y0 + height) }
+            link_starting_point = { x: (x0 + dx_bottom + thickness / 2), y: (y0 + height - inset_y) }
             link_starting_handle_point = { x: link_starting_point.x, y: link_starting_point.y + handle_position_shift }
             dx_bottom = dx_bottom + thickness
           }
@@ -1713,25 +1721,25 @@ export class Class_NodeElement extends Class_NodeBase {
           const anchor_delta = link.target_anchor_delta
           if (link.target_side === 'right') {
             dy_right = dy_right + anchor_delta
-            link_ending_point = { x: (x0 + width), y: (y0 + dy_right + thickness / 2) }
+            link_ending_point = { x: (x0 + width - inset_x), y: (y0 + dy_right + thickness / 2) }
             link_ending_handle_point = { x: (link_ending_point.x + handle_position_shift), y: link_ending_point.y }
             dy_right = dy_right + thickness
           }
           else if (link.target_side === 'left') {
             dy_left = dy_left + anchor_delta
-            link_ending_point = { x: x0, y: (y0 + dy_left + thickness / 2) }
+            link_ending_point = { x: (x0 + inset_x), y: (y0 + dy_left + thickness / 2) }
             link_ending_handle_point = { x: (link_ending_point.x - handle_position_shift), y: link_ending_point.y }
             dy_left = dy_left + thickness
           }
           else if (link.target_side === 'top') {
             dx_top = dx_top + anchor_delta
-            link_ending_point = { x: (x0 + dx_top + thickness / 2), y: y0 }
+            link_ending_point = { x: (x0 + dx_top + thickness / 2), y: (y0 + inset_y) }
             link_ending_handle_point = { x: link_ending_point.x, y: (link_ending_point.y - handle_position_shift) }
             dx_top = dx_top + thickness
           }
           else {  // link.target_side === 'bottom'
             dx_bottom = dx_bottom + anchor_delta
-            link_ending_point = { x: (x0 + dx_bottom + thickness / 2), y: (y0 + height) }
+            link_ending_point = { x: (x0 + dx_bottom + thickness / 2), y: (y0 + height - inset_y) }
             link_ending_handle_point = { x: link_ending_point.x, y: (link_ending_point.y + handle_position_shift) }
             dx_bottom = dx_bottom + thickness
           }

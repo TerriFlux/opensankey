@@ -1776,6 +1776,18 @@ export const MenuConfigurationAppearance = ({
                               />
                             </Box>
                           </Box>
+                          <ElementAttrSetterNumberInput2Cols
+                            app_data={app_data}
+                            config={NODE_SHAPE_SPECIFIC_CONFIG}
+                            elements={elements}
+                            attributePath='Noeud.apparence'
+                            attributeKey={'link_inset'}
+                            prefix={'shape'}
+                            refreshParentComponent={refreshAll}
+                            unit_text='pixels'
+                            minimum_value={-500}
+                            stepper={true}
+                            isOverloaded={isElementAttributeOverloaded(elements, 'shape_link_inset' as keyof typeof NODE_SHAPE_SPECIFIC_CONFIG, NODE_SHAPE_SPECIFIC_CONFIG)} />
                           {nodeShapeValues.position_type == 'parametric' ? <>
                             <ElementAttrSetterNumberInput2Cols
                               app_data={app_data}
