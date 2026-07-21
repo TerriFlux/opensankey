@@ -1241,6 +1241,15 @@ export const parseEsankeyXml = (
 
   // Nœuds : un par graphProcess. Nom = nom logique, sinon label graphique.
   const nodes: { [id: string]: EsNode } = {}
+  // S2 (SA#294) — Boîte e!Sankey des ancres In/Out collapsées en point. Mémorisée
+  // pour recaler, une fois le voisin connu, le point d'accroche du flux sur le BORD
+  // de la boîte face au voisin (cf. recenterHiddenAnchor) au lieu du coin haut-gauche.
+  const hiddenNodeBox: {
+    [id: string]: {
+      x: number, y: number, w: number, h: number,
+      labelX: number, labelY: number, labelW: number, labelH: number, labelHasPos: boolean
+    }
+  } = {}
   const logicalToNodeId: { [logicalId: string]: string } = {}
   const usedNodeIds = new Set<string>()
   const graphNodes = childByTag(netModel, 'graphNodes')
@@ -1304,6 +1313,18 @@ export const parseEsankeyXml = (
         nodes[id].local.node_width = graphical.width
         nodes[id].local.node_height = graphical.height
         applyLinkInset(nodes[id], graphical)
+      } else if (graphical && graphical.width > 0 && graphical.height > 0) {
+        // S2 (SA#294) — ancre In/Out collapsée en point : on mémorise la boîte pour
+        // recaler, une fois le voisin connu, le point d'accroche sur le bord face au
+        // voisin (recenterHiddenAnchor). Un nœud-point rend le choix du bord
+        // (target_side/source_side) SANS OBJET (haut=bas), donc l'accroche est
+        // robuste même quand la barre grossit et remonte au-dessus de l'ancre.
+        hiddenNodeBox[id] = {
+          x: graphical.x, y: graphical.y, w: graphical.width, h: graphical.height,
+          labelX: graphical.labelX, labelY: graphical.labelY,
+          labelW: graphical.labelW, labelH: graphical.labelH,
+          labelHasPos: graphical.labelHasPos,
+        }
       }
     } else {
       // OS#1298 — taille de boîte réelle, uniquement pour un nœud VISIBLE.
@@ -1394,6 +1415,44 @@ export const parseEsankeyXml = (
     }
   })
 
+  // S2 (SA#294) — Recalage du point d'accroche d'une ancre collapsée sur le MILIEU
+  // du bord de sa boîte e!Sankey face à son voisin. e!Sankey raccorde le flux au
+  // milieu de ce bord (bas d'un In posé au-dessus, bas d'un Out dont la barre est
+  // dessous) ; le coin haut-gauche décalait le départ d'une demi-boîte (flux trop
+  // haut). Le nœud restant un POINT, le choix du bord côté rendu (source/target_side)
+  // est sans objet (haut=bas) : accroche robuste même quand la barre grossit. Le
+  // label de nom est ré-ancré au CENTRE du point (name_label='middle' + shift =
+  // centre du label e!Sankey − point) : stable quel que soit l'épaississement.
+  // Idempotent (une ancre = un flux). Positions e!Sankey (pré-croissance) au moment
+  // de l'appel → comparaison de bord fiable.
+  const anchorRecentered = new Set<string>()
+  const recenterHiddenAnchor = (id: string, neighbor: EsNode | undefined): void => {
+    const box = hiddenNodeBox[id]
+    if (!box || !neighbor || anchorRecentered.has(id)) return
+    const cx = box.x + box.w / 2
+    const cy = box.y + box.h / 2
+    // Recalage UNIQUEMENT pour un voisin surtout au-DESSUS/DESSOUS (accroche
+    // verticale = le cas « flux trop haut » des stubs In/Out). Pour un voisin
+    // LATÉRAL (flux horizontal), on NE touche PAS l'ancre : la déplacer au milieu
+    // du bord la ferait descendre d'une demi-boîte alors que la source ne suit pas
+    // (ex. Building Energy « Transmission », qui doit rester droit et horizontal).
+    if (Math.abs(neighbor.y - cy) < Math.abs(neighbor.x - cx)) return
+    anchorRecentered.add(id)
+    const px = cx
+    const py = neighbor.y >= cy ? box.y + box.h : box.y // bord bas si voisin dessous, sinon haut
+    nodes[id].x = px
+    nodes[id].y = py
+    // Label ré-ancré au centre du point (invariant à la croissance en largeur).
+    if (box.labelHasPos) {
+      nodes[id].local.name_label_horiz = 'middle'
+      nodes[id].local.name_label_vert = 'middle'
+      nodes[id].local.name_label_inside_horiz = false
+      nodes[id].local.name_label_inside_vert = false
+      nodes[id].local.name_label_horiz_shift = Math.round(box.labelX + box.labelW / 2 - px)
+      nodes[id].local.name_label_vert_shift = Math.round(box.labelY + box.labelH / 2 - py)
+    }
+  }
+
   // Flux : un par flow de compartments (une flèche multi-matériaux e!Sankey
   // devient N flux parallèles même source/cible, chacun tagué par son entry).
   const links: { [id: string]: EsFlow } = {}
@@ -1412,6 +1471,10 @@ export const parseEsankeyXml = (
     const sourceId = logicalToNodeId[fromRef ?? '']
     const targetId = logicalToNodeId[toRef ?? '']
     if (!sourceId || !targetId) return
+    // S2 (SA#294) — recale les ancres collapsées de CETTE flèche sur le bord face
+    // au voisin AVANT toute géométrie de coude (qui lit les positions des nœuds).
+    recenterHiddenAnchor(sourceId, nodes[targetId])
+    recenterHiddenAnchor(targetId, nodes[sourceId])
     const arrowId = ga.getAttribute('id') ?? ''
     const graphicalArrow = graphicalArrows[edgeMapping[arrowId] ?? ''] ?? null
     // Orientation OpenSankey depuis l'`arrowDirection` des nœuds source/cible :

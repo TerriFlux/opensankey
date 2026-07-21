@@ -563,6 +563,44 @@ describe('parseEsankeyXml — coude droit (OS#1288)', () => {
   })
 })
 
+describe('parseEsankeyXml — SA#294 : ancre masquée recalée (accroche verticale)', () => {
+  // Une ancre In/Out invisible (process visible="false" avec une boîte) est
+  // collapsée en point. Pour un voisin AU-DESSUS/DESSOUS (accroche verticale),
+  // on recale le point sur le MILIEU du bord face au voisin (le coin décalait le
+  // départ d'une demi-boîte → flux trop haut), et le label est ré-ancré au CENTRE
+  // du point (name_label='middle'), stable quand le nœud grossit. Pour un voisin
+  // LATÉRAL (flux horizontal), on NE recale PAS (sinon le flux droit descendrait).
+  // Boîte de l'ancre (process 50) : x=100 y=300 w=48 h=112 → centre (124,356),
+  // bord bas (124,412). Label absolu (110,320) taille 20×22 → centre (120,331).
+  const hidden = (proc51: string): string => FIXTURE
+    .replace('<process id="50" locationX="100"', '<process id="50" visible="false" locationX="100"')
+    .replace('<label text="Source A" />', '<label text="Source A" locationX="110" locationY="320" sizeW="20" sizeH="22" />')
+    .replace('<process id="51" locationX="400" locationY="320">', proc51)
+
+  test('voisin en dessous → bord BAS-centre, label ancré au centre au-dessus du départ', () => {
+    // Cible sous l'ancre (x≈centre, y=600) → axe vertical dominant → bord bas.
+    const d = parseEsankeyXml(hidden('<process id="51" locationX="118" locationY="600">'))
+    const inNode = Object.values(d.nodes).find(n => n.name === 'Source A')
+    expect(inNode?.local.shape_visible).toBe(false)
+    expect(inNode?.local.name_label_vert).toBe('middle')
+    expect(inNode?.local.name_label_horiz).toBe('middle')
+    // shift = centre du label − point d'accroche (bord bas-centre 124,412).
+    expect(inNode?.local.name_label_horiz_shift).toBe(-4)  // 120 − 124
+    expect(inNode?.local.name_label_vert_shift).toBe(-81)  // 331 − 412 (label AU-DESSUS)
+  })
+
+  test('voisin à droite → PAS de recalage (flux horizontal reste droit)', () => {
+    // Cible par défaut (400,320), à droite → axe horizontal dominant → skip.
+    const d = parseEsankeyXml(hidden('<process id="51" locationX="400" locationY="320">'))
+    const inNode = Object.values(d.nodes).find(n => n.name === 'Source A')
+    // Le label garde l'ancrage coin haut-gauche (applyNameLabelPos), non recentré.
+    expect(inNode?.local.name_label_vert).toBe('top')
+    expect(inNode?.local.name_label_horiz).toBe('left')
+    expect(inNode?.local.name_label_horiz_shift).toBe(10)  // 110 − 100 (coin)
+    expect(inNode?.local.name_label_vert_shift).toBe(20)   // 320 − 300 (coin)
+  })
+})
+
 
 describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)', () => {
   const d = parseEsankeyXml(FIXTURE_DECOR, { 'Images/tmp1.tmp': PNG_URI })
