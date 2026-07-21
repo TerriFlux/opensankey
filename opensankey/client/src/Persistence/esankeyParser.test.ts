@@ -431,7 +431,7 @@ describe('parseEsankeyXml — coude droit (OS#1288)', () => {
     .replace('<process id="51" locationX="400" locationY="320">', '<process id="51" locationX="400" locationY="320" arrowDirection="2">')
     .replace('<arrow id="60">', `<arrow id="60">${extra}`)
 
-  test('flux vh : segment droit (horiz_shift) et virage court (tangeant) posés', () => {
+  test('flux vh : segment droit (horiz_shift), tangente de départ = 1, virage court côté cible', () => {
     const d = parseEsankeyXml(withElbow(
       '<sankeyLink sankeyStartSegmentLength="18" sankeyEndSegmentLength="18" curviness="10" orthogonal="false" adjustingStyle="Manual" />'))
     const link = Object.values(d.links)[0]
@@ -439,18 +439,20 @@ describe('parseEsankeyXml — coude droit (OS#1288)', () => {
     // Segments droits 18 px / portée ≈ 300.67 ≈ 0.0599 (ratio de longueur).
     expect(link.local.left_horiz_shift as number).toBeCloseTo(0.0599, 3)
     expect(link.local.right_horiz_shift as number).toBeCloseTo(0.0599, 3)
-    // Virage court : tangente ≈ 10/300.67 ≈ 0.0333, bien sous le défaut 0.3.
-    expect(link.local.starting_tangeant as number).toBeCloseTo(0.0333, 3)
+    // COUDE (vh) : la tangente de départ doit atteindre le coin → forcée à 1,
+    // sinon la courbe file en diagonale molle. Côté cible : virage court
+    // (≈ 10/300.67 ≈ 0.0333).
+    expect(link.local.starting_tangeant as number).toBe(1)
     expect(link.local.ending_tangeant as number).toBeCloseTo(0.0333, 3)
-    expect(link.local.starting_tangeant as number).toBeLessThan(0.3)
   })
 
-  test('orthogonal=true → tangente encore plus serrée (≤ 0.06)', () => {
+  test('orthogonal=true : tangente de départ = 1, tangente cible serrée (≤ 0.06)', () => {
     const d = parseEsankeyXml(withElbow(
       '<sankeyLink sankeyStartSegmentLength="18" sankeyEndSegmentLength="18" curviness="40" orthogonal="true" />'))
     const link = Object.values(d.links)[0]
-    // curviness 40/300.67 ≈ 0.133 mais orthogonal plafonne à 0.06.
-    expect(link.local.starting_tangeant as number).toBeLessThanOrEqual(0.06)
+    // Coude vh : départ forcé à 1 pour un angle net.
+    expect(link.local.starting_tangeant as number).toBe(1)
+    // curviness 40/300.67 ≈ 0.133 mais orthogonal plafonne à 0.06 côté cible.
     expect(link.local.ending_tangeant as number).toBeLessThanOrEqual(0.06)
   })
 
@@ -459,6 +461,40 @@ describe('parseEsankeyXml — coude droit (OS#1288)', () => {
     const link = Object.values(d.links)[0]
     expect(link.local.left_horiz_shift).toBeUndefined()
     expect(link.local.starting_tangeant).toBeUndefined()
+  })
+})
+
+describe('parseEsankeyXml — OS#1298b : ancre masquée accrochée au bord face au voisin', () => {
+  // Une ancre In/Out invisible (process visible="false" avec une boîte) est
+  // collapsée en point. e!Sankey raccorde son flux au MILIEU du bord tourné vers
+  // le voisin (ex. bas-centre d'un In posé au-dessus du process), pas au coin
+  // haut-gauche : garder le coin décalait le départ d'une demi-boîte, si bien que
+  // le flux partait AU-DESSUS du label au lieu de dessous. On vérifie le recalage
+  // du point d'accroche ET du décalage du label de nom.
+  // Boîte de l'ancre (process 50) : x=100 y=300 w=48 h=112 → centre (124, 356),
+  // bord bas (124, 412), bord droit (148, 356). Label absolu = (110, 320).
+  const hidden = (proc51: string): string => FIXTURE
+    .replace('<process id="50" locationX="100"', '<process id="50" visible="false" locationX="100"')
+    .replace('<label text="Source A" />', '<label text="Source A" locationX="110" locationY="320" sizeW="20" sizeH="22" />')
+    .replace('<process id="51" locationX="400" locationY="320">', proc51)
+
+  test('voisin en dessous → bord BAS-centre, label recalé au-dessus du départ', () => {
+    // Cible sous l'ancre (x≈centre, y=600) → axe vertical dominant → bord bas y=412.
+    const d = parseEsankeyXml(hidden('<process id="51" locationX="118" locationY="600">'))
+    const inNode = Object.values(d.nodes).find(n => n.name === 'Source A')
+    expect(inNode?.local.shape_visible).toBe(false)
+    // Décalage du label depuis le bord bas-centre (124, 412) : NÉGATIF en vertical
+    // → label AU-DESSUS du départ du flux. Le bug (coin 100,300) donnait +20.
+    expect(inNode?.local.name_label_vert_shift).toBe(-92)   // 320 − 412
+    expect(inNode?.local.name_label_horiz_shift).toBe(-14)  // 110 − 124 (centré en x)
+  })
+
+  test('voisin à droite → bord DROIT-centre', () => {
+    // Cible par défaut (400, 320), à droite → axe horizontal dominant → bord droit x=148.
+    const d = parseEsankeyXml(hidden('<process id="51" locationX="400" locationY="320">'))
+    const inNode = Object.values(d.nodes).find(n => n.name === 'Source A')
+    expect(inNode?.local.name_label_horiz_shift).toBe(-38)  // 110 − 148
+    expect(inNode?.local.name_label_vert_shift).toBe(-36)   // 320 − 356 (centré en y)
   })
 })
 
