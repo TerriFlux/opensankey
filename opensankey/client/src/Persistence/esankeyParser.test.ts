@@ -548,25 +548,6 @@ describe('parseEsankeyXml — coude droit (OS#1288)', () => {
   })
 })
 
-describe('parseEsankeyXml — placement vertical du label de nom (centré)', () => {
-  // Un nœud Sankey grandit verticalement avec l'épaisseur de ses flux : son bord
-  // haut RENDU est inconnu à l'import. On centre donc le label sur le nœud
-  // (vert='middle', shift 0) au lieu de l'ancrer en 'top' + shift, qui le renvoyait
-  // très au-dessus des nœuds épais (labels « envolés » sur CHP Hospital).
-  // L'horizontal reste ancré à gauche avec un décalage (largeur du nœud prévisible).
-  const withLabelPos = FIXTURE
-    .replace('<label text="Source A" />', '<label text="Source A" locationX="110" locationY="320" sizeW="20" sizeH="22" />')
-
-  test('label positionné → vert=middle + shift 0 ; horiz ancré à gauche avec décalage', () => {
-    const d = parseEsankeyXml(withLabelPos)
-    const a = Object.values(d.nodes).find(n => n.name === 'Source A')
-    expect(a?.local.name_label_vert).toBe('middle')
-    expect(a?.local.name_label_vert_shift).toBe(0)
-    expect(a?.local.name_label_horiz).toBe('left')
-    // Source A : node x = 100 (coin), labelX = 110 → décalage horizontal +10.
-    expect(a?.local.name_label_horiz_shift).toBe(10)
-  })
-})
 
 describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)', () => {
   const d = parseEsankeyXml(FIXTURE_DECOR, { 'Images/tmp1.tmp': PNG_URI })

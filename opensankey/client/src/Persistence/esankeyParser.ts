@@ -1130,23 +1130,21 @@ export const parseEsankeyXml = (
       units: Object.values(ut.units).map(u => ({ id: u.id, name: u.name, coefficient: u.coefficient })),
     }))
 
-  // Placement du LABEL de nom. HORIZONTAL : e!Sankey donne la position absolue
-  // (labelX = coin gauche de la boîte de label) ; on ancre à gauche (horiz='left'
-  // + inside) avec un décalage label − node, stable car la largeur du nœud est
-  // prévisible. VERTICAL : on CENTRE le label sur le nœud (vert='middle', décalage
-  // 0). Un nœud Sankey grandit verticalement avec l'épaisseur de ses flux, donc
-  // son bord haut RENDU est inconnu à l'import : ancrer le label en 'top' + shift
-  // (référence = bord haut) l'envoyait très au-dessus du nœud sur les nœuds épais
-  // (labels « envolés » sur CHP Hospital). Le CENTRE, lui, est stable ⇒ label
-  // centré, fidèle au placement e!Sankey (label centré dans la boîte du process).
+  // Placement du LABEL de nom : e!Sankey donne sa position ABSOLUE (labelX/Y =
+  // coin haut-gauche de la boîte de label). Pour que le décalage OpenSankey soit
+  // indépendant de la bbox RENDUE du nœud (taille pilotée par les flux, inconnue
+  // à l'import), on ancre le label au COIN HAUT-GAUCHE du nœud : horiz='left' +
+  // vert='top' + inside → la référence devient l'origine locale du nœud
+  // (= node.x/node.y monde), pas son centre. Le décalage vaut alors label − node
+  // (coins), exact quelle que soit la taille rendue.
   const applyNameLabelPos = (node: EsNode, graphical: EsGraphicalProcess | null): void => {
     if (!graphical?.labelHasPos) return
     node.local.name_label_horiz = 'left'
     node.local.name_label_inside_horiz = true
-    node.local.name_label_vert = 'middle'
+    node.local.name_label_vert = 'top'
     node.local.name_label_inside_vert = true
     node.local.name_label_horiz_shift = Math.round(graphical.labelX - node.x)
-    node.local.name_label_vert_shift = 0
+    node.local.name_label_vert_shift = Math.round(graphical.labelY - node.y)
     // Largeur de la boîte de label depuis e!Sankey (sinon défaut 150).
     if (graphical.labelW > 0) node.local.name_label_box_width = Math.round(graphical.labelW)
     // e!Sankey rend ses labels avec césure (wrapping) dans leur boîte : on
