@@ -19,6 +19,7 @@ import { inspector_registry, INSPECTOR_TAB_VALUE_ID } from './InspectorRegistry'
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import { SankeyNodeSelection, NodeMaterialBalanceCheckbox, NodeBalanceMarkerConfig } from '../MenuElementsSelection'
 import { MenuConfigurationAppearance } from '../MenuElementsAppearance'
+import { GenericStyleSelector } from '../../dialogs/SankeyStyle'
 import { MenuConfigurationLinksData } from '../SankeyMenuConfigurationLinksData'
 import { ConfigMenuTextInput, OSTooltip, CustomFaEyeCheckIcon, WrapperBoxSubSectionMenu } from '../MenuCommon'
 import { stripHtmlTags, isRichContent } from '../../dialogs/RichTextEditor'
@@ -236,6 +237,26 @@ export function registerBaseInspectorSections(): void {
     title: (app_data) => app_data.t('Menu.Config.element_legend'),
     icon: (app_data) => app_data.icon_library.icon_tab_legend,
     render: (app_data) => <LegendConfig app_data={app_data} compact />
+  })
+
+  // ---- Onglet STYLES (cible Vue) -------------------------------------------
+  // OS#1243 — les styles s'éditent d'ordinaire via la portée « Styles » d'une
+  // sélection. Sans sélection (diagramme vide au démarrage), aucune sélection
+  // ne les expose : on offre ici l'éditeur de styles complet (sélecteur de
+  // famille/style + apparence en portée Style), même contenu que l'ex-boîte de
+  // dialogue « Styles des éléments » retirée du menu contextuel du canvas.
+  inspector_registry.register({
+    id: 'os.view.styles',
+    target: 'view',
+    order: 40,
+    hue: 'style',
+    title: (app_data) => app_data.t('inspector.tab.styles'),
+    icon: (app_data) => app_data.icon_library.icon_edit_style_node,
+    render: (app_data) => (
+      <GenericStyleSelector app_data={app_data}>
+        <MenuConfigurationAppearance app_data={app_data} menu_for_style />
+      </GenericStyleSelector>
+    )
   })
 }
 

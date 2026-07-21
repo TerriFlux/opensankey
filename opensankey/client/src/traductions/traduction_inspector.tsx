@@ -54,7 +54,8 @@ export const resources_inspector = {
           tags: 'Tags',
           analysis: 'Analysis',
           title: 'Title',
-          mfa: 'MFA'
+          mfa: 'MFA',
+          styles: 'Styles'
         },
         // #1258 — Onglet MFA (espace AFM unifié).
         mfa: {
@@ -205,7 +206,8 @@ export const resources_inspector = {
           tags: 'Tags',
           analysis: 'Analyse',
           title: 'Titre',
-          mfa: 'AFM'
+          mfa: 'AFM',
+          styles: 'Styles'
         },
         mfa: {
           reconciliation: 'Réconciliation',
@@ -353,7 +355,8 @@ export const resources_inspector = {
           tags: 'Etiquetas',
           analysis: 'Análisis',
           title: 'Título',
-          mfa: 'AFM'
+          mfa: 'AFM',
+          styles: 'Estilos'
         },
         mfa: {
           reconciliation: 'Conciliación',
@@ -501,7 +504,8 @@ export const resources_inspector = {
           tags: 'Tags',
           analysis: 'Analyse',
           title: 'Titel',
-          mfa: 'MFA'
+          mfa: 'MFA',
+          styles: 'Stile'
         },
         mfa: {
           reconciliation: 'Abgleich',
@@ -649,7 +653,8 @@ export const resources_inspector = {
           tags: 'Tag',
           analysis: 'Analisi',
           title: 'Titolo',
-          mfa: 'AFM'
+          mfa: 'AFM',
+          styles: 'Stili'
         },
         mfa: {
           reconciliation: 'Riconciliazione',
