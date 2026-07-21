@@ -442,6 +442,69 @@ describe('parseEsankeyXml — orientation des flux (arrowDirection)', () => {
   })
 })
 
+describe('parseEsankeyXml — jonction masquée à Distance négative (shape_link_inset)', () => {
+  // e!Sankey n'emploie de « Distance » (port nodePadding) négative que sur des
+  // process MASQUÉS : des jonctions fines et hautes qui rassemblent les flux
+  // (vérifié sur les 120 démos ; CHP Hospital : boîte 16×160, padding -8). Le
+  // nœud doit alors GARDER sa boîte (invisible) + recevoir l'inset — sinon il
+  // collapserait en point, écrasant l'étalement vertical des flux. Les `<port>`
+  // sont des enfants DIRECTS du `<process>` (pas de wrapper `<ports>`).
+  const FIXTURE_HIDDEN_JUNCTION = `<?xml version="1.0" encoding="utf-8"?>
+<document xmlns="${NS}" generator="e!Sankey" generatorVersion="5.2.0.16">
+  <netModel>
+    <unitTypes><unitType id="10" name="E" used="true" width="80" maximumFlow="40">
+      <units><unit id="11" name="MJ" coefficient="1" isBasicUnit="true" /></units>
+    </unitType></unitTypes>
+    <entryGroup id="20" name="Root"><entries>
+      <entry id="21" name="Flux"><unitTypeRef refId="10" /><brushColor argb="-256" /></entry>
+    </entries></entryGroup>
+    <graphNodes>
+      <graphProcess id="30" name="Src" />
+      <graphProcess id="31" name="Junction" />
+    </graphNodes>
+    <graphArrows>
+      <graphArrow id="40" name="">
+        <from><graphProcessRef refId="30" /></from>
+        <to><graphProcessRef refId="31" /></to>
+        <compartments><flow id="41" name="Flux" quantity="10"><entryRef refId="21" /><unitRef refId="11" /></flow></compartments>
+      </graphArrow>
+    </graphArrows>
+  </netModel>
+  <net backgroundColor="-1">
+    <processes>
+      <process id="50" locationX="100" locationY="300" backgroundSizeW="48" backgroundSizeH="48"><label text="Src" /></process>
+      <process id="51" locationX="400" locationY="300" backgroundSizeW="16" backgroundSizeH="160" visible="false"><label text="Junction" />
+        <port id="52" nodePadding="-8" />
+      </process>
+    </processes>
+  </net>
+  <logicalGraphicalObjectMapping>
+    <nodes>
+      <keyValuePair><graphProcessRef refId="30" /><processRef refId="50" /></keyValuePair>
+      <keyValuePair><graphProcessRef refId="31" /><processRef refId="51" /></keyValuePair>
+    </nodes>
+  </logicalGraphicalObjectMapping>
+</document>`
+
+  const d = parseEsankeyXml(FIXTURE_HIDDEN_JUNCTION)
+
+  test('jonction masquée + padding négatif → boîte CONSERVÉE (pas collapsée) + inset', () => {
+    const j = Object.values(d.nodes).find(n => n.name === 'Junction')
+    // Masquée (forme + bordure éteintes) mais boîte 16×160 posée → étalement vertical.
+    expect(j?.local.shape_visible).toBe(false)
+    expect(j?.local.shape_border_visible).toBe(false)
+    expect(j?.local.node_width).toBe(16)
+    expect(j?.local.node_height).toBe(160)
+    // padding -8 → inset 8 (= demi-largeur : les flux se rejoignent au centre en x).
+    expect(j?.local.shape_link_inset).toBe(8)
+  })
+
+  test('process visible sans port → aucun inset (défaut)', () => {
+    const src = Object.values(d.nodes).find(n => n.name === 'Src')
+    expect(src?.local.shape_link_inset).toBeUndefined()
+  })
+})
+
 describe('parseEsankeyXml — coude droit (OS#1288)', () => {
   // Le `<sankeyLink>` du `<arrow>` porte la géométrie du tracé e!Sankey :
   // segment droit (px) à chaque bout puis virage court. On la mappe vers les
@@ -966,9 +1029,30 @@ const DEMOS_DIR = process.env.ESANKEY_CORPUS_DIR
   || 'C:/Program Files/iPoint-systems/e!Sankey 5/demos'
 const describeDemos = fs.existsSync(DEMOS_DIR) ? describe : describe.skip
 
+// Le corpus e!Sankey livre le MÊME diagramme en plusieurs langues (suffixe
+// ` [xx]` : `Efficiency diagram example [en].sankey`, `… [de].sankey`…). On n'en
+// garde qu'UNE variante par diagramme (langue préférée, anglais d'abord) : les
+// autres langues ne parseraient rien de neuf. Même tri que la galerie e!Sankey
+// (esankey_local_index / _ESANKEY_LANG_ORDER côté serveur).
+const ESANKEY_LANG_ORDER = ['en', 'de', 'fr', 'es', 'it', 'zh', 'ja', 'pt', 'nl']
+const dedupeByLanguage = (names: string[]): string[] => {
+  const langRank = (lang: string): number => {
+    const i = ESANKEY_LANG_ORDER.indexOf(lang)
+    return i === -1 ? ESANKEY_LANG_ORDER.length : i
+  }
+  const best: { [base: string]: { name: string, rank: number } } = {}
+  for (const name of names) {
+    const m = /^(.*?)\s*\[([a-z]{2})\]\.sankey$/i.exec(name)
+    const base = m ? m[1].trim() : name.replace(/\.sankey$/i, '')
+    const rank = m ? langRank(m[2].toLowerCase()) : ESANKEY_LANG_ORDER.length
+    if (!best[base] || rank < best[base].rank) best[base] = { name, rank }
+  }
+  return Object.values(best).map(b => b.name).sort()
+}
+
 describeDemos('loadEsankeyFile — démos e!Sankey 5 locales', () => {
   const files = fs.existsSync(DEMOS_DIR)
-    ? fs.readdirSync(DEMOS_DIR).filter(f => f.endsWith('.sankey'))
+    ? dedupeByLanguage(fs.readdirSync(DEMOS_DIR).filter(f => f.endsWith('.sankey')))
     : []
 
   test(`toutes les démos (${files.length}) parsent sans erreur`, async () => {

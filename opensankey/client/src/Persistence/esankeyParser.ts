@@ -411,11 +411,33 @@ interface EsGraphicalProcess {
   labelFontSize: number
   /** Couleur du texte du nom (`<label>/@textColor` argb → hex), null = absente. */
   labelColor: string | null
+  /**
+   * Écart d'accroche des flux = « Distance » e!Sankey, portée par les `<port>`
+   * enfants DIRECTS du process/place (attribut `nodePadding`, souvent négatif :
+   * -8, -30, -80…). Négatif = les flèches RENTRENT dans la boîte (les flux
+   * entrants/sortants se rejoignent à travers le nœud). Un process peut avoir
+   * plusieurs ports : on retient le plus PROFOND (nodePadding minimal). 0 si aucun
+   * port ou tous à 0. Mappé vers `shape_link_inset = -linkPadding` (OpenSankey :
+   * positif = vers l'intérieur, cf. NODE_SHAPE_SPECIFIC_CONFIG).
+   */
+  linkPadding: number
 }
 
 /** Axe de raccordement d'un flux à un nœud, depuis `arrowDirection` e!Sankey. */
 const linkAxis = (arrowDirection: number): 'h' | 'v' =>
   (arrowDirection === 1 || arrowDirection === 4) ? 'v' : 'h'
+
+/** nodePadding minimal (le plus profond) parmi les `<port>` d'un process/place.
+ *  Les `<port>` sont des enfants DIRECTS du `<process>`/`<place>` (pas de wrapper
+ *  `<ports>` — vérifié sur le corpus e!Sankey 5). */
+const deepestPortPadding = (el: Element): number => {
+  let min = 0
+  childrenByTag(el, 'port').forEach(p => {
+    const pad = attrNum(p, 'nodePadding', 0)
+    if (pad < min) min = pad
+  })
+  return min
+}
 
 /** Fond blanc / quasi-blanc (WhiteSmoke #F5F5F5, White #FFFFFF…). En e!Sankey
  *  une boîte terminale de cette couleur sert d'ANCRE invisible sur le canevas
@@ -471,6 +493,7 @@ const parseGraphicalProcesses = (net: Element, palette: EsBrushPalette): { [id: 
       imageFile: childByTag(p, 'image')?.getAttribute('filename') ?? '',
       shapeType: attrNum(p, 'shapeType', 0),
       arrowDirection: attrNum(p, 'arrowDirection', 2),
+      linkPadding: deepestPortPadding(p),
       ...parseGraphicalLabelFont(label),
     }
   })
@@ -509,6 +532,7 @@ const parseGraphicalPlaces = (net: Element, palette: EsBrushPalette): { [id: str
       imageFile: childByTag(p, 'image')?.getAttribute('filename') ?? '',
       shapeType: attrNum(p, 'shapeType', 0),
       arrowDirection: attrNum(p, 'arrowDirection', 0),
+      linkPadding: deepestPortPadding(p),
       // Boîte de la place (OS#1298), même schéma que le process.
       width: attrNum(p, 'backgroundSizeW', 0),
       height: attrNum(p, 'backgroundSizeH', 0),
@@ -1147,6 +1171,15 @@ export const parseEsankeyXml = (
     if (graphical.labelColor) node.local.name_label_color = graphical.labelColor
   }
 
+  // « Distance » e!Sankey (port nodePadding NÉGATIF) → shape_link_inset POSITIF :
+  // les ancres de flux rentrent dans la boîte, les flux entrants/sortants se
+  // rejoignent à travers le nœud (Node.updateLinksPositions clampe à mi-boîte).
+  // Padding >= 0 (gap externe e!Sankey) : pas d'équivalent utile à l'import, ignoré.
+  const applyLinkInset = (node: EsNode, graphical: EsGraphicalProcess | null): void => {
+    if (!graphical || graphical.linkPadding >= 0) return
+    node.local.shape_link_inset = -graphical.linkPadding
+  }
+
   // Nœuds : un par graphProcess. Nom = nom logique, sinon label graphique.
   const nodes: { [id: string]: EsNode } = {}
   const logicalToNodeId: { [logicalId: string]: string } = {}
@@ -1200,10 +1233,24 @@ export const parseEsankeyXml = (
     if (nodeHidden) {
       nodes[id].local.shape_visible = false
       nodes[id].local.shape_border_visible = false
+      // « Distance » e!Sankey NÉGATIVE sur une jonction masquée. e!Sankey ne pose
+      // JAMAIS de Distance négative sur un process VISIBLE (vérifié sur les 120
+      // démos) : c'est toujours une jonction cachée, fine et HAUTE, qui rassemble
+      // plusieurs flux sur sa hauteur (ex. CHP Hospital : boîte 16×160, padding -8
+      // = demi-largeur). On garde alors sa BOÎTE (invisible) + l'inset : les flux
+      // s'étalent le long de la hauteur et se rejoignent au centre en x, fidèle à
+      // e!Sankey. Sans ça, le nœud collapserait en un point, écrasant AUSSI cet
+      // étalement vertical (tous les flux convergeraient au même endroit).
+      if (graphical && graphical.linkPadding < 0 && graphical.width > 0 && graphical.height > 0) {
+        nodes[id].local.node_width = graphical.width
+        nodes[id].local.node_height = graphical.height
+        applyLinkInset(nodes[id], graphical)
+      }
     } else {
       // OS#1298 — taille de boîte réelle, uniquement pour un nœud VISIBLE.
       if (graphical && graphical.width > 0) nodes[id].local.node_width = graphical.width
       if (graphical && graphical.height > 0) nodes[id].local.node_height = graphical.height
+      applyLinkInset(nodes[id], graphical)
     }
     applyNameLabelPos(nodes[id], graphical)
     applyNameLabelFont(nodes[id], graphical)
@@ -1269,6 +1316,8 @@ export const parseEsankeyXml = (
       nodes[id].local.shape_visible = false
       nodes[id].local.shape_border_visible = false
     }
+    // « Distance » e!Sankey (no-op pour les places du corpus, toutes à padding 0).
+    applyLinkInset(nodes[id], graphical)
     if (graphical?.shapeType === 1) nodes[id].local.shape_border_radius = 10
     else if (graphical?.shapeType === 2) nodes[id].local.shape = 'ellipse'
     applyNameLabelPos(nodes[id], graphical)
