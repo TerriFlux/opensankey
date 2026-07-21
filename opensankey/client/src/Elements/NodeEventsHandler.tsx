@@ -49,7 +49,7 @@ export class NodeEventsHandler {
   /**
  * ✅ Détermine quel type d'élément a été cliqué
  */
-  private getClickedLabelType(element: Element): 'shape' | 'name_label' | 'value_label' | 'icon' | null {
+  public getClickedLabelType(element: Element): 'shape' | 'name_label' | 'value_label' | 'icon' | null {
     let current: Element | null = element
 
     while (current) {
@@ -160,6 +160,14 @@ export class NodeEventsHandler {
 
       // ✅ Sélectionner l'élément et ouvrir l'onglet
       this.selectElementAndOpenTab(labelType, event.ctrlKey || event.metaKey)
+
+      // P2 — sous-sélection du LABEL cliqué (n'affiche que les poignées de sa
+      // boîte), reprise de l'ex-handler DrawLabel. Posée APRÈS la sélection car
+      // addElementToSelection -> drawAsSelected remet selected_label_prefix à
+      // null. Sur la forme (labelType 'shape') : pas de sous-sélection.
+      if (labelType !== 'shape') {
+        this._node.drawSelectedLabelHandles(labelType)
+      }
     }
   }
 

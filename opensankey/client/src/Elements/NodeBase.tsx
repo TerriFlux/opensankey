@@ -506,6 +506,31 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     }
   }
 
+  // P2 — double-clic CONFIRMÉ : éditer le label sous le curseur (l'ancien handler
+  // du <text> DrawLabel est supprimé ; le clic label passe désormais par le
+  // discriminateur unique). Le type de label vient de la cible DOM.
+  protected override onDoubleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    if (!this.drawing_area.editable) return
+    const labelType = this._nodeEventsHandler.getClickedLabelType(event.target as Element)
+    if (labelType === 'value_label') { this.openValueLabelEditor(); return }
+    // name_label / icon -> éditer le nom (pour une ZDT, le texte EST le nom).
+    // Sur la forme nue ('shape') : rien (comportement historique).
+    if (labelType === 'name_label' || labelType === 'icon') this.setInputLabelVisible()
+  }
+
+  /** P2 — édition du label de VALEUR ; surchargé par les feuilles qui en ont un. */
+  protected openValueLabelEditor() { /* no-op ici (pas de label de valeur) */ }
+
+  // P2 — sous-sélection d'un label : pose selected_label_prefix puis n'affiche
+  // que les poignées de la boîte du label (drawDragHandlers masque celles de la
+  // forme ; chaque label ne (re)dessine ses poignées que si son prefix matche).
+  public drawSelectedLabelHandles(prefix: 'name_label' | 'value_label' | 'icon' | null) {
+    this.selected_label_prefix = prefix
+    this.drawDragHandlers()
+    this._nodeDrawNameLabel?.refreshLabelResizeHandles()
+    this._nodeDrawIcon?.refreshLabelResizeHandles()
+  }
+
   protected eventMouseDrag(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     super.eventMouseDrag(event)
     this._nodeEventsHandler.handleMouseDrag(event)
