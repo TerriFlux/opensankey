@@ -421,6 +421,16 @@ interface EsGraphicalProcess {
    * positif = vers l'intérieur, cf. NODE_SHAPE_SPECIFIC_CONFIG).
    */
   linkPadding: number
+  /**
+   * Bordure du process : `<penColor argb width Pattern>` (« Nom/couleur »,
+   * « Largeur » et « Style du trait » de la boîte de dialogue e!Sankey). e!Sankey
+   * varie ces largeurs par nœud (Bus : width 1 ET 3) ; ignorées, tous les nœuds
+   * importés retombaient sur la bordure par défaut (3px pointillés). borderWidth
+   * 0 = pas de trait (bordure masquée). borderColor null si absent.
+   */
+  borderColor: string | null
+  borderWidth: number
+  borderDashed: boolean
 }
 
 /** Axe de raccordement d'un flux à un nœud, depuis `arrowDirection` e!Sankey. */
@@ -466,6 +476,18 @@ const parseGraphicalLabelFont = (label: Element | null): Pick<EsGraphicalProcess
   }
 }
 
+/** Bordure d'un `<process>`/`<place>` depuis son `<penColor>`. Commun aux deux
+ *  parseurs. Absente → largeur 0 (pas de trait), la construction du nœud
+ *  masquera la bordure. */
+const parseGraphicalBorder = (el: Element): Pick<EsGraphicalProcess, 'borderColor' | 'borderWidth' | 'borderDashed'> => {
+  const pen = childByTag(el, 'penColor')
+  return {
+    borderColor: argbToHex(pen?.getAttribute('argb') ?? null),
+    borderWidth: attrNum(pen, 'width', 0),
+    borderDashed: isPenColorPatternDashed(pen),
+  }
+}
+
 const parseGraphicalProcesses = (net: Element, palette: EsBrushPalette): { [id: string]: EsGraphicalProcess } => {
   const out: { [id: string]: EsGraphicalProcess } = {}
   const processes = childByTag(net, 'processes')
@@ -495,6 +517,7 @@ const parseGraphicalProcesses = (net: Element, palette: EsBrushPalette): { [id: 
       arrowDirection: attrNum(p, 'arrowDirection', 2),
       linkPadding: deepestPortPadding(p),
       ...parseGraphicalLabelFont(label),
+      ...parseGraphicalBorder(p),
     }
   })
   return out
@@ -537,6 +560,7 @@ const parseGraphicalPlaces = (net: Element, palette: EsBrushPalette): { [id: str
       width: attrNum(p, 'backgroundSizeW', 0),
       height: attrNum(p, 'backgroundSizeH', 0),
       ...parseGraphicalLabelFont(label),
+      ...parseGraphicalBorder(p),
     }
   })
   return out
@@ -970,6 +994,15 @@ const defaultNodeStyle = (): EsLocal => ({
   node_height: 0,
   color: '#D9D9D9',
   colorSustainable: false,
+  // Bordure : e!Sankey trace un trait fin plein noir par défaut (jamais le
+  // pointillé 3px de l'appli). shape_border_color_sustainable = true pour que la
+  // couleur de bordure soit indépendante du remplissage (sinon NodeDrawShape
+  // recolore le trait avec la couleur du nœud). Surchargé par nœud via penColor.
+  shape_border_visible: true,
+  shape_border_color: 'black',
+  shape_border_color_sustainable: true,
+  shape_border_thickness: 1,
+  shape_border_dashed: false,
   node_arrow_angle_factor: 30,
   node_arrow_angle_direction: 'right',
   label_visible: true,
@@ -1169,6 +1202,23 @@ export const parseEsankeyXml = (
     if (graphical.labelColor) node.local.name_label_color = graphical.labelColor
   }
 
+  // Bordure du nœud depuis la <penColor> du process/place (« Largeur » + couleur
+  // + « Style du trait »). width 0 = pas de trait → bordure masquée.
+  const applyGraphicalBorder = (node: EsNode, graphical: EsGraphicalProcess | null): void => {
+    if (!graphical) return
+    if (graphical.borderWidth > 0) {
+      node.local.shape_border_visible = true
+      node.local.shape_border_thickness = graphical.borderWidth
+      node.local.shape_border_dashed = graphical.borderDashed
+      if (graphical.borderColor) {
+        node.local.shape_border_color = graphical.borderColor
+        node.local.shape_border_color_sustainable = true
+      }
+    } else {
+      node.local.shape_border_visible = false
+    }
+  }
+
   // « Distance » e!Sankey (port nodePadding NÉGATIF) → shape_link_inset POSITIF :
   // les ancres de flux rentrent dans la boîte, les flux entrants/sortants se
   // rejoignent à travers le nœud (Node.updateLinksPositions clampe à mi-boîte).
@@ -1249,6 +1299,7 @@ export const parseEsankeyXml = (
       if (graphical && graphical.width > 0) nodes[id].local.node_width = graphical.width
       if (graphical && graphical.height > 0) nodes[id].local.node_height = graphical.height
       applyLinkInset(nodes[id], graphical)
+      applyGraphicalBorder(nodes[id], graphical)
     }
     applyNameLabelPos(nodes[id], graphical)
     applyNameLabelFont(nodes[id], graphical)
@@ -1313,6 +1364,8 @@ export const parseEsankeyXml = (
         (graphical?.visible && !graphical.imageFile && isNearWhiteFill(graphical.color))) {
       nodes[id].local.shape_visible = false
       nodes[id].local.shape_border_visible = false
+    } else {
+      applyGraphicalBorder(nodes[id], graphical)
     }
     // « Distance » e!Sankey (no-op pour les places du corpus, toutes à padding 0).
     applyLinkInset(nodes[id], graphical)

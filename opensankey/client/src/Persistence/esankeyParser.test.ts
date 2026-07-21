@@ -69,10 +69,12 @@ const FIXTURE = `<?xml version="1.0" encoding="utf-8"?>
     <processes>
       <process id="50" locationX="100" locationY="300" backgroundLocationX="100" backgroundLocationY="300" backgroundSizeW="48" backgroundSizeH="112">
         <brushColor argb="-1073774768" />
+        <penColor name="Black" argb="-16777216" hasPattern="true" Pattern="0" width="3" />
         <label text="Source A" />
       </process>
       <process id="51" locationX="400" locationY="320">
         <brushColor argb="-16777216" />
+        <penColor name="Black" argb="-16777216" hasPattern="false" width="1" />
         <label text="Cible B" />
         <selectionNode boundaryX="400" boundaryY="320" boundaryW="72" boundaryH="64" />
       </process>
@@ -124,6 +126,19 @@ describe('parseEsankeyXml — fixture minimale', () => {
     const b = Object.values(d.nodes).find(n => n.name === 'Cible B')
     expect(a?.local.color).toBe('#FF7F50') // Coral, alpha ignoré
     expect(b?.local.color).toBe('#000000') // -16777216 = noir opaque
+  })
+
+  test('bordure de nœud : width/Pattern de <penColor> → shape_border_*', () => {
+    const a = Object.values(d.nodes).find(n => n.name === 'Source A')
+    const b = Object.values(d.nodes).find(n => n.name === 'Cible B')
+    // Source A : width 3, Pattern 0 (solide), noir
+    expect(a?.local.shape_border_visible).toBe(true)
+    expect(a?.local.shape_border_thickness).toBe(3)
+    expect(a?.local.shape_border_dashed).toBe(false)
+    expect(a?.local.shape_border_color).toBe('#000000')
+    expect(a?.local.shape_border_color_sustainable).toBe(true)
+    // Cible B : width 1 (et pas le défaut 3 pointillés de l'appli)
+    expect(b?.local.shape_border_thickness).toBe(1)
   })
 
   // Le <label><font> du process → gras/taille/couleur du name label du nœud
