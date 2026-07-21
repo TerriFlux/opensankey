@@ -1265,6 +1265,16 @@ export class Class_DrawingArea {
     this.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
   }
 
+  // P3 (refonte événements) — SÉLECTION SIMPLE canonique : purge la sélection
+  // puis n'ajoute que cet unique élément. Remplace les couples purge+add
+  // dispersés (NodeEventsHandler, Link, StockShape, cadres de groupe). Les mises
+  // à jour de menus spécifiques restent au site appelant (elles diffèrent selon
+  // le type d'élément).
+  public selectOnly(element: Class_ProtoElement) {
+    this.purgeSelection()
+    this.addElementToSelection(element)
+  }
+
   /**
    * OS#1259 — Cible du clic « façon PowerPoint » sur un groupe de zones de texte,
    * par CLICS SUCCESSIFS (drill-down). `clicked` et ses cadres ZDT englobants

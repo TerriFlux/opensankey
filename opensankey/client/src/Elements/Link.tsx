@@ -1044,8 +1044,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       }
       // Simple clic (sans modificateur) = sélection seule
       else {
-        drawing_area.purgeSelection()
-        drawing_area.addElementToSelection(this)
+        drawing_area.selectOnly(this)
         drawing_area.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
       }
     }

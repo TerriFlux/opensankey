@@ -106,8 +106,7 @@ export class NodeEventsHandler {
     if (ctrlKey) {
       this.addOrRemoveNodeFromSelection(labelType)
     } else {
-      drawing_area.purgeSelection()
-      drawing_area.addElementToSelection(this._node)
+      drawing_area.selectOnly(this._node)
     }
 
     // #1243 — plus d'axe « élément » à forcer (matrice déposée) : l'inspecteur
@@ -175,8 +174,7 @@ export class NodeEventsHandler {
   private selectFrameTarget(target: Class_NodeBase) {
     const drawing_area = this._node.drawing_area
     const menu_config = drawing_area.application_data.menu_configuration
-    drawing_area.purgeSelection()
-    drawing_area.addElementToSelection(target)
+    drawing_area.selectOnly(target)
     // #1243 — la matrice type×élément est déposée : plus d'axe « élément » à
     // forcer, l'inspecteur dérive sa cible de la sélection qu'on vient de poser
     // (ici le cadre englobant : une zone de texte -> cible `container`).
@@ -396,6 +394,18 @@ export class NodeEventsHandler {
 
     // End of drag
     this._node.setDragState(false)
+
+    // P4 (refonte événements) — d3.drag émet TOUJOURS start+end, y compris sur un
+    // simple CLIC (mousedown+mouseup sans déplacement). Si le nœud saisi n'a pas
+    // bougé, c'était un clic : on ne fait AUCUN travail de fin de drag (settle
+    // paramétrique, réorg des colonnes, auto-grow, redraw des liens,
+    // refreshPanExtent). La sélection est gérée par le chemin de clic, pas ici.
+    // (position_changed ci-dessus utilise `&&` — X-seul/Y-seul — donc insuffisant.)
+    const _start_pos = dict_old_pos[this._node.id]
+    const _really_moved = !_start_pos
+      || _start_pos[0] !== this._node.position_x
+      || _start_pos[1] !== this._node.position_y
+    if (!_really_moved) return
 
     // Settle the drag in parametric mode (PR 3 step 4).
     //
