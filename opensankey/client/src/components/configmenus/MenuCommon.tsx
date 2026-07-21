@@ -1685,7 +1685,8 @@ export const ConfigMenuNumberInput = forwardRef<HTMLInputElement, FCType_ConfigM
   t,
   default_value,
   function_on_blur,
-  menu_for_style = false,
+  // #297 — menu_for_style ne gate plus rien ici (l'auto-blur différé a été
+  // supprimé) : conservé dans le type public mais non déstructuré.
   minimum_value = Number.MIN_SAFE_INTEGER,
   maximum_value = Number.MAX_SAFE_INTEGER,
   stepper = false,
@@ -1700,7 +1701,6 @@ export const ConfigMenuNumberInput = forwardRef<HTMLInputElement, FCType_ConfigM
   provenance
 }: FCType_ConfigMenuNumberInput, forwarded_ref) => {
   const ref_input = useRef<HTMLInputElement>(null)
-  const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
   const variant = unit_text ? 'menuconfigpanel_option_numberinput_with_right_addon' : 'menuconfigpanel_option_numberinput'
 
   const getFixedVal = (_: string | number | null | undefined) => {
@@ -1736,14 +1736,9 @@ export const ConfigMenuNumberInput = forwardRef<HTMLInputElement, FCType_ConfigM
           step={step}
           value={value ?? ''}
           onChange={(value_as_string) => {
-            if (!menu_for_style) {
-              if (is_modifying.current) {
-                clearTimeout(is_modifying.current)
-              }
-              is_modifying.current = setTimeout(() => {
-                ref_input.current?.blur()
-              }, 3000)
-            }
+            // #297 — la saisie n'est PLUS validée automatiquement après un délai :
+            // le commit (function_on_blur) n'a lieu que sur Entrée (onKeyDown) ou
+            // à la perte de focus réelle (onBlur, clic ailleurs).
             setValue((value_as_string !== '') ? value_as_string : null)
           }}
           onKeyDown={e => {
@@ -1760,9 +1755,6 @@ export const ConfigMenuNumberInput = forwardRef<HTMLInputElement, FCType_ConfigM
               else if (forwarded_ref) forwarded_ref.current = el
             }}
             onBlur={() => {
-              if (!menu_for_style) {
-                clearTimeout(is_modifying.current)
-              }
               let new_value = (value === null || value === '') ? null : Number(value)
               if (fixed_dec > 0 && new_value !== null) {
                 new_value = +new_value?.toFixed(2)
@@ -1815,7 +1807,8 @@ export const ConfigMenuTextInput = forwardRef<HTMLInputElement, FCType_ConfigMen
 
   default_value,
   function_on_blur,
-  menu_for_style = false,
+  // #297 — menu_for_style non déstructuré (l'auto-blur différé qu'il gérait a
+  // été supprimé) ; conservé dans le type public pour la compat des appelants.
   disabled = false,
   multiValue = false,
   // Tri-état (cf. InputIndicatorWrapper) : pas de défaut à false —
@@ -1825,7 +1818,6 @@ export const ConfigMenuTextInput = forwardRef<HTMLInputElement, FCType_ConfigMen
   t
 }: FCType_ConfigMenuTextInput, forwarded_ref) => {
   const ref_input = useRef<HTMLInputElement>(null)
-  const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
   const [value, setValue] = useState<string | null | undefined>(default_value)
 
   useEffect(() => {
@@ -1845,15 +1837,9 @@ export const ConfigMenuTextInput = forwardRef<HTMLInputElement, FCType_ConfigMen
           variant='menuconfigpanel_option_input'
           value={value ?? ''}
           onChange={evt => {
+            // #297 — plus d'auto-validation différée : le commit (function_on_blur)
+            // n'a lieu que sur Entrée (onKeyDown) ou perte de focus (onBlur).
             const updated_value = evt.target.value
-            if (!menu_for_style) {
-              if (is_modifying.current) {
-                clearTimeout(is_modifying.current)
-              }
-              is_modifying.current = setTimeout(() => {
-                ref_input.current?.blur()
-              }, 2000)
-            }
             setValue((updated_value !== '') ? updated_value : null)
           }}
           onKeyDown={e => {
@@ -1862,9 +1848,6 @@ export const ConfigMenuTextInput = forwardRef<HTMLInputElement, FCType_ConfigMen
             }
           }}
           onBlur={() => {
-            if (!menu_for_style) {
-              clearTimeout(is_modifying.current)
-            }
             function_on_blur(value ?? null)
           }}
         />
