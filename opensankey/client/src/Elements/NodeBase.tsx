@@ -495,22 +495,40 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     this._nodeDrawIcon.d3_selection?.raise()
   }
 
-  public eventSimpleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    if (this._clickTimer) {
-      clearTimeout(this._clickTimer)
-      this._clickTimer = null
-      return // C'était en fait un double-clic, on ignore
+  // P1 (refonte événements) — la désambiguïsation simple/double-clic est faite
+  // UNE fois par Class_ProtoElement.eventSimpleLMBClick (timer unique). NodeBase
+  // ne fait plus que réagir aux clics CONFIRMÉS via ces deux hooks.
+  protected override onSingleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    this._nodeEventsHandler.handleSimpleLMBClick(event)
+    // OSP Extension — ouverture d'un hyperlien porté par le nœud/la ZDT.
+    if (this.hyperlink) {
+      window.open(this.hyperlink)
     }
-    // ✅ Démarrer un timer pour voir si un deuxième clic arrive
-    this._clickTimer = setTimeout(() => {
-      this._clickTimer = null
-      super.eventSimpleLMBClick(event)
-      this._nodeEventsHandler.handleSimpleLMBClick(event)
-      // OSP Extension - Ajouter cette section
-      if (this.hyperlink) {
-        window.open(this.hyperlink)
-      }
-    }, this._clickDelay) // Délai pour détecter un double-clic (250 ms)
+  }
+
+  // P2 — double-clic CONFIRMÉ : éditer le label sous le curseur (l'ancien handler
+  // du <text> DrawLabel est supprimé ; le clic label passe désormais par le
+  // discriminateur unique). Le type de label vient de la cible DOM.
+  protected override onDoubleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    if (!this.drawing_area.editable) return
+    const labelType = this._nodeEventsHandler.getClickedLabelType(event.target as Element)
+    if (labelType === 'value_label') { this.openValueLabelEditor(); return }
+    // name_label / icon -> éditer le nom (pour une ZDT, le texte EST le nom).
+    // Sur la forme nue ('shape') : rien (comportement historique).
+    if (labelType === 'name_label' || labelType === 'icon') this.setInputLabelVisible()
+  }
+
+  /** P2 — édition du label de VALEUR ; surchargé par les feuilles qui en ont un. */
+  protected openValueLabelEditor() { /* no-op ici (pas de label de valeur) */ }
+
+  // P2 — sous-sélection d'un label : pose selected_label_prefix puis n'affiche
+  // que les poignées de la boîte du label (drawDragHandlers masque celles de la
+  // forme ; chaque label ne (re)dessine ses poignées que si son prefix matche).
+  public drawSelectedLabelHandles(prefix: 'name_label' | 'value_label' | 'icon' | null) {
+    this.selected_label_prefix = prefix
+    this.drawDragHandlers()
+    this._nodeDrawNameLabel?.refreshLabelResizeHandles()
+    this._nodeDrawIcon?.refreshLabelResizeHandles()
   }
 
   protected eventMouseDrag(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
@@ -534,9 +552,18 @@ export abstract class Class_NodeBase extends Class_BaseShape {
         already_moved.add(n)
       })
     }
+    // #680 — Recadrage CONTINU pendant le glissé, en SUIVANT la direction du drag :
+    // - mode largeur/hauteur/tout → dézoom au fur et à mesure que le nœud s'éloigne ;
+    // - mode 'aucun' → zoom constant, recentrage caméra (le diagramme glisse à l'opposé) ;
+    // - sur l'axe libre, la zone de dessin s'élargit et suit l'élément (bord poussé épinglé).
+    // NB : le recadrage change le transform en cours de drag → un léger décalage du pointeur
+    // par tick est possible (assumé : comportement voulu « au fur et à mesure »).
+    this.drawing_area.accumulateFitDrag(event.dx, event.dy)
+    this.drawing_area.applyAutoFitMode(false)
   }
   protected eventMouseDragStart(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     super.eventMouseDragStart(event)
+    this.drawing_area.beginFitDrag() // #680 — réinitialise l'accumulateur de direction du glissé
     this._nodeEventsHandler.handleMouseDragStart(event)
   }
   public eventMouseDragEnd(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
@@ -562,6 +589,11 @@ export abstract class Class_NodeBase extends Class_BaseShape {
       this.drawing_area.orderElementOnDA()
     }
     this._nodeEventsHandler.handleMouseDragEnd(event)
+    // #680 — Cadrage FINAL du mode (suit encore la direction accumulée du glissé), puis on
+    // clôt le drag (efface la direction). Mode 'none' → recentrage caméra ; modes largeur/
+    // hauteur/tout → cadrage maintenu bord à bord.
+    this.drawing_area.applyAutoFitMode(false)
+    this.drawing_area.endFitDrag()
   }
 
   protected eventMaintainedClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
@@ -715,6 +747,78 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     this.position_y = new_top - this.shape_margin_top
   }
 
+  /**
+   * OS#1259 — Fait GRANDIR le cadre (grow-only, TOUS les côtés) pour contenir ses
+   * membres. `expandToContainAttachedNodes` ne bougeait le coin que vers le
+   * haut/gauche, et la taille via `_envelopeSize` = ÉTALEMENT des membres (donc
+   * constante pour un membre unique qui s'éloigne) : rien n'étendait le cadre
+   * vers la droite/bas. Ici on prend l'UNION de la boîte de contenu courante et
+   * de la bbox des membres, et on écrit position + `shape_min_*` (donc ça
+   * persiste au save). `settleCenterAnchor()` recale l'ancre centre/coin (#1231)
+   * pour que le prochain dessin ne re-centre pas par-dessus. Grow-only : ne
+   * rétrécit jamais (un membre ramené à l'intérieur ne réduit pas le cadre).
+   */
+  public growFrameToContainMembers() {
+    if (!this._tied_to_nodes || this._attached_node.length === 0) return
+    const bbox = this._computeEnvelopeBBox(this._attached_node)
+    if (!bbox) return
+    const ml = this.shape_margin_left, mt = this.shape_margin_top
+    const mr = this.shape_margin_right, mb = this.shape_margin_bottom
+    // Boîte de CONTENU courante (aire intérieure, hors marges).
+    const cur_left = this.position_x + ml
+    const cur_top = this.position_y + mt
+    const cur_right = this.position_x + this.getShapeWidthToUse() - mr
+    const cur_bottom = this.position_y + this.getShapeHeightToUse() - mb
+    // Union grow-only avec la bbox des membres.
+    const new_left = Math.min(cur_left, bbox.min_x)
+    const new_top = Math.min(cur_top, bbox.min_y)
+    const new_right = Math.max(cur_right, bbox.max_x)
+    const new_bottom = Math.max(cur_bottom, bbox.max_y)
+    if (new_left === cur_left && new_top === cur_top
+      && new_right === cur_right && new_bottom === cur_bottom) return
+    this.position_x = new_left - ml
+    this.position_y = new_top - mt
+    this.shape_min_width = (new_right - new_left) + ml + mr
+    this.shape_min_height = (new_bottom - new_top) + mt + mb
+    this.settleCenterAnchor()
+  }
+
+  /**
+   * OS#1259 (clamp) — Pendant qu'on REDIMENSIONNE le cadre, contraint chaque
+   * membre à rester dans sa boîte de CONTENU : si un membre dépasse (cadre
+   * rétréci sous sa taille), on rétrécit sa taille pour qu'il tienne, puis on
+   * repousse sa position dans les bornes. Inverse de growFrameToContainMembers.
+   * Ne touche pas un membre qui tient déjà (« dès que ça dépasse »). Un membre
+   * qui est lui-même un cadre tied ne descend pas sous l'enveloppe de SES
+   * membres (getShapeWidthToUse = max(shape_min, enveloppe)).
+   */
+  public clampMembersToFrame() {
+    if (!this._tied_to_nodes || this._attached_node.length === 0) return
+    const inner_left = this.position_x + this.shape_margin_left
+    const inner_top = this.position_y + this.shape_margin_top
+    const inner_right = this.position_x + this.getShapeWidthToUse() - this.shape_margin_right
+    const inner_bottom = this.position_y + this.getShapeHeightToUse() - this.shape_margin_bottom
+    const inner_w = Math.max(1, inner_right - inner_left)
+    const inner_h = Math.max(1, inner_bottom - inner_top)
+    this._attached_node.forEach(m => {
+      if (!m.is_visible) return
+      let changed = false
+      // Rétrécir la taille si le membre est plus grand que l'aire intérieure.
+      if (m.getShapeWidthToUse() > inner_w) { m.shape_min_width = inner_w; changed = true }
+      if (m.getShapeHeightToUse() > inner_h) { m.shape_min_height = inner_h; changed = true }
+      const mw = m.getShapeWidthToUse()
+      const mh = m.getShapeHeightToUse()
+      // Repousser (minimal) pour que le membre reste dans les bornes.
+      let mx = m.position_x, my = m.position_y
+      if (mx + mw > inner_right) mx = inner_right - mw
+      if (my + mh > inner_bottom) my = inner_bottom - mh
+      if (mx < inner_left) mx = inner_left
+      if (my < inner_top) my = inner_top
+      if (mx !== m.position_x || my !== m.position_y) { m.position_x = mx; m.position_y = my; changed = true }
+      if (changed) { m.settleCenterAnchor(); m.draw() }
+    })
+  }
+
   // Full re-fit of the top-left onto the attached-node envelope (grows AND
   // shrinks, unlike expandToContainAttachedNodes which only grows). The size
   // stays dynamic (_envelopeSize) — we only move the corner. Called after an
@@ -832,6 +936,8 @@ export abstract class Class_NodeBase extends Class_BaseShape {
       this.shape_min_height -= event.dy
       this.position_y = this.position_y + event.dy
       this.settleCenterAnchor() // #1230 resize manuel : bord opposé fixe, on ré-ancre
+      // OS#1259 (clamp) — redimensionner le cadre contraint ses membres à rester dedans.
+      this.clampMembersToFrame()
       this.draw()
 
       // Reposition drag handler with updated with & pos of the free label
@@ -854,6 +960,8 @@ export abstract class Class_NodeBase extends Class_BaseShape {
 
       this.shape_min_height += event.dy
       this.settleCenterAnchor() // #1230 resize manuel : bord opposé fixe, on ré-ancre
+      // OS#1259 (clamp) — redimensionner le cadre contraint ses membres à rester dedans.
+      this.clampMembersToFrame()
       this.draw()
 
       // Reposition drag handler with updated with & pos of the free label
@@ -877,6 +985,8 @@ export abstract class Class_NodeBase extends Class_BaseShape {
       this.shape_min_width -= event.dx
       this.setPosXY(this.position_x + event.dx, this.position_y)
       this.settleCenterAnchor() // #1230 resize manuel : bord opposé fixe, on ré-ancre
+      // OS#1259 (clamp) — redimensionner le cadre contraint ses membres à rester dedans.
+      this.clampMembersToFrame()
       this.draw()
 
       // Reposition drag handler with updated with & pos of the free label
@@ -899,6 +1009,8 @@ export abstract class Class_NodeBase extends Class_BaseShape {
 
       this.shape_min_width += event.dx
       this.settleCenterAnchor() // #1230 resize manuel : bord opposé fixe, on ré-ancre
+      // OS#1259 (clamp) — redimensionner le cadre contraint ses membres à rester dedans.
+      this.clampMembersToFrame()
       this.draw()
 
       // Reposition drag handler with updated with & pos of the free label

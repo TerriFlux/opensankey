@@ -383,9 +383,11 @@ export const retrieveJSONResults = (
   // master positions/styles instead of keeping its own (mirrors master behaviour).
   const layout_source_json: Type_JSON = (() => {
     if (!view_only) return current_json
-    const views = current_json['views'] as Type_JSON | undefined
-    const view_layout = views?.[app_data.drawing_area.id] as Type_JSON | undefined
-    return view_layout ?? current_json
+    // NB : en OSP, current_json a ses vues encodées en DELTA (#254) — extraire
+    // ['views'][id] brut donnerait une entrée sans version/format_version et
+    // ferait basculer fromJSON sur le legacy pré-0.9 (crash convert_tags). La
+    // méthode virtuelle décode le delta et renvoie le snapshot complet.
+    return app_data.getViewLayoutJSON(app_data.drawing_area.id, current_json)
   })()
   //const data_as_json = JSON.parse(text) as Type_JSON
   JSON_data['version'] = app_data.version // Avoid converter process
@@ -1066,6 +1068,10 @@ export const UniversalFileConverter = ({
             app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current!(false)
           }
         } catch (error) {
+          // L'erreur re-levée part dans la promesse du toast (Chakra ne loggue
+          // pas) et setResult n'alimente pas le panneau Terminal : sans ce log,
+          // la console reste muette alors qu'une exception a bien été levée.
+          console.error('[retrieve_result] échec chargement diagramme:', error)
           setResult('FAILED Erreur chargement JSON:' + error)
           setProcessing(false)
           //setStarted(false)

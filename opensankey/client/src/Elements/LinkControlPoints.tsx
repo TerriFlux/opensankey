@@ -29,6 +29,25 @@ import { Class_LinkElement } from './Link'
 import { Class_Handler } from './Handler'
 import { Class_DrawingArea } from '../types/DrawingArea'
 
+/**
+ * Distance euclidienne d'un point p au segment [a, b] (opensankey#1301 —
+ * choix du segment le plus proche pour l'insertion d'un point de contrôle).
+ */
+function distancePointToSegment(
+  p: [number, number],
+  a: [number, number],
+  b: [number, number]
+): number {
+  const dx = b[0] - a[0]
+  const dy = b[1] - a[1]
+  const len_sq = dx * dx + dy * dy
+  let t = len_sq > 0 ? ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / len_sq : 0
+  t = Math.max(0, Math.min(1, t))
+  const cx = a[0] + t * dx
+  const cy = a[1] + t * dy
+  return Math.hypot(p[0] - cx, p[1] - cy)
+}
+
 export class LinkControlPoints {
 
   private link: Class_LinkElement
@@ -54,6 +73,13 @@ export class LinkControlPoints {
     middle_recycling_point:Class_Handler,
     is_dragged: boolean
   }
+
+  /**
+   * opensankey#1301 — poignées des points de contrôle libres (waypoints), une par
+   * entrée de link.shape_waypoints. Reconstruites quand le nombre change (insertion/
+   * suppression), sinon réutilisées (l'index i ↔ waypoint i, ordre préservé).
+   */
+  private _waypoint_handles: Class_Handler[] = []
 
   constructor(
     link: Class_LinkElement,
@@ -130,12 +156,26 @@ export class LinkControlPoints {
     this._control_points.starting_bezier_point.unDraw()
     this._control_points.ending_bezier_point.unDraw()
     this._control_points.middle_recycling_point.unDraw()
+    this.undrawWaypointHandles()
   }
 
   public drawControlPoint() {
     // Speed-up computing
     if (!this.link.d3_selection)
       return
+
+    // opensankey#1301 — Alt+clic sur le tracé pour insérer un point de contrôle.
+    // Rebindé à chaque draw car .link_path/.link_shape sont recréés par drawShape.
+    this.bindWaypointInsertion()
+
+    // Points de contrôle libres : poignées bleues EN PLUS des poignées noires
+    // (courbure/tangente), qui restent visibles et actives (elles pilotent les
+    // extrémités du tracé, cf. getWaypointPath).
+    if (this.hasEditableWaypoints())
+      this.syncAndDrawWaypointHandles()
+    else
+      this.undrawWaypointHandles()
+
     // Draw control handler
     this._control_points.starting_curve_point.draw()
     this._control_points.ending_curve_point.draw()
@@ -143,7 +183,10 @@ export class LinkControlPoints {
     this._control_points.ending_curve_point.draw()
 
     //If the shape is curved set visible tangeant points else set them invissible
-    if (this.link.shape_is_curved) {
+    // opensankey#1301 — avec des waypoints (coins arrondis), les tangentes Bézier
+    // n'ont plus d'effet : on masque leurs poignées, on garde celles de courbure
+    // (= longueur des segments d'attache source/cible).
+    if (this.link.shape_is_curved && !this.hasEditableWaypoints()) {
       this._control_points.starting_bezier_point.setVisible()
       this._control_points.ending_bezier_point.setVisible()
     } else {
@@ -158,7 +201,7 @@ export class LinkControlPoints {
       this._control_points.middle_recycling_point.setInvisible()
     // Clean previous shape
     this.link.d3_selection?.selectAll('.link_control_path').remove()
-    if (this._control_points.is_dragged) {
+    if (this._control_points.is_dragged && !this.hasEditableWaypoints()) {
       // Get control points coordinates
       const x1 = this._control_points.starting_curve_point.position_x
       const y1 = this._control_points.starting_curve_point.position_y
@@ -229,6 +272,218 @@ export class LinkControlPoints {
     this._control_points.starting_bezier_point.unDraw()
     this._control_points.ending_bezier_point.unDraw()
     this._control_points.middle_recycling_point.unDraw()
+    this.undrawWaypointHandles()
+  }
+
+  // =========== opensankey#1301 — points de contrôle libres (waypoints) ==============
+
+  /** Le flux a-t-il des waypoints éditables ? (pas en mode recyclage). */
+  private hasEditableWaypoints(): boolean {
+    const wp = this.link.shape_waypoints
+    return !this.link.shape_is_recycling && Array.isArray(wp) && wp.length > 0
+  }
+
+  /** Retire les poignées de waypoints du DOM et vide le cache. */
+  private undrawWaypointHandles() {
+    this._waypoint_handles.forEach(h => h.unDraw())
+    this._waypoint_handles = []
+  }
+
+  /** Crée une poignée de waypoint liée à l'index i. */
+  private createWaypointHandler(i: number): Class_Handler {
+    return new Class_Handler(
+      'wp_' + i + '_' + this.link.id,
+      this.link.drawing_area,
+      this.link,
+      this.waypointDragStart(),
+      this.waypointDragEvent(i),
+      this.waypointDragEnd(),
+      { class: 'wp_handle', color: '#1565c0', size: 7 }
+    )
+  }
+
+  /**
+   * Aligne le nombre de poignées sur le nombre de waypoints (reconstruction si le
+   * compte a changé, pour garder l'index i correct après insertion/suppression),
+   * positionne et dessine chacune, et branche le clic droit = suppression.
+   */
+  private syncAndDrawWaypointHandles() {
+    const wps = this.link.shape_waypoints
+    if (this._waypoint_handles.length !== wps.length) {
+      this._waypoint_handles.forEach(h => h.unDraw())
+      this._waypoint_handles = wps.map((_, i) => this.createWaypointHandler(i))
+    }
+    this._waypoint_handles.forEach((h, i) => {
+      h.setPosXY(wps[i].x, wps[i].y)
+      h.setVisible()
+      h.draw()
+      // Clic droit sur une poignée = supprimer ce point (repli/raccourci).
+      h.d3_selection?.on('contextmenu', (event: MouseEvent) => {
+        event.preventDefault()
+        event.stopPropagation()
+        this.removeWaypoint(i)
+      })
+      // Croix rouge de suppression, en haut-droite de la poignée (taille écran
+      // constante). Re-appendue à chaque draw (h.draw vide les enfants du <g>).
+      this.appendDeleteCross(h, i)
+    })
+  }
+
+  /** Ajoute une petite croix rouge cliquable pour supprimer le waypoint d'index i. */
+  private appendDeleteCross(h: Class_Handler, i: number) {
+    if (!h.d3_selection) return
+    const z = this.link.drawing_area.getZoomScale() || 1
+    const s = 4 / z          // demi-taille de la croix
+    const off = 9 / z        // décalage par rapport au centre de la poignée
+    const g = h.d3_selection.append('g')
+      .classed('wp_delete', true)
+      .attr('transform', 'translate(' + off + ',' + (-off) + ')')
+      .style('cursor', 'pointer')
+    // Pastille blanche = zone de clic + contraste
+    g.append('circle')
+      .attr('r', s + 2)
+      .attr('fill', 'white')
+      .attr('stroke', '#c0392b')
+      .attr('stroke-width', 1 / z)
+    g.append('line')
+      .attr('x1', -s).attr('y1', -s).attr('x2', s).attr('y2', s)
+      .attr('stroke', '#c0392b').attr('stroke-width', 1.5 / z)
+    g.append('line')
+      .attr('x1', -s).attr('y1', s).attr('x2', s).attr('y2', -s)
+      .attr('stroke', '#c0392b').attr('stroke-width', 1.5 / z)
+    // Empêche le drag de la poignée de démarrer (d3-drag écoute pointerdown ET
+    // mousedown, et supprime le click qui suit un drag) puis supprime au pointerup.
+    const stop = (event: Event) => event.stopPropagation()
+    g.on('pointerdown', stop)
+    g.on('mousedown', stop)
+    g.on('pointerup', (event: MouseEvent) => {
+      event.stopPropagation()
+      event.preventDefault()
+      this.removeWaypoint(i)
+    })
+    g.on('click', (event: MouseEvent) => event.stopPropagation())
+  }
+
+  /** Snapshot des waypoints (copie profonde) pour l'historique. */
+  private cloneWaypoints(): Array<{ x: number, y: number }> {
+    return this.link.shape_waypoints.map(p => ({ x: p.x, y: p.y }))
+  }
+
+  private waypointDragStart() {
+    return () => {
+      this._control_points.is_dragged = true
+      const ghost = this.cloneWaypoints()
+      this.link.drawing_area.application_data.history.saveUndo(() => {
+        this.link.shape_waypoints = ghost.map(p => ({ x: p.x, y: p.y }))
+        this.link.draw()
+      })
+    }
+  }
+
+  private waypointDragEnd() {
+    return () => {
+      this._control_points.is_dragged = false
+      this.link.drawShape()
+      this.drawControlPoint()
+      this.link.drawing_area.application_data.menu_configuration.updateComponentRelatedToApparence()
+      const ghost = this.cloneWaypoints()
+      this.link.drawing_area.application_data.history.saveRedo(() => {
+        this.link.shape_waypoints = ghost.map(p => ({ x: p.x, y: p.y }))
+        this.link.draw()
+      })
+    }
+  }
+
+  private waypointDragEvent(i: number) {
+    return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
+      const wps = this.cloneWaypoints()
+      if (!wps[i]) return
+      wps[i].x += event.dx
+      wps[i].y += event.dy
+      // Réaffectation (jamais de mutation en place : le défaut [] est partagé) ;
+      // le setter déclenche drawElements + drawControlPoint → la poignée suit.
+      this.link.shape_waypoints = wps
+    }
+  }
+
+  /** Supprime le waypoint d'index i (avec undo/redo). */
+  public removeWaypoint(i: number) {
+    const before = this.cloneWaypoints()
+    if (i < 0 || i >= before.length) return
+    this.link.drawing_area.application_data.history.saveUndo(() => {
+      this.link.shape_waypoints = before.map(p => ({ x: p.x, y: p.y }))
+      this.link.draw()
+    })
+    const after = before.filter((_, k) => k !== i)
+    this.link.shape_waypoints = after
+    this.link.drawing_area.application_data.history.saveRedo(() => {
+      this.link.shape_waypoints = after.map(p => ({ x: p.x, y: p.y }))
+      this.link.draw()
+    })
+    this.link.draw()
+    this.link.drawing_area.application_data.menu_configuration.updateComponentRelatedToApparence()
+  }
+
+  /**
+   * Branche Alt+clic sur le tracé du flux (.link_path / .link_shape) pour insérer
+   * un point de contrôle à la position du curseur, sur le segment le plus proche.
+   */
+  public bindWaypointInsertion() {
+    const paths = this.link.d3_selection?.selectAll<SVGPathElement, unknown>('.link_path, .link_shape')
+    if (!paths) return
+    // Empêche le <g> du flux de démarrer un drag sur Alt+mousedown.
+    paths.on('mousedown.wpinsert', (event: MouseEvent) => {
+      if (event.altKey) event.stopPropagation()
+    })
+    paths.on('click.wpinsert', (event: MouseEvent) => {
+      if (!event.altKey) return
+      event.stopPropagation()
+      event.preventDefault()
+      this.insertWaypointAtEvent(event)
+    })
+  }
+
+  private insertWaypointAtEvent(event: MouseEvent) {
+    // Sélectionne le flux si besoin → les poignées apparaissent sans ctrl+clic
+    // préalable (l'Alt+clic suffit à tout faire).
+    if (!this.link.is_selected) {
+      this.link.drawing_area.addElementToSelection(this.link)
+    }
+    const world_node = this.link.drawing_area.d3_selection?.node()
+    if (!world_node) return
+    // Coordonnées MONDE (le groupe de contenu porte le repère des position_x/y).
+    const [wx, wy] = d3.pointer(event, world_node)
+    // Polyligne courante : ancre source, waypoints, ancre cible.
+    const pts: Array<[number, number]> = [
+      [this.link.position_x_start, this.link.position_y_start],
+      ...this.link.shape_waypoints.map(p => [p.x, p.y] as [number, number]),
+      [this.link.position_x_end, this.link.position_y_end]
+    ]
+    // Segment le plus proche → index d'insertion dans le tableau de waypoints
+    // (= index gauche du segment : segment 0 = source→wp0 → insertion en 0, etc.).
+    let best_seg = 0
+    let best_dist = Infinity
+    for (let s = 0; s < pts.length - 1; s++) {
+      const d = distancePointToSegment([wx, wy], pts[s], pts[s + 1])
+      if (d < best_dist) {
+        best_dist = d
+        best_seg = s
+      }
+    }
+    const before = this.cloneWaypoints()
+    this.link.drawing_area.application_data.history.saveUndo(() => {
+      this.link.shape_waypoints = before.map(p => ({ x: p.x, y: p.y }))
+      this.link.draw()
+    })
+    const after = this.cloneWaypoints()
+    after.splice(best_seg, 0, { x: wx, y: wy })
+    this.link.shape_waypoints = after
+    this.link.drawing_area.application_data.history.saveRedo(() => {
+      this.link.shape_waypoints = after.map(p => ({ x: p.x, y: p.y }))
+      this.link.draw()
+    })
+    this.link.draw()
+    this.link.drawing_area.application_data.menu_configuration.updateComponentRelatedToApparence()
   }
 
   public get control_points_position() {
@@ -498,6 +753,17 @@ export class LinkControlPoints {
       this.link.drawShape()
       this.drawControlPoint()
       this.link.drawing_area.application_data.menu_configuration.updateComponentRelatedToApparence()
+      // Déplacer un coude change la courbure du flux (shape_starting/ending_curve), qui
+      // nourrit l'ordre géométrique des flux E/S (mode 'advanced'). On le recalcule sur
+      // les deux extrémités — comme le fait un drag de nœud — pour éviter à l'utilisateur
+      // de cliquer « Réorganiser ». release_locks=false : on préserve les ancres
+      // verrouillées manuellement (#197). Seules les extrémités en mode 'advanced'
+      // réagissent ; en 'simple'/'none' l'ordre n'est pas touché par un drag de coude.
+      ;[this.link.source, this.link.target].forEach(n => {
+        const node = n as { reorganizeIOLinks?: (release_locks?: boolean) => void, shape_io_reorg_mode?: string }
+        if (node && typeof node.reorganizeIOLinks === 'function' && node.shape_io_reorg_mode === 'advanced')
+          node.reorganizeIOLinks(false)
+      })
       //this.link.drawing_area.areaAutoFit()
       // Save current attribute val after mutating them in dragHandlers events
       const ghost = {

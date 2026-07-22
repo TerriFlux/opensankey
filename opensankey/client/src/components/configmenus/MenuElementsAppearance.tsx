@@ -80,7 +80,8 @@ import {
   getConfigValues,
   Type_AnchorAlignVertical,
   Type_AnchorAlignHorizontal,
-  Type_HatchOrientation
+  Type_HatchOrientation,
+  Type_IOReorgMode
 } from '../../Elements/ElementsAttributesConfig'
 import { SankeyMultiTypeSelectionSimple } from './MenuElementsSelection'
 import { unit_constants } from '../../Elements/LinkValues'
@@ -95,6 +96,37 @@ import { STRAIGHT_MENU_MODES, straightActionKey, Type_StraightMenuMode } from '.
 // retrait ; `undefined` (donnée, ou édition de style) laisse intact.
 const dimLabelSx = (is_overloaded: boolean | undefined) =>
   (is_overloaded === false ? { opacity: 0.65 } : undefined)
+
+// #299 — Édition des ancres/poignées d'un flux en pixels (absolu) en plus du
+// relatif (%). Les valeurs stockées restent des fractions ; l'unité px n'est
+// qu'un mode d'affichage/édition du menu. La conversion px↔fraction s'appuie sur
+// la géométrie courante du flux, miroir EXACT des formules de LinkControlPoints :
+//  - ancres  (starting/ending_curve)   : offset = fraction × écart inter-nœuds ;
+//  - poignées (starting/ending_tangeant): offset = fraction × distance entre les
+//    deux points d'ancrage (x1..x5).
+// L'axe (x/y) est déduit de l'orientation, comme dans compute*CurvePoint/BezierPoint.
+type Type_LinkCurveKey =
+  'starting_curve' | 'ending_curve' | 'starting_tangeant' | 'ending_tangeant'
+const LINK_CURVE_ANCHOR_KEYS: Type_LinkCurveKey[] = ['starting_curve', 'ending_curve']
+const LINK_CURVE_HANDLE_KEYS: Type_LinkCurveKey[] = ['starting_tangeant', 'ending_tangeant']
+const getLinkCurveRefsPx = (l: Class_LinkElement): Record<Type_LinkCurveKey, number> => {
+  const cpp = l.control_points_position
+  const x1 = cpp.starting_curve[0], y1 = cpp.starting_curve[1]
+  const x5 = cpp.ending_curve[0], y5 = cpp.ending_curve[1]
+  const span_x = Math.abs(l.position_x_start - l.position_x_end)
+  const span_y = Math.abs(l.position_y_start - l.position_y_end)
+  const seg_x = Math.abs(x5 - x1)
+  const seg_y = Math.abs(y5 - y1)
+  // Départ : x si le flux part à l'horizontale (hh/hv) ; arrivée : x si (hh/vh).
+  const start_axis_x = l.is_horizontal || l.is_horizontal_vertical
+  const end_axis_x = l.is_horizontal || l.is_vertical_horizontal
+  return {
+    starting_curve: start_axis_x ? span_x : span_y,
+    ending_curve: end_axis_x ? span_x : span_y,
+    starting_tangeant: start_axis_x ? seg_x : seg_y,
+    ending_tangeant: end_axis_x ? seg_x : seg_y
+  }
+}
 
 /**
  * Widget d'angle du texte du label (−180°..180°) : remplace l'ancien toggle
@@ -1380,6 +1412,8 @@ export const MenuConfigurationAppearance = ({
   // ✅ State pour l'onglet actif : 5 onglets
   type ActiveTab = 'shape' | 'name_label' | 'value_label' | 'icon' | 'stock'
   const [activeTab, setActiveTab] = useState<ActiveTab>('shape')
+  // #299 — unité d'édition des ancres/poignées des flux : relatif (%) ou absolu (px).
+  const [linkCurveUnit, setLinkCurveUnit] = useState<'percent' | 'px'>('percent')
   // #1243 — piloté de l'extérieur (inspecteur) : le prop gagne ; sinon on garde
   // la synchronisation historique sur menu_configuration.tab_selected.
   if (active_tab !== undefined) {
@@ -1924,11 +1958,38 @@ export const MenuConfigurationAppearance = ({
                               {t(`Noeud.apparence.${getNodeShapeAttributeKey('shape', 'orphan_node_visible')}`)}
                             </OverloadedCheckbox>
                           </Box>
-                          {selection.hasNodes && !menu_for_style && !(nodes_elements[0] instanceof Class_StockShape) && <>
+                          {!(nodes_elements[0] instanceof Class_StockShape) && <>
                             <Box as='span' layerStyle='menuconfigpanel_part_title_3'>
                               {t('Noeud.Reorg_title')}
                             </Box>
-                            <NodeIOReorganizer app_data={app_data} node={nodes_elements[0] as Class_NodeElement} />
+                            {/* Mode de réorganisation auto (attribut stylé) : visible dans le menu du
+                                nœud ET dans l'onglet Styles (régler sur le style par défaut = global). */}
+                            <ElementAttrSetterSelect2Cols
+                              app_data={app_data}
+                              elements={nodes_elements}
+                              attributePath={'Noeud.apparence'}
+                              attributeKey={'io_reorg_mode'}
+                              config={NODE_SHAPE_SPECIFIC_CONFIG}
+                              prefix={'shape'}
+                              options={[
+                                { key: 'io_reorg_none', value: 'none' as Type_IOReorgMode, label: t('Noeud.apparence.io_reorg_mode_none') },
+                                { key: 'io_reorg_simple', value: 'simple' as Type_IOReorgMode, label: t('Noeud.apparence.io_reorg_mode_simple') },
+                                { key: 'io_reorg_advanced', value: 'advanced' as Type_IOReorgMode, label: t('Noeud.apparence.io_reorg_mode_advanced') }
+                              ]}
+                              refreshParentComponent={refreshAll}
+                              onAfterChange={() => {
+                                // Appliquer tout de suite le nouveau mode aux nœuds sélectionnés
+                                // (release_locks=false : on préserve les cadenas #197). En onglet
+                                // Styles, `nodes_elements` sont des styles → le garde-fou saute.
+                                nodes_elements.forEach(n => {
+                                  const node = n as { reorganizeIOLinks?: (release_locks?: boolean) => void }
+                                  if (typeof node.reorganizeIOLinks === 'function') node.reorganizeIOLinks(false)
+                                })
+                                refreshAll()
+                              }}
+                            />
+                            {selection.hasNodes && !menu_for_style &&
+                              <NodeIOReorganizer app_data={app_data} node={nodes_elements[0] as Class_NodeElement} />}
                           </>}
                         </WrapperBoxSubSectionMenu>
                       )}
@@ -2100,6 +2161,10 @@ export const MenuConfigurationAppearance = ({
                               </OverloadedButton>
                             </Box>
                           </Box>
+
+                          {/* OS#1302 — Pointe indépendante / Épaisseur mini structure /
+                              Largeur mini de pointe : regroupés en section Avancé
+                              (advanced_geometry) plus bas. */}
                         </> : <></>}
 
                       {/* Recyclage tristate (taille d'un bouton d'orientation) + 4 orientations
@@ -2198,6 +2263,58 @@ export const MenuConfigurationAppearance = ({
                             {app_data.icon_library.icon_link_structure}
                           </OverloadedButton>
                         </Box>
+                        {/* OS#1302 — « Nœud/flèche à la hauteur de la valeur », bouton-icône
+                            juste à côté de Structure. Activé = on CONSERVE les hauteurs de
+                            valeur (attribut interne structure_force_min = false ; défaut =
+                            non activé). Texte → tooltip auto (OverloadedButton). Glyphe :
+                            nœud (barre) + flèche pleine hauteur. */}
+                        <Box display='inline-flex' flexShrink={0} flexGrow={0} w='1.5rem' h='1.5rem'>
+                          <OverloadedButton
+                            elements={links_elements}
+                            config={LINK_SHAPE_SPECIFIC_CONFIG}
+                            attributePath='Flux.apparence'
+                            prefix={'shape'}
+                            attributeKey="structure_force_min"
+                            variant={getButtonVariant(
+                              '',
+                              isLinkShapeSpecificValueIndeterminate(links_elements, 'structure_force_min'),
+                              !linkShapeValues.structure_force_min
+                            )}
+                            onClick={() => { linkShapeValues.structure_force_min = !linkShapeValues.structure_force_min }}
+                            buttonSx={{ width: '1.5rem', minWidth: '1.5rem', height: '1.5rem', padding: '0', '& svg': { width: '16px', height: '16px' } }}
+                          >
+                            <svg viewBox='0 0 16 16' fill='currentColor' aria-hidden='true'>
+                              <rect x='1.5' y='1.5' width='4' height='13' rx='1' />
+                              <polygon points='8.5,2 15,8 8.5,14' />
+                            </svg>
+                          </OverloadedButton>
+                        </Box>
+                        {/* OS#189 — « Afficher l'incertitude » : superpose le flux à ses
+                            valeurs min/moyenne/max (fin = opaque). Glyphe = trois barres
+                            horizontales empilées (min/moyenne/max) sur un axe vertical. */}
+                        <Box display='inline-flex' flexShrink={0} flexGrow={0} w='1.5rem' h='1.5rem'>
+                          <OverloadedButton
+                            elements={links_elements}
+                            config={LINK_SHAPE_SPECIFIC_CONFIG}
+                            attributePath='Flux.apparence'
+                            prefix={'shape'}
+                            attributeKey="uncertainty_display"
+                            variant={getButtonVariant(
+                              '',
+                              isLinkShapeSpecificValueIndeterminate(links_elements, 'uncertainty_display'),
+                              linkShapeValues.uncertainty_display
+                            )}
+                            onClick={() => { linkShapeValues.uncertainty_display = !linkShapeValues.uncertainty_display }}
+                            buttonSx={{ width: '1.5rem', minWidth: '1.5rem', height: '1.5rem', padding: '0', '& svg': { width: '16px', height: '16px' } }}
+                          >
+                            <svg viewBox='0 0 16 16' fill='currentColor' aria-hidden='true'>
+                              <rect x='7' y='2' width='2' height='12' rx='1' opacity='0.5' />
+                              <rect x='5' y='2.5' width='6' height='2' rx='1' opacity='0.4' />
+                              <rect x='3.5' y='7' width='9' height='2' rx='1' opacity='0.7' />
+                              <rect x='5.5' y='11.5' width='5' height='2' rx='1' />
+                            </svg>
+                          </OverloadedButton>
+                        </Box>
                       </Box>
 
                       {/* Courbe (icône) | sélecteur de chemin bézier (large, occupe l'espace
@@ -2269,6 +2386,26 @@ export const MenuConfigurationAppearance = ({
                         title={t('inspector.section.advanced_geometry')}
                         is_open={false}
                       >
+                        {/* OS#1302 — Pointe indépendante (par flux) : triangle centré sur
+                            l'extrémité du flux au lieu de l'éventail partagé du nœud. */}
+                        {(linkShapeValues.is_arrow || linkShapeValues.arrow_at_source) && (
+                          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                            <OSTooltip label={t('Flux.apparence.tooltips.shape_arrow_standalone')}>
+                              <Box layerStyle='menuconfigpanel_option_name'
+                                sx={dimLabelSx(isElementAttributeOverloaded(links_elements, 'shape_arrow_standalone' as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG))}>
+                                {t('Flux.apparence.shape_arrow_standalone')}
+                              </Box>
+                            </OSTooltip>
+                            <Checkbox
+                              isChecked={linkShapeValues.arrow_standalone}
+                              isIndeterminate={isLinkShapeSpecificValueIndeterminate(links_elements, 'arrow_standalone')}
+                              onChange={(e) => { linkShapeValues.arrow_standalone = e.target.checked }}
+                            />
+                          </Box>
+                        )}
+                        {/* OS#1302 — « Nœud/flèche à la hauteur de la valeur » : déplacé en
+                            bouton-icône à côté de Structure (rangée des flèches), texte en
+                            tooltip. Voir plus haut. */}
                         {/* Value of link local scale to override scale from DA, can be undefined */}
                         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
                           <OSTooltip label={t('Flux.apparence.tooltips.local_scale')}>
@@ -2290,6 +2427,31 @@ export const MenuConfigurationAppearance = ({
                             isOverloaded={isElementAttributeOverloaded(links_elements, 'local_link_scale', LINK_SHAPE_SPECIFIC_CONFIG)}
                           />
                         </Box>
+                        {/* OS#1302 — Largeur mini de pointe (px), façon e!Sankey : les flux
+                            plus fins reçoivent une pointe de cette largeur (visibles), les
+                            plus épais ne bougent pas. 0 = désactivé. */}
+                        {(linkShapeValues.is_arrow || linkShapeValues.arrow_at_source) && (
+                          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                            <OSTooltip label={t('Flux.apparence.tooltips.shape_arrow_min_width')}>
+                              <Box layerStyle='menuconfigpanel_option_name'
+                                sx={dimLabelSx(isElementAttributeOverloaded(links_elements, 'shape_arrow_min_width' as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG))}
+                              >
+                                {t('Flux.apparence.shape_arrow_min_width')}
+                              </Box>
+                            </OSTooltip>
+                            <ConfigMenuNumberInput
+                              t={t}
+                              default_value={linkShapeValues.arrow_min_width}
+                              menu_for_style={menu_for_style}
+                              minimum_value={0}
+                              unit_text='px'
+                              stepper={true}
+                              function_on_blur={(value) => { linkShapeValues.arrow_min_width = value ?? 0 }}
+                              multiValue={isLinkShapeSpecificValueIndeterminate(links_elements, 'arrow_min_width')}
+                              isOverloaded={isElementAttributeOverloaded(links_elements, 'shape_arrow_min_width' as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG)}
+                            />
+                          </Box>
+                        )}
                         {/* </Box> */}
                         {/* Référence d'échelle par view tag : épaisseur cible (px) du flux pour
                           le view tag COURANT. Visible uniquement quand un view tag est
@@ -2381,48 +2543,149 @@ export const MenuConfigurationAppearance = ({
                               isOverloaded={isElementAttributeOverloaded(links_elements, 'shape_straight_offset' as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG)} />
                           </Box>
                         )}
-                        <Box as='span' textStyle='title_sub_section'>{t('Flux.apparence.anchor')}</Box>
-                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                          {[
-                            ['starting_curve', 0, (1 - linkShapeValues.ending_curve)],
-                            ['ending_curve', linkShapeValues.starting_curve * 100, 100]
-                          ].map(p => {
-                            return <ElementAttrSetterNumberInput2Cols
-                              key={String(p[0])}
-                              app_data={app_data}
-                              elements={links_elements}
-                              attributePath={'Flux.apparence'}
-                              attributeKey={p[0] as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG}
-                              prefix={'shape'}
-                              config={LINK_SHAPE_SPECIFIC_CONFIG}
-                              refreshParentComponent={refreshAll}
-                              minimum_value={p[1] as number}
-                              maximum_value={p[2] as number}
-                              percent={true}
-                              isOverloaded={isElementAttributeOverloaded(links_elements, 'shape_' + String(p[0]) as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG)} />
-                          })}
-                        </Box>
-                        <Box as='span' textStyle='title_sub_section'>{t('Flux.apparence.handle')}</Box>
-                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                          {[
-                            ['starting_tangeant', 0, 100],
-                            ['ending_tangeant', 0, 100],
-                          ].map(p => {
-                            return <ElementAttrSetterNumberInput2Cols
-                              key={String(p[0])}
-                              app_data={app_data}
-                              elements={links_elements}
-                              attributePath={'Flux.apparence'}
-                              attributeKey={p[0] as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG}
-                              prefix={'shape'}
-                              config={LINK_SHAPE_SPECIFIC_CONFIG}
-                              refreshParentComponent={refreshAll}
-                              minimum_value={p[1] as number}
-                              maximum_value={p[2] as number}
-                              percent={true}
-                              isOverloaded={isElementAttributeOverloaded(links_elements, 'shape_' + String(p[0]) as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG)} />
-                          })}
-                        </Box>
+                        {/* #299 — Ancres/Poignées éditables en relatif (%) OU en absolu
+                            (px), au choix via le sélecteur d'unité en tête de section.
+                            Le px n'est qu'un mode d'affichage/édition : la valeur stockée
+                            reste une fraction ; la conversion s'appuie sur la géométrie
+                            courante du flux (getLinkCurveRefsPx). En sélection multiple,
+                            chaque flux reçoit le même décalage ABSOLU (fraction recalculée
+                            par flux). Indisponible en édition de style pur (pas de
+                            géométrie) : on garde alors le %. */}
+                        {(() => {
+                          const linkInstances = (links_elements as (Class_LinkElement | Class_ElementStyle)[])
+                            .filter((e) => e instanceof Class_LinkElement) as Class_LinkElement[]
+                          const can_use_px = linkInstances.length > 0
+                          const use_px = can_use_px && linkCurveUnit === 'px'
+                          const readFrac = (l: Class_LinkElement, key: Type_LinkCurveKey): number => ({
+                            starting_curve: l.shape_starting_curve,
+                            ending_curve: l.shape_ending_curve,
+                            starting_tangeant: l.shape_starting_tangeant,
+                            ending_tangeant: l.shape_ending_tangeant
+                          }[key])
+                          const writeFrac = (l: Class_LinkElement, key: Type_LinkCurveKey, frac: number): void => {
+                            // Écriture via le setter de classe (customStarting/EndingCurve…) :
+                            // clampe (ancres : somme ≤ 1) et déclenche le redessin.
+                            switch (key) {
+                            case 'starting_curve': l.shape_starting_curve = frac; break
+                            case 'ending_curve': l.shape_ending_curve = frac; break
+                            case 'starting_tangeant': l.shape_starting_tangeant = frac; break
+                            case 'ending_tangeant': l.shape_ending_tangeant = frac; break
+                            }
+                          }
+                          const pxOf = (l: Class_LinkElement, key: Type_LinkCurveKey, ref: number): number =>
+                            (ref > 0 && isFinite(ref)) ? readFrac(l, key) * ref : 0
+                          const pxDisplay = (key: Type_LinkCurveKey): number => {
+                            if (!can_use_px) return 0
+                            const l0 = linkInstances[0]
+                            return Math.round(pxOf(l0, key, getLinkCurveRefsPx(l0)[key]) * 10) / 10
+                          }
+                          const pxMultiValue = (key: Type_LinkCurveKey): boolean => {
+                            if (linkInstances.length < 2) return false
+                            const v0 = Math.round(pxOf(linkInstances[0], key, getLinkCurveRefsPx(linkInstances[0])[key]))
+                            return linkInstances.some(l => Math.round(pxOf(l, key, getLinkCurveRefsPx(l)[key])) !== v0)
+                          }
+                          const applyPx = (key: Type_LinkCurveKey, px: number | null): void => {
+                            if (px === null || px === undefined) return
+                            const before = linkInstances.map(l => ({ l, v: readFrac(l, key) }))
+                            const apply = () => {
+                              linkInstances.forEach(l => {
+                                const ref = getLinkCurveRefsPx(l)[key]
+                                if (ref > 0 && isFinite(ref)) writeFrac(l, key, px / ref)
+                              })
+                              refreshAll()
+                            }
+                            const revert = () => { before.forEach(({ l, v }) => writeFrac(l, key, v)); refreshAll() }
+                            app_data.history.saveUndo(revert)
+                            app_data.history.saveRedo(apply)
+                            apply()
+                          }
+                          const renderPxInputs = (keys: Type_LinkCurveKey[]) => keys.map(key => {
+                            const isOverloaded = isElementAttributeOverloaded(links_elements, ('shape_' + key) as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG)
+                            return (
+                              <ElementAttrSetter2Cols
+                                key={key}
+                                attributePath={'Flux.apparence'}
+                                attributeKey={key as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG}
+                                prefix={'shape'}
+                                config={LINK_SHAPE_SPECIFIC_CONFIG}
+                                t={t}
+                                isOverloaded={isOverloaded}>
+                                <ConfigMenuNumberInput
+                                  t={t}
+                                  default_value={pxDisplay(key)}
+                                  function_on_blur={(value) => applyPx(key, value)}
+                                  minimum_value={0}
+                                  step={1}
+                                  stepper={true}
+                                  unit_text={'px'}
+                                  multiValue={pxMultiValue(key)}
+                                  isOverloaded={isOverloaded} />
+                              </ElementAttrSetter2Cols>
+                            )
+                          })
+                          return (
+                            <>
+                              {can_use_px && (
+                                <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                                  <Box layerStyle='menuconfigpanel_option_name'>{t('Flux.apparence.curve_unit')}</Box>
+                                  <Select
+                                    variant='menuconfigpanel_option_select'
+                                    value={linkCurveUnit}
+                                    onChange={(e) => setLinkCurveUnit(e.target.value === 'px' ? 'px' : 'percent')}>
+                                    <option value='percent'>%</option>
+                                    <option value='px'>px</option>
+                                  </Select>
+                                </Box>
+                              )}
+                              <Box as='span' textStyle='title_sub_section'>{t('Flux.apparence.anchor')}</Box>
+                              <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                                {use_px
+                                  ? renderPxInputs(LINK_CURVE_ANCHOR_KEYS)
+                                  : [
+                                    ['starting_curve', 0, (1 - linkShapeValues.ending_curve)],
+                                    ['ending_curve', linkShapeValues.starting_curve * 100, 100]
+                                  ].map(p => {
+                                    return <ElementAttrSetterNumberInput2Cols
+                                      key={String(p[0])}
+                                      app_data={app_data}
+                                      elements={links_elements}
+                                      attributePath={'Flux.apparence'}
+                                      attributeKey={p[0] as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG}
+                                      prefix={'shape'}
+                                      config={LINK_SHAPE_SPECIFIC_CONFIG}
+                                      refreshParentComponent={refreshAll}
+                                      minimum_value={p[1] as number}
+                                      maximum_value={p[2] as number}
+                                      percent={true}
+                                      isOverloaded={isElementAttributeOverloaded(links_elements, 'shape_' + String(p[0]) as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG)} />
+                                  })}
+                              </Box>
+                              <Box as='span' textStyle='title_sub_section'>{t('Flux.apparence.handle')}</Box>
+                              <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                                {use_px
+                                  ? renderPxInputs(LINK_CURVE_HANDLE_KEYS)
+                                  : [
+                                    ['starting_tangeant', 0, 100],
+                                    ['ending_tangeant', 0, 100]
+                                  ].map(p => {
+                                    return <ElementAttrSetterNumberInput2Cols
+                                      key={String(p[0])}
+                                      app_data={app_data}
+                                      elements={links_elements}
+                                      attributePath={'Flux.apparence'}
+                                      attributeKey={p[0] as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG}
+                                      prefix={'shape'}
+                                      config={LINK_SHAPE_SPECIFIC_CONFIG}
+                                      refreshParentComponent={refreshAll}
+                                      minimum_value={p[1] as number}
+                                      maximum_value={p[2] as number}
+                                      percent={true}
+                                      isOverloaded={isElementAttributeOverloaded(links_elements, 'shape_' + String(p[0]) as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG)} />
+                                  })}
+                              </Box>
+                            </>
+                          )
+                        })()}
                       </WrapperBoxSubSectionMenu>
                     </Box>
                   </Box>

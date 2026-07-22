@@ -471,6 +471,12 @@ export class Class_DrawingAreaInteractions {
       let cont: Class_ContainerElement
       const create = () => {
         cont = da.sankey.addNewDefaultContainer()
+        // OS#1259 — une ZDT fraîchement DESSINÉE doit apparaître au PREMIER PLAN.
+        // Le constructeur l'enregistre en FIN de liste ; or orderElementOnDA trie
+        // sur la liste inversée -> fin de liste = arrière-plan. On la ramène en
+        // TÊTE (début = devant). Ciblé sur la création interactive : au
+        // chargement / updateFrom l'ordre Z est pré-amorcé et ne doit pas bouger.
+        da.list_g_element = [cont.id, ...da.list_g_element.filter(id => id !== cont.id)]
         if (is_line) {
           // Ligne libre : trait décoratif sans remplissage ni label. L'apparence
           // (couleur, épaisseur, pointillés) est portée par les attributs de bordure.
@@ -606,6 +612,12 @@ export class Class_DrawingAreaInteractions {
         if (da.application_data?.publish_options?.lock_zoom) return
         // Guard: ignore if deltaY is 0 (can happen with touchpad or wheel tilt)
         if (event.deltaY === 0) return
+        // #680 — Un zoom MOLETTE (Ctrl/Cmd + scroll, pinch trackpad) est un cadrage MANUEL :
+        // il désenclenche les modes de cadrage auto (le setter notifie ZOOM_TOPIC → boutons
+        // éteints). Fait ICI car ce zoom passe par scaleBy programmatique → eventZoom voit
+        // sourceEvent=null et ne peut pas le distinguer d'un cadrage automatique. Le pan
+        // (scroll simple / shift+scroll, plus bas) ne change pas l'échelle et ne désenclenche pas.
+        da.auto_fit_mode = 'none'
         // Smooth zoom factor proportional to deltaY magnitude
         const scale = Math.pow(2, -event.deltaY / 300)
         // Apply scaling

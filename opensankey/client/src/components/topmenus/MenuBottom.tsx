@@ -9,6 +9,7 @@ import { ConfigMenuNumberInput, OSTooltip } from '../configmenus/MenuCommon'
 import { useModelBinding } from '../../hooks/useModelBinding'
 import { ZOOM_TOPIC } from '../../types/EventBus'
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { Type_AutoFitMode } from '../../types/DrawingArea'
 import { Class_DataTagGroup } from '../../types/TagGroup'
 
 // Facteur multiplicatif d'un cran des boutons -/+ (deux crans consécutifs ≈ ×2).
@@ -264,35 +265,49 @@ export const ComponetStretchButtons = ({ app_data, updateParentComponent, hide_f
   // Use variable from class
   const { t } = app_data
   const size = app_data.is_static ? 'sizeToolbarButtonStatic' : 'sizeToolbarButton'
+  // #680 — S'abonner à ZOOM_TOPIC : un zoom manuel (molette / boutons +-) repasse le mode à
+  // 'none' (cf. DrawingArea.eventZoom / zoomByFactor) et notifie ZOOM_TOPIC. Sans cet abonnement
+  // les boutons resteraient allumés visuellement après un zoom (l'état interne, lui, est bien
+  // remis à 'none'). Même canal que l'indicateur de zoom (ComponentZoomControl).
+  useModelBinding(undefined, (r) => app_data.menu_configuration.subscribe(ZOOM_TOPIC, r))
+
+  // #680 — Les 3 boutons d'ajustement sont désormais des MODES radio persistants
+  // (un seul actif, ou aucun) et non plus des actions ponctuelles. Tant qu'un mode est
+  // actif, la contrainte est maintenue en permanence (cf. applyAutoFitMode / drag / zoom).
+  const fit_mode = app_data.drawing_area.auto_fit_mode
+  // Re-clic sur le mode actif → 'none' (extinction). Le clic applique un cadrage animé.
+  const selectFitMode = (m: Type_AutoFitMode) => {
+    const da = app_data.drawing_area
+    da.auto_fit_mode = (fit_mode === m) ? 'none' : m
+    da.applyAutoFitMode(true) // geste utilisateur explicite → zoom cinématique
+    updateParentComponent()
+  }
+  const fitVariant = (m: Type_AutoFitMode) =>
+    fit_mode === m ? 'toolbar_button_6_activated' : 'toolbar_button_6'
 
   return <ButtonGroup className='toolbar_bottom_stretch' isAttached orientation='vertical'>
     <OSTooltip placement='left' label={t('Banner.tooltipAdjustH')}>
-      <Button variant='toolbar_button_6'
+      <Button variant={fitVariant('width')}
         size={size}
-        // Bouton explicite : recadre même quand le verrou de taille est actif (#1240).
-        // #1244 : recadrage animé (zoom cinématique) sur ce déclencheur utilisateur.
-        onClick={() => app_data.drawing_area.areaAutoFitAnimated(true, true)}>
+        // #680 — Mode « largeur » : toute la largeur du diagramme reste visible bord à bord.
+        onClick={() => selectFitMode('width')}>
         {app_data.icon_library.icon_area_fit_horiz}
       </Button>
     </OSTooltip>
     <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')}>
-      <Button variant='toolbar_button_6'
+      <Button variant={fitVariant('height')}
         size={size}
-        // Bouton explicite : recadre même quand le verrou de taille est actif (#1240).
-        // #1244 : recadrage animé (zoom cinématique) sur ce déclencheur utilisateur.
-        onClick={() => app_data.drawing_area.areaAutoFitAnimated(false, true)}>
+        // #680 — Mode « hauteur » : toute la hauteur du diagramme reste visible bord à bord.
+        onClick={() => selectFitMode('height')}>
         {app_data.icon_library.icon_area_fit_vert}
       </Button>
     </OSTooltip>
 
     <OSTooltip placement='left' label={t('Banner.tooltipRecenter')}>
-      <Button variant='toolbar_button_6'
+      <Button variant={fitVariant('full')}
         size={size}
-        onClick={() => {
-          // Bouton explicite : recadre même quand le verrou de taille est actif (#1240).
-          // #1244 : recentrage animé (glissement de caméra vers le centre).
-          app_data.drawing_area.recenterAnimated(true)
-        }}>
+        // #680 — Mode « tout visible » : le diagramme entier reste cadré et centré.
+        onClick={() => selectFitMode('full')}>
         {app_data.icon_library.icon_recenter}
       </Button>
     </OSTooltip>

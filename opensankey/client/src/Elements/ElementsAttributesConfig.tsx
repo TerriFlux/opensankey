@@ -50,6 +50,14 @@ export type Type_AnchorAlignVertical = 'top' | 'center' | 'bottom'
 export type Type_AnchorAlignHorizontal = 'left' | 'center' | 'right'
 export const default_anchor_align_vertical: Type_AnchorAlignVertical = 'center'
 export const default_anchor_align_horizontal: Type_AnchorAlignHorizontal = 'center'
+// Mode de réorganisation automatique de l'ordre des flux E/S d'un nœud quand le
+// diagramme est modifié (cf. Class_NodeElement.reorganizeIOLinks) :
+//  'none'     = jamais recalculé (ordre figé) ;
+//  'simple'   = tri par la position du nœud opposé (comportement par défaut) ;
+//  'advanced' = ordre géométrique par la courbure (os#205/#266 — « qui tourne le
+//               plus tôt va à l'extrémité »), adapté aux diagrammes rigoureux.
+export type Type_IOReorgMode = 'none' | 'simple' | 'advanced'
+export const default_io_reorg_mode: Type_IOReorgMode = 'simple'
 // Orientation des hachures de remplissage d'un nœud ('none' = pas de hachure).
 export type Type_HatchOrientation = 'none' | 'vertical' | 'horizontal' | 'diagonal' | 'antidiagonal'
 export const default_hatch_orientation: Type_HatchOrientation = 'none'
@@ -61,6 +69,11 @@ export const default_auto_y = false
 export const default_dx = 200
 export const default_dy = 50
 export type Type_Orientation = 'hh' | 'vv' | 'vh' | 'hv'
+
+// Point de contrôle libre d'un flux (waypoint e!Sankey) : coordonnées MONDE
+// (mêmes unités que position_x/y des nœuds). La liste, vide par défaut, achemine
+// le tracé source → wp[0] → … → wp[n] → cible. Cf. opensankey#1301.
+export type Type_LinkWaypoint = { x: number, y: number }
 // Ancrage de droiture d'un flux (#665, refonte multi-ancrage). 'none' = libre (flux non
 // contraint). 'source'/'target' = l'accroche aval/amont s'aligne sur l'autre (déplace le
 // nœud opposé). 'highest'/'lowest' = les deux accroches s'alignent sur la plus haute / la
@@ -203,7 +216,7 @@ export type BaseActionType =
   | 'applyPosition'
 
 export type NodeBaseActionType = BaseActionType
-export type LinkBaseActionType = BaseActionType | 'drawArrow' | 'drawControlPoint' | 'drawWithNodes'
+export type LinkBaseActionType = BaseActionType | 'drawArrow' | 'refreshArrow' | 'drawControlPoint' | 'drawWithNodes'
 
 // Interface pour la configuration d'un attribut
 export interface AttributeConfig<T> {
@@ -2574,6 +2587,27 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       it: 'Allineamento orizzontale delle ancore di flusso sui lati superiore/inferiore del nodo (sinistra / centro / destra).'
     }
   } satisfies AttributeConfig<Type_AnchorAlignHorizontal>,
+  // =================== RÉORGANISATION AUTO DE L'ORDRE DES FLUX E/S ===================
+  io_reorg_mode: {
+    default: default_io_reorg_mode,
+    type: (() => default_io_reorg_mode) as (() => Type_IOReorgMode),
+    category: 'shape' as const,
+    actions: ['drawElements'] as BaseActionType[],
+    labels: {
+      en: 'Auto-reordering',
+      fr: 'Réorganisation auto',
+      es: 'Reorganización auto',
+      de: 'Auto-Neuordnung',
+      it: 'Riordino automatico'
+    },
+    tooltips: {
+      en: 'How the incoming/outgoing link order is recomputed when the diagram changes. None: never recomputed (order stays frozen). Simple: sorted by the opposite node position (default). Advanced: geometric order by curvature — the link that turns earliest goes to the extremity (best on rigorous/auto-aligned diagrams).',
+      fr: 'Comment l\'ordre des flux entrants/sortants est recalculé quand le diagramme change. Aucune : jamais recalculé (l\'ordre reste figé). Simple : trié par la position du nœud opposé (par défaut). Avancée : ordre géométrique par la courbure — le flux qui tourne le plus tôt va à l\'extrémité (idéal sur des diagrammes rigoureux ou alignés automatiquement).',
+      es: 'Cómo se recalcula el orden de los flujos entrantes/salientes cuando cambia el diagrama. Ninguna: nunca se recalcula (el orden queda fijo). Simple: ordenado por la posición del nodo opuesto (por defecto). Avanzada: orden geométrico por curvatura — el flujo que gira antes va al extremo (ideal en diagramas rigurosos o alineados automáticamente).',
+      de: 'Wie die Reihenfolge der ein-/ausgehenden Flüsse bei Änderungen am Diagramm neu berechnet wird. Keine: nie neu berechnet (Reihenfolge bleibt fest). Einfach: sortiert nach der Position des gegenüberliegenden Knotens (Standard). Erweitert: geometrische Reihenfolge nach Krümmung — der zuerst abbiegende Fluss geht ans Ende (ideal bei präzisen oder automatisch ausgerichteten Diagrammen).',
+      it: 'Come viene ricalcolato l\'ordine dei flussi entranti/uscenti quando il diagramma cambia. Nessuno: mai ricalcolato (l\'ordine resta fisso). Semplice: ordinato per la posizione del nodo opposto (predefinito). Avanzato: ordine geometrico per curvatura — il flusso che curva prima va all\'estremità (ideale su diagrammi rigorosi o allineati automaticamente).'
+    }
+  } satisfies AttributeConfig<Type_IOReorgMode>,
   // Écart d'accroche des flux, en px, perpendiculaire au côté du nœud (équivalent
   // de la « Distance » d'e!Sankey). POSITIF = les ancres rentrent DANS la boîte
   // (les flux entrants/sortants se rejoignent à travers le nœud) ; négatif = elles
@@ -3207,6 +3241,54 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     }
   } satisfies AttributeConfig<number>,
 
+  // Points de contrôle libres (waypoints e!Sankey, opensankey#1301). Liste de
+  // coordonnées MONDE ; vide = comportement paramétrique historique inchangé.
+  // Persistée génériquement via `attributes` (sérialisation JSON du tableau) ;
+  // NE JAMAIS muter le défaut partagé — toujours réaffecter un nouveau tableau.
+  waypoints: {
+    default: [] as Type_LinkWaypoint[],
+    type: (() => []) as (() => Type_LinkWaypoint[]),
+    category: 'shape' as const,
+    actions: ['drawElements', 'drawControlPoint'] as LinkBaseActionType[],
+    labels: {
+      en: 'Control points',
+      fr: 'Points de contrôle',
+      es: 'Puntos de control',
+      de: 'Kontrollpunkte',
+      it: 'Punti di controllo'
+    },
+    tooltips: {
+      en: 'Free routing points the flow passes through (Alt+click the flow to add one, drag a point to move it, right-click a point to remove it)',
+      fr: 'Points de passage libres empruntés par le flux (Alt+clic sur le flux pour en ajouter un, glisser un point pour le déplacer, clic droit sur un point pour le retirer)',
+      es: 'Puntos de paso libres por los que pasa el flujo (Alt+clic en el flujo para añadir uno, arrastrar un punto para moverlo, clic derecho para eliminarlo)',
+      de: 'Freie Wegpunkte, durch die der Fluss verläuft (Alt+Klick auf den Fluss zum Hinzufügen, Punkt ziehen zum Verschieben, Rechtsklick zum Entfernen)',
+      it: 'Punti di passaggio liberi attraverso cui scorre il flusso (Alt+clic sul flusso per aggiungerne uno, trascinare per spostarlo, clic destro per rimuoverlo)'
+    }
+  } satisfies AttributeConfig<Type_LinkWaypoint[]>,
+
+  // opensankey#1301 — offset d'ancre importé (fidélité e!Sankey). Décalage de l'ancre
+  // le long du bord du nœud, DEPUIS le coin (relatif → survit aux déplacements/resize) :
+  // axe X pour un côté haut/bas, axe Y pour un côté gauche/droite. Pose la source/cible
+  // exactement au PORT e!Sankey pour qu'un flux droit (VV/HH) le reste au lieu d'être
+  // centré sur la bande d'empilement. `undefined` = empilement OpenSankey natif.
+  source_anchor_offset: {
+    default: undefined as number | undefined,
+    type: (() => undefined) as (() => number | undefined),
+    category: 'shape' as const,
+    actions: ['drawWithNodes'] as LinkBaseActionType[],
+    labels: { en: 'Source anchor offset', fr: 'Offset ancre source', es: 'Desfase ancla origen', de: 'Quellanker-Versatz', it: 'Offset ancora sorgente' },
+    tooltips: { en: 'Imported anchor offset along the source node edge (e!Sankey port fidelity).', fr: 'Offset d\'ancre importé le long du bord du nœud source (fidélité port e!Sankey).', es: 'Desfase de ancla importado a lo largo del borde del nodo origen.', de: 'Importierter Ankerversatz entlang der Quellknotenkante.', it: 'Offset di ancoraggio importato lungo il bordo del nodo sorgente.' }
+  } satisfies AttributeConfig<number | undefined>,
+
+  target_anchor_offset: {
+    default: undefined as number | undefined,
+    type: (() => undefined) as (() => number | undefined),
+    category: 'shape' as const,
+    actions: ['drawWithNodes'] as LinkBaseActionType[],
+    labels: { en: 'Target anchor offset', fr: 'Offset ancre cible', es: 'Desfase ancla destino', de: 'Zielanker-Versatz', it: 'Offset ancora destinazione' },
+    tooltips: { en: 'Imported anchor offset along the target node edge (e!Sankey port fidelity).', fr: 'Offset d\'ancre importé le long du bord du nœud cible (fidélité port e!Sankey).', es: 'Desfase de ancla importado a lo largo del borde del nodo destino.', de: 'Importierter Ankerversatz entlang der Zielknotenkante.', it: 'Offset di ancoraggio importato lungo il bordo del nodo destinazione.' }
+  } satisfies AttributeConfig<number | undefined>,
+
   is_arrow: {
     default: true,
     type: (() => true) as (() => boolean),
@@ -3341,6 +3423,111 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       it: 'Se > 0, la profondità della freccia destinazione scala con lo spessore del flusso (angolo costante) invece della dimensione fissa in pixel.'
     }
   } satisfies AttributeConfig<number>,
+
+  // ── Pointe/épaisseur pilotées par le flux (OS#1302) ──────────────────────────
+  // Anciennes globales du drawing_area (arrow_use_standalone_layout,
+  // structure_mode_force_min) + pointe accentuée (#1270) devenues attributs de flux
+  // résolus par le style. Migration des anciennes globales vers le style de flux par
+  // défaut à la lecture (cf. SankeyPersistence).
+
+  // Éventail vs triangle indépendant, par flux (ex-arrow_use_standalone_layout).
+  // Un flux standalone dessine sa pointe centrée sur son extrémité réelle, hors
+  // de l'éventail partagé du côté du nœud.
+  arrow_standalone: {
+    default: false,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['refreshArrow'] as LinkBaseActionType[],
+    labels: {
+      en: 'Standalone arrow',
+      fr: 'Pointe indépendante',
+      es: 'Flecha independiente',
+      de: 'Eigenständige Pfeilspitze',
+      it: 'Punta indipendente'
+    },
+    tooltips: {
+      en: 'Draw this link\'s arrow as an independent triangle centered on its real end, instead of sharing the fan of arrows converging at the node side.',
+      fr: 'Dessine la pointe de ce flux comme un triangle indépendant centré sur son extrémité réelle, au lieu de partager l\'éventail de pointes convergeant vers le côté du nœud.',
+      es: 'Dibuja la flecha de este flujo como un triángulo independiente centrado en su extremo real, en lugar de compartir el abanico de flechas que convergen en el lado del nodo.',
+      de: 'Zeichnet die Pfeilspitze dieses Flusses als eigenständiges Dreieck, zentriert auf sein echtes Ende, statt den am Knoten zusammenlaufenden Pfeilfächer zu teilen.',
+      it: 'Disegna la punta di questo flusso come un triangolo indipendente centrato sulla sua estremità reale, invece di condividere il ventaglio di punte che convergono sul lato del nodo.'
+    }
+  } satisfies AttributeConfig<boolean>,
+
+  // Largeur MINIMALE de la pointe (px), façon e!Sankey. base = max(épaisseur, N) :
+  // les flux plus fins que N reçoivent une pointe de largeur N (indépendante, centrée
+  // sur leur extrémité) → ils restent visibles ; les flux plus épais que N ne bougent
+  // PAS (pas d'explosion). La PROFONDEUR reste celle de shape_arrow_size (pas de
+  // longueur multipliée). Défaut 10 ⇒ pointe visible d'office, y compris sur les flux
+  // sans valeur. 0 = désactivé (rendu strictement proportionnel).
+  arrow_min_width: {
+    default: 10,
+    type: (() => 10) as (() => number),
+    category: 'shape' as const,
+    actions: ['refreshArrow'] as LinkBaseActionType[],
+    labels: {
+      en: 'Min tip width (px)',
+      fr: 'Largeur mini de pointe (px)',
+      es: 'Ancho mín. de punta (px)',
+      de: 'Mindest-Spitzenbreite (px)',
+      it: 'Larghezza min. punta (px)'
+    },
+    tooltips: {
+      en: 'Minimum width (px) of the arrow tip base: flows thinner than this get a tip of this width (so they stay visible), thicker flows are unchanged. The tip depth (arrow size) is unchanged. 0 disables it.',
+      fr: 'Largeur minimale (px) de la base de la pointe : les flux plus fins reçoivent une pointe de cette largeur (pour rester visibles), les flux plus épais ne changent pas. La profondeur de pointe (taille de flèche) est inchangée. 0 = désactivé.',
+      es: 'Ancho mínimo (px) de la base de la punta: los flujos más finos reciben una punta de este ancho (para seguir visibles), los más gruesos no cambian. La profundidad de la punta no cambia. 0 = desactivado.',
+      de: 'Mindestbreite (px) der Pfeilspitzenbasis: dünnere Flüsse erhalten eine Spitze dieser Breite (bleiben sichtbar), dickere Flüsse bleiben unverändert. Die Spitzentiefe bleibt unverändert. 0 = deaktiviert.',
+      it: 'Larghezza minima (px) della base della punta: i flussi più sottili ricevono una punta di questa larghezza (per restare visibili), quelli più spessi non cambiano. La profondità della punta non cambia. 0 = disattivato.'
+    }
+  } satisfies AttributeConfig<number>,
+
+  // Mode structure : forcer l'épaisseur minimale visible du flux (ex-globale
+  // structure_mode_force_min, true par défaut). Affecte l'épaisseur ⇒ redraw
+  // des nœuds source/cible (drawWithNodes) comme local_link_scale.
+  structure_force_min: {
+    default: true,
+    type: (() => true) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['drawWithNodes'] as LinkBaseActionType[],
+    // Libellé/tooltip UI = clés i18n Flux.apparence.shape_structure_force_min (case
+    // affichée INVERSÉE : cochée = conserve les hauteurs). Ces textes de config ne
+    // sont pas affichés, on les garde alignés pour éviter toute confusion.
+    labels: {
+      en: 'Node/arrow at value height',
+      fr: 'Nœud/flèche à la hauteur de la valeur',
+      es: 'Nodo/flecha a la altura del valor',
+      de: 'Knoten/Pfeil auf Werthöhe',
+      it: 'Nodo/freccia all\'altezza del valore'
+    },
+    tooltips: {
+      en: 'Checked: in structure mode, this flow keeps its value height on the node and arrow. Unchecked (default): the flow is collapsed to a thin connector and does not enlarge the node or arrow.',
+      fr: 'Coché : en mode structure, ce flux garde sa hauteur de valeur sur le nœud et la flèche. Décoché (défaut) : le flux est réduit à un connecteur fin et n\'élargit pas le nœud ni la flèche.',
+      es: 'Marcado: en modo estructura, este flujo conserva su altura de valor en el nodo y la flecha. Sin marcar (predeterminado): el flujo se reduce a un conector fino y no agranda el nodo ni la flecha.',
+      de: 'Angehakt: Im Strukturmodus behält dieser Fluss seine Werthöhe an Knoten und Pfeil. Nicht angehakt (Standard): Der Fluss wird auf einen dünnen Verbinder reduziert und vergrößert Knoten und Pfeil nicht.',
+      it: 'Selezionato: in modalità struttura, questo flusso mantiene la sua altezza di valore sul nodo e sulla freccia. Non selezionato (predefinito): il flusso è ridotto a un connettore sottile e non ingrandisce il nodo né la freccia.'
+    }
+  } satisfies AttributeConfig<boolean>,
+
+  uncertainty_display: {
+    default: false,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['drawElements'] as BaseActionType[],
+    labels: {
+      en: 'Show uncertainty',
+      fr: 'Afficher l\'incertitude',
+      es: 'Mostrar incertidumbre',
+      de: 'Unsicherheit anzeigen',
+      it: 'Mostra incertezza'
+    },
+    tooltips: {
+      en: 'Superimpose the flow drawn at its min/mean/max values (thinner = more opaque) to visualize the uncertainty interval.',
+      fr: 'Superpose le flux tracé à ses valeurs min/moyenne/max (plus fin = plus opaque) pour visualiser l\'intervalle d\'incertitude.',
+      es: 'Superpone el flujo dibujado en sus valores mín/media/máx (más fino = más opaco) para visualizar el intervalo de incertidumbre.',
+      de: 'Überlagert den Fluss, gezeichnet an seinen Min-/Mittel-/Max-Werten (dünner = undurchsichtiger), um das Unsicherheitsintervall zu visualisieren.',
+      it: 'Sovrappone il flusso disegnato ai suoi valori min/media/max (più sottile = più opaco) per visualizzare l\'intervallo di incertezza.'
+    }
+  } satisfies AttributeConfig<boolean>,
 
   source_notch_size_ratio: {
     default: 0,

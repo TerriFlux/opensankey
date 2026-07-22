@@ -843,6 +843,22 @@ export class Class_Sankey {
     return link
   }
 
+  // #680 — Re-cadrage débouncé après un AJOUT d'élément (nœud / flux / ZDT) par action
+  // utilisateur, quand un mode de cadrage auto est actif. Ignoré pendant le chargement
+  // (bypass_redraws) — le fit différé de fromJSON s'en charge. Débouncé pour coalescer les
+  // rafales (création d'un flux = nœud(s) + lien ; collage de plusieurs éléments) en un fit.
+  private _scheduleAutoFitAfterAdd(): void {
+    const da = this.drawing_area
+    // #680 — Ignoré seulement pendant le chargement (bypass_redraws) ; le mode 'none'
+    // recentre aussi (à zoom constant), il n'est donc plus exclu ici.
+    if (!da || da.bypass_redraws) return
+    da.application_data._add_waiting_process(
+      'autofit_mode_after_add',
+      () => da.applyAutoFitMode(false),
+      80
+    )
+  }
+
   public addNewNode(id: string, name: string): Class_NodeElement {
     if (!this._nodes[id]) {
       // Create node
@@ -851,6 +867,7 @@ export class Class_Sankey {
       node.draw()
       // Update registry of nodes
       this._addNode(node)
+      this._scheduleAutoFitAfterAdd() // #680
       return node
     }
     else {
@@ -878,6 +895,7 @@ export class Class_Sankey {
       zdt.draw()
       // Update registry of nodes
       this._addLabel(zdt)
+      this._scheduleAutoFitAfterAdd() // #680
       return zdt
     }
     else {
@@ -996,6 +1014,7 @@ export class Class_Sankey {
     if (!this._links[id]) {
       const link = this.createNewLink(id, source, target)
       this._addLink(link)
+      this._scheduleAutoFitAfterAdd() // #680
       return link
     }
     else {

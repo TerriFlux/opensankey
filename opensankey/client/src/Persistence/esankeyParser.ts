@@ -41,7 +41,8 @@ import JSZip from 'jszip'
 import { themeEsankey, Type_ThemeJSON } from '../types/Theme'
 import { Type_UnitTypeJSON } from '../types/Units'
 
-type EsLocal = { [k: string]: string | number | boolean }
+// opensankey#1301 — la valeur peut aussi être un tableau de points (shape_waypoints).
+type EsLocal = { [k: string]: string | number | boolean | Array<{ x: number, y: number }> }
 
 interface EsNode {
   id: string
@@ -451,6 +452,53 @@ interface EsGraphicalProcess {
 const linkAxis = (arrowDirection: number): 'h' | 'v' =>
   (arrowDirection === 1 || arrowDirection === 4) ? 'v' : 'h'
 
+/**
+ * opensankey#1301 — orientation (hh/vv/hv/vh) déduite de la polyligne du tracé : axe du
+ * 1er segment (source) + axe du dernier segment (cible). Bien plus fiable que
+ * `arrowDirection`. Utilisée pour les flux PARAMÉTRIQUES (< 5 points) ; les flux routés
+ * l'ignorent. `null` si trop peu de points / segments dégénérés (→ repli arrowDirection).
+ */
+const orientationFromPoints = (points: Array<{ x: number, y: number }>): string | null => {
+  const n = points.length
+  if (n < 2) return null
+  const axisOf = (a: { x: number, y: number }, b: { x: number, y: number }): 'h' | 'v' | null => {
+    const dx = Math.abs(b.x - a.x), dy = Math.abs(b.y - a.y)
+    if (dx < 1e-6 && dy < 1e-6) return null
+    return dx >= dy ? 'h' : 'v'
+  }
+  const src = axisOf(points[0], points[1])
+  const tgt = axisOf(points[n - 2], points[n - 1])
+  if (!src || !tgt) return null
+  return src + tgt
+}
+
+/**
+ * opensankey#1301 — un flux est ROUTÉ si sa polyligne fait un DÉTOUR : au moins DEUX
+ * coudes orthogonaux (sommets où un segment horizontal rencontre un vertical). UN seul
+ * coude = simple élan HV/VH paramétrique (source h → cible v, ou l'inverse) : NON routé.
+ * Deux coudes ou plus = escalier/boucle qui repart (ex. h→v→h, source et cible du même
+ * côté) → routé, ses points intérieurs deviennent des waypoints. Indépendant du nombre
+ * de points (un détour tient en 4 points : source, coin, coin, cible). Un segment milieu
+ * diagonal (flux droit/courbe simple) ne compte pas comme coude.
+ */
+const hasOrthogonalTurn = (points: Array<{ x: number, y: number }>): boolean => {
+  const tol = 1 // px
+  const segAxis = (a: { x: number, y: number }, b: { x: number, y: number }): 'h' | 'v' | 'd' => {
+    const dx = Math.abs(b.x - a.x), dy = Math.abs(b.y - a.y)
+    if (dx <= tol && dy <= tol) return 'd' // dégénéré
+    if (dy <= tol) return 'h'
+    if (dx <= tol) return 'v'
+    return 'd' // diagonal
+  }
+  let turns = 0
+  for (let i = 1; i < points.length - 1; i++) {
+    const inSeg = segAxis(points[i - 1], points[i])
+    const outSeg = segAxis(points[i], points[i + 1])
+    if ((inSeg === 'h' && outSeg === 'v') || (inSeg === 'v' && outSeg === 'h')) turns++
+  }
+  return turns >= 2
+}
+
 /** nodePadding minimal (le plus profond) parmi les `<port>` d'un process/place.
  *  Les `<port>` sont des enfants DIRECTS du `<process>`/`<place>` (pas de wrapper
  *  `<ports>` — vérifié sur le corpus e!Sankey 5). */
@@ -474,6 +522,14 @@ const isNearWhiteFill = (hex?: string | null): boolean => {
   const n = parseInt(m[1], 16)
   return ((n >> 16) & 0xff) >= 0xf0 && ((n >> 8) & 0xff) >= 0xf0 && (n & 0xff) >= 0xf0
 }
+
+/** Un `<process>`/`<place>` porte un trait VISIBLE : largeur > 0 et couleur non
+ *  quasi-blanche. Une boîte au fond quasi-blanc n'est une ANCRE invisible (cf.
+ *  isNearWhiteFill) que si elle n'a PAS un tel trait : e!Sankey dessine des
+ *  process au fond quasi-blanc mais BORDÉS (démo « Depuration de Chlore » : fond
+ *  #F0F0F8, trait noir 3px), qui sont de vrais nœuds à conserver, pas des ancres. */
+const hasVisibleBorder = (g: EsGraphicalProcess | null): boolean =>
+  !!g && g.borderWidth > 0 && !!g.borderColor && !isNearWhiteFill(g.borderColor)
 
 /** Mise en forme du label de NOM d'un `<process>`/`<place>` : gras/italique/taille
  *  depuis son `<label><font>`, couleur depuis `<label>/@textColor`. Commun aux deux
@@ -521,7 +577,13 @@ const parseGraphicalProcesses = (net: Element, palette: EsBrushPalette): { [id: 
       color: resolveBrushColorHex(p, palette),
       labelText: (label?.getAttribute('text') ?? '').replace(/\r?\n/g, ' ').trim(),
       labelHasPos: !!label && label.hasAttribute('locationX'),
-      labelX: attrNum(label, 'locationX', 0),
+      // opensankey#1301 — bord GAUCHE réel du label = connectionPointX + offsetX
+      // (offset depuis le point d'accroche au nœud). `locationX` est TANTÔT le coin
+      // gauche TANTÔT le centre selon les fichiers (même alignment), donc peu fiable ;
+      // connectionPointX + offsetX donne systématiquement le bord gauche. Repli locationX.
+      labelX: (label?.hasAttribute('connectionPointX') && label?.hasAttribute('offsetX'))
+        ? attrNum(label, 'connectionPointX', 0) + attrNum(label, 'offsetX', 0)
+        : attrNum(label, 'locationX', 0),
       labelY: attrNum(label, 'locationY', 0),
       labelW: attrNum(label, 'sizeW', 0),
       labelH: attrNum(label, 'sizeH', 0),
@@ -561,7 +623,13 @@ const parseGraphicalPlaces = (net: Element, palette: EsBrushPalette): { [id: str
       color: resolveBrushColorHex(p, palette),
       labelText: (label?.getAttribute('text') ?? '').replace(/\r?\n/g, ' ').trim(),
       labelHasPos: !!label && label.hasAttribute('locationX'),
-      labelX: attrNum(label, 'locationX', 0),
+      // opensankey#1301 — bord GAUCHE réel du label = connectionPointX + offsetX
+      // (offset depuis le point d'accroche au nœud). `locationX` est TANTÔT le coin
+      // gauche TANTÔT le centre selon les fichiers (même alignment), donc peu fiable ;
+      // connectionPointX + offsetX donne systématiquement le bord gauche. Repli locationX.
+      labelX: (label?.hasAttribute('connectionPointX') && label?.hasAttribute('offsetX'))
+        ? attrNum(label, 'connectionPointX', 0) + attrNum(label, 'offsetX', 0)
+        : attrNum(label, 'locationX', 0),
       labelY: attrNum(label, 'locationY', 0),
       labelW: attrNum(label, 'sizeW', 0),
       labelH: attrNum(label, 'sizeH', 0),
@@ -842,6 +910,13 @@ interface EsGraphicalArrow {
   orthogonal: boolean
   /** `adjustingStyle` : mode d'ajustement e!Sankey (repris pour information). */
   adjustingStyle: string
+  /**
+   * opensankey#1301 — polyligne du tracé (`<sankeyLink><points>`), coordonnées
+   * document e!Sankey, SUR le tracé (coudes orthogonaux) : `[ancre source, …coins…,
+   * ancre cible]`. Tous les points INTÉRIEURS (P1..P_{n-2}) deviennent des points de
+   * contrôle. Vide si le `<sankeyLink>`/`<points>` est absent.
+   */
+  points: Array<{ x: number, y: number }>
   // os#1289 — têtes de flèche, portées par `sankeyLink` (enfant de `arrow`,
   // indépendant de `sankeyArrowLabel`) : `toArrow`/`fromArrow` = présence
   // d'une pointe à chaque bout (cible / source). `null` = `sankeyLink` absent
@@ -894,6 +969,11 @@ const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } 
     // OS#1290 — le pen du tracé vit sous <sankeyLink>, pas directement sous
     // <arrow> (qui ne porte qu'un <penColor> de repli, non pointillable).
     const pen = sankeyLink ? childByTag(sankeyLink, 'pen') : null
+    // opensankey#1301 — polyligne du tracé (<sankeyLink><points><value X Y>).
+    const pointsEl = sankeyLink ? childByTag(sankeyLink, 'points') : null
+    const linkPoints = pointsEl
+      ? childrenByTag(pointsEl, 'value').map(v => ({ x: attrNum(v, 'X', 0), y: attrNum(v, 'Y', 0) }))
+      : []
     out[a.getAttribute('id') ?? ''] = {
       tooltip: (comment?.getAttribute('text') ?? '').replace(/\r\n/g, '\n').trim(),
       labelVisible: label?.getAttribute('visible') !== 'false',
@@ -910,6 +990,7 @@ const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } 
       curviness: attrNum(sankeyLink, 'curviness', 0),
       orthogonal: sankeyLink?.getAttribute('orthogonal') === 'true',
       adjustingStyle: sankeyLink?.getAttribute('adjustingStyle') ?? '',
+      points: linkPoints,
       toArrow,
       toArrowLength,
       fromArrowLength,
@@ -1284,6 +1365,9 @@ export const parseEsankeyXml = (
       output_value: 0,
     }
     if (graphical?.color) nodes[id].local.color = graphical.color
+    // Image de process → nœud-image (résolue tôt : un process à image REMPLACE sa
+    // boîte, e!Sankey n'en dessine alors ni le fond ni la bordure — cf. bloc else).
+    const imgSrc = graphical?.imageFile ? images[imageKey(graphical.imageFile)] : undefined
     // OS#1298 — Taille réelle du nœud depuis la boîte du process (sinon un point).
     // node_width/node_height (clés du JSON 0.9) sont mappées vers
     // shape_min_width/shape_min_height (cf. persistenceLegacyKeyMaps) : elles
@@ -1302,7 +1386,8 @@ export const parseEsankeyXml = (
     // (écart process→flèches) mise à 0/négatif. Un nœud invisible collapse donc à
     // un point, les flux convergent et pointe/encoche s'emboîtent.
     const nodeHidden = (graphical && !graphical.visible) ||
-      (graphical?.visible && !graphical.imageFile && isNearWhiteFill(graphical.color))
+      (graphical?.visible && !graphical.imageFile && isNearWhiteFill(graphical.color) &&
+        !hasVisibleBorder(graphical))
     if (nodeHidden) {
       nodes[id].local.shape_visible = false
       nodes[id].local.shape_border_visible = false
@@ -1336,7 +1421,12 @@ export const parseEsankeyXml = (
       if (graphical && graphical.width > 0) nodes[id].local.node_width = graphical.width
       if (graphical && graphical.height > 0) nodes[id].local.node_height = graphical.height
       applyLinkInset(nodes[id], graphical)
-      applyGraphicalBorder(nodes[id], graphical)
+      // Nœud-image : l'image REMPLACE la boîte — e!Sankey ne trace PAS la bordure du
+      // process (case « Couleur ligne » inactive pour un process à image, cf.
+      // « Energy Balance for a Country »), même si un <penColor> est sérialisé. On
+      // masque donc la bordure ; sinon on applique celle du penColor.
+      if (imgSrc) nodes[id].local.shape_border_visible = false
+      else applyGraphicalBorder(nodes[id], graphical)
     }
     applyNameLabelPos(nodes[id], graphical)
     applyNameLabelFont(nodes[id], graphical)
@@ -1352,8 +1442,8 @@ export const parseEsankeyXml = (
       nodes[id].local.shape = 'ellipse'
     }
     // Image de process → nœud-image (is_image/image_src à la racine du nœud
-    // 0.9, mappés vers icon_is_image/icon_image_src au chargement).
-    const imgSrc = graphical?.imageFile ? images[imageKey(graphical.imageFile)] : undefined
+    // 0.9, mappés vers icon_is_image/icon_image_src au chargement). imgSrc résolu
+    // plus haut (gate de bordure).
     if (imgSrc) {
       nodes[id].is_image = true
       nodes[id].image_src = imgSrc
@@ -1396,10 +1486,16 @@ export const parseEsankeyXml = (
       output_value: 0,
     }
     if (graphical?.color) nodes[id].local.color = graphical.color
+    const imgSrc = graphical?.imageFile ? images[imageKey(graphical.imageFile)] : undefined
     // Idem process : masquer forme ET bordure (shape_border_visible indépendant).
+    // Une boîte quasi-blanche BORDÉE reste un vrai nœud (cf. hasVisibleBorder).
     if ((graphical && !graphical.visible) ||
-        (graphical?.visible && !graphical.imageFile && isNearWhiteFill(graphical.color))) {
+        (graphical?.visible && !graphical.imageFile && isNearWhiteFill(graphical.color) &&
+          !hasVisibleBorder(graphical))) {
       nodes[id].local.shape_visible = false
+      nodes[id].local.shape_border_visible = false
+    } else if (imgSrc) {
+      // Place à image : l'image REMPLACE la boîte, pas de bordure (cf. process).
       nodes[id].local.shape_border_visible = false
     } else {
       applyGraphicalBorder(nodes[id], graphical)
@@ -1410,7 +1506,6 @@ export const parseEsankeyXml = (
     else if (graphical?.shapeType === 2) nodes[id].local.shape = 'ellipse'
     applyNameLabelPos(nodes[id], graphical)
     applyNameLabelFont(nodes[id], graphical)
-    const imgSrc = graphical?.imageFile ? images[imageKey(graphical.imageFile)] : undefined
     if (imgSrc) {
       nodes[id].is_image = true
       nodes[id].image_src = imgSrc
@@ -1482,14 +1577,17 @@ export const parseEsankeyXml = (
     recenterHiddenAnchor(targetId, nodes[sourceId])
     const arrowId = ga.getAttribute('id') ?? ''
     const graphicalArrow = graphicalArrows[edgeMapping[arrowId] ?? ''] ?? null
-    // Orientation OpenSankey depuis l'`arrowDirection` des nœuds source/cible :
-    // axe d'accroche du flux à chaque bout (h = côté, v = haut/bas). Sur les
-    // démos : In = vh, Out = hv, flux principal = hh. Défaut 'hh' → non posé.
+    // Orientation OpenSankey = axe d'accroche du flux à chaque bout (h = côté,
+    // v = haut/bas). opensankey#1301 — SOURCE DE VÉRITÉ = la polyligne du tracé
+    // (direction 1er/dernier segment), repli sur l'heuristique `arrowDirection`.
+    // N'est POSÉE que pour un flux paramétrique (< 5 points, cf. plus bas) ; un flux
+    // ROUTÉ l'ignore (axe/côté dérivent de la route au runtime, cf. NOTE-WAYPOINTS.md).
     const srcProc = graphicalProcesses[nodeMapping[fromRef ?? ''] ?? '']
     const tgtProc = graphicalProcesses[nodeMapping[toRef ?? ''] ?? '']
-    const orientation = (srcProc && tgtProc)
+    const orientationFromArrowDir = (srcProc && tgtProc)
       ? linkAxis(srcProc.arrowDirection) + linkAxis(tgtProc.arrowDirection)
       : 'hh'
+    const orientation = orientationFromPoints(graphicalArrow?.points ?? []) ?? orientationFromArrowDir
     const compartments = childByTag(ga, 'compartments')
     const flows = compartments ? childrenByTag(compartments, 'flow') : []
     flows.forEach(flow => {
@@ -1527,7 +1625,10 @@ export const parseEsankeyXml = (
         usedEntryIds.add(entry.tagId)
         if (entry.color) link.local.color = entry.color
       }
-      if (orientation !== 'hh') link.local.orientation = orientation
+      // Orientation posée UNIQUEMENT pour un flux paramétrique. Un flux routé
+      // (≥ 5 points → waypoints ci-dessous) l'ignore (axe/côté dérivent de la route).
+      const isRouted = hasOrthogonalTurn(graphicalArrow?.points ?? [])
+      if (!isRouted && orientation !== 'hh') link.local.orientation = orientation
       // Label de valeur : MASQUÉ à l'import (décision utilisateur). Chez e!Sankey
       // la quantité appartient à la FLÈCHE (somme de ses matériaux, posée sur un
       // segment) ; la reproduire PAR flux est faux — sur une flèche
@@ -1582,6 +1683,33 @@ export const parseEsankeyXml = (
         link.local.starting_tangeant = isElbow ? 1 : bend
         link.local.ending_tangeant = bend
         link.local.curvature = bend
+        // opensankey#1301 — POINTS DE CONTRÔLE. La polyligne e!Sankey est SUR le tracé :
+        // [ancre source, …coins…, ancre cible]. Le flux est ROUTÉ ssi elle a un COUDE
+        // ORTHOGONAL (hasOrthogonalTurn) — vrai routage (escalier, boucle), même en 4
+        // points ; un flux droit ou courbe simple (segment milieu diagonal) reste
+        // paramétrique. On prend alors TOUS les points intérieurs (P1..P_{n-2}) comme
+        // waypoints (les vrais coins). Coords doc e!Sankey → translatées avec les nœuds.
+        if (isRouted) {
+          link.local.shape_waypoints = graphicalArrow.points
+            .slice(1, graphicalArrow.points.length - 1)
+            .map(p => ({ x: p.x, y: p.y }))
+          link.local.left_horiz_shift = 0.01
+          link.local.right_horiz_shift = 0.01
+        } else if (graphicalArrow.points.length >= 2 && (orientation === 'vv' || orientation === 'hh')) {
+          // Flux DROIT (vv/hh, mêmes axes aux deux bouts) : aligner les ancres sur les
+          // PORTS e!Sankey (P0/dernier point), sinon l'empilement OpenSankey les décentre
+          // (un VV droit penche). RESTREINT aux flux droits : les coudes (vh/hv) et les
+          // multi-flow non droits gardent le comportement paramétrique (pas d'offset,
+          // sinon on les casse — cf. Bus Passengers). Offset = port − coin du nœud le long
+          // du bord (axe transverse au côté). Différence → invariante par la normalisation.
+          const pts = graphicalArrow.points
+          const P0 = pts[0], PN = pts[pts.length - 1]
+          const srcN = nodes[sourceId], tgtN = nodes[targetId]
+          // Clé PRÉFIXÉE (shape_*), comme shape_waypoints : la persistance générique
+          // ne lit que les clés du config, toutes préfixées 'shape'.
+          if (srcN) link.local.shape_source_anchor_offset = (orientation[0] === 'v') ? (P0.x - srcN.x) : (P0.y - srcN.y)
+          if (tgtN) link.local.shape_target_anchor_offset = (orientation[1] === 'v') ? (PN.x - tgtN.x) : (PN.y - tgtN.y)
+        }
       }
       // os#1289 — têtes de flux e!Sankey (sankeyLink/@toArrow et @fromArrow) :
       //  - @toArrow (côté CIBLE) → pointe classique qui RESSORT (shape_is_arrow,
@@ -1721,6 +1849,14 @@ export const parseEsankeyXml = (
     nodeList.forEach(n => { n.x += dx; n.y += dy })
     containerList.forEach(c => { c.x = (c.x as number) + dx; c.y = (c.y as number) + dy })
     if (legendPos) { legendPos.x += dx; legendPos.y += dy }
+    // opensankey#1301 — les points de contrôle des flux sont en coordonnées MONDE
+    // (même repère que les nœuds) → translater du même dx/dy.
+    Object.values(links).forEach(l => {
+      const wps = l.local.shape_waypoints
+      if (Array.isArray(wps)) {
+        l.local.shape_waypoints = wps.map(p => ({ x: p.x + dx, y: p.y + dy }))
+      }
+    })
   }
 
   // (Échelle globale `userScale` déjà calculée plus haut, avant les flux — A5.)

@@ -111,12 +111,35 @@ export class Class_ContainerElement extends Class_NodeBase {
     this.drawShape()
   }
 
-  // OS#1254 — une zone ATTACHÉE à un cadre géométrique forme un BLOC avec lui :
-  // son drag déplace le cadre le plus englobant et tout son contenu. Pour la
-  // déplacer seule, il faut d'abord la désolidariser du cadre (ce qui, pour la
-  // légende, casse la mise en forme générée). Le drag lui-même ne casse rien.
+  // OS#1254/#1259 — une zone ATTACHÉE à un cadre géométrique forme un BLOC avec
+  // lui : par défaut, son drag déplace le cadre le plus englobant et tout son
+  // contenu (déplacer le groupe entier).
+  // EXCEPTION #1259 : si CE membre est explicitement sélectionné (on est « entré »
+  // dans le groupe par clics successifs) et n'est pas lui-même un cadre, son drag
+  // le déplace SEUL à l'intérieur du groupe ; les cadres englobants s'agrandissent
+  // EN DIRECT pour continuer à le contenir. Sans devoir le désolidariser.
   protected eventMouseDrag(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     if (this.drawing_area.isInSelectionMode()) {
+      // Membre saisi seul (entré dans le groupe) -> déplacement individuel.
+      if (this.is_selected && !this.tied_to_nodes) {
+        super.eventMouseDrag(event)
+        // Agrandissement LIVE des cadres englobants (y compris emboîtés) pendant
+        // le déplacement : la taille d'un cadre tied = max(min, enveloppe des
+        // membres), donc un simple redraw le fait grandir vers la droite/bas ;
+        // expandToContainAttachedNodes déplace le coin quand le membre sort en
+        // haut/à gauche. Sans ça, le cadre ne suivait qu'au relâcher (dragEnd).
+        const growEnclosing = (el: Class_NodeBase, seen: Set<Class_NodeBase>) => {
+          el.attached_container.forEach(frame => {
+            if (!frame.tied_to_nodes || seen.has(frame)) return
+            seen.add(frame)
+            frame.growFrameToContainMembers()
+            frame.draw()
+            growEnclosing(frame, seen)
+          })
+        }
+        growEnclosing(this, new Set<Class_NodeBase>([this]))
+        return
+      }
       const parent_frame = this.attached_container.find(c => c.tied_to_nodes)
       if (parent_frame) {
         // Remonte au cadre le plus englobant (blocs emboîtés de la légende)

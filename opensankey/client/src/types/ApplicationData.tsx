@@ -957,6 +957,15 @@ export class Class_ApplicationData {
       // C'était déjà le cas avant : le garde `to_recenter` de recenter() n'était armé
       // au chargement que par la migration legacy ; l'appel est juste devenu explicite.
       this._drawing_area.normalizeLegacyWorldCoordinates()
+      // #680 — Re-cadrage DIFFÉRÉ du mode actif après le chargement : le premier fit
+      // (draw ci-dessus) tourne avant que la barre du bas (frise de séquence) et la légende
+      // soient mesurées → window_fitting_* périmé, bas du diagramme masqué. On ré-applique le
+      // mode une fois la mise en page stabilisée (débouncé). No-op si mode 'none'.
+      this._drawing_area.application_data._add_waiting_process(
+        'autofit_mode_after_load',
+        () => this._drawing_area.applyAutoFitMode(false),
+        200
+      )
     }
     // })
   }
@@ -1128,6 +1137,23 @@ export class Class_ApplicationData {
   public updateFromJSON(json_object: Type_JSON, kwargs?: Type_JSON) {
     this._updateFromJSON(json_object, kwargs)
     this._menu_configuration!.updateAllMenuComponents()
+  }
+
+  /**
+   * Renvoie le JSON de mise en page à réappliquer pour une vue donnée, extrait
+   * d'un `current_json` produit par `toJSON()`. OS de base n'a pas de vues : on
+   * retombe sur l'entrée brute `['views'][view_id]` (ou le json complet).
+   *
+   * ATTENTION (OSP) : `_toJSON` encode les vues en DELTA (`__patch`, cf. #254),
+   * ce qui RETIRE de l'entrée de vue les clés identiques au master — dont
+   * `version`/`format_version`. Réappliquer telle quelle une entrée delta ferait
+   * croire à `fromJSON` qu'il s'agit d'un fichier pré-0.9 et déclencherait le
+   * convertisseur legacy (crash `convert_tags`). OSP surcharge donc cette méthode
+   * pour renvoyer le snapshot COMPLET décodé de la vue.
+   */
+  public getViewLayoutJSON(view_id: string, current_json: Type_JSON): Type_JSON {
+    const views = current_json['views'] as Type_JSON | undefined
+    return (views?.[view_id] as Type_JSON | undefined) ?? current_json
   }
 
   /**

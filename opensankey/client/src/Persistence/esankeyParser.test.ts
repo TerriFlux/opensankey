@@ -588,6 +588,67 @@ describe('parseEsankeyXml — coude droit (OS#1288)', () => {
   })
 })
 
+describe('parseEsankeyXml — points de contrôle (opensankey#1301)', () => {
+  // Le <sankeyLink><points> porte la polyligne du tracé, SUR le tracé :
+  // [ancre source, …coins…, ancre cible]. n ≥ 5 → tous les points intérieurs
+  // (P1..P_{n-2}) deviennent des waypoints, segments d'attache collapsés.
+  // Nœuds FIXTURE : A(100,300) source, B(400,320) cible.
+  const withPoints = (pointsXml: string): string => FIXTURE
+    .replace('<arrow id="60">',
+      '<arrow id="60"><sankeyLink sankeyStartSegmentLength="50" sankeyEndSegmentLength="50" curviness="10">'
+      + pointsXml + '</sankeyLink>')
+
+  test('5 points → 3 waypoints (escalier), translatés avec le nœud, attaches collapsées', () => {
+    // Escalier : A(100,300) → (150,300) → (150,200) → (350,200) → B(400,320).
+    const d = parseEsankeyXml(withPoints(
+      '<points length="5">'
+      + '<value X="100" Y="300" /><value X="150" Y="300" /><value X="150" Y="200" />'
+      + '<value X="350" Y="200" /><value X="400" Y="320" /></points>'))
+    const link = Object.values(d.links)[0]
+    const wps = link.local.shape_waypoints as Array<{ x: number, y: number }>
+    expect(Array.isArray(wps)).toBe(true)
+    expect(wps.length).toBe(3)
+    // Escalier préservé (invariant par translation) : P1→P2 vertical, P2→P3 horizontal.
+    expect(wps[0].x).toBeCloseTo(wps[1].x, 6)
+    expect(wps[1].y).toBeCloseTo(wps[2].y, 6)
+    // Translation COHÉRENTE avec les nœuds : P1(150,300) est à +50 en x du nœud
+    // source A(100,300) ; après le même dx/dy, l'écart reste (+50, 0).
+    const src = d.nodes[link.idSource]
+    expect(wps[0].x - src.x).toBeCloseTo(50, 6)
+    expect(wps[0].y - src.y).toBeCloseTo(0, 6)
+    // Segments d'attache collapsés (les vrais coins sont les waypoints).
+    expect(link.local.left_horiz_shift).toBe(0.01)
+    expect(link.local.right_horiz_shift).toBe(0.01)
+    // Flux ROUTÉ (opensankey#1301) : l'orientation n'est PAS posée — axe et côté
+    // dérivent de la route au runtime (is_routed), pas de shape_orientation.
+    expect(link.local.orientation).toBeUndefined()
+  })
+
+  test('4 points, segment milieu DIAGONAL (flux simple) → aucun waypoint (paramétrique)', () => {
+    // Pas de coude orthogonal (le milieu (150,300)→(350,320) est diagonal).
+    const d = parseEsankeyXml(withPoints(
+      '<points length="4">'
+      + '<value X="100" Y="300" /><value X="150" Y="300" />'
+      + '<value X="350" Y="320" /><value X="400" Y="320" /></points>'))
+    const link = Object.values(d.links)[0]
+    expect(link.local.shape_waypoints).toBeUndefined()
+  })
+
+  test('4 points, COUDE ORTHOGONAL (H-V-H) → 2 waypoints (routé même en 4 points)', () => {
+    // Boucle e!Sankey type HCl→neutralisation : droite, descendre, gauche.
+    const d = parseEsankeyXml(withPoints(
+      '<points length="4">'
+      + '<value X="100" Y="300" /><value X="150" Y="300" />'
+      + '<value X="150" Y="200" /><value X="100" Y="200" /></points>'))
+    const link = Object.values(d.links)[0]
+    const wps = link.local.shape_waypoints as Array<{ x: number, y: number }>
+    expect(Array.isArray(wps)).toBe(true)
+    expect(wps.length).toBe(2)
+    // Coude : P1→P2 vertical (même x).
+    expect(wps[0].x).toBeCloseTo(wps[1].x, 6)
+  })
+})
+
 describe('parseEsankeyXml — SA#294 : ancre masquée recalée (accroche verticale)', () => {
   // Une ancre In/Out invisible (process visible="false" avec une boîte) est
   // collapsée en point. Pour un voisin AU-DESSUS/DESSOUS (accroche verticale),
@@ -627,6 +688,39 @@ describe('parseEsankeyXml — SA#294 : ancre masquée recalée (accroche vertica
 })
 
 
+describe('parseEsankeyXml — process quasi-blanc BORDÉ reste visible (Depuration de Chlore)', () => {
+  // Régression : e!Sankey dessine des process au fond quasi-blanc mais BORDÉS
+  // (démo « Depuration de Chlore » : fond #F0F0F8, trait noir 3px). L'heuristique
+  // d'ancre invisible (isNearWhiteFill) les masquait à tort — ils doivent rester
+  // de vrais nœuds, visibles et bordés.
+  // brushColor -1057951496 = 0xC0F0F0F8 → RGB #F0F0F8 (quasi-blanc, alpha ignoré).
+  const NEAR_WHITE = '<brushColor argb="-1057951496" />'
+
+  test('fond quasi-blanc + <penColor width 3> → nœud visible + bordure posée', () => {
+    // Source A (id 50) : fond quasi-blanc, garde son penColor noir width 3.
+    const xml = FIXTURE.replace('<brushColor argb="-1073774768" />', NEAR_WHITE)
+    const d = parseEsankeyXml(xml)
+    const a = Object.values(d.nodes).find(n => n.name === 'Source A')
+    expect(a?.local.shape_visible).not.toBe(false) // pas masqué en ancre
+    expect(a?.local.color).toBe('#F0F0F8')
+    expect(a?.local.shape_border_visible).toBe(true)
+    expect(a?.local.shape_border_thickness).toBe(3)
+    expect(a?.local.shape_border_color).toBe('#000000')
+  })
+
+  test('fond quasi-blanc SANS bordure (width 0) → toujours masqué (ancre)', () => {
+    const xml = FIXTURE
+      .replace('<brushColor argb="-1073774768" />', NEAR_WHITE)
+      .replace('<penColor name="Black" argb="-16777216" hasPattern="true" Pattern="0" width="3" />',
+        '<penColor name="Black" argb="-16777216" hasPattern="false" width="0" />')
+    const d = parseEsankeyXml(xml)
+    const a = Object.values(d.nodes).find(n => n.name === 'Source A')
+    expect(a?.local.shape_visible).toBe(false)
+    expect(a?.local.shape_border_visible).toBe(false)
+  })
+})
+
+
 describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)', () => {
   const d = parseEsankeyXml(FIXTURE_DECOR, { 'Images/tmp1.tmp': PNG_URI })
 
@@ -636,6 +730,32 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     expect(source?.local.shape_visible).toBe(false)
     expect(puits?.is_image).toBe(true)
     expect(puits?.image_src).toBe(PNG_URI)
+  })
+
+  // Régression « Energy Balance for a Country » : un process à IMAGE ne doit PAS
+  // porter de bordure — l'image remplace la boîte, e!Sankey ne trace pas le
+  // penColor sérialisé (case « Couleur ligne » inactive pour un process à image).
+  test('process-image avec <penColor> → bordure masquée (l\'image remplace la boîte)', () => {
+    // On injecte un penColor épais dans le process image « Puits » (id 51).
+    const withPen = FIXTURE_DECOR.replace(
+      '<image filename="Images\\tmp1.tmp" />\n        <label text="Puits" />',
+      '<image filename="Images\\tmp1.tmp" />\n        <penColor name="Black" argb="-16777216" width="2" />\n        <label text="Puits" />')
+    const dp = parseEsankeyXml(withPen, { 'Images/tmp1.tmp': PNG_URI })
+    const puits = Object.values(dp.nodes).find(n => n.name === 'Puits')
+    expect(puits?.is_image).toBe(true)
+    expect(puits?.local.shape_border_visible).toBe(false)
+  })
+
+  test('même process SANS image mais avec <penColor> → bordure visible (vraie boîte)', () => {
+    // Contraste : sans image, le penColor doit bien produire une bordure.
+    const noImg = FIXTURE_DECOR.replace(
+      '<image filename="Images\\tmp1.tmp" />\n        <label text="Puits" />',
+      '<penColor name="Black" argb="-16777216" width="2" />\n        <label text="Puits" />')
+    const dn = parseEsankeyXml(noImg) // pas d'image fournie
+    const puits = Object.values(dn.nodes).find(n => n.name === 'Puits')
+    expect(puits?.is_image).toBeUndefined()
+    expect(puits?.local.shape_border_visible).toBe(true)
+    expect(puits?.local.shape_border_thickness).toBe(2)
   })
 
   test('commentaire de flèche → tooltip du flux (via le mapping edges)', () => {

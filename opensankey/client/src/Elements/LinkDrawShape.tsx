@@ -63,6 +63,16 @@ const SIMPLE_OUTLINE_MAX_SLOPE = 0.2
  */
 const EXACT_OUTLINE_SAMPLES = 25
 
+/**
+ * Incertitude (OS#189) — facteurs d'opacité des tracés superposés min/moyenne/max.
+ * Le halo `max` (le plus large) est le plus transparent ; le cœur `min` (le plus
+ * fin) est le plus opaque, de sorte que l'épaisseur « certaine » ressort en plein
+ * et la fourchette possible apparaît en dégradé. Multipliés par l'opacité de base
+ * du flux, puis bornés à 1.
+ */
+const UNCERTAINTY_MAX_OPACITY_FACTOR = 0.35
+const UNCERTAINTY_MIN_OPACITY_FACTOR = 1.6
+
 /** Point d'une Bézier quadratique (p0, contrôle c, p1) au paramètre t */
 function quadBezierPoint(t: number, p0: number[], c: number[], p1: number[]): number[] {
   const u = 1 - t
@@ -122,6 +132,7 @@ export class LinkDrawShape {
     this._link.d3_selection?.selectAll('.link_shape').remove()
     this._link.d3_selection?.selectAll('.link_band').remove()
     this._link.d3_selection?.selectAll('.link_band_label').remove()
+    this._link.d3_selection?.selectAll('.link_uncertainty_band').remove()
 
     // Failsafe
     if (this._link.source && this._link.target) {
@@ -168,17 +179,31 @@ export class LinkDrawShape {
       // Le cadenas (shape_show_as_path_locked) force le trait en ignorant la géométrie.
       // isTapered reste un verrou dur : un stroke d'épaisseur uniforme ne peut pas
       // représenter une épaisseur variable, donc un flux tapered est toujours en forme.
-      const show_as_path = !this._link.isTapered && (
+      // opensankey#1301 — points de contrôle libres : toujours en trait épais
+      // (la géométrie de contour paramétrique ne s'applique pas), même tapered.
+      const has_waypoints = this.hasWaypoints()
+      const show_as_path = has_waypoints || (!this._link.isTapered && (
         this._link.shape_show_as_path_locked ||
         show_as_dash ||
         this._link.shape_is_recycling ||
         geometry_allows_path
-      )
+      ))
 
       // Show as full shape for specific shapes
       const is_outline_shape_type = this._link.shape_type === 'bezier_outline' || this._link.shape_type === 'bezier_outline_exact'
       if (!show_as_path && !is_outline_shape_type && this._link.shape_orientation != 'vh' && this._link.shape_orientation != 'hv') {
         const shape = this.getBezierPath(true)
+
+        // Incertitude (OS#189) — halo MAX régénéré en forme pleine, DERRIÈRE.
+        const unc_shape = this._link.uncertaintyBandsPx
+        if (unc_shape && unc_shape.meanPx > 0 && unc_shape.maxPx > unc_shape.meanPx) {
+          this.appendUncertaintyFilledBand(
+            this.uncertaintyScaledOutline(true, unc_shape.maxPx / unc_shape.meanPx),
+            shape_color,
+            Math.min(1, shape_opacity * UNCERTAINTY_MAX_OPACITY_FACTOR)
+          )
+        }
+
         this._link.d3_selection?.append('path')
           .classed('link', true)
           .classed('link_shape', true)
@@ -192,8 +217,20 @@ export class LinkDrawShape {
           .attr('stroke', 'none')
           .attr('stroke-opacity', '0')
           .attr('stroke-width', '0')
+
+        // Incertitude (OS#189) — cœur MIN régénéré en forme pleine, DEVANT.
+        if (unc_shape && unc_shape.meanPx > 0 && unc_shape.minPx < unc_shape.meanPx) {
+          this.appendUncertaintyFilledBand(
+            this.uncertaintyScaledOutline(true, unc_shape.minPx / unc_shape.meanPx),
+            shape_color,
+            Math.min(1, shape_opacity * UNCERTAINTY_MIN_OPACITY_FACTOR)
+          )
+        }
       }
       else {
+        // opensankey#1301 — les waypoints ne changent PAS le mode de rendu : le
+        // shape_type décide toujours (trait / contour / contour exact). getBezierPath
+        // renvoie la médiane routée ou son contour selon is_outline.
         const bezier_outline = is_outline_shape_type || (this._link.shape_border_visible && !this._link.linkIsStructure()) || this._link.isTapered
         // vh/hv links share the control-point-driven path of hh/vv so their curve
         // and tangent handles are correctly positioned and the curvature editable.
@@ -222,8 +259,40 @@ export class LinkDrawShape {
             .attr('stroke', border_color)
             .attr('stroke-width', border_stroke_width)
             .attr('stroke-opacity', 1)
+            .attr('stroke-linejoin', has_waypoints ? 'round' : null)
+            .attr('stroke-linecap', has_waypoints ? 'butt' : null)
             .attr('stroke-dasharray', border_dashed ? '10,2' : '')
             .attr('pointer-events', 'none')
+        }
+
+        // =================== INCERTITUDE (OS#189) ===================
+        // Tracés superposés min/moyenne/max : le halo `max` (large, transparent)
+        // est posé DERRIÈRE le path principal ; le cœur `min` (fin, opaque) est
+        // posé DEVANT. En mode TRAIT, on rejoue le même path à des stroke-width
+        // différents ; en mode FORME PLEINE, on régénère le contour à une épaisseur
+        // mise à l'échelle (uncertaintyScaledOutline).
+        const uncertainty_bands = this._link.uncertaintyBandsPx
+
+        // Halo MAX — derrière le path principal
+        if (uncertainty_bands && uncertainty_bands.meanPx > 0 && uncertainty_bands.maxPx > uncertainty_bands.meanPx) {
+          if (is_stroke) {
+            this._link.d3_selection?.append('path')
+              .classed('link', true)
+              .classed('link_uncertainty_band', true)
+              .attr('d', path)
+              .attr('fill', 'none')
+              .attr('stroke', shape_color)
+              .attr('stroke-width', uncertainty_bands.maxPx)
+              .attr('stroke-opacity', Math.min(1, shape_opacity * UNCERTAINTY_MAX_OPACITY_FACTOR))
+              .attr('stroke-dasharray', show_as_dash ? '10,2' : '')
+              .attr('pointer-events', 'none')
+          } else {
+            this.appendUncertaintyFilledBand(
+              this.uncertaintyScaledOutline(bezier_outline, uncertainty_bands.maxPx / uncertainty_bands.meanPx),
+              shape_color,
+              Math.min(1, shape_opacity * UNCERTAINTY_MAX_OPACITY_FACTOR)
+            )
+          }
         }
 
         // =================== PATH PRINCIPAL ===================
@@ -239,8 +308,32 @@ export class LinkDrawShape {
           .attr('stroke', is_stroke ? shape_color : 'none')
           .attr('stroke-opacity', is_stroke ? shape_opacity : '0')
           .attr('stroke-width', is_stroke ? thickness : '0')
+          .attr('stroke-linejoin', has_waypoints ? 'round' : null)
+          .attr('stroke-linecap', has_waypoints ? 'butt' : null)
           .attr('stroke-dasharray', show_as_dash ? '10,2' : '')
           .attr('filter', this._link.shape_shadow_visible ? 'url(#os_drop_shadow)' : null)
+
+        // Cœur MIN — devant le path principal
+        if (uncertainty_bands && uncertainty_bands.meanPx > 0 && uncertainty_bands.minPx < uncertainty_bands.meanPx) {
+          if (is_stroke) {
+            this._link.d3_selection?.append('path')
+              .classed('link', true)
+              .classed('link_uncertainty_band', true)
+              .attr('d', path)
+              .attr('fill', 'none')
+              .attr('stroke', shape_color)
+              .attr('stroke-width', uncertainty_bands.minPx)
+              .attr('stroke-opacity', Math.min(1, shape_opacity * UNCERTAINTY_MIN_OPACITY_FACTOR))
+              .attr('stroke-dasharray', show_as_dash ? '10,2' : '')
+              .attr('pointer-events', 'none')
+          } else {
+            this.appendUncertaintyFilledBand(
+              this.uncertaintyScaledOutline(bezier_outline, uncertainty_bands.minPx / uncertainty_bands.meanPx),
+              shape_color,
+              Math.min(1, shape_opacity * UNCERTAINTY_MIN_OPACITY_FACTOR)
+            )
+          }
+        }
 
         if (!is_stroke) {
           this._link.d3_selection?.selectAll('.link_path')
@@ -248,7 +341,6 @@ export class LinkDrawShape {
             .attr('dasharray', show_as_dash ? '10,2' : '')
         }
       }
-
       // #285 — bandes internes : les valeurs coordonnées visibles subdivisent
       // l'épaisseur du flux. Quand elles couvrent le flux, le tracé principal
       // devient INVISIBLE (opacité 0) mais reste en place : c'est lui qui porte
@@ -262,6 +354,10 @@ export class LinkDrawShape {
         this._link.d3_selection?.selectAll('.link_shape')
           .attr('opacity', 0)
       }
+      // opensankey#1301 — Alt+clic pour insérer un point de contrôle : branché à
+      // CHAQUE dessin du flux (pas seulement à la sélection), pour qu'un Alt+clic
+      // sur un flux non sélectionné le sélectionne ET ajoute le point d'un coup.
+      this._link_control_points.bindWaypointInsertion()
     }
   }
 
@@ -426,6 +522,35 @@ export class LinkDrawShape {
     return true
   }
 
+  /**
+   * OS#189 — régénère le contour PLEIN du flux à une épaisseur mise à l'échelle
+   * (scale × épaisseur nominale). Pose un override d'échelle sur le lien le temps
+   * du getBezierPath (qui lit thickness/thicknessSource/thicknessTarget), puis le
+   * retire aussitôt. Réutilise donc toute la géométrie de contour existante.
+   */
+  private uncertaintyScaledOutline(is_outline: boolean, scale: number): string {
+    this._link.setUncertaintyThicknessScale(scale)
+    const d = this.getBezierPath(is_outline)
+    this._link.setUncertaintyThicknessScale(null)
+    return d
+  }
+
+  /**
+   * OS#189 — append une bande d'incertitude en forme pleine (fill, sans stroke,
+   * non interactive). Classe dédiée `link_uncertainty_band` (nettoyée en tête de
+   * drawShape).
+   */
+  private appendUncertaintyFilledBand(d: string, color: string, opacity: number) {
+    this._link.d3_selection?.append('path')
+      .classed('link', true)
+      .classed('link_uncertainty_band', true)
+      .attr('d', d)
+      .attr('fill', color)
+      .attr('stroke', 'none')
+      .attr('fill-opacity', opacity)
+      .attr('pointer-events', 'none')
+  }
+
   // PATH GENERATION METHODS ============================================================
 
   /**
@@ -435,6 +560,10 @@ export class LinkDrawShape {
    * @return {string}
    */
   public getLinesPath(): string {
+    // opensankey#1301 — points de contrôle libres : simple trait le long de la médiane.
+    if (this.hasWaypoints()) {
+      return this.getWaypointStroke()
+    }
     // Security
     if (this._link.shape_is_curved) {
       return this.getBezierPath(false)
@@ -562,6 +691,160 @@ export class LinkDrawShape {
         + ' L ' + xf + ',' + yf
       return path
     }
+  }
+
+  // WAYPOINTS (points de contrôle libres, opensankey#1301) ===========================
+
+  /**
+   * Le flux a-t-il des points de contrôle libres à honorer ? Ignorés en mode
+   * recyclage (géométrie de boucle dédiée).
+   */
+  public hasWaypoints(): boolean {
+    const wp = this._link.shape_waypoints
+    return !this._link.shape_is_recycling && Array.isArray(wp) && wp.length > 0
+  }
+
+  /**
+   * Ligne médiane ÉCHANTILLONNÉE (polyligne dense) passant par les points de contrôle,
+   * modèle e!Sankey : segment droit d'attache source → poignée de courbure début (p1),
+   * segments droits entre les points avec un COIN ARRONDI à chaque sommet (rayon dérivé
+   * de shape_curvature, borné à la demi-longueur du plus court segment adjacent →
+   * jamais de débordement), segment droit de sortie p5 → cible. Coins vifs si
+   * shape_is_curved est faux. Cette médiane unique alimente les 3 rendus (trait /
+   * contour / contour exact) via getWaypointStroke et getWaypointOutline.
+   * @return {Array<[number, number]>}
+   */
+  private getRoutedCenterline(): Array<[number, number]> {
+    // Positions à jour des poignées de courbure (segments d'attache).
+    this._link_control_points.computeControlPoints()
+    const cp = this._link_control_points_internal.controlPoints
+    const src: [number, number] = [this._link.position_x_start, this._link.position_y_start]
+    const tgt: [number, number] = [this._link.position_x_end, this._link.position_y_end]
+    const p1: [number, number] = [cp.starting_curve_point.position_x, cp.starting_curve_point.position_y]
+    const p5: [number, number] = [cp.ending_curve_point.position_x, cp.ending_curve_point.position_y]
+    const wps = this._link.shape_waypoints.map(p => [p.x, p.y] as [number, number])
+    void p1; void p5 // attaches paramétriques inutilisées en régime routé (cf. coudes)
+
+    // Chaîne de sommets : source, waypoints, cible.
+    const chain: Array<[number, number]> = [src, ...wps, tgt]
+    // Coudes orthogonaux aux extrémités : le segment de SORTIE (source) et d'ENTRÉE
+    // (cible) doit suivre l'axe d'accroche (e!Sankey est orthogonal ; nos ancres ne
+    // coïncident pas avec les ports e!Sankey → sinon une diagonale part vers le 1er
+    // waypoint). Coude côté source si sortie horizontale : (wp0.x, src.y) ; si sortie
+    // verticale : (src.x, wp0.y). Symétrique côté cible. Inséré seulement si utile.
+    if (chain.length >= 3) {
+      const first = chain[1]
+      if (this._link.is_source_horizontal) {
+        if (Math.abs(first[1] - src[1]) > 1e-3) chain.splice(1, 0, [first[0], src[1]])
+      } else {
+        if (Math.abs(first[0] - src[0]) > 1e-3) chain.splice(1, 0, [src[0], first[1]])
+      }
+      const last = chain[chain.length - 2]
+      if (this._link.is_target_horizontal) {
+        if (Math.abs(last[1] - tgt[1]) > 1e-3) chain.splice(chain.length - 1, 0, [last[0], tgt[1]])
+      } else {
+        if (Math.abs(last[0] - tgt[0]) > 1e-3) chain.splice(chain.length - 1, 0, [tgt[0], last[1]])
+      }
+    }
+    // Dédupliquer les sommets confondus (évite des normales/directions NaN).
+    const V: Array<[number, number]> = [chain[0]]
+    for (let i = 1; i < chain.length; i++) {
+      const a = V[V.length - 1], b = chain[i]
+      if (Math.hypot(b[0] - a[0], b[1] - a[1]) > 1e-6) V.push(b)
+    }
+    if (V.length <= 2) return V
+
+    const factor = this._link.shape_is_curved
+      ? Math.max(0, Math.min(0.5, this._link.shape_curvature))
+      : 0
+    const K = 8 // échantillons par coin arrondi
+    const out: Array<[number, number]> = [V[0]]
+    for (let i = 1; i < V.length - 1; i++) {
+      const A = V[i - 1], Vv = V[i], B = V[i + 1]
+      const inx = Vv[0] - A[0], iny = Vv[1] - A[1]
+      const li = Math.hypot(inx, iny) || 1
+      const ox = B[0] - Vv[0], oy = B[1] - Vv[1]
+      const lo = Math.hypot(ox, oy) || 1
+      const r = factor > 0 ? Math.min(factor * Math.min(li, lo), 0.5 * Math.min(li, lo)) : 0
+      if (r < 1e-3) { out.push(Vv); continue }
+      const dinx = inx / li, diny = iny / li
+      const donx = ox / lo, dony = oy / lo
+      const T1: [number, number] = [Vv[0] - dinx * r, Vv[1] - diny * r]
+      const T2: [number, number] = [Vv[0] + donx * r, Vv[1] + dony * r]
+      // Congé = quadratique de Bézier T1 → Vv → T2 (visuellement identique à un arc).
+      out.push(T1)
+      for (let k = 1; k < K; k++) {
+        const t = k / K, mt = 1 - t
+        out.push([
+          mt * mt * T1[0] + 2 * mt * t * Vv[0] + t * t * T2[0],
+          mt * mt * T1[1] + 2 * mt * t * Vv[1] + t * t * T2[1]
+        ])
+      }
+      out.push(T2)
+    }
+    out.push(V[V.length - 1])
+    return out
+  }
+
+  /** Tracé simple trait (stroke) le long de la médiane routée. */
+  public getWaypointStroke(): string {
+    const pts = this.getRoutedCenterline()
+    if (pts.length < 2) return ''
+    let d = 'M ' + pts[0][0] + ',' + pts[0][1]
+    for (let i = 1; i < pts.length; i++) d += ' L ' + pts[i][0] + ',' + pts[i][1]
+    return d
+  }
+
+  /**
+   * Contour fermé (forme pleine) : les deux bords sont décalés de ±½ épaisseur le long
+   * de la médiane routée, épaisseur interpolée source→cible (tapered), normale par
+   * sommet = moyenne des normales de segments adjacents avec compensation de miter
+   * bornée. Alimente les modes contour Bézier / contour exact et la bordure.
+   */
+  public getWaypointOutline(): string {
+    const pts = this.getRoutedCenterline()
+    const n = pts.length
+    if (n < 2) return ''
+    const halfSrc = this._link.thicknessSource / 2
+    const halfTgt = this._link.thicknessTarget / 2
+    // Longueurs cumulées → fraction d'abscisse curviligne pour l'épaisseur tapered.
+    const cum: number[] = [0]
+    for (let i = 1; i < n; i++) {
+      cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]))
+    }
+    const total = cum[n - 1] || 1
+    const segDir = (i: number): [number, number] => {
+      const a = pts[i], b = pts[i + 1]
+      const dx = b[0] - a[0], dy = b[1] - a[1]
+      const l = Math.hypot(dx, dy) || 1
+      return [dx / l, dy / l]
+    }
+    const up: Array<[number, number]> = []
+    const low: Array<[number, number]> = []
+    for (let i = 0; i < n; i++) {
+      // Direction moyenne au sommet → normale (perpendiculaire).
+      let dx: number, dy: number
+      if (i === 0) { const s = segDir(0); dx = s[0]; dy = s[1] }
+      else if (i === n - 1) { const s = segDir(n - 2); dx = s[0]; dy = s[1] }
+      else { const s0 = segDir(i - 1), s1 = segDir(i); dx = s0[0] + s1[0]; dy = s0[1] + s1[1] }
+      const l = Math.hypot(dx, dy) || 1
+      const nx = -dy / l, ny = dx / l
+      const half = halfSrc + (halfTgt - halfSrc) * (cum[i] / total)
+      // Compensation miter (offset constant dans un coin), bornée pour éviter les pics.
+      let scale = 1
+      if (i > 0 && i < n - 1) {
+        const s1 = segDir(i)
+        const dot = nx * (-s1[1]) + ny * (s1[0])
+        if (Math.abs(dot) > 1e-3) scale = Math.min(3, 1 / Math.abs(dot))
+      }
+      up.push([pts[i][0] + nx * half * scale, pts[i][1] + ny * half * scale])
+      low.push([pts[i][0] - nx * half * scale, pts[i][1] - ny * half * scale])
+    }
+    let d = 'M ' + up[0][0] + ',' + up[0][1]
+    for (let i = 1; i < n; i++) d += ' L ' + up[i][0] + ',' + up[i][1]
+    for (let i = n - 1; i >= 0; i--) d += ' L ' + low[i][0] + ',' + low[i][1]
+    d += ' Z'
+    return d
   }
 
   /**
@@ -781,6 +1064,11 @@ export class LinkDrawShape {
   }
 
   public getBezierPath(is_outline: boolean): string {
+    // opensankey#1301 — points de contrôle libres : médiane routée (coins arrondis)
+    // partagée par les 3 rendus. is_outline → contour fermé, sinon → simple trait.
+    if (this.hasWaypoints()) {
+      return is_outline ? this.getWaypointOutline() : this.getWaypointStroke()
+    }
     if (!this._link.shape_is_curved) {
       if (is_outline) {
         return this.getLineShape()

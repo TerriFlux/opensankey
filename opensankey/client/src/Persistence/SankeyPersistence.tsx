@@ -48,7 +48,7 @@ import { DEFAULT_THEME_ID, themeFromJSON } from '../types/Theme'
 import { Class_Tag } from '../types/Tag'
 import { node_exchanges_style, elementStyleConfigs, product_sector_styles, ElementStyleKey, LinkStyle, NodeStyle, ContainerStyle, structural_styles } from '../Elements/ElementStyle'
 import { dedupeZOrderKeepFirst } from '../types/zOrder'
-import { Class_DrawingArea } from '../types/DrawingArea'
+import { Class_DrawingArea, Type_AutoFitMode } from '../types/DrawingArea'
 import { backfillTagGroupUseColors, convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
 // Issue #191 — migration de rétro-compat de la césure des libellés, isolée dans
 // son propre module pour rester testable sans le graphe d'imports lourd d'ici.
@@ -1969,13 +1969,10 @@ export class DrawingAreaPersistence {
       json_object['disaggregation_gap_mode'] = drawing_area.disaggregation_gap_mode
     if (drawing_area['_disaggregation_gap_value'] != null)
       json_object['disaggregation_gap_value'] = drawing_area['_disaggregation_gap_value']
-    if (!drawing_area.structure_mode_force_min) json_object['structure_mode_force_min'] = false
-    if (drawing_area.arrow_use_standalone_layout) json_object['arrow_use_standalone_layout'] = true
-    // Pointe accentuée « arrow spikes » (#1270) — sérialisé seulement si non défaut
-    // (défauts : always=false, max_thickness=0, base_factor=2).
-    if (drawing_area.arrow_spike_always) json_object['arrow_spike_always'] = true
-    if (drawing_area.arrow_spike_max_thickness) json_object['arrow_spike_max_thickness'] = drawing_area.arrow_spike_max_thickness
-    if (drawing_area.arrow_spike_base_factor !== 2) json_object['arrow_spike_base_factor'] = drawing_area.arrow_spike_base_factor
+    // OS#1302 — pointe/épaisseur (ex-globales structure_mode_force_min,
+    // arrow_use_standalone_layout, arrow_spike_*) sont désormais des attributs de
+    // flux sérialisés avec les shape_* de chaque flux/style. Plus rien à écrire ici
+    // (les anciennes clés restent lues par fromJSON pour migrer les vieux fichiers).
     // OS#1272 — Marqueur de bilan (réglages globaux). Sérialisés seulement hors défaut.
     if (drawing_area.balance_marker_enabled) json_object['balance_marker_enabled'] = true
     if (drawing_area.balance_marker_strategy !== 'relative') json_object['balance_marker_strategy'] = drawing_area.balance_marker_strategy
@@ -1986,6 +1983,10 @@ export class DrawingAreaPersistence {
     // Verrou de taille (largeur/hauteur/zoom figés au changement de dataTag).
     // Défaut false → sérialisé seulement si activé (absence ⇒ déverrouillé).
     if (drawing_area.size_locked) json_object['size_locked'] = true
+    // #680 — Mode de cadrage automatique (boutons radio d'ajustement). Défaut 'full'
+    // → sérialisé seulement si différent (absence ⇒ 'full' = cadrage à l'ouverture,
+    // comportement historique). 'none' = pas de cadrage auto ; 'width'/'height' = axe forcé.
+    if (drawing_area.auto_fit_mode !== 'full') json_object['auto_fit_mode'] = drawing_area.auto_fit_mode
     // Mode de représentation import/export (proche / haut-bas) : persisté car les nœuds
     // import/export siblings sont régénérés au chargement (cf. SplitIOrE).
     if (drawing_area.import_export_above_below) json_object['import_export_above_below'] = true
@@ -2347,6 +2348,9 @@ export class DrawingAreaPersistence {
     // Verrou de taille : champ direct (le setter size_locked déclenche un re-fit).
     // Absence du flag ⇒ déverrouillé (défaut de la classe).
     drawing_area['_size_locked'] = getBooleanFromJSON(json_object, 'size_locked', false)
+    // #680 — Mode de cadrage auto : champ direct (le setter notifie la barre d'outils).
+    // Absence ⇒ 'full' (défaut de la classe = cadrage à l'ouverture, comportement historique).
+    drawing_area['_auto_fit_mode'] = getStringFromJSON(json_object, 'auto_fit_mode', 'full') as Type_AutoFitMode
     drawing_area['_import_export_above_below'] = getBooleanFromJSON(json_object, 'import_export_above_below', false)
 
     drawing_area.application_data.language = getStringOrUndefinedFromJSON(json_object, 'language')
@@ -2385,12 +2389,26 @@ export class DrawingAreaPersistence {
       getStringFromJSON(json_object, 'disaggregation_gap_mode', 'fill') as Type_DisaggregationGap
     drawing_area['_disaggregation_gap_value'] =
       getNumberOrUndefinedFromJSON(json_object, 'disaggregation_gap_value') ?? null
-    drawing_area['_structure_mode_force_min'] = getBooleanFromJSON(json_object, 'structure_mode_force_min', true)
-    drawing_area['_arrow_use_standalone_layout'] = getBooleanFromJSON(json_object, 'arrow_use_standalone_layout', false)
-    // Pointe accentuée « arrow spikes » (#1270)
-    drawing_area['_arrow_spike_always'] = getBooleanFromJSON(json_object, 'arrow_spike_always', false)
-    drawing_area['_arrow_spike_max_thickness'] = getNumberFromJSON(json_object, 'arrow_spike_max_thickness', 0)
-    drawing_area['_arrow_spike_base_factor'] = getNumberFromJSON(json_object, 'arrow_spike_base_factor', 2)
+    // OS#1302 — les anciennes globales de pointe/épaisseur (structure_mode_force_min,
+    // arrow_use_standalone_layout, arrow_spike_*) sont devenues des attributs de flux
+    // résolus par le style. Migration : si un ancien diagramme porte ces clés au niveau
+    // du drawing_area, on les applique au STYLE DE FLUX PAR DÉFAUT (LinkStyle, base de
+    // la chaîne de style de tout flux — cf. Class_LinkElement) pour préserver le rendu.
+    // Les diagrammes récents portent directement les shape_* par flux/style.
+    const migrated_link_style = drawing_area.sankey.styles_dict[LinkStyle]
+    if (migrated_link_style) {
+      if ('structure_mode_force_min' in json_object)
+        migrated_link_style.shape_structure_force_min = getBooleanFromJSON(json_object, 'structure_mode_force_min', true)
+      if ('arrow_use_standalone_layout' in json_object)
+        migrated_link_style.shape_arrow_standalone = getBooleanFromJSON(json_object, 'arrow_use_standalone_layout', false)
+      // Ancien seuil de « pointe accentuée » (#1270, jamais publié tel quel) → largeur
+      // mini de pointe (px). Les anciens facteurs/always n'ont pas d'équivalent direct
+      // et sont ignorés ; le nouveau défaut (10px) s'applique sinon.
+      if ('arrow_spike_max_thickness' in json_object) {
+        const legacy = getNumberFromJSON(json_object, 'arrow_spike_max_thickness', 0)
+        if (legacy > 0) migrated_link_style.shape_arrow_min_width = legacy
+      }
+    }
     // OS#1272 — Marqueur de bilan (réglages globaux).
     drawing_area['_balance_marker_enabled'] = getBooleanFromJSON(json_object, 'balance_marker_enabled', false)
     drawing_area['_balance_marker_strategy'] = getStringFromJSON(json_object, 'balance_marker_strategy', 'relative') as 'exact' | 'absolute' | 'relative'
@@ -2452,6 +2470,32 @@ export class DrawingAreaPersistence {
 
     // Fusionner : ordre du JSON + éléments manquants à la fin
     drawing_area['_list_g_element_id'] = dedupeZOrderKeepFirst([...order_from_json, ...missing_in_json])
+
+    // OS#1259 — z-order des GROUPES : un cadre (tied_to_nodes) doit être DERRIÈRE
+    // ses membres, sinon il capte les clics qui leur sont destinés (membres
+    // inatteignables). L'ordre Z sauvegardé peut avoir remis le cadre devant ;
+    // on ré-applique sendFrameBehindMembers au chargement. Traité du plus profond
+    // au plus englobant (groupes emboîtés) pour que chaque cadre finisse bien
+    // derrière l'ensemble de sa descendance.
+    {
+      const tiedFrameDepth = (c: Class_NodeBase): number => {
+        let depth = 0
+        let cur: Class_NodeBase = c
+        const seen = new Set<Class_NodeBase>([c])
+        for (;;) {
+          const parent = cur.attached_container.find(p => p.tied_to_nodes && !seen.has(p))
+          if (!parent) break
+          depth++
+          seen.add(parent)
+          cur = parent
+        }
+        return depth
+      }
+      drawing_area.sankey.containers_list
+        .filter(c => c.tied_to_nodes)
+        .sort((a, b) => tiedFrameDepth(b) - tiedFrameDepth(a))
+        .forEach(frame => drawing_area.sendFrameBehindMembers(frame))
+    }
 
     drawing_area['_show_background_image'] = getBooleanFromJSON(json_object, 'show_background_image', drawing_area.show_background_image)
     drawing_area['_background_image'] = getStringFromJSON(json_object, 'background_image', drawing_area.background_image)

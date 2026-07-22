@@ -49,7 +49,7 @@ export class NodeEventsHandler {
   /**
  * ✅ Détermine quel type d'élément a été cliqué
  */
-  private getClickedLabelType(element: Element): 'shape' | 'name_label' | 'value_label' | 'icon' | null {
+  public getClickedLabelType(element: Element): 'shape' | 'name_label' | 'value_label' | 'icon' | null {
     let current: Element | null = element
 
     while (current) {
@@ -106,8 +106,7 @@ export class NodeEventsHandler {
     if (ctrlKey) {
       this.addOrRemoveNodeFromSelection(labelType)
     } else {
-      drawing_area.purgeSelection()
-      drawing_area.addElementToSelection(this._node)
+      drawing_area.selectOnly(this._node)
     }
 
     // #1243 — plus d'axe « élément » à forcer (matrice déposée) : l'inspecteur
@@ -145,53 +144,37 @@ export class NodeEventsHandler {
 
       if (!labelType) return
 
-      // OS#1254 — Alt+clic : sélection REMONTANTE du cadre géométrique
-      // englobant. Cycle : élément → cadre direct → cadre supérieur → ... →
-      // élément. Indispensable pour saisir un cadre invisible (trait 1 px),
-      // ex. les blocs de la légende. Ctrl+clic reste la multi-sélection.
-      if (event.altKey) {
-        const target = this.resolveEnclosingFrameTarget()
-        if (target) {
-          this.selectFrameTarget(target)
+      // OS#1259 — clic « façon PowerPoint » par CLICS SUCCESSIFS sur un groupe de
+      // zones de texte : 1er clic = groupe le plus englobant, chaque clic suivant
+      // descend d'un niveau vers l'élément cliqué (drill-down), puis reboucle.
+      // Scopé aux ZDT ; la sélection d'un nœud dans un cadre géométrique reste
+      // inchangée. Ctrl/Cmd = multi-sélection -> comportement « feuille ».
+      if (!event.ctrlKey && !event.metaKey) {
+        const group_target = this._node.drawing_area.resolveContainerGroupClickTarget(this._node)
+        if (group_target) {
+          this.selectFrameTarget(group_target)
           return
         }
       }
 
       // ✅ Sélectionner l'élément et ouvrir l'onglet
       this.selectElementAndOpenTab(labelType, event.ctrlKey || event.metaKey)
+
+      // P2 — sous-sélection du LABEL cliqué (n'affiche que les poignées de sa
+      // boîte), reprise de l'ex-handler DrawLabel. Posée APRÈS la sélection car
+      // addElementToSelection -> drawAsSelected remet selected_label_prefix à
+      // null. Sur la forme (labelType 'shape') : pas de sous-sélection.
+      if (labelType !== 'shape') {
+        this._node.drawSelectedLabelHandles(labelType)
+      }
     }
   }
 
-  /**
-   * OS#1254 — Cible du Alt+clic : le premier cadre englobant non encore
-   * sélectionné en remontant la chaîne `attached_container` ; si le sommet de
-   * la chaîne est déjà sélectionné, on redescend à l'élément cliqué (cycle).
-   * Renvoie null si l'élément n'est englobé par aucun cadre.
-   */
-  private resolveEnclosingFrameTarget(): Class_NodeBase | null {
-    const chain: Class_NodeBase[] = []
-    const seen = new Set<Class_NodeBase>([this._node])
-    let cur: Class_NodeBase = this._node
-    for (;;) {
-      const parent = cur.attached_container.find(c => c.tied_to_nodes && !seen.has(c))
-      if (!parent) break
-      chain.push(parent)
-      seen.add(parent)
-      cur = parent
-    }
-    if (chain.length === 0) return null
-    const idx = chain.findIndex(c => c.is_selected)
-    if (idx === -1) return chain[0]
-    if (idx + 1 < chain.length) return chain[idx + 1]
-    return this._node
-  }
-
-  /** Sélectionne un cadre (ou l'élément de retour de cycle) + met à jour les menus. */
+  /** Sélectionne un cadre (groupe) + met à jour les menus. */
   private selectFrameTarget(target: Class_NodeBase) {
     const drawing_area = this._node.drawing_area
     const menu_config = drawing_area.application_data.menu_configuration
-    drawing_area.purgeSelection()
-    drawing_area.addElementToSelection(target)
+    drawing_area.selectOnly(target)
     // #1243 — la matrice type×élément est déposée : plus d'axe « élément » à
     // forcer, l'inspecteur dérive sa cible de la sélection qu'on vient de poser
     // (ici le cadre englobant : une zone de texte -> cible `container`).
@@ -411,6 +394,18 @@ export class NodeEventsHandler {
 
     // End of drag
     this._node.setDragState(false)
+
+    // P4 (refonte événements) — d3.drag émet TOUJOURS start+end, y compris sur un
+    // simple CLIC (mousedown+mouseup sans déplacement). Si le nœud saisi n'a pas
+    // bougé, c'était un clic : on ne fait AUCUN travail de fin de drag (settle
+    // paramétrique, réorg des colonnes, auto-grow, redraw des liens,
+    // refreshPanExtent). La sélection est gérée par le chemin de clic, pas ici.
+    // (position_changed ci-dessus utilise `&&` — X-seul/Y-seul — donc insuffisant.)
+    const _start_pos = dict_old_pos[this._node.id]
+    const _really_moved = !_start_pos
+      || _start_pos[0] !== this._node.position_x
+      || _start_pos[1] !== this._node.position_y
+    if (!_really_moved) return
 
     // Settle the drag in parametric mode (PR 3 step 4).
     //

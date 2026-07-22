@@ -1091,6 +1091,24 @@ export const buttonStyles = {
     },
   }),
 
+  // #680 — Variante « enclenchée » des boutons d'ajustement (modes de cadrage auto
+  // radio). Calquée sur toolbar_button_position_mode_activated (liseré + fond soutenu).
+  toolbar_button_6_activated: defineStyle({
+    bgColor: 'tertiaire.4',
+    border: 'none',
+    outline: '2px solid',
+    outlineColor: 'secondaire.4',
+    outlineOffset: '-1px',
+    color: 'white',
+    width: '2rem',
+    height: '2rem',
+    minW: 'unset',
+    padding: '0.2rem',
+    zIndex: 1,
+    _hover: { bgColor: 'tertiaire.4', borderColor: 'secondaire.4', border: 'none' },
+    _active: { bgColor: 'tertiaire.4', borderColor: 'secondaire.4', border: 'none' },
+  }),
+
   button_dataTagg_sequence_play: defineStyle({
     bgColor: 'primaire.3',
     borderColor: 'primaire.3',

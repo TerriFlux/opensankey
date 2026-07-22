@@ -569,7 +569,8 @@ export const ElementAttrSetterSelect2Cols = <
     config,
     prefix = '',
     refreshParentComponent,
-    options
+    options,
+    onAfterChange
   }: {
   app_data: Class_ApplicationData
   elements: ElementsType
@@ -583,6 +584,9 @@ export const ElementAttrSetterSelect2Cols = <
     value: ExtractConfigValue<CONFIG[K]>
     label: string
   }>
+  // Optionnel : appelé APRÈS l'écriture (updateElements) — p. ex. déclencher un effet de
+  // bord qui n'est pas une simple action de rendu (réorganiser l'ordre des flux E/S).
+  onAfterChange?: (value: ExtractConfigValue<CONFIG[K]>) => void
 }) => {
   const { t } = useElementAttributeConfig<CONFIG>(app_data, elements)
   const attribute_values = getConfigValues(elements, config, prefix, refreshParentComponent)
@@ -606,15 +610,17 @@ export const ElementAttrSetterSelect2Cols = <
         <Select
           value={attribute_values[attributeKey] as string}
           onChange={(evt) => {
+            const new_value = evt.target.value as ExtractConfigValue<CONFIG[K]>
             updateElements(
               app_data,
               elements,
               config,
               prefix,
               attributeKey,
-              evt.target.value as ExtractConfigValue<CONFIG[K]>,
+              new_value,
               refreshParentComponent
             )
+            onAfterChange?.(new_value)
           }}
         >
           {options.map(option => (
