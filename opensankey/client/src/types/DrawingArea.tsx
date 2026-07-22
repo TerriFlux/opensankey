@@ -95,6 +95,18 @@ function sortElementByIdOrder(
  * apparente constante d'un focus à l'autre. À ajuster si le central paraît trop gros/petit.
  */
 const UNITARY_CENTRAL_HEIGHT_FRACTION = 0.3
+
+/**
+ * #680 — Mode de cadrage automatique persistant, piloté par les 3 boutons radio de la
+ * barre d'ajustement (ComponetStretchButtons). Un seul mode actif à la fois, ou aucun :
+ * - 'width'  : toute la LARGEUR du diagramme reste visible bord à bord, en permanence.
+ * - 'height' : toute la HAUTEUR du diagramme reste visible bord à bord, en permanence.
+ * - 'full'   : TOUT le diagramme reste visible et centré, en permanence.
+ * - 'none'   : aucun cadrage automatique (l'utilisateur a zoomé/désenclenché).
+ * Un zoom manuel repasse le mode à 'none' (cf. Camera.zoom*). Persisté (SankeyPersistence).
+ */
+export type Type_AutoFitMode = 'none' | 'width' | 'height' | 'full'
+
 export class Class_DrawingArea {
   public application_data: Class_ApplicationData
   public nodePositioning: NodePositioning
@@ -363,6 +375,64 @@ export class Class_DrawingArea {
       this.areaAutoFit()
     }
   }
+
+  // #680 — Mode de cadrage automatique persistant (cf. Type_AutoFitMode). Défaut
+  // 'full' : à l'ouverture d'un diagramme, tout reste visible (proche du cadrage
+  // historique au chargement). Repassé à 'none' par un zoom manuel (cf. Camera.zoom*).
+  protected _auto_fit_mode: Type_AutoFitMode = 'full'
+  // #680 — Direction du glissé en cours (deltas monde), posée par eventMouseDrag le temps
+  // du re-cadrage puis remise à null. Sur les axes LIBRES (non remplis), le cadrage ancre le
+  // bord vers lequel le nœud va (et masque le côté opposé) pour « suivre » l'élément déplacé.
+  protected _fit_drag_dir: { x: number, y: number } | null = null
+  public get auto_fit_mode(): Type_AutoFitMode { return this._auto_fit_mode }
+  public set auto_fit_mode(v: Type_AutoFitMode) {
+    if (this._auto_fit_mode === v) return
+    this._auto_fit_mode = v
+    // Re-render de la barre d'outils (boutons radio abonnés à ZOOM_TOPIC).
+    this.application_data.menu_configuration?.notify(ZOOM_TOPIC)
+  }
+
+  /**
+   * #680 — Applique le cadrage correspondant au mode actif. Appelé :
+   * - au clic sur un bouton (animated=true : geste utilisateur explicite, zoom cinématique),
+   * - après un déplacement/ajout/suppression d'élément quand un mode est actif
+   *   (animated=false : re-cadrage silencieux « au fur et à mesure »).
+   * force_when_locked=true : un mode explicite prime sur le verrou de taille (#1240).
+   * Mode 'none' : ne fait rien (pas de cadrage automatique de la fenêtre).
+   */
+  public applyAutoFitMode(animated: boolean = false): void {
+    const mode = this._auto_fit_mode
+    if (mode === 'width') {
+      // fill_axis_forced=true → REMPLIT la largeur (hauteur peut déborder, scrollable).
+      if (animated) this.areaAutoFitAnimated(true, true, true)
+      else this.areaAutoFit(true, true, undefined, true)
+    } else if (mode === 'height') {
+      // fill_axis_forced=true → REMPLIT la hauteur (largeur peut déborder, scrollable).
+      if (animated) this.areaAutoFitAnimated(false, true, true)
+      else this.areaAutoFit(false, true, undefined, true)
+    } else if (mode === 'full') {
+      // 'full' = tout visible : min des deux axes + centrage (recenter, center_on_content).
+      if (animated) this.recenterAnimated(true)
+      else this.recenter(true)
+    } else {
+      // mode === 'none' : zoom CONSTANT (keep_zoom), recentrage caméra des DEUX axes. C'est
+      // le « glissement à l'opposé » du changement 2 réalisé par la caméra (aucun déplacement
+      // des positions de nœuds) : déplacer un nœud vers le bas/la droite recentre le diagramme
+      // vers le haut/la gauche, sans dézoomer. center_on_content explicite → pas de redirection.
+      this.areaAutoFit(undefined, true, true, undefined, true)
+    }
+  }
+
+  // #680 — Direction du glissé en cours, ACCUMULÉE depuis le début du drag (déplacement net) :
+  // son signe donne une direction de suivi STABLE (insensible aux ticks à delta nul ou au
+  // sens qui hésite). beginFitDrag au 'start', accumulateFitDrag à chaque 'drag', endFitDrag
+  // au 'end' (après le cadrage final, pour que celui-ci suive encore la direction).
+  public beginFitDrag(): void { this._fit_drag_dir = { x: 0, y: 0 } }
+  public accumulateFitDrag(dx: number, dy: number): void {
+    if (this._fit_drag_dir) { this._fit_drag_dir.x += dx; this._fit_drag_dir.y += dy }
+    else this._fit_drag_dir = { x: dx, y: dy }
+  }
+  public endFitDrag(): void { this._fit_drag_dir = null }
 
   // Cadrage verrouillé « à (re)calculer » : true tant que le layout n'est pas
   // stabilisé (1er chargement, ou recenter ayant décalé les positions APRÈS le
@@ -695,6 +765,7 @@ export class Class_DrawingArea {
     this._font_size_locked = drawing_area_to_copy._font_size_locked
     // Idem : champ direct, le setter size_locked déclenche un re-fit.
     this._size_locked = drawing_area_to_copy._size_locked
+    this._auto_fit_mode = drawing_area_to_copy._auto_fit_mode
     this._import_export_above_below = drawing_area_to_copy._import_export_above_below
     this._disaggregation_gap_mode = drawing_area_to_copy._disaggregation_gap_mode
     this._disaggregation_gap_value = drawing_area_to_copy._disaggregation_gap_value
@@ -1458,6 +1529,9 @@ export class Class_DrawingArea {
     }
     this.saveRedo(redo)
     // End Save Redo -----------------------------------
+    // #680 — Suppression d'éléments : un mode de cadrage auto actif resserre la fenêtre
+    // sur le contenu restant (no-op si mode 'none').
+    this.applyAutoFitMode(false)
   }
 
   public copyNodes(node_ids: string[]) { CopyPaste.copyNodes(this, node_ids) }
@@ -1482,7 +1556,7 @@ export class Class_DrawingArea {
    * recenter() : c'est la définition même de « recentrer ». Les autres fits (changement de
    * data tag, redimensionnement…) gardent leur cadrage habituel.
    */
-  public areaAutoFit(horiz?: boolean, force_when_locked?: boolean, center_on_content?: boolean) {
+  public areaAutoFit(horiz?: boolean, force_when_locked?: boolean, center_on_content?: boolean, fill_axis_forced?: boolean, keep_zoom?: boolean) {
 
     // Verrou de taille (#1240) : cadrage (hauteur, largeur, zoom) figé tel quel —
     // aucun auto-fit au changement de dataTag. Exception : au tout premier rendu
@@ -1490,6 +1564,19 @@ export class Class_DrawingArea {
     // réappliquer ; on autorise alors un fit unique pour établir le cadrage
     // initial, qui restera ensuite figé (force_when_locked).
     if (this._size_locked && !force_when_locked) return
+
+    // #680 — Router les fits AUTOMATIQUES vers le mode actif. Un appel GÉNÉRIQUE
+    // (aucun axe / centre / fill explicite : resize, changement de vue, légende,
+    // auto-layout…) doit RESPECTER le mode de cadrage choisi, sinon un « largeur »/
+    // « hauteur »/« tout » actif serait écrasé par un fit générique au moindre resize.
+    // Les appels du mode lui-même passent TOUJOURS un argument explicite (horiz pour
+    // largeur/hauteur, center_on_content pour 'full') → ils ne re-rentrent pas ici :
+    // pas de récursion. Mode 'none' → comportement historique (fit générique).
+    if (horiz === undefined && center_on_content === undefined && fill_axis_forced === undefined
+      && this._auto_fit_mode !== 'none') {
+      this.applyAutoFitMode(false)
+      return
+    }
 
     // #292 — Le calcul de cadrage doit viser la zone de dessin PLEINE (sans gouttière de scrollbar) :
     // on annule la réserve le temps du fit et on empêche le _updateScrollbars interne de la reposer
@@ -1502,7 +1589,7 @@ export class Class_DrawingArea {
     this._scrollbar_reserve_bottom = 0
     this._suppress_scrollbar_reserve = true
     try {
-      this._areaAutoFitCore(horiz, force_when_locked, center_on_content)
+      this._areaAutoFitCore(horiz, force_when_locked, center_on_content, fill_axis_forced, keep_zoom)
     } finally {
       // Contenu qui tient (cas normal d'un fit) -> aucune barre ni gouttière ; contenu qui déborde
       // encore (fit contraint) -> la ou les barres apparaissent avec leur gouttière.
@@ -1516,7 +1603,7 @@ export class Class_DrawingArea {
    * (garde de réserve de gouttière : le fit vise la zone PLEINE) sans réindenter tout le corps.
    * Comportement strictement inchangé — ne pas appeler directement (passer par areaAutoFit).
    */
-  private _areaAutoFitCore(horiz?: boolean, force_when_locked?: boolean, center_on_content?: boolean) {
+  private _areaAutoFitCore(horiz?: boolean, force_when_locked?: boolean, center_on_content?: boolean, fill_axis_forced?: boolean, keep_zoom?: boolean) {
 
     const prev_k_fit = this._k_fit
 
@@ -1757,6 +1844,14 @@ export class Class_DrawingArea {
         // Cas courant (pas de débordement sur l'axe secondaire) : min() retombe sur
         // l'axe dominant → cadrage historique inchangé.
         new_k = Math.min(k_to_fit_horiz, k_to_fit_vert)
+        // #680 — Modes « largeur » / « hauteur » (fill_axis_forced, boutons radio) : on
+        // REMPLIT l'axe demandé (is_horiz) au lieu de tout faire rentrer. L'autre axe peut
+        // alors déborder (contenu masqué + scrollable via _zoom_height/_zoom_width ci-dessous).
+        // C'est ce qui distingue « largeur »/« hauteur » de « tout visible » (min des deux).
+        if (fill_axis_forced) new_k = is_horiz ? k_to_fit_horiz : k_to_fit_vert
+        // #680 — Mode « aucun » (keep_zoom) : on CONSERVE le zoom courant (pas de dézoom),
+        // seul le recentrage (center_h/center_v ci-dessous) déplace la caméra.
+        if (keep_zoom) new_k = this.getZoomScale()
       }
       this._k_fit = new_k
       this._zoom_height = is_horiz ? Math.max(this.height, Math.min(this.height, this.window_fitting_height) / this._k_horiz) : this.height
@@ -1802,24 +1897,54 @@ export class Class_DrawingArea {
       // le constrain inerte. Le mode papier est exclu — son ancrage haut-gauche est
       // voulu (cf. le constrain custom, ajouté pour que A3/A4/A5 ne parte pas du coin).
       const may_center = (this.is_unitary || !!center_on_content) && !this.is_paper_mode
-      const center_h = may_center && bbox.width * new_k < this.window_fitting_width
-      const center_v = may_center && bbox.height * new_k < this.window_fitting_height
-      // OS#1250 phase 4 — la branche par défaut ancre le coin haut-gauche du CONTENU à la
-      // marge. Elle y plaçait l'origine du CANVAS (`- _background_d3_groups_shift_x * k`,
-      // soit `min(0, bbox.x - marge)`) : le contenu flottait donc à son décalage monde par
-      // rapport à l'origine, ce qui n'a plus de sens sans canvas. Les deux convergent de
-      // toute façon, le constrain (actif sur les bounds du CONTENU depuis la phase 5)
-      // clampant le contenu dans l'extent écran déjà rétréci de fit_margin/2.
+      // #680 — Ancrage 3 états par axe : 'start' (haut/gauche + marge), 'center', 'end' (bas/droite).
+      // Base historique : 'center' là où le contenu a du mou (center_on_content / board unitaire),
+      // sinon 'start' (ancrage coin haut-gauche à la marge).
+      let anchor_h: 'start' | 'center' | 'end' =
+        (may_center && bbox.width * new_k < this.window_fitting_width) ? 'center' : 'start'
+      let anchor_v: 'start' | 'center' | 'end' =
+        (may_center && bbox.height * new_k < this.window_fitting_height) ? 'center' : 'start'
+      if (!this.is_paper_mode) {
+        // Mode « remplir un axe » : l'axe REMPLI reste 'start' (bord à bord) ; l'autre centré.
+        if (fill_axis_forced) {
+          if (is_horiz) { anchor_h = 'start'; anchor_v = 'center' }
+          else { anchor_v = 'start'; anchor_h = 'center' }
+        } else if (keep_zoom) {
+          // Mode « aucun » : zoom constant, les deux axes centrés par défaut.
+          anchor_h = 'center'; anchor_v = 'center'
+        }
+        // Pendant un glissé, sur les axes LIBRES (non remplis), SUIVRE la direction du drag :
+        // la zone de dessin s'élargit et se décale pour garder l'élément déplacé dans la vue
+        // (bord poussé épinglé, côté opposé masqué). C'est ce qui permet d'emmener un nœud LOIN.
+        const dd = this._fit_drag_dir
+        if (dd && (fill_axis_forced || keep_zoom)) {
+          const h_free = keep_zoom || !is_horiz // largeur → h rempli (non libre) ; hauteur/aucun → h libre
+          const v_free = keep_zoom || is_horiz  // largeur → v libre ; hauteur → v rempli
+          // On ne « suit le bord » que si l'axe DÉBORDE (contenu > fenêtre) : sinon rien à
+          // masquer, on garde le centrage doux. Dès qu'on emmène le nœud au-delà du bord, le
+          // débordement apparaît et l'ancrage bascule sur le bord poussé (suivi lointain).
+          const h_overflow = bbox.width * new_k > this.window_fitting_width - this._fit_margin
+          const v_overflow = bbox.height * new_k > this.window_fitting_height - this._fit_margin
+          if (h_free && dd.x && h_overflow) anchor_h = dd.x > 0 ? 'end' : 'start'
+          if (v_free && dd.y && v_overflow) anchor_v = dd.y > 0 ? 'end' : 'start'
+        }
+      }
+      // 'start' = coin haut-gauche à la marge ; 'center' = bbox centrée ; 'end' = bord bas/droite
+      // épinglé au bord de la fenêtre (le côté opposé, plus grand, déborde et est masqué).
       const px = unitary_center_node
         ? this.window_fitting_width / 2 - cnx * new_k
-        : center_h
+        : anchor_h === 'center'
           ? (this.window_fitting_width - bbox.width * new_k) / 2 - bbox.x * new_k
-          : this._fit_margin / 2 + label_overflow_left - bbox.x * new_k
+          : anchor_h === 'end'
+            ? (this.window_fitting_width - this._fit_margin / 2 - label_overflow_right) - (bbox.x + bbox.width) * new_k
+            : (this._fit_margin / 2 + label_overflow_left) - bbox.x * new_k
       const py = unitary_center_node
         ? this.window_fitting_height / 2 + this.getNavBarHeight() - cny * new_k
-        : center_v
+        : anchor_v === 'center'
           ? (this.window_fitting_height - bbox.height * new_k) / 2 - bbox.y * new_k + this.getNavBarHeight()
-          : this._fit_margin / 2 + this.getNavBarHeight() + label_overflow_top - bbox.y * new_k
+          : anchor_v === 'end'
+            ? this.getNavBarHeight() + (this.window_fitting_height - this._fit_margin / 2 - label_overflow_bottom) - (bbox.y + bbox.height) * new_k
+            : this._fit_margin / 2 + this.getNavBarHeight() + label_overflow_top - bbox.y * new_k
       // Échelle + translation appliquées ensemble (constrain d3 préservé, cf. _applyFitCamera).
       // px/py ci-dessus ne lisent pas le transform live → réordonnancement sans effet.
       this._applyFitCamera(new_k, px, py)
@@ -2413,8 +2538,8 @@ export class Class_DrawingArea {
   // recenter) reste ici : il recalcule les dimensions du canvas et les décalages du monde.
 
   /** Variante animée des recadrages EXPLICITES (boutons fit H/V). */
-  public areaAutoFitAnimated(horiz?: boolean, force_when_locked?: boolean): void {
-    Camera.areaAutoFitAnimated(this, horiz, force_when_locked)
+  public areaAutoFitAnimated(horiz?: boolean, force_when_locked?: boolean, fill_axis_forced?: boolean): void {
+    Camera.areaAutoFitAnimated(this, horiz, force_when_locked, fill_axis_forced)
   }
 
   /** Variante animée du bouton « recentrer ». */
@@ -2429,11 +2554,15 @@ export class Class_DrawingArea {
 
   /** Zoom explicite par facteur multiplicatif (boutons -/+), ancré au centre du viewport. */
   public zoomByFactor(factor: number): void {
+    // #680 — Zoom manuel (boutons -/+) → sort des modes de cadrage auto (setter = notify).
+    this.auto_fit_mode = 'none'
     Camera.zoomByFactor(this, factor)
   }
 
   /** Zoom explicite vers une échelle absolue (clic indicateur → 100% = k=1). */
   public zoomToScale(k: number): void {
+    // #680 — Zoom manuel (clic 100 %) → sort des modes de cadrage auto (setter = notify).
+    this.auto_fit_mode = 'none'
     Camera.zoomToScale(this, k)
   }
 
@@ -2652,6 +2781,12 @@ export class Class_DrawingArea {
       // Apply translation
       this.d3_selection
         .attr('transform', event.transform.toString())
+
+      // #680 — Le désenclenchement des modes au zoom manuel est fait aux POINTS D'ENTRÉE du
+      // zoom (DrawingAreaInteractions._eventMouseScroll pour la molette/pinch ; zoomByFactor /
+      // zoomToScale pour les boutons +/−) et NON ici : ces zooms passent par scaleBy
+      // programmatique, donc event.sourceEvent est null dans eventZoom (indiscernable d'un
+      // cadrage automatique). Cf. commentaires à ces points d'entrée.
 
       // Indicateur de zoom (MenuBottom) : re-render du seul widget abonné à ZOOM_TOPIC. L'échelle
       // vient du transform relu (getZoomScale), pas d'un état dupliqué. Notification directe par
