@@ -67,6 +67,7 @@ export const resources_flux = {
         apparence: {
           anchor: 'Anchors',
           handle: 'Handles',
+          curve_unit: 'Unit',
           apparence: 'Appearance',
           flow: 'Flow',
           fond: 'shape background',
@@ -270,6 +271,7 @@ export const resources_flux = {
         apparence: {
           anchor: 'Ancres',
           handle: 'Poignées',
+          curve_unit: 'Unité',
           apparence: 'Apparence',
           fond: 'Fond',
           couleur: 'Couleur',
@@ -481,6 +483,7 @@ export const resources_flux = {
         apparence: {
           anchor: 'Anclas',
           handle: 'Tiradores',
+          curve_unit: 'Unidad',
           apparence: 'Apariencia',
           flow: 'Flujo',
           fond: 'Fondo de forma',
@@ -655,6 +658,7 @@ export const resources_flux = {
         apparence: {
           anchor: 'Anker',
           handle: 'Griffe',
+          curve_unit: 'Einheit',
           apparence: 'Darstellung',
           flow: 'Fluss',
           fond: 'Formhintergrund',
@@ -829,6 +833,7 @@ export const resources_flux = {
         apparence: {
           anchor: 'Ancore',
           handle: 'Maniglie',
+          curve_unit: 'Unità',
           apparence: 'Aspetto',
           flow: 'Flusso',
           fond: 'Sfondo forma',
