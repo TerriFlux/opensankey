@@ -3455,6 +3455,27 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     }
   } satisfies AttributeConfig<boolean>,
 
+  uncertainty_display: {
+    default: false,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['drawElements'] as BaseActionType[],
+    labels: {
+      en: 'Show uncertainty',
+      fr: 'Afficher l\'incertitude',
+      es: 'Mostrar incertidumbre',
+      de: 'Unsicherheit anzeigen',
+      it: 'Mostra incertezza'
+    },
+    tooltips: {
+      en: 'Superimpose the flow drawn at its min/mean/max values (thinner = more opaque) to visualize the uncertainty interval.',
+      fr: 'Superpose le flux tracé à ses valeurs min/moyenne/max (plus fin = plus opaque) pour visualiser l\'intervalle d\'incertitude.',
+      es: 'Superpone el flujo dibujado en sus valores mín/media/máx (más fino = más opaco) para visualizar el intervalo de incertidumbre.',
+      de: 'Überlagert den Fluss, gezeichnet an seinen Min-/Mittel-/Max-Werten (dünner = undurchsichtiger), um das Unsicherheitsintervall zu visualisieren.',
+      it: 'Sovrappone il flusso disegnato ai suoi valori min/media/max (più sottile = più opaco) per visualizzare l\'intervallo di incertezza.'
+    }
+  } satisfies AttributeConfig<boolean>,
+
   source_notch_size_ratio: {
     default: 0,
     type: (() => 0) as (() => number),

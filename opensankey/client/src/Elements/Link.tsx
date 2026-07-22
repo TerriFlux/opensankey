@@ -2212,6 +2212,24 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @readonly
    * @memberof Class_LinkElement
    */
+  /**
+   * OS#189 — facteur d'échelle temporaire appliqué à l'épaisseur pendant la
+   * génération des contours de bandes d'incertitude (formes pleines). Posé puis
+   * remis à null immédiatement par LinkDrawShape autour d'un getBezierPath, de
+   * sorte que toute la géométrie du contour (getLineShape/getBezierShape, qui
+   * lisent thickness/thicknessSource/thicknessTarget) soit régénérée à la
+   * largeur min/max sans dupliquer le code de tracé. null = épaisseur nominale.
+   */
+  private _uncertainty_thickness_scale: number | null = null
+
+  public setUncertaintyThicknessScale(scale: number | null) {
+    this._uncertainty_thickness_scale = scale
+  }
+
+  private _scaleUncertainty(px: number): number {
+    return this._uncertainty_thickness_scale != null ? px * this._uncertainty_thickness_scale : px
+  }
+
   public get thickness() {
     // force_min only impacts STRUCTURAL flows (intervals / indéterminés / dashed).
     // Solid flows with a real value keep their proportional thickness even in
@@ -2222,11 +2240,46 @@ export class Class_LinkElement extends Class_LinkAttribute {
       && this.shape_structure_force_min
       && this.linkIsStructure()
     ) {
-      return this._clampThickness(0)
+      return this._scaleUncertainty(this._clampThickness(0))
     }
     const data_value = this.valueCurrent
     const linkValueInPx = (data_value !== null) ? this.scaleValueToPx(data_value) : 2
-    return this._clampThickness(linkValueInPx)
+    return this._scaleUncertainty(this._clampThickness(linkValueInPx))
+  }
+
+  /**
+   * Bornes d'incertitude à représenter (issue OS#189). L'intervalle [min, max]
+   * entourant la valeur affichée suit le MODE d'affichage courant : en mode
+   * `data` on prend les bornes saisies (data_min/data_max), sinon (réconcilié /
+   * libre) les bornes réconciliées (result_min/result_max). Repli sur l'autre
+   * jeu de bornes si celui du mode est absent. Null si aucun intervalle
+   * exploitable (bornes absentes ou dégénérées max <= min).
+   */
+  public get uncertaintyBounds(): { min: number, max: number } | null {
+    const v = this.value
+    if (!v) return null
+    const use_data_first = this.drawing_area.type_data === 'data'
+    const lo = use_data_first ? (v.data_min ?? v.result_min) : (v.result_min ?? v.data_min)
+    const hi = use_data_first ? (v.data_max ?? v.result_max) : (v.result_max ?? v.data_max)
+    if (lo == null || hi == null || hi <= lo) return null
+    return { min: lo, max: hi }
+  }
+
+  /**
+   * Épaisseurs en px des trois tracés superposés min/moyenne/max servant à
+   * matérialiser l'incertitude (OS#189). `meanPx` = épaisseur nominale du flux
+   * (this.thickness). Renvoie null quand l'affichage est désactivé
+   * (shape_uncertainty_display) ou qu'il n'y a pas d'intervalle exploitable.
+   */
+  public get uncertaintyBandsPx(): { minPx: number, meanPx: number, maxPx: number } | null {
+    if (!this.shape_uncertainty_display) return null
+    const bounds = this.uncertaintyBounds
+    if (!bounds) return null
+    return {
+      minPx: this._clampThickness(this.scaleValueToPx(bounds.min)),
+      meanPx: this.thickness,
+      maxPx: this._clampThickness(this.scaleValueToPx(bounds.max))
+    }
   }
 
   /**
@@ -2246,12 +2299,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
       && this.shape_structure_force_min
       && this.linkIsStructure()
     ) {
-      return this._clampThickness(0)
+      return this._scaleUncertainty(this._clampThickness(0))
     }
     const target_value = this.valueCurrentTarget
     if (target_value === null) return this.thickness
     const linkValueInPx = this.scaleValueToPx(target_value)
-    return this._clampThickness(linkValueInPx)
+    return this._scaleUncertainty(this._clampThickness(linkValueInPx))
   }
 
   // Raw (non-clamped) thicknesses used by nodes to compute proportional

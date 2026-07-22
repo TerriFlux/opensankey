@@ -2289,6 +2289,32 @@ export const MenuConfigurationAppearance = ({
                             </svg>
                           </OverloadedButton>
                         </Box>
+                        {/* OS#189 — « Afficher l'incertitude » : superpose le flux à ses
+                            valeurs min/moyenne/max (fin = opaque). Glyphe = trois barres
+                            horizontales empilées (min/moyenne/max) sur un axe vertical. */}
+                        <Box display='inline-flex' flexShrink={0} flexGrow={0} w='1.5rem' h='1.5rem'>
+                          <OverloadedButton
+                            elements={links_elements}
+                            config={LINK_SHAPE_SPECIFIC_CONFIG}
+                            attributePath='Flux.apparence'
+                            prefix={'shape'}
+                            attributeKey="uncertainty_display"
+                            variant={getButtonVariant(
+                              '',
+                              isLinkShapeSpecificValueIndeterminate(links_elements, 'uncertainty_display'),
+                              linkShapeValues.uncertainty_display
+                            )}
+                            onClick={() => { linkShapeValues.uncertainty_display = !linkShapeValues.uncertainty_display }}
+                            buttonSx={{ width: '1.5rem', minWidth: '1.5rem', height: '1.5rem', padding: '0', '& svg': { width: '16px', height: '16px' } }}
+                          >
+                            <svg viewBox='0 0 16 16' fill='currentColor' aria-hidden='true'>
+                              <rect x='7' y='2' width='2' height='12' rx='1' opacity='0.5' />
+                              <rect x='5' y='2.5' width='6' height='2' rx='1' opacity='0.4' />
+                              <rect x='3.5' y='7' width='9' height='2' rx='1' opacity='0.7' />
+                              <rect x='5.5' y='11.5' width='5' height='2' rx='1' />
+                            </svg>
+                          </OverloadedButton>
+                        </Box>
                       </Box>
 
                       {/* Courbe (icône) | sélecteur de chemin bézier (large, occupe l'espace
