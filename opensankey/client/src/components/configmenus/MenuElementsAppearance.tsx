@@ -2100,6 +2100,10 @@ export const MenuConfigurationAppearance = ({
                               </OverloadedButton>
                             </Box>
                           </Box>
+
+                          {/* OS#1302 — Pointe indépendante / Épaisseur mini structure /
+                              Largeur mini de pointe : regroupés en section Avancé
+                              (advanced_geometry) plus bas. */}
                         </> : <></>}
 
                       {/* Recyclage tristate (taille d'un bouton d'orientation) + 4 orientations
@@ -2198,6 +2202,32 @@ export const MenuConfigurationAppearance = ({
                             {app_data.icon_library.icon_link_structure}
                           </OverloadedButton>
                         </Box>
+                        {/* OS#1302 — « Nœud/flèche à la hauteur de la valeur », bouton-icône
+                            juste à côté de Structure. Activé = on CONSERVE les hauteurs de
+                            valeur (attribut interne structure_force_min = false ; défaut =
+                            non activé). Texte → tooltip auto (OverloadedButton). Glyphe :
+                            nœud (barre) + flèche pleine hauteur. */}
+                        <Box display='inline-flex' flexShrink={0} flexGrow={0} w='1.5rem' h='1.5rem'>
+                          <OverloadedButton
+                            elements={links_elements}
+                            config={LINK_SHAPE_SPECIFIC_CONFIG}
+                            attributePath='Flux.apparence'
+                            prefix={'shape'}
+                            attributeKey="structure_force_min"
+                            variant={getButtonVariant(
+                              '',
+                              isLinkShapeSpecificValueIndeterminate(links_elements, 'structure_force_min'),
+                              !linkShapeValues.structure_force_min
+                            )}
+                            onClick={() => { linkShapeValues.structure_force_min = !linkShapeValues.structure_force_min }}
+                            buttonSx={{ width: '1.5rem', minWidth: '1.5rem', height: '1.5rem', padding: '0', '& svg': { width: '16px', height: '16px' } }}
+                          >
+                            <svg viewBox='0 0 16 16' fill='currentColor' aria-hidden='true'>
+                              <rect x='1.5' y='1.5' width='4' height='13' rx='1' />
+                              <polygon points='8.5,2 15,8 8.5,14' />
+                            </svg>
+                          </OverloadedButton>
+                        </Box>
                       </Box>
 
                       {/* Courbe (icône) | sélecteur de chemin bézier (large, occupe l'espace
@@ -2269,6 +2299,26 @@ export const MenuConfigurationAppearance = ({
                         title={t('inspector.section.advanced_geometry')}
                         is_open={false}
                       >
+                        {/* OS#1302 — Pointe indépendante (par flux) : triangle centré sur
+                            l'extrémité du flux au lieu de l'éventail partagé du nœud. */}
+                        {(linkShapeValues.is_arrow || linkShapeValues.arrow_at_source) && (
+                          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                            <OSTooltip label={t('Flux.apparence.tooltips.shape_arrow_standalone')}>
+                              <Box layerStyle='menuconfigpanel_option_name'
+                                sx={dimLabelSx(isElementAttributeOverloaded(links_elements, 'shape_arrow_standalone' as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG))}>
+                                {t('Flux.apparence.shape_arrow_standalone')}
+                              </Box>
+                            </OSTooltip>
+                            <Checkbox
+                              isChecked={linkShapeValues.arrow_standalone}
+                              isIndeterminate={isLinkShapeSpecificValueIndeterminate(links_elements, 'arrow_standalone')}
+                              onChange={(e) => { linkShapeValues.arrow_standalone = e.target.checked }}
+                            />
+                          </Box>
+                        )}
+                        {/* OS#1302 — « Nœud/flèche à la hauteur de la valeur » : déplacé en
+                            bouton-icône à côté de Structure (rangée des flèches), texte en
+                            tooltip. Voir plus haut. */}
                         {/* Value of link local scale to override scale from DA, can be undefined */}
                         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
                           <OSTooltip label={t('Flux.apparence.tooltips.local_scale')}>
@@ -2290,6 +2340,31 @@ export const MenuConfigurationAppearance = ({
                             isOverloaded={isElementAttributeOverloaded(links_elements, 'local_link_scale', LINK_SHAPE_SPECIFIC_CONFIG)}
                           />
                         </Box>
+                        {/* OS#1302 — Largeur mini de pointe (px), façon e!Sankey : les flux
+                            plus fins reçoivent une pointe de cette largeur (visibles), les
+                            plus épais ne bougent pas. 0 = désactivé. */}
+                        {(linkShapeValues.is_arrow || linkShapeValues.arrow_at_source) && (
+                          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                            <OSTooltip label={t('Flux.apparence.tooltips.shape_arrow_min_width')}>
+                              <Box layerStyle='menuconfigpanel_option_name'
+                                sx={dimLabelSx(isElementAttributeOverloaded(links_elements, 'shape_arrow_min_width' as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG))}
+                              >
+                                {t('Flux.apparence.shape_arrow_min_width')}
+                              </Box>
+                            </OSTooltip>
+                            <ConfigMenuNumberInput
+                              t={t}
+                              default_value={linkShapeValues.arrow_min_width}
+                              menu_for_style={menu_for_style}
+                              minimum_value={0}
+                              unit_text='px'
+                              stepper={true}
+                              function_on_blur={(value) => { linkShapeValues.arrow_min_width = value ?? 0 }}
+                              multiValue={isLinkShapeSpecificValueIndeterminate(links_elements, 'arrow_min_width')}
+                              isOverloaded={isElementAttributeOverloaded(links_elements, 'shape_arrow_min_width' as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG)}
+                            />
+                          </Box>
+                        )}
                         {/* </Box> */}
                         {/* Référence d'échelle par view tag : épaisseur cible (px) du flux pour
                           le view tag COURANT. Visible uniquement quand un view tag est

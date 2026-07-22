@@ -1967,13 +1967,10 @@ export class DrawingAreaPersistence {
       json_object['disaggregation_gap_mode'] = drawing_area.disaggregation_gap_mode
     if (drawing_area['_disaggregation_gap_value'] != null)
       json_object['disaggregation_gap_value'] = drawing_area['_disaggregation_gap_value']
-    if (!drawing_area.structure_mode_force_min) json_object['structure_mode_force_min'] = false
-    if (drawing_area.arrow_use_standalone_layout) json_object['arrow_use_standalone_layout'] = true
-    // Pointe accentuée « arrow spikes » (#1270) — sérialisé seulement si non défaut
-    // (défauts : always=false, max_thickness=0, base_factor=2).
-    if (drawing_area.arrow_spike_always) json_object['arrow_spike_always'] = true
-    if (drawing_area.arrow_spike_max_thickness) json_object['arrow_spike_max_thickness'] = drawing_area.arrow_spike_max_thickness
-    if (drawing_area.arrow_spike_base_factor !== 2) json_object['arrow_spike_base_factor'] = drawing_area.arrow_spike_base_factor
+    // OS#1302 — pointe/épaisseur (ex-globales structure_mode_force_min,
+    // arrow_use_standalone_layout, arrow_spike_*) sont désormais des attributs de
+    // flux sérialisés avec les shape_* de chaque flux/style. Plus rien à écrire ici
+    // (les anciennes clés restent lues par fromJSON pour migrer les vieux fichiers).
     // OS#1272 — Marqueur de bilan (réglages globaux). Sérialisés seulement hors défaut.
     if (drawing_area.balance_marker_enabled) json_object['balance_marker_enabled'] = true
     if (drawing_area.balance_marker_strategy !== 'relative') json_object['balance_marker_strategy'] = drawing_area.balance_marker_strategy
@@ -2383,12 +2380,26 @@ export class DrawingAreaPersistence {
       getStringFromJSON(json_object, 'disaggregation_gap_mode', 'fill') as Type_DisaggregationGap
     drawing_area['_disaggregation_gap_value'] =
       getNumberOrUndefinedFromJSON(json_object, 'disaggregation_gap_value') ?? null
-    drawing_area['_structure_mode_force_min'] = getBooleanFromJSON(json_object, 'structure_mode_force_min', true)
-    drawing_area['_arrow_use_standalone_layout'] = getBooleanFromJSON(json_object, 'arrow_use_standalone_layout', false)
-    // Pointe accentuée « arrow spikes » (#1270)
-    drawing_area['_arrow_spike_always'] = getBooleanFromJSON(json_object, 'arrow_spike_always', false)
-    drawing_area['_arrow_spike_max_thickness'] = getNumberFromJSON(json_object, 'arrow_spike_max_thickness', 0)
-    drawing_area['_arrow_spike_base_factor'] = getNumberFromJSON(json_object, 'arrow_spike_base_factor', 2)
+    // OS#1302 — les anciennes globales de pointe/épaisseur (structure_mode_force_min,
+    // arrow_use_standalone_layout, arrow_spike_*) sont devenues des attributs de flux
+    // résolus par le style. Migration : si un ancien diagramme porte ces clés au niveau
+    // du drawing_area, on les applique au STYLE DE FLUX PAR DÉFAUT (LinkStyle, base de
+    // la chaîne de style de tout flux — cf. Class_LinkElement) pour préserver le rendu.
+    // Les diagrammes récents portent directement les shape_* par flux/style.
+    const migrated_link_style = drawing_area.sankey.styles_dict[LinkStyle]
+    if (migrated_link_style) {
+      if ('structure_mode_force_min' in json_object)
+        migrated_link_style.shape_structure_force_min = getBooleanFromJSON(json_object, 'structure_mode_force_min', true)
+      if ('arrow_use_standalone_layout' in json_object)
+        migrated_link_style.shape_arrow_standalone = getBooleanFromJSON(json_object, 'arrow_use_standalone_layout', false)
+      // Ancien seuil de « pointe accentuée » (#1270, jamais publié tel quel) → largeur
+      // mini de pointe (px). Les anciens facteurs/always n'ont pas d'équivalent direct
+      // et sont ignorés ; le nouveau défaut (10px) s'applique sinon.
+      if ('arrow_spike_max_thickness' in json_object) {
+        const legacy = getNumberFromJSON(json_object, 'arrow_spike_max_thickness', 0)
+        if (legacy > 0) migrated_link_style.shape_arrow_min_width = legacy
+      }
+    }
     // OS#1272 — Marqueur de bilan (réglages globaux).
     drawing_area['_balance_marker_enabled'] = getBooleanFromJSON(json_object, 'balance_marker_enabled', false)
     drawing_area['_balance_marker_strategy'] = getStringFromJSON(json_object, 'balance_marker_strategy', 'relative') as 'exact' | 'absolute' | 'relative'

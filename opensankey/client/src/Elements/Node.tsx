@@ -37,7 +37,7 @@ import { format_value, Type_JSON } from '../types/Utils'
 import { default_element_color } from './ElementsAttributesConfig'
 import { SankeyAnimation } from '../Algorithms/SankeyAnimation'
 import { draw_arrow_part } from './NodeDrawShape'
-import { computeArrowPlacement, arrowSpikeApplies, computeArrowSpikePlacement } from './arrowLayout'
+import { computeArrowPlacement, arrowMinWidthApplies, computeArrowMinWidthPlacement } from './arrowLayout'
 import { Class_Sankey } from '../types/Sankey'
 import { Class_DataTag, Class_Tag } from '../types/Tag'
 import { NodeTooltip } from './TooltipsNode'
@@ -1220,7 +1220,7 @@ export class Class_NodeElement extends Class_NodeBase {
     const inset_x = raw_inset === 0 ? 0 : Math.max(-node_width, Math.min(node_width / 2, raw_inset))
     const inset_y = raw_inset === 0 ? 0 : Math.max(-node_height, Math.min(node_height / 2, raw_inset))
 
-    // Two layout modes, driven by drawing_area.arrow_use_standalone_layout :
+    // Two layout modes, driven PER LINK by link.shape_arrow_standalone (OS#1302) :
     //
     // - fan (default) : all arrows on a node side share a single fan whose tips
     //   converge toward the node side center. The fan is sized in RAW thickness
@@ -1233,25 +1233,31 @@ export class Class_NodeElement extends Class_NodeBase {
     // - standalone (opt-in, issue #681) : each arrow is an independent triangle,
     //   base = link's clamped thickness, base center = link's actual visible end
     //   center. No fan, no cumulative offset.
-    const use_standalone = this.drawing_area.arrow_use_standalone_layout
-    // Pointe accentuée « arrow spikes » (#1270) : lue une fois pour la passe. Défaut
-    // désactivé (always=false, max_thickness=0) ⇒ arrowSpikeApplies() toujours false
-    // ⇒ aucune modification du rendu (rétrocompat).
-    const spike_cfg = {
-      always: this.drawing_area.arrow_spike_always,
-      max_thickness: this.drawing_area.arrow_spike_max_thickness,
-      base_factor: this.drawing_area.arrow_spike_base_factor
-    }
+    // OS#1302 — le mode standalone et la pointe accentuée sont désormais des
+    // attributs PAR FLUX (résolus par le style de flux), plus des globales du
+    // drawing_area. Chaque flux décide de sa pointe ; l'éventail ne regroupe que
+    // les flux NON standalone d'un même côté (les standalone dessinent un triangle
+    // indépendant centré sur leur extrémité). Défauts inchangés ⇒ rétrocompat.
     let cum_v_left = 0
     let cum_h_top = 0
     let cum_v_right = 0
     let cum_h_bottom = 0
     // Fan sums in RAW space (clamped=false) so the fan total matches the node
-    // height ; see computeArrowPlacement / #199.
-    const sumLinkLeft = !use_standalone ? this.getSumOfLinksThickness('left', false) : 0
-    const sumLinkRight = !use_standalone ? this.getSumOfLinksThickness('right', false) : 0
-    const sumLinkTop = !use_standalone ? this.getSumOfLinksThickness('top', false) : 0
-    const sumLinkBottom = !use_standalone ? this.getSumOfLinksThickness('bottom', false) : 0
+    // height ; see computeArrowPlacement / #199. On retranche la part des flux
+    // standalone du côté : ils sortent de l'éventail (dessin indépendant), donc
+    // ne comptent ni dans le total ni dans le cumul (cf. branche else du calcul).
+    let standaloneRawLeft = 0, standaloneRawRight = 0, standaloneRawTop = 0, standaloneRawBottom = 0
+    list_link_to_add_arrow.forEach(it => {
+      if (!it.link.shape_arrow_standalone) return
+      if (it.arrow_side === 'left') standaloneRawLeft += it.link_thickness_raw
+      else if (it.arrow_side === 'right') standaloneRawRight += it.link_thickness_raw
+      else if (it.arrow_side === 'top') standaloneRawTop += it.link_thickness_raw
+      else standaloneRawBottom += it.link_thickness_raw
+    })
+    const sumLinkLeft = this.getSumOfLinksThickness('left', false) - standaloneRawLeft
+    const sumLinkRight = this.getSumOfLinksThickness('right', false) - standaloneRawRight
+    const sumLinkTop = this.getSumOfLinksThickness('top', false) - standaloneRawTop
+    const sumLinkBottom = this.getSumOfLinksThickness('bottom', false) - standaloneRawBottom
 
     list_link_to_add_arrow
       .forEach(item => {
@@ -1259,6 +1265,12 @@ export class Class_NodeElement extends Class_NodeBase {
         const arrow_side = item.arrow_side
         const node_arrow_shift = 0
         const arrows_adjustment = 0
+
+        // OS#1302 — réglages de pointe PAR FLUX (résolus par le style).
+        const use_standalone = link.shape_arrow_standalone
+        // Largeur MINIMALE de pointe (px) façon e!Sankey (#1270 refondu) : ne s'applique
+        // qu'aux flux plus fins que cette largeur (les autres restent inchangés).
+        const arrow_min_width = link.shape_arrow_min_width
 
         const link_arrow_side_right = arrow_side == 'right'
         const link_arrow_side_left = arrow_side == 'left'
@@ -1354,19 +1366,24 @@ export class Class_NodeElement extends Class_NodeBase {
           arrow_already_computed = placement.arrow_already_computed
           arrow_slice = placement.slice
         }
-        // Pointe accentuée « arrow spikes » (#1270) : si applicable, remplacer la
-        // géométrie calculée par un triangle INDÉPENDANT (base = base_factor ×
-        // épaisseur visible, longueur = base_factor × taille de pointe), centré sur
-        // l'extrémité réelle du flux — comme le mode standalone mais élargi/allongé.
-        // Les cumuls de l'éventail ne sont pas modifiés : les pointes voisines non
-        // accentuées gardent exactement leur position d'origine.
+        // Largeur mini de pointe (#1270 refondu OS#1302) : si le flux est plus fin que
+        // arrow_min_width, remplacer la géométrie calculée par un triangle INDÉPENDANT
+        // de base = arrow_min_width (largeur ABSOLUE, pas un facteur), centré sur
+        // l'extrémité réelle du flux. Les flux plus épais que arrow_min_width ne passent
+        // pas ici (arrowMinWidthApplies faux) → aucune explosion. La PROFONDEUR reste
+        // celle prescrite (base_arrow_size = shape_arrow_size, ou shape_arrow_size_ratio
+        // × épaisseur) : la pointe ne s'allonge pas vers le nœud, elle s'élargit juste
+        // (l'angle s'ouvre). Angle constant = réglage dédié arrow_size_ratio. Les cumuls
+        // de l'éventail ne sont pas modifiés : les pointes voisines gardent leur place.
         let final_arrow_length = arrow_length
-        if (arrowSpikeApplies(spike_cfg, link_value)) {
-          const spike = computeArrowSpikePlacement(spike_cfg.base_factor, link_value)
+        if (arrowMinWidthApplies(arrow_min_width, link_value)) {
+          const spike = computeArrowMinWidthPlacement(arrow_min_width)
           arrow_half_height = spike.arrow_half_height
           arrow_already_computed = spike.arrow_already_computed
           arrow_slice = spike.slice
-          final_arrow_length = link.shape_arrow_size * Math.max(1, spike_cfg.base_factor)
+          // Profondeur PRESCRITE, non plafonnée par link_value (contrairement au
+          // standalone) : la pointe garde sa distance.
+          final_arrow_length = base_arrow_size
           if (link_arrow_side_left) {
             xt = + this.position_x - this.shape_margin_left + inset_x
             yt = is_reversed ? link.position_y_start : link.position_y_end

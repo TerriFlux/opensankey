@@ -462,31 +462,12 @@ export class Class_DrawingArea {
   private _maximum_node?: number
   private _minimum_node?: number
 
-  // In structure mode (type_data === 'structure'), force all link thicknesses
-  // to minimum_flux (or 2px) regardless of value. When false, link thickness
-  // remains proportional to value even in structure mode (legacy behaviour).
-  private _structure_mode_force_min: boolean = true
-
-  // Arrow layout : when false (default), arrows on each node side share a single
-  // "fan" with converging tips. Since #199 the fan is sized on the RAW link
-  // thicknesses (like the node height and anchors), so flows clamped up to the
-  // minimum thickness overlap in the fan exactly as they do at the node and the
-  // fan total stays equal to the node height — no more oversized arrow bundles
-  // on nodes fed by many thin flows. When true (opt-in, fix #681), each arrow is
-  // instead a standalone triangle whose base = its link's clamped thickness,
-  // centered on the link's actual visible end (independent triangles, no fan).
-  private _arrow_use_standalone_layout: boolean = false
-
-  // Pointe accentuée « arrow spikes » (issue #1270) : rendre visibles les flux fins
-  // en dessinant une pointe plus large/longue que l'épaisseur du flux, sans changer
-  // la valeur. Défaut = désactivé (aucun changement de rendu, rétrocompat) :
-  //  - _arrow_spike_always      : toujours accentuer (false par défaut) ;
-  //  - _arrow_spike_max_thickness : accentuer les flux dont l'épaisseur visible ≤ N px
-  //    (0 = seuil désactivé) ;
-  //  - _arrow_spike_base_factor : facteur de largeur/longueur de la pointe accentuée.
-  private _arrow_spike_always: boolean = false
-  private _arrow_spike_max_thickness: number = 0
-  private _arrow_spike_base_factor: number = 2
+  // OS#1302 — le mode structure « forcer l'épaisseur min », le mode « pointe
+  // indépendante » et la pointe accentuée « arrow spikes » (#1270) ne sont plus des
+  // globales du drawing_area : ce sont des attributs de flux résolus par le style
+  // (shape_structure_force_min / shape_arrow_standalone / shape_arrow_spike_*). Voir
+  // LINK_SHAPE_SPECIFIC_CONFIG, Node._drawLinksArrow et la migration dans
+  // SankeyPersistence (anciennes globales → style de flux par défaut).
 
   // Filter out link inferior to this value (when filter value is at 0 doesn't filter link even null)
   private _filter_link_value: number = 0
@@ -680,11 +661,7 @@ export class Class_DrawingArea {
     this._balance_marker_tolerance = drawing_area_to_copy._balance_marker_tolerance
     this._maximum_node = drawing_area_to_copy._maximum_node
     this._minimum_node = drawing_area_to_copy._minimum_node
-    this._structure_mode_force_min = drawing_area_to_copy._structure_mode_force_min
-    this._arrow_use_standalone_layout = drawing_area_to_copy._arrow_use_standalone_layout
-    this._arrow_spike_always = drawing_area_to_copy._arrow_spike_always
-    this._arrow_spike_max_thickness = drawing_area_to_copy._arrow_spike_max_thickness
-    this._arrow_spike_base_factor = drawing_area_to_copy._arrow_spike_base_factor
+    // OS#1302 — pointe/épaisseur migrées vers les attributs de flux (résolus par le style).
     this._scale = drawing_area_to_copy._scale
     this._scaleValueToPx.domain([0, this._scale])
     this._type_data = drawing_area_to_copy._type_data
@@ -3218,36 +3195,9 @@ export class Class_DrawingArea {
     }
   }
 
-  public get structure_mode_force_min(): boolean { return this._structure_mode_force_min }
-  public set structure_mode_force_min(value: boolean) {
-    this._structure_mode_force_min = value
-    this.drawElements()
-  }
-
-  public get arrow_use_standalone_layout(): boolean { return this._arrow_use_standalone_layout }
-  public set arrow_use_standalone_layout(value: boolean) {
-    this._arrow_use_standalone_layout = value
-    this.drawElements()
-  }
-
-  // Pointe accentuée « arrow spikes » (#1270)
-  public get arrow_spike_always(): boolean { return this._arrow_spike_always }
-  public set arrow_spike_always(value: boolean) {
-    this._arrow_spike_always = value
-    this.drawElements()
-  }
-
-  public get arrow_spike_max_thickness(): number { return this._arrow_spike_max_thickness }
-  public set arrow_spike_max_thickness(value: number) {
-    this._arrow_spike_max_thickness = value
-    this.drawElements()
-  }
-
-  public get arrow_spike_base_factor(): number { return this._arrow_spike_base_factor }
-  public set arrow_spike_base_factor(value: number) {
-    this._arrow_spike_base_factor = value
-    this.drawElements()
-  }
+  // OS#1302 — structure_mode_force_min / arrow_use_standalone_layout / arrow_spike_*
+  // ne sont plus des globales : ce sont des attributs de flux (shape_structure_force_min /
+  // shape_arrow_standalone / shape_arrow_spike_*) résolus par le style de flux.
 
   public get scaleValueToPx() { return this._scaleValueToPx }
 
