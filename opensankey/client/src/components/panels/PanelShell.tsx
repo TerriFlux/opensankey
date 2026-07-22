@@ -23,7 +23,7 @@
 
 import React from 'react'
 import { Box, Button, CloseButton, Text } from '@chakra-ui/react'
-import { FaThumbtack, FaAngleDoubleRight, FaExpandAlt } from 'react-icons/fa'
+import { FaThumbtack, FaAngleDoubleRight, FaExpandAlt, FaArrowsAltH } from 'react-icons/fa'
 import Draggable, { DraggableProps } from 'react-draggable'
 
 import type { Class_ApplicationData } from '../../types/ApplicationData'
@@ -31,7 +31,11 @@ import { PANELS_TOPIC } from '../../types/EventBus'
 import {
   Class_PanelManager,
   Type_PanelMode,
-  PANEL_SIDEBAR_DEFAULT_WIDTH_PX
+  PANEL_SIDEBAR_DEFAULT_WIDTH_PX,
+  PANEL_SIDEBAR_MIN_WIDTH_PX,
+  PANEL_SIDEBAR_MAX_WIDTH_PX,
+  PANEL_POPUP_MIN_SIZE,
+  PANEL_POPUP_MAX_SIZE
 } from '../../types/PanelManager'
 import { useModelBinding } from '../../hooks/useModelBinding'
 import { default_font_size } from '../../css/Theme'
@@ -155,28 +159,86 @@ const PanelHeader = ({
   )
 }
 
-/**
- * Poignée de redimensionnement (double-flèche). Slot VISUEL posé au Lot 0 ;
- * le clamp min/max et le glisser effectif sont branchés au Lot 3.
- */
-const ResizeGrip = ({ corner }: { corner: 'bottom-right' | 'left' }) => (
-  <Box
-    aria-hidden
-    style={corner === 'bottom-right'
-      ? {
-        position: 'absolute', right: '2px', bottom: '2px',
-        color: '#a0aec0', fontSize: '0.6rem', pointerEvents: 'none',
-        transform: 'rotate(90deg)'
-      }
-      : {
-        position: 'absolute', left: '1px', top: '50%',
-        color: '#cbd5e0', fontSize: '0.6rem', pointerEvents: 'none',
-        transform: 'translateY(-50%)'
+const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v))
+
+// Poignée de redimensionnement fonctionnelle (Lot 3). Aperçu local pendant le
+// glisser (onPreview), commit dans le modèle au relâchement (onCommit) — comme le
+// séparateur de la grande zone : pas de recadrage du dessin à chaque pixel.
+// Barre latérale : bord GAUCHE (largeur). Pop-up : coin BAS-DROIT (largeur+hauteur).
+
+const SidebarResizeHandle = ({ startWidth, onPreview, onCommit }: {
+  startWidth: number
+  onPreview: (w: number) => void
+  onCommit: (w: number) => void
+}) => {
+  const onMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault(); e.stopPropagation()
+    const x0 = e.clientX
+    // Glisser vers la GAUCHE élargit (la barre est ancrée à droite).
+    const widthAt = (cx: number) =>
+      clamp(startWidth + (x0 - cx), PANEL_SIDEBAR_MIN_WIDTH_PX, PANEL_SIDEBAR_MAX_WIDTH_PX)
+    const move = (ev: MouseEvent) => onPreview(widthAt(ev.clientX))
+    const up = (ev: MouseEvent) => {
+      window.removeEventListener('mousemove', move)
+      window.removeEventListener('mouseup', up)
+      onCommit(widthAt(ev.clientX))
+    }
+    window.addEventListener('mousemove', move)
+    window.addEventListener('mouseup', up)
+  }
+  return (
+    <Box
+      className='panel_resize_handle_sidebar'
+      onMouseDown={onMouseDown}
+      style={{
+        position: 'absolute', left: 0, top: 0, bottom: 0, width: '7px',
+        cursor: 'ew-resize', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: '#cbd5e0', zIndex: 1
       }}
-  >
-    <FaExpandAlt />
-  </Box>
-)
+      _hover={{ color: 'gray.500', bg: 'rgba(0,0,0,0.04)' }}
+    >
+      <Box as='span' style={{ fontSize: '0.5rem', pointerEvents: 'none' }}><FaArrowsAltH /></Box>
+    </Box>
+  )
+}
+
+const PopupResizeHandle = ({ startW, startH, onPreview, onCommit }: {
+  startW: number
+  startH: number
+  onPreview: (size: { w: number, h: number }) => void
+  onCommit: (size: { w: number, h: number }) => void
+}) => {
+  const onMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault(); e.stopPropagation()
+    const x0 = e.clientX, y0 = e.clientY
+    const sizeAt = (cx: number, cy: number) => ({
+      w: clamp(startW + (cx - x0), PANEL_POPUP_MIN_SIZE.w, PANEL_POPUP_MAX_SIZE.w),
+      h: clamp(startH + (cy - y0), PANEL_POPUP_MIN_SIZE.h, PANEL_POPUP_MAX_SIZE.h)
+    })
+    const move = (ev: MouseEvent) => onPreview(sizeAt(ev.clientX, ev.clientY))
+    const up = (ev: MouseEvent) => {
+      window.removeEventListener('mousemove', move)
+      window.removeEventListener('mouseup', up)
+      onCommit(sizeAt(ev.clientX, ev.clientY))
+    }
+    window.addEventListener('mousemove', move)
+    window.addEventListener('mouseup', up)
+  }
+  return (
+    <Box
+      className='panel_resize_handle_popup'
+      onMouseDown={onMouseDown}
+      style={{
+        position: 'absolute', right: 0, bottom: 0, width: '16px', height: '16px',
+        cursor: 'nwse-resize', display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end',
+        padding: '2px', color: '#a0aec0', zIndex: 1
+      }}
+      _hover={{ color: 'gray.500' }}
+    >
+      <Box as='span' style={{ fontSize: '0.55rem', pointerEvents: 'none' }}><FaExpandAlt /></Box>
+    </Box>
+  )
+}
 
 // --- Barre latérale : ancrée à droite, réserve sa largeur (dessin recadré) ----
 const SidebarShell = ({ app_data, panels, id, title, allowedModes, width_px, onClose, children }: {
@@ -193,6 +255,9 @@ const SidebarShell = ({ app_data, panels, id, title, allowedModes, width_px, onC
   // Se cale à gauche de la colonne d'outils (extrême droite), comme l'ex-panneau
   // de config épinglé.
   const right_offset = app_data.menu_configuration.getToolsColumnWidthPx()
+  // Aperçu local de la largeur pendant le glisser (commit au relâchement).
+  const [drag_width, setDragWidth] = React.useState<number | null>(null)
+  const eff_width = drag_width ?? width_px
   return (
     <Box
       className='panel_sidebar'
@@ -201,21 +266,25 @@ const SidebarShell = ({ app_data, panels, id, title, allowedModes, width_px, onC
       right={right_offset + 'px'}
       top={da.getNavBarHeight() + 'px'}
       bottom={da.getBottomBarHeight() + 'px'}
-      width={width_px + 'px'}
+      width={eff_width + 'px'}
       zIndex={PANEL_Z_SIDEBAR}
       bg='white'
       borderLeft='1px solid #e2e8f0'
       display='flex'
       flexDirection='column'
     >
+      <SidebarResizeHandle
+        startWidth={width_px}
+        onPreview={setDragWidth}
+        onCommit={(w) => { panels.sidebar_width_px = w; setDragWidth(null) }}
+      />
       <PanelHeader
         app_data={app_data} panels={panels} id={id} title={title}
         mode='sidebar' allowedModes={allowedModes} onClose={onClose}
       />
-      <Box style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '0.2rem' }}>
+      <Box style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '0.2rem 0.2rem 0.2rem 0.4rem' }}>
         {children}
       </Box>
-      <ResizeGrip corner='left' />
     </Box>
   )
 }
@@ -233,6 +302,12 @@ const PopupShell = ({ app_data, panels, id, title, allowedModes, onClose, childr
   const node_ref = React.useRef(null)
   const geom = panels.getPopupGeometry(id)
   const handle_class = 'panel-popup-handle-' + id.replace(/[^a-zA-Z0-9_-]/g, '_')
+  const base_w = geom?.w ?? 340
+  const base_h = geom?.h ?? 380
+  // Aperçu local de la taille pendant le glisser (commit au relâchement).
+  const [drag_size, setDragSize] = React.useState<{ w: number, h: number } | null>(null)
+  const eff_w = drag_size?.w ?? base_w
+  const eff_h = drag_size?.h ?? base_h
   return (
     <DraggableComponent
       nodeRef={node_ref}
@@ -256,8 +331,8 @@ const PopupShell = ({ app_data, panels, id, title, allowedModes, onClose, childr
         boxShadow='0 4px 16px rgba(0, 0, 0, 0.25)'
         border='1px solid'
         borderColor='gray.200'
-        width={(geom?.w ?? 340) + 'px'}
-        height={(geom?.h ?? 380) + 'px'}
+        width={eff_w + 'px'}
+        height={eff_h + 'px'}
         display='flex'
         flexDirection='column'
         overflow='hidden'
@@ -270,7 +345,16 @@ const PopupShell = ({ app_data, panels, id, title, allowedModes, onClose, childr
         <Box style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '0.2rem' }}>
           {children}
         </Box>
-        <ResizeGrip corner='bottom-right' />
+        <PopupResizeHandle
+          startW={base_w}
+          startH={base_h}
+          onPreview={setDragSize}
+          onCommit={(size) => {
+            const g = panels.getPopupGeometry(id)
+            if (g) panels.setPopupGeometry(id, { ...g, w: size.w, h: size.h })
+            setDragSize(null)
+          }}
+        />
       </Box>
     </DraggableComponent>
   )

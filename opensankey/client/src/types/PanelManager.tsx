@@ -42,6 +42,9 @@ export const PANEL_SIDEBAR_MAX_WIDTH_PX = 640
 
 // Taille par défaut d'une pop-up à sa création (avant tout redimensionnement).
 export const PANEL_POPUP_DEFAULT_SIZE = { w: 340, h: 380 }
+// Bornes de redimensionnement d'une pop-up (Lot 3).
+export const PANEL_POPUP_MIN_SIZE = { w: 240, h: 160 }
+export const PANEL_POPUP_MAX_SIZE = { w: 1000, h: 900 }
 
 /**
  * Modèle central des panneaux. Une instance vit dans Class_MenuConfig
@@ -191,11 +194,18 @@ export class Class_PanelManager {
     return this._popups.get(id) ?? null
   }
 
-  /** Met à jour la géométrie d'une pop-up ouverte (déplacement / redimension). */
+  /** Met à jour la géométrie d'une pop-up ouverte (déplacement / redimension).
+   *  Taille bornée (Lot 3) ; position laissée telle quelle (react-draggable borne). */
   public setPopupGeometry(id: string, geometry: Type_PopupGeometry): void {
     if (!this._popups.has(id)) return
-    this._popups.set(id, geometry)
-    this._popup_geometry_memory.set(id, geometry)
+    const clamped: Type_PopupGeometry = {
+      x: geometry.x,
+      y: geometry.y,
+      w: Math.max(PANEL_POPUP_MIN_SIZE.w, Math.min(PANEL_POPUP_MAX_SIZE.w, geometry.w)),
+      h: Math.max(PANEL_POPUP_MIN_SIZE.h, Math.min(PANEL_POPUP_MAX_SIZE.h, geometry.h))
+    }
+    this._popups.set(id, clamped)
+    this._popup_geometry_memory.set(id, clamped)
     this._notify()
   }
 
