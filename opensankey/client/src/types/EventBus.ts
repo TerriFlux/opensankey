@@ -32,6 +32,17 @@ export const SELECTION_TOPIC = 'selection'
  */
 export const ZOOM_TOPIC = 'zoom'
 
+/**
+ * OS#300 — Topic « panneaux » (info-bulle / pop-up / barre latérale). Notifié
+ * par Class_PanelManager à chaque changement de mode, d'ouverture/fermeture ou
+ * de géométrie d'un panneau. Abonnés : les coquilles PanelShell (re-render de
+ * leur mode courant) et l'assemblage SankeyMenus (position du chrome droit).
+ * Les changements qui touchent la RÉSERVE de largeur (bascule barre latérale,
+ * largeur de la barre latérale) notifient EN PLUS MAIN_ZONE_TOPIC pour que la
+ * zone de dessin se recadre.
+ */
+export const PANELS_TOPIC = 'panels'
+
 export class Class_EventBus {
   private _listeners: Map<string, Set<() => void>> = new Map()
 

@@ -34,6 +34,7 @@ import {
 import { Class_DataTagGroup } from './TagGroup'
 import { Class_DataTag } from './Tag'
 import { Class_EventBus, MAIN_ZONE_TOPIC, SELECTION_TOPIC } from './EventBus'
+import { Class_PanelManager, Type_PanelMode } from './PanelManager'
 import {
   ConverterConfig
 } from '../components/dialogs/PersistenceProcessDialogConfigs'
@@ -264,19 +265,34 @@ export class Class_MenuConfig {
   public render_tag_group_editor:
     ((element_tag_name_prop: string, group_id: string) => JSX.Element | null) | null = null
 
-  // #1243 — Panneau de config ÉPINGLÉ (mode « édition intense ») : au lieu de
-  // flotter en overlay au-dessus du dessin, le panneau se docke à droite comme
-  // le tableur et RÉSERVE sa largeur — la zone de dessin se recadre à gauche.
-  // État TRANSITOIRE (non sérialisé) ; le mode survol reste le défaut.
-  protected _config_panel_pinned: boolean = false
-  public get config_panel_pinned() { return this._config_panel_pinned }
-  public set config_panel_pinned(v: boolean) { this._config_panel_pinned = v; this._notifyMainZone() }
-  /** Largeur (px) réservée à droite par le panneau de config épinglé (0 si
-   *  non épinglé ou fermé). Même calcul de largeur que le drawer. */
+  // OS#300 — Modèle central des « panneaux » (info-bulle / pop-up / barre
+  // latérale). Instancié dans le constructeur avec le bus de ce menu, de sorte
+  // que les coquilles PanelShell s'abonnent via `subscribe(PANELS_TOPIC, …)`.
+  public panels!: Class_PanelManager
+
+  // OS#300 — Le panneau de Configuration est désormais un « panneau » unifié
+  // (id 'config') piloté par `panels`. `config_panel_pinned` (lu par
+  // l'inspecteur, l'assemblage et le tableur) devient une VUE de son mode :
+  // ancré = barre latérale, dé-ancré = pop-up déplaçable. Le dernier contenant
+  // choisi est mémorisé pour rouvrir la config dans le même mode.
+  // Défaut = POP-UP (superposée, ne réserve PAS de largeur) : l'ouverture
+  // AUTOMATIQUE de la config (sélection de nœud/flux, stock, légende… cf.
+  // DrawingAreaInteractions) ne doit jamais recadrer le dessin — invariant
+  // historique. L'ancrage en barre latérale reste un choix délibéré (en-tête).
+  protected _config_last_container: Type_PanelMode = 'popup'
+  public get config_last_container(): Type_PanelMode { return this._config_last_container }
+  public get config_panel_pinned() { return this.panels.getMode('config') === 'sidebar' }
+  public set config_panel_pinned(v: boolean) {
+    this._config_last_container = v ? 'sidebar' : 'popup'
+    // Ne re-router que si la config est ouverte : sinon on ne fait que mémoriser
+    // le mode de réouverture (l'ouverture elle-même passe par setConfigOpen).
+    if (this.panels.isOpen('config')) this.panels.setMode('config', this._config_last_container)
+  }
+  /** Largeur (px) réservée à droite par la config quand elle est la barre
+   *  latérale (0 sinon). Conservé pour les consommateurs directs (MainZoneTabs,
+   *  galerie) ; la réserve GLOBALE passe par panels.getSidebarReservedPx(). */
   public getConfigPanelPinnedReservedPx(): number {
-    if (!this._config_panel_pinned) return 0
-    if (!this.ref_menu_opened.current[0]) return 0
-    return Math.max(window.innerWidth * MENU_CONFIG_WIDTH_PCT / 100, MENU_CONFIG_MIN_WIDTH_PX)
+    return this.panels.sidebar_id === 'config' ? this.panels.getSidebarReservedPx() : 0
   }
   // #1258 — Tiroir de FILTRES épinglé : même principe que le panneau de config.
   // Épinglé + ouvert, il RÉSERVE sa largeur (le dessin se recadre à gauche) au
@@ -314,7 +330,7 @@ export class Class_MenuConfig {
    *  — même système de fenêtrage pour tous les panneaux dockés (#1243). */
   public getRightChromeReservedPx(): number {
     return this.getToolsColumnWidthPx() +
-      this.getConfigPanelPinnedReservedPx() +
+      this.panels.getSidebarReservedPx() +
       this.getTemplateGalleryPinnedReservedPx() +
       this.getFilterPanelPinnedReservedPx()
   }
@@ -638,6 +654,9 @@ export class Class_MenuConfig {
   } }
 
   constructor() {
+    // OS#300 — modèle des panneaux, partageant le bus de ce menu (créé en
+    // initialiseur de champ, donc déjà disponible ici).
+    this.panels = new Class_PanelManager(this._event_bus)
     this._ref_to_drawer_sequence_data_tag_updater = { current: () => null }
     // Init menu component updater ------------------------------------------------------
     this._ref_rerender_submodules_menus = { current: () => null }
