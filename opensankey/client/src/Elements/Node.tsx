@@ -28,8 +28,7 @@ import * as d3 from '../d3Modules'
 import { Class_NodeBase } from './NodeBase'
 
 import {
-  Class_LinkElement,
-  sortLinksElementsByRelativeNodesPositions
+  Class_LinkElement
 } from './Link'
 import { Class_Handler } from './Handler'
 import { reorganizeIOOrder } from './reorganizeIOOrder'
@@ -1077,22 +1076,29 @@ export class Class_NodeElement extends Class_NodeBase {
 
     let recycling_links: Class_LinkElement[]
     let compare: (link_a: Class_LinkElement, link_b: Class_LinkElement) => number
+    // Les deux modes passent par l'ordre géométrique (cf. ioOrderGeometry.ts). L'éventail
+    // « split direction + hauteur » ne s'applique qu'aux flux qui tournent ('vh'/'hv') ; les
+    // flux droits ('hh'/'vv') gardent le tri par la position du nœud opposé. Différence
+    // simple/advanced : advanced départage les hauteurs égales par l'ancre reach·curve
+    // (use_curve=true) ; simple ignore la courbure.
     if (mode === 'advanced') {
-      // Ordre géométrique par la courbure (os#205/#266) : chaque flux est classé par la
-      // forme de son coude à ce nœud (cf. ioOrderGeometry.ts) pour que l'éventail ne se
-      // croise pas. Les flux de recyclage rejoignent le groupe « middle » et sont classés
-      // par le ventre de leur boucle → on passe recycling_links=[] à reorganizeIOOrder.
+      // Les flux de recyclage rejoignent le groupe « middle » et sont classés par le ventre
+      // de leur boucle → on passe recycling_links=[] à reorganizeIOOrder.
       const middle = this._links_order.filter(
         l => !import_links.includes(l) && !export_links.includes(l)
       )
-      const order_index = this._computeIOOrderIndex(middle)
+      const order_index = this._computeIOOrderIndex(middle, true)
       recycling_links = []
       compare = (link_a, link_b) => (order_index.get(link_a) ?? 0) - (order_index.get(link_b) ?? 0)
     } else {
-      // 'simple' — tri par la position du nœud opposé ; les flux de recyclage sont
-      // parqués en bloc entre le middle et les exports (comportement historique).
+      // 'simple' — mêmes règles sans la courbure ; les flux de recyclage restent parqués en
+      // bloc entre le middle et les exports (comportement historique), donc hors index.
       recycling_links = this._links_order.filter(l => l.shape_is_recycling)
-      compare = (link_a, link_b) => sortLinksElementsByRelativeNodesPositions(link_a, link_b, this)
+      const middle = this._links_order.filter(
+        l => !import_links.includes(l) && !export_links.includes(l) && !l.shape_is_recycling
+      )
+      const order_index = this._computeIOOrderIndex(middle, false)
+      compare = (link_a, link_b) => (order_index.get(link_a) ?? 0) - (order_index.get(link_b) ?? 0)
     }
 
     this._links_order = reorganizeIOOrder(
@@ -1108,16 +1114,18 @@ export class Class_NodeElement extends Class_NodeBase {
   }
 
   /**
-   * Build a link → display-rank map for the geometry-aware I/O order (mode 'advanced') :
-   * each side's links are ranked per-link by the shape of their bend at this node (cf.
-   * ioOrderGeometry.ts) so the fan does not cross. All positions are taken at node
-   * CENTRES ; each link carries the curvature on its node-side end, which is what the
-   * ordering key needs. A recycling link additionally carries `stack_ref`, the centre of
-   * its loop's belly, because its opposite node — which sits backwards, beyond this node
-   * — says nothing about where the loop actually passes.
+   * Build a link → display-rank map for the geometry-aware I/O order (modes 'simple' and
+   * 'advanced', cf. ioOrderGeometry.ts). Turning links ('vh'/'hv') get the direction-split
+   * + height fan so it does not cross ; straight links ('hh'/'vv') keep the plain
+   * opposite-position order. All positions are taken at node CENTRES ; each link carries the
+   * curvature on its node-side end (used as a height tie-break in ADVANCED only — `use_curve`).
+   * A recycling link additionally carries `stack_ref`, the centre of its loop's belly,
+   * because its opposite node — which sits backwards, beyond this node — says nothing about
+   * where the loop actually passes.
    */
   private _computeIOOrderIndex(
-    middle: Class_LinkElement[]
+    middle: Class_LinkElement[],
+    use_curve: boolean
   ): Map<Class_LinkElement, number> {
     const cx = this.position_x + this.getShapeWidthToUse() / 2
     const cy = this.position_y + this.getShapeHeightToUse() / 2
@@ -1134,8 +1142,11 @@ export class Class_NodeElement extends Class_NodeBase {
       // glued to the node) is a real value and is kept — only a missing value falls back
       // to the default. The order rule uses reach·curve_node as the anchor distance.
       const curve_node = (is_source ? l.shape_starting_curve : l.shape_ending_curve) ?? 0.05
+      // Seuls les flux qui changent d'axe ('vh'/'hv') reçoivent l'éventail split+hauteur ;
+      // les flux droits ('hh'/'vv') gardent le tri par position opposée (cf. orderKey).
+      const turning = (l.shape_orientation === 'vh' || l.shape_orientation === 'hv')
       const [ox, oy] = centre(other)
-      const geo: Type_IOGeo = { side, ox, oy, curve_node }
+      const geo: Type_IOGeo = { side, ox, oy, turning, curve_node }
       if (l.shape_is_recycling) {
         const [sx, sy] = centre(l.source)
         const [tx, ty] = centre(l.target)
@@ -1149,7 +1160,7 @@ export class Class_NodeElement extends Class_NodeBase {
       }
       return { item: l, geo }
     })
-    const ordered = orderIOByGeometry(items, cx, cy)
+    const ordered = orderIOByGeometry(items, cx, cy, use_curve)
     const map = new Map<Class_LinkElement, number>()
     ordered.forEach((l, i) => map.set(l, i))
     return map
