@@ -5,22 +5,23 @@
 // returned order to drive `reorganizeIOOrder`.
 //
 // THE POLICY (user's rule, #205 rework — under local visual validation)
-//   0. GATE — the fan rule below applies ONLY to TURNING links (orientation 'vh'/'hv',
-//      i.e. the link changes axis between its two ends). Straight links ('hh'/'vv')
-//      keep the historical order : sorted by the opposite node's stacking position
-//      along the face (its y for left/right, x for top/bottom). `geo.turning` says which.
-//   1. DIRECTION split (turning links) — the opposite node's centre decides : a link
-//      whose opposite node is ABOVE the reorg node goes UP (top of the node), below goes
-//      DOWN. Up links are all placed above down links, so up and down never cross. For
-//      top/bottom sides the analogue is LEFT vs RIGHT.
-//   2. WITHIN a direction group (turning links) — sort by HEIGHT, i.e. the reach
-//      (|opposite − node| on the emission axis : x-distance for left/right, y for
-//      top/bottom). The link that turns FIRST — the highest, nearest one — goes to the
-//      OUTER extremity ; the one that turns last, the farthest, stays toward the middle.
-//      Ascending reach for the up group (nearest at the top extremity), descending for
-//      the down group (nearest at the bottom extremity). Ties are broken by the node-side
-//      curvature ANCHOR distance reach·curve_node (ADVANCED mode only — `use_curve`), then
-//      by the opposite node's stacking position.
+//   Each face is split into THREE bands, top→bottom (left→right for top/bottom sides) :
+//     [ turning-up | straight | turning-down ]
+//   0. GATE — only TURNING links (orientation 'vh'/'hv', the link changes axis end-to-end)
+//      get the fan. Straight links ('hh'/'vv') form the MIDDLE band, ordered by the opposite
+//      node's stacking position along the face (its y for left/right, x for top/bottom).
+//      `geo.turning` says which.
+//   1. DIRECTION split (turning links) — the reference decides which band : a turning link
+//      whose opposite node is ABOVE the reorg node turns UP → it sits ABOVE the whole
+//      straight block ; below → it turns DOWN → BELOW the straight block. So turning-up and
+//      turning-down never cross, and each wraps around the straight middle. For top/bottom
+//      sides the analogue is LEFT vs RIGHT.
+//   2. WITHIN a turning band — sort by HEIGHT, i.e. the reach (|opposite − node| on the
+//      emission axis : x for left/right, y for top/bottom). The link that turns FIRST — the
+//      nearest one — goes to the OUTER extremity ; the farthest stays toward the straight
+//      block. Ascending reach for the up band (nearest at the very top), descending for the
+//      down band (nearest at the very bottom). Ties are broken by the node-side curvature
+//      ANCHOR distance reach·curve_node (ADVANCED mode only — `use_curve`), then by stacking.
 // Cross-side order keeps the historical side priority (right < bottom < left < top).
 //
 // RECYCLING LINKS (user's rule) — they take part in the very same ordering, with ONE
@@ -62,14 +63,16 @@ const side_rank: { [_ in Type_Side]: number } = {
 
 const isHorizontalSide = (s: Type_Side) => s === 'left' || s === 'right'
 
-// Ranking key for one link : [directionGroup, primary, anchorTie, stackTie], lexical.
-//  directionGroup : 0 = up (reference above), 1 = down — a hard split.
-//  primary        : turning links → reach (height), signed so ascending sort puts the
-//                   nearest (first-turning) link at each group's OUTER extremity ;
-//                   straight links → the stacking position itself (plain opposite order).
-//  anchorTie      : turning links, ADVANCED only → node-side anchor distance reach·curve_node,
-//                   signed like primary ; 0 otherwise.
-//  stackTie       : reference stacking position (final, keeps determinism).
+// Ranking key for one link : [band, primary, anchorTie, stackTie], lexical.
+//  band     : 3 bands on the face — 0 = turning-up (above the straight block), 1 = straight
+//             ('hh'/'vv'), 2 = turning-down (below the straight block). A turning link that
+//             turns up sits above ALL straight links, one that turns down sits below them.
+//  primary  : turning links → reach (height), signed so ascending sort puts the nearest
+//             (first-turning) link at each band's OUTER extremity ; straight links → the
+//             stacking position itself (plain opposite order, within the middle band).
+//  anchorTie: turning links, ADVANCED only → node-side anchor distance reach·curve_node,
+//             signed like primary ; 0 otherwise.
+//  stackTie : reference stacking position (final, keeps determinism).
 // The "reference" is the opposite node's centre, except for a recycling link, where it
 // is the centre of the loop's belly (geo.stack_ref) — see the header.
 type Type_OrderKey = [number, number, number, number]
@@ -83,13 +86,15 @@ function orderKey(geo: Type_IOGeo, nx: number, ny: number, use_curve: boolean): 
     ? geo.stack_ref - (horiz ? ny : nx)
     : (horiz ? dy : dx)
   const up = stack < 0
-  // Straight ('hh'/'vv') links : no fan — plain order by the opposite stacking position.
+  // Straight ('hh'/'vv') links : the MIDDLE band (1), no fan — plain order by the opposite
+  // stacking position. Turning links wrap around this block, above or below it.
   if (!geo.turning)
-    return [up ? 0 : 1, stack, 0, 0]
-  // Turning ('vh'/'hv') links : direction split, then HEIGHT (reach) toward the extremity.
+    return [1, stack, 0, 0]
+  // Turning ('vh'/'hv') links : band 0 when they turn up (above the straight block), band 2
+  // when they turn down (below it) ; within the band, HEIGHT (reach) toward the extremity.
   const reach = Math.abs(horiz ? dx : dy)  // toward the opposite (≥ 0), on the emission axis
   const anchor = reach * geo.curve_node    // node-side curvature anchor distance (tie-break)
-  return [up ? 0 : 1, up ? reach : -reach, use_curve ? (up ? anchor : -anchor) : 0, stack]
+  return [up ? 0 : 2, up ? reach : -reach, use_curve ? (up ? anchor : -anchor) : 0, stack]
 }
 
 /**

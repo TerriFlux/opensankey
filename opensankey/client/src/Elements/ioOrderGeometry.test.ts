@@ -95,6 +95,32 @@ describe('turning links — direction split + height', () => {
   })
 })
 
+describe('interleaving — turning links wrap the straight block (3 bands)', () => {
+  it('turning-up sits above ALL straight, turning-down below — whatever the straight own y', () => {
+    // sHigh is a straight link whose opposite is ABOVE the node, yet it stays in the middle
+    // band : straight links never join a turning band. The turning-up link is above it all,
+    // the turning-down link below it all.
+    const items = make([
+      ['sLow', 'right', 300, 150],          // straight, below node
+      ['tDown', 'right', 800, 200, true],   // turning-down → bottom band
+      ['tUp', 'right', 800, -200, true],    // turning-up → top band
+      ['sHigh', 'right', 300, -100],        // straight, above node — still middle band
+    ])
+    expect(run(items, 0, 0)).toEqual(['tUp', 'sHigh', 'sLow', 'tDown'])
+  })
+
+  it('within each turning band the height fan still applies around the straight block', () => {
+    const items = make([
+      ['s', 'right', 300, 0],               // lone straight, middle
+      ['upNear', 'right', 300, -100, true], // up band : nearest at the very top
+      ['upFar', 'right', 1200, -100, true],
+      ['downFar', 'right', 1200, 100, true],
+      ['downNear', 'right', 300, 100, true],// down band : nearest at the very bottom
+    ])
+    expect(run(items, 0, 0)).toEqual(['upNear', 'upFar', 's', 'downFar', 'downNear'])
+  })
+})
+
 describe('height tie-break — anchor distance (advanced only)', () => {
   it('equal reach : advanced breaks by reach·curve_node, simple keeps source order', () => {
     // Same near-node column and same oy → equal reach and equal stacking : only the
