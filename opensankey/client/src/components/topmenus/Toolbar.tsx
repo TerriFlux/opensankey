@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, RefObject, useRef, ReactNode, MutableRefObject } from 'react'
 import {
-  Drawer, Button, Collapse, DrawerContent, DrawerBody, Box, useDisclosure,
+  Button, Collapse, Box, useDisclosure,
   Heading, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Text, Select, Checkbox, Switch,
   Menu, MenuButton, MenuList, MenuItem, HStack, VStack, Divider
 } from '@chakra-ui/react'
@@ -325,11 +325,6 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
       has_level_filter || has_element_filter || has_data_filter ||
       app_data.has_sankey_dev // « Toutes données » (dev) suffit à ouvrir le drawer
   }
-  // OS#300 — En publish/statique, l'ouverture du tiroir vit dans ce useState
-  // local (tiroir overlay historique). En ÉDITEUR, l'ouverture EST la présence du
-  // panneau 'filter' dans le modèle (panels) : on la DÉRIVE, sinon l'état local se
-  // désynchronise quand un autre menu prend la barre latérale et éjecte le filtre.
-  const [drawerOpenLocal, setDrawerOpen] = useState(app_data.is_static)
   // #1283b — bascule GLOBALE de révélation des groupes de tags cachés (bannière
   // « Aucun »), partagée par toutes les sections du tiroir. Pilotée par le bouton
   // unique de l'en-tête (à côté du pin) et transmise en prop aux filtres.
@@ -341,49 +336,38 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
   useModelBinding(app_data.menu_configuration.ref_toolbar)
   // OS#300 — re-render quand un panneau change (ouverture/fermeture/éviction).
   useModelBinding(undefined, (r) => app_data.menu_configuration.subscribe(PANELS_TOPIC, r))
-  const drawerOpen = app_data.is_static
-    ? drawerOpenLocal
-    : app_data.menu_configuration.panels.isOpen('filter')
-  // Abonnement à la grande zone : garde l'offset droit à jour quand la colonne d'outils change.
-  // Le panneau est un overlay au-dessus de toute la grande zone (tableur/doc compris, zIndex 30) :
-  // il ne s'écarte que de la colonne d'outils (zIndex 35, extrême droite), comme la config.
+  // OS#300 — L'ouverture du filtre EST sa présence dans le modèle (panels), en
+  // ÉDITEUR comme en PUBLISH : même emplacement (à droite) et même socle unifié
+  // (pop-up déplaçable ou barre latérale). Dérivée de panels (pas de useState :
+  // sinon désync quand un autre menu prend la barre latérale et éjecte le filtre).
+  const drawerOpen = app_data.menu_configuration.panels.isOpen('filter')
   useMainZone(app_data)
-  // #1243 — chrome droit = colonne d'outils + panneau de config ÉPINGLÉ : ce
-  // tiroir s'en écarte pour se placer à leur gauche (cohabitation config/filtres).
-  // #1258 — moins sa PROPRE réserve quand il est lui-même épinglé (sinon il se
-  // décalerait de sa propre largeur).
-  const toolsReserve = app_data.menu_configuration.getRightChromeReservedPx()
-    - app_data.menu_configuration.getFilterPanelPinnedReservedPx()
-  // En éditeur, le panneau de filtres s'ouvre à DROITE (à côté de la colonne d'outils, comme la config) ;
-  // en publish/statique on garde l'ouverture historique à gauche (bouton flottant gauche).
-  const drawer_on_right = !app_data.is_static
-  // #1243 — sections « Éditer » injectées par les couches supérieures (OSP :
-  // groupes de tags, vues). Onglet masqué s'il n'y en a aucune (OS pur/publish).
   const drawer_width_px = width_fitler_drawer
-  const width_drawer = (drawerOpen ? drawer_width_px + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin
-  // Ouvre/ferme le drawer de filtres. Comme la config, c'est un OVERLAY au-dessus de toute la
-  // grande zone (diagramme, tableur, doc…) : il ne touche ni à l'état doc/tableur ni au cadrage.
-  // Seule exclusivité conservée : le panneau de config (même emplacement à droite). Centralise
-  // tous les chemins (bouton colonne, bouton flottant, Drawer onClose, ref_close_filter_drawer).
+  // Décalage horizontal du bouton flottant d'ouverture (publish) selon l'état.
+  const width_drawer = (drawerOpen ? drawer_width_px + app_data.drawing_area.fit_margin / 2 : 0)
+    + app_data.drawing_area.fit_margin
+  // Géométrie par défaut d'une pop-up filtre : bord droit (comme la config), sans
+  // recouvrir le centre du dessin.
+  const filterPopupGeometry = () => ({
+    w: 340,
+    h: Math.min(560, window.innerHeight - app_data.drawing_area.getNavBarHeight()
+      - app_data.drawing_area.getBottomBarHeight() - 24),
+    x: Math.max(0, window.innerWidth - 340 - app_data.menu_configuration.getToolsColumnWidthPx() - 16),
+    y: app_data.drawing_area.getNavBarHeight() + 8
+  })
+  // Ouvre/ferme le filtre. Panneau unifié 'filter' : pop-up (superposée) ou barre
+  // latérale (exclusive, gérée par panels). Centralise tous les chemins (bouton
+  // colonne d'outils, bouton flottant publish, ref_close_filter_drawer).
   const setFilterOpen = (open: boolean) => {
     app_data.menu_configuration.filter_drawer_open = open
-    // OS#300 — en ÉDITEUR, le filtre est un « panneau » unifié (id 'filter') :
-    // l'ouverture EST sa présence dans le modèle (panels), qui rend l'invariant
-    // « une seule barre latérale » (ancrer le filtre remplace la config/recherche
-    // ancrée, et inversement) et l'éviction cohérente. Config et filtre cohabitent
-    // quand l'un est en pop-up. En publish/statique, le filtre reste le tiroir
-    // overlay historique piloté par l'état local.
-    if (app_data.is_static) {
-      setDrawerOpen(open)
-    } else {
-      const panels = app_data.menu_configuration.panels
-      if (open) {
-        if (!panels.isOpen('filter')) {
-          panels.setMode('filter', app_data.menu_configuration.filter_last_container)
-        }
-      } else {
-        panels.close('filter')
+    const panels = app_data.menu_configuration.panels
+    if (open) {
+      if (!panels.isOpen('filter')) {
+        const mode = app_data.menu_configuration.filter_last_container
+        panels.setMode('filter', mode, mode === 'popup' ? { geometry: filterPopupGeometry() } : undefined)
       }
+    } else {
+      panels.close('filter')
     }
   }
   app_data.menu_configuration.ref_close_filter_drawer.current = setFilterOpen
@@ -402,6 +386,15 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
     app_data.menu_configuration.filter_drawer_width_px = drawer_width_px
     if (pinned && drawerOpen) app_data.menu_configuration.notifyMainZone()
   }, [drawer_width_px, pinned, drawerOpen])
+
+  // OS#300 — Publish : le filtre s'ouvre par défaut (comme l'ancien tiroir), en
+  // pop-up à droite, dès qu'il y a des filtres à montrer.
+  useEffect(() => {
+    if (app_data.is_static && filters_visible
+      && !app_data.menu_configuration.panels.isOpen('filter')) {
+      setFilterOpen(true)
+    }
+  }, [])
 
   if (!filters_visible) return <></>
 
@@ -512,71 +505,27 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
     </Box>
   </>
 
-  // Publish/statique : tiroir overlay historique (à gauche par défaut, bouton
-  // flottant). En ÉDITEUR : panneau unifié (pop-up ou barre latérale partagée).
-  if (app_data.is_static) {
-    return <>
-      {!hide_floating_button ? <Button
-        id='buttonOpenFilterDrawer'
-        variant='toolbar_button_open_filter'
-        size='sizeToolbarButton'
-        style={{
-          left: width_drawer,
-          top: app_data.drawing_area.getNavBarHeight() + (app_data.drawing_area.fit_margin)
-        }}
-        onClick={() => setFilterOpen(!drawerOpen)}
-      >
-        {
-          app_data.icon_library.icon_filter_tags
-        }
-      </Button> : <></>}
+  // OS#300 — Filtre unifié (id 'filter') : pop-up déplaçable ou barre latérale
+  // partagée, ancré à DROITE, en éditeur COMME en publish (même emplacement que
+  // dans l'appli). Le contenu (panel_content) est identique dans les deux modes.
+  // En publish, le bouton flottant sert d'ouvreur (pas de colonne d'outils) ; en
+  // éditeur il est masqué (l'ouverture passe par la colonne d'outils).
+  return <>
+    {!hide_floating_button ? <Button
+      id='buttonOpenFilterDrawer'
+      variant='toolbar_button_open_filter'
+      size='sizeToolbarButton'
+      style={{
+        left: width_drawer,
+        top: app_data.drawing_area.getNavBarHeight() + (app_data.drawing_area.fit_margin)
+      }}
+      onClick={() => setFilterOpen(!drawerOpen)}
+    >
+      {
+        app_data.icon_library.icon_filter_tags
+      }
+    </Button> : <></>}
 
-      <Drawer
-        placement={drawer_on_right ? 'right' : 'left'}
-        isOpen={drawerOpen}
-        onClose={() => setFilterOpen(false)}
-        blockScrollOnMount={false}
-        variant='drawer_menu_filter'
-        trapFocus={false}
-        onEsc={() => {
-          // Override drawer onEscape() to use Class_applicationData 'escape' keyEvent & not the one by default from the <Drawer> component
-          const ev = document
-          const tmp = new KeyboardEvent('keydown', { key: 'Escape' })
-          if (ev.onkeydown) {
-            ev.onkeydown(tmp as KeyboardEvent)
-          }
-        }}
-      >
-        <DrawerContent
-          style={{
-            width: 'unset',
-            height: 'fit-content',
-            // Overlay au-dessus du dessin/tableur : ombre portée pour le détacher visuellement,
-            // comme le panneau de config.
-            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)',
-            maxWidth: 'unset',
-            ...(drawer_on_right
-              ? { right: app_data.drawing_area.fit_margin / 2 + toolsReserve }
-              : { left: app_data.drawing_area.fit_margin / 2 }),
-            maxHeight: app_data.drawing_area.window_fitting_height,
-            //overflowY: 'auto',
-            marginTop: (app_data.drawing_area.fit_margin) + document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().y + document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height
-          }}>
-          <DrawerBody
-            id='drawer_filter'
-            style={{ padding: '0', width: drawer_width_px }}
-          >
-            {panel_content}
-          </DrawerBody>
-        </DrawerContent>
-      </Drawer>
-    </>
-  }
-
-  // OS#300 — Éditeur : le filtre est un « panneau » unifié (id 'filter'). L'en-tête
-  // uniforme du socle porte titre/mode/fermeture ; le contenu (panel_content) est
-  // identique en pop-up et en barre latérale partagée (270px).
-  return (
     <PanelShell
       app_data={app_data}
       id='filter'
@@ -586,7 +535,7 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
     >
       {panel_content}
     </PanelShell>
-  )
+  </>
 }
 
 // Contenu « Paramètres d'affichage » (seuils flux/étiquettes + flux nuls), rendu

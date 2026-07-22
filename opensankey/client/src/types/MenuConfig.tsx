@@ -297,10 +297,10 @@ export class Class_MenuConfig {
   // OS#300 — Le tiroir de FILTRES est un « panneau » unifié (id 'filter') en
   // ÉDITEUR : pop-up ou barre latérale partagée (270px), piloté par `panels`
   // (comme la config). `filter_panel_pinned` devient une VUE de son mode ancré.
-  // En publish/statique, le filtre reste le tiroir overlay historique (à gauche,
-  // hors `panels`) — cette bascule ne s'y applique pas. Dernier contenant
-  // mémorisé pour la réouverture ; défaut = barre latérale (menu de barre).
-  protected _filter_last_container: Type_PanelMode = 'sidebar'
+  // Vaut en ÉDITEUR comme en PUBLISH (le filtre est au même endroit, à droite).
+  // Dernier contenant mémorisé pour la réouverture ; défaut = pop-up (comme la
+  // config), superposée sans recadrer le dessin.
+  protected _filter_last_container: Type_PanelMode = 'popup'
   public get filter_last_container(): Type_PanelMode { return this._filter_last_container }
   public get filter_panel_pinned() { return this.panels.getMode('filter') === 'sidebar' }
   public set filter_panel_pinned(v: boolean) {
