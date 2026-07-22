@@ -48,7 +48,7 @@ import { DEFAULT_THEME_ID, themeFromJSON } from '../types/Theme'
 import { Class_Tag } from '../types/Tag'
 import { node_exchanges_style, elementStyleConfigs, product_sector_styles, ElementStyleKey, LinkStyle, NodeStyle, ContainerStyle, structural_styles } from '../Elements/ElementStyle'
 import { dedupeZOrderKeepFirst } from '../types/zOrder'
-import { Class_DrawingArea } from '../types/DrawingArea'
+import { Class_DrawingArea, Type_AutoFitMode } from '../types/DrawingArea'
 import { backfillTagGroupUseColors, convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
 // Issue #191 — migration de rétro-compat de la césure des libellés, isolée dans
 // son propre module pour rester testable sans le graphe d'imports lourd d'ici.
@@ -1981,6 +1981,10 @@ export class DrawingAreaPersistence {
     // Verrou de taille (largeur/hauteur/zoom figés au changement de dataTag).
     // Défaut false → sérialisé seulement si activé (absence ⇒ déverrouillé).
     if (drawing_area.size_locked) json_object['size_locked'] = true
+    // #680 — Mode de cadrage automatique (boutons radio d'ajustement). Défaut 'full'
+    // → sérialisé seulement si différent (absence ⇒ 'full' = cadrage à l'ouverture,
+    // comportement historique). 'none' = pas de cadrage auto ; 'width'/'height' = axe forcé.
+    if (drawing_area.auto_fit_mode !== 'full') json_object['auto_fit_mode'] = drawing_area.auto_fit_mode
     // Mode de représentation import/export (proche / haut-bas) : persisté car les nœuds
     // import/export siblings sont régénérés au chargement (cf. SplitIOrE).
     if (drawing_area.import_export_above_below) json_object['import_export_above_below'] = true
@@ -2342,6 +2346,9 @@ export class DrawingAreaPersistence {
     // Verrou de taille : champ direct (le setter size_locked déclenche un re-fit).
     // Absence du flag ⇒ déverrouillé (défaut de la classe).
     drawing_area['_size_locked'] = getBooleanFromJSON(json_object, 'size_locked', false)
+    // #680 — Mode de cadrage auto : champ direct (le setter notifie la barre d'outils).
+    // Absence ⇒ 'full' (défaut de la classe = cadrage à l'ouverture, comportement historique).
+    drawing_area['_auto_fit_mode'] = getStringFromJSON(json_object, 'auto_fit_mode', 'full') as Type_AutoFitMode
     drawing_area['_import_export_above_below'] = getBooleanFromJSON(json_object, 'import_export_above_below', false)
 
     drawing_area.application_data.language = getStringOrUndefinedFromJSON(json_object, 'language')

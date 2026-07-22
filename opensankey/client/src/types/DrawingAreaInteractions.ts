@@ -612,6 +612,12 @@ export class Class_DrawingAreaInteractions {
         if (da.application_data?.publish_options?.lock_zoom) return
         // Guard: ignore if deltaY is 0 (can happen with touchpad or wheel tilt)
         if (event.deltaY === 0) return
+        // #680 — Un zoom MOLETTE (Ctrl/Cmd + scroll, pinch trackpad) est un cadrage MANUEL :
+        // il désenclenche les modes de cadrage auto (le setter notifie ZOOM_TOPIC → boutons
+        // éteints). Fait ICI car ce zoom passe par scaleBy programmatique → eventZoom voit
+        // sourceEvent=null et ne peut pas le distinguer d'un cadrage automatique. Le pan
+        // (scroll simple / shift+scroll, plus bas) ne change pas l'échelle et ne désenclenche pas.
+        da.auto_fit_mode = 'none'
         // Smooth zoom factor proportional to deltaY magnitude
         const scale = Math.pow(2, -event.deltaY / 300)
         // Apply scaling

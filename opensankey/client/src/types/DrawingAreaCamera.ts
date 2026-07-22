@@ -112,11 +112,11 @@ export function anchorCamera(da: Class_DrawingArea, wx: number, wy: number, px: 
  * areaAutoFit — inchangé, avec tous ses effets de bord (_k_fit, labels, fond) — puis anime la caméra
  * de l'ancien vers le nouveau transform. Les recadrages automatiques appellent areaAutoFit direct.
  */
-export function areaAutoFitAnimated(da: Class_DrawingArea, horiz?: boolean, force_when_locked?: boolean): void {
+export function areaAutoFitAnimated(da: Class_DrawingArea, horiz?: boolean, force_when_locked?: boolean, fill_axis_forced?: boolean): void {
   const node = da.d3_selection_zoom_area?.node()
-  if (!node) { da.areaAutoFit(horiz, force_when_locked); return }
+  if (!node) { da.areaAutoFit(horiz, force_when_locked, undefined, fill_axis_forced); return }
   const from = d3.zoomTransform(node)
-  da.areaAutoFit(horiz, force_when_locked) // pose l'état final (node à t1)
+  da.areaAutoFit(horiz, force_when_locked, undefined, fill_axis_forced) // pose l'état final (node à t1)
   const to = d3.zoomTransform(node)
   if (CameraMath.sameZoomTransform(from, to)) return
   setCamera(da, to, { animate: true, from })

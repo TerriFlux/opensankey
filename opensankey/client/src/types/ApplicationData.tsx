@@ -957,6 +957,15 @@ export class Class_ApplicationData {
       // C'était déjà le cas avant : le garde `to_recenter` de recenter() n'était armé
       // au chargement que par la migration legacy ; l'appel est juste devenu explicite.
       this._drawing_area.normalizeLegacyWorldCoordinates()
+      // #680 — Re-cadrage DIFFÉRÉ du mode actif après le chargement : le premier fit
+      // (draw ci-dessus) tourne avant que la barre du bas (frise de séquence) et la légende
+      // soient mesurées → window_fitting_* périmé, bas du diagramme masqué. On ré-applique le
+      // mode une fois la mise en page stabilisée (débouncé). No-op si mode 'none'.
+      this._drawing_area.application_data._add_waiting_process(
+        'autofit_mode_after_load',
+        () => this._drawing_area.applyAutoFitMode(false),
+        200
+      )
     }
     // })
   }
