@@ -890,6 +890,8 @@ export class Class_ApplicationData {
     if (Object.keys(this._documentation_images).length > 0) json_object['documentation_images'] = this._documentation_images
     if (Object.keys(this._publish_settings).length > 0) json_object['publish_settings'] = this._publish_settings
     json_object['main_zone'] = this.menu_configuration.mainZoneStateToJSON()
+    // OS#300 Lot 4 — tailles + mode des panneaux (barre latérale / pop-ups).
+    json_object['panels'] = this.menu_configuration.panels.toJSON()
     return {
       ...json_object,
       ...DrawingAreaPersistence.toJSON(this.drawing_area, kwargs)
@@ -998,6 +1000,11 @@ export class Class_ApplicationData {
     // _fromJSON s'exécute avant, l'appel jetait et avortait tout le chargement (et donc
     // l'application du filtre de vue). Le `?.` saute proprement ce cas (cf. ligne ~608).
     if (mz && typeof mz === 'object') this.menu_configuration?.mainZoneStateFromJSON(mz as Type_JSON)
+    // OS#300 Lot 4 — restaure tailles + mode des panneaux (même garde défensive).
+    const panels_json = json_object['panels']
+    if (panels_json && typeof panels_json === 'object') {
+      this.menu_configuration?.panels.fromJSON(panels_json as Type_JSON)
+    }
   }
 
 

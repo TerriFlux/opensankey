@@ -23,7 +23,7 @@
 // de useState local, sous peine de désynchronisation des re-renders.
 
 import { Class_EventBus, MAIN_ZONE_TOPIC, PANELS_TOPIC } from './EventBus'
-import { Type_JSON, getNumberFromJSON, getStringFromJSON } from './Utils'
+import { Type_JSON, getNumberFromJSON, getStringFromJSON, getBooleanFromJSON } from './Utils'
 
 export type Type_PanelMode = 'tooltip' | 'popup' | 'sidebar'
 
@@ -225,28 +225,58 @@ export class Class_PanelManager {
   public get tooltip_anchor(): Type_TooltipAnchor { return this._tooltip_anchor }
 
   // PERSISTANCE (Lot 4) ================================================================
-  // La sérialisation des tailles/mode dans le JSON du diagramme est branchée au
-  // Lot 4. On pose ici les points d'entrée pour que ApplicationData les appelle
-  // sans nouvelle chirurgie ; seule la largeur de barre latérale est déjà
-  // durable (partagée, indépendante du menu affiché).
+  // Sérialise les TAILLES (largeur de barre latérale partagée, largeur+hauteur des
+  // pop-ups) et le MODE (menu ancré, repli) dans le JSON du diagramme — partagés à
+  // l'export (#5). Appelé par ApplicationData (clé `panels`), en parallèle de
+  // `main_zone`. Les info-bulles restent transitoires (non sérialisées).
 
   public toJSON(): Type_JSON {
+    const popups: Type_JSON = {}
+    // Mémoire de géométrie (survit à la fermeture) : c'est elle qui porte les
+    // tailles/positions à restaurer à la réouverture d'une pop-up.
+    this._popup_geometry_memory.forEach((g, id) => {
+      popups[id] = { x: g.x, y: g.y, w: g.w, h: g.h }
+    })
     return {
       // '' = aucune barre latérale (Type_JSON n'accepte pas null).
       sidebar_id: this._sidebar_id ?? '',
-      sidebar_width_px: this._sidebar_width_px
+      sidebar_width_px: this._sidebar_width_px,
+      sidebar_collapsed: this._sidebar_collapsed,
+      popups
     }
   }
 
   public fromJSON(json: Type_JSON): void {
-    this._sidebar_width_px = Math.max(
-      PANEL_SIDEBAR_MIN_WIDTH_PX,
-      Math.min(PANEL_SIDEBAR_MAX_WIDTH_PX,
-        getNumberFromJSON(json, 'sidebar_width_px', this._sidebar_width_px)))
-    // Le menu ancré au chargement (Lot 4) : `sidebar_id` restauré tel quel s'il
-    // est non vide. Les pop-ups/info-bulles restent transitoires pour l'instant.
+    this._sidebar_width_px = clampSidebarWidth(
+      getNumberFromJSON(json, 'sidebar_width_px', this._sidebar_width_px))
+    // Menu ancré au chargement + repli (le « mode » de la barre). `_last_sidebar_id`
+    // suit pour que Ctrl+B rouvre ce menu.
     const sid = getStringFromJSON(json, 'sidebar_id', '')
     this._sidebar_id = sid !== '' ? sid : null
+    this._last_sidebar_id = this._sidebar_id
+    this._sidebar_collapsed = getBooleanFromJSON(json, 'sidebar_collapsed', false)
+    // Géométries de pop-ups (mémoire) : restaurées bornées, pour que chaque pop-up
+    // rouvre à sa taille/position enregistrée.
+    const popups = json['popups']
+    if (popups && typeof popups === 'object' && !Array.isArray(popups)) {
+      this._popup_geometry_memory.clear()
+      Object.entries(popups as Type_JSON).forEach(([id, raw]) => {
+        if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+          const g = raw as Type_JSON
+          this._popup_geometry_memory.set(id, {
+            x: getNumberFromJSON(g, 'x', 0),
+            y: getNumberFromJSON(g, 'y', 0),
+            w: Math.max(PANEL_POPUP_MIN_SIZE.w, Math.min(PANEL_POPUP_MAX_SIZE.w, getNumberFromJSON(g, 'w', PANEL_POPUP_DEFAULT_SIZE.w))),
+            h: Math.max(PANEL_POPUP_MIN_SIZE.h, Math.min(PANEL_POPUP_MAX_SIZE.h, getNumberFromJSON(g, 'h', PANEL_POPUP_DEFAULT_SIZE.h)))
+          })
+        }
+      })
+    }
     this._notifySidebar()
   }
+}
+
+/** Borne la largeur de barre latérale entre min et max. */
+function clampSidebarWidth(px: number): number {
+  return Math.max(PANEL_SIDEBAR_MIN_WIDTH_PX, Math.min(PANEL_SIDEBAR_MAX_WIDTH_PX, px))
 }
