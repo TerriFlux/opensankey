@@ -470,6 +470,14 @@ const isNearWhiteFill = (hex?: string | null): boolean => {
   return ((n >> 16) & 0xff) >= 0xf0 && ((n >> 8) & 0xff) >= 0xf0 && (n & 0xff) >= 0xf0
 }
 
+/** Un `<process>`/`<place>` porte un trait VISIBLE : largeur > 0 et couleur non
+ *  quasi-blanche. Une boîte au fond quasi-blanc n'est une ANCRE invisible (cf.
+ *  isNearWhiteFill) que si elle n'a PAS un tel trait : e!Sankey dessine des
+ *  process au fond quasi-blanc mais BORDÉS (démo « Depuration de Chlore » : fond
+ *  #F0F0F8, trait noir 3px), qui sont de vrais nœuds à conserver, pas des ancres. */
+const hasVisibleBorder = (g: EsGraphicalProcess | null): boolean =>
+  !!g && g.borderWidth > 0 && !!g.borderColor && !isNearWhiteFill(g.borderColor)
+
 /** Mise en forme du label de NOM d'un `<process>`/`<place>` : gras/italique/taille
  *  depuis son `<label><font>`, couleur depuis `<label>/@textColor`. Commun aux deux
  *  parseurs. `label` null (aucun label) → tout neutre. .NET FontStyle : bit 1 gras,
@@ -1297,7 +1305,8 @@ export const parseEsankeyXml = (
     // (écart process→flèches) mise à 0/négatif. Un nœud invisible collapse donc à
     // un point, les flux convergent et pointe/encoche s'emboîtent.
     const nodeHidden = (graphical && !graphical.visible) ||
-      (graphical?.visible && !graphical.imageFile && isNearWhiteFill(graphical.color))
+      (graphical?.visible && !graphical.imageFile && isNearWhiteFill(graphical.color) &&
+        !hasVisibleBorder(graphical))
     if (nodeHidden) {
       nodes[id].local.shape_visible = false
       nodes[id].local.shape_border_visible = false
@@ -1392,8 +1401,10 @@ export const parseEsankeyXml = (
     }
     if (graphical?.color) nodes[id].local.color = graphical.color
     // Idem process : masquer forme ET bordure (shape_border_visible indépendant).
+    // Une boîte quasi-blanche BORDÉE reste un vrai nœud (cf. hasVisibleBorder).
     if ((graphical && !graphical.visible) ||
-        (graphical?.visible && !graphical.imageFile && isNearWhiteFill(graphical.color))) {
+        (graphical?.visible && !graphical.imageFile && isNearWhiteFill(graphical.color) &&
+          !hasVisibleBorder(graphical))) {
       nodes[id].local.shape_visible = false
       nodes[id].local.shape_border_visible = false
     } else {

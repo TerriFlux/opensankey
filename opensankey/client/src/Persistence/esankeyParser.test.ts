@@ -602,6 +602,39 @@ describe('parseEsankeyXml — SA#294 : ancre masquée recalée (accroche vertica
 })
 
 
+describe('parseEsankeyXml — process quasi-blanc BORDÉ reste visible (Depuration de Chlore)', () => {
+  // Régression : e!Sankey dessine des process au fond quasi-blanc mais BORDÉS
+  // (démo « Depuration de Chlore » : fond #F0F0F8, trait noir 3px). L'heuristique
+  // d'ancre invisible (isNearWhiteFill) les masquait à tort — ils doivent rester
+  // de vrais nœuds, visibles et bordés.
+  // brushColor -1057951496 = 0xC0F0F0F8 → RGB #F0F0F8 (quasi-blanc, alpha ignoré).
+  const NEAR_WHITE = '<brushColor argb="-1057951496" />'
+
+  test('fond quasi-blanc + <penColor width 3> → nœud visible + bordure posée', () => {
+    // Source A (id 50) : fond quasi-blanc, garde son penColor noir width 3.
+    const xml = FIXTURE.replace('<brushColor argb="-1073774768" />', NEAR_WHITE)
+    const d = parseEsankeyXml(xml)
+    const a = Object.values(d.nodes).find(n => n.name === 'Source A')
+    expect(a?.local.shape_visible).not.toBe(false) // pas masqué en ancre
+    expect(a?.local.color).toBe('#F0F0F8')
+    expect(a?.local.shape_border_visible).toBe(true)
+    expect(a?.local.shape_border_thickness).toBe(3)
+    expect(a?.local.shape_border_color).toBe('#000000')
+  })
+
+  test('fond quasi-blanc SANS bordure (width 0) → toujours masqué (ancre)', () => {
+    const xml = FIXTURE
+      .replace('<brushColor argb="-1073774768" />', NEAR_WHITE)
+      .replace('<penColor name="Black" argb="-16777216" hasPattern="true" Pattern="0" width="3" />',
+        '<penColor name="Black" argb="-16777216" hasPattern="false" width="0" />')
+    const d = parseEsankeyXml(xml)
+    const a = Object.values(d.nodes).find(n => n.name === 'Source A')
+    expect(a?.local.shape_visible).toBe(false)
+    expect(a?.local.shape_border_visible).toBe(false)
+  })
+})
+
+
 describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)', () => {
   const d = parseEsankeyXml(FIXTURE_DECOR, { 'Images/tmp1.tmp': PNG_URI })
 
