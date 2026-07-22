@@ -1,90 +1,115 @@
 import { orderIOByGeometry, recyclingBellyCentre, Type_IOGeo } from './ioOrderGeometry'
 
-// Geometry-aware I/O ordering — direction split + anchor-distance rule (#266).
-//   1. up-going links (opposite node above the reorg node) are all placed above the
-//      down-going ones, so up and down never cross.
-//   2. within a group, links are sorted by the x-distance (y for top/bottom) of their
-//      node-side curvature anchor to the reorg node — reach·curve_node — ascending for
-//      the up group (nearest at the top extremity), descending for the down group
-//      (nearest at the bottom extremity) ; ties broken by the opposite node's stacking
-//      position. Coordinates are node centres from the real SOCLE diagrams.
+// Geometry-aware I/O ordering — gated direction split + HEIGHT rule (#205 rework).
+//   0. GATE — the fan applies only to TURNING links (orientation 'vh'/'hv'). Straight
+//      links ('hh'/'vv') keep the plain order by the opposite node's stacking position.
+//   1. up-going links (reference above the reorg node) are all placed above the down-going
+//      ones, so up and down never cross.
+//   2. within a group, turning links are sorted by HEIGHT — the reach (|opposite − node|
+//      on the emission axis) : the nearest (first-turning) link goes to the OUTER extremity,
+//      the farthest stays toward the middle. Ascending reach for the up group (nearest at
+//      the top extremity), descending for the down group. Height ties are broken by the
+//      node-side anchor distance reach·curve_node in ADVANCED (use_curve) only, then by the
+//      opposite node's stacking position.
 
 type L = { id: string }
-// row = [id, side, ox, oy, curve_node?, stack_ref?]  (curve_node default 0.05 ;
-// stack_ref set only for recycling links — the centre of their loop's belly)
-const make = (rows: [string, Type_IOGeo['side'], number, number, number?, number?][]) =>
-  rows.map(([id, side, ox, oy, cn, sr]) => ({
+// row = [id, side, ox, oy, turning?, curve_node?, stack_ref?]
+//   turning   default false (straight 'hh'/'vv') — true for 'vh'/'hv'
+//   curve_node default 0.05 — only used as a height tie-break in advanced mode
+//   stack_ref  set only for recycling links (the centre of their loop's belly)
+const make = (
+  rows: [string, Type_IOGeo['side'], number, number, boolean?, number?, number?][]
+) =>
+  rows.map(([id, side, ox, oy, turning, cn, sr]) => ({
     item: { id } as L,
     geo: {
-      side, ox, oy, curve_node: cn ?? 0.05,
+      side, ox, oy,
+      turning: turning ?? false,
+      curve_node: cn ?? 0.05,
       ...(sr !== undefined ? { stack_ref: sr } : {})
     } as Type_IOGeo
   }))
-const run = (items: ReturnType<typeof make>, nx: number, ny: number) =>
-  orderIOByGeometry(items, nx, ny).map(l => l.id)
+// use_curve default true = ADVANCED mode ; pass false for SIMPLE mode.
+const run = (
+  items: ReturnType<typeof make>, nx: number, ny: number, use_curve?: boolean
+) => orderIOByGeometry(items, nx, ny, use_curve).map(l => l.id)
 
-describe('AFMBase I/O order — direction split + anchor distance', () => {
-  it('right side, targets below (node above) : near anchors at the bottom extremity', () => {
+describe('gate — straight vs turning links', () => {
+  it('straight links ignore reach : plain order by the opposite stacking position', () => {
+    // Same near-node column (ox identical) so reach is equal ; only oy (the stacking
+    // position on a right side) decides. A fan would never even run here.
     const items = make([
-      ['Viande', 'right', 1664, 455],
-      ['Porcs', 'right', 839, 877],
-      ['Abats', 'right', 1662, 888],
-      ['Coches', 'right', 837, 1377],
+      ['p', 'right', 300, 300],
+      ['q', 'right', 300, 100],
+      ['r', 'right', 300, 200],
     ])
-    expect(run(items, 460, 191)).toEqual(['Viande', 'Abats', 'Porcs', 'Coches'])
+    expect(run(items, 0, 0)).toEqual(['q', 'r', 'p'])
   })
 
-  it('right side, mixed directions : ALL up links above ALL down links (hard split)', () => {
+  it('same coordinates : the turning flag flips the order (gate proof)', () => {
+    // near (small reach, high) vs far (large reach, low), both below the node.
+    const rows: [string, Type_IOGeo['side'], number, number, boolean?][] = [
+      ['near', 'right', 300, 100],
+      ['far', 'right', 1000, 200],
+    ]
+    // Straight : ordered by opposite stacking (oy) → near (100) then far (200).
+    expect(run(make(rows), 0, 0)).toEqual(['near', 'far'])
+    // Turning : down group ordered by descending reach → far (1000) then near (300).
+    const turning = rows.map(([id, s, ox, oy]) => [id, s, ox, oy, true] as
+      [string, Type_IOGeo['side'], number, number, boolean])
+    expect(run(make(turning), 0, 0)).toEqual(['far', 'near'])
+  })
+})
+
+describe('turning links — direction split + height', () => {
+  it('right side, all below : the nearest (first-turning) link lands at the bottom extremity', () => {
     const items = make([
-      ['farDown', 'right', 2000, 300],
-      ['closeUp', 'right', 500, -100],
-      ['closeDown', 'right', 500, 100],
-      ['farUp', 'right', 2000, -300],
+      ['A', 'right', 1000, 100, true], // reach 1000 — farthest → toward the middle (top)
+      ['B', 'right', 300, 100, true],  // reach  300 — nearest → bottom extremity
+      ['C', 'right', 600, 100, true],
     ])
-    expect(run(items, 0, 0)).toEqual(['closeUp', 'farUp', 'farDown', 'closeDown'])
+    expect(run(items, 0, 0)).toEqual(['A', 'C', 'B'])
   })
 
-  it('bottom side, stacked column : the higher (nearer) source lands on the right', () => {
+  it('mixed directions : ALL up links above ALL down links (hard split)', () => {
     const items = make([
-      ['C2', 'bottom', 1902, 1188],
-      ['C3', 'bottom', 1920, 1419],
+      ['upFar', 'right', 1000, -100, true],
+      ['upNear', 'right', 300, -100, true],
+      ['downNear', 'right', 300, 100, true],
+      ['downFar', 'right', 1000, 100, true],
     ])
-    expect(run(items, 772, 327)).toEqual(['C3', 'C2'])
+    // up group ascending reach (nearest at top) ; down group descending reach (nearest at bottom).
+    expect(run(items, 0, 0)).toEqual(['upNear', 'upFar', 'downFar', 'downNear'])
   })
 
-  it('top side, stacked column : the higher (nearer) source lands on the right', () => {
+  it('bottom side, split left/right : the reach decides within each turn group', () => {
+    // Emission downward ; opposite x splits left/right, |dy| is the height.
     const items = make([
-      ['C2', 'top', 2128, 1407],
-      ['C3', 'top', 2119, 1626],
+      ['L', 'bottom', -400, 800, true],  // left group, reach 800
+      ['R', 'bottom', 900, 500, true],   // right group, reach 500 (nearer)
+      ['R2', 'bottom', 900, 1200, true], // right group, reach 1200 (farther)
     ])
-    expect(run(items, 2231, 1771)).toEqual(['C3', 'C2'])
+    // left group (x<0) first (group 0), then right. Left group ascending reach : only L.
+    // Right group descending reach : R2 (1200) then R (500).
+    expect(run(items, 0, 0)).toEqual(['L', 'R2', 'R'])
   })
+})
 
-  it('dragging a bend farther (larger curve_node) pushes that link toward the middle', () => {
-    // The node-side anchor distance is reach·curve_node : raising the near-node
-    // curvature moves the anchor away → the link reads as farther and drops off the
-    // extremity toward the middle.
-    const node = { x: 2928, y: 1737 }
-    expect(run(make([
-      ['high', 'left', 2420, 1400],
-      ['low', 'left', 2420, 1600],
-    ]), node.x, node.y)).toEqual(['high', 'low'])
-    expect(run(make([
-      ['high', 'left', 2420, 1400, 0.6], // near-node bend pulled far from the node
-      ['low', 'left', 2420, 1600],
-    ]), node.x, node.y)).toEqual(['low', 'high'])
-  })
-
-  it('single opposite column keeps the source-stacking order (tie-break)', () => {
+describe('height tie-break — anchor distance (advanced only)', () => {
+  it('equal reach : advanced breaks by reach·curve_node, simple keeps source order', () => {
+    // Same near-node column and same oy → equal reach and equal stacking : only the
+    // node-side curvature can separate them. A bigger bend reads as farther → toward the middle.
     const items = make([
-      ['b', 'right', 1000, 300],
-      ['a', 'right', 1010, 100],
-      ['c', 'right', 1005, 200],
+      ['small', 'right', 500, 100, true, 0.1], // anchor 50  → bottom extremity
+      ['big', 'right', 500, 100, true, 0.6],   // anchor 300 → toward the middle (top)
     ])
-    expect(run(items, 0, 0)).toEqual(['a', 'c', 'b'])
+    expect(run(items, 0, 0)).toEqual(['big', 'small'])         // advanced
+    expect(run(items, 0, 0, false)).toEqual(['small', 'big'])  // simple ignores the curvature
   })
+})
 
-  it('cross-side links keep the historical side priority (right < bottom < left < top)', () => {
+describe('cross-side links keep the historical side priority', () => {
+  it('right < bottom < left < top', () => {
     const items = make([
       ['top', 'top', 0, -500],
       ['left', 'left', -500, 0],
@@ -95,57 +120,14 @@ describe('AFMBase I/O order — direction split + anchor distance', () => {
   })
 })
 
-describe('#266 — real SOCLE nodes (validated in-app on Œufs, ovine-caprine, Vin)', () => {
-  it('Autres IAA (Vin) : Marc de raisin (near, bend glued to the node) sinks to the bottom', () => {
-    // Marc & Lies have curve_node 0 (anchor at the node) : being the nearest of the
-    // down group they land at the bottom extremity, Marc last. #205 pulled Marc up
-    // into the pack ; this rule sends it to the extremity.
-    const node = { x: 2511.750144958496, y: 540.4196929931641 }
-    const items = make([
-      ['Marc de raisin', 'left', 974.211612701416, 1492.5035143544787, 0],
-      ['Lies de vin', 'left', 1480.6699256896973, 1433.450295887055, 0],
-      ['Vin récolté', 'left', 1200.6367225646973, 305.1676322896378],
-      ['Vin blanc récolté', 'left', 200.63672256469727, 255.28209894895554],
-      ['Vin pour eau-de-vie récolté', 'left', 1476.7910194396973, 1360.530208272756, 0.01066467234012993],
-    ])
-    expect(run(items, node.x, node.y)).toEqual([
-      'Vin récolté', 'Vin blanc récolté', 'Vin pour eau-de-vie récolté', 'Lies de vin', 'Marc de raisin'
-    ])
-  })
-
-  it('Exportations (ovine-caprine) : C3 et alimentaire (nearer anchor) sits above the far réformes', () => {
-    // The réformes have a big node-side curvature (0.7) → far anchor → toward the
-    // middle ; C3 et alimentaire (curvature 0.62, closer node) rises above them. This
-    // is the node whose #205/#266-atan2 order regressed and this rule fixes.
-    const node = { x: 2928.4866, y: 1736.7243 }
-    const items = make([
-      ["Viande d'ovins adultes", 'left', 1871.986083984375, 796.0976778470554, 0.020873020300729014],
-      ['Viande caprine', 'left', 1883.638916015625, 944.6814716045674, 0.03231174787665705],
-      ['Abats comestibles', 'left', 1883.638916015625, 1032.1010849442441, 0.05],
-      ['Protéines animales transformées', 'left', 2422.46533203125, 1570.0235659890914, 0.17769882105163073],
-      ['Corps gras animaux', 'left', 2419.46044921875, 1648.9431871663385, 0.19681390203079135],
-      ['C3 et alimentaire', 'left', 1874.4405517578125, 1642.4243211638623, 0.620424272708354],
-      ['Agneaux', 'left', 930.7470092773438, 1075.5979608623798, 0.7],
-      ['Ovins de réforme', 'left', 930.7470092773438, 1425.7531056565504, 0.7],
-      ['Caprins de réforme', 'left', 927.9173583984375, 1589.7584207857574, 0.7],
-    ])
-    expect(run(items, node.x, node.y)).toEqual([
-      "Viande d'ovins adultes", 'Viande caprine', 'Abats comestibles',
-      'Protéines animales transformées', 'Corps gras animaux',
-      'C3 et alimentaire', 'Agneaux', 'Ovins de réforme', 'Caprins de réforme'
-    ])
-  })
-})
-
 // Recycling links run BACKWARDS : the opposite node sits beyond the reorg node and the
-// flow loops around, so the node says nothing about where the loop actually passes.
-// Criteria 1 (up/down) and 3 (tie-break) therefore key on the centre of the loop's
-// central run — its belly — instead. Criterion 2 (the anchor distance) is unchanged.
-describe('recycling links — keyed on the loop belly, not on the opposite node', () => {
+// flow loops around, so the node says nothing about where the loop actually passes. The
+// direction split and the stacking tie-break therefore key on the centre of the loop's
+// central run — its belly. The reach / anchor distance still measures toward the opposite node.
+describe('recyclingBellyCentre — geometry of the loop belly', () => {
   it('belly of a horizontal loop hangs below the LOWER end, by offset + 2·thickness', () => {
-    // Real link : Mélasses (2050, 661) -> Distillerie de betterave (1090, 1106).
     const b = recyclingBellyCentre(2050.3, 660.9, 1090.2, 1106.5, 6.75, 10, 'hh')
-    expect(b.y).toBeCloseTo(1106.5 + 6.75 + 20, 5) // below the distillerie, the lower end
+    expect(b.y).toBeCloseTo(1106.5 + 6.75 + 20, 5)
     expect(b.x).toBeCloseTo((2050.3 + 1090.2) / 2, 5)
   })
 
@@ -159,41 +141,41 @@ describe('recycling links — keyed on the loop belly, not on the opposite node'
     expect(b.x).toBeCloseTo((100 + 300) / 2 + 50, 5)
     expect(b.y).toBeCloseTo(900, 5)
   })
+})
 
-  it('Distillerie de betterave (Sucre) : the mélasses loop dives below → it sits last', () => {
-    // The Mélasses NODE is HIGH (y=661, well above the distillerie at 1106), yet its loop
-    // hangs BELOW it (shape_middle_recycling = +6.75). The belly decides, not the node :
-    // the flow lands in the down group, i.e. below the betteraves inflow. Real coords.
+describe('recycling links — split keyed on the loop belly, not on the opposite node', () => {
+  it('a loop diving below the node lands in the down group', () => {
+    // The Mélasses NODE is HIGH (y=661, above the distillerie at 1106), yet its loop hangs
+    // BELOW it (offset +6.75) → the belly, not the node, puts the flow in the down group,
+    // i.e. below the Betteraves inflow. Both links are straight so the split alone decides.
     const node = { x: 1090.2, y: 1106.5 }
     const belly = recyclingBellyCentre(2050.3, 660.9, node.x, node.y, 6.75, 10, 'hh')
     const items = make([
       ['Betteraves sucrières', 'left', 617.5, 732.8],
-      ['Mélasses', 'left', 2050.3, 660.9, 0.013923195805218593, belly.y],
+      ['Mélasses', 'left', 2050.3, 660.9, false, 0.0139, belly.y],
     ])
     expect(run(items, node.x, node.y)).toEqual(['Betteraves sucrières', 'Mélasses'])
   })
 
-  it('same node, same nodes : a loop lifted above the distillerie rises to the top', () => {
-    // Only the sign of shape_middle_recycling changes — and the flow switches direction
-    // group. This is what proves the rule keys on the belly and not on the node.
+  it('same nodes, loop lifted above the node : it switches to the up group', () => {
+    // Only the sign of the offset changes — proving the split keys on the belly, not the node.
     const node = { x: 1090.2, y: 1106.5 }
     const belly = recyclingBellyCentre(2050.3, 660.9, node.x, node.y, -600, 10, 'hh')
     const items = make([
       ['Betteraves sucrières', 'left', 617.5, 732.8],
-      ['Mélasses', 'left', 2050.3, 660.9, 0.013923195805218593, belly.y],
+      ['Mélasses', 'left', 2050.3, 660.9, false, 0.0139, belly.y],
     ])
     expect(run(items, node.x, node.y)).toEqual(['Mélasses', 'Betteraves sucrières'])
   })
 
-  it('criterion 2 keeps measuring toward the opposite node, not the belly', () => {
-    // Two recycling links sharing one belly line (so criteria 1 and 3 tie) : only the
-    // anchor distance reach·curve_node separates them, and `reach` is the span to the
-    // opposite node. Down group → the nearest anchor goes to the bottom extremity.
+  it('turning recycling links : the height still measures toward the opposite node', () => {
+    // Two turning recycling links sharing one belly line (so the split and the stacking
+    // tie coincide) : only the reach — the span to the opposite node — separates them.
     const node = { x: 1000, y: 1000 }
-    const belly = 1200 // both loops pass below the node
+    const belly = 1200 // both loops pass below the node → down group
     const items = make([
-      ['far', 'left', 2000, 900, 0.02, belly],  // reach 1000 → anchor 20
-      ['near', 'left', 1500, 900, 0.02, belly], // reach  500 → anchor 10
+      ['far', 'left', 2000, 900, true, 0.02, belly],  // reach 1000 → toward the middle
+      ['near', 'left', 1500, 900, true, 0.02, belly], // reach  500 → bottom extremity
     ])
     expect(run(items, node.x, node.y)).toEqual(['far', 'near'])
   })

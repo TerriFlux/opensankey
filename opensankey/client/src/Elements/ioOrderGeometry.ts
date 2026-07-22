@@ -4,28 +4,33 @@
 // opposite-node geometry and the two side curvatures of each link, and uses the
 // returned order to drive `reorganizeIOOrder`.
 //
-// THE POLICY (user's rule, #266 — under local visual validation)
-//   1. DIRECTION split — the opposite node's centre decides : a link whose opposite
-//      node is ABOVE the reorg node goes UP (top of the node), below goes DOWN. Up
-//      links are all placed above down links, so up and down never cross. For
+// THE POLICY (user's rule, #205 rework — under local visual validation)
+//   0. GATE — the fan rule below applies ONLY to TURNING links (orientation 'vh'/'hv',
+//      i.e. the link changes axis between its two ends). Straight links ('hh'/'vv')
+//      keep the historical order : sorted by the opposite node's stacking position
+//      along the face (its y for left/right, x for top/bottom). `geo.turning` says which.
+//   1. DIRECTION split (turning links) — the opposite node's centre decides : a link
+//      whose opposite node is ABOVE the reorg node goes UP (top of the node), below goes
+//      DOWN. Up links are all placed above down links, so up and down never cross. For
 //      top/bottom sides the analogue is LEFT vs RIGHT.
-//   2. WITHIN a direction group — sort by the x-distance (y for top/bottom) of the
-//      link's node-side curvature ANCHOR to the reorg node, i.e. reach·curve_node
-//      (reach = |opposite − node| on the side axis, curve_node = the curvature on
-//      this node's side). Ascending for the up group (nearest anchor at the top
-//      extremity), descending for the down group (nearest at the bottom extremity).
-//      Ties are broken by the opposite node's stacking position (its y for
-//      left/right, x for top/bottom).
+//   2. WITHIN a direction group (turning links) — sort by HEIGHT, i.e. the reach
+//      (|opposite − node| on the emission axis : x-distance for left/right, y for
+//      top/bottom). The link that turns FIRST — the highest, nearest one — goes to the
+//      OUTER extremity ; the one that turns last, the farthest, stays toward the middle.
+//      Ascending reach for the up group (nearest at the top extremity), descending for
+//      the down group (nearest at the bottom extremity). Ties are broken by the node-side
+//      curvature ANCHOR distance reach·curve_node (ADVANCED mode only — `use_curve`), then
+//      by the opposite node's stacking position.
 // Cross-side order keeps the historical side priority (right < bottom < left < top).
 //
 // RECYCLING LINKS (user's rule) — they take part in the very same ordering, with ONE
 // difference : a recycling link runs BACKWARDS (its opposite node sits on the far side
 // of the reorg node and the flow loops around), so the opposite node's position says
-// nothing about where the loop actually passes. For criteria 1 and 3 only, the
-// reference becomes the centre of the link's central run — the loop's "belly", i.e. the
-// straight span drawn between the two curvature points (`stack_ref`, cf.
-// recyclingBellyCentre). Criterion 2 (the anchor distance) is unchanged and still
-// measures toward the opposite node.
+// nothing about where the loop actually passes. For the direction split and the stacking
+// tie-break only, the reference becomes the centre of the link's central run — the loop's
+// "belly", i.e. the straight span drawn between the two curvature points (`stack_ref`, cf.
+// recyclingBellyCentre). The reach / anchor distance is unchanged and still measures
+// toward the opposite node.
 
 import { Type_Side } from './ElementsAttributesConfig'
 
@@ -33,10 +38,13 @@ export type Type_IOGeo = {
   side: Type_Side
   ox: number         // opposite node centre x
   oy: number         // opposite node centre y
+  turning?: boolean  // link changes axis end-to-end (orientation 'vh'/'hv'). Only turning
+                     // links get the direction-split + height fan ; straight ('hh'/'vv')
+                     // links keep the plain opposite-position order. Defaults to false.
   curve_node: number // curvature factor on THIS node's side (shape_starting_curve when
                      // the link leaves this node, shape_ending_curve when it arrives ;
                      // ratio of the link length ; an explicit 0 — bend glued to the node —
-                     // is a real value). Drives the anchor distance reach·curve_node.
+                     // is a real value). Drives the anchor tie-break distance reach·curve_node.
   stack_ref?: number // RECYCLING links only : absolute coordinate, on the stacking axis
                      // (y for left/right, x for top/bottom), of the centre of the link's
                      // central run — the loop's belly (cf. recyclingBellyCentre). When
@@ -54,27 +62,34 @@ const side_rank: { [_ in Type_Side]: number } = {
 
 const isHorizontalSide = (s: Type_Side) => s === 'left' || s === 'right'
 
-// Ranking key for one link : [directionGroup, primary, tieBreak], compared lexically.
+// Ranking key for one link : [directionGroup, primary, anchorTie, stackTie], lexical.
 //  directionGroup : 0 = up (reference above), 1 = down — a hard split.
-//  primary        : anchor x-distance (reach·curve_node), signed so that ascending
-//                   sort puts the nearest anchor at each group's extremity.
-//  tieBreak       : reference stacking position (equal anchors keep source order).
+//  primary        : turning links → reach (height), signed so ascending sort puts the
+//                   nearest (first-turning) link at each group's OUTER extremity ;
+//                   straight links → the stacking position itself (plain opposite order).
+//  anchorTie      : turning links, ADVANCED only → node-side anchor distance reach·curve_node,
+//                   signed like primary ; 0 otherwise.
+//  stackTie       : reference stacking position (final, keeps determinism).
 // The "reference" is the opposite node's centre, except for a recycling link, where it
 // is the centre of the loop's belly (geo.stack_ref) — see the header.
-type Type_OrderKey = [number, number, number]
+type Type_OrderKey = [number, number, number, number]
 
-function orderKey(geo: Type_IOGeo, nx: number, ny: number): Type_OrderKey {
+function orderKey(geo: Type_IOGeo, nx: number, ny: number, use_curve: boolean): Type_OrderKey {
   const dx = geo.ox - nx
   const dy = geo.oy - ny
   const horiz = isHorizontalSide(geo.side)
-  // Criteria 1 & 3 : the loop's belly for a recycling link, the opposite node otherwise.
+  // Split & stacking tie : the loop's belly for a recycling link, the opposite node otherwise.
   const stack = (geo.stack_ref !== undefined)
     ? geo.stack_ref - (horiz ? ny : nx)
     : (horiz ? dy : dx)
-  const reach = Math.abs(horiz ? dx : dy)  // criterion 2 : always toward the opposite (≥ 0)
-  const anchor = reach * geo.curve_node    // x-distance of the node-side curvature anchor
   const up = stack < 0
-  return [up ? 0 : 1, up ? anchor : -anchor, stack]
+  // Straight ('hh'/'vv') links : no fan — plain order by the opposite stacking position.
+  if (!geo.turning)
+    return [up ? 0 : 1, stack, 0, 0]
+  // Turning ('vh'/'hv') links : direction split, then HEIGHT (reach) toward the extremity.
+  const reach = Math.abs(horiz ? dx : dy)  // toward the opposite (≥ 0), on the emission axis
+  const anchor = reach * geo.curve_node    // node-side curvature anchor distance (tie-break)
+  return [up ? 0 : 1, up ? reach : -reach, use_curve ? (up ? anchor : -anchor) : 0, stack]
 }
 
 /**
@@ -117,28 +132,31 @@ export function recyclingBellyCentre(
 }
 
 function cmpKey(a: Type_OrderKey, b: Type_OrderKey): number {
-  return (a[0] - b[0]) || (a[1] - b[1]) || (a[2] - b[2])
+  return (a[0] - b[0]) || (a[1] - b[1]) || (a[2] - b[2]) || (a[3] - b[3])
 }
 
 /**
- * Order a node's I/O items with the direction-split + anchor-distance policy.
+ * Order a node's I/O items with the gated direction-split + height policy.
  *
- * @param items each link paired with its geometry (opposite node centre, side and the
- *              two side curvatures)
- * @param nx,ny reference node centre
+ * @param items     each link paired with its geometry (opposite node centre, side,
+ *                  node-side curvature and the `turning` flag)
+ * @param nx,ny     reference node centre
+ * @param use_curve ADVANCED mode : break height ties by the node-side anchor distance
+ *                  reach·curve_node. SIMPLE mode passes false (curvature ignored).
  * @returns the items in display order : side groups concatenated in side-priority
  *          order, each side ordered top→bottom (left/right) or left→right (top/bottom).
  */
 export function orderIOByGeometry<T>(
   items: { item: T; geo: Type_IOGeo }[],
   nx: number,
-  ny: number
+  ny: number,
+  use_curve: boolean = true
 ): T[] {
   return [...items]
     .sort((a, b) => {
       const by_side = side_rank[a.geo.side] - side_rank[b.geo.side]
       if (by_side !== 0) return by_side
-      return cmpKey(orderKey(a.geo, nx, ny), orderKey(b.geo, nx, ny))
+      return cmpKey(orderKey(a.geo, nx, ny, use_curve), orderKey(b.geo, nx, ny, use_curve))
     })
     .map(x => x.item)
 }
