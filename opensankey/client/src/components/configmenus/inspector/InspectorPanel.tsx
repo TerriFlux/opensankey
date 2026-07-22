@@ -17,7 +17,6 @@
 
 import React, { useRef, useState } from 'react'
 import { Box, Button, Input, Menu, MenuButton, MenuItem, MenuList, Text } from '@chakra-ui/react'
-import { FaThumbtack } from 'react-icons/fa'
 
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import { default_style_id } from '../../../types/Utils'
@@ -175,6 +174,8 @@ export const InspectorPanel = ({ app_data }: { app_data: Class_ApplicationData }
       className="inspector_panel"
       style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', height: '100%' }}
     >
+      {/* OS#300 — l'épingle/ancrage vit désormais dans l'en-tête uniforme du
+          panneau (PanelShell) ; l'inspecteur ne porte plus que son fil d'Ariane. */}
       <Box style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
         <Box style={{ flex: 1, minWidth: 0 }}>
           <InspectorBreadcrumb
@@ -187,31 +188,6 @@ export const InspectorPanel = ({ app_data }: { app_data: Class_ApplicationData }
             onGoSelection={() => setViewOverride(false)}
           />
         </Box>
-        {/* #1243 — épingler : docke le panneau à droite (réserve sa largeur,
-            le dessin se recadre) pour l'édition intense ; dé-épinglé = overlay. */}
-        <Button
-          size='xs'
-          variant={app_data.menu_configuration.config_panel_pinned
-            ? 'menuconfigpanel_option_button_activated'
-            : 'menuconfigpanel_option_button'}
-          sx={{ paddingInline: '0.3rem', minWidth: 'auto', width: 'auto', flex: 'none' }}
-          title={app_data.menu_configuration.config_panel_pinned
-            ? app_data.t('inspector.unpin')
-            : app_data.t('inspector.pin')}
-          onClick={() => {
-            const mc = app_data.menu_configuration
-            const next_pinned = !mc.config_panel_pinned
-            // Dé-épingler : le panneau redevient un OVERLAY au même coin que le
-            // tiroir de filtres — on referme ce dernier pour ne pas les
-            // superposer (l'exclusivité des overlays reprend, cf. setConfigOpen).
-            if (!next_pinned) mc.ref_close_filter_drawer.current(false)
-            mc.config_panel_pinned = next_pinned
-          }}
-        >
-          <FaThumbtack style={{
-            transform: app_data.menu_configuration.config_panel_pinned ? 'none' : 'rotate(45deg)'
-          }} />
-        </Button>
       </Box>
 
       {/* #1258 — sélection par critères EN HAUT du panneau (repliée par défaut) :
