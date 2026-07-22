@@ -19,20 +19,16 @@
 // bascule via le slot ref_toggle_search de MenuConfig (renseigné ici au montage).
 
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import Draggable, { DraggableProps } from 'react-draggable'
 import {
   Box, HStack, VStack, Input, Button, Text, Checkbox
 } from '@chakra-ui/react'
-import { ChevronUpIcon, ChevronDownIcon, CloseIcon, SearchIcon } from '@chakra-ui/icons'
+import { ChevronUpIcon, ChevronDownIcon, SearchIcon } from '@chakra-ui/icons'
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_LinkElement } from '../../Elements/Link'
 import { Class_ContainerElement } from '../../Elements/TextZone'
-
-// react-draggable : les typings embarqués rendent les props optionnelles, mais
-// @types/react-draggable (tiré par la résolution fraîche du CI) les rend requises.
-const DraggableComponent = Draggable as unknown as React.ComponentClass<Partial<DraggableProps>>
+import { PanelShell } from '../panels/PanelShell'
 
 type ElementType = 'node' | 'link' | 'container'
 
@@ -116,33 +112,29 @@ const collectResults = (
 
 export const ElementSearchOverlay = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { t, drawing_area } = app_data
-  const [open, setOpen] = useState(false)
+  // OS#300 — la Recherche est un « panneau » unifié (id 'search') : son ouverture
+  // vit dans le modèle (panels), plus dans un useState local. La requête et l'état
+  // de navigation restent locaux (état propre à l'outil, pas au contenant) ; ce
+  // composant reste monté en permanence (cf. App.tsx), donc la requête survit à
+  // l'ouverture/fermeture. Le champ (dans le corps de PanelShell) est monté à
+  // l'ouverture avec autoFocus.
   const [query, setQuery] = useState('')
   const [only_visible, setOnlyVisible] = useState(true)
   const [active, setActive] = useState(0)
-  const input_ref = useRef<HTMLInputElement>(null)
-  const node_ref = useRef<HTMLDivElement>(null)
   // Un premier Entrée cible le résultat actif ; les suivants naviguent. Remis à
   // zéro dès que la requête change (nouvelle liste de résultats).
   const visited_ref = useRef(false)
 
-  // Slot clavier (Ctrl+F). Fonction de bascule stable via mise à jour fonctionnelle
-  // (pas de closure périmée). Renseigné à chaque rendu, relâché au démontage.
+  // Slot clavier (Ctrl+F) : bascule le panneau 'search' (rouvre en pop-up par
+  // défaut). Renseigné à chaque montage, relâché au démontage.
   useEffect(() => {
-    app_data.menu_configuration.ref_toggle_search.current = () => setOpen(o => !o)
+    app_data.menu_configuration.ref_toggle_search.current = () => {
+      const panels = app_data.menu_configuration.panels
+      if (panels.isOpen('search')) { panels.close('search'); setQuery('') }
+      else panels.setMode('search', 'popup')
+    }
     return () => { app_data.menu_configuration.ref_toggle_search.current = () => undefined }
   }, [app_data])
-
-  // À l'ouverture : focus + sélection du texte pour ré-écrire vite.
-  useEffect(() => {
-    if (open) {
-      // rAF : l'input vient d'être monté.
-      requestAnimationFrame(() => {
-        input_ref.current?.focus()
-        input_ref.current?.select()
-      })
-    }
-  }, [open])
 
   const results = useMemo(
     () => collectResults(app_data, query, only_visible),
@@ -186,7 +178,7 @@ export const ElementSearchOverlay = ({ app_data }: { app_data: Class_Application
   }
 
   const close = () => {
-    setOpen(false)
+    app_data.menu_configuration.panels.close('search')
     setQuery('')
   }
 
@@ -218,51 +210,38 @@ export const ElementSearchOverlay = ({ app_data }: { app_data: Class_Application
     }
   }
 
-  if (!open) return null
-
   const no_result = query.trim() !== '' && results.length === 0
 
   return (
-    <DraggableComponent
-      nodeRef={node_ref}
-      handle='.element-search-handle'
-      defaultPosition={{ x: Math.max(0, window.innerWidth / 2 - 190), y: 70 }}
-      bounds={{ left: 0, top: 0 }}
+    <PanelShell
+      app_data={app_data}
+      id='search'
+      title={t('search.title')}
+      allowedModes={['popup', 'sidebar']}
+      onClose={close}
     >
       <Box
-        ref={node_ref}
-        className='ElementSearchOverlay'
-        position='fixed'
-        zIndex={1400}
-        bg='white'
-        borderRadius='md'
-        boxShadow='xl'
-        border='1px solid'
-        borderColor='gray.200'
-        width='380px'
-        overflow='hidden'
+        className='ElementSearchContent'
         display='flex'
         flexDirection='column'
+        height='100%'
       >
-        {/* Barre de saisie + navigation (poignée de déplacement) */}
+        {/* Barre de saisie + navigation (l'en-tête uniforme du panneau porte le
+            titre, les boutons de mode et la fermeture). */}
         <HStack
-          className='element-search-handle'
           spacing='0.3rem'
           px='0.4rem'
           py='0.35rem'
-          bg='gray.50'
-          cursor='grab'
-          _active={{ cursor: 'grabbing' }}
+          borderBottom='1px solid'
+          borderColor='gray.100'
         >
           <SearchIcon color='gray.500' boxSize='0.8rem' />
           <Input
-            ref={input_ref}
+            autoFocus
             size='xs'
             variant='flushed'
             placeholder={t('search.placeholder')}
             value={query}
-            // L'input ne doit pas déclencher le drag.
-            onMouseDown={(e) => e.stopPropagation()}
             onChange={(e) => { setQuery(e.target.value); setActive(0); visited_ref.current = false }}
             onKeyDown={onInputKeyDown}
           />
@@ -276,7 +255,6 @@ export const ElementSearchOverlay = ({ app_data }: { app_data: Class_Application
             minW='1.3rem' w='1.3rem' h='1.5rem' p='0'
             title={t('search.prev')} aria-label={t('search.prev')}
             isDisabled={results.length === 0}
-            onMouseDown={(e) => e.stopPropagation()}
             onClick={() => go(-1)}
           >
             <ChevronUpIcon />
@@ -286,31 +264,21 @@ export const ElementSearchOverlay = ({ app_data }: { app_data: Class_Application
             minW='1.3rem' w='1.3rem' h='1.5rem' p='0'
             title={t('search.next')} aria-label={t('search.next')}
             isDisabled={results.length === 0}
-            onMouseDown={(e) => e.stopPropagation()}
             onClick={() => go(1)}
           >
             <ChevronDownIcon />
           </Button>
-          <Button
-            size='xs' variant='ghost' colorScheme='gray'
-            minW='1.3rem' w='1.3rem' h='1.5rem' p='0'
-            title={t('search.close')} aria-label={t('search.close')}
-            onMouseDown={(e) => e.stopPropagation()}
-            onClick={close}
-          >
-            <CloseIcon boxSize='0.55rem' />
-          </Button>
         </HStack>
 
-        {/* Liste des résultats */}
+        {/* Liste des résultats — occupe la place restante (barre latérale) ou
+            défile dans la pop-up. */}
         {query.trim() !== '' && (
           <VStack
             align='stretch'
             spacing='0'
-            maxH='16rem'
+            flex='1'
+            minH='0'
             overflowY='auto'
-            borderTop='1px solid'
-            borderColor='gray.100'
           >
             {results.map((r, i) => (
               <HStack
@@ -342,13 +310,12 @@ export const ElementSearchOverlay = ({ app_data }: { app_data: Class_Application
           <Checkbox
             size='sm'
             isChecked={only_visible}
-            onMouseDown={(e) => e.stopPropagation()}
             onChange={(e) => setOnlyVisible(e.target.checked)}
           >
             <Text fontSize='0.7rem'>{t('search.only_visible')}</Text>
           </Checkbox>
         </HStack>
       </Box>
-    </DraggableComponent>
+    </PanelShell>
   )
 }
