@@ -2762,20 +2762,29 @@ const layerStyles = {
     paddingLeft: '1.5rem'
   },
 
+  // OS#300 — minWidth:0 (grille + cellules) partout : sinon l'auto-minimum d'une
+  // cellule vaut son min-content et le contenu (inputs, libellés) déborde la barre
+  // latérale étroite au lieu de rétrécir.
   options_1_2_1cols: {
     display: 'grid',
     gridTemplateColumns: '1fr 2fr 1fr',
     gridColumnGap: '0.12rem',
+    minWidth: 0,
+    '& > *': { minWidth: 0 },
   },
   options_1_2_2cols: {
     display: 'grid',
     gridTemplateColumns: '1fr 3fr 2fr',
     gridColumnGap: '0.12rem',
+    minWidth: 0,
+    '& > *': { minWidth: 0 },
   },
   options_2_1_2cols: {
     display: 'grid',
     gridTemplateColumns: '2fr 1fr 2fr',
     gridColumnGap: '0.12rem',
+    minWidth: 0,
+    '& > *': { minWidth: 0 },
   },
   // Grid layouts avec factory
   ...(['2cols', '3cols', '4cols', '5cols', '6cols'] as const).reduce((acc, type) => {
@@ -2784,6 +2793,8 @@ const layerStyles = {
       display: 'grid',
       gridTemplateColumns: `repeat(${colCount}, 1fr)`,
       gridColumnGap: '0.12rem',
+      minWidth: 0,
+      '& > *': { minWidth: 0 },
     }
     return acc
   }, {} as Record<string, SystemStyleObject>),
@@ -2800,6 +2811,8 @@ const layerStyles = {
     display: 'grid',
     gridTemplateColumns: '2fr 1fr',
     gridColumnGap: '0.12rem',
+    minWidth: 0,
+    '& > *': { minWidth: 0 },
   },
 
   welcome_license_row: {
@@ -2855,34 +2868,48 @@ const layerStyles = {
     '.rmsc .dropdown-content': { left: 0, right: 0, width: 'auto' },
   },
 
+  // OS#300 — minWidth:0 (grille + cellules) : sans lui l'auto-minimum d'une cellule
+  // de grille vaut son min-content, et un input (champ + stepper + addon « px ») ou
+  // un libellé long DÉBORDE la barre latérale étroite au lieu de rétrécir. Même
+  // correctif que les variantes _droplist ci-dessus.
   menuconfigpanel_zdt_row_droplist: {
     display: 'grid',
     gridTemplateColumns: '1fr 6fr 1fr 1fr 1fr',
     gridColumnGap: '0.25rem',
+    minWidth: 0,
+    '& > *': { minWidth: 0 },
   },
 
   menuconfigpanel_row_stylechoice: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr 6fr',
     gridColumnGap: '0.25rem',
+    minWidth: 0,
+    '& > *': { minWidth: 0 },
   },
 
   menuconfigpanel_row_2cols: {
     display: 'grid',
     gridTemplateColumns: '2fr 3fr',
     gridColumnGap: '0.25rem',
+    minWidth: 0,
+    '& > *': { minWidth: 0 },
   },
 
   menuconfigpanel_row_3cols: {
     display: 'grid',
     gridTemplateColumns: '2fr 1.5fr 1.5fr',
     gridColumnGap: '0.25rem',
+    minWidth: 0,
+    '& > *': { minWidth: 0 },
   },
 
   menuconfigpanel_row_3colsbis: {
     display: 'grid',
     gridTemplateColumns: '2fr 1fr 2fr',
     gridColumnGap: '0.25rem',
+    minWidth: 0,
+    '& > *': { minWidth: 0 },
   },
 
   menuconfigpanel_2row_3cols: {
@@ -2891,7 +2918,9 @@ const layerStyles = {
     gridTemplateRows: '1fr 2fr',
     gridColumnGap: '0',
     gridRowGap: '0',
-    height: '3rem'
+    height: '3rem',
+    minWidth: 0,
+    '& > *': { minWidth: 0 },
   },
 
   menutop_layout_style: {
