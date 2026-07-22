@@ -86,6 +86,7 @@ import {
   loadUniversalJSON,
 } from '../../Persistence/UniversalJSONCompression'
 import { useModelBinding } from '../../hooks/useModelBinding'
+import { PANELS_TOPIC } from '../../types/EventBus'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { BaseApplicationDataType } from '../SankeyMenuTypes'
 import { OSTooltip } from '../configmenus/MenuCommon'
@@ -1524,6 +1525,9 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
   const { logo } = new_data
   const langToFlag: Record<string, string> = { fr: 'fr', en: 'gb', es: 'es', de: 'de', it: 'it' }
   const [flag, setFlag] = useState(langToFlag[new_data.i18n.language] ?? 'gb')
+  // OS#300 Lot 2 — re-render sur changement de panneau : reflète l'état du bouton
+  // de bascule de barre latérale (surligné quand la barre est affichée).
+  useModelBinding(undefined, (r) => new_data.menu_configuration.subscribe(PANELS_TOPIC, r))
   // En statique, la .TopMenu a 3 ou 4 enfants : logo, (header optionnel), boutons, bloc méta
   // (info). Avec un header, il faut 4 colonnes sinon le bloc méta déborde sur une 2e ligne
   // (info mal placé). Sans header (3 enfants), 3 colonnes suffisent.
@@ -1657,26 +1661,24 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
             </MenuList>
           </Portal>
         </Menu> : <></>}
-        {/* Bouton bascule de la colonne d'outils rétractable, placé à droite du sélecteur de langue.
-            Ouvre/ferme la colonne (barre verticale + config + filtres + undo/redo/save) et recadre le
-            diagramme dans la largeur restante. */}
+        {/* OS#300 Lot 2 — Bascule de la BARRE LATÉRALE (Ctrl+B), placée à droite du
+            sélecteur de langue. Affiche/masque le menu ancré (config/filtres/recherche)
+            et recadre le diagramme. La barre d'outils, elle, est désormais permanente. */}
         {!new_data.is_static ? <OSTooltip
           placement='bottom'
-          label={new_data.t('Banner.toggle_tools_column', { defaultValue: 'Afficher / masquer la barre d\'outils' })}
+          label={new_data.t('Banner.toggle_sidebar', { defaultValue: 'Afficher / masquer la barre latérale (Ctrl+B)' })}
         >
           <IconButton
-            aria-label='toggle-tools-column'
-            className='topbar_button_toggle_tools'
+            aria-label='toggle-sidebar'
+            className='topbar_button_toggle_sidebar'
             icon={<FontAwesomeIcon icon={faTableColumns} />}
-            onClick={() => {
-              const mc = new_data.menu_configuration
-              mc.tools_column_open = !mc.tools_column_open
-              new_data.drawing_area.areaAutoFit()
-              new_data.draw()
-            }}
+            onClick={() => new_data.menu_configuration.panels.toggleSidebar('config')}
             {...topbar_state_btn_style}
-            color={new_data.menu_configuration.tools_column_open ? 'gray.900' : 'gray.700'}
-            bg={new_data.menu_configuration.tools_column_open ? 'gray.200' : 'transparent'}
+            color={new_data.menu_configuration.panels.sidebar_visible ? 'gray.900' : 'gray.700'}
+            bg={new_data.menu_configuration.panels.sidebar_visible ? 'gray.200' : 'transparent'}
+            // bgColor surchargé AUSSI : topbar_state_btn_style pose bgColor:'transparent'
+            // qui, en CSS, écraserait `bg` (background-color après le shorthand background).
+            bgColor={new_data.menu_configuration.panels.sidebar_visible ? 'gray.200' : 'transparent'}
           />
         </OSTooltip> : <></>}
       </Box>

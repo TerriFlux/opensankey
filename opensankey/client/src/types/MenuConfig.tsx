@@ -240,9 +240,11 @@ export class Class_MenuConfig {
   // repartirait toujours sur 'grid'. Permet aussi à un import SankeyMATIC d'ouvrir directement
   // l'éditeur texte. État TRANSITOIRE : volontairement absent de mainZoneStateToJSON/FromJSON.
   protected _main_zone_spreadsheet_mode: Type_SheetMode = 'grid'
-  // Colonne d'outils rétractable à droite (éditeur uniquement). `tools_column_enabled` est posé par
+  // Colonne d'outils à droite (éditeur uniquement). `tools_column_enabled` est posé par
   // SankeyMenu (= !is_static) : en mode publish/statique la colonne n'existe pas et ne réserve rien.
-  // `_tools_column_open` (défaut ouvert) pilote l'affichage ET la réserve de largeur du diagramme.
+  // OS#300 Lot 2 — la barre d'outils est désormais TOUJOURS visible : `_tools_column_open`
+  // (conservé pour compat) ne pilote plus l'affichage ni la réserve. L'ancien bouton
+  // « afficher/masquer la barre d'outils » est requalifié en bascule de barre latérale (Ctrl+B).
   public tools_column_enabled: boolean = false
   // Disponibilité du panneau de filtres (posée par ToolbarFilter) : conditionne le bouton filtre
   // dans la colonne d'outils.
@@ -253,9 +255,10 @@ export class Class_MenuConfig {
   protected _notifyMainZone() { this._event_bus.notify(MAIN_ZONE_TOPIC) }
   public get tools_column_open() { return this._tools_column_open }
   public set tools_column_open(v: boolean) { this._tools_column_open = v; this._notifyMainZone() }
-  /** Largeur (px) réservée à droite par la colonne d'outils (0 si absente/fermée). */
+  /** Largeur (px) réservée à droite par la colonne d'outils (0 si publish/absente).
+   *  Toujours réservée en éditeur (barre d'outils permanente). */
   public getToolsColumnWidthPx(): number {
-    return (this.tools_column_enabled && this._tools_column_open) ? TOOLS_COLUMN_WIDTH_PX : 0
+    return this.tools_column_enabled ? TOOLS_COLUMN_WIDTH_PX : 0
   }
 
   // #1283 — Éditeur de groupe de tags injecté par OSP (l'édition vit dans OSP,

@@ -218,7 +218,9 @@ export const SankeyMenu = (
       zIndex={35}
       bg='white'
       borderLeft='1px solid #e2e8f0'
-      display={menu_configuration.tools_column_open ? 'flex' : 'none'}
+      // OS#300 Lot 2 — barre d'outils TOUJOURS visible (l'ancien toggle est
+      // requalifié en bascule de barre latérale).
+      display='flex'
       flexDirection='column'
       alignItems='center'
       gap='0.3rem'

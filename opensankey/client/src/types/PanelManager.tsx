@@ -55,6 +55,13 @@ export class Class_PanelManager {
   // Barre latérale : UN SEUL menu ancré à la fois (#2). `null` = aucune barre.
   private _sidebar_id: string | null = null
   private _sidebar_width_px: number = PANEL_SIDEBAR_DEFAULT_WIDTH_PX
+  // OS#300 Lot 2 — Barre latérale REPLIÉE : le menu ancré reste « le » menu de
+  // barre mais n'est plus affiché ni réservé (le dessin reprend la place). Bascule
+  // par le bouton de la barre du haut / Ctrl+B (afficher/masquer la barre latérale).
+  private _sidebar_collapsed: boolean = false
+  // Dernier menu ayant occupé la barre latérale : sert à la RÉOUVRIR (Ctrl+B quand
+  // aucun menu n'est ancré rouvre celui-ci).
+  private _last_sidebar_id: string | null = null
 
   // Pop-ups : PLUSIEURS simultanées (#1). id -> géométrie (pop-ups OUVERTES).
   private _popups: Map<string, Type_PopupGeometry> = new Map()
@@ -103,8 +110,12 @@ export class Class_PanelManager {
   ): void {
     this._detach(id)
     if (mode === 'sidebar') {
-      // Éjecte l'ancienne barre latérale (un seul menu ancré, #2).
+      // Éjecte l'ancienne barre latérale (un seul menu ancré, #2). Ancrer un menu
+      // DÉPLIE la barre (un menu qu'on ancre doit s'afficher) et devient le dernier
+      // menu de barre mémorisé (réouverture Ctrl+B).
       this._sidebar_id = id
+      this._last_sidebar_id = id
+      this._sidebar_collapsed = false
       this._notifySidebar()
     } else if (mode === 'popup') {
       // Géométrie : explicite > dernière connue (mémoire, survit à la barre
@@ -131,7 +142,8 @@ export class Class_PanelManager {
 
   /** Retire `id` de tous les registres, SANS notifier (usage interne). */
   private _detach(id: string): void {
-    if (this._sidebar_id === id) this._sidebar_id = null
+    // Retirer le menu ancré déplie la barre (plus rien à masquer).
+    if (this._sidebar_id === id) { this._sidebar_id = null; this._sidebar_collapsed = false }
     this._popups.delete(id)
     if (this._tooltip_id === id) this._tooltip_id = null
   }
@@ -139,6 +151,26 @@ export class Class_PanelManager {
   // BARRE LATÉRALE =====================================================================
 
   public get sidebar_id(): string | null { return this._sidebar_id }
+  public get sidebar_collapsed(): boolean { return this._sidebar_collapsed }
+  /** Vrai si un menu de barre est ancré ET affiché (ni absent, ni replié). */
+  public get sidebar_visible(): boolean {
+    return this._sidebar_id !== null && !this._sidebar_collapsed
+  }
+
+  /**
+   * OS#300 Lot 2 — Affiche/masque la barre latérale (bouton barre du haut, Ctrl+B).
+   *  - un menu ancré et affiché → on le REPLIE (le dessin reprend la place) ;
+   *  - un menu ancré mais replié → on le RÉAFFICHE ;
+   *  - aucun menu ancré → on rouvre le dernier menu de barre (ou `defaultId`).
+   */
+  public toggleSidebar(defaultId: string): void {
+    if (this._sidebar_id !== null) {
+      this._sidebar_collapsed = !this._sidebar_collapsed
+      this._notifySidebar()
+    } else {
+      this.setMode(this._last_sidebar_id ?? defaultId, 'sidebar')
+    }
+  }
 
   public get sidebar_width_px(): number { return this._sidebar_width_px }
   public set sidebar_width_px(px: number) {
@@ -147,10 +179,10 @@ export class Class_PanelManager {
     this._notifySidebar()
   }
 
-  /** Largeur (px) réservée à droite par la barre latérale (0 si aucune).
+  /** Largeur (px) réservée à droite par la barre latérale (0 si aucune ou repliée).
    *  Entre dans Class_MenuConfig.getRightChromeReservedPx (réserve du dessin). */
   public getSidebarReservedPx(): number {
-    return this._sidebar_id !== null ? this._sidebar_width_px : 0
+    return this.sidebar_visible ? this._sidebar_width_px : 0
   }
 
   // POP-UPS ============================================================================

@@ -341,6 +341,9 @@ export const PanelShell = ({
   const width = sidebarWidthPx ?? panels.sidebar_width_px ?? PANEL_SIDEBAR_DEFAULT_WIDTH_PX
 
   if (mode === 'sidebar') {
+    // OS#300 Lot 2 — barre latérale repliée (Ctrl+B) : le menu reste « le » menu
+    // de barre mais n'est pas rendu (et ne réserve rien, cf. getSidebarReservedPx).
+    if (panels.sidebar_collapsed) return null
     return (
       <SidebarShell
         app_data={app_data} panels={panels} id={id} title={title}

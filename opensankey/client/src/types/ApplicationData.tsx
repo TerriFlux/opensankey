@@ -1541,11 +1541,15 @@ export class Class_ApplicationData {
     // autres raccourcis, il reste actif même hors zone de dessin (dans un input),
     // pour rester déclenchable quand le focus est ailleurs — comme un Ctrl+F natif.
     const evtKeyF = (evt.key === 'f') || (evt.key === 'F')
+    // OS#300 Lot 2 — Ctrl+B affiche/masque la barre latérale. Restreint à la zone
+    // de dessin (contrairement à Ctrl+F) pour ne pas capter le gras natif dans un input.
+    const evtKeyB = ((evt.key === 'b') || (evt.key === 'B')) && evtOnDrawingArea
     const evtCtrlA = evtCtrl && evtKeyA
     const evtCtrlS = evtCtrl && evtKeyS
     const evtCtrlShiftS = evtCtrlShift && evtKeyS
     const evtCtrlAltS = evtCtrlAlt && evtKeyS
     const evtCtrlF = evtCtrl && evtKeyF
+    const evtCtrlB = evtCtrl && evtKeyB
     const evtCtrlZ = evtCtrl && evtKeyZ
     const evtCtrlY = evtCtrl && evtKeyY
     const evtCtrlShiftZ = evtCtrlShift && evtKeyZ
@@ -1687,6 +1691,11 @@ export class Class_ApplicationData {
       evt.preventDefault()
       // Toggle the element search bar (registered by ElementSearchOverlay)
       app_ref.menu_configuration.ref_toggle_search.current()
+    }
+    // OS#300 Lot 2 — Afficher/masquer la barre latérale (Ctrl+B) --------------------
+    else if (evtCtrlB) {
+      evt.preventDefault()
+      app_ref.menu_configuration.panels.toggleSidebar('config')
     }
     // Undo
     else if (evtCtrlZ) {
