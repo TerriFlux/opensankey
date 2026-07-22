@@ -1140,6 +1140,23 @@ export class Class_ApplicationData {
   }
 
   /**
+   * Renvoie le JSON de mise en page à réappliquer pour une vue donnée, extrait
+   * d'un `current_json` produit par `toJSON()`. OS de base n'a pas de vues : on
+   * retombe sur l'entrée brute `['views'][view_id]` (ou le json complet).
+   *
+   * ATTENTION (OSP) : `_toJSON` encode les vues en DELTA (`__patch`, cf. #254),
+   * ce qui RETIRE de l'entrée de vue les clés identiques au master — dont
+   * `version`/`format_version`. Réappliquer telle quelle une entrée delta ferait
+   * croire à `fromJSON` qu'il s'agit d'un fichier pré-0.9 et déclencherait le
+   * convertisseur legacy (crash `convert_tags`). OSP surcharge donc cette méthode
+   * pour renvoyer le snapshot COMPLET décodé de la vue.
+   */
+  public getViewLayoutJSON(view_id: string, current_json: Type_JSON): Type_JSON {
+    const views = current_json['views'] as Type_JSON | undefined
+    return (views?.[view_id] as Type_JSON | undefined) ?? current_json
+  }
+
+  /**
    * Persist the state of the current drawing area into a per-view compressed
    * cache. No-op for plain OS; ApplicationDataOSP overrides it to refresh
    * `_views[current_view_id].json` so a subsequent view switch or save reflects
