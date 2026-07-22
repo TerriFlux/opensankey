@@ -1009,6 +1009,25 @@ export class Class_DrawingArea {
   }
 
   /**
+   * OS#1246 — rejoue `drawElements()` sous sémantique de draw COMPLET
+   * (`_in_full_draw = true`) SANS repasser par le cycle draw() (unDraw +
+   * _initDraw + autoFit). Nécessaire quand un changement de VALEUR/épaisseur
+   * (bascule de type de données affichées) impose de redessiner le contenu de
+   * TOUS les flux, alors que leurs ancrages ne bougent pas : sans ce drapeau,
+   * Node.updateLinksPositions garderait leur épaisseur périmée (cf. isInFullDraw).
+   * @memberof Class_DrawingArea
+   */
+  public drawElementsAsFullDraw() {
+    const previous = this._in_full_draw
+    this._in_full_draw = true
+    try {
+      this.drawElements()
+    } finally {
+      this._in_full_draw = previous
+    }
+  }
+
+  /**
    * Draw all elements inside drawing area
    * @memberof Class_DrawingArea
    */

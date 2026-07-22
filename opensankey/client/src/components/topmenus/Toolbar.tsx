@@ -945,7 +945,12 @@ export const FilterDataType = ({ app_data, defaultOpen, bare }: { app_data: Clas
   const redrawNodeLinkLegend = (relayout = false) => {
     app_data.drawing_area.sankey.nodes_list.forEach(n => n.resetLinkVisibilitiesMemorization())
     if (relayout) {
-      app_data.drawing_area.drawElements()
+      // OS#1246 — sémantique de draw COMPLET : la bascule de type de données change
+      // l'épaisseur/valeur de TOUS les flux sans forcément déplacer leurs ancrages.
+      // Un drawElements() nu laisserait Node.updateLinksPositions figer leur épaisseur
+      // (il ne redessine hors full-draw que si l'ancrage a bougé ≥1px). D'où
+      // drawElementsAsFullDraw, qui pose _in_full_draw le temps du redraw.
+      app_data.drawing_area.drawElementsAsFullDraw()
     } else {
       app_data.drawing_area.sankey.draw()
     }
