@@ -294,21 +294,28 @@ export class Class_MenuConfig {
   public getConfigPanelPinnedReservedPx(): number {
     return this.panels.sidebar_id === 'config' ? this.panels.getSidebarReservedPx() : 0
   }
-  // #1258 — Tiroir de FILTRES épinglé : même principe que le panneau de config.
-  // Épinglé + ouvert, il RÉSERVE sa largeur (le dessin se recadre à gauche) au
-  // lieu de flotter au-dessus. État TRANSITOIRE (non sérialisé).
-  protected _filter_panel_pinned: boolean = false
-  public get filter_panel_pinned() { return this._filter_panel_pinned }
-  public set filter_panel_pinned(v: boolean) { this._filter_panel_pinned = v; this._notifyMainZone() }
-  // État/largeur publiés par la Toolbar (la largeur du tiroir varie selon
-  // l'onglet actif : filtres 270px, sélection/édition 420px).
+  // OS#300 — Le tiroir de FILTRES est un « panneau » unifié (id 'filter') en
+  // ÉDITEUR : pop-up ou barre latérale partagée (270px), piloté par `panels`
+  // (comme la config). `filter_panel_pinned` devient une VUE de son mode ancré.
+  // En publish/statique, le filtre reste le tiroir overlay historique (à gauche,
+  // hors `panels`) — cette bascule ne s'y applique pas. Dernier contenant
+  // mémorisé pour la réouverture ; défaut = barre latérale (menu de barre).
+  protected _filter_last_container: Type_PanelMode = 'sidebar'
+  public get filter_last_container(): Type_PanelMode { return this._filter_last_container }
+  public get filter_panel_pinned() { return this.panels.getMode('filter') === 'sidebar' }
+  public set filter_panel_pinned(v: boolean) {
+    this._filter_last_container = v ? 'sidebar' : 'popup'
+    if (this.panels.isOpen('filter')) this.panels.setMode('filter', this._filter_last_container)
+  }
+  // Largeur publiée par la Toolbar (informative ; la réserve passe désormais par
+  // la largeur partagée de la barre latérale de `panels`).
   public filter_drawer_open: boolean = false
   public filter_drawer_width_px: number = 0
-  /** Largeur (px) réservée à droite par le tiroir de filtres épinglé (0 si
-   *  non épinglé ou fermé). */
+  /** Largeur (px) réservée à droite par le filtre quand il est la barre latérale
+   *  (0 sinon). Conservé pour les consommateurs directs (MainZoneTabs) ; la
+   *  réserve GLOBALE passe par panels.getSidebarReservedPx(). */
   public getFilterPanelPinnedReservedPx(): number {
-    if (!this._filter_panel_pinned || !this.filter_drawer_open) return 0
-    return this.filter_drawer_width_px
+    return this.panels.sidebar_id === 'filter' ? this.panels.getSidebarReservedPx() : 0
   }
 
   // Galerie de modèles ÉPINGLÉE : même principe que le panneau de config
@@ -329,10 +336,11 @@ export class Class_MenuConfig {
    *  colonne tableur/doc/unitaire (MainZoneTabs) et de la réserve du diagramme
    *  — même système de fenêtrage pour tous les panneaux dockés (#1243). */
   public getRightChromeReservedPx(): number {
+    // La barre latérale unifiée (config / filtre / recherche) est couverte par
+    // panels.getSidebarReservedPx() — ne PAS ré-additionner la réserve du filtre.
     return this.getToolsColumnWidthPx() +
       this.panels.getSidebarReservedPx() +
-      this.getTemplateGalleryPinnedReservedPx() +
-      this.getFilterPanelPinnedReservedPx()
+      this.getTemplateGalleryPinnedReservedPx()
   }
   public get main_zone_show_diagram() { return this._main_zone_show_diagram }
   public set main_zone_show_diagram(v: boolean) { this._main_zone_show_diagram = v; this._notifyMainZone() }

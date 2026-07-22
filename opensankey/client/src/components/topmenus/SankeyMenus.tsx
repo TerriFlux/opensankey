@@ -106,11 +106,11 @@ export const SankeyMenu = (
   // Ouverture de la config = présence du panneau 'config' dans le modèle.
   const show_nav = menu_configuration.panels.isOpen('config')
 
-  // Ouvre/ferme la config. Le panneau est un OVERLAY au-dessus de toute la grande zone
-  // (diagramme, tableur, doc…) : il ne touche PAS à l'état doc/tableur ni au cadrage.
-  // Seule exclusivité conservée : le panneau de filtres (même emplacement à droite).
-  // Centralise tous les chemins (bouton, Drawer onClose, raccourcis, filtre) qui passent
-  // par ref_menu_opened.current[1], pour un comportement uniforme.
+  // Ouvre/ferme la config (panneau unifié 'config'). Centralise tous les chemins
+  // (bouton, raccourcis, ouverture auto depuis le canvas) qui passent par
+  // ref_menu_opened.current[1], pour un comportement uniforme. Aucune exclusivité
+  // manuelle avec les autres menus : seule la barre latérale est exclusive (gérée
+  // par panels) ; les pop-ups/info-bulles se superposent.
   const setConfigOpen = (open: boolean) => {
     // OS#300 — la config est un « panneau » unifié (id 'config') : ouvrir =
     // l'ajouter au modèle dans son dernier contenant (barre latérale par défaut),
@@ -119,14 +119,10 @@ export const SankeyMenu = (
     const panels = menu_configuration.panels
     const already_open = panels.isOpen('config')
     if (open) {
-      // Exclusivité avec le tiroir de filtres en OVERLAY : on ne le referme que
-      // si la config s'ouvre en pop-up (superposée) et qu'aucun panneau ancré ne
-      // cohabite déjà (une barre latérale se place à côté du filtre, cf. #1258).
-      if (!already_open
-        && menu_configuration.config_last_container !== 'sidebar'
-        && !menu_configuration.filter_panel_pinned) {
-        menu_configuration.ref_close_filter_drawer.current(false)
-      }
+      // OS#300 — plus d'exclusivité manuelle config/filtres : dans le modèle
+      // unifié, un menu en pop-up cohabite avec un autre (superposition), et
+      // seule la BARRE LATÉRALE est exclusive (ancrer l'un éjecte l'autre, géré
+      // par panels). La config et le filtre peuvent donc rester ouverts ensemble.
       if (!already_open) {
         const mode = menu_configuration.config_last_container
         // Pop-up config : position par défaut au bord droit (proche de l'ancien
