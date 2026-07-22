@@ -124,7 +124,9 @@ export const SankeyMenu = (
       // seule la BARRE LATÉRALE est exclusive (ancrer l'un éjecte l'autre, géré
       // par panels). La config et le filtre peuvent donc rester ouverts ensemble.
       if (!already_open) {
-        const mode = menu_configuration.config_last_container
+        // OS#300 — contenant par défaut selon le contexte : barre latérale si elle
+        // est affichée, sinon pop-up (cf. panels.defaultOpenMode).
+        const mode = menu_configuration.panels.defaultOpenMode()
         // Pop-up config : position par défaut au bord droit (proche de l'ancien
         // tiroir), sans recouvrir le centre du dessin. La barre latérale, elle,
         // se cale d'elle-même à droite.

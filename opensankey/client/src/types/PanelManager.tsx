@@ -161,6 +161,15 @@ export class Class_PanelManager {
   }
 
   /**
+   * OS#300 — Contenant par défaut à l'ouverture d'un menu : si la barre latérale
+   * est AFFICHÉE, le nouveau menu s'y ancre (et remplace celui en place) ; sinon
+   * il s'ouvre en pop-up superposée. Suit l'endroit où l'utilisateur travaille.
+   */
+  public defaultOpenMode(): 'sidebar' | 'popup' {
+    return this.sidebar_visible ? 'sidebar' : 'popup'
+  }
+
+  /**
    * OS#300 Lot 2 — Affiche/masque la barre latérale (bouton barre du haut, Ctrl+B).
    *  - un menu ancré et affiché → on le REPLIE (le dessin reprend la place) ;
    *  - un menu ancré mais replié → on le RÉAFFICHE ;
