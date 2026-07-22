@@ -483,6 +483,23 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this._orderD3Elements()
   }
 
+  /**
+   * OS#1302 — action des attributs d'apparence de pointe (shape_arrow_standalone,
+   * shape_arrow_spike_*). La géométrie de pointe est calculée paresseusement et
+   * mise en cache (_arrow_shape[_source]) : la redessiner sans invalider le cache
+   * ne fait que re-render la forme périmée. On vide donc le cache avant de
+   * redessiner ; _drawArrow rappelle alors le nœud pour recalculer tout l'éventail
+   * du côté (les pointes voisines suivent le changement de somme). Cf. le bug où
+   * changer un réglage de pointe ne mettait pas à jour le dessin.
+   */
+  public refreshArrow() {
+    if (!this.d3_selection) return
+    this._arrow_shape = undefined
+    this._arrow_shape_source = undefined
+    this._drawArrow()
+    this._orderD3Elements()
+  }
+
   public drawSourceNotch() {
     if (!this.d3_selection) return
     this._drawSourceNotch()
@@ -2202,7 +2219,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // structural ones would get crushed to minimum_flux too.
     if (
       this.drawing_area.is_structure_display
-      && this.drawing_area.structure_mode_force_min
+      && this.shape_structure_force_min
       && this.linkIsStructure()
     ) {
       return this._clampThickness(0)
@@ -2226,7 +2243,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public get thicknessTarget() {
     if (
       this.drawing_area.is_structure_display
-      && this.drawing_area.structure_mode_force_min
+      && this.shape_structure_force_min
       && this.linkIsStructure()
     ) {
       return this._clampThickness(0)
@@ -2265,7 +2282,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // in the cumulative offset.
     if (
       this.drawing_area.is_structure_display
-      && this.drawing_area.structure_mode_force_min
+      && this.shape_structure_force_min
       && this.linkIsStructure()
     ) {
       return 0
@@ -2278,7 +2295,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public get thicknessTargetRaw() {
     if (
       this.drawing_area.is_structure_display
-      && this.drawing_area.structure_mode_force_min
+      && this.shape_structure_force_min
       && this.linkIsStructure()
     ) {
       return 0

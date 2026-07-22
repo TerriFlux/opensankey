@@ -211,7 +211,7 @@ export type BaseActionType =
   | 'applyPosition'
 
 export type NodeBaseActionType = BaseActionType
-export type LinkBaseActionType = BaseActionType | 'drawArrow' | 'drawControlPoint' | 'drawWithNodes'
+export type LinkBaseActionType = BaseActionType | 'drawArrow' | 'refreshArrow' | 'drawControlPoint' | 'drawWithNodes'
 
 // Interface pour la configuration d'un attribut
 export interface AttributeConfig<T> {
@@ -3370,6 +3370,90 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       it: 'Se > 0, la profondità della freccia destinazione scala con lo spessore del flusso (angolo costante) invece della dimensione fissa in pixel.'
     }
   } satisfies AttributeConfig<number>,
+
+  // ── Pointe/épaisseur pilotées par le flux (OS#1302) ──────────────────────────
+  // Anciennes globales du drawing_area (arrow_use_standalone_layout,
+  // structure_mode_force_min) + pointe accentuée (#1270) devenues attributs de flux
+  // résolus par le style. Migration des anciennes globales vers le style de flux par
+  // défaut à la lecture (cf. SankeyPersistence).
+
+  // Éventail vs triangle indépendant, par flux (ex-arrow_use_standalone_layout).
+  // Un flux standalone dessine sa pointe centrée sur son extrémité réelle, hors
+  // de l'éventail partagé du côté du nœud.
+  arrow_standalone: {
+    default: false,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['refreshArrow'] as LinkBaseActionType[],
+    labels: {
+      en: 'Standalone arrow',
+      fr: 'Pointe indépendante',
+      es: 'Flecha independiente',
+      de: 'Eigenständige Pfeilspitze',
+      it: 'Punta indipendente'
+    },
+    tooltips: {
+      en: 'Draw this link\'s arrow as an independent triangle centered on its real end, instead of sharing the fan of arrows converging at the node side.',
+      fr: 'Dessine la pointe de ce flux comme un triangle indépendant centré sur son extrémité réelle, au lieu de partager l\'éventail de pointes convergeant vers le côté du nœud.',
+      es: 'Dibuja la flecha de este flujo como un triángulo independiente centrado en su extremo real, en lugar de compartir el abanico de flechas que convergen en el lado del nodo.',
+      de: 'Zeichnet die Pfeilspitze dieses Flusses als eigenständiges Dreieck, zentriert auf sein echtes Ende, statt den am Knoten zusammenlaufenden Pfeilfächer zu teilen.',
+      it: 'Disegna la punta di questo flusso come un triangolo indipendente centrato sulla sua estremità reale, invece di condividere il ventaglio di punte che convergono sul lato del nodo.'
+    }
+  } satisfies AttributeConfig<boolean>,
+
+  // Largeur MINIMALE de la pointe (px), façon e!Sankey. base = max(épaisseur, N) :
+  // les flux plus fins que N reçoivent une pointe de largeur N (indépendante, centrée
+  // sur leur extrémité) → ils restent visibles ; les flux plus épais que N ne bougent
+  // PAS (pas d'explosion). La PROFONDEUR reste celle de shape_arrow_size (pas de
+  // longueur multipliée). Défaut 10 ⇒ pointe visible d'office, y compris sur les flux
+  // sans valeur. 0 = désactivé (rendu strictement proportionnel).
+  arrow_min_width: {
+    default: 10,
+    type: (() => 10) as (() => number),
+    category: 'shape' as const,
+    actions: ['refreshArrow'] as LinkBaseActionType[],
+    labels: {
+      en: 'Min tip width (px)',
+      fr: 'Largeur mini de pointe (px)',
+      es: 'Ancho mín. de punta (px)',
+      de: 'Mindest-Spitzenbreite (px)',
+      it: 'Larghezza min. punta (px)'
+    },
+    tooltips: {
+      en: 'Minimum width (px) of the arrow tip base: flows thinner than this get a tip of this width (so they stay visible), thicker flows are unchanged. The tip depth (arrow size) is unchanged. 0 disables it.',
+      fr: 'Largeur minimale (px) de la base de la pointe : les flux plus fins reçoivent une pointe de cette largeur (pour rester visibles), les flux plus épais ne changent pas. La profondeur de pointe (taille de flèche) est inchangée. 0 = désactivé.',
+      es: 'Ancho mínimo (px) de la base de la punta: los flujos más finos reciben una punta de este ancho (para seguir visibles), los más gruesos no cambian. La profundidad de la punta no cambia. 0 = desactivado.',
+      de: 'Mindestbreite (px) der Pfeilspitzenbasis: dünnere Flüsse erhalten eine Spitze dieser Breite (bleiben sichtbar), dickere Flüsse bleiben unverändert. Die Spitzentiefe bleibt unverändert. 0 = deaktiviert.',
+      it: 'Larghezza minima (px) della base della punta: i flussi più sottili ricevono una punta di questa larghezza (per restare visibili), quelli più spessi non cambiano. La profondità della punta non cambia. 0 = disattivato.'
+    }
+  } satisfies AttributeConfig<number>,
+
+  // Mode structure : forcer l'épaisseur minimale visible du flux (ex-globale
+  // structure_mode_force_min, true par défaut). Affecte l'épaisseur ⇒ redraw
+  // des nœuds source/cible (drawWithNodes) comme local_link_scale.
+  structure_force_min: {
+    default: true,
+    type: (() => true) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['drawWithNodes'] as LinkBaseActionType[],
+    // Libellé/tooltip UI = clés i18n Flux.apparence.shape_structure_force_min (case
+    // affichée INVERSÉE : cochée = conserve les hauteurs). Ces textes de config ne
+    // sont pas affichés, on les garde alignés pour éviter toute confusion.
+    labels: {
+      en: 'Node/arrow at value height',
+      fr: 'Nœud/flèche à la hauteur de la valeur',
+      es: 'Nodo/flecha a la altura del valor',
+      de: 'Knoten/Pfeil auf Werthöhe',
+      it: 'Nodo/freccia all\'altezza del valore'
+    },
+    tooltips: {
+      en: 'Checked: in structure mode, this flow keeps its value height on the node and arrow. Unchecked (default): the flow is collapsed to a thin connector and does not enlarge the node or arrow.',
+      fr: 'Coché : en mode structure, ce flux garde sa hauteur de valeur sur le nœud et la flèche. Décoché (défaut) : le flux est réduit à un connecteur fin et n\'élargit pas le nœud ni la flèche.',
+      es: 'Marcado: en modo estructura, este flujo conserva su altura de valor en el nodo y la flecha. Sin marcar (predeterminado): el flujo se reduce a un conector fino y no agranda el nodo ni la flecha.',
+      de: 'Angehakt: Im Strukturmodus behält dieser Fluss seine Werthöhe an Knoten und Pfeil. Nicht angehakt (Standard): Der Fluss wird auf einen dünnen Verbinder reduziert und vergrößert Knoten und Pfeil nicht.',
+      it: 'Selezionato: in modalità struttura, questo flusso mantiene la sua altezza di valore sul nodo e sulla freccia. Non selezionato (predefinito): il flusso è ridotto a un connettore sottile e non ingrandisce il nodo né la freccia.'
+    }
+  } satisfies AttributeConfig<boolean>,
 
   source_notch_size_ratio: {
     default: 0,
