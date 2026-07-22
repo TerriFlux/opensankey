@@ -646,6 +646,32 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     expect(puits?.image_src).toBe(PNG_URI)
   })
 
+  // Régression « Energy Balance for a Country » : un process à IMAGE ne doit PAS
+  // porter de bordure — l'image remplace la boîte, e!Sankey ne trace pas le
+  // penColor sérialisé (case « Couleur ligne » inactive pour un process à image).
+  test('process-image avec <penColor> → bordure masquée (l\'image remplace la boîte)', () => {
+    // On injecte un penColor épais dans le process image « Puits » (id 51).
+    const withPen = FIXTURE_DECOR.replace(
+      '<image filename="Images\\tmp1.tmp" />\n        <label text="Puits" />',
+      '<image filename="Images\\tmp1.tmp" />\n        <penColor name="Black" argb="-16777216" width="2" />\n        <label text="Puits" />')
+    const dp = parseEsankeyXml(withPen, { 'Images/tmp1.tmp': PNG_URI })
+    const puits = Object.values(dp.nodes).find(n => n.name === 'Puits')
+    expect(puits?.is_image).toBe(true)
+    expect(puits?.local.shape_border_visible).toBe(false)
+  })
+
+  test('même process SANS image mais avec <penColor> → bordure visible (vraie boîte)', () => {
+    // Contraste : sans image, le penColor doit bien produire une bordure.
+    const noImg = FIXTURE_DECOR.replace(
+      '<image filename="Images\\tmp1.tmp" />\n        <label text="Puits" />',
+      '<penColor name="Black" argb="-16777216" width="2" />\n        <label text="Puits" />')
+    const dn = parseEsankeyXml(noImg) // pas d'image fournie
+    const puits = Object.values(dn.nodes).find(n => n.name === 'Puits')
+    expect(puits?.is_image).toBeUndefined()
+    expect(puits?.local.shape_border_visible).toBe(true)
+    expect(puits?.local.shape_border_thickness).toBe(2)
+  })
+
   test('commentaire de flèche → tooltip du flux (via le mapping edges)', () => {
     const link = Object.values(d.links)[0]
     expect(link.tooltip_text).toBe('Mesure 2025\nsource: compteur')

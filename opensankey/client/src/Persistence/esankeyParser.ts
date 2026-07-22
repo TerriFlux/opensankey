@@ -1287,6 +1287,9 @@ export const parseEsankeyXml = (
       output_value: 0,
     }
     if (graphical?.color) nodes[id].local.color = graphical.color
+    // Image de process → nœud-image (résolue tôt : un process à image REMPLACE sa
+    // boîte, e!Sankey n'en dessine alors ni le fond ni la bordure — cf. bloc else).
+    const imgSrc = graphical?.imageFile ? images[imageKey(graphical.imageFile)] : undefined
     // OS#1298 — Taille réelle du nœud depuis la boîte du process (sinon un point).
     // node_width/node_height (clés du JSON 0.9) sont mappées vers
     // shape_min_width/shape_min_height (cf. persistenceLegacyKeyMaps) : elles
@@ -1340,7 +1343,12 @@ export const parseEsankeyXml = (
       if (graphical && graphical.width > 0) nodes[id].local.node_width = graphical.width
       if (graphical && graphical.height > 0) nodes[id].local.node_height = graphical.height
       applyLinkInset(nodes[id], graphical)
-      applyGraphicalBorder(nodes[id], graphical)
+      // Nœud-image : l'image REMPLACE la boîte — e!Sankey ne trace PAS la bordure du
+      // process (case « Couleur ligne » inactive pour un process à image, cf.
+      // « Energy Balance for a Country »), même si un <penColor> est sérialisé. On
+      // masque donc la bordure ; sinon on applique celle du penColor.
+      if (imgSrc) nodes[id].local.shape_border_visible = false
+      else applyGraphicalBorder(nodes[id], graphical)
     }
     applyNameLabelPos(nodes[id], graphical)
     applyNameLabelFont(nodes[id], graphical)
@@ -1356,8 +1364,8 @@ export const parseEsankeyXml = (
       nodes[id].local.shape = 'ellipse'
     }
     // Image de process → nœud-image (is_image/image_src à la racine du nœud
-    // 0.9, mappés vers icon_is_image/icon_image_src au chargement).
-    const imgSrc = graphical?.imageFile ? images[imageKey(graphical.imageFile)] : undefined
+    // 0.9, mappés vers icon_is_image/icon_image_src au chargement). imgSrc résolu
+    // plus haut (gate de bordure).
     if (imgSrc) {
       nodes[id].is_image = true
       nodes[id].image_src = imgSrc
@@ -1400,12 +1408,16 @@ export const parseEsankeyXml = (
       output_value: 0,
     }
     if (graphical?.color) nodes[id].local.color = graphical.color
+    const imgSrc = graphical?.imageFile ? images[imageKey(graphical.imageFile)] : undefined
     // Idem process : masquer forme ET bordure (shape_border_visible indépendant).
     // Une boîte quasi-blanche BORDÉE reste un vrai nœud (cf. hasVisibleBorder).
     if ((graphical && !graphical.visible) ||
         (graphical?.visible && !graphical.imageFile && isNearWhiteFill(graphical.color) &&
           !hasVisibleBorder(graphical))) {
       nodes[id].local.shape_visible = false
+      nodes[id].local.shape_border_visible = false
+    } else if (imgSrc) {
+      // Place à image : l'image REMPLACE la boîte, pas de bordure (cf. process).
       nodes[id].local.shape_border_visible = false
     } else {
       applyGraphicalBorder(nodes[id], graphical)
@@ -1416,7 +1428,6 @@ export const parseEsankeyXml = (
     else if (graphical?.shapeType === 2) nodes[id].local.shape = 'ellipse'
     applyNameLabelPos(nodes[id], graphical)
     applyNameLabelFont(nodes[id], graphical)
-    const imgSrc = graphical?.imageFile ? images[imageKey(graphical.imageFile)] : undefined
     if (imgSrc) {
       nodes[id].is_image = true
       nodes[id].image_src = imgSrc
