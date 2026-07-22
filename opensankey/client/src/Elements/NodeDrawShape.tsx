@@ -295,7 +295,10 @@ export class NodeDrawShape {
     this._node.d3_selection_g_shape
       ?.attr('filter', this._node.shape_shadow_visible ? 'url(#os_drop_shadow)' : null)
     if (acts_as_frame && sel) {
-      const hover_thickness = Math.max(base_thickness * 3, base_thickness + 6)
+      // OS#1259 — survol d'un cadre de groupe : léger épaississement pour le
+      // rendre saisissable, mais DISCRET (l'ancien max(base*3, base+6) donnait
+      // un trait trop épais, ex. 8 px).
+      const hover_thickness = Math.max(base_thickness + 1, 2)
       sel
         .on('mouseenter.tied_frame', (event: Event) => {
           (event.currentTarget as SVGElement).setAttribute('stroke-width', String(hover_thickness))
