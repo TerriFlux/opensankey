@@ -184,6 +184,15 @@ export class Class_NodeElement extends Class_NodeBase {
     this.d3_selection?.selectAll('.stock_box').raise()
   }
 
+  // P2 (refonte événements) — le nœud a un label de VALEUR éditable en plus du nom.
+  protected override openValueLabelEditor() {
+    this._nodeDrawValueLabel?.setInputLabelVisible()
+  }
+  public override drawSelectedLabelHandles(prefix: 'name_label' | 'value_label' | 'icon' | null) {
+    super.drawSelectedLabelHandles(prefix)
+    this._nodeDrawValueLabel?.refreshLabelResizeHandles()
+  }
+
   public copyTagsReferencingFrom(
     node_to_copy: Class_NodeElement,
     matching_tagg: { [_: string]: string },

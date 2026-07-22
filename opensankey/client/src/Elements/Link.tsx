@@ -1003,15 +1003,13 @@ export class Class_LinkElement extends Class_LinkAttribute {
     //this._link_draw_image.d3_selection?.raise()
     this._link_draw_icon.d3_selection?.raise()
   }
-  protected eventDoubleLMBClick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  // P1 (refonte événements) — double-clic CONFIRMÉ (désambiguïsé par le
+  // discriminateur unique de Class_ProtoElement) : éditer la valeur inline.
+  // Marche aussi quand le flux est en pointillé (sans label) : openInlineEditor
+  // force l'input. Inutile en mode structure.
+  protected override onDoubleLMBClick(
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-    // Apply parent behavior first
-    super.eventDoubleLMBClick(event)
-    // Double-clic sur le tracé du flux → éditer sa valeur inline. Marche aussi
-    // quand le flux est encore en pointillé (sans valeur, donc sans label
-    // affiché) : openInlineEditor force le dessin de l'input. Inutile en mode
-    // structure (pas de notion de valeur).
     const drawing_area = this.drawing_area
     if (!drawing_area.editable || drawing_area.type_data == 'structure') return
     if (!this.is_selected) {
@@ -1019,61 +1017,37 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
     this._link_draw_value.openInlineEditor()
   }
-  /**
-   * Deal with simple left Mouse Button (LMB) click on given element
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Link
-   */
-  protected eventSimpleLMBClick(
+
+  // P1 — simple clic CONFIRMÉ : sélection du flux (idem ex-eventSimpleLMBClick,
+  // sans le timer, désormais porté par Class_ProtoElement).
+  protected override onSingleLMBClick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-    // ✅ Annuler le timer précédent s'il existe
-    if (this._clickTimer) {
-      clearTimeout(this._clickTimer)
-      this._clickTimer = null
-      return // C'était en fait un double-clic, on ignore
+    const drawing_area = this.drawing_area
+    if (!drawing_area.application_data.is_editable) {
+      drawing_area.purgeSelection()
+      return
     }
-    // ✅ Démarrer un timer pour voir si un deuxième clic arrive
-    this._clickTimer = setTimeout(() => {
-      this._clickTimer = null
-      // Apply parent behavior first
-      super.eventSimpleLMBClick(event)
-      // Get related drawing area
-      const drawing_area = this.drawing_area
-      if (!drawing_area.application_data.is_editable) {
-        drawing_area.purgeSelection()
-        return
+    // EDITION MODE ===========================================================
+    if (drawing_area.isInEditionMode()) {
+      drawing_area.purgeSelection()
+      drawing_area.closeAllMenus()
+    }
+    // SELECTION MODE =========================================================
+    else if (drawing_area.isInSelectionMode()) {
+      // CTRL (or CMD on Mac) = multi-sélection
+      if (event.ctrlKey || event.metaKey) {
+        this.addOrRemoveLinkFromSelection()
+        // #1243 — matrice déposée : l'inspecteur dérive sa cible de la sélection.
+        this.drawing_area.application_data.menu_configuration.ref_to_menu_config_updater.current()
+        this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
       }
-      // EDITION MODE ===========================================================
-      if (drawing_area.isInEditionMode()) {
-        // Purge selection list
-        drawing_area.purgeSelection()
-        // Close all menus
-        drawing_area.closeAllMenus()
+      // Simple clic (sans modificateur) = sélection seule
+      else {
+        drawing_area.selectOnly(this)
+        drawing_area.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
       }
-      // SELECTION MODE =========================================================
-      else if (drawing_area.isInSelectionMode()) {
-        // SHIFT
-
-        // CTRL (or CMD on Mac)
-        if (event.ctrlKey || event.metaKey) {
-          this.addOrRemoveLinkFromSelection()
-          // #1243 — matrice déposée : l'inspecteur dérive sa cible de la sélection.
-          this.drawing_area.application_data.menu_configuration.ref_to_menu_config_updater.current()
-          this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-        }
-        // OTHERS
-        else {
-          // If we're here then it's a simple click (no ctrl,alt or shift key pressed) - purge
-          // Purge selection list
-          drawing_area.purgeSelection()
-          // Add link to selection
-          drawing_area.addElementToSelection(this)
-          drawing_area.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
-        }
-      }
-    }, this._clickDelay)
+    }
   }
 
   protected eventSimpleRMBClick(

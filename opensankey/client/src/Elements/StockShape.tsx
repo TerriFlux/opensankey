@@ -144,8 +144,7 @@ export class Class_StockShape extends Class_NodeBase {
     if (!da.editable || !da.isInSelectionMode()) return
     event.stopPropagation()
     const mc = da.application_data.menu_configuration
-    da.purgeSelection()
-    da.addElementToSelection(this)
+    da.selectOnly(this)
     // #1243 — matrice déposée : l'inspecteur dérive sa cible de la sélection.
     mc.openConfigMenu()
     mc.tab_selected = 'shape'

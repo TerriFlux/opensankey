@@ -495,22 +495,40 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     this._nodeDrawIcon.d3_selection?.raise()
   }
 
-  public eventSimpleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    if (this._clickTimer) {
-      clearTimeout(this._clickTimer)
-      this._clickTimer = null
-      return // C'était en fait un double-clic, on ignore
+  // P1 (refonte événements) — la désambiguïsation simple/double-clic est faite
+  // UNE fois par Class_ProtoElement.eventSimpleLMBClick (timer unique). NodeBase
+  // ne fait plus que réagir aux clics CONFIRMÉS via ces deux hooks.
+  protected override onSingleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    this._nodeEventsHandler.handleSimpleLMBClick(event)
+    // OSP Extension — ouverture d'un hyperlien porté par le nœud/la ZDT.
+    if (this.hyperlink) {
+      window.open(this.hyperlink)
     }
-    // ✅ Démarrer un timer pour voir si un deuxième clic arrive
-    this._clickTimer = setTimeout(() => {
-      this._clickTimer = null
-      super.eventSimpleLMBClick(event)
-      this._nodeEventsHandler.handleSimpleLMBClick(event)
-      // OSP Extension - Ajouter cette section
-      if (this.hyperlink) {
-        window.open(this.hyperlink)
-      }
-    }, this._clickDelay) // Délai pour détecter un double-clic (250 ms)
+  }
+
+  // P2 — double-clic CONFIRMÉ : éditer le label sous le curseur (l'ancien handler
+  // du <text> DrawLabel est supprimé ; le clic label passe désormais par le
+  // discriminateur unique). Le type de label vient de la cible DOM.
+  protected override onDoubleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    if (!this.drawing_area.editable) return
+    const labelType = this._nodeEventsHandler.getClickedLabelType(event.target as Element)
+    if (labelType === 'value_label') { this.openValueLabelEditor(); return }
+    // name_label / icon -> éditer le nom (pour une ZDT, le texte EST le nom).
+    // Sur la forme nue ('shape') : rien (comportement historique).
+    if (labelType === 'name_label' || labelType === 'icon') this.setInputLabelVisible()
+  }
+
+  /** P2 — édition du label de VALEUR ; surchargé par les feuilles qui en ont un. */
+  protected openValueLabelEditor() { /* no-op ici (pas de label de valeur) */ }
+
+  // P2 — sous-sélection d'un label : pose selected_label_prefix puis n'affiche
+  // que les poignées de la boîte du label (drawDragHandlers masque celles de la
+  // forme ; chaque label ne (re)dessine ses poignées que si son prefix matche).
+  public drawSelectedLabelHandles(prefix: 'name_label' | 'value_label' | 'icon' | null) {
+    this.selected_label_prefix = prefix
+    this.drawDragHandlers()
+    this._nodeDrawNameLabel?.refreshLabelResizeHandles()
+    this._nodeDrawIcon?.refreshLabelResizeHandles()
   }
 
   protected eventMouseDrag(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {

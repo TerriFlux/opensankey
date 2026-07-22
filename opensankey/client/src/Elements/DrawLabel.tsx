@@ -138,12 +138,6 @@ export abstract class DrawLabelBase {
   // d'un flux encore en pointillé (sans valeur), qui n'a normalement aucun label.
   protected _force_editable_draw: boolean = false
 
-  // Détection manuelle du double-clic (cf. attachDoubleClickEdit). Stockée sur
-  // l'instance (qui survit au redraw du DOM), pas sur le <text> : le 1er clic peut
-  // recréer le <text>, ce qui casse le `dblclick` natif (les deux clics doivent
-  // atterrir sur le MÊME nœud DOM — non garanti sur Mac). Timestamp en ms.
-  private _last_label_click_ts: number = 0
-
   // Valeur du modèle à l'ouverture de l'éditeur inline, ou null hors édition.
   // Sert à coalescer toute la session de frappe en UNE entrée d'historique : le
   // listener 'input' écrit le modèle à chaque caractère, donc enregistrer là
@@ -1459,49 +1453,18 @@ export abstract class DrawLabelBase {
   ): void {
     if (!this._element.drawing_area.editable) return
     textElement.style('cursor', 'text')
+      // P2 (refonte événements) — le clic sur le <text> du label ne fait plus SA
+      // propre logique (sélection, drill-down groupe, détection manuelle 400 ms,
+      // sous-sélection, dblclick natif). Il DÉLÈGUE au discriminateur UNIQUE de
+      // l'élément (Class_ProtoElement.eventSimpleLMBClick), exactement comme un
+      // clic sur la forme : simple = handleSimpleLMBClick (sélection + drill-down
+      // groupe + sous-sélection du label via getClickedLabelType) ; double =
+      // onDoubleLMBClick (édition). stopPropagation empêche le <g> de traiter
+      // AUSSI le clic (double-déclenchement). Plus AUCUNE logique dupliquée ici.
       .on('click', (evt: MouseEvent) => {
-        // Clic sur le label : sélectionne l'élément + sous-sélectionne ce
-        // label (les poignées n'apparaîtront que pour ce label).
-        // stopPropagation pour éviter le double-trigger via le <g> du nœud
-        // (qui purge + ré-ajoute → flicker visuel).
         evt.stopPropagation()
-        // Détection MANUELLE du double-clic : le 1er clic (addElementToSelection)
-        // peut recréer le <text>, donc le second clic atterrit sur un autre nœud
-        // DOM et le `dblclick` natif ne se déclenche pas (systématique sur Mac).
-        // On mesure l'écart entre deux clics sur l'instance (qui survit au redraw).
-        const now = Date.now()
-        const is_double = (now - this._last_label_click_ts) <= 400
-        this._last_label_click_ts = is_double ? 0 : now
-        if (is_double) {
-          evt.preventDefault()
-          this.setInputLabelVisible()
-          return
-        }
-        const el = this._element as Class_BaseShape
-        const drawing_area = el.drawing_area
-        // Sélectionne l'élément (via _selection) sinon Escape/purgeSelection
-        // n'itère pas dessus et la sub-sélection reste collée (poignées qui
-        // ne disparaissent pas en clic ailleurs / Escape).
-        if (!el.is_selected) {
-          drawing_area.addElementToSelection(el)
-        }
-        // Set APRÈS addElementToSelection (qui passe par drawAsSelected →
-        // clear de selected_label_prefix).
-        el.selected_label_prefix = this.prefix as 'name_label' | 'value_label' | 'icon'
-        // Masque les poignées de la FORME : sous-sélection d'un label → on ne
-        // montre QUE les poignées de la boîte du label. drawDragHandlers, désormais
-        // sensible à selected_label_prefix, les unDraw. (Absent sur les liens.)
-        ;(el as unknown as { drawDragHandlers?: () => void }).drawDragHandlers?.()
-        this.refreshLabelResizeHandles()
-      })
-      .on('dblclick', (evt: MouseEvent) => {
-        // Conservé pour les plateformes où le `dblclick` natif fonctionne ;
-        // la détection manuelle ci-dessus prend le relais sinon. setInputLabelVisible
-        // est idempotent, un éventuel double-déclenchement est sans effet.
-        evt.stopPropagation()
-        evt.preventDefault()
-        this._last_label_click_ts = 0
-        this.setInputLabelVisible()
+        this._element.eventSimpleLMBClick(
+          evt as unknown as React.MouseEvent<HTMLButtonElement, React.MouseEvent>)
       })
   }
 

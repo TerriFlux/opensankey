@@ -1265,6 +1265,55 @@ export class Class_DrawingArea {
     this.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
   }
 
+  // P3 (refonte événements) — SÉLECTION SIMPLE canonique : purge la sélection
+  // puis n'ajoute que cet unique élément. Remplace les couples purge+add
+  // dispersés (NodeEventsHandler, Link, StockShape, cadres de groupe). Les mises
+  // à jour de menus spécifiques restent au site appelant (elles diffèrent selon
+  // le type d'élément).
+  public selectOnly(element: Class_ProtoElement) {
+    this.purgeSelection()
+    this.addElementToSelection(element)
+  }
+
+  /**
+   * OS#1259 — Cible du clic « façon PowerPoint » sur un groupe de zones de texte,
+   * par CLICS SUCCESSIFS (drill-down). `clicked` et ses cadres ZDT englobants
+   * forment un chemin du plus englobant à la feuille cliquée :
+   *   [groupe externe, ..., cadre direct, feuille cliquée]
+   * - rien de ce chemin n'est sélectionné -> on saisit le GROUPE le plus externe ;
+   * - un élément du chemin est sélectionné -> on descend d'UN niveau vers la
+   *   feuille (clic suivant = on entre dans le groupe) ;
+   * - la feuille est déjà sélectionnée -> on reboucle sur le groupe externe.
+   * Scopé aux zones de texte (un cadre de nœuds n'est pas concerné). Renvoie null
+   * si `clicked` n'est pas une ZDT membre d'un groupe de ZDT (sélection normale).
+   * Partagé par le clic sur la forme (NodeEventsHandler) et sur le label
+   * (DrawLabel, qui court-circuite l'autre chemin via stopPropagation).
+   */
+  public resolveContainerGroupClickTarget(clicked: Class_NodeBase): Class_NodeBase | null {
+    const containers = this.sankey.containers_list as unknown as Class_NodeBase[]
+    const is_container = (el: Class_NodeBase): boolean => containers.includes(el)
+    if (!is_container(clicked)) return null
+    // Chaîne ascendante des cadres ZDT englobants (du plus interne au plus externe)
+    const ascend: Class_NodeBase[] = []
+    const seen = new Set<Class_NodeBase>([clicked])
+    let cur: Class_NodeBase = clicked
+    for (;;) {
+      const parent = cur.attached_container.find(
+        c => c.tied_to_nodes && is_container(c) && !seen.has(c))
+      if (!parent) break
+      ascend.push(parent)
+      seen.add(parent)
+      cur = parent
+    }
+    if (ascend.length === 0) return null
+    // Chemin ordonné : groupe le plus englobant -> ... -> feuille cliquée
+    const path: Class_NodeBase[] = [...ascend.slice().reverse(), clicked]
+    const sel_idx = path.findIndex(el => el.is_selected)
+    if (sel_idx === -1) return path[0]                       // rien de sélectionné -> groupe externe
+    if (sel_idx + 1 < path.length) return path[sel_idx + 1]  // clic suivant -> un niveau plus profond
+    return path[0]                                            // feuille atteinte -> reboucle sur le groupe
+  }
+
   // OS#1254 — addLegendToSelection/removeLegendFromSelection supprimées avec
   // Class_Legend : la légende n'est plus un objet unique sélectionnable, c'est
   // un GÉNÉRATEUR (Class_LegendConfig) qui produit des zones de texte. Elles se
@@ -2124,9 +2173,12 @@ export class Class_DrawingArea {
   }
 
   /**
-   * #1259 — Envoie un cadre de groupe DERRIÈRE ses membres dans l'ordre Z
-   * (fin de liste = premier plan). Sans ça, un cadre dessiné après ses membres
-   * capte leurs clics (cas ZDT dans ZDT : impossible d'attraper la ZDT membre).
+   * #1259 — Envoie un cadre de groupe DERRIÈRE ses membres dans l'ordre Z.
+   * Convention réelle (orderElementOnDA trie sur la liste INVERSÉE) : un élément
+   * plus loin dans `_list_g_element_id` est dessiné plus tôt = plus au FOND.
+   * Donc « derrière » = indice PLUS HAUT. On place le cadre juste après (indice
+   * plus haut que) le membre le plus au fond. Sans ça, le cadre capte les clics
+   * de ses membres (cas ZDT dans ZDT : impossible d'attraper la ZDT membre).
    */
   public sendFrameBehindMembers(frame: Class_NodeBase) {
     const list = dedupeZOrderKeepFirst(this._list_g_element_id)
@@ -2136,10 +2188,15 @@ export class Class_DrawingArea {
       .map(m => list.indexOf(m.id))
       .filter(i => i >= 0)
     if (member_idx.length === 0) return
-    const min_idx = Math.min(...member_idx)
-    if (frame_idx < min_idx) return
+    const max_idx = Math.max(...member_idx)
+    if (frame_idx > max_idx) return // déjà derrière tous ses membres (indice plus haut)
+    // Retire le cadre puis le réinsère juste APRÈS le membre le plus au fond
+    // (recalcul de l'indice max après suppression, les positions ayant glissé).
     list.splice(frame_idx, 1)
-    list.splice(min_idx, 0, frame.id)
+    const new_max = Math.max(...frame.attached_node
+      .map(m => list.indexOf(m.id))
+      .filter(i => i >= 0))
+    list.splice(new_max + 1, 0, frame.id)
     this._list_g_element_id = list
     this.orderElementOnDA()
   }

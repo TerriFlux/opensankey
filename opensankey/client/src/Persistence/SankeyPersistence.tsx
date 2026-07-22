@@ -2451,6 +2451,32 @@ export class DrawingAreaPersistence {
     // Fusionner : ordre du JSON + éléments manquants à la fin
     drawing_area['_list_g_element_id'] = dedupeZOrderKeepFirst([...order_from_json, ...missing_in_json])
 
+    // OS#1259 — z-order des GROUPES : un cadre (tied_to_nodes) doit être DERRIÈRE
+    // ses membres, sinon il capte les clics qui leur sont destinés (membres
+    // inatteignables). L'ordre Z sauvegardé peut avoir remis le cadre devant ;
+    // on ré-applique sendFrameBehindMembers au chargement. Traité du plus profond
+    // au plus englobant (groupes emboîtés) pour que chaque cadre finisse bien
+    // derrière l'ensemble de sa descendance.
+    {
+      const tiedFrameDepth = (c: Class_NodeBase): number => {
+        let depth = 0
+        let cur: Class_NodeBase = c
+        const seen = new Set<Class_NodeBase>([c])
+        for (;;) {
+          const parent = cur.attached_container.find(p => p.tied_to_nodes && !seen.has(p))
+          if (!parent) break
+          depth++
+          seen.add(parent)
+          cur = parent
+        }
+        return depth
+      }
+      drawing_area.sankey.containers_list
+        .filter(c => c.tied_to_nodes)
+        .sort((a, b) => tiedFrameDepth(b) - tiedFrameDepth(a))
+        .forEach(frame => drawing_area.sendFrameBehindMembers(frame))
+    }
+
     drawing_area['_show_background_image'] = getBooleanFromJSON(json_object, 'show_background_image', drawing_area.show_background_image)
     drawing_area['_background_image'] = getStringFromJSON(json_object, 'background_image', drawing_area.background_image)
     drawing_area['_constrain_to_bg_image_ratio'] = getBooleanFromJSON(json_object, 'constrain_to_bg_image_ratio', drawing_area.constrain_to_bg_image_ratio)

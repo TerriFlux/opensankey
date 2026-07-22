@@ -219,6 +219,15 @@ export class NodeDrawShape {
     // attrape l'enfant qu'on visait. La bordure est volontairement
     // épaissie au mouseover pour faciliter sa préhension.
     const acts_as_frame = this._node.tied_to_nodes
+    // OS#1259 — un cadre de NŒUDS garde l'intérieur transparent aux clics
+    // ('visibleStroke'). Un groupe de ZONES DE TEXTE a désormais ses membres
+    // DEVANT (z-order corrigé, sendFrameBehindMembers) : son intérieur peut donc
+    // capter les clics (gaps entre membres) pour rendre tout le groupe cliquable,
+    // sans gêner les membres qui sont au-dessus. On ne bloque l'intérieur que
+    // pour les cadres qui ne sont PAS des zones de texte.
+    const is_text_zone = (this._node.drawing_area.sankey.containers_list as unknown[])
+      .includes(this._node)
+    const frame_blocks_interior = acts_as_frame && !is_text_zone
     const base_thickness = this._node.shape_border_thickness
     // Hachures : motif de traits parallèles appliqué au REMPLISSAGE du nœud
     // (et non à la bordure), selon l'orientation choisie. Le motif reprend la
@@ -280,7 +289,7 @@ export class NodeDrawShape {
       .attr('stroke-dasharray', this._node.shape_border_dashed ? '10,3' : '')
       .attr('stroke-opacity', (this._node.shape_border_visible) ? 1 : 0)
       .attr('clip-path', clip_attr)
-      .attr('pointer-events', acts_as_frame ? 'visibleStroke' : null)
+      .attr('pointer-events', frame_blocks_interior ? 'visibleStroke' : null)
     // Ombre portée : appliquée sur le groupe g_node_shape (pas sur .node_shape)
     // pour que le clip de bordure interne ne rogne pas l'ombre.
     this._node.d3_selection_g_shape
