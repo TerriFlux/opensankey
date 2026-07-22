@@ -69,6 +69,11 @@ export const default_auto_y = false
 export const default_dx = 200
 export const default_dy = 50
 export type Type_Orientation = 'hh' | 'vv' | 'vh' | 'hv'
+
+// Point de contrôle libre d'un flux (waypoint e!Sankey) : coordonnées MONDE
+// (mêmes unités que position_x/y des nœuds). La liste, vide par défaut, achemine
+// le tracé source → wp[0] → … → wp[n] → cible. Cf. opensankey#1301.
+export type Type_LinkWaypoint = { x: number, y: number }
 // Ancrage de droiture d'un flux (#665, refonte multi-ancrage). 'none' = libre (flux non
 // contraint). 'source'/'target' = l'accroche aval/amont s'aligne sur l'autre (déplace le
 // nœud opposé). 'highest'/'lowest' = les deux accroches s'alignent sur la plus haute / la
@@ -3235,6 +3240,54 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       it: 'Posizione del punto di riciclaggio'
     }
   } satisfies AttributeConfig<number>,
+
+  // Points de contrôle libres (waypoints e!Sankey, opensankey#1301). Liste de
+  // coordonnées MONDE ; vide = comportement paramétrique historique inchangé.
+  // Persistée génériquement via `attributes` (sérialisation JSON du tableau) ;
+  // NE JAMAIS muter le défaut partagé — toujours réaffecter un nouveau tableau.
+  waypoints: {
+    default: [] as Type_LinkWaypoint[],
+    type: (() => []) as (() => Type_LinkWaypoint[]),
+    category: 'shape' as const,
+    actions: ['drawElements', 'drawControlPoint'] as LinkBaseActionType[],
+    labels: {
+      en: 'Control points',
+      fr: 'Points de contrôle',
+      es: 'Puntos de control',
+      de: 'Kontrollpunkte',
+      it: 'Punti di controllo'
+    },
+    tooltips: {
+      en: 'Free routing points the flow passes through (Alt+click the flow to add one, drag a point to move it, right-click a point to remove it)',
+      fr: 'Points de passage libres empruntés par le flux (Alt+clic sur le flux pour en ajouter un, glisser un point pour le déplacer, clic droit sur un point pour le retirer)',
+      es: 'Puntos de paso libres por los que pasa el flujo (Alt+clic en el flujo para añadir uno, arrastrar un punto para moverlo, clic derecho para eliminarlo)',
+      de: 'Freie Wegpunkte, durch die der Fluss verläuft (Alt+Klick auf den Fluss zum Hinzufügen, Punkt ziehen zum Verschieben, Rechtsklick zum Entfernen)',
+      it: 'Punti di passaggio liberi attraverso cui scorre il flusso (Alt+clic sul flusso per aggiungerne uno, trascinare per spostarlo, clic destro per rimuoverlo)'
+    }
+  } satisfies AttributeConfig<Type_LinkWaypoint[]>,
+
+  // opensankey#1301 — offset d'ancre importé (fidélité e!Sankey). Décalage de l'ancre
+  // le long du bord du nœud, DEPUIS le coin (relatif → survit aux déplacements/resize) :
+  // axe X pour un côté haut/bas, axe Y pour un côté gauche/droite. Pose la source/cible
+  // exactement au PORT e!Sankey pour qu'un flux droit (VV/HH) le reste au lieu d'être
+  // centré sur la bande d'empilement. `undefined` = empilement OpenSankey natif.
+  source_anchor_offset: {
+    default: undefined as number | undefined,
+    type: (() => undefined) as (() => number | undefined),
+    category: 'shape' as const,
+    actions: ['drawWithNodes'] as LinkBaseActionType[],
+    labels: { en: 'Source anchor offset', fr: 'Offset ancre source', es: 'Desfase ancla origen', de: 'Quellanker-Versatz', it: 'Offset ancora sorgente' },
+    tooltips: { en: 'Imported anchor offset along the source node edge (e!Sankey port fidelity).', fr: 'Offset d\'ancre importé le long du bord du nœud source (fidélité port e!Sankey).', es: 'Desfase de ancla importado a lo largo del borde del nodo origen.', de: 'Importierter Ankerversatz entlang der Quellknotenkante.', it: 'Offset di ancoraggio importato lungo il bordo del nodo sorgente.' }
+  } satisfies AttributeConfig<number | undefined>,
+
+  target_anchor_offset: {
+    default: undefined as number | undefined,
+    type: (() => undefined) as (() => number | undefined),
+    category: 'shape' as const,
+    actions: ['drawWithNodes'] as LinkBaseActionType[],
+    labels: { en: 'Target anchor offset', fr: 'Offset ancre cible', es: 'Desfase ancla destino', de: 'Zielanker-Versatz', it: 'Offset ancora destinazione' },
+    tooltips: { en: 'Imported anchor offset along the target node edge (e!Sankey port fidelity).', fr: 'Offset d\'ancre importé le long du bord du nœud cible (fidélité port e!Sankey).', es: 'Desfase de ancla importado a lo largo del borde del nodo destino.', de: 'Importierter Ankerversatz entlang der Zielknotenkante.', it: 'Offset di ancoraggio importato lungo il bordo del nodo destinazione.' }
+  } satisfies AttributeConfig<number | undefined>,
 
   is_arrow: {
     default: true,

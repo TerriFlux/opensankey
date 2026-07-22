@@ -2464,6 +2464,14 @@ export class Class_DrawingArea {
       if (n.value_label_position_y) n.value_label_position_y += shift_y
       if (n.name_label_position_x) n.name_label_position_x += shift_x
       if (n.name_label_position_y) n.name_label_position_y += shift_y
+      // opensankey#1301 — les points de contrôle (waypoints) sont en coords MONDE
+      // (comme les nœuds). Sans ce décalage, le recentrage bouge les nœuds mais pas
+      // les waypoints → le tracé routé se désaligne (côté d'accroche faux, cf. bug
+      // « part en haut »). Réaffectation (ne jamais muter le défaut partagé []).
+      const wps = n.shape_waypoints
+      if (Array.isArray(wps) && wps.length > 0) {
+        n.shape_waypoints = wps.map(p => ({ x: p.x + shift_x, y: p.y + shift_y }))
+      }
     })
     this.sankey.nodes_list.forEach(n => {
       n.draw()

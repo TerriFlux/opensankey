@@ -275,6 +275,15 @@ export function scaleModelGeometry(da: Class_DrawingArea, r: number, include_lab
   sankey.links_list.forEach(l => {
     scaleNumAttr(l, 'shape_border_thickness', r)
     scaleNumAttr(l, 'shape_middle_recycling', r)
+    // opensankey#1301 — offsets d'ancre importés (longueurs le long du bord) : scaler.
+    scaleNumAttr(l, 'shape_source_anchor_offset', r)
+    scaleNumAttr(l, 'shape_target_anchor_offset', r)
+    // opensankey#1301 — points de contrôle libres : coordonnées MONDE, à scaler
+    // comme le reste de la géométrie. Réaffectation (jamais muter le défaut []).
+    const wps = l.shape_waypoints
+    if (Array.isArray(wps) && wps.length > 0) {
+      l.shape_waypoints = wps.map(p => ({ x: p.x * r, y: p.y * r }))
+    }
     if (include_labels) {
       LABEL_NUM_KEYS.forEach(k => scaleNumAttr(l, k, r))
       LABEL_RICH_KEYS.forEach(k => scaleRichAttr(l, k, r))

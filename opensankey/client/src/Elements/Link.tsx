@@ -777,7 +777,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     if (this.shape_color_rule == 'gradient') {
       const link_arrow_side_right = this.target_side == 'right'
       const link_arrow_side_bottom = this.target_side == 'bottom'
-      const is_horizontal_at_target = this.is_horizontal || this.is_vertical_horizontal
+      const is_horizontal_at_target = this.is_target_horizontal
       const is_revert = (is_horizontal_at_target && link_arrow_side_right) || (!is_horizontal_at_target && link_arrow_side_bottom)
 
       const source_color = this.source.getShapeColorToUse()
@@ -1611,6 +1611,29 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   /** Side derived from node relative positions, ignoring any anchor lock. */
+  /**
+   * opensankey#1301 — auto-suivi du côté d'accroche : le côté du nœud `node` qui
+   * FAIT FACE au point `pt` (1er/dernier waypoint). Les waypoints découplent la
+   * direction de départ/arrivée de la position relative des nœuds, donc le côté
+   * doit suivre la route, pas « où est l'autre nœud ». `undefined` si pas de point.
+   */
+  private _waypointFacingSide(
+    node: Class_NodeElement,
+    pt: { x: number, y: number } | undefined
+  ): Type_Side | undefined {
+    if (!pt) return undefined
+    // Centre estimé depuis la TAILLE BRUTE (shape_min_width/height), PAS
+    // getShapeWidthToUse() : cette dernière dérive la bande des liens ordonnés, qui
+    // lit source_side → récursion infinie (source_side → _computed_source_side →
+    // _waypointFacingSide → getShapeWidthToUse → getLinksOrdered → source_side …).
+    // position_x/y sont, eux, déjà lus sans risque par le calcul de côté d'origine.
+    const cx = node.position_x + node.shape_min_width / 2
+    const cy = node.position_y + node.shape_min_height / 2
+    const dx = pt.x - cx, dy = pt.y - cy
+    if (Math.abs(dx) >= Math.abs(dy)) return dx >= 0 ? 'right' : 'left'
+    return dy >= 0 ? 'bottom' : 'top'
+  }
+
   private get _computed_source_side(): Type_Side {
     // Failsafe : because of constructor
     if (this.source === undefined || this.target === undefined) {
@@ -1618,6 +1641,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
     // Normal behavior
     if (!this.shape_is_recycling) {
+      // opensankey#1301 — auto-suivi : le côté suit le 1er waypoint s'il y en a.
+      const wps = this.shape_waypoints
+      if (Array.isArray(wps) && wps.length > 0) {
+        const side = this._waypointFacingSide(this.source, wps[0])
+        if (side) return side
+      }
       if (this.is_horizontal || this.is_horizontal_vertical) {
         if (this.source.position_x <= this.target.position_x)
           return 'right'
@@ -1727,6 +1756,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
     // Normal behavior
     if (!this.shape_is_recycling) {
+      // opensankey#1301 — auto-suivi : le côté cible suit le DERNIER waypoint s'il y en a.
+      const wps = this.shape_waypoints
+      if (Array.isArray(wps) && wps.length > 0) {
+        const side = this._waypointFacingSide(this.target, wps[wps.length - 1])
+        if (side) return side
+      }
       if (this.is_horizontal || this.is_vertical_horizontal) {
         if (this.source.position_x <= this.target.position_x)
           return 'left'
@@ -2383,7 +2418,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // place à la pointe (symétrique de position_x_end côté cible).
     let shifting_start_point_x = 0
     if (this.shape_arrow_at_source) {
-      const is_horizontal_at_source = this.is_horizontal || this.is_horizontal_vertical
+      const is_horizontal_at_source = this.is_source_horizontal
       const is_revert = (is_horizontal_at_source && source_side === 'right') || (!is_horizontal_at_source && source_side === 'bottom')
       const sign = is_revert ? -1 : 1
       shifting_start_point_x = is_horizontal_at_source ? this.shape_arrow_size * sign : 0
@@ -2403,7 +2438,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     const source_side = this.source_side
     let shifting_start_point_y = 0
     if (this.shape_arrow_at_source) {
-      const is_horizontal_at_source = this.is_horizontal || this.is_horizontal_vertical
+      const is_horizontal_at_source = this.is_source_horizontal
       const is_revert = (is_horizontal_at_source && source_side === 'right') || (!is_horizontal_at_source && source_side === 'bottom')
       const sign = is_revert ? -1 : 1
       shifting_start_point_y = !is_horizontal_at_source ? this.shape_arrow_size * sign : 0
@@ -2423,10 +2458,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // Calcul du décalage pour la flèche (code existant)
     let shifting_end_point_x = 0
     if (this.shape_is_arrow) {
-      const is_horizontal_at_target = this.is_horizontal || this.is_vertical_horizontal
+      const is_horizontal_at_target = this.is_target_horizontal
       const is_revert = (is_horizontal_at_target && this.target_side == 'right') || (!is_horizontal_at_target && this.target_side == 'bottom')
       const sign_shifting_end_point = (is_revert) ? -1 : 1
-      shifting_end_point_x = (this.is_horizontal || this.is_vertical_horizontal) ? this.shape_arrow_size * sign_shifting_end_point : 0
+      shifting_end_point_x = is_horizontal_at_target ? this.shape_arrow_size * sign_shifting_end_point : 0
     }
 
     const target_side = this.target_side
@@ -2446,10 +2481,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // Calcul du décalage pour la flèche (code existant)
     let shifting_end_point_y = 0
     if (this.shape_is_arrow) {
-      const is_horizontal_at_target = this.is_horizontal || this.is_vertical_horizontal
+      const is_horizontal_at_target = this.is_target_horizontal
       const is_revert = (is_horizontal_at_target && this.target_side == 'right') || (!is_horizontal_at_target && this.target_side == 'bottom')
       const sign_shifting_end_point = (is_revert) ? -1 : 1
-      shifting_end_point_y = (this.is_vertical || this.is_horizontal_vertical) ? this.shape_arrow_size * sign_shifting_end_point : 0
+      shifting_end_point_y = !is_horizontal_at_target ? this.shape_arrow_size * sign_shifting_end_point : 0
     }
 
     const target_side = this.target_side
@@ -2479,6 +2514,30 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public get is_vertical() { return this.shape_orientation === 'vv' }
   public get is_horizontal_vertical() { return this.shape_orientation === 'hv' }
   public get is_vertical_horizontal() { return this.shape_orientation === 'vh' }
+
+  /**
+   * opensankey#1301 — RÉGIME ROUTÉ : le flux a des points de contrôle libres et n'est
+   * plus paramétrique. shape_orientation (hh/vv/vh/hv) ne s'applique plus ; axe et côté
+   * à chaque extrémité dérivent de la route (cf. NOTE-WAYPOINTS.md). Exclut le recyclage.
+   */
+  public get is_routed(): boolean {
+    return !this.shape_is_recycling && Array.isArray(this.shape_waypoints) && this.shape_waypoints.length > 0
+  }
+
+  /**
+   * Axe d'accroche par EXTRÉMITÉ (h = côté gauche/droite, v = haut/bas), source de
+   * vérité pour le layout du nœud et les extrémités du tracé. En régime routé, l'axe
+   * suit le CÔTÉ dérivé de la route (source_side/target_side) ; sinon, l'ancienne
+   * combinaison d'orientation (source = 1ère lettre, cible = 2ème).
+   */
+  public get is_source_horizontal(): boolean {
+    if (this.is_routed) return this.source_side === 'left' || this.source_side === 'right'
+    return this.is_horizontal || this.is_horizontal_vertical
+  }
+  public get is_target_horizontal(): boolean {
+    if (this.is_routed) return this.target_side === 'left' || this.target_side === 'right'
+    return this.is_horizontal || this.is_vertical_horizontal
+  }
 
   /**
    * Set and redraw d3 path for link arrow

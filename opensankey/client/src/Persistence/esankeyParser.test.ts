@@ -563,6 +563,67 @@ describe('parseEsankeyXml — coude droit (OS#1288)', () => {
   })
 })
 
+describe('parseEsankeyXml — points de contrôle (opensankey#1301)', () => {
+  // Le <sankeyLink><points> porte la polyligne du tracé, SUR le tracé :
+  // [ancre source, …coins…, ancre cible]. n ≥ 5 → tous les points intérieurs
+  // (P1..P_{n-2}) deviennent des waypoints, segments d'attache collapsés.
+  // Nœuds FIXTURE : A(100,300) source, B(400,320) cible.
+  const withPoints = (pointsXml: string): string => FIXTURE
+    .replace('<arrow id="60">',
+      '<arrow id="60"><sankeyLink sankeyStartSegmentLength="50" sankeyEndSegmentLength="50" curviness="10">'
+      + pointsXml + '</sankeyLink>')
+
+  test('5 points → 3 waypoints (escalier), translatés avec le nœud, attaches collapsées', () => {
+    // Escalier : A(100,300) → (150,300) → (150,200) → (350,200) → B(400,320).
+    const d = parseEsankeyXml(withPoints(
+      '<points length="5">'
+      + '<value X="100" Y="300" /><value X="150" Y="300" /><value X="150" Y="200" />'
+      + '<value X="350" Y="200" /><value X="400" Y="320" /></points>'))
+    const link = Object.values(d.links)[0]
+    const wps = link.local.shape_waypoints as Array<{ x: number, y: number }>
+    expect(Array.isArray(wps)).toBe(true)
+    expect(wps.length).toBe(3)
+    // Escalier préservé (invariant par translation) : P1→P2 vertical, P2→P3 horizontal.
+    expect(wps[0].x).toBeCloseTo(wps[1].x, 6)
+    expect(wps[1].y).toBeCloseTo(wps[2].y, 6)
+    // Translation COHÉRENTE avec les nœuds : P1(150,300) est à +50 en x du nœud
+    // source A(100,300) ; après le même dx/dy, l'écart reste (+50, 0).
+    const src = d.nodes[link.idSource]
+    expect(wps[0].x - src.x).toBeCloseTo(50, 6)
+    expect(wps[0].y - src.y).toBeCloseTo(0, 6)
+    // Segments d'attache collapsés (les vrais coins sont les waypoints).
+    expect(link.local.left_horiz_shift).toBe(0.01)
+    expect(link.local.right_horiz_shift).toBe(0.01)
+    // Flux ROUTÉ (opensankey#1301) : l'orientation n'est PAS posée — axe et côté
+    // dérivent de la route au runtime (is_routed), pas de shape_orientation.
+    expect(link.local.orientation).toBeUndefined()
+  })
+
+  test('4 points, segment milieu DIAGONAL (flux simple) → aucun waypoint (paramétrique)', () => {
+    // Pas de coude orthogonal (le milieu (150,300)→(350,320) est diagonal).
+    const d = parseEsankeyXml(withPoints(
+      '<points length="4">'
+      + '<value X="100" Y="300" /><value X="150" Y="300" />'
+      + '<value X="350" Y="320" /><value X="400" Y="320" /></points>'))
+    const link = Object.values(d.links)[0]
+    expect(link.local.shape_waypoints).toBeUndefined()
+  })
+
+  test('4 points, COUDE ORTHOGONAL (H-V-H) → 2 waypoints (routé même en 4 points)', () => {
+    // Boucle e!Sankey type HCl→neutralisation : droite, descendre, gauche.
+    const d = parseEsankeyXml(withPoints(
+      '<points length="4">'
+      + '<value X="100" Y="300" /><value X="150" Y="300" />'
+      + '<value X="150" Y="200" /><value X="100" Y="200" /></points>'))
+    const link = Object.values(d.links)[0]
+    const wps = link.local.shape_waypoints as Array<{ x: number, y: number }>
+    expect(Array.isArray(wps)).toBe(true)
+    expect(wps.length).toBe(2)
+    // Coude : P1→P2 vertical (même x).
+    expect(wps[0].x).toBeCloseTo(wps[1].x, 6)
+  })
+})
+
 describe('parseEsankeyXml — SA#294 : ancre masquée recalée (accroche verticale)', () => {
   // Une ancre In/Out invisible (process visible="false" avec une boîte) est
   // collapsée en point. Pour un voisin AU-DESSUS/DESSOUS (accroche verticale),

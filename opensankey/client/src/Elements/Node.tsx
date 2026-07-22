@@ -28,8 +28,7 @@ import * as d3 from '../d3Modules'
 import { Class_NodeBase } from './NodeBase'
 
 import {
-  Class_LinkElement,
-  sortLinksElementsByRelativeNodesPositions
+  Class_LinkElement
 } from './Link'
 import { Class_Handler } from './Handler'
 import { reorganizeIOOrder } from './reorganizeIOOrder'
@@ -1077,22 +1076,29 @@ export class Class_NodeElement extends Class_NodeBase {
 
     let recycling_links: Class_LinkElement[]
     let compare: (link_a: Class_LinkElement, link_b: Class_LinkElement) => number
+    // Les deux modes passent par l'ordre géométrique (cf. ioOrderGeometry.ts). L'éventail
+    // « split direction + hauteur » ne s'applique qu'aux flux qui tournent ('vh'/'hv') ; les
+    // flux droits ('hh'/'vv') gardent le tri par la position du nœud opposé. Différence
+    // simple/advanced : advanced départage les hauteurs égales par l'ancre reach·curve
+    // (use_curve=true) ; simple ignore la courbure.
     if (mode === 'advanced') {
-      // Ordre géométrique par la courbure (os#205/#266) : chaque flux est classé par la
-      // forme de son coude à ce nœud (cf. ioOrderGeometry.ts) pour que l'éventail ne se
-      // croise pas. Les flux de recyclage rejoignent le groupe « middle » et sont classés
-      // par le ventre de leur boucle → on passe recycling_links=[] à reorganizeIOOrder.
+      // Les flux de recyclage rejoignent le groupe « middle » et sont classés par le ventre
+      // de leur boucle → on passe recycling_links=[] à reorganizeIOOrder.
       const middle = this._links_order.filter(
         l => !import_links.includes(l) && !export_links.includes(l)
       )
-      const order_index = this._computeIOOrderIndex(middle)
+      const order_index = this._computeIOOrderIndex(middle, true)
       recycling_links = []
       compare = (link_a, link_b) => (order_index.get(link_a) ?? 0) - (order_index.get(link_b) ?? 0)
     } else {
-      // 'simple' — tri par la position du nœud opposé ; les flux de recyclage sont
-      // parqués en bloc entre le middle et les exports (comportement historique).
+      // 'simple' — mêmes règles sans la courbure ; les flux de recyclage restent parqués en
+      // bloc entre le middle et les exports (comportement historique), donc hors index.
       recycling_links = this._links_order.filter(l => l.shape_is_recycling)
-      compare = (link_a, link_b) => sortLinksElementsByRelativeNodesPositions(link_a, link_b, this)
+      const middle = this._links_order.filter(
+        l => !import_links.includes(l) && !export_links.includes(l) && !l.shape_is_recycling
+      )
+      const order_index = this._computeIOOrderIndex(middle, false)
+      compare = (link_a, link_b) => (order_index.get(link_a) ?? 0) - (order_index.get(link_b) ?? 0)
     }
 
     this._links_order = reorganizeIOOrder(
@@ -1108,16 +1114,18 @@ export class Class_NodeElement extends Class_NodeBase {
   }
 
   /**
-   * Build a link → display-rank map for the geometry-aware I/O order (mode 'advanced') :
-   * each side's links are ranked per-link by the shape of their bend at this node (cf.
-   * ioOrderGeometry.ts) so the fan does not cross. All positions are taken at node
-   * CENTRES ; each link carries the curvature on its node-side end, which is what the
-   * ordering key needs. A recycling link additionally carries `stack_ref`, the centre of
-   * its loop's belly, because its opposite node — which sits backwards, beyond this node
-   * — says nothing about where the loop actually passes.
+   * Build a link → display-rank map for the geometry-aware I/O order (modes 'simple' and
+   * 'advanced', cf. ioOrderGeometry.ts). Turning links ('vh'/'hv') get the direction-split
+   * + height fan so it does not cross ; straight links ('hh'/'vv') keep the plain
+   * opposite-position order. All positions are taken at node CENTRES ; each link carries the
+   * curvature on its node-side end (used as a height tie-break in ADVANCED only — `use_curve`).
+   * A recycling link additionally carries `stack_ref`, the centre of its loop's belly,
+   * because its opposite node — which sits backwards, beyond this node — says nothing about
+   * where the loop actually passes.
    */
   private _computeIOOrderIndex(
-    middle: Class_LinkElement[]
+    middle: Class_LinkElement[],
+    use_curve: boolean
   ): Map<Class_LinkElement, number> {
     const cx = this.position_x + this.getShapeWidthToUse() / 2
     const cy = this.position_y + this.getShapeHeightToUse() / 2
@@ -1134,8 +1142,11 @@ export class Class_NodeElement extends Class_NodeBase {
       // glued to the node) is a real value and is kept — only a missing value falls back
       // to the default. The order rule uses reach·curve_node as the anchor distance.
       const curve_node = (is_source ? l.shape_starting_curve : l.shape_ending_curve) ?? 0.05
+      // Seuls les flux qui changent d'axe ('vh'/'hv') reçoivent l'éventail split+hauteur ;
+      // les flux droits ('hh'/'vv') gardent le tri par position opposée (cf. orderKey).
+      const turning = (l.shape_orientation === 'vh' || l.shape_orientation === 'hv')
       const [ox, oy] = centre(other)
-      const geo: Type_IOGeo = { side, ox, oy, curve_node }
+      const geo: Type_IOGeo = { side, ox, oy, turning, curve_node }
       if (l.shape_is_recycling) {
         const [sx, sy] = centre(l.source)
         const [tx, ty] = centre(l.target)
@@ -1149,7 +1160,7 @@ export class Class_NodeElement extends Class_NodeBase {
       }
       return { item: l, geo }
     })
-    const ordered = orderIOByGeometry(items, cx, cy)
+    const ordered = orderIOByGeometry(items, cx, cy, use_curve)
     const map = new Map<Class_LinkElement, number>()
     ordered.forEach((l, i) => map.set(l, i))
     return map
@@ -1276,7 +1287,9 @@ export class Class_NodeElement extends Class_NodeBase {
         arrow_side: link.target_side,
         link_thickness: link.thicknessTarget,
         link_thickness_raw: link.thicknessTargetRaw,
-        is_horizontal_at_anchor: link.is_horizontal || link.is_vertical_horizontal
+        // opensankey#1301 — axe par extrémité (routé → suit target_side), sinon la
+        // flèche reste horizontale sur un flux routé arrivant verticalement.
+        is_horizontal_at_anchor: link.is_target_horizontal
       }))
     // Source arrows: this node is the source, arrow drawn on link.source_side
     // (independent of the target arrow — a link can carry both; graphical only,
@@ -1289,7 +1302,8 @@ export class Class_NodeElement extends Class_NodeBase {
         arrow_side: link.source_side,
         link_thickness: link.thicknessSource,
         link_thickness_raw: link.thicknessSourceRaw,
-        is_horizontal_at_anchor: link.is_horizontal || link.is_horizontal_vertical
+        // opensankey#1301 — axe par extrémité (routé → suit source_side).
+        is_horizontal_at_anchor: link.is_source_horizontal
       }))
     const list_link_to_add_arrow = [...target_arrows, ...source_arrows]
       .sort((a, b) => this._links_order.indexOf(a.link) - this._links_order.indexOf(b.link))
@@ -1325,13 +1339,24 @@ export class Class_NodeElement extends Class_NodeBase {
     let cum_h_top = 0
     let cum_v_right = 0
     let cum_h_bottom = 0
+    // opensankey#1301 — un bout de flux importé d'e!Sankey avec un OFFSET d'ancre
+    // (flux droit vv/hh : `shape_source/target_anchor_offset`) voit sa bande décalée
+    // au PORT dans updateLinksPositions. e!Sankey dessine UNE pointe convergente pour
+    // TOUS les flux arrivant/partant d'un côté (bande empilée). On reproduit ça : ces
+    // bouts sont RETIRÉS de l'éventail standard du côté (calé sur le milieu du nœud) et
+    // forment leur PROPRE éventail, calé sur la bande à offsets, cf. anchorFan* plus bas.
+    const endHasAnchorOffset = (it: { link: Class_LinkElement, is_source_arrow: boolean }): boolean =>
+      it.is_source_arrow
+        ? it.link.shape_source_anchor_offset !== undefined
+        : it.link.shape_target_anchor_offset !== undefined
     // Fan sums in RAW space (clamped=false) so the fan total matches the node
     // height ; see computeArrowPlacement / #199. On retranche la part des flux
     // standalone du côté : ils sortent de l'éventail (dessin indépendant), donc
     // ne comptent ni dans le total ni dans le cumul (cf. branche else du calcul).
+    // Les bouts à offset d'ancre sont retranchés de la même façon (éventail par port).
     let standaloneRawLeft = 0, standaloneRawRight = 0, standaloneRawTop = 0, standaloneRawBottom = 0
     list_link_to_add_arrow.forEach(it => {
-      if (!it.link.shape_arrow_standalone) return
+      if (!it.link.shape_arrow_standalone && !endHasAnchorOffset(it)) return
       if (it.arrow_side === 'left') standaloneRawLeft += it.link_thickness_raw
       else if (it.arrow_side === 'right') standaloneRawRight += it.link_thickness_raw
       else if (it.arrow_side === 'top') standaloneRawTop += it.link_thickness_raw
@@ -1341,6 +1366,51 @@ export class Class_NodeElement extends Class_NodeBase {
     const sumLinkRight = this.getSumOfLinksThickness('right', false) - standaloneRawRight
     const sumLinkTop = this.getSumOfLinksThickness('top', false) - standaloneRawTop
     const sumLinkBottom = this.getSumOfLinksThickness('bottom', false) - standaloneRawBottom
+    // opensankey#1301 — UNE pointe par BANDE CONTIGUË (comme e!Sankey). Chaque flux à
+    // offset est calé sur sa position de bande RÉELLE (position_*_start/end, axe transverse) :
+    // ces positions empilent DÉJÀ les flux-tags d'un même port ET séparent les ports (posées
+    // par updateLinksPositions). On regroupe par (bout|côté), on TRIE par position, puis on
+    // découpe en RUNS contigus (un TROU entre deux tranches → nouvelle pointe). Résultat :
+    //  - flux-tags d'un même port (même offset) → contigus → 1 pointe (BEF Transmission, 5 @48) ;
+    //  - ports adjacents qui se touchent → 1 pointe (Households, offsets 35 et 80) ;
+    //  - ports séparés par un trou → pointes distinctes (BEF Process : 13,4 / 60,1 / 123,1).
+    // Position de bande transverse : y pour un côté gauche/droite, x pour haut/bas (l'autre
+    // axe porte le décalage de pointe, hors sujet ici).
+    const ANCHOR_RUN_TOL = 1 // px : deux tranches plus proches que ça sont réputées contiguës
+    const bandTransversePos = (it: { link: Class_LinkElement, is_source_arrow: boolean, arrow_side: Type_Side }): number => {
+      const horiz = it.arrow_side === 'left' || it.arrow_side === 'right'
+      if (horiz) return it.is_source_arrow ? it.link.position_y_start : it.link.position_y_end
+      return it.is_source_arrow ? it.link.position_x_start : it.link.position_x_end
+    }
+    const anchorMemberKey = (it: { link: Class_LinkElement, is_source_arrow: boolean }): string =>
+      it.is_source_arrow + '|' + it.link.id
+    const anchorSideBuckets = new Map<string, Array<{ key: string, pos: number, t: number }>>()
+    list_link_to_add_arrow.forEach(it => {
+      if (!endHasAnchorOffset(it)) return
+      const sk = it.is_source_arrow + '|' + it.arrow_side
+      const arr = anchorSideBuckets.get(sk) ?? []
+      arr.push({ key: anchorMemberKey(it), pos: bandTransversePos(it), t: it.link_thickness })
+      anchorSideBuckets.set(sk, arr)
+    })
+    // Découpe chaque côté en runs contigus ; mémorise le run de chaque flux + sa géométrie.
+    const anchorRunOf = new Map<string, string>()
+    const anchorRunInfo = new Map<string, { total: number, minEdge: number, maxEdge: number }>()
+    anchorSideBuckets.forEach((arr, sk) => {
+      arr.sort((a, b) => a.pos - b.pos)
+      let runIdx = 0
+      let runMaxEdge = -Infinity
+      arr.forEach((f, i) => {
+        if (i > 0 && (f.pos - f.t / 2) > runMaxEdge + ANCHOR_RUN_TOL) runIdx++
+        const rk = sk + '#' + runIdx
+        anchorRunOf.set(f.key, rk)
+        const info = anchorRunInfo.get(rk) ?? { total: 0, minEdge: Infinity, maxEdge: -Infinity }
+        info.total += f.t
+        info.minEdge = Math.min(info.minEdge, f.pos - f.t / 2)
+        info.maxEdge = Math.max(info.maxEdge, f.pos + f.t / 2)
+        anchorRunInfo.set(rk, info)
+        runMaxEdge = Math.max(runMaxEdge, f.pos + f.t / 2)
+      })
+    })
 
     list_link_to_add_arrow
       .forEach(item => {
@@ -1351,6 +1421,12 @@ export class Class_NodeElement extends Class_NodeBase {
 
         // OS#1302 — réglages de pointe PAR FLUX (résolus par le style).
         const use_standalone = link.shape_arrow_standalone
+        // opensankey#1301 — bout à offset d'ancre importé (flux droit e!Sankey) : garde
+        // l'ÉVENTAIL (une pointe convergente pour tous les flux d'un même port, comme
+        // e!Sankey), mais centré sur le PORT (offset) et non sur le milieu du côté.
+        const anchor_offset = (!use_standalone && endHasAnchorOffset(item))
+          ? (item.is_source_arrow ? link.shape_source_anchor_offset : link.shape_target_anchor_offset)
+          : undefined
         // Largeur MINIMALE de pointe (px) façon e!Sankey (#1270 refondu) : ne s'applique
         // qu'aux flux plus fins que cette largeur (les autres restent inchangés).
         const arrow_min_width = link.shape_arrow_min_width
@@ -1384,14 +1460,48 @@ export class Class_NodeElement extends Class_NodeBase {
           ? Math.min(base_arrow_size, link_value)
           : base_arrow_size
 
-        let xt: number
-        let yt: number
+        let xt = 0
+        let yt = 0
         let arrow_half_height: number
         let arrow_already_computed: number
         // Base of the arrow (draw_arrow_part `linkSize`) : raw in fan mode (so the
         // fan tiles the node band), clamped in standalone mode (visible triangle).
         let arrow_slice: number
-        if (!use_standalone) {
+        if (anchor_offset !== undefined) {
+          // opensankey#1301 — UNE pointe convergente par RUN CONTIGU (cf. anchorRun* plus
+          // haut). L'apex est le CENTRE de la bande du run (moyenne des bords extrêmes,
+          // coords absolues) ; chaque flux occupe sa tranche à sa position de bande RÉELLE,
+          // donc la pointe est calée exactement sur la bande dessinée. cumul dérivé de la
+          // position (pas d'un compteur d'ordre) → robuste à l'ordre et aux tranches d'un
+          // run partiellement chevauchantes.
+          const g = anchorRunInfo.get(anchorRunOf.get(anchorMemberKey(item)) ?? '')
+            ?? { total: link_value, minEdge: 0, maxEdge: link_value }
+          const total = g.total
+          const apex_abs = (g.minEdge + g.maxEdge) / 2 // centre de bande du run (ABSOLU)
+          const band_pos = bandTransversePos(item)      // centre de la tranche de CE flux (ABSOLU)
+          // cumul tel que (apex - total/2 + cumul) = bord haut de la tranche de ce flux.
+          const cumul = (band_pos - link_value / 2) - (apex_abs - total / 2)
+          if (link_arrow_side_left) {
+            xt = + this.position_x - this.shape_margin_left + inset_x
+            yt = apex_abs
+          }
+          else if (link_arrow_side_right) {
+            xt = + this.position_x + node_width + this.shape_margin_right - inset_x
+            yt = apex_abs
+          }
+          else if (link_arrow_side_top) {
+            xt = apex_abs
+            yt = + this.position_y + inset_y
+          }
+          else {
+            xt = apex_abs
+            yt = + this.position_y + node_height - inset_y
+          }
+          arrow_half_height = total / 2
+          arrow_already_computed = cumul
+          arrow_slice = link_value
+        }
+        else if (!use_standalone) {
           // Fan : sized in RAW space (#199). total = Σ raw on the side, cumulative
           // offset accumulates raw thicknesses, position centered on node side.
           let total_cumul_of_side = 0
@@ -1725,6 +1835,27 @@ export class Class_NodeElement extends Class_NodeBase {
 
     const doublon: Class_LinkElement[] = []
 
+    // opensankey#1301 — offset d'ancre importé (flux droits vv/hh) : les N flows d'un
+    // MÊME arrow partagent le même offset (= même port e!Sankey). On les empile en une
+    // SOUS-BANDE centrée sur le port (au lieu de tous les écraser au même point, ce qui
+    // cassait le multi-flow). Pré-calcul du total d'épaisseur RAW par offset, source et
+    // cible séparés ; l'empilement se fait dans la boucle via les cumuls ci-dessous.
+    const sourceOffTotals = new Map<number, number>()
+    const targetOffTotals = new Map<number, number>()
+    this._links_order.forEach(l => {
+      if (!l.is_visible) return
+      if (l.source === this && l.shape_source_anchor_offset !== undefined) {
+        const o = l.shape_source_anchor_offset
+        sourceOffTotals.set(o, (sourceOffTotals.get(o) ?? 0) + l.thicknessSourceRaw)
+      }
+      if (l.target === this && l.shape_target_anchor_offset !== undefined) {
+        const o = l.shape_target_anchor_offset
+        targetOffTotals.set(o, (targetOffTotals.get(o) ?? 0) + l.thicknessTargetRaw)
+      }
+    })
+    const sourceOffCumul = new Map<number, number>()
+    const targetOffCumul = new Map<number, number>()
+
     // Loop on all links to compute starting / ending position
     this._links_order
       .forEach(link => {
@@ -1777,6 +1908,25 @@ export class Class_NodeElement extends Class_NodeBase {
             link_starting_point = { x: (x0 + dx_bottom + thickness / 2), y: (y0 + height - inset_y) }
             link_starting_handle_point = { x: link_starting_point.x, y: link_starting_point.y + handle_position_shift }
             dx_bottom = dx_bottom + thickness
+          }
+          // opensankey#1301 — offset d'ancre importé (flux droits vv/hh) : la SOUS-BANDE
+          // des flows partageant ce port (même offset) est centrée sur le port (coin +
+          // offset) et empilée en épaisseur. Mono-flow → un flux pile au port ; multi-flow
+          // → N flux empilés autour du port (au lieu de s'effondrer). `along` = position
+          // dans la sous-bande relative au centre = port.
+          if (link.shape_source_anchor_offset !== undefined) {
+            const o = link.shape_source_anchor_offset
+            const total = sourceOffTotals.get(o) ?? thickness
+            const cumul = sourceOffCumul.get(o) ?? 0
+            const along = -total / 2 + cumul + thickness / 2
+            sourceOffCumul.set(o, cumul + thickness)
+            if (link.source_side === 'top' || link.source_side === 'bottom') {
+              link_starting_point.x = x0 + o + along
+              link_starting_handle_point.x = link_starting_point.x
+            } else {
+              link_starting_point.y = y0 + o + along
+              link_starting_handle_point.y = link_starting_point.y
+            }
           }
           // Draw link if position has not been set before
           // OS#1246 — isInFullDraw() : un draw complet redessine TOUJOURS le flux.
@@ -1848,6 +1998,21 @@ export class Class_NodeElement extends Class_NodeBase {
             link_ending_point = { x: (x0 + dx_bottom + thickness / 2), y: (y0 + height - inset_y) }
             link_ending_handle_point = { x: link_ending_point.x, y: (link_ending_point.y + handle_position_shift) }
             dx_bottom = dx_bottom + thickness
+          }
+          // opensankey#1301 — offset d'ancre importé : sous-bande centrée sur le port, cf. source.
+          if (link.shape_target_anchor_offset !== undefined) {
+            const o = link.shape_target_anchor_offset
+            const total = targetOffTotals.get(o) ?? thickness
+            const cumul = targetOffCumul.get(o) ?? 0
+            const along = -total / 2 + cumul + thickness / 2
+            targetOffCumul.set(o, cumul + thickness)
+            if (link.target_side === 'top' || link.target_side === 'bottom') {
+              link_ending_point.x = x0 + o + along
+              link_ending_handle_point.x = link_ending_point.x
+            } else {
+              link_ending_point.y = y0 + o + along
+              link_ending_handle_point.y = link_ending_point.y
+            }
           }
           // Draw link if position has not been set before
           // OS#1246 — isInFullDraw() : cf. la branche « source » ci-dessus.

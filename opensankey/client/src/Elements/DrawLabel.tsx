@@ -2333,6 +2333,31 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     return (this.link.thicknessSource + this.link.thicknessTarget) / 2
   }
 
+  /**
+   * opensankey#1301 — milieu (abscisse curviligne) de la polyligne source → points de
+   * contrôle → cible, pour ancrer le label « milieu » sur le tracé routé. null si pas
+   * de waypoint (ou recyclage) → repli sur le calcul paramétrique historique.
+   */
+  protected getWaypointLabelMidpoint(): [number, number] | null {
+    const wps = this.link.shape_waypoints
+    if (this.link.shape_is_recycling || !Array.isArray(wps) || wps.length === 0) return null
+    const pts: Array<[number, number]> = [
+      [this.link.position_x_start, this.link.position_y_start],
+      ...wps.map(p => [p.x, p.y] as [number, number]),
+      [this.link.position_x_end, this.link.position_y_end]
+    ]
+    let total = 0
+    for (let i = 1; i < pts.length; i++) total += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1])
+    let half = total / 2
+    for (let i = 1; i < pts.length; i++) {
+      const dx = pts[i][0] - pts[i - 1][0], dy = pts[i][1] - pts[i - 1][1]
+      const l = Math.hypot(dx, dy)
+      if (l >= half) { const t = l > 0 ? half / l : 0; return [pts[i - 1][0] + dx * t, pts[i - 1][1] + dy * t] }
+      half -= l
+    }
+    return pts[pts.length - 1]
+  }
+
   protected getLabelPos(): [number, number, string, string] {
     let label_pos_y = this.link.position_y_start
     const label_pos_y_end = this.link.position_y_end
@@ -2347,10 +2372,18 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     } else {
       if (this._label_values.horiz === 'middle') {
         label_anchor = 'middle'
-        label_pos_x = (this._link_control_points_internal.controlPoints.starting_bezier_point.position_x +
-          this._link_control_points_internal.controlPoints.ending_bezier_point.position_x) / 2
-        label_pos_y = (this._link_control_points_internal.controlPoints.starting_bezier_point.position_y +
-          this._link_control_points_internal.controlPoints.ending_bezier_point.position_y) / 2
+        // opensankey#1301 — avec des points de contrôle, « milieu » = milieu (abscisse
+        // curviligne) du tracé routé, sinon le label flotterait près des extrémités.
+        const wp_mid = this.getWaypointLabelMidpoint()
+        if (wp_mid) {
+          label_pos_x = wp_mid[0]
+          label_pos_y = wp_mid[1]
+        } else {
+          label_pos_x = (this._link_control_points_internal.controlPoints.starting_bezier_point.position_x +
+            this._link_control_points_internal.controlPoints.ending_bezier_point.position_x) / 2
+          label_pos_y = (this._link_control_points_internal.controlPoints.starting_bezier_point.position_y +
+            this._link_control_points_internal.controlPoints.ending_bezier_point.position_y) / 2
+        }
       } else if (this._label_values.horiz === 'right') {
         label_anchor = 'end'
         label_pos_x = this.link.position_x_end
