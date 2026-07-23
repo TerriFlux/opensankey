@@ -153,7 +153,8 @@ _PROCESS_TYPE_BOUNDARY = 1
 # Champs numériques du XML (tout y est texte, contrairement à SQLite) :
 # les identifiants se terminent par "ID", les valeurs/facteurs sont des réels.
 # SV… = niveau de stock, DT… = sa variation sur la période.
-_FLOAT_FIELDS = {"MFInput", "MFCalc", "Factor", "SVInput", "SVCalc", "DTInput", "DTCalc"}
+_FLOAT_FIELDS = {"MFInput", "MFCalc", "MFUncertInput", "MFUncertCalc",
+                 "Factor", "SVInput", "SVCalc", "DTInput", "DTCalc"}
 
 
 # --- Lecteur SQLite (.smfa) ---------------------------------------------------
@@ -889,9 +890,24 @@ def parse_stan(path, period_id=None, layer_id=None):
         # de la donnée, sa référence bibliographique devient la source.
         pair["hypothesis"] = fv.get("Remarks") or None
         pair["source"] = literature.get(fv.get("LiteratureRefID")) or None
+        # Incertitudes (S-A1). STAN stocke un σ ABSOLU dans l'unité de saisie ;
+        # `data_uncertainty` chez nous est RELATIVE en % (colonne « Incertitude
+        # relative » du tableur) → conversion. L'incertitude RÉCONCILIÉE, elle,
+        # devient l'intervalle result_min/result_max (l'affichage OS#189).
+        pair["uncertainty"] = None
+        u_in, v_in = fv.get("MFUncertInput"), fv.get("MFInput")
+        if isinstance(u_in, (int, float)) and isinstance(v_in, (int, float)) and v_in:
+            pair["uncertainty"] = round(abs(u_in) / abs(v_in) * 100.0, 3)
+        pair["result_min"] = pair["result_max"] = None
+        u_calc = fv.get("MFUncertCalc")
+        if isinstance(u_calc, (int, float)) and pair["result"] is not None:
+            half = abs(u_calc) * factor / display_factor
+            pair["result_min"] = round(pair["result"] - half, 6)
+            pair["result_max"] = round(pair["result"] + half, 6)
         flow_values[(fv["PeriodID"], fv["FlowID"])] = pair
 
-    _EMPTY_PAIR = {"data": None, "result": None, "hypothesis": None, "source": None}
+    _EMPTY_PAIR = {"data": None, "result": None, "hypothesis": None, "source": None,
+                   "uncertainty": None, "result_min": None, "result_max": None}
 
     def flow_pair(flow_id, pid):
         return flow_values.get((pid, flow_id)) or _EMPTY_PAIR
@@ -1008,6 +1024,11 @@ def parse_stan(path, period_id=None, layer_id=None):
                 value_json["data_hypothesis"] = pair["hypothesis"]
             if pair["source"]:
                 value_json["data_source"] = pair["source"]
+            if pair["uncertainty"] is not None:
+                value_json["data_uncertainty"] = pair["uncertainty"]
+            if pair["result_min"] is not None:
+                value_json["result_min"] = pair["result_min"]
+                value_json["result_max"] = pair["result_max"]
 
         if multi_period:
             # Une valeur par tag de période. L'arbre est reconstruit côté front à partir
@@ -2094,6 +2115,66 @@ def test_provenance_descriptions_et_matchcodes():
     assert link["tooltip_text"] == "Koelwater"
     assert link["value"]["data_hypothesis"] == "estimation haute"
     assert link["value"]["data_source"] == "Rapport ADEME 2024"
+
+
+def test_incertitudes_deviennent_relative_et_intervalle_resultat():
+    # MFUncertInput (sigma ABSOLU) -> data_uncertainty RELATIVE en % (la
+    # convention du tableur) ; MFUncertCalc -> intervalle result_min/result_max
+    # autour de la reconciliee (l'affichage d'incertitude OS#189).
+    import tempfile
+    import os
+    path = os.path.join(tempfile.mkdtemp(), "uncert.smfa")
+    _build_minimal_smfa(path)
+    con = sqlite3.connect(path)
+    con.executescript(
+        """
+        ALTER TABLE FlowValue ADD COLUMN MFUncertInput REAL;
+        ALTER TABLE FlowValue ADD COLUMN MFUncertCalc REAL;
+        -- 250 t +/- 25 t saisi (10 %), reconcilie 200 t +/- 10 t.
+        UPDATE FlowValue SET MFUncertInput = 25.0, MFCalc = 200.0, MFUncertCalc = 10.0
+            WHERE FlowID = 0;
+        """
+    )
+    con.commit()
+    con.close()
+
+    result = parse_stan(path)
+    link = next(lk for lk in result["links"].values()
+                if lk["value"].get("result_value") is not None)
+    assert link["value"]["data_uncertainty"] == 10.0        # 25/250 en %
+    assert link["value"]["result_value"] == 200000.0
+    assert link["value"]["result_min"] == 190000.0          # 200 t - 10 t
+    assert link["value"]["result_max"] == 210000.0
+    # L'autre flux, sans incertitude : rien d'emis.
+    other = next(lk for lk in result["links"].values() if lk is not link)
+    assert "data_uncertainty" not in other["value"]
+    assert "result_min" not in other["value"]
+
+
+def test_zmfa_incertitude_est_numerique():
+    # Les champs MFUncert* du XML doivent etre COERCES en float (_FLOAT_FIELDS) :
+    # sans cela ils arrivent en chaine et la division data_uncertainty crashe
+    # ou produit n'importe quoi.
+    import tempfile
+    import os
+    path = os.path.join(tempfile.mkdtemp(), "uncert.zmfa")
+    xml = """<MfaSystemData xmlns="http://inkasoft.net/MfaSystemData.xsd">
+  <Process><ProcessID>1</ProcessID><ProcessType>2</ProcessType><Name>A</Name></Process>
+  <Process><ProcessID>2</ProcessID><ProcessType>2</ProcessType><Name>B</Name></Process>
+  <ProcessInput><ProcessInputID>10</ProcessInputID><ProcessID>2</ProcessID></ProcessInput>
+  <ProcessOutput><ProcessOutputID>20</ProcessOutputID><ProcessID>1</ProcessID></ProcessOutput>
+  <Flow><FlowID>1</FlowID><ProcessInputID>10</ProcessInputID><ProcessOutputID>20</ProcessOutputID><Name>F</Name></Flow>
+  <FlowValue><FlowValueID>1</FlowValueID><FlowID>1</FlowID><FlowLayerID>1</FlowLayerID><PeriodID>1</PeriodID><MFNumUnitID>2</MFNumUnitID><MFInput>100</MFInput><MFUncertInput>5</MFUncertInput></FlowValue>
+  <Unit><UnitID>2</UnitID><UnitCode>kg</UnitCode><Factor>1</Factor></Unit>
+  <Period><PeriodID>1</PeriodID><PeriodCode>2024</PeriodCode></Period>
+  <FlowLayer><FlowLayerID>1</FlowLayerID><MaterialCode>Good</MaterialCode><Name>Good</Name></FlowLayer>
+</MfaSystemData>
+"""
+    with gzip.open(path, "wb") as fh:
+        fh.write(xml.encode("utf-8"))
+    result = parse_stan(path)
+    link = next(iter(result["links"].values()))
+    assert link["value"]["data_uncertainty"] == 5.0
 
 
 def test_backfill_period_codes():
