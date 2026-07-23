@@ -243,12 +243,17 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     if (this._is_selected) {
       this.drawDragHandlers()
     }
-    this._nodeDrawNameLabel.drawGenericLabel()
+    // Icône/image AVANT les textes : une image de nœud peut remplir toute la
+    // boîte (import e!Sankey) — le label doit rester lisible par-dessus.
     this._nodeDrawIcon.drawGenericLabel()
+    this._nodeDrawNameLabel.drawGenericLabel()
   }
   public drawIcon() {
     if (!this._nodeDrawIcon) return
     this._nodeDrawIcon.drawGenericLabel()
+    // drawGenericLabel append le <g> en fin de nœud : re-trier pour que les
+    // labels repassent au-dessus de l'icône/image.
+    this._orderD3Elements()
   }
   public drawShape() {
     if (!this._nodeDrawShape) return
@@ -491,8 +496,10 @@ export abstract class Class_NodeBase extends Class_BaseShape {
 
   protected _orderD3Elements() {
     this.d3_selection_g_shape?.raise()
-    this._nodeDrawNameLabel.d3_selection?.raise()
+    // Icône/image sous les textes (cf. drawElements) : le label de nom doit
+    // rester au-dessus d'une image qui remplit la boîte du nœud.
     this._nodeDrawIcon.d3_selection?.raise()
+    this._nodeDrawNameLabel.d3_selection?.raise()
   }
 
   // P1 (refonte événements) — la désambiguïsation simple/double-clic est faite
