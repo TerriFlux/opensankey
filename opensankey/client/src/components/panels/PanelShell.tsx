@@ -258,29 +258,108 @@ const PopupResizeHandle = ({ startW, startH, onPreview, onCommit }: {
   )
 }
 
-// --- Barre latérale : ancrée à droite, réserve sa largeur (dessin recadré) ----
-const SidebarShell = ({ app_data, panels, id, title, allowedModes, width_px, onClose, children }: {
+/**
+ * Repère de la zone d'ancrage : bande translucide au bord droit, affichée pendant
+ * qu'une pop-up y est glissée. Purement visuel (`pointerEvents: none`) — c'est
+ * `onStop` qui décide de l'ancrage.
+ */
+const DockHint = ({ app_data, width_px }: { app_data: Class_ApplicationData, width_px: number }) => {
+  const da = app_data.drawing_area
+  return (
+    <Box
+      className='panel_dock_hint'
+      position='fixed'
+      right={app_data.menu_configuration.getToolsColumnWidthPx() + 'px'}
+      top={da.getNavBarHeight() + 'px'}
+      bottom={da.getBottomBarHeight() + 'px'}
+      width={width_px + 'px'}
+      zIndex={PANEL_Z_DOCK_HINT}
+      bg='rgba(66, 153, 225, 0.18)'
+      borderLeft='2px dashed'
+      borderColor='blue.400'
+      pointerEvents='none'
+    />
+  )
+}
+
+const TOOLTIP_W = 300
+
+/**
+ * ENVELOPPE UNIQUE des trois contenants.
+ *
+ * Les trois modes partagent le MÊME arbre React — même wrapper draggable, même
+ * Box, mêmes emplacements d'enfants : seuls l'habillage et les gestes changent.
+ * C'est ce qui garantit que `children` n'est JAMAIS démonté quand le panneau
+ * change de contenant. Avec trois composants distincts (l'implémentation
+ * précédente), React démontait l'un pour monter l'autre et l'état local du
+ * CONTENU repartait au défaut à chaque promotion : onglet actif de l'inspecteur,
+ * position de défilement, sections dépliées, portée Sélection/Styles.
+ *
+ * Deux conséquences de conception à connaître :
+ *  - le wrapper react-draggable est TOUJOURS monté ; il est `disabled` hors
+ *    pop-up et sa position forcée à (0,0) — un `translate(0,0)` sans effet
+ *    visuel, le placement étant alors porté par le `position:fixed` de la Box
+ *    (une transform sur un élément ne change pas son propre bloc conteneur) ;
+ *  - les emplacements optionnels (poignées) rendent `null` au lieu de
+ *    disparaître, pour que l'index des enfants — donc l'identité du contenu —
+ *    reste stable.
+ */
+const PanelFrame = ({
+  app_data, panels, id, title, mode, allowedModes, width_px, onClose, children,
+  hidden, onTooltipHoverIn, onTooltipHoverOut, onTooltipEditIntent
+}: {
   app_data: Class_ApplicationData
   panels: Class_PanelManager
   id: string
   title: string
+  mode: Type_PanelMode
   allowedModes: Type_PanelMode[]
   width_px: number
   onClose: () => void
   children: React.ReactNode
+  /** Rendu mais MASQUÉ (barre latérale repliée par Ctrl+B) : on garde le contenu
+   *  monté pour ne pas perdre son état au dépliage. */
+  hidden?: boolean
+  onTooltipHoverIn?: () => void
+  onTooltipHoverOut?: () => void
+  onTooltipEditIntent?: () => void
 }) => {
   const da = app_data.drawing_area
-  // Se cale à gauche de la colonne d'outils (extrême droite), comme l'ex-panneau
-  // de config épinglé.
-  const right_offset = app_data.menu_configuration.getToolsColumnWidthPx()
-  // Aperçu local de la largeur pendant le glisser (commit au relâchement).
+  const node_ref = React.useRef(null)
+  const handle_class = 'panel-popup-handle-' + id.replace(/[^a-zA-Z0-9_-]/g, '_')
+
+  const is_popup = mode === 'popup'
+  const is_sidebar = mode === 'sidebar'
+  const is_tooltip = mode === 'tooltip'
+
+  // Aperçus locaux pendant les glissers (commit au relâchement). Ils survivent
+  // désormais aux changements de mode, le frame n'étant plus remonté.
+  const [drag_pos, setDragPos] = React.useState<{ x: number, y: number } | null>(null)
+  const [drag_size, setDragSize] = React.useState<{ w: number, h: number } | null>(null)
   const [drag_width, setDragWidth] = React.useState<number | null>(null)
+  const [in_dock_zone, setInDockZone] = React.useState(false)
+
+  const geom = panels.getPopupGeometry(id)
+  const base_w = geom?.w ?? 340
+  const base_h = geom?.h ?? 380
+  const eff_w = drag_size?.w ?? base_w
+  const eff_h = drag_size?.h ?? base_h
   const eff_width = drag_width ?? width_px
-  // OS#300 Lot 6 — glisser l'EN-TÊTE d'un menu ancré le DÉTACHE en pop-up, posée
-  // sous le curseur. Seuil de 8 px pour ne pas confondre avec un clic (les
-  // boutons de l'en-tête sont exclus).
+
+  // Position CONTRÔLÉE du wrapper : la géométrie de la pop-up en mode pop-up,
+  // (0,0) sinon. Contrôlée (et non `defaultPosition`) parce qu'un même wrapper
+  // sert les trois modes : sa position doit suivre le mode courant.
+  const position = is_popup
+    ? (drag_pos ?? { x: geom?.x ?? 0, y: geom?.y ?? 0 })
+    : { x: 0, y: 0 }
+
+  // --- Ancrage par glisser (pop-up -> barre latérale) -------------------------
+  const can_dock = allowedModes.includes('sidebar')
+  const inDockZone = (x: number) => x >= (window.innerWidth || 4096) - DOCK_ZONE_PX
+
+  // --- Détachement par glisser (barre latérale -> pop-up) ---------------------
   const startDetachDrag = (e: React.PointerEvent) => {
-    if (!allowedModes.includes('popup')) return
+    if (!is_sidebar || !allowedModes.includes('popup')) return
     if ((e.target as HTMLElement).closest('button')) return
     const start_x = e.clientX
     const start_y = e.clientY
@@ -307,221 +386,125 @@ const SidebarShell = ({ app_data, panels, id, title, allowedModes, width_px, onC
     window.addEventListener('pointermove', move)
     window.addEventListener('pointerup', cleanup)
   }
-  return (
-    <Box
-      className='panel_sidebar'
-      data-panel-id={id}
-      position='fixed'
-      right={right_offset + 'px'}
-      top={da.getNavBarHeight() + 'px'}
-      bottom={da.getBottomBarHeight() + 'px'}
-      width={eff_width + 'px'}
-      zIndex={PANEL_Z_SIDEBAR}
-      bg='white'
-      borderLeft='1px solid #e2e8f0'
-      display='flex'
-      flexDirection='column'
-    >
-      <SidebarResizeHandle
-        startWidth={width_px}
-        onPreview={setDragWidth}
-        onCommit={(w) => { panels.sidebar_width_px = w; setDragWidth(null) }}
-      />
-      <Box onPointerDown={startDetachDrag}>
-        <PanelHeader
-          app_data={app_data} panels={panels} id={id} title={title}
-          mode='sidebar' allowedModes={allowedModes} onClose={onClose}
-        />
-      </Box>
-      <Box style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '0.2rem 0.2rem 0.2rem 0.4rem' }}>
-        {children}
-      </Box>
-    </Box>
-  )
-}
 
-/**
- * OS#300 Lot 6 — Repère de la zone d'ancrage : bande translucide au bord droit,
- * affichée pendant qu'une pop-up y est glissée. Purement visuel (pointerEvents
- * none) — c'est `onStop` qui décide de l'ancrage.
- */
-const DockHint = ({ app_data, width_px }: { app_data: Class_ApplicationData, width_px: number }) => {
-  const da = app_data.drawing_area
-  return (
-    <Box
-      className='panel_dock_hint'
-      position='fixed'
-      right={app_data.menu_configuration.getToolsColumnWidthPx() + 'px'}
-      top={da.getNavBarHeight() + 'px'}
-      bottom={da.getBottomBarHeight() + 'px'}
-      width={width_px + 'px'}
-      zIndex={PANEL_Z_DOCK_HINT}
-      bg='rgba(66, 153, 225, 0.18)'
-      borderLeft='2px dashed'
-      borderColor='blue.400'
-      pointerEvents='none'
-    />
-  )
-}
+  // Ancre de l'info-bulle : décalée du curseur (pour être atteignable) et bornée
+  // dans la fenêtre. Garde-fou si innerWidth/innerHeight valent 0.
+  const anchor = panels.tooltip_anchor
+  const vw = window.innerWidth || 4096
+  const vh = window.innerHeight || 4096
+  const tt_left = Math.max(4, Math.min(anchor.x + 14, vw - TOOLTIP_W - 6))
+  const tt_top = Math.max(4, Math.min(anchor.y + 14, vh - 120))
 
-// --- Pop-up : déplaçable, épinglée, plusieurs simultanées ---------------------
-const PopupShell = ({ app_data, panels, id, title, allowedModes, onClose, children }: {
-  app_data: Class_ApplicationData
-  panels: Class_PanelManager
-  id: string
-  title: string
-  allowedModes: Type_PanelMode[]
-  onClose: () => void
-  children: React.ReactNode
-}) => {
-  const node_ref = React.useRef(null)
-  const geom = panels.getPopupGeometry(id)
-  const handle_class = 'panel-popup-handle-' + id.replace(/[^a-zA-Z0-9_-]/g, '_')
-  const base_w = geom?.w ?? 340
-  const base_h = geom?.h ?? 380
-  // Aperçu local de la taille pendant le glisser (commit au relâchement).
-  const [drag_size, setDragSize] = React.useState<{ w: number, h: number } | null>(null)
-  const eff_w = drag_size?.w ?? base_w
-  const eff_h = drag_size?.h ?? base_h
-  // OS#300 Lot 6 — glisser vers le bord droit pour ANCRER en barre latérale.
-  const can_dock = allowedModes.includes('sidebar')
-  const [in_dock_zone, setInDockZone] = React.useState(false)
-  const inDockZone = (x: number) => x >= (window.innerWidth || 4096) - DOCK_ZONE_PX
   return (
     <>
-      {can_dock && in_dock_zone && (
-        <DockHint app_data={app_data} width_px={panels.sidebar_width_px} />
-      )}
+      {(is_popup && can_dock && in_dock_zone)
+        ? <DockHint app_data={app_data} width_px={panels.sidebar_width_px} />
+        : null}
       <DraggableComponent
         nodeRef={node_ref}
         handle={'.' + handle_class}
-        defaultPosition={geom ? { x: geom.x, y: geom.y } : { x: window.innerWidth / 3, y: 120 }}
+        disabled={!is_popup}
+        position={position}
         bounds={{ left: 0, top: 0 }}
         onDrag={(_e, data) => {
+          setDragPos({ x: data.x, y: data.y })
           if (can_dock) setInDockZone(inDockZone(data.x))
         }}
         onStop={(_e, data) => {
+          setDragPos(null)
+          setInDockZone(false)
+          if (!is_popup) return
           // Relâchée dans la bande d'ancrage -> devient la barre latérale
           // (l'invariant « un seul menu ancré » est appliqué par le modèle).
           if (can_dock && inDockZone(data.x)) {
-            setInDockZone(false)
             panels.setMode(id, 'sidebar')
             return
           }
-          setInDockZone(false)
-          // Sinon : mémorise la position dans le modèle (persistance Lot 4).
           const g = panels.getPopupGeometry(id)
           if (g) panels.setPopupGeometry(id, { ...g, x: data.x, y: data.y })
         }}
       >
-      <Box
-        ref={node_ref}
-        className='panel_popup'
-        data-panel-id={id}
-        position='fixed'
-        zIndex={PANEL_Z_POPUP}
-        bg='white'
-        borderRadius='md'
-        boxShadow='0 4px 16px rgba(0, 0, 0, 0.25)'
-        border='1px solid'
-        borderColor='gray.200'
-        width={eff_w + 'px'}
-        height={eff_h + 'px'}
-        display='flex'
-        flexDirection='column'
-        overflow='hidden'
-      >
-        <PanelHeader
-          app_data={app_data} panels={panels} id={id} title={title}
-          mode='popup' allowedModes={allowedModes} dragHandleClassName={handle_class}
-          onClose={onClose}
-        />
-        <Box style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '0.2rem' }}>
-          {children}
-        </Box>
-        <PopupResizeHandle
-          startW={base_w}
-          startH={base_h}
-          onPreview={setDragSize}
-          onCommit={(size) => {
-            const g = panels.getPopupGeometry(id)
-            if (g) panels.setPopupGeometry(id, { ...g, w: size.w, h: size.h })
-            setDragSize(null)
-          }}
-        />
+        <Box
+          ref={node_ref}
+          data-panel-id={id}
+          className={is_sidebar ? 'panel_sidebar' : is_popup ? 'panel_popup' : 'panel_tooltip'}
+          position='fixed'
+          bg='white'
+          display={hidden ? 'none' : 'flex'}
+          flexDirection='column'
+          zIndex={is_sidebar ? PANEL_Z_SIDEBAR : is_popup ? PANEL_Z_POPUP : PANEL_Z_TOOLTIP}
+          right={is_sidebar ? app_data.menu_configuration.getToolsColumnWidthPx() + 'px' : undefined}
+          bottom={is_sidebar ? da.getBottomBarHeight() + 'px' : undefined}
+          left={is_tooltip ? tt_left + 'px' : undefined}
+          top={is_sidebar ? da.getNavBarHeight() + 'px' : (is_tooltip ? tt_top + 'px' : undefined)}
+          width={is_sidebar ? eff_width + 'px' : (is_popup ? eff_w + 'px' : TOOLTIP_W + 'px')}
+          height={is_popup ? eff_h + 'px' : undefined}
+          maxHeight={is_tooltip ? '60vh' : undefined}
+          borderLeft={is_sidebar ? '1px solid #e2e8f0' : undefined}
+          borderRadius={is_sidebar ? undefined : 'md'}
+          boxShadow={is_sidebar ? undefined : '0 4px 16px rgba(0, 0, 0, 0.25)'}
+          border={is_sidebar ? undefined : '1px solid'}
+          borderColor={is_sidebar ? undefined : 'gray.200'}
+          overflow={is_sidebar ? undefined : 'hidden'}
+          // Info-bulle : intention de survol — entrer annule la fermeture
+          // programmée par l'élément, sortir la (re)programme.
+          onMouseEnter={is_tooltip ? onTooltipHoverIn : undefined}
+          onMouseLeave={is_tooltip ? (onTooltipHoverOut ?? onClose) : undefined}
+        >
+          {/* Emplacement 1 — poignée de largeur (barre latérale seule). */}
+          {is_sidebar
+            ? <SidebarResizeHandle
+              startWidth={width_px}
+              onPreview={setDragWidth}
+              onCommit={(w) => { panels.sidebar_width_px = w; setDragWidth(null) }}
+            />
+            : null}
+          {/* Emplacement 2 — en-tête : poignée de DÉPLACEMENT en pop-up
+              (react-draggable cible `handle_class`), poignée de DÉTACHEMENT en
+              barre latérale. */}
+          <Box onPointerDown={is_sidebar ? startDetachDrag : undefined}>
+            <PanelHeader
+              app_data={app_data} panels={panels} id={id} title={title}
+              mode={mode} allowedModes={allowedModes}
+              dragHandleClassName={handle_class}
+              onClose={onClose}
+            />
+          </Box>
+          {/* Emplacement 3 — CONTENU : jamais démonté d'un mode à l'autre. */}
+          <Box
+            style={{
+              flex: 1, overflowY: 'auto', overflowX: 'hidden',
+              padding: is_sidebar ? '0.2rem 0.2rem 0.2rem 0.4rem' : '0.2rem'
+            }}
+            // Info-bulle : 1ʳᵉ interaction dans le corps = intention d'édition
+            // -> épingle en pop-up.
+            onPointerDownCapture={is_tooltip ? onTooltipEditIntent : undefined}
+          >
+            {children}
+          </Box>
+          {/* Emplacement 4 — poignée de taille (pop-up seule). */}
+          {is_popup
+            ? <PopupResizeHandle
+              startW={base_w}
+              startH={base_h}
+              onPreview={setDragSize}
+              onCommit={(size) => {
+                const g = panels.getPopupGeometry(id)
+                if (g) panels.setPopupGeometry(id, { ...g, w: size.w, h: size.h })
+                setDragSize(null)
+              }}
+            />
+            : null}
         </Box>
       </DraggableComponent>
     </>
   )
 }
 
-// --- Info-bulle : transitoire, ancrée près du point de survol -----------------
-const TOOLTIP_W = 300
-const TooltipShell = ({
-  app_data, panels, id, title, allowedModes, onClose, children,
-  onTooltipHoverIn, onTooltipHoverOut, onTooltipEditIntent
-}: {
-  app_data: Class_ApplicationData
-  panels: Class_PanelManager
-  id: string
-  title: string
-  allowedModes: Type_PanelMode[]
-  onClose: () => void
-  children: React.ReactNode
-  onTooltipHoverIn?: () => void
-  onTooltipHoverOut?: () => void
-  onTooltipEditIntent?: () => void
-}) => {
-  const anchor = panels.tooltip_anchor
-  // Décalée du curseur (pour être atteignable) et bornée dans la fenêtre.
-  // Garde-fou si innerWidth/innerHeight valent 0 (contexte de rendu sans fenêtre).
-  const vw = window.innerWidth || 4096
-  const vh = window.innerHeight || 4096
-  const left = Math.max(4, Math.min(anchor.x + 14, vw - TOOLTIP_W - 6))
-  const top = Math.max(4, Math.min(anchor.y + 14, vh - 120))
-  return (
-    <Box
-      className='panel_tooltip'
-      data-panel-id={id}
-      position='fixed'
-      left={left + 'px'}
-      top={top + 'px'}
-      zIndex={PANEL_Z_TOOLTIP}
-      bg='white'
-      borderRadius='md'
-      boxShadow='0 4px 16px rgba(0, 0, 0, 0.25)'
-      border='1px solid'
-      borderColor='gray.200'
-      width={TOOLTIP_W + 'px'}
-      maxHeight='60vh'
-      display='flex'
-      flexDirection='column'
-      overflow='hidden'
-      // Intention de survol : entrer annule la fermeture programmée par l'élément ;
-      // sortir la (re)programme. Fallback onClose si non fournis.
-      onMouseEnter={onTooltipHoverIn}
-      onMouseLeave={onTooltipHoverOut ?? onClose}
-    >
-      <PanelHeader
-        app_data={app_data} panels={panels} id={id} title={title}
-        mode='tooltip' allowedModes={allowedModes} onClose={onClose}
-      />
-      {/* 1ʳᵉ interaction dans le CORPS (éditer un champ, cliquer un bouton) =
-          intention d'édition → épingle en pop-up. */}
-      <Box
-        style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '0.2rem' }}
-        onPointerDownCapture={onTooltipEditIntent}
-      >
-        {children}
-      </Box>
-    </Box>
-  )
-}
-
 /**
  * Coquille de panneau : rend `children` dans le contenant correspondant au mode
  * courant de `id` (ou rien si le panneau est fermé). Se re-rend sur le topic
- * PANELS.
+ * PANELS. Le contenu n'est PAS remonté d'un mode à l'autre (cf. PanelFrame).
  */
 export const PanelShell = ({
   app_data, id, title, children, allowedModes = ALL_MODES,
@@ -530,47 +513,30 @@ export const PanelShell = ({
 }: Type_PanelShellProps) => {
   useModelBinding<() => void>(
     undefined,
-  (rerender) => app_data.menu_configuration.subscribe(PANELS_TOPIC, rerender)
+    (rerender) => app_data.menu_configuration.subscribe(PANELS_TOPIC, rerender)
   )
   const panels = app_data.menu_configuration.panels
   const mode = panels.getMode(id)
   if (mode === null) return null
+  // OS#300 Lot 2 — barre latérale repliée (Ctrl+B) : le menu reste « le » menu de
+  // barre et ne réserve rien (cf. getSidebarReservedPx). On le rend MASQUÉ plutôt
+  // que de le démonter, pour que son contenu (onglet actif, défilement) survive au
+  // dépliage — même raison que l'enveloppe unique ci-dessus.
+  const collapsed = mode === 'sidebar' && panels.sidebar_collapsed
 
   const close = onClose ?? (() => panels.close(id))
   const width = sidebarWidthPx ?? panels.sidebar_width_px ?? PANEL_SIDEBAR_DEFAULT_WIDTH_PX
 
-  if (mode === 'sidebar') {
-    // OS#300 Lot 2 — barre latérale repliée (Ctrl+B) : le menu reste « le » menu
-    // de barre mais n'est pas rendu (et ne réserve rien, cf. getSidebarReservedPx).
-    if (panels.sidebar_collapsed) return null
-    return (
-      <SidebarShell
-        app_data={app_data} panels={panels} id={id} title={title}
-        allowedModes={allowedModes} width_px={width} onClose={close}
-      >
-        {children}
-      </SidebarShell>
-    )
-  }
-  if (mode === 'popup') {
-    return (
-      <PopupShell
-        app_data={app_data} panels={panels} id={id} title={title}
-        allowedModes={allowedModes} onClose={close}
-      >
-        {children}
-      </PopupShell>
-    )
-  }
   return (
-    <TooltipShell
+    <PanelFrame
       app_data={app_data} panels={panels} id={id} title={title}
-      allowedModes={allowedModes} onClose={close}
+      mode={mode} allowedModes={allowedModes} width_px={width} onClose={close}
+      hidden={collapsed}
       onTooltipHoverIn={onTooltipHoverIn}
       onTooltipHoverOut={onTooltipHoverOut}
       onTooltipEditIntent={onTooltipEditIntent}
     >
       {children}
-    </TooltipShell>
+    </PanelFrame>
   )
 }
