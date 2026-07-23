@@ -22,12 +22,16 @@
 // tags par entry, échelle (globale + par unitType, cf. A5), unités sur les
 // labels de flux (via le REGISTRE d'unités OS#1286, clé `units` : chaque
 // unitType devient une grandeur, chaque flux garde son unité d'origine en
-// mode unit_model), labels en pourcentage (format personnalisé
+// mode unit_model), format numérique des valeurs (unitType@displayFormat,
+// format .NET → nombre de décimales par flux, cf. netFormatDecimalCount,
+// os#1304), labels en pourcentage (format personnalisé
 // {PercentProcessSource}/{PercentProcessDestination}, cf. A2 ; % intégré
 // showPercentage=2 = {PercentModel}, reproduit statiquement via unit_factor),
 // formes de process alternatives (shapeType 0/1/2, cf. A4), commentaires de
 // flèche (→ tooltips), zones libres texte/image/rectangle (→ zones de texte),
-// légende, thème esankey, dégradé le long du flux (OS#1294 :
+// légende, masquage des zéros (net@hideZeroFlows/@hideZeroFlowProcesses,
+// cf. os#1306 : le défaut OpenSankey masque déjà, on ne pose `show_zero_links`
+// que pour les DÉSACTIVER fidèlement), thème esankey, dégradé le long du flux (OS#1294 :
 // gradientFromSource+gradientToDestination → shape_color_rule='gradient',
 // couleur du nœud source → couleur du nœud cible). Les jeux de couleurs
 // (<colorSets>) sont des <brushColor> à id, résolus par la palette partagée
@@ -139,6 +143,16 @@ export interface EsParsedDiagram {
   /** OS#1286 — registre d'unités reconstruit depuis les unitTypes e!Sankey. */
   units?: Type_UnitTypeJSON[]
   /**
+   * os#1305 — « Scale to lower flow threshold » e!Sankey
+   * (`scaleToLowerFlowTreashold` + `lowerFlowTreashold`, unitType de référence
+   * ou miroir `<net>`) : épaisseur visible MINIMALE des flux fins, en px —
+   * même sémantique que le `minimum_flux` de la drawing area (clamp de rendu,
+   * cf. flowThickness.fluxFloor), d'où la recopie directe sans conversion
+   * d'échelle. Clé racine `minimum_flux` du JSON 0.9, lue par le fromJSON
+   * générique. Absent quand le fichier n'active pas le réglage.
+   */
+  minimum_flux?: number
+  /**
    * Ordre Z global des éléments importés (nœuds + flux + zones), du 1ER PLAN
    * vers le FOND (convention `_list_g_element_id`), reconstruit depuis les
    * `@zorder` e!Sankey (plus grand = par-dessus). C'est lui qui restitue les
@@ -147,6 +161,17 @@ export interface EsParsedDiagram {
    * porte aucun zorder.
    */
   order_g_elements?: string[]
+  /**
+   * os#1306 — posé à `true` quand le fichier N'ACTIVE PAS `net@hideZeroFlows`
+   * (défaut e!Sankey : les flux à quantité nulle restent tracés en trait fin).
+   * Clé racine du drawing_area (option globale « flux nuls visibles »), lue par
+   * le fromJSON générique. Absent quand hideZeroFlows=true : le défaut
+   * OpenSankey (`show_zero_links=false` + porte `is_not_zero`) masque déjà
+   * dynamiquement les flux nuls ET les nœuds dont tous les flux sont nuls
+   * (= hideZeroFlowProcesses). Détail du choix : cf. le bloc os#1306 dans
+   * parseEsankeyXml.
+   */
+  show_zero_links?: boolean
 }
 
 // Id du groupe de tags de flux créé depuis les entries e!Sankey.
@@ -330,7 +355,23 @@ const isDashStylePenDashed = (penEl: Element | null): boolean => {
 // ------------------------------------------------------------- Modèle logique
 
 interface EsUnit { id: string, coefficient: number, name: string, isBasic: boolean }
-interface EsUnitType { id: string, name: string, maximumFlow: number, width: number, used: boolean, showUnit: boolean, units: { [id: string]: EsUnit } }
+// os#1305 — scaleToLowerFlowTreashold/lowerFlowTreashold : « Scale to lower
+// flow threshold », plancher d'épaisseur des flux fins (cf. calcul de
+// `minimumFlux` dans parseEsankeyXml pour la sémantique établie sur corpus).
+interface EsUnitType { id: string, name: string, maximumFlow: number, width: number, used: boolean, showUnit: boolean, displayFormat: string, scaleToLowerFlowTreashold: boolean, lowerFlowTreashold: number, units: { [id: string]: EsUnit } }
+
+// os#1304 — Format numérique .NET du unitType (`displayFormat`) → nombre de
+// décimales. Grammaire .NET : `0` = chiffre forcé, `#` = chiffre optionnel,
+// `.` = début des décimales, `,` = séparateur de milliers (toujours AVANT le
+// point). Le nombre de décimales = nombre de placeholders (0/#) après le point.
+// Corpus des démos : `0`→0, `0.#`/`0.0`/`#,0.#`→1, `0.00`/`0.##`/`#,#.##`/
+// `0,0.00`→2. null = pas de format déclaré (on laisse les défauts OpenSankey).
+export const netFormatDecimalCount = (fmt: string): number | null => {
+  if (!fmt) return null
+  const dot = fmt.indexOf('.')
+  if (dot < 0) return 0
+  return (fmt.slice(dot + 1).match(/[0#]/g) ?? []).length
+}
 interface EsEntry { name: string, color: string | null, tagId: string, isTransparent: boolean }
 
 const parseUnitTypes = (netModel: Element): { [id: string]: EsUnitType } => {
@@ -357,6 +398,9 @@ const parseUnitTypes = (netModel: Element): { [id: string]: EsUnitType } => {
       width: attrNum(ut, 'width', 0),
       used: ut.getAttribute('used') === 'true',
       showUnit: ut.getAttribute('showUnit') === 'true',
+      displayFormat: ut.getAttribute('displayFormat') ?? '',
+      scaleToLowerFlowTreashold: ut.getAttribute('scaleToLowerFlowTreashold') === 'true',
+      lowerFlowTreashold: attrNum(ut, 'lowerFlowTreashold', 0),
       units,
     }
   })
@@ -1369,6 +1413,29 @@ export const parseEsankeyXml = (
   const referenceUnitType = Object.values(unitTypes).find(ut => ut.used && ut.maximumFlow > 0 && ut.width > 0) ?? null
   if (referenceUnitType) userScale = unitTypeOwnScale(referenceUnitType)
 
+  // os#1305 — « Scale to lower flow threshold » : e!Sankey borne l'épaisseur
+  // RENDUE des flux fins à `lowerFlowTreashold`, seuil en PIXELS — pas en
+  // quantité. Preuve corpus (« Energy Flows China 2014 ») : maximumFlow=141126
+  // sur width=61 px (≈ 0.0004 px/unité) avec lowerFlowTreashold=2 — lu en
+  // quantité, le plancher vaudrait 0.0009 px (réglage sans effet) ; lu en px,
+  // c'est un plancher visible de 2 px, cohérent sur les 4 démos actives du
+  // corpus. Les valeurs observées (1, 2, 11) sont d'ailleurs de petits entiers
+  // découplés des maximumFlow (20 → 141126), même famille de réglages px que
+  // smallArrowTreashold. Équivalent OpenSankey EXACT : `minimum_flux` de la
+  // drawing area (clamp px de l'épaisseur visible, cf. flowThickness.fluxFloor)
+  // → recopié tel quel, AUCUNE conversion par l'échelle (userScale). Le réglage
+  // vit sur chaque unitType ET en miroir sur <net> (valeurs identiques sur tout
+  // le corpus) : on lit le unitType de RÉFÉRENCE d'abord, <net> en repli.
+  let minimumFlux: number | null = null
+  if (referenceUnitType?.scaleToLowerFlowTreashold) {
+    minimumFlux = referenceUnitType.lowerFlowTreashold
+  } else if (net.getAttribute('scaleToLowerFlowTreashold') === 'true') {
+    minimumFlux = attrNum(net, 'lowerFlowTreashold', 0)
+  }
+  // Seuil nul/absent : rien à émettre (0 ABAISSERAIT le plancher par défaut de
+  // 2 px d'OpenSankey, contraire à l'intention du réglage).
+  if (minimumFlux !== null && minimumFlux <= 0) minimumFlux = null
+
   // os#1297 — <scale>/<sectionFactors>/<quantityFactors> (`<net><prototypes>`) :
   // PAS d'échelle supplémentaire, RIEN à mapper. Vérifié sur les 101 démos
   // officielles (e!Sankey 5 demos/) : ce n'est pas un facteur d'échelle global
@@ -1889,6 +1956,20 @@ export const parseEsankeyXml = (
         graphicalArrow !== null && graphicalArrow.labelVisible &&
         (graphicalArrow.showValue || graphicalArrow.showPercentage === 2)
       link.local.value_label_on_path = false
+      // os#1304 — FORMAT NUMÉRIQUE de la valeur : le unitType du flow porte un
+      // format .NET (`displayFormat`, ex. « 0.## ») → nombre de décimales posé
+      // par flux (value_label_custom_digit + value_label_nb_digit ; format_value
+      // fait alors `parseFloat(v.toFixed(nb_digit))`). Posé dans tous les cas,
+      // même label éteint (mêmes conventions que les réglages #1287 : correct si
+      // l'utilisateur réactive les valeurs à la main). Approximation assumée (≈) :
+      // OpenSankey TRONQUE les zéros de fin (le parseFloat), donc les formats à
+      // décimales FORCÉES (« 0.00 » → « 1,50 » chez e!Sankey) s'affichent « 1.5 »
+      // chez nous ; le séparateur de milliers (`,`) n'est pas reproduit.
+      const nbDecimals = netFormatDecimalCount(found?.unitType.displayFormat ?? '')
+      if (nbDecimals !== null) {
+        link.local.value_label_custom_digit = true
+        link.local.value_label_nb_digit = nbDecimals
+      }
       // Unité du label : référence au REGISTRE d'unités (mode unit_model, OS#1286)
       // pointant l'unité D'ORIGINE du flow. data_value étant converti vers l'unité
       // de base, l'affichage re-divise par le coefficient et restitue la quantité
@@ -2216,6 +2297,35 @@ export const parseEsankeyXml = (
   // OS#1286 — registre d'unités (grandeurs e!Sankey), lu par fromJSON.
   if (unitsRegistry.length > 0) {
     result.units = unitsRegistry
+  }
+  // os#1305 — plancher d'épaisseur des flux fins (seuil px, cf. calcul de
+  // `minimumFlux` plus haut).
+  if (minimumFlux !== null) {
+    result.minimum_flux = minimumFlux
+  }
+  // os#1306 — masquage des zéros. e!Sankey : `net@hideZeroFlows` masque les
+  // flux à quantité nulle, `net@hideZeroFlowProcesses` étend le masquage aux
+  // process dont TOUS les flux sont nuls (attributs toujours EXPLICITES sur le
+  // corpus : 14× / 5× true, les 5 hideZeroFlowProcesses=true étant un
+  // sous-ensemble des hideZeroFlows=true). OpenSankey fait DÉJÀ les deux
+  // d'office : la porte `is_not_zero` (Class_LinkElement) filtre les flux à 0,
+  // et un nœud dont tous les flux sont nuls tombe avec eux
+  // (Class_NodeElement.checkIfLinksVisibilitiesAreOK). Masquage DYNAMIQUE,
+  // piloté par la valeur (le flux réapparaît si la donnée est éditée) — là où
+  // un `is_visible=false` posé à l'import resterait figé, et où un seuil
+  // `filter_link_value` epsilon (comparaison `valueCurrent >= seuil` au rendu)
+  // masquerait aussi les petites valeurs 0 < v < epsilon. Donc :
+  // hideZeroFlows=true → rien à poser (défaut fidèle) ; false (défaut
+  // e!Sankey) → `show_zero_links: true` (option globale du drawing_area) pour
+  // que les flux nuls restent tracés en trait fin comme chez e!Sankey — et
+  // leurs process avec (couvre aussi hideZeroFlowProcesses=false).
+  // Limite (≈, cf. NOTE-ESANKEY-MAPPING §4.4) : hideZeroFlows=true +
+  // hideZeroFlowProcesses=false sur un process dont tous les flux sont nuls —
+  // e!Sankey garde la boîte seule, chez nous elle disparaît avec ses flux.
+  // Unique cas du corpus (« Bus Passengers », arrêt sans montée ni descente) :
+  // process décor déjà `visible=false` → aucune différence visible.
+  if (net.getAttribute('hideZeroFlows') !== 'true') {
+    result.show_zero_links = true
   }
   // Ordre Z : zorder DÉCROISSANT (liste OpenSankey = 1er plan → fond). Tri
   // stable : les flux d'une même flèche (même zorder) gardent leur ordre de

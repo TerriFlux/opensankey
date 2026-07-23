@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import JSZip from 'jszip'
-import { parseEsankeyXml, loadEsankeyFile, ESANKEY_ENTRIES_TAGG_ID } from './esankeyParser'
+import { parseEsankeyXml, loadEsankeyFile, netFormatDecimalCount, ESANKEY_ENTRIES_TAGG_ID } from './esankeyParser'
 import { Class_ApplicationData } from '../types/ApplicationData'
 
 // Valide le parseur e!Sankey sur des fixtures minimales fabriquées main (les
@@ -269,6 +269,37 @@ describe('parseEsankeyXml — fixture minimale', () => {
     expect(d.version).toBe('0.9')
   })
 
+  // os#1305 — « Scale to lower flow threshold » : plancher d'épaisseur des flux
+  // fins. Seuil e!Sankey déjà en PX (établi sur les 4 démos actives du corpus,
+  // cf. commentaire du parseur) → recopié TEL QUEL dans la clé racine
+  // `minimum_flux` du JSON 0.9 (clamp px de la drawing area), sans conversion
+  // par l'échelle (ici user_scale=50 : une conversion trahirait le test).
+  test('os#1305 — scaleToLowerFlowTreashold sur le unitType de référence → minimum_flux (px)', () => {
+    const withThreshold = FIXTURE.replace(
+      '<unitType id="10" name="Energy" used="true" width="80" maximumFlow="40">',
+      '<unitType id="10" name="Energy" used="true" width="80" maximumFlow="40" scaleToLowerFlowTreashold="true" lowerFlowTreashold="2">'
+    )
+    expect(parseEsankeyXml(withThreshold).minimum_flux).toBe(2)
+  })
+
+  test('os#1305 — réglage porté par <net> seul (attributs miroirs) → minimum_flux aussi', () => {
+    const withNet = FIXTURE.replace(
+      '<net backgroundColor="-1">',
+      '<net backgroundColor="-1" scaleToLowerFlowTreashold="true" lowerFlowTreashold="1">'
+    )
+    expect(parseEsankeyXml(withNet).minimum_flux).toBe(1)
+  })
+
+  test('os#1305 — réglage absent ou explicitement false → pas de minimum_flux', () => {
+    expect(d.minimum_flux).toBeUndefined()
+    // false + seuil renseigné (cas de 97 démos du corpus) : rien à émettre
+    const inactive = FIXTURE.replace(
+      '<net backgroundColor="-1">',
+      '<net backgroundColor="-1" scaleToLowerFlowTreashold="false" lowerFlowTreashold="2">'
+    )
+    expect(parseEsankeyXml(inactive).minimum_flux).toBeUndefined()
+  })
+
   test('OS#1286 — registre d\'unités : coefficients conservés, défaut = unité de base', () => {
     expect(d.units).toBeDefined()
     const energy = d.units!.find(ut => ut.name === 'Energy')!
@@ -289,6 +320,101 @@ describe('parseEsankeyXml — fixture minimale', () => {
     expect(elec?.local.label_unit).toBe('12') // kWh (10 kWh saisis)
     const heat = Object.values(d.links).find(l => l.value.data_value === 5)
     expect(heat?.local.label_unit).toBe('11') // MJ
+  })
+})
+
+// os#1304 — format numérique des valeurs : le unitType e!Sankey porte un
+// format .NET (`displayFormat`) → nombre de décimales posé par flux
+// (value_label_custom_digit + value_label_nb_digit). Approximation assumée :
+// format_value tronque les zéros de fin, donc les décimales FORCÉES (« 0.00 »)
+// deviennent « jusqu'à N décimales » chez nous ; milliers non reproduits.
+describe('os#1304 — unitType@displayFormat → décimales du label de valeur', () => {
+  test('table de vérité .NET → décimales (les 8 formats du corpus)', () => {
+    expect(netFormatDecimalCount('0')).toBe(0)
+    expect(netFormatDecimalCount('0.#')).toBe(1)
+    expect(netFormatDecimalCount('0.00')).toBe(2)
+    expect(netFormatDecimalCount('0.0')).toBe(1)
+    expect(netFormatDecimalCount('#,#.##')).toBe(2)
+    expect(netFormatDecimalCount('0.##')).toBe(2)
+    expect(netFormatDecimalCount('0,0.00')).toBe(2)
+    expect(netFormatDecimalCount('#,0.#')).toBe(1)
+    // Format absent → null : on ne pose rien, les défauts OpenSankey décident.
+    expect(netFormatDecimalCount('')).toBe(null)
+  })
+
+  test('displayFormat « 0.# » → custom_digit + nb_digit 1 sur CHAQUE flux du unitType', () => {
+    const withFormat = FIXTURE.replace(
+      '<unitType id="10" name="Energy" used="true" width="80" maximumFlow="40">',
+      '<unitType id="10" name="Energy" used="true" width="80" maximumFlow="40" displayFormat="0.#">'
+    )
+    const links = Object.values(parseEsankeyXml(withFormat).links)
+    expect(links.length).toBe(2) // les 2 flows référencent le unitType 10
+    links.forEach(l => {
+      expect(l.local.value_label_custom_digit).toBe(true)
+      expect(l.local.value_label_nb_digit).toBe(1)
+    })
+  })
+
+  test('displayFormat entier « 0 » → nb_digit 0 (valeurs arrondies à l\'unité)', () => {
+    const withFormat = FIXTURE.replace(
+      '<unitType id="10" name="Energy" used="true" width="80" maximumFlow="40">',
+      '<unitType id="10" name="Energy" used="true" width="80" maximumFlow="40" displayFormat="0">'
+    )
+    const link = Object.values(parseEsankeyXml(withFormat).links)[0]
+    expect(link.local.value_label_custom_digit).toBe(true)
+    expect(link.local.value_label_nb_digit).toBe(0)
+  })
+
+  test('sans displayFormat (FIXTURE brute) : aucune clé de décimales posée', () => {
+    Object.values(parseEsankeyXml(FIXTURE).links).forEach(l => {
+      expect(l.local.value_label_custom_digit).toBeUndefined()
+      expect(l.local.value_label_nb_digit).toBeUndefined()
+    })
+  })
+})
+
+// os#1306 — masquage des zéros (net@hideZeroFlows / @hideZeroFlowProcesses).
+// Le défaut OpenSankey masque DÉJÀ dynamiquement les flux nuls (porte
+// is_not_zero) et les nœuds dont tous les flux sont nuls : le parseur ne pose
+// `show_zero_links` que pour reproduire le défaut e!Sankey INVERSE (zéros
+// visibles). Variantes de FIXTURE par .replace — la constante n'est jamais
+// modifiée.
+describe('os#1306 — masquage des zéros (hideZeroFlows)', () => {
+  test('hideZeroFlows absent (défaut e!Sankey = zéros visibles) → show_zero_links posé', () => {
+    const d = parseEsankeyXml(FIXTURE)
+    expect(d.show_zero_links).toBe(true)
+  })
+
+  test('hideZeroFlows="false" explicite (87/101 démos) → show_zero_links posé', () => {
+    const xml = FIXTURE.replace(
+      '<net backgroundColor="-1">',
+      '<net backgroundColor="-1" hideZeroFlows="false" hideZeroFlowProcesses="false">',
+    )
+    expect(parseEsankeyXml(xml).show_zero_links).toBe(true)
+  })
+
+  test('hideZeroFlows="true" → rien à poser, le défaut OpenSankey masque déjà les zéros', () => {
+    const xml = FIXTURE.replace(
+      '<net backgroundColor="-1">',
+      '<net backgroundColor="-1" hideZeroFlows="true" hideZeroFlowProcesses="true">',
+    )
+    expect(parseEsankeyXml(xml).show_zero_links).toBeUndefined()
+  })
+
+  test('flow quantity=0 : flux bien créé (data_value 0) — masquage dynamique, pas structurel', () => {
+    // Un fichier hideZeroFlows=true ne perd PAS ses flux nuls à l'import : ils
+    // portent data_value 0 et c'est la porte is_not_zero qui les masque au
+    // rendu (le flux réapparaît si la valeur est éditée). Aucun is_visible
+    // figé (cas réel : « Bus Passengers », flow « Pax Alighting » à 0).
+    const xml = FIXTURE
+      .replace('<net backgroundColor="-1">', '<net backgroundColor="-1" hideZeroFlows="true">')
+      .replace('quantity="5"', 'quantity="0"')
+    const d = parseEsankeyXml(xml)
+    expect(Object.keys(d.links).length).toBe(2)
+    const zero = Object.values(d.links).find(l => l.value.data_value === 0)
+    expect(zero).toBeDefined()
+    expect(zero?.is_visible).toBe(true)
+    expect(d.show_zero_links).toBeUndefined()
   })
 })
 
