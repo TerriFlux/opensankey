@@ -19,17 +19,28 @@
 
 import {
   layoutFor, normalizeAllLayouts, placeBlock, unplaceBlock,
-  MAX_TABS, MAX_ROWS, type Type_Composition
+  MAX_TABS, MAX_COLS, MAX_ROWS,
+  type Type_Composition, type Type_BlockPlacement
 } from '../../../types/PresentationComposition'
 import type { Type_PanelMode } from '../../../types/PanelManager'
 
-export const ROW = 'row'
+export const CELL = 'cell'
 export const NEW_ROW = 'newrow'
+export const NEW_COL = 'newcol'
 export const NEW_TAB = 'newtab'
 export const TRAY = 'tray'
 
-export const rowDropId = (tab: number, row: number) => `${ROW}|${tab}|${row}`
-export const newRowDropId = (tab: number) => `${NEW_ROW}|${tab}`
+export const cellDropId = (tab: number, col: number, row: number) => `${CELL}|${tab}|${col}|${row}`
+export const newRowDropId = (tab: number, col: number) => `${NEW_ROW}|${tab}|${col}`
+export const newColDropId = (tab: number) => `${NEW_COL}|${tab}`
+
+/** Forme du tableau, telle qu'affichée : de quoi situer les zones « nouvelle
+ *  rangée » et « nouvelle colonne » sans redonner la disposition entière. */
+export type Type_LayoutShape = {
+  tabs: number
+  cols: (tab: number) => number
+  rows: (tab: number, col: number) => number
+}
 
 /**
  * Cible d'un dépôt, résolue en placement — ou `null` pour « retirer de ce
@@ -37,19 +48,26 @@ export const newRowDropId = (tab: number) => `${NEW_ROW}|${tab}`
  */
 export const dropTarget = (
   droppable_id: string,
-  tabs_count: number,
-  rows_count: (tab: number) => number
-): { tab: number, row: number } | null | undefined => {
-  const [kind, a, b] = droppable_id.split('|')
+  shape: Type_LayoutShape
+): Type_BlockPlacement | null | undefined => {
+  const [kind, a, b, c] = droppable_id.split('|')
   if (kind === TRAY) return null
-  if (kind === NEW_TAB) return { tab: tabs_count, row: 0 }
-  if (kind === NEW_ROW) {
+  if (kind === NEW_TAB) return { tab: shape.tabs, col: 0, row: 0 }
+  if (kind === NEW_COL) {
     const tab = Number(a)
-    return Number.isInteger(tab) ? { tab, row: rows_count(tab) } : undefined
+    return Number.isInteger(tab) ? { tab, col: shape.cols(tab), row: 0 } : undefined
   }
-  if (kind === ROW) {
-    const tab = Number(a), row = Number(b)
-    return Number.isInteger(tab) && Number.isInteger(row) ? { tab, row } : undefined
+  if (kind === NEW_ROW) {
+    const tab = Number(a), col = Number(b)
+    return Number.isInteger(tab) && Number.isInteger(col)
+      ? { tab, col, row: shape.rows(tab, col) }
+      : undefined
+  }
+  if (kind === CELL) {
+    const tab = Number(a), col = Number(b), row = Number(c)
+    return Number.isInteger(tab) && Number.isInteger(col) && Number.isInteger(row)
+      ? { tab, col, row }
+      : undefined
   }
   return undefined
 }
@@ -58,11 +76,11 @@ export const dropTarget = (
  * Applique un dépôt et rend la composition résultante.
  *
  * Deux temps, dans cet ordre :
- *  1. le PLACEMENT — quel onglet, quelle rangée (`placeBlock`) ;
- *  2. le RANG dans la rangée — `placeBlock` met le bloc en queue, or l'auteur
+ *  1. le PLACEMENT — quelle cellule du tableau (`placeBlock`) ;
+ *  2. le RANG dans la cellule — `placeBlock` met le bloc en queue, or l'auteur
  *     l'a relâché à un endroit précis. On réordonne alors les seules entrées de
- *     cette rangée, chacune reprenant une des positions qu'elles occupaient déjà
- *     dans la liste : rien d'autre ne bouge.
+ *     cette cellule, chacune reprenant une des positions qu'elles occupaient
+ *     déjà dans la liste : rien d'autre ne bouge.
  *
  * La normalisation préalable des trois contenants est ce qui rend ce
  * réordonnancement inoffensif pour les deux autres (cf. `normalizeAllLayouts`).
@@ -75,22 +93,26 @@ export const applyDrop = (
   index: number
 ): Type_Composition => {
   const tabs = layoutFor(composition, mode)
-  const target = dropTarget(droppable_id, tabs.length, (i) => tabs[i]?.length ?? 0)
+  const target = dropTarget(droppable_id, {
+    tabs: tabs.length,
+    cols: (t) => tabs[t]?.length ?? 0,
+    rows: (t, c) => tabs[t]?.[c]?.length ?? 0
+  })
   if (target === undefined) return composition
 
   const normalized = normalizeAllLayouts(composition)
   if (target === null) return unplaceBlock(normalized, block, mode)
-  if (target.tab >= MAX_TABS || target.row >= MAX_ROWS) return composition
+  if (target.tab >= MAX_TABS || target.col >= MAX_COLS || target.row >= MAX_ROWS) return composition
 
   const placed = placeBlock(normalized, block, mode, target)
-  const row_members = layoutFor(placed, mode)[target.tab]?.[target.row] ?? []
-  const dragged = row_members.find(e => e.block === block)
-  if (!dragged || row_members.length < 2) return placed
+  const cell = layoutFor(placed, mode)[target.tab]?.[target.col]?.[target.row] ?? []
+  const dragged = cell.find(e => e.block === block)
+  if (!dragged || cell.length < 2) return placed
 
-  const wanted = row_members.filter(e => e.block !== block)
+  const wanted = cell.filter(e => e.block !== block)
   wanted.splice(Math.max(0, Math.min(index, wanted.length)), 0, dragged)
   const slots = placed
-    .map((e, i) => (row_members.some(m => m.block === e.block) ? i : -1))
+    .map((e, i) => (cell.some(m => m.block === e.block) ? i : -1))
     .filter(i => i >= 0)
   const out = [...placed]
   slots.forEach((slot, k) => { out[slot] = wanted[k] })

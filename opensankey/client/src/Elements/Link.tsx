@@ -1104,9 +1104,14 @@ export class Class_LinkElement extends Class_LinkAttribute {
       else {
         drawing_area.selectOnly(this)
         drawing_area.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
-        // OS#300 Lot 5 — clic nu ouvre l'inspecteur de propriétés du flux
-        // (pop-up superposée, ou barre latérale si affichée).
-        drawing_area.application_data.menu_configuration.openConfigMenu()
+        // Clic nu : ouvre la PRÉSENTATION du flux (pop-up juxtaposée, ou panneau
+        // latéral s'il est ouvert). Le panneau de configuration, outil d'auteur,
+        // ne s'ouvre plus qu'à la demande, par son bouton.
+        openPresentationFor(
+          drawing_area.application_data,
+          this as unknown as Parameters<typeof openPresentationFor>[1],
+          { x: event.clientX, y: event.clientY }
+        )
       }
     }
   }
@@ -1163,8 +1168,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // OS#305 — LECTEUR : survol satisfaisant le déclencheur du document ->
     // présentation composée en info-bulle. Remplace le survol que fournissait le
     // mixin d'info-bulle hérité, retiré avec son mécanisme.
+    // En ÉDITION AUSSI : survoler montre à l'auteur ce que verra son lecteur,
+    // par le chemin exact du lecteur — ce qui rend le bouton « Aperçu » inutile.
     const app_data = this.drawing_area.application_data
-    if (!app_data.is_editable && event.buttons === 0
+    if (event.buttons === 0
       && matchesPresentationTrigger(app_data, event)
       && canPresentTooltip(this as unknown as Parameters<typeof canPresentTooltip>[0])) {
       const rect = (event.target as HTMLElement)?.getBoundingClientRect?.()

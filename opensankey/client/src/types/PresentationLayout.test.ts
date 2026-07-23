@@ -13,26 +13,31 @@ import {
   setTabLabel,
   blockPlacementFromJSON,
   MAX_TABS,
+  MAX_COLS,
   MAX_ROWS,
   DEFAULT_BLOCK_VISIBILITY,
   type Type_Composition
 } from './PresentationComposition'
+import type { Type_PanelMode } from './PanelManager'
 
-// AJUSTEMENT #5 — disposition des blocs par contenant : onglets, rangées, et
-// blocs côte à côte sur une même rangée.
+// AJUSTEMENT #5 — la disposition est un TABLEAU : des onglets, découpés en
+// colonnes, chaque colonne empilant des rangées. Un bloc occupe une cellule.
 
 const entry = (block: string, layout?: unknown): never =>
   ({ block, show: { ...DEFAULT_BLOCK_VISIBILITY }, ...(layout ? { layout } : {}) }) as never
 
-const ids = (rows: { block: string }[][]) => rows.map(r => r.map(e => e.block))
+/** Vue lisible : onglets -> colonnes -> rangées -> blocs. */
+const grid = (composition: Type_Composition, mode: Type_PanelMode) =>
+  layoutFor(composition, mode).map(cols => cols.map(rows => rows.map(cell => cell.map(e => e.block))))
+
+/** Première colonne du premier onglet — la disposition « en pile ». */
+const stack = (composition: Type_Composition, mode: Type_PanelMode) => grid(composition, mode)[0]?.[0]
 
 describe('#5 layoutFor — disposition par défaut', () => {
-  it('sans placement : un seul onglet, un bloc par rangée, dans l\'ordre', () => {
+  it('sans placement : un onglet, une colonne, un bloc par rangée', () => {
     // C'est l'empilement d'avant #5 : un document déjà composé ne bouge pas.
     const composition: Type_Composition = [entry('a'), entry('b'), entry('c')]
-    const tabs = layoutFor(composition, 'tooltip')
-    expect(tabs).toHaveLength(1)
-    expect(ids(tabs[0])).toEqual([['a'], ['b'], ['c']])
+    expect(grid(composition, 'tooltip')).toEqual([[[['a'], ['b'], ['c']]]])
   })
 
   it('ne retient que les blocs visibles DANS CE CONTENANT', () => {
@@ -40,8 +45,8 @@ describe('#5 layoutFor — disposition par défaut', () => {
       { block: 'a', show: { tooltip: true, popup: true, sidebar: true } },
       { block: 'b', show: { tooltip: false, popup: true, sidebar: true } }
     ]
-    expect(ids(layoutFor(composition, 'tooltip')[0])).toEqual([['a']])
-    expect(ids(layoutFor(composition, 'popup')[0])).toEqual([['a'], ['b']])
+    expect(stack(composition, 'tooltip')).toEqual([['a']])
+    expect(stack(composition, 'popup')).toEqual([['a'], ['b']])
   })
 
   it('rend une liste vide quand rien n\'est visible ici', () => {
@@ -49,61 +54,65 @@ describe('#5 layoutFor — disposition par défaut', () => {
   })
 })
 
-describe('#5 layoutFor — côte à côte et onglets', () => {
-  it('deux blocs sur la MÊME rangée s\'affichent côte à côte, dans l\'ordre de la composition', () => {
+describe('#5 layoutFor — colonnes, rangées, onglets', () => {
+  it('deux COLONNES mettent les blocs côte à côte', () => {
     const composition: Type_Composition = [
-      entry('a', { tooltip: { tab: 0, row: 0 } }),
-      entry('b', { tooltip: { tab: 0, row: 0 } })
+      entry('gauche', { tooltip: { tab: 0, col: 0, row: 0 } }),
+      entry('droite', { tooltip: { tab: 0, col: 1, row: 0 } })
     ]
-    expect(ids(layoutFor(composition, 'tooltip')[0])).toEqual([['a', 'b']])
+    expect(grid(composition, 'tooltip')).toEqual([[[['gauche']], [['droite']]]])
   })
 
-  it('des rangées différentes s\'empilent, triées par index', () => {
+  it('une colonne accueille PLUSIEURS rangées', () => {
     const composition: Type_Composition = [
-      entry('bas', { tooltip: { tab: 0, row: 5 } }),
-      entry('haut', { tooltip: { tab: 0, row: 1 } })
+      entry('haut', { tooltip: { tab: 0, col: 1, row: 0 } }),
+      entry('bas', { tooltip: { tab: 0, col: 1, row: 1 } }),
+      entry('seul', { tooltip: { tab: 0, col: 0, row: 0 } })
     ]
-    expect(ids(layoutFor(composition, 'tooltip')[0])).toEqual([['haut'], ['bas']])
+    expect(grid(composition, 'tooltip')).toEqual([[[['seul']], [['haut'], ['bas']]]])
+  })
+
+  it('deux blocs dans la MÊME cellule s\'y empilent, dans l\'ordre de la composition', () => {
+    const composition: Type_Composition = [
+      entry('a', { tooltip: { tab: 0, col: 0, row: 0 } }),
+      entry('b', { tooltip: { tab: 0, col: 0, row: 0 } })
+    ]
+    expect(stack(composition, 'tooltip')).toEqual([['a', 'b']])
   })
 
   it('des onglets différents donnent plusieurs onglets, triés par index', () => {
     const composition: Type_Composition = [
-      entry('second', { tooltip: { tab: 1, row: 0 } }),
-      entry('premier', { tooltip: { tab: 0, row: 0 } })
+      entry('second', { tooltip: { tab: 1, col: 0, row: 0 } }),
+      entry('premier', { tooltip: { tab: 0, col: 0, row: 0 } })
     ]
-    const tabs = layoutFor(composition, 'tooltip')
-    expect(tabs).toHaveLength(2)
-    expect(ids(tabs[0])).toEqual([['premier']])
-    expect(ids(tabs[1])).toEqual([['second']])
+    expect(grid(composition, 'tooltip')).toEqual([[[['premier']]], [[['second']]]])
   })
 
-  it('COMPACTE les onglets et rangées vides', () => {
-    // L'auteur a vidé l'onglet 0 et la rangée 0 : le lecteur ne doit pas voir
-    // d'onglet fantôme ni de rangée blanche.
+  it('COMPACTE les onglets, colonnes et rangées vides', () => {
+    // L'auteur a vidé la colonne du milieu : le lecteur ne doit pas voir de
+    // bande blanche, ni d'onglet fantôme.
     const composition: Type_Composition = [
-      entry('seul', { tooltip: { tab: 3, row: 7 } })
+      entry('seul', { tooltip: { tab: 3, col: 4, row: 7 } })
     ]
-    const tabs = layoutFor(composition, 'tooltip')
-    expect(tabs).toHaveLength(1)
-    expect(ids(tabs[0])).toEqual([['seul']])
+    expect(grid(composition, 'tooltip')).toEqual([[[['seul']]]])
   })
 
-  it('un bloc NON placé prend une rangée propre, APRÈS les blocs placés', () => {
+  it('un bloc NON placé prend une rangée propre en première colonne, APRÈS les placés', () => {
     const composition: Type_Composition = [
       entry('libre'),
-      entry('place', { tooltip: { tab: 0, row: 0 } })
+      entry('place', { tooltip: { tab: 0, col: 0, row: 0 } })
     ]
-    expect(ids(layoutFor(composition, 'tooltip')[0])).toEqual([['place'], ['libre']])
+    expect(stack(composition, 'tooltip')).toEqual([['place'], ['libre']])
   })
 
   it('la disposition est PROPRE À CHAQUE CONTENANT', () => {
     const composition: Type_Composition = [
-      entry('a', { tooltip: { tab: 0, row: 0 }, sidebar: { tab: 0, row: 0 } }),
-      entry('b', { tooltip: { tab: 0, row: 0 }, sidebar: { tab: 0, row: 1 } })
+      entry('a', { tooltip: { tab: 0, col: 0, row: 0 }, sidebar: { tab: 0, col: 0, row: 0 } }),
+      entry('b', { tooltip: { tab: 0, col: 1, row: 0 }, sidebar: { tab: 0, col: 0, row: 1 } })
     ]
-    // Côte à côte en info-bulle, empilés dans le panneau.
-    expect(ids(layoutFor(composition, 'tooltip')[0])).toEqual([['a', 'b']])
-    expect(ids(layoutFor(composition, 'sidebar')[0])).toEqual([['a'], ['b']])
+    // Deux colonnes en info-bulle, une seule (empilée) dans le panneau étroit.
+    expect(grid(composition, 'tooltip')).toEqual([[[['a']], [['b']]]])
+    expect(grid(composition, 'sidebar')).toEqual([[[['a'], ['b']]]])
   })
 })
 
@@ -114,31 +123,35 @@ describe('#5 placeBlock / unplaceBlock', () => {
     const composition: Type_Composition = [
       { block: 'a', show: { tooltip: false, popup: true, sidebar: true } }
     ]
-    const next = placeBlock(composition, 'a', 'tooltip', { tab: 0, row: 0 })
+    const next = placeBlock(composition, 'a', 'tooltip', { tab: 0, col: 0, row: 0 })
     expect(next[0].show.tooltip).toBe(true)
-    expect(next[0].layout?.tooltip).toEqual({ tab: 0, row: 0 })
+    expect(next[0].layout?.tooltip).toEqual({ tab: 0, col: 0, row: 0 })
   })
 
   it('ne mute pas la composition d\'origine', () => {
-    placeBlock(base, 'a', 'popup', { tab: 1, row: 2 })
+    placeBlock(base, 'a', 'popup', { tab: 1, col: 0, row: 2 })
     expect(base[0].layout).toBeUndefined()
   })
 
   it('ne touche pas aux autres contenants', () => {
     const next = placeBlock(
-      placeBlock(base, 'a', 'popup', { tab: 0, row: 0 }),
-      'a', 'sidebar', { tab: 1, row: 3 })
-    expect(next[0].layout).toEqual({ popup: { tab: 0, row: 0 }, sidebar: { tab: 1, row: 3 } })
+      placeBlock(base, 'a', 'popup', { tab: 0, col: 0, row: 0 }),
+      'a', 'sidebar', { tab: 1, col: 2, row: 3 })
+    expect(next[0].layout).toEqual({
+      popup: { tab: 0, col: 0, row: 0 },
+      sidebar: { tab: 1, col: 2, row: 3 }
+    })
   })
 
   it('refuse un placement hors bornes plutôt que de le tronquer', () => {
-    expect(placeBlock(base, 'a', 'popup', { tab: MAX_TABS, row: 0 })).toBe(base)
-    expect(placeBlock(base, 'a', 'popup', { tab: 0, row: MAX_ROWS })).toBe(base)
-    expect(placeBlock(base, 'a', 'popup', { tab: -1, row: 0 })).toBe(base)
+    expect(placeBlock(base, 'a', 'popup', { tab: MAX_TABS, col: 0, row: 0 })).toBe(base)
+    expect(placeBlock(base, 'a', 'popup', { tab: 0, col: MAX_COLS, row: 0 })).toBe(base)
+    expect(placeBlock(base, 'a', 'popup', { tab: 0, col: 0, row: MAX_ROWS })).toBe(base)
+    expect(placeBlock(base, 'a', 'popup', { tab: 0, col: -1, row: 0 })).toBe(base)
   })
 
   it('retirer d\'un contenant masque le bloc ET oublie son placement', () => {
-    const placed = placeBlock(base, 'a', 'popup', { tab: 0, row: 0 })
+    const placed = placeBlock(base, 'a', 'popup', { tab: 0, col: 0, row: 0 })
     const next = unplaceBlock(placed, 'a', 'popup')
     expect(next[0].show.popup).toBe(false)
     expect(next[0].layout).toBeUndefined()
@@ -146,39 +159,39 @@ describe('#5 placeBlock / unplaceBlock', () => {
 
   it('retirer d\'un contenant préserve le placement des AUTRES', () => {
     const placed = placeBlock(
-      placeBlock(base, 'a', 'popup', { tab: 0, row: 0 }),
-      'a', 'tooltip', { tab: 0, row: 1 })
+      placeBlock(base, 'a', 'popup', { tab: 0, col: 0, row: 0 }),
+      'a', 'tooltip', { tab: 0, col: 0, row: 1 })
     const next = unplaceBlock(placed, 'a', 'popup')
-    expect(next[0].layout).toEqual({ tooltip: { tab: 0, row: 1 } })
+    expect(next[0].layout).toEqual({ tooltip: { tab: 0, col: 0, row: 1 } })
   })
 
   it('clearLayout revient à l\'empilement sans rien masquer', () => {
     const placed = placeBlock(
-      placeBlock(base, 'a', 'popup', { tab: 1, row: 0 }),
-      'b', 'popup', { tab: 1, row: 0 })
+      placeBlock(base, 'a', 'popup', { tab: 1, col: 1, row: 0 }),
+      'b', 'popup', { tab: 1, col: 0, row: 0 })
     const next = clearLayout(placed, 'popup')
     expect(next.every(e => e.layout?.popup === undefined)).toBe(true)
     expect(next.every(e => e.show.popup)).toBe(true)
-    expect(ids(layoutFor(next, 'popup')[0])).toEqual([['a'], ['b']])
+    expect(stack(next, 'popup')).toEqual([['a'], ['b']])
   })
 })
 
 describe('#5 normalisation', () => {
   it('rend les index STOCKÉS égaux aux index AFFICHÉS, sans rien changer à l\'affichage', () => {
     const composition: Type_Composition = [
-      entry('a', { tooltip: { tab: 0, row: 0 } }),
-      entry('b', { tooltip: { tab: 3, row: 9 } })
+      entry('a', { tooltip: { tab: 0, col: 0, row: 0 } }),
+      entry('b', { tooltip: { tab: 3, col: 5, row: 9 } })
     ]
-    const before = ids(layoutFor(composition, 'tooltip')[0])
+    const before = grid(composition, 'tooltip')
     const next = normalizeLayout(composition, 'tooltip')
-    expect(next[1].layout?.tooltip).toEqual({ tab: 1, row: 0 })
-    expect(ids(layoutFor(next, 'tooltip')[0])).toEqual(before)
+    expect(next[1].layout?.tooltip).toEqual({ tab: 1, col: 0, row: 0 })
+    expect(grid(next, 'tooltip')).toEqual(before)
   })
 
   it('donne un placement explicite aux blocs qui n\'en avaient pas', () => {
     const next = normalizeLayout([entry('a'), entry('b')], 'popup')
-    expect(next[0].layout?.popup).toEqual({ tab: 0, row: 0 })
-    expect(next[1].layout?.popup).toEqual({ tab: 0, row: 1 })
+    expect(next[0].layout?.popup).toEqual({ tab: 0, col: 0, row: 0 })
+    expect(next[1].layout?.popup).toEqual({ tab: 0, col: 0, row: 1 })
   })
 
   it('ne place pas un bloc invisible dans ce contenant', () => {
@@ -190,19 +203,19 @@ describe('#5 normalisation', () => {
 
   it('normalizeAllLayouts rend l\'ORDRE de la liste sans effet sur l\'affichage', () => {
     // C'est l'invariant qui permet à l'éditeur de réordonner la composition pour
-    // ranger une rangée, sans bousculer les deux autres contenants.
+    // ranger une cellule, sans bousculer les deux autres contenants.
     const composition: Type_Composition = [entry('a'), entry('b'), entry('c')]
     const fige = normalizeAllLayouts(composition)
     const inverse = [fige[2], fige[1], fige[0]]
-    expect(ids(layoutFor(inverse, 'tooltip')[0])).toEqual([['a'], ['b'], ['c']])
-    expect(ids(layoutFor(inverse, 'sidebar')[0])).toEqual([['a'], ['b'], ['c']])
+    expect(stack(inverse, 'tooltip')).toEqual([['a'], ['b'], ['c']])
+    expect(stack(inverse, 'sidebar')).toEqual([['a'], ['b'], ['c']])
   })
 })
 
 describe('#5 persistance de la disposition', () => {
   it('round-trip', () => {
     const composition: Type_Composition = [
-      entry('a', { tooltip: { tab: 0, row: 0 }, sidebar: { tab: 2, row: 3 } }),
+      entry('a', { tooltip: { tab: 0, col: 0, row: 0 }, sidebar: { tab: 2, col: 1, row: 3 } }),
       entry('b')
     ]
     expect(compositionFromJSON(compositionToJSON(composition))).toEqual(composition)
@@ -213,20 +226,31 @@ describe('#5 persistance de la disposition', () => {
     expect(json[0].layout).toBeUndefined()
   })
 
+  it('un placement sans COLONNE tombe dans la première — la disposition n\'était pas encore un tableau', () => {
+    expect(blockPlacementFromJSON({ tab: 1, row: 2 })).toEqual({ tab: 1, col: 0, row: 2 })
+  })
+
   it('ignore un placement à moitié valide plutôt que d\'en inventer la moitié', () => {
     expect(blockPlacementFromJSON({ tab: 0 })).toBeNull()
     expect(blockPlacementFromJSON({ tab: 0, row: 'x' })).toBeNull()
-    expect(blockPlacementFromJSON({ tab: 0, row: 2 })).toEqual({ tab: 0, row: 2 })
+    expect(blockPlacementFromJSON({ tab: 0, col: 1, row: 2 })).toEqual({ tab: 0, col: 1, row: 2 })
   })
 
   it('un JSON abîmé retombe sur la disposition par défaut, sans jeter', () => {
     const composition = compositionFromJSON([
       { block: 'a', layout: 'nawak' },
-      { block: 'b', layout: { tooltip: { tab: 999, row: 0 } } }
+      { block: 'b', layout: { tooltip: { tab: 999, col: 0, row: 0 } } }
     ])
     expect(composition[0].layout).toBeUndefined()
     expect(composition[1].layout).toBeUndefined()
-    expect(ids(layoutFor(composition, 'tooltip')[0])).toEqual([['a'], ['b']])
+    expect(stack(composition, 'tooltip')).toEqual([['a'], ['b']])
+  })
+
+  it('une colonne hors bornes retombe sur la première, sans perdre le placement', () => {
+    const composition = compositionFromJSON([
+      { block: 'a', layout: { tooltip: { tab: 0, col: 999, row: 2 } } }
+    ])
+    expect(composition[0].layout?.tooltip).toEqual({ tab: 0, col: 0, row: 2 })
   })
 })
 

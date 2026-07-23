@@ -44,9 +44,7 @@ import {
   type Type_PresentationTarget
 } from './PresentationBlockRegistry'
 import { registerBasePresentationBlocks } from './registerBaseBlocks'
-import {
-  openPresentationFor, canPresent, defaultCompositionFor, type Type_Presentable
-} from './openPresentation'
+import { defaultCompositionFor, type Type_Presentable } from './openPresentation'
 
 // Le catalogue de base doit exister dès l'affichage du composeur.
 registerBasePresentationBlocks()
@@ -109,9 +107,10 @@ export const PresentationComposer = ({ app_data, scope }: {
       ...drawing_area.selected_containers_list
     ]) as unknown as Attr_Target[]
 
-  // Élément servant d'APERÇU : la présentation se lit toujours sur un élément
-  // (via la cascade), même quand on compose au niveau du style.
-  const preview_element = (
+  // La composition par défaut se lit toujours sur un ÉLÉMENT (via la cascade),
+  // même quand on compose au niveau du style : c'est lui qui porte les blocs
+  // hérités à reproduire.
+  const default_source = (
     drawing_area.selected_nodes_list[0]
     ?? drawing_area.selected_links_list[0]
     ?? drawing_area.selected_containers_list[0]
@@ -123,8 +122,8 @@ export const PresentationComposer = ({ app_data, scope }: {
   // plutôt que d'une page blanche.
   const raw_blocks = read_target?.getElementProperty(ATTR_BLOCKS)
   const is_default = raw_blocks === undefined || raw_blocks === null
-  const composition = is_default && preview_element
-    ? defaultCompositionFor(preview_element)
+  const composition = is_default && default_source
+    ? defaultCompositionFor(default_source)
     : compositionFromJSON(raw_blocks)
   const labels = tabLabelsFromJSON(read_target?.getElementProperty(ATTR_TABS))
   const catalogue = catalogueFor(app_data, present_targets)
@@ -188,8 +187,11 @@ export const PresentationComposer = ({ app_data, scope }: {
   return (
     <Box style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
 
-      {/* CIBLE EXPLICITE (décision #8) : ce que l'on est en train de composer,
-          + APERÇU : voir ce que verra le lecteur, par le même chemin que lui. */}
+      {/* CIBLE EXPLICITE (décision #8) : ce que l'on est en train de composer.
+          Plus de bouton « Aperçu » : survoler ou cliquer l'élément dans le
+          dessin ouvre désormais sa présentation, en édition comme en lecture —
+          l'auteur emprunte donc le chemin exact de son lecteur, au lieu d'un
+          bouton qui le simulait. */}
       <Box
         style={{
           display: 'flex', alignItems: 'center', gap: '0.3rem',
@@ -206,20 +208,6 @@ export const PresentationComposer = ({ app_data, scope }: {
               : t('presentation.the_selection', { defaultValue: 'la sélection (surcharge)' })}
           </Text>
         </Box>
-        <Button
-          size='xs'
-          variant='menuconfigpanel_option_button'
-          sx={{ paddingInline: '0.4rem', minWidth: 'auto', width: 'auto', flex: 'none' }}
-          // Désactivé exactement quand le lecteur ne verrait rien : l'auteur
-          // apprend ainsi, sans essayer, que sa composition est vide.
-          isDisabled={!preview_element || !canPresent(app_data, preview_element)}
-          title={t('presentation.preview_tooltip', {
-            defaultValue: 'Ouvrir la présentation telle que la verra le lecteur'
-          })}
-          onClick={() => { if (preview_element) openPresentationFor(app_data, preview_element) }}
-        >
-          {t('presentation.preview', { defaultValue: 'Aperçu' })}
-        </Button>
       </Box>
 
       {/* DISPOSITION (ajustement #5) — un onglet d'édition par CONTENANT.

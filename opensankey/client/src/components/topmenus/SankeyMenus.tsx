@@ -426,11 +426,6 @@ export const SankeyMenu = (
           id='config'
           title={t('panel.config_title', { defaultValue: 'Configuration' })}
           allowedModes={['popup', 'sidebar']}
-          // OS#300 Lot 5 — info-bulle éditable au survol : intention de survol +
-          // auto-épinglage à la 1ʳᵉ édition (cf. Class_MenuConfig).
-          onTooltipHoverIn={() => menu_configuration.cancelInspectorHoverClose()}
-          onTooltipHoverOut={() => menu_configuration.scheduleInspectorHoverClose(app_data)}
-          onTooltipEditIntent={() => menu_configuration.pinInspectorHoverTooltip()}
         >
           <ConfigMenu
             app_data={app_data}

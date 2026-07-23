@@ -33,19 +33,23 @@ import { Type_JSON } from './Utils'
 export type Type_BlockVisibility = { [mode in Type_PanelMode]: boolean }
 
 /**
- * AJUSTEMENT #5 — PLACEMENT d'un bloc dans un contenant : dans quel onglet, sur
- * quelle rangée.
+ * AJUSTEMENT #5 — PLACEMENT d'un bloc dans un contenant. La disposition est un
+ * TABLEAU : des onglets, chacun découpé en colonnes, chaque colonne empilant
+ * des rangées. Un bloc occupe donc une cellule (onglet, colonne, rangée).
  *
- * Deux blocs qui partagent (onglet, rangée) s'affichent CÔTE À CÔTE ; des
- * rangées différentes s'empilent ; des onglets différents donnent une barre
- * d'onglets — exactement la grammaire de l'ancienne info-bulle (Valeurs / Autres
+ * Trois gestes, trois dimensions : ajouter une rangée allonge une colonne,
+ * ajouter une colonne partage la largeur, ajouter un onglet ouvre un second
+ * tableau. C'est la grammaire de l'ancienne info-bulle (Valeurs / Autres
  * informations / Sankey unitaire), désormais entre les mains de l'auteur.
  *
  * Le placement est PAR CONTENANT : une info-bulle veut deux colonnes serrées là
- * où un panneau latéral, étroit et haut, veut une pile. C'est la même
+ * où un panneau latéral, étroit et haut, veut une seule colonne. C'est la même
  * composition, disposée différemment.
+ *
+ * Plusieurs blocs peuvent partager une cellule ; ils s'y empilent, comme un
+ * groupe qu'on déplace d'un bloc.
  */
-export type Type_BlockPlacement = { tab: number, row: number }
+export type Type_BlockPlacement = { tab: number, col: number, row: number }
 export type Type_BlockLayout = { [mode in Type_PanelMode]?: Type_BlockPlacement }
 
 /** Une entrée de composition : un bloc, sa visibilité, sa disposition, ses réglages. */
@@ -113,6 +117,7 @@ export const blockVisibilityFromJSON = (raw: unknown): Type_BlockVisibility => {
 /** Borne les index d'onglet / de rangée : un JSON abîmé ne doit pas produire une
  *  disposition à 10^9 rangées vides. */
 export const MAX_TABS = 8
+export const MAX_COLS = 6
 export const MAX_ROWS = 40
 
 const asIndex = (v: unknown, max: number): number | null => {
@@ -121,13 +126,16 @@ const asIndex = (v: unknown, max: number): number | null => {
   return i >= 0 && i < max ? i : null
 }
 
-/** Lit un placement. Rend `null` si l'un des deux index est inexploitable : un
- *  placement à moitié valide vaudrait moins que pas de placement du tout. */
+/** Lit un placement. Rend `null` si un index est inexploitable : un placement à
+ *  moitié valide vaudrait moins que pas de placement du tout. La colonne, elle,
+ *  peut manquer — les placements écrits avant que la disposition ne devienne un
+ *  tableau n'en portaient pas ; ils tombent dans la première colonne. */
 export const blockPlacementFromJSON = (raw: unknown): Type_BlockPlacement | null => {
   if (!isPlainObject(raw)) return null
   const tab = asIndex(raw.tab, MAX_TABS)
   const row = asIndex(raw.row, MAX_ROWS)
-  return tab === null || row === null ? null : { tab, row }
+  if (tab === null || row === null) return null
+  return { tab, col: raw.col === undefined ? 0 : (asIndex(raw.col, MAX_COLS) ?? 0), row }
 }
 
 /** Lit une disposition (placement par contenant). Rend `undefined` si aucun
@@ -207,14 +215,15 @@ export const hasContentFor = (
 
 // DISPOSITION (ajustement #5) ======================================================
 
-/** Une rangée : les blocs qui s'y affichent CÔTE À CÔTE, dans l'ordre. */
-export type Type_LayoutRow = Type_CompositionEntry[]
-/** Un onglet : ses rangées, empilées. */
-export type Type_LayoutTab = Type_LayoutRow[]
+/** Une cellule : les blocs qui l'occupent, empilés, dans l'ordre. */
+export type Type_LayoutCell = Type_CompositionEntry[]
+/** Une colonne : ses cellules, de haut en bas. */
+export type Type_LayoutColumn = Type_LayoutCell[]
+/** Un onglet : ses colonnes, de gauche à droite. */
+export type Type_LayoutTab = Type_LayoutColumn[]
 
 /**
- * Résout la disposition d'un contenant : la liste des onglets, chacun étant une
- * liste de rangées, chaque rangée une liste de blocs côte à côte.
+ * Résout la disposition d'un contenant : onglets -> colonnes -> cellules -> blocs.
  *
  * Point de vérité UNIQUE, partagé par le rendu lecteur et par l'éditeur — les
  * deux doivent voir exactement la même chose, sans quoi l'auteur composerait à
@@ -222,41 +231,47 @@ export type Type_LayoutTab = Type_LayoutRow[]
  *
  * Trois règles, dans cet ordre :
  *  1. seuls les blocs VISIBLES dans ce contenant participent ;
- *  2. un bloc PLACÉ va à son (onglet, rangée) ; plusieurs blocs au même endroit
- *     se rangent côte à côte, dans l'ordre de la composition ;
- *  3. un bloc NON PLACÉ prend une rangée pour lui, à la suite, dans le premier
- *     onglet — ce qui reproduit l'empilement d'avant #5 pour un document qui
- *     n'a jamais été disposé.
+ *  2. un bloc PLACÉ va à sa cellule ; plusieurs blocs dans la même cellule s'y
+ *     empilent, dans l'ordre de la composition ;
+ *  3. un bloc NON PLACÉ prend une rangée pour lui, à la suite, dans la première
+ *     colonne du premier onglet — ce qui reproduit l'empilement d'avant #5 pour
+ *     un document qui n'a jamais été disposé.
  *
- * Les onglets et rangées VIDES sont compactés : l'auteur peut vider la rangée du
- * milieu sans laisser un trou dans ce que voit son lecteur.
+ * Onglets, colonnes et rangées VIDES sont COMPACTÉS : l'auteur peut vider la
+ * colonne du milieu sans laisser une bande blanche chez son lecteur.
  */
 export const layoutFor = (
   composition: Type_Composition,
   mode: Type_PanelMode
 ): Type_LayoutTab[] => {
   const visible = blocksFor(composition, mode)
-  // Clé de tri : (onglet, rangée). Les non-placés passent APRÈS les placés du
-  // premier onglet, chacun sur sa propre rangée, en gardant l'ordre de la liste.
-  const cells = new Map<string, { tab: number, row: number, blocks: Type_LayoutRow }>()
+  // Les non-placés passent APRÈS les placés de la première colonne, chacun sur
+  // sa propre rangée, en gardant l'ordre de la liste.
+  const cells = new Map<string, { tab: number, col: number, row: number, blocks: Type_LayoutCell }>()
   let next_free_row = MAX_ROWS
   visible.forEach(entry => {
     const placement = entry.layout?.[mode]
     const tab = placement ? placement.tab : 0
+    const col = placement ? placement.col : 0
     const row = placement ? placement.row : next_free_row++
-    const key = tab + ':' + row
+    const key = tab + ':' + col + ':' + row
     const cell = cells.get(key)
     if (cell) cell.blocks.push(entry)
-    else cells.set(key, { tab, row, blocks: [entry] })
+    else cells.set(key, { tab, col, row, blocks: [entry] })
   })
 
-  const sorted = [...cells.values()].sort((a, b) => a.tab - b.tab || a.row - b.row)
+  const sorted = [...cells.values()]
+    .sort((a, b) => a.tab - b.tab || a.col - b.col || a.row - b.row)
   const tabs: Type_LayoutTab[] = []
   const tab_index = new Map<number, number>()
+  const col_index = new Map<string, number>()
   sorted.forEach(cell => {
-    let i = tab_index.get(cell.tab)
-    if (i === undefined) { i = tabs.length; tab_index.set(cell.tab, i); tabs.push([]) }
-    tabs[i].push(cell.blocks)
+    let ti = tab_index.get(cell.tab)
+    if (ti === undefined) { ti = tabs.length; tab_index.set(cell.tab, ti); tabs.push([]) }
+    const col_key = cell.tab + ':' + cell.col
+    let ci = col_index.get(col_key)
+    if (ci === undefined) { ci = tabs[ti].length; col_index.set(col_key, ci); tabs[ti].push([]) }
+    tabs[ti][ci].push(cell.blocks)
   })
   return tabs
 }
@@ -278,9 +293,11 @@ export const normalizeLayout = (
   mode: Type_PanelMode
 ): Type_Composition => {
   const placements = new Map<string, Type_BlockPlacement>()
-  layoutFor(composition, mode).forEach((rows, tab) => {
-    rows.forEach((row, row_index) => {
-      row.forEach(entry => placements.set(entry.block, { tab, row: row_index }))
+  layoutFor(composition, mode).forEach((cols, tab) => {
+    cols.forEach((rows, col) => {
+      rows.forEach((cell, row) => {
+        cell.forEach(entry => placements.set(entry.block, { tab, col, row }))
+      })
     })
   })
   return composition.map(e => {
@@ -365,6 +382,7 @@ export const placeBlock = (
   placement: Type_BlockPlacement
 ): Type_Composition => {
   if (placement.tab < 0 || placement.tab >= MAX_TABS) return composition
+  if (placement.col < 0 || placement.col >= MAX_COLS) return composition
   if (placement.row < 0 || placement.row >= MAX_ROWS) return composition
   return composition.map(e => e.block === block
     ? {

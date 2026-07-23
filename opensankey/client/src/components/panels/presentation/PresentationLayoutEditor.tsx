@@ -39,13 +39,15 @@ import type { Type_PanelMode } from '../../../types/PanelManager'
 import { default_font_size } from '../../../css/Theme'
 import {
   layoutFor, normalizeAllLayouts, unplaceBlock, clearLayout,
-  tabLabelAt, setTabLabel, MAX_TABS,
+  tabLabelAt, setTabLabel, MAX_TABS, MAX_COLS,
   type Type_Composition, type Type_TabLabels
 } from '../../../types/PresentationComposition'
 import { presentation_block_registry } from './PresentationBlockRegistry'
 // La règle de dépôt vit à part, en module pur : c'est là que se logent les
 // erreurs d'index, et un test la couvre sans avoir à simuler un glisser.
-import { applyDrop, rowDropId, newRowDropId, NEW_TAB, TRAY } from './presentationDrop'
+import {
+  applyDrop, cellDropId, newRowDropId, newColDropId, NEW_TAB, TRAY
+} from './presentationDrop'
 
 const chip_style: React.CSSProperties = {
   border: '1px solid #cbd5e0',
@@ -157,71 +159,98 @@ export const PresentationLayoutEditor = ({
           </Box>
         )}
 
-        {tabs.map((rows, tab_index) => (
+        {tabs.map((cols, tab_index) => (
           <Box
             key={tab_index}
             style={{
               border: '1px solid #e2e8f0', borderRadius: '4px', padding: '0.25rem'
             }}
           >
-            {/* Nom de l'onglet. N'apparaît qu'à partir de DEUX onglets : tant
-                qu'il n'y en a qu'un, le lecteur ne voit aucune barre d'onglets,
-                donc le nommer n'aurait aucun effet visible. */}
-            {tabs.length > 1 && (
-              <Input
-                size='xs'
-                variant='menuconfigpanel_option_input'
-                marginBottom='0.2rem'
-                placeholder={t('presentation.tab_name', { defaultValue: 'Nom de l\'onglet' })}
-                defaultValue={tabLabelAt(labels, mode, tab_index)}
-                // onBlur : un point d'undo par frappe de touche serait inutilisable.
-                onBlur={(e) => {
-                  if (e.target.value !== tabLabelAt(labels, mode, tab_index)) {
-                    writeLabels(setTabLabel(labels, mode, tab_index, e.target.value))
-                  }
-                }}
-              />
-            )}
-            <Box style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-              {rows.map((row, row_index) => (
-                <Droppable
-                  key={row_index}
-                  droppableId={rowDropId(tab_index, row_index)}
-                  direction='horizontal'
+            {/* Bandeau de l'onglet : son nom, et — sur le PREMIER onglet
+                seulement — la zone « nouvel onglet ». Elle est placée là, en
+                haut à droite, parce que c'est l'endroit où le nouvel onglet
+                apparaîtra : la zone de dépôt occupe la place de son résultat. */}
+            <Box style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              {/* Le nom ne sert qu'à partir de DEUX onglets : tant qu'il n'y en
+                  a qu'un, le lecteur ne voit aucune barre d'onglets. */}
+              {tabs.length > 1 ? (
+                <Input
+                  size='xs'
+                  flex='1'
+                  variant='menuconfigpanel_option_input'
+                  placeholder={t('presentation.tab_name', { defaultValue: 'Nom de l\'onglet' })}
+                  defaultValue={tabLabelAt(labels, mode, tab_index)}
+                  // onBlur : un point d'undo par frappe de touche serait inutilisable.
+                  onBlur={(e) => {
+                    if (e.target.value !== tabLabelAt(labels, mode, tab_index)) {
+                      writeLabels(setTabLabel(labels, mode, tab_index, e.target.value))
+                    }
+                  }}
+                />
+              ) : <Box style={{ flex: 1 }} />}
+              {tab_index === 0 && tabs.length < MAX_TABS && (
+                <Box style={{ flex: 'none', minWidth: '7rem' }}>
+                  <DropStrip
+                    id={NEW_TAB}
+                    label={t('presentation.drop_new_tab', { defaultValue: '＋ onglet' })}
+                  />
+                </Box>
+              )}
+            </Box>
+
+            {/* LE TABLEAU : des colonnes côte à côte, chacune empilant ses
+                rangées, et une zone « nouvelle colonne » à droite. */}
+            <Box style={{ display: 'flex', gap: '0.25rem', alignItems: 'flex-start', paddingTop: '0.2rem' }}>
+              {cols.map((rows, col_index) => (
+                <Box
+                  key={col_index}
+                  style={{
+                    flex: '1 1 0', minWidth: 0,
+                    display: 'flex', flexDirection: 'column', gap: '0.2rem'
+                  }}
                 >
-                  {(provided, snapshot) => (
-                    <Box
-                      ref={provided.innerRef}
-                      {...provided.droppableProps}
-                      style={{
-                        display: 'flex', gap: '0.2rem', alignItems: 'stretch',
-                        padding: '0.1rem',
-                        borderRadius: '4px',
-                        background: snapshot.isDraggingOver ? 'rgba(66,153,225,0.08)' : undefined
-                      }}
+                  {rows.map((cell, row_index) => (
+                    <Droppable
+                      key={row_index}
+                      droppableId={cellDropId(tab_index, col_index, row_index)}
+                      direction='horizontal'
                     >
-                      {row.map((entry, i) => (
-                        <Chip key={entry.block} block={entry.block} index={i} />
-                      ))}
-                      {provided.placeholder}
-                    </Box>
-                  )}
-                </Droppable>
+                      {(provided, snapshot) => (
+                        <Box
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          style={{
+                            display: 'flex', gap: '0.2rem', alignItems: 'stretch',
+                            padding: '0.1rem',
+                            borderRadius: '4px',
+                            background: snapshot.isDraggingOver ? 'rgba(66,153,225,0.08)' : undefined
+                          }}
+                        >
+                          {cell.map((entry, i) => (
+                            <Chip key={entry.block} block={entry.block} index={i} />
+                          ))}
+                          {provided.placeholder}
+                        </Box>
+                      )}
+                    </Droppable>
+                  ))}
+                  <DropStrip
+                    id={newRowDropId(tab_index, col_index)}
+                    label={t('presentation.drop_new_row', { defaultValue: '＋ rangée' })}
+                  />
+                </Box>
               ))}
-              <DropStrip
-                id={newRowDropId(tab_index)}
-                label={t('presentation.drop_new_row', { defaultValue: '＋ nouvelle rangée' })}
-              />
+              {cols.length < MAX_COLS && (
+                <Box style={{ flex: 'none', width: '5.5rem', alignSelf: 'stretch' }}>
+                  <DropStrip
+                    id={newColDropId(tab_index)}
+                    label={t('presentation.drop_new_col', { defaultValue: '＋ colonne' })}
+                  />
+                </Box>
+              )}
             </Box>
           </Box>
         ))}
-
-        {tabs.length < MAX_TABS && (
-          <DropStrip
-            id={NEW_TAB}
-            label={t('presentation.drop_new_tab', { defaultValue: '＋ nouvel onglet' })}
-          />
-        )}
 
         {/* RÉSERVE : les blocs du document absents de CE contenant. C'est aussi
             la zone où l'on relâche un bloc pour l'en retirer. */}

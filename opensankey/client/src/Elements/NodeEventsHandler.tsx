@@ -165,9 +165,7 @@ export class NodeEventsHandler {
         const group_target = this._node.drawing_area.resolveContainerGroupClickTarget(this._node)
         if (group_target) {
           this.selectFrameTarget(group_target)
-          // OS#300 Lot 5 — clic nu = ouvre l'inspecteur (pop-up/barre latérale
-          // selon le contexte) sur l'élément sélectionné.
-          drawing_area.application_data.menu_configuration.openConfigMenu()
+          this.openPresentationOnClick(group_target, event)
           return
         }
       }
@@ -183,13 +181,42 @@ export class NodeEventsHandler {
         this._node.drawSelectedLabelHandles(labelType)
       }
 
-      // OS#300 Lot 5 — clic NU (sans Ctrl/Cmd) : ouvre l'inspecteur de propriétés
-      // de l'élément (pop-up superposée, ou barre latérale si elle est affichée).
-      // Ctrl/Cmd (multi-sélection) ne force pas l'ouverture.
+      // Clic NU (sans Ctrl/Cmd) : ouvre la PRÉSENTATION de l'élément — pop-up
+      // juxtaposée, ou panneau latéral s'il est ouvert. Ctrl/Cmd
+      // (multi-sélection) n'ouvre rien.
       if (!event.ctrlKey && !event.metaKey) {
-        drawing_area.application_data.menu_configuration.openConfigMenu()
+        this.openPresentationOnClick(this._node, event)
       }
     }
+  }
+
+  /**
+   * Clic sur un élément : ouvre SA présentation, jamais le panneau de
+   * configuration.
+   *
+   * Le panneau de configuration est l'outil de l'AUTEUR : il s'ouvre quand
+   * l'auteur le demande, par son bouton. Cliquer un nœud, c'est vouloir voir ce
+   * nœud — ce que voit le lecteur — et c'est aussi ce qui rend le composeur
+   * honnête : l'auteur emprunte exactement le chemin de son lecteur, au lieu
+   * d'un bouton « Aperçu » qui simulait ce chemin.
+   *
+   * La SÉLECTION, elle, est inchangée : le panneau de configuration, quand il
+   * est ouvert, continue d'en dériver sa cible.
+   */
+  private openPresentationOnClick(
+    element: Class_NodeBase,
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    const app_data = this._node.drawing_area.application_data
+    const rect = (event.target as HTMLElement)?.getBoundingClientRect?.()
+    openPresentationFor(
+      app_data,
+      element as unknown as Parameters<typeof openPresentationFor>[1],
+      {
+        x: event.clientX || (rect ? Math.round(rect.right) : 0),
+        y: event.clientY || (rect ? Math.round(rect.top) : 0)
+      }
+    )
   }
 
   /** Sélectionne un cadre (groupe) + met à jour les menus. */
@@ -797,22 +824,16 @@ export class NodeEventsHandler {
     // l'inspecteur en INFO-BULLE éditable de l'élément survolé (sans changer la
     // sélection ferme). Le garde `buttons === 0` évite de déclencher pendant un
     // MAJ+glisser (verrou d'axe) ou un Alt+glisser (déplacement de label).
-    if (app_data.is_editable && (event.shiftKey || event.altKey)
-      && event.buttons === 0 && (event.target as HTMLElement).tagName !== 'tspan') {
-      // Ancre : position souris, avec le rectangle de l'élément survolé en repli
-      // (coords souris parfois indisponibles selon le câblage d3 de l'événement).
-      const rect = (event.target as HTMLElement)?.getBoundingClientRect?.()
-      const ax = event.clientX || (rect ? Math.round(rect.right) : 0)
-      const ay = event.clientY || (rect ? Math.round(rect.top) : 0)
-      app_data.menu_configuration.openInspectorHoverTooltip(app_data, this._node, ax, ay)
-      return
-    }
-    // OS#305 Lot 4 — LECTEUR : survol satisfaisant le déclencheur réglé sur le
-    // DOCUMENT (survol nu / +MAJ / +Alt) -> présentation composée en info-bulle,
-    // après le délai réglé. On ne prend la main que si l'auteur a effectivement
-    // composé quelque chose pour ce contenant : sinon on laisse l'info-bulle
-    // historique ci-dessous faire son travail (aucune régression).
-    if (!app_data.is_editable && event.buttons === 0
+    // Survol satisfaisant le déclencheur réglé sur le DOCUMENT (survol nu /
+    // +MAJ / +Alt) -> présentation composée en info-bulle, après le délai réglé.
+    //
+    // En ÉDITION AUSSI, désormais : survoler un élément montre à l'auteur ce que
+    // verra son lecteur, par le même chemin que lui. C'est ce qui rend le bouton
+    // « Aperçu » du composeur inutile — et c'est plus fidèle, puisque l'auteur
+    // déclenche l'affichage comme le lecteur le déclenchera. L'info-bulle
+    // d'INSPECTEUR qui occupait cette place a donc disparu : elle montrait des
+    // champs d'édition là où le survol doit montrer le diagramme.
+    if (event.buttons === 0
       && (event.target as HTMLElement).tagName !== 'tspan'
       && matchesPresentationTrigger(app_data, event)
       && canPresentTooltip(this._node as unknown as Parameters<typeof canPresentTooltip>[0])) {
@@ -834,13 +855,10 @@ export class NodeEventsHandler {
 
   public handleMouseMove() {return}
   public handleMouseOut() {
-    // Quitter l'élément programme la fermeture de l'info-bulle (annulée si le
-    // curseur y entre, cf. PanelShell) : celle de l'inspecteur en édition
-    // (OS#300 Lot 5), celle de la présentation composée en lecture (OS#305
-    // Lot 4). Chacune est inerte si elle n'est pas active.
-    const app_data = this._node.drawing_area.application_data
-    app_data.menu_configuration.scheduleInspectorHoverClose(app_data)
-    schedulePresentationHoverClose(app_data)
+    // Quitter l'élément programme la fermeture de l'info-bulle de présentation
+    // (annulée si le curseur y entre, cf. PanelShell). Inerte si aucune n'est
+    // ouverte.
+    schedulePresentationHoverClose(this._node.drawing_area.application_data)
   }
 
   private moveMagneticNode(

@@ -35,14 +35,13 @@ import { Class_DataTagGroup } from './TagGroup'
 import { Class_DataTag } from './Tag'
 import { Class_EventBus, MAIN_ZONE_TOPIC, SELECTION_TOPIC } from './EventBus'
 import { Class_PanelManager, Type_PanelMode } from './PanelManager'
-import type { Class_ApplicationData } from './ApplicationData'
 import {
   ConverterConfig
 } from '../components/dialogs/PersistenceProcessDialogConfigs'
 import type { Type_TemplateSource } from '../components/topmenus/SankeyTemplates'
 import { Class_NodeBase } from '../Elements/NodeBase'
 import { Class_LinkElement } from '../Elements/Link'
-import { Class_ElementStyle, Class_ProtoElement } from '../Elements/Element'
+import { Class_ElementStyle } from '../Elements/Element'
 
 export type Type_AdditionalMenus = {
   external_top_buttons_item: { [x: string]: JSX.Element },
@@ -868,77 +867,13 @@ export class Class_MenuConfig {
     }
   }
 
-  // OS#300 Lot 5 — INFO-BULLE d'inspecteur au survol (MAJ/Alt) ======================
-  // L'inspecteur étant piloté par la SÉLECTION, l'aperçu au survol sélectionne
-  // temporairement l'élément survolé et RESTAURE la sélection précédente à la
-  // fermeture (net : sélection inchangée après survol ; surlignage transitoire =
-  // feedback de l'élément inspecté). La 1ʳᵉ édition épingle en pop-up et conserve.
-  private _hover_saved_selection: Class_ProtoElement[] | null = null
-  private _hover_close_timer: ReturnType<typeof setTimeout> | null = null
-  private _hover_element: Class_ProtoElement | null = null
-
-  private _cancelHoverClose() {
-    if (this._hover_close_timer !== null) { clearTimeout(this._hover_close_timer); this._hover_close_timer = null }
-  }
-
-  /** Survol + MAJ/Alt d'un élément (éditeur) : montre l'inspecteur en info-bulle
-   *  ancrée, ciblant l'élément survolé (sélection sauvegardée pour restauration). */
-  public openInspectorHoverTooltip(
-    app_data: Class_ApplicationData,
-    element: Class_ProtoElement,
-    x: number, y: number
-  ) {
-    // Ne pas perturber un inspecteur déjà ÉPINGLÉ (pop-up / barre latérale).
-    const mode = this.panels.getMode('config')
-    if (mode === 'popup' || mode === 'sidebar') return
-    this._cancelHoverClose()
-    if (this._hover_element === element) {
-      this.panels.setMode('config', 'tooltip', { anchor: { x, y } })
-      return
-    }
-    if (this._hover_saved_selection === null) {
-      this._hover_saved_selection = [...app_data.drawing_area.selected_elements_list]
-    }
-    this._hover_element = element
-    app_data.drawing_area.selectOnly(element)
-    this.updateInspector()
-    this.panels.setMode('config', 'tooltip', { anchor: { x, y } })
-  }
-
-  /** Programme la fermeture de l'info-bulle (délai d'intention de survol). */
-  public scheduleInspectorHoverClose(app_data: Class_ApplicationData) {
-    if (this.panels.getMode('config') !== 'tooltip') return
-    this._cancelHoverClose()
-    this._hover_close_timer = setTimeout(() => this.closeInspectorHoverTooltip(app_data, true), 300)
-  }
-
-  /** Annule la fermeture programmée (curseur revenu sur l'élément / dans l'info-bulle). */
-  public cancelInspectorHoverClose() { this._cancelHoverClose() }
-
-  /** Ferme l'info-bulle ; `restore` = restaure la sélection sauvegardée. */
-  public closeInspectorHoverTooltip(app_data: Class_ApplicationData, restore: boolean) {
-    this._cancelHoverClose()
-    if (this.panels.getMode('config') === 'tooltip') this.panels.close('config')
-    if (restore && this._hover_saved_selection !== null) {
-      app_data.drawing_area.purgeSelection()
-      this._hover_saved_selection.forEach(e => app_data.drawing_area.addElementToSelection(e))
-      this.updateInspector()
-    }
-    this._hover_saved_selection = null
-    this._hover_element = null
-  }
-
-  /** 1ʳᵉ édition dans l'info-bulle : épingle en pop-up et CONSERVE la sélection
-   *  (l'élément survolé devient la sélection ferme). */
-  public pinInspectorHoverTooltip() {
-    if (this.panels.getMode('config') !== 'tooltip') return
-    this._cancelHoverClose()
-    this._hover_saved_selection = null
-    this._hover_element = null
-    this.panels.setMode('config', 'popup')
-  }
-
-
+  // OS#300 Lot 5 — l'INFO-BULLE D'INSPECTEUR au survol a été RETIRÉE.
+  //
+  // Elle montrait des champs d'édition là où le survol d'un élément doit montrer
+  // le diagramme : c'est désormais la présentation composée qui s'y affiche, en
+  // édition comme en lecture. Sa machinerie (sélection temporaire de l'élément
+  // survolé, restauration de la sélection à la fermeture, épinglage à la 1re
+  // édition) n'avait plus d'appelant.
 
   // #1243 — La matrice est déposée : les ex-openConfigMenuElementsNodes/Links/
   // NodesLinks/Containers, qui ouvraient le panneau PUIS forçaient (après 200 ms)

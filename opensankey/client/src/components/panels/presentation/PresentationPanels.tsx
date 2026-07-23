@@ -94,22 +94,25 @@ export const PresentationPanel = ({ app_data, element, mode, panel_id }: {
   const panels = app_data.menu_configuration.panels
 
   // Rendu d'abord, structure ensuite : c'est le seul moyen de savoir ce qui est
-  // réellement muet.
+  // réellement muet. Une cellule vide s'efface, une colonne vide avec elle, et
+  // un onglet vide de même.
   const tabs = layoutFor(composition, mode)
-    .map(rows => rows
-      .map(row => row
-        .map(entry => ({
-          key: entry.block,
-          node: renderPresentationBlock(entry.block, {
-            app_data,
-            element: element as unknown as null,
-            mode,
-            options: entry.options
-          })
-        }))
-        .filter(r => r.node !== null && r.node !== undefined))
-      .filter(row => row.length > 0))
-    .filter(rows => rows.length > 0)
+    .map(cols => cols
+      .map(rows => rows
+        .map(cell => cell
+          .map(entry => ({
+            key: entry.block,
+            node: renderPresentationBlock(entry.block, {
+              app_data,
+              element: element as unknown as null,
+              mode,
+              options: entry.options
+            })
+          }))
+          .filter(r => r.node !== null && r.node !== undefined))
+        .filter(cell => cell.length > 0))
+      .filter(rows => rows.length > 0))
+    .filter(cols => cols.length > 0)
 
   if (tabs.length === 0) {
     return (
@@ -126,21 +129,30 @@ export const PresentationPanel = ({ app_data, element, mode, panel_id }: {
   // l'élément n'a pas de quoi remplir le dernier) : on retombe sur le premier.
   const active = Math.min(panels.getActiveTab(panel_id), tabs.length - 1)
 
+  // Les colonnes se partagent la largeur à parts égales et peuvent rétrécir
+  // (`minWidth: 0`, sans quoi un tableau large déborderait sa colonne) ; chaque
+  // colonne empile ses cellules.
+  const active_cols = tabs[active]
   const rows = (
-    <Box style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
-      {tabs[active].map((row, row_index) => (
+    <Box
+      style={{
+        display: 'flex',
+        gap: active_cols.length > 1 ? '0.4rem' : undefined,
+        alignItems: 'flex-start'
+      }}
+    >
+      {active_cols.map((cells, col_index) => (
         <Box
-          key={row_index}
+          key={col_index}
           style={{
-            display: 'flex',
-            // Côte à côte : chaque bloc prend une part égale et peut rétrécir
-            // (`minWidth: 0`, sans quoi un tableau large déborderait la rangée).
-            gap: row.length > 1 ? '0.4rem' : undefined,
-            alignItems: 'flex-start'
+            flex: '1 1 0', minWidth: 0,
+            display: 'flex', flexDirection: 'column', gap: '0.15rem'
           }}
         >
-          {row.map(r => (
-            <Box key={r.key} style={{ flex: '1 1 0', minWidth: 0 }}>{r.node}</Box>
+          {cells.map((cell, row_index) => (
+            <Box key={row_index}>
+              {cell.map(r => <React.Fragment key={r.key}>{r.node}</React.Fragment>)}
+            </Box>
           ))}
         </Box>
       ))}
@@ -171,7 +183,7 @@ export const PresentationPanel = ({ app_data, element, mode, panel_id }: {
                 ? label
                 // Onglet sans nom : on l'annonce par son premier bloc plutôt que
                 // par un numéro, qui ne dirait rien au lecteur.
-                : (presentation_block_registry.get(rows_of_tab[0][0].key)?.label(app_data)
+                : (presentation_block_registry.get(rows_of_tab[0][0][0].key)?.label(app_data)
                   ?? app_data.t('presentation.tab_n', { defaultValue: 'Onglet' }) + ' ' + (index + 1))}
             </Button>
           )
