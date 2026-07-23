@@ -79,6 +79,7 @@ import { Type_JSON } from '../../types/Utils'
 import { clickSaveSVG } from './SankeyExports'
 import { ModalExcelTemplate } from './ExcelTemplateModal'
 import { ModalImageImport } from './ImageImportModal'
+import { fetchStanMeta, importStanFile, ModalStanLayerChoice, Type_StanMeta } from './StanImportModal'
 import { importSankeymaticText } from '../../Persistence/sankeymaticLoad'
 import { applyEsankeyFile } from '../../Persistence/esankeyLoad'
 import {
@@ -496,6 +497,9 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
   const [show_excel_template, set_show_excel_template] = useState(false)
   // State for image import modal (extraction de structure depuis une image)
   const [show_image_import, set_show_image_import] = useState(false)
+  // Import STAN multi-couches : fichier en attente + méta (périodes/couches),
+  // le temps que l'utilisateur choisisse la couche à importer.
+  const [stan_pending, set_stan_pending] = useState<{ file: File, meta: Type_StanMeta } | null>(null)
 
   // Liste des tutoriels disponibles dans SankeyData/tutorials, peuplée par le
   // sous-menu « Tutoriels » de l'Aide (endpoint /menus/tutorials, lit index.json).
@@ -1244,6 +1248,14 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
       show={show_image_import}
       setShow={set_show_image_import}
     />
+    {stan_pending && (
+      <ModalStanLayerChoice
+        new_data={new_data}
+        file={stan_pending.file}
+        meta={stan_pending.meta}
+        onClose={() => set_stan_pending(null)}
+      />
+    )}
     {/* Inputs fichiers cachés montés hors des menus : un MenuItem ferme le
         MenuList (display:none), et click() sur un input dont un ancêtre est
         masqué n'ouvre pas le sélecteur de fichier. Ici ils restent montés. */}
@@ -1272,15 +1284,23 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
         if (!files || !files[0]) return
         // .smfa (SQLite) et .zmfa (XML gzippé) sont binaires : on POST le
         // fichier tel quel, le serveur dispatche sur le magic number.
-        const form_data = new FormData()
-        form_data.append('file_content', files[0])
-        fetch(window.location.origin + '/opensankey/open_stan', {
-          method: 'POST',
-          body: form_data
-        }).then(response => response.json())
-          .then(json_data => new_data.fromJSON(json_data))
+        // Un fichier multi-couches (FlowLayer) passe par le choix de couche ;
+        // sinon (mono-couche, ou méta illisible) import direct, comme avant.
+        const file = files[0] as File
+        fetchStanMeta(new_data, file)
+          .then(
+            meta => {
+              if (meta.layers.length > 1) {
+                set_stan_pending({ file, meta })
+                return
+              }
+              return importStanFile(new_data, file)
+            },
+            // Méta illisible : import direct (1ère couche), comme avant.
+            () => importStanFile(new_data, file)
+          )
           .catch((error) => {
-            console.error('Error in open_stan - ' + error.toString())
+            console.error('Error in open_stan - ' + String(error))
           })
       }} />
     <Input

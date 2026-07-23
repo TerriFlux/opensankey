@@ -98,6 +98,9 @@ _PX_PER_STAN_UNIT = 5.0
 # mais l'ellipse doit rester assez grande pour contenir la lettre « I » ou « E ».
 _EXTERNAL_NODE_MIN_PX = 26.0
 
+# Marge entre le bord d'un flux vertical et son nom, écrit à sa droite comme STAN.
+_VERTICAL_NAME_PAD_PX = 5.0
+
 # Rôles de ShapeType, déduits de la géométrie et des jointures d'Example.smfa
 # (STAN ne documente pas cette énumération).
 # STAN calibre ses cadres de texte sur SA police ; nous rendons le texte avec la nôtre,
@@ -248,12 +251,15 @@ def _polyline(link_obj, objects):
 
 
 def _orientation_from_polyline(points):
-    """Traduit un tracé STAN en `shape_orientation` OpenSankey.
+    """Traduit un tracé STAN SANS DÉTOUR en `shape_orientation` OpenSankey.
 
     STAN route ses flux à angle droit (le `HVLink` de sa bibliothèque de dessin).
     Un tracé dont tous les points partagent leur ordonnée est horizontal, tous leur
     abscisse est vertical ; sinon c'est une équerre, dont le nom dépend du premier
     segment. Renvoie None si le tracé est inexploitable, pour laisser le défaut.
+
+    Ne convient qu'aux tracés d'au plus UN coude : les détours (escaliers,
+    boucles) passent par le régime routé de `_route_from_polyline`.
     """
     if len(points) < 2:
         return None
@@ -277,6 +283,90 @@ def _orientation_from_polyline(points):
         if abs(y1 - y0) > eps:
             return "vh"
     return None
+
+
+def _simplify_polyline(points, eps=1e-3):
+    """Ôte d'un tracé STAN les points dupliqués et les sommets colinéaires.
+
+    Les tracés STAN traînent des points intermédiaires sans coude (« Racoyet -
+    WB 3-1 » : 4 points rigoureusement alignés) : les garder fabriquerait des
+    waypoints inutiles. Un sommet où le tracé REBROUSSE (produit scalaire
+    négatif) n'est pas colinéaire : c'est un vrai détour, on le garde.
+    """
+    if not points:
+        return []
+    out = [points[0]]
+    for p in points[1:]:
+        if abs(p[0] - out[-1][0]) < eps and abs(p[1] - out[-1][1]) < eps:
+            continue
+        out.append(p)
+    i = 1
+    while i < len(out) - 1:
+        (ax, ay), (bx, by), (cx, cy) = out[i - 1], out[i], out[i + 1]
+        ux, uy = bx - ax, by - ay
+        vx, vy = cx - bx, cy - by
+        norm = ((ux * ux + uy * uy) ** 0.5) * ((vx * vx + vy * vy) ** 0.5)
+        cross = ux * vy - uy * vx
+        dot = ux * vx + uy * vy
+        if norm > 0 and abs(cross) / norm < eps and dot > 0:
+            del out[i]
+        else:
+            i += 1
+    return out
+
+
+def _segment_axes(points, eps=1e-3):
+    """Axe de chaque segment du tracé : 'h', 'v', ou 'd' (diagonale libre)."""
+    axes = []
+    for (x0, y0), (x1, y1) in zip(points, points[1:]):
+        dx, dy = abs(x1 - x0), abs(y1 - y0)
+        if dx < eps and dy < eps:
+            continue
+        axes.append("h" if dy < eps else ("v" if dx < eps else "d"))
+    return axes
+
+
+def _dominant_axis(p0, p1):
+    """Axe dominant d'un segment quelconque (diagonale comprise)."""
+    return "h" if abs(p1[0] - p0[0]) >= abs(p1[1] - p0[1]) else "v"
+
+
+def _route_from_polyline(points):
+    """Classe un tracé STAN : régime du lien OpenSankey et données associées.
+
+    Miroir de `hasOrthogonalTurn` de l'import e!Sankey (esankeyParser.ts) : un
+    tracé est ROUTÉ dès qu'il fait un DÉTOUR — au moins DEUX coudes orthogonaux
+    (h↔v) — et ses points intérieurs deviennent des `shape_waypoints`. UN coude
+    ou moins reste paramétrique (hh/vv/hv/vh, comportement historique). Cas à
+    part : STAN sait tracer une droite LIBRE (diagonale, 2 points) ; l'écraser
+    en équerre `hv`, comme avant, dessinait un coude là où STAN dessine une
+    droite — on la rend par un flux droit aux segments d'attache quasi nuls.
+
+    Renvoie `{"kind": "routed", "waypoints": [...]}` (points en unités STAN),
+    `{"kind": "diagonal"|"parametric", "orientation": ...}`, ou None si le
+    tracé est inexploitable (le style garde alors son défaut).
+    """
+    pts = _simplify_polyline(points)
+    if len(pts) < 2:
+        return None
+    axes = _segment_axes(pts)
+    if not axes:
+        return None
+    turns = sum(1 for a, b in zip(axes, axes[1:]) if {a, b} == {"h", "v"})
+    if turns >= 2:
+        return {"kind": "routed", "waypoints": [(p[0], p[1]) for p in pts[1:-1]]}
+    if axes == ["d"]:
+        return {"kind": "diagonal",
+                "orientation": _dominant_axis(pts[0], pts[-1]) * 2}
+    if "d" in axes:
+        # Tracé mixte sans détour (ex. h-d-h) : le rendu droit paramétrique —
+        # bout, diagonale, bout — est déjà sa silhouette. L'axe d'accroche à
+        # chaque extrémité est celui de son premier/dernier segment.
+        first = axes[0] if axes[0] != "d" else _dominant_axis(pts[0], pts[1])
+        last = axes[-1] if axes[-1] != "d" else _dominant_axis(pts[-2], pts[-1])
+        return {"kind": "parametric", "orientation": first + last}
+    orientation = _orientation_from_polyline(pts)
+    return {"kind": "parametric", "orientation": orientation} if orientation else None
 
 
 def _connector_to_leaf_process(rows, id_field, sub_field):
@@ -472,10 +562,13 @@ def read_geometry(tables):
     dans une table SQL — raison pour laquelle l'import les a longtemps ignorés et
     recalculé une mise en page à leur place.
 
-    Renvoie un dict `{"processes", "orientations", "boundary", "texts"}` en unités
-    STAN, ou `None` si le fichier n'expose pas de géométrie (document absent, version
-    de bibliothèque non reconnue). L'appelant retombe alors sur le placement calculé :
-    une mise en page illisible ne doit jamais faire échouer l'import.
+    Renvoie un dict `{"processes", "polylines", "boundary", "texts", "markers"}` en
+    unités STAN, ou `None` si le fichier n'expose pas de géométrie (document absent,
+    version de bibliothèque non reconnue). L'appelant retombe alors sur le placement
+    calculé : une mise en page illisible ne doit jamais faire échouer l'import.
+
+    `polylines` porte le tracé COMPLET de chaque flux : c'est `_route_from_polyline`
+    qui décide ensuite du régime (paramétrique, droite libre, ou routé par waypoints).
     """
     document = _document_bytes(tables)
     if document is None:
@@ -485,7 +578,7 @@ def read_geometry(tables):
     except (nrbf.NrbfError, struct.error, IndexError, KeyError):
         return None
 
-    processes, orientations, texts, markers, boundary = {}, {}, [], {}, None
+    processes, polylines, texts, markers, boundary = {}, {}, [], {}, None
     for shape in tables.get("Shape") or []:
         entry = index.get(str(shape.get("ShapeGuid") or "").lower())
         if entry is None:
@@ -507,14 +600,13 @@ def read_geometry(tables):
             # Son texte est son nom, et sa forme une ellipse.
             markers[flow_id] = {"bounds": entry["bounds"], "text": (entry["text"] or "").strip()}
         elif shape_type == _SHAPE_FLOW_LINK and flow_id is not None:
-            orientation = _orientation_from_polyline(
-                _polyline(entry["object"], entry["objects"]))
-            if orientation:
-                orientations[flow_id] = orientation
+            points = _polyline(entry["object"], entry["objects"])
+            if len(points) >= 2:
+                polylines[flow_id] = points
 
     if not processes:
         return None
-    return {"processes": processes, "orientations": orientations,
+    return {"processes": processes, "polylines": polylines,
             "boundary": boundary, "texts": texts, "markers": markers}
 
 
@@ -704,7 +796,7 @@ def parse_stan(path, period_id=None, layer_id=None):
     if geometry:
         DA_scale = _apply_stan_geometry(
             nodes, links, node_id_of_process, link_id_of_flow, external_of_flow,
-            sizing_of_link, geometry["processes"], geometry["orientations"],
+            sizing_of_link, geometry["processes"], geometry["polylines"],
             geometry["markers"])
         containers = _text_containers(geometry["texts"])
     else:
@@ -814,8 +906,47 @@ def _text_containers(texts):
     return containers
 
 
+def _link_has_name(link):
+    """Le flux porte-t-il un nom ? (`text_value` plat, ou dans les feuilles multi-période)."""
+    value = link.get("value") or {}
+    if value.get("text_value"):
+        return True
+    return any(isinstance(leaf, dict) and leaf.get("text_value")
+               for leaf in value.values())
+
+
+def _place_vertical_flux_labels(link, points, band_px):
+    """Labels d'un flux VERTICAL, à la façon de STAN.
+
+    STAN écrit toujours ses textes à l'horizontale : la valeur reste dans son
+    ellipse SUR le flux mais ne pivote pas avec lui, et le nom (les « Flow
+    Properties ») s'écrit À DROITE du tracé, à mi-hauteur. Chez nous, par
+    défaut, `value_label_on_path` couche le texte le long du tracé (un textPath
+    suit sa direction), et le nom se pose sous le point de départ.
+
+    Trois attributs modernes suffisent côté valeur : hors tracé (`on_path`),
+    centré (`vert: middle` — le `horiz: middle` par défaut ancre déjà au milieu
+    du lien), sans repositionnement automatique (`pos_auto`). Le nom passe en
+    position ABSOLUE (ancre `start`, baseline `middle` : le texte part vers la
+    droite depuis le point donné), calculée sur la polyligne STAN : bord droit
+    de la bande + marge, à mi-hauteur du tracé.
+    """
+    local = link["local"]
+    local["value_label_on_path"] = False
+    local["value_label_vert"] = "middle"
+    local["value_label_pos_auto"] = False
+    if not (points and _link_has_name(link)):
+        return
+    xs = [p[0] for p in points]
+    ys = [p[1] for p in points]
+    local["name_label_position_absolute"] = True
+    local["name_label_position_x"] = ((min(xs) + max(xs)) / 2.0) * _PX_PER_STAN_UNIT \
+        + band_px / 2.0 + _VERTICAL_NAME_PAD_PX
+    local["name_label_position_y"] = ((min(ys) + max(ys)) / 2.0) * _PX_PER_STAN_UNIT
+
+
 def _apply_stan_geometry(nodes, links, node_id_of_process, link_id_of_flow,
-                         external_of_flow, sizing_of_link, proc_bounds, orientations, markers):
+                         external_of_flow, sizing_of_link, proc_bounds, polylines, markers):
     """Pose les positions, tailles et tracés dessinés par l'utilisateur dans STAN.
 
     Renvoie l'échelle (`user_scale`) du front. Celle-ci est choisie pour qu'aucune
@@ -861,12 +992,35 @@ def _apply_stan_geometry(nodes, links, node_id_of_process, link_id_of_flow,
             bounds = marker["bounds"]
             node["y"] = (bounds[1] + bounds[3] / 2.0) * scale
 
-    # L'empilement des flux d'un côté suit l'ordre de la liste : on la trie par
-    # l'ordonnée du nœud d'en face, pour retrouver l'ordre vertical de STAN. Sans cela
-    # les décalages calculés ci-dessous seraient justes mais attribués au mauvais flux.
+    # Régime de chaque flux, décidé sur son tracé complet (cf. _route_from_polyline).
+    routes = {}
+    for flow_id, points in polylines.items():
+        route = _route_from_polyline(points)
+        if route is not None:
+            routes[flow_id] = route
+    flow_of_link = {lid: fid for fid, lid in link_id_of_flow.items()}
+
+    # L'empilement des flux d'un côté suit l'ordre de la liste : on la trie pour
+    # retrouver l'ordre vertical de STAN. La clé d'un flux est sa POLYLIGNE lue
+    # depuis le nœud en s'en éloignant (tuple d'ordonnées) : le point d'attache
+    # d'abord, puis chaque coude. STAN fait converger les tracés qui fusionnent
+    # (F43/F44/F49 → P09 dans Wastewater : même point final (183, 15) pour tous),
+    # et c'est en remontant la route que l'ordre apparaît — le flux DIRECT (tuple
+    # préfixe, plus court) passe devant, puis chacun se départage sur le coude de
+    # son propre étage. Repli sans tracé : l'ordonnée du nœud d'en face.
+    def _facing_key(link_id, opposite_key, from_end):
+        pts = _simplify_polyline(polylines.get(flow_of_link.get(link_id)) or [])
+        if len(pts) >= 2:
+            seq = reversed(pts) if from_end else pts
+            # Arrondi au 1/10 px : les coordonnées STAN sont des float32, et leur
+            # bruit (7e chiffre) suffirait sinon à inverser deux tuples égaux à
+            # l'œil — c'est lui qui décidait de l'ordre au lieu du coude suivant.
+            return tuple(round(p[1] * scale, 1) for p in seq)
+        return (nodes[links[link_id][opposite_key]]["y"],)
+
     for node in nodes.values():
-        node["inputLinksId"].sort(key=lambda lid: nodes[links[lid]["idSource"]]["y"])
-        node["outputLinksId"].sort(key=lambda lid: nodes[links[lid]["idTarget"]]["y"])
+        node["inputLinksId"].sort(key=lambda lid: _facing_key(lid, "idSource", True))
+        node["outputLinksId"].sort(key=lambda lid: _facing_key(lid, "idTarget", False))
         node["links_order"] = node["inputLinksId"] + node["outputLinksId"]
 
     def attachment_center(process_node, link_id, side, box_height):
@@ -929,7 +1083,14 @@ def _apply_stan_geometry(nodes, links, node_id_of_process, link_id_of_flow,
         # On aligne les CENTRES, pas les bords : un nœud se positionne par son coin
         # haut-gauche, mais c'est le milieu de sa bande qui doit tomber en face du
         # milieu de la bande du processus, sans quoi le flux d'import arrive en biais.
-        if facing is None:
+        route = routes.get(flow_id)
+        if facing is None or (route is not None and route["kind"] == "routed"):
+            # Flux ROUTÉ : son tracé (waypoints) part du marqueur, pas du bord du
+            # processus d'en face. L'aligner sur la bande du processus, comme un
+            # flux droit, arrachait le nœud « I »/« E » de son marqueur et
+            # empilait au même endroit tous les externes d'un même processus
+            # (F43/F44/F49 → P09 dans BalansSTANcheck-Wastewater). Le marqueur
+            # STAN est la position fidèle : le premier segment de la route en part.
             center = (bounds[1] + bounds[3] / 2.0) * scale
         else:
             side = "inputLinksId" if is_import else "outputLinksId"
@@ -942,10 +1103,32 @@ def _apply_stan_geometry(nodes, links, node_id_of_process, link_id_of_flow,
             center = attachment_center(facing, link_id, side, box_height)
         node["y"] = center - height / 2.0
 
-    for flow_id, orientation in orientations.items():
+    # Application du régime décidé par _route_from_polyline. Un flux ROUTÉ ne
+    # reçoit PAS d'orientation : en régime routé le front la déduit de la route
+    # (cf. NOTE-WAYPOINTS.md), et `shape_waypoints` — nom moderne, sans alias
+    # legacy — est relu par la boucle générique de ProtoElementPersistence.fromJSON.
+    for flow_id, route in routes.items():
         link = links.get(link_id_of_flow.get(flow_id))
-        if link is not None:
-            link["local"]["orientation"] = orientation
+        if link is None:
+            continue
+        if route["kind"] == "routed":
+            link["local"]["shape_waypoints"] = [
+                {"x": x * scale, "y": y * scale} for x, y in route["waypoints"]]
+            # Segments d'attache quasi nuls, comme l'import e!Sankey : le tracé
+            # part droit du nœud vers son premier waypoint.
+            link["local"]["left_horiz_shift"] = 0.01
+            link["local"]["right_horiz_shift"] = 0.01
+        else:
+            link["local"]["orientation"] = route["orientation"]
+            if route["kind"] == "diagonal":
+                # Droite libre STAN : en rendu droit le tracé paramétrique est
+                # bout - diagonale - bout ; des bouts quasi nuls laissent la
+                # diagonale seule, comme STAN la dessine.
+                link["local"]["left_horiz_shift"] = 0.01
+                link["local"]["right_horiz_shift"] = 0.01
+            if route["orientation"] == "vv":
+                _place_vertical_flux_labels(
+                    link, polylines.get(flow_id) or [], band_of.get(link["id"], 0.0))
 
     if not ky or ky <= 0:
         return 100.0
@@ -1327,6 +1510,51 @@ def test_orientation_from_polyline():
     assert _orientation_from_polyline([(f32(50.0), 45.0), (f32(50.000004), 68.0)]) == "vv"
 
 
+def test_route_from_polyline():
+    # 0 ou 1 coude : paramétrique, comme avant (hh/vv/hv/vh).
+    assert _route_from_polyline([(0, 5), (20, 5)]) == {"kind": "parametric", "orientation": "hh"}
+    assert _route_from_polyline([(5, 0), (5, 20)]) == {"kind": "parametric", "orientation": "vv"}
+    assert _route_from_polyline([(0, 0), (10, 0), (10, 20)]) == {"kind": "parametric", "orientation": "hv"}
+    assert _route_from_polyline([(0, 0), (0, 20), (10, 20)]) == {"kind": "parametric", "orientation": "vh"}
+
+    # DEUX coudes (escalier h-v-h) : ROUTÉ, les points intérieurs deviennent des
+    # waypoints. C'est le motif dominant de BalansSTANcheck-Wastewater (23/48 flux),
+    # qu'on écrasait avant en équerre `hv` — mauvais tracé ET mauvais axe d'arrivée.
+    route = _route_from_polyline([(0, 0), (10, 0), (10, 20), (30, 20)])
+    assert route == {"kind": "routed", "waypoints": [(10, 0), (10, 20)]}
+
+    # Boucle qui repart en arrière (h-v-h à rebours) : routé aussi.
+    route = _route_from_polyline([(0, 0), (10, 0), (10, 20), (-30, 20)])
+    assert route["kind"] == "routed"
+
+    # Droite DIAGONALE libre (2 points) : flux droit, pas une équerre.
+    assert _route_from_polyline([(0, 0), (30, 10)]) == {"kind": "diagonal", "orientation": "hh"}
+    assert _route_from_polyline([(0, 0), (10, 30)]) == {"kind": "diagonal", "orientation": "vv"}
+
+    # Tracé mixte sans détour (h puis diagonale puis h) : paramétrique hh — le rendu
+    # droit (bout - diagonale - bout) est déjà sa silhouette.
+    assert _route_from_polyline([(0, 0), (5, 0), (25, 10), (30, 10)]) == \
+        {"kind": "parametric", "orientation": "hh"}
+
+    # Points intermédiaires colinéaires : simplifiés, pas de faux waypoints
+    # (« Racoyet - WB 3-1 » : 4 points rigoureusement alignés → flux droit).
+    assert _route_from_polyline([(0, 5), (8, 5), (14, 5), (20, 5)]) == \
+        {"kind": "parametric", "orientation": "hh"}
+
+    # Tracé inexploitable : None, le style garde son défaut.
+    assert _route_from_polyline([]) is None
+    assert _route_from_polyline([(1, 1)]) is None
+
+
+def test_simplify_polyline_garde_les_rebroussements():
+    # Un sommet où le tracé fait demi-tour n'est PAS colinéaire au sens du dessin :
+    # le supprimer gommerait un vrai détour.
+    pts = [(0, 0), (20, 0), (10, 0), (10, 15)]
+    assert _simplify_polyline(pts) == pts
+    # Les doublons et alignements stricts, eux, disparaissent.
+    assert _simplify_polyline([(0, 0), (0, 0), (5, 0), (9, 0)]) == [(0, 0), (9, 0)]
+
+
 def test_read_geometry_absente_ne_leve_pas():
     # Un fichier sans table Diagram doit simplement renoncer a la geometrie,
     # pas faire echouer l'import.
@@ -1389,6 +1617,7 @@ def test_fixtures_stan_reelles():
         return  # SankeyData absent : rien a verifier
 
     seen_orientations = set()
+    routed_links = 0
     for path in fixtures:
         result = parse_stan(path)
         assert result["theme"]["id"] == "stan"
@@ -1401,6 +1630,23 @@ def test_fixtures_stan_reelles():
             orientation = link["local"].get("orientation")
             assert orientation in (None, "hh", "vv", "hv", "vh"), path
             seen_orientations.add(orientation)
+            if orientation == "vv":
+                # Flux vertical : la valeur reste HORIZONTALE (STAN ne couche
+                # jamais ses textes), et le nom s'ecrit a droite du trace.
+                assert link["local"].get("value_label_on_path") is False, path
+                assert link["local"].get("value_label_vert") == "middle", path
+                if _link_has_name(link):
+                    assert link["local"].get("name_label_position_absolute") is True, path
+                    assert link["local"]["name_label_position_x"] == \
+                        link["local"]["name_label_position_x"], path  # pas de NaN
+            waypoints = link["local"].get("shape_waypoints")
+            if waypoints is not None:
+                # Un flux route : au moins 2 points (un detour a 2 coudes), en
+                # coordonnees monde finies, et JAMAIS d'orientation concurrente.
+                routed_links += 1
+                assert len(waypoints) >= 2, path
+                assert all(p["x"] == p["x"] and p["y"] == p["y"] for p in waypoints), path
+                assert orientation is None, path
         # Aucune couleur cuite dans les noeuds : STAN n'a pas de palette.
         assert all("color" not in n["local"] for n in result["nodes"].values()), path
 
@@ -1410,6 +1656,9 @@ def test_fixtures_stan_reelles():
 
     # Au moins un fichier a des equerres : sinon on ne teste pas ce qu'on croit.
     assert seen_orientations & {"hv", "vh"}, seen_orientations
+    # Et au moins un a des detours (BalansSTANcheck-Wastewater : 23 escaliers h-v-h) :
+    # c'est la seule validation du chemin route sur un vrai fichier.
+    assert routed_links >= 20, routed_links
 
 
 def test_fixtures_stan_les_deux_formats_concordent():
@@ -1427,7 +1676,8 @@ def test_fixtures_stan_les_deux_formats_concordent():
     def signature(path):
         d = parse_stan(path)
         return (sorted((n["name"], round(n["x"], 3), round(n["y"], 3)) for n in d["nodes"].values()),
-                sorted(link["local"].get("orientation") for link in d["links"].values()),
+                sorted(link["local"].get("orientation") or "" for link in d["links"].values()),
+                sorted(len(link["local"].get("shape_waypoints") or []) for link in d["links"].values()),
                 round(d["user_scale"], 6))
 
     assert signature(smfa) == signature(zmfa)
