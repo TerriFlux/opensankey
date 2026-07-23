@@ -25,16 +25,16 @@
 // pop-ups peuvent donc coexister, comme le permet #300.
 
 import React from 'react'
-import { Box, Text } from '@chakra-ui/react'
+import { Box, Button, Text } from '@chakra-ui/react'
 
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import { PANELS_TOPIC } from '../../../types/EventBus'
 import type { Type_PanelMode } from '../../../types/PanelManager'
 import { useModelBinding } from '../../../hooks/useModelBinding'
 import { default_font_size } from '../../../css/Theme'
-import { blocksFor } from '../../../types/PresentationComposition'
+import { layoutFor, tabLabelsFromJSON, tabLabelAt } from '../../../types/PresentationComposition'
 import { PanelShell } from '../PanelShell'
-import { renderPresentationBlock } from './PresentationBlockRegistry'
+import { renderPresentationBlock, presentation_block_registry } from './PresentationBlockRegistry'
 import { registerBasePresentationBlocks } from './registerBaseBlocks'
 import {
   isPresentationPanelId, elementIdOfPanel, compositionOf, type Type_Presentable,
@@ -73,29 +73,45 @@ const titleOf = (element: Presentable): string => {
 }
 
 /**
- * Contenu d'un panneau de présentation : les blocs visibles dans ce contenant,
- * DANS L'ORDRE de la composition. Les blocs qui n'ont rien à montrer — et ceux
- * qu'on ne sait pas dessiner (venus d'une version plus récente) — sont sautés.
+ * Contenu d'un panneau de présentation : la DISPOSITION composée par l'auteur
+ * pour ce contenant — onglets, rangées empilées, blocs côte à côte sur une même
+ * rangée (ajustement #5).
+ *
+ * Les blocs qui n'ont rien à montrer — et ceux qu'on ne sait pas dessiner (venus
+ * d'une version plus récente) — sont sautés ; une rangée entièrement muette
+ * disparaît, et un onglet entièrement muet avec elle. Sans cela, l'auteur
+ * verrait des onglets vides apparaître chez les lecteurs dont les éléments ne
+ * portent pas la donnée.
  */
-export const PresentationPanel = ({ app_data, element, mode }: {
+export const PresentationPanel = ({ app_data, element, mode, panel_id }: {
   app_data: Class_ApplicationData
   element: Presentable
   mode: Type_PanelMode
+  /** Id du panneau : sert à retenir l'onglet actif, côté modèle. */
+  panel_id: string
 }) => {
   const composition = compositionOf(element)
-  const rendered = blocksFor(composition, mode)
-    .map(entry => ({
-      key: entry.block,
-      node: renderPresentationBlock(entry.block, {
-        app_data,
-        element: element as unknown as null,
-        mode,
-        options: entry.options
-      })
-    }))
-    .filter(r => r.node !== null && r.node !== undefined)
+  const panels = app_data.menu_configuration.panels
 
-  if (rendered.length === 0) {
+  // Rendu d'abord, structure ensuite : c'est le seul moyen de savoir ce qui est
+  // réellement muet.
+  const tabs = layoutFor(composition, mode)
+    .map(rows => rows
+      .map(row => row
+        .map(entry => ({
+          key: entry.block,
+          node: renderPresentationBlock(entry.block, {
+            app_data,
+            element: element as unknown as null,
+            mode,
+            options: entry.options
+          })
+        }))
+        .filter(r => r.node !== null && r.node !== undefined))
+      .filter(row => row.length > 0))
+    .filter(rows => rows.length > 0)
+
+  if (tabs.length === 0) {
     return (
       <Box style={{ fontSize: default_font_size, opacity: 0.7, padding: '0.3rem 0.1rem' }}>
         <Text>{app_data.t('presentation.nothing_here', {
@@ -104,7 +120,66 @@ export const PresentationPanel = ({ app_data, element, mode }: {
       </Box>
     )
   }
-  return <>{rendered.map(r => <React.Fragment key={r.key}>{r.node}</React.Fragment>)}</>
+
+  const labels = tabLabelsFromJSON(element.getElementProperty('presentation_tabs'))
+  // L'onglet mémorisé peut être devenu hors bornes (l'auteur en a retiré un, ou
+  // l'élément n'a pas de quoi remplir le dernier) : on retombe sur le premier.
+  const active = Math.min(panels.getActiveTab(panel_id), tabs.length - 1)
+
+  const rows = (
+    <Box style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+      {tabs[active].map((row, row_index) => (
+        <Box
+          key={row_index}
+          style={{
+            display: 'flex',
+            // Côte à côte : chaque bloc prend une part égale et peut rétrécir
+            // (`minWidth: 0`, sans quoi un tableau large déborderait la rangée).
+            gap: row.length > 1 ? '0.4rem' : undefined,
+            alignItems: 'flex-start'
+          }}
+        >
+          {row.map(r => (
+            <Box key={r.key} style={{ flex: '1 1 0', minWidth: 0 }}>{r.node}</Box>
+          ))}
+        </Box>
+      ))}
+    </Box>
+  )
+
+  if (tabs.length === 1) return rows
+
+  return (
+    <Box style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+      <Box
+        style={{
+          display: 'flex', gap: '0.15rem', flexWrap: 'wrap',
+          borderBottom: '1px solid #e2e8f0', paddingBottom: '0.2rem'
+        }}
+      >
+        {tabs.map((rows_of_tab, index) => {
+          const label = tabLabelAt(labels, mode, index).trim()
+          return (
+            <Button
+              key={index}
+              size='xs'
+              variant={index === active ? 'button_type_config_activated' : 'button_type_config'}
+              sx={{ paddingInline: '0.45rem', minWidth: 'auto', width: 'auto', flex: 'none' }}
+              onClick={() => panels.setActiveTab(panel_id, index)}
+            >
+              {label !== ''
+                ? label
+                // Onglet sans nom : on l'annonce par son premier bloc plutôt que
+                // par un numéro, qui ne dirait rien au lecteur.
+                : (presentation_block_registry.get(rows_of_tab[0][0].key)?.label(app_data)
+                  ?? app_data.t('presentation.tab_n', { defaultValue: 'Onglet' }) + ' ' + (index + 1))}
+            </Button>
+          )
+        })}
+      </Box>
+      {rows}
+    </Box>
+  )
 }
 
 /**
@@ -153,7 +228,7 @@ export const PresentationPanels = ({ app_data }: { app_data: Class_ApplicationDa
               panels.setMode(id, panels.defaultOpenMode())
             }}
           >
-            <PresentationPanel app_data={app_data} element={element} mode={mode} />
+            <PresentationPanel app_data={app_data} element={element} mode={mode} panel_id={id} />
           </PanelShell>
         )
       })}

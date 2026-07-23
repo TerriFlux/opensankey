@@ -25,7 +25,7 @@
 // Décision #8 : la cible est ÉCRITE, jamais implicite.
 
 import React from 'react'
-import { Box, Button, Checkbox, Menu, MenuButton, MenuItem, MenuList, Text } from '@chakra-ui/react'
+import { Box, Button, Menu, MenuButton, MenuItem, MenuList, Text } from '@chakra-ui/react'
 
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import type { Type_PanelMode } from '../../../types/PanelManager'
@@ -33,9 +33,11 @@ import type { Type_InspectorScope } from '../../configmenus/inspector/InspectorR
 import { default_font_size } from '../../../css/Theme'
 import {
   compositionFromJSON, compositionToJSON,
-  addBlock, removeBlock, toggleBlockVisibility, moveBlock,
-  type Type_Composition
+  tabLabelsFromJSON, tabLabelsToJSON,
+  addBlock, removeBlock,
+  type Type_Composition, type Type_TabLabels
 } from '../../../types/PresentationComposition'
+import { PresentationLayoutEditor } from './PresentationLayoutEditor'
 import {
   presentation_block_registry,
   type Type_PresentationBlock,
@@ -50,11 +52,12 @@ import {
 registerBasePresentationBlocks()
 
 const ATTR_BLOCKS = 'presentation_blocks'
+const ATTR_TABS = 'presentation_tabs'
 
 /** Vue structurelle minimale d'une cible d'attribut (élément OU style édité). */
 type Attr_Target = {
   attributes: Record<string, unknown>
-  getElementProperty: (k: typeof ATTR_BLOCKS) => unknown
+  getElementProperty: (k: typeof ATTR_BLOCKS | typeof ATTR_TABS) => unknown
 }
 
 const MODES: Type_PanelMode[] = ['tooltip', 'popup', 'sidebar']
@@ -123,22 +126,38 @@ export const PresentationComposer = ({ app_data, scope }: {
   const composition = is_default && preview_element
     ? defaultCompositionFor(preview_element)
     : compositionFromJSON(raw_blocks)
+  const labels = tabLabelsFromJSON(read_target?.getElementProperty(ATTR_TABS))
   const catalogue = catalogueFor(app_data, present_targets)
+  const composer_mode = menu_configuration.presentation_composer_mode
 
   // --- Écriture (même patron que les autres attributs de style : undo + commit)
-  const writeAttr = (key: string, value: unknown) => {
+  // Plusieurs attributs à la fois quand ils forment UN geste (réinitialiser
+  // efface composition et onglets) : sinon l'auteur devrait annuler deux fois
+  // pour défaire ce qu'il a fait une fois.
+  const writeAttrs = (changes: [key: string, value: unknown][]) => {
     if (targets.length === 0) return
-    const before = targets.map(el => ({ el, v: el.attributes[key] }))
+    const before = targets.map(el => ({
+      el, values: changes.map(([key]) => el.attributes[key])
+    }))
     const commit = () => {
       menu_configuration.ref_to_save_in_cache_indicator.current(false)
       menu_configuration.updateInspector()
     }
-    const apply = () => { targets.forEach(el => { el.attributes[key] = value }); commit() }
-    const undo = () => { before.forEach(({ el, v }) => { el.attributes[key] = v }); commit() }
+    const apply = () => {
+      targets.forEach(el => { changes.forEach(([key, value]) => { el.attributes[key] = value }) })
+      commit()
+    }
+    const undo = () => {
+      before.forEach(({ el, values }) => {
+        changes.forEach(([key], i) => { el.attributes[key] = values[i] })
+      })
+      commit()
+    }
     history.saveUndo(undo)
     history.saveRedo(apply)
     apply()
   }
+  const writeAttr = (key: string, value: unknown) => writeAttrs([[key, value]])
 
   // On écrit TOUJOURS le tableau, même vide : un tableau vide est un choix
   // explicite (« ne rien montrer »), alors qu'un attribut ABSENT signifie
@@ -146,7 +165,12 @@ export const PresentationComposer = ({ app_data, scope }: {
   // info-bulle. C'est « Réinitialiser » qui remet l'attribut à l'état absent.
   const writeComposition = (next: Type_Composition) =>
     writeAttr(ATTR_BLOCKS, compositionToJSON(next))
-  const resetComposition = () => writeAttr(ATTR_BLOCKS, undefined)
+  const writeLabels = (next: Type_TabLabels) =>
+    writeAttr(ATTR_TABS, tabLabelsToJSON(next))
+  // Réinitialiser efface la composition ET les noms d'onglets : des onglets
+  // nommés sans disposition qui les porte ne voudraient plus rien dire.
+  const resetComposition = () =>
+    writeAttrs([[ATTR_BLOCKS, undefined], [ATTR_TABS, undefined]])
 
   if (targets.length === 0) {
     return (
@@ -198,17 +222,50 @@ export const PresentationComposer = ({ app_data, scope }: {
         </Button>
       </Box>
 
-      {/* LA LISTE (décision #2) : une seule composition, trois cases par bloc. */}
+      {/* DISPOSITION (ajustement #5) — un onglet d'édition par CONTENANT.
+          La disposition d'une info-bulle (compacte, deux colonnes) n'est pas
+          celle d'un panneau latéral (étroit, empilé) : c'est la même
+          composition, arrangée séparément. */}
+      <Box>
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('presentation.layout', { defaultValue: 'Disposition' })}
+          {is_default && (
+            <Text as='span' style={{ fontWeight: 400, opacity: 0.65, fontSize: '0.7rem' }}>
+              {' — '}
+              {t('presentation.is_default', { defaultValue: 'présentation par défaut' })}
+            </Text>
+          )}
+        </Box>
+        <Box style={{ display: 'flex', gap: '0.15rem', paddingBottom: '0.25rem' }}>
+          {MODES.map(m => (
+            <Button
+              key={m}
+              size='xs'
+              flex='1'
+              variant={composer_mode === m ? 'button_type_config_activated' : 'button_type_config'}
+              onClick={() => { menu_configuration.presentation_composer_mode = m }}
+            >
+              {t(MODE_LABEL[m].key, { defaultValue: MODE_LABEL[m].fallback })}
+            </Button>
+          ))}
+        </Box>
+        <PresentationLayoutEditor
+          app_data={app_data}
+          mode={composer_mode}
+          composition={composition}
+          labels={labels}
+          writeComposition={writeComposition}
+          writeLabels={writeLabels}
+        />
+      </Box>
+
+      {/* LES BLOCS DU DOCUMENT : ce qui EXISTE, indépendamment du contenant où
+          ça s'affiche. On y ajoute, on en retire, on y règle ce qu'un bloc
+          expose de réglable. Le placement, lui, se fait ci-dessus. */}
       <Box>
         <Box style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Box layerStyle='menuconfigpanel_option_name'>
-            {t('presentation.blocks', { defaultValue: 'Blocs affichés' })}
-            {is_default && (
-              <Text as='span' style={{ fontWeight: 400, opacity: 0.65, fontSize: '0.7rem' }}>
-                {' — '}
-                {t('presentation.is_default', { defaultValue: 'présentation par défaut' })}
-              </Text>
-            )}
+            {t('presentation.blocks', { defaultValue: 'Blocs du document' })}
           </Box>
           {!is_default && (
             <Button
@@ -251,15 +308,14 @@ export const PresentationComposer = ({ app_data, scope }: {
           </Box>
         ) : (
           <Box style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', paddingTop: '0.2rem' }}>
-            {composition.map((entry, index) => {
+            {composition.map(entry => {
               const block = presentation_block_registry.get(entry.block)
               // Bloc connu mais INDISPONIBLE ici (licence absente, hook OS+ non
               // injecté) : on ne l'affiche pas — l'auteur n'en ferait rien, et il
               // ne rend déjà rien. La composition, elle, le CONSERVE : le document
               // reste valable pour une installation qui en dispose.
-              // On rend `null` plutôt que de filtrer, pour que `index` reste celui
-              // de la composition complète (le réordonnancement en dépend).
               if (block?.gate && !block.gate(app_data)) return null
+              const shown_in = MODES.filter(m => entry.show[m])
               return (
                 <Box
                   key={entry.block}
@@ -268,7 +324,6 @@ export const PresentationComposer = ({ app_data, scope }: {
                     padding: '0.25rem 0.3rem'
                   }}
                 >
-                  {/* Ligne 1 : nom du bloc + réordonner + retirer */}
                   <Box style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
                     <Text
                       as='span'
@@ -285,48 +340,25 @@ export const PresentationComposer = ({ app_data, scope }: {
                     >
                       {block
                         ? block.label(app_data)
-                        : `${entry.block} — ${t('presentation.unknown_block', { defaultValue: 'bloc inconnu de cette version' })}`}
+                        : entry.block + ' — ' + t('presentation.unknown_block', { defaultValue: 'bloc inconnu de cette version' })}
                     </Text>
-                    <Button
-                      size='xs' variant='menuconfigpanel_option_button'
-                      sx={{ paddingInline: '0.25rem', minWidth: 'auto', width: 'auto', flex: 'none' }}
-                      isDisabled={index === 0}
-                      title={t('presentation.move_up', { defaultValue: 'Monter' })}
-                      onClick={() => writeComposition(moveBlock(composition, index, index - 1))}
-                    >▲</Button>
-                    <Button
-                      size='xs' variant='menuconfigpanel_option_button'
-                      sx={{ paddingInline: '0.25rem', minWidth: 'auto', width: 'auto', flex: 'none' }}
-                      isDisabled={index === composition.length - 1}
-                      title={t('presentation.move_down', { defaultValue: 'Descendre' })}
-                      onClick={() => writeComposition(moveBlock(composition, index, index + 1))}
-                    >▼</Button>
+                    {/* Où ce bloc apparaît, en toutes lettres : la disposition
+                        ci-dessus le dit contenant par contenant, mais pas d'un
+                        seul coup d'œil. */}
+                    <Text as='span' style={{ fontSize: '0.65rem', opacity: 0.6, flex: 'none' }}>
+                      {shown_in.length > 0
+                        ? shown_in.map(m => t(MODE_LABEL[m].key, { defaultValue: MODE_LABEL[m].fallback })).join(' · ')
+                        : t('presentation.nowhere', { defaultValue: 'nulle part' })}
+                    </Text>
                     <Button
                       size='xs' variant='menuconfigpanel_del_button'
                       sx={{ paddingInline: '0.3rem', minWidth: 'auto', width: 'auto', flex: 'none' }}
-                      title={t('presentation.remove', { defaultValue: 'Retirer' })}
+                      title={t('presentation.remove', { defaultValue: 'Retirer du document' })}
                       onClick={() => writeComposition(removeBlock(composition, entry.block))}
                     >×</Button>
                   </Box>
 
-                  {/* Ligne 2 : les TROIS cases de visibilité. */}
-                  <Box style={{ display: 'flex', gap: '0.6rem', paddingTop: '0.15rem', flexWrap: 'wrap' }}>
-                    {MODES.map(mode => (
-                      <Checkbox
-                        key={mode}
-                        size='sm'
-                        isChecked={entry.show[mode]}
-                        onChange={() => writeComposition(
-                          toggleBlockVisibility(composition, entry.block, mode))}
-                      >
-                        <Box as='span' style={{ fontSize: '0.7rem' }}>
-                          {t(MODE_LABEL[mode].key, { defaultValue: MODE_LABEL[mode].fallback })}
-                        </Box>
-                      </Checkbox>
-                    ))}
-                  </Box>
-
-                  {/* Ligne 3 : sous-réglages propres au bloc, s'il en déclare. */}
+                  {/* Sous-réglages propres au bloc, s'il en déclare. */}
                   {block?.renderOptions && (
                     <Box style={{ paddingTop: '0.2rem' }}>
                       {block.renderOptions({

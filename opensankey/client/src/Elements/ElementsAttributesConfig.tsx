@@ -35,7 +35,7 @@ import { Class_NodeBase } from './NodeBase'
 import { isLegendElementId } from './legendIds'
 import { Type_AnalysisDescriptor } from '../Charts/AnalysisDescriptor'
 import { Type_TooltipHiddenBlocks } from './TooltipBlocks'
-import type { Type_Composition } from '../types/PresentationComposition'
+import type { Type_Composition, Type_TabLabels } from '../types/PresentationComposition'
 
 // Types spécifiques
 // 'line' (OS#1276) : trait libre décoratif porté par un conteneur. La forme est
@@ -2244,7 +2244,30 @@ export const PRESENTATION_CONFIG = {
       de: 'Dem Leser angezeigte Blöcke, in Reihenfolge und in welchen Containern',
       it: 'Blocchi mostrati al lettore, in ordine, e in quali contenitori'
     }
-  } satisfies AttributeConfig<Type_Composition | undefined>
+  } satisfies AttributeConfig<Type_Composition | undefined>,
+  // AJUSTEMENT #5 — noms des onglets, par contenant. Séparé de la composition
+  // parce que ce n'est pas une propriété des blocs : deux blocs partagent un
+  // onglet, l'onglet n'appartient à aucun des deux.
+  presentation_tabs: {
+    default: undefined as Type_TabLabels | undefined,
+    type: (() => undefined) as (() => Type_TabLabels | undefined),
+    category: 'presentation' as const,
+    actions: undefined,
+    labels: {
+      en: 'Presentation tabs',
+      fr: 'Onglets de présentation',
+      es: 'Pestañas de presentación',
+      de: 'Präsentationsregisterkarten',
+      it: 'Schede di presentazione'
+    },
+    tooltips: {
+      en: 'Names of the tabs, per container',
+      fr: 'Noms des onglets, par contenant',
+      es: 'Nombres de las pestañas, por contenedor',
+      de: 'Namen der Registerkarten, pro Container',
+      it: 'Nomi delle schede, per contenitore'
+    }
+  } satisfies AttributeConfig<Type_TabLabels | undefined>
 } as const
 
 export type LabelValues<T extends typeof BASE_LABEL_CONFIG> = {

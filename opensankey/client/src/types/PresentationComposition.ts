@@ -32,12 +32,32 @@ import { Type_JSON } from './Utils'
 /** Visibilité d'un bloc dans chacun des trois contenants. */
 export type Type_BlockVisibility = { [mode in Type_PanelMode]: boolean }
 
-/** Une entrée de composition : un bloc, sa visibilité, ses réglages propres. */
+/**
+ * AJUSTEMENT #5 — PLACEMENT d'un bloc dans un contenant : dans quel onglet, sur
+ * quelle rangée.
+ *
+ * Deux blocs qui partagent (onglet, rangée) s'affichent CÔTE À CÔTE ; des
+ * rangées différentes s'empilent ; des onglets différents donnent une barre
+ * d'onglets — exactement la grammaire de l'ancienne info-bulle (Valeurs / Autres
+ * informations / Sankey unitaire), désormais entre les mains de l'auteur.
+ *
+ * Le placement est PAR CONTENANT : une info-bulle veut deux colonnes serrées là
+ * où un panneau latéral, étroit et haut, veut une pile. C'est la même
+ * composition, disposée différemment.
+ */
+export type Type_BlockPlacement = { tab: number, row: number }
+export type Type_BlockLayout = { [mode in Type_PanelMode]?: Type_BlockPlacement }
+
+/** Une entrée de composition : un bloc, sa visibilité, sa disposition, ses réglages. */
 export type Type_CompositionEntry = {
   /** Identifiant du bloc au catalogue (Lot 1). Volontairement `string` : un id
    *  INCONNU (produit par une version plus récente) reste porté par le modèle. */
   block: string
   show: Type_BlockVisibility
+  /** Placement par contenant. ABSENT = disposition par défaut : une rangée pour
+   *  soi, dans le premier onglet — c'est-à-dire l'empilement d'avant #5, ce qui
+   *  laisse inchangé tout document déjà composé. */
+  layout?: Type_BlockLayout
   /** Réglages propres au bloc — opaques ici, interprétés par le bloc (Lot 1). */
   options?: { [key: string]: unknown }
 }
@@ -90,6 +110,39 @@ export const blockVisibilityFromJSON = (raw: unknown): Type_BlockVisibility => {
   return out
 }
 
+/** Borne les index d'onglet / de rangée : un JSON abîmé ne doit pas produire une
+ *  disposition à 10^9 rangées vides. */
+export const MAX_TABS = 8
+export const MAX_ROWS = 40
+
+const asIndex = (v: unknown, max: number): number | null => {
+  if (typeof v !== 'number' || !isFinite(v)) return null
+  const i = Math.trunc(v)
+  return i >= 0 && i < max ? i : null
+}
+
+/** Lit un placement. Rend `null` si l'un des deux index est inexploitable : un
+ *  placement à moitié valide vaudrait moins que pas de placement du tout. */
+export const blockPlacementFromJSON = (raw: unknown): Type_BlockPlacement | null => {
+  if (!isPlainObject(raw)) return null
+  const tab = asIndex(raw.tab, MAX_TABS)
+  const row = asIndex(raw.row, MAX_ROWS)
+  return tab === null || row === null ? null : { tab, row }
+}
+
+/** Lit une disposition (placement par contenant). Rend `undefined` si aucun
+ *  contenant n'est placé, pour ne pas semer d'objets vides dans le modèle. */
+export const blockLayoutFromJSON = (raw: unknown): Type_BlockLayout | undefined => {
+  if (!isPlainObject(raw)) return undefined
+  const out: Type_BlockLayout = {}
+  let any = false
+  PANEL_MODES.forEach(mode => {
+    const placement = blockPlacementFromJSON(raw[mode])
+    if (placement !== null) { out[mode] = placement; any = true }
+  })
+  return any ? out : undefined
+}
+
 /** Lit une composition depuis du JSON quelconque. Ne jette jamais. */
 export const compositionFromJSON = (raw: unknown): Type_Composition => {
   if (!Array.isArray(raw)) return []
@@ -107,6 +160,8 @@ export const compositionFromJSON = (raw: unknown): Type_Composition => {
       block,
       show: blockVisibilityFromJSON(item.show)
     }
+    const layout = blockLayoutFromJSON(item.layout)
+    if (layout) entry.layout = layout
     if (isPlainObject(item.options)) entry.options = { ...item.options }
     out.push(entry)
   }
@@ -119,6 +174,9 @@ export const compositionToJSON = (composition: Type_Composition): Type_JSON[] =>
     const json: Type_JSON = {
       block: entry.block,
       show: { ...entry.show }
+    }
+    if (entry.layout && Object.keys(entry.layout).length > 0) {
+      json.layout = { ...entry.layout } as unknown as Type_JSON
     }
     if (entry.options && Object.keys(entry.options).length > 0) {
       json.options = { ...entry.options } as Type_JSON
@@ -146,6 +204,207 @@ export const hasContentFor = (
   composition: Type_Composition,
   mode: Type_PanelMode
 ): boolean => composition.some(entry => isBlockVisibleIn(entry, mode))
+
+// DISPOSITION (ajustement #5) ======================================================
+
+/** Une rangée : les blocs qui s'y affichent CÔTE À CÔTE, dans l'ordre. */
+export type Type_LayoutRow = Type_CompositionEntry[]
+/** Un onglet : ses rangées, empilées. */
+export type Type_LayoutTab = Type_LayoutRow[]
+
+/**
+ * Résout la disposition d'un contenant : la liste des onglets, chacun étant une
+ * liste de rangées, chaque rangée une liste de blocs côte à côte.
+ *
+ * Point de vérité UNIQUE, partagé par le rendu lecteur et par l'éditeur — les
+ * deux doivent voir exactement la même chose, sans quoi l'auteur composerait à
+ * l'aveugle.
+ *
+ * Trois règles, dans cet ordre :
+ *  1. seuls les blocs VISIBLES dans ce contenant participent ;
+ *  2. un bloc PLACÉ va à son (onglet, rangée) ; plusieurs blocs au même endroit
+ *     se rangent côte à côte, dans l'ordre de la composition ;
+ *  3. un bloc NON PLACÉ prend une rangée pour lui, à la suite, dans le premier
+ *     onglet — ce qui reproduit l'empilement d'avant #5 pour un document qui
+ *     n'a jamais été disposé.
+ *
+ * Les onglets et rangées VIDES sont compactés : l'auteur peut vider la rangée du
+ * milieu sans laisser un trou dans ce que voit son lecteur.
+ */
+export const layoutFor = (
+  composition: Type_Composition,
+  mode: Type_PanelMode
+): Type_LayoutTab[] => {
+  const visible = blocksFor(composition, mode)
+  // Clé de tri : (onglet, rangée). Les non-placés passent APRÈS les placés du
+  // premier onglet, chacun sur sa propre rangée, en gardant l'ordre de la liste.
+  const cells = new Map<string, { tab: number, row: number, blocks: Type_LayoutRow }>()
+  let next_free_row = MAX_ROWS
+  visible.forEach(entry => {
+    const placement = entry.layout?.[mode]
+    const tab = placement ? placement.tab : 0
+    const row = placement ? placement.row : next_free_row++
+    const key = tab + ':' + row
+    const cell = cells.get(key)
+    if (cell) cell.blocks.push(entry)
+    else cells.set(key, { tab, row, blocks: [entry] })
+  })
+
+  const sorted = [...cells.values()].sort((a, b) => a.tab - b.tab || a.row - b.row)
+  const tabs: Type_LayoutTab[] = []
+  const tab_index = new Map<number, number>()
+  sorted.forEach(cell => {
+    let i = tab_index.get(cell.tab)
+    if (i === undefined) { i = tabs.length; tab_index.set(cell.tab, i); tabs.push([]) }
+    tabs[i].push(cell.blocks)
+  })
+  return tabs
+}
+
+/**
+ * Fige la disposition COURANTE d'un contenant en placements explicites.
+ *
+ * `layoutFor` compacte : des rangées stockées 0 et 5 s'affichent en 0 et 1. Sans
+ * cette remise à plat, l'éditeur travaillerait sur des index affichés qui ne
+ * désignent pas les rangées stockées — déposer sur « la deuxième rangée »
+ * créerait une rangée intercalaire au lieu de rejoindre celle qu'on vise. Après
+ * normalisation, index affiché = index stocké, et le geste devient littéral.
+ *
+ * Ne change RIEN à ce qui est affiché : c'est la même disposition, écrite
+ * explicitement.
+ */
+export const normalizeLayout = (
+  composition: Type_Composition,
+  mode: Type_PanelMode
+): Type_Composition => {
+  const placements = new Map<string, Type_BlockPlacement>()
+  layoutFor(composition, mode).forEach((rows, tab) => {
+    rows.forEach((row, row_index) => {
+      row.forEach(entry => placements.set(entry.block, { tab, row: row_index }))
+    })
+  })
+  return composition.map(e => {
+    const placement = placements.get(e.block)
+    return placement
+      ? { ...e, layout: { ...(e.layout ?? {}), [mode]: placement } }
+      : e
+  })
+}
+
+/**
+ * Normalise les TROIS contenants d'un coup — à appeler avant toute édition de
+ * disposition.
+ *
+ * Sans placement, un bloc se range d'après l'ordre de la composition. L'éditeur,
+ * lui, a besoin de réordonner cette liste pour dire « ce bloc-ci vient avant
+ * celui-là dans la rangée » ; ce réordonnancement déplacerait alors, en douce,
+ * les blocs non placés des DEUX AUTRES contenants. Les figer d'abord rend
+ * l'ordre de la liste sans effet sur l'affichage, donc l'édition d'un contenant
+ * inoffensive pour les autres.
+ */
+export const normalizeAllLayouts = (composition: Type_Composition): Type_Composition =>
+  PANEL_MODES.reduce((acc, mode) => normalizeLayout(acc, mode), composition)
+
+/** Étiquettes d'onglets par contenant, rédigées par l'auteur. Une étiquette vide
+ *  ou absente laisse le rendu nommer l'onglet d'après son premier bloc. */
+export type Type_TabLabels = { [mode in Type_PanelMode]?: string[] }
+
+export const tabLabelsFromJSON = (raw: unknown): Type_TabLabels => {
+  if (!isPlainObject(raw)) return {}
+  const out: Type_TabLabels = {}
+  PANEL_MODES.forEach(mode => {
+    const list = raw[mode]
+    if (!Array.isArray(list)) return
+    out[mode] = list.slice(0, MAX_TABS).map(v => (typeof v === 'string' ? v : ''))
+  })
+  return out
+}
+
+export const tabLabelsToJSON = (labels: Type_TabLabels): Type_JSON => {
+  const out: Type_JSON = {}
+  PANEL_MODES.forEach(mode => {
+    const list = labels[mode]
+    // On n'écrit que ce qui porte au moins un nom : sinon le JSON se remplit de
+    // tableaux de chaînes vides à chaque ouverture du composeur.
+    if (list && list.some(s => s.trim() !== '')) out[mode] = [...list]
+  })
+  return out
+}
+
+/** Étiquette de l'onglet `index` pour ce contenant ('' si l'auteur n'en a pas mis). */
+export const tabLabelAt = (
+  labels: Type_TabLabels,
+  mode: Type_PanelMode,
+  index: number
+): string => labels[mode]?.[index] ?? ''
+
+/** Renomme un onglet (immuable ; complète le tableau au besoin). */
+export const setTabLabel = (
+  labels: Type_TabLabels,
+  mode: Type_PanelMode,
+  index: number,
+  label: string
+): Type_TabLabels => {
+  if (index < 0 || index >= MAX_TABS) return labels
+  const list = [...(labels[mode] ?? [])]
+  while (list.length <= index) list.push('')
+  list[index] = label
+  return { ...labels, [mode]: list }
+}
+
+/**
+ * Place un bloc dans un contenant — le geste unique de l'éditeur par
+ * glisser-déposer. Rend une composition dans laquelle le bloc est VISIBLE dans
+ * ce contenant (on ne dépose pas un bloc là où il ne s'afficherait pas) et placé
+ * en (tab, row).
+ */
+export const placeBlock = (
+  composition: Type_Composition,
+  block: string,
+  mode: Type_PanelMode,
+  placement: Type_BlockPlacement
+): Type_Composition => {
+  if (placement.tab < 0 || placement.tab >= MAX_TABS) return composition
+  if (placement.row < 0 || placement.row >= MAX_ROWS) return composition
+  return composition.map(e => e.block === block
+    ? {
+      ...e,
+      show: { ...e.show, [mode]: true },
+      layout: { ...(e.layout ?? {}), [mode]: { ...placement } }
+    }
+    : e)
+}
+
+/** Retire un bloc d'un contenant : il n'y est plus visible, et son placement y
+ *  est oublié (le rapatrier plus tard doit repartir d'une rangée propre). */
+export const unplaceBlock = (
+  composition: Type_Composition,
+  block: string,
+  mode: Type_PanelMode
+): Type_Composition => composition.map(e => {
+  if (e.block !== block) return e
+  const layout = { ...(e.layout ?? {}) }
+  delete layout[mode]
+  const next: Type_CompositionEntry = { ...e, show: { ...e.show, [mode]: false } }
+  if (Object.keys(layout).length > 0) next.layout = layout
+  else delete next.layout
+  return next
+})
+
+/** Oublie toute disposition d'un contenant : retour à l'empilement, un bloc par
+ *  rangée, sans toucher à ce qui y est visible. */
+export const clearLayout = (
+  composition: Type_Composition,
+  mode: Type_PanelMode
+): Type_Composition => composition.map(e => {
+  if (!e.layout?.[mode]) return e
+  const layout = { ...e.layout }
+  delete layout[mode]
+  const next = { ...e }
+  if (Object.keys(layout).length > 0) next.layout = layout
+  else delete next.layout
+  return next
+})
 
 // ÉDITION (helpers immuables, utilisés par l'UI de composition au Lot 2) ===========
 

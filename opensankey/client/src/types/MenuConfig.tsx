@@ -1669,6 +1669,20 @@ export class Class_MenuConfig {
     return this._ref_selected_style
   }
 
+  // AJUSTEMENT #5 — contenant dont l'auteur arrange la disposition dans le
+  // composeur. État d'ÉDITION (jamais enregistré : ce n'est pas une propriété du
+  // document, seulement l'onglet où l'auteur travaille en ce moment), tenu ici
+  // plutôt qu'en `useState` local pour survivre aux re-rendus de l'inspecteur —
+  // qui se remonte à chaque changement de sélection.
+  protected _presentation_composer_mode: Type_PanelMode = 'tooltip'
+  public get presentation_composer_mode(): Type_PanelMode {
+    return this._presentation_composer_mode
+  }
+  public set presentation_composer_mode(mode: Type_PanelMode) {
+    this._presentation_composer_mode = mode
+    this.updateInspector()
+  }
+
 
   public get ref_to_save_diagram_updater(): MutableRefObject<() => void> {
     return this._ref_to_save_diagram_updater
