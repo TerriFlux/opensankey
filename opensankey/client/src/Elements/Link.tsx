@@ -49,7 +49,10 @@ import { Class_LinkAttribute } from './Element'
 import { LinkDrawNameLabel, LinkDrawValueLabel } from './DrawLabel'
 import { Class_ApplicationData } from '../types/ApplicationData'
 import { LinkStyle } from './ElementStyle'
-import { openPresentationFor } from '../components/panels/presentation/openPresentation'
+import {
+  openPresentationFor, canPresentTooltip, matchesPresentationTrigger,
+  schedulePresentationHover, schedulePresentationHoverClose
+} from '../components/panels/presentation/openPresentation'
 
 const side_order: { [_ in Type_Side]: number } = {
   'right': 0,
@@ -1160,6 +1163,23 @@ export class Class_LinkElement extends Class_LinkAttribute {
       // Artificially enlarge link thickness if too thin
       this.d3_selection?.select('.link_path').attr('stroke-width', 15)
     }
+    // OS#305 — LECTEUR : survol satisfaisant le déclencheur du document ->
+    // présentation composée en info-bulle. Remplace le survol que fournissait le
+    // mixin d'info-bulle hérité, retiré avec son mécanisme.
+    const app_data = this.drawing_area.application_data
+    if (!app_data.is_editable && event.buttons === 0
+      && matchesPresentationTrigger(app_data, event)
+      && canPresentTooltip(this as unknown as Parameters<typeof canPresentTooltip>[0])) {
+      const rect = (event.target as HTMLElement)?.getBoundingClientRect?.()
+      schedulePresentationHover(
+        app_data,
+        this as unknown as Parameters<typeof canPresentTooltip>[0],
+        {
+          x: event.clientX || (rect ? Math.round(rect.right) : 0),
+          y: event.clientY || (rect ? Math.round(rect.top) : 0)
+        }
+      )
+    }
   }
 
   /**
@@ -1183,13 +1203,9 @@ export class Class_LinkElement extends Class_LinkAttribute {
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     super.eventMouseOut(event)
-    // Utiliser la même logique de protection que pour les nœuds
-    // const activeTooltip = (window as any).activeTooltip
-    // if (!activeTooltip) {
-    //   // Pas de tooltip actif protégé, fermeture normale
-    //   d3.selectAll('.sankey-tooltip').remove()
-    //   this.d3_selection?.classed('tooltip_shown', false)
-    // }
+    // OS#305 — quitter le flux programme la fermeture de son info-bulle de
+    // présentation (annulée si le curseur y entre, cf. PanelShell).
+    schedulePresentationHoverClose(this.drawing_area.application_data)
 
     // reset link thickness
     if (this._artifical_enlargement) {

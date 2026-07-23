@@ -333,6 +333,36 @@ export class NodeTooltip {
     return formatElementValue(n, sampleLink)
   }
 
+  /**
+   * OS#305 — Contenu d'un BLOC de présentation, en HTML. Les constructeurs
+   * ci-dessous sont de simples fonctions données -> HTML : le chantier #305
+   * retire le MÉCANISME d'info-bulle hérité (overlay, positionnement, barre
+   * d'onglets, gestionnaire d'événements), qui double désormais les panneaux
+   * unifiés, mais RÉUTILISE ce contenu tel quel — contenu identique, aucune
+   * régression. Rend `null` quand le bloc n'a rien à montrer.
+   */
+  public getBlockHTML(block_id: string): string | null {
+    const app_data = this._node.drawing_area.application_data
+    const t = app_data.t.bind(app_data) as TFunction
+    let input_val = 0
+    let output_val = 0
+    this._node.input_links_list.filter(l => l.is_visible).forEach(l => input_val += l.valueCurrent ?? 0)
+    this._node.output_links_list.filter(l => l.is_visible).forEach(l => output_val += l.valueCurrent ?? 0)
+    const hasInputs = this._node.hasInputLinks()
+    const hasOutputs = this._node.hasOutputLinks()
+    if (!hasInputs && !hasOutputs) return null
+    switch (block_id) {
+    case 'values':
+      return this.getValuesTabHTML(hasInputs, hasOutputs, input_val, output_val, t)
+    case 'tags':
+      return this._node.sankey.flux_taggs_list.length > 0
+        ? this.getTagsTabHTML(hasInputs, hasOutputs, input_val, output_val, t)
+        : null
+    default:
+      return null
+    }
+  }
+
   private getValuesTabHTML(hasInputs: boolean, hasOutputs: boolean, input_val: number, output_val: number, t: TFunction): string {
     // Unité commune affichée une seule fois dans l'en-tête de la colonne
     // « Valeurs » plutôt que répétée sur chaque ligne.

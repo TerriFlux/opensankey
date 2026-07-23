@@ -43,7 +43,9 @@ import {
   type Type_PresentationTarget
 } from './PresentationBlockRegistry'
 import { registerBasePresentationBlocks } from './registerBaseBlocks'
-import { openPresentationFor, canPresent, type Type_Presentable } from './openPresentation'
+import {
+  openPresentationFor, canPresent, defaultCompositionFor, type Type_Presentable
+} from './openPresentation'
 
 // Le catalogue de base doit exister dès l'affichage du composeur.
 registerBasePresentationBlocks()
@@ -115,7 +117,14 @@ export const PresentationComposer = ({ app_data, scope }: {
   ) as unknown as Type_Presentable | undefined
 
   const read_target = targets[0]
-  const composition = compositionFromJSON(read_target?.getElementProperty(ATTR_BLOCKS))
+  // Attribut absent = jamais composé : on montre le DÉFAUT (l'équivalent de
+  // l'ancienne info-bulle), pour que l'auteur parte de ce que voit son lecteur
+  // plutôt que d'une page blanche.
+  const raw_blocks = read_target?.getElementProperty(ATTR_BLOCKS)
+  const is_default = raw_blocks === undefined || raw_blocks === null
+  const composition = is_default && preview_element
+    ? defaultCompositionFor(preview_element)
+    : compositionFromJSON(raw_blocks)
   const policy = containerPolicyFromJSON(read_target?.getElementProperty(ATTR_CONTAINERS))
   const catalogue = catalogueFor(app_data, present_targets)
 
@@ -134,8 +143,13 @@ export const PresentationComposer = ({ app_data, scope }: {
     apply()
   }
 
+  // On écrit TOUJOURS le tableau, même vide : un tableau vide est un choix
+  // explicite (« ne rien montrer »), alors qu'un attribut ABSENT signifie
+  // « jamais composé » et retombe sur le défaut, qui reproduit l'ancienne
+  // info-bulle. C'est « Réinitialiser » qui remet l'attribut à l'état absent.
   const writeComposition = (next: Type_Composition) =>
-    writeAttr(ATTR_BLOCKS, next.length > 0 ? compositionToJSON(next) : undefined)
+    writeAttr(ATTR_BLOCKS, compositionToJSON(next))
+  const resetComposition = () => writeAttr(ATTR_BLOCKS, undefined)
   const writePolicy = (next: Type_ContainerPolicy) =>
     writeAttr(ATTR_CONTAINERS, containerPolicyToJSON(next))
 
@@ -243,7 +257,26 @@ export const PresentationComposer = ({ app_data, scope }: {
         <Box style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Box layerStyle='menuconfigpanel_option_name'>
             {t('presentation.blocks', { defaultValue: 'Blocs affichés' })}
+            {is_default && (
+              <Text as='span' style={{ fontWeight: 400, opacity: 0.65, fontSize: '0.7rem' }}>
+                {' — '}
+                {t('presentation.is_default', { defaultValue: 'présentation par défaut' })}
+              </Text>
+            )}
           </Box>
+          {!is_default && (
+            <Button
+              size='xs'
+              variant='menuconfigpanel_option_button'
+              sx={{ paddingInline: '0.4rem', minWidth: 'auto', width: 'auto', flex: 'none' }}
+              title={t('presentation.reset_tooltip', {
+                defaultValue: 'Revenir à la présentation par défaut'
+              })}
+              onClick={resetComposition}
+            >
+              {t('presentation.reset', { defaultValue: 'Réinitialiser' })}
+            </Button>
+          )}
           <Menu placement='bottom-end'>
             <MenuButton
               as={Button}
@@ -274,6 +307,13 @@ export const PresentationComposer = ({ app_data, scope }: {
           <Box style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', paddingTop: '0.2rem' }}>
             {composition.map((entry, index) => {
               const block = presentation_block_registry.get(entry.block)
+              // Bloc connu mais INDISPONIBLE ici (licence absente, hook OS+ non
+              // injecté) : on ne l'affiche pas — l'auteur n'en ferait rien, et il
+              // ne rend déjà rien. La composition, elle, le CONSERVE : le document
+              // reste valable pour une installation qui en dispose.
+              // On rend `null` plutôt que de filtrer, pour que `index` reste celui
+              // de la composition complète (le réordonnancement en dépend).
+              if (block?.gate && !block.gate(app_data)) return null
               return (
                 <Box
                   key={entry.block}

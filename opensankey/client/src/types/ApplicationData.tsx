@@ -42,7 +42,6 @@ import { getPublishOptions, PublishOptions } from './PublishOptions'
 import { Class_ApplicationHistory } from './ApplicationHistory'
 import { Class_IconLibrary } from '../css/IconLibrairie'
 import { Class_DrawingArea } from './DrawingArea'
-import { initializeTooltipSystem } from '../Elements/TooltipsConfig'
 import { compressJSONToGzip, decompressUploadedFileUniversal } from '../Persistence/UniversalJSONCompression'
 import { parseSankeymaticText } from '../Persistence/sankeymaticParser'
 import { loadEsankeyFile } from '../Persistence/esankeyParser'
@@ -629,7 +628,22 @@ export class Class_ApplicationData {
     // Initialiser le système de tooltip (idempotent ; appelé ici plutôt qu'au top-level
     // pour ne pas marquer le module comme side-effectful, ce qui casse l'analyse webpack
     // des named imports Chakra dans les consommateurs externes).
-    initializeTooltipSystem()
+    // OS#305 — le MÉCANISME d'info-bulle hérité (overlay propre, positionnement,
+    // barre d'onglets, gestionnaire d'événements) est RETIRÉ : il doublait les
+    // panneaux unifiés (#300). Son CONTENU est conservé et réutilisé comme blocs
+    // de présentation, et la composition PAR DÉFAUT le reproduit — un diagramme
+    // déjà produit affiche donc la même chose qu'avant, sans que son auteur ait
+    // rien à faire (cf. defaultCompositionFor).
+    // initializeTooltipSystem()  // <- retiré, cf. ci-dessus
+    //
+    // MIGRATION du déclencheur : l'option de publication `tooltip_on_hover`
+    // signifiait « info-bulle au simple survol, sans maintenir MAJ ». Sans cette
+    // reprise, un diagramme publié ainsi exigerait soudain MAJ de son lecteur.
+    // Posé comme DÉFAUT : un `presentation_trigger` enregistré dans le document
+    // le remplacera au chargement (cf. Class_PanelManager.fromJSON).
+    if (this.publish_options.tooltip_on_hover) {
+      this.menu_configuration.panels.presentation_trigger = 'hover'
+    }
     // Options for application
     this.options = options
     // Deals with UI menu updates / each modifications

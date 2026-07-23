@@ -230,6 +230,30 @@ export class LinkTooltip {
     return html
   }
 
+  /**
+   * OS#305 — Contenu d'un BLOC de présentation, en HTML. Voir NodeTooltip :
+   * le chantier retire le MÉCANISME hérité mais réutilise ces constructeurs de
+   * contenu tels quels. Rend `null` quand le bloc n'a rien à montrer.
+   */
+  public getBlockHTML(block_id: string): string | null {
+    const groups = this.getChildLinkGroups()
+    const combos = this.getValueComboEntries(this._link)
+    const has_children = groups.length > 0
+    const has_series = combos.length > 1
+    switch (block_id) {
+    case 'flux':
+      return this.getMainTabHTML()
+    case 'series_flux':
+      return has_series ? this.getSeriesFluxHTML(combos) : null
+    case 'data':
+      return has_children ? this.getDataTabHTML(groups) : null
+    case 'series_data':
+      return (has_children && has_series) ? this.getSeriesDataHTML(groups, combos) : null
+    default:
+      return null
+    }
+  }
+
   /** Onglet principal : valeur du lien, donnée, tags de flux (contenu historique). */
   private getMainTabHTML(): string {
     let html = '<table class="tooltip-table">'

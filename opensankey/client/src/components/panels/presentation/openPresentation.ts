@@ -21,8 +21,66 @@
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import type { Type_PopupGeometry } from '../../../types/PanelManager'
 import {
-  compositionFromJSON, containerPolicyFromJSON, resolveOpenContainer, hasContentFor
+  compositionFromJSON, containerPolicyFromJSON, resolveOpenContainer, hasContentFor,
+  DEFAULT_BLOCK_VISIBILITY, type Type_Composition
 } from '../../../types/PresentationComposition'
+import { isTooltipBlockVisible, type Type_TooltipHiddenBlocks } from '../../../Elements/TooltipBlocks'
+
+// OS#305 — COMPOSITION PAR DÉFAUT : elle reproduit l'info-bulle historique.
+//
+// Le mécanisme hérité est retiré (il doublait les panneaux unifiés), mais un
+// diagramme déjà produit ne doit RIEN perdre : tant que son auteur n'a rien
+// composé, le lecteur voit exactement ce qu'il voyait avant. D'où cette liste,
+// calquée sur les onglets de l'ancienne info-bulle.
+//
+// Chaque entrée porte l'id du bloc ET l'id du bloc HÉRITÉ correspondant, pour
+// continuer d'honorer `tooltip_hidden_blocks` (OS#1285) : les blocs qu'un auteur
+// avait déjà masqués restent masqués. '' = bloc sans équivalent hérité (le texte
+// libre, qui était le sous-titre de l'en-tête).
+const DEFAULT_NODE_BLOCKS: [block: string, legacy: string][] = [
+  ['os.block.free_text', ''],
+  ['os.block.balance', 'values'],
+  ['os.block.flux_tags', 'tags'],
+  ['os.block.unitary', 'unitary'],
+  ['os.block.analysis', 'analysis']
+]
+const DEFAULT_LINK_BLOCKS: [block: string, legacy: string][] = [
+  ['os.block.free_text', ''],
+  ['os.block.link_flux', 'flux'],
+  ['os.block.link_series_flux', 'series_flux'],
+  ['os.block.link_data', 'data'],
+  ['os.block.link_series_data', 'series_data'],
+  ['os.block.analysis', 'analysis']
+]
+
+const isLinkLike = (element: Type_Presentable): boolean => {
+  const raw = element as unknown as Record<string, unknown>
+  return 'source' in raw && 'target' in raw
+}
+
+/** Composition par défaut d'un élément : l'équivalent de son info-bulle d'avant. */
+export const defaultCompositionFor = (element: Type_Presentable): Type_Composition => {
+  const hidden = element.getElementProperty('tooltip_hidden_blocks') as
+    Type_TooltipHiddenBlocks | undefined
+  const list = isLinkLike(element) ? DEFAULT_LINK_BLOCKS : DEFAULT_NODE_BLOCKS
+  return list
+    .filter(([, legacy]) => legacy === '' || isTooltipBlockVisible(hidden, legacy))
+    .map(([block]) => ({ block, show: { ...DEFAULT_BLOCK_VISIBILITY } }))
+}
+
+/**
+ * Composition EFFECTIVE d'un élément — le point de lecture unique.
+ *
+ * Attribut absent = l'auteur n'a jamais composé -> défaut (l'ancienne info-bulle).
+ * Attribut présent, même VIDE = choix explicite de l'auteur -> on le respecte,
+ * y compris « ne rien montrer ». C'est ce qui distingue « pas encore touché » de
+ * « volontairement vidé », et rend le bouton « Réinitialiser » du composeur utile.
+ */
+export const compositionOf = (element: Type_Presentable): Type_Composition => {
+  const raw = element.getElementProperty('presentation_blocks')
+  if (raw === undefined || raw === null) return defaultCompositionFor(element)
+  return compositionFromJSON(raw)
+}
 
 const PRESENTATION_PREFIX = 'presentation:'
 
@@ -55,17 +113,17 @@ export const elementIdOfPanel = (panel_id: string): string =>
   panel_id.slice(PRESENTATION_PREFIX.length)
 
 /**
- * Ouvre la présentation composée d'un élément dans le contenant que sa politique
- * désigne. Rend `false` — et n'ouvre RIEN — quand l'auteur n'a rien composé :
- * c'est le repli retenu au point ouvert n°2 de l'issue (mieux vaut ne rien
- * ouvrir qu'exposer un panneau vide, ou pire l'inspecteur d'édition).
+ * Ouvre la présentation d'un élément dans le contenant que sa politique désigne.
+ * Rend `false` — et n'ouvre rien — s'il n'y a rien à montrer, c'est-à-dire quand
+ * l'auteur a EXPLICITEMENT vidé la composition (une composition absente, elle,
+ * retombe sur le défaut, qui reproduit l'ancienne info-bulle).
  */
 export const openPresentationFor = (
   app_data: Class_ApplicationData,
   element: Type_Presentable,
   anchor?: { x: number, y: number }
 ): boolean => {
-  const composition = compositionFromJSON(element.getElementProperty('presentation_blocks'))
+  const composition = compositionOf(element)
   const policy = containerPolicyFromJSON(element.getElementProperty('presentation_containers'))
   const mode = resolveOpenContainer(composition, policy)
   if (mode === null) return false
@@ -166,7 +224,7 @@ export const matchesPresentationTrigger = (
 /** L'élément a-t-il une présentation à montrer EN INFO-BULLE ? Permet de
  *  retomber sur l'info-bulle historique quand l'auteur n'a rien composé. */
 export const canPresentTooltip = (element: Type_Presentable): boolean => {
-  const composition = compositionFromJSON(element.getElementProperty('presentation_blocks'))
+  const composition = compositionOf(element)
   const policy = containerPolicyFromJSON(element.getElementProperty('presentation_containers'))
   return policy.allow.tooltip && hasContentFor(composition, 'tooltip')
 }
@@ -180,7 +238,7 @@ export const openPresentationTooltip = (
   element: Type_Presentable,
   anchor: { x: number, y: number }
 ): boolean => {
-  const composition = compositionFromJSON(element.getElementProperty('presentation_blocks'))
+  const composition = compositionOf(element)
   const policy = containerPolicyFromJSON(element.getElementProperty('presentation_containers'))
   if (!policy.allow.tooltip || !hasContentFor(composition, 'tooltip')) return false
   app_data.menu_configuration.panels.setMode(
@@ -234,6 +292,17 @@ export const schedulePresentationHoverClose = (app_data: Class_ApplicationData):
 /** Le curseur revient (dans l'élément ou l'info-bulle) : on annule la fermeture. */
 export const cancelPresentationHoverClose = (): void => { clearCloseTimer() }
 
+/** Ferme IMMÉDIATEMENT l'info-bulle de présentation, s'il y en a une. Remplace
+ *  `TooltipEventManager.closeTooltip()` de l'ancien mécanisme (clic droit…). */
+export const closePresentationTooltip = (app_data: Class_ApplicationData): void => {
+  clearOpenTimer()
+  clearCloseTimer()
+  const panels = app_data.menu_configuration.panels
+  const id = panels.tooltip_id
+  if (id !== null && isPresentationPanelId(id)) panels.close(id)
+  _hovered_id = null
+}
+
 /** L'info-bulle est promue (épinglée) : elle cesse d'être transitoire. */
 export const releasePresentationHover = (): void => {
   clearOpenTimer()
@@ -243,7 +312,7 @@ export const releasePresentationHover = (): void => {
 
 /** La présentation d'un élément est-elle ouvrable (quelque chose à montrer) ? */
 export const canPresent = (element: Type_Presentable): boolean => {
-  const composition = compositionFromJSON(element.getElementProperty('presentation_blocks'))
+  const composition = compositionOf(element)
   const policy = containerPolicyFromJSON(element.getElementProperty('presentation_containers'))
   return resolveOpenContainer(composition, policy) !== null
 }

@@ -27,6 +27,11 @@ import { Box, Checkbox, Text } from '@chakra-ui/react'
 import { default_font_size } from '../../../css/Theme'
 import { formatElementValue, resolveValueUnit } from '../../../Elements/ValueFormatting'
 import type { Class_LinkElement } from '../../../Elements/Link'
+import { NodeTooltip } from '../../../Elements/TooltipsNode'
+import { LinkTooltip } from '../../../Elements/TooltipsLink'
+import { TOOLTIP_STYLES } from '../../../Elements/TooltipsCSS'
+import type { Class_NodeElement } from '../../../Elements/Node'
+import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import {
   presentation_block_registry,
   type Type_BlockRenderContext
@@ -100,6 +105,97 @@ const Row = ({ label, value }: { label: string, value: string }) => (
 
 const isCompact = (ctx: Type_BlockRenderContext) => ctx.mode === 'tooltip'
 const el_of = (ctx: Type_BlockRenderContext) => ctx.element as unknown as Unknown_Element
+
+// --- Réutilisation du contenu historique -------------------------------------
+// OS#305 : le MÉCANISME d'info-bulle hérité est retiré (il doublait les panneaux
+// unifiés), mais ses constructeurs de CONTENU — de simples fonctions
+// données -> HTML — sont réutilisés tels quels. Contenu identique à l'ancien,
+// donc aucune régression, et il devient composable.
+//
+// NB : ce HTML est injecté tel quel, comme le faisait l'ancien système. Les noms
+// d'éléments y sont interpolés sans échappement — défaut PRÉEXISTANT hérité des
+// constructeurs, à corriger à leur source (et non ici, qui ne fait que rendre).
+
+const LEGACY_STYLES_ID = 'os-presentation-legacy-styles'
+
+/** Injecte une seule fois la feuille de styles des tableaux historiques. */
+const ensureLegacyStyles = () => {
+  if (typeof document === 'undefined') return
+  if (document.getElementById(LEGACY_STYLES_ID)) return
+  const style = document.createElement('style')
+  style.id = LEGACY_STYLES_ID
+  style.textContent = TOOLTIP_STYLES
+  document.head.appendChild(style)
+}
+
+const LegacyHtml = ({ html }: { html: string }) => {
+  React.useEffect(ensureLegacyStyles, [])
+  return (
+    <Box
+      className='presentation_legacy_html'
+      style={{ overflowX: 'auto' }}
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  )
+}
+
+/** Contenu HTML d'un bloc de NŒUD (instance jetable : constructeur trivial). */
+const nodeBlockHtml = (el: Unknown_Element, block_id: string): string | null => {
+  if (!el || isLinkLike(el)) return null
+  try {
+    return new NodeTooltip(el as unknown as Class_NodeElement).getBlockHTML(block_id)
+  } catch { return null }
+}
+
+/** Contenu HTML d'un bloc de FLUX. */
+const linkBlockHtml = (el: Unknown_Element, block_id: string): string | null => {
+  if (!el || !isLinkLike(el)) return null
+  try {
+    return new LinkTooltip(el as unknown as Class_LinkElement).getBlockHTML(block_id)
+  } catch { return null }
+}
+
+// --- Blocs dessinés par un hook OS+ ------------------------------------------
+// L'unitaire et l'analyse ne sont pas de l'affichage de données : ce sont des
+// features OS+ dessinées IMPÉRATIVEMENT dans un conteneur DOM désigné par
+// sélecteur. Le bloc se contente donc de poser le conteneur et d'appeler le hook
+// après montage, en nettoyant au démontage.
+
+const cssId = (raw: string) => raw.replace(/[^a-zA-Z0-9_-]/g, '_')
+
+const HookDrawnBlock = ({ app_data, element, hook, id_prefix, min_height }: {
+  app_data: Class_ApplicationData
+  element: Unknown_Element
+  hook: 'draw_unitary_in_container' | 'draw_analysis_in_container'
+  id_prefix: string
+  min_height: number
+}) => {
+  const element_id = String((element as Record<string, unknown>)?.['id'] ?? '')
+  const container_id = `${id_prefix}-${cssId(element_id)}`
+  React.useEffect(() => {
+    const draw = app_data[hook] as
+      ((el: unknown, selector: string) => { redraw: () => void, cleanup: () => void } | void) | undefined
+    if (typeof draw !== 'function') return
+    let handle: { redraw: () => void, cleanup: () => void } | void
+    try { handle = draw(element, '#' + container_id) } catch { handle = undefined }
+    // Recadre le dessin quand le panneau est redimensionné.
+    const node = document.getElementById(container_id)
+    let observer: ResizeObserver | undefined
+    if (node && typeof ResizeObserver !== 'undefined' && handle) {
+      observer = new ResizeObserver(() => handle && handle.redraw())
+      observer.observe(node)
+    }
+    return () => {
+      observer?.disconnect()
+      handle?.cleanup()
+    }
+  }, [container_id])
+  return <Box id={container_id} style={{ minHeight: min_height + 'px', width: '100%' }} />
+}
+
+/** Le hook OS+ est-il disponible ? (absent hors OS+ : le bloc n'est pas proposé) */
+const hasHook = (app_data: Class_ApplicationData, hook: string): boolean =>
+  typeof (app_data as unknown as Record<string, unknown>)[hook] === 'function'
 
 // --- Enregistrement ----------------------------------------------------------
 
@@ -266,6 +362,100 @@ export function registerBasePresentationBlocks(): void {
             <Text key={i} style={{ opacity: 0.9 }}>{line}</Text>
           ))}
         </BlockSection>
+      )
+    }
+  })
+
+  // --- Blocs repris du contenu d'info-bulle historique ----------------------
+  // Mêmes tableaux qu'avant, désormais composables et affichables dans les trois
+  // contenants. Les ids ci-dessous sont écrits dans le JSON : ne pas les renommer.
+
+  const legacyNodeBlock = (
+    id: string, order: number, key: string, label_key: string, fallback: string
+  ) => presentation_block_registry.register({
+    id, target: 'node', order,
+    label: (a) => a.t(label_key, { defaultValue: fallback }),
+    render: (ctx) => {
+      const html = nodeBlockHtml(el_of(ctx), key)
+      return html ? <LegacyHtml html={html} /> : null
+    }
+  })
+
+  const legacyLinkBlock = (
+    id: string, order: number, key: string, label_key: string, fallback: string
+  ) => presentation_block_registry.register({
+    id, target: 'link', order,
+    label: (a) => a.t(label_key, { defaultValue: fallback }),
+    render: (ctx) => {
+      const html = linkBlockHtml(el_of(ctx), key)
+      return html ? <LegacyHtml html={html} /> : null
+    }
+  })
+
+  // Nœud : bilan (entrées/sorties/ratios + équilibre) et répartition par tag de flux.
+  legacyNodeBlock('os.block.balance', 25, 'values',
+    'presentation.block.balance', 'Bilan des flux')
+  legacyNodeBlock('os.block.flux_tags', 35, 'tags',
+    'presentation.block.flux_tags', 'Tags de flux')
+
+  // Flux : valeur/donnée/tags, séries, flux enfants par dimension.
+  legacyLinkBlock('os.block.link_flux', 50, 'flux',
+    'presentation.block.link_flux', 'Flux')
+  legacyLinkBlock('os.block.link_series_flux', 55, 'series_flux',
+    'presentation.block.link_series_flux', 'Séries de flux')
+  legacyLinkBlock('os.block.link_data', 60, 'data',
+    'presentation.block.link_data', 'Données')
+  legacyLinkBlock('os.block.link_series_data', 65, 'series_data',
+    'presentation.block.link_series_data', 'Séries de données')
+
+  // --- Blocs OS+ (dessinés par hook injecté) --------------------------------
+  // Non proposés hors OS+ : le hook est absent, le `gate` les masque.
+
+  presentation_block_registry.register({
+    id: 'os.block.unitary',
+    target: 'node',
+    order: 70,
+    label: (a) => a.t('presentation.block.unitary', { defaultValue: 'Sankey unitaire' }),
+    gate: (a) => a.has_sankey_plus && hasHook(a, 'draw_unitary_in_container'),
+    render: (ctx) => {
+      const el = el_of(ctx)
+      if (!el || isLinkLike(el)) return null
+      return (
+        <HookDrawnBlock
+          app_data={ctx.app_data} element={el}
+          hook='draw_unitary_in_container'
+          id_prefix='presentation-unitary'
+          min_height={ctx.mode === 'tooltip' ? 140 : 220}
+        />
+      )
+    }
+  })
+
+  presentation_block_registry.register({
+    id: 'os.block.analysis',
+    target: ['node', 'link'],
+    order: 80,
+    label: (a) => a.t('presentation.block.analysis', { defaultValue: 'Analyse' }),
+    gate: (a) => hasHook(a, 'draw_analysis_in_container'),
+    render: (ctx) => {
+      const el = el_of(ctx)
+      if (!el) return null
+      // Même condition que l'info-bulle historique : l'élément doit publier un
+      // graphique (surfaces.tooltip) et décrire une décomposition/comparaison.
+      const descriptor = (el as unknown as {
+        getElementProperty?: (k: string) => unknown
+      }).getElementProperty?.('analysis_descriptor') as {
+        surfaces?: { tooltip?: boolean }, decompose?: unknown, compare?: unknown
+      } | undefined
+      if (!descriptor?.surfaces?.tooltip) return null
+      if (!descriptor.decompose && !descriptor.compare) return null
+      return (
+        <HookDrawnBlock
+          app_data={ctx.app_data} element={el}
+          hook='draw_analysis_in_container'
+          id_prefix='presentation-analysis'
+          min_height={ctx.mode === 'tooltip' ? 140 : 200}
+        />
       )
     }
   })

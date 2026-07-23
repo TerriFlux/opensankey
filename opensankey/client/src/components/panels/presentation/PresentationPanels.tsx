@@ -33,13 +33,13 @@ import type { Type_PanelMode } from '../../../types/PanelManager'
 import { useModelBinding } from '../../../hooks/useModelBinding'
 import { default_font_size } from '../../../css/Theme'
 import {
-  compositionFromJSON, containerPolicyFromJSON, blocksFor
+  containerPolicyFromJSON, blocksFor
 } from '../../../types/PresentationComposition'
 import { PanelShell } from '../PanelShell'
 import { renderPresentationBlock } from './PresentationBlockRegistry'
 import { registerBasePresentationBlocks } from './registerBaseBlocks'
 import {
-  isPresentationPanelId, elementIdOfPanel, type Type_Presentable,
+  isPresentationPanelId, elementIdOfPanel, compositionOf, type Type_Presentable,
   cancelPresentationHoverClose, schedulePresentationHoverClose, releasePresentationHover
 } from './openPresentation'
 
@@ -84,7 +84,7 @@ export const PresentationPanel = ({ app_data, element, mode }: {
   element: Presentable
   mode: Type_PanelMode
 }) => {
-  const composition = compositionFromJSON(element.getElementProperty('presentation_blocks'))
+  const composition = compositionOf(element)
   const rendered = blocksFor(composition, mode)
     .map(entry => ({
       key: entry.block,

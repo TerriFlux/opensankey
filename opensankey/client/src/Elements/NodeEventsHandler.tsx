@@ -27,7 +27,6 @@
 import * as d3 from '../d3Modules'
 
 import { Class_NodeBase } from './NodeBase'
-import { TooltipEventManager } from './TooltipsConfig'
 import { Class_LinkElement } from './Link'
 import { Class_ProtoElement } from './Element'
 import { Class_NodeElement } from './Node'
@@ -829,22 +828,8 @@ export class NodeEventsHandler {
       return
     }
 
-    // Option publish tooltip_on_hover : tooltips au simple survol, sans maintenir Shift.
-    const show_tooltip = event.shiftKey || app_data.publish_options.tooltip_on_hover
-    // ALT + pas de tooltip déjà ouvert pour ce noeud
-    if (show_tooltip && (event.target as HTMLElement).tagName !== 'tspan') {
-      const existingTooltip = document.querySelector('.sankey-tooltip')
-      if (!existingTooltip || !this._node.d3_selection?.classed('tooltip_shown')) {
-        // Stocker la position de la souris pour l'ouverture
-        this.tooltipMouseX = event.pageX
-        this.tooltipMouseY = event.pageY
-
-        // Utiliser le système intégré
-        const tooltipManager = TooltipEventManager.getInstance()
-        //@ts-expect-error xxx
-        tooltipManager.showTooltip(this._node, event.pageX, event.pageY)
-      }
-    }
+    // OS#305 — l'info-bulle HÉRITÉE est retirée : son contenu est désormais servi
+    // par la présentation composée ci-dessus, dont le défaut la reproduit.
   }
 
   public handleMouseMove() {return}
