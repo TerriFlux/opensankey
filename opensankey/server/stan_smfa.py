@@ -134,7 +134,14 @@ _TEXT_ZONE_PADDING_H = 1.45
 
 _SHAPE_PROCESS = 1
 _SHAPE_FLOW_LINK = 2
+# Sous-label de processus (un par processus, texte vide dans les fichiers — STAN
+# y dessine dynamiquement la valeur/balance) : rien d'exploitable, ignoré.
+_SHAPE_PROCESS_SUBLABEL = 4
 _SHAPE_EXTERNAL_MARKER = 5
+# La BOÎTE DU NOM d'un flux (« F01, BAW uit ») : un shape par flux, aux bounds
+# ABSOLUS — la position exacte où STAN dessine le nom, déplacements manuels
+# compris (les Anchor du corpus sont tous à offset 0 : bounds déjà finaux).
+_SHAPE_FLOW_NAME_LABEL = 6
 _SHAPE_FREE_TEXT = 7
 _SHAPE_SYSTEM_BOUNDARY = 8
 
@@ -660,6 +667,8 @@ def read_geometry(tables):
     process_zorders, flow_zorders = {}, {}
     # Polices dessinées (`m_TextProps.fo`), par processus et par flux.
     process_fonts, flow_fonts = {}, {}
+    # Boîtes du nom de chaque flux (ShapeType 6) : position absolue du label.
+    flow_name_labels = {}
 
     def _zorder(entry):
         z = nrbf.resolve(entry["object"].members.get("m_nZOrder"), entry["objects"])
@@ -712,6 +721,8 @@ def read_geometry(tables):
             markers[flow_id] = {"bounds": entry["bounds"],
                                 "text": (entry["text"] or "").strip(),
                                 "z": _zorder(entry), "font": _font(entry)}
+        elif shape_type == _SHAPE_FLOW_NAME_LABEL and flow_id is not None and entry["bounds"]:
+            flow_name_labels[flow_id] = {"bounds": entry["bounds"], "font": _font(entry)}
         elif shape_type == _SHAPE_FLOW_LINK and flow_id is not None:
             points = _polyline(entry["object"], entry["objects"])
             if len(points) >= 2:
@@ -732,7 +743,8 @@ def read_geometry(tables):
             "boundary": boundary, "texts": texts, "markers": markers,
             "label_offsets": label_offsets,
             "process_zorders": process_zorders, "flow_zorders": flow_zorders,
-            "process_fonts": process_fonts, "flow_fonts": flow_fonts}
+            "process_fonts": process_fonts, "flow_fonts": flow_fonts,
+            "flow_name_labels": flow_name_labels}
 
 
 def parse_stan(path, period_id=None, layer_id=None):
@@ -994,6 +1006,7 @@ def parse_stan(path, period_id=None, layer_id=None):
         order_g_elements = _order_g_elements(
             geometry, nodes, containers, node_id_of_process, link_id_of_flow,
             external_of_flow)
+        _apply_flow_name_label_boxes(geometry, links, link_id_of_flow)
         _apply_stan_fonts(geometry, nodes, links, containers, node_id_of_process,
                           link_id_of_flow, external_of_flow)
     else:
@@ -1090,6 +1103,31 @@ def _order_g_elements(geometry, nodes, containers, node_id_of_process,
     return [e[0] for e in entries if e[1] < 0] + [e[0] for e in known]
 
 
+def _apply_flow_name_label_boxes(geometry, links, link_id_of_flow):
+    """Nom de chaque flux à sa position STAN EXACTE (boîte ShapeType 6).
+
+    La boîte du nom est un shape à part entière, aux bounds absolus : c'est la
+    position réellement dessinée par STAN, déplacements manuels compris. Elle
+    REMPLACE les heuristiques de placement (décalage depuis la source, nom à
+    droite d'un flux vertical) posées plus tôt. Ancre `start` + baseline
+    `middle` en mode absolu : le texte part du bord gauche de la boîte, centré
+    sur sa hauteur.
+    """
+    scale = _PX_PER_STAN_UNIT
+    for flow_id, label in geometry["flow_name_labels"].items():
+        link = links.get(link_id_of_flow.get(flow_id))
+        if link is None:
+            continue
+        x, y, _w, h = label["bounds"]
+        local = link["local"]
+        local["name_label_position_absolute"] = True
+        local["name_label_position_x"] = x * scale
+        local["name_label_position_y"] = (y + h / 2.0) * scale
+        # Les décalages heuristiques ne s'appliquent plus en mode absolu.
+        local.pop("name_label_horiz_shift", None)
+        local.pop("name_label_vert_shift", None)
+
+
 def _apply_stan_fonts(geometry, nodes, links, containers, node_id_of_process,
                       link_id_of_flow, external_of_flow):
     """Applique les polices dessinées par STAN (`m_TextProps.fo`) aux labels.
@@ -1123,6 +1161,12 @@ def _apply_stan_fonts(geometry, nodes, links, containers, node_id_of_process,
         link = links.get(link_id_of_flow.get(flow_id))
         if link is not None:
             apply(link["local"], ("value_label", "name_label"), font)
+    # La boîte du nom (ShapeType 6) porte sa propre police : elle raffine celle
+    # du tracé pour le label de nom.
+    for flow_id, label in geometry["flow_name_labels"].items():
+        link = links.get(link_id_of_flow.get(flow_id))
+        if link is not None:
+            apply(link["local"], ("name_label",), label.get("font"))
     for flow_id, marker in geometry["markers"].items():
         node = nodes.get(external_of_flow.get(flow_id))
         if node is not None:
@@ -2148,6 +2192,13 @@ def test_fixtures_stan_reelles():
             sizes = [c["local"].get("name_label_font_size")
                      for c in result["labels"].values()]
             assert 17.5 in sizes, sizes
+
+        # Le nom de CHAQUE flux est a sa position STAN exacte (boite ShapeType 6,
+        # position absolue) — plus aucune heuristique de placement.
+        assert all(link["local"].get("name_label_position_absolute") is True
+                   for link in result["links"].values()), path
+        assert not any("name_label_horiz_shift" in link["local"]
+                       for link in result["links"].values()), path
 
     # Le corpus doit exercer les deux formes routees : les equerres a UN coin
     # (F48...) et les detours multi-coudes (les 23 escaliers h-v-h de
