@@ -41,7 +41,8 @@ de positions du module neutre sankey_layout.py.
 
 Périmètre v1 : nœuds (processus), flux et valeurs. Les incertitudes, couches
 substance/énergie multiples, stocks et coefficients de transfert ne sont pas
-encore rendus (valeurs = MFInput normalisée, repli sur MFCalc si mesure absente).
+encore rendus (valeurs = MFCalc réconciliée normalisée — l'affichage de STAN —,
+repli sur la saisie MFInput si le fichier n'est pas réconcilié).
 
 Modèle de données STAN (tables SQLite = éléments XML) :
 - Process(ProcessID, ProcessType, Name) : ProcessType 1 = frontière de système
@@ -100,6 +101,17 @@ _EXTERNAL_NODE_MIN_PX = 26.0
 
 # Marge entre le bord d'un flux vertical et son nom, écrit à sa droite comme STAN.
 _VERTICAL_NAME_PAD_PX = 5.0
+
+# Distance PAR DÉFAUT entre le nœud SOURCE et les labels d'un flux (valeur dans son
+# ellipse, nom en dessous). STAN stocke la vraie distance par flux (`m_fTextOffset`,
+# lue dans read_geometry) ; cette constante n'est que le repli des fichiers sans
+# géométrie. Un ancrage au milieu du tracé, lui, se disperse dès qu'il y a des coudes.
+_LINK_LABEL_START_OFFSET_PX = 20.0
+
+# Décalage du NOM sous l'ellipse de valeur : l'ellipse est centrée sur le tracé et
+# déborde dessous d'environ sa demi-hauteur (police 16 + marges 3) — sans ce
+# décalage, le nom écrit sous le trait passe SOUS l'ellipse et se fait masquer.
+_NAME_BELOW_VALUE_PX = 14.0
 
 # Rôles de ShapeType, déduits de la géométrie et des jointures d'Example.smfa
 # (STAN ne documente pas cette énumération).
@@ -421,9 +433,10 @@ def _stock_values(tables, node_id_of_process, periods, layer_id, display_factor,
     deux champs : `initial_stock` et `stock_variation`.
     """
     def scaled(row, prefix, unit_field):
-        raw = row.get(prefix + "Input")
+        # Réconciliée d'abord, comme les flux : c'est l'affichage de STAN.
+        raw = row.get(prefix + "Calc")
         if raw is None:
-            raw = row.get(prefix + "Calc")
+            raw = row.get(prefix + "Input")
         try:
             # Ceinture et bretelles : un champ non listé dans _FLOAT_FIELDS arriverait
             # du XML sous forme de chaîne, et se multiplierait comme une séquence.
@@ -579,6 +592,7 @@ def read_geometry(tables):
         return None
 
     processes, polylines, texts, markers, boundary = {}, {}, [], {}, None
+    label_offsets = {}
     for shape in tables.get("Shape") or []:
         entry = index.get(str(shape.get("ShapeGuid") or "").lower())
         if entry is None:
@@ -603,11 +617,19 @@ def read_geometry(tables):
             points = _polyline(entry["object"], entry["objects"])
             if len(points) >= 2:
                 polylines[flow_id] = points
+            # Position du label le long du tracé : STAN la stocke par flux
+            # (`m_fTextOffset`, en unités STAN depuis le DÉPART du lien — 15
+            # partout dans Wastewater, d'où ses labels alignés en colonne).
+            offset = nrbf.resolve(entry["object"].members.get("m_fTextOffset"),
+                                  entry["objects"])
+            if isinstance(offset, (int, float)):
+                label_offsets[flow_id] = float(offset)
 
     if not processes:
         return None
     return {"processes": processes, "polylines": polylines,
-            "boundary": boundary, "texts": texts, "markers": markers}
+            "boundary": boundary, "texts": texts, "markers": markers,
+            "label_offsets": label_offsets}
 
 
 def parse_stan(path, period_id=None, layer_id=None):
@@ -663,16 +685,21 @@ def parse_stan(path, period_id=None, layer_id=None):
     # défaut de la couche — sa légende dit « Flows [t/a] ». On normalise donc en SI
     # via `Factor`, puis on convertit vers cette unité d'affichage. Convertir en SI et
     # s'y arrêter, comme avant, écrivait « 190 000 » là où STAN écrit « 190 ».
+    #
+    # La valeur retenue est la RÉCONCILIÉE (`MFCalc`) : c'est elle que STAN affiche
+    # sur le diagramme (Wastewater : 97.9 là où la saisie `MFInput` dit 114), avec
+    # repli sur la saisie tant que le fichier n'a pas été réconcilié.
+    def flow_raw(fv):
+        raw = fv.get("MFCalc")
+        return raw if raw is not None else fv.get("MFInput")
+
     retained = []
     for fv in tables["FlowValue"]:
         if fv.get("PeriodID") not in period_ids:
             continue
         if layer_id is not None and fv.get("FlowLayerID") != layer_id:
             continue
-        raw = fv.get("MFInput")
-        if raw is None:
-            raw = fv.get("MFCalc")  # repli sur la valeur réconciliée
-        if raw is None:
+        if flow_raw(fv) is None:
             continue
         retained.append(fv)
 
@@ -680,9 +707,7 @@ def parse_stan(path, period_id=None, layer_id=None):
 
     flow_values = {}
     for fv in retained:
-        raw = fv.get("MFInput")
-        if raw is None:
-            raw = fv.get("MFCalc")
+        raw = flow_raw(fv)
         num_unit = units.get(fv.get("MFNumUnitID"))
         factor = num_unit["Factor"] if num_unit and num_unit.get("Factor") else 1.0
         # L'arrondi ôte le bruit du double aller-retour de facteurs (114999.999... -> 115).
@@ -755,7 +780,14 @@ def parse_stan(path, period_id=None, layer_id=None):
         # getter calculé « source---cible », sans setter — mais dans `value.text_value`,
         # que `LinkDrawNameLabel` affiche quand `name_label_text_source` vaut `custom`
         # (son défaut). Il ne concurrence pas le label de valeur, qui passe par data_label.
+        # STAN affiche « MatchCode, Name » (« F43, Sanfors ») : on compose pareil —
+        # OpenSankey n'a pas de notion de nom court/long sur un flux.
         flow_name = fl.get("Name")
+        match_code = fl.get("MatchCode")
+        if match_code and flow_name:
+            flow_name = "%s, %s" % (match_code, flow_name)
+        elif match_code and not flow_name:
+            flow_name = match_code
         if flow_name:
             new_flow["value"]["text_value"] = flow_name
         if multi_period:
@@ -797,7 +829,7 @@ def parse_stan(path, period_id=None, layer_id=None):
         DA_scale = _apply_stan_geometry(
             nodes, links, node_id_of_process, link_id_of_flow, external_of_flow,
             sizing_of_link, geometry["processes"], geometry["polylines"],
-            geometry["markers"])
+            geometry["markers"], geometry["label_offsets"])
         containers = _text_containers(geometry["texts"])
     else:
         try:
@@ -935,6 +967,11 @@ def _place_vertical_flux_labels(link, points, band_px):
     local["value_label_on_path"] = False
     local["value_label_vert"] = "middle"
     local["value_label_pos_auto"] = False
+    # Le style ancre les labels au DÉPART du lien avec un décalage en x (flux
+    # horizontaux) : sur un flux vertical ce décalage pousserait l'ellipse hors
+    # de la bande — ici elle reste centrée sur le tracé.
+    local["value_label_horiz"] = "middle"
+    local["value_label_horiz_shift"] = 0
     if not (points and _link_has_name(link)):
         return
     xs = [p[0] for p in points]
@@ -946,7 +983,8 @@ def _place_vertical_flux_labels(link, points, band_px):
 
 
 def _apply_stan_geometry(nodes, links, node_id_of_process, link_id_of_flow,
-                         external_of_flow, sizing_of_link, proc_bounds, polylines, markers):
+                         external_of_flow, sizing_of_link, proc_bounds, polylines,
+                         markers, label_offsets):
     """Pose les positions, tailles et tracés dessinés par l'utilisateur dans STAN.
 
     Renvoie l'échelle (`user_scale`) du front. Celle-ci est choisie pour qu'aucune
@@ -1129,6 +1167,25 @@ def _apply_stan_geometry(nodes, links, node_id_of_process, link_id_of_flow,
             if route["orientation"] == "vv":
                 _place_vertical_flux_labels(
                     link, polylines.get(flow_id) or [], band_of.get(link["id"], 0.0))
+                continue
+        # Distance du label au nœud source : la VRAIE, lue dans le fichier
+        # (`m_fTextOffset`, en unités STAN le long du tracé). Le nom suit le même
+        # décalage pour rester sous l'ellipse. Départ vertical (équerre vh, route
+        # qui plonge) : l'offset court le long du tracé, donc vers le bas.
+        offset = label_offsets.get(flow_id)
+        if offset is None:
+            continue
+        shift = offset * scale
+        axes = _segment_axes(_simplify_polyline(polylines.get(flow_id) or []))
+        local = link["local"]
+        if axes and axes[0] == "v":
+            local["value_label_horiz_shift"] = 0
+            local["value_label_vert_shift"] = shift
+            local["name_label_horiz_shift"] = 0
+            local["name_label_vert_shift"] = shift + _NAME_BELOW_VALUE_PX
+        else:
+            local["value_label_horiz_shift"] = shift
+            local["name_label_horiz_shift"] = shift
 
     if not ky or ky <= 0:
         return 100.0
@@ -1161,15 +1218,31 @@ def _stan_theme(unit_code=None):
         # pas dessus — la valeur, elle, est sur le tracé, dans son ellipse.
         "name_label_is_visible": True,
         "name_label_color": "#000000",
-        # STAN écrit le nom du flux SOUS son tracé, et la valeur dessus, dans l'ellipse.
+        # STAN place les DEUX labels à distance constante du nœud SOURCE : l'ellipse
+        # de valeur sur le tracé, le nom juste en dessous, alignés d'un flux à
+        # l'autre. Chez nous : ancrage hors tracé au DÉPART du lien (`horiz: left`,
+        # ancre posée sur le nœud source) + décalage constant (`horiz_shift`).
+        # Un ancrage au milieu (`middle`, le défaut) tombe dans les coudes des flux
+        # routés et disperse les labels. `pos_auto` est coupé : il déplacerait le
+        # label au-dessus/en-dessous dès que la police dépasse la bande, alors que
+        # STAN garde l'ellipse SUR le trait et le nom DESSOUS, même pour un filet.
         "name_label_vert": "bottom",
         "name_label_on_path": False,
+        "name_label_horiz": "left",
+        "name_label_horiz_shift": _LINK_LABEL_START_OFFSET_PX,
+        "name_label_vert_shift": _NAME_BELOW_VALUE_PX,
+        "name_label_pos_auto": False,
         "value_label_is_visible": True,
-        "value_label_on_path": True,
+        "value_label_on_path": False,
+        "value_label_horiz": "left",
+        "value_label_horiz_shift": _LINK_LABEL_START_OFFSET_PX,
+        "value_label_vert": "middle",
+        "value_label_pos_auto": False,
         "value_label_color": "#000000",
-        # STAN écrit des entiers, jamais de décimales.
-        "value_label_custom_digit": True,
-        "value_label_nb_digit": 0,
+        # STAN affiche 3 chiffres significatifs (ses labels dessinés, `m_sText` :
+        # « 1,400 », « 336 », « 87.6 », « 0.0100 ») — pas un nombre fixe de décimales.
+        "value_label_significant_digits": True,
+        "value_label_nb_significant_digits": 3,
         # L'ellipse blanche à liseré noir.
         "value_label_background_visible": True,
         "value_label_background_type": "ellipse",
