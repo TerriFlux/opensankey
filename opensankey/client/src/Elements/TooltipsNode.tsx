@@ -3,6 +3,7 @@ import { Class_NodeElement } from './Node'
 import { Class_LinkElement } from './Link'
 import { TOOLTIP_STYLES, TooltipBehaviorManager } from './TooltipsCSS'
 import { getNameLabelValues } from './ElementsAttributesConfig'
+import { formatElementValue } from './ValueFormatting'
 import { Type_AnalysisDescriptor } from '../Charts/AnalysisDescriptor'
 import { isTooltipBlockVisible, Type_TooltipHiddenBlocks } from './TooltipBlocks'
 import { TFunction } from 'i18next'
@@ -327,31 +328,9 @@ export class NodeTooltip {
    * TooltipsLink. Sans lien de référence, repli sur la chaîne brute séparée.
    */
   private formatValue(n: number, sampleLink?: Class_LinkElement): string {
-    const addSep = (s: string) => s.replace(/(?<!\..*)(\d)(?=(?:\d{3})+(?:\.|$))/g, '$1 ')
-    if (!sampleLink) return addSep(String(n))
-    const lv = getNameLabelValues(sampleLink, 'value_label')
-    let v = n
-    // OS#1286 — en mode unit_model le facteur est le coefficient de l'unité du registre.
-    const model = lv.unit_type === 'unit_model' ? sampleLink.sankey.units.resolve(lv.unit) : undefined
-    if (model) {
-      if (model.unit.coefficient !== 0) v = v / model.unit.coefficient
-    } else if (lv.unit_factor && lv.unit_factor > 1) {
-      v = v / lv.unit_factor
-    }
-    let text: string
-    if (lv.scientific_notation) {
-      text = lv.significant_digits
-        ? v.toExponential((lv.nb_significant_digits ?? 1) - 1)
-        : v.toExponential()
-    } else if (lv.significant_digits) {
-      text = String(parseFloat(v.toPrecision(lv.nb_significant_digits ?? 3)))
-      if (lv.custom_digit) text = String(parseFloat(parseFloat(text).toFixed(lv.nb_digit ?? 0)))
-    } else if (lv.custom_digit) {
-      text = String(parseFloat(v.toFixed(lv.nb_digit ?? 0)))
-    } else {
-      text = String(v)
-    }
-    return addSep(text)
+    // OS#305 — règle extraite dans ValueFormatting (elle était dupliquée ici et
+    // dans TooltipsLink, et les blocs de présentation en auraient fait une 3ᵉ copie).
+    return formatElementValue(n, sampleLink)
   }
 
   private getValuesTabHTML(hasInputs: boolean, hasOutputs: boolean, input_val: number, output_val: number, t: TFunction): string {
