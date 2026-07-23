@@ -84,6 +84,7 @@ _TABLES = (
     "Process", "ProcessInput", "ProcessOutput", "Flow",
     "FlowValue", "Unit", "Period", "FlowLayer",
     "Diagram", "Shape", "DefaultUnit", "Stock",
+    "LiteratureRef",
 )
 
 # Un fichier STAN multi-périodes devient un groupe de tags de DONNÉES : une période
@@ -684,6 +685,10 @@ def parse_stan(path, period_id=None, layer_id=None):
     pout_to_proc = _connector_to_leaf_process(
         tables["ProcessOutput"], "ProcessOutputID", "SubProcessOutputID")
     units = {r["UnitID"]: r for r in tables["Unit"]}
+    # Références bibliographiques : pointées par FlowValue.LiteratureRefID, elles
+    # deviennent la « Source » de la donnée du flux (champ data_source du lien).
+    literature = {r["LiteratureRefID"]: r.get("ReferenceText")
+                  for r in tables["LiteratureRef"]}
 
     periods = tables["Period"]
     layers = tables["FlowLayer"]
@@ -739,10 +744,16 @@ def parse_stan(path, period_id=None, layer_id=None):
             # L'arrondi ôte le bruit du double aller-retour de facteurs
             # (114999.999... -> 115).
             pair[our_key] = None if raw is None else round(raw * factor / display_factor, 6)
+        # Provenance de la valeur : la remarque libre de STAN devient l'hypothèse
+        # de la donnée, sa référence bibliographique devient la source.
+        pair["hypothesis"] = fv.get("Remarks") or None
+        pair["source"] = literature.get(fv.get("LiteratureRefID")) or None
         flow_values[(fv["PeriodID"], fv["FlowID"])] = pair
 
+    _EMPTY_PAIR = {"data": None, "result": None, "hypothesis": None, "source": None}
+
     def flow_pair(flow_id, pid):
-        return flow_values.get((pid, flow_id)) or {"data": None, "result": None}
+        return flow_values.get((pid, flow_id)) or _EMPTY_PAIR
 
     def flow_value(flow_id, pid):
         """Valeur AFFICHÉE (résultat si présent, sinon donnée) : bandes et échelle."""
@@ -764,11 +775,23 @@ def parse_stan(path, period_id=None, layer_id=None):
 
     def node_id_for_process(proc_id):
         proc = processes[proc_id]
-        name = proc.get("Name") or ("Process %s" % proc_id)
+        # STAN affiche « MatchCode, Name » (« P09, Rioolput 09 ») pour les
+        # processus, comme pour les flux : on compose pareil.
+        name = proc.get("Name")
+        match_code = proc.get("MatchCode")
+        if match_code and name:
+            name = "%s, %s" % (match_code, name)
+        elif match_code:
+            name = match_code
+        elif not name:
+            name = "Process %s" % proc_id
         nid = sankey_layout.normalizeStringToValidId("proc_%s_%s" % (proc_id, name))
         node_id_of_process[proc_id] = nid
         if nid not in nodes:
             nodes[nid] = sankey_layout.create_json_node(nid, name)
+            # La description libre du processus devient son infobulle.
+            if proc.get("Description"):
+                nodes[nid]["tooltip_text"] = proc["Description"]
         return nid
 
     external_of_flow = {}
@@ -825,6 +848,9 @@ def parse_stan(path, period_id=None, layer_id=None):
             flow_name = match_code
         if flow_name:
             new_flow["value"]["text_value"] = flow_name
+        # La description libre du flux devient son infobulle.
+        if fl.get("Description"):
+            new_flow["tooltip_text"] = fl["Description"]
 
         # Donnée + résultat, jamais fusionnés : `data_value` = MFInput (saisie),
         # `result_value` = MFCalc (réconciliée) — les deux champs qu'MFASankey
@@ -837,6 +863,10 @@ def parse_stan(path, period_id=None, layer_id=None):
                 value_json["data_value"] = pair["data"]
             else:
                 value_json["data_value"] = pair["data"] if pair["data"] is not None else 0.0
+            if pair["hypothesis"]:
+                value_json["data_hypothesis"] = pair["hypothesis"]
+            if pair["source"]:
+                value_json["data_source"] = pair["source"]
 
         if multi_period:
             # Une valeur par tag de période. L'arbre est reconstruit côté front à partir
@@ -1701,6 +1731,41 @@ def test_mfinput_et_mfcalc_deviennent_donnee_et_resultat():
     other = next(lk for lk in result["links"].values() if lk is not link)
     assert other["value"]["data_value"] == 115000.0
     assert "result_value" not in other["value"]
+
+
+def test_provenance_descriptions_et_matchcodes():
+    # MatchCode -> « P1, Process 1 » (noeuds comme flux), Description -> infobulle,
+    # Remarks -> data_hypothesis, LiteratureRef -> data_source.
+    import tempfile
+    import os
+    path = os.path.join(tempfile.mkdtemp(), "prov.smfa")
+    _build_minimal_smfa(path)
+    con = sqlite3.connect(path)
+    con.executescript(
+        """
+        ALTER TABLE Process ADD COLUMN MatchCode TEXT;
+        ALTER TABLE Process ADD COLUMN Description TEXT;
+        ALTER TABLE Flow ADD COLUMN Description TEXT;
+        ALTER TABLE FlowValue ADD COLUMN Remarks TEXT;
+        ALTER TABLE FlowValue ADD COLUMN LiteratureRefID INT;
+        CREATE TABLE LiteratureRef(LiteratureRefID INT, ReferenceText TEXT);
+        UPDATE Process SET MatchCode = 'P1', Description = 'Un four' WHERE ProcessID = 2;
+        UPDATE Flow SET Description = 'Koelwater' WHERE FlowID = 1;
+        UPDATE FlowValue SET Remarks = 'estimation haute', LiteratureRefID = 7 WHERE FlowID = 1;
+        INSERT INTO LiteratureRef VALUES(7, 'Rapport ADEME 2024');
+        """
+    )
+    con.commit()
+    con.close()
+
+    result = parse_stan(path)
+    node = next(n for n in result["nodes"].values() if n["name"] == "P1, Process 1")
+    assert node["tooltip_text"] == "Un four"
+    link = next(lk for lk in result["links"].values()
+                if lk["value"].get("text_value") == "Flow B")
+    assert link["tooltip_text"] == "Koelwater"
+    assert link["value"]["data_hypothesis"] == "estimation haute"
+    assert link["value"]["data_source"] == "Rapport ADEME 2024"
 
 
 def test_point_along_polyline():
