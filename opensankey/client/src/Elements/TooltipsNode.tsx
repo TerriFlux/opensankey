@@ -3,11 +3,16 @@ import { Class_NodeElement } from './Node'
 import { Class_LinkElement } from './Link'
 import { TOOLTIP_STYLES, TooltipBehaviorManager } from './TooltipsCSS'
 import { getNameLabelValues } from './ElementsAttributesConfig'
+import { Type_AnalysisDescriptor } from '../Charts/AnalysisDescriptor'
+import { isTooltipBlockVisible, Type_TooltipHiddenBlocks } from './TooltipBlocks'
 import { TFunction } from 'i18next'
 
 // Conteneur DOM (id fixe) de la zone de dessin du sankey unitaire embarqué dans
 // l'onglet du tooltip. Un seul tooltip à la fois → id unique suffisant.
 const UNITARY_TOOLTIP_CONTAINER_ID = 'unitary_tooltip_sankey_container'
+// Conteneur (id fixe) de l'onglet « Analyse » (OS#1278) — graphique couronne /
+// histogramme décrit par analysis_descriptor. Un seul tooltip à la fois.
+const ANALYSIS_TOOLTIP_CONTAINER_ID = 'analysis_tooltip_chart_container'
 
 
 export class NodeTooltip {
@@ -20,6 +25,11 @@ export class NodeTooltip {
   private _unitaryHandle?: { redraw: () => void, cleanup: () => void }
   private _unitaryResizeObserver?: ResizeObserver
   private _unitaryDrawn = false
+
+  // Onglet « Analyse » (OS#1278) : même patron paresseux que l'unitaire.
+  private _analysisHandle?: { redraw: () => void, cleanup: () => void }
+  private _analysisResizeObserver?: ResizeObserver
+  private _analysisDrawn = false
 
   constructor(node: Class_NodeElement) {
     this._node = node
@@ -34,6 +44,7 @@ export class NodeTooltip {
   public removeTooltip() {
     this.behaviorManager?.cleanup()
     this.cleanupUnitary()
+    this.cleanupAnalysis()
     d3.selectAll('.sankey-tooltip').remove()
     this._node.d3_selection?.classed('tooltip_shown', false)
   }
@@ -47,8 +58,18 @@ export class NodeTooltip {
     this._unitaryDrawn = false
   }
 
+  /** Détruit le graphique d'analyse embarqué (observer + conteneur) s'il existe. */
+  private cleanupAnalysis() {
+    this._analysisResizeObserver?.disconnect()
+    this._analysisResizeObserver = undefined
+    this._analysisHandle?.cleanup()
+    this._analysisHandle = undefined
+    this._analysisDrawn = false
+  }
+
   public drawTooltip() {
     this.cleanupUnitary()
+    this.cleanupAnalysis()
     d3.selectAll('.sankey-tooltip').remove()
 
     let x = this.mousePosition.x || this._node.position_x
@@ -104,12 +125,44 @@ export class NodeTooltip {
           content.classList.add('active')
           // L'onglet « Sankey unitaire » se dessine paresseusement : son conteneur
           // n'a une taille non nulle qu'une fois affiché (display:block).
-          if (content.getAttribute('data-tab-key') === 'unitary') {
+          const key = content.getAttribute('data-tab-key')
+          if (key === 'unitary') {
             this.drawUnitaryTab()
+          } else if (key === 'analysis') {
+            this.drawAnalysisTab()
           }
         }
       })
     })
+  }
+
+  /**
+   * Dessine (une seule fois) le graphique d'analyse dans le conteneur de l'onglet,
+   * via le hook OS+ (draw_analysis_in_container). Observe le redimensionnement pour
+   * recadrer. Pas d'épingle : le graphique est statique (pas d'interaction lourde).
+   */
+  private drawAnalysisTab() {
+    if (this._analysisDrawn) return
+    const hook = this._node.drawing_area.application_data.draw_analysis_in_container
+    if (typeof hook !== 'function') return
+    const container = document.getElementById(ANALYSIS_TOOLTIP_CONTAINER_ID)
+    if (!container) return
+    this._analysisDrawn = true
+
+    const handle = hook(this._node, '#' + ANALYSIS_TOOLTIP_CONTAINER_ID)
+    if (handle) this._analysisHandle = handle
+
+    // Recadrage au redimensionnement du tooltip (poignée resize CSS).
+    if (typeof ResizeObserver !== 'undefined') {
+      let raf = 0
+      let first = true
+      this._analysisResizeObserver = new ResizeObserver(() => {
+        if (first) { first = false; return }
+        if (raf) cancelAnimationFrame(raf)
+        raf = requestAnimationFrame(() => this._analysisHandle?.redraw())
+      })
+      this._analysisResizeObserver.observe(container)
+    }
   }
 
   /**
@@ -169,81 +222,103 @@ export class NodeTooltip {
   }
 
   private getTooltipHTML(): string {
-    this._node.sankey.drawing_area.bypass_redraws = true
+    return this._node.sankey.drawing_area.withBypassRedraws(() => {
     // Calculs des valeurs
-    let input_val = 0
-    let output_val = 0
-    this._node.input_links_list.filter(l => l.is_visible).forEach(l => input_val += l.valueCurrent ?? 0)
-    this._node.output_links_list.filter(l => l.is_visible).forEach(l => output_val += l.valueCurrent ?? 0)
+      let input_val = 0
+      let output_val = 0
+      this._node.input_links_list.filter(l => l.is_visible).forEach(l => input_val += l.valueCurrent ?? 0)
+      this._node.output_links_list.filter(l => l.is_visible).forEach(l => output_val += l.valueCurrent ?? 0)
 
-    const app_data = this._node.drawing_area.application_data
-    const t = app_data.t.bind(app_data)
-    const hasInputs = this._node.hasInputLinks()
-    const hasOutputs = this._node.hasOutputLinks()
-    const hasTags = this._node.sankey.flux_taggs_list.length > 0
-    // Onglet unitaire : seulement si OS+ a injecté le hook de dessin.
-    const hasUnitary = app_data.has_sankey_plus && typeof app_data.draw_unitary_in_container === 'function'
+      const app_data = this._node.drawing_area.application_data
+      const t = app_data.t.bind(app_data)
+      const hasInputs = this._node.hasInputLinks()
+      const hasOutputs = this._node.hasOutputLinks()
+      const hasTags = this._node.sankey.flux_taggs_list.length > 0
+      // Onglet unitaire : seulement si OS+ a injecté le hook de dessin.
+      const hasUnitary = app_data.has_sankey_plus && typeof app_data.draw_unitary_in_container === 'function'
+      // Onglet analyse (OS#1278) : hook OS+ présent ET le nœud publie un graphique
+      // d'analyse dans l'info-bulle (surfaces.tooltip du descripteur résolu).
+      const analysis_descriptor = this._node.getElementProperty('analysis_descriptor') as Type_AnalysisDescriptor | undefined
+      const hasAnalysis = typeof app_data.draw_analysis_in_container === 'function'
+        && !!analysis_descriptor?.surfaces?.tooltip
+        && (!!analysis_descriptor.decompose || !!analysis_descriptor.compare)
 
-    // Définition des onglets disponibles (clé, libellé, contenu HTML).
-    const tabs: { key: string, label: string, content: string }[] = [{
-      key: 'values',
-      label: t('Noeud.drawing_area_tooltip.values_tab') || 'Valeurs & Ratios',
-      content: this.getValuesTabHTML(hasInputs, hasOutputs, input_val, output_val, t)
-    }]
-    if (hasTags) {
-      tabs.push({
-        key: 'tags',
-        label: t('Noeud.drawing_area_tooltip.tags_tab') || 'Tags de flux',
-        content: this.getTagsTabHTML(hasInputs, hasOutputs, input_val, output_val, t)
-      })
-    }
-    if (hasUnitary) {
-      tabs.push({
-        key: 'unitary',
-        label: t('Noeud.drawing_area_tooltip.unitary_tab') || 'Sankey unitaire',
-        // Conteneur vide : OS+ y dessine la DA unitaire à l'activation de l'onglet.
-        content: `<div class="unitary-tooltip-container" id="${UNITARY_TOOLTIP_CONTAINER_ID}"></div>`
-      })
-    }
+      // OS#1285 — visibilité configurable des blocs (attribut de style résolu).
+      const hidden_blocks = this._node.getElementProperty('tooltip_hidden_blocks') as Type_TooltipHiddenBlocks | undefined
+      const vis = (id: string) => isTooltipBlockVisible(hidden_blocks, id)
 
-    // Structure HTML
-    let html = `<style>${TOOLTIP_STYLES}${this.getTabStyles()}</style>`
+      // Définition des onglets disponibles (clé, libellé, contenu HTML).
+      const tabs: { key: string, label: string, content: string }[] = []
+      if (vis('values')) {
+        tabs.push({
+          key: 'values',
+          label: t('Noeud.drawing_area_tooltip.values_tab') || 'Valeurs & Ratios',
+          content: this.getValuesTabHTML(hasInputs, hasOutputs, input_val, output_val, t)
+        })
+      }
+      if (hasTags && vis('tags')) {
+        tabs.push({
+          key: 'tags',
+          label: t('Noeud.drawing_area_tooltip.tags_tab') || 'Tags de flux',
+          content: this.getTagsTabHTML(hasInputs, hasOutputs, input_val, output_val, t)
+        })
+      }
+      if (hasUnitary && vis('unitary')) {
+        tabs.push({
+          key: 'unitary',
+          label: t('Noeud.drawing_area_tooltip.unitary_tab') || 'Sankey unitaire',
+          // Conteneur vide : OS+ y dessine la DA unitaire à l'activation de l'onglet.
+          content: `<div class="unitary-tooltip-container" id="${UNITARY_TOOLTIP_CONTAINER_ID}"></div>`
+        })
+      }
+      if (hasAnalysis && vis('analysis')) {
+        tabs.push({
+          key: 'analysis',
+          label: t('Noeud.drawing_area_tooltip.analysis_tab') || 'Analyse',
+          // Conteneur vide : OS+ y dessine le graphique d'analyse à l'activation.
+          content: `<div class="analysis-tooltip-container" id="${ANALYSIS_TOOLTIP_CONTAINER_ID}"></div>`
+        })
+      }
 
-    // Header avec bouton de fermeture
-    //html += `<p class="tooltip-subtitle">u:${this._node.position_u } | v:${this._node.position_v } | x:${this._node.position_x } | y:${this._node.position_y }</p>`;
-    html += '<div class="tooltip-header">'
-    html += '<button class="tooltip-close" type="button" aria-label="Fermer">&times;</button>'
-    html += `<h4 class="tooltip-title">${this._node.name.split('\\n').join(' ')}</h4>`
-    if (this._node.tooltip_text) {
-      html += `<p class="tooltip-subtitle">${this._node.tooltip_text.split('\n').join('<br>')}</p>`
-    }
+      // Structure HTML
+      let html = `<style>${TOOLTIP_STYLES}${this.getTabStyles()}</style>`
 
-    const useTabs = tabs.length > 1
-    // Onglets (seulement si plus d'un onglet disponible)
-    if (useTabs) {
-      html += '<div class="tab-container"><div class="tab-buttons">'
-      tabs.forEach((tab, i) => {
-        html += `<button class="tab-button${i === 0 ? ' active' : ''}">${tab.label}</button>`
-      })
-      html += '</div></div>'
-    }
+      // Header avec bouton de fermeture
+      //html += `<p class="tooltip-subtitle">u:${this._node.position_u } | v:${this._node.position_v } | x:${this._node.position_x } | y:${this._node.position_y }</p>`;
+      html += '<div class="tooltip-header">'
+      html += '<button class="tooltip-close" type="button" aria-label="Fermer">&times;</button>'
+      html += `<h4 class="tooltip-title">${this._node.name.split('\\n').join(' ')}</h4>`
+      if (this._node.tooltip_text) {
+        html += `<p class="tooltip-subtitle">${this._node.tooltip_text.split('\n').join('<br>')}</p>`
+      }
 
-    html += '</div>'
+      const useTabs = tabs.length > 1
+      // Onglets (seulement si plus d'un onglet disponible)
+      if (useTabs) {
+        html += '<div class="tab-container"><div class="tab-buttons">'
+        tabs.forEach((tab, i) => {
+          html += `<button class="tab-button${i === 0 ? ' active' : ''}">${tab.label}</button>`
+        })
+        html += '</div></div>'
+      }
 
-    // Contenu avec onglets
-    html += '<div class="tooltip-content">'
-    if (useTabs) {
-      tabs.forEach((tab, i) => {
-        html += `<div class="tab-content${i === 0 ? ' active' : ''}" data-tab-key="${tab.key}">${tab.content}</div>`
-      })
-    } else {
-      // Un seul onglet : affichage direct du contenu (valeurs)
-      html += tabs[0].content
-    }
+      html += '</div>'
 
-    html += '</div>'
-    this._node.sankey.drawing_area.bypass_redraws = false
-    return html
+      // Contenu avec onglets
+      html += '<div class="tooltip-content">'
+      if (useTabs) {
+        tabs.forEach((tab, i) => {
+          html += `<div class="tab-content${i === 0 ? ' active' : ''}" data-tab-key="${tab.key}">${tab.content}</div>`
+        })
+      } else if (tabs.length === 1) {
+        // Un seul onglet : affichage direct du contenu. (0 onglet = tout masqué
+        // par la config OS#1285 → header/titre seuls.)
+        html += tabs[0].content
+      }
+
+      html += '</div>'
+      return html
+    }, false)
   }
 
   /**
@@ -256,7 +331,11 @@ export class NodeTooltip {
     if (!sampleLink) return addSep(String(n))
     const lv = getNameLabelValues(sampleLink, 'value_label')
     let v = n
-    if (lv.unit_factor && lv.unit_factor > 1) {
+    // OS#1286 — en mode unit_model le facteur est le coefficient de l'unité du registre.
+    const model = lv.unit_type === 'unit_model' ? sampleLink.sankey.units.resolve(lv.unit) : undefined
+    if (model) {
+      if (model.unit.coefficient !== 0) v = v / model.unit.coefficient
+    } else if (lv.unit_factor && lv.unit_factor > 1) {
       v = v / lv.unit_factor
     }
     let text: string
@@ -283,7 +362,12 @@ export class NodeTooltip {
     let unit = ''
     if (sampleLink) {
       const lv = getNameLabelValues(sampleLink, 'value_label')
-      if (lv.unit_visible) unit = (lv.unit ?? '').toString().trim()
+      if (lv.unit_visible) {
+        // OS#1286 — en mode unit_model, `unit` porte un id : symbole résolu.
+        unit = lv.unit_type === 'unit_model'
+          ? (sampleLink.sankey.units.resolve(lv.unit)?.unit.name ?? '')
+          : (lv.unit ?? '').toString().trim()
+      }
     }
     const valHeader = unit
       ? `${t('Noeud.drawing_area_tooltip.val')} (${unit})`
@@ -335,6 +419,26 @@ export class NodeTooltip {
         html += renderRow(l, output_val, false)
       })
       html += renderTotalRow(output_val, outputLinks[0])
+    }
+
+    // OS#1272 — Section « Bilan » : entrée / sortie / différence. Toujours affichée
+    // quand le nœud a des flux des deux côtés (indépendante de l'activation du
+    // marqueur). Signale l'état si le marqueur est actif (⚠ déséquilibré / ✓ ok).
+    if (hasInputs && hasOutputs) {
+      const bal = this._node.getFluxBalance()
+      const sampleLink = this._node.input_links_list.filter(l => l.is_visible)[0]
+        ?? this._node.output_links_list.filter(l => l.is_visible)[0]
+      const status = this._node.balance_status
+      html += `<tr class="section-header"><td colspan="3">${t('Noeud.drawing_area_tooltip.balance') || 'Bilan'}</td></tr>`
+      html += `<tr><td>${t('Noeud.drawing_area_tooltip.prov') || 'Entrées'}</td><td class="value">${this.formatValue(bal.input, sampleLink)}</td><td></td></tr>`
+      html += `<tr><td>${t('Noeud.drawing_area_tooltip.dest') || 'Sorties'}</td><td class="value">${this.formatValue(bal.output, sampleLink)}</td><td></td></tr>`
+      let statusCell = ''
+      if (status) {
+        statusCell = status.violated
+          ? `⚠ ${t('Noeud.drawing_area_tooltip.balance_ko') || 'Déséquilibré'}`
+          : `✓ ${t('Noeud.drawing_area_tooltip.balance_ok') || 'Équilibré'}`
+      }
+      html += `<tr class="total-row"><td>${t('Noeud.drawing_area_tooltip.balance_diff') || 'Différence (E − S)'}</td><td class="value">${this.formatValue(bal.diff, sampleLink)}</td><td>${statusCell}</td></tr>`
     }
 
     html += '</tbody></table>'
@@ -462,6 +566,25 @@ export class NodeTooltip {
          fit cadre sur les formes seules) ne sont que du bruit visuel ici. */
       .unitary-tooltip-container .scrollbar {
         display: none !important;
+      }
+      /* Onglet analyse (OS#1278) : même stratégie flex pleine hauteur que l'unitaire
+         pour que le graphique suive le redimensionnement du tooltip. */
+      .tab-content[data-tab-key="analysis"].active {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        box-sizing: border-box;
+      }
+      .analysis-tooltip-container {
+        position: relative;
+        flex: 1 1 auto;
+        width: 100%;
+        min-width: 0;
+        /* Hauteur mini pour que la couronne/l'histogramme aient la place de se
+           dessiner même dans un tooltip non redimensionné. */
+        min-height: 220px;
+        background: white;
+        overflow: hidden;
       }
     `
   }

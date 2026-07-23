@@ -36,6 +36,7 @@ import {
   BOX2COLS, BOX2COLSTITLEH4,
   ConfigMenuNumberInput, ConfigMenuTextInput
 } from './MenuCommon'
+import { useModelBinding } from '../../hooks/useModelBinding'
 import { getElementsLabelValues } from '../../Elements/ElementsAttributesConfig'
 import { SankeyLinkSelection } from './MenuElementsSelection'
 import { value_option_percent_constants } from '../../Elements/LinkValues'
@@ -258,7 +259,152 @@ export const LinkValueTypeSelector = ({
 /*************************************************************************************************/
 export const default_value_option = 'value'
 
-export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_ApplicationData }) => {
+// #1243 — Origine / destination / inversion d'un flux, extrait pour servir
+// d'EN-TÊTE D'IDENTITÉ à l'inspecteur (l'identité n'est pas un onglet).
+// `refresh` : rafraîchissement post-retopologie, fourni par l'hôte (le panneau
+// historique passe le sien ; l'inspecteur notifie les menus liés aux flux).
+export const LinkOriginDestEditor = ({ app_data, refresh }: {
+  app_data: Class_ApplicationData
+  refresh: () => void
+}) => {
+  const { t, drawing_area, history } = app_data
+  const { sankey } = drawing_area
+  const selected_links = drawing_area.selected_links_list_sorted
+  return <Box
+    display='grid'
+    gridTemplateColumns='9fr 1fr'
+    gridTemplateRows='1fr 1fr'
+    gridColumnGap='0.25rem'
+    gridRowGap='0.25rem'
+    height='4.25rem'
+  >
+    <Box
+      display='grid'
+      gridColumn='1'
+      gridRow='1 / 3'
+      gridTemplateColumns='1fr'
+      gridTemplateRows='1fr 1fr'
+      gridRowGap='0.25rem'
+    >
+      <OSTooltip label={t('Flux.tooltips.src')}>
+        <InputGroup variant='menuconfigpanel_option_input'>
+          <InputLeftAddon height='1.5rem' width='5rem'>
+            {t('Flux.src')}
+          </InputLeftAddon>
+          <Select
+            variant='select_custom_style'
+            isDisabled={selected_links.length !== 1}
+            onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+              const new_source = sankey.nodes_dict[event.target.value]
+              if (new_source !== null) {
+                // Retopologie du graphe : on mémorise l'ancienne origine flux par flux.
+                const before = selected_links.map(link => ({ link, source: link.source }))
+                const apply = () => {
+                  selected_links.forEach(link => link.source = new_source)
+                  refresh()
+                }
+                const undo = () => {
+                  before.forEach(({ link, source }) => link.source = source)
+                  refresh()
+                }
+                history.saveUndo(undo)
+                history.saveRedo(apply)
+                apply()
+              }
+            }}
+            value={selected_links.length > 0 ? selected_links[0].source.id : ''}
+          >
+            <>
+              <option hidden key={'no_source'} value=''> </option>
+              {sankey.nodes_list.map((n, i) => <option key={i} value={n.id}>{n.name}</option>)}
+            </>
+          </Select>
+        </InputGroup>
+      </OSTooltip>
+
+      <OSTooltip label={t('Flux.tooltips.trgt')}>
+        <InputGroup variant='menuconfigpanel_option_input'>
+          <InputLeftAddon height='1.5rem' width='5rem'>
+            {t('Flux.trgt')}
+          </InputLeftAddon>
+          <Select
+            variant='select_custom_style'
+            isDisabled={selected_links.length !== 1}
+            onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+              const new_target = sankey.nodes_dict[event.target.value]
+              if (new_target !== null) {
+                // Idem origine : ancienne destination mémorisée flux par flux.
+                const before = selected_links.map(link => ({ link, target: link.target }))
+                const apply = () => {
+                  selected_links.forEach(link => link.target = new_target)
+                  refresh()
+                }
+                const undo = () => {
+                  before.forEach(({ link, target }) => link.target = target)
+                  refresh()
+                }
+                history.saveUndo(undo)
+                history.saveRedo(apply)
+                apply()
+              }
+            }}
+            value={selected_links.length > 0 ? selected_links[0].target.id : ''}
+          >
+            <>
+              <option hidden key={'no_target'} value=''> </option>
+              {sankey.nodes_list.map((n, i) => <option key={i} value={n.id}>{n.name}</option>)}
+            </>
+          </Select>
+        </InputGroup>
+      </OSTooltip>
+    </Box>
+    {/* Bouton inversion origine <-> destination */}
+    <OSTooltip label={t('Flux.tooltips.if')}>
+      <Button
+        variant='menuconfigpanel_option_button'
+        gridColumn='2'
+        gridRow='1 / 3'
+        alignSelf='center'
+        justifySelf='stretch'
+        height='2.25rem'
+        width='100%'
+        minWidth='unset'
+        padding='0'
+        isDisabled={selected_links.length !== 1}
+        onClick={() => {
+          // L'inversion est sa propre inverse : undo et redo sont la même fonction.
+          const swap = () => {
+            selected_links.forEach(link => link.swapSourceAndTarget())
+            refresh()
+          }
+          history.saveUndo(swap)
+          history.saveRedo(swap)
+          swap()
+        }}
+      >
+        <FaExchangeAlt size='1rem' style={{ transform: 'rotate(90deg)' }} />
+      </Button>
+    </OSTooltip>
+  </Box>
+}
+
+export const MenuConfigurationLinksData = ({
+  app_data, hide_selector = false, hide_origin_dest = false, afm_only = false, hide_afm = false
+}: {
+  app_data: Class_ApplicationData
+  // #1243 — inspecteur : le sélecteur unifié est rendu une seule fois en tête de
+  // panneau ; on masque alors celui embarqué ici (doublon).
+  hide_selector?: boolean
+  // #1243 — inspecteur : origine/destination vivent dans l'en-tête d'identité
+  // du panneau (LinkOriginDestEditor), pas dans l'onglet Valeur.
+  hide_origin_dest?: boolean
+  // #1258 — onglet MFA de l'inspecteur : ne rendre QUE le panneau AFM (type de
+  // valeur, bornes, incertitude), sans rangée Basique/AFM ni sélecteurs.
+  afm_only?: boolean
+  // #1258 — onglet Valeur : le panneau AFM vit désormais dans l'onglet MFA ;
+  // on masque ici la rangée Basique/AFM et son contenu.
+  hide_afm?: boolean
+}) => {
   const { t, drawing_area, menu_configuration } = app_data
   const { sankey } = drawing_area
   const { data_taggs_list } = sankey
@@ -274,13 +420,9 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
   const first_link = selected_links[0]
   const first_link_value = first_link?.value
 
-  // Function used to force this component to reload
-  const [, setCount] = useState(0)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  useModelBinding(ref_to_menu_config_links_data_updater)
   const [dataTab, setDataTab] = useState<'basic' | 'afm'>('basic')
-
-  const refreshThis = () => {
-    setCount(a => a + 1)
-  }
 
   // Link this menu's update function
   const refreshThisAndUpdateRelatedComponents = () => {
@@ -290,8 +432,6 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
     // And update this menu also
     menu_configuration.updateComponentRelatedToLinksData()
   }
-
-  ref_to_menu_config_links_data_updater.current = refreshThis
 
   // const shapeValues = selected_links.length > 0
   //   ? getLinkShapeValues(selected_links, refreshThisAndUpdateRelatedComponents)
@@ -316,10 +456,10 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
   })
 
   const value_option = first_link_value?.value_option ?? default_value_option
-  // eslint-disable-next-line no-console
-  if (first_link) console.log('[TYPEDEBUG] render-read', { value_option, readLeaf: first_link_value, valueOptionOnLeaf: first_link_value?.value_option, selectedTags: first_link.selected_data_tags_list.map(t => t.id), valuesIsTree: !(first_link_value && first_link_value.constructor && first_link_value.constructor.name === 'Class_LinkValue') })
   // Force AFM tab when value_option is not 'value' (basic tab disabled)
-  if (dataTab === 'basic' && value_option !== 'value' && app_data.has_sankey_afm) setDataTab('afm')
+  if (!afm_only && !hide_afm && dataTab === 'basic' && value_option !== 'value' && app_data.has_sankey_afm) setDataTab('afm')
+  // #1258 — l'onglet appelant impose le panneau : MFA → 'afm', Valeur → 'basic'.
+  const effective_tab = afm_only ? 'afm' : hide_afm ? 'basic' : dataTab
 
   const unit_text = value_option_percent_constants.includes(value_option) ?
     '%' :
@@ -395,98 +535,12 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
   }
 
   return <Box layerStyle='menu_sub_section'>
-    <SankeyLinkSelection app_data={app_data} />
-    {/* Édition origine / destination du flux */}
-    <Box
-      display='grid'
-      gridTemplateColumns='9fr 1fr'
-      gridTemplateRows='1fr 1fr'
-      gridColumnGap='0.25rem'
-      gridRowGap='0.25rem'
-      height='4.25rem'
-    >
-      <Box
-        display='grid'
-        gridColumn='1'
-        gridRow='1 / 3'
-        gridTemplateColumns='1fr'
-        gridTemplateRows='1fr 1fr'
-        gridRowGap='0.25rem'
-      >
-        <OSTooltip label={t('Flux.tooltips.src')}>
-          <InputGroup variant='menuconfigpanel_option_input'>
-            <InputLeftAddon height='1.5rem' width='5rem'>
-              {t('Flux.src')}
-            </InputLeftAddon>
-            <Select
-              variant='select_custom_style'
-              isDisabled={selected_links.length !== 1}
-              onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
-                const new_source = sankey.nodes_dict[event.target.value]
-                if (new_source !== null) {
-                  selected_links.forEach(link => link.source = new_source)
-                  refreshThisAndUpdateRelatedComponents()
-                }
-              }}
-              value={selected_links.length > 0 ? selected_links[0].source.id : ''}
-            >
-              <>
-                <option hidden key={'no_source'} value=''> </option>
-                {sankey.nodes_list.map((n, i) => <option key={i} value={n.id}>{n.name}</option>)}
-              </>
-            </Select>
-          </InputGroup>
-        </OSTooltip>
-
-        <OSTooltip label={t('Flux.tooltips.trgt')}>
-          <InputGroup variant='menuconfigpanel_option_input'>
-            <InputLeftAddon height='1.5rem' width='5rem'>
-              {t('Flux.trgt')}
-            </InputLeftAddon>
-            <Select
-              variant='select_custom_style'
-              isDisabled={selected_links.length !== 1}
-              onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
-                const new_target = sankey.nodes_dict[event.target.value]
-                if (new_target !== null) {
-                  selected_links.forEach(link => link.target = new_target)
-                  refreshThisAndUpdateRelatedComponents()
-                }
-              }}
-              value={selected_links.length > 0 ? selected_links[0].target.id : ''}
-            >
-              <>
-                <option hidden key={'no_target'} value=''> </option>
-                {sankey.nodes_list.map((n, i) => <option key={i} value={n.id}>{n.name}</option>)}
-              </>
-            </Select>
-          </InputGroup>
-        </OSTooltip>
-      </Box>
-      {/* Bouton inversion origine <-> destination */}
-      <OSTooltip label={t('Flux.tooltips.if')}>
-        <Button
-          variant='menuconfigpanel_option_button'
-          gridColumn='2'
-          gridRow='1 / 3'
-          alignSelf='center'
-          justifySelf='stretch'
-          height='2.25rem'
-          width='100%'
-          minWidth='unset'
-          padding='0'
-          isDisabled={selected_links.length !== 1}
-          onClick={() => {
-            selected_links.forEach(link => link.swapSourceAndTarget())
-            refreshThisAndUpdateRelatedComponents()
-          }}
-        >
-          <FaExchangeAlt size='1rem' style={{ transform: 'rotate(90deg)' }} />
-        </Button>
-      </OSTooltip>
-    </Box>
+    {!hide_selector && !afm_only && <SankeyLinkSelection app_data={app_data} />}
+    {/* Édition origine / destination du flux (dans l'inspecteur : en-tête d'identité) */}
+    {!hide_origin_dest && !afm_only &&
+      <LinkOriginDestEditor app_data={app_data} refresh={refreshThisAndUpdateRelatedComponents} />}
     {/* Data tags selector */}
-    {data_taggs_list.map(data_tagg => {
+    {!afm_only && data_taggs_list.map(data_tagg => {
       return <BOX2COLSTITLEH4 key={data_tagg.id} title={data_tagg.name}>
         <Select
           name={data_tagg.id}
@@ -502,8 +556,9 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
       </BOX2COLSTITLEH4>
     })}
 
-    {/* Tab selector: Basique / AFM */}
-    {app_data.has_sankey_afm && (
+    {/* Tab selector: Basique / AFM — masqué quand l'onglet appelant impose le
+        panneau (#1258 : Valeur → basic, MFA → afm). */}
+    {app_data.has_sankey_afm && !afm_only && !hide_afm && (
       <Box layerStyle='options_2cols'>
         <OSTooltip label={value_option !== 'value' ? t('Flux.data.tooltips.tab_basic_disabled') : ''}>
           <Button
@@ -523,8 +578,17 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
       </Box>
     )}
 
+    {/* #1258 — en mode hide_afm (onglet Valeur), un type de valeur non basique
+        s'édite dans l'onglet MFA : on l'indique au lieu d'afficher un champ
+        de valeur inadapté. */}
+    {effective_tab === 'basic' && value_option !== 'value' && app_data.has_sankey_afm && (
+      <Box layerStyle='menuconfigpanel_option_name' opacity={0.7}>
+        {t('inspector.mfa.value_in_mfa')}
+      </Box>
+    )}
+
     {/* ===== Panel "Basique" ===== */}
-    {dataTab === 'basic' && (<>
+    {effective_tab === 'basic' && (value_option === 'value' || !app_data.has_sankey_afm) && (<>
       {/* Value */}
       <RowSetter2Cols
         attributePath={'Flux.labels'}
@@ -552,6 +616,7 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
           <BOX2COLS>
             <Button
               variant={default_value_target !== null ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+              sx={{ width: 'fit-content', paddingInline: '0.6rem' }}
               isDisabled={!app_data.has_sankey_plus}
               onClick={() => {
                 if (default_value_target !== null) {
@@ -588,7 +653,7 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
     </>)}
 
     {/* ===== Panel "AFM" ===== */}
-    {dataTab === 'afm' && app_data.has_sankey_afm && (<>
+    {effective_tab === 'afm' && app_data.has_sankey_afm && (<>
       {/* Data type selector */}
       <RowSetter2Cols
         attributePath={'Flux.data'}
@@ -600,14 +665,11 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
           onChange={(evt) => {
             const computed = compute_value_option(evt.target.value, afm_node_ref, afm_dir)
             selected_links.forEach(l => {
-              const before = l.value
-                l.value!.value_option = computed as ValueOptionType
-                if (computed === 'unit_ratio') {
-                  l.value!.ratio_unit_tag = unit_data_tagg?.tags_list[0] ?? null
-                }
-                l.drawElements()
-                // eslint-disable-next-line no-console
-                console.log('[TYPEDEBUG] write', { computed, beforeLeaf: before, afterReadLeaf: l.value, sameLeaf: before === l.value, valueOptionAfter: l.value?.value_option, selectedTags: l.selected_data_tags_list.map(t => t.id) })
+              l.value!.value_option = computed as ValueOptionType
+              if (computed === 'unit_ratio') {
+                l.value!.ratio_unit_tag = unit_data_tagg?.tags_list[0] ?? null
+              }
+              l.drawElements()
             })
             refreshThisAndUpdateRelatedComponents()
           }}
@@ -758,6 +820,7 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
             <BOX2COLS>
               <Button
                 variant={first_link?.dataUncertainty !== null ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                sx={{ width: 'fit-content', paddingInline: '0.6rem' }}
                 onClick={() => {
                   if (first_link?.dataUncertainty !== null) {
                     Class_LinkElement.updateLinks(
@@ -794,7 +857,7 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
     </>)}
 
     {/* Text display and mode selector */}
-    <Box layerStyle='options_2cols'>
+    {!afm_only && <Box layerStyle='options_2cols'>
       <RowSetter2Cols
         attributePath={'Flux.data'}
         attributeKey={'affichage'}
@@ -815,10 +878,11 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
       </RowSetter2Cols>
       <Button
         variant={(displayMode === 'simple_text' || displayMode === 'rich_text') ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
+        sx={{ width: 'fit-content', justifySelf: 'end', paddingInline: '0.8rem' }}
         onClick={setModeText}
       >
         {t('Menu.display_mode.editor')}
       </Button>
-    </Box>
+    </Box>}
   </Box>
 }

@@ -24,8 +24,9 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { useState } from 'react'
+import React from 'react'
 import * as d3 from '../d3Modules'
+import { useModelBinding } from '../hooks/useModelBinding'
 import { Class_ApplicationData } from './ApplicationData'
 import { FType_InitializeAdditionalMenus } from '../Modules'
 import { value_option_percent_constants, unit_stock_percent_constants, ValueOptionType } from '../Elements/LinkValues'
@@ -268,13 +269,6 @@ export const CutName = (t: string, n: number): string => {
   return (t && t.length > n) ? t.slice(0, n) + '...' : t
 }
 
-export const check_perf = (f: () => void, name: string) => {
-  const s = performance.now()
-  f()
-  const e = performance.now()
-  console.debug(`Execution ${name} took  ${e - s} ms`)
-}
-
 export const GetRandomInt = (max: number) => {
   return Math.floor(Math.random() * max)
 }
@@ -320,17 +314,14 @@ export const WrapperInitializeAdditionalMenus = ({ new_data, initializeAdditiona
   new_data: Class_ApplicationData,
   initializeAdditionalMenus: FType_InitializeAdditionalMenus,
 }) => {
-  const [, setUpdate] = useState(0)
-  new_data.menu_configuration.ref_rerender_submodules_menus.current = () => setUpdate(a => a + 1)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  useModelBinding(new_data.menu_configuration.ref_rerender_submodules_menus)
 
   new_data.menu_configuration.additionalMenus.current = {
     external_top_buttons_item: {},
 
-    additional_menu_type: {},
-    additional_menu_button_element_configurable: {},
-    // additional_menu_config_content: { data: {}, style: {}, presentation:{} },
-    additional_new_menu_config_content: {},
-
+    // #1243 — les champs d'injection du menu de config sont déposés avec la
+    // matrice : les couches passent par inspector_registry / filter_panel_registry.
     extra_background_element: <></>,
     additional_nav_item: [],
     additional_bottom_item: [],
@@ -655,6 +646,22 @@ export const format_value = (
     target.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
     data_value = data_value && total_source ? data_value / total_source * 100 : null
     is_percent = true
+  } else if (label_values.unit_type == '%PS' || label_values.unit_type == '%PD') {
+    // Part du flux dans le total (débit) du nœud « parent » : nœud amont (source)
+    // pour %PS, nœud aval (destination) pour %PD. Contrairement aux modes
+    // directionnels (%IS/%OS côté source, %ID/%OD côté destination) qui ne
+    // rapportent qu'aux entrées OU aux sorties, le total « parent » d'un nœud est
+    // son débit propre = max(somme des entrées, somme des sorties). Sur un nœud
+    // équilibré (entrées = sorties) %PD coïncide avec %ID et %PS avec %OS ; ils
+    // divergent sur les nœuds déséquilibrés (sources, puits, import/export).
+    const ref_node = label_values.unit_type == '%PS' ? source : target
+    let total_in = 0
+    let total_out = 0
+    ref_node.input_links_list.filter(l => l.is_visible).forEach(l => total_in += l.valueCurrent ?? 0)
+    ref_node.output_links_list.filter(l => l.is_visible).forEach(l => total_out += l.valueCurrent ?? 0)
+    const total_node = Math.max(total_in, total_out)
+    data_value = data_value && total_node ? data_value / total_node * 100 : null
+    is_percent = true
   } else if (label_values.unit_type == '%SS' || label_values.unit_type == '%SD') {
     // Display-only: link value as a percent of a node's stock level.
     // '%SS' = source node ("en sortie"), '%SD' = destination node ("en entrée").
@@ -678,10 +685,18 @@ export const format_value = (
   // Second step. value formatting
   let text_value = ''
   // Create data label
+  // OS#1286 — mode « unit_model » : l'unité d'affichage vient du registre
+  // d'unités du diagramme ; le facteur de conversion est son coefficient
+  // (data_value est stocké dans l'unité de base, coefficient 1).
+  const model_unit = (label_values.unit_type == 'unit_model')
+    ? element.sankey.units.resolve(label_values.unit)
+    : undefined
   if (data_value !== null && data_value !== undefined && label_values.is_visible) {
     // Apply unit factor regardless of whether the unit is visible/named,
     // so the displayed value reflects the chosen scale even when the unit itself is hidden.
-    if (!is_percent && label_values.unit_factor > 1) {
+    if (!is_percent && model_unit) {
+      if (model_unit.unit.coefficient !== 0) data_value /= model_unit.unit.coefficient
+    } else if (!is_percent && label_values.unit_factor > 1) {
       data_value /= label_values.unit_factor
     }
 
@@ -718,6 +733,10 @@ export const format_value = (
   if ((data_type == 'data' || data_type == 'data_label') && link.value!.value_option == 'unit_ratio') return text_value
   if (label_values.unit_type == 'unit_ratio') { text_value = link.value?.valueData + ' ' + unit_name + '/' + link.value?.ratio_unit_tag!.name }
   else if (label_values.unit_type == 'unit_name') text_value = text_value + ' ' + label_values.unit
+  else if (label_values.unit_type == 'unit_model') {
+    // OS#1286 — symbole de l'unité résolue depuis le registre (rien si registre vide).
+    if (model_unit) text_value = text_value + ' ' + model_unit.unit.name
+  }
   else if (label_values.unit_type == 'unit_tag' && unit_taggs.length > 0) {
     //const label_unit = unit_taggs[0].first_selected_tags!.name
     text_value = text_value + ' ' + unit_name

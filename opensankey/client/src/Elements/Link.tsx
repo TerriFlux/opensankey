@@ -443,20 +443,63 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public unDraw() {
     super.unDraw()
     this._link_control_points.unDrawControlPoints()
+    this._invalidateDrawCaches()
+  }
+
+  /**
+   * OS#1246 — caches de géométrie du flux recalculés paresseusement à chaque
+   * draw (cf. _drawArrow / _drawSourceNotch : recalcul seulement si undefined).
+   * Doit être vidé à chaque (re)dessin pour suivre les changements de position/
+   * taille des nœuds ; appelé par draw() (réutilisation du <g>) ET par unDraw().
+   */
+  protected _invalidateDrawCaches() {
     this._arrow_shape = undefined // reset shape also
     this._arrow_shape_source = undefined
     this._source_notch_shape = undefined
   }
 
+  /**
+   * OS#1246 — un <g class="gg_links"> peut exister sans tracé : il est pré-créé
+   * par l'enter du data-join, et c'est le nœud source/cible qui le remplit
+   * (updateLinksPositions). Le contenu qui fait foi est la forme posée par
+   * LinkDrawShape.drawShape : `.link_shape` (forme pleine) ou `.link_path`
+   * (simple trait), selon le mode de tracé.
+   */
+  protected _hasDrawnContent(): boolean {
+    const node = this.d3_selection?.node()
+    if (!node) return false
+    return node.querySelector('.link_shape, .link_path') !== null
+  }
+
   public drawShape() {
     if (!this._link_shape) return
     this._link_shape.drawShape()
+    this._applySourceNotchMask()
     this._orderD3Elements()
   }
 
   public drawArrow() {
     if (!this.d3_selection) return
     this._drawArrow()
+    this._applySourceNotchMask()
+    this._orderD3Elements()
+  }
+
+  /**
+   * OS#1302 — action des attributs d'apparence de pointe (shape_arrow_standalone,
+   * shape_arrow_spike_*). La géométrie de pointe est calculée paresseusement et
+   * mise en cache (_arrow_shape[_source]) : la redessiner sans invalider le cache
+   * ne fait que re-render la forme périmée. On vide donc le cache avant de
+   * redessiner ; _drawArrow rappelle alors le nœud pour recalculer tout l'éventail
+   * du côté (les pointes voisines suivent le changement de somme). Cf. le bug où
+   * changer un réglage de pointe ne mettait pas à jour le dessin.
+   */
+  public refreshArrow() {
+    if (!this.d3_selection) return
+    this._arrow_shape = undefined
+    this._arrow_shape_source = undefined
+    this._drawArrow()
+    this._applySourceNotchMask()
     this._orderD3Elements()
   }
 
@@ -677,10 +720,20 @@ export class Class_LinkElement extends Class_LinkAttribute {
       if (source_color_tags.length > 0 && target_color_tags.length === 0) return this.source.getShapeColorToUse()
       if (target_color_tags.length > 0 && source_color_tags.length === 0) return this.target.getShapeColorToUse()
 
-      // 3. Both have color tags (no common) → prefer the product node
+      // 3. Both have color tags (no common) → prefer the product node, sinon
+      // l'extremite. Un noeud est une "extremite" s'il n'a de liens que d'un
+      // seul cote (source pure ou puits pur) : sur un modele en etoile (un hub
+      // qui redistribue), le flux suit alors la couleur du noeud feuille plutot
+      // que celle du hub. Ce departage ne sert qu'a choisir entre deux couleurs
+      // de tags deja actives — il ne s'applique pas quand aucun tag ne colore
+      // (use_colors off), auquel cas le flux garde sa couleur propre (regle 5).
       if (source_color_tags.length > 0 && target_color_tags.length > 0) {
         if (this.source.hasGivenTag(productTag)) return this.source.getShapeColorToUse()
         if (this.target.hasGivenTag(productTag)) return this.target.getShapeColorToUse()
+        const source_is_extremity = this.source.hasInputLinks() !== this.source.hasOutputLinks()
+        const target_is_extremity = this.target.hasInputLinks() !== this.target.hasOutputLinks()
+        if (target_is_extremity && !source_is_extremity) return this.target.getShapeColorToUse()
+        if (source_is_extremity && !target_is_extremity) return this.source.getShapeColorToUse()
         return this.source.getShapeColorToUse()
       }
 
@@ -688,7 +741,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       if (this.source.hasGivenTag(productTag)) return this.source.getShapeColorToUse()
       if (this.target.hasGivenTag(productTag)) return this.target.getShapeColorToUse()
 
-      // 5. Fallback: source color
+      // 5. Fallback: couleur propre du flux
       return this.shape_color //this.source.getShapeColorToUse()
     }
     const type_source = this.shape_color_rule
@@ -727,7 +780,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     if (this.shape_color_rule == 'gradient') {
       const link_arrow_side_right = this.target_side == 'right'
       const link_arrow_side_bottom = this.target_side == 'bottom'
-      const is_horizontal_at_target = this.is_horizontal || this.is_vertical_horizontal
+      const is_horizontal_at_target = this.is_target_horizontal
       const is_revert = (is_horizontal_at_target && link_arrow_side_right) || (!is_horizontal_at_target && link_arrow_side_bottom)
 
       const source_color = this.source.getShapeColorToUse()
@@ -802,6 +855,16 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @private
    * @memberof Class_LinkElement
    */
+  /**
+   * OS#1246 — le flux ne doit avoir un <g> que s'il est visible ET au-dessus
+   * du seuil de valeur. Sans ce gate, un flux passant sous le seuil garderait
+   * son <g> racine réutilisé dans le DOM (l'ancien early-return de _draw ne le
+   * supprimait pas). Le retour false fait déclencher un unDraw (exit) par draw().
+   */
+  public _shouldBeDrawn(): boolean {
+    return super._shouldBeDrawn() && this.is_value_above_threshold
+  }
+
   protected _draw() {
     if (!this.is_value_above_threshold) {
       return
@@ -893,29 +956,61 @@ export class Class_LinkElement extends Class_LinkAttribute {
   /**
    * Draw the "source notch" (negative arrow) on this link's d3 selection.
    * The chevron is computed once at the source node for ALL links leaving the
-   * same side (so they share a single notch), then drawn as a copy on each
-   * participating link. Filled with the drawing-area background color so it
-   * carves a V out of the link starts, regardless of element z-order.
+   * same side (so they share a single notch), then applied on each participating
+   * link as an SVG <mask> that carves the chevron out of the link's own paint
+   * (shape/path/bordure/pointe) : vraie découpe transparente, ce qui est derrière
+   * l'encoche (nœuds, flux croisés, fond) reste visible — contrairement à
+   * l'ancien recouvrement peint couleur de fond qui masquait tout.
    * @protected
    */
   protected _drawSourceNotch() {
     if (!this.d3_selection)
       return
-    // Clean previous notch
-    this.d3_selection?.selectAll('.link_source_notch').remove()
+    // Clean previous notch mask
+    this.d3_selection?.selectAll('.link_source_notch_mask').remove()
     if (this.shape_source_notch && this.is_visible) {
       if (this._source_notch_shape === undefined) {
+        // Recompute at node level : le setter shape_source_notch_path rappelle
+        // drawSourceNotch sur chaque flux participant (récursion contrôlée).
         this.source.drawLinksSourceNotch()
       }
       else {
-        this.d3_selection?.append('path')
-          .attr('class', 'link_source_notch')
+        const mask = this.d3_selection.append('mask')
+          .attr('class', 'link_source_notch_mask')
+          .attr('id', this._sourceNotchMaskId())
+          .attr('maskUnits', 'userSpaceOnUse')
+          .attr('x', -1e5).attr('y', -1e5)
+          .attr('width', 2e5).attr('height', 2e5)
+        mask.append('rect')
+          .attr('x', -1e5).attr('y', -1e5)
+          .attr('width', 2e5).attr('height', 2e5)
+          .attr('fill', 'white')
+        mask.append('path')
           .attr('d', this._source_notch_shape)
-          .attr('fill', this.sankey.drawing_area.color)
-          .attr('stroke', 'none')
-          .attr('pointer-events', 'none')
+          .attr('fill', 'black')
       }
     }
+    this._applySourceNotchMask()
+  }
+
+  /** Id du mask d'encoche — id du flux échappé pour rester un fragment url(#...) valide. */
+  private _sourceNotchMaskId(): string {
+    return 'link_source_notch_mask_' + this.id.replace(/[^a-zA-Z0-9_-]/g, c => '_' + c.charCodeAt(0) + '_')
+  }
+
+  /**
+   * (Ré)applique l'attribut mask de l'encoche sur les tracés peints du flux.
+   * Les <path> (shape/path/bordure/pointe) sont détruits/recréés par
+   * drawShape/_drawArrow et perdent l'attribut, alors que le <mask> lui-même
+   * persiste dans le <g> du flux — d'où ce rattrapage dans chaque point
+   * d'entrée public qui recrée les tracés.
+   * @protected
+   */
+  protected _applySourceNotchMask() {
+    if (!this.d3_selection) return
+    const has_mask = !this.d3_selection.select('.link_source_notch_mask').empty()
+    this.d3_selection.selectAll('.link_shape, .link_path, .link_path_border, .link_arrow, .link_uncertainty_band')
+      .attr('mask', has_mask ? 'url(#' + this._sourceNotchMaskId() + ')' : null)
   }
 
   /**
@@ -952,23 +1047,19 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this.d3_selection?.selectAll('.link_shape').raise()
     this.d3_selection?.selectAll('.link_path').raise()
     this.d3_selection?.selectAll('.link_arrow').raise()
-    // Above shape/path/arrow (it masks them) but below labels.
-    this.d3_selection?.selectAll('.link_source_notch').raise()
 
     this._link_draw_label.d3_selection?.raise()
     this._link_draw_value.d3_selection?.raise()
     //this._link_draw_image.d3_selection?.raise()
     this._link_draw_icon.d3_selection?.raise()
   }
-  protected eventDoubleLMBClick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  // P1 (refonte événements) — double-clic CONFIRMÉ (désambiguïsé par le
+  // discriminateur unique de Class_ProtoElement) : éditer la valeur inline.
+  // Marche aussi quand le flux est en pointillé (sans label) : openInlineEditor
+  // force l'input. Inutile en mode structure.
+  protected override onDoubleLMBClick(
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-    // Apply parent behavior first
-    super.eventDoubleLMBClick(event)
-    // Double-clic sur le tracé du flux → éditer sa valeur inline. Marche aussi
-    // quand le flux est encore en pointillé (sans valeur, donc sans label
-    // affiché) : openInlineEditor force le dessin de l'input. Inutile en mode
-    // structure (pas de notion de valeur).
     const drawing_area = this.drawing_area
     if (!drawing_area.editable || drawing_area.type_data == 'structure') return
     if (!this.is_selected) {
@@ -976,62 +1067,37 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
     this._link_draw_value.openInlineEditor()
   }
-  /**
-   * Deal with simple left Mouse Button (LMB) click on given element
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Link
-   */
-  protected eventSimpleLMBClick(
+
+  // P1 — simple clic CONFIRMÉ : sélection du flux (idem ex-eventSimpleLMBClick,
+  // sans le timer, désormais porté par Class_ProtoElement).
+  protected override onSingleLMBClick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-    // ✅ Annuler le timer précédent s'il existe
-    if (this._clickTimer) {
-      clearTimeout(this._clickTimer)
-      this._clickTimer = null
-      return // C'était en fait un double-clic, on ignore
+    const drawing_area = this.drawing_area
+    if (!drawing_area.application_data.is_editable) {
+      drawing_area.purgeSelection()
+      return
     }
-    // ✅ Démarrer un timer pour voir si un deuxième clic arrive
-    this._clickTimer = setTimeout(() => {
-      this._clickTimer = null
-      // Apply parent behavior first
-      super.eventSimpleLMBClick(event)
-      // Get related drawing area
-      const drawing_area = this.drawing_area
-      if (!drawing_area.application_data.is_editable) {
-        drawing_area.purgeSelection()
-        return
+    // EDITION MODE ===========================================================
+    if (drawing_area.isInEditionMode()) {
+      drawing_area.purgeSelection()
+      drawing_area.closeAllMenus()
+    }
+    // SELECTION MODE =========================================================
+    else if (drawing_area.isInSelectionMode()) {
+      // CTRL (or CMD on Mac) = multi-sélection
+      if (event.ctrlKey || event.metaKey) {
+        this.addOrRemoveLinkFromSelection()
+        // #1243 — matrice déposée : l'inspecteur dérive sa cible de la sélection.
+        this.drawing_area.application_data.menu_configuration.ref_to_menu_config_updater.current()
+        this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
       }
-      // EDITION MODE ===========================================================
-      if (drawing_area.isInEditionMode()) {
-        // Purge selection list
-        drawing_area.purgeSelection()
-        // Close all menus
-        drawing_area.closeAllMenus()
+      // Simple clic (sans modificateur) = sélection seule
+      else {
+        drawing_area.selectOnly(this)
+        drawing_area.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
       }
-      // SELECTION MODE =========================================================
-      else if (drawing_area.isInSelectionMode()) {
-        // SHIFT
-
-        // CTRL (or CMD on Mac)
-        if (event.ctrlKey || event.metaKey) {
-          this.addOrRemoveLinkFromSelection()
-          this.drawing_area.application_data.menu_configuration.elements_configurable_selected.data = ['flow']
-          this.drawing_area.application_data.menu_configuration.elements_configurable_selected.style = ['element']
-          this.drawing_area.application_data.menu_configuration.ref_to_menu_config_updater.current()
-          this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-        }
-        // OTHERS
-        else {
-          // If we're here then it's a simple click (no ctrl,alt or shift key pressed) - purge
-          // Purge selection list
-          drawing_area.purgeSelection()
-          // Add link to selection
-          drawing_area.addElementToSelection(this)
-          drawing_area.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
-        }
-      }
-    }, this._clickDelay)
+    }
   }
 
   protected eventSimpleRMBClick(
@@ -1578,6 +1644,29 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   /** Side derived from node relative positions, ignoring any anchor lock. */
+  /**
+   * opensankey#1301 — auto-suivi du côté d'accroche : le côté du nœud `node` qui
+   * FAIT FACE au point `pt` (1er/dernier waypoint). Les waypoints découplent la
+   * direction de départ/arrivée de la position relative des nœuds, donc le côté
+   * doit suivre la route, pas « où est l'autre nœud ». `undefined` si pas de point.
+   */
+  private _waypointFacingSide(
+    node: Class_NodeElement,
+    pt: { x: number, y: number } | undefined
+  ): Type_Side | undefined {
+    if (!pt) return undefined
+    // Centre estimé depuis la TAILLE BRUTE (shape_min_width/height), PAS
+    // getShapeWidthToUse() : cette dernière dérive la bande des liens ordonnés, qui
+    // lit source_side → récursion infinie (source_side → _computed_source_side →
+    // _waypointFacingSide → getShapeWidthToUse → getLinksOrdered → source_side …).
+    // position_x/y sont, eux, déjà lus sans risque par le calcul de côté d'origine.
+    const cx = node.position_x + node.shape_min_width / 2
+    const cy = node.position_y + node.shape_min_height / 2
+    const dx = pt.x - cx, dy = pt.y - cy
+    if (Math.abs(dx) >= Math.abs(dy)) return dx >= 0 ? 'right' : 'left'
+    return dy >= 0 ? 'bottom' : 'top'
+  }
+
   private get _computed_source_side(): Type_Side {
     // Failsafe : because of constructor
     if (this.source === undefined || this.target === undefined) {
@@ -1585,6 +1674,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
     // Normal behavior
     if (!this.shape_is_recycling) {
+      // opensankey#1301 — auto-suivi : le côté suit le 1er waypoint s'il y en a.
+      const wps = this.shape_waypoints
+      if (Array.isArray(wps) && wps.length > 0) {
+        const side = this._waypointFacingSide(this.source, wps[0])
+        if (side) return side
+      }
       if (this.is_horizontal || this.is_horizontal_vertical) {
         if (this.source.position_x <= this.target.position_x)
           return 'right'
@@ -1694,6 +1789,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
     // Normal behavior
     if (!this.shape_is_recycling) {
+      // opensankey#1301 — auto-suivi : le côté cible suit le DERNIER waypoint s'il y en a.
+      const wps = this.shape_waypoints
+      if (Array.isArray(wps) && wps.length > 0) {
+        const side = this._waypointFacingSide(this.target, wps[wps.length - 1])
+        if (side) return side
+      }
       if (this.is_horizontal || this.is_vertical_horizontal) {
         if (this.source.position_x <= this.target.position_x)
           return 'left'
@@ -2066,6 +2167,9 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public unit_name(prefix: 'name_label' | 'value_label') {
     if (prefix == 'value_label') {
       if (this.value_label_unit_type == 'unit_name') return this.value_label_unit
+      // OS#1286 — unité résolue depuis le registre d'unités du diagramme.
+      if (this.value_label_unit_type == 'unit_model')
+        return this.sankey.units.resolve(this.value_label_unit)?.unit.name ?? ''
       const unit_taggs = this.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
       if (unit_taggs.length > 0) {
         if (!this.selected_data_tags_list) return unit_taggs[0].selected_tags_list[0].name
@@ -2074,6 +2178,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
       return ''
     }
     if (this.name_label_unit_type == 'unit_name') return this.name_label_unit
+    if (this.name_label_unit_type == 'unit_model')
+      return this.sankey.units.resolve(this.name_label_unit)?.unit.name ?? ''
     const unit_taggs = this.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
     if (unit_taggs.length > 0) {
       if (!this.selected_data_tags_list) return unit_taggs[0].selected_tags_list[0].name
@@ -2174,6 +2280,24 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @readonly
    * @memberof Class_LinkElement
    */
+  /**
+   * OS#189 — facteur d'échelle temporaire appliqué à l'épaisseur pendant la
+   * génération des contours de bandes d'incertitude (formes pleines). Posé puis
+   * remis à null immédiatement par LinkDrawShape autour d'un getBezierPath, de
+   * sorte que toute la géométrie du contour (getLineShape/getBezierShape, qui
+   * lisent thickness/thicknessSource/thicknessTarget) soit régénérée à la
+   * largeur min/max sans dupliquer le code de tracé. null = épaisseur nominale.
+   */
+  private _uncertainty_thickness_scale: number | null = null
+
+  public setUncertaintyThicknessScale(scale: number | null) {
+    this._uncertainty_thickness_scale = scale
+  }
+
+  private _scaleUncertainty(px: number): number {
+    return this._uncertainty_thickness_scale != null ? px * this._uncertainty_thickness_scale : px
+  }
+
   public get thickness() {
     // force_min only impacts STRUCTURAL flows (intervals / indéterminés / dashed).
     // Solid flows with a real value keep their proportional thickness even in
@@ -2181,14 +2305,49 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // structural ones would get crushed to minimum_flux too.
     if (
       this.drawing_area.is_structure_display
-      && this.drawing_area.structure_mode_force_min
+      && this.shape_structure_force_min
       && this.linkIsStructure()
     ) {
-      return this._clampThickness(0)
+      return this._scaleUncertainty(this._clampThickness(0))
     }
     const data_value = this.valueCurrent
     const linkValueInPx = (data_value !== null) ? this.scaleValueToPx(data_value) : 2
-    return this._clampThickness(linkValueInPx)
+    return this._scaleUncertainty(this._clampThickness(linkValueInPx))
+  }
+
+  /**
+   * Bornes d'incertitude à représenter (issue OS#189). L'intervalle [min, max]
+   * entourant la valeur affichée suit le MODE d'affichage courant : en mode
+   * `data` on prend les bornes saisies (data_min/data_max), sinon (réconcilié /
+   * libre) les bornes réconciliées (result_min/result_max). Repli sur l'autre
+   * jeu de bornes si celui du mode est absent. Null si aucun intervalle
+   * exploitable (bornes absentes ou dégénérées max <= min).
+   */
+  public get uncertaintyBounds(): { min: number, max: number } | null {
+    const v = this.value
+    if (!v) return null
+    const use_data_first = this.drawing_area.type_data === 'data'
+    const lo = use_data_first ? (v.data_min ?? v.result_min) : (v.result_min ?? v.data_min)
+    const hi = use_data_first ? (v.data_max ?? v.result_max) : (v.result_max ?? v.data_max)
+    if (lo == null || hi == null || hi <= lo) return null
+    return { min: lo, max: hi }
+  }
+
+  /**
+   * Épaisseurs en px des trois tracés superposés min/moyenne/max servant à
+   * matérialiser l'incertitude (OS#189). `meanPx` = épaisseur nominale du flux
+   * (this.thickness). Renvoie null quand l'affichage est désactivé
+   * (shape_uncertainty_display) ou qu'il n'y a pas d'intervalle exploitable.
+   */
+  public get uncertaintyBandsPx(): { minPx: number, meanPx: number, maxPx: number } | null {
+    if (!this.shape_uncertainty_display) return null
+    const bounds = this.uncertaintyBounds
+    if (!bounds) return null
+    return {
+      minPx: this._clampThickness(this.scaleValueToPx(bounds.min)),
+      meanPx: this.thickness,
+      maxPx: this._clampThickness(this.scaleValueToPx(bounds.max))
+    }
   }
 
   /**
@@ -2205,15 +2364,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public get thicknessTarget() {
     if (
       this.drawing_area.is_structure_display
-      && this.drawing_area.structure_mode_force_min
+      && this.shape_structure_force_min
       && this.linkIsStructure()
     ) {
-      return this._clampThickness(0)
+      return this._scaleUncertainty(this._clampThickness(0))
     }
     const target_value = this.valueCurrentTarget
     if (target_value === null) return this.thickness
     const linkValueInPx = this.scaleValueToPx(target_value)
-    return this._clampThickness(linkValueInPx)
+    return this._scaleUncertainty(this._clampThickness(linkValueInPx))
   }
 
   // Raw (non-clamped) thicknesses used by nodes to compute proportional
@@ -2244,7 +2403,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // in the cumulative offset.
     if (
       this.drawing_area.is_structure_display
-      && this.drawing_area.structure_mode_force_min
+      && this.shape_structure_force_min
       && this.linkIsStructure()
     ) {
       return 0
@@ -2257,7 +2416,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public get thicknessTargetRaw() {
     if (
       this.drawing_area.is_structure_display
-      && this.drawing_area.structure_mode_force_min
+      && this.shape_structure_force_min
       && this.linkIsStructure()
     ) {
       return 0
@@ -2274,13 +2433,25 @@ export class Class_LinkElement extends Class_LinkAttribute {
     return this.valueCurrentTarget !== null && this.thicknessSource !== this.thicknessTarget
   }
 
+  /**
+   * OS#1250 phase 3 — points de contrôle du tracé, en coordonnées MONDE.
+   *
+   * Exposés pour borner le flux SANS mesurer le DOM : une Bézier est contenue dans
+   * l'enveloppe convexe de ses points de contrôle, donc ces points (élargis de la
+   * demi-épaisseur) majorent le tracé — y compris les flux de recyclage, qui bouclent
+   * franchement hors du segment source→cible.
+   */
+  public get control_points_position() {
+    return this._link_control_points.control_points_position
+  }
+
   public get position_x_start() {
     const source_side = this.source_side
     // Avec une flèche côté source, le trait est raccourci côté source pour laisser
     // place à la pointe (symétrique de position_x_end côté cible).
     let shifting_start_point_x = 0
     if (this.shape_arrow_at_source) {
-      const is_horizontal_at_source = this.is_horizontal || this.is_horizontal_vertical
+      const is_horizontal_at_source = this.is_source_horizontal
       const is_revert = (is_horizontal_at_source && source_side === 'right') || (!is_horizontal_at_source && source_side === 'bottom')
       const sign = is_revert ? -1 : 1
       shifting_start_point_x = is_horizontal_at_source ? this.shape_arrow_size * sign : 0
@@ -2300,7 +2471,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     const source_side = this.source_side
     let shifting_start_point_y = 0
     if (this.shape_arrow_at_source) {
-      const is_horizontal_at_source = this.is_horizontal || this.is_horizontal_vertical
+      const is_horizontal_at_source = this.is_source_horizontal
       const is_revert = (is_horizontal_at_source && source_side === 'right') || (!is_horizontal_at_source && source_side === 'bottom')
       const sign = is_revert ? -1 : 1
       shifting_start_point_y = !is_horizontal_at_source ? this.shape_arrow_size * sign : 0
@@ -2320,10 +2491,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // Calcul du décalage pour la flèche (code existant)
     let shifting_end_point_x = 0
     if (this.shape_is_arrow) {
-      const is_horizontal_at_target = this.is_horizontal || this.is_vertical_horizontal
+      const is_horizontal_at_target = this.is_target_horizontal
       const is_revert = (is_horizontal_at_target && this.target_side == 'right') || (!is_horizontal_at_target && this.target_side == 'bottom')
       const sign_shifting_end_point = (is_revert) ? -1 : 1
-      shifting_end_point_x = (this.is_horizontal || this.is_vertical_horizontal) ? this.shape_arrow_size * sign_shifting_end_point : 0
+      shifting_end_point_x = is_horizontal_at_target ? this.shape_arrow_size * sign_shifting_end_point : 0
     }
 
     const target_side = this.target_side
@@ -2343,10 +2514,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // Calcul du décalage pour la flèche (code existant)
     let shifting_end_point_y = 0
     if (this.shape_is_arrow) {
-      const is_horizontal_at_target = this.is_horizontal || this.is_vertical_horizontal
+      const is_horizontal_at_target = this.is_target_horizontal
       const is_revert = (is_horizontal_at_target && this.target_side == 'right') || (!is_horizontal_at_target && this.target_side == 'bottom')
       const sign_shifting_end_point = (is_revert) ? -1 : 1
-      shifting_end_point_y = (this.is_vertical || this.is_horizontal_vertical) ? this.shape_arrow_size * sign_shifting_end_point : 0
+      shifting_end_point_y = !is_horizontal_at_target ? this.shape_arrow_size * sign_shifting_end_point : 0
     }
 
     const target_side = this.target_side
@@ -2376,6 +2547,30 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public get is_vertical() { return this.shape_orientation === 'vv' }
   public get is_horizontal_vertical() { return this.shape_orientation === 'hv' }
   public get is_vertical_horizontal() { return this.shape_orientation === 'vh' }
+
+  /**
+   * opensankey#1301 — RÉGIME ROUTÉ : le flux a des points de contrôle libres et n'est
+   * plus paramétrique. shape_orientation (hh/vv/vh/hv) ne s'applique plus ; axe et côté
+   * à chaque extrémité dérivent de la route (cf. NOTE-WAYPOINTS.md). Exclut le recyclage.
+   */
+  public get is_routed(): boolean {
+    return !this.shape_is_recycling && Array.isArray(this.shape_waypoints) && this.shape_waypoints.length > 0
+  }
+
+  /**
+   * Axe d'accroche par EXTRÉMITÉ (h = côté gauche/droite, v = haut/bas), source de
+   * vérité pour le layout du nœud et les extrémités du tracé. En régime routé, l'axe
+   * suit le CÔTÉ dérivé de la route (source_side/target_side) ; sinon, l'ancienne
+   * combinaison d'orientation (source = 1ère lettre, cible = 2ème).
+   */
+  public get is_source_horizontal(): boolean {
+    if (this.is_routed) return this.source_side === 'left' || this.source_side === 'right'
+    return this.is_horizontal || this.is_horizontal_vertical
+  }
+  public get is_target_horizontal(): boolean {
+    if (this.is_routed) return this.target_side === 'left' || this.target_side === 'right'
+    return this.is_horizontal || this.is_vertical_horizontal
+  }
 
   /**
    * Set and redraw d3 path for link arrow

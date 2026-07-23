@@ -25,8 +25,10 @@
 // ==================================================================================================
 
 import * as d3 from '../d3Modules'
+import i18next from 'i18next'
 import { MouseEvent } from 'react'
 
+import { Type_LangMap, normalizeLang, resolveLangMap } from '../Persistence/persistenceMigrations'
 import {
   const_default_position_x,
   const_default_position_y,
@@ -43,6 +45,18 @@ import {
   Type_Orientation, ValueLabelAttributeTypes,
   ConfigType
 } from './ElementsAttributesConfig'
+
+// OS#1299 — attributs portant du TEXTE AFFICHÉ traduisible (même modèle que le
+// nom des nœuds/zones de texte) : stockés en interne comme string (historique)
+// OU map { langue -> texte }. Le getter dynamique des ÉLÉMENTS résout la langue
+// active de l'app ; le setter écrit sous la langue active en préservant les
+// autres langues. La persistance `local` sérialise string si monolingue
+// (rétro-compatible), map sinon (cf. ProtoElementPersistence).
+// NB : les STYLES gardent des strings brutes (leurs menus lisent/écrivent direct).
+export const TRANSLATABLE_TEXT_ATTRIBUTES: ReadonlySet<string> = new Set([
+  'name_label_text',
+  'name_label_fo_content',
+])
 
 export abstract class Class_BaseElement {
   public d3_selection: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
@@ -109,36 +123,34 @@ export abstract class Class_BaseElement {
         this.eventSimpleLMBClick(event)
       })
     if (this.drawing_area.editable) {
-
-      this.d3_selection?.on(
-        'dblclick',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventDoubleLMBClick(event))
-      // Left mouse button click
+      // P1 (refonte événements) — plus de `dblclick` NATIF : le double-clic est
+      // désambiguïsé par le SEUL discriminateur `eventSimpleLMBClick`
+      // (Class_ProtoElement) qui appelle onDoubleLMBClick. Garder le dblclick
+      // natif ici doublerait le déclenchement (le navigateur émet click+dblclick).
 
       // Changed call of drag, we have to use only on time call because otherwise each .call erase the previous .call event
-      if (this.drawing_area.isInSelectionMode()) {
-        this.d3_selection?.call(
-          d3.drag<SVGGElement, unknown>()
-            .on('start',
-              (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
-                this.eventMouseDragStart(event))
-            .on('drag',
-              (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
-                this.eventMouseDrag(event))
-            .on('end',
-              (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
-                this.eventMouseDragEnd(event))
-        )
-      }
-      // In edition mode we don't use drag event on elements
-      else if (this.drawing_area.isInEditionMode()) {
-        this.d3_selection?.on('mousedown.drag', null) // Remove dag event
-      }
-      // In style paint mode we don't use drag event on elements
-      else if (this.drawing_area.isInStylePaintMode()) {
-        this.d3_selection?.on('mousedown.drag', null)
-      }
+      // #1259 — le drag est TOUJOURS câblé ; c'est le `filter` qui décide PAR
+      // GESTE selon le mode courant. Avant, le câblage dépendait du mode au
+      // moment du draw : une ZDT dessinée pendant le chargement (mode sélection
+      // pas encore actif) restait non draggable tant qu'un redraw — typiquement
+      // sa sélection — ne re-câblait pas ses listeners. Le filter reprend le
+      // défaut d3 (!ctrlKey && !button) + exclut édition et pot de peinture.
+      this.d3_selection?.call(
+        d3.drag<SVGGElement, unknown>()
+          .filter((event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+            !event.ctrlKey && !event.button
+            && this.drawing_area.isInSelectionMode()
+            && !this.drawing_area.isInStylePaintMode())
+          .on('start',
+            (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
+              this.eventMouseDragStart(event))
+          .on('drag',
+            (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
+              this.eventMouseDrag(event))
+          .on('end',
+            (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
+              this.eventMouseDragEnd(event))
+      )
     }
     // Right mouse button maintained
     this.d3_selection?.on(
@@ -198,11 +210,43 @@ export abstract class Class_BaseElement {
 
   public draw() {
     this._process_or_bypass(() => {
-      this.unDraw()
-      if (this.is_visible && !this._is_currently_deleted)
+      // OS#1246 — data-join keyé (réutilisation du <g> racine) au lieu de
+      // remove/re-append systématique : si l'élément reste affichable on
+      // réutilise son <g> existant (via _initDraw), sinon on le retire (exit).
+      if (this._shouldBeDrawn()) {
+        // Avant, draw() appelait unDraw() à chaque passage, ce qui invalidait
+        // aussi les caches de géométrie par-draw (ex. Link._arrow_shape). Le <g>
+        // racine étant désormais réutilisé (plus d'unDraw systématique), on
+        // conserve CETTE invalidation-là explicitement, sinon les sous-formes
+        // calculées paresseusement (pointes de flèche, encoche source) sont
+        // redessinées depuis un cache périmé → mauvaise taille/position.
+        this._invalidateDrawCaches()
         this._draw()
+      } else {
+        this.unDraw()
+      }
     })
   }
+
+  /**
+   * OS#1246 — invalide les caches de géométrie recalculés à chaque draw.
+   * Auparavant porté par les surcharges de unDraw() (appelé à chaque draw) ;
+   * extrait ici pour rester exécuté malgré la réutilisation du <g> racine.
+   * No-op par défaut ; surchargé là où existe un cache paresseux (Link).
+   */
+  protected _invalidateDrawCaches() { }
+
+  /**
+   * Gate affichage pour le data-join (OS#1246). Détermine si l'élément doit
+   * avoir un <g> dans le DOM. Surchargée par les sous-classes qui ont des
+   * conditions d'affichage supplémentaires (ex. seuil de valeur des flux),
+   * de sorte que le passage sous condition déclenche bien un exit (unDraw)
+   * au lieu de laisser un <g> orphelin dans le DOM réutilisé.
+   */
+  public _shouldBeDrawn(): boolean {
+    return this.is_visible && !this._is_currently_deleted
+  }
+
   protected _draw() {
     this._initDraw()
     this.setEventsListeners()
@@ -218,10 +262,26 @@ export abstract class Class_BaseElement {
   protected _initDraw() {
     const d3_drawing_area = this.drawing_area.d3_selection
     if (d3_drawing_area !== null) {
+      // drawing_area est relue en live (jamais capturée en closure) : au
+      // reset()/changement de vue (createNewDrawingArea) le parent ci-dessous
+      // est le nouveau groupe, donc select() ne trouve rien et on re-append.
       const d3_drawing_area_selection = d3_drawing_area.selectAll(' #' + this._svg_parent_group)
       if (d3_drawing_area_selection.nodes().length > 0) {
-        this.d3_selection = d3_drawing_area_selection.append('g')
-        this.d3_selection.attr('id', this.svg_group)
+        // Data-join keyé par id : on réutilise le <g> racine existant s'il est
+        // déjà dans le DOM (enter/update), sinon on l'append (enter). Le <g>
+        // racine — qui porte l'id, la classe, le transform et les handlers —
+        // persiste ainsi entre deux draw() ; seules ses sous-formes sont
+        // vidées puis reconstruites (remove/re-append interne conservé pour
+        // l'instant, cf. OS#1246). selectAll('*') ne cible que les descendants,
+        // donc le root et ses listeners d'événements survivent.
+        const existing = d3_drawing_area_selection.select<SVGGElement>('#' + this.svg_group)
+        if (!existing.empty()) {
+          this.d3_selection = existing
+          this.d3_selection.selectAll('*').remove()
+        } else {
+          this.d3_selection = d3_drawing_area_selection.append('g')
+          this.d3_selection.attr('id', this.svg_group)
+        }
       }
     }
   }
@@ -383,20 +443,80 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
     this.createDynamicProperties()
   }
 
+  // ============================================================================
+  // P1 (refonte événements) — UNIQUE discriminateur simple/double-clic. C'est le
+  // SEUL gestionnaire du `click` du <g> PERSISTANT (câblé dans
+  // setEventsListeners via eventSimpleLMBClick). Un 2e clic dans `_clickDelay` ms
+  // annule le simple en attente et déclenche le double ; sinon le simple part
+  // après le délai. Remplace les timers dupliqués de NodeBase et Link (et, en P2,
+  // la détection manuelle du label). Les feuilles surchargent
+  // `onSingleLMBClick` / `onDoubleLMBClick` — plus jamais le timer lui-même.
+  // ============================================================================
+  public override eventSimpleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    // Tout clic (simple ou 1er d'un double) purge les tooltips (ex-comportement
+    // de Class_BaseElement.eventSimpleLMBClick, désormais court-circuité).
+    d3.selectAll('.sankey-tooltip').remove()
+    if (this._clickTimer) {
+      clearTimeout(this._clickTimer)
+      this._clickTimer = null
+      this.onDoubleLMBClick(event)
+      return
+    }
+    this._clickTimer = setTimeout(() => {
+      this._clickTimer = null
+      this.onSingleLMBClick(event)
+    }, this._clickDelay)
+  }
+
+  /** Simple clic CONFIRMÉ (après désambiguïsation). Surchargé par les feuilles. */
+  protected onSingleLMBClick(_event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    /* no-op par défaut */
+  }
+
+  /** Double clic CONFIRMÉ. Surchargé par les feuilles (édition, etc.). */
+  protected onDoubleLMBClick(_event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    /* no-op par défaut */
+  }
+
   protected createDynamicProperties() {
     (Object.keys(this._config) as Array<keyof ConfigType>).forEach(key => {
+      const is_translatable = TRANSLATABLE_TEXT_ATTRIBUTES.has(key as string)
       Object.defineProperty(this, key, {
-        get: () => this.getElementProperty(key as keyof ConfigType),
+        get: () => {
+          const raw = this.getElementProperty(key as keyof ConfigType)
+          // OS#1299 — texte traduisible : une map { langue -> texte } est résolue
+          // pour la langue active (les strings historiques passent telles quelles).
+          if (is_translatable && raw !== null && typeof raw === 'object') {
+            return resolveLangMap(raw as Type_LangMap, i18next.language)
+          }
+          return raw
+        },
         set: (value: ExtractAttributeValue<ConfigType[typeof key]>) => {
           const attribute = this._config[key]
+          let store_value: unknown = value
+
+          // OS#1299 — texte traduisible : écrire = poser la valeur sous la langue
+          // active, en préservant les traductions existantes (héritées du storage
+          // local OU d'un style). Vider alors que d'autres langues existent =
+          // supprimer cette traduction (repli à l'affichage). Une string
+          // historique (langue inconnue) est simplement remplacée.
+          if (is_translatable && typeof value === 'string') {
+            const lang = normalizeLang(i18next.language)
+            const raw = this.getElementProperty(key as keyof ConfigType)
+            const map: Type_LangMap =
+              (raw !== null && typeof raw === 'object') ? { ...(raw as Type_LangMap) } : {}
+            if (value === '' && Object.keys(map).some(l => l !== lang)) delete map[lang]
+            else map[lang] = value
+            store_value = map
+          }
 
           if (attribute.setter) {
             const setter = this[attribute.setter as keyof this]
             if (typeof setter === 'function') {
-              setter.call(this, value)
+              setter.call(this, store_value)
             }
           } else {
-            this._storage[key] = value
+            this._storage[key] = store_value as ExtractAttributeValue<ConfigType[typeof key]>
           }
 
           if (attribute.callback) {
@@ -626,18 +746,29 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
     this.updateVisibilityFingerprint()
   }
 
+  /**
+   * OS#1246 — « la représentation DOM de cet élément est-elle à jour ? ».
+   *
+   * Cherchait auparavant un <g id=...> sous le groupe parent : l'EXISTENCE de
+   * l'id valait « synchronisé ». Insuffisant depuis les data-joins — un enter
+   * peut pré-créer un <g> VIDE, que l'ancienne version déclarait synchronisé,
+   * si bien que le nœud sautait le dessin et laissait un flux invisible.
+   * On vérifie donc la sélection vivante ET un marqueur de CONTENU. Au passage
+   * c'est moins cher : plus de double requête DOM par élément et par frame.
+   */
   public isRelatedD3SelectionPresentAndSynced() {
-    const d3_drawing_area = this.drawing_area.d3_selection
-    if (d3_drawing_area !== null) {
-      const d3_drawing_area_selection = d3_drawing_area.selectAll(' #' + this._svg_parent_group)
-      if (d3_drawing_area_selection.nodes().length > 0) {
-        const d3_selection = d3_drawing_area_selection.selectAll(' #' + this.svg_group)
-        if (d3_selection && d3_selection.nodes().length > 0)
-          return true
-      }
-    }
-    return false
+    const node = this.d3_selection?.node()
+    if (!node || !node.isConnected)
+      return false
+    return this._hasDrawnContent()
   }
+
+  /**
+   * Marqueur de contenu dessiné, complément de
+   * isRelatedD3SelectionPresentAndSynced(). Base : la présence du <g> suffit.
+   * Surchargé là où un <g> peut légitimement être présent mais vide (Link).
+   */
+  protected _hasDrawnContent(): boolean { return true }
 
   protected _process_or_bypass(
     process_func: () => void
@@ -857,8 +988,15 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   shape_position_dy!: NodeShapeSpecificAttributeTypes['position_dy']
   shape_anchor_align_vertical!: NodeShapeSpecificAttributeTypes['anchor_align_vertical']
   shape_anchor_align_horizontal!: NodeShapeSpecificAttributeTypes['anchor_align_horizontal']
+  shape_io_reorg_mode!: NodeShapeSpecificAttributeTypes['io_reorg_mode']
+  shape_link_inset!: NodeShapeSpecificAttributeTypes['link_inset']
   shape_hatch!: NodeShapeSpecificAttributeTypes['hatch']
   shape_is_reference_stock!: NodeShapeSpecificAttributeTypes['is_reference_stock']
+  shape_line_flip!: NodeShapeSpecificAttributeTypes['line_flip']
+  shape_line_x1!: NodeShapeSpecificAttributeTypes['line_x1']
+  shape_line_y1!: NodeShapeSpecificAttributeTypes['line_y1']
+  shape_line_x2!: NodeShapeSpecificAttributeTypes['line_x2']
+  shape_line_y2!: NodeShapeSpecificAttributeTypes['line_y2']
   shape_position_u_locked!: boolean
   shape_position_v_locked!: boolean
   shape_margin_bottom!: ShapeAttributeTypes['margin_bottom']
@@ -902,11 +1040,20 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   shape_starting_tangeant!: LinkShapeSpecificValues['starting_tangeant']
   shape_ending_tangeant!: LinkShapeSpecificValues['ending_tangeant']
   shape_middle_recycling!: LinkShapeSpecificValues['middle_recycling']
+  shape_waypoints!: LinkShapeSpecificValues['waypoints']
+  shape_source_anchor_offset!: LinkShapeSpecificValues['source_anchor_offset']
+  shape_target_anchor_offset!: LinkShapeSpecificValues['target_anchor_offset']
   shape_is_arrow!: LinkShapeSpecificValues['is_arrow']
   shape_arrow_at_source!: LinkShapeSpecificValues['arrow_at_source']
   shape_arrow_size!: LinkShapeSpecificValues['arrow_size']
+  shape_arrow_size_ratio!: LinkShapeSpecificValues['arrow_size_ratio']
+  shape_arrow_standalone!: LinkShapeSpecificValues['arrow_standalone']
+  shape_arrow_min_width!: LinkShapeSpecificValues['arrow_min_width']
+  shape_structure_force_min!: LinkShapeSpecificValues['structure_force_min']
+  shape_uncertainty_display!: LinkShapeSpecificValues['uncertainty_display']
   shape_source_notch!: LinkShapeSpecificValues['source_notch']
   shape_source_notch_size!: LinkShapeSpecificValues['source_notch_size']
+  shape_source_notch_size_ratio!: LinkShapeSpecificValues['source_notch_size_ratio']
   shape_is_dashed!: LinkShapeSpecificValues['is_dashed']
   shape_color_rule!: LinkShapeSpecificValues['color_rule']
   shape_visible_when_zero!: LinkShapeSpecificValues['visible_when_zero']
@@ -1205,11 +1352,20 @@ export class Class_ElementStyle {
   shape_starting_tangeant!: LinkShapeSpecificValues['starting_tangeant']
   shape_ending_tangeant!: LinkShapeSpecificValues['ending_tangeant']
   shape_middle_recycling!: LinkShapeSpecificValues['middle_recycling']
+  shape_waypoints!: LinkShapeSpecificValues['waypoints']
+  shape_source_anchor_offset!: LinkShapeSpecificValues['source_anchor_offset']
+  shape_target_anchor_offset!: LinkShapeSpecificValues['target_anchor_offset']
   shape_is_arrow!: LinkShapeSpecificValues['is_arrow']
   shape_arrow_at_source!: LinkShapeSpecificValues['arrow_at_source']
   shape_arrow_size!: LinkShapeSpecificValues['arrow_size']
+  shape_arrow_size_ratio!: LinkShapeSpecificValues['arrow_size_ratio']
+  shape_arrow_standalone!: LinkShapeSpecificValues['arrow_standalone']
+  shape_arrow_min_width!: LinkShapeSpecificValues['arrow_min_width']
+  shape_structure_force_min!: LinkShapeSpecificValues['structure_force_min']
+  shape_uncertainty_display!: LinkShapeSpecificValues['uncertainty_display']
   shape_source_notch!: LinkShapeSpecificValues['source_notch']
   shape_source_notch_size!: LinkShapeSpecificValues['source_notch_size']
+  shape_source_notch_size_ratio!: LinkShapeSpecificValues['source_notch_size_ratio']
   shape_is_dashed!: LinkShapeSpecificValues['is_dashed']
   shape_color_rule!: LinkShapeSpecificValues['color_rule']
   shape_visible_when_zero!: LinkShapeSpecificValues['visible_when_zero']
@@ -1244,8 +1400,15 @@ export class Class_ElementStyle {
   shape_position_dy!: NodeShapeSpecificAttributeTypes['position_dy']
   shape_anchor_align_vertical!: NodeShapeSpecificAttributeTypes['anchor_align_vertical']
   shape_anchor_align_horizontal!: NodeShapeSpecificAttributeTypes['anchor_align_horizontal']
+  shape_io_reorg_mode!: NodeShapeSpecificAttributeTypes['io_reorg_mode']
+  shape_link_inset!: NodeShapeSpecificAttributeTypes['link_inset']
   shape_hatch!: NodeShapeSpecificAttributeTypes['hatch']
   shape_is_reference_stock!: NodeShapeSpecificAttributeTypes['is_reference_stock']
+  shape_line_flip!: NodeShapeSpecificAttributeTypes['line_flip']
+  shape_line_x1!: NodeShapeSpecificAttributeTypes['line_x1']
+  shape_line_y1!: NodeShapeSpecificAttributeTypes['line_y1']
+  shape_line_x2!: NodeShapeSpecificAttributeTypes['line_x2']
+  shape_line_y2!: NodeShapeSpecificAttributeTypes['line_y2']
   shape_position_u_locked!: boolean
   shape_position_v_locked!: boolean
   shape_margin_bottom!: ShapeAttributeTypes['margin_bottom']

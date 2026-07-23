@@ -1,3 +1,4 @@
+import * as d3 from '../d3Modules'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeBase } from './NodeBase'
 import { ContainerStyle } from './ElementStyle'
@@ -70,6 +71,13 @@ export class Class_ContainerElement extends Class_NodeBase {
     return out
   }
 
+  // À l'édition (input inline, init rich text) on veut le texte BRUT avec les
+  // jetons {Tag} tels que saisis, pas leur valeur interpolée : on court-circuite
+  // l'interpolation de name_label_effective ci-dessus et on renvoie la base.
+  public override get name_label_effective_editable(): string {
+    return super.name_label_effective
+  }
+
   // GETTERS / SETTERS ===========================================================
   public get is_title(): boolean { return this._is_title }
   public set is_title(_: boolean) { this._is_title = _ }
@@ -101,6 +109,66 @@ export class Class_ContainerElement extends Class_NodeBase {
   public applyPosition() {
     super.applyPosition()
     this.drawShape()
+  }
+
+  // OS#1254/#1259 — une zone ATTACHÉE à un cadre géométrique forme un BLOC avec
+  // lui : par défaut, son drag déplace le cadre le plus englobant et tout son
+  // contenu (déplacer le groupe entier).
+  // EXCEPTION #1259 : si CE membre est explicitement sélectionné (on est « entré »
+  // dans le groupe par clics successifs) et n'est pas lui-même un cadre, son drag
+  // le déplace SEUL à l'intérieur du groupe ; les cadres englobants s'agrandissent
+  // EN DIRECT pour continuer à le contenir. Sans devoir le désolidariser.
+  protected eventMouseDrag(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+    if (this.drawing_area.isInSelectionMode()) {
+      // Membre saisi seul (entré dans le groupe) -> déplacement individuel.
+      if (this.is_selected && !this.tied_to_nodes) {
+        super.eventMouseDrag(event)
+        // Agrandissement LIVE des cadres englobants (y compris emboîtés) pendant
+        // le déplacement : la taille d'un cadre tied = max(min, enveloppe des
+        // membres), donc un simple redraw le fait grandir vers la droite/bas ;
+        // expandToContainAttachedNodes déplace le coin quand le membre sort en
+        // haut/à gauche. Sans ça, le cadre ne suivait qu'au relâcher (dragEnd).
+        const growEnclosing = (el: Class_NodeBase, seen: Set<Class_NodeBase>) => {
+          el.attached_container.forEach(frame => {
+            if (!frame.tied_to_nodes || seen.has(frame)) return
+            seen.add(frame)
+            frame.growFrameToContainMembers()
+            frame.draw()
+            growEnclosing(frame, seen)
+          })
+        }
+        growEnclosing(this, new Set<Class_NodeBase>([this]))
+        return
+      }
+      const parent_frame = this.attached_container.find(c => c.tied_to_nodes)
+      if (parent_frame) {
+        // Remonte au cadre le plus englobant (blocs emboîtés de la légende)
+        let root: Class_NodeBase = parent_frame
+        const seen = new Set<Class_NodeBase>([root])
+        for (;;) {
+          const upper = root.attached_container.find(c => c.tied_to_nodes && !seen.has(c))
+          if (!upper) break
+          seen.add(upper)
+          root = upper
+        }
+        // Déplace le cadre racine et toute sa descendance (une seule fois chacun)
+        const moved = new Set<Class_NodeBase>()
+        const moveTree = (el: Class_NodeBase) => {
+          if (moved.has(el)) return
+          moved.add(el)
+          el.position_x += event.dx
+          el.position_y += event.dy
+          el.applyPosition()
+          if (el.tied_to_nodes) {
+            el.attached_node.forEach(child => { if (child.is_visible) moveTree(child) })
+          }
+        }
+        moveTree(root)
+        this.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+        return
+      }
+    }
+    super.eventMouseDrag(event)
   }
 
   public draw() {

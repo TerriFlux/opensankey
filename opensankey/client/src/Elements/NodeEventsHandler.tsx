@@ -35,7 +35,6 @@ import { Class_NodeElement } from './Node'
 export class NodeEventsHandler {
 
   private _node: Class_NodeBase
-  private bbox: DOMRect | undefined = undefined
 
   // Shift+drag axis lock (SankeyMatic-style): while shift is held, once enough
   // motion has accumulated, the drag is constrained to whichever axis was
@@ -50,7 +49,7 @@ export class NodeEventsHandler {
   /**
  * ✅ Détermine quel type d'élément a été cliqué
  */
-  private getClickedLabelType(element: Element): 'shape' | 'name_label' | 'value_label' | 'icon' | null {
+  public getClickedLabelType(element: Element): 'shape' | 'name_label' | 'value_label' | 'icon' | null {
     let current: Element | null = element
 
     while (current) {
@@ -102,35 +101,17 @@ export class NodeEventsHandler {
   private selectElementAndOpenTab(labelType: 'shape' | 'name_label' | 'value_label' | 'icon', ctrlKey: boolean) {
     const drawing_area = this._node.drawing_area
     const menu_config = drawing_area.application_data.menu_configuration
-    const elements_configurable_selected = menu_config.elements_configurable_selected
 
     // ✅ Ajouter/Retirer de la sélection
     if (ctrlKey) {
       this.addOrRemoveNodeFromSelection(labelType)
     } else {
-      drawing_area.purgeSelection()
-      drawing_area.addElementToSelection(this._node)
+      drawing_area.selectOnly(this._node)
     }
 
-    // ✅ Mettre à jour elements_configurable_selected.data
-    if (drawing_area.selected_nodes_list.length > 0 && !elements_configurable_selected.data.includes('node')) {
-      elements_configurable_selected.data.push('node')
-    }
-    if (drawing_area.selected_containers_list.length > 0 && !elements_configurable_selected.data.includes('object')) {
-      elements_configurable_selected.data.push('object')
-    }
-
-    // ✅ Configurer le style et l'onglet
-    elements_configurable_selected.style = ['element']
-  
-    // // ✅ Mapper le type de label vers l'onglet correspondant
-    // const tabMap: Record<string, 'background' | 'shape' | 'name' | 'value' | 'icon'> = {
-    //   'shape': 'shape',
-    //   'name_label': 'name',
-    //   'value_label': 'value',
-    //   'icon': 'icon'
-    // }
-  
+    // #1243 — plus d'axe « élément » à forcer (matrice déposée) : l'inspecteur
+    // dérive sa cible de la sélection qu'on vient de poser. On ne garde que
+    // l'onglet visé (cliquer un label ouvre l'onglet de ce label).
     menu_config.tab_selected = labelType
 
     // ✅ Mettre à jour les composants
@@ -163,9 +144,42 @@ export class NodeEventsHandler {
 
       if (!labelType) return
 
+      // OS#1259 — clic « façon PowerPoint » par CLICS SUCCESSIFS sur un groupe de
+      // zones de texte : 1er clic = groupe le plus englobant, chaque clic suivant
+      // descend d'un niveau vers l'élément cliqué (drill-down), puis reboucle.
+      // Scopé aux ZDT ; la sélection d'un nœud dans un cadre géométrique reste
+      // inchangée. Ctrl/Cmd = multi-sélection -> comportement « feuille ».
+      if (!event.ctrlKey && !event.metaKey) {
+        const group_target = this._node.drawing_area.resolveContainerGroupClickTarget(this._node)
+        if (group_target) {
+          this.selectFrameTarget(group_target)
+          return
+        }
+      }
+
       // ✅ Sélectionner l'élément et ouvrir l'onglet
       this.selectElementAndOpenTab(labelType, event.ctrlKey || event.metaKey)
+
+      // P2 — sous-sélection du LABEL cliqué (n'affiche que les poignées de sa
+      // boîte), reprise de l'ex-handler DrawLabel. Posée APRÈS la sélection car
+      // addElementToSelection -> drawAsSelected remet selected_label_prefix à
+      // null. Sur la forme (labelType 'shape') : pas de sous-sélection.
+      if (labelType !== 'shape') {
+        this._node.drawSelectedLabelHandles(labelType)
+      }
     }
+  }
+
+  /** Sélectionne un cadre (groupe) + met à jour les menus. */
+  private selectFrameTarget(target: Class_NodeBase) {
+    const drawing_area = this._node.drawing_area
+    const menu_config = drawing_area.application_data.menu_configuration
+    drawing_area.selectOnly(target)
+    // #1243 — la matrice type×élément est déposée : plus d'axe « élément » à
+    // forcer, l'inspecteur dérive sa cible de la sélection qu'on vient de poser
+    // (ici le cadre englobant : une zone de texte -> cible `container`).
+    menu_config.ref_to_menu_config_updater.current()
+    menu_config.updateAllComponentsRelatedToNodes()
   }
 
   /**
@@ -241,34 +255,42 @@ export class NodeEventsHandler {
         if (!(c.id in dict_old_pos)) dict_old_pos[c.id] = [c.position_x, c.position_y]
         if (!(c.id in dict_old_sizes)) dict_old_sizes[c.id] = [c.shape_min_width, c.shape_min_height]
       })
+      // OS#1257 — drag DÉLÉGUÉ (une ZDT attachée à un cadre déplace le cadre le
+      // plus englobant et toute sa descendance, cf. TextZone.eventMouseDrag) :
+      // capturer positions et tailles de TOUT l'arbre du cadre racine, sinon
+      // l'annulation ne restaure que l'élément saisi et ses parents directs.
+      // Sans effet parasite pour un drag non délégué : les positions capturées
+      // en trop n'auront pas bougé, leur restauration est un no-op.
+      const seen_up = new Set<Class_NodeBase>([n])
+      let root: Class_NodeBase | null = null
+      let cur: Class_NodeBase = n
+      for (;;) {
+        const parent: Class_NodeBase | undefined =
+          cur.attached_container.find(c => c.tied_to_nodes && !seen_up.has(c))
+        if (!parent) break
+        seen_up.add(parent)
+        root = parent
+        cur = parent
+      }
+      if (root) {
+        const visited = new Set<Class_NodeBase>()
+        const captureTree = (el: Class_NodeBase) => {
+          if (visited.has(el)) return
+          visited.add(el)
+          if (!(el.id in dict_old_pos)) dict_old_pos[el.id] = [el.position_x, el.position_y]
+          if (el.tied_to_nodes) {
+            if (!(el.id in dict_old_sizes)) dict_old_sizes[el.id] = [el.shape_min_width, el.shape_min_height]
+            el.attached_node.forEach(child => captureTree(child))
+          }
+        }
+        captureTree(root)
+      }
     })
 
     // ✅ Utiliser les nouvelles méthodes d'accès
     this._node.setDragStartPositions(dict_old_pos)
     this._node.setDragStartSizes(dict_old_sizes)
     this._node.setDragState(true)
-    this.bbox = this._node.drawing_area.d3_selection_elements_group?.node()?.getBBox() ?? undefined
-
-    if (this.bbox == undefined)
-      return
-    if (this._node.drawing_area.legend.is_visible && this._node.drawing_area.legend.stick_to_drawing) {
-      const legendBbox = this._node.drawing_area.d3_selection_legend?.node()?.getBBox()
-      if (legendBbox) {
-        // Calculer la bounding box englobante
-        const minX = Math.min(this.bbox.x, legendBbox.x)
-        const minY = Math.min(this.bbox.y, legendBbox.y)
-        const maxX = Math.max(this.bbox.x + this.bbox.width, legendBbox.x + legendBbox.width)
-        const maxY = Math.max(this.bbox.y + this.bbox.height, legendBbox.y + legendBbox.height)
-
-        // Créer une nouvelle bbox combinée
-        this.bbox = {
-          x: minX,
-          y: minY,
-          width: maxX - minX,
-          height: maxY - minY
-        } as DOMRect
-      } 
-    }
   }
 
   /**
@@ -372,6 +394,18 @@ export class NodeEventsHandler {
 
     // End of drag
     this._node.setDragState(false)
+
+    // P4 (refonte événements) — d3.drag émet TOUJOURS start+end, y compris sur un
+    // simple CLIC (mousedown+mouseup sans déplacement). Si le nœud saisi n'a pas
+    // bougé, c'était un clic : on ne fait AUCUN travail de fin de drag (settle
+    // paramétrique, réorg des colonnes, auto-grow, redraw des liens,
+    // refreshPanExtent). La sélection est gérée par le chemin de clic, pas ici.
+    // (position_changed ci-dessus utilise `&&` — X-seul/Y-seul — donc insuffisant.)
+    const _start_pos = dict_old_pos[this._node.id]
+    const _really_moved = !_start_pos
+      || _start_pos[0] !== this._node.position_x
+      || _start_pos[1] !== this._node.position_y
+    if (!_really_moved) return
 
     // Settle the drag in parametric mode (PR 3 step 4).
     //
@@ -520,6 +554,37 @@ export class NodeEventsHandler {
         dict_new_orders[n.id] = n.links_order.map(l => l.id)
       })
 
+      // sankeyapplication#153 — Recalcul auto du recyclage : déplacer un nœud en amont de la
+      // source d'un de ses flux entrants doit faire passer ce flux en recyclage, et
+      // réciproquement. Aucun nœud n'est déplacé ici (une mise en page manuelle survit), et
+      // le verrou par flux (#711) prime toujours sur la géométrie.
+      //
+      // Le marquage est restreint aux flux dont une extrémité a été déplacée : les colonnes
+      // globales bougent avec l'ordinal du nœud, mais reflaguer tout le diagramme faisait
+      // basculer des flux arrière voulus loin du drag. Ceux-là gardent leur statut.
+      const moved_node_ids = new Set(Object.keys(dict_old_pos).filter(id => {
+        const n = (drawing_area.sankey.nodes_dict[id] ?? drawing_area.sankey.containers_dict[id]) as Class_NodeBase | undefined
+        return n !== undefined && (n.position_x !== dict_old_pos[id][0] || n.position_y !== dict_old_pos[id][1])
+      }))
+      const dict_old_recycling = drawing_area.application_data.layout_auto_recycling && moved_node_ids.size > 0
+        ? drawing_area.nodePositioning.updateRecyclingFromPositions(moved_node_ids)
+        : {}
+      const recycling_changed = Object.keys(dict_old_recycling)
+      if (recycling_changed.length > 0) {
+        recycling_changed.forEach(id => drawing_area.sankey.links_dict[id]?.draw())
+      }
+
+      const applyRecycling = (_: Class_ProtoElement, use_old: boolean) => {
+        recycling_changed.forEach(id => {
+          const link = _.drawing_area.sankey.links_dict[id]
+          if (!link) return
+          // dict_old_recycling porte la valeur d'AVANT ; la valeur d'après en est la négation
+          // (markRecyclingLinks ne rapporte que les flux dont le statut a bel et bien changé).
+          link.shape_is_recycling = use_old ? dict_old_recycling[id] : !dict_old_recycling[id]
+          link.draw()
+        })
+      }
+
       // Snapshot final positions for redo (captures the true post-drag state,
       // including any late setPosXY adjustments above).
       const dict_new_pos: { [x: string]: [number, number] } = {}
@@ -559,6 +624,7 @@ export class NodeEventsHandler {
             n.draw()
           }
         })
+        applyRecycling(_, true)
       }
 
       function redo(_: Class_ProtoElement) {
@@ -584,7 +650,10 @@ export class NodeEventsHandler {
             n.draw()
           }
         })
-        _.drawing_area.areaAutoFit()
+        applyRecycling(_, false)
+        // OS#1250 — même traitement qu'en fin de drag : pas de recadrage caméra
+        // au redo, seulement l'extent de pan.
+        _.drawing_area.refreshPanExtent()
       }
 
       this._node.saveUndo(undo)
@@ -607,36 +676,27 @@ export class NodeEventsHandler {
       this._node.drawing_area.drawElements()
     }
 
-    let new_bbox = this._node.drawing_area.d3_selection_elements_group?.node()?.getBBox() ?? undefined
-
-    if (new_bbox == undefined)
-      return
-    if (this._node.drawing_area.legend.is_visible && this._node.drawing_area.legend.stick_to_drawing) {
-      const legendBbox = this._node.drawing_area.d3_selection_legend?.node()?.getBBox()
-      if (legendBbox) {
-        // Calculer la bounding box englobante
-        const minX = Math.min(new_bbox.x, legendBbox.x)
-        const minY = Math.min(new_bbox.y, legendBbox.y)
-        const maxX = Math.max(new_bbox.x + new_bbox.width, legendBbox.x + legendBbox.width)
-        const maxY = Math.max(new_bbox.y + new_bbox.height, legendBbox.y + legendBbox.height)
-
-        // Créer une nouvelle bbox combinée
-        new_bbox = {
-          x: minX,
-          y: minY,
-          width: maxX - minX,
-          height: maxY - minY
-        } as DOMRect
-      } 
-    }
-
-
-    if (this.bbox && (
-      new_bbox.x < this.bbox.x || new_bbox.y < this.bbox.y || 
-      new_bbox.x + new_bbox.width > (this.bbox.x + this.bbox.width) || new_bbox.y + new_bbox.height > (this.bbox.y + this.bbox.height)
-    )) {
-      this._node.drawing_area.areaAutoFit()
-    }
+    // OS#1250 — le monde est immuable, la caméra appartient à l'utilisateur : plus
+    // d'areaAutoFit quand le drag étend le contenu au-delà de l'ancienne bbox (le
+    // recadrage sautait à chaque dépôt de nœud). On recale seulement l'extent de
+    // pan et les scrollbars pour que le contenu étendu reste atteignable.
+    this._node.drawing_area.refreshPanExtent()
+    // Pendant le drag les formes de liens retombent sur le contour SIMPLE
+    // (moins coûteux, cf. LinkDrawShape/isBeingDragged). areaAutoFit assurait
+    // au passage le redraw final qui restaurait le contour exact ; depuis sa
+    // suppression, plus personne ne le fait en mode absolu (les autres modes
+    // passent par drawElements ci-dessus). On redessine donc explicitement les
+    // formes des liens des nœuds déplacés — leurs partenaires de faisceau
+    // partagent les mêmes nœuds, ils sont donc couverts.
+    const moved_nodes = nodes_selected.includes(this._node) ? nodes_selected : [this._node]
+    const links_to_redraw = new Set<Class_LinkElement>()
+    moved_nodes.forEach(n => {
+      const as_node = n as Class_NodeElement
+      if (typeof as_node.input_links_list === 'undefined') return
+      as_node.input_links_list.forEach(l => links_to_redraw.add(l as Class_LinkElement))
+      as_node.output_links_list.forEach(l => links_to_redraw.add(l as Class_LinkElement))
+    })
+    links_to_redraw.forEach(l => l.drawShape())
     this._node.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
   }
 
@@ -655,8 +715,13 @@ export class NodeEventsHandler {
       target.setPosXY(this._node.position_x, this._node.position_y)
       // Make target a 'ghost' node
       target.setInvisible()
-      // Close the menu config the time to draw place target
-      this._node.drawing_area.closeAllMenus()
+      // Close the menu config the time to draw place target — SAUF s'il est
+      // épinglé : docké (il réserve sa largeur, cf. #1243), il ne recouvre pas
+      // la zone de dessin, il n'y a donc rien à dégager et le refermer était
+      // une régression (le panneau doit rester ouvert pendant le tracé).
+      if (!this._node.drawing_area.application_data.menu_configuration.config_panel_pinned) {
+        this._node.drawing_area.closeAllMenus()
+      }
 
       // Ref newly created link this var to be used in other mouse event
       this._node.drawing_area.ghost_link = new Class_LinkElement(
@@ -731,36 +796,35 @@ export class NodeEventsHandler {
     node_to_move: Class_NodeBase[]
   ) {
     const drawing_area = this._node.drawing_area
-    const limit_magnetic_node = drawing_area.grid_size / 4
+    const step = drawing_area.grid_size / 4
 
+    // Delta cumulé (brut) depuis le début du drag
     this._node.updateNodeCurrentDelta(event.dx, event.dy)
-    const { dx: node_current_dx, dy: node_current_dy } = this._node.getNodeCurrentDeltas()
+    const { dx: total_dx, dy: total_dy } = this._node.getNodeCurrentDeltas()
 
-    const shift_x = Math.abs(node_current_dx)
-    const shift_y = Math.abs(node_current_dy)
-    const sign_x = Math.sign(node_current_dx)
-    const sign_y = Math.sign(node_current_dy)
+    // Ancre : position du nœud tenu au début du drag. On arrondit la cible
+    // en absolu (position de départ + delta cumulé) au multiple de step le
+    // plus proche, plutôt que d'accumuler des pas relatifs à une position de
+    // départ arbitraire — sinon le déphasage initial n'est jamais rattrapé
+    // et le nœud ne coïncide jamais avec les lignes de la grille affichée.
+    const start_positions = this._node.getDragStartPositions()
+    const start_pos = start_positions[this._node.id]
+    if (!start_pos) return
 
-    // if event shift is greater than twice the limit_magnetic_node then keep track of how much step we move at once
-    const multi_shift_x = Math.floor(shift_x / limit_magnetic_node)
-    const multi_shift_y = Math.floor(shift_y / limit_magnetic_node)
+    const target_x = Math.round((start_pos[0] + total_dx) / step) * step
+    const target_y = Math.round((start_pos[1] + total_dy) / step) * step
+    const applied_dx = target_x - start_pos[0]
+    const applied_dy = target_y - start_pos[1]
 
-    // Update node position if threshold is exceeded
-    if (shift_x >= limit_magnetic_node) {
-      node_to_move.forEach(node => {
-        node.setPosXY(node.position_x + (limit_magnetic_node * sign_x * multi_shift_x), node.position_y)
-      })
-      // Reset delta modulo limit
-      this._node.updateNodeCurrentDelta(-(Math.floor(shift_x / limit_magnetic_node) * limit_magnetic_node * sign_x), 0)
-    }
-
-    if (shift_y >= limit_magnetic_node) {
-      node_to_move.forEach(node => {
-        node.setPosXY(node.position_x, node.position_y + (limit_magnetic_node * sign_y * multi_shift_y))
-      })
-      // Reset delta modulo limit
-      this._node.updateNodeCurrentDelta(0, -(Math.floor(shift_y / limit_magnetic_node) * limit_magnetic_node * sign_y))
-    }
+    node_to_move.forEach(node => {
+      const node_start = start_positions[node.id]
+      if (!node_start) return
+      const new_x = node_start[0] + applied_dx
+      const new_y = node_start[1] + applied_dy
+      if (new_x !== node.position_x || new_y !== node.position_y) {
+        node.setPosXY(new_x, new_y)
+      }
+    })
   }
 
 }

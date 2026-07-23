@@ -1,13 +1,19 @@
 import React, { useState, useRef } from 'react'
 import {
-  Box, Button, ButtonGroup, MenuItem, MenuDivider, MenuButton, Menu, MenuList,
+  Box, Button, ButtonGroup, Text, MenuItem, MenuDivider, MenuButton, Menu, MenuList,
   useSteps, Stepper, Step, StepIndicator, StepStatus, StepSeparator, StepTitle
 } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLocationDot, faPercent, faRulerVertical } from '@fortawesome/free-solid-svg-icons'
+import { faLocationDot, faPercent, faRulerVertical, faPlus, faMinus } from '@fortawesome/free-solid-svg-icons'
 import { ConfigMenuNumberInput, OSTooltip } from '../configmenus/MenuCommon'
+import { useModelBinding } from '../../hooks/useModelBinding'
+import { ZOOM_TOPIC } from '../../types/EventBus'
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { Type_AutoFitMode } from '../../types/DrawingArea'
 import { Class_DataTagGroup } from '../../types/TagGroup'
+
+// Facteur multiplicatif d'un cran des boutons -/+ (deux crans consécutifs ≈ ×2).
+const ZOOM_STEP_FACTOR = Math.SQRT2
 
 /**
  * Right toolbar for some simple functionnality on the DA (Draw flow, recenter DA,...)
@@ -21,12 +27,8 @@ export const ToolBarBottom = ({ new_data, right_offset }: {
   new_data: Class_ApplicationData,
   right_offset?: string | number
 }) => {
-  // Local State to update this & subcomponent
-  const [, setUpdater] = useState(0)
-  const refreshThis = () => {
-    setUpdater(a => a + 1)
-  }
-  new_data.menu_configuration.ref_to_toolbar_bottom_updater.current = refreshThis
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  const refreshThis = useModelBinding(new_data.menu_configuration.ref_to_toolbar_bottom_updater)
 
   let btn_mouse_mode_edition = <></>
   if (!new_data.is_static) {
@@ -80,6 +82,9 @@ export const ToolBarBottom = ({ new_data, right_offset }: {
       updateParentComponent={refreshThis}
       hide_fullscreen={new_data.is_static && new_data.publish_options.fullscreen}
     /> : <></>}
+    {/* Indicateur de zoom + boutons -/+ : même gate que le groupe ajustement en publish. */}
+    {(!new_data.is_static || new_data.publish_options.fit_toolbar)
+      ? <ComponentZoomControl app_data={new_data} /> : <></>}
   </Box>
 }
 
@@ -99,10 +104,13 @@ export const ComponentMouseMode = (
         id='button_selection_edition'
         size={size}
         onClick={() => {
+          // Sortir d'abord du mode « placer une zone de texte » (switchMode ne gère
+          // que édition⇄sélection) : on repasse en sélection, puis la bascule ci-dessous.
+          if (drawing_area.isInPlaceContainerMode()) drawing_area.exitPlaceContainerMode()
           if (!drawing_area.isInEditionMode()) {
             drawing_area.switchMode()
-            updateParentComponent()
           }
+          updateParentComponent()
         }}>
         {icon_library.icon_DA_edit}
       </Button>
@@ -111,10 +119,11 @@ export const ComponentMouseMode = (
         id='button_selection_edition'
         size={size}
         onClick={() => {
+          if (drawing_area.isInPlaceContainerMode()) drawing_area.exitPlaceContainerMode()
           if (!drawing_area.isInSelectionMode()) {
             drawing_area.switchMode()
-            updateParentComponent()
           }
+          updateParentComponent()
         }}>
         {icon_library.icon_DA_selection}
       </Button>
@@ -214,6 +223,39 @@ const ComponentFullscreenButton = (
 }
 
 /**
+ * Indicateur de niveau de zoom + boutons -/+ (comme dans la plupart des logiciels), en complément
+ * de la molette (Ctrl/Cmd+scroll). 100% = échelle d'une page vide (k=1). Le clic sur le pourcentage
+ * remet à 100%. S'abonne à ZOOM_TOPIC pour suivre le zoom en direct (molette incluse).
+ */
+export const ComponentZoomControl = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const { t, drawing_area } = app_data
+  // Re-render à chaque tick de zoom (molette / boutons / recadrages) via le bus.
+  useModelBinding(undefined, (r) => app_data.menu_configuration.subscribe(ZOOM_TOPIC, r))
+  const size = app_data.is_static ? 'sizeToolbarButtonStatic' : 'sizeToolbarButton'
+  const percent = Math.round(drawing_area.getZoomScale() * 100)
+  return <ButtonGroup className='toolbar_bottom_zoom' isAttached orientation='vertical'>
+    <OSTooltip placement='left' label={t('Banner.tooltipZoomIn')}>
+      <Button variant='toolbar_button_6' size={size}
+        onClick={() => drawing_area.zoomByFactor(ZOOM_STEP_FACTOR)}>
+        <FontAwesomeIcon icon={faPlus} />
+      </Button>
+    </OSTooltip>
+    <OSTooltip placement='left' label={t('Banner.tooltipZoomReset')}>
+      <Button variant='toolbar_button_6' size={size}
+        onClick={() => drawing_area.zoomToScale(1)}>
+        <Text fontSize='2xs' lineHeight='1' fontWeight='semibold'>{percent}%</Text>
+      </Button>
+    </OSTooltip>
+    <OSTooltip placement='left' label={t('Banner.tooltipZoomOut')}>
+      <Button variant='toolbar_button_6' size={size}
+        onClick={() => drawing_area.zoomByFactor(1 / ZOOM_STEP_FACTOR)}>
+        <FontAwesomeIcon icon={faMinus} />
+      </Button>
+    </OSTooltip>
+  </ButtonGroup>
+}
+
+/**
  *Buttons component to recenter DA horizontally or vertically
  *
  * @param {*} { new_data, updateParentComponent }
@@ -223,36 +265,49 @@ export const ComponetStretchButtons = ({ app_data, updateParentComponent, hide_f
   // Use variable from class
   const { t } = app_data
   const size = app_data.is_static ? 'sizeToolbarButtonStatic' : 'sizeToolbarButton'
+  // #680 — S'abonner à ZOOM_TOPIC : un zoom manuel (molette / boutons +-) repasse le mode à
+  // 'none' (cf. DrawingArea.eventZoom / zoomByFactor) et notifie ZOOM_TOPIC. Sans cet abonnement
+  // les boutons resteraient allumés visuellement après un zoom (l'état interne, lui, est bien
+  // remis à 'none'). Même canal que l'indicateur de zoom (ComponentZoomControl).
+  useModelBinding(undefined, (r) => app_data.menu_configuration.subscribe(ZOOM_TOPIC, r))
+
+  // #680 — Les 3 boutons d'ajustement sont désormais des MODES radio persistants
+  // (un seul actif, ou aucun) et non plus des actions ponctuelles. Tant qu'un mode est
+  // actif, la contrainte est maintenue en permanence (cf. applyAutoFitMode / drag / zoom).
+  const fit_mode = app_data.drawing_area.auto_fit_mode
+  // Re-clic sur le mode actif → 'none' (extinction). Le clic applique un cadrage animé.
+  const selectFitMode = (m: Type_AutoFitMode) => {
+    const da = app_data.drawing_area
+    da.auto_fit_mode = (fit_mode === m) ? 'none' : m
+    da.applyAutoFitMode(true) // geste utilisateur explicite → zoom cinématique
+    updateParentComponent()
+  }
+  const fitVariant = (m: Type_AutoFitMode) =>
+    fit_mode === m ? 'toolbar_button_6_activated' : 'toolbar_button_6'
 
   return <ButtonGroup className='toolbar_bottom_stretch' isAttached orientation='vertical'>
     <OSTooltip placement='left' label={t('Banner.tooltipAdjustH')}>
-      <Button variant='toolbar_button_6'
+      <Button variant={fitVariant('width')}
         size={size}
-        // Bouton explicite : recadre même quand le verrou de taille est actif (#1240).
-        // #1244 : recadrage animé (zoom cinématique) sur ce déclencheur utilisateur.
-        onClick={() => app_data.drawing_area.areaAutoFitAnimated(true, true)}>
+        // #680 — Mode « largeur » : toute la largeur du diagramme reste visible bord à bord.
+        onClick={() => selectFitMode('width')}>
         {app_data.icon_library.icon_area_fit_horiz}
       </Button>
     </OSTooltip>
     <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')}>
-      <Button variant='toolbar_button_6'
+      <Button variant={fitVariant('height')}
         size={size}
-        // Bouton explicite : recadre même quand le verrou de taille est actif (#1240).
-        // #1244 : recadrage animé (zoom cinématique) sur ce déclencheur utilisateur.
-        onClick={() => app_data.drawing_area.areaAutoFitAnimated(false, true)}>
+        // #680 — Mode « hauteur » : toute la hauteur du diagramme reste visible bord à bord.
+        onClick={() => selectFitMode('height')}>
         {app_data.icon_library.icon_area_fit_vert}
       </Button>
     </OSTooltip>
 
     <OSTooltip placement='left' label={t('Banner.tooltipRecenter')}>
-      <Button variant='toolbar_button_6'
+      <Button variant={fitVariant('full')}
         size={size}
-        onClick={() => {
-          app_data.drawing_area.to_recenter = true
-          // Bouton explicite : recadre même quand le verrou de taille est actif (#1240).
-          // #1244 : recentrage animé (glissement de caméra vers le centre).
-          app_data.drawing_area.recenterAnimated(true)
-        }}>
+        // #680 — Mode « tout visible » : le diagramme entier reste cadré et centré.
+        onClick={() => selectFitMode('full')}>
         {app_data.icon_library.icon_recenter}
       </Button>
     </OSTooltip>
@@ -297,8 +352,8 @@ export const ComponetStretchButtons = ({ app_data, updateParentComponent, hide_f
 export const DrawerSequenceDataTagg = ({ new_data }: { new_data: Class_ApplicationData }) => {
   const { icon_library } = new_data
   const { icon_repeat_sequence, icon_play, icon_pause, icon_activated, icon_open_selector } = icon_library
-  const [, setUpdate] = useState(0)
-  new_data.menu_configuration.ref_to_drawer_sequence_data_tag_updater.current = () => setUpdate(a => a + 1)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  const refreshThis = useModelBinding(new_data.menu_configuration.ref_to_drawer_sequence_data_tag_updater)
   const [active_grp, setActiveGrp] = useState('')
 
   const list_grp_seq = new_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(grp => (grp as Class_DataTagGroup).banner == 'sequence')
@@ -386,7 +441,7 @@ export const DrawerSequenceDataTagg = ({ new_data }: { new_data: Class_Applicati
               const curr_active_grp = new_data.drawing_area.sankey.getTagGroupsAsDict('data_taggs')[active_grp] as Class_DataTagGroup
               new_data.menu_configuration.launchDataSequence(curr_active_grp)
             }
-            setUpdate(a => a + 1)
+            refreshThis()
           }}
         >
           {logo_btn}
@@ -396,7 +451,7 @@ export const DrawerSequenceDataTagg = ({ new_data }: { new_data: Class_Applicati
           onClick={() => {
             // Switch 'is sequence loop' value
             new_data.menu_configuration.is_sequence_loop = !new_data.menu_configuration.is_sequence_loop
-            setUpdate(a => a + 1)
+            refreshThis()
           }}>
           {icon_repeat_sequence}
         </Button>

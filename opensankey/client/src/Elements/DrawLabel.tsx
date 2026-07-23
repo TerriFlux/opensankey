@@ -16,6 +16,7 @@ import {
 } from './ElementsAttributesConfig'
 import { Class_NodeBase, default_selected_stroke_width } from './NodeBase'
 import { Class_NodeElement } from './Node'
+import { isLegendChildId } from './legendIds'
 import { Class_LinkElement } from './Link'
 import { LinkControlPoints } from './LinkControlPoints'
 import { Class_BaseShape } from './Element'
@@ -137,11 +138,11 @@ export abstract class DrawLabelBase {
   // d'un flux encore en pointillé (sans valeur), qui n'a normalement aucun label.
   protected _force_editable_draw: boolean = false
 
-  // Détection manuelle du double-clic (cf. attachDoubleClickEdit). Stockée sur
-  // l'instance (qui survit au redraw du DOM), pas sur le <text> : le 1er clic peut
-  // recréer le <text>, ce qui casse le `dblclick` natif (les deux clics doivent
-  // atterrir sur le MÊME nœud DOM — non garanti sur Mac). Timestamp en ms.
-  private _last_label_click_ts: number = 0
+  // Valeur du modèle à l'ouverture de l'éditeur inline, ou null hors édition.
+  // Sert à coalescer toute la session de frappe en UNE entrée d'historique : le
+  // listener 'input' écrit le modèle à chaque caractère, donc enregistrer là
+  // saturerait la table (history_size slots) au bout de 10 lettres.
+  private _edit_value_before: string | null = null
 
   public d3_selection: d3_selection_type | null = null
 
@@ -1130,17 +1131,17 @@ export abstract class DrawLabelBase {
   }
 
   protected dragGenericMove(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
-    this._element.drawing_area.bypass_redraws = true
-    if (this._label_values.position_absolute) {
-      // MODE ABSOLU : éditer position_x/position_y
-      this._label_values.position_x = (this._label_values.position_x ?? 0) + event.dx
-      this._label_values.position_y = (this._label_values.position_y ?? 0) + event.dy
-    } else {
-      // MODE RELATIF : éditer horiz_shift/vert_shift
-      this._label_values.horiz_shift = (this._label_values.horiz_shift ?? 0) + event.dx
-      this._label_values.vert_shift = (this._label_values.vert_shift ?? 0) + event.dy
-    }
-    this._element.drawing_area.bypass_redraws = false
+    this._element.drawing_area.withBypassRedraws(() => {
+      if (this._label_values.position_absolute) {
+        // MODE ABSOLU : éditer position_x/position_y
+        this._label_values.position_x = (this._label_values.position_x ?? 0) + event.dx
+        this._label_values.position_y = (this._label_values.position_y ?? 0) + event.dy
+      } else {
+        // MODE RELATIF : éditer horiz_shift/vert_shift
+        this._label_values.horiz_shift = (this._label_values.horiz_shift ?? 0) + event.dx
+        this._label_values.vert_shift = (this._label_values.vert_shift ?? 0) + event.dy
+      }
+    }, false)
     // Mettre à jour la position visuelle
     this.updateGenericPosition()
   }
@@ -1265,6 +1266,7 @@ export abstract class DrawLabelBase {
     const inputId = `${this.prefix}_input_${this.getElementId()}`
     const input = document.getElementById(inputId) as HTMLElement | null
     if (!input) return
+    this._edit_value_before = this.getInputInitialValue()
     input.focus()
     const sel = window.getSelection()
     const range = document.createRange()
@@ -1281,6 +1283,32 @@ export abstract class DrawLabelBase {
 
   public setInputLabelInvisible() {
     this.drawGenericLabel()
+  }
+
+  /**
+   * Fin d'édition inline : enregistre la session de frappe comme UNE entrée
+   * d'historique. On rejoue `onInputChange` — seul écrivain du modèle pendant
+   * l'édition — avec l'ancienne puis la nouvelle valeur, ce qui évite de dupliquer
+   * ici la logique propre à chaque label (renommage vs label custom vs valeur de flux).
+   * Rien n'est enregistré si le texte n'a pas bougé : ouvrir l'éditeur puis en sortir
+   * ne doit pas consommer un slot d'historique.
+   */
+  protected commitEditToHistory() {
+    const before = this._edit_value_before
+    this._edit_value_before = null
+    if (before === null || !this.onInputChange) return
+    const inputId = `${this.prefix}_input_${this.getElementId()}`
+    const input = document.getElementById(inputId) as HTMLElement | null
+    // Lu avant setInputLabelInvisible : le redraw détruit l'input.
+    const after = input?.innerText ?? before
+    if (after === before) return
+    const apply = (value: string) => {
+      this.onInputChange?.(value)
+      this.setInputLabelInvisible()
+    }
+    const history = this._element.drawing_area.application_data.history
+    history.saveUndo(() => apply(before))
+    history.saveRedo(() => apply(after))
   }
 
   /**
@@ -1392,10 +1420,10 @@ export abstract class DrawLabelBase {
       .on('click', (evt: MouseEvent) => { evt.stopPropagation() })
       .on('dblclick', (evt: MouseEvent) => { evt.stopPropagation() })
       .on('input', (evt: Event) => {
-        this._element.sankey.drawing_area.bypass_redraws = true
-        const text = (evt.target as HTMLElement).innerText ?? ''
-        this.onInputChange?.(text)
-        this._element.sankey.drawing_area.bypass_redraws = false
+        this._element.sankey.drawing_area.withBypassRedraws(() => {
+          const text = (evt.target as HTMLElement).innerText ?? ''
+          this.onInputChange?.(text)
+        }, false)
       })
       .on('keydown', (evt: KeyboardEvent) => {
         // Enter valide (sans insérer de saut de ligne) ; Shift+Enter insère
@@ -1407,7 +1435,10 @@ export abstract class DrawLabelBase {
           (evt.target as HTMLElement).blur()
         }
       })
-      .on('blur', () => this.setInputLabelInvisible())
+      .on('blur', () => {
+        this.commitEditToHistory()
+        this.setInputLabelInvisible()
+      })
   }
 
   protected getInputInitialValue(): string {
@@ -1422,45 +1453,18 @@ export abstract class DrawLabelBase {
   ): void {
     if (!this._element.drawing_area.editable) return
     textElement.style('cursor', 'text')
+      // P2 (refonte événements) — le clic sur le <text> du label ne fait plus SA
+      // propre logique (sélection, drill-down groupe, détection manuelle 400 ms,
+      // sous-sélection, dblclick natif). Il DÉLÈGUE au discriminateur UNIQUE de
+      // l'élément (Class_ProtoElement.eventSimpleLMBClick), exactement comme un
+      // clic sur la forme : simple = handleSimpleLMBClick (sélection + drill-down
+      // groupe + sous-sélection du label via getClickedLabelType) ; double =
+      // onDoubleLMBClick (édition). stopPropagation empêche le <g> de traiter
+      // AUSSI le clic (double-déclenchement). Plus AUCUNE logique dupliquée ici.
       .on('click', (evt: MouseEvent) => {
-        // Clic sur le label : sélectionne l'élément + sous-sélectionne ce
-        // label (les poignées n'apparaîtront que pour ce label).
-        // stopPropagation pour éviter le double-trigger via le <g> du nœud
-        // (qui purge + ré-ajoute → flicker visuel).
         evt.stopPropagation()
-        // Détection MANUELLE du double-clic : le 1er clic (addElementToSelection)
-        // peut recréer le <text>, donc le second clic atterrit sur un autre nœud
-        // DOM et le `dblclick` natif ne se déclenche pas (systématique sur Mac).
-        // On mesure l'écart entre deux clics sur l'instance (qui survit au redraw).
-        const now = Date.now()
-        const is_double = (now - this._last_label_click_ts) <= 400
-        this._last_label_click_ts = is_double ? 0 : now
-        if (is_double) {
-          evt.preventDefault()
-          this.setInputLabelVisible()
-          return
-        }
-        const el = this._element as Class_BaseShape
-        const drawing_area = el.drawing_area
-        // Sélectionne l'élément (via _selection) sinon Escape/purgeSelection
-        // n'itère pas dessus et la sub-sélection reste collée (poignées qui
-        // ne disparaissent pas en clic ailleurs / Escape).
-        if (!el.is_selected) {
-          drawing_area.addElementToSelection(el)
-        }
-        // Set APRÈS addElementToSelection (qui passe par drawAsSelected →
-        // clear de selected_label_prefix).
-        el.selected_label_prefix = this.prefix as 'name_label' | 'value_label' | 'icon'
-        this.refreshLabelResizeHandles()
-      })
-      .on('dblclick', (evt: MouseEvent) => {
-        // Conservé pour les plateformes où le `dblclick` natif fonctionne ;
-        // la détection manuelle ci-dessus prend le relais sinon. setInputLabelVisible
-        // est idempotent, un éventuel double-déclenchement est sans effet.
-        evt.stopPropagation()
-        evt.preventDefault()
-        this._last_label_click_ts = 0
-        this.setInputLabelVisible()
+        this._element.eventSimpleLMBClick(
+          evt as unknown as React.MouseEvent<HTMLButtonElement, React.MouseEvent>)
       })
   }
 
@@ -2126,6 +2130,17 @@ export class NodeDrawNameLabel extends NodeDrawLabelBase {
     return this.node.name_label_effective
   }
 
+  // Valeur initiale de l'input d'édition inline : miroir de getLabelText, mais on
+  // édite le texte BRUT du titre (jetons {Tag} non interpolés — ex. « {Month} »)
+  // et non la valeur affichée au rendu (« January »).
+  protected override getInputInitialValue(): string {
+    if (this._label_values.has_fo) return ''
+    if (this.prefix === 'name_label' && this._label_values.is_value && this.node instanceof Class_NodeElement) {
+      return String(this.node.name_value_label)
+    }
+    return String(this.node.name_label_effective_editable ?? '')
+  }
+
   protected shouldDrawLabel(): boolean {
     // Seuil d'affichage des labels de nœud (#seuil px).
     return this._label_values.is_visible && this.node.is_above_label_threshold
@@ -2151,6 +2166,10 @@ export class NodeDrawNameLabel extends NodeDrawLabelBase {
     if (this._label_values.has_fo) {
       this.node.name_label_fo_content = `<p>${value}</p>`
     }
+    // OS#1256 — éditer inline le texte d'une zone de la légende est une
+    // personnalisation : la mise en forme générée est cassée (sinon la saisie
+    // serait écrasée en silence à la prochaine régénération).
+    if (isLegendChildId(this.node.id)) this.node.drawing_area.legend.markBroken()
   }
 }
 
@@ -2314,6 +2333,31 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     return (this.link.thicknessSource + this.link.thicknessTarget) / 2
   }
 
+  /**
+   * opensankey#1301 — milieu (abscisse curviligne) de la polyligne source → points de
+   * contrôle → cible, pour ancrer le label « milieu » sur le tracé routé. null si pas
+   * de waypoint (ou recyclage) → repli sur le calcul paramétrique historique.
+   */
+  protected getWaypointLabelMidpoint(): [number, number] | null {
+    const wps = this.link.shape_waypoints
+    if (this.link.shape_is_recycling || !Array.isArray(wps) || wps.length === 0) return null
+    const pts: Array<[number, number]> = [
+      [this.link.position_x_start, this.link.position_y_start],
+      ...wps.map(p => [p.x, p.y] as [number, number]),
+      [this.link.position_x_end, this.link.position_y_end]
+    ]
+    let total = 0
+    for (let i = 1; i < pts.length; i++) total += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1])
+    let half = total / 2
+    for (let i = 1; i < pts.length; i++) {
+      const dx = pts[i][0] - pts[i - 1][0], dy = pts[i][1] - pts[i - 1][1]
+      const l = Math.hypot(dx, dy)
+      if (l >= half) { const t = l > 0 ? half / l : 0; return [pts[i - 1][0] + dx * t, pts[i - 1][1] + dy * t] }
+      half -= l
+    }
+    return pts[pts.length - 1]
+  }
+
   protected getLabelPos(): [number, number, string, string] {
     let label_pos_y = this.link.position_y_start
     const label_pos_y_end = this.link.position_y_end
@@ -2328,10 +2372,18 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     } else {
       if (this._label_values.horiz === 'middle') {
         label_anchor = 'middle'
-        label_pos_x = (this._link_control_points_internal.controlPoints.starting_bezier_point.position_x +
-          this._link_control_points_internal.controlPoints.ending_bezier_point.position_x) / 2
-        label_pos_y = (this._link_control_points_internal.controlPoints.starting_bezier_point.position_y +
-          this._link_control_points_internal.controlPoints.ending_bezier_point.position_y) / 2
+        // opensankey#1301 — avec des points de contrôle, « milieu » = milieu (abscisse
+        // curviligne) du tracé routé, sinon le label flotterait près des extrémités.
+        const wp_mid = this.getWaypointLabelMidpoint()
+        if (wp_mid) {
+          label_pos_x = wp_mid[0]
+          label_pos_y = wp_mid[1]
+        } else {
+          label_pos_x = (this._link_control_points_internal.controlPoints.starting_bezier_point.position_x +
+            this._link_control_points_internal.controlPoints.ending_bezier_point.position_x) / 2
+          label_pos_y = (this._link_control_points_internal.controlPoints.starting_bezier_point.position_y +
+            this._link_control_points_internal.controlPoints.ending_bezier_point.position_y) / 2
+        }
       } else if (this._label_values.horiz === 'right') {
         label_anchor = 'end'
         label_pos_x = this.link.position_x_end

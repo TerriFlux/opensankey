@@ -10,6 +10,17 @@ import { WarningIcon } from '@chakra-ui/icons'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { TFunction } from 'i18next'
 
+/**
+ * SA#249 — Cause machine-lisible d'un échec, remontée par le serveur (<logname>.error) et produite
+ * par MFAProblem (mfa_problem_error.py). Le CODE pilote le message affiché ; `message` et `details`
+ * restent techniques (logs, support).
+ */
+export type Type_ProcessError = {
+  code: string,
+  message?: string,
+  details?: Record<string, unknown>,
+}
+
 interface ProcessTerminalProps {
   url_prefix: string
   app_data: Class_ApplicationData
@@ -19,6 +30,7 @@ interface ProcessTerminalProps {
   auto_load: boolean,
   failure: boolean,
   setFailure: (_:boolean)=>void,
+  setFailureError: (_: Type_ProcessError | undefined) => void,
   processing: boolean,
   setProcessing: (_:boolean)=>void,
   started: boolean,
@@ -34,6 +46,7 @@ export const ProcessTerminal = ({
   handleFinish,
   failure,
   setFailure,
+  setFailureError,
   processing,
   setProcessing,
   started,
@@ -74,9 +87,10 @@ export const ProcessTerminal = ({
       {started && processing ? (
         <Counter
           url_prefix={url_prefix}
-          finishProcess={(failed: boolean) => {
+          finishProcess={(failed: boolean, error?: Type_ProcessError) => {
             setProcessing(false)
             setFailure(failed)
+            setFailureError(error)
           }}
           value={value}
           result={result}
@@ -308,7 +322,7 @@ const Counter = ({
   set_result
 }: {
   url_prefix: string,
-  finishProcess: (failed: boolean) => void,
+  finishProcess: (failed: boolean, error?: Type_ProcessError) => void,
   value: number[],
   result: string,
   set_result: (_: string) => void
@@ -317,8 +331,20 @@ const Counter = ({
   // peut encore tirer une requête avant que le démontage du Counter ne soit
   // effectif côté React).
   const finished_ref = useRef(false)
+  // Les callbacks sont recréés à chaque render du parent ; on les lit via des
+  // refs pour que l'effet ci-dessous puisse ne dépendre de rien et donc ne
+  // jamais recréer son intervalle (cf. commentaire de l'effet).
+  const finish_ref = useRef(finishProcess)
+  finish_ref.current = finishProcess
+  const set_result_ref = useRef(set_result)
+  set_result_ref.current = set_result
+  // Dépendances vides, et c'est essentiel : sans elles, chaque render recréait
+  // l'intervalle en remettant le compte à 5 s à zéro — or chaque poll appelle
+  // set_result, donc provoque un render. Le premier check part immédiatement :
+  // un process peut être déjà terminé quand le terminal se monte, et l'attendre
+  // un tick complet ne servait à rien.
   useEffect(() => {
-    const interval = setInterval(() => {
+    const check = () => {
       const root = window.location.origin
       const url = root + url_prefix + 'upload/check_process'
       const fetchData = {
@@ -330,26 +356,30 @@ const Counter = ({
           if (response.ok) {
             response.json().then(
               function (data) {
-                if (data.output !== undefined) set_result(data.output)
+                if (data.output !== undefined) set_result_ref.current(data.output)
                 // Arrêt piloté par le statut machine renvoyé par le serveur
                 // (fichier <logname>.status), et non plus par le grep du texte
                 // localisé du log (FINISHED/TERMINÉ/ÉCHOUÉ…) qui était fragile.
                 if (!finished_ref.current) {
                   if (data.status === 'finished') {
                     finished_ref.current = true
-                    finishProcess(false)
+                    finish_ref.current(false)
                   } else if (data.status === 'failed') {
                     finished_ref.current = true
-                    finishProcess(true)
+                    // SA#249 — le serveur joint la cause (code) quand il en connaît une ; sinon
+                    // undefined, et le dialogue garde son message d'échec générique.
+                    finish_ref.current(true, data.error ?? undefined)
                   }
                 }
               }
             )
           }
         })
-    }, 5000)
+    }
+    check()
+    const interval = setInterval(check, 5000)
     return () => clearInterval(interval)
-  })
+  }, [url_prefix])
 
   const scroll_ref = useRef<HTMLDivElement>(null)
   useEffect(() => {

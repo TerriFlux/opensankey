@@ -85,7 +85,7 @@ _TABLES = (
     "Process", "ProcessInput", "ProcessOutput", "Flow",
     "FlowValue", "Unit", "Period", "FlowLayer",
     "Diagram", "Shape", "DefaultUnit", "Stock",
-    "LiteratureRef", "MfaSystem", "PeriodDefinition",
+    "LiteratureRef", "MfaSystem", "PeriodDefinition", "TransCoeff",
 )
 
 # Un fichier STAN multi-périodes devient un groupe de tags de DONNÉES : une période
@@ -154,6 +154,7 @@ _PROCESS_TYPE_BOUNDARY = 1
 # les identifiants se terminent par "ID", les valeurs/facteurs sont des réels.
 # SV… = niveau de stock, DT… = sa variation sur la période.
 _FLOAT_FIELDS = {"MFInput", "MFCalc", "MFUncertInput", "MFUncertCalc",
+                 "TCInput", "TCCalc",
                  "Factor", "SVInput", "SVCalc", "DTInput", "DTCalc"}
 
 
@@ -445,6 +446,71 @@ def _connector_to_leaf_process(rows, id_field, sub_field):
             current = by_id[nxt]
         leaves[connector_id] = current["ProcessID"]
     return leaves
+
+
+def _transfer_coefficient_constraints(tables, layer_id, selected_periods,
+                                      multi_period, nodes, links, link_id_of_flow):
+    """Coefficients de transfert STAN → contraintes « Ratio Flux » (S-A2).
+
+    Un `TransCoeff` dit : la sortie visée reçoit TC × le débit du processus.
+    C'est exactement une ligne de la feuille Ratio Flux (convention SEP#116) :
+    `flux[P → cible] = coef × flux[* → P]` — « * » agrège les entrées de P.
+    Seuls les TC SAISIS comptent (`TCInput` posé, `CalculateTC` faux) : un TC
+    calculé est un résultat, pas une contrainte. Multi-période : une contrainte
+    par période, portée par son tag de données.
+
+    Le TC référence un CONNECTEUR de sortie, parfois un parent de celui du flux
+    (chaînes SubProcessOutputID) : on apparie par connecteur FEUILLE.
+    """
+    outputs = {r["ProcessOutputID"]: r for r in tables["ProcessOutput"]}
+
+    def leaf_out(connector_id):
+        current = outputs.get(connector_id)
+        for _ in range(len(outputs) + 1):
+            nxt = current.get("SubProcessOutputID") if current else None
+            if nxt is None or nxt not in outputs:
+                break
+            current = outputs[nxt]
+        return current["ProcessOutputID"] if current else connector_id
+
+    flow_by_leaf_out = {}
+    for fl in tables["Flow"]:
+        if fl.get("ProcessOutputID") is not None:
+            flow_by_leaf_out[leaf_out(fl["ProcessOutputID"])] = fl
+
+    period_tag_by_id = {p["PeriodID"]: _period_tag_id(p) for p in selected_periods}
+    constraints = []
+    for tc in tables["TransCoeff"]:
+        if layer_id is not None and tc.get("FlowLayerID") != layer_id:
+            continue
+        if tc.get("PeriodID") not in period_tag_by_id:
+            continue
+        coef = tc.get("TCInput")
+        if not isinstance(coef, (int, float)):
+            continue
+        if str(tc.get("CalculateTC")).strip().lower() in ("1", "true"):
+            continue
+        flow = flow_by_leaf_out.get(leaf_out(tc.get("ProcessOutputID")))
+        if flow is None:
+            continue
+        link = links.get(link_id_of_flow.get(flow["FlowID"]))
+        if link is None:
+            continue
+        origin = nodes[link["idSource"]]["name"]
+        constraints.append({
+            "origin": origin,
+            "destination": nodes[link["idTarget"]]["name"],
+            "origin_ref": "*",
+            "destination_ref": origin,
+            "coef": float(coef),
+            "min": None,
+            "max": None,
+            "data_tag": period_tag_by_id[tc["PeriodID"]] if multi_period else None,
+            "data_tag_ref": None,
+            # Laissée vide : le front génère la traduction par défaut au chargement.
+            "traduction": None,
+        })
+    return constraints
 
 
 def _backfill_period_codes(periods, period_definitions):
@@ -949,6 +1015,12 @@ def parse_stan(path, period_id=None, layer_id=None):
             # La description libre du processus devient son infobulle.
             if proc.get("Description"):
                 nodes[nid]["tooltip_text"] = proc["Description"]
+            # `CalcBalance` décoché = processus EXCLU de l'équilibre entrée-sortie
+            # (sous-système, frontière…) : c'est exactement notre
+            # has_material_balance, la contrainte de bilan du solveur MFA.
+            # SQLite dit 0/1, le XML « true »/« false » ; absent = équilibré.
+            if str(proc.get("CalcBalance")).strip().lower() in ("0", "false"):
+                nodes[nid]["has_material_balance"] = False
         return nid
 
     external_of_flow = {}
@@ -971,6 +1043,9 @@ def parse_stan(path, period_id=None, layer_id=None):
     flow_colors = _flow_colors(tables)
     links = {}
     link_id_of_flow = {}
+    # Nom court de chaque flux (« F53 ») : sert à nommer de façon UNIQUE les
+    # nœuds externes (« E F53 ») — les contraintes ratio résolvent par nom.
+    flow_codes = {}
     # Épaisseur de référence de chaque lien : `value` peut être un ARBRE (multi-période),
     # auquel cas `data_value` n'existe plus à sa racine.
     sizing_of_link = {}
@@ -988,6 +1063,7 @@ def parse_stan(path, period_id=None, layer_id=None):
 
         # La bande d'un flux est dimensionnée sur son maximum toutes périodes
         # confondues : c'est lui qui doit tenir dans la boîte du processus.
+        flow_codes[fid] = fl.get("MatchCode") or fl.get("Name") or str(fid)
         sizing_value = flow_value_max(fid)
         new_flow = sankey_layout.create_json_flow(
             src_node, tgt_node, sizing_value, flow_colors.get(fid))
@@ -1073,7 +1149,7 @@ def parse_stan(path, period_id=None, layer_id=None):
         DA_scale = _apply_stan_geometry(
             nodes, links, node_id_of_process, link_id_of_flow, external_of_flow,
             sizing_of_link, geometry["processes"], geometry["polylines"],
-            geometry["markers"], geometry["label_offsets"])
+            geometry["markers"], geometry["label_offsets"], flow_codes)
         containers = _text_containers(geometry["texts"])
         order_g_elements = _order_g_elements(
             geometry, nodes, containers, node_id_of_process, link_id_of_flow,
@@ -1133,6 +1209,11 @@ def parse_stan(path, period_id=None, layer_id=None):
         # FOND (convention order_g_elements) — les fonds de processus passent
         # DERRIÈRE les flux, comme dans STAN. Même mécanique que l'import e!Sankey.
         result["order_g_elements"] = order_g_elements
+    ratio_constraints = _transfer_coefficient_constraints(
+        tables, layer_id, selected_periods, multi_period, nodes, links,
+        link_id_of_flow)
+    if ratio_constraints:
+        result["ratio_flux_constraints"] = ratio_constraints
     return result
 
 
@@ -1414,7 +1495,7 @@ def _place_vertical_flux_labels(link, points, band_px):
 
 def _apply_stan_geometry(nodes, links, node_id_of_process, link_id_of_flow,
                          external_of_flow, sizing_of_link, proc_bounds, polylines,
-                         markers, label_offsets):
+                         markers, label_offsets, flow_codes):
     """Pose les positions, tailles et tracés dessinés par l'utilisateur dans STAN.
 
     Renvoie l'échelle (`user_scale`) du front. Celle-ci est choisie pour qu'aucune
@@ -1521,8 +1602,15 @@ def _apply_stan_geometry(nodes, links, node_id_of_process, link_id_of_flow,
         facing = nodes.get(facing_id)
 
         # STAN nomme ces nœuds « I » et « E », et les dessine en ellipse, la lettre
-        # centrée dedans.
-        node["name"] = marker["text"] or ("I" if is_import else "E")
+        # centrée dedans. Le NOM du nœud, lui, doit être UNIQUE (« E F53 ») : les
+        # contraintes ratio et les listes de l'app résolvent par nom, et 35
+        # externes nommés « E » seraient ambigus. La lettre reste AFFICHÉE via le
+        # label custom (name_label_source/name_label_text, lus à la racine).
+        letter = marker["text"] or ("I" if is_import else "E")
+        code = flow_codes.get(flow_id)
+        node["name"] = ("%s %s" % (letter, code)) if code else letter
+        node["name_label_source"] = "custom"
+        node["name_label_text"] = letter
         node["local"]["shape"] = "ellipse"
         node["local"]["label_visible"] = True
         # `inside_*` met le libellé DANS la forme ; ce sont `name_label_vert` et
@@ -1643,6 +1731,10 @@ def _stan_theme(unit_code=None):
         "shape_is_arrow": True,
         # Les pointes de flèche de STAN sont nettement plus allongées que notre défaut (10).
         "shape_arrow_size": 25,
+        # STAN dessine une tête d'office, même sur un filet : largeur mini de pointe
+        # posée ICI car le défaut applicatif est 0 (désactivé) depuis SA#304 — un
+        # défaut > 0 fragmentait l'éventail des diagrammes existants.
+        "shape_arrow_min_width": 10,
         # Le nom du flux, lu depuis `value.text_value` (le défaut de
         # `name_label_text_source` est déjà `custom`). STAN l'écrit à côté du tracé,
         # pas dessus — la valeur, elle, est sur le tracé, dans son ellipse.
@@ -2177,6 +2269,48 @@ def test_zmfa_incertitude_est_numerique():
     assert link["value"]["data_uncertainty"] == 5.0
 
 
+def test_transcoeff_et_calcbalance():
+    # Un TC saisi devient une contrainte Ratio Flux ; CalcBalance decoche exclut
+    # le processus de l'equilibre entree-sortie (has_material_balance false).
+    import tempfile
+    import os
+    path = os.path.join(tempfile.mkdtemp(), "tc.smfa")
+    _build_minimal_smfa(path)
+    con = sqlite3.connect(path)
+    con.executescript(
+        """
+        ALTER TABLE Process ADD COLUMN CalcBalance INT;
+        UPDATE Process SET CalcBalance = 1;
+        UPDATE Process SET CalcBalance = 0 WHERE ProcessID = 3;
+        CREATE TABLE TransCoeff(TransCoeffID INT, FlowLayerID INT, PeriodID INT,
+            ProcessID INT, ProcessInputID INT, ProcessOutputID INT, TCUnitID INT,
+            LiteratureRefID INT, TCInput REAL, TCCalc REAL, TCUncertInput REAL,
+            TCUncertCalc REAL, TCUncertAbsolut REAL, CalculateTC INT, Remarks TEXT);
+        -- TC saisi 0.8 sur la sortie 20 (Flow B : Process 1 -> Process 2)...
+        INSERT INTO TransCoeff VALUES(1, 1, 1, 2, NULL, 20, NULL, NULL,
+            0.8, NULL, NULL, NULL, NULL, 0, NULL);
+        -- ... et un TC CALCULE (CalculateTC=1) qui ne doit PAS devenir contrainte.
+        INSERT INTO TransCoeff VALUES(2, 1, 1, 2, NULL, 20, NULL, NULL,
+            0.9, NULL, NULL, NULL, NULL, 1, NULL);
+        """
+    )
+    con.commit()
+    con.close()
+
+    result = parse_stan(path)
+    constraints = result.get("ratio_flux_constraints") or []
+    assert len(constraints) == 1
+    c = constraints[0]
+    assert c["origin"] == "Process 1" and c["destination"] == "Process 2"
+    assert c["origin_ref"] == "*" and c["destination_ref"] == "Process 1"
+    assert c["coef"] == 0.8
+    assert c["data_tag"] is None  # periode unique -> valeur plate, pas de tag
+
+    balances = {n["name"]: n.get("has_material_balance") for n in result["nodes"].values()}
+    assert balances["Process 2"] is False       # CalcBalance = 0
+    assert balances["Process 1"] is None        # equilibre par defaut : rien d'emis
+
+
 def test_backfill_period_codes():
     # Sans PeriodCode, les tags de periodes derivent de l'annee de BeginDate
     # (PeriodDefinition), numerotes dans l'ordre de la table.
@@ -2315,9 +2449,23 @@ def test_fixtures_stan_reelles():
         # Aucune couleur cuite dans les noeuds : STAN n'a pas de palette.
         assert all("color" not in n["local"] for n in result["nodes"].values()), path
 
-        # Les noeuds d'import/export sont des ellipses nommees « I » et « E ».
+        # Les noeuds d'import/export sont des ellipses AFFICHANT « I »/« E »
+        # (label custom) mais au nom UNIQUE (« E F53 ») : les contraintes ratio
+        # resolvent par nom.
         externals = [n for n in result["nodes"].values() if n["local"].get("shape") == "ellipse"]
-        assert all(n["name"] in ("I", "E") for n in externals), path
+        assert all(n.get("name_label_text") in ("I", "E") for n in externals), path
+        assert all(n.get("name_label_source") == "custom" for n in externals), path
+        names = [n["name"] for n in externals]
+        assert len(set(names)) == len(names), path  # unicite
+        assert all(n["name"].split(" ")[0] in ("I", "E") for n in externals), path
+
+        # Les coefficients de transfert saisis deviennent des contraintes ratio.
+        for constraint in result.get("ratio_flux_constraints", []):
+            node_names = {n["name"] for n in result["nodes"].values()}
+            assert constraint["origin"] in node_names, path
+            assert constraint["destination"] in node_names, path
+            assert constraint["origin_ref"] == "*", path
+            assert constraint["coef"] is not None, path
 
         # Ordre Z (m_nZOrder) : liste 1er plan -> fond, ids connus, et les
         # PROCESSUS derriere les FLUX (la raison d'etre du zorder STAN).

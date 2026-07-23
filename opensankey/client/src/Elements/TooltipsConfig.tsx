@@ -7,7 +7,7 @@ import { TooltipBehaviorManager } from './TooltipsCSS'
  * Gestionnaire centralisé des tooltips pour tous les éléments
  */
 export class TooltipEventManager {
-  private static instance: TooltipEventManager
+  private static instance: TooltipEventManager | undefined
   private activeTooltip: {
     element: Class_LinkElement | Class_NodeElement | null;
     behaviorManager: TooltipBehaviorManager | null;
@@ -15,12 +15,14 @@ export class TooltipEventManager {
 
   private mousePosition: { x: number; y: number } = { x: 0, y: 0 }
   private isProtected: boolean = false
+  private protectionTimer: ReturnType<typeof setTimeout> | null = null
 
-  // ✅ AJOUT : Timer pour la fermeture automatique
-  private autoCloseTimer: NodeJS.Timeout | null = null
-  private autoCloseDelay: number = 1000 // 2 secondes par défaut
+  private autoCloseTimer: ReturnType<typeof setTimeout> | null = null
+  private autoCloseDelay: number = 1000
 
-  // ✅ AJOUT : Méthode pour démarrer le timer de fermeture
+  // Le suivi de la souris n'est armé que tant qu'un tooltip est ouvert
+  private isTrackingMouse: boolean = false
+
   private startAutoCloseTimer() {
     this.clearAutoCloseTimer()
     this.autoCloseTimer = setTimeout(() => {
@@ -28,7 +30,6 @@ export class TooltipEventManager {
     }, this.autoCloseDelay)
   }
 
-  // ✅ AJOUT : Méthode pour annuler le timer
   private clearAutoCloseTimer() {
     if (this.autoCloseTimer) {
       clearTimeout(this.autoCloseTimer)
@@ -43,49 +44,85 @@ export class TooltipEventManager {
     return TooltipEventManager.instance
   }
 
+  /**
+   * Ferme le tooltip courant, retire les écouteurs globaux et oublie le singleton.
+   * Un getInstance() ultérieur reconstruit un gestionnaire propre.
+   */
+  public static disposeInstance() {
+    TooltipEventManager.instance?.dispose()
+    TooltipEventManager.instance = undefined
+  }
+
   private constructor() {
-    this.setupGlobalListeners()
+    document.addEventListener('click', this.onDocumentClick)
+    document.addEventListener('keydown', this.onDocumentKeyDown)
   }
 
-  private setupGlobalListeners() {
-    // Écouter les clics pour fermer les tooltips (sauf si épinglé)
-    document.addEventListener('click', (event) => {
-      if (this.activeTooltip.element && !this.isClickInTooltip(event)) {
-        const tooltip = document.querySelector('.sankey-tooltip')
-        if (tooltip && tooltip.classList.contains('pinned')) return
-        this.closeTooltip()
-      }
-    })
-
-    // Écouter ESC pour fermer
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' && this.activeTooltip.element) {
-        this.closeTooltip()
-      }
-    })
-    // ✅ AJOUT : Écouter les mouvements de souris globaux
-    document.addEventListener('mousemove', (event) => {
-      if (this.activeTooltip.element) {
-        const isOverElement = this.isMouseOverElement(event)
-        const isOverTooltip = this.isMouseOverTooltip(event)
-
-        if (!isOverElement && !isOverTooltip) {
-          // La souris n'est ni sur l'élément ni sur le tooltip.
-          // Si le tooltip est épinglé, on ne ferme jamais automatiquement.
-          const tooltip = document.querySelector('.sankey-tooltip')
-          if (tooltip && tooltip.classList.contains('pinned')) {
-            this.clearAutoCloseTimer()
-          } else {
-            this.startAutoCloseTimer()
-          }
-        } else {
-          // La souris est sur l'élément ou le tooltip, annuler la fermeture
-          this.clearAutoCloseTimer()
-        }
-      }
-    })
+  private dispose() {
+    this.closeTooltip()
+    this.clearProtectionTimer()
+    document.removeEventListener('click', this.onDocumentClick)
+    document.removeEventListener('keydown', this.onDocumentKeyDown)
   }
-  // ✅ AJOUT : Vérifier si la souris est sur l'élément actif
+
+  private startTrackingMouse() {
+    if (this.isTrackingMouse) return
+    document.addEventListener('mousemove', this.onDocumentMouseMove)
+    this.isTrackingMouse = true
+  }
+
+  private stopTrackingMouse() {
+    if (!this.isTrackingMouse) return
+    document.removeEventListener('mousemove', this.onDocumentMouseMove)
+    this.isTrackingMouse = false
+  }
+
+  private clearProtectionTimer() {
+    if (this.protectionTimer) {
+      clearTimeout(this.protectionTimer)
+      this.protectionTimer = null
+    }
+  }
+
+  // Fermer les tooltips au clic (sauf clic dans le tooltip, ou tooltip épinglé)
+  private onDocumentClick = (event: MouseEvent) => {
+    if (this.activeTooltip.element && !this.isClickInTooltip(event)) {
+      const tooltip = document.querySelector('.sankey-tooltip')
+      if (tooltip && tooltip.classList.contains('pinned')) return
+      this.closeTooltip()
+    }
+  }
+
+  // Fermer les tooltips avec ESC
+  private onDocumentKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape' && this.activeTooltip.element) {
+      this.closeTooltip()
+    }
+  }
+
+  // Armer la fermeture automatique dès que la souris quitte l'élément et le tooltip
+  private onDocumentMouseMove = (event: MouseEvent) => {
+    if (!this.activeTooltip.element) return
+
+    const isOverElement = this.isMouseOverElement(event)
+    const isOverTooltip = this.isMouseOverTooltip(event)
+
+    if (!isOverElement && !isOverTooltip) {
+      // La souris n'est ni sur l'élément ni sur le tooltip.
+      // Si le tooltip est épinglé, on ne ferme jamais automatiquement.
+      const tooltip = document.querySelector('.sankey-tooltip')
+      if (tooltip && tooltip.classList.contains('pinned')) {
+        this.clearAutoCloseTimer()
+      } else {
+        this.startAutoCloseTimer()
+      }
+    } else {
+      // La souris est sur l'élément ou le tooltip, annuler la fermeture
+      this.clearAutoCloseTimer()
+    }
+  }
+
+  // Vérifier si la souris est sur l'élément actif
   private isMouseOverElement(event: MouseEvent): boolean {
     if (!this.activeTooltip.element || !this.activeTooltip.element.d3_selection) {
       return false
@@ -98,7 +135,7 @@ export class TooltipEventManager {
     return elementNode.contains(event.target as Node)
   }
 
-  // ✅ AJOUT : Vérifier si la souris est sur le tooltip
+  // Vérifier si la souris est sur le tooltip
   private isMouseOverTooltip(event: MouseEvent): boolean {
     const tooltip = document.querySelector('.sankey-tooltip')
     return tooltip ? tooltip.contains(event.target as Node) : false
@@ -116,7 +153,6 @@ export class TooltipEventManager {
     if (this.activeTooltip.element === element) {
       return
     }
-    // ✅ MODIFICATION : Annuler le timer lors de l'ouverture
     this.clearAutoCloseTimer()
     this.mousePosition = { x: mouseX, y: mouseY }
 
@@ -140,17 +176,24 @@ export class TooltipEventManager {
       }
     }
 
+    // Un tooltip est ouvert : suivre la souris pour savoir quand le refermer
+    this.startTrackingMouse()
+
     // Marquer comme protégé temporairement
     this.isProtected = true
-    setTimeout(() => { this.isProtected = false }, 100)
+    this.clearProtectionTimer()
+    this.protectionTimer = setTimeout(() => {
+      this.isProtected = false
+      this.protectionTimer = null
+    }, 100)
   }
 
   /**
    * Ferme le tooltip actuel
    */
   public closeTooltip() {
-    // ✅ MODIFICATION : Annuler le timer lors de la fermeture
     this.clearAutoCloseTimer()
+    this.stopTrackingMouse()
     if (this.activeTooltip.element) {
       // Nettoyer les classes CSS
       this.activeTooltip.element.d3_selection?.classed('tooltip_shown', false)
@@ -166,7 +209,8 @@ export class TooltipEventManager {
       this.activeTooltip = { element: null, behaviorManager: null }
     }
   }
-  // ✅ AJOUT : Méthode pour configurer le délai de fermeture
+
+  // Configurer le délai de fermeture automatique
   public setAutoCloseDelay(delay: number) {
     this.autoCloseDelay = delay
   }
@@ -363,15 +407,32 @@ export function implementTooltipForLink(LinkClass: typeof Class_LinkElement) {
   }
 }
 
+// Les mixins réécrivent les prototypes : les réappliquer empilerait les wrappers
+// (un tooltip par instance de Class_ApplicationData créée).
+let tooltip_system_initialized = false
+
 /**
- * Fonction d'initialisation à appeler au démarrage de l'application
+ * Fonction d'initialisation à appeler au démarrage de l'application.
+ * Idempotente : les appels suivants n'ont aucun effet.
  */
 export function initializeTooltipSystem() {
+  if (tooltip_system_initialized) return
+  tooltip_system_initialized = true
+
   // Appliquer les mixins aux classes
   implementTooltipForNode(Class_NodeElement)
   implementTooltipForLink(Class_LinkElement)
 
   // Initialiser le gestionnaire
   TooltipEventManager.getInstance()
+}
+
+/**
+ * Libère le gestionnaire de tooltips (écouteurs globaux, timers).
+ * Les mixins posés sur les prototypes restent en place : un
+ * initializeTooltipSystem() ultérieur ne les réappliquera pas.
+ */
+export function disposeTooltipSystem() {
+  TooltipEventManager.disposeInstance()
 }
 

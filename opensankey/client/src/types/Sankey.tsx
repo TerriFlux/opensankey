@@ -24,20 +24,24 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
+import * as d3 from '../d3Modules'
 import { Class_DrawingArea } from './DrawingArea'
 import { base_styles, elementStyleConfigs, ElementStyleConfigsDict, ElementStyleKey, LinkExportCloseStyle, LinkImportCloseStyle, LinkImportExportAboveBelowStyle, LinkImportExportCloseStyle, LinkStyle, NodeExportBelowStyle, NodeExportCloseStyle, NodeImportAboveStyle, NodeImportCloseStyle, NodeImportExportAboveBelowStyle, NodeImportExportCloseStyle, NodeSectorStyle, NodeStyle } from '../Elements/ElementStyle'
 import { Class_LinkElement, defaultLinkId, sortLinksElementsByIds } from '../Elements/Link'
 import { Class_NodeElement } from '../Elements/Node'
+// Type seul : `Class_ContainerElement` en hérite aussi, et `onNodeRenamed` doit
+// pouvoir refuser un conteneur. Pas d'import de valeur, pour ne pas créer de cycle.
+import type { Class_NodeBase } from '../Elements/NodeBase'
 import { Class_NodeDimension } from '../Elements/NodeDimension'
 import { Class_DataTag } from '../types/Tag'
 import { Class_NodeTagGroup, Class_FluxTagGroup, Class_DataTagGroup, Class_LevelTagGroup, Class_ViewTagGroup } from './TagGroup'
 import { Class_Theme, themeOpenSankey } from './Theme'
+import { Class_UnitsRegistry } from './Units'
 
 /**
- * Les styles dont un thème est propriétaire : `applyTheme` les remet à zéro avant
- * d'écrire son patch. Ils sont `is_deletable = true` (donc non pré-remplis des
- * défauts usine), ce qui rend la remise à zéro équivalente à « revenir au style
- * `default` ». Cf. NOTE-THEMES.md.
+ * Les styles dont un thème est propriétaire : `applyTheme` les ramène à leur AMORCE
+ * (`elementStyleConfigs`) avant d'y écrire son patch — surtout pas au vide, qui ne
+ * restituerait pas l'apparence OpenSankey. Cf. `applyTheme` et NOTE-THEMES.md.
  */
 const THEME_MANAGED_STYLES: readonly string[] = [NodeStyle, LinkStyle]
 import {
@@ -157,6 +161,11 @@ export class Class_Sankey {
   // diagramme. Pure préférence d'UI (n'affecte pas le modèle/calcul). Voir Type_SpreadsheetState.
   private _spreadsheet_state: Type_SpreadsheetState = {}
 
+  // OS#1286 — registre d'unités du diagramme (grandeurs → unités + défauts).
+  // Amorcé au catalogue par défaut ; clé JSON `units` sérialisée seulement s'il
+  // en diffère (additivité — les anciens fichiers restent inchangés).
+  private _units: Class_UnitsRegistry = new Class_UnitsRegistry()
+
   // Thème du diagramme (cf. NOTE-THEMES.md). `opensankey` est volontairement vide :
   // il décrit le comportement historique plutôt qu'il ne le change.
   private _theme: Class_Theme = themeOpenSankey()
@@ -181,6 +190,7 @@ export class Class_Sankey {
     this._ratio_stock_flux_constraints = []
     this._stock_chaining_constraints = []
     this._spreadsheet_state = {}
+    this._units.resetToDefault()
 
     this._styles[default_style_id] = this.createNewElementStyle(default_style_id, default_style_name, false)
     base_styles.forEach(style_id => this.create_internal_style(style_id, elementStyleConfigs))
@@ -222,6 +232,11 @@ export class Class_Sankey {
     this._spreadsheet_state = _ ?? {}
   }
 
+  /** OS#1286 — registre d'unités (grandeurs/unités/défauts) du diagramme. */
+  public get units(): Class_UnitsRegistry {
+    return this._units
+  }
+
   public delete() {
     // Properly delete all nodes & link
     this.nodes_list.forEach(n => { n.delete() /* Will also trigger delete() on links*/ })
@@ -238,6 +253,9 @@ export class Class_Sankey {
     // Un reset ramène au thème historique : `fromJSON` reposera celui du fichier.
     this._theme = themeOpenSankey()
     this.invalidateThemePalette()
+
+    // OS#1286 — reset du registre d'unités : `fromJSON` reposera celui du fichier.
+    this._units.resetToDefault()
 
     this.node_taggs_list.forEach(grp => grp.delete())
     this.flux_taggs_list.forEach(grp => grp.delete())
@@ -343,6 +361,8 @@ export class Class_Sankey {
       .forEach(([idx, icon_path]) => {
         this._icon_catalog[idx] = icon_path
       })
+    // OS#1286 — copie du registre d'unités
+    this._units.copyFrom(sankey_to_copy.units)
   }
 
   public get container_activated() { return this._container_activated }
@@ -442,11 +462,113 @@ export class Class_Sankey {
     // // Draw links
     // this.links_list.forEach(link => link.draw())
     // Draw nodes
-    this.nodes_list.forEach(node => node.draw())
-    this.containers_list.forEach(container => container.draw())
+    // Le join des flux passe AVANT celui des nœuds : il pose les <g> racine
+    // (enter) que node._drawLinks remplit ensuite pendant le dessin des nœuds.
+    this._drawLinksJoin()
+    this._drawNodesJoin()
+    this._drawContainersJoin()
     //this.nodes_list.forEach(node => node.unDraw())
-    //this.visible_nodes_list_sorted.forEach(node => node.draw()) 
+    //this.visible_nodes_list_sorted.forEach(node => node.draw())
     this.drawing_area.orderElementOnDA()
+  }
+
+  /**
+   * OS#1246 — join keyé des zones de texte (`gg_labels`). Même forme que les
+   * nœuds : Class_ContainerElement hérite de Class_NodeBase (donc même parent
+   * `g_elements_sankey`, `datum(this)` posé dans _initDraw) et la boucle de
+   * dessin est INCONDITIONNELLE — le join peut donc posséder le cycle de vie du
+   * <g> racine (enter/update/exit), contrairement aux flux.
+   */
+  private _drawContainersJoin() {
+    const parent = this.drawing_area.d3_selection_elements_sankey_group
+    if (parent) {
+      parent.selectAll<SVGGElement, Class_ContainerElement>('.gg_labels')
+        .data(this.containers_list.filter(c => c._shouldBeDrawn()), d => d.id)
+        .join(
+          enter => enter.append('g')
+            .attr('class', 'gg_labels')
+            .attr('id', d => d.svg_group)
+            .each(function (d) {
+              d.d3_selection = d3.select(this) as unknown as
+                d3.Selection<SVGGElement, unknown, SVGGElement, unknown>
+            }),
+          update => update,
+          exit => exit.each(function (d) { d.unDraw() }).remove()
+        )
+    }
+    // Contenu : toutes les zones (les non-dessinables se retirent via _shouldBeDrawn).
+    this.containers_list.forEach(container => container.draw())
+  }
+
+  /**
+   * OS#1246 — join keyé LITTÉRAL des flux. Le join possède le cycle de vie du
+   * <g> racine (enter/update/exit), comme pour les nœuds et les ZDT.
+   *
+   * Le contenu, lui, reste posé par le nœud source/cible (node._drawLinks →
+   * updateLinksPositions), qui ne redessine un flux que si sa position a bougé
+   * ≥1px OU si isRelatedD3SelectionPresentAndSynced() est faux. C'est pour ça
+   * que ce join ne pouvait pas pré-créer les <g> tant que cette sync se résumait
+   * à « l'id existe-t-il ? » : un <g> vide passait pour synchronisé et le flux
+   * n'était jamais tracé. La sync vérifie désormais un marqueur de CONTENU
+   * (Link._hasDrawnContent : .link_shape / .link_path), donc un <g> pré-créé
+   * vide est bien vu comme « à dessiner ».
+   */
+  private _drawLinksJoin() {
+    const parent = this.drawing_area.d3_selection_elements_sankey_group
+    if (!parent) return
+    const drawable_links = this.links_list.filter(l => l._shouldBeDrawn())
+    parent.selectAll<SVGGElement, Class_LinkElement>('.gg_links')
+      .data(drawable_links, d => d.id)
+      .join(
+        enter => enter.append('g')
+          .attr('class', 'gg_links')
+          .attr('id', d => d.svg_group)
+          .each(function (d) {
+            d.d3_selection = d3.select(this) as unknown as
+              d3.Selection<SVGGElement, unknown, SVGGElement, unknown>
+          }),
+        update => update,
+        // exit : le flux n'est plus dessinable — nettoyage complet + retrait du <g>.
+        exit => exit.each(function (d) { d.unDraw() }).remove()
+      )
+  }
+
+  /**
+   * OS#1246 — premier vrai data-join keyé de la lib. Le join possède le cycle
+   * de vie du <g> racine des nœuds : enter l'append, exit le retire, update le
+   * conserve. Le CONTENU reste dessiné par node.draw() (qui réutilise ce <g>
+   * via Element._initDraw idempotent) — migration « groupe par groupe » sans
+   * casser l'architecture par classes. Les <g class="gg_nodes"> existants
+   * portent leur datum(this) (posé dans NodeBase._initDraw), donc le join les
+   * reconnaît par id (update) au lieu de les recréer. Prérequis des transitions
+   * animées : enter/update/exit sont désormais des sélections nommées.
+   */
+  private _drawNodesJoin() {
+    const parent = this.drawing_area.d3_selection_elements_sankey_group
+    if (parent) {
+      parent.selectAll<SVGGElement, Class_NodeElement>('.gg_nodes')
+        .data(this.visible_nodes_list, d => d.id)
+        .join(
+          enter => enter.append('g')
+            .attr('class', 'gg_nodes')
+            .attr('id', d => d.svg_group)
+            .each(function (d) {
+              // select() sur un nœud type le parent à null → recast vers le
+              // type du champ (phantom type, sans incidence runtime).
+              d.d3_selection = d3.select(this) as unknown as
+                d3.Selection<SVGGElement, unknown, SVGGElement, unknown>
+            }),
+          update => update,
+          // exit : nœud devenu invisible/supprimé — nettoyage complet (retrait
+          // DOM + caches + cascade des flux) via unDraw, puis retrait du <g>.
+          exit => exit.each(function (d) { d.unDraw() }).remove()
+        )
+    }
+    // Contenu de chaque nœud. On parcourt TOUS les nœuds (pas seulement les
+    // visibles) : un nœud invisible non capté par l'exit ci-dessus (jamais
+    // entré dans le DOM) doit quand même passer par draw()→unDraw pour ses
+    // dépendances (flux, poignées). No-op DOM si déjà retiré.
+    this.nodes_list.forEach(node => node.draw())
   }
   public linkValueHasReconciliedData = () => {
     return this.links_list.some(link => link.has_result)
@@ -509,6 +631,22 @@ export class Class_Sankey {
     return link
   }
 
+  // #680 — Re-cadrage débouncé après un AJOUT d'élément (nœud / flux / ZDT) par action
+  // utilisateur, quand un mode de cadrage auto est actif. Ignoré pendant le chargement
+  // (bypass_redraws) — le fit différé de fromJSON s'en charge. Débouncé pour coalescer les
+  // rafales (création d'un flux = nœud(s) + lien ; collage de plusieurs éléments) en un fit.
+  private _scheduleAutoFitAfterAdd(): void {
+    const da = this.drawing_area
+    // #680 — Ignoré seulement pendant le chargement (bypass_redraws) ; le mode 'none'
+    // recentre aussi (à zoom constant), il n'est donc plus exclu ici.
+    if (!da || da.bypass_redraws) return
+    da.application_data._add_waiting_process(
+      'autofit_mode_after_add',
+      () => da.applyAutoFitMode(false),
+      80
+    )
+  }
+
   public addNewNode(id: string, name: string): Class_NodeElement {
     if (!this._nodes[id]) {
       // Create node
@@ -517,6 +655,7 @@ export class Class_Sankey {
       node.draw()
       // Update registry of nodes
       this._addNode(node)
+      this._scheduleAutoFitAfterAdd() // #680
       return node
     }
     else {
@@ -544,6 +683,7 @@ export class Class_Sankey {
       zdt.draw()
       // Update registry of nodes
       this._addLabel(zdt)
+      this._scheduleAutoFitAfterAdd() // #680
       return zdt
     }
     else {
@@ -662,6 +802,7 @@ export class Class_Sankey {
     if (!this._links[id]) {
       const link = this.createNewLink(id, source, target)
       this._addLink(link)
+      this._scheduleAutoFitAfterAdd() // #680
       return link
     }
     else {
@@ -693,13 +834,38 @@ export class Class_Sankey {
   ////////////////////////////////////////////////////////////////////////////
 
   public deleteLocalAttrSelectedElements(k: keyof typeof ALL_ATTRIBUTES_CONFIG, selected_elements_list: Class_ProtoElement[]) {
-    selected_elements_list.forEach(link => {
-      if (k in ALL_ATTRIBUTES_CONFIG) {
-        link.delete_attribute(k)
-        link.draw()
-      }
-    })
-    this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+    // `attributes` expose _storage PAR RÉFÉRENCE et delete_attribute le mute en place :
+    // mémoriser l'objet (comme le fait resetAttrSelectedElements) ne restaurerait rien.
+    // On retient donc la valeur de la clé élément par élément ; `had` distingue « pas de
+    // surcharge » de « surcharge à undefined », pour ne pas en recréer une à l'undo.
+    const before = selected_elements_list.map(element => ({
+      element,
+      had: k in element.attributes,
+      value: element.attributes[k],
+    }))
+
+    const apply = () => {
+      selected_elements_list.forEach(element => {
+        if (k in ALL_ATTRIBUTES_CONFIG) {
+          element.delete_attribute(k)
+          element.draw()
+        }
+      })
+      this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+    }
+
+    const undo = () => {
+      before.forEach(({ element, had, value }) => {
+        if (had) element.attributes[k] = value
+        else delete element.attributes[k]
+        element.draw()
+      })
+      this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+    }
+
+    this.drawing_area.application_data.history.saveUndo(undo)
+    this.drawing_area.application_data.history.saveRedo(apply)
+    apply()
   }
 
   public createNewElementStyle(id: string, name: string, is_deletable?: boolean): Class_ElementStyle {
@@ -777,6 +943,31 @@ export class Class_Sankey {
    */
   public invalidateThemePalette(): void {
     this._theme_node_colors = null
+  }
+
+  /**
+   * Renommage d'un nœud : la table de palette est indexée par `id` mais calculée
+   * depuis les NOMS. Un renommage peut donc changer le regroupement par premier mot,
+   * et c'est toute la table qui est périmée, pas la seule entrée du nœud renommé.
+   *
+   * Le paramètre n'est pas décoratif : `Class_ContainerElement` hérite de
+   * `Class_NodeBase` et passe donc par le même setter, alors qu'il ne participe pas
+   * à la palette. On filtre sur l'appartenance à `_nodes`.
+   *
+   * Le redraw n'a lieu que si la palette dépend réellement des noms — sous
+   * `opensankey` (`by-tag`) ou `stan` (`none`), renommer ne change aucune couleur.
+   * Il est aussi sauté sous `bypass_redraws` : le chargement et les opérations en
+   * masse redessinent à la fin, et `fromJSON` pose le thème AVANT les nœuds.
+   * Les flux sont du lot : sous `shape_color_rule: 'source'` leur couleur suit
+   * celle de leur nœud source.
+   */
+  public onNodeRenamed(node: Class_NodeBase): void {
+    if (this._nodes[node.id] !== node) return
+    this.invalidateThemePalette()
+    if (this._theme.palette.node_rule !== 'by-name-first-word') return
+    if (this.drawing_area.bypass_redraws) return
+    this.nodes_list.forEach(_ => _.draw())
+    this.links_list.forEach(_ => _.draw())
   }
 
   /**
@@ -949,13 +1140,34 @@ export class Class_Sankey {
 
   /** Enlève une surcharge précise d'un style (équivalent deleteLocalAttrSelectedElements). */
   public deleteLocalAttrStyle(style: Class_ElementStyle, k: keyof typeof ALL_ATTRIBUTES_CONFIG) {
-    if (k in ALL_ATTRIBUTES_CONFIG) {
-      style.deleteAttribute(k as string)
-      style.redrawReferences()
-    }
     const menu = this.drawing_area.application_data.menu_configuration
-    menu.updateAllComponentsRelatedToNodes()
-    menu.updateComponentRelatedToStyles()
+    // Même piège de référence que deleteLocalAttrSelectedElements : on retient la
+    // valeur de la clé, pas l'objet. Le setter `attributes` redessine les références.
+    const key = k as string
+    const had = key in style.attributes
+    const value = style.attributes[key]
+
+    const apply = () => {
+      if (k in ALL_ATTRIBUTES_CONFIG) {
+        style.deleteAttribute(key)
+        style.redrawReferences()
+      }
+      menu.updateAllComponentsRelatedToNodes()
+      menu.updateComponentRelatedToStyles()
+    }
+
+    const undo = () => {
+      const restored = { ...style.attributes }
+      if (had) restored[key] = value
+      else delete restored[key]
+      style.attributes = restored
+      menu.updateAllComponentsRelatedToNodes()
+      menu.updateComponentRelatedToStyles()
+    }
+
+    this.drawing_area.application_data.history.saveUndo(undo)
+    this.drawing_area.application_data.history.saveRedo(apply)
+    apply()
   }
 
 
@@ -1394,101 +1606,101 @@ export class Class_Sankey {
     // leur style seul ne survit pas ; SplitIOrE lira ce drapeau).
     this.drawing_area.import_export_above_below = !close
 
-    this.drawing_area.bypass_redraws = true
-    const process_nodes = this.nodes_list
-    const echangeTag = this.node_taggs_dict['type de noeud'].tags_dict['echange']
+    this.drawing_area.withBypassRedraws(() => {
+      const process_nodes = this.nodes_list
+      const echangeTag = this.node_taggs_dict['type de noeud'].tags_dict['echange']
 
-    const import_nodes = process_nodes.filter(n =>
-      n.hasGivenTag(echangeTag) && n.output_links_list.length > 0
-    )
-    const export_nodes = process_nodes.filter(n =>
-      n.hasGivenTag(echangeTag) && n.input_links_list.length > 0
-    )
+      const import_nodes = process_nodes.filter(n =>
+        n.hasGivenTag(echangeTag) && n.output_links_list.length > 0
+      )
+      const export_nodes = process_nodes.filter(n =>
+        n.hasGivenTag(echangeTag) && n.input_links_list.length > 0
+      )
 
-    if (close) {
+      if (close) {
       // Mode "close" pour les imports
-      import_nodes.forEach((n, _i) => {
+        import_nodes.forEach((n, _i) => {
         // if (i == 0) n.sibling!.replaceStyles([
         //   node_styles_dict[NodeSectorStyle],
         //   node_styles_dict[NodeImportExportCloseStyle],
         // ])
-        n.replaceStyles([
-          node_styles_dict[NodeStyle],
-          node_styles_dict[NodeImportExportCloseStyle],
-          node_styles_dict[NodeImportCloseStyle]
-        ])
-
-        const firstOutputLink = n.getFirstOutputLink()
-        if (firstOutputLink) {
-          firstOutputLink.replaceStyles([
-            node_styles_dict[LinkStyle],
-            link_styles_dict[LinkImportExportCloseStyle],
-            link_styles_dict[LinkImportCloseStyle]
+          n.replaceStyles([
+            node_styles_dict[NodeStyle],
+            node_styles_dict[NodeImportExportCloseStyle],
+            node_styles_dict[NodeImportCloseStyle]
           ])
-        }
-      })
 
-      // Mode "close" pour les exports
-      export_nodes.forEach(n => {
-        n.replaceStyles([
-          node_styles_dict[NodeStyle],
-          node_styles_dict[NodeImportExportCloseStyle],
-          node_styles_dict[NodeExportCloseStyle]
-        ])
+          const firstOutputLink = n.getFirstOutputLink()
+          if (firstOutputLink) {
+            firstOutputLink.replaceStyles([
+              node_styles_dict[LinkStyle],
+              link_styles_dict[LinkImportExportCloseStyle],
+              link_styles_dict[LinkImportCloseStyle]
+            ])
+          }
+        })
 
-        const firstInputLink = n.getFirstInputLink()
-        if (firstInputLink) {
-          firstInputLink.replaceStyles([
-            node_styles_dict[LinkStyle],
-            link_styles_dict[LinkImportExportCloseStyle],
-            link_styles_dict[LinkExportCloseStyle]
+        // Mode "close" pour les exports
+        export_nodes.forEach(n => {
+          n.replaceStyles([
+            node_styles_dict[NodeStyle],
+            node_styles_dict[NodeImportExportCloseStyle],
+            node_styles_dict[NodeExportCloseStyle]
           ])
-        }
-      })
-    } else {
+
+          const firstInputLink = n.getFirstInputLink()
+          if (firstInputLink) {
+            firstInputLink.replaceStyles([
+              node_styles_dict[LinkStyle],
+              link_styles_dict[LinkImportExportCloseStyle],
+              link_styles_dict[LinkExportCloseStyle]
+            ])
+          }
+        })
+      } else {
       // Mode "above/below" pour les imports
-      import_nodes.forEach((n, _i) => {
+        import_nodes.forEach((n, _i) => {
         // if (i == 0) n.sibling!.replaceStyles([
         //   node_styles_dict[NodeSectorStyle],
         //   node_styles_dict[NodeImportExportAboveBelowStyle],
         // ])
-        n.replaceStyles([
-          node_styles_dict[NodeStyle],
-          node_styles_dict[NodeSectorStyle],
-          node_styles_dict[NodeImportExportAboveBelowStyle],
-          node_styles_dict[NodeImportAboveStyle]
-        ])
-
-        const firstOutputLink = n.getFirstOutputLink()
-        if (firstOutputLink) {
-          firstOutputLink.replaceStyles([
-            node_styles_dict[LinkStyle],
-            link_styles_dict[LinkImportExportAboveBelowStyle]
+          n.replaceStyles([
+            node_styles_dict[NodeStyle],
+            node_styles_dict[NodeSectorStyle],
+            node_styles_dict[NodeImportExportAboveBelowStyle],
+            node_styles_dict[NodeImportAboveStyle]
           ])
-        }
-      })
 
-      // Mode "above/below" pour les exports
-      export_nodes.forEach(n => {
-        n.replaceStyles([
-          node_styles_dict[NodeStyle],
-          node_styles_dict[NodeSectorStyle],
-          node_styles_dict[NodeImportExportAboveBelowStyle],
-          node_styles_dict[NodeExportBelowStyle]
-        ])
+          const firstOutputLink = n.getFirstOutputLink()
+          if (firstOutputLink) {
+            firstOutputLink.replaceStyles([
+              node_styles_dict[LinkStyle],
+              link_styles_dict[LinkImportExportAboveBelowStyle]
+            ])
+          }
+        })
 
-        const firstInputLink = n.getFirstInputLink()
-        if (firstInputLink) {
-          firstInputLink.replaceStyles([
-            node_styles_dict[LinkStyle],
-            link_styles_dict[LinkImportExportAboveBelowStyle]
+        // Mode "above/below" pour les exports
+        export_nodes.forEach(n => {
+          n.replaceStyles([
+            node_styles_dict[NodeStyle],
+            node_styles_dict[NodeSectorStyle],
+            node_styles_dict[NodeImportExportAboveBelowStyle],
+            node_styles_dict[NodeExportBelowStyle]
           ])
-        }
-      })
-    }
 
-    this.drawing_area.nodePositioning.arrangeTrade(true)
-    this.drawing_area.draw()
+          const firstInputLink = n.getFirstInputLink()
+          if (firstInputLink) {
+            firstInputLink.replaceStyles([
+              node_styles_dict[LinkStyle],
+              link_styles_dict[LinkImportExportAboveBelowStyle]
+            ])
+          }
+        })
+      }
+
+      this.drawing_area.nodePositioning.arrangeTrade(true)
+    })
   }
 }
 

@@ -30,16 +30,18 @@ import {
   Button,
   Checkbox,
   Input,
-  Select
+  Select,
+  Textarea
 } from '@chakra-ui/react'
 
+import { useModelBinding } from '../../hooks/useModelBinding'
 import { ConfigMenuNumberInput, MenuColorPicker, WrapperBoxSubSectionMenu } from './MenuCommon'
 import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle, OnDragEndResponder } from 'react-beautiful-dnd'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_DataTagGroup } from '../../types/TagGroup'
 import { CustomFaEyeCheckIcon, OSChecklistDropdown, OSTooltip } from './MenuCommon'
 import { AVAILABLE_THEMES, themeById } from '../../types/ThemeRegistry'
-import { Type_PaperFormat, Type_PaperOrientation } from '../../Elements/ElementsAttributesConfig'
+import { Type_PaperFormat, Type_PaperOrientation, default_title_text } from '../../Elements/ElementsAttributesConfig'
 
 // Utils functions -------------------------------------------------------------------
 
@@ -59,7 +61,8 @@ export const DrawingAreaConfig = ({
   extra_background_element?: JSX.Element,
 }) => {
   const { t } = app_data
-  const [, setCount] = useState(0)
+  // #247 — re-render forcé d'identité stable (compteur local, ce menu n'a pas de slot updater).
+  const refreshThis = useModelBinding()
 
   const unit_taggs = app_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
   const [selectedTag, setSelectedTag] = useState(unit_taggs.length > 0 ? unit_taggs[0].tags_list.filter(tag => tag.is_selected)[0].id : '')
@@ -84,7 +87,7 @@ export const DrawingAreaConfig = ({
 
   const refreshThisAndUpdateRelatedComponents = () => {
     app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    setCount(a => a + 1)
+    refreshThis()
     app_data.menu_configuration.updateComponentRelatedToLayoutApparence()
   }
 
@@ -201,21 +204,10 @@ export const DrawingAreaConfig = ({
     app_data.setValueAndSaveHistory(app_data.drawing_area, 'minimum_flux', new_min, f)
   }
 
-  const eventStructureForceMin = (evt: React.ChangeEvent<HTMLInputElement>) => {
-    const f = (_: boolean) => {
-      app_data.drawing_area.structure_mode_force_min = _
-      refreshThisAndUpdateRelatedComponents()
-    }
-    app_data.setValueAndSaveHistory(app_data.drawing_area, 'structure_mode_force_min', evt.target.checked, f)
-  }
-
-  const eventArrowStandaloneLayout = (evt: React.ChangeEvent<HTMLInputElement>) => {
-    const f = (_: boolean) => {
-      app_data.drawing_area.arrow_use_standalone_layout = _
-      refreshThisAndUpdateRelatedComponents()
-    }
-    app_data.setValueAndSaveHistory(app_data.drawing_area, 'arrow_use_standalone_layout', evt.target.checked, f)
-  }
+  // OS#1302 — les réglages « forcer épaisseur min », « pointe indépendante » et
+  // « pointe accentuée » ont quitté ce menu global : ce sont désormais des attributs
+  // de flux édités dans le panneau d'apparence des flux (et pilotables par le style
+  // de flux). Voir MenuConfigurationAppearance / LINK_SHAPE_SPECIFIC_CONFIG.
 
   const eventMaxLinkThickness = (evt: number | null | undefined) => {
     if (evt == null) return
@@ -263,356 +255,350 @@ export const DrawingAreaConfig = ({
     app_data.setValueAndSaveHistory(app_data.drawing_area, 'maximum_node', evt, f)
   }
 
+  // #1258 — 4 sections repliables : Page / Habillage / Échelle & tailles /
+  // Avancé (repliée). Fin de la liste plate de ~15 réglages.
   return <>
-    {/* Paper format */}
-    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-      <Box layerStyle='menuconfigpanel_option_name'>
-        {t('MEP.PaperFormat')}
-      </Box>
-      <Select
-        variant='menuconfigpanel_option_select'
-        value={app_data.drawing_area.paper_format}
-        onChange={eventPaperFormat}
-      >
-        <option value='free'>{t('MEP.PaperFree')}</option>
-        <option value='A3'>A3</option>
-        <option value='A4'>A4</option>
-        <option value='A5'>A5</option>
-      </Select>
-    </Box>
-
-    {app_data.drawing_area.is_paper_mode && <>
+    <WrapperBoxSubSectionMenu title={t('inspector.section.page')} new_data={app_data}>
+      {/* Paper format */}
       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
         <Box layerStyle='menuconfigpanel_option_name'>
-          {t('MEP.PaperOrientation')}
+          {t('MEP.PaperFormat')}
         </Box>
         <Select
           variant='menuconfigpanel_option_select'
-          value={app_data.drawing_area.paper_orientation}
-          onChange={eventPaperOrientation}
+          value={app_data.drawing_area.paper_format}
+          onChange={eventPaperFormat}
         >
-          <option value='landscape'>{t('MEP.Landscape')}</option>
-          <option value='portrait'>{t('MEP.Portrait')}</option>
+          <option value='free'>{t('MEP.PaperFree')}</option>
+          <option value='A3'>A3</option>
+          <option value='A4'>A4</option>
+          <option value='A5'>A5</option>
         </Select>
+      </Box>
+
+      {app_data.drawing_area.is_paper_mode && <>
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+          <Box layerStyle='menuconfigpanel_option_name'>
+            {t('MEP.PaperOrientation')}
+          </Box>
+          <Select
+            variant='menuconfigpanel_option_select'
+            value={app_data.drawing_area.paper_orientation}
+            onChange={eventPaperOrientation}
+          >
+            <option value='landscape'>{t('MEP.Landscape')}</option>
+            <option value='portrait'>{t('MEP.Portrait')}</option>
+          </Select>
+        </Box>
+
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+          <Box layerStyle='menuconfigpanel_option_name'>
+            {t('MEP.Margins')}
+          </Box>
+          <Box display='grid' gridTemplateColumns='1fr 1fr' gap='4px'>
+            <ConfigMenuNumberInput
+              t={app_data.t}
+              default_value={app_data.drawing_area.margin_top_mm}
+              function_on_blur={eventMargin('top')}
+              minimum_value={0}
+              maximum_value={50}
+              stepper={true}
+              unit_text='mm'
+            />
+            <ConfigMenuNumberInput
+              t={app_data.t}
+              default_value={app_data.drawing_area.margin_right_mm}
+              function_on_blur={eventMargin('right')}
+              minimum_value={0}
+              maximum_value={50}
+              stepper={true}
+              unit_text='mm'
+            />
+            <ConfigMenuNumberInput
+              t={app_data.t}
+              default_value={app_data.drawing_area.margin_bottom_mm}
+              function_on_blur={eventMargin('bottom')}
+              minimum_value={0}
+              maximum_value={50}
+              stepper={true}
+              unit_text='mm'
+            />
+            <ConfigMenuNumberInput
+              t={app_data.t}
+              default_value={app_data.drawing_area.margin_left_mm}
+              function_on_blur={eventMargin('left')}
+              minimum_value={0}
+              maximum_value={50}
+              stepper={true}
+              unit_text='mm'
+            />
+          </Box>
+        </Box>
+
+        <Box layerStyle='menuconfigpanel_option_name' fontSize='xs' opacity={0.7}>
+          {Math.round(app_data.drawing_area.width)} x {Math.round(app_data.drawing_area.height)} px
+        </Box>
+
+      </>}
+    </WrapperBoxSubSectionMenu>
+
+    <WrapperBoxSubSectionMenu title={t('inspector.section.dressing')} new_data={app_data}>
+      {/* Theme */}
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('Menu.theme.label')}
+        </Box>
+        <OSTooltip label={t('Menu.theme.tooltip')}>
+          <Select
+            variant='menuconfigpanel_option_select'
+            value={app_data.drawing_area.sankey.theme.id}
+            onChange={eventTheme}
+          >
+            {AVAILABLE_THEMES.map(theme => (
+              <option key={theme.id} value={theme.id}>{t(theme.label_key)}</option>
+            ))}
+          </Select>
+        </OSTooltip>
       </Box>
 
       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
         <Box layerStyle='menuconfigpanel_option_name'>
-          {t('MEP.Margins')}
+          {t('Menu.BgC')}
         </Box>
-        <Box display='grid' gridTemplateColumns='1fr 1fr' gap='4px'>
-          <ConfigMenuNumberInput
-            t={app_data.t}
-            default_value={app_data.drawing_area.margin_top_mm}
-            function_on_blur={eventMargin('top')}
-            minimum_value={0}
-            maximum_value={50}
-            stepper={true}
-            unit_text='mm'
-          />
-          <ConfigMenuNumberInput
-            t={app_data.t}
-            default_value={app_data.drawing_area.margin_right_mm}
-            function_on_blur={eventMargin('right')}
-            minimum_value={0}
-            maximum_value={50}
-            stepper={true}
-            unit_text='mm'
-          />
-          <ConfigMenuNumberInput
-            t={app_data.t}
-            default_value={app_data.drawing_area.margin_bottom_mm}
-            function_on_blur={eventMargin('bottom')}
-            minimum_value={0}
-            maximum_value={50}
-            stepper={true}
-            unit_text='mm'
-          />
-          <ConfigMenuNumberInput
-            t={app_data.t}
-            default_value={app_data.drawing_area.margin_left_mm}
-            function_on_blur={eventMargin('left')}
-            minimum_value={0}
-            maximum_value={50}
-            stepper={true}
-            unit_text='mm'
-          />
-        </Box>
+        <OSTooltip label={t('MEP.tooltips.BgC')}>
+          <Box>
+            <MenuColorPicker
+              initialColor={app_data.drawing_area.color}
+              onColorChange={eventBgColor}
+            />
+          </Box>
+        </OSTooltip>
       </Box>
-
-      <Box layerStyle='menuconfigpanel_option_name' fontSize='xs' opacity={0.7}>
-        {Math.round(app_data.drawing_area.width)} x {Math.round(app_data.drawing_area.height)} px
-      </Box>
-
-    </>}
-
-    {/* Theme */}
-    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-      <Box layerStyle='menuconfigpanel_option_name'>
-        {t('Menu.theme.label')}
-      </Box>
-      <OSTooltip label={t('Menu.theme.tooltip')}>
-        <Select
-          variant='menuconfigpanel_option_select'
-          value={app_data.drawing_area.sankey.theme.id}
-          onChange={eventTheme}
+      <Box layerStyle='menuconfigpanel_row_2cols'>
+        <Checkbox
+          variant='menuconfigpanel_option_checkbox'
+          isChecked={app_data.drawing_area.grid_visible}
+          icon={<CustomFaEyeCheckIcon />}
+          onChange={eventGridVisible}
         >
-          {AVAILABLE_THEMES.map(theme => (
-            <option key={theme.id} value={theme.id}>{t(theme.label_key)}</option>
-          ))}
-        </Select>
-      </OSTooltip>
-    </Box>
+          <OSTooltip label={t('MEP.tooltips.GV')}>
+            {t('MEP.TCG')}
+          </OSTooltip>
+        </Checkbox>
 
-    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-      <Box layerStyle='menuconfigpanel_option_name'>
-        {t('Menu.BgC')}
-      </Box>
-      <OSTooltip label={t('MEP.tooltips.BgC')}>
-        <Box>
-          <MenuColorPicker
-            initialColor={app_data.drawing_area.color}
-            onColorChange={eventBgColor}
+        <OSTooltip label={t('MEP.tooltips.TCG')}>
+          <ConfigMenuNumberInput
+            t={app_data.t}
+            default_value={app_data.drawing_area.grid_size}
+            function_on_blur={eventGridSize}
+            minimum_value={10}
+            stepper={true}
+            unit_text={right_addon_pixel(app_data.drawing_area.grid_size)}
           />
-        </Box>
-      </OSTooltip>
-    </Box>
-    <Box layerStyle='menuconfigpanel_row_2cols'>
+        </OSTooltip>
+      </Box>
+
+      {/* Nodes move by steps */}
       <Checkbox
         variant='menuconfigpanel_option_checkbox'
-        isChecked={app_data.drawing_area.grid_visible}
+        isChecked={app_data.drawing_area.magnetic_nodes}
         icon={<CustomFaEyeCheckIcon />}
-        onChange={eventGridVisible}
+        onChange={eventMagneticNodes}
       >
-        <OSTooltip label={t('MEP.tooltips.GV')}>
-          {t('MEP.TCG')}
+        <OSTooltip label={t('MEP.tooltips.MN')}>
+          {t('MEP.MN')}
         </OSTooltip>
       </Checkbox>
 
-      <OSTooltip label={t('MEP.tooltips.TCG')}>
-        <ConfigMenuNumberInput
-          t={app_data.t}
-          default_value={app_data.drawing_area.grid_size}
-          function_on_blur={eventGridSize}
-          minimum_value={10}
-          stepper={true}
-          unit_text={right_addon_pixel(app_data.drawing_area.grid_size)}
-        />
-      </OSTooltip>
-    </Box>
+      {/* Image de fond (injection OSP) : c'est de l'habillage. */}
+      {extra_background_element}
+    </WrapperBoxSubSectionMenu>
 
-    {/* Nodes move by steps */}
-    <Checkbox
-      variant='menuconfigpanel_option_checkbox'
-      isChecked={app_data.drawing_area.magnetic_nodes}
-      icon={<CustomFaEyeCheckIcon />}
-      onChange={eventMagneticNodes}
-    >
-      <OSTooltip label={t('MEP.tooltips.MN')}>
-        {t('MEP.MN')}
-      </OSTooltip>
-    </Checkbox>
-
-    {unit_taggs.length > 0 && (
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box as='span' layerStyle='menuconfigpanel_part_title_3'>
-          {unit_taggs[0].name}
+    <WrapperBoxSubSectionMenu title={t('inspector.section.scale_sizes')} new_data={app_data}>
+      {unit_taggs.length > 0 && (
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+          <Box as='span' layerStyle='menuconfigpanel_part_title_3'>
+            {unit_taggs[0].name}
+          </Box>
+          <Select
+            name={unit_taggs[0].id}
+            variant='menuconfigpanel_option_select'
+            value={selectedTag}
+            onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+              setSelectedTag(evt.target.value)
+              refreshThisAndUpdateRelatedComponents()
+            }}
+          >
+            {unit_taggs[0].tags_list.map(tag => (
+              <option key={tag.id} value={tag.id}>{tag.name}</option>
+            ))}
+          </Select>
         </Box>
-        <Select
-          name={unit_taggs[0].id}
-          variant='menuconfigpanel_option_select'
-          value={selectedTag}
-          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-            setSelectedTag(evt.target.value)
-            refreshThisAndUpdateRelatedComponents()
-          }}
+      )}
+
+      {/* Échelle */}
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('MEP.Echelle')}
+        </Box>
+        <Box>
+          <ConfigMenuNumberInput
+            t={app_data.t}
+            default_value={unit_taggs.length > 0 ? unit_taggs[0].tags_dict[selectedTag].scale : app_data.drawing_area.scale}
+            function_on_blur={eventScale}
+            minimum_value={1}
+            stepper={true}
+            unit_text={'unit. / 100 pixels'}
+          />
+        </Box>
+      </Box>
+
+      {/* Limites min/max */}
+      <Box layerStyle='menuconfigpanel_2row_3cols'>
+        <Box
+          layerStyle='menuconfigpanel_option_name'
+          gridColumnStart='1'
+          gridColumnEnd='2'
+          gridRowStart='2'
+          gridRowEnd='3'
         >
-          {unit_taggs[0].tags_list.map(tag => (
-            <option key={tag.id} value={tag.id}>{tag.name}</option>
-          ))}
-        </Select>
-      </Box>
-    )}
+          {t('MEP.link_size_limit')}
+        </Box>
+        <Box
+          layerStyle='menuconfigpanel_option_name'
+          gridColumnStart='2'
+          gridColumnEnd='3'
+          gridRowStart='1'
+          gridRowEnd='2'
+          alignItems='flex-end'
+        >
+          {t('MEP.MinFlux')}
+        </Box>
+        <Box
+          layerStyle='menuconfigpanel_option_name'
+          gridColumnStart='3'
+          gridColumnEnd='4'
+          gridRowStart='1'
+          gridRowEnd='2'
+          alignItems='flex-end'
+        >
+          {t('MEP.MaxFlux')}
+        </Box>
+        <Box
+          gridColumnStart='2'
+          gridColumnEnd='3'
+          gridRowStart='2'
+          gridRowEnd='3'
+        >
+          <OSTooltip label={t('MEP.tooltips.MinFlux')}>
+            <ConfigMenuNumberInput
+              t={app_data.t}
+              default_value={app_data.drawing_area.minimum_flux ?? 2}
+              function_on_blur={eventMinLinkThickness}
+              minimum_value={0}
+              maximum_value={app_data.drawing_area.maximum_flux}
+              stepper={true}
+            />
+          </OSTooltip>
+        </Box>
+        <Box
+          gridColumnStart='3'
+          gridColumnEnd='4'
+          gridRowStart='2'
+          gridRowEnd='3'
+        >
+          <OSTooltip label={t('MEP.tooltips.MaxFlux')}>
+            <ConfigMenuNumberInput
+              t={app_data.t}
+              default_value={app_data.drawing_area.maximum_flux}
+              function_on_blur={eventMaxLinkThickness}
+              minimum_value={app_data.drawing_area.minimum_flux}
+              stepper={true}
+              unit_text={right_addon_pixel(app_data.drawing_area.maximum_flux!)}
+            />
+          </OSTooltip>
+        </Box>
 
-    {/* Échelle */}
-    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-      <Box layerStyle='menuconfigpanel_option_name'>
-        {t('MEP.Echelle')}
-      </Box>
-      <Box>
-        <ConfigMenuNumberInput
-          t={app_data.t}
-          default_value={unit_taggs.length > 0 ? unit_taggs[0].tags_dict[selectedTag].scale : app_data.drawing_area.scale}
-          function_on_blur={eventScale}
-          minimum_value={1}
-          stepper={true}
-          unit_text={'unit. / 100 pixels'}
-        />
-      </Box>
-    </Box>
-
-    {/* Limites min/max */}
-    <Box layerStyle='menuconfigpanel_2row_3cols'>
-      <Box
-        layerStyle='menuconfigpanel_option_name'
-        gridColumnStart='1'
-        gridColumnEnd='2'
-        gridRowStart='2'
-        gridRowEnd='3'
-      >
-        {t('MEP.link_size_limit')}
-      </Box>
-      <Box
-        layerStyle='menuconfigpanel_option_name'
-        gridColumnStart='2'
-        gridColumnEnd='3'
-        gridRowStart='1'
-        gridRowEnd='2'
-        alignItems='flex-end'
-      >
-        {t('MEP.MinFlux')}
-      </Box>
-      <Box
-        layerStyle='menuconfigpanel_option_name'
-        gridColumnStart='3'
-        gridColumnEnd='4'
-        gridRowStart='1'
-        gridRowEnd='2'
-        alignItems='flex-end'
-      >
-        {t('MEP.MaxFlux')}
-      </Box>
-      <Box
-        gridColumnStart='2'
-        gridColumnEnd='3'
-        gridRowStart='2'
-        gridRowEnd='3'
-      >
-        <OSTooltip label={t('MEP.tooltips.MinFlux')}>
-          <ConfigMenuNumberInput
-            t={app_data.t}
-            default_value={app_data.drawing_area.minimum_flux ?? 2}
-            function_on_blur={eventMinLinkThickness}
-            minimum_value={0}
-            maximum_value={app_data.drawing_area.maximum_flux}
-            stepper={true}
-          />
-        </OSTooltip>
-      </Box>
-      <Box
-        gridColumnStart='3'
-        gridColumnEnd='4'
-        gridRowStart='2'
-        gridRowEnd='3'
-      >
-        <OSTooltip label={t('MEP.tooltips.MaxFlux')}>
-          <ConfigMenuNumberInput
-            t={app_data.t}
-            default_value={app_data.drawing_area.maximum_flux}
-            function_on_blur={eventMaxLinkThickness}
-            minimum_value={app_data.drawing_area.minimum_flux}
-            stepper={true}
-            unit_text={right_addon_pixel(app_data.drawing_area.maximum_flux!)}
-          />
-        </OSTooltip>
       </Box>
 
-    </Box>
-
-    {/* Limite min/max de hauteur des nœuds (px), indépendante des flux */}
-    <Box layerStyle='menuconfigpanel_2row_3cols'>
-      <Box
-        layerStyle='menuconfigpanel_option_name'
-        gridColumnStart='1'
-        gridColumnEnd='2'
-        gridRowStart='2'
-        gridRowEnd='3'
-      >
-        {t('MEP.node_size_limit')}
+      {/* Limite min/max de hauteur des nœuds (px), indépendante des flux */}
+      <Box layerStyle='menuconfigpanel_2row_3cols'>
+        <Box
+          layerStyle='menuconfigpanel_option_name'
+          gridColumnStart='1'
+          gridColumnEnd='2'
+          gridRowStart='2'
+          gridRowEnd='3'
+        >
+          {t('MEP.node_size_limit')}
+        </Box>
+        <Box
+          layerStyle='menuconfigpanel_option_name'
+          gridColumnStart='2'
+          gridColumnEnd='3'
+          gridRowStart='1'
+          gridRowEnd='2'
+          alignItems='flex-end'
+        >
+          {t('MEP.MinFlux')}
+        </Box>
+        <Box
+          layerStyle='menuconfigpanel_option_name'
+          gridColumnStart='3'
+          gridColumnEnd='4'
+          gridRowStart='1'
+          gridRowEnd='2'
+          alignItems='flex-end'
+        >
+          {t('MEP.MaxFlux')}
+        </Box>
+        <Box
+          gridColumnStart='2'
+          gridColumnEnd='3'
+          gridRowStart='2'
+          gridRowEnd='3'
+        >
+          <OSTooltip label={t('MEP.tooltips.MinNode')}>
+            <ConfigMenuNumberInput
+              t={app_data.t}
+              default_value={app_data.drawing_area.minimum_node ?? null}
+              function_on_blur={eventMinNodeHeight}
+              minimum_value={0}
+              maximum_value={app_data.drawing_area.maximum_node}
+              stepper={true}
+            />
+          </OSTooltip>
+        </Box>
+        <Box
+          gridColumnStart='3'
+          gridColumnEnd='4'
+          gridRowStart='2'
+          gridRowEnd='3'
+        >
+          <OSTooltip label={t('MEP.tooltips.MaxNode')}>
+            <ConfigMenuNumberInput
+              t={app_data.t}
+              default_value={app_data.drawing_area.maximum_node ?? null}
+              function_on_blur={eventMaxNodeHeight}
+              minimum_value={app_data.drawing_area.minimum_node}
+              stepper={true}
+              unit_text={right_addon_pixel(app_data.drawing_area.maximum_node!)}
+            />
+          </OSTooltip>
+        </Box>
       </Box>
-      <Box
-        layerStyle='menuconfigpanel_option_name'
-        gridColumnStart='2'
-        gridColumnEnd='3'
-        gridRowStart='1'
-        gridRowEnd='2'
-        alignItems='flex-end'
-      >
-        {t('MEP.MinFlux')}
-      </Box>
-      <Box
-        layerStyle='menuconfigpanel_option_name'
-        gridColumnStart='3'
-        gridColumnEnd='4'
-        gridRowStart='1'
-        gridRowEnd='2'
-        alignItems='flex-end'
-      >
-        {t('MEP.MaxFlux')}
-      </Box>
-      <Box
-        gridColumnStart='2'
-        gridColumnEnd='3'
-        gridRowStart='2'
-        gridRowEnd='3'
-      >
-        <OSTooltip label={t('MEP.tooltips.MinNode')}>
-          <ConfigMenuNumberInput
-            t={app_data.t}
-            default_value={app_data.drawing_area.minimum_node ?? null}
-            function_on_blur={eventMinNodeHeight}
-            minimum_value={0}
-            maximum_value={app_data.drawing_area.maximum_node}
-            stepper={true}
-          />
-        </OSTooltip>
-      </Box>
-      <Box
-        gridColumnStart='3'
-        gridColumnEnd='4'
-        gridRowStart='2'
-        gridRowEnd='3'
-      >
-        <OSTooltip label={t('MEP.tooltips.MaxNode')}>
-          <ConfigMenuNumberInput
-            t={app_data.t}
-            default_value={app_data.drawing_area.maximum_node ?? null}
-            function_on_blur={eventMaxNodeHeight}
-            minimum_value={app_data.drawing_area.minimum_node}
-            stepper={true}
-            unit_text={right_addon_pixel(app_data.drawing_area.maximum_node!)}
-          />
-        </OSTooltip>
-      </Box>
-    </Box>
+    </WrapperBoxSubSectionMenu>
 
-    {/* Mode Structure : forcer toutes les épaisseurs à minimum_flux */}
-    <Checkbox
-      variant='menuconfigpanel_option_checkbox'
-      isChecked={app_data.drawing_area.structure_mode_force_min}
-      icon={<CustomFaEyeCheckIcon />}
-      onChange={eventStructureForceMin}
-    >
-      <OSTooltip label={t('MEP.tooltips.StructureForceMin')}>
-        {t('MEP.StructureForceMin')}
-      </OSTooltip>
-    </Checkbox>
+    {/* Réglages pointus, repliés par défaut. */}
+    <WrapperBoxSubSectionMenu title={t('inspector.section.advanced')} new_data={app_data} is_open={false}>
+      {/* OS#1302 — « Forcer épaisseur min », « Pointe indépendante » et « Pointe
+          accentuée » ont quitté ce menu global : ce sont des attributs de flux, édités
+          dans le panneau d'apparence des flux (et pilotables par le style de flux). */}
 
-    {/* Layout des flèches : triangle indépendant par flux (défaut) vs éventail partagé (legacy) */}
-    <Checkbox
-      variant='menuconfigpanel_option_checkbox'
-      isChecked={app_data.drawing_area.arrow_use_standalone_layout}
-      icon={<CustomFaEyeCheckIcon />}
-      onChange={eventArrowStandaloneLayout}
-    >
-      <OSTooltip label={t('MEP.tooltips.ArrowStandaloneLayout')}>
-        {t('MEP.ArrowStandaloneLayout')}
-      </OSTooltip>
-    </Checkbox>
-
-    {extra_background_element}
-
-    <WrapperBoxSubSectionMenu title={t('Menu.ElOrder')} new_data={app_data} is_open={false}>
+      {/* Ordre d'empilement des éléments (ex-sous-section dédiée). */}
+      <Box as='span' layerStyle='menuconfigpanel_part_title_3'>
+        {t('Menu.ElOrder')}
+      </Box>
       <GraphElementsOrdoner app_data={app_data} />
     </WrapperBoxSubSectionMenu>
   </>
@@ -624,10 +610,16 @@ export const DrawingAreaConfig = ({
  * @param {*} { app_data }
  * @return {*} 
  */
-export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) => {
+export const LegendConfig = ({ app_data, compact = false }: {
+  app_data: Class_ApplicationData
+  // #1243 — inspecteur : l'onglet porte déjà le nom (« Légende ») → l'œil dit
+  // juste « Visible », et les attributs restent éditables même œil fermé.
+  compact?: boolean
+}) => {
 
   const { t } = app_data
-  const [, setCount] = useState(0)
+  // #247 — re-render forcé d'identité stable (compteur local, ce menu n'a pas de slot updater).
+  const refreshThis = useModelBinding()
 
   /**
    * Function used to reset menu UI
@@ -636,7 +628,7 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
     // Whatever is done, set saving indicator
     app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // And update this menu also
-    setCount(a => a + 1)
+    refreshThis()
   }
 
   // Event functions -------------------------------------------------------------------
@@ -688,20 +680,10 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
   }
 
   // ✅ Position
-  const eventLegendStickDrawing = (checked: boolean) => {
-    const f = (_: boolean) => {
-      const { drawing_area } = app_data
-      drawing_area.legend.stick_to_drawing = _
-      refreshThisAndUpdateRelatedComponents()
-    }
-    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'stick_to_drawing', checked, f)
-  }
-
   const eventLegendPosX = (evt: number | undefined | null) => {
     if (evt !== undefined && evt !== null) {
       const f = (_: number) => {
         app_data.drawing_area.legend.position_x = _
-        app_data.drawing_area.legend.applyPosition()
         refreshThisAndUpdateRelatedComponents()
       }
       app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'position_x', evt, f)
@@ -712,7 +694,6 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
     if (evt !== undefined && evt !== null) {
       const f = (_: number) => {
         app_data.drawing_area.legend.position_y = _
-        app_data.drawing_area.legend.applyPosition()
         refreshThisAndUpdateRelatedComponents()
       }
       app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'position_y', evt, f)
@@ -779,6 +760,15 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
     app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'legend_horizontal', checked, f)
   }
 
+  // OS#1254 — légende cassée (zones éditées individuellement) : les paramètres
+  // ne pilotent plus rien ; « Régénérer » reconstruit tout (destructif, pas
+  // d'annulation) et repasse en mode géré.
+  const legend_broken = !app_data.drawing_area.legend.managed
+  const eventLegendRegenerate = () => {
+    app_data.drawing_area.legend.regenerate()
+    refreshThisAndUpdateRelatedComponents()
+  }
+
   return <Box layerStyle='menu_sub_section'>
     {/* ✅ TITRE AVEC CHECKBOX DE VISIBILITÉ */}
     <Box
@@ -791,13 +781,39 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
         isChecked={!app_data.drawing_area.legend.masked}
         onChange={eventLegendMasked}
       >
-        {t('Menu.Leg')}
+        {compact ? 'Visible' : t('Menu.Leg')}
       </Checkbox>
     </Box>
 
+    {/* OS#1254 — légende personnalisée : bandeau + bouton Régénérer à la place des paramètres */}
+    {legend_broken && (
+      <Box layerStyle='menuconfigpanel_grid'>
+        <Box as='span' layerStyle='menuconfigpanel_option_name'>
+          {t('Menu.leg_broken')}
+        </Box>
+        <OSTooltip label={t('Menu.tooltips.leg_regenerate')}>
+          <Button
+            variant='menuconfigpanel_option_button'
+            onClick={eventLegendRegenerate}
+          >
+            {t('Menu.leg_regenerate')}
+          </Button>
+        </OSTooltip>
+      </Box>
+    )}
+
     <Box
       layerStyle='menuconfigpanel_grid'
-      style={{ display: (app_data.drawing_area.legend.masked ? 'none' : '') }}
+      // Deux raisons distinctes de masquer les paramètres :
+      //  - OS#1254 : légende « cassée » (personnalisée à la main) — le bandeau
+      //    « Régénérer » les remplace, ils n'ont plus de prise ;
+      //  - légende masquée — SAUF en mode compact (#1243, inspecteur) où l'on
+      //    peut régler avant d'afficher, comme partout ailleurs dans le panneau.
+      style={{
+        display: (legend_broken || (!compact && app_data.drawing_area.legend.masked))
+          ? 'none'
+          : ''
+      }}
     >
       {/* Couleur + Opacité du fond */}
       <Box as='span' layerStyle='options_2cols'>
@@ -852,32 +868,22 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
       {/* ✅ SECTION POSITION */}
       <Box as='span' textStyle='title_sub_section'>{t('Menu.position') || 'Position'}</Box>
 
-      {/* Solidaire du diagramme + Largeur */}
-      <Box as='span' layerStyle='options_2cols'>
-        <OSTooltip label={t('Menu.tooltips.LegStickDrawing')}>
-          <Button
-            variant={app_data.drawing_area.legend.stick_to_drawing ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-            onClick={() => eventLegendStickDrawing(!app_data.drawing_area.legend.stick_to_drawing)}
-          >
-            {t('Menu.LegStickDrawing')}
-          </Button>
-        </OSTooltip>
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-          <Box layerStyle='menuconfigpanel_option_name'>
-            {t('Menu.LegWidth')}
-          </Box>
-          <OSTooltip label={t('Menu.tooltips.LegWidth')}>
-            <ConfigMenuNumberInput
-              t={app_data.t}
-              default_value={app_data.drawing_area.legend.width}
-              function_on_blur={eventLegendWidth}
-              minimum_value={0}
-              step={1}
-              stepper={true}
-              unit_text={right_addon_pixel(app_data.drawing_area.legend.width)}
-            />
-          </OSTooltip>
+      {/* Largeur d'enveloppement du texte (OS#1254 : plus de mode « fixe à l'écran ») */}
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('Menu.LegWidth')}
         </Box>
+        <OSTooltip label={t('Menu.tooltips.LegWidth')}>
+          <ConfigMenuNumberInput
+            t={app_data.t}
+            default_value={app_data.drawing_area.legend.width}
+            function_on_blur={eventLegendWidth}
+            minimum_value={0}
+            step={1}
+            stepper={true}
+            unit_text={right_addon_pixel(app_data.drawing_area.legend.width)}
+          />
+        </OSTooltip>
       </Box>
 
       {/* Position X + Y */}
@@ -993,21 +999,29 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
  * Composant de configuration du titre du diagramme (cf. ClassTemplate_DrawingTitle).
  * Affiché à côté de la légende dans l'onglet style.
  */
-export const TitleConfig = ({ app_data }: { app_data: Class_ApplicationData }) => {
+export const TitleConfig = ({ app_data, compact = false }: {
+  app_data: Class_ApplicationData
+  // #1243 — inspecteur : l'onglet porte déjà le nom (« Titre ») → l'œil dit
+  // juste « Visible », et le contenu reste éditable même œil fermé.
+  compact?: boolean
+}) => {
 
   const { t } = app_data
-  const [, setCount] = useState(0)
+  // #247 — re-render forcé d'identité stable (compteur local, ce menu n'a pas de slot updater).
+  const refreshThis = useModelBinding()
   const sankey = app_data.drawing_area.sankey
   const title = sankey.getTitleContainer()
   const is_shown = !!title && title.is_visible
 
   const refreshThisAndUpdateRelatedComponents = () => {
     app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    setCount(a => a + 1)
+    refreshThis()
   }
 
   const data_taggs = sankey.data_taggs_list
   const view_taggs = sankey.view_taggs_list
+  // Simple choix de jeton à insérer : défaut « Choose a group » (vide). L'état des
+  // datatags utilisés est déjà lisible dans le champ texte du titre ci-dessous.
   const [token_group_id, setTokenGroupId] = useState('')
   const [view_token_group_id, setViewTokenGroupId] = useState('')
 
@@ -1019,6 +1033,16 @@ export const TitleConfig = ({ app_data }: { app_data: Class_ApplicationData }) =
     } else {
       title?.setInvisible()
     }
+    app_data.drawing_area.draw()
+    refreshThisAndUpdateRelatedComponents()
+  }
+
+  // Édition directe du texte du titre depuis le panneau (en plus du double-clic
+  // sur le diagramme). On écrit le texte BRUT (avec les jetons {Groupe}), stocké
+  // dans name_label_text — jamais le nom interne de la zone de texte.
+  const eventTitleTextChange = (evt: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const c = sankey.getOrCreateTitleContainer()
+    c.name_label_text = evt.target.value
     app_data.drawing_area.draw()
     refreshThisAndUpdateRelatedComponents()
   }
@@ -1058,18 +1082,26 @@ export const TitleConfig = ({ app_data }: { app_data: Class_ApplicationData }) =
         isChecked={is_shown}
         onChange={eventTitleShown}
       >
-        {t('Menu.TitleSection')}
+        {compact ? 'Visible' : t('Menu.TitleSection')}
       </Checkbox>
     </Box>
 
     <Box
       layerStyle='menuconfigpanel_grid'
-      style={{ display: (is_shown ? '' : 'none') }}
+      style={{ display: (compact || is_shown ? '' : 'none') }}
     >
-      {/* Édition du texte via l'interface ZDT */}
+      {/* Édition directe du texte du titre (jetons {Groupe} visibles tels quels),
+          en plus du double-clic sur le diagramme. */}
       <Box layerStyle='menuconfigpanel_option_name'>
         {t('Menu.TitleEditHint')}
       </Box>
+      <Textarea
+        size='sm'
+        rows={2}
+        placeholder={default_title_text}
+        value={title?.name_label_text ?? ''}
+        onChange={eventTitleTextChange}
+      />
 
       {/* Insertion d'un jeton data tag (combine statique + data tag) */}
       {data_taggs.length > 0 &&
@@ -1165,7 +1197,6 @@ export const GraphElementsOrdoner = ({ app_data }: { app_data: Class_Application
     )
   )]
 
-  console.log('Cleaned elements:', cleanedElements)
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
