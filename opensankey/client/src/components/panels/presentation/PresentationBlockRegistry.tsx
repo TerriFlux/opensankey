@@ -64,6 +64,16 @@ export type Type_PresentationBlock = {
    * bloc plutôt que d'afficher une section vide.
    */
   render: (ctx: Type_BlockRenderContext) => React.ReactNode
+  /**
+   * Réglages propres au bloc, ÉDITÉS PAR L'AUTEUR dans le composeur (Lot 2).
+   * Absent = le bloc n'a rien à régler. `setOptions` reçoit l'objet complet :
+   * c'est l'appelant qui le persiste dans la composition (avec undo).
+   */
+  renderOptions?: (args: {
+    app_data: Class_ApplicationData
+    options: { [key: string]: unknown }
+    setOptions: (next: { [key: string]: unknown }) => void
+  }) => React.ReactNode
   /** Gating déclaratif (licence, disponibilité d'un hook…). */
   gate?: (app_data: Class_ApplicationData) => boolean
 }

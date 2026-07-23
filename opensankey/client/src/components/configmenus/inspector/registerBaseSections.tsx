@@ -23,6 +23,7 @@ import { GenericStyleSelector } from '../../dialogs/SankeyStyle'
 import { MenuConfigurationLinksData } from '../SankeyMenuConfigurationLinksData'
 import { ConfigMenuTextInput, OSTooltip, CustomFaEyeCheckIcon, WrapperBoxSubSectionMenu } from '../MenuCommon'
 import { stripHtmlTags, isRichContent } from '../../dialogs/RichTextEditor'
+import { PresentationComposer } from '../../panels/presentation/PresentationComposer'
 import {
   NODE_TOOLTIP_BLOCKS, LINK_TOOLTIP_BLOCKS, tooltipBlockLabelKey,
   isTooltipBlockVisible, Type_TooltipHiddenBlocks
@@ -158,6 +159,22 @@ export function registerBaseInspectorSections(): void {
     // Pas data_only : la VISIBILITÉ des blocs (OS#1285) est un attribut de style,
     // éditable en portée Style ; le texte libre reste propre à la sélection.
     render: (app_data, scope) => <InspectorTooltipTab app_data={app_data} scope={scope} />
+  })
+
+  // ---- Onglet Présentation : ce que verra le LECTEUR (OS#305) --------------
+  // Distinct des autres onglets : ceux-ci éditent l'élément, celui-ci compose ce
+  // qu'un lecteur verra en survolant/cliquant l'élément dans un diagramme publié
+  // (décision #1 : deux registres, le composé ne remplace jamais l'inspecteur).
+  // Attributs de STYLE, donc éditable dans les deux portées — pas data_only.
+  inspector_registry.register({
+    id: 'os.tab.presentation',
+    target: [...ELEMENT_TARGETS],
+    order: 65,
+    overload_prefixes: ['presentation'],
+    hue: 'presentation',
+    title: (app_data) => app_data.t('inspector.tab.presentation', { defaultValue: 'Présentation' }),
+    icon: (app_data) => app_data.icon_library.icon_tab_tooltip,
+    render: (app_data, scope) => <PresentationComposer app_data={app_data} scope={scope} />
   })
 
   // ---- Onglet MFA : l'espace AFM unifié (#1258) ----------------------------

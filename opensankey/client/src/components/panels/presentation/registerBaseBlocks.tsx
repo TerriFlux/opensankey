@@ -22,7 +22,7 @@
 // n'a pas la donnée retombe naturellement sur `null`.
 
 import React from 'react'
-import { Box, Text } from '@chakra-ui/react'
+import { Box, Checkbox, Text } from '@chakra-ui/react'
 
 import { default_font_size } from '../../../css/Theme'
 import { formatElementValue, resolveValueUnit } from '../../../Elements/ValueFormatting'
@@ -146,6 +146,18 @@ export function registerBasePresentationBlocks(): void {
     target: ['node', 'link'],
     order: 20,
     label: (a) => a.t('presentation.block.value', { defaultValue: 'Valeur' }),
+    // Sous-réglage du bloc : l'unité s'affiche-t-elle à côté de la valeur ?
+    renderOptions: ({ app_data, options, setOptions }) => (
+      <Checkbox
+        size='sm'
+        isChecked={options['show_unit'] !== false}
+        onChange={(e) => setOptions({ ...options, show_unit: e.target.checked })}
+      >
+        <Box as='span' style={{ fontSize: '0.7rem' }}>
+          {app_data.t('presentation.block.show_unit', { defaultValue: 'Afficher l\'unité' })}
+        </Box>
+      </Checkbox>
+    ),
     render: (ctx) => {
       const el = el_of(ctx)
       const sample = sampleLinkOf(el)
