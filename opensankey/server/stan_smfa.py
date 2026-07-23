@@ -565,12 +565,19 @@ def _display_unit(tables, units, flow_values, layer_id):
             continue
         unit = units.get(row.get("NumUnitID"))
         if unit and (not families or unit.get("SiUnitID") in families):
-            candidates.append(unit)
+            candidates.append((unit, units.get(row.get("DenomUnitID"))))
 
     if not candidates:
         return 1.0, None
-    unit = candidates[0]
-    return (unit.get("Factor") or 1.0), unit.get("UnitCode")
+    unit, denom = candidates[0]
+    code = unit.get("UnitCode")
+    # L'unité STAN est un QUOTIENT : la légende dit « Flows [t/a] », pas « t ».
+    # Le dénominateur (base de temps) n'affecte pas les valeurs — elles sont déjà
+    # exprimées par période — seulement le libellé.
+    denom_code = (denom or {}).get("UnitCode")
+    if code and denom_code:
+        code = "%s/%s" % (code, denom_code)
+    return (unit.get("Factor") or 1.0), code
 
 
 def _flow_colors(tables):
@@ -669,10 +676,53 @@ def read_geometry(tables):
     process_fonts, flow_fonts = {}, {}
     # Boîtes du nom de chaque flux (ShapeType 6) : position absolue du label.
     flow_name_labels = {}
+    # Fond peint / bordure personnalisée des boîtes de processus.
+    process_styles = {}
 
     def _zorder(entry):
         z = nrbf.resolve(entry["object"].members.get("m_nZOrder"), entry["objects"])
         return z if isinstance(z, int) else -1
+
+    def _gdi_color(ref, objects):
+        """Couleur GDI sérialisée → « #rrggbb », ou None si défaut/nommée.
+
+        Un System.Drawing.Color porte `state` (flags) : bit 2 = `value` contient
+        l'ARGB (couleur choisie par l'utilisateur). Les couleurs connues/nommées
+        (state=1, le noir par défaut) rendent None : on laisse le thème décider.
+        """
+        color = nrbf.resolve(ref, objects)
+        if not isinstance(color, nrbf.ClassRef):
+            return None
+        state = nrbf.resolve(color.members.get("state"), objects)
+        value = nrbf.resolve(color.members.get("value"), objects)
+        if not isinstance(state, int) or not (state & 2) or not isinstance(value, int):
+            return None
+        return "#%02x%02x%02x" % ((value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF)
+
+    def _process_style(entry):
+        """Fond peint et bordure personnalisée d'une boîte de processus.
+
+        Le fond vit dans `m_FillEffect.m_Material` (diffuse dR/dG/dB, floats
+        0-1) : tout à 1.0 = blanc = défaut STAN → None. La bordure dans
+        `m_Border` (couleur GDI + épaisseur, défaut noir/1).
+        """
+        style = {"fill": None, "border_color": None, "border_width": None}
+        fill = nrbf.resolve(entry["object"].members.get("m_FillEffect"), entry["objects"])
+        if isinstance(fill, nrbf.ClassRef):
+            material = nrbf.resolve(fill.members.get("m_Material"), entry["objects"])
+            if isinstance(material, nrbf.ClassRef):
+                rgb = [nrbf.resolve(material.members.get(k), entry["objects"])
+                       for k in ("dR", "dG", "dB")]
+                if all(isinstance(v, (int, float)) for v in rgb) and any(v < 0.999 for v in rgb):
+                    style["fill"] = "#%02x%02x%02x" % tuple(
+                        max(0, min(255, int(round(v * 255)))) for v in rgb)
+        border = nrbf.resolve(entry["object"].members.get("m_Border"), entry["objects"])
+        if isinstance(border, nrbf.ClassRef):
+            style["border_color"] = _gdi_color(border.members.get("m_Color"), entry["objects"])
+            width = nrbf.resolve(border.members.get("m_nWidth"), entry["objects"])
+            if isinstance(width, int) and width != 1:
+                style["border_width"] = width
+        return style
 
     def _font(entry):
         """Police du texte d'un shape (`m_TextProps.fo`), ou None.
@@ -707,6 +757,7 @@ def read_geometry(tables):
             processes[process_id] = entry["bounds"]
             process_zorders[process_id] = _zorder(entry)
             process_fonts[process_id] = _font(entry)
+            process_styles[process_id] = _process_style(entry)
         elif shape_type == _SHAPE_SYSTEM_BOUNDARY and entry["bounds"]:
             boundary = entry["bounds"]
             texts.append({"text": entry["text"] or "", "bounds": entry["bounds"],
@@ -744,7 +795,7 @@ def read_geometry(tables):
             "label_offsets": label_offsets,
             "process_zorders": process_zorders, "flow_zorders": flow_zorders,
             "process_fonts": process_fonts, "flow_fonts": flow_fonts,
-            "flow_name_labels": flow_name_labels}
+            "flow_name_labels": flow_name_labels, "process_styles": process_styles}
 
 
 def parse_stan(path, period_id=None, layer_id=None):
@@ -1009,6 +1060,7 @@ def parse_stan(path, period_id=None, layer_id=None):
         _apply_flow_name_label_boxes(geometry, links, link_id_of_flow)
         _apply_stan_fonts(geometry, nodes, links, containers, node_id_of_process,
                           link_id_of_flow, external_of_flow)
+        _apply_stan_process_styles(geometry, nodes, node_id_of_process)
     else:
         try:
             DA_scale = sankey_layout.computeSankeyPosition(nodes, links, _default_setting())
@@ -1175,6 +1227,26 @@ def _apply_stan_fonts(geometry, nodes, links, containers, node_id_of_process,
         container = containers.get("id_stan_text_%d" % i)
         if container is not None:
             apply(container["local"], ("name_label",), item.get("font"))
+
+
+def _apply_stan_process_styles(geometry, nodes, node_id_of_process):
+    """Fond peint et bordure personnalisée des processus, quand ils dévient.
+
+    STAN dessine tout en blanc bordé de noir (le thème `stan` le fait déjà) :
+    on n'émet QUE les écarts — un fond peint par l'utilisateur (m_FillEffect),
+    une bordure recolorée ou épaissie (m_Border). Un fichier par défaut sort
+    strictement inchangé, et les nœuds restent sans couleur cuite.
+    """
+    for proc_id, style in geometry["process_styles"].items():
+        node = nodes.get(node_id_of_process.get(proc_id))
+        if node is None:
+            continue
+        if style["fill"]:
+            node["local"]["color"] = style["fill"]
+        if style["border_color"]:
+            node["local"]["shape_border_color"] = style["border_color"]
+        if style["border_width"]:
+            node["local"]["shape_border_thickness"] = style["border_width"]
 
 
 def _title_container(tables, nodes, containers):
@@ -2238,3 +2310,9 @@ def test_display_unit_convertit_vers_l_unite_de_la_couche():
     assert _display_unit(tables, units, flow_values, 1) == (1000.0, "t")
     # Sans DefaultUnit : on reste en unite SI, comme avant.
     assert _display_unit({}, units, flow_values, 1) == (1.0, None)
+    # Avec denominateur : l'unite est un QUOTIENT (« Flows [t/a] »), le facteur
+    # de conversion reste celui du numerateur (valeurs deja par periode).
+    units_q = dict(units)
+    units_q[30] = {"UnitID": 30, "UnitCode": "a", "Factor": 1.0, "SiUnitID": 9}
+    tables_q = {"DefaultUnit": [{"FlowLayerID": -1, "NumUnitID": 20, "DenomUnitID": 30}]}
+    assert _display_unit(tables_q, units_q, flow_values, 1) == (1000.0, "t/a")
