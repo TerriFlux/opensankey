@@ -38,7 +38,6 @@ import { Type_BaseElementPosition, link_data_label } from '../types/Utils'
 import { Class_ElementValueTree, Class_LinkValue } from './LinkValues'
 import { LinkDrawShape } from './LinkDrawShape'
 import { LinkControlPoints } from './LinkControlPoints'
-import { LinkTooltip } from './TooltipsLink'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeElement } from './Node'
 import type { Class_NodeDimension } from './NodeDimension'
@@ -200,7 +199,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
   protected _link_draw_label: LinkDrawNameLabel
   protected _link_draw_value: LinkDrawValueLabel
   protected _link_draw_icon: LinkDrawNameLabel
-  public _link_tooltip: LinkTooltip
 
   private _source: Class_NodeElement
   private _target: Class_NodeElement
@@ -272,7 +270,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this._link_draw_label = new LinkDrawNameLabel(this, this._link_control_points, 'name_label')
     this._link_draw_value = new LinkDrawValueLabel(this, this._link_control_points)
     this._link_draw_icon = new LinkDrawNameLabel(this, this._link_control_points, 'icon')
-    this._link_tooltip = new LinkTooltip(this)
 
     // Values
     this._values = this.createValue(this)

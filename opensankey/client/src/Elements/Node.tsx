@@ -40,7 +40,6 @@ import { draw_arrow_part } from './NodeDrawShape'
 import { computeArrowPlacement, arrowMinWidthApplies, computeArrowMinWidthPlacement, applyFanMinWidth } from './arrowLayout'
 import { Class_Sankey } from '../types/Sankey'
 import { Class_DataTag, Class_Tag } from '../types/Tag'
-import { NodeTooltip } from './TooltipsNode'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeDimension, NodeDimensionsManager } from './NodeDimension'
 import { Class_DataTagGroup, Class_LevelTagGroup, Class_TagGroup, Class_ViewTagGroup } from '../types/TagGroup'
@@ -61,7 +60,6 @@ import { NodeStyle, NodeImportCloseStyle, NodeExportCloseStyle, NodeImportExport
  * @extends {ClassAbstract_NodeElement}
  */
 export class Class_NodeElement extends Class_NodeBase {
-  public _nodeTooltip: NodeTooltip
   public _nodeDimensionsManager: NodeDimensionsManager
   protected _dimensions_as_parent: { [id: string]: Class_NodeDimension } = {}
   protected _dimensions_as_child: { [id: string]: Class_NodeDimension } = {}
@@ -141,7 +139,6 @@ export class Class_NodeElement extends Class_NodeBase {
     //super(id, drawing_area, drawing_area.sankey, 'g_elements_sankey')
     const default_node_style = drawing_area.sankey.styles_dict[NodeStyle]
     super(id, name, drawing_area, default_node_style)
-    this._nodeTooltip = new NodeTooltip(this)
 
     this._nodeDimensionsManager = new NodeDimensionsManager(this)
     this._nodeDrawValueLabel = new NodeDrawValueLabel(this)
@@ -2520,10 +2517,6 @@ export class Class_NodeElement extends Class_NodeBase {
   protected eventMaintainedClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
     super.eventMaintainedClick(event)
     this._nodeEventsHandler.handleMaintainedClick(event)
-  }
-
-  public drawTooltip() {
-    this._nodeTooltip.drawTooltip()
   }
 
   public get is_child() { return this._nodeDimensionsManager.is_child }

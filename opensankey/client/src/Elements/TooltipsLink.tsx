@@ -1,240 +1,30 @@
-import * as d3 from '../d3Modules'
+// ==================================================================================================
+// OS#305 — FOURNISSEUR DE CONTENU (ex-info-bulle).
+// ==================================================================================================
+// Cette classe ne dessine plus rien : le MÉCANISME d'info-bulle hérité (overlay
+// propre, positionnement, barre d'onglets, gestionnaire d'événements) a été
+// retiré, car il doublait les panneaux unifiés (#300). Ne subsiste que ce qui a
+// de la valeur : les constructeurs de CONTENU, de simples fonctions
+// données -> HTML, exposés par `getBlockHTML(block_id)` et consommés comme blocs
+// de présentation (#305).
+// ==================================================================================================
+
 import { Class_LinkElement } from './Link'
 import { Class_NodeElement } from './Node'
 import { Class_LinkValue } from './LinkValues'
 import { Class_DataTag } from '../types/Tag'
-import { TOOLTIP_STYLES, TooltipBehaviorManager } from './TooltipsCSS'
 import { link_data_label, format_value, link_ratio_constraint, ratio_flux_constraint_traduction } from '../types/Utils'
 import { getNameLabelValues } from './ElementsAttributesConfig'
-import { Type_AnalysisDescriptor } from '../Charts/AnalysisDescriptor'
-import { isTooltipBlockVisible, Type_TooltipHiddenBlocks } from './TooltipBlocks'
-
-// Conteneur (id fixe) de l'onglet « Analyse » (OS#1278) du tooltip de flux. Un
-// seul tooltip à la fois → id unique suffisant.
-const ANALYSIS_LINK_TOOLTIP_CONTAINER_ID = 'analysis_link_tooltip_chart_container'
+import { escapeHtml } from './htmlEscape'
 
 export class LinkTooltip {
 
   private _link: Class_LinkElement
-  public behaviorManager?: TooltipBehaviorManager
-  // ✅ AJOUT : Propriété pour stocker la position de la souris
-  public mousePosition: { x: number; y: number } = { x: 0, y: 0 }
-
-  // Onglet « Analyse » (OS#1278) : dessin paresseux à la 1re activation, via le
-  // hook OS+ (draw_analysis_in_container).
-  private _analysisHandle?: { redraw: () => void, cleanup: () => void }
-  private _analysisResizeObserver?: ResizeObserver
-  private _analysisDrawn = false
 
   constructor(link: Class_LinkElement) {
     this._link = link
   }
 
-  /** Détruit le graphique d'analyse embarqué (observer + conteneur) s'il existe. */
-  private cleanupAnalysis() {
-    this._analysisResizeObserver?.disconnect()
-    this._analysisResizeObserver = undefined
-    this._analysisHandle?.cleanup()
-    this._analysisHandle = undefined
-    this._analysisDrawn = false
-  }
-
-  private initTooltipBehavior() {
-    const tooltip = document.querySelector('.sankey-tooltip') as HTMLElement
-    if (!tooltip) return
-
-    this.behaviorManager = new TooltipBehaviorManager(tooltip, () => this.removeTooltip())
-    this.behaviorManager.initialize()
-  }
-
-  public drawTooltip() {
-    // Clean previous tooltips
-    this.cleanupAnalysis()
-    d3.selectAll('.sankey-tooltip').remove()
-
-    // Position initiale = souris (ou milieu source/target en fallback)
-    let x, y
-    if (this.mousePosition.x && this.mousePosition.y) {
-      x = this.mousePosition.x + 10
-      y = this.mousePosition.y + 10
-    } else {
-      x = (this._link.source.position_x + this._link.target.position_x) / 2
-      y = (this._link.source.position_y + this._link.target.position_y) / 2
-    }
-
-    const tooltip = d3.select('body')
-      .append('div')
-      .attr('class', 'sankey-tooltip')
-      .attr('tabindex', '0')
-      .style('opacity', 0)
-      .style('top', y + 'px')
-      .style('left', x + 'px')
-      //.style('width', '400px') // Plus étroit que NodeTooltip
-      .html(this.getTooltipHTML())
-
-    // Recaler dans le viewport selon la hauteur/largeur réelles : le tooltip à
-    // onglets peut être haut (header + ~400px de contenu) et déborder sous l'écran.
-    const node = tooltip.node() as HTMLElement
-    if (node) {
-      const margin = 10
-      const rect = node.getBoundingClientRect()
-      if (y + rect.height > window.innerHeight - margin) {
-        y = Math.max(margin, window.innerHeight - rect.height - margin)
-      }
-      if (x + rect.width > window.innerWidth - margin) {
-        x = Math.max(margin, window.innerWidth - rect.width - margin)
-      }
-      node.style.top = y + 'px'
-      node.style.left = x + 'px'
-    }
-
-    // Animation d'apparition
-    tooltip.transition()
-      .duration(300)
-      .style('opacity', 1)
-      .on('end', () => {
-        this.initTooltipBehavior()
-        this.setupTabBehavior()
-      })
-  }
-
-  public moveTooltip() {
-  }
-
-  public removeTooltip() {
-    this.behaviorManager?.cleanup()
-    this.cleanupAnalysis()
-    d3.selectAll('.sankey-tooltip').remove()
-  }
-
-  private setupTabBehavior() {
-    const tabButtons = document.querySelectorAll('.tab-button')
-    const tabContents = document.querySelectorAll('.tab-content')
-
-    tabButtons.forEach((button, index) => {
-      button.addEventListener('click', (e) => {
-        e.preventDefault()
-        e.stopPropagation()
-
-        tabButtons.forEach(btn => btn.classList.remove('active'))
-        tabContents.forEach(content => content.classList.remove('active'))
-
-        button.classList.add('active')
-        const content = tabContents[index] as HTMLElement | undefined
-        if (content) {
-          content.classList.add('active')
-          // L'onglet « Analyse » se dessine paresseusement (conteneur mesuré une
-          // fois affiché, cf. tooltip de nœud).
-          if (content.getAttribute('data-tab-key') === 'analysis') {
-            this.drawAnalysisTab()
-          }
-        }
-      })
-    })
-  }
-
-  /**
-   * Dessine (une seule fois) le graphique d'analyse du flux via le hook OS+
-   * (draw_analysis_in_container). Observe le redimensionnement pour recadrer.
-   */
-  private drawAnalysisTab() {
-    if (this._analysisDrawn) return
-    const hook = this._link.drawing_area.application_data.draw_analysis_in_container
-    if (typeof hook !== 'function') return
-    const container = document.getElementById(ANALYSIS_LINK_TOOLTIP_CONTAINER_ID)
-    if (!container) return
-    this._analysisDrawn = true
-
-    const handle = hook(this._link, '#' + ANALYSIS_LINK_TOOLTIP_CONTAINER_ID)
-    if (handle) this._analysisHandle = handle
-
-    if (typeof ResizeObserver !== 'undefined') {
-      let raf = 0
-      let first = true
-      this._analysisResizeObserver = new ResizeObserver(() => {
-        if (first) { first = false; return }
-        if (raf) cancelAnimationFrame(raf)
-        raf = requestAnimationFrame(() => this._analysisHandle?.redraw())
-      })
-      this._analysisResizeObserver.observe(container)
-    }
-  }
-
-  private getTooltipHTML(): string {
-    // Flux enfants groupés par dimension (axe d'agrégation). Les dimensions
-    // sont antagonistes : par essences, par propriétés… → un tableau par axe.
-    const groups = this.getChildLinkGroups()
-    const has_children = groups.length > 0
-    // Combinaisons de dataTags (séries) du flux parent.
-    const combos = this.getValueComboEntries(this._link)
-    const has_series = combos.length > 1
-
-    // Onglet analyse (OS#1278) : hook OS+ présent ET le flux publie un graphique
-    // dans l'info-bulle (surfaces.tooltip du descripteur résolu).
-    const app_data = this._link.drawing_area.application_data
-    const analysis_descriptor = this._link.getElementProperty('analysis_descriptor') as Type_AnalysisDescriptor | undefined
-    const has_analysis = typeof app_data.draw_analysis_in_container === 'function'
-      && !!analysis_descriptor?.surfaces?.tooltip
-      && (!!analysis_descriptor.decompose || !!analysis_descriptor.compare)
-
-    // OS#1285 — visibilité configurable des blocs (attribut de style résolu).
-    const hidden_blocks = this._link.getElementProperty('tooltip_hidden_blocks') as Type_TooltipHiddenBlocks | undefined
-    const vis = (id: string) => isTooltipBlockVisible(hidden_blocks, id)
-
-    // Construction des onglets présents.
-    const tabs: { label: string, html: string, key?: string }[] = []
-    if (vis('flux')) tabs.push({ label: 'Flux', html: this.getMainTabHTML() })
-    if (has_series && vis('series_flux')) tabs.push({ label: 'Séries flux', html: this.getSeriesFluxHTML(combos) })
-    if (has_children && vis('data')) tabs.push({ label: 'Données', html: this.getDataTabHTML(groups) })
-    if (has_children && has_series && vis('series_data')) tabs.push({ label: 'Séries données', html: this.getSeriesDataHTML(groups, combos) })
-    if (has_analysis && vis('analysis')) tabs.push({
-      label: app_data.t('Noeud.drawing_area_tooltip.analysis_tab') || 'Analyse',
-      key: 'analysis',
-      // Conteneur vide : OS+ y dessine le graphique à l'activation de l'onglet.
-      html: `<div class="analysis-link-tooltip-container" id="${ANALYSIS_LINK_TOOLTIP_CONTAINER_ID}"></div>`
-    })
-
-    let html = '<style>' + TOOLTIP_STYLES + this.getTabStyles() + '</style>'
-
-    // Header
-    html += '<div class="tooltip-header">'
-    html += '<button class="tooltip-close">&times;</button>'
-    html += `<h4 class="tooltip-title">${this._link.source.name.split('\\n').join(' ')} → ${this._link.target.name.split('\\n').join(' ')}</h4>`
-
-    if (this._link.tooltip_text) {
-      html += `<p class="tooltip-subtitle">${this._link.tooltip_text.split('\n').join('<br>')}</p>`
-    }
-
-    if (tabs.length > 1) {
-      html += '<div class="tab-container"><div class="tab-buttons">'
-      tabs.forEach((t, i) => {
-        html += `<button class="tab-button${i === 0 ? ' active' : ''}">${t.label}</button>`
-      })
-      html += '</div></div>'
-    }
-    html += '</div>'
-
-    // Content
-    html += '<div class="tooltip-content">'
-    if (tabs.length > 1) {
-      tabs.forEach((t, i) => {
-        const key_attr = t.key ? ` data-tab-key="${t.key}"` : ''
-        html += `<div class="tab-content${i === 0 ? ' active' : ''}"${key_attr}>${t.html}</div>`
-      })
-    } else if (tabs.length === 1) {
-      html += tabs[0].html
-    }
-    // 0 onglet = tous masqués par la config OS#1285 → header/titre seuls.
-    html += '</div>'
-
-    return html
-  }
-
-  /**
-   * OS#305 — Contenu d'un BLOC de présentation, en HTML. Voir NodeTooltip :
-   * le chantier retire le MÉCANISME hérité mais réutilise ces constructeurs de
-   * contenu tels quels. Rend `null` quand le bloc n'a rien à montrer.
-   */
   public getBlockHTML(block_id: string): string | null {
     const groups = this.getChildLinkGroups()
     const combos = this.getValueComboEntries(this._link)
@@ -267,14 +57,14 @@ export class LinkTooltip {
     // OS#1286 — unit_model conservé (valeur convertie + symbole du registre) ;
     // les autres modes sont ramenés à l'unité nommée comme avant.
     if (tmp !== 'unit_model') this._link.value_label_unit_type = 'unit_name'
-    html += `<td>${link_data_label('free_value', this._link, 'value_label')}</td>`
+    html += `<td>${escapeHtml(link_data_label('free_value', this._link, 'value_label'))}</td>`
     this._link.value_label_unit_type = tmp
     html += '</tr>'
 
     if (this._link.value?.valueData !== null && this._link.value?.valueResult !== null) {
       html += '<tr>'
       html += `<th>${this._link.drawing_area.application_data.t('Noeud.drawing_area_tooltip.data_value')}</th>`
-      html += `<td>${link_data_label('data', this._link, 'value_label')}</td>`
+      html += `<td>${escapeHtml(link_data_label('data', this._link, 'value_label'))}</td>`
       html += '</tr>'
     }
     this._link.value_label_is_visible = data_label_visible
@@ -284,7 +74,7 @@ export class LinkTooltip {
     const ratio_c = link_ratio_constraint(this._link)
     if (ratio_c) {
       const trad = ratio_c.traduction || ratio_flux_constraint_traduction(ratio_c)
-      html += `<tr><th>Contrainte</th><td>${this.escapeHtml(trad)}</td></tr>`
+      html += `<tr><th>Contrainte</th><td>${escapeHtml(trad)}</td></tr>`
     }
 
     // Source / URL / Hypothèse de la donnée courante (colonnes "Source"/"URL"/"Hypothèse" de l'onglet Données)
@@ -301,8 +91,8 @@ export class LinkTooltip {
         .join(', ')
 
       html += '<tr>'
-      html += `<th>${tagg.name}</th>`
-      html += `<td>${tagNames || '-'}</td>`
+      html += `<th>${escapeHtml(tagg.name)}</th>`
+      html += `<td>${escapeHtml(tagNames) || '-'}</td>`
       html += '</tr>'
     })
 
@@ -340,7 +130,7 @@ export class LinkTooltip {
 
     groups.forEach((group, gi) => {
       html += `<div class="data-axis"${gi > 0 ? ' style="margin-top:14px;"' : ''}>`
-      html += `<div class="data-axis-title">${group.axisName}</div>`
+      html += `<div class="data-axis-title">${escapeHtml(group.axisName)}</div>`
       html += '<table class="tooltip-table"><thead><tr>'
       html += '<th>Origine</th>'
       html += '<th>Destination</th>'
@@ -362,11 +152,11 @@ export class LinkTooltip {
           : '-'
         const v = l.value as Class_LinkValue | undefined
         html += '<tr>'
-        html += `<td>${l.source.name.split('\\n').join(' ')}</td>`
-        html += `<td>${l.target.name.split('\\n').join(' ')}</td>`
+        html += `<td>${escapeHtml(l.source.name.split('\\n').join(' '))}</td>`
+        html += `<td>${escapeHtml(l.target.name.split('\\n').join(' '))}</td>`
         html += `<td class="value">${this.formatLinkDataValue(l)}</td>`
         html += `<td class="ratio">${ratio}</td>`
-        if (show_source) html += `<td>${v?.data_source ? this.escapeHtml(v.data_source) : '-'}</td>`
+        if (show_source) html += `<td>${v?.data_source ? escapeHtml(v.data_source) : '-'}</td>`
         if (show_url) html += `<td>${v?.data_url ? this.urlAnchor(v.data_url) : '-'}</td>`
         html += '</tr>'
       })
@@ -443,24 +233,15 @@ export class LinkTooltip {
     if (!value) return ''
     let html = ''
     if (value.data_source) {
-      html += `<tr><th>Source</th><td>${this.escapeHtml(value.data_source)}</td></tr>`
+      html += `<tr><th>Source</th><td>${escapeHtml(value.data_source)}</td></tr>`
     }
     if (value.data_url) {
       html += `<tr><th>URL</th><td>${this.urlAnchor(value.data_url)}</td></tr>`
     }
     if (value.data_hypothesis) {
-      html += `<tr><th>Hypothèse</th><td>${this.escapeHtml(value.data_hypothesis)}</td></tr>`
+      html += `<tr><th>Hypothèse</th><td>${escapeHtml(value.data_hypothesis)}</td></tr>`
     }
     return html
-  }
-
-  /** Échappe le HTML pour injection sûre dans le tooltip (innerHTML). */
-  private escapeHtml(_: string): string {
-    return _
-      .split('&').join('&amp;')
-      .split('<').join('&lt;')
-      .split('>').join('&gt;')
-      .split('"').join('&quot;')
   }
 
   /**
@@ -479,10 +260,10 @@ export class LinkTooltip {
     } catch {
       label = trimmed.length > 50 ? trimmed.slice(0, 50) + '…' : trimmed
     }
-    return `<a href="${this.escapeHtml(href)}" target="_blank" rel="noopener noreferrer"`
-      + ` title="${this.escapeHtml(trimmed)}"`
+    return `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer"`
+      + ` title="${escapeHtml(trimmed)}"`
       + ' style="color:#3182ce;text-decoration:underline;">'
-      + `${this.escapeHtml(label)}</a>`
+      + `${escapeHtml(label)}</a>`
   }
 
   /** Lignes <tr> du contexte dataTags courant : un groupe par ligne (tag(s) sélectionné(s)). */
@@ -490,7 +271,7 @@ export class LinkTooltip {
     let html = ''
     this._link.drawing_area.sankey.data_taggs_list.forEach(tagg => {
       const sel = tagg.selected_tags_list.map(t => t.display_name).join(', ')
-      html += `<tr><th>${tagg.name}</th><td>${sel || '-'}</td></tr>`
+      html += `<tr><th>${escapeHtml(tagg.name)}</th><td>${escapeHtml(sel) || '-'}</td></tr>`
     })
     return html
   }
@@ -569,14 +350,14 @@ export class LinkTooltip {
       ? (this._link.sankey.units.resolve(lv.unit)?.unit.name ?? '')
       : lv.unit
     if (!lv.unit_visible || !unit) return ''
-    return `<div class="series-unit">Unité : ${unit}</div>`
+    return `<div class="series-unit">Unité : ${escapeHtml(unit)}</div>`
   }
 
   /** Onglet Séries flux : valeur du flux par combinaison de dataTags (combinaisons en colonnes). */
   private getSeriesFluxHTML(combos: { key: string, label: string, value: Class_LinkValue }[]): string {
     let html = this.getSeriesUnitLabelHTML()
     html += '<table class="tooltip-table"><thead><tr>'
-    combos.forEach(c => html += `<th class="value">${c.label}</th>`)
+    combos.forEach(c => html += `<th class="value">${escapeHtml(c.label)}</th>`)
     html += '</tr></thead><tbody><tr>'
     combos.forEach(c => html += `<td class="value">${this.fmtNum(this.linkValueNumber(c.value))}</td>`)
     html += '</tr></tbody></table>'
@@ -594,16 +375,16 @@ export class LinkTooltip {
     let html = this.getSeriesUnitLabelHTML()
     groups.forEach((group, gi) => {
       html += `<div class="data-axis"${gi > 0 ? ' style="margin-top:14px;"' : ''}>`
-      html += `<div class="data-axis-title">${group.axisName}</div>`
+      html += `<div class="data-axis-title">${escapeHtml(group.axisName)}</div>`
       html += '<table class="tooltip-table"><thead><tr><th>Origine</th><th>Destination</th>'
-      combos.forEach(c => html += `<th class="value">${c.label}</th>`)
+      combos.forEach(c => html += `<th class="value">${escapeHtml(c.label)}</th>`)
       html += '</tr></thead><tbody>'
       group.links.forEach(l => {
         const childMap: { [key: string]: Class_LinkValue } = {}
         this.getValueComboEntries(l).forEach(e => { childMap[e.key] = e.value })
         html += '<tr>'
-        html += `<td>${l.source.name.split('\\n').join(' ')}</td>`
-        html += `<td>${l.target.name.split('\\n').join(' ')}</td>`
+        html += `<td>${escapeHtml(l.source.name.split('\\n').join(' '))}</td>`
+        html += `<td>${escapeHtml(l.target.name.split('\\n').join(' '))}</td>`
         combos.forEach(c => {
           html += `<td class="value">${this.fmtNum(this.linkValueNumber(childMap[c.key] ?? null))}</td>`
         })
@@ -700,78 +481,4 @@ export class LinkTooltip {
     return out
   }
 
-  private getTabStyles(): string {
-    return `
-      .tab-container {
-        margin-top: 8px;
-      }
-      .tab-buttons {
-        display: flex;
-        border-bottom: 2px solid #e0e0e0;
-        background: #f9f9f9;
-      }
-      .tab-button {
-        padding: 8px 16px;
-        border: none;
-        background: transparent;
-        cursor: pointer;
-        font-size: 11px;
-        font-weight: 500;
-        color: #666;
-        border-bottom: 2px solid transparent;
-        transition: all 0.2s ease;
-        flex: 1;
-        text-align: center;
-        pointer-events: auto !important;
-        z-index: 10001;
-        position: relative;
-      }
-      .tab-button:hover {
-        background: #f0f0f0;
-        color: #333;
-      }
-      .tab-button.active {
-        color: #4a9eff;
-        border-bottom-color: #4a9eff;
-        background: white;
-        font-weight: 600;
-      }
-      .tab-content {
-        display: none;
-        padding-top: 12px;
-      }
-      .tab-content.active {
-        display: block;
-      }
-      .data-axis-title {
-        font-size: 12px;
-        font-weight: 600;
-        color: #333;
-        padding: 4px 8px;
-        margin-bottom: 4px;
-        background: linear-gradient(90deg, #f0f8ff 0%, #e6f3ff 100%);
-        border-left: 3px solid #4a9eff;
-      }
-      .series-unit {
-        font-size: 11px;
-        font-weight: 600;
-        color: #555;
-        margin-bottom: 6px;
-      }
-      /* Onglet analyse (OS#1278) : conteneur de dessin dimensionné (le tooltip de
-         flux n'est pas flex pleine hauteur comme celui du nœud → taille explicite
-         pour que la couronne/l'histogramme aient la place de se dessiner). */
-      .tab-content[data-tab-key="analysis"].active {
-        display: block;
-      }
-      .analysis-link-tooltip-container {
-        position: relative;
-        width: 100%;
-        min-width: 320px;
-        height: 260px;
-        background: white;
-        overflow: hidden;
-      }
-    `
-  }
 }
