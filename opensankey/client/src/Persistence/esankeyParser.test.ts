@@ -2,6 +2,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import JSZip from 'jszip'
 import { parseEsankeyXml, loadEsankeyFile, ESANKEY_ENTRIES_TAGG_ID } from './esankeyParser'
+import { Class_ApplicationData } from '../types/ApplicationData'
 
 // Valide le parseur e!Sankey sur des fixtures minimales fabriquées main (les
 // démos livrées avec e!Sankey sont propriétaires : jamais committées). Une
@@ -186,6 +187,29 @@ describe('parseEsankeyXml — fixture minimale', () => {
       expect(d.nodes[l.idSource].name).toBe('Source A')
       expect(d.nodes[l.idTarget].name).toBe('Cible B')
     })
+  })
+
+  // Ordre Z : `@zorder` e!Sankey (plus grand = par-dessus) → order_g_elements
+  // (liste OpenSankey 1er plan → fond). C'est lui qui met les fonds de process
+  // derrière les flux (démo « Erdgas Krankenhaus »). Variante locale : la
+  // FIXTURE partagée reste SANS zorder (ses chaînes exactes servent de points
+  // d'ancrage aux .replace() des autres suites).
+  test('ordre Z : zorder → order_g_elements (zorder décroissant = 1er plan → fond)', () => {
+    const withZ = FIXTURE
+      .replace('<process id="50" locationX="100"', '<process id="50" zorder="0" locationX="100"')
+      .replace('<process id="51" locationX="400"', '<process id="51" zorder="2" locationX="400"')
+      .replace('<arrow id="60">', '<arrow id="60" zorder="1">')
+    const dz = parseEsankeyXml(withZ)
+    const a = Object.values(dz.nodes).find(n => n.name === 'Source A')
+    const b = Object.values(dz.nodes).find(n => n.name === 'Cible B')
+    const linkIds = Object.keys(dz.links)
+    // process 51 (z=2) au 1er plan, la flèche 60 (z=1, ses 2 flux dans l'ordre
+    // de déclaration), le process 50 (z=0) au fond.
+    expect(dz.order_g_elements).toEqual([b?.id, ...linkIds, a?.id])
+  })
+
+  test('ordre Z : aucun zorder dans le fichier → order_g_elements absent', () => {
+    expect(d.order_g_elements).toBeUndefined()
   })
 
   test('entries → tags de flux (groupe unique), couleur reprise sur le flux', () => {
@@ -623,11 +647,13 @@ describe('parseEsankeyXml — points de contrôle (opensankey#1301)', () => {
     expect(wps[0].x).toBeCloseTo(wps[1].x, 6)
   })
 
-  test('détour QUASI-vertical (dérive ≤ 30 px, corpus Petroleum) → routé, 3 waypoints', () => {
+  test('détour QUASI-vertical (dérive ≤ 30 px, corpus Petroleum) → routé, 2 coins rectifiés', () => {
     // Motif « Crude Oil Exports » : part à droite, remonte (segments verticaux
     // dérivant de 8 px — la route arrondie e!Sankey n'a pas de coins parfaits),
     // revient à gauche. L'ancien seuil strict (1 px) classait ces segments en
-    // diagonale → 0 coude compté → paramétrique mou au lieu du détour.
+    // diagonale → 0 coude compté → paramétrique mou au lieu du détour. Les 3 points
+    // intérieurs dérivants sont RECTIFIÉS en 2 coins à 90° sur un même montant
+    // vertical (sinon le runtime dessine des mini-S à rebours à chaque coin).
     const d = parseEsankeyXml(withPoints(
       '<points length="5">'
       + '<value X="100" Y="300" /><value X="270" Y="300" /><value X="278" Y="166" />'
@@ -635,8 +661,15 @@ describe('parseEsankeyXml — points de contrôle (opensankey#1301)', () => {
     const link = Object.values(d.links)[0]
     const wps = link.local.shape_waypoints as Array<{ x: number, y: number }>
     expect(Array.isArray(wps)).toBe(true)
-    expect(wps.length).toBe(3)
+    expect(wps.length).toBe(2)
+    // Montant vertical exact : même x pour les deux coins (moyenne du run).
+    expect(wps[0].x).toBeCloseTo(wps[1].x, 6)
     expect(link.local.orientation).toBeUndefined()
+    // Mapping exact des extrémités : ancres épinglées aux ports P0/PN via les
+    // offsets (sinon l'ancre ré-empilée ailleurs fait dépasser le montant puis
+    // rebrousser au dernier coin). Accroches horizontales → offset en y.
+    expect(link.local.shape_source_anchor_offset as number).toBeCloseTo(0, 6) // P0.y 300 − A.y 300
+    expect(link.local.shape_target_anchor_offset as number).toBeCloseTo(-290, 6) // PN.y 30 − B.y 320
   })
 
   test('S-curve RAIDE (segment milieu dérivant > 30 px) → paramétrique, aucun waypoint', () => {
@@ -1320,17 +1353,26 @@ describe('parseEsankeyXml — stocks (opensankey#1292)', () => {
   const b = Object.values(d.nodes).find(n => n.name === 'B')!
   const c = Object.values(d.nodes).find(n => n.name === 'C')!
 
-  test('compartiments sommés, conversion d\'unité, forme visible', () => {
+  test('compartiments sommés, conversion d\'unité (donnée Δ sur le process)', () => {
     expect(a.has_stock).toBe(true)
     // −5 MJ (déstockage) + 10 kWh × 3.6 (stockage) = +31 MJ
     expect(a.stock_values?.stock_variation).toBeCloseTo(31)
-    expect(a.stock_shape_is_visible).toBe(true)
   })
 
-  test('entry transparente : donnée gardée, forme masquée', () => {
+  test('libellé de stock activé en local, avec unité du registre', () => {
+    // Le remplissage de style legacy résout stock_label_is_visible à FALSE :
+    // le défaut config (true) ne suffit pas, l'import doit poser le local.
+    expect(a.local.stock_label_is_visible).toBe(true)
+    expect(a.local.stock_label_unit_visible).toBe(true)
+    expect(a.local.stock_label_unit_type).toBe('unit_model')
+    // Unité du premier compartiment non transparent (MJ, id 11).
+    expect(a.local.stock_label_unit).toBe('11')
+  })
+
+  test('entry transparente : donnée gardée, libellé muet', () => {
     expect(b.has_stock).toBe(true)
     expect(b.stock_values?.stock_variation).toBe(-400)
-    expect(b.stock_shape_is_visible).toBeUndefined()
+    expect(b.local.stock_label_is_visible).toBeUndefined()
   })
 
   test('compartiment sans quantité : aucun stock posé', () => {
@@ -1479,14 +1521,28 @@ describeDemos('loadEsankeyFile — démos e!Sankey 5 locales', () => {
     const variations = stocked.map(n => n.stock_values!.stock_variation).sort((x, y) => x - y)
     expect(variations).toEqual([-400, -380, -180, 180, 380, 400])
     expect(variations.reduce((s, v) => s + v, 0)).toBe(0)
-    // Assembly stocke 380 d'Item B (output vers le stock) → Δ positif, visible.
+    // Assembly stocke 380 d'Item B (output vers le stock) → Δ positif.
     const assembly = stocked.find(n => n.name.includes('Assembly'))!
     expect(assembly.stock_values?.stock_variation).toBe(380)
-    expect(assembly.stock_shape_is_visible).toBe(true)
-    // Les 3 stocks « Transparent » (astuce d'équilibrage des sources/puits)
-    // gardent la donnée mais pas la forme.
-    const hidden = stocked.filter(n => n.stock_shape_is_visible === undefined)
-    expect(hidden.length).toBe(3)
-    expect(hidden.map(n => n.stock_values!.stock_variation).sort((x, y) => x - y)).toEqual([-380, 180, 400])
+    // Représentation visible : le LIBELLÉ de stock, activé sur les 3 process à
+    // stock non transparent seulement (les 3 stocks « Transparent » —
+    // équilibrage des sources/puits — restent muets, comme chez e!Sankey).
+    const labelled = stocked.filter(n => n.local.stock_label_is_visible === true)
+    expect(labelled.length).toBe(3)
+    expect(labelled.map(n => n.stock_values!.stock_variation).sort((x, y) => x - y)).toEqual([-400, -180, 380])
+    expect(labelled.every(n => n.local.stock_label_unit_type === 'unit_model')).toBe(true)
+    // Vérité de bout en bout : après fromJSON, l'attribut RÉSOLU du nœud est
+    // bien visible (le remplissage de style legacy le résolvait à false quand
+    // l'import comptait sur le défaut config — c'est le bug « je ne vois
+    // rien » d'origine).
+    const app = new Class_ApplicationData(false)
+    app.fromJSON(d as never)
+    const nAssembly = app.drawing_area.sankey.nodes_list.find(n => n.name.includes('Assembly'))!
+    expect(nAssembly.has_stock).toBe(true)
+    expect(nAssembly.stock_value?.stockVariationData).toBe(380)
+    expect(nAssembly.stock_label_is_visible).toBe(true)
+    const nSource = app.drawing_area.sankey.nodes_list.find(n => n.name.includes('Source of Resource 1'))!
+    expect(nSource.has_stock).toBe(true)
+    expect(nSource.stock_label_is_visible).toBe(false)
   }, 30000)
 })

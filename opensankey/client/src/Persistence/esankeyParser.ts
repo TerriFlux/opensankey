@@ -64,12 +64,13 @@ interface EsNode {
   /** Nœud-image (mappé vers icon_is_image/icon_image_src au chargement). */
   is_image?: boolean
   image_src?: string
-  /** OS#1292 — Stock du process (compartiments `<stock>`), mappé vers la forme
-   *  stock OpenSankey. Clés lues telles quelles au niveau nœud par le loader
-   *  générique (has_stock / stock_values / stock_shape_is_visible). */
+  /** OS#1292 — Donnée de stock du process (compartiments `<stock>`). Clés lues
+   *  telles quelles au niveau nœud par le loader générique. La REPRÉSENTATION
+   *  visible est le LIBELLÉ de stock (stock_label_*, posé dans local), pas la
+   *  forme stock (qui encode un niveau, absent du format e!Sankey). La
+   *  représentation en flux « From/To Stock » façon e!Sankey = OS#1303. */
   has_stock?: boolean
   stock_values?: { stock_variation: number }
-  stock_shape_is_visible?: boolean
 }
 
 interface EsFlow {
@@ -137,6 +138,15 @@ export interface EsParsedDiagram {
   legend?: { mask_legend: boolean, legend_dx: number, legend_dy: number, legend_police?: number }
   /** OS#1286 — registre d'unités reconstruit depuis les unitTypes e!Sankey. */
   units?: Type_UnitTypeJSON[]
+  /**
+   * Ordre Z global des éléments importés (nœuds + flux + zones), du 1ER PLAN
+   * vers le FOND (convention `_list_g_element_id`), reconstruit depuis les
+   * `@zorder` e!Sankey (plus grand = par-dessus). C'est lui qui restitue les
+   * fonds de process DERRIÈRE les flux (démo « Erdgas Krankenhaus »). Lu par
+   * le fromJSON générique (clé `order_g_elements`). Absent si le fichier ne
+   * porte aucun zorder.
+   */
+  order_g_elements?: string[]
 }
 
 // Id du groupe de tags de flux créé depuis les entries e!Sankey.
@@ -465,6 +475,15 @@ interface EsGraphicalProcess {
   borderColor: string | null
   borderWidth: number
   borderDashed: boolean
+  /**
+   * Ordre Z GLOBAL de l'élément (`@zorder` sur `<process>`/`<arrow>`/shapes du
+   * `net`) : entier unique par document, PLUS GRAND = dessiné PAR-DESSUS. C'est
+   * lui qui met les fonds de process DERRIÈRE les flux (démo « Erdgas
+   * Krankenhaus » : process 0-8, flèches 9-20 — sauf un cache translucide
+   * volontairement posé sur les flux, zorder 17). -1 = absent (les `<place>`
+   * n'en portent jamais, vérifié sur les 120 démos).
+   */
+  zorder: number
 }
 
 /** Axe de raccordement d'un flux à un nœud, depuis `arrowDirection` e!Sankey. */
@@ -511,20 +530,24 @@ const orientationFromPoints = (points: Array<{ x: number, y: number }>): string 
  * cible). Un segment milieu diagonal (flux droit/courbe simple) ne compte pas comme
  * coude et ne fait rien tourner.
  */
+/** Dérive transversale max (px) pour qu'un segment compte comme quasi-axial. */
+const ROUTED_CROSS_TOL = 30
+
+/** Axe d'un segment de polyligne e!Sankey, avec la tolérance transversale ci-dessus. */
+const routedSegAxis = (a: { x: number, y: number }, b: { x: number, y: number }): 'h' | 'v' | 'd' => {
+  const dx = Math.abs(b.x - a.x), dy = Math.abs(b.y - a.y)
+  if (dx < 2 && dy < 2) return 'd' // dégénéré
+  if (dy <= ROUTED_CROSS_TOL && dy <= dx) return 'h'
+  if (dx <= ROUTED_CROSS_TOL && dx <= dy) return 'v'
+  return 'd' // diagonal
+}
+
 const isRoutedPolyline = (points: Array<{ x: number, y: number }>): boolean => {
-  const crossTol = 30 // px — dérive transversale max d'un segment quasi-axial
   const minSeg = 10 // px — delta significatif pour le test de rebroussement
-  const segAxis = (a: { x: number, y: number }, b: { x: number, y: number }): 'h' | 'v' | 'd' => {
-    const dx = Math.abs(b.x - a.x), dy = Math.abs(b.y - a.y)
-    if (dx < 2 && dy < 2) return 'd' // dégénéré
-    if (dy <= crossTol && dy <= dx) return 'h'
-    if (dx <= crossTol && dx <= dy) return 'v'
-    return 'd' // diagonal
-  }
   let turns = 0
   for (let i = 1; i < points.length - 1; i++) {
-    const inSeg = segAxis(points[i - 1], points[i])
-    const outSeg = segAxis(points[i], points[i + 1])
+    const inSeg = routedSegAxis(points[i - 1], points[i])
+    const outSeg = routedSegAxis(points[i], points[i + 1])
     if ((inSeg === 'h' && outSeg === 'v') || (inSeg === 'v' && outSeg === 'h')) turns++
   }
   if (turns >= 2) return true
@@ -540,6 +563,66 @@ const isRoutedPolyline = (points: Array<{ x: number, y: number }>): boolean => {
     }
   }
   return false
+}
+
+/**
+ * Rectifie la polyligne d'un flux ROUTÉ en ses COINS à 90°. La route e!Sankey est
+ * arrondie : un « montant vertical » y est stocké en plusieurs segments qui dérivent
+ * de quelques px (Petroleum : x = 984 → 1000 → 992). Repris tels quels en waypoints,
+ * ces sommets font dessiner au runtime (segments droits + congés) des mini-S qui
+ * repartent en arrière à chaque coin. On fusionne donc les chaînes de segments
+ * quasi-axiaux DE MÊME SENS en un run H/V exact (coordonnée = moyenne des points du
+ * run) et on n'émet que les intersections de runs consécutifs — les vrais coins.
+ * Les segments diagonaux restent des runs à part entière : leurs jonctions sont
+ * conservées (recalées sur la coordonnée du run axial voisin). Retourne les coins
+ * INTÉRIEURS (sans les ancres), en coordonnées document e!Sankey.
+ */
+const rectifyRoutedWaypoints = (points: Array<{ x: number, y: number }>): Array<{ x: number, y: number }> => {
+  // Dédoublonnage des points quasi-confondus (< 2 px).
+  const pts: Array<{ x: number, y: number }> = []
+  points.forEach(p => {
+    const last = pts[pts.length - 1]
+    if (!last || Math.abs(p.x - last.x) >= 2 || Math.abs(p.y - last.y) >= 2) pts.push(p)
+  })
+  if (pts.length < 3) return []
+  // Runs : segments consécutifs de même axe ET même sens le long de l'axe principal
+  // (un aller-retour sur le même axe reste deux runs distincts).
+  interface Run { axis: 'h' | 'v' | 'd', start: number, end: number }
+  const runs: Run[] = []
+  for (let i = 0; i < pts.length - 1; i++) {
+    const axis = routedSegAxis(pts[i], pts[i + 1])
+    const prev = runs[runs.length - 1]
+    if (prev && prev.axis === axis && axis !== 'd') {
+      const mainDelta = (p: number, q: number): number =>
+        axis === 'h' ? pts[q].x - pts[p].x : pts[q].y - pts[p].y
+      if (mainDelta(prev.start, prev.end) * mainDelta(i, i + 1) > 0) {
+        prev.end = i + 1
+        continue
+      }
+    }
+    runs.push({ axis, start: i, end: i + 1 })
+  }
+  // Coordonnée d'un run axial = moyenne (x pour 'v', y pour 'h') de ses points.
+  const runCoord = (r: Run): number => {
+    let sum = 0
+    for (let i = r.start; i <= r.end; i++) sum += (r.axis === 'v') ? pts[i].x : pts[i].y
+    return sum / (r.end - r.start + 1)
+  }
+  const corners: Array<{ x: number, y: number }> = []
+  for (let i = 1; i < runs.length; i++) {
+    const a = runs[i - 1], b = runs[i]
+    const j = pts[a.end] // jonction entre les deux runs
+    if (a.axis === 'h' && b.axis === 'v') corners.push({ x: runCoord(b), y: runCoord(a) })
+    else if (a.axis === 'v' && b.axis === 'h') corners.push({ x: runCoord(a), y: runCoord(b) })
+    else {
+      // Un diagonal (ou deux runs parallèles après rebroussement) : jonction
+      // conservée, recalée sur la coordonnée des runs axiaux qui la bordent.
+      const x = (a.axis === 'v') ? runCoord(a) : (b.axis === 'v') ? runCoord(b) : j.x
+      const y = (a.axis === 'h') ? runCoord(a) : (b.axis === 'h') ? runCoord(b) : j.y
+      corners.push({ x, y })
+    }
+  }
+  return corners
 }
 
 /** nodePadding minimal (le plus profond) parmi les `<port>` d'un process/place.
@@ -636,6 +719,7 @@ const parseGraphicalProcesses = (net: Element, palette: EsBrushPalette): { [id: 
       shapeType: attrNum(p, 'shapeType', 0),
       arrowDirection: attrNum(p, 'arrowDirection', 2),
       linkPadding: deepestPortPadding(p),
+      zorder: attrNum(p, 'zorder', -1),
       ...parseGraphicalLabelFont(label),
       ...parseGraphicalBorder(p),
     }
@@ -683,6 +767,7 @@ const parseGraphicalPlaces = (net: Element, palette: EsBrushPalette): { [id: str
       shapeType: attrNum(p, 'shapeType', 0),
       arrowDirection: attrNum(p, 'arrowDirection', 0),
       linkPadding: deepestPortPadding(p),
+      zorder: attrNum(p, 'zorder', -1),
       // Boîte de la place (OS#1298), même schéma que le process.
       width: attrNum(p, 'backgroundSizeW', 0),
       height: attrNum(p, 'backgroundSizeH', 0),
@@ -775,7 +860,7 @@ const applyTextToContainer = (base: EsContainerJSON, textEl: Element, resize = t
   return true
 }
 
-interface EsShapeBox { el: Element, kind: string, x: number, y: number, w: number, h: number }
+interface EsShapeBox { el: Element, kind: string, x: number, y: number, w: number, h: number, z: number }
 
 /**
  * Shapes libres du `net` → zones de texte OpenSankey (clé JSON `labels`).
@@ -793,10 +878,12 @@ const parseShapes = (
   net: Element,
   images: { [path: string]: string },
   palette: EsBrushPalette
-): { [id: string]: EsContainerJSON } => {
+): { containers: { [id: string]: EsContainerJSON }, zorders: { [id: string]: number } } => {
   const out: { [id: string]: EsContainerJSON } = {}
+  // Ordre Z global (`@zorder`) de chaque zone émise — alimente order_g_elements.
+  const zorders: { [id: string]: number } = {}
   const shapes = childByTag(net, 'shapes')
-  if (!shapes) return out
+  if (!shapes) return { containers: out, zorders }
   // Collecte de tous les shapes graphiques avec leur boîte englobante.
   const items: EsShapeBox[] = []
   childrenByTag(shapes, 'shape').forEach(wrapper => {
@@ -805,6 +892,7 @@ const parseShapes = (
         el: shape, kind: shape.localName,
         x: attrNum(shape, 'locationX', 0), y: attrNum(shape, 'locationY', 0),
         w: attrNum(shape, 'sizeW', 100), h: attrNum(shape, 'sizeH', 30),
+        z: attrNum(shape, 'zorder', -1),
       })
     })
   })
@@ -903,8 +991,9 @@ const parseShapes = (
       if (isPenColorPatternDashed(pen)) base.shape_border_dashed = true
       out[id] = base
     }
+    if (id in out) zorders[id] = it.z
   })
-  return out
+  return { containers: out, zorders }
 }
 
 /**
@@ -1008,6 +1097,8 @@ interface EsGraphicalArrow {
    */
   gradientFromSource: boolean
   gradientToDestination: boolean
+  /** Ordre Z global de la flèche (`@zorder`, cf. EsGraphicalProcess.zorder). */
+  zorder: number
 }
 
 const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } => {
@@ -1072,6 +1163,7 @@ const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } 
       // OS#1294 — dégradé source→cible (lu sur la flèche graphique).
       gradientFromSource: a.getAttribute('gradientFromSource') === 'true',
       gradientToDestination: a.getAttribute('gradientToDestination') === 'true',
+      zorder: attrNum(a, 'zorder', -1),
     }
   })
   return out
@@ -1404,6 +1496,12 @@ export const parseEsankeyXml = (
 
   // Nœuds : un par graphProcess. Nom = nom logique, sinon label graphique.
   const nodes: { [id: string]: EsNode } = {}
+  // Ordre Z global e!Sankey (`@zorder` : plus grand = par-dessus) de chaque
+  // élément importé (nœuds, flux, zones), collecté au fil des boucles pour
+  // émettre `order_g_elements` (liste OpenSankey 1er plan → fond). z = -1 :
+  // élément sans zorder (places, nœud sans contrepartie graphique) — posé au
+  // 1er plan, comme e!Sankey qui dessine ces petits stubs d'E/S au-dessus.
+  const zOrderEntries: Array<{ id: string, z: number }> = []
   // S2 (SA#294) — Boîte e!Sankey des ancres In/Out collapsées en point. Mémorisée
   // pour recaler, une fois le voisin connu, le point d'accroche du flux sur le BORD
   // de la boîte face au voisin (cf. recenterHiddenAnchor) au lieu du coin haut-gauche.
@@ -1425,6 +1523,7 @@ export const parseEsankeyXml = (
     if (usedNodeIds.has(id)) id = id + '_' + logicalId
     usedNodeIds.add(id)
     logicalToNodeId[logicalId] = id
+    zOrderEntries.push({ id, z: graphical?.zorder ?? -1 })
     nodes[id] = {
       id, name,
       svg_parent_group: 'g_nodes',
@@ -1531,15 +1630,21 @@ export const parseEsankeyXml = (
     // DEPUIS le stock (déstockage), outputQuantity = sortie du process VERS le
     // stock (stockage). Δ stock = output − input, sommé sur les compartiments
     // et converti en unité de base comme les flux. Pas de niveau initial dans
-    // le format → initial_stock jamais posé. Les stocks d'entry TRANSPARENTE
-    // gardent la donnée (bilan du process juste) mais pas la forme
-    // (stock_shape_is_visible reste false, son défaut), fidèle au rendu
-    // e!Sankey qui ne dessine rien pour ces flèches invisibles.
+    // le format → initial_stock jamais posé, et la FORME stock OpenSankey (qui
+    // encode un niveau) n'aurait rien à montrer : la même information est
+    // rendue en LIBELLÉ de stock (« Δ Stock : +380 kg », drawStockBox), activé
+    // EXPLICITEMENT en local — le remplissage de style legacy 0.9 résout
+    // stock_label_is_visible à false, le défaut config (true) ne suffit pas.
+    // (La représentation en FLUX « From/To Stock » façon e!Sankey est l'objet
+    // d'OS#1303, branche 1303-esankey-stock-flux.) Les stocks d'entry
+    // TRANSPARENTE (astuce e!Sankey pour équilibrer un process sans rien
+    // dessiner) gardent la donnée (bilan du process juste) mais restent muets.
     const compartmentsEl = childByTag(gp, 'compartments')
     const stockList = compartmentsEl ? childrenByTag(compartmentsEl, 'stock') : []
     let stockVariation = 0
     let hasStockQuantity = false
     let hasVisibleStockEntry = false
+    let stockUnitId: string | null = null
     stockList.forEach(s => {
       const input = attrNum(s, 'inputQuantity', 0)
       const output = attrNum(s, 'outputQuantity', 0)
@@ -1547,15 +1652,28 @@ export const parseEsankeyXml = (
       // largeur nulle) → rien à mapper.
       if (input === 0 && output === 0) return
       hasStockQuantity = true
-      const coef = findUnit(childByTag(s, 'unitRef')?.getAttribute('refId') ?? null)?.unit.coefficient ?? 1
-      stockVariation += (output - input) * coef
-      const entry = entries[childByTag(s, 'entryRef')?.getAttribute('refId') ?? '']
-      if (entry && !entry.isTransparent) hasVisibleStockEntry = true
+      const found = findUnit(childByTag(s, 'unitRef')?.getAttribute('refId') ?? null)
+      stockVariation += (output - input) * (found?.unit.coefficient ?? 1)
+      const entry = entries[childByTag(s, 'entryRef')?.getAttribute('refId') ?? ''] ?? null
+      if (entry && !entry.isTransparent) {
+        hasVisibleStockEntry = true
+        if (stockUnitId === null) stockUnitId = found?.unit.id ?? null
+      }
     })
     if (hasStockQuantity) {
       nodes[id].has_stock = true
       nodes[id].stock_values = { stock_variation: stockVariation }
-      if (hasVisibleStockEntry) nodes[id].stock_shape_is_visible = true
+      if (hasVisibleStockEntry) {
+        nodes[id].local.stock_label_is_visible = true
+        // Unité du libellé via le registre (OS#1286), comme les labels de flux :
+        // la variation est en unité de base, l'affichage re-divise par le
+        // coefficient et restitue la quantité avec son symbole (« +380 kg »).
+        if (stockUnitId !== null) {
+          nodes[id].local.stock_label_unit_visible = true
+          nodes[id].local.stock_label_unit_type = 'unit_model'
+          nodes[id].local.stock_label_unit = stockUnitId
+        }
+      }
     }
   })
 
@@ -1578,6 +1696,7 @@ export const parseEsankeyXml = (
     if (usedNodeIds.has(id)) id = id + '_' + logicalId
     usedNodeIds.add(id)
     logicalToNodeId[logicalId] = id
+    zOrderEntries.push({ id, z: graphical?.zorder ?? -1 })
     nodes[id] = {
       id, name,
       svg_parent_group: 'g_nodes',
@@ -1817,15 +1936,32 @@ export const parseEsankeyXml = (
         // [ancre source, …coins…, ancre cible]. Le flux est ROUTÉ ssi elle fait un
         // DÉTOUR (isRoutedPolyline : ≥ 2 coudes quasi-orthogonaux OU rebroussement) —
         // vrai routage (escalier, boucle), même en 4 points ; un flux droit ou courbe
-        // simple (segment milieu diagonal) reste paramétrique. On prend alors TOUS les
-        // points intérieurs (P1..P_{n-2}) comme waypoints (les vrais coins). Coords
+        // simple (segment milieu diagonal) reste paramétrique. Les waypoints sont les
+        // COINS RECTIFIÉS de la polyligne (rectifyRoutedWaypoints), pas ses points
+        // bruts : la route arrondie e!Sankey dérive de quelques px et ses sommets
+        // repris tels quels dessinent des mini-S à rebours à chaque coin. Coords
         // doc e!Sankey → translatées avec les nœuds.
         if (isRouted) {
-          link.local.shape_waypoints = graphicalArrow.points
-            .slice(1, graphicalArrow.points.length - 1)
-            .map(p => ({ x: p.x, y: p.y }))
+          const corners = rectifyRoutedWaypoints(graphicalArrow.points)
+          link.local.shape_waypoints = corners.length > 0
+            ? corners
+            : graphicalArrow.points.slice(1, graphicalArrow.points.length - 1).map(p => ({ x: p.x, y: p.y }))
           link.local.left_horiz_shift = 0.01
           link.local.right_horiz_shift = 0.01
+          // MAPPING EXACT des extrémités : sans offset d'ancre, OpenSankey ré-empile
+          // l'ancre ailleurs que le port e!Sankey (P0/PN de la polyligne) et le
+          // runtime ponte l'écart ancre↔coin en insérant un coude → dépassement puis
+          // rebroussement visible au dernier coin. On épingle donc l'ancre au port,
+          // comme pour les flux droits vv/hh ci-dessous. Axe de l'offset = transverse
+          // à l'axe d'accroche (1er/dernier segment de la polyligne) ; segment
+          // diagonal → pas d'offset (accroche paramétrique auto).
+          const rpts = graphicalArrow.points
+          const P0 = rpts[0], PN = rpts[rpts.length - 1]
+          const srcAxis = routedSegAxis(P0, rpts[1])
+          const tgtAxis = routedSegAxis(rpts[rpts.length - 2], PN)
+          const srcN = nodes[sourceId], tgtN = nodes[targetId]
+          if (srcN && srcAxis !== 'd') link.local.shape_source_anchor_offset = (srcAxis === 'v') ? (P0.x - srcN.x) : (P0.y - srcN.y)
+          if (tgtN && tgtAxis !== 'd') link.local.shape_target_anchor_offset = (tgtAxis === 'v') ? (PN.x - tgtN.x) : (PN.y - tgtN.y)
         } else if (graphicalArrow.points.length >= 2 && (orientation === 'vv' || orientation === 'hh')) {
           // Flux DROIT (vv/hh, mêmes axes aux deux bouts) : aligner les ancres sur les
           // PORTS e!Sankey (P0/dernier point), sinon l'empilement OpenSankey les décentre
@@ -1979,6 +2115,9 @@ export const parseEsankeyXml = (
         }
       }
       links[id] = link
+      // Une flèche multi-matériaux → N flux au MÊME zorder : le tri stable
+      // conserve leur ordre de déclaration entre eux.
+      zOrderEntries.push({ id, z: graphicalArrow?.zorder ?? -1 })
       nodes[sourceId].outputLinksId.push(id)
       nodes[sourceId].output_value += link.value.data_value
       nodes[sourceId].links_order.push(id)
@@ -1989,7 +2128,8 @@ export const parseEsankeyXml = (
   })
 
   // Zones libres (textes, images, rectangles) et légende.
-  const labels = parseShapes(net, images, brushPalette)
+  const { containers: labels, zorders: shapeZorders } = parseShapes(net, images, brushPalette)
+  Object.entries(shapeZorders).forEach(([id, z]) => zOrderEntries.push({ id, z }))
   const legendPos = parseLegendPosition(net)
   const legendFontSize = parseLegendFontSize(net) // OS#1296
 
@@ -2076,6 +2216,18 @@ export const parseEsankeyXml = (
   // OS#1286 — registre d'unités (grandeurs e!Sankey), lu par fromJSON.
   if (unitsRegistry.length > 0) {
     result.units = unitsRegistry
+  }
+  // Ordre Z : zorder DÉCROISSANT (liste OpenSankey = 1er plan → fond). Tri
+  // stable : les flux d'une même flèche (même zorder) gardent leur ordre de
+  // déclaration. Les éléments SANS zorder (places, cf. zOrderEntries) passent
+  // au 1er plan. N'est émis que si le fichier porte au moins un zorder — sinon
+  // aucune info d'ordre, on laisse l'ordre de création par défaut.
+  const zKnown = zOrderEntries.filter(e => e.z >= 0).sort((a, b) => b.z - a.z)
+  if (zKnown.length > 0) {
+    result.order_g_elements = [
+      ...zOrderEntries.filter(e => e.z < 0).map(e => e.id),
+      ...zKnown.map(e => e.id),
+    ]
   }
   return result
 }
