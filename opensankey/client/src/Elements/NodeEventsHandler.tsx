@@ -31,6 +31,7 @@ import { TooltipEventManager } from './TooltipsConfig'
 import { Class_LinkElement } from './Link'
 import { Class_ProtoElement } from './Element'
 import { Class_NodeElement } from './Node'
+import { openPresentationFor } from '../components/panels/presentation/openPresentation'
 
 export class NodeEventsHandler {
 
@@ -126,6 +127,15 @@ export class NodeEventsHandler {
     const drawing_area = this._node.drawing_area
   
     if (!drawing_area.application_data.is_editable) {
+      // OS#305 Lot 3 — LECTEUR : le clic ouvre la présentation composée par
+      // l'auteur, dans le contenant que sa politique désigne. Si rien n'a été
+      // composé, openPresentationFor n'ouvre rien et on retombe sur le
+      // comportement historique (purge) — jamais l'inspecteur d'édition.
+      openPresentationFor(
+        drawing_area.application_data,
+        this._node as unknown as Parameters<typeof openPresentationFor>[1],
+        { x: event.clientX, y: event.clientY }
+      )
       drawing_area.purgeSelection()
       return
     }

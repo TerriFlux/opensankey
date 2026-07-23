@@ -49,6 +49,7 @@ import { Class_LinkAttribute } from './Element'
 import { LinkDrawNameLabel, LinkDrawValueLabel } from './DrawLabel'
 import { Class_ApplicationData } from '../types/ApplicationData'
 import { LinkStyle } from './ElementStyle'
+import { openPresentationFor } from '../components/panels/presentation/openPresentation'
 
 const side_order: { [_ in Type_Side]: number } = {
   'right': 0,
@@ -1075,6 +1076,13 @@ export class Class_LinkElement extends Class_LinkAttribute {
   ) {
     const drawing_area = this.drawing_area
     if (!drawing_area.application_data.is_editable) {
+      // OS#305 Lot 3 — LECTEUR : le clic ouvre la présentation composée (rien
+      // ne s'ouvre si l'auteur n'a rien composé pour ce flux).
+      openPresentationFor(
+        drawing_area.application_data,
+        this as unknown as Parameters<typeof openPresentationFor>[1],
+        { x: event.clientX, y: event.clientY }
+      )
       drawing_area.purgeSelection()
       return
     }

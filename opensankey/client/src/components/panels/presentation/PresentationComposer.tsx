@@ -43,6 +43,7 @@ import {
   type Type_PresentationTarget
 } from './PresentationBlockRegistry'
 import { registerBasePresentationBlocks } from './registerBaseBlocks'
+import { openPresentationFor, canPresent, type Type_Presentable } from './openPresentation'
 
 // Le catalogue de base doit exister dès l'affichage du composeur.
 registerBasePresentationBlocks()
@@ -105,6 +106,14 @@ export const PresentationComposer = ({ app_data, scope }: {
       ...drawing_area.selected_containers_list
     ]) as unknown as Attr_Target[]
 
+  // Élément servant d'APERÇU : la présentation se lit toujours sur un élément
+  // (via la cascade), même quand on compose au niveau du style.
+  const preview_element = (
+    drawing_area.selected_nodes_list[0]
+    ?? drawing_area.selected_links_list[0]
+    ?? drawing_area.selected_containers_list[0]
+  ) as unknown as Type_Presentable | undefined
+
   const read_target = targets[0]
   const composition = compositionFromJSON(read_target?.getElementProperty(ATTR_BLOCKS))
   const policy = containerPolicyFromJSON(read_target?.getElementProperty(ATTR_CONTAINERS))
@@ -146,20 +155,38 @@ export const PresentationComposer = ({ app_data, scope }: {
   return (
     <Box style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
 
-      {/* CIBLE EXPLICITE (décision #8) : ce que l'on est en train de composer. */}
+      {/* CIBLE EXPLICITE (décision #8) : ce que l'on est en train de composer,
+          + APERÇU : voir ce que verra le lecteur, par le même chemin que lui. */}
       <Box
         style={{
-          fontSize: '0.7rem', opacity: 0.8, background: '#f7fafc',
+          display: 'flex', alignItems: 'center', gap: '0.3rem',
+          fontSize: '0.7rem', opacity: 0.9, background: '#f7fafc',
           borderRadius: '4px', padding: '0.25rem 0.35rem'
         }}
       >
-        {t('presentation.applies_to', { defaultValue: 'S\'applique à' })}
-        {' : '}
-        <Text as='span' style={{ fontWeight: 600 }}>
-          {scope === 'style'
-            ? t(edited_style?.name ?? '') || t('presentation.the_style', { defaultValue: 'le style édité' })
-            : t('presentation.the_selection', { defaultValue: 'la sélection (surcharge)' })}
-        </Text>
+        <Box as='span' style={{ flex: 1, minWidth: 0 }}>
+          {t('presentation.applies_to', { defaultValue: 'S\'applique à' })}
+          {' : '}
+          <Text as='span' style={{ fontWeight: 600 }}>
+            {scope === 'style'
+              ? t(edited_style?.name ?? '') || t('presentation.the_style', { defaultValue: 'le style édité' })
+              : t('presentation.the_selection', { defaultValue: 'la sélection (surcharge)' })}
+          </Text>
+        </Box>
+        <Button
+          size='xs'
+          variant='menuconfigpanel_option_button'
+          sx={{ paddingInline: '0.4rem', minWidth: 'auto', width: 'auto', flex: 'none' }}
+          // Désactivé exactement quand le lecteur ne verrait rien : l'auteur
+          // apprend ainsi, sans essayer, que sa composition est vide.
+          isDisabled={!preview_element || !canPresent(preview_element)}
+          title={t('presentation.preview_tooltip', {
+            defaultValue: 'Ouvrir la présentation telle que la verra le lecteur'
+          })}
+          onClick={() => { if (preview_element) openPresentationFor(app_data, preview_element) }}
+        >
+          {t('presentation.preview', { defaultValue: 'Aperçu' })}
+        </Button>
       </Box>
 
       {/* CONTENANT PAR DÉFAUT + ALTERNATIVES (décision #7) : un choix unique, des

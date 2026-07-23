@@ -100,6 +100,17 @@ export class Class_PanelManager {
 
   public isOpen(id: string): boolean { return this.getMode(id) !== null }
 
+  /** Ids de TOUS les panneaux ouverts, tous contenants confondus. Permet à une
+   *  feature de monter une coquille par panneau ouvert sans tenir son propre
+   *  registre (cf. les panneaux de présentation, OS#305). */
+  public get open_ids(): string[] {
+    const ids: string[] = []
+    if (this._sidebar_id !== null) ids.push(this._sidebar_id)
+    this._popups.forEach((_geometry, id) => { if (!ids.includes(id)) ids.push(id) })
+    if (this._tooltip_id !== null && !ids.includes(this._tooltip_id)) ids.push(this._tooltip_id)
+    return ids
+  }
+
   /**
    * Ouvre `id` dans `mode`, ou l'y PROMEUT s'il est déjà ouvert dans un autre
    * mode. Applique les invariants (une seule barre latérale ; une seule

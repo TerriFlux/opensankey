@@ -55,6 +55,7 @@ import { IType_DictHookRefSetterShowDialogComponents, Type_AdditionalMenus, TOOL
 import { LinkValueTypeSelector } from '../configmenus/SankeyMenuConfigurationLinksData'
 import { InspectorPanel } from '../configmenus/inspector/InspectorPanel'
 import { PanelShell } from '../panels/PanelShell'
+import { PresentationPanels } from '../panels/presentation/PresentationPanels'
 import { PANELS_TOPIC } from '../../types/EventBus'
 import { default_font_size } from '../../css/Theme'
 import { useModelBinding } from '../../hooks/useModelBinding'
@@ -428,6 +429,11 @@ export const SankeyMenu = (
           />
         </PanelShell>
       ) : <></>}
+
+      {/* OS#305 — Panneaux de PRÉSENTATION (un par élément présenté). Montés
+          dans les deux modes : en lecture c'est ce que voit le lecteur, en
+          édition c'est l'aperçu que l'auteur déclenche depuis le composeur. */}
+      <PresentationPanels app_data={app_data} />
 
 
       {/* Bouton config flottant conservé UNIQUEMENT en publish-éditable (static + editable) ; en
