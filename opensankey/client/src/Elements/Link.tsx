@@ -1092,10 +1092,13 @@ export class Class_LinkElement extends Class_LinkAttribute {
         this.drawing_area.application_data.menu_configuration.ref_to_menu_config_updater.current()
         this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
       }
-      // Simple clic (sans modificateur) = sélection seule
+      // Simple clic (sans modificateur) = sélection + ouverture de l'inspecteur
       else {
         drawing_area.selectOnly(this)
         drawing_area.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
+        // OS#300 Lot 5 — clic nu ouvre l'inspecteur de propriétés du flux
+        // (pop-up superposée, ou barre latérale si affichée).
+        drawing_area.application_data.menu_configuration.openConfigMenu()
       }
     }
   }

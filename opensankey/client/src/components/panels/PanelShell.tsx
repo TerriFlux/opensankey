@@ -69,6 +69,14 @@ export type Type_PanelShellProps = {
   sidebarWidthPx?: number
   /** Fermeture : par défaut `panels.close(id)`. */
   onClose?: () => void
+  // OS#300 Lot 5 — intention de survol de l'INFO-BULLE (annule/programme sa
+  // fermeture) + intention d'édition (auto-épinglage en pop-up à la 1ʳᵉ édition).
+  /** Curseur entré dans l'info-bulle : annule la fermeture programmée. */
+  onTooltipHoverIn?: () => void
+  /** Curseur sorti de l'info-bulle : programme la fermeture (délai d'intention). */
+  onTooltipHoverOut?: () => void
+  /** 1ʳᵉ interaction dans le corps de l'info-bulle : épingle en pop-up. */
+  onTooltipEditIntent?: () => void
 }
 
 /**
@@ -360,8 +368,12 @@ const PopupShell = ({ app_data, panels, id, title, allowedModes, onClose, childr
   )
 }
 
-// --- Info-bulle : transitoire, ancrée au point d'ouverture --------------------
-const TooltipShell = ({ app_data, panels, id, title, allowedModes, onClose, children }: {
+// --- Info-bulle : transitoire, ancrée près du point de survol -----------------
+const TOOLTIP_W = 300
+const TooltipShell = ({
+  app_data, panels, id, title, allowedModes, onClose, children,
+  onTooltipHoverIn, onTooltipHoverOut, onTooltipEditIntent
+}: {
   app_data: Class_ApplicationData
   panels: Class_PanelManager
   id: string
@@ -369,35 +381,50 @@ const TooltipShell = ({ app_data, panels, id, title, allowedModes, onClose, chil
   allowedModes: Type_PanelMode[]
   onClose: () => void
   children: React.ReactNode
+  onTooltipHoverIn?: () => void
+  onTooltipHoverOut?: () => void
+  onTooltipEditIntent?: () => void
 }) => {
   const anchor = panels.tooltip_anchor
+  // Décalée du curseur (pour être atteignable) et bornée dans la fenêtre.
+  // Garde-fou si innerWidth/innerHeight valent 0 (contexte de rendu sans fenêtre).
+  const vw = window.innerWidth || 4096
+  const vh = window.innerHeight || 4096
+  const left = Math.max(4, Math.min(anchor.x + 14, vw - TOOLTIP_W - 6))
+  const top = Math.max(4, Math.min(anchor.y + 14, vh - 120))
   return (
     <Box
       className='panel_tooltip'
       data-panel-id={id}
       position='fixed'
-      left={anchor.x + 'px'}
-      top={anchor.y + 'px'}
+      left={left + 'px'}
+      top={top + 'px'}
       zIndex={PANEL_Z_TOOLTIP}
       bg='white'
       borderRadius='md'
       boxShadow='0 4px 16px rgba(0, 0, 0, 0.25)'
       border='1px solid'
       borderColor='gray.200'
-      width='300px'
+      width={TOOLTIP_W + 'px'}
       maxHeight='60vh'
       display='flex'
       flexDirection='column'
       overflow='hidden'
-      // S'efface en sortant (le survol-suivi + l'auto-épinglage à la 1ʳᵉ édition
-      // sont branchés au Lot 5).
-      onMouseLeave={onClose}
+      // Intention de survol : entrer annule la fermeture programmée par l'élément ;
+      // sortir la (re)programme. Fallback onClose si non fournis.
+      onMouseEnter={onTooltipHoverIn}
+      onMouseLeave={onTooltipHoverOut ?? onClose}
     >
       <PanelHeader
         app_data={app_data} panels={panels} id={id} title={title}
         mode='tooltip' allowedModes={allowedModes} onClose={onClose}
       />
-      <Box style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '0.2rem' }}>
+      {/* 1ʳᵉ interaction dans le CORPS (éditer un champ, cliquer un bouton) =
+          intention d'édition → épingle en pop-up. */}
+      <Box
+        style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '0.2rem' }}
+        onPointerDownCapture={onTooltipEditIntent}
+      >
         {children}
       </Box>
     </Box>
@@ -411,7 +438,8 @@ const TooltipShell = ({ app_data, panels, id, title, allowedModes, onClose, chil
  */
 export const PanelShell = ({
   app_data, id, title, children, allowedModes = ALL_MODES,
-  sidebarWidthPx, onClose
+  sidebarWidthPx, onClose,
+  onTooltipHoverIn, onTooltipHoverOut, onTooltipEditIntent
 }: Type_PanelShellProps) => {
   useModelBinding<() => void>(
     undefined,
@@ -451,6 +479,9 @@ export const PanelShell = ({
     <TooltipShell
       app_data={app_data} panels={panels} id={id} title={title}
       allowedModes={allowedModes} onClose={close}
+      onTooltipHoverIn={onTooltipHoverIn}
+      onTooltipHoverOut={onTooltipHoverOut}
+      onTooltipEditIntent={onTooltipEditIntent}
     >
       {children}
     </TooltipShell>

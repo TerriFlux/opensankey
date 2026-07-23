@@ -153,6 +153,9 @@ export class NodeEventsHandler {
         const group_target = this._node.drawing_area.resolveContainerGroupClickTarget(this._node)
         if (group_target) {
           this.selectFrameTarget(group_target)
+          // OS#300 Lot 5 — clic nu = ouvre l'inspecteur (pop-up/barre latérale
+          // selon le contexte) sur l'élément sélectionné.
+          drawing_area.application_data.menu_configuration.openConfigMenu()
           return
         }
       }
@@ -166,6 +169,13 @@ export class NodeEventsHandler {
       // null. Sur la forme (labelType 'shape') : pas de sous-sélection.
       if (labelType !== 'shape') {
         this._node.drawSelectedLabelHandles(labelType)
+      }
+
+      // OS#300 Lot 5 — clic NU (sans Ctrl/Cmd) : ouvre l'inspecteur de propriétés
+      // de l'élément (pop-up superposée, ou barre latérale si elle est affichée).
+      // Ctrl/Cmd (multi-sélection) ne force pas l'ouverture.
+      if (!event.ctrlKey && !event.metaKey) {
+        drawing_area.application_data.menu_configuration.openConfigMenu()
       }
     }
   }
@@ -770,8 +780,23 @@ export class NodeEventsHandler {
    * Define event when mouse moves over element
    */
   public handleMouseOver(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    const app_data = this._node.drawing_area.application_data
+    // OS#300 Lot 5 — Éditeur : survol NU (aucun bouton enfoncé) + MAJ ou Alt montre
+    // l'inspecteur en INFO-BULLE éditable de l'élément survolé (sans changer la
+    // sélection ferme). Le garde `buttons === 0` évite de déclencher pendant un
+    // MAJ+glisser (verrou d'axe) ou un Alt+glisser (déplacement de label).
+    if (app_data.is_editable && (event.shiftKey || event.altKey)
+      && event.buttons === 0 && (event.target as HTMLElement).tagName !== 'tspan') {
+      // Ancre : position souris, avec le rectangle de l'élément survolé en repli
+      // (coords souris parfois indisponibles selon le câblage d3 de l'événement).
+      const rect = (event.target as HTMLElement)?.getBoundingClientRect?.()
+      const ax = event.clientX || (rect ? Math.round(rect.right) : 0)
+      const ay = event.clientY || (rect ? Math.round(rect.top) : 0)
+      app_data.menu_configuration.openInspectorHoverTooltip(app_data, this._node, ax, ay)
+      return
+    }
     // Option publish tooltip_on_hover : tooltips au simple survol, sans maintenir Shift.
-    const show_tooltip = event.shiftKey || this._node.drawing_area.application_data.publish_options.tooltip_on_hover
+    const show_tooltip = event.shiftKey || app_data.publish_options.tooltip_on_hover
     // ALT + pas de tooltip déjà ouvert pour ce noeud
     if (show_tooltip && (event.target as HTMLElement).tagName !== 'tspan') {
       const existingTooltip = document.querySelector('.sankey-tooltip')
@@ -789,7 +814,12 @@ export class NodeEventsHandler {
   }
 
   public handleMouseMove() {return}
-  public handleMouseOut() {return}
+  public handleMouseOut() {
+    // OS#300 Lot 5 — quitter l'élément programme la fermeture de l'info-bulle
+    // d'inspecteur (annulée si le curseur entre dans l'info-bulle, cf. PanelShell).
+    const app_data = this._node.drawing_area.application_data
+    app_data.menu_configuration.scheduleInspectorHoverClose(app_data)
+  }
 
   private moveMagneticNode(
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>,
