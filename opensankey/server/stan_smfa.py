@@ -63,6 +63,7 @@ Modèle de données STAN (tables SQLite = éléments XML) :
 import base64
 import binascii
 import gzip
+import re
 import sqlite3
 import struct
 import xml.etree.ElementTree as ET
@@ -84,7 +85,7 @@ _TABLES = (
     "Process", "ProcessInput", "ProcessOutput", "Flow",
     "FlowValue", "Unit", "Period", "FlowLayer",
     "Diagram", "Shape", "DefaultUnit", "Stock",
-    "LiteratureRef",
+    "LiteratureRef", "MfaSystem", "PeriodDefinition",
 )
 
 # Un fichier STAN multi-périodes devient un groupe de tags de DONNÉES : une période
@@ -430,6 +431,32 @@ def _connector_to_leaf_process(rows, id_field, sub_field):
     return leaves
 
 
+def _backfill_period_codes(periods, period_definitions):
+    """Complète les `PeriodCode` absents depuis `PeriodDefinition` (BeginDate).
+
+    STAN définit ses périodes par une date de départ et une durée ; le code
+    (« 2006 ») est optionnel. Sans lui, les tags de données s'appelaient « 1 »,
+    « 2 »… : on dérive « <année>, <année+1>… » de l'année de BeginDate, en
+    numérotant dans l'ordre de la table pour chaque définition. Si aucune année
+    n'est lisible, on laisse le repli existant (PeriodID).
+    """
+    by_def = {}
+    for period in periods:
+        if period.get("PeriodCode"):
+            continue
+        definition = next(
+            (d for d in period_definitions
+             if d.get("PeriodDefinitionID") == period.get("PeriodDefinitionID")), None)
+        if definition is None:
+            continue
+        match = re.search(r"(\d{4})", str(definition.get("BeginDate") or ""))
+        if not match:
+            continue
+        rank = by_def.get(period.get("PeriodDefinitionID"), 0)
+        by_def[period.get("PeriodDefinitionID")] = rank + 1
+        period["PeriodCode"] = str(int(match.group(1)) + rank)
+
+
 def _period_tag_id(period):
     """Identifiant du tag d'une période : son code STAN (« 2006 »), ou son id à défaut."""
     return str(period.get("PeriodCode") or period["PeriodID"])
@@ -619,6 +646,15 @@ def read_geometry(tables):
 
     processes, polylines, texts, markers, boundary = {}, {}, [], {}, None
     label_offsets = {}
+    # Ordre Z global de chaque élément (`m_nZOrder` : plus grand = par-dessus).
+    # C'est lui qui met les fonds de processus DERRIÈRE les flux (Wastewater :
+    # processus 2-19, flux 52+, textes libres au premier plan).
+    process_zorders, flow_zorders = {}, {}
+
+    def _zorder(entry):
+        z = nrbf.resolve(entry["object"].members.get("m_nZOrder"), entry["objects"])
+        return z if isinstance(z, int) else -1
+
     for shape in tables.get("Shape") or []:
         entry = index.get(str(shape.get("ShapeGuid") or "").lower())
         if entry is None:
@@ -629,20 +665,26 @@ def read_geometry(tables):
         process_id, flow_id = shape.get("ProcessID"), shape.get("FlowID")
         if shape_type == _SHAPE_PROCESS and process_id is not None and entry["bounds"]:
             processes[process_id] = entry["bounds"]
+            process_zorders[process_id] = _zorder(entry)
         elif shape_type == _SHAPE_SYSTEM_BOUNDARY and entry["bounds"]:
             boundary = entry["bounds"]
-            texts.append({"text": entry["text"] or "", "bounds": entry["bounds"], "frame": True})
+            texts.append({"text": entry["text"] or "", "bounds": entry["bounds"],
+                          "frame": True, "z": _zorder(entry)})
         elif shape_type == _SHAPE_FREE_TEXT and entry["bounds"]:
-            texts.append({"text": entry["text"] or "", "bounds": entry["bounds"], "frame": False})
+            texts.append({"text": entry["text"] or "", "bounds": entry["bounds"],
+                          "frame": False, "z": _zorder(entry)})
         elif shape_type == _SHAPE_EXTERNAL_MARKER and flow_id is not None and entry["bounds"]:
             # Le petit « I » ou « E » que STAN dessine au bout de chaque flux de
             # frontière : un par flux, comme les imports/exports scindés d'OpenSankey.
             # Son texte est son nom, et sa forme une ellipse.
-            markers[flow_id] = {"bounds": entry["bounds"], "text": (entry["text"] or "").strip()}
+            markers[flow_id] = {"bounds": entry["bounds"],
+                                "text": (entry["text"] or "").strip(),
+                                "z": _zorder(entry)}
         elif shape_type == _SHAPE_FLOW_LINK and flow_id is not None:
             points = _polyline(entry["object"], entry["objects"])
             if len(points) >= 2:
                 polylines[flow_id] = points
+            flow_zorders[flow_id] = _zorder(entry)
             # Position du label le long du tracé : STAN la stocke par flux
             # (`m_fTextOffset`, en unités STAN depuis le DÉPART du lien — 15
             # partout dans Wastewater, d'où ses labels alignés en colonne).
@@ -655,7 +697,8 @@ def read_geometry(tables):
         return None
     return {"processes": processes, "polylines": polylines,
             "boundary": boundary, "texts": texts, "markers": markers,
-            "label_offsets": label_offsets}
+            "label_offsets": label_offsets,
+            "process_zorders": process_zorders, "flow_zorders": flow_zorders}
 
 
 def parse_stan(path, period_id=None, layer_id=None):
@@ -691,6 +734,7 @@ def parse_stan(path, period_id=None, layer_id=None):
                   for r in tables["LiteratureRef"]}
 
     periods = tables["Period"]
+    _backfill_period_codes(periods, tables["PeriodDefinition"])
     layers = tables["FlowLayer"]
     if layer_id is None and layers:
         layer_id = layers[0]["FlowLayerID"]
@@ -905,6 +949,7 @@ def parse_stan(path, period_id=None, layer_id=None):
     # en pointillés devient une zone de texte, comme les autres.
     geometry = read_geometry(tables)
     containers = {}
+    order_g_elements = None
 
     if geometry:
         DA_scale = _apply_stan_geometry(
@@ -912,6 +957,9 @@ def parse_stan(path, period_id=None, layer_id=None):
             sizing_of_link, geometry["processes"], geometry["polylines"],
             geometry["markers"], geometry["label_offsets"])
         containers = _text_containers(geometry["texts"])
+        order_g_elements = _order_g_elements(
+            geometry, nodes, containers, node_id_of_process, link_id_of_flow,
+            external_of_flow)
     else:
         try:
             DA_scale = sankey_layout.computeSankeyPosition(nodes, links, _default_setting())
@@ -919,6 +967,12 @@ def parse_stan(path, period_id=None, layer_id=None):
             # Positionnement best-effort : si l'algo échoue (graphe dégénéré),
             # on laisse le front relancer un auto-layout.
             DA_scale = 100.0
+
+    # Le nom du système MFA (« Balans 1 - debiet en COD ») devient le TITRE du
+    # diagramme : une zone de texte marquée is_title, centrée au-dessus du dessin.
+    title = _title_container(tables, nodes, containers)
+    if title is not None:
+        containers[title["id"]] = title
 
     # Stocks : un processus peut en porter un, avec son niveau et sa variation.
     stocks = _stock_values(
@@ -930,7 +984,7 @@ def parse_stan(path, period_id=None, layer_id=None):
             node["stock_shape_is_visible"] = True
 
     theme = _stan_theme(unit_code)
-    return {
+    result = {
         "version": "0.9",
         "nodes": nodes,
         "links": links,
@@ -952,12 +1006,92 @@ def parse_stan(path, period_id=None, layer_id=None):
         "grid_visible": False,
         "theme": theme,
     }
+    if order_g_elements:
+        # Ordre Z de STAN (`m_nZOrder`) : liste OpenSankey du 1ER PLAN vers le
+        # FOND (convention order_g_elements) — les fonds de processus passent
+        # DERRIÈRE les flux, comme dans STAN. Même mécanique que l'import e!Sankey.
+        result["order_g_elements"] = order_g_elements
+    return result
 
 
 def _html_escape(text):
     """Échappe un texte pour l'insérer dans le contenu HTML d'une zone de texte."""
     return (text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
                 .replace("\n", "<br/>"))
+
+
+def _order_g_elements(geometry, nodes, containers, node_id_of_process,
+                      link_id_of_flow, external_of_flow):
+    """Ordre Z des éléments importés : liste du 1ER PLAN vers le FOND, ou None.
+
+    Reconstruit depuis les `m_nZOrder` de STAN (plus grand = par-dessus), même
+    convention que l'import e!Sankey : tri décroissant, éléments sans zorder au
+    premier plan, émis seulement si le fichier en porte au moins un. Le nœud
+    externe « I »/« E » d'un flux hérite du zorder de son MARQUEUR (type 5).
+    """
+    entries = []
+    for proc_id, z in geometry["process_zorders"].items():
+        node_id = node_id_of_process.get(proc_id)
+        if node_id in nodes:
+            entries.append((node_id, z))
+    for flow_id, z in geometry["flow_zorders"].items():
+        link_id = link_id_of_flow.get(flow_id)
+        if link_id is not None:
+            entries.append((link_id, z))
+    for flow_id, marker in geometry["markers"].items():
+        node_id = external_of_flow.get(flow_id)
+        if node_id in nodes:
+            entries.append((node_id, marker.get("z", -1)))
+    # Les zones de texte sont émises dans l'ordre de `texts` (id_stan_text_<i>).
+    for i, item in enumerate(geometry["texts"]):
+        cid = "id_stan_text_%d" % i
+        if cid in containers:
+            entries.append((cid, item.get("z", -1)))
+
+    known = sorted([e for e in entries if e[1] >= 0], key=lambda e: -e[1])
+    if not known:
+        return None
+    return [e[0] for e in entries if e[1] < 0] + [e[0] for e in known]
+
+
+def _title_container(tables, nodes, containers):
+    """Le nom du système MFA en zone de texte-titre, ou None s'il n'y en a pas.
+
+    STAN porte le nom du modèle dans `MfaSystem.Name` (« Balans 1 - debiet en
+    COD ») ; chez nous le titre du diagramme est une zone de texte marquée
+    `is_title` (cf. Sankey.addTitle). Centré au-dessus du dessin, en gras.
+    """
+    rows = tables.get("MfaSystem") or []
+    name = str(rows[0].get("Name") or "").strip() if rows else ""
+    if not name or not nodes:
+        return None
+    xs = [n["x"] for n in nodes.values()]
+    ys = [n["y"] for n in nodes.values()] + \
+         [c["y"] for c in containers.values() if isinstance(c.get("y"), (int, float))]
+    width = max(300.0, 14.0 * len(name))
+    return {
+        "id": "drawing_title",
+        "is_title": True,
+        "name": name,
+        "title": name,
+        "content": "<b>" + _html_escape(name) + "</b>",
+        "x": (min(xs) + max(xs)) / 2.0 - width / 2.0,
+        "y": min(ys) - 70.0,
+        "label_width": width,
+        "label_height": 40.0,
+        "name_label_font_size": 24,
+        "name_label_bold": True,
+        "name_label_is_visible": True,
+        "transparent_border": True,
+        "color_visible": False,
+        "color": "#ffffff",
+        "shape_border_dashed": False,
+        "style": "default",
+        "tags": {},
+        "local": {},
+        "tiedToNode": False,
+        "attachedNodes": [],
+    }
 
 
 def _text_containers(texts):
@@ -1768,6 +1902,24 @@ def test_provenance_descriptions_et_matchcodes():
     assert link["value"]["data_source"] == "Rapport ADEME 2024"
 
 
+def test_backfill_period_codes():
+    # Sans PeriodCode, les tags de periodes derivent de l'annee de BeginDate
+    # (PeriodDefinition), numerotes dans l'ordre de la table.
+    periods = [
+        {"PeriodID": 1, "PeriodDefinitionID": 9, "PeriodCode": None},
+        {"PeriodID": 2, "PeriodDefinitionID": 9, "PeriodCode": None},
+        {"PeriodID": 3, "PeriodDefinitionID": 9, "PeriodCode": "explicite"},
+    ]
+    defs = [{"PeriodDefinitionID": 9, "BeginDate": "2006-01-01T00:00:00"}]
+    _backfill_period_codes(periods, defs)
+    assert [p["PeriodCode"] for p in periods] == ["2006", "2007", "explicite"]
+
+    # Sans annee lisible : on ne touche a rien (repli PeriodID en aval).
+    broken = [{"PeriodID": 4, "PeriodDefinitionID": 1, "PeriodCode": None}]
+    _backfill_period_codes(broken, [{"PeriodDefinitionID": 1, "BeginDate": "???"}])
+    assert broken[0]["PeriodCode"] is None
+
+
 def test_point_along_polyline():
     # L'offset court LE LONG du tracé : au-delà du premier segment, il tourne
     # avec le coude (sémantique de m_fTextOffset, cf. F48 de Wastewater).
@@ -1891,6 +2043,23 @@ def test_fixtures_stan_reelles():
         # Les noeuds d'import/export sont des ellipses nommees « I » et « E ».
         externals = [n for n in result["nodes"].values() if n["local"].get("shape") == "ellipse"]
         assert all(n["name"] in ("I", "E") for n in externals), path
+
+        # Ordre Z (m_nZOrder) : liste 1er plan -> fond, ids connus, et les
+        # PROCESSUS derriere les FLUX (la raison d'etre du zorder STAN).
+        order = result.get("order_g_elements")
+        assert order, path
+        known_ids = set(result["nodes"]) | set(result["links"]) | set(result["labels"])
+        assert set(order) <= known_ids, path
+        rank = {eid: i for i, eid in enumerate(order)}
+        process_ranks = [rank[n["id"]] for n in result["nodes"].values()
+                         if n["local"].get("shape") != "ellipse" and n["id"] in rank]
+        link_ranks = [rank[lid] for lid in result["links"] if lid in rank]
+        assert min(process_ranks) > max(link_ranks), path
+
+        # Le nom du systeme MFA devient le titre du diagramme.
+        title = result["labels"].get("drawing_title")
+        assert title is not None and title["is_title"] is True, path
+        assert title["name"], path
 
     # Le corpus doit exercer les deux formes routees : les equerres a UN coin
     # (F48...) et les detours multi-coudes (les 23 escaliers h-v-h de
