@@ -1015,6 +1015,12 @@ def parse_stan(path, period_id=None, layer_id=None):
             # La description libre du processus devient son infobulle.
             if proc.get("Description"):
                 nodes[nid]["tooltip_text"] = proc["Description"]
+            # `CalcBalance` décoché = processus EXCLU de l'équilibre entrée-sortie
+            # (sous-système, frontière…) : c'est exactement notre
+            # has_material_balance, la contrainte de bilan du solveur MFA.
+            # SQLite dit 0/1, le XML « true »/« false » ; absent = équilibré.
+            if str(proc.get("CalcBalance")).strip().lower() in ("0", "false"):
+                nodes[nid]["has_material_balance"] = False
         return nid
 
     external_of_flow = {}
@@ -1725,6 +1731,10 @@ def _stan_theme(unit_code=None):
         "shape_is_arrow": True,
         # Les pointes de flèche de STAN sont nettement plus allongées que notre défaut (10).
         "shape_arrow_size": 25,
+        # STAN dessine une tête d'office, même sur un filet : largeur mini de pointe
+        # posée ICI car le défaut applicatif est 0 (désactivé) depuis SA#304 — un
+        # défaut > 0 fragmentait l'éventail des diagrammes existants.
+        "shape_arrow_min_width": 10,
         # Le nom du flux, lu depuis `value.text_value` (le défaut de
         # `name_label_text_source` est déjà `custom`). STAN l'écrit à côté du tracé,
         # pas dessus — la valeur, elle, est sur le tracé, dans son ellipse.
@@ -2257,6 +2267,48 @@ def test_zmfa_incertitude_est_numerique():
     result = parse_stan(path)
     link = next(iter(result["links"].values()))
     assert link["value"]["data_uncertainty"] == 5.0
+
+
+def test_transcoeff_et_calcbalance():
+    # Un TC saisi devient une contrainte Ratio Flux ; CalcBalance decoche exclut
+    # le processus de l'equilibre entree-sortie (has_material_balance false).
+    import tempfile
+    import os
+    path = os.path.join(tempfile.mkdtemp(), "tc.smfa")
+    _build_minimal_smfa(path)
+    con = sqlite3.connect(path)
+    con.executescript(
+        """
+        ALTER TABLE Process ADD COLUMN CalcBalance INT;
+        UPDATE Process SET CalcBalance = 1;
+        UPDATE Process SET CalcBalance = 0 WHERE ProcessID = 3;
+        CREATE TABLE TransCoeff(TransCoeffID INT, FlowLayerID INT, PeriodID INT,
+            ProcessID INT, ProcessInputID INT, ProcessOutputID INT, TCUnitID INT,
+            LiteratureRefID INT, TCInput REAL, TCCalc REAL, TCUncertInput REAL,
+            TCUncertCalc REAL, TCUncertAbsolut REAL, CalculateTC INT, Remarks TEXT);
+        -- TC saisi 0.8 sur la sortie 20 (Flow B : Process 1 -> Process 2)...
+        INSERT INTO TransCoeff VALUES(1, 1, 1, 2, NULL, 20, NULL, NULL,
+            0.8, NULL, NULL, NULL, NULL, 0, NULL);
+        -- ... et un TC CALCULE (CalculateTC=1) qui ne doit PAS devenir contrainte.
+        INSERT INTO TransCoeff VALUES(2, 1, 1, 2, NULL, 20, NULL, NULL,
+            0.9, NULL, NULL, NULL, NULL, 1, NULL);
+        """
+    )
+    con.commit()
+    con.close()
+
+    result = parse_stan(path)
+    constraints = result.get("ratio_flux_constraints") or []
+    assert len(constraints) == 1
+    c = constraints[0]
+    assert c["origin"] == "Process 1" and c["destination"] == "Process 2"
+    assert c["origin_ref"] == "*" and c["destination_ref"] == "Process 1"
+    assert c["coef"] == 0.8
+    assert c["data_tag"] is None  # periode unique -> valeur plate, pas de tag
+
+    balances = {n["name"]: n.get("has_material_balance") for n in result["nodes"].values()}
+    assert balances["Process 2"] is False       # CalcBalance = 0
+    assert balances["Process 1"] is None        # equilibre par defaut : rien d'emis
 
 
 def test_backfill_period_codes():
