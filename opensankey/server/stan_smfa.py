@@ -116,6 +116,14 @@ _LINK_LABEL_START_OFFSET_PX = 20.0
 # décalage, le nom écrit sous le trait passe SOUS l'ellipse et se fait masquer.
 _NAME_BELOW_VALUE_PX = 14.0
 
+# Conversion des tailles de police STAN (points GDI, `m_TextProps.fo.Size`) vers
+# nos pixels monde. Calibrage EMPIRIQUE : la police par défaut de STAN (Arial 9)
+# doit tomber sur notre défaut de label (14 px), qui rend déjà les proportions
+# du diagramme — un fichier aux polices par défaut ne change donc pas d'aspect,
+# et les tailles personnalisées suivent proportionnellement.
+_FONT_PX_PER_POINT = 14.0 / 9.0
+_DEFAULT_LABEL_FONT_PX = 14.0
+
 # Rôles de ShapeType, déduits de la géométrie et des jointures d'Example.smfa
 # (STAN ne documente pas cette énumération).
 # STAN calibre ses cadres de texte sur SA police ; nous rendons le texte avec la nôtre,
@@ -650,10 +658,33 @@ def read_geometry(tables):
     # C'est lui qui met les fonds de processus DERRIÈRE les flux (Wastewater :
     # processus 2-19, flux 52+, textes libres au premier plan).
     process_zorders, flow_zorders = {}, {}
+    # Polices dessinées (`m_TextProps.fo`), par processus et par flux.
+    process_fonts, flow_fonts = {}, {}
 
     def _zorder(entry):
         z = nrbf.resolve(entry["object"].members.get("m_nZOrder"), entry["objects"])
         return z if isinstance(z, int) else -1
+
+    def _font(entry):
+        """Police du texte d'un shape (`m_TextProps.fo`), ou None.
+
+        `fo` est un System.Drawing.Font : Size en POINTS, Style en bitmask GDI
+        (1 = gras, 2 = italique — enum sérialisé, valeur dans `value__`).
+        """
+        props = nrbf.resolve(entry["object"].members.get("m_TextProps"), entry["objects"])
+        if not isinstance(props, nrbf.ClassRef):
+            return None
+        fo = nrbf.resolve(props.members.get("fo"), entry["objects"])
+        if not isinstance(fo, nrbf.ClassRef):
+            return None
+        size = nrbf.resolve(fo.members.get("Size"), entry["objects"])
+        if not isinstance(size, (int, float)) or size <= 0:
+            return None
+        style = nrbf.resolve(fo.members.get("Style"), entry["objects"])
+        if isinstance(style, nrbf.ClassRef):
+            style = nrbf.resolve(style.members.get("value__"), entry["objects"])
+        style = style if isinstance(style, int) else 0
+        return {"size": float(size), "bold": bool(style & 1), "italic": bool(style & 2)}
 
     for shape in tables.get("Shape") or []:
         entry = index.get(str(shape.get("ShapeGuid") or "").lower())
@@ -666,25 +697,27 @@ def read_geometry(tables):
         if shape_type == _SHAPE_PROCESS and process_id is not None and entry["bounds"]:
             processes[process_id] = entry["bounds"]
             process_zorders[process_id] = _zorder(entry)
+            process_fonts[process_id] = _font(entry)
         elif shape_type == _SHAPE_SYSTEM_BOUNDARY and entry["bounds"]:
             boundary = entry["bounds"]
             texts.append({"text": entry["text"] or "", "bounds": entry["bounds"],
-                          "frame": True, "z": _zorder(entry)})
+                          "frame": True, "z": _zorder(entry), "font": _font(entry)})
         elif shape_type == _SHAPE_FREE_TEXT and entry["bounds"]:
             texts.append({"text": entry["text"] or "", "bounds": entry["bounds"],
-                          "frame": False, "z": _zorder(entry)})
+                          "frame": False, "z": _zorder(entry), "font": _font(entry)})
         elif shape_type == _SHAPE_EXTERNAL_MARKER and flow_id is not None and entry["bounds"]:
             # Le petit « I » ou « E » que STAN dessine au bout de chaque flux de
             # frontière : un par flux, comme les imports/exports scindés d'OpenSankey.
             # Son texte est son nom, et sa forme une ellipse.
             markers[flow_id] = {"bounds": entry["bounds"],
                                 "text": (entry["text"] or "").strip(),
-                                "z": _zorder(entry)}
+                                "z": _zorder(entry), "font": _font(entry)}
         elif shape_type == _SHAPE_FLOW_LINK and flow_id is not None:
             points = _polyline(entry["object"], entry["objects"])
             if len(points) >= 2:
                 polylines[flow_id] = points
             flow_zorders[flow_id] = _zorder(entry)
+            flow_fonts[flow_id] = _font(entry)
             # Position du label le long du tracé : STAN la stocke par flux
             # (`m_fTextOffset`, en unités STAN depuis le DÉPART du lien — 15
             # partout dans Wastewater, d'où ses labels alignés en colonne).
@@ -698,7 +731,8 @@ def read_geometry(tables):
     return {"processes": processes, "polylines": polylines,
             "boundary": boundary, "texts": texts, "markers": markers,
             "label_offsets": label_offsets,
-            "process_zorders": process_zorders, "flow_zorders": flow_zorders}
+            "process_zorders": process_zorders, "flow_zorders": flow_zorders,
+            "process_fonts": process_fonts, "flow_fonts": flow_fonts}
 
 
 def parse_stan(path, period_id=None, layer_id=None):
@@ -960,6 +994,8 @@ def parse_stan(path, period_id=None, layer_id=None):
         order_g_elements = _order_g_elements(
             geometry, nodes, containers, node_id_of_process, link_id_of_flow,
             external_of_flow)
+        _apply_stan_fonts(geometry, nodes, links, containers, node_id_of_process,
+                          link_id_of_flow, external_of_flow)
     else:
         try:
             DA_scale = sankey_layout.computeSankeyPosition(nodes, links, _default_setting())
@@ -1054,6 +1090,49 @@ def _order_g_elements(geometry, nodes, containers, node_id_of_process,
     return [e[0] for e in entries if e[1] < 0] + [e[0] for e in known]
 
 
+def _apply_stan_fonts(geometry, nodes, links, containers, node_id_of_process,
+                      link_id_of_flow, external_of_flow):
+    """Applique les polices dessinées par STAN (`m_TextProps.fo`) aux labels.
+
+    Taille en points GDI convertie vers nos px monde (`_FONT_PX_PER_POINT`,
+    calibrage : Arial 9 = notre défaut 14 px). N'écrit que ce qui s'écarte du
+    défaut (taille différente, gras, italique) pour garder le JSON lean : un
+    fichier STAN aux polices par défaut sort strictement inchangé.
+
+    Un flux applique sa police à ses DEUX labels (valeur et nom) : STAN ne
+    distingue pas. Les zones de texte reçoivent la leur dans `local`, lue par
+    la boucle générique de ProtoElementPersistence.fromJSON, comme les nœuds.
+    """
+    def apply(local, prefixes, font):
+        if font is None:
+            return
+        px = round(font["size"] * _FONT_PX_PER_POINT, 1)
+        for prefix in prefixes:
+            if px != _DEFAULT_LABEL_FONT_PX:
+                local[prefix + "_font_size"] = px
+            if font["bold"]:
+                local[prefix + "_bold"] = True
+            if font["italic"]:
+                local[prefix + "_italic"] = True
+
+    for proc_id, font in geometry["process_fonts"].items():
+        node = nodes.get(node_id_of_process.get(proc_id))
+        if node is not None:
+            apply(node["local"], ("name_label",), font)
+    for flow_id, font in geometry["flow_fonts"].items():
+        link = links.get(link_id_of_flow.get(flow_id))
+        if link is not None:
+            apply(link["local"], ("value_label", "name_label"), font)
+    for flow_id, marker in geometry["markers"].items():
+        node = nodes.get(external_of_flow.get(flow_id))
+        if node is not None:
+            apply(node["local"], ("name_label",), marker.get("font"))
+    for i, item in enumerate(geometry["texts"]):
+        container = containers.get("id_stan_text_%d" % i)
+        if container is not None:
+            apply(container["local"], ("name_label",), item.get("font"))
+
+
 def _title_container(tables, nodes, containers):
     """Le nom du système MFA en zone de texte-titre, ou None s'il n'y en a pas.
 
@@ -1079,8 +1158,6 @@ def _title_container(tables, nodes, containers):
         "y": min(ys) - 70.0,
         "label_width": width,
         "label_height": 40.0,
-        "name_label_font_size": 24,
-        "name_label_bold": True,
         "name_label_is_visible": True,
         "transparent_border": True,
         "color_visible": False,
@@ -1088,7 +1165,8 @@ def _title_container(tables, nodes, containers):
         "shape_border_dashed": False,
         "style": "default",
         "tags": {},
-        "local": {},
+        # Dans `local` : lu par la boucle générique de ProtoElementPersistence.
+        "local": {"name_label_font_size": 24, "name_label_bold": True},
         "tiedToNode": False,
         "attachedNodes": [],
     }
@@ -2060,6 +2138,16 @@ def test_fixtures_stan_reelles():
         title = result["labels"].get("drawing_title")
         assert title is not None and title["is_title"] is True, path
         assert title["name"], path
+
+        # Polices : Arial 9 (le defaut STAN = notre defaut 14 px) n'emet RIEN ;
+        # seules les tailles personnalisees sortent (Wastewater : zone de texte
+        # en 11.25 pt -> 17.5 px). Verifie la conversion ET la parcimonie.
+        assert not any("name_label_font_size" in n["local"]
+                       for n in result["nodes"].values()), path
+        if "BalansSTANcheck" in path:
+            sizes = [c["local"].get("name_label_font_size")
+                     for c in result["labels"].values()]
+            assert 17.5 in sizes, sizes
 
     # Le corpus doit exercer les deux formes routees : les equerres a UN coin
     # (F48...) et les detours multi-coudes (les 23 escaliers h-v-h de
