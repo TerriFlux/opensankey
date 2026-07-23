@@ -34,8 +34,11 @@ import ipaddress
 import socket
 import tempfile
 import os
+import posixpath
 import json
+import re
 import shutil
+import zipfile
 from time import perf_counter
 from urllib.parse import urlparse
 
@@ -58,6 +61,7 @@ from flask import Response
 from flask import send_file
 from flask import send_from_directory
 from flask import session
+from werkzeug.utils import safe_join
 
 import SankeyExcelParser.su_trace as trace
 from SankeyExcelParser.io_base import IOExcel, IOJson
@@ -138,6 +142,11 @@ def write_process_status(log_filename, status):
     path = _process_status_path(log_filename)
     if not path:
         return
+    if status == PROCESS_STATUS_RUNNING:
+        # Un même logname est réutilisé d'un run à l'autre : sans ça, la cause de l'échec
+        # PRÉCÉDENT survivrait à un run qui repart, et un run réussi afficherait l'ancienne
+        # erreur si quoi que ce soit relisait le canal.
+        _clear_process_error(log_filename)
     try:
         with open(path, "w", encoding="utf-8") as f:
             f.write(status)
@@ -157,6 +166,58 @@ def read_process_status(log_filename):
             return f.read().strip() or None
     except OSError:
         return None
+
+
+# --- Cause machine-lisible d'un échec (SA#249 / mfa_problem#43) --------------
+# Le fichier de statut ne porte qu'un mot (running/finished/failed) et le client
+# le compare tel quel : y encoder du JSON casserait ce contrat. La CAUSE voyage
+# donc dans un fichier frère (<logname>.error), écrit par le thread juste avant
+# le statut d'échec, et exposé en plus (jamais à la place) du statut par
+# check_process. Un client qui l'ignore garde exactement l'ancien comportement.
+def _process_error_path(log_filename):
+    if not log_filename:
+        return None
+    return log_filename + ".error"
+
+
+def write_process_error(log_filename, error):
+    """
+    Écrit la cause de l'échec. `error` est un dict sérialisable ({code, message, details}),
+    typiquement MFAProblemError.to_dict(). Best-effort, comme le statut.
+    """
+    path = _process_error_path(log_filename)
+    if not path:
+        return
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(error, f, ensure_ascii=False)
+    except (OSError, TypeError, ValueError):
+        # Un échec d'écriture (ou une cause non sérialisable) ne doit pas masquer l'échec
+        # lui-même : le client retombe alors sur le message générique.
+        pass
+
+
+def read_process_error(log_filename):
+    """Relit la cause. None si absente/illisible — le client affiche alors le message générique."""
+    path = _process_error_path(log_filename)
+    if not path or not os.path.isfile(path):
+        return None
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return None
+
+
+def _clear_process_error(log_filename):
+    """Efface la cause d'un run précédent (appelé au passage en RUNNING)."""
+    path = _process_error_path(log_filename)
+    if not path:
+        return
+    try:
+        os.remove(path)
+    except OSError:
+        pass
 
 
 @opensankey.route("/")
@@ -193,6 +254,9 @@ def check_process():
                 # None tant que le thread n'a rien écrit (= traitement en cours) ;
                 # le client s'arrête sur 'finished'/'failed', plus sur le texte.
                 "status": read_process_status(logname),
+                # Cause de l'échec ({code, message, details}), quand le thread en a posé une
+                # (SA#249). None sinon : le client affiche alors son message générique.
+                "error": read_process_error(logname),
             }
             json_data = json.dumps(results_dict)
             # trace.logger.debug('dumps')
@@ -529,7 +593,16 @@ def launch_conversion():
                 # Pas de thread ici (chargement direct d'un exemple JSON) : on
                 # marque le statut terminé tout de suite pour arrêter le polling.
                 write_process_status(log_filename, PROCESS_STATUS_FINISHED)
-                return Response(response="{}", status=200, mimetype="application/json")
+                # Le statut voyage aussi dans la réponse : le client enchaîne
+                # alors directement sur retrieve_result au lieu d'attendre le
+                # premier tick de check_process (5 s d'attente sur un travail
+                # déjà terminé). Les autres formats renvoient {} et gardent le
+                # polling, leur conversion tournant dans un thread.
+                return Response(
+                    response=json.dumps({"status": PROCESS_STATUS_FINISHED}),
+                    status=200,
+                    mimetype="application/json",
+                )
                 # return handle_json_or_compressed(data_folder, exemple, input_file_name)
 
         elif input_format != 'example_excel' and input_format != 'example_json' and input_format != 'blob':
@@ -1359,24 +1432,210 @@ def _generate_excel_template(filepath, sheets, lang="fr"):
     wb.save(filepath)
 
 
-@opensankey.route("/menus/templates", methods=["POST"])
-def menus_templates():
+def templates_index_path(source):
     """
-    Renvoie l'index des modeles (templates).
+    Chemin de l'index d'une galerie, selon sa source.
 
-    Les modeles migres vivent dans le submodule SankeyData (env SANKEY_DATA,
-    sous-dossier templates/) ; repli sur MFAData/Modeles/Template/ tant que la
-    migration n'est pas deployee partout. Les chemins file_path / img_path de
-    l'index sont relatifs a la racine SANKEY_DATA (ex. templates/<diff>/...) et
-    sont servis : data via /opensankey/convert/launch (example_json), images via
-    /opensankey/menus/templates_asset/<path>.
+    - 'sankeydata' (defaut) : les modeles, dans le submodule SankeyData (env
+      SANKEY_DATA, sous-dossier templates/) ; repli sur MFAData/Modeles/Template/
+      tant que la migration n'est pas deployee partout.
+    - 'mfadata' : la sankeytheque, index a la racine de MFAData (env MFAData),
+      qui liste nos etudes publiees.
     """
+    if source == "mfadata":
+        mfa_data = os.environ.get("MFAData")
+        return os.path.join(mfa_data, "index.json") if mfa_data else None
     sankey_data = os.environ.get("SANKEY_DATA")
     index_path = os.path.join(sankey_data, "templates", "index.json") if sankey_data else None
     if not (index_path and os.path.exists(index_path)):
-        index_path = os.path.join(os.environ.get("MFAData"), "Modèles", "Template", "index.json")
+        mfa_data = os.environ.get("MFAData")
+        index_path = os.path.join(mfa_data, "Modèles", "Template", "index.json") if mfa_data else None
+    return index_path
+
+
+def templates_index_load(source):
+    """Charge l'index d'une galerie, ou None s'il n'existe pas."""
+    index_path = templates_index_path(source)
+    if not (index_path and os.path.exists(index_path)):
+        return None
     with open(index_path, encoding="utf-8") as file_index:
-        data_index = json.load(file_index)
+        return json.load(file_index)
+
+
+def esankey_corpus_dir():
+    """
+    Dossier du corpus e!Sankey pour la galerie locale de DEVELOPPEMENT (os#1281).
+
+    Les demos e!Sankey (et les cliparts tiers qu'elles embarquent) sont
+    PROPRIETAIRES : elles ne doivent JAMAIS etre committees ni publiees — le
+    corpus est transporte a la main sur les serveurs (jamais via git). La galerie
+    n'est donc active QUE si les DEUX conditions suivantes sont reunies :
+      - la variable d'environnement ESANKEY_CORPUS_DIR est definie cote serveur et
+        pointe un dossier existant (opt-in explicite du developpeur — aucune valeur
+        par defaut, pour ne rien exposer par accident), ET
+      - l'application tourne en mode debug (current_app.debug — poste de dev), OU
+        la requete vient d'un compte developpeur (is_developer_user — serveurs
+        deployes, ou le login-component est monte).
+
+    Si l'une manque, renvoie None : les routes /menus/templates et
+    /menus/templates_asset repondent alors 404 pour cette source, et le front
+    n'affiche meme pas la galerie (la source disparait). La fonctionnalite est donc
+    totalement inerte sans ESANKEY_CORPUS_DIR, et invisible hors comptes dev.
+    """
+    corpus = os.environ.get("ESANKEY_CORPUS_DIR")
+    if not corpus or not os.path.isdir(corpus):
+        return None
+    try:
+        if current_app.debug or is_developer_user():
+            return corpus
+    except Exception:
+        return None
+    return None
+
+
+# Suffixe de langue des demos e!Sankey : "Nom du modele [fr].sankey".
+_ESANKEY_NAME_RE = re.compile(r"^(?P<base>.+?)\s*\[(?P<lang>[A-Za-z]{2})\]\.sankey$")
+
+# Ordre de preference des variantes : langue servie par defaut et ordre des
+# boutons de langue sur la vignette.
+_ESANKEY_LANG_ORDER = ["en", "fr", "de", "es", "pt", "zh"]
+
+# Les demos traduites ne portent pas toutes le meme nom de base selon la langue
+# ("Goldmarkt 2013 [de]" = "Gold Market 2013 [en]") : table des noms traduits
+# vers le nom canonique (anglais), verifiee en comparant les diagrammes
+# (memes nombres de processus / flux / liens par groupe).
+_ESANKEY_TITLE_ALIASES = {
+    "Buslinie Fahrgastzaehlung": "Bus Passengers On_Off",
+    "Depuracao Cloro": "Effluent Gas Treatment",
+    "Depuracion Cloro": "Effluent Gas Treatment",
+    "Depuration de Chlore": "Effluent Gas Treatment",
+    "Rauchgasreinigung": "Effluent Gas Treatment",
+    "ELV Energiezyklus (pro version)": "EV Energy Cycle (pro version)",
+    "Einfache Verteilungen": "Set of Simple Branchouts",
+    "Energiebilanz für ein Land": "Energy Balance for a Country",
+    "Energiemanagement Firma Beispiel": "Energy Management Company",
+    "Erdoel (pro version)": "Petroleum (pro version)",
+    "Facility Management Krankenhaus": "Facility Management Hospital",
+    "Gestao da Energia Hospital": "Facility Management Hospital",
+    "Gestion Energetique Hopital (Example)": "Facility Management Hospital",
+    "Gestion de Energia Hospital": "Facility Management Hospital",
+    "Gebaeude Footprint": "Building Energy Footprint",
+    "Flujos Globales Fosforo": "Global Phosphorus Streams",
+    "Flux Globale Phosphore": "Global Phosphorus Streams",
+    "Fluxos Globais Fosforo": "Global Phosphorus Streams",
+    "Globale Phosphor Stroeme": "Global Phosphorus Streams",
+    "Goldmarkt 2013": "Gold Market 2013",
+    "KWK Krankenhaus": "CHP Hospital",
+    "Oxyfuel Verbrennung": "Oxy-fuel Combustion",
+    "Produktionskosten (pro version)": "Production Cost (pro version)",
+    "Prozess mit Bestandsaenderungen (pro version)": "Processes with Stocks (pro version)",
+}
+
+
+def esankey_local_index():
+    """
+    Genere a la volee l'index de la galerie locale e!Sankey (os#1281).
+
+    Une seule categorie ; les fichiers `.sankey` sont REGROUPES par diagramme :
+    les demos existent en plusieurs langues (suffixe "[xx]" du nom, parfois nom
+    de base traduit — voir _ESANKEY_TITLE_ALIASES). Chaque groupe donne UN
+    template : file_path = variante preferee (_ESANKEY_LANG_ORDER), et un champ
+    `variants` {lang: file_path} que le front affiche en petite liste de langues
+    sous la vignette. img_path pointe la preview.png embarquee dans le zip
+    (servie par templates_asset via le chemin virtuel "<modele>/preview.png").
+    Renvoie None si la galerie n'est pas active (voir esankey_corpus_dir).
+    """
+    corpus = esankey_corpus_dir()
+    if corpus is None:
+        return None
+    # canonical -> {lang: (file_path, base_traduit)}
+    groups = {}
+    for name in sorted(os.listdir(corpus)):
+        if not name.lower().endswith(".sankey"):
+            continue
+        if not os.path.isfile(os.path.join(corpus, name)):
+            continue
+        match = _ESANKEY_NAME_RE.match(name)
+        base = match.group("base").strip() if match else name[: -len(".sankey")]
+        lang = match.group("lang").lower() if match else "en"
+        canonical = _ESANKEY_TITLE_ALIASES.get(base, base)
+        # setdefault : en cas de doublon de langue improbable, le premier gagne.
+        groups.setdefault(canonical, {}).setdefault(lang, (name, base))
+    lang_rank = {lang: i for i, lang in enumerate(_ESANKEY_LANG_ORDER)}
+    templates = {}
+    for canonical in sorted(groups):
+        variants = groups[canonical]
+        ordered_langs = sorted(variants, key=lambda lg: lang_rank.get(lg, len(lang_rank)))
+        preferred = ordered_langs[0]
+        file_path = variants[preferred][0]
+        # Titre localise a partir du nom de base de la variante correspondante
+        # (le nom traduit quand il existe, sinon le canonique).
+        templates[canonical] = {
+            "title": {
+                "en": canonical,
+                "fr": variants.get("fr", (None, canonical))[1],
+            },
+            "file_path": file_path,
+            # file_path relatif a la racine du corpus (servi par templates_asset).
+            "img_path": file_path + "/preview.png",
+            "lang": preferred,
+            # Meme categorie que les modeles e!Sankey publies de SankeyData : dans
+            # le panneau consolide, tout finit sous l'onglet "e!Sankey".
+            "category": "esankey",
+            "variants": {lang: variants[lang][0] for lang in ordered_langs},
+        }
+    return {"categories": ["esankey"], "templates": templates}
+
+
+def templates_declared_assets(source):
+    """
+    Ensemble des chemins declares par l'index d'une galerie (file_path + img_path).
+
+    Sert de liste blanche a /menus/templates_asset. Indispensable pour 'mfadata' :
+    la racine MFAData contient aussi des dossiers non publies, une simple regle
+    de prefixe ne suffirait pas a les proteger.
+    """
+    data_index = templates_index_load(source)
+    if not data_index:
+        return set()
+    declared = set()
+    for template in (data_index.get("templates") or {}).values():
+        for key in ("file_path", "img_path"):
+            value = template.get(key)
+            if value:
+                declared.add(value.replace("\\", "/"))
+    return declared
+
+
+@opensankey.route("/menus/templates", methods=["POST"])
+def menus_templates():
+    """
+    Renvoie l'index d'une galerie : les modeles (source 'sankeydata', defaut) ou
+    la sankeytheque (source 'mfadata').
+
+    Les chemins file_path / img_path de l'index sont relatifs a la racine de la
+    source et sont servis : data via /opensankey/convert/launch (example_json,
+    parametre example_root), images via /opensankey/menus/templates_asset/<path>
+    (parametre source).
+    """
+    payload = request.get_json(silent=True) or {}
+    requested = payload.get("source")
+    # Galerie locale e!Sankey (dev-only) : index genere a la volee. 404 si la
+    # source n'est pas active (ESANKEY_CORPUS_DIR absente ou hors mode debug) —
+    # le front n'affiche alors rien pour cette source.
+    if requested == "esankey-local":
+        data_index = esankey_local_index()
+        if data_index is None:
+            abort(404)
+        return Response(
+            response=json.dumps(data_index), status=200, mimetype="application/json"
+        )
+    source = "mfadata" if requested == "mfadata" else "sankeydata"
+    data_index = templates_index_load(source)
+    if data_index is None:
+        # Pas d'index pour cette source (ex. MFAData absent d'un deploiement) :
+        # galerie vide plutot qu'une 500, le front n'affiche alors rien.
+        data_index = {"categories": [], "templates": {}}
     response = Response(response=json.dumps(data_index), status=200, mimetype="application/json")
     return response
 
@@ -1384,30 +1643,118 @@ def menus_templates():
 @opensankey.route("/menus/templates_asset/<path:asset>", methods=["GET"])
 def menus_templates_asset(asset):
     """
-    Sert un fichier (image de previsualisation, ...) depuis la racine SANKEY_DATA.
+    Sert un fichier d'une galerie : image de previsualisation, ou le modele
+    lui-meme (JSON, mais aussi .xlsx / .sankey / .zmfa, recuperes bruts et
+    parses par le front).
 
-    Le chemin `asset` est relatif a SANKEY_DATA (ex. templates/essential/image/
-    business_simple.png) ; send_from_directory neutralise les remontees de chemin.
+    Le chemin `asset` est relatif a la racine de la source : SANKEY_DATA pour les
+    modeles (defaut), MFAData pour la sankeytheque (?source=mfadata).
+    send_from_directory neutralise les remontees de chemin ; en plus, on n'accepte
+    que des chemins effectivement declares par l'index (liste blanche exacte),
+    pour ne rien exposer d'autre que le contenu publie.
     """
-    sankey_data = os.environ.get("SANKEY_DATA")
-    if not sankey_data:
+    requested = request.args.get("source")
+    # Galerie locale e!Sankey (dev-only, os#1281) : sert un `.sankey` du corpus.
+    # Actif uniquement si ESANKEY_CORPUS_DIR est definie ET en mode debug, sinon
+    # 404. On restreint aux fichiers `.sankey` et on neutralise toute remontee de
+    # chemin (normalisation + refus de "..", safe_join, send_from_directory).
+    if requested == "esankey-local":
+        corpus = esankey_corpus_dir()
+        if corpus is None:
+            abort(404)
+        normalized = posixpath.normpath(asset.replace("\\", "/"))
+        if (
+            normalized.startswith("/")
+            or normalized.startswith("../")
+            or ".." in normalized.split("/")
+        ):
+            abort(404)
+        # Vignette : chemin virtuel "<modele>.sankey/preview.png", la preview
+        # embarquee dans le zip e!Sankey est extraite a la volee.
+        if normalized.lower().endswith(".sankey/preview.png"):
+            model_rel = normalized[: -len("/preview.png")]
+            full_path = safe_join(corpus, model_rel)
+            if full_path is None or not os.path.isfile(full_path):
+                abort(404)
+            try:
+                with zipfile.ZipFile(full_path) as archive:
+                    preview = archive.read("Images/preview.png")
+            except (zipfile.BadZipFile, KeyError, OSError):
+                abort(404)
+            return Response(preview, status=200, mimetype="image/png")
+        if not normalized.lower().endswith(".sankey"):
+            abort(404)
+        full_path = safe_join(corpus, normalized)
+        if full_path is None or not os.path.isfile(full_path):
+            abort(404)
+        return send_from_directory(corpus, normalized)
+    source = "mfadata" if requested == "mfadata" else "sankeydata"
+    root = os.environ.get("MFAData" if source == "mfadata" else "SANKEY_DATA")
+    if not root:
         abort(404)
-    # Route GET publique : on ne sert que le contenu des modeles (templates/).
-    if not asset.replace("\\", "/").startswith("templates/"):
+    # Normaliser AVANT de filtrer, sinon "templates/../tests/x" passe la regle de
+    # prefixe (la chaine brute commence bien par "templates/") alors que le chemin
+    # reellement ouvert, lui, est normalise ensuite — et sort de templates/ tout en
+    # restant sous la racine, donc sans que safe_join / send_from_directory n'y
+    # voient une remontee. Le filtre doit porter sur le chemin final.
+    normalized = posixpath.normpath(asset.replace("\\", "/"))
+    if source == "mfadata":
+        if normalized not in templates_declared_assets("mfadata"):
+            abort(404)
+    # Modeles : tout SankeyData/templates/ est publiable, la regle de prefixe suffit.
+    elif not normalized.startswith("templates/"):
         abort(404)
-    return send_from_directory(sankey_data, asset)
+    if normalized.endswith(".json") or normalized.endswith(".json.gz"):
+        # L'index declare "x.json" alors que, le plus souvent, seul "x.json.gz"
+        # existe sur disque. handle_json_or_compressed applique la meme tolerance
+        # .json/.json.gz que convert/launch (avec compression a la volee mise en
+        # cache au premier acces) et renvoie le chemin a servir — sinon une
+        # Response 404 ou False.
+        #
+        # safe_join reste la ceinture de securite : send_from_directory
+        # neutralisait les remontees, pas os.path.join.
+        full_path = safe_join(root, normalized)
+        if full_path is None:
+            abort(404)
+        resolved = handle_json_or_compressed(full_path)
+        if not isinstance(resolved, str):
+            abort(404)
+        # Servi BRUT, sans Content-Encoding : le client degzippe lui-meme (regle
+        # etablie pour les portfolios, ou l'en-tete faisait double decompression).
+        # conditional=True ajoute ETag / Last-Modified, donc un 304 quand le
+        # navigateur a deja le modele.
+        return send_file(resolved, mimetype="application/gzip", conditional=True)
+    return send_from_directory(root, normalized)
+
+
+def is_developer_user():
+    """
+    Vrai si la requete vient d'un compte developpeur.
+
+    OpenSankey (open-source) ne depend pas du login-component : on interroge
+    flask_login s'il est la, sinon on refuse. Les routes gardees par ce test ne
+    sont utilisees que par SankeyApplication, ou le login-component est monte ;
+    OpenSankey autonome ne les appelle pas.
+    """
+    try:
+        from flask_login import current_user
+
+        return bool(getattr(current_user, "is_developer", False))
+    except Exception:
+        return False
 
 
 @opensankey.route("/menus/examples", methods=["POST"])
 def menus_examples():
     """
-    _summary_
+    Arborescence brute de MFAData (dossiers + fichiers), pour l'explorateur interne.
 
-    Returns
-    -------
-    :return: _description_
-    :rtype: _type_
+    Reserve aux comptes developpeur : c'est un parcours de notre repertoire de
+    travail, pas du contenu publie. Ce qui est publie passe par l'index
+    (/menus/templates?source=mfadata), qui fait liste blanche.
     """
+    if not is_developer_user():
+        abort(403)
     data_folder = os.environ.get("MFAData")
     menus = {}
     # try:
@@ -1490,6 +1837,29 @@ def menus_tutorials():
                 tutorials.append({"file": name, "title": title.replace("_", " ")})
     response = Response(response=json.dumps({"tutorials": tutorials}), status=200, mimetype="application/json")
     return response
+
+
+@opensankey.route("/stan_meta", methods=["POST"])
+def stan_meta():
+    """
+    Renvoie les périodes et couches (FlowLayer) d'un fichier STAN, sans le
+    convertir : le front s'en sert pour proposer le choix de couche avant
+    l'import (open_stan n'importe qu'UNE couche, la première à défaut).
+    """
+    try:
+        stan_input_file = request.files["file_content"]
+
+        tmp_dir = tempfile.mkdtemp()
+        stan_input_filename = os.path.join(tmp_dir, "input.stan")
+        stan_input_file.save(stan_input_filename)
+
+        meta = stan_smfa.list_periods_and_layers(stan_input_filename)
+        clean_file(stan_input_filename, "Clean_STAN")
+
+        return Response(response=json.dumps(meta), status=200, mimetype="application/json")
+    except Exception as e:
+        current_app.logger.error("STAN META | {0}".format(e))
+        abort(500)
 
 
 @opensankey.route("/open_stan", methods=["POST"])
