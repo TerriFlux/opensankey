@@ -41,7 +41,9 @@ de positions du module neutre sankey_layout.py.
 
 Périmètre v1 : nœuds (processus), flux et valeurs. Les incertitudes, couches
 substance/énergie multiples, stocks et coefficients de transfert ne sont pas
-encore rendus (valeurs = MFInput normalisée, repli sur MFCalc si mesure absente).
+encore rendus. Concepts MFA calqués sur MFASankey : MFInput (saisie) → data_value,
+MFCalc (réconciliée) → result_value ; l'affichage suit le résultat quand il existe,
+comme le diagramme STAN.
 
 Modèle de données STAN (tables SQLite = éléments XML) :
 - Process(ProcessID, ProcessType, Name) : ProcessType 1 = frontière de système
@@ -61,6 +63,7 @@ Modèle de données STAN (tables SQLite = éléments XML) :
 import base64
 import binascii
 import gzip
+import re
 import sqlite3
 import struct
 import xml.etree.ElementTree as ET
@@ -82,6 +85,7 @@ _TABLES = (
     "Process", "ProcessInput", "ProcessOutput", "Flow",
     "FlowValue", "Unit", "Period", "FlowLayer",
     "Diagram", "Shape", "DefaultUnit", "Stock",
+    "LiteratureRef", "MfaSystem", "PeriodDefinition",
 )
 
 # Un fichier STAN multi-périodes devient un groupe de tags de DONNÉES : une période
@@ -98,6 +102,28 @@ _PX_PER_STAN_UNIT = 5.0
 # mais l'ellipse doit rester assez grande pour contenir la lettre « I » ou « E ».
 _EXTERNAL_NODE_MIN_PX = 26.0
 
+# Marge entre le bord d'un flux vertical et son nom, écrit à sa droite comme STAN.
+_VERTICAL_NAME_PAD_PX = 5.0
+
+# Distance PAR DÉFAUT entre le nœud SOURCE et les labels d'un flux (valeur dans son
+# ellipse, nom en dessous). STAN stocke la vraie distance par flux (`m_fTextOffset`,
+# lue dans read_geometry) ; cette constante n'est que le repli des fichiers sans
+# géométrie. Un ancrage au milieu du tracé, lui, se disperse dès qu'il y a des coudes.
+_LINK_LABEL_START_OFFSET_PX = 20.0
+
+# Décalage du NOM sous l'ellipse de valeur : l'ellipse est centrée sur le tracé et
+# déborde dessous d'environ sa demi-hauteur (police 16 + marges 3) — sans ce
+# décalage, le nom écrit sous le trait passe SOUS l'ellipse et se fait masquer.
+_NAME_BELOW_VALUE_PX = 14.0
+
+# Conversion des tailles de police STAN (points GDI, `m_TextProps.fo.Size`) vers
+# nos pixels monde. Calibrage EMPIRIQUE : la police par défaut de STAN (Arial 9)
+# doit tomber sur notre défaut de label (14 px), qui rend déjà les proportions
+# du diagramme — un fichier aux polices par défaut ne change donc pas d'aspect,
+# et les tailles personnalisées suivent proportionnellement.
+_FONT_PX_PER_POINT = 14.0 / 9.0
+_DEFAULT_LABEL_FONT_PX = 14.0
+
 # Rôles de ShapeType, déduits de la géométrie et des jointures d'Example.smfa
 # (STAN ne documente pas cette énumération).
 # STAN calibre ses cadres de texte sur SA police ; nous rendons le texte avec la nôtre,
@@ -108,7 +134,14 @@ _TEXT_ZONE_PADDING_H = 1.45
 
 _SHAPE_PROCESS = 1
 _SHAPE_FLOW_LINK = 2
+# Sous-label de processus (un par processus, texte vide dans les fichiers — STAN
+# y dessine dynamiquement la valeur/balance) : rien d'exploitable, ignoré.
+_SHAPE_PROCESS_SUBLABEL = 4
 _SHAPE_EXTERNAL_MARKER = 5
+# La BOÎTE DU NOM d'un flux (« F01, BAW uit ») : un shape par flux, aux bounds
+# ABSOLUS — la position exacte où STAN dessine le nom, déplacements manuels
+# compris (les Anchor du corpus sont tous à offset 0 : bounds déjà finaux).
+_SHAPE_FLOW_NAME_LABEL = 6
 _SHAPE_FREE_TEXT = 7
 _SHAPE_SYSTEM_BOUNDARY = 8
 
@@ -248,12 +281,15 @@ def _polyline(link_obj, objects):
 
 
 def _orientation_from_polyline(points):
-    """Traduit un tracé STAN en `shape_orientation` OpenSankey.
+    """Traduit un tracé STAN SANS DÉTOUR en `shape_orientation` OpenSankey.
 
     STAN route ses flux à angle droit (le `HVLink` de sa bibliothèque de dessin).
     Un tracé dont tous les points partagent leur ordonnée est horizontal, tous leur
     abscisse est vertical ; sinon c'est une équerre, dont le nom dépend du premier
     segment. Renvoie None si le tracé est inexploitable, pour laisser le défaut.
+
+    Ne convient qu'aux tracés d'au plus UN coude : les détours (escaliers,
+    boucles) passent par le régime routé de `_route_from_polyline`.
     """
     if len(points) < 2:
         return None
@@ -279,6 +315,112 @@ def _orientation_from_polyline(points):
     return None
 
 
+def _simplify_polyline(points, eps=1e-3):
+    """Ôte d'un tracé STAN les points dupliqués et les sommets colinéaires.
+
+    Les tracés STAN traînent des points intermédiaires sans coude (« Racoyet -
+    WB 3-1 » : 4 points rigoureusement alignés) : les garder fabriquerait des
+    waypoints inutiles. Un sommet où le tracé REBROUSSE (produit scalaire
+    négatif) n'est pas colinéaire : c'est un vrai détour, on le garde.
+    """
+    if not points:
+        return []
+    out = [points[0]]
+    for p in points[1:]:
+        if abs(p[0] - out[-1][0]) < eps and abs(p[1] - out[-1][1]) < eps:
+            continue
+        out.append(p)
+    i = 1
+    while i < len(out) - 1:
+        (ax, ay), (bx, by), (cx, cy) = out[i - 1], out[i], out[i + 1]
+        ux, uy = bx - ax, by - ay
+        vx, vy = cx - bx, cy - by
+        norm = ((ux * ux + uy * uy) ** 0.5) * ((vx * vx + vy * vy) ** 0.5)
+        cross = ux * vy - uy * vx
+        dot = ux * vx + uy * vy
+        if norm > 0 and abs(cross) / norm < eps and dot > 0:
+            del out[i]
+        else:
+            i += 1
+    return out
+
+
+def _segment_axes(points, eps=1e-3):
+    """Axe de chaque segment du tracé : 'h', 'v', ou 'd' (diagonale libre)."""
+    axes = []
+    for (x0, y0), (x1, y1) in zip(points, points[1:]):
+        dx, dy = abs(x1 - x0), abs(y1 - y0)
+        if dx < eps and dy < eps:
+            continue
+        axes.append("h" if dy < eps else ("v" if dx < eps else "d"))
+    return axes
+
+
+def _dominant_axis(p0, p1):
+    """Axe dominant d'un segment quelconque (diagonale comprise)."""
+    return "h" if abs(p1[0] - p0[0]) >= abs(p1[1] - p0[1]) else "v"
+
+
+def _point_along_polyline(points, distance):
+    """Point à `distance` curviligne du départ du tracé, borné à son extrémité.
+
+    C'est la sémantique de `m_fTextOffset` : STAN mesure la position du label LE
+    LONG du tracé — un offset plus long que le premier segment place le label
+    après le coude (F48 : 15 unités sur un tracé qui descend de 10 puis tourne).
+    """
+    remaining = max(0.0, float(distance))
+    for (x0, y0), (x1, y1) in zip(points, points[1:]):
+        seg = ((x1 - x0) ** 2 + (y1 - y0) ** 2) ** 0.5
+        if seg > 0 and remaining <= seg:
+            t = remaining / seg
+            return (x0 + (x1 - x0) * t, y0 + (y1 - y0) * t)
+        remaining -= seg
+    return points[-1]
+
+
+def _route_from_polyline(points):
+    """Classe un tracé STAN : régime du lien OpenSankey et données associées.
+
+    Un tracé est ROUTÉ dès qu'il a AU MOINS UN coude orthogonal (h↔v) : ses
+    points intérieurs deviennent des `shape_waypoints`, et le régime routé en
+    mode droit dessine des angles à 90° EXACTS — la silhouette de STAN. Rendre
+    une équerre par le paramétrique `hv`/`vh`, comme d'abord fait, traçait
+    « bout, diagonale, bout » au lieu d'un coude net (cf. F48 de Wastewater).
+    C'est plus agressif que l'import e!Sankey (`hasOrthogonalTurn` route à
+    partir de DEUX coudes) : e!Sankey lisse ses tracés en courbes, où l'équerre
+    paramétrique est fidèle ; STAN route à angle droit.
+
+    Restent paramétriques : les tracés DROITS (hh/vv) ; et la droite LIBRE de
+    STAN (diagonale, 2 points) est rendue par un flux droit aux segments
+    d'attache quasi nuls plutôt que par une équerre.
+
+    Renvoie `{"kind": "routed", "waypoints": [...]}` (points en unités STAN),
+    `{"kind": "diagonal"|"parametric", "orientation": ...}`, ou None si le
+    tracé est inexploitable (le style garde alors son défaut).
+    """
+    pts = _simplify_polyline(points)
+    if len(pts) < 2:
+        return None
+    axes = _segment_axes(pts)
+    if not axes:
+        return None
+    turns = sum(1 for a, b in zip(axes, axes[1:]) if {a, b} == {"h", "v"})
+    if turns >= 1:
+        return {"kind": "routed", "waypoints": [(p[0], p[1]) for p in pts[1:-1]]}
+    if axes == ["d"]:
+        return {"kind": "diagonal",
+                "orientation": _dominant_axis(pts[0], pts[-1]) * 2}
+    if "d" in axes:
+        # Tracé mixte sans coude orthogonal (ex. h-d-h) : le rendu droit
+        # paramétrique — bout, diagonale, bout — est déjà sa silhouette. L'axe
+        # d'accroche à chaque extrémité est celui de son premier/dernier segment.
+        first = axes[0] if axes[0] != "d" else _dominant_axis(pts[0], pts[1])
+        last = axes[-1] if axes[-1] != "d" else _dominant_axis(pts[-2], pts[-1])
+        return {"kind": "parametric", "orientation": first + last}
+    orientation = _orientation_from_polyline(pts)
+    return {"kind": "parametric", "orientation": orientation} if orientation else None
+
+
 def _connector_to_leaf_process(rows, id_field, sub_field):
     """Associe chaque connecteur (entrée ou sortie de processus) au processus RÉEL.
 
@@ -302,6 +444,32 @@ def _connector_to_leaf_process(rows, id_field, sub_field):
             current = by_id[nxt]
         leaves[connector_id] = current["ProcessID"]
     return leaves
+
+
+def _backfill_period_codes(periods, period_definitions):
+    """Complète les `PeriodCode` absents depuis `PeriodDefinition` (BeginDate).
+
+    STAN définit ses périodes par une date de départ et une durée ; le code
+    (« 2006 ») est optionnel. Sans lui, les tags de données s'appelaient « 1 »,
+    « 2 »… : on dérive « <année>, <année+1>… » de l'année de BeginDate, en
+    numérotant dans l'ordre de la table pour chaque définition. Si aucune année
+    n'est lisible, on laisse le repli existant (PeriodID).
+    """
+    by_def = {}
+    for period in periods:
+        if period.get("PeriodCode"):
+            continue
+        definition = next(
+            (d for d in period_definitions
+             if d.get("PeriodDefinitionID") == period.get("PeriodDefinitionID")), None)
+        if definition is None:
+            continue
+        match = re.search(r"(\d{4})", str(definition.get("BeginDate") or ""))
+        if not match:
+            continue
+        rank = by_def.get(period.get("PeriodDefinitionID"), 0)
+        by_def[period.get("PeriodDefinitionID")] = rank + 1
+        period["PeriodCode"] = str(int(match.group(1)) + rank)
 
 
 def _period_tag_id(period):
@@ -331,9 +499,12 @@ def _stock_values(tables, node_id_of_process, periods, layer_id, display_factor,
     deux champs : `initial_stock` et `stock_variation`.
     """
     def scaled(row, prefix, unit_field):
-        raw = row.get(prefix + "Input")
+        # Réconciliée d'abord : c'est l'affichage de STAN. Contrairement aux flux
+        # (data_value/result_value), le JSON de stock n'a qu'un champ par grandeur
+        # (initial_stock/stock_variation) — pas de paire donnée/résultat où ventiler.
+        raw = row.get(prefix + "Calc")
         if raw is None:
-            raw = row.get(prefix + "Calc")
+            raw = row.get(prefix + "Input")
         try:
             # Ceinture et bretelles : un champ non listé dans _FLOAT_FIELDS arriverait
             # du XML sous forme de chaîne, et se multiplierait comme une séquence.
@@ -472,10 +643,13 @@ def read_geometry(tables):
     dans une table SQL — raison pour laquelle l'import les a longtemps ignorés et
     recalculé une mise en page à leur place.
 
-    Renvoie un dict `{"processes", "orientations", "boundary", "texts"}` en unités
-    STAN, ou `None` si le fichier n'expose pas de géométrie (document absent, version
-    de bibliothèque non reconnue). L'appelant retombe alors sur le placement calculé :
-    une mise en page illisible ne doit jamais faire échouer l'import.
+    Renvoie un dict `{"processes", "polylines", "boundary", "texts", "markers"}` en
+    unités STAN, ou `None` si le fichier n'expose pas de géométrie (document absent,
+    version de bibliothèque non reconnue). L'appelant retombe alors sur le placement
+    calculé : une mise en page illisible ne doit jamais faire échouer l'import.
+
+    `polylines` porte le tracé COMPLET de chaque flux : c'est `_route_from_polyline`
+    qui décide ensuite du régime (paramétrique, droite libre, ou routé par waypoints).
     """
     document = _document_bytes(tables)
     if document is None:
@@ -485,7 +659,42 @@ def read_geometry(tables):
     except (nrbf.NrbfError, struct.error, IndexError, KeyError):
         return None
 
-    processes, orientations, texts, markers, boundary = {}, {}, [], {}, None
+    processes, polylines, texts, markers, boundary = {}, {}, [], {}, None
+    label_offsets = {}
+    # Ordre Z global de chaque élément (`m_nZOrder` : plus grand = par-dessus).
+    # C'est lui qui met les fonds de processus DERRIÈRE les flux (Wastewater :
+    # processus 2-19, flux 52+, textes libres au premier plan).
+    process_zorders, flow_zorders = {}, {}
+    # Polices dessinées (`m_TextProps.fo`), par processus et par flux.
+    process_fonts, flow_fonts = {}, {}
+    # Boîtes du nom de chaque flux (ShapeType 6) : position absolue du label.
+    flow_name_labels = {}
+
+    def _zorder(entry):
+        z = nrbf.resolve(entry["object"].members.get("m_nZOrder"), entry["objects"])
+        return z if isinstance(z, int) else -1
+
+    def _font(entry):
+        """Police du texte d'un shape (`m_TextProps.fo`), ou None.
+
+        `fo` est un System.Drawing.Font : Size en POINTS, Style en bitmask GDI
+        (1 = gras, 2 = italique — enum sérialisé, valeur dans `value__`).
+        """
+        props = nrbf.resolve(entry["object"].members.get("m_TextProps"), entry["objects"])
+        if not isinstance(props, nrbf.ClassRef):
+            return None
+        fo = nrbf.resolve(props.members.get("fo"), entry["objects"])
+        if not isinstance(fo, nrbf.ClassRef):
+            return None
+        size = nrbf.resolve(fo.members.get("Size"), entry["objects"])
+        if not isinstance(size, (int, float)) or size <= 0:
+            return None
+        style = nrbf.resolve(fo.members.get("Style"), entry["objects"])
+        if isinstance(style, nrbf.ClassRef):
+            style = nrbf.resolve(style.members.get("value__"), entry["objects"])
+        style = style if isinstance(style, int) else 0
+        return {"size": float(size), "bold": bool(style & 1), "italic": bool(style & 2)}
+
     for shape in tables.get("Shape") or []:
         entry = index.get(str(shape.get("ShapeGuid") or "").lower())
         if entry is None:
@@ -496,26 +705,46 @@ def read_geometry(tables):
         process_id, flow_id = shape.get("ProcessID"), shape.get("FlowID")
         if shape_type == _SHAPE_PROCESS and process_id is not None and entry["bounds"]:
             processes[process_id] = entry["bounds"]
+            process_zorders[process_id] = _zorder(entry)
+            process_fonts[process_id] = _font(entry)
         elif shape_type == _SHAPE_SYSTEM_BOUNDARY and entry["bounds"]:
             boundary = entry["bounds"]
-            texts.append({"text": entry["text"] or "", "bounds": entry["bounds"], "frame": True})
+            texts.append({"text": entry["text"] or "", "bounds": entry["bounds"],
+                          "frame": True, "z": _zorder(entry), "font": _font(entry)})
         elif shape_type == _SHAPE_FREE_TEXT and entry["bounds"]:
-            texts.append({"text": entry["text"] or "", "bounds": entry["bounds"], "frame": False})
+            texts.append({"text": entry["text"] or "", "bounds": entry["bounds"],
+                          "frame": False, "z": _zorder(entry), "font": _font(entry)})
         elif shape_type == _SHAPE_EXTERNAL_MARKER and flow_id is not None and entry["bounds"]:
             # Le petit « I » ou « E » que STAN dessine au bout de chaque flux de
             # frontière : un par flux, comme les imports/exports scindés d'OpenSankey.
             # Son texte est son nom, et sa forme une ellipse.
-            markers[flow_id] = {"bounds": entry["bounds"], "text": (entry["text"] or "").strip()}
+            markers[flow_id] = {"bounds": entry["bounds"],
+                                "text": (entry["text"] or "").strip(),
+                                "z": _zorder(entry), "font": _font(entry)}
+        elif shape_type == _SHAPE_FLOW_NAME_LABEL and flow_id is not None and entry["bounds"]:
+            flow_name_labels[flow_id] = {"bounds": entry["bounds"], "font": _font(entry)}
         elif shape_type == _SHAPE_FLOW_LINK and flow_id is not None:
-            orientation = _orientation_from_polyline(
-                _polyline(entry["object"], entry["objects"]))
-            if orientation:
-                orientations[flow_id] = orientation
+            points = _polyline(entry["object"], entry["objects"])
+            if len(points) >= 2:
+                polylines[flow_id] = points
+            flow_zorders[flow_id] = _zorder(entry)
+            flow_fonts[flow_id] = _font(entry)
+            # Position du label le long du tracé : STAN la stocke par flux
+            # (`m_fTextOffset`, en unités STAN depuis le DÉPART du lien — 15
+            # partout dans Wastewater, d'où ses labels alignés en colonne).
+            offset = nrbf.resolve(entry["object"].members.get("m_fTextOffset"),
+                                  entry["objects"])
+            if isinstance(offset, (int, float)):
+                label_offsets[flow_id] = float(offset)
 
     if not processes:
         return None
-    return {"processes": processes, "orientations": orientations,
-            "boundary": boundary, "texts": texts, "markers": markers}
+    return {"processes": processes, "polylines": polylines,
+            "boundary": boundary, "texts": texts, "markers": markers,
+            "label_offsets": label_offsets,
+            "process_zorders": process_zorders, "flow_zorders": flow_zorders,
+            "process_fonts": process_fonts, "flow_fonts": flow_fonts,
+            "flow_name_labels": flow_name_labels}
 
 
 def parse_stan(path, period_id=None, layer_id=None):
@@ -545,8 +774,13 @@ def parse_stan(path, period_id=None, layer_id=None):
     pout_to_proc = _connector_to_leaf_process(
         tables["ProcessOutput"], "ProcessOutputID", "SubProcessOutputID")
     units = {r["UnitID"]: r for r in tables["Unit"]}
+    # Références bibliographiques : pointées par FlowValue.LiteratureRefID, elles
+    # deviennent la « Source » de la donnée du flux (champ data_source du lien).
+    literature = {r["LiteratureRefID"]: r.get("ReferenceText")
+                  for r in tables["LiteratureRef"]}
 
     periods = tables["Period"]
+    _backfill_period_codes(periods, tables["PeriodDefinition"])
     layers = tables["FlowLayer"]
     if layer_id is None and layers:
         layer_id = layers[0]["FlowLayerID"]
@@ -571,16 +805,20 @@ def parse_stan(path, period_id=None, layer_id=None):
     # défaut de la couche — sa légende dit « Flows [t/a] ». On normalise donc en SI
     # via `Factor`, puis on convertit vers cette unité d'affichage. Convertir en SI et
     # s'y arrêter, comme avant, écrivait « 190 000 » là où STAN écrit « 190 ».
+    #
+    # Les concepts MFA de STAN se calquent sur ceux d'MFASankey : `MFInput` (la
+    # valeur SAISIE) devient `data_value` (donnée collectée) et `MFCalc` (la
+    # RÉCONCILIÉE) devient `result_value` (résultat de réconciliation) — le même
+    # couple qu'après une réconciliation MFA chez nous. L'affichage (bandes,
+    # labels, échelle) suit le résultat quand il existe, comme le diagramme STAN
+    # (Wastewater : il dessine 97.9 là où la saisie dit 114).
     retained = []
     for fv in tables["FlowValue"]:
         if fv.get("PeriodID") not in period_ids:
             continue
         if layer_id is not None and fv.get("FlowLayerID") != layer_id:
             continue
-        raw = fv.get("MFInput")
-        if raw is None:
-            raw = fv.get("MFCalc")  # repli sur la valeur réconciliée
-        if raw is None:
+        if fv.get("MFInput") is None and fv.get("MFCalc") is None:
             continue
         retained.append(fv)
 
@@ -588,16 +826,31 @@ def parse_stan(path, period_id=None, layer_id=None):
 
     flow_values = {}
     for fv in retained:
-        raw = fv.get("MFInput")
-        if raw is None:
-            raw = fv.get("MFCalc")
         num_unit = units.get(fv.get("MFNumUnitID"))
         factor = num_unit["Factor"] if num_unit and num_unit.get("Factor") else 1.0
-        # L'arrondi ôte le bruit du double aller-retour de facteurs (114999.999... -> 115).
-        flow_values[(fv["PeriodID"], fv["FlowID"])] = round(raw * factor / display_factor, 6)
+        pair = {}
+        for stan_key, our_key in (("MFInput", "data"), ("MFCalc", "result")):
+            raw = fv.get(stan_key)
+            # L'arrondi ôte le bruit du double aller-retour de facteurs
+            # (114999.999... -> 115).
+            pair[our_key] = None if raw is None else round(raw * factor / display_factor, 6)
+        # Provenance de la valeur : la remarque libre de STAN devient l'hypothèse
+        # de la donnée, sa référence bibliographique devient la source.
+        pair["hypothesis"] = fv.get("Remarks") or None
+        pair["source"] = literature.get(fv.get("LiteratureRefID")) or None
+        flow_values[(fv["PeriodID"], fv["FlowID"])] = pair
+
+    _EMPTY_PAIR = {"data": None, "result": None, "hypothesis": None, "source": None}
+
+    def flow_pair(flow_id, pid):
+        return flow_values.get((pid, flow_id)) or _EMPTY_PAIR
 
     def flow_value(flow_id, pid):
-        return flow_values.get((pid, flow_id), 0.0)
+        """Valeur AFFICHÉE (résultat si présent, sinon donnée) : bandes et échelle."""
+        pair = flow_pair(flow_id, pid)
+        if pair["result"] is not None:
+            return pair["result"]
+        return pair["data"] if pair["data"] is not None else 0.0
 
     def flow_value_max(flow_id):
         """Valeur maximale sur les périodes : sert à dimensionner l'échelle et les bandes.
@@ -612,11 +865,23 @@ def parse_stan(path, period_id=None, layer_id=None):
 
     def node_id_for_process(proc_id):
         proc = processes[proc_id]
-        name = proc.get("Name") or ("Process %s" % proc_id)
+        # STAN affiche « MatchCode, Name » (« P09, Rioolput 09 ») pour les
+        # processus, comme pour les flux : on compose pareil.
+        name = proc.get("Name")
+        match_code = proc.get("MatchCode")
+        if match_code and name:
+            name = "%s, %s" % (match_code, name)
+        elif match_code:
+            name = match_code
+        elif not name:
+            name = "Process %s" % proc_id
         nid = sankey_layout.normalizeStringToValidId("proc_%s_%s" % (proc_id, name))
         node_id_of_process[proc_id] = nid
         if nid not in nodes:
             nodes[nid] = sankey_layout.create_json_node(nid, name)
+            # La description libre du processus devient son infobulle.
+            if proc.get("Description"):
+                nodes[nid]["tooltip_text"] = proc["Description"]
         return nid
 
     external_of_flow = {}
@@ -663,19 +928,49 @@ def parse_stan(path, period_id=None, layer_id=None):
         # getter calculé « source---cible », sans setter — mais dans `value.text_value`,
         # que `LinkDrawNameLabel` affiche quand `name_label_text_source` vaut `custom`
         # (son défaut). Il ne concurrence pas le label de valeur, qui passe par data_label.
+        # STAN affiche « MatchCode, Name » (« F43, Sanfors ») : on compose pareil —
+        # OpenSankey n'a pas de notion de nom court/long sur un flux.
         flow_name = fl.get("Name")
+        match_code = fl.get("MatchCode")
+        if match_code and flow_name:
+            flow_name = "%s, %s" % (match_code, flow_name)
+        elif match_code and not flow_name:
+            flow_name = match_code
         if flow_name:
             new_flow["value"]["text_value"] = flow_name
+        # La description libre du flux devient son infobulle.
+        if fl.get("Description"):
+            new_flow["tooltip_text"] = fl["Description"]
+
+        # Donnée + résultat, jamais fusionnés : `data_value` = MFInput (saisie),
+        # `result_value` = MFCalc (réconciliée) — les deux champs qu'MFASankey
+        # remplit lui-même après une réconciliation. Le front affiche le résultat
+        # quand il existe ; `create_json_flow` avait posé la valeur AFFICHÉE dans
+        # data_value, on la re-ventile ici.
+        def fill_value(value_json, pair):
+            if pair["result"] is not None:
+                value_json["result_value"] = pair["result"]
+                value_json["data_value"] = pair["data"]
+            else:
+                value_json["data_value"] = pair["data"] if pair["data"] is not None else 0.0
+            if pair["hypothesis"]:
+                value_json["data_hypothesis"] = pair["hypothesis"]
+            if pair["source"]:
+                value_json["data_source"] = pair["source"]
+
         if multi_period:
             # Une valeur par tag de période. L'arbre est reconstruit côté front à partir
             # du groupe `dataTags` ; le JSON n'y dépose que les feuilles.
             tree = {"datatag_group": _PERIOD_TAGG_ID}
             for period in selected_periods:
-                leaf = {"data_value": flow_value(fid, period["PeriodID"])}
+                leaf = {}
+                fill_value(leaf, flow_pair(fid, period["PeriodID"]))
                 if flow_name:
                     leaf["text_value"] = flow_name
                 tree[_period_tag_id(period)] = leaf
             new_flow["value"] = tree
+        elif period_ids:
+            fill_value(new_flow["value"], flow_pair(fid, period_ids[0]))
         links[new_flow["id"]] = new_flow
         link_id_of_flow[fid] = new_flow["id"]
         sizing_of_link[new_flow["id"]] = sizing_value
@@ -700,13 +995,20 @@ def parse_stan(path, period_id=None, layer_id=None):
     # en pointillés devient une zone de texte, comme les autres.
     geometry = read_geometry(tables)
     containers = {}
+    order_g_elements = None
 
     if geometry:
         DA_scale = _apply_stan_geometry(
             nodes, links, node_id_of_process, link_id_of_flow, external_of_flow,
-            sizing_of_link, geometry["processes"], geometry["orientations"],
-            geometry["markers"])
+            sizing_of_link, geometry["processes"], geometry["polylines"],
+            geometry["markers"], geometry["label_offsets"])
         containers = _text_containers(geometry["texts"])
+        order_g_elements = _order_g_elements(
+            geometry, nodes, containers, node_id_of_process, link_id_of_flow,
+            external_of_flow)
+        _apply_flow_name_label_boxes(geometry, links, link_id_of_flow)
+        _apply_stan_fonts(geometry, nodes, links, containers, node_id_of_process,
+                          link_id_of_flow, external_of_flow)
     else:
         try:
             DA_scale = sankey_layout.computeSankeyPosition(nodes, links, _default_setting())
@@ -714,6 +1016,12 @@ def parse_stan(path, period_id=None, layer_id=None):
             # Positionnement best-effort : si l'algo échoue (graphe dégénéré),
             # on laisse le front relancer un auto-layout.
             DA_scale = 100.0
+
+    # Le nom du système MFA (« Balans 1 - debiet en COD ») devient le TITRE du
+    # diagramme : une zone de texte marquée is_title, centrée au-dessus du dessin.
+    title = _title_container(tables, nodes, containers)
+    if title is not None:
+        containers[title["id"]] = title
 
     # Stocks : un processus peut en porter un, avec son niveau et sa variation.
     stocks = _stock_values(
@@ -725,7 +1033,7 @@ def parse_stan(path, period_id=None, layer_id=None):
             node["stock_shape_is_visible"] = True
 
     theme = _stan_theme(unit_code)
-    return {
+    result = {
         "version": "0.9",
         "nodes": nodes,
         "links": links,
@@ -747,12 +1055,165 @@ def parse_stan(path, period_id=None, layer_id=None):
         "grid_visible": False,
         "theme": theme,
     }
+    if order_g_elements:
+        # Ordre Z de STAN (`m_nZOrder`) : liste OpenSankey du 1ER PLAN vers le
+        # FOND (convention order_g_elements) — les fonds de processus passent
+        # DERRIÈRE les flux, comme dans STAN. Même mécanique que l'import e!Sankey.
+        result["order_g_elements"] = order_g_elements
+    return result
 
 
 def _html_escape(text):
     """Échappe un texte pour l'insérer dans le contenu HTML d'une zone de texte."""
     return (text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
                 .replace("\n", "<br/>"))
+
+
+def _order_g_elements(geometry, nodes, containers, node_id_of_process,
+                      link_id_of_flow, external_of_flow):
+    """Ordre Z des éléments importés : liste du 1ER PLAN vers le FOND, ou None.
+
+    Reconstruit depuis les `m_nZOrder` de STAN (plus grand = par-dessus), même
+    convention que l'import e!Sankey : tri décroissant, éléments sans zorder au
+    premier plan, émis seulement si le fichier en porte au moins un. Le nœud
+    externe « I »/« E » d'un flux hérite du zorder de son MARQUEUR (type 5).
+    """
+    entries = []
+    for proc_id, z in geometry["process_zorders"].items():
+        node_id = node_id_of_process.get(proc_id)
+        if node_id in nodes:
+            entries.append((node_id, z))
+    for flow_id, z in geometry["flow_zorders"].items():
+        link_id = link_id_of_flow.get(flow_id)
+        if link_id is not None:
+            entries.append((link_id, z))
+    for flow_id, marker in geometry["markers"].items():
+        node_id = external_of_flow.get(flow_id)
+        if node_id in nodes:
+            entries.append((node_id, marker.get("z", -1)))
+    # Les zones de texte sont émises dans l'ordre de `texts` (id_stan_text_<i>).
+    for i, item in enumerate(geometry["texts"]):
+        cid = "id_stan_text_%d" % i
+        if cid in containers:
+            entries.append((cid, item.get("z", -1)))
+
+    known = sorted([e for e in entries if e[1] >= 0], key=lambda e: -e[1])
+    if not known:
+        return None
+    return [e[0] for e in entries if e[1] < 0] + [e[0] for e in known]
+
+
+def _apply_flow_name_label_boxes(geometry, links, link_id_of_flow):
+    """Nom de chaque flux à sa position STAN EXACTE (boîte ShapeType 6).
+
+    La boîte du nom est un shape à part entière, aux bounds absolus : c'est la
+    position réellement dessinée par STAN, déplacements manuels compris. Elle
+    REMPLACE les heuristiques de placement (décalage depuis la source, nom à
+    droite d'un flux vertical) posées plus tôt. Ancre `start` + baseline
+    `middle` en mode absolu : le texte part du bord gauche de la boîte, centré
+    sur sa hauteur.
+    """
+    scale = _PX_PER_STAN_UNIT
+    for flow_id, label in geometry["flow_name_labels"].items():
+        link = links.get(link_id_of_flow.get(flow_id))
+        if link is None:
+            continue
+        x, y, _w, h = label["bounds"]
+        local = link["local"]
+        local["name_label_position_absolute"] = True
+        local["name_label_position_x"] = x * scale
+        local["name_label_position_y"] = (y + h / 2.0) * scale
+        # Les décalages heuristiques ne s'appliquent plus en mode absolu.
+        local.pop("name_label_horiz_shift", None)
+        local.pop("name_label_vert_shift", None)
+
+
+def _apply_stan_fonts(geometry, nodes, links, containers, node_id_of_process,
+                      link_id_of_flow, external_of_flow):
+    """Applique les polices dessinées par STAN (`m_TextProps.fo`) aux labels.
+
+    Taille en points GDI convertie vers nos px monde (`_FONT_PX_PER_POINT`,
+    calibrage : Arial 9 = notre défaut 14 px). N'écrit que ce qui s'écarte du
+    défaut (taille différente, gras, italique) pour garder le JSON lean : un
+    fichier STAN aux polices par défaut sort strictement inchangé.
+
+    Un flux applique sa police à ses DEUX labels (valeur et nom) : STAN ne
+    distingue pas. Les zones de texte reçoivent la leur dans `local`, lue par
+    la boucle générique de ProtoElementPersistence.fromJSON, comme les nœuds.
+    """
+    def apply(local, prefixes, font):
+        if font is None:
+            return
+        px = round(font["size"] * _FONT_PX_PER_POINT, 1)
+        for prefix in prefixes:
+            if px != _DEFAULT_LABEL_FONT_PX:
+                local[prefix + "_font_size"] = px
+            if font["bold"]:
+                local[prefix + "_bold"] = True
+            if font["italic"]:
+                local[prefix + "_italic"] = True
+
+    for proc_id, font in geometry["process_fonts"].items():
+        node = nodes.get(node_id_of_process.get(proc_id))
+        if node is not None:
+            apply(node["local"], ("name_label",), font)
+    for flow_id, font in geometry["flow_fonts"].items():
+        link = links.get(link_id_of_flow.get(flow_id))
+        if link is not None:
+            apply(link["local"], ("value_label", "name_label"), font)
+    # La boîte du nom (ShapeType 6) porte sa propre police : elle raffine celle
+    # du tracé pour le label de nom.
+    for flow_id, label in geometry["flow_name_labels"].items():
+        link = links.get(link_id_of_flow.get(flow_id))
+        if link is not None:
+            apply(link["local"], ("name_label",), label.get("font"))
+    for flow_id, marker in geometry["markers"].items():
+        node = nodes.get(external_of_flow.get(flow_id))
+        if node is not None:
+            apply(node["local"], ("name_label",), marker.get("font"))
+    for i, item in enumerate(geometry["texts"]):
+        container = containers.get("id_stan_text_%d" % i)
+        if container is not None:
+            apply(container["local"], ("name_label",), item.get("font"))
+
+
+def _title_container(tables, nodes, containers):
+    """Le nom du système MFA en zone de texte-titre, ou None s'il n'y en a pas.
+
+    STAN porte le nom du modèle dans `MfaSystem.Name` (« Balans 1 - debiet en
+    COD ») ; chez nous le titre du diagramme est une zone de texte marquée
+    `is_title` (cf. Sankey.addTitle). Centré au-dessus du dessin, en gras.
+    """
+    rows = tables.get("MfaSystem") or []
+    name = str(rows[0].get("Name") or "").strip() if rows else ""
+    if not name or not nodes:
+        return None
+    xs = [n["x"] for n in nodes.values()]
+    ys = [n["y"] for n in nodes.values()] + \
+         [c["y"] for c in containers.values() if isinstance(c.get("y"), (int, float))]
+    width = max(300.0, 14.0 * len(name))
+    return {
+        "id": "drawing_title",
+        "is_title": True,
+        "name": name,
+        "title": name,
+        "content": "<b>" + _html_escape(name) + "</b>",
+        "x": (min(xs) + max(xs)) / 2.0 - width / 2.0,
+        "y": min(ys) - 70.0,
+        "label_width": width,
+        "label_height": 40.0,
+        "name_label_is_visible": True,
+        "transparent_border": True,
+        "color_visible": False,
+        "color": "#ffffff",
+        "shape_border_dashed": False,
+        "style": "default",
+        "tags": {},
+        # Dans `local` : lu par la boucle générique de ProtoElementPersistence.
+        "local": {"name_label_font_size": 24, "name_label_bold": True},
+        "tiedToNode": False,
+        "attachedNodes": [],
+    }
 
 
 def _text_containers(texts):
@@ -814,8 +1275,53 @@ def _text_containers(texts):
     return containers
 
 
+def _link_has_name(link):
+    """Le flux porte-t-il un nom ? (`text_value` plat, ou dans les feuilles multi-période)."""
+    value = link.get("value") or {}
+    if value.get("text_value"):
+        return True
+    return any(isinstance(leaf, dict) and leaf.get("text_value")
+               for leaf in value.values())
+
+
+def _place_vertical_flux_labels(link, points, band_px):
+    """Labels d'un flux VERTICAL, à la façon de STAN.
+
+    STAN écrit toujours ses textes à l'horizontale : la valeur reste dans son
+    ellipse SUR le flux mais ne pivote pas avec lui, et le nom (les « Flow
+    Properties ») s'écrit À DROITE du tracé, à mi-hauteur. Chez nous, par
+    défaut, `value_label_on_path` couche le texte le long du tracé (un textPath
+    suit sa direction), et le nom se pose sous le point de départ.
+
+    Trois attributs modernes suffisent côté valeur : hors tracé (`on_path`),
+    centré (`vert: middle` — le `horiz: middle` par défaut ancre déjà au milieu
+    du lien), sans repositionnement automatique (`pos_auto`). Le nom passe en
+    position ABSOLUE (ancre `start`, baseline `middle` : le texte part vers la
+    droite depuis le point donné), calculée sur la polyligne STAN : bord droit
+    de la bande + marge, à mi-hauteur du tracé.
+    """
+    local = link["local"]
+    local["value_label_on_path"] = False
+    local["value_label_vert"] = "middle"
+    local["value_label_pos_auto"] = False
+    # Le style ancre les labels au DÉPART du lien avec un décalage en x (flux
+    # horizontaux) : sur un flux vertical ce décalage pousserait l'ellipse hors
+    # de la bande — ici elle reste centrée sur le tracé.
+    local["value_label_horiz"] = "middle"
+    local["value_label_horiz_shift"] = 0
+    if not (points and _link_has_name(link)):
+        return
+    xs = [p[0] for p in points]
+    ys = [p[1] for p in points]
+    local["name_label_position_absolute"] = True
+    local["name_label_position_x"] = ((min(xs) + max(xs)) / 2.0) * _PX_PER_STAN_UNIT \
+        + band_px / 2.0 + _VERTICAL_NAME_PAD_PX
+    local["name_label_position_y"] = ((min(ys) + max(ys)) / 2.0) * _PX_PER_STAN_UNIT
+
+
 def _apply_stan_geometry(nodes, links, node_id_of_process, link_id_of_flow,
-                         external_of_flow, sizing_of_link, proc_bounds, orientations, markers):
+                         external_of_flow, sizing_of_link, proc_bounds, polylines,
+                         markers, label_offsets):
     """Pose les positions, tailles et tracés dessinés par l'utilisateur dans STAN.
 
     Renvoie l'échelle (`user_scale`) du front. Celle-ci est choisie pour qu'aucune
@@ -861,12 +1367,35 @@ def _apply_stan_geometry(nodes, links, node_id_of_process, link_id_of_flow,
             bounds = marker["bounds"]
             node["y"] = (bounds[1] + bounds[3] / 2.0) * scale
 
-    # L'empilement des flux d'un côté suit l'ordre de la liste : on la trie par
-    # l'ordonnée du nœud d'en face, pour retrouver l'ordre vertical de STAN. Sans cela
-    # les décalages calculés ci-dessous seraient justes mais attribués au mauvais flux.
+    # Régime de chaque flux, décidé sur son tracé complet (cf. _route_from_polyline).
+    routes = {}
+    for flow_id, points in polylines.items():
+        route = _route_from_polyline(points)
+        if route is not None:
+            routes[flow_id] = route
+    flow_of_link = {lid: fid for fid, lid in link_id_of_flow.items()}
+
+    # L'empilement des flux d'un côté suit l'ordre de la liste : on la trie pour
+    # retrouver l'ordre vertical de STAN. La clé d'un flux est sa POLYLIGNE lue
+    # depuis le nœud en s'en éloignant (tuple d'ordonnées) : le point d'attache
+    # d'abord, puis chaque coude. STAN fait converger les tracés qui fusionnent
+    # (F43/F44/F49 → P09 dans Wastewater : même point final (183, 15) pour tous),
+    # et c'est en remontant la route que l'ordre apparaît — le flux DIRECT (tuple
+    # préfixe, plus court) passe devant, puis chacun se départage sur le coude de
+    # son propre étage. Repli sans tracé : l'ordonnée du nœud d'en face.
+    def _facing_key(link_id, opposite_key, from_end):
+        pts = _simplify_polyline(polylines.get(flow_of_link.get(link_id)) or [])
+        if len(pts) >= 2:
+            seq = reversed(pts) if from_end else pts
+            # Arrondi au 1/10 px : les coordonnées STAN sont des float32, et leur
+            # bruit (7e chiffre) suffirait sinon à inverser deux tuples égaux à
+            # l'œil — c'est lui qui décidait de l'ordre au lieu du coude suivant.
+            return tuple(round(p[1] * scale, 1) for p in seq)
+        return (nodes[links[link_id][opposite_key]]["y"],)
+
     for node in nodes.values():
-        node["inputLinksId"].sort(key=lambda lid: nodes[links[lid]["idSource"]]["y"])
-        node["outputLinksId"].sort(key=lambda lid: nodes[links[lid]["idTarget"]]["y"])
+        node["inputLinksId"].sort(key=lambda lid: _facing_key(lid, "idSource", True))
+        node["outputLinksId"].sort(key=lambda lid: _facing_key(lid, "idTarget", False))
         node["links_order"] = node["inputLinksId"] + node["outputLinksId"]
 
     def attachment_center(process_node, link_id, side, box_height):
@@ -929,7 +1458,14 @@ def _apply_stan_geometry(nodes, links, node_id_of_process, link_id_of_flow,
         # On aligne les CENTRES, pas les bords : un nœud se positionne par son coin
         # haut-gauche, mais c'est le milieu de sa bande qui doit tomber en face du
         # milieu de la bande du processus, sans quoi le flux d'import arrive en biais.
-        if facing is None:
+        axes = _segment_axes(_simplify_polyline(polylines.get(flow_id) or []))
+        if facing is None or axes != ["h"]:
+            # L'alignement sur la bande du processus n'a de sens que pour un flux
+            # DROIT HORIZONTAL : c'est lui qui doit arriver à plat. Pour tout
+            # autre tracé (routé, équerre vh comme F48, vertical, diagonale), le
+            # marqueur STAN est la position fidèle — l'alignement arrachait le
+            # nœud « I »/« E » de son marqueur (F43/F44/F49 empilés devant P09,
+            # E de F48 remonté à la hauteur de son processus, équerre écrasée).
             center = (bounds[1] + bounds[3] / 2.0) * scale
         else:
             side = "inputLinksId" if is_import else "outputLinksId"
@@ -942,10 +1478,51 @@ def _apply_stan_geometry(nodes, links, node_id_of_process, link_id_of_flow,
             center = attachment_center(facing, link_id, side, box_height)
         node["y"] = center - height / 2.0
 
-    for flow_id, orientation in orientations.items():
+    # Application du régime décidé par _route_from_polyline. Un flux ROUTÉ ne
+    # reçoit PAS d'orientation : en régime routé le front la déduit de la route
+    # (cf. NOTE-WAYPOINTS.md), et `shape_waypoints` — nom moderne, sans alias
+    # legacy — est relu par la boucle générique de ProtoElementPersistence.fromJSON.
+    for flow_id, route in routes.items():
         link = links.get(link_id_of_flow.get(flow_id))
-        if link is not None:
-            link["local"]["orientation"] = orientation
+        if link is None:
+            continue
+        if route["kind"] == "routed":
+            link["local"]["shape_waypoints"] = [
+                {"x": x * scale, "y": y * scale} for x, y in route["waypoints"]]
+            # Segments d'attache quasi nuls, comme l'import e!Sankey : le tracé
+            # part droit du nœud vers son premier waypoint.
+            link["local"]["left_horiz_shift"] = 0.01
+            link["local"]["right_horiz_shift"] = 0.01
+        else:
+            link["local"]["orientation"] = route["orientation"]
+            if route["kind"] == "diagonal":
+                # Droite libre STAN : en rendu droit le tracé paramétrique est
+                # bout - diagonale - bout ; des bouts quasi nuls laissent la
+                # diagonale seule, comme STAN la dessine.
+                link["local"]["left_horiz_shift"] = 0.01
+                link["local"]["right_horiz_shift"] = 0.01
+            if route["orientation"] == "vv":
+                _place_vertical_flux_labels(
+                    link, polylines.get(flow_id) or [], band_of.get(link["id"], 0.0))
+                continue
+        # Distance du label au nœud source : la VRAIE, lue dans le fichier
+        # (`m_fTextOffset`, en unités STAN LE LONG du tracé). On marche la
+        # polyligne sur cette distance — l'offset suit donc les coudes (F48 :
+        # 15 unités sur un tracé qui descend de 10 puis tourne à droite) — et le
+        # point atteint devient un décalage (dx, dy) relatif au départ du lien,
+        # qui continue ainsi de suivre le nœud source. Le nom suit, sous l'ellipse.
+        offset = label_offsets.get(flow_id)
+        pts = _simplify_polyline(polylines.get(flow_id) or [])
+        if offset is None or len(pts) < 2:
+            continue
+        px, py = _point_along_polyline(pts, offset)
+        dx = round((px - pts[0][0]) * scale, 3)
+        dy = round((py - pts[0][1]) * scale, 3)
+        local = link["local"]
+        local["value_label_horiz_shift"] = dx
+        local["value_label_vert_shift"] = dy
+        local["name_label_horiz_shift"] = dx
+        local["name_label_vert_shift"] = dy + _NAME_BELOW_VALUE_PX
 
     if not ky or ky <= 0:
         return 100.0
@@ -978,15 +1555,34 @@ def _stan_theme(unit_code=None):
         # pas dessus — la valeur, elle, est sur le tracé, dans son ellipse.
         "name_label_is_visible": True,
         "name_label_color": "#000000",
-        # STAN écrit le nom du flux SOUS son tracé, et la valeur dessus, dans l'ellipse.
+        # STAN place les DEUX labels à distance constante du nœud SOURCE : l'ellipse
+        # de valeur sur le tracé, le nom juste en dessous, alignés d'un flux à
+        # l'autre. Chez nous : ancrage hors tracé au DÉPART du lien (`horiz: left`,
+        # ancre posée sur le nœud source) + décalage constant (`horiz_shift`).
+        # Un ancrage au milieu (`middle`, le défaut) tombe dans les coudes des flux
+        # routés et disperse les labels. `pos_auto` est coupé : il déplacerait le
+        # label au-dessus/en-dessous dès que la police dépasse la bande, alors que
+        # STAN garde l'ellipse SUR le trait et le nom DESSOUS, même pour un filet.
         "name_label_vert": "bottom",
         "name_label_on_path": False,
+        "name_label_horiz": "left",
+        "name_label_horiz_shift": _LINK_LABEL_START_OFFSET_PX,
+        "name_label_vert_shift": _NAME_BELOW_VALUE_PX,
+        "name_label_pos_auto": False,
+        # STAN écrit les noms de flux sur UNE ligne ; notre boîte de label par
+        # défaut (150 px) césure « F49, Sanitair zone appret » en pleine largeur.
+        "name_label_box_width": 400,
         "value_label_is_visible": True,
-        "value_label_on_path": True,
+        "value_label_on_path": False,
+        "value_label_horiz": "left",
+        "value_label_horiz_shift": _LINK_LABEL_START_OFFSET_PX,
+        "value_label_vert": "middle",
+        "value_label_pos_auto": False,
         "value_label_color": "#000000",
-        # STAN écrit des entiers, jamais de décimales.
-        "value_label_custom_digit": True,
-        "value_label_nb_digit": 0,
+        # STAN affiche 3 chiffres significatifs (ses labels dessinés, `m_sText` :
+        # « 1,400 », « 336 », « 87.6 », « 0.0100 ») — pas un nombre fixe de décimales.
+        "value_label_significant_digits": True,
+        "value_label_nb_significant_digits": 3,
         # L'ellipse blanche à liseré noir.
         "value_label_background_visible": True,
         "value_label_background_type": "ellipse",
@@ -1327,6 +1923,145 @@ def test_orientation_from_polyline():
     assert _orientation_from_polyline([(f32(50.0), 45.0), (f32(50.000004), 68.0)]) == "vv"
 
 
+def test_route_from_polyline():
+    # Tracés droits : paramétrique hh/vv.
+    assert _route_from_polyline([(0, 5), (20, 5)]) == {"kind": "parametric", "orientation": "hh"}
+    assert _route_from_polyline([(5, 0), (5, 20)]) == {"kind": "parametric", "orientation": "vv"}
+
+    # UN coude (équerre) : ROUTÉ, le coin devient un waypoint — le régime routé en
+    # mode droit dessine un angle à 90° exact, la silhouette de STAN (F48). Le
+    # paramétrique hv/vh traçait « bout, diagonale, bout ».
+    assert _route_from_polyline([(0, 0), (10, 0), (10, 20)]) == \
+        {"kind": "routed", "waypoints": [(10, 0)]}
+    assert _route_from_polyline([(0, 0), (0, 20), (10, 20)]) == \
+        {"kind": "routed", "waypoints": [(0, 20)]}
+
+    # DEUX coudes (escalier h-v-h) : routé aussi, tous les points intérieurs.
+    # C'est le motif dominant de BalansSTANcheck-Wastewater (23/48 flux).
+    route = _route_from_polyline([(0, 0), (10, 0), (10, 20), (30, 20)])
+    assert route == {"kind": "routed", "waypoints": [(10, 0), (10, 20)]}
+
+    # Boucle qui repart en arrière (h-v-h à rebours) : routé aussi.
+    route = _route_from_polyline([(0, 0), (10, 0), (10, 20), (-30, 20)])
+    assert route["kind"] == "routed"
+
+    # Droite DIAGONALE libre (2 points) : flux droit, pas une équerre.
+    assert _route_from_polyline([(0, 0), (30, 10)]) == {"kind": "diagonal", "orientation": "hh"}
+    assert _route_from_polyline([(0, 0), (10, 30)]) == {"kind": "diagonal", "orientation": "vv"}
+
+    # Tracé mixte sans détour (h puis diagonale puis h) : paramétrique hh — le rendu
+    # droit (bout - diagonale - bout) est déjà sa silhouette.
+    assert _route_from_polyline([(0, 0), (5, 0), (25, 10), (30, 10)]) == \
+        {"kind": "parametric", "orientation": "hh"}
+
+    # Points intermédiaires colinéaires : simplifiés, pas de faux waypoints
+    # (« Racoyet - WB 3-1 » : 4 points rigoureusement alignés → flux droit).
+    assert _route_from_polyline([(0, 5), (8, 5), (14, 5), (20, 5)]) == \
+        {"kind": "parametric", "orientation": "hh"}
+
+    # Tracé inexploitable : None, le style garde son défaut.
+    assert _route_from_polyline([]) is None
+    assert _route_from_polyline([(1, 1)]) is None
+
+
+def test_mfinput_et_mfcalc_deviennent_donnee_et_resultat():
+    # Mapping des concepts MFA : MFInput (saisie) -> data_value, MFCalc
+    # (reconciliee) -> result_value, comme apres une reconciliation MFASankey.
+    # L'affichage (sommes des noeuds, dimensionnement) suit le resultat.
+    import tempfile
+    import os
+    path = os.path.join(tempfile.mkdtemp(), "calc.smfa")
+    _build_minimal_smfa(path)
+    con = sqlite3.connect(path)
+    con.execute("UPDATE FlowValue SET MFCalc = 200.0 WHERE FlowID = 0")  # 200 t vs 250 t saisi
+    con.commit()
+    con.close()
+
+    result = parse_stan(path)
+    link = next(lk for lk in result["links"].values()
+                if lk["value"].get("result_value") is not None)
+    assert link["value"]["data_value"] == 250000.0    # la saisie reste la donnee
+    assert link["value"]["result_value"] == 200000.0  # la reconciliee est le resultat
+    assert result["nodes"][link["idSource"]]["output_value"] == 200000.0
+    # L'autre flux, non reconcilie, garde sa valeur plate sans result_value.
+    other = next(lk for lk in result["links"].values() if lk is not link)
+    assert other["value"]["data_value"] == 115000.0
+    assert "result_value" not in other["value"]
+
+
+def test_provenance_descriptions_et_matchcodes():
+    # MatchCode -> « P1, Process 1 » (noeuds comme flux), Description -> infobulle,
+    # Remarks -> data_hypothesis, LiteratureRef -> data_source.
+    import tempfile
+    import os
+    path = os.path.join(tempfile.mkdtemp(), "prov.smfa")
+    _build_minimal_smfa(path)
+    con = sqlite3.connect(path)
+    con.executescript(
+        """
+        ALTER TABLE Process ADD COLUMN MatchCode TEXT;
+        ALTER TABLE Process ADD COLUMN Description TEXT;
+        ALTER TABLE Flow ADD COLUMN Description TEXT;
+        ALTER TABLE FlowValue ADD COLUMN Remarks TEXT;
+        ALTER TABLE FlowValue ADD COLUMN LiteratureRefID INT;
+        CREATE TABLE LiteratureRef(LiteratureRefID INT, ReferenceText TEXT);
+        UPDATE Process SET MatchCode = 'P1', Description = 'Un four' WHERE ProcessID = 2;
+        UPDATE Flow SET Description = 'Koelwater' WHERE FlowID = 1;
+        UPDATE FlowValue SET Remarks = 'estimation haute', LiteratureRefID = 7 WHERE FlowID = 1;
+        INSERT INTO LiteratureRef VALUES(7, 'Rapport ADEME 2024');
+        """
+    )
+    con.commit()
+    con.close()
+
+    result = parse_stan(path)
+    node = next(n for n in result["nodes"].values() if n["name"] == "P1, Process 1")
+    assert node["tooltip_text"] == "Un four"
+    link = next(lk for lk in result["links"].values()
+                if lk["value"].get("text_value") == "Flow B")
+    assert link["tooltip_text"] == "Koelwater"
+    assert link["value"]["data_hypothesis"] == "estimation haute"
+    assert link["value"]["data_source"] == "Rapport ADEME 2024"
+
+
+def test_backfill_period_codes():
+    # Sans PeriodCode, les tags de periodes derivent de l'annee de BeginDate
+    # (PeriodDefinition), numerotes dans l'ordre de la table.
+    periods = [
+        {"PeriodID": 1, "PeriodDefinitionID": 9, "PeriodCode": None},
+        {"PeriodID": 2, "PeriodDefinitionID": 9, "PeriodCode": None},
+        {"PeriodID": 3, "PeriodDefinitionID": 9, "PeriodCode": "explicite"},
+    ]
+    defs = [{"PeriodDefinitionID": 9, "BeginDate": "2006-01-01T00:00:00"}]
+    _backfill_period_codes(periods, defs)
+    assert [p["PeriodCode"] for p in periods] == ["2006", "2007", "explicite"]
+
+    # Sans annee lisible : on ne touche a rien (repli PeriodID en aval).
+    broken = [{"PeriodID": 4, "PeriodDefinitionID": 1, "PeriodCode": None}]
+    _backfill_period_codes(broken, [{"PeriodDefinitionID": 1, "BeginDate": "???"}])
+    assert broken[0]["PeriodCode"] is None
+
+
+def test_point_along_polyline():
+    # L'offset court LE LONG du tracé : au-delà du premier segment, il tourne
+    # avec le coude (sémantique de m_fTextOffset, cf. F48 de Wastewater).
+    pts = [(120.0, 60.0), (120.0, 70.0), (245.5, 70.0)]
+    assert _point_along_polyline(pts, 0) == (120.0, 60.0)
+    assert _point_along_polyline(pts, 10) == (120.0, 70.0)
+    assert _point_along_polyline(pts, 15) == (125.0, 70.0)
+    # Borné à l'extrémité si l'offset dépasse la longueur totale.
+    assert _point_along_polyline(pts, 1e6) == (245.5, 70.0)
+
+
+def test_simplify_polyline_garde_les_rebroussements():
+    # Un sommet où le tracé fait demi-tour n'est PAS colinéaire au sens du dessin :
+    # le supprimer gommerait un vrai détour.
+    pts = [(0, 0), (20, 0), (10, 0), (10, 15)]
+    assert _simplify_polyline(pts) == pts
+    # Les doublons et alignements stricts, eux, disparaissent.
+    assert _simplify_polyline([(0, 0), (0, 0), (5, 0), (9, 0)]) == [(0, 0), (9, 0)]
+
+
 def test_read_geometry_absente_ne_leve_pas():
     # Un fichier sans table Diagram doit simplement renoncer a la geometrie,
     # pas faire echouer l'import.
@@ -1381,14 +2116,17 @@ def test_fixtures_stan_reelles():
 
     Ces fixtures sont la seule validation du chemin `read_geometry` : les fichiers
     synthetiques n'ont pas de blob `Diagram.Document`, donc tout ce chemin y est
-    court-circuite. Elles sont aussi la seule validation des equerres (`hv` / `vh`),
-    que seul BalansSTANcheck-Wastewater.zmfa contient.
+    court-circuite. Elles sont aussi la seule validation des flux ROUTES (tout
+    trace a coude orthogonal — equerres comprises), dont
+    BalansSTANcheck-Wastewater.zmfa est le principal pourvoyeur.
     """
     fixtures = _stan_fixtures()
     if not fixtures:
         return  # SankeyData absent : rien a verifier
 
     seen_orientations = set()
+    routed_links = 0
+    single_corner_links = 0
     for path in fixtures:
         result = parse_stan(path)
         assert result["theme"]["id"] == "stan"
@@ -1399,8 +2137,28 @@ def test_fixtures_stan_reelles():
             assert node["y"] == node["y"], path
         for link in result["links"].values():
             orientation = link["local"].get("orientation")
-            assert orientation in (None, "hh", "vv", "hv", "vh"), path
+            # Les equerres sont ROUTEES (coudes a 90° exacts) : il ne reste en
+            # parametrique que les traces droits (et diagonales rendues hh/vv).
+            assert orientation in (None, "hh", "vv"), path
             seen_orientations.add(orientation)
+            if orientation == "vv":
+                # Flux vertical : la valeur reste HORIZONTALE (STAN ne couche
+                # jamais ses textes), et le nom s'ecrit a droite du trace.
+                assert link["local"].get("value_label_on_path") is False, path
+                assert link["local"].get("value_label_vert") == "middle", path
+                if _link_has_name(link):
+                    assert link["local"].get("name_label_position_absolute") is True, path
+                    assert link["local"]["name_label_position_x"] == \
+                        link["local"]["name_label_position_x"], path  # pas de NaN
+            waypoints = link["local"].get("shape_waypoints")
+            if waypoints is not None:
+                # Un flux route : au moins 1 point (le coin d'une equerre), en
+                # coordonnees monde finies, et JAMAIS d'orientation concurrente.
+                routed_links += 1
+                if len(waypoints) == 1:
+                    single_corner_links += 1
+                assert all(p["x"] == p["x"] and p["y"] == p["y"] for p in waypoints), path
+                assert orientation is None, path
         # Aucune couleur cuite dans les noeuds : STAN n'a pas de palette.
         assert all("color" not in n["local"] for n in result["nodes"].values()), path
 
@@ -1408,8 +2166,45 @@ def test_fixtures_stan_reelles():
         externals = [n for n in result["nodes"].values() if n["local"].get("shape") == "ellipse"]
         assert all(n["name"] in ("I", "E") for n in externals), path
 
-    # Au moins un fichier a des equerres : sinon on ne teste pas ce qu'on croit.
-    assert seen_orientations & {"hv", "vh"}, seen_orientations
+        # Ordre Z (m_nZOrder) : liste 1er plan -> fond, ids connus, et les
+        # PROCESSUS derriere les FLUX (la raison d'etre du zorder STAN).
+        order = result.get("order_g_elements")
+        assert order, path
+        known_ids = set(result["nodes"]) | set(result["links"]) | set(result["labels"])
+        assert set(order) <= known_ids, path
+        rank = {eid: i for i, eid in enumerate(order)}
+        process_ranks = [rank[n["id"]] for n in result["nodes"].values()
+                         if n["local"].get("shape") != "ellipse" and n["id"] in rank]
+        link_ranks = [rank[lid] for lid in result["links"] if lid in rank]
+        assert min(process_ranks) > max(link_ranks), path
+
+        # Le nom du systeme MFA devient le titre du diagramme.
+        title = result["labels"].get("drawing_title")
+        assert title is not None and title["is_title"] is True, path
+        assert title["name"], path
+
+        # Polices : Arial 9 (le defaut STAN = notre defaut 14 px) n'emet RIEN ;
+        # seules les tailles personnalisees sortent (Wastewater : zone de texte
+        # en 11.25 pt -> 17.5 px). Verifie la conversion ET la parcimonie.
+        assert not any("name_label_font_size" in n["local"]
+                       for n in result["nodes"].values()), path
+        if "BalansSTANcheck" in path:
+            sizes = [c["local"].get("name_label_font_size")
+                     for c in result["labels"].values()]
+            assert 17.5 in sizes, sizes
+
+        # Le nom de CHAQUE flux est a sa position STAN exacte (boite ShapeType 6,
+        # position absolue) — plus aucune heuristique de placement.
+        assert all(link["local"].get("name_label_position_absolute") is True
+                   for link in result["links"].values()), path
+        assert not any("name_label_horiz_shift" in link["local"]
+                       for link in result["links"].values()), path
+
+    # Le corpus doit exercer les deux formes routees : les equerres a UN coin
+    # (F48...) et les detours multi-coudes (les 23 escaliers h-v-h de
+    # BalansSTANcheck-Wastewater) — sinon on ne teste pas ce qu'on croit.
+    assert single_corner_links >= 5, single_corner_links
+    assert routed_links >= 25, routed_links
 
 
 def test_fixtures_stan_les_deux_formats_concordent():
@@ -1427,7 +2222,8 @@ def test_fixtures_stan_les_deux_formats_concordent():
     def signature(path):
         d = parse_stan(path)
         return (sorted((n["name"], round(n["x"], 3), round(n["y"], 3)) for n in d["nodes"].values()),
-                sorted(link["local"].get("orientation") for link in d["links"].values()),
+                sorted(link["local"].get("orientation") or "" for link in d["links"].values()),
+                sorted(len(link["local"].get("shape_waypoints") or []) for link in d["links"].values()),
                 round(d["user_scale"], 6))
 
     assert signature(smfa) == signature(zmfa)

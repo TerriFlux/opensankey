@@ -1,4 +1,5 @@
-import React, { useState, RefObject, useRef, ReactNode, useReducer } from 'react'
+﻿import React, { useState, useEffect, RefObject, useRef, ReactNode, MutableRefObject } from 'react'
+import { FaThumbtack } from 'react-icons/fa'
 import {
   Drawer, Button, Collapse, DrawerContent, DrawerBody, Box, useDisclosure,
   Heading, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Text, Select, Checkbox, Switch,
@@ -7,16 +8,20 @@ import {
 import { CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
 import { OSMultiSelect, typeElementSelectable, CustomFaEyeCheckIcon, OSTooltip, ConfigMenuNumberInput } from '../configmenus/MenuCommon'
 import { useMainZone } from '../spreadsheet/MainZoneTabs'
+import { useModelBinding } from '../../hooks/useModelBinding'
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { Class_MenuConfig } from '../../types/MenuConfig'
 import { Class_TagGroup, Class_DataTagGroup, Class_LevelTagGroup, Class_ViewTagGroup } from '../../types/TagGroup'
 import { Class_LevelTag } from '../../types/Tag'
 import { updateUnitaryStyles } from '../../Algorithms/UnitaryBoard'
 import { disaggregate, aggregate, resetLocalHierarchy, disaggregationExpansion, applyContainerModeForDim } from '../../Algorithms/Hierarchies'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_NodeDimension, Type_DisaggregationKind } from '../../Elements/NodeDimension'
-import { Type_DisaggregationGap, const_default_position_x, const_default_position_y } from '../../types/Utils'
+import { Type_DisaggregationGap, const_default_position_x, const_default_position_y, Type_MacroTagGroup } from '../../types/Utils'
 
+// #1283 — largeur du tiroir de filtres (comme avant : compact).
 const width_fitler_drawer = 270
+
 
 /**
  * Reconstruit les child links et redessine après un changement de sélection d'un
@@ -139,8 +144,8 @@ export const TopbarNavSelect = ({
 export const BannerDataTagTopbar = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { t, drawing_area } = app_data
   const { sankey } = drawing_area
-  const [, setCount] = useState(0)
-  app_data.menu_configuration.ref_to_toolbar_data_tag_updater.current = () => setCount(c => c + 1)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  const refreshThis = useModelBinding(app_data.menu_configuration.ref_to_toolbar_data_tag_updater)
 
   const topbar_taggs = sankey.getTagGroupsAsList('data_taggs')
     .filter(grp => (grp as unknown as Class_DataTagGroup).banner === 'topbar') as unknown as Class_DataTagGroup[]
@@ -157,7 +162,7 @@ export const BannerDataTagTopbar = ({ app_data }: { app_data: Class_ApplicationD
         tagg.selectTagsFromId(id)
         applyDataTagChildLinks(app_data, tagg, [id])
         app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
-        setCount(c => c + 1)
+        refreshThis()
       }
       return <TopbarNavSelect
         key={tagg.id}
@@ -199,7 +204,6 @@ export const applyViewTagFilterRedraw = (app_data: Class_ApplicationData) => {
       n.position_y === const_default_position_y)
     if (needs_auto_layout) drawing_area.nodePositioning.computeAutoSankey(true, true)
   }
-  drawing_area.to_recenter = true
   drawing_area.recenter()
   drawing_area.draw()
 }
@@ -214,8 +218,8 @@ export const applyViewTagFilterRedraw = (app_data: Class_ApplicationData) => {
 export const BannerViewTagTopbar = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { t, drawing_area } = app_data
   const { sankey } = drawing_area
-  const [, setCount] = useState(0)
-  app_data.menu_configuration.ref_to_unitarytag_filter_updater.current = () => setCount(c => c + 1)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  const refreshThis = useModelBinding(app_data.menu_configuration.ref_to_unitarytag_filter_updater)
 
   // Concept unifié vue ⊕ viewtag : quand la feature Vues remplace le sélecteur viewtag
   // (utilisateurs plus), on masque ce sélecteur topbar (« tout est une vue nommée »).
@@ -235,16 +239,19 @@ export const BannerViewTagTopbar = ({ app_data }: { app_data: Class_ApplicationD
   const full_label = tagg.full_view_label || t('Banner.view_full')
 
   const selectValue = (id: string | null) => {
-    drawing_area.bypass_redraws = true
-    if (id === null) {
-      tagg.view_mode = false
-    } else {
-      tagg.activated = true
-      tagg.view_mode = true
-      tagg.selectTagsFromId(id)
-    }
+    // Batch la sélection sous bypass_redraws (applyViewTagFilterRedraw fait le draw
+    // final). withBypassRedraws garantit le reset même si selectTagsFromId throw (#240).
+    drawing_area.withBypassRedraws(() => {
+      if (id === null) {
+        tagg.view_mode = false
+      } else {
+        tagg.activated = true
+        tagg.view_mode = true
+        tagg.selectTagsFromId(id)
+      }
+    }, false)
     applyViewTagFilterRedraw(app_data)
-    setCount(c => c + 1)
+    refreshThis()
   }
 
   // « Vue complète » = position la plus à gauche (valeur '') ; les flèches naviguent dans
@@ -318,36 +325,185 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
       app_data.has_sankey_dev // « Toutes données » (dev) suffit à ouvrir le drawer
   }
   const [drawerOpen, setDrawerOpen] = useState(app_data.is_static)
-  const [, forceUpdate] = useReducer(x => x + 1, 0)
+  // #1283b — bascule GLOBALE de révélation des groupes de tags cachés (bannière
+  // « Aucun »), partagée par toutes les sections du tiroir. Pilotée par le bouton
+  // unique de l'en-tête (à côté du pin) et transmise en prop aux filtres.
+  const [showHiddenGroups, setShowHiddenGroups] = useState(false)
+  // #1283 — le tiroir de filtres ne fait plus QUE filtrer (panneau unique, sans
+  // onglet) : les groupes de tags s'éditent EN PLACE (crayon par carte) et les
+  // Vues sont devenues un onglet de l'inspecteur (cible « Vue »).
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  useModelBinding(app_data.menu_configuration.ref_toolbar)
   // Abonnement à la grande zone : garde l'offset droit à jour quand la colonne d'outils change.
   // Le panneau est un overlay au-dessus de toute la grande zone (tableur/doc compris, zIndex 30) :
   // il ne s'écarte que de la colonne d'outils (zIndex 35, extrême droite), comme la config.
   useMainZone(app_data)
-  const toolsReserve = app_data.menu_configuration.getToolsColumnWidthPx()
+  // #1243 — chrome droit = colonne d'outils + panneau de config ÉPINGLÉ : ce
+  // tiroir s'en écarte pour se placer à leur gauche (cohabitation config/filtres).
+  // #1258 — moins sa PROPRE réserve quand il est lui-même épinglé (sinon il se
+  // décalerait de sa propre largeur).
+  const toolsReserve = app_data.menu_configuration.getRightChromeReservedPx()
+    - app_data.menu_configuration.getFilterPanelPinnedReservedPx()
   // En éditeur, le panneau de filtres s'ouvre à DROITE (à côté de la colonne d'outils, comme la config) ;
   // en publish/statique on garde l'ouverture historique à gauche (bouton flottant gauche).
   const drawer_on_right = !app_data.is_static
-  const width_drawer = (drawerOpen ? width_fitler_drawer + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin
+  // #1243 — sections « Éditer » injectées par les couches supérieures (OSP :
+  // groupes de tags, vues). Onglet masqué s'il n'y en a aucune (OS pur/publish).
+  const drawer_width_px = width_fitler_drawer
+  const width_drawer = (drawerOpen ? drawer_width_px + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin
   // Ouvre/ferme le drawer de filtres. Comme la config, c'est un OVERLAY au-dessus de toute la
   // grande zone (diagramme, tableur, doc…) : il ne touche ni à l'état doc/tableur ni au cadrage.
   // Seule exclusivité conservée : le panneau de config (même emplacement à droite). Centralise
   // tous les chemins (bouton colonne, bouton flottant, Drawer onClose, ref_close_filter_drawer).
   const setFilterOpen = (open: boolean) => {
-    if (open && open !== drawerOpen) {
+    // #1243 — symétrique de setConfigOpen : on ne ferme la config que si elle
+    // est en OVERLAY (même coin). Épinglée, elle est dockée et réserve sa
+    // largeur : ce tiroir s'ouvre à sa gauche et les deux cohabitent.
+    if (open && open !== drawerOpen && !app_data.menu_configuration.config_panel_pinned) {
       app_data.menu_configuration.ref_menu_opened.current[1](false)
     }
+    // #1258 — publier l'état pour la réserve de largeur du mode épinglé.
+    app_data.menu_configuration.filter_drawer_open = open
     setDrawerOpen(open)
+    if (app_data.menu_configuration.filter_panel_pinned) app_data.menu_configuration.notifyMainZone()
   }
   app_data.menu_configuration.ref_close_filter_drawer.current = setFilterOpen
   app_data.menu_configuration.ref_toggle_filter_drawer.current = () => setFilterOpen(!drawerOpen)
-  app_data.menu_configuration.ref_toolbar.current = forceUpdate
 
   // Disponibilité publiée pour la colonne d'outils (bouton filtre conditionnel). Posée AVANT le
   // retour anticipé pour rester correcte même sans filtre visible.
   const filters_visible = hasVisibleFilters()
   app_data.menu_configuration.filter_bar_available = filters_visible
 
+  // #1258 — mode épinglé : publier la largeur courante (elle varie selon
+  // l'onglet actif) pour que la réserve du dessin suive. Hook AVANT le retour
+  // anticipé (règle des hooks).
+  const pinned = app_data.menu_configuration.filter_panel_pinned
+  useEffect(() => {
+    app_data.menu_configuration.filter_drawer_width_px = drawer_width_px
+    if (pinned && drawerOpen) app_data.menu_configuration.notifyMainZone()
+  }, [drawer_width_px, pinned, drawerOpen])
+
   if (!filters_visible) return <></>
+
+  // #1283 — création de groupe TOUJOURS accessible (même si aucun groupe n'existe
+  // encore, donc aucune carte à éditer). createTagGroup vit sur le modèle Sankey
+  // (OS base) ; on l'expose ici pour n'importe quel type. Gated licence/éditeur.
+  const createGroup = (type: Type_MacroTagGroup) => {
+    app_data.runWithSnapshotUndo(
+      () => {
+        app_data.drawing_area.sankey.createTagGroup(type)
+        app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+        app_data.menu_configuration.updateAllComponentsRelatedToTags()
+      },
+      () => app_data.menu_configuration.updateAllComponentsRelatedToTags()
+    )
+  }
+  const can_create_groups = !app_data.is_static && app_data.has_sankey_plus
+  const group_types: { type: Type_MacroTagGroup, label: string, dev?: boolean }[] = [
+    { type: 'node_taggs', label: app_data.t('filter_panel.short.node') },
+    { type: 'flux_taggs', label: app_data.t('filter_panel.short.link') },
+    { type: 'data_taggs', label: app_data.t('filter_panel.short.data') },
+    { type: 'level_taggs', label: app_data.t('filter_panel.short.level'), dev: true }
+  ]
+
+  // #1283b — nombre de groupes CACHÉS (bannière « Aucun ») ayant au moins un tag,
+  // parmi les types rendus dans ce tiroir (élément node/flux, données, niveaux).
+  // Pilote la présence du bouton GLOBAL de révélation dans l'en-tête.
+  const countHiddenTagGroups = () => {
+    const { sankey } = app_data.drawing_area
+    const hasTags = (tagg: { tags_dict?: object }) => Object.keys(tagg.tags_dict || {}).length >= 1
+    let n = 0
+    if (app_data.publish_options.node_filter) {
+      n += [...Object.values(sankey.node_taggs_dict), ...Object.values(sankey.flux_taggs_dict)]
+        .filter(t => t.banner === 'none' && !t.id.includes('unitary') && hasTags(t)).length
+    }
+    if (app_data.publish_options.data_filter) {
+      n += Object.values(sankey.data_taggs_dict).filter(t => t.banner === 'none' && hasTags(t)).length
+    }
+    if (app_data.publish_options.level_filter) {
+      n += Object.values(sankey.level_taggs_dict).filter(t => t.banner === 'none' && t.has_tags).length
+    }
+    return n
+  }
+  const nb_hidden_groups = countHiddenTagGroups()
+
+  // #1258 — contenu du panneau, PARTAGÉ entre le tiroir overlay (Drawer) et le
+  // mode ÉPINGLÉ (panneau docké pleine hauteur qui réserve sa largeur, comme
+  // la config épinglée).
+  const panel_content = <>
+    {/* #1283 — en-tête : « + Groupe » (création, toujours dispo) à gauche,
+        épingle à droite. */}
+    <Box style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.3rem 0.3rem 0' }}>
+      {can_create_groups ? (
+        <Menu placement='bottom-start'>
+          <MenuButton
+            as={Button}
+            size='xs'
+            variant='menuconfigpanel_add_button'
+            sx={{ height: 'auto', paddingBlock: '0.15rem', paddingInline: '0.5rem' }}
+            leftIcon={app_data.icon_library.icon_add_element}
+          >
+            {app_data.t('Tags.GE')}
+          </MenuButton>
+          <MenuList>
+            {group_types.filter(g => !g.dev || app_data.has_sankey_dev).map(g => (
+              <MenuItem key={g.type} onClick={() => createGroup(g.type)}>
+                {g.label}
+              </MenuItem>
+            ))}
+          </MenuList>
+        </Menu>
+      ) : <Box />}
+      <Box style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+        {/* #1283b — bouton GLOBAL unique : révèle/masque les groupes de tags cachés
+            (bannière « Aucun ») de toutes les sections. Présent seulement s'il en
+            existe ; le compteur indique combien. */}
+        {nb_hidden_groups > 0 ? (
+          <OSTooltip label={showHiddenGroups ? app_data.t('filter_panel.hide_hidden') : app_data.t('filter_panel.show_hidden', { count: nb_hidden_groups })}>
+            <Button
+              size='xs'
+              variant={showHiddenGroups ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+              sx={{ paddingInline: '0.3rem', minWidth: 'auto', width: 'auto', flex: 'none', height: 'auto' }}
+              leftIcon={showHiddenGroups ? app_data.icon_library.icon_element_visible : app_data.icon_library.icon_element_invisible}
+              onClick={() => setShowHiddenGroups(v => !v)}
+            >
+              {nb_hidden_groups}
+            </Button>
+          </OSTooltip>
+        ) : null}
+        <Button
+          size='xs'
+          variant={pinned ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+          sx={{ paddingInline: '0.3rem', minWidth: 'auto', width: 'auto', flex: 'none', height: 'auto' }}
+          title={pinned ? app_data.t('inspector.unpin') : app_data.t('inspector.pin')}
+          onClick={() => {
+            const mc = app_data.menu_configuration
+            mc.filter_drawer_width_px = drawer_width_px
+            mc.filter_panel_pinned = !pinned
+          }}
+        >
+          <FaThumbtack style={{ transform: pinned ? 'none' : 'rotate(45deg)' }} />
+        </Button>
+      </Box>
+    </Box>
+    <Box layerStyle='drawerFilterBox'>
+      {
+        (app_data.publish_options.data_type || app_data.publish_options.value_filter)
+          ? <FilterDisplay app_data={app_data} /> : <></>
+      }
+      {
+        app_data.publish_options.level_filter ? <LevelTagFilter app_data={app_data} show_hidden_groups={showHiddenGroups} /> : <></>
+      }
+      {
+        app_data.publish_options.node_filter ? <NodeTagGroupFilter app_data={app_data} level={false} show_hidden_groups={showHiddenGroups} /> : <></>
+      }
+      {
+        app_data.publish_options.data_filter ? <DataTagGroupFilter app_data={app_data} show_hidden_groups={showHiddenGroups} /> : <></>
+      }
+    </Box>
+  </>
+
   return <>
     {!hide_floating_button ? <Button
       id='buttonOpenFilterDrawer'
@@ -364,61 +520,66 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
       }
     </Button> : <></>}
 
-    <Drawer
-      placement={drawer_on_right ? 'right' : 'left'}
-      isOpen={drawerOpen}
-      onClose={() => setFilterOpen(false)}
-      blockScrollOnMount={false}
-      variant='drawer_menu_filter'
-      trapFocus={false}
-      onEsc={() => {
-        // Override drawer onEscape() to use Class_applicationData 'escape' keyEvent & not the one by default from the <Drawer> component
-        const ev = document
-        const tmp = new KeyboardEvent('keydown', { key: 'Escape' })
-        if (ev.onkeydown) {
-          ev.onkeydown(tmp as KeyboardEvent)
-        }
-      }}
-    >
-      <DrawerContent
-        style={{
-          width: 'unset',
-          height: 'fit-content',
-          // Overlay au-dessus du dessin/tableur : ombre portée pour le détacher visuellement,
-          // comme le panneau de config.
-          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)',
-          maxWidth: 'unset',
-          ...(drawer_on_right
-            ? { right: app_data.drawing_area.fit_margin / 2 + toolsReserve }
-            : { left: app_data.drawing_area.fit_margin / 2 }),
-          maxHeight: app_data.drawing_area.window_fitting_height,
-          //overflowY: 'auto',
-          marginTop: (app_data.drawing_area.fit_margin) + document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().y + document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height
-        }}>
-        <DrawerBody
-          id='drawer_filter'
-          style={{ padding: '0', width: width_fitler_drawer }}
-        >
-          <Box layerStyle='drawerFilterBox'>
-            {
-              (app_data.publish_options.data_type || app_data.publish_options.value_filter)
-                ? <FilterDisplay app_data={app_data} /> : <></>
-            }
-            {/* « Génération de vues » (view tags) déplacé dans la topbar
-                (cf. BannerViewTagTopbar) — retiré du tiroir de filtres. */}
-            {
-              app_data.publish_options.level_filter ? <LevelTagFilter app_data={app_data} /> : <></>
-            }
-            {
-              app_data.publish_options.node_filter ? <NodeTagGroupFilter app_data={app_data} level={false} /> : <></>
-            }
-            {
-              app_data.publish_options.data_filter ? <DataTagGroupFilter app_data={app_data} /> : <></>
-            }
-          </Box>
-        </DrawerBody>
-      </DrawerContent>
-    </Drawer></>
+    {pinned && drawerOpen ? (
+      /* #1258 — mode ÉPINGLÉ : panneau docké pleine hauteur à droite (comme la
+         config épinglée), il réserve sa largeur et le dessin se recadre. */
+      <Box
+        className='filter_panel_pinned'
+        id='drawer_filter'
+        position='fixed'
+        right={(app_data.drawing_area.fit_margin / 2 + toolsReserve) + 'px'}
+        top={app_data.drawing_area.getNavBarHeight() + 'px'}
+        bottom={app_data.drawing_area.getBottomBarHeight() + 'px'}
+        width={drawer_width_px + 'px'}
+        zIndex={26}
+        bg='white'
+        borderLeft='1px solid #e2e8f0'
+        overflowY='auto'
+        overflowX='hidden'
+      >
+        {panel_content}
+      </Box>
+    ) : (
+      <Drawer
+        placement={drawer_on_right ? 'right' : 'left'}
+        isOpen={drawerOpen}
+        onClose={() => setFilterOpen(false)}
+        blockScrollOnMount={false}
+        variant='drawer_menu_filter'
+        trapFocus={false}
+        onEsc={() => {
+          // Override drawer onEscape() to use Class_applicationData 'escape' keyEvent & not the one by default from the <Drawer> component
+          const ev = document
+          const tmp = new KeyboardEvent('keydown', { key: 'Escape' })
+          if (ev.onkeydown) {
+            ev.onkeydown(tmp as KeyboardEvent)
+          }
+        }}
+      >
+        <DrawerContent
+          style={{
+            width: 'unset',
+            height: 'fit-content',
+            // Overlay au-dessus du dessin/tableur : ombre portée pour le détacher visuellement,
+            // comme le panneau de config.
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)',
+            maxWidth: 'unset',
+            ...(drawer_on_right
+              ? { right: app_data.drawing_area.fit_margin / 2 + toolsReserve }
+              : { left: app_data.drawing_area.fit_margin / 2 }),
+            maxHeight: app_data.drawing_area.window_fitting_height,
+            //overflowY: 'auto',
+            marginTop: (app_data.drawing_area.fit_margin) + document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().y + document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height
+          }}>
+          <DrawerBody
+            id='drawer_filter'
+            style={{ padding: '0', width: drawer_width_px }}
+          >
+            {panel_content}
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
+    )}</>
 }
 
 // Contenu « Paramètres d'affichage » (seuils flux/étiquettes + flux nuls), rendu
@@ -428,7 +589,8 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
 
   // Get the maximum value a link can have, so it is used as maximum value we wan filter in popover_link_visual_filter
   const max_link_value = Math.max(0, ...app_data.drawing_area.sankey.links_list.map(l => Number(l.getMaxValue()) / (l.shape_local_link_scale ?? 1))) + 1
-  const [, setCount] = useState(0)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  const refreshThis = useModelBinding(app_data.menu_configuration.ref_to_toolbar_link_visual_filter_updater)
 
   // #seuil px — les seuils flux/étiquette peuvent s'exprimer en pixels (épaisseur
   // rendue) plutôt qu'en valeur de donnée. En mode pixel, le curseur va de 0 au
@@ -478,7 +640,6 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
   // Un seuil nœud/stock change la visibilité des labels → re-tracer les nœuds.
   const redraw_nodes = () => app_data.drawing_area.sankey.nodes_list.forEach(n => n.draw())
 
-  app_data.menu_configuration.ref_to_toolbar_link_visual_filter_updater.current = () => setCount(a => a + 1)
 
   // Ref to popover button trigger to trap focus at popover when onBlur of NumberInput
   const ref: RefObject<HTMLButtonElement> = useRef(null)
@@ -498,7 +659,7 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
           value={app_data.drawing_area.filter_unit}
           onChange={evt => {
             app_data.drawing_area.filter_unit = evt.target.value === 'pixel' ? 'pixel' : 'value'
-            setCount(a => a + 1)
+            refreshThis()
             // Le sens des deux seuils change → re-tracer flux ET étiquettes.
             app_data.drawing_area.sankey.draw()
           }}
@@ -525,7 +686,7 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
             value={flux_seuil}
             onChange={evt => {
               set_flux_seuil(+evt)
-              setCount(a => a + 1)
+              refreshThis()
               app_data.drawing_area.sankey.visible_links_list.forEach(link => {
                 link.draw()
                 link.target.drawLinksArrow()
@@ -547,7 +708,7 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
                 }
                 if (value) {
                   set_flux_seuil(value)
-                  setCount(a => a + 1)
+                  refreshThis()
                   app_data.drawing_area.sankey.draw()
                 }
 
@@ -574,7 +735,7 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
             value={label_seuil}
             onChange={(evt) => {
               set_label_seuil(+evt)
-              setCount(a => a + 1)
+              refreshThis()
               app_data.drawing_area.sankey.visible_links_list.forEach(link => link.drawValueLabel())
             }}
           >
@@ -594,7 +755,7 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
                     value = seuil_max
                   }
                   set_label_seuil(value)
-                  setCount(a => a + 1)
+                  refreshThis()
                   app_data.drawing_area.sankey.links_list.forEach(link => link.drawValueLabel())
                 }
 
@@ -625,7 +786,7 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
             value={node_seuil}
             onChange={evt => {
               set_node_seuil(+evt)
-              setCount(a => a + 1)
+              refreshThis()
               redraw_nodes()
             }}
           >
@@ -644,7 +805,7 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
                     value = node_max
                   }
                   set_node_seuil(value)
-                  setCount(a => a + 1)
+                  refreshThis()
                   redraw_nodes()
                 }
                 ref.current?.focus() //avoid closure of popover
@@ -670,7 +831,7 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
             value={stock_seuil}
             onChange={evt => {
               set_stock_seuil(+evt)
-              setCount(a => a + 1)
+              refreshThis()
               redraw_nodes()
             }}
           >
@@ -689,7 +850,7 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
                     value = stock_max
                   }
                   set_stock_seuil(value)
-                  setCount(a => a + 1)
+                  refreshThis()
                   redraw_nodes()
                 }
                 ref.current?.focus() //avoid closure of popover
@@ -713,7 +874,7 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
           onChange={evt => {
             app_data.drawing_area.show_zero_links = evt.target.checked
             app_data.drawing_area.sankey.nodes_list.forEach(n => n.resetLinkVisibilitiesMemorization())
-            setCount(a => a + 1)
+            refreshThis()
             app_data.drawing_area.draw()
             app_data.drawing_area.legend.draw()
           }}
@@ -727,7 +888,7 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
           onChange={evt => {
             app_data.drawing_area.show_orphan_nodes = evt.target.checked
             app_data.drawing_area.sankey.nodes_list.forEach(n => n.resetLinkVisibilitiesMemorization())
-            setCount(a => a + 1)
+            refreshThis()
             app_data.drawing_area.draw()
             app_data.drawing_area.legend.draw()
           }}
@@ -771,8 +932,8 @@ export const FilterWrapperBox = ({ app_data, title, defaultOpen, children }: Rea
 
 export const FilterDataType = ({ app_data, defaultOpen, bare }: { app_data: Class_ApplicationData, defaultOpen?: boolean, bare?: boolean }) => {
   const { t } = app_data
-  const [, setCount] = useState(0)
-  app_data.menu_configuration.ref_to_toolbar_updater.current = () => setCount(a => a + 1)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  const refreshThis = useModelBinding(app_data.menu_configuration.ref_to_toolbar_updater)
 
   // #665 — `relayout=true` relance le PLACEMENT des nœuds (écartement par nœud,
   // droiture des flux) et pas seulement le tracé. Un changement de type de données
@@ -784,7 +945,12 @@ export const FilterDataType = ({ app_data, defaultOpen, bare }: { app_data: Clas
   const redrawNodeLinkLegend = (relayout = false) => {
     app_data.drawing_area.sankey.nodes_list.forEach(n => n.resetLinkVisibilitiesMemorization())
     if (relayout) {
-      app_data.drawing_area.drawElements()
+      // OS#1246 — sémantique de draw COMPLET : la bascule de type de données change
+      // l'épaisseur/valeur de TOUS les flux sans forcément déplacer leurs ancrages.
+      // Un drawElements() nu laisserait Node.updateLinksPositions figer leur épaisseur
+      // (il ne redessine hors full-draw que si l'ancrage a bougé ≥1px). D'où
+      // drawElementsAsFullDraw, qui pose _in_full_draw le temps du redraw.
+      app_data.drawing_area.drawElementsAsFullDraw()
     } else {
       app_data.drawing_area.sankey.draw()
     }
@@ -816,7 +982,7 @@ export const FilterDataType = ({ app_data, defaultOpen, bare }: { app_data: Clas
           if (evt.target.value !== 'reconciled') {
             app_data.drawing_area.interval_display = 'structure'
           }
-          setCount(a => a + 1)
+          refreshThis()
           redrawNodeLinkLegend(true)
         }}>
         <option key='structure' value='structure' >{t('Banner.structure')}</option>
@@ -837,7 +1003,7 @@ export const FilterDataType = ({ app_data, defaultOpen, bare }: { app_data: Clas
           value={app_data.drawing_area.interval_display}
           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
             app_data.drawing_area.interval_display = evt.target.value as 'structure' | 'free_value' | 'free_interval'
-            setCount(a => a + 1)
+            refreshThis()
             redrawNodeLinkLegend(true)
           }}>
           <option key='none' value='structure' >{t('Banner.structure')}</option>
@@ -934,15 +1100,39 @@ const TAG_FILTER_CONFIGS: Record<TagFilterMode, TagFilterConfig> = {
 /**
  * Composant unifié pour filtrer tous les types de tags
  */
-export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
+export const UnifiedTagGroupFilter = ({ app_data, mode, show_hidden_groups }: {
   app_data: Class_ApplicationData
   mode: TagFilterMode
+  // #1283b — piloté par le bouton GLOBAL unique de l'en-tête du tiroir (à côté du
+  // pin) : révèle les groupes cachés (bannière « Aucun ») de TOUTES les sections
+  // d'un coup. Non fourni = masqués.
+  show_hidden_groups?: boolean
 }) => {
+  const showHiddenGroups = show_hidden_groups ?? false
   const config = TAG_FILTER_CONFIGS[mode]
   const { t, drawing_area } = app_data
   const { sankey } = drawing_area
-  // Component updater
-  const [, setCount] = useState(0)
+  // #247 — re-render piloté par le modèle : le slot updater dépend du mode de filtre (clé
+  // dynamique dans menu_configuration), d'où le cast ; lié au montage, relâché au démontage.
+  const refreshThis = useModelBinding(
+    config.ref_updater_key
+      ? (app_data.menu_configuration[config.ref_updater_key as keyof Class_MenuConfig] as MutableRefObject<() => void>)
+      : undefined
+  )
+
+  // #1283 — fusion usage/édition : un seul groupe édité à la fois, déplié EN PLACE
+  // sous sa rangée de filtre. Le renderer d'éditeur est injecté par OSP (null en
+  // OS pur / sans licence → pas de crayon). Le prop du groupe se déduit de son
+  // appartenance (element = node+flux, d'où pas de mapping mode→prop fiable).
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null)
+  const renderGroupEditor = app_data.menu_configuration.render_tag_group_editor
+  const groupProp = (group_id: string): string | null => {
+    if (group_id in sankey.node_taggs_dict) return 'node_taggs'
+    if (group_id in sankey.flux_taggs_dict) return 'flux_taggs'
+    if (group_id in sankey.data_taggs_dict) return 'data_taggs'
+    if (group_id in sankey.level_taggs_dict) return 'level_taggs'
+    return null
+  }
 
   // #1231 — État HYBRIDE LOCAL : des nœuds ont été désagrégés via le clic droit (et NON
   // via le menu Hiérarchies global). On se base sur l'ORIGINE de l'action
@@ -954,34 +1144,35 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   const has_local_hierarchy = mode === 'level' &&
     sankey.nodes_list.some(n => n.dimensions_as_parent.some(d => d.forced_by_local_action))
 
-  // Configuration du updater selon le mode
-  if (config.ref_updater_key && app_data.menu_configuration[config.ref_updater_key as keyof typeof app_data.menu_configuration]) {
-    //@ts-expect-error xxx
-    app_data.menu_configuration[config.ref_updater_key as keyof typeof app_data.menu_configuration].current = () => setCount(a => a + 1)
-  }
-
-  // Récupération des tags selon le mode — passe par getTagGroupsAsList pour respecter _taggs_order
-  const getTagsForMode = (): Class_TagGroup[] => {
+  // Récupération des tags selon le mode — passe par getTagGroupsAsList pour respecter _taggs_order.
+  // #1283b — `include_hidden` : inclut ou non les groupes en bannière « Aucun ».
+  // Par défaut ils sont exclus (tiroir épuré) ; le bouton bascule les révèle en
+  // carte ÉDITION SEULE (cf. `edit_only`), seul accès à leur éditeur une fois cachés.
+  const getTagsForMode = (include_hidden: boolean): Class_TagGroup[] => {
+    const keep = (tagg: { banner: string }) => include_hidden || tagg.banner !== 'none'
     switch (mode) {
     case 'element':
       return [...sankey.getTagGroupsAsList('node_taggs'), ...sankey.getTagGroupsAsList('flux_taggs')]
-        .filter(tagg => tagg.banner !== 'none' && !tagg.id.includes('unitary')) as unknown as Class_TagGroup[]
+        .filter(tagg => keep(tagg) && !tagg.id.includes('unitary')) as unknown as Class_TagGroup[]
     case 'level':
       return sankey.getTagGroupsAsList('level_taggs')
-        .filter(tagg => tagg.has_tags && tagg.banner !== 'none') as unknown as Class_TagGroup[]
+        .filter(tagg => tagg.has_tags && keep(tagg)) as unknown as Class_TagGroup[]
     case 'data':
+      // #1283 — inclut aussi sequence/topbar : consommés par la timeline/topbar,
+      // mais on les liste en carte ÉDITION SEULE (nom + crayon) pour pouvoir
+      // rechanger leur mode (sinon aucun accès à leur éditeur).
       return sankey.getTagGroupsAsList('data_taggs')
-        .filter(tagg => tagg.banner === 'one' || tagg.banner === 'multi') as unknown as Class_TagGroup[]
+        .filter(keep) as unknown as Class_TagGroup[]
     case 'unitary':
       return sankey.getTagGroupsAsList('view_taggs')
-        .filter(tagg => tagg.banner !== 'none') as unknown as Class_TagGroup[]
+        .filter(keep) as unknown as Class_TagGroup[]
     default:
       return [] as unknown as Class_TagGroup[]
     }
   }
 
   const updateComponents = () => {
-    setCount(c => c + 1)
+    refreshThis()
     if (config.update_method == 'updateAllComponentsRelatedToNodeTags') {
       app_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
       app_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
@@ -992,7 +1183,9 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
     }
   }
 
-  const taggs_in_banner = getTagsForMode()
+  // #1283b — liste affichée = groupes visibles, + les cachés si l'utilisateur les
+  // a révélés via le bouton GLOBAL de l'en-tête.
+  const taggs_in_banner = getTagsForMode(showHiddenGroups)
 
   // Fonction générique pour appliquer une palette
   const setApplyTagGroupPalette = (tagg: Class_TagGroup, checked: boolean) => {
@@ -1034,126 +1227,145 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
       ? [...drawing_area.sankey.visible_nodes_list]
       : []
 
-    if (values.length > 1) {
-      tagg.selectTagsFromIds(values)
-    } else {
-      drawing_area.bypass_redraws = true
-      tagg.selectTagsFromId(values[0])
-    }
-
     // Actions spécifiques selon le mode
-    switch (mode) {
-    case 'level': {
-      app_data.drawing_area.bypass_redraws = true
-      // #1231 — Désagrégation/agrégation GLOBALE = application des fonctions LOCALES
-      // nœud par nœud (mêmes positions que le clic droit : enfants remplissent le slot
-      // du parent). On part des nœuds visibles du niveau précédent. La contrainte ±1
-      // (dropdown) garantit un seul cran. En désagrégation uniforme « simple »,
-      // `showAccordingToLevelTags()` ci-dessous nettoie les force-flags (visibilité
-      // pilotée par les level-tags) ; en présence d'un type hybride mémorisé
-      // (englobant/expansion) on garde les flags (cf. `any_hybrid`).
-      const new_level_idx = tagg.tags_list.findIndex(t => t.id === values[0])
-      // #1231 — DÉSAGRÉGATION : chaque nœud applique le type qu'il a MÉMORISÉ
-      // (clic droit local : simple / englobant / expansion), au lieu de toujours
-      // désagréger « simple ». La préférence survit aux agrégations et au
-      // rechargement (cf. Class_NodeDimension.preferred_disaggregation).
-      let any_hybrid = false
-      if (old_level_idx >= 0 && new_level_idx > old_level_idx) {
-        nodes_before.forEach(n => {
-          const dim = n.dimensions_as_parent.find(d => d.id === tagg.id) as Class_NodeDimension | undefined
-          if (!dim || dim.children.length === 0) return
-          const pref: Type_DisaggregationKind | null = dim.preferred_disaggregation
-          if (pref === 'expanded_left' || pref === 'expanded_right') {
+    const runModeActions = () => {
+      switch (mode) {
+      case 'level': {
+        app_data.drawing_area.bypass_redraws = true
+        // #1231 — Désagrégation/agrégation GLOBALE = application des fonctions LOCALES
+        // nœud par nœud (mêmes positions que le clic droit : enfants remplissent le slot
+        // du parent). On part des nœuds visibles du niveau précédent. La contrainte ±1
+        // (dropdown) garantit un seul cran. En désagrégation uniforme « simple »,
+        // `showAccordingToLevelTags()` ci-dessous nettoie les force-flags (visibilité
+        // pilotée par les level-tags) ; en présence d'un type hybride mémorisé
+        // (englobant/expansion) on garde les flags (cf. `any_hybrid`).
+        const new_level_idx = tagg.tags_list.findIndex(t => t.id === values[0])
+        // #1231 — DÉSAGRÉGATION : chaque nœud applique le type qu'il a MÉMORISÉ
+        // (clic droit local : simple / englobant / expansion), au lieu de toujours
+        // désagréger « simple ». La préférence survit aux agrégations et au
+        // rechargement (cf. Class_NodeDimension.preferred_disaggregation).
+        let any_hybrid = false
+        if (old_level_idx >= 0 && new_level_idx > old_level_idx) {
+          nodes_before.forEach(n => {
+            const dim = n.dimensions_as_parent.find(d => d.id === tagg.id) as Class_NodeDimension | undefined
+            if (!dim || dim.children.length === 0) return
+            const pref: Type_DisaggregationKind | null = dim.preferred_disaggregation
+            if (pref === 'expanded_left' || pref === 'expanded_right') {
             // Le parent est encore VISIBLE ici (on n'a pas encore appelé
             // showAccordingToLevelTags) → la redistribution des valeurs sur les
             // liens d'expansion a le bon contexte.
-            any_hybrid = true
-            // finalize=false : batch sous bypass_redraws ; un unique draw()+recenter()
-            // est fait après la boucle (sinon un redraw complet par nœud → O(N²)).
-            disaggregationExpansion(app_data, n as Class_NodeElement, pref === 'expanded_left', dim.children[0] as Class_NodeElement, false)
-          } else if (pref && pref !== 'children') {
-            any_hybrid = true
-            applyContainerModeForDim(app_data, dim, pref)
-          } else {
-            disaggregate(app_data, n as Class_NodeElement, dim.children[0].id, false)
-          }
-        })
-      } else if (old_level_idx >= 0 && new_level_idx < old_level_idx) {
-        nodes_before.forEach(n => {
-          const dim = n.dimensions_as_child.find(d => d.id === tagg.id)
-          if (dim) {
-            aggregate(app_data, n as Class_NodeElement, dim.parent.id, false)
-          }
-        })
-      }
-      // #1231 — `showAccordingToLevelTags()` efface TOUS les force-flags (y compris
-      // container/expansion) pour piloter la visibilité par les level-tags. On ne le
-      // fait QUE si la désagrégation est uniforme « simple » : dès qu'un nœud utilise
-      // un type hybride (englobant/expansion), l'état est volontairement hybride et on
-      // garde ses flags. L'agrégation (sens inverse) repasse toujours par le mode propre.
-      if (!any_hybrid) {
-        app_data.drawing_area.sankey.showAccordingToLevelTags()
-      }
-      app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
-      updateUnitaryStyles(app_data.drawing_area)
-      // #1231 — un changement de niveau (désagrégation/agrégation globale) est une commande
-      // de positionnement → mode absolu (réf flux/datatag persistée conservée).
-      app_data.drawing_area.setAbsoluteMode()
-      // Réordonnancement E/S AVANT le draw (sous bypass_redraws=true encore actif) : il ne
-      // réordonne que _links_order (géométrie relative, invariante par la translation du
-      // recenter), donc son draw() interne est bypassé. Ainsi le draw() ci-dessous rend
-      // directement le bon ordre — au lieu d'un 3e rendu complet après recenter (le draw()
-      // réactivait le rendu → une passe entière gaspillée + rendu transitoire mal ordonné).
-      app_data.drawing_area.sankey.nodes_list.forEach(node => node.reorganizeIOLinks())
-      app_data.drawing_area.draw()
-      app_data.drawing_area.to_recenter = true
-      app_data.drawing_area.recenter()
-      app_data.drawing_area.orderElementOnDA()
-
-      break
-    }
-    case 'data':
-      handleDataTagSelection(tagg as unknown as Class_DataTagGroup, values)
-      break
-    case 'element':
-      //app_data.drawing_area.bypass_compute_positions = true
-      app_data.drawing_area.draw()
-      //app_data.drawing_area.bypass_compute_positions = false
-      app_data.drawing_area.orderElementOnDA()
-      break
-    case 'unitary':
-      updateUnitaryStyles(app_data.drawing_area)
-      // Filtre vue générique : la sélection à valeur unique a posé bypass_redraws=true
-      // (l.497) via un <Select> SANS wrapper de reset (contrairement au Menu unitaire)
-      // → forcer false, sinon draw/recenter/computeAutoSankey ne rendent rien et il
-      // faut re-sélectionner pour voir.
-      if (app_data.drawing_area.sankey.view_mode_active) {
-        app_data.drawing_area.bypass_redraws = false
-      }
-      app_data.drawing_area.draw()
-      // Si le changement de valeur révèle des nœuds jamais positionnés (encore à la
-      // position par défaut), relancer une mise en page auto (comme au chargement).
-      // On stabilise d'abord la visibilité (2 passes de is_visible).
-      if (app_data.drawing_area.sankey.view_mode_active) {
-        app_data.drawing_area.sankey.nodes_list.forEach(n => { void n.is_visible })
-        app_data.drawing_area.sankey.nodes_list.forEach(n => { void n.is_visible })
-        // Mise en page auto SEULEMENT en sous-mode GLOBAL 'auto' (pas en 'filter' = on
-        // garde les positions).
-        if (app_data.drawing_area.view_filter_kind === 'auto') {
-          const needs_auto_layout = app_data.drawing_area.sankey.visible_nodes_list.some(n =>
-            n.position_x === const_default_position_x &&
-            n.position_y === const_default_position_y)
-          if (needs_auto_layout) {
-            app_data.drawing_area.nodePositioning.computeAutoSankey(true, true)
-          }
+              any_hybrid = true
+              // finalize=false : batch sous bypass_redraws ; un unique draw()+recenter()
+              // est fait après la boucle (sinon un redraw complet par nœud → O(N²)).
+              disaggregationExpansion(app_data, n as Class_NodeElement, pref === 'expanded_left', dim.children[0] as Class_NodeElement, false)
+            } else if (pref && pref !== 'children') {
+              any_hybrid = true
+              applyContainerModeForDim(app_data, dim, pref)
+            } else {
+              disaggregate(app_data, n as Class_NodeElement, dim.children[0].id, false)
+            }
+          })
+        } else if (old_level_idx >= 0 && new_level_idx < old_level_idx) {
+          nodes_before.forEach(n => {
+            const dim = n.dimensions_as_child.find(d => d.id === tagg.id)
+            if (dim) {
+              aggregate(app_data, n as Class_NodeElement, dim.parent.id, false)
+            }
+          })
         }
-        app_data.drawing_area.bypass_redraws = false
+        // #1231 — `showAccordingToLevelTags()` efface TOUS les force-flags (y compris
+        // container/expansion) pour piloter la visibilité par les level-tags. On ne le
+        // fait QUE si la désagrégation est uniforme « simple » : dès qu'un nœud utilise
+        // un type hybride (englobant/expansion), l'état est volontairement hybride et on
+        // garde ses flags. L'agrégation (sens inverse) repasse toujours par le mode propre.
+        if (!any_hybrid) {
+          app_data.drawing_area.sankey.showAccordingToLevelTags()
+        }
+        app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
+        updateUnitaryStyles(app_data.drawing_area)
+        // #1231 — un changement de niveau (désagrégation/agrégation globale) est une commande
+        // de positionnement → mode absolu (réf flux/datatag persistée conservée).
+        app_data.drawing_area.setAbsoluteMode()
+        // Réordonnancement E/S AVANT le draw (sous bypass_redraws=true encore actif) : il ne
+        // réordonne que _links_order (géométrie relative, invariante par la translation du
+        // recenter), donc son draw() interne est bypassé. Ainsi le draw() ci-dessous rend
+        // directement le bon ordre — au lieu d'un 3e rendu complet après recenter (le draw()
+        // réactivait le rendu → une passe entière gaspillée + rendu transitoire mal ordonné).
+        app_data.drawing_area.sankey.nodes_list.forEach(node => node.reorganizeIOLinks())
+        app_data.drawing_area.draw()
+        app_data.drawing_area.recenter()
+        app_data.drawing_area.orderElementOnDA()
+
+        break
       }
-      app_data.drawing_area.to_recenter = true
-      app_data.drawing_area.recenter()
-      break
+      case 'data':
+        handleDataTagSelection(tagg as unknown as Class_DataTagGroup, values)
+        break
+      case 'element':
+      //app_data.drawing_area.bypass_compute_positions = true
+        app_data.drawing_area.draw()
+        //app_data.drawing_area.bypass_compute_positions = false
+        app_data.drawing_area.orderElementOnDA()
+        break
+      case 'unitary':
+        updateUnitaryStyles(app_data.drawing_area)
+        // Filtre vue générique : la sélection à valeur unique a posé bypass_redraws=true
+        // (l.497) via un <Select> SANS wrapper de reset (contrairement au Menu unitaire)
+        // → forcer false, sinon draw/recenter/computeAutoSankey ne rendent rien et il
+        // faut re-sélectionner pour voir.
+        if (app_data.drawing_area.sankey.view_mode_active) {
+          app_data.drawing_area.bypass_redraws = false
+        }
+        app_data.drawing_area.draw()
+        // Si le changement de valeur révèle des nœuds jamais positionnés (encore à la
+        // position par défaut), relancer une mise en page auto (comme au chargement).
+        // On stabilise d'abord la visibilité (2 passes de is_visible).
+        if (app_data.drawing_area.sankey.view_mode_active) {
+          app_data.drawing_area.sankey.nodes_list.forEach(n => { void n.is_visible })
+          app_data.drawing_area.sankey.nodes_list.forEach(n => { void n.is_visible })
+          // Mise en page auto SEULEMENT en sous-mode GLOBAL 'auto' (pas en 'filter' = on
+          // garde les positions).
+          if (app_data.drawing_area.view_filter_kind === 'auto') {
+            const needs_auto_layout = app_data.drawing_area.sankey.visible_nodes_list.some(n =>
+              n.position_x === const_default_position_x &&
+            n.position_y === const_default_position_y)
+            if (needs_auto_layout) {
+              app_data.drawing_area.nodePositioning.computeAutoSankey(true, true)
+            }
+          }
+          app_data.drawing_area.bypass_redraws = false
+        }
+        app_data.drawing_area.recenter()
+        break
+      }
     }
-    updateComponents()
+
+    const run = () => {
+      if (values.length > 1) {
+        tagg.selectTagsFromIds(values)
+        runModeActions()
+      } else {
+        // Sélection à valeur unique : batch sous bypass_redraws (les case redessinent
+        // explicitement). withBypassRedraws garantit le reset même si un case throw (#240).
+        drawing_area.withBypassRedraws(() => {
+          tagg.selectTagsFromId(values[0])
+          runModeActions()
+        }, false)
+      }
+      updateComponents()
+    }
+
+    // Le mode 'level' agrège/désagrège nœud par nœud avec register_history=false : c'est
+    // volontaire (un undo par nœud saturerait la pile de 10 et casserait le redo, cf.
+    // Hierarchies.tsx:281), mais le geste entier n'était alors annulable en rien alors
+    // qu'il déplace tout le diagramme et crée/détruit des liens d'expansion. Un seul
+    // snapshot pour tout le geste rétablit « un geste utilisateur = un undo ».
+    // Les autres modes ne font que filtrer/redessiner : pas de snapshot (trop coûteux).
+    if (mode === 'level') {
+      app_data.runWithSnapshotUndo(run, updateComponents)
+    } else {
+      run()
+    }
   }
 
   // Filtre vue : (ré)applique après un changement d'activation (œil) ou de sous-mode
@@ -1246,15 +1458,11 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
                       icon={tag.id === selected_value ? <CheckIcon /> : undefined}
                       onClick={() => {
                         // Preview pendant la navigation
-                        drawing_area.bypass_redraws = true
-                        handleTagSelection(tagg, [tag.id])
-                        drawing_area.bypass_redraws = false
+                        drawing_area.withBypassRedraws(() => handleTagSelection(tagg, [tag.id]), false)
                       }}
                       onFocus={() => {
                         // Preview au survol/focus avec les flèches
-                        drawing_area.bypass_redraws = true
-                        handleTagSelection(tagg, [tag.id])
-                        drawing_area.bypass_redraws = false
+                        drawing_area.withBypassRedraws(() => handleTagSelection(tagg, [tag.id]), false)
                       }}
                     >
                       {tag.display_name}
@@ -1343,15 +1551,15 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
             })
             const selected_tag = level_tagg.selected_tags_list.map(t => t.id)[0]
             level_tagg.selectTagsFromId(level_tagg.tags_list[0]?.id ?? '')
-            app_data.drawing_area.bypass_redraws = true
-            app_data.drawing_area.sankey.showAccordingToLevelTags()
-            app_data.drawing_area.nodePositioning.computeParametricVForTagg(
-              level_tagg.selected_tags_list[0] as Class_LevelTag
-            )
-            app_data.drawing_area.resetAllVerticalIntervals()
-            level_tagg.selectTagsFromId(selected_tag ?? '')
-            app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
-            app_data.drawing_area.draw()
+            app_data.drawing_area.withBypassRedraws(() => {
+              app_data.drawing_area.sankey.showAccordingToLevelTags()
+              app_data.drawing_area.nodePositioning.computeParametricVForTagg(
+                level_tagg.selected_tags_list[0] as Class_LevelTag
+              )
+              app_data.drawing_area.resetAllVerticalIntervals()
+              level_tagg.selectTagsFromId(selected_tag ?? '')
+              app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
+            })
             app_data.drawing_area.sankey.nodes_list.forEach(n => n.reorganizeIOLinks())
             updateComponents()
           }}
@@ -1405,32 +1613,31 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
           onChange={evt => {
             if (evt.target.checked) {
               sankey.nodeTagsUpdated()
-              sankey.drawing_area.bypass_redraws = true
-              // Activer ce groupe
-              view_tagg.activated = true
+              sankey.drawing_area.withBypassRedraws(() => {
+                // Activer ce groupe
+                view_tagg.activated = true
 
-              // Désactiver tous les siblings
-              view_tagg.siblings.forEach(sibling_id => {
-                const sibling = sankey.view_taggs_dict[sibling_id]
-                if (sibling) {
-                  sibling.activated = false
+                // Désactiver tous les siblings
+                view_tagg.siblings.forEach(sibling_id => {
+                  const sibling = sankey.view_taggs_dict[sibling_id]
+                  if (sibling) {
+                    sibling.activated = false
+                  }
+                })
+
+                // Sauvegarder le tag actuellement sélectionné de ce groupe
+                const current_selected = view_tagg.selected_tags_list[0]?.id
+
+                // Sélectionner le premier tag du groupe pour forcer la mise à jour
+                if (view_tagg.tags_list.length > 0) {
+                  // Si on a un tag sélectionné, on le garde, sinon on prend le premier
+                  const tag_to_select = current_selected ?? view_tagg.tags_list[0].id
+                  view_tagg.selectTagsFromId(tag_to_select)
                 }
+
+                // Appliquer les mêmes transformations que dans handleTagSelection pour le mode 'unitary'
+                updateUnitaryStyles(app_data.drawing_area)
               })
-
-              // Sauvegarder le tag actuellement sélectionné de ce groupe
-              const current_selected = view_tagg.selected_tags_list[0]?.id
-
-              // Sélectionner le premier tag du groupe pour forcer la mise à jour
-              if (view_tagg.tags_list.length > 0) {
-                // Si on a un tag sélectionné, on le garde, sinon on prend le premier
-                const tag_to_select = current_selected ?? view_tagg.tags_list[0].id
-                view_tagg.selectTagsFromId(tag_to_select)
-              }
-
-              // Appliquer les mêmes transformations que dans handleTagSelection pour le mode 'unitary'
-              updateUnitaryStyles(app_data.drawing_area)
-              app_data.drawing_area.draw()
-              app_data.drawing_area.to_recenter = true
               app_data.drawing_area.recenter()
 
               updateComponents()
@@ -1465,23 +1672,62 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
     }
     const selector = createSelector(tagg)
     const actionButton = createActionButton(tagg)
+    // #1283 — crayon d'édition en place : visible si OSP a injecté un éditeur
+    // et que ce groupe est éditable (level 'Primaire' exclu, comme son titre).
+    const editable = renderGroupEditor !== null
+      && groupProp(tagg.id) !== null
+      && !(mode === 'level' && tagg.name === 'Primaire')
+    const is_editing = editingGroupId === tagg.id
+    // #1283 — séquence/topbar : filtrés via la timeline/topbar, pas ici. On ne
+    // montre que nom + crayon (édition du groupe, ex. rechanger son mode), sans
+    // le sélecteur de filtrage qui ferait doublon.
+    // #1283b — bannière « Aucun » : groupe caché du bandeau, présenté lui aussi
+    // en carte édition seule pour rester éditable (et pouvoir le ré-afficher).
+    const edit_only = tagg.banner === 'sequence' || tagg.banner === 'topbar' || tagg.banner === 'none'
 
     return (
       <Box key={tagg.id} layerStyle={mode === 'data' ? 'menuconfigpanel_grid' : 'menuconfig_grid'}>
         {mode === 'level' && tagg.name === 'Primaire' ? <></> :
-          <Box layerStyle='menuconfigpanel_option_name'>
-            {tagg.name}
+          <Box layerStyle='menuconfigpanel_option_name' display='flex' alignItems='center' gap='0.3rem'>
+            <Box as='span'>{tagg.name}</Box>
+            {editable && (
+              <OSTooltip label={t('filter_panel.edit_group')}>
+                <Button
+                  variant={is_editing ? 'menuconfigpanel_icon_button_activated' : 'menuconfigpanel_icon_button'}
+                  size='xs'
+                  sx={{ marginLeft: 'auto' }}
+                  onClick={() => setEditingGroupId(is_editing ? null : tagg.id)}
+                >
+                  {app_data.icon_library.icon_edit_style}
+                </Button>
+              </OSTooltip>
+            )}
           </Box>}
-        <Box layerStyle='filter_grid_row'>
-          <OSTooltip label={t('Banner.ndd_lst')}>
-            {selector}
-          </OSTooltip>
-          <OSTooltip label={t('Banner.ndd_chk')}>
-            <Box justifySelf='end' alignSelf='center'>
-              {actionButton}
-            </Box>
-          </OSTooltip>
-        </Box>
+        {!edit_only && (
+          <Box layerStyle='filter_grid_row'>
+            <OSTooltip label={t('Banner.ndd_lst')}>
+              {selector}
+            </OSTooltip>
+            <OSTooltip label={t('Banner.ndd_chk')}>
+              <Box justifySelf='end' alignSelf='center'>
+                {actionButton}
+              </Box>
+            </OSTooltip>
+          </Box>
+        )}
+        {/* #1283 — édition du groupe dépliée EN PLACE (renderer OSP). */}
+        {editable && is_editing && renderGroupEditor && (
+          <Box
+            marginTop='0.3rem'
+            padding='0.3rem'
+            borderRadius='6px'
+            border='1px dashed'
+            borderColor='gray.200'
+            background='gray.50'
+          >
+            {renderGroupEditor(groupProp(tagg.id) as string, tagg.id)}
+          </Box>
+        )}
       </Box>
     )
   })
@@ -1511,8 +1757,12 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
           size='xs'
           variant='menuconfigpanel_option_button'
           onClick={() => {
-            resetLocalHierarchy(app_data)
-            updateComponents()
+            // Détruit les liens d'expansion et efface tous les force-flags, donc tout le
+            // travail de clic droit local : snapshot avant/après.
+            app_data.runWithSnapshotUndo(
+              () => { resetLocalHierarchy(app_data); updateComponents() },
+              updateComponents
+            )
           }}>
           {t('Banner.resetHierarchy')}
         </Button>
@@ -1612,6 +1862,9 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   const RevealAllDataControl = null
 
   // Rendu final
+  // #1283b — la section entière est masquée quand aucun groupe n'est affiché
+  // (aucun visible, et cachés non révélés) : c'est le bouton GLOBAL de l'en-tête
+  // qui les fait réapparaître, section comprise.
   return SelectorOfTagsByGroup.length > 0 ? (
     <FilterWrapperBox app_data={app_data} title={t(`Banner.${title_key}`)} defaultOpen={app_data.is_static}>
       {ResetHierarchyButton}
@@ -1625,14 +1878,15 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   ) : <></>
 }
 
-// Composants wrapper pour maintenir la compatibilité avec l'API existante
-export const NodeTagGroupFilter = ({ app_data, level }: { app_data: Class_ApplicationData, level: boolean }) => (
-  <UnifiedTagGroupFilter app_data={app_data} mode={level ? 'level' : 'element'} />
+// Composants wrapper pour maintenir la compatibilité avec l'API existante.
+// #1283b — `show_hidden_groups` transmis par ToolbarFilter (bouton global).
+export const NodeTagGroupFilter = ({ app_data, level, show_hidden_groups }: { app_data: Class_ApplicationData, level: boolean, show_hidden_groups?: boolean }) => (
+  <UnifiedTagGroupFilter app_data={app_data} mode={level ? 'level' : 'element'} show_hidden_groups={show_hidden_groups} />
 )
 
-export const LevelTagFilter = ({ app_data }: { app_data: Class_ApplicationData }) => {
-  const [_, setCount] = useState(0)
-  app_data.menu_configuration.ref_to_toolbar_level_tag_filter_updater.current = () => setCount(a => a + 1)
+export const LevelTagFilter = ({ app_data, show_hidden_groups }: { app_data: Class_ApplicationData, show_hidden_groups?: boolean }) => {
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  useModelBinding(app_data.menu_configuration.ref_to_toolbar_level_tag_filter_updater)
   const nb_level_taggs = Object.entries(app_data.drawing_area.sankey.level_taggs_dict).length
   if (nb_level_taggs == 0) {
     return <></>
@@ -1643,25 +1897,27 @@ export const LevelTagFilter = ({ app_data }: { app_data: Class_ApplicationData }
       return <></>
     }
   }
-  const content_popover = <UnifiedTagGroupFilter app_data={app_data} mode="level" />
+  const content_popover = <UnifiedTagGroupFilter app_data={app_data} mode="level" show_hidden_groups={show_hidden_groups} />
 
   return content_popover
 }
 
-export const DataTagGroupFilter = ({ app_data }: { app_data: Class_ApplicationData }) =>
-  <UnifiedTagGroupFilter app_data={app_data} mode="data" />
+export const DataTagGroupFilter = ({ app_data, show_hidden_groups }: { app_data: Class_ApplicationData, show_hidden_groups?: boolean }) =>
+  <UnifiedTagGroupFilter app_data={app_data} mode="data" show_hidden_groups={show_hidden_groups} />
 
-export const UnitaryTagGroupFilter = ({ app_data }: { app_data: Class_ApplicationData }) => {
-  const [_, setCount] = useState(0)
-  app_data.menu_configuration.ref_to_unitarytag_filter_updater.current = () => setCount(a => a + 1)
+export const UnitaryTagGroupFilter = ({ app_data, show_hidden_groups }: { app_data: Class_ApplicationData, show_hidden_groups?: boolean }) => {
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  useModelBinding(app_data.menu_configuration.ref_to_unitarytag_filter_updater)
 
-  // MODIFIÉ : vérifier dans view_taggs_dict au lieu de node_taggs_dict
+  // MODIFIÉ : vérifier dans view_taggs_dict au lieu de node_taggs_dict.
+  // #1283b — on ne filtre PLUS les bannières « Aucun » ici : sinon un jeu de vues
+  // entièrement caché n'afficherait pas la section, donc pas le bouton global qui
+  // permet de les rééditer. Le filtrage réel se fait dans UnifiedTagGroupFilter.
   const view_taggs = Object.values(app_data.drawing_area.sankey.view_taggs_dict)
-    .filter(tagg => tagg.banner !== 'none')
 
   if (view_taggs.length === 0) {
     return <></>
   }
 
-  return <UnifiedTagGroupFilter app_data={app_data} mode="unitary" />
+  return <UnifiedTagGroupFilter app_data={app_data} mode="unitary" show_hidden_groups={show_hidden_groups} />
 }

@@ -767,7 +767,13 @@ export const ReturnValueNode: ReturnValueNodeFuncType = (
   let value = ReturnLocalNodeValue(n, k as keyof SankeyNodeAttrLocal)
   if (value === undefined || value === null) {
     const ks = k as keyof SankeyNodeStyle
-    value = n.style in data.style_node ? data.style_node[n.style][ks] : data.style_node['default'][ks]
+    // #276 — Un fichier 0.5 ne porte AUCUN style : `style_node['default']` n'existe pas, et cette
+    // ligne jetait « Cannot read properties of undefined ». On se replie sur le style par defaut
+    // EN MEMOIRE, sans jamais l'ecrire dans le JSON : l'injecter ferait heriter des attributs
+    // legacy (police, tailles) a tout fichier sans styles — y compris des 0.8 qui n'en demandaient
+    // pas, et dont le rendu changerait (constate sur 0.8/example_reg.json, 41 attributs ajoutes).
+    const default_style = data.style_node['default'] ?? DefaultNodeStyle()
+    value = n.style in data.style_node ? data.style_node[n.style][ks] : default_style[ks]
   }
   return value
 }
@@ -957,6 +963,14 @@ const convert_tags: convert_tagsFuncType = (
   data: SankeyData
 ): void => {
   const data_to_convert = data as SankeyData & ConvertSankeyData
+  // #276 — Les fichiers les plus anciens (0.5) rangent leurs tags dans `tags_catalog` et ne portent
+  // AUCUN de ces dictionnaires. La suite ecrit pourtant dedans sans les creer
+  // (`data.fluxTags['flux_types'] = ...`) : charger une publication de 2021 jetait
+  // « Cannot set properties of undefined ». `levelTags` etait deja protege plus bas ; les trois
+  // autres ne l'etaient pas. Creation idempotente : un fichier qui les porte n'est pas touche.
+  if (data.nodeTags === undefined) data.nodeTags = {} as TagsCatalog
+  if (data.fluxTags === undefined) data.fluxTags = {} as TagsCatalog
+  if (data.dataTags === undefined) data.dataTags = {} as TagsCatalog
   if (data_to_convert.tags_catalog) {
     data.nodeTags = Object.assign(data_to_convert.tags_catalog)
   }
@@ -1750,8 +1764,7 @@ const convert_nodes: convert_nodesFuncType = (
       node.outputLinksId
         .forEach(lid => {
           if (!data.links[lid]) {
-            console.log(lid)
-            console.log(Object.values(data.links).filter(l => l.idLink.includes('Ethanol')))
+            console.warn(`Legacy: flux sortant introuvable (${lid}), nœud ${node.idNode} ignoré`)
             return
           }
           const output_node = data.nodes[data.links[lid].idTarget]
@@ -2742,6 +2755,32 @@ const normalizeName = (name: string) => {
   return new_name
 }
 
+
+/**
+ * Rétro-portage de `use_colors` sur les groupes de tags (fichiers < 0.92).
+ *
+ * Avant l'introduction de `use_colors`, c'est `show_legend` qui commandait à la
+ * fois l'affichage de la légende ET l'application de la palette du groupe. Le
+ * rétro-portage existait déjà dans `convert_tags`, mais uniquement sur le
+ * chemin `fromJSON_pre_0_9` : un fichier estampillé exactement '0.9' ou '0.91'
+ * passait au travers et chargeait `use_colors = false` (défaut de classe). Les
+ * tags y restaient sélectionnés sans colorer quoi que ce soit, et le mode
+ * `auto` des flux, qui filtre les tags des extrémités sur `group.use_colors`,
+ * retombait sur la couleur propre du flux (gris du style par défaut).
+ *
+ * Uniquement un défaut : un groupe portant déjà `use_colors` (fichier réenregistré
+ * après l'introduction du champ) n'est jamais réécrit.
+ */
+export const backfillTagGroupUseColors = (data: Type_JSON) => {
+  (['nodeTags', 'fluxTags', 'dataTags', 'levelTags'] as const).forEach(tagg_key => {
+    const taggs = data[tagg_key] as { [_: string]: Type_JSON } | undefined
+    if (!taggs) return
+    Object.values(taggs).forEach(tagg => {
+      if (tagg && typeof tagg === 'object' && tagg['use_colors'] === undefined)
+        tagg['use_colors'] = (tagg['show_legend'] === true) || (tagg['show_legend'] === 1)
+    })
+  })
+}
 
 /**
  * Convert JSON from App that are previous to 0.91,

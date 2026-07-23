@@ -12,6 +12,7 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       type: 'submenu',
       titleKey: 'Positionnement',
       children: [
+        { type: 'button', actionName: 'bakeZoomTo100' },
         { type: 'button', actionName: 'transposeDA' },
         {
           type: 'submenu',
@@ -98,10 +99,9 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         { type: 'button', actionName: 'resetLinkColors' }
       ]
     },
-    {
-      type: 'button',
-      actionName: 'openStyleModal'
-    },
+    // OS#1243 — « Styles des éléments » retiré du menu contextuel : les styles
+    // s'éditent désormais dans l'inspecteur (portée Styles sur une sélection,
+    // onglet Styles de la cible « Vue » quand rien n'est sélectionné).
     // {
     //   type: 'button',
     //   actionName: 'openGraphOrder'
@@ -263,6 +263,24 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         it: 'Attiva/disattiva la visibilità della legenda'
       },
       getToggleValue: 'maskLegendValue'
+    },
+
+    bakeZoomTo100: {
+      type: 'action',
+      labels: {
+        en: 'Reset zoom to 100% (keep appearance)',
+        fr: 'Ramener le zoom à 100 % (aspect conservé)',
+        es: 'Restablecer el zoom al 100 % (conservar aspecto)',
+        de: 'Zoom auf 100 % zurücksetzen (Aussehen behalten)',
+        it: 'Riporta lo zoom al 100% (aspetto invariato)'
+      },
+      tooltips: {
+        en: 'Bake the current zoom into the geometry: multiply node/text-zone sizes, fonts, positions and flow scale by the current ratio, then set the camera back to 100%. The diagram looks identical but stored pixel sizes reflect the real scale. Undoable.',
+        fr: 'Fige le zoom courant dans la géométrie : multiplie les tailles des nœuds/zones de texte, les polices, les positions et l\'échelle des flux par le ratio courant, puis remet la caméra à 100 %. Le diagramme reste identique mais les tailles px stockées reflètent l\'échelle réelle. Annulable.',
+        es: 'Fija el zoom actual en la geometría: multiplica los tamaños de nodos/zonas de texto, fuentes, posiciones y escala de flujos por el ratio actual, y vuelve la cámara al 100 %. El diagrama se ve igual pero los tamaños px almacenados reflejan la escala real. Reversible.',
+        de: 'Fixiert den aktuellen Zoom in der Geometrie: multipliziert Knoten-/Textzonengrößen, Schriften, Positionen und Flussskala mit dem aktuellen Verhältnis und setzt die Kamera auf 100 %. Das Diagramm sieht identisch aus, gespeicherte Pixelgrößen entsprechen dem realen Maßstab. Umkehrbar.',
+        it: 'Fissa lo zoom corrente nella geometria: moltiplica dimensioni di nodi/zone di testo, font, posizioni e scala dei flussi per il rapporto corrente, poi riporta la camera al 100%. Il diagramma resta identico ma le dimensioni px memorizzate riflettono la scala reale. Annullabile.'
+      }
     },
 
     transposeDA: {
@@ -634,14 +652,23 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
   return {
     clearCurrentView: () => { app_data.reset({ only_current_view: true }); app_data.drawing_area.draw() },
     deleteAllViews: () => app_data.reinitialization(),
+    // Fige le zoom courant dans la géométrie puis remet la caméra à 100 % (historique interne
+    // à bakeZoomIntoGeometry : snapshots avant/après). saveToCache après pour persister le geste.
+    bakeZoomTo100: () => { drawing_area.bakeZoomIntoGeometry(); saveToCache() },
     transposeDA: () => { drawing_area.verticalizeDiagram(); saveToCache() },
     arrangeNodesToGrid: () => { nodePositioning.arrangeNodesToGrid(); saveToCache() },
     prepositionInPlace: () => {
       // Opération lourde (désagrégation récursive) : toast spinner + exécution différée
       // (sendWaitingToast attend ~500 ms pour afficher le spinner avant de bloquer).
-      app_data.sendWaitingToast(() => { prepositionAllInPlace(app_data); saveToCache() })
+      // Repositionne TOUS les nœuds → snapshot avant/après, sinon rien ne le rattrape.
+      app_data.sendWaitingToast(() => {
+        app_data.runWithSnapshotUndo(() => { prepositionAllInPlace(app_data); saveToCache() })
+      })
     },
-    centerChildrenOnParent: () => { centerChildrenOnParent(app_data); saveToCache() },
+    centerChildrenOnParent: () => {
+      // Écrase les positions de toute la descendance + réordonne les ancres.
+      app_data.runWithSnapshotUndo(() => { centerChildrenOnParent(app_data); saveToCache() })
+    },
     // #1231 — le mode paramétrique n'est plus un mode utilisateur : ce toggle bascule
     // désormais entre pourcentage et absolu.
     toggleParametricMode: () => getNodeStyle().shape_position_type === 'proportional' ? drawing_area.setAbsoluteMode() : drawing_area.setProportionalMode(),
@@ -651,7 +678,12 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
     // toggleAutoXValue: () => null,//getNodeStyle().position.auto_x,
     // toggleAutoY: () => { },//getNodeStyle().position.auto_y = !getNodeStyle().position.auto_y },
     // toggleAutoYValue: () => null, //getNodeStyle().position.auto_y,
-    toggleTradeMode: () => { sankey.tradeOption() == 'above_below' ? sankey.setTrade(true) : sankey.setTrade(false); saveToCache() },
+    // setTrade fait un replaceStyles massif + bascule import_export_above_below :
+    // withBypassRedraws ne groupait que les rendus, il n'y avait aucun undo.
+    toggleTradeMode: () => app_data.runWithSnapshotUndo(() => {
+      sankey.tradeOption() == 'above_below' ? sankey.setTrade(true) : sankey.setTrade(false)
+      saveToCache()
+    }),
     toggleTradeValue: () => sankey.tradeOption() == 'above_below',
     applyRandomNodeColors: () => { applyRandomColors(app_data, sankey.nodes_list); saveToCache() },
     applyRandomLinkColors: () => { applyRandomColors(app_data, sankey.links_list); saveToCache() },

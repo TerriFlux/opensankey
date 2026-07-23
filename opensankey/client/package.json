@@ -71,6 +71,7 @@
     "d3-scale": "^4.0.2",
     "d3-scale-chromatic": "^3.1.0",
     "d3-selection": "^3.0.0",
+    "d3-shape": "^3.2.0",
     "d3-textwrap": "^3.0.0",
     "d3-transition": "^3.0.1",
     "d3-zoom": "^3.0.0",
@@ -83,6 +84,7 @@
     "i18next-browser-languagedetector": "^7.2.2",
     "jszip": "^3.10.1",
     "katex": "^0.16.11",
+    "utif2": "^4.1.0",
     "lz-string": "^1.5.0",
     "nth-check": "^2.1.1",
     "pako": "^2.1.0",
@@ -104,7 +106,8 @@
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0",
     "svgo": "^3.3.2",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "zod": "3.23.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.20.0",
@@ -117,6 +120,7 @@
     "@types/d3-scale": "^4.0.8",
     "@types/d3-scale-chromatic": "^3.0.3",
     "@types/d3-selection": "^3.0.10",
+    "@types/d3-shape": "^3.1.7",
     "@types/d3-transition": "^3.0.8",
     "@types/d3-zoom": "^3.0.8",
     "@types/deep-diff": "^1.0.5",
@@ -148,7 +152,8 @@
     "shx": "^0.3.4",
     "ts-jest": "^29.2.5",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^7.18.0"
+    "typescript-eslint": "^7.18.0",
+    "zod-to-json-schema": "3.23.5"
   },
   "optionalDependencies": {
     "fsevents": "^2.3.3"
@@ -173,13 +178,6 @@
       "last 1 chrome version",
       "last 1 firefox version",
       "last 1 safari version"
-    ]
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@parcel/watcher",
-      "core-js",
-      "core-js-pure"
     ]
   }
 }

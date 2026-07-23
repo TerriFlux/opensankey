@@ -39,20 +39,27 @@ import { ratio_flux_constraint_traduction } from '../types/Utils'
 import { Class_ContainerElement } from '../Elements/TextZone'
 import { Class_NodeElement } from '../Elements/Node'
 import { ConfigType } from '../Elements/ElementsAttributesConfig'
-import { Class_BaseElement, Class_ElementStyle, Class_ProtoElement, ExtractAttributeValue } from '../Elements/Element'
+import { Class_BaseElement, Class_ElementStyle, Class_ProtoElement, ExtractAttributeValue, TRANSLATABLE_TEXT_ATTRIBUTES } from '../Elements/Element'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_NodeBase, Type_NameLabelSource } from '../Elements/NodeBase'
-import { ClassTemplate_Legend } from '../Elements/Legend'
+import { Class_LegendConfig } from '../Elements/LegendGenerator'
 import { Class_Sankey, Type_RatioFluxConstraint, Type_RatioStockFluxConstraint, Type_StockChainingConstraint, Type_SpreadsheetState } from '../types/Sankey'
 import { DEFAULT_THEME_ID, themeFromJSON } from '../types/Theme'
 import { Class_Tag } from '../types/Tag'
 import { node_exchanges_style, elementStyleConfigs, product_sector_styles, ElementStyleKey, LinkStyle, NodeStyle, ContainerStyle, structural_styles } from '../Elements/ElementStyle'
 import { dedupeZOrderKeepFirst } from '../types/zOrder'
-import { Class_DrawingArea } from '../types/DrawingArea'
-import { convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
+import { Class_DrawingArea, Type_AutoFitMode } from '../types/DrawingArea'
+import { backfillTagGroupUseColors, convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
 // Issue #191 — migration de rétro-compat de la césure des libellés, isolée dans
 // son propre module pour rester testable sans le graphe d'imports lourd d'ici.
-import { applyWrapLongWordsRetrocompat, CURRENT_FORMAT_VERSION, effectiveLoadVersion, isVersionBelow, validateSankeyRootJSON } from './persistenceMigrations'
+import { applyWrapLongWordsRetrocompat, CURRENT_FORMAT_VERSION, effectiveLoadVersion, isVersionBelow, parseLangMap, resolveLangMap, serializeLangMap, Type_LangMap, validateSankeyRootJSON } from './persistenceMigrations'
+import {
+  CONTAINER_KEY_MAP,
+  LINK_LOCAL_KEY_MAP,
+  NODE_ICON_KEY_MAP,
+  NODE_LOCAL_KEY_MAP,
+  STYLE_KEY_MAP
+} from './persistenceLegacyKeyMaps'
 
 
 export class BaseElementPersistence {
@@ -148,7 +155,12 @@ export class ProtoElementPersistence extends BaseElementPersistence {
       json_object['local'] = {} as Type_JSON
       (Object.entries(proto_element.attributes) as Array<[keyof ConfigType, boolean | number | string]>).forEach(([key, value]) => {
         if (proto_element.shouldSaveAttribute(key as keyof ConfigType, value)) {
-          (json_object['local'] as Type_JSON)[key] = value
+          // OS#1299 — texte traduisible stocké en map { langue -> texte } :
+          // string si monolingue (format historique, rétro-compatible), map sinon.
+          const out_value = (TRANSLATABLE_TEXT_ATTRIBUTES.has(key as string) && value !== null && typeof value === 'object')
+            ? (serializeLangMap(value as Type_LangMap) ?? '')
+            : value;
+          (json_object['local'] as Type_JSON)[key] = out_value
         }
       })
     }
@@ -168,9 +180,7 @@ export class ProtoElementPersistence extends BaseElementPersistence {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
-    console.log('convert_pre_v_0_91')
     convert_pre_v_0_91(json_object)
-    console.log(json_object.version)
   }
 
   public static fromJSON_0_91(
@@ -220,7 +230,16 @@ export class ProtoElementPersistence extends BaseElementPersistence {
     if (json_local_object) {
       (Object.keys(proto_element['_config']) as Array<keyof ConfigType>).forEach(key => {
         if (json_local_object[key as string] !== undefined) {
-          const value = json_local_object[key as string] as ExtractAttributeValue<ConfigType[typeof key]>
+          let value = json_local_object[key as string] as ExtractAttributeValue<ConfigType[typeof key]>
+          // OS#1299 — texte traduisible : accepte la string historique (rangée
+          // sous la langue déclarée du fichier) ou la map { langue -> texte }.
+          // Stocké en map ; le getter dynamique résout la langue active.
+          if (TRANSLATABLE_TEXT_ATTRIBUTES.has(key as string)) {
+            value = parseLangMap(
+              value,
+              proto_element.drawing_area.application_data.language
+            ) as unknown as ExtractAttributeValue<ConfigType[typeof key]>
+          }
           // Symétrie STRICTE avec l'écriture (shouldSaveAttribute) : l'écriture
           // sauve aussi une valeur égale au style résolu quand plusieurs styles
           // portent l'attribut ; la lecture doit la garder au même critère,
@@ -238,7 +257,10 @@ export class ProtoElementPersistence extends BaseElementPersistence {
 export class NodeBasePersistence extends ProtoElementPersistence {
   public static toJSON(node_base: Class_NodeBase, json_object: Type_JSON, kwargs?: Type_JSON) {
     super.toJSON(node_base, json_object, kwargs)
-    json_object['name'] = node_base.name
+    // OS#1299 — nom multilingue : string si une seule langue (format historique,
+    // rétro-compatible), map { fr, en, ... } si le diagramme est traduit. Un nom
+    // vide reste sérialisé '' (la clé est toujours présente, comme avant).
+    json_object['name'] = serializeLangMap(node_base.name_lang_map) ?? ''
     // Le contenu du label (name_label_source/text/tag_group_id/dimension_id) est
     // désormais un attribut de style (_storage) : il est sérialisé génériquement
     // sous json_object['local'] par ProtoElementPersistence.toJSON. Plus rien à
@@ -284,7 +306,16 @@ export class NodeBasePersistence extends ProtoElementPersistence {
   public static fromJSON(version: number, node_base: Class_NodeBase, json_node_object: Type_JSON, kwargs?: Type_JSON) {
     super.fromJSON(version, node_base, json_node_object, kwargs)
 
-    node_base['_name'] = getStringFromJSON(json_node_object, 'name', node_base.name)
+    // OS#1299 — nom multilingue : accepte la string historique (rangée sous la
+    // langue déclarée du fichier, lue AVANT les nœuds — cf. l'ordre dans
+    // DrawingAreaPersistence.fromJSON) ou la map { langue -> nom }. Clé absente
+    // (nœud implicite créé par un flux) -> on garde le nom de création (= id).
+    if (json_node_object['name'] !== undefined) {
+      node_base['_name_map'] = parseLangMap(
+        json_node_object['name'],
+        node_base.drawing_area.application_data.language
+      )
+    }
     // Rétro-compat : le contenu du label est maintenant un attribut de style,
     // chargé génériquement depuis `local` par super.fromJSON ci-dessus. Les
     // anciens fichiers stockaient ces valeurs à la RACINE du nœud (et le booléen
@@ -365,13 +396,7 @@ export class ContainerPersistence extends NodeBasePersistence {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
-    const fromJsonMapping_0_91_to_0_92: { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG } = {
-      'label_height': 'shape_min_height',
-      'label_width': 'shape_min_width',
-      //'has_fo': 'name_label_has_fo',
-      'content': 'name_label_fo_content'
-    }
-    Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
+    Object.entries(CONTAINER_KEY_MAP).forEach(([jsonKey, attrKey]) => {
       if (json_object[jsonKey] !== undefined) {
         const key = attrKey as keyof ConfigType
         const currentValue = container.getStyleProperty(key)
@@ -434,82 +459,94 @@ export class ContainerPersistence extends NodeBasePersistence {
       }
     })
     if (container.attributes['name_label_fo_content']) {
-      const html = container.attributes['name_label_fo_content'] as string
+      // OS#1299 — le contenu peut être une map multilingue { langue -> html } :
+      // le nettoyage Quill ci-dessous s'applique à CHAQUE langue (cf. fin de bloc).
+      const raw_fo = container.attributes['name_label_fo_content']
 
+      const cleanQuillHtml = (html: string): string => {
       // Parse HTML avec DOMParser
-      const parser = new DOMParser()
-      const doc = parser.parseFromString(html, 'text/html')
+        const parser = new DOMParser()
+        const doc = parser.parseFromString(html, 'text/html')
 
-      // Fonction pour fusionner un nouveau style dans l'attribut style existant
-      const mergeStyle = (element: Element, newStyleRule: string) => {
-        const existingStyle = element.getAttribute('style') || ''
-        const styles = new Map<string, string>()
+        // Fonction pour fusionner un nouveau style dans l'attribut style existant
+        const mergeStyle = (element: Element, newStyleRule: string) => {
+          const existingStyle = element.getAttribute('style') || ''
+          const styles = new Map<string, string>()
 
-        // Parse les styles existants
-        existingStyle.split(';').forEach(rule => {
-          const [prop, value] = rule.split(':').map(s => s.trim())
+          // Parse les styles existants
+          existingStyle.split(';').forEach(rule => {
+            const [prop, value] = rule.split(':').map(s => s.trim())
+            if (prop && value) {
+              styles.set(prop, value)
+            }
+          })
+
+          // Ajoute le nouveau style
+          const [prop, value] = newStyleRule.split(':').map(s => s.trim())
           if (prop && value) {
             styles.set(prop, value)
           }
-        })
 
-        // Ajoute le nouveau style
-        const [prop, value] = newStyleRule.split(':').map(s => s.trim())
-        if (prop && value) {
-          styles.set(prop, value)
-        }
+          // Reconstruit l'attribut style
+          const merged = Array.from(styles.entries())
+            .map(([p, v]) => `${p}: ${v}`)
+            .join('; ')
 
-        // Reconstruit l'attribut style
-        const merged = Array.from(styles.entries())
-          .map(([p, v]) => `${p}: ${v}`)
-          .join('; ')
-
-        if (merged) {
-          element.setAttribute('style', merged)
-        }
-      }
-
-      // Map des conversions Quill class -> CSS style
-      const classToStyle: Record<string, string> = {
-        'ql-align-center': 'text-align: center',
-        'ql-align-right': 'text-align: right',
-        'ql-align-left': 'text-align: left',
-        'ql-align-justify': 'text-align: justify',
-        'ql-size-small': 'font-size: 0.75em',
-        'ql-size-large': 'font-size: 1.5em',
-        'ql-size-huge': 'font-size: 2.5em',
-        'ql-font-serif': 'font-family: serif',
-        'ql-font-monospace': 'font-family: monospace'
-      }
-
-      // Traite tous les éléments qui ont des classes
-      doc.body.querySelectorAll('[class]').forEach(element => {
-        const classes = Array.from(element.classList)
-
-        classes.forEach(className => {
-          // Classes standard
-          if (className in classToStyle) {
-            mergeStyle(element, classToStyle[className])
-            element.classList.remove(className)
+          if (merged) {
+            element.setAttribute('style', merged)
           }
-          // Classes custom font-size (ql-size-25px)
-          else if (/^ql-size-(\d+)px$/.test(className)) {
-            const match = className.match(/^ql-size-(\d+)px$/)
-            if (match) {
-              mergeStyle(element, `font-size: ${match[1]}px`)
+        }
+
+        // Map des conversions Quill class -> CSS style
+        const classToStyle: Record<string, string> = {
+          'ql-align-center': 'text-align: center',
+          'ql-align-right': 'text-align: right',
+          'ql-align-left': 'text-align: left',
+          'ql-align-justify': 'text-align: justify',
+          'ql-size-small': 'font-size: 0.75em',
+          'ql-size-large': 'font-size: 1.5em',
+          'ql-size-huge': 'font-size: 2.5em',
+          'ql-font-serif': 'font-family: serif',
+          'ql-font-monospace': 'font-family: monospace'
+        }
+
+        // Traite tous les éléments qui ont des classes
+        doc.body.querySelectorAll('[class]').forEach(element => {
+          const classes = Array.from(element.classList)
+
+          classes.forEach(className => {
+          // Classes standard
+            if (className in classToStyle) {
+              mergeStyle(element, classToStyle[className])
               element.classList.remove(className)
             }
+            // Classes custom font-size (ql-size-25px)
+            else if (/^ql-size-(\d+)px$/.test(className)) {
+              const match = className.match(/^ql-size-(\d+)px$/)
+              if (match) {
+                mergeStyle(element, `font-size: ${match[1]}px`)
+                element.classList.remove(className)
+              }
+            }
+          })
+
+          // Supprime l'attribut class s'il est vide
+          if (element.classList.length === 0) {
+            element.removeAttribute('class')
           }
         })
 
-        // Supprime l'attribut class s'il est vide
-        if (element.classList.length === 0) {
-          element.removeAttribute('class')
-        }
-      })
+        // Récupère le HTML nettoyé
+        return doc.body.innerHTML
+      }
 
-      // Récupère le HTML nettoyé
-      container.attributes['name_label_fo_content'] = doc.body.innerHTML
+      if (raw_fo !== null && typeof raw_fo === 'object') {
+        const cleaned: Type_LangMap = {}
+        Object.entries(raw_fo as Type_LangMap).forEach(([l, h]) => { cleaned[l] = cleanQuillHtml(h) })
+        container.attributes['name_label_fo_content'] = cleaned as unknown as ExtractAttributeValue<ConfigType['name_label_fo_content']>
+      } else {
+        container.attributes['name_label_fo_content'] = cleanQuillHtml(raw_fo as string)
+      }
     }
     // Load tied_to_nodes flag
     container['_tied_to_nodes'] = getBooleanFromJSON(
@@ -518,17 +555,25 @@ export class ContainerPersistence extends NodeBasePersistence {
       container.tied_to_nodes
     )
 
+    // OS#1254 — un cadre peut englober des NŒUDS ou d'autres CONTENEURS (cas du
+    // cadre de la légende, dont les enfants sont des zones de texte) : la
+    // résolution cherche dans les deux registres.
     const list_id_nodes = (json_object['attachedNodes'] as string[]) || []
     const nodes_dict = container.drawing_area.sankey.nodes_dict
+    const containers_dict = container.drawing_area.sankey.containers_dict
 
     list_id_nodes.forEach(node_id => {
-      if (node_id in nodes_dict) {
-        const node = nodes_dict[node_id]
-        container.attachContToNode(node)
+      const target: Class_NodeBase | undefined = nodes_dict[node_id] ?? containers_dict[node_id]
+      if (target && target !== container) {
+        container.attachNodeToCont(target)
       }
     })
 
-
+    // OS#1276b — rétrocompat « diagonale de boîte » → segment à 2 extrémités.
+    // Les anciens fichiers ne portent que shape_line_flip (offsets absents ⇒ tous
+    // à 0, segment dégénéré). ensureLineEndpoints() les dérive de la boîte + du sens
+    // historique. Idempotent : ne touche rien si les offsets sont déjà chargés.
+    container.ensureLineEndpoints()
   }
 }
 
@@ -616,50 +661,6 @@ export class LinkElementPersistence extends ProtoElementPersistence {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
-    const fromJsonMapping_0_91_to_0_92: { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG } = {
-      'user_scale': 'shape_local_link_scale',
-      'curved': 'shape_is_curved',
-      'curvature': 'shape_curvature',
-      'recycling': 'shape_is_recycling',
-      'is_structur': 'shape_is_structure',
-      'orientation': 'shape_orientation',
-      'left_horiz_shift': 'shape_starting_curve',
-      'right_horiz_shift': 'shape_ending_curve',
-      'starting_tangeant': 'shape_starting_tangeant',
-      'ending_tangeant': 'shape_ending_tangeant',
-      'vert_shift': 'shape_middle_recycling',
-      'arrow': 'shape_is_arrow',
-      'arrow_size': 'shape_arrow_size',
-      'dashed': 'shape_is_dashed',
-      'color': 'shape_color',
-      'color_rule': 'shape_color_rule',
-      'opacity': 'shape_opacity',
-      // legacy
-      'label_visible': 'value_label_is_visible',
-      'font_family': 'value_label_font_family',
-      'label_font_size': 'value_label_font_size',
-      'text_color': 'value_label_color',
-      'label_position': 'value_label_horiz',
-      'orthogonal_label_position': 'value_label_vert',
-      'label_on_path': 'value_label_on_path',
-      'label_pos_auto': 'value_label_pos_auto',
-      'to_precision': 'value_label_scientific_notation',
-      'scientific_precision': 'value_label_nb_significant_digits',
-      //'nb_scientific_precision': 'value_label_nb_significant_digits',
-      'custom_digit': 'value_label_custom_digit',
-      'nb_digit': 'value_label_nb_digit',
-      'label_unit_visible': 'value_label_unit_visible',
-      'label_unit': 'value_label_unit',
-      'label_unit_factor': 'value_label_unit_factor',
-      'font_size': 'name_label_font_size',
-      'uppercase': 'name_label_uppercase',
-      'bold': 'name_label_bold',
-      'italic': 'name_label_italic',
-      'label_color': 'name_label_color',
-      'label_horiz': 'name_label_horiz',
-      'label_vert': 'name_label_vert',
-
-    }
 
     const json_local = json_object.local as Type_JSON
     if (json_local) {
@@ -667,7 +668,7 @@ export class LinkElementPersistence extends ProtoElementPersistence {
       if (was_gradient) {
         link.attributes['shape_color_rule'] = 'gradient'
       }
-      Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
+      Object.entries(LINK_LOCAL_KEY_MAP).forEach(([jsonKey, attrKey]) => {
         if (json_local[jsonKey] !== undefined) {
           const key = attrKey as keyof ConfigType
           //const currentValue = link.getStyleProperty(key)
@@ -819,6 +820,10 @@ export class NodeElementPersistence extends NodeBasePersistence {
     if (!node.has_material_balance) {
       json_object['has_material_balance'] = false
     }
+    // OS#1272 — Override par nœud du marqueur de bilan ('inherit' = suit le global).
+    if (node.balance_marker_mode !== 'inherit') {
+      json_object['balance_marker_mode'] = node.balance_marker_mode
+    }
 
     if (kwargs && kwargs['save_only_elements_with_tags']) {
       if (node.input_links_list.length > 0) {
@@ -913,55 +918,9 @@ export class NodeElementPersistence extends NodeBasePersistence {
     kwargs?: Type_JSON
   ) {
     super.fromJSON_0_91(node, json_object, kwargs)
-    const fromJsonMapping_0_91_to_0_92Local: { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG } = {
-      // Name label legacy
-      'label_visible': 'name_label_is_visible',
-      'font_family': 'name_label_font_family',
-      'font_size': 'name_label_font_size',
-      'uppercase': 'name_label_uppercase',
-      'bold': 'name_label_bold',
-      'italic': 'name_label_italic',
-      'label_color': 'name_label_color',
-      'label_horiz': 'name_label_horiz',
-      'label_vert': 'name_label_vert',
-      'label_background': 'name_label_background_visible',
-      'label_background_color': 'name_label_background_color',
-      'label_box_width': 'name_label_box_width',
-
-      // Value label legacy
-      'show_value': 'value_label_is_visible',
-      'value_font_size': 'value_label_font_size',
-      'label_horiz_valeur': 'value_label_horiz',
-      'label_vert_valeur': 'value_label_vert',
-      //'to_precision': 'value_label_scientific_notation',
-      'scientific_precision': 'value_label_significant_digits',
-      'nb_scientific_precision': 'value_label_nb_significant_digits',
-      'custom_digit': 'value_label_custom_digit',
-      'nb_digit': 'value_label_nb_digit',
-      'label_unit_visible': 'value_label_unit_visible',
-      'label_unit': 'value_label_unit',
-      'label_unit_factor': 'value_label_unit_factor',
-
-      // Shape legacy (fusion avec MAIN_MAPPING)
-      'shape': 'shape_type',
-      'node_width': 'shape_min_width',
-      'node_height': 'shape_min_height',
-      'color': 'shape_color',
-      'opacity': 'shape_opacity',
-      'colorSustainable': 'shape_color_sustainable'
-    }
-    const fromJsonMapping_0_91_to_0_92: { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG } = {
-      'iconName': 'icon_icon_name',
-      'iconColor': 'icon_color',
-      'iconVisible': 'icon_is_visible',
-      'iconViewBox': 'icon_view_box',
-      'iconColorSustainable': 'icon_color_sustainable',
-      'is_image': 'icon_is_image',
-      'image_src': 'icon_image_src'
-    }
     const json_local = json_object.local as Type_JSON
     if (json_local) {
-      Object.entries(fromJsonMapping_0_91_to_0_92Local).forEach(([jsonKey, attrKey]) => {
+      Object.entries(NODE_LOCAL_KEY_MAP).forEach(([jsonKey, attrKey]) => {
         if (json_local[jsonKey] !== undefined) {
           const key = attrKey as keyof ConfigType
           const currentValue = node.getStyleProperty(key)
@@ -972,7 +931,7 @@ export class NodeElementPersistence extends NodeBasePersistence {
       })
     }
 
-    Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
+    Object.entries(NODE_ICON_KEY_MAP).forEach(([jsonKey, attrKey]) => {
       if (json_object[jsonKey] !== undefined) {
         const key = attrKey as keyof ConfigType
         const currentValue = node.getStyleProperty(key)
@@ -1041,25 +1000,40 @@ export class NodeElementPersistence extends NodeBasePersistence {
     if (json_node_object['has_material_balance'] !== undefined) {
       node.has_material_balance = json_node_object['has_material_balance'] as boolean
     }
+    // OS#1272 — Override par nœud du marqueur de bilan.
+    if (json_node_object['balance_marker_mode'] !== undefined) {
+      node.balance_marker_mode = json_node_object['balance_marker_mode'] as 'inherit' | 'on' | 'off'
+    }
 
   }
 }
 
 
-export class LegendPersistence extends ProtoElementPersistence {
+/**
+ * OS#1254 — persistance des PARAMÈTRES du générateur de légende.
+ *
+ * Les zones de la légende elles-mêmes ('legend', 'legend-*') sont des
+ * conteneurs ordinaires, sérialisés dans 'labels' comme les autres. Le
+ * sous-objet 'legend' ne porte plus que les paramètres du générateur ; les
+ * clés reprennent celles de l'ancienne légende-objet pour que la lecture des
+ * anciens fichiers soit directe. Nouveauté : 'legend_managed' (absent = true).
+ * L'ancien mode « fixe à l'écran » ('legend_stick_to_drawing' /
+ * 'legacy_legend') est supprimé : ignoré en lecture, la légende vit dans le
+ * monde. En mode géré, les zones sont régénérées au premier draw ; en mode
+ * cassé, elles sont simplement relues depuis 'labels'.
+ */
+export class LegendPersistence {
 
   public static toJSON(
-    legend: ClassTemplate_Legend,
+    legend: Class_LegendConfig,
     json_object: Type_JSON
   ) {
     json_object['legend'] = {}
-    const json_legend = json_object['legend']
-    ProtoElementPersistence.toJSON(legend, json_legend)
-    //if (this.position_x != const_default_position_x || this.position_x != const_default_position_y) json_legend['legend_position'] = [String(this.position_x), String(this.position_y)]
+    const json_legend = json_object['legend'] as Type_JSON
+    json_legend['x'] = legend.position_x
+    json_legend['y'] = legend.position_y
+    if (!legend.managed) json_legend['legend_managed'] = false
     if (!legend.masked) json_legend['mask_legend'] = legend.masked
-    if (legend.shape_position_dx) json_legend['legend_dx'] = legend.shape_position_dx
-    if (legend.shape_position_dy) json_legend['legend_dy'] = legend.shape_position_dy
-    if (legend.display_legend_scale) json_legend['legend_scale'] = legend.display_legend_scale
     if (legend.width != default_width) json_legend['legend_width'] = legend.width
     if (legend.display_legend_scale) json_legend['display_legend_scale'] = legend.display_legend_scale
     if (legend.scale_legend_unit !== '') json_legend['scale_legend_unit'] = legend.scale_legend_unit
@@ -1071,30 +1045,13 @@ export class LegendPersistence extends ProtoElementPersistence {
     if (!legend.legend_show_dataTags) json_legend['legend_show_dataTags'] = legend.legend_show_dataTags
     if (legend.legend_show_constraints) json_legend['legend_show_constraints'] = legend.legend_show_constraints
     if (legend.legend_horizontal) json_legend['legend_horizontal'] = legend.legend_horizontal
-    if (legend.stick_to_drawing != undefined) json_legend['legend_stick_to_drawing'] = legend.stick_to_drawing
     if (legend.info_link_value_void) json_legend['info_link_value_void'] = legend.info_link_value_void
-    if (!legend.legend_show_data_type) json_legend['legend_show_data_type'] = legend.legend_show_data_type
+    if (legend.legend_show_data_type) json_legend['legend_show_data_type'] = legend.legend_show_data_type
     return json_object
-  }
-  public static fromJSON_pre_0_9(
-    _legend: ClassTemplate_Legend,
-    _json_object: Type_JSON,
-    _kwargs?: Type_JSON
-  ) {
-  }
-
-  public static fromJSON_0_9(
-    _legend: ClassTemplate_Legend,
-    json_object: Type_JSON,
-    _kwargs?: Type_JSON
-  ) {
-    console.log('convert_pre_v_0_91')
-    convert_pre_v_0_91(json_object)
-    console.log(json_object.version)
   }
 
   public static fromJSON_0_91(
-    _legend: ClassTemplate_Legend,
+    _legend: Class_LegendConfig,
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
@@ -1106,23 +1063,22 @@ export class LegendPersistence extends ProtoElementPersistence {
   }
 
   public static fromJSON(
-    version: number,
-    legend: ClassTemplate_Legend,
+    _version: number,
+    legend: Class_LegendConfig,
     json_object: Type_JSON,
-    kwargs?: Type_JSON
+    _kwargs?: Type_JSON
   ): void {
-
     const json_legend = getJSONFromJSON(json_object, 'legend', {})
-    ProtoElementPersistence.fromJSON(version, legend, json_legend, kwargs)
-    // const legend_position = getStringListFromJSON(
-    //   json_legend, 'legend_position', [String(default_legend_position_x), String(default_legend_position_y)]
-    // )
-    // this._position_x = +legend_position[0]
-    // legend.position_y = +legend_position[1]
+    // Position d'apparition du cadre. Anciens fichiers « fixes à l'écran » :
+    // les coordonnées écran sont reprises telles quelles comme coordonnées
+    // monde (la légende apparaît près du coin haut-gauche de la vue).
+    // Repli sur legend_dx/dy (import e!Sankey et vieux fichiers sans x/y).
+    legend.initial_position = {
+      x: getNumberFromJSON(json_legend, 'x', getNumberFromJSON(json_legend, 'legend_dx', legend.initial_position.x)),
+      y: getNumberFromJSON(json_legend, 'y', getNumberFromJSON(json_legend, 'legend_dy', legend.initial_position.y))
+    }
+    legend.managed = getBooleanFromJSON(json_legend, 'legend_managed', true)
     legend['_masked'] = getBooleanFromJSON(json_legend, 'mask_legend', legend.masked)
-    legend['_dx'] = getNumberFromJSON(json_legend, 'legend_dx', legend.shape_position_dx)
-    legend['_dy'] = getNumberFromJSON(json_legend, 'legend_dy', legend.shape_position_dy)
-    legend['_scale'] = getNumberFromJSON(json_legend, 'legend_scale', legend['_scale'])
     legend['_width'] = getNumberFromJSON(json_legend, 'legend_width', legend.width)
     legend['_display_legend_scale'] = getBooleanFromJSON(json_legend, 'display_legend_scale', legend.display_legend_scale)
     legend['_scale_legend_unit'] = getStringFromJSON(json_legend, 'scale_legend_unit', legend.scale_legend_unit)
@@ -1136,11 +1092,6 @@ export class LegendPersistence extends ProtoElementPersistence {
     legend['_legend_horizontal'] = getBooleanFromJSON(json_legend, 'legend_horizontal', legend.legend_horizontal)
     legend['_info_link_value_void'] = getBooleanFromJSON(json_legend, 'info_link_value_void', legend.info_link_value_void)
     legend['_legend_show_data_type'] = getBooleanFromJSON(json_legend, 'legend_show_data_type', legend.legend_show_data_type)
-    legend['_stick_to_drawing'] = getBooleanFromJSON(json_legend, 'legend_stick_to_drawing', legend.stick_to_drawing)
-    // Var only present if json is legacy
-    if (!legend.stick_to_drawing) {
-      legend['_stick_to_drawing'] = getBooleanFromJSON(json_legend, 'legacy_legend', legend.stick_to_drawing)
-    }
   }
 }
 
@@ -1162,92 +1113,9 @@ export class StylePersistence {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
-    const fromJsonMapping_0_91_to_0_92: { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG } = {
-      // Nodes
-      'user_scale': 'shape_local_link_scale',
-      'curved': 'shape_is_curved',
-      'curvature': 'shape_curvature',
-      'recycling': 'shape_is_recycling',
-      'is_structur': 'shape_is_structure',
-      'orientation': 'shape_orientation',
-      'left_horiz_shift': 'shape_starting_curve',
-      'right_horiz_shift': 'shape_ending_curve',
-      'starting_tangeant': 'shape_starting_tangeant',
-      'ending_tangeant': 'shape_ending_tangeant',
-      'vert_shift': 'shape_middle_recycling',
-      'arrow': 'shape_is_arrow',
-      'arrow_size': 'shape_arrow_size',
-      //'dashed': 'shape_is_dashed',
-      'color': 'shape_color',
-      'color_rule': 'shape_color_rule',
-      'opacity': 'shape_opacity',
-      // legacy
-      //'label_visible': 'value_label_is_visible',
-      //'font_family': 'value_label_font_family',
-      'label_font_size': 'value_label_font_size',
-      'text_color': 'value_label_color',
-      'label_position': 'value_label_horiz',
-      'orthogonal_label_position': 'value_label_vert',
-      'label_on_path': 'value_label_on_path',
-      'label_pos_auto': 'value_label_pos_auto',
-      //'to_precision': 'value_label_scientific_notation',
-      'scientific_precision': 'value_label_nb_significant_digits',
-      //'nb_scientific_precision': 'value_label_nb_significant_digits',
-      'custom_digit': 'value_label_custom_digit',
-      'nb_digit': 'value_label_nb_digit',
-      'label_unit_visible': 'value_label_unit_visible',
-      'label_unit': 'value_label_unit',
-      'label_unit_factor': 'value_label_unit_factor',
-      //'font_size': 'name_label_font_size',
-      //'uppercase': 'name_label_uppercase',
-      //'bold': 'name_label_bold',
-      'italic': 'name_label_italic',
-      'label_color': 'name_label_color',
-      'label_horiz': 'name_label_horiz',
-      'label_vert': 'name_label_vert',
-      // Links
-      // Name label legacy
-      'label_visible': 'name_label_is_visible',
-      'font_family': 'name_label_font_family',
-      'font_size': 'name_label_font_size',
-      'uppercase': 'name_label_uppercase',
-      'bold': 'name_label_bold',
-      //'italic': 'name_label_italic',
-      //'label_color': 'name_label_color',
-      //'label_horiz': 'name_label_horiz',
-      //'label_vert': 'name_label_vert',
-      'label_background': 'name_label_background_visible',
-      'label_background_color': 'name_label_background_color',
-      'label_box_width': 'name_label_box_width',
-
-      // Value label legacy
-      'show_value': 'value_label_is_visible',
-      'value_font_size': 'value_label_font_size',
-      'label_horiz_valeur': 'value_label_horiz',
-      'label_vert_valeur': 'value_label_vert',
-      //'to_precision': 'value_label_scientific_notation',
-      //'scientific_precision': 'value_label_significant_digits',
-      //'nb_scientific_precision': 'value_label_nb_significant_digits',
-      //'custom_digit': 'value_label_custom_digit',
-      //'nb_digit': 'value_label_nb_digit',
-      //'label_unit_visible': 'value_label_unit_visible',
-      //'label_unit': 'value_label_unit',
-      //'label_unit_factor': 'value_label_unit_factor',
-
-      // Shape legacy (fusion avec MAIN_MAPPING)
-      'shape': 'shape_type',
-      'node_width': 'shape_min_width',
-      'node_height': 'shape_min_height',
-      //'color': 'shape_color',
-      //'opacity': 'shape_opacity',
-      colorSustainable: 'shape_color_sustainable',
-      value_label_background: 'value_label_background_color_visible',
-      dashed: 'shape_border_dashed',
-      thickness: 'shape_border_thickness'
-    }
 
     const default_style = style.drawing_area.sankey.default_style
-    Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
+    Object.entries(STYLE_KEY_MAP).forEach(([jsonKey, attrKey]) => {
       if (json_object[jsonKey] == undefined) {
         return
       }
@@ -1330,21 +1198,25 @@ export class SankeyPersistence {
     kwargs?: Type_JSON
   ) {
     const json_container_object = getJSONFromJSON(json_object, 'labels', {})
-    if (json_object.version == 0.8 && (json_object.file_name as string)?.includes('Agricole Référentiel Flux')) {
-      Object.entries(json_container_object).reverse()
-        .forEach(([_, container_json]) => {
-          const name = (container_json as Type_JSON)['name'] as string
-          const container = sankey.containers_dict[_] ?? sankey.addNewContainer(_, name)
-          fromJSON(container, container_json as Type_JSON, kwargs)
-        })
-    } else {
-      Object.entries(json_container_object)
-        .forEach(([_, container_json]) => {
-          const name = (container_json as Type_JSON)['name'] as string
-          const container = sankey.containers_dict[_] ?? sankey.addNewContainer(_, name)
-          fromJSON(container, container_json as Type_JSON, kwargs)
-        })        
-    }
+    const entries = (json_object.version == 0.8 && (json_object.file_name as string)?.includes('Agricole Référentiel Flux'))
+      ? Object.entries(json_container_object).reverse()
+      : Object.entries(json_container_object)
+    // Passe 1 : créer TOUS les conteneurs avant de les charger — un cadre peut
+    // référencer (attachedNodes) un conteneur défini plus loin dans le JSON
+    // (cas du cadre de la légende, OS#1254).
+    entries.forEach(([_, container_json]) => {
+      // OS#1299 — 'name' peut être une map multilingue : on résout une string
+      // pour le constructeur ; la map complète est restaurée en passe 2 (fromJSON).
+      const raw_name = (container_json as Type_JSON)['name']
+      const name = typeof raw_name === 'string'
+        ? raw_name
+        : resolveLangMap(parseLangMap(raw_name, sankey.drawing_area.application_data.language), undefined)
+      if (!sankey.containers_dict[_]) sankey.addNewContainer(_, name)
+    })
+    // Passe 2 : charger.
+    entries.forEach(([_, container_json]) => {
+      fromJSON(sankey.containers_dict[_], container_json as Type_JSON, kwargs)
+    })
   }
 
   private static load_nodes(
@@ -1577,6 +1449,11 @@ export class SankeyPersistence {
     // additive & rétro-compatible : absente des anciens fichiers -> comportement par défaut.
     if (Object.keys(sankey.spreadsheet_state).length > 0)
       json_object['spreadsheet_state'] = sankey.spreadsheet_state as unknown as Type_JSON
+
+    // OS#1286 — registre d'unités (grandeurs/unités/défauts). Additif : sérialisé
+    // seulement s'il diffère du catalogue par défaut (fichiers existants inchangés).
+    if (!sankey.units.equalsDefaultCatalog())
+      json_object['units'] = sankey.units.toJSON() as unknown as Type_JSON
 
     sankey.create_child_links()
     // Out
@@ -1833,9 +1710,61 @@ export class SankeyPersistence {
         : {}
     ) as unknown as Type_SpreadsheetState
 
+    // OS#1286 — registre d'unités. Additif : clé absente → catalogue par défaut
+    // (le registre du Sankey fraîchement reset est déjà au catalogue, on repose
+    // explicitement pour couvrir les rechargements sans reset préalable).
+    if (Array.isArray(json_object['units']))
+      sankey.units.fromJSON(json_object['units'])
+    else
+      sankey.units.resetToDefault()
+
     // Legacy migration: older files store the %IS/%OS/... family per-link via
     // value_option; fold them into the canonical list (sankeyexcelparser#116).
     SankeyPersistence.migrate_legacy_link_ratios(sankey)
+
+    // OS#1286 — migration des « unités personnalisées » (texte libre) vers le
+    // registre d'unités : le mode unit_name est retiré du sélecteur.
+    SankeyPersistence.migrate_legacy_unit_names(sankey)
+  }
+
+  /**
+   * OS#1286 — convertit chaque unité « texte libre » (unit_type effectif
+   * `unit_name` avec un texte non vide) des éléments ET des styles vers une
+   * référence du registre (`unit_model`) :
+   * - correspondance intelligente d'abord (symbole exact puis normalisé/alias
+   *   — « tonne » → t — À coefficient == unit_factor, condition d'un affichage
+   *   identique : l'ancien mode divisait la valeur par unit_factor) ;
+   * - sinon l'unité est AJOUTÉE à la grandeur « Unités du fichier » avec
+   *   coefficient = unit_factor, et référencée.
+   * Idempotente (après migration le type est `unit_model`) ; un texte vide est
+   * laissé tel quel (rien n'était affiché, rien ne l'est avec le nouveau
+   * défaut `unit_model` à référence vide).
+   */
+  private static migrate_legacy_unit_names(sankey: Class_Sankey) {
+    const prefixes = ['name_label', 'value_label', 'stock_label'] as const
+    const migrateTarget = (attrs: Record<string, unknown>) => {
+      prefixes.forEach(prefix => {
+        const type_key = prefix + '_unit_type'
+        const unit_key = prefix + '_unit'
+        const type = attrs[type_key]
+        // Attribut absent = ancien défaut `unit_name` : à migrer aussi.
+        if (type !== undefined && type !== 'unit_name') return
+        const text = attrs[unit_key]
+        if (typeof text !== 'string' || text.trim() === '') return
+        // Déjà une référence du registre (fichier récent, type par défaut).
+        if (sankey.units.resolve(text)) return
+        // L'ancien affichage ne divisait que pour unit_factor > 1.
+        const factor_raw = attrs[prefix + '_unit_factor']
+        const factor = (typeof factor_raw === 'number' && Number.isFinite(factor_raw) && factor_raw > 1)
+          ? factor_raw : 1
+        const resolved = sankey.units.getOrCreateLegacyUnit(text, factor)
+        attrs[type_key] = 'unit_model'
+        attrs[unit_key] = resolved.unit.id
+      })
+    }
+    sankey.styles_list.forEach(style => migrateTarget(style.attributes as unknown as Record<string, unknown>))
+    ;[...sankey.nodes_list, ...sankey.links_list, ...sankey.containers_list]
+      .forEach(el => migrateTarget(el.attributes as unknown as Record<string, unknown>))
   }
 
   // Convert each legacy per-link %-type (value_option in %IS/%OS/%PS/%ID/%OD/%PD)
@@ -2038,14 +1967,24 @@ export class DrawingAreaPersistence {
       json_object['disaggregation_gap_mode'] = drawing_area.disaggregation_gap_mode
     if (drawing_area['_disaggregation_gap_value'] != null)
       json_object['disaggregation_gap_value'] = drawing_area['_disaggregation_gap_value']
-    if (!drawing_area.structure_mode_force_min) json_object['structure_mode_force_min'] = false
-    if (drawing_area.arrow_use_standalone_layout) json_object['arrow_use_standalone_layout'] = true
+    // OS#1302 — pointe/épaisseur (ex-globales structure_mode_force_min,
+    // arrow_use_standalone_layout, arrow_spike_*) sont désormais des attributs de
+    // flux sérialisés avec les shape_* de chaque flux/style. Plus rien à écrire ici
+    // (les anciennes clés restent lues par fromJSON pour migrer les vieux fichiers).
+    // OS#1272 — Marqueur de bilan (réglages globaux). Sérialisés seulement hors défaut.
+    if (drawing_area.balance_marker_enabled) json_object['balance_marker_enabled'] = true
+    if (drawing_area.balance_marker_strategy !== 'relative') json_object['balance_marker_strategy'] = drawing_area.balance_marker_strategy
+    if (drawing_area.balance_marker_tolerance !== 1) json_object['balance_marker_tolerance'] = drawing_area.balance_marker_tolerance
     // Issue #165 — toujours sérialisé : l'absence du flag identifie un fichier
     // antérieur à la feature (chargé en déverrouillé pour préserver son rendu).
     json_object['font_size_locked'] = drawing_area.font_size_locked
     // Verrou de taille (largeur/hauteur/zoom figés au changement de dataTag).
     // Défaut false → sérialisé seulement si activé (absence ⇒ déverrouillé).
     if (drawing_area.size_locked) json_object['size_locked'] = true
+    // #680 — Mode de cadrage automatique (boutons radio d'ajustement). Défaut 'full'
+    // → sérialisé seulement si différent (absence ⇒ 'full' = cadrage à l'ouverture,
+    // comportement historique). 'none' = pas de cadrage auto ; 'width'/'height' = axe forcé.
+    if (drawing_area.auto_fit_mode !== 'full') json_object['auto_fit_mode'] = drawing_area.auto_fit_mode
     // Mode de représentation import/export (proche / haut-bas) : persisté car les nœuds
     // import/export siblings sont régénérés au chargement (cf. SplitIOrE).
     if (drawing_area.import_export_above_below) json_object['import_export_above_below'] = true
@@ -2116,7 +2055,6 @@ export class DrawingAreaPersistence {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
-    console.log('convert_data_legacy')
     convert_data_legacy(json_object)
     drawing_area.sankey.styles_dict['default'].shape_color_rule = 'auto'
 
@@ -2131,9 +2069,7 @@ export class DrawingAreaPersistence {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
-    console.log('convert_pre_v_0_91')
     convert_pre_v_0_91(json_object)
-    console.log(json_object.version)
   }
 
   public static fromJSON_0_91(
@@ -2141,6 +2077,7 @@ export class DrawingAreaPersistence {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
+    backfillTagGroupUseColors(json_object)
     LegendPersistence.fromJSON_0_91(drawing_area.legend, json_object)
     SankeyPersistence.fromJSON_0_91(drawing_area.sankey, json_object)
   }
@@ -2345,6 +2282,19 @@ export class DrawingAreaPersistence {
     // version pointée en la traitant comme courante ⇒ aucune migration legacy à
     // seuil ne se rejoue. Les fichiers legacy (sans format_version) sont inchangés.
     const file_format_version = getNumberOrUndefinedFromJSON(json_object, 'format_version')
+    // #254 — Garde-fou vers l'AVANT : un fichier annonçant un format plus récent
+    // que celui que cette app sait lire contient potentiellement des structures
+    // inconnues (ex. vues en delta introduites en format 2). On ne peut pas le
+    // lire correctement — on avertit explicitement plutôt que de le mal lire en
+    // silence.
+    if (file_format_version !== undefined && file_format_version > CURRENT_FORMAT_VERSION) {
+      console.warn(
+        `[format] Ce fichier est au format ${file_format_version}, or cette version de ` +
+        `l'application ne sait lire que jusqu'au format ${CURRENT_FORMAT_VERSION}. ` +
+        'Certains éléments (par exemple les vues) peuvent ne pas se charger correctement. ' +
+        'Mettez à jour l\'application.'
+      )
+    }
     const version = effectiveLoadVersion(
       getStringOrUndefinedFromJSON(json_object, 'version'),
       file_format_version,
@@ -2371,7 +2321,10 @@ export class DrawingAreaPersistence {
       isVersionBelow(version, '0.92')
     ) {
       this.fromJSON_0_91(drawing_area, json_object, kwargs)
-      drawing_area.to_recenter = true
+      // OS#1250 phase 2 — le cadrage de ces fichiers reposait sur le recentrage
+      // MUTANT fait au chargement. C'était déjà une migration, mais déguisée en
+      // opération de navigation (drapeau `to_recenter` + recenter()). On la nomme.
+      drawing_area.markForLegacyNormalization()
     }
     if (
       (version === undefined) ||
@@ -2393,6 +2346,9 @@ export class DrawingAreaPersistence {
     // Verrou de taille : champ direct (le setter size_locked déclenche un re-fit).
     // Absence du flag ⇒ déverrouillé (défaut de la classe).
     drawing_area['_size_locked'] = getBooleanFromJSON(json_object, 'size_locked', false)
+    // #680 — Mode de cadrage auto : champ direct (le setter notifie la barre d'outils).
+    // Absence ⇒ 'full' (défaut de la classe = cadrage à l'ouverture, comportement historique).
+    drawing_area['_auto_fit_mode'] = getStringFromJSON(json_object, 'auto_fit_mode', 'full') as Type_AutoFitMode
     drawing_area['_import_export_above_below'] = getBooleanFromJSON(json_object, 'import_export_above_below', false)
 
     drawing_area.application_data.language = getStringOrUndefinedFromJSON(json_object, 'language')
@@ -2431,8 +2387,30 @@ export class DrawingAreaPersistence {
       getStringFromJSON(json_object, 'disaggregation_gap_mode', 'fill') as Type_DisaggregationGap
     drawing_area['_disaggregation_gap_value'] =
       getNumberOrUndefinedFromJSON(json_object, 'disaggregation_gap_value') ?? null
-    drawing_area['_structure_mode_force_min'] = getBooleanFromJSON(json_object, 'structure_mode_force_min', true)
-    drawing_area['_arrow_use_standalone_layout'] = getBooleanFromJSON(json_object, 'arrow_use_standalone_layout', false)
+    // OS#1302 — les anciennes globales de pointe/épaisseur (structure_mode_force_min,
+    // arrow_use_standalone_layout, arrow_spike_*) sont devenues des attributs de flux
+    // résolus par le style. Migration : si un ancien diagramme porte ces clés au niveau
+    // du drawing_area, on les applique au STYLE DE FLUX PAR DÉFAUT (LinkStyle, base de
+    // la chaîne de style de tout flux — cf. Class_LinkElement) pour préserver le rendu.
+    // Les diagrammes récents portent directement les shape_* par flux/style.
+    const migrated_link_style = drawing_area.sankey.styles_dict[LinkStyle]
+    if (migrated_link_style) {
+      if ('structure_mode_force_min' in json_object)
+        migrated_link_style.shape_structure_force_min = getBooleanFromJSON(json_object, 'structure_mode_force_min', true)
+      if ('arrow_use_standalone_layout' in json_object)
+        migrated_link_style.shape_arrow_standalone = getBooleanFromJSON(json_object, 'arrow_use_standalone_layout', false)
+      // Ancien seuil de « pointe accentuée » (#1270, jamais publié tel quel) → largeur
+      // mini de pointe (px). Les anciens facteurs/always n'ont pas d'équivalent direct
+      // et sont ignorés ; le nouveau défaut (10px) s'applique sinon.
+      if ('arrow_spike_max_thickness' in json_object) {
+        const legacy = getNumberFromJSON(json_object, 'arrow_spike_max_thickness', 0)
+        if (legacy > 0) migrated_link_style.shape_arrow_min_width = legacy
+      }
+    }
+    // OS#1272 — Marqueur de bilan (réglages globaux).
+    drawing_area['_balance_marker_enabled'] = getBooleanFromJSON(json_object, 'balance_marker_enabled', false)
+    drawing_area['_balance_marker_strategy'] = getStringFromJSON(json_object, 'balance_marker_strategy', 'relative') as 'exact' | 'absolute' | 'relative'
+    drawing_area['_balance_marker_tolerance'] = getNumberFromJSON(json_object, 'balance_marker_tolerance', 1)
     drawing_area['_scale'] = getNumberFromJSON(json_object, 'user_scale', drawing_area.scale)
     drawing_area.scaleValueToPx.domain([0, drawing_area.scale])
     drawing_area['_type_data'] = getStringFromJSON(json_object, 'show_structure', drawing_area.type_data) as Type_Structure
@@ -2490,6 +2468,32 @@ export class DrawingAreaPersistence {
 
     // Fusionner : ordre du JSON + éléments manquants à la fin
     drawing_area['_list_g_element_id'] = dedupeZOrderKeepFirst([...order_from_json, ...missing_in_json])
+
+    // OS#1259 — z-order des GROUPES : un cadre (tied_to_nodes) doit être DERRIÈRE
+    // ses membres, sinon il capte les clics qui leur sont destinés (membres
+    // inatteignables). L'ordre Z sauvegardé peut avoir remis le cadre devant ;
+    // on ré-applique sendFrameBehindMembers au chargement. Traité du plus profond
+    // au plus englobant (groupes emboîtés) pour que chaque cadre finisse bien
+    // derrière l'ensemble de sa descendance.
+    {
+      const tiedFrameDepth = (c: Class_NodeBase): number => {
+        let depth = 0
+        let cur: Class_NodeBase = c
+        const seen = new Set<Class_NodeBase>([c])
+        for (;;) {
+          const parent = cur.attached_container.find(p => p.tied_to_nodes && !seen.has(p))
+          if (!parent) break
+          depth++
+          seen.add(parent)
+          cur = parent
+        }
+        return depth
+      }
+      drawing_area.sankey.containers_list
+        .filter(c => c.tied_to_nodes)
+        .sort((a, b) => tiedFrameDepth(b) - tiedFrameDepth(a))
+        .forEach(frame => drawing_area.sendFrameBehindMembers(frame))
+    }
 
     drawing_area['_show_background_image'] = getBooleanFromJSON(json_object, 'show_background_image', drawing_area.show_background_image)
     drawing_area['_background_image'] = getStringFromJSON(json_object, 'background_image', drawing_area.background_image)

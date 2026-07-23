@@ -36,7 +36,9 @@ import {
   makeId
 } from '../types/Utils'
 import { default_grey_color } from '../Elements/ElementsAttributesConfig'
+import i18next from 'i18next'
 import { Class_Sankey } from './Sankey'
+import { Type_LangMap, normalizeLang, parseLangMap, resolveLangMap, serializeLangMap } from '../Persistence/persistenceMigrations'
 import { Class_ProtoTagGroup, Class_TagGroup, Class_DataTagGroup, Class_ViewTagGroup } from './TagGroup'
 
 // SPECIFIC TYPES ***********************************************************************
@@ -56,11 +58,15 @@ export abstract class Class_ProtoTag {
   // Unique ID
   private _id: string
 
+  // OS#1299 — nom multilingue { langue -> nom }, comme les noms de nœuds.
+  // Les getters/setters name / long_name exposent une string résolue/écrite pour
+  // la langue ACTIVE de l'app (i18next). Monolingue = comportement historique
+  // (sérialisé en string).
   // Name (short name - used as label in config menus & selectors)
-  private _name: string
+  private _name_map: Type_LangMap
 
   // Long name (used for display on the diagram - falls back to _name if empty)
-  private _long_name: string = ''
+  private _long_name_map: Type_LangMap = {}
 
   // Color of tag
   private _color: string = default_grey_color
@@ -99,7 +105,7 @@ export abstract class Class_ProtoTag {
     id: string | undefined = undefined
   ) {
     this._id = id ?? makeId(name)
-    this._name = name
+    this._name_map = { [normalizeLang(i18next.language)]: name }
     this._ref_sankey = sankey
   }
 
@@ -140,8 +146,9 @@ export abstract class Class_ProtoTag {
    * @memberof Class_ProtoTag
    */
   protected _copyFrom(tag_to_copy: Class_ProtoTag) {
-    this._name = tag_to_copy._name
-    this._long_name = tag_to_copy._long_name
+    // Maps complètes (pas les strings résolues) : les traductions survivent à la copie.
+    this._name_map = { ...tag_to_copy._name_map }
+    this._long_name_map = { ...tag_to_copy._long_name_map }
     this._color = tag_to_copy._color
     this._is_selected = tag_to_copy._is_selected
     // Groups are switched from related group class
@@ -175,8 +182,9 @@ export abstract class Class_ProtoTag {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
-    json_object['name'] = this._name
-    json_object['long_name'] = this._long_name
+    // OS#1299 — string si monolingue (format historique), map { fr, en, ... } sinon.
+    json_object['name'] = serializeLangMap(this._name_map) ?? ''
+    json_object['long_name'] = serializeLangMap(this._long_name_map) ?? ''
     json_object['selected'] = this._is_selected
     json_object['color'] = this._color
   }
@@ -207,8 +215,15 @@ export abstract class Class_ProtoTag {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ): void {
-    this._name = getStringFromJSON(json_object, 'name', this._name)
-    this._long_name = getStringFromJSON(json_object, 'long_name', this._long_name)
+    // OS#1299 — accepte la string historique (rangée sous la langue déclarée du
+    // fichier) ou la map { langue -> nom }.
+    const file_lang = this._ref_sankey.drawing_area.application_data.language
+    if (json_object['name'] !== undefined) {
+      this._name_map = parseLangMap(json_object['name'], file_lang)
+    }
+    if (json_object['long_name'] !== undefined) {
+      this._long_name_map = parseLangMap(json_object['long_name'], file_lang)
+    }
     this._is_selected = getBooleanFromJSON(json_object, 'selected', true)
     this._color = getStringFromJSON(json_object, 'color', this._color)
   }
@@ -260,22 +275,34 @@ export abstract class Class_ProtoTag {
 
   public get id() { return this._id }
 
-  public get name() { return this._name }
-  public set name(value: string) { this._name = value }
+  // Nom résolu pour la langue active de l'app (repli en→fr→première dispo).
+  public get name() { return resolveLangMap(this._name_map ?? {}, i18next.language) }
+  public set name(value: string) {
+    const lang = normalizeLang(i18next.language)
+    if (!this._name_map) this._name_map = {}
+    // Vider dans une langue alors que d'autres existent = supprimer la traduction.
+    if (value === '' && Object.keys(this._name_map).some(l => l !== lang)) delete this._name_map[lang]
+    else this._name_map[lang] = value
+  }
 
   // Long name - used for display on the diagram, falls back to short name if empty
-  public get long_name() { return this._long_name }
+  public get long_name() { return resolveLangMap(this._long_name_map ?? {}, i18next.language) }
   public set long_name(value: string) {
     // Avoid useless updates
-    if (this._long_name !== value) {
-      this._long_name = value
+    if (this.long_name !== value) {
+      const lang = normalizeLang(i18next.language)
+      if (value === '' && Object.keys(this._long_name_map).some(l => l !== lang)) delete this._long_name_map[lang]
+      else this._long_name_map[lang] = value
       // Redraw all related elements (legend, banner, ...)
       this.update()
     }
   }
 
   // Name to display on the diagram : long name if defined, else short name
-  public get display_name() { return this._long_name !== '' ? this._long_name : this._name }
+  public get display_name() {
+    const long_name = this.long_name
+    return long_name !== '' ? long_name : this.name
+  }
 
   public get color() { return this._color }
   public set color(value: string) {

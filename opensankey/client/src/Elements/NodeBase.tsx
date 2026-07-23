@@ -25,7 +25,9 @@
 // ==================================================================================================
 
 import * as d3 from '../d3Modules'
+import i18next from 'i18next'
 
+import { Type_LangMap, normalizeLang, resolveLangMap } from '../Persistence/persistenceMigrations'
 import { Class_ElementStyle } from './Element'
 import { NodeDrawNameLabel } from './DrawLabel'
 import { Class_DrawingArea } from '../types/DrawingArea'
@@ -33,6 +35,7 @@ import { NodeDrawShape } from './NodeDrawShape'
 import { Class_Handler } from './Handler'
 import { Class_BaseShape } from './Element'
 import { NodeEventsHandler } from './NodeEventsHandler'
+import { isLegendElementId } from './legendIds'
 
 export const default_selected_stroke_width = 3
 //export const label_margin = 0
@@ -57,13 +60,22 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     left: Class_Handler,
     right: Class_Handler,
   }
+  // OS#1276b — poignées d'extrémité pour une ligne libre (shape_type === 'line').
+  // Créées paresseusement (la plupart des nœuds ne sont pas des lignes) ; en mode
+  // ligne elles REMPLACENT les 4 poignées de redimensionnement de boîte ci-dessus.
+  private _line_endpoint_handler: { a: Class_Handler, b: Class_Handler } | null = null
   public _nodeEventsHandler: NodeEventsHandler
   public d3_selection_g_shape: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
 
   private _position_u: number
   private _position_v: number
 
-  protected _name: string
+  // OS#1299 — nom multilingue : map { langue -> nom }, comme la documentation
+  // markdown (cf. persistenceMigrations). Le getter/setter `name` expose une
+  // string résolue/écrite pour la langue ACTIVE de l'app (i18next) : traduire un
+  // diagramme = basculer la langue de l'app puis renommer. Une seule langue =
+  // comportement historique inchangé (sérialisée en string).
+  protected _name_map: Type_LangMap
   // Le contenu du label de nom (source, texte libre, groupe de tags, dimension)
   // est désormais porté par le système d'attributs/styles (_storage) :
   // name_label_source / name_label_text / name_label_tag_group_id /
@@ -132,7 +144,7 @@ export abstract class Class_NodeBase extends Class_BaseShape {
       default_style
     )
 
-    this._name = name
+    this._name_map = { [normalizeLang(i18next.language)]: name }
     this._nodeDrawShape = new NodeDrawShape(this)
     this._nodeDrawNameLabel = new NodeDrawNameLabel(this, 'name_label')
     this._nodeDrawIcon = new NodeDrawNameLabel(this, 'icon')
@@ -191,7 +203,9 @@ export abstract class Class_NodeBase extends Class_BaseShape {
 
   protected _copyFrom(_: Class_NodeBase): void {
     super._copyFrom(_)
-    this._name = _.name
+    // Copie de la MAP complète (pas la string résolue) : les traductions non
+    // actives doivent survivre à la copie (vues, duplication, undo).
+    this._name_map = { ..._._name_map }
     // name_label_source/text/tag_group_id/dimension_id sont des attributs _storage,
     // déjà copiés par copyAttrFrom (appelé dans Element._copyFrom via super).
     this._position_u = _._position_u
@@ -205,15 +219,17 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     // _nodeDrawShape/_nodeDrawNameLabel/_nodeDrawIcon ne soient assignés.
     if (!this._nodeDrawShape) return
     this._nodeDrawShape.drawShape()
-    this.drawDragHandlers()
+    // On clear la sub-sélection du label AVANT drawDragHandlers : une sélection
+    // au niveau ÉLÉMENT (typiquement clic sur la forme) doit (ré)afficher les
+    // poignées de forme, que drawDragHandlers masque tant qu'un label est
+    // sous-sélectionné.
     // NB: on NE redessine PAS les labels ici. Sinon un simple clic
     // (re-sélection) détruit et recrée le <text> entre les deux clics d'un
     // double-clic → le dblclick natif ne déclenche pas l'éditeur du label.
-    // drawAsSelected reflète un changement de sélection au niveau ÉLÉMENT
-    // (typiquement clic sur la forme). On clear la sub-sélection du label
-    // dans tous les cas — l'utilisateur doit cliquer sur le <text> du label
-    // pour faire (ré)apparaître les poignées.
+    // L'utilisateur doit cliquer sur le <text> du label pour faire
+    // (ré)apparaître les poignées de boîte de label.
     this.selected_label_prefix = null
+    this.drawDragHandlers()
     // Poignées dans `g_handlers` (Class_Handler) — refresh appelle unDraw si
     // le label n'est plus sub-sélectionné.
     this._nodeDrawNameLabel?.refreshLabelResizeHandles()
@@ -227,12 +243,17 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     if (this._is_selected) {
       this.drawDragHandlers()
     }
-    this._nodeDrawNameLabel.drawGenericLabel()
+    // Icône/image AVANT les textes : une image de nœud peut remplir toute la
+    // boîte (import e!Sankey) — le label doit rester lisible par-dessus.
     this._nodeDrawIcon.drawGenericLabel()
+    this._nodeDrawNameLabel.drawGenericLabel()
   }
   public drawIcon() {
     if (!this._nodeDrawIcon) return
     this._nodeDrawIcon.drawGenericLabel()
+    // drawGenericLabel append le <g> en fin de nœud : re-trier pour que les
+    // labels repassent au-dessus de l'icône/image.
+    this._orderD3Elements()
   }
   public drawShape() {
     if (!this._nodeDrawShape) return
@@ -475,26 +496,46 @@ export abstract class Class_NodeBase extends Class_BaseShape {
 
   protected _orderD3Elements() {
     this.d3_selection_g_shape?.raise()
-    this._nodeDrawNameLabel.d3_selection?.raise()
+    // Icône/image sous les textes (cf. drawElements) : le label de nom doit
+    // rester au-dessus d'une image qui remplit la boîte du nœud.
     this._nodeDrawIcon.d3_selection?.raise()
+    this._nodeDrawNameLabel.d3_selection?.raise()
   }
 
-  public eventSimpleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    if (this._clickTimer) {
-      clearTimeout(this._clickTimer)
-      this._clickTimer = null
-      return // C'était en fait un double-clic, on ignore
+  // P1 (refonte événements) — la désambiguïsation simple/double-clic est faite
+  // UNE fois par Class_ProtoElement.eventSimpleLMBClick (timer unique). NodeBase
+  // ne fait plus que réagir aux clics CONFIRMÉS via ces deux hooks.
+  protected override onSingleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    this._nodeEventsHandler.handleSimpleLMBClick(event)
+    // OSP Extension — ouverture d'un hyperlien porté par le nœud/la ZDT.
+    if (this.hyperlink) {
+      window.open(this.hyperlink)
     }
-    // ✅ Démarrer un timer pour voir si un deuxième clic arrive
-    this._clickTimer = setTimeout(() => {
-      this._clickTimer = null
-      super.eventSimpleLMBClick(event)
-      this._nodeEventsHandler.handleSimpleLMBClick(event)
-      // OSP Extension - Ajouter cette section
-      if (this.hyperlink) {
-        window.open(this.hyperlink)
-      }
-    }, this._clickDelay) // Délai pour détecter un double-clic (250 ms)
+  }
+
+  // P2 — double-clic CONFIRMÉ : éditer le label sous le curseur (l'ancien handler
+  // du <text> DrawLabel est supprimé ; le clic label passe désormais par le
+  // discriminateur unique). Le type de label vient de la cible DOM.
+  protected override onDoubleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    if (!this.drawing_area.editable) return
+    const labelType = this._nodeEventsHandler.getClickedLabelType(event.target as Element)
+    if (labelType === 'value_label') { this.openValueLabelEditor(); return }
+    // name_label / icon -> éditer le nom (pour une ZDT, le texte EST le nom).
+    // Sur la forme nue ('shape') : rien (comportement historique).
+    if (labelType === 'name_label' || labelType === 'icon') this.setInputLabelVisible()
+  }
+
+  /** P2 — édition du label de VALEUR ; surchargé par les feuilles qui en ont un. */
+  protected openValueLabelEditor() { /* no-op ici (pas de label de valeur) */ }
+
+  // P2 — sous-sélection d'un label : pose selected_label_prefix puis n'affiche
+  // que les poignées de la boîte du label (drawDragHandlers masque celles de la
+  // forme ; chaque label ne (re)dessine ses poignées que si son prefix matche).
+  public drawSelectedLabelHandles(prefix: 'name_label' | 'value_label' | 'icon' | null) {
+    this.selected_label_prefix = prefix
+    this.drawDragHandlers()
+    this._nodeDrawNameLabel?.refreshLabelResizeHandles()
+    this._nodeDrawIcon?.refreshLabelResizeHandles()
   }
 
   protected eventMouseDrag(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
@@ -518,9 +559,18 @@ export abstract class Class_NodeBase extends Class_BaseShape {
         already_moved.add(n)
       })
     }
+    // #680 — Recadrage CONTINU pendant le glissé, en SUIVANT la direction du drag :
+    // - mode largeur/hauteur/tout → dézoom au fur et à mesure que le nœud s'éloigne ;
+    // - mode 'aucun' → zoom constant, recentrage caméra (le diagramme glisse à l'opposé) ;
+    // - sur l'axe libre, la zone de dessin s'élargit et suit l'élément (bord poussé épinglé).
+    // NB : le recadrage change le transform en cours de drag → un léger décalage du pointeur
+    // par tick est possible (assumé : comportement voulu « au fur et à mesure »).
+    this.drawing_area.accumulateFitDrag(event.dx, event.dy)
+    this.drawing_area.applyAutoFitMode(false)
   }
   protected eventMouseDragStart(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     super.eventMouseDragStart(event)
+    this.drawing_area.beginFitDrag() // #680 — réinitialise l'accumulateur de direction du glissé
     this._nodeEventsHandler.handleMouseDragStart(event)
   }
   public eventMouseDragEnd(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
@@ -546,6 +596,11 @@ export abstract class Class_NodeBase extends Class_BaseShape {
       this.drawing_area.orderElementOnDA()
     }
     this._nodeEventsHandler.handleMouseDragEnd(event)
+    // #680 — Cadrage FINAL du mode (suit encore la direction accumulée du glissé), puis on
+    // clôt le drag (efface la direction). Mode 'none' → recentrage caméra ; modes largeur/
+    // hauteur/tout → cadrage maintenu bord à bord.
+    this.drawing_area.applyAutoFitMode(false)
+    this.drawing_area.endFitDrag()
   }
 
   protected eventMaintainedClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
@@ -568,14 +623,36 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     this._nodeEventsHandler.handleMouseOut()
   }
 
-  public get name() { return this._name }
-  public set name(_: string) { this._name = _; this.drawNameLabel() }
+  // Nom résolu pour la langue active de l'app (repli en→fr→première dispo).
+  // Avec une seule langue dans la map (cas historique), renvoie toujours cette
+  // valeur quelle que soit la langue active. Le `?? {}` protège les accès
+  // pendant la chaîne super() du constructeur (map pas encore assignée).
+  public get name() { return resolveLangMap(this._name_map ?? {}, i18next.language) }
+  public set name(_: string) {
+    const lang = normalizeLang(i18next.language)
+    if (!this._name_map) this._name_map = {}
+    // Vider le nom dans une langue alors que d'autres langues existent =
+    // SUPPRIMER cette traduction (le nom retombe sur l'autre langue). Vider le
+    // nom quand c'est la seule langue = nom vide (comportement historique).
+    const other_langs = Object.keys(this._name_map).filter(l => l !== lang)
+    if (_ === '' && other_langs.length > 0) delete this._name_map[lang]
+    else this._name_map[lang] = _
+    // Sous un thème à palette par nom, renommer périme la table des couleurs.
+    // `Class_ContainerElement` hérite de cette classe sans être un nœud : c'est
+    // `Sankey` qui filtre.
+    this.sankey?.onNodeRenamed(this)
+    this.drawNameLabel()
+  }
+  /** Map complète { langue -> nom } (persistance / copie). */
+  public get name_lang_map(): Type_LangMap { return this._name_map }
+  public set name_lang_map(_: Type_LangMap) { this._name_map = _ }
   public get name_label() {
+    const resolved_name = this.name
     if (this.name_label_separator !== '') {
-      const splitted_label = this._name.split(this.name_label_separator)
+      const splitted_label = resolved_name.split(this.name_label_separator)
       return (splitted_label.length > 1 && this.name_label_separator_part == 'after') ? splitted_label[splitted_label.length - 1] : splitted_label[0]
     }
-    return this._name
+    return resolved_name
   }
 
   // Compat historique : name_label_custom <=> source 'custom'. Conserve le
@@ -594,6 +671,14 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     case 'ancestor': return this.resolveAncestorLabel()
     default: return this.name_label
     }
+  }
+
+  // Texte BRUT à éditer : identique au libellé effectif pour un élément normal,
+  // mais surchargé par le titre (Class_ContainerElement) pour préserver les
+  // jetons {Tag} au lieu de leur valeur interpolée. Sert aux chemins d'édition
+  // (input inline, init rich text) : on édite « {Month} », pas « January ».
+  public get name_label_effective_editable(): string {
+    return this.name_label_effective
   }
 
   // Sources 'tag' et 'ancestor' : surchargées par Class_NodeElement (qui porte
@@ -632,6 +717,10 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     if (idx_n >= 0) this._attached_node.splice(idx_n, 1)
     const idx_c = node._attached_container.indexOf(this)
     if (idx_c >= 0) node._attached_container.splice(idx_c, 1)
+    // OS#1254 — désolidariser une zone d'un cadre de la légende (racine ou
+    // bloc de groupe) casse la mise en forme générée (markBroken est inerte
+    // pendant la régénération elle-même).
+    if (isLegendElementId(this.id)) this.drawing_area.legend.markBroken()
   }
 
   public dettachContFromNode(node: Class_NodeBase) {
@@ -663,6 +752,78 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     if (new_left === cur_left && new_top === cur_top) return
     this.position_x = new_left - this.shape_margin_left
     this.position_y = new_top - this.shape_margin_top
+  }
+
+  /**
+   * OS#1259 — Fait GRANDIR le cadre (grow-only, TOUS les côtés) pour contenir ses
+   * membres. `expandToContainAttachedNodes` ne bougeait le coin que vers le
+   * haut/gauche, et la taille via `_envelopeSize` = ÉTALEMENT des membres (donc
+   * constante pour un membre unique qui s'éloigne) : rien n'étendait le cadre
+   * vers la droite/bas. Ici on prend l'UNION de la boîte de contenu courante et
+   * de la bbox des membres, et on écrit position + `shape_min_*` (donc ça
+   * persiste au save). `settleCenterAnchor()` recale l'ancre centre/coin (#1231)
+   * pour que le prochain dessin ne re-centre pas par-dessus. Grow-only : ne
+   * rétrécit jamais (un membre ramené à l'intérieur ne réduit pas le cadre).
+   */
+  public growFrameToContainMembers() {
+    if (!this._tied_to_nodes || this._attached_node.length === 0) return
+    const bbox = this._computeEnvelopeBBox(this._attached_node)
+    if (!bbox) return
+    const ml = this.shape_margin_left, mt = this.shape_margin_top
+    const mr = this.shape_margin_right, mb = this.shape_margin_bottom
+    // Boîte de CONTENU courante (aire intérieure, hors marges).
+    const cur_left = this.position_x + ml
+    const cur_top = this.position_y + mt
+    const cur_right = this.position_x + this.getShapeWidthToUse() - mr
+    const cur_bottom = this.position_y + this.getShapeHeightToUse() - mb
+    // Union grow-only avec la bbox des membres.
+    const new_left = Math.min(cur_left, bbox.min_x)
+    const new_top = Math.min(cur_top, bbox.min_y)
+    const new_right = Math.max(cur_right, bbox.max_x)
+    const new_bottom = Math.max(cur_bottom, bbox.max_y)
+    if (new_left === cur_left && new_top === cur_top
+      && new_right === cur_right && new_bottom === cur_bottom) return
+    this.position_x = new_left - ml
+    this.position_y = new_top - mt
+    this.shape_min_width = (new_right - new_left) + ml + mr
+    this.shape_min_height = (new_bottom - new_top) + mt + mb
+    this.settleCenterAnchor()
+  }
+
+  /**
+   * OS#1259 (clamp) — Pendant qu'on REDIMENSIONNE le cadre, contraint chaque
+   * membre à rester dans sa boîte de CONTENU : si un membre dépasse (cadre
+   * rétréci sous sa taille), on rétrécit sa taille pour qu'il tienne, puis on
+   * repousse sa position dans les bornes. Inverse de growFrameToContainMembers.
+   * Ne touche pas un membre qui tient déjà (« dès que ça dépasse »). Un membre
+   * qui est lui-même un cadre tied ne descend pas sous l'enveloppe de SES
+   * membres (getShapeWidthToUse = max(shape_min, enveloppe)).
+   */
+  public clampMembersToFrame() {
+    if (!this._tied_to_nodes || this._attached_node.length === 0) return
+    const inner_left = this.position_x + this.shape_margin_left
+    const inner_top = this.position_y + this.shape_margin_top
+    const inner_right = this.position_x + this.getShapeWidthToUse() - this.shape_margin_right
+    const inner_bottom = this.position_y + this.getShapeHeightToUse() - this.shape_margin_bottom
+    const inner_w = Math.max(1, inner_right - inner_left)
+    const inner_h = Math.max(1, inner_bottom - inner_top)
+    this._attached_node.forEach(m => {
+      if (!m.is_visible) return
+      let changed = false
+      // Rétrécir la taille si le membre est plus grand que l'aire intérieure.
+      if (m.getShapeWidthToUse() > inner_w) { m.shape_min_width = inner_w; changed = true }
+      if (m.getShapeHeightToUse() > inner_h) { m.shape_min_height = inner_h; changed = true }
+      const mw = m.getShapeWidthToUse()
+      const mh = m.getShapeHeightToUse()
+      // Repousser (minimal) pour que le membre reste dans les bornes.
+      let mx = m.position_x, my = m.position_y
+      if (mx + mw > inner_right) mx = inner_right - mw
+      if (my + mh > inner_bottom) my = inner_bottom - mh
+      if (mx < inner_left) mx = inner_left
+      if (my < inner_top) my = inner_top
+      if (mx !== m.position_x || my !== m.position_y) { m.position_x = mx; m.position_y = my; changed = true }
+      if (changed) { m.settleCenterAnchor(); m.draw() }
+    })
   }
 
   // Full re-fit of the top-left onto the attached-node envelope (grows AND
@@ -707,10 +868,21 @@ export abstract class Class_NodeBase extends Class_BaseShape {
         y: this.position_y,
         w: this.getShapeWidthToUse(),
         h: this.getShapeHeightToUse(),
+        // OS#1276b — offsets d'extrémité de ligne : sans eux, l'undo d'un drag de
+        // poignée d'extrémité ne restaurerait que la boîte, pas la géométrie du
+        // segment. No-op pour un resize de boîte (les offsets n'y changent pas).
+        x1: this.shape_line_x1,
+        y1: this.shape_line_y1,
+        x2: this.shape_line_x2,
+        y2: this.shape_line_y2,
       }
       this.drawing_area.application_data.history.saveUndo(() => {
         this.shape_min_width = old_val.w
         this.shape_min_height = old_val.h
+        this.shape_line_x1 = old_val.x1
+        this.shape_line_y1 = old_val.y1
+        this.shape_line_x2 = old_val.x2
+        this.shape_line_y2 = old_val.y2
         this._position.x = old_val.x
         this._position.y = old_val.y
         this.settleCenterAnchor() // #1230 restauration taille+position : ré-ancre le centre
@@ -734,10 +906,19 @@ export abstract class Class_NodeBase extends Class_BaseShape {
         y: this.position_y,
         w: this.getShapeWidthToUse(),
         h: this.getShapeHeightToUse(),
+        // OS#1276b — cf. dragHandleStart : le redo doit aussi rétablir le segment.
+        x1: this.shape_line_x1,
+        y1: this.shape_line_y1,
+        x2: this.shape_line_x2,
+        y2: this.shape_line_y2,
       }
       this.drawing_area.application_data.history.saveRedo(() => {
         this.shape_min_width = old_val.w
         this.shape_min_height = old_val.h
+        this.shape_line_x1 = old_val.x1
+        this.shape_line_y1 = old_val.y1
+        this.shape_line_x2 = old_val.x2
+        this.shape_line_y2 = old_val.y2
         this._position.x = old_val.x
         this._position.y = old_val.y
         this.settleCenterAnchor() // #1230 restauration taille+position : ré-ancre le centre
@@ -762,6 +943,8 @@ export abstract class Class_NodeBase extends Class_BaseShape {
       this.shape_min_height -= event.dy
       this.position_y = this.position_y + event.dy
       this.settleCenterAnchor() // #1230 resize manuel : bord opposé fixe, on ré-ancre
+      // OS#1259 (clamp) — redimensionner le cadre contraint ses membres à rester dedans.
+      this.clampMembersToFrame()
       this.draw()
 
       // Reposition drag handler with updated with & pos of the free label
@@ -784,6 +967,8 @@ export abstract class Class_NodeBase extends Class_BaseShape {
 
       this.shape_min_height += event.dy
       this.settleCenterAnchor() // #1230 resize manuel : bord opposé fixe, on ré-ancre
+      // OS#1259 (clamp) — redimensionner le cadre contraint ses membres à rester dedans.
+      this.clampMembersToFrame()
       this.draw()
 
       // Reposition drag handler with updated with & pos of the free label
@@ -807,6 +992,8 @@ export abstract class Class_NodeBase extends Class_BaseShape {
       this.shape_min_width -= event.dx
       this.setPosXY(this.position_x + event.dx, this.position_y)
       this.settleCenterAnchor() // #1230 resize manuel : bord opposé fixe, on ré-ancre
+      // OS#1259 (clamp) — redimensionner le cadre contraint ses membres à rester dedans.
+      this.clampMembersToFrame()
       this.draw()
 
       // Reposition drag handler with updated with & pos of the free label
@@ -829,6 +1016,8 @@ export abstract class Class_NodeBase extends Class_BaseShape {
 
       this.shape_min_width += event.dx
       this.settleCenterAnchor() // #1230 resize manuel : bord opposé fixe, on ré-ancre
+      // OS#1259 (clamp) — redimensionner le cadre contraint ses membres à rester dedans.
+      this.clampMembersToFrame()
       this.draw()
 
       // Reposition drag handler with updated with & pos of the free label
@@ -873,12 +1062,125 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   }
 
   /**
+   * OS#1276b — garantit que les 4 offsets d'extrémité (shape_line_x1…y2) décrivent
+   * un vrai segment. Idempotent : si le segment est déjà non dégénéré (A ≠ B) on ne
+   * touche à rien. S'il est dégénéré (cas d'un ancien fichier « diagonale de boîte »
+   * où les offsets valent 0, ou d'une création qui n'a posé que shape_line_flip), on
+   * les dérive de la boîte (w = shape_min_width, h = shape_min_height) et du sens
+   * historique shape_line_flip :
+   *   flip=false → A=(0,0), B=(w,h)   « \ »
+   *   flip=true  → A=(0,h), B=(w,0)   « / »
+   * La boîte et position_x/y restent inchangées (les offsets sont déjà normalisés
+   * min=0). Appelé au chargement (ContainerPersistence.fromJSON) et à la création.
+   */
+  public ensureLineEndpoints() {
+    if (this.shape_type !== 'line') return
+    const x1 = this.shape_line_x1, y1 = this.shape_line_y1
+    const x2 = this.shape_line_x2, y2 = this.shape_line_y2
+    // Segment déjà défini (extrémités distinctes) : rien à faire.
+    if (x1 !== x2 || y1 !== y2) return
+    const w = this.shape_min_width
+    const h = this.shape_min_height
+    if (this.shape_line_flip) {
+      this.shape_line_x1 = 0; this.shape_line_y1 = h
+      this.shape_line_x2 = w; this.shape_line_y2 = 0
+    } else {
+      this.shape_line_x1 = 0; this.shape_line_y1 = 0
+      this.shape_line_x2 = w; this.shape_line_y2 = h
+    }
+  }
+
+  /**
+   * OS#1276b — drag d'une extrémité de ligne libre. Recalcule la position monde de
+   * l'extrémité déplacée (offset local + event.dx/dy), puis RENORMALISE tout le
+   * segment pour que min(x1,x2)=0 et min(y1,y2)=0 : le décalage est absorbé par
+   * position_x/y (le coin haut-gauche suit le min), les 4 offsets et la boîte dérivée
+   * (shape_min_width/height) sont réécrits. Ainsi tous les invariants « position =
+   * coin haut-gauche, boîte = max des offsets » restent vrais (resize, hit, ordre-Z).
+   */
+  protected dragEndpointHandler(which: 'a' | 'b') {
+    return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
+      let x1 = this.shape_line_x1, y1 = this.shape_line_y1
+      let x2 = this.shape_line_x2, y2 = this.shape_line_y2
+      if (which === 'a') { x1 += event.dx; y1 += event.dy }
+      else { x2 += event.dx; y2 += event.dy }
+      // Renormalisation : le coin haut-gauche encaisse le min, les offsets repartent de 0.
+      const min_x = Math.min(x1, x2)
+      const min_y = Math.min(y1, y2)
+      this.setPosXY(this.position_x + min_x, this.position_y + min_y)
+      x1 -= min_x; x2 -= min_x
+      y1 -= min_y; y2 -= min_y
+      this.shape_line_x1 = x1; this.shape_line_y1 = y1
+      this.shape_line_x2 = x2; this.shape_line_y2 = y2
+      this.shape_min_width = Math.max(x1, x2)
+      this.shape_min_height = Math.max(y1, y2)
+      this.settleCenterAnchor() // #1230 : la géométrie a changé, ré-ancre le centre
+      this.draw()
+      this.drawDragHandlers()
+    }
+  }
+
+  private _ensureLineEndpointHandlers(): { a: Class_Handler, b: Class_Handler } {
+    if (this._line_endpoint_handler) return this._line_endpoint_handler
+    this._line_endpoint_handler = {
+      a: new Class_Handler(
+        'line_a_handle_' + this.id,
+        this.drawing_area,
+        this,
+        this.dragHandleStart(),
+        this.dragEndpointHandler('a'),
+        this.dragHandleEnd(),
+        { class: 'line_endpoint_handle' }),
+      b: new Class_Handler(
+        'line_b_handle_' + this.id,
+        this.drawing_area,
+        this,
+        this.dragHandleStart(),
+        this.dragEndpointHandler('b'),
+        this.dragHandleEnd(),
+        { class: 'line_endpoint_handle' }),
+    }
+    return this._line_endpoint_handler
+  }
+
+  /**
    * Draw all control points
    *
    * @private
    * @memberof Class_ContainerElement
    */
   public drawDragHandlers() {
+    // Sous-sélection d'un label (clic sur son <text>) : on ne montre QUE les
+    // poignées de la boîte du label, pas celles de la forme. On masque donc tout
+    // jeu de poignées de forme tant qu'un label est sous-sélectionné.
+    if (this.selected_label_prefix != null) {
+      this._drag_handler.top.unDraw()
+      this._drag_handler.bottom.unDraw()
+      this._drag_handler.left.unDraw()
+      this._drag_handler.right.unDraw()
+      this._line_endpoint_handler?.a.unDraw()
+      this._line_endpoint_handler?.b.unDraw()
+      return
+    }
+    // OS#1276b — ligne libre : deux poignées aux extrémités absolues (position + offset
+    // local), en lieu et place des 4 poignées de boîte. Chaque poignée renormalise le
+    // segment (cf. dragEndpointHandler). Le drag du CORPS de la ligne reste le drag
+    // normal du conteneur (eventMouseDrag), rien de spécial ici.
+    if (this.shape_type === 'line') {
+      // Masque les 4 poignées de boîte si elles avaient été dessinées.
+      this._drag_handler.top.unDraw()
+      this._drag_handler.bottom.unDraw()
+      this._drag_handler.left.unDraw()
+      this._drag_handler.right.unDraw()
+      const h = this._ensureLineEndpointHandlers()
+      h.a.position_x = this.position_x + this.shape_line_x1
+      h.a.position_y = this.position_y + this.shape_line_y1
+      h.b.position_x = this.position_x + this.shape_line_x2
+      h.b.position_y = this.position_y + this.shape_line_y2
+      h.a.draw()
+      h.b.draw()
+      return
+    }
     // Compute positions
     this.computeTopHandlerPos()
     this.computeBottomHandlerPos()

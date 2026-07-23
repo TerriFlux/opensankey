@@ -47,3 +47,28 @@ export function computeArrowPlacement(
     return { arrow_half_height: clamped_thickness / 2, arrow_already_computed: 0, slice: clamped_thickness }
   return { arrow_half_height: side_sum_raw / 2, arrow_already_computed: running_cumul_raw, slice: raw_thickness }
 }
+
+// ── Largeur minimale de pointe (issue #1270, refonte OS#1302) ─────────────────
+// « Pointe visible » façon e!Sankey via une LARGEUR ABSOLUE minimale (px), pas un
+// facteur : base = max(épaisseur visible, min_width). Les flux plus fins que
+// min_width reçoivent une pointe de largeur min_width (donc restent visibles), les
+// flux plus épais ne changent pas (pas d'explosion). La PROFONDEUR reste celle
+// prescrite par shape_arrow_size (cf. Node.tsx). min_width = 0 ⇒ désactivé.
+
+/**
+ * La largeur mini s'applique à un flux d'épaisseur VISIBLE (clampée) `clamped_thickness`
+ * ssi min_width la dépasse (sinon la pointe proportionnelle est déjà ≥ min_width).
+ */
+export function arrowMinWidthApplies(min_width: number, clamped_thickness: number): boolean {
+  return min_width > 0 && min_width > clamped_thickness
+}
+
+/**
+ * Géométrie d'UNE pointe ramenée à la largeur mini : un triangle indépendant (pas
+ * d'éventail, pas de cumul) dont la base = `min_width`. La profondeur (longueur) reste
+ * prescrite par shape_arrow_size (cf. Node.tsx). N'est appelée que quand
+ * arrowMinWidthApplies est vrai (min_width > épaisseur).
+ */
+export function computeArrowMinWidthPlacement(min_width: number): Type_ArrowPlacement {
+  return { arrow_half_height: min_width / 2, arrow_already_computed: 0, slice: min_width }
+}

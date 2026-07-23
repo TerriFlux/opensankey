@@ -21,12 +21,16 @@ export const importSankeymaticText = (text: string, app_data: Class_ApplicationD
   app_data.openSpreadsheetTextEditor()
 }
 
-/** Charge un modèle .txt depuis les assets de templates du backend, puis l'applique. */
+/**
+ * Charge un modèle .txt depuis les assets de templates du backend, puis l'applique.
+ * Contrairement à l'import, on n'ouvre PAS le Tableur : le dialogue des modèles
+ * doit juste afficher le diagramme.
+ */
 export const loadSankeymaticTemplate = (file_path: string, app_data: Class_ApplicationData): void => {
   const url = window.location.origin + '/opensankey/menus/templates_asset/' + file_path
   fetch(url)
     .then(response => response.text())
-    .then(text => importSankeymaticText(text, app_data))
+    .then(text => applySankeymaticText(text, app_data))
     .catch((error) => {
       console.error('Error in loadSankeymaticTemplate - ' + error.toString())
     })

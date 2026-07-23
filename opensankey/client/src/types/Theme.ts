@@ -234,6 +234,10 @@ export const themeEsankey = (): Class_Theme => new Class_Theme({
       shape_is_curved: true,
       shape_is_arrow: true,
       shape_arrow_size: 10,
+      // OS#1302 — e!Sankey n'a PAS de dépassement de pointe : on désactive la
+      // largeur mini (défaut OpenSankey = 10px) pour ce thème, sinon les flux fins
+      // importés recevraient une pointe élargie absente du fichier d'origine.
+      shape_arrow_min_width: 0,
       name_label_is_visible: false,
       // Pas de valeurs par défaut : dans e!Sankey la visibilité du label est un
       // réglage PAR FLÈCHE ; l'importeur pose `label_visible` sur chaque flux

@@ -296,9 +296,12 @@ export const modalStyles = {
 // ===============================
 
 // Base styles pour menu config panel
+// #1258 — hauteur UNIQUE de 1.5rem (celle des selects/inputs xs) et minWidth
+// carré : plus aucun call site ne doit surcharger padding/height en sx.
 export const menuconfigBaseButton = {
   height: '1.5rem',
-  padding: '0.5rem',
+  minWidth: '1.5rem',
+  padding: '0 0.4rem',
   fontSize: 'unset',
   backgroundColor: 'white',
   color: 'tertiaire.3',
@@ -595,6 +598,78 @@ export const buttonStyles = {
 
   // Base menu config panel buttons
   menuconfigpanel_option_button: defineStyle(menuconfigBaseButton),
+
+  // #1258 — Bouton d'onglet de l'inspecteur : icône au-dessus d'un libellé
+  // court, hauteur auto. Centralise ce que la rangée d'onglets posait en sx.
+  inspector_tab: defineStyle({
+    ...menuconfigBaseButton,
+    height: 'auto',
+    minWidth: 'auto',
+    padding: '0.3rem 0.1rem 0.25rem',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '0.2rem',
+    position: 'relative',
+    fontWeight: 'normal',
+  }),
+
+  // #1258 — bouton-icône CARRÉ (cadenas, tireté, ombre…) : le baseStyle global
+  // des Button impose width:100% (pilules pleine largeur) — ce variant fixe la
+  // taille unique 1.5rem×1.5rem pour toutes les bascules à icône du panneau.
+  menuconfigpanel_icon_button: defineStyle({
+    ...menuconfigBaseButton,
+    width: 'auto',
+    minWidth: '1.5rem',
+    padding: '0 0.25rem',
+    flex: 'none',
+  }),
+
+  menuconfigpanel_icon_button_activated: defineStyle({
+    ...menuconfigBaseButton,
+    width: 'auto',
+    minWidth: '1.5rem',
+    padding: '0 0.25rem',
+    flex: 'none',
+    color: 'white',
+    fill: 'white',
+    borderColor: 'white',
+    backgroundColor: 'tertiaire.3',
+  }),
+
+  // #1258 — lien discret du fil d'Ariane de l'inspecteur (pas une pilule).
+  inspector_crumb: defineStyle({
+    background: 'none',
+    backgroundColor: 'transparent',
+    border: 'none',
+    padding: 0,
+    height: 'auto',
+    minWidth: 'auto',
+    width: 'auto',
+    fontSize: 'inherit',
+    fontWeight: 'normal',
+    color: '#1f6fae',
+    textDecoration: 'underline',
+    _hover: { color: '#155a8f', backgroundColor: 'transparent' },
+    _active: { backgroundColor: 'transparent' },
+  }),
+
+  inspector_tab_activated: defineStyle({
+    ...menuconfigBaseButton,
+    height: 'auto',
+    minWidth: 'auto',
+    padding: '0.3rem 0.1rem 0.25rem',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '0.2rem',
+    position: 'relative',
+    fontWeight: 'normal',
+    color: 'white',
+    fill: 'white',
+    borderColor: 'white',
+    backgroundColor: 'tertiaire.3',
+  }),
 
   menuconfigpanel_option_button_activated: defineStyle({
     ...menuconfigBaseButton,
@@ -1014,6 +1089,24 @@ export const buttonStyles = {
       borderColor: 'secondaire.4',
       border: 'none',
     },
+  }),
+
+  // #680 — Variante « enclenchée » des boutons d'ajustement (modes de cadrage auto
+  // radio). Calquée sur toolbar_button_position_mode_activated (liseré + fond soutenu).
+  toolbar_button_6_activated: defineStyle({
+    bgColor: 'tertiaire.4',
+    border: 'none',
+    outline: '2px solid',
+    outlineColor: 'secondaire.4',
+    outlineOffset: '-1px',
+    color: 'white',
+    width: '2rem',
+    height: '2rem',
+    minW: 'unset',
+    padding: '0.2rem',
+    zIndex: 1,
+    _hover: { bgColor: 'tertiaire.4', borderColor: 'secondaire.4', border: 'none' },
+    _active: { bgColor: 'tertiaire.4', borderColor: 'secondaire.4', border: 'none' },
   }),
 
   button_dataTagg_sequence_play: defineStyle({
@@ -2094,16 +2187,18 @@ export const tableStyles = {
   base: table.definePartsStyle({}),
   table_edit_grp_tag_node_link: createTableStyle('0.5fr 2fr 1.5fr'),
   table_edit_grp_tag_data: createTableStyle('0.75fr 2fr 1.5fr 1.5fr'),
-  // supprimer + nom court + nom long + visible + couleur
-  table_edit_tag_node: createTableStyle('0.5fr 1fr 2fr 0.75fr 0.5fr'),
-  table_edit_tag_link: createTableStyle('0.5fr 1fr 2fr 0.5fr 0.75fr'),
-  table_edit_tag_data: createTableStyle('0.5fr 1fr 2fr 0.75fr'),
-  // Variants position : supprimer + nom court + nom long + flèches
+  // #1283 — nom court + nom long fusionnés en 1 colonne : suppr + NOM(flexible) +
+  // visible + couleur. `auto` = colonnes au contenu (elles se touchent, zéro
+  // vide) ; `1fr` sur le NOM = il prend toute la largeur restante.
+  table_edit_tag_node: createTableStyle('auto 1fr auto auto'),
+  table_edit_tag_link: createTableStyle('auto 1fr auto auto'),
+  table_edit_tag_data: createTableStyle('auto 1fr auto'), // data : pas de colonne visible
+  // Variants position : suppr + NOM(flexible) + flèches
   table_edit_grp_tag_node_link_pos: createTableStyle('0.5fr 2fr 1fr'),
   table_edit_grp_tag_data_pos: createTableStyle('0.5fr 2fr 1fr'),
-  table_edit_tag_node_pos: createTableStyle('0.5fr 1fr 2fr 1fr'),
-  table_edit_tag_link_pos: createTableStyle('0.5fr 1fr 2fr 1fr'),
-  table_edit_tag_data_pos: createTableStyle('0.5fr 1fr 2fr 1fr'),
+  table_edit_tag_node_pos: createTableStyle('auto 1fr auto'),
+  table_edit_tag_link_pos: createTableStyle('auto 1fr auto'),
+  table_edit_tag_data_pos: createTableStyle('auto 1fr auto'),
   table_edit_node_io: createTableStyle('3fr 1fr 0.7fr 1.3fr'),
 
   table_welcome_buttons: table.definePartsStyle({
@@ -2720,18 +2815,44 @@ const layerStyles = {
   menuconfigpanel_grid: {
     display: 'grid',
     gridRowGap: '0.25rem',
+    minWidth: 0,
   },
 
+  // minWidth:0 (ici et sur les cellules) : sans lui l'auto-minimum d'un item de
+  // grille vaut son min-content, et un libellé long élargit tout le panneau au
+  // lieu de se faire ellipser.
   menuconfigpanel_row_droplist: {
     display: 'grid',
     gridTemplateColumns: '1fr 10fr 1fr 1fr',
     gridColumnGap: '0.25rem',
+    minWidth: 0,
+    '& > *': { minWidth: 0 },
   },
 
   menuconfigpanel_row_droplist_simple: {
     display: 'grid',
     gridColumnGap: '0.25rem',
     gridTemplateColumns: '2fr 6fr 1fr',
+    minWidth: 0,
+    '& > *': { minWidth: 0 },
+  },
+
+  // Ligne de sélection compacte : sélecteur + filtres par tag + œil sur UNE
+  // ligne. Les colonnes sont calculées par le composant (elles dépendent des
+  // contrôles réellement rendus) — surtout pas figées ici, sinon une cellule
+  // absente décale tout (c'est le bug de _simple, où l'œil héritait du 6fr).
+  // position:relative + .dropdown-container en static : le panneau déroulant du
+  // rmsc s'ancre alors sur la LIGNE et s'ouvre sur toute la largeur du panneau,
+  // au lieu d'être bridé à la largeur du sélecteur fermé.
+  menuconfigpanel_row_droplist_inline: {
+    display: 'grid',
+    gridColumnGap: '0.25rem',
+    alignItems: 'center',
+    position: 'relative',
+    minWidth: 0,
+    '& > *': { minWidth: 0 },
+    '.rmsc .dropdown-container': { position: 'static' },
+    '.rmsc .dropdown-content': { left: 0, right: 0, width: 'auto' },
   },
 
   menuconfigpanel_zdt_row_droplist: {
@@ -2999,13 +3120,24 @@ const layerStyles = {
   // de la lib est `position:absolute; z-index:1` : sans ce relèvement il passe
   // derrière les sections de menu qui suivent (qui créent leurs propres
   // contextes d'empilement) et paraît tronqué juste après « Tout sélectionner ».
+  // Un nom d'élément long ne doit JAMAIS élargir le panneau : le rmsc ellipse
+  // son en-tête, mais seulement si la cellule de grille peut rétrécir — d'où
+  // minWidth:0 (l'auto-minimum d'un item de grille vaut son min-content).
+  // Idem pour la liste déroulante : un nom sans espace (« Bois d'œuvre---Prod »)
+  // n'a aucun point de césure et pousse le scroll horizontal du tiroir.
   submenuconfig_droplist: {
     width: '100%',
+    minWidth: 0,
+    maxWidth: '100%',
     '.rmsc .dropdown-content': {
       zIndex: 'dropdown',
+      maxWidth: '100%',
     },
     '.rmsc .options': {
       maxHeight: '18rem',
+    },
+    '.rmsc .select-item': {
+      overflowWrap: 'anywhere',
     },
   },
 
@@ -3098,7 +3230,8 @@ const layerStyles = {
     overflowY: 'auto',
     padding: '0.3rem',
     color: 'primaire.5',
-
+    // #1258 — même corps de texte que le panneau de config (homogénéité).
+    fontSize: default_font_size,
   },
   filter_head_box: {
     display: 'grid',
