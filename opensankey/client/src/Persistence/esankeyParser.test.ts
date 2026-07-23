@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import JSZip from 'jszip'
-import { parseEsankeyXml, loadEsankeyFile, netFormatDecimalCount, ESANKEY_ENTRIES_TAGG_ID } from './esankeyParser'
+import { parseEsankeyXml, loadEsankeyFile, netFormatDecimalCount, esAngleToTextAngle, ESANKEY_ENTRIES_TAGG_ID } from './esankeyParser'
 import { Class_ApplicationData } from '../types/ApplicationData'
 
 // Valide le parseur e!Sankey sur des fixtures minimales fabriquées main (les
@@ -415,6 +415,110 @@ describe('os#1306 — masquage des zéros (hideZeroFlows)', () => {
     expect(zero).toBeDefined()
     expect(zero?.is_visible).toBe(true)
     expect(d.show_zero_links).toBeUndefined()
+  })
+})
+
+// os#1310 — textes inclinés. L'angle e!Sankey (degrés HORAIRES 0..360, y vers
+// le bas, .NET) partage la convention du rotate() SVG : seul un recalage de
+// plage vers (−180, 180] est nécessaire (esAngleToTextAngle). Trois porteurs :
+// nom de process (<label angle>), label de valeur (<sankeyArrowLabel angle>,
+// baké même quand angleAlignment=1) et zone de texte (<text angle>).
+describe('os#1310 — textes inclinés (label@angle, sankeyArrowLabel@angle, text@angle)', () => {
+  test('normalisation : degrés e!Sankey (0..360 horaires) → text_angle (−180..180]', () => {
+    expect(esAngleToTextAngle(0)).toBe(0)
+    expect(esAngleToTextAngle(90)).toBe(90)
+    expect(esAngleToTextAngle(270)).toBe(-90)
+    expect(esAngleToTextAngle(180)).toBe(180)
+    expect(esAngleToTextAngle(314.6396)).toBe(-45.36)
+    expect(esAngleToTextAngle(-90)).toBe(-90)
+  })
+
+  test('nom de process vertical : <label angle="270"> → name_label_text_angle −90', () => {
+    const xml = FIXTURE.replace('<label text="Source A" />', '<label text="Source A" angle="270" />')
+    const d = parseEsankeyXml(xml)
+    const a = Object.values(d.nodes).find(n => n.name === 'Source A')
+    expect(a?.local.name_label_text_angle).toBe(-90)
+    // Cible B sans @angle : rien de posé, le style décide.
+    const b = Object.values(d.nodes).find(n => n.name === 'Cible B')
+    expect(b?.local.name_label_text_angle).toBeUndefined()
+  })
+
+  test('label de valeur incliné : sankeyArrowLabel@angle=90 → value_label_text_angle sur chaque flux', () => {
+    const xml = FIXTURE.replace('<sankeyArrowLabel visible="true"', '<sankeyArrowLabel angle="90" visible="true"')
+    Object.values(parseEsankeyXml(xml).links).forEach(l => {
+      expect(l.local.value_label_text_angle).toBe(90)
+    })
+  })
+
+  test('aligné sur la flèche sans angle baké (angleAlignment=1, angle=0) : tangente du segment', () => {
+    // Tracé vertical : la tangente du segment 0 vaut 90° (horaire, y vers le bas).
+    const xml = FIXTURE
+      .replace('<arrow id="60">',
+        '<arrow id="60"><sankeyLink><points length="2"><value X="120" Y="330" /><value X="120" Y="480" /></points></sankeyLink>')
+      .replace('<sankeyArrowLabel visible="true"', '<sankeyArrowLabel angleAlignment="1" visible="true"')
+    Object.values(parseEsankeyXml(xml).links).forEach(l => {
+      expect(l.local.value_label_text_angle).toBe(90)
+    })
+  })
+
+  test('zone de texte tournée : <text angle="270"> → name_label_text_angle −90 sur la zone', () => {
+    const xml = FIXTURE.replace('</net>',
+      '<shapes><shape><text locationX="10" locationY="10" sizeW="100" sizeH="30" angle="270" text="Note pivotée" /></shape></shapes></net>')
+    const zones = Object.values(parseEsankeyXml(xml).labels)
+    expect(zones.length).toBe(1)
+    expect(zones[0].name_label_text_angle).toBe(-90)
+  })
+
+  test('sans angle (FIXTURE brute) : aucune clé text_angle posée', () => {
+    const d = parseEsankeyXml(FIXTURE)
+    Object.values(d.nodes).forEach(n => expect(n.local.name_label_text_angle).toBeUndefined())
+    Object.values(d.links).forEach(l => expect(l.local.value_label_text_angle).toBeUndefined())
+  })
+
+  // os#1310b — nom du matériau dans le label (`@showEntryname`, gabarit
+  // `{EntryName}: {Quantity} {UnitName}`) : label de NOM du flux en source
+  // 'tag' + valeur collée (stick). Mono-matériau uniquement.
+  test('showEntryname sur flèche MONO-matériau : nom en source tag + valeur collée', () => {
+    // FIXTURE réduite à un seul flow (le Heat est retiré) → mono-matériau.
+    const xml = FIXTURE.replace(
+      /<flow id="42"[\s\S]*?<\/flow>/, ''
+    )
+    const links = Object.values(parseEsankeyXml(xml).links)
+    expect(links.length).toBe(1)
+    const l = links[0]
+    expect(l.local.name_label_is_visible).toBe(true)
+    expect(l.local.name_label_text_source).toBe('tag')
+    expect(l.local.name_label_flux_tag_group_id).toBe(ESANKEY_ENTRIES_TAGG_ID)
+    expect(l.local.value_label_stick_to_label).toBe(true)
+    // Label ~horizontal : la valeur se colle à DROITE du nom.
+    expect(l.local.value_label_horiz).toBe('right')
+  })
+
+  test('showEntryname="false" ou flèche multi-matériaux : pas de label de nom', () => {
+    // Multi-matériaux (FIXTURE brute, 2 flows) : jamais de nom par flux.
+    Object.values(parseEsankeyXml(FIXTURE).links).forEach(l => {
+      expect(l.local.name_label_text_source).toBeUndefined()
+      expect(l.local.value_label_stick_to_label).toBeUndefined()
+    })
+    // Mono-matériau mais showEntryname éteint.
+    const xml = FIXTURE
+      .replace(/<flow id="42"[\s\S]*?<\/flow>/, '')
+      .replace('<sankeyArrowLabel visible="true"', '<sankeyArrowLabel showEntryname="false" visible="true"')
+    Object.values(parseEsankeyXml(xml).links).forEach(l => {
+      expect(l.local.name_label_text_source).toBeUndefined()
+    })
+  })
+
+  test('nom + label vertical (angle=90) : valeur collée SOUS le nom, dans le sens de lecture', () => {
+    const xml = FIXTURE
+      .replace(/<flow id="42"[\s\S]*?<\/flow>/, '')
+      .replace('<sankeyArrowLabel visible="true"', '<sankeyArrowLabel angle="90" visible="true"')
+    const l = Object.values(parseEsankeyXml(xml).links)[0]
+    expect(l.local.name_label_text_angle).toBe(90)
+    expect(l.local.value_label_text_angle).toBe(90)
+    expect(l.local.value_label_stick_to_label).toBe(true)
+    expect(l.local.value_label_vert).toBe('bottom')
+    expect(l.local.value_label_horiz).toBe('middle')
   })
 })
 
@@ -1248,9 +1352,12 @@ describe('parseEsankeyXml — OS#1287 taille/couleur/position du label de valeur
     // position_x = bord GAUCHE (anchor start), position_y = CENTRE vertical
     // (baseline middle) → (300, 388), puis même translation de normalisation que
     // les nœuds — dérivée ici du process « Source » (e!Sankey (200, 400)).
+    // showEntryname="false" : la position absolue reste portée par la VALEUR
+    // (avec le nom affiché — défaut e!Sankey — c'est le label de NOM qui la
+    // porte, cf. suite os#1310b).
     const withPos = FIXTURE_DECOR.replace(
       '<sankeyArrowLabel visible="true" showValue="true" showUnit="true" text="60" labelFormat="{EntryName}: {PercentProcessSource} %" />',
-      '<sankeyArrowLabel visible="true" showValue="true" showUnit="true" text="60" labelFormat="{EntryName}: {PercentProcessSource} %"' +
+      '<sankeyArrowLabel showEntryname="false" visible="true" showValue="true" showUnit="true" text="60" labelFormat="{EntryName}: {PercentProcessSource} %"' +
       ' locationX="300" locationY="380" sizeW="40" sizeH="16" segmentPercentage="91" offsetH="15.5" />'
     )
     const d2 = parseEsankeyXml(withPos)
@@ -1670,5 +1777,44 @@ describeDemos('loadEsankeyFile — démos e!Sankey 5 locales', () => {
     const nSource = app.drawing_area.sankey.nodes_list.find(n => n.name.includes('Source of Resource 1'))!
     expect(nSource.has_stock).toBe(true)
     expect(nSource.stock_label_is_visible).toBe(false)
+  }, 30000)
+
+  test('Depuration de Chlore : labels de valeur inclinés (os#1310, angle baké + aligné)', async () => {
+    const f = 'Depuration de Chlore [fr].sankey'
+    if (!files.includes(f)) return
+    const buffer = fs.readFileSync(path.join(DEMOS_DIR, f))
+    const d = await loadEsankeyFile(buffer as unknown as ArrayBuffer)
+    // 4 labels FIXES à 90° (flux verticaux, flèches mono-matériau mappées). Le
+    // 5ᵉ label incliné du fichier (45.98°, aligné) vit sur une flèche SANS
+    // mapping logique (non importée) — hors périmètre.
+    const angles = Object.values(d.links)
+      .map(l => l.local.value_label_text_angle)
+      .filter((a): a is number => typeof a === 'number')
+    expect(angles).toEqual([90, 90, 90, 90])
+    // os#1310b — 3 labels visibles affichent le nom du matériau (@showEntryname
+    // true) : 2 tournés à 90° (ex. « Chlore_r 720 g/t » vers cendre volante) +
+    // 1 horizontal. Nom en source tag, valeur collée (SOUS le nom à 90° — sens
+    // de lecture —, à droite en horizontal), position absolue portée par le
+    // NOM (pas la valeur).
+    const named = Object.values(d.links).filter(l => l.local.name_label_text_source === 'tag')
+    expect(named.length).toBe(3)
+    named.forEach(l => {
+      expect(l.local.name_label_is_visible).toBe(true)
+      expect(l.local.value_label_stick_to_label).toBe(true)
+      expect(l.local.name_label_position_absolute).toBe(true)
+      expect(l.local.value_label_position_absolute).toBeUndefined()
+    })
+    const namedRotated = named.filter(l => l.local.name_label_text_angle === 90)
+    expect(namedRotated.length).toBe(2)
+    namedRotated.forEach(l => expect(l.local.value_label_vert).toBe('bottom'))
+    const namedFlat = named.filter(l => l.local.name_label_text_angle === undefined)
+    expect(namedFlat.length).toBe(1)
+    namedFlat.forEach(l => expect(l.local.value_label_horiz).toBe('right'))
+    // Bout en bout : l'attribut RÉSOLU après fromJSON porte bien la rotation.
+    const app = new Class_ApplicationData(false)
+    app.fromJSON(d as never)
+    const rotated = app.drawing_area.sankey.links_list.filter(l => l.value_label_text_angle !== 0)
+    expect(rotated.length).toBe(4)
+    expect(rotated.every(l => l.value_label_text_angle === 90)).toBe(true)
   }, 30000)
 })

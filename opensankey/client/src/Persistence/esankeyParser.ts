@@ -216,6 +216,17 @@ const attrNum = (el: Element | null, attr: string, fallback: number): number => 
 const PT_TO_PX = 96 / 72
 const ptToPx = (pt: number): number => pt > 0 ? Math.round(pt * PT_TO_PX) : pt
 
+// os#1310 — angle e!Sankey (`@angle` des labels/zones, degrés HORAIRES, y vers
+// le bas — .NET RotateTransform) → `*_label_text_angle` OpenSankey. MÊME
+// convention que le rotate() SVG (vérifié sur corpus : l'angle baké d'un label
+// aligné vaut exactement atan2(dy,dx) du segment porteur, « Depuration de
+// Chlore » : 45.98°) ; seule la PLAGE diffère — e!Sankey sérialise 0..360, le
+// widget OpenSankey vit en (−180, 180] (270° → −90°). 0 = neutre (rien à poser).
+export const esAngleToTextAngle = (deg: number): number => {
+  const a = ((deg % 360) + 360) % 360
+  return Math.round((a > 180 ? a - 360 : a) * 100) / 100
+}
+
 // Couleurs e!Sankey : entier ARGB signé 32 bits (ex: -1073774768 = Coral
 // avec alpha). On ne garde que le RGB pour la couleur.
 const argbToHex = (argb: string | null): string | null => {
@@ -499,6 +510,9 @@ interface EsGraphicalProcess {
   labelFontSize: number
   /** Couleur du texte du nom (`<label>/@textColor` argb → hex), null = absente. */
   labelColor: string | null
+  /** os#1310 — rotation du nom (`<label>/@angle`, degrés horaires 0..360 ;
+   *  corpus : 270 = nom vertical sur 5 démos). 0 = horizontal (neutre). */
+  labelAngle: number
   /**
    * Écart d'accroche des flux = « Distance » e!Sankey, portée par les `<port>`
    * enfants DIRECTS du process/place (attribut `nodePadding`, souvent négatif :
@@ -705,7 +719,7 @@ const hasVisibleBorder = (g: EsGraphicalProcess | null): boolean =>
  *  depuis son `<label><font>`, couleur depuis `<label>/@textColor`. Commun aux deux
  *  parseurs. `label` null (aucun label) → tout neutre. .NET FontStyle : bit 1 gras,
  *  bit 2 italique. */
-const parseGraphicalLabelFont = (label: Element | null): Pick<EsGraphicalProcess, 'labelBold' | 'labelItalic' | 'labelFontSize' | 'labelColor'> => {
+const parseGraphicalLabelFont = (label: Element | null): Pick<EsGraphicalProcess, 'labelBold' | 'labelItalic' | 'labelFontSize' | 'labelColor' | 'labelAngle'> => {
   const font = label ? childByTag(label, 'font') : null
   const style = attrNum(font, 'style', 0)
   return {
@@ -713,6 +727,7 @@ const parseGraphicalLabelFont = (label: Element | null): Pick<EsGraphicalProcess
     labelItalic: (style & 2) !== 0,
     labelFontSize: ptToPx(attrNum(font, 'size', 0)),
     labelColor: argbToHex(label?.getAttribute('textColor') ?? null),
+    labelAngle: attrNum(label, 'angle', 0),
   }
 }
 
@@ -967,6 +982,14 @@ const parseShapes = (
     }
     if (kind === 'text') {
       if (!applyTextToContainer(base, shape)) return
+      // os#1310 — zone tournée (`@angle`, corpus : 270 = colonne verticale sur
+      // 3 démos). Les zones importées rendent leur texte en rich-text
+      // (foreignObject, cf. applyTextToContainer) dont seule la rotation −90°
+      // est implémentée (DrawLabel.drawFO) — pile le cas 270° du corpus ; un
+      // angle e!Sankey quelconque (jamais observé sur une zone) resterait
+      // horizontal en FO (≈, cf. NOTE-ESANKEY-MAPPING §4.3).
+      const textAngle = esAngleToTextAngle(attrNum(shape, 'angle', 0))
+      if (textAngle !== 0) base.name_label_text_angle = textAngle
       out[id] = base
     } else if (kind === 'picture') {
       const file = childByTag(shape, 'image')?.getAttribute('filename') ?? ''
@@ -1080,6 +1103,21 @@ interface EsGraphicalArrow {
   /** Couleur du texte (`@textColor` argb → hex #RRGGBB), null = absente. */
   labelColor: string | null
   /**
+   * os#1310 — label INCLINÉ. `@angle` (degrés horaires 0..360) : angle COURANT
+   * du label, y compris quand il est piloté par l'alignement — e!Sankey bake
+   * l'angle calculé à la sérialisation (vérifié : « Depuration de Chlore »,
+   * angle 45.98 = atan2 du segment porteur). `@angleAlignment` : 1 = aligné
+   * sur la flèche (suit le tracé), 0 = angle fixe. `@segment` : index du
+   * segment de la polyligne portant le label (sert de repli tangente quand
+   * angle=0 avec alignment=1 — flèche sérialisée avant tout recalcul).
+   */
+  labelAngle: number
+  labelAngleAlignment: number
+  labelSegment: number
+  /** os#1310b — `@showEntryname` : afficher le nom du matériau dans le label
+   *  (gabarit `{EntryName}: …`). Défaut e!Sankey = true. */
+  showEntryname: boolean
+  /**
    * BOÎTE du label en coordonnées DOCUMENT (même repère que les nœuds et la
    * polyligne du tracé) : `locationX/Y` = coin HAUT-GAUCHE, `sizeW/H` = taille.
    * Modèle e!Sankey vérifié numériquement (Efficiency diagram, flèches droites
@@ -1187,6 +1225,10 @@ const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } 
       labelOffsetH: attrNum(label, 'offsetH', 0),
       labelSegmentPercentage: attrNum(label, 'segmentPercentage', NaN),
       labelColor: argbToHex(label?.getAttribute('textColor') ?? null),
+      labelAngle: attrNum(label, 'angle', 0),
+      labelAngleAlignment: attrNum(label, 'angleAlignment', 0),
+      labelSegment: attrNum(label, 'segment', 0),
+      showEntryname: label?.getAttribute('showEntryname') !== 'false',
       labelHasPos: !!label && label.hasAttribute('locationX'),
       labelX: attrNum(label, 'locationX', 0),
       labelY: attrNum(label, 'locationY', 0),
@@ -1533,6 +1575,9 @@ export const parseEsankeyXml = (
     if (graphical.labelItalic) node.local.name_label_italic = true
     if (graphical.labelFontSize > 0) node.local.name_label_font_size = graphical.labelFontSize
     if (graphical.labelColor) node.local.name_label_color = graphical.labelColor
+    // os#1310 — nom tourné (`<label>/@angle`, corpus : 270 = vertical). Rendu
+    // par le widget d'angle générique des labels (name_label_text_angle).
+    if (graphical.labelAngle !== 0) node.local.name_label_text_angle = esAngleToTextAngle(graphical.labelAngle)
   }
 
   // Bordure du nœud depuis la <penColor> du process/place (« Largeur » + couleur
@@ -2155,23 +2200,94 @@ export const parseEsankeyXml = (
         if (graphicalArrow.labelColor) {
           link.local.value_label_color = graphicalArrow.labelColor
         }
+        // os#1310 — label INCLINÉ. `@angle` fait foi (e!Sankey y bake l'angle
+        // courant, même piloté par l'alignement, cf. EsGraphicalArrow) ; repli
+        // quand angle=0 avec angleAlignment=1 : tangente du segment `@segment`
+        // de la polyligne (atan2 y-vers-le-bas = même convention horaire que
+        // l'angle e!Sankey ET que le rotate() SVG — souvent 0 de toute façon,
+        // les flèches concernées étant horizontales). Rendu STATIQUE : l'angle
+        // est figé à l'import, il ne suit pas le flux si on le déplace (≈,
+        // cf. NOTE-ESANKEY-MAPPING §4.2).
+        let esAngle = graphicalArrow.labelAngle
+        const pts = graphicalArrow.points
+        if (esAngle === 0 && graphicalArrow.labelAngleAlignment === 1 && pts.length >= 2) {
+          const k = Math.min(Math.max(graphicalArrow.labelSegment, 0), pts.length - 2)
+          const dx = pts[k + 1].x - pts[k].x
+          const dy = pts[k + 1].y - pts[k].y
+          if (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01) esAngle = Math.atan2(dy, dx) * 180 / Math.PI
+        }
+        const textAngle = esAngleToTextAngle(esAngle)
+        if (textAngle !== 0) link.local.value_label_text_angle = textAngle
+        // Label quasi-vertical (±90 à ±45 près) : la boîte e!Sankey est un
+        // ruban VERTICAL et le texte y coule du haut vers le bas (angle > 0)
+        // ou du bas vers le haut (angle < 0).
+        const isSteepAngle = Math.abs(textAngle) > 45 && Math.abs(textAngle) < 135
+        // os#1310b — NOM du matériau dans le label. Le gabarit e!Sankey
+        // (`{EntryName}: {Quantity} {UnitName}`, constant sur le corpus) est
+        // piloté par l'interrupteur RÉEL `@showEntryname`. Reproduit avec les
+        // mécanismes existants : label de NOM du flux en source 'tag' (le tag
+        // de flux importé porte le nom de l'entry) + valeur COLLÉE au nom
+        // (value_label_stick_to_label). Restreint aux flèches mono-matériau à
+        // label visible, comme la valeur. Écart assumé (≈) : le deux-points du
+        // gabarit n'est pas reproduit (« Chlore_r 720 g/t »).
+        const showEntryName = graphicalArrow.labelVisible && graphicalArrow.showEntryname &&
+          entry !== null && flows.length === 1
+        if (showEntryName) {
+          link.local.name_label_is_visible = true
+          link.local.name_label_text_source = 'tag'
+          link.local.name_label_flux_tag_group_id = ESANKEY_ENTRIES_TAGG_ID
+          if (graphicalArrow.labelFontSize > 0) link.local.name_label_font_size = graphicalArrow.labelFontSize
+          if (graphicalArrow.labelColor) link.local.name_label_color = graphicalArrow.labelColor
+          if (textAngle !== 0) link.local.name_label_text_angle = textAngle
+          // La valeur se colle au nom, dans le sens de LECTURE du texte : à
+          // droite du nom pour un label ~horizontal, en dessous (angle > 0,
+          // texte qui coule vers le bas) ou au-dessus (angle < 0) pour un
+          // label ~vertical (computeStickPos travaille sur la bbox TOURNÉE).
+          link.local.value_label_stick_to_label = true
+          if (isSteepAngle) {
+            link.local.value_label_horiz = 'middle'
+            link.local.value_label_horiz_shift = 0
+            link.local.value_label_vert = textAngle > 0 ? 'bottom' : 'top'
+            link.local.value_label_vert_shift = 0
+          } else {
+            link.local.value_label_horiz = 'right'
+            link.local.value_label_inside_horiz = false
+            link.local.value_label_horiz_shift = 4
+            link.local.value_label_vert = 'middle'
+            link.local.value_label_vert_shift = 0
+          }
+        }
         // POSITION. e!Sankey sérialise la BOÎTE du label posée à l'écran
         // (locationX/Y + sizeW/H, coords document = repère des nœuds, cf.
         // EsGraphicalArrow.labelHasPos) : on la reporte via le mode ABSOLU
-        // d'OpenSankey (getLabelPos : value_label_position_absolute, position_x
-        // = bord GAUCHE — anchor 'start' —, position_y = CENTRE vertical —
-        // baseline 'middle' —, coords monde ; même mécanique que le drag de
-        // label). C'est exact au pixel près à l'import (indépendant de notre
-        // reconstruction du tracé), au prix d'un label qui ne suit plus le flux
-        // si l'utilisateur déplace les nœuds — même compromis, assumé, que les
-        // labels de NOM des process (applyNameLabelPos). Translaté par la
-        // normalisation des positions plus bas, comme les waypoints. RESTREINT
-        // aux flèches mono-matériau : sur une flèche multi-flow, N labels au
-        // même point exact se masqueraient l'un l'autre si réactivés à la main.
+        // d'OpenSankey (getLabelPos : position_x = bord GAUCHE — anchor
+        // 'start' —, position_y = CENTRE vertical — baseline 'middle' —,
+        // coords monde ; même mécanique que le drag de label). C'est exact au
+        // pixel près à l'import (indépendant de notre reconstruction du
+        // tracé), au prix d'un label qui ne suit plus le flux si l'utilisateur
+        // déplace les nœuds — même compromis, assumé, que les labels de NOM
+        // des process (applyNameLabelPos). Translaté par la normalisation des
+        // positions plus bas, comme les waypoints. RESTREINT aux flèches
+        // mono-matériau : sur une flèche multi-flow, N labels au même point
+        // exact se masqueraient l'un l'autre si réactivés à la main.
+        // Porteur : le label de NOM quand le nom du matériau est affiché (la
+        // valeur collée suit), la VALEUR sinon.
+        // os#1310 — label TOURNÉ : l'ancre (début du texte, anchor 'start')
+        // n'est plus au bord gauche/milieu de la boîte mais au MILIEU de sa
+        // largeur, en HAUT (texte qui coule vers le bas, angle > 0) ou en BAS
+        // (angle < 0) du ruban vertical sérialisé par e!Sankey.
         if (graphicalArrow.labelHasPos && flows.length === 1) {
-          link.local.value_label_position_absolute = true
-          link.local.value_label_position_x = graphicalArrow.labelX
-          link.local.value_label_position_y = graphicalArrow.labelY + graphicalArrow.labelH / 2
+          const posPrefix = showEntryName ? 'name_label' : 'value_label'
+          link.local[posPrefix + '_position_absolute'] = true
+          if (isSteepAngle) {
+            link.local[posPrefix + '_position_x'] = graphicalArrow.labelX + graphicalArrow.labelW / 2
+            link.local[posPrefix + '_position_y'] = textAngle > 0
+              ? graphicalArrow.labelY
+              : graphicalArrow.labelY + graphicalArrow.labelH
+          } else {
+            link.local[posPrefix + '_position_x'] = graphicalArrow.labelX
+            link.local[posPrefix + '_position_y'] = graphicalArrow.labelY + graphicalArrow.labelH / 2
+          }
         } else {
           // REPLI sans locationX (aucun cas au corpus) : approximation par tiers
           // le long du tracé (segmentPercentage) + côté perpendiculaire (offsetH),
@@ -2238,6 +2354,12 @@ export const parseEsankeyXml = (
       if (l.local.value_label_position_absolute === true) {
         l.local.value_label_position_x = (l.local.value_label_position_x as number) + dx
         l.local.value_label_position_y = (l.local.value_label_position_y as number) + dy
+      }
+      // os#1310b — même translation pour le label de NOM absolu (porteur de la
+      // position quand le nom du matériau est affiché, la valeur y est collée).
+      if (l.local.name_label_position_absolute === true) {
+        l.local.name_label_position_x = (l.local.name_label_position_x as number) + dx
+        l.local.name_label_position_y = (l.local.name_label_position_y as number) + dy
       }
     })
   }
