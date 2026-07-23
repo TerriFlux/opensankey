@@ -474,12 +474,14 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public drawShape() {
     if (!this._link_shape) return
     this._link_shape.drawShape()
+    this._applySourceNotchMask()
     this._orderD3Elements()
   }
 
   public drawArrow() {
     if (!this.d3_selection) return
     this._drawArrow()
+    this._applySourceNotchMask()
     this._orderD3Elements()
   }
 
@@ -497,6 +499,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this._arrow_shape = undefined
     this._arrow_shape_source = undefined
     this._drawArrow()
+    this._applySourceNotchMask()
     this._orderD3Elements()
   }
 
@@ -953,29 +956,61 @@ export class Class_LinkElement extends Class_LinkAttribute {
   /**
    * Draw the "source notch" (negative arrow) on this link's d3 selection.
    * The chevron is computed once at the source node for ALL links leaving the
-   * same side (so they share a single notch), then drawn as a copy on each
-   * participating link. Filled with the drawing-area background color so it
-   * carves a V out of the link starts, regardless of element z-order.
+   * same side (so they share a single notch), then applied on each participating
+   * link as an SVG <mask> that carves the chevron out of the link's own paint
+   * (shape/path/bordure/pointe) : vraie découpe transparente, ce qui est derrière
+   * l'encoche (nœuds, flux croisés, fond) reste visible — contrairement à
+   * l'ancien recouvrement peint couleur de fond qui masquait tout.
    * @protected
    */
   protected _drawSourceNotch() {
     if (!this.d3_selection)
       return
-    // Clean previous notch
-    this.d3_selection?.selectAll('.link_source_notch').remove()
+    // Clean previous notch mask
+    this.d3_selection?.selectAll('.link_source_notch_mask').remove()
     if (this.shape_source_notch && this.is_visible) {
       if (this._source_notch_shape === undefined) {
+        // Recompute at node level : le setter shape_source_notch_path rappelle
+        // drawSourceNotch sur chaque flux participant (récursion contrôlée).
         this.source.drawLinksSourceNotch()
       }
       else {
-        this.d3_selection?.append('path')
-          .attr('class', 'link_source_notch')
+        const mask = this.d3_selection.append('mask')
+          .attr('class', 'link_source_notch_mask')
+          .attr('id', this._sourceNotchMaskId())
+          .attr('maskUnits', 'userSpaceOnUse')
+          .attr('x', -1e5).attr('y', -1e5)
+          .attr('width', 2e5).attr('height', 2e5)
+        mask.append('rect')
+          .attr('x', -1e5).attr('y', -1e5)
+          .attr('width', 2e5).attr('height', 2e5)
+          .attr('fill', 'white')
+        mask.append('path')
           .attr('d', this._source_notch_shape)
-          .attr('fill', this.sankey.drawing_area.color)
-          .attr('stroke', 'none')
-          .attr('pointer-events', 'none')
+          .attr('fill', 'black')
       }
     }
+    this._applySourceNotchMask()
+  }
+
+  /** Id du mask d'encoche — id du flux échappé pour rester un fragment url(#...) valide. */
+  private _sourceNotchMaskId(): string {
+    return 'link_source_notch_mask_' + this.id.replace(/[^a-zA-Z0-9_-]/g, c => '_' + c.charCodeAt(0) + '_')
+  }
+
+  /**
+   * (Ré)applique l'attribut mask de l'encoche sur les tracés peints du flux.
+   * Les <path> (shape/path/bordure/pointe) sont détruits/recréés par
+   * drawShape/_drawArrow et perdent l'attribut, alors que le <mask> lui-même
+   * persiste dans le <g> du flux — d'où ce rattrapage dans chaque point
+   * d'entrée public qui recrée les tracés.
+   * @protected
+   */
+  protected _applySourceNotchMask() {
+    if (!this.d3_selection) return
+    const has_mask = !this.d3_selection.select('.link_source_notch_mask').empty()
+    this.d3_selection.selectAll('.link_shape, .link_path, .link_path_border, .link_arrow, .link_uncertainty_band')
+      .attr('mask', has_mask ? 'url(#' + this._sourceNotchMaskId() + ')' : null)
   }
 
   /**
@@ -1012,8 +1047,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this.d3_selection?.selectAll('.link_shape').raise()
     this.d3_selection?.selectAll('.link_path').raise()
     this.d3_selection?.selectAll('.link_arrow').raise()
-    // Above shape/path/arrow (it masks them) but below labels.
-    this.d3_selection?.selectAll('.link_source_notch').raise()
 
     this._link_draw_label.d3_selection?.raise()
     this._link_draw_value.d3_selection?.raise()

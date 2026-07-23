@@ -1633,8 +1633,8 @@ export class Class_NodeElement extends Class_NodeBase {
    * one chevron whose base spans every link's attach band on that side and whose
    * apex is pushed into the ribbon (toward the targets) by the deepest requested
    * notch size. The resulting path is pushed onto every participating link, which
-   * draws a background-colored copy on its own d3 selection — so the notch is
-   * carved consistently whatever the global element z-order.
+   * carves it out of its own paint via an SVG mask — the notch is a transparent
+   * cutout (what lies behind stays visible), consistent whatever the z-order.
    */
   private _drawLinksSourceNotch() {
     // Même garde mort (méthode non appelée) qu'en tête de `_drawLinksArrow` : retiré, pas activé.
