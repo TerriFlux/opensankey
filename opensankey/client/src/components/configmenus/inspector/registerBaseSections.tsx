@@ -24,11 +24,6 @@ import { MenuConfigurationLinksData } from '../SankeyMenuConfigurationLinksData'
 import { ConfigMenuTextInput, OSTooltip, CustomFaEyeCheckIcon, WrapperBoxSubSectionMenu } from '../MenuCommon'
 import { stripHtmlTags, isRichContent } from '../../dialogs/RichTextEditor'
 import { PresentationComposer } from '../../panels/presentation/PresentationComposer'
-import { PresentationDocumentSettings } from '../../panels/presentation/PresentationDocumentSettings'
-import {
-  NODE_TOOLTIP_BLOCKS, LINK_TOOLTIP_BLOCKS, tooltipBlockLabelKey,
-  isTooltipBlockVisible, Type_TooltipHiddenBlocks
-} from '../../../Elements/TooltipBlocks'
 import { CONVERTER_CONFIGS } from '../../dialogs/PersistenceProcessDialogConfigs'
 import {
   DrawingAreaConfig,
@@ -145,20 +140,20 @@ export function registerBaseInspectorSections(): void {
     render: (app_data, scope) => <InspectorStockTab app_data={app_data} scope={scope} />
   })
 
-  // ---- Onglet INFOBULLE (données pures — masqué en portée Style) -----------
-  // Même pattern que les libellés : texte SIMPLE en ligne, éditeur complet
-  // dans un panneau draggable (rien d'embarqué dans le menu de config).
-  // Réintègre les tooltips, orphelins depuis que les entrées node/flow de
-  // « presentation » ont été commentées dans ModulesOSP.
+  // ---- Onglet INFOS (texte libre de l'élément — masqué en portée Style) -----
+  // Ex-« Info-bulle ». Depuis #305, la VISIBILITÉ des blocs se règle dans
+  // l'onglet Présentation (par contenant), et le mécanisme d'info-bulle hérité
+  // est retiré : il ne reste ici qu'à SAISIR le texte libre (simple ou riche).
+  // D'où le renommage en « Infos » — ce texte alimente le bloc « Infos » du
+  // composeur. `data_only` : le texte libre est propre à la sélection.
   inspector_registry.register({
     id: 'os.tab.infobulle',
     target: ['node', 'link', 'mixed'],
     order: 60,
     hue: 'data',
-    title: (app_data) => app_data.t('inspector.tab.tooltip'),
+    data_only: true,
+    title: (app_data) => app_data.t('inspector.tab.infos', { defaultValue: 'Infos' }),
     icon: (app_data) => app_data.icon_library.icon_tab_tooltip,
-    // Pas data_only : la VISIBILITÉ des blocs (OS#1285) est un attribut de style,
-    // éditable en portée Style ; le texte libre reste propre à la sélection.
     render: (app_data, scope) => <InspectorTooltipTab app_data={app_data} scope={scope} />
   })
 
@@ -277,18 +272,11 @@ export function registerBaseInspectorSections(): void {
     )
   })
 
-  // ---- Vue > Présentation : réglages DOCUMENT (OS#305) ---------------------
-  // Le déclencheur et le délai valent pour tout le diagramme (décision #6) : ils
-  // ne sont donc pas dans l'onglet Présentation d'un élément, mais ici.
-  inspector_registry.register({
-    id: 'os.view.presentation',
-    target: 'view',
-    order: 50,
-    hue: 'presentation',
-    title: (app_data) => app_data.t('inspector.tab.presentation', { defaultValue: 'Présentation' }),
-    icon: (app_data) => app_data.icon_library.icon_tab_tooltip,
-    render: (app_data) => <PresentationDocumentSettings app_data={app_data} />
-  })
+  // Le déclencheur et le délai d'apparition valent pour tout le diagramme, mais
+  // se règlent désormais AU BAS de l'onglet Présentation d'un élément (et non
+  // plus dans un onglet de Vue distinct, qui n'apparaissait que sans sélection).
+  // L'aide au survol des menus de barre a été retirée : les boutons portent déjà
+  // les info-bulles de l'application.
 }
 
 // #1243 — Onglet Stock : même structure d'en-tête que l'onglet Icône —
@@ -415,9 +403,10 @@ const InspectorMFATab = ({ app_data }: { app_data: Class_ApplicationData }) => {
   </>
 }
 
-// #1243 — Onglet Infobulle : MÊME interface que le Libellé — en-tête avec les
-// boutons de MODE à droite (texte simple / texte riche), texte simple édité en
-// ligne, le mode riche ouvrant l'éditeur complet en panneau draggable.
+// Onglet Infos : saisie du TEXTE LIBRE de l'élément — même interface que le
+// Libellé (boutons de mode simple / riche à droite, texte simple en ligne, mode
+// riche dans un panneau draggable). La visibilité des blocs a migré vers
+// l'onglet Présentation (#305) ; ne reste ici que ce texte.
 const InspectorTooltipTab = ({ app_data, scope }: { app_data: Class_ApplicationData, scope: 'selection' | 'style' }) => {
   const { t, drawing_area, history, menu_configuration, icon_library } = app_data
   const elements = [
@@ -496,64 +485,6 @@ const InspectorTooltipTab = ({ app_data, scope }: { app_data: Class_ApplicationD
         />
       )}
     </>}
-
-    {/* OS#1285 — visibilité des blocs de l'info-bulle (attribut de style). */}
-    <TooltipBlocksToggles app_data={app_data} scope={scope} />
   </>
-}
-
-// OS#1285 — cases de visibilité des blocs d'info-bulle. Écrit l'attribut de style
-// `tooltip_hidden_blocks` sur la sélection ou le style édité (undo), selon la portée.
-type BlockTarget = { attributes: Record<string, unknown>, getElementProperty: (k: 'tooltip_hidden_blocks') => unknown }
-const TooltipBlocksToggles = ({ app_data, scope }: { app_data: Class_ApplicationData, scope: 'selection' | 'style' }) => {
-  const { t, drawing_area, history, menu_configuration } = app_data
-  const nodes = drawing_area.selected_nodes_list
-  const links = drawing_area.selected_links_list
-
-  // Blocs pertinents selon les types sélectionnés (analysis dédupliqué).
-  const block_ids: string[] = []
-  if (nodes.length) NODE_TOOLTIP_BLOCKS.forEach(b => block_ids.push(b))
-  if (links.length) LINK_TOOLTIP_BLOCKS.forEach(b => { if (!block_ids.includes(b)) block_ids.push(b) })
-  if (block_ids.length === 0) return null
-
-  const targets = (scope === 'style'
-    ? [drawing_area.sankey.styles_dict[menu_configuration.ref_selected_style.current]].filter(Boolean)
-    : [...nodes, ...links]) as unknown as BlockTarget[]
-  const read_target = targets[0]
-  const hidden = (read_target?.getElementProperty('tooltip_hidden_blocks') as Type_TooltipHiddenBlocks | undefined) ?? {}
-
-  const setHidden = (block_id: string, hide: boolean) => {
-    if (targets.length === 0) return
-    const next: Type_TooltipHiddenBlocks = { ...hidden }
-    if (hide) next[block_id] = true
-    else delete next[block_id]
-    const value = Object.keys(next).length ? next : undefined
-    const before = targets.map(el => ({ el, v: el.attributes['tooltip_hidden_blocks'] }))
-    const commit = () => {
-      menu_configuration.ref_to_save_in_cache_indicator.current(false)
-      menu_configuration.updateInspector()
-    }
-    const apply = () => { targets.forEach(el => { el.attributes['tooltip_hidden_blocks'] = value }); commit() }
-    const undo = () => { before.forEach(({ el, v }) => { el.attributes['tooltip_hidden_blocks'] = v }); commit() }
-    history.saveUndo(undo)
-    history.saveRedo(apply)
-    apply()
-  }
-
-  return <Box style={{ marginTop: '0.4rem' }}>
-    <Box layerStyle='menuconfigpanel_option_name'>{t('inspector.tooltip_blocks.title')}</Box>
-    <Box style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem', paddingTop: '0.2rem' }}>
-      {block_ids.map(id => (
-        <Checkbox
-          key={id}
-          size='sm'
-          isChecked={isTooltipBlockVisible(hidden, id)}
-          onChange={e => setHidden(id, !e.target.checked)}
-        >
-          <Box as='span' style={{ fontSize: '0.75rem' }}>{t(tooltipBlockLabelKey(id))}</Box>
-        </Checkbox>
-      ))}
-    </Box>
-  </Box>
 }
 

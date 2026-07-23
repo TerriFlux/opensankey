@@ -1,37 +1,7 @@
-import { Class_PanelManager, MENU_PANEL_IDS } from './PanelManager'
+import { Class_PanelManager } from './PanelManager'
 import { Class_EventBus } from './EventBus'
 
-// OS#305 Lot 5 — réglages d'auteur par MENU de barre. Décision #9 : pour un
-// bouton on ne compose pas de contenu (c'est l'UI de l'appli). Depuis
-// l'ajustement #4, le CONTENANT n'est plus réglable non plus : ne reste que
-// l'aide au survol.
-
 const make = () => new Class_PanelManager(new Class_EventBus())
-
-describe('#305 politique par menu — valeurs par défaut', () => {
-  it('un menu non réglé n\'a pas d\'aide', () => {
-    const panels = make()
-    MENU_PANEL_IDS.forEach(id => {
-      expect(panels.getMenuPolicy(id)).toEqual({ help: '' })
-      expect(panels.getMenuHelp(id)).toBe('')
-    })
-  })
-
-  it('mémorise l\'aide rédigée par l\'auteur', () => {
-    const panels = make()
-    panels.setMenuPolicy('filter', { help: 'Filtrer par filière' })
-    expect(panels.getMenuHelp('filter')).toBe('Filtrer par filière')
-  })
-
-  it('ne stocke RIEN quand l\'aide revient au vide', () => {
-    // Sinon le JSON du diagramme s'alourdit d'entrées sans effet.
-    const panels = make()
-    panels.setMenuPolicy('search', { help: 'aide' })
-    expect(panels.toJSON()['menus']).toEqual({ search: { help: 'aide' } })
-    panels.setMenuPolicy('search', { help: '   ' })
-    expect(panels.toJSON()['menus']).toEqual({})
-  })
-})
 
 // AJUSTEMENT #4 — la règle d'ouverture au clic, en une phrase : la barre
 // latérale si elle est OUVERTE, une pop-up sinon. Aucun réglage ne s'y
@@ -105,16 +75,7 @@ describe('#4 bascule de la barre latérale', () => {
   })
 })
 
-describe('#305 persistance des réglages de menu', () => {
-  it('round-trip', () => {
-    const a = make()
-    a.setMenuPolicy('config', { help: 'Régler le diagramme' })
-    const b = make()
-    b.fromJSON(a.toJSON())
-    expect(b.getMenuPolicy('config')).toEqual({ help: 'Régler le diagramme' })
-    expect(b.getMenuPolicy('filter')).toEqual({ help: '' })
-  })
-
+describe('#4 persistance de la barre latérale', () => {
   it('l\'ouverture de la barre voyage avec le document, indépendamment du menu ancré', () => {
     const a = make()
     a.toggleSidebar()          // ouverte et VIDE
@@ -122,20 +83,6 @@ describe('#305 persistance des réglages de menu', () => {
     b.fromJSON(a.toJSON())
     expect(b.sidebar_open).toBe(true)
     expect(b.sidebar_id).toBeNull()
-  })
-
-  it('tolère un JSON abîmé, et ignore un « container » d\'une version antérieure', () => {
-    const panels = make()
-    panels.fromJSON({
-      menus: {
-        config: { container: 'sidebar', help: 'ok' },  // container ignoré
-        filter: 'pas un objet',                        // ignoré
-        search: { container: 'popup' }                 // aide absente -> non stocké
-      }
-    } as never)
-    expect(panels.getMenuPolicy('config')).toEqual({ help: 'ok' })
-    expect(panels.getMenuPolicy('filter')).toEqual({ help: '' })
-    expect(panels.getMenuPolicy('search')).toEqual({ help: '' })
   })
 
   it('reconstruit l\'ouverture d\'un document antérieur à l\'ajustement #4', () => {
@@ -154,9 +101,15 @@ describe('#305 persistance des réglages de menu', () => {
     expect(aucun.sidebar_open).toBe(false)
   })
 
-  it('ne casse pas sur un JSON sans clé « menus »', () => {
+  it('ignore sans casser un bloc « menus » d\'une version antérieure (aide au survol retirée)', () => {
     const panels = make()
-    expect(() => panels.fromJSON({} as never)).not.toThrow()
-    expect(panels.getMenuHelp('config')).toBe('')
+    expect(() => panels.fromJSON({
+      menus: { config: { help: 'ok' }, filter: 'pas un objet' }
+    } as never)).not.toThrow()
+    expect(panels.toJSON()['menus']).toBeUndefined()
+  })
+
+  it('ne casse pas sur un JSON vide', () => {
+    expect(() => make().fromJSON({} as never)).not.toThrow()
   })
 })

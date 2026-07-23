@@ -66,22 +66,6 @@ export const PRESENTATION_DELAY_MAX_MS = 3000
 const clampPresentationDelay = (ms: number): number =>
   Math.max(0, Math.min(PRESENTATION_DELAY_MAX_MS, Math.round(isFinite(ms) ? ms : 0)))
 
-// OS#305 Lot 5 — Réglages d'auteur pour les BOUTONS DE MENU (Configuration,
-// Filtres, Recherche).
-//
-// Décision #9 : un bouton n'est pas un élément. Un nœud a des attributs (valeur,
-// libellé, icône) ; le bouton « Filtres » n'en a pas — son contenu EST l'UI de
-// filtres fournie par l'appli. On ne compose donc pas son contenu : l'auteur
-// règle seulement l'AIDE que le lecteur lit en survolant le bouton.
-//
-// Le CONTENANT, lui, n'est plus un réglage : la règle est désormais uniforme et
-// tient en une phrase (cf. `defaultOpenMode`). Un choix par menu rouvrait la
-// question à trois endroits pour un gain nul.
-export type Type_MenuPolicy = { help: string }
-/** Menus de barre réglables par l'auteur. */
-export const MENU_PANEL_IDS = ['config', 'filter', 'search'] as const
-export const DEFAULT_MENU_POLICY: Type_MenuPolicy = { help: '' }
-
 export class Class_PanelManager {
 
   private _bus: Class_EventBus
@@ -114,9 +98,6 @@ export class Class_PanelManager {
   // OS#305 — déclenchement de la présentation composée (réglages DOCUMENT).
   private _presentation_trigger: Type_PresentationTrigger = 'shift'
   private _presentation_delay_ms: number = 0
-  // OS#305 Lot 5 — réglages d'auteur par MENU de barre (contenant + aide).
-  // Absent de la map = non réglé, donc contenant contextuel.
-  private _menu_policies: Map<string, Type_MenuPolicy> = new Map()
 
   // Info-bulle transitoire : une seule à la fois (le survol d'un autre élément
   // remplace la précédente).
@@ -234,23 +215,6 @@ export class Class_PanelManager {
     return this._sidebar_open ? 'sidebar' : 'popup'
   }
 
-  // OS#305 Lot 5 — réglages d'auteur par menu de barre (aide au survol).
-  public getMenuPolicy(menu_id: string): Type_MenuPolicy {
-    return this._menu_policies.get(menu_id) ?? { ...DEFAULT_MENU_POLICY }
-  }
-
-  public setMenuPolicy(menu_id: string, policy: Type_MenuPolicy): void {
-    // On ne stocke que ce qui s'écarte du défaut, pour ne pas alourdir le JSON.
-    if (policy.help.trim() === '') this._menu_policies.delete(menu_id)
-    else this._menu_policies.set(menu_id, { help: policy.help })
-    this._notify()
-  }
-
-  /** Aide rédigée par l'auteur pour ce menu ('' si aucune). */
-  public getMenuHelp(menu_id: string): string {
-    return this._menu_policies.get(menu_id)?.help ?? ''
-  }
-
   /**
    * Ouvre / ferme la barre latérale elle-même (bouton de la barre du haut,
    * Ctrl+B). À l'ouverture, elle retrouve le dernier menu qu'elle contenait ;
@@ -358,10 +322,6 @@ export class Class_PanelManager {
     this._popup_geometry_memory.forEach((g, id) => {
       popups[id] = { x: g.x, y: g.y, w: g.w, h: g.h }
     })
-    const menus: Type_JSON = {}
-    this._menu_policies.forEach((p, id) => {
-      menus[id] = { help: p.help }
-    })
     return {
       // '' = barre vide (Type_JSON n'accepte pas null).
       sidebar_id: this._sidebar_id ?? '',
@@ -370,9 +330,7 @@ export class Class_PanelManager {
       popups,
       // OS#305 — déclenchement de la présentation composée (réglage DOCUMENT).
       presentation_trigger: this._presentation_trigger,
-      presentation_delay_ms: this._presentation_delay_ms,
-      // OS#305 Lot 5 — réglages d'auteur par menu de barre (contenant + aide).
-      menus
+      presentation_delay_ms: this._presentation_delay_ms
     }
   }
 
@@ -396,18 +354,8 @@ export class Class_PanelManager {
       : 'shift'
     this._presentation_delay_ms = clampPresentationDelay(
       getNumberFromJSON(json, 'presentation_delay_ms', this._presentation_delay_ms))
-    // OS#305 Lot 5 — réglages par menu (tolérant : entrée mal formée ignorée).
-    // Un éventuel `container` écrit par une version antérieure est ignoré : le
-    // contenant ne se règle plus (ajustement #4).
-    const menus = json['menus']
-    if (menus && typeof menus === 'object' && !Array.isArray(menus)) {
-      this._menu_policies.clear()
-      Object.entries(menus as Type_JSON).forEach(([id, raw]) => {
-        if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return
-        const help = getStringFromJSON(raw as Type_JSON, 'help', '')
-        if (help !== '') this._menu_policies.set(id, { help })
-      })
-    }
+    // Un éventuel bloc `menus` (aide au survol des boutons de barre, retirée) est
+    // simplement ignoré : les boutons portent les info-bulles de l'application.
     // Géométries de pop-ups (mémoire) : restaurées bornées, pour que chaque pop-up
     // rouvre à sa taille/position enregistrée.
     const popups = json['popups']

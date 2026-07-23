@@ -25,10 +25,13 @@
 // Décision #8 : la cible est ÉCRITE, jamais implicite.
 
 import React from 'react'
-import { Box, Button, Menu, MenuButton, MenuItem, MenuList, Text } from '@chakra-ui/react'
+import { Box, Button, Input, Menu, MenuButton, MenuItem, MenuList, Text } from '@chakra-ui/react'
 
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
-import type { Type_PanelMode } from '../../../types/PanelManager'
+import {
+  PRESENTATION_TRIGGERS, PRESENTATION_DELAY_MAX_MS,
+  type Type_PanelMode, type Type_PresentationTrigger
+} from '../../../types/PanelManager'
 import type { Type_InspectorScope } from '../../configmenus/inspector/InspectorRegistry'
 import { default_font_size } from '../../../css/Theme'
 import {
@@ -63,6 +66,68 @@ const MODE_LABEL: Record<Type_PanelMode, { key: string, fallback: string }> = {
   tooltip: { key: 'presentation.mode.tooltip', fallback: 'Info-bulle' },
   popup: { key: 'presentation.mode.popup', fallback: 'Pop-up' },
   sidebar: { key: 'presentation.mode.sidebar', fallback: 'Panneau' }
+}
+
+const TRIGGER_LABEL: Record<Type_PresentationTrigger, { key: string, fallback: string }> = {
+  hover: { key: 'presentation.trigger.hover', fallback: 'Survol' },
+  shift: { key: 'presentation.trigger.shift', fallback: 'MAJ + survol' },
+  alt: { key: 'presentation.trigger.alt', fallback: 'Alt + survol' }
+}
+
+/**
+ * Déclenchement de l'info-bulle : COMMENT le lecteur la fait apparaître, et après
+ * quel délai. Réglages DOCUMENT (ils valent pour tout le diagramme, décision #6)
+ * mais édités ici, au bas de l'onglet Présentation d'un élément — l'onglet de Vue
+ * qui les portait, invisible dès qu'un élément était sélectionné, a disparu.
+ */
+const TriggerSettings = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const { t, menu_configuration } = app_data
+  const panels = menu_configuration.panels
+  const markDirty = () => menu_configuration.ref_to_save_in_cache_indicator.current(false)
+  return (
+    <Box style={{ borderTop: '1px solid #e2e8f0', paddingTop: '0.35rem', marginTop: '0.15rem' }}>
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('presentation.trigger', { defaultValue: 'Déclencheur de l\'info-bulle' })}
+      </Box>
+      <Text style={{ fontSize: '0.7rem', opacity: 0.7, paddingBottom: '0.15rem' }}>
+        {t('presentation.trigger_hint', {
+          defaultValue: 'Vaut pour tout le diagramme.'
+        })}
+      </Text>
+      <Box style={{ display: 'flex', gap: '0.15rem' }}>
+        {PRESENTATION_TRIGGERS.map(trigger => (
+          <Button
+            key={trigger}
+            size='xs'
+            flex='1'
+            variant={panels.presentation_trigger === trigger
+              ? 'button_type_config_activated'
+              : 'button_type_config'}
+            onClick={() => { panels.presentation_trigger = trigger; markDirty() }}
+          >
+            {t(TRIGGER_LABEL[trigger].key, { defaultValue: TRIGGER_LABEL[trigger].fallback })}
+          </Button>
+        ))}
+      </Box>
+      <Box layerStyle='menuconfigpanel_option_name' style={{ paddingTop: '0.25rem' }}>
+        {t('presentation.delay', { defaultValue: 'Délai d\'apparition (ms)' })}
+      </Box>
+      <Input
+        size='xs'
+        type='number'
+        min={0}
+        max={PRESENTATION_DELAY_MAX_MS}
+        step={50}
+        variant='menuconfigpanel_option_input'
+        value={panels.presentation_delay_ms}
+        onChange={(e) => {
+          const v = Number(e.target.value)
+          panels.presentation_delay_ms = isNaN(v) ? 0 : v
+          markDirty()
+        }}
+      />
+    </Box>
+  )
 }
 
 /** Types d'éléments réellement présents dans la sélection. */
@@ -365,6 +430,9 @@ export const PresentationComposer = ({ app_data, scope }: {
           </Box>
         )}
       </Box>
+
+      {/* Déclencheur + délai de l'info-bulle (réglages document, cf. #6). */}
+      <TriggerSettings app_data={app_data} />
     </Box>
   )
 }

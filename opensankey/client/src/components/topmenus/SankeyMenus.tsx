@@ -108,13 +108,6 @@ export const SankeyMenu = (
   // Ouverture de la config = présence du panneau 'config' dans le modèle.
   const show_nav = menu_configuration.panels.isOpen('config')
 
-  // OS#305 Lot 5 — l'AIDE rédigée par l'auteur pour un menu de barre est ce que
-  // le lecteur lit en survolant son bouton (décision #9 : pour un bouton, on ne
-  // compose pas de contenu, on règle son contenant et son aide). À défaut, on
-  // garde le libellé d'origine.
-  const menuHelp = (menu_id: string, fallback: string) =>
-    menu_configuration.panels.getMenuHelp(menu_id) || fallback
-
   // Ouvre/ferme la config (panneau unifié 'config'). Centralise tous les chemins
   // (bouton, raccourcis, ouverture auto depuis le canvas) qui passent par
   // ref_menu_opened.current[1], pour un comportement uniforme. Aucune exclusivité
@@ -253,7 +246,7 @@ export const SankeyMenu = (
         {/* Configuration (roue crantée). */}
         <OSTooltip
           placement='left'
-          label={menuHelp('config', t('Banner.open_configuration_menu'))}
+          label={t('Banner.open_configuration_menu')}
           isAlwaysOpen={app_data.menu_configuration.show_splashscreen}
         >
           <Button
@@ -273,7 +266,7 @@ export const SankeyMenu = (
           </Button>
         </OSTooltip>
         {/* Filtres : pilote le drawer de ToolbarFilter via ref (le bouton flottant est masqué en éditeur). */}
-        {menu_configuration.filter_bar_available ? <OSTooltip placement='left' label={menuHelp('filter', t('Banner.fdn'))}>
+        {menu_configuration.filter_bar_available ? <OSTooltip placement='left' label={t('Banner.fdn')}>
           <Button
             id='buttonOpenFilterDrawerTools'
             variant='toolbar_button_open_filter'
@@ -286,7 +279,7 @@ export const SankeyMenu = (
         </OSTooltip> : <></>}
         {/* OS#1273 — recherche d'élément (nœud / flux / zone). Bascule la barre de
             recherche (même slot que le raccourci Ctrl+F). */}
-        <OSTooltip placement='left' label={menuHelp('search', t('search.tooltip'))}>
+        <OSTooltip placement='left' label={t('search.tooltip')}>
           <Button
             id='buttonOpenElementSearch'
             variant='toolbar_button_open_filter'
@@ -445,7 +438,7 @@ export const SankeyMenu = (
       {app_data.is_static && app_data.is_editable ? (
         <OSTooltip
           placement='left'
-          label={menuHelp('config', t('Banner.open_configuration_menu'))}
+          label={t('Banner.open_configuration_menu')}
           isAlwaysOpen={app_data.menu_configuration.show_splashscreen}
         >
           <Button

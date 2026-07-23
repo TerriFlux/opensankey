@@ -168,12 +168,17 @@ const PanelHeader = ({
         </Button>
       )}
 
-      <CloseButton
-        size='sm'
-        aria-label='panel-close'
-        onMouseDown={(e) => e.stopPropagation()}
-        onClick={onClose}
-      />
+      {/* Pas de croix sur l'INFO-BULLE : elle est transitoire et se ferme d'
+          elle-même quand le curseur la quitte. Une croix n'y servirait à rien,
+          et brouillerait la distinction avec la pop-up/le panneau, eux persistants. */}
+      {mode !== 'tooltip' && (
+        <CloseButton
+          size='sm'
+          aria-label='panel-close'
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={onClose}
+        />
+      )}
     </Box>
   )
 }
@@ -283,7 +288,12 @@ const DockHint = ({ app_data, width_px }: { app_data: Class_ApplicationData, wid
   )
 }
 
-const TOOLTIP_W = 300
+// Info-bulle : sa largeur s'adapte au CONTENU (`max-content`), entre ces bornes.
+// Le minimum évite une bulle ridicule pour un seul mot ; le maximum garde un
+// tableau large lisible sans barrer l'écran, et sert de repère au clamp de
+// position ci-dessous. La hauteur reste plafonnée (60vh) avec défilement.
+const TOOLTIP_MIN_W = 140
+const TOOLTIP_MAX_W = 420
 
 /**
  * ENVELOPPE UNIQUE des trois contenants.
@@ -423,7 +433,10 @@ const PanelFrame = ({
   const anchor = panels.tooltip_anchor
   const vw = window.innerWidth || 4096
   const vh = window.innerHeight || 4096
-  const tt_left = Math.max(4, Math.min(anchor.x + 14, vw - TOOLTIP_W - 6))
+  // La largeur réelle de l'info-bulle s'adapte au contenu ; pour le placement on
+  // borne au maximum possible, de sorte qu'une bulle large ne déborde jamais à
+  // droite (une bulle plus étroite se trouvera simplement un peu à gauche du bord).
+  const tt_left = Math.max(4, Math.min(anchor.x + 14, vw - TOOLTIP_MAX_W - 6))
   const tt_top = Math.max(4, Math.min(anchor.y + 14, vh - 120))
 
   return (
@@ -468,7 +481,12 @@ const PanelFrame = ({
           bottom={is_sidebar ? da.getBottomBarHeight() + 'px' : undefined}
           left={is_tooltip ? tt_left + 'px' : undefined}
           top={is_sidebar ? da.getNavBarHeight() + 'px' : (is_tooltip ? tt_top + 'px' : undefined)}
-          width={is_sidebar ? eff_width + 'px' : (is_popup ? eff_w + 'px' : TOOLTIP_W + 'px')}
+          // Info-bulle : largeur au CONTENU (`max-content`), bornée — elle rétrécit
+          // pour un seul mot, s'élargit pour un tableau serré, et varie donc d'un
+          // élément à l'autre. Sidebar / pop-up gardent leur largeur explicite.
+          width={is_sidebar ? eff_width + 'px' : (is_popup ? eff_w + 'px' : 'max-content')}
+          minWidth={is_tooltip ? TOOLTIP_MIN_W + 'px' : undefined}
+          maxWidth={is_tooltip ? TOOLTIP_MAX_W + 'px' : undefined}
           height={is_popup ? eff_h + 'px' : undefined}
           maxHeight={is_tooltip ? '60vh' : undefined}
           borderLeft={is_sidebar ? '1px solid #e2e8f0' : undefined}

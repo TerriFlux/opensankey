@@ -343,14 +343,15 @@ export function registerBasePresentationBlocks(): void {
     }
   })
 
-  // 4. TEXTE LIBRE — décision #4 : on RECYCLE l'info-bulle d'auteur existante
-  //    (`tooltip_text`, éditée par le Rich Text Editor) comme bloc du catalogue,
-  //    au lieu de créer un second mécanisme concurrent.
+  // 4. INFOS — le texte libre de l'élément. On RECYCLE `tooltip_text` (saisi dans
+  //    l'onglet « Infos » de l'inspecteur, simple ou riche) comme bloc du
+  //    catalogue, au lieu d'un second mécanisme concurrent. L'id reste
+  //    `os.block.free_text` (écrit dans le JSON), seul le libellé change.
   presentation_block_registry.register({
     id: 'os.block.free_text',
     target: ['node', 'link', 'container'],
     order: 40,
-    label: (a) => a.t('presentation.block.free_text', { defaultValue: 'Texte libre' }),
+    label: (a) => a.t('presentation.block.infos', { defaultValue: 'Infos' }),
     render: (ctx) => {
       const el = el_of(ctx)
       const raw = el?.['tooltip_text']
