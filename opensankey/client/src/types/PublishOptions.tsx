@@ -13,9 +13,6 @@
 // Modes de navigation / positionnement (cf. DrawingArea.setAbsoluteMode / setProportionalMode /
 // setScaleAdaptedMode et styles_dict['default'].shape_position_type).
 export type Type_PositionMode = 'absolute' | 'proportional' | 'scale_adapted'
-// OS#305 — comment le lecteur déclenche la présentation au survol :
-//  'hover' = survol nu ; 'shift' = survol + MAJ ; 'alt' = survol + Alt.
-export type Type_PresentationTrigger = 'hover' | 'shift' | 'alt'
 
 export interface SankeyGlobals {
   // Mode
@@ -65,10 +62,9 @@ export interface SankeyGlobals {
   // Interaction (viewer publish)
   lock_zoom?: boolean             // default false : bloque le zoom molette/scale (le pan au bouton milieu reste actif)
   tooltip_on_hover?: boolean      // default false : affiche les tooltips au simple survol, sans maintenir Shift
-  // OS#305 — présentation composée : déclencheur de survol (default 'shift') et
-  // délai d'apparition en ms (default 0, borné à 3000). Réglages DOCUMENT.
-  presentation_trigger?: Type_PresentationTrigger
-  presentation_delay_ms?: number
+  // OS#305 — le déclencheur/délai de la présentation composée ne sont PAS ici :
+  // ce sont des réglages d'AUTEUR, enregistrés dans le diagramme (cf.
+  // Class_PanelManager), alors que ce bloc-ci est une config viewer read-only.
 
   // État initial
   position_mode?: Type_PositionMode  // mode de navigation imposé à l'ouverture (absolu/proportionnel/échelle adaptée)
@@ -104,8 +100,6 @@ export interface PublishOptions {
   data_filter: boolean
   lock_zoom: boolean
   tooltip_on_hover: boolean
-  presentation_trigger: Type_PresentationTrigger
-  presentation_delay_ms: number
   language: string | null
   position_mode: Type_PositionMode | null
   data_tag_selection: Record<string, string> | null
@@ -126,17 +120,6 @@ declare global {
 
 const bool = (v: unknown, def: boolean): boolean => (typeof v === 'boolean' ? v : def)
 const str = (v: unknown): string | null => (typeof v === 'string' ? v : null)
-// OS#305 — déclencheur de la présentation au survol (réglage DOCUMENT, cf.
-// décision #6 : le lecteur a besoin d'une grammaire d'interaction cohérente,
-// donc pas de déclencheur par élément).
-const PRESENTATION_TRIGGERS: Type_PresentationTrigger[] = ['hover', 'shift', 'alt']
-const presentationTrigger = (v: unknown): Type_PresentationTrigger =>
-  (typeof v === 'string' && (PRESENTATION_TRIGGERS as string[]).includes(v))
-    ? v as Type_PresentationTrigger
-    : 'shift'
-// Délai d'apparition (ms), borné : un délai négatif ou absurde casserait le survol.
-const presentationDelay = (v: unknown): number =>
-  (typeof v === 'number' && isFinite(v)) ? Math.max(0, Math.min(3000, Math.round(v))) : 0
 const POSITION_MODES: Type_PositionMode[] = ['absolute', 'proportional', 'scale_adapted']
 const posMode = (v: unknown): Type_PositionMode | null =>
   (typeof v === 'string' && (POSITION_MODES as string[]).includes(v)) ? v as Type_PositionMode : null
@@ -214,8 +197,6 @@ export const getPublishOptions = (): PublishOptions => {
     data_filter: bool(s.data_filter, true),
     lock_zoom: bool(s.lock_zoom, false),
     tooltip_on_hover: bool(s.tooltip_on_hover, false),
-    presentation_trigger: presentationTrigger(s.presentation_trigger),
-    presentation_delay_ms: presentationDelay(s.presentation_delay_ms),
     language: str(s.language),
     position_mode: posMode(s.position_mode),
     data_tag_selection: strRecord(s.data_tag_selection),

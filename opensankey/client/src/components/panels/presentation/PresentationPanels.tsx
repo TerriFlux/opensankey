@@ -39,7 +39,8 @@ import { PanelShell } from '../PanelShell'
 import { renderPresentationBlock } from './PresentationBlockRegistry'
 import { registerBasePresentationBlocks } from './registerBaseBlocks'
 import {
-  isPresentationPanelId, elementIdOfPanel, type Type_Presentable
+  isPresentationPanelId, elementIdOfPanel, type Type_Presentable,
+  cancelPresentationHoverClose, schedulePresentationHoverClose, releasePresentationHover
 } from './openPresentation'
 
 registerBasePresentationBlocks()
@@ -142,6 +143,16 @@ export const PresentationPanels = ({ app_data }: { app_data: Class_ApplicationDa
             id={id}
             title={titleOf(element)}
             allowedModes={allowed}
+            // Intention de survol : entrer dans l'info-bulle annule la fermeture
+            // programmée par l'élément ; en sortir la reprogramme.
+            onTooltipHoverIn={cancelPresentationHoverClose}
+            onTooltipHoverOut={() => schedulePresentationHoverClose(app_data)}
+            // Le lecteur interagit avec l'info-bulle : elle cesse d'être
+            // transitoire et se fixe en pop-up (si l'auteur l'a permis).
+            onTooltipEditIntent={() => {
+              releasePresentationHover()
+              if (policy.allow.popup) panels.setMode(id, 'popup')
+            }}
           >
             <PresentationPanel app_data={app_data} element={element} mode={mode} />
           </PanelShell>

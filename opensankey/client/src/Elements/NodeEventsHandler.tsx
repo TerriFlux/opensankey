@@ -31,7 +31,10 @@ import { TooltipEventManager } from './TooltipsConfig'
 import { Class_LinkElement } from './Link'
 import { Class_ProtoElement } from './Element'
 import { Class_NodeElement } from './Node'
-import { openPresentationFor } from '../components/panels/presentation/openPresentation'
+import {
+  openPresentationFor, canPresentTooltip, matchesPresentationTrigger,
+  schedulePresentationHover, schedulePresentationHoverClose
+} from '../components/panels/presentation/openPresentation'
 
 export class NodeEventsHandler {
 
@@ -805,6 +808,27 @@ export class NodeEventsHandler {
       app_data.menu_configuration.openInspectorHoverTooltip(app_data, this._node, ax, ay)
       return
     }
+    // OS#305 Lot 4 — LECTEUR : survol satisfaisant le déclencheur réglé sur le
+    // DOCUMENT (survol nu / +MAJ / +Alt) -> présentation composée en info-bulle,
+    // après le délai réglé. On ne prend la main que si l'auteur a effectivement
+    // composé quelque chose pour ce contenant : sinon on laisse l'info-bulle
+    // historique ci-dessous faire son travail (aucune régression).
+    if (!app_data.is_editable && event.buttons === 0
+      && (event.target as HTMLElement).tagName !== 'tspan'
+      && matchesPresentationTrigger(app_data, event)
+      && canPresentTooltip(this._node as unknown as Parameters<typeof canPresentTooltip>[0])) {
+      const rect = (event.target as HTMLElement)?.getBoundingClientRect?.()
+      schedulePresentationHover(
+        app_data,
+        this._node as unknown as Parameters<typeof canPresentTooltip>[0],
+        {
+          x: event.clientX || (rect ? Math.round(rect.right) : 0),
+          y: event.clientY || (rect ? Math.round(rect.top) : 0)
+        }
+      )
+      return
+    }
+
     // Option publish tooltip_on_hover : tooltips au simple survol, sans maintenir Shift.
     const show_tooltip = event.shiftKey || app_data.publish_options.tooltip_on_hover
     // ALT + pas de tooltip déjà ouvert pour ce noeud
@@ -825,10 +849,13 @@ export class NodeEventsHandler {
 
   public handleMouseMove() {return}
   public handleMouseOut() {
-    // OS#300 Lot 5 — quitter l'élément programme la fermeture de l'info-bulle
-    // d'inspecteur (annulée si le curseur entre dans l'info-bulle, cf. PanelShell).
+    // Quitter l'élément programme la fermeture de l'info-bulle (annulée si le
+    // curseur y entre, cf. PanelShell) : celle de l'inspecteur en édition
+    // (OS#300 Lot 5), celle de la présentation composée en lecture (OS#305
+    // Lot 4). Chacune est inerte si elle n'est pas active.
     const app_data = this._node.drawing_area.application_data
     app_data.menu_configuration.scheduleInspectorHoverClose(app_data)
+    schedulePresentationHoverClose(app_data)
   }
 
   private moveMagneticNode(

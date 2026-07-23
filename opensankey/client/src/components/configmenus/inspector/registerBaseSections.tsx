@@ -24,6 +24,7 @@ import { MenuConfigurationLinksData } from '../SankeyMenuConfigurationLinksData'
 import { ConfigMenuTextInput, OSTooltip, CustomFaEyeCheckIcon, WrapperBoxSubSectionMenu } from '../MenuCommon'
 import { stripHtmlTags, isRichContent } from '../../dialogs/RichTextEditor'
 import { PresentationComposer } from '../../panels/presentation/PresentationComposer'
+import { PresentationDocumentSettings } from '../../panels/presentation/PresentationDocumentSettings'
 import {
   NODE_TOOLTIP_BLOCKS, LINK_TOOLTIP_BLOCKS, tooltipBlockLabelKey,
   isTooltipBlockVisible, Type_TooltipHiddenBlocks
@@ -274,6 +275,19 @@ export function registerBaseInspectorSections(): void {
         <MenuConfigurationAppearance app_data={app_data} menu_for_style />
       </GenericStyleSelector>
     )
+  })
+
+  // ---- Vue > Présentation : réglages DOCUMENT (OS#305) ---------------------
+  // Le déclencheur et le délai valent pour tout le diagramme (décision #6) : ils
+  // ne sont donc pas dans l'onglet Présentation d'un élément, mais ici.
+  inspector_registry.register({
+    id: 'os.view.presentation',
+    target: 'view',
+    order: 50,
+    hue: 'presentation',
+    title: (app_data) => app_data.t('inspector.tab.presentation', { defaultValue: 'Présentation' }),
+    icon: (app_data) => app_data.icon_library.icon_tab_tooltip,
+    render: (app_data) => <PresentationDocumentSettings app_data={app_data} />
   })
 }
 
