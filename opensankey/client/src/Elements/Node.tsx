@@ -32,7 +32,7 @@ import {
 } from './Link'
 import { Class_Handler } from './Handler'
 import { reorganizeIOOrder } from './reorganizeIOOrder'
-import { orderIOByGeometry, recyclingBellyCentre, Type_IOGeo } from './ioOrderGeometry'
+import { orderIOByGeometry, recyclingBellyCentre, bundleTie, Type_IOGeo } from './ioOrderGeometry'
 import { format_value, Type_JSON } from '../types/Utils'
 import { default_element_color } from './ElementsAttributesConfig'
 import { SankeyAnimation } from '../Algorithms/SankeyAnimation'
@@ -1145,8 +1145,13 @@ export class Class_NodeElement extends Class_NodeBase {
       // Seuls les flux qui changent d'axe ('vh'/'hv') reçoivent l'éventail split+hauteur ;
       // les flux droits ('hh'/'vv') gardent le tri par position opposée (cf. orderKey).
       const turning = (l.shape_orientation === 'vh' || l.shape_orientation === 'hv')
+      // Départage de faisceau : pour des flux parallèles (mêmes source/cible/côtés) toutes les
+      // autres composantes de la clé sont égales. On signe un ordinal stable et partagé (index
+      // global du lien) selon la géométrie du côté pour que la source et la cible ordonnent le
+      // faisceau en miroir (CCW à la source, CW à la cible) → pas de croisement. cf. bundleTie.
+      const ord = this.sankey.links_list.indexOf(l)
       const [ox, oy] = centre(other)
-      const geo: Type_IOGeo = { side, ox, oy, turning, curve_node }
+      const geo: Type_IOGeo = { side, ox, oy, turning, curve_node, bundle_tie: bundleTie(side, is_source, ord) }
       if (l.shape_is_recycling) {
         const [sx, sy] = centre(l.source)
         const [tx, ty] = centre(l.target)
