@@ -44,14 +44,23 @@ import { default_font_size } from '../../css/Theme'
 // deviennent requises selon la source des @types tirée par le CI).
 const DraggableComponent = Draggable as unknown as React.ComponentClass<Partial<DraggableProps>>
 
-// z-index par contenant. Harmonisation fine au Lot 6 ; on centralise ici les
-// valeurs héritées des patterns existants pour garder l'empilement actuel :
-//  - barre latérale : 26 (ex-config_panel_pinned / filter_panel_pinned) ;
-//  - pop-up         : 40 (ex-MenuDraggable) ;
-//  - info-bulle     : 1400 (ex-ElementSearchOverlay).
+// OS#300 Lot 6 — Empilement HARMONISÉ des contenants, du plus « posé » au plus
+// transitoire, en cohérence avec le reste du chrome :
+//   diagramme < tableur/doc (20-25) < barre latérale (26) < colonne d'outils (35)
+//   < pop-up (40) < zone d'ancrage (42) < info-bulle (45) < dialogues Chakra (~1300+)
+// La barre latérale est DOCKÉE : elle reste sous la colonne d'outils, à sa gauche.
+// Les pop-ups flottent au-dessus du chrome ; l'info-bulle, transitoire, passe
+// au-dessus des pop-ups. L'info-bulle était à 1400 (héritage de l'overlay de
+// recherche) : elle recouvrait les dialogues, ce qui n'a pas lieu d'être.
 const PANEL_Z_SIDEBAR = 26
 const PANEL_Z_POPUP = 40
-const PANEL_Z_TOOLTIP = 1400
+const PANEL_Z_DOCK_HINT = 42
+const PANEL_Z_TOOLTIP = 45
+
+// Largeur (px) de la bande, au bord droit, où relâcher une pop-up l'ANCRE en
+// barre latérale. Mesurée sur le bord GAUCHE de la pop-up : il faut donc l'y
+// pousser franchement (une pop-up posée par défaut près du bord n'ancre pas).
+const DOCK_ZONE_PX = 120
 
 const ALL_MODES: Type_PanelMode[] = ['tooltip', 'popup', 'sidebar']
 
@@ -109,7 +118,8 @@ const PanelHeader = ({
         padding: '0.2rem 0.3rem',
         borderBottom: '1px solid #e2e8f0',
         background: '#f7fafc',
-        cursor: mode === 'popup' ? 'grab' : 'default',
+        // Saisissable : déplacer la pop-up, ou DÉTACHER un menu ancré (Lot 6).
+        cursor: (mode === 'popup' || mode === 'sidebar') ? 'grab' : 'default',
         userSelect: 'none'
       }}
     >
@@ -266,6 +276,37 @@ const SidebarShell = ({ app_data, panels, id, title, allowedModes, width_px, onC
   // Aperçu local de la largeur pendant le glisser (commit au relâchement).
   const [drag_width, setDragWidth] = React.useState<number | null>(null)
   const eff_width = drag_width ?? width_px
+  // OS#300 Lot 6 — glisser l'EN-TÊTE d'un menu ancré le DÉTACHE en pop-up, posée
+  // sous le curseur. Seuil de 8 px pour ne pas confondre avec un clic (les
+  // boutons de l'en-tête sont exclus).
+  const startDetachDrag = (e: React.PointerEvent) => {
+    if (!allowedModes.includes('popup')) return
+    if ((e.target as HTMLElement).closest('button')) return
+    const start_x = e.clientX
+    const start_y = e.clientY
+    let done = false
+    const cleanup = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', cleanup)
+    }
+    const move = (ev: PointerEvent) => {
+      if (done) return
+      if (Math.abs(ev.clientX - start_x) < 8 && Math.abs(ev.clientY - start_y) < 8) return
+      done = true
+      cleanup()
+      const w = 340
+      const h = 380
+      panels.setMode(id, 'popup', {
+        geometry: {
+          x: Math.max(0, Math.round(ev.clientX - w / 2)),
+          y: Math.max(0, Math.round(ev.clientY - 12)),
+          w, h
+        }
+      })
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', cleanup)
+  }
   return (
     <Box
       className='panel_sidebar'
@@ -286,14 +327,40 @@ const SidebarShell = ({ app_data, panels, id, title, allowedModes, width_px, onC
         onPreview={setDragWidth}
         onCommit={(w) => { panels.sidebar_width_px = w; setDragWidth(null) }}
       />
-      <PanelHeader
-        app_data={app_data} panels={panels} id={id} title={title}
-        mode='sidebar' allowedModes={allowedModes} onClose={onClose}
-      />
+      <Box onPointerDown={startDetachDrag}>
+        <PanelHeader
+          app_data={app_data} panels={panels} id={id} title={title}
+          mode='sidebar' allowedModes={allowedModes} onClose={onClose}
+        />
+      </Box>
       <Box style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '0.2rem 0.2rem 0.2rem 0.4rem' }}>
         {children}
       </Box>
     </Box>
+  )
+}
+
+/**
+ * OS#300 Lot 6 — Repère de la zone d'ancrage : bande translucide au bord droit,
+ * affichée pendant qu'une pop-up y est glissée. Purement visuel (pointerEvents
+ * none) — c'est `onStop` qui décide de l'ancrage.
+ */
+const DockHint = ({ app_data, width_px }: { app_data: Class_ApplicationData, width_px: number }) => {
+  const da = app_data.drawing_area
+  return (
+    <Box
+      className='panel_dock_hint'
+      position='fixed'
+      right={app_data.menu_configuration.getToolsColumnWidthPx() + 'px'}
+      top={da.getNavBarHeight() + 'px'}
+      bottom={da.getBottomBarHeight() + 'px'}
+      width={width_px + 'px'}
+      zIndex={PANEL_Z_DOCK_HINT}
+      bg='rgba(66, 153, 225, 0.18)'
+      borderLeft='2px dashed'
+      borderColor='blue.400'
+      pointerEvents='none'
+    />
   )
 }
 
@@ -316,18 +383,37 @@ const PopupShell = ({ app_data, panels, id, title, allowedModes, onClose, childr
   const [drag_size, setDragSize] = React.useState<{ w: number, h: number } | null>(null)
   const eff_w = drag_size?.w ?? base_w
   const eff_h = drag_size?.h ?? base_h
+  // OS#300 Lot 6 — glisser vers le bord droit pour ANCRER en barre latérale.
+  const can_dock = allowedModes.includes('sidebar')
+  const [in_dock_zone, setInDockZone] = React.useState(false)
+  const inDockZone = (x: number) => x >= (window.innerWidth || 4096) - DOCK_ZONE_PX
   return (
-    <DraggableComponent
-      nodeRef={node_ref}
-      handle={'.' + handle_class}
-      defaultPosition={geom ? { x: geom.x, y: geom.y } : { x: window.innerWidth / 3, y: 120 }}
-      bounds={{ left: 0, top: 0 }}
-      // Mémorise la position dans le modèle (persistance Lot 4).
-      onStop={(_e, data) => {
-        const g = panels.getPopupGeometry(id)
-        if (g) panels.setPopupGeometry(id, { ...g, x: data.x, y: data.y })
-      }}
-    >
+    <>
+      {can_dock && in_dock_zone && (
+        <DockHint app_data={app_data} width_px={panels.sidebar_width_px} />
+      )}
+      <DraggableComponent
+        nodeRef={node_ref}
+        handle={'.' + handle_class}
+        defaultPosition={geom ? { x: geom.x, y: geom.y } : { x: window.innerWidth / 3, y: 120 }}
+        bounds={{ left: 0, top: 0 }}
+        onDrag={(_e, data) => {
+          if (can_dock) setInDockZone(inDockZone(data.x))
+        }}
+        onStop={(_e, data) => {
+          // Relâchée dans la bande d'ancrage -> devient la barre latérale
+          // (l'invariant « un seul menu ancré » est appliqué par le modèle).
+          if (can_dock && inDockZone(data.x)) {
+            setInDockZone(false)
+            panels.setMode(id, 'sidebar')
+            return
+          }
+          setInDockZone(false)
+          // Sinon : mémorise la position dans le modèle (persistance Lot 4).
+          const g = panels.getPopupGeometry(id)
+          if (g) panels.setPopupGeometry(id, { ...g, x: data.x, y: data.y })
+        }}
+      >
       <Box
         ref={node_ref}
         className='panel_popup'
@@ -363,8 +449,9 @@ const PopupShell = ({ app_data, panels, id, title, allowedModes, onClose, childr
             setDragSize(null)
           }}
         />
-      </Box>
-    </DraggableComponent>
+        </Box>
+      </DraggableComponent>
+    </>
   )
 }
 
