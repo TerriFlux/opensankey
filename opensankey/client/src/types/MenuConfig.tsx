@@ -40,6 +40,7 @@ import {
 import { Class_NodeBase } from '../Elements/NodeBase'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_ElementStyle } from '../Elements/Element'
+import type { Type_TemplateSource } from '../components/topmenus/SankeyTemplates'
 
 export type Type_AdditionalMenus = {
   external_top_buttons_item: { [x: string]: JSX.Element },
@@ -79,6 +80,9 @@ export type Type_SheetMode = 'grid' | 'text'
 // undo/redo/save). Quand ouverte, cette largeur est réservée par le diagramme (cf.
 // getToolsColumnWidthPx / getMainZoneRightReservedPx) pour que la zone de dessin ne morde pas dessus.
 export const TOOLS_COLUMN_WIDTH_PX = 48
+// Largeur (px) de la galerie de modèles. Source de vérité ici (et non dans
+// SankeyTemplates) : la réserve de largeur du mode épinglé en a besoin.
+export const TEMPLATE_GALLERY_WIDTH_PX = 300
 export type keyTypeConfig = 'data' | 'style'
 export type keyTypeElements = 'data' | 'DA' | 'flow' | 'node' | 'element' | 'object' | 'legend'
 export interface IType_DictHookRefSetterShowDialogComponents {
@@ -107,6 +111,9 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   // Other modals
   ref_setter_show_modal_preference: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_templates_lib: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  // Galerie ciblée sur une source précise (onglet sankeydata/mfadata/esankey) ;
+  // sert aux galeries des couches supérieures (la sankeythèque, côté SA).
+  ref_setter_show_gallery_source: MutableRefObject<Dispatch<SetStateAction<Type_TemplateSource | null>>>
   ref_setter_show_spreadsheet: MutableRefObject<Dispatch<SetStateAction<boolean>>>
 
   ref_setter_show_menu_node_icon: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
@@ -262,6 +269,20 @@ export class Class_MenuConfig {
   public getToolsColumnWidthPx(): number {
     return (this.tools_column_enabled && this._tools_column_open) ? TOOLS_COLUMN_WIDTH_PX : 0
   }
+  // Galerie de modèles épinglée (fenêtre dockée) : elle RÉSERVE alors sa
+  // largeur et ne se ferme plus que par sa croix (on enchaîne alors les essais
+  // de modèles). État TRANSITOIRE (non sérialisé) ; l'overlay reste le défaut.
+  protected _template_gallery_pinned: boolean = false
+  public get template_gallery_pinned() { return this._template_gallery_pinned }
+  public set template_gallery_pinned(v: boolean) { this._template_gallery_pinned = v; this._notifyMainZone() }
+  /** Largeur (px) réservée à droite par la galerie de modèles épinglée (0 si
+   *  non épinglée). Même largeur que l'overlay. */
+  public getTemplateGalleryPinnedReservedPx(): number {
+    return this._template_gallery_pinned ? TEMPLATE_GALLERY_WIDTH_PX : 0
+  }
+  /** Pas de panneau de config épinglé sur cette version (le mode épinglé arrive
+   *  avec l'inspecteur #1243) : réserve toujours nulle, gardé pour la galerie. */
+  public getConfigPanelPinnedReservedPx(): number { return 0 }
   public get main_zone_show_diagram() { return this._main_zone_show_diagram }
   public set main_zone_show_diagram(v: boolean) { this._main_zone_show_diagram = v; this._notifyMainZone() }
   public get main_zone_show_spreadsheet() { return this._main_zone_show_spreadsheet }
@@ -317,7 +338,8 @@ export class Class_MenuConfig {
     const rightColumnShown = this._main_zone_show_spreadsheet || docInRightColumn || unitaryDocked
     // La colonne d'outils s'ajoute toujours à la réserve droite (qu'il y ait ou non un tableur/doc) :
     // elle occupe l'extrême droite et le tableur/doc se décale d'autant vers la gauche (cf. MainZoneTabs).
-    const tools = this.getToolsColumnWidthPx()
+    // La galerie de modèles épinglée s'y empile de la même façon.
+    const tools = this.getToolsColumnWidthPx() + this.getTemplateGalleryPinnedReservedPx()
     if (!(this._main_zone_show_diagram && rightColumnShown)) return tools
     const MIN_SPREADSHEET_PX = 320
     const MIN_DIAGRAM_PX = 160
@@ -679,6 +701,7 @@ export class Class_MenuConfig {
       // Other modals
       ref_setter_show_modal_preference: { current: () => null },
       ref_setter_show_modal_templates_lib: { current: () => null },
+      ref_setter_show_gallery_source: { current: () => null },
       ref_setter_show_spreadsheet: { current: () => null },
 
       ref_setter_show_menu_node_icon: { current: () => null },

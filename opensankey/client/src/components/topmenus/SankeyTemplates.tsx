@@ -24,40 +24,60 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { useState, useEffect, MutableRefObject } from 'react'
+import React, { useState, useEffect, useRef, MutableRefObject } from 'react'
 import {
-  Tabs,
-  TabList,
-  Tab,
-  TabPanels,
-  TabPanel,
   Box,
   Button,
-  ButtonGroup,
-  Card,
-  CardHeader,
   CloseButton,
-  Heading,
-  Divider,
-  CardBody,
   Image,
-  CardFooter,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
   Text
 } from '@chakra-ui/react'
+import { FaThumbtack, FaPlay, FaPause, FaStepBackward, FaStepForward } from 'react-icons/fa'
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { Type_AdditionalMenus } from '../../types/MenuConfig'
+import { Type_JSON } from '../../types/Utils'
+import { Type_AdditionalMenus, TEMPLATE_GALLERY_WIDTH_PX } from '../../types/MenuConfig'
+import { useMainZone } from '../spreadsheet/MainZoneTabs'
 import { CONVERTER_CONFIGS } from '../dialogs/PersistenceProcessDialogConfigs'
 import { loadSankeymaticTemplate } from '../../Persistence/sankeymaticLoad'
 import { applyEsankeyFile } from '../../Persistence/esankeyLoad'
+import { decompressGzipDataFixed } from '../../Persistence/UniversalJSONCompression'
 
 // TYPES ================================================================================
+
+/**
+ * Source d'une galerie. Toutes ont le même index (categories + templates) et
+ * sont CONSOLIDÉES dans un panneau unique (onglet par catégorie) ; seules
+ * changent la racine des fichiers et les dialogues de chargement :
+ *  - 'sankeydata'    : les modèles, dans le submodule SankeyData ;
+ *  - 'mfadata'       : la sankeythèque, nos études publiées, dans MFAData ;
+ *  - 'esankey-local' : galerie locale de DÉVELOPPEMENT (os#1281), les démos
+ *    e!Sankey d'un dossier pointé par ESANKEY_CORPUS_DIR côté serveur. Corpus
+ *    propriétaire : jamais committé ni déployé. La source n'existe que si le
+ *    backend est en mode debug avec ESANKEY_CORPUS_DIR défini (sinon 404, ses
+ *    modèles n'apparaissent pas).
+ * Une source absente (404, index vide, pas de JSON) ne contribue simplement
+ * aucun modèle : le panneau montre les onglets des catégories restantes.
+ */
+export type Type_TemplateSource = 'sankeydata' | 'mfadata' | 'esankey-local'
+
+/** Ordre de chargement ET de préséance des catégories dans le panneau consolidé. */
+const GALLERY_SOURCES: Type_TemplateSource[] = ['sankeydata', 'esankey-local', 'mfadata']
+
+/**
+ * Onglet (« tab ») auquel appartient un modèle. Un onglet regroupe une ou
+ * plusieurs catégories :
+ *  - toute la sankeythèque (source MFAData : études, filières, recherche,
+ *    clients) est réunie sous un onglet unique 'sankeytheque' ;
+ *  - le reste garde un onglet par catégorie (opensankey, maps, web, sankeymatic,
+ *    stan, esankey) — la galerie e!Sankey de dev, catégorisée 'esankey' côté
+ *    serveur, fusionne donc avec le modèle e!Sankey publié.
+ */
+const templateTab = (template: Type_TemplateInfos): string =>
+  template.source === 'mfadata' ? 'sankeytheque' : template.category
+
+/** Ordre des onglets ; un onglet non listé (catégorie inattendue) passe à la fin. */
+const TAB_ORDER = ['opensankey', 'maps', 'web', 'sankeymatic', 'stan', 'esankey', 'sankeytheque']
 
 export type Type_TemplateInfos = {
   'title'?: { [lang: string]: string };
@@ -65,6 +85,12 @@ export type Type_TemplateInfos = {
   'img_path'?: string;
   'lang': string;
   'category': string;
+  // Variantes de langue d'un meme diagramme (galerie e!Sankey locale) :
+  // lang -> file_path. file_path reste la variante par defaut.
+  'variants'?: { [lang: string]: string };
+  // Source d'origine du modèle, posée côté client à la fusion des index :
+  // détermine la racine de service des fichiers et le mode de chargement.
+  'source'?: Type_TemplateSource;
 };
 export type Type_TemplatesInfos = { [id: string]: Type_TemplateInfos; };
 export type Type_TemplatesIndexes = { [category: string]: string[]; };
@@ -72,6 +98,14 @@ export type Type_TemplatesIndexes = { [category: string]: string[]; };
 // HELPERS ==============================================================================
 
 export declare const window: Window & typeof globalThis
+
+/** URL de service d'un fichier de galerie (vignette, modèle binaire...). */
+const assetUrl = (path: string, source: Type_TemplateSource) => {
+  const url = window.location.origin + '/opensankey/menus/templates_asset/' + path
+  if (source === 'mfadata') return url + '?source=mfadata'
+  if (source === 'esankey-local') return url + '?source=esankey-local'
+  return url
+}
 
 /**
  * Charge un modèle STAN (.smfa SQLite / .zmfa XML gzippé) : binaire non-JSON, la
@@ -82,7 +116,7 @@ const loadStanTemplate = (
   file_path: string
 ) => {
   const root = window.location.origin
-  fetch(root + '/opensankey/menus/templates_asset/' + file_path)
+  fetch(assetUrl(file_path, 'sankeydata'))
     .then(response => response.blob())
     .then(blob => {
       const form_data = new FormData()
@@ -106,10 +140,10 @@ const loadStanTemplate = (
  */
 const loadEsankeyTemplate = (
   new_data: Class_ApplicationData,
-  file_path: string
+  file_path: string,
+  source: Type_TemplateSource = 'sankeydata'
 ) => {
-  const root = window.location.origin
-  fetch(root + '/opensankey/menus/templates_asset/' + file_path)
+  fetch(assetUrl(file_path, source))
     .then(response => response.arrayBuffer())
     .then(buffer => applyEsankeyFile(buffer, new_data))
     .catch((error) => {
@@ -118,90 +152,188 @@ const loadEsankeyTemplate = (
 }
 
 /**
- * Charge un modèle dans l'application (même chemin que le bouton « Utiliser » de la
- * modale) : parse front pour les modèles SankeyMATIC (.txt) et e!Sankey (.sankey),
- * conversion serveur pour les modèles STAN (.smfa/.zmfa), converter JSON sinon.
+ * Charge un modèle JSON : récupéré en un seul GET, dézippé et chargé côté front.
+ *
+ * Le serveur n'a rien à convertir ici — il ne fait que servir un fichier — d'où
+ * le court-circuit du converter (convert/launch + polling check_process +
+ * retrieve_result, soit 3 aller-retours et un état en session Flask pour ouvrir
+ * puis refermer un dialogue). templates_asset applique la tolérance
+ * .json/.json.gz, sert le .gz brut et le rend cacheable (304).
  */
-export const loadTemplate = (
+const loadJsonTemplate = (
   new_data: Class_ApplicationData,
-  file_path: string
+  file_path: string,
+  source: Type_TemplateSource
 ) => {
-  if (file_path.endsWith('.txt')) {
-    // Modèle SankeyMATIC natif : parsé côté front (pas de converter JSON).
-    loadSankeymaticTemplate(file_path, new_data)
-  } else if (/\.(smfa|zmfa)$/i.test(file_path)) {
-    loadStanTemplate(new_data, file_path)
-  } else if (file_path.endsWith('.sankey')) {
-    loadEsankeyTemplate(new_data, file_path)
-  } else {
-    new_data.menu_configuration.ref_universal_converter_set_config.current(
-      CONVERTER_CONFIGS['load_example_json'], file_path, true
-    )
-    new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
-  }
+  new_data.sendWaitingToast(
+    async () => {
+      const response = await fetch(assetUrl(file_path, source))
+      if (!response.ok) {
+        throw new Error('chargement: ' + response.status + ' ' + response.statusText)
+      }
+      const buffer = await response.arrayBuffer()
+      const decompressed = await decompressGzipDataFixed(buffer)
+      new_data.fromJSON(JSON.parse(decompressed) as Type_JSON, {})
+    },
+    {
+      success: { title: new_data.t('toast.load_json.success.title') },
+      loading: { title: new_data.t('toast.load_json.loading.title') },
+      error: { title: new_data.t('toast.load_json.error.title') }
+    }
+  )
 }
 
 /**
- * Récupère la bibliothèque de modèles auprès du serveur (une fois au montage).
- * Renvoie les modèles, l'index catégorie -> ids et l'ordre des catégories. Au sein
- * d'une catégorie, l'ordre des modèles est celui de `index.json`.
+ * Charge une entrée de galerie dans l'application.
+ *
+ * Les formats importés (SankeyMATIC .txt, e!Sankey .sankey, STAN .smfa/.zmfa) ne
+ * concernent que les modèles : parse front pour les deux premiers, conversion
+ * serveur pour STAN. Le JSON se charge en direct (loadJsonTemplate). Seul le
+ * .xlsx passe encore par le converter, avec les dialogues de la source :
+ * `load_example_json` résout contre SankeyData, `load_sankeytheque_excel`
+ * contre MFAData (example_root).
+ */
+export const loadTemplate = (
+  new_data: Class_ApplicationData,
+  file_path: string,
+  source: Type_TemplateSource = 'sankeydata'
+) => {
+  if (source === 'sankeydata' && file_path.endsWith('.txt')) {
+    // Modèle SankeyMATIC natif : parsé côté front (pas de converter JSON).
+    loadSankeymaticTemplate(file_path, new_data)
+    return
+  }
+  if (source === 'sankeydata' && /\.(smfa|zmfa)$/i.test(file_path)) {
+    loadStanTemplate(new_data, file_path)
+    return
+  }
+  // e!Sankey (.sankey) : depuis les modèles SankeyData ou la galerie locale de
+  // dev (os#1281). Le loader passe la source à assetUrl pour cibler la bonne racine.
+  if ((source === 'sankeydata' || source === 'esankey-local') && file_path.endsWith('.sankey')) {
+    loadEsankeyTemplate(new_data, file_path, source)
+    return
+  }
+  // Un .json / .json.gz s'ouvre directement, sans dialogue : le serveur ne
+  // convertit rien. Un .xlsx doit passer par le parser (dialogue excel), dont la
+  // conversion tourne vraiment dans un thread — le converter garde tout son sens.
+  if (!/\.xlsx$/i.test(file_path)) {
+    loadJsonTemplate(new_data, file_path, source)
+    return
+  }
+  // Mapping inchangé pour le .xlsx : côté sankeydata, c'est bien load_example_json
+  // qui était utilisé, convert/launch basculant en input_format='excel' d'après
+  // l'extension. (Aucun .xlsx dans l'index des modèles à ce jour.)
+  const config = source === 'mfadata'
+    ? CONVERTER_CONFIGS['load_sankeytheque_excel']
+    : CONVERTER_CONFIGS['load_example_json']
+  new_data.menu_configuration.ref_universal_converter_set_config.current(config, file_path, true)
+  new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
+}
+
+/**
+ * Récupère la bibliothèque CONSOLIDÉE de modèles auprès du serveur (une fois au
+ * montage) : les trois sources sont interrogées en parallèle et fusionnées en un
+ * seul index, puis regroupées en ONGLETS (voir templateTab). Renvoie :
+ *  - `templates` : les modèles (id préfixé par la source pour éviter toute
+ *    collision, champ `source` posé sur chacun) ;
+ *  - `indexes` : catégorie -> ids, ordre d'index.json (sert aux sous-titres) ;
+ *  - `tabs` : onglets ordonnés (TAB_ORDER puis inattendus) ;
+ *  - `tab_categories` : onglet -> catégories qu'il regroupe (pour les sous-titres
+ *    de la sankeythèque) ;
+ *  - `source_tab` : source -> son onglet, pour présélectionner (sankeythèque,
+ *    e!Sankey de dev).
  */
 export const useTemplatesLibrary = (
   additionalMenu: MutableRefObject<Type_AdditionalMenus>
 ) => {
   const [templates, setTemplates] = useState<Type_TemplatesInfos>({})
   const [indexes, setIndexes] = useState<Type_TemplatesIndexes>({})
-  const [categories, setCategories] = useState<string[]>([])
+  const [tabs, setTabs] = useState<string[]>([])
+  const [tab_categories, setTabCategories] = useState<{ [tab: string]: string[] }>({})
+  const [source_tab, setSourceTab] = useState<{ [s in Type_TemplateSource]?: string }>({})
 
   useEffect(() => {
     const url = window.location.origin + '/opensankey/menus/templates'
-    fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ module: additionalMenu.current.template_module_key })
-    })
-      .then(response => response.text())
-      .then(text => {
-        const json_data = JSON.parse(text)
+    Promise.all(GALLERY_SOURCES.map(source =>
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          module: additionalMenu.current.template_module_key,
+          source
+        })
+      })
+        .then(response => {
+          // Un backend sans route modèles (ou une page d'erreur HTML) ne doit pas
+          // finir dans JSON.parse : on ne parse que du JSON annoncé comme tel.
+          // Une source inactive (e!Sankey hors dev, MFAData absent) répond 404 :
+          // elle ne contribue rien.
+          if (!response.ok || !(response.headers.get('content-type') ?? '').includes('application/json')) {
+            return null
+          }
+          return response.json()
+        })
+        .catch(() => null)
+        .then(json_data => ({ source, json_data }))
+    ))
+      .then(results => {
+        const new_templates: Type_TemplatesInfos = {}
         const new_indexes: Type_TemplatesIndexes = {}
-        if ('templates' in json_data) {
+        const new_tab_categories: { [tab: string]: string[] } = {}
+        const new_source_tab: { [s in Type_TemplateSource]?: string } = {}
+        results.forEach(({ source, json_data }) => {
+          if (!json_data || !('templates' in json_data)) return
           Object.entries(json_data['templates'] as Type_TemplatesInfos)
             .forEach(([id, template]) => {
+              const uid = source + '|' + id
+              const full = { ...template, source }
+              new_templates[uid] = full
               const category = template['category']
               if (!(category in new_indexes))
                 new_indexes[category] = []
-              new_indexes[category].push(id)
+              new_indexes[category].push(uid)
+              const tab = templateTab(full)
+              if (!(tab in new_tab_categories))
+                new_tab_categories[tab] = []
+              if (!new_tab_categories[tab].includes(category))
+                new_tab_categories[tab].push(category)
+              // Premier onglet non vide d'une source : cible de présélection.
+              if (!(source in new_source_tab))
+                new_source_tab[source] = tab
             })
-          setTemplates(json_data['templates'] as Type_TemplatesInfos)
-        }
-        // Les categories declarees fixent l'ordre des onglets ; une categorie
-        // presente dans les modeles mais absente de la liste passe a la fin.
-        const declared: string[] = json_data['categories'] ?? []
-        setCategories([
-          ...declared.filter(category => category in new_indexes),
-          ...Object.keys(new_indexes).filter(category => !declared.includes(category))
+        })
+        // Onglets ordonnés : TAB_ORDER d'abord, inattendus (catégorie non prévue)
+        // à la fin dans leur ordre d'apparition.
+        const present = Object.keys(new_tab_categories)
+        setTabs([
+          ...TAB_ORDER.filter(tab => present.includes(tab)),
+          ...present.filter(tab => !TAB_ORDER.includes(tab))
         ])
+        setTemplates(new_templates)
         setIndexes(new_indexes)
+        setTabCategories(new_tab_categories)
+        setSourceTab(new_source_tab)
       })
       .catch((err) => {
         console.error('Error in fetch templates - ' + err.toString())
       })
   }, [])
 
-  return { templates, indexes, categories }
+  return { templates, indexes, tabs, tab_categories, source_tab }
 }
 
 /**
  * Vignette d'un modèle. Certains modèles (formats importés) n'ont pas d'image de
  * prévisualisation : on affiche alors un aplat portant leur titre.
  */
-const TemplateThumbnail = ({ title, img_path, max_height, className }:{
+const TemplateThumbnail = ({ title, img_path, max_height, className, source }:{
   title: string
   img_path?: string
   max_height: string
   className?: string
+  source: Type_TemplateSource
 }) => {
   if (img_path === undefined)
     return <Box
@@ -219,12 +351,23 @@ const TemplateThumbnail = ({ title, img_path, max_height, className }:{
     </Box>
   return <Image
     className={className}
-    src={window.location.origin + '/opensankey/menus/templates_asset/' + img_path}
+    src={assetUrl(img_path, source)}
     style={{ 'objectFit': 'contain', 'maxHeight': max_height, 'width': '100%' }}
   />
 }
 
-/** Titre localisé d'un modèle, avec repli en puis id. */
+/**
+ * Fichier à charger pour un modèle : la variante dans la langue de l'application
+ * quand elle existe, sinon la variante par défaut (file_path).
+ */
+const templateFilePath = (
+  new_data: Class_ApplicationData,
+  template: Type_TemplateInfos
+) => {
+  return template.variants?.[new_data.i18n.language] ?? template.file_path
+}
+
+/** Titre localisé d'un modèle, avec repli en puis id (sans le préfixe de source). */
 const templateTitle = (
   new_data: Class_ApplicationData,
   id: string,
@@ -232,161 +375,146 @@ const templateTitle = (
 ) => {
   return template.title?.[new_data.i18n.language]
     ?? template.title?.['en']
-    ?? id
+    ?? id.split('|').slice(1).join('|')
 }
 
 // COMPONENTS ===========================================================================
 
 /**
- * Modal containing templates to create sankey
+ * Galerie de modèles ancrée à droite, CONSOLIDÉE : les trois sources (modèles
+ * SankeyData, sankeythèque MFAData, corpus e!Sankey de dev) sont fusionnées dans
+ * un panneau unique, avec un onglet par catégorie en haut (OpenSankey, cartes,
+ * classiques du web, SankeyMATIC, STAN, e!Sankey, puis les catégories de la
+ * sankeythèque). Deux façons de l'obtenir :
+ *  - automatiquement à l'ARRIVÉE tant que le diagramme est vide : vitrine pour le
+ *    nouveau visiteur (un clic charge un exemple riche). Elle s'efface d'elle-même
+ *    dès que l'utilisateur travaille : diagramme non vide (modèle chargé, fichier
+ *    ouvert, cache restauré), première interaction avec le canvas (création
+ *    manuelle) ou fermeture explicite ;
+ *  - explicitement, via Menu -> Nouveau -> « À partir d'un modèle » (et le splash
+ *    screen), qui passent par ref_setter_show_modal_templates_lib. Ouverte ainsi,
+ *    elle reste affichée même sur un diagramme non vide, jusqu'au choix d'un modèle
+ *    ou à sa fermeture.
  *
- * @param {*} { new_data, additionalMenu }
- * @return {*}
- */
-export const ModalTemplate = ({ new_data, additionalMenu }:{
-  new_data: Class_ApplicationData
-  additionalMenu: MutableRefObject<Type_AdditionalMenus>
-}) => {
-
-  const [show_template, set_show_template] = useState(false)
-  const { templates, indexes, categories } = useTemplatesLibrary(additionalMenu)
-
-  const { ref_setter_show_modal_templates_lib } = new_data.menu_configuration.dict_setter_show_dialog
-  ref_setter_show_modal_templates_lib.current = set_show_template
-
-  // Tabs for each entries of the template_module_key
-  const tabs_of_cards = <Tabs
-    orientation='vertical'
-    align='start'
-    variant='tabs_variant_template'
-    height='100%'
-  >
-    <TabList>
-      {categories
-        .map((category, idx) => {
-          return <Tab
-            key={idx}
-          >
-            {new_data.t('templates.categories.' + category)}
-          </Tab>
-        })}
-    </TabList>
-    <TabPanels>
-      {categories
-        .map((category, idx) => {
-
-          const ordered_ids = indexes[category]
-
-          return <TabPanel key={idx}>
-            <Box
-              display='grid'
-              gridAutoFlow='row'
-              gridRowGap='1rem'
-              height='100%'
-            >
-              <Box
-                display="block"
-                overflow='scroll'
-                height='100%'
-              >
-                <Box
-                  display='grid'
-                  gridTemplateColumns='1fr 1fr 1fr'
-                  gridTemplateRows='0.5fr'
-                  gridRowGap='0.25rem'
-                  gridColumnGap='0.25rem'
-                  height='100%'
-                >
-                  {ordered_ids
-                    .map((id, idx) => {
-                      return <Card
-                        key={idx}
-                        variant='cards_template'
-                        onClick={() => {
-                          // Cliquer la carte charge le modèle (même action que le bouton
-                          // « Utiliser ») : l'ancien comportement réinitialisait le
-                          // diagramme sans rien charger.
-                          loadTemplate(new_data, templates[id].file_path)
-                          set_show_template(false)
-                        }}
-                      >
-                        <CardHeader>
-                          <Heading variant='heading_template_sankey'>
-                            {templateTitle(new_data, id, templates[id])}
-                          </Heading>
-                          <Divider />
-                        </CardHeader>
-
-                        <CardBody>
-                          {/* Get the image from the server */}
-                          <TemplateThumbnail
-                            className='img-card'
-                            title={templateTitle(new_data, id, templates[id])}
-                            img_path={templates[id].img_path}
-                            max_height='150px'
-                          />
-                        </CardBody>
-
-                        <CardFooter>
-                          <ButtonGroup
-                            //ButtonGroup don't have variants theming so we modify directly the style
-                            style={{
-                              margin: 'auto'
-                            }}>
-                            <Button variant='menuconfigpanel_option_button'
-                              onClick={() => {
-                                loadTemplate(new_data, templates[id].file_path)
-                                set_show_template(false)
-                              }}>
-                              {new_data.t('useTemplate')}
-                            </Button>
-
-                          </ButtonGroup>
-                        </CardFooter>
-                      </Card>
-                    })}
-
-                </Box>
-              </Box>
-            </Box>
-          </TabPanel>
-        })}
-    </TabPanels>
-  </Tabs>
-
-
-  return <Modal
-    isOpen={show_template}
-    blockScrollOnMount={false}
-    onClose={() => set_show_template(false)}
-  >
-    <ModalOverlay />
-    <ModalContent
-      maxWidth='inherit'
-    >
-      <ModalHeader>{new_data.t('Menu.templates')}</ModalHeader>
-      <ModalCloseButton />
-      <ModalBody>
-        {tabs_of_cards}
-      </ModalBody>
-    </ModalContent>
-  </Modal>
-}
-
-/**
- * Galerie de modèles ancrée à droite, visible à l'ARRIVÉE tant que le diagramme est
- * vide : vitrine pour le nouveau visiteur (un clic charge un exemple riche). Elle
- * s'efface d'elle-même dès que l'utilisateur travaille : diagramme non vide (modèle
- * chargé, fichier ouvert, cache restauré), première interaction avec le canvas
- * (création manuelle) ou fermeture explicite. La modale (ModalTemplate) reste le
- * parcours Menu -> Nouveau -> « À partir d'un modèle ».
+ * L'épingle neutralise TOUTES les fermetures implicites (clic canvas, diagramme
+ * non vide, choix d'un modèle) : on peut ainsi essayer les modèles l'un après
+ * l'autre. Seul le bouton de fermeture la referme alors. Comme le panneau de
+ * config (#1243), épinglée elle quitte l'overlay et entre dans le système de
+ * fenêtrage : dockée à droite, elle réserve sa largeur (getRightChromeReservedPx)
+ * et la zone de dessin se recadre à gauche.
  */
 export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
   new_data: Class_ApplicationData
   additionalMenu: MutableRefObject<Type_AdditionalMenus>
 }) => {
-  const { templates, indexes, categories } = useTemplatesLibrary(additionalMenu)
   const [dismissed, setDismissed] = useState(false)
+  // L'épinglage vit dans le modèle (et non en useState) : il réserve de la
+  // largeur, donc le diagramme et la colonne tableur/doc doivent le lire.
+  // useMainZone -> re-render quand la réserve change (ici comme ailleurs).
+  useMainZone(new_data)
+  const pinned = new_data.menu_configuration.template_gallery_pinned
+  const setPinned = (v: boolean) => { new_data.menu_configuration.template_gallery_pinned = v }
+  // Panneau UNIQUE et consolidé : toutes les sources fusionnées, un onglet par
+  // regroupement (voir templateTab). `forced_open` = ouverture explicite (menu /
+  // splash / sankeythèque), qui survit à un diagramme non vide.
+  const [forced_open, setForcedOpen] = useState(false)
+  // Onglet sélectionné ; null tant qu'aucun choix -> premier onglet disponible.
+  const [selected_tab, setSelectedTab] = useState<string | null>(null)
+
+  // Player (diaporama) : enchaîne les modèles de l'ONGLET COURANT l'un après
+  // l'autre. `playing` pilote la temporisation ; `current_id` sert au surlignage
+  // et au repli automatique de la liste sur la vignette en cours. L'index courant
+  // vit dans une ref (l'intervalle ne se réabonne pas à chaque avance).
+  const [playing, setPlaying] = useState(false)
+  const [current_id, setCurrentId] = useState<string | null>(null)
+  const play_index_ref = useRef(0)
+  const cards_ref = useRef<{ [id: string]: HTMLElement | null }>({})
+
+  const { templates, indexes, tabs, tab_categories, source_tab } = useTemplatesLibrary(additionalMenu)
+
+  // Ouverture depuis le menu / le splash screen : le panneau remplace l'ancienne modale.
+  new_data.menu_configuration.dict_setter_show_dialog
+    .ref_setter_show_modal_templates_lib.current = (open) => {
+      const is_open = typeof open === 'function' ? open(forced_open) : open
+      setForcedOpen(is_open)
+    }
+  // Ouverture sur l'onglet d'une source donnée (la sankeythèque côté SA, la
+  // galerie e!Sankey de dev) : même panneau, onglet présélectionné.
+  new_data.menu_configuration.dict_setter_show_dialog
+    .ref_setter_show_gallery_source.current = (src) => {
+      const requested = typeof src === 'function' ? src(null) : src
+      if (requested === null) {
+        setForcedOpen(false)
+        return
+      }
+      setForcedOpen(true)
+      const tab = source_tab[requested]
+      if (tab) setSelectedTab(tab)
+    }
+
+  // Onglet effectif : le choix de l'utilisateur s'il pointe un onglet encore
+  // servi, sinon le premier onglet.
+  const current_tab = (selected_tab && selected_tab in tab_categories)
+    ? selected_tab
+    : (tabs[0] ?? null)
+
+  // Catégories de l'onglet courant (sous-titres) et liste à plat des modèles dans
+  // l'ordre d'affichage : c'est la séquence que parcourent le player et les
+  // boutons précédent/suivant.
+  const current_tab_categories = current_tab ? (tab_categories[current_tab] ?? []) : []
+  const ordered_all = current_tab_categories.flatMap(category => indexes[category] ?? [])
+  const current_pos = current_id ? ordered_all.indexOf(current_id) : -1
+
+  // Charge le modèle à la position `i` (bouclage) et le marque comme courant.
+  const showTemplateAt = (i: number) => {
+    if (ordered_all.length === 0) return
+    const idx = ((i % ordered_all.length) + ordered_all.length) % ordered_all.length
+    const id = ordered_all[idx]
+    play_index_ref.current = idx
+    setCurrentId(id)
+    loadTemplate(new_data, templateFilePath(new_data, templates[id]), templates[id].source)
+  }
+
+  // Lecture automatique : un intervalle avance d'un cran à chaque tick. Snapshot de
+  // l'onglet pris au démarrage (la bibliothèque ne change pas tant que la galerie
+  // est ouverte), d'où l'intervalle qui ne dépend que de `playing`.
+  useEffect(() => {
+    if (!playing) return
+    const cats = current_tab ? (tab_categories[current_tab] ?? []) : []
+    const flat = cats.flatMap(category => indexes[category] ?? [])
+    if (flat.length === 0) { setPlaying(false); return }
+    const show = (i: number) => {
+      const idx = ((i % flat.length) + flat.length) % flat.length
+      const id = flat[idx]
+      play_index_ref.current = idx
+      setCurrentId(id)
+      loadTemplate(new_data, templateFilePath(new_data, templates[id]), templates[id].source)
+    }
+    show(play_index_ref.current)
+    const timer = window.setInterval(() => show(play_index_ref.current + 1), 3500)
+    return () => window.clearInterval(timer)
+  }, [playing])
+
+  // Replie la liste sur la vignette en cours (player ou navigation manuelle).
+  useEffect(() => {
+    if (current_id)
+      cards_ref.current[current_id]?.scrollIntoView({ block: 'nearest' })
+  }, [current_id])
+
+  // Changement d'onglet : on repart d'une séquence vierge.
+  useEffect(() => {
+    setPlaying(false)
+    setCurrentId(null)
+    play_index_ref.current = 0
+  }, [current_tab])
+
+  // Démarrer/arrêter le player. Au démarrage, on force l'ouverture pour que le
+  // panneau survive aux chargements successifs (sinon il se referme sur un diagramme
+  // non vide) sans pour autant le docker comme l'épingle.
+  const togglePlay = () => {
+    if (!playing) setForcedOpen(true)
+    setPlaying(p => !p)
+  }
 
   // Première interaction avec la zone de dessin -> la galerie s'efface. Écoute au
   // niveau document (capture) : #draw_zoom est recréé à chaque draw(), un listener
@@ -407,27 +535,153 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
   const da = new_data.drawing_area
   const diagram_empty = (da.sankey?.nodes_list?.length ?? 0) === 0
 
-  if (dismissed || !diagram_empty || new_data.is_static || !new_data.is_editable)
+  if (new_data.is_static || !new_data.is_editable)
     return <></>
-  if (Object.keys(indexes).length === 0)
+  if (!pinned && !forced_open && (dismissed || !diagram_empty))
+    return <></>
+  if (tabs.length === 0 || current_tab === null)
     return <></>
 
-  const top = da.getNavBarHeight() + da.fit_margin
-  const bottom = da.getBottomBarHeight() + da.fit_margin
-  const right = da.fit_margin / 2 + new_data.menu_configuration.getToolsColumnWidthPx()
+  // Habillage de l'onglet courant : la sankeythèque garde son titre et son
+  // invite ; l'onglet e!Sankey rappelle la nature du corpus local quand la
+  // galerie de dev est active (hors dev, il ne contient que les modèles publiés).
+  const is_theque_tab = current_tab === 'sankeytheque'
+  const is_esankey_dev_tab = source_tab['esankey-local'] === current_tab
+  // Sous-titres de catégorie utiles seulement si l'onglet en regroupe plusieurs
+  // (la sankeythèque : études / filières / recherche / clients).
+  const show_subheaders = current_tab_categories.length > 1
+
+  const mc = new_data.menu_configuration
+  // Épinglée, la galerie se docke à GAUCHE du chrome déjà réservé (colonne
+  // d'outils + config épinglée) : de droite à gauche, outils | config | galerie
+  // | dessin. Sa propre largeur n'entre pas dans cet offset (elle la réserve).
+  const docked_right = mc.getToolsColumnWidthPx() + mc.getConfigPanelPinnedReservedPx()
+  const top = da.getNavBarHeight() + (pinned ? 0 : da.fit_margin)
+  const bottom = da.getBottomBarHeight() + (pinned ? 0 : da.fit_margin)
+  const right = pinned ? docked_right : da.fit_margin / 2 + mc.getToolsColumnWidthPx()
+
+  const ACCENT = '#55897A'   // tertiaire.3, accent de l'app
+
+  // Rendu d'une vignette (réutilisé par onglet simple ou sous-catégories).
+  const renderCard = (id: string) => {
+    const is_current = id === current_id
+    const template = templates[id]
+    const variant_langs = Object.keys(template.variants ?? {})
+    // Charge une variante du modèle, avec les mêmes effets de bord que le clic
+    // sur la vignette (surlignage, reprise du player, fermeture).
+    const openTemplate = (file_path: string) => {
+      play_index_ref.current = ordered_all.indexOf(id)
+      setCurrentId(id)
+      loadTemplate(new_data, file_path, template.source)
+      // Épinglée ou en lecture, la galerie survit au chargement : on enchaîne.
+      if (!pinned && !playing) setForcedOpen(false)
+    }
+    return <Box
+      key={id}
+      ref={(el: HTMLElement | null) => { cards_ref.current[id] = el }}
+      role='group'
+      cursor='pointer'
+      overflow='hidden'
+      background='white'
+      border='1px solid'
+      borderColor={is_current ? ACCENT : '#e6ebe9'}
+      boxShadow={is_current ? '0 0 0 1px ' + ACCENT : '0 1px 2px rgba(16, 24, 40, 0.04)'}
+      borderRadius='10px'
+      transition='transform .12s ease, box-shadow .12s ease, border-color .12s ease'
+      _hover={{
+        transform: 'translateY(-2px)',
+        boxShadow: '0 6px 18px rgba(16, 24, 40, 0.12)',
+        borderColor: ACCENT
+      }}
+      // Clic manuel : le player suit la sélection (surlignage + reprise ici).
+      onClick={() => openTemplate(templateFilePath(new_data, template))}
+    >
+      <Box
+        height='96px'
+        background='#f6f8f7'
+        borderBottom='1px solid #eef2f0'
+        display='flex'
+        alignItems='center'
+        justifyContent='center'
+        overflow='hidden'
+      >
+        <TemplateThumbnail
+          title={templateTitle(new_data, id, template)}
+          img_path={template.img_path}
+          max_height='96px'
+          source={template.source ?? 'sankeydata'}
+        />
+      </Box>
+      <Box padding='0.4rem 0.5rem 0.5rem 0.5rem'>
+        <Text
+          fontSize='xs'
+          fontWeight='600'
+          textAlign='center'
+          color='gray.700'
+          margin='0'
+          noOfLines={2}
+          minHeight='2.1em'
+          lineHeight='1.05em'
+          title={templateTitle(new_data, id, template)}
+        >
+          {templateTitle(new_data, id, template)}
+        </Text>
+        {variant_langs.length > 1 &&
+          <Box display='flex' flexWrap='wrap' justifyContent='center' gap='0.25rem' marginTop='0.35rem'>
+            {variant_langs.map(lang =>
+              <Box
+                key={lang}
+                as='button'
+                fontSize='0.62rem'
+                fontWeight='600'
+                lineHeight='1'
+                letterSpacing='0.02em'
+                padding='0.15rem 0.3rem'
+                borderRadius='4px'
+                color={lang === new_data.i18n.language ? 'white' : ACCENT}
+                background={lang === new_data.i18n.language ? ACCENT : '#eaf1ee'}
+                _hover={{ background: ACCENT, color: 'white' }}
+                transition='background .1s, color .1s'
+                onClick={(evt: React.MouseEvent) => {
+                  evt.stopPropagation()
+                  openTemplate(template.variants![lang])
+                }}
+              >
+                {lang.toUpperCase()}
+              </Box>)}
+          </Box>}
+      </Box>
+    </Box>
+  }
+
+  // Grille 2 colonnes de vignettes pour une liste d'ids.
+  const renderGrid = (ids: string[]) =>
+    <Box
+      display='grid'
+      gridTemplateColumns='repeat(2, minmax(0, 1fr))'
+      gap='0.5rem'
+    >
+      {ids.map(renderCard)}
+    </Box>
+
+  const iconBtnSx = { paddingInline: '0.3rem', minWidth: 'auto', width: 'auto', flex: 'none' }
 
   return <Box
-    className='template_gallery_panel'
+    className={pinned ? 'template_gallery_panel_pinned' : 'template_gallery_panel'}
     position='fixed'
     top={top + 'px'}
     right={right + 'px'}
-    width='300px'
-    maxHeight={'calc(100vh - ' + (top + bottom) + 'px)'}
-    zIndex={20}
+    width={TEMPLATE_GALLERY_WIDTH_PX + 'px'}
+    // Dockée : elle occupe toute la hauteur entre les barres, comme le panneau
+    // de config épinglé. Flottante : elle s'arrête à son contenu.
+    bottom={pinned ? bottom + 'px' : undefined}
+    maxHeight={pinned ? undefined : 'calc(100vh - ' + (top + bottom) + 'px)'}
+    zIndex={pinned ? 26 : 20}
     background='white'
-    border='1px solid #e2e8f0'
-    borderRadius='6px'
-    boxShadow='0 4px 16px rgba(0, 0, 0, 0.25)'
+    border={pinned ? undefined : '1px solid #e2e8f0'}
+    borderLeft='1px solid #e2e8f0'
+    borderRadius={pinned ? undefined : '10px'}
+    boxShadow={pinned ? undefined : '0 10px 30px rgba(16, 24, 40, 0.18)'}
     display='flex'
     flexDirection='column'
     overflow='hidden'
@@ -436,58 +690,127 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
       display='flex'
       alignItems='center'
       justifyContent='space-between'
-      padding='0.5rem 0.75rem'
-      borderBottom='1px solid #e2e8f0'
+      padding='0.6rem 0.75rem'
+      borderBottom='1px solid #eef2f0'
     >
-      <Text fontWeight='bold' margin='0'>
-        {new_data.t('Menu.templates')}
+      <Text fontWeight='700' fontSize='sm' color='gray.800' margin='0'>
+        {new_data.t(is_theque_tab ? 'Menu.sankeytheque' : 'Menu.templates')}
       </Text>
-      <CloseButton size='sm' onClick={() => setDismissed(true)} />
-    </Box>
-    <Text
-      fontSize='sm'
-      color='gray.600'
-      margin='0'
-      padding='0.4rem 0.75rem'
-    >
-      {new_data.t('templates.gallery_hint')}
-    </Text>
-    <Box overflowY='auto' padding='0 0.75rem 0.75rem 0.75rem'>
-      {categories.map(category => {
-        const ordered_ids = indexes[category]
-        return <Box key={category} marginTop='0.5rem'>
-          <Text
-            fontSize='xs'
-            fontWeight='bold'
-            textTransform='uppercase'
-            color='gray.500'
-            margin='0 0 0.3rem 0'
+      <Box display='flex' alignItems='center' gap='0.25rem'>
+        {ordered_all.length > 1 && <>
+          <Button
+            size='xs'
+            variant='menuconfigpanel_option_button'
+            sx={iconBtnSx}
+            title={new_data.t('templates.prev')}
+            onClick={() => showTemplateAt((current_pos < 0 ? 0 : current_pos) - 1)}
           >
-            {new_data.t('templates.categories.' + category)}
-          </Text>
-          {ordered_ids.map(id => {
-            return <Box
-              key={id}
-              cursor='pointer'
-              border='1px solid #e2e8f0'
-              borderRadius='6px'
-              padding='0.4rem'
-              marginBottom='0.4rem'
-              _hover={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)' }}
-              onClick={() => loadTemplate(new_data, templates[id].file_path)}
-            >
-              <TemplateThumbnail
-                title={templateTitle(new_data, id, templates[id])}
-                img_path={templates[id].img_path}
-                max_height='90px'
-              />
-              <Text fontSize='sm' textAlign='center' margin='0.2rem 0 0 0'>
-                {templateTitle(new_data, id, templates[id])}
-              </Text>
-            </Box>
-          })}
+            <FaStepBackward />
+          </Button>
+          <Button
+            size='xs'
+            variant={playing
+              ? 'menuconfigpanel_option_button_activated'
+              : 'menuconfigpanel_option_button'}
+            sx={iconBtnSx}
+            title={new_data.t(playing ? 'templates.pause' : 'templates.play')}
+            onClick={togglePlay}
+          >
+            {playing ? <FaPause /> : <FaPlay />}
+          </Button>
+          <Button
+            size='xs'
+            variant='menuconfigpanel_option_button'
+            sx={iconBtnSx}
+            title={new_data.t('templates.next')}
+            onClick={() => showTemplateAt((current_pos < 0 ? -1 : current_pos) + 1)}
+          >
+            <FaStepForward />
+          </Button>
+          {current_pos >= 0 && <Text fontSize='xs' color='gray.500' margin='0 0.15rem'>
+            {(current_pos + 1) + '/' + ordered_all.length}
+          </Text>}
+        </>}
+        <Button
+          size='xs'
+          variant={pinned
+            ? 'menuconfigpanel_option_button_activated'
+            : 'menuconfigpanel_option_button'}
+          sx={iconBtnSx}
+          title={new_data.t(pinned ? 'templates.unpin' : 'templates.pin')}
+          onClick={() => setPinned(!pinned)}
+        >
+          <FaThumbtack style={{ transform: pinned ? 'none' : 'rotate(45deg)' }} />
+        </Button>
+        <CloseButton
+          size='sm'
+          onClick={() => { setPlaying(false); setForcedOpen(false); setDismissed(true); setPinned(false) }}
+        />
+      </Box>
+    </Box>
+    {/* Barre d'onglets : toutes les sources consolidées (modèles OpenSankey,
+        cartes, classiques du web, SankeyMATIC, STAN, e!Sankey, puis la
+        SankeyThèque). Pilules qui reviennent à la ligne — pas de défilement
+        (donc pas de scrollbar au ras du bandeau). */}
+    <Box
+      display='flex'
+      flexWrap='wrap'
+      gap='0.3rem'
+      padding='0.5rem 0.75rem'
+      borderBottom='1px solid #eef2f0'
+    >
+      {tabs.map(tab => {
+        const active = tab === current_tab
+        return <Box
+          key={tab}
+          as='button'
+          flex='none'
+          whiteSpace='nowrap'
+          fontSize='xs'
+          fontWeight={active ? '700' : '500'}
+          lineHeight='1'
+          padding='0.3rem 0.55rem'
+          borderRadius='999px'
+          color={active ? 'white' : 'gray.600'}
+          background={active ? ACCENT : '#eef2f0'}
+          transition='background .12s, color .12s'
+          _hover={{ background: active ? ACCENT : '#e0e7e4' }}
+          onClick={() => setSelectedTab(tab)}
+        >
+          {new_data.t('templates.categories.' + tab)}
         </Box>
       })}
+    </Box>
+    <Text
+      fontSize='xs'
+      color='gray.500'
+      margin='0'
+      padding='0.5rem 0.75rem 0.4rem 0.75rem'
+    >
+      {is_esankey_dev_tab
+        ? 'Galerie locale de développement (ESANKEY_CORPUS_DIR) — corpus propriétaire, non déployé.'
+        : new_data.t(is_theque_tab ? 'templates.sankeytheque_hint' : 'templates.gallery_hint')}
+    </Text>
+    <Box overflowY='auto' padding='0 0.75rem 0.75rem 0.75rem'>
+      {show_subheaders
+        ? current_tab_categories.map(category => {
+          const ids = indexes[category] ?? []
+          if (ids.length === 0) return null
+          return <Box key={category} marginTop='0.5rem'>
+            <Text
+              fontSize='0.68rem'
+              fontWeight='700'
+              textTransform='uppercase'
+              letterSpacing='0.04em'
+              color='gray.400'
+              margin='0 0 0.4rem 0'
+            >
+              {new_data.t('templates.categories.' + category)}
+            </Text>
+            {renderGrid(ids)}
+          </Box>
+        })
+        : <Box marginTop='0.5rem'>{renderGrid(ordered_all)}</Box>}
     </Box>
   </Box>
 }
