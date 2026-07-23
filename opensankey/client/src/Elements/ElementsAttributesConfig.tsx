@@ -35,6 +35,7 @@ import { Class_NodeBase } from './NodeBase'
 import { isLegendElementId } from './legendIds'
 import { Type_AnalysisDescriptor } from '../Charts/AnalysisDescriptor'
 import { Type_TooltipHiddenBlocks } from './TooltipBlocks'
+import type { Type_Composition, Type_ContainerPolicy } from '../types/PresentationComposition'
 
 // Types spécifiques
 // 'line' (OS#1276) : trait libre décoratif porté par un conteneur. La forme est
@@ -2210,6 +2211,59 @@ export const TOOLTIP_BLOCKS_CONFIG = {
   } satisfies AttributeConfig<Type_TooltipHiddenBlocks | undefined>
 } as const
 
+// OS#305 — PRÉSENTATION COMPOSÉE PAR L'AUTEUR. Deux attributs de STYLE (donc
+// hérités par la cascade et surchargeables par élément — décision #5 « les styles
+// d'abord, l'élément en exception »), même patron objet que tooltip_hidden_blocks
+// (surcharge jugée par présence, pas par égalité) :
+//  - `presentation_blocks`     : la liste ORDONNÉE de blocs + leur visibilité
+//                                dans les 3 contenants (décision #2) ;
+//  - `presentation_containers` : contenant par défaut + alternatives permises
+//                                (décision #7).
+// `undefined` = rien de composé : la cible n'ouvre aucune présentation lecteur
+// (l'inspecteur d'auteur, lui, reste toujours disponible — décision #1).
+export const PRESENTATION_CONFIG = {
+  presentation_blocks: {
+    default: undefined as Type_Composition | undefined,
+    type: (() => undefined) as (() => Type_Composition | undefined),
+    category: 'presentation' as const,
+    actions: undefined,
+    labels: {
+      en: 'Presentation blocks',
+      fr: 'Blocs de présentation',
+      es: 'Bloques de presentación',
+      de: 'Präsentationsblöcke',
+      it: 'Blocchi di presentazione'
+    },
+    tooltips: {
+      en: 'Ordered blocks shown to the reader, and in which containers',
+      fr: 'Blocs affichés au lecteur, dans l\'ordre, et dans quels contenants',
+      es: 'Bloques mostrados al lector, en orden, y en qué contenedores',
+      de: 'Dem Leser angezeigte Blöcke, in Reihenfolge und in welchen Containern',
+      it: 'Blocchi mostrati al lettore, in ordine, e in quali contenitori'
+    }
+  } satisfies AttributeConfig<Type_Composition | undefined>,
+  presentation_containers: {
+    default: undefined as Type_ContainerPolicy | undefined,
+    type: (() => undefined) as (() => Type_ContainerPolicy | undefined),
+    category: 'presentation' as const,
+    actions: undefined,
+    labels: {
+      en: 'Presentation containers',
+      fr: 'Contenants de présentation',
+      es: 'Contenedores de presentación',
+      de: 'Präsentationscontainer',
+      it: 'Contenitori di presentazione'
+    },
+    tooltips: {
+      en: 'Default container for this target, and which alternates are allowed',
+      fr: 'Contenant par défaut de cette cible, et alternatives permises',
+      es: 'Contenedor por defecto de este destino y alternativas permitidas',
+      de: 'Standardcontainer für dieses Ziel und erlaubte Alternativen',
+      it: 'Contenitore predefinito per questo target e alternative consentite'
+    }
+  } satisfies AttributeConfig<Type_ContainerPolicy | undefined>
+} as const
+
 export type LabelValues<T extends typeof BASE_LABEL_CONFIG> = {
   -readonly [K in keyof T]: ExtractConfigValue<T[K]>
 }
@@ -3778,6 +3832,7 @@ export const ALL_ATTRIBUTES_CONFIG = {
   ...HYPER_LINK_CONFIG,
   ...ANALYSIS_CONFIG,
   ...TOOLTIP_BLOCKS_CONFIG,
+  ...PRESENTATION_CONFIG,
 } as const
 
 export type ElementsType = Class_LinkElement[] | Class_NodeBase[] | Class_ElementStyle[]
