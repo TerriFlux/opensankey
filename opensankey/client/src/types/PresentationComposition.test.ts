@@ -1,12 +1,8 @@
 import {
   compositionFromJSON,
   compositionToJSON,
-  containerPolicyFromJSON,
-  containerPolicyToJSON,
   blocksFor,
   hasContentFor,
-  openableContainers,
-  resolveOpenContainer,
   addBlock,
   removeBlock,
   toggleBlockVisibility,
@@ -97,30 +93,6 @@ describe('#305 round-trip JSON', () => {
   })
 })
 
-describe('#305 containerPolicyFromJSON', () => {
-  it('retombe sur la pop-up quand le défaut est absent ou invalide', () => {
-    expect(containerPolicyFromJSON(undefined).default).toBe('popup')
-    expect(containerPolicyFromJSON({ default: 'nope' }).default).toBe('popup')
-  })
-
-  it('garantit que le contenant par défaut est TOUJOURS permis', () => {
-    // Invariant : sinon la cible n'aurait aucun contenant à ouvrir.
-    const policy = containerPolicyFromJSON({
-      default: 'sidebar',
-      allow: { tooltip: false, popup: false, sidebar: false }
-    })
-    expect(policy.default).toBe('sidebar')
-    expect(policy.allow.sidebar).toBe(true)
-  })
-
-  it('round-trip', () => {
-    const policy = containerPolicyFromJSON({
-      default: 'tooltip', allow: { tooltip: true, popup: false, sidebar: true }
-    })
-    expect(containerPolicyFromJSON(containerPolicyToJSON(policy))).toEqual(policy)
-  })
-})
-
 describe('#305 requêtes', () => {
   const composition: Type_Composition = [
     entry('value', { tooltip: true, popup: true, sidebar: true }),
@@ -138,30 +110,6 @@ describe('#305 requêtes', () => {
     expect(hasContentFor(composition, 'tooltip')).toBe(true)
     expect(hasContentFor([], 'tooltip')).toBe(false)
     expect(hasContentFor([entry('a', { tooltip: false, popup: false, sidebar: false })], 'popup')).toBe(false)
-  })
-
-  it('openableContainers croise la politique ET la présence de contenu', () => {
-    const policy = containerPolicyFromJSON({
-      default: 'popup', allow: { tooltip: true, popup: true, sidebar: false }
-    })
-    expect(openableContainers(composition, policy)).toEqual(['tooltip', 'popup'])
-  })
-
-  it('resolveOpenContainer préfère le défaut quand il est ouvrable', () => {
-    const policy = containerPolicyFromJSON({ default: 'sidebar' })
-    expect(resolveOpenContainer(composition, policy)).toBe('sidebar')
-  })
-
-  it('resolveOpenContainer retombe sur le premier ouvrable sinon', () => {
-    // Défaut = info-bulle, mais aucun bloc n'y est visible.
-    const only_sidebar: Type_Composition = [entry('a', { tooltip: false, popup: false, sidebar: true })]
-    const policy = containerPolicyFromJSON({ default: 'tooltip' })
-    expect(resolveOpenContainer(only_sidebar, policy)).toBe('sidebar')
-  })
-
-  it('resolveOpenContainer rend null quand il n\'y a rien à montrer', () => {
-    // Point ouvert n°2 : rien de composé -> pas d'ouverture côté lecteur.
-    expect(resolveOpenContainer([], containerPolicyFromJSON({}))).toBeNull()
   })
 })
 

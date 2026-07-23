@@ -21,7 +21,7 @@
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import type { Type_PopupGeometry } from '../../../types/PanelManager'
 import {
-  compositionFromJSON, containerPolicyFromJSON, resolveOpenContainer, hasContentFor,
+  compositionFromJSON, hasContentFor,
   DEFAULT_BLOCK_VISIBILITY, type Type_Composition
 } from '../../../types/PresentationComposition'
 import { isTooltipBlockVisible, type Type_TooltipHiddenBlocks } from '../../../Elements/TooltipBlocks'
@@ -113,10 +113,14 @@ export const elementIdOfPanel = (panel_id: string): string =>
   panel_id.slice(PRESENTATION_PREFIX.length)
 
 /**
- * Ouvre la présentation d'un élément dans le contenant que sa politique désigne.
- * Rend `false` — et n'ouvre rien — s'il n'y a rien à montrer, c'est-à-dire quand
- * l'auteur a EXPLICITEMENT vidé la composition (une composition absente, elle,
- * retombe sur le défaut, qui reproduit l'ancienne info-bulle).
+ * Ouvre la présentation d'un élément — geste de CLIC, donc jamais en info-bulle
+ * (ajustement #4). Le contenant se déduit de l'état de la barre latérale :
+ * ouverte, le clic y ouvre ; fermée, il ouvre une pop-up juxtaposée.
+ *
+ * Rend `false` — et n'ouvre rien — s'il n'y a rien à montrer dans ce contenant,
+ * c'est-à-dire quand l'auteur a EXPLICITEMENT vidé la composition (une
+ * composition absente, elle, retombe sur le défaut, qui reproduit l'ancienne
+ * info-bulle).
  */
 export const openPresentationFor = (
   app_data: Class_ApplicationData,
@@ -124,9 +128,8 @@ export const openPresentationFor = (
   anchor?: { x: number, y: number }
 ): boolean => {
   const composition = compositionOf(element)
-  const policy = containerPolicyFromJSON(element.getElementProperty('presentation_containers'))
-  const mode = resolveOpenContainer(composition, policy)
-  if (mode === null) return false
+  const mode = app_data.menu_configuration.panels.defaultOpenMode()
+  if (!hasContentFor(composition, mode)) return false
   const panels = app_data.menu_configuration.panels
   const id = presentationPanelId(element.id)
   if (mode === 'popup') {
@@ -223,24 +226,17 @@ export const matchesPresentationTrigger = (
 
 /** L'élément a-t-il une présentation à montrer EN INFO-BULLE ? Permet de
  *  retomber sur l'info-bulle historique quand l'auteur n'a rien composé. */
-export const canPresentTooltip = (element: Type_Presentable): boolean => {
-  const composition = compositionOf(element)
-  const policy = containerPolicyFromJSON(element.getElementProperty('presentation_containers'))
-  return policy.allow.tooltip && hasContentFor(composition, 'tooltip')
-}
+export const canPresentTooltip = (element: Type_Presentable): boolean =>
+  hasContentFor(compositionOf(element), 'tooltip')
 
-/**
- * Ouvre la présentation en INFO-BULLE, si l'auteur l'y a autorisée et qu'elle a
- * quelque chose à montrer dans ce contenant.
- */
+/** Ouvre la présentation en INFO-BULLE — geste de SURVOL, seul contenant qu'il
+ *  ouvre (ajustement #4) — si elle a quelque chose à y montrer. */
 export const openPresentationTooltip = (
   app_data: Class_ApplicationData,
   element: Type_Presentable,
   anchor: { x: number, y: number }
 ): boolean => {
-  const composition = compositionOf(element)
-  const policy = containerPolicyFromJSON(element.getElementProperty('presentation_containers'))
-  if (!policy.allow.tooltip || !hasContentFor(composition, 'tooltip')) return false
+  if (!hasContentFor(compositionOf(element), 'tooltip')) return false
   app_data.menu_configuration.panels.setMode(
     presentationPanelId(element.id), 'tooltip', { anchor })
   return true
@@ -310,9 +306,11 @@ export const releasePresentationHover = (): void => {
   _hovered_id = null
 }
 
-/** La présentation d'un élément est-elle ouvrable (quelque chose à montrer) ? */
-export const canPresent = (element: Type_Presentable): boolean => {
-  const composition = compositionOf(element)
-  const policy = containerPolicyFromJSON(element.getElementProperty('presentation_containers'))
-  return resolveOpenContainer(composition, policy) !== null
-}
+/** La présentation d'un élément est-elle ouvrable AU CLIC, ici et maintenant ?
+ *  (donc dans le contenant que l'état de la barre latérale désigne). */
+export const canPresent = (
+  app_data: Class_ApplicationData,
+  element: Type_Presentable
+): boolean => hasContentFor(
+  compositionOf(element),
+  app_data.menu_configuration.panels.defaultOpenMode())

@@ -322,7 +322,11 @@ export const InspectorPanel = ({ app_data }: { app_data: Class_ApplicationData }
         </Box>
       )}
 
-      <Box style={{ overflowY: 'auto', flex: 1 }}>
+      {/* AJUSTEMENT #3 — UN SEUL défilement. C'est la coquille de panneau
+          (PanelShell) qui fait défiler son contenu ; un second conteneur
+          défilant ici superposait deux ascenseurs dans la même colonne, et
+          l'inspecteur s'en trouvait coupé en deux hauteurs indépendantes. */}
+      <Box style={{ flex: 1 }}>
         {active_tab ? (
           active_tab.render(app_data, scope)
         ) : (

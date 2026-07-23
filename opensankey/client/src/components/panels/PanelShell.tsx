@@ -35,7 +35,8 @@ import {
   PANEL_SIDEBAR_MIN_WIDTH_PX,
   PANEL_SIDEBAR_MAX_WIDTH_PX,
   PANEL_POPUP_MIN_SIZE,
-  PANEL_POPUP_MAX_SIZE
+  PANEL_POPUP_MAX_SIZE,
+  PANEL_POPUP_DEFAULT_SIZE
 } from '../../types/PanelManager'
 import { useModelBinding } from '../../hooks/useModelBinding'
 import { default_font_size } from '../../css/Theme'
@@ -358,33 +359,63 @@ const PanelFrame = ({
   const inDockZone = (x: number) => x >= (window.innerWidth || 4096) - DOCK_ZONE_PX
 
   // --- Détachement par glisser (barre latérale -> pop-up) ---------------------
+  //
+  // AJUSTEMENT #2 — UN SEUL geste. Le détachement transformait la barre en
+  // pop-up puis rendait la main : react-draggable, lui, n'avait pas vu le
+  // pointeur s'enfoncer, donc la fenêtre restait posée là où la conversion
+  // l'avait mise et il fallait la ressaisir pour la placer. On mène donc le
+  // glisser de bout en bout ici : conversion au franchissement du seuil, puis
+  // suivi du curseur jusqu'au relâchement, exactement comme un déplacement de
+  // pop-up ordinaire (aperçu local `drag_pos`, écriture au relâchement).
   const startDetachDrag = (e: React.PointerEvent) => {
     if (!is_sidebar || !allowedModes.includes('popup')) return
     if ((e.target as HTMLElement).closest('button')) return
     const start_x = e.clientX
     const start_y = e.clientY
-    let done = false
+    const { w, h } = PANEL_POPUP_DEFAULT_SIZE
+    // Décalage de PRISE : le point saisi dans l'en-tête reste sous le curseur,
+    // pour que la fenêtre ne saute pas au moment où elle se détache. Borné à la
+    // largeur de la pop-up (la barre peut être plus large qu'elle).
+    const rect = (node_ref.current as HTMLElement | null)?.getBoundingClientRect()
+    const grab_x = Math.min(rect ? start_x - rect.left : w / 2, w - 24)
+    const grab_y = rect ? start_y - rect.top : 12
+
+    let detached = false
+    const posAt = (ev: PointerEvent) => ({
+      x: Math.max(0, Math.round(ev.clientX - grab_x)),
+      y: Math.max(0, Math.round(ev.clientY - grab_y))
+    })
     const cleanup = () => {
       window.removeEventListener('pointermove', move)
-      window.removeEventListener('pointerup', cleanup)
+      window.removeEventListener('pointerup', up)
     }
     const move = (ev: PointerEvent) => {
-      if (done) return
-      if (Math.abs(ev.clientX - start_x) < 8 && Math.abs(ev.clientY - start_y) < 8) return
-      done = true
+      if (!detached) {
+        // Seuil : un clic sur l'en-tête ne doit pas détacher le menu.
+        if (Math.abs(ev.clientX - start_x) < 8 && Math.abs(ev.clientY - start_y) < 8) return
+        detached = true
+        panels.setMode(id, 'popup', { geometry: { ...posAt(ev), w, h } })
+        return
+      }
+      // Le panneau est désormais une pop-up : on la porte, sans réécrire le
+      // modèle à chaque pixel (même économie que le glisser react-draggable).
+      const p = posAt(ev)
+      setDragPos(p)
+      if (can_dock) setInDockZone(inDockZone(p.x))
+    }
+    const up = (ev: PointerEvent) => {
       cleanup()
-      const w = 340
-      const h = 380
-      panels.setMode(id, 'popup', {
-        geometry: {
-          x: Math.max(0, Math.round(ev.clientX - w / 2)),
-          y: Math.max(0, Math.round(ev.clientY - 12)),
-          w, h
-        }
-      })
+      if (!detached) return
+      setDragPos(null)
+      setInDockZone(false)
+      const p = posAt(ev)
+      // Relâchée dans la bande d'ancrage : elle retourne d'où elle vient.
+      if (can_dock && inDockZone(p.x)) { panels.setMode(id, 'sidebar'); return }
+      const g = panels.getPopupGeometry(id)
+      if (g) panels.setPopupGeometry(id, { ...g, x: p.x, y: p.y })
     }
     window.addEventListener('pointermove', move)
-    window.addEventListener('pointerup', cleanup)
+    window.addEventListener('pointerup', up)
   }
 
   // Ancre de l'info-bulle : décalée du curseur (pour être atteignable) et bornée
@@ -502,6 +533,55 @@ const PanelFrame = ({
 }
 
 /**
+ * FOND de la barre latérale — la bande elle-même, indépendamment de ce qu'elle
+ * contient (ajustement #4).
+ *
+ * La barre est devenue un contenant à part entière : elle peut être ouverte et
+ * VIDE, état qui a un sens propre (« ouvre les prochains clics ici »). Sans ce
+ * fond, une barre vide ne serait qu'un blanc inexpliqué au bord du dessin, alors
+ * qu'elle en réserve la largeur. Rendu SOUS les panneaux (z-index inférieur) :
+ * le menu ancré, quand il y en a un, le recouvre exactement.
+ */
+export const SidebarSurface = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  useModelBinding<() => void>(
+    undefined,
+  (rerender) => app_data.menu_configuration.subscribe(PANELS_TOPIC, rerender)
+  )
+  const panels = app_data.menu_configuration.panels
+  if (!panels.sidebar_open) return null
+  const da = app_data.drawing_area
+  return (
+    <Box
+      className='panel_sidebar_surface'
+      position='fixed'
+      right={app_data.menu_configuration.getToolsColumnWidthPx() + 'px'}
+      top={da.getNavBarHeight() + 'px'}
+      bottom={da.getBottomBarHeight() + 'px'}
+      width={panels.sidebar_width_px + 'px'}
+      zIndex={PANEL_Z_SIDEBAR - 1}
+      bg='white'
+      borderLeft='1px solid #e2e8f0'
+      display='flex'
+      alignItems='center'
+      justifyContent='center'
+      padding='0.6rem'
+    >
+      {panels.sidebar_id === null && (
+        <Text
+          style={{
+            fontSize: default_font_size, opacity: 0.5, textAlign: 'center', lineHeight: 1.35
+          }}
+        >
+          {app_data.t('panel.sidebar_empty', {
+            defaultValue: 'Panneau ouvert. Cliquez un élément ou un menu pour l\'afficher ici.'
+          })}
+        </Text>
+      )}
+    </Box>
+  )
+}
+
+/**
  * Coquille de panneau : rend `children` dans le contenant correspondant au mode
  * courant de `id` (ou rien si le panneau est fermé). Se re-rend sur le topic
  * PANELS. Le contenu n'est PAS remonté d'un mode à l'autre (cf. PanelFrame).
@@ -513,16 +593,16 @@ export const PanelShell = ({
 }: Type_PanelShellProps) => {
   useModelBinding<() => void>(
     undefined,
-    (rerender) => app_data.menu_configuration.subscribe(PANELS_TOPIC, rerender)
+  (rerender) => app_data.menu_configuration.subscribe(PANELS_TOPIC, rerender)
   )
   const panels = app_data.menu_configuration.panels
   const mode = panels.getMode(id)
   if (mode === null) return null
-  // OS#300 Lot 2 — barre latérale repliée (Ctrl+B) : le menu reste « le » menu de
-  // barre et ne réserve rien (cf. getSidebarReservedPx). On le rend MASQUÉ plutôt
-  // que de le démonter, pour que son contenu (onglet actif, défilement) survive au
-  // dépliage — même raison que l'enveloppe unique ci-dessus.
-  const collapsed = mode === 'sidebar' && panels.sidebar_collapsed
+  // Barre latérale FERMÉE (Ctrl+B) : le menu y reste ancré mais rien ne s'affiche
+  // ni ne se réserve (cf. getSidebarReservedPx). On le rend MASQUÉ plutôt que de
+  // le démonter, pour que son contenu (onglet actif, défilement) survive à la
+  // réouverture — même raison que l'enveloppe unique ci-dessus.
+  const collapsed = mode === 'sidebar' && !panels.sidebar_open
 
   const close = onClose ?? (() => panels.close(id))
   const width = sidebarWidthPx ?? panels.sidebar_width_px ?? PANEL_SIDEBAR_DEFAULT_WIDTH_PX

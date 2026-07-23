@@ -1716,7 +1716,7 @@ export class Class_ApplicationData {
     // OS#300 Lot 2 — Afficher/masquer la barre latérale (Ctrl+B) --------------------
     else if (evtCtrlB) {
       evt.preventDefault()
-      app_ref.menu_configuration.panels.toggleSidebar('config')
+      app_ref.menu_configuration.panels.toggleSidebar()
     }
     // Undo
     else if (evtCtrlZ) {

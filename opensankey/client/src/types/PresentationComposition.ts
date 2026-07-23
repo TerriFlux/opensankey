@@ -45,25 +45,20 @@ export type Type_CompositionEntry = {
 /** Composition = liste ORDONNÉE d'entrées (l'ordre est l'ordre d'affichage). */
 export type Type_Composition = Type_CompositionEntry[]
 
-/** Politique de contenants d'une cible : contenant par défaut + alternatives
- *  permises (décision #7 : un choix unique + des cases, pas deux booléens
- *  arbitrés par une règle de priorité cachée). */
-export type Type_ContainerPolicy = {
-  default: Type_PanelMode
-  allow: { [mode in Type_PanelMode]: boolean }
-}
-
 /** Un bloc ajouté par l'auteur est visible partout par défaut — il le restreint
  *  ensuite. Même esprit que TooltipBlocks (absent = visible). */
 export const DEFAULT_BLOCK_VISIBILITY: Type_BlockVisibility =
   { tooltip: true, popup: true, sidebar: true }
 
-/** Défaut de politique : pop-up (elle se superpose, donc n'impose rien au
- *  lecteur), les trois contenants restant permis. */
-export const DEFAULT_CONTAINER_POLICY: Type_ContainerPolicy = {
-  default: 'popup',
-  allow: { tooltip: true, popup: true, sidebar: true }
-}
+// AJUSTEMENT #4 — il n'y a plus de « politique de contenants » par cible.
+//
+// Le contenant ne se choisit plus, il se DÉDUIT du geste : le survol n'ouvre
+// jamais qu'une info-bulle, le clic n'ouvre jamais d'info-bulle. Reste à
+// départager pop-up et panneau, ce que fait l'état de la barre latérale
+// (ouverte -> panneau, fermée -> pop-up) — un état que le lecteur pilote
+// lui-même. Un réglage d'auteur par élément ne pouvait qu'entrer en conflit
+// avec ce geste. Ce qui subsiste ici, c'est la seule question qui garde du
+// sens : quels BLOCS apparaissent dans quel contenant.
 
 // Garde-fou contre un JSON pathologique (composition absurdement longue).
 export const MAX_COMPOSITION_ENTRIES = 100
@@ -131,31 +126,6 @@ export const compositionToJSON = (composition: Type_Composition): Type_JSON[] =>
     return json
   })
 
-/** Lit une politique de contenants depuis du JSON quelconque. */
-export const containerPolicyFromJSON = (raw: unknown): Type_ContainerPolicy => {
-  const src = isPlainObject(raw) ? raw : {}
-  const raw_default = src.default
-  const def: Type_PanelMode = (typeof raw_default === 'string'
-    && PANEL_MODES.includes(raw_default as Type_PanelMode))
-    ? raw_default as Type_PanelMode
-    : DEFAULT_CONTAINER_POLICY.default
-  const raw_allow = isPlainObject(src.allow) ? src.allow : {}
-  const allow = {} as Type_ContainerPolicy['allow']
-  PANEL_MODES.forEach(mode => {
-    allow[mode] = asBool(raw_allow[mode], DEFAULT_CONTAINER_POLICY.allow[mode])
-  })
-  // INVARIANT : le contenant par défaut est toujours permis (sinon la cible
-  // n'aurait aucun contenant à ouvrir).
-  allow[def] = true
-  return { default: def, allow }
-}
-
-/** Sérialise une politique de contenants. */
-export const containerPolicyToJSON = (policy: Type_ContainerPolicy): Type_JSON => ({
-  default: policy.default,
-  allow: { ...policy.allow }
-})
-
 // REQUÊTES =========================================================================
 
 /** Un bloc est-il visible dans ce contenant ? */
@@ -176,25 +146,6 @@ export const hasContentFor = (
   composition: Type_Composition,
   mode: Type_PanelMode
 ): boolean => composition.some(entry => isBlockVisibleIn(entry, mode))
-
-/** Contenants réellement ouvrables pour une cible : permis par la politique ET
- *  pourvus d'au moins un bloc visible. */
-export const openableContainers = (
-  composition: Type_Composition,
-  policy: Type_ContainerPolicy
-): Type_PanelMode[] =>
-  PANEL_MODES.filter(mode => policy.allow[mode] && hasContentFor(composition, mode))
-
-/** Contenant à ouvrir pour une cible : le défaut s'il est ouvrable, sinon le
- *  premier ouvrable, sinon `null` (rien à montrer). */
-export const resolveOpenContainer = (
-  composition: Type_Composition,
-  policy: Type_ContainerPolicy
-): Type_PanelMode | null => {
-  const openable = openableContainers(composition, policy)
-  if (openable.length === 0) return null
-  return openable.includes(policy.default) ? policy.default : openable[0]
-}
 
 // ÉDITION (helpers immuables, utilisés par l'UI de composition au Lot 2) ===========
 

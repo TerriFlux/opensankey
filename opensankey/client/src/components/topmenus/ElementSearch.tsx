@@ -132,7 +132,7 @@ export const ElementSearchOverlay = ({ app_data }: { app_data: Class_Application
       const panels = app_data.menu_configuration.panels
       if (panels.isOpen('search')) { panels.close('search'); setQuery('') }
       // Contenant par défaut selon le contexte (barre latérale si affichée, sinon pop-up).
-      else panels.setMode('search', panels.defaultOpenMode('search'))
+      else panels.setMode('search', panels.defaultOpenMode())
     }
     return () => { app_data.menu_configuration.ref_toggle_search.current = () => undefined }
   }, [app_data])

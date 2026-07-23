@@ -32,9 +32,7 @@ import { PANELS_TOPIC } from '../../../types/EventBus'
 import type { Type_PanelMode } from '../../../types/PanelManager'
 import { useModelBinding } from '../../../hooks/useModelBinding'
 import { default_font_size } from '../../../css/Theme'
-import {
-  containerPolicyFromJSON, blocksFor
-} from '../../../types/PresentationComposition'
+import { blocksFor } from '../../../types/PresentationComposition'
 import { PanelShell } from '../PanelShell'
 import { renderPresentationBlock } from './PresentationBlockRegistry'
 import { registerBasePresentationBlocks } from './registerBaseBlocks'
@@ -133,25 +131,26 @@ export const PresentationPanels = ({ app_data }: { app_data: Class_ApplicationDa
           if (mode !== null) panels.close(id)
           return null
         }
-        // Contenants offerts par l'en-tête : ceux que l'auteur a permis.
-        const policy = containerPolicyFromJSON(element.getElementProperty('presentation_containers'))
-        const allowed = MODES.filter(m => policy.allow[m])
+        // Les trois contenants restent atteignables depuis l'en-tête : l'auteur
+        // ne les restreint plus (ajustement #4), il décide seulement de ce qui
+        // s'y affiche. Le lecteur, lui, garde la main sur l'endroit.
         return (
           <PanelShell
             key={id}
             app_data={app_data}
             id={id}
             title={titleOf(element)}
-            allowedModes={allowed}
+            allowedModes={MODES}
             // Intention de survol : entrer dans l'info-bulle annule la fermeture
             // programmée par l'élément ; en sortir la reprogramme.
             onTooltipHoverIn={cancelPresentationHoverClose}
             onTooltipHoverOut={() => schedulePresentationHoverClose(app_data)}
             // Le lecteur interagit avec l'info-bulle : elle cesse d'être
-            // transitoire et se fixe en pop-up (si l'auteur l'a permis).
+            // transitoire et se fixe — dans le contenant que désigne la règle
+            // du clic, puisque c'est bien un clic qu'il vient de faire.
             onTooltipEditIntent={() => {
               releasePresentationHover()
-              if (policy.allow.popup) panels.setMode(id, 'popup')
+              panels.setMode(id, panels.defaultOpenMode())
             }}
           >
             <PresentationPanel app_data={app_data} element={element} mode={mode} />

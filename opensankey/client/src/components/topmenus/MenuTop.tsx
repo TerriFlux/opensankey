@@ -1672,7 +1672,7 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
             aria-label='toggle-sidebar'
             className='topbar_button_toggle_sidebar'
             icon={<FontAwesomeIcon icon={faTableColumns} />}
-            onClick={() => new_data.menu_configuration.panels.toggleSidebar('config')}
+            onClick={() => new_data.menu_configuration.panels.toggleSidebar()}
             {...topbar_state_btn_style}
             color={new_data.menu_configuration.panels.sidebar_visible ? 'gray.900' : 'gray.700'}
             bg={new_data.menu_configuration.panels.sidebar_visible ? 'gray.200' : 'transparent'}

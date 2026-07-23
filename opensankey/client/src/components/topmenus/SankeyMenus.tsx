@@ -56,6 +56,7 @@ import { LinkValueTypeSelector } from '../configmenus/SankeyMenuConfigurationLin
 import { InspectorPanel } from '../configmenus/inspector/InspectorPanel'
 import { PanelShell } from '../panels/PanelShell'
 import { PresentationPanels } from '../panels/presentation/PresentationPanels'
+import { SidebarSurface } from '../panels/PanelShell'
 import { PANELS_TOPIC } from '../../types/EventBus'
 import { default_font_size } from '../../css/Theme'
 import { useModelBinding } from '../../hooks/useModelBinding'
@@ -134,7 +135,7 @@ export const SankeyMenu = (
       if (!already_open) {
         // OS#300 — contenant par défaut selon le contexte : barre latérale si elle
         // est affichée, sinon pop-up (cf. panels.defaultOpenMode).
-        const mode = menu_configuration.panels.defaultOpenMode('config')
+        const mode = menu_configuration.panels.defaultOpenMode()
         // Pop-up config : position par défaut au bord droit (proche de l'ancien
         // tiroir), sans recouvrir le centre du dessin. La barre latérale, elle,
         // se cale d'elle-même à droite.
@@ -440,6 +441,7 @@ export const SankeyMenu = (
       {/* OS#305 — Panneaux de PRÉSENTATION (un par élément présenté). Montés
           dans les deux modes : en lecture c'est ce que voit le lecteur, en
           édition c'est l'aperçu que l'auteur déclenche depuis le composeur. */}
+      <SidebarSurface app_data={app_data} />
       <PresentationPanels app_data={app_data} />
 
 
@@ -576,9 +578,6 @@ const ConfigMenu = ({ app_data }: {
   // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
   useModelBinding(app_data.menu_configuration.ref_to_menu_config_updater)
 
-  // Hauteur bornée à l'espace écran restant (panneau ancré).
-  const maxHConfig = 'calc(' + (window.innerHeight - (app_data.drawing_area.getNavBarHeight() + app_data.drawing_area.getBottomBarHeight() + (app_data.drawing_area.fit_margin * 2))) + 'px - 0.8rem)'
-
   return <Box style={{
     background: 'white',
     borderRadius: '5px',
@@ -588,7 +587,13 @@ const ConfigMenu = ({ app_data }: {
     color: '#444'
   }}>
     <Box
-      style={{ maxHeight: maxHConfig, overflowY: 'auto', overflowX: 'hidden' }}
+      // AJUSTEMENT #3 — AUCUNE propriété `overflow` ici : la coquille de panneau
+      // fait défiler, ce conteneur ne fait que porter le contenu. La hauteur
+      // bornée qu'il avait datait du tiroir fixe d'avant #300 et, dans une
+      // pop-up, se calculait de surcroît sur la mauvaise référence (la fenêtre
+      // du navigateur, pas le panneau). Même `overflow-x: hidden` seul serait de
+      // trop : borner un seul axe fait passer l'autre de `visible` à `auto` —
+      // c'est ainsi que le second ascenseur revenait.
       onMouseDownCapture={() => {
         // Auto-exit edition mode as soon as the user interacts with the configuration menu
         if (app_data.drawing_area.isInEditionMode()) {

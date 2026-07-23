@@ -28,7 +28,7 @@ import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import { PANELS_TOPIC } from '../../../types/EventBus'
 import {
   PRESENTATION_TRIGGERS, PRESENTATION_DELAY_MAX_MS, MENU_PANEL_IDS,
-  type Type_PresentationTrigger, type Type_MenuContainerChoice
+  type Type_PresentationTrigger
 } from '../../../types/PanelManager'
 import { useModelBinding } from '../../../hooks/useModelBinding'
 import { default_font_size } from '../../../css/Theme'
@@ -43,14 +43,6 @@ const MENU_LABEL: Record<string, { key: string, fallback: string }> = {
   config: { key: 'presentation.menu.config', fallback: 'Configuration' },
   filter: { key: 'presentation.menu.filter', fallback: 'Filtres et légende' },
   search: { key: 'presentation.menu.search', fallback: 'Recherche' }
-}
-
-const MENU_CHOICES: Type_MenuContainerChoice[] = ['auto', 'popup', 'sidebar']
-const CHOICE_LABEL: Record<Type_MenuContainerChoice, { key: string, fallback: string }> = {
-  // 'auto' = comportement contextuel de #300 (barre latérale si affichée, sinon pop-up).
-  auto: { key: 'presentation.container.auto', fallback: 'Auto' },
-  popup: { key: 'presentation.mode.popup', fallback: 'Pop-up' },
-  sidebar: { key: 'presentation.mode.sidebar', fallback: 'Panneau' }
 }
 
 export const PresentationDocumentSettings = ({ app_data }: {
@@ -114,16 +106,16 @@ export const PresentationDocumentSettings = ({ app_data }: {
       </Box>
 
       {/* OS#305 Lot 5 — MENUS DE BARRE. Décision #9 : un bouton n'est pas un
-          élément, on ne compose pas son contenu (qui est l'UI de l'appli). On
-          règle seulement OÙ il s'ouvre, et l'aide que le lecteur lit en le
-          survolant. */}
+          élément, on ne compose pas son contenu (qui est l'UI de l'appli). Reste
+          l'aide que le lecteur lit en survolant le bouton — le CONTENANT, lui,
+          ne se règle plus (ajustement #4) : il suit la règle unique du clic. */}
       <Box>
         <Box layerStyle='menuconfigpanel_option_name'>
           {t('presentation.menus', { defaultValue: 'Menus de barre' })}
         </Box>
         <Text style={{ fontSize: '0.7rem', opacity: 0.7, paddingBottom: '0.2rem' }}>
           {t('presentation.menus_hint', {
-            defaultValue: 'Où chaque menu s\'ouvre, et l\'aide affichée au survol de son bouton.'
+            defaultValue: 'L\'aide affichée au survol du bouton de chaque menu.'
           })}
         </Text>
         <Box style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
@@ -141,21 +133,6 @@ export const PresentationDocumentSettings = ({ app_data }: {
                 <Text style={{ fontSize: default_font_size, fontWeight: 600 }}>
                   {t(MENU_LABEL[menu_id].key, { defaultValue: MENU_LABEL[menu_id].fallback })}
                 </Text>
-                <Box style={{ display: 'flex', gap: '0.15rem', paddingTop: '0.2rem' }}>
-                  {MENU_CHOICES.map(choice => (
-                    <Button
-                      key={choice}
-                      size='xs'
-                      flex='1'
-                      variant={policy.container === choice
-                        ? 'button_type_config_activated'
-                        : 'button_type_config'}
-                      onClick={() => setPolicy({ ...policy, container: choice })}
-                    >
-                      {t(CHOICE_LABEL[choice].key, { defaultValue: CHOICE_LABEL[choice].fallback })}
-                    </Button>
-                  ))}
-                </Box>
                 <Input
                   size='xs'
                   variant='menuconfigpanel_option_input'

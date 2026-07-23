@@ -33,9 +33,8 @@ import type { Type_InspectorScope } from '../../configmenus/inspector/InspectorR
 import { default_font_size } from '../../../css/Theme'
 import {
   compositionFromJSON, compositionToJSON,
-  containerPolicyFromJSON, containerPolicyToJSON,
   addBlock, removeBlock, toggleBlockVisibility, moveBlock,
-  type Type_Composition, type Type_ContainerPolicy
+  type Type_Composition
 } from '../../../types/PresentationComposition'
 import {
   presentation_block_registry,
@@ -51,12 +50,11 @@ import {
 registerBasePresentationBlocks()
 
 const ATTR_BLOCKS = 'presentation_blocks'
-const ATTR_CONTAINERS = 'presentation_containers'
 
 /** Vue structurelle minimale d'une cible d'attribut (élément OU style édité). */
 type Attr_Target = {
   attributes: Record<string, unknown>
-  getElementProperty: (k: typeof ATTR_BLOCKS | typeof ATTR_CONTAINERS) => unknown
+  getElementProperty: (k: typeof ATTR_BLOCKS) => unknown
 }
 
 const MODES: Type_PanelMode[] = ['tooltip', 'popup', 'sidebar']
@@ -125,7 +123,6 @@ export const PresentationComposer = ({ app_data, scope }: {
   const composition = is_default && preview_element
     ? defaultCompositionFor(preview_element)
     : compositionFromJSON(raw_blocks)
-  const policy = containerPolicyFromJSON(read_target?.getElementProperty(ATTR_CONTAINERS))
   const catalogue = catalogueFor(app_data, present_targets)
 
   // --- Écriture (même patron que les autres attributs de style : undo + commit)
@@ -150,8 +147,6 @@ export const PresentationComposer = ({ app_data, scope }: {
   const writeComposition = (next: Type_Composition) =>
     writeAttr(ATTR_BLOCKS, compositionToJSON(next))
   const resetComposition = () => writeAttr(ATTR_BLOCKS, undefined)
-  const writePolicy = (next: Type_ContainerPolicy) =>
-    writeAttr(ATTR_CONTAINERS, containerPolicyToJSON(next))
 
   if (targets.length === 0) {
     return (
@@ -193,7 +188,7 @@ export const PresentationComposer = ({ app_data, scope }: {
           sx={{ paddingInline: '0.4rem', minWidth: 'auto', width: 'auto', flex: 'none' }}
           // Désactivé exactement quand le lecteur ne verrait rien : l'auteur
           // apprend ainsi, sans essayer, que sa composition est vide.
-          isDisabled={!preview_element || !canPresent(preview_element)}
+          isDisabled={!preview_element || !canPresent(app_data, preview_element)}
           title={t('presentation.preview_tooltip', {
             defaultValue: 'Ouvrir la présentation telle que la verra le lecteur'
           })}
@@ -201,55 +196,6 @@ export const PresentationComposer = ({ app_data, scope }: {
         >
           {t('presentation.preview', { defaultValue: 'Aperçu' })}
         </Button>
-      </Box>
-
-      {/* CONTENANT PAR DÉFAUT + ALTERNATIVES (décision #7) : un choix unique, des
-          cases — plutôt que deux booléens arbitrés par une priorité cachée. */}
-      <Box>
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('presentation.default_container', { defaultValue: 'Ouvrir par défaut dans' })}
-        </Box>
-        <Box style={{ display: 'flex', gap: '0.15rem', paddingTop: '0.2rem' }}>
-          {MODES.map(mode => (
-            <Button
-              key={mode}
-              size='xs'
-              flex='1'
-              variant={policy.default === mode
-                ? 'button_type_config_activated'
-                : 'button_type_config'}
-              onClick={() => writePolicy({
-                ...policy,
-                default: mode,
-                // L'invariant « le défaut est permis » est aussi appliqué à la lecture.
-                allow: { ...policy.allow, [mode]: true }
-              })}
-            >
-              {t(MODE_LABEL[mode].key, { defaultValue: MODE_LABEL[mode].fallback })}
-            </Button>
-          ))}
-        </Box>
-        <Box style={{ display: 'flex', gap: '0.6rem', paddingTop: '0.25rem', flexWrap: 'wrap' }}>
-          {MODES.map(mode => (
-            <Checkbox
-              key={mode}
-              size='sm'
-              isChecked={policy.allow[mode]}
-              // Le contenant par défaut ne peut pas être interdit.
-              isDisabled={policy.default === mode}
-              onChange={(e) => writePolicy({
-                ...policy,
-                allow: { ...policy.allow, [mode]: e.target.checked }
-              })}
-            >
-              <Box as='span' style={{ fontSize: '0.7rem' }}>
-                {t('presentation.allow_prefix', { defaultValue: 'Autoriser' })}
-                {' '}
-                {t(MODE_LABEL[mode].key, { defaultValue: MODE_LABEL[mode].fallback })}
-              </Box>
-            </Checkbox>
-          ))}
-        </Box>
       </Box>
 
       {/* LA LISTE (décision #2) : une seule composition, trois cases par bloc. */}
