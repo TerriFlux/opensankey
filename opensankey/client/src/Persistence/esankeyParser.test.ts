@@ -622,6 +622,47 @@ describe('parseEsankeyXml — points de contrôle (opensankey#1301)', () => {
     // Coude : P1→P2 vertical (même x).
     expect(wps[0].x).toBeCloseTo(wps[1].x, 6)
   })
+
+  test('détour QUASI-vertical (dérive ≤ 30 px, corpus Petroleum) → routé, 3 waypoints', () => {
+    // Motif « Crude Oil Exports » : part à droite, remonte (segments verticaux
+    // dérivant de 8 px — la route arrondie e!Sankey n'a pas de coins parfaits),
+    // revient à gauche. L'ancien seuil strict (1 px) classait ces segments en
+    // diagonale → 0 coude compté → paramétrique mou au lieu du détour.
+    const d = parseEsankeyXml(withPoints(
+      '<points length="5">'
+      + '<value X="100" Y="300" /><value X="270" Y="300" /><value X="278" Y="166" />'
+      + '<value X="270" Y="30" /><value X="174" Y="30" /></points>'))
+    const link = Object.values(d.links)[0]
+    const wps = link.local.shape_waypoints as Array<{ x: number, y: number }>
+    expect(Array.isArray(wps)).toBe(true)
+    expect(wps.length).toBe(3)
+    expect(link.local.orientation).toBeUndefined()
+  })
+
+  test('S-curve RAIDE (segment milieu dérivant > 30 px) → paramétrique, aucun waypoint', () => {
+    // Milieu presque vertical (42 px de dérive sur 180) mais monotone : simple
+    // courbe raide, pas un détour. Un seuil angulaire l'aurait happée à tort.
+    const d = parseEsankeyXml(withPoints(
+      '<points length="4">'
+      + '<value X="100" Y="300" /><value X="150" Y="300" />'
+      + '<value X="192" Y="120" /><value X="400" Y="120" /></points>'))
+    const link = Object.values(d.links)[0]
+    expect(link.local.shape_waypoints).toBeUndefined()
+  })
+
+  test('REBROUSSEMENT avec segment milieu diagonal → routé même avec un seul coude', () => {
+    // Motif « Refined Products Imports → Transportation » : monte, se déporte en
+    // diagonale, remonte, repart en ARRIÈRE (x s'inverse). Un seul coude
+    // orthogonal compté, mais le rebroussement signe le détour.
+    const d = parseEsankeyXml(withPoints(
+      '<points length="5">'
+      + '<value X="212" Y="400" /><value X="212" Y="288" /><value X="100" Y="240" />'
+      + '<value X="100" Y="35" /><value X="188" Y="35" /></points>'))
+    const link = Object.values(d.links)[0]
+    const wps = link.local.shape_waypoints as Array<{ x: number, y: number }>
+    expect(Array.isArray(wps)).toBe(true)
+    expect(wps.length).toBe(3)
+  })
 })
 
 describe('parseEsankeyXml — SA#294 : ancre masquée recalée (accroche verticale)', () => {
@@ -753,9 +794,9 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     expect(withoutArrow?.local.shape_source_notch).toBeUndefined()
   })
 
-  test('aucun label de valeur posé sur le flux ; unité préparée si activation manuelle', () => {
+  test('label de valeur visible (flèche mono-matériau à label affiché) ; unité posée', () => {
     const link = Object.values(d.links)[0]
-    expect(link.local.value_label_is_visible).toBe(false)
+    expect(link.local.value_label_is_visible).toBe(true)
     expect(link.local.label_unit_visible).toBe(true)
     // OS#1286 — la référence d'unité (id du registre) est posée, mais le
     // format pourcentage ({PercentProcessSource}) garde la PRIORITÉ sur le
@@ -1042,6 +1083,41 @@ describe('parseEsankeyXml — OS#1287 taille/couleur/position du label de valeur
     expect(base.local.value_label_horiz).toBeUndefined()
     expect(base.local.value_label_vert).toBeUndefined()
   })
+
+  test('locationX/Y présents (flèche mono-matériau) → position ABSOLUE, normalisée avec les nœuds', () => {
+    // Boîte du label : coin haut-gauche (300, 380), 40×16. Mode absolu OpenSankey :
+    // position_x = bord GAUCHE (anchor start), position_y = CENTRE vertical
+    // (baseline middle) → (300, 388), puis même translation de normalisation que
+    // les nœuds — dérivée ici du process « Source » (e!Sankey (200, 400)).
+    const withPos = FIXTURE_DECOR.replace(
+      '<sankeyArrowLabel visible="true" showValue="true" showUnit="true" text="60" labelFormat="{EntryName}: {PercentProcessSource} %" />',
+      '<sankeyArrowLabel visible="true" showValue="true" showUnit="true" text="60" labelFormat="{EntryName}: {PercentProcessSource} %"' +
+      ' locationX="300" locationY="380" sizeW="40" sizeH="16" segmentPercentage="91" offsetH="15.5" />'
+    )
+    const d2 = parseEsankeyXml(withPos)
+    const src = Object.values(d2.nodes).find(n => n.name === 'Source')!
+    const dx = src.x - 200
+    const dy = src.y - 400
+    const l = Object.values(d2.links).find(l2 => l2.value.data_value === 60)!
+    expect(l.local.value_label_position_absolute).toBe(true)
+    expect(l.local.value_label_position_x).toBe(300 + dx)
+    expect(l.local.value_label_position_y).toBe(388 + dy)
+    // Le mode absolu REMPLACE l'approximation par tiers (segmentPercentage/offsetH).
+    expect(l.local.value_label_horiz).toBeUndefined()
+    expect(l.local.value_label_vert).toBeUndefined()
+  })
+
+  test('flèche MULTI-matériaux : pas de position absolue (N labels superposés sinon), repli par tiers', () => {
+    const withPos = FIXTURE.replace(
+      '<sankeyArrowLabel visible="true" showValue="true" showUnit="true" labelFormat="{Quantity} {Unit}" />',
+      '<sankeyArrowLabel visible="true" showValue="true" showUnit="true" labelFormat="{Quantity} {Unit}"' +
+      ' locationX="220" locationY="330" sizeW="40" sizeH="16" segmentPercentage="91" offsetH="15.5" />'
+    )
+    const l = Object.values(parseEsankeyXml(withPos).links)[0]
+    expect(l.local.value_label_position_absolute).toBeUndefined()
+    expect(l.local.value_label_horiz).toBe('right')
+    expect(l.local.value_label_vert).toBe('bottom')
+  })
 })
 
 // OS#1291 — Places (E/S externes). Un process « Usine » émet un flux vers une
@@ -1154,6 +1230,115 @@ describe('parseEsankeyXml — places (OS#1291)', () => {
   })
 })
 
+// OS#1292 — Stocks : compartiments <stock> des graphProcess. Sémantique
+// centrée process : inputQuantity = déstockage (entre dans le process),
+// outputQuantity = stockage (sort du process) → Δ stock = output − input.
+// Fixture : A porte 2 compartiments visibles (dont un en kWh, coefficient 3.6),
+// B un stock d'entry TRANSPARENTE (donnée gardée, forme masquée), C un
+// compartiment sans quantité (rien à mapper).
+describe('parseEsankeyXml — stocks (opensankey#1292)', () => {
+  const STOCK_FIXTURE = `<?xml version="1.0" encoding="utf-8"?>
+<document xmlns="${NS}" generator="e!Sankey" generatorVersion="5.2.0.16">
+  <userSettings netUnitMaximumWidth="200" scaleMode="0" />
+  <netModel>
+    <colorSets />
+    <unitTypes>
+      <unitType id="10" name="Energy" used="true" width="80" maximumFlow="40">
+        <units>
+          <unit id="11" name="MJ" coefficient="1" isBasicUnit="true" />
+          <unit id="12" name="kWh" coefficient="3.6" isBasicUnit="false" />
+        </units>
+      </unitType>
+    </unitTypes>
+    <entryGroup id="20" name="Root">
+      <entries>
+        <entry id="21" name="Electricity" showEntry="true">
+          <unitTypeRef refId="10" />
+          <brushColor argb="-256" />
+        </entry>
+        <entry id="23" name="Transparent" showEntry="true" showInLegend="false">
+          <unitTypeRef refId="10" />
+          <brushColor argb="16777215" />
+        </entry>
+      </entries>
+      <entryGroups />
+    </entryGroup>
+    <graphNodes>
+      <graphProcess id="30" name="A">
+        <compartments>
+          <stock id="35" name="Electricity" isCutOff="false" inputQuantity="5" outputQuantity="0">
+            <entryRef refId="21" />
+            <unitRef refId="11" />
+          </stock>
+          <stock id="36" name="Electricity" isCutOff="false" inputQuantity="0" outputQuantity="10">
+            <entryRef refId="21" />
+            <unitRef refId="12" />
+          </stock>
+        </compartments>
+      </graphProcess>
+      <graphProcess id="31" name="B">
+        <compartments>
+          <stock id="37" name="Transparent" isCutOff="false" inputQuantity="400" outputQuantity="0">
+            <entryRef refId="23" />
+            <unitRef refId="11" />
+          </stock>
+        </compartments>
+      </graphProcess>
+      <graphProcess id="32" name="C">
+        <compartments>
+          <stock id="38" name="Electricity" isCutOff="false" inputQuantity="0" outputQuantity="0">
+            <entryRef refId="21" />
+            <unitRef refId="11" />
+          </stock>
+        </compartments>
+      </graphProcess>
+    </graphNodes>
+    <graphArrows>
+      <graphArrow id="40" name="">
+        <from><graphProcessRef refId="30" /></from>
+        <to><graphProcessRef refId="31" /></to>
+        <compartments>
+          <flow id="41" name="Electricity" quantity="10" source="0">
+            <entryRef refId="21" />
+            <unitRef refId="11" />
+          </flow>
+        </compartments>
+      </graphArrow>
+    </graphArrows>
+  </netModel>
+  <net backgroundColor="-1">
+    <processes />
+    <arrows />
+  </net>
+  <logicalGraphicalObjectMapping>
+    <nodes />
+    <edges />
+  </logicalGraphicalObjectMapping>
+</document>`
+  const d = parseEsankeyXml(STOCK_FIXTURE)
+  const a = Object.values(d.nodes).find(n => n.name === 'A')!
+  const b = Object.values(d.nodes).find(n => n.name === 'B')!
+  const c = Object.values(d.nodes).find(n => n.name === 'C')!
+
+  test('compartiments sommés, conversion d\'unité, forme visible', () => {
+    expect(a.has_stock).toBe(true)
+    // −5 MJ (déstockage) + 10 kWh × 3.6 (stockage) = +31 MJ
+    expect(a.stock_values?.stock_variation).toBeCloseTo(31)
+    expect(a.stock_shape_is_visible).toBe(true)
+  })
+
+  test('entry transparente : donnée gardée, forme masquée', () => {
+    expect(b.has_stock).toBe(true)
+    expect(b.stock_values?.stock_variation).toBe(-400)
+    expect(b.stock_shape_is_visible).toBeUndefined()
+  })
+
+  test('compartiment sans quantité : aucun stock posé', () => {
+    expect(c.has_stock).toBeUndefined()
+    expect(c.stock_values).toBeUndefined()
+  })
+})
+
 describe('parseEsankeyXml — erreurs', () => {
   test('XML non e!Sankey rejeté', () => {
     expect(() => parseEsankeyXml('<foo><bar/></foo>')).toThrow()
@@ -1242,12 +1427,66 @@ describeDemos('loadEsankeyFile — démos e!Sankey 5 locales', () => {
     expect(d.legend?.legend_police).toBe(11.25)
     // Tous les process de cette démo sont invisibles (style « décor »)
     expect(Object.values(d.nodes).every(n => n.local.shape_visible === false)).toBe(true)
-    // Aucun flux importé ne porte de label de valeur (décision user : chez
-    // e!Sankey l'étiquette appartient à la flèche, pas au flux).
-    const labelled = Object.values(d.links).filter(l => l.local.label_visible === true)
-    expect(labelled.length).toBe(0)
+    // Labels de valeur : visibles UNIQUEMENT sur les flèches mono-matériau
+    // (4 dans cette démo) ; les flèches multi-matériaux (5 et 3 flows → 8 flux
+    // parallèles) restent éteintes (l'étiquette e!Sankey appartient à la flèche,
+    // les N parts se chevaucheraient).
+    const labelled = Object.values(d.links).filter(l => l.local.value_label_is_visible === true)
+    expect(labelled.length).toBe(4)
+    expect(Object.keys(d.links).length).toBe(12)
     // Texture : les rectangles hachurés (<brushColor hasPattern pattern="3">)
     // importent shape_hatch = antidiagonal (\) sur la zone de texte.
     expect(Object.values(d.labels).some(c => c.shape_hatch === 'antidiagonal')).toBe(true)
+  }, 30000)
+
+  test('Efficiency diagram : noms de process masqués (<label visible=false>), labels % {PercentModel}', async () => {
+    const f = 'Efficiency diagram example [en].sankey'
+    if (!files.includes(f)) return
+    const buffer = fs.readFileSync(path.join(DEMOS_DIR, f))
+    const d = await loadEsankeyFile(buffer as unknown as ArrayBuffer)
+    // Les 9 process portent <label visible="false"> : aucun nom affiché.
+    expect(Object.keys(d.nodes).length).toBe(9)
+    expect(Object.values(d.nodes).every(n => n.local.label_visible === false)).toBe(true)
+    // Les 8 flèches (mono-matériau) affichent un % intégré (showPercentage=2 =
+    // {PercentModel}) : label visible, unité texte '%', facteur = plus gros flux
+    // du modèle en unité de base / 100 (2000 MJ × 0.27778 = 555.56 kWh → 5.556).
+    // Affichage : 555.56/5.556 = « 100 % », 84, 76, 54, 18, 16, 8, 4.
+    const links = Object.values(d.links)
+    expect(links.length).toBe(8)
+    expect(links.every(l => l.local.value_label_is_visible === true)).toBe(true)
+    expect(links.every(l => l.local.value_label_unit_type === 'unit_name')).toBe(true)
+    expect(links.every(l => l.local.label_unit === '%')).toBe(true)
+    const factors = links.map(l => Number(l.local.label_unit_factor))
+    factors.forEach(f => expect(f).toBeCloseTo(5.5556, 3))
+    // Le % rendu = data_value / facteur : vérifie les 8 valeurs attendues.
+    const pcts = links.map(l => Math.round(l.value.data_value / factors[0])).sort((a, b) => a - b)
+    expect(pcts).toEqual([4, 8, 16, 18, 54, 76, 84, 100])
+    // Placement : la boîte e!Sankey du label (locationX/Y, présente sur toutes
+    // les flèches) est reportée en position ABSOLUE, dans le repère normalisé.
+    expect(links.every(l => l.local.value_label_position_absolute === true)).toBe(true)
+    expect(links.every(l => Number.isFinite(l.local.value_label_position_x as number))).toBe(true)
+  }, 30000)
+
+  test('Processes with Stocks : stocks importés (opensankey#1292)', async () => {
+    const f = 'Processes with Stocks (pro version) [en].sankey'
+    if (!files.includes(f)) return
+    const buffer = fs.readFileSync(path.join(DEMOS_DIR, f))
+    const d = await loadEsankeyFile(buffer as unknown as ArrayBuffer)
+    const stocked = Object.values(d.nodes).filter(n => n.has_stock)
+    // 6 process, tous porteurs d'un stock non nul (le compartiment 0/0 d'Item A
+    // sur Assembly ne compte pas). Bilan global fermé : Σ Δ stock = 0.
+    expect(stocked.length).toBe(6)
+    const variations = stocked.map(n => n.stock_values!.stock_variation).sort((x, y) => x - y)
+    expect(variations).toEqual([-400, -380, -180, 180, 380, 400])
+    expect(variations.reduce((s, v) => s + v, 0)).toBe(0)
+    // Assembly stocke 380 d'Item B (output vers le stock) → Δ positif, visible.
+    const assembly = stocked.find(n => n.name.includes('Assembly'))!
+    expect(assembly.stock_values?.stock_variation).toBe(380)
+    expect(assembly.stock_shape_is_visible).toBe(true)
+    // Les 3 stocks « Transparent » (astuce d'équilibrage des sources/puits)
+    // gardent la donnée mais pas la forme.
+    const hidden = stocked.filter(n => n.stock_shape_is_visible === undefined)
+    expect(hidden.length).toBe(3)
+    expect(hidden.map(n => n.stock_values!.stock_variation).sort((x, y) => x - y)).toEqual([-380, 180, 400])
   }, 30000)
 })
