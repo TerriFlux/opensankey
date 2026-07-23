@@ -365,7 +365,7 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
       if (!panels.isOpen('filter')) {
         // OS#300 — contenant par défaut selon le contexte (barre latérale si
         // affichée, sinon pop-up au bord droit).
-        const mode = panels.defaultOpenMode()
+        const mode = panels.defaultOpenMode('filter')
         panels.setMode('filter', mode, mode === 'popup' ? { geometry: filterPopupGeometry() } : undefined)
       }
     } else {

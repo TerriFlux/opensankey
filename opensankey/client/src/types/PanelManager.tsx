@@ -66,6 +66,24 @@ export const PRESENTATION_DELAY_MAX_MS = 3000
 const clampPresentationDelay = (ms: number): number =>
   Math.max(0, Math.min(PRESENTATION_DELAY_MAX_MS, Math.round(isFinite(ms) ? ms : 0)))
 
+// OS#305 Lot 5 — Réglages d'auteur pour les BOUTONS DE MENU (Configuration,
+// Filtres, Recherche).
+//
+// Décision #9 : un bouton n'est pas un élément. Un nœud a des attributs (valeur,
+// libellé, icône) ; le bouton « Filtres » n'en a pas — son contenu EST l'UI de
+// filtres fournie par l'appli. On ne compose donc pas son contenu : l'auteur
+// choisit seulement le CONTENANT par défaut et une AIDE.
+//
+// L'aide est le pendant « info-bulle » du bouton : ce que le lecteur lit en le
+// survolant. Les trois contenants gardent ainsi leur sens pour un bouton —
+// info-bulle = l'aide, pop-up / barre latérale = le menu lui-même.
+export type Type_MenuContainerChoice = 'auto' | 'popup' | 'sidebar'
+export type Type_MenuPolicy = { container: Type_MenuContainerChoice, help: string }
+/** Menus de barre réglables par l'auteur. */
+export const MENU_PANEL_IDS = ['config', 'filter', 'search'] as const
+const MENU_CONTAINER_CHOICES: Type_MenuContainerChoice[] = ['auto', 'popup', 'sidebar']
+export const DEFAULT_MENU_POLICY: Type_MenuPolicy = { container: 'auto', help: '' }
+
 export class Class_PanelManager {
 
   private _bus: Class_EventBus
@@ -91,6 +109,9 @@ export class Class_PanelManager {
   // OS#305 — déclenchement de la présentation composée (réglages DOCUMENT).
   private _presentation_trigger: Type_PresentationTrigger = 'shift'
   private _presentation_delay_ms: number = 0
+  // OS#305 Lot 5 — réglages d'auteur par MENU de barre (contenant + aide).
+  // Absent de la map = non réglé, donc contenant contextuel.
+  private _menu_policies: Map<string, Type_MenuPolicy> = new Map()
 
   // Info-bulle transitoire : une seule à la fois (le survol d'un autre élément
   // remplace la précédente).
@@ -195,8 +216,35 @@ export class Class_PanelManager {
    * est AFFICHÉE, le nouveau menu s'y ancre (et remplace celui en place) ; sinon
    * il s'ouvre en pop-up superposée. Suit l'endroit où l'utilisateur travaille.
    */
-  public defaultOpenMode(): 'sidebar' | 'popup' {
+  public defaultOpenMode(menu_id?: string): 'sidebar' | 'popup' {
+    // OS#305 Lot 5 — un contenant imposé par l'auteur pour CE menu prime sur le
+    // comportement contextuel : c'est ainsi que sa mise en page voyage avec le
+    // document. 'auto' (défaut) laisse la main au contexte.
+    if (menu_id !== undefined) {
+      const choice = this._menu_policies.get(menu_id)?.container
+      if (choice === 'popup' || choice === 'sidebar') return choice
+    }
     return this.sidebar_visible ? 'sidebar' : 'popup'
+  }
+
+  // OS#305 Lot 5 — réglages d'auteur par menu de barre.
+  public getMenuPolicy(menu_id: string): Type_MenuPolicy {
+    return this._menu_policies.get(menu_id) ?? { ...DEFAULT_MENU_POLICY }
+  }
+
+  public setMenuPolicy(menu_id: string, policy: Type_MenuPolicy): void {
+    // On ne stocke que ce qui s'écarte du défaut, pour ne pas alourdir le JSON.
+    if (policy.container === 'auto' && policy.help.trim() === '') {
+      this._menu_policies.delete(menu_id)
+    } else {
+      this._menu_policies.set(menu_id, { container: policy.container, help: policy.help })
+    }
+    this._notify()
+  }
+
+  /** Aide rédigée par l'auteur pour ce menu ('' si aucune). */
+  public getMenuHelp(menu_id: string): string {
+    return this._menu_policies.get(menu_id)?.help ?? ''
   }
 
   /**
@@ -288,6 +336,10 @@ export class Class_PanelManager {
     this._popup_geometry_memory.forEach((g, id) => {
       popups[id] = { x: g.x, y: g.y, w: g.w, h: g.h }
     })
+    const menus: Type_JSON = {}
+    this._menu_policies.forEach((p, id) => {
+      menus[id] = { container: p.container, help: p.help }
+    })
     return {
       // '' = aucune barre latérale (Type_JSON n'accepte pas null).
       sidebar_id: this._sidebar_id ?? '',
@@ -296,7 +348,9 @@ export class Class_PanelManager {
       popups,
       // OS#305 — déclenchement de la présentation composée (réglage DOCUMENT).
       presentation_trigger: this._presentation_trigger,
-      presentation_delay_ms: this._presentation_delay_ms
+      presentation_delay_ms: this._presentation_delay_ms,
+      // OS#305 Lot 5 — réglages d'auteur par menu de barre (contenant + aide).
+      menus
     }
   }
 
@@ -316,6 +370,24 @@ export class Class_PanelManager {
       : 'shift'
     this._presentation_delay_ms = clampPresentationDelay(
       getNumberFromJSON(json, 'presentation_delay_ms', this._presentation_delay_ms))
+    // OS#305 Lot 5 — réglages par menu (tolérant : entrée mal formée ignorée,
+    // choix de contenant inconnu ramené à 'auto').
+    const menus = json['menus']
+    if (menus && typeof menus === 'object' && !Array.isArray(menus)) {
+      this._menu_policies.clear()
+      Object.entries(menus as Type_JSON).forEach(([id, raw]) => {
+        if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return
+        const m = raw as Type_JSON
+        const container = getStringFromJSON(m, 'container', 'auto')
+        const help = getStringFromJSON(m, 'help', '')
+        const choice = (MENU_CONTAINER_CHOICES as string[]).includes(container)
+          ? container as Type_MenuContainerChoice
+          : 'auto'
+        if (choice !== 'auto' || help !== '') {
+          this._menu_policies.set(id, { container: choice, help })
+        }
+      })
+    }
     // Géométries de pop-ups (mémoire) : restaurées bornées, pour que chaque pop-up
     // rouvre à sa taille/position enregistrée.
     const popups = json['popups']

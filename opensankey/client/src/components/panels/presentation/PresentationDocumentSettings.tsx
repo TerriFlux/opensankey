@@ -27,8 +27,8 @@ import { Box, Button, Input, Text } from '@chakra-ui/react'
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import { PANELS_TOPIC } from '../../../types/EventBus'
 import {
-  PRESENTATION_TRIGGERS, PRESENTATION_DELAY_MAX_MS,
-  type Type_PresentationTrigger
+  PRESENTATION_TRIGGERS, PRESENTATION_DELAY_MAX_MS, MENU_PANEL_IDS,
+  type Type_PresentationTrigger, type Type_MenuContainerChoice
 } from '../../../types/PanelManager'
 import { useModelBinding } from '../../../hooks/useModelBinding'
 import { default_font_size } from '../../../css/Theme'
@@ -37,6 +37,20 @@ const TRIGGER_LABEL: Record<Type_PresentationTrigger, { key: string, fallback: s
   hover: { key: 'presentation.trigger.hover', fallback: 'Survol' },
   shift: { key: 'presentation.trigger.shift', fallback: 'MAJ + survol' },
   alt: { key: 'presentation.trigger.alt', fallback: 'Alt + survol' }
+}
+
+const MENU_LABEL: Record<string, { key: string, fallback: string }> = {
+  config: { key: 'presentation.menu.config', fallback: 'Configuration' },
+  filter: { key: 'presentation.menu.filter', fallback: 'Filtres et légende' },
+  search: { key: 'presentation.menu.search', fallback: 'Recherche' }
+}
+
+const MENU_CHOICES: Type_MenuContainerChoice[] = ['auto', 'popup', 'sidebar']
+const CHOICE_LABEL: Record<Type_MenuContainerChoice, { key: string, fallback: string }> = {
+  // 'auto' = comportement contextuel de #300 (barre latérale si affichée, sinon pop-up).
+  auto: { key: 'presentation.container.auto', fallback: 'Auto' },
+  popup: { key: 'presentation.mode.popup', fallback: 'Pop-up' },
+  sidebar: { key: 'presentation.mode.sidebar', fallback: 'Panneau' }
 }
 
 export const PresentationDocumentSettings = ({ app_data }: {
@@ -97,6 +111,69 @@ export const PresentationDocumentSettings = ({ app_data }: {
             markDirty()
           }}
         />
+      </Box>
+
+      {/* OS#305 Lot 5 — MENUS DE BARRE. Décision #9 : un bouton n'est pas un
+          élément, on ne compose pas son contenu (qui est l'UI de l'appli). On
+          règle seulement OÙ il s'ouvre, et l'aide que le lecteur lit en le
+          survolant. */}
+      <Box>
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('presentation.menus', { defaultValue: 'Menus de barre' })}
+        </Box>
+        <Text style={{ fontSize: '0.7rem', opacity: 0.7, paddingBottom: '0.2rem' }}>
+          {t('presentation.menus_hint', {
+            defaultValue: 'Où chaque menu s\'ouvre, et l\'aide affichée au survol de son bouton.'
+          })}
+        </Text>
+        <Box style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+          {MENU_PANEL_IDS.map(menu_id => {
+            const policy = panels.getMenuPolicy(menu_id)
+            const setPolicy = (next: typeof policy) => {
+              panels.setMenuPolicy(menu_id, next)
+              markDirty()
+            }
+            return (
+              <Box
+                key={menu_id}
+                style={{ border: '1px solid #e2e8f0', borderRadius: '4px', padding: '0.25rem 0.3rem' }}
+              >
+                <Text style={{ fontSize: default_font_size, fontWeight: 600 }}>
+                  {t(MENU_LABEL[menu_id].key, { defaultValue: MENU_LABEL[menu_id].fallback })}
+                </Text>
+                <Box style={{ display: 'flex', gap: '0.15rem', paddingTop: '0.2rem' }}>
+                  {MENU_CHOICES.map(choice => (
+                    <Button
+                      key={choice}
+                      size='xs'
+                      flex='1'
+                      variant={policy.container === choice
+                        ? 'button_type_config_activated'
+                        : 'button_type_config'}
+                      onClick={() => setPolicy({ ...policy, container: choice })}
+                    >
+                      {t(CHOICE_LABEL[choice].key, { defaultValue: CHOICE_LABEL[choice].fallback })}
+                    </Button>
+                  ))}
+                </Box>
+                <Input
+                  size='xs'
+                  variant='menuconfigpanel_option_input'
+                  marginTop='0.2rem'
+                  placeholder={t('presentation.menu_help_placeholder', {
+                    defaultValue: 'Aide au survol (facultatif)'
+                  })}
+                  defaultValue={policy.help}
+                  // onBlur et non onChange : on ne veut pas un point d'undo par
+                  // frappe de touche.
+                  onBlur={(e) => {
+                    if (e.target.value !== policy.help) setPolicy({ ...policy, help: e.target.value })
+                  }}
+                />
+              </Box>
+            )
+          })}
+        </Box>
       </Box>
     </Box>
   )
