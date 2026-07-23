@@ -54,21 +54,26 @@ export const integrate_missing_translations = (
   resources_nodes: I18nResources,
   resources_flux: I18nResources
 ): void => {
+  // Merge chaque langue présente dans la cible ; repli sur l'anglais si la
+  // source ne fournit pas cette langue.
+  const merge_all_langs = (source: I18nResources, target: I18nResources): void => {
+    langs_of(target).forEach(lang => {
+      const src = source[lang] ?? source.en
+      deep_merge_translations(src.translation, target[lang]!.translation)
+    })
+  }
+
   // Intégrer les traductions du menu général
-  deep_merge_translations(missing_menu_translations.en.translation, resources_app_elements.en.translation)
-  deep_merge_translations(missing_menu_translations.fr.translation, resources_app_elements.fr.translation)
+  merge_all_langs(missing_menu_translations as unknown as I18nResources, resources_app_elements)
 
   // Intégrer les traductions des labels de nœuds
-  deep_merge_translations(missing_node_labels_translations.en.translation, resources_nodes.en.translation)
-  deep_merge_translations(missing_node_labels_translations.fr.translation, resources_nodes.fr.translation)
+  merge_all_langs(missing_node_labels_translations as unknown as I18nResources, resources_nodes)
 
   // Intégrer les traductions de l'apparence des nœuds
-  deep_merge_translations(missing_node_apparence_translations.en.translation, resources_nodes.en.translation)
-  deep_merge_translations(missing_node_apparence_translations.fr.translation, resources_nodes.fr.translation)
+  merge_all_langs(missing_node_apparence_translations as unknown as I18nResources, resources_nodes)
 
   // Intégrer les traductions de l'apparence des flux
-  deep_merge_translations(missing_flux_apparence_translations.en.translation, resources_flux.en.translation)
-  deep_merge_translations(missing_flux_apparence_translations.fr.translation, resources_flux.fr.translation)
+  merge_all_langs(missing_flux_apparence_translations as unknown as I18nResources, resources_flux)
 }
 
 interface TranslationItem {
@@ -87,6 +92,10 @@ interface TranslationConfig {
  */
 const SUPPORTED_LANGS = ['en', 'fr', 'es', 'de', 'it'] as const
 type SupportedLang = typeof SUPPORTED_LANGS[number]
+
+// Langues effectivement présentes dans un objet resources (racines en/fr/es/de/it)
+const langs_of = (resources: I18nResources): SupportedLang[] =>
+  SUPPORTED_LANGS.filter(lang => resources[lang] !== undefined)
 
 const convertToI18nFormat = (
   config: TranslationConfig,
@@ -131,21 +140,33 @@ interface LanguageResource {
 export interface I18nResources {
   en: LanguageResource
   fr: LanguageResource
+  es?: LanguageResource
+  de?: LanguageResource
+  it?: LanguageResource
 }
 
 interface LanguageLabels {
   en: string
   fr: string
+  es?: string
+  de?: string
+  it?: string
 }
 
 interface LanguageTooltips {
   en: string
   fr: string
+  es?: string
+  de?: string
+  it?: string
 }
 
 interface ToggleLabels {
   en: { true: string; false: string }
   fr: { true: string; false: string }
+  es?: { true: string; false: string }
+  de?: { true: string; false: string }
+  it?: { true: string; false: string }
 }
 
 interface AttributeConfig {
@@ -197,93 +218,85 @@ type TargetType = 'Flux' | 'Noeud'
 //   })
 // }
 
-// Version mise à jour pour MenuConfig
+// Version mise à jour pour MenuConfig — injecte toutes les langues présentes
+// dans resources, avec repli sur l'anglais si la config ne fournit pas la langue.
 export const use_context_config = (
   resources: I18nResources,
   menu_config: MenuConfig,
   path: string
 ): void => {
-  // Initialiser les structures de traduction
-  resources.en.translation[path] = { tooltips: {} }
-  resources.fr.translation[path] = { tooltips: {} }
-  
-  const contextEn = resources.en.translation[path] as TranslationSection
-  const contextFr = resources.fr.translation[path] as TranslationSection
+  langs_of(resources).forEach(lang => {
+    const translation = resources[lang]!.translation
 
-  // Traitement des titres de section
-  Object.entries(menu_config.sectionTitles).forEach(([attributeKey, attributeValue]) => {
-    contextEn[attributeKey] = attributeValue.en
-    contextFr[attributeKey] = attributeValue.fr
-  })
+    // Initialiser les structures de traduction
+    translation[path] = { tooltips: {} }
+    const context = translation[path] as TranslationSection
 
-  // Traitement des actions
-  Object.entries(menu_config.actions).forEach(([actionKey, actionConfig]) => {
-    const { labels, labelsToggle, tooltips } = actionConfig
+    // Traitement des titres de section
+    Object.entries(menu_config.sectionTitles).forEach(([attributeKey, attributeValue]) => {
+      context[attributeKey] = attributeValue[lang] ?? attributeValue.en
+    })
 
-    // Labels principaux
-    contextEn[actionKey] = labels.en
-    contextFr[actionKey] = labels.fr
+    // Traitement des actions
+    Object.entries(menu_config.actions).forEach(([actionKey, actionConfig]) => {
+      const { labels, labelsToggle, tooltips } = actionConfig
 
-    // Labels pour les toggles
-    if (labelsToggle) {
-      contextEn[actionKey + 'True'] = labelsToggle.en.true
-      contextEn[actionKey + 'False'] = labelsToggle.en.false
-      contextFr[actionKey + 'True'] = labelsToggle.fr.true
-      contextFr[actionKey + 'False'] = labelsToggle.fr.false
-    }
+      // Labels principaux
+      context[actionKey] = labels[lang] ?? labels.en
 
-    // Tooltips
-    contextEn.tooltips![actionKey] = tooltips.en
-    contextFr.tooltips![actionKey] = tooltips.fr
+      // Labels pour les toggles
+      if (labelsToggle) {
+        const toggle = labelsToggle[lang] ?? labelsToggle.en
+        context[actionKey + 'True'] = toggle.true
+        context[actionKey + 'False'] = toggle.false
+      }
+
+      // Tooltips
+      context.tooltips![actionKey] = tooltips[lang] ?? tooltips.en
+    })
   })
 }
 
 const use_link_config = (resources: I18nResources): void => {
   const linksConfig = ALL_ATTRIBUTES_CONFIG as Record<string, AttributeConfig>
-  
+
   // Génération automatique des traductions pour chaque attribut
   Object.entries(linksConfig).forEach(([attributeKey, config]) => {
     const { category, labels, tooltips } = config
 
     // Déterminer la section et sous-section
     let section: SectionType
-    let target: TargetType
+    const target: TargetType = 'Flux'
 
     if (category === 'shape') {
-      section = 'apparence'
-      target = 'Flux' // Les shapes sont principalement pour les flux
+      section = 'apparence' // Les shapes sont principalement pour les flux
     } else {
-      section = 'labels'
-      target = 'Flux' // Les labels peuvent être pour flux ou noeuds
+      section = 'labels' // Les labels peuvent être pour flux ou noeuds
     }
 
-    // Assurer que les structures existent
-    const targetEn = resources.en.translation[target] as TranslationSection
-    const targetFr = resources.fr.translation[target] as TranslationSection
-    
-    if (!targetEn[section]) {
-      targetEn[section] = { tooltips: {} }
-    }
-    if (!targetFr[section]) {
-      targetFr[section] = { tooltips: {} }
-    }
-    
-    const sectionEn = targetEn[section] as TranslationSection
-    const sectionFr = targetFr[section] as TranslationSection
+    langs_of(resources).forEach(lang => {
+      const translation = resources[lang]!.translation
 
-    // Ajouter les labels
-    sectionEn[attributeKey] = labels.en
-    sectionFr[attributeKey] = labels.fr
+      // Assurer que les structures existent
+      if (!translation[target]) {
+        translation[target] = { tooltips: {} }
+      }
+      const targetSection = translation[target] as TranslationSection
+      if (!targetSection[section]) {
+        targetSection[section] = { tooltips: {} }
+      }
+      const sectionTr = targetSection[section] as TranslationSection
 
-    // Ajouter les tooltips
-    sectionEn.tooltips![attributeKey] = tooltips.en
-    sectionFr.tooltips![attributeKey] = tooltips.fr
+      // Ajouter les labels et les tooltips
+      sectionTr[attributeKey] = labels[lang] ?? labels.en
+      sectionTr.tooltips![attributeKey] = tooltips[lang] ?? tooltips.en
+    })
   })
 }
 
 interface ElementSelectionConfig {
-  labels: Record<string, { en: string; fr: string }>
-  tooltips: Record<string, { en: string; fr: string }>
+  labels: Record<string, LanguageLabels>
+  tooltips: Record<string, LanguageTooltips>
 }
 
 interface ElementsSelectionConfig {
@@ -291,7 +304,7 @@ interface ElementsSelectionConfig {
   link: ElementSelectionConfig
   container: ElementSelectionConfig
   common: {
-    labels: Record<string, { en: string; fr: string }>
+    labels: Record<string, LanguageLabels>
   }
 }
 
@@ -307,98 +320,82 @@ export const use_elements_selection_config = (
     container: 'Container'
   } as const
 
-  (['node', 'link', 'container'] as const).forEach(elementType => {
-    const config = elements_config[elementType]
-    const translationPath = typeMapping[elementType]
-    
-    // Initialiser les structures pour ce type d'élément
-    const elementEn = resources.en.translation[translationPath] as TranslationSection
-    const elementFr = resources.fr.translation[translationPath] as TranslationSection
-    
-    if (!elementEn) {
-      resources.en.translation[translationPath] = { tooltips: {} }
-    }
-    if (!elementFr) {
-      resources.fr.translation[translationPath] = { tooltips: {} }
-    }
-    
-    const targetEn = resources.en.translation[translationPath] as TranslationSection
-    const targetFr = resources.fr.translation[translationPath] as TranslationSection
-    
-    // S'assurer que tooltips existe
-    if (!targetEn.tooltips) {
-      targetEn.tooltips = {} as Record<string, string | Record<string, string>>
-    }
-    if (!targetFr.tooltips) {
-      targetFr.tooltips = {} as Record<string, string | Record<string, string>>
-    }
-    
-    const tooltipsEn = targetEn.tooltips as Record<string, string>
-    const tooltipsFr = targetFr.tooltips as Record<string, string>
-    
-    // Ajouter les labels au niveau racine (ex: Noeud.TS, Flux.NS)
-    Object.entries(config.labels).forEach(([key, value]) => {
-      targetEn[key] = value.en
-      targetFr[key] = value.fr
+  langs_of(resources).forEach(lang => {
+    const translation = resources[lang]!.translation
+
+    ;(['node', 'link', 'container'] as const).forEach(elementType => {
+      const config = elements_config[elementType]
+      const translationPath = typeMapping[elementType]
+
+      // Initialiser les structures pour ce type d'élément
+      if (!translation[translationPath]) {
+        translation[translationPath] = { tooltips: {} }
+      }
+      const target = translation[translationPath] as TranslationSection
+
+      // S'assurer que tooltips existe
+      if (!target.tooltips) {
+        target.tooltips = {} as Record<string, string | Record<string, string>>
+      }
+      const tooltipsTr = target.tooltips as Record<string, string>
+
+      // Ajouter les labels au niveau racine (ex: Noeud.TS, Flux.NS)
+      Object.entries(config.labels).forEach(([key, value]) => {
+        target[key] = value[lang] ?? value.en
+      })
+
+      // Ajouter les tooltips (ex: Noeud.tooltips.plus, Flux.tooltips.slct)
+      Object.entries(config.tooltips).forEach(([key, value]) => {
+        tooltipsTr[key] = value[lang] ?? value.en
+      })
     })
-    
-    // Ajouter les tooltips (ex: Noeud.tooltips.plus, Flux.tooltips.slct)
-    Object.entries(config.tooltips).forEach(([key, value]) => {
-      tooltipsEn[key] = value.en
-      tooltipsFr[key] = value.fr
+
+    // Traiter les labels communs dans Menu
+    if (!translation['Menu']) {
+      translation['Menu'] = { tooltips: {} }
+    }
+    const menu = translation['Menu'] as TranslationSection
+
+    Object.entries(elements_config.common.labels).forEach(([key, value]) => {
+      menu[key] = value[lang] ?? value.en
     })
-  })
-  
-  // Traiter les labels communs dans Menu
-  const menuEn = resources.en.translation['Menu'] as TranslationSection
-  const menuFr = resources.fr.translation['Menu'] as TranslationSection
-  
-  Object.entries(elements_config.common.labels).forEach(([key, value]) => {
-    menuEn[key] = value.en
-    menuFr[key] = value.fr
   })
 }
 
 const use_node_config = (resources: I18nResources): void => {
   const nodesConfig = ALL_ATTRIBUTES_CONFIG as Record<string, AttributeConfig>
-  
+
   // Génération automatique des traductions pour chaque attribut
   Object.entries(nodesConfig).forEach(([attributeKey, config]) => {
     const { category, labels, tooltips } = config
 
     // Déterminer la section et sous-section
     let section: SectionType
-    let target: TargetType
+    const target: TargetType = 'Noeud'
 
     if (category === 'shape') {
       section = 'apparence'
-      target = 'Noeud' // Les shapes sont principalement pour les flux
     } else {
       section = 'labels'
-      target = 'Noeud' // Les labels peuvent être pour flux ou noeuds
     }
 
-    // Assurer que les structures existent
-    const targetEn = resources.en.translation[target] as TranslationSection
-    const targetFr = resources.fr.translation[target] as TranslationSection
-    
-    if (!targetEn[section]) {
-      targetEn[section] = { tooltips: {} }
-    }
-    if (!targetFr[section]) {
-      targetFr[section] = { tooltips: {} }
-    }
-    
-    const sectionEn = targetEn[section] as TranslationSection
-    const sectionFr = targetFr[section] as TranslationSection
+    langs_of(resources).forEach(lang => {
+      const translation = resources[lang]!.translation
 
-    // Ajouter les labels
-    sectionEn[attributeKey] = labels.en
-    sectionFr[attributeKey] = labels.fr
+      // Assurer que les structures existent
+      if (!translation[target]) {
+        translation[target] = { tooltips: {} }
+      }
+      const targetSection = translation[target] as TranslationSection
+      if (!targetSection[section]) {
+        targetSection[section] = { tooltips: {} }
+      }
+      const sectionTr = targetSection[section] as TranslationSection
 
-    // Ajouter les tooltips
-    sectionEn.tooltips![attributeKey] = tooltips.en
-    sectionFr.tooltips![attributeKey] = tooltips.fr
+      // Ajouter les labels et les tooltips
+      sectionTr[attributeKey] = labels[lang] ?? labels.en
+      sectionTr.tooltips![attributeKey] = tooltips[lang] ?? tooltips.en
+    })
   })
 }
 
@@ -483,6 +480,7 @@ i18next
     // lng:'en', // language to use, more information here: https://www.i18next.com/overview/configuration-options#languages-namespaces-resources
     // you can use the i18n.changeLanguage function to change the language manually: https://www.i18next.com/overview/api#changelanguage
     // if you're using a language detector, do not define the lng option
+    fallbackLng: 'en', // clé absente dans la langue courante → libellé anglais plutôt que la clé brute
 
     interpolation: {
       escapeValue: false // react already safes from xss
