@@ -249,10 +249,14 @@ export const GenericStyleSelector = ({ app_data, children }: React.PropsWithChil
           size='sizeConfigButton'
           isDisabled={selected_style_id === default_style_id}
           onClick={() => {
-            app_data.drawing_area.sankey.deleteElementStyle(selected_style)
-            app_data.menu_configuration.ref_selected_style.current = default_style_id
-            updateAll()
-            app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+            // deleteElementStyle fait un `delete` sec : reconstruire le style ET recâbler
+            // les références des éléments qui l'utilisaient serait fragile → snapshot.
+            app_data.runWithSnapshotUndo(() => {
+              app_data.drawing_area.sankey.deleteElementStyle(selected_style)
+              app_data.menu_configuration.ref_selected_style.current = default_style_id
+              updateAll()
+              app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+            }, updateAll)
           }}
         >
           {icon_remove_element}

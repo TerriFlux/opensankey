@@ -34,6 +34,11 @@ import { AddConstraintModal } from './AddConstraintModal'
 // Type i18next minimal (clé -> libellé) pour typer les builders d'options ci-dessous.
 type Type_TFn = (key: string) => string
 
+// Nom de la ressource de snapshot du plugin de validation de données d'Univer (cf.
+// @univerjs/data-validation, DATA_VALIDATION_PLUGIN_NAME). Les règles déposées sous ce nom dans
+// `IWorkbookData.resources` sont chargées par `onLoad` avec la source 'patched' (et non 'command').
+const DV_RESOURCE_NAME = 'SHEET_DATA_VALIDATION_PLUGIN'
+
 // Filtres d'affichage du tableur. Pour l'instant deux modes ; la liste est destinée à s'enrichir
 // (ex. masquer les flux à zéro, n'afficher qu'un tag…) sans toucher au reste de la barre d'outils.
 // 'visible' = seulement les éléments visibles (exclut repliés/agrégés) → onlyVisible.
@@ -584,6 +589,48 @@ export const UniverSpreadSheet = (
           const built = buildSankeyWorkbookData(app_data, onlyVisibleRef.current)
           columnsRef.current = built.columns
           setSheetsMeta(built.sheets)
+          // Listes déroulantes (sélecteur d'étiquette) sur les colonnes de tags des feuilles de
+          // nœuds : injectées dans le SNAPSHOT du classeur, et NON posées après coup via
+          // `range.setDataValidation()`. Motif : setDataValidation passe par le command service, donc
+          // émet un `ruleChange$` de source 'command' ; le contrôleur d'auto-height d'Univer
+          // (sheets-data-validation-ui `_initAutoHeight`) bufferise ces événements pendant 100 ms
+          // SANS `takeUntil(dispose$)`, puis appelle `getCurrentUnitOfType(SHEET).getUnitId()`. Si le
+          // classeur est détruit dans cette fenêtre (rebuild, chargement d'un JSON, fermeture de
+          // l'onglet), il n'y a plus d'unité courante -> « workbook is undefined ». Chargées depuis le
+          // snapshot, les règles arrivent avec la source 'patched', que le filtre d'`_initAutoHeight`
+          // ignore : aucun timer n'est armé, la course disparaît.
+          // Le write-back (UniverSankeyBridge) aligne ensuite l'appartenance du nœud sur la cellule.
+          const dvRules: { [sheetId: string]: any[] } = {}
+          Object.keys(built.validations || {}).forEach((sheetId) => {
+            const rules = built.validations[sheetId]
+            const sheet: any = (built.data.sheets as any || {})[sheetId]
+            if (!rules || rules.length === 0 || !sheet) {
+              return
+            }
+            // Lignes de données uniquement (en-tête figé exclu).
+            const lastRow = Math.max(1, (sheet.rowCount || 1000) - 1)
+            rules.forEach((rule) => {
+              try {
+                const dv = univerAPI.newDataValidation()
+                  .requireValueInList(rule.options, rule.multiple, true)
+                  .build()
+                const built_rule = {
+                  ...dv.rule,
+                  ranges: [{
+                    startRow: 1, endRow: lastRow, startColumn: rule.col, endColumn: rule.col
+                  }]
+                }
+                dvRules[sheetId] = (dvRules[sheetId] || []).concat(built_rule)
+              } catch (e) { /* preset absent / API indispo : pas de dropdown, édition libre */ }
+            })
+          })
+          if (Object.keys(dvRules).length > 0) {
+            const others = (built.data.resources || [])
+              .filter((r: { name: string }) => r.name !== DV_RESOURCE_NAME)
+            built.data.resources = others.concat({
+              name: DV_RESOURCE_NAME, data: JSON.stringify(dvRules)
+            })
+          }
           const wb: any = univerAPI.createWorkbook(built.data)
           const hidden: { [sheetId: string]: number[] } = {}
           Object.keys(built.columns).forEach((sheetId) => {
@@ -606,29 +653,6 @@ export const UniverSpreadSheet = (
             freezeHeaderRow(sheetId)
           })
           setHiddenCols(hidden)
-          // Listes déroulantes (sélecteur d'étiquette) sur les colonnes de tags des feuilles de
-          // nœuds : validation de liste appliquée aux lignes de données (en-tête figé exclu). Le
-          // write-back (UniverSankeyBridge) aligne ensuite l'appartenance du nœud sur la cellule.
-          Object.keys(built.validations || {}).forEach((sheetId) => {
-            const rules = built.validations[sheetId]
-            if (!rules || rules.length === 0) {
-              return
-            }
-            const ws = wb.getSheetBySheetId ? wb.getSheetBySheetId(sheetId) : null
-            if (!ws) {
-              return
-            }
-            const rowCount = typeof ws.getMaxRows === 'function' ? ws.getMaxRows() : 1000
-            const numRows = Math.max(1, rowCount - 1)
-            rules.forEach((rule) => {
-              try {
-                const dv = univerAPI.newDataValidation()
-                  .requireValueInList(rule.options, rule.multiple, true)
-                  .build()
-                ws.getRange(1, rule.col, numRows, 1).setDataValidation(dv)
-              } catch (e) { /* preset absent / API indispo : pas de dropdown, édition libre */ }
-            })
-          })
           // Onglet actif cible : on conserve celui sur lequel l'utilisateur était (keepActive) ;
           // au tout premier build (keepActive null) l'onglet par défaut est Flux. On le rend actif
           // AVANT de masquer les onglets vides (Univer interdit de masquer la feuille active) et

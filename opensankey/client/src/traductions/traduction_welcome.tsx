@@ -72,12 +72,14 @@ export const resources_welcome = {
       Avancé: 'Advanced',
       separator_interval: ',',
       sep_decimal: '.',
-      diaporama: 'Presentation',
-      start: 'Start',
+      start_template: 'Start from a template',
+      start_tour: 'Guided tour',
+      start_blank: 'Blank diagram',
       tooltip: {
         dontSeeAgain: 'By checking this box, the welcome screen will no longer appear on the next page load. To display this welcome screen again, go to Help->Home.',
-        diaporama: 'Presentation of the various features of the tool, from the most basic to the most advanced as well as mouse/keyboard combination for edition.',
-        start: 'Start drawing your flows. To do this, click in the drawing area, drag without releasing, then release.'
+        start_template: 'Choose a ready-to-use diagram from the template library as a starting point.',
+        start_tour: 'Interactive walkthrough of the interface — menus, toolbar and configuration panel — on a small demo diagram.',
+        start_blank: 'Start with an empty drawing area. To draw a flow, click in the drawing area, drag without releasing, then release.'
       }
     }
   },
@@ -154,12 +156,14 @@ export const resources_welcome = {
       Avancé: 'Avancé',
       separator_interval: ';',
       sep_decimal: ',',
-      diaporama: 'Présentation',
-      start: 'Démarrer',
+      start_template: 'Partir d\'un modèle',
+      start_tour: 'Visite guidée',
+      start_blank: 'Diagramme vierge',
       tooltip: {
         dontSeeAgain: 'En cochant cette case il n\'y aura plus d\'écran d\'accueil au prochaine chargement de la page. Pour réafficher cet accueil aller dans Aide->Accueil.',
-        diaporama: 'Présentation des différentes fonctionnalités de l\'outil des plus basiques aux plus avancées, ainsi que les combinaisons souris/claviers d\'édition.',
-        start: 'Commencez à tracer vos flux. Pour cela cliquez dans la zone de dessin, faites glisser sans relâcher, puis relâchez.'
+        start_template: 'Choisissez un diagramme prêt à l\'emploi dans la bibliothèque de modèles comme point de départ.',
+        start_tour: 'Découverte interactive de l\'interface — menus, barre d\'outils et panneau de configuration — sur un petit diagramme de démonstration.',
+        start_blank: 'Commencez sur une zone de dessin vide. Pour tracer un flux, cliquez dans la zone de dessin, faites glisser sans relâcher, puis relâchez.'
       }
     }
   },
@@ -236,12 +240,14 @@ export const resources_welcome = {
       Avancé: 'Avanzado',
       separator_interval: ';',
       sep_decimal: ',',
-      diaporama: 'Presentación',
-      start: 'Comenzar',
+      start_template: 'Partir de una plantilla',
+      start_tour: 'Visita guiada',
+      start_blank: 'Diagrama en blanco',
       tooltip: {
         dontSeeAgain: 'Al marcar esta casilla, la pantalla de bienvenida ya no aparecerá en la próxima carga de página. Para volver a mostrarla, vaya a Ayuda->Inicio.',
-        diaporama: 'Presentación de las diferentes funcionalidades de la herramienta, desde las más básicas hasta las más avanzadas, así como las combinaciones de ratón/teclado para la edición.',
-        start: 'Comience a trazar sus flujos. Para ello, haga clic en el área de dibujo, arrastre sin soltar y luego suelte.'
+        start_template: 'Elija un diagrama listo para usar de la biblioteca de plantillas como punto de partida.',
+        start_tour: 'Recorrido interactivo por la interfaz — menús, barra de herramientas y panel de configuración — sobre un pequeño diagrama de demostración.',
+        start_blank: 'Comience con un área de dibujo vacía. Para trazar un flujo, haga clic en el área de dibujo, arrastre sin soltar y luego suelte.'
       }
     }
   },
@@ -318,12 +324,14 @@ export const resources_welcome = {
       Avancé: 'Erweitert',
       separator_interval: ';',
       sep_decimal: ',',
-      diaporama: 'Präsentation',
-      start: 'Starten',
+      start_template: 'Mit einer Vorlage beginnen',
+      start_tour: 'Geführte Tour',
+      start_blank: 'Leeres Diagramm',
       tooltip: {
         dontSeeAgain: 'Wenn Sie dieses Kästchen ankreuzen, wird der Willkommensbildschirm beim nächsten Laden der Seite nicht mehr angezeigt. Um ihn erneut anzuzeigen, gehen Sie zu Hilfe->Startseite.',
-        diaporama: 'Vorstellung der verschiedenen Funktionen des Tools, von den grundlegendsten bis zu den fortgeschrittensten, sowie Maus-/Tastaturkombinationen für die Bearbeitung.',
-        start: 'Beginnen Sie mit dem Zeichnen Ihrer Flüsse. Klicken Sie dazu in die Zeichenfläche, ziehen Sie ohne loszulassen und lassen Sie dann los.'
+        start_template: 'Wählen Sie ein fertiges Diagramm aus der Vorlagenbibliothek als Ausgangspunkt.',
+        start_tour: 'Interaktiver Rundgang durch die Oberfläche — Menüs, Symbolleiste und Konfigurationsbereich — anhand eines kleinen Demo-Diagramms.',
+        start_blank: 'Beginnen Sie mit einer leeren Zeichenfläche. Um einen Fluss zu zeichnen, klicken Sie in die Zeichenfläche, ziehen Sie ohne loszulassen und lassen Sie dann los.'
       }
     }
   },
@@ -400,12 +408,14 @@ export const resources_welcome = {
       Avancé: 'Avanzato',
       separator_interval: ';',
       sep_decimal: ',',
-      diaporama: 'Presentazione',
-      start: 'Inizia',
+      start_template: 'Parti da un modello',
+      start_tour: 'Visita guidata',
+      start_blank: 'Diagramma vuoto',
       tooltip: {
         dontSeeAgain: 'Selezionando questa casella, la schermata di benvenuto non apparirà più al prossimo caricamento della pagina. Per visualizzarla di nuovo, andare su Aiuto->Home.',
-        diaporama: 'Presentazione delle diverse funzionalità dello strumento, dalle più basilari alle più avanzate, nonché le combinazioni mouse/tastiera per la modifica.',
-        start: 'Iniziate a tracciare i vostri flussi. Per farlo, cliccate nell\'area di disegno, trascinate senza rilasciare, poi rilasciate.'
+        start_template: 'Scegliete un diagramma pronto all\'uso dalla libreria di modelli come punto di partenza.',
+        start_tour: 'Percorso interattivo dell\'interfaccia — menu, barra degli strumenti e pannello di configurazione — su un piccolo diagramma dimostrativo.',
+        start_blank: 'Iniziate con un\'area di disegno vuota. Per tracciare un flusso, cliccate nell\'area di disegno, trascinate senza rilasciare, poi rilasciate.'
       }
     }
   }

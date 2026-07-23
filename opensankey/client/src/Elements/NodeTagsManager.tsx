@@ -102,10 +102,10 @@ export class NodeTagsManager {
   // JSON METHODS =======================================================================
   public addAsAntiTagged(_: Class_LevelTagGroup) {
     if (typeof _.addAntiTaggedRef !== 'function') {
-      console.error('Object is not a proper Class_LevelTagGroup instance:', _)
-      console.log('Constructor:', _.constructor?.name)
-      console.log('Has prototype methods:', Object.getPrototypeOf(_))
-      //debugger // S'arrête ici automatiquement
+      console.error(
+        'Object is not a proper Class_LevelTagGroup instance:',
+        _, 'constructor:', _.constructor?.name
+      )
     }
     const tagsData = this._node.internalTagsData
     if (!tagsData.leveltaggs_as_antitagged.includes(_)) {

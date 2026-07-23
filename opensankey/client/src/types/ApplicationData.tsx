@@ -1,4 +1,4 @@
-// ==================================================================================================
+﻿// ==================================================================================================
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
@@ -33,9 +33,10 @@ import * as d3 from '../d3Modules'
 import FileSaver from 'file-saver'
 
 import { StepType } from '@reactour/tour'
+import { Class_GuidedTour } from './GuidedTour'
 import { CreateToastFnReturn } from '@chakra-ui/react'
 
-import { Class_MenuConfig, keyTypeConfig, keyTypeElements } from '../types/MenuConfig'
+import { Class_MenuConfig } from '../types/MenuConfig'
 import { const_default_position_x, const_default_position_y, default_file_name, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, randomId, toast_bypass, Type_JSON } from './Utils'
 import { getPublishOptions, PublishOptions } from './PublishOptions'
 import { Class_ApplicationHistory } from './ApplicationHistory'
@@ -53,6 +54,7 @@ import {
   resolveDocMarkdown, normalizeDocLang
 } from '../Persistence/persistenceMigrations'
 import type { Class_NodeElement } from '../Elements/Node'
+import type { Class_LinkElement } from '../Elements/Link'
 
 // SPECIFIC TYPES **********************************************************************/
 
@@ -359,6 +361,27 @@ export class Class_ApplicationData {
     container_selector: string
   ) => { redraw: () => void, cleanup: () => void } | void = undefined
 
+  /** Hook injecté par OS+ (cf. ModalUnitarySankeyOSP) : dessine le GRAPHIQUE
+   * D'ANALYSE (couronne / histogramme) décrit par l'attribut analysis_descriptor
+   * de l'élément (nœud OU flux) dans le conteneur DOM `container_selector`.
+   * Alimente l'onglet « Analyse » des tooltips de nœud et de flux quand
+   * surfaces.tooltip est activé (OS#1278). Absent hors OS+. */
+  public draw_analysis_in_container?: (
+    element: Class_NodeElement | Class_LinkElement,
+    container_selector: string
+  ) => { redraw: () => void, cleanup: () => void } | void = undefined
+
+  /** Hook injecté par OS+ : dessine le nœud EN CAMEMBERT (surface on_node, OS#1278)
+   * dans le groupe SVG `group_el` du nœud, aux dimensions passées. Utilisé par
+   * NodeDrawShape quand le descripteur du nœud a surfaces.on_node. Couleurs du
+   * diagramme (le graphique fait partie du langage visuel). Absent hors OS+. */
+  public draw_node_analysis_overlay?: (
+    node: Class_NodeElement,
+    group_el: SVGGElement,
+    width: number,
+    height: number
+  ) => boolean = undefined
+
   protected _waiting_processes: { [id: string]: NodeJS.Timeout } = {}
   protected _waiting_time_for_processes: number = 50 // ms
 
@@ -476,7 +499,7 @@ export class Class_ApplicationData {
    * @type {string}
    * @memberof Class_ApplicationData
    */
-  private _app_name: string = 'SankeySuite'
+  private _app_name: string = 'MFASankey'
 
   /**
    * Path prefix for backend server requests
@@ -526,6 +549,14 @@ export class Class_ApplicationData {
   private _steps: StepType[] = []
 
   /**
+   * #1255 — Scénario de la visite guidée (cf. Class_GuidedTour). Porte l'état du tour en cours :
+   * gestes attendus, contenu de repli créé, nettoyage de fin.
+   * @private
+   * @memberof Class_ApplicationData
+   */
+  private _guided_tour: Class_GuidedTour = new Class_GuidedTour(this)
+
+  /**
    * Session-only horizontal spacing for auto-layout. `null` = use style default.
    * Shared between the auto-layout context menu widget and the Excel import dialog.
    */
@@ -557,6 +588,20 @@ export class Class_ApplicationData {
    * Used by the Excel import dialog; the right-click menu exposes the choice via two buttons instead.
    */
   public layout_optimize_crossing: boolean = true
+
+  /**
+   * sankeyapplication#153 — Recalcul automatique du statut recyclage après un déplacement
+   * de nœud : un flux dont la cible ne se trouve plus à droite de sa source passe en
+   * recyclage, et réciproquement.
+   *
+   * `true` (défaut) = « Recalcul auto », `false` = « Mise en page figée » — indispensable
+   * sur un diagramme particulier dont l'utilisateur a réglé le recyclage à la main (le
+   * verrou par flux reste de toute façon prioritaire sur la géométrie).
+   *
+   * Ne déplace AUCUN nœud : une mise en page manuelle survit au recalcul. Mode de session,
+   * non persisté (comme layout_sources_mode / layout_optimize_crossing).
+   */
+  public layout_auto_recycling: boolean = true
 
   /**
    * Mode « afficher aussi les flux porteurs de données » : quand actif, EN PLUS de
@@ -743,9 +788,7 @@ export class Class_ApplicationData {
    */
   protected _saveToJSON(kwargs?: Type_JSON) {
     // Convert all datas as JSON
-    this.drawing_area.bypass_redraws = true
-    const json_data = this._toJSON(kwargs)
-    this.drawing_area.draw()
+    const json_data = this.drawing_area.withBypassRedraws(() => this._toJSON(kwargs))
     if (kwargs && kwargs['compression'] === 'gzip') {
       const compressed = compressJSONToGzip(json_data)
       const blob = new Blob([compressed as BlobPart], { type: 'application/gzip' })
@@ -753,7 +796,6 @@ export class Class_ApplicationData {
         ? this._file_name.replace('.json', '.json.gz')
         : this._file_name + '.json.gz'
 
-      console.log(`💾 Sauvegarde compressée: ${gzFilename} (${(blob.size / 1024).toFixed(1)}KB)`)
       FileSaver.saveAs(blob, gzFilename)
     } else {
       const json_data_str = JSON.stringify(json_data, null, 2)
@@ -806,6 +848,28 @@ export class Class_ApplicationData {
     _name: string,
     _args?: Type_JSON
   ) {
+  }
+
+  /**
+   * Enregistre un geste LOURD (hiérarchies, pré-positionnement global, import/export…)
+   * comme UNE seule entrée d'historique, par snapshots avant/après.
+   *
+   * Pourquoi ne pas rejouer l'action au redo, comme le fait executeWithUndo ? Parce que
+   * fromJSON() passe par reset(), qui REMPLACE la drawing_area : après un undo, toute
+   * référence capturée (nœud, tag group, drawing_area) pointe sur des instances mortes.
+   * Restaurer l'état sérialisé des deux côtés évite complètement le problème.
+   *
+   * À réserver aux gestes qui mutent large : deux toJSON complets par appel.
+   * `onRestore` sert à rafraîchir les menus après restauration.
+   */
+  public runWithSnapshotUndo(action: () => void, onRestore?: () => void) {
+    const before = this.toJSON()
+    action()
+    const after = this.toJSON()
+    // saveUndo PUIS saveRedo, après l'action : saveUndo ouvre le slot, saveRedo écrit
+    // sur celui-là (cf. Class_ApplicationHistory).
+    this.history.saveUndo(() => { this.fromJSON(before); onRestore?.() })
+    this.history.saveRedo(() => { this.fromJSON(after); onRestore?.() })
   }
 
   public toJSON(kwargs?: Type_JSON) {
@@ -878,9 +942,30 @@ export class Class_ApplicationData {
         // les centres, pas de désagrégation/ré-agrégation récursive — bien plus rapide au
         // chargement) pour que le filtre vue révèle des nœuds déjà placés.
         centerChildrenOnParent(this)
+      } else {
+        // sankeyapplication#153 — le fichier fait foi sur le statut recyclage : tout flux dont
+        // le statut chargé diverge de ce que la géométrie recalculerait est verrouillé
+        // (tristate #711), sinon le recalcul auto au premier drag le rebasculerait. Réservé
+        // aux fichiers porteurs d'une géométrie (sinon computeAutoSankey ci-dessus vient de
+        // poser des statuts cohérents) et au chargement pour affichage (draw) : les flux
+        // internes en draw=false (réconciliation, tests corpus) réappliquent leur propre
+        // mise en page derrière.
+        this._drawing_area.nodePositioning.lockRecyclingStatusDivergences()
       }
       this._drawing_area.draw()
-      this._drawing_area.recenter()
+      // OS#1250 phase 2 — no-op sauf fichier < 0.92 (cf. markForLegacyNormalization).
+      // C'était déjà le cas avant : le garde `to_recenter` de recenter() n'était armé
+      // au chargement que par la migration legacy ; l'appel est juste devenu explicite.
+      this._drawing_area.normalizeLegacyWorldCoordinates()
+      // #680 — Re-cadrage DIFFÉRÉ du mode actif après le chargement : le premier fit
+      // (draw ci-dessus) tourne avant que la barre du bas (frise de séquence) et la légende
+      // soient mesurées → window_fitting_* périmé, bas du diagramme masqué. On ré-applique le
+      // mode une fois la mise en page stabilisée (débouncé). No-op si mode 'none'.
+      this._drawing_area.application_data._add_waiting_process(
+        'autofit_mode_after_load',
+        () => this._drawing_area.applyAutoFitMode(false),
+        200
+      )
     }
     // })
   }
@@ -1005,9 +1090,8 @@ export class Class_ApplicationData {
         try {
           const json_data = JSON.parse(text)
           this.fromJSON(json_data)
-        } catch (jsonError) {
-          console.log('Content is not valid JSON, attempting decompression...')
-
+        } catch {
+          // Contenu non JSON : tenter une décompression
           // Créer un File à partir de l'ArrayBuffer pour la décompression
           const file = new File([arrayBuffer], filename)
 
@@ -1053,6 +1137,23 @@ export class Class_ApplicationData {
   public updateFromJSON(json_object: Type_JSON, kwargs?: Type_JSON) {
     this._updateFromJSON(json_object, kwargs)
     this._menu_configuration!.updateAllMenuComponents()
+  }
+
+  /**
+   * Renvoie le JSON de mise en page à réappliquer pour une vue donnée, extrait
+   * d'un `current_json` produit par `toJSON()`. OS de base n'a pas de vues : on
+   * retombe sur l'entrée brute `['views'][view_id]` (ou le json complet).
+   *
+   * ATTENTION (OSP) : `_toJSON` encode les vues en DELTA (`__patch`, cf. #254),
+   * ce qui RETIRE de l'entrée de vue les clés identiques au master — dont
+   * `version`/`format_version`. Réappliquer telle quelle une entrée delta ferait
+   * croire à `fromJSON` qu'il s'agit d'un fichier pré-0.9 et déclencherait le
+   * convertisseur legacy (crash `convert_tags`). OSP surcharge donc cette méthode
+   * pour renvoyer le snapshot COMPLET décodé de la vue.
+   */
+  public getViewLayoutJSON(view_id: string, current_json: Type_JSON): Type_JSON {
+    const views = current_json['views'] as Type_JSON | undefined
+    return (views?.[view_id] as Type_JSON | undefined) ?? current_json
   }
 
   /**
@@ -1260,21 +1361,27 @@ export class Class_ApplicationData {
     // sits inside the export viewport with comfortable padding on every side.
     const edge_pad = Class_ApplicationData.export_edge_padding
     let export_width: number, export_height: number
+    // OS#1250 phase 4 — la taille d'export dérive du CONTENU (bounds via la façade
+    // caméra), plus du canvas. Doit rester d'accord avec le translate posé par
+    // _pre_process_export_svg : même origine, même padding.
+    const bounds = this.drawing_area.contentBounds()
     if (this.drawing_area.is_paper_mode) {
-      // Paper mode: use paper dimensions, but expand if content (labels) extends beyond
-      // Measure bbox on the ORIGINAL rendered SVG (not the clone) for accurate layout
+      // Paper mode: use paper dimensions, but expand if content (labels) extends beyond.
+      // La page est ancrée à (0,0) : on mesure donc jusqu'où le contenu va à droite/en bas.
       const dims = this.drawing_area.getPaperDimensionsMm()
       const paper_w = Class_DrawingArea.mmToPx(dims.width)
       const paper_h = Class_DrawingArea.mmToPx(dims.height)
-      const bbox = this.drawing_area.d3_selection_elements_group?.node()?.getBBox()
-      const content_right = bbox ? bbox.x + bbox.width : 0
-      const content_bottom = bbox ? bbox.y + bbox.height : 0
+      const content_right = bounds ? bounds.x + bounds.width : 0
+      const content_bottom = bounds ? bounds.y + bounds.height : 0
       export_width = Math.max(paper_w, content_right + 5) + 2 * edge_pad
       export_height = Math.max(paper_h, content_bottom + 5) + 2 * edge_pad
     } else {
+      // Mode libre : le contenu est ancré à son coin haut-gauche, donc la taille est celle
+      // du contenu — et non plus celle du canvas, qui valait au minimum la fenêtre et
+      // faisait embarquer ses marges vides dans l'export.
       const scale_da = this.drawing_area.getZoomScale()
-      export_width = (this.drawing_area.width * scale_da) + legend_w + 5 + 2 * edge_pad
-      export_height = this.drawing_area.height * scale_da + 5 + 2 * edge_pad
+      export_width = ((bounds?.width ?? this.drawing_area.width) * scale_da) + legend_w + 5 + 2 * edge_pad
+      export_height = ((bounds?.height ?? this.drawing_area.height) * scale_da) + 5 + 2 * edge_pad
     }
 
     // Watermark "réalisé avec OpenSankey.fr" for raster/PDF exports without
@@ -1308,210 +1415,19 @@ export class Class_ApplicationData {
     return svg_with_header
   }
 
+  /**
+   * (Re)construit le scénario de la visite guidée. Appelé à chaque lancement du tour (bouton Aide,
+   * écran d'accueil) car le scénario dépend de l'état du diagramme au moment du lancement.
+   *
+   * `_steps` est muté EN PLACE : le TourProvider reçoit `app_data.steps` et garde la même
+   * référence de tableau d'un lancement à l'autre.
+   */
   public setSteps() {
     this._steps.splice(0, this._steps.length) // Reset list
-    const openConfigDrawer = () => {
-      if (this.menu_configuration.ref_menu_opened.current?.[0] === false) {
-        this.menu_configuration.ref_menu_opened.current[1](true)
-      }
-    }
-    const closeConfigDrawer = () => {
-      if (this.menu_configuration.ref_menu_opened.current?.[0] === true) {
-        this.menu_configuration.ref_menu_opened.current[1](false)
-      }
-    }
-    const switchConfigTab = (tab: 'data' | 'style') => {
-      this.menu_configuration.type_menu_configuration_selected = tab
-      this.menu_configuration.ref_to_menu_config_updater.current?.()
-    }
-    const ensureElementSelected = (type: keyTypeConfig, element: keyTypeElements) => {
-      const list = this.menu_configuration.elements_configurable_selected[type] as keyTypeElements[]
-      if (!list.includes(element)) {
-        this.menu_configuration.toggleElementInConfigEdition(type, element)
-        this.menu_configuration.ref_to_menu_config_updater.current?.()
-      }
-    }
-    const setFilterDrawer = (open: boolean) => {
-      this.menu_configuration.ref_close_filter_drawer.current?.(open)
-    }
-    const demoRefs: {
-      created: boolean
-      node_ids: string[]
-      node_tagg_id: string | null
-      flux_tagg_id: string | null
-      data_tagg_id: string | null
-    } = {
-      created: false,
-      node_ids: [],
-      node_tagg_id: null,
-      flux_tagg_id: null,
-      data_tagg_id: null,
-    }
-    const ensureDemoContent = () => {
-      // Create two nodes, a flow with a value and one tag group per type (node/flux/data)
-      // so the user sees a concrete diagram and can explore all sub menus during the tour
-      if (demoRefs.created) return
-      if (this.drawing_area.sankey.nodes_list.length !== 0) return
-      const sankey = this.drawing_area.sankey
-      sankey.addNewDefaultLink()
-      const link = sankey.links_list[0]
-      if (link) {
-        link.valueCurrent = 100
-      }
-      const node_tagg = sankey.addNodeTagGroup('tour_demo_node_tagg', this.t('guide.demo_node_tagg_name'))
-      const flux_tagg = sankey.addFluxTagGroup('tour_demo_flux_tagg', this.t('guide.demo_flux_tagg_name'))
-      const data_tagg = sankey.addDataTagGroup('tour_demo_data_tagg', this.t('guide.demo_data_tagg_name'))
-      demoRefs.node_ids = sankey.nodes_list.map(n => n.id)
-      demoRefs.node_tagg_id = node_tagg.id
-      demoRefs.flux_tagg_id = flux_tagg.id
-      demoRefs.data_tagg_id = data_tagg.id
-      demoRefs.created = true
-      sankey.draw()
-      this.drawing_area.areaAutoFit()
-    }
-    const cleanupDemoContent = () => {
-      if (!demoRefs.created) return
-      const sankey = this.drawing_area.sankey
-      demoRefs.node_ids.forEach(id => {
-        const node = sankey.nodes_dict[id]
-        if (node) sankey.deleteNode(node)
-      })
-      if (demoRefs.node_tagg_id) sankey.removeTagGroupWithId('node_taggs', demoRefs.node_tagg_id)
-      if (demoRefs.flux_tagg_id) sankey.removeTagGroupWithId('flux_taggs', demoRefs.flux_tagg_id)
-      if (demoRefs.data_tagg_id) sankey.removeTagGroupWithId('data_taggs', demoRefs.data_tagg_id)
-      demoRefs.created = false
-      demoRefs.node_ids = []
-      demoRefs.node_tagg_id = null
-      demoRefs.flux_tagg_id = null
-      demoRefs.data_tagg_id = null
-      sankey.draw()
-    }
-    const has_filter_toolbar = document.getElementById('buttonOpenFilterDrawer') !== null
-    const steps = [
-      {
-        selector: '#g_drawing',
-        content: this.t('guide.drawing_area'),
-        action: () => {
-          ensureDemoContent()
-        }
-      },
-      {
-        selector: '.TopMenu',
-        content: this.t('guide.nav_menu'),
-      },
-      {
-        selector: '.menutop_button_fichier',
-        content: this.t('guide.menutop_fichier'),
-      },
-      {
-        selector: '.menutop_button_export',
-        content: this.t('guide.menutop_export'),
-      },
-      {
-        selector: '.menutop_button_edition',
-        content: this.t('guide.menutop_edition'),
-      },
-      {
-        // Save-in-cache moved to the topbar document-state block (undo/redo/save).
-        selector: '.topbar_button_save_in_cache',
-        content: this.t('guide.save_in_cache'),
-      },
-      {
-        // Visite guidée + Tutoriels (+ Sankeythèque) now live in the "Aide" dropdown.
-        selector: '.menutop_button_aide',
-        content: this.t('guide.tutorials_button'),
-      },
-      ...(has_filter_toolbar ? [
-        {
-          selector: '#buttonOpenFilterDrawer',
-          content: this.t('guide.filter_toolbar_button'),
-          action: () => {
-            setFilterDrawer(true)
-          }
-        },
-        {
-          selector: '#drawer_filter',
-          content: this.t('guide.filter_toolbar_drawer'),
-          action: () => {
-            setFilterDrawer(true)
-          },
-          actionAfter: () => {
-            setFilterDrawer(false)
-          }
-        },
-      ] : []),
-      {
-        selector: '.toolbar_bottom_mouse_mode',
-        content: this.t('guide.toolbar_bottom_mouse_mode'),
-      },
-      {
-        selector: '.toolbar_bottom_position_mode',
-        content: this.t('guide.toolbar_bottom_position_mode'),
-      },
-      {
-        selector: '.toolbar_bottom_stretch',
-        content: this.t('guide.toolbar_bottom_stretch'),
-      },
-      {
-        selector: '.menutop_button_aide',
-        content: this.t('guide.toolbar_bottom_help'),
-      },
-      {
-        selector: '.sideToolBar',
-        content: this.t('guide.toolbar'),
-        actionAfter: () => {
-          // Open the configuration drawer so next steps can target its internals
-          openConfigDrawer()
-          switchConfigTab('data')
-          ensureElementSelected('data', 'node')
-          ensureElementSelected('data', 'flow')
-        }
-      },
-      {
-        selector: '.drawer_menu_config',
-        content: this.t('guide.menu_config'),
-      },
-      {
-        selector: '.buttonGroupTypeConfig',
-        content: this.t('guide.config_tabs'),
-      },
-      {
-        selector: '.button_type_config_data',
-        content: this.t('guide.config_tab_data'),
-        actionAfter: () => {
-          switchConfigTab('data')
-        }
-      },
-      {
-        selector: '.config_box',
-        content: this.t('guide.config_content_data'),
-        actionAfter: () => {
-          switchConfigTab('style')
-          ensureElementSelected('style', 'DA')
-          ensureElementSelected('style', 'element')
-        }
-      },
-      {
-        selector: '.button_type_config_style',
-        content: this.t('guide.config_tab_style'),
-      },
-      {
-        selector: '.config_box',
-        content: this.t('guide.config_content_style'),
-        actionAfter: () => {
-          closeConfigDrawer()
-        }
-      },
-      {
-        selector: '#g_drawing',
-        content: this.t('guide.demo_cleanup'),
-        actionAfter: () => {
-          cleanupDemoContent()
-        }
-      },
-    ]
-    steps.forEach(step => this._steps.push(step))
+    this._guided_tour.buildSteps().forEach(step => this._steps.push(step))
   }
+
+  public get guided_tour(): Class_GuidedTour { return this._guided_tour }
 
   /**
    * Generatric function used to save undo/redo of some basic attribute mutation
@@ -1613,15 +1529,22 @@ export class Class_ApplicationData {
     const evtKeyEnter = (evt.key === 'Enter')
     const evtKeyA = ((evt.key === 'a') || (evt.key === 'A')) && evtOnDrawingArea
     const evtKeyS = ((evt.key === 's') || (evt.key === 'S')) && evtOnDrawingArea
-    const evtKeyZ = ((evt.key === 'z') || (evt.key === 'Z'))
-    const evtKeyY = ((evt.key === 'y') || (evt.key === 'Y'))
+    // Comme A/S/C/V : pendant une édition inline (contenteditable) ou dans un input
+    // de menu, Ctrl+Z/Y doit rester l'undo natif du champ. Sans ce garde-fou, le
+    // preventDefault plus bas bloquait la frappe ET annulait l'action Sankey d'avant.
+    const evtKeyZ = ((evt.key === 'z') || (evt.key === 'Z')) && evtOnDrawingArea
+    const evtKeyY = ((evt.key === 'y') || (evt.key === 'Y')) && evtOnDrawingArea
     const evtKeyC = ((evt.key === 'c') || (evt.key === 'C')) && evtOnDrawingArea
     const evtKeyV = ((evt.key === 'v') || (evt.key === 'V')) && evtOnDrawingArea
+    // OS#1273 — Ctrl+F ouvre la barre de recherche d'élément. Contrairement aux
+    // autres raccourcis, il reste actif même hors zone de dessin (dans un input),
+    // pour rester déclenchable quand le focus est ailleurs — comme un Ctrl+F natif.
+    const evtKeyF = (evt.key === 'f') || (evt.key === 'F')
     const evtCtrlA = evtCtrl && evtKeyA
     const evtCtrlS = evtCtrl && evtKeyS
     const evtCtrlShiftS = evtCtrlShift && evtKeyS
     const evtCtrlAltS = evtCtrlAlt && evtKeyS
-    //const evtCtrlF = evtCtrl && evtKeyF
+    const evtCtrlF = evtCtrl && evtKeyF
     const evtCtrlZ = evtCtrl && evtKeyZ
     const evtCtrlY = evtCtrl && evtKeyY
     const evtCtrlShiftZ = evtCtrlShift && evtKeyZ
@@ -1696,6 +1619,9 @@ export class Class_ApplicationData {
       // Exit style paint mode if active
       if (app_ref.drawing_area.isInStylePaintMode())
         app_ref.drawing_area.exitStylePaintMode()
+      // Exit « placer une zone de texte » mode if active
+      else if (app_ref.drawing_area.isInPlaceContainerMode())
+        app_ref.drawing_area.exitPlaceContainerMode()
       // Set app in selection mode
       else if (app_ref.drawing_area.isInEditionMode())
         app_ref.drawing_area.switchMode()
@@ -1727,9 +1653,9 @@ export class Class_ApplicationData {
       // Prevent default event on ctrl + a
       evt.preventDefault()
 
-      // Select all node & links
+      // Select all node & links (les zones de la légende sont des conteneurs,
+      // déjà couvertes par addAllVisibleElementsToSelection — OS#1254)
       app_ref.drawing_area.addAllVisibleElementsToSelection()
-      app_ref.drawing_area.addLegendToSelection()
     }
     // Event to save current diagram in cache -----------------------------------------
     else if (evtCtrlS) {
@@ -1752,18 +1678,13 @@ export class Class_ApplicationData {
       // Trigger saving via Excel saving button
       this.saveToExcel('/opensankey/', {})
     }
-    // Fullscreen --------------------------------------------------------------------
-    // else if (evtCtrlF) {
-    //   // Prevent default event
-    //   evt.preventDefault()
-    //   // Toggle fullscreen
-    //   if (!document.fullscreenElement) {
-    //     document.documentElement.requestFullscreen()
-    //   }
-    //   else if (document.exitFullscreen) {
-    //     document.exitFullscreen()
-    //   }
-    // }
+    // Search an element in the diagram (OS#1273) ------------------------------------
+    else if (evtCtrlF) {
+      // Prevent default event (browser find bar)
+      evt.preventDefault()
+      // Toggle the element search bar (registered by ElementSearchOverlay)
+      app_ref.menu_configuration.ref_toggle_search.current()
+    }
     // Undo
     else if (evtCtrlZ) {
       evt.preventDefault()
@@ -1882,15 +1803,25 @@ export class Class_ApplicationData {
     // In free mode, use the current zoom scale
     const scale_da = this.drawing_area.is_paper_mode ? 1 : this.drawing_area.getZoomScale()
 
-    // areaAutoFit may shift the canvas origin to negative coordinates when content
-    // (e.g. value labels above flows) extends past y=0; counter-translate g_drawing
-    // so the canvas top-left maps to (0,0) in the export SVG instead of clipping.
-    // The extra export_edge_padding px absorbs the bg rect stroke-width (5 px → 2.5 px
-    // half-stroke outside the rect bounds) and font ascender heights so nothing peeks
-    // outside the export viewport. The matching padding on export_width/height keeps
-    // bottom/right unaffected.
-    const tx = -this.drawing_area.background_shift_x * scale_da + Class_ApplicationData.export_edge_padding
-    const ty = -this.drawing_area.background_shift_y * scale_da + Class_ApplicationData.export_edge_padding
+    // OS#1250 phase 4 — l'export s'ancre sur l'origine du CONTENU, plus sur celle du
+    // canvas (background_shift), qui n'existe plus : le canvas était un rectangle fini
+    // dimensionné sur la fenêtre, sans rapport avec ce qu'on exporte. Le contenu peut
+    // vivre en coordonnées négatives (labels de valeur au-dessus des flux) : on
+    // contre-translate pour que son coin haut-gauche tombe à (0,0) au lieu d'être rogné.
+    //
+    // Mode papier : c'est la PAGE qu'on exporte, ancrée à son origine (0,0) — pas le
+    // contenu, qui peut déborder d'un côté sans devoir décaler la page.
+    //
+    // Le export_edge_padding absorbe le stroke du rect de fond (5 px → 2,5 px de
+    // demi-trait hors bornes) et les hauteurs d'ascendantes, pour que rien ne dépasse du
+    // viewport d'export. Le padding correspondant sur export_width/height laisse
+    // bas/droite inchangés (cf. pre_process_export_svg, qui doit rester d'accord avec ce
+    // calcul).
+    const export_bounds = this.drawing_area.contentBounds()
+    const origin_x = this.drawing_area.is_paper_mode ? 0 : (export_bounds?.x ?? 0)
+    const origin_y = this.drawing_area.is_paper_mode ? 0 : (export_bounds?.y ?? 0)
+    const tx = -origin_x * scale_da + Class_ApplicationData.export_edge_padding
+    const ty = -origin_y * scale_da + Class_ApplicationData.export_edge_padding
     svg_clone?.select('#g_drawing').attr('transform', `translate(${tx},${ty}) scale(${scale_da})`)
     svg_clone?.selectAll('input').remove()
 
@@ -1900,6 +1831,11 @@ export class Class_ApplicationData {
     // it would otherwise be baked into the SVG/PNG/PDF as a stray border cutting across
     // the export, shifted down by the top menu height.
     svg_clone?.select('#viewport_border').remove()
+
+    // #291 — Le clip du contenu (groupe #g_clip enveloppant g_drawing) découpe l'affichage éditeur
+    // au cadre de la fenêtre. À l'export, on veut le diagramme COMPLET (le contenu peut vivre
+    // hors de la fenêtre courante après un pan/zoom) : on neutralise donc le clip-path sur le clone.
+    svg_clone?.select('#g_clip').attr('clip-path', null)
 
     // wkhtmltoimage doesn't honor `dominant-baseline` consistently — node labels
     // render fine but link labels collide with their value-label sibling. We

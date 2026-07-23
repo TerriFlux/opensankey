@@ -25,21 +25,22 @@
 // ==================================================================================================
 
 import React, { ChangeEvent, useEffect, useRef, useState } from 'react'
-import { Checkbox, Box, Button, Input, Select, Text, Divider, Alert, AlertIcon } from '@chakra-ui/react'
+import { Checkbox, Box, Button, Select, Text, Divider, Alert, AlertIcon } from '@chakra-ui/react'
 import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react'
 import { WarningIcon } from '@chakra-ui/icons'
 import { MenuDraggable } from '../topmenus/SankeyMenus'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import FileSaver from 'file-saver'
 import { decompressGzipDataFixed, decompressUploadedFileUniversal } from '../../Persistence/UniversalJSONCompression'
+import { applyEsankeyFile } from '../../Persistence/esankeyLoad'
 import { Type_JSON, default_main_sankey_id } from '../../types/Utils'
-import { ActionButtons, ProcessTerminal } from './PersistenceProcessDialogTerminal'
+import { ActionButtons, ProcessTerminal, Type_ProcessError } from './PersistenceProcessDialogTerminal'
 import {
   CONVERTER_CONFIGS, ConverterConfig, FormatConfigStructure, FormatType, getDefaultInputOptions, getDefaultOutputOptions,
   getInitialFormat, hasOptionsFormat, SOLVER_OPTION_KEYS, INPUT_OPTION_KEYS, OptionGroup, OPTION_GROUP_LABELS
 } from './PersistenceProcessDialogConfigs'
 import { MenuConditionEvaluator } from './SankeyMenuContext'
-import { OSTooltip, WrapperBoxSubSectionMenu } from '../configmenus/MenuCommon'
+import { OSTooltip, WrapperBoxSubSectionMenu, LocalizedFileInput } from '../configmenus/MenuCommon'
 import { AutoLayoutSpacingInputs } from './MenuContextWidgetFactory'
 import { Type_PaperFormat, Type_PaperOrientation, default_paper_format, default_paper_orientation, default_margin_mm } from '../../Elements/ElementsAttributesConfig'
 import { ConfigMenuNumberInput } from '../configmenus/MenuCommon'
@@ -89,7 +90,34 @@ const stored_file_handles = new Map<string, FileSystemFileHandle>()
 
 const supports_fs_access = typeof window !== 'undefined' && 'showOpenFilePicker' in window
 
-const pickerTypesForFormat = (format: FormatType): Array<{ description: string; accept: Record<string, string[]> }> | undefined => {
+/**
+ * SA#249 — Message d'échec affiché à l'utilisateur.
+ *
+ * Le serveur joint un CODE quand il en connaît un (cf. mfa_problem_error.py) ; on lui associe un
+ * message actionnable. Deux raisons de retomber sur le message générique : aucune cause remontée
+ * (échec sans code), ou code INCONNU du front — un backend plus récent peut introduire un code que
+ * cette version ne traduit pas encore, et il vaut mieux un message vague qu'une clé i18n crue
+ * affichée telle quelle.
+ */
+const failureMessage = (
+  t: (_: string) => string,
+  generic_message: string,
+  error?: Type_ProcessError
+): string => {
+  if (!error?.code) return generic_message
+  const key = 'ProcessDialog.error_' + error.code
+  const translated = t(key)
+  return translated === key ? generic_message : translated
+}
+
+const pickerTypesForFormat = (
+  format: FormatType,
+  // N'autoriser .sankey (e!Sankey, ZIP+XML) que lorsque la sélection charge
+  // directement le diagramme (input json -> output blob) : dans les autres
+  // dialogues partageant le format 'json' (conversion, réconciliation...), un
+  // .sankey n'a pas de sens côté serveur.
+  allow_esankey: boolean = false
+): Array<{ description: string; accept: Record<string, string[]> }> | undefined => {
   if (format === 'excel') {
     return [{
       description: 'Excel',
@@ -102,7 +130,11 @@ const pickerTypesForFormat = (format: FormatType): Array<{ description: string; 
   if (format === 'json') {
     return [{
       description: 'JSON',
-      accept: { 'application/json': ['.json'], 'application/gzip': ['.gz'] }
+      accept: {
+        'application/json': ['.json'],
+        'application/gzip': ['.gz'],
+        ...(allow_esankey ? { 'application/octet-stream': ['.sankey'] } : {})
+      }
     }]
   }
   return undefined
@@ -249,17 +281,20 @@ export const FileFormatSection = ({
             pick_file_handle ? (
               <Box display='grid' gridTemplateColumns='1fr 2fr' gap={2} alignItems='center'>
                 <Button size='sm' onClick={() => { void pick_file_handle() }}>
-                  {current_file_name ? 'Changer...' : 'Parcourir...'}
+                  {current_file_name ? t('ProcessDialog.change_file') : t('ProcessDialog.browse')}
                 </Button>
                 <Text fontSize='sm' noOfLines={1} title={current_file_name}>
                   {current_file_name ?? ''}
                 </Text>
               </Box>
             ) : (
-              <Input
-                type="file"
+              <LocalizedFileInput
                 accept={//@ts-expect-error xxx
-                  FORMAT_CONFIG[current_format].accept}
+                  FORMAT_CONFIG[current_format].accept
+                  // Un .sankey (e!Sankey) peut être ouvert ici comme un .json : ne
+                  // l'autoriser que lorsque ce sélecteur charge directement le
+                  // diagramme (input json -> output blob), pas en conversion.
+                  + (current_format === 'json' && output_format === 'blob' ? ',.sankey' : '')}
                 onChange={(evt: ChangeEvent<HTMLInputElement>) => {
                   const files = (evt.target as HTMLInputElement).files
                   set_file(files?.[0])
@@ -348,9 +383,11 @@ export const retrieveJSONResults = (
   // master positions/styles instead of keeping its own (mirrors master behaviour).
   const layout_source_json: Type_JSON = (() => {
     if (!view_only) return current_json
-    const views = current_json['views'] as Type_JSON | undefined
-    const view_layout = views?.[app_data.drawing_area.id] as Type_JSON | undefined
-    return view_layout ?? current_json
+    // NB : en OSP, current_json a ses vues encodées en DELTA (#254) — extraire
+    // ['views'][id] brut donnerait une entrée sans version/format_version et
+    // ferait basculer fromJSON sur le legacy pré-0.9 (crash convert_tags). La
+    // méthode virtuelle décode le delta et renvoie le snapshot complet.
+    return app_data.getViewLayoutJSON(app_data.drawing_area.id, current_json)
   })()
   //const data_as_json = JSON.parse(text) as Type_JSON
   JSON_data['version'] = app_data.version // Avoid converter process
@@ -383,79 +420,95 @@ export const retrieveJSONResults = (
     }
   }
 
-  app_data.drawing_area.bypass_redraws = true
-  app_data.drawing_area.sankey.nodes_list.forEach(n => {
-    const tagg = app_data.drawing_area.sankey.node_taggs_dict['type de noeud']
-    if (!tagg) {
-      return
-    }
-    const product_tag = tagg.tags_dict['produit']
-    const sector_tag = tagg.tags_dict['secteur']
-    //const echange_tag = tagg.tags_dict['echange']
-    if (n.hasGivenTag(product_tag)) {
-      // Vérifier si les styles corrects ne sont pas déjà appliqués
-      if (!n.hasStyle(NodeProductStyle)) {
-        // Retirer tous les styles personnalisés existants
-        n.removeAllStyles()
-
-        // Ajouter les styles appropriés
-        n.addStyle(app_data.drawing_area.sankey.styles_dict[NodeStyle])
-        n.addStyle(app_data.drawing_area.sankey.styles_dict[NodeProductStyle])
+  // Le chargement ci-dessus a pu laisser bypass_redraws=true (set l.364 en view_only, ou
+  // app_data.fromJSON(draw=false) qui ne le repasse jamais à false). On repart d'un état
+  // propre puis on enveloppe restylage + mise en page ; le draw() final est fait par
+  // withBypassRedraws (#240 : plus de flag bloqué si un restyle/layout throw).
+  app_data.drawing_area.bypass_redraws = false
+  app_data.drawing_area.withBypassRedraws(() => {
+    app_data.drawing_area.sankey.nodes_list.forEach(n => {
+      const tagg = app_data.drawing_area.sankey.node_taggs_dict['type de noeud']
+      if (!tagg) {
+        return
       }
-    }
-    // Pour les noeuds secteur
-    else if (n.hasGivenTag(sector_tag)) {
+      const product_tag = tagg.tags_dict['produit']
+      const sector_tag = tagg.tags_dict['secteur']
+      //const echange_tag = tagg.tags_dict['echange']
+      if (n.hasGivenTag(product_tag)) {
       // Vérifier si les styles corrects ne sont pas déjà appliqués
-      if (!n.hasStyle(NodeSectorStyle)) {
+        if (!n.hasStyle(NodeProductStyle)) {
         // Retirer tous les styles personnalisés existants
-        n.removeAllStyles()
+          n.removeAllStyles()
 
-        // Ajouter les styles appropriés
-        n.addStyle(app_data.drawing_area.sankey.styles_dict[NodeStyle])
-        n.addStyle(app_data.drawing_area.sankey.styles_dict[NodeSectorStyle])
+          // Ajouter les styles appropriés
+          n.addStyle(app_data.drawing_area.sankey.styles_dict[NodeStyle])
+          n.addStyle(app_data.drawing_area.sankey.styles_dict[NodeProductStyle])
+        }
       }
+      // Pour les noeuds secteur
+      else if (n.hasGivenTag(sector_tag)) {
+      // Vérifier si les styles corrects ne sont pas déjà appliqués
+        if (!n.hasStyle(NodeSectorStyle)) {
+        // Retirer tous les styles personnalisés existants
+          n.removeAllStyles()
+
+          // Ajouter les styles appropriés
+          n.addStyle(app_data.drawing_area.sankey.styles_dict[NodeStyle])
+          n.addStyle(app_data.drawing_area.sankey.styles_dict[NodeSectorStyle])
+        }
+      }
+    })
+    app_data.drawing_area.legend.masked = false
+    if (app_data.drawing_area.sankey.flux_taggs_list.length > 0) {
+      app_data.drawing_area.sankey.flux_taggs_list[0].use_colors = true
+    } else if (app_data.drawing_area.sankey.node_taggs_list.filter(tagg => tagg.id != 'type de noeud').length == 0) {
+      app_data.drawing_area.sankey.styles_dict[LinkStyle].shape_color_rule = 'flow'
+      applyRandomColors(app_data, app_data.drawing_area.sankey.links_list)
+    }
+    const unit_taggs = app_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
+    if (unit_taggs.length > 0) {
+      app_data.drawing_area.sankey.styles_dict['default'].value_label_unit_type = 'unit_tag'
+      app_data.drawing_area.sankey.styles_dict['default'].value_label_unit_visible = true
+    }
+
+    // Case 1 : Apply extracted layout if present -> contains positions
+    if (apply_layout_current_sankey) {
+      app_data.drawing_area.nodePositioning.computeScale()
+      // L'échelle vient d'être recalculée sur les nouvelles données : ne pas la réécraser
+      // avec celle stockée dans le layout importé.
+      app_data.updateFromJSON(layout_source_json, { exclude_scale: true } as Type_JSON)
+      // mfa_problem#222 : updateFromJSON merge les positions sans rejouer
+      // afterFromJSON → les nœuds import/export d'échange ne sont ni restylés ni
+      // replacés. setTrade(true) réapplique les styles import/export à TOUS les
+      // échanges (produits ET secteurs) puis appelle arrangeTrade (placement,
+      // secteurs en horizontal). Sinon les import/export secteur restent "collés".
+      app_data.drawing_area.sankey.setTrade(true)
+    } else if (JSON_data['layout']) {
+      app_data.drawing_area.nodePositioning.computeScale()
+      app_data.updateFromJSON(JSON_data['layout'] as Type_JSON, { exclude_scale: true } as Type_JSON)
+      app_data.drawing_area.sankey.setTrade(true)
+    } else {
+      app_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true, optimize_crossing, h_spacing, v_spacing, sources_mode, sinks_mode)
+      app_data.drawing_area.sankey.setTrade(true)
+    }
+    // Réconciliation/complétion d'un diagramme existant : restaurer l'échelle que
+    // l'utilisateur avait calée (computeScale l'aurait clobbérée avec le nouveau
+    // max de flux complété).
+    if (preserve_scale) {
+      app_data.drawing_area.scale = initial_scale
     }
   })
-  app_data.drawing_area.legend.masked = false
-  if (app_data.drawing_area.sankey.flux_taggs_list.length > 0) {
-    app_data.drawing_area.sankey.flux_taggs_list[0].use_colors = true
-  } else if (app_data.drawing_area.sankey.node_taggs_list.filter(tagg => tagg.id != 'type de noeud').length == 0) {
-    app_data.drawing_area.sankey.styles_dict[LinkStyle].shape_color_rule = 'flow'
-    applyRandomColors(app_data, app_data.drawing_area.sankey.links_list)
-  }
-  const unit_taggs = app_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
-  if (unit_taggs.length > 0) {
-    app_data.drawing_area.sankey.styles_dict['default'].value_label_unit_type = 'unit_tag'
-    app_data.drawing_area.sankey.styles_dict['default'].value_label_unit_visible = true
+
+  // Import Excel avec mise en page auto (aucun layout fourni, hors réconciliation) : garantir un
+  // zoom à 100 %. areaAutoFit ne peut structurellement pas donner k=1 (fit_margin + plancher
+  // Math.max bornent k sous 1) ; on fige donc le fit dans la géométrie (tailles px ×ratio, échelle
+  // des flux ÷ratio) puis caméra à k=1 — rendu identique, indicateur à 100 %, tailles « réelles ».
+  // Hors historique (l'import gère le sien) et hors view_only (le bake sérialise TOUT l'app : on
+  // évite de mettre à l'échelle d'autres vues d'un document multi-vues).
+  if (!apply_layout_current_sankey && !JSON_data['layout'] && !preserve_scale && !view_only) {
+    app_data.drawing_area.bakeZoomIntoGeometry({ record_history: false })
   }
 
-  // Case 1 : Apply extracted layout if present -> contains positions
-  if (apply_layout_current_sankey) {
-    app_data.drawing_area.nodePositioning.computeScale()
-    // L'échelle vient d'être recalculée sur les nouvelles données : ne pas la réécraser
-    // avec celle stockée dans le layout importé.
-    app_data.updateFromJSON(layout_source_json, { exclude_scale: true } as Type_JSON)
-    // mfa_problem#222 : updateFromJSON merge les positions sans rejouer
-    // afterFromJSON → les nœuds import/export d'échange ne sont ni restylés ni
-    // replacés. setTrade(true) réapplique les styles import/export à TOUS les
-    // échanges (produits ET secteurs) puis appelle arrangeTrade (placement,
-    // secteurs en horizontal). Sinon les import/export secteur restent "collés".
-    app_data.drawing_area.sankey.setTrade(true)
-  } else if (JSON_data['layout']) {
-    app_data.drawing_area.nodePositioning.computeScale()
-    app_data.updateFromJSON(JSON_data['layout'] as Type_JSON, { exclude_scale: true } as Type_JSON)
-    app_data.drawing_area.sankey.setTrade(true)
-  } else {
-    app_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true, optimize_crossing, h_spacing, v_spacing, sources_mode, sinks_mode)
-    app_data.drawing_area.sankey.setTrade(true)
-  }
-  // Réconciliation/complétion d'un diagramme existant : restaurer l'échelle que
-  // l'utilisateur avait calée (computeScale l'aurait clobbérée avec le nouveau
-  // max de flux complété).
-  if (preserve_scale) {
-    app_data.drawing_area.scale = initial_scale
-  }
-  app_data.drawing_area.draw()
   app_data.menu_configuration.updateComponentRelatedToStyles()
 
   // In view_only mode, every mutation above happened on the current view's DA.
@@ -582,6 +635,9 @@ export const UniversalFileConverter = ({
 
   const [file_path, setFilePath] = useState('')
   const [failure, setFailure] = useState(false)
+  // SA#249 — cause de l'échec remontée par le serveur (code MFAProblem). Quand elle est là, elle
+  // remplace le message d'échec générique par un message actionnable.
+  const [failure_error, setFailureError] = useState<Type_ProcessError | undefined>(undefined)
 
   // Restore a previously-picked file handle when the modal is reopened.
   // The handle survives in the module-level Map even after unmount.
@@ -736,7 +792,7 @@ export const UniversalFileConverter = ({
       // @ts-expect-error showOpenFilePicker is not in all TS lib.dom versions
       const [handle] = await window.showOpenFilePicker({
         multiple: false,
-        types: pickerTypesForFormat(input_format)
+        types: pickerTypesForFormat(input_format, input_format === 'json' && output_format === 'blob')
       }) as [FileSystemFileHandle]
       stored_file_handles.set(dialog_name, handle)
       const file = await handle.getFile()
@@ -810,6 +866,7 @@ export const UniversalFileConverter = ({
     setStarted(false)
     setProcessing(false)
     setFailure(false)
+    setFailureError(undefined)
     setResult('')
     // [#188] Fresh dialog opening: clear manual-override tracking so the
     // workbook's recorded options pre-fill the buckets cleanly.
@@ -896,6 +953,7 @@ export const UniversalFileConverter = ({
     setStarted(false)
     setProcessing(false)
     setFailure(false)
+    setFailureError(undefined)
     setAutoLoad(!config.output.required /*&& !config.input.format.options!.includes('blob')*/)
 
     set_show_terminal(false)
@@ -907,6 +965,7 @@ export const UniversalFileConverter = ({
   const launch = (file_path: string) => {
     setFilePath(file_path)
     setFailure(false)
+    setFailureError(undefined)
     setStarted(true)
     setProcessing(true)
     setResult('')
@@ -920,7 +979,6 @@ export const UniversalFileConverter = ({
       return
     }
     if (!auto_load) {
-      console.log('🔄 Conversion terminée - en attente d\'action utilisateur')
       setStarted(false)
       setProcessing(false)
       setFailure(false)
@@ -1010,6 +1068,10 @@ export const UniversalFileConverter = ({
             app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current!(false)
           }
         } catch (error) {
+          // L'erreur re-levée part dans la promesse du toast (Chakra ne loggue
+          // pas) et setResult n'alimente pas le panneau Terminal : sans ce log,
+          // la console reste muette alors qu'une exception a bien été levée.
+          console.error('[retrieve_result] échec chargement diagramme:', error)
           setResult('FAILED Erreur chargement JSON:' + error)
           setProcessing(false)
           //setStarted(false)
@@ -1070,7 +1132,6 @@ export const UniversalFileConverter = ({
         const filename = `${root_filename}${ext}`
 
         FileSaver.saveAs(blob, filename)
-        console.log(`✅ Fichier téléchargé: ${filename}`)
       })
       .catch(error => {
         console.error('❌ Erreur téléchargement:', error)
@@ -1191,9 +1252,17 @@ export const UniversalFileConverter = ({
       app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current!(false)
       return
     } else if (input_format == 'json' && output_format == 'blob') {
-      decompressUploadedFileUniversal(current_input_file as File).then(JSON_data => {
-        app_data.fromJSON(JSON_data as Type_JSON, input_options as Type_JSON)
-      })
+      const picked_file = current_input_file as File
+      if (/\.sankey$/i.test(picked_file.name ?? '')) {
+        // Un .sankey (e!Sankey) peut être choisi dans ce même sélecteur "Ouvrir
+        // un fichier JSON" : dézippé et parsé 100 % côté front, comme le fait
+        // le raccourci dédié du menu Ouvrir (MenuTop._load_esankey).
+        void picked_file.arrayBuffer().then((buffer: ArrayBuffer) => applyEsankeyFile(buffer, app_data))
+      } else {
+        decompressUploadedFileUniversal(picked_file).then(JSON_data => {
+          app_data.fromJSON(JSON_data as Type_JSON, input_options as Type_JSON)
+        })
+      }
       setStarted(false)
       setProcessing(false)
       setFailure(false)
@@ -1211,9 +1280,6 @@ export const UniversalFileConverter = ({
 
     const url = window.location.origin + config.server_endpoint
 
-    console.log(`🔄 Lancement conversion ${input_format} → ${output_format}`)
-    console.log('Options entrée:', input_options)
-    console.log('Options sortie:', output_options)
 
     set_show_terminal(true)
     // Garde-fou : un échec HTTP non-JSON (413/502/504 nginx, etc.) ou un network
@@ -1230,7 +1296,19 @@ export const UniversalFileConverter = ({
         const content_type = response.headers.get('content-type') || ''
         const is_json = content_type.includes('application/json')
         if (response.ok && is_json) {
-          // Succès — le Counter prend le relais via check_process.
+          // Chargement direct d'un exemple JSON : le serveur a déjà tout fait
+          // avant de répondre et nous le dit. On termine sur-le-champ plutôt
+          // que d'attendre un tick de check_process — c'était 5 s d'attente
+          // sur un travail terminé. setProcessing(false) démonte le Counter
+          // (donc aucun poll) et déclenche handleFinish côté ProcessTerminal,
+          // exactement comme le faisait finishProcess(false).
+          const data = await response.json().catch(() => null)
+          if (data?.status === 'finished') {
+            setProcessing(false)
+            return
+          }
+          // Sinon la conversion tourne dans un thread : le Counter prend le
+          // relais via check_process.
           return
         }
         if (response.status === 413) {
@@ -1579,7 +1657,9 @@ export const UniversalFileConverter = ({
       {started && !processing && failure ? (
         <Alert status='warning'>
           <AlertIcon />
-          {failure_status}
+          {/* SA#249 — message par code quand le serveur en a remonté un (et que le front connaît ce
+              code) ; sinon on garde le message d'échec générique du dialogue. */}
+          {failureMessage(t, failure_status, failure_error)}
         </Alert>
       ) : (<></>)}
       {/* Terminal inline si configuré */}
@@ -1644,6 +1724,7 @@ export const UniversalFileConverter = ({
             auto_load={auto_load}
             failure={failure}
             setFailure={setFailure}
+            setFailureError={setFailureError}
             processing={processing}
             setProcessing={setProcessing}
             started={started}

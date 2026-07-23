@@ -5,6 +5,7 @@
 // aucune dépendance runtime lourde.
 import type { Class_Sankey } from '../types/Sankey'
 import type { Class_ProtoElement } from '../Elements/Element'
+import { sankeyRootSchema } from './sankeyFormatSchema'
 
 // ---------------------------------------------------------------------------
 // Version de FORMAT (entier), distincte de la version d'app
@@ -15,7 +16,17 @@ import type { Class_ProtoElement } from '../Elements/Element'
 // version pointée pour NE PAS rejouer les migrations legacy à seuil. C'est ce qui
 // corrige l'import Excel (SEP écrivait "1.0" → migrations < 1.1.4 appliquées à tort).
 // Doit rester alignée avec JSON_FORMAT_VERSION de SEP (io_base.py).
-export const CURRENT_FORMAT_VERSION = 1
+// Historique (cf. FORMAT.md) :
+//   1 — introduction de format_version (#22)
+//   2 — vues persistées en DELTA vs le maître (#254) : une entrée de `views`
+//       porte `__patch` au lieu du snapshot intégral. Incompatible en LECTURE
+//       pour une app antérieure (elle prendrait le patch pour une vue).
+//   3 — légende = zones de texte générées (OS#1254) : le sous-objet `legend` ne
+//       porte plus que les paramètres du générateur (+ `legend_managed`) ; les
+//       zones ('legend', 'legend-*') sont des conteneurs ordinaires dans
+//       `labels`. Incompatible en LECTURE pour une app antérieure (elle
+//       afficherait l'ancienne légende-objet EN PLUS des zones).
+export const CURRENT_FORMAT_VERSION = 3
 
 /**
  * Version « effective » servant à piloter les migrations au chargement.
@@ -33,55 +44,63 @@ export function effectiveLoadVersion(
 }
 
 // ---------------------------------------------------------------------------
-// Documentation markdown multilingue (onglet « Doc »)
+// Textes multilingues embarqués dans le diagramme (map { langue -> texte })
 // ---------------------------------------------------------------------------
-// Le champ `documentation_markdown` est stocké en interne comme une map
-// { langue -> markdown }. La sérialisation est RÉTRO-COMPATIBLE et auto-décrite :
-//   - 0 langue        -> champ absent
+// Mécanisme partagé par la documentation markdown (onglet « Doc », tutoriels
+// multilingues) et par les NOMS des nœuds / zones de texte (OS#1299). Le champ
+// est stocké en interne comme une map { langue -> texte }. La sérialisation est
+// RÉTRO-COMPATIBLE et auto-décrite :
+//   - 0 langue        -> champ absent (l'appelant décide du défaut)
 //   - 1 seule langue  -> string (format historique, lisible par les versions
 //                        antérieures qui attendaient une string)
-//   - plusieurs       -> map { fr, en, ... } (les tutoriels traduits)
+//   - plusieurs       -> map { fr, en, ... }
 // La relecture accepte les deux formes : une string historique est rangée sous
 // la langue déclarée du fichier (défaut 'fr', le contenu existant étant
 // francophone). Aucun bump de version n'est requis : le type porte l'info.
 
-export type Type_DocMarkdownMap = { [lang: string]: string }
+export type Type_LangMap = { [lang: string]: string }
+/** Alias historique (doc markdown) — même structure. */
+export type Type_DocMarkdownMap = Type_LangMap
 
 /** Normalise un code langue en 2 lettres minuscules ('en-US' -> 'en'). */
-export function normalizeDocLang(lang: string | undefined): string {
+export function normalizeLang(lang: string | undefined): string {
   return (lang || 'fr').substring(0, 2).toLowerCase()
 }
+/** Alias historique. */
+export const normalizeDocLang = normalizeLang
 
 /**
- * Sérialise la map doc pour le JSON. Renvoie `undefined` si vide (le champ ne
- * doit alors pas être écrit), une string si une seule langue (format
- * historique), sinon la map filtrée des entrées vides.
+ * Sérialise la map pour le JSON. Renvoie `undefined` si vide (le champ ne
+ * doit alors pas être écrit — ou être écrit '' selon le champ), une string si
+ * une seule langue (format historique), sinon la map filtrée des entrées vides.
  */
-export function serializeDocMarkdown(
-  map: Type_DocMarkdownMap
-): string | Type_DocMarkdownMap | undefined {
+export function serializeLangMap(
+  map: Type_LangMap
+): string | Type_LangMap | undefined {
   const langs = Object.keys(map).filter((l) => (map[l] ?? '') !== '')
   if (langs.length === 0) return undefined
   if (langs.length === 1) return map[langs[0]]
-  const out: Type_DocMarkdownMap = {}
+  const out: Type_LangMap = {}
   langs.forEach((l) => { out[l] = map[l] })
   return out
 }
+/** Alias historique. */
+export const serializeDocMarkdown = serializeLangMap
 
 /**
- * Relit le champ doc (string historique ou map) vers une map { langue ->
- * markdown }. `file_lang` = langue déclarée du diagramme (clé `language`),
- * utilisée pour ranger une string historique.
+ * Relit le champ (string historique ou map) vers une map { langue -> texte }.
+ * `file_lang` = langue déclarée du diagramme (clé `language`), utilisée pour
+ * ranger une string historique.
  */
-export function parseDocMarkdown(
+export function parseLangMap(
   raw: unknown,
   file_lang: string | undefined
-): Type_DocMarkdownMap {
+): Type_LangMap {
   if (typeof raw === 'string') {
-    return raw ? { [normalizeDocLang(file_lang)]: raw } : {}
+    return raw ? { [normalizeLang(file_lang)]: raw } : {}
   }
   if (raw && typeof raw === 'object') {
-    const out: Type_DocMarkdownMap = {}
+    const out: Type_LangMap = {}
     for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
       if (typeof v === 'string') out[k] = v
     }
@@ -89,22 +108,26 @@ export function parseDocMarkdown(
   }
   return {}
 }
+/** Alias historique. */
+export const parseDocMarkdown = parseLangMap
 
 /**
- * Résout la map doc vers le markdown à afficher pour la langue active, avec
- * repli en→fr→première disponible (aligné sur la résolution des titres de
- * tutoriels). Renvoie '' si aucune doc.
+ * Résout la map vers le texte à afficher pour la langue active, avec repli
+ * en→fr→première disponible (aligné sur la résolution des titres de
+ * tutoriels). Renvoie '' si la map est vide.
  */
-export function resolveDocMarkdown(
-  map: Type_DocMarkdownMap,
+export function resolveLangMap(
+  map: Type_LangMap,
   lang: string | undefined
 ): string {
-  const l = normalizeDocLang(lang)
+  const l = normalizeLang(lang)
   if (map[l] != null) return map[l]
   for (const fb of ['en', 'fr']) if (map[fb] != null) return map[fb]
   const first = Object.values(map)[0]
   return first ?? ''
 }
+/** Alias historique. */
+export const resolveDocMarkdown = resolveLangMap
 
 /**
  * Compare deux versions « pointées » (ex. '0.92', '1.1', '1.1.4') segment par
@@ -133,63 +156,58 @@ export function isVersionBelow(version: string | number | undefined, target: str
 }
 
 // ---------------------------------------------------------------------------
-// #233 — Validation racine au chargement (pare-chocs léger)
+// #233 / #253 — Validation racine au chargement (pare-chocs léger)
 // ---------------------------------------------------------------------------
 // `fromJSON` supposait la forme du JSON racine et plantait avec une erreur
 // cryptique (ex. `Object.values(undefined)`) sur un fichier ancien ou édité à la
 // main dont une clé structurante manque ou a le mauvais type. Cette garde LÉGÈRE
-// (pas un schéma zod exhaustif — cf. item 47 de l'automne) vérifie la racine et le
-// TYPE des clés structurantes, et renvoie la liste lisible des champs
-// problématiques. Le dispatcher lève alors une erreur explicite AVANT le crash.
+// vérifie la racine et le TYPE des clés structurantes, et renvoie la liste
+// lisible des champs problématiques. Le dispatcher lève alors une erreur
+// explicite AVANT le crash.
 //
-// Volontairement permissive : elle ne vérifie que la présence/le type de ce dont
-// l'absence ou le mauvais type ferait échouer la lecture. Une clé simplement
-// absente d'un fichier légitime (diagramme vide sans `nodes`, etc.) n'est PAS une
-// erreur — on ne signale un problème que sur un type INCOMPATIBLE d'une clé
-// présente (ou une racine qui n'est pas un objet).
+// #253 : la validation dérive désormais du schéma zod `sankeyRootSchema`
+// (source de vérité unique, dont est aussi généré le JSON Schema publié). Le
+// contrat public de cette fonction est inchangé (mêmes messages, même contrat
+// « zéro faux positif sur le corpus golden »).
+//
+// Volontairement permissive : le schéma est en `passthrough` et ne contraint que
+// l'enveloppe. Une clé simplement absente d'un fichier légitime (diagramme vide
+// sans `nodes`, etc.) n'est PAS une erreur — on ne signale un problème que sur un
+// type INCOMPATIBLE d'une clé présente (ou une racine qui n'est pas un objet).
 
-/** Vrai pour un objet « dictionnaire » simple (ni null, ni tableau). */
-function isPlainObject(v: unknown): v is Record<string, unknown> {
-  return typeof v === 'object' && v !== null && !Array.isArray(v)
+/** Décrit le type d'une valeur pour un message lisible (ni null ni tableau brut). */
+function kindOf(v: unknown): string {
+  if (v === null) return 'null'
+  if (Array.isArray(v)) return 'un tableau'
+  return typeof v
 }
 
-/** Clés structurantes attendues comme dictionnaires si présentes. */
-const ROOT_OBJECT_KEYS = [
-  'nodes', 'links',
-  'dataTags', 'nodeTags', 'levelTags', 'fluxTags', 'viewTags'
-] as const
-
 /**
- * Valide la forme du JSON racine d'un diagramme Sankey. Renvoie la liste des
- * champs problématiques (vide = OK). Pure et sans dépendance : testable en
+ * Valide la forme du JSON racine d'un diagramme Sankey via `sankeyRootSchema`.
+ * Renvoie la liste des champs problématiques (vide = OK). Pure : testable en
  * isolation et réutilisable côté outillage.
  */
 export function validateSankeyRootJSON(json: unknown): string[] {
+  const result = sankeyRootSchema.safeParse(json)
+  if (result.success) return []
   const problems: string[] = []
-  if (!isPlainObject(json)) {
-    const kind = json === null ? 'null'
-      : Array.isArray(json) ? 'un tableau'
-        : typeof json
-    problems.push(`racine : attendu un objet JSON, reçu ${kind}`)
-    return problems // rien d'autre n'est vérifiable
-  }
-  if ('version' in json && !(typeof json.version === 'string' || typeof json.version === 'number')) {
-    problems.push(`version : attendu une chaîne (ou un nombre), reçu ${typeof json.version}`)
-  }
-  if ('format_version' in json && typeof json.format_version !== 'number') {
-    problems.push(`format_version : attendu un entier, reçu ${typeof json.format_version}`)
-  }
-  for (const key of ROOT_OBJECT_KEYS) {
-    if (key in json && !isPlainObject(json[key])) {
-      const val = json[key]
-      const kind = val === null ? 'null' : Array.isArray(val) ? 'un tableau' : typeof val
-      problems.push(`${key} : attendu un objet, reçu ${kind}`)
+  for (const issue of result.error.issues) {
+    // Racine non-objet (tableau, null, scalaire) : un seul problème, rien
+    // d'autre n'est descendable.
+    if (issue.path.length === 0) {
+      problems.push(`racine : attendu un objet JSON, reçu ${kindOf(json)}`)
+      continue
+    }
+    const key = String(issue.path[0])
+    const value = (json as Record<string, unknown>)[key]
+    if (key === 'version') {
+      problems.push(`version : attendu une chaîne (ou un nombre), reçu ${typeof value}`)
+    } else if (key === 'format_version') {
+      problems.push(`format_version : attendu un entier, reçu ${typeof value}`)
+    } else {
+      problems.push(`${key} : attendu un objet, reçu ${kindOf(value)}`)
     }
   }
-  // NB : `views` (concept OpenSankey+) n'est PAS validé ici. Sa forme varie selon
-  // l'époque (objet keyé par id dans les fichiers anciens, tableau plus tard) et la
-  // couche base OpenSankey ne le relit pas — le contraindre produirait des faux
-  // positifs sur des fichiers légitimes (cf. corpus 0.9→1.1.6).
   return problems
 }
 

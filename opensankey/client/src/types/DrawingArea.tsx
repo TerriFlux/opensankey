@@ -25,11 +25,9 @@
 // ==================================================================================================
 
 import * as d3 from '../d3Modules'
-import { MouseEvent } from 'react'
-import { Type_JSON, Type_Structure, Type_DataSource, Type_IntervalDisplay, Type_DisaggregationGap, default_main_sankey_id } from '../types/Utils'
+import { Type_JSON, Type_Structure, Type_DataSource, Type_IntervalDisplay, Type_DisaggregationGap, default_main_sankey_id, randomId } from '../types/Utils'
 import {
   default_background_color,
-  default_black_color,
   default_DA_marging,
   default_grid_color,
   default_grid_size,
@@ -43,6 +41,7 @@ import {
   Type_Orientation,
   Type_PaperFormat,
   Type_PaperOrientation,
+  Type_Shape,
   Type_TextHPos,
   Type_TextVPos
 } from '../Elements/ElementsAttributesConfig'
@@ -54,7 +53,8 @@ import {
   Class_LinkElement,
   sortLinksElementsByIds
 } from '../Elements/Link'
-import { ClassTemplate_Legend } from '../Elements/Legend'
+import { Class_LegendConfig } from '../Elements/LegendGenerator'
+import { isLegendElementId } from '../Elements/legendIds'
 import { Class_BaseElement, Class_ProtoElement } from '../Elements/Element'
 import { Class_ElementStyle } from '../Elements/Element'
 import { NodePositioning } from '../Algorithms/NodePositioning'
@@ -64,10 +64,19 @@ import { Class_Tag } from './Tag'
 import { Class_ContainerElement } from '../Elements/TextZone'
 import { Class_ApplicationData } from './ApplicationData'
 import { compareZOrder, dedupeZOrderKeepFirst } from './zOrder'
-import { TooltipEventManager } from '../Elements/TooltipsConfig'
+import * as LabelFilters from './LabelFilters'
+import * as CopyPaste from './copyPaste'
+import * as DisplayModes from './displayModes'
+import * as CameraMath from './CameraMath'
+import * as StyleCascade from './styleCascade'
+import { Class_ScaleOverrides } from './ScaleOverrides'
+import * as Camera from './DrawingAreaCamera'
+import { ZOOM_TOPIC } from './EventBus'
+import { Class_ViewportChrome } from './DrawingAreaViewportChrome'
+import { Class_DrawingAreaInteractions } from './DrawingAreaInteractions'
 import { Class_NodeBase, sortNodesElements } from '../Elements/NodeBase'
 import {
-  LinkElementPersistence, NodeElementPersistence, SankeyPersistence
+  ContainerPersistence, LinkElementPersistence, NodeElementPersistence, SankeyPersistence
 } from '../Persistence/SankeyPersistence'
 
 
@@ -86,6 +95,18 @@ function sortElementByIdOrder(
  * apparente constante d'un focus à l'autre. À ajuster si le central paraît trop gros/petit.
  */
 const UNITARY_CENTRAL_HEIGHT_FRACTION = 0.3
+
+/**
+ * #680 — Mode de cadrage automatique persistant, piloté par les 3 boutons radio de la
+ * barre d'ajustement (ComponetStretchButtons). Un seul mode actif à la fois, ou aucun :
+ * - 'width'  : toute la LARGEUR du diagramme reste visible bord à bord, en permanence.
+ * - 'height' : toute la HAUTEUR du diagramme reste visible bord à bord, en permanence.
+ * - 'full'   : TOUT le diagramme reste visible et centré, en permanence.
+ * - 'none'   : aucun cadrage automatique (l'utilisateur a zoomé/désenclenché).
+ * Un zoom manuel repasse le mode à 'none' (cf. Camera.zoom*). Persisté (SankeyPersistence).
+ */
+export type Type_AutoFitMode = 'none' | 'width' | 'height' | 'full'
+
 export class Class_DrawingArea {
   public application_data: Class_ApplicationData
   public nodePositioning: NodePositioning
@@ -97,22 +118,45 @@ export class Class_DrawingArea {
   public d3_selection_grid: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_elements_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_elements_sankey_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
-  public d3_selection_legend: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_handlers: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_zone_select: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
-  // Scrollbars
-  private _d3_scrollbar_h: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
-  private _d3_scrollbar_v: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
-  // Border drawn directly on the SVG root (outside g_drawing's zoom transform)
-  // so it always frames the visible viewport, regardless of pan/zoom.
-  private _d3_viewport_border: d3.Selection<SVGRectElement, unknown, HTMLElement, unknown> | null = null
-  private _scrollbar_size = 10
+  // #291 — Identifiant (unique par instance de DA) du clipPath qui découpe le contenu au cadre.
+  // Généré à chaque _initDraw (le #draw_zoom est recréé) ; référencé par le groupe #g_clip qui
+  // enveloppe g_drawing, et servi à Class_ViewportChrome pour retrouver le <rect> à mettre à jour.
+  public viewport_clip_id: string = ''
+
+  // #242 — Chrome de viewport (scrollbars + cadre) : posé sur la racine SVG (hors du transform de
+  // zoom de g_drawing), il porte ses propres sélections d3 et ne fait que lire la géométrie de la
+  // DA (cf. DrawingAreaViewportChrome).
+  private _viewport_chrome = new Class_ViewportChrome()
+  // #242 — Surcharges transitoires d'échelle (référence d'épaisseur par view tag, plafond de
+  // hauteur de nœud) : le module porte les « porteurs » restaurés d'une frame à l'autre.
+  private _scale_overrides = new Class_ScaleOverrides()
+  // #242 — Interactions souris (création de flux au cliquer-glisser, rectangle de sélection,
+  // pan/zoom molette) : le module porte l'état de geste (cf. DrawingAreaInteractions).
+  private _interactions = new Class_DrawingAreaInteractions()
 
 
   public static: boolean = !!window.sankey?.publish
-  public to_recenter = false
   public is_unitary = false
+
+  /**
+   * OS#1250 phase 2 — le fichier chargé est antérieur à 0.92 et ses coordonnées
+   * doivent être normalisées UNE FOIS (ramenées près de l'origine).
+   *
+   * Remplace l'ancien drapeau public `to_recenter`, qui armait le garde de
+   * recenter(). Ce protocole était BUGUÉ : `to_recenter` n'était jamais remis à
+   * false par le bouton « recentrer », les 4 chemins de Toolbar, ni la migration
+   * legacy — il restait donc collant. Or ViewsManager appelle recenter() sans
+   * jamais l'armer : une fois le drapeau collé à true, chaque changement de vue
+   * se mettait à décaler les positions des nœuds ET à réécrire les centres
+   * persistés (#1231), silencieusement, selon ce que l'utilisateur avait fait
+   * avant. La normalisation est désormais explicite, ponctuelle, et recenter()
+   * ne touche plus au document.
+   */
+  private _needs_legacy_normalization = false
+  public markForLegacyNormalization() { this._needs_legacy_normalization = true }
 
   /** id du nœud central d'un board unitaire (is_unitary). Posé par updateUnitaryStyles
    * à chaque (re)focalisation. areaAutoFit s'en sert pour caler ce nœud au CENTRE de la
@@ -165,6 +209,26 @@ export class Class_DrawingArea {
   public bypass_redraws: boolean = false
   public bypass_compute_positions: boolean = false
 
+  private _in_full_draw: boolean = false
+
+  /**
+   * OS#1246 — « sommes-nous dans un draw() complet de la zone de dessin ? ».
+   *
+   * Node.updateLinksPositions ne redessine un flux que si son ancrage a bougé
+   * ≥1px ou si son DOM manque. Ce garde-fou ignore les changements de VALEUR —
+   * il ne posait pas problème tant que Node.unDraw() cascadait link.unDraw() sur
+   * tous les flux à chaque dessin de nœud : leur DOM disparaissait, donc ils
+   * étaient tous redessinés et l'optimisation ne servait jamais sur un draw
+   * complet. Depuis que les <g> sont réutilisés (data-join keyé), elle est
+   * devenue active et gelait la valeur et l'épaisseur des flux d'un data tag à
+   * l'autre.
+   *
+   * On restaure donc la sémantique d'origine : un draw complet redessine tous
+   * les flux ; l'optimisation ne s'applique plus qu'aux redraws partiels (drag),
+   * son usage réel.
+   */
+  public isInFullDraw(): boolean { return this._in_full_draw }
+
   /**
    * Documentation (onglet Doc, SA#167) importée depuis un fichier source lors d'un
    * transfert de mise en page. La doc vit sur l'ApplicationData (partagée), or la DA
@@ -201,13 +265,11 @@ export class Class_DrawingArea {
   protected _margin_left_mm: number = default_margin_mm
 
   protected _sankey: Class_Sankey
-  protected _legend: ClassTemplate_Legend
+  protected _legend: Class_LegendConfig
 
 
   private _fit_margin: number = 10
   public _scale: number = default_scale
-  private starting_x_point = 0
-  private starting_y_point = 0
 
   // #1244 — Zoom cinématique. Anime la caméra (transform du zoom) sur les
   // recadrages EXPLICITES déclenchés par l'utilisateur (boutons fit H/V,
@@ -217,7 +279,6 @@ export class Class_DrawingArea {
   // globalement (tests, contextes sans animation souhaitée).
   public zoom_animations_enabled: boolean = true
   // Durée (ms) de l'interpolation de caméra (d3.interpolateZoom via d3-zoom).
-  private readonly _zoom_animation_duration_ms: number = 450
 
   // Effective fit zoom applied by areaAutoFit. Used as a per-label font-size
   // multiplier (1/_k_fit) so requested font-size in px stays constant on screen
@@ -315,6 +376,64 @@ export class Class_DrawingArea {
     }
   }
 
+  // #680 — Mode de cadrage automatique persistant (cf. Type_AutoFitMode). Défaut
+  // 'full' : à l'ouverture d'un diagramme, tout reste visible (proche du cadrage
+  // historique au chargement). Repassé à 'none' par un zoom manuel (cf. Camera.zoom*).
+  protected _auto_fit_mode: Type_AutoFitMode = 'full'
+  // #680 — Direction du glissé en cours (deltas monde), posée par eventMouseDrag le temps
+  // du re-cadrage puis remise à null. Sur les axes LIBRES (non remplis), le cadrage ancre le
+  // bord vers lequel le nœud va (et masque le côté opposé) pour « suivre » l'élément déplacé.
+  protected _fit_drag_dir: { x: number, y: number } | null = null
+  public get auto_fit_mode(): Type_AutoFitMode { return this._auto_fit_mode }
+  public set auto_fit_mode(v: Type_AutoFitMode) {
+    if (this._auto_fit_mode === v) return
+    this._auto_fit_mode = v
+    // Re-render de la barre d'outils (boutons radio abonnés à ZOOM_TOPIC).
+    this.application_data.menu_configuration?.notify(ZOOM_TOPIC)
+  }
+
+  /**
+   * #680 — Applique le cadrage correspondant au mode actif. Appelé :
+   * - au clic sur un bouton (animated=true : geste utilisateur explicite, zoom cinématique),
+   * - après un déplacement/ajout/suppression d'élément quand un mode est actif
+   *   (animated=false : re-cadrage silencieux « au fur et à mesure »).
+   * force_when_locked=true : un mode explicite prime sur le verrou de taille (#1240).
+   * Mode 'none' : ne fait rien (pas de cadrage automatique de la fenêtre).
+   */
+  public applyAutoFitMode(animated: boolean = false): void {
+    const mode = this._auto_fit_mode
+    if (mode === 'width') {
+      // fill_axis_forced=true → REMPLIT la largeur (hauteur peut déborder, scrollable).
+      if (animated) this.areaAutoFitAnimated(true, true, true)
+      else this.areaAutoFit(true, true, undefined, true)
+    } else if (mode === 'height') {
+      // fill_axis_forced=true → REMPLIT la hauteur (largeur peut déborder, scrollable).
+      if (animated) this.areaAutoFitAnimated(false, true, true)
+      else this.areaAutoFit(false, true, undefined, true)
+    } else if (mode === 'full') {
+      // 'full' = tout visible : min des deux axes + centrage (recenter, center_on_content).
+      if (animated) this.recenterAnimated(true)
+      else this.recenter(true)
+    } else {
+      // mode === 'none' : zoom CONSTANT (keep_zoom), recentrage caméra des DEUX axes. C'est
+      // le « glissement à l'opposé » du changement 2 réalisé par la caméra (aucun déplacement
+      // des positions de nœuds) : déplacer un nœud vers le bas/la droite recentre le diagramme
+      // vers le haut/la gauche, sans dézoomer. center_on_content explicite → pas de redirection.
+      this.areaAutoFit(undefined, true, true, undefined, true)
+    }
+  }
+
+  // #680 — Direction du glissé en cours, ACCUMULÉE depuis le début du drag (déplacement net) :
+  // son signe donne une direction de suivi STABLE (insensible aux ticks à delta nul ou au
+  // sens qui hésite). beginFitDrag au 'start', accumulateFitDrag à chaque 'drag', endFitDrag
+  // au 'end' (après le cadrage final, pour que celui-ci suive encore la direction).
+  public beginFitDrag(): void { this._fit_drag_dir = { x: 0, y: 0 } }
+  public accumulateFitDrag(dx: number, dy: number): void {
+    if (this._fit_drag_dir) { this._fit_drag_dir.x += dx; this._fit_drag_dir.y += dy }
+    else this._fit_drag_dir = { x: dx, y: dy }
+  }
+  public endFitDrag(): void { this._fit_drag_dir = null }
+
   // Cadrage verrouillé « à (re)calculer » : true tant que le layout n'est pas
   // stabilisé (1er chargement, ou recenter ayant décalé les positions APRÈS le
   // dernier fit). Le prochain draw verrouillé recalcule alors un fit vertical sur
@@ -373,14 +492,28 @@ export class Class_DrawingArea {
     .range([0, 100])
 
   // Shifting of d3 elements
-  private _elements_d3_groups_shift_x: number = 0
-  private _elements_d3_groups_shift_y: number = 0
+  // OS#1250 phase 2 — `_elements_d3_groups_shift_x/y` supprimés : ils n'étaient
+  // que la trace du déplacement du monde par recenter(), et ne servaient nulle
+  // part ailleurs. Le décalage est désormais local à la migration legacy
+  // (normalizeLegacyWorldCoordinates).
   private _background_d3_groups_shift_x: number = 0
   private _background_d3_groups_shift_y: number = 0
 
   // Limitations of link thickness
   private _maximum_flux?: number
   private _minimum_flux?: number
+
+  // OS#1272 — Marqueur visuel d'avertissement de bilan par nœud (Σ flux entrants ≠
+  // Σ flux sortants). Réglage GLOBAL, simple contrôle d'AFFICHAGE, DISTINCT de
+  // Class_NodeElement.has_material_balance (contrainte du solveur MFA de
+  // réconciliation). Désactivé par défaut → aucun changement de rendu.
+  private _balance_marker_enabled: boolean = false
+  // Stratégie de tolérance : 'exact' (toute différence non nulle), 'absolute'
+  // (|Δ| > seuil, dans l'unité des flux) ou 'relative' (|Δ| > seuil% × max(Σentrée, Σsortie)).
+  private _balance_marker_strategy: 'exact' | 'absolute' | 'relative' = 'relative'
+  // Seuil de tolérance : ignoré en 'exact' ; unité de flux en 'absolute' ;
+  // pourcentage (0–100) en 'relative'. Défaut 1 (= 1 %).
+  private _balance_marker_tolerance: number = 1
 
   // Référence d'échelle par view tag : pour un view tag donné (clé = id de l'étiquette),
   // le flux `link_id` est calé à `thickness` px. Quand ce view tag est sélectionné,
@@ -392,11 +525,6 @@ export class Class_DrawingArea {
   // avant de recalculer). tag_id défini → data tag unitaire ; sinon → échelle de la DA.
   // `original` = valeur naturelle à restaurer ; `applied` = valeur qu'on a posée (sert à
   // détecter si une autre source — applyAdaptedScale, utilisateur — a depuis recalculé l'échelle).
-  private _scale_ref_carrier?: { tag_id?: string, original: number, applied: number }
-  // #1231b — Porteur d'échelle surchargé par le plafond de taille de nœud (applyMaximumNodeScale),
-  // séparé de _scale_ref_carrier. Même logique transitoire : `original` = échelle de base à
-  // restaurer ; `applied` = échelle posée (détecte si une autre source l'a depuis recalculée).
-  private _max_node_scale_carrier?: { original: number, applied: number }
 
   // Limitations of NODE height (px), independent of the flux size limit above.
   // Applied as a final cap/floor on each node's rendered height. Fixed px (does
@@ -404,20 +532,12 @@ export class Class_DrawingArea {
   private _maximum_node?: number
   private _minimum_node?: number
 
-  // In structure mode (type_data === 'structure'), force all link thicknesses
-  // to minimum_flux (or 2px) regardless of value. When false, link thickness
-  // remains proportional to value even in structure mode (legacy behaviour).
-  private _structure_mode_force_min: boolean = true
-
-  // Arrow layout : when false (default), arrows on each node side share a single
-  // "fan" with converging tips. Since #199 the fan is sized on the RAW link
-  // thicknesses (like the node height and anchors), so flows clamped up to the
-  // minimum thickness overlap in the fan exactly as they do at the node and the
-  // fan total stays equal to the node height — no more oversized arrow bundles
-  // on nodes fed by many thin flows. When true (opt-in, fix #681), each arrow is
-  // instead a standalone triangle whose base = its link's clamped thickness,
-  // centered on the link's actual visible end (independent triangles, no fan).
-  private _arrow_use_standalone_layout: boolean = false
+  // OS#1302 — le mode structure « forcer l'épaisseur min », le mode « pointe
+  // indépendante » et la pointe accentuée « arrow spikes » (#1270) ne sont plus des
+  // globales du drawing_area : ce sont des attributs de flux résolus par le style
+  // (shape_structure_force_min / shape_arrow_standalone / shape_arrow_spike_*). Voir
+  // LINK_SHAPE_SPECIFIC_CONFIG, Node._drawLinksArrow et la migration dans
+  // SankeyPersistence (anciennes globales → style de flux par défaut).
 
   // Filter out link inferior to this value (when filter value is at 0 doesn't filter link even null)
   private _filter_link_value: number = 0
@@ -466,12 +586,13 @@ export class Class_DrawingArea {
 
   protected _group_to_select: string = '.gg_nodes,.gg_links,.gg_labels'
 
-  private _mode: 'edition' | 'selection' | 'style_paint' = 'edition'
+  private _mode: 'edition' | 'selection' | 'style_paint' | 'place_container' = 'edition'
   private _style_paint_source: Class_ProtoElement | null = null
+  // OS#1276 — forme du conteneur à créer en mode « placement » : 'rect' pour une
+  // zone de texte classique, 'line' pour une ligne libre (cf. enterPlaceContainerMode).
+  private _place_container_shape: Type_Shape = 'rect'
 
   private _ghost_link: Class_LinkElement | null = null
-  private _ghost_link_source: Class_NodeElement | null = null
-  private _ghost_link_target: Class_NodeElement | null = null
 
 
 
@@ -491,25 +612,27 @@ export class Class_DrawingArea {
    * @private
    * @memberof Class_DrawingArea
    */
-  private zoomListener = d3.zoom<SVGSVGElement, unknown>()
+  private _zoomListener = d3.zoom<SVGSVGElement, unknown>()
     // only trigger zoom event when we scroll (which == 0) &&
     // and drag mouse middle button (which == 2)
     .filter(evt => (evt.which === 2 || evt.which === 0))
     // Prevent extreme zoom levels that freeze SVG rendering
     .scaleExtent([0.05, 20])
-    // Custom constrain: anchor top-left when content is smaller than the viewport
-    // (d3-zoom default centers in that case, which pushed the A3/A4/A5 paper off
-    // the top-left corner). Larger-than-viewport behaviour is unchanged.
-    .constrain((transform, extent, translateExtent) => {
-      const dx0 = transform.invertX(extent[0][0]) - translateExtent[0][0]
-      const dx1 = transform.invertX(extent[1][0]) - translateExtent[1][0]
-      const dy0 = transform.invertY(extent[0][1]) - translateExtent[0][1]
-      const dy1 = transform.invertY(extent[1][1]) - translateExtent[1][1]
-      return transform.translate(
-        dx1 > dx0 ? dx0 : Math.min(0, dx0) || Math.max(0, dx1),
-        dy1 > dy0 ? dy0 : Math.min(0, dy0) || Math.max(0, dy1)
-      )
-    })
+    // OS#1250 phase 5 — constrain d3 par DÉFAUT.
+    //
+    // Il y avait ici un constrain custom qui forçait l'ancrage haut-gauche quand le
+    // contenu était plus petit que le viewport (le défaut d3 centre : `(dx0+dx1)/2`
+    // au lieu de `dx0`), parce que le translateExtent portait le CANVAS — un rectangle
+    // dimensionné sur la fenêtre — et que centrer ce canvas poussait la page A3/A4/A5
+    // hors du coin.
+    //
+    // Le translateExtent dérive désormais du CONTENU (cf. Class_ViewportChrome
+    // .updateScrollbars) et non plus du canvas : il n'y a donc plus de canvas à ancrer,
+    // et le comportement du défaut d3 est exactement celui qu'on veut —
+    //   - contenu plus petit que la fenêtre -> centré ;
+    //   - contenu plus grand               -> déplacement borné par ses bords.
+    // En mode papier, la page participe simplement aux bounds : elle est donc centrée
+    // au lieu d'être poussée hors du coin, ce qui était la raison d'être du custom.
     // Change cursor in teh beginning to 'move' to show we can shift drawing area
     .on('start', () => this.d3_selection_zoom_area?.attr('cursor', 'move'))
     .on('zoom', (event) => this.eventZoom(event))
@@ -536,7 +659,7 @@ export class Class_DrawingArea {
     this._zoom_height = this.window_fitting_height
     this._zoom_width = this.window_fitting_width
     this._sankey = this.createNewSankey(id)
-    this._legend = new ClassTemplate_Legend(this, this._sankey)
+    this._legend = new Class_LegendConfig(this)
     this._selection_zone = this.createNewSelectionZone()
     this.nodePositioning = new NodePositioning(this)
 
@@ -556,7 +679,6 @@ export class Class_DrawingArea {
     this._contextualised_free_label = undefined
     // Clean Elements
     // this._sankey.delete() TODO Trop lourd + bug suppression vues
-    this._legend.delete()
     this._selection_zone.unDraw()
 
     // Clean drawing area
@@ -573,9 +695,9 @@ export class Class_DrawingArea {
     // Copy Sankey
     this._sankey.copyFrom(drawing_area_to_copy._sankey)
 
-    //create new ClassTemplate_Legend after deleting previous in 'this.delete()'
-    this._legend = new ClassTemplate_Legend(this, this._sankey)
-    // Copy Legend
+    // Copie des paramètres du générateur de légende (les zones 'legend-*'
+    // elles-mêmes sont des conteneurs, copiés avec le sankey ci-dessus)
+    this._legend = new Class_LegendConfig(this)
     this._legend.copyFrom(drawing_area_to_copy._legend)
 
     //create new selection zone after deleting previous in 'this.delete()'
@@ -604,10 +726,12 @@ export class Class_DrawingArea {
     this._height = drawing_area_to_copy._height
     this._maximum_flux = drawing_area_to_copy._maximum_flux
     this._minimum_flux = drawing_area_to_copy._minimum_flux
+    this._balance_marker_enabled = drawing_area_to_copy._balance_marker_enabled
+    this._balance_marker_strategy = drawing_area_to_copy._balance_marker_strategy
+    this._balance_marker_tolerance = drawing_area_to_copy._balance_marker_tolerance
     this._maximum_node = drawing_area_to_copy._maximum_node
     this._minimum_node = drawing_area_to_copy._minimum_node
-    this._structure_mode_force_min = drawing_area_to_copy._structure_mode_force_min
-    this._arrow_use_standalone_layout = drawing_area_to_copy._arrow_use_standalone_layout
+    // OS#1302 — pointe/épaisseur migrées vers les attributs de flux (résolus par le style).
     this._scale = drawing_area_to_copy._scale
     this._scaleValueToPx.domain([0, this._scale])
     this._type_data = drawing_area_to_copy._type_data
@@ -618,6 +742,7 @@ export class Class_DrawingArea {
     this._font_size_locked = drawing_area_to_copy._font_size_locked
     // Idem : champ direct, le setter size_locked déclenche un re-fit.
     this._size_locked = drawing_area_to_copy._size_locked
+    this._auto_fit_mode = drawing_area_to_copy._auto_fit_mode
     this._import_export_above_below = drawing_area_to_copy._import_export_above_below
     this._disaggregation_gap_mode = drawing_area_to_copy._disaggregation_gap_mode
     this._disaggregation_gap_value = drawing_area_to_copy._disaggregation_gap_value
@@ -655,10 +780,52 @@ export class Class_DrawingArea {
   }
 
 
+  /**
+   * Exécute `fn` avec `bypass_redraws` posé, puis restaure l'état précédent
+   * dans un `finally`. Corrige le footgun du flag global non-safe (#240) : une
+   * exception entre le `= true` et le `= false` ne laisse plus la DA figée.
+   *
+   * L'état précédent est *restauré* (et non forcé à `false`), ce qui rend les
+   * appels réentrants sûrs : un `withBypassRedraws` imbriqué dans un batch qui a
+   * déjà posé le flag ne le relâche pas prématurément.
+   *
+   * @param redraw  Si `true` (défaut) et qu'on est l'appel le plus externe
+   *   (le flag était `false` en entrée), déclenche un `draw()` final — c'est le
+   *   pattern classique `true → travail → false → draw()`. Passer `false` pour
+   *   les blocs qui ne redessinent pas (construction de tooltip, édition de
+   *   label, preview de tag) ou qui délèguent le rendu à l'appelant.
+   */
+  public withBypassRedraws<T>(fn: () => T, redraw: boolean = true): T {
+    const previous = this.bypass_redraws
+    this.bypass_redraws = true
+    try {
+      return fn()
+    } finally {
+      this.bypass_redraws = previous
+      if (redraw && !previous) this.draw()
+    }
+  }
+
   public draw(
   ) {
     // This function calls explictly for a redraw
     this.bypass_redraws = false
+
+    // OS#1246 — signale aux éléments qu'on est dans un draw COMPLET (cf.
+    // isInFullDraw) : les flux doivent alors tous être redessinés.
+    this._in_full_draw = true
+    try {
+      this._drawBody()
+    } finally {
+      this._in_full_draw = false
+    }
+  }
+
+  /**
+   * Corps du draw complet. Extrait de draw() pour que `_in_full_draw` soit
+   * refermé par un finally quoi qu'il arrive.
+   */
+  private _drawBody() {
 
     // #1240 — Verrou de taille : _initDraw recrée le SVG de zoom et perd le
     // transform (zoom/pan) ; areaAutoFit étant inerte quand verrouillé, on
@@ -729,7 +896,7 @@ export class Class_DrawingArea {
         this.areaAutoFit(false, true)
       } else {
         this._locked_overflow_shrunk = false
-        this.zoomListener.transform(this.d3_selection_zoom_area, locked_zoom_transform)
+        this.setCamera(locked_zoom_transform)
         this.drawBackground()
         this.drawGrid()
         this._updateScrollbars()
@@ -788,7 +955,19 @@ export class Class_DrawingArea {
     // Init drawing area
     const x = this._fit_margin / 2
     const y = this._fit_margin / 2 + this.getNavBarHeight() // init drawing area zone with a margin for taking into account the navbar
-    this.d3_selection = this.d3_selection_zoom_area
+    // #291 — Groupe d'enveloppe interposé entre la racine SVG et g_drawing. Il ne porte AUCUN
+    // transform (donc reste en coordonnées écran, comme le cadre #viewport_border), et porte le
+    // clip-path qui découpe le contenu au rectangle du cadre. g_drawing conserve, lui, le transform
+    // de zoom/pan : un clip posé directement sur lui serait zoomé avec le contenu et ne clipperait
+    // jamais au cadre écran. Le <clipPath> associé (et son <rect>, mis à jour aux mêmes moments que
+    // le cadre) est créé par Class_ViewportChrome. À l'export, le clip est neutralisé
+    // (_pre_process_export_svg) pour ne pas rogner le diagramme complet.
+    this.viewport_clip_id = 'viewport_clip_' + randomId()
+    const g_clip = this.d3_selection_zoom_area
+      .append('g')
+      .attr('id', 'g_clip')
+      .attr('clip-path', 'url(#' + this.viewport_clip_id + ')')
+    this.d3_selection = g_clip
       .append('g')
       .attr('id', 'g_drawing')
       .attr('transform', 'translate(' + x + ',' + y + ')')
@@ -798,21 +977,36 @@ export class Class_DrawingArea {
     this.d3_selection_bg = this.d3_selection_bg_group.append('g').attr('id', 'g_color_bg')
     this.d3_selection_grid = this.d3_selection_bg_group.append('g').attr('id', 'g_grid')
 
-    // Since legend can't be affected by zoom, it outside g_drawing
-
-
-
     // Add specific groups for nodes, link and others
     this.d3_selection_elements_group = this.d3_selection.append('g').attr('id', 'g_elements')
-    this.d3_selection_elements_sankey_group = this.d3_selection_elements_group.append('g').attr('id', 'g_elements_sankey')
+    // OS#1246 — persistance du sous-arbre nœuds/flux. unDraw() ne détache que
+    // #draw_zoom (et NE remet PAS d3_selection_elements_sankey_group à null) :
+    // le <g id=g_elements_sankey> précédent survit donc, détaché mais intact
+    // avec tous ses <g> enfants. On le ré-attache au nouveau scaffold au lieu
+    // d'en recréer un vide, pour que la réutilisation par élément
+    // (Element._initDraw) retrouve les <g> et que le DOM persiste entre draws.
+    // Reste inerte au 1er draw (ref null) et au changement de vue
+    // (createNewDrawingArea → nouvelle instance, ref null) : build frais.
+    const preserved_sankey_group = this.d3_selection_elements_sankey_group?.node() ?? null
+    const new_elements_group_node = this.d3_selection_elements_group.node()
+    if (
+      preserved_sankey_group &&
+      new_elements_group_node &&
+      preserved_sankey_group.ownerDocument === new_elements_group_node.ownerDocument
+    ) {
+      new_elements_group_node.appendChild(preserved_sankey_group)
+      // select() sur un nœud type le parent à `null` ; on recaste vers le parent
+      // HTMLElement du champ (phantom type sans incidence runtime — même motif que
+      // pour d3_selection_zoom_area plus haut dans _initDraw).
+      this.d3_selection_elements_sankey_group =
+        d3.select(preserved_sankey_group) as unknown as
+          d3.Selection<SVGGElement, unknown, HTMLElement, unknown>
+    } else {
+      this.d3_selection_elements_sankey_group =
+        this.d3_selection_elements_group.append('g').attr('id', 'g_elements_sankey')
+    }
     this.d3_selection_handlers = this.d3_selection_elements_group.append('g').attr('id', 'g_handlers')
     this.d3_selection_zone_select = this.d3_selection_elements_group.append('g').attr('id', 'g_select_zone')
-
-    if (this._legend.stick_to_drawing) {
-      this.d3_selection_legend = this.d3_selection.append('g').attr('id', 'grp_legend')
-    } else {
-      this.d3_selection_legend = this.d3_selection_zoom_area.append('g').attr('id', 'grp_legend')
-    }
 
     this.d3_selection_def_gradient = this.d3_selection_elements_group?.append('g').attr('id', 'def_gradient') ?? null
 
@@ -836,16 +1030,8 @@ export class Class_DrawingArea {
         .attr('flood-opacity', 0.35)
     }
 
-    // Scrollbars (outside g_drawing so they stay fixed in viewport)
-    this._initScrollbars()
-
-    // Viewport border (outside g_drawing → fixed frame, unaffected by pan/zoom)
-    this._d3_viewport_border = this.d3_selection_zoom_area.append('rect')
-      .attr('id', 'viewport_border')
-      .attr('fill', 'none')
-      .style('pointer-events', 'none')
-      .style('shape-rendering', 'crispEdges')
-    this._updateViewportBorder()
+    // Chrome de viewport : scrollbars + cadre, posés hors de g_drawing pour rester fixes.
+    this._viewport_chrome.init(this)
   }
 
   /**
@@ -856,11 +1042,8 @@ export class Class_DrawingArea {
   public drawGrid() {
     // Clean if needed
     this.d3_selection_grid?.selectAll('.line').remove()
-    // Mêmes bornes que le fond : canvas en mode papier, union canvas ∪ viewport en
-    // mode libre (la grille remplit toute la fenêtre, comme le fond).
-    const b = this.is_paper_mode
-      ? { x: this._background_d3_groups_shift_x, y: this._background_d3_groups_shift_y, w: this._zoom_width, h: this._zoom_height }
-      : this._freeBgBounds()
+    // Mêmes bornes que le fond (cf. drawBackground).
+    const b = this.is_paper_mode ? this.paper_world_rect : this._freeBgBounds()
     // Draw only if asked OR outside publishing mode
     if (this.grid_visible && this.editable) {
       // Draw horizontal lines
@@ -894,6 +1077,25 @@ export class Class_DrawingArea {
     this.d3_selection_grid?.attr(
       'transform',
       'translate(' + b.x + ', ' + b.y + ')')
+  }
+
+  /**
+   * OS#1246 — rejoue `drawElements()` sous sémantique de draw COMPLET
+   * (`_in_full_draw = true`) SANS repasser par le cycle draw() (unDraw +
+   * _initDraw + autoFit). Nécessaire quand un changement de VALEUR/épaisseur
+   * (bascule de type de données affichées) impose de redessiner le contenu de
+   * TOUS les flux, alors que leurs ancrages ne bougent pas : sans ce drapeau,
+   * Node.updateLinksPositions garderait leur épaisseur périmée (cf. isInFullDraw).
+   * @memberof Class_DrawingArea
+   */
+  public drawElementsAsFullDraw() {
+    const previous = this._in_full_draw
+    this._in_full_draw = true
+    try {
+      this.drawElements()
+    } finally {
+      this._in_full_draw = previous
+    }
   }
 
   /**
@@ -977,10 +1179,41 @@ export class Class_DrawingArea {
         this.nodePositioning.enforceStraightLinks()) {
       this._sankey.draw()
     }
+    // OS#1246 — passe « exit » du data-join. Le sous-arbre #g_elements_sankey étant
+    // désormais réutilisé (non rasé), un <g> dont l'élément n'a pas été (re)dessiné
+    // — nœud/flux devenu invisible sans passer par unDraw, flux sous seuil non
+    // parcouru, etc. — resterait fantôme. On retire donc tout <g gg_...> qui ne
+    // correspond pas à un élément vivant (d3_selection connectée à ce draw).
+    this._sweepOrphanElementGroups()
     // Draw legend
     //this._legend.draw()
     this.drawBgImage()
 
+  }
+
+  /**
+   * OS#1246 — supprime du DOM les <g> racine d'éléments (nœuds/flux/conteneurs)
+   * qui ne correspondent plus à un élément affiché. Complément « exit » de la
+   * réutilisation du sous-arbre #g_elements_sankey (cf. _initDraw). Un élément
+   * effectivement dessiné a une d3_selection dont le nœud est connecté ; les
+   * autres (invisibles, supprimés, sous seuil) ne sont pas dans l'ensemble
+   * attendu et leur <g> résiduel est retiré.
+   */
+  private _sweepOrphanElementGroups() {
+    const group_node = this.d3_selection_elements_sankey_group?.node()
+    if (!group_node) return
+    const expected = new Set<string>()
+    this._sankey.elements_list.forEach(el => {
+      const el_node = el.d3_selection?.node()
+      if (el_node && el_node.isConnected) expected.add(el.svg_group)
+    })
+    // Copie du live HTMLCollection avant mutation (remove() la modifie).
+    Array.from(group_node.children).forEach(child => {
+      const id = (child as SVGElement).id
+      if (id && id.startsWith('gg_') && !expected.has(id)) {
+        child.remove()
+      }
+    })
   }
 
   public drawSelected() {
@@ -1033,9 +1266,6 @@ export class Class_DrawingArea {
         return false
     }
 
-    if (this._legend.isMouseOver()) {
-      return false
-    }
     if (!this.sankey.container_activated) return true
 
     mouse_over_nodes = this.sankey.isMouseOverAnExistingContainer()
@@ -1069,6 +1299,9 @@ export class Class_DrawingArea {
     this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
   }
   public deleteContainer(c: Class_ContainerElement) {
+    // OS#1254 — supprimer une zone de la légende (ou son cadre) la « casse » :
+    // elle devient un snapshot statique, plus de régénération automatique.
+    if (isLegendElementId(c.id)) this._legend.markBroken()
     // Remove link from selection if necessary
     this.removeElementFromSelection(c)
     // Remove link from sankey
@@ -1099,12 +1332,59 @@ export class Class_DrawingArea {
     this.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
   }
 
-  public addLegendToSelection(): void {
-    // Update selection list
-    this._selection['legend'] = this._legend
-    this._legend.setSelected()
+  // P3 (refonte événements) — SÉLECTION SIMPLE canonique : purge la sélection
+  // puis n'ajoute que cet unique élément. Remplace les couples purge+add
+  // dispersés (NodeEventsHandler, Link, StockShape, cadres de groupe). Les mises
+  // à jour de menus spécifiques restent au site appelant (elles diffèrent selon
+  // le type d'élément).
+  public selectOnly(element: Class_ProtoElement) {
+    this.purgeSelection()
+    this.addElementToSelection(element)
   }
 
+  /**
+   * OS#1259 — Cible du clic « façon PowerPoint » sur un groupe de zones de texte,
+   * par CLICS SUCCESSIFS (drill-down). `clicked` et ses cadres ZDT englobants
+   * forment un chemin du plus englobant à la feuille cliquée :
+   *   [groupe externe, ..., cadre direct, feuille cliquée]
+   * - rien de ce chemin n'est sélectionné -> on saisit le GROUPE le plus externe ;
+   * - un élément du chemin est sélectionné -> on descend d'UN niveau vers la
+   *   feuille (clic suivant = on entre dans le groupe) ;
+   * - la feuille est déjà sélectionnée -> on reboucle sur le groupe externe.
+   * Scopé aux zones de texte (un cadre de nœuds n'est pas concerné). Renvoie null
+   * si `clicked` n'est pas une ZDT membre d'un groupe de ZDT (sélection normale).
+   * Partagé par le clic sur la forme (NodeEventsHandler) et sur le label
+   * (DrawLabel, qui court-circuite l'autre chemin via stopPropagation).
+   */
+  public resolveContainerGroupClickTarget(clicked: Class_NodeBase): Class_NodeBase | null {
+    const containers = this.sankey.containers_list as unknown as Class_NodeBase[]
+    const is_container = (el: Class_NodeBase): boolean => containers.includes(el)
+    if (!is_container(clicked)) return null
+    // Chaîne ascendante des cadres ZDT englobants (du plus interne au plus externe)
+    const ascend: Class_NodeBase[] = []
+    const seen = new Set<Class_NodeBase>([clicked])
+    let cur: Class_NodeBase = clicked
+    for (;;) {
+      const parent = cur.attached_container.find(
+        c => c.tied_to_nodes && is_container(c) && !seen.has(c))
+      if (!parent) break
+      ascend.push(parent)
+      seen.add(parent)
+      cur = parent
+    }
+    if (ascend.length === 0) return null
+    // Chemin ordonné : groupe le plus englobant -> ... -> feuille cliquée
+    const path: Class_NodeBase[] = [...ascend.slice().reverse(), clicked]
+    const sel_idx = path.findIndex(el => el.is_selected)
+    if (sel_idx === -1) return path[0]                       // rien de sélectionné -> groupe externe
+    if (sel_idx + 1 < path.length) return path[sel_idx + 1]  // clic suivant -> un niveau plus profond
+    return path[0]                                            // feuille atteinte -> reboucle sur le groupe
+  }
+
+  // OS#1254 — addLegendToSelection/removeLegendFromSelection supprimées avec
+  // Class_Legend : la légende n'est plus un objet unique sélectionnable, c'est
+  // un GÉNÉRATEUR (Class_LegendConfig) qui produit des zones de texte. Elles se
+  // sélectionnent donc comme des zones ordinaires (#1243 : cible `container`).
   public removeElementFromSelection(element: Class_ProtoElement) {
     if (this._selection[element.id] !== undefined) {
       // Update selection list
@@ -1113,15 +1393,6 @@ export class Class_DrawingArea {
       element.setUnSelected()
       // Update related menus
       this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
-    }
-  }
-
-  public removeLegendFromSelection() {
-    if (this._selection['legend'] !== undefined) {
-      // Update selection list
-      delete this._selection['legend']
-      // Update selection attribute on legend
-      this._legend.setUnSelected()
     }
   }
 
@@ -1174,7 +1445,12 @@ export class Class_DrawingArea {
     // --- Init
     const json_hist_nodes: { [_: string]: Type_JSON } = {}
     const json_hist_links: { [_: string]: Type_JSON } = {}
+    const json_hist_containers: { [_: string]: Type_JSON } = {}
     const json_hist_links_order: { [_: string]: string[] } = {}
+    // Ordre Z d'avant suppression : une ZDT recréée par addNewContainer est
+    // repoussée en fin de liste, donc au premier plan. Sans ça, annuler la
+    // suppression d'un cadre de fond le ferait revenir par-dessus le diagramme.
+    const z_order_before = [...this.list_g_element]
 
     // --- Selected nodes
     //if (deleteSelectedNodes) {
@@ -1203,15 +1479,27 @@ export class Class_DrawingArea {
       json_hist_links_order[link.target.id] = link.target.links_order.map(link => link.id)//save IO order of nodes affected by links suppression
     })
     //}
+    // --- Selected containers (zones de texte)
+    this.selected_containers_list.forEach(container => {
+      json_hist_containers[container.id] = {}
+      ContainerPersistence.toJSON(container, json_hist_containers[container.id])
+    })
 
     // --- Undo function
     const undo = (_: Class_DrawingArea) => {
       const json_hist: Type_JSON = {
         'nodes': json_hist_nodes,
-        'links': json_hist_links
+        'links': json_hist_links,
+        // Clé 'labels' : celle sous laquelle SankeyPersistence lit les containers.
+        'labels': json_hist_containers
       }
       SankeyPersistence.fromJSON(+this.application_data.version, _.sankey, json_hist)
       Object.entries(json_hist_links_order).forEach(ent => _.sankey.nodes_dict[ent[0]].reorganizeIOFromListIds(ent[1]))//Organise correctly nodes IO
+      // Les éléments créés depuis la suppression sont absents du snapshot : on les
+      // conserve en fin de liste plutôt que de les faire disparaître de l'ordre Z.
+      const restored = new Set(z_order_before)
+      const created_since = _.list_g_element.filter(id => !restored.has(id))
+      _.list_g_element = dedupeZOrderKeepFirst([...z_order_before, ...created_since])
       _.sankey.draw()
     }
     this.saveUndo(undo)
@@ -1228,55 +1516,21 @@ export class Class_DrawingArea {
         .forEach(link_id => _.deleteLink(_.sankey.links_dict[link_id]))
       Object.keys(json_hist_nodes)
         .forEach(node_id => _.deleteNode(_.sankey.nodes_dict[node_id]))
+      Object.keys(json_hist_containers)
+        .forEach(container_id => {
+          const container = _.sankey.containers_dict[container_id]
+          if (container) _.deleteContainer(container)
+        })
+      _.sankey.draw()
     }
     this.saveRedo(redo)
     // End Save Redo -----------------------------------
+    // #680 — Suppression d'éléments : un mode de cadrage auto actif resserre la fenêtre
+    // sur le contenu restant (no-op si mode 'none').
+    this.applyAutoFitMode(false)
   }
 
-  public copyNodes(node_ids: string[]) {
-    const sankey = this.sankey
-    this.bypass_redraws = true
-    const offset = 50
-    const source_nodes = node_ids.map(id => sankey.nodes_dict[id]).filter(n => n !== undefined)
-    this.purgeSelection()
-    const selected_node_ids = new Set(node_ids)
-    const matching_link_id: { [_: string]: string } = {}
-    const node_copy_map = new Map<string, Class_NodeElement>()
-
-    source_nodes.forEach(node => {
-      const new_node = sankey.addNewNode(node.id + '_copy', node.name)
-      node_copy_map.set(node.id, new_node)
-      new_node.copyFrom(node)
-      new_node.position_x = node.position_x + offset
-      new_node.position_y = node.position_y + offset
-      this.addElementToSelection(new_node)
-    })
-
-    source_nodes.forEach(node => {
-      node.output_links_list.forEach(link => {
-        if (selected_node_ids.has(link.target.id)) {
-          const new_source = node_copy_map.get(node.id)
-          const new_target = node_copy_map.get(link.target.id)
-          if (new_source && new_target) {
-            const new_link = sankey.addNewLink(new_source, new_target)
-            new_link.copyFrom(link)
-            new_link.source = new_source
-            new_link.target = new_target
-            matching_link_id[link.id] = new_link.id
-            this.addElementToSelection(new_link)
-          }
-        }
-      })
-    })
-
-    source_nodes.forEach(node => {
-      const new_node = node_copy_map.get(node.id)
-      if (new_node) new_node.keepLinkOrderingFrom(node, matching_link_id)
-    })
-
-    this.bypass_redraws = false
-    this.draw()
-  }
+  public copyNodes(node_ids: string[]) { CopyPaste.copyNodes(this, node_ids) }
 
   public updateScaleAtLinkValueSetting(previously_valued_count?: number) {
     // Si une seule valeur existe sur tout le diagramme, elle détermine l'échelle.
@@ -1292,7 +1546,13 @@ export class Class_DrawingArea {
     }
   }
 
-  public areaAutoFit(horiz?: boolean, force_when_locked?: boolean) {
+  /**
+   * @param center_on_content OS#1250 phase 2 — centre le contenu dans le viewport sur les
+   * axes où il a du mou, au lieu de l'ancrer en haut à gauche avec les marges. Posé par
+   * recenter() : c'est la définition même de « recentrer ». Les autres fits (changement de
+   * data tag, redimensionnement…) gardent leur cadrage habituel.
+   */
+  public areaAutoFit(horiz?: boolean, force_when_locked?: boolean, center_on_content?: boolean, fill_axis_forced?: boolean, keep_zoom?: boolean) {
 
     // Verrou de taille (#1240) : cadrage (hauteur, largeur, zoom) figé tel quel —
     // aucun auto-fit au changement de dataTag. Exception : au tout premier rendu
@@ -1300,6 +1560,46 @@ export class Class_DrawingArea {
     // réappliquer ; on autorise alors un fit unique pour établir le cadrage
     // initial, qui restera ensuite figé (force_when_locked).
     if (this._size_locked && !force_when_locked) return
+
+    // #680 — Router les fits AUTOMATIQUES vers le mode actif. Un appel GÉNÉRIQUE
+    // (aucun axe / centre / fill explicite : resize, changement de vue, légende,
+    // auto-layout…) doit RESPECTER le mode de cadrage choisi, sinon un « largeur »/
+    // « hauteur »/« tout » actif serait écrasé par un fit générique au moindre resize.
+    // Les appels du mode lui-même passent TOUJOURS un argument explicite (horiz pour
+    // largeur/hauteur, center_on_content pour 'full') → ils ne re-rentrent pas ici :
+    // pas de récursion. Mode 'none' → comportement historique (fit générique).
+    if (horiz === undefined && center_on_content === undefined && fill_axis_forced === undefined
+      && this._auto_fit_mode !== 'none') {
+      this.applyAutoFitMode(false)
+      return
+    }
+
+    // #292 — Le calcul de cadrage doit viser la zone de dessin PLEINE (sans gouttière de scrollbar) :
+    // on annule la réserve le temps du fit et on empêche le _updateScrollbars interne de la reposer
+    // (`suppress`), sinon le fit lirait un window_fitting déjà rétréci et cadrerait ~14 px trop petit
+    // (marge asymétrique sur tout diagramme chargé). La réserve est ré-évaluée à la fin, sur le
+    // CADRAGE FINAL. Le corps vit dans _areaAutoFitCore pour que le try/finally (qui garantit le
+    // rétablissement du flag même en sortie anticipée — mode papier — ou sur exception) n'oblige pas
+    // à réindenter tout le corps.
+    this._scrollbar_reserve_right = 0
+    this._scrollbar_reserve_bottom = 0
+    this._suppress_scrollbar_reserve = true
+    try {
+      this._areaAutoFitCore(horiz, force_when_locked, center_on_content, fill_axis_forced, keep_zoom)
+    } finally {
+      // Contenu qui tient (cas normal d'un fit) -> aucune barre ni gouttière ; contenu qui déborde
+      // encore (fit contraint) -> la ou les barres apparaissent avec leur gouttière.
+      this._suppress_scrollbar_reserve = false
+      this._updateScrollbars()
+    }
+  }
+
+  /**
+   * #292 — Corps du cadrage automatique, extrait pour que areaAutoFit l'enveloppe dans un try/finally
+   * (garde de réserve de gouttière : le fit vise la zone PLEINE) sans réindenter tout le corps.
+   * Comportement strictement inchangé — ne pas appeler directement (passer par areaAutoFit).
+   */
+  private _areaAutoFitCore(horiz?: boolean, force_when_locked?: boolean, center_on_content?: boolean, fill_axis_forced?: boolean, keep_zoom?: boolean) {
 
     const prev_k_fit = this._k_fit
 
@@ -1321,10 +1621,7 @@ export class Class_DrawingArea {
         // Refresh translateExtent BEFORE scaleTo/translateTo so d3-zoom's constrain
         // uses the paper bounds (not the stale elements bbox from the previous format).
         this._updateScrollbars()
-        this.zoomListener.scaleTo(this.d3_selection_zoom_area, new_k)
-        this.zoomListener.translateTo(
-          this.d3_selection_zoom_area, 0, 0,
-          [this._fit_margin / 2, this._fit_margin / 2 + this.getNavBarHeight()])
+        this._applyFitCamera(new_k, this._fit_margin / 2, this._fit_margin / 2 + this.getNavBarHeight())
         this.drawBackground()
         this.drawGrid()
         if (this._k_fit !== prev_k_fit) this._refreshLabelsForFitZoom()
@@ -1357,7 +1654,9 @@ export class Class_DrawingArea {
     let label_overflow_right = 0
     let label_overflow_top = 0
     let label_overflow_bottom = 0
-    let bbox: DOMRect | undefined
+    // OS#1250 phase 1 — rect structurel (et non DOMRect) : c'est le type rendu par
+    // la façade contentBounds(), qui cessera de mesurer le DOM en phase 3.
+    let bbox: { x: number, y: number, width: number, height: number } | undefined
     if (skip_text_in_bbox) {
       // Conversion monde→écran : les labels sont contre-scalés par
       // font_compensation = 1/getZoomScale() (zoom LIVE), donc débordement monde
@@ -1365,22 +1664,19 @@ export class Class_DrawingArea {
       // live (molette depuis le dernier fit) et fausser la réserve — d'autant
       // plus visible quand le fit collapse à ~1e-4 (grand user_scale).
       const k_live = this.getZoomScale()
-      const full_bbox = this.d3_selection_elements_group?.node()?.getBBox()
-      // On masque TOUTES les parties de label qui vivent dans le repère zoomé avec la
-      // compensation 1/k (police verrouillée) — sinon elles dominent le getBBox et le
-      // fit diverge / sous-estime :
-      //  - <text> (labels simples + textPath des flux) ;
-      //  - <foreignObject class="element_fo"> (labels rich-text #1232) ;
-      //  - leurs fonds <rect class="name_label_bg / value_label_bg"> qui portent le
-      //    MÊME transform scale(1/k) et la même taille que le label.
-      // Ne masquer que les <text>/.element_fo laissait le fond gonfler la bbox (cas
-      // Cartofob : rect element_fo_background scale ~2) → débordement non réservé →
-      // labels qui dépassent au (re)chargement en cadrage figé.
-      const hidden_texts = this.d3_selection_elements_group?.selectAll<SVGGraphicsElement, unknown>(
-        'text, .element_fo, .name_label_bg, .value_label_bg')
-      hidden_texts?.style('display', 'none')
-      bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
-      hidden_texts?.style('display', null)
+      // OS#1250 phase 1 — bounds du contenu (labels INCLUS) via la façade caméra.
+      const full_bbox = this.contentBounds() ?? undefined
+      // OS#1250 phase 3a — bounds des FORMES (labels exclus) calculés depuis le MODÈLE.
+      //
+      // Avant, on masquait en DOM tout ce qui vit dans le repère zoomé avec la
+      // compensation 1/k (<text>, <foreignObject class="element_fo">, et leurs fonds
+      // .name_label_bg/.value_label_bg qui portent le MÊME scale(1/k)), on mesurait, puis
+      // on restaurait — deux calculs de layout et une mutation du DOM pour le mesurer.
+      // Le modèle donne directement les formes, sans toucher au rendu : par construction
+      // il n'inclut aucun label, donc plus rien à masquer ni à oublier de masquer (le
+      // fond des labels rich-text avait justement été oublié une première fois, cas
+      // Cartofob → débordement non réservé).
+      bbox = Camera.contentBoundsFromModel(this) ?? undefined
       if (full_bbox && bbox) {
         label_overflow_left = Math.max(0, bbox.x - full_bbox.x) * k_live
         label_overflow_right = Math.max(0, (full_bbox.x + full_bbox.width) - (bbox.x + bbox.width)) * k_live
@@ -1388,49 +1684,14 @@ export class Class_DrawingArea {
         label_overflow_bottom = Math.max(0, (full_bbox.y + full_bbox.height) - (bbox.y + bbox.height)) * k_live
       }
     } else {
-      bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
+      // OS#1250 phase 1 — même mesure qu'avant, via la façade caméra.
+      bbox = this.contentBounds() ?? undefined
     }
 
     if (bbox == undefined)
       return
-    // Issue #165 — Anti-divergence : la legend stick_to_drawing est contre-
-    // scalée par 1/k_fit dans son transform (cf. Legend.applyPosition). Sa
-    // bbox locale est donc démultipliée par le même facteur, et l'inclure
-    // ici ferait diverger les fits successifs comme pour les <text>. On
-    // l'exclut quand la compensation est active.
-    if (!skip_text_in_bbox && this.legend.is_visible && this.legend.stick_to_drawing) {
-      const legendBbox = this.d3_selection_legend?.node()?.getBBox()
-      if (legendBbox) {
-        // Une légende stick_to_drawing peut être glissée arbitrairement loin du
-        // contenu (souvent par accident, ou héritée d'une position obsolète).
-        // L'inclure inconditionnellement gonflait la bbox de cadrage : l'auto-fit
-        // gardait alors une zone géante impossible à rapetisser, la légende
-        // restant hors écran sans retour possible. On ne l'inclut donc dans le
-        // cadrage que si elle est proche du contenu (à fit_margin près) ; sinon
-        // on fitte uniquement sur les éléments.
-        const tol = this._fit_margin
-        const legend_near_content =
-          legendBbox.x <= bbox.x + bbox.width + tol &&
-          legendBbox.x + legendBbox.width >= bbox.x - tol &&
-          legendBbox.y <= bbox.y + bbox.height + tol &&
-          legendBbox.y + legendBbox.height >= bbox.y - tol
-        if (legend_near_content) {
-          // Calculer la bounding box englobante
-          const minX = Math.min(bbox.x, legendBbox.x)
-          const minY = Math.min(bbox.y, legendBbox.y)
-          const maxX = Math.max(bbox.x + bbox.width, legendBbox.x + legendBbox.width)
-          const maxY = Math.max(bbox.y + bbox.height, legendBbox.y + legendBbox.height)
-
-          // Créer une nouvelle bbox combinée
-          bbox = {
-            x: minX,
-            y: minY,
-            width: maxX - minX,
-            height: maxY - minY
-          } as DOMRect
-        }
-      }
-    }
+    // OS#1254 — plus de cas particulier légende : ses zones sont des conteneurs
+    // ordinaires, déjà couverts par la mesure du contenu ci-dessus.
 
     // Bounding box with no element -> reset to fresh-diagram state (full fitting window,
     // scale 1, origin at top-left). Needed e.g. when switching A3/A4/A5 -> free on an
@@ -1448,10 +1709,7 @@ export class Class_DrawingArea {
       this._k_fit = 1
       if (this.d3_selection_zoom_area) {
         this._updateScrollbars()
-        this.zoomListener.scaleTo(this.d3_selection_zoom_area, 1)
-        this.zoomListener.translateTo(
-          this.d3_selection_zoom_area, 0, 0,
-          [this._fit_margin / 2, this._fit_margin / 2 + this.getNavBarHeight()])
+        this._applyFitCamera(1, this._fit_margin / 2, this._fit_margin / 2 + this.getNavBarHeight())
       }
       this.drawBackground()
       this.drawGrid()
@@ -1582,6 +1840,14 @@ export class Class_DrawingArea {
         // Cas courant (pas de débordement sur l'axe secondaire) : min() retombe sur
         // l'axe dominant → cadrage historique inchangé.
         new_k = Math.min(k_to_fit_horiz, k_to_fit_vert)
+        // #680 — Modes « largeur » / « hauteur » (fill_axis_forced, boutons radio) : on
+        // REMPLIT l'axe demandé (is_horiz) au lieu de tout faire rentrer. L'autre axe peut
+        // alors déborder (contenu masqué + scrollable via _zoom_height/_zoom_width ci-dessous).
+        // C'est ce qui distingue « largeur »/« hauteur » de « tout visible » (min des deux).
+        if (fill_axis_forced) new_k = is_horiz ? k_to_fit_horiz : k_to_fit_vert
+        // #680 — Mode « aucun » (keep_zoom) : on CONSERVE le zoom courant (pas de dézoom),
+        // seul le recentrage (center_h/center_v ci-dessous) déplace la caméra.
+        if (keep_zoom) new_k = this.getZoomScale()
       }
       this._k_fit = new_k
       this._zoom_height = is_horiz ? Math.max(this.height, Math.min(this.height, this.window_fitting_height) / this._k_horiz) : this.height
@@ -1604,11 +1870,15 @@ export class Class_DrawingArea {
         this._zoom_width = 2 * half_view_w
         this._zoom_height = 2 * half_view_h
       }
+      // OS#1250 phase 5 — le calage du canvas sur la vue centrée qui se trouvait ici
+      // (phase 2) a disparu : il ne servait qu'à neutraliser le constrain custom, qui
+      // re-plaquait le diagramme en haut-gauche. Le constrain est revenu au défaut d3
+      // sur des bounds de CONTENU : il centre donc lui-même quand le contenu tient dans
+      // la fenêtre, en accord avec le px/py calculé plus bas (center_h/center_v).
       // Refresh translateExtent BEFORE scaleTo/translateTo so d3-zoom's constrain
       // uses the current content bbox (e.g. when switching back from paper to free,
       // we don't want the stale paper bounds to clamp the transform).
       this._updateScrollbars()
-      this.zoomListener.scaleTo(this.d3_selection_zoom_area, new_k)
       // Board unitaire (scopé is_unitary pour ne rien changer au diagramme principal) :
       // - avec nœud central → on l'épingle au CENTRE de la fenêtre (translateTo place le
       //   monde (0,0) en pixel [px,py], donc le point monde cnx/cny tombe au centre).
@@ -1617,19 +1887,63 @@ export class Class_DrawingArea {
       //   y a du mou (contenu plus petit que la fenêtre). On ne se base PAS sur is_horiz :
       //   pour un board compact dans un grand modal, _width/_height valent la fenêtre →
       //   ratio_h==ratio_v → is_horiz=false → seul l'horizontal serait centré.
-      const center_h = this.is_unitary && bbox.width * new_k < this.window_fitting_width
-      const center_v = this.is_unitary && bbox.height * new_k < this.window_fitting_height
+      // OS#1250 phase 2 — `center_on_content` ouvre ce centrage (jusque-là réservé au
+      // board unitaire) au recentrage explicite du diagramme principal. C'est le
+      // mécanisme éprouvé : on centre sur les axes où le contenu a du mou, en laissant
+      // le constrain inerte. Le mode papier est exclu — son ancrage haut-gauche est
+      // voulu (cf. le constrain custom, ajouté pour que A3/A4/A5 ne parte pas du coin).
+      const may_center = (this.is_unitary || !!center_on_content) && !this.is_paper_mode
+      // #680 — Ancrage 3 états par axe : 'start' (haut/gauche + marge), 'center', 'end' (bas/droite).
+      // Base historique : 'center' là où le contenu a du mou (center_on_content / board unitaire),
+      // sinon 'start' (ancrage coin haut-gauche à la marge).
+      let anchor_h: 'start' | 'center' | 'end' =
+        (may_center && bbox.width * new_k < this.window_fitting_width) ? 'center' : 'start'
+      let anchor_v: 'start' | 'center' | 'end' =
+        (may_center && bbox.height * new_k < this.window_fitting_height) ? 'center' : 'start'
+      if (!this.is_paper_mode) {
+        // Mode « remplir un axe » : l'axe REMPLI reste 'start' (bord à bord) ; l'autre centré.
+        if (fill_axis_forced) {
+          if (is_horiz) { anchor_h = 'start'; anchor_v = 'center' }
+          else { anchor_v = 'start'; anchor_h = 'center' }
+        } else if (keep_zoom) {
+          // Mode « aucun » : zoom constant, les deux axes centrés par défaut.
+          anchor_h = 'center'; anchor_v = 'center'
+        }
+        // Pendant un glissé, sur les axes LIBRES (non remplis), SUIVRE la direction du drag :
+        // la zone de dessin s'élargit et se décale pour garder l'élément déplacé dans la vue
+        // (bord poussé épinglé, côté opposé masqué). C'est ce qui permet d'emmener un nœud LOIN.
+        const dd = this._fit_drag_dir
+        if (dd && (fill_axis_forced || keep_zoom)) {
+          const h_free = keep_zoom || !is_horiz // largeur → h rempli (non libre) ; hauteur/aucun → h libre
+          const v_free = keep_zoom || is_horiz  // largeur → v libre ; hauteur → v rempli
+          // On ne « suit le bord » que si l'axe DÉBORDE (contenu > fenêtre) : sinon rien à
+          // masquer, on garde le centrage doux. Dès qu'on emmène le nœud au-delà du bord, le
+          // débordement apparaît et l'ancrage bascule sur le bord poussé (suivi lointain).
+          const h_overflow = bbox.width * new_k > this.window_fitting_width - this._fit_margin
+          const v_overflow = bbox.height * new_k > this.window_fitting_height - this._fit_margin
+          if (h_free && dd.x && h_overflow) anchor_h = dd.x > 0 ? 'end' : 'start'
+          if (v_free && dd.y && v_overflow) anchor_v = dd.y > 0 ? 'end' : 'start'
+        }
+      }
+      // 'start' = coin haut-gauche à la marge ; 'center' = bbox centrée ; 'end' = bord bas/droite
+      // épinglé au bord de la fenêtre (le côté opposé, plus grand, déborde et est masqué).
       const px = unitary_center_node
         ? this.window_fitting_width / 2 - cnx * new_k
-        : center_h
+        : anchor_h === 'center'
           ? (this.window_fitting_width - bbox.width * new_k) / 2 - bbox.x * new_k
-          : this._fit_margin / 2 + label_overflow_left - this._background_d3_groups_shift_x * new_k
+          : anchor_h === 'end'
+            ? (this.window_fitting_width - this._fit_margin / 2 - label_overflow_right) - (bbox.x + bbox.width) * new_k
+            : (this._fit_margin / 2 + label_overflow_left) - bbox.x * new_k
       const py = unitary_center_node
         ? this.window_fitting_height / 2 + this.getNavBarHeight() - cny * new_k
-        : center_v
+        : anchor_v === 'center'
           ? (this.window_fitting_height - bbox.height * new_k) / 2 - bbox.y * new_k + this.getNavBarHeight()
-          : this._fit_margin / 2 + this.getNavBarHeight() + label_overflow_top - this._background_d3_groups_shift_y * new_k
-      this.zoomListener.translateTo(this.d3_selection_zoom_area, 0, 0, [px, py])
+          : anchor_v === 'end'
+            ? this.getNavBarHeight() + (this.window_fitting_height - this._fit_margin / 2 - label_overflow_bottom) - (bbox.y + bbox.height) * new_k
+            : this._fit_margin / 2 + this.getNavBarHeight() + label_overflow_top - bbox.y * new_k
+      // Échelle + translation appliquées ensemble (constrain d3 préservé, cf. _applyFitCamera).
+      // px/py ci-dessus ne lisent pas le transform live → réordonnancement sans effet.
+      this._applyFitCamera(new_k, px, py)
       this.drawBackground()
       this.drawGrid()
       if (this._k_fit !== prev_k_fit) {
@@ -1645,7 +1959,7 @@ export class Class_DrawingArea {
         // des labels dans la zone visible (sous la top bar, marge à gauche).
         if (this._font_size_locked) {
           this._updateScrollbars()
-          this.zoomListener.translateTo(this.d3_selection_zoom_area, 0, 0, [px, py])
+          this._anchorCamera(0, 0, px, py)
           // Le ré-ancrage ci-dessus change le transform APRÈS le drawBackground/drawGrid
           // initiaux : on les redessine pour que le fond et la grille suivent le contenu.
           this.drawBackground()
@@ -1691,11 +2005,8 @@ export class Class_DrawingArea {
     this._sankey.containers_list.forEach(c => {
       c.drawNameLabel()
     })
-    // Legend : pas de compensation par-attribut (font-size hardcodée à
-    // _legend_police partout). À la place, on contre-scale son groupe racine
-    // via Legend.applyPosition() qui lit k_fit. Suffit de re-déclencher la
-    // pose du transform.
-    this._legend.applyPosition()
+    // OS#1254 — la légende est faite de conteneurs ordinaires ('legend-*'),
+    // couverts par la boucle ci-dessus : plus de compensation dédiée.
   }
 
   /**
@@ -1982,6 +2293,43 @@ export class Class_DrawingArea {
     _moveElement()
   }
 
+  /**
+   * #1259 — Envoie un cadre de groupe DERRIÈRE ses membres dans l'ordre Z.
+   * Convention réelle (orderElementOnDA trie sur la liste INVERSÉE) : un élément
+   * plus loin dans `_list_g_element_id` est dessiné plus tôt = plus au FOND.
+   * Donc « derrière » = indice PLUS HAUT. On place le cadre juste après (indice
+   * plus haut que) le membre le plus au fond. Sans ça, le cadre capte les clics
+   * de ses membres (cas ZDT dans ZDT : impossible d'attraper la ZDT membre).
+   */
+  public sendFrameBehindMembers(frame: Class_NodeBase) {
+    const list = dedupeZOrderKeepFirst(this._list_g_element_id)
+    const frame_idx = list.indexOf(frame.id)
+    if (frame_idx < 0) return
+    const member_idx = frame.attached_node
+      .map(m => list.indexOf(m.id))
+      .filter(i => i >= 0)
+    if (member_idx.length === 0) return
+    const max_idx = Math.max(...member_idx)
+    if (frame_idx > max_idx) return // déjà derrière tous ses membres (indice plus haut)
+    // Retire le cadre puis le réinsère juste APRÈS le membre le plus au fond
+    // (recalcul de l'indice max après suppression, les positions ayant glissé).
+    list.splice(frame_idx, 1)
+    const new_max = Math.max(...frame.attached_node
+      .map(m => list.indexOf(m.id))
+      .filter(i => i >= 0))
+    list.splice(new_max + 1, 0, frame.id)
+    this._list_g_element_id = list
+    this.orderElementOnDA()
+  }
+
+  /**
+   * #242 — Retire un élément de la liste des <g> tracés (utilisé quand le lien fantôme est
+   * détruit à la fin d'un geste de création).
+   */
+  public forgetGElementId(id: string) {
+    this._list_g_element_id = this._list_g_element_id.filter(_ => _ != id)
+  }
+
   public orderElementOnDA() {
     // Dédoublonnage défensif (même politique que moveOrderElementInDA : on garde la
     // 1ʳᵉ occurrence). L'application d'une mise en page (updateFrom) peut laisser des
@@ -2058,80 +2406,127 @@ export class Class_DrawingArea {
     if (this.d3_selection_zoom_area) {
       this.d3_selection_zoom_area.remove()
       this.d3_selection_zoom_area = null
-      this._d3_viewport_border = null
+      this._viewport_chrome.reset()
     }
   }
 
-  public recenter(force: boolean = false) {
-    if (!this.to_recenter) return
+  /**
+   * OS#1250 phase 2 — NORMALISATION des coordonnées monde. Migration PONCTUELLE
+   * des fichiers antérieurs à 0.92, dont le cadrage d'origine reposait sur le
+   * recentrage mutant fait au chargement (invariant #1231 : ils doivent
+   * toujours s'ouvrir cadrés).
+   *
+   * C'est le SEUL endroit qui déplace encore le monde. Le code ci-dessous est
+   * celui de l'ancien recenter(), extrait tel quel : il ramène le contenu près
+   * de l'origine. Il tourne après le premier draw (cf. ApplicationData.fromJSON),
+   * donc la bbox DOM est disponible — la mesure depuis le MODÈLE viendra en
+   * phase 3.
+   */
+  public normalizeLegacyWorldCoordinates() {
+    if (!this._needs_legacy_normalization) return
+    this._needs_legacy_normalization = false // migration ponctuelle
     // In paper mode, positions are already computed for the format — don't shift
     if (this.is_paper_mode) return
-    // Verrou de taille (#1240) : une fois le cadrage figé (_locked_fit_dirty=false),
-    // un changement de dataTag/viewTag/niveau NE DOIT plus rien recadrer. recenter()
-    // décale les positions ET force un areaAutoFit (force_when_locked) — donc un
-    // reflow visible à chaque sélection, ce qui contredit le verrou. On le neutralise
-    // pour ces recadrages AUTOMATIQUES. Exceptions : le tout premier recenter
-    // (chargement, dirty=true, cf. ApplicationData.fromJSON draw→recenter→draw) qui
-    // établit le cadrage initial, et le bouton « recentrer » explicite (force=true).
-    if (this._size_locked && !this._locked_fit_dirty && !force) return
     const bbox = this.d3_selection_elements_group?.node()?.getBBox()
     if (!bbox) return
     if ((bbox.width == 0) && (bbox.height == 0)) {
       return
     }
 
+    // Dimensions du canvas visées par le décalage. Locales : areaAutoFit les
+    // recalcule de toute façon (même formule, cf. son corps) juste après, via le
+    // recenter() de fin.
     const new_lefter_x = Math.min(0, bbox.x - default_DA_marging)
     const new_righter_x = Math.max(this.window_fitting_width, bbox.x + bbox.width + default_DA_marging)
-    this.width = new_righter_x - new_lefter_x
+    const canvas_width = new_righter_x - new_lefter_x
 
     const new_upper_y = Math.min(0, bbox.y - default_DA_marging)
     const new_bottom_y = Math.max(this.window_fitting_height, bbox.y + bbox.height + default_DA_marging)
-    this.height = new_bottom_y - new_upper_y
+    const canvas_height = new_bottom_y - new_upper_y
 
-
-    this._elements_d3_groups_shift_x = (new_lefter_x - bbox.x) + (this.width - bbox.width) / 2
-    this._elements_d3_groups_shift_y = (new_upper_y - bbox.y) + (this.height - bbox.height) / 2
+    const shift_x = (new_lefter_x - bbox.x) + (canvas_width - bbox.width) / 2
+    const shift_y = (new_upper_y - bbox.y) + (canvas_height - bbox.height) / 2
     this.sankey.nodes_list.forEach(n => {
-      n.position_x += this._elements_d3_groups_shift_x
-      n.position_y += this._elements_d3_groups_shift_y
+      n.position_x += shift_x
+      n.position_y += shift_y
       // #1231 — La position persistée d'un nœud est son CENTRE (_center_x/_center_y, cf.
-      // centerForPersistence). recenter() ne décale que le coin ; sans ce report, le centre
-      // stocké reste périmé et le nœud « revient » à sa place pré-recenter au rechargement
-      // (régression visible sur les vieux fichiers v0.91 qui forcent un recenter au load).
-      n.translateStoredCenter(this._elements_d3_groups_shift_x, this._elements_d3_groups_shift_y)
-      if (n.value_label_position_x) n.value_label_position_x += this._elements_d3_groups_shift_x
-      if (n.value_label_position_y) n.value_label_position_y += this._elements_d3_groups_shift_y
-      if (n.name_label_position_x) n.name_label_position_x += this._elements_d3_groups_shift_x
-      if (n.name_label_position_y) n.name_label_position_y += this._elements_d3_groups_shift_y
+      // centerForPersistence). Le décalage ne touche que le coin ; sans ce report, le centre
+      // stocké reste périmé et le nœud « revient » à sa place d'origine au rechargement
+      // (régression visible sur les vieux fichiers v0.91).
+      n.translateStoredCenter(shift_x, shift_y)
+      if (n.value_label_position_x) n.value_label_position_x += shift_x
+      if (n.value_label_position_y) n.value_label_position_y += shift_y
+      if (n.name_label_position_x) n.name_label_position_x += shift_x
+      if (n.name_label_position_y) n.name_label_position_y += shift_y
     })
     this.sankey.links_list.forEach(n => {
-      if (n.value_label_position_x) n.value_label_position_x += this._elements_d3_groups_shift_x
-      if (n.value_label_position_y) n.value_label_position_y += this._elements_d3_groups_shift_y
-      if (n.name_label_position_x) n.name_label_position_x += this._elements_d3_groups_shift_x
-      if (n.name_label_position_y) n.name_label_position_y += this._elements_d3_groups_shift_y
+      if (n.value_label_position_x) n.value_label_position_x += shift_x
+      if (n.value_label_position_y) n.value_label_position_y += shift_y
+      if (n.name_label_position_x) n.name_label_position_x += shift_x
+      if (n.name_label_position_y) n.name_label_position_y += shift_y
+      // opensankey#1301 — les points de contrôle (waypoints) sont en coords MONDE
+      // (comme les nœuds). Sans ce décalage, le recentrage bouge les nœuds mais pas
+      // les waypoints → le tracé routé se désaligne (côté d'accroche faux, cf. bug
+      // « part en haut »). Réaffectation (ne jamais muter le défaut partagé []).
+      const wps = n.shape_waypoints
+      if (Array.isArray(wps) && wps.length > 0) {
+        n.shape_waypoints = wps.map(p => ({ x: p.x + shift_x, y: p.y + shift_y }))
+      }
     })
     this.sankey.nodes_list.forEach(n => {
       n.draw()
     })
     this.sankey.containers_list.forEach(n => {
-      n.position_x += this._elements_d3_groups_shift_x
-      n.position_y += this._elements_d3_groups_shift_y
+      n.position_x += shift_x
+      n.position_y += shift_y
     })
     this.sankey.containers_list.forEach(n => {
       n.draw()
     })
-    if (this.legend.stick_to_drawing) {
-      this.legend.position_x += this._elements_d3_groups_shift_x
-      this.legend.position_y += this._elements_d3_groups_shift_y 
-      this.legend.draw()
+    // OS#1254 — les zones de la légende sont des conteneurs, décalées ci-dessus.
+    // Reporter aussi la position d'apparition (cadre pas encore généré).
+    this.legend.initial_position = {
+      x: this.legend.initial_position.x + shift_x,
+      y: this.legend.initial_position.y + shift_y
     }
 
-    // recenter a décalé les positions et redessiné les éléments : la bbox reflète
-    // désormais le layout FINAL. En mode verrouillé on recalcule donc ici un fit
-    // VERTICAL sur ces positions définitives (et on lève le drapeau dirty), ce qui
-    // fige le bon cadrage — y compris dans les flux sans draw ultérieur. Sinon, fit
-    // normal (heuristique horiz/vert).
-    this.areaAutoFit(this._size_locked ? false : undefined, this._size_locked)
+    // Les positions sont définitives : on cadre dessus (force = le verrou de taille
+    // ne doit pas empêcher le cadrage initial d'un fichier legacy).
+    this.recenter(true)
+  }
+
+  /**
+   * OS#1250 phase 2 — recenter est désormais une opération de CAMÉRA : il cadre
+   * le contenu, il ne le DÉPLACE plus.
+   *
+   * Avant, il décalait `position_x/y` de tous les nœuds, les centres persistés
+   * (#1231), les positions de labels, les containers et la légende — donc un
+   * clic sur « recentrer » modifiait le document, et une opération de navigation
+   * touchait la persistance. Ce décalage ne survit que comme migration ponctuelle
+   * des fichiers < 0.92 (normalizeLegacyWorldCoordinates).
+   *
+   * L'ancien garde `if (!this.to_recenter) return` a disparu avec le protocole :
+   * cf. `_needs_legacy_normalization` pour le bug de drapeau collant qu'il
+   * causait. Le calcul de canvas (width/height) a lui aussi disparu : areaAutoFit
+   * le refait avec la même formule juste en dessous.
+   */
+  public recenter(force: boolean = false) {
+    // In paper mode, positions are already computed for the format — don't refit
+    if (this.is_paper_mode) return
+    // Verrou de taille (#1240) : une fois le cadrage figé (_locked_fit_dirty=false),
+    // un changement de dataTag/viewTag/niveau NE DOIT plus rien recadrer, sinon
+    // reflow visible à chaque sélection. On neutralise donc ces recadrages
+    // AUTOMATIQUES. Exceptions : le tout premier cadrage (chargement, dirty=true)
+    // et le bouton « recentrer » explicite (force=true).
+    if (this._size_locked && !this._locked_fit_dirty && !force) return
+
+    // En mode verrouillé on recalcule un fit VERTICAL et on lève le drapeau dirty,
+    // ce qui fige le bon cadrage — y compris dans les flux sans draw ultérieur.
+    // Sinon, fit normal (heuristique horiz/vert).
+    // center_on_content : c'est CE que « recentrer » veut dire. Le centrage venait
+    // auparavant du décalage du MONDE (contenu recentré dans un canvas plaqué en
+    // haut-gauche) ; il devient un paramètre du fit — donc de la caméra.
+    this.areaAutoFit(this._size_locked ? false : undefined, this._size_locked, true)
     if (this._size_locked) {
       this._locked_fit_dirty = false
       // Le recentrage (auto au 1er rendu, ou bouton « recentrer ») rétablit le
@@ -2142,192 +2537,92 @@ export class Class_DrawingArea {
     this.orderElementOnDA()
   }
 
-  // ZOOM CINÉMATIQUE (#1244) ==========================================================
+  // CAMÉRA (#1244 zoom cinématique, #1250 façade) =====================================
+  // Délégations vers types/DrawingAreaCamera.ts. Le cœur géométrique du cadrage (areaAutoFit /
+  // recenter) reste ici : il recalcule les dimensions du canvas et les décalages du monde.
 
-  /**
-   * Deux transforms de zoom sont-ils identiques (à epsilon près) ? Sert à ne pas
-   * lancer d'animation quand le recadrage ne bouge pas la caméra.
-   */
-  private _sameZoomTransform(a: d3.ZoomTransform, b: d3.ZoomTransform): boolean {
-    const eps = 1e-6
-    return Math.abs(a.k - b.k) < eps
-      && Math.abs(a.x - b.x) < eps
-      && Math.abs(a.y - b.y) < eps
+  /** Variante animée des recadrages EXPLICITES (boutons fit H/V). */
+  public areaAutoFitAnimated(horiz?: boolean, force_when_locked?: boolean, fill_axis_forced?: boolean): void {
+    Camera.areaAutoFitAnimated(this, horiz, force_when_locked, fill_axis_forced)
   }
 
-  /**
-   * Anime la caméra (transform du zoom) vers `target` via l'interpolation native
-   * de d3-zoom (d3.interpolateZoom : trajectoire dézoom → pan → rezoom). On passe
-   * par zoomListener.transform (et non par un attr('transform') direct) pour que
-   * l'état interne du behavior reste cohérent — d3.zoomTransform, lu ailleurs
-   * (Legend, _freeBgBounds…), reste juste pendant et après l'animation.
-   *
-   * Application INSTANTANÉE (comportement historique) si les animations sont
-   * désactivées, si l'OS demande moins de mouvement (prefers-reduced-motion), ou
-   * s'il n'y a pas de zone de zoom.
-   *
-   * `from` (optionnel) : transform de départ imposé, posé instantanément avant
-   * l'animation pour éviter tout saut d'une frame (cas fit/recenter où l'état
-   * final a déjà été peint par areaAutoFit/recenter).
-   */
-  private _animateZoomTo(target: d3.ZoomTransform, from?: d3.ZoomTransform): void {
-    const sel = this.d3_selection_zoom_area
-    if (!sel || !sel.node()) return
-    const reduce_motion = typeof window !== 'undefined'
-      && typeof window.matchMedia === 'function'
-      && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (!this.zoom_animations_enabled || reduce_motion) {
-      this.zoomListener.transform(sel, target)
-      return
-    }
-    // Cale le point de départ (émet un event zoom → eventZoom applique le
-    // transform) puis anime depuis ce point vers la cible.
-    if (from) this.zoomListener.transform(sel, from)
-    // Transition SANS nom (défaut) : un geste souris (d3-zoom fait selection.interrupt())
-    // ou un nouvel appel l'annule proprement, sans transitions concurrentes.
-    this.zoomListener.transform(
-      sel.transition().duration(this._zoom_animation_duration_ms).ease(d3.easeCubicInOut),
-      target
-    )
-  }
-
-  /**
-   * Variante animée des recadrages EXPLICITES (boutons fit H/V). Calcule le
-   * cadrage cible via areaAutoFit — inchangé, avec tous ses effets de bord
-   * (_k_fit, labels, fond) — puis anime la caméra de l'ancien vers le nouveau
-   * transform. Les recadrages automatiques continuent d'appeler areaAutoFit.
-   */
-  public areaAutoFitAnimated(horiz?: boolean, force_when_locked?: boolean): void {
-    const node = this.d3_selection_zoom_area?.node()
-    if (!node) { this.areaAutoFit(horiz, force_when_locked); return }
-    const from = d3.zoomTransform(node)
-    this.areaAutoFit(horiz, force_when_locked) // pose l'état final (node à t1)
-    const to = d3.zoomTransform(node)
-    if (this._sameZoomTransform(from, to)) return
-    this.setCamera(to, { animate: true, from })
-  }
-
-  /**
-   * Variante animée du bouton « recentrer ». recenter() décale les coordonnées
-   * MONDE de tous les éléments puis refait le fit ; on capture le transform et un
-   * nœud de référence AVANT, on laisse recenter() poser l'état final, puis on
-   * anime la caméra depuis un transform de départ CORRIGÉ du décalage monde. La
-   * correction (X' = X0 − k0·Δ, avec Δ le décalage appliqué aux positions)
-   * reproduit exactement le rendu d'avant-recentrage sur les nouvelles positions,
-   * donc le contenu paraît glisser vers le centre sans saut d'une frame.
-   */
+  /** Variante animée du bouton « recentrer ». */
   public recenterAnimated(force: boolean = false): void {
-    const node = this.d3_selection_zoom_area?.node()
-    // Paper mode / pas de zone : recenter() ne décale rien de recadrable → direct.
-    if (!node || this.is_paper_mode) { this.recenter(force); return }
-    const t0 = d3.zoomTransform(node)
-    // Décalage monde réellement appliqué : mesuré sur un nœud témoin (toutes les
-    // positions sont décalées du même vecteur). 0 si recenter court-circuite.
-    const ref = this.sankey.nodes_list[0]
-    const bx = ref ? ref.position_x : 0
-    const by = ref ? ref.position_y : 0
-    this.recenter(force)
-    const to = d3.zoomTransform(node)
-    const dx = ref ? ref.position_x - bx : 0
-    const dy = ref ? ref.position_y - by : 0
-    const from = d3.zoomIdentity
-      .translate(t0.x - t0.k * dx, t0.y - t0.k * dy)
-      .scale(t0.k)
-    if (this._sameZoomTransform(from, to)) return
-    this.setCamera(to, { animate: true, from })
+    Camera.recenterAnimated(this, force)
   }
 
-  /**
-   * Centre la caméra sur un nœud avec une animation cinématique (d3-zoom gère
-   * nativement la trajectoire dézoom → pan → rezoom via d3.interpolateZoom).
-   * Utilisable par la recherche / la sélection. Conserve l'échelle courante par
-   * défaut ; `scale` force un niveau de zoom cible.
-   */
+  /** Centre la caméra sur un nœud, avec animation (recherche / sélection). */
   public flyToNode(node: Class_NodeElement, scale?: number): void {
-    const area_node = this.d3_selection_zoom_area?.node()
-    if (!area_node || !node) return
-    const t0 = d3.zoomTransform(area_node)
-    const k = scale ?? t0.k
-    const cx = node.position_x + node.getShapeWidthToUse() / 2
-    const cy = node.position_y + node.getShapeHeightToUse() / 2
-    // Place le centre du nœud au centre de la fenêtre visible (sous la nav bar).
-    const px = this.window_fitting_width / 2
-    const py = this.window_fitting_height / 2 + this.getNavBarHeight()
-    const to = d3.zoomIdentity.translate(px - k * cx, py - k * cy).scale(k)
-    this.setCamera(to, { animate: true })
+    Camera.flyToNode(this, node, scale)
   }
 
-  // FAÇADE CAMÉRA (#1250 — phase 1) ===================================================
-  // Modèle cible : « caméra sur monde immuable ». Le transform d3-zoom est la
-  // seule source de vérité d'échelle/translation ; les opérations de caméra
-  // sont des fonctions qui produisent un transform, appliqué par setCamera().
-  // Phase 1 = amorce : la façade existe et les chemins NOUVEAUX (zoom
-  // cinématique #1244, futurs consommateurs) passent par elle. Le routage des
-  // internals d'areaAutoFit/recenter (et la bascule de contentBounds vers un
-  // calcul MODÈLE sans getBBox) viennent dans les phases suivantes.
+  /** Zoom explicite par facteur multiplicatif (boutons -/+), ancré au centre du viewport. */
+  public zoomByFactor(factor: number): void {
+    // #680 — Zoom manuel (boutons -/+) → sort des modes de cadrage auto (setter = notify).
+    this.auto_fit_mode = 'none'
+    Camera.zoomByFactor(this, factor)
+  }
 
-  /**
-   * Viewport utile en pixels écran : zone réellement disponible pour le
-   * diagramme (fenêtre ou conteneur hôte, réserves de panneaux déduites via
-   * window_fitting_*), et décalage vertical de la nav bar.
-   */
+  /** Zoom explicite vers une échelle absolue (clic indicateur → 100% = k=1). */
+  public zoomToScale(k: number): void {
+    // #680 — Zoom manuel (clic 100 %) → sort des modes de cadrage auto (setter = notify).
+    this.auto_fit_mode = 'none'
+    Camera.zoomToScale(this, k)
+  }
+
+  /** Fige le zoom courant dans la géométrie (tailles ×ratio) et remet la caméra à 100 %. */
+  public bakeZoomIntoGeometry(opts?: { record_history?: boolean }): void {
+    Camera.bakeZoomIntoGeometry(this, opts)
+  }
+
+  /** Centre la caméra sur un point MONDE, avec animation (recherche flux / zone — OS#1273). */
+  public flyToPoint(wx: number, wy: number, scale?: number): void {
+    Camera.flyToPoint(this, wx, wy, scale)
+  }
+
+  /** Viewport utile en pixels écran (réserves de panneaux déduites) + décalage de la nav bar. */
   public getViewport(): { width: number, height: number, top_offset: number } {
-    return {
-      width: this.window_fitting_width,
-      height: this.window_fitting_height,
-      top_offset: this.getNavBarHeight()
-    }
+    return Camera.getViewport(this)
   }
 
-  /**
-   * Bounds du contenu en coordonnées MONDE. Phase 1 : mesure DOM (getBBox du
-   * groupe des éléments) — l'interface est posée, l'implémentation basculera
-   * vers un calcul depuis le modèle (positions + tailles + labels estimés) en
-   * phase 3, ce qui supprimera les dépendances à l'ordre de rendu.
-   */
+  /** Bounds du contenu en coordonnées MONDE (null si vide). */
   public contentBounds(): { x: number, y: number, width: number, height: number } | null {
-    const bbox = this.d3_selection_elements_group?.node()?.getBBox()
-    if (!bbox || (bbox.width === 0 && bbox.height === 0)) return null
-    return { x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height }
+    return Camera.contentBounds(this)
   }
 
   /**
-   * Fonction PURE : transform de caméra qui cadre `bounds` dans `viewport`
-   * avec la marge donnée (contenu ancré en haut-gauche à margin/2, comme le
-   * fit historique). Ne lit ni n'écrit aucun état — testable unitairement.
+   * Fonction PURE : transform de caméra qui cadre `bounds` dans `viewport` avec la marge donnée
+   * (contenu ancré en haut-gauche à margin/2, comme le fit historique).
    */
   public fitTransform(
     bounds: { x: number, y: number, width: number, height: number },
     viewport: { width: number, height: number, top_offset: number },
     margin: number = this._fit_margin
   ): d3.ZoomTransform {
-    const k_w = (viewport.width - margin) / bounds.width
-    const k_h = (viewport.height - margin) / bounds.height
-    // Bornes identiques au scaleExtent du zoomListener (rendu SVG gelé au-delà).
-    const k = Math.max(0.05, Math.min(20, Math.min(k_w, k_h)))
-    return d3.zoomIdentity
-      .translate(margin / 2 - bounds.x * k, viewport.top_offset + margin / 2 - bounds.y * k)
-      .scale(k)
+    return CameraMath.fitTransform(bounds, viewport, margin)
   }
 
-  /**
-   * Point d'application UNIQUE d'un transform de caméra. Passe toujours par
-   * zoomListener.transform pour garder l'état interne du behavior cohérent
-   * (d3.zoomTransform lu par Legend, _freeBgBounds, scrollbars…).
-   * `animate` : interpolation d3.interpolateZoom (cf. _animateZoomTo) ;
-   * `from` : point de départ imposé, posé instantanément avant l'animation.
-   */
+  /** Point d'application UNIQUE d'un transform de caméra. */
   public setCamera(
     target: d3.ZoomTransform,
     opts?: { animate?: boolean, from?: d3.ZoomTransform }
   ): void {
-    const sel = this.d3_selection_zoom_area
-    if (!sel || !sel.node()) return
-    if (opts?.animate) {
-      this._animateZoomTo(target, opts.from)
-    } else {
-      this.zoomListener.transform(sel, target)
-    }
+    Camera.setCamera(this, target, opts)
+  }
+
+  /**
+   * Recadrage de fit : échelle `k` puis point MONDE (0,0) au pixel [px, py]. Conserve le constrain
+   * de d3-zoom (load-bearing pour le ré-ancrage des labels en police verrouillée, #165) ;
+   * _updateScrollbars doit avoir été appelé AVANT (il pose le translateExtent lu par le constrain).
+   */
+  /** OS#1250 phase 1 — ré-ancrage sans changement d'échelle (cf. Camera.anchorCamera). */
+  private _anchorCamera(wx: number, wy: number, px: number, py: number): void {
+    Camera.anchorCamera(this, wx, wy, px, py)
+  }
+
+
+  private _applyFitCamera(k: number, px: number, py: number): void {
+    Camera.applyFitCamera(this, k, px, py)
   }
 
   /**
@@ -2343,34 +2638,47 @@ export class Class_DrawingArea {
    * ou le ré-ancrage (#165) — le canvas figé, lui, ne couvre plus la fenêtre après un
    * ré-ancrage ou quand le contenu est plus petit qu'elle.
    */
+  /**
+   * OS#1250 phase 4 — CANVAS INFINI : bornes du fond et de la grille en mode libre.
+   *
+   * C'est exactement le viewport projeté en coordonnées monde : le fond couvre ce qu'on
+   * voit, ni plus ni moins. Il n'y a plus de « canvas » — ce rectangle fini, dimensionné
+   * sur la fenêtre puis unionné ici, n'existait que pour être ancré par le constrain
+   * custom (supprimé en phase 5). Le fond suivait donc une géométrie dont personne
+   * n'avait plus besoin, et grossissait au fil des pans.
+   *
+   * Le résultat dépend de la caméra (et non de l'inverse) : c'est le sens du modèle.
+   * Marge de sécurité d'un demi-viewport de chaque côté pour absorber les pans/zooms
+   * entre deux redraws (le zoom n'applique qu'un transform ; le fond n'est redessiné
+   * qu'en différé, cf. eventZoom) sans laisser apparaître de bande vide.
+   */
   private _freeBgBounds(): { x: number, y: number, w: number, h: number } {
-    let x0 = this._background_d3_groups_shift_x
-    let y0 = this._background_d3_groups_shift_y
-    let x1 = x0 + this._zoom_width
-    let y1 = y0 + this._zoom_height
     const node = this.d3_selection_zoom_area?.node()
-    if (node) {
-      const t = d3.zoomTransform(node)
-      if (t.k) {
-        const fm = this._fit_margin / 2
-        const navH = this.getNavBarHeight()
-        x0 = Math.min(x0, (fm - t.x) / t.k)
-        y0 = Math.min(y0, (navH + fm - t.y) / t.k)
-        x1 = Math.max(x1, (fm + this.window_fitting_width - t.x) / t.k)
-        y1 = Math.max(y1, (navH + fm + this.window_fitting_height - t.y) / t.k)
-      }
+    const fm = this._fit_margin / 2
+    const navH = this.getNavBarHeight()
+    const vw = this.window_fitting_width
+    const vh = this.window_fitting_height
+    if (!node) return { x: 0, y: 0, w: vw, h: vh }
+    const t = d3.zoomTransform(node)
+    if (!t.k) return { x: 0, y: 0, w: vw, h: vh }
+    const tl = CameraMath.screenToWorld(t, fm, navH + fm)
+    const br = CameraMath.screenToWorld(t, fm + vw, navH + fm + vh)
+    const pad_x = (br.x - tl.x) / 2
+    const pad_y = (br.y - tl.y) / 2
+    return {
+      x: tl.x - pad_x,
+      y: tl.y - pad_y,
+      w: (br.x - tl.x) + 2 * pad_x,
+      h: (br.y - tl.y) + 2 * pad_y
     }
-    return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }
   }
 
   protected drawBackground() {
     // Clean if needed
     this.d3_selection_bg?.selectAll('.bg').remove()
-    // Bornes du fond : en mode papier, le canvas figé (taille papier). En mode libre,
-    // l'union canvas ∪ viewport (cf. _freeBgBounds) pour remplir toute la fenêtre.
-    const b = this.is_paper_mode
-      ? { x: this._background_d3_groups_shift_x, y: this._background_d3_groups_shift_y, w: this._zoom_width, h: this._zoom_height }
-      : this._freeBgBounds()
+    // OS#1250 phase 4 — bornes du fond. Mode papier : la PAGE, rect fixe en coordonnées
+    // monde (cf. paper_world_rect). Mode libre : le viewport projeté (canvas infini).
+    const b = this.is_paper_mode ? this.paper_world_rect : this._freeBgBounds()
     // Draw background (fill only — the editable-canvas border is drawn separately
     // on the SVG root via _updateViewportBorder so it stays anchored to the viewport
     // and doesn't slide off-screen when the user pans content).
@@ -2389,30 +2697,16 @@ export class Class_DrawingArea {
   }
 
   /**
-   * Position and size the viewport border rect so it frames the visible drawing
-   * area on the SVG root (outside g_drawing). Called on init and on every
-   * drawBackground() so it tracks navbar/bottombar/window changes.
+   * Position and size the viewport border rect on the SVG root (outside g_drawing).
+   * Mode libre : encadre la zone visible (fenêtre). Mode papier : encadre la PAGE.
+   * Appelé à l'init, à chaque drawBackground(), et — en mode papier — à chaque zoom/pan
+   * (eventZoom), car le fond n'y est pas redessiné.
    */
   private _updateViewportBorder() {
-    if (!this._d3_viewport_border) return
-    if (!this.editable) {
-      this._d3_viewport_border.attr('visibility', 'hidden')
-      return
-    }
-    const fm = this._fit_margin / 2
-    const navH = this.getNavBarHeight()
-    const viewW = this.window_fitting_width
-    const viewH = this.window_fitting_height
-    // viewW/viewH already exclude fit_margin and navbar/bottombar, so they map
-    // directly to the framed area (x=fm, y=navH+fm, w=viewW, h=viewH).
-    this._d3_viewport_border
-      .attr('visibility', 'visible')
-      .attr('x', fm)
-      .attr('y', navH + fm)
-      .attr('width', Math.max(0, viewW))
-      .attr('height', Math.max(0, viewH))
-      .style('stroke', default_black_color)
-      .style('stroke-width', 1)
+    this._viewport_chrome.updateBorder(this)
+    // #291 — Le clip du contenu partage la géométrie du cadre : on le rafraîchit ici, donc à
+    // l'init, à chaque drawBackground() (draw / resize) et — en mode papier — à chaque zoom/pan.
+    this._viewport_chrome.updateClip(this)
   }
 
   /**
@@ -2438,7 +2732,7 @@ export class Class_DrawingArea {
    * @return {*}
    * @memberof Class_DrawingArea
    */
-  private isMouseOverAnExistingNode(): boolean {
+  public isMouseOverAnExistingNode(): boolean {
     let node_id: string
     for (node_id in this.sankey.nodes_dict) {
       if (this.sankey.nodes_dict[node_id].isMouseOver())
@@ -2453,801 +2747,27 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   private setEventsListeners() {
-    if (this.d3_selection !== null) {
-      this.d3_selection?.on(
-        'click',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventSimpleLMBClick(event))
-    }
-    if (
-      this.editable &&
-      (this.d3_selection !== null)
-    ) {
-
-      this.d3_selection?.on(
-        'dblclick',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventDoubleLMBClick(event))
-      // Right mouse button maintained
-      this.d3_selection?.on(
-        'mousedown',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventMaintainedClick(event))
-      this.d3_selection?.on(
-        'mouseup',
-        (event: MouseEvent) =>
-          this.eventReleasedClick(event))
-      // Mouse cursor goes over this
-      this.d3_selection?.on(
-        'mouseover',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventMouseOver(event))
-      this.d3_selection?.on(
-        'mouseout',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventMouseOut(event))
-      // Mouse cursor move
-      this.d3_selection?.on(
-        'mousemove',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventMouseMove(event))
-      // Left mouse button click
-      this.d3_selection?.on(
-        'contextmenu',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventSimpleRMBClick(event))
-    }
-    // Zoom behavior(but can also drag drawing area in scroll zone)
-    this.d3_selection_zoom_area?.call(
-      this.zoomListener)
-      .on('dblclick.zoom', null) // deactivate dbl click zoom
-      .on('wheel.zoom', (event: WheelEvent) => {
-        event.preventDefault()
-        this.eventMouseScroll(event)
-      })
-  }
-
-  /**
-   * Deal with simple left Mouse Button (LMB) click on given element
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventSimpleLMBClick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    event.preventDefault()
-    // Fermer les tooltips via le système intégré
-    this.closeAllContextMenus()
-    const tooltipManager = TooltipEventManager.getInstance()
-    tooltipManager.closeTooltip()
-    if (!this.editable) this.purgeSelection()
-  }
-
-  /**
-   * Deal with double left Mouse Button (LMB) click on given element
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventDoubleLMBClick(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    //if (event.ctrlKey) return
-    //this.closeAllMenus()
-    this._selection_zone.reset()
-  }
-
-  /**
-   * Deal with simple right Mouse Button (RMB) click on given element
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventSimpleRMBClick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    event.preventDefault()
-    if (this.eventsEnabled()) {
-      // Fermer les tooltips via le système intégré
-      const tooltipManager = TooltipEventManager.getInstance()
-      tooltipManager.closeTooltip()
-      this.closeAllContextMenus()
-      this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-      this.is_drawing_area_contextualised = true
-      this.application_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
-      this.setSelectionMode()
-    }
-  }
-
-  /**
-   * Define maintained left mouse button click for drawing area
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventMaintainedClick(
-    event: MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    event.preventDefault()
-    // Clear tooltips presents
-    // Fermer les tooltips via le système intégré
-    // const tooltipManager = TooltipEventManager.getInstance();
-    // tooltipManager.closeTooltip();
-    // EDITION MODE =============================================================
-    // event.button==0 check if we use LMB
-    if (this.isInEditionMode() && event.button == 0 && this.eventsEnabled()) {
-      // No more elements must be in selection
-      this.purgeSelection()
-      // Close all menus
-      this.closeAllMenus()
-
-      if (this._ghost_link == null) {// Start creating  a node & a ghost_link + ghost node
-        // Get relative mouse position
-        const mouse_position = d3.pointer(event)
-        // Create default source node
-        const source = this.sankey.addNewDefaultNode()
-        source.draw()
-        // Position center of source node to pointer pos
-        source.setPosXY(
-          mouse_position[0] - (source.getShapeWidthToUse() / 2),
-          mouse_position[1] - (source.getShapeHeightToUse() / 2))
-
-        // Create default target node
-        const target = this.sankey.addNewDefaultNode()
-        target.setPosXY(mouse_position[0] + 2, mouse_position[1] + 2)
-        // Make target a 'ghost' node
-        target.setInvisible()
-        // Ref newly created link this var to be used in other mouse event
-        this._ghost_link = new Class_LinkElement(
-          'ghost_link',
-          source,
-          target,
-          this)
-        this.drawing_link = true
-        // Peuple source._output_links_starting_point[ghost_link.id] pour que le
-        // 1er rendu du ghost_link voie son starting_point (sinon drawElements
-        // est skip et aucun path n'est tracé pendant le drag initial).
-        source.applyPosition()
-        this._ghost_link_source = source
-        this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
-
-      } else {
-        // If by any means we have already a ghost link but we start clicking the DA
-        // (It can occur when we relase the mouse out of DA while we have a ghost link & restart clicking in DA
-
-        // Mouse released on source node
-        if (this._ghost_link.source.isMouseOver()) {
-          // If we release the mouse on the source of the link
-          // then delete the link & target to keep only the source
-          // So we only created 1 node
-          this.deleteNode(this._ghost_link.target as Class_NodeElement)
-          this.drawing_link = false
-          // Sélectionner le nœud fraîchement créé (clic simple sans glisser) :
-          // les branches de création de flux sélectionnent leurs éléments, celle-ci
-          // l'oubliait, laissant le nœud non sélectionné après le dessin.
-          this.purgeSelectionOfElement(false)
-          this.addElementToSelection(this._ghost_link.source)
-          this.application_data.menu_configuration.openConfigMenuElementsNodes()
-        }
-        else if (this.isMouseOverAnExistingNode() === true) {
-          let node_id: string = this._ghost_link?.source.id //in case the loop don't find the hovered node we take the source as default
-          for (node_id in this.sankey.nodes_dict) {
-            if (this.sankey.nodes_dict[node_id].isMouseOver())
-              break //stop the loop when we fint the node hovered
-          }
-          // Create new link
-          this.sankey.addNewLink(
-            this._ghost_link.source as Class_NodeElement,
-            this.sankey.nodes_dict[node_id]
-          )
-          const newLink1 = this.sankey.links_list[this.sankey.links_list.length - 1]
-          this.purgeSelectionOfElement(false)
-          this.addElementToSelection(newLink1)
-          this.addElementToSelection(newLink1.source)
-          this.addElementToSelection(newLink1.target)
-          this.application_data.menu_configuration.openConfigMenuElementsLinks()
-          // Delete old target node
-          this.deleteNode(this._ghost_link?.target as Class_NodeElement)
-          this.drawing_link = false
-        }
-        else {
-          // Make ghost target visible
-          this._ghost_link.target.setVisible()
-
-          // Create new link
-          this.sankey.addNewLink(
-            this._ghost_link.source as Class_NodeElement,
-            this._ghost_link.target as Class_NodeElement
-          )
-          const newLink2 = this.sankey.links_list[this.sankey.links_list.length - 1]
-          this.purgeSelectionOfElement(false)
-          this.addElementToSelection(newLink2)
-          this.addElementToSelection(newLink2.source)
-          this.addElementToSelection(newLink2.target)
-          this.application_data.menu_configuration.openConfigMenuElementsLinks()
-        }
-        // In case we get there still deref ghost link
-        this._ghost_link.delete()
-        this._ghost_link = null
-        // Reset systématique : la 3e branche (relâché dans le vide) oubliait de
-        // le faire, laissant drawing_link=true et faussant la visibilité des
-        // flux normaux + l'aléa du drag suivant. On le remet à false pour TOUTES
-        // les fins de création de flux.
-        this.drawing_link = false
-        this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
-        this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-      }
-
-    }
-    // SELECTION MODE ===========================================================
-    else if (this.isInSelectionMode()) {
-      if (event.button === 0) {
-        // Close context menus
-
-        // Get relative mouse position
-        const mouse_position = d3.pointer(event)
-        // Display the selection zone & set it starting position
-        this._selection_zone.setVisible()
-        this.starting_x_point = mouse_position[0]
-        this.starting_y_point = mouse_position[1]
-        this._selection_zone.draw()
-      }
-    }
-  }
-
-  /**
-   * Define released left mouse button click for drawing area
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventReleasedClick(
-    event: MouseEvent
-  ) {
-    // EDITION MODE =============================================================
-    if (this.isInEditionMode()) {
-      // When we are creating a link with LMB
-      if (this._ghost_link !== null) {
-        let ghost_link_json: Type_JSON | undefined
-        let ghost_src_json: Type_JSON
-        let ghost_trgt_json: Type_JSON
-        let wasGhostSrc = false
-        let wasGhostTrgt = false
-        // Mouse released on source node
-        if (this._ghost_link.source.isMouseOver()) {
-          // If we release the mouse on the source of the link
-          // then delete the link & target to keep only the source
-          // So we only created 1 node
-          this.deleteNode(this._ghost_link.target as Class_NodeElement)
-          this.drawing_link = false
-          // Sélectionner le nœud fraîchement créé (clic simple sans glisser) :
-          // les branches de création de flux sélectionnent leurs éléments, celle-ci
-          // l'oubliait, laissant le nœud non sélectionné après le dessin.
-          this.purgeSelectionOfElement(false)
-          this.addElementToSelection(this._ghost_link.source)
-          this.application_data.menu_configuration.openConfigMenuElementsNodes()
-        }
-        else if (this.isMouseOverAnExistingNode() === true) {
-          let node_id: string = this._ghost_link?.source.id //in case the loop don't find the hovered node we take the source as default
-          for (node_id in this.sankey.nodes_dict) {
-            if (this.sankey.nodes_dict[node_id].isMouseOver())
-              break //stop the loop when we fint the node hovered
-          }
-          // Create new link
-          const l = this.sankey.addNewLink(
-            this._ghost_link.source as Class_NodeElement,
-            this.sankey.nodes_dict[node_id]
-          )
-          ghost_link_json = {}
-          LinkElementPersistence.toJSON(l, ghost_link_json) //For undo/redo
-          this.purgeSelectionOfElement(false)
-          this.addElementToSelection(l)
-          this.addElementToSelection(l.source)
-          this.addElementToSelection(l.target)
-          this.application_data.menu_configuration.openConfigMenuElementsLinks()
-          // Delete old target node
-          this.deleteNode(this._ghost_link?.target as Class_NodeElement)
-          this.drawing_link = false
-        }
-        else {
-          // Make ghost target visible
-          this._ghost_link.target.setVisible()
-
-          // Create new link
-          const l = this.sankey.addNewLink(
-            this._ghost_link.source as Class_NodeElement,
-            this._ghost_link.target as Class_NodeElement
-          )
-          ghost_link_json = { id: l.id }
-          LinkElementPersistence.toJSON(l, ghost_link_json) //For undo/redo
-          this._ghost_link_target = l.target //For undo/redo
-
-          this.purgeSelectionOfElement(false)
-          this.addElementToSelection(l)
-          this.addElementToSelection(l.source)
-          this.addElementToSelection(l.target)
-          this.application_data.menu_configuration.openConfigMenuElementsLinks()
-        }
-
-        // Undo/Redo related instructions ================================
-
-        if (this._ghost_link_source) {
-          // For undo : Set wasGhostSrc to true to delete created the node source when we created a link with the mouse on the DA
-          wasGhostSrc = true
-          // For redo : save ghost source in json to recreate it correctly at redo
-          ghost_src_json = { id: this._ghost_link_source.id }
-          NodeElementPersistence.toJSON(this._ghost_link_source, ghost_src_json)
-        }
-
-        if (this._ghost_link_target) {
-          // For undo : Set wasGhostTrgt to true to delete created the node target when we created a link with the mouse on the DA
-          wasGhostTrgt = true
-          // For redo : save ghost target in json to recreate it correctly at redo
-          ghost_trgt_json = { id: this._ghost_link_target.id }
-          NodeElementPersistence.toJSON(this._ghost_link_target, ghost_trgt_json)
-
-        }
-
-        if (ghost_link_json || wasGhostSrc) {
-          this.saveUndo(() => {
-            if (ghost_link_json) {
-              // Delete ghost link,source and target it they were created for ghost link
-              const g_l = this.sankey.links_dict[ghost_link_json['id'] as string]
-              const t = g_l.target
-              const s = g_l.source
-              this.deleteLink(g_l)
-              if (wasGhostTrgt) {
-                this.deleteNode(t)
-              }
-              if (wasGhostSrc) {
-                this.deleteNode(s)
-              }
-            } else if (wasGhostSrc) {
-              // If we are here it mean we relased the button on the ghost link source so if deleted GL & target but kept source
-              const g_s = this.sankey.nodes_dict[ghost_src_json['id'] as string]
-              this.deleteNode(g_s)
-            }
-          })
-
-          this.saveRedo(() => {
-            // Recreate delete element in undo
-            if (ghost_trgt_json) {
-              const new_n = this.sankey.addNewNode(ghost_trgt_json['id'] as string, ghost_trgt_json['name'] as string)
-              NodeElementPersistence.fromJSON(+this.application_data.version, new_n, ghost_trgt_json)
-              new_n.draw()
-            }
-            if (ghost_src_json) {
-              const new_n = this.sankey.addNewNode(ghost_src_json['id'] as string, ghost_src_json['name'] as string)
-              NodeElementPersistence.fromJSON(+this.application_data.version, new_n, ghost_src_json)
-              new_n.draw()
-            }
-            if (ghost_link_json) {
-              const src = this.sankey.nodes_dict[ghost_link_json['idSource'] as string]
-              const trgt = this.sankey.nodes_dict[ghost_link_json['idTarget'] as string]
-              const new_l = this.sankey.addNewLink(src, trgt)
-              LinkElementPersistence.fromJSON(+this.application_data.version, new_l, ghost_link_json)
-              new_l.draw()
-            }
-          })
-        }
-
-
-        // Deref ghost links & related attr ================================
-
-        // In case we get there still deref ghost link
-        this._ghost_link.delete()
-        this._list_g_element_id = this._list_g_element_id.filter(id => id != this._ghost_link!.id)
-        this._ghost_link = null
-        this._ghost_link_source = null
-        this._ghost_link_target = null
-        // Reset systématique (idem eventClick) : la 3e branche (relâché dans le vide) oubliait
-        // de le faire, laissant drawing_link=true. Or _is_visible_ignoring_container_modes
-        // court-circuite tous les filtres tant qu'il est vrai : les flux désagrégés restaient
-        // visibles et s'ajoutaient à la bande du nœud (hauteur ×N, labels décalés d'autant).
-        this.drawing_link = false
-        this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
-        this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-        if (this.sankey.default_style.shape_position_type == 'parametric') {
-          this.application_data.sendWaitingToast(
-            () => {
-              this.nodePositioning.inferPositionUFromX()
-              this.nodePositioning.computeParametrization(false)
-            })
-        }
-      }
-    } else if (this.isInSelectionMode() && event.button == 0) {
-      if ((!event.shiftKey) && (!event.ctrlKey) && (!event.metaKey)) {
-        const just_closed = this.closeAllContextMenus()
-        if (!just_closed) this.purgeSelection()
-      }
-      // Select element inside the selection zone & reset it (hide the zone)
-      const nb_type_el_sel = this._selection_zone.selectElementsInside()
-      if (event.shiftKey) {
-        // If 2 types of element were selected, open config for nodes & flow
-        if (nb_type_el_sel == 2) {
-          this.application_data.menu_configuration.openConfigMenuElementsNodesLinks()
-        } else if (nb_type_el_sel == 1) {
-          // else if 1 type of element was selected, open config for nodes
-          // (can't select flow without selecting nodes so if we have 1 type of element selected it's the nodes)
-          this.application_data.menu_configuration.openConfigMenuElementsNodes()
-        }
-      }
-      this._selection_zone.reset()
-      this.orderElementOnDA()
-    }
-  }
-
-  /**
-   * Define event when mouse moves over drawing area
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventMouseOver(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    // TODO Definir
-  }
-
-  /**
-   * Define event when mouse moves out of drawing area
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventMouseOut(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    // TODO definir
-  }
-
-  /**
-   * Define event when mouse moves in drawing area
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
-   */
-  private eventMouseMove(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    // Save pointer pos for external access
-    if (!this.is_drawing_area_contextualised)
-      this.pointer_pos = [event.pageX, event.pageY]
-    // EDITION MODE =============================================================
-    if (this.isInEditionMode()) {
-      // When we are creating a link with LMB
-      if (this._ghost_link !== null) {
-        // Get relative mouse position
-        const mouse_position = d3.pointer(event)
-        // Move ghost target
-        const target = this._ghost_link.target
-        target.setPosXY(
-          mouse_position[0] - (target.getShapeWidthToUse() / 2),
-          mouse_position[1] - (target.getShapeHeightToUse() / 2))
-
-        //this.checkAndUpdateAreaSize()
-      }
-    } else if (this.isInSelectionMode()) {
-      if (this._selection_zone.is_visible) {
-        // Get relative mouse position
-        const mouse_position = d3.pointer(event)
-        // Variable that can be modifier if we move the selection zone above or at the left of it starting point
-        let new_x = this.starting_x_point,
-          new_y = this.starting_y_point
-
-        if (mouse_position[0] > this._selection_zone.position_x) {
-          this.selection_zone.width = mouse_position[0] - this._selection_zone.position_x
-        } else {
-          this.selection_zone.width = Math.abs(mouse_position[0] - this.starting_x_point)
-          new_x = mouse_position[0]
-        }
-
-        if (mouse_position[1] > this.starting_y_point) {
-          this.selection_zone.height = mouse_position[1] - this.starting_y_point
-        } else {
-          this.selection_zone.height = Math.abs(this.starting_y_point - mouse_position[1])
-          new_y = mouse_position[1]
-        }
-
-        // Update shape on drawing area
-        this.selection_zone.setPosXY(new_x, new_y)
-        this._selection_zone.setSize()
-      }
-    }
+    this._interactions.setEventsListeners(this)
   }
 
   // SCROLLBARS ==========================================================================
 
   /**
-   * Create scrollbar SVG elements (track + thumb) for horizontal and vertical scrolling.
-   * Placed directly in the SVG root so they stay fixed in viewport coordinates.
-   */
-  private _initScrollbars() {
-    if (!this.d3_selection_zoom_area) return
-    const sb = this._scrollbar_size
-
-    // Horizontal scrollbar
-    this._d3_scrollbar_h = this.d3_selection_zoom_area.append('g')
-      .attr('class', 'scrollbar scrollbar-h')
-      .attr('visibility', 'hidden')
-      .style('pointer-events', 'all')
-    // Track
-    this._d3_scrollbar_h.append('rect')
-      .attr('class', 'scrollbar-track')
-      .attr('rx', sb / 2).attr('ry', sb / 2)
-      .attr('height', sb)
-      .style('fill', '#e0e0e0').style('fill-opacity', 0.3)
-    // Thumb
-    this._d3_scrollbar_h.append('rect')
-      .attr('class', 'scrollbar-thumb')
-      .attr('rx', sb / 2).attr('ry', sb / 2)
-      .attr('height', sb)
-      .style('fill', '#78A7C2').style('fill-opacity', 0.85)
-      .style('cursor', 'pointer')
-
-    // Vertical scrollbar
-    this._d3_scrollbar_v = this.d3_selection_zoom_area.append('g')
-      .attr('class', 'scrollbar scrollbar-v')
-      .attr('visibility', 'hidden')
-      .style('pointer-events', 'all')
-    // Track
-    this._d3_scrollbar_v.append('rect')
-      .attr('class', 'scrollbar-track')
-      .attr('rx', sb / 2).attr('ry', sb / 2)
-      .attr('width', sb)
-      .style('fill', '#e0e0e0').style('fill-opacity', 0.3)
-    // Thumb
-    this._d3_scrollbar_v.append('rect')
-      .attr('class', 'scrollbar-thumb')
-      .attr('rx', sb / 2).attr('ry', sb / 2)
-      .attr('width', sb)
-      .style('fill', '#78A7C2').style('fill-opacity', 0.85)
-      .style('cursor', 'pointer')
-
-    // Helper to get content extent via getBBox
-    const getContentScreenExtent = () => {
-      if (!this.d3_selection_zoom_area || !this.d3_selection_elements_group) return null
-      const svgN = this.d3_selection_zoom_area.node()
-      // Measure g_elements, not g_drawing: g_drawing includes the viewport-tracking
-      // background (see _updateScrollbars) which would let the thumb drag into empty space.
-      const gN = this.d3_selection_elements_group.node()
-      if (!svgN || !gN) return null
-      const t = d3.zoomTransform(svgN)
-      let bbox: DOMRect
-      try { bbox = gN.getBBox() } catch { return null }
-      const has_bbox = bbox.width !== 0 || bbox.height !== 0
-      // Union with the canvas rect so the pannable extent matches translateExtent.
-      let cx0: number, cy0: number, cx1: number, cy1: number
-      if (this.is_paper_mode) {
-        cx0 = 0; cy0 = 0; cx1 = this._width; cy1 = this._height
-      } else {
-        cx0 = this._background_d3_groups_shift_x
-        cy0 = this._background_d3_groups_shift_y
-        cx1 = cx0 + this._zoom_width
-        cy1 = cy0 + this._zoom_height
-      }
-      const x0 = has_bbox ? Math.min(bbox.x, cx0) : cx0
-      const y0 = has_bbox ? Math.min(bbox.y, cy0) : cy0
-      const x1 = has_bbox ? Math.max(bbox.x + bbox.width, cx1) : cx1
-      const y1 = has_bbox ? Math.max(bbox.y + bbox.height, cy1) : cy1
-      const r = svgN.getBoundingClientRect()
-      return {
-        screenW: (x1 - x0) * t.k,
-        screenH: (y1 - y0) * t.k,
-        viewW: Math.min(r.width, window.innerWidth - Math.max(0, r.left)),
-        viewH: Math.min(r.height, window.innerHeight - Math.max(0, r.top)),
-        k: t.k
-      }
-    }
-
-    // Drag behavior for horizontal thumb
-    const hThumbNode = this._d3_scrollbar_h.select('.scrollbar-thumb').node() as SVGRectElement | null
-    if (hThumbNode) {
-      d3.select<SVGRectElement, unknown>(hThumbNode).call(
-        d3.drag<SVGRectElement, unknown>()
-          .on('drag', (event: d3.D3DragEvent<SVGRectElement, unknown, unknown>) => {
-            if (!this.d3_selection_zoom_area) return
-            const ext = getContentScreenExtent()
-            if (!ext || ext.screenW <= ext.viewW) return
-            const trackW = ext.viewW - 2 * sb
-            const ratio = ext.screenW / trackW
-            this.zoomListener.translateBy(this.d3_selection_zoom_area, -event.dx * ratio / ext.k, 0)
-            // Sync thumb position to mouse immediately: the zoom event defers _updateScrollbars
-            // by 100ms, which makes the thumb visibly lag behind the cursor during a drag.
-            this._updateScrollbars()
-          })
-      )
-    }
-
-    // Drag behavior for vertical thumb
-    const vThumbNode = this._d3_scrollbar_v.select('.scrollbar-thumb').node() as SVGRectElement | null
-    if (vThumbNode) {
-      d3.select<SVGRectElement, unknown>(vThumbNode).call(
-        d3.drag<SVGRectElement, unknown>()
-          .on('drag', (event: d3.D3DragEvent<SVGRectElement, unknown, unknown>) => {
-            if (!this.d3_selection_zoom_area) return
-            const ext = getContentScreenExtent()
-            if (!ext || ext.screenH <= ext.viewH) return
-            const trackH = ext.viewH - 2 * sb
-            const ratio = ext.screenH / trackH
-            this.zoomListener.translateBy(this.d3_selection_zoom_area, 0, -event.dy * ratio / ext.k)
-            this._updateScrollbars()
-          })
-      )
-    }
-  }
-
-  /**
-   * Update scrollbar positions and sizes based on the current D3 zoom transform.
-   * Uses getBBox() on g_drawing to get the real content extent, then maps it
-   * to viewport coordinates via the zoom transform.
-   * Scrollbars stay visible as long as content overflows the viewport.
+   * Rafraîchit les scrollbars (et, au passage, extent/translateExtent du zoom listener —
+   * cf. Class_ViewportChrome.updateScrollbars, qui calcule l'étendue pannable).
    */
   private _updateScrollbars() {
-    if (!this.d3_selection_zoom_area || !this._d3_scrollbar_h || !this._d3_scrollbar_v) return
-    const svgNode = this.d3_selection_zoom_area.node()
-    if (!svgNode) return
-    // Measure the real content via g_elements, NOT g_drawing: g_drawing contains
-    // g_background, whose rect is sized to the union canvas ∪ visible viewport
-    // (_freeBgBounds). Panning re-runs drawBackground() and grows that rect to cover
-    // the newly revealed viewport, so g_drawing.getBBox() would grow without bound and
-    // make the scrollbar appear over — and pan into — empty space.
-    const gNode = this.d3_selection_elements_group?.node()
-    if (!gNode) return
-
-    const sb = this._scrollbar_size
-    // The SVG has height=window.innerHeight but is placed after the navbar,
-    // so its bottom overflows past the viewport. Use window_fitting dimensions
-    // which correctly account for navbar and bottom bar.
-    const viewW = this.window_fitting_width
-    const viewH = this.window_fitting_height
-    if (viewW <= 0 || viewH <= 0) return
-    // Offset from SVG top to the actual visible area (navbar pushes content down)
-    const navH = this.getNavBarHeight()
-
-    // Get the real bounding box of all content in g_drawing's local coordinate system
-    // This handles negative coordinates correctly since getBBox returns the untransformed extent
-    let bbox: DOMRect | null = null
-    try {
-      bbox = gNode.getBBox()
-    } catch {
-      // getBBox can throw if element has no rendered content; treat as empty
-    }
-    const has_bbox = !!bbox && (bbox.width !== 0 || bbox.height !== 0)
-
-    // Canvas (paper or free-mode background) bounds in world coords
-    let canvasX0: number
-    let canvasY0: number
-    let canvasX1: number
-    let canvasY1: number
-    if (this.is_paper_mode) {
-      canvasX0 = 0
-      canvasY0 = 0
-      canvasX1 = this._width
-      canvasY1 = this._height
-    } else {
-      canvasX0 = this._background_d3_groups_shift_x
-      canvasY0 = this._background_d3_groups_shift_y
-      canvasX1 = canvasX0 + this._zoom_width
-      canvasY1 = canvasY0 + this._zoom_height
-    }
-    // Constrain zoom pan: content bbox in world coords + usable viewport (excludes navbar / bottom bar).
-    // d3-zoom clamps translateBy/scaleBy so the user can't pan past the content edges.
-    // The translateExtent must include the "canvas" rectangle so the custom constrain
-    // (anchor top-left) aligns that canvas to the viewport's top-left.
-    const panX0 = has_bbox ? Math.min(bbox!.x, canvasX0) : canvasX0
-    const panY0 = has_bbox ? Math.min(bbox!.y, canvasY0) : canvasY0
-    const panX1 = has_bbox ? Math.max(bbox!.x + bbox!.width, canvasX1) : canvasX1
-    const panY1 = has_bbox ? Math.max(bbox!.y + bbox!.height, canvasY1) : canvasY1
-    // Inset the viewport extent by fit_margin/2 so the constrain anchors the canvas
-    // top-left at (fit_margin/2, navH + fit_margin/2) — leaving a symmetric margin
-    // on the 4 sides (left/right/bottom = fit_margin/2; top = navbar + fit_margin/2).
-    const fm = this._fit_margin / 2
-    this.zoomListener
-      .extent([[fm, navH + fm], [viewW - fm, navH + viewH - fm]])
-      .translateExtent([[panX0, panY0], [panX1, panY1]])
-    // Without an actual bbox we can't (and don't need to) update scrollbars — they
-    // stay hidden until there is content. The extent / translateExtent above are
-    // enough for the initial draw and for empty-diagram resets to anchor correctly.
-    if (!has_bbox) return
-
-    // Map the pannable extent (union content ∪ canvas — the same rect used for
-    // translateExtent above) to screen coordinates using the zoom transform, so the
-    // scrollbar reflects exactly what d3-zoom lets the user pan to.
-    const transform = d3.zoomTransform(svgNode)
-    // In screen space: point (localX, localY) -> (transform.x + localX * k, transform.y + localY * k)
-    const screenLeft = transform.x + panX0 * transform.k
-    const screenRight = transform.x + panX1 * transform.k
-    const screenTop = transform.y + panY0 * transform.k
-    const screenBottom = transform.y + panY1 * transform.k
-    const screenW = screenRight - screenLeft
-    const screenH = screenBottom - screenTop
-
-    // Horizontal scrollbar: content wider than viewport
-    // interrupt() cancels any pending d3 transition that could override opacity
-    this._d3_scrollbar_h.interrupt()
-    if (screenW > viewW * 1.01) {
-      const trackW = viewW - 2 * sb
-      const thumbW = Math.max(30, (viewW / screenW) * trackW)
-      const scrollFraction = Math.max(0, Math.min(1, -screenLeft / (screenW - viewW)))
-      const thumbX = sb + scrollFraction * (trackW - thumbW)
-
-      this._d3_scrollbar_h
-        .attr('visibility', 'visible')
-        .attr('transform', `translate(0, ${navH + viewH - sb - 4})`)
-      this._d3_scrollbar_h.select('.scrollbar-track')
-        .attr('x', sb).attr('width', trackW)
-      this._d3_scrollbar_h.select('.scrollbar-thumb')
-        .attr('x', thumbX)
-        .attr('width', thumbW)
-    } else {
-      this._d3_scrollbar_h.attr('visibility', 'hidden')
-    }
-
-    // Vertical scrollbar: content taller than viewport
-    this._d3_scrollbar_v.interrupt()
-    if (screenH > viewH * 1.01) {
-      const trackH = viewH - 2 * sb
-      const thumbH = Math.max(30, (viewH / screenH) * trackH)
-      const scrollFraction = Math.max(0, Math.min(1, -screenTop / (screenH - viewH)))
-      const thumbY = sb + scrollFraction * (trackH - thumbH)
-
-      this._d3_scrollbar_v
-        .attr('visibility', 'visible')
-        .attr('transform', `translate(${viewW - sb - 4}, ${navH})`)
-      this._d3_scrollbar_v.select('.scrollbar-track')
-        .attr('y', sb).attr('height', trackH)
-      this._d3_scrollbar_v.select('.scrollbar-thumb')
-        .attr('y', thumbY)
-        .attr('height', thumbH)
-    } else {
-      this._d3_scrollbar_v.attr('visibility', 'hidden')
-    }
+    this._viewport_chrome.updateScrollbars(this)
   }
 
   /**
-   * Define event when mouse scrolls in drawing area
-   * Note : Under the hood, this calls eventZoom method throught this.zoomListener
-   * @private
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
+   * OS#1250 — recale le translateExtent et les scrollbars sur la bbox de contenu
+   * courante SANS toucher à la caméra. À utiliser quand le contenu s'étend (drag
+   * d'un nœud au-delà de l'ancienne bbox) : le monde grandit, la vue reste où
+   * l'utilisateur l'a mise.
    */
-  private eventMouseScroll(
-    event: WheelEvent
-  ) {
-    if (
-      this.d3_selection_zoom_area
-    ) {
-      // Zoom in / out
-      const isMac = navigator.platform.toUpperCase().includes('MAC')
-      if (isMac ? event.metaKey : event.ctrlKey) {
-        // Avoid CTRL + Scroll (or CMD + Scroll on Mac) default behavior in Browser
-        event.preventDefault()
-        // Option publish lock_zoom : zoom molette (Ctrl/Cmd + scroll, y compris pinch trackpad)
-        // désactivé. On garde le preventDefault (pas de zoom navigateur) mais on ne change pas
-        // l'échelle du diagramme. Le pan (scroll simple / shift+scroll) reste actif.
-        if (this.application_data?.publish_options?.lock_zoom) return
-        // Guard: ignore if deltaY is 0 (can happen with touchpad or wheel tilt)
-        if (event.deltaY === 0) return
-        // Smooth zoom factor proportional to deltaY magnitude
-        const scale = Math.pow(2, -event.deltaY / 300)
-        // Apply scaling
-        this.zoomListener.scaleBy(
-          this.d3_selection_zoom_area,
-          scale,
-          [event.x, event.y]
-        )
-      }
-      // Horizontal displacement (Shift+scroll for mouse, or trackpad horizontal swipe via deltaX)
-      else if (event.shiftKey) {
-        this.zoomListener.translateBy(this.d3_selection_zoom_area, -event.deltaY, 0)
-      }
-      // Combined / trackpad two-finger pan: use both deltaX and deltaY
-      else {
-        this.zoomListener.translateBy(this.d3_selection_zoom_area, -event.deltaX, -event.deltaY)
-      }
-    }
+  public refreshPanExtent() {
+    this._updateScrollbars()
   }
 
   /**
@@ -3265,6 +2785,18 @@ export class Class_DrawingArea {
       // Apply translation
       this.d3_selection
         .attr('transform', event.transform.toString())
+
+      // #680 — Le désenclenchement des modes au zoom manuel est fait aux POINTS D'ENTRÉE du
+      // zoom (DrawingAreaInteractions._eventMouseScroll pour la molette/pinch ; zoomByFactor /
+      // zoomToScale pour les boutons +/−) et NON ici : ces zooms passent par scaleBy
+      // programmatique, donc event.sourceEvent est null dans eventZoom (indiscernable d'un
+      // cadrage automatique). Cf. commentaires à ces points d'entrée.
+
+      // Indicateur de zoom (MenuBottom) : re-render du seul widget abonné à ZOOM_TOPIC. L'échelle
+      // vient du transform relu (getZoomScale), pas d'un état dupliqué. Notification directe par
+      // tick : coût = un forceRerender d'un petit composant isolé (les process lourds sont débouncés
+      // plus bas). menu_configuration peut être absent aux tout premiers constructeurs.
+      this.application_data.menu_configuration?.notify(ZOOM_TOPIC)
 
       // Launch waiting process to redraw handler with corresponding size (it take into account DA zoom scale)
       // only lauch draw for handler visible since those not visible don't create a <g> (therefore selectAll can't select them)
@@ -3292,6 +2824,12 @@ export class Class_DrawingArea {
           this.drawBackground()
           this.drawGrid()
         }, 80)
+      } else {
+        // Mode papier : le fond n'est pas redessiné, mais le cadre de page est calculé en
+        // pixels-écran (projection du rect de page). Il doit donc se réajuster à chaque
+        // zoom/pan, sinon il reste figé sur le transform précédent. 4 attributs, pas de
+        // getBBox : assez léger pour être fait à chaque tick, sans débounce.
+        this._updateViewportBorder()
       }
 
       // Issue #165 — Mode verrouillé : la font-size écran doit rester constante
@@ -3325,7 +2863,7 @@ export class Class_DrawingArea {
   // Mode
 
   public isInSelectionMode() { return this._mode === 'selection' }
-  protected setSelectionMode() {
+  public setSelectionMode() {
     // forcing are there are some issues sometimes it is not unset
     // this.sankey.links_list.forEach(l => l.unsetMouseOver())
     // this.sankey.nodes_list.forEach(n => n.unsetMouseOver())
@@ -3352,7 +2890,6 @@ export class Class_DrawingArea {
     this.sankey.visible_nodes_list.forEach(n => n.setEventsListeners())
     this.sankey.visible_links_list.forEach(n => n.setEventsListeners())
     this.sankey.visible_containers_list.forEach(n => n.setEventsListeners())
-    this._legend.setEventsListeners()
     this.application_data.menu_configuration.updateAllComponentsRelatedToToolbar()
   }
 
@@ -3362,222 +2899,76 @@ export class Class_DrawingArea {
     this.sankey.visible_nodes_list.forEach(n => n.setEventsListeners())
     this.sankey.visible_links_list.forEach(n => n.setEventsListeners())
     this.sankey.visible_containers_list.forEach(n => n.setEventsListeners())
-    this._legend.setEventsListeners()
     this.application_data.menu_configuration.updateAllComponentsRelatedToToolbar()
+  }
+
+  // Mode « placer une zone de texte » : l'utilisateur glisse un rectangle sur le
+  // fond pour poser une ZDT à cette position/taille (cf. DrawingAreaInteractions,
+  // branches isInPlaceContainerMode). On purge la sélection pour neutraliser le
+  // drag des nœuds (qui n'agit que sur un élément déjà sélectionné) ; le fond
+  // capture ainsi le glisser sans interférence.
+  public isInPlaceContainerMode(): boolean { return this._mode === 'place_container' }
+
+  // OS#1276 — forme à créer au relâché du glisser de placement ('rect' = zone de
+  // texte, 'line' = ligne libre). Lue par DrawingAreaInteractions.
+  public get place_container_shape(): Type_Shape { return this._place_container_shape }
+
+  public enterPlaceContainerMode(shape: Type_Shape = 'rect'): void {
+    this.purgeSelection()
+    this._place_container_shape = shape
+    this._mode = 'place_container'
+    this.drawCursor()
+    // Rafraîchit la colonne d'outils (bouton mode placement actif/inactif).
+    this.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
+  }
+
+  public exitPlaceContainerMode(): void {
+    this.selection_zone.reset()
+    this.setSelectionMode()
+    this.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
   }
 
   public applyStyleFromPaintSource(target: Class_ProtoElement): void {
     if (!this._style_paint_source) return
-    const transition = this._applyStyleFromSourceToTarget(this._style_paint_source, target)
+    const transition = StyleCascade.applyStyleFromSourceToTarget(this._style_paint_source, target)
     if (!transition) return
     this.application_data.history.saveUndo(transition.undo)
     this.application_data.history.saveRedo(transition.redo)
   }
 
   /**
-   * Applique le style (styles custom + attributs) de `source` sur `target` et
-   * renvoie les fonctions undo/redo correspondantes (sans les enregistrer dans
-   * l'historique). Renvoie null si les deux éléments ne sont pas de même nature
-   * (nœud→nœud, flux→flux uniquement).
-   */
-  private _applyStyleFromSourceToTarget(
-    source: Class_ProtoElement,
-    target: Class_ProtoElement
-  ): { undo: () => void, redo: () => void } | null {
-    // Même type uniquement (nœud→nœud, flux→flux)
-    if ((source instanceof Class_NodeElement) !== (target instanceof Class_NodeElement)) return null
-    // Capturer l'état avant pour undo
-    const old_storage = target.snapshotStorage()
-    const old_custom_styles = target.getCustomStyles()
-    // Capturer l'état source pour redo
-    const new_custom_styles = source.style.slice(1)
-    const new_storage = source.snapshotStorage()
-    // Undo : restaurer l'ancien état
-    const undo = () => {
-      target.removeAllStyles()
-      old_custom_styles.forEach(s => target.addStyle(s))
-      target.restoreStorage(old_storage)
-      target.draw()
-    }
-    // Redo : ré-appliquer le style source
-    const redo = () => {
-      target.removeAllStyles()
-      new_custom_styles.forEach(s => target.addStyle(s))
-      target.restoreStorage(new_storage)
-      target.draw()
-    }
-    // Appliquer
-    target.removeAllStyles()
-    new_custom_styles.forEach(s => target.addStyle(s))
-    target.copyAttrFrom(source)
-    target.draw()
-    return { undo, redo }
-  }
-
-  /**
-   * Collecte (sans toucher à l'historique) les transitions de propagation du
-   * style du nœud `source` à toute sa descendance dans la hiérarchie de
-   * dimensions. Partagé par la variante mono- et multi-source.
-   */
-  private _collectStyleToNodeChildren(
-    source: Class_NodeElement,
-    undos: Array<() => void>,
-    redos: Array<() => void>
-  ): void {
-    // collectNodeDescendants inclut le nœud lui-même ; on l'exclut pour ne pas
-    // « réappliquer » le style du parent sur lui-même.
-    const descendants = [...NodePositioning.collectNodeDescendants(source)].filter(n => n !== source)
-    descendants.forEach(target => {
-      const transition = this._applyStyleFromSourceToTarget(source, target)
-      if (transition) {
-        undos.push(transition.undo)
-        redos.push(transition.redo)
-      }
-    })
-  }
-
-  /**
    * Propage le style du nœud `source` à toute sa descendance dans la hiérarchie
    * de dimensions (désagrégation), même si les enfants sont actuellement
-   * agrégés/masqués. Toutes les modifications sont regroupées dans une seule
-   * transition d'historique (un seul undo/redo).
+   * agrégés/masqués, en une seule transition d'historique.
    */
   public applyStyleToNodeChildren(source: Class_NodeElement): void {
-    this.applyStyleToNodesChildren([source])
+    StyleCascade.applyStyleToNodesChildren(this, [source])
   }
 
-  /**
-   * Variante multi-sélection : propage le style de CHAQUE nœud parent de
-   * `sources` à sa propre descendance, le tout regroupé dans une seule
-   * transition d'historique.
-   */
+  /** Variante multi-sélection de {@link applyStyleToNodeChildren}. */
   public applyStyleToNodesChildren(sources: Class_NodeElement[]): void {
-    const undos: Array<() => void> = []
-    const redos: Array<() => void> = []
-    sources.forEach(source => this._collectStyleToNodeChildren(source, undos, redos))
-    if (undos.length === 0) return
-    this.application_data.history.saveUndo(() => undos.forEach(u => u()))
-    this.application_data.history.saveRedo(() => redos.forEach(r => r()))
+    StyleCascade.applyStyleToNodesChildren(this, sources)
   }
 
   /**
-   * Assigne la colonne du nœud parent à toute sa descendance dans la hiérarchie de
-   * dimensions (désagrégation), même si les enfants sont actuellement agrégés/masqués.
-   * Tous les descendants sont réassignés ET reverrouillés (y compris ceux déjà
-   * verrouillés), pour qu'ils suivent le parent même après un déplacement de celui-ci.
-   *
-   * Pour chaque enfant on combine trois choses :
-   * - `position_u` = colonne du parent (l'index de colonne) ;
-   * - `shape_position_u_locked = true` : le verrou est le signal « édité, à garder ».
-   *   C'est lui qui fait persister `position_u` (cf. NodeBasePersistence.toJSON, qui ne
-   *   sérialise u/v qu'en mode parametric OU si verrouillé) et qui empêche autosankey /
-   *   `inferPositionUFromX` de recalculer la colonne depuis x au chargement ;
-   * - le CENTRE stocké (`setStoredCenter`) aligné sur le coin du parent : en mode
-   *   `absolute` le nœud est DESSINÉ d'après sa géométrie, et c'est le centre (pas
-   *   position_x seul) qui est persisté — sans ça l'enfant « reviendrait » à sa place.
-   *
-   * Toutes les modifications sont regroupées dans une seule transition d'historique.
+   * Assigne la colonne du nœud parent à toute sa descendance (cf. styleCascade), en une seule
+   * transition d'historique.
    */
   public assignColumnToNodesChildren(sources: Class_NodeElement[]): void {
-    const undos: Array<() => void> = []
-    const redos: Array<() => void> = []
-    sources.forEach(source => {
-      const target_u = source.position_u
-      const target_x = source.position_x
-      // collectNodeDescendants inclut le nœud lui-même ; on l'exclut.
-      const descendants = [...NodePositioning.collectNodeDescendants(source)].filter(n => n !== source)
-      descendants.forEach(target => {
-        const old_u = target.position_u
-        const old_x = target.position_x
-        const old_u_locked = target.shape_position_u_locked === true
-        // Rien à faire si déjà dans la bonne colonne ET déjà verrouillé.
-        if (old_u === target_u && old_x === target_x && old_u_locked) return
-        // 1) Le nœud est sérialisé par son CENTRE stocké (cf. centerForPersistence),
-        //    pas par position_x : modifier seulement position_x laisse `_center_x`
-        //    périmé et le nœud « revient » à sa place au rechargement (écueil
-        //    documenté dans translateStoredCenter). On passe donc par setStoredCenter
-        //    pour viser un centre tel que le COIN (position_x) s'aligne sur le parent.
-        // 2) On VERROUILLE la colonne (shape_position_u_locked) : c'est ce verrou qui
-        //    fait persister position_u (cf. NodeBasePersistence.toJSON) et empêche
-        //    autosankey/inferPositionUFromX de le recalculer depuis x au chargement.
-        const old_center = target.centerForPersistence()
-        const new_center_x = target_x + target.getShapeWidthToUse() / 2
-        const apply = () => {
-          target.position_u = target_u
-          target.shape_position_u_locked = true
-          target.setStoredCenter(new_center_x, old_center.y)
-          target.draw()
-        }
-        const undo = () => {
-          target.position_u = old_u
-          target.shape_position_u_locked = old_u_locked
-          target.setStoredCenter(old_center.x, old_center.y)
-          target.draw()
-        }
-        undos.push(undo)
-        redos.push(apply)
-        apply()
-      })
-    })
-    if (undos.length === 0) return
-    this.application_data.history.saveUndo(() => undos.forEach(u => u()))
-    this.application_data.history.saveRedo(() => redos.forEach(r => r()))
+    StyleCascade.assignColumnToNodesChildren(this, sources)
   }
 
   /**
-   * Propage le style du flux `source` à tous ses flux enfants : les flux
-   * existants reliant un descendant de la source du flux à un descendant de sa
-   * cible (combinaison des flux entre les nœuds enfants de chaque extrémité).
-   * Toutes les modifications sont regroupées dans une seule transition undo/redo.
+   * Propage le style du flux `source` à ses flux enfants (ceux reliant un descendant de sa source
+   * à un descendant de sa cible), en une seule transition d'historique.
    */
   public applyStyleToLinkChildren(source: Class_LinkElement): void {
-    this.applyStyleToLinksChildren([source])
+    StyleCascade.applyStyleToLinksChildren(this, [source])
   }
 
-  /**
-   * Collecte (sans toucher à l'historique) les transitions de propagation du
-   * style du flux `source` à ses flux enfants. Partagé par la variante mono- et
-   * multi-source.
-   */
-  private _collectStyleToLinkChildren(
-    source: Class_LinkElement,
-    undos: Array<() => void>,
-    redos: Array<() => void>
-  ): void {
-    // Même logique que NodePositioning.collectChildLinks (propagation de la
-    // droiture aux flux désagrégés) : on parcourt TOUS les liens du sankey (les
-    // flux enfants existent même quand le parent est agrégé, juste invisibles) et
-    // on retient ceux reliant un descendant de la source à un descendant de la
-    // cible. collectNodeDescendants inclut le nœud lui-même, donc a→b avec b
-    // désagrégé en b1,b2 cible bien a→b1 et a→b2.
-    const src_descendants = NodePositioning.collectNodeDescendants(source.source as Class_NodeElement)
-    const tgt_descendants = NodePositioning.collectNodeDescendants(source.target as Class_NodeElement)
-    const child_links = this.sankey.links_list.filter(link =>
-      link !== source &&
-      src_descendants.has(link.source as Class_NodeElement) &&
-      tgt_descendants.has(link.target as Class_NodeElement)
-    ) as Class_LinkElement[]
-    child_links.forEach(target => {
-      const transition = this._applyStyleFromSourceToTarget(source, target)
-      if (transition) {
-        undos.push(transition.undo)
-        redos.push(transition.redo)
-      }
-    })
-  }
-
-  /**
-   * Variante multi-sélection : propage le style de CHAQUE flux parent de
-   * `sources` à ses propres flux enfants, le tout regroupé dans une seule
-   * transition d'historique.
-   */
+  /** Variante multi-sélection de {@link applyStyleToLinkChildren}. */
   public applyStyleToLinksChildren(sources: Class_LinkElement[]): void {
-    const undos: Array<() => void> = []
-    const redos: Array<() => void> = []
-    sources.forEach(source => this._collectStyleToLinkChildren(source, undos, redos))
-    if (undos.length === 0) return
-    this.application_data.history.saveUndo(() => undos.forEach(u => u()))
-    this.application_data.history.saveRedo(() => redos.forEach(r => r()))
+    StyleCascade.applyStyleToLinksChildren(this, sources)
   }
 
   public switchMode() {
@@ -3586,7 +2977,6 @@ export class Class_DrawingArea {
     this.sankey.visible_nodes_list.forEach(n => n.setEventsListeners())
     this.sankey.visible_links_list.forEach(n => n.setEventsListeners())
     this.sankey.visible_containers_list.forEach(n => n.setEventsListeners())  // drag event is disabled in edition mode so we have to reset eventListener when we switch mode
-    this._legend.setEventsListeners()
     this.application_data.menu_configuration.updateAllComponentsRelatedToToolbar()
     //this.containers_list.forEach(lab => lab.setEventsListeners())
   }
@@ -3607,14 +2997,16 @@ export class Class_DrawingArea {
   public drawCursor() {
     const mode_edition = this.isInEditionMode()
     const mode_style_paint = this.isInStylePaintMode()
+    const mode_place_container = this.isInPlaceContainerMode()
     this.d3_selection?.classed('edition_mode', mode_edition)
-    this.d3_selection?.classed('selection_mode', !mode_edition && !mode_style_paint)
+    this.d3_selection?.classed('selection_mode', !mode_edition && !mode_style_paint && !mode_place_container)
     this.d3_selection?.classed('style_paint_mode', mode_style_paint)
+    this.d3_selection?.classed('place_container_mode', mode_place_container)
   }
 
   public get sankey() { return this._sankey }
-  public get legend(): ClassTemplate_Legend { return this._legend }
-  public set legend(value: ClassTemplate_Legend) { this._legend = value }
+  public get legend(): Class_LegendConfig { return this._legend }
+  public set legend(value: Class_LegendConfig) { this._legend = value }
   public get ghost_link() { return this._ghost_link }
   public set ghost_link(value) { this._ghost_link = value }
 
@@ -3664,8 +3056,8 @@ export class Class_DrawingArea {
   // Read-only exposure of the canvas origin shifts so consumers (e.g. SVG export)
   // can align the export viewport on the actual content origin instead of (0,0)
   // when areaAutoFit has pushed content to negative coordinates.
-  public get background_shift_x(): number { return this._background_d3_groups_shift_x }
-  public get background_shift_y(): number { return this._background_d3_groups_shift_y }
+  // OS#1250 phase 4 — background_shift_x/y supprimés : ils n'exposaient l'origine du
+  // canvas que pour l'export, qui s'ancre désormais sur celle du CONTENU (contentBounds).
 
   public get height() { return this._height }
   public set height(_: number) {
@@ -3677,7 +3069,7 @@ export class Class_DrawingArea {
     // DA détachée : on cadre dans le conteneur hôte (modal), pas la fenêtre.
     if (this.is_detached) {
       const h = this.getContainerNode()?.clientHeight ?? 0
-      if (h > 0) return h - this._fit_margin
+      if (h > 0) return h - this._fit_margin - this._scrollbar_reserve_bottom
     }
     // Mode embarqué (embedded) : le SVG fait 100% du conteneur hôte (#sankey_app),
     // qui peut être plus court que la fenêtre quand l'embarqueur ajoute sa PROPRE
@@ -3687,9 +3079,9 @@ export class Class_DrawingArea {
     // on retranche le footer (BottomMenu) et la réserve doc s'ils sont dans le conteneur.
     if (this.application_data.publish_options.embedded) {
       const h = this.getContainerNode()?.clientHeight ?? 0
-      if (h > 0) return h - this._fit_margin - this.getBottomBarHeight() - this.main_zone_bottom_reserved
+      if (h > 0) return h - this._fit_margin - this.getBottomBarHeight() - this.main_zone_bottom_reserved - this._scrollbar_reserve_bottom
     }
-    return window.innerHeight - this._fit_margin - this.getNavBarHeight() - this.getBottomBarHeight() - this.main_zone_bottom_reserved
+    return window.innerHeight - this._fit_margin - this.getNavBarHeight() - this.getBottomBarHeight() - this.main_zone_bottom_reserved - this._scrollbar_reserve_bottom
   }
   // Hauteur réservée en bas de la grande zone pour la doc (modes diagram-bottom / window-bottom).
   // Source globale (menu_configuration), symétrique de main_zone_right_reserved. Null-safe : la
@@ -3710,20 +3102,41 @@ export class Class_DrawingArea {
     if (!mc) return 0
     return mc.getMainZoneRightReservedPx()
   }
+  // #292 — Gouttière de scrollbar réservée DYNAMIQUEMENT (droite pour la barre verticale,
+  // bas pour l'horizontale). Vaut 0 quand la barre correspondante est masquée, et l'épaisseur
+  // de gouttière quand elle est visible. Posée par Class_ViewportChrome.updateScrollbars selon
+  // le débordement du contenu : quand une barre apparaît, la zone de dessin (window_fitting)
+  // se réduit d'autant du côté concerné, ce qui loge la barre HORS du dessin — elle ne recouvre
+  // plus jamais le diagramme. Réserve CONDITIONNELLE : aucun retrait quand tout le contenu tient
+  // dans la fenêtre. Champ par instance (et non source globale) car chaque scrollbar est propre
+  // à sa DA. updateBorder / l'extent d3-zoom / le fit lisent tous window_fitting → cohérence
+  // automatique du cadre et du cadrage avec la zone rétrécie.
+  private _scrollbar_reserve_right: number = 0
+  private _scrollbar_reserve_bottom: number = 0
+  public get scrollbar_reserve_right(): number { return this._scrollbar_reserve_right }
+  public set scrollbar_reserve_right(v: number) { this._scrollbar_reserve_right = v }
+  public get scrollbar_reserve_bottom(): number { return this._scrollbar_reserve_bottom }
+  public set scrollbar_reserve_bottom(v: number) { this._scrollbar_reserve_bottom = v }
+  // #292 — Vrai pendant un areaAutoFit : le calcul de cadrage doit viser la zone PLEINE (sans
+  // gouttière). updateScrollbars ne pose alors PAS la réserve (sinon le fit lirait un window_fitting
+  // déjà rétréci et cadrerait 14 px trop petit) ; areaAutoFit remet le flag à faux et ré-évalue la
+  // réserve à la fin, sur le cadrage final.
+  private _suppress_scrollbar_reserve: boolean = false
+  public get suppress_scrollbar_reserve(): boolean { return this._suppress_scrollbar_reserve }
   public get window_fitting_width(): number {
     // DA détachée : on cadre dans le conteneur hôte (modal), pas la fenêtre.
     if (this.is_detached) {
       const w = this.getContainerNode()?.clientWidth ?? 0
-      if (w > 0) return w - this._fit_margin
+      if (w > 0) return w - this._fit_margin - this._scrollbar_reserve_right
     }
     // Mode embarqué : cadre dans la largeur RÉELLE du conteneur hôte (l'embarqueur
     // peut le rendre plus étroit que la fenêtre). Full-window => clientWidth ==
     // innerWidth, comportement inchangé.
     if (this.application_data.publish_options.embedded) {
       const w = this.getContainerNode()?.clientWidth ?? 0
-      if (w > 0) return w - this._fit_margin - this.main_zone_right_reserved
+      if (w > 0) return w - this._fit_margin - this.main_zone_right_reserved - this._scrollbar_reserve_right
     }
-    return window.innerWidth - this._fit_margin - this.main_zone_right_reserved
+    return window.innerWidth - this._fit_margin - this.main_zone_right_reserved - this._scrollbar_reserve_right
   }
 
   // Paper format getters/setters
@@ -3738,6 +3151,9 @@ export class Class_DrawingArea {
     } else if (this.is_bg_image_ratio_mode) {
       this.applyBgImageRatio()
     }
+    // Pas de recadrage caméra : changer de format/orientation ne doit PAS bouger le
+    // diagramme ni le niveau de zoom. applyPaperDimensions recalcule les bornes de page ;
+    // seuls le cadre et la grille s'adaptent.
     this.drawBackground()
     this.drawGrid()
     this.drawBgImage()
@@ -3783,11 +3199,47 @@ export class Class_DrawingArea {
     return { width: Math.min(base.width, base.height), height: Math.max(base.width, base.height) }
   }
 
-  /** Apply paper dimensions to _width/_height (full paper, margins are only used by fitToFormat) */
+  /**
+   * Dimensionne le canvas papier : le plus petit rectangle AU RATIO DU FORMAT qui contient
+   * le diagramme, centré dessus. La dimension contraignante — largeur ou hauteur — est
+   * choisie d'après le contenu (autofit à ratio constant).
+   *
+   * Seul le RATIO compte ici, pas les millimètres : A3/A4/A5 partagent 1:√2 et ne se
+   * distinguent qu'à l'export (qui relit getPaperDimensionsMm(), inchangé). Seule
+   * l'orientation change le rapport (1.414 ↔ 0.707).
+   *
+   * La CAMÉRA n'est pas touchée : changer de format/orientation ne bouge ni le diagramme
+   * ni le zoom. Seuls le fond, la grille et le cadre (tous dimensionnés sur _zoom_* et les
+   * shifts) s'adaptent. Sans contenu, on retombe sur les dimensions physiques du format.
+   */
   protected applyPaperDimensions() {
     const dims = this.getPaperDimensionsMm()
-    this._width = Class_DrawingArea.mmToPx(dims.width)
-    this._height = Class_DrawingArea.mmToPx(dims.height)
+    const ratio = dims.width / dims.height
+    const bbox = this.d3_selection_elements_group?.node()?.getBBox()
+    const has_content = !!bbox && bbox.width > 0 && bbox.height > 0
+    if (!has_content) {
+      this._width = Class_DrawingArea.mmToPx(dims.width)
+      this._height = Class_DrawingArea.mmToPx(dims.height)
+    } else if (bbox.width / bbox.height > ratio) {
+      // Contenu plus « large » que le format : la largeur contraint.
+      this._width = bbox.width
+      this._height = bbox.width / ratio
+    } else {
+      // Contenu plus « haut » que le format : la hauteur contraint.
+      this._height = bbox.height
+      this._width = bbox.height * ratio
+    }
+    if (this.is_paper_mode) {
+      // Le fond, la grille et le cadre se dessinent sur _zoom_* + les shifts, et
+      // _updateScrollbars pose le translateExtent dessus : il faut les resynchroniser ici.
+      this._zoom_width = this._width
+      this._zoom_height = this._height
+      const cx = has_content ? bbox.x + bbox.width / 2 : this._width / 2
+      const cy = has_content ? bbox.y + bbox.height / 2 : this._height / 2
+      this._background_d3_groups_shift_x = cx - this._width / 2
+      this._background_d3_groups_shift_y = cy - this._height / 2
+      this._updateScrollbars()
+    }
   }
 
 
@@ -3899,119 +3351,39 @@ export class Class_DrawingArea {
     }
   }
 
-  private _findUnitDataTag(tag_id: string) {
-    for (const tagg of this.sankey.data_taggs_list) {
-      const t = tagg.tags_dict[tag_id]
-      if (t) return t
-    }
-    return undefined
-  }
-
   /**
-   * Recalcule l'échelle pour que le flux désigné comme référence du view tag COURANT
-   * atteigne son épaisseur cible (px). Touche uniquement l'échelle (le porteur effectif :
-   * data tag unitaire du flux s'il en a un, sinon l'échelle de la DA), avec prise en compte
-   * du facteur `local_link_scale` du flux. Les autres flux et la légende suivent.
-   *
-   * Transitoire : la valeur naturelle du porteur est capturée puis restaurée à la frame
-   * suivante (avant recalcul) ou dès qu'on passe à un view tag sans référence / vue complète.
-   * Appelé dans `drawElements`, APRÈS applyAdaptedScale (mode « échelle adaptée ») et avant le
-   * positionnement des nœuds ; no-op sans référence pour le view tag courant.
-   *
-   * Compatible mode « échelle adaptée » : on ne restaure la valeur naturelle QUE si le porteur
-   * vaut encore exactement ce qu'on avait posé (`applied`). S'il a changé entre-temps
-   * (applyAdaptedScale a recalculé l'échelle, ou l'utilisateur l'a modifiée), sa valeur
-   * courante EST la nouvelle base → on n'écrase pas, le plafond s'applique par-dessus.
+   * Référence d'épaisseur du view tag courant : recalcule l'échelle pour que le flux de référence
+   * atteigne son épaisseur cible (cf. Class_ScaleOverrides — surcharge transitoire, restaurée à la
+   * frame suivante).
    */
   public applyViewTagScaleReference() {
-    // 1. Restaure le porteur surchargé à la frame précédente, sauf si une autre source l'a
-    // recalculé depuis (cf. doc ci-dessus → sa valeur courante devient la base).
-    if (this._scale_ref_carrier) {
-      const c = this._scale_ref_carrier
-      const tag = c.tag_id ? this._findUnitDataTag(c.tag_id) : undefined
-      const current = c.tag_id ? tag?.scale : this._scale
-      if (current !== undefined && Math.abs(current - c.applied) < 1e-9) {
-        if (c.tag_id) {
-          if (tag) tag.scale = c.original
-        } else {
-          this._scale = c.original
-          this._scaleValueToPx.domain([0, c.original])
-        }
-      }
-      this._scale_ref_carrier = undefined
-    }
-    // 2. Résout la référence du view tag courant.
-    const vt_id = this.sankey.current_scale_reference_viewtag_id
-    if (!vt_id) return
-    const ref = this._scale_reference_by_viewtag[vt_id]
-    if (!ref || !(ref.thickness > 0)) return
-    const link = this.sankey.links_dict[ref.link_id]
-    if (!link) return
-    const v = Math.abs(link.valueCurrent ?? 0)
-    if (!(v > 0)) return
-    const factor = link.shape_local_link_scale || 1
-    // thickness = v / (carrier_scale × factor) × 100 (range [0,100]) → carrier_scale = v×100 / (T×factor)
-    const new_scale = v * 100 / (ref.thickness * factor)
-    if (!(isFinite(new_scale) && new_scale > 0)) return
-    // 3. Sémantique « maximum » : l'épaisseur cible est un SEUIL. On ne recale QUE si, à
-    // l'échelle naturelle, l'épaisseur du flux DÉPASSE ce seuil (sinon le flux est déjà
-    // plus fin que le seuil → on ne touche à rien). Augmenter l'échelle réduit l'épaisseur,
-    // donc « épaisseur naturelle > seuil » ⟺ « new_scale > échelle naturelle du porteur ».
-    const unit_tag = link.value?.unit_data_tag()
-    const carrier_original = unit_tag ? unit_tag.scale : this._scale
-    if (!(new_scale > carrier_original)) return
-    // 4. Applique sur le porteur effectif du flux (cf. Link.scaleValueToPx).
-    if (unit_tag) {
-      this._scale_ref_carrier = { tag_id: unit_tag.id, original: unit_tag.scale, applied: new_scale }
-      unit_tag.scale = new_scale
-    } else {
-      this._scale_ref_carrier = { original: this._scale, applied: new_scale }
-      this._scale = new_scale
-      this._scaleValueToPx.domain([0, new_scale])
-    }
+    this._scale_overrides.applyViewTagScaleReference(this)
   }
 
   /**
-   * #1231b — Plafond de taille de nœud (`maximum_node`, px) appliqué par l'ÉCHELLE et non par
-   * un clamp individuel. Si le nœud le plus HAUT (hauteur naturelle non clampée =
-   * max(stock, bande de flux)) dépasse `maximum_node` à l'échelle courante, on réduit l'échelle
-   * (valeur→px) pour qu'il y rentre exactement. Tout le diagramme suit la même échelle → aucun
-   * flux entrant/sortant ne dépasse de son nœud, et les proportions relatives sont conservées.
-   *
-   * Sémantique « maximum » : no-op si aucun nœud ne dépasse (on ne grossit jamais le diagramme).
-   * Transitoire : l'échelle de base est sauvegardée puis restaurée à la frame suivante (avant
-   * recalcul), ou laissée intacte si une autre source l'a recalculée depuis. Appelé en DERNIER
-   * dans `drawElements` (après applyAdaptedScale + applyViewTagScaleReference), avant le
-   * positionnement des nœuds (qui lit l'échelle courante). Le clamp par-nœud de
-   * `getShapeHeightToUse` devient alors un no-op (natural == max_node) → pas de troncature.
+   * #1231b — Plafond de hauteur de nœud appliqué par l'ÉCHELLE (cf. Class_ScaleOverrides).
    */
   public applyMaximumNodeScale() {
-    // 1. Restaure l'échelle de base posée à la frame précédente, sauf si une autre source l'a
-    // recalculée entre-temps (sa valeur courante devient alors la nouvelle base).
-    if (this._max_node_scale_carrier) {
-      const c = this._max_node_scale_carrier
-      if (Math.abs(this._scale - c.applied) < 1e-9) {
-        this._scale = c.original
-        this._scaleValueToPx.domain([0, c.original])
-      }
-      this._max_node_scale_carrier = undefined
+    this._scale_overrides.applyMaximumNodeScale(this)
+  }
+
+  // OS#1272 — Réglages globaux du marqueur de bilan (voir champs privés).
+  public get balance_marker_enabled(): boolean { return this._balance_marker_enabled }
+  public set balance_marker_enabled(value: boolean) {
+    this._balance_marker_enabled = value
+    this.drawElements()
+  }
+  public get balance_marker_strategy(): 'exact' | 'absolute' | 'relative' { return this._balance_marker_strategy }
+  public set balance_marker_strategy(value: 'exact' | 'absolute' | 'relative') {
+    this._balance_marker_strategy = value
+    this.drawElements()
+  }
+  public get balance_marker_tolerance(): number { return this._balance_marker_tolerance }
+  public set balance_marker_tolerance(value: number) {
+    if (value >= 0) {
+      this._balance_marker_tolerance = value
+      this.drawElements()
     }
-    const max_node = this._maximum_node
-    if (!max_node || !(max_node > 0)) return
-    // 2. Hauteur naturelle (non clampée) du nœud le plus haut, à l'échelle courante.
-    let tallest = 0
-    this.sankey.visible_nodes_list.forEach(n => {
-      const h = n.getNaturalShapeHeight()
-      if (h > tallest) tallest = h
-    })
-    if (!(tallest > max_node)) return
-    // 3. scaleValueToPx ∝ 1/scale : multiplier l'échelle par tallest/max_node (> 1) réduit les
-    // px/valeur → le plus haut nœud rend exactement à max_node.
-    const new_scale = this._scale * (tallest / max_node)
-    if (!(isFinite(new_scale) && new_scale > 0)) return
-    this._max_node_scale_carrier = { original: this._scale, applied: new_scale }
-    this._scale = new_scale
-    this._scaleValueToPx.domain([0, new_scale])
   }
 
   public get minimum_flux(): number | undefined { return this._minimum_flux }
@@ -4042,17 +3414,9 @@ export class Class_DrawingArea {
     }
   }
 
-  public get structure_mode_force_min(): boolean { return this._structure_mode_force_min }
-  public set structure_mode_force_min(value: boolean) {
-    this._structure_mode_force_min = value
-    this.drawElements()
-  }
-
-  public get arrow_use_standalone_layout(): boolean { return this._arrow_use_standalone_layout }
-  public set arrow_use_standalone_layout(value: boolean) {
-    this._arrow_use_standalone_layout = value
-    this.drawElements()
-  }
+  // OS#1302 — structure_mode_force_min / arrow_use_standalone_layout / arrow_spike_*
+  // ne sont plus des globales : ce sont des attributs de flux (shape_structure_force_min /
+  // shape_arrow_standalone / shape_arrow_spike_*) résolus par le style de flux.
 
   public get scaleValueToPx() { return this._scaleValueToPx }
 
@@ -4137,13 +3501,10 @@ export class Class_DrawingArea {
    * @returns true si le nœud passe le seuil (label affiché).
    */
   public nodeLabelPassesThreshold(value: number, height_px: number): boolean {
-    if (this._filter_unit === 'pixel') {
-      if (!(this._filter_node_px > 0)) return true
-      // Pixels ÉCRAN : hauteur de bande locale × zoom live.
-      return height_px * this.getZoomScale() >= this._filter_node_px
-    }
-    if (!(this._filter_node > 0)) return true
-    return value >= this._filter_node
+    return LabelFilters.nodeLabelPassesThreshold(
+      this._filter_unit, this._filter_node_px, this._filter_node,
+      value, height_px, this.getZoomScale()
+    )
   }
 
   /**
@@ -4158,14 +3519,10 @@ export class Class_DrawingArea {
    * @param height_px hauteur de bande RENDUE du stock (repère local, facteur inclus)
    */
   public stockLabelPassesThreshold(abs_value: number | null, height_px: number): boolean {
-    if (abs_value === null) return true
-    if (this._filter_unit === 'pixel') {
-      if (!(this._filter_stock_px > 0)) return true
-      // Pixels ÉCRAN : hauteur rendue locale × zoom live.
-      return height_px * this.getZoomScale() >= this._filter_stock_px
-    }
-    if (!(this._filter_stock > 0)) return true
-    return abs_value >= this._filter_stock
+    return LabelFilters.stockLabelPassesThreshold(
+      this._filter_unit, this._filter_stock_px, this._filter_stock,
+      abs_value, height_px, this.getZoomScale()
+    )
   }
 
   /**
@@ -4174,11 +3531,9 @@ export class Class_DrawingArea {
    * (les pixels écran dépendent du zoom, cf. handlers de zoom).
    */
   public get has_active_pixel_filter(): boolean {
-    return this._filter_unit === 'pixel' && (
-      this._filter_link_value_px > 0 ||
-      this._filter_label_px > 0 ||
-      this._filter_node_px > 0 ||
-      this._filter_stock_px > 0
+    return LabelFilters.hasActivePixelFilter(
+      this._filter_unit, this._filter_link_value_px, this._filter_label_px,
+      this._filter_node_px, this._filter_stock_px
     )
   }
 
@@ -4189,6 +3544,49 @@ export class Class_DrawingArea {
   public set show_orphan_nodes(value: boolean) { this._show_orphan_nodes = value }
 
   public get fit_margin(): number { return this._fit_margin }
+
+  /**
+   * #242 — Comportement de zoom/pan d3, exposé pour le chrome de viewport : le drag d'un pouce de
+   * scrollbar déplace la caméra, et `updateScrollbars` (re)pose extent/translateExtent.
+   */
+  public get zoomListener() { return this._zoomListener }
+
+  /**
+   * #242 — Rectangle du canvas de fond (coords monde) : la PAGE en mode papier, le fond décalé en
+   * mode libre. Sert au cadre de viewport et au tracé du fond.
+   */
+  public get background_canvas_rect(): { x: number, y: number, w: number, h: number } {
+    return {
+      x: this._background_d3_groups_shift_x,
+      y: this._background_d3_groups_shift_y,
+      w: this._zoom_width,
+      h: this._zoom_height
+    }
+  }
+
+  /**
+   * #242 — Rectangle « canvas » (coords monde) servant de plancher à l'étendue pannable : uni au
+   * contenu, il donne le translateExtent de d3-zoom et l'échelle des scrollbars. En mode papier
+   * c'est la page ancrée en (0,0) — et non le fond décalé.
+   */
+  /**
+   * OS#1250 phase 4 — la PAGE, rect fixe en coordonnées monde. Le mode papier n'est
+   * plus un « canvas » à ancrer : c'est un rectangle comme un autre, qui participe aux
+   * bounds (cf. Class_ViewportChrome.updateScrollbars) et sert de bornes au fond/grille.
+   * Origine (0,0) par construction : les positions du mode papier sont calculées pour
+   * le format.
+   */
+  public get paper_world_rect(): { x: number, y: number, w: number, h: number } {
+    return { x: 0, y: 0, w: this._width, h: this._height }
+  }
+
+  public get pannable_canvas_rect(): { x0: number, y0: number, x1: number, y1: number } {
+    if (this.is_paper_mode) {
+      return { x0: 0, y0: 0, x1: this._width, y1: this._height }
+    }
+    const bg = this.background_canvas_rect
+    return { x0: bg.x, y0: bg.y, x1: bg.x + bg.w, y1: bg.y + bg.h }
+  }
 
   public get magnetic_nodes(): boolean { return this._magnetic_nodes }
   public set magnetic_nodes(value: boolean) { this._magnetic_nodes = value }
@@ -4302,128 +3700,15 @@ export class Class_DrawingArea {
     }
   }
 
-  public setParametricMode() {
-    this.bypass_redraws = true
-    const default_style = this.sankey.styles_dict['default']
+  public setParametricMode() { DisplayModes.setParametricMode(this) }
 
-    // 1. Initialise position_u depuis position_x pour les nœuds non verrouillés.
-    //    Nécessaire car on vient potentiellement du mode absolu où les nœuds
-    //    ont été placés librement.
-    this.nodePositioning.inferPositionUFromX()
+  public setAbsoluteMode() { DisplayModes.setAbsoluteMode(this) }
 
-    // 2. Back-calcul de shape_position_dy depuis les positions absolues actuelles.
-    //    Si overlap détecté, shape_position_dy est clampé à 0 — la bascule provoquera
-    //    un saut visuel pour ces nœuds.
-    const overlap_count = this.nodePositioning.backCalculateShapePositionDyFromY()
-    if (overlap_count > 0) {
-      console.warn(
-        `[setParametricMode] ${overlap_count} nœud(s) en chevauchement détecté(s) en absolu — ` +
-        'shape_position_dy clampé à 0, certaines positions vont changer lors de la bascule.'
-      )
-    }
+  public setScaleAdaptedMode() { DisplayModes.setScaleAdaptedMode(this) }
 
-    // 3. Bascule du mode et recalcul du V (les Y restent stables car le dy a été
-    //    back-calculé pour reproduire les positions actuelles).
-    default_style.shape_position_type = 'parametric'
-    this.sankey.nodes_list.forEach(n => {
-      if (n.shape_position_v_locked !== true) n.position_v = -1
-    })
-    // #1231 — mode « écart » : capturer le cadre de référence (médiane globale + centre
-    // par colonne + sommes par colonne) sur l'état courant cohérent, comme le mode
-    // proportionnel. Les centres de colonne suivront ensuite le % au changement de
-    // datatag/dimension, avec écarts constants. Fait après backCalculateShapePositionDyFromY
-    // et avant computeParametrization (l'ordre V ne change pas l'étendue géométrique).
-    this.nodePositioning.captureProportionalReference()
-    this.nodePositioning.computeParametrization(false)
-    this.bypass_redraws = false
-  }
+  public setProportionalMode() { DisplayModes.setProportionalMode(this) }
 
-  public setAbsoluteMode() {
-    const default_style = this.sankey.styles_dict['default']
-    const prev_mode = default_style.shape_position_type
-    // #1231 — quitter l'« échelle adaptée » restaure l'échelle de base.
-    this.nodePositioning.clearScaleAdaptation()
-    // #1231 — le flux/datatag de référence sont PERSISTÉS et conservés en mode absolu (on ne
-    // les efface plus) : seul le MODE change. Re-entrer en % réutilisera le couple de réf.
-    default_style.shape_position_type = 'absolute'
-    if (prev_mode === 'scale_adapted' || prev_mode === 'proportional') {
-      // #1231 (1.1.5) — sortie d'un mode d'AFFICHAGE (échelle / proportionnel) : le coin
-      // courant est du scratch (rescalé par l'échelle adaptée, ou comprimé par le %). On
-      // FORCE le retour aux vrais centres stockés, sinon les positions d'affichage
-      // deviendraient les positions absolues (le % « collait »). Centres invariants → on
-      // retrouve exactement la position absolue d'avant l'entrée du mode.
-      this.nodePositioning.deriveAbsoluteNodesFromCenter()
-    } else {
-      // #1230 — prev = absolu / parametric (ex. ops structurelles) : le coin courant EST la
-      // nouvelle vérité → on le commit comme centre (settle), pour que le 1er draw n'introduise
-      // aucun saut.
-      this.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
-    }
-  }
-
-  // #1231 — Mode « échelle adaptée » : le flux de référence (clic droit) garde toujours la
-  // même épaisseur ; l'échelle du diagramme s'adapte à chaque datatag en conséquence. Les
-  // nœuds gardent leur centre fixe (comme l'absolu) pendant qu'ils se redimensionnent.
-  public setScaleAdaptedMode() {
-    const default_style = this.sankey.styles_dict['default']
-    // #1231 (1.1.5) — si on vient d'un mode d'AFFICHAGE (proportionnel), le coin courant est
-    // comprimé. On revient d'abord aux VRAIS centres (sinon settleCenterAnchor figerait le
-    // coin comprimé comme centre → centres faussés). L'échelle adaptée part donc des positions
-    // absolues réelles ; le draw applique ensuite le rescale autour des centres invariants.
-    this.nodePositioning.deriveAbsoluteNodesFromCenter()
-    default_style.shape_position_type = 'scale_adapted'
-    this.nodePositioning.captureScaleReference()
-    // #1231 — redessiner immédiatement pour appliquer l'échelle adaptée dès l'entrée du
-    // mode (sinon le rescale n'apparaissait qu'au draw suivant : navigation datatag).
-    this.draw()
-  }
-
-  public setProportionalMode() {
-    const default_style = this.sankey.styles_dict['default']
-    // #1231 — quitter l'« échelle adaptée » restaure l'échelle de base.
-    this.nodePositioning.clearScaleAdaptation()
-    // #1231 (1.1.5) — si on vient d'un mode d'AFFICHAGE (échelle), le coin courant est du
-    // scratch rescalé. On revient d'abord aux VRAIS centres pour que la capture de référence
-    // (médiane, centres de colonne) parte des positions absolues réelles, pas de l'affichage.
-    this.nodePositioning.deriveAbsoluteNodesFromCenter()
-    default_style.shape_position_type = 'proportional'
-    // #1231 — identifier les colonnes (position_u, sans déplacer les nœuds) puis
-    // capturer le cadre de référence (médiane = centre de gravité, haut/bas, sommes
-    // par colonne, centre de réf de chaque nœud). Au datatag courant f=1 → pas de saut
-    // à la bascule ; les autres datatags compriment/dilatent autour de la médiane.
-    this.nodePositioning.inferPositionUFromX()
-    this.nodePositioning.captureProportionalReference()
-  }
-
-  public resetAllVerticalIntervals(v_spacing?: number) {
-    // La clé dans le config prefixée est `shape_position_dy` (cf.
-    // createConfigWithPrefix + NODE_SHAPE_SPECIFIC_CONFIG). Utiliser `position_dy`
-    // supprimait une clé inexistante → les overrides persistaient.
-    const affected_nodes = Object.values(this.sankey.nodes_dict)
-      .filter(node => node.shape_position_type !== 'relative')
-    const snapshots = affected_nodes.map(node => ({ node, snapshot: node.snapshotStorage() }))
-    const default_style = this.sankey.styles_dict['default']
-    const prev_style_dy = default_style.shape_position_dy
-
-    const apply = () => {
-      if (v_spacing !== undefined) {
-        default_style.shape_position_dy = v_spacing
-      }
-      affected_nodes.forEach(node => node.delete_attribute('shape_position_dy'))
-      this.draw()
-    }
-    const revert = () => {
-      if (v_spacing !== undefined) {
-        default_style.shape_position_dy = prev_style_dy
-      }
-      snapshots.forEach(({ node, snapshot }) => node.restoreStorage(snapshot))
-      this.draw()
-    }
-
-    this.application_data.history.saveUndo(revert)
-    this.application_data.history.saveRedo(apply)
-    apply()
-  }
+  public resetAllVerticalIntervals(v_spacing?: number) { DisplayModes.resetAllVerticalIntervals(this, v_spacing) }
 
   public get id() { return this._sankey.id }
   public get name() { return this._sankey.name }

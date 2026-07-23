@@ -8,6 +8,7 @@ import { Box, Button, Checkbox, InputGroup, Select, Divider, Input } from '@chak
 import { FaAlignCenter, FaAlignLeft, FaAlignRight, FaLock, FaLockOpen, FaRecycle } from 'react-icons/fa'
 import { MdTextRotationAngleup } from 'react-icons/md'
 import { TFunction } from 'i18next'
+import { useModelBinding } from '../../hooks/useModelBinding'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_LinkElement } from '../../Elements/Link'
@@ -38,7 +39,8 @@ import {
   InputIndicatorWrapper,
   OverloadIndicatorWrapper,
   CustomFaEyeCheckIcon,
-  WrapperBoxSubSectionMenu
+  WrapperBoxSubSectionMenu,
+  ConfigMenuTextInput
 } from './MenuCommon'
 
 // Imports des configs
@@ -78,12 +80,53 @@ import {
   getConfigValues,
   Type_AnchorAlignVertical,
   Type_AnchorAlignHorizontal,
-  Type_HatchOrientation
+  Type_HatchOrientation,
+  Type_IOReorgMode
 } from '../../Elements/ElementsAttributesConfig'
 import { SankeyMultiTypeSelectionSimple } from './MenuElementsSelection'
 import { unit_constants } from '../../Elements/LinkValues'
 import { NodeIOReorganizer } from '../dialogs/NodeIOReorganizer'
 import { STRAIGHT_MENU_MODES, straightActionKey, Type_StraightMenuMode } from '../dialogs/ContextLinkConfig'
+
+// #1243 — Retrait des LIBELLÉS artisanaux quand l'attribut est hérité de la
+// cascade de styles. Les fabriques (ElementAttrSetter2Cols, OverloadedButtonGroup,
+// wrappers) le font déjà pour leurs contrôles ; ce helper couvre les lignes
+// construites à la main (label Box + contrôle custom).
+// Tri-état : seul `false` (attribut STYLABLE hérité de la cascade) met en
+// retrait ; `undefined` (donnée, ou édition de style) laisse intact.
+const dimLabelSx = (is_overloaded: boolean | undefined) =>
+  (is_overloaded === false ? { opacity: 0.65 } : undefined)
+
+// #299 — Édition des ancres/poignées d'un flux en pixels (absolu) en plus du
+// relatif (%). Les valeurs stockées restent des fractions ; l'unité px n'est
+// qu'un mode d'affichage/édition du menu. La conversion px↔fraction s'appuie sur
+// la géométrie courante du flux, miroir EXACT des formules de LinkControlPoints :
+//  - ancres  (starting/ending_curve)   : offset = fraction × écart inter-nœuds ;
+//  - poignées (starting/ending_tangeant): offset = fraction × distance entre les
+//    deux points d'ancrage (x1..x5).
+// L'axe (x/y) est déduit de l'orientation, comme dans compute*CurvePoint/BezierPoint.
+type Type_LinkCurveKey =
+  'starting_curve' | 'ending_curve' | 'starting_tangeant' | 'ending_tangeant'
+const LINK_CURVE_ANCHOR_KEYS: Type_LinkCurveKey[] = ['starting_curve', 'ending_curve']
+const LINK_CURVE_HANDLE_KEYS: Type_LinkCurveKey[] = ['starting_tangeant', 'ending_tangeant']
+const getLinkCurveRefsPx = (l: Class_LinkElement): Record<Type_LinkCurveKey, number> => {
+  const cpp = l.control_points_position
+  const x1 = cpp.starting_curve[0], y1 = cpp.starting_curve[1]
+  const x5 = cpp.ending_curve[0], y5 = cpp.ending_curve[1]
+  const span_x = Math.abs(l.position_x_start - l.position_x_end)
+  const span_y = Math.abs(l.position_y_start - l.position_y_end)
+  const seg_x = Math.abs(x5 - x1)
+  const seg_y = Math.abs(y5 - y1)
+  // Départ : x si le flux part à l'horizontale (hh/hv) ; arrivée : x si (hh/vh).
+  const start_axis_x = l.is_horizontal || l.is_horizontal_vertical
+  const end_axis_x = l.is_horizontal || l.is_vertical_horizontal
+  return {
+    starting_curve: start_axis_x ? span_x : span_y,
+    ending_curve: end_axis_x ? span_x : span_y,
+    starting_tangeant: start_axis_x ? seg_x : seg_y,
+    ending_tangeant: end_axis_x ? seg_x : seg_y
+  }
+}
 
 /**
  * Widget d'angle du texte du label (−180°..180°) : remplace l'ancien toggle
@@ -206,7 +249,7 @@ export const LabelDisplayModeSelector = ({
     // pas le nœud.
     if (!labelValues.fo_content) {
       (elements as Class_NodeBase[]).forEach(node => {
-        node.name_label_fo_content = `<p>${node.name_label_effective}</p>`
+        node.name_label_fo_content = `<p>${node.name_label_effective_editable}</p>`
       })
     }
     labelValues.has_fo = true
@@ -244,18 +287,14 @@ export const LabelDisplayModeSelector = ({
       <Box layerStyle='options_3cols'>
         <OSTooltip label={t('Menu.display_mode.tooltips.simple_text')}>
           <Button
-            variant={display_mode_name_label.current === 'simple_text' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
-            sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
-            onClick={setModeSimpleText}
+            variant={display_mode_name_label.current === 'simple_text' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}            onClick={setModeSimpleText}
           >
             {app_data.icon_library.icon_text_mode_simple}
           </Button>
         </OSTooltip>
         <OSTooltip label={t('Menu.display_mode.tooltips.rich_text')}>
           <Button
-            variant={display_mode_name_label.current === 'rich_text' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'}
-            sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
-            onClick={setModeText}
+            variant={display_mode_name_label.current === 'rich_text' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'}            onClick={setModeText}
           >
             {app_data.icon_library.icon_text_mode_rich}
           </Button>
@@ -263,9 +302,7 @@ export const LabelDisplayModeSelector = ({
         <OSTooltip label={t('Menu.display_mode.tooltips.value')} disabled={!app_data.has_sankey_plus}>
           <Button
             isDisabled={!app_data.has_sankey_plus}
-            variant={display_mode_name_label.current === 'value' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
-            sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
-            onClick={setModeValue}
+            variant={display_mode_name_label.current === 'value' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}            onClick={setModeValue}
           >
             {app_data.icon_library.icon_text_mode_value}
           </Button>
@@ -280,18 +317,14 @@ export const LabelDisplayModeSelector = ({
       <Box layerStyle='options_2cols'>
         <OSTooltip label={t('Menu.display_mode.tooltips.icon')}>
           <Button
-            variant={labelValues.is_icon ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
-            sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
-            onClick={setModeIcon}
+            variant={labelValues.is_icon ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}            onClick={setModeIcon}
           >
             {t('Menu.display_mode.icon')}
           </Button>
         </OSTooltip>
         <OSTooltip label={t('Menu.display_mode.tooltips.image')}>
           <Button
-            variant={labelValues.is_image ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
-            sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
-            onClick={setModeImage}
+            variant={labelValues.is_image ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}            onClick={setModeImage}
           >
             {t('Menu.display_mode.image')}
           </Button>
@@ -353,9 +386,18 @@ const NumberFormatComponent = ({ app_data, elements, prefix, config, attributePa
             value={labelValues.unit_type}
             onChange={(evt) => { labelValues.unit_type = evt.target.value }}
           >
-            {unit_constants.map(el => (
-              <option key={'value_' + el} value={el}>{app_data.t('Flux.labels.' + el)}</option>
-            ))}
+            {/* OS#1286 — 'unit_name' (texte libre) retiré : remplacé par le
+                registre (migration au chargement). Les modes « naturels »
+                (unit_tag/other_unit_tag) ne valent que si un groupe de
+                dataTags is_unit existe : masqués sinon. La valeur courante
+                est toujours listée (fichier legacy non migré). */}
+            {unit_constants
+              .filter(el =>
+                (el === labelValues.unit_type) ||
+                (el !== 'unit_name' && (unit_tagg !== undefined || (el !== 'unit_tag' && el !== 'other_unit_tag'))))
+              .map(el => (
+                <option key={'value_' + el} value={el}>{app_data.t('Flux.labels.' + el)}</option>
+              ))}
           </Select>
         </InputIndicatorWrapper>
 
@@ -373,24 +415,65 @@ const NumberFormatComponent = ({ app_data, elements, prefix, config, attributePa
         )}
 
         {labelValues.unit_type == 'unit_name' && (
-          <InputIndicatorWrapper
-            isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_unit` as keyof typeof config, config)}
-            isMultiValue={isConfigValueIndeterminate(elements, config, 'unit', prefix)}
+          // #297 — champ d'unité personnalisée : passe par ConfigMenuTextInput
+          // (état local, commit UNIQUEMENT au blur/Entrée). L'ancien <Input>
+          // écrivait dans le modèle à chaque frappe → refreshParentComponent
+          // remontait le champ → perte de focus dès le 1er caractère.
+          <ConfigMenuTextInput
             t={app_data.t}
-          >
-            <Input
-              variant='menuconfigpanel_option_input'
-              value={labelValues.unit ?? ''}
-              placeholder="nom de l'unité"
-              onChange={(evt) => { labelValues.unit = evt.target.value }}
-              onBlur={(evt) => { labelValues.unit = evt.target.value || '' }}
-            />
-          </InputIndicatorWrapper>
+            default_value={labelValues.unit ?? ''}
+            function_on_blur={(v) => { labelValues.unit = v ?? '' }}
+            isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_unit` as keyof typeof config, config)}
+            multiValue={isConfigValueIndeterminate(elements, config, 'unit', prefix)}
+          />
+        )}
+
+        {/* OS#1286 — mode « unité du modèle » : choix d'une unité du registre
+            (groupée par grandeur ; choisir la grandeur = hériter de son unité
+            par défaut), + bouton d'ouverture de l'éditeur du registre. */}
+        {labelValues.unit_type == 'unit_model' && (
+          <Box display='flex' alignItems='center' gap='0.25rem'>
+            <InputIndicatorWrapper
+              isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_unit` as keyof typeof config, config)}
+              isMultiValue={isConfigValueIndeterminate(elements, config, 'unit', prefix)}
+              t={app_data.t}
+            >
+              <Select
+                value={labelValues.unit ?? ''}
+                onChange={(evt) => { labelValues.unit = evt.target.value }}
+              >
+                <option value=''>{app_data.t('inspector.units.none')}</option>
+                {app_data.drawing_area.sankey.units.unit_types.map(ut => (
+                  <optgroup key={'ut_' + ut.id} label={ut.name}>
+                    <option value={ut.id}>
+                      {ut.name + ' — ' + app_data.t('inspector.units.type_default') + (ut.default_unit ? ' (' + ut.default_unit.name + ')' : '')}
+                    </option>
+                    {ut.units.map(u => (
+                      <option key={'u_' + u.id} value={u.id}>{u.name}</option>
+                    ))}
+                  </optgroup>
+                ))}
+              </Select>
+            </InputIndicatorWrapper>
+            <OSTooltip label={app_data.t('inspector.units.open_editor_tooltip')}>
+              <Button
+                size='xs'
+                variant='menuconfigpanel_option_button'
+                onClick={() => {
+                  app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_units_editor.current(true)
+                }}
+              >
+                {app_data.t('inspector.units.open_editor')}
+              </Button>
+            </OSTooltip>
+          </Box>
         )}
       </> : <></>}
     </Box>
 
-    <Box layerStyle='options_5cols'>
+    {/* #1258 v2 — bascules de format en carrés compacts, champs de précision
+        adjacents : plus de grille 5 colonnes à cellules vides. */}
+    <Box display='flex' alignItems='center' gap='0.25rem' flexWrap='wrap'>
       <OverloadedCheckbox
         elements={elements}
         config={config}
@@ -401,22 +484,25 @@ const NumberFormatComponent = ({ app_data, elements, prefix, config, attributePa
         getIsIndeterminate={() => isConfigValueIndeterminate(elements, config, 'custom_digit', prefix)}
         tooltipLabel={t(`${attributePath}.tooltips.${getLabelAttributeKey(prefix, 'custom_digit')}`)}
         t={t}
+        icon_button
       >
         <Box display="flex" alignItems="center" gap={1}>.##</Box>
       </OverloadedCheckbox>
 
-      {labelValues.custom_digit ? (
-        <ConfigMenuNumberInput
-          t={t}
-          default_value={labelValues.nb_digit}
-          menu_for_style={menu_for_style}
-          minimum_value={0}
-          stepper={true}
-          function_on_blur={(value) => { labelValues.nb_digit = value ?? 0 }}
-          multiValue={isConfigValueIndeterminate(elements, config, 'nb_digit', prefix)}
-          isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_nb_digit` as keyof typeof config, config)}
-        />
-      ) : <Box />}
+      {labelValues.custom_digit && (
+        <Box width='3.8rem'>
+          <ConfigMenuNumberInput
+            t={t}
+            default_value={labelValues.nb_digit}
+            menu_for_style={menu_for_style}
+            minimum_value={0}
+            stepper={true}
+            function_on_blur={(value) => { labelValues.nb_digit = value ?? 0 }}
+            multiValue={isConfigValueIndeterminate(elements, config, 'nb_digit', prefix)}
+            isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_nb_digit` as keyof typeof config, config)}
+          />
+        </Box>
+      )}
 
       <OverloadedCheckbox
         elements={elements}
@@ -428,6 +514,7 @@ const NumberFormatComponent = ({ app_data, elements, prefix, config, attributePa
         getIsIndeterminate={() => isConfigValueIndeterminate(elements, config, 'scientific_notation', prefix)}
         tooltipLabel={t(`${attributePath}.tooltips.${prefix}_scientific_notation`)}
         t={t}
+        icon_button
       >
         <Box display="flex" alignItems="center" gap={1}>#e^#</Box>
       </OverloadedCheckbox>
@@ -442,37 +529,44 @@ const NumberFormatComponent = ({ app_data, elements, prefix, config, attributePa
         getIsIndeterminate={() => isConfigValueIndeterminate(elements, config, 'significant_digits', prefix)}
         tooltipLabel={t(`${attributePath}.tooltips.${getLabelAttributeKey(prefix, 'significant_digits')}`)}
         t={t}
+        icon_button
       >
         <Box display="flex" alignItems="center" gap={1}>#.##</Box>
       </OverloadedCheckbox>
 
-      {labelValues.significant_digits ? (
-        <ConfigMenuNumberInput
-          t={t}
-          default_value={labelValues.nb_significant_digits}
-          menu_for_style={menu_for_style}
-          minimum_value={0}
-          stepper={true}
-          function_on_blur={(value) => { labelValues.nb_significant_digits = value ?? 0 }}
-          multiValue={isConfigValueIndeterminate(elements, config, 'nb_significant_digits', prefix)}
-          isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_nb_significant_digits` as keyof typeof config, config)}
-        />
-      ) : <Box />}
+      {labelValues.significant_digits && (
+        <Box width='3.8rem'>
+          <ConfigMenuNumberInput
+            t={t}
+            default_value={labelValues.nb_significant_digits}
+            menu_for_style={menu_for_style}
+            minimum_value={0}
+            stepper={true}
+            function_on_blur={(value) => { labelValues.nb_significant_digits = value ?? 0 }}
+            multiValue={isConfigValueIndeterminate(elements, config, 'nb_significant_digits', prefix)}
+            isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_nb_significant_digits` as keyof typeof config, config)}
+          />
+        </Box>
+      )}
     </Box>
 
-    <Box layerStyle='options_2cols'>
-      <ElementAttrSetterNumberInput2Cols
-        app_data={app_data}
-        elements={elements}
-        attributePath={attributePath}
-        attributeKey={'unit_factor'}
-        config={config}
-        prefix={prefix}
-        refreshParentComponent={refreshParentComponent}
-        stepper={false}
-        isOverloaded={isElementAttributeOverloaded(elements, prefix + '_unit_factor' as keyof typeof config, config)}
-      />
-    </Box>
+    {/* OS#1286 — en mode « unité du modèle » le facteur est le coefficient de
+        l'unité du registre : le facteur manuel n'a pas de sens, on le masque. */}
+    {labelValues.unit_type !== 'unit_model' && (
+      <Box layerStyle='options_2cols'>
+        <ElementAttrSetterNumberInput2Cols
+          app_data={app_data}
+          elements={elements}
+          attributePath={attributePath}
+          attributeKey={'unit_factor'}
+          config={config}
+          prefix={prefix}
+          refreshParentComponent={refreshParentComponent}
+          stepper={false}
+          isOverloaded={isElementAttributeOverloaded(elements, prefix + '_unit_factor' as keyof typeof config, config)}
+        />
+      </Box>
+    )}
   </>)
 }
 
@@ -483,7 +577,8 @@ const LabelContentComponent = ({
   prefix,
   displayMode,
   menu_style: _menu_style,
-  refreshParentComponent
+  refreshParentComponent,
+  always_show_sections = false
 }: {
   app_data: Class_ApplicationData
   elements: ElementsType
@@ -491,6 +586,9 @@ const LabelContentComponent = ({
   displayMode: 'simple_text' | 'rich_text' | 'icon' | 'image' | 'value'
   menu_style: boolean
   refreshParentComponent: () => void
+  // #1243 — inspecteur : les sections à œil (Fond…) restent éditables même
+  // décochées, comme la visibilité au niveau de l'onglet.
+  always_show_sections?: boolean
 }) => {
   const { t } = app_data
   const labelValues = elements.length > 0
@@ -559,9 +657,10 @@ const LabelContentComponent = ({
       </>
       )}
       <Box as='span' layerStyle='options_2_1_2cols'>
-        {/* Section TEXT */}
+        {/* Section TEXT — la TYPOGRAPHIE (police, graisse…) n'a pas de sens
+            pour une icône ou une image (#1243). */}
 
-        <InputIndicatorWrapper
+        {displayMode !== 'icon' && displayMode !== 'image' && <InputIndicatorWrapper
           isOverloaded={isElementAttributeOverloaded(
             elements,
             `${prefix}_font_family` as keyof typeof BASE_LABEL_CONFIG,
@@ -586,7 +685,7 @@ const LabelContentComponent = ({
               <option style={{ fontFamily: d }} key={'ff-' + d} value={d}>{d}</option>
             ))}
           </Select>
-        </InputIndicatorWrapper>
+        </InputIndicatorWrapper>}
         {(displayMode === 'simple_text' || displayMode === 'value') && (<>
           <ConfigMenuNumberInput
             t={app_data.t}
@@ -697,9 +796,13 @@ const LabelContentComponent = ({
       {displayMode === 'icon' && (
         <>
           <Box layerStyle='menuconfigpanel_row_2cols'>
-            <Box as='span' layerStyle='menuconfigpanel_option_name'>{t('Menu.sections.icon_catalog')}</Box>
+            <Box as='span' layerStyle='menuconfigpanel_option_name'
+              sx={dimLabelSx(isElementAttributeOverloaded(base_elements, 'icon_icon_name' as keyof typeof BASE_LABEL_CONFIG, BASE_LABEL_CONFIG))}
+            >{t('Menu.sections.icon_catalog')}</Box>
             <Button
               variant='menuconfigpanel_option_button'
+              // #1258 v2 — action ponctuelle : pas une pilule pleine largeur.
+              sx={{ width: 'fit-content', justifySelf: 'end', paddingInline: '0.8rem' }}
               onClick={() => {
                 app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_import_icons?.current?.(true)
                 app_data.menu_configuration.icon_selector_set_elements.current(base_elements, prefix as 'name_label' | 'value_label' | 'icon')
@@ -710,7 +813,9 @@ const LabelContentComponent = ({
           </Box>
 
           <Box layerStyle='menuconfigpanel_row_3cols'>
-            <Box as='span' layerStyle='menuconfigpanel_option_name'>{t('Menu.sections.icon_color')}</Box>
+            <Box as='span' layerStyle='menuconfigpanel_option_name'
+              sx={dimLabelSx(isElementAttributeOverloaded(base_elements, 'icon_color' as keyof typeof BASE_LABEL_CONFIG, BASE_LABEL_CONFIG))}
+            >{t('Menu.sections.icon_color')}</Box>
             <MenuColorPicker
               initialColor={iconColor}
               onColorChange={(new_color) => {
@@ -724,7 +829,7 @@ const LabelContentComponent = ({
             />
             <OSTooltip label={iconColorSustainable ? t('color_lock.locked') : t('color_lock.unlocked')}>
               <Button
-                variant={iconColorSustainable ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                variant={iconColorSustainable ? 'menuconfigpanel_icon_button_activated' : 'menuconfigpanel_icon_button'}
                 onClick={() => {
                   base_elements.forEach(el => {
                     if ('icon_color_sustainable' in el) {
@@ -748,7 +853,9 @@ const LabelContentComponent = ({
         <>
           <Divider />
           <Box layerStyle='menuconfigpanel_row_2cols'>
-            <Box as='span' layerStyle='menuconfigpanel_option_name'>{t('Menu.sections.image_source')}</Box>
+            <Box as='span' layerStyle='menuconfigpanel_option_name'
+              sx={dimLabelSx(isElementAttributeOverloaded(base_elements, prefix + '_image_src' as keyof typeof BASE_LABEL_CONFIG, BASE_LABEL_CONFIG))}
+            >{t('Menu.sections.image_source')}</Box>
             <Box as='span' layerStyle='options_2cols'>
               <Button
                 variant='menuconfigpanel_option_button_left'
@@ -947,7 +1054,8 @@ const LabelContentComponent = ({
           unit_text='px'
           isOverloaded={isElementAttributeOverloaded(elements, prefix + '_' + String('box_width') as keyof typeof BASE_LABEL_CONFIG, BASE_LABEL_CONFIG)}
         />
-        <OverloadedButton
+        {/* Coupure des mots longs : du TEXTE — sans objet pour icône/image (#1243). */}
+        {displayMode !== 'icon' && displayMode !== 'image' && <OverloadedButton
           elements={elements}
           config={BASE_LABEL_CONFIG}
           attributePath={attributePath}
@@ -955,11 +1063,16 @@ const LabelContentComponent = ({
           attributeKey="wrap_long_words"
           variant={getButtonVariant('', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'wrap_long_words', prefix), labelValues.wrap_long_words)}
           onClick={() => { labelValues.wrap_long_words = !labelValues.wrap_long_words }}
+          // #1258 — bouton bascule compact : pas la pleine largeur de la cellule.
+          buttonSx={{ width: 'fit-content', marginLeft: 'auto', paddingInline: '0.6rem' }}
         >
           <span style={{ fontSize: '0.85em', fontWeight: 600 }}>ab-</span>
-        </OverloadedButton>
+        </OverloadedButton>}
       </Box>
-      {(displayMode === 'simple_text' && selection.hasNodes && prefix !== 'value_label' || menu_for_style && prefix == 'name_label') ? <Box as='span' layerStyle='options_2cols'>
+      {/* #1258 — en sélection, le séparateur est devenu une OPTION du menu
+          « Contenu du label » (name_part, plus bas). Cette rangée autonome ne
+          subsiste que pour l'édition de STYLE, qui n'a pas ce menu. */}
+      {(menu_for_style && prefix == 'name_label') ? <Box as='span' layerStyle='options_2cols'>
         <ElementAttrSetterTextInput2Cols
           app_data={app_data}
           elements={elements}
@@ -999,7 +1112,12 @@ const LabelContentComponent = ({
               <Box as='span'
                 layerStyle='menuconfigpanel_option_name'
                 display="flex"
-                alignItems="center">{t('Menu.sections.link_label_position')}</Box>
+                alignItems="center"
+                sx={(() => {
+                  const a = isElementAttributeOverloaded(links_elements, `${prefix}_on_path` as keyof typeof LINKS_LABEL_SPECIFIC_CONFIG, LINKS_LABEL_SPECIFIC_CONFIG)
+                  const b = isElementAttributeOverloaded(links_elements, `${prefix}_pos_auto` as keyof typeof LINKS_LABEL_SPECIFIC_CONFIG, LINKS_LABEL_SPECIFIC_CONFIG)
+                  return dimLabelSx(a === undefined ? undefined : (a || b))
+                })()}>{t('Menu.sections.link_label_position')}</Box>
               <OverloadedButton
                 elements={links_elements}
                 config={LINKS_LABEL_SPECIFIC_CONFIG}
@@ -1029,8 +1147,13 @@ const LabelContentComponent = ({
           </Box>
           {prefix === 'name_label' && (<>
             <Box layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name'>
-                {t('Flux.labels.name_label_text_source')}
+              <Box layerStyle='menuconfigpanel_option_name'
+                sx={dimLabelSx(isElementAttributeOverloaded(links_elements, `${prefix}_text_source` as keyof typeof LINKS_LABEL_SPECIFIC_CONFIG, LINKS_LABEL_SPECIFIC_CONFIG))}
+              >
+                {/* #1258 — homonyme du « Contenu du label » des nœuds : en
+                    sélection mixte, préciser le type pour les distinguer. */}
+                {t('Flux.labels.name_label_text_source')
+                  + ((selection.hasNodes || selection.hasContainers) ? ` (${t('inspector.target.link').toLowerCase()})` : '')}
               </Box>
               <InputIndicatorWrapper
                 isOverloaded={isElementAttributeOverloaded(links_elements, `${prefix}_text_source` as keyof typeof LINKS_LABEL_SPECIFIC_CONFIG, LINKS_LABEL_SPECIFIC_CONFIG)}
@@ -1052,7 +1175,9 @@ const LabelContentComponent = ({
             </Box>
             {linkLabelValues.text_source === 'tag' && (
               <Box layerStyle='menuconfigpanel_row_2cols'>
-                <Box layerStyle='menuconfigpanel_option_name'>
+                <Box layerStyle='menuconfigpanel_option_name'
+                  sx={dimLabelSx(isElementAttributeOverloaded(links_elements, `${prefix}_flux_tag_group_id` as keyof typeof LINKS_LABEL_SPECIFIC_CONFIG, LINKS_LABEL_SPECIFIC_CONFIG))}
+                >
                   {t('Flux.labels.name_label_tag_group')}
                 </Box>
                 <Select
@@ -1081,6 +1206,10 @@ const LabelContentComponent = ({
         if (name_label_elements.length === 0) return null
         const first = name_label_elements[0]
         const source = first?.name_label_source ?? 'name'
+        // #1258 — le séparateur est une option de contenu : « name » avec un
+        // séparateur posé s'affiche (et se choisit) comme 'name_part'.
+        const separator_active = ((nodeLabelValues.separator as string) ?? '') !== ''
+        const select_value = source === 'name' && separator_active ? 'name_part' : source
         const sankey = app_data.drawing_area.sankey
         // Source 'tag' (nœuds) : on choisit un groupe de tags de nœud ; le label
         // affiche le tag de ce groupe assigné au nœud (le premier si plusieurs).
@@ -1092,14 +1221,20 @@ const LabelContentComponent = ({
           : t('Noeud.labels.text_source.name_container')
         return <>
           <Box layerStyle='menuconfigpanel_row_2cols'>
-            <Box layerStyle='menuconfigpanel_option_name'>
-              {t('Noeud.labels.name_label_text_source')}
+            <Box layerStyle='menuconfigpanel_option_name'
+              sx={dimLabelSx(isElementAttributeOverloaded(name_label_elements, 'name_label_source' as keyof typeof NAME_LABEL_CONFIG, NAME_LABEL_CONFIG))}
+            >
+              {t('Noeud.labels.name_label_text_source')
+                + (selection.hasLinks ? ` (${t('inspector.target.node').toLowerCase()})` : '')}
             </Box>
             <OSTooltip label={t('Noeud.labels.tooltips.name_label_text_source')}>
               <Select
-                value={source}
+                value={select_value}
                 onChange={(evt) => {
-                  const new_source = evt.target.value as 'name' | 'custom' | 'tag' | 'ancestor'
+                  const raw = evt.target.value as 'name' | 'custom' | 'tag' | 'ancestor' | 'name_part'
+                  // 'name_part' = source 'name' + séparateur posé ; 'name' nu
+                  // efface le séparateur (l'option EST l'interrupteur, #1258).
+                  const new_source = raw === 'name_part' ? 'name' : raw
                   name_label_elements.forEach(n => {
                     // À l'activation custom, amorcer le texte avec le nom courant
                     // s'il est vide, pour ne pas afficher un label vide.
@@ -1110,19 +1245,58 @@ const LabelContentComponent = ({
                     }
                     n.name_label_source = new_source
                   })
+                  if (raw === 'name_part' && !separator_active) nodeLabelValues.separator = '-'
+                  if (raw === 'name' && separator_active) nodeLabelValues.separator = ''
                   refreshParentComponent()
                 }}
               >
                 <option value='name'>{name_option_label}</option>
+                {selection.hasNodes ? <option value='name_part'>{t('Noeud.labels.text_source.name_part')}</option> : null}
                 <option value='custom'>{t('Noeud.labels.text_source.custom')}</option>
                 {selection.hasNodes && tag_groups.length > 0 ? <option value='tag'>{t('Noeud.labels.text_source.tag')}</option> : null}
                 {selection.hasNodes ? <option value='ancestor'>{t('Noeud.labels.text_source.ancestor')}</option> : null}
               </Select>
             </OSTooltip>
           </Box>
+          {/* #1258 — sous-options de 'name_part' : le caractère séparateur et
+              la partie à garder (avant / après). */}
+          {select_value === 'name_part' ? (
+            <Box as='span' layerStyle='options_2cols'>
+              <ElementAttrSetterTextInput2Cols
+                app_data={app_data}
+                elements={elements}
+                config={NAME_LABEL_CONFIG}
+                prefix={prefix}
+                attributePath={attributePath}
+                attributeKey={'separator'}
+                refreshParentComponent={refreshParentComponent}
+                isOverloaded={isElementAttributeOverloaded(elements, prefix + '_' + String('separator') as keyof typeof NAME_LABEL_CONFIG, NAME_LABEL_CONFIG)}
+              />
+              <OSTooltip label={app_data.t('Menu.tooltips.node_label_sep_pos')}>
+                <Box layerStyle='options_2cols'>
+                  <Button variant={nodeLabelValues.separator_part == 'before' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
+                    onClick={() => {
+                      nodeLabelValues.separator_part = 'before'
+                    }}
+                  >
+                    {app_data.t('Menu.before')}
+                  </Button>
+                  <Button variant={nodeLabelValues.separator_part == 'after' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
+                    onClick={() => {
+                      nodeLabelValues.separator_part = 'after'
+                    }}
+                  >
+                    {app_data.t('Menu.after')}
+                  </Button>
+                </Box>
+              </OSTooltip>
+            </Box>
+          ) : null}
           {source === 'custom' && displayMode === 'simple_text' ? (
             <Box layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name'>
+              <Box layerStyle='menuconfigpanel_option_name'
+                sx={dimLabelSx(isElementAttributeOverloaded(name_label_elements, 'name_label_text' as keyof typeof NAME_LABEL_CONFIG, NAME_LABEL_CONFIG))}
+              >
                 {t('Noeud.labels.name_label_text')}
               </Box>
               <Input
@@ -1136,7 +1310,9 @@ const LabelContentComponent = ({
           ) : null}
           {source === 'tag' ? (
             <Box layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name'>
+              <Box layerStyle='menuconfigpanel_option_name'
+                sx={dimLabelSx(isElementAttributeOverloaded(name_label_elements, 'name_label_tag_group_id' as keyof typeof NAME_LABEL_CONFIG, NAME_LABEL_CONFIG))}
+              >
                 {t('Noeud.labels.name_label_tag_group')}
               </Box>
               <Select
@@ -1153,7 +1329,9 @@ const LabelContentComponent = ({
           ) : null}
           {source === 'ancestor' && dimension_groups.length > 1 ? (
             <Box layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name'>
+              <Box layerStyle='menuconfigpanel_option_name'
+                sx={dimLabelSx(isElementAttributeOverloaded(name_label_elements, 'name_label_dimension_id' as keyof typeof NAME_LABEL_CONFIG, NAME_LABEL_CONFIG))}
+              >
                 {t('Noeud.labels.name_label_dimension')}
               </Box>
               <Select
@@ -1186,7 +1364,7 @@ const LabelContentComponent = ({
           refreshUI={refreshParentComponent} />
         }
       >
-        {getShapeValues(elements, `${prefix}_background` as ShapePrefix, refreshParentComponent).visible && (<>
+        {(always_show_sections || getShapeValues(elements, `${prefix}_background` as ShapePrefix, refreshParentComponent).visible) && (<>
           <MarginEditor
             app_data={app_data}
             elements={elements}
@@ -1208,21 +1386,39 @@ const LabelContentComponent = ({
 // ✅ COMPOSANT PRINCIPAL UNIFIÉ
 export const MenuConfigurationAppearance = ({
   app_data,
-  menu_for_style
+  menu_for_style,
+  hide_selector = false,
+  active_tab,
+  hide_tabs = false
 }: {
   app_data: Class_ApplicationData
   menu_for_style: boolean
+  // #1243 — inspecteur : le sélecteur unifié est rendu une seule fois en tête de
+  // panneau ; on masque alors celui embarqué ici (doublon).
+  hide_selector?: boolean
+  // #1243 — inspecteur : l'onglet actif est piloté de l'EXTÉRIEUR (la rangée
+  // d'onglets de l'inspecteur), ce composant ne rend alors qu'un seul onglet.
+  active_tab?: 'shape' | 'name_label' | 'value_label' | 'icon' | 'stock'
+  // #1243 — masque la rangée d'onglets interne (l'inspecteur rend la sienne).
+  hide_tabs?: boolean
 }) => {
   const { t, drawing_area, menu_configuration, icon_library } = app_data
   const { sankey } = drawing_area
-  const [, setCount] = useState(0)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  const refreshThis = useModelBinding(menu_configuration.ref_to_menu_config_apparence_updater)
   const { ref_selected_style } = menu_configuration
 
   const display_mode_name_label = useRef<'simple_text' | 'rich_text' | 'value'>('simple_text')
   // ✅ State pour l'onglet actif : 5 onglets
   type ActiveTab = 'shape' | 'name_label' | 'value_label' | 'icon' | 'stock'
   const [activeTab, setActiveTab] = useState<ActiveTab>('shape')
-  if (activeTab !== app_data.menu_configuration.tab_selected)
+  // #299 — unité d'édition des ancres/poignées des flux : relatif (%) ou absolu (px).
+  const [linkCurveUnit, setLinkCurveUnit] = useState<'percent' | 'px'>('percent')
+  // #1243 — piloté de l'extérieur (inspecteur) : le prop gagne ; sinon on garde
+  // la synchronisation historique sur menu_configuration.tab_selected.
+  if (active_tab !== undefined) {
+    if (activeTab !== active_tab) setActiveTab(active_tab)
+  } else if (activeTab !== app_data.menu_configuration.tab_selected)
     setActiveTab(app_data.menu_configuration.tab_selected)
   // ✅ Récupération éléments
   const getAllSelectedElements = (): (Class_NodeElement | Class_LinkElement | Class_ContainerElement)[] => {
@@ -1255,8 +1451,6 @@ export const MenuConfigurationAppearance = ({
   const links_elements = allElements as Class_LinkElement[] | Class_ElementStyle[]
   const nodes_elements = allElements as Class_NodeBase[] | Class_ElementStyle[]
 
-  menu_configuration.ref_to_menu_config_apparence_updater.current = () => setCount(a => a + 1)
-
   const refreshAll = () => {
     menu_configuration.ref_to_save_in_cache_indicator.current(false)
     if (selection.hasNodes) {
@@ -1271,7 +1465,7 @@ export const MenuConfigurationAppearance = ({
       menu_configuration.updateComponentRelatedToApparence()
       selection.containers.forEach(c => c.draw())
     }
-    setCount(a => a + 1)
+    refreshThis()
   }
 
   // ✅ Valeurs SHAPE
@@ -1323,24 +1517,31 @@ export const MenuConfigurationAppearance = ({
     : Object.fromEntries(Object.entries(STOCK_LABEL_CONFIG).map(([key, value]) => [key, value.default]))
 
   const showContent = allElements.length > 0 || menu_for_style
-  const container_element = elements[0] as Class_ContainerElement
-  const options_selector_node_tied = !menu_for_style
-    ? app_data.drawing_area.sankey.nodes_list_sorted.map((node) => ({
-      'label': node.name,
-      'value': node.id,
-      selected: !selection.hasContainers ? false : selection.containers[0].attached_node.includes(node)
-    }))
+  // #1259 (groupes, P1) — section « Groupe » unifiée : porteurs = zones de texte
+  // ET nœuds sélectionnés (ex-« Cadre géométrique » dédoublé ZDT/nœuds). Membres
+  // proposés : tous les nœuds + les autres ZDT (un groupe peut englober des
+  // zones de texte, OS#1254). L'état affiché est celui du premier porteur.
+  const group_carriers: Class_NodeBase[] = !menu_for_style
+    ? [...selection.containers, ...selection.nodes]
     : []
-  // Tied-frame options for the contextual node (excluding the node itself).
-  const node_tied_element = selection.hasNodes ? selection.nodes[0] : undefined
-  const options_selector_for_node_tied = (!menu_for_style && node_tied_element)
-    ? app_data.drawing_area.sankey.nodes_list_sorted
-      .filter(n => n !== node_tied_element)
-      .map((node) => ({
-        'label': node.name,
-        'value': node.id,
-        selected: node_tied_element.attached_node.includes(node)
-      }))
+  const group_ref = group_carriers.length > 0 ? group_carriers[0] : undefined
+  const group_member_options = group_ref
+    ? [
+      ...app_data.drawing_area.sankey.nodes_list_sorted
+        .filter(n => n !== group_ref)
+        .map((node) => ({
+          'label': node.name,
+          'value': node.id,
+          selected: group_ref.attached_node.includes(node)
+        })),
+      ...app_data.drawing_area.sankey.containers_list_sorted
+        .filter(c => c !== group_ref)
+        .map((c) => ({
+          'label': '[ZDT] ' + c.name,
+          'value': c.id,
+          selected: group_ref.attached_node.includes(c)
+        }))
+    ]
     : []
 
   return (
@@ -1352,12 +1553,13 @@ export const MenuConfigurationAppearance = ({
       style={!showContent ? { minHeight: '18rem' } : undefined}
     >
       {/* ✅ SÉLECTEUR MULTI-TYPE */}
-      {!menu_for_style && (
+      {!menu_for_style && !hide_selector && (
         <SankeyMultiTypeSelectionSimple app_data={app_data} enabledTypes={['node', 'link', 'container', 'stock']} />
       )}
 
-      {/* ✅ ConfigMenuStyleElement */}
-      {!menu_for_style && allElements.length > 0 && (
+      {/* ✅ ConfigMenuStyleElement — masqué en mode inspecteur (hide_tabs) :
+          la portée « Styles » + cascade du panneau le remplace (#1243). */}
+      {!menu_for_style && !hide_tabs && allElements.length > 0 && (
         <ConfigMenuStyleElement
           app_data={app_data}
           selected_elements={base_elements}
@@ -1369,7 +1571,7 @@ export const MenuConfigurationAppearance = ({
       {/* ✅ 5 ONGLETS */}
       {showContent && (
         <>
-          <Box layerStyle='options_5cols'>
+          {!hide_tabs && <Box layerStyle='options_5cols'>
             <Button
               variant={activeTab === 'shape' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
               sx={{ paddingInline: '0.25rem', minWidth: 'auto' }}
@@ -1422,10 +1624,10 @@ export const MenuConfigurationAppearance = ({
                   setActiveTab('stock')
                 }}
               >
-                {'Stock'}
+                {t('inspector.tab.stock')}
               </Button>
             )}
-          </Box>
+          </Box>}
 
           {/* ========== ONGLET FORME ========== */}
           {activeTab === 'shape' && (
@@ -1490,22 +1692,34 @@ export const MenuConfigurationAppearance = ({
                         prefix={'shape'}
                         refreshUI={refreshAll}
                       />
-                      {selection.hasNodes || menu_for_style ? <>
-                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                          <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.geometry')}</Box>
-                          <OverloadedButtonGroup
-                            elements={nodes_elements}
-                            config={NODE_SHAPE_SPECIFIC_CONFIG}
-                            attributePath={'Noeud.apparence'}
-                            prefix={'shape'}
-                            attributeKey="position_type"
-                            currentValue={nodeShapeValues.position_type}
-                            items={[
-                              { value: 'absolute' as Type_Position, label: t('Noeud.apparence.geometry_absolute'), icon: '' },
-                              { value: 'parametric' as Type_Position, label: t('Noeud.apparence.geometry_parametric'), icon: '' },
-                              { value: 'relative' as Type_Position, label: t('Noeud.apparence.geometry_relative'), icon: '' }
-                            ]}
-                            onChange={(value) => {
+                      {/* #1258 — géométrie fine (type de position, ancrage, u/v,
+                          réorganisation) repliée par défaut : réglages pointus. */}
+                      {(selection.hasNodes || menu_for_style) && (
+                        <WrapperBoxSubSectionMenu
+                          new_data={app_data}
+                          title={t('inspector.section.advanced_geometry')}
+                          is_open={false}
+                        >
+                          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                            {/* #1243 — libellé en retrait quand l'attribut est hérité de la
+                              cascade (les fabriques 2Cols le font ; ligne artisanale ici). */}
+                            <Box
+                              layerStyle='menuconfigpanel_option_name'
+                              sx={dimLabelSx(isElementAttributeOverloaded(nodes_elements, 'shape_position_type' as keyof typeof NODE_SHAPE_SPECIFIC_CONFIG, NODE_SHAPE_SPECIFIC_CONFIG))}
+                            >{t('Noeud.apparence.geometry')}</Box>
+                            <OverloadedButtonGroup
+                              elements={nodes_elements}
+                              config={NODE_SHAPE_SPECIFIC_CONFIG}
+                              attributePath={'Noeud.apparence'}
+                              prefix={'shape'}
+                              attributeKey="position_type"
+                              currentValue={nodeShapeValues.position_type}
+                              items={[
+                                { value: 'absolute' as Type_Position, label: t('Noeud.apparence.geometry_absolute'), icon: '' },
+                                { value: 'parametric' as Type_Position, label: t('Noeud.apparence.geometry_parametric'), icon: '' },
+                                { value: 'relative' as Type_Position, label: t('Noeud.apparence.geometry_relative'), icon: '' }
+                              ]}
+                              onChange={(value) => {
                               // Switching position_type to 'parametric' or 'relative' triggers
                               // applyPosition() as a side effect of drawShape, which mutates
                               // _position.x/y. The default proxy setter (updateElements) only
@@ -1513,223 +1727,272 @@ export const MenuConfigurationAppearance = ({
                               // restore the type but leave the recomputed position in place,
                               // making the undo look like a no-op. Bypass the proxy and register
                               // a single undo that captures position_x/y as well.
-                              const node_targets = (nodes_elements as Array<Class_NodeBase | Class_ElementStyle>)
-                                .filter((el): el is Class_NodeElement => el instanceof Class_NodeElement)
+                                const node_targets = (nodes_elements as Array<Class_NodeBase | Class_ElementStyle>)
+                                  .filter((el): el is Class_NodeElement => el instanceof Class_NodeElement)
 
-                              if (node_targets.length === 0) {
+                                if (node_targets.length === 0) {
                                 // No real nodes (e.g. only ElementStyle): keep the proxy path.
-                                nodeShapeValues.position_type = value
-                                return
-                              }
+                                  nodeShapeValues.position_type = value
+                                  return
+                                }
 
-                              const snapshots = node_targets.map(n => ({
-                                node: n,
-                                position_type: n.shape_position_type,
-                                position_x: n.position_x,
-                                position_y: n.position_y,
-                              }))
+                                const snapshots = node_targets.map(n => ({
+                                  node: n,
+                                  position_type: n.shape_position_type,
+                                  position_x: n.position_x,
+                                  position_y: n.position_y,
+                                }))
 
-                              const apply = () => {
-                                node_targets.forEach(n => { n.shape_position_type = value })
-                                refreshAll()
-                              }
-                              const revert = () => {
-                                snapshots.forEach(s => {
-                                  s.node.shape_position_type = s.position_type
-                                  s.node.position_x = s.position_x
-                                  s.node.position_y = s.position_y
-                                })
-                                refreshAll()
-                              }
+                                const apply = () => {
+                                  node_targets.forEach(n => { n.shape_position_type = value })
+                                  refreshAll()
+                                }
+                                const revert = () => {
+                                  snapshots.forEach(s => {
+                                    s.node.shape_position_type = s.position_type
+                                    s.node.position_x = s.position_x
+                                    s.node.position_y = s.position_y
+                                  })
+                                  refreshAll()
+                                }
 
-                              app_data.history.saveUndo(revert)
-                              app_data.history.saveRedo(apply)
-                              apply()
-                            }}
-                            getIsIndeterminate={() => isNodeShapeSpecificValueIndeterminate(nodes_elements, 'position_type')}
-                            t={t}
-                          />
-                        </Box>
-                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                          <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.anchor_align')}</Box>
-                          <Box display='flex' alignItems='center' gap='2'>
-                            <OverloadedButtonGroup
-                              elements={nodes_elements}
-                              config={NODE_SHAPE_SPECIFIC_CONFIG}
-                              attributePath={'Noeud.apparence'}
-                              prefix={'shape'}
-                              attributeKey="anchor_align_vertical"
-                              currentValue={nodeShapeValues.anchor_align_vertical}
-                              items={[
-                                { value: 'top' as Type_AnchorAlignVertical, icon: app_data.icon_library.icon_text_vert_pos_top },
-                                { value: 'center' as Type_AnchorAlignVertical, icon: app_data.icon_library.icon_text_vert_pos_center },
-                                { value: 'bottom' as Type_AnchorAlignVertical, icon: app_data.icon_library.icon_text_vert_pos_bottom }
-                              ]}
-                              onChange={(value) => { nodeShapeValues.anchor_align_vertical = value }}
-                              getIsIndeterminate={() => isNodeShapeSpecificValueIndeterminate(nodes_elements, 'anchor_align_vertical')}
-                              t={t}
-                            />
-                            <OverloadedButtonGroup
-                              elements={nodes_elements}
-                              config={NODE_SHAPE_SPECIFIC_CONFIG}
-                              attributePath={'Noeud.apparence'}
-                              prefix={'shape'}
-                              attributeKey="anchor_align_horizontal"
-                              currentValue={nodeShapeValues.anchor_align_horizontal}
-                              items={[
-                                { value: 'left' as Type_AnchorAlignHorizontal, icon: app_data.icon_library.icon_text_align_left },
-                                { value: 'center' as Type_AnchorAlignHorizontal, icon: app_data.icon_library.icon_text_align_center },
-                                { value: 'right' as Type_AnchorAlignHorizontal, icon: app_data.icon_library.icon_text_align_right }
-                              ]}
-                              onChange={(value) => { nodeShapeValues.anchor_align_horizontal = value }}
-                              getIsIndeterminate={() => isNodeShapeSpecificValueIndeterminate(nodes_elements, 'anchor_align_horizontal')}
+                                app_data.history.saveUndo(revert)
+                                app_data.history.saveRedo(apply)
+                                apply()
+                              }}
+                              getIsIndeterminate={() => isNodeShapeSpecificValueIndeterminate(nodes_elements, 'position_type')}
                               t={t}
                             />
                           </Box>
-                        </Box>
-                        {nodeShapeValues.position_type == 'parametric' ? <>
+                          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                            <Box
+                              layerStyle='menuconfigpanel_option_name'
+                              sx={(() => {
+                              // Deux attributs pour un libellé : hérité seulement si les deux le sont.
+                                const v = isElementAttributeOverloaded(nodes_elements, 'shape_anchor_align_vertical' as keyof typeof NODE_SHAPE_SPECIFIC_CONFIG, NODE_SHAPE_SPECIFIC_CONFIG)
+                                const h = isElementAttributeOverloaded(nodes_elements, 'shape_anchor_align_horizontal' as keyof typeof NODE_SHAPE_SPECIFIC_CONFIG, NODE_SHAPE_SPECIFIC_CONFIG)
+                                return dimLabelSx(v === undefined ? undefined : (v || h))
+                              })()}
+                            >{t('Noeud.apparence.anchor_align')}</Box>
+                            <Box display='flex' alignItems='center' gap='2'>
+                              <OverloadedButtonGroup
+                                elements={nodes_elements}
+                                config={NODE_SHAPE_SPECIFIC_CONFIG}
+                                attributePath={'Noeud.apparence'}
+                                prefix={'shape'}
+                                attributeKey="anchor_align_vertical"
+                                currentValue={nodeShapeValues.anchor_align_vertical}
+                                items={[
+                                  { value: 'top' as Type_AnchorAlignVertical, icon: app_data.icon_library.icon_text_vert_pos_top },
+                                  { value: 'center' as Type_AnchorAlignVertical, icon: app_data.icon_library.icon_text_vert_pos_center },
+                                  { value: 'bottom' as Type_AnchorAlignVertical, icon: app_data.icon_library.icon_text_vert_pos_bottom }
+                                ]}
+                                onChange={(value) => { nodeShapeValues.anchor_align_vertical = value }}
+                                getIsIndeterminate={() => isNodeShapeSpecificValueIndeterminate(nodes_elements, 'anchor_align_vertical')}
+                                t={t}
+                              />
+                              <OverloadedButtonGroup
+                                elements={nodes_elements}
+                                config={NODE_SHAPE_SPECIFIC_CONFIG}
+                                attributePath={'Noeud.apparence'}
+                                prefix={'shape'}
+                                attributeKey="anchor_align_horizontal"
+                                currentValue={nodeShapeValues.anchor_align_horizontal}
+                                items={[
+                                  { value: 'left' as Type_AnchorAlignHorizontal, icon: app_data.icon_library.icon_text_align_left },
+                                  { value: 'center' as Type_AnchorAlignHorizontal, icon: app_data.icon_library.icon_text_align_center },
+                                  { value: 'right' as Type_AnchorAlignHorizontal, icon: app_data.icon_library.icon_text_align_right }
+                                ]}
+                                onChange={(value) => { nodeShapeValues.anchor_align_horizontal = value }}
+                                getIsIndeterminate={() => isNodeShapeSpecificValueIndeterminate(nodes_elements, 'anchor_align_horizontal')}
+                                t={t}
+                              />
+                            </Box>
+                          </Box>
                           <ElementAttrSetterNumberInput2Cols
                             app_data={app_data}
                             config={NODE_SHAPE_SPECIFIC_CONFIG}
                             elements={elements}
                             attributePath='Noeud.apparence'
-                            attributeKey={'position_dx'}
+                            attributeKey={'link_inset'}
                             prefix={'shape'}
                             refreshParentComponent={refreshAll}
                             unit_text='pixels'
+                            minimum_value={-500}
                             stepper={true}
-                            isOverloaded={isElementAttributeOverloaded(elements, 'shape_position_dx' as keyof typeof NODE_SHAPE_SPECIFIC_CONFIG, NODE_SHAPE_SPECIFIC_CONFIG)} />
-                          <ElementAttrSetterNumberInput2Cols
-                            app_data={app_data}
-                            config={NODE_SHAPE_SPECIFIC_CONFIG}
-                            elements={elements}
-                            attributePath='Noeud.apparence'
-                            attributeKey={'position_dy'}
-                            prefix={'shape'}
-                            refreshParentComponent={refreshAll}
-                            unit_text='pixels'
-                            stepper={true}
-                            isOverloaded={isElementAttributeOverloaded(elements, 'shape_position_dy' as keyof typeof NODE_SHAPE_SPECIFIC_CONFIG, NODE_SHAPE_SPECIFIC_CONFIG)} /></> : <></>}
-                        {selection.hasNodes && !menu_for_style ? (() => {
+                            isOverloaded={isElementAttributeOverloaded(elements, 'shape_link_inset' as keyof typeof NODE_SHAPE_SPECIFIC_CONFIG, NODE_SHAPE_SPECIFIC_CONFIG)} />
+                          {nodeShapeValues.position_type == 'parametric' ? <>
+                            <ElementAttrSetterNumberInput2Cols
+                              app_data={app_data}
+                              config={NODE_SHAPE_SPECIFIC_CONFIG}
+                              elements={elements}
+                              attributePath='Noeud.apparence'
+                              attributeKey={'position_dx'}
+                              prefix={'shape'}
+                              refreshParentComponent={refreshAll}
+                              unit_text='pixels'
+                              stepper={true}
+                              isOverloaded={isElementAttributeOverloaded(elements, 'shape_position_dx' as keyof typeof NODE_SHAPE_SPECIFIC_CONFIG, NODE_SHAPE_SPECIFIC_CONFIG)} />
+                            <ElementAttrSetterNumberInput2Cols
+                              app_data={app_data}
+                              config={NODE_SHAPE_SPECIFIC_CONFIG}
+                              elements={elements}
+                              attributePath='Noeud.apparence'
+                              attributeKey={'position_dy'}
+                              prefix={'shape'}
+                              refreshParentComponent={refreshAll}
+                              unit_text='pixels'
+                              stepper={true}
+                              isOverloaded={isElementAttributeOverloaded(elements, 'shape_position_dy' as keyof typeof NODE_SHAPE_SPECIFIC_CONFIG, NODE_SHAPE_SPECIFIC_CONFIG)} /></> : <></>}
+                          {selection.hasNodes && !menu_for_style ? (() => {
                           // Column index (u) and row index (v) inputs + lock toggles.
                           // position_u / position_v live directly on the node (not in the
                           // dynamic attribute config), so we manage undo manually. The locks
                           // control whether autosankey compute overwrites the node's column
                           // index / relative row order on the next run.
-                          const real_nodes = (nodes_elements as Array<Class_NodeBase | Class_ElementStyle>)
-                            .filter((el): el is Class_NodeElement => el instanceof Class_NodeElement)
-                          if (real_nodes.length === 0) return <></>
-                          const first_u = real_nodes[0].position_u
-                          const u_indeterminate = real_nodes.some(n => n.position_u !== first_u)
-                          const first_u_locked = real_nodes[0].shape_position_u_locked === true
-                          const all_same_u_lock = real_nodes.every(n => (n.shape_position_u_locked === true) === first_u_locked)
-                          const first_v = real_nodes[0].position_v
-                          const v_indeterminate = real_nodes.some(n => n.position_v !== first_v)
-                          const first_v_locked = real_nodes[0].shape_position_v_locked === true
-                          const all_same_v_lock = real_nodes.every(n => (n.shape_position_v_locked === true) === first_v_locked)
-                          return <>
-                            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                              <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.column_row_uv')}</Box>
-                              <Box display='flex' alignItems='center' gap={2}>
-                                <Box display='flex' alignItems='center' gap={1}>
-                                  <ConfigMenuNumberInput
-                                    t={t}
-                                    default_value={first_u}
-                                    menu_for_style={menu_for_style}
-                                    minimum_value={0}
-                                    step={1}
-                                    stepper={true}
-                                    function_on_blur={(value) => {
-                                      const new_u = value ?? 0
-                                      const snapshots = real_nodes.map(n => ({ node: n, u: n.position_u }))
-                                      const apply = () => {
-                                        real_nodes.forEach(n => { n.position_u = new_u })
-                                        refreshAll()
-                                      }
-                                      const revert = () => {
-                                        snapshots.forEach(s => { s.node.position_u = s.u })
-                                        refreshAll()
-                                      }
-                                      app_data.history.saveUndo(revert)
-                                      app_data.history.saveRedo(apply)
-                                      apply()
-                                    }}
-                                    multiValue={u_indeterminate}
-                                  />
-                                  <OSTooltip label={t('Noeud.apparence.tooltips.shape_position_u_locked')}>
-                                    <Button
-                                      variant={first_u_locked && all_same_u_lock ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                                      onClick={() => {
-                                        const new_locked = !(first_u_locked && all_same_u_lock)
-                                        nodeShapeValues.position_u_locked = new_locked
+                            const real_nodes = (nodes_elements as Array<Class_NodeBase | Class_ElementStyle>)
+                              .filter((el): el is Class_NodeElement => el instanceof Class_NodeElement)
+                            if (real_nodes.length === 0) return <></>
+                            const first_u = real_nodes[0].position_u
+                            const u_indeterminate = real_nodes.some(n => n.position_u !== first_u)
+                            const first_u_locked = real_nodes[0].shape_position_u_locked === true
+                            const all_same_u_lock = real_nodes.every(n => (n.shape_position_u_locked === true) === first_u_locked)
+                            const first_v = real_nodes[0].position_v
+                            const v_indeterminate = real_nodes.some(n => n.position_v !== first_v)
+                            const first_v_locked = real_nodes[0].shape_position_v_locked === true
+                            const all_same_v_lock = real_nodes.every(n => (n.shape_position_v_locked === true) === first_v_locked)
+                            return <>
+                              <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                                <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.column_row_uv')}</Box>
+                                <Box display='flex' alignItems='center' gap={2}>
+                                  <Box display='flex' alignItems='center' gap={1}>
+                                    <ConfigMenuNumberInput
+                                      t={t}
+                                      default_value={first_u}
+                                      menu_for_style={menu_for_style}
+                                      minimum_value={0}
+                                      step={1}
+                                      stepper={true}
+                                      function_on_blur={(value) => {
+                                        const new_u = value ?? 0
+                                        const snapshots = real_nodes.map(n => ({ node: n, u: n.position_u }))
+                                        const apply = () => {
+                                          real_nodes.forEach(n => { n.position_u = new_u })
+                                          refreshAll()
+                                        }
+                                        const revert = () => {
+                                          snapshots.forEach(s => { s.node.position_u = s.u })
+                                          refreshAll()
+                                        }
+                                        app_data.history.saveUndo(revert)
+                                        app_data.history.saveRedo(apply)
+                                        apply()
                                       }}
-                                    >
-                                      {first_u_locked && all_same_u_lock ? <FaLock /> : <FaLockOpen />}
-                                    </Button>
-                                  </OSTooltip>
-                                </Box>
-                                <Box display='flex' alignItems='center' gap={1}>
-                                  <ConfigMenuNumberInput
-                                    t={t}
-                                    default_value={first_v}
-                                    menu_for_style={menu_for_style}
-                                    minimum_value={0}
-                                    step={1}
-                                    stepper={true}
-                                    function_on_blur={(value) => {
-                                      const new_v = value ?? 0
-                                      const snapshots = real_nodes.map(n => ({ node: n, v: n.position_v }))
-                                      const apply = () => {
-                                        real_nodes.forEach(n => { n.position_v = new_v })
-                                        refreshAll()
-                                      }
-                                      const revert = () => {
-                                        snapshots.forEach(s => { s.node.position_v = s.v })
-                                        refreshAll()
-                                      }
-                                      app_data.history.saveUndo(revert)
-                                      app_data.history.saveRedo(apply)
-                                      apply()
-                                    }}
-                                    multiValue={v_indeterminate}
-                                  />
-                                  <OSTooltip label={t('Noeud.apparence.tooltips.shape_position_v_locked')}>
-                                    <Button
-                                      variant={first_v_locked && all_same_v_lock ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                                      onClick={() => {
-                                        const new_locked = !(first_v_locked && all_same_v_lock)
-                                        nodeShapeValues.position_v_locked = new_locked
+                                      multiValue={u_indeterminate}
+                                    />
+                                    <OSTooltip label={t('Noeud.apparence.tooltips.shape_position_u_locked')}>
+                                      <Button
+                                        variant={first_u_locked && all_same_u_lock ? 'menuconfigpanel_icon_button_activated' : 'menuconfigpanel_icon_button'}
+                                        onClick={() => {
+                                          const new_locked = !(first_u_locked && all_same_u_lock)
+                                          nodeShapeValues.position_u_locked = new_locked
+                                        }}
+                                      >
+                                        {first_u_locked && all_same_u_lock ? <FaLock /> : <FaLockOpen />}
+                                      </Button>
+                                    </OSTooltip>
+                                  </Box>
+                                  <Box display='flex' alignItems='center' gap={1}>
+                                    <ConfigMenuNumberInput
+                                      t={t}
+                                      default_value={first_v}
+                                      menu_for_style={menu_for_style}
+                                      minimum_value={0}
+                                      step={1}
+                                      stepper={true}
+                                      function_on_blur={(value) => {
+                                        const new_v = value ?? 0
+                                        const snapshots = real_nodes.map(n => ({ node: n, v: n.position_v }))
+                                        const apply = () => {
+                                          real_nodes.forEach(n => { n.position_v = new_v })
+                                          refreshAll()
+                                        }
+                                        const revert = () => {
+                                          snapshots.forEach(s => { s.node.position_v = s.v })
+                                          refreshAll()
+                                        }
+                                        app_data.history.saveUndo(revert)
+                                        app_data.history.saveRedo(apply)
+                                        apply()
                                       }}
-                                    >
-                                      {first_v_locked && all_same_v_lock ? <FaLock /> : <FaLockOpen />}
-                                    </Button>
-                                  </OSTooltip>
+                                      multiValue={v_indeterminate}
+                                    />
+                                    <OSTooltip label={t('Noeud.apparence.tooltips.shape_position_v_locked')}>
+                                      <Button
+                                        variant={first_v_locked && all_same_v_lock ? 'menuconfigpanel_icon_button_activated' : 'menuconfigpanel_icon_button'}
+                                        onClick={() => {
+                                          const new_locked = !(first_v_locked && all_same_v_lock)
+                                          nodeShapeValues.position_v_locked = new_locked
+                                        }}
+                                      >
+                                        {first_v_locked && all_same_v_lock ? <FaLock /> : <FaLockOpen />}
+                                      </Button>
+                                    </OSTooltip>
+                                  </Box>
                                 </Box>
                               </Box>
+                            </>
+                          })() : <></>}
+                          <Box layerStyle='options_3cols'>
+                            <OverloadedCheckbox
+                              elements={nodes_elements}
+                              config={NODE_SHAPE_SPECIFIC_CONFIG}
+                              prefix={'shape'}
+                              attributeKey="orphan_node_visible"
+                              isChecked={nodeShapeValues.orphan_node_visible}
+                              onChange={(checked) => { nodeShapeValues.orphan_node_visible = checked }}
+                              getIsIndeterminate={() => isNodeShapeSpecificValueIndeterminate(nodes_elements, 'orphan_node_visible')}
+                              tooltipLabel={t(`Noeud.apparence.tooltips.${getNodeShapeAttributeKey('shape', 'orphan_node_visible')}`)}
+                              t={t}
+                            >
+                              {t(`Noeud.apparence.${getNodeShapeAttributeKey('shape', 'orphan_node_visible')}`)}
+                            </OverloadedCheckbox>
+                          </Box>
+                          {!(nodes_elements[0] instanceof Class_StockShape) && <>
+                            <Box as='span' layerStyle='menuconfigpanel_part_title_3'>
+                              {t('Noeud.Reorg_title')}
                             </Box>
-                          </>
-                        })() : <></>}
-                        <Box layerStyle='options_3cols'>
-                          <OverloadedCheckbox
-                            elements={nodes_elements}
-                            config={NODE_SHAPE_SPECIFIC_CONFIG}
-                            prefix={'shape'}
-                            attributeKey="orphan_node_visible"
-                            isChecked={nodeShapeValues.orphan_node_visible}
-                            onChange={(checked) => { nodeShapeValues.orphan_node_visible = checked }}
-                            getIsIndeterminate={() => isNodeShapeSpecificValueIndeterminate(nodes_elements, 'orphan_node_visible')}
-                            tooltipLabel={t(`Noeud.apparence.tooltips.${getNodeShapeAttributeKey('shape', 'orphan_node_visible')}`)}
-                            t={t}
-                          >
-                            {t(`Noeud.apparence.${getNodeShapeAttributeKey('shape', 'orphan_node_visible')}`)}
-                          </OverloadedCheckbox>
-                        </Box>
-                      </> : <></>
-                      }
-                      {selection.hasNodes && !menu_for_style && !(nodes_elements[0] instanceof Class_StockShape) ?
-                        <WrapperBoxSubSectionMenu new_data={app_data} title={t('Noeud.Reorg_title')} is_open={false} >
-                          <NodeIOReorganizer app_data={app_data} node={nodes_elements[0] as Class_NodeElement} />
-                        </WrapperBoxSubSectionMenu> : <></>}
+                            {/* Mode de réorganisation auto (attribut stylé) : visible dans le menu du
+                                nœud ET dans l'onglet Styles (régler sur le style par défaut = global). */}
+                            <ElementAttrSetterSelect2Cols
+                              app_data={app_data}
+                              elements={nodes_elements}
+                              attributePath={'Noeud.apparence'}
+                              attributeKey={'io_reorg_mode'}
+                              config={NODE_SHAPE_SPECIFIC_CONFIG}
+                              prefix={'shape'}
+                              options={[
+                                { key: 'io_reorg_none', value: 'none' as Type_IOReorgMode, label: t('Noeud.apparence.io_reorg_mode_none') },
+                                { key: 'io_reorg_simple', value: 'simple' as Type_IOReorgMode, label: t('Noeud.apparence.io_reorg_mode_simple') },
+                                { key: 'io_reorg_advanced', value: 'advanced' as Type_IOReorgMode, label: t('Noeud.apparence.io_reorg_mode_advanced') }
+                              ]}
+                              refreshParentComponent={refreshAll}
+                              onAfterChange={() => {
+                                // Appliquer tout de suite le nouveau mode aux nœuds sélectionnés
+                                // (release_locks=false : on préserve les cadenas #197). En onglet
+                                // Styles, `nodes_elements` sont des styles → le garde-fou saute.
+                                nodes_elements.forEach(n => {
+                                  const node = n as { reorganizeIOLinks?: (release_locks?: boolean) => void }
+                                  if (typeof node.reorganizeIOLinks === 'function') node.reorganizeIOLinks(false)
+                                })
+                                refreshAll()
+                              }}
+                            />
+                            {selection.hasNodes && !menu_for_style &&
+                              <NodeIOReorganizer app_data={app_data} node={nodes_elements[0] as Class_NodeElement} />}
+                          </>}
+                        </WrapperBoxSubSectionMenu>
+                      )}
                     </Box>
                   </Box>
                 )}
@@ -1746,7 +2009,9 @@ export const MenuConfigurationAppearance = ({
                           <Divider />
                           <Box layerStyle='options_2cols'>
                             <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-                              <Box layerStyle='menuconfigpanel_option_name'>
+                              <Box layerStyle='menuconfigpanel_option_name'
+                                sx={dimLabelSx(isElementAttributeOverloaded(links_elements, 'shape_color_rule' as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG))}
+                              >
                                 {app_data.t('Flux.apparence.shape_color_rule')}
                                 <TooltipElementOverloaded
                                   prefix={'shape'} attributeKey={'color_rule'} elements={elements} config={LINK_SHAPE_SPECIFIC_CONFIG} t={app_data.t}
@@ -1896,6 +2161,10 @@ export const MenuConfigurationAppearance = ({
                               </OverloadedButton>
                             </Box>
                           </Box>
+
+                          {/* OS#1302 — Pointe indépendante / Épaisseur mini structure /
+                              Largeur mini de pointe : regroupés en section Avancé
+                              (advanced_geometry) plus bas. */}
                         </> : <></>}
 
                       {/* Recyclage tristate (taille d'un bouton d'orientation) + 4 orientations
@@ -1994,6 +2263,58 @@ export const MenuConfigurationAppearance = ({
                             {app_data.icon_library.icon_link_structure}
                           </OverloadedButton>
                         </Box>
+                        {/* OS#1302 — « Nœud/flèche à la hauteur de la valeur », bouton-icône
+                            juste à côté de Structure. Activé = on CONSERVE les hauteurs de
+                            valeur (attribut interne structure_force_min = false ; défaut =
+                            non activé). Texte → tooltip auto (OverloadedButton). Glyphe :
+                            nœud (barre) + flèche pleine hauteur. */}
+                        <Box display='inline-flex' flexShrink={0} flexGrow={0} w='1.5rem' h='1.5rem'>
+                          <OverloadedButton
+                            elements={links_elements}
+                            config={LINK_SHAPE_SPECIFIC_CONFIG}
+                            attributePath='Flux.apparence'
+                            prefix={'shape'}
+                            attributeKey="structure_force_min"
+                            variant={getButtonVariant(
+                              '',
+                              isLinkShapeSpecificValueIndeterminate(links_elements, 'structure_force_min'),
+                              !linkShapeValues.structure_force_min
+                            )}
+                            onClick={() => { linkShapeValues.structure_force_min = !linkShapeValues.structure_force_min }}
+                            buttonSx={{ width: '1.5rem', minWidth: '1.5rem', height: '1.5rem', padding: '0', '& svg': { width: '16px', height: '16px' } }}
+                          >
+                            <svg viewBox='0 0 16 16' fill='currentColor' aria-hidden='true'>
+                              <rect x='1.5' y='1.5' width='4' height='13' rx='1' />
+                              <polygon points='8.5,2 15,8 8.5,14' />
+                            </svg>
+                          </OverloadedButton>
+                        </Box>
+                        {/* OS#189 — « Afficher l'incertitude » : superpose le flux à ses
+                            valeurs min/moyenne/max (fin = opaque). Glyphe = trois barres
+                            horizontales empilées (min/moyenne/max) sur un axe vertical. */}
+                        <Box display='inline-flex' flexShrink={0} flexGrow={0} w='1.5rem' h='1.5rem'>
+                          <OverloadedButton
+                            elements={links_elements}
+                            config={LINK_SHAPE_SPECIFIC_CONFIG}
+                            attributePath='Flux.apparence'
+                            prefix={'shape'}
+                            attributeKey="uncertainty_display"
+                            variant={getButtonVariant(
+                              '',
+                              isLinkShapeSpecificValueIndeterminate(links_elements, 'uncertainty_display'),
+                              linkShapeValues.uncertainty_display
+                            )}
+                            onClick={() => { linkShapeValues.uncertainty_display = !linkShapeValues.uncertainty_display }}
+                            buttonSx={{ width: '1.5rem', minWidth: '1.5rem', height: '1.5rem', padding: '0', '& svg': { width: '16px', height: '16px' } }}
+                          >
+                            <svg viewBox='0 0 16 16' fill='currentColor' aria-hidden='true'>
+                              <rect x='7' y='2' width='2' height='12' rx='1' opacity='0.5' />
+                              <rect x='5' y='2.5' width='6' height='2' rx='1' opacity='0.4' />
+                              <rect x='3.5' y='7' width='9' height='2' rx='1' opacity='0.7' />
+                              <rect x='5.5' y='11.5' width='5' height='2' rx='1' />
+                            </svg>
+                          </OverloadedButton>
+                        </Box>
                       </Box>
 
                       {/* Courbe (icône) | sélecteur de chemin bézier (large, occupe l'espace
@@ -2058,277 +2379,393 @@ export const MenuConfigurationAppearance = ({
                           </OverloadedButton>
                         </Box>
                       </Box>
-                      {/* Value of link local scale to override scale from DA, can be undefined */}
-                      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-                        <OSTooltip label={t('Flux.apparence.tooltips.local_scale')}>
-                          <Box layerStyle='menuconfigpanel_option_name' >
-                            {t('Flux.apparence.shape_local_link_scale')}
-                          </Box>
-                        </OSTooltip>
-                        <ConfigMenuNumberInput
-                          default_value={linkShapeValues.local_link_scale}
-                          function_on_blur={(_) => {
-                            linkShapeValues.local_link_scale = _ ?? linkShapeValues.local_link_scale
-                          }}
-                          minimum_value={0}
-                          stepper={true}
-                          step={1}
-                          t={t}
-                          isOverloaded={isElementAttributeOverloaded(links_elements, 'local_link_scale', LINK_SHAPE_SPECIFIC_CONFIG)}
-                        />
-                      </Box>
-                      {/* </Box> */}
-                      {/* Référence d'échelle par view tag : épaisseur cible (px) du flux pour
-                          le view tag COURANT. Visible uniquement quand un view tag est
-                          sélectionné et qu'on édite de vrais flux (pas un style). */}
-                      {(() => {
-                        const vt_id = app_data.drawing_area.sankey.current_scale_reference_viewtag_id
-                        const linkInstances = (links_elements as (Class_LinkElement | Class_ElementStyle)[])
-                          .filter((e) => e instanceof Class_LinkElement) as Class_LinkElement[]
-                        if (!vt_id || linkInstances.length === 0) return null
-                        const vt_name = app_data.drawing_area.sankey.view_taggs_list
-                          .flatMap((g) => g.tags_list).find((tg) => tg.id === vt_id)?.name ?? vt_id
-                        return (
+                      {/* #1258 — géométrie fine du flux (échelle locale, droiture,
+                          ancres, poignées) repliée par défaut : réglages pointus. */}
+                      <WrapperBoxSubSectionMenu
+                        new_data={app_data}
+                        title={t('inspector.section.advanced_geometry')}
+                        is_open={false}
+                      >
+                        {/* OS#1302 — Pointe indépendante (par flux) : triangle centré sur
+                            l'extrémité du flux au lieu de l'éventail partagé du nœud. */}
+                        {(linkShapeValues.is_arrow || linkShapeValues.arrow_at_source) && (
                           <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                            <OSTooltip label={t('Flux.apparence.tooltips.scale_ref_thickness')}>
-                              <Box layerStyle='menuconfigpanel_option_name'>
-                                {t('Flux.apparence.scale_ref_thickness')} ({vt_name})
+                            <OSTooltip label={t('Flux.apparence.tooltips.shape_arrow_standalone')}>
+                              <Box layerStyle='menuconfigpanel_option_name'
+                                sx={dimLabelSx(isElementAttributeOverloaded(links_elements, 'shape_arrow_standalone' as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG))}>
+                                {t('Flux.apparence.shape_arrow_standalone')}
+                              </Box>
+                            </OSTooltip>
+                            <Checkbox
+                              isChecked={linkShapeValues.arrow_standalone}
+                              isIndeterminate={isLinkShapeSpecificValueIndeterminate(links_elements, 'arrow_standalone')}
+                              onChange={(e) => { linkShapeValues.arrow_standalone = e.target.checked }}
+                            />
+                          </Box>
+                        )}
+                        {/* OS#1302 — « Nœud/flèche à la hauteur de la valeur » : déplacé en
+                            bouton-icône à côté de Structure (rangée des flèches), texte en
+                            tooltip. Voir plus haut. */}
+                        {/* Value of link local scale to override scale from DA, can be undefined */}
+                        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+                          <OSTooltip label={t('Flux.apparence.tooltips.local_scale')}>
+                            <Box layerStyle='menuconfigpanel_option_name'
+                              sx={dimLabelSx(isElementAttributeOverloaded(links_elements, 'local_link_scale', LINK_SHAPE_SPECIFIC_CONFIG))}
+                            >
+                              {t('Flux.apparence.shape_local_link_scale')}
+                            </Box>
+                          </OSTooltip>
+                          <ConfigMenuNumberInput
+                            default_value={linkShapeValues.local_link_scale}
+                            function_on_blur={(_) => {
+                              linkShapeValues.local_link_scale = _ ?? linkShapeValues.local_link_scale
+                            }}
+                            minimum_value={0}
+                            stepper={true}
+                            step={1}
+                            t={t}
+                            isOverloaded={isElementAttributeOverloaded(links_elements, 'local_link_scale', LINK_SHAPE_SPECIFIC_CONFIG)}
+                          />
+                        </Box>
+                        {/* OS#1302 — Largeur mini de pointe (px), façon e!Sankey : les flux
+                            plus fins reçoivent une pointe de cette largeur (visibles), les
+                            plus épais ne bougent pas. 0 = désactivé. */}
+                        {(linkShapeValues.is_arrow || linkShapeValues.arrow_at_source) && (
+                          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                            <OSTooltip label={t('Flux.apparence.tooltips.shape_arrow_min_width')}>
+                              <Box layerStyle='menuconfigpanel_option_name'
+                                sx={dimLabelSx(isElementAttributeOverloaded(links_elements, 'shape_arrow_min_width' as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG))}
+                              >
+                                {t('Flux.apparence.shape_arrow_min_width')}
                               </Box>
                             </OSTooltip>
                             <ConfigMenuNumberInput
-                              default_value={linkInstances[0].scale_reference_thickness ?? 0}
-                              function_on_blur={(_) => {
-                                linkInstances.forEach((l) => { l.scale_reference_thickness = (_ && _ > 0) ? _ : undefined })
-                                app_data.drawing_area.drawElements()
-                              }}
-                              minimum_value={0}
-                              stepper={true}
-                              step={1}
                               t={t}
+                              default_value={linkShapeValues.arrow_min_width}
+                              menu_for_style={menu_for_style}
+                              minimum_value={0}
+                              unit_text='px'
+                              stepper={true}
+                              function_on_blur={(value) => { linkShapeValues.arrow_min_width = value ?? 0 }}
+                              multiValue={isLinkShapeSpecificValueIndeterminate(links_elements, 'arrow_min_width')}
+                              isOverloaded={isElementAttributeOverloaded(links_elements, 'shape_arrow_min_width' as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG)}
                             />
                           </Box>
-                        )
-                      })()}
-                      {/* Droiture multi-ancrage (#665) : mode d'ancrage + propagation aux
+                        )}
+                        {/* </Box> */}
+                        {/* Référence d'échelle par view tag : épaisseur cible (px) du flux pour
+                          le view tag COURANT. Visible uniquement quand un view tag est
+                          sélectionné et qu'on édite de vrais flux (pas un style). */}
+                        {(() => {
+                          const vt_id = app_data.drawing_area.sankey.current_scale_reference_viewtag_id
+                          const linkInstances = (links_elements as (Class_LinkElement | Class_ElementStyle)[])
+                            .filter((e) => e instanceof Class_LinkElement) as Class_LinkElement[]
+                          if (!vt_id || linkInstances.length === 0) return null
+                          const vt_name = app_data.drawing_area.sankey.view_taggs_list
+                            .flatMap((g) => g.tags_list).find((tg) => tg.id === vt_id)?.name ?? vt_id
+                          return (
+                            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                              <OSTooltip label={t('Flux.apparence.tooltips.scale_ref_thickness')}>
+                                <Box layerStyle='menuconfigpanel_option_name'>
+                                  {t('Flux.apparence.scale_ref_thickness')} ({vt_name})
+                                </Box>
+                              </OSTooltip>
+                              <ConfigMenuNumberInput
+                                default_value={linkInstances[0].scale_reference_thickness ?? 0}
+                                function_on_blur={(_) => {
+                                  linkInstances.forEach((l) => { l.scale_reference_thickness = (_ && _ > 0) ? _ : undefined })
+                                  app_data.drawing_area.drawElements()
+                                }}
+                                minimum_value={0}
+                                stepper={true}
+                                step={1}
+                                t={t}
+                              />
+                            </Box>
+                          )
+                        })()}
+                        {/* Droiture multi-ancrage (#665) : mode d'ancrage + propagation aux
                           enfants. Pendant menu du clic droit « Rectitude ». */}
-                      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                        <OSTooltip label={t('Flux.apparence.tooltips.shape_straight_mode')}>
-                          <Box layerStyle='menuconfigpanel_option_name'>
-                            {t('Flux.apparence.shape_straight_mode')}
-                          </Box>
-                        </OSTooltip>
-                        <Select
-                          w='100%'
-                          value={linkShapeValues.straight_mode}
-                          onChange={(evt) => {
-                            const v = evt.target.value as Type_StraightMenuMode
-                            linkShapeValues.straight_mode = v
-                            // Drapeau legacy gardé en phase (rétrocompat enforceStraightLinks).
-                            linkShapeValues.must_stay_straight = v !== 'none'
-                            if (v === 'none') linkShapeValues.straight_include_children = false
-                          }}
-                        >
-                          {STRAIGHT_MENU_MODES.map(mode => (
-                            <option key={'straight_' + mode} value={mode}>
-                              {t('ContextMenuLinks.' + straightActionKey('Flux', mode))}
-                            </option>
-                          ))}
-                        </Select>
-                      </Box>
-                      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                        <OSTooltip label={t('Flux.apparence.tooltips.shape_straight_include_children')}>
-                          <Box layerStyle='menuconfigpanel_option_name'>
-                            {t('Flux.apparence.shape_straight_include_children')}
-                          </Box>
-                        </OSTooltip>
-                        <Checkbox
-                          isChecked={linkShapeValues.straight_include_children}
-                          isDisabled={linkShapeValues.straight_mode === 'none'}
-                          onChange={(evt) => {
-                            linkShapeValues.straight_include_children = evt.target.checked
-                          }}
-                        />
-                      </Box>
-                      {linkShapeValues.straight_mode !== 'none' && (
                         <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                          <ElementAttrSetterNumberInput2Cols
-                            app_data={app_data}
-                            elements={links_elements}
-                            attributePath={'Flux.apparence'}
-                            attributeKey={'straight_offset'}
-                            prefix={'shape'}
-                            config={LINK_SHAPE_SPECIFIC_CONFIG}
-                            refreshParentComponent={refreshAll}
-                            minimum_value={-10000}
-                            maximum_value={10000}
-                            isOverloaded={isElementAttributeOverloaded(links_elements, 'shape_straight_offset' as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG)} />
+                          <OSTooltip label={t('Flux.apparence.tooltips.shape_straight_mode')}>
+                            <Box layerStyle='menuconfigpanel_option_name'
+                              sx={dimLabelSx(isElementAttributeOverloaded(links_elements, 'shape_straight_mode' as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG))}
+                            >
+                              {t('Flux.apparence.shape_straight_mode')}
+                            </Box>
+                          </OSTooltip>
+                          <Select
+                            w='100%'
+                            value={linkShapeValues.straight_mode}
+                            onChange={(evt) => {
+                              const v = evt.target.value as Type_StraightMenuMode
+                              linkShapeValues.straight_mode = v
+                              // Drapeau legacy gardé en phase (rétrocompat enforceStraightLinks).
+                              linkShapeValues.must_stay_straight = v !== 'none'
+                              if (v === 'none') linkShapeValues.straight_include_children = false
+                            }}
+                          >
+                            {STRAIGHT_MENU_MODES.map(mode => (
+                              <option key={'straight_' + mode} value={mode}>
+                                {t('ContextMenuLinks.' + straightActionKey('Flux', mode))}
+                              </option>
+                            ))}
+                          </Select>
                         </Box>
-                      )}
-                      <Box as='span' textStyle='title_sub_section'>{t('Flux.apparence.anchor')}</Box>
-                      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                        {[
-                          ['starting_curve', 0, (1 - linkShapeValues.ending_curve)],
-                          ['ending_curve', linkShapeValues.starting_curve * 100, 100]
-                        ].map(p => {
-                          return <ElementAttrSetterNumberInput2Cols
-                            key={String(p[0])}
-                            app_data={app_data}
-                            elements={links_elements}
-                            attributePath={'Flux.apparence'}
-                            attributeKey={p[0] as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG}
-                            prefix={'shape'}
-                            config={LINK_SHAPE_SPECIFIC_CONFIG}
-                            refreshParentComponent={refreshAll}
-                            minimum_value={p[1] as number}
-                            maximum_value={p[2] as number}
-                            percent={true}
-                            isOverloaded={isElementAttributeOverloaded(links_elements, 'shape_' + String(p[0]) as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG)} />
-                        })}
-                      </Box>
-                      <Box as='span' textStyle='title_sub_section'>{t('Flux.apparence.handle')}</Box>
-                      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                        {[
-                          ['starting_tangeant', 0, 100],
-                          ['ending_tangeant', 0, 100],
-                        ].map(p => {
-                          return <ElementAttrSetterNumberInput2Cols
-                            key={String(p[0])}
-                            app_data={app_data}
-                            elements={links_elements}
-                            attributePath={'Flux.apparence'}
-                            attributeKey={p[0] as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG}
-                            prefix={'shape'}
-                            config={LINK_SHAPE_SPECIFIC_CONFIG}
-                            refreshParentComponent={refreshAll}
-                            minimum_value={p[1] as number}
-                            maximum_value={p[2] as number}
-                            percent={true}
-                            isOverloaded={isElementAttributeOverloaded(links_elements, 'shape_' + String(p[0]) as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG)} />
-                        })}
-                      </Box>
+                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                          <OSTooltip label={t('Flux.apparence.tooltips.shape_straight_include_children')}>
+                            <Box layerStyle='menuconfigpanel_option_name'
+                              sx={dimLabelSx(isElementAttributeOverloaded(links_elements, 'shape_straight_include_children' as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG))}
+                            >
+                              {t('Flux.apparence.shape_straight_include_children')}
+                            </Box>
+                          </OSTooltip>
+                          <Checkbox
+                            isChecked={linkShapeValues.straight_include_children}
+                            isDisabled={linkShapeValues.straight_mode === 'none'}
+                            onChange={(evt) => {
+                              linkShapeValues.straight_include_children = evt.target.checked
+                            }}
+                          />
+                        </Box>
+                        {linkShapeValues.straight_mode !== 'none' && (
+                          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                            <ElementAttrSetterNumberInput2Cols
+                              app_data={app_data}
+                              elements={links_elements}
+                              attributePath={'Flux.apparence'}
+                              attributeKey={'straight_offset'}
+                              prefix={'shape'}
+                              config={LINK_SHAPE_SPECIFIC_CONFIG}
+                              refreshParentComponent={refreshAll}
+                              minimum_value={-10000}
+                              maximum_value={10000}
+                              isOverloaded={isElementAttributeOverloaded(links_elements, 'shape_straight_offset' as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG)} />
+                          </Box>
+                        )}
+                        {/* #299 — Ancres/Poignées éditables en relatif (%) OU en absolu
+                            (px), au choix via le sélecteur d'unité en tête de section.
+                            Le px n'est qu'un mode d'affichage/édition : la valeur stockée
+                            reste une fraction ; la conversion s'appuie sur la géométrie
+                            courante du flux (getLinkCurveRefsPx). En sélection multiple,
+                            chaque flux reçoit le même décalage ABSOLU (fraction recalculée
+                            par flux). Indisponible en édition de style pur (pas de
+                            géométrie) : on garde alors le %. */}
+                        {(() => {
+                          const linkInstances = (links_elements as (Class_LinkElement | Class_ElementStyle)[])
+                            .filter((e) => e instanceof Class_LinkElement) as Class_LinkElement[]
+                          const can_use_px = linkInstances.length > 0
+                          const use_px = can_use_px && linkCurveUnit === 'px'
+                          const readFrac = (l: Class_LinkElement, key: Type_LinkCurveKey): number => ({
+                            starting_curve: l.shape_starting_curve,
+                            ending_curve: l.shape_ending_curve,
+                            starting_tangeant: l.shape_starting_tangeant,
+                            ending_tangeant: l.shape_ending_tangeant
+                          }[key])
+                          const writeFrac = (l: Class_LinkElement, key: Type_LinkCurveKey, frac: number): void => {
+                            // Écriture via le setter de classe (customStarting/EndingCurve…) :
+                            // clampe (ancres : somme ≤ 1) et déclenche le redessin.
+                            switch (key) {
+                            case 'starting_curve': l.shape_starting_curve = frac; break
+                            case 'ending_curve': l.shape_ending_curve = frac; break
+                            case 'starting_tangeant': l.shape_starting_tangeant = frac; break
+                            case 'ending_tangeant': l.shape_ending_tangeant = frac; break
+                            }
+                          }
+                          const pxOf = (l: Class_LinkElement, key: Type_LinkCurveKey, ref: number): number =>
+                            (ref > 0 && isFinite(ref)) ? readFrac(l, key) * ref : 0
+                          const pxDisplay = (key: Type_LinkCurveKey): number => {
+                            if (!can_use_px) return 0
+                            const l0 = linkInstances[0]
+                            return Math.round(pxOf(l0, key, getLinkCurveRefsPx(l0)[key]) * 10) / 10
+                          }
+                          const pxMultiValue = (key: Type_LinkCurveKey): boolean => {
+                            if (linkInstances.length < 2) return false
+                            const v0 = Math.round(pxOf(linkInstances[0], key, getLinkCurveRefsPx(linkInstances[0])[key]))
+                            return linkInstances.some(l => Math.round(pxOf(l, key, getLinkCurveRefsPx(l)[key])) !== v0)
+                          }
+                          const applyPx = (key: Type_LinkCurveKey, px: number | null): void => {
+                            if (px === null || px === undefined) return
+                            const before = linkInstances.map(l => ({ l, v: readFrac(l, key) }))
+                            const apply = () => {
+                              linkInstances.forEach(l => {
+                                const ref = getLinkCurveRefsPx(l)[key]
+                                if (ref > 0 && isFinite(ref)) writeFrac(l, key, px / ref)
+                              })
+                              refreshAll()
+                            }
+                            const revert = () => { before.forEach(({ l, v }) => writeFrac(l, key, v)); refreshAll() }
+                            app_data.history.saveUndo(revert)
+                            app_data.history.saveRedo(apply)
+                            apply()
+                          }
+                          const renderPxInputs = (keys: Type_LinkCurveKey[]) => keys.map(key => {
+                            const isOverloaded = isElementAttributeOverloaded(links_elements, ('shape_' + key) as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG)
+                            return (
+                              <ElementAttrSetter2Cols
+                                key={key}
+                                attributePath={'Flux.apparence'}
+                                attributeKey={key as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG}
+                                prefix={'shape'}
+                                config={LINK_SHAPE_SPECIFIC_CONFIG}
+                                t={t}
+                                isOverloaded={isOverloaded}>
+                                <ConfigMenuNumberInput
+                                  t={t}
+                                  default_value={pxDisplay(key)}
+                                  function_on_blur={(value) => applyPx(key, value)}
+                                  minimum_value={0}
+                                  step={1}
+                                  stepper={true}
+                                  unit_text={'px'}
+                                  multiValue={pxMultiValue(key)}
+                                  isOverloaded={isOverloaded} />
+                              </ElementAttrSetter2Cols>
+                            )
+                          })
+                          return (
+                            <>
+                              {can_use_px && (
+                                <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                                  <Box layerStyle='menuconfigpanel_option_name'>{t('Flux.apparence.curve_unit')}</Box>
+                                  <Select
+                                    variant='menuconfigpanel_option_select'
+                                    value={linkCurveUnit}
+                                    onChange={(e) => setLinkCurveUnit(e.target.value === 'px' ? 'px' : 'percent')}>
+                                    <option value='percent'>%</option>
+                                    <option value='px'>px</option>
+                                  </Select>
+                                </Box>
+                              )}
+                              <Box as='span' textStyle='title_sub_section'>{t('Flux.apparence.anchor')}</Box>
+                              <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                                {use_px
+                                  ? renderPxInputs(LINK_CURVE_ANCHOR_KEYS)
+                                  : [
+                                    ['starting_curve', 0, (1 - linkShapeValues.ending_curve)],
+                                    ['ending_curve', linkShapeValues.starting_curve * 100, 100]
+                                  ].map(p => {
+                                    return <ElementAttrSetterNumberInput2Cols
+                                      key={String(p[0])}
+                                      app_data={app_data}
+                                      elements={links_elements}
+                                      attributePath={'Flux.apparence'}
+                                      attributeKey={p[0] as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG}
+                                      prefix={'shape'}
+                                      config={LINK_SHAPE_SPECIFIC_CONFIG}
+                                      refreshParentComponent={refreshAll}
+                                      minimum_value={p[1] as number}
+                                      maximum_value={p[2] as number}
+                                      percent={true}
+                                      isOverloaded={isElementAttributeOverloaded(links_elements, 'shape_' + String(p[0]) as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG)} />
+                                  })}
+                              </Box>
+                              <Box as='span' textStyle='title_sub_section'>{t('Flux.apparence.handle')}</Box>
+                              <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                                {use_px
+                                  ? renderPxInputs(LINK_CURVE_HANDLE_KEYS)
+                                  : [
+                                    ['starting_tangeant', 0, 100],
+                                    ['ending_tangeant', 0, 100]
+                                  ].map(p => {
+                                    return <ElementAttrSetterNumberInput2Cols
+                                      key={String(p[0])}
+                                      app_data={app_data}
+                                      elements={links_elements}
+                                      attributePath={'Flux.apparence'}
+                                      attributeKey={p[0] as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG}
+                                      prefix={'shape'}
+                                      config={LINK_SHAPE_SPECIFIC_CONFIG}
+                                      refreshParentComponent={refreshAll}
+                                      minimum_value={p[1] as number}
+                                      maximum_value={p[2] as number}
+                                      percent={true}
+                                      isOverloaded={isElementAttributeOverloaded(links_elements, 'shape_' + String(p[0]) as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG)} />
+                                  })}
+                              </Box>
+                            </>
+                          )
+                        })()}
+                      </WrapperBoxSubSectionMenu>
                     </Box>
                   </Box>
                 )}
-                {(selection.hasContainers) && (
-                  <>
-                    <Box layerStyle='menu_sub_section'>
-                      <Checkbox
-                        variant='menuconfigpanel_option_checkbox'
-                        iconColor={'white'}
-                        isChecked={elements.length > 0 ? container_element.tied_to_nodes : false}
-                        onChange={(evt) => {
-                          const target = evt.target.checked
-                          const containerElements = elements.filter(e => e instanceof Class_ContainerElement) as Class_ContainerElement[]
-                          const before = containerElements.map(c => ({ c, tied: c.tied_to_nodes }))
+                {/* #1259 (groupes, P1) — section « Groupe » UNIQUE, partagée par les
+                    zones de texte et les nœuds (remplace les deux blocs « Cadre
+                    géométrique » qui se dédoublaient en sélection mixte). */}
+                {group_ref && (
+                  <Box layerStyle='menu_sub_section'>
+                    <Checkbox
+                      variant='menuconfigpanel_option_checkbox'
+                      iconColor={'white'}
+                      isChecked={group_ref.tied_to_nodes}
+                      onChange={(evt) => {
+                        const target = evt.target.checked
+                        const before = group_carriers.map(el => ({ el, tied: el.tied_to_nodes }))
+                        const apply = () => {
+                          group_carriers.forEach(el => { el.tied_to_nodes = target })
+                          refreshAll()
+                        }
+                        const revert = () => {
+                          before.forEach(({ el, tied }) => { el.tied_to_nodes = tied })
+                          refreshAll()
+                        }
+                        app_data.history.saveUndo(revert)
+                        app_data.history.saveRedo(apply)
+                        apply()
+                      }}>
+                      <OSTooltip label={t('inspector.group.tooltip')} placement='left'>{t('inspector.group.title')}</OSTooltip>
+                    </Checkbox>
+
+                    {group_ref.tied_to_nodes && <Box>
+                      <OSMultiSelect
+                        t={app_data.t}
+                        elements={group_member_options}
+                        onClick={(entries) => {
+                          const entries_values = entries.map(d => d.value)
+                          const before = group_carriers.map(el => ({ el, attached: [...el.attached_node] }))
                           const apply = () => {
-                            containerElements.forEach(c => { c.tied_to_nodes = target })
+                            app_data.drawing_area.sankey.nodes_list.forEach(node => {
+                              group_carriers.forEach(el => {
+                                if (el === node) return
+                                if (entries_values.includes(node.id)) el.attachNodeToCont(node)
+                                else el.dettachNodeFromCont(node)
+                              })
+                            })
+                            // OS#1254 — un groupe peut aussi englober des zones de texte
+                            // (cf. blocs de la légende). Garde anti-cycle : jamais soi-même
+                            // ni un cadre qui contient déjà le porteur.
+                            app_data.drawing_area.sankey.containers_list.forEach(cont => {
+                              group_carriers.forEach(el => {
+                                if (el === cont) return
+                                if (entries_values.includes(cont.id)) {
+                                  if (!cont.attached_node.includes(el)) el.attachNodeToCont(cont)
+                                } else {
+                                  el.dettachNodeFromCont(cont)
+                                }
+                              })
+                            })
+                            // #1259 — chaque cadre passe derrière ses membres
+                            // pour ne pas capter leurs clics.
+                            group_carriers.forEach(el => app_data.drawing_area.sendFrameBehindMembers(el))
                             refreshAll()
                           }
                           const revert = () => {
-                            before.forEach(({ c, tied }) => { c.tied_to_nodes = tied })
+                            before.forEach(({ el, attached }) => {
+                              for (let i = el.attached_node.length - 1; i >= 0; i--) {
+                                el.dettachNodeFromCont(el.attached_node[i])
+                              }
+                              attached.forEach(a => el.attachNodeToCont(a))
+                            })
                             refreshAll()
                           }
                           app_data.history.saveUndo(revert)
                           app_data.history.saveRedo(apply)
                           apply()
-                        }}>
-                        <OSTooltip label={t('LL.tooltips.tiedToNodes')} placement='left'>{t('LL.tiedToNodes')}</OSTooltip>
-                      </Checkbox>
-
-                      {elements.length > 0 && container_element.tied_to_nodes ? <Box>
-                        <OSMultiSelect
-                          t={app_data.t}
-                          elements={options_selector_node_tied}
-                          onClick={(entries) => {
-                            const entries_values = entries.map(d => d.value)
-                            const containerElements = elements.filter(e => e instanceof Class_ContainerElement) as Class_ContainerElement[]
-                            const before = containerElements.map(zdt => ({ zdt, attached: [...zdt.attached_node] }))
-                            const apply = () => {
-                              app_data.drawing_area.sankey.nodes_list.forEach(node => {
-                                if (entries_values.includes(node.id)) {
-                                  containerElements.forEach(zdt => { zdt.attachNodeToCont(node) })
-                                } else {
-                                  containerElements.forEach(zdt => { zdt.dettachNodeFromCont(node) })
-                                }
-                              })
-                              refreshAll()
-                            }
-                            const revert = () => {
-                              before.forEach(({ zdt, attached }) => {
-                                for (let i = zdt.attached_node.length - 1; i >= 0; i--) {
-                                  zdt.dettachNodeFromCont(zdt.attached_node[i])
-                                }
-                                attached.forEach(n => zdt.attachNodeToCont(n))
-                              })
-                              refreshAll()
-                            }
-                            app_data.history.saveUndo(revert)
-                            app_data.history.saveRedo(apply)
-                            apply()
-                          }}
-                        />
-
-                      </Box> : <></>}
-                    </Box></>
-                )}
-                {(selection.hasNodes && node_tied_element) && (
-                  <>
-                    <Box layerStyle='menu_sub_section'>
-                      <Checkbox
-                        variant='menuconfigpanel_option_checkbox'
-                        iconColor={'white'}
-                        isChecked={node_tied_element.tied_to_nodes}
-                        onChange={(evt) => {
-                          const target = evt.target.checked
-                          const before = selection.nodes.map(n => ({ n, tied: n.tied_to_nodes }))
-                          const apply = () => {
-                            selection.nodes.forEach(n => { n.tied_to_nodes = target })
-                            refreshAll()
-                          }
-                          const revert = () => {
-                            before.forEach(({ n, tied }) => { n.tied_to_nodes = tied })
-                            refreshAll()
-                          }
-                          app_data.history.saveUndo(revert)
-                          app_data.history.saveRedo(apply)
-                          apply()
-                        }}>
-                        <OSTooltip label={t('LL.tooltips.tiedToNodes')} placement='left'>{t('LL.tiedToNodes')}</OSTooltip>
-                      </Checkbox>
-
-                      {node_tied_element.tied_to_nodes ? <Box>
-                        <OSMultiSelect
-                          t={app_data.t}
-                          elements={options_selector_for_node_tied}
-                          onClick={(entries) => {
-                            const entries_values = entries.map(d => d.value)
-                            const before = selection.nodes.map(n => ({ n, attached: [...n.attached_node] }))
-                            const apply = () => {
-                              app_data.drawing_area.sankey.nodes_list.forEach(node => {
-                                if (entries_values.includes(node.id)) {
-                                  selection.nodes.forEach(n => { if (n !== node) n.attachNodeToCont(node) })
-                                } else {
-                                  selection.nodes.forEach(n => n.dettachNodeFromCont(node))
-                                }
-                              })
-                              refreshAll()
-                            }
-                            const revert = () => {
-                              before.forEach(({ n, attached }) => {
-                                for (let i = n.attached_node.length - 1; i >= 0; i--) {
-                                  n.dettachNodeFromCont(n.attached_node[i])
-                                }
-                                attached.forEach(a => n.attachNodeToCont(a))
-                              })
-                              refreshAll()
-                            }
-                            app_data.history.saveUndo(revert)
-                            app_data.history.saveRedo(apply)
-                            apply()
-                          }}
-                        />
-                      </Box> : <></>}
-                    </Box></>
+                        }}
+                      />
+                    </Box>}
+                  </Box>
                 )}
               </>
             </>
@@ -2343,6 +2780,7 @@ export const MenuConfigurationAppearance = ({
               config={NAME_LABEL_CONFIG}
               prefix={'name_label'}
               refreshParentComponent={refreshAll}
+              compact={hide_tabs}
               rightComponent={<LabelDisplayModeSelector
                 prefix='name_label'
                 elements={elements}
@@ -2354,7 +2792,9 @@ export const MenuConfigurationAppearance = ({
               />
               }
             >
-              {nameLabelValues.is_visible && (
+              {/* #1243 (inspecteur) : le contenu reste éditable même invisible —
+                  on peut caler les réglages AVANT d'activer l'œil. */}
+              {(hide_tabs || nameLabelValues.is_visible) && (
                 <LabelContentComponent
                   app_data={app_data}
                   elements={elements}
@@ -2362,6 +2802,7 @@ export const MenuConfigurationAppearance = ({
                   displayMode={display_mode_name_label.current}
                   menu_style={menu_for_style}
                   refreshParentComponent={refreshAll}
+                  always_show_sections={hide_tabs}
                 />
               )}
             </MenuSectionCheckbox>
@@ -2375,8 +2816,9 @@ export const MenuConfigurationAppearance = ({
               config={VALUE_LABEL_CONFIG}
               prefix={'value_label'}
               refreshParentComponent={refreshAll}
+              compact={hide_tabs}
             >
-              {valueLabelValues.is_visible && (
+              {(hide_tabs || valueLabelValues.is_visible) && (
                 <LabelContentComponent
                   app_data={app_data}
                   elements={elements}
@@ -2384,6 +2826,7 @@ export const MenuConfigurationAppearance = ({
                   displayMode='value'
                   menu_style={menu_for_style}
                   refreshParentComponent={refreshAll}
+                  always_show_sections={hide_tabs}
                 />
               )}
             </MenuSectionCheckbox>
@@ -2391,38 +2834,52 @@ export const MenuConfigurationAppearance = ({
 
           {/* ========== ONGLET STOCK (SA#1229) ========== */}
           {activeTab === 'stock' && (<>
-            {selection.hasNodes && selection.nodes.some(n => n.has_stock) ? (<>
-              {/* Visibility of the node-like stock shape, independent of the
-                  legacy stock box label (stock_label_is_visible). */}
-              <Checkbox
-                isChecked={selection.nodes.find(n => n.has_stock)?.stock_shape_is_visible ?? false}
-                onChange={(e) => {
-                  selection.nodes.forEach(n => {
-                    if (n.has_stock) { n.stock_shape_is_visible = e.target.checked; n.draw() }
-                  })
-                  refreshAll()
-                }}
-              >
-                {'Afficher la forme de stock'}
-              </Checkbox>
-              <MenuSectionCheckbox
-                elements={elements}
-                attributePath='Noeud.labels'
-                attributeKey={'is_visible'}
-                config={STOCK_LABEL_CONFIG}
-                prefix={'stock_label'}
-                refreshParentComponent={refreshAll}
-              >
-                {stockLabelValues.is_visible && (
-                  <StockTabContent
-                    app_data={app_data}
-                    nodes={selection.nodes}
-                    refreshAll={refreshAll}
-                  />
-                )}
-              </MenuSectionCheckbox>
-            </>) : (
-              <Box as='span'>{'Sélectionnez un nœud portant un stock.'}</Box>
+            {selection.hasNodes && selection.nodes.some(n => n.has_stock) ? (
+              hide_tabs ? (
+                // #1243 (inspecteur) : les bascules Activé / Forme / Libellés
+                // vivent dans l'EN-TÊTE de l'onglet (InspectorStockTab) —
+                // ici uniquement le contenu, toujours éditable.
+                <StockTabContent
+                  app_data={app_data}
+                  nodes={selection.nodes}
+                  refreshAll={refreshAll}
+                  always_show_sections
+                />
+              ) : (<>
+                {/* Visibility of the node-like stock shape, independent of the
+                    legacy stock box label (stock_label_is_visible). */}
+                <Checkbox
+                  variant='menuconfigpanel_part_title_1_checkbox'
+                  icon={<CustomFaEyeCheckIcon />}
+                  isChecked={selection.nodes.find(n => n.has_stock)?.stock_shape_is_visible ?? false}
+                  onChange={(e) => {
+                    selection.nodes.forEach(n => {
+                      if (n.has_stock) { n.stock_shape_is_visible = e.target.checked; n.draw() }
+                    })
+                    refreshAll()
+                  }}
+                >
+                  {t('inspector.stock_shape_visible')}
+                </Checkbox>
+                <MenuSectionCheckbox
+                  elements={elements}
+                  attributePath='Noeud.labels'
+                  attributeKey={'is_visible'}
+                  config={STOCK_LABEL_CONFIG}
+                  prefix={'stock_label'}
+                  refreshParentComponent={refreshAll}
+                >
+                  {stockLabelValues.is_visible && (
+                    <StockTabContent
+                      app_data={app_data}
+                      nodes={selection.nodes}
+                      refreshAll={refreshAll}
+                    />
+                  )}
+                </MenuSectionCheckbox>
+              </>)
+            ) : (
+              <Box as='span'>{t('inspector.stock_select_node')}</Box>
             )}
           </>)}
 
@@ -2434,6 +2891,7 @@ export const MenuConfigurationAppearance = ({
               config={ICON_LABEL_BASE_CONFIG}
               prefix={'icon'}
               refreshParentComponent={refreshAll}
+              compact={hide_tabs}
               rightComponent={<LabelDisplayModeSelector
                 prefix='icon'
                 app_data={app_data}
@@ -2445,7 +2903,7 @@ export const MenuConfigurationAppearance = ({
               />}
             >
               {
-                iconValues.is_visible && (
+                (hide_tabs || iconValues.is_visible) && (
                   <LabelContentComponent
                     app_data={app_data}
                     elements={elements}
@@ -2453,6 +2911,7 @@ export const MenuConfigurationAppearance = ({
                     displayMode={iconValues.is_icon ? 'icon' : 'image'}
                     menu_style={menu_for_style}
                     refreshParentComponent={refreshAll}
+                    always_show_sections={hide_tabs}
                   />
                 )
               }
@@ -2472,11 +2931,14 @@ export const MenuConfigurationAppearance = ({
 const StockTabContent = ({
   app_data,
   nodes,
-  refreshAll
+  refreshAll,
+  always_show_sections = false
 }: {
   app_data: Class_ApplicationData
   nodes: Class_NodeElement[]
   refreshAll: () => void
+  // #1243 — inspecteur : sections à œil toujours éditables (cf. LabelContentComponent).
+  always_show_sections?: boolean
 }) => {
   const firstNode = nodes[0]
   if (!firstNode) return <></>
@@ -2492,7 +2954,7 @@ const StockTabContent = ({
     <Box layerStyle='menuconfigpanel_grid'>
       {/* SA#1229: editable captions replacing the hardcoded "SI:" / "ΔS:". */}
       <Box layerStyle='options_2cols'>
-        <Box as='span'>{'Libellé stock'}</Box>
+        <Box as='span'>{app_data.t('inspector.stock_caption')}</Box>
         <Input
           size='xs'
           value={firstNode.stock_si_caption}
@@ -2500,7 +2962,7 @@ const StockTabContent = ({
         />
       </Box>
       <Box layerStyle='options_2cols'>
-        <Box as='span'>{'Libellé Δ stock'}</Box>
+        <Box as='span'>{app_data.t('inspector.stock_delta_caption')}</Box>
         <Input
           size='xs'
           value={firstNode.stock_delta_caption}
@@ -2517,6 +2979,7 @@ const StockTabContent = ({
         displayMode='value'
         menu_style={false}
         refreshParentComponent={refresh}
+        always_show_sections={always_show_sections}
       />
     </Box>
   )
@@ -2550,21 +3013,24 @@ export const MenuShapeAttributes = ({
   return (
     <>
       <Box layerStyle='menuconfigpanel_grid'>
-        <Box as='span' layerStyle='options_2cols'>
-          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-            <OverloadedCheckbox
-              elements={elements}
-              config={BASE_SHAPE_CONFIG}
-              prefix={prefix}
-              attributeKey="color_visible"
-              isChecked={shapeValues.color_visible}
-              onChange={(checked) => { shapeValues.color_visible = checked }}
-              getIsIndeterminate={() => isShapeValueIndeterminate(elements, prefix, 'color_visible')}
-              tooltipLabel={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'color_visible')}`)}
-              t={t}
-            >
-              {t(`${attributePath}.${getShapeAttributeKey(prefix, 'color_visible')}`)}
-            </OverloadedCheckbox>
+        {/* #1258 v2 — une rangée par OBJET : le Fond porte sa couleur et son
+            opacité, la Bordure sa couleur et son épaisseur, puis coins/effets.
+            (Avant : couleurs côte à côte, puis Opacité|Rayon, puis Épaisseur.) */}
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+          <OverloadedCheckbox
+            elements={elements}
+            config={BASE_SHAPE_CONFIG}
+            prefix={prefix}
+            attributeKey="color_visible"
+            isChecked={shapeValues.color_visible}
+            onChange={(checked) => { shapeValues.color_visible = checked }}
+            getIsIndeterminate={() => isShapeValueIndeterminate(elements, prefix, 'color_visible')}
+            tooltipLabel={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'color_visible')}`)}
+            t={t}
+          >
+            {t(`${attributePath}.${getShapeAttributeKey(prefix, 'color_visible')}`)}
+          </OverloadedCheckbox>
+          <Box display='grid' gridTemplateColumns='1fr 4.5rem' gap='0.25rem' alignItems='center'>
             <ColorPickerWithSustainable
               app_data={app_data}
               elements={elements}
@@ -2575,21 +3041,39 @@ export const MenuShapeAttributes = ({
               sustainableAttributeKey="color_sustainable"
               refreshParentComponent={refreshUI}
             />
+            <OSTooltip label={t(`${attributePath}.${getShapeAttributeKey(prefix, 'opacity')}`)}>
+              <Box>
+                <ConfigMenuNumberInput
+                  t={t}
+                  default_value={shapeValues.opacity}
+                  function_on_blur={(v) => { if (v !== null && v !== undefined) shapeValues.opacity = v }}
+                  minimum_value={0}
+                  maximum_value={1}
+                  step={0.1}
+                  stepper={true}
+                  multiValue={isShapeValueIndeterminate(elements, prefix, 'opacity')}
+                  isOverloaded={isElementAttributeOverloaded(elements, prefix + '_' + String('opacity') as keyof typeof BASE_SHAPE_CONFIG, BASE_SHAPE_CONFIG)}
+                />
+              </Box>
+            </OSTooltip>
           </Box>
-          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-            <OverloadedCheckbox
-              elements={elements}
-              config={BASE_SHAPE_CONFIG}
-              prefix={prefix}
-              attributeKey="border_visible"
-              isChecked={shapeValues.border_visible}
-              onChange={(checked) => { shapeValues.border_visible = checked }}
-              getIsIndeterminate={() => isShapeValueIndeterminate(elements, prefix, 'border_visible')}
-              tooltipLabel={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_visible')}`)}
-              t={t}
-            >
-              {t(`${attributePath}.${getShapeAttributeKey(prefix, 'border_visible')}`)}
-            </OverloadedCheckbox>
+        </Box>
+
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+          <OverloadedCheckbox
+            elements={elements}
+            config={BASE_SHAPE_CONFIG}
+            prefix={prefix}
+            attributeKey="border_visible"
+            isChecked={shapeValues.border_visible}
+            onChange={(checked) => { shapeValues.border_visible = checked }}
+            getIsIndeterminate={() => isShapeValueIndeterminate(elements, prefix, 'border_visible')}
+            tooltipLabel={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_visible')}`)}
+            t={t}
+          >
+            {t(`${attributePath}.${getShapeAttributeKey(prefix, 'border_visible')}`)}
+          </OverloadedCheckbox>
+          <Box display='grid' gridTemplateColumns='1fr 4.5rem' gap='0.25rem' alignItems='center'>
             <ColorPickerWithSustainable
               app_data={app_data}
               elements={elements}
@@ -2600,26 +3084,26 @@ export const MenuShapeAttributes = ({
               sustainableAttributeKey="border_color_sustainable"
               refreshParentComponent={refreshUI}
             />
+            <OSTooltip label={t(`${attributePath}.${getShapeAttributeKey(prefix, 'border_thickness')}`)}>
+              <Box>
+                <ConfigMenuNumberInput
+                  t={t}
+                  default_value={shapeValues.border_thickness}
+                  function_on_blur={(v) => { if (v !== null && v !== undefined) shapeValues.border_thickness = v }}
+                  minimum_value={0}
+                  maximum_value={20}
+                  stepper={true}
+                  unit_text='px'
+                  multiValue={isShapeValueIndeterminate(elements, prefix, 'border_thickness')}
+                  isOverloaded={isElementAttributeOverloaded(elements, prefix + '_' + String('border_thickness') as keyof typeof BASE_SHAPE_CONFIG, BASE_SHAPE_CONFIG)}
+                />
+              </Box>
+            </OSTooltip>
           </Box>
         </Box>
 
         <Box as='span' layerStyle='options_2cols'>
-          {/* Shape Opacity */}
-          <ElementAttrSetterNumberInput2Cols
-            app_data={app_data}
-            elements={elements}
-            attributePath={attributePath}
-            attributeKey={'opacity'}
-            prefix={prefix}
-            config={BASE_SHAPE_CONFIG}
-            refreshParentComponent={refreshUI}
-            unit_text=''
-            minimum_value={0}
-            maximum_value={1}
-            step={0.1}
-            stepper={true}
-            isOverloaded={isElementAttributeOverloaded(elements, prefix + '_' + String('opacity') as keyof typeof BASE_SHAPE_CONFIG, BASE_SHAPE_CONFIG)} />
-          {/* Radius */}
+          {/* Rayon des coins + tireté / ombre portée */}
           <ElementAttrSetterNumberInput2Cols
             app_data={app_data}
             elements={elements}
@@ -2633,24 +3117,6 @@ export const MenuShapeAttributes = ({
             maximum_value={20}
             stepper={true}
             isOverloaded={isElementAttributeOverloaded(elements, prefix + '_' + String('border_radius') as keyof typeof BASE_SHAPE_CONFIG, BASE_SHAPE_CONFIG)} />
-        </Box>
-
-        <Box as='span' layerStyle='options_2cols'>
-          {/* Épaisseur */}
-          <ElementAttrSetterNumberInput2Cols
-            app_data={app_data}
-            elements={elements}
-            attributePath={attributePath}
-            attributeKey={'border_thickness'}
-            config={BASE_SHAPE_CONFIG}
-            prefix={prefix}
-            refreshParentComponent={refreshUI}
-            unit_text='px'
-            minimum_value={0}
-            maximum_value={20}
-            stepper={true}
-            isOverloaded={isElementAttributeOverloaded(elements, prefix + '_' + String('border_thickness') as keyof typeof BASE_SHAPE_CONFIG, BASE_SHAPE_CONFIG)} />
-          {/* Tireté et Ombre portée (icônes) inline avec l'épaisseur */}
           <Box display='flex' alignItems='center' justifyContent='flex-end' gap={2} fontSize='xl'>
             <OverloadedCheckbox
               elements={elements}
@@ -2662,6 +3128,7 @@ export const MenuShapeAttributes = ({
               getIsIndeterminate={() => isShapeValueIndeterminate(elements, prefix, 'border_dashed')}
               tooltipLabel={t(`${attributePath}.${getShapeAttributeKey(prefix, 'border_dashed')}`)}
               t={t}
+              icon_button
             >
               {app_data.icon_library.icon_border_dashed}
             </OverloadedCheckbox>
@@ -2676,6 +3143,7 @@ export const MenuShapeAttributes = ({
                 getIsIndeterminate={() => isShapeValueIndeterminate(elements, prefix, 'shadow_visible')}
                 tooltipLabel={t(`${attributePath}.${getShapeAttributeKey(prefix, 'shadow_visible')}`)}
                 t={t}
+                icon_button
               >
                 {app_data.icon_library.icon_drop_shadow}
               </OverloadedCheckbox>
@@ -2698,12 +3166,16 @@ export const MenuShapeAttributes = ({
             ? shapeValues.box_width
             : labelValues.box_width
           const lock_tooltip = t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'width_locked')}`)
+          // Tri-état préservé : en édition de style (undefined) on ne force pas false.
+          const bw_overloaded = isElementAttributeOverloaded(elements, prefix + '_' + 'box_width' as keyof typeof BASE_SHAPE_CONFIG, BASE_SHAPE_CONFIG)
+          const bw_state = bw_overloaded === undefined ? undefined : (shapeValues.width_locked && bw_overloaded)
           return (
             <ElementAttrSetter2Cols
               attributePath={attributePath}
               attributeKey={'box_width'}
               config={BASE_SHAPE_CONFIG}
               prefix={prefix}
+              isOverloaded={bw_state}
               t={t}
             >
               <Box display='flex' alignItems='center' gap={1}>
@@ -2721,11 +3193,11 @@ export const MenuShapeAttributes = ({
                       shapeValues.box_width = value ?? 0
                     }
                   }}
-                  isOverloaded={shapeValues.width_locked && isElementAttributeOverloaded(elements, prefix + '_' + 'box_width' as keyof typeof BASE_SHAPE_CONFIG, BASE_SHAPE_CONFIG)}
+                  isOverloaded={bw_state}
                 />
                 <OSTooltip label={lock_tooltip}>
                   <Button
-                    variant={shapeValues.width_locked ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                    variant={shapeValues.width_locked ? 'menuconfigpanel_icon_button_activated' : 'menuconfigpanel_icon_button'}
                     onClick={() => { shapeValues.width_locked = !shapeValues.width_locked }}
                   >
                     {shapeValues.width_locked ? <FaLock /> : <FaLockOpen />}
@@ -2892,6 +3364,7 @@ export const MarginEditor = ({
           }
           tooltipLabel={t('Noeud.apparence.tooltips.shape_margin')}
           t={t}
+          icon_button
         >
           {t('Noeud.apparence.shape_margin')}
         </OverloadedCheckbox>

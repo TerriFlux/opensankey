@@ -5,6 +5,7 @@
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_NodeBase } from '../../Elements/NodeBase'
+import { Class_ContainerElement } from '../../Elements/TextZone'
 import {
   aggregate,
   disaggregate,
@@ -16,7 +17,6 @@ import { Class_DrawingArea } from '../../types/DrawingArea'
 import { Class_ApplicationHistory } from '../../types/ApplicationHistory'
 import { StorageType } from '../../Elements/Element'
 import { ALL_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
-import { NodePositioning } from '../../Algorithms/NodePositioning'
 import { Class_NodeDimension } from '../../Elements/NodeDimension'
 import { downloadImageSource } from './SaveImage'
 
@@ -138,28 +138,25 @@ export class NodeActions {
     }
   }
 
+  // Symétriques de expandLeft/expandRight : mêmes mutations lourdes du graphe, donc
+  // même filet (snapshot complet). Le garde est posé AVANT _runExpansionWithUndo pour
+  // ne pas consommer un slot d'historique quand il n'y a rien à agréger.
   aggregateLeft = (_dim_name: string) => {
-    if (!this.contextualised_node) return
-
-    const parentDims = this.contextualised_node.dimensions_as_child
-
-    if (parentDims.length > 0) {
-      const parent = parentDims[0].parent
-      aggregationExpansion(this.app_data, this.contextualised_node, true, parent)
-      this._restackEnglobingChain(this.contextualised_node)
-    }
+    if (!this.contextualised_node?.dimensions_as_child.length) return
+    this._runExpansionWithUndo((node) => {
+      const parentDims = node.dimensions_as_child
+      if (parentDims.length === 0) return
+      aggregationExpansion(this.app_data, node, true, parentDims[0].parent)
+    })
   }
 
   aggregateRight = (_dim_name: string) => {
-    if (!this.contextualised_node) return
-
-    const parentDims = this.contextualised_node.dimensions_as_child
-
-    if (parentDims.length > 0) {
-      const parent = parentDims[0].parent
-      aggregationExpansion(this.app_data, this.contextualised_node, false, parent)
-      this._restackEnglobingChain(this.contextualised_node)
-    }
+    if (!this.contextualised_node?.dimensions_as_child.length) return
+    this._runExpansionWithUndo((node) => {
+      const parentDims = node.dimensions_as_child
+      if (parentDims.length === 0) return
+      aggregationExpansion(this.app_data, node, false, parentDims[0].parent)
+    })
   }
 
   disaggregate = (dim_name: string) => {
@@ -468,6 +465,12 @@ export class NodeActions {
   createFluxOnChildren = () => {
     if (!this.contextualised_node || !this.contextualised_node.is_parent) return
 
+    // Crée N liens en cascade sur toute la descendance : inverse symbolique trop
+    // fragile, on reprend le snapshot complet de _runExpansionWithUndo (sans passer
+    // par lui : il ajoute un _restackEnglobingChain que cette action ne fait pas).
+    const ctx_id = this.contextualised_node.id
+    const snapshot = this.app_data.toJSON()
+
     const addNewLinks = (n: Class_NodeElement) => {
       n.dimensions_as_parent.forEach(dim => {
         dim.children.forEach(c => {
@@ -484,11 +487,22 @@ export class NodeActions {
       })
     }
 
-    addNewLinks(this.contextualised_node)
-    this.drawing_area.purgeSelection()
-    this.drawing_area.node_contextualised = undefined
-    this.drawing_area.areaAutoFit()
-    this.refreshAndSave()
+    const apply = () => {
+      const node = this.drawing_area.sankey.nodes_dict[ctx_id]
+      if (!node) return
+      addNewLinks(node)
+      this.drawing_area.purgeSelection()
+      this.drawing_area.node_contextualised = undefined
+      this.drawing_area.areaAutoFit()
+      this.refreshAndSave()
+    }
+
+    const undo = () => {
+      this.app_data.fromJSON(snapshot)
+      this.refreshAndSave()
+    }
+
+    this.executeWithUndo(apply, undo)
   }
 
   // Actions dynamiques pour les dimensions
@@ -658,6 +672,107 @@ export class NodeActions {
   alignVertMaxBottom = () => this.alignNode('max', 'position_y', 'a')
 
   // ==================================================================================================
+  // ACTIONS DE DISTRIBUTION (#1274 lot E2) — répartir à distance égale
+  // ==================================================================================================
+
+  // Répartit les éléments sélectionnés à espacement égal le long d'un axe.
+  // 'position_x' distribue horizontalement, 'position_y' verticalement. Les
+  // deux éléments extrêmes restent fixes ; ceux du milieu sont replacés pour
+  // égaliser les intervalles (gaps entre bords). No-op en dessous de 3 éléments.
+  // Comme alignNode : opère sur nœuds + zones de texte, ignore les nœuds en
+  // position 'relative', mute directement position_x/y puis draw() (une simple
+  // translation ne change pas la taille, donc anchorByCenterIfResized recommit
+  // le centre depuis le nouveau coin sans réintroduire de dérive #1230).
+  private distributeNodes = (attr: 'position_x' | 'position_y') => {
+    const elements: Class_NodeBase[] = [
+      ...this.selected_nodes,
+      ...this.drawing_area.selected_containers_list,
+    ].filter(n => n.shape_position_type != 'relative')
+
+    if (elements.length < 3) return
+
+    const dict_old_pos: { [x: string]: [number, number] } = {}
+    elements.forEach(n => dict_old_pos[n.id] = [n.position_x, n.position_y])
+
+    const sizeOf = (n: Class_NodeBase) =>
+      attr === 'position_x' ? n.getShapeWidthToUse() : n.getShapeHeightToUse()
+
+    const doDistribute = () => {
+      const sorted = [...elements].sort((a, b) => a[attr] - b[attr])
+      const first = sorted[0]
+      const last = sorted[sorted.length - 1]
+      const span = (last[attr] + sizeOf(last)) - first[attr]
+      const total = sorted.reduce((s, n) => s + sizeOf(n), 0)
+      const gap = (span - total) / (sorted.length - 1)
+      let cursor = first[attr] + sizeOf(first) + gap
+      for (let i = 1; i < sorted.length - 1; i++) {
+        sorted[i][attr] = cursor
+        sorted[i].draw()
+        cursor += sizeOf(sorted[i]) + gap
+      }
+      this.refreshAndSave()
+    }
+
+    const undoDistribute = () => {
+      elements.forEach(n => n.setPosXY(dict_old_pos[n.id][0], dict_old_pos[n.id][1]))
+    }
+
+    this.executeWithUndo(doDistribute, undoDistribute)
+  }
+
+  distributeHorizontal = () => this.distributeNodes('position_x')
+  distributeVertical = () => this.distributeNodes('position_y')
+
+  // ==================================================================================================
+  // CALER LA TAILLE SUR CET ÉLÉMENT (#1274 lot E2)
+  // ==================================================================================================
+
+  // Applique la taille de rendu (largeur + hauteur) du nœud de RÉFÉRENCE à tous
+  // les autres nœuds sélectionnés. Référence = nœud contextualisé (clic droit)
+  // sinon 1er de la sélection. On écrit shape_min_width/height (même levier que
+  // les poignées de resize) puis settleCenterAnchor() (#1230) : le coin reste
+  // fixe, la forme croît vers le bas-droite, et le centre est ré-ancré pour que
+  // le prochain redraw ne recentre pas. NB : shape_min_* est un PLANCHER — un
+  // nœud dont l'enveloppe (épaisseur des flux) dépasse ne rétrécira pas en deçà.
+  matchSizeToRef = () => {
+    const ref = this.contextualised_node ?? this.selected_nodes[0]
+    if (!ref) return
+    const targets = this.selected_nodes.filter(
+      n => n != ref && n.shape_position_type != 'relative'
+    )
+    if (targets.length === 0) return
+
+    const w = ref.getShapeWidthToUse()
+    const h = ref.getShapeHeightToUse()
+
+    const dict_old: { [x: string]: [number, number] } = {}
+    targets.forEach(n => dict_old[n.id] = [n.shape_min_width, n.shape_min_height])
+
+    const doMatch = () => {
+      targets.forEach(n => {
+        n.shape_min_width = w
+        n.shape_min_height = h
+        n.settleCenterAnchor()
+        n.draw()
+      })
+      this.refreshAndSave()
+    }
+
+    const undoMatch = () => {
+      targets.forEach(n => {
+        const s = dict_old[n.id]
+        if (!s) return
+        n.shape_min_width = s[0]
+        n.shape_min_height = s[1]
+        n.settleCenterAnchor()
+        n.draw()
+      })
+    }
+
+    this.executeWithUndo(doMatch, undoMatch)
+  }
+
+  // ==================================================================================================
   // ACTIONS DE VISIBILITÉ
   // ==================================================================================================
 
@@ -825,24 +940,40 @@ export class NodeActions {
   }
 
   createTiedZdt = () => {
-    const cont = this.drawing_area.sankey.addNewDefaultContainer()
-    cont.tied_to_nodes = true
-    this.drawing_area.selected_nodes_list.forEach(n => {
-      n.getListDescendantOfNode().forEach(node => {
-        cont.attachNodeToCont(node)
+    // Le redo rejoue create : on garde la dernière ZDT créée pour que l'undo
+    // supprime bien celle-ci et pas une instance périmée.
+    let cont: Class_ContainerElement
+
+    const create = () => {
+      cont = this.drawing_area.sankey.addNewDefaultContainer()
+      cont.tied_to_nodes = true
+      this.drawing_area.selected_nodes_list.forEach(n => {
+        n.getListDescendantOfNode().forEach(node => {
+          cont.attachNodeToCont(node)
+        })
+        n.getListAncestorOfNode().forEach(node => {
+          cont.attachNodeToCont(node)
+        })
+        cont.attachNodeToCont(n)
+        cont.computeSizeAndPositionFromAttachedNodes()
       })
-      n.getListAncestorOfNode().forEach(node => {
-        cont.attachNodeToCont(node)
-      })
-      cont.attachNodeToCont(n)
-      cont.computeSizeAndPositionFromAttachedNodes()
-    })
-    this.drawing_area.draw()
+      // #1259 — le cadre créé passe derrière ses membres (sinon il capte
+      // leurs clics : nœuds inatteignables sous le cadre).
+      this.drawing_area.sendFrameBehindMembers(cont)
+      this.drawing_area.draw()
+    }
+
+    const undo = () => {
+      this.drawing_area.deleteContainer(cont)
+      this.drawing_area.draw()
+    }
+
+    this.executeWithUndo(create, undo)
   }
 
-  // Cadre géométrique sur le nœud lui-même : attache les nœuds géométriquement
-  // à l'intérieur des bornes du nœud (mêmes règles que ZDT — cf.
-  // ContextZDTOSP.btn_select_node_inside), puis auto-resize.
+  // Groupe porté par le nœud lui-même : attache les éléments (nœuds + ZDT)
+  // géométriquement à l'intérieur des bornes du nœud (mêmes règles que ZDT —
+  // cf. ContextZDTOSP.btn_select_node_inside). Sans auto-resize.
   setTiedFrame = () => {
     const nodes = [...this.drawing_area.selected_nodes_list]
     const before = this._captureTiedFrameState(nodes)
@@ -872,7 +1003,22 @@ export class NodeActions {
               inside.getListAncestorOfNode().forEach(a => { if (a !== n) n.attachNodeToCont(a) })
               n.attachNodeToCont(inside)
             })
-          n.computeSizeAndPositionFromAttachedNodes()
+          // #1259 — attache aussi les ZDT géométriquement contenues (cohérent
+          // avec le cadre ZDT et la section « Groupe » de l'inspecteur). Garde
+          // anti-cycle : jamais un cadre qui contient déjà ce nœud.
+          this.drawing_area.sankey.containers_list
+            .filter(cont => !cont.attached_node.includes(n))
+            .filter(cont => (
+              cont.position_x >= frame_x &&
+              (cont.position_x + cont.getShapeWidthToUse()) <= (frame_x + frame_w) &&
+              cont.position_y >= frame_y &&
+              (cont.position_y + cont.getShapeHeightToUse()) <= (frame_y + frame_h)
+            ))
+            .forEach(cont => n.attachNodeToCont(cont))
+          // #1259 — grouper n'ajuste pas le cadre (« Ajuster le cadre au
+          // groupe » est une commande séparée, fitFrameToAttached) ; le cadre
+          // passe derrière ses membres pour ne pas capter leurs clics.
+          this.drawing_area.sendFrameBehindMembers(n)
         })
         this.drawing_area.draw()
       },
@@ -1069,6 +1215,12 @@ export class NodeActions {
       alignVertMaxTop: nodeActions.alignVertMaxTop,
       alignVertMaxCenter: nodeActions.alignVertMaxCenter,
       alignVertMaxBottom: nodeActions.alignVertMaxBottom,
+
+      // Actions de distribution (#1274 lot E2)
+      distributeHorizontal: nodeActions.distributeHorizontal,
+      distributeVertical: nodeActions.distributeVertical,
+      // Caler la taille sur l'élément de référence (#1274 lot E2)
+      matchSizeToRef: nodeActions.matchSizeToRef,
 
       // Actions de visibilité
       toggleShapeVisibility: nodeActions.toggleShapeVisibility,

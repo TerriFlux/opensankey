@@ -1,4 +1,4 @@
-// ==================================================================================================
+﻿// ==================================================================================================
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 
-import React, { FC, useRef, useState, ChangeEvent, ReactNode, useEffect, MutableRefObject, CSSProperties, JSX } from 'react'
+import React, { FC, useRef, useState, ChangeEvent, ReactNode, useEffect, MutableRefObject, CSSProperties, JSX, forwardRef } from 'react'
 import { ColorResult, SketchPicker } from 'react-color'
 import {
   Text,
@@ -65,15 +65,18 @@ import {
   Portal,
   VStack
 } from '@chakra-ui/react'
-import { ChevronDownIcon } from '@chakra-ui/icons'
+import { ChevronDownIcon, SmallCloseIcon } from '@chakra-ui/icons'
 import { FaSquare } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSquareCheck, faEye, faEyeSlash, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
+import { useModelBinding, useModelSlot } from '../../hooks/useModelBinding'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { FCType_WrapperBoxSubSectionMenu } from '../SankeyMenuTypes'
 import { Class_DataTagGroup } from '../../types/TagGroup'
 import { SankeyLinkSelectionSimple, SankeyNodeSelectionSimple } from './MenuElementsSelection'
 import { AttributeConfig, ElementsType, ExtractConfigValue, getConfigValues, isConfigValueIndeterminate, ALL_ATTRIBUTES_CONFIG, updateElements, useElementAttributeConfig, ShapePrefix } from '../../Elements/ElementsAttributesConfig'
+import { Class_ElementStyle } from '../../Elements/Element'
+import { default_style_id } from '../../types/Utils'
 
 // Déclaration du type pour l'EyeDropper API
 declare global {
@@ -163,7 +166,8 @@ export const MenuSectionCheckbox = <
   K extends keyof CONFIG
 >({
     elements, attributePath, attributeKey, config,
-    prefix = '', refreshParentComponent, children, rightComponent
+    prefix = '', refreshParentComponent, children, rightComponent, compact = false,
+    compact_label
   }: React.PropsWithChildren<{
   elements: ElementsType
   attributePath: string,
@@ -173,6 +177,15 @@ export const MenuSectionCheckbox = <
   refreshParentComponent: () => void
   children: React.ReactNode
   rightComponent?: React.ReactNode  // ✅ Nouveau paramètre optionnel
+  // #1243 — mode inspecteur : l'onglet porte déjà le nom (Valeur, Libellé…),
+  // le bandeau-titre ferait doublon. On ne garde que l'œil de visibilité,
+  // et le rightComponent reste visible même quand l'attribut est décoché
+  // (le contenu n'est plus caché : on peut régler AVANT de rendre visible).
+  compact?: boolean
+  // Libellé de l'œil en mode compact (défaut : inspector.visible) — ex.
+  // « Libellés visibles » quand la case ne gouverne qu'une partie de l'onglet
+  // (Stock). Passer une chaîne DÉJÀ traduite.
+  compact_label?: string
 }>) => {
   const attribute_values = getConfigValues(elements, config, prefix, refreshParentComponent)
   const fullKey = (prefix ? `${prefix}_${String(attributeKey)}` : String(attributeKey))
@@ -181,7 +194,7 @@ export const MenuSectionCheckbox = <
   return (
     <Box layerStyle='menu_sub_section'>
       <Box
-        layerStyle='menu_sub_section_head'
+        layerStyle={compact ? undefined : 'menu_sub_section_head'}
         display="flex"
         alignItems="center"
         justifyContent="space-between"  // ✅ Espace entre checkbox et rightComponent
@@ -201,13 +214,15 @@ export const MenuSectionCheckbox = <
             }}
           >
             <OSTooltip label={t(`${String(attributePath)}.tooltips.${fullKey}`)}>
-              {t(`${String(attributePath)}.${fullKey}`)}
+              {compact
+                ? (compact_label ?? t('inspector.visible'))
+                : t(`${String(attributePath)}.${fullKey}`)}
             </OSTooltip>
           </Checkbox>
         </InputIndicatorWrapper>
 
         {/* ✅ Composant optionnel à droite */}
-        {rightComponent && attribute_values[attributeKey] && (
+        {rightComponent && (compact || attribute_values[attributeKey]) && (
           <Box flexShrink={0}>
             {rightComponent}
           </Box>
@@ -241,11 +256,30 @@ export const WrapperContentConfig = ({ title, children, hide = false }: React.Pr
   </Box>
 }
 
+// Regroupement des surcharges par onglet du panneau de config (Forme · Libellé ·
+// Valeur · Icône · Stock · Infobulle). La clé d'attribut est déjà préfixée par
+// l'onglet qui l'édite (`shape_*`, `name_label_*`…), on s'en sert pour situer
+// chaque surcharge sous l'en-tête de son onglet plutôt que de répéter
+// « Suppr. surcharge : » sur chaque ligne. L'ordre suit celui de la rangée d'onglets.
+type Type_ResetAttrGroup = {
+  match: string
+  titleKey: string
+  getIcon: (lib: Class_ApplicationData['icon_library']) => JSX.Element
+}
+const RESET_ATTR_GROUPS: Type_ResetAttrGroup[] = [
+  { match: 'shape_', titleKey: 'Menu.tabs.shape', getIcon: (l) => l.icon_tab_shape },
+  { match: 'name_label_', titleKey: 'Menu.tabs.name', getIcon: (l) => l.icon_tab_label },
+  { match: 'value_label_', titleKey: 'Menu.tabs.value', getIcon: (l) => l.icon_tab_value },
+  { match: 'icon_', titleKey: 'Menu.tabs.icon', getIcon: (l) => l.icon_tab_icon },
+  { match: 'stock_label_', titleKey: 'inspector.tab.stock', getIcon: (l) => l.icon_tab_stock },
+  { match: 'tooltip_', titleKey: 'inspector.tab.tooltip', getIcon: (l) => l.icon_tab_tooltip },
+]
+
 /**
  * Menu select to delete local attribute value of nodes/links
  *
  * @param {*} { app_data, nodesOrLinks, dict_overwritted_attr }
- * @return {*} 
+ * @return {*}
  */
 export const MenuResetAttrLocal = (
   {
@@ -297,14 +331,55 @@ export const MenuResetAttrLocal = (
       <ChevronDownIcon />
     </MenuButton>
 
-    <MenuList>
-      <MenuItem onClick={resetAll}>{t('Menu.reset_all_attr')} </MenuItem>
-      <MenuDivider />
-      {
-        Object.entries(dict_to_use).filter(ent => ent[1].overloaded).map(ent => {
-          return <MenuItem key={ent[0]} onClick={() => resetLocal(ent[0])}>{t('Menu.reset_attr')}{ent[1].name}</MenuItem>
+    <MenuList maxH='60vh' minW='13rem' overflowY='auto' py={1}>
+      <MenuItem onClick={resetAll} fontWeight='semibold'>{t('Menu.reset_all_attr')}</MenuItem>
+      {(() => {
+        type Entry = [string, { overloaded: boolean, name: string }]
+        const overloaded = (Object.entries(dict_to_use) as Entry[]).filter(([, v]) => v.overloaded)
+        const buckets = RESET_ATTR_GROUPS.map(g => ({ g, items: [] as Entry[] }))
+        const others: Entry[] = []
+        overloaded.forEach(entry => {
+          const b = buckets.find(b => entry[0].startsWith(b.g.match))
+          if (b) b.items.push(entry)
+          else others.push(entry)
         })
-      }
+
+        // Le thème force `MenuItem { display: grid }` : on n'y met donc qu'UN
+        // enfant (un flex plein-largeur) pour aligner nom + croix sur une ligne.
+        const renderItem = ([k, v]: Entry) => (
+          <MenuItem key={k} onClick={() => resetLocal(k)} py='0.2rem' pl='1.9rem' pr='0.75rem'>
+            <Box display='flex' alignItems='center' justifyContent='space-between' w='100%' gap={3}>
+              <Box as='span' overflow='hidden' textOverflow='ellipsis' whiteSpace='nowrap'>{v.name}</Box>
+              <SmallCloseIcon boxSize='0.6em' color='gray.400' flexShrink={0} />
+            </Box>
+          </MenuItem>
+        )
+        const renderHeader = (g: Type_ResetAttrGroup) => (
+          <Box
+            display='flex' alignItems='center' gap='0.4rem'
+            px='0.75rem' pt='0.45rem' pb='0.15rem'
+            color='gray.500' fontSize='0.65rem' fontWeight='bold'
+            letterSpacing='0.04em' textTransform='uppercase'
+            sx={{ svg: { width: '0.95em', height: '0.95em' } }}>
+            {g.getIcon(icon_library)}
+            <span>{t(g.titleKey)}</span>
+          </Box>
+        )
+
+        return <>
+          {buckets.filter(b => b.items.length > 0).map(({ g, items }) => (
+            <React.Fragment key={g.match}>
+              <MenuDivider my={1} />
+              {renderHeader(g)}
+              {items.map(renderItem)}
+            </React.Fragment>
+          ))}
+          {others.length > 0 && <>
+            <MenuDivider my={1} />
+            {others.map(renderItem)}
+          </>}
+        </>
+      })()}
     </MenuList>
   </Menu>
 }
@@ -447,7 +522,7 @@ export const ElementAttrSetter2Cols = <
   K extends keyof CONFIG
 >({
     attributePath, attributeKey,
-    prefix = '', t, children
+    prefix = '', t, isOverloaded, children
   }: React.PropsWithChildren<{
   attributePath: string,
   attributeKey: K
@@ -456,6 +531,9 @@ export const ElementAttrSetter2Cols = <
 
   t: TFunction; // Fonction de traduction
   showTooltipOverload?: boolean; // Optionnel - afficher le tooltip overload
+  // #1243 — tri-état (cf. InputIndicatorWrapper) : false = hérité de la
+  // cascade → le LIBELLÉ recule aussi (le contrôle recule via son wrapper).
+  isOverloaded?: boolean
   children: React.ReactNode; // Le composant enfant (Select, Input, etc.)
 }>) => {
   const fullKey = (prefix ? `${prefix}_${String(attributeKey)}` : String(attributeKey)) as K
@@ -466,7 +544,10 @@ export const ElementAttrSetter2Cols = <
     <OSTooltip label={tooltip}>
       <span>
         <BOX2COLS>
-          <Box layerStyle='menuconfigpanel_option_name'>
+          <Box
+            layerStyle='menuconfigpanel_option_name'
+            sx={isOverloaded === false ? { opacity: 0.65 } : undefined}
+          >
             {label}
           </Box>
           {children}
@@ -488,7 +569,8 @@ export const ElementAttrSetterSelect2Cols = <
     config,
     prefix = '',
     refreshParentComponent,
-    options
+    options,
+    onAfterChange
   }: {
   app_data: Class_ApplicationData
   elements: ElementsType
@@ -502,9 +584,15 @@ export const ElementAttrSetterSelect2Cols = <
     value: ExtractConfigValue<CONFIG[K]>
     label: string
   }>
+  // Optionnel : appelé APRÈS l'écriture (updateElements) — p. ex. déclencher un effet de
+  // bord qui n'est pas une simple action de rendu (réorganiser l'ordre des flux E/S).
+  onAfterChange?: (value: ExtractConfigValue<CONFIG[K]>) => void
 }) => {
   const { t } = useElementAttributeConfig<CONFIG>(app_data, elements)
   const attribute_values = getConfigValues(elements, config, prefix, refreshParentComponent)
+  // #1243 — statut de surcharge, pour le liseré violet ET le retrait « hérité ».
+  const fullAttributeKey = (prefix ? `${prefix}_${String(attributeKey)}` : String(attributeKey)) as keyof CONFIG
+  const isOverloaded = isElementAttributeOverloaded(elements, fullAttributeKey, config)
 
   return (
     <ElementAttrSetter2Cols
@@ -512,27 +600,36 @@ export const ElementAttrSetterSelect2Cols = <
       attributeKey={attributeKey}
       config={config}
       prefix={prefix}
+      isOverloaded={isOverloaded}
       t={t}>
-      <Select
-        value={attribute_values[attributeKey] as string}
-        onChange={(evt) => {
-          updateElements(
-            app_data,
-            elements,
-            config,
-            prefix,
-            attributeKey,
-            evt.target.value as ExtractConfigValue<CONFIG[K]>,
-            refreshParentComponent
-          )
-        }}
+      <InputIndicatorWrapper
+        isOverloaded={isOverloaded}
+        provenance={elementAttributeProvenance(elements, fullAttributeKey, config)}
+        t={t}
       >
-        {options.map(option => (
-          <option key={option.key} value={option.value as string}>
-            {option.label}
-          </option>
-        ))}
-      </Select>
+        <Select
+          value={attribute_values[attributeKey] as string}
+          onChange={(evt) => {
+            const new_value = evt.target.value as ExtractConfigValue<CONFIG[K]>
+            updateElements(
+              app_data,
+              elements,
+              config,
+              prefix,
+              attributeKey,
+              new_value,
+              refreshParentComponent
+            )
+            onAfterChange?.(new_value)
+          }}
+        >
+          {options.map(option => (
+            <option key={option.key} value={option.value as string}>
+              {option.label}
+            </option>
+          ))}
+        </Select>
+      </InputIndicatorWrapper>
     </ElementAttrSetter2Cols>
   )
 }
@@ -557,7 +654,8 @@ export const ElementAttrSetterTextInput2Cols = <
   config: CONFIG,
   prefix?: string,
   refreshParentComponent: () => void
-  isOverloaded: boolean
+  // Tri-état : undefined = édition de style (ni retrait ni liseré).
+  isOverloaded?: boolean
 }) => {
   const { menu_for_style, t } = useElementAttributeConfig<CONFIG>(app_data, elements)
   const attribute_values = getConfigValues(elements, config, prefix, refreshParentComponent)
@@ -567,6 +665,7 @@ export const ElementAttrSetterTextInput2Cols = <
       attributeKey={attributeKey}
       config={config}
       prefix={prefix}
+      isOverloaded={isOverloaded}
       t={t}>
       <ConfigMenuTextInput
         t={t}
@@ -577,6 +676,11 @@ export const ElementAttrSetterTextInput2Cols = <
         menu_for_style={menu_for_style}
         multiValue={isConfigValueIndeterminate(elements, config, attributeKey, prefix)}
         isOverloaded={isOverloaded}
+        provenance={elementAttributeProvenance(
+          elements,
+          (prefix ? `${prefix}_${String(attributeKey)}` : String(attributeKey)) as keyof CONFIG,
+          config
+        )}
       />
     </ElementAttrSetter2Cols>
   )
@@ -608,7 +712,8 @@ export const ElementAttrSetterNumberInput2Cols = <
   stepper?: boolean
   percent?: boolean,
   unit_text?: string,
-  isOverloaded: boolean
+  // Tri-état : undefined = édition de style (ni retrait ni liseré).
+  isOverloaded?: boolean
 }) => {
 
   const { menu_for_style, t } = useElementAttributeConfig<CONFIG>(app_data, elements)
@@ -620,6 +725,7 @@ export const ElementAttrSetterNumberInput2Cols = <
       attributeKey={attributeKey}
       config={config}
       prefix={prefix}
+      isOverloaded={isOverloaded}
       t={t}>
       <ConfigMenuNumberInput
         t={t}
@@ -635,7 +741,11 @@ export const ElementAttrSetterNumberInput2Cols = <
         stepper={stepper}
         multiValue={isConfigValueIndeterminate(elements, config, attributeKey, prefix)}
         isOverloaded={isOverloaded}
-
+        provenance={elementAttributeProvenance(
+          elements,
+          (prefix ? `${prefix}_${String(attributeKey)}` : String(attributeKey)) as keyof CONFIG,
+          config
+        )}
       />
     </ElementAttrSetter2Cols>
   )
@@ -843,6 +953,52 @@ export const CustomFaEyeCheckIcon = (props: CheckboxProps) => {
     : <FontAwesomeIcon icon={faEyeSlash} />
 }
 /**
+ * #1243 — PROVENANCE d'un attribut : d'où vient la valeur affichée ?
+ *
+ * Modèle de la cascade (cf. Class_ProtoElement) :
+ *   surcharge locale  >  dernier style de la cascade qui définit l'attribut
+ *                     >  valeur d'usine (config.default)
+ *
+ * Rendue en TOOLTIP du contrôle (pas en étiquette permanente : le panneau est
+ * déjà dense, et le retrait/liseré porte déjà l'information principale). Le
+ * nom du style répond à la question que le retrait seul laisse ouverte :
+ * « hérité, oui — mais de QUI ? ».
+ *
+ * @returns un libellé traduit, ou undefined si non pertinent (édition de style,
+ *   sélection vide, valeurs divergentes entre éléments).
+ */
+export const elementAttributeProvenance = <
+  CONFIG extends Record<string, AttributeConfig<unknown>>,
+  K extends keyof CONFIG
+>(
+    elements: ElementsType,
+    attr: K,
+    _config: CONFIG
+  ): string | undefined => {
+  if (elements.length === 0) return undefined
+  // Édition d'un style : « hérité de » n'a pas de sens (un style définit).
+  if (elements.some(el => el instanceof Class_ElementStyle)) return undefined
+
+  const provenanceOf = (element: ElementsType[number]): string => {
+    //@ts-expect-error même convention que isElementAttributeOverloaded
+    if (element.isAttributeOverloaded(attr)) return t('inspector.provenance.local')
+    //@ts-expect-error idem : getStyleWithAttr est porté par Class_ProtoElement
+    const style = element.getStyleWithAttr(attr) as Class_ElementStyle | undefined
+    // getStyleWithAttr retombe sur le 1er style (défaut) même s'il ne définit
+    // pas l'attribut : dans ce cas la valeur vient de la config (usine).
+    if (!style || style[attr as keyof Class_ElementStyle] === undefined) {
+      return t('inspector.provenance.factory')
+    }
+    return t('inspector.provenance.from_style', { style: t(style.name) })
+  }
+
+  const first = provenanceOf(elements[0])
+  // Sélection multiple aux provenances divergentes : ne rien affirmer.
+  if (elements.some(el => provenanceOf(el) !== first)) return undefined
+  return first
+}
+
+/**
  * Check if given attribute is overloaded in at least one link
  * @export
  * @param {Class_LinkElement[]} links
@@ -857,8 +1013,8 @@ export const isElementAttributeOverloaded = <
     elements: ElementsType,
     attr: K,
     _config: CONFIG
-  ) => {
-  return elements.some(element => {
+  ): boolean | undefined => {
+  const some_overloaded = elements.some(element => {
     //if (element instanceof Class_LinkElement) {
     //@ts-expect-error xxx
     return element.isAttributeOverloaded(attr)
@@ -869,6 +1025,17 @@ export const isElementAttributeOverloaded = <
     // }
     // return false
   })
+  // #1243 — même lecture dans les deux portées (validé UX) :
+  // - éléments : violet = surchargé localement, retrait = hérité de la cascade ;
+  // - style édité : violet = le style surcharge l'attribut (vs style par
+  //   défaut), retrait = il ne le définit pas.
+  // EXCEPTION : le style PAR DÉFAUT est la racine de la cascade — rien
+  // au-dessus de lui, donc pas de « hérité » : violet conservé (personnalisé
+  // vs réglages d'usine), jamais de retrait (undefined au lieu de false).
+  if (elements.some(el => el instanceof Class_ElementStyle && el.id === default_style_id)) {
+    return some_overloaded ? true : undefined
+  }
+  return some_overloaded
 }
 
 export const TooltipElementOverloaded = <
@@ -936,7 +1103,7 @@ export const OverloadedButton = ({
         <Button
           variant={variant}
           onClick={onClick}
-          sx={{ padding: '4px', minWidth: 'auto', height: 'auto', ...buttonSx }}
+          sx={buttonSx}
         >
           {children}
         </Button>
@@ -981,6 +1148,7 @@ export const OverloadedButtonGroup = <T extends string>({
 }: OverloadedButtonGroupProps<T>) => {
   const fullAttributeKey = `${prefix}_${attributeKey}` as keyof typeof config
   const isOverloaded = isElementAttributeOverloaded(elements, fullAttributeKey, config)
+  const provenance = elementAttributeProvenance(elements, fullAttributeKey, config)
   const tooltipLabel = t(`${String(attributePath)}.tooltips.${String(fullAttributeKey)}`)
   // Groupe d'icônes (pas de label texte) : on ne laisse pas la grille s'étirer pour
   // remplir sa colonne, sinon les boutons sont trop larges avec une icône minuscule
@@ -990,6 +1158,7 @@ export const OverloadedButtonGroup = <T extends string>({
   return (
     <OverloadIndicatorWrapper
       isOverloaded={isOverloaded}
+      provenance={provenance}
     >
       <OSTooltip label={tooltipLabel}>
         <Box layerStyle={`options_${items.length}cols`} sx={hasOnlyIcons ? { width: 'fit-content' } : undefined}>
@@ -1048,6 +1217,8 @@ interface OverloadedCheckboxProps {
   tooltipLabel?: string
   children: React.ReactNode
   t: (key: string) => string
+  // #1258 — bascule à ICÔNE seule : bouton carré 1.5rem (pas une pilule).
+  icon_button?: boolean
 }
 
 export const OverloadedCheckbox = ({
@@ -1060,20 +1231,23 @@ export const OverloadedCheckbox = ({
   getIsIndeterminate,
   tooltipLabel,
   children,
-  t
+  t,
+  icon_button = false
 }: React.PropsWithChildren<OverloadedCheckboxProps>) => {
   const fullAttributeKey = `${prefix}_${attributeKey}` as keyof typeof config
-  
+
   return (
     <InputIndicatorWrapper
       isOverloaded={isElementAttributeOverloaded(elements, fullAttributeKey, config)}
       isMultiValue={getIsIndeterminate()}
+      fit={icon_button}
       t={t}
     >
       <Button
-        variant={isChecked ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+        variant={icon_button
+          ? (isChecked ? 'menuconfigpanel_icon_button_activated' : 'menuconfigpanel_icon_button')
+          : (isChecked ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button')}
         onClick={() => onChange(!isChecked)}
-        sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
       >
         {tooltipLabel ? (
           <OSTooltip label={tooltipLabel}>
@@ -1091,12 +1265,35 @@ export const OverloadedCheckbox = ({
  */
 export const OverloadIndicatorWrapper = ({
   isOverloaded,
+  provenance,
   children
 }: React.PropsWithChildren<{
-  isOverloaded: boolean
+  // Tri-état (cf. InputIndicatorWrapper) : true = surchargé (liseré violet),
+  // false = hérité de la cascade (retrait), undefined = hors sujet (style…).
+  isOverloaded?: boolean
+  // #1243 — provenance de la valeur, en tooltip (cf. InputIndicatorWrapper).
+  provenance?: string
   children: React.ReactNode
 }>) => {
-  if (!isOverloaded) {
+  if (isOverloaded !== true) {
+    // #1243 — false = hérité de la cascade → même retrait que
+    // InputIndicatorWrapper (remonte au survol/focus, cibles inchangées).
+    if (isOverloaded === false) {
+      return (
+        <Box
+          display='inline-flex'
+          title={provenance}
+          sx={{
+            opacity: 0.65,
+            transition: 'opacity 0.12s',
+            '&:hover, &:focus-within': { opacity: 1 },
+            ...(provenance ? { cursor: 'help' } : {})
+          }}
+        >
+          {children}
+        </Box>
+      )
+    }
     return <>{children}</>
   }
 
@@ -1104,6 +1301,7 @@ export const OverloadIndicatorWrapper = ({
     <Box
       position='relative'
       display='inline-flex'
+      title={provenance}
       sx={{
         '& > *': {
           boxShadow: '0 0 0 1.5px rgba(128, 90, 213, 0.7)', // purple.500 = surcharge
@@ -1202,7 +1400,7 @@ export const TooltipEditor = ({ app_data, elements, updaterRef }: {
   // Editor state
   const [editor_content_tooltip, setEditorContentTooltip] = useState('')
   const [isInitialized, setIsInitialized] = useState(false)
-  const [, setCount] = useState(0)
+  const refreshThis = useModelBinding()
   const inputRef = useRef() as MutableRefObject<HTMLTextAreaElement>
 
   // Fonction pour obtenir le texte du tooltip selon le type d'élément
@@ -1285,14 +1483,14 @@ export const TooltipEditor = ({ app_data, elements, updaterRef }: {
     updateEditorContent()
   }
 
-  // Link with new_data components updater
-  updaterRef.current = () => {
-    setCount(a => a + 1)
+  // #247 — slot updater piloté par le modèle : handler custom (closure fraîche) + cleanup au démontage.
+  useModelSlot(updaterRef, () => {
+    refreshThis()
     setIsInitialized(false)
     setTimeout(() => {
       updateEditorContent()
     }, 20)
-  }
+  })
 
   // Handle textarea changes
   const handleTextareaChange = (evt: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -1350,12 +1548,16 @@ const LinkTooltipEditor: FC<{
   updaterRef: React.MutableRefObject<(() => void) | null>
 }> = (props) => <TooltipEditor {...props} />
 
-export const MenuConfigurationNodesTooltip = ({ new_data }: { new_data: Class_ApplicationData }) => {
+export const MenuConfigurationNodesTooltip = ({ new_data, hide_selector = false }: {
+  new_data: Class_ApplicationData
+  // #1243 — inspecteur : pas de sélecteur embarqué (canvas = sélecteur).
+  hide_selector?: boolean
+}) => {
   const selected_nodes = new_data.drawing_area.selected_nodes_list_sorted
 
   return (
     <>
-      <SankeyNodeSelectionSimple app_data={new_data} />
+      {!hide_selector && <SankeyNodeSelectionSimple app_data={new_data} />}
       <NodeTooltipEditor
         app_data={new_data}
         elements={selected_nodes}
@@ -1365,12 +1567,16 @@ export const MenuConfigurationNodesTooltip = ({ new_data }: { new_data: Class_Ap
   )
 }
 
-export const MenuConfigurationLinksTooltip = ({ app_data }: { app_data: Class_ApplicationData }) => {
+export const MenuConfigurationLinksTooltip = ({ app_data, hide_selector = false }: {
+  app_data: Class_ApplicationData
+  // #1243 — inspecteur : pas de sélecteur embarqué (canvas = sélecteur).
+  hide_selector?: boolean
+}) => {
   const selected_links = app_data.drawing_area.selected_links_list_sorted
 
   return (
     <>
-      <SankeyLinkSelectionSimple app_data={app_data} />
+      {!hide_selector && <SankeyLinkSelectionSimple app_data={app_data} />}
       <LinkTooltipEditor
         app_data={app_data}
         elements={selected_links}
@@ -1384,24 +1590,61 @@ export const MenuConfigurationLinksTooltip = ({ app_data }: { app_data: Class_Ap
  * Wrapper universel qui gère à la fois :
  * - L'encadrement bleu pour les attributs overloadés
  * - L'encadrement orange pour les valeurs multiples (indéterminées)
+ * - #1243 : la mise en RETRAIT des attributs hérités de la cascade de styles.
+ *
+ * `isOverloaded` est TRI-ÉTAT :
+ * - `true`      → attribut stylable SURCHARGÉ localement (liseré violet) ;
+ * - `false`     → attribut stylable dont la valeur VIENT de la cascade
+ *                 (hérité) : contrôle en léger retrait, remonte au survol/focus ;
+ * - `undefined` → contrôle non stylable (donnée…) : rendu intact.
+ * Ne passer `false` que là où la surcharge a réellement été calculée
+ * (isElementAttributeOverloaded) — sinon laisser undefined.
  */
 export const InputIndicatorWrapper = ({
-  isOverloaded = false,
+  isOverloaded,
   isMultiValue = false,
+  provenance,
   children,
+  fit = false,
   t: _t
 }: React.PropsWithChildren<{
   isOverloaded?: boolean
   isMultiValue?: boolean
+  // #1243 — d'où vient la valeur (cf. elementAttributeProvenance) : rendu en
+  // TOOLTIP, jamais en étiquette — le panneau est déjà dense et le
+  // retrait/liseré porte déjà l'information principale.
+  provenance?: string
   children: React.ReactNode
+  // #1258 — bouton-icône carré : le wrapper épouse le contenu au lieu
+  // d'occuper toute la cellule (sinon le carré se cale à gauche d'un vide).
+  fit?: boolean
   t: (key: string) => string
 }>) => {
   // Priorité : multiValue > overloaded
-  const hasIndicator = isMultiValue || isOverloaded
+  const hasIndicator = isMultiValue || isOverloaded === true
   const color = isMultiValue ? 'rgba(237, 137, 54, 0.5)' : 'rgba(128, 90, 213, 0.7)' // orange (multi) ou violet (surcharge)
   const colorHover = isMultiValue ? 'rgba(237, 137, 54, 0.8)' : 'rgba(128, 90, 213, 1)'
 
   if (!hasIndicator) {
+    // Hérité de la cascade : en retrait, cibles inchangées, pleine visibilité
+    // au survol ou au focus clavier.
+    if (isOverloaded === false) {
+      return (
+        <Box
+          display='inline-flex'
+          width={fit ? 'fit-content' : '100%'}
+          title={provenance}
+          sx={{
+            opacity: 0.65,
+            transition: 'opacity 0.12s',
+            '&:hover, &:focus-within': { opacity: 1 },
+            ...(provenance ? { cursor: 'help' } : {})
+          }}
+        >
+          {children}
+        </Box>
+      )
+    }
     return <>{children}</>
   }
 
@@ -1409,7 +1652,8 @@ export const InputIndicatorWrapper = ({
     <Box
       position='relative'
       display='inline-flex'
-      width='100%'
+      width={fit ? 'fit-content' : '100%'}
+      title={provenance}
       sx={{
         '& > *': {
           boxShadow: `0 0 0 1.5px ${color}`,
@@ -1441,11 +1685,14 @@ export const InputIndicatorWrapper = ({
   * }
   * @return {*}
   */
-export const ConfigMenuNumberInput = ({
+// forwardRef : parfois enfant direct d'un Tooltip Chakra (qui a besoin d'un
+// ref DOM pour se positionner) — même motif que ConfigMenuTextInput.
+export const ConfigMenuNumberInput = forwardRef<HTMLInputElement, FCType_ConfigMenuNumberInput>(({
   t,
   default_value,
   function_on_blur,
-  menu_for_style = false,
+  // #297 — menu_for_style ne gate plus rien ici (l'auto-blur différé a été
+  // supprimé) : conservé dans le type public mais non déstructuré.
   minimum_value = Number.MIN_SAFE_INTEGER,
   maximum_value = Number.MAX_SAFE_INTEGER,
   stepper = false,
@@ -1454,10 +1701,12 @@ export const ConfigMenuNumberInput = ({
   fixed_dec = 2,
   disabled = false,
   multiValue = false,
-  isOverloaded = false  // ✅ Nouveau paramètre
-}: FCType_ConfigMenuNumberInput) => {
+  // Tri-état (cf. InputIndicatorWrapper) : surtout NE PAS défauter à false,
+  // undefined signifie « contrôle non stylable » et doit le rester.
+  isOverloaded,
+  provenance
+}: FCType_ConfigMenuNumberInput, forwarded_ref) => {
   const ref_input = useRef<HTMLInputElement>(null)
-  const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
   const variant = unit_text ? 'menuconfigpanel_option_numberinput_with_right_addon' : 'menuconfigpanel_option_numberinput'
 
   const getFixedVal = (_: string | number | null | undefined) => {
@@ -1482,7 +1731,7 @@ export const ConfigMenuNumberInput = ({
   const input_unit = unit_text ? <InputRightAddon>{unit_text}</InputRightAddon> : <></>
 
   return (
-    <InputIndicatorWrapper isOverloaded={isOverloaded} isMultiValue={multiValue} t={t}>
+    <InputIndicatorWrapper isOverloaded={isOverloaded} isMultiValue={multiValue} provenance={provenance} t={t}>
       <InputGroup>
         <NumberInput
           allowMouseWheel
@@ -1493,14 +1742,9 @@ export const ConfigMenuNumberInput = ({
           step={step}
           value={value ?? ''}
           onChange={(value_as_string) => {
-            if (!menu_for_style) {
-              if (is_modifying.current) {
-                clearTimeout(is_modifying.current)
-              }
-              is_modifying.current = setTimeout(() => {
-                ref_input.current?.blur()
-              }, 3000)
-            }
+            // #297 — la saisie n'est PLUS validée automatiquement après un délai :
+            // le commit (function_on_blur) n'a lieu que sur Entrée (onKeyDown) ou
+            // à la perte de focus réelle (onBlur, clic ailleurs).
             setValue((value_as_string !== '') ? value_as_string : null)
           }}
           onKeyDown={e => {
@@ -1511,11 +1755,12 @@ export const ConfigMenuNumberInput = ({
           }}
         >
           <NumberInputField
-            ref={ref_input}
+            ref={(el: HTMLInputElement | null) => {
+              (ref_input as MutableRefObject<HTMLInputElement | null>).current = el
+              if (typeof forwarded_ref === 'function') forwarded_ref(el)
+              else if (forwarded_ref) forwarded_ref.current = el
+            }}
             onBlur={() => {
-              if (!menu_for_style) {
-                clearTimeout(is_modifying.current)
-              }
               let new_value = (value === null || value === '') ? null : Number(value)
               if (fixed_dec > 0 && new_value !== null) {
                 new_value = +new_value?.toFixed(2)
@@ -1529,7 +1774,8 @@ export const ConfigMenuNumberInput = ({
       </InputGroup>
     </InputIndicatorWrapper>
   )
-}
+})
+ConfigMenuNumberInput.displayName = 'ConfigMenuNumberInput'
 
 export type FCType_ConfigMenuNumberInput = {
   t: TFunction,
@@ -1545,6 +1791,8 @@ export type FCType_ConfigMenuNumberInput = {
   disabled?: boolean,
   multiValue?: boolean,
   isOverloaded?: boolean,
+  // #1243 — provenance de la valeur, rendue en tooltip par le wrapper.
+  provenance?: string,
 }
 
 /**
@@ -1557,18 +1805,25 @@ export type FCType_ConfigMenuNumberInput = {
  * }
  * @return {*}
  */
-export const ConfigMenuTextInput: FC<FCType_ConfigMenuTextInput> = ({
+// forwardRef : le composant est parfois enfant direct d'un Tooltip Chakra
+// (ex. ElementNameRow de l'inspecteur), qui a besoin d'un ref DOM pour se
+// positionner — sans lui, React émet « Function components cannot be given
+// refs ». Le ref exposé pointe sur l'<Input>.
+export const ConfigMenuTextInput = forwardRef<HTMLInputElement, FCType_ConfigMenuTextInput>(({
 
   default_value,
   function_on_blur,
-  menu_for_style = false,
+  // #297 — menu_for_style non déstructuré (l'auto-blur différé qu'il gérait a
+  // été supprimé) ; conservé dans le type public pour la compat des appelants.
   disabled = false,
   multiValue = false,
-  isOverloaded = false,  // ✅ Nouveau paramètre
+  // Tri-état (cf. InputIndicatorWrapper) : pas de défaut à false —
+  // undefined = « contrôle non stylable », à ne pas mettre en retrait.
+  isOverloaded,
+  provenance,
   t
-}: FCType_ConfigMenuTextInput) => {
+}: FCType_ConfigMenuTextInput, forwarded_ref) => {
   const ref_input = useRef<HTMLInputElement>(null)
-  const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
   const [value, setValue] = useState<string | null | undefined>(default_value)
 
   useEffect(() => {
@@ -1576,23 +1831,21 @@ export const ConfigMenuTextInput: FC<FCType_ConfigMenuTextInput> = ({
   }, [default_value])
 
   return (
-    <InputIndicatorWrapper isOverloaded={isOverloaded} isMultiValue={multiValue} t={t}>
+    <InputIndicatorWrapper isOverloaded={isOverloaded} isMultiValue={multiValue} provenance={provenance} t={t}>
       <InputGroup>
         <Input
           isDisabled={disabled}
-          ref={ref_input}
+          ref={(el: HTMLInputElement | null) => {
+            (ref_input as MutableRefObject<HTMLInputElement | null>).current = el
+            if (typeof forwarded_ref === 'function') forwarded_ref(el)
+            else if (forwarded_ref) forwarded_ref.current = el
+          }}
           variant='menuconfigpanel_option_input'
           value={value ?? ''}
           onChange={evt => {
+            // #297 — plus d'auto-validation différée : le commit (function_on_blur)
+            // n'a lieu que sur Entrée (onKeyDown) ou perte de focus (onBlur).
             const updated_value = evt.target.value
-            if (!menu_for_style) {
-              if (is_modifying.current) {
-                clearTimeout(is_modifying.current)
-              }
-              is_modifying.current = setTimeout(() => {
-                ref_input.current?.blur()
-              }, 2000)
-            }
             setValue((updated_value !== '') ? updated_value : null)
           }}
           onKeyDown={e => {
@@ -1601,16 +1854,14 @@ export const ConfigMenuTextInput: FC<FCType_ConfigMenuTextInput> = ({
             }
           }}
           onBlur={() => {
-            if (!menu_for_style) {
-              clearTimeout(is_modifying.current)
-            }
             function_on_blur(value ?? null)
           }}
         />
       </InputGroup>
     </InputIndicatorWrapper>
   )
-}
+})
+ConfigMenuTextInput.displayName = 'ConfigMenuTextInput'
 
 export type FCType_ConfigMenuTextInput = {
   t: TFunction,
@@ -1620,6 +1871,8 @@ export type FCType_ConfigMenuTextInput = {
   disabled?: boolean,
   multiValue?: boolean,
   isOverloaded?: boolean
+  // #1243 — provenance de la valeur, rendue en tooltip par le wrapper.
+  provenance?: string
 }
 
 
@@ -1861,16 +2114,9 @@ export const ColorPickerWithSustainable = <T extends Record<string, AttributeCon
       >
         <OSTooltip label={sustainableValue ? t('color_lock.locked') : t('color_lock.unlocked')}>
           <Button
-            variant={sustainableValue ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+            variant={sustainableValue ? 'menuconfigpanel_icon_button_activated' : 'menuconfigpanel_icon_button'}
             onClick={() => {
               values[sustainableAttributeKey as string] = !sustainableValue
-            }}
-            sx={{
-              padding: '0px',
-              width: '20px',
-              height: '20px',
-              display: 'flex',
-              alignItems: 'center'
             }}
           >
             {sustainableValue ? icon_locked : icon_unlocked}
@@ -1899,5 +2145,76 @@ export const getButtonVariant = (
   }
 
   return `menuconfigpanel_option_button${suffix}`
+}
+
+/**
+ * Sélecteur de fichier localisé.
+ *
+ * Le navigateur rend le bouton et le libellé d'un <input type="file"> natif
+ * ("Parcourir..." / "Aucun fichier sélectionné") dans SA propre langue, non
+ * traduisible via l'i18n de l'app. On masque donc l'input natif et on pilote
+ * nous-mêmes un bouton + un libellé via t(), pour qu'ils suivent la langue de
+ * l'application. La fenêtre système de choix de fichier reste, elle, dans la
+ * langue de l'OS (hors de portée du code web).
+ */
+export const LocalizedFileInput: FC<{
+  accept?: string
+  multiple?: boolean
+  onChange: (evt: ChangeEvent<HTMLInputElement>) => void
+  // Mode contrôlé : si `currentFileName` est fourni (même ''), le parent pilote
+  // le libellé affiché (utile quand il doit réinitialiser l'input après
+  // traitement). S'il est omis (undefined), le composant gère le nom en interne.
+  currentFileName?: string
+  disabled?: boolean
+  buttonSize?: string
+  gridTemplateColumns?: string
+}> = ({
+  accept,
+  multiple,
+  onChange,
+  currentFileName,
+  disabled,
+  buttonSize = 'sm',
+  gridTemplateColumns = '1fr 2fr'
+}) => {
+  const ref = useRef<HTMLInputElement>(null)
+  const [internal_name, set_internal_name] = useState<string | undefined>(undefined)
+  const shown = currentFileName !== undefined ? currentFileName : internal_name
+  return (
+    <Box display='grid' gridTemplateColumns={gridTemplateColumns} gap={2} alignItems='center'>
+      <Input
+        ref={ref}
+        display='none'
+        type='file'
+        accept={accept}
+        multiple={multiple}
+        isDisabled={disabled}
+        onChange={(evt: ChangeEvent<HTMLInputElement>) => {
+          const files = evt.target.files
+          set_internal_name(
+            files && files.length
+              ? Array.from(files).map((f) => f.name).join(', ')
+              : undefined
+          )
+          onChange(evt)
+        }}
+      />
+      <Button
+        size={buttonSize}
+        isDisabled={disabled}
+        onClick={() => {
+          // Vider la valeur avant d'ouvrir le sélecteur pour que choisir à
+          // nouveau le même fichier redéclenche bien onChange.
+          if (ref.current) ref.current.value = ''
+          ref.current?.click()
+        }}
+      >
+        {shown ? t('ProcessDialog.change_file') : t('ProcessDialog.browse')}
+      </Button>
+      <Text fontSize='sm' noOfLines={1} title={shown} color={shown ? undefined : 'gray.500'}>
+        {shown || t('ProcessDialog.no_file_selected')}
+      </Text>
+    </Box>
+  )
 }
 

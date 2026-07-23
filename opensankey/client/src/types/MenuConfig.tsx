@@ -1,4 +1,4 @@
-// ==================================================================================================
+﻿// ==================================================================================================
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
@@ -31,29 +31,27 @@ import {
   Type_MacroTagGroup, Type_JSON,
   getBooleanFromJSON, getNumberFromJSON, getStringFromJSON
 } from '../types/Utils'
-import { typeButtonElementConfigurable } from '../components/topmenus/SankeyMenus'
 import { Class_DataTagGroup } from './TagGroup'
 import { Class_DataTag } from './Tag'
+import { Class_EventBus, MAIN_ZONE_TOPIC, SELECTION_TOPIC } from './EventBus'
 import {
   ConverterConfig
 } from '../components/dialogs/PersistenceProcessDialogConfigs'
+import type { Type_TemplateSource } from '../components/topmenus/SankeyTemplates'
 import { Class_NodeBase } from '../Elements/NodeBase'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_ElementStyle } from '../Elements/Element'
-import type { Type_TemplateSource } from '../components/topmenus/SankeyTemplates'
 
 export type Type_AdditionalMenus = {
   external_top_buttons_item: { [x: string]: JSX.Element },
 
-  // Config menu
-  additional_menu_type: { [x: string]: string }
-  additional_menu_button_element_configurable: typeButtonElementConfigurable
-  // additional_menu_config_content: {
-  //   data: { [x: string]: JSX.Element },
-  //   style: { [x: string]: JSX.Element },
-  //   presentation: { [x: string]: JSX.Element }
-  // }
-  additional_new_menu_config_content: { [x: string]: { [x: string]: JSX.Element } }
+  // #1243 — Le contrat d'injection du menu de config (additional_menu_type,
+  // additional_menu_button_element_configurable, additional_new_menu_config_content)
+  // est DÉPOSÉ avec la matrice type×élément qu'il alimentait. Les couches
+  // supérieures enregistrent désormais leurs contenus dans les REGISTRES :
+  //  - inspector_registry     (onglets de l'inspecteur, par cible)
+  //  - filter_panel_registry  (sections « Éditer » du panneau Filtres)
+  // — id idempotent, ordre, gate de licence, au lieu de dictionnaires imbriqués.
 
   extra_background_element: JSX.Element
   additional_nav_item: JSX.Element[],
@@ -80,11 +78,17 @@ export type Type_SheetMode = 'grid' | 'text'
 // undo/redo/save). Quand ouverte, cette largeur est réservée par le diagramme (cf.
 // getToolsColumnWidthPx / getMainZoneRightReservedPx) pour que la zone de dessin ne morde pas dessus.
 export const TOOLS_COLUMN_WIDTH_PX = 48
+// Dimensions du panneau de configuration (drawer/inspecteur). Source de vérité
+// ici (et non dans SankeyMenus) : getConfigPanelPinnedReservedPx en a besoin
+// pour la réserve de largeur du mode épinglé (#1243).
+export const MENU_CONFIG_WIDTH_PCT = 20
+export const MENU_CONFIG_MIN_WIDTH_PX = 420
 // Largeur (px) de la galerie de modèles. Source de vérité ici (et non dans
-// SankeyTemplates) : la réserve de largeur du mode épinglé en a besoin.
+// SankeyTemplates) : getTemplateGalleryPinnedReservedPx en a besoin pour la
+// réserve de largeur du mode épinglé.
 export const TEMPLATE_GALLERY_WIDTH_PX = 300
-export type keyTypeConfig = 'data' | 'style'
-export type keyTypeElements = 'data' | 'DA' | 'flow' | 'node' | 'element' | 'object' | 'legend'
+// #1243 — `keyTypeConfig` (axe Type) et `keyTypeElements` (axe Élément) étaient
+// les coordonnées de la matrice du menu de config : supprimés avec elle.
 export interface IType_DictHookRefSetterShowDialogComponents {
   // Config menu - Layout
   // Modal - Welcome
@@ -96,6 +100,12 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   ref_setter_show_modal_rich_text_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_shape_attribute_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_value_type_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  // #1243 — éditeur d'infobulle en panneau draggable (l'onglet Infobulle de
+  // l'inspecteur n'embarque qu'un texte simple + ce bouton d'ouverture).
+  ref_setter_show_tooltip_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  // OS#1286 — éditeur du registre d'unités (grandeurs/unités/défauts) en
+  // panneau draggable, ouvert depuis l'onglet Valeur de l'inspecteur.
+  ref_setter_show_units_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
 
   ref_setter_show_modal_png_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_png_saver_res_h: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>
@@ -111,7 +121,8 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   // Other modals
   ref_setter_show_modal_preference: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_templates_lib: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  // Galerie ciblée sur une source précise (onglet sankeydata/mfadata/esankey) ;
+  // Ouvre le panneau de galerie sur une source donnée, null pour le fermer. Les
+  // modèles ont leur propre setter booléen ci-dessus (rétro-compat) ; celui-ci
   // sert aux galeries des couches supérieures (la sankeythèque, côté SA).
   ref_setter_show_gallery_source: MutableRefObject<Dispatch<SetStateAction<Type_TemplateSource | null>>>
   ref_setter_show_spreadsheet: MutableRefObject<Dispatch<SetStateAction<boolean>>>
@@ -169,14 +180,6 @@ export class Class_MenuConfig {
   protected _flow_color_origin_type: ('flow' | 'source' | 'target' | 'gradient' | 'auto')[] = ['flow', 'source', 'target']
   protected _shape_type: string[] = ['bezier_path', 'bezier_outline', 'bezier_outline_exact']
 
-  /**
-   * Variable that determine what kind of element we are configuring in the config menu
-   *
-   * @protected
-   * @memberof Class_MenuConfig
-   */
-  protected _type_menu_configuration_selected: keyTypeConfig = 'data'
-
   protected _spreadsheet_freeze = false
 
   // Mode de placement des nœuds créés depuis le tableur (ajout de flux/nœud) :
@@ -193,27 +196,10 @@ export class Class_MenuConfig {
   // Réglage de session (non persisté).
   protected _spreadsheet_matrix_mode: 'cross' | 'value' = 'cross'
 
-  /**
-   * Dict containing theme of menu according to _type_menu_configuration_selected & elements configurable
-   *
-   * @protected
-   * @type {{ [x: string]: { theme: string; elements_configurable: string[] } }}
-   * @memberof Class_MenuConfig
-   */
-  protected _style_config: { [x: string]: { theme: string; elements_configurable: string[] } } = {
-    'data': { 'theme': '#78a7c2', elements_configurable: ['flow', 'node', 'object'] },
-    'style': { 'theme': '#78c2ad', elements_configurable: ['DA', 'legend', 'element', 'tag_flow', 'tag_node'] },
-    'presentation': { 'theme': '#778a95', elements_configurable: ['node_tag', 'flow_tag', 'data_tag', 'view'] }
-  }
-
+  // #1243 — `_style_config` (thème + éléments configurables par type) et
+  // `_elements_configurable_selected` étaient l'état de la MATRICE type×élément :
+  // déposés avec elle. L'inspecteur dérive sa cible de la sélection.
   protected _tab_selected: 'shape' | 'name_label' | 'value_label' | 'icon' | 'stock' = 'shape'
-  protected _elements_configurable_selected: { [x: string]: keyTypeElements[] } = {
-    'data': [],
-    'style': [],
-    'presentation': []
-  }
-
-  public get elements_configurable_selected() { return this._elements_configurable_selected }
   public get tab_selected() { return this._tab_selected }
   public set tab_selected(tab_selected) { this._tab_selected = tab_selected }
 
@@ -261,15 +247,57 @@ export class Class_MenuConfig {
   // dans la colonne d'outils.
   public filter_bar_available: boolean = false
   protected _tools_column_open: boolean = true
-  protected _main_zone_listeners: Array<() => void> = []
-  protected _notifyMainZone() { this._main_zone_listeners.forEach((l) => l()) }
+  // #248 — bus pub/sub générique par topic (remplace la liste plate `_main_zone_listeners`).
+  protected _event_bus: Class_EventBus = new Class_EventBus()
+  protected _notifyMainZone() { this._event_bus.notify(MAIN_ZONE_TOPIC) }
   public get tools_column_open() { return this._tools_column_open }
   public set tools_column_open(v: boolean) { this._tools_column_open = v; this._notifyMainZone() }
   /** Largeur (px) réservée à droite par la colonne d'outils (0 si absente/fermée). */
   public getToolsColumnWidthPx(): number {
     return (this.tools_column_enabled && this._tools_column_open) ? TOOLS_COLUMN_WIDTH_PX : 0
   }
-  // Galerie de modèles épinglée (fenêtre dockée) : elle RÉSERVE alors sa
+
+  // #1283 — Éditeur de groupe de tags injecté par OSP (l'édition vit dans OSP,
+  // le filtre dans OS base). Le filtre appelle ce renderer pour déplier l'édition
+  // d'un groupe EN PLACE, sous sa rangée de filtre (fusion usage/édition). Null
+  // en OS pur / sans licence : le crayon d'édition ne s'affiche pas.
+  public render_tag_group_editor:
+    ((element_tag_name_prop: string, group_id: string) => JSX.Element | null) | null = null
+
+  // #1243 — Panneau de config ÉPINGLÉ (mode « édition intense ») : au lieu de
+  // flotter en overlay au-dessus du dessin, le panneau se docke à droite comme
+  // le tableur et RÉSERVE sa largeur — la zone de dessin se recadre à gauche.
+  // État TRANSITOIRE (non sérialisé) ; le mode survol reste le défaut.
+  protected _config_panel_pinned: boolean = false
+  public get config_panel_pinned() { return this._config_panel_pinned }
+  public set config_panel_pinned(v: boolean) { this._config_panel_pinned = v; this._notifyMainZone() }
+  /** Largeur (px) réservée à droite par le panneau de config épinglé (0 si
+   *  non épinglé ou fermé). Même calcul de largeur que le drawer. */
+  public getConfigPanelPinnedReservedPx(): number {
+    if (!this._config_panel_pinned) return 0
+    if (!this.ref_menu_opened.current[0]) return 0
+    return Math.max(window.innerWidth * MENU_CONFIG_WIDTH_PCT / 100, MENU_CONFIG_MIN_WIDTH_PX)
+  }
+  // #1258 — Tiroir de FILTRES épinglé : même principe que le panneau de config.
+  // Épinglé + ouvert, il RÉSERVE sa largeur (le dessin se recadre à gauche) au
+  // lieu de flotter au-dessus. État TRANSITOIRE (non sérialisé).
+  protected _filter_panel_pinned: boolean = false
+  public get filter_panel_pinned() { return this._filter_panel_pinned }
+  public set filter_panel_pinned(v: boolean) { this._filter_panel_pinned = v; this._notifyMainZone() }
+  // État/largeur publiés par la Toolbar (la largeur du tiroir varie selon
+  // l'onglet actif : filtres 270px, sélection/édition 420px).
+  public filter_drawer_open: boolean = false
+  public filter_drawer_width_px: number = 0
+  /** Largeur (px) réservée à droite par le tiroir de filtres épinglé (0 si
+   *  non épinglé ou fermé). */
+  public getFilterPanelPinnedReservedPx(): number {
+    if (!this._filter_panel_pinned || !this.filter_drawer_open) return 0
+    return this.filter_drawer_width_px
+  }
+
+  // Galerie de modèles ÉPINGLÉE : même principe que le panneau de config
+  // ci-dessus. Non épinglée, elle flotte en overlay et s'efface dès que
+  // l'utilisateur travaille ; épinglée, elle se docke à droite, réserve sa
   // largeur et ne se ferme plus que par sa croix (on enchaîne alors les essais
   // de modèles). État TRANSITOIRE (non sérialisé) ; l'overlay reste le défaut.
   protected _template_gallery_pinned: boolean = false
@@ -280,9 +308,16 @@ export class Class_MenuConfig {
   public getTemplateGalleryPinnedReservedPx(): number {
     return this._template_gallery_pinned ? TEMPLATE_GALLERY_WIDTH_PX : 0
   }
-  /** Pas de panneau de config épinglé sur cette version (le mode épinglé arrive
-   *  avec l'inspecteur #1243) : réserve toujours nulle, gardé pour la galerie. */
-  public getConfigPanelPinnedReservedPx(): number { return 0 }
+  /** Réserve TOTALE de « chrome » à droite : colonne d'outils + panneau de
+   *  config épinglé + galerie de modèles épinglée. C'est l'offset commun de la
+   *  colonne tableur/doc/unitaire (MainZoneTabs) et de la réserve du diagramme
+   *  — même système de fenêtrage pour tous les panneaux dockés (#1243). */
+  public getRightChromeReservedPx(): number {
+    return this.getToolsColumnWidthPx() +
+      this.getConfigPanelPinnedReservedPx() +
+      this.getTemplateGalleryPinnedReservedPx() +
+      this.getFilterPanelPinnedReservedPx()
+  }
   public get main_zone_show_diagram() { return this._main_zone_show_diagram }
   public set main_zone_show_diagram(v: boolean) { this._main_zone_show_diagram = v; this._notifyMainZone() }
   public get main_zone_show_spreadsheet() { return this._main_zone_show_spreadsheet }
@@ -306,12 +341,21 @@ export class Class_MenuConfig {
   public get main_zone_spreadsheet_mode() { return this._main_zone_spreadsheet_mode }
   public set main_zone_spreadsheet_mode(v: Type_SheetMode) { this._main_zone_spreadsheet_mode = v; this._notifyMainZone() }
   public addMainZoneListener(l: () => void): () => void {
-    this._main_zone_listeners.push(l)
-    return () => { this._main_zone_listeners = this._main_zone_listeners.filter((x) => x !== l) }
+    return this._event_bus.subscribe(MAIN_ZONE_TOPIC, l)
   }
   /** Notifie les abonnés de la grande zone (barre du haut + MainZoneTabs). Exposé pour
    *  que des features injectées (ex. l'onglet « Unit. » OS+) puissent re-rendre le bouton. */
   public notifyMainZone() { this._notifyMainZone() }
+
+  // #248 — API pub/sub générique par topic. Toute nouvelle feature s'abonne à son topic via
+  // `subscribe(topic, listener)` (désabonnement au démontage, cf. useModelBinding) et notifie via
+  // `notify(topic)`, plutôt qu'une ref nue ou la liste globale de la grande zone.
+  public subscribe(topic: string, l: () => void): () => void {
+    return this._event_bus.subscribe(topic, l)
+  }
+  public notify(topic: string): void {
+    this._event_bus.notify(topic)
+  }
 
   // Panneau « Unit. » (sankey unitaire, feature OS+) affiché à côté de Diagramme/Tableur/Doc.
   // `unitary_tab_available` est renseigné par OS+ (ModalUnitarySankeyOSP) ; reste neutre en OS pur.
@@ -336,10 +380,10 @@ export class Class_MenuConfig {
     // SAUF s'il est détaché en dialogue flottant (il ne réserve alors plus d'espace).
     const unitaryDocked = this._main_zone_show_unitary && !this._main_zone_unitary_detached
     const rightColumnShown = this._main_zone_show_spreadsheet || docInRightColumn || unitaryDocked
-    // La colonne d'outils s'ajoute toujours à la réserve droite (qu'il y ait ou non un tableur/doc) :
-    // elle occupe l'extrême droite et le tableur/doc se décale d'autant vers la gauche (cf. MainZoneTabs).
-    // La galerie de modèles épinglée s'y empile de la même façon.
-    const tools = this.getToolsColumnWidthPx() + this.getTemplateGalleryPinnedReservedPx()
+    // Le chrome droit (colonne d'outils + panneau de config épinglé #1243) s'ajoute toujours à la
+    // réserve (qu'il y ait ou non un tableur/doc) : il occupe l'extrême droite et le tableur/doc se
+    // décale d'autant vers la gauche (cf. MainZoneTabs).
+    const tools = this.getRightChromeReservedPx()
     if (!(this._main_zone_show_diagram && rightColumnShown)) return tools
     const MIN_SPREADSHEET_PX = 320
     const MIN_DIAGRAM_PX = 160
@@ -414,6 +458,9 @@ export class Class_MenuConfig {
   // Bascule (ouvre/ferme) le drawer de filtres depuis la colonne d'outils (le bouton flottant
   // historique étant masqué en éditeur). Renseigné par ToolbarFilter.
   private _ref_toggle_filter_drawer: MutableRefObject<(() => void)>
+  // OS#1273 — Ouvre/bascule la barre de recherche d'élément (Ctrl+F). Renseigné
+  // par le composant ElementSearchOverlay ; appelé depuis le gestionnaire clavier.
+  private _ref_toggle_search: MutableRefObject<(() => void)>
   private _ref_toolbar: MutableRefObject<(() => void)>
 
   private _ref_rerender_submodules_menus: MutableRefObject<() => void>
@@ -442,6 +489,12 @@ export class Class_MenuConfig {
 
   // Update component OpenSankeyConfigurationsMenus
   protected _ref_to_menu_config_updater: MutableRefObject<() => void>
+
+  // #1243 — Update de l'inspecteur piloté par la sélection. Slot dédié : déclenché
+  // à chaque changement de composition de la sélection (add/remove/purge) pour que
+  // l'inspecteur re-résolve sa cible. Distinct des updaters de sous-menus (que
+  // l'inspecteur réutilise en tant qu'enfants) pour éviter tout vol de slot.
+  private _ref_to_inspector_updater: MutableRefObject<() => void>
 
   private _ref_to_menu_config_layout_updater: MutableRefObject<() => void>
   private _ref_to_menu_contextual_config_layout_updater: MutableRefObject<() => void>
@@ -573,11 +626,8 @@ export class Class_MenuConfig {
   private _additionalMenus: MutableRefObject<Type_AdditionalMenus> = { current: {
     external_top_buttons_item: {},
 
-    // Menu config
-    additional_menu_type: {},
-    additional_menu_button_element_configurable: {},
-    // additional_menu_config_content: { data: {}, style:{}, presentation:{} },
-    additional_new_menu_config_content: {},
+    // Menu config : cf. Type_AdditionalMenus — l'injection du panneau de config
+    // passe désormais par les registres (#1243).
     extra_background_element: <></>,
 
     additional_nav_item: [],
@@ -597,6 +647,7 @@ export class Class_MenuConfig {
     this._ref_to_spreadsheet = { current: () => null }
     this._ref_to_doc = { current: () => null }
     this._ref_to_menu_config_updater = { current: () => null }
+    this._ref_to_inspector_updater = { current: () => null }
     this._ref_menu_opened = { current: [false, () => null] }
 
     // Layout
@@ -686,6 +737,8 @@ export class Class_MenuConfig {
       ref_setter_show_modal_rich_text_editor: { current: () => null },
       ref_setter_show_shape_attribute_editor: { current: () => null },
       ref_setter_show_value_type_editor: { current: () => null },
+      ref_setter_show_tooltip_editor: { current: () => null },
+      ref_setter_show_units_editor: { current: () => null },
 
       ref_setter_show_modal_png_saver: { current: () => null },
       ref_setter_png_saver_res_h: { current: () => null },
@@ -725,6 +778,7 @@ export class Class_MenuConfig {
 
     this._ref_close_filter_drawer = { current: () => null }
     this._ref_toggle_filter_drawer = { current: () => undefined }
+    this._ref_toggle_search = { current: () => undefined }
     this._ref_toolbar = { current: () => null }
   }
 
@@ -738,6 +792,8 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_modal_rich_text_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_shape_attribute_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_value_type_editor.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_tooltip_editor.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_units_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_png_saver.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_pdf_saver.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_styles.current(false)
@@ -745,20 +801,9 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_modal_styles_containers.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_preference.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_templates_lib.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_gallery_source.current(null)
     this._dict_setter_show_dialog.ref_setter_show_spreadsheet.current(false)
     this._ref_close_filter_drawer.current(false)
-  }
-
-  public openConfigMenuElementsContainers() {
-    this.openConfigMenu()
-    // Leave enough time for menus to open
-    setTimeout(() => {
-      // this._type_menu_configuration_selected = 'presentation' as keyTypeConfig
-      this._elements_configurable_selected.data = ['object' as keyTypeElements]
-      this._elements_configurable_selected.style = ['element']
-      this._elements_configurable_selected.presentation = ['object' as keyTypeElements]
-      this._ref_to_menu_config_updater.current()
-    }, 200)
   }
 
   /**
@@ -794,60 +839,11 @@ export class Class_MenuConfig {
 
 
 
-  /**
-   * Open config menu if closed and show sub-menu node in type config data
-   * @memberof Class_MenuConfig
-   */
-  public openConfigMenuElementsNodes() {
-    // Element config menu must be opened first
-    this.openConfigMenu()
-    // Leave enough time for menus to open
-    setTimeout(() => {
-      this._type_menu_configuration_selected = 'style'
-      this._elements_configurable_selected.data = ['node']
-      this._elements_configurable_selected.style = ['element']
-      this._ref_to_menu_config_updater.current()
-    }, 200)
-  }
-
-  /**
-  * Open config menu if closed and show sub-menu node and flow in type config data
-  * @memberof Class_MenuConfig
-  */
-  public openConfigMenuElementsNodesLinks() {
-    // Element config menu must be opened first
-    this.openConfigMenu()
-    // Leave enough time for menus to open
-    setTimeout(() => {
-      this._elements_configurable_selected.data = ['node', 'flow']
-      this._elements_configurable_selected.style = ['element']
-      this._ref_to_menu_config_updater.current()
-    }, 200)
-  }
-
-  /**
-   * Open config menu if closed and show sub-menu flow in type config data
-   * @memberof Class_MenuConfig
-   */
-  public openConfigMenuElementsLinks() {
-    // Element config menu must be opened first
-    this.openConfigMenu()
-    // Leave enough time for menus to open
-    setTimeout(() => {
-      this._elements_configurable_selected.data = ['node', 'flow']
-      this._elements_configurable_selected.style = ['element']
-      this._ref_to_menu_config_updater.current()
-    }, 200)
-  }
-
-  public toggleElementInConfigEdition(kt: keyTypeConfig, ke: keyTypeElements) {
-    if (this._elements_configurable_selected[kt].includes(ke)) {
-      const idx = this._elements_configurable_selected[kt].indexOf(ke)
-      this._elements_configurable_selected[kt].splice(idx, 1)
-    } else {
-      this._elements_configurable_selected[kt].splice(0, 0, ke)
-    }
-  }
+  // #1243 — La matrice est déposée : les ex-openConfigMenuElementsNodes/Links/
+  // NodesLinks/Containers, qui ouvraient le panneau PUIS forçaient (après 200 ms)
+  // le type et l'élément de la matrice, n'ont plus d'objet — l'inspecteur dérive
+  // sa cible de la sélection. Leurs appelants (interactions de canvas, légende,
+  // stock) appellent désormais openConfigMenu() tout court.
 
   public updateComponentRelatedToLayoutApparence() {
     this._add_waiting_process(
@@ -1003,6 +999,7 @@ export class Class_MenuConfig {
     //  for now OpenSankeyMenusDictBuilder is a function so the updater crash the app because the re-render is out of the correct scope
     // this._ref_to_submenu_updater.current()
     this.updateMenuConfigComponent()
+    this.updateInspector() // #1243
     this.updateComponentRelatedToLayoutApparence()
     this.updateAllComponentsRelatedToNodes()
     this.updateAllComponentsRelatedToLinks()
@@ -1054,6 +1051,7 @@ export class Class_MenuConfig {
     this.updateComponentRelatedToNodesSelection()
     this.updateAllComponentsRelatedToNodesConfig()
     this.updateComponentRelatedToStyles()
+    this.updateInspector() // #1243 — re-résoudre la cible sur changement de sélection
   }
 
   /**
@@ -1084,11 +1082,13 @@ export class Class_MenuConfig {
     this.updateComponentRelatedToLinksSelection()
     this.updateAllComponentsRelatedToLinksConfig()
     this.updateComponentRelatedToStyles()
+    this.updateInspector() // #1243 — re-résoudre la cible sur changement de sélection
   }
 
   public updateAllComponentsRelatedToContainers() {
     this._ref_to_menu_config_container_updater.current()
     this._ref_to_menu_config_containers_selection_updater.current()
+    this.updateInspector() // #1243 — re-résoudre la cible sur changement de sélection
   }
 
   public updateAllComponentsRelatedToContainersStyles() {
@@ -1385,6 +1385,40 @@ export class Class_MenuConfig {
     return this._ref_to_menu_config_updater
   }
 
+  // #1243 — Slot de re-render de l'inspecteur piloté par la sélection.
+  public get ref_to_inspector_updater(): MutableRefObject<() => void> {
+    return this._ref_to_inspector_updater
+  }
+
+  /**
+   * #1255 — Onglet que l'inspecteur doit tenir ouvert, demandé par la visite guidée (l'onglet
+   * actif est un état local d'InspectorPanel, inatteignable depuis le modèle).
+   *
+   * C'est une demande PERSISTANTE, pas une commande ponctuelle : l'inspecteur réinitialise son
+   * onglet à chaque changement de composition de sélection, et le tour sélectionne justement un
+   * élément avant de demander son onglet — une commande ponctuelle serait écrasée par cette
+   * réinitialisation. Tant que la demande est posée, elle l'emporte ; un clic de l'utilisateur sur
+   * un onglet la lève (il reprend la main), tout comme la fin de l'étape ou du tour.
+   */
+  private _inspector_requested_tab_id: string | null = null
+  public get inspector_requested_tab_id(): string | null { return this._inspector_requested_tab_id }
+  public set inspector_requested_tab_id(_: string | null) { this._inspector_requested_tab_id = _ }
+
+  // #1243 — Déclenche un re-render de l'inspecteur (résolution de cible). Appelé
+  // sur chaque changement de composition de sélection. Debouncé comme les autres
+  // updaters pour absorber les rafales (sélection au lasso, add/remove multiples).
+  public updateInspector() {
+    this._add_waiting_process(
+      'updateInspector',
+      (_this: Class_MenuConfig) => {
+        _this._ref_to_inspector_updater.current()
+        // Multi-abonnés (bus #248) : tout composant qui suit la sélection sans
+        // posséder de slot (ex. récapitulatif de l'outil de sélection).
+        _this._event_bus.notify(SELECTION_TOPIC)
+      }
+    )
+  }
+
   public get ref_universal_converter_set_config() {
     return this._ref_universal_converter_set_config
   }
@@ -1575,6 +1609,7 @@ export class Class_MenuConfig {
 
   public get ref_close_filter_drawer(): MutableRefObject<((_: boolean) => void)> { return this._ref_close_filter_drawer }
   public get ref_toggle_filter_drawer(): MutableRefObject<(() => void)> { return this._ref_toggle_filter_drawer }
+  public get ref_toggle_search(): MutableRefObject<(() => void)> { return this._ref_toggle_search }
   public get ref_toolbar(): MutableRefObject<(() => void)> { return this._ref_toolbar }
   public get ref_to_toolbar_node_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_node_tag_updater }
   public get ref_to_toolbar_link_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_link_tag_updater }
@@ -1602,10 +1637,8 @@ export class Class_MenuConfig {
   public get spreadsheet_matrix_mode() { return this._spreadsheet_matrix_mode }
   public set spreadsheet_matrix_mode(_: 'cross' | 'value') { this._spreadsheet_matrix_mode = _ }
 
-  public get type_menu_configuration_selected() { return this._type_menu_configuration_selected }
-  public set type_menu_configuration_selected(value) { this._type_menu_configuration_selected = value }
-
-  public get style_config(): { [x: string]: { theme: string; elements_configurable: string[] } } { return this._style_config }
+  // #1243 — accesseurs de la matrice (type_menu_configuration_selected,
+  // style_config, elements_configurable_selected) supprimés avec elle.
   public get flow_color_origin_type(): string[] { return this._flow_color_origin_type }
   public get shape_type(): string[] { return this._shape_type }
 

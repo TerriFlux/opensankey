@@ -29,6 +29,7 @@ import { MenuList, MenuButton, MenuItem, Menu, Box, Checkbox, Text, Select } fro
 import { ChevronRightIcon } from '@chakra-ui/icons'
 import { Button } from '@chakra-ui/react'
 
+import { useModelBinding } from '../../hooks/useModelBinding'
 import { ConfigMenuNumberInput, OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { default_value_option } from '../configmenus/SankeyMenuConfigurationLinksData'
@@ -66,9 +67,8 @@ export const MenuContextLinksData = ({ app_data }: { app_data: Class_Application
   const default_value = value_option_percent_constants.includes(value_option) ?
     first_link_value?.valueData ?? null :
     first_link?.valueCurrent
-  // Function used to force this component to reload
-  const [, setCount] = useState(0)
-  ref_to_menu_contextual_config_links_data_updater.current = () => setCount(a => a + 1)
+  // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
+  const refreshThis = useModelBinding(ref_to_menu_contextual_config_links_data_updater)
 
   const refreshThisAndUpdateRelatedComponents = () => {
     // Toogle saving indicator
@@ -76,7 +76,7 @@ export const MenuContextLinksData = ({ app_data }: { app_data: Class_Application
     ref_to_save_in_cache_indicator.current(false)
     // Update data menu for link
     menu_configuration.updateComponentRelatedToLinksData()
-    setCount(a => a + 1)
+    refreshThis()
     // And update this menu also
   }
 
@@ -103,7 +103,8 @@ export const MenuContextLinksData = ({ app_data }: { app_data: Class_Application
 
 export const ButtonLinkContextAssignTag = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { t, drawing_area, menu_configuration } = app_data
-  const [, setUpdate] = useState(0)
+  // #247 — re-render forcé d'identité stable (compteur local).
+  const refreshThis = useModelBinding()
   const contextualised_link = drawing_area.link_contextualised
   const has_flux_tags = Object.values(drawing_area.sankey.flux_taggs_dict).length > 0
   return (
@@ -140,6 +141,7 @@ export const ButtonLinkContextAssignTag = ({ app_data }: { app_data: Class_Appli
                         .map(tag => {
                           const has_tag = contextualised_link.hasGivenTag(tag)
                           return <MenuItem
+                            key={tag.id}
                             display='flex'
                             closeOnSelect={false}
                             onClick={(event) => {
@@ -147,7 +149,7 @@ export const ButtonLinkContextAssignTag = ({ app_data }: { app_data: Class_Appli
                               event.preventDefault()
                               drawing_area.updateSelectedLinksTagAssignation(!has_tag, tag)
                               menu_configuration.ref_to_menu_context_links_updater.current()
-                              setUpdate(a => a + 1)
+                              refreshThis()
                             }}
                           >
                             {tag.name}
@@ -166,7 +168,8 @@ export const ButtonLinkContextAssignTag = ({ app_data }: { app_data: Class_Appli
 
 export const ButtonNodeContextAssignTag = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { t, drawing_area, menu_configuration } = app_data
-  const [, setUpdate] = useState(0)
+  // #247 — re-render forcé d'identité stable (compteur local).
+  const refreshThis = useModelBinding()
   const contextualised_node = drawing_area.node_contextualised
   const has_node_tags = Object.values(drawing_area.sankey.node_taggs_dict).length > 0
   return (
@@ -203,6 +206,7 @@ export const ButtonNodeContextAssignTag = ({ app_data }: { app_data: Class_Appli
                         .map(tag => {
                           const has_tag = contextualised_node.hasGivenTag(tag)
                           return <MenuItem
+                            key={tag.id}
                             display='flex'
                             closeOnSelect={false}
                             onClick={() => {
@@ -210,7 +214,7 @@ export const ButtonNodeContextAssignTag = ({ app_data }: { app_data: Class_Appli
                             // event.preventDefault()
                               drawing_area.updateSelectedNodesTagAssignation(!has_tag, tag)
                               menu_configuration.ref_to_menu_context_nodes_updater.current()
-                              setUpdate(a => a + 1)
+                              refreshThis()
                             }}
                           >
                             {tag.name}
@@ -229,7 +233,8 @@ export const ButtonNodeContextAssignTag = ({ app_data }: { app_data: Class_Appli
 
 export const ButtonNodeContextAssignStyle = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { drawing_area, t } = app_data
-  const [, setUpdate] = useState(0)
+  // #247 — re-render forcé d'identité stable (compteur local).
+  const refreshThis = useModelBinding()
   const contextualised_node = drawing_area.node_contextualised
   const has_node_style = drawing_area.sankey.styles_list.length > 0
   return (
@@ -251,15 +256,33 @@ export const ButtonNodeContextAssignStyle = ({ app_data }: { app_data: Class_App
             .map((_) => {
               const has_style = contextualised_node.style.includes(_)
               return <MenuItem
+                key={_.id}
                 display='flex'
                 closeOnSelect={false}
                 onClick={() => {
-                  if (!has_style) {
-                    contextualised_node.addStyle(_)
-                  } else {
-                    contextualised_node.removeStyle(_)
+                  // Action sur le seul nœud contextualisé : has_style EST son état,
+                  // l'undo est donc l'opération inverse (pas besoin de snapshot).
+                  const apply = () => {
+                    if (!has_style) {
+                      contextualised_node.addStyle(_)
+                    } else {
+                      contextualised_node.removeStyle(_)
+                    }
+                    refreshThis()
                   }
-                  setUpdate(a => a + 1)
+
+                  const undo = () => {
+                    if (!has_style) {
+                      contextualised_node.removeStyle(_)
+                    } else {
+                      contextualised_node.addStyle(_)
+                    }
+                    refreshThis()
+                  }
+
+                  app_data.history.saveUndo(undo)
+                  app_data.history.saveRedo(apply)
+                  apply()
                 }}
               >
                 {t(_.name)}
@@ -274,7 +297,8 @@ export const ButtonNodeContextAssignStyle = ({ app_data }: { app_data: Class_App
 
 export const ButtonContainerContextAssignStyle = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { drawing_area, t } = app_data
-  const [, setUpdate] = useState(0)
+  // #247 — re-render forcé d'identité stable (compteur local).
+  const refreshThis = useModelBinding()
   const contextualised_container = drawing_area.contextualised_container
   const selected_containers = drawing_area.selected_containers_list
   const has_styles = drawing_area.sankey.styles_list.length > 0
@@ -296,17 +320,39 @@ export const ButtonContainerContextAssignStyle = ({ app_data }: { app_data: Clas
             .map((_) => {
               const has_style = contextualised_container.style.includes(_)
               return <MenuItem
+                key={_.id}
                 display='flex'
                 closeOnSelect={false}
                 onClick={() => {
-                  selected_containers.forEach(container => {
-                    if (!has_style) {
-                      container.addStyle(_)
-                    } else {
-                      container.removeStyle(_)
-                    }
-                  })
-                  setUpdate(a => a + 1)
+                  // has_style est lu sur la ZDT contextualisée, mais l'action porte sur
+                  // toute la sélection : les autres ZDT n'étaient pas forcément dans le
+                  // même état, on mémorise donc le leur pour un undo exact.
+                  const before = selected_containers.map(
+                    container => ({ container, had: container.style.includes(_) })
+                  )
+
+                  const apply = () => {
+                    selected_containers.forEach(container => {
+                      if (!has_style) {
+                        container.addStyle(_)
+                      } else {
+                        container.removeStyle(_)
+                      }
+                    })
+                    refreshThis()
+                  }
+
+                  const undo = () => {
+                    before.forEach(({ container, had }) => {
+                      if (had && !container.style.includes(_)) container.addStyle(_)
+                      else if (!had && container.style.includes(_)) container.removeStyle(_)
+                    })
+                    refreshThis()
+                  }
+
+                  app_data.history.saveUndo(undo)
+                  app_data.history.saveRedo(apply)
+                  apply()
                 }}
               >
                 {t(_.name)}
@@ -321,7 +367,8 @@ export const ButtonContainerContextAssignStyle = ({ app_data }: { app_data: Clas
 
 export const ButtonLinkContextAssignStyle = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { drawing_area, t } = app_data
-  const [, setUpdate] = useState(0)
+  // #247 — re-render forcé d'identité stable (compteur local).
+  const refreshThis = useModelBinding()
   const contextualised_link = drawing_area.link_contextualised
   const has_node_style = drawing_area.sankey.styles_list.length > 0
   return (
@@ -344,15 +391,32 @@ export const ButtonLinkContextAssignStyle = ({ app_data }: { app_data: Class_App
               .map((_) => {
                 const has_style = contextualised_link.style.includes(_)
                 return <MenuItem
+                  key={_.id}
                   display='flex'
                   closeOnSelect={false}
                   onClick={() => {
-                    if (!has_style) {
-                      contextualised_link.addStyle(_)
-                    } else {
-                      contextualised_link.removeStyle(_)
+                    // Idem nœud : un seul flux contextualisé, undo = opération inverse.
+                    const apply = () => {
+                      if (!has_style) {
+                        contextualised_link.addStyle(_)
+                      } else {
+                        contextualised_link.removeStyle(_)
+                      }
+                      refreshThis()
                     }
-                    setUpdate(a => a + 1)
+
+                    const undo = () => {
+                      if (!has_style) {
+                        contextualised_link.removeStyle(_)
+                      } else {
+                        contextualised_link.addStyle(_)
+                      }
+                      refreshThis()
+                    }
+
+                    app_data.history.saveUndo(undo)
+                    app_data.history.saveRedo(apply)
+                    apply()
                   }}
                 >
                   {t(_.name)}
@@ -375,19 +439,21 @@ export const AutoLayoutSpacingInputs = ({
   show_horizontal = true,
   show_extremities = false,
   show_optimize_mode = false,
+  show_recycling_mode = false,
   label_min_width = '100px'
 }: {
   app_data: Class_ApplicationData,
   show_horizontal?: boolean,
   show_extremities?: boolean,
   show_optimize_mode?: boolean,
+  show_recycling_mode?: boolean,
   label_min_width?: string
 }) => {
   const { drawing_area } = app_data
   const default_dx = drawing_area.sankey.styles_dict['default'].shape_position_dx ?? 0
   const default_dy = drawing_area.sankey.styles_dict['default'].shape_position_dy ?? 0
-  const [, setTick] = useState(0)
-  const redraw = () => setTick((t) => t + 1)
+  // #247 — re-render forcé d'identité stable (compteur local).
+  const redraw = useModelBinding()
 
   const h_value = app_data.layout_h_spacing ?? default_dx
   const v_value = app_data.layout_v_spacing ?? default_dy
@@ -401,6 +467,9 @@ export const AutoLayoutSpacingInputs = ({
     }
     if (show_optimize_mode) {
       app_data.layout_optimize_crossing = true
+    }
+    if (show_recycling_mode) {
+      app_data.layout_auto_recycling = true
     }
     redraw()
   }
@@ -491,6 +560,23 @@ export const AutoLayoutSpacingInputs = ({
         <option value='minimize'>{t('ProcessDialog.layout_minimize')}</option>
       </Select>
     </Box>}
+    {/* #153 — Recalcul auto du recyclage après un déplacement de nœud. */}
+    {show_recycling_mode && <Box display='flex' alignItems='center' gap='4px'>
+      <OSTooltip label={t('ProcessDialog.layout_recycling_tt')}>
+        <Text fontSize='xs' whiteSpace='nowrap' minW={label_min_width}>{t('ProcessDialog.layout_recycling')}</Text>
+      </OSTooltip>
+      <Select
+        size='xs'
+        value={app_data.layout_auto_recycling ? 'auto' : 'frozen'}
+        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+          app_data.layout_auto_recycling = e.target.value === 'auto'
+          redraw()
+        }}
+      >
+        <option value='auto'>{t('ProcessDialog.layout_recycling_auto')}</option>
+        <option value='frozen'>{t('ProcessDialog.layout_recycling_frozen')}</option>
+      </Select>
+    </Box>}
     <OSTooltip label={t('ProcessDialog.layout_reset_tt')}>
       <Button
         variant='menuconfigpanel_option_button'
@@ -527,7 +613,7 @@ export const MenuContextAutoLayout = ({ app_data }: { app_data: Class_Applicatio
   }
 
   return <Box display='flex' flexDirection='column' gap='4px' p='8px' minW='280px'>
-    <AutoLayoutSpacingInputs app_data={app_data} show_extremities show_optimize_mode />
+    <AutoLayoutSpacingInputs app_data={app_data} show_extremities show_optimize_mode show_recycling_mode />
     <Box display='flex' alignItems='center' gap='4px'>
       <Checkbox
         size='sm'
@@ -592,7 +678,8 @@ export const MenuContextResetVerticalIntervals = ({ app_data }: { app_data: Clas
 export const MenuContextNodeStock = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { drawing_area, menu_configuration } = app_data
   const node = drawing_area.node_contextualised
-  const [, setUpdate] = useState(0)
+  // #247 — re-render forcé d'identité stable (compteur local).
+  const refreshThis = useModelBinding()
 
   if (!node) return <></>
 
@@ -601,7 +688,7 @@ export const MenuContextNodeStock = ({ app_data }: { app_data: Class_Application
   const refreshAll = () => {
     node.drawStockBox()
     menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    setUpdate(a => a + 1)
+    refreshThis()
   }
 
   return <Box display='flex' flexDirection='column' gap='4px'>
@@ -613,7 +700,7 @@ export const MenuContextNodeStock = ({ app_data }: { app_data: Class_Application
           n.draw()
         })
         menu_configuration.ref_to_save_in_cache_indicator.current(false)
-        setUpdate(a => a + 1)
+        refreshThis()
       }}
     >
       <Text fontSize='sm'>Afficher stocks</Text>
@@ -624,10 +711,24 @@ export const MenuContextNodeStock = ({ app_data }: { app_data: Class_Application
         t={app_data.t}
         default_value={stock_val?.stockInitialData ?? null}
         function_on_blur={(v) => {
-          drawing_area.selected_nodes_list.forEach(n => {
-            const s = n.stock_value; if (s) s.stockInitialData = v
-          })
-          refreshAll()
+          // Donnée métier saisie à la main : on mémorise l'ancienne, nœud par nœud.
+          const nodes = [...drawing_area.selected_nodes_list]
+          const before = nodes.map(n => ({ n, value: n.stock_value?.stockInitialData ?? null }))
+          const apply = () => {
+            nodes.forEach(n => {
+              const s = n.stock_value; if (s) s.stockInitialData = v
+            })
+            refreshAll()
+          }
+          const undo = () => {
+            before.forEach(({ n, value }) => {
+              const s = n.stock_value; if (s) s.stockInitialData = value
+            })
+            refreshAll()
+          }
+          app_data.history.saveUndo(undo)
+          app_data.history.saveRedo(apply)
+          apply()
         }}
         stepper={true}
         step={1}
@@ -639,10 +740,24 @@ export const MenuContextNodeStock = ({ app_data }: { app_data: Class_Application
         t={app_data.t}
         default_value={stock_val?.stockVariationData ?? null}
         function_on_blur={(v) => {
-          drawing_area.selected_nodes_list.forEach(n => {
-            const s = n.stock_value; if (s) s.stockVariationData = v
-          })
-          refreshAll()
+          // Idem stock initial.
+          const nodes = [...drawing_area.selected_nodes_list]
+          const before = nodes.map(n => ({ n, value: n.stock_value?.stockVariationData ?? null }))
+          const apply = () => {
+            nodes.forEach(n => {
+              const s = n.stock_value; if (s) s.stockVariationData = v
+            })
+            refreshAll()
+          }
+          const undo = () => {
+            before.forEach(({ n, value }) => {
+              const s = n.stock_value; if (s) s.stockVariationData = value
+            })
+            refreshAll()
+          }
+          app_data.history.saveUndo(undo)
+          app_data.history.saveRedo(apply)
+          apply()
         }}
         stepper={true}
         step={1}
