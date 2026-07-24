@@ -1,10 +1,10 @@
 import React, { useState, useRef } from 'react'
 import {
-  Box, Button, ButtonGroup, Text, MenuItem, MenuDivider, MenuButton, Menu, MenuList,
+  Box, Button, ButtonGroup, Text, MenuItem, MenuDivider, MenuButton, Menu, MenuList, Portal,
   useSteps, Stepper, Step, StepIndicator, StepStatus, StepSeparator, StepTitle
 } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLocationDot, faPercent, faRulerVertical, faPlus, faMinus } from '@fortawesome/free-solid-svg-icons'
+import { faLocationDot, faPercent, faRulerVertical, faPlus, faMinus, faCaretDown } from '@fortawesome/free-solid-svg-icons'
 import { ConfigMenuNumberInput, OSTooltip } from '../configmenus/MenuCommon'
 import { useModelBinding } from '../../hooks/useModelBinding'
 import { ZOOM_TOPIC } from '../../types/EventBus'
@@ -271,44 +271,83 @@ export const ComponetStretchButtons = ({ app_data, updateParentComponent, hide_f
   // remis à 'none'). Même canal que l'indicateur de zoom (ComponentZoomControl).
   useModelBinding(undefined, (r) => app_data.menu_configuration.subscribe(ZOOM_TOPIC, r))
 
-  // #680 — Les 3 boutons d'ajustement sont désormais des MODES radio persistants
-  // (un seul actif, ou aucun) et non plus des actions ponctuelles. Tant qu'un mode est
-  // actif, la contrainte est maintenue en permanence (cf. applyAutoFitMode / drag / zoom).
+  // #680 — Les modes de cadrage sont des MODES persistants (un seul actif, ou aucun) et
+  // non des actions ponctuelles. Tant qu'un mode est actif, la contrainte est maintenue
+  // en permanence (cf. applyAutoFitMode / drag / zoom).
+  // OS#1315 — UI ramenée à DEUX boutons : un bouton Fit unique (variantes tout/largeur/
+  // hauteur dans son menu) + un bouton d'ancrage (centré / haut-gauche).
   const fit_mode = app_data.drawing_area.auto_fit_mode
-  // Re-clic sur le mode actif → 'none' (extinction). Le clic applique un cadrage animé.
-  const selectFitMode = (m: Type_AutoFitMode) => {
+  const fit_anchor = app_data.drawing_area.fit_anchor
+  const setFitMode = (m: Type_AutoFitMode) => {
     const da = app_data.drawing_area
-    da.auto_fit_mode = (fit_mode === m) ? 'none' : m
-    da.applyAutoFitMode(true) // geste utilisateur explicite → zoom cinématique
+    da.auto_fit_mode = m
+    da.applyAutoFitMode(true) // geste utilisateur explicite → zoom cinématique (no-op en 'none')
     updateParentComponent()
   }
-  const fitVariant = (m: Type_AutoFitMode) =>
-    fit_mode === m ? 'toolbar_button_6_activated' : 'toolbar_button_6'
+  const toggleAnchor = () => {
+    const da = app_data.drawing_area
+    da.fit_anchor = (da.fit_anchor === 'center') ? 'top_left' : 'center'
+    if (da.auto_fit_mode === 'none') {
+      // Sans mode actif, le bascule doit avoir un effet IMMÉDIAT (sinon il ne se
+      // verrait qu'au prochain chargement) : on applique une fois le cadrage
+      // « d'arrivée » du nouvel ancrage — haut-gauche → caméra à (0,0), zoom 100 % ;
+      // centré → recadrage centré ponctuel. La caméra reste ensuite libre.
+      if (da.fit_anchor === 'top_left') da.resetCameraToOrigin()
+      else da.recenterAnimated(true)
+    } else {
+      da.applyAutoFitMode(true) // ré-applique le mode actif avec le nouvel ancrage
+    }
+    updateParentComponent()
+  }
+  // L'icône du bouton Fit reflète la variante active (défaut : « tout visible »).
+  const fit_icon = fit_mode === 'width' ? app_data.icon_library.icon_area_fit_horiz
+    : fit_mode === 'height' ? app_data.icon_library.icon_area_fit_vert
+      : app_data.icon_library.icon_recenter
 
   return <ButtonGroup className='toolbar_bottom_stretch' isAttached orientation='vertical'>
-    <OSTooltip placement='left' label={t('Banner.tooltipAdjustH')}>
-      <Button variant={fitVariant('width')}
+    {/* OS#1315 — clic = bascule du fit (applique la dernière variante immédiatement) ;
+        le chevron dessous ouvre le menu des variantes. */}
+    <OSTooltip placement='left' label={t('Banner.tooltipFitMenu')}>
+      <Button
+        variant={fit_mode !== 'none' ? 'toolbar_button_6_activated' : 'toolbar_button_6'}
         size={size}
-        // #680 — Mode « largeur » : toute la largeur du diagramme reste visible bord à bord.
-        onClick={() => selectFitMode('width')}>
-        {app_data.icon_library.icon_area_fit_horiz}
+        onClick={() => setFitMode(fit_mode === 'none' ? app_data.drawing_area.last_fit_variant : 'none')}>
+        {fit_icon}
       </Button>
     </OSTooltip>
-    <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')}>
-      <Button variant={fitVariant('height')}
+    <Menu placement='left-start'>
+      <MenuButton as={Button}
+        variant='toolbar_button_6'
         size={size}
-        // #680 — Mode « hauteur » : toute la hauteur du diagramme reste visible bord à bord.
-        onClick={() => selectFitMode('height')}>
-        {app_data.icon_library.icon_area_fit_vert}
-      </Button>
-    </OSTooltip>
+        height='1rem'
+        minHeight='1rem'
+        padding={0}>
+        <FontAwesomeIcon icon={faCaretDown} style={{ fontSize: '0.6rem' }} />
+      </MenuButton>
+      {/* Portal : la toolbar est en position:fixed avec son propre contexte d'empilement —
+          une MenuList non portalisée s'ouvre clippée / hors écran. zIndex au-dessus de la
+          toolbar (40) et des panneaux (20-30). */}
+      <Portal>
+        <MenuList minWidth='unset' zIndex={50}>
+          <MenuItem icon={fit_mode === 'none' ? app_data.icon_library.icon_activated : <></>}
+            onClick={() => setFitMode('none')}>{t('Banner.fitModeNone')}</MenuItem>
+          <MenuItem icon={fit_mode === 'full' ? app_data.icon_library.icon_activated : <></>}
+            onClick={() => setFitMode('full')}>{t('Banner.fitModeFull')}</MenuItem>
+          <MenuItem icon={fit_mode === 'width' ? app_data.icon_library.icon_activated : <></>}
+            onClick={() => setFitMode('width')}>{t('Banner.fitModeWidth')}</MenuItem>
+          <MenuItem icon={fit_mode === 'height' ? app_data.icon_library.icon_activated : <></>}
+            onClick={() => setFitMode('height')}>{t('Banner.fitModeHeight')}</MenuItem>
+        </MenuList>
+      </Portal>
+    </Menu>
 
-    <OSTooltip placement='left' label={t('Banner.tooltipRecenter')}>
-      <Button variant={fitVariant('full')}
-        size={size}
-        // #680 — Mode « tout visible » : le diagramme entier reste cadré et centré.
-        onClick={() => selectFitMode('full')}>
-        {app_data.icon_library.icon_recenter}
+    <OSTooltip placement='left'
+      label={fit_anchor === 'center' ? t('Banner.tooltipAnchorCenter') : t('Banner.tooltipAnchorTopLeft')}>
+      <Button variant='toolbar_button_6' size={size}
+        // OS#1315 — Ancrage : 'center' répartit le mou autour du contenu ; 'top_left'
+        // épingle le monde (0,0) au coin (sans fit : le chargement ne bouge pas la caméra).
+        onClick={toggleAnchor}>
+        {fit_anchor === 'center' ? app_data.icon_library.icon_anchor_center : app_data.icon_library.icon_anchor_top_left}
       </Button>
     </OSTooltip>
 
