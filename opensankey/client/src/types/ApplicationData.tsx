@@ -1607,8 +1607,10 @@ export class Class_ApplicationData {
       // nœud revient à sa place au rechargement. Les zones de texte persistent leur coin et
       // ne sont donc pas concernées (cohérent avec le fix du drag).
       app_ref.drawing_area.selected_nodes_list.forEach(node => node.settleCenterAnchor())
-      // Update drawing area size so none of elements are outside the DA
-      this.drawing_area.areaAutoFit()
+      // Update drawing area size so none of elements are outside the DA.
+      // Mode 'none' (revu post-#680) : pas de recadrage auto après un déplacement clavier
+      // (cohérent avec le drag souris).
+      if (this.drawing_area.auto_fit_mode !== 'none') this.drawing_area.areaAutoFit()
     }
     // Open config menu ---------------------------------------------------------------
     else if (evtKeyTab) {

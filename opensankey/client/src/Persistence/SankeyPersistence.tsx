@@ -1981,10 +1981,10 @@ export class DrawingAreaPersistence {
     // Verrou de taille (largeur/hauteur/zoom figés au changement de dataTag).
     // Défaut false → sérialisé seulement si activé (absence ⇒ déverrouillé).
     if (drawing_area.size_locked) json_object['size_locked'] = true
-    // #680 — Mode de cadrage automatique (boutons radio d'ajustement). Défaut 'full'
-    // → sérialisé seulement si différent (absence ⇒ 'full' = cadrage à l'ouverture,
-    // comportement historique). 'none' = pas de cadrage auto ; 'width'/'height' = axe forcé.
-    if (drawing_area.auto_fit_mode !== 'full') json_object['auto_fit_mode'] = drawing_area.auto_fit_mode
+    // #680 — Mode de cadrage automatique (boutons radio d'ajustement). Défaut 'none'
+    // (revu post-#680 : cadrage auto strictement opt-in) → sérialisé seulement si un
+    // mode est actif. 'full' = tout visible ; 'width'/'height' = axe forcé.
+    if (drawing_area.auto_fit_mode !== 'none') json_object['auto_fit_mode'] = drawing_area.auto_fit_mode
     // Mode de représentation import/export (proche / haut-bas) : persisté car les nœuds
     // import/export siblings sont régénérés au chargement (cf. SplitIOrE).
     if (drawing_area.import_export_above_below) json_object['import_export_above_below'] = true
@@ -2347,8 +2347,9 @@ export class DrawingAreaPersistence {
     // Absence du flag ⇒ déverrouillé (défaut de la classe).
     drawing_area['_size_locked'] = getBooleanFromJSON(json_object, 'size_locked', false)
     // #680 — Mode de cadrage auto : champ direct (le setter notifie la barre d'outils).
-    // Absence ⇒ 'full' (défaut de la classe = cadrage à l'ouverture, comportement historique).
-    drawing_area['_auto_fit_mode'] = getStringFromJSON(json_object, 'auto_fit_mode', 'full') as Type_AutoFitMode
+    // Absence ⇒ 'none' (revu post-#680 : jamais de recadrage automatique non demandé —
+    // les anciens fichiers, qui omettaient 'full', chargent donc SANS cadrage auto).
+    drawing_area['_auto_fit_mode'] = getStringFromJSON(json_object, 'auto_fit_mode', 'none') as Type_AutoFitMode
     drawing_area['_import_export_above_below'] = getBooleanFromJSON(json_object, 'import_export_above_below', false)
 
     drawing_area.application_data.language = getStringOrUndefinedFromJSON(json_object, 'language')
