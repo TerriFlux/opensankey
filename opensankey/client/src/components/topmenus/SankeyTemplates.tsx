@@ -122,6 +122,9 @@ const loadStanTemplate = (
       const form_data = new FormData()
       const filename = file_path.split('/').pop() as string
       form_data.append('file_content', new File([blob], filename))
+      // Métriques d'usage : le GET du fichier de modèle est déjà compté comme
+      // « import » ; ce marqueur évite au serveur de recompter le POST.
+      form_data.append('origin', 'template')
       return fetch(root + new_data.url_prefix + 'open_stan', {
         method: 'POST',
         body: form_data
