@@ -22,20 +22,24 @@
 // tags par entry, échelle (globale + par unitType, cf. A5), unités sur les
 // labels de flux (via le REGISTRE d'unités OS#1286, clé `units` : chaque
 // unitType devient une grandeur, chaque flux garde son unité d'origine en
-// mode unit_model), labels en pourcentage (format personnalisé
-// {PercentProcessSource}/{PercentProcessDestination}, cf. A2), formes de
-// process alternatives (shapeType 0/1/2, cf. A4), commentaires de flèche
-// (→ tooltips), zones libres texte/image/rectangle (→ zones de texte),
-// légende, thème esankey, dégradé le long du flux (OS#1294 :
+// mode unit_model), format numérique des valeurs (unitType@displayFormat,
+// format .NET → nombre de décimales par flux, cf. netFormatDecimalCount,
+// os#1304), labels en pourcentage (format personnalisé
+// {PercentProcessSource}/{PercentProcessDestination}, cf. A2 ; % intégré
+// showPercentage=2 = {PercentModel}, reproduit statiquement via unit_factor),
+// formes de process alternatives (shapeType 0/1/2, cf. A4), commentaires de
+// flèche (→ tooltips), zones libres texte/image/rectangle (→ zones de texte),
+// légende, masquage des zéros (net@hideZeroFlows/@hideZeroFlowProcesses,
+// cf. os#1306 : le défaut OpenSankey masque déjà, on ne pose `show_zero_links`
+// que pour les DÉSACTIVER fidèlement), thème esankey, dégradé le long du flux (OS#1294 :
 // gradientFromSource+gradientToDestination → shape_color_rule='gradient',
 // couleur du nœud source → couleur du nœud cible). Les jeux de couleurs
 // (<colorSets>) sont des <brushColor> à id, résolus par la palette partagée
 // (cf. buildBrushColorPalette).
 // Hors périmètre (listé sur l'issue #264) : lignes libres, balance labels,
-// pourcentages « Arrow »/« Model » (bascule simple
-// showPercentage, sans équivalent chez nous — seul le format personnalisé à
-// mots-clés {PercentProcessSource}/{PercentProcessDestination} est mappé),
-// export.
+// pourcentage « Arrow » (part du flux au sein de sa flèche multi-matériaux,
+// sans équivalent chez nous), label agrégé par flèche multi-matériaux (les
+// valeurs de ces flèches restent éteintes), export.
 
 import JSZip from 'jszip'
 import { themeEsankey, Type_ThemeJSON } from '../types/Theme'
@@ -64,6 +68,13 @@ interface EsNode {
   /** Nœud-image (mappé vers icon_is_image/icon_image_src au chargement). */
   is_image?: boolean
   image_src?: string
+  /** OS#1292 — Donnée de stock du process (compartiments `<stock>`). Clés lues
+   *  telles quelles au niveau nœud par le loader générique. La REPRÉSENTATION
+   *  visible est le LIBELLÉ de stock (stock_label_*, posé dans local), pas la
+   *  forme stock (qui encode un niveau, absent du format e!Sankey). La
+   *  représentation en flux « From/To Stock » façon e!Sankey = OS#1303. */
+  has_stock?: boolean
+  stock_values?: { stock_variation: number }
 }
 
 interface EsFlow {
@@ -136,6 +147,36 @@ export interface EsParsedDiagram {
   legend?: { mask_legend: boolean, legend_dx: number, legend_dy: number, legend_police?: number }
   /** OS#1286 — registre d'unités reconstruit depuis les unitTypes e!Sankey. */
   units?: Type_UnitTypeJSON[]
+  /**
+   * os#1305 — « Scale to lower flow threshold » e!Sankey
+   * (`scaleToLowerFlowTreashold` + `lowerFlowTreashold`, unitType de référence
+   * ou miroir `<net>`) : épaisseur visible MINIMALE des flux fins, en px —
+   * même sémantique que le `minimum_flux` de la drawing area (clamp de rendu,
+   * cf. flowThickness.fluxFloor), d'où la recopie directe sans conversion
+   * d'échelle. Clé racine `minimum_flux` du JSON 0.9, lue par le fromJSON
+   * générique. Absent quand le fichier n'active pas le réglage.
+   */
+  minimum_flux?: number
+  /**
+   * Ordre Z global des éléments importés (nœuds + flux + zones), du 1ER PLAN
+   * vers le FOND (convention `_list_g_element_id`), reconstruit depuis les
+   * `@zorder` e!Sankey (plus grand = par-dessus). C'est lui qui restitue les
+   * fonds de process DERRIÈRE les flux (démo « Erdgas Krankenhaus »). Lu par
+   * le fromJSON générique (clé `order_g_elements`). Absent si le fichier ne
+   * porte aucun zorder.
+   */
+  order_g_elements?: string[]
+  /**
+   * os#1306 — posé à `true` quand le fichier N'ACTIVE PAS `net@hideZeroFlows`
+   * (défaut e!Sankey : les flux à quantité nulle restent tracés en trait fin).
+   * Clé racine du drawing_area (option globale « flux nuls visibles »), lue par
+   * le fromJSON générique. Absent quand hideZeroFlows=true : le défaut
+   * OpenSankey (`show_zero_links=false` + porte `is_not_zero`) masque déjà
+   * dynamiquement les flux nuls ET les nœuds dont tous les flux sont nuls
+   * (= hideZeroFlowProcesses). Détail du choix : cf. le bloc os#1306 dans
+   * parseEsankeyXml.
+   */
+  show_zero_links?: boolean
 }
 
 // Id du groupe de tags de flux créé depuis les entries e!Sankey.
@@ -180,6 +221,17 @@ const attrNum = (el: Element | null, attr: string, fallback: number): number => 
 const PT_TO_PX = 96 / 72
 const ptToPx = (pt: number): number => pt > 0 ? Math.round(pt * PT_TO_PX) : pt
 
+// os#1310 — angle e!Sankey (`@angle` des labels/zones, degrés HORAIRES, y vers
+// le bas — .NET RotateTransform) → `*_label_text_angle` OpenSankey. MÊME
+// convention que le rotate() SVG (vérifié sur corpus : l'angle baké d'un label
+// aligné vaut exactement atan2(dy,dx) du segment porteur, « Depuration de
+// Chlore » : 45.98°) ; seule la PLAGE diffère — e!Sankey sérialise 0..360, le
+// widget OpenSankey vit en (−180, 180] (270° → −90°). 0 = neutre (rien à poser).
+export const esAngleToTextAngle = (deg: number): number => {
+  const a = ((deg % 360) + 360) % 360
+  return Math.round((a > 180 ? a - 360 : a) * 100) / 100
+}
+
 // Couleurs e!Sankey : entier ARGB signé 32 bits (ex: -1073774768 = Coral
 // avec alpha). On ne garde que le RGB pour la couleur.
 const argbToHex = (argb: string | null): string | null => {
@@ -213,6 +265,16 @@ const flattenArgbOverBg = (argb: string | null, bgHex: string): string | null =>
   const mix = (c: number, bc: number) => Math.round(a * c + (1 - a) * bc)
   const out = (mix(r, br) << 16) | (mix(g, bgg) << 8) | mix(b, bb)
   return '#' + out.toString(16).padStart(6, '0').toUpperCase()
+}
+
+// OS#1292 — Alpha d'une couleur ARGB (0 = totalement transparente, 255 =
+// opaque). Sert à repérer les entries « Transparent » (astuce e!Sankey pour
+// équilibrer un process sans rien dessiner).
+const argbAlpha = (argb: string | null): number => {
+  if (argb === null) return 255
+  const parsed = parseInt(argb, 10)
+  if (!Number.isFinite(parsed)) return 255
+  return ((parsed >>> 0) >>> 24) & 0xFF
 }
 
 const normalizeStringToValidId = (text: string): string =>
@@ -309,8 +371,24 @@ const isDashStylePenDashed = (penEl: Element | null): boolean => {
 // ------------------------------------------------------------- Modèle logique
 
 interface EsUnit { id: string, coefficient: number, name: string, isBasic: boolean }
-interface EsUnitType { id: string, name: string, maximumFlow: number, width: number, used: boolean, showUnit: boolean, units: { [id: string]: EsUnit } }
-interface EsEntry { name: string, color: string | null, tagId: string }
+// os#1305 — scaleToLowerFlowTreashold/lowerFlowTreashold : « Scale to lower
+// flow threshold », plancher d'épaisseur des flux fins (cf. calcul de
+// `minimumFlux` dans parseEsankeyXml pour la sémantique établie sur corpus).
+interface EsUnitType { id: string, name: string, maximumFlow: number, width: number, used: boolean, showUnit: boolean, displayFormat: string, scaleToLowerFlowTreashold: boolean, lowerFlowTreashold: number, units: { [id: string]: EsUnit } }
+
+// os#1304 — Format numérique .NET du unitType (`displayFormat`) → nombre de
+// décimales. Grammaire .NET : `0` = chiffre forcé, `#` = chiffre optionnel,
+// `.` = début des décimales, `,` = séparateur de milliers (toujours AVANT le
+// point). Le nombre de décimales = nombre de placeholders (0/#) après le point.
+// Corpus des démos : `0`→0, `0.#`/`0.0`/`#,0.#`→1, `0.00`/`0.##`/`#,#.##`/
+// `0,0.00`→2. null = pas de format déclaré (on laisse les défauts OpenSankey).
+export const netFormatDecimalCount = (fmt: string): number | null => {
+  if (!fmt) return null
+  const dot = fmt.indexOf('.')
+  if (dot < 0) return 0
+  return (fmt.slice(dot + 1).match(/[0#]/g) ?? []).length
+}
+interface EsEntry { name: string, color: string | null, tagId: string, isTransparent: boolean }
 
 const parseUnitTypes = (netModel: Element): { [id: string]: EsUnitType } => {
   const out: { [id: string]: EsUnitType } = {}
@@ -336,6 +414,9 @@ const parseUnitTypes = (netModel: Element): { [id: string]: EsUnitType } => {
       width: attrNum(ut, 'width', 0),
       used: ut.getAttribute('used') === 'true',
       showUnit: ut.getAttribute('showUnit') === 'true',
+      displayFormat: ut.getAttribute('displayFormat') ?? '',
+      scaleToLowerFlowTreashold: ut.getAttribute('scaleToLowerFlowTreashold') === 'true',
+      lowerFlowTreashold: attrNum(ut, 'lowerFlowTreashold', 0),
       units,
     }
   })
@@ -353,13 +434,17 @@ const parseEntries = (entryGroup: Element, out: { [id: string]: EsEntry }, usedT
     // Deux entries homonymes (groupes différents) : suffixe par l'id XML.
     if (usedTagIds.has(tagId)) tagId = tagId + '_' + id
     usedTagIds.add(tagId)
+    const brush = resolveBrushArgb(entry, palette)
     out[id] = {
       name,
       // Transparence e!Sankey (alpha) aplatie dans la couleur (mélange sur le
       // fond) : chaque entry a sa propre teinte semi-transparente rendue en
       // couleur solide équivalente.
-      color: flattenArgbOverBg(resolveBrushArgb(entry, palette), bgHex),
+      color: flattenArgbOverBg(brush, bgHex),
       tagId,
+      // OS#1292 — alpha 0 : entry invisible (élément « Transparent » servant à
+      // équilibrer un process). Sa DONNÉE compte, son rendu non.
+      isTransparent: argbAlpha(brush) === 0,
     }
   })
   const subGroups = childByTag(entryGroup, 'entryGroups')
@@ -395,6 +480,10 @@ interface EsGraphicalProcess {
   labelY: number
   labelW: number
   labelH: number
+  /** `<label visible='false'>` : e!Sankey masque le NOM du process (démos
+   *  « Efficiency diagram example » : tous les process du bloc central). Absent
+   *  = visible. Indépendant de `visible` (qui masque la BOÎTE, pas le nom). */
+  labelVisible: boolean
   /** `visible='false'` : e!Sankey n'affiche que le label (et l'icône libre à côté). */
   visible: boolean
   /** Chemin dans le ZIP de l'image du process (ex: `Images\\tmpXX.tmp`), sinon ''. */
@@ -426,6 +515,9 @@ interface EsGraphicalProcess {
   labelFontSize: number
   /** Couleur du texte du nom (`<label>/@textColor` argb → hex), null = absente. */
   labelColor: string | null
+  /** os#1310 — rotation du nom (`<label>/@angle`, degrés horaires 0..360 ;
+   *  corpus : 270 = nom vertical sur 5 démos). 0 = horizontal (neutre). */
+  labelAngle: number
   /**
    * Écart d'accroche des flux = « Distance » e!Sankey, portée par les `<port>`
    * enfants DIRECTS du process/place (attribut `nodePadding`, souvent négatif :
@@ -446,6 +538,15 @@ interface EsGraphicalProcess {
   borderColor: string | null
   borderWidth: number
   borderDashed: boolean
+  /**
+   * Ordre Z GLOBAL de l'élément (`@zorder` sur `<process>`/`<arrow>`/shapes du
+   * `net`) : entier unique par document, PLUS GRAND = dessiné PAR-DESSUS. C'est
+   * lui qui met les fonds de process DERRIÈRE les flux (démo « Erdgas
+   * Krankenhaus » : process 0-8, flèches 9-20 — sauf un cache translucide
+   * volontairement posé sur les flux, zorder 17). -1 = absent (les `<place>`
+   * n'en portent jamais, vérifié sur les 120 démos).
+   */
+  zorder: number
 }
 
 /** Axe de raccordement d'un flux à un nœud, depuis `arrowDirection` e!Sankey. */
@@ -455,7 +556,7 @@ const linkAxis = (arrowDirection: number): 'h' | 'v' =>
 /**
  * opensankey#1301 — orientation (hh/vv/hv/vh) déduite de la polyligne du tracé : axe du
  * 1er segment (source) + axe du dernier segment (cible). Bien plus fiable que
- * `arrowDirection`. Utilisée pour les flux PARAMÉTRIQUES (< 5 points) ; les flux routés
+ * `arrowDirection`. Utilisée pour les flux PARAMÉTRIQUES (non routés) ; les flux routés
  * l'ignorent. `null` si trop peu de points / segments dégénérés (→ repli arrowDirection).
  */
 const orientationFromPoints = (points: Array<{ x: number, y: number }>): string | null => {
@@ -473,30 +574,118 @@ const orientationFromPoints = (points: Array<{ x: number, y: number }>): string 
 }
 
 /**
- * opensankey#1301 — un flux est ROUTÉ si sa polyligne fait un DÉTOUR : au moins DEUX
- * coudes orthogonaux (sommets où un segment horizontal rencontre un vertical). UN seul
- * coude = simple élan HV/VH paramétrique (source h → cible v, ou l'inverse) : NON routé.
- * Deux coudes ou plus = escalier/boucle qui repart (ex. h→v→h, source et cible du même
- * côté) → routé, ses points intérieurs deviennent des waypoints. Indépendant du nombre
- * de points (un détour tient en 4 points : source, coin, coin, cible). Un segment milieu
- * diagonal (flux droit/courbe simple) ne compte pas comme coude.
+ * opensankey#1301 — un flux est ROUTÉ si sa polyligne fait un DÉTOUR, détecté par
+ * l'une OU l'autre de ces deux signatures :
+ *  1. au moins DEUX coudes QUASI-orthogonaux (segment quasi-horizontal rencontrant
+ *     un quasi-vertical). « Quasi » : e!Sankey stocke des points de la route arrondie,
+ *     pas des coins parfaits — sur le corpus (Petroleum) les segments « verticaux »
+ *     des détours dérivent de 8 à 22 px en x, quand les segments milieu des S-curves
+ *     paramétriques dérivent d'au moins 42 px. D'où une tolérance transversale
+ *     ABSOLUE (30 px, entre les deux populations) plutôt qu'angulaire : un seuil
+ *     d'angle happait les S-curves raides (milieu long presque vertical).
+ *  2. un REBROUSSEMENT : la progression en x (ou y) s'inverse entre deux segments
+ *     significatifs (≥ 10 px, pour ignorer la dérive des quasi-verticaux) — le flux
+ *     revient sur ses pas (droite, remonte, revient à gauche), exactement le détour
+ *     qui exige des waypoints même quand un segment milieu est franchement diagonal
+ *     (Petroleum : Refined Products Imports → Transportation, un seul coude compté).
+ * UN seul coude sans rebroussement = simple élan HV/VH paramétrique : NON routé.
+ * Indépendant du nombre de points (un détour tient en 4 points : source, coin, coin,
+ * cible). Un segment milieu diagonal (flux droit/courbe simple) ne compte pas comme
+ * coude et ne fait rien tourner.
  */
-const hasOrthogonalTurn = (points: Array<{ x: number, y: number }>): boolean => {
-  const tol = 1 // px
-  const segAxis = (a: { x: number, y: number }, b: { x: number, y: number }): 'h' | 'v' | 'd' => {
-    const dx = Math.abs(b.x - a.x), dy = Math.abs(b.y - a.y)
-    if (dx <= tol && dy <= tol) return 'd' // dégénéré
-    if (dy <= tol) return 'h'
-    if (dx <= tol) return 'v'
-    return 'd' // diagonal
-  }
+/** Dérive transversale max (px) pour qu'un segment compte comme quasi-axial. */
+const ROUTED_CROSS_TOL = 30
+
+/** Axe d'un segment de polyligne e!Sankey, avec la tolérance transversale ci-dessus. */
+const routedSegAxis = (a: { x: number, y: number }, b: { x: number, y: number }): 'h' | 'v' | 'd' => {
+  const dx = Math.abs(b.x - a.x), dy = Math.abs(b.y - a.y)
+  if (dx < 2 && dy < 2) return 'd' // dégénéré
+  if (dy <= ROUTED_CROSS_TOL && dy <= dx) return 'h'
+  if (dx <= ROUTED_CROSS_TOL && dx <= dy) return 'v'
+  return 'd' // diagonal
+}
+
+const isRoutedPolyline = (points: Array<{ x: number, y: number }>): boolean => {
+  const minSeg = 10 // px — delta significatif pour le test de rebroussement
   let turns = 0
   for (let i = 1; i < points.length - 1; i++) {
-    const inSeg = segAxis(points[i - 1], points[i])
-    const outSeg = segAxis(points[i], points[i + 1])
+    const inSeg = routedSegAxis(points[i - 1], points[i])
+    const outSeg = routedSegAxis(points[i], points[i + 1])
     if ((inSeg === 'h' && outSeg === 'v') || (inSeg === 'v' && outSeg === 'h')) turns++
   }
-  return turns >= 2
+  if (turns >= 2) return true
+  // Rebroussement sur x ou y parmi les deltas significatifs.
+  for (const axis of ['x', 'y'] as const) {
+    let prevSign = 0
+    for (let i = 1; i < points.length; i++) {
+      const d = points[i][axis] - points[i - 1][axis]
+      if (Math.abs(d) < minSeg) continue
+      const sign = d > 0 ? 1 : -1
+      if (prevSign !== 0 && sign !== prevSign) return true
+      prevSign = sign
+    }
+  }
+  return false
+}
+
+/**
+ * Rectifie la polyligne d'un flux ROUTÉ en ses COINS à 90°. La route e!Sankey est
+ * arrondie : un « montant vertical » y est stocké en plusieurs segments qui dérivent
+ * de quelques px (Petroleum : x = 984 → 1000 → 992). Repris tels quels en waypoints,
+ * ces sommets font dessiner au runtime (segments droits + congés) des mini-S qui
+ * repartent en arrière à chaque coin. On fusionne donc les chaînes de segments
+ * quasi-axiaux DE MÊME SENS en un run H/V exact (coordonnée = moyenne des points du
+ * run) et on n'émet que les intersections de runs consécutifs — les vrais coins.
+ * Les segments diagonaux restent des runs à part entière : leurs jonctions sont
+ * conservées (recalées sur la coordonnée du run axial voisin). Retourne les coins
+ * INTÉRIEURS (sans les ancres), en coordonnées document e!Sankey.
+ */
+const rectifyRoutedWaypoints = (points: Array<{ x: number, y: number }>): Array<{ x: number, y: number }> => {
+  // Dédoublonnage des points quasi-confondus (< 2 px).
+  const pts: Array<{ x: number, y: number }> = []
+  points.forEach(p => {
+    const last = pts[pts.length - 1]
+    if (!last || Math.abs(p.x - last.x) >= 2 || Math.abs(p.y - last.y) >= 2) pts.push(p)
+  })
+  if (pts.length < 3) return []
+  // Runs : segments consécutifs de même axe ET même sens le long de l'axe principal
+  // (un aller-retour sur le même axe reste deux runs distincts).
+  interface Run { axis: 'h' | 'v' | 'd', start: number, end: number }
+  const runs: Run[] = []
+  for (let i = 0; i < pts.length - 1; i++) {
+    const axis = routedSegAxis(pts[i], pts[i + 1])
+    const prev = runs[runs.length - 1]
+    if (prev && prev.axis === axis && axis !== 'd') {
+      const mainDelta = (p: number, q: number): number =>
+        axis === 'h' ? pts[q].x - pts[p].x : pts[q].y - pts[p].y
+      if (mainDelta(prev.start, prev.end) * mainDelta(i, i + 1) > 0) {
+        prev.end = i + 1
+        continue
+      }
+    }
+    runs.push({ axis, start: i, end: i + 1 })
+  }
+  // Coordonnée d'un run axial = moyenne (x pour 'v', y pour 'h') de ses points.
+  const runCoord = (r: Run): number => {
+    let sum = 0
+    for (let i = r.start; i <= r.end; i++) sum += (r.axis === 'v') ? pts[i].x : pts[i].y
+    return sum / (r.end - r.start + 1)
+  }
+  const corners: Array<{ x: number, y: number }> = []
+  for (let i = 1; i < runs.length; i++) {
+    const a = runs[i - 1], b = runs[i]
+    const j = pts[a.end] // jonction entre les deux runs
+    if (a.axis === 'h' && b.axis === 'v') corners.push({ x: runCoord(b), y: runCoord(a) })
+    else if (a.axis === 'v' && b.axis === 'h') corners.push({ x: runCoord(a), y: runCoord(b) })
+    else {
+      // Un diagonal (ou deux runs parallèles après rebroussement) : jonction
+      // conservée, recalée sur la coordonnée des runs axiaux qui la bordent.
+      const x = (a.axis === 'v') ? runCoord(a) : (b.axis === 'v') ? runCoord(b) : j.x
+      const y = (a.axis === 'h') ? runCoord(a) : (b.axis === 'h') ? runCoord(b) : j.y
+      corners.push({ x, y })
+    }
+  }
+  return corners
 }
 
 /** nodePadding minimal (le plus profond) parmi les `<port>` d'un process/place.
@@ -535,7 +724,7 @@ const hasVisibleBorder = (g: EsGraphicalProcess | null): boolean =>
  *  depuis son `<label><font>`, couleur depuis `<label>/@textColor`. Commun aux deux
  *  parseurs. `label` null (aucun label) → tout neutre. .NET FontStyle : bit 1 gras,
  *  bit 2 italique. */
-const parseGraphicalLabelFont = (label: Element | null): Pick<EsGraphicalProcess, 'labelBold' | 'labelItalic' | 'labelFontSize' | 'labelColor'> => {
+const parseGraphicalLabelFont = (label: Element | null): Pick<EsGraphicalProcess, 'labelBold' | 'labelItalic' | 'labelFontSize' | 'labelColor' | 'labelAngle'> => {
   const font = label ? childByTag(label, 'font') : null
   const style = attrNum(font, 'style', 0)
   return {
@@ -543,6 +732,7 @@ const parseGraphicalLabelFont = (label: Element | null): Pick<EsGraphicalProcess
     labelItalic: (style & 2) !== 0,
     labelFontSize: ptToPx(attrNum(font, 'size', 0)),
     labelColor: argbToHex(label?.getAttribute('textColor') ?? null),
+    labelAngle: attrNum(label, 'angle', 0),
   }
 }
 
@@ -587,11 +777,13 @@ const parseGraphicalProcesses = (net: Element, palette: EsBrushPalette): { [id: 
       labelY: attrNum(label, 'locationY', 0),
       labelW: attrNum(label, 'sizeW', 0),
       labelH: attrNum(label, 'sizeH', 0),
+      labelVisible: label?.getAttribute('visible') !== 'false',
       visible: p.getAttribute('visible') !== 'false',
       imageFile: childByTag(p, 'image')?.getAttribute('filename') ?? '',
       shapeType: attrNum(p, 'shapeType', 0),
       arrowDirection: attrNum(p, 'arrowDirection', 2),
       linkPadding: deepestPortPadding(p),
+      zorder: attrNum(p, 'zorder', -1),
       ...parseGraphicalLabelFont(label),
       ...parseGraphicalBorder(p),
     }
@@ -633,11 +825,13 @@ const parseGraphicalPlaces = (net: Element, palette: EsBrushPalette): { [id: str
       labelY: attrNum(label, 'locationY', 0),
       labelW: attrNum(label, 'sizeW', 0),
       labelH: attrNum(label, 'sizeH', 0),
+      labelVisible: label?.getAttribute('visible') !== 'false',
       visible: p.getAttribute('visible') !== 'false',
       imageFile: childByTag(p, 'image')?.getAttribute('filename') ?? '',
       shapeType: attrNum(p, 'shapeType', 0),
       arrowDirection: attrNum(p, 'arrowDirection', 0),
       linkPadding: deepestPortPadding(p),
+      zorder: attrNum(p, 'zorder', -1),
       // Boîte de la place (OS#1298), même schéma que le process.
       width: attrNum(p, 'backgroundSizeW', 0),
       height: attrNum(p, 'backgroundSizeH', 0),
@@ -730,7 +924,7 @@ const applyTextToContainer = (base: EsContainerJSON, textEl: Element, resize = t
   return true
 }
 
-interface EsShapeBox { el: Element, kind: string, x: number, y: number, w: number, h: number }
+interface EsShapeBox { el: Element, kind: string, x: number, y: number, w: number, h: number, z: number }
 
 /**
  * Shapes libres du `net` → zones de texte OpenSankey (clé JSON `labels`).
@@ -748,10 +942,12 @@ const parseShapes = (
   net: Element,
   images: { [path: string]: string },
   palette: EsBrushPalette
-): { [id: string]: EsContainerJSON } => {
+): { containers: { [id: string]: EsContainerJSON }, zorders: { [id: string]: number } } => {
   const out: { [id: string]: EsContainerJSON } = {}
+  // Ordre Z global (`@zorder`) de chaque zone émise — alimente order_g_elements.
+  const zorders: { [id: string]: number } = {}
   const shapes = childByTag(net, 'shapes')
-  if (!shapes) return out
+  if (!shapes) return { containers: out, zorders }
   // Collecte de tous les shapes graphiques avec leur boîte englobante.
   const items: EsShapeBox[] = []
   childrenByTag(shapes, 'shape').forEach(wrapper => {
@@ -760,6 +956,7 @@ const parseShapes = (
         el: shape, kind: shape.localName,
         x: attrNum(shape, 'locationX', 0), y: attrNum(shape, 'locationY', 0),
         w: attrNum(shape, 'sizeW', 100), h: attrNum(shape, 'sizeH', 30),
+        z: attrNum(shape, 'zorder', -1),
       })
     })
   })
@@ -790,6 +987,14 @@ const parseShapes = (
     }
     if (kind === 'text') {
       if (!applyTextToContainer(base, shape)) return
+      // os#1310 — zone tournée (`@angle`, corpus : 270 = colonne verticale sur
+      // 3 démos). Les zones importées rendent leur texte en rich-text
+      // (foreignObject, cf. applyTextToContainer) dont seule la rotation −90°
+      // est implémentée (DrawLabel.drawFO) — pile le cas 270° du corpus ; un
+      // angle e!Sankey quelconque (jamais observé sur une zone) resterait
+      // horizontal en FO (≈, cf. NOTE-ESANKEY-MAPPING §4.3).
+      const textAngle = esAngleToTextAngle(attrNum(shape, 'angle', 0))
+      if (textAngle !== 0) base.name_label_text_angle = textAngle
       out[id] = base
     } else if (kind === 'picture') {
       const file = childByTag(shape, 'image')?.getAttribute('filename') ?? ''
@@ -858,8 +1063,9 @@ const parseShapes = (
       if (isPenColorPatternDashed(pen)) base.shape_border_dashed = true
       out[id] = base
     }
+    if (id in out) zorders[id] = it.z
   })
-  return out
+  return { containers: out, zorders }
 }
 
 /**
@@ -873,6 +1079,13 @@ interface EsGraphicalArrow {
   labelVisible: boolean
   showValue: boolean
   showUnit: boolean
+  /**
+   * `sankeyArrowLabel/@showPercentage` : label en POURCENTAGE intégré (sans
+   * passer par labelFormat). Seule la valeur 2 est observée sur le corpus
+   * (démos « Efficiency diagram example ») = % du plus gros flux du même
+   * unitType dans tout le modèle (mot-clé {PercentModel} du manuel). 0 = off.
+   */
+  showPercentage: number
   /**
    * Gabarit du label (`sankeyArrowLabel/@labelFormat`) : toujours présent, même
    * hors mode « Custom » (e!Sankey l'auto-génère aussi pour ses modes intégrés,
@@ -894,6 +1107,36 @@ interface EsGraphicalArrow {
   labelSegmentPercentage: number
   /** Couleur du texte (`@textColor` argb → hex #RRGGBB), null = absente. */
   labelColor: string | null
+  /**
+   * os#1310 — label INCLINÉ. `@angle` (degrés horaires 0..360) : angle COURANT
+   * du label, y compris quand il est piloté par l'alignement — e!Sankey bake
+   * l'angle calculé à la sérialisation (vérifié : « Depuration de Chlore »,
+   * angle 45.98 = atan2 du segment porteur). `@angleAlignment` : 1 = aligné
+   * sur la flèche (suit le tracé), 0 = angle fixe. `@segment` : index du
+   * segment de la polyligne portant le label (sert de repli tangente quand
+   * angle=0 avec alignment=1 — flèche sérialisée avant tout recalcul).
+   */
+  labelAngle: number
+  labelAngleAlignment: number
+  labelSegment: number
+  /** os#1310b — `@showEntryname` : afficher le nom du matériau dans le label
+   *  (gabarit `{EntryName}: …`). Défaut e!Sankey = true. */
+  showEntryname: boolean
+  /**
+   * BOÎTE du label en coordonnées DOCUMENT (même repère que les nœuds et la
+   * polyligne du tracé) : `locationX/Y` = coin HAUT-GAUCHE, `sizeW/H` = taille.
+   * Modèle e!Sankey vérifié numériquement (Efficiency diagram, flèches droites
+   * et coudées) : point d'accroche = point du segment `@segment` de la
+   * polyligne à `@segmentPercentage` %, puis centre du label = accroche +
+   * (offsetW, offsetH), et locationX/Y = centre − size/2 (cache sérialisé,
+   * exact au centième). On lit directement locationX/Y : présent sur 100 % des
+   * 2136 labels de flèches mappées du corpus.
+   */
+  labelHasPos: boolean
+  labelX: number
+  labelY: number
+  labelW: number
+  labelH: number
   // OS#1288 — COUDE DROIT. Géométrie du tracé portée par le `<sankeyLink>`
   // (enfant du `<arrow>` graphique). e!Sankey trace des coudes quasi à angle
   // droit : un SEGMENT DROIT (px) part de chaque nœud, puis un virage COURT
@@ -941,6 +1184,8 @@ interface EsGraphicalArrow {
    */
   gradientFromSource: boolean
   gradientToDestination: boolean
+  /** Ordre Z global de la flèche (`@zorder`, cf. EsGraphicalProcess.zorder). */
+  zorder: number
 }
 
 const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } => {
@@ -979,11 +1224,21 @@ const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } 
       labelVisible: label?.getAttribute('visible') !== 'false',
       showValue: label?.getAttribute('showValue') !== 'false',
       showUnit: label?.getAttribute('showUnit') === 'true',
+      showPercentage: attrNum(label, 'showPercentage', 0),
       labelFormat: label?.getAttribute('labelFormat') ?? '',
       labelFontSize: ptToPx(attrNum(labelFont, 'size', 0)),
       labelOffsetH: attrNum(label, 'offsetH', 0),
       labelSegmentPercentage: attrNum(label, 'segmentPercentage', NaN),
       labelColor: argbToHex(label?.getAttribute('textColor') ?? null),
+      labelAngle: attrNum(label, 'angle', 0),
+      labelAngleAlignment: attrNum(label, 'angleAlignment', 0),
+      labelSegment: attrNum(label, 'segment', 0),
+      showEntryname: label?.getAttribute('showEntryname') !== 'false',
+      labelHasPos: !!label && label.hasAttribute('locationX'),
+      labelX: attrNum(label, 'locationX', 0),
+      labelY: attrNum(label, 'locationY', 0),
+      labelW: attrNum(label, 'sizeW', 0),
+      labelH: attrNum(label, 'sizeH', 0),
       hasSankeyLink: sankeyLink !== null,
       startSegmentLength: attrNum(sankeyLink, 'sankeyStartSegmentLength', 0),
       endSegmentLength: attrNum(sankeyLink, 'sankeyEndSegmentLength', 0),
@@ -999,6 +1254,7 @@ const parseGraphicalArrows = (net: Element): { [id: string]: EsGraphicalArrow } 
       // OS#1294 — dégradé source→cible (lu sur la flèche graphique).
       gradientFromSource: a.getAttribute('gradientFromSource') === 'true',
       gradientToDestination: a.getAttribute('gradientToDestination') === 'true',
+      zorder: attrNum(a, 'zorder', -1),
     }
   })
   return out
@@ -1204,6 +1460,29 @@ export const parseEsankeyXml = (
   const referenceUnitType = Object.values(unitTypes).find(ut => ut.used && ut.maximumFlow > 0 && ut.width > 0) ?? null
   if (referenceUnitType) userScale = unitTypeOwnScale(referenceUnitType)
 
+  // os#1305 — « Scale to lower flow threshold » : e!Sankey borne l'épaisseur
+  // RENDUE des flux fins à `lowerFlowTreashold`, seuil en PIXELS — pas en
+  // quantité. Preuve corpus (« Energy Flows China 2014 ») : maximumFlow=141126
+  // sur width=61 px (≈ 0.0004 px/unité) avec lowerFlowTreashold=2 — lu en
+  // quantité, le plancher vaudrait 0.0009 px (réglage sans effet) ; lu en px,
+  // c'est un plancher visible de 2 px, cohérent sur les 4 démos actives du
+  // corpus. Les valeurs observées (1, 2, 11) sont d'ailleurs de petits entiers
+  // découplés des maximumFlow (20 → 141126), même famille de réglages px que
+  // smallArrowTreashold. Équivalent OpenSankey EXACT : `minimum_flux` de la
+  // drawing area (clamp px de l'épaisseur visible, cf. flowThickness.fluxFloor)
+  // → recopié tel quel, AUCUNE conversion par l'échelle (userScale). Le réglage
+  // vit sur chaque unitType ET en miroir sur <net> (valeurs identiques sur tout
+  // le corpus) : on lit le unitType de RÉFÉRENCE d'abord, <net> en repli.
+  let minimumFlux: number | null = null
+  if (referenceUnitType?.scaleToLowerFlowTreashold) {
+    minimumFlux = referenceUnitType.lowerFlowTreashold
+  } else if (net.getAttribute('scaleToLowerFlowTreashold') === 'true') {
+    minimumFlux = attrNum(net, 'lowerFlowTreashold', 0)
+  }
+  // Seuil nul/absent : rien à émettre (0 ABAISSERAIT le plancher par défaut de
+  // 2 px d'OpenSankey, contraire à l'intention du réglage).
+  if (minimumFlux !== null && minimumFlux <= 0) minimumFlux = null
+
   // os#1297 — <scale>/<sectionFactors>/<quantityFactors> (`<net><prototypes>`) :
   // PAS d'échelle supplémentaire, RIEN à mapper. Vérifié sur les 101 démos
   // officielles (e!Sankey 5 demos/) : ce n'est pas un facteur d'échelle global
@@ -1293,10 +1572,17 @@ export const parseEsankeyXml = (
   // les zones de texte) appliquées telles quelles par le loader.
   const applyNameLabelFont = (node: EsNode, graphical: EsGraphicalProcess | null): void => {
     if (!graphical) return
+    // `<label visible='false'>` : e!Sankey masque le NOM (démo « Efficiency
+    // diagram example » : tous les process du bloc central) — indépendant de la
+    // visibilité de la boîte. Clé legacy 0.9 → name_label_is_visible.
+    if (!graphical.labelVisible) node.local.label_visible = false
     if (graphical.labelBold) node.local.name_label_bold = true
     if (graphical.labelItalic) node.local.name_label_italic = true
     if (graphical.labelFontSize > 0) node.local.name_label_font_size = graphical.labelFontSize
     if (graphical.labelColor) node.local.name_label_color = graphical.labelColor
+    // os#1310 — nom tourné (`<label>/@angle`, corpus : 270 = vertical). Rendu
+    // par le widget d'angle générique des labels (name_label_text_angle).
+    if (graphical.labelAngle !== 0) node.local.name_label_text_angle = esAngleToTextAngle(graphical.labelAngle)
   }
 
   // Bordure du nœud depuis la <penColor> du process/place (« Largeur » + couleur
@@ -1327,6 +1613,12 @@ export const parseEsankeyXml = (
 
   // Nœuds : un par graphProcess. Nom = nom logique, sinon label graphique.
   const nodes: { [id: string]: EsNode } = {}
+  // Ordre Z global e!Sankey (`@zorder` : plus grand = par-dessus) de chaque
+  // élément importé (nœuds, flux, zones), collecté au fil des boucles pour
+  // émettre `order_g_elements` (liste OpenSankey 1er plan → fond). z = -1 :
+  // élément sans zorder (places, nœud sans contrepartie graphique) — posé au
+  // 1er plan, comme e!Sankey qui dessine ces petits stubs d'E/S au-dessus.
+  const zOrderEntries: Array<{ id: string, z: number }> = []
   // S2 (SA#294) — Boîte e!Sankey des ancres In/Out collapsées en point. Mémorisée
   // pour recaler, une fois le voisin connu, le point d'accroche du flux sur le BORD
   // de la boîte face au voisin (cf. recenterHiddenAnchor) au lieu du coin haut-gauche.
@@ -1348,6 +1640,7 @@ export const parseEsankeyXml = (
     if (usedNodeIds.has(id)) id = id + '_' + logicalId
     usedNodeIds.add(id)
     logicalToNodeId[logicalId] = id
+    zOrderEntries.push({ id, z: graphical?.zorder ?? -1 })
     nodes[id] = {
       id, name,
       svg_parent_group: 'g_nodes',
@@ -1448,6 +1741,57 @@ export const parseEsankeyXml = (
       nodes[id].is_image = true
       nodes[id].image_src = imgSrc
     }
+    // OS#1292 — Stocks : compartiments <stock> du graphProcess (un par matière).
+    // Sémantique e!Sankey CENTRÉE PROCESS (vérifiée par bilan matière sur la
+    // démo « Processes with Stocks ») : inputQuantity = entrée du process
+    // DEPUIS le stock (déstockage), outputQuantity = sortie du process VERS le
+    // stock (stockage). Δ stock = output − input, sommé sur les compartiments
+    // et converti en unité de base comme les flux. Pas de niveau initial dans
+    // le format → initial_stock jamais posé, et la FORME stock OpenSankey (qui
+    // encode un niveau) n'aurait rien à montrer : la même information est
+    // rendue en LIBELLÉ de stock (« Δ Stock : +380 kg », drawStockBox), activé
+    // EXPLICITEMENT en local — le remplissage de style legacy 0.9 résout
+    // stock_label_is_visible à false, le défaut config (true) ne suffit pas.
+    // (La représentation en FLUX « From/To Stock » façon e!Sankey est l'objet
+    // d'OS#1303, branche 1303-esankey-stock-flux.) Les stocks d'entry
+    // TRANSPARENTE (astuce e!Sankey pour équilibrer un process sans rien
+    // dessiner) gardent la donnée (bilan du process juste) mais restent muets.
+    const compartmentsEl = childByTag(gp, 'compartments')
+    const stockList = compartmentsEl ? childrenByTag(compartmentsEl, 'stock') : []
+    let stockVariation = 0
+    let hasStockQuantity = false
+    let hasVisibleStockEntry = false
+    let stockUnitId: string | null = null
+    stockList.forEach(s => {
+      const input = attrNum(s, 'inputQuantity', 0)
+      const output = attrNum(s, 'outputQuantity', 0)
+      // Compartiment sans quantité : e!Sankey ne dessine rien (flèches de
+      // largeur nulle) → rien à mapper.
+      if (input === 0 && output === 0) return
+      hasStockQuantity = true
+      const found = findUnit(childByTag(s, 'unitRef')?.getAttribute('refId') ?? null)
+      stockVariation += (output - input) * (found?.unit.coefficient ?? 1)
+      const entry = entries[childByTag(s, 'entryRef')?.getAttribute('refId') ?? ''] ?? null
+      if (entry && !entry.isTransparent) {
+        hasVisibleStockEntry = true
+        if (stockUnitId === null) stockUnitId = found?.unit.id ?? null
+      }
+    })
+    if (hasStockQuantity) {
+      nodes[id].has_stock = true
+      nodes[id].stock_values = { stock_variation: stockVariation }
+      if (hasVisibleStockEntry) {
+        nodes[id].local.stock_label_is_visible = true
+        // Unité du libellé via le registre (OS#1286), comme les labels de flux :
+        // la variation est en unité de base, l'affichage re-divise par le
+        // coefficient et restitue la quantité avec son symbole (« +380 kg »).
+        if (stockUnitId !== null) {
+          nodes[id].local.stock_label_unit_visible = true
+          nodes[id].local.stock_label_unit_type = 'unit_model'
+          nodes[id].local.stock_label_unit = stockUnitId
+        }
+      }
+    }
   })
 
   // OS#1291 — Nœuds de PLACES : un par <graphPlace> (frère de <graphProcess>
@@ -1469,6 +1813,7 @@ export const parseEsankeyXml = (
     if (usedNodeIds.has(id)) id = id + '_' + logicalId
     usedNodeIds.add(id)
     logicalToNodeId[logicalId] = id
+    zOrderEntries.push({ id, z: graphical?.zorder ?? -1 })
     nodes[id] = {
       id, name,
       svg_parent_group: 'g_nodes',
@@ -1559,6 +1904,23 @@ export const parseEsankeyXml = (
   const usedEntryIds = new Set<string>()
   const graphArrows = childByTag(netModel, 'graphArrows')
   const graphArrowList = graphArrows ? childrenByTag(graphArrows, 'graphArrow') : []
+  // Labels en % intégré (showPercentage=2, {PercentModel}) : la référence est le
+  // plus gros flux du même unitType dans TOUT le modèle, en unité de base —
+  // vérifié sur « Efficiency diagram example » (2000 → 100 %, 1680 → 84 %…) ;
+  // ce n'est PAS le maximumFlow du unitType (555.6 sur cette démo, réglage
+  // d'échelle). Pré-passe avant la boucle des flux.
+  const maxFlowByUnitType: { [unitTypeId: string]: number } = {}
+  graphArrowList.forEach(ga => {
+    const compartments = childByTag(ga, 'compartments')
+    const flows = compartments ? childrenByTag(compartments, 'flow') : []
+    flows.forEach(flow => {
+      const found = findUnit(childByTag(flow, 'unitRef')?.getAttribute('refId') ?? null)
+      if (!found) return
+      const v = attrNum(flow, 'quantity', 0) * (found.unit.coefficient ?? 1)
+      const key = found.unitType.id
+      if (!(key in maxFlowByUnitType) || v > maxFlowByUnitType[key]) maxFlowByUnitType[key] = v
+    })
+  })
   graphArrowList.forEach(ga => {
     const fromEl = childByTag(ga, 'from')
     const toEl = childByTag(ga, 'to')
@@ -1580,8 +1942,8 @@ export const parseEsankeyXml = (
     // Orientation OpenSankey = axe d'accroche du flux à chaque bout (h = côté,
     // v = haut/bas). opensankey#1301 — SOURCE DE VÉRITÉ = la polyligne du tracé
     // (direction 1er/dernier segment), repli sur l'heuristique `arrowDirection`.
-    // N'est POSÉE que pour un flux paramétrique (< 5 points, cf. plus bas) ; un flux
-    // ROUTÉ l'ignore (axe/côté dérivent de la route au runtime, cf. NOTE-WAYPOINTS.md).
+    // N'est POSÉE que pour un flux paramétrique (cf. isRoutedPolyline plus bas) ; un
+    // flux ROUTÉ l'ignore (axe/côté dérivent de la route au runtime, cf. NOTE-WAYPOINTS.md).
     const srcProc = graphicalProcesses[nodeMapping[fromRef ?? ''] ?? '']
     const tgtProc = graphicalProcesses[nodeMapping[toRef ?? ''] ?? '']
     const orientationFromArrowDir = (srcProc && tgtProc)
@@ -1626,20 +1988,38 @@ export const parseEsankeyXml = (
         if (entry.color) link.local.color = entry.color
       }
       // Orientation posée UNIQUEMENT pour un flux paramétrique. Un flux routé
-      // (≥ 5 points → waypoints ci-dessous) l'ignore (axe/côté dérivent de la route).
-      const isRouted = hasOrthogonalTurn(graphicalArrow?.points ?? [])
+      // (détour → waypoints ci-dessous) l'ignore (axe/côté dérivent de la route).
+      const isRouted = isRoutedPolyline(graphicalArrow?.points ?? [])
       if (!isRouted && orientation !== 'hh') link.local.orientation = orientation
-      // Label de valeur : MASQUÉ à l'import (décision utilisateur). Chez e!Sankey
-      // la quantité appartient à la FLÈCHE (somme de ses matériaux, posée sur un
-      // segment) ; la reproduire PAR flux est faux — sur une flèche
-      // multi-matériaux chaque flux afficherait SA part et les N valeurs se
-      // chevauchent (illisible). On laisse donc les valeurs éteintes ; seul le
-      // titre du nœud reste visible. Les réglages de style du label (#1287 :
-      // taille/couleur/offset ci-dessous) sont tout de même posés : ils
-      // s'appliqueront si l'utilisateur réactive les valeurs à la main. e!Sankey
-      // affiche les valeurs TOUJOURS à l'horizontale (jamais sur la tangente).
-      link.local.value_label_is_visible = false
+      // Label de valeur : REPRIS de la flèche e!Sankey quand elle affiche le
+      // sien (`<sankeyArrowLabel visible showValue>`), mais UNIQUEMENT pour une
+      // flèche MONO-matériau. Chez e!Sankey la quantité appartient à la FLÈCHE
+      // (somme de ses matériaux, posée sur un segment) ; sur une flèche
+      // multi-matériaux (N flux parallèles chez nous) chaque flux afficherait SA
+      // part et les N valeurs se chevauchent (illisible) — celles-là restent
+      // éteintes (manque « label agrégé par flèche », listé en #264). Les
+      // réglages de style du label (#1287 : taille/couleur/offset ci-dessous)
+      // sont posés dans tous les cas : ils s'appliquent aussi si l'utilisateur
+      // réactive les valeurs à la main. e!Sankey affiche les valeurs TOUJOURS à
+      // l'horizontale (jamais sur la tangente).
+      link.local.value_label_is_visible = flows.length === 1 &&
+        graphicalArrow !== null && graphicalArrow.labelVisible &&
+        (graphicalArrow.showValue || graphicalArrow.showPercentage === 2)
       link.local.value_label_on_path = false
+      // os#1304 — FORMAT NUMÉRIQUE de la valeur : le unitType du flow porte un
+      // format .NET (`displayFormat`, ex. « 0.## ») → nombre de décimales posé
+      // par flux (value_label_custom_digit + value_label_nb_digit ; format_value
+      // fait alors `parseFloat(v.toFixed(nb_digit))`). Posé dans tous les cas,
+      // même label éteint (mêmes conventions que les réglages #1287 : correct si
+      // l'utilisateur réactive les valeurs à la main). Approximation assumée (≈) :
+      // OpenSankey TRONQUE les zéros de fin (le parseFloat), donc les formats à
+      // décimales FORCÉES (« 0.00 » → « 1,50 » chez e!Sankey) s'affichent « 1.5 »
+      // chez nous ; le séparateur de milliers (`,`) n'est pas reproduit.
+      const nbDecimals = netFormatDecimalCount(found?.unitType.displayFormat ?? '')
+      if (nbDecimals !== null) {
+        link.local.value_label_custom_digit = true
+        link.local.value_label_nb_digit = nbDecimals
+      }
       // Unité du label : référence au REGISTRE d'unités (mode unit_model, OS#1286)
       // pointant l'unité D'ORIGINE du flow. data_value étant converti vers l'unité
       // de base, l'affichage re-divise par le coefficient et restitue la quantité
@@ -1684,17 +2064,35 @@ export const parseEsankeyXml = (
         link.local.ending_tangeant = bend
         link.local.curvature = bend
         // opensankey#1301 — POINTS DE CONTRÔLE. La polyligne e!Sankey est SUR le tracé :
-        // [ancre source, …coins…, ancre cible]. Le flux est ROUTÉ ssi elle a un COUDE
-        // ORTHOGONAL (hasOrthogonalTurn) — vrai routage (escalier, boucle), même en 4
-        // points ; un flux droit ou courbe simple (segment milieu diagonal) reste
-        // paramétrique. On prend alors TOUS les points intérieurs (P1..P_{n-2}) comme
-        // waypoints (les vrais coins). Coords doc e!Sankey → translatées avec les nœuds.
+        // [ancre source, …coins…, ancre cible]. Le flux est ROUTÉ ssi elle fait un
+        // DÉTOUR (isRoutedPolyline : ≥ 2 coudes quasi-orthogonaux OU rebroussement) —
+        // vrai routage (escalier, boucle), même en 4 points ; un flux droit ou courbe
+        // simple (segment milieu diagonal) reste paramétrique. Les waypoints sont les
+        // COINS RECTIFIÉS de la polyligne (rectifyRoutedWaypoints), pas ses points
+        // bruts : la route arrondie e!Sankey dérive de quelques px et ses sommets
+        // repris tels quels dessinent des mini-S à rebours à chaque coin. Coords
+        // doc e!Sankey → translatées avec les nœuds.
         if (isRouted) {
-          link.local.shape_waypoints = graphicalArrow.points
-            .slice(1, graphicalArrow.points.length - 1)
-            .map(p => ({ x: p.x, y: p.y }))
+          const corners = rectifyRoutedWaypoints(graphicalArrow.points)
+          link.local.shape_waypoints = corners.length > 0
+            ? corners
+            : graphicalArrow.points.slice(1, graphicalArrow.points.length - 1).map(p => ({ x: p.x, y: p.y }))
           link.local.left_horiz_shift = 0.01
           link.local.right_horiz_shift = 0.01
+          // MAPPING EXACT des extrémités : sans offset d'ancre, OpenSankey ré-empile
+          // l'ancre ailleurs que le port e!Sankey (P0/PN de la polyligne) et le
+          // runtime ponte l'écart ancre↔coin en insérant un coude → dépassement puis
+          // rebroussement visible au dernier coin. On épingle donc l'ancre au port,
+          // comme pour les flux droits vv/hh ci-dessous. Axe de l'offset = transverse
+          // à l'axe d'accroche (1er/dernier segment de la polyligne) ; segment
+          // diagonal → pas d'offset (accroche paramétrique auto).
+          const rpts = graphicalArrow.points
+          const P0 = rpts[0], PN = rpts[rpts.length - 1]
+          const srcAxis = routedSegAxis(P0, rpts[1])
+          const tgtAxis = routedSegAxis(rpts[rpts.length - 2], PN)
+          const srcN = nodes[sourceId], tgtN = nodes[targetId]
+          if (srcN && srcAxis !== 'd') link.local.shape_source_anchor_offset = (srcAxis === 'v') ? (P0.x - srcN.x) : (P0.y - srcN.y)
+          if (tgtN && tgtAxis !== 'd') link.local.shape_target_anchor_offset = (tgtAxis === 'v') ? (PN.x - tgtN.x) : (PN.y - tgtN.y)
         } else if (graphicalArrow.points.length >= 2 && (orientation === 'vv' || orientation === 'hh')) {
           // Flux DROIT (vv/hh, mêmes axes aux deux bouts) : aligner les ancres sur les
           // PORTS e!Sankey (P0/dernier point), sinon l'empilement OpenSankey les décentre
@@ -1742,11 +2140,9 @@ export const parseEsankeyXml = (
       if (graphicalArrow?.gradientFromSource && graphicalArrow?.gradientToDestination) {
         link.local.color_rule = 'gradient'
       }
-      // AUCUN label de valeur posé sur les flux importés (décision user) : chez
-      // e!Sankey l'étiquette de quantité appartient à la FLÈCHE (somme de ses
-      // matériaux, position sur segment) — la reproduire par flux serait faux ;
-      // manque « label agrégé par flèche » listé en #264. On prépare seulement
-      // l'unité : si l'utilisateur active les valeurs, elle est déjà correcte.
+      // Unité du label (posée même quand le label reste éteint — flèche
+      // multi-matériaux : si l'utilisateur active les valeurs, elle est déjà
+      // correcte).
       // OS#1286 — l'unité est désormais une référence au REGISTRE d'unités
       // (mode unit_model) pointant l'unité D'ORIGINE du flow : data_value étant
       // converti vers l'unité de base, l'affichage re-divise par le coefficient
@@ -1774,14 +2170,33 @@ export const parseEsankeyXml = (
       } else if (labelFormat.includes('{PercentProcessDestination}')) {
         link.local.value_label_unit_type = '%ID'
       }
+      // Label en % INTÉGRÉ (showPercentage=2 = {PercentModel} : % du plus gros
+      // flux du même unitType, cf. pré-passe maxFlowByUnitType). Pas de mode
+      // dynamique équivalent côté OpenSankey : reproduit STATIQUEMENT via
+      // l'unité texte '%' + unit_factor = max/100 (format_value divise par le
+      // facteur avant affichage → 2000/20 = « 100 % »). PRIORITAIRE sur showUnit
+      // et labelFormat : quand showPercentage est actif, e!Sankey ignore le
+      // gabarit sérialisé (vérifié sur « Efficiency diagram example », dont le
+      // labelFormat contient {Quantity} alors que le rendu affiche « 100,0 % »).
+      // Limite : format_value n'applique unit_factor que s'il est > 1 → repli
+      // valeur brute si le max du modèle est <= 100 (aucun cas au corpus).
+      const percentModelRef = (graphicalArrow?.showPercentage === 2 && found)
+        ? (maxFlowByUnitType[found.unitType.id] ?? 0)
+        : 0
+      if (percentModelRef > 100) {
+        link.local.value_label_unit_type = 'unit_name'
+        link.local.label_unit = '%'
+        link.local.label_unit_visible = true
+        link.local.label_unit_factor = percentModelRef / 100
+      }
       // OS#1287 — TAILLE, COULEUR et POSITION du label de VALEUR, repris du
       // `<sankeyArrowLabel>` graphique de la flèche (retrouvé via edgeMapping).
-      // On ne DÉCIDE PAS ici de la visibilité du label (arbitrée ailleurs, selon
-      // la stratégie e!Sankey « l'étiquette appartient à la flèche ») : on se
-      // contente, quand la flèche affiche sa valeur (`showValue`), de préparer la
-      // mise en forme pour qu'un label activé soit fidèle — sinon le style par
-      // défaut impose une police trop grosse (~20 px) et un placement générique.
-      if (graphicalArrow && graphicalArrow.showValue !== false) {
+      // La visibilité est arbitrée PLUS HAUT (mono-matériau uniquement) : on se
+      // contente, quand la flèche affiche sa valeur (`showValue`) ou son % intégré
+      // (`showPercentage`), de préparer la mise en forme pour qu'un label activé
+      // soit fidèle — sinon le style par défaut impose une police trop grosse
+      // (~20 px) et un placement générique.
+      if (graphicalArrow && (graphicalArrow.showValue !== false || graphicalArrow.showPercentage === 2)) {
         // TAILLE de police (<font size>). Absente (0) → le style décide.
         if (graphicalArrow.labelFontSize > 0) {
           link.local.value_label_font_size = graphicalArrow.labelFontSize
@@ -1790,25 +2205,105 @@ export const parseEsankeyXml = (
         if (graphicalArrow.labelColor) {
           link.local.value_label_color = graphicalArrow.labelColor
         }
-        // POSITION LE LONG du tracé (segmentPercentage : 0 = près de la source,
-        // 100 = près de la cible). e!Sankey affiche la valeur À PLAT, hors tracé
-        // (jamais sur la tangente) : il n'existe alors pas d'attribut « % le long
-        // du chemin » côté OpenSankey — l'axe le long du flux est piloté par
-        // value_label_horiz (left = source, middle = centre, right = cible ; cf.
-        // Class_LinkLabelDrawer.getLabelPos, off-path). On approxime par tiers ;
-        // couvre les flux In/Out (vh/hv) dont e!Sankey colle le label près du nœud.
-        if (Number.isFinite(graphicalArrow.labelSegmentPercentage)) {
-          const seg = graphicalArrow.labelSegmentPercentage
-          link.local.value_label_horiz = seg < 33 ? 'left' : seg > 66 ? 'right' : 'middle'
+        // os#1310 — label INCLINÉ. `@angle` fait foi (e!Sankey y bake l'angle
+        // courant, même piloté par l'alignement, cf. EsGraphicalArrow) ; repli
+        // quand angle=0 avec angleAlignment=1 : tangente du segment `@segment`
+        // de la polyligne (atan2 y-vers-le-bas = même convention horaire que
+        // l'angle e!Sankey ET que le rotate() SVG — souvent 0 de toute façon,
+        // les flèches concernées étant horizontales). Rendu STATIQUE : l'angle
+        // est figé à l'import, il ne suit pas le flux si on le déplace (≈,
+        // cf. NOTE-ESANKEY-MAPPING §4.2).
+        let esAngle = graphicalArrow.labelAngle
+        const pts = graphicalArrow.points
+        if (esAngle === 0 && graphicalArrow.labelAngleAlignment === 1 && pts.length >= 2) {
+          const k = Math.min(Math.max(graphicalArrow.labelSegment, 0), pts.length - 2)
+          const dx = pts[k + 1].x - pts[k].x
+          const dy = pts[k + 1].y - pts[k].y
+          if (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01) esAngle = Math.atan2(dy, dx) * 180 / Math.PI
         }
-        // DÉCALAGE PERPENDICULAIRE au tracé (offsetH) : côté du flux où poser le
-        // label. offsetH >= 0 → sous le flux horizontal (value_label_vert =
-        // 'bottom'), < 0 → au-dessus ('top'). Seul le CÔTÉ est repris : OpenSankey
-        // réserve déjà un écart perpendiculaire hors tracé (demi-épaisseur +
-        // police) ; reporter l'amplitude d'offsetH en vert_shift éloignerait trop
-        // le label (double comptage) — approximation assumée, cf. #1287.
-        if (graphicalArrow.labelOffsetH !== 0) {
-          link.local.value_label_vert = graphicalArrow.labelOffsetH >= 0 ? 'bottom' : 'top'
+        const textAngle = esAngleToTextAngle(esAngle)
+        if (textAngle !== 0) link.local.value_label_text_angle = textAngle
+        // Label quasi-vertical (±90 à ±45 près) : la boîte e!Sankey est un
+        // ruban VERTICAL et le texte y coule du haut vers le bas (angle > 0)
+        // ou du bas vers le haut (angle < 0).
+        const isSteepAngle = Math.abs(textAngle) > 45 && Math.abs(textAngle) < 135
+        // os#1310b — NOM du matériau dans le label. Le gabarit e!Sankey
+        // (`{EntryName}: {Quantity} {UnitName}`, constant sur le corpus) est
+        // piloté par l'interrupteur RÉEL `@showEntryname`. Reproduit avec les
+        // mécanismes existants : label de NOM du flux en source 'tag' (le tag
+        // de flux importé porte le nom de l'entry) + valeur COLLÉE au nom
+        // (value_label_stick_to_label). Restreint aux flèches mono-matériau à
+        // label visible, comme la valeur. Écart assumé (≈) : le deux-points du
+        // gabarit n'est pas reproduit (« Chlore_r 720 g/t »).
+        const showEntryName = graphicalArrow.labelVisible && graphicalArrow.showEntryname &&
+          entry !== null && flows.length === 1
+        if (showEntryName) {
+          link.local.name_label_is_visible = true
+          link.local.name_label_text_source = 'tag'
+          link.local.name_label_flux_tag_group_id = ESANKEY_ENTRIES_TAGG_ID
+          if (graphicalArrow.labelFontSize > 0) link.local.name_label_font_size = graphicalArrow.labelFontSize
+          if (graphicalArrow.labelColor) link.local.name_label_color = graphicalArrow.labelColor
+          if (textAngle !== 0) link.local.name_label_text_angle = textAngle
+          // La valeur se colle au nom, dans le sens de LECTURE du texte : à
+          // droite du nom pour un label ~horizontal, en dessous (angle > 0,
+          // texte qui coule vers le bas) ou au-dessus (angle < 0) pour un
+          // label ~vertical (computeStickPos travaille sur la bbox TOURNÉE).
+          link.local.value_label_stick_to_label = true
+          if (isSteepAngle) {
+            link.local.value_label_horiz = 'middle'
+            link.local.value_label_horiz_shift = 0
+            link.local.value_label_vert = textAngle > 0 ? 'bottom' : 'top'
+            link.local.value_label_vert_shift = 0
+          } else {
+            link.local.value_label_horiz = 'right'
+            link.local.value_label_inside_horiz = false
+            link.local.value_label_horiz_shift = 4
+            link.local.value_label_vert = 'middle'
+            link.local.value_label_vert_shift = 0
+          }
+        }
+        // POSITION. e!Sankey sérialise la BOÎTE du label posée à l'écran
+        // (locationX/Y + sizeW/H, coords document = repère des nœuds, cf.
+        // EsGraphicalArrow.labelHasPos) : on la reporte via le mode ABSOLU
+        // d'OpenSankey (getLabelPos : position_x = bord GAUCHE — anchor
+        // 'start' —, position_y = CENTRE vertical — baseline 'middle' —,
+        // coords monde ; même mécanique que le drag de label). C'est exact au
+        // pixel près à l'import (indépendant de notre reconstruction du
+        // tracé), au prix d'un label qui ne suit plus le flux si l'utilisateur
+        // déplace les nœuds — même compromis, assumé, que les labels de NOM
+        // des process (applyNameLabelPos). Translaté par la normalisation des
+        // positions plus bas, comme les waypoints. RESTREINT aux flèches
+        // mono-matériau : sur une flèche multi-flow, N labels au même point
+        // exact se masqueraient l'un l'autre si réactivés à la main.
+        // Porteur : le label de NOM quand le nom du matériau est affiché (la
+        // valeur collée suit), la VALEUR sinon.
+        // os#1310 — label TOURNÉ : l'ancre (début du texte, anchor 'start')
+        // n'est plus au bord gauche/milieu de la boîte mais au MILIEU de sa
+        // largeur, en HAUT (texte qui coule vers le bas, angle > 0) ou en BAS
+        // (angle < 0) du ruban vertical sérialisé par e!Sankey.
+        if (graphicalArrow.labelHasPos && flows.length === 1) {
+          const posPrefix = showEntryName ? 'name_label' : 'value_label'
+          link.local[posPrefix + '_position_absolute'] = true
+          if (isSteepAngle) {
+            link.local[posPrefix + '_position_x'] = graphicalArrow.labelX + graphicalArrow.labelW / 2
+            link.local[posPrefix + '_position_y'] = textAngle > 0
+              ? graphicalArrow.labelY
+              : graphicalArrow.labelY + graphicalArrow.labelH
+          } else {
+            link.local[posPrefix + '_position_x'] = graphicalArrow.labelX
+            link.local[posPrefix + '_position_y'] = graphicalArrow.labelY + graphicalArrow.labelH / 2
+          }
+        } else {
+          // REPLI sans locationX (aucun cas au corpus) : approximation par tiers
+          // le long du tracé (segmentPercentage) + côté perpendiculaire (offsetH),
+          // via les ancrages off-path value_label_horiz/vert de getLabelPos.
+          if (Number.isFinite(graphicalArrow.labelSegmentPercentage)) {
+            const seg = graphicalArrow.labelSegmentPercentage
+            link.local.value_label_horiz = seg < 33 ? 'left' : seg > 66 ? 'right' : 'middle'
+          }
+          if (graphicalArrow.labelOffsetH !== 0) {
+            link.local.value_label_vert = graphicalArrow.labelOffsetH >= 0 ? 'bottom' : 'top'
+          }
         }
       }
       // A5 — échelle indépendante par unitType (cf. calcul de `userScale` plus
@@ -1822,6 +2317,9 @@ export const parseEsankeyXml = (
         }
       }
       links[id] = link
+      // Une flèche multi-matériaux → N flux au MÊME zorder : le tri stable
+      // conserve leur ordre de déclaration entre eux.
+      zOrderEntries.push({ id, z: graphicalArrow?.zorder ?? -1 })
       nodes[sourceId].outputLinksId.push(id)
       nodes[sourceId].output_value += link.value.data_value
       nodes[sourceId].links_order.push(id)
@@ -1832,7 +2330,8 @@ export const parseEsankeyXml = (
   })
 
   // Zones libres (textes, images, rectangles) et légende.
-  const labels = parseShapes(net, images, brushPalette)
+  const { containers: labels, zorders: shapeZorders } = parseShapes(net, images, brushPalette)
+  Object.entries(shapeZorders).forEach(([id, z]) => zOrderEntries.push({ id, z }))
   const legendPos = parseLegendPosition(net)
   const legendFontSize = parseLegendFontSize(net) // OS#1296
 
@@ -1850,11 +2349,22 @@ export const parseEsankeyXml = (
     containerList.forEach(c => { c.x = (c.x as number) + dx; c.y = (c.y as number) + dy })
     if (legendPos) { legendPos.x += dx; legendPos.y += dy }
     // opensankey#1301 — les points de contrôle des flux sont en coordonnées MONDE
-    // (même repère que les nœuds) → translater du même dx/dy.
+    // (même repère que les nœuds) → translater du même dx/dy. Idem pour les
+    // labels de valeur posés en ABSOLU (position monde reprise d'e!Sankey).
     Object.values(links).forEach(l => {
       const wps = l.local.shape_waypoints
       if (Array.isArray(wps)) {
         l.local.shape_waypoints = wps.map(p => ({ x: p.x + dx, y: p.y + dy }))
+      }
+      if (l.local.value_label_position_absolute === true) {
+        l.local.value_label_position_x = (l.local.value_label_position_x as number) + dx
+        l.local.value_label_position_y = (l.local.value_label_position_y as number) + dy
+      }
+      // os#1310b — même translation pour le label de NOM absolu (porteur de la
+      // position quand le nom du matériau est affiché, la valeur y est collée).
+      if (l.local.name_label_position_absolute === true) {
+        l.local.name_label_position_x = (l.local.name_label_position_x as number) + dx
+        l.local.name_label_position_y = (l.local.name_label_position_y as number) + dy
       }
     })
   }
@@ -1917,6 +2427,47 @@ export const parseEsankeyXml = (
   // OS#1286 — registre d'unités (grandeurs e!Sankey), lu par fromJSON.
   if (unitsRegistry.length > 0) {
     result.units = unitsRegistry
+  }
+  // os#1305 — plancher d'épaisseur des flux fins (seuil px, cf. calcul de
+  // `minimumFlux` plus haut).
+  if (minimumFlux !== null) {
+    result.minimum_flux = minimumFlux
+  }
+  // os#1306 — masquage des zéros. e!Sankey : `net@hideZeroFlows` masque les
+  // flux à quantité nulle, `net@hideZeroFlowProcesses` étend le masquage aux
+  // process dont TOUS les flux sont nuls (attributs toujours EXPLICITES sur le
+  // corpus : 14× / 5× true, les 5 hideZeroFlowProcesses=true étant un
+  // sous-ensemble des hideZeroFlows=true). OpenSankey fait DÉJÀ les deux
+  // d'office : la porte `is_not_zero` (Class_LinkElement) filtre les flux à 0,
+  // et un nœud dont tous les flux sont nuls tombe avec eux
+  // (Class_NodeElement.checkIfLinksVisibilitiesAreOK). Masquage DYNAMIQUE,
+  // piloté par la valeur (le flux réapparaît si la donnée est éditée) — là où
+  // un `is_visible=false` posé à l'import resterait figé, et où un seuil
+  // `filter_link_value` epsilon (comparaison `valueCurrent >= seuil` au rendu)
+  // masquerait aussi les petites valeurs 0 < v < epsilon. Donc :
+  // hideZeroFlows=true → rien à poser (défaut fidèle) ; false (défaut
+  // e!Sankey) → `show_zero_links: true` (option globale du drawing_area) pour
+  // que les flux nuls restent tracés en trait fin comme chez e!Sankey — et
+  // leurs process avec (couvre aussi hideZeroFlowProcesses=false).
+  // Limite (≈, cf. NOTE-ESANKEY-MAPPING §4.4) : hideZeroFlows=true +
+  // hideZeroFlowProcesses=false sur un process dont tous les flux sont nuls —
+  // e!Sankey garde la boîte seule, chez nous elle disparaît avec ses flux.
+  // Unique cas du corpus (« Bus Passengers », arrêt sans montée ni descente) :
+  // process décor déjà `visible=false` → aucune différence visible.
+  if (net.getAttribute('hideZeroFlows') !== 'true') {
+    result.show_zero_links = true
+  }
+  // Ordre Z : zorder DÉCROISSANT (liste OpenSankey = 1er plan → fond). Tri
+  // stable : les flux d'une même flèche (même zorder) gardent leur ordre de
+  // déclaration. Les éléments SANS zorder (places, cf. zOrderEntries) passent
+  // au 1er plan. N'est émis que si le fichier porte au moins un zorder — sinon
+  // aucune info d'ordre, on laisse l'ordre de création par défaut.
+  const zKnown = zOrderEntries.filter(e => e.z >= 0).sort((a, b) => b.z - a.z)
+  if (zKnown.length > 0) {
+    result.order_g_elements = [
+      ...zOrderEntries.filter(e => e.z < 0).map(e => e.id),
+      ...zKnown.map(e => e.id),
+    ]
   }
   return result
 }

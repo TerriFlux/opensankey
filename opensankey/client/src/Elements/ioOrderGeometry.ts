@@ -52,6 +52,13 @@ export type Type_IOGeo = {
                      // set it replaces the opposite node's centre for the direction split
                      // (criterion 1) and the tie-break (criterion 3). Left undefined for
                      // normal links, which keep using the opposite node.
+  bundle_tie?: number // FINAL tie-break for a bundle of parallel links (same source, same
+                     // target, same sides) — where every other key element is equal. It is
+                     // `bundleTie(side, is_source, ord)` : a stable per-link ordinal signed by
+                     // the side geometry so the SOURCE and TARGET ends order the bundle in the
+                     // mirror sense (CCW at the source, CW at the target) and the parallel
+                     // flows don't cross. Built by the caller (it needs is_source and a shared
+                     // ordinal). Defaults to 0 (no effect).
 }
 
 const side_rank: { [_ in Type_Side]: number } = {
@@ -63,19 +70,43 @@ const side_rank: { [_ in Type_Side]: number } = {
 
 const isHorizontalSide = (s: Type_Side) => s === 'left' || s === 'right'
 
-// Ranking key for one link : [band, primary, anchorTie, stackTie], lexical.
-//  band     : 3 bands on the face — 0 = turning-up (above the straight block), 1 = straight
-//             ('hh'/'vv'), 2 = turning-down (below the straight block). A turning link that
-//             turns up sits above ALL straight links, one that turns down sits below them.
-//  primary  : turning links → reach (height), signed so ascending sort puts the nearest
-//             (first-turning) link at each band's OUTER extremity ; straight links → the
-//             stacking position itself (plain opposite order, within the middle band).
-//  anchorTie: turning links, ADVANCED only → node-side anchor distance reach·curve_node,
-//             signed like primary ; 0 otherwise.
-//  stackTie : reference stacking position (final, keeps determinism).
+// Does the `_links_order` index direction match the node's CCW boundary tangent for this
+// side ? Index runs top→bottom (left/right) or left→right (top/bottom) ; the CCW tangent
+// runs up on the right, left on top, down on the left, right on the bottom. So they agree on
+// 'left'/'bottom' (+1) and oppose on 'right'/'top' (−1).
+const sideIndexVsCCW = (s: Type_Side): number => (s === 'left' || s === 'bottom') ? 1 : -1
+
+/**
+ * Signed ordinal that keeps a bundle of parallel links (same source, same target, same
+ * sides) UNTWISTED across its two endpoints. The band linking two convex node boundaries
+ * flips orientation, so the members must be laid CCW at the source and CW at the target.
+ * With `ord` a stable per-link ordinal shared by both ends, the SOURCE end signs it by the
+ * side's index-vs-CCW factor and the TARGET end by its opposite — so ascending sort places
+ * the same member at mirror slots (e.g. leftmost at the source ↔ bottommost at the target
+ * when the flow descends and turns right). `ord` must be identical from both ends (e.g. the
+ * link's index in the sankey's global links list).
+ */
+export function bundleTie(side: Type_Side, is_source: boolean, ord: number): number {
+  const idx_dir = sideIndexVsCCW(side)
+  return (is_source ? idx_dir : -idx_dir) * ord
+}
+
+// Ranking key for one link : [band, primary, anchorTie, stackTie, bundleTie], lexical.
+//  band      : 3 bands on the face — 0 = turning-up (above the straight block), 1 = straight
+//              ('hh'/'vv'), 2 = turning-down (below the straight block). A turning link that
+//              turns up sits above ALL straight links, one that turns down sits below them.
+//  primary   : turning links → reach (height), signed so ascending sort puts the nearest
+//              (first-turning) link at each band's OUTER extremity ; straight links → the
+//              stacking position itself (plain opposite order, within the middle band).
+//  anchorTie : turning links, ADVANCED only → node-side anchor distance reach·curve_node,
+//              signed like primary ; 0 otherwise.
+//  stackTie  : reference stacking position.
+//  bundleTie : final, only bites when everything else is equal — i.e. a bundle of parallel
+//              links (same source, same target, same sides). `geo.bundle_tie` (built by the
+//              caller via bundleTie()) mirrors the two ends so the bundle stays untwisted.
 // The "reference" is the opposite node's centre, except for a recycling link, where it
 // is the centre of the loop's belly (geo.stack_ref) — see the header.
-type Type_OrderKey = [number, number, number, number]
+type Type_OrderKey = [number, number, number, number, number]
 
 function orderKey(geo: Type_IOGeo, nx: number, ny: number, use_curve: boolean): Type_OrderKey {
   const dx = geo.ox - nx
@@ -86,15 +117,16 @@ function orderKey(geo: Type_IOGeo, nx: number, ny: number, use_curve: boolean): 
     ? geo.stack_ref - (horiz ? ny : nx)
     : (horiz ? dy : dx)
   const up = stack < 0
+  const bundle = geo.bundle_tie ?? 0
   // Straight ('hh'/'vv') links : the MIDDLE band (1), no fan — plain order by the opposite
   // stacking position. Turning links wrap around this block, above or below it.
   if (!geo.turning)
-    return [1, stack, 0, 0]
+    return [1, stack, 0, 0, bundle]
   // Turning ('vh'/'hv') links : band 0 when they turn up (above the straight block), band 2
   // when they turn down (below it) ; within the band, HEIGHT (reach) toward the extremity.
   const reach = Math.abs(horiz ? dx : dy)  // toward the opposite (≥ 0), on the emission axis
   const anchor = reach * geo.curve_node    // node-side curvature anchor distance (tie-break)
-  return [up ? 0 : 2, up ? reach : -reach, use_curve ? (up ? anchor : -anchor) : 0, stack]
+  return [up ? 0 : 2, up ? reach : -reach, use_curve ? (up ? anchor : -anchor) : 0, stack, bundle]
 }
 
 /**
@@ -137,7 +169,7 @@ export function recyclingBellyCentre(
 }
 
 function cmpKey(a: Type_OrderKey, b: Type_OrderKey): number {
-  return (a[0] - b[0]) || (a[1] - b[1]) || (a[2] - b[2]) || (a[3] - b[3])
+  return (a[0] - b[0]) || (a[1] - b[1]) || (a[2] - b[2]) || (a[3] - b[3]) || (a[4] - b[4])
 }
 
 /**

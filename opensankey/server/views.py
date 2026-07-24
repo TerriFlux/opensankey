@@ -1839,6 +1839,29 @@ def menus_tutorials():
     return response
 
 
+@opensankey.route("/stan_meta", methods=["POST"])
+def stan_meta():
+    """
+    Renvoie les périodes et couches (FlowLayer) d'un fichier STAN, sans le
+    convertir : le front s'en sert pour proposer le choix de couche avant
+    l'import (open_stan n'importe qu'UNE couche, la première à défaut).
+    """
+    try:
+        stan_input_file = request.files["file_content"]
+
+        tmp_dir = tempfile.mkdtemp()
+        stan_input_filename = os.path.join(tmp_dir, "input.stan")
+        stan_input_file.save(stan_input_filename)
+
+        meta = stan_smfa.list_periods_and_layers(stan_input_filename)
+        clean_file(stan_input_filename, "Clean_STAN")
+
+        return Response(response=json.dumps(meta), status=200, mimetype="application/json")
+    except Exception as e:
+        current_app.logger.error("STAN META | {0}".format(e))
+        abort(500)
+
+
 @opensankey.route("/open_stan", methods=["POST"])
 def open_stan():
     """

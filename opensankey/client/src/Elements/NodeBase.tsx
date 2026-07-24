@@ -243,12 +243,17 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     if (this._is_selected) {
       this.drawDragHandlers()
     }
-    this._nodeDrawNameLabel.drawGenericLabel()
+    // Icône/image AVANT les textes : une image de nœud peut remplir toute la
+    // boîte (import e!Sankey) — le label doit rester lisible par-dessus.
     this._nodeDrawIcon.drawGenericLabel()
+    this._nodeDrawNameLabel.drawGenericLabel()
   }
   public drawIcon() {
     if (!this._nodeDrawIcon) return
     this._nodeDrawIcon.drawGenericLabel()
+    // drawGenericLabel append le <g> en fin de nœud : re-trier pour que les
+    // labels repassent au-dessus de l'icône/image.
+    this._orderD3Elements()
   }
   public drawShape() {
     if (!this._nodeDrawShape) return
@@ -491,8 +496,10 @@ export abstract class Class_NodeBase extends Class_BaseShape {
 
   protected _orderD3Elements() {
     this.d3_selection_g_shape?.raise()
-    this._nodeDrawNameLabel.d3_selection?.raise()
+    // Icône/image sous les textes (cf. drawElements) : le label de nom doit
+    // rester au-dessus d'une image qui remplit la boîte du nœud.
     this._nodeDrawIcon.d3_selection?.raise()
+    this._nodeDrawNameLabel.d3_selection?.raise()
   }
 
   // P1 (refonte événements) — la désambiguïsation simple/double-clic est faite
@@ -554,7 +561,7 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     }
     // #680 — Recadrage CONTINU pendant le glissé, en SUIVANT la direction du drag :
     // - mode largeur/hauteur/tout → dézoom au fur et à mesure que le nœud s'éloigne ;
-    // - mode 'aucun' → zoom constant, recentrage caméra (le diagramme glisse à l'opposé) ;
+    // - mode 'aucun' → no-op : la caméra ne bouge pas (revu post-#680) ;
     // - sur l'axe libre, la zone de dessin s'élargit et suit l'élément (bord poussé épinglé).
     // NB : le recadrage change le transform en cours de drag → un léger décalage du pointeur
     // par tick est possible (assumé : comportement voulu « au fur et à mesure »).
@@ -590,7 +597,7 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     }
     this._nodeEventsHandler.handleMouseDragEnd(event)
     // #680 — Cadrage FINAL du mode (suit encore la direction accumulée du glissé), puis on
-    // clôt le drag (efface la direction). Mode 'none' → recentrage caméra ; modes largeur/
+    // clôt le drag (efface la direction). Mode 'none' → no-op ; modes largeur/
     // hauteur/tout → cadrage maintenu bord à bord.
     this.drawing_area.applyAutoFitMode(false)
     this.drawing_area.endFitDrag()

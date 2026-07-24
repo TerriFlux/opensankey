@@ -729,21 +729,41 @@ export class LinkDrawShape {
     const chain: Array<[number, number]> = [src, ...wps, tgt]
     // Coudes orthogonaux aux extrémités : le segment de SORTIE (source) et d'ENTRÉE
     // (cible) doit suivre l'axe d'accroche (e!Sankey est orthogonal ; nos ancres ne
-    // coïncident pas avec les ports e!Sankey → sinon une diagonale part vers le 1er
-    // waypoint). Coude côté source si sortie horizontale : (wp0.x, src.y) ; si sortie
-    // verticale : (src.x, wp0.y). Symétrique côté cible. Inséré seulement si utile.
+    // coïncident pas toujours avec les ports d'origine → sinon une diagonale part
+    // vers le 1er waypoint). Deux cas :
+    //  - le segment qui borde le waypoint extrême est DÉJÀ perpendiculaire à l'axe
+    //    d'accroche (coin menant à un montant) → on RECALE ce coin sur l'axe de
+    //    l'ancre. Insérer un coude ici ferait dépasser le montant puis REVENIR sur
+    //    l'ancre (ergot + rebroussement visibles quand l'ancre ne coïncide pas avec
+    //    le port, ex. empilement multi-flux) ;
+    //  - sinon (segment oblique), coude inséré comme avant : côté source si sortie
+    //    horizontale (wp0.x, src.y) ; si verticale (src.x, wp0.y). Symétrique cible.
     if (chain.length >= 3) {
+      const eps = 1e-3
       const first = chain[1]
       if (this._link.is_source_horizontal) {
-        if (Math.abs(first[1] - src[1]) > 1e-3) chain.splice(1, 0, [first[0], src[1]])
+        if (Math.abs(first[1] - src[1]) > eps) {
+          if (Math.abs(chain[2][0] - first[0]) <= eps) first[1] = src[1]
+          else chain.splice(1, 0, [first[0], src[1]])
+        }
       } else {
-        if (Math.abs(first[0] - src[0]) > 1e-3) chain.splice(1, 0, [src[0], first[1]])
+        if (Math.abs(first[0] - src[0]) > eps) {
+          if (Math.abs(chain[2][1] - first[1]) <= eps) first[0] = src[0]
+          else chain.splice(1, 0, [src[0], first[1]])
+        }
       }
       const last = chain[chain.length - 2]
+      const beforeLast = chain[chain.length - 3]
       if (this._link.is_target_horizontal) {
-        if (Math.abs(last[1] - tgt[1]) > 1e-3) chain.splice(chain.length - 1, 0, [last[0], tgt[1]])
+        if (Math.abs(last[1] - tgt[1]) > eps) {
+          if (Math.abs(beforeLast[0] - last[0]) <= eps) last[1] = tgt[1]
+          else chain.splice(chain.length - 1, 0, [last[0], tgt[1]])
+        }
       } else {
-        if (Math.abs(last[0] - tgt[0]) > 1e-3) chain.splice(chain.length - 1, 0, [tgt[0], last[1]])
+        if (Math.abs(last[0] - tgt[0]) > eps) {
+          if (Math.abs(beforeLast[1] - last[1]) <= eps) last[0] = tgt[0]
+          else chain.splice(chain.length - 1, 0, [tgt[0], last[1]])
+        }
       }
     }
     // Dédupliquer les sommets confondus (évite des normales/directions NaN).

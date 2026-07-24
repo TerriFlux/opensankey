@@ -255,7 +255,10 @@ export const resources_app_elements = {
             attrGeneral: 'Transfer the attributes of the drawing area of the imported sankey to the current',
             doc: 'Transfer the documentation (Doc tab) from the imported sankey to the current',
             Styles: 'Transfer element styles from the imported sankey to the current',
-          }
+            Attribut: 'Transfer attributes of nodes and links from the imported sankey to the current one',
+          },
+          PosNoeud: 'Nodes',
+          amp_manuelle: 'Node positioning'
         },
         Styles: 'Styles',
 
@@ -298,6 +301,22 @@ export const resources_app_elements = {
           sankey_file_name: 'Name of diagram : ',
           style_attr_applicated: 'Select which attributes in the style can be applicated, it also unlock the corresponding input',
         },
+        Values: 'Values',
+        amp_import: 'From another diagram',
+        choseTransforDifficulty: 'Element types',
+        container_style: 'Text zone styles',
+        download_file: 'Download file',
+        esf_labels: 'Link labels',
+        esn_labels: 'Node labels',
+        file_converter: 'File editing',
+        oher_file: 'Other file',
+        open_file: 'Load file',
+        rand_link_color: 'Random link colors',
+        rand_node_color: 'Random node colors',
+        select_file: 'File to convert',
+        tagNode_assign: 'Assign tags',
+        topoFlux: 'of Flows',
+        topoNode: 'of Nodes',
       },
 
       SpreadSheet: {
@@ -413,7 +432,8 @@ export const resources_app_elements = {
           importExport: 'Import/export nodes',
           importExportClose: 'Import/export near the node',
           importExportAboveBelow: 'Import/export at the top and bottom of the diagram',
-        }
+        },
+        defaultParametric: 'Compute parametrization'
       },
 
       Tags: {
@@ -464,7 +484,10 @@ export const resources_app_elements = {
           banner: 'Choose the type of dropdown menu on the filtering of this tag group (None / Single / Multiple / LevelTags)',
           up: 'Move the tag group up in the node filtering menu',
           down: 'Move the tag group down in the node filter menu'
-        }
+        },
+        Dimension: 'Dimension',
+        EditDimension: 'Dimension editing',
+        EditDimensionLevel: 'Editing the levels of a dimension'
       },
 
       Banner: {
@@ -533,6 +556,13 @@ export const resources_app_elements = {
         preposition_nodes_tt: 'Recursively disaggregate every node in place then re-aggregate: all hidden nodes get a position within their ancestor. Run once so the view filter reveals already-placed nodes.',
         view_mode_tt: 'When checked, selecting a value of this view tag shows the nodes carrying it regardless of the aggregation level (bypassing level tags) and hides nodes carrying another value of the group. Visibility filter only.',
         tooltipRecenter: 'Recenter the diagram in the drawing area',
+        tooltipFitMenu: 'Automatic fitting of the diagram to the screen',
+        fitModeNone: 'No automatic fitting',
+        fitModeFull: 'Fit all',
+        fitModeWidth: 'Fit width',
+        fitModeHeight: 'Fit height',
+        tooltipAnchorCenter: 'Anchoring: centered — click to pin the top-left corner (0,0)',
+        tooltipAnchorTopLeft: 'Anchoring: top-left (0,0) — the camera never moves on load; click to center',
         tooltipZoomIn: 'Zoom in',
         tooltipZoomOut: 'Zoom out',
         tooltipZoomReset: 'Current zoom level — click to reset to 100%',
@@ -591,6 +621,25 @@ export const resources_app_elements = {
       color_lock: {
         locked: 'Custom color — this color is fixed and will not be overridden by the element\'s own color',
         unlocked: 'Inherits the element\'s color (node, link or text zone) — click to lock a custom color'
+      },
+      Label: {
+        NbDigit: 'Maximum number of decimals',
+        align_h: 'Horiz. position',
+        align_v: 'Vert. position',
+        bold: 'Bold',
+        color: 'Color',
+        italic: 'Italic',
+        name_title: 'Label',
+        police: 'Font',
+        scientificNotation: 'Scientific notation',
+        significantDigits: 'Significant digits',
+        size: 'Size',
+        unit: 'Unit',
+        unit_factor: 'Unit factor',
+        unit_name: 'Unit name',
+        uppercase: 'Uppercase',
+        value_label_custom_digit: 'Decimals',
+        value_title: 'Value'
       }
     }
   },
@@ -877,7 +926,11 @@ export const resources_app_elements = {
             attrGeneral: 'Transfert les attributs de la zone de dessin du sankey importé vers l\'actuel',
             doc: 'Transfert la documentation (onglet Doc) du sankey importé vers l\'actuel',
             Styles: 'Transfert les styles des éléments du sankey importé vers l\'actuel',
-          }
+            Attribute: 'Transférer les attributs des nœuds et flux du sankey importé vers le sankey courant'
+          },
+          PosOut: 'Nœuds',
+          amp_manual: 'Positionnement',
+          oher_file: 'Autre fichier'
         },
         Styles: 'Styles',
         tooltips: {
@@ -919,6 +972,12 @@ export const resources_app_elements = {
           style_attr_applicated: 'Choisis quelle attributs peuvent être appliqués par ce style, dévérouille l\'input correspondant',
 
         },
+        PosFlux: 'Géométrie des flux',
+        PosNoeud: 'Géométrie des nœuds',
+        attrFlux: 'Attributs des flux',
+        attrNode: 'Attributs des nœuds',
+        diagramme: 'Diagrammes',
+        mep: 'Mise en page'
       },
       SpreadSheet: {
         paste: 'Coller'
@@ -1176,6 +1235,13 @@ export const resources_app_elements = {
         preposition_nodes_tt: 'Désagrège récursivement chaque nœud in-place puis ré-agrège : tous les nœuds cachés reçoivent une position dans l\'empreinte de leur ancêtre. À lancer une fois pour que le filtre vue révèle des nœuds déjà placés.',
         view_mode_tt: 'Quand coché, sélectionner une valeur de ce view tag montre les nœuds qui la portent quel que soit le niveau d\'agrégation (court-circuit des level tags) et cache ceux portant une autre valeur du groupe. Filtre de visibilité seulement.',
         tooltipRecenter: 'Recentrer le diagramme dans la zone de dessin',
+        tooltipFitMenu: 'Cadrage automatique du diagramme à l\'écran',
+        fitModeNone: 'Aucun cadrage automatique',
+        fitModeFull: 'Tout visible',
+        fitModeWidth: 'Ajuster la largeur',
+        fitModeHeight: 'Ajuster la hauteur',
+        tooltipAnchorCenter: 'Ancrage : centré — cliquer pour caler en haut à gauche (0,0)',
+        tooltipAnchorTopLeft: 'Ancrage : haut-gauche (0,0) — la caméra ne bouge jamais au chargement ; cliquer pour centrer',
         tooltipZoomIn: 'Zoom avant',
         tooltipZoomOut: 'Zoom arrière',
         tooltipZoomReset: 'Niveau de zoom courant — cliquer pour revenir à 100 %',
@@ -1204,7 +1270,8 @@ export const resources_app_elements = {
         create_text_zone: 'Ajouter une zone de texte',
         create_line: 'Ajouter une ligne libre',
         detach_configuration_menu: 'Détacher le panneau de configuration dans une fenêtre séparée',
-        reattach_configuration_menu: 'Ré-attacher le panneau de configuration dans la fenêtre principale'
+        reattach_configuration_menu: 'Ré-attacher le panneau de configuration dans la fenêtre principale',
+        tooltipAjoutNode: 'Ajoute un nœud au clic de souris'
       },
       useTemplate: 'Utiliser ce modèle',
       DisplayWelcome: 'Accueil',
@@ -1501,7 +1568,11 @@ export const resources_app_elements = {
             attrGeneral: 'Transferir atributos de la zona de dibujo del Sankey importado al actual',
             doc: 'Transferir la documentación (pestaña Doc) del Sankey importado al actual',
             Styles: 'Transferir estilos de elementos del Sankey importado al actual',
-          }
+            Attribute: 'Transferir los atributos de nodos y flujos del sankey importado al actual'
+          },
+          PosOut: 'Nodos',
+          amp_manual: 'Posicionamiento',
+          oher_file: 'Otro archivo'
         },
         Styles: 'Estilos',
         tooltips: {
@@ -1541,6 +1612,12 @@ export const resources_app_elements = {
           sankey_file_name: 'Nombre del diagrama: ',
           style_attr_applicated: 'Elegir qué atributos puede aplicar este estilo, desbloquea la entrada correspondiente',
         },
+        PosFlux: 'Geometría de los flujos',
+        PosNoeud: 'Geometría de los nodos',
+        attrFlux: 'Atributos de los flujos',
+        attrNode: 'Atributos de los nodos',
+        diagramme: 'Diagramas',
+        mep: 'Diseño'
       },
       SpreadSheet: {
         paste: 'Pegar'
@@ -1795,6 +1872,13 @@ export const resources_app_elements = {
         preposition_nodes_tt: 'Desagrega recursivamente cada nodo in situ y luego reagrega: todos los nodos ocultos obtienen una posición dentro de su ancestro. Ejecutar una vez para que el filtro de vista revele nodos ya colocados.',
         view_mode_tt: 'Si está marcado, seleccionar un valor de este view tag muestra los nodos que lo portan sin importar el nivel de agregación (ignorando los level tags) y oculta los que portan otro valor del grupo. Solo filtro de visibilidad.',
         tooltipRecenter: 'Recentrar el diagrama en la zona de dibujo',
+        tooltipFitMenu: 'Ajuste automático del diagrama a la pantalla',
+        fitModeNone: 'Sin ajuste automático',
+        fitModeFull: 'Todo visible',
+        fitModeWidth: 'Ajustar el ancho',
+        fitModeHeight: 'Ajustar el alto',
+        tooltipAnchorCenter: 'Anclaje: centrado — clic para fijar arriba a la izquierda (0,0)',
+        tooltipAnchorTopLeft: 'Anclaje: arriba a la izquierda (0,0) — la cámara nunca se mueve al cargar; clic para centrar',
         tooltipZoomIn: 'Acercar',
         tooltipZoomOut: 'Alejar',
         tooltipZoomReset: 'Nivel de zoom actual — haga clic para volver al 100 %',
@@ -2121,7 +2205,11 @@ export const resources_app_elements = {
             attrGeneral: 'Zeichenflächenattribute vom importierten Sankey zum aktuellen übertragen',
             doc: 'Dokumentation (Doc-Tab) vom importierten Sankey zum aktuellen übertragen',
             Styles: 'Elementstile vom importierten Sankey zum aktuellen übertragen',
-          }
+            Attribute: 'Attribute von Knoten und Flüssen aus dem importierten Sankey in das aktuelle übertragen'
+          },
+          PosOut: 'Knoten',
+          amp_manual: 'Positionierung',
+          oher_file: 'Andere Datei'
         },
         Styles: 'Stile',
         tooltips: {
@@ -2161,6 +2249,12 @@ export const resources_app_elements = {
           sankey_file_name: 'Name des Diagramms: ',
           style_attr_applicated: 'Wählen Sie, welche Attribute dieser Stil anwenden kann; entsperrt die zugehörige Eingabe',
         },
+        PosFlux: 'Flussgeometrie',
+        PosNoeud: 'Knotengeometrie',
+        attrFlux: 'Flussattribute',
+        attrNode: 'Knotenattribute',
+        diagramme: 'Diagramme',
+        mep: 'Layout'
       },
       SpreadSheet: {
         paste: 'Einfügen'
@@ -2415,6 +2509,13 @@ export const resources_app_elements = {
         preposition_nodes_tt: 'Zerlegt rekursiv jeden Knoten an Ort und Stelle und aggregiert wieder: alle versteckten Knoten erhalten eine Position innerhalb ihres Vorfahren. Einmal ausführen, damit der Ansichtsfilter bereits platzierte Knoten anzeigt.',
         view_mode_tt: 'Wenn aktiviert, zeigt die Auswahl eines Werts dieses View-Tags die Knoten, die ihn tragen, unabhängig von der Aggregationsebene (Umgehung der Level-Tags) und blendet Knoten mit einem anderen Wert der Gruppe aus. Nur Sichtbarkeitsfilter.',
         tooltipRecenter: 'Das Diagramm in der Zeichenfläche neu zentrieren',
+        tooltipFitMenu: 'Automatische Anpassung des Diagramms an den Bildschirm',
+        fitModeNone: 'Keine automatische Anpassung',
+        fitModeFull: 'Alles sichtbar',
+        fitModeWidth: 'Breite anpassen',
+        fitModeHeight: 'Höhe anpassen',
+        tooltipAnchorCenter: 'Verankerung: zentriert — klicken, um oben links (0,0) zu verankern',
+        tooltipAnchorTopLeft: 'Verankerung: oben links (0,0) — die Kamera bewegt sich beim Laden nie; klicken zum Zentrieren',
         tooltipZoomIn: 'Vergrößern',
         tooltipZoomOut: 'Verkleinern',
         tooltipZoomReset: 'Aktuelle Zoomstufe — zum Zurücksetzen auf 100 % klicken',
@@ -2741,7 +2842,11 @@ export const resources_app_elements = {
             attrGeneral: 'Trasferire attributi dell\'area di disegno dal Sankey importato a quello attuale',
             doc: 'Trasferire la documentazione (scheda Doc) dal Sankey importato a quello attuale',
             Styles: 'Trasferire stili degli elementi dal Sankey importato a quello attuale',
-          }
+            Attribute: 'Trasferire gli attributi di nodi e flussi dal sankey importato a quello corrente'
+          },
+          PosOut: 'Nodi',
+          amp_manual: 'Posizionamento',
+          oher_file: 'Altro file'
         },
         Styles: 'Stili',
         tooltips: {
@@ -2781,6 +2886,12 @@ export const resources_app_elements = {
           sankey_file_name: 'Nome del diagramma: ',
           style_attr_applicated: 'Scegliere quali attributi possono essere applicati da questo stile, sblocca l\'input corrispondente',
         },
+        PosFlux: 'Geometria dei flussi',
+        PosNoeud: 'Geometria dei nodi',
+        attrFlux: 'Attributi dei flussi',
+        attrNode: 'Attributi dei nodi',
+        diagramme: 'Diagrammi',
+        mep: 'Layout'
       },
       SpreadSheet: {
         paste: 'Incolla'
@@ -3035,6 +3146,13 @@ export const resources_app_elements = {
         preposition_nodes_tt: 'Disaggrega ricorsivamente ogni nodo in loco poi riaggrega: tutti i nodi nascosti ottengono una posizione nell\'antenato. Eseguire una volta affinché il filtro vista riveli nodi già posizionati.',
         view_mode_tt: 'Quando selezionato, scegliere un valore di questo view tag mostra i nodi che lo portano indipendentemente dal livello di aggregazione (ignorando i level tag) e nasconde quelli che portano un altro valore del gruppo. Solo filtro di visibilità.',
         tooltipRecenter: 'Ricentrare il diagramma nell\'area di disegno',
+        tooltipFitMenu: 'Adattamento automatico del diagramma allo schermo',
+        fitModeNone: 'Nessun adattamento automatico',
+        fitModeFull: 'Tutto visibile',
+        fitModeWidth: 'Adattare la larghezza',
+        fitModeHeight: 'Adattare l\'altezza',
+        tooltipAnchorCenter: 'Ancoraggio: centrato — clic per fissare in alto a sinistra (0,0)',
+        tooltipAnchorTopLeft: 'Ancoraggio: in alto a sinistra (0,0) — la camera non si muove mai al caricamento; clic per centrare',
         tooltipZoomIn: 'Ingrandisci',
         tooltipZoomOut: 'Riduci',
         tooltipZoomReset: 'Livello di zoom attuale — clicca per tornare al 100%',

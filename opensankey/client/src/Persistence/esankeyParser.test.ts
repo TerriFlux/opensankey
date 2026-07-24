@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import JSZip from 'jszip'
-import { parseEsankeyXml, loadEsankeyFile, ESANKEY_ENTRIES_TAGG_ID } from './esankeyParser'
+import { parseEsankeyXml, loadEsankeyFile, netFormatDecimalCount, esAngleToTextAngle, ESANKEY_ENTRIES_TAGG_ID } from './esankeyParser'
 import { Class_ApplicationData } from '../types/ApplicationData'
 
 // jest 27/jsdom n'expose pas structuredClone (utilisé par Link.copyFrom).
@@ -194,6 +194,29 @@ describe('parseEsankeyXml — fixture minimale', () => {
     })
   })
 
+  // Ordre Z : `@zorder` e!Sankey (plus grand = par-dessus) → order_g_elements
+  // (liste OpenSankey 1er plan → fond). C'est lui qui met les fonds de process
+  // derrière les flux (démo « Erdgas Krankenhaus »). Variante locale : la
+  // FIXTURE partagée reste SANS zorder (ses chaînes exactes servent de points
+  // d'ancrage aux .replace() des autres suites).
+  test('ordre Z : zorder → order_g_elements (zorder décroissant = 1er plan → fond)', () => {
+    const withZ = FIXTURE
+      .replace('<process id="50" locationX="100"', '<process id="50" zorder="0" locationX="100"')
+      .replace('<process id="51" locationX="400"', '<process id="51" zorder="2" locationX="400"')
+      .replace('<arrow id="60">', '<arrow id="60" zorder="1">')
+    const dz = parseEsankeyXml(withZ)
+    const a = Object.values(dz.nodes).find(n => n.name === 'Source A')
+    const b = Object.values(dz.nodes).find(n => n.name === 'Cible B')
+    const linkIds = Object.keys(dz.links)
+    // process 51 (z=2) au 1er plan, la flèche 60 (z=1, ses 2 flux dans l'ordre
+    // de déclaration), le process 50 (z=0) au fond.
+    expect(dz.order_g_elements).toEqual([b?.id, ...linkIds, a?.id])
+  })
+
+  test('ordre Z : aucun zorder dans le fichier → order_g_elements absent', () => {
+    expect(d.order_g_elements).toBeUndefined()
+  })
+
   test('entries → tags de flux (groupe unique), couleur reprise sur le flux', () => {
     const group = d.fluxTags[ESANKEY_ENTRIES_TAGG_ID]
     expect(group).toBeDefined()
@@ -270,6 +293,37 @@ describe('parseEsankeyXml — fixture minimale', () => {
     expect(d.version).toBe('0.9')
   })
 
+  // os#1305 — « Scale to lower flow threshold » : plancher d'épaisseur des flux
+  // fins. Seuil e!Sankey déjà en PX (établi sur les 4 démos actives du corpus,
+  // cf. commentaire du parseur) → recopié TEL QUEL dans la clé racine
+  // `minimum_flux` du JSON 0.9 (clamp px de la drawing area), sans conversion
+  // par l'échelle (ici user_scale=50 : une conversion trahirait le test).
+  test('os#1305 — scaleToLowerFlowTreashold sur le unitType de référence → minimum_flux (px)', () => {
+    const withThreshold = FIXTURE.replace(
+      '<unitType id="10" name="Energy" used="true" width="80" maximumFlow="40">',
+      '<unitType id="10" name="Energy" used="true" width="80" maximumFlow="40" scaleToLowerFlowTreashold="true" lowerFlowTreashold="2">'
+    )
+    expect(parseEsankeyXml(withThreshold).minimum_flux).toBe(2)
+  })
+
+  test('os#1305 — réglage porté par <net> seul (attributs miroirs) → minimum_flux aussi', () => {
+    const withNet = FIXTURE.replace(
+      '<net backgroundColor="-1">',
+      '<net backgroundColor="-1" scaleToLowerFlowTreashold="true" lowerFlowTreashold="1">'
+    )
+    expect(parseEsankeyXml(withNet).minimum_flux).toBe(1)
+  })
+
+  test('os#1305 — réglage absent ou explicitement false → pas de minimum_flux', () => {
+    expect(d.minimum_flux).toBeUndefined()
+    // false + seuil renseigné (cas de 97 démos du corpus) : rien à émettre
+    const inactive = FIXTURE.replace(
+      '<net backgroundColor="-1">',
+      '<net backgroundColor="-1" scaleToLowerFlowTreashold="false" lowerFlowTreashold="2">'
+    )
+    expect(parseEsankeyXml(inactive).minimum_flux).toBeUndefined()
+  })
+
   test('OS#1286 — registre d\'unités : coefficients conservés, défaut = unité de base', () => {
     expect(d.units).toBeDefined()
     const energy = d.units!.find(ut => ut.name === 'Energy')!
@@ -290,6 +344,205 @@ describe('parseEsankeyXml — fixture minimale', () => {
     expect(elec?.local.label_unit).toBe('12') // kWh (10 kWh saisis)
     const heat = Object.values(d.links).find(l => l.value.data_value === 5)
     expect(heat?.local.label_unit).toBe('11') // MJ
+  })
+})
+
+// os#1304 — format numérique des valeurs : le unitType e!Sankey porte un
+// format .NET (`displayFormat`) → nombre de décimales posé par flux
+// (value_label_custom_digit + value_label_nb_digit). Approximation assumée :
+// format_value tronque les zéros de fin, donc les décimales FORCÉES (« 0.00 »)
+// deviennent « jusqu'à N décimales » chez nous ; milliers non reproduits.
+describe('os#1304 — unitType@displayFormat → décimales du label de valeur', () => {
+  test('table de vérité .NET → décimales (les 8 formats du corpus)', () => {
+    expect(netFormatDecimalCount('0')).toBe(0)
+    expect(netFormatDecimalCount('0.#')).toBe(1)
+    expect(netFormatDecimalCount('0.00')).toBe(2)
+    expect(netFormatDecimalCount('0.0')).toBe(1)
+    expect(netFormatDecimalCount('#,#.##')).toBe(2)
+    expect(netFormatDecimalCount('0.##')).toBe(2)
+    expect(netFormatDecimalCount('0,0.00')).toBe(2)
+    expect(netFormatDecimalCount('#,0.#')).toBe(1)
+    // Format absent → null : on ne pose rien, les défauts OpenSankey décident.
+    expect(netFormatDecimalCount('')).toBe(null)
+  })
+
+  test('displayFormat « 0.# » → custom_digit + nb_digit 1 sur CHAQUE flux du unitType', () => {
+    const withFormat = FIXTURE.replace(
+      '<unitType id="10" name="Energy" used="true" width="80" maximumFlow="40">',
+      '<unitType id="10" name="Energy" used="true" width="80" maximumFlow="40" displayFormat="0.#">'
+    )
+    const links = Object.values(parseEsankeyXml(withFormat).links)
+    expect(links.length).toBe(2) // les 2 flows référencent le unitType 10
+    links.forEach(l => {
+      expect(l.local.value_label_custom_digit).toBe(true)
+      expect(l.local.value_label_nb_digit).toBe(1)
+    })
+  })
+
+  test('displayFormat entier « 0 » → nb_digit 0 (valeurs arrondies à l\'unité)', () => {
+    const withFormat = FIXTURE.replace(
+      '<unitType id="10" name="Energy" used="true" width="80" maximumFlow="40">',
+      '<unitType id="10" name="Energy" used="true" width="80" maximumFlow="40" displayFormat="0">'
+    )
+    const link = Object.values(parseEsankeyXml(withFormat).links)[0]
+    expect(link.local.value_label_custom_digit).toBe(true)
+    expect(link.local.value_label_nb_digit).toBe(0)
+  })
+
+  test('sans displayFormat (FIXTURE brute) : aucune clé de décimales posée', () => {
+    Object.values(parseEsankeyXml(FIXTURE).links).forEach(l => {
+      expect(l.local.value_label_custom_digit).toBeUndefined()
+      expect(l.local.value_label_nb_digit).toBeUndefined()
+    })
+  })
+})
+
+// os#1306 — masquage des zéros (net@hideZeroFlows / @hideZeroFlowProcesses).
+// Le défaut OpenSankey masque DÉJÀ dynamiquement les flux nuls (porte
+// is_not_zero) et les nœuds dont tous les flux sont nuls : le parseur ne pose
+// `show_zero_links` que pour reproduire le défaut e!Sankey INVERSE (zéros
+// visibles). Variantes de FIXTURE par .replace — la constante n'est jamais
+// modifiée.
+describe('os#1306 — masquage des zéros (hideZeroFlows)', () => {
+  test('hideZeroFlows absent (défaut e!Sankey = zéros visibles) → show_zero_links posé', () => {
+    const d = parseEsankeyXml(FIXTURE)
+    expect(d.show_zero_links).toBe(true)
+  })
+
+  test('hideZeroFlows="false" explicite (87/101 démos) → show_zero_links posé', () => {
+    const xml = FIXTURE.replace(
+      '<net backgroundColor="-1">',
+      '<net backgroundColor="-1" hideZeroFlows="false" hideZeroFlowProcesses="false">',
+    )
+    expect(parseEsankeyXml(xml).show_zero_links).toBe(true)
+  })
+
+  test('hideZeroFlows="true" → rien à poser, le défaut OpenSankey masque déjà les zéros', () => {
+    const xml = FIXTURE.replace(
+      '<net backgroundColor="-1">',
+      '<net backgroundColor="-1" hideZeroFlows="true" hideZeroFlowProcesses="true">',
+    )
+    expect(parseEsankeyXml(xml).show_zero_links).toBeUndefined()
+  })
+
+  test('flow quantity=0 : flux bien créé (data_value 0) — masquage dynamique, pas structurel', () => {
+    // Un fichier hideZeroFlows=true ne perd PAS ses flux nuls à l'import : ils
+    // portent data_value 0 et c'est la porte is_not_zero qui les masque au
+    // rendu (le flux réapparaît si la valeur est éditée). Aucun is_visible
+    // figé (cas réel : « Bus Passengers », flow « Pax Alighting » à 0).
+    const xml = FIXTURE
+      .replace('<net backgroundColor="-1">', '<net backgroundColor="-1" hideZeroFlows="true">')
+      .replace('quantity="5"', 'quantity="0"')
+    const d = parseEsankeyXml(xml)
+    expect(Object.keys(d.links).length).toBe(2)
+    const zero = Object.values(d.links).find(l => l.value.data_value === 0)
+    expect(zero).toBeDefined()
+    expect(zero?.is_visible).toBe(true)
+    expect(d.show_zero_links).toBeUndefined()
+  })
+})
+
+// os#1310 — textes inclinés. L'angle e!Sankey (degrés HORAIRES 0..360, y vers
+// le bas, .NET) partage la convention du rotate() SVG : seul un recalage de
+// plage vers (−180, 180] est nécessaire (esAngleToTextAngle). Trois porteurs :
+// nom de process (<label angle>), label de valeur (<sankeyArrowLabel angle>,
+// baké même quand angleAlignment=1) et zone de texte (<text angle>).
+describe('os#1310 — textes inclinés (label@angle, sankeyArrowLabel@angle, text@angle)', () => {
+  test('normalisation : degrés e!Sankey (0..360 horaires) → text_angle (−180..180]', () => {
+    expect(esAngleToTextAngle(0)).toBe(0)
+    expect(esAngleToTextAngle(90)).toBe(90)
+    expect(esAngleToTextAngle(270)).toBe(-90)
+    expect(esAngleToTextAngle(180)).toBe(180)
+    expect(esAngleToTextAngle(314.6396)).toBe(-45.36)
+    expect(esAngleToTextAngle(-90)).toBe(-90)
+  })
+
+  test('nom de process vertical : <label angle="270"> → name_label_text_angle −90', () => {
+    const xml = FIXTURE.replace('<label text="Source A" />', '<label text="Source A" angle="270" />')
+    const d = parseEsankeyXml(xml)
+    const a = Object.values(d.nodes).find(n => n.name === 'Source A')
+    expect(a?.local.name_label_text_angle).toBe(-90)
+    // Cible B sans @angle : rien de posé, le style décide.
+    const b = Object.values(d.nodes).find(n => n.name === 'Cible B')
+    expect(b?.local.name_label_text_angle).toBeUndefined()
+  })
+
+  test('label de valeur incliné : sankeyArrowLabel@angle=90 → value_label_text_angle sur chaque flux', () => {
+    const xml = FIXTURE.replace('<sankeyArrowLabel visible="true"', '<sankeyArrowLabel angle="90" visible="true"')
+    Object.values(parseEsankeyXml(xml).links).forEach(l => {
+      expect(l.local.value_label_text_angle).toBe(90)
+    })
+  })
+
+  test('aligné sur la flèche sans angle baké (angleAlignment=1, angle=0) : tangente du segment', () => {
+    // Tracé vertical : la tangente du segment 0 vaut 90° (horaire, y vers le bas).
+    const xml = FIXTURE
+      .replace('<arrow id="60">',
+        '<arrow id="60"><sankeyLink><points length="2"><value X="120" Y="330" /><value X="120" Y="480" /></points></sankeyLink>')
+      .replace('<sankeyArrowLabel visible="true"', '<sankeyArrowLabel angleAlignment="1" visible="true"')
+    Object.values(parseEsankeyXml(xml).links).forEach(l => {
+      expect(l.local.value_label_text_angle).toBe(90)
+    })
+  })
+
+  test('zone de texte tournée : <text angle="270"> → name_label_text_angle −90 sur la zone', () => {
+    const xml = FIXTURE.replace('</net>',
+      '<shapes><shape><text locationX="10" locationY="10" sizeW="100" sizeH="30" angle="270" text="Note pivotée" /></shape></shapes></net>')
+    const zones = Object.values(parseEsankeyXml(xml).labels)
+    expect(zones.length).toBe(1)
+    expect(zones[0].name_label_text_angle).toBe(-90)
+  })
+
+  test('sans angle (FIXTURE brute) : aucune clé text_angle posée', () => {
+    const d = parseEsankeyXml(FIXTURE)
+    Object.values(d.nodes).forEach(n => expect(n.local.name_label_text_angle).toBeUndefined())
+    Object.values(d.links).forEach(l => expect(l.local.value_label_text_angle).toBeUndefined())
+  })
+
+  // os#1310b — nom du matériau dans le label (`@showEntryname`, gabarit
+  // `{EntryName}: {Quantity} {UnitName}`) : label de NOM du flux en source
+  // 'tag' + valeur collée (stick). Mono-matériau uniquement.
+  test('showEntryname sur flèche MONO-matériau : nom en source tag + valeur collée', () => {
+    // FIXTURE réduite à un seul flow (le Heat est retiré) → mono-matériau.
+    const xml = FIXTURE.replace(
+      /<flow id="42"[\s\S]*?<\/flow>/, ''
+    )
+    const links = Object.values(parseEsankeyXml(xml).links)
+    expect(links.length).toBe(1)
+    const l = links[0]
+    expect(l.local.name_label_is_visible).toBe(true)
+    expect(l.local.name_label_text_source).toBe('tag')
+    expect(l.local.name_label_flux_tag_group_id).toBe(ESANKEY_ENTRIES_TAGG_ID)
+    expect(l.local.value_label_stick_to_label).toBe(true)
+    // Label ~horizontal : la valeur se colle à DROITE du nom.
+    expect(l.local.value_label_horiz).toBe('right')
+  })
+
+  test('showEntryname="false" ou flèche multi-matériaux : pas de label de nom', () => {
+    // Multi-matériaux (FIXTURE brute, 2 flows) : jamais de nom par flux.
+    Object.values(parseEsankeyXml(FIXTURE).links).forEach(l => {
+      expect(l.local.name_label_text_source).toBeUndefined()
+      expect(l.local.value_label_stick_to_label).toBeUndefined()
+    })
+    // Mono-matériau mais showEntryname éteint.
+    const xml = FIXTURE
+      .replace(/<flow id="42"[\s\S]*?<\/flow>/, '')
+      .replace('<sankeyArrowLabel visible="true"', '<sankeyArrowLabel showEntryname="false" visible="true"')
+    Object.values(parseEsankeyXml(xml).links).forEach(l => {
+      expect(l.local.name_label_text_source).toBeUndefined()
+    })
+  })
+
+  test('nom + label vertical (angle=90) : valeur collée SOUS le nom, dans le sens de lecture', () => {
+    const xml = FIXTURE
+      .replace(/<flow id="42"[\s\S]*?<\/flow>/, '')
+      .replace('<sankeyArrowLabel visible="true"', '<sankeyArrowLabel angle="90" visible="true"')
+    const l = Object.values(parseEsankeyXml(xml).links)[0]
+    expect(l.local.name_label_text_angle).toBe(90)
+    expect(l.local.value_label_text_angle).toBe(90)
+    expect(l.local.value_label_stick_to_label).toBe(true)
+    expect(l.local.value_label_vert).toBe('bottom')
+    expect(l.local.value_label_horiz).toBe('middle')
   })
 })
 
@@ -647,6 +900,56 @@ describe('parseEsankeyXml — points de contrôle (opensankey#1301)', () => {
     // Coude : P1→P2 vertical (même x).
     expect(wps[0].x).toBeCloseTo(wps[1].x, 6)
   })
+
+  test('détour QUASI-vertical (dérive ≤ 30 px, corpus Petroleum) → routé, 2 coins rectifiés', () => {
+    // Motif « Crude Oil Exports » : part à droite, remonte (segments verticaux
+    // dérivant de 8 px — la route arrondie e!Sankey n'a pas de coins parfaits),
+    // revient à gauche. L'ancien seuil strict (1 px) classait ces segments en
+    // diagonale → 0 coude compté → paramétrique mou au lieu du détour. Les 3 points
+    // intérieurs dérivants sont RECTIFIÉS en 2 coins à 90° sur un même montant
+    // vertical (sinon le runtime dessine des mini-S à rebours à chaque coin).
+    const d = parseEsankeyXml(withPoints(
+      '<points length="5">'
+      + '<value X="100" Y="300" /><value X="270" Y="300" /><value X="278" Y="166" />'
+      + '<value X="270" Y="30" /><value X="174" Y="30" /></points>'))
+    const link = Object.values(d.links)[0]
+    const wps = link.local.shape_waypoints as Array<{ x: number, y: number }>
+    expect(Array.isArray(wps)).toBe(true)
+    expect(wps.length).toBe(2)
+    // Montant vertical exact : même x pour les deux coins (moyenne du run).
+    expect(wps[0].x).toBeCloseTo(wps[1].x, 6)
+    expect(link.local.orientation).toBeUndefined()
+    // Mapping exact des extrémités : ancres épinglées aux ports P0/PN via les
+    // offsets (sinon l'ancre ré-empilée ailleurs fait dépasser le montant puis
+    // rebrousser au dernier coin). Accroches horizontales → offset en y.
+    expect(link.local.shape_source_anchor_offset as number).toBeCloseTo(0, 6) // P0.y 300 − A.y 300
+    expect(link.local.shape_target_anchor_offset as number).toBeCloseTo(-290, 6) // PN.y 30 − B.y 320
+  })
+
+  test('S-curve RAIDE (segment milieu dérivant > 30 px) → paramétrique, aucun waypoint', () => {
+    // Milieu presque vertical (42 px de dérive sur 180) mais monotone : simple
+    // courbe raide, pas un détour. Un seuil angulaire l'aurait happée à tort.
+    const d = parseEsankeyXml(withPoints(
+      '<points length="4">'
+      + '<value X="100" Y="300" /><value X="150" Y="300" />'
+      + '<value X="192" Y="120" /><value X="400" Y="120" /></points>'))
+    const link = Object.values(d.links)[0]
+    expect(link.local.shape_waypoints).toBeUndefined()
+  })
+
+  test('REBROUSSEMENT avec segment milieu diagonal → routé même avec un seul coude', () => {
+    // Motif « Refined Products Imports → Transportation » : monte, se déporte en
+    // diagonale, remonte, repart en ARRIÈRE (x s'inverse). Un seul coude
+    // orthogonal compté, mais le rebroussement signe le détour.
+    const d = parseEsankeyXml(withPoints(
+      '<points length="5">'
+      + '<value X="212" Y="400" /><value X="212" Y="288" /><value X="100" Y="240" />'
+      + '<value X="100" Y="35" /><value X="188" Y="35" /></points>'))
+    const link = Object.values(d.links)[0]
+    const wps = link.local.shape_waypoints as Array<{ x: number, y: number }>
+    expect(Array.isArray(wps)).toBe(true)
+    expect(wps.length).toBe(3)
+  })
 })
 
 describe('parseEsankeyXml — SA#294 : ancre masquée recalée (accroche verticale)', () => {
@@ -778,9 +1081,9 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     expect(withoutArrow?.local.shape_source_notch).toBeUndefined()
   })
 
-  test('aucun label de valeur posé sur le flux ; unité préparée si activation manuelle', () => {
+  test('label de valeur visible (flèche mono-matériau à label affiché) ; unité posée', () => {
     const link = Object.values(d.links)[0]
-    expect(link.local.value_label_is_visible).toBe(false)
+    expect(link.local.value_label_is_visible).toBe(true)
     expect(link.local.label_unit_visible).toBe(true)
     // OS#1286 — la référence d'unité (id du registre) est posée, mais le
     // format pourcentage ({PercentProcessSource}) garde la PRIORITÉ sur le
@@ -1067,6 +1370,44 @@ describe('parseEsankeyXml — OS#1287 taille/couleur/position du label de valeur
     expect(base.local.value_label_horiz).toBeUndefined()
     expect(base.local.value_label_vert).toBeUndefined()
   })
+
+  test('locationX/Y présents (flèche mono-matériau) → position ABSOLUE, normalisée avec les nœuds', () => {
+    // Boîte du label : coin haut-gauche (300, 380), 40×16. Mode absolu OpenSankey :
+    // position_x = bord GAUCHE (anchor start), position_y = CENTRE vertical
+    // (baseline middle) → (300, 388), puis même translation de normalisation que
+    // les nœuds — dérivée ici du process « Source » (e!Sankey (200, 400)).
+    // showEntryname="false" : la position absolue reste portée par la VALEUR
+    // (avec le nom affiché — défaut e!Sankey — c'est le label de NOM qui la
+    // porte, cf. suite os#1310b).
+    const withPos = FIXTURE_DECOR.replace(
+      '<sankeyArrowLabel visible="true" showValue="true" showUnit="true" text="60" labelFormat="{EntryName}: {PercentProcessSource} %" />',
+      '<sankeyArrowLabel showEntryname="false" visible="true" showValue="true" showUnit="true" text="60" labelFormat="{EntryName}: {PercentProcessSource} %"' +
+      ' locationX="300" locationY="380" sizeW="40" sizeH="16" segmentPercentage="91" offsetH="15.5" />'
+    )
+    const d2 = parseEsankeyXml(withPos)
+    const src = Object.values(d2.nodes).find(n => n.name === 'Source')!
+    const dx = src.x - 200
+    const dy = src.y - 400
+    const l = Object.values(d2.links).find(l2 => l2.value.data_value === 60)!
+    expect(l.local.value_label_position_absolute).toBe(true)
+    expect(l.local.value_label_position_x).toBe(300 + dx)
+    expect(l.local.value_label_position_y).toBe(388 + dy)
+    // Le mode absolu REMPLACE l'approximation par tiers (segmentPercentage/offsetH).
+    expect(l.local.value_label_horiz).toBeUndefined()
+    expect(l.local.value_label_vert).toBeUndefined()
+  })
+
+  test('flèche MULTI-matériaux : pas de position absolue (N labels superposés sinon), repli par tiers', () => {
+    const withPos = FIXTURE.replace(
+      '<sankeyArrowLabel visible="true" showValue="true" showUnit="true" labelFormat="{Quantity} {Unit}" />',
+      '<sankeyArrowLabel visible="true" showValue="true" showUnit="true" labelFormat="{Quantity} {Unit}"' +
+      ' locationX="220" locationY="330" sizeW="40" sizeH="16" segmentPercentage="91" offsetH="15.5" />'
+    )
+    const l = Object.values(parseEsankeyXml(withPos).links)[0]
+    expect(l.local.value_label_position_absolute).toBeUndefined()
+    expect(l.local.value_label_horiz).toBe('right')
+    expect(l.local.value_label_vert).toBe('bottom')
+  })
 })
 
 // OS#1291 — Places (E/S externes). Un process « Usine » émet un flux vers une
@@ -1179,6 +1520,124 @@ describe('parseEsankeyXml — places (OS#1291)', () => {
   })
 })
 
+// OS#1292 — Stocks : compartiments <stock> des graphProcess. Sémantique
+// centrée process : inputQuantity = déstockage (entre dans le process),
+// outputQuantity = stockage (sort du process) → Δ stock = output − input.
+// Fixture : A porte 2 compartiments visibles (dont un en kWh, coefficient 3.6),
+// B un stock d'entry TRANSPARENTE (donnée gardée, forme masquée), C un
+// compartiment sans quantité (rien à mapper).
+describe('parseEsankeyXml — stocks (opensankey#1292)', () => {
+  const STOCK_FIXTURE = `<?xml version="1.0" encoding="utf-8"?>
+<document xmlns="${NS}" generator="e!Sankey" generatorVersion="5.2.0.16">
+  <userSettings netUnitMaximumWidth="200" scaleMode="0" />
+  <netModel>
+    <colorSets />
+    <unitTypes>
+      <unitType id="10" name="Energy" used="true" width="80" maximumFlow="40">
+        <units>
+          <unit id="11" name="MJ" coefficient="1" isBasicUnit="true" />
+          <unit id="12" name="kWh" coefficient="3.6" isBasicUnit="false" />
+        </units>
+      </unitType>
+    </unitTypes>
+    <entryGroup id="20" name="Root">
+      <entries>
+        <entry id="21" name="Electricity" showEntry="true">
+          <unitTypeRef refId="10" />
+          <brushColor argb="-256" />
+        </entry>
+        <entry id="23" name="Transparent" showEntry="true" showInLegend="false">
+          <unitTypeRef refId="10" />
+          <brushColor argb="16777215" />
+        </entry>
+      </entries>
+      <entryGroups />
+    </entryGroup>
+    <graphNodes>
+      <graphProcess id="30" name="A">
+        <compartments>
+          <stock id="35" name="Electricity" isCutOff="false" inputQuantity="5" outputQuantity="0">
+            <entryRef refId="21" />
+            <unitRef refId="11" />
+          </stock>
+          <stock id="36" name="Electricity" isCutOff="false" inputQuantity="0" outputQuantity="10">
+            <entryRef refId="21" />
+            <unitRef refId="12" />
+          </stock>
+        </compartments>
+      </graphProcess>
+      <graphProcess id="31" name="B">
+        <compartments>
+          <stock id="37" name="Transparent" isCutOff="false" inputQuantity="400" outputQuantity="0">
+            <entryRef refId="23" />
+            <unitRef refId="11" />
+          </stock>
+        </compartments>
+      </graphProcess>
+      <graphProcess id="32" name="C">
+        <compartments>
+          <stock id="38" name="Electricity" isCutOff="false" inputQuantity="0" outputQuantity="0">
+            <entryRef refId="21" />
+            <unitRef refId="11" />
+          </stock>
+        </compartments>
+      </graphProcess>
+    </graphNodes>
+    <graphArrows>
+      <graphArrow id="40" name="">
+        <from><graphProcessRef refId="30" /></from>
+        <to><graphProcessRef refId="31" /></to>
+        <compartments>
+          <flow id="41" name="Electricity" quantity="10" source="0">
+            <entryRef refId="21" />
+            <unitRef refId="11" />
+          </flow>
+        </compartments>
+      </graphArrow>
+    </graphArrows>
+  </netModel>
+  <net backgroundColor="-1">
+    <processes />
+    <arrows />
+  </net>
+  <logicalGraphicalObjectMapping>
+    <nodes />
+    <edges />
+  </logicalGraphicalObjectMapping>
+</document>`
+  const d = parseEsankeyXml(STOCK_FIXTURE)
+  const a = Object.values(d.nodes).find(n => n.name === 'A')!
+  const b = Object.values(d.nodes).find(n => n.name === 'B')!
+  const c = Object.values(d.nodes).find(n => n.name === 'C')!
+
+  test('compartiments sommés, conversion d\'unité (donnée Δ sur le process)', () => {
+    expect(a.has_stock).toBe(true)
+    // −5 MJ (déstockage) + 10 kWh × 3.6 (stockage) = +31 MJ
+    expect(a.stock_values?.stock_variation).toBeCloseTo(31)
+  })
+
+  test('libellé de stock activé en local, avec unité du registre', () => {
+    // Le remplissage de style legacy résout stock_label_is_visible à FALSE :
+    // le défaut config (true) ne suffit pas, l'import doit poser le local.
+    expect(a.local.stock_label_is_visible).toBe(true)
+    expect(a.local.stock_label_unit_visible).toBe(true)
+    expect(a.local.stock_label_unit_type).toBe('unit_model')
+    // Unité du premier compartiment non transparent (MJ, id 11).
+    expect(a.local.stock_label_unit).toBe('11')
+  })
+
+  test('entry transparente : donnée gardée, libellé muet', () => {
+    expect(b.has_stock).toBe(true)
+    expect(b.stock_values?.stock_variation).toBe(-400)
+    expect(b.local.stock_label_is_visible).toBeUndefined()
+  })
+
+  test('compartiment sans quantité : aucun stock posé', () => {
+    expect(c.has_stock).toBeUndefined()
+    expect(c.stock_values).toBeUndefined()
+  })
+})
+
 describe('parseEsankeyXml — erreurs', () => {
   test('XML non e!Sankey rejeté', () => {
     expect(() => parseEsankeyXml('<foo><bar/></foo>')).toThrow()
@@ -1267,12 +1726,119 @@ describeDemos('loadEsankeyFile — démos e!Sankey 5 locales', () => {
     expect(d.legend?.legend_police).toBe(11.25)
     // Tous les process de cette démo sont invisibles (style « décor »)
     expect(Object.values(d.nodes).every(n => n.local.shape_visible === false)).toBe(true)
-    // Aucun flux importé ne porte de label de valeur (décision user : chez
-    // e!Sankey l'étiquette appartient à la flèche, pas au flux).
-    const labelled = Object.values(d.links).filter(l => l.local.label_visible === true)
-    expect(labelled.length).toBe(0)
+    // Labels de valeur : visibles UNIQUEMENT sur les flèches mono-matériau
+    // (4 dans cette démo) ; les flèches multi-matériaux (5 et 3 flows → 8 flux
+    // parallèles) restent éteintes (l'étiquette e!Sankey appartient à la flèche,
+    // les N parts se chevaucheraient).
+    const labelled = Object.values(d.links).filter(l => l.local.value_label_is_visible === true)
+    expect(labelled.length).toBe(4)
+    expect(Object.keys(d.links).length).toBe(12)
     // Texture : les rectangles hachurés (<brushColor hasPattern pattern="3">)
     // importent shape_hatch = antidiagonal (\) sur la zone de texte.
     expect(Object.values(d.labels).some(c => c.shape_hatch === 'antidiagonal')).toBe(true)
+  }, 30000)
+
+  test('Efficiency diagram : noms de process masqués (<label visible=false>), labels % {PercentModel}', async () => {
+    const f = 'Efficiency diagram example [en].sankey'
+    if (!files.includes(f)) return
+    const buffer = fs.readFileSync(path.join(DEMOS_DIR, f))
+    const d = await loadEsankeyFile(buffer as unknown as ArrayBuffer)
+    // Les 9 process portent <label visible="false"> : aucun nom affiché.
+    expect(Object.keys(d.nodes).length).toBe(9)
+    expect(Object.values(d.nodes).every(n => n.local.label_visible === false)).toBe(true)
+    // Les 8 flèches (mono-matériau) affichent un % intégré (showPercentage=2 =
+    // {PercentModel}) : label visible, unité texte '%', facteur = plus gros flux
+    // du modèle en unité de base / 100 (2000 MJ × 0.27778 = 555.56 kWh → 5.556).
+    // Affichage : 555.56/5.556 = « 100 % », 84, 76, 54, 18, 16, 8, 4.
+    const links = Object.values(d.links)
+    expect(links.length).toBe(8)
+    expect(links.every(l => l.local.value_label_is_visible === true)).toBe(true)
+    expect(links.every(l => l.local.value_label_unit_type === 'unit_name')).toBe(true)
+    expect(links.every(l => l.local.label_unit === '%')).toBe(true)
+    const factors = links.map(l => Number(l.local.label_unit_factor))
+    factors.forEach(f => expect(f).toBeCloseTo(5.5556, 3))
+    // Le % rendu = data_value / facteur : vérifie les 8 valeurs attendues.
+    const pcts = links.map(l => Math.round(l.value.data_value / factors[0])).sort((a, b) => a - b)
+    expect(pcts).toEqual([4, 8, 16, 18, 54, 76, 84, 100])
+    // Placement : la boîte e!Sankey du label (locationX/Y, présente sur toutes
+    // les flèches) est reportée en position ABSOLUE, dans le repère normalisé.
+    expect(links.every(l => l.local.value_label_position_absolute === true)).toBe(true)
+    expect(links.every(l => Number.isFinite(l.local.value_label_position_x as number))).toBe(true)
+  }, 30000)
+
+  test('Processes with Stocks : stocks importés (opensankey#1292)', async () => {
+    const f = 'Processes with Stocks (pro version) [en].sankey'
+    if (!files.includes(f)) return
+    const buffer = fs.readFileSync(path.join(DEMOS_DIR, f))
+    const d = await loadEsankeyFile(buffer as unknown as ArrayBuffer)
+    const stocked = Object.values(d.nodes).filter(n => n.has_stock)
+    // 6 process, tous porteurs d'un stock non nul (le compartiment 0/0 d'Item A
+    // sur Assembly ne compte pas). Bilan global fermé : Σ Δ stock = 0.
+    expect(stocked.length).toBe(6)
+    const variations = stocked.map(n => n.stock_values!.stock_variation).sort((x, y) => x - y)
+    expect(variations).toEqual([-400, -380, -180, 180, 380, 400])
+    expect(variations.reduce((s, v) => s + v, 0)).toBe(0)
+    // Assembly stocke 380 d'Item B (output vers le stock) → Δ positif.
+    const assembly = stocked.find(n => n.name.includes('Assembly'))!
+    expect(assembly.stock_values?.stock_variation).toBe(380)
+    // Représentation visible : le LIBELLÉ de stock, activé sur les 3 process à
+    // stock non transparent seulement (les 3 stocks « Transparent » —
+    // équilibrage des sources/puits — restent muets, comme chez e!Sankey).
+    const labelled = stocked.filter(n => n.local.stock_label_is_visible === true)
+    expect(labelled.length).toBe(3)
+    expect(labelled.map(n => n.stock_values!.stock_variation).sort((x, y) => x - y)).toEqual([-400, -180, 380])
+    expect(labelled.every(n => n.local.stock_label_unit_type === 'unit_model')).toBe(true)
+    // Vérité de bout en bout : après fromJSON, l'attribut RÉSOLU du nœud est
+    // bien visible (le remplissage de style legacy le résolvait à false quand
+    // l'import comptait sur le défaut config — c'est le bug « je ne vois
+    // rien » d'origine).
+    const app = new Class_ApplicationData(false)
+    app.fromJSON(d as never)
+    const nAssembly = app.drawing_area.sankey.nodes_list.find(n => n.name.includes('Assembly'))!
+    expect(nAssembly.has_stock).toBe(true)
+    expect(nAssembly.stock_value?.stockVariationData).toBe(380)
+    expect(nAssembly.stock_label_is_visible).toBe(true)
+    const nSource = app.drawing_area.sankey.nodes_list.find(n => n.name.includes('Source of Resource 1'))!
+    expect(nSource.has_stock).toBe(true)
+    expect(nSource.stock_label_is_visible).toBe(false)
+  }, 30000)
+
+  test('Depuration de Chlore : labels de valeur inclinés (os#1310, angle baké + aligné)', async () => {
+    const f = 'Depuration de Chlore [fr].sankey'
+    if (!files.includes(f)) return
+    const buffer = fs.readFileSync(path.join(DEMOS_DIR, f))
+    const d = await loadEsankeyFile(buffer as unknown as ArrayBuffer)
+    // 4 labels FIXES à 90° (flux verticaux, flèches mono-matériau mappées). Le
+    // 5ᵉ label incliné du fichier (45.98°, aligné) vit sur une flèche SANS
+    // mapping logique (non importée) — hors périmètre.
+    const angles = Object.values(d.links)
+      .map(l => l.local.value_label_text_angle)
+      .filter((a): a is number => typeof a === 'number')
+    expect(angles).toEqual([90, 90, 90, 90])
+    // os#1310b — 3 labels visibles affichent le nom du matériau (@showEntryname
+    // true) : 2 tournés à 90° (ex. « Chlore_r 720 g/t » vers cendre volante) +
+    // 1 horizontal. Nom en source tag, valeur collée (SOUS le nom à 90° — sens
+    // de lecture —, à droite en horizontal), position absolue portée par le
+    // NOM (pas la valeur).
+    const named = Object.values(d.links).filter(l => l.local.name_label_text_source === 'tag')
+    expect(named.length).toBe(3)
+    named.forEach(l => {
+      expect(l.local.name_label_is_visible).toBe(true)
+      expect(l.local.value_label_stick_to_label).toBe(true)
+      expect(l.local.name_label_position_absolute).toBe(true)
+      expect(l.local.value_label_position_absolute).toBeUndefined()
+    })
+    const namedRotated = named.filter(l => l.local.name_label_text_angle === 90)
+    expect(namedRotated.length).toBe(2)
+    namedRotated.forEach(l => expect(l.local.value_label_vert).toBe('bottom'))
+    const namedFlat = named.filter(l => l.local.name_label_text_angle === undefined)
+    expect(namedFlat.length).toBe(1)
+    namedFlat.forEach(l => expect(l.local.value_label_horiz).toBe('right'))
+    // Bout en bout : l'attribut RÉSOLU après fromJSON porte bien la rotation.
+    const app = new Class_ApplicationData(false)
+    app.fromJSON(d as never)
+    const rotated = app.drawing_area.sankey.links_list.filter(l => l.value_label_text_angle !== 0)
+    expect(rotated.length).toBe(4)
+    expect(rotated.every(l => l.value_label_text_angle === 90)).toBe(true)
   }, 30000)
 })

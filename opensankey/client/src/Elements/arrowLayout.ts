@@ -68,7 +68,59 @@ export function arrowMinWidthApplies(min_width: number, clamped_thickness: numbe
  * d'éventail, pas de cumul) dont la base = `min_width`. La profondeur (longueur) reste
  * prescrite par shape_arrow_size (cf. Node.tsx). N'est appelée que quand
  * arrowMinWidthApplies est vrai (min_width > épaisseur).
+ *
+ * ⚠️ Réservée aux pointes INDÉPENDANTES (mode standalone) : dans un éventail partagé,
+ * une pointe par flux contredit le contrat « une seule pointe convergente par côté »
+ * (issue #304) — c'est `applyFanMinWidth` qui porte la largeur mini là-bas.
  */
 export function computeArrowMinWidthPlacement(min_width: number): Type_ArrowPlacement {
   return { arrow_half_height: min_width / 2, arrow_already_computed: 0, slice: min_width }
+}
+
+/**
+ * Largeur mini appliquée à un ÉVENTAIL (issue #304), pas flux par flux.
+ *
+ * Contexte : la largeur mini (#1270 / OS#1302) remplaçait la géométrie calculée par un
+ * triangle INDÉPENDANT dès qu'un flux était plus fin que `min_width` (défaut 10 px). Sur
+ * un nœud alimenté par beaucoup de flux — 63 imports du nœud « Blé » de SOCLE Céréales —
+ * presque tous les flux passent sous 10 px : chacun recevait sa propre pointe et le côté
+ * affichait des DIZAINES de triangles au lieu de l'unique éventail convergent promis par
+ * `_drawLinksArrow`. Le regroupement était donc défait par un réglage de visibilité.
+ *
+ * Nouvelle règle : dans un éventail (côté de nœud, ou run contigu de ports e!Sankey), la
+ * largeur mini garantit que **l'éventail entier** est visible, jamais qu'un flux isolé
+ * l'est. Un flux fin occupe donc sa tranche fine DANS la pointe commune — exactement
+ * comme sa bande se superpose à celle de ses voisins au nœud (#199).
+ *
+ * - éventail déjà ≥ `min_width` : rien à faire (la pointe commune est visible) ;
+ * - éventail plus fin : on met l'éventail À l'échelle `min_width` (tranches et cumuls
+ *   proportionnels — l'ordre et les proportions sont préservés) ;
+ * - éventail d'épaisseur nulle (flux structurels, brut 0) : on répartit `min_width` en
+ *   parts égales, sinon la géométrie dégénère (0/0) et la pointe disparaît.
+ *
+ * @param placement    géométrie d'éventail calculée par computeArrowPlacement.
+ * @param min_width    largeur mini retenue pour l'éventail (max des flux du groupe).
+ * @param group_total  Σ des épaisseurs du groupe, dans l'espace de `placement`.
+ * @param fan_index    rang de ce flux dans le groupe (répartition du cas total = 0).
+ * @param fan_count    nombre de flux du groupe.
+ */
+export function applyFanMinWidth(
+  placement: Type_ArrowPlacement,
+  min_width: number,
+  group_total: number,
+  fan_index: number,
+  fan_count: number
+): Type_ArrowPlacement {
+  if (!(min_width > 0) || fan_count <= 0 || group_total >= min_width)
+    return placement
+  if (group_total > 0) {
+    const scale = min_width / group_total
+    return {
+      arrow_half_height: min_width / 2,
+      arrow_already_computed: placement.arrow_already_computed * scale,
+      slice: placement.slice * scale
+    }
+  }
+  const slice = min_width / fan_count
+  return { arrow_half_height: min_width / 2, arrow_already_computed: fan_index * slice, slice }
 }

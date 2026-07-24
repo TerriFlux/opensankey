@@ -27,10 +27,13 @@
 import * as d3 from '../d3Modules'
 
 import { Class_NodeBase } from './NodeBase'
-import { TooltipEventManager } from './TooltipsConfig'
 import { Class_LinkElement } from './Link'
 import { Class_ProtoElement } from './Element'
 import { Class_NodeElement } from './Node'
+import {
+  openPresentationFor, canPresentTooltip, matchesPresentationTrigger,
+  schedulePresentationHover, schedulePresentationHoverClose
+} from '../components/panels/presentation/openPresentation'
 
 export class NodeEventsHandler {
 
@@ -126,6 +129,15 @@ export class NodeEventsHandler {
     const drawing_area = this._node.drawing_area
   
     if (!drawing_area.application_data.is_editable) {
+      // OS#305 Lot 3 — LECTEUR : le clic ouvre la présentation composée par
+      // l'auteur, dans le contenant que sa politique désigne. Si rien n'a été
+      // composé, openPresentationFor n'ouvre rien et on retombe sur le
+      // comportement historique (purge) — jamais l'inspecteur d'édition.
+      openPresentationFor(
+        drawing_area.application_data,
+        this._node as unknown as Parameters<typeof openPresentationFor>[1],
+        { x: event.clientX, y: event.clientY }
+      )
       drawing_area.purgeSelection()
       return
     }
@@ -153,6 +165,7 @@ export class NodeEventsHandler {
         const group_target = this._node.drawing_area.resolveContainerGroupClickTarget(this._node)
         if (group_target) {
           this.selectFrameTarget(group_target)
+          this.openPresentationOnClick(group_target, event)
           return
         }
       }
@@ -167,7 +180,43 @@ export class NodeEventsHandler {
       if (labelType !== 'shape') {
         this._node.drawSelectedLabelHandles(labelType)
       }
+
+      // Clic NU (sans Ctrl/Cmd) : ouvre la PRÉSENTATION de l'élément — pop-up
+      // juxtaposée, ou panneau latéral s'il est ouvert. Ctrl/Cmd
+      // (multi-sélection) n'ouvre rien.
+      if (!event.ctrlKey && !event.metaKey) {
+        this.openPresentationOnClick(this._node, event)
+      }
     }
+  }
+
+  /**
+   * Clic sur un élément : ouvre SA présentation, jamais le panneau de
+   * configuration.
+   *
+   * Le panneau de configuration est l'outil de l'AUTEUR : il s'ouvre quand
+   * l'auteur le demande, par son bouton. Cliquer un nœud, c'est vouloir voir ce
+   * nœud — ce que voit le lecteur — et c'est aussi ce qui rend le composeur
+   * honnête : l'auteur emprunte exactement le chemin de son lecteur, au lieu
+   * d'un bouton « Aperçu » qui simulait ce chemin.
+   *
+   * La SÉLECTION, elle, est inchangée : le panneau de configuration, quand il
+   * est ouvert, continue d'en dériver sa cible.
+   */
+  private openPresentationOnClick(
+    element: Class_NodeBase,
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    const app_data = this._node.drawing_area.application_data
+    const rect = (event.target as HTMLElement)?.getBoundingClientRect?.()
+    openPresentationFor(
+      app_data,
+      element as unknown as Parameters<typeof openPresentationFor>[1],
+      {
+        x: event.clientX || (rect ? Math.round(rect.right) : 0),
+        y: event.clientY || (rect ? Math.round(rect.top) : 0)
+      }
+    )
   }
 
   /** Sélectionne un cadre (groupe) + met à jour les menus. */
@@ -770,26 +819,47 @@ export class NodeEventsHandler {
    * Define event when mouse moves over element
    */
   public handleMouseOver(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    // Option publish tooltip_on_hover : tooltips au simple survol, sans maintenir Shift.
-    const show_tooltip = event.shiftKey || this._node.drawing_area.application_data.publish_options.tooltip_on_hover
-    // ALT + pas de tooltip déjà ouvert pour ce noeud
-    if (show_tooltip && (event.target as HTMLElement).tagName !== 'tspan') {
-      const existingTooltip = document.querySelector('.sankey-tooltip')
-      if (!existingTooltip || !this._node.d3_selection?.classed('tooltip_shown')) {
-        // Stocker la position de la souris pour l'ouverture
-        this.tooltipMouseX = event.pageX
-        this.tooltipMouseY = event.pageY
-
-        // Utiliser le système intégré
-        const tooltipManager = TooltipEventManager.getInstance()
-        //@ts-expect-error xxx
-        tooltipManager.showTooltip(this._node, event.pageX, event.pageY)
-      }
+    const app_data = this._node.drawing_area.application_data
+    // OS#300 Lot 5 — Éditeur : survol NU (aucun bouton enfoncé) + MAJ ou Alt montre
+    // l'inspecteur en INFO-BULLE éditable de l'élément survolé (sans changer la
+    // sélection ferme). Le garde `buttons === 0` évite de déclencher pendant un
+    // MAJ+glisser (verrou d'axe) ou un Alt+glisser (déplacement de label).
+    // Survol satisfaisant le déclencheur réglé sur le DOCUMENT (survol nu /
+    // +MAJ / +Alt) -> présentation composée en info-bulle, après le délai réglé.
+    //
+    // En ÉDITION AUSSI, désormais : survoler un élément montre à l'auteur ce que
+    // verra son lecteur, par le même chemin que lui. C'est ce qui rend le bouton
+    // « Aperçu » du composeur inutile — et c'est plus fidèle, puisque l'auteur
+    // déclenche l'affichage comme le lecteur le déclenchera. L'info-bulle
+    // d'INSPECTEUR qui occupait cette place a donc disparu : elle montrait des
+    // champs d'édition là où le survol doit montrer le diagramme.
+    if (event.buttons === 0
+      && (event.target as HTMLElement).tagName !== 'tspan'
+      && matchesPresentationTrigger(this._node as unknown as Parameters<typeof canPresentTooltip>[0], event)
+      && canPresentTooltip(this._node as unknown as Parameters<typeof canPresentTooltip>[0])) {
+      const rect = (event.target as HTMLElement)?.getBoundingClientRect?.()
+      schedulePresentationHover(
+        app_data,
+        this._node as unknown as Parameters<typeof canPresentTooltip>[0],
+        {
+          x: event.clientX || (rect ? Math.round(rect.right) : 0),
+          y: event.clientY || (rect ? Math.round(rect.top) : 0)
+        }
+      )
+      return
     }
+
+    // OS#305 — l'info-bulle HÉRITÉE est retirée : son contenu est désormais servi
+    // par la présentation composée ci-dessus, dont le défaut la reproduit.
   }
 
   public handleMouseMove() {return}
-  public handleMouseOut() {return}
+  public handleMouseOut() {
+    // Quitter l'élément programme la fermeture de l'info-bulle de présentation
+    // (annulée si le curseur y entre, cf. PanelShell). Inerte si aucune n'est
+    // ouverte.
+    schedulePresentationHoverClose(this._node.drawing_area.application_data)
+  }
 
   private moveMagneticNode(
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>,

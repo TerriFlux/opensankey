@@ -15,6 +15,7 @@ import { Class_NodeBase } from './NodeBase'
 import { NodeDrawValueLabel } from './DrawLabel'
 import { NodeStyle } from './ElementStyle'
 import { format_value } from '../types/Utils'
+import { openPresentationFor } from '../components/panels/presentation/openPresentation'
 // Type-only import: avoids a runtime import cycle with Node.tsx (which imports
 // this module to instantiate the stock shape).
 import type { Class_NodeElement } from './Node'
@@ -145,8 +146,15 @@ export class Class_StockShape extends Class_NodeBase {
     event.stopPropagation()
     const mc = da.application_data.menu_configuration
     da.selectOnly(this)
-    // #1243 — matrice déposée : l'inspecteur dérive sa cible de la sélection.
-    mc.openConfigMenu()
+    // Clic nu : ouvre la PRÉSENTATION, comme pour tout élément du dessin — le
+    // panneau de configuration ne s'ouvre plus qu'à la demande. La sélection,
+    // elle, reste posée : c'est d'elle que ce panneau tire sa cible s'il est
+    // ouvert (d'où `tab_selected` conservé ci-dessous).
+    openPresentationFor(
+      da.application_data,
+      this as unknown as Parameters<typeof openPresentationFor>[1],
+      { x: event.clientX, y: event.clientY }
+    )
     mc.tab_selected = 'shape'
     mc.ref_to_menu_config_updater.current()
     mc.updateAllComponentsRelatedToNodes()

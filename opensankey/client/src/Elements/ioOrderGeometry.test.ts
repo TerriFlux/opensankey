@@ -1,4 +1,4 @@
-import { orderIOByGeometry, recyclingBellyCentre, Type_IOGeo } from './ioOrderGeometry'
+import { orderIOByGeometry, recyclingBellyCentre, bundleTie, Type_IOGeo } from './ioOrderGeometry'
 
 // Geometry-aware I/O ordering — gated direction split + HEIGHT rule (#205 rework).
 //   0. GATE — the fan applies only to TURNING links (orientation 'vh'/'hv'). Straight
@@ -131,6 +131,39 @@ describe('height tie-break — anchor distance (advanced only)', () => {
     ])
     expect(run(items, 0, 0)).toEqual(['big', 'small'])         // advanced
     expect(run(items, 0, 0, false)).toEqual(['small', 'big'])  // simple ignores the curvature
+  })
+})
+
+describe('bundle tie — parallel links stay untwisted across both ends', () => {
+  // Order two parallel turning links (same opposite node) from one node's point of view.
+  // A and B carry stable shared ordinals 1 and 2 (A before B in the global list).
+  const bundle = (
+    side: Type_IOGeo['side'], isSource: boolean, ox: number, oy: number
+  ) => {
+    const mk = (id: string, ord: number) => ({
+      item: { id },
+      geo: {
+        side, ox, oy, turning: true, curve_node: 0.05,
+        bundle_tie: bundleTie(side, isSource, ord)
+      } as Type_IOGeo
+    })
+    return orderIOByGeometry([mk('A', 1), mk('B', 2)], 0, 0).map(l => l.id)
+  }
+
+  it('descends + turns right : source (bottom) and target (left) mirror each other', () => {
+    // S at origin emits from its BOTTOM toward T below-right (opposite at 500,500). T receives
+    // on its LEFT ; from T the opposite (S) sits above-left (-500,-500).
+    const atSource = bundle('bottom', true, 500, 500)   // along X, index 0 = leftmost
+    const atTarget = bundle('left', false, -500, -500)  // along Y, index 0 = topmost
+    expect(atSource).toEqual(['A', 'B'])  // A is leftmost at the source
+    expect(atTarget).toEqual(['B', 'A'])  // …and bottommost at the target → the two never cross
+  })
+
+  it('signs the source and target ends oppositely (same side, opposite role)', () => {
+    expect(Math.sign(bundleTie('bottom', true, 3))).toBe(1)
+    expect(Math.sign(bundleTie('left', false, 3))).toBe(-1)
+    expect(bundleTie('right', true, 3)).toBe(-bundleTie('right', false, 3))
+    expect(bundleTie('top', true, 3)).toBe(-bundleTie('top', false, 3))
   })
 })
 

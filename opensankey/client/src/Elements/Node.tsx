@@ -32,15 +32,14 @@ import {
 } from './Link'
 import { Class_Handler } from './Handler'
 import { reorganizeIOOrder } from './reorganizeIOOrder'
-import { orderIOByGeometry, recyclingBellyCentre, Type_IOGeo } from './ioOrderGeometry'
+import { orderIOByGeometry, recyclingBellyCentre, bundleTie, Type_IOGeo } from './ioOrderGeometry'
 import { format_value, Type_JSON } from '../types/Utils'
 import { default_element_color } from './ElementsAttributesConfig'
 import { SankeyAnimation } from '../Algorithms/SankeyAnimation'
 import { draw_arrow_part } from './NodeDrawShape'
-import { computeArrowPlacement, arrowMinWidthApplies, computeArrowMinWidthPlacement } from './arrowLayout'
+import { computeArrowPlacement, arrowMinWidthApplies, computeArrowMinWidthPlacement, applyFanMinWidth } from './arrowLayout'
 import { Class_Sankey } from '../types/Sankey'
 import { Class_DataTag, Class_Tag } from '../types/Tag'
-import { NodeTooltip } from './TooltipsNode'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeDimension, NodeDimensionsManager } from './NodeDimension'
 import { Class_DataTagGroup, Class_LevelTagGroup, Class_TagGroup, Class_ViewTagGroup } from '../types/TagGroup'
@@ -61,7 +60,6 @@ import { NodeStyle, NodeImportCloseStyle, NodeExportCloseStyle, NodeImportExport
  * @extends {ClassAbstract_NodeElement}
  */
 export class Class_NodeElement extends Class_NodeBase {
-  public _nodeTooltip: NodeTooltip
   public _nodeDimensionsManager: NodeDimensionsManager
   protected _dimensions_as_parent: { [id: string]: Class_NodeDimension } = {}
   protected _dimensions_as_child: { [id: string]: Class_NodeDimension } = {}
@@ -141,7 +139,6 @@ export class Class_NodeElement extends Class_NodeBase {
     //super(id, drawing_area, drawing_area.sankey, 'g_elements_sankey')
     const default_node_style = drawing_area.sankey.styles_dict[NodeStyle]
     super(id, name, drawing_area, default_node_style)
-    this._nodeTooltip = new NodeTooltip(this)
 
     this._nodeDimensionsManager = new NodeDimensionsManager(this)
     this._nodeDrawValueLabel = new NodeDrawValueLabel(this)
@@ -1145,8 +1142,13 @@ export class Class_NodeElement extends Class_NodeBase {
       // Seuls les flux qui changent d'axe ('vh'/'hv') reçoivent l'éventail split+hauteur ;
       // les flux droits ('hh'/'vv') gardent le tri par position opposée (cf. orderKey).
       const turning = (l.shape_orientation === 'vh' || l.shape_orientation === 'hv')
+      // Départage de faisceau : pour des flux parallèles (mêmes source/cible/côtés) toutes les
+      // autres composantes de la clé sont égales. On signe un ordinal stable et partagé (index
+      // global du lien) selon la géométrie du côté pour que la source et la cible ordonnent le
+      // faisceau en miroir (CCW à la source, CW à la cible) → pas de croisement. cf. bundleTie.
+      const ord = this.sankey.links_list.indexOf(l)
       const [ox, oy] = centre(other)
-      const geo: Type_IOGeo = { side, ox, oy, turning, curve_node }
+      const geo: Type_IOGeo = { side, ox, oy, turning, curve_node, bundle_tie: bundleTie(side, is_source, ord) }
       if (l.shape_is_recycling) {
         const [sx, sy] = centre(l.source)
         const [tx, ty] = centre(l.target)
@@ -1366,6 +1368,20 @@ export class Class_NodeElement extends Class_NodeBase {
     const sumLinkRight = this.getSumOfLinksThickness('right', false) - standaloneRawRight
     const sumLinkTop = this.getSumOfLinksThickness('top', false) - standaloneRawTop
     const sumLinkBottom = this.getSumOfLinksThickness('bottom', false) - standaloneRawBottom
+    // #304 — la largeur mini de pointe s'applique à l'ÉVENTAIL, pas flux par flux (cf.
+    // applyFanMinWidth) : il faut donc connaître, par côté, le nombre de flux de
+    // l'éventail et la largeur mini retenue (max des flux du côté — les flux d'un même
+    // éventail doivent partager UNE géométrie, sinon les tranches ne pavent plus la
+    // pointe commune). Le rang du flux dans l'éventail sert au cas « côté d'épaisseur
+    // nulle » (flux structurels), où les tranches sont réparties à parts égales.
+    const fanCount: { [side in Type_Side]: number } = { left: 0, right: 0, top: 0, bottom: 0 }
+    const fanMinWidth: { [side in Type_Side]: number } = { left: 0, right: 0, top: 0, bottom: 0 }
+    list_link_to_add_arrow.forEach(it => {
+      if (it.link.shape_arrow_standalone || endHasAnchorOffset(it)) return
+      fanCount[it.arrow_side] += 1
+      fanMinWidth[it.arrow_side] = Math.max(fanMinWidth[it.arrow_side], it.link.shape_arrow_min_width)
+    })
+    const fanIndex: { [side in Type_Side]: number } = { left: 0, right: 0, top: 0, bottom: 0 }
     // opensankey#1301 — UNE pointe par BANDE CONTIGUË (comme e!Sankey). Chaque flux à
     // offset est calé sur sa position de bande RÉELLE (position_*_start/end, axe transverse) :
     // ces positions empilent DÉJÀ les flux-tags d'un même port ET séparent les ports (posées
@@ -1384,17 +1400,25 @@ export class Class_NodeElement extends Class_NodeBase {
     }
     const anchorMemberKey = (it: { link: Class_LinkElement, is_source_arrow: boolean }): string =>
       it.is_source_arrow + '|' + it.link.id
-    const anchorSideBuckets = new Map<string, Array<{ key: string, pos: number, t: number }>>()
+    const anchorSideBuckets = new Map<string, Array<{ key: string, pos: number, t: number, min_width: number }>>()
     list_link_to_add_arrow.forEach(it => {
       if (!endHasAnchorOffset(it)) return
       const sk = it.is_source_arrow + '|' + it.arrow_side
       const arr = anchorSideBuckets.get(sk) ?? []
-      arr.push({ key: anchorMemberKey(it), pos: bandTransversePos(it), t: it.link_thickness })
+      arr.push({
+        key: anchorMemberKey(it),
+        pos: bandTransversePos(it),
+        t: it.link_thickness,
+        min_width: it.link.shape_arrow_min_width
+      })
       anchorSideBuckets.set(sk, arr)
     })
     // Découpe chaque côté en runs contigus ; mémorise le run de chaque flux + sa géométrie.
+    // `count` / `min_width` (#304) : le run est un éventail, la largeur mini s'y applique
+    // globalement (cf. applyFanMinWidth) ; `anchorRunIndex` donne le rang dans le run.
     const anchorRunOf = new Map<string, string>()
-    const anchorRunInfo = new Map<string, { total: number, minEdge: number, maxEdge: number }>()
+    const anchorRunIndex = new Map<string, number>()
+    const anchorRunInfo = new Map<string, { total: number, minEdge: number, maxEdge: number, count: number, min_width: number }>()
     anchorSideBuckets.forEach((arr, sk) => {
       arr.sort((a, b) => a.pos - b.pos)
       let runIdx = 0
@@ -1403,10 +1427,13 @@ export class Class_NodeElement extends Class_NodeBase {
         if (i > 0 && (f.pos - f.t / 2) > runMaxEdge + ANCHOR_RUN_TOL) runIdx++
         const rk = sk + '#' + runIdx
         anchorRunOf.set(f.key, rk)
-        const info = anchorRunInfo.get(rk) ?? { total: 0, minEdge: Infinity, maxEdge: -Infinity }
+        const info = anchorRunInfo.get(rk) ?? { total: 0, minEdge: Infinity, maxEdge: -Infinity, count: 0, min_width: 0 }
+        anchorRunIndex.set(f.key, info.count)
         info.total += f.t
         info.minEdge = Math.min(info.minEdge, f.pos - f.t / 2)
         info.maxEdge = Math.max(info.maxEdge, f.pos + f.t / 2)
+        info.count += 1
+        info.min_width = Math.max(info.min_width, f.min_width)
         anchorRunInfo.set(rk, info)
         runMaxEdge = Math.max(runMaxEdge, f.pos + f.t / 2)
       })
@@ -1475,7 +1502,7 @@ export class Class_NodeElement extends Class_NodeBase {
           // position (pas d'un compteur d'ordre) → robuste à l'ordre et aux tranches d'un
           // run partiellement chevauchantes.
           const g = anchorRunInfo.get(anchorRunOf.get(anchorMemberKey(item)) ?? '')
-            ?? { total: link_value, minEdge: 0, maxEdge: link_value }
+            ?? { total: link_value, minEdge: 0, maxEdge: link_value, count: 1, min_width: arrow_min_width }
           const total = g.total
           const apex_abs = (g.minEdge + g.maxEdge) / 2 // centre de bande du run (ABSOLU)
           const band_pos = bandTransversePos(item)      // centre de la tranche de CE flux (ABSOLU)
@@ -1497,9 +1524,14 @@ export class Class_NodeElement extends Class_NodeBase {
             xt = apex_abs
             yt = + this.position_y + node_height - inset_y
           }
-          arrow_half_height = total / 2
-          arrow_already_computed = cumul
-          arrow_slice = link_value
+          // #304 — largeur mini au niveau du RUN (éventail de port), pas flux par flux.
+          const run_placement = applyFanMinWidth(
+            { arrow_half_height: total / 2, arrow_already_computed: cumul, slice: link_value },
+            g.min_width, total, anchorRunIndex.get(anchorMemberKey(item)) ?? 0, g.count
+          )
+          arrow_half_height = run_placement.arrow_half_height
+          arrow_already_computed = run_placement.arrow_already_computed
+          arrow_slice = run_placement.slice
         }
         else if (!use_standalone) {
           // Fan : sized in RAW space (#199). total = Σ raw on the side, cumulative
@@ -1530,7 +1562,14 @@ export class Class_NodeElement extends Class_NodeBase {
             current_cumul_of_side = cum_h_bottom ; total_cumul_of_side = sumLinkBottom
             cum_h_bottom += link_value_raw
           }
-          const placement = computeArrowPlacement(false, link_value_raw, link_value, total_cumul_of_side, current_cumul_of_side)
+          // #304 — largeur mini au niveau de l'ÉVENTAIL du côté, pas flux par flux : sans
+          // cela, sur un nœud à beaucoup de flux fins, chaque flux recevait sa propre
+          // pointe indépendante et le côté affichait des dizaines de triangles.
+          const placement = applyFanMinWidth(
+            computeArrowPlacement(false, link_value_raw, link_value, total_cumul_of_side, current_cumul_of_side),
+            fanMinWidth[arrow_side], total_cumul_of_side, fanIndex[arrow_side], fanCount[arrow_side]
+          )
+          fanIndex[arrow_side] += 1
           arrow_half_height = placement.arrow_half_height
           arrow_already_computed = placement.arrow_already_computed
           arrow_slice = placement.slice
@@ -1566,10 +1605,16 @@ export class Class_NodeElement extends Class_NodeBase {
         // pas ici (arrowMinWidthApplies faux) → aucune explosion. La PROFONDEUR reste
         // celle prescrite (base_arrow_size = shape_arrow_size, ou shape_arrow_size_ratio
         // × épaisseur) : la pointe ne s'allonge pas vers le nœud, elle s'élargit juste
-        // (l'angle s'ouvre). Angle constant = réglage dédié arrow_size_ratio. Les cumuls
-        // de l'éventail ne sont pas modifiés : les pointes voisines gardent leur place.
+        // (l'angle s'ouvre). Angle constant = réglage dédié arrow_size_ratio.
+        //
+        // #304 — RÉSERVÉ AUX POINTES INDÉPENDANTES (standalone). Ce triangle par flux
+        // était auparavant posé dans TOUS les modes : dans un éventail partagé, il
+        // remplaçait la pointe convergente unique par une pointe PAR FLUX dès qu'un flux
+        // passait sous 10 px (défaut) — d'où les dizaines de triangles sur un nœud à
+        // beaucoup de flux fins. En éventail, la largeur mini est désormais portée par
+        // applyFanMinWidth (elle garantit la visibilité de l'éventail ENTIER).
         let final_arrow_length = arrow_length
-        if (arrowMinWidthApplies(arrow_min_width, link_value)) {
+        if (use_standalone && arrowMinWidthApplies(arrow_min_width, link_value)) {
           const spike = computeArrowMinWidthPlacement(arrow_min_width)
           arrow_half_height = spike.arrow_half_height
           arrow_already_computed = spike.arrow_already_computed
@@ -1628,8 +1673,8 @@ export class Class_NodeElement extends Class_NodeBase {
    * one chevron whose base spans every link's attach band on that side and whose
    * apex is pushed into the ribbon (toward the targets) by the deepest requested
    * notch size. The resulting path is pushed onto every participating link, which
-   * draws a background-colored copy on its own d3 selection — so the notch is
-   * carved consistently whatever the global element z-order.
+   * carves it out of its own paint via an SVG mask — the notch is a transparent
+   * cutout (what lies behind stays visible), consistent whatever the z-order.
    */
   private _drawLinksSourceNotch() {
     // Même garde mort (méthode non appelée) qu'en tête de `_drawLinksArrow` : retiré, pas activé.
@@ -2471,10 +2516,6 @@ export class Class_NodeElement extends Class_NodeBase {
   protected eventMaintainedClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
     super.eventMaintainedClick(event)
     this._nodeEventsHandler.handleMaintainedClick(event)
-  }
-
-  public drawTooltip() {
-    this._nodeTooltip.drawTooltip()
   }
 
   public get is_child() { return this._nodeDimensionsManager.is_child }

@@ -1205,11 +1205,12 @@ export const GraphElementsOrdoner = ({ app_data }: { app_data: Class_Application
           <Box
             {...provided.droppableProps}
             ref={provided.innerRef}
+            // AJUSTEMENT #3 — plus de hauteur bornée ici : cette liste avait son
+            // propre ascenseur, qui doublait celui du panneau. Une liste longue
+            // allonge désormais le panneau, comme le reste de la configuration.
             style={{
               display: 'grid',
-              gridRowGap: '0.2rem',
-              maxHeight: '400px',
-              overflowY: 'auto'
+              gridRowGap: '0.2rem'
             }}
           >
             {cleanedElements.map((id_element, element_idx) => {

@@ -38,9 +38,6 @@ import {
   Button,
   CloseButton,
   Divider,
-  Drawer,
-  DrawerBody,
-  DrawerContent,
   Text
 } from '@chakra-ui/react'
 import { SearchIcon } from '@chakra-ui/icons'
@@ -57,6 +54,10 @@ import { TemplateGalleryPanel } from './SankeyTemplates'
 import { IType_DictHookRefSetterShowDialogComponents, Type_AdditionalMenus, TOOLS_COLUMN_WIDTH_PX, MENU_CONFIG_WIDTH_PCT, MENU_CONFIG_MIN_WIDTH_PX } from '../../types/MenuConfig'
 import { LinkValueTypeSelector } from '../configmenus/SankeyMenuConfigurationLinksData'
 import { InspectorPanel } from '../configmenus/inspector/InspectorPanel'
+import { PanelShell } from '../panels/PanelShell'
+import { PresentationPanels } from '../panels/presentation/PresentationPanels'
+import { SidebarSurface } from '../panels/PanelShell'
+import { PANELS_TOPIC } from '../../types/EventBus'
 import { default_font_size } from '../../css/Theme'
 import { useModelBinding } from '../../hooks/useModelBinding'
 import { Class_ApplicationData } from '../../types/ApplicationData'
@@ -94,7 +95,6 @@ export const SankeyMenu = (
 ) => {
   const { t, icon_library, menu_configuration } = app_data
   const { icon_open_close_config } = icon_library
-  const [show_nav, set_show_nav] = useState(false)
   // #247 — re-render piloté par le modèle : slot du menu, + slot de la colonne d'outils quand
   // elle est affichée (mode édition). Cleanup des deux au démontage.
   const refreshThis = useModelBinding(
@@ -102,32 +102,52 @@ export const SankeyMenu = (
       ? [menu_configuration.ref_to_menu_updater]
       : [menu_configuration.ref_to_menu_updater, menu_configuration.ref_to_toolbar_bottom_updater]
   )
+  // OS#300 — re-render quand un panneau change (ouverture/fermeture/mode) : la
+  // config est un « panneau » piloté par le modèle, plus un useState local.
+  useModelBinding(undefined, (r) => menu_configuration.subscribe(PANELS_TOPIC, r))
+  // Ouverture de la config = présence du panneau 'config' dans le modèle.
+  const show_nav = menu_configuration.panels.isOpen('config')
 
-  // Ouvre/ferme la config. Le panneau est un OVERLAY au-dessus de toute la grande zone
-  // (diagramme, tableur, doc…) : il ne touche PAS à l'état doc/tableur ni au cadrage.
-  // Seule exclusivité conservée : le panneau de filtres (même emplacement à droite).
-  // Centralise tous les chemins (bouton, Drawer onClose, raccourcis, filtre) qui passent
-  // par ref_menu_opened.current[1], pour un comportement uniforme.
+  // Ouvre/ferme la config (panneau unifié 'config'). Centralise tous les chemins
+  // (bouton, raccourcis, ouverture auto depuis le canvas) qui passent par
+  // ref_menu_opened.current[1], pour un comportement uniforme. Aucune exclusivité
+  // manuelle avec les autres menus : seule la barre latérale est exclusive (gérée
+  // par panels) ; les pop-ups/info-bulles se superposent.
   const setConfigOpen = (open: boolean) => {
-    // #1243 — l'exclusivité config/filtres n'existait que parce que les deux
-    // sont des overlays au MÊME coin. Épinglé, le panneau est docké et réserve
-    // sa largeur : le tiroir de filtres se place à sa gauche, les deux
-    // cohabitent (indispensable à « Filtres > Sélectionner » qui alimente
-    // l'inspecteur — sinon on sélectionne à l'aveugle).
-    // #1258 — un tiroir de filtres ÉPINGLÉ est docké (il réserve sa largeur) :
-    // il cohabite avec la config, on ne le ferme plus.
-    if (open && open !== show_nav && !menu_configuration.config_panel_pinned
-      && !menu_configuration.filter_panel_pinned) {
-      menu_configuration.ref_close_filter_drawer.current(false)
+    // OS#300 — la config est un « panneau » unifié (id 'config') : ouvrir =
+    // l'ajouter au modèle dans son dernier contenant (barre latérale par défaut),
+    // fermer = l'en retirer. Le modèle notifie panneaux + grande zone (recadrage
+    // du dessin quand la barre latérale change).
+    const panels = menu_configuration.panels
+    const already_open = panels.isOpen('config')
+    if (open) {
+      // OS#300 — plus d'exclusivité manuelle config/filtres : dans le modèle
+      // unifié, un menu en pop-up cohabite avec un autre (superposition), et
+      // seule la BARRE LATÉRALE est exclusive (ancrer l'un éjecte l'autre, géré
+      // par panels). La config et le filtre peuvent donc rester ouverts ensemble.
+      if (!already_open) {
+        // OS#300 — contenant par défaut selon le contexte : barre latérale si elle
+        // est affichée, sinon pop-up (cf. panels.defaultOpenMode).
+        const mode = menu_configuration.panels.defaultOpenMode()
+        // Pop-up config : position par défaut au bord droit (proche de l'ancien
+        // tiroir), sans recouvrir le centre du dessin. La barre latérale, elle,
+        // se cale d'elle-même à droite.
+        const opts = mode === 'popup'
+          ? { geometry: {
+            w: 400,
+            h: Math.min(560, window.innerHeight - app_data.drawing_area.getNavBarHeight()
+              - app_data.drawing_area.getBottomBarHeight() - 24),
+            x: Math.max(0, window.innerWidth - 400 - menu_configuration.getToolsColumnWidthPx() - 16),
+            y: app_data.drawing_area.getNavBarHeight() + 8
+          } }
+          : undefined
+        panels.setMode('config', mode, opts)
+      }
+    } else {
+      panels.close('config')
     }
-    set_show_nav(open)
-    // #1243 — en mode épinglé, ouvrir/fermer change la RÉSERVE de largeur :
-    // pose l'état tout de suite (le render l'écrasera à l'identique) puis
-    // notifie la grande zone pour que le diagramme se recadre.
-    if (menu_configuration.config_panel_pinned) {
-      menu_configuration.ref_menu_opened.current = [open, setConfigOpen]
-      menu_configuration.notifyMainZone()
-    }
+    // Miroir de compatibilité lu par GuidedTour / MenuTop / Toolbar / ApplicationData.
+    menu_configuration.ref_menu_opened.current = [open, setConfigOpen]
   }
 
   menu_configuration.ref_menu_opened.current = [show_nav, setConfigOpen]
@@ -149,6 +169,21 @@ export const SankeyMenu = (
   // useMainZone -> re-render au toggle/redimension.
   useMainZone(app_data)
   const rightReserve = mainZoneRightReservedPx(app_data)
+
+  // OS#300 — Recadrage du dessin quand la RÉSERVE de barre latérale change
+  // (ancrage/détachement/fermeture d'un menu ancré). Une notification MAIN_ZONE
+  // seule ne refit pas le diagramme : on déclenche explicitement areaAutoFit +
+  // draw, comme la bascule de la colonne d'outils (cf. MenuTop). N'est PAS
+  // déclenché par les pop-ups/info-bulles (qui se superposent, réserve nulle).
+  const sidebar_reserve = menu_configuration.panels.getSidebarReservedPx()
+  const prev_sidebar_reserve = useRef(sidebar_reserve)
+  useLayoutEffect(() => {
+    if (prev_sidebar_reserve.current !== sidebar_reserve) {
+      prev_sidebar_reserve.current = sidebar_reserve
+      app_data.drawing_area.areaAutoFit()
+      app_data.draw()
+    }
+  })
   // Le PANNEAU de config, lui, est un overlay au-dessus de TOUTE la grande zone (tableur/doc
   // compris, zIndex 30 > panneaux 20-25) : il ne s'écarte que de la colonne d'outils (zIndex 35,
   // extrême droite), pas des réserves tableur/doc.
@@ -159,10 +194,6 @@ export const SankeyMenu = (
     : (app_data.drawing_area.fit_margin + rightReserve)
   //Switch the variable value that handle opening and closing the configuration menu
   const toggleShow = () => setConfigOpen(!show_nav)
-
-  // Aligned with the floating config toggle button (same top as the wrench).
-  // The legacy +1.75rem offset was for the now-removed file_name Editable.
-  const posTopMenuConfig = app_data.drawing_area.getNavBarHeight() + app_data.drawing_area.fit_margin
 
   // Colonne d'outils rétractable (éditeur uniquement). On déclare sa disponibilité ici (à chaque
   // rendu) pour que la réserve de largeur droite (getToolsColumnWidthPx) soit nulle en publish.
@@ -191,7 +222,9 @@ export const SankeyMenu = (
       zIndex={35}
       bg='white'
       borderLeft='1px solid #e2e8f0'
-      display={menu_configuration.tools_column_open ? 'flex' : 'none'}
+      // OS#300 Lot 2 — barre d'outils TOUJOURS visible (l'ancien toggle est
+      // requalifié en bascule de barre latérale).
+      display='flex'
       flexDirection='column'
       alignItems='center'
       gap='0.3rem'
@@ -331,9 +364,11 @@ export const SankeyMenu = (
     <Text
       fontStyle='h4'
     >
-      {t('Menu.support_explication').split('[]')[0]}
+      {/* Garde-fou : selon la config i18n (returnNull), une clé absente rend
+          `null` — `.split` ferait alors tomber tout le menu. */}
+      {(t('Menu.support_explication') || '').split('[]')[0]}
       <a href='mailto:support@terriflux.fr	'>support@terriflux.fr</a>
-      {t('Menu.support_explication').split('[]')[1]}
+      {(t('Menu.support_explication') || '').split('[]')[1]}
     </Text>
   </>
 
@@ -375,73 +410,29 @@ export const SankeyMenu = (
         </Box>
       }
 
-      {/* #1243 — mode ÉPINGLÉ : le panneau se docke à droite (comme le tableur)
-          et réserve sa largeur — la zone de dessin se recadre à gauche. Pour
-          l'édition intense ; le mode survol (Drawer overlay) reste le défaut. */}
-      {app_data.is_editable && menu_configuration.config_panel_pinned && show_nav ? (
-        <Box
-          className='config_panel_pinned'
-          position='fixed'
-          right={toolsReserve + 'px'}
-          top={app_data.drawing_area.getNavBarHeight() + 'px'}
-          bottom={app_data.drawing_area.getBottomBarHeight() + 'px'}
-          width={drawer_width_css}
-          zIndex={26}
-          bg='white'
-          borderLeft='1px solid #e2e8f0'
-          overflowY='auto'
-          overflowX='hidden'
-          padding='0.2rem'
+      {/* OS#300 — La Configuration (= Inspecteur) est un « panneau » unifié
+          (id 'config') : barre latérale ancrée (recadre le dessin) ou pop-up
+          déplaçable, au choix via l'en-tête uniforme. Le contenu (ConfigMenu)
+          est identique quel que soit le contenant. Remplace l'ancien couple
+          Drawer overlay (#1243) / panneau épinglé docké (#1258). */}
+      {app_data.is_editable ? (
+        <PanelShell
+          app_data={app_data}
+          id='config'
+          title={t('panel.config_title', { defaultValue: 'Configuration' })}
+          allowedModes={['popup', 'sidebar']}
         >
           <ConfigMenu
             app_data={app_data}
           />
-        </Box>
+        </PanelShell>
       ) : <></>}
 
-      {
-        app_data.is_editable && !menu_configuration.config_panel_pinned ? <>
-          <Drawer
-            blockScrollOnMount={false}
-            isOpen={show_nav}
-            placement='right'
-            onClose={() => setConfigOpen(false)}
-            onEsc={() => {
-              // Override drawer onEscape() to use Class_applicationData 'escape' keyEvent & not the one by default from the <Drawer> component
-              const ev = document
-              const tmp = new KeyboardEvent('keydown', { key: 'Escape' })
-              if (ev.onkeydown) {
-                ev.onkeydown(tmp as KeyboardEvent)
-              }
-            }}
-            variant='drawer_menu_config'
-            id='drawer_config'
-            trapFocus={false}
-          >
-            {/* We have to set the width of the component here (and not in the theme)
-            because for some reason a style is directly applied to this component
-            and we cannot override it in the theme */}
-            <DrawerContent
-              className='drawer_menu_config'
-              style={{
-                width: drawer_width_css,
-                height: 'fit-content',
-                right: app_data.drawing_area.fit_margin / 2 + toolsReserve,
-                marginTop: posTopMenuConfig,
-                // Panneau en overlay au-dessus du dessin : ombre portée pour le détacher visuellement
-                // (le variant du thème met boxShadow:unset, hérité de l'époque panneau docké).
-                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)',
-                borderRadius: '4px'
-              }}
-            >
-              <DrawerBody style={{ overflowX: 'auto' }}>
-                <ConfigMenu
-                  app_data={app_data}
-                />
-              </DrawerBody>
-            </DrawerContent>
-          </Drawer></> :
-          <></>}
+      {/* OS#305 — Panneaux de PRÉSENTATION (un par élément présenté). Montés
+          dans les deux modes : en lecture c'est ce que voit le lecteur, en
+          édition c'est l'aperçu que l'auteur déclenche depuis le composeur. */}
+      <SidebarSurface app_data={app_data} />
+      <PresentationPanels app_data={app_data} />
 
 
       {/* Bouton config flottant conservé UNIQUEMENT en publish-éditable (static + editable) ; en
@@ -577,9 +568,6 @@ const ConfigMenu = ({ app_data }: {
   // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).
   useModelBinding(app_data.menu_configuration.ref_to_menu_config_updater)
 
-  // Hauteur bornée à l'espace écran restant (panneau ancré).
-  const maxHConfig = 'calc(' + (window.innerHeight - (app_data.drawing_area.getNavBarHeight() + app_data.drawing_area.getBottomBarHeight() + (app_data.drawing_area.fit_margin * 2))) + 'px - 0.8rem)'
-
   return <Box style={{
     background: 'white',
     borderRadius: '5px',
@@ -589,7 +577,13 @@ const ConfigMenu = ({ app_data }: {
     color: '#444'
   }}>
     <Box
-      style={{ maxHeight: maxHConfig, overflowY: 'auto', overflowX: 'hidden' }}
+      // AJUSTEMENT #3 — AUCUNE propriété `overflow` ici : la coquille de panneau
+      // fait défiler, ce conteneur ne fait que porter le contenu. La hauteur
+      // bornée qu'il avait datait du tiroir fixe d'avant #300 et, dans une
+      // pop-up, se calculait de surcroît sur la mauvaise référence (la fenêtre
+      // du navigateur, pas le panneau). Même `overflow-x: hidden` seul serait de
+      // trop : borner un seul axe fait passer l'autre de `visible` à `auto` —
+      // c'est ainsi que le second ascenseur revenait.
       onMouseDownCapture={() => {
         // Auto-exit edition mode as soon as the user interacts with the configuration menu
         if (app_data.drawing_area.isInEditionMode()) {
