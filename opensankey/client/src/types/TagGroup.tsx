@@ -8,6 +8,10 @@ import { Class_Sankey } from './Sankey'
 import { tag_banner_type, Class_ProtoTag, Class_Tag, Class_NodeTag, Class_FluxTag, Class_DataTag, Class_LevelTag, Class_ViewTag } from './Tag'
 import { Type_JSON, getStringFromJSON, getBooleanFromJSON, getStringListFromJSON, getStringOrUndefinedFromJSON } from './Utils'
 
+// #285 — pour un groupe porteur additif, ce que montrent les labels des flux :
+// 'total' = somme (label principal), 'detail' = un label par bande, 'both' = les deux.
+export type Type_bandsLabelDisplay = 'total' | 'detail' | 'both'
+
 // CLASS PROTO TAGGROUP *****************************************************************
 /**
  * Class that define a TagGroup object
@@ -597,6 +601,20 @@ export class Class_FluxTagGroup extends Class_TagGroup {
   // carries_values ; la largeur de bande dérive du coefficient de l'unité.
   private _is_unit_type: boolean = false
 
+  // #285 — groupe porteur ADDITIF : les valeurs coordonnées s'additionnent, la
+  // valeur du flux = leur SOMME (le total, accessible) et le détail apparaît en
+  // bandes. Opposé au cas « unité » (is_unit_type) où les valeurs sont non
+  // additives (kWh/t/€) et la valeur affichée = celle du tag sélectionné.
+  // Défaut true : un groupe porteur non-unité est additif (rétro-compat : les
+  // fichiers fusion existants deviennent additifs).
+  private _is_additive: boolean = true
+
+  // #285 — pour un groupe porteur ADDITIF, choix de ce que montrent les labels
+  // des flux tagués : 'total' (label principal = somme, défaut e!Sankey),
+  // 'detail' (un label par bande, pas de total) ou 'both' (les deux). N'a de
+  // sens que si is_additive_carrier ; ignoré pour les groupes de type unité.
+  private _bands_label_display: Type_bandsLabelDisplay = 'total'
+
   public get carries_values(): boolean { return this._carries_values }
   public set carries_values(_: boolean) { this._carries_values = _ }
 
@@ -606,6 +624,18 @@ export class Class_FluxTagGroup extends Class_TagGroup {
   public get is_unit_type(): boolean { return this._is_unit_type }
   public set is_unit_type(_: boolean) { this._is_unit_type = _ }
 
+  public get is_additive(): boolean { return this._is_additive }
+  public set is_additive(_: boolean) { this._is_additive = _ }
+
+  public get bands_label_display(): Type_bandsLabelDisplay { return this._bands_label_display }
+  public set bands_label_display(_: Type_bandsLabelDisplay) { this._bands_label_display = _ }
+
+  /** True si ce groupe porteur additionne ses valeurs (total = somme) — additif
+   *  ET pas de type unité. Base commune pour valueCurrent et l'affichage. */
+  public get is_additive_carrier(): boolean {
+    return this._carries_values && this._is_additive && !this._is_unit_type
+  }
+
   protected _toJSON(
     json_object: Type_JSON,
     kwargs?: Type_JSON
@@ -614,6 +644,10 @@ export class Class_FluxTagGroup extends Class_TagGroup {
     if (this._carries_values) json_object['carries_values'] = true
     if (this._has_own_scales) json_object['has_own_scales'] = true
     if (this._is_unit_type) json_object['is_unit_type'] = true
+    // Défaut true → on ne sérialise que l'exception (non additif sans être unité).
+    if (!this._is_additive) json_object['is_additive'] = false
+    // Défaut 'total' → sérialisé seulement s'il change.
+    if (this._bands_label_display !== 'total') json_object['bands_label_display'] = this._bands_label_display
   }
 
   protected _fromJSON(
@@ -624,6 +658,9 @@ export class Class_FluxTagGroup extends Class_TagGroup {
     this._carries_values = getBooleanFromJSON(json_object, 'carries_values', this._carries_values)
     this._has_own_scales = getBooleanFromJSON(json_object, 'has_own_scales', this._has_own_scales)
     this._is_unit_type = getBooleanFromJSON(json_object, 'is_unit_type', this._is_unit_type)
+    this._is_additive = getBooleanFromJSON(json_object, 'is_additive', this._is_additive)
+    this._bands_label_display = getStringFromJSON(
+      json_object, 'bands_label_display', this._bands_label_display) as Type_bandsLabelDisplay
   }
 
   // PROTECTED ATTRIBUTES ===============================================================

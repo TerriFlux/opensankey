@@ -171,6 +171,57 @@ describe('tagged_value_bands — bandes internes des valeurs du flux', () => {
 })
 
 describe('OS#1286 — unite attachee au fluxTag (groupe de type unite)', () => {
+  it('additive carrier: valueCurrent = SUM (total), unit carrier: selected tag value', () => {
+    const { sankey, link, tagg, acier, cuivre } = makeApp()
+    tagg.banner = 'multi'
+    tagg.carries_values = true
+    // additif par défaut (pas is_unit_type)
+    acier.setSelected()
+    const value = link.value!
+    const tv1 = value.addTaggedValue(); tv1.value = 198.9; tv1.addTag(acier)
+    const tv2 = value.addTaggedValue(); tv2.value = 80; tv2.addTag(cuivre)
+    // ADDITIF : la valeur du flux = la somme (le total)
+    expect(tagg.is_additive_carrier).toBe(true)
+    expect(link.valueCurrent).toBeCloseTo(278.9)
+    expect(link.has_additive_bands).toBe(true)
+    expect(link.tagged_value_bands).toHaveLength(2)
+
+    // Bascule en type unité -> NON additif -> valeur du tag sélectionné (acier)
+    tagg.is_unit_type = true
+    expect(tagg.is_additive_carrier).toBe(false)
+    expect(link.valueCurrent).toBeCloseTo(198.9)
+    expect(link.has_additive_bands).toBe(false)
+  })
+
+  it('additive: bands_label_display pilote total/détail/les deux', () => {
+    const { link, tagg, acier, cuivre } = makeApp()
+    tagg.banner = 'multi'
+    tagg.carries_values = true
+    const value = link.value!
+    const tv1 = value.addTaggedValue(); tv1.value = 198.9; tv1.addTag(acier)
+    const tv2 = value.addTaggedValue(); tv2.value = 80; tv2.addTag(cuivre)
+    expect(tagg.is_additive_carrier).toBe(true)
+
+    // défaut 'total' : total oui, détail non
+    expect(tagg.bands_label_display).toBe('total')
+    expect(link.shows_additive_total).toBe(true)
+    expect(link.shows_additive_detail).toBe(false)
+
+    tagg.bands_label_display = 'detail'
+    expect(link.shows_additive_total).toBe(false)
+    expect(link.shows_additive_detail).toBe(true)
+
+    tagg.bands_label_display = 'both'
+    expect(link.shows_additive_total).toBe(true)
+    expect(link.shows_additive_detail).toBe(true)
+
+    // sérialisation : 'total' non écrit, autre valeur écrite puis relue
+    tagg.bands_label_display = 'total'
+    expect(tagg.toJSON().bands_label_display).toBeUndefined()
+    tagg.bands_label_display = 'both'
+    expect(tagg.toJSON().bands_label_display).toBe('both')
+  })
+
   it('derives band px from the unit coefficient (t vs kt coherents)', () => {
     const { sankey, link, tagg, acier, cuivre } = makeApp()
     tagg.banner = 'multi'

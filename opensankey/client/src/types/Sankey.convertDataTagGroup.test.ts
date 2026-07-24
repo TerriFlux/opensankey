@@ -19,7 +19,7 @@ function makeApp() {
 }
 
 describe('convertDataTagGroupToFluxTagGroup — dimension → annotation', () => {
-  it('turns per-tag leaves into coordinated values, main value = selected slice', () => {
+  it('turns per-tag leaves into coordinated values, main value = additive total', () => {
     const { sankey, link } = makeApp()
     const annee = sankey.addDataTagGroup('annee', 'Année', false)
     const t2020 = annee.addTag('2020', 't2020') as Class_DataTag
@@ -40,11 +40,12 @@ describe('convertDataTagGroupToFluxTagGroup — dimension → annotation', () =>
     expect(flux_tagg.is_dimension).toBe(false)
     expect(flux_tagg.tags_list.map(t => t.id)).toEqual(['t2020', 't2021'])
 
-    // Valeur principale = tranche SÉLECTIONNÉE (pas de somme — valeurs non
-    // additives) ; les deux tranches deviennent des valeurs coordonnées
+    // #285 — le groupe libre issu d'une dimension est ADDITIF par défaut : la
+    // valeur du flux = la SOMME des tranches (le total, 10 + 12), et chaque
+    // tranche devient une valeur coordonnée (détail en bandes).
     const value = link.value
     expect(value).not.toBeNull()
-    expect(link.valueCurrent).toBe(12)
+    expect(link.valueCurrent).toBe(22)
     const subs = value!.tagged_values_list
     expect(subs).toHaveLength(2)
     const by_tag = (id: string) => subs.find(s => s.tags_list.some(t => t.id === id))

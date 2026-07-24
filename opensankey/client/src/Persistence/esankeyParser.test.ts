@@ -1726,12 +1726,14 @@ describeDemos('loadEsankeyFile — démos e!Sankey 5 locales', () => {
     expect(d.legend?.legend_police).toBe(11.25)
     // Tous les process de cette démo sont invisibles (style « décor »)
     expect(Object.values(d.nodes).every(n => n.local.shape_visible === false)).toBe(true)
-    // Labels de valeur : visibles UNIQUEMENT sur les flèches mono-matériau
-    // (4 dans cette démo) ; les flèches multi-matériaux (5 et 3 flows → 8 flux
-    // parallèles) restent éteintes (l'étiquette e!Sankey appartient à la flèche,
-    // les N parts se chevaucheraient).
+    // #285 — labels de valeur visibles sur TOUTES les flèches (les 23
+    // <sankeyArrowLabel> sont visible=true + showValue=true). Les flèches
+    // multi-matériaux (5 et 3 flows) deviennent, après la fusion additive au
+    // chargement, UN flux dont le label montre le TOTAL — plus de chevauchement,
+    // donc plus de raison de les éteindre. 12 flux parallèles à l'import, tous
+    // labellisés (fusionnés en 6 au fromJSON).
     const labelled = Object.values(d.links).filter(l => l.local.value_label_is_visible === true)
-    expect(labelled.length).toBe(4)
+    expect(labelled.length).toBe(12)
     expect(Object.keys(d.links).length).toBe(12)
     // Texture : les rectangles hachurés (<brushColor hasPattern pattern="3">)
     // importent shape_hatch = antidiagonal (\) sur la zone de texte.

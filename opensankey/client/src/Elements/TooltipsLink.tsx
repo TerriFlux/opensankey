@@ -58,11 +58,14 @@ export class LinkTooltip {
     const multi_dim = this._link.sankey.data_taggs_list.find(tagg =>
       tagg.banner === 'multi' && tagg.tags_list.length > 1)
 
+    // #285 — flux ADDITIF : la ligne « Valeur » a du sens (c'est le TOTAL) et
+    // s'affiche EN PLUS du détail par tag. Sur un flux ventilé non additif
+    // (unité), elle ne ferait que recopier le tag sélectionné → masquée.
+    const has_additive_carrying = this._link.has_additive_bands
+
     const data_label_visible = this._link.value_label_is_visible
     this._link.value_label_is_visible = true
-    // #285 — flux ventilé : la ligne « Valeur » isolée n'a pas de sens (la liste
-    // par tag fait foi) ; on ne l'émet que sur un flux non ventilé.
-    if (!has_carrying_values && !multi_dim) {
+    if ((!has_carrying_values && !multi_dim) || has_additive_carrying) {
       // Valeur du lien
       html += '<tr>'
       html += '<th>Valeur</th>'

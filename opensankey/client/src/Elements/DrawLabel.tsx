@@ -2892,8 +2892,13 @@ export class LinkDrawValueLabel extends LinkDrawLabelBase {
     if (da.type_data === 'structure') return false
     // #285 — flux affiché en bandes : la valeur unique n'a aucun sens (elle
     // recopierait la première) ; les bandes portent chacune leur label
-    // (cf. LinkDrawShape.drawTaggedValueBands).
-    if (this.link.tagged_value_bands.length > 0) return false
+    // (cf. LinkDrawShape.drawTaggedValueBands). EXCEPTION : bandes ADDITIVES,
+    // où le label principal montre le TOTAL (la somme) et les bandes ne sont
+    // pas labellisées.
+    // #285 — bandes additives : le total n'est montré que si le mode d'affichage
+    // du groupe l'inclut ('total' ou 'both').
+    if (this.link.tagged_value_bands.length > 0
+      && !(this.link.has_additive_bands && this.link.shows_additive_total)) return false
     // Seuil d'affichage des valeurs : mode pixel (#seuil px) → épaisseur rendue,
     // sinon valeur de donnée (comportement historique).
     if (da.filter_unit === 'pixel') {

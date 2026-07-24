@@ -1992,17 +1992,15 @@ export const parseEsankeyXml = (
       const isRouted = isRoutedPolyline(graphicalArrow?.points ?? [])
       if (!isRouted && orientation !== 'hh') link.local.orientation = orientation
       // Label de valeur : REPRIS de la flèche e!Sankey quand elle affiche le
-      // sien (`<sankeyArrowLabel visible showValue>`), mais UNIQUEMENT pour une
-      // flèche MONO-matériau. Chez e!Sankey la quantité appartient à la FLÈCHE
-      // (somme de ses matériaux, posée sur un segment) ; sur une flèche
-      // multi-matériaux (N flux parallèles chez nous) chaque flux afficherait SA
-      // part et les N valeurs se chevauchent (illisible) — celles-là restent
-      // éteintes (manque « label agrégé par flèche », listé en #264). Les
-      // réglages de style du label (#1287 : taille/couleur/offset ci-dessous)
-      // sont posés dans tous les cas : ils s'appliquent aussi si l'utilisateur
-      // réactive les valeurs à la main. e!Sankey affiche les valeurs TOUJOURS à
-      // l'horizontale (jamais sur la tangente).
-      link.local.value_label_is_visible = flows.length === 1 &&
+      // sien (`<sankeyArrowLabel visible showValue>`). Chez e!Sankey la quantité
+      // appartient à la FLÈCHE (somme de ses matériaux). #285 — la fusion
+      // additive fournit désormais ce « label agrégé par flèche » qui manquait
+      // (#264) : une flèche multi-matériaux devient UN flux dont le label montre
+      // le TOTAL (pas N parts qui se chevauchent). On respecte donc la même
+      // config de label pour mono ET multi-matériaux ; le flux de base conservé
+      // à la fusion garde cette visibilité. e!Sankey affiche les valeurs TOUJOURS
+      // à l'horizontale (jamais sur la tangente).
+      link.local.value_label_is_visible =
         graphicalArrow !== null && graphicalArrow.labelVisible &&
         (graphicalArrow.showValue || graphicalArrow.showPercentage === 2)
       link.local.value_label_on_path = false

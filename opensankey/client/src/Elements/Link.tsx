@@ -955,6 +955,35 @@ export class Class_LinkElement extends Class_LinkAttribute {
     return bands.reduce((acc, band) => acc + band.px, 0)
   }
 
+  /** #285 — le flux affiche des bandes issues d'un groupe porteur ADDITIF : la
+   *  valeur du flux (label principal) est le TOTAL, les bandes montrent le
+   *  détail SANS label par bande. À l'inverse (unité), pas de total et un label
+   *  par bande. Sert à DrawLabel (garder/masquer le label) et aux labels de bande. */
+  public get has_additive_bands(): boolean {
+    return (this.value?.tagged_values_list?.length ?? 0) > 0
+      && this.sankey.flux_taggs_list.some(tagg => tagg.is_additive_carrier)
+  }
+
+  /** #285 — mode d'affichage des labels pour un flux à bandes additives, lu sur
+   *  le premier groupe porteur additif ('total' par défaut). */
+  public get additive_bands_label_display(): 'total' | 'detail' | 'both' {
+    if (!this.has_additive_bands) return 'total'
+    const carrier = this.sankey.flux_taggs_list.find(tagg => tagg.is_additive_carrier)
+    return carrier?.bands_label_display ?? 'total'
+  }
+
+  /** Le label principal (total) doit-il être affiché pour ce flux additif ? */
+  public get shows_additive_total(): boolean {
+    const m = this.additive_bands_label_display
+    return m === 'total' || m === 'both'
+  }
+
+  /** Les labels par bande (détail) doivent-ils être affichés pour ce flux additif ? */
+  public get shows_additive_detail(): boolean {
+    const m = this.additive_bands_label_display
+    return m === 'detail' || m === 'both'
+  }
+
   /**
    * Set up element on d3 svg area
    * @private
@@ -2144,13 +2173,22 @@ export class Class_LinkElement extends Class_LinkAttribute {
       if (tvs.length > 0) {
         const carrying = this.sankey.flux_taggs_list.filter(tagg => tagg.carries_values)
         if (carrying.length > 0) {
-          const matches_selection = (tv: Class_ElementTaggedValue) => carrying.every(tagg => {
-            const mine = tv.getTagForGroup(tagg)
-            return !mine || mine.is_selected
-          })
-          const selected_tv = tvs.find(tv =>
-            matches_selection(tv) && carrying.some(tagg => tv.getTagForGroup(tagg)))
-          if (selected_tv) value_current = selected_tv.value
+          // #285 — groupe porteur ADDITIF : la valeur du flux = SOMME des valeurs
+          // coordonnées visibles (le total ; le détail est en bandes). Cas unité
+          // (non additif) : valeur du TAG SÉLECTIONNÉ (kWh/t/€ non sommables).
+          if (carrying.some(tagg => tagg.is_additive_carrier)) {
+            const visible = tvs.filter(tv => tv.tags_list.every(tag => tag.is_selected))
+            const summed = (visible.length > 0 ? visible : tvs)
+            value_current = summed.reduce((acc, tv) => acc + (tv.value as number), 0)
+          } else {
+            const matches_selection = (tv: Class_ElementTaggedValue) => carrying.every(tagg => {
+              const mine = tv.getTagForGroup(tagg)
+              return !mine || mine.is_selected
+            })
+            const selected_tv = tvs.find(tv =>
+              matches_selection(tv) && carrying.some(tagg => tv.getTagForGroup(tagg)))
+            if (selected_tv) value_current = selected_tv.value
+          }
         }
         if (value_current === null) {
           const multi = this.sankey.flux_taggs_list.some(tagg => tagg.banner === 'multi')

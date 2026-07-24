@@ -470,7 +470,12 @@ export class LinkDrawShape {
     }
 
     const da = link.sankey.drawing_area
+    // #285 — bandes ADDITIVES : le total est porté par le label principal du
+    // flux, pas de label par bande (sinon doublon total + détail illisible).
+    // #285 — bandes additives : les labels par bande n'apparaissent que si le
+    // mode d'affichage du groupe l'inclut ('detail' ou 'both'). Cas unité : toujours.
     const band_label_visible = da.type_data !== 'structure'
+      && (!link.has_additive_bands || link.shows_additive_detail)
     // #285 — le label de bande suit la MÊME police que le label de valeur du
     // flux (réglage font_size), compensée du zoom local comme les autres labels
     // (mode police verrouillée) : plus de taille 8-11 px codée en dur.
