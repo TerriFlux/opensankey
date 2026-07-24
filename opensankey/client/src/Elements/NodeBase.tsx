@@ -561,7 +561,7 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     }
     // #680 — Recadrage CONTINU pendant le glissé, en SUIVANT la direction du drag :
     // - mode largeur/hauteur/tout → dézoom au fur et à mesure que le nœud s'éloigne ;
-    // - mode 'aucun' → zoom constant, recentrage caméra (le diagramme glisse à l'opposé) ;
+    // - mode 'aucun' → no-op : la caméra ne bouge pas (revu post-#680) ;
     // - sur l'axe libre, la zone de dessin s'élargit et suit l'élément (bord poussé épinglé).
     // NB : le recadrage change le transform en cours de drag → un léger décalage du pointeur
     // par tick est possible (assumé : comportement voulu « au fur et à mesure »).
@@ -597,7 +597,7 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     }
     this._nodeEventsHandler.handleMouseDragEnd(event)
     // #680 — Cadrage FINAL du mode (suit encore la direction accumulée du glissé), puis on
-    // clôt le drag (efface la direction). Mode 'none' → recentrage caméra ; modes largeur/
+    // clôt le drag (efface la direction). Mode 'none' → no-op ; modes largeur/
     // hauteur/tout → cadrage maintenu bord à bord.
     this.drawing_area.applyAutoFitMode(false)
     this.drawing_area.endFitDrag()

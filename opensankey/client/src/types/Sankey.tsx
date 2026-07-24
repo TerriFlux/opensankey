@@ -637,9 +637,9 @@ export class Class_Sankey {
   // rafales (création d'un flux = nœud(s) + lien ; collage de plusieurs éléments) en un fit.
   private _scheduleAutoFitAfterAdd(): void {
     const da = this.drawing_area
-    // #680 — Ignoré seulement pendant le chargement (bypass_redraws) ; le mode 'none'
-    // recentre aussi (à zoom constant), il n'est donc plus exclu ici.
-    if (!da || da.bypass_redraws) return
+    // #680 — Ignoré pendant le chargement (bypass_redraws) et quand aucun mode n'est
+    // actif (mode 'none' = caméra immobile, applyAutoFitMode y est un no-op).
+    if (!da || da.bypass_redraws || da.auto_fit_mode === 'none') return
     da.application_data._add_waiting_process(
       'autofit_mode_after_add',
       () => da.applyAutoFitMode(false),

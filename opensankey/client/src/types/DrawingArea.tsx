@@ -377,9 +377,10 @@ export class Class_DrawingArea {
   }
 
   // #680 — Mode de cadrage automatique persistant (cf. Type_AutoFitMode). Défaut
-  // 'full' : à l'ouverture d'un diagramme, tout reste visible (proche du cadrage
-  // historique au chargement). Repassé à 'none' par un zoom manuel (cf. Camera.zoom*).
-  protected _auto_fit_mode: Type_AutoFitMode = 'full'
+  // 'none' (revu post-#680) : certains diagrammes ne doivent JAMAIS être recadrés
+  // automatiquement — le cadrage auto est strictement opt-in (clic sur un bouton).
+  // Repassé à 'none' par un zoom manuel (cf. Camera.zoom*).
+  protected _auto_fit_mode: Type_AutoFitMode = 'none'
   // #680 — Direction du glissé en cours (deltas monde), posée par eventMouseDrag le temps
   // du re-cadrage puis remise à null. Sur les axes LIBRES (non remplis), le cadrage ancre le
   // bord vers lequel le nœud va (et masque le côté opposé) pour « suivre » l'élément déplacé.
@@ -414,13 +415,9 @@ export class Class_DrawingArea {
       // 'full' = tout visible : min des deux axes + centrage (recenter, center_on_content).
       if (animated) this.recenterAnimated(true)
       else this.recenter(true)
-    } else {
-      // mode === 'none' : zoom CONSTANT (keep_zoom), recentrage caméra des DEUX axes. C'est
-      // le « glissement à l'opposé » du changement 2 réalisé par la caméra (aucun déplacement
-      // des positions de nœuds) : déplacer un nœud vers le bas/la droite recentre le diagramme
-      // vers le haut/la gauche, sans dézoomer. center_on_content explicite → pas de redirection.
-      this.areaAutoFit(undefined, true, true, undefined, true)
     }
+    // mode === 'none' : aucun cadrage automatique — la caméra ne bouge que sur geste
+    // explicite (zoom, scroll, clic sur un bouton de cadrage).
   }
 
   // #680 — Direction du glissé en cours, ACCUMULÉE depuis le début du drag (déplacement net) :
@@ -831,7 +828,10 @@ export class Class_DrawingArea {
     // transform (zoom/pan) ; areaAutoFit étant inerte quand verrouillé, on
     // capture la vue courante avant de redessiner pour la réappliquer à
     // l'identique après (le cadrage ne bouge donc pas d'un dataTag à l'autre).
-    const zoom_node = this._size_locked ? this.d3_selection_zoom_area?.node() : null
+    // Mode de cadrage 'none' (revu post-#680) : même capture — la caméra est
+    // strictement préservée d'un draw à l'autre, aucun fit automatique.
+    const preserve_camera = this._size_locked || (this._auto_fit_mode === 'none' && !this.is_unitary)
+    const zoom_node = preserve_camera ? this.d3_selection_zoom_area?.node() : null
     const live_zoom_transform = zoom_node ? d3.zoomTransform(zoom_node) : null
     // Tant qu'on n'est pas dans un état « rétréci pour débordement », le transform
     // live fait foi (il capture un éventuel zoom/pan manuel) et (re)devient le
@@ -880,7 +880,22 @@ export class Class_DrawingArea {
     // rapetisse. On capture donc _k_fit avant le fit pour forcer un rafraîchissement
     // final quand le fit ne l'a pas déjà fait.
     const k_fit_before_fit = this._k_fit
-    this.areaAutoFit(recompute_locked ? false : undefined, recompute_locked)
+    if (!this._size_locked && this._auto_fit_mode === 'none' && !this.is_unitary) {
+      if (live_zoom_transform) {
+        // Mode 'none' — draws suivants : la caméra est réappliquée telle quelle
+        // (zoom/pan conservés), aucun recadrage automatique.
+        this.setCamera(live_zoom_transform)
+        this.drawBackground()
+        this.drawGrid()
+        this._updateScrollbars()
+      } else {
+        // Premier draw de cette DA (chargement) : cadrage initial UNIQUE pour que le
+        // diagramme tienne à l'écran même sans mode actif. Les draws suivants (branche
+        // ci-dessus) ne recadrent plus jamais. Au changement de vue, la caméra de la
+        // vue sortante est reportée par-dessus (cf. ViewsManager.setCurrentViewInternal).
+        this.areaAutoFit()
+      }
+    } else this.areaAutoFit(recompute_locked ? false : undefined, recompute_locked)
     if (recompute_locked) {
       this._locked_fit_dirty = false
       // Le fit verrouillé qu'on vient d'appliquer devient le cadrage de référence.
@@ -2600,6 +2615,12 @@ export class Class_DrawingArea {
     margin: number = this._fit_margin
   ): d3.ZoomTransform {
     return CameraMath.fitTransform(bounds, viewport, margin)
+  }
+
+  /** Transform caméra courant (null tant que le SVG de zoom n'existe pas). */
+  public getCameraTransform(): d3.ZoomTransform | null {
+    const node = this.d3_selection_zoom_area?.node()
+    return node ? d3.zoomTransform(node) : null
   }
 
   /** Point d'application UNIQUE d'un transform de caméra. */
