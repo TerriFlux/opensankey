@@ -26,6 +26,7 @@
 
 import React from 'react'
 import { Box, Button, Text } from '@chakra-ui/react'
+import { FaInfoCircle } from 'react-icons/fa'
 
 import type { Class_ApplicationData, Type_PresentationDiagram } from '../../../types/ApplicationData'
 import { default_font_size } from '../../../css/Theme'
@@ -59,6 +60,34 @@ const DiagramHost = ({ diagram }: { diagram: Type_PresentationDiagram }) => {
   }, [diagram])
   return <Box ref={ref} style={{ width: '100%', height: '260px', minHeight: '260px' }} />
 }
+
+/** Bouton de diagramme : icône au-dessus, libellé dessous — même habillage que
+ *  les onglets du menu de configuration (`inspector_tab`). */
+const DiagramButton = ({ icon, label, active, onClick }: {
+  icon?: React.ReactNode
+  label: string
+  active: boolean
+  onClick: () => void
+}) => (
+  <Button
+    size='xs'
+    variant={active ? 'inspector_tab_activated' : 'inspector_tab'}
+    title={label}
+    onClick={onClick}
+    sx={{ display: 'flex', flexDirection: 'column', height: 'auto', paddingBlock: '0.3rem', gap: '0.15rem' }}
+  >
+    {icon}
+    <Box
+      as='span'
+      style={{
+        fontSize: '0.62rem', lineHeight: 1, maxWidth: '100%',
+        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+      }}
+    >
+      {label}
+    </Box>
+  </Button>
+)
 
 export const PresentationPopup = ({ app_data, element }: {
   app_data: Class_ApplicationData
@@ -110,32 +139,31 @@ export const PresentationPopup = ({ app_data, element }: {
             ))}
       </Box>
 
-      {/* COLONNE DE DIAGRAMMES (droite) — seulement si OS+ en fournit. */}
+      {/* COLONNE DE DIAGRAMMES (droite) — seulement si OS+ en fournit. Boutons
+          « icône au-dessus, libellé dessous », à l'image des onglets du menu de
+          configuration. */}
       {diagrams.length > 0 && (
         <Box
           style={{
-            flex: 'none', width: '6.5rem',
+            flex: 'none', width: '4.5rem',
             display: 'flex', flexDirection: 'column', gap: '0.2rem',
             borderLeft: '1px solid #e2e8f0', paddingLeft: '0.35rem'
           }}
         >
-          {/* Retour au contenu. */}
-          <Button
-            size='xs'
-            variant={active === null ? 'button_type_config_activated' : 'button_type_config'}
+          <DiagramButton
+            icon={<FaInfoCircle />}
+            label={t('presentation.infos', { defaultValue: 'Infos' })}
+            active={active === null}
             onClick={() => setActive(null)}
-          >
-            {t('presentation.infos', { defaultValue: 'Infos' })}
-          </Button>
+          />
           {diagrams.map(d => (
-            <Button
+            <DiagramButton
               key={d.id}
-              size='xs'
-              variant={active === d.id ? 'button_type_config_activated' : 'button_type_config'}
+              icon={d.icon}
+              label={d.label}
+              active={active === d.id}
               onClick={() => setActive(d.id)}
-            >
-              {d.label}
-            </Button>
+            />
           ))}
         </Box>
       )}

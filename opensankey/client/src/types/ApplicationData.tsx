@@ -86,6 +86,8 @@ export type Type_PresentationDiagram = {
   id: string
   /** Libellé du bouton (déjà traduit). */
   label: string
+  /** Icône du bouton (au-dessus du libellé, comme les onglets de config). */
+  icon?: React.ReactNode
   /** Dessine le diagramme dans le conteneur DOM ; rend un nettoyage optionnel. */
   render: (container: HTMLElement) => (() => void) | void
 }
