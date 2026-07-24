@@ -1732,13 +1732,8 @@ export const ConfigMenuNumberInput = forwardRef<HTMLInputElement, FCType_ConfigM
 
   return (
     <InputIndicatorWrapper isOverloaded={isOverloaded} isMultiValue={multiValue} provenance={provenance} t={t}>
-      {/* OS#300 — minW:0 sur le groupe ET le NumberInput : dans la barre latérale
-          étroite, le champ doit pouvoir rétrécir sous son min-content (min-width
-          auto du flex) au lieu de déborder ; le stepper + l'addon « px » restent
-          fixes. */}
-      <InputGroup minW={0}>
+      <InputGroup>
         <NumberInput
-          minW={0}
           allowMouseWheel
           isDisabled={disabled}
           variant={variant}

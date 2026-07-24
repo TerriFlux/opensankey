@@ -27,7 +27,7 @@ import { Class_LinkElement } from '../Elements/Link'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_ContainerElement } from '../Elements/TextZone'
 import { LinkElementPersistence, NodeElementPersistence } from '../Persistence/SankeyPersistence'
-import { closePresentationTooltip } from '../components/panels/presentation/openPresentation'
+import { TooltipEventManager } from '../Elements/TooltipsConfig'
 import { Type_JSON } from './Utils'
 
 export class Class_DrawingAreaInteractions {
@@ -103,7 +103,8 @@ export class Class_DrawingAreaInteractions {
     event.preventDefault()
     // Fermer les tooltips via le système intégré
     da.closeAllContextMenus()
-    closePresentationTooltip(da.application_data)
+    const tooltipManager = TooltipEventManager.getInstance()
+    tooltipManager.closeTooltip()
     if (!da.editable) da.purgeSelection()
   }
 
@@ -117,7 +118,8 @@ export class Class_DrawingAreaInteractions {
     event.preventDefault()
     if (da.eventsEnabled()) {
       // Fermer les tooltips via le système intégré
-      closePresentationTooltip(da.application_data)
+      const tooltipManager = TooltipEventManager.getInstance()
+      tooltipManager.closeTooltip()
       da.closeAllContextMenus()
       da.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
       da.is_drawing_area_contextualised = true
