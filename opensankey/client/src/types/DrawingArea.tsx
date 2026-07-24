@@ -107,6 +107,17 @@ const UNITARY_CENTRAL_HEIGHT_FRACTION = 0.3
  */
 export type Type_AutoFitMode = 'none' | 'width' | 'height' | 'full'
 
+/**
+ * OS#1315 — Ancrage du cadrage, orthogonal au mode de fit :
+ * - 'center' : le mou disponible est réparti autour du contenu (fits centrés,
+ *   cadrage initial unique au chargement quand aucun fit n'est actif) ;
+ * - 'top_left' : le monde (0,0) est épinglé au coin haut-gauche de l'écran — sans
+ *   fit actif, le chargement ne bouge JAMAIS la caméra (zoom 100 %) ; avec fit,
+ *   le contenu est calé en haut-gauche (marges) au lieu d'être centré.
+ * Persisté (SankeyPersistence, défaut 'center').
+ */
+export type Type_FitAnchor = 'center' | 'top_left'
+
 export class Class_DrawingArea {
   public application_data: Class_ApplicationData
   public nodePositioning: NodePositioning
@@ -389,7 +400,25 @@ export class Class_DrawingArea {
   public set auto_fit_mode(v: Type_AutoFitMode) {
     if (this._auto_fit_mode === v) return
     this._auto_fit_mode = v
+    // OS#1315 — mémorise la dernière variante active : le clic sur le bouton Fit
+    // bascule entre 'none' et cette variante.
+    if (v !== 'none') this._last_fit_variant = v
     // Re-render de la barre d'outils (boutons radio abonnés à ZOOM_TOPIC).
+    this.application_data.menu_configuration?.notify(ZOOM_TOPIC)
+  }
+
+  // OS#1315 — Dernière variante de fit utilisée (cible du toggle du bouton Fit).
+  // Transient (non persisté) : 'full' par défaut.
+  protected _last_fit_variant: Exclude<Type_AutoFitMode, 'none'> = 'full'
+  public get last_fit_variant(): Exclude<Type_AutoFitMode, 'none'> { return this._last_fit_variant }
+
+  // OS#1315 — Ancrage du cadrage (cf. Type_FitAnchor). Défaut 'center'.
+  protected _fit_anchor: Type_FitAnchor = 'center'
+  public get fit_anchor(): Type_FitAnchor { return this._fit_anchor }
+  public set fit_anchor(v: Type_FitAnchor) {
+    if (this._fit_anchor === v) return
+    this._fit_anchor = v
+    // Re-render de la barre d'outils (bouton d'ancrage abonné à ZOOM_TOPIC).
     this.application_data.menu_configuration?.notify(ZOOM_TOPIC)
   }
 
@@ -412,12 +441,29 @@ export class Class_DrawingArea {
       if (animated) this.areaAutoFitAnimated(false, true, true)
       else this.areaAutoFit(false, true, undefined, true)
     } else if (mode === 'full') {
-      // 'full' = tout visible : min des deux axes + centrage (recenter, center_on_content).
-      if (animated) this.recenterAnimated(true)
+      // 'full' = tout visible : min des deux axes. Ancrage 'center' → centrage (recenter,
+      // center_on_content) ; 'top_left' (OS#1315) → contenu calé en haut-gauche (marges) :
+      // center_on_content=false EXPLICITE, sinon l'appel générique re-routerait ici (récursion).
+      if (this._fit_anchor === 'top_left') this.areaAutoFit(undefined, true, false)
+      else if (animated) this.recenterAnimated(true)
       else this.recenter(true)
     }
     // mode === 'none' : aucun cadrage automatique — la caméra ne bouge que sur geste
     // explicite (zoom, scroll, clic sur un bouton de cadrage).
+  }
+
+  /**
+   * OS#1315 — Cadrage « d'arrivée » (chargement / fin de chargement différée) :
+   * - mode actif → le mode s'applique ;
+   * - mode 'none' + ancrage 'center' → fit centré PONCTUEL (la caméra reste libre ensuite) ;
+   * - mode 'none' + ancrage 'top_left' → origine (0,0) au coin du cadre, zoom 100 %.
+   * Idempotent ; no-op en verrou de taille et sur le board unitaire.
+   */
+  public applyInitialFraming(): void {
+    if (this._auto_fit_mode !== 'none') { this.applyAutoFitMode(false); return }
+    if (this._size_locked || this.is_unitary) return
+    if (this._fit_anchor === 'top_left') this.resetCameraToOrigin()
+    else this.areaAutoFit(undefined, undefined, true)
   }
 
   // #680 — Direction du glissé en cours, ACCUMULÉE depuis le début du drag (déplacement net) :
@@ -615,21 +661,38 @@ export class Class_DrawingArea {
     .filter(evt => (evt.which === 2 || evt.which === 0))
     // Prevent extreme zoom levels that freeze SVG rendering
     .scaleExtent([0.05, 20])
-    // OS#1250 phase 5 — constrain d3 par DÉFAUT.
+    // OS#1315 — Constrain custom sensible au mode et à l'ancrage (le translateExtent
+    // dérive du CONTENU, posé par Class_ViewportChrome.updateScrollbars ; l'extent est
+    // inset de fit_margin/2, donc le calage `dx0` tombe exactement sur la marge des fits).
     //
-    // Il y avait ici un constrain custom qui forçait l'ancrage haut-gauche quand le
-    // contenu était plus petit que le viewport (le défaut d3 centre : `(dx0+dx1)/2`
-    // au lieu de `dx0`), parce que le translateExtent portait le CANVAS — un rectangle
-    // dimensionné sur la fenêtre — et que centrer ce canvas poussait la page A3/A4/A5
-    // hors du coin.
-    //
-    // Le translateExtent dérive désormais du CONTENU (cf. Class_ViewportChrome
-    // .updateScrollbars) et non plus du canvas : il n'y a donc plus de canvas à ancrer,
-    // et le comportement du défaut d3 est exactement celui qu'on veut —
-    //   - contenu plus petit que la fenêtre -> centré ;
-    //   - contenu plus grand               -> déplacement borné par ses bords.
-    // En mode papier, la page participe simplement aux bounds : elle est donc centrée
-    // au lieu d'être poussée hors du coin, ce qui était la raison d'être du custom.
+    // Le défaut d3 (rétabli en OS#1250 phase 5) CENTRE le contenu dès qu'il tient dans
+    // la fenêtre ((dx0+dx1)/2). Deux problèmes depuis la refonte du cadrage :
+    // - en caméra libre (mode 'none'), le premier coup de molette re-centrait le
+    //   diagramme (le zoom autour du pointeur est corrigé par le constrain → « saut ») ;
+    // - en ancrage 'top_left', il annulait l'ancrage posé par le fit (translateTo passe
+    //   délibérément par le constrain).
+    // Sur l'axe à MOU (contenu < fenêtre) on applique donc : AUCUN re-calage en caméra
+    // libre, calage au bord haut/gauche (dx0) en ancrage 'top_left', centrage sinon
+    // (défaut d3). L'axe qui DÉBORDE garde le clamp d3 standard. Mode papier et board
+    // unitaire : défaut d3 inchangé (la page / le canvas calé comptent sur le centrage).
+    .constrain((transform, extent, translateExtent) => {
+      const dx0 = transform.invertX(extent[0][0]) - translateExtent[0][0]
+      const dx1 = transform.invertX(extent[1][0]) - translateExtent[1][0]
+      const dy0 = transform.invertY(extent[0][1]) - translateExtent[0][1]
+      const dy1 = transform.invertY(extent[1][1]) - translateExtent[1][1]
+      const custom = !this.is_paper_mode && !this.is_unitary
+      const free = custom && this._auto_fit_mode === 'none'
+      // Ancrage origine (OS#1315) : sur l'axe à mou, caler le monde (0,0) au bord du
+      // cadre (extent[0]) — cohérent avec le px/py des fits (anchor_origin) — et non le
+      // bord du CONTENU (translateExtent, qui re-calerait la bbox au lieu de l'origine).
+      const origin_anchor = custom && this._fit_anchor === 'top_left'
+      const sx = free ? 0 : origin_anchor ? transform.invertX(extent[0][0]) : (dx0 + dx1) / 2
+      const sy = free ? 0 : origin_anchor ? transform.invertY(extent[0][1]) : (dy0 + dy1) / 2
+      return transform.translate(
+        dx1 > dx0 ? sx : Math.min(0, dx0) || Math.max(0, dx1),
+        dy1 > dy0 ? sy : Math.min(0, dy0) || Math.max(0, dy1)
+      )
+    })
     // Change cursor in teh beginning to 'move' to show we can shift drawing area
     .on('start', () => this.d3_selection_zoom_area?.attr('cursor', 'move'))
     .on('zoom', (event) => this.eventZoom(event))
@@ -740,6 +803,7 @@ export class Class_DrawingArea {
     // Idem : champ direct, le setter size_locked déclenche un re-fit.
     this._size_locked = drawing_area_to_copy._size_locked
     this._auto_fit_mode = drawing_area_to_copy._auto_fit_mode
+    this._fit_anchor = drawing_area_to_copy._fit_anchor
     this._import_export_above_below = drawing_area_to_copy._import_export_above_below
     this._disaggregation_gap_mode = drawing_area_to_copy._disaggregation_gap_mode
     this._disaggregation_gap_value = drawing_area_to_copy._disaggregation_gap_value
@@ -889,11 +953,12 @@ export class Class_DrawingArea {
         this.drawGrid()
         this._updateScrollbars()
       } else {
-        // Premier draw de cette DA (chargement) : cadrage initial UNIQUE pour que le
-        // diagramme tienne à l'écran même sans mode actif. Les draws suivants (branche
-        // ci-dessus) ne recadrent plus jamais. Au changement de vue, la caméra de la
-        // vue sortante est reportée par-dessus (cf. ViewsManager.setCurrentViewInternal).
-        this.areaAutoFit()
+        // Premier draw de cette DA (chargement) : cadrage « d'arrivée » UNIQUE selon
+        // l'ancrage — centré (fit ponctuel) ou origine (0,0) au coin, zoom 100 %. Les
+        // draws suivants (branche ci-dessus) ne recadrent plus jamais. Au changement de
+        // vue, la caméra de la vue sortante est reportée par-dessus (cf.
+        // ViewsManager.setCurrentViewInternal).
+        this.applyInitialFraming()
       }
     } else this.areaAutoFit(recompute_locked ? false : undefined, recompute_locked)
     if (recompute_locked) {
@@ -1577,16 +1642,24 @@ export class Class_DrawingArea {
     if (this._size_locked && !force_when_locked) return
 
     // #680 — Router les fits AUTOMATIQUES vers le mode actif. Un appel GÉNÉRIQUE
-    // (aucun axe / centre / fill explicite : resize, changement de vue, légende,
+    // (aucun axe / centre / fill explicite : resize, toggle tableur/panneaux, légende,
     // auto-layout…) doit RESPECTER le mode de cadrage choisi, sinon un « largeur »/
     // « hauteur »/« tout » actif serait écrasé par un fit générique au moindre resize.
     // Les appels du mode lui-même passent TOUJOURS un argument explicite (horiz pour
     // largeur/hauteur, center_on_content pour 'full') → ils ne re-rentrent pas ici :
-    // pas de récursion. Mode 'none' → comportement historique (fit générique).
-    if (horiz === undefined && center_on_content === undefined && fill_axis_forced === undefined
-      && this._auto_fit_mode !== 'none') {
-      this.applyAutoFitMode(false)
-      return
+    // pas de récursion.
+    if (horiz === undefined && center_on_content === undefined && fill_axis_forced === undefined) {
+      if (this._auto_fit_mode !== 'none') {
+        this.applyAutoFitMode(false)
+        return
+      }
+      // OS#1315 — Caméra libre (mode 'none') : les fits génériques déclenchés par le
+      // SYSTÈME ne recadrent plus rien (ex. l'application de l'état main_zone au
+      // chargement écrasait le cadrage initial en re-calant le contenu en haut-gauche).
+      // La caméra ne bouge que sur geste explicite ou appel à arguments explicites
+      // (cadrage initial de _drawBody, export, recenter…). Board unitaire et mode
+      // papier gardent leur fit générique (leur cadrage est intrinsèque au rendu).
+      if (!this.is_unitary && !this.is_paper_mode) return
     }
 
     // #292 — Le calcul de cadrage doit viser la zone de dessin PLEINE (sans gouttière de scrollbar) :
@@ -1908,6 +1981,11 @@ export class Class_DrawingArea {
       // le constrain inerte. Le mode papier est exclu — son ancrage haut-gauche est
       // voulu (cf. le constrain custom, ajouté pour que A3/A4/A5 ne parte pas du coin).
       const may_center = (this.is_unitary || !!center_on_content) && !this.is_paper_mode
+      // OS#1315 — Ancrage 'top_left' : le point ancré est l'ORIGINE monde (0,0), PAS le
+      // bord du contenu. Le coin du cadre écran reste le (0,0) de la zone de dessin et le
+      // fit ne s'étend que vers la droite/le bas (l'échelle couvre déjà [0..bord droit/bas] :
+      // cf. new_lefter_x/new_upper_y = min(0, …) qui incluent l'origine dans width/height).
+      const anchor_origin = this._fit_anchor === 'top_left' && !this.is_paper_mode && !this.is_unitary
       // #680 — Ancrage 3 états par axe : 'start' (haut/gauche + marge), 'center', 'end' (bas/droite).
       // Base historique : 'center' là où le contenu a du mou (center_on_content / board unitaire),
       // sinon 'start' (ancrage coin haut-gauche à la marge).
@@ -1916,10 +1994,11 @@ export class Class_DrawingArea {
       let anchor_v: 'start' | 'center' | 'end' =
         (may_center && bbox.height * new_k < this.window_fitting_height) ? 'center' : 'start'
       if (!this.is_paper_mode) {
-        // Mode « remplir un axe » : l'axe REMPLI reste 'start' (bord à bord) ; l'autre centré.
+        // Mode « remplir un axe » : l'axe REMPLI reste 'start' (bord à bord) ; l'autre
+        // centré — sauf ancrage origine (OS#1315) où l'axe libre reste aussi calé 'start'.
         if (fill_axis_forced) {
-          if (is_horiz) { anchor_h = 'start'; anchor_v = 'center' }
-          else { anchor_v = 'start'; anchor_h = 'center' }
+          if (is_horiz) { anchor_h = 'start'; anchor_v = anchor_origin ? 'start' : 'center' }
+          else { anchor_v = 'start'; anchor_h = anchor_origin ? 'start' : 'center' }
         } else if (keep_zoom) {
           // Mode « aucun » : zoom constant, les deux axes centrés par défaut.
           anchor_h = 'center'; anchor_v = 'center'
@@ -1948,14 +2027,16 @@ export class Class_DrawingArea {
           ? (this.window_fitting_width - bbox.width * new_k) / 2 - bbox.x * new_k
           : anchor_h === 'end'
             ? (this.window_fitting_width - this._fit_margin / 2 - label_overflow_right) - (bbox.x + bbox.width) * new_k
-            : (this._fit_margin / 2 + label_overflow_left) - bbox.x * new_k
+            // 'start' : bord du contenu à la marge — sauf ancrage origine (OS#1315) où
+            // c'est le monde (0,0) qui est épinglé à la marge, pas le bord de la bbox.
+            : (this._fit_margin / 2 + label_overflow_left) - (anchor_origin ? 0 : bbox.x) * new_k
       const py = unitary_center_node
         ? this.window_fitting_height / 2 + this.getNavBarHeight() - cny * new_k
         : anchor_v === 'center'
           ? (this.window_fitting_height - bbox.height * new_k) / 2 - bbox.y * new_k + this.getNavBarHeight()
           : anchor_v === 'end'
             ? this.getNavBarHeight() + (this.window_fitting_height - this._fit_margin / 2 - label_overflow_bottom) - (bbox.y + bbox.height) * new_k
-            : this._fit_margin / 2 + this.getNavBarHeight() + label_overflow_top - bbox.y * new_k
+            : this._fit_margin / 2 + this.getNavBarHeight() + label_overflow_top - (anchor_origin ? 0 : bbox.y) * new_k
       // Échelle + translation appliquées ensemble (constrain d3 préservé, cf. _applyFitCamera).
       // px/py ci-dessus ne lisent pas le transform live → réordonnancement sans effet.
       this._applyFitCamera(new_k, px, py)
@@ -2621,6 +2702,19 @@ export class Class_DrawingArea {
   public getCameraTransform(): d3.ZoomTransform | null {
     const node = this.d3_selection_zoom_area?.node()
     return node ? d3.zoomTransform(node) : null
+  }
+
+  /**
+   * OS#1315 — Cale le monde (0,0) au coin haut-gauche du CADRE visible, zoom 100 %.
+   * Même référence que les fits ((fit_margin/2, navbar + fit_margin/2)) — PAS le pixel
+   * (0,0) absolu de l'écran, qui serait masqué sous la barre de navigation.
+   */
+  public resetCameraToOrigin(): void {
+    const t = d3.zoomIdentity.translate(this._fit_margin / 2, this._fit_margin / 2 + this.getNavBarHeight())
+    this.setCamera(t)
+    this.drawBackground()
+    this.drawGrid()
+    this._updateScrollbars()
   }
 
   /** Point d'application UNIQUE d'un transform de caméra. */

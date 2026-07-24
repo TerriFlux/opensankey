@@ -1580,6 +1580,16 @@ export class Class_IconLibrary {
   protected _icon_area_fit_horiz = <FontAwesomeIcon icon={faArrowsLeftRight} />
   protected _icon_recenter = <FontAwesomeIcon icon={faArrowsToDot} />
 
+  // OS#1315 — Ancrage du cadrage : cadre avec point centré / point en haut-gauche.
+  protected _icon_anchor_center = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12">
+    <rect x="2" y="2" width="20" height="20" rx="2" fill="none" stroke="currentColor" strokeWidth="2.5" />
+    <circle cx="12" cy="12" r="3.5" fill="currentColor" />
+  </svg>
+  protected _icon_anchor_top_left = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12">
+    <rect x="2" y="2" width="20" height="20" rx="2" fill="none" stroke="currentColor" strokeWidth="2.5" />
+    <circle cx="8" cy="8" r="3.5" fill="currentColor" />
+  </svg>
+
   protected _icon_font_size_locked = <span style={{ display: 'inline-flex', alignItems: 'center', gap: '1px' }}><FontAwesomeIcon icon={faFont} style={{ fontSize: '0.7em' }} /><FontAwesomeIcon icon={faLock} /></span>
   protected _icon_font_size_unlocked = <span style={{ display: 'inline-flex', alignItems: 'center', gap: '1px' }}><FontAwesomeIcon icon={faFont} style={{ fontSize: '0.7em' }} /><FontAwesomeIcon icon={faLockOpen} /></span>
   protected _icon_size_locked = <span style={{ display: 'inline-flex', alignItems: 'center', gap: '1px' }}><FontAwesomeIcon icon={faArrowsUpDown} style={{ fontSize: '0.7em' }} /><FontAwesomeIcon icon={faLock} /></span>
@@ -1914,6 +1924,8 @@ export class Class_IconLibrary {
   public get icon_area_fit_vert() { return this._icon_area_fit_vert }
   public get icon_area_fit_horiz() { return this._icon_area_fit_horiz }
   public get icon_recenter() { return this._icon_recenter }
+  public get icon_anchor_center() { return this._icon_anchor_center }
+  public get icon_anchor_top_left() { return this._icon_anchor_top_left }
   public get icon_font_size_locked() { return this._icon_font_size_locked }
   public get icon_font_size_unlocked() { return this._icon_font_size_unlocked }
   public get icon_size_locked() { return this._icon_size_locked }

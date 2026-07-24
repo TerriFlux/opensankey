@@ -48,7 +48,7 @@ import { DEFAULT_THEME_ID, themeFromJSON } from '../types/Theme'
 import { Class_Tag } from '../types/Tag'
 import { node_exchanges_style, elementStyleConfigs, product_sector_styles, ElementStyleKey, LinkStyle, NodeStyle, ContainerStyle, structural_styles } from '../Elements/ElementStyle'
 import { dedupeZOrderKeepFirst } from '../types/zOrder'
-import { Class_DrawingArea, Type_AutoFitMode } from '../types/DrawingArea'
+import { Class_DrawingArea, Type_AutoFitMode, Type_FitAnchor } from '../types/DrawingArea'
 import { backfillTagGroupUseColors, convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
 // Issue #191 — migration de rétro-compat de la césure des libellés, isolée dans
 // son propre module pour rester testable sans le graphe d'imports lourd d'ici.
@@ -1985,6 +1985,8 @@ export class DrawingAreaPersistence {
     // (revu post-#680 : cadrage auto strictement opt-in) → sérialisé seulement si un
     // mode est actif. 'full' = tout visible ; 'width'/'height' = axe forcé.
     if (drawing_area.auto_fit_mode !== 'none') json_object['auto_fit_mode'] = drawing_area.auto_fit_mode
+    // OS#1315 — Ancrage du cadrage. Défaut 'center' → sérialisé seulement si 'top_left'.
+    if (drawing_area.fit_anchor !== 'center') json_object['fit_anchor'] = drawing_area.fit_anchor
     // Mode de représentation import/export (proche / haut-bas) : persisté car les nœuds
     // import/export siblings sont régénérés au chargement (cf. SplitIOrE).
     if (drawing_area.import_export_above_below) json_object['import_export_above_below'] = true
@@ -2350,6 +2352,8 @@ export class DrawingAreaPersistence {
     // Absence ⇒ 'none' (revu post-#680 : jamais de recadrage automatique non demandé —
     // les anciens fichiers, qui omettaient 'full', chargent donc SANS cadrage auto).
     drawing_area['_auto_fit_mode'] = getStringFromJSON(json_object, 'auto_fit_mode', 'none') as Type_AutoFitMode
+    // OS#1315 — Ancrage du cadrage : champ direct (le setter notifie la barre d'outils).
+    drawing_area['_fit_anchor'] = getStringFromJSON(json_object, 'fit_anchor', 'center') as Type_FitAnchor
     drawing_area['_import_export_above_below'] = getBooleanFromJSON(json_object, 'import_export_above_below', false)
 
     drawing_area.application_data.language = getStringOrUndefinedFromJSON(json_object, 'language')
