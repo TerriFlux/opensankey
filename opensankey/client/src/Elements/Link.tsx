@@ -29,19 +29,20 @@ import * as d3 from '../d3Modules'
 
 import type {
   Class_DataTag,
+  Class_FluxTag,
   Class_ProtoTag,
   Class_Tag,
 } from '../types/Tag'
-import type { Class_DataTagGroup } from '../types/TagGroup'
+import type { Class_DataTagGroup, Class_FluxTagGroup, Class_TagGroup } from '../types/TagGroup'
 
 import { Type_BaseElementPosition, link_data_label } from '../types/Utils'
-import { Class_ElementValueTree, Class_LinkValue } from './LinkValues'
+import { Class_ElementValueTree, Class_LinkValue, Class_ElementTaggedValue } from './LinkValues'
 import { LinkDrawShape } from './LinkDrawShape'
 import { LinkControlPoints } from './LinkControlPoints'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeElement } from './Node'
 import type { Class_NodeDimension } from './NodeDimension'
-import { Type_Side, } from './ElementsAttributesConfig'
+import { Type_Side, getNameLabelValues } from './ElementsAttributesConfig'
 import { transferAnchorLock } from './anchorLockTransfer'
 import { clampLinkThickness } from './flowThickness'
 import { Class_LinkAttribute } from './Element'
@@ -175,9 +176,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
   private _tooltip_text: string = ''
 
-  private _child_links: { [tag_name: string]: Class_LinkElement } = {}
-  private _is_multi_link = false
-  private _multi_link_tag: Class_DataTag | undefined
   private _is_unit_reference = false
 
   // Visibility memorized - source & target
@@ -522,7 +520,23 @@ export class Class_LinkElement extends Class_LinkAttribute {
     if (this.value_label_stick_to_label && this._link_draw_label) {
       this._link_draw_label.refreshStickLayout()
     }
+    // #285 — les labels de bande vivent dans le repère zoomé (dessinés au
+    // drawShape) : le refresh de labels (zoom / verrou de police) ne les
+    // recrée pas, on remet donc leur font-size compensée ici pour qu'ils
+    // suivent le mode « police verrouillée » comme les labels normaux.
+    this.refreshBandLabelsFontSize()
     this._orderD3Elements()
+  }
+
+  /** #285 — remet la font-size compensée du zoom sur les labels de bande déjà
+   *  présents dans le DOM (cf. LinkDrawShape.drawTaggedValueBands), sans les
+   *  reconstruire : suit la police du label de valeur + font_compensation. */
+  public refreshBandLabelsFontSize() {
+    const labels = this.d3_selection?.selectAll('.link_band_label')
+    if (!labels || labels.empty()) return
+    const value_lv = getNameLabelValues(this, 'value_label') as { font_size?: number }
+    const fs = (value_lv.font_size ?? 12) * (this.drawing_area.font_compensation ?? 1)
+    labels.attr('font-size', fs)
   }
 
   public drawNameLabel() {
@@ -632,6 +646,17 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this.tagsUpdated()
   }
 
+  // #285 — replie sans perte le niveau du groupe avant sa suppression
+  // (cf. Class_ElementValueTree.collapseGroup)
+  public collapseDataTagGroup(
+    tagg: Class_DataTagGroup,
+    tag_for: (tag_id: string) => Class_Tag | undefined,
+    selected_tag_id: string | undefined = undefined
+  ) {
+    if (this._values instanceof Class_ElementValueTree)
+      this._values.collapseGroup(tagg, tag_for, selected_tag_id)
+  }
+
   public removeDataTagGroup(tagg: Class_DataTagGroup) {
     if (this._values instanceof Class_ElementValueTree) {
       // Prune values tree
@@ -663,7 +688,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this.drawing_area.d3_selection_def_gradient?.select('#def_gradient_' + this.source.id + '-' + this.target.id).remove()
 
     // Apply gradient if needed
-    if (!this.is_multi_link && this.shape_color_rule == 'gradient') {
+    if (this.shape_color_rule == 'gradient') {
 
       const defGradient = this.drawing_area.d3_selection_def_gradient
       const n_source = this.source
@@ -836,19 +861,98 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
   }
 
-  public setAsChildLink(tag: Class_DataTag) {
-    this._is_multi_link = true
-    this._multi_link_tag = tag
+  /**
+   * #285 — bandes internes : subdivision de l'épaisseur du flux,
+   * proportionnelle aux valeurs coordonnées VISIBLES de la feuille courante.
+   * Choix d'affichage déclenché par la bannière `multi` d'un groupe libre
+   * (sinon le flux montre sa seule valeur principale) ; une bande disparaît si
+   * un tag de sa coordonnée est désélectionné. Les parts sont relatives à la
+   * somme des valeurs visibles — les valeurs d'un flux ne sont PAS additives,
+   * l'épaisseur du flux reste pilotée par la valeur principale.
+   */
+  public get tagged_value_bands(): { id: string, px: number, share: number, color: string | null, value: number, unit?: string }[] {
+    if (this._is_expansion_link) return []
+    // 1) Dimension en bannière `multi` : une bande par tag SÉLECTIONNÉ, à la
+    //    valeur de sa tranche (remplace l'ancien mécanisme de liens enfants —
+    //    plus aucun lien fantôme dans le modèle).
+    const multi_dim = this.sankey.data_taggs_list.find(tagg =>
+      tagg.banner === 'multi' && tagg.tags_list.length > 1)
+    if (multi_dim) {
+      const bands: { id: string, px: number, color: string | null, value: number }[] = []
+      multi_dim.selected_tags_list.forEach(tag => {
+        const leaf = this.valueForTag(tag as Class_DataTag) as Class_LinkValue | null
+        const v = leaf === null ? null : (leaf.valueData ?? leaf.valueResult)
+        if (v === null || v <= 0) return
+        if (multi_dim.is_unit && (tag as Class_DataTag).scale) {
+          this.setDomainLocalScale((tag as Class_DataTag).scale)
+          bands.push({ id: tag.id, px: Math.max(0, this._scaleValueToPx(v)), color: tag.color, value: v })
+        }
+        else {
+          bands.push({ id: tag.id, px: Math.max(0, this.scaleValueToPx(v)), color: tag.color, value: v })
+        }
+      })
+      const dim_total = bands.reduce((acc, band) => acc + band.px, 0)
+      if (dim_total <= 0) return []
+      return bands.map(band => ({ ...band, share: band.px / dim_total }))
+    }
+    // 2) Valeurs coordonnées des groupes libres (bannière `multi` requise)
+    const expand = this.sankey.flux_taggs_list.some(tagg => tagg.banner === 'multi')
+    if (!expand) return []
+    const tvs = (this.value?.tagged_values_list ?? []).filter(tv =>
+      tv.value !== null &&
+      tv.value > 0 &&
+      tv.tags_list.every(tag => tag.is_selected))
+    // OS#1286 — unité du registre attachée au tag (groupe « de type unité ») :
+    // le coefficient convertit la valeur exprimée dans l'unité vers l'unité de
+    // base, à l'échelle du dessin (t/kt/Mt cohérents automatiquement).
+    const unit_tag_of = (tv: Class_ElementTaggedValue): Class_FluxTag | undefined =>
+      tv.tags_list
+        .map(tag => tag as Class_FluxTag)
+        .find(tag => (tag.group as Class_FluxTagGroup).is_unit_type && tag.resolved_unit)
+    // §3.0ter — largeur de bande = valeur convertie avec l'échelle DE SON TAG
+    // (si le groupe déclare des échelles distinctes) ; sinon échelle du dessin.
+    const px_for = (tv: Class_ElementTaggedValue): number => {
+      const v = tv.value as number
+      const unit_tag = unit_tag_of(tv)
+      if (unit_tag) {
+        const resolved = unit_tag.resolved_unit
+        const coeff = resolved?.unit.coefficient ?? 1
+        // Échelle PROPRE à la grandeur (façon e!Sankey) si définie, sinon
+        // échelle globale du dessin ; le coefficient convertit vers l'unité
+        // de base sur laquelle l'échelle s'exprime.
+        const base_scale = resolved?.unit_type.display_scale ?? this.sankey.drawing_area.scale
+        this.setDomainLocalScale(base_scale / (coeff || 1))
+        return this._scaleValueToPx(v)
+      }
+      const scale_tag = tv.tags_list
+        .map(tag => tag as Class_FluxTag)
+        .find(tag => tag.scale !== undefined
+          && (tag.group as Class_FluxTagGroup).has_own_scales)
+      if (scale_tag?.scale) {
+        this.setDomainLocalScale(scale_tag.scale)
+        return this._scaleValueToPx(v)
+      }
+      return this.scaleValueToPx(v)
+    }
+    const color_for = (tv: Class_ElementTaggedValue): string | null => {
+      const colored_tag = tv.tags_list
+        .find(tag => (tag.group as Class_TagGroup).use_colors) ?? tv.tags_list[0]
+      return colored_tag?.color ?? null
+    }
+    const unit_for = (tv: Class_ElementTaggedValue): string | undefined =>
+      unit_tag_of(tv)?.resolved_unit?.unit.name
+    const bands = tvs.map(tv => ({ id: tv.id, px: Math.max(0, px_for(tv)), color: color_for(tv), value: tv.value as number, unit: unit_for(tv) }))
+    const total = bands.reduce((acc, band) => acc + band.px, 0)
+    if (total <= 0) return []
+    return bands.map(band => ({ ...band, share: band.px / total }))
   }
 
-  // PROTECTED METHODS ==================================================================
-  public addChildLink(l: Class_LinkElement, tag: Class_DataTag) {
-    this._child_links[tag.id] = l
-    this.source.addOutputLink(l)
-    this.target.addInputLink(l)
-    l.setAsChildLink(tag)
-    l.shape_type = 'bezier_outline'
-    tag.group.use_colors = true
+  /** §3.0ter — épaisseur totale quand le flux s'affiche en bandes : somme des
+   *  largeurs de bandes (chacune à l'échelle de son tag). */
+  private get _bands_total_px(): number | null {
+    const bands = this.tagged_value_bands
+    if (bands.length === 0) return null
+    return bands.reduce((acc, band) => acc + band.px, 0)
   }
 
   /**
@@ -935,23 +1039,56 @@ export class Class_LinkElement extends Class_LinkAttribute {
     const border_thickness = this.shape_border_thickness
     // Clean previous shape
     this.d3_selection?.selectAll('.link_arrow').remove()
+    this.d3_selection?.selectAll('.link_arrow_clip').remove()
     const arrow_color = this.getArrowColorToUse() // Avoid recomputing
     // Append one arrow path (factorisé pour les deux extrémités).
-    const appendArrowPath = (d: string) => {
-      this.d3_selection?.append('path')
+    const appendArrowPath = (d: string, fill: string = arrow_color, clip_id?: string) => {
+      const path = this.d3_selection?.append('path')
         .attr('class', 'link_arrow')
         .attr('d', d)
-        .attr('fill', this.shape_color_visible ? arrow_color : 'none')
+        .attr('fill', this.shape_color_visible ? fill : 'none')
         .attr('fill-opacity', da.type_data == 'data_label' && !this.has_data ? 0.2 : this.shape_opacity)
         .attr('stroke', border_visible ? border_color : 'none')
         .attr('stroke-width', border_visible ? border_thickness : 0)
         .attr('stroke-opacity', border_visible ? 1 : 0)
         .attr('stroke-dasharray', border_dashed ? '10,2' : '')
+      if (clip_id) path?.attr('clip-path', `url(#${clip_id})`)
     }
-    if (draw_target && this._arrow_shape !== undefined)
-      appendArrowPath(this._arrow_shape)
-    if (draw_source && this._arrow_shape_source !== undefined)
-      appendArrowPath(this._arrow_shape_source)
+    // #285 — flèche par bandes : quand le flux affiche ses valeurs en bandes,
+    // la pointe est dessinée une fois PAR bande, clippée sur la tranche
+    // transverse de la bande et peinte à sa couleur.
+    const bands = this.tagged_value_bands
+    const appendBandArrows = (d: string, at_source: boolean) => {
+      const full = at_source ? this.thicknessSource : this.thicknessTarget
+      const x_end = at_source ? this.position_x_start : this.position_x_end
+      const y_end = at_source ? this.position_y_start : this.position_y_end
+      const is_hh = this.shape_orientation === 'hh'
+      const safe_id = this.id.replace(/[^a-zA-Z0-9_-]/g, '_')
+      let cum = 0
+      bands.forEach(({ color, share }, band_idx) => {
+        const lo = cum
+        cum += share
+        const clip_id = `arrowband_${safe_id}_${at_source ? 's' : 't'}_${band_idx}`
+        const reach = full + 100 // couvre largement la profondeur de la pointe
+        this.d3_selection?.append('clipPath')
+          .attr('class', 'link_arrow_clip')
+          .attr('id', clip_id)
+          .append('rect')
+          .attr('x', is_hh ? x_end - reach : x_end - full / 2 + lo * full)
+          .attr('y', is_hh ? y_end - full / 2 + lo * full : y_end - reach)
+          .attr('width', is_hh ? 2 * reach : share * full)
+          .attr('height', is_hh ? share * full : 2 * reach)
+        appendArrowPath(d, color ?? arrow_color, clip_id)
+      })
+    }
+    if (draw_target && this._arrow_shape !== undefined) {
+      if (bands.length > 0) appendBandArrows(this._arrow_shape, false)
+      else appendArrowPath(this._arrow_shape)
+    }
+    if (draw_source && this._arrow_shape_source !== undefined) {
+      if (bands.length > 0) appendBandArrows(this._arrow_shape_source, true)
+      else appendArrowPath(this._arrow_shape_source)
+    }
   }
 
   /**
@@ -1263,7 +1400,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
     target: Class_NodeElement
   ) {
     // coherent with code in python (Constructor of flux)
-    if (this.is_multi_link) return source.name + '---' + target.name + '(' + this._multi_link_tag?.name + ')'
     return source.name + '---' + target.name
   }
 
@@ -1319,8 +1455,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
     return this._values.getStructurallyAbsentForDataTags(this.selected_data_tags_list as Class_DataTag[])
   }
 
-  public get child_links() { return this._child_links }
-  public get is_multi_link() { return this._is_multi_link }
 
   // Transient marker for expansion links — set by Hierarchies.disaggregationExpansion,
   // read by contract() to know which links to delete. Not persisted.
@@ -1334,8 +1468,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // container pour révéler un flux normalement masqué par son niveau.
     if (
       this.drawing_area.application_data.reveal_data_links &&
-      super.is_visible &&
-      Object.values(this._child_links).length == 0
+      super.is_visible
     ) {
       // (a) le flux de donnée lui-même
       if (this.has_collected_data) return true
@@ -1463,7 +1596,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
     return (
       super.is_visible &&
-      Object.values(this._child_links).length == 0 &&
       this.are_source_and_target_displayed &&
       this.are_related_flux_tags_selected &&
       (!require_non_zero || this.is_not_zero || this.is_forced_visible_when_zero)
@@ -1948,14 +2080,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   public get selected_data_tags_list() {
-    if (this._is_multi_link) {
-      const selected_tags: Class_DataTag[] = []
-      this.sankey.data_taggs_list.forEach((tagg) => {
-        if (tagg == this._multi_link_tag?.group) selected_tags.push(this._multi_link_tag)
-        else selected_tags.push(tagg.selected_tags_list[0])
-      })
-      return selected_tags
-    }
     return this.sankey.selected_data_tags_list
   }
 
@@ -2010,6 +2134,52 @@ export class Class_LinkElement extends Class_LinkAttribute {
     let value_current = null
     if (this.drawing_area.type_data === 'data') value_current = this.value?.valueData ?? null
     else value_current = this.value?.valueResult ?? ((this.value?.value_option == 'value' || this.value?.value_option == 'intervals') ? this.value?.valueData : null) ?? null
+    // #285 (§3.0ter) — pas de valeur principale : avec des groupes PORTEURS,
+    // la valeur affichée est celle du TAG SÉLECTIONNÉ (comme pour les
+    // dataTags), même si un scalaire hérité subsiste (il ne sert plus que de
+    // secours solveur). À défaut : somme des visibles en bannière multi, puis
+    // première valeur (compat fichiers sans flag porteur).
+    {
+      const tvs = (this.value?.tagged_values_list ?? []).filter(tv => tv.value !== null)
+      if (tvs.length > 0) {
+        const carrying = this.sankey.flux_taggs_list.filter(tagg => tagg.carries_values)
+        if (carrying.length > 0) {
+          const matches_selection = (tv: Class_ElementTaggedValue) => carrying.every(tagg => {
+            const mine = tv.getTagForGroup(tagg)
+            return !mine || mine.is_selected
+          })
+          const selected_tv = tvs.find(tv =>
+            matches_selection(tv) && carrying.some(tagg => tv.getTagForGroup(tagg)))
+          if (selected_tv) value_current = selected_tv.value
+        }
+        if (value_current === null) {
+          const multi = this.sankey.flux_taggs_list.some(tagg => tagg.banner === 'multi')
+          if (multi) {
+            const visible = tvs.filter(tv => tv.tags_list.every(tag => tag.is_selected))
+            if (visible.length > 0)
+              value_current = visible.reduce((acc, tv) => acc + (tv.value as number), 0)
+          }
+        }
+        if (value_current === null) value_current = tvs[0].value
+      }
+      // Dimension en bannière multi : le flux affiche la somme des tranches
+      // sélectionnées (l'épaisseur passe de toute façon par les bandes) —
+      // sans quoi value serait null (résolution 1 tag/groupe) et le flux
+      // serait pris pour un flux de structure.
+      if (value_current === null) {
+        const multi_dim = this.sankey.data_taggs_list.find(tagg =>
+          tagg.banner === 'multi' && tagg.tags_list.length > 1)
+        if (multi_dim) {
+          const vals = multi_dim.selected_tags_list
+            .map(tag => {
+              const leaf = this.valueForTag(tag as Class_DataTag) as Class_LinkValue | null
+              return leaf === null ? null : (leaf.valueData ?? leaf.valueResult)
+            })
+            .filter((v): v is number => v !== null)
+          if (vals.length > 0) value_current = vals.reduce((a, b) => a + b, 0)
+        }
+      }
+    }
     this._is_computing = false
     return value_current
   }
@@ -2341,6 +2511,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
     ) {
       return this._scaleUncertainty(this._clampThickness(0))
     }
+    const bands_px = this._bands_total_px
+    if (bands_px !== null) return this._clampThickness(bands_px)
     const data_value = this.valueCurrent
     const linkValueInPx = (data_value !== null) ? this.scaleValueToPx(data_value) : 2
     return this._scaleUncertainty(this._clampThickness(linkValueInPx))
@@ -2400,6 +2572,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
     ) {
       return this._scaleUncertainty(this._clampThickness(0))
     }
+    const bands_px = this._bands_total_px
+    if (bands_px !== null) return this._clampThickness(bands_px)
     const target_value = this.valueCurrentTarget
     if (target_value === null) return this.thickness
     const linkValueInPx = this.scaleValueToPx(target_value)
@@ -2439,6 +2613,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
     ) {
       return 0
     }
+    const bands_px = this._bands_total_px
+    if (bands_px !== null) return this._safeRawThickness(bands_px)
     const data_value = this.valueCurrent
     if (data_value === null) return 2
     return this._safeRawThickness(this.scaleValueToPx(data_value))
@@ -2452,6 +2628,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
     ) {
       return 0
     }
+    const bands_px = this._bands_total_px
+    if (bands_px !== null) return this._safeRawThickness(bands_px)
     const target_value = this.valueCurrentTarget
     if (target_value === null) return this.thicknessSourceRaw
     return this._safeRawThickness(this.scaleValueToPx(target_value))

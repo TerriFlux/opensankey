@@ -105,6 +105,11 @@ interface EsFluxTagGroup {
   name: string
   banner: string
   use_colors: boolean
+  // SA#285 (fusion) — le groupe des entries PORTE des valeurs : chaque flèche
+  // multi-matériaux devient UN flux dont les valeurs sont ventilées par tag
+  // (bandes), au lieu de N flux parallèles. Fusionné à la migration au
+  // chargement (migrateParallelTaggedLinks), banner 'multi' pour l'éclatement.
+  carries_values?: boolean
   tags: { [id: string]: EsFluxTag }
 }
 
@@ -2378,7 +2383,10 @@ export const parseEsankeyXml = (
     // `use_colors` : les tags portent les couleurs des entries → ils
     // apparaissent dans la légende, et la colormap coïncide avec les couleurs
     // déjà posées sur les flux.
-    fluxTags[ESANKEY_ENTRIES_TAGG_ID] = { name: 'Flux e!Sankey', banner: 'none', use_colors: true, tags }
+    // SA#285 (fusion) — banner 'multi' + porteur de valeurs : après la fusion
+    // des flux parallèles au chargement, la flèche multi-matériaux s'affiche en
+    // UN flux dont l'épaisseur est ventilée en bandes (une par entry).
+    fluxTags[ESANKEY_ENTRIES_TAGG_ID] = { name: 'Flux e!Sankey', banner: 'multi', use_colors: true, carries_values: true, tags }
   }
 
   const backgroundColor = argbToHex(net.getAttribute('backgroundColor')) ?? '#FFFFFF'

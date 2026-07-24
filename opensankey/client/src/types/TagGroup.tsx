@@ -2,7 +2,7 @@ import colormap from 'colormap'
 import i18next from 'i18next'
 import { Type_LangMap, normalizeLang, parseLangMap, resolveLangMap, serializeLangMap } from '../Persistence/persistenceMigrations'
 import { Class_LinkElement } from '../Elements/Link'
-import { Class_ElementValue } from '../Elements/LinkValues'
+import { Class_ElementValue, Class_ElementTaggedValue } from '../Elements/LinkValues'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_Sankey } from './Sankey'
 import { tag_banner_type, Class_ProtoTag, Class_Tag, Class_NodeTag, Class_FluxTag, Class_DataTag, Class_LevelTag, Class_ViewTag } from './Tag'
@@ -462,7 +462,7 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
 
   // PUBLIC METHODS =====================================================================
   public updateTagsReferences(): void {
-    const ref_updated: (Class_NodeElement | Class_LinkElement | Class_ElementValue)[] = []
+    const ref_updated: (Class_NodeElement | Class_LinkElement | Class_ElementValue | Class_ElementTaggedValue)[] = []
     Object.values(this._tags)
       .forEach(tag => {
         tag.references
@@ -573,6 +573,59 @@ export class Class_NodeTagGroup extends Class_TagGroup {
 
 export class Class_FluxTagGroup extends Class_TagGroup {
 
+  // #284 — concept unifié (NOTE-FUSION-TAGS.md §3) : un groupe de tags de flux
+  // est soit une dimension (ex-dataTag, structure l'arbre de valeurs), soit un
+  // groupe optionnel (annote/partitionne les feuilles). Le flag est porté par
+  // la classe (pas de bascule dynamique en phase 1).
+  public get is_dimension(): boolean { return false }
+
+  // #285 (§3.0ter) — un groupe libre est soit PORTEUR DE VALEURS (chaque
+  // valeur du flux est attachée à un tag du groupe — dataTag-light, épars),
+  // soit pure étiquette (annotation du flux entier). Porté par les
+  // conversions (dimension→annotation, fusion de flux parallèles) ou réglé
+  // dans l'éditeur de groupes.
+  private _carries_values: boolean = false
+
+  // §3.0ter — échelles DIFFÉRENTES par tag (cas jeu d'unités kWh/t/€) : la
+  // colonne échelle et l'usage des échelles propres ne s'activent que si le
+  // groupe le déclare — sinon tous les tags suivent l'échelle du dessin.
+  private _has_own_scales: boolean = false
+
+  // OS#1286 (fusion) — groupe « de type unité » : chaque tag porte alors une
+  // référence d'unité du registre du diagramme (Class_FluxTag.unit_ref) au lieu
+  // d'une échelle libre. Remplace les anciens data_taggs is_unit. Implique
+  // carries_values ; la largeur de bande dérive du coefficient de l'unité.
+  private _is_unit_type: boolean = false
+
+  public get carries_values(): boolean { return this._carries_values }
+  public set carries_values(_: boolean) { this._carries_values = _ }
+
+  public get has_own_scales(): boolean { return this._has_own_scales }
+  public set has_own_scales(_: boolean) { this._has_own_scales = _ }
+
+  public get is_unit_type(): boolean { return this._is_unit_type }
+  public set is_unit_type(_: boolean) { this._is_unit_type = _ }
+
+  protected _toJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    super._toJSON(json_object, kwargs)
+    if (this._carries_values) json_object['carries_values'] = true
+    if (this._has_own_scales) json_object['has_own_scales'] = true
+    if (this._is_unit_type) json_object['is_unit_type'] = true
+  }
+
+  protected _fromJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    super._fromJSON(json_object, kwargs)
+    this._carries_values = getBooleanFromJSON(json_object, 'carries_values', this._carries_values)
+    this._has_own_scales = getBooleanFromJSON(json_object, 'has_own_scales', this._has_own_scales)
+    this._is_unit_type = getBooleanFromJSON(json_object, 'is_unit_type', this._is_unit_type)
+  }
+
   // PROTECTED ATTRIBUTES ===============================================================
   protected _tags: { [_: string]: Class_FluxTag; }
 
@@ -615,6 +668,9 @@ export class Class_FluxTagGroup extends Class_TagGroup {
  */
 
 export class Class_DataTagGroup extends Class_ProtoTagGroup {
+
+  // #284 — pendant dimension du concept unifié (cf. Class_FluxTagGroup.is_dimension)
+  public get is_dimension(): boolean { return true }
 
   // PRIVATE ATTRIBUTES =================================================================
   // Display attributes
@@ -729,7 +785,8 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   }
 
   public updateTagsReferences(): void {
-    // On datatags update everything is impacted
+    // On datatags update everything is impacted (les bandes de valeurs
+    // coordonnées sont dérivées au draw — rien à synchroniser)
     this._ref_sankey.drawing_area.draw()
   }
 

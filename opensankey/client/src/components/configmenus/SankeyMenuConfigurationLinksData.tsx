@@ -588,7 +588,11 @@ export const MenuConfigurationLinksData = ({
     )}
 
     {/* ===== Panel "Basique" ===== */}
-    {effective_tab === 'basic' && (value_option === 'value' || !app_data.has_sankey_afm) && (<>
+    {/* #285 §3.0ter — avec un groupe PORTEUR de valeurs, le flux n'a pas de
+        valeur principale (ni de valeur destination) : chaque valeur est
+        attachée à un tag et s'édite dans « Valeurs du flux ». */}
+    {effective_tab === 'basic' && !app_data.drawing_area.sankey.flux_taggs_list.some(tagg => tagg.carries_values)
+      && (value_option === 'value' || !app_data.has_sankey_afm) && (<>
       {/* Value */}
       <RowSetter2Cols
         attributePath={'Flux.labels'}

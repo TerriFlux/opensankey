@@ -25,6 +25,8 @@
 // ==================================================================================================
 
 import { Class_LinkElement } from './Link'
+import { getNameLabelValues } from './ElementsAttributesConfig'
+import type { Class_TagGroup } from '../types/TagGroup'
 import { LinkControlPoints } from './LinkControlPoints'
 import { Class_Handler } from './Handler'
 
@@ -128,6 +130,8 @@ export class LinkDrawShape {
     this._link.d3_selection?.selectAll('.link_path').remove()
     this._link.d3_selection?.selectAll('.link_path_border').remove()
     this._link.d3_selection?.selectAll('.link_shape').remove()
+    this._link.d3_selection?.selectAll('.link_band').remove()
+    this._link.d3_selection?.selectAll('.link_band_label').remove()
     this._link.d3_selection?.selectAll('.link_uncertainty_band').remove()
 
     // Failsafe
@@ -337,11 +341,185 @@ export class LinkDrawShape {
             .attr('dasharray', show_as_dash ? '10,2' : '')
         }
       }
+      // #285 — bandes internes : les valeurs coordonnées visibles subdivisent
+      // l'épaisseur du flux. Quand elles couvrent le flux, le tracé principal
+      // devient INVISIBLE (opacité 0) mais reste en place : c'est lui qui porte
+      // les interactions (survol, clic, tooltip) — sinon sa peinture se
+      // mélangerait aux bandes à travers l'opacité.
+      if (this.drawTaggedValueBands(shape_opacity)) {
+        this._link.d3_selection?.selectAll('.link_path')
+          .attr('opacity', 0)
+          .attr('fill-opacity', 0)
+          .attr('stroke-opacity', 0)
+        this._link.d3_selection?.selectAll('.link_shape')
+          .attr('opacity', 0)
+      }
       // opensankey#1301 — Alt+clic pour insérer un point de contrôle : branché à
       // CHAQUE dessin du flux (pas seulement à la sélection), pour qu'un Alt+clic
       // sur un flux non sélectionné le sélectionne ET ajoute le point d'un coup.
       this._link_control_points.bindWaypointInsertion()
     }
+  }
+
+  /**
+   * #285 — dessine une bande par valeur coordonnée visible du flux, dans le
+   * contour du flux lui-même : mêmes points de contrôle que le tracé principal,
+   * offsets transverses cumulés proportionnels aux parts (bandes jointives par
+   * construction — le contour exact #1251 du flux entier, subdivisé). Les
+   * bandes sont décoratives : pointer-events none, les interactions restent
+   * portées par le tracé principal (invisible sous les bandes).
+   * Pendant un drag, la géométrie EXACTE (échantillonnée) serait trop coûteuse
+   * à chaque frame : on bascule sur le contour simple (translation transverse),
+   * comme le tracé principal — l'exact est rétabli au redraw de fin de drag.
+   * V1 : flux courbes hh/vv, hors recyclage. Retourne true si des bandes ont
+   * été dessinées.
+   */
+  private drawTaggedValueBands(shape_opacity: number | string): boolean {
+    const link = this._link
+    const bands = link.tagged_value_bands
+    if (bands.length === 0) return false
+    if (link.shape_is_recycling) return false
+    if (link.linkIsStructure()) return false
+
+    // Mêmes points de contrôle que le tracé principal
+    this._link_control_points.computeControlPoints()
+    const x0 = link.position_x_start
+    const y0 = link.position_y_start
+    const x6 = link.position_x_end
+    const y6 = link.position_y_end
+    const x1 = this._link_control_points_internal.controlPoints.starting_curve_point.position_x
+    const y1 = this._link_control_points_internal.controlPoints.starting_curve_point.position_y
+    const x2 = this._link_control_points_internal.controlPoints.starting_bezier_point.position_x
+    const y2 = this._link_control_points_internal.controlPoints.starting_bezier_point.position_y
+    const x4 = this._link_control_points_internal.controlPoints.ending_bezier_point.position_x
+    const y4 = this._link_control_points_internal.controlPoints.ending_bezier_point.position_y
+    const x5 = this._link_control_points_internal.controlPoints.ending_curve_point.position_x
+    const y5 = this._link_control_points_internal.controlPoints.ending_curve_point.position_y
+    const x3 = (x2 + x4) / 2
+    const y3 = (y2 + y4) / 2
+
+    const full_src = link.thicknessSource
+    const full_tgt = link.thicknessTarget
+    const transverse = link.shape_orientation === 'hh' ? [0, 1] : [1, 0]
+    // Contour exact réservé aux courbes hh/vv hors drag (comme le tracé
+    // principal) ; tous les autres cas — flux droits, orientations vh/hv,
+    // pendant un drag — passent par le constructeur générique ci-dessous.
+    const use_exact = link.shape_is_curved
+      && (link.shape_orientation === 'hh' || link.shape_orientation === 'vv')
+      && !this.isBeingDragged()
+
+    // Contour approché d'une bande, générique : chaque groupe de points est
+    // décalé le long de la PERPENDICULAIRE de son segment (technique de la
+    // branche vh/hv du tracé principal), l'offset étant interpolé
+    // source→cible. Couvre courbes (Q) et flux droits (L).
+    const perp = (ax: number, ay: number, bx: number, by: number): number[] => {
+      const dx = bx - ax
+      const dy = by - ay
+      const len = Math.sqrt(dx * dx + dy * dy)
+      if (len === 0) return transverse
+      return [-dy / len, dx / len]
+    }
+    const genericBandPath = (
+      off_src_a: number, off_tgt_a: number,
+      off_src_b: number, off_tgt_b: number
+    ): string => {
+      const n_start = perp(x0, y0, x1, y1)
+      const n_mid = perp(x2, y2, x4, y4)
+      const n_end = perp(x5, y5, x6, y6)
+      const edge = (off_src: number, off_tgt: number) => {
+        const off_mid = (off_src + off_tgt) / 2
+        const p0 = [x0 + n_start[0] * off_src, y0 + n_start[1] * off_src]
+        const p1 = [x1 + n_start[0] * off_src, y1 + n_start[1] * off_src]
+        const p2 = [x2 + n_mid[0] * off_mid, y2 + n_mid[1] * off_mid]
+        const p4 = [x4 + n_mid[0] * off_mid, y4 + n_mid[1] * off_mid]
+        const p5 = [x5 + n_end[0] * off_tgt, y5 + n_end[1] * off_tgt]
+        const p6 = [x6 + n_end[0] * off_tgt, y6 + n_end[1] * off_tgt]
+        const p3 = [(p2[0] + p4[0]) / 2, (p2[1] + p4[1]) / 2]
+        return { p0, p1, p2, p3, p4, p5, p6 }
+      }
+      const a = edge(off_src_a, off_tgt_a)
+      const b = edge(off_src_b, off_tgt_b)
+      if (link.shape_is_curved) {
+        return 'M ' + a.p0[0] + ',' + a.p0[1]
+          + ' L ' + a.p1[0] + ',' + a.p1[1]
+          + ' Q ' + a.p2[0] + ',' + a.p2[1] + ' ' + a.p3[0] + ',' + a.p3[1]
+          + ' Q ' + a.p4[0] + ',' + a.p4[1] + ' ' + a.p5[0] + ',' + a.p5[1]
+          + ' L ' + a.p6[0] + ',' + a.p6[1]
+          + ' L ' + b.p6[0] + ',' + b.p6[1]
+          + ' L ' + b.p5[0] + ',' + b.p5[1]
+          + ' Q ' + b.p4[0] + ',' + b.p4[1] + ' ' + b.p3[0] + ',' + b.p3[1]
+          + ' Q ' + b.p2[0] + ',' + b.p2[1] + ' ' + b.p1[0] + ',' + b.p1[1]
+          + ' L ' + b.p0[0] + ',' + b.p0[1]
+          + ' Z'
+      }
+      // Flux droit : polyline par les mêmes points (jonctions approchées,
+      // même barre de qualité que la branche vh/hv du tracé principal)
+      return 'M ' + a.p0[0] + ',' + a.p0[1]
+        + ' L ' + a.p1[0] + ',' + a.p1[1]
+        + ' L ' + a.p2[0] + ',' + a.p2[1]
+        + ' L ' + a.p4[0] + ',' + a.p4[1]
+        + ' L ' + a.p5[0] + ',' + a.p5[1]
+        + ' L ' + a.p6[0] + ',' + a.p6[1]
+        + ' L ' + b.p6[0] + ',' + b.p6[1]
+        + ' L ' + b.p5[0] + ',' + b.p5[1]
+        + ' L ' + b.p4[0] + ',' + b.p4[1]
+        + ' L ' + b.p2[0] + ',' + b.p2[1]
+        + ' L ' + b.p1[0] + ',' + b.p1[1]
+        + ' L ' + b.p0[0] + ',' + b.p0[1]
+        + ' Z'
+    }
+
+    const da = link.sankey.drawing_area
+    const band_label_visible = da.type_data !== 'structure'
+    // #285 — le label de bande suit la MÊME police que le label de valeur du
+    // flux (réglage font_size), compensée du zoom local comme les autres labels
+    // (mode police verrouillée) : plus de taille 8-11 px codée en dur.
+    const value_lv = getNameLabelValues(link, 'value_label') as { font_size?: number }
+    const band_font_size = (value_lv.font_size ?? 12) * (da.font_compensation ?? 1)
+    let cum = 0
+    bands.forEach(({ id, color, share, value, unit }) => {
+      const lo = cum
+      cum += share
+      const off_lo_src = -full_src / 2 + lo * full_src
+      const off_lo_tgt = -full_tgt / 2 + lo * full_tgt
+      const off_hi_src = -full_src / 2 + cum * full_src
+      const off_hi_tgt = -full_tgt / 2 + cum * full_tgt
+      const path = use_exact
+        ? this.getExactBezierOutline(
+          [x0, y0], [x1, y1], [x2, y2], [x3, y3], [x4, y4], [x5, y5], [x6, y6],
+          off_lo_src, off_lo_tgt,
+          off_hi_src, off_hi_tgt,
+          transverse
+        )
+        : genericBandPath(off_lo_src, off_lo_tgt, off_hi_src, off_hi_tgt)
+      this._link.d3_selection?.append('path')
+        .classed('link', true)
+        .classed('link_band', true)
+        .attr('id', `${link.id}_band_${id}`)
+        .attr('d', path)
+        .attr('fill', color ?? link.getShapeColorToUse())
+        .attr('fill-opacity', shape_opacity)
+        .attr('stroke', 'none')
+        .attr('pointer-events', 'none')
+      // #285 — un label de valeur PAR bande (la valeur unique du flux n'a pas
+      // de sens sur un flux ventilé) : au milieu de la bande, suit l'œil
+      // « valeur » du flux et le seuil d'affichage.
+      if (link.value_label_is_visible && band_label_visible) {
+        const n_mid_label = perp(x2, y2, x4, y4)
+        const off_mid = ((off_lo_src + off_hi_src) / 2 + (off_lo_tgt + off_hi_tgt) / 2) / 2
+        this._link.d3_selection?.append('text')
+          .classed('link_band_label', true)
+          .attr('x', x3 + n_mid_label[0] * off_mid)
+          .attr('y', y3 + n_mid_label[1] * off_mid)
+          .attr('text-anchor', 'middle')
+          .attr('dominant-baseline', 'middle')
+          .attr('font-size', band_font_size)
+          .attr('fill', '#000')
+          .attr('pointer-events', 'none')
+          .text(unit ? `${value} ${unit}` : String(value))
+      }
+    })
+    return true
   }
 
   /**
@@ -955,7 +1133,11 @@ export class LinkDrawShape {
         // on retombe sur le contour simple, moins coûteux ; le rendu exact est
         // rétabli par le redraw de fin de drag (setPosXY/drawElements après
         // setDragState(false), cf. NodeEventsHandler.handleMouseDragEnd).
-        if (this._link.shape_type === 'bezier_outline_exact' && !this.isBeingDragged()) {
+        // #285 — un flux porteur de bandes suit TOUJOURS la géométrie exacte :
+        // ses bandes internes sont exactes, l'enveloppe (et la bordure) doivent
+        // coïncider avec leur union, quel que soit le shape_type du lien.
+        const has_bands = this._link.tagged_value_bands.length > 0
+        if ((this._link.shape_type === 'bezier_outline_exact' || has_bands) && !this.isBeingDragged()) {
           // Faisceau de flux parallèles entre les mêmes nœuds : bandes jointives
           // dérivées de la médiane commune du faisceau
           const band_path = this.getParallelBandPath()
@@ -965,9 +1147,11 @@ export class LinkDrawShape {
           // Lien seul : contour exact seulement si la pente de la corde de la
           // section courbe dépasse le seuil — en dessous, le contour simple
           // (translation transverse) est visuellement identique et moins coûteux.
+          // Avec des bandes : exact sans seuil (les frontières internes doivent
+          // coïncider avec l'enveloppe).
           const chord_axis = this._link.shape_orientation === 'hh' ? Math.abs(x5 - x1) : Math.abs(y5 - y1)
           const chord_off = this._link.shape_orientation === 'hh' ? Math.abs(y5 - y1) : Math.abs(x5 - x1)
-          if (chord_off > SIMPLE_OUTLINE_MAX_SLOPE * chord_axis) {
+          if (has_bands || chord_off > SIMPLE_OUTLINE_MAX_SLOPE * chord_axis) {
             return this.getExactBezierOutline(
               [x0, y0], [x1, y1], [x2, y2], [x3, y3], [x4, y4], [x5, y5], [x6, y6],
               -halfSrc, -halfTgt, halfSrc, halfTgt,

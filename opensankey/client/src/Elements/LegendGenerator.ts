@@ -288,6 +288,20 @@ function wireTagHover(
           l.target.hasGivenTag(tag as Class_Tag)) {
           highlighted_nodes.add(l.source)
           highlighted_nodes.add(l.target)
+          // #285 — flux ventilé : mettre en exergue la/les BANDE(S) du tag
+          // survolé, pas tout le flux. On atténue les bandes des autres valeurs.
+          const bands = l.d3_selection?.selectAll('.link_band')
+          if (bands && !bands.empty()) {
+            const matching = new Set(
+              (l.value?.tagged_values_list ?? [])
+                .filter(tv => tv.tags_list.includes(tag as Class_Tag))
+                .map(tv => l.id + '_band_' + tv.id))
+            if (matching.size > 0) {
+              bands.attr('opacity', function () {
+                return matching.has((this as Element).getAttribute('id') ?? '') ? '' : 0.1
+              })
+            }
+          }
         } else {
           l.d3_selection?.attr('opacity', 0.1)
         }
@@ -300,7 +314,10 @@ function wireTagHover(
     })
     .on('mouseout.legend_highlight', () => {
       drawing_area.sankey.visible_nodes_list.forEach(n => n.d3_selection?.attr('opacity', ''))
-      drawing_area.sankey.visible_links_list.forEach(l => l.d3_selection?.attr('opacity', ''))
+      drawing_area.sankey.visible_links_list.forEach(l => {
+        l.d3_selection?.attr('opacity', '')
+        l.d3_selection?.selectAll('.link_band').attr('opacity', '')
+      })
     })
 }
 
