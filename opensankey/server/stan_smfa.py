@@ -1731,10 +1731,6 @@ def _stan_theme(unit_code=None):
         "shape_is_arrow": True,
         # Les pointes de flèche de STAN sont nettement plus allongées que notre défaut (10).
         "shape_arrow_size": 25,
-        # STAN dessine une tête d'office, même sur un filet : largeur mini de pointe
-        # posée ICI car le défaut applicatif est 0 (désactivé) depuis SA#304 — un
-        # défaut > 0 fragmentait l'éventail des diagrammes existants.
-        "shape_arrow_min_width": 10,
         # Le nom du flux, lu depuis `value.text_value` (le défaut de
         # `name_label_text_source` est déjà `custom`). STAN l'écrit à côté du tracé,
         # pas dessus — la valeur, elle, est sur le tracé, dans son ellipse.
