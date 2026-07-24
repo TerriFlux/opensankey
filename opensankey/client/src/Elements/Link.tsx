@@ -1172,7 +1172,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // par le chemin exact du lecteur — ce qui rend le bouton « Aperçu » inutile.
     const app_data = this.drawing_area.application_data
     if (event.buttons === 0
-      && matchesPresentationTrigger(app_data, event)
+      && matchesPresentationTrigger(this as unknown as Parameters<typeof canPresentTooltip>[0], event)
       && canPresentTooltip(this as unknown as Parameters<typeof canPresentTooltip>[0])) {
       const rect = (event.target as HTMLElement)?.getBoundingClientRect?.()
       schedulePresentationHover(

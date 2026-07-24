@@ -14,7 +14,7 @@
 // Les couches supérieures (OSP : onglet Tags…) enregistrent les leurs.
 
 import React from 'react'
-import { Box, Button, Checkbox, Input, Text } from '@chakra-ui/react'
+import { Box, Button, Checkbox, Input } from '@chakra-ui/react'
 import { inspector_registry, INSPECTOR_TAB_VALUE_ID } from './InspectorRegistry'
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import {
@@ -442,7 +442,7 @@ const InspectorTooltipTab = ({ app_data, scope }: { app_data: Class_ApplicationD
     {/* Texte libre : propre à l'élément → portée Sélection uniquement. */}
     {scope === 'selection' && <>
       <Box display='flex' alignItems='center' justifyContent='space-between' gap={2}>
-        <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.IB')}</Box>
+        <Box layerStyle='menuconfigpanel_option_name'>{t('inspector.description', { defaultValue: 'Description' })}</Box>
         <Box layerStyle='options_2cols' width='fit-content'>
           <OSTooltip label={t('Menu.display_mode.tooltips.simple_text')}>
             <Button
@@ -484,8 +484,9 @@ const InspectorTooltipTab = ({ app_data, scope }: { app_data: Class_ApplicationD
     {/* Blocs visibles dans l'info-bulle (attribut de style, OS#1285). */}
     <TooltipBlocksToggles app_data={app_data} scope={scope} />
 
-    {/* Déclencheur + délai d'apparition de l'info-bulle (réglages document). */}
-    <TriggerSettings app_data={app_data} />
+    {/* Déclencheur + délai d'apparition (attributs de style, propres à la
+        sélection ou au style édité). */}
+    <TriggerSettings app_data={app_data} scope={scope} />
   </>
 }
 
@@ -544,39 +545,68 @@ const TooltipBlocksToggles = ({ app_data, scope }: { app_data: Class_Application
   </Box>
 }
 
-// Déclencheur + délai d'apparition de l'info-bulle. Réglages DOCUMENT (ils valent
-// pour tout le diagramme) portés par Class_PanelManager, édités ici au bas du
-// sous-menu Info-bulle.
+// Déclencheur + délai d'apparition de l'info-bulle. Attributs de STYLE, PROPRES à
+// la sélection (éléments) ou au style édité — comme les cases de blocs — et non
+// plus un réglage document. Écrits avec undo, lus par la cascade.
 const TRIGGER_LABEL: Record<Type_PresentationTrigger, { key: string, fallback: string }> = {
   hover: { key: 'presentation.trigger.hover', fallback: 'Survol' },
   shift: { key: 'presentation.trigger.shift', fallback: 'MAJ + survol' },
   alt: { key: 'presentation.trigger.alt', fallback: 'Alt + survol' }
 }
 
-const TriggerSettings = ({ app_data }: { app_data: Class_ApplicationData }) => {
-  const { t, menu_configuration } = app_data
-  const panels = menu_configuration.panels
-  const markDirty = () => menu_configuration.ref_to_save_in_cache_indicator.current(false)
+type TriggerTarget = {
+  attributes: Record<string, unknown>
+  getElementProperty: (k: 'tooltip_trigger' | 'tooltip_delay_ms') => unknown
+}
+
+const TriggerSettings = ({ app_data, scope }: { app_data: Class_ApplicationData, scope: 'selection' | 'style' }) => {
+  const { t, drawing_area, history, menu_configuration } = app_data
+  const nodes = drawing_area.selected_nodes_list
+  const links = drawing_area.selected_links_list
+
+  const targets = (scope === 'style'
+    ? [drawing_area.sankey.styles_dict[menu_configuration.ref_selected_style.current]].filter(Boolean)
+    : [...nodes, ...links]) as unknown as TriggerTarget[]
+  if (targets.length === 0) return null
+  const read_target = targets[0]
+
+  const raw_trigger = read_target?.getElementProperty('tooltip_trigger')
+  const trigger: Type_PresentationTrigger =
+    (PRESENTATION_TRIGGERS as string[]).includes(raw_trigger as string)
+      ? raw_trigger as Type_PresentationTrigger : 'shift'
+  const raw_delay = read_target?.getElementProperty('tooltip_delay_ms')
+  const delay = typeof raw_delay === 'number' ? raw_delay : 0
+
+  const writeAttr = (key: 'tooltip_trigger' | 'tooltip_delay_ms', value: unknown) => {
+    const before = targets.map(el => ({ el, v: el.attributes[key] }))
+    const commit = () => {
+      menu_configuration.ref_to_save_in_cache_indicator.current(false)
+      menu_configuration.updateInspector()
+    }
+    const apply = () => { targets.forEach(el => { el.attributes[key] = value }); commit() }
+    const undo = () => { before.forEach(({ el, v }) => { el.attributes[key] = v }); commit() }
+    history.saveUndo(undo)
+    history.saveRedo(apply)
+    apply()
+  }
+
   return (
     <Box style={{ borderTop: '1px solid #e2e8f0', paddingTop: '0.35rem', marginTop: '0.4rem' }}>
       <Box layerStyle='menuconfigpanel_option_name'>
         {t('presentation.trigger', { defaultValue: 'Déclencheur de l\'info-bulle' })}
       </Box>
-      <Text style={{ fontSize: '0.7rem', opacity: 0.7, paddingBottom: '0.15rem' }}>
-        {t('presentation.trigger_hint', { defaultValue: 'Vaut pour tout le diagramme.' })}
-      </Text>
-      <Box style={{ display: 'flex', gap: '0.15rem' }}>
-        {PRESENTATION_TRIGGERS.map(trigger => (
+      <Box style={{ display: 'flex', gap: '0.15rem', paddingTop: '0.2rem' }}>
+        {PRESENTATION_TRIGGERS.map(trig => (
           <Button
-            key={trigger}
+            key={trig}
             size='xs'
             flex='1'
-            variant={panels.presentation_trigger === trigger
-              ? 'button_type_config_activated'
-              : 'button_type_config'}
-            onClick={() => { panels.presentation_trigger = trigger; markDirty() }}
+            variant={trigger === trig ? 'button_type_config_activated' : 'button_type_config'}
+            // '' = revient au défaut (undefined non stocké) pour le déclencheur par
+            // défaut ; sinon on écrit la valeur choisie.
+            onClick={() => writeAttr('tooltip_trigger', trig === 'shift' ? undefined : trig)}
           >
-            {t(TRIGGER_LABEL[trigger].key, { defaultValue: TRIGGER_LABEL[trigger].fallback })}
+            {t(TRIGGER_LABEL[trig].key, { defaultValue: TRIGGER_LABEL[trig].fallback })}
           </Button>
         ))}
       </Box>
@@ -590,11 +620,10 @@ const TriggerSettings = ({ app_data }: { app_data: Class_ApplicationData }) => {
         max={PRESENTATION_DELAY_MAX_MS}
         step={50}
         variant='menuconfigpanel_option_input'
-        value={panels.presentation_delay_ms}
+        value={delay}
         onChange={(e) => {
-          const v = Number(e.target.value)
-          panels.presentation_delay_ms = isNaN(v) ? 0 : v
-          markDirty()
+          const v = Math.max(0, Math.min(PRESENTATION_DELAY_MAX_MS, Number(e.target.value) || 0))
+          writeAttr('tooltip_delay_ms', v === 0 ? undefined : v)
         }}
       />
     </Box>

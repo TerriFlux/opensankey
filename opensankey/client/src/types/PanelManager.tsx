@@ -51,20 +51,13 @@ export const PANEL_POPUP_MAX_SIZE = { w: 1000, h: 900 }
  * (`menu_configuration.panels`) et partage SON bus d'événements, de sorte que
  * les abonnements passent par `menu_configuration.subscribe(PANELS_TOPIC, …)`.
  */
-// OS#305 — Déclenchement de la présentation composée : comment le LECTEUR la
-// fait apparaître au survol, et après quel délai. Réglages DOCUMENT (décision
-// #6 : le lecteur a besoin d'une grammaire d'interaction cohérente, donc pas de
-// déclencheur par élément).
-//
-// Ils vivent ICI, et non dans PublishOptions comme initialement posé au Lot 0 :
-// `publish_options` est une config viewer READ-ONLY issue de window.sankey —
-// ni modifiable par l'auteur, ni enregistrée dans le JSON du diagramme. Or ces
-// réglages doivent précisément voyager avec le document.
+// OS#305 — Déclenchement de l'info-bulle : comment le LECTEUR la fait apparaître
+// (survol nu / +MAJ / +Alt) et après quel délai. Ce sont désormais des ATTRIBUTS
+// DE STYLE par élément (`tooltip_trigger` / `tooltip_delay_ms`) ; on ne garde ici
+// que le vocabulaire (valeurs possibles + délai max), partagé par l'éditeur.
 export type Type_PresentationTrigger = 'hover' | 'shift' | 'alt'
 export const PRESENTATION_TRIGGERS: Type_PresentationTrigger[] = ['hover', 'shift', 'alt']
 export const PRESENTATION_DELAY_MAX_MS = 3000
-const clampPresentationDelay = (ms: number): number =>
-  Math.max(0, Math.min(PRESENTATION_DELAY_MAX_MS, Math.round(isFinite(ms) ? ms : 0)))
 
 export class Class_PanelManager {
 
@@ -94,10 +87,6 @@ export class Class_PanelManager {
   // barre latérale, pour qu'un aller-retour pop-up → barre → pop-up (ou une
   // réouverture) retrouve la dernière position/taille. Persistée au Lot 4.
   private _popup_geometry_memory: Map<string, Type_PopupGeometry> = new Map()
-
-  // OS#305 — déclenchement de la présentation composée (réglages DOCUMENT).
-  private _presentation_trigger: Type_PresentationTrigger = 'shift'
-  private _presentation_delay_ms: number = 0
 
   // Info-bulle transitoire : une seule à la fois (le survol d'un autre élément
   // remplace la précédente).
@@ -275,18 +264,9 @@ export class Class_PanelManager {
   }
 
   // INFO-BULLE =========================================================================
-
-  // OS#305 — déclenchement de la présentation (document).
-  public get presentation_trigger(): Type_PresentationTrigger { return this._presentation_trigger }
-  public set presentation_trigger(v: Type_PresentationTrigger) {
-    this._presentation_trigger = v
-    this._notify()
-  }
-  public get presentation_delay_ms(): number { return this._presentation_delay_ms }
-  public set presentation_delay_ms(ms: number) {
-    this._presentation_delay_ms = clampPresentationDelay(ms)
-    this._notify()
-  }
+  // Le déclencheur et le délai de l'info-bulle ne sont plus des réglages document :
+  // ce sont désormais des attributs de style PROPRES à l'élément / au style
+  // (`tooltip_trigger` / `tooltip_delay_ms`), lus par la cascade.
 
   public get tooltip_id(): string | null { return this._tooltip_id }
   public get tooltip_anchor(): Type_TooltipAnchor { return this._tooltip_anchor }
@@ -309,10 +289,7 @@ export class Class_PanelManager {
       sidebar_id: this._sidebar_id ?? '',
       sidebar_width_px: this._sidebar_width_px,
       sidebar_open: this._sidebar_open,
-      popups,
-      // OS#305 — déclenchement de la présentation composée (réglage DOCUMENT).
-      presentation_trigger: this._presentation_trigger,
-      presentation_delay_ms: this._presentation_delay_ms
+      popups
     }
   }
 
@@ -329,15 +306,10 @@ export class Class_PanelManager {
     // existait UNIQUEMENT via son menu ancré — d'où la reconstruction.
     this._sidebar_open = getBooleanFromJSON(json, 'sidebar_open',
       this._sidebar_id !== null && !getBooleanFromJSON(json, 'sidebar_collapsed', false))
-    // OS#305 — déclenchement de la présentation (tolérant : valeur inconnue -> défaut).
-    const trigger = getStringFromJSON(json, 'presentation_trigger', PRESENTATION_TRIGGERS[1])
-    this._presentation_trigger = (PRESENTATION_TRIGGERS as string[]).includes(trigger)
-      ? trigger as Type_PresentationTrigger
-      : 'shift'
-    this._presentation_delay_ms = clampPresentationDelay(
-      getNumberFromJSON(json, 'presentation_delay_ms', this._presentation_delay_ms))
-    // Un éventuel bloc `menus` (aide au survol des boutons de barre, retirée) est
-    // simplement ignoré : les boutons portent les info-bulles de l'application.
+    // Un éventuel `presentation_trigger` / `presentation_delay_ms` (réglages
+    // document d'une version antérieure) est ignoré : déclencheur et délai sont
+    // désormais des attributs de style par élément. De même pour un bloc `menus`
+    // (aide au survol des boutons de barre, retirée).
     // Géométries de pop-ups (mémoire) : restaurées bornées, pour que chaque pop-up
     // rouvre à sa taille/position enregistrée.
     const popups = json['popups']

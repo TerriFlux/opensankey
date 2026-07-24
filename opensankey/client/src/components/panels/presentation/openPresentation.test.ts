@@ -10,7 +10,6 @@ import type { Type_PopupGeometry } from '../../../types/PanelManager'
 
 const fakeApp = (opts: {
   popups?: Record<string, Type_PopupGeometry>
-  trigger?: 'hover' | 'shift' | 'alt'
 } = {}): Class_ApplicationData => {
   const popups = opts.popups ?? {}
   return {
@@ -18,12 +17,16 @@ const fakeApp = (opts: {
       panels: {
         open_ids: Object.keys(popups),
         getMode: (id: string) => (id in popups ? 'popup' : null),
-        getPopupGeometry: (id: string) => popups[id] ?? null,
-        presentation_trigger: opts.trigger ?? 'shift'
+        getPopupGeometry: (id: string) => popups[id] ?? null
       }
     }
   } as unknown as Class_ApplicationData
 }
+
+// Élément factice porteur d'un déclencheur (attribut de style).
+const fakeElement = (trigger?: 'hover' | 'shift' | 'alt') => ({
+  getElementProperty: (k: string) => (k === 'tooltip_trigger' ? trigger : undefined)
+}) as never
 
 describe('#305 identité des panneaux de présentation', () => {
   it('préfixe, reconnaît et retrouve l\'id d\'élément', () => {
@@ -80,23 +83,25 @@ describe('#305 placePopupNear — juxtaposition et anti-collision', () => {
   })
 })
 
-describe('#305 matchesPresentationTrigger — grammaire du document', () => {
+describe('matchesPresentationTrigger — déclencheur PROPRE À L\'ÉLÉMENT', () => {
   it('« survol » accepte tout survol', () => {
-    const app = fakeApp({ trigger: 'hover' })
-    expect(matchesPresentationTrigger(app, {})).toBe(true)
+    expect(matchesPresentationTrigger(fakeElement('hover'), {})).toBe(true)
+  })
+
+  it('défaut (attribut absent) = MAJ + survol', () => {
+    expect(matchesPresentationTrigger(fakeElement(undefined), {})).toBe(false)
+    expect(matchesPresentationTrigger(fakeElement(undefined), { shiftKey: true })).toBe(true)
   })
 
   it('« MAJ » exige la touche MAJ', () => {
-    const app = fakeApp({ trigger: 'shift' })
-    expect(matchesPresentationTrigger(app, {})).toBe(false)
-    expect(matchesPresentationTrigger(app, { shiftKey: true })).toBe(true)
-    expect(matchesPresentationTrigger(app, { altKey: true })).toBe(false)
+    expect(matchesPresentationTrigger(fakeElement('shift'), {})).toBe(false)
+    expect(matchesPresentationTrigger(fakeElement('shift'), { shiftKey: true })).toBe(true)
+    expect(matchesPresentationTrigger(fakeElement('shift'), { altKey: true })).toBe(false)
   })
 
   it('« Alt » exige la touche Alt', () => {
-    const app = fakeApp({ trigger: 'alt' })
-    expect(matchesPresentationTrigger(app, { altKey: true })).toBe(true)
-    expect(matchesPresentationTrigger(app, { shiftKey: true })).toBe(false)
+    expect(matchesPresentationTrigger(fakeElement('alt'), { altKey: true })).toBe(true)
+    expect(matchesPresentationTrigger(fakeElement('alt'), { shiftKey: true })).toBe(false)
   })
 })
 

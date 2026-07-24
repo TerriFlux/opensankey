@@ -835,7 +835,7 @@ export class NodeEventsHandler {
     // champs d'édition là où le survol doit montrer le diagramme.
     if (event.buttons === 0
       && (event.target as HTMLElement).tagName !== 'tspan'
-      && matchesPresentationTrigger(app_data, event)
+      && matchesPresentationTrigger(this._node as unknown as Parameters<typeof canPresentTooltip>[0], event)
       && canPresentTooltip(this._node as unknown as Parameters<typeof canPresentTooltip>[0])) {
       const rect = (event.target as HTMLElement)?.getBoundingClientRect?.()
       schedulePresentationHover(

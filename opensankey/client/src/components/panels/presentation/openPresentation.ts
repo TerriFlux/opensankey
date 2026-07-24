@@ -184,15 +184,22 @@ export const enforcePopupCap = (app_data: Class_ApplicationData, incoming_id: st
 }
 
 // DÉCLENCHEMENT AU SURVOL ==========================================================
-// Réglages DOCUMENT (décision #6) : le lecteur a besoin d'une grammaire
-// d'interaction cohérente, donc pas de déclencheur par élément.
+// Déclencheur + délai sont désormais PROPRES à l'élément (attributs de style
+// `tooltip_trigger` / `tooltip_delay_ms`, résolus par la cascade), et non plus un
+// réglage document.
 
-/** L'événement de survol satisfait-il le déclencheur réglé sur le document ? */
+/** Déclencheur résolu d'un élément (défaut : MAJ + survol). */
+const triggerOf = (element: Type_Presentable): 'hover' | 'shift' | 'alt' => {
+  const raw = element.getElementProperty('tooltip_trigger')
+  return raw === 'hover' || raw === 'alt' || raw === 'shift' ? raw : 'shift'
+}
+
+/** L'événement de survol satisfait-il le déclencheur RÉGLÉ SUR L'ÉLÉMENT ? */
 export const matchesPresentationTrigger = (
-  app_data: Class_ApplicationData,
+  element: Type_Presentable,
   event: { shiftKey?: boolean, altKey?: boolean }
 ): boolean => {
-  switch (app_data.menu_configuration.panels.presentation_trigger) {
+  switch (triggerOf(element)) {
   case 'hover': return true
   case 'alt': return event.altKey === true
   case 'shift':
@@ -227,7 +234,7 @@ let _hovered_id: string | null = null
 const clearOpenTimer = () => { if (_open_timer !== null) { clearTimeout(_open_timer); _open_timer = null } }
 const clearCloseTimer = () => { if (_close_timer !== null) { clearTimeout(_close_timer); _close_timer = null } }
 
-/** Survol d'un élément : programme l'ouverture après le délai du document. */
+/** Survol d'un élément : programme l'ouverture après le délai PROPRE À L'ÉLÉMENT. */
 export const schedulePresentationHover = (
   app_data: Class_ApplicationData,
   element: Type_Presentable,
@@ -238,7 +245,8 @@ export const schedulePresentationHover = (
   // Déjà affichée pour cet élément : rien à refaire.
   if (_hovered_id === id && app_data.menu_configuration.panels.getMode(id) === 'tooltip') return
   clearOpenTimer()
-  const delay = app_data.menu_configuration.panels.presentation_delay_ms
+  const raw_delay = element.getElementProperty('tooltip_delay_ms')
+  const delay = typeof raw_delay === 'number' && raw_delay > 0 ? raw_delay : 0
   const open = () => {
     _open_timer = null
     if (openPresentationTooltip(app_data, element, anchor)) _hovered_id = id

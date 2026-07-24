@@ -479,8 +479,13 @@ const PanelFrame = ({
           zIndex={is_sidebar ? PANEL_Z_SIDEBAR : is_popup ? PANEL_Z_POPUP : PANEL_Z_TOOLTIP}
           right={is_sidebar ? app_data.menu_configuration.getToolsColumnWidthPx() + 'px' : undefined}
           bottom={is_sidebar ? da.getBottomBarHeight() + 'px' : undefined}
-          left={is_tooltip ? tt_left + 'px' : undefined}
-          top={is_sidebar ? da.getNavBarHeight() + 'px' : (is_tooltip ? tt_top + 'px' : undefined)}
+          // Pop-up : ANCRÉE à l'origine du viewport (0,0). react-draggable pose la
+          // géométrie via un `transform: translate(x,y)` ; sans left/top explicites,
+          // une Box `position:fixed` partirait de sa position de FLUX — qui, depuis
+          // que les panneaux sont portalés en fin de <body>, tombe tout en bas, d'où
+          // une pop-up hors écran. `0,0` la rend indépendante de son emplacement DOM.
+          left={is_tooltip ? tt_left + 'px' : (is_popup ? '0' : undefined)}
+          top={is_sidebar ? da.getNavBarHeight() + 'px' : (is_tooltip ? tt_top + 'px' : (is_popup ? '0' : undefined))}
           // Info-bulle : largeur au CONTENU (`max-content`), bornée — elle rétrécit
           // pour un seul mot, s'élargit pour un tableau serré, et varie donc d'un
           // élément à l'autre. Sidebar / pop-up gardent leur largeur explicite.

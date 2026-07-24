@@ -654,14 +654,10 @@ export class Class_ApplicationData {
     // rien à faire (cf. defaultCompositionFor).
     // initializeTooltipSystem()  // <- retiré, cf. ci-dessus
     //
-    // MIGRATION du déclencheur : l'option de publication `tooltip_on_hover`
-    // signifiait « info-bulle au simple survol, sans maintenir MAJ ». Sans cette
-    // reprise, un diagramme publié ainsi exigerait soudain MAJ de son lecteur.
-    // Posé comme DÉFAUT : un `presentation_trigger` enregistré dans le document
-    // le remplacera au chargement (cf. Class_PanelManager.fromJSON).
-    if (this.publish_options.tooltip_on_hover) {
-      this.menu_configuration.panels.presentation_trigger = 'hover'
-    }
+    // L'ancienne migration de l'option de publication `tooltip_on_hover` vers un
+    // déclencheur DOCUMENT a été retirée : le déclencheur est désormais un attribut
+    // de style PAR ÉLÉMENT (`tooltip_trigger`), il n'y a plus de réglage global à
+    // poser ici.
     // Options for application
     this.options = options
     // Deals with UI menu updates / each modifications
