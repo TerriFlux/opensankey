@@ -135,7 +135,9 @@ export const resources_nodes = {
             shape_position_u_locked: 'When locked, autosankey compute keeps this node\'s column index (u) instead of recomputing it.',
             shape_position_v_locked: 'When locked, autosankey compute preserves the relative vertical order (v) of this node within its column instead of recomputing it.',
             override_type_node_shape: 'Override the default forced shape of product and sector type nodes',
-          }
+          },
+          shape_arrow_angle_direction: 'Arrow orientation',
+          shape_arrow_angle_factor: 'Arrow slope'
         },
         node_value: {
           anchor: 'Anchor position',
@@ -196,6 +198,7 @@ export const resources_nodes = {
             gauche_val: 'Displays the associated value to the left of the selected node(s)',
             Milieu_ph_val: 'Displays the associated value in the middle (horizontally) of the selected node(s)',
             droite_val: 'Displays the associated value to the right of the selected node(s)',
+            haut: 'Place the label above the selected node(s)'
           }
         },
         tags_node: {
@@ -397,7 +400,14 @@ export const resources_nodes = {
             shape_position_u_locked: 'Si verrouillé, le calcul autosankey conserve l\'index de colonne (u) de ce nœud au lieu de le recalculer.',
             shape_position_v_locked: 'Si verrouillé, le calcul autosankey conserve l\'ordre vertical relatif (v) de ce nœud dans sa colonne au lieu de le recalculer.',
             override_type_node_shape: 'Permet de changer la forme forcée par défaut sur les noeuds de types produits et secteur',
-          }
+          },
+          shape_color: 'Couleur',
+          shape_color_sustainable: 'Couleur statique',
+          shape_min_height: 'Hauteur minimale',
+          shape_min_width: 'Largeur minimale',
+          shape_opacity: 'Opacité',
+          shape_type: 'Forme du nœud',
+          shape_visible: 'Forme'
         },
         node_value: {
           anchor: 'Position de l\'ancre',
@@ -455,6 +465,9 @@ export const resources_nodes = {
             gauche_val: 'Positionner l\'affichage de la valeur associée à gauche du/des noeud(s) sélectionné(s)',
             Milieu_ph_val: 'Positionner l\'affichage de la valeur associée au milieu (horizontalement) du/des noeud(s) sélectionné(s)',
             droite_val: 'Positionner l\'affichage de la valeur associée à droite du/des noeud(s) sélectionné(s)',
+            name_label_background: 'Ajoute un fond au label pour une meilleure lisibilité lorsque le label passe devant un flux',
+            name_label_is_visible: 'Affiche ou non le(s) label(s) attaché(s) au(x) nœud(s) sélectionné(s)',
+            top: 'Affiche le(s) label(s) au dessus du/des nœud(s) sélectionné(s)',
           }
         },
         tags_node: {
@@ -656,7 +669,9 @@ export const resources_nodes = {
             shape_position_u_locked: 'Si está bloqueado, el cálculo autosankey conserva el índice de columna (u) de este nodo en lugar de recalcularlo.',
             shape_position_v_locked: 'Si está bloqueado, el cálculo autosankey conserva el orden vertical relativo (v) de este nodo en su columna en lugar de recalcularlo.',
             override_type_node_shape: 'Permite cambiar la forma forzada por defecto en los nodos de tipo producto y sector',
-          }
+          },
+          shape_arrow_angle_direction: 'Orientación de la flecha',
+          shape_arrow_angle_factor: 'Inclinación de la flecha'
         },
         node_value: {
           anchor: 'Posición del ancla',
@@ -716,6 +731,7 @@ export const resources_nodes = {
             gauche_val: 'Muestra el valor asociado a la izquierda del/de los nodo(s) seleccionado(s)',
             Milieu_ph_val: 'Muestra el valor asociado en el centro (horizontalmente) del/de los nodo(s) seleccionado(s)',
             droite_val: 'Muestra el valor asociado a la derecha del/de los nodo(s) seleccionado(s)',
+            haut: 'Colocar la etiqueta encima del/de los nodo(s) seleccionado(s)'
           }
         },
         tags_node: {
@@ -917,7 +933,9 @@ export const resources_nodes = {
             shape_position_u_locked: 'Wenn gesperrt, behält die Autosankey-Berechnung den Spaltenindex (u) dieses Knotens bei, anstatt ihn neu zu berechnen.',
             shape_position_v_locked: 'Wenn gesperrt, behält die Autosankey-Berechnung die relative vertikale Reihenfolge (v) dieses Knotens in seiner Spalte bei, anstatt sie neu zu berechnen.',
             override_type_node_shape: 'Ermöglicht das Ändern der standardmäßig erzwungenen Form bei Produkt- und Sektorknoten',
-          }
+          },
+          shape_arrow_angle_direction: 'Pfeilausrichtung',
+          shape_arrow_angle_factor: 'Pfeilneigung'
         },
         node_value: {
           anchor: 'Ankerposition',
@@ -977,6 +995,7 @@ export const resources_nodes = {
             gauche_val: 'Zeigt den zugehörigen Wert links vom/von den ausgewählten Knoten an',
             Milieu_ph_val: 'Zeigt den zugehörigen Wert in der Mitte (horizontal) des/der ausgewählten Knoten(s) an',
             droite_val: 'Zeigt den zugehörigen Wert rechts vom/von den ausgewählten Knoten an',
+            haut: 'Beschriftung oberhalb der ausgewählten Knoten platzieren'
           }
         },
         tags_node: {
@@ -1178,7 +1197,9 @@ export const resources_nodes = {
             shape_position_u_locked: 'Se bloccato, il calcolo autosankey conserva l\'indice di colonna (u) di questo nodo invece di ricalcolarlo.',
             shape_position_v_locked: 'Se bloccato, il calcolo autosankey conserva l\'ordine verticale relativo (v) di questo nodo nella sua colonna invece di ricalcolarlo.',
             override_type_node_shape: 'Permette di cambiare la forma forzata di default sui nodi di tipo prodotto e settore',
-          }
+          },
+          shape_arrow_angle_direction: 'Orientamento della freccia',
+          shape_arrow_angle_factor: 'Inclinazione della freccia'
         },
         node_value: {
           anchor: 'Posizione dell\'ancora',
@@ -1238,6 +1259,7 @@ export const resources_nodes = {
             gauche_val: 'Mostra il valore associato a sinistra del/dei nodo/i selezionato/i',
             Milieu_ph_val: 'Mostra il valore associato al centro (orizzontalmente) del/dei nodo/i selezionato/i',
             droite_val: 'Mostra il valore associato a destra del/dei nodo/i selezionato/i',
+            haut: 'Posizionare l\'etichetta sopra il/i nodo(i) selezionato(i)'
           }
         },
         tags_node: {
