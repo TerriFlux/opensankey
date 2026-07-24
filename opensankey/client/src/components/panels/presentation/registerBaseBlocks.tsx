@@ -31,7 +31,6 @@ import { NodeTooltip } from '../../../Elements/TooltipsNode'
 import { LinkTooltip } from '../../../Elements/TooltipsLink'
 import { TOOLTIP_STYLES } from '../../../Elements/TooltipsCSS'
 import type { Class_NodeElement } from '../../../Elements/Node'
-import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import {
   presentation_block_registry,
   type Type_BlockRenderContext
@@ -154,48 +153,6 @@ const linkBlockHtml = (el: Unknown_Element, block_id: string): string | null => 
     return new LinkTooltip(el as unknown as Class_LinkElement).getBlockHTML(block_id)
   } catch { return null }
 }
-
-// --- Blocs dessinés par un hook OS+ ------------------------------------------
-// L'unitaire et l'analyse ne sont pas de l'affichage de données : ce sont des
-// features OS+ dessinées IMPÉRATIVEMENT dans un conteneur DOM désigné par
-// sélecteur. Le bloc se contente donc de poser le conteneur et d'appeler le hook
-// après montage, en nettoyant au démontage.
-
-const cssId = (raw: string) => raw.replace(/[^a-zA-Z0-9_-]/g, '_')
-
-const HookDrawnBlock = ({ app_data, element, hook, id_prefix, min_height }: {
-  app_data: Class_ApplicationData
-  element: Unknown_Element
-  hook: 'draw_unitary_in_container' | 'draw_analysis_in_container'
-  id_prefix: string
-  min_height: number
-}) => {
-  const element_id = String((element as Record<string, unknown>)?.['id'] ?? '')
-  const container_id = `${id_prefix}-${cssId(element_id)}`
-  React.useEffect(() => {
-    const draw = app_data[hook] as
-      ((el: unknown, selector: string) => { redraw: () => void, cleanup: () => void } | void) | undefined
-    if (typeof draw !== 'function') return
-    let handle: { redraw: () => void, cleanup: () => void } | void
-    try { handle = draw(element, '#' + container_id) } catch { handle = undefined }
-    // Recadre le dessin quand le panneau est redimensionné.
-    const node = document.getElementById(container_id)
-    let observer: ResizeObserver | undefined
-    if (node && typeof ResizeObserver !== 'undefined' && handle) {
-      observer = new ResizeObserver(() => handle && handle.redraw())
-      observer.observe(node)
-    }
-    return () => {
-      observer?.disconnect()
-      handle?.cleanup()
-    }
-  }, [container_id])
-  return <Box id={container_id} style={{ minHeight: min_height + 'px', width: '100%' }} />
-}
-
-/** Le hook OS+ est-il disponible ? (absent hors OS+ : le bloc n'est pas proposé) */
-const hasHook = (app_data: Class_ApplicationData, hook: string): boolean =>
-  typeof (app_data as unknown as Record<string, unknown>)[hook] === 'function'
 
 // --- Enregistrement ----------------------------------------------------------
 
@@ -409,55 +366,7 @@ export function registerBasePresentationBlocks(): void {
   legacyLinkBlock('os.block.link_series_data', 65, 'series_data',
     'presentation.block.link_series_data', 'Séries de données')
 
-  // --- Blocs OS+ (dessinés par hook injecté) --------------------------------
-  // Non proposés hors OS+ : le hook est absent, le `gate` les masque.
-
-  presentation_block_registry.register({
-    id: 'os.block.unitary',
-    target: 'node',
-    order: 70,
-    label: (a) => a.t('presentation.block.unitary', { defaultValue: 'Sankey unitaire' }),
-    gate: (a) => a.has_sankey_plus && hasHook(a, 'draw_unitary_in_container'),
-    render: (ctx) => {
-      const el = el_of(ctx)
-      if (!el || isLinkLike(el)) return null
-      return (
-        <HookDrawnBlock
-          app_data={ctx.app_data} element={el}
-          hook='draw_unitary_in_container'
-          id_prefix='presentation-unitary'
-          min_height={ctx.mode === 'tooltip' ? 140 : 220}
-        />
-      )
-    }
-  })
-
-  presentation_block_registry.register({
-    id: 'os.block.analysis',
-    target: ['node', 'link'],
-    order: 80,
-    label: (a) => a.t('presentation.block.analysis', { defaultValue: 'Analyse' }),
-    gate: (a) => hasHook(a, 'draw_analysis_in_container'),
-    render: (ctx) => {
-      const el = el_of(ctx)
-      if (!el) return null
-      // Même condition que l'info-bulle historique : l'élément doit publier un
-      // graphique (surfaces.tooltip) et décrire une décomposition/comparaison.
-      const descriptor = (el as unknown as {
-        getElementProperty?: (k: string) => unknown
-      }).getElementProperty?.('analysis_descriptor') as {
-        surfaces?: { tooltip?: boolean }, decompose?: unknown, compare?: unknown
-      } | undefined
-      if (!descriptor?.surfaces?.tooltip) return null
-      if (!descriptor.decompose && !descriptor.compare) return null
-      return (
-        <HookDrawnBlock
-          app_data={ctx.app_data} element={el}
-          hook='draw_analysis_in_container'
-          id_prefix='presentation-analysis'
-          min_height={ctx.mode === 'tooltip' ? 140 : 200}
-        />
-      )
-    }
-  })
+  // Les DIAGRAMMES (Sankey unitaire / Analyse) ne sont plus des blocs de la
+  // composition : ils vivent dans la colonne de boutons de la POP-UP d'élément,
+  // fournis par OS+ (`presentation_diagrams_for`) et rendus en ligne.
 }

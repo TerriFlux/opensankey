@@ -21,36 +21,29 @@
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import type { Type_PopupGeometry } from '../../../types/PanelManager'
 import {
-  compositionFromJSON, hasContentFor,
-  DEFAULT_BLOCK_VISIBILITY, type Type_Composition
+  hasContentFor, DEFAULT_BLOCK_VISIBILITY, type Type_Composition
 } from '../../../types/PresentationComposition'
 import { isTooltipBlockVisible, type Type_TooltipHiddenBlocks } from '../../../Elements/TooltipBlocks'
 
-// OS#305 — COMPOSITION PAR DÉFAUT : elle reproduit l'info-bulle historique.
-//
-// Le mécanisme hérité est retiré (il doublait les panneaux unifiés), mais un
-// diagramme déjà produit ne doit RIEN perdre : tant que son auteur n'a rien
-// composé, le lecteur voit exactement ce qu'il voyait avant. D'où cette liste,
-// calquée sur les onglets de l'ancienne info-bulle.
+// COMPOSITION PAR DÉFAUT de l'INFO-BULLE : les blocs légers, cochables dans le
+// sous-menu Info-bulle. Les DIAGRAMMES (unitaire / analyse) n'y figurent plus :
+// ils vivent dans la colonne de la POP-UP (boutons OS+), pas dans une info-bulle
+// transitoire.
 //
 // Chaque entrée porte l'id du bloc ET l'id du bloc HÉRITÉ correspondant, pour
-// continuer d'honorer `tooltip_hidden_blocks` (OS#1285) : les blocs qu'un auteur
-// avait déjà masqués restent masqués. '' = bloc sans équivalent hérité (le texte
-// libre, qui était le sous-titre de l'en-tête).
+// honorer `tooltip_hidden_blocks` (OS#1285) : les blocs décochés restent masqués.
+// '' = bloc sans équivalent hérité (le texte libre / « Description »).
 const DEFAULT_NODE_BLOCKS: [block: string, legacy: string][] = [
   ['os.block.free_text', ''],
   ['os.block.balance', 'values'],
-  ['os.block.flux_tags', 'tags'],
-  ['os.block.unitary', 'unitary'],
-  ['os.block.analysis', 'analysis']
+  ['os.block.flux_tags', 'tags']
 ]
 const DEFAULT_LINK_BLOCKS: [block: string, legacy: string][] = [
   ['os.block.free_text', ''],
   ['os.block.link_flux', 'flux'],
   ['os.block.link_series_flux', 'series_flux'],
   ['os.block.link_data', 'data'],
-  ['os.block.link_series_data', 'series_data'],
-  ['os.block.analysis', 'analysis']
+  ['os.block.link_series_data', 'series_data']
 ]
 
 const isLinkLike = (element: Type_Presentable): boolean => {
@@ -69,18 +62,12 @@ export const defaultCompositionFor = (element: Type_Presentable): Type_Compositi
 }
 
 /**
- * Composition EFFECTIVE d'un élément — le point de lecture unique.
- *
- * Attribut absent = l'auteur n'a jamais composé -> défaut (l'ancienne info-bulle).
- * Attribut présent, même VIDE = choix explicite de l'auteur -> on le respecte,
- * y compris « ne rien montrer ». C'est ce qui distingue « pas encore touché » de
- * « volontairement vidé », et rend le bouton « Réinitialiser » du composeur utile.
+ * Composition d'un élément pour l'INFO-BULLE : le patron imposé (blocs cochés dans
+ * le sous-menu Info-bulle). Plus de composition libre — la pop-up, elle, a une
+ * structure fixe (cf. PresentationPopup) et n'utilise pas cette liste.
  */
-export const compositionOf = (element: Type_Presentable): Type_Composition => {
-  const raw = element.getElementProperty('presentation_blocks')
-  if (raw === undefined || raw === null) return defaultCompositionFor(element)
-  return compositionFromJSON(raw)
-}
+export const compositionOf = (element: Type_Presentable): Type_Composition =>
+  defaultCompositionFor(element)
 
 const PRESENTATION_PREFIX = 'presentation:'
 
@@ -113,32 +100,21 @@ export const elementIdOfPanel = (panel_id: string): string =>
   panel_id.slice(PRESENTATION_PREFIX.length)
 
 /**
- * Ouvre la présentation d'un élément — geste de CLIC, donc jamais en info-bulle
- * (ajustement #4). Le contenant se déduit de l'état de la barre latérale :
- * ouverte, le clic y ouvre ; fermée, il ouvre une pop-up juxtaposée.
- *
- * Rend `false` — et n'ouvre rien — s'il n'y a rien à montrer dans ce contenant,
- * c'est-à-dire quand l'auteur a EXPLICITEMENT vidé la composition (une
- * composition absente, elle, retombe sur le défaut, qui reproduit l'ancienne
- * info-bulle).
+ * Ouvre la présentation d'un élément — geste de CLIC. Toujours en POP-UP
+ * juxtaposée : la barre latérale est réservée aux menus (config/filtres/
+ * recherche), jamais aux éléments. La pop-up a une structure fixe, donc elle a
+ * toujours de quoi s'afficher pour un élément réel — on l'ouvre sans condition.
  */
 export const openPresentationFor = (
   app_data: Class_ApplicationData,
   element: Type_Presentable,
   anchor?: { x: number, y: number }
 ): boolean => {
-  const composition = compositionOf(element)
-  const mode = app_data.menu_configuration.panels.defaultOpenMode()
-  if (!hasContentFor(composition, mode)) return false
   const panels = app_data.menu_configuration.panels
   const id = presentationPanelId(element.id)
-  if (mode === 'popup') {
-    // Juxtaposée à l'élément, sans recouvrir une pop-up déjà posée (décision #10).
-    enforcePopupCap(app_data, id)
-    panels.setMode(id, 'popup', { geometry: placePopupNear(app_data, anchor, id) })
-  } else {
-    panels.setMode(id, mode, anchor ? { anchor } : undefined)
-  }
+  // Juxtaposée à l'élément, sans recouvrir une pop-up déjà posée.
+  enforcePopupCap(app_data, id)
+  panels.setMode(id, 'popup', { geometry: placePopupNear(app_data, anchor, id) })
   return true
 }
 
@@ -306,11 +282,3 @@ export const releasePresentationHover = (): void => {
   _hovered_id = null
 }
 
-/** La présentation d'un élément est-elle ouvrable AU CLIC, ici et maintenant ?
- *  (donc dans le contenant que l'état de la barre latérale désigne). */
-export const canPresent = (
-  app_data: Class_ApplicationData,
-  element: Type_Presentable
-): boolean => hasContentFor(
-  compositionOf(element),
-  app_data.menu_configuration.panels.defaultOpenMode())

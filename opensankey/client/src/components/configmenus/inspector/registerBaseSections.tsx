@@ -14,16 +14,23 @@
 // Les couches supérieures (OSP : onglet Tags…) enregistrent les leurs.
 
 import React from 'react'
-import { Box, Button, Checkbox } from '@chakra-ui/react'
+import { Box, Button, Checkbox, Input, Text } from '@chakra-ui/react'
 import { inspector_registry, INSPECTOR_TAB_VALUE_ID } from './InspectorRegistry'
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
+import {
+  PRESENTATION_TRIGGERS, PRESENTATION_DELAY_MAX_MS,
+  type Type_PresentationTrigger
+} from '../../../types/PanelManager'
+import {
+  NODE_TOOLTIP_BLOCKS, LINK_TOOLTIP_BLOCKS, tooltipBlockLabelKey,
+  isTooltipBlockVisible, Type_TooltipHiddenBlocks
+} from '../../../Elements/TooltipBlocks'
 import { SankeyNodeSelection, NodeMaterialBalanceCheckbox, NodeBalanceMarkerConfig } from '../MenuElementsSelection'
 import { MenuConfigurationAppearance } from '../MenuElementsAppearance'
 import { GenericStyleSelector } from '../../dialogs/SankeyStyle'
 import { MenuConfigurationLinksData } from '../SankeyMenuConfigurationLinksData'
 import { ConfigMenuTextInput, OSTooltip, CustomFaEyeCheckIcon, WrapperBoxSubSectionMenu } from '../MenuCommon'
 import { stripHtmlTags, isRichContent } from '../../dialogs/RichTextEditor'
-import { PresentationComposer } from '../../panels/presentation/PresentationComposer'
 import { CONVERTER_CONFIGS } from '../../dialogs/PersistenceProcessDialogConfigs'
 import {
   DrawingAreaConfig,
@@ -142,35 +149,21 @@ export function registerBaseInspectorSections(): void {
 
   // ---- Onglet INFOS (texte libre de l'élément — masqué en portée Style) -----
   // Ex-« Info-bulle ». Depuis #305, la VISIBILITÉ des blocs se règle dans
-  // l'onglet Présentation (par contenant), et le mécanisme d'info-bulle hérité
-  // est retiré : il ne reste ici qu'à SAISIR le texte libre (simple ou riche).
-  // D'où le renommage en « Infos » — ce texte alimente le bloc « Infos » du
-  // composeur. `data_only` : le texte libre est propre à la sélection.
+  // l'onglet régit ce que le LECTEUR voit sur l'élément (patron imposé, plus de
+  // composition libre depuis le retour en arrière) :
+  //  - portée STYLES : cases « Blocs visibles » (tooltip_hidden_blocks) + le
+  //    déclencheur et le délai d'apparition ;
+  //  - portée SÉLECTION : en plus, le TEXTE LIBRE (« Description ») propre à
+  //    l'élément — contenu, hors style, comme une valeur.
+  // Pas `data_only` : le sous-menu vit dans les Styles (visibilité + déclencheur).
   inspector_registry.register({
     id: 'os.tab.infobulle',
     target: ['node', 'link', 'mixed'],
     order: 60,
     hue: 'data',
-    data_only: true,
-    title: (app_data) => app_data.t('inspector.tab.infos', { defaultValue: 'Infos' }),
+    title: (app_data) => app_data.t('inspector.tab.tooltip'),
     icon: (app_data) => app_data.icon_library.icon_tab_tooltip,
     render: (app_data, scope) => <InspectorTooltipTab app_data={app_data} scope={scope} />
-  })
-
-  // ---- Onglet Présentation : ce que verra le LECTEUR (OS#305) --------------
-  // Distinct des autres onglets : ceux-ci éditent l'élément, celui-ci compose ce
-  // qu'un lecteur verra en survolant/cliquant l'élément dans un diagramme publié
-  // (décision #1 : deux registres, le composé ne remplace jamais l'inspecteur).
-  // Attributs de STYLE, donc éditable dans les deux portées — pas data_only.
-  inspector_registry.register({
-    id: 'os.tab.presentation',
-    target: [...ELEMENT_TARGETS],
-    order: 65,
-    overload_prefixes: ['presentation'],
-    hue: 'presentation',
-    title: (app_data) => app_data.t('inspector.tab.presentation', { defaultValue: 'Présentation' }),
-    icon: (app_data) => app_data.icon_library.icon_tab_tooltip,
-    render: (app_data, scope) => <PresentationComposer app_data={app_data} scope={scope} />
   })
 
   // ---- Onglet MFA : l'espace AFM unifié (#1258) ----------------------------
@@ -406,7 +399,9 @@ const InspectorMFATab = ({ app_data }: { app_data: Class_ApplicationData }) => {
 // Onglet Infos : saisie du TEXTE LIBRE de l'élément — même interface que le
 // Libellé (boutons de mode simple / riche à droite, texte simple en ligne, mode
 // riche dans un panneau draggable). La visibilité des blocs a migré vers
-// l'onglet Présentation (#305) ; ne reste ici que ce texte.
+// Sous-menu « Info-bulle » : le TEXTE LIBRE de l'élément (« Description », portée
+// Sélection uniquement — contenu propre à l'élément), puis les cases de blocs
+// visibles (style) et le déclencheur / délai (document).
 const InspectorTooltipTab = ({ app_data, scope }: { app_data: Class_ApplicationData, scope: 'selection' | 'style' }) => {
   const { t, drawing_area, history, menu_configuration, icon_library } = app_data
   const elements = [
@@ -485,6 +480,124 @@ const InspectorTooltipTab = ({ app_data, scope }: { app_data: Class_ApplicationD
         />
       )}
     </>}
+
+    {/* Blocs visibles dans l'info-bulle (attribut de style, OS#1285). */}
+    <TooltipBlocksToggles app_data={app_data} scope={scope} />
+
+    {/* Déclencheur + délai d'apparition de l'info-bulle (réglages document). */}
+    <TriggerSettings app_data={app_data} />
   </>
+}
+
+// OS#1285 — cases de visibilité des blocs d'info-bulle. Écrit l'attribut de style
+// `tooltip_hidden_blocks` sur la sélection ou le style édité (undo), selon la portée.
+type BlockTarget = { attributes: Record<string, unknown>, getElementProperty: (k: 'tooltip_hidden_blocks') => unknown }
+const TooltipBlocksToggles = ({ app_data, scope }: { app_data: Class_ApplicationData, scope: 'selection' | 'style' }) => {
+  const { t, drawing_area, history, menu_configuration } = app_data
+  const nodes = drawing_area.selected_nodes_list
+  const links = drawing_area.selected_links_list
+
+  // Blocs pertinents selon les types sélectionnés (analysis dédupliqué).
+  const block_ids: string[] = []
+  if (nodes.length) NODE_TOOLTIP_BLOCKS.forEach(b => block_ids.push(b))
+  if (links.length) LINK_TOOLTIP_BLOCKS.forEach(b => { if (!block_ids.includes(b)) block_ids.push(b) })
+  if (block_ids.length === 0) return null
+
+  const targets = (scope === 'style'
+    ? [drawing_area.sankey.styles_dict[menu_configuration.ref_selected_style.current]].filter(Boolean)
+    : [...nodes, ...links]) as unknown as BlockTarget[]
+  const read_target = targets[0]
+  const hidden = (read_target?.getElementProperty('tooltip_hidden_blocks') as Type_TooltipHiddenBlocks | undefined) ?? {}
+
+  const setHidden = (block_id: string, hide: boolean) => {
+    if (targets.length === 0) return
+    const next: Type_TooltipHiddenBlocks = { ...hidden }
+    if (hide) next[block_id] = true
+    else delete next[block_id]
+    const value = Object.keys(next).length ? next : undefined
+    const before = targets.map(el => ({ el, v: el.attributes['tooltip_hidden_blocks'] }))
+    const commit = () => {
+      menu_configuration.ref_to_save_in_cache_indicator.current(false)
+      menu_configuration.updateInspector()
+    }
+    const apply = () => { targets.forEach(el => { el.attributes['tooltip_hidden_blocks'] = value }); commit() }
+    const undo = () => { before.forEach(({ el, v }) => { el.attributes['tooltip_hidden_blocks'] = v }); commit() }
+    history.saveUndo(undo)
+    history.saveRedo(apply)
+    apply()
+  }
+
+  return <Box style={{ marginTop: '0.4rem' }}>
+    <Box layerStyle='menuconfigpanel_option_name'>{t('inspector.tooltip_blocks.title')}</Box>
+    <Box style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem', paddingTop: '0.2rem' }}>
+      {block_ids.map(id => (
+        <Checkbox
+          key={id}
+          size='sm'
+          isChecked={isTooltipBlockVisible(hidden, id)}
+          onChange={e => setHidden(id, !e.target.checked)}
+        >
+          <Box as='span' style={{ fontSize: '0.75rem' }}>{t(tooltipBlockLabelKey(id))}</Box>
+        </Checkbox>
+      ))}
+    </Box>
+  </Box>
+}
+
+// Déclencheur + délai d'apparition de l'info-bulle. Réglages DOCUMENT (ils valent
+// pour tout le diagramme) portés par Class_PanelManager, édités ici au bas du
+// sous-menu Info-bulle.
+const TRIGGER_LABEL: Record<Type_PresentationTrigger, { key: string, fallback: string }> = {
+  hover: { key: 'presentation.trigger.hover', fallback: 'Survol' },
+  shift: { key: 'presentation.trigger.shift', fallback: 'MAJ + survol' },
+  alt: { key: 'presentation.trigger.alt', fallback: 'Alt + survol' }
+}
+
+const TriggerSettings = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const { t, menu_configuration } = app_data
+  const panels = menu_configuration.panels
+  const markDirty = () => menu_configuration.ref_to_save_in_cache_indicator.current(false)
+  return (
+    <Box style={{ borderTop: '1px solid #e2e8f0', paddingTop: '0.35rem', marginTop: '0.4rem' }}>
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('presentation.trigger', { defaultValue: 'Déclencheur de l\'info-bulle' })}
+      </Box>
+      <Text style={{ fontSize: '0.7rem', opacity: 0.7, paddingBottom: '0.15rem' }}>
+        {t('presentation.trigger_hint', { defaultValue: 'Vaut pour tout le diagramme.' })}
+      </Text>
+      <Box style={{ display: 'flex', gap: '0.15rem' }}>
+        {PRESENTATION_TRIGGERS.map(trigger => (
+          <Button
+            key={trigger}
+            size='xs'
+            flex='1'
+            variant={panels.presentation_trigger === trigger
+              ? 'button_type_config_activated'
+              : 'button_type_config'}
+            onClick={() => { panels.presentation_trigger = trigger; markDirty() }}
+          >
+            {t(TRIGGER_LABEL[trigger].key, { defaultValue: TRIGGER_LABEL[trigger].fallback })}
+          </Button>
+        ))}
+      </Box>
+      <Box layerStyle='menuconfigpanel_option_name' style={{ paddingTop: '0.25rem' }}>
+        {t('presentation.delay', { defaultValue: 'Délai d\'apparition (ms)' })}
+      </Box>
+      <Input
+        size='xs'
+        type='number'
+        min={0}
+        max={PRESENTATION_DELAY_MAX_MS}
+        step={50}
+        variant='menuconfigpanel_option_input'
+        value={panels.presentation_delay_ms}
+        onChange={(e) => {
+          const v = Number(e.target.value)
+          panels.presentation_delay_ms = isNaN(v) ? 0 : v
+          markDirty()
+        }}
+      />
+    </Box>
+  )
 }
 

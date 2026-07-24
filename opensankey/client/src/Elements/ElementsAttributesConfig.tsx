@@ -35,7 +35,6 @@ import { Class_NodeBase } from './NodeBase'
 import { isLegendElementId } from './legendIds'
 import { Type_AnalysisDescriptor } from '../Charts/AnalysisDescriptor'
 import { Type_TooltipHiddenBlocks } from './TooltipBlocks'
-import type { Type_Composition, Type_TabLabels } from '../types/PresentationComposition'
 
 // Types spécifiques
 // 'line' (OS#1276) : trait libre décoratif porté par un conteneur. La forme est
@@ -2211,64 +2210,11 @@ export const TOOLTIP_BLOCKS_CONFIG = {
   } satisfies AttributeConfig<Type_TooltipHiddenBlocks | undefined>
 } as const
 
-// OS#305 — PRÉSENTATION COMPOSÉE PAR L'AUTEUR. Un attribut de STYLE (donc
-// hérités par la cascade et surchargeables par élément — décision #5 « les styles
-// d'abord, l'élément en exception »), même patron objet que tooltip_hidden_blocks
-// (surcharge jugée par présence, pas par égalité) :
-// `presentation_blocks` porte la liste ORDONNÉE de blocs, leur visibilité dans
-// les 3 contenants et leur disposition (décision #2).
-//
-// Le second attribut, `presentation_containers`, a été RETIRÉ (ajustement #4) :
-// le contenant ne se règle plus, il se déduit du geste et de l'état de la barre
-// latérale. Un document plus ancien qui le porte encore le voit simplement
-// ignoré.
-// `undefined` = rien de composé : la cible n'ouvre aucune présentation lecteur
-// (l'inspecteur d'auteur, lui, reste toujours disponible — décision #1).
-export const PRESENTATION_CONFIG = {
-  presentation_blocks: {
-    default: undefined as Type_Composition | undefined,
-    type: (() => undefined) as (() => Type_Composition | undefined),
-    category: 'presentation' as const,
-    actions: undefined,
-    labels: {
-      en: 'Presentation blocks',
-      fr: 'Blocs de présentation',
-      es: 'Bloques de presentación',
-      de: 'Präsentationsblöcke',
-      it: 'Blocchi di presentazione'
-    },
-    tooltips: {
-      en: 'Ordered blocks shown to the reader, and in which containers',
-      fr: 'Blocs affichés au lecteur, dans l\'ordre, et dans quels contenants',
-      es: 'Bloques mostrados al lector, en orden, y en qué contenedores',
-      de: 'Dem Leser angezeigte Blöcke, in Reihenfolge und in welchen Containern',
-      it: 'Blocchi mostrati al lettore, in ordine, e in quali contenitori'
-    }
-  } satisfies AttributeConfig<Type_Composition | undefined>,
-  // AJUSTEMENT #5 — noms des onglets, par contenant. Séparé de la composition
-  // parce que ce n'est pas une propriété des blocs : deux blocs partagent un
-  // onglet, l'onglet n'appartient à aucun des deux.
-  presentation_tabs: {
-    default: undefined as Type_TabLabels | undefined,
-    type: (() => undefined) as (() => Type_TabLabels | undefined),
-    category: 'presentation' as const,
-    actions: undefined,
-    labels: {
-      en: 'Presentation tabs',
-      fr: 'Onglets de présentation',
-      es: 'Pestañas de presentación',
-      de: 'Präsentationsregisterkarten',
-      it: 'Schede di presentazione'
-    },
-    tooltips: {
-      en: 'Names of the tabs, per container',
-      fr: 'Noms des onglets, par contenant',
-      es: 'Nombres de las pestañas, por contenedor',
-      de: 'Namen der Registerkarten, pro Container',
-      it: 'Nomi delle schede, per contenitore'
-    }
-  } satisfies AttributeConfig<Type_TabLabels | undefined>
-} as const
+// OS#305 — la PRÉSENTATION COMPOSÉE PAR L'AUTEUR a été RETIRÉE (retour à un
+// patron imposé) : les attributs de style `presentation_blocks` et
+// `presentation_tabs` n'existent plus. Un document plus ancien qui les porte les
+// voit simplement ignorés. Ce qui régit la présentation subsiste ailleurs :
+// `tooltip_hidden_blocks` (blocs de l'info-bulle) et `analysis_descriptor` (OS+).
 
 export type LabelValues<T extends typeof BASE_LABEL_CONFIG> = {
   -readonly [K in keyof T]: ExtractConfigValue<T[K]>
@@ -3838,7 +3784,6 @@ export const ALL_ATTRIBUTES_CONFIG = {
   ...HYPER_LINK_CONFIG,
   ...ANALYSIS_CONFIG,
   ...TOOLTIP_BLOCKS_CONFIG,
-  ...PRESENTATION_CONFIG,
 } as const
 
 export type ElementsType = Class_LinkElement[] | Class_NodeBase[] | Class_ElementStyle[]

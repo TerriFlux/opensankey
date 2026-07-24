@@ -291,24 +291,6 @@ export class Class_PanelManager {
   public get tooltip_id(): string | null { return this._tooltip_id }
   public get tooltip_anchor(): Type_TooltipAnchor { return this._tooltip_anchor }
 
-  // ONGLET ACTIF (ajustement #5) =======================================================
-  // Quand l'auteur a réparti les blocs d'un élément sur plusieurs onglets, le
-  // panneau en montre un à la fois. Cet index vit ICI, dans le modèle, et non en
-  // état local de la coquille : c'est précisément le genre d'état qu'un
-  // changement de contenant remettrait à zéro (cf. #300, enveloppe unique).
-  // Transitoire : jamais sérialisé — c'est là où le LECTEUR en est, pas un choix
-  // d'auteur.
-  private _active_tabs: Map<string, number> = new Map()
-
-  public getActiveTab(panel_id: string): number {
-    return this._active_tabs.get(panel_id) ?? 0
-  }
-
-  public setActiveTab(panel_id: string, index: number): void {
-    this._active_tabs.set(panel_id, Math.max(0, Math.trunc(index)))
-    this._notify()
-  }
-
   // PERSISTANCE (Lot 4) ================================================================
   // Sérialise les TAILLES (largeur de barre latérale partagée, largeur+hauteur des
   // pop-ups) et le MODE (menu ancré, repli) dans le JSON du diagramme — partagés à

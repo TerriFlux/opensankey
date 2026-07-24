@@ -79,6 +79,17 @@ export type MenuColorPickerProps = {
   textDisabled?: string
 }
 
+/** Un diagramme proposé dans la pop-up de présentation d'un élément (bouton +
+ *  rendu). Fourni par OS+ via `Class_ApplicationData.presentation_diagrams_for`. */
+export type Type_PresentationDiagram = {
+  /** Id stable ('unit' | 'donut' | 'bar'). */
+  id: string
+  /** Libellé du bouton (déjà traduit). */
+  label: string
+  /** Dessine le diagramme dans le conteneur DOM ; rend un nettoyage optionnel. */
+  render: (container: HTMLElement) => (() => void) | void
+}
+
 // FOREIGN OBJECT → SVG TEXT (rich) *****************************************************
 
 type FOSpanStyle = {
@@ -380,6 +391,13 @@ export class Class_ApplicationData {
     width: number,
     height: number
   ) => boolean = undefined
+
+  /** Hook injecté par OS+ : DIAGRAMMES proposés pour un élément dans la pop-up de
+   * présentation (colonne de boutons Unit. / Couronne / Barres). Chacun sait se
+   * dessiner dans un conteneur DOM. Absent hors OS+ (pas de colonne de diagrammes). */
+  public presentation_diagrams_for?: (
+    element: Class_NodeElement | Class_LinkElement
+  ) => Type_PresentationDiagram[] = undefined
 
   protected _waiting_processes: { [id: string]: NodeJS.Timeout } = {}
   protected _waiting_time_for_processes: number = 50 // ms
