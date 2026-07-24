@@ -470,11 +470,18 @@ export class LinkDrawShape {
     }
 
     const da = link.sankey.drawing_area
+    // #285 — le label de bande suit le MÊME filtre de taille que le label de
+    // valeur principal (cf. DrawLabel.shouldDrawLabel) : un flux sous le seuil
+    // (pixel ou valeur) ne montre aucun label, bandes comprises.
+    const passes_size_filter = da.filter_unit === 'pixel'
+      ? link.isThicknessAbovePxThreshold(da.filter_label_px)
+      : (link.valueCurrent ?? 0) >= da.filter_label
     // #285 — bandes ADDITIVES : le total est porté par le label principal du
     // flux, pas de label par bande (sinon doublon total + détail illisible).
-    // #285 — bandes additives : les labels par bande n'apparaissent que si le
-    // mode d'affichage du groupe l'inclut ('detail' ou 'both'). Cas unité : toujours.
+    // Les labels par bande n'apparaissent que si le mode d'affichage du groupe
+    // l'inclut ('detail' ou 'both'). Cas unité : toujours.
     const band_label_visible = da.type_data !== 'structure'
+      && passes_size_filter
       && (!link.has_additive_bands || link.shows_additive_detail)
     // #285 — le label de bande suit la MÊME police que le label de valeur du
     // flux (réglage font_size), compensée du zoom local comme les autres labels
