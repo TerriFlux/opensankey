@@ -957,13 +957,14 @@ export class Class_ApplicationData {
       // C'était déjà le cas avant : le garde `to_recenter` de recenter() n'était armé
       // au chargement que par la migration legacy ; l'appel est juste devenu explicite.
       this._drawing_area.normalizeLegacyWorldCoordinates()
-      // #680 — Re-cadrage DIFFÉRÉ du mode actif après le chargement : le premier fit
-      // (draw ci-dessus) tourne avant que la barre du bas (frise de séquence) et la légende
-      // soient mesurées → window_fitting_* périmé, bas du diagramme masqué. On ré-applique le
-      // mode une fois la mise en page stabilisée (débouncé). No-op si mode 'none'.
+      // #680 — Re-cadrage DIFFÉRÉ après le chargement : le premier fit (draw ci-dessus)
+      // tourne avant que la disposition (tableur/doc de main_zone, frise de séquence,
+      // légende) soit stabilisée → window_fitting_* périmé. On ré-applique le cadrage
+      // « d'arrivée » (mode actif, ou fit initial centré / origine en mode 'none',
+      // cf. OS#1315) une fois la mise en page posée (débouncé).
       this._drawing_area.application_data._add_waiting_process(
         'autofit_mode_after_load',
-        () => this._drawing_area.applyAutoFitMode(false),
+        () => this._drawing_area.applyInitialFraming(),
         200
       )
     }
@@ -1792,7 +1793,9 @@ export class Class_ApplicationData {
    */
   protected _pre_process_export_svg() {
     this.drawing_area.purgeSelection()
-    this.drawing_area.areaAutoFit()
+    // center_on_content=false EXPLICITE (OS#1315) : le fit d'export doit tourner même en
+    // mode 'none' (le routeur d'areaAutoFit neutralise les fits GÉNÉRIQUES en caméra libre).
+    this.drawing_area.areaAutoFit(undefined, undefined, false)
     // areaAutoFit ne rafraîchit les labels que si k_fit a changé ; en export il faut
     // que la font-size (compensée par 1/k) corresponde TOUJOURS au zoom d'export (= k_fit),
     // sinon la police reste à la taille d'un zoom précédent → non réajustée dans le SVG capturé.
