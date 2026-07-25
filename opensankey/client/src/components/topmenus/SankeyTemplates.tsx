@@ -34,7 +34,7 @@ import {
 } from '@chakra-ui/react'
 import {
   FaThumbtack, FaPlay, FaPause, FaStepBackward, FaStepForward,
-  FaCaretDown, FaCaretRight, FaInfoCircle, FaCheckCircle
+  FaCaretDown, FaCaretRight, FaCheckCircle
 } from 'react-icons/fa'
 import ReactMarkdown from 'react-markdown'
 
@@ -902,38 +902,57 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
           >
             <FaCheckCircle />
           </Box>}
-          {readme && <Box
-            as='button'
-            flex='none'
-            fontSize='0.72rem'
-            color={readme_open ? ACCENT : 'gray.400'}
-            _hover={{ color: ACCENT }}
-            title={new_data.t('templates.group_readme')}
-            onClick={() => setOpenReadme(readme_open ? null : group)}
-          >
-            <FaInfoCircle />
-          </Box>}
           <Text fontSize='0.65rem' color='gray.400' margin='0' flex='none'>
             {section_ids.length}
           </Text>
         </Box>
-        {/* Chapô : extrait du README à la génération de l'index, donc affichable
-            sans requête. Le README entier ne part en réseau qu'au clic sur (i). */}
-        {abstract && !readme_open && <Text
-          fontSize='0.68rem'
-          color='gray.500'
-          lineHeight='1.35'
-          margin='0 0 0.3rem 1.05rem'
-          noOfLines={is_collapsed ? 2 : 4}
-        >
-          {abstract}
-        </Text>}
-        {readme_open && readme && <Box marginBottom='0.4rem'>
+        {/* Présentation de l'étude. Le chapô vient de l'index (extrait du README
+            à la génération) : il s'affiche sans requête. Le README entier ne part
+            en réseau qu'au clic sur « lire la présentation ». Le lien est écrit en
+            toutes lettres : une icône seule passait inaperçue, d'autant que les
+            premiers dossiers de la liste n'ont pas encore de README. */}
+        {(abstract || readme) && !readme_open && <Box margin='0 0 0.35rem 1.05rem'>
+          {abstract && <Text
+            fontSize='0.68rem'
+            color='gray.500'
+            lineHeight='1.35'
+            margin='0'
+            noOfLines={is_collapsed ? 2 : 4}
+          >
+            {abstract}
+          </Text>}
+          {readme && <Box
+            as='button'
+            fontSize='0.66rem'
+            fontWeight='600'
+            color={ACCENT}
+            textDecoration='underline'
+            marginTop='0.1rem'
+            _hover={{ opacity: 0.75 }}
+            onClick={() => setOpenReadme(group)}
+          >
+            {new_data.t('templates.group_readme_open')}
+          </Box>}
+        </Box>}
+        {readme_open && readme && <Box margin='0 0 0.4rem 0'>
           <GroupReadme
             path={readme}
             source={source}
             error_label={new_data.t('templates.group_readme_error')}
           />
+          <Box
+            as='button'
+            fontSize='0.66rem'
+            fontWeight='600'
+            color={ACCENT}
+            textDecoration='underline'
+            marginTop='0.2rem'
+            marginLeft='0.2rem'
+            _hover={{ opacity: 0.75 }}
+            onClick={() => setOpenReadme(null)}
+          >
+            {new_data.t('templates.group_readme_close')}
+          </Box>
         </Box>}
         {!is_collapsed && <Box marginTop='0.25rem' marginBottom='0.4rem'>
           {renderGrid(section_ids)}
