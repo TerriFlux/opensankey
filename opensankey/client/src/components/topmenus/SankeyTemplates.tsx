@@ -32,7 +32,7 @@ import {
   Image,
   Text
 } from '@chakra-ui/react'
-import { FaThumbtack, FaPlay, FaPause, FaStepBackward, FaStepForward } from 'react-icons/fa'
+import { FaThumbtack, FaPlay, FaPause, FaStepBackward, FaStepForward, FaCaretDown, FaCaretRight } from 'react-icons/fa'
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Type_JSON } from '../../types/Utils'
@@ -85,6 +85,9 @@ export type Type_TemplateInfos = {
   'img_path'?: string;
   'lang': string;
   'category': string;
+  // Dossier (étude) auquel appartient le modèle : id d'une entrée de `groups`
+  // de l'index, préfixé par la source côté client comme les ids de modèles.
+  'group'?: string;
   // Variantes de langue d'un meme diagramme (galerie e!Sankey locale) :
   // lang -> file_path. file_path reste la variante par defaut.
   'variants'?: { [lang: string]: string };
@@ -94,6 +97,16 @@ export type Type_TemplateInfos = {
 };
 export type Type_TemplatesInfos = { [id: string]: Type_TemplateInfos; };
 export type Type_TemplatesIndexes = { [category: string]: string[]; };
+
+/**
+ * Dossier d'étude déclaré par l'index d'une galerie (`groups` top-level, posé
+ * par la sankeythèque MFAData) : porte le nom affiché, localisable. L'ordre des
+ * sections suit l'ordre des modèles dans l'index, pas celui du dictionnaire.
+ */
+export type Type_TemplateGroupInfos = {
+  'title'?: { [lang: string]: string };
+};
+export type Type_TemplateGroups = { [id: string]: Type_TemplateGroupInfos; };
 
 // HELPERS ==============================================================================
 
@@ -240,6 +253,8 @@ export const loadTemplate = (
  *  - `templates` : les modèles (id préfixé par la source pour éviter toute
  *    collision, champ `source` posé sur chacun) ;
  *  - `indexes` : catégorie -> ids, ordre d'index.json (sert aux sous-titres) ;
+ *  - `groups` : dossiers d'étude déclarés par les index (ids préfixés par la
+ *    source, comme les modèles), pour les sections repliables de la sankeythèque ;
  *  - `tabs` : onglets ordonnés (TAB_ORDER puis inattendus) ;
  *  - `tab_categories` : onglet -> catégories qu'il regroupe (pour les sous-titres
  *    de la sankeythèque) ;
@@ -251,6 +266,7 @@ export const useTemplatesLibrary = (
 ) => {
   const [templates, setTemplates] = useState<Type_TemplatesInfos>({})
   const [indexes, setIndexes] = useState<Type_TemplatesIndexes>({})
+  const [groups, setGroups] = useState<Type_TemplateGroups>({})
   const [tabs, setTabs] = useState<string[]>([])
   const [tab_categories, setTabCategories] = useState<{ [tab: string]: string[] }>({})
   const [source_tab, setSourceTab] = useState<{ [s in Type_TemplateSource]?: string }>({})
@@ -284,14 +300,22 @@ export const useTemplatesLibrary = (
       .then(results => {
         const new_templates: Type_TemplatesInfos = {}
         const new_indexes: Type_TemplatesIndexes = {}
+        const new_groups: Type_TemplateGroups = {}
         const new_tab_categories: { [tab: string]: string[] } = {}
         const new_source_tab: { [s in Type_TemplateSource]?: string } = {}
         results.forEach(({ source, json_data }) => {
           if (!json_data || !('templates' in json_data)) return
+          // Dossiers d'étude de la source, préfixés comme les ids de modèles.
+          Object.entries((json_data['groups'] ?? {}) as Type_TemplateGroups)
+            .forEach(([gid, infos]) => { new_groups[source + '|' + gid] = infos })
           Object.entries(json_data['templates'] as Type_TemplatesInfos)
             .forEach(([id, template]) => {
               const uid = source + '|' + id
-              const full = { ...template, source }
+              const full = {
+                ...template,
+                source,
+                group: template.group ? source + '|' + template.group : undefined
+              }
               new_templates[uid] = full
               const category = template['category']
               if (!(category in new_indexes))
@@ -316,6 +340,7 @@ export const useTemplatesLibrary = (
         ])
         setTemplates(new_templates)
         setIndexes(new_indexes)
+        setGroups(new_groups)
         setTabCategories(new_tab_categories)
         setSourceTab(new_source_tab)
       })
@@ -324,7 +349,7 @@ export const useTemplatesLibrary = (
       })
   }, [])
 
-  return { templates, indexes, tabs, tab_categories, source_tab }
+  return { templates, indexes, groups, tabs, tab_categories, source_tab }
 }
 
 /**
@@ -433,7 +458,11 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
   const play_index_ref = useRef(0)
   const cards_ref = useRef<{ [id: string]: HTMLElement | null }>({})
 
-  const { templates, indexes, tabs, tab_categories, source_tab } = useTemplatesLibrary(additionalMenu)
+  const { templates, indexes, groups, tabs, tab_categories, source_tab } = useTemplatesLibrary(additionalMenu)
+
+  // Dossiers d'étude repliés. `null` = état par défaut, calculé au rendu (tous
+  // repliés sauf le premier de l'onglet) ; un Set dès la première interaction.
+  const [collapsed_groups, setCollapsedGroups] = useState<Set<string> | null>(null)
 
   // Ouverture depuis le menu / le splash screen : le panneau remplace l'ancienne modale.
   new_data.menu_configuration.dict_setter_show_dialog
@@ -468,6 +497,43 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
   const ordered_all = current_tab_categories.flatMap(category => indexes[category] ?? [])
   const current_pos = current_id ? ordered_all.indexOf(current_id) : -1
 
+  // Découpe une liste d'ids en sections par dossier d'étude (`group`), dans
+  // l'ordre de première apparition ; les modèles sans dossier forment des
+  // sections anonymes (grille à plat, cas des galeries sans `groups`).
+  const groupSections = (ids: string[]) => {
+    const sections: { group: string | null, ids: string[] }[] = []
+    ids.forEach(id => {
+      const g = templates[id]?.group ?? null
+      const section = sections.find(s => s.group === g)
+      if (section) section.ids.push(id)
+      else sections.push({ group: g, ids: [id] })
+    })
+    return sections
+  }
+
+  // Dossiers de l'onglet courant, dans l'ordre d'affichage. Par défaut seul le
+  // premier est déplié : la sankeythèque compte des centaines d'entrées.
+  const current_tab_groups = current_tab_categories
+    .flatMap(category => groupSections(indexes[category] ?? []))
+    .flatMap(section => section.group === null ? [] : [section.group])
+  const collapsed = collapsed_groups ?? new Set(current_tab_groups.slice(1))
+
+  const toggleGroup = (gid: string) => {
+    const next = new Set(collapsed)
+    if (next.has(gid)) next.delete(gid)
+    else next.add(gid)
+    setCollapsedGroups(next)
+  }
+
+  /** Nom affiché d'un dossier d'étude, localisé, avec repli sur son id. */
+  const groupTitle = (gid: string) => {
+    const infos = groups[gid]
+    return infos?.title?.[new_data.i18n.language]
+      ?? infos?.title?.['en']
+      ?? infos?.title?.['fr']
+      ?? gid.split('|').slice(1).join('|')
+  }
+
   // Charge le modèle à la position `i` (bouclage) et le marque comme courant.
   const showTemplateAt = (i: number) => {
     if (ordered_all.length === 0) return
@@ -498,17 +564,31 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
     return () => window.clearInterval(timer)
   }, [playing])
 
+  // Le modèle courant (player ou navigation) déplie son dossier d'étude : sans
+  // quoi sa vignette resterait invisible dans une section repliée.
+  useEffect(() => {
+    if (!current_id) return
+    const gid = templates[current_id]?.group
+    if (gid && collapsed.has(gid)) {
+      const next = new Set(collapsed)
+      next.delete(gid)
+      setCollapsedGroups(next)
+    }
+  }, [current_id])
+
   // Replie la liste sur la vignette en cours (player ou navigation manuelle).
+  // Dépend aussi du repli : la vignette peut n'exister qu'après le dépliage.
   useEffect(() => {
     if (current_id)
       cards_ref.current[current_id]?.scrollIntoView({ block: 'nearest' })
-  }, [current_id])
+  }, [current_id, collapsed_groups])
 
-  // Changement d'onglet : on repart d'une séquence vierge.
+  // Changement d'onglet : on repart d'une séquence vierge, repli par défaut.
   useEffect(() => {
     setPlaying(false)
     setCurrentId(null)
     play_index_ref.current = 0
+    setCollapsedGroups(null)
   }, [current_tab])
 
   // Démarrer/arrêter le player. Au démarrage, on force l'ouverture pour que le
@@ -667,6 +747,45 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
       {ids.map(renderCard)}
     </Box>
 
+  // Liste d'ids rendue en sections par dossier d'étude : un en-tête repliable
+  // par dossier (nom affiché déclaré par l'index), grille à plat pour les
+  // modèles sans dossier — les galeries sans `groups` gardent leur rendu actuel.
+  const renderSections = (ids: string[]) =>
+    groupSections(ids).map(({ group, ids: section_ids }, i) => {
+      if (group === null)
+        return <Box key={'flat_' + i} marginTop='0.4rem'>{renderGrid(section_ids)}</Box>
+      const is_collapsed = collapsed.has(group)
+      return <Box key={group} marginTop='0.35rem'>
+        <Box
+          as='button'
+          width='100%'
+          display='flex'
+          alignItems='center'
+          gap='0.35rem'
+          padding='0.3rem 0.2rem'
+          borderRadius='6px'
+          textAlign='left'
+          color='gray.600'
+          _hover={{ background: '#f2f5f4', color: 'gray.800' }}
+          transition='background .1s, color .1s'
+          onClick={() => toggleGroup(group)}
+        >
+          <Box as='span' fontSize='0.7rem' color={ACCENT} flex='none'>
+            {is_collapsed ? <FaCaretRight /> : <FaCaretDown />}
+          </Box>
+          <Text fontSize='xs' fontWeight='600' margin='0' noOfLines={1} flex='1'>
+            {groupTitle(group)}
+          </Text>
+          <Text fontSize='0.65rem' color='gray.400' margin='0' flex='none'>
+            {section_ids.length}
+          </Text>
+        </Box>
+        {!is_collapsed && <Box marginTop='0.25rem' marginBottom='0.4rem'>
+          {renderGrid(section_ids)}
+        </Box>}
+      </Box>
+    })
+
   const iconBtnSx = { paddingInline: '0.3rem', minWidth: 'auto', width: 'auto', flex: 'none' }
 
   return <Box
@@ -810,10 +929,10 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
             >
               {new_data.t('templates.categories.' + category)}
             </Text>
-            {renderGrid(ids)}
+            {renderSections(ids)}
           </Box>
         })
-        : <Box marginTop='0.5rem'>{renderGrid(ordered_all)}</Box>}
+        : <Box marginTop='0.5rem'>{renderSections(ordered_all)}</Box>}
     </Box>
   </Box>
 }
