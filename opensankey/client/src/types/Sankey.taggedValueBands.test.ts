@@ -193,7 +193,7 @@ describe('OS#1286 — unite attachee au fluxTag (groupe de type unite)', () => {
     expect(link.has_additive_bands).toBe(false)
   })
 
-  it('additive: bands_label_display pilote total/détail/les deux', () => {
+  it('label_visible par bande : défaut false, round-trip JSON, exposé dans les bandes', () => {
     const { link, tagg, acier, cuivre } = makeApp()
     tagg.banner = 'multi'
     tagg.carries_values = true
@@ -202,24 +202,19 @@ describe('OS#1286 — unite attachee au fluxTag (groupe de type unite)', () => {
     const tv2 = value.addTaggedValue(); tv2.value = 80; tv2.addTag(cuivre)
     expect(tagg.is_additive_carrier).toBe(true)
 
-    // défaut 'total' : total oui, détail non
-    expect(tagg.bands_label_display).toBe('total')
-    expect(link.shows_additive_total).toBe(true)
-    expect(link.shows_additive_detail).toBe(false)
+    // défaut false ; le flag est PAR BANDE (sur la valeur taguée), pas sur le groupe
+    expect(tv1.label_visible).toBe(false)
+    expect(tv2.label_visible).toBe(false)
 
-    tagg.bands_label_display = 'detail'
-    expect(link.shows_additive_total).toBe(false)
-    expect(link.shows_additive_detail).toBe(true)
+    // sérialisation : false non écrit, true écrit puis relu
+    expect(tv1.toJSON().label_visible).toBeUndefined()
+    tv1.label_visible = true
+    expect(tv1.toJSON().label_visible).toBe(true)
 
-    tagg.bands_label_display = 'both'
-    expect(link.shows_additive_total).toBe(true)
-    expect(link.shows_additive_detail).toBe(true)
-
-    // sérialisation : 'total' non écrit, autre valeur écrite puis relue
-    tagg.bands_label_display = 'total'
-    expect(tagg.toJSON().bands_label_display).toBeUndefined()
-    tagg.bands_label_display = 'both'
-    expect(tagg.toJSON().bands_label_display).toBe('both')
+    // exposé dans tagged_value_bands pour le rendu
+    const bands = link.tagged_value_bands
+    expect(bands.find(b => b.id === tv1.id)?.label_visible).toBe(true)
+    expect(bands.find(b => b.id === tv2.id)?.label_visible).toBe(false)
   })
 
   it('derives band px from the unit coefficient (t vs kt coherents)', () => {

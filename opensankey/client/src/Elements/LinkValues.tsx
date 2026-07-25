@@ -908,6 +908,11 @@ export class Class_ElementTaggedValue {
   private _value: number | null = null
   private _tags: Class_Tag[] = []
   private _is_currently_deleted = false
+  // #285 — la bande (cette valeur taguée) affiche-t-elle son propre label de
+  // valeur sur le dessin ? Piloté PAR BANDE dans la config valeur du flux, et
+  // indépendant du label de total du flux. Défaut false (total seul, style
+  // e!Sankey) ; le seuil de taille (filter_label) s'applique ensuite par bande.
+  private _label_visible = false
 
   // CONSTRUCTOR ========================================================================
   constructor(
@@ -931,6 +936,7 @@ export class Class_ElementTaggedValue {
   // COPY METHODS =======================================================================
   public copyFrom(sub_to_copy: Class_ElementTaggedValue) {
     this._value = sub_to_copy._value
+    this._label_visible = sub_to_copy._label_visible
     this._tags.slice().forEach(tag => tag.removeReference(this))
     this._tags = []
     sub_to_copy.tags_list.forEach(tag => tag.addReference(this))
@@ -941,6 +947,7 @@ export class Class_ElementTaggedValue {
     const json_object: Type_JSON = {}
     json_object['id'] = this._id
     if (this._value !== null) json_object['value'] = this._value
+    if (this._label_visible) json_object['label_visible'] = true
     if (this._tags.length > 0)
       json_object['tags'] = Object.fromEntries(
         this._tags.map(tag => [tag.group.id, tag.id]))
@@ -950,6 +957,7 @@ export class Class_ElementTaggedValue {
   public fromJSON(json_object: Type_JSON) {
     this._id = getStringFromJSON(json_object, 'id', this._id)
     this._value = getNumberOrNullFromJSON(json_object, 'value')
+    this._label_visible = getBooleanFromJSON(json_object, 'label_visible', this._label_visible)
     const flux_taggs_dict = (this.parent.link?.drawing_area.sankey.flux_taggs_dict ?? {})
     Object.entries((json_object['tags'] ?? {}) as { [_: string]: string })
       .forEach(([tagg_id, tag_id]) => {
@@ -996,6 +1004,9 @@ export class Class_ElementTaggedValue {
 
   public get value(): number | null { return this._value }
   public set value(_: number | null) { this._value = _ }
+
+  public get label_visible(): boolean { return this._label_visible }
+  public set label_visible(_: boolean) { this._label_visible = _ }
 
   public get tags_list(): Class_Tag[] { return [...this._tags] }
 }

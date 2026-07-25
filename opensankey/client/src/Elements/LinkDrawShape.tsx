@@ -470,26 +470,24 @@ export class LinkDrawShape {
     }
 
     const da = link.sankey.drawing_area
-    // #285 — le label de bande suit le MÊME filtre de taille que le label de
-    // valeur principal (cf. DrawLabel.shouldDrawLabel) : un flux sous le seuil
-    // (pixel ou valeur) ne montre aucun label, bandes comprises.
-    const passes_size_filter = da.filter_unit === 'pixel'
-      ? link.isThicknessAbovePxThreshold(da.filter_label_px)
-      : (link.valueCurrent ?? 0) >= da.filter_label
-    // #285 — bandes ADDITIVES : le total est porté par le label principal du
-    // flux, pas de label par bande (sinon doublon total + détail illisible).
-    // Les labels par bande n'apparaissent que si le mode d'affichage du groupe
-    // l'inclut ('detail' ou 'both'). Cas unité : toujours.
-    const band_label_visible = da.type_data !== 'structure'
-      && passes_size_filter
-      && (!link.has_additive_bands || link.shows_additive_detail)
     // #285 — le label de bande suit la MÊME police que le label de valeur du
     // flux (réglage font_size), compensée du zoom local comme les autres labels
     // (mode police verrouillée) : plus de taille 8-11 px codée en dur.
     const value_lv = getNameLabelValues(link, 'value_label') as { font_size?: number }
     const band_font_size = (value_lv.font_size ?? 12) * (da.font_compensation ?? 1)
+    // #285 — unité affichée sur les labels de bande : l'unité PROPRE de la bande
+    // (groupe de type unité) sinon l'unité de valeur du flux si elle est visible
+    // (value_label_unit_visible). Indépendant du label de total.
+    const flux_unit = link.value_label_unit_visible ? link.unit_name('value_label') : ''
+    // #285 — filtre de taille appliqué PAR BANDE (pas sur le total du flux) :
+    // en mode pixel, l'épaisseur écran de la bande ; en mode valeur, sa valeur.
+    const zoom = da.getZoomScale()
+    const bandPassesFilter = (band_value: number, band_px: number): boolean =>
+      da.filter_unit === 'pixel'
+        ? (!(da.filter_label_px > 0) || band_px * zoom >= da.filter_label_px)
+        : band_value >= da.filter_label
     let cum = 0
-    bands.forEach(({ id, color, share, value, unit }) => {
+    bands.forEach(({ id, color, share, value, unit, label_visible, px }) => {
       const lo = cum
       cum += share
       const off_lo_src = -full_src / 2 + lo * full_src
@@ -513,10 +511,15 @@ export class LinkDrawShape {
         .attr('fill-opacity', shape_opacity)
         .attr('stroke', 'none')
         .attr('pointer-events', 'none')
-      // #285 — un label de valeur PAR bande (la valeur unique du flux n'a pas
-      // de sens sur un flux ventilé) : au milieu de la bande, suit l'œil
-      // « valeur » du flux et le seuil d'affichage.
-      if (link.value_label_is_visible && band_label_visible) {
+      // #285 — label de valeur PAR bande, indépendant du label de total :
+      //  - cas ADDITIF : affiché si la bande le demande (tv.label_visible) ;
+      //  - cas unité / dataTag multi : suit la visibilité du label du flux.
+      // Dans les deux cas, soumis au filtre de taille PAR BANDE.
+      const band_label_shown = da.type_data !== 'structure'
+        && bandPassesFilter(value, px)
+        && (link.has_additive_bands ? !!label_visible : link.value_label_is_visible)
+      if (band_label_shown) {
+        const band_unit = unit ?? flux_unit
         const n_mid_label = perp(x2, y2, x4, y4)
         const off_mid = ((off_lo_src + off_hi_src) / 2 + (off_lo_tgt + off_hi_tgt) / 2) / 2
         this._link.d3_selection?.append('text')
@@ -528,7 +531,7 @@ export class LinkDrawShape {
           .attr('font-size', band_font_size)
           .attr('fill', '#000')
           .attr('pointer-events', 'none')
-          .text(unit ? `${value} ${unit}` : String(value))
+          .text(band_unit ? `${value} ${band_unit}` : String(value))
       }
     })
     return true

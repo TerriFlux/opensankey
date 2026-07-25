@@ -870,7 +870,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * somme des valeurs visibles — les valeurs d'un flux ne sont PAS additives,
    * l'épaisseur du flux reste pilotée par la valeur principale.
    */
-  public get tagged_value_bands(): { id: string, px: number, share: number, color: string | null, value: number, unit?: string }[] {
+  public get tagged_value_bands(): { id: string, px: number, share: number, color: string | null, value: number, unit?: string, label_visible?: boolean }[] {
     if (this._is_expansion_link) return []
     // 1) Dimension en bannière `multi` : une bande par tag SÉLECTIONNÉ, à la
     //    valeur de sa tranche (remplace l'ancien mécanisme de liens enfants —
@@ -941,7 +941,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
     const unit_for = (tv: Class_ElementTaggedValue): string | undefined =>
       unit_tag_of(tv)?.resolved_unit?.unit.name
-    const bands = tvs.map(tv => ({ id: tv.id, px: Math.max(0, px_for(tv)), color: color_for(tv), value: tv.value as number, unit: unit_for(tv) }))
+    const bands = tvs.map(tv => ({ id: tv.id, px: Math.max(0, px_for(tv)), color: color_for(tv), value: tv.value as number, unit: unit_for(tv), label_visible: tv.label_visible }))
     const total = bands.reduce((acc, band) => acc + band.px, 0)
     if (total <= 0) return []
     return bands.map(band => ({ ...band, share: band.px / total }))
@@ -964,25 +964,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
       && this.sankey.flux_taggs_list.some(tagg => tagg.is_additive_carrier)
   }
 
-  /** #285 — mode d'affichage des labels pour un flux à bandes additives, lu sur
-   *  le premier groupe porteur additif ('total' par défaut). */
-  public get additive_bands_label_display(): 'total' | 'detail' | 'both' {
-    if (!this.has_additive_bands) return 'total'
-    const carrier = this.sankey.flux_taggs_list.find(tagg => tagg.is_additive_carrier)
-    return carrier?.bands_label_display ?? 'total'
-  }
-
-  /** Le label principal (total) doit-il être affiché pour ce flux additif ? */
-  public get shows_additive_total(): boolean {
-    const m = this.additive_bands_label_display
-    return m === 'total' || m === 'both'
-  }
-
-  /** Les labels par bande (détail) doivent-ils être affichés pour ce flux additif ? */
-  public get shows_additive_detail(): boolean {
-    const m = this.additive_bands_label_display
-    return m === 'detail' || m === 'both'
-  }
 
   /**
    * Set up element on d3 svg area
