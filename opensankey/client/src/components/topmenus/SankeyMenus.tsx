@@ -364,9 +364,11 @@ export const SankeyMenu = (
     <Text
       fontStyle='h4'
     >
-      {t('Menu.support_explication').split('[]')[0]}
+      {/* Garde-fou : selon la config i18n (returnNull), une clé absente rend
+          `null` — `.split` ferait alors tomber tout le menu. */}
+      {(t('Menu.support_explication') || '').split('[]')[0]}
       <a href='mailto:support@terriflux.fr	'>support@terriflux.fr</a>
-      {t('Menu.support_explication').split('[]')[1]}
+      {(t('Menu.support_explication') || '').split('[]')[1]}
     </Text>
   </>
 

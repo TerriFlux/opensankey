@@ -187,6 +187,7 @@ export const resources_spreadsheet = {
           mode_edit: 'Edit',
           mode_split: 'Side by side',
           mode_preview: 'Preview',
+          back_to_diagram_doc: 'Back to the diagram documentation',
           reattach: 'Reattach the documentation into the main window',
           detach: 'Detach the documentation into a separate window',
           editor_placeholder: 'Write this diagram\'s documentation in markdown…\n\n# Title\n\n- point 1\n- point 2'
@@ -374,6 +375,7 @@ export const resources_spreadsheet = {
           mode_edit: 'Édition',
           mode_split: 'Côte à côte',
           mode_preview: 'Aperçu',
+          back_to_diagram_doc: 'Revenir à la documentation du diagramme',
           reattach: 'Ré-attacher la documentation dans la fenêtre principale',
           detach: 'Détacher la documentation dans une fenêtre séparée',
           editor_placeholder: 'Rédigez la documentation de ce diagramme en markdown…\n\n# Titre\n\n- point 1\n- point 2'
@@ -560,6 +562,7 @@ export const resources_spreadsheet = {
           mode_edit: 'Edición',
           mode_split: 'Lado a lado',
           mode_preview: 'Vista previa',
+          back_to_diagram_doc: 'Volver a la documentación del diagrama',
           reattach: 'Volver a anclar la documentación en la ventana principal',
           detach: 'Separar la documentación en una ventana aparte',
           editor_placeholder: 'Redacte la documentación de este diagrama en markdown…\n\n# Título\n\n- punto 1\n- punto 2'
@@ -746,6 +749,7 @@ export const resources_spreadsheet = {
           mode_edit: 'Bearbeiten',
           mode_split: 'Nebeneinander',
           mode_preview: 'Vorschau',
+          back_to_diagram_doc: 'Zurück zur Diagramm-Dokumentation',
           reattach: 'Dokumentation wieder im Hauptfenster andocken',
           detach: 'Dokumentation in einem separaten Fenster lösen',
           editor_placeholder: 'Verfassen Sie die Dokumentation dieses Diagramms in Markdown…\n\n# Titel\n\n- Punkt 1\n- Punkt 2'
@@ -932,6 +936,7 @@ export const resources_spreadsheet = {
           mode_edit: 'Modifica',
           mode_split: 'Affiancato',
           mode_preview: 'Anteprima',
+          back_to_diagram_doc: 'Torna alla documentazione del diagramma',
           reattach: 'Riancorare la documentazione nella finestra principale',
           detach: 'Staccare la documentazione in una finestra separata',
           editor_placeholder: 'Redigi la documentazione di questo diagramma in markdown…\n\n# Titolo\n\n- punto 1\n- punto 2'

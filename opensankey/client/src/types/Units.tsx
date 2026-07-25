@@ -28,6 +28,7 @@ export type Type_UnitTypeJSON = {
   name: string,
   default_unit: string,
   units: Type_UnitJSON[],
+  display_scale?: number,
 }
 
 /** Une unité : symbole affiché + coefficient vers l'unité de base de sa
@@ -65,12 +66,19 @@ export class Class_UnitType {
   public units: Class_Unit[]
   /** Id de l'unité d'affichage par défaut (les flux sans surcharge l'héritent). */
   public default_unit_id: string
+  /** OS#1286 (fusion) — échelle d'affichage PROPRE à la grandeur (façon
+   * e!Sankey : chaque unitType a son ratio quantité/pixels) : quantité en unité
+   * de BASE affichée sur 100 px pour les bandes « de type unité ». undefined =
+   * échelle globale du dessin (drawing_area.scale). Permet d'équilibrer
+   * visuellement des grandeurs différentes (kWh vs t vs €) sur un même flux. */
+  public display_scale?: number
 
-  constructor(id: string, name: string, units: Class_Unit[] = [], default_unit_id: string = '') {
+  constructor(id: string, name: string, units: Class_Unit[] = [], default_unit_id: string = '', display_scale?: number) {
     this.id = id
     this.name = name
     this.units = units
     this.default_unit_id = default_unit_id
+    this.display_scale = display_scale
   }
 
   public get default_unit(): Class_Unit | undefined {
@@ -104,12 +112,14 @@ export class Class_UnitType {
   }
 
   public toJSON(): Type_UnitTypeJSON {
-    return {
+    const json: Type_UnitTypeJSON = {
       id: this.id,
       name: this.name,
       default_unit: this.default_unit_id,
       units: this.units.map(u => u.toJSON()),
     }
+    if (this.display_scale !== undefined) json.display_scale = this.display_scale
+    return json
   }
 
   public static fromJSON(json_object: Type_JSON): Class_UnitType {
@@ -121,7 +131,8 @@ export class Class_UnitType {
       getStringFromJSON(json_object, 'id', ''),
       getStringFromJSON(json_object, 'name', ''),
       units,
-      getStringFromJSON(json_object, 'default_unit', units[0]?.id ?? '')
+      getStringFromJSON(json_object, 'default_unit', units[0]?.id ?? ''),
+      json_object['display_scale'] !== undefined ? getNumberFromJSON(json_object, 'display_scale', 0) : undefined
     )
   }
 }

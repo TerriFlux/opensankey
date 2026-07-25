@@ -26,7 +26,7 @@
 
 // Local types
 import { Class_LinkElement } from '../Elements/Link'
-import { Class_ElementValue } from '../Elements/LinkValues'
+import { Class_ElementValue, Class_ElementTaggedValue } from '../Elements/LinkValues'
 import { Class_NodeElement } from '../Elements/Node'
 import {
   Type_JSON,
@@ -334,7 +334,7 @@ export abstract class Class_Tag extends Class_ProtoTag {
   // PRIVATE ATTRIBUTES =================================================================
 
   // List of elements that relates to this tag
-  protected _references: { [_: string]: Class_NodeElement | Class_LinkElement | Class_ElementValue } = {}
+  protected _references: { [_: string]: Class_NodeElement | Class_LinkElement | Class_ElementValue | Class_ElementTaggedValue } = {}
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -385,18 +385,18 @@ export abstract class Class_Tag extends Class_ProtoTag {
     this._ref_sankey.drawing_area.legend.draw()
   }
 
-  public hasGivenReference(_: Class_NodeElement | Class_LinkElement | Class_ElementValue) {
+  public hasGivenReference(_: Class_NodeElement | Class_LinkElement | Class_ElementValue | Class_ElementTaggedValue) {
     return (this._references[_.id] !== undefined)
   }
 
-  public addReference(_: Class_NodeElement | Class_LinkElement | Class_ElementValue) {
+  public addReference(_: Class_NodeElement | Class_LinkElement | Class_ElementValue | Class_ElementTaggedValue) {
     if (!this.hasGivenReference(_)) {
       this._references[_.id] = _
       _.addTag(this)
     }
   }
 
-  public removeReference(_: Class_NodeElement | Class_LinkElement | Class_ElementValue) {
+  public removeReference(_: Class_NodeElement | Class_LinkElement | Class_ElementValue | Class_ElementTaggedValue) {
     if (this.hasGivenReference(_)) {
       delete this._references[_.id]
       _.removeTag(this)
@@ -457,6 +457,56 @@ export class Class_NodeTag extends Class_Tag {
  */
 export class Class_FluxTag extends Class_Tag {
 
+  // #285 (§3.0ter) — échelle propre du tag, pendant de Class_DataTag._scale
+  // pour les groupes PORTEURS DE VALEURS : la largeur de bande d'une valeur
+  // coordonnée vaut valeur convertie avec l'échelle de SON tag, ce qui rend
+  // affichables ensemble des valeurs non additives (kWh/t/€).
+  // undefined = échelle du dessin.
+  private _scale: number | undefined = undefined
+
+  public get scale(): number | undefined { return this._scale }
+  public set scale(_: number | undefined) { this._scale = _ }
+
+  // OS#1286 (fusion §3.0ter) — quand le groupe est « de type unité », le tag
+  // référence une unité du registre du diagramme (id d'unité). L'unité fournit
+  // le symbole affiché ET le coefficient de conversion : la largeur de bande
+  // d'une valeur exprimée dans cette unité vaut valeur × coefficient à
+  // l'échelle du dessin (t/kt/Mt deviennent cohérents automatiquement).
+  private _unit_ref: string | undefined = undefined
+
+  public get unit_ref(): string | undefined { return this._unit_ref }
+  public set unit_ref(_: string | undefined) { this._unit_ref = _ }
+
+  /** Unité résolue depuis le registre du diagramme (OS#1286), ou undefined. */
+  public get resolved_unit() {
+    return this._unit_ref ? this._ref_sankey.units.resolve(this._unit_ref) : undefined
+  }
+
+  protected _toJSON(
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    super._toJSON(json_object, _kwargs)
+    if (this._scale !== undefined) json_object['scale'] = this._scale
+    if (this._unit_ref !== undefined) json_object['unit'] = this._unit_ref
+  }
+
+  protected _fromJSON(
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ): void {
+    super._fromJSON(json_object, _kwargs)
+    if (json_object['scale'] !== undefined) this._scale = getNumberFromJSON(json_object, 'scale', 0)
+    if (json_object['unit'] !== undefined) this._unit_ref = getStringFromJSON(json_object, 'unit', '')
+  }
+
+  protected _copyFrom(tag_to_copy: Class_ProtoTag) {
+    super._copyFrom(tag_to_copy)
+    if (tag_to_copy instanceof Class_FluxTag) {
+      this._scale = tag_to_copy._scale
+      this._unit_ref = tag_to_copy._unit_ref
+    }
+  }
 
   // PUBLIC METHODS =====================================================================
 

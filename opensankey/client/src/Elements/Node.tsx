@@ -2336,8 +2336,7 @@ export class Class_NodeElement extends Class_NodeBase {
    * porteurs de données » (cf. `Class_ApplicationData.reveal_data_links`).
    */
   public get is_attached_to_collected_data_link(): boolean {
-    const carries = (l: Class_LinkElement) =>
-      Object.values(l.child_links).length == 0 && l.has_collected_data
+    const carries = (l: Class_LinkElement) => l.has_collected_data
     return this.input_links_list.some(carries) || this.output_links_list.some(carries)
   }
   public get is_visible_without_orphan() {

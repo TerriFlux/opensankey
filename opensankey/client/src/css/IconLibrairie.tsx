@@ -27,7 +27,7 @@ import React from 'react'
 import { faCopy, faDeleteLeft, faFolderTree, faIcons, faListCheck, faObjectUngroup } from '@fortawesome/free-solid-svg-icons'
 import { FaCaretSquareLeft, FaCaretSquareRight, FaCog, FaFileImport, FaPalette, FaRandom, FaUser, FaPowerOff } from 'react-icons/fa'
 import {
-  faArrowPointer, faArrowsLeftRight, faArrowsUpDown, faArrowsToDot, faChartSimple, faCloudArrowUp, faCompress, faDownload, faExpand,
+  faArrowPointer, faArrowsLeftRight, faArrowsUpDown, faArrowsToDot, faCloudArrowUp, faCompress, faDownload, faExpand,
   faFile, faFileExport, faFileInvoice, faFolderOpen, faGears, faImage, faPenNib, faPenToSquare, faPlus, faRepeat,
   faRotateLeft, faRotateRight, faShapes, faShareNodes, faSliders, faTable, faUpRightFromSquare, faXmark, faBox, faFileExcel, faFileCode, faArrowRightArrowLeft, faBrush,
   faLock, faLockOpen, faFont
@@ -1508,6 +1508,46 @@ export const logo_level_tag = <svg
 </svg>
 
 
+// Pastilles « produit » pour les imports de formats non natifs.
+// Monogrammes maison aux couleurs de chaque outil : on évoque le produit sans
+// embarquer son logo officiel (œuvre + marque déposée) dans le bundle.
+const ProductBadgeIcon: React.FC<{
+  label: string,
+  color: string,
+  fontSize?: number
+}> = ({
+  label,
+  color,
+  fontSize = 8
+}) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox='0 0 16 16'
+    width='1rem'
+    height='1rem'
+  >
+    <rect x='0.5' y='0.5' width='15' height='15' rx='3.5' fill={color} />
+    <text
+      x='8'
+      y='8.4'
+      textAnchor='middle'
+      dominantBaseline='central'
+      fill='#ffffff'
+      fontFamily='Helvetica, Arial, sans-serif'
+      fontSize={fontSize}
+      fontWeight='700'
+      letterSpacing='-0.4'
+    >
+      {label}
+    </text>
+  </svg>
+)
+
+const SankeyMaticIcon = () => <ProductBadgeIcon label='SM' color='#2C7FB8' />
+const StanIcon = () => <ProductBadgeIcon label='ST' color='#2E8B57' />
+// « e! » est la marque visuelle d'e!Sankey : monogramme suffisant et lisible.
+const ESankeyIcon = () => <ProductBadgeIcon label='e!' color='#E8730C' fontSize={9} />
+
 // Class ===========================================================================
 
 export class Class_IconLibrary {
@@ -1541,7 +1581,9 @@ export class Class_IconLibrary {
   protected _icon_open_sankey_json = <FontAwesomeIcon icon={faFileCode} />
   protected _icon_open_sankey_excel = <FontAwesomeIcon icon={faFileExcel} />
   protected _icon_open_sankey_pickle = <FontAwesomeIcon icon={faBox} />
-  protected _icon_open_sankey_sankeymatic = <FontAwesomeIcon icon={faChartSimple} />
+  protected _icon_open_sankey_sankeymatic = <SankeyMaticIcon />
+  protected _icon_open_sankey_stan = <StanIcon />
+  protected _icon_open_sankey_esankey = <ESankeyIcon />
   protected _icon_file_converter = <FontAwesomeIcon icon={faArrowRightArrowLeft} />
 
   protected _icon_save_sankey = <FontAwesomeIcon icon={faDownload} />
@@ -1899,6 +1941,8 @@ export class Class_IconLibrary {
   public get icon_open_sankey_excel() { return this._icon_open_sankey_excel }
   public get icon_open_sankey_pickle() { return this._icon_open_sankey_pickle }
   public get icon_open_sankey_sankeymatic() { return this._icon_open_sankey_sankeymatic }
+  public get icon_open_sankey_stan() { return this._icon_open_sankey_stan }
+  public get icon_open_sankey_esankey() { return this._icon_open_sankey_esankey }
   public get icon_save_sankey() { return this._icon_save_sankey }
   public get icon_save_sankey_json() { return this._icon_save_sankey_json }
   public get icon_save_sankey_excel() { return this._icon_save_sankey_excel }

@@ -1589,11 +1589,15 @@ def esankey_local_index():
 
 def templates_declared_assets(source):
     """
-    Ensemble des chemins declares par l'index d'une galerie (file_path + img_path).
+    Ensemble des chemins declares par l'index d'une galerie.
+
+    Couvre les modeles (file_path + img_path) ET les dossiers d'etude declares
+    par `groups` : README de presentation (un par langue) et image de couverture.
 
     Sert de liste blanche a /menus/templates_asset. Indispensable pour 'mfadata' :
-    la racine MFAData contient aussi des dossiers non publies, une simple regle
-    de prefixe ne suffirait pas a les proteger.
+    la racine MFAData contient aussi des dossiers non publies (donnees clients,
+    archives, materiaux de travail), une simple regle de prefixe ne suffirait pas
+    a les proteger. Seul ce qui est explicitement indexe est servi.
     """
     data_index = templates_index_load(source)
     if not data_index:
@@ -1604,6 +1608,13 @@ def templates_declared_assets(source):
             value = template.get(key)
             if value:
                 declared.add(value.replace("\\", "/"))
+    for group in (data_index.get("groups") or {}).values():
+        image = group.get("img_path")
+        if image:
+            declared.add(image.replace("\\", "/"))
+        for readme in (group.get("readme") or {}).values():
+            if readme:
+                declared.add(readme.replace("\\", "/"))
     return declared
 
 
@@ -1620,9 +1631,10 @@ def menus_templates():
     """
     payload = request.get_json(silent=True) or {}
     requested = payload.get("source")
-    # Galerie locale e!Sankey (dev-only) : index genere a la volee. 404 si la
-    # source n'est pas active (ESANKEY_CORPUS_DIR absente ou hors mode debug) —
-    # le front n'affiche alors rien pour cette source.
+    # Galerie locale e!Sankey (reservee aux devs) : index genere a la volee. 404
+    # si la source n'est pas active (ESANKEY_CORPUS_DIR absente, ou requete ni en
+    # mode debug ni d'un compte developpeur — voir esankey_corpus_dir) : le front
+    # n'affiche alors rien pour cette source.
     if requested == "esankey-local":
         data_index = esankey_local_index()
         if data_index is None:
@@ -1654,10 +1666,11 @@ def menus_templates_asset(asset):
     pour ne rien exposer d'autre que le contenu publie.
     """
     requested = request.args.get("source")
-    # Galerie locale e!Sankey (dev-only, os#1281) : sert un `.sankey` du corpus.
-    # Actif uniquement si ESANKEY_CORPUS_DIR est definie ET en mode debug, sinon
-    # 404. On restreint aux fichiers `.sankey` et on neutralise toute remontee de
-    # chemin (normalisation + refus de "..", safe_join, send_from_directory).
+    # Galerie locale e!Sankey (reservee aux devs, os#1281) : sert un `.sankey` du
+    # corpus. Actif uniquement si ESANKEY_CORPUS_DIR est definie ET que la requete
+    # vient d'un poste en mode debug ou d'un compte developpeur (esankey_corpus_dir),
+    # sinon 404. On restreint aux fichiers `.sankey` et on neutralise toute remontee
+    # de chemin (normalisation + refus de "..", safe_join, send_from_directory).
     if requested == "esankey-local":
         corpus = esankey_corpus_dir()
         if corpus is None:

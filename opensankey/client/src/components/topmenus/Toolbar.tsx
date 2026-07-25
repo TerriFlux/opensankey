@@ -25,72 +25,21 @@ const width_fitler_drawer = 270
 
 
 /**
- * Reconstruit les child links et redessine après un changement de sélection d'un
- * groupe de data tags. Suppose que la sélection (selectTagsFromId/Ids) a déjà été
- * appliquée sur `tagg`. Factorisé pour être partagé entre le panneau de filtres et
- * le sélecteur de data tags en topbar (banner 'topbar').
+ * Redessine après un changement de sélection d'un groupe de data tags (les
+ * bandes par tranche sont dérivées au draw — plus de liens enfants à
+ * reconstruire). Suppose la sélection déjà appliquée sur `tagg`.
  */
 export const applyDataTagChildLinks = (
   app_data: Class_ApplicationData,
-  tagg: Class_DataTagGroup,
-  entries: string[]
+  _tagg: Class_DataTagGroup,
+  _entries: string[]
 ) => {
   // La sélection à valeur unique a pu poser bypass_redraws=true (preview Menu
-  // unitaire) — ici le draw() final serait un no-op et le changement d'unité (scale
-  // par tag) ne se verrait pas. On le remet à false pour que le redraw réapplique
-  // l'échelle par dataTag.
+  // unitaire) — on le remet à false pour que le redraw réapplique l'échelle.
   app_data.drawing_area.bypass_redraws = false
-  app_data.drawing_area.sankey.links_list.forEach(l => {
-    if (l.is_multi_link) return
-
-    if (entries.length === 1) {
-      Object.keys(l.child_links).forEach(key => {
-        l.child_links[key].delete()
-        delete l.child_links[key]
-      })
-    } else {
-      tagg.tags_list.forEach(tag => {
-        if (!tag.is_selected && tag.id in l.child_links) {
-          l.child_links[tag.id].delete()
-          delete l.child_links[tag.id]
-        }
-      })
-      tagg.selected_tags_list.forEach(tag => {
-        if (tag.id in l.child_links || l.is_multi_link) return
-        const child_link = app_data.drawing_area.sankey.addNewLink(l.source, l.target)
-        child_link.copyFrom(l)
-        l.addChildLink(child_link, tag)
-      })
-    }
-  })
-
-  // Les hauteurs de nœuds dépendent des valeurs des liens (qui viennent de changer
-  // avec le data tag). En mode paramétrique il faut donc rejouer la chaîne de
-  // positionnement pour que l'écart entre nœuds reste cohérent avec les nouvelles
-  // hauteurs.
-  if (app_data.drawing_area.sankey.default_style.shape_position_type === 'parametric') {
-    app_data.drawing_area.nodePositioning.computeParametrization(false)
-  }
-
   app_data.drawing_area.draw()
-  app_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.reorganizeIOLinks())
-  app_data.drawing_area.orderElementOnDA()
 }
 
-/**
- * Sélecteur de data tags rendu dans la topbar (groupes dont la bannière vaut
- * 'topbar'), pensé pour être placé à côté de la navigation entre vues. Rend un
- * <Select> mono-sélection par groupe ; le changement applique la même
- * reconstruction de child links + redraw que la sélection mono-valeur du panneau
- * de filtres (cf. applyDataTagChildLinks).
- */
-/**
- * Bloc topbar « Préc. / <Select> / Suiv. » partagé par les sélecteurs de data tags et de
- * view tags (« générateur de vues »), sur le modèle de la navigation entre vues. Le nom du
- * groupe est calé EN PETIT AU-DESSUS du sélecteur (pas à gauche) : on gagne en largeur sans
- * épaissir la topbar (qui réserve déjà deux lignes pour ses boutons). Sélecteur élargi et
- * flèches compactes. La logique de navigation (bornes, options) est portée par l'appelant.
- */
 export const TopbarNavSelect = ({
   prefix, options, value, onChange, onPrev, onNext, prev_disabled, next_disabled, select_label, t
 }: {
@@ -414,10 +363,13 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
     )
   }
   const can_create_groups = !app_data.is_static && app_data.has_sankey_plus
+  // #285 (fusion dataTags/fluxTags) — plus d'entrée « Données » séparée : on crée
+  // une étiquette de flux, et la case « Dimension » de l'éditeur la promeut en
+  // dimension combinatoire (conversion sans perte). Les data_taggs existants
+  // (imports Excel, timeline…) restent éditables via le filtre Données.
   const group_types: { type: Type_MacroTagGroup, label: string, dev?: boolean }[] = [
     { type: 'node_taggs', label: app_data.t('filter_panel.short.node') },
     { type: 'flux_taggs', label: app_data.t('filter_panel.short.link') },
-    { type: 'data_taggs', label: app_data.t('filter_panel.short.data') },
     { type: 'level_taggs', label: app_data.t('filter_panel.short.level'), dev: true }
   ]
 
@@ -502,7 +454,10 @@ export const ToolbarFilter = ({ app_data, hide_floating_button }: {
         app_data.publish_options.node_filter ? <NodeTagGroupFilter app_data={app_data} level={false} show_hidden_groups={showHiddenGroups} /> : <></>
       }
       {
-        app_data.publish_options.data_filter ? <DataTagGroupFilter app_data={app_data} show_hidden_groups={showHiddenGroups} /> : <></>
+        // #285 — section « Flux » unifiée (étiquettes de flux + dimensions) ;
+        // remplace l'ancienne section « Données » séparée.
+        (app_data.publish_options.node_filter || app_data.publish_options.data_filter)
+          ? <FluxTagGroupFilter app_data={app_data} show_hidden_groups={showHiddenGroups} /> : <></>
       }
     </Box>
   </>
@@ -1007,7 +962,10 @@ const FilterDisplay = ({ app_data, defaultOpen }: { app_data: Class_ApplicationD
 }
 
 // Types pour la configuration des différents modes
-type TagFilterMode = 'element' | 'level' | 'data' | 'unitary'
+// #285 (fusion dataTags/fluxTags) — 'flux' : section d'édition dédiée listant
+// les étiquettes de flux ET les dimensions (data_taggs) ensemble, chacune avec
+// sa case Dimension. 'element' redevient nœuds seuls.
+type TagFilterMode = 'element' | 'level' | 'data' | 'unitary' | 'flux'
 interface TagFilterConfig {
   mode: TagFilterMode
   title_key: string
@@ -1052,6 +1010,19 @@ const TAG_FILTER_CONFIGS: Record<TagFilterMode, TagFilterConfig> = {
     show_type_selection_header: false,
     update_method: 'updateAllComponentsRelatedToNodeTags',
     ref_updater_key: 'ref_to_unitarytag_filter_updater'
+  },
+  // #285 — section « Flux » unifiée (étiquettes de flux + dimensions). Le
+  // comportement par ligne (palette vs bascule multi/one, sélecteur) est
+  // résolu par le type RÉEL du groupe (cf. groupEffectiveMode), pas par le
+  // mode. Re-render lié à l'updater des tags de flux (= nodetag_filter).
+  flux: {
+    mode: 'flux',
+    title_key: 'flux',
+    show_title_column: false,
+    show_palette_switch: true,
+    show_type_selection_header: false,
+    update_method: 'updateAllComponentsRelatedToFluxAndDataTags',
+    ref_updater_key: 'ref_to_nodetag_filter_updater'
   }
 }
 
@@ -1102,6 +1073,12 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, show_hidden_groups }: {
   const has_local_hierarchy = mode === 'level' &&
     sankey.nodes_list.some(n => n.dimensions_as_parent.some(d => d.forced_by_local_action))
 
+  // #285 — type RÉEL d'un groupe (pour le mode 'flux' mixte) : une dimension
+  // (data_tagg) se comporte comme 'data', une étiquette de flux comme 'element'.
+  const isDataGroup = (tagg: Class_TagGroup): boolean => tagg.id in sankey.data_taggs_dict
+  const groupEffectiveMode = (tagg: Class_TagGroup): TagFilterMode =>
+    mode === 'flux' ? (isDataGroup(tagg) ? 'data' : 'element') : mode
+
   // Récupération des tags selon le mode — passe par getTagGroupsAsList pour respecter _taggs_order.
   // #1283b — `include_hidden` : inclut ou non les groupes en bannière « Aucun ».
   // Par défaut ils sont exclus (tiroir épuré) ; le bouton bascule les révèle en
@@ -1110,7 +1087,12 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, show_hidden_groups }: {
     const keep = (tagg: { banner: string }) => include_hidden || tagg.banner !== 'none'
     switch (mode) {
     case 'element':
-      return [...sankey.getTagGroupsAsList('node_taggs'), ...sankey.getTagGroupsAsList('flux_taggs')]
+      // #285 — nœuds seuls ; les étiquettes de flux ont leur section 'flux'.
+      return sankey.getTagGroupsAsList('node_taggs')
+        .filter(tagg => keep(tagg) && !tagg.id.includes('unitary')) as unknown as Class_TagGroup[]
+    case 'flux':
+      // #285 — étiquettes de flux + dimensions ensemble.
+      return [...sankey.getTagGroupsAsList('flux_taggs'), ...sankey.getTagGroupsAsList('data_taggs')]
         .filter(tagg => keep(tagg) && !tagg.id.includes('unitary')) as unknown as Class_TagGroup[]
     case 'level':
       return sankey.getTagGroupsAsList('level_taggs')
@@ -1135,6 +1117,10 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, show_hidden_groups }: {
       app_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
       app_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
     } else if (config.update_method == 'updateAllComponentsRelatedToDataTags') {
+      app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
+    } else if (config.update_method == 'updateAllComponentsRelatedToFluxAndDataTags') {
+      // #285 — section Flux mixte : rafraîchir flux ET dimensions.
+      app_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
       app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
     } else if (config.update_method == 'updateAllComponentsRelatedToLevelTags') {
       app_data.menu_configuration.updateAllComponentsRelatedToLevelTags()
@@ -1258,6 +1244,16 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, show_hidden_groups }: {
       }
       case 'data':
         handleDataTagSelection(tagg as unknown as Class_DataTagGroup, values)
+        break
+      case 'flux':
+        // #285 — section mixte : une dimension applique la logique data (child
+        // links), une étiquette de flux se contente de redessiner.
+        if (isDataGroup(tagg)) {
+          handleDataTagSelection(tagg as unknown as Class_DataTagGroup, values)
+        } else {
+          app_data.drawing_area.draw()
+          app_data.drawing_area.orderElementOnDA()
+        }
         break
       case 'element':
       //app_data.drawing_area.bypass_compute_positions = true
@@ -1461,7 +1457,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, show_hidden_groups }: {
         label: tag.display_name,
         value: tag.id,
         selected: tag.is_selected,
-        disabled: mode === 'data' && tagg.selected_tags_list.length < 2 && tag.id === tagg.selected_tags_list[0]?.id
+        disabled: groupEffectiveMode(tagg) === 'data' && tagg.selected_tags_list.length < 2 && tag.id === tagg.selected_tags_list[0]?.id
       }))
 
       return (
@@ -1478,7 +1474,9 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, show_hidden_groups }: {
 
   // Création du bouton switch/checkbox selon le mode
   const createActionButton = (tagg: Class_TagGroup) => {
-    if (mode === 'element' && config.show_palette_switch) {
+    // #285 — en section 'flux', le comportement suit le type réel du groupe.
+    const emode = groupEffectiveMode(tagg)
+    if (emode === 'element' && config.show_palette_switch) {
       return (
         <Switch
           justifySelf='end'
@@ -1603,7 +1601,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, show_hidden_groups }: {
           }}
         />
       )
-    } else if (mode === 'data') {
+    } else if (emode === 'data') {
       return (
         <Switch
           justifySelf='end'
@@ -1612,9 +1610,6 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, show_hidden_groups }: {
           isChecked={tagg.banner === 'multi'}
           onChange={evt => {
             tagg.banner = evt.target.checked ? 'multi' : 'one'
-            if (tagg.banner === 'one') {
-              app_data.drawing_area.sankey.remove_child_links()
-            }
             tagg.selectTagsFromId(tagg.tags_list[0].id)
             updateComponents()
           }} />
@@ -1644,7 +1639,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, show_hidden_groups }: {
     const edit_only = tagg.banner === 'sequence' || tagg.banner === 'topbar' || tagg.banner === 'none'
 
     return (
-      <Box key={tagg.id} layerStyle={mode === 'data' ? 'menuconfigpanel_grid' : 'menuconfig_grid'}>
+      <Box key={tagg.id} layerStyle={groupEffectiveMode(tagg) === 'data' ? 'menuconfigpanel_grid' : 'menuconfig_grid'}>
         {mode === 'level' && tagg.name === 'Primaire' ? <></> :
           <Box layerStyle='menuconfigpanel_option_name' display='flex' alignItems='center' gap='0.3rem'>
             <Box as='span'>{tagg.name}</Box>
@@ -1862,6 +1857,11 @@ export const LevelTagFilter = ({ app_data, show_hidden_groups }: { app_data: Cla
 
 export const DataTagGroupFilter = ({ app_data, show_hidden_groups }: { app_data: Class_ApplicationData, show_hidden_groups?: boolean }) =>
   <UnifiedTagGroupFilter app_data={app_data} mode="data" show_hidden_groups={show_hidden_groups} />
+
+// #285 (fusion) — section d'édition unifiée « Flux » : étiquettes de flux +
+// dimensions dans une seule liste, chacune avec sa case Dimension.
+export const FluxTagGroupFilter = ({ app_data, show_hidden_groups }: { app_data: Class_ApplicationData, show_hidden_groups?: boolean }) =>
+  <UnifiedTagGroupFilter app_data={app_data} mode="flux" show_hidden_groups={show_hidden_groups} />
 
 export const UnitaryTagGroupFilter = ({ app_data, show_hidden_groups }: { app_data: Class_ApplicationData, show_hidden_groups?: boolean }) => {
   // #247 — re-render piloté par le modèle (lie le slot updater + cleanup au démontage).

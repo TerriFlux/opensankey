@@ -32,7 +32,10 @@ import {
   Image,
   Text
 } from '@chakra-ui/react'
-import { FaThumbtack, FaPlay, FaPause, FaStepBackward, FaStepForward } from 'react-icons/fa'
+import {
+  FaThumbtack, FaPlay, FaPause, FaStepBackward, FaStepForward,
+  FaCaretDown, FaCaretRight, FaCheckCircle
+} from 'react-icons/fa'
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Type_JSON } from '../../types/Utils'
@@ -51,11 +54,13 @@ import { decompressGzipDataFixed } from '../../Persistence/UniversalJSONCompress
  * changent la racine des fichiers et les dialogues de chargement :
  *  - 'sankeydata'    : les modèles, dans le submodule SankeyData ;
  *  - 'mfadata'       : la sankeythèque, nos études publiées, dans MFAData ;
- *  - 'esankey-local' : galerie locale de DÉVELOPPEMENT (os#1281), les démos
+ *  - 'esankey-local' : galerie réservée aux DÉVELOPPEURS (os#1281), les démos
  *    e!Sankey d'un dossier pointé par ESANKEY_CORPUS_DIR côté serveur. Corpus
- *    propriétaire : jamais committé ni déployé. La source n'existe que si le
- *    backend est en mode debug avec ESANKEY_CORPUS_DIR défini (sinon 404, ses
- *    modèles n'apparaissent pas).
+ *    propriétaire : jamais committé ni publié — il est transporté à la main sur
+ *    les serveurs. La source n'existe que si ESANKEY_CORPUS_DIR est défini ET
+ *    que le backend est en mode debug (poste de dev) ou que la requête vient
+ *    d'un compte développeur (serveurs déployés) ; sinon 404, ses modèles
+ *    n'apparaissent pas.
  * Une source absente (404, index vide, pas de JSON) ne contribue simplement
  * aucun modèle : le panneau montre les onglets des catégories restantes.
  */
@@ -85,6 +90,9 @@ export type Type_TemplateInfos = {
   'img_path'?: string;
   'lang': string;
   'category': string;
+  // Dossier (étude) auquel appartient le modèle : id d'une entrée de `groups`
+  // de l'index, préfixé par la source côté client comme les ids de modèles.
+  'group'?: string;
   // Variantes de langue d'un meme diagramme (galerie e!Sankey locale) :
   // lang -> file_path. file_path reste la variante par defaut.
   'variants'?: { [lang: string]: string };
@@ -94,6 +102,26 @@ export type Type_TemplateInfos = {
 };
 export type Type_TemplatesInfos = { [id: string]: Type_TemplateInfos; };
 export type Type_TemplatesIndexes = { [category: string]: string[]; };
+
+/**
+ * Dossier d'étude déclaré par l'index d'une galerie (`groups` top-level, posé
+ * par la sankeythèque MFAData) : porte le nom affiché, localisable. L'ordre des
+ * sections suit l'ordre des modèles dans l'index, pas celui du dictionnaire.
+ *
+ * Les autres champs reprennent ce que la publication (GitLab Pages) lit déjà
+ * dans le dossier de l'étude, via scripts/generate_sankeytheque_index.py :
+ * `abstract` est le chapô du README (extrait à la génération, donc affichable
+ * sans requête), `readme` le chemin du README complet (chargé à la demande),
+ * `img_path` son image_front et `validated` la présence d'un marqueur .stamped.
+ */
+export type Type_TemplateGroupInfos = {
+  'title'?: { [lang: string]: string };
+  'abstract'?: { [lang: string]: string };
+  'readme'?: { [lang: string]: string };
+  'img_path'?: string;
+  'validated'?: boolean;
+};
+export type Type_TemplateGroups = { [id: string]: Type_TemplateGroupInfos; };
 
 // HELPERS ==============================================================================
 
@@ -239,10 +267,12 @@ export const loadTemplate = (
  * seul index, puis regroupées en ONGLETS (voir templateTab). Renvoie :
  *  - `templates` : les modèles (id préfixé par la source pour éviter toute
  *    collision, champ `source` posé sur chacun) ;
- *  - `indexes` : catégorie -> ids, ordre d'index.json (sert aux sous-titres) ;
+ *  - `indexes` : catégorie -> ids, ordre d'index.json ;
+ *  - `groups` : dossiers d'étude déclarés par les index (ids préfixés par la
+ *    source, comme les modèles), pour les sections repliables de la sankeythèque ;
  *  - `tabs` : onglets ordonnés (TAB_ORDER puis inattendus) ;
- *  - `tab_categories` : onglet -> catégories qu'il regroupe (pour les sous-titres
- *    de la sankeythèque) ;
+ *  - `tab_categories` : onglet -> catégories qu'il regroupe (ordre d'affichage
+ *    des modèles de l'onglet) ;
  *  - `source_tab` : source -> son onglet, pour présélectionner (sankeythèque,
  *    e!Sankey de dev).
  */
@@ -251,6 +281,7 @@ export const useTemplatesLibrary = (
 ) => {
   const [templates, setTemplates] = useState<Type_TemplatesInfos>({})
   const [indexes, setIndexes] = useState<Type_TemplatesIndexes>({})
+  const [groups, setGroups] = useState<Type_TemplateGroups>({})
   const [tabs, setTabs] = useState<string[]>([])
   const [tab_categories, setTabCategories] = useState<{ [tab: string]: string[] }>({})
   const [source_tab, setSourceTab] = useState<{ [s in Type_TemplateSource]?: string }>({})
@@ -284,14 +315,22 @@ export const useTemplatesLibrary = (
       .then(results => {
         const new_templates: Type_TemplatesInfos = {}
         const new_indexes: Type_TemplatesIndexes = {}
+        const new_groups: Type_TemplateGroups = {}
         const new_tab_categories: { [tab: string]: string[] } = {}
         const new_source_tab: { [s in Type_TemplateSource]?: string } = {}
         results.forEach(({ source, json_data }) => {
           if (!json_data || !('templates' in json_data)) return
+          // Dossiers d'étude de la source, préfixés comme les ids de modèles.
+          Object.entries((json_data['groups'] ?? {}) as Type_TemplateGroups)
+            .forEach(([gid, infos]) => { new_groups[source + '|' + gid] = infos })
           Object.entries(json_data['templates'] as Type_TemplatesInfos)
             .forEach(([id, template]) => {
               const uid = source + '|' + id
-              const full = { ...template, source }
+              const full = {
+                ...template,
+                source,
+                group: template.group ? source + '|' + template.group : undefined
+              }
               new_templates[uid] = full
               const category = template['category']
               if (!(category in new_indexes))
@@ -316,6 +355,7 @@ export const useTemplatesLibrary = (
         ])
         setTemplates(new_templates)
         setIndexes(new_indexes)
+        setGroups(new_groups)
         setTabCategories(new_tab_categories)
         setSourceTab(new_source_tab)
       })
@@ -324,7 +364,7 @@ export const useTemplatesLibrary = (
       })
   }, [])
 
-  return { templates, indexes, tabs, tab_categories, source_tab }
+  return { templates, indexes, groups, tabs, tab_categories, source_tab }
 }
 
 /**
@@ -360,6 +400,42 @@ const TemplateThumbnail = ({ title, img_path, max_height, className, source }:{
 }
 
 /**
+ * Ouvre la présentation d'un dossier d'étude (son README) dans le PANNEAU DE DOC,
+ * qui a la largeur et le moteur de rendu qu'il faut (titres, tableaux, formules).
+ *
+ * Le document y est prêté en lecture seule : `doc_external` est transitoire et ne
+ * touche jamais `documentation_markdown`, la documentation du diagramme, qui
+ * revient dès qu'on referme la présentation.
+ *
+ * Les images du README ne s'affichent pas : leurs chemins sont relatifs au dépôt
+ * MFAData et ne sont pas déclarés dans l'index, donc pas servis (la liste blanche
+ * protège le contenu non publié). Le site publié les réécrit à la génération :
+ * c'est le rendu de référence, vers lequel pointent les liens du README.
+ */
+const openGroupReadme = (
+  new_data: Class_ApplicationData,
+  path: string,
+  source: Type_TemplateSource,
+  title: string
+) => {
+  const mc = new_data.menu_configuration
+  new_data.sendWaitingToast(
+    async () => {
+      const response = await fetch(assetUrl(path, source))
+      if (!response.ok) {
+        throw new Error(response.status + ' ' + response.statusText)
+      }
+      const markdown = await response.text()
+      mc.doc_external = { title, markdown }
+      // Le panneau de doc peut être fermé : l'ouvrir, sinon le document n'irait nulle part.
+      mc.main_zone_show_doc = true
+      mc.ref_to_doc.current()
+    },
+    { error: { title: new_data.t('templates.group_readme_error') } }
+  )
+}
+
+/**
  * Fichier à charger pour un modèle : la variante dans la langue de l'application
  * quand elle existe, sinon la variante par défaut (file_path).
  */
@@ -370,15 +446,28 @@ const templateFilePath = (
   return template.variants?.[new_data.i18n.language] ?? template.file_path
 }
 
-/** Titre localisé d'un modèle, avec repli en puis id (sans le préfixe de source). */
+/**
+ * Titre affiché d'un modèle : sa langue, puis en, fr, puis le premier titre
+ * déclaré — un titre écrit dans UNE seule langue doit s'afficher dans toutes les
+ * autres plutôt que disparaître.
+ *
+ * En dernier recours, le NOM DU FICHIER (souligné rendu aux espaces), jamais
+ * l'identifiant : celui-ci dérive du chemin complet, si bien que tous les
+ * modèles d'un même dossier donnaient des libellés identiques une fois tronqués
+ * à deux lignes (« recherche_filiere_alimentation_anima… »).
+ */
 const templateTitle = (
   new_data: Class_ApplicationData,
   id: string,
   template: Type_TemplateInfos
 ) => {
-  return template.title?.[new_data.i18n.language]
-    ?? template.title?.['en']
-    ?? id.split('|').slice(1).join('|')
+  const titles = template.title
+  const localized = titles?.[new_data.i18n.language]
+    ?? titles?.['en'] ?? titles?.['fr']
+    ?? (titles ? Object.values(titles)[0] : undefined)
+  if (localized) return localized
+  const file_name = template.file_path.split('/').pop() ?? id
+  return file_name.replace(/\.json(\.gz)?$/i, '').replace(/_/g, ' ')
 }
 
 // COMPONENTS ===========================================================================
@@ -433,7 +522,13 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
   const play_index_ref = useRef(0)
   const cards_ref = useRef<{ [id: string]: HTMLElement | null }>({})
 
-  const { templates, indexes, tabs, tab_categories, source_tab } = useTemplatesLibrary(additionalMenu)
+  const { templates, indexes, groups, tabs, tab_categories, source_tab } = useTemplatesLibrary(additionalMenu)
+
+  // Dossiers d'étude repliés. `null` = état par défaut, calculé au rendu (tous
+  // repliés sauf le premier de l'onglet) ; un Set dès la première interaction.
+  const [collapsed_groups, setCollapsedGroups] = useState<Set<string> | null>(null)
+  // Dossier dont le README complet est déployé (un seul à la fois).
+  const [open_readme, setOpenReadme] = useState<string | null>(null)
 
   // Ouverture depuis le menu / le splash screen : le panneau remplace l'ancienne modale.
   new_data.menu_configuration.dict_setter_show_dialog
@@ -468,6 +563,50 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
   const ordered_all = current_tab_categories.flatMap(category => indexes[category] ?? [])
   const current_pos = current_id ? ordered_all.indexOf(current_id) : -1
 
+  // Découpe une liste d'ids en sections par dossier d'étude (`group`), dans
+  // l'ordre de première apparition ; les modèles sans dossier forment des
+  // sections anonymes (grille à plat, cas des galeries sans `groups`).
+  const groupSections = (ids: string[]) => {
+    const sections: { group: string | null, ids: string[] }[] = []
+    ids.forEach(id => {
+      const g = templates[id]?.group ?? null
+      const section = sections.find(s => s.group === g)
+      if (section) section.ids.push(id)
+      else sections.push({ group: g, ids: [id] })
+    })
+    return sections
+  }
+
+  // Dossiers de l'onglet courant, dans l'ordre d'affichage. Par défaut seul le
+  // premier est déplié : la sankeythèque compte des centaines d'entrées.
+  const current_tab_groups = current_tab_categories
+    .flatMap(category => groupSections(indexes[category] ?? []))
+    .flatMap(section => section.group === null ? [] : [section.group])
+  const collapsed = collapsed_groups ?? new Set(current_tab_groups.slice(1))
+
+  const toggleGroup = (gid: string) => {
+    const next = new Set(collapsed)
+    if (next.has(gid)) next.delete(gid)
+    else next.add(gid)
+    setCollapsedGroups(next)
+  }
+
+  /**
+   * Valeur d'un champ multilingue d'un dossier (nom affiché, chapô, chemin du
+   * README) dans la langue de l'application, avec repli sur en, fr, puis la
+   * première déclarée.
+   */
+  const groupLocalized = (gid: string, field: 'title' | 'abstract' | 'readme') => {
+    const values = groups[gid]?.[field]
+    if (!values) return undefined
+    return values[new_data.i18n.language]
+      ?? values['en'] ?? values['fr'] ?? Object.values(values)[0]
+  }
+
+  /** Nom affiché d'un dossier d'étude, localisé, avec repli sur son id. */
+  const groupTitle = (gid: string) =>
+    groupLocalized(gid, 'title') ?? gid.split('|').slice(1).join('|')
+
   // Charge le modèle à la position `i` (bouclage) et le marque comme courant.
   const showTemplateAt = (i: number) => {
     if (ordered_all.length === 0) return
@@ -498,17 +637,31 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
     return () => window.clearInterval(timer)
   }, [playing])
 
+  // Le modèle courant (player ou navigation) déplie son dossier d'étude : sans
+  // quoi sa vignette resterait invisible dans une section repliée.
+  useEffect(() => {
+    if (!current_id) return
+    const gid = templates[current_id]?.group
+    if (gid && collapsed.has(gid)) {
+      const next = new Set(collapsed)
+      next.delete(gid)
+      setCollapsedGroups(next)
+    }
+  }, [current_id])
+
   // Replie la liste sur la vignette en cours (player ou navigation manuelle).
+  // Dépend aussi du repli : la vignette peut n'exister qu'après le dépliage.
   useEffect(() => {
     if (current_id)
       cards_ref.current[current_id]?.scrollIntoView({ block: 'nearest' })
-  }, [current_id])
+  }, [current_id, collapsed_groups])
 
-  // Changement d'onglet : on repart d'une séquence vierge.
+  // Changement d'onglet : on repart d'une séquence vierge, repli par défaut.
   useEffect(() => {
     setPlaying(false)
     setCurrentId(null)
     play_index_ref.current = 0
+    setCollapsedGroups(null)
   }, [current_tab])
 
   // Démarrer/arrêter le player. Au démarrage, on force l'ouverture pour que le
@@ -547,12 +700,10 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
 
   // Habillage de l'onglet courant : la sankeythèque garde son titre et son
   // invite ; l'onglet e!Sankey rappelle la nature du corpus local quand la
-  // galerie de dev est active (hors dev, il ne contient que les modèles publiés).
+  // galerie réservée aux devs est active (sans elle, il ne contient que les
+  // modèles publiés).
   const is_theque_tab = current_tab === 'sankeytheque'
   const is_esankey_dev_tab = source_tab['esankey-local'] === current_tab
-  // Sous-titres de catégorie utiles seulement si l'onglet en regroupe plusieurs
-  // (la sankeythèque : études / filières / recherche / clients).
-  const show_subheaders = current_tab_categories.length > 1
 
   const mc = new_data.menu_configuration
   // Épinglée, la galerie se docke à GAUCHE du chrome déjà réservé (colonne
@@ -666,6 +817,119 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
     >
       {ids.map(renderCard)}
     </Box>
+
+  // Liste d'ids rendue en sections par dossier d'étude : un en-tête repliable
+  // par dossier (nom affiché déclaré par l'index), grille à plat pour les
+  // modèles sans dossier — les galeries sans `groups` gardent leur rendu actuel.
+  const renderSections = (ids: string[]) =>
+    groupSections(ids).map(({ group, ids: section_ids }, i) => {
+      if (group === null)
+        return <Box key={'flat_' + i} marginTop='0.4rem'>{renderGrid(section_ids)}</Box>
+      const is_collapsed = collapsed.has(group)
+      const abstract = groupLocalized(group, 'abstract')
+      const readme = groupLocalized(group, 'readme')
+      // Le panneau de doc a son propre bouton de retour : on relit `doc_external`
+      // plutôt que le seul état local, sinon le lien resterait sur « Masquer »
+      // après une fermeture faite depuis le panneau.
+      const readme_open = new_data.menu_configuration.doc_external !== null
+        && open_readme === group
+      const source = templates[section_ids[0]]?.source ?? 'sankeydata'
+      return <Box key={group} marginTop='0.35rem'>
+        <Box
+          display='flex'
+          alignItems='center'
+          gap='0.35rem'
+          padding='0.3rem 0.2rem'
+          borderRadius='6px'
+          color='gray.600'
+          _hover={{ background: '#f2f5f4', color: 'gray.800' }}
+          transition='background .1s, color .1s'
+        >
+          <Box
+            as='button'
+            display='flex'
+            alignItems='center'
+            gap='0.35rem'
+            flex='1'
+            minWidth='0'
+            textAlign='left'
+            color='inherit'
+            onClick={() => toggleGroup(group)}
+          >
+            <Box as='span' fontSize='0.7rem' color={ACCENT} flex='none'>
+              {is_collapsed ? <FaCaretRight /> : <FaCaretDown />}
+            </Box>
+            {/* Couverture de l'étude (image_front du dossier), la même que celle
+                qui illustre sa page sur le site publié. */}
+            {groups[group]?.img_path && <Image
+              src={assetUrl(groups[group].img_path as string, source)}
+              flex='none'
+              width='1.6rem'
+              height='1.6rem'
+              borderRadius='4px'
+              objectFit='cover'
+              background='#f6f8f7'
+            />}
+            <Text fontSize='xs' fontWeight='600' margin='0' noOfLines={1} flex='1'>
+              {groupTitle(group)}
+            </Text>
+          </Box>
+          {/* Étude validée : marqueur .stamped, le même que celui qui autorise la
+              publication du dossier sur le site. */}
+          {groups[group]?.validated && <Box
+            as='span'
+            flex='none'
+            fontSize='0.7rem'
+            color={ACCENT}
+            title={new_data.t('templates.group_validated')}
+          >
+            <FaCheckCircle />
+          </Box>}
+          <Text fontSize='0.65rem' color='gray.400' margin='0' flex='none'>
+            {section_ids.length}
+          </Text>
+        </Box>
+        {/* Présentation de l'étude. Le chapô vient de l'index (extrait du README
+            à la génération) : il s'affiche sans requête. Le README entier ne part
+            en réseau qu'au clic sur « lire la présentation ». Le lien est écrit en
+            toutes lettres : une icône seule passait inaperçue, d'autant que les
+            premiers dossiers de la liste n'ont pas encore de README. */}
+        {(abstract || readme) && <Box margin='0 0 0.35rem 1.05rem'>
+          {abstract && <Text
+            fontSize='0.68rem'
+            color='gray.500'
+            lineHeight='1.35'
+            margin='0'
+            noOfLines={is_collapsed ? 2 : 4}
+          >
+            {abstract}
+          </Text>}
+          {readme && <Box
+            as='button'
+            fontSize='0.66rem'
+            fontWeight='600'
+            color={readme_open ? 'gray.400' : ACCENT}
+            textDecoration='underline'
+            marginTop='0.1rem'
+            _hover={{ opacity: 0.75 }}
+            onClick={() => {
+              if (readme_open) {
+                new_data.menu_configuration.doc_external = null
+                setOpenReadme(null)
+                return
+              }
+              setOpenReadme(group)
+              openGroupReadme(new_data, readme, source, groupTitle(group))
+            }}
+          >
+            {new_data.t(readme_open ? 'templates.group_readme_close' : 'templates.group_readme_open')}
+          </Box>}
+        </Box>}
+        {!is_collapsed && <Box marginTop='0.25rem' marginBottom='0.4rem'>
+          {renderGrid(section_ids)}
+        </Box>}
+      </Box>
+    })
 
   const iconBtnSx = { paddingInline: '0.3rem', minWidth: 'auto', width: 'auto', flex: 'none' }
 
@@ -791,29 +1055,14 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
       padding='0.5rem 0.75rem 0.4rem 0.75rem'
     >
       {is_esankey_dev_tab
-        ? 'Galerie locale de développement (ESANKEY_CORPUS_DIR) — corpus propriétaire, non déployé.'
+        ? 'Galerie réservée aux développeurs (ESANKEY_CORPUS_DIR) — corpus propriétaire, non publié.'
         : new_data.t(is_theque_tab ? 'templates.sankeytheque_hint' : 'templates.gallery_hint')}
     </Text>
+    {/* Un seul niveau : les dossiers d'étude (sections repliables) se suivent
+        dans l'ordre de l'index, sans sous-titre par catégorie — les catégories
+        ne servent plus qu'à ordonner ordered_all. */}
     <Box overflowY='auto' padding='0 0.75rem 0.75rem 0.75rem'>
-      {show_subheaders
-        ? current_tab_categories.map(category => {
-          const ids = indexes[category] ?? []
-          if (ids.length === 0) return null
-          return <Box key={category} marginTop='0.5rem'>
-            <Text
-              fontSize='0.68rem'
-              fontWeight='700'
-              textTransform='uppercase'
-              letterSpacing='0.04em'
-              color='gray.400'
-              margin='0 0 0.4rem 0'
-            >
-              {new_data.t('templates.categories.' + category)}
-            </Text>
-            {renderGrid(ids)}
-          </Box>
-        })
-        : <Box marginTop='0.5rem'>{renderGrid(ordered_all)}</Box>}
+      <Box marginTop='0.5rem'>{renderSections(ordered_all)}</Box>
     </Box>
   </Box>
 }

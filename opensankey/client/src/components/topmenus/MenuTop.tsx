@@ -656,44 +656,6 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
         {new_data.icon_library.icon_open_sankey_excel}
         {t('Menu.open_excel')}
       </MenuItem>
-      {new_data.has_sankey_dev && <MenuItem onClick={() => { set_show_image_import(true) }}>
-        <Box as='span' mr='0.5em'><FontAwesomeIcon icon={faImage} /></Box>
-        {t('Menu.import_image')}
-      </MenuItem>}
-      <MenuItem
-        onClick={() => {
-          if (_load_sankeymatic.current) {
-            _load_sankeymatic.current.name = ''
-            _load_sankeymatic.current.click()
-          }
-        }}
-      >
-        {/* TODO : find a better icon when we'll use FontAwesome pro */}
-        {new_data.icon_library.icon_open_sankey_sankeymatic}
-        {t('Menu.open_sankeymatic')}
-      </MenuItem>
-      <MenuItem
-        onClick={() => {
-          if (_load_stan.current) {
-            _load_stan.current.name = ''
-            _load_stan.current.click()
-          }
-        }}
-      >
-        {new_data.icon_library.icon_open_sankey_sankeymatic}
-        {t('Menu.open_stan')}
-      </MenuItem>
-      <MenuItem
-        onClick={() => {
-          if (_load_esankey.current) {
-            _load_esankey.current.name = ''
-            _load_esankey.current.click()
-          }
-        }}
-      >
-        {new_data.icon_library.icon_open_sankey_sankeymatic}
-        {t('Menu.open_esankey')}
-      </MenuItem>
       <MenuItem
         onClick={() => {
           new_data.menu_configuration.ref_universal_converter_set_config.current(
@@ -705,6 +667,48 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
         {new_data.icon_library.icon_open_sankey_pickle}
         {t('Menu.format_converter')}
       </MenuItem>
+      <MenuDivider />
+      {/* Formats non natifs : regroupés à part pour que l'utilisateur voie d'un
+          coup d'œil ce qui relève de l'import depuis un logiciel concurrent. */}
+      <MenuGroup title={t('Menu.import_foreign')}>
+        <MenuItem
+          onClick={() => {
+            if (_load_sankeymatic.current) {
+              _load_sankeymatic.current.name = ''
+              _load_sankeymatic.current.click()
+            }
+          }}
+        >
+          {new_data.icon_library.icon_open_sankey_sankeymatic}
+          {t('Menu.open_sankeymatic')}
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            if (_load_stan.current) {
+              _load_stan.current.name = ''
+              _load_stan.current.click()
+            }
+          }}
+        >
+          {new_data.icon_library.icon_open_sankey_stan}
+          {t('Menu.open_stan')}
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            if (_load_esankey.current) {
+              _load_esankey.current.name = ''
+              _load_esankey.current.click()
+            }
+          }}
+        >
+          {new_data.icon_library.icon_open_sankey_esankey}
+          {t('Menu.open_esankey')}
+        </MenuItem>
+        {new_data.has_sankey_dev && <MenuItem onClick={() => { set_show_image_import(true) }}>
+          <Box as='span' mr='0.5em'><FontAwesomeIcon icon={faImage} /></Box>
+          {t('Menu.import_image')}
+        </MenuItem>}
+      </MenuGroup>
     </MenuList>
   </ChakraMenu>
 
@@ -971,10 +975,11 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
           {new_data.icon_library.icon_open_sankey_excel}
           {t('Menu.open_excel')}
         </MenuItem>
-        {new_data.has_sankey_dev && <MenuItem onClick={() => { set_show_image_import(true) }}>
-          <Box as='span' mr='0.5em'><FontAwesomeIcon icon={faImage} /></Box>
-          {t('Menu.import_image')}
-        </MenuItem>}
+      </MenuGroup>
+      <MenuDivider />
+      {/* Formats non natifs : regroupés à part pour que l'utilisateur voie d'un
+          coup d'œil ce qui relève de l'import depuis un logiciel concurrent. */}
+      <MenuGroup title={t('Menu.import_foreign')}>
         <MenuItem onClick={() => {
           if (_load_sankeymatic.current) {
             _load_sankeymatic.current.name = ''
@@ -990,7 +995,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
             _load_stan.current.click()
           }
         }}>
-          {new_data.icon_library.icon_open_sankey_sankeymatic}
+          {new_data.icon_library.icon_open_sankey_stan}
           {t('Menu.open_stan')}
         </MenuItem>
         <MenuItem onClick={() => {
@@ -999,9 +1004,13 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
             _load_esankey.current.click()
           }
         }}>
-          {new_data.icon_library.icon_open_sankey_sankeymatic}
+          {new_data.icon_library.icon_open_sankey_esankey}
           {t('Menu.open_esankey')}
         </MenuItem>
+        {new_data.has_sankey_dev && <MenuItem onClick={() => { set_show_image_import(true) }}>
+          <Box as='span' mr='0.5em'><FontAwesomeIcon icon={faImage} /></Box>
+          {t('Menu.import_image')}
+        </MenuItem>}
       </MenuGroup>
       <MenuDivider />
       <MenuGroup title={t('Menu.enregistrer')}>

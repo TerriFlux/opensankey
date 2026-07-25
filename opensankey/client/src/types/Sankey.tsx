@@ -28,12 +28,17 @@ import * as d3 from '../d3Modules'
 import { Class_DrawingArea } from './DrawingArea'
 import { base_styles, elementStyleConfigs, ElementStyleConfigsDict, ElementStyleKey, LinkExportCloseStyle, LinkImportCloseStyle, LinkImportExportAboveBelowStyle, LinkImportExportCloseStyle, LinkStyle, NodeExportBelowStyle, NodeExportCloseStyle, NodeImportAboveStyle, NodeImportCloseStyle, NodeImportExportAboveBelowStyle, NodeImportExportCloseStyle, NodeSectorStyle, NodeStyle } from '../Elements/ElementStyle'
 import { Class_LinkElement, defaultLinkId, sortLinksElementsByIds } from '../Elements/Link'
+// Type seul (cast dans mergeParallelLinks) : pas d'import de valeur, pour ne
+// pas créer de cycle Sankey -> LinkValues -> Link -> Sankey.
+import type { Class_LinkValue } from '../Elements/LinkValues'
 import { Class_NodeElement } from '../Elements/Node'
 // Type seul : `Class_ContainerElement` en hérite aussi, et `onNodeRenamed` doit
 // pouvoir refuser un conteneur. Pas d'import de valeur, pour ne pas créer de cycle.
 import type { Class_NodeBase } from '../Elements/NodeBase'
 import { Class_NodeDimension } from '../Elements/NodeDimension'
 import { Class_DataTag } from '../types/Tag'
+import type { Class_Tag } from '../types/Tag'
+import type { Class_FluxTag } from '../types/Tag'
 import { Class_NodeTagGroup, Class_FluxTagGroup, Class_DataTagGroup, Class_LevelTagGroup, Class_ViewTagGroup } from './TagGroup'
 import { Class_Theme, themeOpenSankey } from './Theme'
 import { Class_UnitsRegistry } from './Units'
@@ -377,43 +382,250 @@ export class Class_Sankey {
     return false
   }
 
-  public create_child_links() {
-    const data_tagg = Object.values(this._data_taggs).filter(tagg => tagg.banner == 'multi')[0]
-    if (!data_tagg) return
-    const selected_tags = data_tagg.tags_list.map(tag => tag.is_selected)
-    if (selected_tags.length == 1) return
-    this.links_list.forEach(l => {
-      if (l.is_multi_link) {
-        return
+  /**
+   * #285 — bascule dimension→annotation SANS PERTE (NOTE-FUSION-TAGS.md §3.3) :
+   * le groupe de dataTags devient un groupe d'étiquettes libres (mêmes tags,
+   * mêmes couleurs), et sur chaque lien le niveau d'arbre correspondant est
+   * replié — chaque tranche devient des sous-valeurs coordonnées, la feuille
+   * fusionnée porte la somme des données. Les résultats de résolution des
+   * tranches sont abandonnés. Le sens inverse (annotation→dimension) attend
+   * l'arbitrage §6.2.
+   */
+  public convertDataTagGroupToFluxTagGroup(data_tagg: Class_DataTagGroup): Class_FluxTagGroup {
+    // 1) Groupe libre miroir (les dicts data/flux sont séparés : même id possible)
+    const flux_tagg = this.addFluxTagGroup(data_tagg.id, data_tagg.name, false)
+    // §3.0ter — le groupe issu d'une dimension PORTE des valeurs ; un groupe
+    // unité transfère l'échelle de chaque tag (cas unitTag généralisé).
+    flux_tagg.carries_values = true
+    // OS#1286 — un ancien groupe unité (is_unit) devient un groupe « de type
+    // unité » : chaque tag référence l'unité du registre correspondant à son
+    // symbole (créée dans « Unités du fichier » si absente). L'ancienne échelle
+    // libre est conservée en repli, la largeur de bande dérive du coefficient.
+    if (data_tagg.is_unit) flux_tagg.is_unit_type = true
+    data_tagg.tags_list.forEach(data_tag => {
+      const tag = flux_tagg.addTag(data_tag.name, data_tag.id) as Class_FluxTag
+      tag.color = data_tag.color
+      tag.long_name = data_tag.long_name
+      tag.setSelected(false)
+      if (data_tagg.is_unit) {
+        tag.scale = (data_tag as Class_DataTag).scale
+        tag.unit_ref = this.units.getOrCreateLegacyUnit(data_tag.name, 1).unit.id
       }
-      data_tagg.tags_list.forEach(tag => {
-        if (!tag.is_selected) {
-          if (tag.id in l.child_links) {
-            l.child_links[tag.id].delete()
-            delete l.child_links[tag.id]
+    })
+    flux_tagg.use_colors = data_tagg.use_colors
+    // 2) Replier les arbres de valeurs (liens porteurs seulement, pas les
+    //    rubans). La valeur principale de chaque flux reste celle de la
+    //    tranche SÉLECTIONNÉE (valeurs non additives — pas de somme).
+    const tag_for = (tag_id: string) => flux_tagg.tags_dict[tag_id]
+    const selected_tag_id = data_tagg.selected_tags_list[0]?.id
+    this.links_list.forEach(l => {
+      l.collapseDataTagGroup(data_tagg, tag_for, selected_tag_id)
+    })
+    // 3) Supprimer la dimension : prune() conserve la tranche fusionnée (la
+    //    première). Les bandes d'affichage sont dérivées au draw — rien à
+    //    synchroniser.
+    this.removeTagGroupWithId('data_taggs', data_tagg.id)
+    return flux_tagg
+  }
+
+  /**
+   * #285 (§3.3/§6.2) — bascule annotation→DIMENSION : un groupe libre porteur
+   * devient un groupe de dataTags. Chaque valeur coordonnée par un tag du
+   * groupe devient la valeur de la tranche correspondante (ses autres
+   * coordonnées restent des valeurs coordonnées dans la tranche) ; la
+   * quantité SANS tag du groupe (scalaire hérité ou valeur non coordonnée)
+   * va sur un tag « Non affecté » créé automatiquement (totaux préservés,
+   * réversible). Un groupe à échelles distinctes devient un groupe unité
+   * (échelles transférées).
+   *
+   * Piège structurel : addDataTagGroup étend l'arbre de valeurs de chaque
+   * lien en DÉTRUISANT les feuilles (expand copie puis delete) — on
+   * snapshotte donc tout AVANT, puis on réécrit dans les tranches.
+   */
+  public convertFluxTagGroupToDataTagGroup(flux_tagg: Class_FluxTagGroup): Class_DataTagGroup | null {
+    if (flux_tagg.is_dimension) return null
+    const group_tag_ids = new Set(flux_tagg.tags_list.map(tag => tag.id))
+    const tags_meta = flux_tagg.tags_list.map(tag => ({
+      id: tag.id, name: tag.name, long_name: tag.long_name, color: tag.color,
+      scale: (tag as Class_FluxTag).scale,
+      unit_coeff: (tag as Class_FluxTag).resolved_unit?.unit.coefficient,
+      unit_grandeur_scale: (tag as Class_FluxTag).resolved_unit?.unit_type.display_scale
+    }))
+
+    // 1) Snapshot de toutes les feuilles de tous les liens porteurs
+    type TvSnap = { value: number | null, own: string | null, others: Class_Tag[] }
+    type LeafSnap = { link: Class_LinkElement, path: Class_DataTag[], scalar: number | null, tvs: TvSnap[] }
+    const snaps: LeafSnap[] = []
+    let needs_unassigned = false
+    const path_tags_from_ids = (ids: string[]): Class_DataTag[] =>
+      this.data_taggs_list.map((tagg, idx) => tagg.tags_dict[ids[idx]] as Class_DataTag).filter(tag => tag !== undefined)
+    this.links_list.forEach(l => {
+      Object.values(l.getAllValues()).forEach(([leaf]) => {
+        const lv = leaf as Class_LinkValue
+        const scalar = lv.valueData ?? lv.valueResult
+        const tvs: TvSnap[] = lv.tagged_values_list.map(tv => {
+          const own = tv.tags_list.find(tag => group_tag_ids.has(tag.id))?.id ?? null
+          const others = tv.tags_list.filter(tag => !group_tag_ids.has(tag.id))
+          return { value: tv.value, own, others }
+        })
+        // §3.0ter — avec un groupe porteur, le scalaire n'est qu'un CACHE de
+        // la valeur sélectionnée : il ne compte comme quantité non ventilée
+        // que si le flux n'a AUCUNE valeur coordonnée (flux vierge).
+        if ((scalar !== null && tvs.length === 0) || tvs.some(tv => tv.own === null)) needs_unassigned = true
+        if (scalar !== null || tvs.length > 0)
+          snaps.push({ link: l, path: path_tags_from_ids(leaf.data_tags_id), scalar, tvs })
+      })
+    })
+
+    // 2) Créer la dimension (mêmes tags ; « Non affecté » si nécessaire).
+    //    L'expansion détruit les feuilles — les snapshots font foi.
+    const data_tagg = this.addDataTagGroup(flux_tagg.id, flux_tagg.name, false)
+    // OS#1286 — un groupe « de type unité » (ou à échelles distinctes) redevient
+    // une dimension unité ; l'échelle de tranche dérive du coefficient de
+    // l'unité (échelle du dessin / coefficient) pour préserver la largeur.
+    const to_unit = flux_tagg.is_unit_type || flux_tagg.has_own_scales
+    if (to_unit) data_tagg.is_unit = true
+    tags_meta.forEach(meta => {
+      const tag = data_tagg.addTag(meta.name, meta.id) as Class_DataTag
+      tag.color = meta.color
+      tag.long_name = meta.long_name
+      if (to_unit) {
+        if (meta.unit_coeff !== undefined && meta.unit_coeff !== 0)
+          tag.scale = (meta.unit_grandeur_scale ?? this.drawing_area.scale) / meta.unit_coeff
+        else if (meta.scale !== undefined) tag.scale = meta.scale
+      }
+    })
+    const UNASSIGNED_ID = flux_tagg.id + '_unassigned'
+    if (needs_unassigned) {
+      const tag = data_tagg.addTag('Non affecté', UNASSIGNED_ID) as Class_DataTag
+      tag.color = '#b0b0b0'
+    }
+    ;(data_tagg.tags_list[0] as Class_DataTag)?.setSelected()
+
+    // 3) Réécrire les tranches depuis les snapshots
+    const bucket_of = (snap: LeafSnap, tag_id: string): Class_LinkValue | null =>
+      snap.link.valueForTags([...snap.path, data_tagg.tags_dict[tag_id] as Class_DataTag]) as Class_LinkValue | null
+    snaps.forEach(snap => {
+      // par tag du groupe : les valeurs qui le portent
+      tags_meta.forEach(meta => {
+        const carried = snap.tvs.filter(tv => tv.own === meta.id)
+        const slice = bucket_of(snap, meta.id)
+        if (!slice || carried.length === 0) return
+        if (carried.length === 1 && carried[0].others.length === 0) {
+          slice.valueData = carried[0].value
+          slice.valueResult = null
+        }
+        else {
+          carried.forEach(tv => {
+            const recreated = slice.addTaggedValue()
+            recreated.value = tv.value
+            tv.others.forEach(tag => tag.addReference(recreated))
+          })
+        }
+      })
+      // le non-ventilé : scalaire hérité + valeurs sans tag du groupe
+      if (needs_unassigned) {
+        const slice = bucket_of(snap, UNASSIGNED_ID)
+        if (slice) {
+          if (snap.scalar !== null && snap.tvs.length === 0) {
+            slice.valueData = snap.scalar
+            slice.valueResult = null
           }
+          snap.tvs.filter(tv => tv.own === null).forEach(tv => {
+            const recreated = slice.addTaggedValue()
+            recreated.value = tv.value
+            tv.others.forEach(tag => tag.addReference(recreated))
+          })
         }
-      })
-      data_tagg.selected_tags_list.forEach(tag => {
-        if (tag.id in l.child_links || l.is_multi_link) {
-          return
-        }
-        const child_link = this.addNewLink(l.source, l.target)
-        child_link.copyFrom(l)
-        l.addChildLink(child_link, tag)
-      })
+      }
+    })
+
+    // 4) Supprimer le groupe libre (ses tags ne coordonnent plus rien)
+    this.removeTagGroupWithId('flux_taggs', flux_tagg.id)
+    return data_tagg
+  }
+
+  /**
+   * #285 — fusionne des flux PARALLÈLES (même source, même cible — l'ancien
+   * contournement « n flux pour n étiquettes », cf. NOTE-FUSION-TAGS.md §2.1)
+   * en UN flux à n valeurs coordonnées : la valeur de chaque lien devient une
+   * valeur du flux conservé, coordonnée par ses étiquettes ; la valeur
+   * principale porte le total (partition assumée par l'utilisateur qui
+   * déclenche la fusion) ; le premier lien garde sa géométrie et son style,
+   * les autres sont supprimés.
+   *
+   * V1 : liens sans dimensions (pas d'arbre de valeurs) — le cas des fichiers
+   * construits avec le contournement. Retourne null si la fusion est refusée.
+   */
+  /**
+   * #285 — migration au chargement : fusionne TOUS les groupes de flux
+   * parallèles (même source, même cible — même direction) dont au moins un
+   * membre porte des étiquettes de flux, en un flux à n valeurs coordonnées.
+   * Idempotent ; sans effet si le fichier a des dimensions (V1 de
+   * mergeParallelLinks) ou si les parallèles ne sont pas tagués (choix de
+   * dessin respecté).
+   */
+  public migrateParallelTaggedLinks() {
+    if (this.data_taggs_list.length > 0) return
+    const groups: { [pair: string]: Class_LinkElement[] } = {}
+    this.links_list.forEach(l => {
+      const key = l.source.id + '→' + l.target.id
+      if (!groups[key]) groups[key] = []
+      groups[key].push(l)
+    })
+    Object.values(groups).forEach(group => {
+      if (group.length < 2) return
+      if (!group.some(l => (l.value?.flux_tags_list.length ?? 0) > 0)) return
+      this.mergeParallelLinks(group)
     })
   }
 
-  public remove_child_links() {
-    this.links_list.filter(l => Object.values(l.child_links).length > 0).forEach(l => {
-      Object.keys(l.child_links).forEach(key => {
-        l.child_links[key].delete()
-        delete l.child_links[key]
-        //delete this.links_dict[key]
-      })
+  public mergeParallelLinks(links: Class_LinkElement[]): Class_LinkElement | null {
+    if (links.length < 2) return null
+    const base = links[0]
+    // Garde : même paire source→cible, pas de rubans, pas de dimensions
+    const compatible = links.every(l =>
+      l.source === base.source &&
+      l.target === base.target &&
+      (l.value !== null))
+    if (!compatible || this.data_taggs_list.length > 0) return null
+
+    let total: number | null = null
+    links.forEach(l => {
+      const leaf = l.value as Class_LinkValue
+      // Les valeurs coordonnées déjà présentes sont transférées telles quelles
+      if (l !== base) {
+        leaf.tagged_values_list.forEach(tv => {
+          (base.value as Class_LinkValue).addTaggedValue().copyFrom(tv)
+        })
+      }
+      // Le scalaire du lien devient une valeur coordonnée par SES étiquettes
+      const v = leaf.valueData ?? leaf.valueResult
+      if (v !== null) {
+        total = (total ?? 0) + v
+        const tv = (base.value as Class_LinkValue).addTaggedValue()
+        tv.value = v
+        leaf.flux_tags_list.forEach(tag => {
+          // addTag (pas seulement addReference) : sinon tv.tags_list reste vide
+          // → couleur de bande en repli (fallback) et tag absent de la légende.
+          tv.addTag(tag)
+          // §3.0ter — les groupes dont les tags coordonnent des valeurs
+          // deviennent PORTEURS
+          ;(tag.group as Class_FluxTagGroup).carries_values = true
+        })
+      }
     })
+    // Les étiquettes « flux entier » du lien conservé ont migré sur sa valeur
+    // coordonnée ; la valeur principale porte le total
+    const base_leaf = base.value as Class_LinkValue
+    base_leaf.flux_tags_list.slice().forEach(tag => base_leaf.removeTag(tag))
+    base_leaf.valueData = total
+    base_leaf.valueResult = null
+    // Suppression des liens absorbés (les bandes sont dérivées au draw)
+    links.slice(1).forEach(l => this.drawing_area.deleteLink(l))
+    return base
   }
+
   public create_internal_style(id: ElementStyleKey, configs: ElementStyleConfigsDict) {
     if (this._styles[id]) {
       return

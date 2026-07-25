@@ -1386,7 +1386,6 @@ export class SankeyPersistence {
         (kwargs && kwargs['save_only_visible_elements']) ? sankey.visible_nodes_list : sankey.nodes_list)
     const echangeTag = sankey.node_taggs_dict['type de noeud'] ? sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
 
-    sankey.remove_child_links()
 
     nodes_list
       .forEach(node => {
@@ -1422,7 +1421,7 @@ export class SankeyPersistence {
     )
     let has_results = false
     links_list.forEach(l => has_results = has_results || l.has_result)
-    links_list.filter(l => !l.is_multi_link)
+    links_list
       .forEach(link => {
         json_object_links[link.id] = {}
         json_object_links[link.id] = LinkElementPersistence.toJSON(link, json_object_links[link.id] as Type_JSON, { ...kwargs, 'has_results': has_results })
@@ -1454,8 +1453,6 @@ export class SankeyPersistence {
     // seulement s'il diffère du catalogue par défaut (fichiers existants inchangés).
     if (!sankey.units.equalsDefaultCatalog())
       json_object['units'] = sankey.units.toJSON() as unknown as Type_JSON
-
-    sankey.create_child_links()
     // Out
     return json_object
   }
@@ -1672,7 +1669,12 @@ export class SankeyPersistence {
       )
     )
 
-    sankey.create_child_links()
+    // #285 — migration des fichiers d'avant la fusion des tags : l'ancien
+    // contournement « n flux parallèles, un par étiquette » devient un flux
+    // unique à n valeurs coordonnées. Idempotent (un fichier déjà converti n'a
+    // plus de parallèles tagués) ; les parallèles NON tagués sont un choix de
+    // dessin et ne sont pas touchés.
+    sankey.migrateParallelTaggedLinks()
     // Icon catalog
     sankey['_icon_catalog'] = getJSONFromJSON(json_object, 'icon_catalog', sankey.icon_catalog) as { [x: string]: string }
 

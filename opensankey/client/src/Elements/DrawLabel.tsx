@@ -2313,10 +2313,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     // Comparaison vs link.thickness en coords locales : on raisonne en taille
     // logique puis on compense le fit-zoom à la fin pour garder une police
     // constante à l'écran (issue #165).
-    let font_size = this._label_values.font_size
-    if (font_size > this.link.thickness && this.link.is_multi_link) {
-      font_size = this.link.thickness
-    }
+    const font_size = this._label_values.font_size
     const comp = this._element.drawing_area?.font_compensation ?? 1
     return font_size * comp
   }
@@ -2893,6 +2890,13 @@ export class LinkDrawValueLabel extends LinkDrawLabelBase {
     const da = this._element.drawing_area
 
     if (da.type_data === 'structure') return false
+    // #285 — flux affiché en bandes : la valeur unique n'a aucun sens (elle
+    // recopierait la première) ; chaque bande peut porter son label
+    // (cf. LinkDrawShape.drawTaggedValueBands). EXCEPTION : bandes ADDITIVES,
+    // où le label principal montre le TOTAL (la somme). Ce total suit ensuite le
+    // chemin normal par flux (value_label_is_visible + filtre taille) et reste
+    // indépendant des labels par bande — les deux ne sont PAS exclusifs.
+    if (this.link.tagged_value_bands.length > 0 && !this.link.has_additive_bands) return false
     // Seuil d'affichage des valeurs : mode pixel (#seuil px) → épaisseur rendue,
     // sinon valeur de donnée (comportement historique).
     if (da.filter_unit === 'pixel') {

@@ -14,7 +14,7 @@ import {
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_UnitType } from '../../types/Units'
 import { MenuDraggable } from '../topmenus/SankeyMenus'
-import { OSTooltip } from '../configmenus/MenuCommon'
+import { ConfigMenuNumberInput, OSTooltip } from '../configmenus/MenuCommon'
 import { useModelBinding } from '../../hooks/useModelBinding'
 
 /** Contenu de l'éditeur (une section par grandeur, unités en Table). */
@@ -35,26 +35,48 @@ const UnitsEditorContent = ({ app_data }: { app_data: Class_ApplicationData }) =
   }
 
   const renderUnitType = (ut: Class_UnitType) => (
-    <Box key={ut.id} marginBottom='0.8rem'>
+    <Box key={ut.id} marginBottom='0.6rem'>
       {/* En-tête de grandeur : nom éditable + suppression. */}
-      <Box display='flex' alignItems='center' gap='0.3rem' marginBottom='0.2rem'>
+      <Box display='flex' alignItems='center' gap='0.25rem' marginBottom='0.15rem'>
         <Input
           variant='menuconfigpanel_option_input'
+          size='xs'
           fontWeight='bold'
+          flex='1'
+          minW='4rem'
           defaultValue={ut.name}
           onBlur={(evt) => { ut.name = evt.target.value; commit() }}
         />
         <Button
-          size='xs'
-          variant='menuconfigpanel_del_button'
+          variant='menuconfigpanel_del_button_in_table'
+          flexShrink={0}
           onClick={() => { units.removeUnitType(ut.id); commit() }}
         >
           ✕
         </Button>
       </Box>
-      <Table size='sm' variant='simple'>
+      {/* OS#1286 — échelle propre à la grandeur (bandes « de type unité »),
+          même contrôle que l'échelle globale du dessin : quantité en unité de
+          base pour 100 px ; vide = échelle du dessin. */}
+      <Box display='flex' alignItems='center' gap='0.35rem' marginBottom='0.2rem'>
+        <OSTooltip label={t('inspector.units.display_scale_tooltip')}>
+          <Box flexShrink={0}>{t('inspector.units.display_scale')}</Box>
+        </OSTooltip>
+        <ConfigMenuNumberInput
+          t={t}
+          default_value={ut.display_scale ?? app_data.drawing_area.scale}
+          minimum_value={1}
+          stepper={true}
+          unit_text={'unit. / 100 pixels'}
+          function_on_blur={(val) => {
+            ut.display_scale = (val !== null && val > 0) ? val : undefined
+            commit()
+          }}
+        />
+      </Box>
+      <Table size='sm' variant='simple' sx={{ 'th, td': { px: '0.35rem', py: '0.15rem' } }}>
         <Thead>
-          <Tr>
+          <Tr sx={{ 'th': { fontSize: '0.6rem', letterSpacing: 'normal' } }}>
             <Th>{t('inspector.units.symbol')}</Th>
             <Th>
               <OSTooltip label={t('inspector.units.coefficient_tooltip')}>
@@ -101,8 +123,7 @@ const UnitsEditorContent = ({ app_data }: { app_data: Class_ApplicationData }) =
               </Td>
               <Td width='1%'>
                 <Button
-                  size='xs'
-                  variant='menuconfigpanel_del_button'
+                  variant='menuconfigpanel_del_button_in_table'
                   onClick={() => { ut.removeUnit(unit.id); commit() }}
                 >
                   ✕
@@ -123,7 +144,15 @@ const UnitsEditorContent = ({ app_data }: { app_data: Class_ApplicationData }) =
   )
 
   return (
-    <Box maxHeight='60vh' overflowY='auto'>
+    <Box
+      maxHeight='60vh'
+      overflowY='auto'
+      fontSize='0.7rem'
+      sx={{
+        'input, .chakra-input__field, .chakra-select': { fontSize: '0.7rem' },
+        'th': { fontSize: '0.6rem' },
+      }}
+    >
       {units.is_empty && (
         <Box marginBottom='0.5rem'>{t('inspector.units.empty')}</Box>
       )}

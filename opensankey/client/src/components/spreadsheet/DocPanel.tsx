@@ -338,9 +338,14 @@ export const DocPanel = (
     return <a href={href} target='_blank' rel='noreferrer'>{children}</a>
   }
 
-  const showEditor = editable && (mode === 'edit' || mode === 'split')
+  // Document externe (présentation d'une étude de la sankeythèque) : il PRÊTE le panneau, en
+  // lecture seule. La documentation du diagramme reste intacte derrière et revient dès qu'on le
+  // referme — d'où l'éditeur neutralisé tant qu'il est affiché.
+  const external = app_data.menu_configuration.doc_external
+  const showEditor = editable && !external && (mode === 'edit' || mode === 'split')
   // Aperçu visible dès que l'éditeur ne l'est pas (mode 'preview' ou lecture seule), ou en côte à côte.
   const showPreview = !showEditor || mode === 'split'
+  const displayed_text = external ? external.markdown : text
 
   return (
     <Box display='flex' flexDirection='column' height='100%' background='white'>
@@ -361,9 +366,23 @@ export const DocPanel = (
             (modes édition/côte à côte), le sélecteur de position « À droite du tableur » passe
             sous le libellé au lieu de déborder à droite hors du panneau. */}
         <Box display='flex' alignItems='center' flexWrap='wrap' gap='0.25rem 0.5rem' flex='0 1 auto' minWidth={0}>
-          <Box fontSize='0.8rem' fontWeight='600' color='gray.700'>{t('Spreadsheet.doc.title')}</Box>
+          <Box fontSize='0.8rem' fontWeight='600' color='gray.700'>
+            {external ? external.title : t('Spreadsheet.doc.title')}
+          </Box>
+          {/* Retour à la documentation du diagramme, prêtée le temps de lire une présentation. */}
+          {external && (
+            <Button
+              size='xs'
+              variant='outline'
+              fontWeight='normal'
+              width='auto'
+              onClick={() => { app_data.menu_configuration.doc_external = null }}
+            >
+              {t('Spreadsheet.doc.back_to_diagram_doc')}
+            </Button>
+          )}
           {/* Sélecteur de position de la doc dans la grande zone (masqué en aperçu seul et en lecture seule). */}
-          {editable && mode !== 'preview' && (
+          {editable && !external && mode !== 'preview' && (
             <Menu placement='bottom-start' isLazy>
               <MenuButton
                 as={Button}
@@ -421,7 +440,7 @@ export const DocPanel = (
             onChange={onPickImage}
           />
           {/* Sélecteur d'insertion unique (image, lien vers une vue, sommaire) masqué en aperçu seul et en lecture seule. */}
-          {editable && mode !== 'preview' && (
+          {editable && !external && mode !== 'preview' && (
             <Menu placement='bottom-end' isLazy>
               <MenuButton
                 as={Button}
@@ -492,8 +511,9 @@ export const DocPanel = (
               n'est qu'un dernier recours pour un panneau plus étroit qu'un seul bouton (ne contient
               aucun menu déroulant, donc pas de risque de rognage de popover). */}
           <Box display='flex' flexWrap='wrap' justifyContent='flex-end' gap='0.15rem' minWidth={0} overflowX='auto'>
-            {/* Bascules de mode masquées en lecture seule (publication) : seul l'aperçu a du sens. */}
-            {editable && (
+            {/* Bascules de mode masquées en lecture seule (publication, document externe) :
+                seul l'aperçu a du sens. */}
+            {editable && !external && (
               <>
                 <Button {...tab_btn_style(mode === 'edit')} onClick={() => setMode('edit')}>{t('Spreadsheet.doc.mode_edit')}</Button>
                 <Button {...tab_btn_style(mode === 'split')} onClick={() => setMode('split')}>{t('Spreadsheet.doc.mode_split')}</Button>
@@ -555,7 +575,7 @@ export const DocPanel = (
                 rehypePlugins={[rehypeKatex]}
                 urlTransform={resolveUrl}
                 components={{ a: LinkRenderer, ...HeadingRenderers }}
-              >{text}</ReactMarkdown>
+              >{displayed_text}</ReactMarkdown>
             </div>
           </Box>
         )}
