@@ -42,7 +42,11 @@ export const default_file_name = 'Diagramme de Sankey'
 
 export const default_toast_duration: number = 1000 // 1sec
 export const default_toast_waiting_delay: number = 500 // 500ms
-export const toast_bypass: boolean = window.sankey?.publish??false
+// Lu au chargement du module, donc garde `typeof window` obligatoire : OS est
+// consommé comme paquet npm (viewer embarquable, tests hors DOM, rendu serveur
+// éventuel) et ne doit jamais toucher `window` à l'import.
+export const toast_bypass: boolean =
+  typeof window !== 'undefined' ? (window.sankey?.publish ?? false) : false
 
 export type Type_BaseElementPosition = {
   x: number
