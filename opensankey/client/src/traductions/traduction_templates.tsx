@@ -229,5 +229,41 @@ export const resources_template = {
         }
       },
     }
+  },
+  ja: {
+    translation: {
+      templates: {
+        need_osp: 'OpenSankey+ が必要です',
+        gallery_hint: 'テンプレートをクリックすると、その例から始められます',
+        sankeytheque_hint: '研究事例をクリックすると開きます',
+        pin: 'ギャラリーを固定（描画エリアはその左側でサイズ調整され、テンプレートを次々と試せます）',
+        unpin: 'ギャラリーの固定を解除（描画の上に浮かび、作業を始めると閉じます）',
+        play: 'ギャラリーを再生（各モデルを順に読み込みます）',
+        pause: 'スライドショーを一時停止',
+        prev: '前のモデル',
+        next: '次のモデル',
+        group_validated: '検証済みの研究事例（ウェブサイトで公開）',
+        group_readme_open: '紹介を読む',
+        group_readme_close: '紹介を隠す',
+        group_readme_error: '説明を取得できません',
+        fr: 'フランス語の図テンプレート',
+        en: '英語の図テンプレート',
+        categories: {
+          opensankey: 'OpenSankey',
+          maps: '地図',
+          web: 'ウェブの定番例',
+          other_formats: 'その他の形式',
+          sankeymatic: 'SankeyMATIC',
+          stan: 'STAN',
+          esankey: 'e!Sankey',
+          sankeytheque: 'サンキーライブラリ',
+          // Catégories de la sankeythèque (index MFAData)
+          etudes: '研究事例',
+          filieres: '部門',
+          recherche: '研究',
+          clients: '顧客'
+        }
+      },
+    }
   }
 }

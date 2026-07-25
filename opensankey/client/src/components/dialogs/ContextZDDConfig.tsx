@@ -136,7 +136,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Zona de texto',
         de: 'Textbereich',
         it: 'Zona di testo',
-        'zh-CN': '文本区'
+        'zh-CN': '文本区',
+        ja: 'テキストエリア'
       },
       tooltips: {
         en: 'Text Zone',
@@ -144,7 +145,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Zona de texto',
         de: 'Textbereich',
         it: 'Zona di testo',
-        'zh-CN': '文本区'
+        'zh-CN': '文本区',
+        ja: 'テキストエリア'
       },
       labelsToggle: {
         en: {
@@ -170,6 +172,10 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         'zh-CN': {
           true: '停用文本区 ',
           false: '启用文本区'
+        },
+        ja: {
+          true: 'テキストエリアを無効にする ',
+          false: 'テキストエリアを有効にする'
         }
       },
       getToggleValue: 'toggleZDTActivatedValue'
@@ -182,7 +188,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Vaciar la vista',
         de: 'Ansicht leeren',
         it: 'Svuota la vista',
-        'zh-CN': '清空视图'
+        'zh-CN': '清空视图',
+        ja: 'ビューを空にする'
       },
       tooltips: {
         en: 'Clear all nodes and links in the current view',
@@ -190,7 +197,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Eliminar todos los nodos y flujos de la vista actual',
         de: 'Alle Knoten und Flüsse in der aktuellen Ansicht löschen',
         it: 'Eliminare tutti i nodi e flussi nella vista corrente',
-        'zh-CN': '清除当前视图中的所有节点与流量'
+        'zh-CN': '清除当前视图中的所有节点与流量',
+        ja: '現在のビューのノードとフローをすべて削除します'
       }
     },
 
@@ -202,7 +210,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Nuevo diagrama',
         de: 'Neues Diagramm',
         it: 'Nuovo diagramma',
-        'zh-CN': '新建图表'
+        'zh-CN': '新建图表',
+        ja: '新しい図'
       },
       tooltips: {
         en: 'Delete all views and reset to an empty diagram',
@@ -210,7 +219,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Eliminar todas las vistas y restablecer un diagrama vacío',
         de: 'Alle Ansichten löschen und auf ein leeres Diagramm zurücksetzen',
         it: 'Eliminare tutte le viste e reimpostare un diagramma vuoto',
-        'zh-CN': '删除所有视图并重置为空白图表'
+        'zh-CN': '删除所有视图并重置为空白图表',
+        ja: 'すべてのビューを削除し、空の図に戻します'
       }
     },
 
@@ -222,7 +232,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Cuadrícula',
         de: 'Raster',
         it: 'Griglia',
-        'zh-CN': '网格'
+        'zh-CN': '网格',
+        ja: 'グリッド'
       },
       tooltips: {
         en: 'Show or hide the background grid',
@@ -230,7 +241,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Mostrar u ocultar la cuadrícula de fondo',
         de: 'Hintergrundraster ein- oder ausblenden',
         it: 'Mostrare o nascondere la griglia di sfondo',
-        'zh-CN': '显示或隐藏背景网格'
+        'zh-CN': '显示或隐藏背景网格',
+        ja: '背景のグリッドの表示を切り替えます'
       },
       getToggleValue: 'bgGridValue',
       showCheck: true
@@ -244,7 +256,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Leyenda',
         de: 'Legende',
         it: 'Legenda',
-        'zh-CN': '图例'
+        'zh-CN': '图例',
+        ja: '凡例'
       },
       labelsToggle: {
         en: {
@@ -270,6 +283,10 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         'zh-CN': {
           true: '显示图例',
           false: '隐藏图例'
+        },
+        ja: {
+          true: '凡例を表示',
+          false: '凡例を隠す'
         }
       },
       tooltips: {
@@ -278,7 +295,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Alternar la visibilidad de la leyenda',
         de: 'Sichtbarkeit der Legende umschalten',
         it: 'Attiva/disattiva la visibilità della legenda',
-        'zh-CN': '切换图例的可见性'
+        'zh-CN': '切换图例的可见性',
+        ja: '凡例の表示を切り替えます'
       },
       getToggleValue: 'maskLegendValue'
     },
@@ -291,7 +309,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Restablecer el zoom al 100 % (conservar aspecto)',
         de: 'Zoom auf 100 % zurücksetzen (Aussehen behalten)',
         it: 'Riporta lo zoom al 100% (aspetto invariato)',
-        'zh-CN': '将缩放重置为 100%（保持外观）'
+        'zh-CN': '将缩放重置为 100%（保持外观）',
+        ja: 'ズームを 100% に戻す（見た目は維持）'
       },
       tooltips: {
         en: 'Bake the current zoom into the geometry: multiply node/text-zone sizes, fonts, positions and flow scale by the current ratio, then set the camera back to 100%. The diagram looks identical but stored pixel sizes reflect the real scale. Undoable.',
@@ -299,7 +318,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Fija el zoom actual en la geometría: multiplica los tamaños de nodos/zonas de texto, fuentes, posiciones y escala de flujos por el ratio actual, y vuelve la cámara al 100 %. El diagrama se ve igual pero los tamaños px almacenados reflejan la escala real. Reversible.',
         de: 'Fixiert den aktuellen Zoom in der Geometrie: multipliziert Knoten-/Textzonengrößen, Schriften, Positionen und Flussskala mit dem aktuellen Verhältnis und setzt die Kamera auf 100 %. Das Diagramm sieht identisch aus, gespeicherte Pixelgrößen entsprechen dem realen Maßstab. Umkehrbar.',
         it: 'Fissa lo zoom corrente nella geometria: moltiplica dimensioni di nodi/zone di testo, font, posizioni e scala dei flussi per il rapporto corrente, poi riporta la camera al 100%. Il diagramma resta identico ma le dimensioni px memorizzate riflettono la scala reale. Annullabile.',
-        'zh-CN': '将当前缩放固化到几何尺寸中：把节点/文本区的尺寸、字号、位置与流量比例乘以当前比率，再将视角恢复为 100%。图表外观完全相同，但存储的像素尺寸反映真实比例。可撤销。'
+        'zh-CN': '将当前缩放固化到几何尺寸中：把节点/文本区的尺寸、字号、位置与流量比例乘以当前比率，再将视角恢复为 100%。图表外观完全相同，但存储的像素尺寸反映真实比例。可撤销。',
+        ja: '現在のズームを図形に焼き付けます：ノード／テキストエリアのサイズ、フォント、位置、フローのスケールを現在の倍率で掛け、視点を 100% に戻します。見た目は変わりませんが、保存されるピクセル寸法が実寸を反映します。取り消し可能です。'
       }
     },
 
@@ -311,7 +331,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Transponer diagrama',
         de: 'Diagramm transponieren',
         it: 'Trasponi diagramma',
-        'zh-CN': '转置图表'
+        'zh-CN': '转置图表',
+        ja: '図を転置'
       },
       tooltips: {
         en: 'Transpose the diagram: swap horizontal and vertical axes',
@@ -319,7 +340,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Transponer el diagrama: intercambiar los ejes horizontal y vertical',
         de: 'Diagramm transponieren: horizontale und vertikale Achsen tauschen',
         it: 'Trasponi il diagramma: scambia gli assi orizzontale e verticale',
-        'zh-CN': '转置图表：交换水平轴与垂直轴'
+        'zh-CN': '转置图表：交换水平轴与垂直轴',
+        ja: '図を転置します：水平軸と垂直軸を入れ替えます'
       }
     },
 
@@ -331,7 +353,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Pre-posicionar nodos',
         de: 'Knoten vorpositionieren',
         it: 'Pre-posiziona nodi',
-        'zh-CN': '预置节点位置'
+        'zh-CN': '预置节点位置',
+        ja: 'ノードの位置をあらかじめ計算'
       },
       tooltips: {
         en: 'Recursively disaggregate every node in place then re-aggregate, so all hidden nodes get a position within their ancestor (used by the view filter).',
@@ -339,7 +362,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Desagrega recursivamente cada nodo in situ y reagrega: todos los nodos ocultos obtienen una posición dentro de su ancestro (usado por el filtro de vista).',
         de: 'Zerlegt rekursiv jeden Knoten an Ort und Stelle und aggregiert wieder: alle versteckten Knoten erhalten eine Position innerhalb ihres Vorfahren (vom Ansichtsfilter genutzt).',
         it: 'Disaggrega ricorsivamente ogni nodo in loco poi riaggrega: tutti i nodi nascosti ottengono una posizione nell\'antenato (usato dal filtro vista).',
-        'zh-CN': '原地递归分解每个节点再重新聚合，使所有隐藏节点在其祖先内获得位置（供视图筛选使用）。'
+        'zh-CN': '原地递归分解每个节点再重新聚合，使所有隐藏节点在其祖先内获得位置（供视图筛选使用）。',
+        ja: '各ノードをその場で再帰的に分解してから再集約し、隠れているノードにも祖先の中での位置を持たせます（ビューフィルタが使用します）。'
       }
     },
 
@@ -351,7 +375,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Centrar los hijos en el padre',
         de: 'Kinder auf Eltern zentrieren',
         it: 'Centra i figli sul genitore',
-        'zh-CN': '将子节点居中于父节点'
+        'zh-CN': '将子节点居中于父节点',
+        ja: '子を親の中心に揃える'
       },
       tooltips: {
         en: 'Place each child\'s center on its parent\'s center (recursively): all descendants end up at their level-1 ancestor\'s position. The view filter then shows leaves stacked on their ancestor (clean static alternative to the ancestor mode).',
@@ -359,7 +384,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Coloca el centro de cada hijo en el de su padre (recursivamente): todos los descendientes quedan en la posición de su ancestro de nivel 1.',
         de: 'Setzt das Zentrum jedes Kindes auf das seines Elternknotens (rekursiv): alle Nachkommen landen an der Position ihres Vorfahren der Ebene 1.',
         it: 'Posiziona il centro di ogni figlio su quello del genitore (ricorsivamente): tutti i discendenti finiscono nella posizione del loro antenato di livello 1.',
-        'zh-CN': '将每个子节点的中心置于其父节点的中心（递归）：所有后代最终位于其一级祖先的位置。视图筛选随后会把叶子堆叠显示在其祖先上（祖先模式的简洁静态替代方案）。'
+        'zh-CN': '将每个子节点的中心置于其父节点的中心（递归）：所有后代最终位于其一级祖先的位置。视图筛选随后会把叶子堆叠显示在其祖先上（祖先模式的简洁静态替代方案）。',
+        ja: '各子の中心を親の中心に配置します（再帰的）。すべての子孫は第 1 階層の祖先の位置に集まります。ビューフィルタでは、葉ノードが祖先の上に重なって表示されます（祖先モードのすっきりした静的な代替）。'
       }
     },
 
@@ -371,7 +397,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Alinear a la cuadrícula',
         de: 'Am Raster ausrichten',
         it: 'Allinea alla griglia',
-        'zh-CN': '对齐到网格'
+        'zh-CN': '对齐到网格',
+        ja: 'グリッドに合わせる'
       },
       tooltips: {
         en: 'Align all nodes to the background grid',
@@ -379,7 +406,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Alinear todos los nodos a la cuadrícula de fondo',
         de: 'Alle Knoten am Hintergrundraster ausrichten',
         it: 'Allineare tutti i nodi alla griglia di sfondo',
-        'zh-CN': '将所有节点对齐到背景网格'
+        'zh-CN': '将所有节点对齐到背景网格',
+        ja: 'すべてのノードを背景のグリッドに揃えます'
       }
     },
 
@@ -391,7 +419,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Modo coordenadas absolutas',
         de: 'Absolutkoordinaten-Modus',
         it: 'Modalità coordinate assolute',
-        'zh-CN': '绝对坐标模式'
+        'zh-CN': '绝对坐标模式',
+        ja: '絶対座標モード'
       },
       labelsToggle: {
         en: {
@@ -417,6 +446,10 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         'zh-CN': {
           true: '绝对坐标模式',
           false: '恒定垂直偏移模式'
+        },
+        ja: {
+          true: '絶対座標モード',
+          false: '一定の垂直オフセットモード'
         }
       },
       tooltips: {
@@ -425,7 +458,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Alternar entre modo coordenadas absolutas y modo desplazamiento vertical constante',
         de: 'Zwischen Absolutkoordinaten-Modus und konstantem vertikalen Versatz-Modus umschalten',
         it: 'Alternare tra modalità coordinate assolute e modalità offset verticale costante',
-        'zh-CN': '在绝对坐标模式与恒定垂直偏移模式之间切换'
+        'zh-CN': '在绝对坐标模式与恒定垂直偏移模式之间切换',
+        ja: '絶対座標モードと一定の垂直オフセットモードを切り替えます'
       },
       getToggleValue: 'toggleParametricModeValue'
     },
@@ -438,7 +472,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Restablecer intervalos verticales',
         de: 'Vertikale Abstände zurücksetzen',
         it: 'Reimposta intervalli verticali',
-        'zh-CN': '重置垂直间距'
+        'zh-CN': '重置垂直间距',
+        ja: '垂直方向の間隔をリセット'
       },
       tooltips: {
         en: 'Reset vertical intervals',
@@ -446,7 +481,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Restablecer intervalos verticales',
         de: 'Vertikale Abstände zurücksetzen',
         it: 'Reimposta intervalli verticali',
-        'zh-CN': '重置垂直间距'
+        'zh-CN': '重置垂直间距',
+        ja: '垂直方向の間隔をリセット'
       }
     },
     // toggleAutoX: {
@@ -480,7 +516,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Importación/exportación cercana',
         de: 'Import/Export nah',
         it: 'Importazione/esportazione vicina',
-        'zh-CN': '进出口就近'
+        'zh-CN': '进出口就近',
+        ja: '移入／移出を近くに'
       },
       tooltips: {
         en: 'Set import/export nodes close to their connected nodes oir at the top and bottom of the diagram',
@@ -488,7 +525,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Colocar los nodos de importación/exportación cerca de sus nodos conectados o en la parte superior e inferior del diagrama',
         de: 'Import-/Export-Knoten nah an ihren verbundenen Knoten oder oben und unten im Diagramm platzieren',
         it: 'Posizionare i nodi di importazione/esportazione vicino ai nodi collegati o in alto e in basso nel diagramma',
-        'zh-CN': '将进口/出口节点置于与之相连的节点附近，或置于图表的上下两端'
+        'zh-CN': '将进口/出口节点置于与之相连的节点附近，或置于图表的上下两端',
+        ja: '移入／移出ノードを、接続先のノードの近く、または図の上下の端に配置します'
       },
       labelsToggle: {
         en: {
@@ -514,6 +552,10 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         'zh-CN': {
           true: '进出口就近选项',
           false: '进出口置于上下两端选项'
+        },
+        ja: {
+          true: '移入／移出を近くに配置',
+          false: '移入／移出を上下に配置'
         }
       },
       getToggleValue: 'toggleTradeValue'
@@ -526,7 +568,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Colores aleatorios de nodos',
         de: 'Zufällige Knotenfarben',
         it: 'Colori casuali nodi',
-        'zh-CN': '随机节点颜色'
+        'zh-CN': '随机节点颜色',
+        ja: 'ノードの色をランダムに'
       },
       tooltips: {
         en: 'Apply random colors to all nodes',
@@ -534,7 +577,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Aplicar colores aleatorios a todos los nodos',
         de: 'Zufällige Farben auf alle Knoten anwenden',
         it: 'Applicare colori casuali a tutti i nodi',
-        'zh-CN': '为所有节点应用随机颜色'
+        'zh-CN': '为所有节点应用随机颜色',
+        ja: 'すべてのノードにランダムな色を適用します'
       }
     },
 
@@ -546,7 +590,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Colores aleatorios de flujos',
         de: 'Zufällige Flussfarben',
         it: 'Colori casuali flussi',
-        'zh-CN': '随机流量颜色'
+        'zh-CN': '随机流量颜色',
+        ja: 'フローの色をランダムに'
       },
       tooltips: {
         en: 'Apply random colors to all links',
@@ -554,7 +599,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Aplicar colores aleatorios a todos los flujos',
         de: 'Zufällige Farben auf alle Flüsse anwenden',
         it: 'Applicare colori casuali a tutti i flussi',
-        'zh-CN': '为所有流量应用随机颜色'
+        'zh-CN': '为所有流量应用随机颜色',
+        ja: 'すべてのフローにランダムな色を適用します'
       }
     },
 
@@ -566,7 +612,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Colores predeterminados de nodos',
         de: 'Standard-Knotenfarben',
         it: 'Colori predefiniti nodi',
-        'zh-CN': '默认节点颜色'
+        'zh-CN': '默认节点颜色',
+        ja: 'ノードを既定色に'
       },
       tooltips: {
         en: 'Reset all nodes to their default colors',
@@ -574,7 +621,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Restablecer todos los nodos a sus colores predeterminados',
         de: 'Alle Knoten auf ihre Standardfarben zurücksetzen',
         it: 'Reimpostare tutti i nodi ai colori predefiniti',
-        'zh-CN': '将所有节点恢复为默认颜色'
+        'zh-CN': '将所有节点恢复为默认颜色',
+        ja: 'すべてのノードを既定の色に戻します'
       }
     },
 
@@ -586,7 +634,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Colores predeterminados de flujos',
         de: 'Standard-Flussfarben',
         it: 'Colori predefiniti flussi',
-        'zh-CN': '默认流量颜色'
+        'zh-CN': '默认流量颜色',
+        ja: 'フローを既定色に'
       },
       tooltips: {
         en: 'Reset all links to their default colors',
@@ -594,7 +643,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Restablecer todos los flujos a sus colores predeterminados',
         de: 'Alle Flüsse auf ihre Standardfarben zurücksetzen',
         it: 'Reimpostare tutti i flussi ai colori predefiniti',
-        'zh-CN': '将所有流量恢复为默认颜色'
+        'zh-CN': '将所有流量恢复为默认颜色',
+        ja: 'すべてのフローを既定の色に戻します'
       }
     },
 
@@ -606,7 +656,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Estilos de elementos',
         de: 'Elementstile',
         it: 'Stili degli elementi',
-        'zh-CN': '元素样式'
+        'zh-CN': '元素样式',
+        ja: '要素のスタイル'
       },
       tooltips: {
         en: 'Open the node visual style configuration dialog',
@@ -614,7 +665,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Abrir el diálogo de configuración del estilo visual de los nodos',
         de: 'Den Dialog zur Konfiguration des visuellen Knotenstils öffnen',
         it: 'Aprire la finestra di configurazione dello stile visivo dei nodi',
-        'zh-CN': '打开节点视觉样式配置对话框'
+        'zh-CN': '打开节点视觉样式配置对话框',
+        ja: 'ノードの外観スタイルの設定ダイアログを開きます'
       }
     },
 
@@ -626,7 +678,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Guardar imagen de fondo',
         de: 'Hintergrundbild speichern',
         it: 'Salva immagine di sfondo',
-        'zh-CN': '保存背景图片'
+        'zh-CN': '保存背景图片',
+        ja: '背景画像を保存'
       },
       tooltips: {
         en: 'Download the background image to a file',
@@ -634,7 +687,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         es: 'Descargar la imagen de fondo a un archivo',
         de: 'Hintergrundbild in eine Datei herunterladen',
         it: 'Scarica l\'immagine di sfondo in un file',
-        'zh-CN': '将背景图片下载为文件'
+        'zh-CN': '将背景图片下载为文件',
+        ja: '背景画像をファイルとしてダウンロードします'
       }
     },
     // openGraphOrder: {
@@ -663,7 +717,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       es: 'Posicionamiento',
       de: 'Positionierung',
       it: 'Posizionamento',
-      'zh-CN': '定位'
+      'zh-CN': '定位',
+      ja: '配置'
     },
     MiseEnPageAuto: {
       en: 'Auto layout',
@@ -671,7 +726,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       es: 'Diseño automático',
       de: 'Automatisches Layout',
       it: 'Layout automatico',
-      'zh-CN': '自动布局'
+      'zh-CN': '自动布局',
+      ja: '自動レイアウト'
     },
     ResetVerticalIntervals: {
       en: 'Reset vertical intervals',
@@ -679,7 +735,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       es: 'Restablecer intervalos verticales',
       de: 'Vertikale Abstände zurücksetzen',
       it: 'Reimposta intervalli verticali',
-      'zh-CN': '重置垂直间距'
+      'zh-CN': '重置垂直间距',
+      ja: '垂直方向の間隔をリセット'
     },
     GestionCouleurs: {
       en: 'Color Management',
@@ -687,7 +744,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       es: 'Gestión de colores',
       de: 'Farbverwaltung',
       it: 'Gestione colori',
-      'zh-CN': '颜色管理'
+      'zh-CN': '颜色管理',
+      ja: '色の管理'
     },
     Style: {
       en: 'Styles',
@@ -695,7 +753,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       es: 'Estilos de elementos',
       de: 'Elementstile',
       it: 'Stili degli elementi',
-      'zh-CN': '样式'
+      'zh-CN': '样式',
+      ja: 'スタイル'
     }
   }
 } as const

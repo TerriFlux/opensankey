@@ -60,7 +60,7 @@ import { INPUT_ATTRIBUTES_CONFIG, OUTPUT_ATTRIBUTES_CONFIG } from './components/
 // CONSTANTS =========================================================================================
 // Link with React
 window.React = React
-const supportedLangs = ['fr', 'en', 'es', 'de', 'it', 'zh-CN']
+const supportedLangs = ['fr', 'en', 'es', 'de', 'it', 'zh-CN', 'ja']
 // `zh-CN` étant régionalisé, la langue navigateur passe par normalizeLanguage
 // (un slice(0, 2) renverrait 'zh', absent des ressources).
 const browserLang = normalizeLanguage(navigator.language, supportedLangs)

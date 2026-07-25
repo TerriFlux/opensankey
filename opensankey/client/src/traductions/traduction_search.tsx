@@ -140,5 +140,25 @@ export const resources_search = {
         }
       }
     }
+  },
+  ja: {
+    translation: {
+      search: {
+        title: '要素を検索',
+        tooltip: 'ノード、フロー、テキストエリアを検索（Ctrl+F）',
+        placeholder: 'ノード、フロー、エリアを検索…',
+        no_result: '一致するものがありません',
+        counter: '{{current}} / {{total}}',
+        prev: '前の結果',
+        next: '次の結果',
+        close: '検索を閉じる',
+        only_visible: '表示中の要素のみ',
+        type: {
+          node: 'ノード',
+          link: 'フロー',
+          container: 'エリア'
+        }
+      }
+    }
   }
 }

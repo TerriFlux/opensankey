@@ -763,5 +763,130 @@ export const resources_loading_toasts = {
         }
       },
     }
+  },
+  ja: {
+    translation: {
+      toast: {
+        default: {
+          success: {
+            title: '成功',
+            desc: 'お待ちいただきありがとうございました'
+          },
+          loading: {
+            title: '処理中',
+            desc: 'お待ちください'
+          },
+          error: {
+            title: '処理に失敗しました',
+            desc: 'もう一度お試しください。解消しない場合は contact@terriflux.fr までご連絡ください'
+          }
+        },
+        reset: {
+          success: {
+            title: '描画エリアを空にしました',
+            desc: ''
+          },
+          loading: {
+            title: '描画エリアを消去中',
+            desc: ''
+          },
+        },
+        draw: {
+          success: {
+            title: '描画の準備ができました',
+            desc: ''
+          },
+          loading: {
+            title: '描画エリアを初期化中',
+            desc: ''
+          },
+        },
+        save_in_cache: {
+          success: {
+            title: '完了しました',
+          },
+          loading: {
+            title: 'キャッシュに保存中',
+          },
+          error: {
+            title: '保存中にエラーが発生しました',
+          }
+        },
+        load_json: {
+          success: {
+            title: '図を読み込みました',
+          },
+          loading: {
+            title: '図を読み込み中…',
+          },
+          error: {
+            title: '図の読み込み中にエラーが発生しました',
+          }
+        },
+        save_as_json: {
+          success: {
+            title: 'まもなくダウンロードが始まります',
+          },
+          loading: {
+            title: 'JSON ファイルを準備中',
+          },
+          error: {
+            title: 'ファイルの準備中にエラーが発生しました',
+          }
+        },
+        save_as_excel: {
+          success: {
+            title: 'まもなくダウンロードが始まります',
+          },
+          loading: {
+            title: 'Excel ファイルを準備中',
+          },
+          error: {
+            title: 'ファイルの準備中にエラーが発生しました',
+          }
+        },
+        save_as_png: {
+          success: {
+            title: 'まもなくダウンロードが始まります',
+          },
+          loading: {
+            title: 'PNG ファイルを準備中',
+          },
+          error: {
+            title: 'ファイルの準備中にエラーが発生しました',
+          }
+        },
+        save_as_pdf: {
+          success: {
+            title: 'まもなくダウンロードが始まります',
+          },
+          loading: {
+            title: 'PDF ファイルを準備中',
+          },
+          error: {
+            title: 'ファイルの準備中にエラーが発生しました',
+          }
+        },
+        set_view: {
+          success: {
+            title: '準備完了',
+          },
+          loading: {
+            title: 'ビューを切り替え中',
+          },
+          error: {
+            title: '指定されたビューの読み込み中にエラーが発生しました',
+          }
+        },
+        compute_auto_sankey: {
+          success: {
+            title: 'ノードの位置を計算しました',
+          },
+          loading: {
+            title: 'ノードの位置を計算中',
+          },
+        }
+      },
+    }
   }
 }

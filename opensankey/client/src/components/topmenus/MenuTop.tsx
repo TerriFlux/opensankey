@@ -1558,7 +1558,7 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
   additionalMenus: MutableRefObject<Type_AdditionalMenus>,
 }) => {
   const { logo } = new_data
-  const langToFlag: Record<string, string> = { fr: 'fr', en: 'gb', es: 'es', de: 'de', it: 'it', 'zh-CN': 'cn' }
+  const langToFlag: Record<string, string> = { fr: 'fr', en: 'gb', es: 'es', de: 'de', it: 'it', 'zh-CN': 'cn', ja: 'jp' }
   const [flag, setFlag] = useState(langToFlag[new_data.i18n.language] ?? 'gb')
   // OS#300 Lot 2 — re-render sur changement de panneau : reflète l'état du bouton
   // de bascule de barre latérale (surligné quand la barre est affichée).
@@ -1694,6 +1694,7 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
               <MenuItem onClick={() => { setFlag('de'); changeLang('de') }}><ReactCountryFlag countryCode={'de'} svg />Deutsch</MenuItem>
               <MenuItem onClick={() => { setFlag('it'); changeLang('it') }}><ReactCountryFlag countryCode={'it'} svg />Italiano</MenuItem>
               <MenuItem onClick={() => { setFlag('cn'); changeLang('zh-CN') }}><ReactCountryFlag countryCode={'cn'} svg />中文</MenuItem>
+              <MenuItem onClick={() => { setFlag('jp'); changeLang('ja') }}><ReactCountryFlag countryCode={'jp'} svg />日本語</MenuItem>
             </MenuList>
           </Portal>
         </Menu> : <></>}

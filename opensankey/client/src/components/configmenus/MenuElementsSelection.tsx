@@ -59,82 +59,110 @@ export const ELEMENTS_MENU_CONFIG = {
   node: {
     labels: {
       TS: { en: 'Selected nodes', fr: 'Noeuds sélectionnés', es: 'Nodos seleccionados', de: 'Ausgewählte Knoten', it: 'Nodi selezionati',
-        'zh-CN': '已选节点' },
+        'zh-CN': '已选节点',
+        ja: '選択中のノード' },
       NS: { en: 'No selection', fr: 'Aucune sélection', es: 'Sin selección', de: 'Keine Auswahl', it: 'Nessuna selezione',
-        'zh-CN': '未选择' },
+        'zh-CN': '未选择',
+        ja: '選択なし' },
       Nom: { en: 'Name', fr: 'Nom', es: 'Nombre', de: 'Name', it: 'Nome',
-        'zh-CN': '名称' }
+        'zh-CN': '名称',
+        ja: '名前' }
     },
     tooltips: {
       plus: { en: 'Add a node, which will be automatically selected', fr: 'Ajouter un noeud. Celui-ci sera automatiquement selectionné.', es: 'Añadir un nodo, que se seleccionará automáticamente', de: 'Einen Knoten hinzufügen, der automatisch ausgewählt wird', it: 'Aggiungere un nodo, che verrà selezionato automaticamente',
-        'zh-CN': '添加一个节点，该节点将被自动选中' },
+        'zh-CN': '添加一个节点，该节点将被自动选中',
+        ja: 'ノードを追加します。追加したノードは自動的に選択されます' },
       slct: { en: 'Choose nodes to select via dropdown', fr: 'Choisir un / des / tous les noeud(s) à sélectionner via une liste déroulante', es: 'Elegir nodos a seleccionar mediante lista desplegable', de: 'Knoten über Dropdown-Liste auswählen', it: 'Scegliere i nodi da selezionare tramite elenco a discesa',
-        'zh-CN': '通过下拉列表选择要选中的节点' },
+        'zh-CN': '通过下拉列表选择要选中的节点',
+        ja: 'ドロップダウンから選択するノードを選びます' },
       rm: { en: 'Delete all currently selected nodes', fr: 'Permettre de supprimer tous les noeud(s) actuellement sélectionné(s)', es: 'Eliminar todos los nodos actualmente seleccionados', de: 'Alle aktuell ausgewählten Knoten löschen', it: 'Eliminare tutti i nodi attualmente selezionati',
-        'zh-CN': '删除当前已选的所有节点' },
+        'zh-CN': '删除当前已选的所有节点',
+        ja: '現在選択されているノードをすべて削除します' },
       dns: { en: 'Display only visible nodes in selector', fr: 'Afficher dans la liste de selection des noeuds, uniquement ceux actuellement visibles', es: 'Mostrar solo los nodos visibles en el selector', de: 'Nur sichtbare Knoten im Selektor anzeigen', it: 'Visualizzare solo i nodi visibili nel selettore',
-        'zh-CN': '在选择器中仅显示可见节点' },
+        'zh-CN': '在选择器中仅显示可见节点',
+        ja: 'セレクタに表示中のノードだけを表示します' },
       Nom: { en: 'Rename the node', fr: 'Renommer le noeud', es: 'Renombrar el nodo', de: 'Den Knoten umbenennen', it: 'Rinominare il nodo',
-        'zh-CN': '重命名该节点' }
+        'zh-CN': '重命名该节点',
+        ja: 'ノードの名前を変更します' }
     }
   },
 
   link: {
     labels: {
       TS: { en: 'Selected links', fr: 'Flux sélectionnés', es: 'Flujos seleccionados', de: 'Ausgewählte Flüsse', it: 'Flussi selezionati',
-        'zh-CN': '已选流量' },
+        'zh-CN': '已选流量',
+        ja: '選択中のフロー' },
       NS: { en: 'No selection', fr: 'Aucune sélection', es: 'Sin selección', de: 'Keine Auswahl', it: 'Nessuna selezione',
-        'zh-CN': '未选择' }
+        'zh-CN': '未选择',
+        ja: '選択なし' }
     },
     tooltips: {
       plus: { en: 'Add a new link', fr: 'Ajouter un flux', es: 'Añadir un nuevo flujo', de: 'Einen neuen Fluss hinzufügen', it: 'Aggiungere un nuovo flusso',
-        'zh-CN': '添加新流量' },
+        'zh-CN': '添加新流量',
+        ja: '新しいフローを追加' },
       slct: { en: 'Choose links to select', fr: 'Choisir un / des / tous les flux à sélectionner', es: 'Elegir flujos a seleccionar', de: 'Flüsse zum Auswählen wählen', it: 'Scegliere i flussi da selezionare',
-        'zh-CN': '选择要选中的流量' },
+        'zh-CN': '选择要选中的流量',
+        ja: '選択するフローを選ぶ' },
       rm: { en: 'Delete selected links', fr: 'Supprimer les flux sélectionnés', es: 'Eliminar los flujos seleccionados', de: 'Ausgewählte Flüsse löschen', it: 'Eliminare i flussi selezionati',
-        'zh-CN': '删除所选流量' },
+        'zh-CN': '删除所选流量',
+        ja: '選択中のフローを削除' },
       dns: { en: 'Display only visible links', fr: 'Afficher uniquement les flux visibles', es: 'Mostrar solo los flujos visibles', de: 'Nur sichtbare Flüsse anzeigen', it: 'Visualizzare solo i flussi visibili',
-        'zh-CN': '仅显示可见流量' },
+        'zh-CN': '仅显示可见流量',
+        ja: '表示中のフローだけを表示' },
       dls: { en: 'Display only visible links', fr: 'Afficher uniquement les flux visibles', es: 'Mostrar solo los flujos visibles', de: 'Nur sichtbare Flüsse anzeigen', it: 'Visualizzare solo i flussi visibili',
-        'zh-CN': '仅显示可见流量' }
+        'zh-CN': '仅显示可见流量',
+        ja: '表示中のフローだけを表示' }
     }
   },
 
   container: {
     labels: {
       TS: { en: 'Selected containers', fr: 'Containers sélectionnés', es: 'Contenedores seleccionados', de: 'Ausgewählte Container', it: 'Contenitori selezionati',
-        'zh-CN': '已选容器' },
+        'zh-CN': '已选容器',
+        ja: '選択中のコンテナ' },
       NS: { en: 'No selection', fr: 'Aucune sélection', es: 'Sin selección', de: 'Keine Auswahl', it: 'Nessuna selezione',
-        'zh-CN': '未选择' },
+        'zh-CN': '未选择',
+        ja: '選択なし' },
       Nom: { en: 'Name', fr: 'Nom', es: 'Nombre', de: 'Name', it: 'Nome',
-        'zh-CN': '名称' }
+        'zh-CN': '名称',
+        ja: '名前' }
     },
     tooltips: {
       plus: { en: 'Add a container', fr: 'Ajouter un container', es: 'Añadir un contenedor', de: 'Einen Container hinzufügen', it: 'Aggiungere un contenitore',
-        'zh-CN': '添加容器' },
+        'zh-CN': '添加容器',
+        ja: 'コンテナを追加' },
       slct: { en: 'Choose containers to select', fr: 'Choisir les containers à sélectionner', es: 'Elegir contenedores a seleccionar', de: 'Container zum Auswählen wählen', it: 'Scegliere i contenitori da selezionare',
-        'zh-CN': '选择要选中的容器' },
+        'zh-CN': '选择要选中的容器',
+        ja: '選択するコンテナを選ぶ' },
       rm: { en: 'Delete selected containers', fr: 'Supprimer les containers sélectionnés', es: 'Eliminar los contenedores seleccionados', de: 'Ausgewählte Container löschen', it: 'Eliminare i contenitori selezionati',
-        'zh-CN': '删除所选容器' },
+        'zh-CN': '删除所选容器',
+        ja: '選択中のコンテナを削除' },
       dns: { en: 'Display only visible containers', fr: 'Afficher uniquement les containers visibles', es: 'Mostrar solo los contenedores visibles', de: 'Nur sichtbare Container anzeigen', it: 'Visualizzare solo i contenitori visibili',
-        'zh-CN': '仅显示可见容器' },
+        'zh-CN': '仅显示可见容器',
+        ja: '表示中のコンテナだけを表示' },
       Nom: { en: 'Rename the container', fr: 'Renommer le container', es: 'Renombrar el contenedor', de: 'Den Container umbenennen', it: 'Rinominare il contenitore',
-        'zh-CN': '重命名该容器' }
+        'zh-CN': '重命名该容器',
+        ja: 'コンテナの名前を変更します' }
     }
   },
 
   common: {
     labels: {
       filter_nodes: { en: 'Filter nodes', fr: 'Filtrer les nœuds', es: 'Filtrar nodos', de: 'Knoten filtern', it: 'Filtrare i nodi',
-        'zh-CN': '筛选节点' },
+        'zh-CN': '筛选节点',
+        ja: 'ノードを絞り込む' },
       filter_links: { en: 'Filter links', fr: 'Filtrer les flux', es: 'Filtrar flujos', de: 'Flüsse filtern', it: 'Filtrare i flussi',
-        'zh-CN': '筛选流量' },
+        'zh-CN': '筛选流量',
+        ja: 'フローを絞り込む' },
       filter_containers: { en: 'Filter containers', fr: 'Filtrer les containers', es: 'Filtrar contenedores', de: 'Container filtern', it: 'Filtrare i contenitori',
-        'zh-CN': '筛选容器' },
+        'zh-CN': '筛选容器',
+        ja: 'コンテナを絞り込む' },
       select_elements: { en: 'Select elements', fr: 'Sélectionner des éléments', es: 'Seleccionar elementos', de: 'Elemente auswählen', it: 'Selezionare elementi',
-        'zh-CN': '选择元素' },
+        'zh-CN': '选择元素',
+        ja: '要素を選択' },
       toggle_visibility: { en: 'Toggle visibility', fr: 'Basculer la visibilité', es: 'Alternar visibilidad', de: 'Sichtbarkeit umschalten', it: 'Attivare/disattivare visibilità',
-        'zh-CN': '切换可见性' }
+        'zh-CN': '切换可见性',
+        ja: '表示を切り替え' }
     }
   }
 } as const

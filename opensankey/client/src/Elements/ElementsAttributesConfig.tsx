@@ -223,8 +223,8 @@ export interface AttributeConfig<T> {
   default: T
   type: () => T
   category: string
-  labels: { en: string; fr: string; es: string; de: string; it: string; 'zh-CN'?: string }
-  tooltips: { en: string; fr: string; es: string; de: string; it: string; 'zh-CN'?: string }
+  labels: { en: string; fr: string; es: string; de: string; it: string; 'zh-CN'?: string; ja?: string }
+  tooltips: { en: string; fr: string; es: string; de: string; it: string; 'zh-CN'?: string; ja?: string }
   callback?: string
   setter?: string
   actions?: (BaseActionType | NodeBaseActionType | LinkBaseActionType)[]
@@ -437,8 +437,8 @@ export type ConfigOverrides<T extends Record<string, AttributeConfig<unknown>>> 
   [K in keyof T]: {
     default?: ExtractConfigValue<T[K]>
     category?: string
-    labels?: { en: string; fr: string; es: string; de: string; it: string; 'zh-CN'?: string }
-    tooltips?: { en: string; fr: string; es: string; de: string; it: string; 'zh-CN'?: string }
+    labels?: { en: string; fr: string; es: string; de: string; it: string; 'zh-CN'?: string; ja?: string }
+    tooltips?: { en: string; fr: string; es: string; de: string; it: string; 'zh-CN'?: string; ja?: string }
     callback?: string
     setter?: string
     actions?: (BaseActionType | NodeBaseActionType | LinkBaseActionType)[]
@@ -503,7 +503,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Forma y fondo',
       de: 'Form und Hintergrund',
       it: 'Forma e sfondo',
-      'zh-CN': '形状与背景'
+      'zh-CN': '形状与背景',
+      ja: '形状と背景'
     },
     tooltips: {
       en: 'Show or hide the shape',
@@ -511,7 +512,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Mostrar u ocultar la forma',
       de: 'Form anzeigen oder ausblenden',
       it: 'Mostra o nascondi la forma',
-      'zh-CN': '显示或隐藏形状'
+      'zh-CN': '显示或隐藏形状',
+      ja: '形状の表示／非表示'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -526,7 +528,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Tipo de forma',
       de: 'Formtyp',
       it: 'Tipo di forma',
-      'zh-CN': '形状类型'
+      'zh-CN': '形状类型',
+      ja: '形状の種類'
     },
     tooltips: {
       en: 'Choose a shape (rectangle, ellipse, capsule)',
@@ -534,7 +537,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Elegir una forma (rectángulo, elipse, cápsula)',
       de: 'Eine Form wählen (Rechteck, Ellipse, Kapsel)',
       it: 'Scegliere una forma (rettangolo, ellisse, capsula)',
-      'zh-CN': '选择形状（矩形、椭圆、胶囊形）'
+      'zh-CN': '选择形状（矩形、椭圆、胶囊形）',
+      ja: '形状を選択（長方形、楕円、カプセル）'
     }
   } satisfies AttributeConfig<Type_Shape>,
 
@@ -549,7 +553,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Ancho mínimo',
       de: 'Minimale Breite',
       it: 'Larghezza minima',
-      'zh-CN': '最小宽度'
+      'zh-CN': '最小宽度',
+      ja: '最小幅'
     },
     tooltips: {
       en: 'Minimum width in pixels',
@@ -557,7 +562,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Ancho mínimo en píxeles',
       de: 'Minimale Breite in Pixeln',
       it: 'Larghezza minima in pixel',
-      'zh-CN': '最小宽度（像素）'
+      'zh-CN': '最小宽度（像素）',
+      ja: '最小幅（ピクセル）'
     }
   } satisfies AttributeConfig<number>,
 
@@ -572,7 +578,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Altura mínima',
       de: 'Minimale Höhe',
       it: 'Altezza minima',
-      'zh-CN': '最小高度'
+      'zh-CN': '最小高度',
+      ja: '最小の高さ'
     },
     tooltips: {
       en: 'Minimum height in pixels',
@@ -580,7 +587,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Altura mínima en píxeles',
       de: 'Minimale Höhe in Pixeln',
       it: 'Altezza minima in pixel',
-      'zh-CN': '最小高度（像素）'
+      'zh-CN': '最小高度（像素）',
+      ja: '最小の高さ（ピクセル）'
     }
   } satisfies AttributeConfig<number>,
 
@@ -598,7 +606,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Ancho fijo',
       de: 'Feste Breite',
       it: 'Larghezza fissa',
-      'zh-CN': '固定宽度'
+      'zh-CN': '固定宽度',
+      ja: '幅を固定'
     },
     tooltips: {
       en: 'Lock the background width to a fixed value instead of fitting the text',
@@ -606,7 +615,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Bloquear el ancho del fondo a un valor fijo en lugar de ajustarse al texto',
       de: 'Hintergrundbreite auf einen festen Wert sperren statt an den Text anzupassen',
       it: 'Bloccare la larghezza dello sfondo a un valore fisso invece di adattarsi al testo',
-      'zh-CN': '将背景宽度锁定为固定值，而非自适应文本'
+      'zh-CN': '将背景宽度锁定为固定值，而非自适应文本',
+      ja: '背景の幅をテキストに合わせず、固定値で固定します'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -622,7 +632,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Ancho',
       de: 'Breite',
       it: 'Larghezza',
-      'zh-CN': '宽度'
+      'zh-CN': '宽度',
+      ja: '幅'
     },
     tooltips: {
       en: 'Fixed width of the background in pixels (when fixed width is enabled)',
@@ -630,7 +641,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Ancho fijo del fondo en píxeles (cuando el ancho fijo está activado)',
       de: 'Feste Breite des Hintergrunds in Pixeln (wenn feste Breite aktiviert ist)',
       it: 'Larghezza fissa dello sfondo in pixel (quando la larghezza fissa è attiva)',
-      'zh-CN': '背景的固定宽度（像素，启用固定宽度时生效）'
+      'zh-CN': '背景的固定宽度（像素，启用固定宽度时生效）',
+      ja: '背景の固定幅（ピクセル。幅の固定が有効なとき）'
     }
   } satisfies AttributeConfig<number>,
 
@@ -645,7 +657,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Fondo',
       de: 'Hintergrund',
       it: 'Sfondo',
-      'zh-CN': '背景'
+      'zh-CN': '背景',
+      ja: '背景'
     },
     tooltips: {
       en: 'Show or hide the background color',
@@ -653,7 +666,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Mostrar u ocultar el color de fondo',
       de: 'Hintergrundfarbe anzeigen oder ausblenden',
       it: 'Mostra o nascondi il colore di sfondo',
-      'zh-CN': '显示或隐藏背景颜色'
+      'zh-CN': '显示或隐藏背景颜色',
+      ja: '背景色の表示／非表示'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -668,7 +682,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Color',
       de: 'Farbe',
       it: 'Colore',
-      'zh-CN': '颜色'
+      'zh-CN': '颜色',
+      ja: '色'
     },
     tooltips: {
       en: 'Background color',
@@ -676,7 +691,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Color de fondo',
       de: 'Hintergrundfarbe',
       it: 'Colore di sfondo',
-      'zh-CN': '背景颜色'
+      'zh-CN': '背景颜色',
+      ja: '背景色'
     }
   } satisfies AttributeConfig<string>,
 
@@ -691,7 +707,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Opacidad',
       de: 'Deckkraft',
       it: 'Opacità',
-      'zh-CN': '不透明度'
+      'zh-CN': '不透明度',
+      ja: '不透明度'
     },
     tooltips: {
       en: 'Opacity of the shape',
@@ -699,7 +716,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Opacidad de la forma',
       de: 'Deckkraft der Form',
       it: 'Opacità della forma',
-      'zh-CN': '形状的不透明度'
+      'zh-CN': '形状的不透明度',
+      ja: '形状の不透明度'
     }
   } satisfies AttributeConfig<number>,
 
@@ -714,7 +732,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Color fijo',
       de: 'Feste Farbe',
       it: 'Colore fisso',
-      'zh-CN': '固定颜色'
+      'zh-CN': '固定颜色',
+      ja: '固定色'
     },
     tooltips: {
       en: 'Keep the color fixed regardless of filters',
@@ -722,7 +741,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Mantener el color fijo independientemente de los filtros',
       de: 'Farbe unabhängig von Filtern beibehalten',
       it: 'Mantenere il colore fisso indipendentemente dai filtri',
-      'zh-CN': '无论筛选如何，保持颜色不变'
+      'zh-CN': '无论筛选如何，保持颜色不变',
+      ja: 'フィルタに関係なく色を固定したままにします'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -737,7 +757,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Borde',
       de: 'Rahmen',
       it: 'Bordo',
-      'zh-CN': '边框'
+      'zh-CN': '边框',
+      ja: '枠線'
     },
     tooltips: {
       en: 'Make the border transparent',
@@ -745,7 +766,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Hacer el borde transparente',
       de: 'Rahmen transparent machen',
       it: 'Rendere il bordo trasparente',
-      'zh-CN': '使边框透明'
+      'zh-CN': '使边框透明',
+      ja: '枠線を透明にします'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -760,7 +782,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Color',
       de: 'Farbe',
       it: 'Colore',
-      'zh-CN': '颜色'
+      'zh-CN': '颜色',
+      ja: '色'
     },
     tooltips: {
       en: 'Color of the border',
@@ -768,7 +791,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Color del borde',
       de: 'Farbe des Rahmens',
       it: 'Colore del bordo',
-      'zh-CN': '边框的颜色'
+      'zh-CN': '边框的颜色',
+      ja: '枠線の色'
     }
   } satisfies AttributeConfig<string>,
   border_color_sustainable: {
@@ -782,7 +806,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Color fijo',
       de: 'Feste Farbe',
       it: 'Colore fisso',
-      'zh-CN': '固定颜色'
+      'zh-CN': '固定颜色',
+      ja: '固定色'
     },
     tooltips: {
       en: 'Keep the color fixed regardless of filters',
@@ -790,7 +815,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Mantener el color fijo independientemente de los filtros',
       de: 'Farbe unabhängig von Filtern beibehalten',
       it: 'Mantenere il colore fisso indipendentemente dai filtri',
-      'zh-CN': '无论筛选如何，保持颜色不变'
+      'zh-CN': '无论筛选如何，保持颜色不变',
+      ja: 'フィルタに関係なく色を固定したままにします'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -805,7 +831,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Grosor',
       de: 'Stärke',
       it: 'Spessore',
-      'zh-CN': '粗细'
+      'zh-CN': '粗细',
+      ja: '太さ'
     },
     tooltips: {
       en: 'Thickness of the border in pixels',
@@ -813,7 +840,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Grosor del borde en píxeles',
       de: 'Stärke des Rahmens in Pixeln',
       it: 'Spessore del bordo in pixel',
-      'zh-CN': '边框粗细（像素）'
+      'zh-CN': '边框粗细（像素）',
+      ja: '枠線の太さ（ピクセル）'
     }
   } satisfies AttributeConfig<number>,
 
@@ -828,7 +856,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Discontinuo',
       de: 'Gestrichelt',
       it: 'Tratteggiato',
-      'zh-CN': '虚线'
+      'zh-CN': '虚线',
+      ja: '破線'
     },
     tooltips: {
       en: 'Use a dashed border style',
@@ -836,7 +865,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Usar un estilo de borde discontinuo',
       de: 'Gestrichelten Rahmenstil verwenden',
       it: 'Usare uno stile di bordo tratteggiato',
-      'zh-CN': '使用虚线边框样式'
+      'zh-CN': '使用虚线边框样式',
+      ja: '枠線を破線にします'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -851,7 +881,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Radio',
       de: 'Radius',
       it: 'Raggio',
-      'zh-CN': '圆角半径'
+      'zh-CN': '圆角半径',
+      ja: '角丸'
     },
     tooltips: {
       en: 'Border radius in pixels',
@@ -859,7 +890,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Radio del borde en píxeles',
       de: 'Rahmenradius in Pixeln',
       it: 'Raggio del bordo in pixel',
-      'zh-CN': '边框圆角半径（像素）'
+      'zh-CN': '边框圆角半径（像素）',
+      ja: '枠線の角丸半径（ピクセル）'
     }
   } satisfies AttributeConfig<number>,
 
@@ -874,7 +906,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Sombra paralela',
       de: 'Schlagschatten',
       it: 'Ombra esterna',
-      'zh-CN': '投影'
+      'zh-CN': '投影',
+      ja: 'ドロップシャドウ'
     },
     tooltips: {
       en: 'Add a drop shadow behind the element',
@@ -882,7 +915,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Añadir una sombra paralela detrás del elemento',
       de: 'Schlagschatten hinter dem Element hinzufügen',
       it: 'Aggiungere un\'ombra esterna dietro l\'elemento',
-      'zh-CN': '在元素后方添加投影'
+      'zh-CN': '在元素后方添加投影',
+      ja: '要素の背面に影を追加します'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -898,7 +932,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Izquierda',
       de: 'Links',
       it: 'Sinistra',
-      'zh-CN': '左'
+      'zh-CN': '左',
+      ja: '左'
     },
     tooltips: {
       en: 'Left margin',
@@ -906,7 +941,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Margen izquierdo',
       de: 'Linker Rand',
       it: 'Margine sinistro',
-      'zh-CN': '左边距'
+      'zh-CN': '左边距',
+      ja: '左の余白'
     }
   } satisfies AttributeConfig<number>,
 
@@ -922,7 +958,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Derecha',
       de: 'Rechts',
       it: 'Destra',
-      'zh-CN': '右'
+      'zh-CN': '右',
+      ja: '右'
     },
     tooltips: {
       en: 'Right margin',
@@ -930,7 +967,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Margen derecho',
       de: 'Rechter Rand',
       it: 'Margine destro',
-      'zh-CN': '右边距'
+      'zh-CN': '右边距',
+      ja: '右の余白'
     }
   } satisfies AttributeConfig<number>,
 
@@ -946,7 +984,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Superior',
       de: 'Oben',
       it: 'Superiore',
-      'zh-CN': '上'
+      'zh-CN': '上',
+      ja: '上'
     },
     tooltips: {
       en: 'Top margin',
@@ -954,7 +993,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Margen superior',
       de: 'Oberer Rand',
       it: 'Margine superiore',
-      'zh-CN': '上边距'
+      'zh-CN': '上边距',
+      ja: '上の余白'
     }
   } satisfies AttributeConfig<number>,
 
@@ -970,7 +1010,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Inferior',
       de: 'Unten',
       it: 'Inferiore',
-      'zh-CN': '下'
+      'zh-CN': '下',
+      ja: '下'
     },
     tooltips: {
       en: 'Bottom margin',
@@ -978,7 +1019,8 @@ export const BASE_SHAPE_CONFIG = {
       es: 'Margen inferior',
       de: 'Unterer Rand',
       it: 'Margine inferiore',
-      'zh-CN': '下边距'
+      'zh-CN': '下边距',
+      ja: '下の余白'
     }
   } satisfies AttributeConfig<number>,
 } as const
@@ -995,7 +1037,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Etiqueta',
       de: 'Beschriftung',
       it: 'Etichetta',
-      'zh-CN': '标签'
+      'zh-CN': '标签',
+      ja: 'ラベル'
     },
     tooltips: {
       en: 'Display or hide the label',
@@ -1003,7 +1046,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Mostrar u ocultar la etiqueta',
       de: 'Beschriftung anzeigen oder ausblenden',
       it: 'Mostra o nascondi l\'etichetta',
-      'zh-CN': '显示或隐藏标签'
+      'zh-CN': '显示或隐藏标签',
+      ja: 'ラベルの表示／非表示'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -1019,7 +1063,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Familia de fuente',
       de: 'Schriftfamilie',
       it: 'Famiglia di caratteri',
-      'zh-CN': '字体'
+      'zh-CN': '字体',
+      ja: 'フォント'
     },
     tooltips: {
       en: 'Font family for the label',
@@ -1027,7 +1072,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Familia de fuente para la etiqueta',
       de: 'Schriftfamilie für die Beschriftung',
       it: 'Famiglia di caratteri per l\'etichetta',
-      'zh-CN': '标签使用的字体'
+      'zh-CN': '标签使用的字体',
+      ja: 'ラベルのフォント'
     }
   } satisfies AttributeConfig<string>,
 
@@ -1042,7 +1088,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Tamaño de fuente',
       de: 'Schriftgröße',
       it: 'Dimensione del carattere',
-      'zh-CN': '字号'
+      'zh-CN': '字号',
+      ja: '文字サイズ'
     },
     tooltips: {
       en: 'Font size for the label',
@@ -1050,7 +1097,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Tamaño de fuente para la etiqueta',
       de: 'Schriftgröße für die Beschriftung',
       it: 'Dimensione del carattere per l\'etichetta',
-      'zh-CN': '标签的字号'
+      'zh-CN': '标签的字号',
+      ja: 'ラベルの文字サイズ'
     }
   } satisfies AttributeConfig<number>,
 
@@ -1065,7 +1113,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Mayúsculas',
       de: 'Großbuchstaben',
       it: 'Maiuscolo',
-      'zh-CN': '大写'
+      'zh-CN': '大写',
+      ja: '大文字'
     },
     tooltips: {
       en: 'Display text in uppercase',
@@ -1073,7 +1122,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Mostrar el texto en mayúsculas',
       de: 'Text in Großbuchstaben anzeigen',
       it: 'Visualizzare il testo in maiuscolo',
-      'zh-CN': '以大写显示文本'
+      'zh-CN': '以大写显示文本',
+      ja: 'テキストを大文字で表示します'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -1088,7 +1138,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Negrita',
       de: 'Fett',
       it: 'Grassetto',
-      'zh-CN': '粗体'
+      'zh-CN': '粗体',
+      ja: '太字'
     },
     tooltips: {
       en: 'Display text in bold',
@@ -1096,7 +1147,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Mostrar el texto en negrita',
       de: 'Text fett anzeigen',
       it: 'Visualizzare il testo in grassetto',
-      'zh-CN': '以粗体显示文本'
+      'zh-CN': '以粗体显示文本',
+      ja: 'テキストを太字で表示します'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -1111,7 +1163,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Cursiva',
       de: 'Kursiv',
       it: 'Corsivo',
-      'zh-CN': '斜体'
+      'zh-CN': '斜体',
+      ja: '斜体'
     },
     tooltips: {
       en: 'Display text in italic',
@@ -1119,7 +1172,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Mostrar el texto en cursiva',
       de: 'Text kursiv anzeigen',
       it: 'Visualizzare il testo in corsivo',
-      'zh-CN': '以斜体显示文本'
+      'zh-CN': '以斜体显示文本',
+      ja: 'テキストを斜体で表示します'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -1134,7 +1188,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Color del texto',
       de: 'Textfarbe',
       it: 'Colore del testo',
-      'zh-CN': '文本颜色'
+      'zh-CN': '文本颜色',
+      ja: '文字色'
     },
     tooltips: {
       en: 'Color of the text',
@@ -1142,7 +1197,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Color del texto',
       de: 'Farbe des Textes',
       it: 'Colore del testo',
-      'zh-CN': '文本的颜色'
+      'zh-CN': '文本的颜色',
+      ja: 'テキストの色'
     }
   } satisfies AttributeConfig<string>,
 
@@ -1158,7 +1214,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Posición horizontal',
       de: 'Horizontale Position',
       it: 'Posizione orizzontale',
-      'zh-CN': '水平位置'
+      'zh-CN': '水平位置',
+      ja: '水平位置'
     },
     tooltips: {
       en: 'Horizontal position relative to the node',
@@ -1166,7 +1223,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Posición horizontal respecto al nodo',
       de: 'Horizontale Position relativ zum Knoten',
       it: 'Posizione orizzontale rispetto al nodo',
-      'zh-CN': '相对于节点的水平位置'
+      'zh-CN': '相对于节点的水平位置',
+      ja: 'ノードを基準とした水平位置'
     }
   } satisfies AttributeConfig<Type_TextHPos>,
 
@@ -1182,7 +1240,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Posición vertical',
       de: 'Vertikale Position',
       it: 'Posizione verticale',
-      'zh-CN': '垂直位置'
+      'zh-CN': '垂直位置',
+      ja: '垂直位置'
     },
     tooltips: {
       en: 'Vertical position relative to the node',
@@ -1190,7 +1249,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Posición vertical respecto al nodo',
       de: 'Vertikale Position relativ zum Knoten',
       it: 'Posizione verticale rispetto al nodo',
-      'zh-CN': '相对于节点的垂直位置'
+      'zh-CN': '相对于节点的垂直位置',
+      ja: 'ノードを基準とした垂直位置'
     }
   } satisfies AttributeConfig<Type_TextVPos>,
 
@@ -1205,7 +1265,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Horizontal',
       de: 'Horizontal',
       it: 'Orizzontale',
-      'zh-CN': '水平'
+      'zh-CN': '水平',
+      ja: '水平'
     },
     tooltips: {
       en: 'Horizontal shift from anchor point',
@@ -1213,7 +1274,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Desplazamiento horizontal desde el punto de anclaje',
       de: 'Horizontale Verschiebung vom Ankerpunkt',
       it: 'Spostamento orizzontale dal punto di ancoraggio',
-      'zh-CN': '相对于锚点的水平偏移'
+      'zh-CN': '相对于锚点的水平偏移',
+      ja: 'アンカーからの水平方向のずれ'
     }
   } satisfies AttributeConfig<number>,
 
@@ -1228,7 +1290,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Vertical',
       de: 'Vertikal',
       it: 'Verticale',
-      'zh-CN': '垂直'
+      'zh-CN': '垂直',
+      ja: '垂直'
     },
     tooltips: {
       en: 'Vertical shift from anchor point',
@@ -1236,7 +1299,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Desplazamiento vertical desde el punto de anclaje',
       de: 'Vertikale Verschiebung vom Ankerpunkt',
       it: 'Spostamento verticale dal punto di ancoraggio',
-      'zh-CN': '相对于锚点的垂直偏移'
+      'zh-CN': '相对于锚点的垂直偏移',
+      ja: 'アンカーからの垂直方向のずれ'
     }
   } satisfies AttributeConfig<number>,
   text_align: {
@@ -1250,7 +1314,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Alineación del texto',
       de: 'Textausrichtung',
       it: 'Allineamento del testo',
-      'zh-CN': '文本对齐'
+      'zh-CN': '文本对齐',
+      ja: '文字揃え'
     },
     tooltips: {
       en: 'Text alignment',
@@ -1258,7 +1323,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Alineación del texto',
       de: 'Textausrichtung',
       it: 'Allineamento del testo',
-      'zh-CN': '文本对齐'
+      'zh-CN': '文本对齐',
+      ja: '文字揃え'
     }
   } satisfies AttributeConfig<string>,
   box_width: {
@@ -1275,7 +1341,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Ancho',
       de: 'Breite',
       it: 'Larghezza',
-      'zh-CN': '宽度'
+      'zh-CN': '宽度',
+      ja: '幅'
     },
     tooltips: {
       en: 'Width of the text area in pixels',
@@ -1283,7 +1350,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Ancho del área de texto en píxeles',
       de: 'Breite des Textbereichs in Pixeln',
       it: 'Larghezza dell\'area di testo in pixel',
-      'zh-CN': '文本区宽度（像素）'
+      'zh-CN': '文本区宽度（像素）',
+      ja: 'テキスト領域の幅（ピクセル）'
     }
   } satisfies AttributeConfig<number>,
   wrap_long_words: {
@@ -1297,7 +1365,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Cortar palabras largas',
       de: 'Lange Wörter umbrechen',
       it: 'Spezza parole lunghe',
-      'zh-CN': '断开长单词'
+      'zh-CN': '断开长单词',
+      ja: '長い単語を分割'
     },
     tooltips: {
       en: 'Insert a hyphen to break words that exceed the label width',
@@ -1305,7 +1374,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Inserta un guion para cortar las palabras que exceden el ancho de la etiqueta',
       de: 'Bindestrich einfügen, um Wörter zu trennen, die die Beschriftungsbreite überschreiten',
       it: 'Inserisce un trattino per spezzare le parole che superano la larghezza dell\'etichetta',
-      'zh-CN': '插入连字符以断开超出标签宽度的单词'
+      'zh-CN': '插入连字符以断开超出标签宽度的单词',
+      ja: 'ラベル幅を超える単語にハイフンを入れて折り返します'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -1320,7 +1390,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Texto vertical',
       de: 'Vertikaler Text',
       it: 'Testo verticale',
-      'zh-CN': '竖排文本'
+      'zh-CN': '竖排文本',
+      ja: '縦書き'
     },
     tooltips: {
       en: 'Orient text vertically',
@@ -1328,7 +1399,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Orientar el texto verticalmente',
       de: 'Text vertikal ausrichten',
       it: 'Orientare il testo verticalmente',
-      'zh-CN': '将文本竖向排列'
+      'zh-CN': '将文本竖向排列',
+      ja: 'テキストを縦方向に配置します'
     }
   } satisfies AttributeConfig<boolean>,
   // Angle de rotation libre du texte, en degrés (−180..180). Remplace le toggle
@@ -1345,7 +1417,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Ángulo del texto',
       de: 'Textwinkel',
       it: 'Angolo del testo',
-      'zh-CN': '文本角度'
+      'zh-CN': '文本角度',
+      ja: 'テキストの角度'
     },
     tooltips: {
       en: 'Rotate the text by an angle (−180° to 180°)',
@@ -1353,7 +1426,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Girar el texto un ángulo (−180° a 180°)',
       de: 'Text um einen Winkel drehen (−180° bis 180°)',
       it: 'Ruotare il testo di un angolo (−180° a 180°)',
-      'zh-CN': '按角度旋转文本（−180° 至 180°）'
+      'zh-CN': '按角度旋转文本（−180° 至 180°）',
+      ja: 'テキストを指定角度で回転します（−180° 〜 180°）'
     }
   } satisfies AttributeConfig<number>,
   position_absolute: {
@@ -1367,7 +1441,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'position_absolute',
       de: 'position_absolute',
       it: 'position_absolute',
-      'zh-CN': 'position_absolute'
+      'zh-CN': 'position_absolute',
+      ja: 'position_absolute'
     },
     tooltips: {
       en: 'position_absolute',
@@ -1375,7 +1450,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'position_absolute',
       de: 'position_absolute',
       it: 'position_absolute',
-      'zh-CN': 'position_absolute'
+      'zh-CN': 'position_absolute',
+      ja: 'position_absolute'
     }
   } satisfies AttributeConfig<boolean>,
   position_x: {
@@ -1389,7 +1465,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'position_x',
       de: 'position_x',
       it: 'position_x',
-      'zh-CN': 'position_x'
+      'zh-CN': 'position_x',
+      ja: 'position_x'
     },
     tooltips: {
       en: 'position_x',
@@ -1397,7 +1474,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'position_x',
       de: 'position_x',
       it: 'position_x',
-      'zh-CN': 'position_x'
+      'zh-CN': 'position_x',
+      ja: 'position_x'
     }
   } satisfies AttributeConfig<number>,
   position_y: {
@@ -1411,7 +1489,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'position_y',
       de: 'position_y',
       it: 'position_y',
-      'zh-CN': 'position_y'
+      'zh-CN': 'position_y',
+      ja: 'position_y'
     },
     tooltips: {
       en: 'position_y',
@@ -1419,7 +1498,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'position_y',
       de: 'position_y',
       it: 'position_y',
-      'zh-CN': 'position_y'
+      'zh-CN': 'position_y',
+      ja: 'position_y'
     }
   } satisfies AttributeConfig<number>,
   position_offset: {
@@ -1433,7 +1513,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'position_offset',
       de: 'position_offset',
       it: 'position_offset',
-      'zh-CN': 'position_offset'
+      'zh-CN': 'position_offset',
+      ja: 'position_offset'
     },
     tooltips: {
       en: 'position_offset',
@@ -1441,7 +1522,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'position_offset',
       de: 'position_offset',
       it: 'position_offset',
-      'zh-CN': 'position_offset'
+      'zh-CN': 'position_offset',
+      ja: 'position_offset'
     }
   } satisfies AttributeConfig<number>,
   inside_horiz: {
@@ -1455,7 +1537,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Interior horizontal',
       de: 'Innen horizontal',
       it: 'Interno orizzontale',
-      'zh-CN': '内部水平'
+      'zh-CN': '内部水平',
+      ja: '内側（水平）'
     },
     tooltips: {
       en: 'Position label inside shape horizontally',
@@ -1463,7 +1546,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Posicionar la etiqueta dentro de la forma horizontalmente',
       de: 'Beschriftung horizontal innerhalb der Form positionieren',
       it: 'Posizionare l\'etichetta all\'interno della forma orizzontalmente',
-      'zh-CN': '在形状内部水平放置标签'
+      'zh-CN': '在形状内部水平放置标签',
+      ja: 'ラベルを形状の内側に水平方向で配置します'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -1478,7 +1562,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Interior vertical',
       de: 'Innen vertikal',
       it: 'Interno verticale',
-      'zh-CN': '内部垂直'
+      'zh-CN': '内部垂直',
+      ja: '内側（垂直）'
     },
     tooltips: {
       en: 'Position label inside shape vertically',
@@ -1486,7 +1571,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Posicionar la etiqueta dentro de la forma verticalmente',
       de: 'Beschriftung vertikal innerhalb der Form positionieren',
       it: 'Posizionare l\'etichetta all\'interno della forma verticalmente',
-      'zh-CN': '在形状内部垂直放置标签'
+      'zh-CN': '在形状内部垂直放置标签',
+      ja: 'ラベルを形状の内側に垂直方向で配置します'
     }
   } satisfies AttributeConfig<boolean>,
   icon_name: {
@@ -1500,7 +1586,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Nombre del icono',
       de: 'Symbolname',
       it: 'Nome dell\'icona',
-      'zh-CN': '图标名称'
+      'zh-CN': '图标名称',
+      ja: 'アイコン名'
     },
     tooltips: {
       en: 'Name of the icon',
@@ -1508,7 +1595,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Nombre del icono',
       de: 'Name des Symbols',
       it: 'Nome dell\'icona',
-      'zh-CN': '图标的名称'
+      'zh-CN': '图标的名称',
+      ja: 'アイコンの名前'
     }
   } satisfies AttributeConfig<string>,
   view_box: {
@@ -1522,7 +1610,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'ViewBox del icono',
       de: 'Symbol-ViewBox',
       it: 'ViewBox dell\'icona',
-      'zh-CN': '图标 viewBox'
+      'zh-CN': '图标 viewBox',
+      ja: 'アイコンの viewBox'
     },
     tooltips: {
       en: 'SVG viewBox attribute',
@@ -1530,7 +1619,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Atributo viewBox SVG',
       de: 'SVG-viewBox-Attribut',
       it: 'Attributo viewBox SVG',
-      'zh-CN': 'SVG viewBox 属性'
+      'zh-CN': 'SVG viewBox 属性',
+      ja: 'SVG の viewBox 属性'
     }
   } satisfies AttributeConfig<string | undefined>,
 
@@ -1545,7 +1635,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Color de icono fijo',
       de: 'Feste Symbolfarbe',
       it: 'Colore icona fisso',
-      'zh-CN': '固定图标颜色'
+      'zh-CN': '固定图标颜色',
+      ja: 'アイコンの色を固定'
     },
     tooltips: {
       en: 'Keep icon color fixed',
@@ -1553,7 +1644,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Mantener el color del icono fijo',
       de: 'Symbolfarbe fest beibehalten',
       it: 'Mantenere il colore dell\'icona fisso',
-      'zh-CN': '保持图标颜色不变'
+      'zh-CN': '保持图标颜色不变',
+      ja: 'アイコンの色を固定したままにします'
     }
   } satisfies AttributeConfig<boolean>,
   has_fo: {
@@ -1567,7 +1659,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Texto enriquecido',
       de: 'Rich Text',
       it: 'Testo formattato',
-      'zh-CN': '含富文本'
+      'zh-CN': '含富文本',
+      ja: 'リッチテキストあり'
     },
     tooltips: {
       en: 'Has rich text',
@@ -1575,7 +1668,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Tiene texto enriquecido',
       de: 'Hat Rich Text',
       it: 'Ha testo formattato',
-      'zh-CN': '含富文本'
+      'zh-CN': '含富文本',
+      ja: 'リッチテキストあり'
     }
   } satisfies AttributeConfig<boolean>,
   fo_content: {
@@ -1589,7 +1683,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Contenido del objeto externo',
       de: 'Fremdobjekt-Inhalt',
       it: 'Contenuto dell\'oggetto esterno',
-      'zh-CN': '外部对象内容'
+      'zh-CN': '外部对象内容',
+      ja: '外部オブジェクトの内容'
     },
     tooltips: {
       en: 'HTML content',
@@ -1597,7 +1692,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Contenido HTML',
       de: 'HTML-Inhalt',
       it: 'Contenuto HTML',
-      'zh-CN': 'HTML 内容'
+      'zh-CN': 'HTML 内容',
+      ja: 'HTML の内容'
     }
   } satisfies AttributeConfig<string>,
   // Image
@@ -1612,7 +1708,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Es un icono',
       de: 'Ist ein Symbol',
       it: 'È un\'icona',
-      'zh-CN': '为图标'
+      'zh-CN': '为图标',
+      ja: 'アイコンとして扱う'
     },
     tooltips: {
       en: 'Display as icon',
@@ -1620,7 +1717,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Mostrar como icono',
       de: 'Als Symbol anzeigen',
       it: 'Visualizzare come icona',
-      'zh-CN': '以图标显示'
+      'zh-CN': '以图标显示',
+      ja: 'アイコンとして表示します'
     }
   } satisfies AttributeConfig<boolean>,
   // Image
@@ -1635,7 +1733,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Es una imagen',
       de: 'Ist ein Bild',
       it: 'È un\'immagine',
-      'zh-CN': '为图片'
+      'zh-CN': '为图片',
+      ja: '画像として扱う'
     },
     tooltips: {
       en: 'Display as image',
@@ -1643,7 +1742,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Mostrar como imagen',
       de: 'Als Bild anzeigen',
       it: 'Visualizzare come immagine',
-      'zh-CN': '以图片显示'
+      'zh-CN': '以图片显示',
+      ja: '画像として表示します'
     }
   } satisfies AttributeConfig<boolean>,
   is_value: {
@@ -1657,7 +1757,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Es un valor',
       de: 'Ist ein Wert',
       it: 'È un valore',
-      'zh-CN': '为数值'
+      'zh-CN': '为数值',
+      ja: '値として扱う'
     },
     tooltips: {
       en: 'Display as value',
@@ -1665,7 +1766,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Mostrar como valor',
       de: 'Als Wert anzeigen',
       it: 'Visualizzare come valore',
-      'zh-CN': '以数值显示'
+      'zh-CN': '以数值显示',
+      ja: '値として表示します'
     }
   } satisfies AttributeConfig<boolean>,
   image_src: {
@@ -1679,7 +1781,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Fuente de la imagen',
       de: 'Bildquelle',
       it: 'Sorgente dell\'immagine',
-      'zh-CN': '图片来源'
+      'zh-CN': '图片来源',
+      ja: '画像のソース'
     },
     tooltips: {
       en: 'URL or path to image',
@@ -1687,7 +1790,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'URL o ruta a la imagen',
       de: 'URL oder Pfad zum Bild',
       it: 'URL o percorso dell\'immagine',
-      'zh-CN': '图片的 URL 或路径'
+      'zh-CN': '图片的 URL 或路径',
+      ja: '画像の URL またはパス'
     }
   } satisfies AttributeConfig<string | undefined>,
   // Formatting
@@ -1702,7 +1806,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Notación científica',
       de: 'Wissenschaftliche Notation',
       it: 'Notazione scientifica',
-      'zh-CN': '科学计数法'
+      'zh-CN': '科学计数法',
+      ja: '指数表記'
     },
     tooltips: {
       en: 'Use scientific notation',
@@ -1710,7 +1815,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Usar notación científica',
       de: 'Wissenschaftliche Notation verwenden',
       it: 'Usare la notazione scientifica',
-      'zh-CN': '使用科学计数法'
+      'zh-CN': '使用科学计数法',
+      ja: '指数表記を使用します'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -1725,7 +1831,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Cifras significativas',
       de: 'Signifikante Stellen',
       it: 'Cifre significative',
-      'zh-CN': '有效数字'
+      'zh-CN': '有效数字',
+      ja: '有効数字'
     },
     tooltips: {
       en: 'Use significant digits',
@@ -1733,7 +1840,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Usar cifras significativas',
       de: 'Signifikante Stellen verwenden',
       it: 'Usare le cifre significative',
-      'zh-CN': '使用有效数字'
+      'zh-CN': '使用有效数字',
+      ja: '有効数字を使用します'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -1748,7 +1856,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Número de cifras significativas',
       de: 'Anzahl signifikanter Stellen',
       it: 'Numero di cifre significative',
-      'zh-CN': '有效数字位数'
+      'zh-CN': '有效数字位数',
+      ja: '有効数字の桁数'
     },
     tooltips: {
       en: 'Number of significant digits',
@@ -1756,7 +1865,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Número de cifras significativas',
       de: 'Anzahl signifikanter Stellen',
       it: 'Numero di cifre significative',
-      'zh-CN': '有效数字位数'
+      'zh-CN': '有效数字位数',
+      ja: '有効数字の桁数'
     }
   } satisfies AttributeConfig<number>,
 
@@ -1771,7 +1881,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Decimales',
       de: 'Dezimalstellen',
       it: 'Decimali',
-      'zh-CN': '小数位数'
+      'zh-CN': '小数位数',
+      ja: '小数桁数'
     },
     tooltips: {
       en: 'Use custom number of decimals',
@@ -1779,7 +1890,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Usar un número personalizado de decimales',
       de: 'Benutzerdefinierte Anzahl von Dezimalstellen verwenden',
       it: 'Usare un numero personalizzato di decimali',
-      'zh-CN': '使用自定义小数位数'
+      'zh-CN': '使用自定义小数位数',
+      ja: '小数点以下の桁数を指定します'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -1794,7 +1906,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Número de decimales',
       de: 'Anzahl der Dezimalstellen',
       it: 'Numero di decimali',
-      'zh-CN': '小数位数'
+      'zh-CN': '小数位数',
+      ja: '小数点以下の桁数'
     },
     tooltips: {
       en: 'Number of decimal places',
@@ -1802,7 +1915,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Número de decimales',
       de: 'Anzahl der Dezimalstellen',
       it: 'Numero di decimali',
-      'zh-CN': '小数点后位数'
+      'zh-CN': '小数点后位数',
+      ja: '小数点以下の桁数'
     }
   } satisfies AttributeConfig<number>,
 
@@ -1817,7 +1931,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Totales entrantes/salientes',
       de: 'Eingangs-/Ausgangssummen',
       it: 'Totali in entrata/uscita',
-      'zh-CN': '进/出合计'
+      'zh-CN': '进/出合计',
+      ja: '入出合計'
     },
     tooltips: {
       en: 'When incoming total differs from outgoing: show both (in→out), only incoming, or only outgoing',
@@ -1825,7 +1940,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Cuando el total entrante difiere del saliente: mostrar ambos (entrada→salida), solo entrante, o solo saliente',
       de: 'Wenn die Eingangssumme von der Ausgangssumme abweicht: beide anzeigen (Eingang→Ausgang), nur Eingang oder nur Ausgang',
       it: 'Quando il totale in entrata differisce da quello in uscita: mostrare entrambi (entrata→uscita), solo entrata o solo uscita',
-      'zh-CN': '当进入总量与流出总量不同时：同时显示（进→出）、仅显示进入、或仅显示流出'
+      'zh-CN': '当进入总量与流出总量不同时：同时显示（进→出）、仅显示进入、或仅显示流出',
+      ja: '入力合計と出力合計が異なる場合：両方（入→出）、入力のみ、出力のみのいずれかを表示'
     }
   } satisfies AttributeConfig<'both' | 'in' | 'out'>,
 
@@ -1841,7 +1957,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Unidad',
       de: 'Einheit',
       it: 'Unità',
-      'zh-CN': '单位'
+      'zh-CN': '单位',
+      ja: '単位'
     },
     tooltips: {
       en: 'Display the unit',
@@ -1849,7 +1966,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Mostrar la unidad',
       de: 'Einheit anzeigen',
       it: 'Visualizzare l\'unità',
-      'zh-CN': '显示单位'
+      'zh-CN': '显示单位',
+      ja: '単位を表示します'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -1867,7 +1985,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Tipo de unidad',
       de: 'Einheitentyp',
       it: 'Tipo di unità',
-      'zh-CN': '单位类型'
+      'zh-CN': '单位类型',
+      ja: '単位の種類'
     },
     tooltips: {
       en: 'Type of unit to display',
@@ -1875,7 +1994,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Tipo de unidad a mostrar',
       de: 'Anzuzeigender Einheitentyp',
       it: 'Tipo di unità da visualizzare',
-      'zh-CN': '要显示的单位类型'
+      'zh-CN': '要显示的单位类型',
+      ja: '表示する単位の種類'
     }
   } satisfies AttributeConfig<UnitType>,
 
@@ -1890,7 +2010,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Nombre de la unidad',
       de: 'Einheitenname',
       it: 'Nome dell\'unità',
-      'zh-CN': '单位名称'
+      'zh-CN': '单位名称',
+      ja: '単位名'
     },
     tooltips: {
       en: 'Name of the unit',
@@ -1898,7 +2019,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Nombre de la unidad',
       de: 'Name der Einheit',
       it: 'Nome dell\'unità',
-      'zh-CN': '单位的名称'
+      'zh-CN': '单位的名称',
+      ja: '単位の名前'
     }
   } satisfies AttributeConfig<string>,
 
@@ -1913,7 +2035,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Factor',
       de: 'Faktor',
       it: 'Fattore',
-      'zh-CN': '系数'
+      'zh-CN': '系数',
+      ja: '係数'
     },
     tooltips: {
       en: 'Conversion factor for the unit',
@@ -1921,7 +2044,8 @@ export const BASE_LABEL_CONFIG = {
       es: 'Factor de conversión para la unidad',
       de: 'Umrechnungsfaktor für die Einheit',
       it: 'Fattore di conversione per l\'unità',
-      'zh-CN': '该单位的换算系数'
+      'zh-CN': '该单位的换算系数',
+      ja: 'その単位の換算係数'
     }
   } satisfies AttributeConfig<number>
 } as const
@@ -1977,7 +2101,8 @@ function createLabelConfig(prefix: string, category: string, drawAction: BaseAct
             es: 'Fondo',
             de: 'Hintergrund',
             it: 'Sfondo',
-            'zh-CN': '背景'
+            'zh-CN': '背景',
+            ja: '背景'
           },
           tooltips: {
             en: 'Show background for better visibility',
@@ -1985,7 +2110,8 @@ function createLabelConfig(prefix: string, category: string, drawAction: BaseAct
             es: 'Mostrar el fondo para mejor visibilidad',
             de: 'Hintergrund für bessere Sichtbarkeit anzeigen',
             it: 'Mostrare lo sfondo per una migliore visibilità',
-            'zh-CN': '显示背景以提升可读性'
+            'zh-CN': '显示背景以提升可读性',
+            ja: '見やすくするために背景を表示します'
           }
         },
         color_visible: {
@@ -1996,7 +2122,8 @@ function createLabelConfig(prefix: string, category: string, drawAction: BaseAct
             es: 'Fondo',
             de: 'Hintergrund',
             it: 'Sfondo',
-            'zh-CN': '背景'
+            'zh-CN': '背景',
+            ja: '背景'
           },
           tooltips: {
             en: 'Background color',
@@ -2004,7 +2131,8 @@ function createLabelConfig(prefix: string, category: string, drawAction: BaseAct
             es: 'Color de fondo',
             de: 'Hintergrundfarbe',
             it: 'Colore di sfondo',
-            'zh-CN': '背景颜色'
+            'zh-CN': '背景颜色',
+            ja: '背景色'
           }
         },
         color: {
@@ -2015,7 +2143,8 @@ function createLabelConfig(prefix: string, category: string, drawAction: BaseAct
             es: 'Fondo',
             de: 'Hintergrund',
             it: 'Sfondo',
-            'zh-CN': '背景'
+            'zh-CN': '背景',
+            ja: '背景'
           },
           tooltips: {
             en: 'Background color',
@@ -2023,7 +2152,8 @@ function createLabelConfig(prefix: string, category: string, drawAction: BaseAct
             es: 'Color de fondo',
             de: 'Hintergrundfarbe',
             it: 'Colore di sfondo',
-            'zh-CN': '背景颜色'
+            'zh-CN': '背景颜色',
+            ja: '背景色'
           }
         },
         color_sustainable: {
@@ -2064,7 +2194,8 @@ export const NAME_LABEL_CONFIG = {
       es: 'Separador',
       de: 'Trennzeichen',
       it: 'Separatore',
-      'zh-CN': '分隔符'
+      'zh-CN': '分隔符',
+      ja: '区切り文字'
     },
     tooltips: {
       en: 'Separator character',
@@ -2072,7 +2203,8 @@ export const NAME_LABEL_CONFIG = {
       es: 'Carácter separador',
       de: 'Trennzeichen',
       it: 'Carattere separatore',
-      'zh-CN': '分隔符字符'
+      'zh-CN': '分隔符字符',
+      ja: '区切りに使う文字'
     }
   } satisfies AttributeConfig<string>,
 
@@ -2087,7 +2219,8 @@ export const NAME_LABEL_CONFIG = {
       es: 'Posición del separador',
       de: 'Position des Trennzeichens',
       it: 'Posizione del separatore',
-      'zh-CN': '分隔符位置'
+      'zh-CN': '分隔符位置',
+      ja: '区切り位置'
     },
     tooltips: {
       en: 'Position of the separator',
@@ -2095,7 +2228,8 @@ export const NAME_LABEL_CONFIG = {
       es: 'Posición del separador',
       de: 'Position des Trennzeichens',
       it: 'Posizione del separatore',
-      'zh-CN': '分隔符的位置'
+      'zh-CN': '分隔符的位置',
+      ja: '区切り文字の位置'
     }
   } satisfies AttributeConfig<'before' | 'after'>,
 
@@ -2114,7 +2248,8 @@ export const NAME_LABEL_CONFIG = {
       es: 'Contenido de la etiqueta',
       de: 'Beschriftungsinhalt',
       it: 'Contenuto etichetta',
-      'zh-CN': '标签内容'
+      'zh-CN': '标签内容',
+      ja: 'ラベルの内容'
     },
     tooltips: {
       en: 'Source of the label text (element name, custom text, assigned tag, ancestor name)',
@@ -2122,7 +2257,8 @@ export const NAME_LABEL_CONFIG = {
       es: 'Origen del texto de la etiqueta (nombre del elemento, texto personalizado, etiqueta asignada, nombre del ancestro)',
       de: 'Quelle des Beschriftungstextes (Elementname, benutzerdefinierter Text, zugewiesener Tag, Vorfahrenname)',
       it: 'Origine del testo dell\'etichetta (nome elemento, testo personalizzato, tag assegnato, nome antenato)',
-      'zh-CN': '标签文本的来源（元素名称、自定义文本、指派的标签、祖先名称）'
+      'zh-CN': '标签文本的来源（元素名称、自定义文本、指派的标签、祖先名称）',
+      ja: 'ラベル文字列の取得元（要素名、任意テキスト、割り当てタグ、祖先ノード名）'
     }
   } satisfies AttributeConfig<'name' | 'custom' | 'tag' | 'ancestor'>,
 
@@ -2137,7 +2273,8 @@ export const NAME_LABEL_CONFIG = {
       es: 'Texto personalizado',
       de: 'Benutzerdefinierter Text',
       it: 'Testo personalizzato',
-      'zh-CN': '自定义文本'
+      'zh-CN': '自定义文本',
+      ja: '任意テキスト'
     },
     tooltips: {
       en: 'Free text shown when label content is "custom"',
@@ -2145,7 +2282,8 @@ export const NAME_LABEL_CONFIG = {
       es: 'Texto libre mostrado cuando el contenido de la etiqueta es «personalizado»',
       de: 'Freitext, der angezeigt wird, wenn der Beschriftungsinhalt „benutzerdefiniert“ ist',
       it: 'Testo libero mostrato quando il contenuto dell\'etichetta è «personalizzato»',
-      'zh-CN': '当标签内容为“自定义”时显示的自由文本'
+      'zh-CN': '当标签内容为“自定义”时显示的自由文本',
+      ja: 'ラベルの内容が「任意テキスト」のときに表示される自由入力の文字列'
     }
   } satisfies AttributeConfig<string>,
 
@@ -2160,7 +2298,8 @@ export const NAME_LABEL_CONFIG = {
       es: 'Grupo de etiquetas',
       de: 'Tag-Gruppe',
       it: 'Gruppo di tag',
-      'zh-CN': '标签组'
+      'zh-CN': '标签组',
+      ja: 'タググループ'
     },
     tooltips: {
       en: 'Tag group whose assigned tag is shown when label content is "tag"',
@@ -2168,7 +2307,8 @@ export const NAME_LABEL_CONFIG = {
       es: 'Grupo de etiquetas cuya etiqueta asignada se muestra cuando el contenido es «tag»',
       de: 'Tag-Gruppe, deren zugewiesener Tag bei Inhalt „tag“ angezeigt wird',
       it: 'Gruppo di tag il cui tag assegnato è mostrato quando il contenuto è «tag»',
-      'zh-CN': '当标签内容为“标签”时，显示所指派标签的标签组'
+      'zh-CN': '当标签内容为“标签”时，显示所指派标签的标签组',
+      ja: 'ラベルの内容が「タグ」のとき、割り当てタグを表示するタググループ'
     }
   } satisfies AttributeConfig<string>,
 
@@ -2183,7 +2323,8 @@ export const NAME_LABEL_CONFIG = {
       es: 'Dimensión',
       de: 'Dimension',
       it: 'Dimensione',
-      'zh-CN': '维度'
+      'zh-CN': '维度',
+      ja: '次元'
     },
     tooltips: {
       en: 'Dimension to climb to the root ancestor when label content is "ancestor" (empty = first)',
@@ -2191,7 +2332,8 @@ export const NAME_LABEL_CONFIG = {
       es: 'Dimensión a recorrer hasta el ancestro raíz cuando el contenido es «ancestro» (vacío = primera)',
       de: 'Dimension bis zum Wurzel-Vorfahren bei Inhalt „Vorfahre“ (leer = erste)',
       it: 'Dimensione da risalire fino all\'antenato radice quando il contenuto è «antenato» (vuoto = prima)',
-      'zh-CN': '当标签内容为“祖先”时，用于上溯到根祖先的维度（留空 = 第一个）'
+      'zh-CN': '当标签内容为“祖先”时，用于上溯到根祖先的维度（留空 = 第一个）',
+      ja: 'ラベルの内容が「祖先」のとき、ルート祖先までたどる次元（空欄 = 最初の次元）'
     }
   } satisfies AttributeConfig<string>,
 } as const
@@ -2214,7 +2356,8 @@ export const STOCK_LABEL_CONFIG = {
       es: 'Ancho de caja (px)',
       de: 'Kastenbreite (px)',
       it: 'Larghezza riquadro (px)',
-      'zh-CN': '文本框宽度（px）'
+      'zh-CN': '文本框宽度（px）',
+      ja: 'ボックス幅（px）'
     },
     tooltips: {
       en: 'Wrap width of the stock label box, in screen px',
@@ -2222,7 +2365,8 @@ export const STOCK_LABEL_CONFIG = {
       es: 'Ancho de ajuste de la caja de stock, en px de pantalla',
       de: 'Umbruchbreite des Stock-Kastens, in Bildschirm-px',
       it: 'Larghezza di a capo del riquadro stock, in px schermo',
-      'zh-CN': '库存标签框的换行宽度，单位为屏幕像素'
+      'zh-CN': '库存标签框的换行宽度，单位为屏幕像素',
+      ja: 'ストックラベルのボックスの折り返し幅（画面ピクセル）'
     }
   } satisfies AttributeConfig<number>,
 
@@ -2240,7 +2384,8 @@ export const STOCK_LABEL_CONFIG = {
       es: 'Posición automática',
       de: 'Automatische Position',
       it: 'Posizione automatica',
-      'zh-CN': '自动定位'
+      'zh-CN': '自动定位',
+      ja: '自動配置'
     },
     tooltips: {
       en: 'When the node is too thin to hold the box, move it above/below the node instead of overlapping it',
@@ -2248,7 +2393,8 @@ export const STOCK_LABEL_CONFIG = {
       es: 'Cuando el nodo es demasiado fino para la caja, colocarla encima/debajo en vez de superponerla',
       de: 'Wenn der Knoten zu dünn für den Kasten ist, diesen darüber/darunter statt überlappend platzieren',
       it: 'Quando il nodo è troppo sottile per il riquadro, posizionarlo sopra/sotto invece di sovrapporlo',
-      'zh-CN': '当节点过窄放不下文本框时，将其移到节点上方/下方，而非与之重叠'
+      'zh-CN': '当节点过窄放不下文本框时，将其移到节点上方/下方，而非与之重叠',
+      ja: 'ノードが細すぎてボックスが収まらない場合、重ねずにノードの上／下へ移動します'
     }
   } satisfies AttributeConfig<boolean>,
 } as const
@@ -2267,7 +2413,8 @@ export const VALUE_LABEL_CONFIG = {
       es: 'Pegar a la etiqueta',
       de: 'An Beschriftung haften',
       it: 'Attaccare all\'etichetta',
-      'zh-CN': '贴靠标签'
+      'zh-CN': '贴靠标签',
+      ja: 'ラベルに追従'
     },
     tooltips: {
       en: 'Position the value relative to the node label instead of the shape. Background of the label (if visible) covers both label and value.',
@@ -2275,7 +2422,8 @@ export const VALUE_LABEL_CONFIG = {
       es: 'Posicionar el valor respecto a la etiqueta del nodo en lugar de la forma. El fondo de la etiqueta (si está visible) cubre etiqueta y valor.',
       de: 'Wert relativ zur Knotenbeschriftung statt zur Form positionieren. Hintergrund der Beschriftung (falls sichtbar) umfasst Beschriftung und Wert.',
       it: 'Posizionare il valore rispetto all\'etichetta del nodo invece della forma. Lo sfondo dell\'etichetta (se visibile) copre etichetta e valore.',
-      'zh-CN': '将数值相对于节点标签而非形状定位。标签的背景（若可见）将同时覆盖标签与数值。'
+      'zh-CN': '将数值相对于节点标签而非形状定位。标签的背景（若可见）将同时覆盖标签与数值。',
+      ja: '値を形状ではなくノードのラベルを基準に配置します。ラベルの背景（表示されている場合）はラベルと値の両方を覆います。'
     }
   } satisfies AttributeConfig<boolean>,
 } as const
@@ -2293,7 +2441,8 @@ export const HYPER_LINK_CONFIG = {
       es: 'Hipervínculo',
       de: 'Hyperlink',
       it: 'Collegamento ipertestuale',
-      'zh-CN': '超链接'
+      'zh-CN': '超链接',
+      ja: 'ハイパーリンク'
     },
     tooltips: {
       en: 'URL for hyperlink',
@@ -2301,7 +2450,8 @@ export const HYPER_LINK_CONFIG = {
       es: 'URL para hipervínculo',
       de: 'URL für Hyperlink',
       it: 'URL per collegamento ipertestuale',
-      'zh-CN': '超链接的 URL'
+      'zh-CN': '超链接的 URL',
+      ja: 'ハイパーリンクの URL'
     }
   } satisfies AttributeConfig<string | undefined>
 } as const
@@ -2323,7 +2473,8 @@ export const ANALYSIS_CONFIG = {
       es: 'Gráfico de análisis',
       de: 'Analysediagramm',
       it: 'Grafico di analisi',
-      'zh-CN': '分析图表'
+      'zh-CN': '分析图表',
+      ja: '分析チャート'
     },
     tooltips: {
       en: 'Analysis chart descriptor (donut / histogram)',
@@ -2331,7 +2482,8 @@ export const ANALYSIS_CONFIG = {
       es: 'Descriptor de gráfico de análisis (anillo / histograma)',
       de: 'Analysediagramm-Deskriptor (Ring / Histogramm)',
       it: 'Descrittore del grafico di analisi (anello / istogramma)',
-      'zh-CN': '分析图表描述符（环形图 / 直方图）'
+      'zh-CN': '分析图表描述符（环形图 / 直方图）',
+      ja: '分析チャートの定義（ドーナツ／ヒストグラム）'
     }
   } satisfies AttributeConfig<Type_AnalysisDescriptor | undefined>
 } as const
@@ -2351,7 +2503,8 @@ export const TOOLTIP_BLOCKS_CONFIG = {
       es: 'Bloques del tooltip',
       de: 'Tooltip-Blöcke',
       it: 'Blocchi del tooltip',
-      'zh-CN': '提示框区块'
+      'zh-CN': '提示框区块',
+      ja: 'ツールチップのブロック'
     },
     tooltips: {
       en: 'Which tooltip blocks are hidden for this element',
@@ -2359,7 +2512,8 @@ export const TOOLTIP_BLOCKS_CONFIG = {
       es: 'Bloques del tooltip ocultos para este elemento',
       de: 'Für dieses Element ausgeblendete Tooltip-Blöcke',
       it: 'Blocchi del tooltip nascosti per questo elemento',
-      'zh-CN': '该元素隐藏了哪些提示框区块'
+      'zh-CN': '该元素隐藏了哪些提示框区块',
+      ja: 'この要素で非表示にするツールチップのブロック'
     }
   } satisfies AttributeConfig<Type_TooltipHiddenBlocks | undefined>,
   // Déclencheur de l'info-bulle : 'hover' | 'shift' | 'alt'. Attribut de STYLE
@@ -2373,7 +2527,8 @@ export const TOOLTIP_BLOCKS_CONFIG = {
     labels: {
       en: 'Tooltip trigger', fr: 'Déclencheur de l\'info-bulle',
       es: 'Disparador del tooltip', de: 'Tooltip-Auslöser', it: 'Attivatore del tooltip',
-      'zh-CN': '提示框触发方式'
+      'zh-CN': '提示框触发方式',
+      ja: 'ツールチップの表示方法'
     },
     tooltips: {
       en: 'How the reader shows the tooltip (hover / Shift / Alt)',
@@ -2381,7 +2536,8 @@ export const TOOLTIP_BLOCKS_CONFIG = {
       es: 'Cómo el lector muestra el tooltip (pasar / Mayús / Alt)',
       de: 'Wie der Leser den Tooltip anzeigt (Hover / Umschalt / Alt)',
       it: 'Come il lettore mostra il tooltip (passaggio / Maiusc / Alt)',
-      'zh-CN': '读者显示提示框的方式（悬停 / Shift / Alt）'
+      'zh-CN': '读者显示提示框的方式（悬停 / Shift / Alt）',
+      ja: '閲覧者がツールチップを表示する操作（ホバー／Shift／Alt）'
     }
   } satisfies AttributeConfig<string | undefined>,
   // Délai d'apparition de l'info-bulle en ms. Attribut de STYLE. `undefined` = 0.
@@ -2393,7 +2549,8 @@ export const TOOLTIP_BLOCKS_CONFIG = {
     labels: {
       en: 'Tooltip delay (ms)', fr: 'Délai de l\'info-bulle (ms)',
       es: 'Retardo del tooltip (ms)', de: 'Tooltip-Verzögerung (ms)', it: 'Ritardo del tooltip (ms)',
-      'zh-CN': '提示框延迟（毫秒）'
+      'zh-CN': '提示框延迟（毫秒）',
+      ja: 'ツールチップの遅延（ミリ秒）'
     },
     tooltips: {
       en: 'Delay before the tooltip appears, in milliseconds',
@@ -2401,7 +2558,8 @@ export const TOOLTIP_BLOCKS_CONFIG = {
       es: 'Retardo antes de que aparezca el tooltip, en milisegundos',
       de: 'Verzögerung, bevor der Tooltip erscheint, in Millisekunden',
       it: 'Ritardo prima che il tooltip appaia, in millisecondi',
-      'zh-CN': '提示框出现前的延迟，单位为毫秒'
+      'zh-CN': '提示框出现前的延迟，单位为毫秒',
+      ja: 'ツールチップが表示されるまでの遅延（ミリ秒）'
     }
   } satisfies AttributeConfig<number | undefined>
 } as const
@@ -2695,7 +2853,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'x',
       de: 'x',
       it: 'x',
-      'zh-CN': 'x'
+      'zh-CN': 'x',
+      ja: 'x'
     },
     tooltips: {
       en: 'x',
@@ -2703,7 +2862,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'x',
       de: 'x',
       it: 'x',
-      'zh-CN': 'x'
+      'zh-CN': 'x',
+      ja: 'x'
     }
   } satisfies AttributeConfig<Type_Position>,
   position_dx: {
@@ -2719,7 +2879,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Horizontal',
       de: 'Horizontal',
       it: 'Orizzontale',
-      'zh-CN': '水平'
+      'zh-CN': '水平',
+      ja: '水平'
     },
     tooltips: {
       en: 'x',
@@ -2727,7 +2888,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'x',
       de: 'x',
       it: 'x',
-      'zh-CN': 'x'
+      'zh-CN': 'x',
+      ja: 'x'
     }
   } satisfies AttributeConfig<number>,
   position_dy: {
@@ -2743,7 +2905,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Vertical',
       de: 'Vertikal',
       it: 'Verticale',
-      'zh-CN': '垂直'
+      'zh-CN': '垂直',
+      ja: '垂直'
     },
     tooltips: {
       en: 'x',
@@ -2751,7 +2914,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'x',
       de: 'x',
       it: 'x',
-      'zh-CN': 'x'
+      'zh-CN': 'x',
+      ja: 'x'
     }
   } satisfies AttributeConfig<number>,
   // =================== ALIGNEMENT DES ANCRES DE FLUX ===================
@@ -2766,7 +2930,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Anclas (lados verticales)',
       de: 'Anker (vertikale Seiten)',
       it: 'Ancore (lati verticali)',
-      'zh-CN': '锚点（左右两侧）'
+      'zh-CN': '锚点（左右两侧）',
+      ja: 'アンカー（左右の辺）'
     },
     tooltips: {
       en: 'Vertical alignment of link anchors on the left/right sides of the node (top / center / bottom).',
@@ -2774,7 +2939,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Alineación vertical de las anclas de flujo en los lados izquierdo/derecho del nodo (arriba / centro / abajo).',
       de: 'Vertikale Ausrichtung der Flussanker an den linken/rechten Seiten des Knotens (oben / Mitte / unten).',
       it: 'Allineamento verticale delle ancore di flusso sui lati sinistro/destro del nodo (alto / centro / basso).',
-      'zh-CN': '节点左/右两侧流量锚点的垂直对齐方式（上 / 中 / 下）。'
+      'zh-CN': '节点左/右两侧流量锚点的垂直对齐方式（上 / 中 / 下）。',
+      ja: 'ノードの左／右の辺におけるフローアンカーの垂直方向の揃え（上／中央／下）。'
     }
   } satisfies AttributeConfig<Type_AnchorAlignVertical>,
   anchor_align_horizontal: {
@@ -2788,7 +2954,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Anclas (lados horizontales)',
       de: 'Anker (horizontale Seiten)',
       it: 'Ancore (lati orizzontali)',
-      'zh-CN': '锚点（上下两侧）'
+      'zh-CN': '锚点（上下两侧）',
+      ja: 'アンカー（上下の辺）'
     },
     tooltips: {
       en: 'Horizontal alignment of link anchors on the top/bottom sides of the node (left / center / right).',
@@ -2796,7 +2963,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Alineación horizontal de las anclas de flujo en los lados superior/inferior del nodo (izquierda / centro / derecha).',
       de: 'Horizontale Ausrichtung der Flussanker an den oberen/unteren Seiten des Knotens (links / Mitte / rechts).',
       it: 'Allineamento orizzontale delle ancore di flusso sui lati superiore/inferiore del nodo (sinistra / centro / destra).',
-      'zh-CN': '节点上/下两侧流量锚点的水平对齐方式（左 / 中 / 右）。'
+      'zh-CN': '节点上/下两侧流量锚点的水平对齐方式（左 / 中 / 右）。',
+      ja: 'ノードの上／下の辺におけるフローアンカーの水平方向の揃え（左／中央／右）。'
     }
   } satisfies AttributeConfig<Type_AnchorAlignHorizontal>,
   // =================== RÉORGANISATION AUTO DE L'ORDRE DES FLUX E/S ===================
@@ -2811,7 +2979,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Reorganización auto',
       de: 'Auto-Neuordnung',
       it: 'Riordino automatico',
-      'zh-CN': '自动重排序'
+      'zh-CN': '自动重排序',
+      ja: '自動並べ替え'
     },
     tooltips: {
       en: 'How the incoming/outgoing link order is recomputed when the diagram changes. None: never recomputed (order stays frozen). Simple: sorted by the opposite node position (default). Advanced: geometric order by curvature — the link that turns earliest goes to the extremity (best on rigorous/auto-aligned diagrams).',
@@ -2819,7 +2988,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Cómo se recalcula el orden de los flujos entrantes/salientes cuando cambia el diagrama. Ninguna: nunca se recalcula (el orden queda fijo). Simple: ordenado por la posición del nodo opuesto (por defecto). Avanzada: orden geométrico por curvatura — el flujo que gira antes va al extremo (ideal en diagramas rigurosos o alineados automáticamente).',
       de: 'Wie die Reihenfolge der ein-/ausgehenden Flüsse bei Änderungen am Diagramm neu berechnet wird. Keine: nie neu berechnet (Reihenfolge bleibt fest). Einfach: sortiert nach der Position des gegenüberliegenden Knotens (Standard). Erweitert: geometrische Reihenfolge nach Krümmung — der zuerst abbiegende Fluss geht ans Ende (ideal bei präzisen oder automatisch ausgerichteten Diagrammen).',
       it: 'Come viene ricalcolato l\'ordine dei flussi entranti/uscenti quando il diagramma cambia. Nessuno: mai ricalcolato (l\'ordine resta fisso). Semplice: ordinato per la posizione del nodo opposto (predefinito). Avanzato: ordine geometrico per curvatura — il flusso che curva prima va all\'estremità (ideale su diagrammi rigorosi o allineati automaticamente).',
-      'zh-CN': '图表变化时如何重新计算进出流量的顺序。无：不再重新计算（顺序保持冻结）。简单：按对侧节点位置排序（默认）。高级：按曲率的几何顺序——最先转弯的流量排到端部（在严谨/自动对齐的图上效果最佳）。'
+      'zh-CN': '图表变化时如何重新计算进出流量的顺序。无：不再重新计算（顺序保持冻结）。简单：按对侧节点位置排序（默认）。高级：按曲率的几何顺序——最先转弯的流量排到端部（在严谨/自动对齐的图上效果最佳）。',
+      ja: '図が変化したときに入出力フローの順序をどう再計算するか。なし：再計算しません（順序は固定されたまま）。単純：反対側のノードの位置で並べ替え（既定）。高度：曲率による幾何学的な順序 — 最も早く曲がるフローが端に来ます（厳密に／自動で整列された図に最適）。'
     }
   } satisfies AttributeConfig<Type_IOReorgMode>,
   // Écart d'accroche des flux, en px, perpendiculaire au côté du nœud (équivalent
@@ -2841,7 +3011,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Distancia de flujos',
       de: 'Flussabstand',
       it: 'Distanza dei flussi',
-      'zh-CN': '流量锚点距离'
+      'zh-CN': '流量锚点距离',
+      ja: 'フローアンカーの距離'
     },
     tooltips: {
       en: 'Perpendicular offset of link anchors relative to the node border, in px. Positive pulls the anchors INSIDE the box (incoming/outgoing links meet through the node), negative pushes them outside. The box keeps its size.',
@@ -2849,7 +3020,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Desplazamiento perpendicular de las anclas de flujo respecto al borde del nodo, en px. Positivo mete las anclas DENTRO de la caja (los flujos entrantes/salientes se unen a través del nodo), negativo las aleja. La caja conserva su tamaño.',
       de: 'Senkrechter Versatz der Flussanker relativ zum Knotenrand, in px. Positiv zieht die Anker IN die Box (ein-/ausgehende Flüsse treffen sich durch den Knoten), negativ schiebt sie nach außen. Die Box behält ihre Größe.',
       it: 'Scostamento perpendicolare delle ancore di flusso rispetto al bordo del nodo, in px. Positivo porta le ancore DENTRO la scatola (i flussi entranti/uscenti si incontrano attraverso il nodo), negativo le allontana. La scatola mantiene la sua dimensione.',
-      'zh-CN': '流量锚点相对于节点边框的垂直偏移，单位为 px。正值将锚点拉入方框内部（进出流量在节点内部相接），负值则将其推到方框之外。方框尺寸保持不变。'
+      'zh-CN': '流量锚点相对于节点边框的垂直偏移，单位为 px。正值将锚点拉入方框内部（进出流量在节点内部相接），负值则将其推到方框之外。方框尺寸保持不变。',
+      ja: 'ノードの枠に対するフローアンカーの垂直方向のずれ（px）。正の値はアンカーを枠の内側へ引き込み（入出力フローがノードの内部でつながります）、負の値は外側へ押し出します。枠の大きさは変わりません。'
     }
   } satisfies AttributeConfig<number>,
   // =================== AUTRES ATTRIBUTS ===================
@@ -2864,7 +3036,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Huérfanos',
       de: 'Verwaiste',
       it: 'Orfani',
-      'zh-CN': '孤立节点'
+      'zh-CN': '孤立节点',
+      ja: '孤立ノード'
     },
     tooltips: {
       en: 'Visibility of orphan nodes',
@@ -2872,7 +3045,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Visibilidad de los nodos huérfanos',
       de: 'Sichtbarkeit verwaister Knoten',
       it: 'Visibilità dei nodi orfani',
-      'zh-CN': '孤立节点的可见性'
+      'zh-CN': '孤立节点的可见性',
+      ja: '孤立ノードの表示'
     }
   } satisfies AttributeConfig<boolean>,
   position_u_locked: {
@@ -2886,7 +3060,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Bloquear columna',
       de: 'Spalte sperren',
       it: 'Blocca colonna',
-      'zh-CN': '锁定列'
+      'zh-CN': '锁定列',
+      ja: '列を固定'
     },
     tooltips: {
       en: 'When locked, autosankey compute will keep this node\'s column index (u) instead of recomputing it.',
@@ -2894,7 +3069,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Si está bloqueado, el cálculo autosankey conservará el índice de columna (u) de este nodo en lugar de recalcularlo.',
       de: 'Wenn gesperrt, behält die Autosankey-Berechnung den Spaltenindex (u) dieses Knotens bei, anstatt ihn neu zu berechnen.',
       it: 'Se bloccato, il calcolo autosankey manterrà l\'indice di colonna (u) di questo nodo invece di ricalcolarlo.',
-      'zh-CN': '锁定后，自动布局计算将保留该节点的列索引（u），而不再重新计算。'
+      'zh-CN': '锁定后，自动布局计算将保留该节点的列索引（u），而不再重新计算。',
+      ja: '固定すると、自動レイアウトの計算はこのノードの列インデックス（u）を再計算せずに保持します。'
     }
   } satisfies AttributeConfig<boolean>,
   position_v_locked: {
@@ -2908,7 +3084,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Bloquear fila',
       de: 'Zeile sperren',
       it: 'Blocca riga',
-      'zh-CN': '锁定行'
+      'zh-CN': '锁定行',
+      ja: '行を固定'
     },
     tooltips: {
       en: 'When locked, autosankey compute preserves the relative vertical order (v) of this node within its column instead of recomputing it.',
@@ -2916,7 +3093,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Si está bloqueado, el cálculo autosankey conserva el orden vertical relativo (v) de este nodo dentro de su columna en lugar de recalcularlo.',
       de: 'Wenn gesperrt, behält die Autosankey-Berechnung die relative vertikale Reihenfolge (v) dieses Knotens innerhalb seiner Spalte bei, anstatt sie neu zu berechnen.',
       it: 'Se bloccato, il calcolo autosankey preserva l\'ordine verticale relativo (v) di questo nodo nella sua colonna invece di ricalcolarlo.',
-      'zh-CN': '锁定后，自动布局计算将保留该节点在其列内的相对垂直顺序（v），而不再重新计算。'
+      'zh-CN': '锁定后，自动布局计算将保留该节点在其列内的相对垂直顺序（v），而不再重新计算。',
+      ja: '固定すると、自動レイアウトの計算は列内でのこのノードの相対的な垂直順序（v）を再計算せずに保持します。'
     }
   } satisfies AttributeConfig<boolean>,
   // OS#1276 — sens de la diagonale pour shape_type === 'line'.
@@ -2933,7 +3111,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Sentido de la línea',
       de: 'Linienrichtung',
       it: 'Direzione della linea',
-      'zh-CN': '线条方向'
+      'zh-CN': '线条方向',
+      ja: '線の向き'
     },
     tooltips: {
       en: 'Diagonal direction of a free line',
@@ -2941,7 +3120,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Sentido de la diagonal de una línea libre',
       de: 'Diagonalrichtung einer freien Linie',
       it: 'Direzione diagonale di una linea libera',
-      'zh-CN': '自由线条的对角方向'
+      'zh-CN': '自由线条的对角方向',
+      ja: '自由線の対角方向'
     }
   } satisfies AttributeConfig<boolean>,
   // OS#1276b — extrémités A(x1,y1) et B(x2,y2) d'une ligne libre (shape_type === 'line'),
@@ -2961,7 +3141,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'X inicio de línea',
       de: 'Linienstart X',
       it: 'X inizio linea',
-      'zh-CN': '线条起点 X'
+      'zh-CN': '线条起点 X',
+      ja: '線の始点 X'
     },
     tooltips: {
       en: 'X coordinate of the first endpoint of a free line',
@@ -2969,7 +3150,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Coordenada X del primer extremo de una línea libre',
       de: 'X-Koordinate des ersten Endpunkts einer freien Linie',
       it: 'Coordinata X del primo estremo di una linea libera',
-      'zh-CN': '自由线条第一个端点的 X 坐标'
+      'zh-CN': '自由线条第一个端点的 X 坐标',
+      ja: '自由線の 1 つ目の端点の X 座標'
     }
   } satisfies AttributeConfig<number>,
   line_y1: {
@@ -2983,7 +3165,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Y inicio de línea',
       de: 'Linienstart Y',
       it: 'Y inizio linea',
-      'zh-CN': '线条起点 Y'
+      'zh-CN': '线条起点 Y',
+      ja: '線の始点 Y'
     },
     tooltips: {
       en: 'Y coordinate of the first endpoint of a free line',
@@ -2991,7 +3174,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Coordenada Y del primer extremo de una línea libre',
       de: 'Y-Koordinate des ersten Endpunkts einer freien Linie',
       it: 'Coordinata Y del primo estremo di una linea libera',
-      'zh-CN': '自由线条第一个端点的 Y 坐标'
+      'zh-CN': '自由线条第一个端点的 Y 坐标',
+      ja: '自由線の 1 つ目の端点の Y 座標'
     }
   } satisfies AttributeConfig<number>,
   line_x2: {
@@ -3005,7 +3189,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'X fin de línea',
       de: 'Linienende X',
       it: 'X fine linea',
-      'zh-CN': '线条终点 X'
+      'zh-CN': '线条终点 X',
+      ja: '線の終点 X'
     },
     tooltips: {
       en: 'X coordinate of the second endpoint of a free line',
@@ -3013,7 +3198,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Coordenada X del segundo extremo de una línea libre',
       de: 'X-Koordinate des zweiten Endpunkts einer freien Linie',
       it: 'Coordinata X del secondo estremo di una linea libera',
-      'zh-CN': '自由线条第二个端点的 X 坐标'
+      'zh-CN': '自由线条第二个端点的 X 坐标',
+      ja: '自由線の 2 つ目の端点の X 座標'
     }
   } satisfies AttributeConfig<number>,
   line_y2: {
@@ -3027,7 +3213,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Y fin de línea',
       de: 'Linienende Y',
       it: 'Y fine linea',
-      'zh-CN': '线条终点 Y'
+      'zh-CN': '线条终点 Y',
+      ja: '線の終点 Y'
     },
     tooltips: {
       en: 'Y coordinate of the second endpoint of a free line',
@@ -3035,7 +3222,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Coordenada Y del segundo extremo de una línea libre',
       de: 'Y-Koordinate des zweiten Endpunkts einer freien Linie',
       it: 'Coordinata Y del secondo estremo di una linea libera',
-      'zh-CN': '自由线条第二个端点的 Y 坐标'
+      'zh-CN': '自由线条第二个端点的 Y 坐标',
+      ja: '自由線の 2 つ目の端点の Y 座標'
     }
   } satisfies AttributeConfig<number>,
   hatch: {
@@ -3049,7 +3237,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Rayado',
       de: 'Schraffur',
       it: 'Tratteggio',
-      'zh-CN': '剖面线填充'
+      'zh-CN': '剖面线填充',
+      ja: 'ハッチング'
     },
     tooltips: {
       en: 'Fill the selected node(s) with a hatch pattern (none / vertical / horizontal / diagonal / anti-diagonal)',
@@ -3057,7 +3246,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Rellena el/los nodo(s) seleccionado(s) con un patrón de rayado (ninguno / vertical / horizontal / diagonal / anti-diagonal)',
       de: 'Füllt den/die ausgewählten Knoten mit einem Schraffurmuster (keine / vertikal / horizontal / diagonal / anti-diagonal)',
       it: 'Riempie il/i nodo/i selezionato/i con un motivo tratteggiato (nessuno / verticale / orizzontale / diagonale / anti-diagonale)',
-      'zh-CN': '用剖面线图案填充所选节点（无 / 竖线 / 横线 / 斜线 / 反斜线）'
+      'zh-CN': '用剖面线图案填充所选节点（无 / 竖线 / 横线 / 斜线 / 反斜线）',
+      ja: '選択したノードをハッチングで塗りつぶします（なし／縦／横／斜め／逆斜め）'
     }
   } satisfies AttributeConfig<Type_HatchOrientation>,
   is_reference_stock: {
@@ -3073,7 +3263,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'Stock de referencia',
       de: 'Referenzbestand',
       it: 'Stock di riferimento',
-      'zh-CN': '参考存量'
+      'zh-CN': '参考存量',
+      ja: '基準ストック'
     },
     tooltips: {
       en: 'In proportional / adapted-scale mode, anchor the diagram on this node\'s stock. Set via right-click "Set as reference stock".',
@@ -3081,7 +3272,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       es: 'En modo proporcional / escala adaptada, anclar el diagrama en el stock de este nodo. Activado con clic derecho «Definir como stock de referencia».',
       de: 'Im proportionalen / angepassten Maßstab-Modus das Diagramm am Bestand dieses Knotens verankern. Über Rechtsklick „Als Referenzbestand festlegen" aktiviert.',
       it: 'In modalità proporzionale / scala adattata, ancorare il diagramma allo stock di questo nodo. Attivato con clic destro «Imposta come stock di riferimento».',
-      'zh-CN': '在比例 / 自适应比例模式下，以该节点的存量作为图表锚点。可通过右键“设为参考存量”设置。'
+      'zh-CN': '在比例 / 自适应比例模式下，以该节点的存量作为图表锚点。可通过右键“设为参考存量”设置。',
+      ja: '比例／適応スケールモードで、このノードのストックを図の基準にします。右クリックの「基準ストックに設定」から指定します。'
     }
   } satisfies AttributeConfig<boolean>,
 } as const
@@ -3101,7 +3293,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Factor de escala',
       de: 'Skalierungsfaktor',
       it: 'Fattore di scala',
-      'zh-CN': '比例倍数'
+      'zh-CN': '比例倍数',
+      ja: 'スケール倍率'
     },
     tooltips: {
       en: 'Define a local scaling factor that will be multiplied by the multiplier specified for this flow.',
@@ -3109,7 +3302,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Definir un factor de escala local que se multiplicará por el multiplicador especificado para este flujo.',
       de: 'Definieren Sie einen lokalen Skalierungsfaktor, der mit dem für diesen Fluss angegebenen Multiplikator multipliziert wird.',
       it: 'Definire un fattore di scala locale che verrà moltiplicato per il moltiplicatore specificato per questo flusso.',
-      'zh-CN': '定义一个局部缩放系数，它将与为该流量指定的倍数相乘。'
+      'zh-CN': '定义一个局部缩放系数，它将与为该流量指定的倍数相乘。',
+      ja: 'このフローに指定された倍率に掛け合わせる、ローカルな拡大率を定義します。'
     }
   } satisfies AttributeConfig<number | undefined>,
 
@@ -3124,7 +3318,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Curvo',
       de: 'Gebogen',
       it: 'Curvo',
-      'zh-CN': '曲线'
+      'zh-CN': '曲线',
+      ja: '曲線'
     },
     tooltips: {
       en: 'Represents the selected link(s) as Bezier curve(s)',
@@ -3132,7 +3327,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Representa el/los flujo(s) seleccionado(s) como curva(s) de Bezier',
       de: 'Stellt den/die ausgewählten Fluss/Flüsse als Bezier-Kurve(n) dar',
       it: 'Rappresenta il/i flusso/i selezionato/i come curva/e di Bezier',
-      'zh-CN': '将所选流量绘制为贝塞尔曲线'
+      'zh-CN': '将所选流量绘制为贝塞尔曲线',
+      ja: '選択したフローをベジェ曲線として表現します'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -3147,7 +3343,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Curvatura',
       de: 'Krümmung',
       it: 'Curvatura',
-      'zh-CN': '曲率'
+      'zh-CN': '曲率',
+      ja: '曲率'
     },
     tooltips: {
       en: 'Adjust the curvature of the link',
@@ -3155,7 +3352,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Ajustar la curvatura del flujo',
       de: 'Krümmung des Flusses anpassen',
       it: 'Regolare la curvatura del flusso',
-      'zh-CN': '调整流量的曲率'
+      'zh-CN': '调整流量的曲率',
+      ja: 'フローの曲率を調整します'
     }
   } satisfies AttributeConfig<number>,
 
@@ -3171,7 +3369,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Reciclaje',
       de: 'Recycling',
       it: 'Riciclaggio',
-      'zh-CN': '回流'
+      'zh-CN': '回流',
+      ja: 'リサイクル'
     },
     tooltips: {
       en: 'Represents the selected link(s) as recycling with a backward turn',
@@ -3179,7 +3378,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Representa el/los flujo(s) seleccionado(s) como reciclaje con un retorno hacia atrás',
       de: 'Stellt den/die ausgewählten Fluss/Flüsse als Recycling mit einer Rückwärtskurve dar',
       it: 'Rappresenta il/i flusso/i selezionato/i come riciclaggio con un ritorno all\'indietro',
-      'zh-CN': '将所选流量表示为带回折的回流'
+      'zh-CN': '将所选流量表示为带回折的回流',
+      ja: '選択したフローを、後ろ向きに折り返すリサイクルとして表現します'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -3194,7 +3394,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Reciclaje bloqueado',
       de: 'Recycling gesperrt',
       it: 'Riciclaggio bloccato',
-      'zh-CN': '回流已锁定'
+      'zh-CN': '回流已锁定',
+      ja: 'リサイクルを固定'
     },
     tooltips: {
       en: 'When locked, autosankey keeps the user-set recycling status (on or off) instead of recomputing it via cycle detection',
@@ -3202,7 +3403,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Si está bloqueado, el cálculo autosankey conserva el estado de reciclaje definido por el usuario (forzado o no) en lugar de recalcularlo mediante la detección de ciclos',
       de: 'Wenn gesperrt, behält die Autosankey-Berechnung den vom Benutzer festgelegten Recycling-Status bei, anstatt ihn über die Zykluserkennung neu zu berechnen',
       it: 'Se bloccato, il calcolo autosankey conserva lo stato di riciclaggio definito dall\'utente invece di ricalcolarlo tramite il rilevamento di cicli',
-      'zh-CN': '锁定后，自动布局将保留用户设定的回流状态（开或关），而不通过环路检测重新计算'
+      'zh-CN': '锁定后，自动布局将保留用户设定的回流状态（开或关），而不通过环路检测重新计算',
+      ja: '固定すると、自動レイアウトは閉路検出による再計算を行わず、ユーザーが設定したリサイクル状態（オン／オフ）を保持します'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -3217,7 +3419,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Estructura',
       de: 'Struktur',
       it: 'Struttura',
-      'zh-CN': '结构'
+      'zh-CN': '结构',
+      ja: '構造'
     },
     tooltips: {
       en: 'Represents the selected link(s) as if they didn\'t have values',
@@ -3225,7 +3428,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Representa el/los flujo(s) seleccionado(s) como si no tuvieran valores',
       de: 'Stellt den/die ausgewählten Fluss/Flüsse dar, als ob sie keine Werte hätten',
       it: 'Rappresenta il/i flusso/i selezionato/i come se non avessero valori',
-      'zh-CN': '将所选流量表示为没有数值的流量'
+      'zh-CN': '将所选流量表示为没有数值的流量',
+      ja: '選択したフローを、値を持たないものとして表現します'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -3240,7 +3444,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Mantener recto',
       de: 'Gerade halten',
       it: 'Mantieni dritto',
-      'zh-CN': '保持水平'
+      'zh-CN': '保持水平',
+      ja: '水平を維持'
     },
     tooltips: {
       en: 'Keep this flow exactly horizontal across all data tags (only vertical gaps adapt). Set via right-click "Straighten flow".',
@@ -3248,7 +3453,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Mantener este flujo exactamente horizontal en todas las etiquetas de datos (solo se adaptan los espacios verticales). Activado con clic derecho «Enderezar flujo».',
       de: 'Diesen Fluss über alle Daten-Tags hinweg exakt horizontal halten (nur vertikale Abstände passen sich an). Über Rechtsklick „Fluss begradigen" aktiviert.',
       it: 'Mantieni questo flusso esattamente orizzontale per tutti i tag di dati (solo gli spazi verticali si adattano). Attivato con clic destro «Raddrizza flusso».',
-      'zh-CN': '在所有数据标签下保持该流量严格水平（仅垂直间距自适应）。可通过右键“拉直流量”设置。'
+      'zh-CN': '在所有数据标签下保持该流量严格水平（仅垂直间距自适应）。可通过右键“拉直流量”设置。',
+      ja: 'すべてのデータタグでこのフローを厳密に水平に保ちます（垂直方向の間隔だけが調整されます）。右クリックの「フローを直線化」から指定します。'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -3263,7 +3469,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Mantener rectos los flujos desagregados',
       de: 'Disaggregierte Flüsse gerade halten',
       it: 'Mantieni dritti i flussi disaggregati',
-      'zh-CN': '同时拉直分解后的流量'
+      'zh-CN': '同时拉直分解后的流量',
+      ja: '分解したフローも直線に保つ'
     },
     tooltips: {
       en: 'Also keep the child flows straight (between the disaggregated children of the source and target), so straightness survives disaggregation.',
@@ -3271,7 +3478,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Mantener rectos también los flujos hijos (entre los descendientes desagregados del origen y del destino), para que la rectitud sobreviva a la desagregación.',
       de: 'Auch die untergeordneten Flüsse gerade halten (zwischen den disaggregierten Kindknoten von Quelle und Ziel), damit die Geradheit die Disaggregation überlebt.',
       it: 'Mantieni dritti anche i flussi figli (tra i discendenti disaggregati di origine e destinazione), così la rettitudine sopravvive alla disaggregazione.',
-      'zh-CN': '同时保持子流量（源与目标的分解子节点之间）为直线，使拉直在分解后依然有效。'
+      'zh-CN': '同时保持子流量（源与目标的分解子节点之间）为直线，使拉直在分解后依然有效。',
+      ja: '始点・終点それぞれの分解された子ノード間の子フローも直線に保ち、分解後も直線性が失われないようにします。'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -3286,7 +3494,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Anclaje de rectitud',
       de: 'Geradheits-Anker',
       it: 'Ancoraggio rettitudine',
-      'zh-CN': '拉直锚点'
+      'zh-CN': '拉直锚点',
+      ja: '直線化の基準'
     },
     tooltips: {
       en: 'Where this flow is kept straight: none (free), aligned to source, aligned to target, highest or lowest of the two. Set via right-click "Straightness".',
@@ -3294,7 +3503,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Dónde se mantiene recto este flujo: ninguno (libre), alineado al origen, alineado al destino, el más alto o el más bajo de los dos. Activado con clic derecho «Rectitud».',
       de: 'Wo dieser Fluss gerade gehalten wird: keine (frei), an Quelle ausgerichtet, an Ziel ausgerichtet, höchster oder niedrigster der beiden. Über Rechtsklick „Geradheit" aktiviert.',
       it: 'Dove questo flusso è mantenuto dritto: nessuno (libero), allineato all\'origine, allineato alla destinazione, il più alto o il più basso dei due. Attivato con clic destro «Rettitudine».',
-      'zh-CN': '该流量在何处保持拉直：无（自由）、对齐到源、对齐到目标、两者中较高者或较低者。可通过右键“拉直”设置。'
+      'zh-CN': '该流量在何处保持拉直：无（自由）、对齐到源、对齐到目标、两者中较高者或较低者。可通过右键“拉直”设置。',
+      ja: 'このフローをどこで直線に保つか：なし（自由）、始点に揃える、終点に揃える、両者のうち高いほう／低いほう。右クリックの「直線化」から指定します。'
     }
   } satisfies AttributeConfig<Type_StraightMode>,
 
@@ -3309,7 +3519,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Desviación de rectitud',
       de: 'Geradheits-Versatz',
       it: 'Scarto di rettitudine',
-      'zh-CN': '拉直偏移'
+      'zh-CN': '拉直偏移',
+      ja: '直線化のオフセット'
     },
     tooltips: {
       en: 'Constant vertical offset in pixels kept between the source and target anchors (target below source if positive). 0 = perfectly horizontal. Maintained across all data tags.',
@@ -3317,7 +3528,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Desviación vertical constante en píxeles mantenida entre los anclajes de origen y destino (destino más abajo que el origen si es positivo). 0 = perfectamente horizontal. Se mantiene en todas las etiquetas de datos.',
       de: 'Konstanter vertikaler Versatz in Pixeln zwischen Quell- und Zielanker (Ziel unterhalb der Quelle bei positivem Wert). 0 = perfekt horizontal. Über alle Daten-Tags hinweg beibehalten.',
       it: 'Scarto verticale costante in pixel mantenuto tra gli ancoraggi di origine e destinazione (destinazione più in basso dell\'origine se positivo). 0 = perfettamente orizzontale. Mantenuto per tutti i tag di dati.',
-      'zh-CN': '源锚点与目标锚点之间保持的恒定垂直偏移，单位为像素（正值表示目标低于源）。0 = 完全水平。在所有数据标签下均保持。'
+      'zh-CN': '源锚点与目标锚点之间保持的恒定垂直偏移，单位为像素（正值表示目标低于源）。0 = 完全水平。在所有数据标签下均保持。',
+      ja: '始点アンカーと終点アンカーの間に保つ一定の垂直方向のずれ（ピクセル。正の値なら終点が始点より下）。0 = 完全な水平。すべてのデータタグで維持されます。'
     }
   } satisfies AttributeConfig<number>,
 
@@ -3334,7 +3546,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Flujo de referencia',
       de: 'Referenzfluss',
       it: 'Flusso di riferimento',
-      'zh-CN': '参考流量'
+      'zh-CN': '参考流量',
+      ja: '基準フロー'
     },
     tooltips: {
       en: 'In proportional / adapted-scale mode, anchor the diagram on this flow. Set via right-click "Set as reference flow".',
@@ -3342,7 +3555,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'En modo proporcional / escala adaptada, anclar el diagrama en este flujo. Activado con clic derecho «Definir como flujo de referencia».',
       de: 'Im proportionalen / angepassten Maßstab-Modus das Diagramm an diesem Fluss verankern. Über Rechtsklick „Als Referenzfluss festlegen" aktiviert.',
       it: 'In modalità proporzionale / scala adattata, ancorare il diagramma a questo flusso. Attivato con clic destro «Imposta come flusso di riferimento».',
-      'zh-CN': '在比例 / 自适应比例模式下，以该流量作为图表锚点。可通过右键“设为参考流量”设置。'
+      'zh-CN': '在比例 / 自适应比例模式下，以该流量作为图表锚点。可通过右键“设为参考流量”设置。',
+      ja: '比例／適応スケールモードで、このフローを図の基準にします。右クリックの「基準フローに設定」から指定します。'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -3357,7 +3571,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Bloquear renderizado en trazo',
       de: 'Strich-Darstellung sperren',
       it: 'Blocca il rendering a tratto',
-      'zh-CN': '锁定描边渲染'
+      'zh-CN': '锁定描边渲染',
+      ja: 'ストローク描画を固定'
     },
     tooltips: {
       en: 'Force this flow to always render as a stroked path, even when thick and short. By default a thick, short flow auto-switches to a filled shape so the stroke does not overlap itself at sharp turns.',
@@ -3365,7 +3580,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Obliga a este flujo a representarse siempre como trazo, incluso grueso y corto. Por defecto un flujo grueso y corto cambia automáticamente a forma rellena para que el trazo no se solape en las curvas cerradas.',
       de: 'Erzwingt, dass dieser Fluss immer als Strich gezeichnet wird, auch wenn dick und kurz. Standardmäßig wechselt ein dicker, kurzer Fluss automatisch zu einer gefüllten Form, damit sich der Strich an engen Kurven nicht selbst überlappt.',
       it: 'Forza questo flusso a essere sempre disegnato come tratto, anche se spesso e corto. Per impostazione predefinita un flusso spesso e corto passa automaticamente a forma piena affinché il tratto non si sovrapponga nelle curve strette.',
-      'zh-CN': '强制该流量始终以描边路径渲染，即使又粗又短。默认情况下，又粗又短的流量会自动切换为填充形状，以免描边在急转弯处自相重叠。'
+      'zh-CN': '强制该流量始终以描边路径渲染，即使又粗又短。默认情况下，又粗又短的流量会自动切换为填充形状，以免描边在急转弯处自相重叠。',
+      ja: '太くて短い場合でも、このフローを常にストロークのパスとして描画します。既定では、太く短いフローは急な曲がりでストロークが自身と重ならないよう、自動的に塗りつぶし形状に切り替わります。'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -3382,7 +3598,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Orientación',
       de: 'Orientierung',
       it: 'Orientamento',
-      'zh-CN': '方向'
+      'zh-CN': '方向',
+      ja: '向き'
     },
     tooltips: {
       en: 'Choose the orientation of the link start and end points',
@@ -3390,7 +3607,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Elegir la orientación de los puntos de inicio y fin del flujo',
       de: 'Orientierung der Start- und Endpunkte des Flusses wählen',
       it: 'Scegliere l\'orientamento dei punti di partenza e di arrivo del flusso',
-      'zh-CN': '选择流量起点与终点的方向'
+      'zh-CN': '选择流量起点与终点的方向',
+      ja: 'フローの始点と終点の向きを選択します'
     }
   } satisfies AttributeConfig<Type_Orientation>,
 
@@ -3406,7 +3624,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Inicio',
       de: 'Start',
       it: 'Inizio',
-      'zh-CN': '起点'
+      'zh-CN': '起点',
+      ja: '始点'
     },
     tooltips: {
       en: 'Position of the starting point of curvature as ratio of link length',
@@ -3415,6 +3634,7 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       de: 'Position des Startpunkts der Krümmung als Verhältnis der Flusslänge',
       it: 'Posizione del punto di inizio della curvatura come rapporto della lunghezza del flusso',
       'zh-CN': '曲率起点的位置，以流量长度的比例表示',
+      ja: '曲率の始点の位置（フロー長に対する比率）',
     }
   } satisfies AttributeConfig<number>,
 
@@ -3430,7 +3650,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Fin',
       de: 'Ende',
       it: 'Fine',
-      'zh-CN': '终点'
+      'zh-CN': '终点',
+      ja: '終点'
     },
     tooltips: {
       en: 'Position of the ending point of curvature as ratio of link length',
@@ -3439,6 +3660,7 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       de: 'Position des Endpunkts der Krümmung als Verhältnis der Flusslänge',
       it: 'Posizione del punto finale della curvatura come rapporto della lunghezza del flusso',
       'zh-CN': '曲率终点的位置，以流量长度的比例表示',
+      ja: '曲率の終点の位置（フロー長に対する比率）',
     }
   } satisfies AttributeConfig<number>,
 
@@ -3454,7 +3676,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Inicio',
       de: 'Start',
       it: 'Inizio',
-      'zh-CN': '起点'
+      'zh-CN': '起点',
+      ja: '始点'
     },
     tooltips: {
       en: 'Setting the radius of the starting curvature for Bezier curves',
@@ -3463,6 +3686,7 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       de: 'Einstellung des Radius der Startkrümmung für Bezier-Kurven',
       it: 'Impostazione del raggio della curvatura iniziale per le curve di Bezier',
       'zh-CN': '设置贝塞尔曲线起始曲率的半径',
+      ja: 'ベジェ曲線の開始側の曲率半径を設定します',
     }
   } satisfies AttributeConfig<number>,
 
@@ -3478,7 +3702,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Fin',
       de: 'Ende',
       it: 'Fine',
-      'zh-CN': '终点'
+      'zh-CN': '终点',
+      ja: '終点'
     },
     tooltips: {
       en: 'Setting the radius of the ending curvature for Bezier curves',
@@ -3487,6 +3712,7 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       de: 'Einstellung des Radius der Endkrümmung für Bezier-Kurven',
       it: 'Impostazione del raggio della curvatura finale per le curve di Bezier',
       'zh-CN': '设置贝塞尔曲线结束曲率的半径',
+      ja: 'ベジェ曲線の終了側の曲率半径を設定します',
     }
   } satisfies AttributeConfig<number>,
 
@@ -3501,7 +3727,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Posición del punto de reciclaje',
       de: 'Recycling-Position',
       it: 'Posizione del punto di riciclaggio',
-      'zh-CN': '回流位置'
+      'zh-CN': '回流位置',
+      ja: 'リサイクルの位置'
     },
     tooltips: {
       en: 'Position of the recycling point',
@@ -3509,7 +3736,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Posición del punto de reciclaje',
       de: 'Position des Recycling-Punkts',
       it: 'Posizione del punto di riciclaggio',
-      'zh-CN': '回流点的位置'
+      'zh-CN': '回流点的位置',
+      ja: 'リサイクル点の位置'
     }
   } satisfies AttributeConfig<number>,
 
@@ -3528,7 +3756,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Puntos de control',
       de: 'Kontrollpunkte',
       it: 'Punti di controllo',
-      'zh-CN': '控制点'
+      'zh-CN': '控制点',
+      ja: '制御点'
     },
     tooltips: {
       en: 'Free routing points the flow passes through (Alt+click the flow to add one, drag a point to move it, right-click a point to remove it)',
@@ -3536,7 +3765,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Puntos de paso libres por los que pasa el flujo (Alt+clic en el flujo para añadir uno, arrastrar un punto para moverlo, clic derecho para eliminarlo)',
       de: 'Freie Wegpunkte, durch die der Fluss verläuft (Alt+Klick auf den Fluss zum Hinzufügen, Punkt ziehen zum Verschieben, Rechtsklick zum Entfernen)',
       it: 'Punti di passaggio liberi attraverso cui scorre il flusso (Alt+clic sul flusso per aggiungerne uno, trascinare per spostarlo, clic destro per rimuoverlo)',
-      'zh-CN': '流量所经过的自由路径点（Alt+点击流量可添加，拖动可移动，右键点击可删除）'
+      'zh-CN': '流量所经过的自由路径点（Alt+点击流量可添加，拖动可移动，右键点击可删除）',
+      ja: 'フローが通過する自由な経路点（Alt+クリックで追加、ドラッグで移動、右クリックで削除）'
     }
   } satisfies AttributeConfig<Type_LinkWaypoint[]>,
 
@@ -3551,9 +3781,11 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     category: 'shape' as const,
     actions: ['drawWithNodes'] as LinkBaseActionType[],
     labels: { en: 'Source anchor offset', fr: 'Offset ancre source', es: 'Desfase ancla origen', de: 'Quellanker-Versatz', it: 'Offset ancora sorgente',
-      'zh-CN': '源锚点偏移' },
+      'zh-CN': '源锚点偏移',
+      ja: '始点アンカーのオフセット' },
     tooltips: { en: 'Imported anchor offset along the source node edge (e!Sankey port fidelity).', fr: 'Offset d\'ancre importé le long du bord du nœud source (fidélité port e!Sankey).', es: 'Desfase de ancla importado a lo largo del borde del nodo origen.', de: 'Importierter Ankerversatz entlang der Quellknotenkante.', it: 'Offset di ancoraggio importato lungo il bordo del nodo sorgente.',
-      'zh-CN': '沿源节点边缘导入的锚点偏移（e!Sankey 端口保真）。' }
+      'zh-CN': '沿源节点边缘导入的锚点偏移（e!Sankey 端口保真）。',
+      ja: '始点ノードの辺に沿って取り込まれたアンカーのオフセット（e!Sankey のポートを忠実に再現）。' }
   } satisfies AttributeConfig<number | undefined>,
 
   target_anchor_offset: {
@@ -3562,9 +3794,11 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     category: 'shape' as const,
     actions: ['drawWithNodes'] as LinkBaseActionType[],
     labels: { en: 'Target anchor offset', fr: 'Offset ancre cible', es: 'Desfase ancla destino', de: 'Zielanker-Versatz', it: 'Offset ancora destinazione',
-      'zh-CN': '目标锚点偏移' },
+      'zh-CN': '目标锚点偏移',
+      ja: '終点アンカーのオフセット' },
     tooltips: { en: 'Imported anchor offset along the target node edge (e!Sankey port fidelity).', fr: 'Offset d\'ancre importé le long du bord du nœud cible (fidélité port e!Sankey).', es: 'Desfase de ancla importado a lo largo del borde del nodo destino.', de: 'Importierter Ankerversatz entlang der Zielknotenkante.', it: 'Offset di ancoraggio importato lungo il bordo del nodo destinazione.',
-      'zh-CN': '沿目标节点边缘导入的锚点偏移（e!Sankey 端口保真）。' }
+      'zh-CN': '沿目标节点边缘导入的锚点偏移（e!Sankey 端口保真）。',
+      ja: '終点ノードの辺に沿って取り込まれたアンカーのオフセット（e!Sankey のポートを忠実に再現）。' }
   } satisfies AttributeConfig<number | undefined>,
 
   is_arrow: {
@@ -3578,7 +3812,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Flecha',
       de: 'Pfeil',
       it: 'Freccia',
-      'zh-CN': '箭头'
+      'zh-CN': '箭头',
+      ja: '矢印'
     },
     tooltips: {
       en: 'Draw an arrow tip on the target side of the selected link(s)',
@@ -3586,7 +3821,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Dibuja una punta de flecha en el lado de destino del/los flujo(s) seleccionado(s)',
       de: 'Zeichnet eine Pfeilspitze auf der Zielseite des/der ausgewählten Flusses/Flüsse',
       it: 'Disegna una punta di freccia sul lato destinazione del/dei flusso/i selezionato/i',
-      'zh-CN': '在所选流量的目标一侧绘制箭头'
+      'zh-CN': '在所选流量的目标一侧绘制箭头',
+      ja: '選択したフローの終点側に矢印を描画します'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -3605,7 +3841,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Flecha origen',
       de: 'Quellpfeil',
       it: 'Freccia sorgente',
-      'zh-CN': '源端箭头'
+      'zh-CN': '源端箭头',
+      ja: '始点側の矢印'
     },
     tooltips: {
       en: 'Draw an arrow tip on the source side of the selected link(s), independently of the target arrow (graphical only, the data flow direction is unchanged)',
@@ -3613,7 +3850,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Dibuja una punta de flecha en el lado de origen del/los flujo(s) seleccionado(s), independientemente de la flecha de destino (solo gráfico, el sentido del flujo no cambia)',
       de: 'Zeichnet eine Pfeilspitze auf der Quellseite des/der ausgewählten Flusses/Flüsse, unabhängig vom Zielpfeil (rein grafisch, die Flussrichtung in den Daten bleibt unverändert)',
       it: 'Disegna una punta di freccia sul lato sorgente del/dei flusso/i selezionato/i, indipendentemente dalla freccia di destinazione (solo grafico, il senso del flusso non cambia)',
-      'zh-CN': '在所选流量的源一侧独立绘制箭头，与目标箭头无关（仅为图形效果，数据流向不变）'
+      'zh-CN': '在所选流量的源一侧独立绘制箭头，与目标箭头无关（仅为图形效果，数据流向不变）',
+      ja: '終点側の矢印とは独立に、選択したフローの始点側に矢印を描画します（見た目のみで、データの流れる向きは変わりません）'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -3628,7 +3866,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Tamaño',
       de: 'Größe',
       it: 'Dimensione',
-      'zh-CN': '尺寸'
+      'zh-CN': '尺寸',
+      ja: 'サイズ'
     },
     tooltips: {
       en: 'Change the size of the arrow (from the end of the link to the node)',
@@ -3636,7 +3875,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Cambiar el tamaño de la flecha (desde el final del flujo al nodo)',
       de: 'Größe des Pfeils ändern (vom Ende des Flusses zum Knoten)',
       it: 'Cambiare la dimensione della freccia (dalla fine del flusso al nodo)',
-      'zh-CN': '更改箭头的尺寸（从流量末端到节点）'
+      'zh-CN': '更改箭头的尺寸（从流量末端到节点）',
+      ja: '矢印の大きさを変更します（フローの端からノードまで）'
     }
   } satisfies AttributeConfig<number>,
 
@@ -3651,7 +3891,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Muesca de origen',
       de: 'Quellkerbe',
       it: 'Tacca sorgente',
-      'zh-CN': '源端缺口'
+      'zh-CN': '源端缺口',
+      ja: '始点の切り欠き'
     },
     tooltips: {
       en: 'Carve a chevron notch (reversed arrow tail) into the start of the selected link(s). Links leaving the same node side share a single notch.',
@@ -3659,7 +3900,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Talla una muesca en forma de galón (flecha invertida) al inicio del/los flujo(s) seleccionado(s). Los flujos que salen del mismo lado de un nodo comparten una sola muesca.',
       de: 'Schneidet eine Pfeil-Kerbe (umgekehrte Pfeilspitze) am Anfang des/der ausgewählten Flusses/Flüsse ein. Flüsse, die dieselbe Knotenseite verlassen, teilen sich eine einzige Kerbe.',
       it: 'Incide una tacca a freccia (freccia invertita) all\'inizio del/dei flusso/i selezionato/i. I flussi che escono dallo stesso lato di un nodo condividono un\'unica tacca.',
-      'zh-CN': '在所选流量的起点刻出一个 V 形缺口（反向箭尾）。从节点同一侧离开的流量共用一个缺口。'
+      'zh-CN': '在所选流量的起点刻出一个 V 形缺口（反向箭尾）。从节点同一侧离开的流量共用一个缺口。',
+      ja: '選択したフローの始点に山形の切り欠き（矢印の尾を反転した形）を刻みます。ノードの同じ辺から出るフローは 1 つの切り欠きを共有します。'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -3674,7 +3916,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Profundidad de muesca',
       de: 'Kerbentiefe',
       it: 'Profondità tacca',
-      'zh-CN': '缺口深度'
+      'zh-CN': '缺口深度',
+      ja: '切り欠きの深さ'
     },
     tooltips: {
       en: 'Depth (in px) of the source notch carved into the start of the link',
@@ -3682,7 +3925,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Profundidad (en px) de la muesca tallada al inicio del flujo',
       de: 'Tiefe (in px) der am Flussanfang eingeschnittenen Kerbe',
       it: 'Profondità (in px) della tacca incisa all\'inizio del flusso',
-      'zh-CN': '刻入流量起点的源端缺口深度（px）'
+      'zh-CN': '刻入流量起点的源端缺口深度（px）',
+      ja: 'フローの始点に刻む切り欠きの深さ（px）'
     }
   } satisfies AttributeConfig<number>,
 
@@ -3702,7 +3946,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Proporción flecha',
       de: 'Pfeil-Verhältnis',
       it: 'Rapporto freccia',
-      'zh-CN': '箭头比例'
+      'zh-CN': '箭头比例',
+      ja: '矢印の比率'
     },
     tooltips: {
       en: 'When > 0, the target arrow depth scales with link thickness (constant angle) instead of the fixed pixel size.',
@@ -3710,7 +3955,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Si > 0, la profundidad de la flecha destino escala con el grosor del flujo (ángulo constante) en lugar del tamaño fijo en píxeles.',
       de: 'Wenn > 0, skaliert die Tiefe der Zielpfeilspitze mit der Flussdicke (konstanter Winkel) statt der festen Pixelgröße.',
       it: 'Se > 0, la profondità della freccia destinazione scala con lo spessore del flusso (angolo costante) invece della dimensione fissa in pixel.',
-      'zh-CN': '当 > 0 时，目标箭头深度随流量粗细按比例变化（角度恒定），而非使用固定像素尺寸。'
+      'zh-CN': '当 > 0 时，目标箭头深度随流量粗细按比例变化（角度恒定），而非使用固定像素尺寸。',
+      ja: '0 より大きい場合、終点側の矢印の深さは固定ピクセルではなくフローの太さに比例します（角度は一定）。'
     }
   } satisfies AttributeConfig<number>,
 
@@ -3734,7 +3980,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Flecha independiente',
       de: 'Eigenständige Pfeilspitze',
       it: 'Punta indipendente',
-      'zh-CN': '独立箭头'
+      'zh-CN': '独立箭头',
+      ja: '独立した矢印'
     },
     tooltips: {
       en: 'Draw this link\'s arrow as an independent triangle centered on its real end, instead of sharing the fan of arrows converging at the node side.',
@@ -3742,7 +3989,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Dibuja la flecha de este flujo como un triángulo independiente centrado en su extremo real, en lugar de compartir el abanico de flechas que convergen en el lado del nodo.',
       de: 'Zeichnet die Pfeilspitze dieses Flusses als eigenständiges Dreieck, zentriert auf sein echtes Ende, statt den am Knoten zusammenlaufenden Pfeilfächer zu teilen.',
       it: 'Disegna la punta di questo flusso come un triangolo indipendente centrato sulla sua estremità reale, invece di condividere il ventaglio di punte che convergono sul lato del nodo.',
-      'zh-CN': '将该流量的箭头绘制为以其真实末端为中心的独立三角形，而不与汇聚在节点一侧的箭头组共用。'
+      'zh-CN': '将该流量的箭头绘制为以其真实末端为中心的独立三角形，而不与汇聚在节点一侧的箭头组共用。',
+      ja: 'ノードの辺に集まる矢印の扇形を共有せず、このフローの矢印を実際の終端を中心とする独立した三角形として描画します。'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -3763,7 +4011,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Ancho mín. de punta (px)',
       de: 'Mindest-Spitzenbreite (px)',
       it: 'Larghezza min. punta (px)',
-      'zh-CN': '最小箭头底宽（px）'
+      'zh-CN': '最小箭头底宽（px）',
+      ja: '矢先の最小幅（px）'
     },
     tooltips: {
       en: 'Minimum width (px) of the arrow tip base: flows thinner than this get a tip of this width (so they stay visible), thicker flows are unchanged. The tip depth (arrow size) is unchanged. 0 disables it.',
@@ -3771,7 +4020,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Ancho mínimo (px) de la base de la punta: los flujos más finos reciben una punta de este ancho (para seguir visibles), los más gruesos no cambian. La profundidad de la punta no cambia. 0 = desactivado.',
       de: 'Mindestbreite (px) der Pfeilspitzenbasis: dünnere Flüsse erhalten eine Spitze dieser Breite (bleiben sichtbar), dickere Flüsse bleiben unverändert. Die Spitzentiefe bleibt unverändert. 0 = deaktiviert.',
       it: 'Larghezza minima (px) della base della punta: i flussi più sottili ricevono una punta di questa larghezza (per restare visibili), quelli più spessi non cambiano. La profondità della punta non cambia. 0 = disattivato.',
-      'zh-CN': '箭头底边的最小宽度（px）：比该值更细的流量会获得此宽度的箭头（以保持可见），更粗的流量保持不变。箭头深度（箭头尺寸）不变。0 表示禁用。'
+      'zh-CN': '箭头底边的最小宽度（px）：比该值更细的流量会获得此宽度的箭头（以保持可见），更粗的流量保持不变。箭头深度（箭头尺寸）不变。0 表示禁用。',
+      ja: '矢先の底辺の最小幅（px）：これより細いフローにはこの幅の矢先が付き（見えなくならないように）、太いフローは変わりません。矢先の深さ（矢印サイズ）は変わりません。0 で無効。'
     }
   } satisfies AttributeConfig<number>,
 
@@ -3792,7 +4042,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Nodo/flecha a la altura del valor',
       de: 'Knoten/Pfeil auf Werthöhe',
       it: 'Nodo/freccia all\'altezza del valore',
-      'zh-CN': '节点/箭头按数值高度'
+      'zh-CN': '节点/箭头按数值高度',
+      ja: 'ノード／矢印を値の高さに'
     },
     tooltips: {
       en: 'Checked: in structure mode, this flow keeps its value height on the node and arrow. Unchecked (default): the flow is collapsed to a thin connector and does not enlarge the node or arrow.',
@@ -3800,7 +4051,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Marcado: en modo estructura, este flujo conserva su altura de valor en el nodo y la flecha. Sin marcar (predeterminado): el flujo se reduce a un conector fino y no agranda el nodo ni la flecha.',
       de: 'Angehakt: Im Strukturmodus behält dieser Fluss seine Werthöhe an Knoten und Pfeil. Nicht angehakt (Standard): Der Fluss wird auf einen dünnen Verbinder reduziert und vergrößert Knoten und Pfeil nicht.',
       it: 'Selezionato: in modalità struttura, questo flusso mantiene la sua altezza di valore sul nodo e sulla freccia. Non selezionato (predefinito): il flusso è ridotto a un connettore sottile e non ingrandisce il nodo né la freccia.',
-      'zh-CN': '勾选：在结构模式下，该流量在节点与箭头上保留其数值高度。取消勾选（默认）：该流量收缩为细连接线，不会增大节点或箭头。'
+      'zh-CN': '勾选：在结构模式下，该流量在节点与箭头上保留其数值高度。取消勾选（默认）：该流量收缩为细连接线，不会增大节点或箭头。',
+      ja: 'オン：構造モードでも、このフローはノードと矢印の上で値どおりの高さを保ちます。オフ（既定）：フローは細い連結線に縮められ、ノードや矢印を大きくしません。'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -3815,7 +4067,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Mostrar incertidumbre',
       de: 'Unsicherheit anzeigen',
       it: 'Mostra incertezza',
-      'zh-CN': '显示不确定性'
+      'zh-CN': '显示不确定性',
+      ja: '不確実性を表示'
     },
     tooltips: {
       en: 'Superimpose the flow drawn at its min/mean/max values (thinner = more opaque) to visualize the uncertainty interval.',
@@ -3823,7 +4076,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Superpone el flujo dibujado en sus valores mín/media/máx (más fino = más opaco) para visualizar el intervalo de incertidumbre.',
       de: 'Überlagert den Fluss, gezeichnet an seinen Min-/Mittel-/Max-Werten (dünner = undurchsichtiger), um das Unsicherheitsintervall zu visualisieren.',
       it: 'Sovrappone il flusso disegnato ai suoi valori min/media/max (più sottile = più opaco) per visualizzare l\'intervallo di incertezza.',
-      'zh-CN': '叠加绘制流量的最小值/均值/最大值（越细越不透明），以呈现不确定区间。'
+      'zh-CN': '叠加绘制流量的最小值/均值/最大值（越细越不透明），以呈现不确定区间。',
+      ja: '最小値／平均値／最大値で描いたフローを重ねて表示し（細いほど不透明）、不確実性の幅を可視化します。'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -3838,7 +4092,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Proporción muesca',
       de: 'Kerben-Verhältnis',
       it: 'Rapporto tacca',
-      'zh-CN': '缺口比例'
+      'zh-CN': '缺口比例',
+      ja: '切り欠きの比率'
     },
     tooltips: {
       en: 'When > 0, the source notch depth scales with link thickness (constant angle) instead of the fixed pixel depth.',
@@ -3846,7 +4101,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Si > 0, la profundidad de la muesca origen escala con el grosor del flujo (ángulo constante) en lugar de la profundidad fija en píxeles.',
       de: 'Wenn > 0, skaliert die Tiefe der Quellkerbe mit der Flussdicke (konstanter Winkel) statt der festen Pixeltiefe.',
       it: 'Se > 0, la profondità della tacca origine scala con lo spessore del flusso (angolo costante) invece della profondità fissa in pixel.',
-      'zh-CN': '当 > 0 时，源端缺口深度随流量粗细按比例变化（角度恒定），而非使用固定像素深度。'
+      'zh-CN': '当 > 0 时，源端缺口深度随流量粗细按比例变化（角度恒定），而非使用固定像素深度。',
+      ja: '0 より大きい場合、始点の切り欠きの深さは固定ピクセルではなくフローの太さに比例します（角度は一定）。'
     }
   } satisfies AttributeConfig<number>,
 
@@ -3861,7 +4117,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Discontinuo',
       de: 'Gestrichelt',
       it: 'Tratteggiato',
-      'zh-CN': '虚线'
+      'zh-CN': '虚线',
+      ja: '破線'
     },
     tooltips: {
       en: 'Applies a hatch effect on the selected link(s)',
@@ -3869,7 +4126,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Aplica un efecto de rayado en el/los flujo(s) seleccionado(s)',
       de: 'Wendet einen Schraffureffekt auf den/die ausgewählten Fluss/Flüsse an',
       it: 'Applica un effetto tratteggiato sul/sui flusso/i selezionato/i',
-      'zh-CN': '对所选流量应用剖面线效果'
+      'zh-CN': '对所选流量应用剖面线效果',
+      ja: '選択したフローにハッチングの効果を適用します'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -3884,7 +4142,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Color',
       de: 'Farbe',
       it: 'Colore',
-      'zh-CN': '颜色'
+      'zh-CN': '颜色',
+      ja: '色'
     },
     tooltips: {
       en: 'Choose what rule defines flow color',
@@ -3892,7 +4151,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Elegir qué regla define el color del flujo',
       de: 'Wählen, welche Regel die Flussfarbe bestimmt',
       it: 'Scegliere quale regola definisce il colore del flusso',
-      'zh-CN': '选择决定流量颜色的规则'
+      'zh-CN': '选择决定流量颜色的规则',
+      ja: 'フローの色を決めるルールを選択します'
     }
   } satisfies AttributeConfig<'flow' | 'source' | 'target' | 'gradient' | 'auto'>,
 
@@ -3910,7 +4170,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Mostrar si es nulo',
       de: 'Anzeigen wenn null',
       it: 'Mostra se nullo',
-      'zh-CN': '为零时仍显示'
+      'zh-CN': '为零时仍显示',
+      ja: 'ゼロでも表示'
     },
     tooltips: {
       en: 'Always draw this link even when its value is zero (overrides the null-link filter for this link only)',
@@ -3918,7 +4179,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Mostrar siempre este flujo aunque su valor sea cero (anula el filtrado de flujos nulos solo para este flujo)',
       de: 'Diesen Fluss immer anzeigen, auch wenn sein Wert null ist (überschreibt die Nullfluss-Filterung nur für diesen Fluss)',
       it: 'Mostra sempre questo flusso anche se il suo valore è zero (ignora il filtro dei flussi nulli solo per questo flusso)',
-      'zh-CN': '即使数值为零也始终绘制该流量（仅对该流量覆盖零值流量筛选）'
+      'zh-CN': '即使数值为零也始终绘制该流量（仅对该流量覆盖零值流量筛选）',
+      ja: '値がゼロでもこのフローを常に描画します（このフローに限りゼロ値フィルタを無視します）'
     }
   } satisfies AttributeConfig<boolean>,
   link_caps: {
@@ -3932,7 +4194,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Empalme',
       de: 'Übergang',
       it: 'Raccordo',
-      'zh-CN': '端帽'
+      'zh-CN': '端帽',
+      ja: '端の詰め'
     },
     tooltips: {
       en: 'On elliptical source/target nodes, fill the gap between the ellipse edge and this link start with the link color, for a smoother junction.',
@@ -3940,7 +4203,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'En nodos origen/destino elípticos, rellena el espacio entre el borde de la elipse y el inicio de este flujo con su color, para una unión más fluida.',
       de: 'Bei elliptischen Quell-/Zielknoten den Zwischenraum zwischen dem Ellipsenrand und dem Beginn dieses Flusses mit dessen Farbe füllen, für einen weicheren Übergang.',
       it: 'Su nodi sorgente/destinazione ellittici, riempie lo spazio tra il bordo dell\'ellisse e l\'inizio di questo flusso con il suo colore, per un raccordo più fluido.',
-      'zh-CN': '在椭圆形的源/目标节点上，用流量颜色填充椭圆边缘与流量起点之间的空隙，使衔接更平滑。'
+      'zh-CN': '在椭圆形的源/目标节点上，用流量颜色填充椭圆边缘与流量起点之间的空隙，使衔接更平滑。',
+      ja: '楕円形の始点／終点ノードで、楕円の縁とこのフローの始まりとの隙間をフローの色で埋め、接続をなめらかにします。'
     }
   } satisfies AttributeConfig<boolean>,
 } as const
@@ -3957,7 +4221,8 @@ export const LINKS_LABEL_SPECIFIC_CONFIG = {
       es: 'Seguir el trazado',
       de: 'Pfad folgen',
       it: 'Seguire il percorso',
-      'zh-CN': '沿路径排布'
+      'zh-CN': '沿路径排布',
+      ja: '経路に沿わせる'
     },
     tooltips: {
       en: 'Orient the label following the shape of the link',
@@ -3965,7 +4230,8 @@ export const LINKS_LABEL_SPECIFIC_CONFIG = {
       es: 'Orientar la etiqueta siguiendo la forma del flujo',
       de: 'Beschriftung entlang der Form des Flusses ausrichten',
       it: 'Orientare l\'etichetta seguendo la forma del flusso',
-      'zh-CN': '使标签沿流量的形状排布'
+      'zh-CN': '使标签沿流量的形状排布',
+      ja: 'ラベルをフローの形状に沿って配置します'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -3980,7 +4246,8 @@ export const LINKS_LABEL_SPECIFIC_CONFIG = {
       es: 'Posición automática',
       de: 'Automatische Position',
       it: 'Posizione automatica',
-      'zh-CN': '自动定位'
+      'zh-CN': '自动定位',
+      ja: '自動配置'
     },
     tooltips: {
       en: 'Automatically adjust the vertical position',
@@ -3988,7 +4255,8 @@ export const LINKS_LABEL_SPECIFIC_CONFIG = {
       es: 'Ajustar automáticamente la posición vertical',
       de: 'Vertikale Position automatisch anpassen',
       it: 'Regolare automaticamente la posizione verticale',
-      'zh-CN': '自动调整垂直位置'
+      'zh-CN': '自动调整垂直位置',
+      ja: '垂直位置を自動で調整します'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -4008,7 +4276,8 @@ export const LINKS_LABEL_SPECIFIC_CONFIG = {
       es: 'Contenido de la etiqueta',
       de: 'Beschriftungstext',
       it: 'Contenuto etichetta',
-      'zh-CN': '标签内容'
+      'zh-CN': '标签内容',
+      ja: 'ラベルの内容'
     },
     tooltips: {
       en: 'Pick what the link label displays: typed text, nothing, source/target node name, source → target, or an assigned flux tag',
@@ -4016,7 +4285,8 @@ export const LINKS_LABEL_SPECIFIC_CONFIG = {
       es: 'Elegir lo que muestra la etiqueta: texto, nada, nombre del nodo origen/destino, origen → destino, o una etiqueta de flujo asignada',
       de: 'Wählen, was die Beschriftung anzeigt: Text, nichts, Name des Quell-/Zielknotens, Quelle → Ziel oder ein zugewiesener Fluss-Tag',
       it: 'Scegli cosa mostra l\'etichetta: testo, nulla, nome del nodo sorgente/destinazione, sorgente → destinazione, o un tag di flusso assegnato',
-      'zh-CN': '选择流量标签显示的内容：输入的文本、不显示、源/目标节点名称、源 → 目标，或指派的流量标签'
+      'zh-CN': '选择流量标签显示的内容：输入的文本、不显示、源/目标节点名称、源 → 目标，或指派的流量标签',
+      ja: 'フローのラベルに表示する内容を選択：入力したテキスト、なし、始点／終点ノード名、始点 → 終点、割り当てたフロータグ'
     }
   } satisfies AttributeConfig<string>,
 
@@ -4033,7 +4303,8 @@ export const LINKS_LABEL_SPECIFIC_CONFIG = {
       es: 'Grupo de etiquetas',
       de: 'Tag-Gruppe',
       it: 'Gruppo di tag',
-      'zh-CN': '标签组'
+      'zh-CN': '标签组',
+      ja: 'タググループ'
     },
     tooltips: {
       en: 'Flux tag group whose assigned tag is shown as the label',
@@ -4041,7 +4312,8 @@ export const LINKS_LABEL_SPECIFIC_CONFIG = {
       es: 'Grupo de etiquetas de flujo cuya etiqueta asignada se muestra como etiqueta',
       de: 'Fluss-Tag-Gruppe, deren zugewiesener Tag als Beschriftung angezeigt wird',
       it: 'Gruppo di tag di flusso il cui tag assegnato è mostrato come etichetta',
-      'zh-CN': '其所指派标签将作为标签显示的流量标签组'
+      'zh-CN': '其所指派标签将作为标签显示的流量标签组',
+      ja: '割り当てタグをラベルとして表示するフロータググループ'
     }
   } satisfies AttributeConfig<string>,
 } as const

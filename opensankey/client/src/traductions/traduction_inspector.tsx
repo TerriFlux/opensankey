@@ -920,5 +920,159 @@ export const resources_inspector = {
         }
       }
     }
+  },
+  ja: {
+    translation: {
+      inspector: {
+        view: 'ビュー',
+        back_to_selection: '選択に戻る',
+        pin: 'パネルを固定（描画エリアがその左側でサイズ調整されます）',
+        unpin: 'パネルの固定を解除（描画の上に浮かびます）',
+        // Cibles : singulier / pluriel (fil d'Ariane).
+        target: {
+          view: 'ビュー',
+          node: 'ノード', nodes: 'ノード',
+          link: 'フロー', links: 'フロー',
+          container: 'エリア', containers: 'エリア',
+          legend: '凡例', legends: '凡例',
+          title: 'タイトル', titles: 'タイトル',
+          mixed: '複数種類の選択', elements: '要素'
+        },
+        nothing_here: '{{target}} に利用できる設定はありません。',
+        // Portée & cascade de styles
+        selection: '選択',
+        selection_count: '選択（{{count}}）',
+        styles_count: 'スタイル（{{count}}）',
+        cascade: 'カスケード',
+        style_name: 'スタイル名',
+        new_style: '+ 新しいスタイル',
+        delete_style: '削除',
+        delete_style_tooltip: 'このスタイルを削除します（これに従っている要素は、カスケードの残りのスタイルに戻ります）',
+        attach_style: '選択中の要素にスタイルを付与します（カスケードの末尾で、最も優先されます）',
+        detach_style: 'このスタイルを選択中の要素から外します',
+        edited_style_hint: '強調表示されたスタイルを編集しています：これに従うすべての要素が変わります。カスケードの最後が優先され、個別の上書きは常に優先されます。',
+        divergent_cascade: '1 番目の要素のカスケード — 選択中の他の要素は別のカスケードに従っています。 ',
+        selection_hint: '薄い属性：スタイル（カスケード）から継承。紫の枠：選択中の要素で上書き。オレンジの枠：値が複数あります。',
+        tab_overloaded: '上書きされた属性を含みます',
+        provenance: {
+          local: 'ここで上書き（選択中の要素で）',
+          from_style: 'スタイル «{{style}}» から継承',
+          factory: '工場出荷時の既定値'
+        },
+        // Onglets
+        tab: {
+          stock: 'ストック',
+          tooltip: 'ツールチップ',
+          tags: 'タグ',
+          analysis: '分析',
+          title: 'タイトル',
+          mfa: 'MFA',
+          styles: 'スタイル'
+        },
+        // #1258 — Onglet MFA (espace AFM unifié).
+        mfa: {
+          reconciliation: 'データ調和',
+          open_spreadsheet: 'スプレッドシートを開く（制約）',
+          run_reconciliation: 'Excel で調和…',
+          value_in_mfa: '値の種類、範囲、不確実性は MFA タブで編集します。'
+        },
+        // #1258 — Titres des sections repliables des onglets.
+        section: {
+          page: 'ページ',
+          dressing: '背景とグリッド',
+          scale_sizes: 'スケールとサイズ',
+          advanced: '詳細設定',
+          advanced_geometry: '詳細 — 配置'
+        },
+        // #1259 — Section « Groupe » unifiée (ex-« Cadre géométrique » ZDT + nœuds).
+        group: {
+          title: 'グループ',
+          tooltip: '選択中の要素にノードやテキストエリアを紐づけます：枠はメンバーを囲む位置に配置され、メンバーとともに移動します'
+        },
+        visible: '表示',
+        labels_visible: 'ラベルを表示',
+        stock_enabled: '有効',
+        stock_shape: '形状',
+        stock_shape_tooltip: 'ストックの形状を表示します',
+        stock_labels: 'ラベル',
+        stock_labels_tooltip: 'ストックのラベルを表示します',
+        stock_shape_visible: 'ストックの形状を表示',
+        stock_select_node: 'ストックを持つノードを選択してください。',
+        stock_caption: 'ストックの説明',
+        stock_delta_caption: 'Δ ストックの説明',
+        advanced_editor: '詳細エディタ…',
+        open_editor: 'エディタを開く…',
+        tags_assign_hint: '割り当て（グループは「絞り込み」で編集します）',
+        // OS#1278 — section « Analyse » (graphiques couronne / histogramme).
+        analysis: {
+          decompose_by: '分解の軸',
+          compare_by: '比較の軸',
+          none: '— なし —',
+          inputs: '入ってくるフロー',
+          outputs: '出ていくフロー',
+          inputs_by: '{{group}} 別の入ってくるフロー',
+          outputs_by: '{{group}} 別の出ていくフロー',
+          node_children: '子ノード（{{dim}}）',
+          flux_children: '子フロー（{{dim}}）',
+          repr_auto: '自動',
+          repr_donut: 'ドーナツ',
+          repr_bars: '棒',
+          show_in_tooltip: 'ツールチップに表示',
+          show_on_node: 'ノード上に表示（ドーナツ／ヒストグラム）',
+          select_subject: 'ノードまたはフローを選択してください。'
+        },
+        // OS#1285 — visibilité des blocs d'info-bulle.
+        tooltip_blocks: {
+          title: '表示するブロック',
+          values: '値',
+          flux: 'フロー',
+          tags: 'タグ',
+          series_flux: 'フローの系列',
+          data: 'データ',
+          series_data: 'データの系列',
+          unitary: '単位サンキー',
+          analysis: '分析チャート'
+        },
+        // OS#1286 — registre d'unités du diagramme (grandeurs/unités/défauts).
+        units: {
+          title: '図の単位',
+          none: '— なし —',
+          type_default: '既定',
+          open_editor: '編集…',
+          open_editor_tooltip: '図の単位を編集します（物理量、単位、係数、既定値）',
+          symbol: '記号',
+          coefficient: '係数',
+          coefficient_tooltip: 'この単位を、その物理量の基準単位で表した値（基準単位 = 1）。値は基準単位で保存されます。',
+          display_scale: 'スケール',
+          display_scale_tooltip: 'この物理量専用の表示スケール（e!Sankey と同様）：単位型の帯について、100 px あたりに相当する基準単位の量です。空欄：図のスケールを使います。同じフロー上で異なる物理量（kWh、t、EUR）のバランスをとれます。',
+          default: '既定',
+          default_tooltip: 'この物理量の既定の表示単位（単位を明示していないフローが継承します）',
+          add_unit: '+ 単位',
+          add_unit_type: '+ 物理量',
+          new_unit_name: '単位',
+          new_unit_type_name: '新しい物理量',
+          empty: 'レジストリに物理量がありません — 追加してください。'
+        }
+      },
+      filter_panel: {
+        filter: '絞り込み',
+        select: '選択',
+        select_tooltip: '種類とタグで要素を選択します（一括操作）',
+        edit: '編集',
+        edit_group: 'このグループを編集',
+        show_hidden: '非表示のグループを表示（{{count}}）',
+        hide_hidden: '非表示のグループを隠す',
+        select_elements: '要素を選択',
+        deselect_all: '選択をすべて解除',
+        selection_summary: '選択：{{summary}}',
+        short: {
+          node: 'ノード',
+          link: 'フロー',
+          data: 'データ',
+          level: 'レベル',
+          views: 'ビュー'
+        }
+      }
+    }
   }
 }
