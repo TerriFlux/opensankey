@@ -11,14 +11,13 @@ import { resources_loading_toasts } from './traduction_loading_toasts'
 import { resources_template } from './traduction_templates'
 import { resources_welcome } from './traduction_welcome'
 import { resources_spreadsheet } from './traduction_spreadsheet'
-import { ZDD_MENU_CONFIG } from '../components/dialogs/ContextZDDConfig'
-import { LINK_MENU_CONFIG } from '../components/dialogs/ContextLinkConfig'
-import { NODE_MENU_CONFIG } from '../components/dialogs/ContextNodeConfig'
 import { rcc_shortcuts } from './traduction_rcc_shortcuts'
-import { translations } from '../components/dialogs/PersistenceProcessDialogConfigs'
 import { ALL_ATTRIBUTES_CONFIG } from '../Elements/ElementsAttributesConfig'
-import { ELEMENTS_MENU_CONFIG } from '../components/configmenus/MenuElementsSelection'
-import { missing_flux_apparence_translations, missing_menu_translations, missing_node_apparence_translations, missing_node_labels_translations } from '../components/configmenus/MenuElementsAppearance'
+
+// #1335 — Ce module est la BASE viewer des traductions : il n'importe RIEN de la zone d'édition
+// (dialogues, menus de configuration). Les contributions de l'atelier d'édition sont appliquées
+// par `editor/traductions.tsx`, qui importe ce module et non l'inverse. Voir #1331 : le paquet
+// viewer ne doit rien importer du paquet éditeur.
 
 
 // ==================================================================================================
@@ -46,13 +45,24 @@ export const deep_merge_translations = (source: TranslationTree, target: Transla
 }
 
 /**
- * Fonction pour intégrer toutes les traductions manquantes
- * À appeler dans ton fichier i18n principal
+ * Intègre les traductions manquantes fournies par l'atelier d'édition.
+ *
+ * #1335 — les quatre arbres étaient auparavant importés ici depuis
+ * `components/configmenus/MenuElementsAppearance`, ce qui faisait dépendre la base viewer de la
+ * zone d'édition. Ils sont désormais PASSÉS EN PARAMÈTRE par `editor/traductions.tsx` : la
+ * fonction reste ici parce qu'elle est de la mécanique de fusion, mais elle ne sait plus rien de
+ * l'origine des arbres.
  */
 export const integrate_missing_translations = (
   resources_app_elements: I18nResources,
   resources_nodes: I18nResources,
-  resources_flux: I18nResources
+  resources_flux: I18nResources,
+  missing: {
+    menu: I18nResources
+    node_labels: I18nResources
+    node_apparence: I18nResources
+    flux_apparence: I18nResources
+  }
 ): void => {
   // Merge chaque langue présente dans la cible ; repli sur l'anglais si la
   // source ne fournit pas cette langue.
@@ -64,16 +74,16 @@ export const integrate_missing_translations = (
   }
 
   // Intégrer les traductions du menu général
-  merge_all_langs(missing_menu_translations as unknown as I18nResources, resources_app_elements)
+  merge_all_langs(missing.menu, resources_app_elements)
 
   // Intégrer les traductions des labels de nœuds
-  merge_all_langs(missing_node_labels_translations as unknown as I18nResources, resources_nodes)
+  merge_all_langs(missing.node_labels, resources_nodes)
 
   // Intégrer les traductions de l'apparence des nœuds
-  merge_all_langs(missing_node_apparence_translations as unknown as I18nResources, resources_nodes)
+  merge_all_langs(missing.node_apparence, resources_nodes)
 
   // Intégrer les traductions de l'apparence des flux
-  merge_all_langs(missing_flux_apparence_translations as unknown as I18nResources, resources_flux)
+  merge_all_langs(missing.flux_apparence, resources_flux)
 }
 
 interface TranslationItem {
@@ -82,7 +92,7 @@ interface TranslationItem {
   [key: string]: unknown
 }
 
-interface TranslationConfig {
+export interface TranslationConfig {
   [key: string]: TranslationItem | TranslationConfig
 }
 
@@ -90,14 +100,16 @@ interface TranslationConfig {
  * Convertit le format { key: { en: '...', fr: '...' } }
  * en format i18next { en: { translation: { key: '...' } }, fr: { translation: { key: '...' } } }
  */
-const SUPPORTED_LANGS = ['en', 'fr', 'es', 'de', 'it', 'zh-CN', 'ja'] as const
+// Exportée depuis #1335 : `editor/traductions.tsx` en a besoin pour construire les ressources du
+// dialogue de traitement et pour pousser le complément dans i18next.
+export const SUPPORTED_LANGS = ['en', 'fr', 'es', 'de', 'it', 'zh-CN', 'ja'] as const
 type SupportedLang = typeof SUPPORTED_LANGS[number]
 
 // Langues effectivement présentes dans un objet resources (racines en/fr/es/de/it/zh-CN/ja)
 const langs_of = (resources: I18nResources): SupportedLang[] =>
   SUPPORTED_LANGS.filter(lang => resources[lang] !== undefined)
 
-const convertToI18nFormat = (
+export const convertToI18nFormat = (
   config: TranslationConfig,
   path: string[] = []
 ): Record<SupportedLang, Record<string, unknown>> => {
@@ -123,11 +135,9 @@ const convertToI18nFormat = (
   return result
 }
 
-// Convertir les traductions
-const converted = convertToI18nFormat(translations as unknown as TranslationConfig)
-export const resources_process_dialog = Object.fromEntries(
-  SUPPORTED_LANGS.map(lang => [lang, { translation: converted[lang] }])
-)
+// #1335 — `resources_process_dialog` était construit ici depuis les `translations` de
+// `components/dialogs/PersistenceProcessDialogConfigs`, donc depuis la zone d'édition. Sa
+// construction est passée dans `editor/traductions.tsx`, qui réutilise `convertToI18nFormat`.
 interface TranslationSection {
   tooltips?: Record<string, string | Record<string, string>>  // ✅ Permet imbrication
   [key: string]: string | TranslationSection | Record<string, string | Record<string, string>> | undefined
@@ -194,7 +204,7 @@ interface ActionConfig {
   tooltips: LanguageTooltips
 }
 
-interface MenuConfig {
+export interface MenuConfig {
   sectionTitles: Record<string, LanguageLabels>
   actions: Record<string, ActionConfig>
 }
@@ -434,34 +444,16 @@ export const deep_assign_resources = (
 use_link_config(resources_flux as unknown as I18nResources)
 use_node_config(resources_nodes as unknown as I18nResources)
 
-use_elements_selection_config(
-  resources_app_elements as unknown as I18nResources,
-  ELEMENTS_MENU_CONFIG
-)
-
-// use_excel_config(resources_app_elements as unknown as I18nResources)
-use_context_config(
-  resources_app_elements as unknown as I18nResources,
-  ZDD_MENU_CONFIG as unknown as MenuConfig,
-  'ContextMenuZDD'
-)
-use_context_config(
-  resources_app_elements as unknown as  I18nResources,
-  LINK_MENU_CONFIG as unknown as MenuConfig,
-  'ContextMenuLinks'
-)
-use_context_config(
-  resources_app_elements as unknown as  I18nResources,
-  NODE_MENU_CONFIG as unknown as MenuConfig,
-  'ContextMenuNodes'
-)
-
-// ✅ INTÉGRATION DES TRADUCTIONS MANQUANTES
-integrate_missing_translations(
-  resources_app_elements as unknown as I18nResources,
-  resources_nodes as unknown as I18nResources,
-  resources_flux as unknown as I18nResources
-)
+// #1335 — Les contributions de l'atelier d'édition (menus contextuels ZDD / flux / nœud, menu de
+// sélection d'éléments, traductions manquantes d'apparence, dialogue de traitement) étaient
+// appliquées ICI, ce qui obligeait ce module à importer six modules de la zone d'édition. Elles
+// sont désormais appliquées par `editor/traductions.tsx`, qui importe ce module, réapplique ses
+// contributions sur les mêmes objets de ressources puis complète `resources_opensankey`.
+//
+// Conséquence d'ordonnancement, volontaire : `resources_opensankey` n'est COMPLET qu'une fois
+// `editor/traductions.tsx` chargé. Les consommateurs de l'atelier d'édition (OSP, et `index.tsx`
+// côté OS) importent ce module éditeur, ce qui rend l'ordre déterministe par le graphe d'imports.
+// Un consommateur purement viewer obtient la base viewer, ce qui est l'objectif de #1331.
 
 // Concat traductions resources
 export const resources_opensankey: Record<string, unknown> = {}
@@ -476,7 +468,7 @@ deep_assign_resources(resources_search as Record<string, unknown>, resources_ope
 deep_assign_resources(resources_loading_toasts as Record<string, unknown>, resources_opensankey)
 deep_assign_resources(resources_template as Record<string, unknown>, resources_opensankey)
 deep_assign_resources(resources_spreadsheet as Record<string, unknown>, resources_opensankey)
-deep_assign_resources(resources_process_dialog as Record<string, unknown>, resources_opensankey)
+// `resources_process_dialog` est ajouté par `editor/traductions.tsx` (#1335).
 // Update traduction
 const resources = resources_opensankey // /!\ i18next accept only var with name "resources"
 i18next

@@ -35,6 +35,11 @@ import { createRoot } from 'react-dom/client'
 import { ChakraProvider } from '@chakra-ui/react'
 
 import './traductions/traduction'
+// #1335 — Applique les contributions de traduction de l'atelier d'édition. Cet import est
+// OBLIGATOIRE pour toute cible qui embarque l'éditeur : sans lui, les libellés des menus
+// contextuels et des menus de configuration s'afficheraient sous forme de clés. Une cible
+// purement viewer ne l'importe pas (#1331).
+import './editor/traductions'
 import { useTranslation } from 'react-i18next'
 import i18next from './traductions/traduction'
 
