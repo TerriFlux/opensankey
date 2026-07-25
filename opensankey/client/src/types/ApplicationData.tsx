@@ -92,6 +92,17 @@ export type Type_PresentationDiagram = {
   render: (container: HTMLElement) => (() => void) | void
 }
 
+/**
+ * Provenance d'un diagramme ouvert depuis la sankeythèque (galerie MFAData) :
+ * chemin du modèle dans l'index, relatif à la racine MFAData, et nom affiché.
+ * Le chemin est le seul champ qui compte côté serveur — il doit être exactement
+ * celui de l'index, qui fait liste blanche d'écriture.
+ */
+export type Type_SankeythequeOrigin = {
+  file_path: string
+  title: string
+}
+
 // FOREIGN OBJECT → SVG TEXT (rich) *****************************************************
 
 type FOSpanStyle = {
@@ -416,6 +427,14 @@ export class Class_ApplicationData {
   // fichier servi). Non persisté.
   protected _static_diagram_file: string | null = null
 
+  // Étude de la sankeythèque (MFAData) dont vient le diagramme affiché, quand il a
+  // été ouvert depuis la galerie. Sert au réenregistrement en place réservé aux
+  // développeurs (voir MFADataSaveModal / route serveur menus_templates_save).
+  // NON persisté : c'est une provenance de session, pas une propriété du diagramme —
+  // un JSON téléchargé puis rouvert ne doit surtout pas se croire réenregistrable.
+  // Effacé par reset(), donc par tout chargement (fromJSON) ou nouveau diagramme.
+  protected _sankeytheque_origin: Type_SankeythequeOrigin | null = null
+
   // Documentation markdown libre attachée au diagramme (onglet « Doc »), persistée en JSON.
   // Stockée par langue { fr, en, ... } : un même diagramme peut embarquer la doc
   // traduite (cf. tutoriels multilingues). Le getter/setter public expose une
@@ -706,6 +725,10 @@ export class Class_ApplicationData {
     // Reset drawing area
     const by_pass_redraw = this._drawing_area.bypass_redraws
     this._file_name = default_file_name
+    // Provenance sankeythèque : un autre diagramme est chargé, celui d'avant n'est
+    // plus à l'écran — le réenregistrement en place doit donc redevenir impossible.
+    // (Le chargement d'une étude la repose juste après, cf. loadJsonTemplate.)
+    this._sankeytheque_origin = null
     // La doc markdown est attachée au diagramme : un nouveau diagramme repart d'une doc vide.
     this._documentation_markdown = {}
     this._documentation_images = {}
@@ -896,10 +919,19 @@ export class Class_ApplicationData {
     const before = this.toJSON()
     action()
     const after = this.toJSON()
+    // On reste sur le MÊME diagramme : fromJSON passe par reset(), qui efface la
+    // provenance sankeythèque — sans ce report, annuler un geste lourd ferait
+    // disparaître le réenregistrement en place de l'étude ouverte.
+    const origin = this._sankeytheque_origin
+    const restore = (snapshot: Type_JSON) => {
+      this.fromJSON(snapshot)
+      this._sankeytheque_origin = origin
+      onRestore?.()
+    }
     // saveUndo PUIS saveRedo, après l'action : saveUndo ouvre le slot, saveRedo écrit
     // sur celui-là (cf. Class_ApplicationHistory).
-    this.history.saveUndo(() => { this.fromJSON(before); onRestore?.() })
-    this.history.saveRedo(() => { this.fromJSON(after); onRestore?.() })
+    this.history.saveUndo(() => restore(before))
+    this.history.saveRedo(() => restore(after))
   }
 
   public toJSON(kwargs?: Type_JSON) {
@@ -2003,6 +2035,9 @@ export class Class_ApplicationData {
 
   public get static_diagram_file(): string | null { return this._static_diagram_file }
   public set static_diagram_file(value: string | null) { this._static_diagram_file = value }
+
+  public get sankeytheque_origin(): Type_SankeythequeOrigin | null { return this._sankeytheque_origin }
+  public set sankeytheque_origin(value: Type_SankeythequeOrigin | null) { this._sankeytheque_origin = value }
 
   // Doc résolue pour la langue active (i18next), repli en→fr→première. Le setter
   // écrit dans le slot de la langue active : éditer en mode 'en' ne touche que la

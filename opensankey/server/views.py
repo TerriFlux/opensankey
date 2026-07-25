@@ -32,7 +32,9 @@ Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlu
 from pathlib import Path
 import ipaddress
 import socket
+import subprocess
 import tempfile
+import gzip
 import os
 import posixpath
 import json
@@ -1618,6 +1620,47 @@ def templates_declared_assets(source):
     return declared
 
 
+# Compression a la volee des .json de la sankeytheque : chemin absolu -> (empreinte
+# mtime/taille, octets gzippes). Quelques entrees suffisent (on ne recharge qu'un
+# modele a la fois) ; l'empreinte invalide le cache des que le fichier change.
+_MFADATA_GZ_CACHE = {}
+_MFADATA_GZ_CACHE_LOCK = Lock()
+_MFADATA_GZ_CACHE_MAX = 4
+
+
+def mfadata_gzip_json_response(json_abs):
+    """
+    Sert un .json de MFAData compresse EN MEMOIRE, sans jamais ecrire de .gz.
+
+    handle_json_or_compressed, lui, MET EN CACHE SUR DISQUE le .gz qu'il fabrique
+    (a cote du .json). C'est inacceptable dans MFAData depuis que les etudes
+    enregistrees par l'app y sont ecrites en .json versionne : le .gz de cache
+    n'est pas suivi par git, donc un `git pull` qui met a jour le .json laisserait
+    le cache perime en place — et le serveur continuerait de servir l'ancienne
+    version, indefiniment. On compresse donc en RAM (memo par mtime+taille) et on
+    pose un ETag pour que le navigateur puisse se contenter d'un 304.
+    """
+    stat = os.stat(json_abs)
+    key = os.path.abspath(json_abs)
+    stamp = (stat.st_mtime_ns, stat.st_size)
+    with _MFADATA_GZ_CACHE_LOCK:
+        cached = _MFADATA_GZ_CACHE.get(key)
+        payload = cached[1] if (cached and cached[0] == stamp) else None
+    if payload is None:
+        with open(json_abs, "rb") as file_json:
+            payload = gzip.compress(file_json.read())
+        with _MFADATA_GZ_CACHE_LOCK:
+            if len(_MFADATA_GZ_CACHE) >= _MFADATA_GZ_CACHE_MAX:
+                _MFADATA_GZ_CACHE.clear()
+            _MFADATA_GZ_CACHE[key] = (stamp, payload)
+    # Servi BRUT (pas de Content-Encoding) : le front degzippe lui-meme, comme
+    # pour les .gz du disque (regle etablie pour les portfolios).
+    response = make_response(payload)
+    response.mimetype = "application/gzip"
+    response.set_etag("%d-%d" % stamp)
+    return response.make_conditional(request)
+
+
 @opensankey.route("/menus/templates", methods=["POST"])
 def menus_templates():
     """
@@ -1712,8 +1755,17 @@ def menus_templates_asset(asset):
     # voient une remontee. Le filtre doit porter sur le chemin final.
     normalized = posixpath.normpath(asset.replace("\\", "/"))
     if source == "mfadata":
-        if normalized not in templates_declared_assets("mfadata"):
+        json_rel = mfadata_declared_json(normalized)
+        if json_rel is None and normalized not in templates_declared_assets("mfadata"):
             abort(404)
+        # Une etude enregistree depuis l'app (voir menus_templates_save) est ecrite
+        # en .json LISIBLE et son .json.gz d'origine est supprime. Le .json fait
+        # donc foi des qu'il existe, quelle que soit l'extension declaree par
+        # l'index, et il est compresse en RAM (jamais de .gz de cache sur disque).
+        if json_rel:
+            json_abs = safe_join(root, json_rel)
+            if json_abs and os.path.isfile(json_abs):
+                return mfadata_gzip_json_response(json_abs)
     # Modeles : tout SankeyData/templates/ est publiable, la regle de prefixe suffit.
     elif not normalized.startswith("templates/"):
         abort(404)
@@ -1755,6 +1807,231 @@ def is_developer_user():
         return bool(getattr(current_user, "is_developer", False))
     except Exception:
         return False
+
+
+def is_developer_request():
+    """
+    Garde des routes qui ECRIVENT (menus_templates_save), plus stricte que celle
+    des galeries de lecture.
+
+    `current_app.debug` seul ne suffit pas ici : FLASK_DEBUG traine dans
+    l'environnement de bien des lancements, et une route qui ecrit dans MFAData
+    puis pousse un commit ne doit pas s'ouvrir pour autant a tout visiteur du
+    serveur de dev. Le repli « mode debug » n'est donc accorde que lorsque l'app
+    n'a AUCUNE gestion de comptes (OpenSankey seul, lance a la main, ou il n'y a
+    pas de notion d'utilisateur). Des qu'un login-component est monte — tous les
+    serveurs deployes — seul un compte `is_developer` ouvre la route.
+    """
+    if is_developer_user():
+        return True
+    return current_app.debug and not hasattr(current_app, "login_manager")
+
+
+def mfadata_declared_json(normalized):
+    """
+    Chemin du .json d'un modele de la sankeytheque, si le chemin demande est bien
+    DECLARE par index.json — sinon None (rien d'autre n'est lisible ni ecrivable).
+
+    Tolere l'equivalence .json / .json.gz, a condition que l'un des deux soit
+    declare : un modele reenregistre depuis l'app passe de « x.json.gz » a
+    « x.json » dans l'index, et une galerie deja ouverte dans un navigateur
+    continuerait sinon de demander l'ancien chemin — 404 sur une etude publiee.
+    """
+    declared = templates_declared_assets("mfadata")
+    json_rel = normalized[:-3] if normalized.endswith(".gz") else normalized
+    if not json_rel.endswith(".json"):
+        return None
+    if normalized in declared or json_rel in declared or json_rel + ".gz" in declared:
+        return json_rel
+    return None
+
+
+def developer_user_email():
+    """Email du compte developpeur a l'origine de la requete, ou None."""
+    try:
+        from flask_login import current_user
+
+        email = getattr(current_user, "email", None)
+        return str(email) if email else None
+    except Exception:
+        return None
+
+
+def mfadata_git(root, args, timeout=180):
+    """
+    Lance une commande git dans MFAData. Renvoie (code_retour, sortie).
+
+    Sans shell et avec des arguments en liste : aucun contenu venant de la requete
+    (message de commit, chemin) ne peut etre reinterprete par un interpreteur.
+    """
+    try:
+        completed = subprocess.run(
+            ["git", "-C", root] + list(args),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=timeout,
+        )
+    except (OSError, subprocess.SubprocessError) as error:
+        return 127, str(error)
+    output = ((completed.stdout or "") + (completed.stderr or "")).strip()
+    return completed.returncode, output
+
+
+@opensankey.route("/menus/templates_save", methods=["POST"])
+def menus_templates_save():
+    """
+    Enregistre le diagramme courant PAR-DESSUS l'etude de la sankeytheque dont il
+    vient, puis committe et pousse MFAData. RESERVE AUX DEVELOPPEURS.
+
+    Boucle courte pour mettre a jour les diagrammes publies : ouvrir l'etude depuis
+    la sankeytheque, corriger dans l'app, reenregistrer. Le filet, c'est git : tout
+    passe par un commit signe du compte developpeur, donc relisible et reversible.
+
+    Garde-fous, dans l'ordre :
+      - compte `is_developer` (ou poste de dev sans gestion de comptes du tout,
+        cf. is_developer_request) — sinon 404 ;
+      - le chemin cible doit etre DECLARE PAR index.json (meme liste blanche que
+        /menus/templates_asset) : impossible d'ecrire ailleurs dans MFAData, en
+        particulier dans Clients/ ou dans les materiaux non publies ;
+      - le fichier doit deja exister : on ecrase une etude publiee, on n'en cree
+        pas de nouvelle (l'ajout a l'index reste un geste manuel, cf.
+        scripts/generate_sankeytheque_index.py) ;
+      - seuls les chemins du modele (+ index.json) sont ajoutes au commit, jamais
+        `git add -A` : la copie de travail de MFAData est en permanence pleine de
+        materiaux de travail non committes qu'il ne faut surtout pas embarquer.
+
+    Le diagramme est ecrit en .json INDENTE (pas en .json.gz) : c'est ce qui rend
+    le diff git relisible, donc la sauvegarde reellement sure. Le .json.gz d'origine
+    est supprime dans le meme commit et l'index bascule sur le .json — sinon deux
+    fichiers coexisteraient et le plus ancien pourrait etre servi.
+    """
+    if not is_developer_request():
+        abort(404)
+    payload = request.get_json(silent=True) or {}
+    diagram = payload.get("json")
+    requested_path = payload.get("file_path") or ""
+    message = " ".join(str(payload.get("message") or "").split())[:200]
+    if not isinstance(diagram, dict) or not requested_path:
+        abort(400)
+    root = os.environ.get("MFAData")
+    if not root:
+        return templates_save_error("MFAData n'est pas configure sur ce serveur.")
+    normalized = posixpath.normpath(str(requested_path).replace("\\", "/"))
+    # Cible = le JSON en clair ; le .gz eventuel du meme modele part au meme commit.
+    json_rel = mfadata_declared_json(normalized)
+    if json_rel is None:
+        abort(404)
+    gz_rel = json_rel + ".gz"
+    json_abs = safe_join(root, json_rel)
+    gz_abs = safe_join(root, gz_rel)
+    if json_abs is None or gz_abs is None:
+        abort(404)
+    if not (os.path.isfile(json_abs) or os.path.isfile(gz_abs)):
+        abort(404)
+
+    # Ecriture atomique : un fichier temporaire dans le meme dossier, puis rename.
+    # Une ecriture interrompue ne peut pas laisser une etude publiee tronquee.
+    try:
+        target_dir = os.path.dirname(json_abs)
+        handle, tmp_path = tempfile.mkstemp(dir=target_dir, suffix=".json.tmp")
+        with os.fdopen(handle, "w", encoding="utf-8") as file_json:
+            json.dump(diagram, file_json, ensure_ascii=False, indent=1)
+            file_json.write("\n")
+        os.replace(tmp_path, json_abs)
+    except OSError as error:
+        return templates_save_error("Ecriture impossible : %s" % error)
+
+    committed_paths = [json_rel]
+    if os.path.isfile(gz_abs):
+        try:
+            os.remove(gz_abs)
+            committed_paths.append(gz_rel)
+        except OSError as error:
+            return templates_save_error("Suppression du .gz impossible : %s" % error)
+
+    # L'index doit decrire la realite du disque : les outils qui le lisent
+    # (vignettes, publication du site statique) ouvrent file_path tel quel.
+    if json_rel != normalized:
+        data_index = templates_index_load("mfadata") or {}
+        index_changed = False
+        for template in (data_index.get("templates") or {}).values():
+            if (template.get("file_path") or "").replace("\\", "/") == normalized:
+                template["file_path"] = json_rel
+                index_changed = True
+        if index_changed:
+            index_path = templates_index_path("mfadata")
+            try:
+                with open(index_path, "w", encoding="utf-8") as file_index:
+                    json.dump(data_index, file_index, ensure_ascii=False, indent=2)
+                    file_index.write("\n")
+                committed_paths.append("index.json")
+            except OSError as error:
+                return templates_save_error("Mise a jour de l'index impossible : %s" % error)
+
+    if not os.path.exists(os.path.join(root, ".git")):
+        return templates_save_error(
+            "Fichier enregistre, mais MFAData n'est pas un depot git sur ce serveur.",
+            saved=True,
+        )
+    email = developer_user_email() or "dev@terriflux.com"
+    if not message:
+        message = "sankeytheque: mise a jour de %s" % posixpath.basename(json_rel)
+    code, output = mfadata_git(root, ["add", "-A", "--"] + committed_paths)
+    if code != 0:
+        return templates_save_error("git add : %s" % output, saved=True)
+    code, output = mfadata_git(
+        root,
+        [
+            "-c", "user.name=OpenSankey",
+            "-c", "user.email=%s" % email,
+            "commit",
+            "-m", message,
+            "-m", "Enregistre depuis l'application par %s." % email,
+            "--",
+        ] + committed_paths,
+    )
+    if code != 0:
+        # `git commit` sort en 1 quand rien n'a change : ce n'est pas une erreur.
+        if "nothing to commit" in output or "rien a valider" in output:
+            return Response(
+                response=json.dumps({
+                    "ok": True, "saved": True, "committed": False, "pushed": False,
+                    "path": json_rel,
+                    "detail": "Aucune modification par rapport a la version enregistree.",
+                }),
+                status=200,
+                mimetype="application/json",
+            )
+        return templates_save_error("git commit : %s" % output, saved=True)
+    _, commit = mfadata_git(root, ["rev-parse", "--short", "HEAD"])
+    code, output = mfadata_git(root, ["push"])
+    return Response(
+        response=json.dumps({
+            "ok": True,
+            "saved": True,
+            "committed": True,
+            "pushed": code == 0,
+            "path": json_rel,
+            "commit": commit,
+            # Un push refuse (depot en retard, identifiants absents) laisse le
+            # commit en local : on le dit franchement plutot que de tenter un
+            # rebase automatique dans une copie de travail pleine de modifications.
+            "detail": "" if code == 0 else "Commit local cree, push refuse : %s" % output,
+        }),
+        status=200,
+        mimetype="application/json",
+    )
+
+
+def templates_save_error(detail, saved=False):
+    """Reponse d'erreur de /menus/templates_save, avec l'etat reellement atteint."""
+    return Response(
+        response=json.dumps({"ok": False, "saved": saved, "detail": detail}),
+        status=200,
+        mimetype="application/json",
+    )
 
 
 @opensankey.route("/menus/examples", methods=["POST"])

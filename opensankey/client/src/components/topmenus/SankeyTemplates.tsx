@@ -127,12 +127,26 @@ export type Type_TemplateGroups = { [id: string]: Type_TemplateGroupInfos; };
 
 export declare const window: Window & typeof globalThis
 
+/**
+ * Origine du chargement d'un modèle, transmise au serveur pour le journal d'usage
+ * (cf. server/usage_events.py) : `user` = geste délibéré (clic sur une vignette,
+ * boutons précédent/suivant), `slideshow` = avance automatique du player. Les deux
+ * sont comptées, mais séparément — sans quoi une galerie laissée en lecture noie
+ * les imports réels sous des centaines de chargements.
+ */
+export type Type_TemplateOrigin = 'user' | 'slideshow'
+
 /** URL de service d'un fichier de galerie (vignette, modèle binaire...). */
-const assetUrl = (path: string, source: Type_TemplateSource) => {
+const assetUrl = (
+  path: string,
+  source: Type_TemplateSource,
+  origin: Type_TemplateOrigin = 'user'
+) => {
   const url = window.location.origin + '/opensankey/menus/templates_asset/' + path
-  if (source === 'mfadata') return url + '?source=mfadata'
-  if (source === 'esankey-local') return url + '?source=esankey-local'
-  return url
+  const params: string[] = []
+  if (source === 'mfadata' || source === 'esankey-local') params.push('source=' + source)
+  if (origin === 'slideshow') params.push('origin=slideshow')
+  return params.length > 0 ? url + '?' + params.join('&') : url
 }
 
 /**
@@ -141,10 +155,11 @@ const assetUrl = (path: string, source: Type_TemplateSource) => {
  */
 const loadStanTemplate = (
   new_data: Class_ApplicationData,
-  file_path: string
+  file_path: string,
+  origin: Type_TemplateOrigin
 ) => {
   const root = window.location.origin
-  fetch(assetUrl(file_path, 'sankeydata'))
+  fetch(assetUrl(file_path, 'sankeydata', origin))
     .then(response => response.blob())
     .then(blob => {
       const form_data = new FormData()
@@ -172,9 +187,10 @@ const loadStanTemplate = (
 const loadEsankeyTemplate = (
   new_data: Class_ApplicationData,
   file_path: string,
-  source: Type_TemplateSource = 'sankeydata'
+  source: Type_TemplateSource = 'sankeydata',
+  origin: Type_TemplateOrigin = 'user'
 ) => {
-  fetch(assetUrl(file_path, source))
+  fetch(assetUrl(file_path, source, origin))
     .then(response => response.arrayBuffer())
     .then(buffer => applyEsankeyFile(buffer, new_data))
     .catch((error) => {
@@ -194,17 +210,24 @@ const loadEsankeyTemplate = (
 const loadJsonTemplate = (
   new_data: Class_ApplicationData,
   file_path: string,
-  source: Type_TemplateSource
+  source: Type_TemplateSource,
+  origin: Type_TemplateOrigin,
+  title?: string
 ) => {
   new_data.sendWaitingToast(
     async () => {
-      const response = await fetch(assetUrl(file_path, source))
+      const response = await fetch(assetUrl(file_path, source, origin))
       if (!response.ok) {
         throw new Error('chargement: ' + response.status + ' ' + response.statusText)
       }
       const buffer = await response.arrayBuffer()
       const decompressed = await decompressGzipDataFixed(buffer)
       new_data.fromJSON(JSON.parse(decompressed) as Type_JSON, {})
+      // Provenance retenue APRÈS fromJSON, qui l'efface (reset). Elle rend le
+      // réenregistrement en place possible pour un développeur, cf. MFADataSaveModal.
+      if (source === 'mfadata') {
+        new_data.sankeytheque_origin = { file_path, title: title ?? file_path }
+      }
     },
     {
       success: { title: new_data.t('toast.load_json.success.title') },
@@ -227,28 +250,30 @@ const loadJsonTemplate = (
 export const loadTemplate = (
   new_data: Class_ApplicationData,
   file_path: string,
-  source: Type_TemplateSource = 'sankeydata'
+  source: Type_TemplateSource = 'sankeydata',
+  origin: Type_TemplateOrigin = 'user',
+  title?: string
 ) => {
   if (source === 'sankeydata' && file_path.endsWith('.txt')) {
     // Modèle SankeyMATIC natif : parsé côté front (pas de converter JSON).
-    loadSankeymaticTemplate(file_path, new_data)
+    loadSankeymaticTemplate(file_path, new_data, origin === 'slideshow')
     return
   }
   if (source === 'sankeydata' && /\.(smfa|zmfa)$/i.test(file_path)) {
-    loadStanTemplate(new_data, file_path)
+    loadStanTemplate(new_data, file_path, origin)
     return
   }
   // e!Sankey (.sankey) : depuis les modèles SankeyData ou la galerie locale de
   // dev (os#1281). Le loader passe la source à assetUrl pour cibler la bonne racine.
   if ((source === 'sankeydata' || source === 'esankey-local') && file_path.endsWith('.sankey')) {
-    loadEsankeyTemplate(new_data, file_path, source)
+    loadEsankeyTemplate(new_data, file_path, source, origin)
     return
   }
   // Un .json / .json.gz s'ouvre directement, sans dialogue : le serveur ne
   // convertit rien. Un .xlsx doit passer par le parser (dialogue excel), dont la
   // conversion tourne vraiment dans un thread — le converter garde tout son sens.
   if (!/\.xlsx$/i.test(file_path)) {
-    loadJsonTemplate(new_data, file_path, source)
+    loadJsonTemplate(new_data, file_path, source, origin, title)
     return
   }
   // Mapping inchangé pour le .xlsx : côté sankeydata, c'est bien load_example_json
@@ -614,7 +639,10 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
     const id = ordered_all[idx]
     play_index_ref.current = idx
     setCurrentId(id)
-    loadTemplate(new_data, templateFilePath(new_data, templates[id]), templates[id].source)
+    loadTemplate(
+      new_data, templateFilePath(new_data, templates[id]), templates[id].source, 'user',
+      templateTitle(new_data, id, templates[id])
+    )
   }
 
   // Lecture automatique : un intervalle avance d'un cran à chaque tick. Snapshot de
@@ -630,7 +658,12 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
       const id = flat[idx]
       play_index_ref.current = idx
       setCurrentId(id)
-      loadTemplate(new_data, templateFilePath(new_data, templates[id]), templates[id].source)
+      // `slideshow` : c'est le player qui avance, pas l'utilisateur qui choisit
+      // — le journal d'usage compte ces chargements à part (cf. assetUrl).
+      loadTemplate(
+        new_data, templateFilePath(new_data, templates[id]), templates[id].source, 'slideshow',
+        templateTitle(new_data, id, templates[id])
+      )
     }
     show(play_index_ref.current)
     const timer = window.setInterval(() => show(play_index_ref.current + 1), 3500)
@@ -726,7 +759,7 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
     const openTemplate = (file_path: string) => {
       play_index_ref.current = ordered_all.indexOf(id)
       setCurrentId(id)
-      loadTemplate(new_data, file_path, template.source)
+      loadTemplate(new_data, file_path, template.source, 'user', templateTitle(new_data, id, template))
       // Épinglée ou en lecture, la galerie survit au chargement : on enchaîne.
       if (!pinned && !playing) setForcedOpen(false)
     }
