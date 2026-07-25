@@ -14,6 +14,9 @@ export const resources_template = {
         pause: 'Pause the slideshow',
         prev: 'Previous model',
         next: 'Next model',
+        group_validated: 'Validated study (published on the website)',
+        group_readme: 'Show / hide the study description',
+        group_readme_error: 'Description unavailable',
         fr: 'Diagram template in french',
         en: 'Diagram template in english',
         categories: {
@@ -49,6 +52,9 @@ export const resources_template = {
         pause: 'Mettre le diaporama en pause',
         prev: 'Modèle précédent',
         next: 'Modèle suivant',
+        group_validated: 'Étude validée (publiée sur le site)',
+        group_readme: 'Afficher / masquer la description de l\'étude',
+        group_readme_error: 'Description indisponible',
         fr: 'Modèle de diagramme en français',
         en: 'Modèle de diagramme en anglais',
         categories: {
@@ -84,6 +90,9 @@ export const resources_template = {
         pause: 'Pausar la presentación',
         prev: 'Modelo anterior',
         next: 'Modelo siguiente',
+        group_validated: 'Estudio validado (publicado en el sitio web)',
+        group_readme: 'Mostrar / ocultar la descripción del estudio',
+        group_readme_error: 'Descripción no disponible',
         fr: 'Plantilla de diagrama en francés',
         en: 'Plantilla de diagrama en inglés',
         categories: {
@@ -119,6 +128,9 @@ export const resources_template = {
         pause: 'Diashow pausieren',
         prev: 'Vorheriges Modell',
         next: 'Nächstes Modell',
+        group_validated: 'Validierte Studie (auf der Website veröffentlicht)',
+        group_readme: 'Studienbeschreibung ein-/ausblenden',
+        group_readme_error: 'Beschreibung nicht verfügbar',
         fr: 'Diagrammvorlage auf Französisch',
         en: 'Diagrammvorlage auf Englisch',
         categories: {
@@ -154,6 +166,9 @@ export const resources_template = {
         pause: 'Metti in pausa la presentazione',
         prev: 'Modello precedente',
         next: 'Modello successivo',
+        group_validated: 'Studio validato (pubblicato sul sito)',
+        group_readme: 'Mostra / nascondi la descrizione dello studio',
+        group_readme_error: 'Descrizione non disponibile',
         fr: 'Modello di diagramma in francese',
         en: 'Modello di diagramma in inglese',
         categories: {

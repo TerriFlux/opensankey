@@ -32,7 +32,11 @@ import {
   Image,
   Text
 } from '@chakra-ui/react'
-import { FaThumbtack, FaPlay, FaPause, FaStepBackward, FaStepForward, FaCaretDown, FaCaretRight } from 'react-icons/fa'
+import {
+  FaThumbtack, FaPlay, FaPause, FaStepBackward, FaStepForward,
+  FaCaretDown, FaCaretRight, FaInfoCircle, FaCheckCircle
+} from 'react-icons/fa'
+import ReactMarkdown from 'react-markdown'
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Type_JSON } from '../../types/Utils'
@@ -102,9 +106,19 @@ export type Type_TemplatesIndexes = { [category: string]: string[]; };
  * Dossier d'étude déclaré par l'index d'une galerie (`groups` top-level, posé
  * par la sankeythèque MFAData) : porte le nom affiché, localisable. L'ordre des
  * sections suit l'ordre des modèles dans l'index, pas celui du dictionnaire.
+ *
+ * Les autres champs reprennent ce que la publication (GitLab Pages) lit déjà
+ * dans le dossier de l'étude, via scripts/generate_sankeytheque_index.py :
+ * `abstract` est le chapô du README (extrait à la génération, donc affichable
+ * sans requête), `readme` le chemin du README complet (chargé à la demande),
+ * `img_path` son image_front et `validated` la présence d'un marqueur .stamped.
  */
 export type Type_TemplateGroupInfos = {
   'title'?: { [lang: string]: string };
+  'abstract'?: { [lang: string]: string };
+  'readme'?: { [lang: string]: string };
+  'img_path'?: string;
+  'validated'?: boolean;
 };
 export type Type_TemplateGroups = { [id: string]: Type_TemplateGroupInfos; };
 
@@ -385,6 +399,75 @@ const TemplateThumbnail = ({ title, img_path, max_height, className, source }:{
 }
 
 /**
+ * README de présentation d'un dossier d'étude, chargé À LA DEMANDE (le chapô,
+ * lui, vient de l'index et s'affiche sans requête).
+ *
+ * Les images du README ne sont volontairement PAS rendues : leurs chemins sont
+ * relatifs au dépôt MFAData et ne sont pas déclarés dans l'index, donc pas
+ * servis (la liste blanche protège le contenu non publié). Le site publié, lui,
+ * les réécrit à la génération — c'est le rendu de référence, vers lequel les
+ * liens du README pointent en s'ouvrant dans un nouvel onglet.
+ */
+const GroupReadme = ({ path, source, error_label }:{
+  path: string
+  source: Type_TemplateSource
+  error_label: string
+}) => {
+  const [text, setText] = useState<string | null>(null)
+  const [failed, setFailed] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    setText(null)
+    setFailed(false)
+    fetch(assetUrl(path, source))
+      .then(response => {
+        if (!response.ok) throw new Error(String(response.status))
+        return response.text()
+      })
+      .then(content => { if (!cancelled) setText(content) })
+      .catch(() => { if (!cancelled) setFailed(true) })
+    return () => { cancelled = true }
+  }, [path, source])
+
+  if (failed)
+    return <Text fontSize='xs' color='gray.400' margin='0.3rem 0'>{error_label}</Text>
+  if (text === null)
+    return <Text fontSize='xs' color='gray.400' margin='0.3rem 0'>…</Text>
+  return <Box
+    fontSize='xs'
+    color='gray.600'
+    lineHeight='1.45'
+    maxHeight='16rem'
+    overflowY='auto'
+    padding='0.4rem 0.5rem'
+    background='#f8faf9'
+    border='1px solid #eef2f0'
+    borderRadius='6px'
+    // Le README est écrit pour une page pleine largeur : on ramène les titres à
+    // l'échelle du panneau et on borne les blocs qui déborderaient.
+    sx={{
+      '& h1, & h2, & h3, & h4': { fontSize: 'xs', fontWeight: '700', margin: '0.5rem 0 0.2rem 0' },
+      '& h1:first-of-type': { marginTop: '0' },
+      '& p, & ul, & ol': { margin: '0 0 0.4rem 0' },
+      '& ul, & ol': { paddingLeft: '1rem' },
+      '& a': { color: '#55897A', textDecoration: 'underline' },
+      '& code': { fontSize: '0.9em' },
+      '& pre, & table': { overflowX: 'auto', maxWidth: '100%' },
+      '& hr': { margin: '0.4rem 0', borderColor: '#e6ebe9' }
+    }}
+  >
+    <ReactMarkdown
+      components={{
+        img: () => null,
+        a: ({ href, children }) =>
+          <a href={href} target='_blank' rel='noopener noreferrer'>{children}</a>
+      }}
+    >{text}</ReactMarkdown>
+  </Box>
+}
+
+/**
  * Fichier à charger pour un modèle : la variante dans la langue de l'application
  * quand elle existe, sinon la variante par défaut (file_path).
  */
@@ -463,6 +546,8 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
   // Dossiers d'étude repliés. `null` = état par défaut, calculé au rendu (tous
   // repliés sauf le premier de l'onglet) ; un Set dès la première interaction.
   const [collapsed_groups, setCollapsedGroups] = useState<Set<string> | null>(null)
+  // Dossier dont le README complet est déployé (un seul à la fois).
+  const [open_readme, setOpenReadme] = useState<string | null>(null)
 
   // Ouverture depuis le menu / le splash screen : le panneau remplace l'ancienne modale.
   new_data.menu_configuration.dict_setter_show_dialog
@@ -525,14 +610,21 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
     setCollapsedGroups(next)
   }
 
-  /** Nom affiché d'un dossier d'étude, localisé, avec repli sur son id. */
-  const groupTitle = (gid: string) => {
-    const infos = groups[gid]
-    return infos?.title?.[new_data.i18n.language]
-      ?? infos?.title?.['en']
-      ?? infos?.title?.['fr']
-      ?? gid.split('|').slice(1).join('|')
+  /**
+   * Valeur d'un champ multilingue d'un dossier (nom affiché, chapô, chemin du
+   * README) dans la langue de l'application, avec repli sur en, fr, puis la
+   * première déclarée.
+   */
+  const groupLocalized = (gid: string, field: 'title' | 'abstract' | 'readme') => {
+    const values = groups[gid]?.[field]
+    if (!values) return undefined
+    return values[new_data.i18n.language]
+      ?? values['en'] ?? values['fr'] ?? Object.values(values)[0]
   }
+
+  /** Nom affiché d'un dossier d'étude, localisé, avec repli sur son id. */
+  const groupTitle = (gid: string) =>
+    groupLocalized(gid, 'title') ?? gid.split('|').slice(1).join('|')
 
   // Charge le modèle à la position `i` (bouclage) et le marque comme courant.
   const showTemplateAt = (i: number) => {
@@ -627,7 +719,8 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
 
   // Habillage de l'onglet courant : la sankeythèque garde son titre et son
   // invite ; l'onglet e!Sankey rappelle la nature du corpus local quand la
-  // galerie de dev est active (hors dev, il ne contient que les modèles publiés).
+  // galerie réservée aux devs est active (sans elle, il ne contient que les
+  // modèles publiés).
   const is_theque_tab = current_tab === 'sankeytheque'
   const is_esankey_dev_tab = source_tab['esankey-local'] === current_tab
 
@@ -752,31 +845,83 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
       if (group === null)
         return <Box key={'flat_' + i} marginTop='0.4rem'>{renderGrid(section_ids)}</Box>
       const is_collapsed = collapsed.has(group)
+      const abstract = groupLocalized(group, 'abstract')
+      const readme = groupLocalized(group, 'readme')
+      const readme_open = open_readme === group
+      const source = templates[section_ids[0]]?.source ?? 'sankeydata'
       return <Box key={group} marginTop='0.35rem'>
         <Box
-          as='button'
-          width='100%'
           display='flex'
           alignItems='center'
           gap='0.35rem'
           padding='0.3rem 0.2rem'
           borderRadius='6px'
-          textAlign='left'
           color='gray.600'
           _hover={{ background: '#f2f5f4', color: 'gray.800' }}
           transition='background .1s, color .1s'
-          onClick={() => toggleGroup(group)}
         >
-          <Box as='span' fontSize='0.7rem' color={ACCENT} flex='none'>
-            {is_collapsed ? <FaCaretRight /> : <FaCaretDown />}
+          <Box
+            as='button'
+            display='flex'
+            alignItems='center'
+            gap='0.35rem'
+            flex='1'
+            minWidth='0'
+            textAlign='left'
+            color='inherit'
+            onClick={() => toggleGroup(group)}
+          >
+            <Box as='span' fontSize='0.7rem' color={ACCENT} flex='none'>
+              {is_collapsed ? <FaCaretRight /> : <FaCaretDown />}
+            </Box>
+            <Text fontSize='xs' fontWeight='600' margin='0' noOfLines={1} flex='1'>
+              {groupTitle(group)}
+            </Text>
           </Box>
-          <Text fontSize='xs' fontWeight='600' margin='0' noOfLines={1} flex='1'>
-            {groupTitle(group)}
-          </Text>
+          {/* Étude validée : marqueur .stamped, le même que celui qui autorise la
+              publication du dossier sur le site. */}
+          {groups[group]?.validated && <Box
+            as='span'
+            flex='none'
+            fontSize='0.7rem'
+            color={ACCENT}
+            title={new_data.t('templates.group_validated')}
+          >
+            <FaCheckCircle />
+          </Box>}
+          {readme && <Box
+            as='button'
+            flex='none'
+            fontSize='0.72rem'
+            color={readme_open ? ACCENT : 'gray.400'}
+            _hover={{ color: ACCENT }}
+            title={new_data.t('templates.group_readme')}
+            onClick={() => setOpenReadme(readme_open ? null : group)}
+          >
+            <FaInfoCircle />
+          </Box>}
           <Text fontSize='0.65rem' color='gray.400' margin='0' flex='none'>
             {section_ids.length}
           </Text>
         </Box>
+        {/* Chapô : extrait du README à la génération de l'index, donc affichable
+            sans requête. Le README entier ne part en réseau qu'au clic sur (i). */}
+        {abstract && !readme_open && <Text
+          fontSize='0.68rem'
+          color='gray.500'
+          lineHeight='1.35'
+          margin='0 0 0.3rem 1.05rem'
+          noOfLines={is_collapsed ? 2 : 4}
+        >
+          {abstract}
+        </Text>}
+        {readme_open && readme && <Box marginBottom='0.4rem'>
+          <GroupReadme
+            path={readme}
+            source={source}
+            error_label={new_data.t('templates.group_readme_error')}
+          />
+        </Box>}
         {!is_collapsed && <Box marginTop='0.25rem' marginBottom='0.4rem'>
           {renderGrid(section_ids)}
         </Box>}

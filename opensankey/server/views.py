@@ -1589,11 +1589,15 @@ def esankey_local_index():
 
 def templates_declared_assets(source):
     """
-    Ensemble des chemins declares par l'index d'une galerie (file_path + img_path).
+    Ensemble des chemins declares par l'index d'une galerie.
+
+    Couvre les modeles (file_path + img_path) ET les dossiers d'etude declares
+    par `groups` : README de presentation (un par langue) et image de couverture.
 
     Sert de liste blanche a /menus/templates_asset. Indispensable pour 'mfadata' :
-    la racine MFAData contient aussi des dossiers non publies, une simple regle
-    de prefixe ne suffirait pas a les proteger.
+    la racine MFAData contient aussi des dossiers non publies (donnees clients,
+    archives, materiaux de travail), une simple regle de prefixe ne suffirait pas
+    a les proteger. Seul ce qui est explicitement indexe est servi.
     """
     data_index = templates_index_load(source)
     if not data_index:
@@ -1604,6 +1608,13 @@ def templates_declared_assets(source):
             value = template.get(key)
             if value:
                 declared.add(value.replace("\\", "/"))
+    for group in (data_index.get("groups") or {}).values():
+        image = group.get("img_path")
+        if image:
+            declared.add(image.replace("\\", "/"))
+        for readme in (group.get("readme") or {}).values():
+            if readme:
+                declared.add(readme.replace("\\", "/"))
     return declared
 
 
