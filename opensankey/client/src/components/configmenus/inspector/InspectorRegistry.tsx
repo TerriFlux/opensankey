@@ -15,12 +15,11 @@ import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import type { Type_InspectorTarget } from './InspectorResolver'
 
 /**
- * Id de l'onglet « Valeur » (cf. registerBaseSections). Il vit ici, dans le module du registre,
- * parce que la visite guidée (#1255) doit le désigner pour demander son ouverture : le champ de
- * valeur du flux n'est dans le DOM que si cet onglet est actif. Le modèle ne peut pas importer
- * registerBaseSections, qui tire tout l'arbre de composants derrière lui.
+ * Id de l'onglet « Valeur » (cf. registerBaseSections). Réexporté ici pour les imports existants,
+ * mais il est DÉCLARÉ dans `types/inspectorTabIds` : c'est un contrat partagé avec le modèle (la
+ * visite guidée #1255 doit désigner cet onglet), et #1331 interdit au viewer d'importer l'éditeur.
  */
-export const INSPECTOR_TAB_VALUE_ID = 'os.tab.valeur'
+export { INSPECTOR_TAB_VALUE_ID } from '../../../types/inspectorTabIds'
 
 // Couleur de thème de la section, réutilise les 3 familles historiques
 // (data/style/presentation) pour garder la continuité visuelle.

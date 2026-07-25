@@ -9,7 +9,7 @@
 
 import { Class_GuidedTour } from './GuidedTour'
 import type { Class_ApplicationData } from './ApplicationData'
-import { INSPECTOR_TAB_VALUE_ID } from '../components/configmenus/inspector/InspectorRegistry'
+import { INSPECTOR_TAB_VALUE_ID } from './inspectorTabIds'
 
 type FakeNode = { id: string }
 type FakeLink = { id: string, valueCurrent: number | null, source: FakeNode, target: FakeNode }

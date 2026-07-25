@@ -31,7 +31,7 @@ import { StepType } from '@reactour/tour'
 
 import type { Class_ApplicationData } from './ApplicationData'
 import type { Class_LinkElement } from '../Elements/Link'
-import { INSPECTOR_TAB_VALUE_ID } from '../components/configmenus/inspector/InspectorRegistry'
+import { INSPECTOR_TAB_VALUE_ID } from './inspectorTabIds'
 
 /**
  * Contrôle du tour, injecté par un composant monté SOUS le `TourProvider` (cf. `TourBridge` dans

@@ -35,7 +35,9 @@ import { Class_DataTagGroup } from './TagGroup'
 import { Class_DataTag } from './Tag'
 import { Class_EventBus, MAIN_ZONE_TOPIC, SELECTION_TOPIC } from './EventBus'
 import { Class_PanelManager, Type_PanelMode } from './PanelManager'
-import {
+// `ConverterConfig` est une interface : `import type` suffit, et l'arête vers la zone d'édition
+// disparaît à la compilation (#1331 — le viewer ne doit rien importer de l'éditeur).
+import type {
   ConverterConfig
 } from '../components/dialogs/PersistenceProcessDialogConfigs'
 import type { Type_TemplateSource } from '../components/topmenus/SankeyTemplates'
