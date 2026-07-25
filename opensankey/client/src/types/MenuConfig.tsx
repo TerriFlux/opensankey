@@ -34,6 +34,7 @@ import {
 import { Class_DataTagGroup } from './TagGroup'
 import { Class_DataTag } from './Tag'
 import { Class_EventBus, MAIN_ZONE_TOPIC, SELECTION_TOPIC } from './EventBus'
+import { Class_PanelManager, Type_PanelMode } from './PanelManager'
 import {
   ConverterConfig
 } from '../components/dialogs/PersistenceProcessDialogConfigs'
@@ -239,9 +240,11 @@ export class Class_MenuConfig {
   // repartirait toujours sur 'grid'. Permet aussi à un import SankeyMATIC d'ouvrir directement
   // l'éditeur texte. État TRANSITOIRE : volontairement absent de mainZoneStateToJSON/FromJSON.
   protected _main_zone_spreadsheet_mode: Type_SheetMode = 'grid'
-  // Colonne d'outils rétractable à droite (éditeur uniquement). `tools_column_enabled` est posé par
+  // Colonne d'outils à droite (éditeur uniquement). `tools_column_enabled` est posé par
   // SankeyMenu (= !is_static) : en mode publish/statique la colonne n'existe pas et ne réserve rien.
-  // `_tools_column_open` (défaut ouvert) pilote l'affichage ET la réserve de largeur du diagramme.
+  // OS#300 Lot 2 — la barre d'outils est désormais TOUJOURS visible : `_tools_column_open`
+  // (conservé pour compat) ne pilote plus l'affichage ni la réserve. L'ancien bouton
+  // « afficher/masquer la barre d'outils » est requalifié en bascule de barre latérale (Ctrl+B).
   public tools_column_enabled: boolean = false
   // Disponibilité du panneau de filtres (posée par ToolbarFilter) : conditionne le bouton filtre
   // dans la colonne d'outils.
@@ -252,9 +255,10 @@ export class Class_MenuConfig {
   protected _notifyMainZone() { this._event_bus.notify(MAIN_ZONE_TOPIC) }
   public get tools_column_open() { return this._tools_column_open }
   public set tools_column_open(v: boolean) { this._tools_column_open = v; this._notifyMainZone() }
-  /** Largeur (px) réservée à droite par la colonne d'outils (0 si absente/fermée). */
+  /** Largeur (px) réservée à droite par la colonne d'outils (0 si publish/absente).
+   *  Toujours réservée en éditeur (barre d'outils permanente). */
   public getToolsColumnWidthPx(): number {
-    return (this.tools_column_enabled && this._tools_column_open) ? TOOLS_COLUMN_WIDTH_PX : 0
+    return this.tools_column_enabled ? TOOLS_COLUMN_WIDTH_PX : 0
   }
 
   // #1283 — Éditeur de groupe de tags injecté par OSP (l'édition vit dans OSP,
@@ -264,35 +268,57 @@ export class Class_MenuConfig {
   public render_tag_group_editor:
     ((element_tag_name_prop: string, group_id: string) => JSX.Element | null) | null = null
 
-  // #1243 — Panneau de config ÉPINGLÉ (mode « édition intense ») : au lieu de
-  // flotter en overlay au-dessus du dessin, le panneau se docke à droite comme
-  // le tableur et RÉSERVE sa largeur — la zone de dessin se recadre à gauche.
-  // État TRANSITOIRE (non sérialisé) ; le mode survol reste le défaut.
-  protected _config_panel_pinned: boolean = false
-  public get config_panel_pinned() { return this._config_panel_pinned }
-  public set config_panel_pinned(v: boolean) { this._config_panel_pinned = v; this._notifyMainZone() }
-  /** Largeur (px) réservée à droite par le panneau de config épinglé (0 si
-   *  non épinglé ou fermé). Même calcul de largeur que le drawer. */
-  public getConfigPanelPinnedReservedPx(): number {
-    if (!this._config_panel_pinned) return 0
-    if (!this.ref_menu_opened.current[0]) return 0
-    return Math.max(window.innerWidth * MENU_CONFIG_WIDTH_PCT / 100, MENU_CONFIG_MIN_WIDTH_PX)
+  // OS#300 — Modèle central des « panneaux » (info-bulle / pop-up / barre
+  // latérale). Instancié dans le constructeur avec le bus de ce menu, de sorte
+  // que les coquilles PanelShell s'abonnent via `subscribe(PANELS_TOPIC, …)`.
+  public panels!: Class_PanelManager
+
+  // OS#300 — Le panneau de Configuration est désormais un « panneau » unifié
+  // (id 'config') piloté par `panels`. `config_panel_pinned` (lu par
+  // l'inspecteur, l'assemblage et le tableur) devient une VUE de son mode :
+  // ancré = barre latérale, dé-ancré = pop-up déplaçable. Le dernier contenant
+  // choisi est mémorisé pour rouvrir la config dans le même mode.
+  // Défaut = POP-UP (superposée, ne réserve PAS de largeur) : l'ouverture
+  // AUTOMATIQUE de la config (sélection de nœud/flux, stock, légende… cf.
+  // DrawingAreaInteractions) ne doit jamais recadrer le dessin — invariant
+  // historique. L'ancrage en barre latérale reste un choix délibéré (en-tête).
+  protected _config_last_container: Type_PanelMode = 'popup'
+  public get config_last_container(): Type_PanelMode { return this._config_last_container }
+  public get config_panel_pinned() { return this.panels.getMode('config') === 'sidebar' }
+  public set config_panel_pinned(v: boolean) {
+    this._config_last_container = v ? 'sidebar' : 'popup'
+    // Ne re-router que si la config est ouverte : sinon on ne fait que mémoriser
+    // le mode de réouverture (l'ouverture elle-même passe par setConfigOpen).
+    if (this.panels.isOpen('config')) this.panels.setMode('config', this._config_last_container)
   }
-  // #1258 — Tiroir de FILTRES épinglé : même principe que le panneau de config.
-  // Épinglé + ouvert, il RÉSERVE sa largeur (le dessin se recadre à gauche) au
-  // lieu de flotter au-dessus. État TRANSITOIRE (non sérialisé).
-  protected _filter_panel_pinned: boolean = false
-  public get filter_panel_pinned() { return this._filter_panel_pinned }
-  public set filter_panel_pinned(v: boolean) { this._filter_panel_pinned = v; this._notifyMainZone() }
-  // État/largeur publiés par la Toolbar (la largeur du tiroir varie selon
-  // l'onglet actif : filtres 270px, sélection/édition 420px).
+  /** Largeur (px) réservée à droite par la config quand elle est la barre
+   *  latérale (0 sinon). Conservé pour les consommateurs directs (MainZoneTabs,
+   *  galerie) ; la réserve GLOBALE passe par panels.getSidebarReservedPx(). */
+  public getConfigPanelPinnedReservedPx(): number {
+    return this.panels.sidebar_id === 'config' ? this.panels.getSidebarReservedPx() : 0
+  }
+  // OS#300 — Le tiroir de FILTRES est un « panneau » unifié (id 'filter') en
+  // ÉDITEUR : pop-up ou barre latérale partagée (270px), piloté par `panels`
+  // (comme la config). `filter_panel_pinned` devient une VUE de son mode ancré.
+  // Vaut en ÉDITEUR comme en PUBLISH (le filtre est au même endroit, à droite).
+  // Dernier contenant mémorisé pour la réouverture ; défaut = pop-up (comme la
+  // config), superposée sans recadrer le dessin.
+  protected _filter_last_container: Type_PanelMode = 'popup'
+  public get filter_last_container(): Type_PanelMode { return this._filter_last_container }
+  public get filter_panel_pinned() { return this.panels.getMode('filter') === 'sidebar' }
+  public set filter_panel_pinned(v: boolean) {
+    this._filter_last_container = v ? 'sidebar' : 'popup'
+    if (this.panels.isOpen('filter')) this.panels.setMode('filter', this._filter_last_container)
+  }
+  // Largeur publiée par la Toolbar (informative ; la réserve passe désormais par
+  // la largeur partagée de la barre latérale de `panels`).
   public filter_drawer_open: boolean = false
   public filter_drawer_width_px: number = 0
-  /** Largeur (px) réservée à droite par le tiroir de filtres épinglé (0 si
-   *  non épinglé ou fermé). */
+  /** Largeur (px) réservée à droite par le filtre quand il est la barre latérale
+   *  (0 sinon). Conservé pour les consommateurs directs (MainZoneTabs) ; la
+   *  réserve GLOBALE passe par panels.getSidebarReservedPx(). */
   public getFilterPanelPinnedReservedPx(): number {
-    if (!this._filter_panel_pinned || !this.filter_drawer_open) return 0
-    return this.filter_drawer_width_px
+    return this.panels.sidebar_id === 'filter' ? this.panels.getSidebarReservedPx() : 0
   }
 
   // Galerie de modèles ÉPINGLÉE : même principe que le panneau de config
@@ -313,10 +339,11 @@ export class Class_MenuConfig {
    *  colonne tableur/doc/unitaire (MainZoneTabs) et de la réserve du diagramme
    *  — même système de fenêtrage pour tous les panneaux dockés (#1243). */
   public getRightChromeReservedPx(): number {
+    // La barre latérale unifiée (config / filtre / recherche) est couverte par
+    // panels.getSidebarReservedPx() — ne PAS ré-additionner la réserve du filtre.
     return this.getToolsColumnWidthPx() +
-      this.getConfigPanelPinnedReservedPx() +
-      this.getTemplateGalleryPinnedReservedPx() +
-      this.getFilterPanelPinnedReservedPx()
+      this.panels.getSidebarReservedPx() +
+      this.getTemplateGalleryPinnedReservedPx()
   }
   public get main_zone_show_diagram() { return this._main_zone_show_diagram }
   public set main_zone_show_diagram(v: boolean) { this._main_zone_show_diagram = v; this._notifyMainZone() }
@@ -638,6 +665,9 @@ export class Class_MenuConfig {
   } }
 
   constructor() {
+    // OS#300 — modèle des panneaux, partageant le bus de ce menu (créé en
+    // initialiseur de champ, donc déjà disponible ici).
+    this.panels = new Class_PanelManager(this._event_bus)
     this._ref_to_drawer_sequence_data_tag_updater = { current: () => null }
     // Init menu component updater ------------------------------------------------------
     this._ref_rerender_submodules_menus = { current: () => null }
@@ -837,7 +867,13 @@ export class Class_MenuConfig {
     }
   }
 
-
+  // OS#300 Lot 5 — l'INFO-BULLE D'INSPECTEUR au survol a été RETIRÉE.
+  //
+  // Elle montrait des champs d'édition là où le survol d'un élément doit montrer
+  // le diagramme : c'est désormais la présentation composée qui s'y affiche, en
+  // édition comme en lecture. Sa machinerie (sélection temporaire de l'élément
+  // survolé, restauration de la sélection à la fermeture, épinglage à la 1re
+  // édition) n'avait plus d'appelant.
 
   // #1243 — La matrice est déposée : les ex-openConfigMenuElementsNodes/Links/
   // NodesLinks/Containers, qui ouvraient le panneau PUIS forçaient (après 200 ms)
@@ -1566,6 +1602,20 @@ export class Class_MenuConfig {
 
   public get ref_selected_style(): MutableRefObject<string> {
     return this._ref_selected_style
+  }
+
+  // AJUSTEMENT #5 — contenant dont l'auteur arrange la disposition dans le
+  // composeur. État d'ÉDITION (jamais enregistré : ce n'est pas une propriété du
+  // document, seulement l'onglet où l'auteur travaille en ce moment), tenu ici
+  // plutôt qu'en `useState` local pour survivre aux re-rendus de l'inspecteur —
+  // qui se remonte à chaque changement de sélection.
+  protected _presentation_composer_mode: Type_PanelMode = 'tooltip'
+  public get presentation_composer_mode(): Type_PanelMode {
+    return this._presentation_composer_mode
+  }
+  public set presentation_composer_mode(mode: Type_PanelMode) {
+    this._presentation_composer_mode = mode
+    this.updateInspector()
   }
 
 

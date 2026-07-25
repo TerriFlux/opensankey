@@ -38,7 +38,6 @@ import { Type_BaseElementPosition, link_data_label } from '../types/Utils'
 import { Class_ElementValueTree, Class_LinkValue } from './LinkValues'
 import { LinkDrawShape } from './LinkDrawShape'
 import { LinkControlPoints } from './LinkControlPoints'
-import { LinkTooltip } from './TooltipsLink'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeElement } from './Node'
 import type { Class_NodeDimension } from './NodeDimension'
@@ -49,6 +48,10 @@ import { Class_LinkAttribute } from './Element'
 import { LinkDrawNameLabel, LinkDrawValueLabel } from './DrawLabel'
 import { Class_ApplicationData } from '../types/ApplicationData'
 import { LinkStyle } from './ElementStyle'
+import {
+  openPresentationFor, canPresentTooltip, matchesPresentationTrigger,
+  schedulePresentationHover, schedulePresentationHoverClose
+} from '../components/panels/presentation/openPresentation'
 
 const side_order: { [_ in Type_Side]: number } = {
   'right': 0,
@@ -196,7 +199,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
   protected _link_draw_label: LinkDrawNameLabel
   protected _link_draw_value: LinkDrawValueLabel
   protected _link_draw_icon: LinkDrawNameLabel
-  public _link_tooltip: LinkTooltip
 
   private _source: Class_NodeElement
   private _target: Class_NodeElement
@@ -268,7 +270,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this._link_draw_label = new LinkDrawNameLabel(this, this._link_control_points, 'name_label')
     this._link_draw_value = new LinkDrawValueLabel(this, this._link_control_points)
     this._link_draw_icon = new LinkDrawNameLabel(this, this._link_control_points, 'icon')
-    this._link_tooltip = new LinkTooltip(this)
 
     // Values
     this._values = this.createValue(this)
@@ -1075,6 +1076,13 @@ export class Class_LinkElement extends Class_LinkAttribute {
   ) {
     const drawing_area = this.drawing_area
     if (!drawing_area.application_data.is_editable) {
+      // OS#305 Lot 3 — LECTEUR : le clic ouvre la présentation composée (rien
+      // ne s'ouvre si l'auteur n'a rien composé pour ce flux).
+      openPresentationFor(
+        drawing_area.application_data,
+        this as unknown as Parameters<typeof openPresentationFor>[1],
+        { x: event.clientX, y: event.clientY }
+      )
       drawing_area.purgeSelection()
       return
     }
@@ -1092,10 +1100,18 @@ export class Class_LinkElement extends Class_LinkAttribute {
         this.drawing_area.application_data.menu_configuration.ref_to_menu_config_updater.current()
         this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
       }
-      // Simple clic (sans modificateur) = sélection seule
+      // Simple clic (sans modificateur) = sélection + ouverture de l'inspecteur
       else {
         drawing_area.selectOnly(this)
         drawing_area.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
+        // Clic nu : ouvre la PRÉSENTATION du flux (pop-up juxtaposée, ou panneau
+        // latéral s'il est ouvert). Le panneau de configuration, outil d'auteur,
+        // ne s'ouvre plus qu'à la demande, par son bouton.
+        openPresentationFor(
+          drawing_area.application_data,
+          this as unknown as Parameters<typeof openPresentationFor>[1],
+          { x: event.clientX, y: event.clientY }
+        )
       }
     }
   }
@@ -1149,6 +1165,25 @@ export class Class_LinkElement extends Class_LinkAttribute {
       // Artificially enlarge link thickness if too thin
       this.d3_selection?.select('.link_path').attr('stroke-width', 15)
     }
+    // OS#305 — LECTEUR : survol satisfaisant le déclencheur du document ->
+    // présentation composée en info-bulle. Remplace le survol que fournissait le
+    // mixin d'info-bulle hérité, retiré avec son mécanisme.
+    // En ÉDITION AUSSI : survoler montre à l'auteur ce que verra son lecteur,
+    // par le chemin exact du lecteur — ce qui rend le bouton « Aperçu » inutile.
+    const app_data = this.drawing_area.application_data
+    if (event.buttons === 0
+      && matchesPresentationTrigger(this as unknown as Parameters<typeof canPresentTooltip>[0], event)
+      && canPresentTooltip(this as unknown as Parameters<typeof canPresentTooltip>[0])) {
+      const rect = (event.target as HTMLElement)?.getBoundingClientRect?.()
+      schedulePresentationHover(
+        app_data,
+        this as unknown as Parameters<typeof canPresentTooltip>[0],
+        {
+          x: event.clientX || (rect ? Math.round(rect.right) : 0),
+          y: event.clientY || (rect ? Math.round(rect.top) : 0)
+        }
+      )
+    }
   }
 
   /**
@@ -1172,13 +1207,9 @@ export class Class_LinkElement extends Class_LinkAttribute {
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     super.eventMouseOut(event)
-    // Utiliser la même logique de protection que pour les nœuds
-    // const activeTooltip = (window as any).activeTooltip
-    // if (!activeTooltip) {
-    //   // Pas de tooltip actif protégé, fermeture normale
-    //   d3.selectAll('.sankey-tooltip').remove()
-    //   this.d3_selection?.classed('tooltip_shown', false)
-    // }
+    // OS#305 — quitter le flux programme la fermeture de son info-bulle de
+    // présentation (annulée si le curseur y entre, cf. PanelShell).
+    schedulePresentationHoverClose(this.drawing_area.application_data)
 
     // reset link thickness
     if (this._artifical_enlargement) {

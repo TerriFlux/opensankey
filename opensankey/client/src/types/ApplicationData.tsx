@@ -42,7 +42,6 @@ import { getPublishOptions, PublishOptions } from './PublishOptions'
 import { Class_ApplicationHistory } from './ApplicationHistory'
 import { Class_IconLibrary } from '../css/IconLibrairie'
 import { Class_DrawingArea } from './DrawingArea'
-import { initializeTooltipSystem } from '../Elements/TooltipsConfig'
 import { compressJSONToGzip, decompressUploadedFileUniversal } from '../Persistence/UniversalJSONCompression'
 import { parseSankeymaticText } from '../Persistence/sankeymaticParser'
 import { loadEsankeyFile } from '../Persistence/esankeyParser'
@@ -78,6 +77,19 @@ export type MenuColorPickerProps = {
   functionOnBlur: (x: string) => void;
   isDisabled?: boolean,
   textDisabled?: string
+}
+
+/** Un diagramme proposé dans la pop-up de présentation d'un élément (bouton +
+ *  rendu). Fourni par OS+ via `Class_ApplicationData.presentation_diagrams_for`. */
+export type Type_PresentationDiagram = {
+  /** Id stable ('unit' | 'donut' | 'bar'). */
+  id: string
+  /** Libellé du bouton (déjà traduit). */
+  label: string
+  /** Icône du bouton (au-dessus du libellé, comme les onglets de config). */
+  icon?: React.ReactNode
+  /** Dessine le diagramme dans le conteneur DOM ; rend un nettoyage optionnel. */
+  render: (container: HTMLElement) => (() => void) | void
 }
 
 // FOREIGN OBJECT → SVG TEXT (rich) *****************************************************
@@ -382,6 +394,13 @@ export class Class_ApplicationData {
     height: number
   ) => boolean = undefined
 
+  /** Hook injecté par OS+ : DIAGRAMMES proposés pour un élément dans la pop-up de
+   * présentation (colonne de boutons Unit. / Couronne / Barres). Chacun sait se
+   * dessiner dans un conteneur DOM. Absent hors OS+ (pas de colonne de diagrammes). */
+  public presentation_diagrams_for?: (
+    element: Class_NodeElement | Class_LinkElement
+  ) => Type_PresentationDiagram[] = undefined
+
   protected _waiting_processes: { [id: string]: NodeJS.Timeout } = {}
   protected _waiting_time_for_processes: number = 50 // ms
 
@@ -629,7 +648,18 @@ export class Class_ApplicationData {
     // Initialiser le système de tooltip (idempotent ; appelé ici plutôt qu'au top-level
     // pour ne pas marquer le module comme side-effectful, ce qui casse l'analyse webpack
     // des named imports Chakra dans les consommateurs externes).
-    initializeTooltipSystem()
+    // OS#305 — le MÉCANISME d'info-bulle hérité (overlay propre, positionnement,
+    // barre d'onglets, gestionnaire d'événements) est RETIRÉ : il doublait les
+    // panneaux unifiés (#300). Son CONTENU est conservé et réutilisé comme blocs
+    // de présentation, et la composition PAR DÉFAUT le reproduit — un diagramme
+    // déjà produit affiche donc la même chose qu'avant, sans que son auteur ait
+    // rien à faire (cf. defaultCompositionFor).
+    // initializeTooltipSystem()  // <- retiré, cf. ci-dessus
+    //
+    // L'ancienne migration de l'option de publication `tooltip_on_hover` vers un
+    // déclencheur DOCUMENT a été retirée : le déclencheur est désormais un attribut
+    // de style PAR ÉLÉMENT (`tooltip_trigger`), il n'y a plus de réglage global à
+    // poser ici.
     // Options for application
     this.options = options
     // Deals with UI menu updates / each modifications
@@ -890,6 +920,8 @@ export class Class_ApplicationData {
     if (Object.keys(this._documentation_images).length > 0) json_object['documentation_images'] = this._documentation_images
     if (Object.keys(this._publish_settings).length > 0) json_object['publish_settings'] = this._publish_settings
     json_object['main_zone'] = this.menu_configuration.mainZoneStateToJSON()
+    // OS#300 Lot 4 — tailles + mode des panneaux (barre latérale / pop-ups).
+    json_object['panels'] = this.menu_configuration.panels.toJSON()
     return {
       ...json_object,
       ...DrawingAreaPersistence.toJSON(this.drawing_area, kwargs)
@@ -998,6 +1030,11 @@ export class Class_ApplicationData {
     // _fromJSON s'exécute avant, l'appel jetait et avortait tout le chargement (et donc
     // l'application du filtre de vue). Le `?.` saute proprement ce cas (cf. ligne ~608).
     if (mz && typeof mz === 'object') this.menu_configuration?.mainZoneStateFromJSON(mz as Type_JSON)
+    // OS#300 Lot 4 — restaure tailles + mode des panneaux (même garde défensive).
+    const panels_json = json_object['panels']
+    if (panels_json && typeof panels_json === 'object') {
+      this.menu_configuration?.panels.fromJSON(panels_json as Type_JSON)
+    }
   }
 
 
@@ -1541,11 +1578,15 @@ export class Class_ApplicationData {
     // autres raccourcis, il reste actif même hors zone de dessin (dans un input),
     // pour rester déclenchable quand le focus est ailleurs — comme un Ctrl+F natif.
     const evtKeyF = (evt.key === 'f') || (evt.key === 'F')
+    // OS#300 Lot 2 — Ctrl+B affiche/masque la barre latérale. Restreint à la zone
+    // de dessin (contrairement à Ctrl+F) pour ne pas capter le gras natif dans un input.
+    const evtKeyB = ((evt.key === 'b') || (evt.key === 'B')) && evtOnDrawingArea
     const evtCtrlA = evtCtrl && evtKeyA
     const evtCtrlS = evtCtrl && evtKeyS
     const evtCtrlShiftS = evtCtrlShift && evtKeyS
     const evtCtrlAltS = evtCtrlAlt && evtKeyS
     const evtCtrlF = evtCtrl && evtKeyF
+    const evtCtrlB = evtCtrl && evtKeyB
     const evtCtrlZ = evtCtrl && evtKeyZ
     const evtCtrlY = evtCtrl && evtKeyY
     const evtCtrlShiftZ = evtCtrlShift && evtKeyZ
@@ -1687,6 +1728,11 @@ export class Class_ApplicationData {
       evt.preventDefault()
       // Toggle the element search bar (registered by ElementSearchOverlay)
       app_ref.menu_configuration.ref_toggle_search.current()
+    }
+    // OS#300 Lot 2 — Afficher/masquer la barre latérale (Ctrl+B) --------------------
+    else if (evtCtrlB) {
+      evt.preventDefault()
+      app_ref.menu_configuration.panels.toggleSidebar()
     }
     // Undo
     else if (evtCtrlZ) {

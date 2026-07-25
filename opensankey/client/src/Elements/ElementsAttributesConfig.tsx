@@ -2207,8 +2207,52 @@ export const TOOLTIP_BLOCKS_CONFIG = {
       de: 'Für dieses Element ausgeblendete Tooltip-Blöcke',
       it: 'Blocchi del tooltip nascosti per questo elemento'
     }
-  } satisfies AttributeConfig<Type_TooltipHiddenBlocks | undefined>
+  } satisfies AttributeConfig<Type_TooltipHiddenBlocks | undefined>,
+  // Déclencheur de l'info-bulle : 'hover' | 'shift' | 'alt'. Attribut de STYLE
+  // (propre à la sélection ou au style édité, hérité par la cascade). `undefined`
+  // = déclencheur par défaut (MAJ + survol), résolu à la lecture.
+  tooltip_trigger: {
+    default: undefined as string | undefined,
+    type: (() => undefined) as (() => string | undefined),
+    category: 'tooltip' as const,
+    actions: undefined,
+    labels: {
+      en: 'Tooltip trigger', fr: 'Déclencheur de l\'info-bulle',
+      es: 'Disparador del tooltip', de: 'Tooltip-Auslöser', it: 'Attivatore del tooltip'
+    },
+    tooltips: {
+      en: 'How the reader shows the tooltip (hover / Shift / Alt)',
+      fr: 'Comment le lecteur fait apparaître l\'info-bulle (survol / MAJ / Alt)',
+      es: 'Cómo el lector muestra el tooltip (pasar / Mayús / Alt)',
+      de: 'Wie der Leser den Tooltip anzeigt (Hover / Umschalt / Alt)',
+      it: 'Come il lettore mostra il tooltip (passaggio / Maiusc / Alt)'
+    }
+  } satisfies AttributeConfig<string | undefined>,
+  // Délai d'apparition de l'info-bulle en ms. Attribut de STYLE. `undefined` = 0.
+  tooltip_delay_ms: {
+    default: undefined as number | undefined,
+    type: (() => undefined) as (() => number | undefined),
+    category: 'tooltip' as const,
+    actions: undefined,
+    labels: {
+      en: 'Tooltip delay (ms)', fr: 'Délai de l\'info-bulle (ms)',
+      es: 'Retardo del tooltip (ms)', de: 'Tooltip-Verzögerung (ms)', it: 'Ritardo del tooltip (ms)'
+    },
+    tooltips: {
+      en: 'Delay before the tooltip appears, in milliseconds',
+      fr: 'Délai avant l\'apparition de l\'info-bulle, en millisecondes',
+      es: 'Retardo antes de que aparezca el tooltip, en milisegundos',
+      de: 'Verzögerung, bevor der Tooltip erscheint, in Millisekunden',
+      it: 'Ritardo prima che il tooltip appaia, in millisecondi'
+    }
+  } satisfies AttributeConfig<number | undefined>
 } as const
+
+// OS#305 — la PRÉSENTATION COMPOSÉE PAR L'AUTEUR a été RETIRÉE (retour à un
+// patron imposé) : les attributs de style `presentation_blocks` et
+// `presentation_tabs` n'existent plus. Un document plus ancien qui les porte les
+// voit simplement ignorés. Ce qui régit la présentation subsiste ailleurs :
+// `tooltip_hidden_blocks` (blocs de l'info-bulle) et `analysis_descriptor` (OS+).
 
 export type LabelValues<T extends typeof BASE_LABEL_CONFIG> = {
   -readonly [K in keyof T]: ExtractConfigValue<T[K]>

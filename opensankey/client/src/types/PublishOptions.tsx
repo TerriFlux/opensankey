@@ -62,6 +62,9 @@ export interface SankeyGlobals {
   // Interaction (viewer publish)
   lock_zoom?: boolean             // default false : bloque le zoom molette/scale (le pan au bouton milieu reste actif)
   tooltip_on_hover?: boolean      // default false : affiche les tooltips au simple survol, sans maintenir Shift
+  // OS#305 — le déclencheur/délai de la présentation composée ne sont PAS ici :
+  // ce sont des réglages d'AUTEUR, enregistrés dans le diagramme (cf.
+  // Class_PanelManager), alors que ce bloc-ci est une config viewer read-only.
 
   // État initial
   position_mode?: Type_PositionMode  // mode de navigation imposé à l'ouverture (absolu/proportionnel/échelle adaptée)
