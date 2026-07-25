@@ -36,7 +36,6 @@ import {
   FaThumbtack, FaPlay, FaPause, FaStepBackward, FaStepForward,
   FaCaretDown, FaCaretRight, FaCheckCircle
 } from 'react-icons/fa'
-import ReactMarkdown from 'react-markdown'
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Type_JSON } from '../../types/Utils'
@@ -401,72 +400,39 @@ const TemplateThumbnail = ({ title, img_path, max_height, className, source }:{
 }
 
 /**
- * README de présentation d'un dossier d'étude, chargé À LA DEMANDE (le chapô,
- * lui, vient de l'index et s'affiche sans requête).
+ * Ouvre la présentation d'un dossier d'étude (son README) dans le PANNEAU DE DOC,
+ * qui a la largeur et le moteur de rendu qu'il faut (titres, tableaux, formules).
  *
- * Les images du README ne sont volontairement PAS rendues : leurs chemins sont
- * relatifs au dépôt MFAData et ne sont pas déclarés dans l'index, donc pas
- * servis (la liste blanche protège le contenu non publié). Le site publié, lui,
- * les réécrit à la génération — c'est le rendu de référence, vers lequel les
- * liens du README pointent en s'ouvrant dans un nouvel onglet.
+ * Le document y est prêté en lecture seule : `doc_external` est transitoire et ne
+ * touche jamais `documentation_markdown`, la documentation du diagramme, qui
+ * revient dès qu'on referme la présentation.
+ *
+ * Les images du README ne s'affichent pas : leurs chemins sont relatifs au dépôt
+ * MFAData et ne sont pas déclarés dans l'index, donc pas servis (la liste blanche
+ * protège le contenu non publié). Le site publié les réécrit à la génération :
+ * c'est le rendu de référence, vers lequel pointent les liens du README.
  */
-const GroupReadme = ({ path, source, error_label }:{
-  path: string
-  source: Type_TemplateSource
-  error_label: string
-}) => {
-  const [text, setText] = useState<string | null>(null)
-  const [failed, setFailed] = useState(false)
-
-  useEffect(() => {
-    let cancelled = false
-    setText(null)
-    setFailed(false)
-    fetch(assetUrl(path, source))
-      .then(response => {
-        if (!response.ok) throw new Error(String(response.status))
-        return response.text()
-      })
-      .then(content => { if (!cancelled) setText(content) })
-      .catch(() => { if (!cancelled) setFailed(true) })
-    return () => { cancelled = true }
-  }, [path, source])
-
-  if (failed)
-    return <Text fontSize='xs' color='gray.400' margin='0.3rem 0'>{error_label}</Text>
-  if (text === null)
-    return <Text fontSize='xs' color='gray.400' margin='0.3rem 0'>…</Text>
-  return <Box
-    fontSize='xs'
-    color='gray.600'
-    lineHeight='1.45'
-    maxHeight='16rem'
-    overflowY='auto'
-    padding='0.4rem 0.5rem'
-    background='#f8faf9'
-    border='1px solid #eef2f0'
-    borderRadius='6px'
-    // Le README est écrit pour une page pleine largeur : on ramène les titres à
-    // l'échelle du panneau et on borne les blocs qui déborderaient.
-    sx={{
-      '& h1, & h2, & h3, & h4': { fontSize: 'xs', fontWeight: '700', margin: '0.5rem 0 0.2rem 0' },
-      '& h1:first-of-type': { marginTop: '0' },
-      '& p, & ul, & ol': { margin: '0 0 0.4rem 0' },
-      '& ul, & ol': { paddingLeft: '1rem' },
-      '& a': { color: '#55897A', textDecoration: 'underline' },
-      '& code': { fontSize: '0.9em' },
-      '& pre, & table': { overflowX: 'auto', maxWidth: '100%' },
-      '& hr': { margin: '0.4rem 0', borderColor: '#e6ebe9' }
-    }}
-  >
-    <ReactMarkdown
-      components={{
-        img: () => null,
-        a: ({ href, children }) =>
-          <a href={href} target='_blank' rel='noopener noreferrer'>{children}</a>
-      }}
-    >{text}</ReactMarkdown>
-  </Box>
+const openGroupReadme = (
+  new_data: Class_ApplicationData,
+  path: string,
+  source: Type_TemplateSource,
+  title: string
+) => {
+  const mc = new_data.menu_configuration
+  new_data.sendWaitingToast(
+    async () => {
+      const response = await fetch(assetUrl(path, source))
+      if (!response.ok) {
+        throw new Error(response.status + ' ' + response.statusText)
+      }
+      const markdown = await response.text()
+      mc.doc_external = { title, markdown }
+      // Le panneau de doc peut être fermé : l'ouvrir, sinon le document n'irait nulle part.
+      mc.main_zone_show_doc = true
+      mc.ref_to_doc.current()
+    },
+    { error: { title: new_data.t('templates.group_readme_error') } }
+  )
 }
 
 /**
@@ -849,7 +815,11 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
       const is_collapsed = collapsed.has(group)
       const abstract = groupLocalized(group, 'abstract')
       const readme = groupLocalized(group, 'readme')
-      const readme_open = open_readme === group
+      // Le panneau de doc a son propre bouton de retour : on relit `doc_external`
+      // plutôt que le seul état local, sinon le lien resterait sur « Masquer »
+      // après une fermeture faite depuis le panneau.
+      const readme_open = new_data.menu_configuration.doc_external !== null
+        && open_readme === group
       const source = templates[section_ids[0]]?.source ?? 'sankeydata'
       return <Box key={group} marginTop='0.35rem'>
         <Box
@@ -911,7 +881,7 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
             en réseau qu'au clic sur « lire la présentation ». Le lien est écrit en
             toutes lettres : une icône seule passait inaperçue, d'autant que les
             premiers dossiers de la liste n'ont pas encore de README. */}
-        {(abstract || readme) && !readme_open && <Box margin='0 0 0.35rem 1.05rem'>
+        {(abstract || readme) && <Box margin='0 0 0.35rem 1.05rem'>
           {abstract && <Text
             fontSize='0.68rem'
             color='gray.500'
@@ -925,34 +895,22 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
             as='button'
             fontSize='0.66rem'
             fontWeight='600'
-            color={ACCENT}
+            color={readme_open ? 'gray.400' : ACCENT}
             textDecoration='underline'
             marginTop='0.1rem'
             _hover={{ opacity: 0.75 }}
-            onClick={() => setOpenReadme(group)}
+            onClick={() => {
+              if (readme_open) {
+                new_data.menu_configuration.doc_external = null
+                setOpenReadme(null)
+                return
+              }
+              setOpenReadme(group)
+              openGroupReadme(new_data, readme, source, groupTitle(group))
+            }}
           >
-            {new_data.t('templates.group_readme_open')}
+            {new_data.t(readme_open ? 'templates.group_readme_close' : 'templates.group_readme_open')}
           </Box>}
-        </Box>}
-        {readme_open && readme && <Box margin='0 0 0.4rem 0'>
-          <GroupReadme
-            path={readme}
-            source={source}
-            error_label={new_data.t('templates.group_readme_error')}
-          />
-          <Box
-            as='button'
-            fontSize='0.66rem'
-            fontWeight='600'
-            color={ACCENT}
-            textDecoration='underline'
-            marginTop='0.2rem'
-            marginLeft='0.2rem'
-            _hover={{ opacity: 0.75 }}
-            onClick={() => setOpenReadme(null)}
-          >
-            {new_data.t('templates.group_readme_close')}
-          </Box>
         </Box>}
         {!is_collapsed && <Box marginTop='0.25rem' marginBottom='0.4rem'>
           {renderGrid(section_ids)}

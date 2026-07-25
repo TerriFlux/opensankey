@@ -214,6 +214,10 @@ export class Class_MenuConfig {
   // Doc détachée dans une fenêtre OS séparée : état TRANSITOIRE (non sérialisé), piloté par
   // MainZoneTabs. Quand vrai, la doc ne réserve plus d'espace in-app (le diagramme récupère la place).
   public main_zone_doc_detached: boolean = false
+  // Document EXTERNE affiché à la place de la documentation du diagramme : présentation d'une
+  // étude de la sankeythèque (son README). TRANSITOIRE et en lecture seule — il ne touche jamais
+  // `documentation_markdown`, qui appartient au diagramme et serait persisté.
+  protected _doc_external: { title: string, markdown: string } | null = null
   // Position de la doc dans la grande zone (cf. Type_MainZoneDocLayout).
   protected _main_zone_doc_layout: Type_MainZoneDocLayout = 'sheet-right'
   // Hauteur (px) de la doc dans les modes bas (diagram-bottom / window-bottom), réglée par la poignée.
@@ -351,6 +355,11 @@ export class Class_MenuConfig {
   public set main_zone_show_spreadsheet(v: boolean) { this._main_zone_show_spreadsheet = v; this._notifyMainZone() }
   public get main_zone_show_doc() { return this._main_zone_show_doc }
   public set main_zone_show_doc(v: boolean) { this._main_zone_show_doc = v; this._notifyMainZone() }
+  public get doc_external() { return this._doc_external }
+  public set doc_external(v: { title: string, markdown: string } | null) {
+    this._doc_external = v
+    this._notifyMainZone()
+  }
   public get main_zone_doc_layout() { return this._main_zone_doc_layout }
   public set main_zone_doc_layout(v: Type_MainZoneDocLayout) { this._main_zone_doc_layout = v; this._notifyMainZone() }
   public get main_zone_doc_bottom_px() { return this._main_zone_doc_bottom_px }
