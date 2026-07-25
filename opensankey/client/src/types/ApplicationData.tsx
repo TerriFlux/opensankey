@@ -37,9 +37,12 @@ import { Class_GuidedTour } from './GuidedTour'
 import { CreateToastFnReturn } from '@chakra-ui/react'
 
 import { Class_MenuConfig } from '../types/MenuConfig'
-import { const_default_position_x, const_default_position_y, default_file_name, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, randomId, toast_bypass, Type_JSON } from './Utils'
+import { const_default_position_x, const_default_position_y, default_file_name, default_main_sankey_id, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, randomId, toast_bypass, Type_JSON } from './Utils'
 import { getPublishOptions, PublishOptions } from './PublishOptions'
 import { Class_ApplicationHistory } from './ApplicationHistory'
+import { ViewsReader } from './ViewsReader'
+import { decodeViewsFromDelta } from './viewDelta'
+import type { Type_ViewEntry } from './ViewsQuery'
 import { Class_IconLibrary } from '../css/IconLibrairie'
 import { Class_DrawingArea } from './DrawingArea'
 import { compressJSONToGzip, decompressUploadedFileUniversal } from '../Persistence/UniversalJSONCompression'
@@ -458,6 +461,59 @@ export class Class_ApplicationData {
    * @memberof Class_ApplicationData
    */
   protected _drawing_area: Class_DrawingArea
+
+  // ==========================================================================================
+  // ÉTAT DE VUES (#1316 — viewer intégral)
+  // ------------------------------------------------------------------------------------------
+  // L'état LECTURE des vues vit désormais en OpenSankey pour que la couche viewer sache
+  // restituer un fichier multi-vues. La création/édition des vues (heredited_attr, snapshot
+  // « original », dialogues de sauvegarde) reste en OpenSankey+ (Class_ApplicationDataOSP), qui
+  // hérite de ces champs. Voir ViewsReader (lecture) / ViewsManager OSP (édition).
+  // ==========================================================================================
+
+  /** DA du Sankey MAÎTRE (référence de mise en page) quand le fichier porte des vues. */
+  protected _master_drawing_area: Class_DrawingArea | undefined
+  public get master_drawing_area() { return this._master_drawing_area }
+  public set master_drawing_area(master) { this._master_drawing_area = master }
+
+  /** Vues enregistrées, indexées par id : snapshot gzip + concept unifié vue ⊕ viewtag. */
+  protected _views: { [id: string]: Type_ViewEntry } = {}
+  public get views_dict() { return this._views }
+
+  /** Ordre des vues (le maître n'y figure pas). Muté en place par les méthodes d'ordre. */
+  protected _views_order: string[] = []
+  public get views_order() { return this._views_order }
+
+  // Affiche le Sankey maître comme une entrée à part entière dans la liste des vues
+  // (sélecteur topbar + table de config). Par défaut masqué. Libellé éditable = _master_view_name.
+  protected _show_master_in_views: boolean = false
+  public get show_master_in_views() { return this._show_master_in_views }
+  public set show_master_in_views(v: boolean) { this._show_master_in_views = v }
+  protected _master_view_name: string = ''
+  public get master_view_name() { return this._master_view_name }
+  public set master_view_name(v: string) { this._master_view_name = v }
+
+  // OS#1315 — Conserver le réglage caméra (zoom/pan) d'une vue à l'autre. true (défaut) : la
+  // caméra de la vue sortante est reportée sur l'entrante (cadrage 'none'). false : chaque vue
+  // applique son propre cadrage à l'arrivée.
+  protected _keep_camera_across_views: boolean = true
+  public get keep_camera_across_views(): boolean { return this._keep_camera_across_views }
+  public set keep_camera_across_views(v: boolean) { this._keep_camera_across_views = v }
+
+  // Identité LOGIQUE de la vue courante, découplée de l'id du Sankey de la DA. Nécessaire pour
+  // les vues light qui RÉUTILISENT la DA maître : sans ce champ, une vue light serait confondue
+  // avec le maître (is_view_master, navigation, suppression…). Vaut default_main_sankey_id pour
+  // le maître, l'id du Sankey de la DA pour une vue heavy.
+  protected _current_view_id: string = default_main_sankey_id
+  public get current_view_id() { return this._current_view_id }
+  public set current_view_id(v: string) { this._current_view_id = v }
+
+  // Service de LECTURE des vues (#1316). Instancié via une fabrique virtuelle : OpenSankey+
+  // (Class_ApplicationDataOSP) la surcharge pour fournir un `ViewsManager` (édition) à la place,
+  // sans dupliquer le corps de lecture. Ce champ vit ici pour qu'un viewer OS pur sache
+  // restituer un fichier multi-vues.
+  protected _views_reader: ViewsReader = this.instanciateViewsReader()
+  protected instanciateViewsReader(): ViewsReader { return new ViewsReader(this) }
 
   /**
    * History of all actions
@@ -1067,6 +1123,10 @@ export class Class_ApplicationData {
     if (panels_json && typeof panels_json === 'object') {
       this.menu_configuration?.panels.fromJSON(panels_json as Type_JSON)
     }
+    // #1316 — Viewer intégral : lit le bloc `views` (+ delta __patch) et rouvre sur la vue active.
+    // No-op si le fichier n'a pas de clé `views`. OpenSankey+ réimplémente `_fromJSON` (sans super)
+    // et pilote ses propres appels vues + migration viewtag ; ce chemin ne sert qu'au viewer OS pur.
+    this._views_reader.viewsFromJSON(json_object)
   }
 
 
@@ -1211,19 +1271,25 @@ export class Class_ApplicationData {
 
   /**
    * Renvoie le JSON de mise en page à réappliquer pour une vue donnée, extrait
-   * d'un `current_json` produit par `toJSON()`. OS de base n'a pas de vues : on
-   * retombe sur l'entrée brute `['views'][view_id]` (ou le json complet).
+   * d'un `current_json` produit par `toJSON()`.
    *
-   * ATTENTION (OSP) : `_toJSON` encode les vues en DELTA (`__patch`, cf. #254),
-   * ce qui RETIRE de l'entrée de vue les clés identiques au master — dont
+   * ATTENTION : `_toJSON` encode les vues en DELTA (`__patch`, cf. #254), ce qui
+   * RETIRE de l'entrée de vue les clés identiques au master — dont
    * `version`/`format_version`. Réappliquer telle quelle une entrée delta ferait
    * croire à `fromJSON` qu'il s'agit d'un fichier pré-0.9 et déclencherait le
-   * convertisseur legacy (crash `convert_tags`). OSP surcharge donc cette méthode
-   * pour renvoyer le snapshot COMPLET décodé de la vue.
+   * convertisseur legacy (crash `convert_tags`). Depuis #1316 (delta descendu en
+   * OS), on DÉCODE donc le delta sur une copie pour retrouver le snapshot complet
+   * de la vue avant réapplication — comportement identique en OS et OSP.
    */
   public getViewLayoutJSON(view_id: string, current_json: Type_JSON): Type_JSON {
     const views = current_json['views'] as Type_JSON | undefined
-    return (views?.[view_id] as Type_JSON | undefined) ?? current_json
+    if (!views || !(view_id in views)) {
+      return current_json
+    }
+    const decoded = JSON.parse(JSON.stringify(current_json)) as Type_JSON
+    decodeViewsFromDelta(decoded)
+    const view_layout = (decoded['views'] as Type_JSON | undefined)?.[view_id] as Type_JSON | undefined
+    return view_layout ?? current_json
   }
 
   /**
@@ -1960,6 +2026,40 @@ export class Class_ApplicationData {
   public get is_static(): boolean { return this._drawing_area.static }
 
   public get history(): Class_ApplicationHistory { return this._history! }
+
+  /** Réinitialise l'historique undo/redo (appelé au switch de vue par ViewsReader). */
+  public resetHistory(): void {
+    this._history = new Class_ApplicationHistory(this._menu_configuration!)
+  }
+
+  // ==========================================================================================
+  // VUES — délégations de LECTURE vers le ViewsReader (#1316). Un viewer OS pur restitue ainsi
+  // un fichier multi-vues (décodage, bascule, navigation). OpenSankey+ surcharge celles qui
+  // ont besoin d'un comportement d'édition (elles délèguent alors au ViewsManager, même objet).
+  // ==========================================================================================
+  public viewsFromJSON(json_object: Type_JSON): void { this._views_reader.viewsFromJSON(json_object) }
+  public setCurrentView(id: string): void { this._views_reader.setCurrentView(id) }
+  public setCurrentViewToMaster(): void { this._views_reader.setCurrentViewToMaster() }
+  public setCurrentViewToNext(): void { this._views_reader.setCurrentViewToNext() }
+  public setCurrentViewToPrev(): void { this._views_reader.setCurrentViewToPrev() }
+  public navigateToView(id: string): void { this._views_reader.navigateToView(id) }
+  public extractViewFromJSON(json_object: Uint8Array, view_id: string): void { this._views_reader.extractViewFromJSON(json_object, view_id) }
+  public getDrawingAreaFromViewId(id: string): Class_DrawingArea | undefined { return this._views_reader.getDrawingAreaFromViewId(id) }
+  public pushViewIdInViewOrder(id: string): void { this._views_reader.pushViewIdInViewOrder(id) }
+  public moveViewUpInOrder(id: string): void { this._views_reader.moveViewUpInOrder(id) }
+  public moveViewDownInOrder(id: string): void { this._views_reader.moveViewDownInOrder(id) }
+  public applyViewTagSelection(selection: { [view_tagg_id: string]: string } | undefined): void { this._views_reader.applyViewTagSelection(selection) }
+
+  public get has_views(): boolean { return this._views_reader.has_views }
+  public get is_view_master(): boolean { return this._views_reader.is_view_master }
+  public get is_current_view_light(): boolean { return this._views_reader.is_current_view_light }
+  public get has_master_sankey(): boolean { return this._views_reader.has_master_sankey }
+  public get views_navigation_order(): string[] { return this._views_reader.views_navigation_order }
+  public get master_view(): Class_DrawingArea | undefined { return this._views_reader.master_view }
+  public get has_view_before(): boolean { return this._views_reader.has_view_before }
+  public get has_view_after(): boolean { return this._views_reader.has_view_after }
+  public get layout_view_sources(): Array<{ id: string, name: string }> { return this._views_reader.layout_view_sources }
+
   public get icon_library(): Class_IconLibrary { return this._icon_library }
 
   public get steps(): StepType[] { return this._steps }
@@ -2064,15 +2164,8 @@ export class Class_ApplicationData {
   public get publish_settings(): Type_JSON { return this._publish_settings }
   public set publish_settings(value: Type_JSON) { this._publish_settings = value }
 
-  /** Override in subclasses to expose named views as layout sources */
-  public get layout_view_sources(): Array<{ id: string, name: string }> { return [] }
-
-  /** Override in subclasses to navigate to a named view (used by doc markdown `view://<id>` links).
-   *  No-op when views are not supported (base OpenSankey). */
-  public navigateToView(_id: string): void { /* no-op */ }
-
-  /** Override in subclasses to build a temporary DA from a view id */
-  public getDrawingAreaFromViewId(_id: string): Class_DrawingArea | undefined { return undefined }
+  // #1316 — `layout_view_sources`, `navigateToView`, `getDrawingAreaFromViewId` étaient des
+  // stubs neutres (subclass-only) ; ils délèguent désormais au ViewsReader (voir plus haut).
 
 }
 
