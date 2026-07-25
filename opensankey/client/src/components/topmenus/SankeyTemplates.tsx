@@ -874,6 +874,17 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
             <Box as='span' fontSize='0.7rem' color={ACCENT} flex='none'>
               {is_collapsed ? <FaCaretRight /> : <FaCaretDown />}
             </Box>
+            {/* Couverture de l'étude (image_front du dossier), la même que celle
+                qui illustre sa page sur le site publié. */}
+            {groups[group]?.img_path && <Image
+              src={assetUrl(groups[group].img_path as string, source)}
+              flex='none'
+              width='1.6rem'
+              height='1.6rem'
+              borderRadius='4px'
+              objectFit='cover'
+              background='#f6f8f7'
+            />}
             <Text fontSize='xs' fontWeight='600' margin='0' noOfLines={1} flex='1'>
               {groupTitle(group)}
             </Text>

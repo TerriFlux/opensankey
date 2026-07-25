@@ -1631,9 +1631,10 @@ def menus_templates():
     """
     payload = request.get_json(silent=True) or {}
     requested = payload.get("source")
-    # Galerie locale e!Sankey (dev-only) : index genere a la volee. 404 si la
-    # source n'est pas active (ESANKEY_CORPUS_DIR absente ou hors mode debug) —
-    # le front n'affiche alors rien pour cette source.
+    # Galerie locale e!Sankey (reservee aux devs) : index genere a la volee. 404
+    # si la source n'est pas active (ESANKEY_CORPUS_DIR absente, ou requete ni en
+    # mode debug ni d'un compte developpeur — voir esankey_corpus_dir) : le front
+    # n'affiche alors rien pour cette source.
     if requested == "esankey-local":
         data_index = esankey_local_index()
         if data_index is None:
@@ -1665,10 +1666,11 @@ def menus_templates_asset(asset):
     pour ne rien exposer d'autre que le contenu publie.
     """
     requested = request.args.get("source")
-    # Galerie locale e!Sankey (dev-only, os#1281) : sert un `.sankey` du corpus.
-    # Actif uniquement si ESANKEY_CORPUS_DIR est definie ET en mode debug, sinon
-    # 404. On restreint aux fichiers `.sankey` et on neutralise toute remontee de
-    # chemin (normalisation + refus de "..", safe_join, send_from_directory).
+    # Galerie locale e!Sankey (reservee aux devs, os#1281) : sert un `.sankey` du
+    # corpus. Actif uniquement si ESANKEY_CORPUS_DIR est definie ET que la requete
+    # vient d'un poste en mode debug ou d'un compte developpeur (esankey_corpus_dir),
+    # sinon 404. On restreint aux fichiers `.sankey` et on neutralise toute remontee
+    # de chemin (normalisation + refus de "..", safe_join, send_from_directory).
     if requested == "esankey-local":
         corpus = esankey_corpus_dir()
         if corpus is None:
