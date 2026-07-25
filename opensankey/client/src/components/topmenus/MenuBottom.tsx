@@ -9,7 +9,7 @@ import { ConfigMenuNumberInput, OSTooltip } from '../configmenus/MenuCommon'
 import { useModelBinding } from '../../hooks/useModelBinding'
 import { ZOOM_TOPIC } from '../../types/EventBus'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { Type_AutoFitMode } from '../../types/DrawingArea'
+import { Type_AutoFitMode, Type_CreationTool } from '../../types/DrawingArea'
 import { Class_DataTagGroup } from '../../types/TagGroup'
 
 // Facteur multiplicatif d'un cran des boutons -/+ (deux crans consécutifs ≈ ×2).
@@ -88,62 +88,119 @@ export const ToolBarBottom = ({ new_data, right_offset }: {
   </Box>
 }
 
+/**
+ * Outils du curseur, rangés PAR NATURE — c'est le point de la refonte : l'ancienne
+ * colonne collait dans un même groupe deux modes de pointeur et un outil
+ * d'application de style, en laissant à part deux outils de création (zone de texte,
+ * ligne) qui appartenaient pourtant au même geste.
+ *
+ *  1. pointeur     : Sélection ;
+ *  2. création     : Nœud, Flux, Zone de texte, Ligne (un seul actif à la fois) ;
+ *  3. application  : pinceau de style, isolé — il agit sur un élément existant,
+ *                    il ne dessine rien.
+ *
+ * Le bouton « crayon » a disparu : il portait à lui seul deux gestes indevinables
+ * (clic = un nœud, glisser = un flux + ses nœuds), désormais scindés en deux outils
+ * explicites — le glisser de l'outil Flux crée les nœuds manquants, comme e!Sankey.
+ * Clic = activer/désactiver ; double-clic = verrouiller l'outil pour enchaîner les
+ * poses (sinon il rend la main à la sélection après chaque pose).
+ */
 export const ComponentMouseMode = (
   { app_data, updateParentComponent }: { app_data: Class_ApplicationData, updateParentComponent: () => void }) => {
   const { t, menu_configuration, drawing_area, icon_library } = app_data
   const size = app_data.is_static ? 'sizeToolbarButtonStatic' : 'sizeToolbarButton'
-  { /* Boutons permettant soit de passer la souris en mode sélection soit en mode création noeud/flux */ }
-  return <OSTooltip
-    placement='left'
-    label={t('Banner.tooltipLiason')}
-    isAlwaysOpen={menu_configuration.show_splashscreen}
-  >
+  const active_tool = drawing_area.active_creation_tool
+  const sticky = drawing_area.tool_sticky
+
+  const toolButton = (
+    tool: Type_CreationTool, icon: JSX.Element, label: string, id: string,
+    // Un SEUL bouton porte le message d'accueil (splash du premier geste) : une
+    // info-bulle posée sur le groupe se superposait à celle du bouton survolé, les
+    // deux s'affichant l'une sur l'autre.
+    carries_splash = false
+  ) => {
+    const is_active = active_tool === tool
+    const splash = carries_splash && menu_configuration.show_splashscreen
+    return <OSTooltip
+      key={tool}
+      placement='left'
+      isAlwaysOpen={splash}
+      label={splash ? t('Banner.tooltipLiason') : label + ' — ' + t('Banner.tool_lock_hint')}
+    >
+      <Button
+        id={id}
+        size={size}
+        variant={is_active ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
+        // Outil verrouillé : liseré intérieur, pour distinguer « actif le temps d'une
+        // pose » de « actif jusqu'à nouvel ordre ».
+        sx={is_active && sticky
+          ? { boxShadow: 'inset 0 0 0 2px var(--chakra-colors-secondaire-1)' }
+          : undefined}
+        onClick={() => {
+          drawing_area.setCreationTool(is_active ? null : tool)
+          updateParentComponent()
+        }}
+        onDoubleClick={() => {
+          drawing_area.setCreationTool(tool, true)
+          updateParentComponent()
+        }}
+      >
+        {icon}
+      </Button>
+    </OSTooltip>
+  }
+
+  return <>
+    {/* 1. Pointeur */}
     <ButtonGroup className='toolbar_bottom_mouse_mode' isAttached orientation='vertical'>
-      <Button
-        variant={drawing_area.isInEditionMode() ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
-        id='button_selection_edition'
-        size={size}
-        onClick={() => {
-          // Sortir d'abord du mode « placer une zone de texte » (switchMode ne gère
-          // que édition⇄sélection) : on repasse en sélection, puis la bascule ci-dessous.
-          if (drawing_area.isInPlaceContainerMode()) drawing_area.exitPlaceContainerMode()
-          if (!drawing_area.isInEditionMode()) {
-            drawing_area.switchMode()
-          }
-          updateParentComponent()
-        }}>
-        {icon_library.icon_DA_edit}
-      </Button>
-      <Button
-        variant={drawing_area.isInSelectionMode() ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
-        id='button_selection_edition'
-        size={size}
-        onClick={() => {
-          if (drawing_area.isInPlaceContainerMode()) drawing_area.exitPlaceContainerMode()
-          if (!drawing_area.isInSelectionMode()) {
-            drawing_area.switchMode()
-          }
-          updateParentComponent()
-        }}>
-        {icon_library.icon_DA_selection}
-      </Button>
-      <Button
-        variant={drawing_area.isInStylePaintMode() ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
-        isDisabled={!drawing_area.isInStylePaintMode() && drawing_area.selected_elements_list.length !== 1}
-        size={size}
-        onClick={() => {
-          if (drawing_area.isInStylePaintMode()) {
-            drawing_area.exitStylePaintMode()
-          } else {
-            const selected = drawing_area.selected_elements_list[0]
-            if (selected) drawing_area.enterStylePaintMode(selected)
-          }
-          updateParentComponent()
-        }}>
-        {icon_library.icon_style_paint}
-      </Button>
+      <OSTooltip placement='left' label={t('Banner.tool_select')}>
+        <Button
+          variant={drawing_area.isInSelectionMode() ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
+          id='button_selection_edition'
+          size={size}
+          onClick={() => {
+            drawing_area.setCreationTool(null)
+            updateParentComponent()
+          }}>
+          {icon_library.icon_DA_selection}
+        </Button>
+      </OSTooltip>
     </ButtonGroup>
-  </OSTooltip>
+
+    {/* 2. Création. Le message d'accueil (splash du premier geste) est porté par le
+        bouton Flux, geste emblématique du dessin. */}
+    <ButtonGroup className='toolbar_bottom_creation_tools' isAttached orientation='vertical'>
+      {/* Les logos d'élément de l'application (nœud, flux, objet), ramenés à la
+          taille des glyphes voisins : l'outil et l'élément qu'il pose se
+          reconnaissent au même dessin. */}
+      {toolButton('node', icon_library.icon_tool_node, t('Banner.tool_node'), 'button_tool_node')}
+      {toolButton('link', icon_library.icon_tool_link, t('Banner.tool_link'), 'button_tool_link', true)}
+      {toolButton('text_zone', icon_library.icon_tool_text_zone, t('Banner.create_text_zone'), 'button_create_text_zone')}
+      {toolButton('line', icon_library.icon_line_shape, t('Banner.create_line'), 'button_create_line')}
+    </ButtonGroup>
+
+    {/* 3. Application de style — séparé : il ne crée rien, il recopie l'apparence
+        d'un élément sélectionné sur ceux que l'on clique ensuite. */}
+    <ButtonGroup className='toolbar_bottom_style_paint' isAttached orientation='vertical'>
+      <OSTooltip placement='left' label={t('Banner.tool_style_paint')}>
+        <Button
+          variant={drawing_area.isInStylePaintMode() ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
+          isDisabled={!drawing_area.isInStylePaintMode() && drawing_area.selected_elements_list.length !== 1}
+          size={size}
+          onClick={() => {
+            if (drawing_area.isInStylePaintMode()) {
+              drawing_area.exitStylePaintMode()
+            } else {
+              const selected = drawing_area.selected_elements_list[0]
+              if (selected) drawing_area.enterStylePaintMode(selected)
+            }
+            updateParentComponent()
+          }}>
+          {icon_library.icon_style_paint}
+        </Button>
+      </OSTooltip>
+    </ButtonGroup>
+  </>
 }
 
 

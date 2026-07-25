@@ -101,6 +101,18 @@ body {
   }
 }
 
+/* Outil « nœud » : le clic pose un nœud -> réticule (la plume reste à l'outil flux,
+   dont le geste est un tracé). Déclaré APRÈS .edition_mode : même spécificité, c'est
+   l'ordre source qui tranche. */
+.node_tool_mode {
+  #g_background,
+  .gg_nodes,
+  .gg_labels,
+  .link {
+    cursor: crosshair;
+  }
+}
+
 /* Cursor when placing a text zone (drag a rectangle to size/position it) */
 .place_container_mode {
   #g_background,

@@ -753,9 +753,17 @@ export class NodeEventsHandler {
    * Define when left mouse click is maintained
    */
   public handleMaintainedClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    // EDITION MODE =============================================================
+    // OUTIL FLUX ===============================================================
     // event.button==0 check if we use LMB
-    if (this._node.drawing_area.isInEditionMode() && event.button == 0) {
+    // Seul l'outil « flux » amorce un tracé depuis un nœud existant : sous l'outil
+    // « nœud », presser un nœud ne doit rien tracer.
+    if (this._node.drawing_area.isInLinkTool() && event.button == 0) {
+      // Ce mousedown est CONSOMMÉ par le tracé du flux. Sans cet arrêt, il remonte
+      // jusqu'au fond de la zone de dessin, dont le gestionnaire voit un ghost_link
+      // déjà posé et le résout aussitôt (branche de rattrapage) : le tracé depuis un
+      // nœud existant se terminait avant d'avoir commencé. Arrête aussi le pan de
+      // d3.zoom (l'aire de zoom est un ancêtre), ce qui est voulu pendant un tracé.
+      event.stopPropagation()
       // Get mouse position
       // Create default source node
       // Position center of source node to pointer pos

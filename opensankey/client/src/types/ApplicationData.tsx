@@ -1663,12 +1663,10 @@ export class Class_ApplicationData {
       // Exit style paint mode if active
       if (app_ref.drawing_area.isInStylePaintMode())
         app_ref.drawing_area.exitStylePaintMode()
-      // Exit « placer une zone de texte » mode if active
-      else if (app_ref.drawing_area.isInPlaceContainerMode())
-        app_ref.drawing_area.exitPlaceContainerMode()
-      // Set app in selection mode
-      else if (app_ref.drawing_area.isInEditionMode())
-        app_ref.drawing_area.switchMode()
+      // Échap relâche l'outil de création actif (nœud, flux, zone de texte, ligne),
+      // verrouillé ou non, et rend la main à la sélection.
+      else if (app_ref.drawing_area.active_creation_tool !== null)
+        app_ref.drawing_area.setCreationTool(null)
 
       // Deselect all element
       app_ref.drawing_area.purgeSelection()

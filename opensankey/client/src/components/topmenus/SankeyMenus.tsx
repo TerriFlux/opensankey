@@ -292,55 +292,11 @@ export const SankeyMenu = (
           </Button>
         </OSTooltip>
         <Divider />
+        {/* Outils du curseur : pointeur, création (nœud / flux / zone de texte / ligne),
+            application de style. Les boutons « zone de texte » et « ligne » vivaient ici,
+            détachés du reste ; ils ont rejoint le groupe de création, avec lequel ils
+            partagent geste et exclusivité (cf. ComponentMouseMode). */}
         <ComponentMouseMode app_data={app_data} updateParentComponent={refreshToolsColumn} />
-        {/* Zone de texte : à côté de l'outil de tracé (mode édition). Active le mode
-            « placer une zone de texte » — glisser un rectangle sur le fond pose la ZDT
-            à cette position/taille (cf. DrawingArea.enterPlaceContainerMode). Re-clic =
-            sortie du mode. Seule porte d'entrée restante pour créer une ZDT depuis l'UI. */}
-        <OSTooltip placement='left' label={t('Banner.create_text_zone')}>
-          <Button
-            id='button_create_text_zone'
-            variant={app_data.drawing_area.isInPlaceContainerMode()
-              && app_data.drawing_area.place_container_shape !== 'line'
-              ? 'toolbar_button_mouse_mode_activated'
-              : 'toolbar_button_mouse_mode'}
-            size='sizeToolbarButton'
-            onClick={() => {
-              if (app_data.drawing_area.isInPlaceContainerMode()
-                && app_data.drawing_area.place_container_shape !== 'line') {
-                app_data.drawing_area.exitPlaceContainerMode()
-              } else {
-                app_data.drawing_area.enterPlaceContainerMode('rect')
-              }
-              refreshToolsColumn()
-            }}
-          >
-            {icon_library.icon_object}
-          </Button>
-        </OSTooltip>
-        {/* OS#1276 — ligne libre : même mode « placement » que la zone de texte, mais
-            le glisser pose un trait décoratif (diagonale de la boîte tracée). */}
-        <OSTooltip placement='left' label={t('Banner.create_line')}>
-          <Button
-            id='button_create_line'
-            variant={app_data.drawing_area.isInPlaceContainerMode()
-              && app_data.drawing_area.place_container_shape === 'line'
-              ? 'toolbar_button_mouse_mode_activated'
-              : 'toolbar_button_mouse_mode'}
-            size='sizeToolbarButton'
-            onClick={() => {
-              if (app_data.drawing_area.isInPlaceContainerMode()
-                && app_data.drawing_area.place_container_shape === 'line') {
-                app_data.drawing_area.exitPlaceContainerMode()
-              } else {
-                app_data.drawing_area.enterPlaceContainerMode('line')
-              }
-              refreshToolsColumn()
-            }}
-          >
-            {icon_library.icon_line_shape}
-          </Button>
-        </OSTooltip>
         <ComponentPositionMode app_data={app_data} updateParentComponent={refreshToolsColumn} />
         {/* hide_fullscreen : le plein écran est dans la barre du haut en éditeur. */}
         <ComponetStretchButtons app_data={app_data} updateParentComponent={refreshToolsColumn} hide_fullscreen />
@@ -585,9 +541,10 @@ const ConfigMenu = ({ app_data }: {
       // trop : borner un seul axe fait passer l'autre de `visible` à `auto` —
       // c'est ainsi que le second ascenseur revenait.
       onMouseDownCapture={() => {
-        // Auto-exit edition mode as soon as the user interacts with the configuration menu
+        // Auto-exit edition mode as soon as the user interacts with the configuration menu.
+        // Passe par setCreationTool pour que la colonne d'outils reflète l'outil relâché.
         if (app_data.drawing_area.isInEditionMode()) {
-          app_data.drawing_area.switchMode()
+          app_data.drawing_area.setCreationTool(null)
         }
       }}
     >

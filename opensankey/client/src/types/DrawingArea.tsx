@@ -107,6 +107,13 @@ const UNITARY_CENTRAL_HEIGHT_FRACTION = 0.3
  */
 export type Type_AutoFitMode = 'none' | 'width' | 'height' | 'full'
 
+// Outils de création de la colonne d'outils. Les deux premiers sont deux gestes
+// du mode 'edition' (cf. _edition_tool), les deux suivants deux formes du mode
+// 'place_container' (cf. _place_container_shape) : quatre boutons pour l'auteur,
+// deux modes pour le moteur.
+export type Type_EditionTool = 'node' | 'link'
+export type Type_CreationTool = Type_EditionTool | 'text_zone' | 'line'
+
 /**
  * OS#1315 — Ancrage du cadrage, orthogonal au mode de fit :
  * - 'center' : le mou disponible est réparti autour du contenu (fits centrés,
@@ -634,6 +641,18 @@ export class Class_DrawingArea {
   // OS#1276 — forme du conteneur à créer en mode « placement » : 'rect' pour une
   // zone de texte classique, 'line' pour une ligne libre (cf. enterPlaceContainerMode).
   private _place_container_shape: Type_Shape = 'rect'
+  // Outil actif du mode « édition ». Historiquement le mode édition portait DEUX
+  // gestes indistincts (clic = un nœud, glisser = un flux + ses nœuds) qu'aucun
+  // libellé n'annonçait. On les sépare en deux OUTILS explicites, sans toucher au
+  // mode lui-même (`isInEditionMode` reste vrai pour les deux, tous les chemins
+  // existants — raccourcis, tour guidé, écouteurs de nœud — restent valides) :
+  //   'node' : le clic pose un nœud, et rien d'autre ;
+  //   'link' : le glisser trace un flux et crée les nœuds manquants (façon e!Sankey).
+  private _edition_tool: Type_EditionTool = 'link'
+  // Outil « collant ». Par défaut une pose rend la main à la sélection (comme
+  // e!Sankey ou PowerPoint) ; un double-clic sur le bouton d'outil le verrouille
+  // pour enchaîner les poses. Vaut pour les quatre outils de création.
+  private _tool_sticky = false
 
   private _ghost_link: Class_LinkElement | null = null
 
@@ -2995,6 +3014,86 @@ export class Class_DrawingArea {
     this.drawCursor()
   }
 
+  // Outils de création ---------------------------------------------------------------
+  // Quatre outils pour l'auteur (nœud, flux, zone de texte, ligne), deux modes pour le
+  // moteur. `isInNodeTool`/`isInLinkTool` sont les gardes que lisent les gestionnaires
+  // de geste pour CONTRAINDRE le geste à l'outil : sans ça, séparer les boutons
+  // n'aurait rien clarifié (le glisser continuerait de créer un flux sous l'outil nœud).
+
+  public get edition_tool(): Type_EditionTool { return this._edition_tool }
+  public isInNodeTool(): boolean { return this.isInEditionMode() && this._edition_tool === 'node' }
+  public isInLinkTool(): boolean { return this.isInEditionMode() && this._edition_tool === 'link' }
+
+  public get tool_sticky(): boolean { return this._tool_sticky }
+  public set tool_sticky(v: boolean) { this._tool_sticky = v }
+
+  /** Outil de création actif, ou null si l'on est en sélection / application de style. */
+  public get active_creation_tool(): Type_CreationTool | null {
+    if (this.isInEditionMode()) return this._edition_tool
+    if (this.isInPlaceContainerMode()) return this._place_container_shape === 'line' ? 'line' : 'text_zone'
+    return null
+  }
+
+  /**
+   * Active un outil de création (ou le désactive si c'est déjà lui = bascule). Point
+   * d'entrée UNIQUE des quatre boutons de la colonne d'outils : il aiguille vers le
+   * bon mode moteur et remet à zéro l'état de l'outil précédent.
+   */
+  public setCreationTool(tool: Type_CreationTool | null, sticky = false): void {
+    this._tool_sticky = sticky
+    if (tool === null) {
+      if (this.isInPlaceContainerMode()) this.exitPlaceContainerMode()
+      else this.setSelectionMode()
+      this.refreshModeEventsListeners()
+      this.notifyToolsColumn()
+      return
+    }
+    if (tool === 'text_zone' || tool === 'line') {
+      this.enterPlaceContainerMode(tool === 'line' ? 'line' : 'rect')
+      return
+    }
+    // Outils nœud / flux : mode 'edition', seul le geste change.
+    if (this.isInPlaceContainerMode()) this.selection_zone.reset()
+    this._edition_tool = tool
+    this.purgeSelection()
+    this.setEditionMode()
+    this.refreshModeEventsListeners()
+    this.notifyToolsColumn()
+  }
+
+  /**
+   * Fin d'une pose : on rend la main à la sélection, sauf si l'outil est verrouillé
+   * (double-clic sur son bouton). Appelé par les gestionnaires de geste APRÈS que
+   * l'élément créé a été sélectionné — l'auteur enchaîne donc naturellement sur son
+   * réglage dans l'inspecteur.
+   */
+  public finishToolGesture(): void {
+    if (this._tool_sticky) {
+      if (this.isInPlaceContainerMode()) this.selection_zone.reset()
+      this.notifyToolsColumn()
+      return
+    }
+    if (this.isInPlaceContainerMode()) this.selection_zone.reset()
+    this.setSelectionMode()
+    this.refreshModeEventsListeners()
+    this.notifyToolsColumn()
+  }
+
+  /**
+   * Re-pose les écouteurs des éléments après un changement de mode : le drag des nœuds
+   * et des zones est branché/débranché selon le mode (cf. switchMode).
+   */
+  public refreshModeEventsListeners(): void {
+    this.sankey.visible_nodes_list.forEach(n => n.setEventsListeners())
+    this.sankey.visible_links_list.forEach(l => l.setEventsListeners())
+    this.sankey.visible_containers_list.forEach(c => c.setEventsListeners())
+  }
+
+  /** Rafraîchit la colonne d'outils (état actif/inactif des boutons). */
+  public notifyToolsColumn(): void {
+    this.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
+  }
+
   public isInStylePaintMode(): boolean { return this._mode === 'style_paint' }
   public get style_paint_source() { return this._style_paint_source }
 
@@ -3114,6 +3213,9 @@ export class Class_DrawingArea {
     const mode_style_paint = this.isInStylePaintMode()
     const mode_place_container = this.isInPlaceContainerMode()
     this.d3_selection?.classed('edition_mode', mode_edition)
+    // L'outil « nœud » pose au clic : réticule, comme le placement d'une zone de
+    // texte. La plume reste au flux, dont le geste est un tracé.
+    this.d3_selection?.classed('node_tool_mode', this.isInNodeTool())
     this.d3_selection?.classed('selection_mode', !mode_edition && !mode_style_paint && !mode_place_container)
     this.d3_selection?.classed('style_paint_mode', mode_style_paint)
     this.d3_selection?.classed('place_container_mode', mode_place_container)
