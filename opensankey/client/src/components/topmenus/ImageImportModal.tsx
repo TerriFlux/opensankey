@@ -45,7 +45,8 @@ export const ModalImageImport = ({
 }) => {
   const { i18n } = new_data
   const langCode = i18n.language?.substring(0, 2) ?? 'en'
-  const lang = (['fr', 'es', 'de', 'it'].includes(langCode)) ? langCode : 'en'
+  // 'zh' est le seul code réduit à 2 lettres qui ne corresponde pas au code de ressource ('zh-CN').
+  const lang = (['fr', 'es', 'de', 'it'].includes(langCode)) ? langCode : (langCode === 'zh' ? 'zh-CN' : 'en')
 
   const [file, setFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string>('')
@@ -81,7 +82,8 @@ export const ModalImageImport = ({
   }
 
   const errToast = (e: unknown) => toast({
-    title: L(lang, { fr: 'Erreur', en: 'Error', es: 'Error', de: 'Fehler', it: 'Errore' }),
+    title: L(lang, { fr: 'Erreur', en: 'Error', es: 'Error', de: 'Fehler', it: 'Errore',
+      'zh-CN': '错误' }),
     description: String(e),
     status: 'error',
     duration: 6000,
@@ -189,7 +191,8 @@ export const ModalImageImport = ({
           _active={{ cursor: 'grabbing' }}
         >
           <Text fontWeight='bold' fontSize='sm'>
-            {L(lang, { fr: 'Importer depuis une image', en: 'Import from an image', es: 'Importar desde una imagen', de: 'Aus einem Bild importieren', it: 'Importa da un\'immagine' })}
+            {L(lang, { fr: 'Importer depuis une image', en: 'Import from an image', es: 'Importar desde una imagen', de: 'Aus einem Bild importieren', it: 'Importa da un\'immagine',
+              'zh-CN': '从图片导入' })}
           </Text>
           <CloseButton size='sm' onClick={close} />
         </Box>
@@ -198,10 +201,12 @@ export const ModalImageImport = ({
         <Box px={3} py={2} overflowY='auto'>
           <Box display='flex' gap={2} alignItems='center' mb={2}>
             <Button size='xs' onClick={() => fileInputRef.current?.click()}>
-              {L(lang, { fr: 'Choisir une image', en: 'Choose image', es: 'Elegir imagen', de: 'Bild wählen', it: 'Scegli immagine' })}
+              {L(lang, { fr: 'Choisir une image', en: 'Choose image', es: 'Elegir imagen', de: 'Bild wählen', it: 'Scegli immagine',
+                'zh-CN': '选择图片' })}
             </Button>
             <Text fontSize='xs' color='gray.600' noOfLines={1}>
-              {file ? file.name : L(lang, { fr: 'Aucun fichier', en: 'No file', es: 'Ningún archivo', de: 'Keine Datei', it: 'Nessun file' })}
+              {file ? file.name : L(lang, { fr: 'Aucun fichier', en: 'No file', es: 'Ningún archivo', de: 'Keine Datei', it: 'Nessun file',
+                'zh-CN': '无文件' })}
             </Text>
             <Input
               ref={fileInputRef}
@@ -218,7 +223,8 @@ export const ModalImageImport = ({
               isDisabled={!file}
               onClick={handleExtract}
             >
-              {L(lang, { fr: 'Extraire', en: 'Extract', es: 'Extraer', de: 'Extrahieren', it: 'Estrai' })}
+              {L(lang, { fr: 'Extraire', en: 'Extract', es: 'Extraer', de: 'Extrahieren', it: 'Estrai',
+                'zh-CN': '提取' })}
             </Button>
           </Box>
 
@@ -235,6 +241,7 @@ export const ModalImageImport = ({
                 es: 'Clave Anthropic (opcional — si no, cuota incluida)',
                 de: 'Anthropic-Schlüssel (optional — sonst inkl. Kontingent)',
                 it: 'Chiave Anthropic (opzionale — altrimenti quota inclusa)',
+                'zh-CN': 'Anthropic 密钥（可选——否则使用内置配额）',
               })}
             />
           </Box>
@@ -247,20 +254,23 @@ export const ModalImageImport = ({
 
           {usage && (
             <Text fontSize='xs' color='gray.500' mb={1}>
-              {L(lang, { fr: 'Tokens', en: 'Tokens', es: 'Tokens', de: 'Tokens', it: 'Token' })}: {usage.input_tokens ?? '?'} / {usage.output_tokens ?? '?'}
+              {L(lang, { fr: 'Tokens', en: 'Tokens', es: 'Tokens', de: 'Tokens', it: 'Token',
+                'zh-CN': '令牌' })}: {usage.input_tokens ?? '?'} / {usage.output_tokens ?? '?'}
               {estCost != null ? ` — ≈ $${estCost.toFixed(3)}` : ''}
             </Text>
           )}
           {quota && (
             <Text fontSize='xs' color='gray.500' mb={2}>
-              {L(lang, { fr: 'Quota mensuel', en: 'Monthly quota', es: 'Cuota mensual', de: 'Monatskontingent', it: 'Quota mensile' })}: {quota.used} / {quota.limit}
+              {L(lang, { fr: 'Quota mensuel', en: 'Monthly quota', es: 'Cuota mensual', de: 'Monatskontingent', it: 'Quota mensile',
+                'zh-CN': '每月配额' })}: {quota.used} / {quota.limit}
             </Text>
           )}
 
           {structure && (
             <>
               <Text fontSize='xs' fontWeight='semibold' mb={1}>
-                {L(lang, { fr: 'Noeuds', en: 'Nodes', es: 'Nodos', de: 'Knoten', it: 'Nodi' })} ({structure.nodes.length})
+                {L(lang, { fr: 'Noeuds', en: 'Nodes', es: 'Nodos', de: 'Knoten', it: 'Nodi',
+                  'zh-CN': '节点' })} ({structure.nodes.length})
               </Text>
               <Box display='flex' flexWrap='wrap' gap='4px' mb={2}>
                 {structure.nodes.map((n, i) => (
@@ -271,15 +281,19 @@ export const ModalImageImport = ({
               </Box>
 
               <Text fontSize='xs' fontWeight='semibold' mb={1}>
-                {L(lang, { fr: 'Flux', en: 'Flows', es: 'Flujos', de: 'Flüsse', it: 'Flussi' })} ({structure.flux.length})
+                {L(lang, { fr: 'Flux', en: 'Flows', es: 'Flujos', de: 'Flüsse', it: 'Flussi',
+                  'zh-CN': '流量' })} ({structure.flux.length})
               </Text>
               <Box maxHeight='30vh' overflowY='auto' border='1px solid' borderColor='gray.200' borderRadius='4px'>
                 <Table size='sm' variant='simple'>
                   <Thead position='sticky' top='0' bg='gray.50'>
                     <Tr>
-                      <Th px={1}>{L(lang, { fr: 'Origine', en: 'Source', es: 'Origen', de: 'Quelle', it: 'Origine' })}</Th>
-                      <Th px={1}>{L(lang, { fr: 'Cible', en: 'Target', es: 'Destino', de: 'Ziel', it: 'Destinazione' })}</Th>
-                      <Th px={1} isNumeric>{L(lang, { fr: 'Valeur', en: 'Value', es: 'Valor', de: 'Wert', it: 'Valore' })}</Th>
+                      <Th px={1}>{L(lang, { fr: 'Origine', en: 'Source', es: 'Origen', de: 'Quelle', it: 'Origine',
+                        'zh-CN': '来源' })}</Th>
+                      <Th px={1}>{L(lang, { fr: 'Cible', en: 'Target', es: 'Destino', de: 'Ziel', it: 'Destinazione',
+                        'zh-CN': '目标' })}</Th>
+                      <Th px={1} isNumeric>{L(lang, { fr: 'Valeur', en: 'Value', es: 'Valor', de: 'Wert', it: 'Valore',
+                        'zh-CN': '数值' })}</Th>
                       <Th px={1}></Th>
                     </Tr>
                   </Thead>
@@ -316,6 +330,7 @@ export const ModalImageImport = ({
                   es: 'Filas amarillas = valores estimados por el modelo, revisar.',
                   de: 'Gelbe Zeilen = vom Modell geschätzte Werte, bitte prüfen.',
                   it: 'Righe gialle = valori stimati dal modello, da verificare.',
+                  'zh-CN': '黄色行 = 由模型估算的数值，请复核。',
                 })}
               </Text>
             </>
@@ -325,7 +340,8 @@ export const ModalImageImport = ({
         {/* Footer */}
         <Box px={3} py={2} borderTop='1px solid' borderColor='gray.200' display='flex' justifyContent='flex-end' gap={2}>
           <Button size='xs' variant='ghost' onClick={close}>
-            {L(lang, { fr: 'Annuler', en: 'Cancel', es: 'Cancelar', de: 'Abbrechen', it: 'Annulla' })}
+            {L(lang, { fr: 'Annuler', en: 'Cancel', es: 'Cancelar', de: 'Abbrechen', it: 'Annulla',
+              'zh-CN': '取消' })}
           </Button>
           <Button
             size='xs'
@@ -334,7 +350,8 @@ export const ModalImageImport = ({
             isDisabled={!structure || structure.flux.length === 0}
             onClick={handleImport}
           >
-            {L(lang, { fr: 'Importer', en: 'Import', es: 'Importar', de: 'Importieren', it: 'Importa' })}
+            {L(lang, { fr: 'Importer', en: 'Import', es: 'Importar', de: 'Importieren', it: 'Importa',
+              'zh-CN': '导入' })}
           </Button>
         </Box>
       </Box>

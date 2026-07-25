@@ -120,5 +120,25 @@ export const resources_search = {
         }
       }
     }
+  },
+  'zh-CN': {
+    translation: {
+      search: {
+        title: '搜索元素',
+        tooltip: '搜索节点、流量或文本区（Ctrl+F）',
+        placeholder: '搜索节点、流量或区域……',
+        no_result: '无匹配',
+        counter: '{{current}} / {{total}}',
+        prev: '上一个结果',
+        next: '下一个结果',
+        close: '关闭搜索',
+        only_visible: '仅可见元素',
+        type: {
+          node: '节点',
+          link: '流量',
+          container: '区域'
+        }
+      }
+    }
   }
 }

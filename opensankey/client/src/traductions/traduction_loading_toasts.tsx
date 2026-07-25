@@ -638,5 +638,130 @@ export const resources_loading_toasts = {
         },
       },
     }
+  },
+  'zh-CN': {
+    translation: {
+      toast: {
+        default: {
+          success: {
+            title: '成功',
+            desc: '感谢您的耐心等待'
+          },
+          loading: {
+            title: '处理中',
+            desc: '请稍候'
+          },
+          error: {
+            title: '处理失败',
+            desc: '请重试；若问题持续存在，请联系 contact@terriflux.fr'
+          }
+        },
+        reset: {
+          success: {
+            title: '绘图区已清空',
+            desc: ''
+          },
+          loading: {
+            title: '正在清除绘图区',
+            desc: ''
+          },
+        },
+        draw: {
+          success: {
+            title: '可以开始绘制',
+            desc: ''
+          },
+          loading: {
+            title: '正在初始化绘图区',
+            desc: ''
+          },
+        },
+        save_in_cache: {
+          success: {
+            title: '已完成',
+          },
+          loading: {
+            title: '正在保存到缓存',
+          },
+          error: {
+            title: '保存时出错',
+          }
+        },
+        load_json: {
+          success: {
+            title: '图表已加载',
+          },
+          loading: {
+            title: '正在加载图表……',
+          },
+          error: {
+            title: '加载图表时出错',
+          }
+        },
+        save_as_json: {
+          success: {
+            title: '下载即将开始',
+          },
+          loading: {
+            title: '正在准备 JSON 文件',
+          },
+          error: {
+            title: '准备文件时出错',
+          }
+        },
+        save_as_excel: {
+          success: {
+            title: '下载即将开始',
+          },
+          loading: {
+            title: '正在准备 Excel 文件',
+          },
+          error: {
+            title: '准备文件时出错',
+          }
+        },
+        save_as_png: {
+          success: {
+            title: '下载即将开始',
+          },
+          loading: {
+            title: '正在准备 PNG 文件',
+          },
+          error: {
+            title: '准备文件时出错',
+          }
+        },
+        save_as_pdf: {
+          success: {
+            title: '下载即将开始',
+          },
+          loading: {
+            title: '正在准备 PDF 文件',
+          },
+          error: {
+            title: '准备文件时出错',
+          }
+        },
+        set_view: {
+          success: {
+            title: '就绪',
+          },
+          loading: {
+            title: '正在切换视图',
+          },
+          error: {
+            title: '加载所请求的视图时出错',
+          }
+        },
+        compute_auto_sankey: {
+          success: {
+            title: '节点位置已计算',
+          },
+          loading: {
+            title: '正在计算节点位置',
+          },
+        }
+      },
+    }
   }
 }

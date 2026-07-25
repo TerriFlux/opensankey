@@ -67,7 +67,8 @@ import {
   faBan,
   faImage,
   faCircleQuestion,
-  faTableColumns
+  faTableColumns,
+  faCodeBranch
 } from '@fortawesome/free-solid-svg-icons'
 import {
   FontAwesomeIcon
@@ -79,6 +80,7 @@ import { Type_JSON } from '../../types/Utils'
 import { clickSaveSVG } from './SankeyExports'
 import { ModalExcelTemplate } from './ExcelTemplateModal'
 import { ModalImageImport } from './ImageImportModal'
+import { ModalMFADataSave } from './MFADataSaveModal'
 import { fetchStanMeta, importStanFile, ModalStanLayerChoice, Type_StanMeta } from './StanImportModal'
 import { importSankeymaticText } from '../../Persistence/sankeymaticLoad'
 import { applyEsankeyFile } from '../../Persistence/esankeyLoad'
@@ -498,6 +500,8 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
   const [show_excel_template, set_show_excel_template] = useState(false)
   // State for image import modal (extraction de structure depuis une image)
   const [show_image_import, set_show_image_import] = useState(false)
+  // Réenregistrement d'une étude de la sankeythèque dans MFAData (développeurs).
+  const [show_mfadata_save, set_show_mfadata_save] = useState(false)
   // Import STAN multi-couches : fichier en attente + méta (périodes/couches),
   // le temps que l'utilisateur choisisse la couche à importer.
   const [stan_pending, set_stan_pending] = useState<{ file: File, meta: Type_StanMeta } | null>(null)
@@ -767,6 +771,13 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
         {new_data.icon_library.icon_save_sankey_excel}
         {t('Menu.open_excel')}
       </MenuItem>
+      {new_data.has_sankey_dev && <MenuItem
+        isDisabled={!new_data.sankeytheque_origin}
+        onClick={() => { set_show_mfadata_save(true) }}
+      >
+        <Box as='span' mr='0.5em'><FontAwesomeIcon icon={faCodeBranch} /></Box>
+        {t('Menu.save_sankeytheque')}
+      </MenuItem>}
     </MenuList>
   </ChakraMenu>
 
@@ -1022,6 +1033,16 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
           {new_data.icon_library.icon_save_sankey_excel}
           {t('Menu.open_excel')}
         </MenuItem>
+        {/* Réenregistrement en place d'une étude de la sankeythèque, avec commit git
+            dans MFAData : réservé aux développeurs, et grisé tant que le diagramme
+            affiché ne vient pas de la galerie (rien à écraser). */}
+        {new_data.has_sankey_dev && <MenuItem
+          isDisabled={!new_data.sankeytheque_origin}
+          onClick={() => { set_show_mfadata_save(true) }}
+        >
+          <Box as='span' mr='0.5em'><FontAwesomeIcon icon={faCodeBranch} /></Box>
+          {t('Menu.save_sankeytheque')}
+        </MenuItem>}
       </MenuGroup>
     </MenuList>
   </ChakraMenu>
@@ -1257,6 +1278,11 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
       new_data={new_data}
       show={show_image_import}
       setShow={set_show_image_import}
+    />
+    <ModalMFADataSave
+      new_data={new_data}
+      show={show_mfadata_save}
+      setShow={set_show_mfadata_save}
     />
     {stan_pending && (
       <ModalStanLayerChoice
@@ -1532,7 +1558,7 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
   additionalMenus: MutableRefObject<Type_AdditionalMenus>,
 }) => {
   const { logo } = new_data
-  const langToFlag: Record<string, string> = { fr: 'fr', en: 'gb', es: 'es', de: 'de', it: 'it' }
+  const langToFlag: Record<string, string> = { fr: 'fr', en: 'gb', es: 'es', de: 'de', it: 'it', 'zh-CN': 'cn' }
   const [flag, setFlag] = useState(langToFlag[new_data.i18n.language] ?? 'gb')
   // OS#300 Lot 2 — re-render sur changement de panneau : reflète l'état du bouton
   // de bascule de barre latérale (surligné quand la barre est affichée).
@@ -1667,6 +1693,7 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
               <MenuItem onClick={() => { setFlag('es'); changeLang('es') }}><ReactCountryFlag countryCode={'es'} svg />Español</MenuItem>
               <MenuItem onClick={() => { setFlag('de'); changeLang('de') }}><ReactCountryFlag countryCode={'de'} svg />Deutsch</MenuItem>
               <MenuItem onClick={() => { setFlag('it'); changeLang('it') }}><ReactCountryFlag countryCode={'it'} svg />Italiano</MenuItem>
+              <MenuItem onClick={() => { setFlag('cn'); changeLang('zh-CN') }}><ReactCountryFlag countryCode={'cn'} svg />中文</MenuItem>
             </MenuList>
           </Portal>
         </Menu> : <></>}

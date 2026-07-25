@@ -418,5 +418,89 @@ export const resources_welcome = {
         start_blank: 'Iniziate con un\'area di disegno vuota. Per tracciare un flusso, cliccate nell\'area di disegno, trascinate senza rilasciare, poi rilasciate.'
       }
     }
+  },
+  'zh-CN': {
+    translation: {
+      welcome: {
+        welcome: '欢迎使用 OpenSankey 网页应用',
+        breadcrumbs: {
+          intro: '概览',
+          //interface: 'Interface',
+          rc: '要点',
+          //licence: 'Licences',
+        },
+        read_me: '请先阅读',
+        intro: '功能指南',
+        interface: '界面按钮说明',
+        rc: '鼠标操作、工具栏与键盘快捷键',
+        licence: '许可证',
+        1: '鼠标模式选择按钮，共有 2 种模式：一种用于选中节点与流量以便移动它们，另一种用于通过鼠标点击创建流量与节点',
+        2: '用于按所属分组筛选节点与流量的可见性或颜色的按钮',
+        3: '用于按聚合层级筛选节点的按钮',
+        4: '用于按数值筛选流量可见性的按钮；该按钮还可修改图表的比例尺（流量的粗细）',
+        5: '用于调整绘图区尺寸、使所有元素都可见的按钮',
+        6: '用于在不考虑流量数值的情况下显示图表的按钮',
+        7: '用于显示更多帮助的按钮',
+        8: '用于打开、保存、编辑桑基图的导航菜单',
+        9: '用于连接 OpenSankey 账号并启用附加模块的按钮',
+        10: '用于打开配置菜单以编辑桑基图元素的按钮',
+        excel: '以 Excel 格式下载桑基图所用数据的按钮'
+      },
+      carousel: {
+        Image1: {
+          title: '理解您的流量，用桑基图将其呈现',
+          description: '在这种表示方式中，每个箭头的粗细与其所代表流量的数值成正比'
+        },
+        Image2: {
+          title: '快速导入您的数据，或直接绘制您的图表',
+          description: '通过 Excel 表格或交互式绘图区创建您的图表'
+        },
+        Image3: {
+          title: '让所呈现的信息更清晰',
+          description: '借助内置的节点、流量与数据标注，让您的图表易于阅读'
+        },
+        Image5: {
+          title: '制作互动式、教学式信息图',
+          description: '借助自动图例系统与文本框，简明地讲解您的成果'
+        },
+        Image6: {
+          title: '制作互动式、教学式信息图',
+          description: '通过直接嵌入图片或图标，制作精美的图表'
+        },
+        Image40: {
+          title: '提供必要的理解深度',
+          description: '聚合层级让您可以在多个细节层次上呈现您的流量'
+        },
+        Image41: {
+          title: '为理解提供必要的深度',
+          description: '每个细节层级都可直接选择，只显示有用的内容'
+        }
+      },
+      useTemplate: '使用此模板',
+      DisplayWelcome: '欢迎',
+      dontSeeAgain: '不再显示',
+      scale: '比例尺',
+      useTutoJSON: '打开',
+      useTutoExcel: '打开 Excel',
+      menuTuto: '打开教程菜单',
+      desire_to_know_more: '了解更多',
+      contribute_to_os: '了解更多',
+      legal: '法律信息',
+      tdr: '版权所有',
+      fullscreen: '启用全屏',
+      exitFullscreen: '退出全屏',
+      Avancé: '高级',
+      separator_interval: ',',
+      sep_decimal: '.',
+      start_template: '从模板开始',
+      start_tour: '引导游览',
+      start_blank: '空白图表',
+      tooltip: {
+        dontSeeAgain: '勾选此框后，欢迎界面将不再于下次加载页面时出现。若要重新显示该欢迎界面，请前往 帮助->首页。',
+        start_template: '从模板库中选择一张开箱即用的图表作为起点。',
+        start_tour: '在一张小型演示图上交互式浏览界面——菜单、工具栏与配置面板。',
+        start_blank: '从空白绘图区开始。绘制流量时，请在绘图区中点击、按住拖动，然后松开。'
+      }
+    }
   }
 }

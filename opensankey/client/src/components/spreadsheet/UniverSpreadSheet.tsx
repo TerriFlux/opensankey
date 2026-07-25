@@ -287,10 +287,10 @@ const SheetSelector = (
   )
 }
 
-// Mapping langue applicative (i18next) -> type d'enum LocaleType Univer. Univer fournit en-US/fr-FR/
-// es-ES/de-DE/it-IT (cf. @univerjs/presets/.../locales). Repli en-US.
+// Mapping langue applicative (i18next, réduite à 2 lettres) -> type d'enum LocaleType Univer. Univer
+// fournit en-US/fr-FR/es-ES/de-DE/it-IT/zh-CN (cf. @univerjs/presets/.../locales). Repli en-US.
 const UNIVER_LOCALE_TYPE: { [lang: string]: string } = {
-  fr: 'FR_FR', en: 'EN_US', es: 'ES_ES', de: 'DE_DE', it: 'IT_IT'
+  fr: 'FR_FR', en: 'EN_US', es: 'ES_ES', de: 'DE_DE', it: 'IT_IT', zh: 'ZH_CN'
 }
 
 // Charge les 4 fichiers de locale Univer (core/filter/sort/data-validation) pour la langue donnée.
@@ -322,6 +322,12 @@ const loadUniverLocales = (lang: string): Promise<any[]> => {
     import('@univerjs/presets/preset-sheets-filter/locales/it-IT'),
     import('@univerjs/presets/preset-sheets-sort/locales/it-IT'),
     import('@univerjs/presets/preset-sheets-data-validation/locales/it-IT')
+  ])
+  case 'zh': return Promise.all([
+    import('@univerjs/presets/preset-sheets-core/locales/zh-CN'),
+    import('@univerjs/presets/preset-sheets-filter/locales/zh-CN'),
+    import('@univerjs/presets/preset-sheets-sort/locales/zh-CN'),
+    import('@univerjs/presets/preset-sheets-data-validation/locales/zh-CN')
   ])
   default: return Promise.all([
     import('@univerjs/presets/preset-sheets-core/locales/en-US'),

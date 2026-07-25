@@ -54,14 +54,16 @@ import { NODE_MENU_CONFIG, STATIC_NODE_MENU_CONFIG } from './components/dialogs/
 import { Class_ApplicationData } from './types/ApplicationData'
 import { Type_JSON } from './types/Utils'
 import { loadUniversalJSON } from './Persistence/UniversalJSONCompression'
-import { getForcedLanguage } from './types/PublishOptions'
+import { getForcedLanguage, normalizeLanguage } from './types/PublishOptions'
 import { INPUT_ATTRIBUTES_CONFIG, OUTPUT_ATTRIBUTES_CONFIG } from './components/dialogs/PersistenceProcessDialogConfigs'
 
 // CONSTANTS =========================================================================================
 // Link with React
 window.React = React
-const browserLang = navigator.language.slice(0, 2)
-const supportedLangs = ['fr', 'en', 'es', 'de', 'it']
+const supportedLangs = ['fr', 'en', 'es', 'de', 'it', 'zh-CN']
+// `zh-CN` étant régionalisé, la langue navigateur passe par normalizeLanguage
+// (un slice(0, 2) renverrait 'zh', absent des ressources).
+const browserLang = normalizeLanguage(navigator.language, supportedLangs)
 // Langue imposée par la page hôte (?lang= ou window.sankey.language, cf. sites publiés) :
 // prioritaire sur la préférence mémorisée.
 const forcedLang = getForcedLanguage(supportedLangs)
@@ -74,7 +76,7 @@ if (forcedLang) {
   // la préférence mémorisée et on ne retombe sur le navigateur que si elle est absente/invalide.
   const savedLang = localStorage.getItem('i18nextLng')
   if (!savedLang || !supportedLangs.includes(savedLang))
-    i18next.changeLanguage(supportedLangs.includes(browserLang) ? browserLang : 'en')
+    i18next.changeLanguage(browserLang ?? 'en')
 }
 
 // Application container

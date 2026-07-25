@@ -82,7 +82,8 @@ export const ModalStanLayerChoice = ({
 }) => {
   const { i18n } = new_data
   const langCode = i18n.language?.substring(0, 2) ?? 'en'
-  const lang = (['fr', 'es', 'de', 'it'].includes(langCode)) ? langCode : 'en'
+  // 'zh' est le seul code réduit à 2 lettres qui ne corresponde pas au code de ressource ('zh-CN').
+  const lang = (['fr', 'es', 'de', 'it'].includes(langCode)) ? langCode : (langCode === 'zh' ? 'zh-CN' : 'en')
 
   const [layerId, setLayerId] = useState<number>(meta.layers[0]?.id ?? 0)
   const [busy, setBusy] = useState(false)
@@ -131,7 +132,8 @@ export const ModalStanLayerChoice = ({
           _active={{ cursor: 'grabbing' }}
         >
           <Text fontWeight='bold' fontSize='sm'>
-            {L(lang, { fr: 'Import STAN', en: 'STAN import', es: 'Importación STAN', de: 'STAN-Import', it: 'Importazione STAN' })}
+            {L(lang, { fr: 'Import STAN', en: 'STAN import', es: 'Importación STAN', de: 'STAN-Import', it: 'Importazione STAN',
+              'zh-CN': 'STAN 导入' })}
           </Text>
           <CloseButton size='sm' onClick={onClose} />
         </Box>
@@ -145,6 +147,7 @@ export const ModalStanLayerChoice = ({
               es: 'Este archivo contiene varias capas (sustancias). Elija la que desea importar:',
               de: 'Diese Datei enthält mehrere Ebenen (Substanzen). Wählen Sie die zu importierende:',
               it: 'Questo file contiene più livelli (sostanze). Scegli quello da importare:',
+              'zh-CN': '该文件包含多个层（物质）。请选择要导入的层：',
             })}
           </Text>
           <Select
@@ -174,7 +177,8 @@ export const ModalStanLayerChoice = ({
         {/* Pied */}
         <Box px={3} py={2} borderTop='1px solid' borderColor='gray.200' display='flex' justifyContent='flex-end' gap={2}>
           <Button size='xs' variant='ghost' onClick={onClose}>
-            {L(lang, { fr: 'Annuler', en: 'Cancel', es: 'Cancelar', de: 'Abbrechen', it: 'Annulla' })}
+            {L(lang, { fr: 'Annuler', en: 'Cancel', es: 'Cancelar', de: 'Abbrechen', it: 'Annulla',
+              'zh-CN': '取消' })}
           </Button>
           <Button
             size='xs'
@@ -182,7 +186,8 @@ export const ModalStanLayerChoice = ({
             isLoading={busy}
             onClick={handleImport}
           >
-            {L(lang, { fr: 'Importer', en: 'Import', es: 'Importar', de: 'Importieren', it: 'Importa' })}
+            {L(lang, { fr: 'Importer', en: 'Import', es: 'Importar', de: 'Importieren', it: 'Importa',
+              'zh-CN': '导入' })}
           </Button>
         </Box>
       </Box>

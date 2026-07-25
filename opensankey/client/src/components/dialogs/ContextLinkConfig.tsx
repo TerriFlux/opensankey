@@ -17,18 +17,28 @@ export const straightActionKey = (scope: StraightScope, mode: Type_StraightMenuM
   `straight${scope}${capFirst(mode)}`
 
 export const STRAIGHT_MODE_LABELS: Record<Type_StraightMenuMode, Record<string, string>> = {
-  none: { en: 'Free', fr: 'Libre', es: 'Libre', de: 'Frei', it: 'Libero' },
-  source: { en: 'Aligned to source', fr: 'En face de la source', es: 'Alineado al origen', de: 'An Quelle ausgerichtet', it: 'Allineato all\'origine' },
-  target: { en: 'Aligned to target', fr: 'En face de la destination', es: 'Alineado al destino', de: 'An Ziel ausgerichtet', it: 'Allineato alla destinazione' },
-  highest: { en: 'Highest of the two', fr: 'Le plus haut des deux', es: 'El más alto de los dos', de: 'Höchster der beiden', it: 'Il più alto dei due' },
-  lowest: { en: 'Lowest of the two', fr: 'Le plus bas des deux', es: 'El más bajo de los dos', de: 'Niedrigster der beiden', it: 'Il più basso dei due' }
+  none: { en: 'Free', fr: 'Libre', es: 'Libre', de: 'Frei', it: 'Libero',
+    'zh-CN': '自由' },
+  source: { en: 'Aligned to source', fr: 'En face de la source', es: 'Alineado al origen', de: 'An Quelle ausgerichtet', it: 'Allineato all\'origine',
+    'zh-CN': '对齐到源' },
+  target: { en: 'Aligned to target', fr: 'En face de la destination', es: 'Alineado al destino', de: 'An Ziel ausgerichtet', it: 'Allineato alla destinazione',
+    'zh-CN': '对齐到目标' },
+  highest: { en: 'Highest of the two', fr: 'Le plus haut des deux', es: 'El más alto de los dos', de: 'Höchster der beiden', it: 'Il più alto dei due',
+    'zh-CN': '两者中较高者' },
+  lowest: { en: 'Lowest of the two', fr: 'Le plus bas des deux', es: 'El más bajo de los dos', de: 'Niedrigster der beiden', it: 'Il più basso dei due',
+    'zh-CN': '两者中较低者' }
 }
 const STRAIGHT_MODE_TIPS: Record<Type_StraightMenuMode, Record<string, string>> = {
-  none: { en: 'Release this flow (not kept straight).', fr: 'Libérer ce flux (non gardé droit).', es: 'Liberar este flujo (no mantenido recto).', de: 'Diesen Fluss lösen (nicht gerade gehalten).', it: 'Libera questo flusso (non mantenuto dritto).' },
-  source: { en: 'Keep straight by aligning onto the source anchor (moves the target).', fr: 'Garder droit en alignant sur l\'accroche source (déplace la cible).', es: 'Mantener recto alineando sobre el anclaje del origen (mueve el destino).', de: 'Gerade halten durch Ausrichtung am Quell-Anker (verschiebt das Ziel).', it: 'Mantieni dritto allineando sull\'ancoraggio origine (sposta la destinazione).' },
-  target: { en: 'Keep straight by aligning onto the target anchor (moves the source).', fr: 'Garder droit en alignant sur l\'accroche cible (déplace la source).', es: 'Mantener recto alineando sobre el anclaje del destino (mueve el origen).', de: 'Gerade halten durch Ausrichtung am Ziel-Anker (verschiebt die Quelle).', it: 'Mantieni dritto allineando sull\'ancoraggio destinazione (sposta l\'origine).' },
-  highest: { en: 'Keep straight by aligning both anchors onto the highest of the two.', fr: 'Garder droit en alignant les deux accroches sur la plus haute des deux.', es: 'Mantener recto alineando ambos anclajes sobre el más alto de los dos.', de: 'Gerade halten durch Ausrichtung beider Anker am höchsten der beiden.', it: 'Mantieni dritto allineando entrambi gli ancoraggi sul più alto dei due.' },
-  lowest: { en: 'Keep straight by aligning both anchors onto the lowest of the two.', fr: 'Garder droit en alignant les deux accroches sur la plus basse des deux.', es: 'Mantener recto alineando ambos anclajes sobre el más bajo de los dos.', de: 'Gerade halten durch Ausrichtung beider Anker am niedrigsten der beiden.', it: 'Mantieni dritto allineando entrambi gli ancoraggi sul più basso dei due.' }
+  none: { en: 'Release this flow (not kept straight).', fr: 'Libérer ce flux (non gardé droit).', es: 'Liberar este flujo (no mantenido recto).', de: 'Diesen Fluss lösen (nicht gerade gehalten).', it: 'Libera questo flusso (non mantenuto dritto).',
+    'zh-CN': '释放该流量（不再保持拉直）。' },
+  source: { en: 'Keep straight by aligning onto the source anchor (moves the target).', fr: 'Garder droit en alignant sur l\'accroche source (déplace la cible).', es: 'Mantener recto alineando sobre el anclaje del origen (mueve el destino).', de: 'Gerade halten durch Ausrichtung am Quell-Anker (verschiebt das Ziel).', it: 'Mantieni dritto allineando sull\'ancoraggio origine (sposta la destinazione).',
+    'zh-CN': '通过对齐到源锚点保持拉直（移动目标）。' },
+  target: { en: 'Keep straight by aligning onto the target anchor (moves the source).', fr: 'Garder droit en alignant sur l\'accroche cible (déplace la source).', es: 'Mantener recto alineando sobre el anclaje del destino (mueve el origen).', de: 'Gerade halten durch Ausrichtung am Ziel-Anker (verschiebt die Quelle).', it: 'Mantieni dritto allineando sull\'ancoraggio destinazione (sposta l\'origine).',
+    'zh-CN': '通过对齐到目标锚点保持拉直（移动源）。' },
+  highest: { en: 'Keep straight by aligning both anchors onto the highest of the two.', fr: 'Garder droit en alignant les deux accroches sur la plus haute des deux.', es: 'Mantener recto alineando ambos anclajes sobre el más alto de los dos.', de: 'Gerade halten durch Ausrichtung beider Anker am höchsten der beiden.', it: 'Mantieni dritto allineando entrambi gli ancoraggi sul più alto dei due.',
+    'zh-CN': '将两个锚点都对齐到较高者以保持拉直。' },
+  lowest: { en: 'Keep straight by aligning both anchors onto the lowest of the two.', fr: 'Garder droit en alignant les deux accroches sur la plus basse des deux.', es: 'Mantener recto alineando ambos anclajes sobre el más bajo de los dos.', de: 'Gerade halten durch Ausrichtung beider Anker am niedrigsten der beiden.', it: 'Mantieni dritto allineando entrambi gli ancoraggi sul più basso dei due.',
+    'zh-CN': '将两个锚点都对齐到较低者以保持拉直。' }
 }
 
 // Boutons d'un sous-menu de portée (un par mode), liés à l'action générée correspondante.
@@ -148,14 +158,16 @@ export const LINK_MENU_CONFIG: MenuConfig = {
         fr: 'Inverser source/cible',
         es: 'Invertir origen/destino',
         de: 'Quelle/Ziel umkehren',
-        it: 'Inverti origine/destinazione'
+        it: 'Inverti origine/destinazione',
+        'zh-CN': '交换源/目标'
       },
       tooltips: {
         en: 'Inverse the source and target of the selected link(s)',
         fr: 'Inverser la source et la cible du/des flux sélectionné(s)',
         es: 'Invertir el origen y el destino del/de los flujo(s) seleccionado(s)',
         de: 'Quelle und Ziel des/der ausgewählten Flusses/Flüsse umkehren',
-        it: 'Inverti l\'origine e la destinazione del/dei flusso/i selezionato/i'
+        it: 'Inverti l\'origine e la destinazione del/dei flusso/i selezionato/i',
+        'zh-CN': '交换所选流量的源与目标'
       }
     },
 
@@ -169,21 +181,24 @@ export const LINK_MENU_CONFIG: MenuConfig = {
         fr: 'Flux de référence (proportionnel)',
         es: 'Flujo de referencia (proporcional)',
         de: 'Referenzfluss (proportional)',
-        it: 'Flusso di riferimento (proporzionale)'
+        it: 'Flusso di riferimento (proporzionale)',
+        'zh-CN': '参考流量（比例模式）'
       },
       labelsToggle: {
         en: { true: 'Unset reference flow', false: 'Set as reference flow' },
         fr: { true: 'Retirer le flux de référence', false: 'Définir comme flux de référence' },
         es: { true: 'Quitar flujo de referencia', false: 'Definir como flujo de referencia' },
         de: { true: 'Referenzfluss entfernen', false: 'Als Referenzfluss festlegen' },
-        it: { true: 'Rimuovi flusso di riferimento', false: 'Imposta come flusso di riferimento' }
+        it: { true: 'Rimuovi flusso di riferimento', false: 'Imposta come flusso di riferimento' },
+        'zh-CN': { true: '取消参考流量', false: '设为参考流量' }
       },
       tooltips: {
         en: 'In proportional mode, anchor the diagram center of gravity on this flow and scale everything by this flow\'s thickness ratio across data tags.',
         fr: 'En mode proportionnel, ancrer le centre de gravité du diagramme sur ce flux et dimensionner tout le reste selon le ratio d\'épaisseur de ce flux entre les tags de données.',
         es: 'En modo proporcional, anclar el centro de gravedad del diagrama en este flujo y escalar todo según la relación de grosor de este flujo entre las etiquetas de datos.',
         de: 'Im proportionalen Modus den Schwerpunkt des Diagramms an diesem Fluss verankern und alles anhand des Dickenverhältnisses dieses Flusses über die Daten-Tags skalieren.',
-        it: 'In modalità proporzionale, ancorare il baricentro del diagramma a questo flusso e ridimensionare tutto in base al rapporto di spessore di questo flusso tra i tag di dati.'
+        it: 'In modalità proporzionale, ancorare il baricentro del diagramma a questo flusso e ridimensionare tutto in base al rapporto di spessore di questo flusso tra i tag di dati.',
+        'zh-CN': '在比例模式下，将图表重心锚定在该流量上，并按该流量在各数据标签下的粗细比例缩放全部内容。'
       },
       getToggleValue: 'setReferenceFluxValue',
       closeMenuAfter: true
@@ -196,14 +211,16 @@ export const LINK_MENU_CONFIG: MenuConfig = {
         fr: 'Scinder en deux',
         es: 'Dividir en dos',
         de: 'In zwei teilen',
-        it: 'Dividi in due'
+        it: 'Dividi in due',
+        'zh-CN': '拆分为两段'
       },
       tooltips: {
         en: 'Insert a new node at the middle of this link, replacing it by two links of equal value',
         fr: 'Insérer un nouveau nœud au milieu du flux, remplaçant le flux par deux flux de même valeur',
         es: 'Insertar un nuevo nodo en el medio del flujo, reemplazándolo por dos flujos del mismo valor',
         de: 'Einen neuen Knoten in der Mitte des Flusses einfügen und ihn durch zwei Flüsse gleichen Wertes ersetzen',
-        it: 'Inserire un nuovo nodo al centro del flusso, sostituendolo con due flussi dello stesso valore'
+        it: 'Inserire un nuovo nodo al centro del flusso, sostituendolo con due flussi dello stesso valore',
+        'zh-CN': '在该流量中部插入一个新节点，将其替换为两条数值相同的流量'
       },
       closeMenuAfter: true,
       undoable: true
@@ -216,14 +233,16 @@ export const LINK_MENU_CONFIG: MenuConfig = {
         fr: 'Copier le(s) flux',
         es: 'Copiar flujo(s)',
         de: 'Fluss/Flüsse kopieren',
-        it: 'Copia flusso/i'
+        it: 'Copia flusso/i',
+        'zh-CN': '复制流量'
       },
       tooltips: {
         en: 'Duplicate the selected link(s) between the same source and target',
         fr: 'Dupliquer le(s) flux sélectionné(s) entre la même source et la même cible',
         es: 'Duplicar el/los flujo(s) seleccionado(s) entre el mismo origen y destino',
         de: 'Ausgewählte(n) Fluss/Flüsse zwischen gleicher Quelle und gleichem Ziel duplizieren',
-        it: 'Duplica il/i flusso/i selezionato/i tra la stessa origine e destinazione'
+        it: 'Duplica il/i flusso/i selezionato/i tra la stessa origine e destinazione',
+        'zh-CN': '在相同的源与目标之间复制所选流量'
       },
       closeMenuAfter: true
     },
@@ -235,14 +254,16 @@ export const LINK_MENU_CONFIG: MenuConfig = {
         fr: 'Réinit. valeurs styles',
         es: 'Restablecer atributos',
         de: 'Attribute zurücksetzen',
-        it: 'Reimposta attributi'
+        it: 'Reimposta attributi',
+        'zh-CN': '重置属性'
       },
       tooltips: {
         en: 'Reset all local attributes to default values',
         fr: 'Remettre tous les attributs locaux aux valeurs par défaut',
         es: 'Restablecer todos los atributos locales a los valores predeterminados',
         de: 'Alle lokalen Attribute auf Standardwerte zurücksetzen',
-        it: 'Reimpostare tutti gli attributi locali ai valori predefiniti'
+        it: 'Reimpostare tutti gli attributi locali ai valori predefiniti',
+        'zh-CN': '将所有局部属性重置为默认值'
       },
       undoable: true
     },
@@ -254,14 +275,16 @@ export const LINK_MENU_CONFIG: MenuConfig = {
         fr: 'Appliquer le style aux enfants',
         es: 'Aplicar estilo a los hijos',
         de: 'Stil auf Kinder anwenden',
-        it: 'Applica stile ai figli'
+        it: 'Applica stile ai figli',
+        'zh-CN': '将样式应用到子元素'
       },
       tooltips: {
         en: 'Copy this flow\'s style and attributes onto all child flows between the source\'s and target\'s child nodes',
         fr: 'Copier le style et les attributs de ce flux sur tous les flux enfants reliant les nœuds enfants de la source et de la cible',
         es: 'Copiar el estilo y los atributos de este flujo en todos los flujos hijos entre los nodos hijos del origen y del destino',
         de: 'Stil und Attribute dieses Flusses auf alle Kind-Flüsse zwischen den Kindknoten von Quelle und Ziel kopieren',
-        it: 'Copia lo stile e gli attributi di questo flusso su tutti i flussi figli tra i nodi figli dell\'origine e della destinazione'
+        it: 'Copia lo stile e gli attributi di questo flusso su tutti i flussi figli tra i nodi figli dell\'origine e della destinazione',
+        'zh-CN': '将该流量的样式与属性复制到源与目标的子节点之间的所有子流量'
       },
       undoable: true
     },
@@ -282,14 +305,16 @@ export const LINK_MENU_CONFIG: MenuConfig = {
         fr: 'Mettre au premier plan',
         es: 'Traer al frente',
         de: 'In den Vordergrund',
-        it: 'Porta in primo piano'
+        it: 'Porta in primo piano',
+        'zh-CN': '置于顶层'
       },
       tooltips: {
         en: 'Draw selected link(s) on top of all other elements',
         fr: 'Afficher le(s) flux sélectionné(s) au-dessus de tous les autres éléments',
         es: 'Dibujar el/los flujo(s) seleccionado(s) encima de todos los demás elementos',
         de: 'Ausgewählte(n) Fluss/Flüsse über allen anderen Elementen zeichnen',
-        it: 'Disegna il/i flusso/i selezionato/i sopra tutti gli altri elementi'
+        it: 'Disegna il/i flusso/i selezionato/i sopra tutti gli altri elementi',
+        'zh-CN': '将所选流量绘制在所有其他元素之上'
       }
     },
 
@@ -300,14 +325,16 @@ export const LINK_MENU_CONFIG: MenuConfig = {
         fr: 'Mettre à l\'arrière-plan',
         es: 'Enviar al fondo',
         de: 'In den Hintergrund',
-        it: 'Manda in secondo piano'
+        it: 'Manda in secondo piano',
+        'zh-CN': '置于底层'
       },
       tooltips: {
         en: 'Draw selected link(s) behind all other elements',
         fr: 'Afficher le(s) flux sélectionné(s) derrière tous les autres éléments',
         es: 'Dibujar el/los flujo(s) seleccionado(s) detrás de todos los demás elementos',
         de: 'Ausgewählte(n) Fluss/Flüsse hinter allen anderen Elementen zeichnen',
-        it: 'Disegna il/i flusso/i selezionato/i dietro tutti gli altri elementi'
+        it: 'Disegna il/i flusso/i selezionato/i dietro tutti gli altri elementi',
+        'zh-CN': '将所选流量绘制在所有其他元素之下'
       }
     },
 
@@ -318,7 +345,8 @@ export const LINK_MENU_CONFIG: MenuConfig = {
         fr: 'Libellé nom',
         es: 'Etiqueta de nombre',
         de: 'Namensbezeichnung',
-        it: 'Etichetta nome'
+        it: 'Etichetta nome',
+        'zh-CN': '名称标签'
       },
       labelsToggle: {
         en: {
@@ -340,6 +368,10 @@ export const LINK_MENU_CONFIG: MenuConfig = {
         it: {
           true: 'Nascondi etichetta nome',
           false: 'Mostra etichetta nome'
+        },
+        'zh-CN': {
+          true: '隐藏名称标签',
+          false: '显示名称标签'
         }
       },
       tooltips: {
@@ -347,7 +379,8 @@ export const LINK_MENU_CONFIG: MenuConfig = {
         fr: 'Basculer la visibilité du libellé nom',
         es: 'Alternar la visibilidad de la etiqueta de nombre',
         de: 'Sichtbarkeit der Namensbezeichnung umschalten',
-        it: 'Attiva/disattiva la visibilità dell\'etichetta nome'
+        it: 'Attiva/disattiva la visibilità dell\'etichetta nome',
+        'zh-CN': '切换名称标签的可见性'
       },
       getToggleValue: 'toggleNameVisibilityValue',
       undoable: true
@@ -360,7 +393,8 @@ export const LINK_MENU_CONFIG: MenuConfig = {
         fr: 'Libellé valeur',
         es: 'Etiqueta de valor',
         de: 'Wertbezeichnung',
-        it: 'Etichetta valore'
+        it: 'Etichetta valore',
+        'zh-CN': '数值标签'
       },
       labelsToggle: {
         en: {
@@ -382,6 +416,10 @@ export const LINK_MENU_CONFIG: MenuConfig = {
         it: {
           true: 'Nascondi valore',
           false: 'Mostra valore'
+        },
+        'zh-CN': {
+          true: '隐藏数值',
+          false: '显示数值'
         }
       },
       tooltips: {
@@ -389,7 +427,8 @@ export const LINK_MENU_CONFIG: MenuConfig = {
         fr: 'Basculer la visibilité du libellé valeur',
         es: 'Alternar la visibilidad de la etiqueta de valor',
         de: 'Sichtbarkeit der Wertbezeichnung umschalten',
-        it: 'Attiva/disattiva la visibilità dell\'etichetta valore'
+        it: 'Attiva/disattiva la visibilità dell\'etichetta valore',
+        'zh-CN': '切换数值标签的可见性'
       },
       getToggleValue: 'toggleValueVisibilityValue',
       undoable: true
@@ -402,49 +441,56 @@ export const LINK_MENU_CONFIG: MenuConfig = {
       fr: 'Édition',
       es: 'Edición',
       de: 'Bearbeitung',
-      it: 'Modifica'
+      it: 'Modifica',
+      'zh-CN': '编辑'
     },
     ChangePlan: {
       en: 'Change Layer',
       fr: 'Changer Plan',
       es: 'Cambiar capa',
       de: 'Ebene ändern',
-      it: 'Cambia livello'
+      it: 'Cambia livello',
+      'zh-CN': '更改图层'
     },
     MaskAttr: {
       en: 'Mask Attributes',
       fr: 'Affichage des éléments',
       es: 'Visualización de elementos',
       de: 'Elementanzeige',
-      it: 'Visualizzazione elementi'
+      it: 'Visualizzazione elementi',
+      'zh-CN': '隐藏属性'
     },
     EditValue: {
       en: 'Edit Value',
       fr: 'Éditer Valeur',
       es: 'Editar valor',
       de: 'Wert bearbeiten',
-      it: 'Modifica valore'
+      it: 'Modifica valore',
+      'zh-CN': '编辑数值'
     },
     Straightness: {
       en: 'Straightness',
       fr: 'Rectitude',
       es: 'Rectitud',
       de: 'Geradheit',
-      it: 'Rettitudine'
+      it: 'Rettitudine',
+      'zh-CN': '拉直'
     },
     StraightnessFlux: {
       en: 'Flow only',
       fr: 'Flux uniquement',
       es: 'Solo el flujo',
       de: 'Nur Fluss',
-      it: 'Solo flusso'
+      it: 'Solo flusso',
+      'zh-CN': '仅该流量'
     },
     StraightnessChildren: {
       en: 'Children',
       fr: 'Enfants',
       es: 'Hijos',
       de: 'Kinder',
-      it: 'Figli'
+      it: 'Figli',
+      'zh-CN': '子元素'
     }
   }
 } as const
