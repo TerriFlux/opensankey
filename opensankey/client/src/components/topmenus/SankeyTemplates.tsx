@@ -55,11 +55,13 @@ import { decompressGzipDataFixed } from '../../Persistence/UniversalJSONCompress
  * changent la racine des fichiers et les dialogues de chargement :
  *  - 'sankeydata'    : les modèles, dans le submodule SankeyData ;
  *  - 'mfadata'       : la sankeythèque, nos études publiées, dans MFAData ;
- *  - 'esankey-local' : galerie locale de DÉVELOPPEMENT (os#1281), les démos
+ *  - 'esankey-local' : galerie réservée aux DÉVELOPPEURS (os#1281), les démos
  *    e!Sankey d'un dossier pointé par ESANKEY_CORPUS_DIR côté serveur. Corpus
- *    propriétaire : jamais committé ni déployé. La source n'existe que si le
- *    backend est en mode debug avec ESANKEY_CORPUS_DIR défini (sinon 404, ses
- *    modèles n'apparaissent pas).
+ *    propriétaire : jamais committé ni publié — il est transporté à la main sur
+ *    les serveurs. La source n'existe que si ESANKEY_CORPUS_DIR est défini ET
+ *    que le backend est en mode debug (poste de dev) ou que la requête vient
+ *    d'un compte développeur (serveurs déployés) ; sinon 404, ses modèles
+ *    n'apparaissent pas.
  * Une source absente (404, index vide, pas de JSON) ne contribue simplement
  * aucun modèle : le panneau montre les onglets des catégories restantes.
  */
@@ -1063,7 +1065,7 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
       padding='0.5rem 0.75rem 0.4rem 0.75rem'
     >
       {is_esankey_dev_tab
-        ? 'Galerie locale de développement (ESANKEY_CORPUS_DIR) — corpus propriétaire, non déployé.'
+        ? 'Galerie réservée aux développeurs (ESANKEY_CORPUS_DIR) — corpus propriétaire, non publié.'
         : new_data.t(is_theque_tab ? 'templates.sankeytheque_hint' : 'templates.gallery_hint')}
     </Text>
     {/* Un seul niveau : les dossiers d'étude (sections repliables) se suivent
