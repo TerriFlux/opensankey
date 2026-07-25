@@ -766,5 +766,313 @@ export const resources_inspector = {
         }
       }
     }
+  },
+  'zh-CN': {
+    translation: {
+      inspector: {
+        view: '视图',
+        back_to_selection: '返回所选内容',
+        pin: '固定面板（绘图区在其左侧重新调整大小）',
+        unpin: '取消固定面板（浮于绘图之上）',
+        // Cibles : singulier / pluriel (fil d'Ariane).
+        target: {
+          view: '视图',
+          node: '节点', nodes: '节点',
+          link: '流量', links: '流量',
+          container: '区域', containers: '区域',
+          legend: '图例', legends: '图例',
+          title: '标题', titles: '标题',
+          mixed: '混合选择', elements: '元素'
+        },
+        nothing_here: '没有可用于以下对象的设置：{{target}}。',
+        // Portée & cascade de styles
+        selection: '选择',
+        selection_count: '选择（{{count}}）',
+        styles_count: '样式（{{count}}）',
+        cascade: '层叠',
+        style_name: '样式名称',
+        new_style: '+ 新建样式',
+        delete_style: '删除',
+        delete_style_tooltip: '删除该样式（沿用它的元素将回退到其层叠中的其余样式）',
+        attach_style: '为所选内容附加一个样式（位于层叠末端，优先生效）',
+        detach_style: '将该样式从所选内容中分离',
+        edited_style_hint: '正在编辑高亮的样式：所有沿用它的元素都会随之改变。层叠中最后一个优先；局部覆盖始终优先。',
+        divergent_cascade: '第 1 个元素的层叠——其他被选中的元素遵循不同的层叠。 ',
+        selection_hint: '变暗的属性：继承自样式（层叠）。紫色轮廓：在所选内容上被覆盖。橙色轮廓：存在多个值。',
+        tab_overloaded: '包含被覆盖的属性',
+        provenance: {
+          local: '在此处（所选内容上）被覆盖',
+          from_style: '继承自样式 « {{style}} »',
+          factory: '出厂默认值'
+        },
+        // Onglets
+        tab: {
+          stock: '存量',
+          tooltip: '提示框',
+          tags: '标签',
+          analysis: '分析',
+          title: '标题',
+          mfa: 'MFA',
+          styles: '样式'
+        },
+        // #1258 — Onglet MFA (espace AFM unifié).
+        mfa: {
+          reconciliation: '数据调和',
+          open_spreadsheet: '打开电子表格（约束）',
+          run_reconciliation: '通过 Excel 调和……',
+          value_in_mfa: '数值类型、界限与不确定性在 MFA 选项卡中编辑。'
+        },
+        // #1258 — Titres des sections repliables des onglets.
+        section: {
+          page: '页面',
+          dressing: '背景与网格',
+          scale_sizes: '比例尺与尺寸',
+          advanced: '高级',
+          advanced_geometry: '高级 — 几何'
+        },
+        // #1259 — Section « Groupe » unifiée (ex-« Cadre géométrique » ZDT + nœuds).
+        group: {
+          title: '组',
+          tooltip: '将节点或文本区附加到所选元素：框体会自动定位以包围其成员，并随其移动'
+        },
+        visible: '可见',
+        labels_visible: '标签可见',
+        stock_enabled: '已启用',
+        stock_shape: '形状',
+        stock_shape_tooltip: '显示存量形状',
+        stock_labels: '标签',
+        stock_labels_tooltip: '显示存量标签',
+        stock_shape_visible: '存量形状可见',
+        stock_select_node: '请选择一个带有存量的节点。',
+        stock_caption: '存量说明',
+        stock_delta_caption: 'Δ 存量说明',
+        advanced_editor: '高级编辑器……',
+        open_editor: '打开编辑器……',
+        tags_assign_hint: '指派（标签组在“筛选”中编辑）',
+        // OS#1278 — section « Analyse » (graphiques couronne / histogramme).
+        analysis: {
+          decompose_by: '按此分解',
+          compare_by: '按此比较',
+          none: '— 无 —',
+          inputs: '进入的流量',
+          outputs: '流出的流量',
+          inputs_by: '按 {{group}} 划分的进入流量',
+          outputs_by: '按 {{group}} 划分的流出流量',
+          node_children: '子节点（{{dim}}）',
+          flux_children: '子流量（{{dim}}）',
+          repr_auto: '自动',
+          repr_donut: '环形图',
+          repr_bars: '条形图',
+          show_in_tooltip: '在提示框中显示',
+          show_on_node: '在节点上显示（环形图 / 直方图）',
+          select_subject: '请选择一个节点或一条流量。'
+        },
+        // OS#1285 — visibilité des blocs d'info-bulle.
+        tooltip_blocks: {
+          title: '可见区块',
+          values: '数值',
+          flux: '流量',
+          tags: '标签',
+          series_flux: '流量序列',
+          data: '数据',
+          series_data: '数据序列',
+          unitary: '单位桑基图',
+          analysis: '分析图表'
+        },
+        // OS#1286 — registre d'unités du diagramme (grandeurs/unités/défauts).
+        units: {
+          title: '图表单位',
+          none: '— 无 —',
+          type_default: '默认',
+          open_editor: '编辑……',
+          open_editor_tooltip: '编辑图表的单位（量纲、单位、系数、默认值）',
+          symbol: '符号',
+          coefficient: '系数',
+          coefficient_tooltip: '该单位以其量纲基准单位表示的数值（基准单位 = 1）。数值以基准单位存储。',
+          display_scale: '比例尺',
+          display_scale_tooltip: '该量纲专用的显示比例尺（类似 e!Sankey）：单位类型分带每 100 px 所代表的基准单位量。留空：使用图表比例尺。可在同一条流量上平衡不同量纲（kWh、t 与 EUR）。',
+          default: '默认',
+          default_tooltip: '该量纲的默认显示单位（未显式指定单位的流量将继承它）',
+          add_unit: '+ 单位',
+          add_unit_type: '+ 量纲',
+          new_unit_name: '单位',
+          new_unit_type_name: '新建量纲',
+          empty: '注册表中没有量纲——请添加一个。'
+        }
+      },
+      filter_panel: {
+        filter: '筛选',
+        select: '选择',
+        select_tooltip: '按类型与标签选择元素（批量操作）',
+        edit: '编辑',
+        edit_group: '编辑该组',
+        show_hidden: '显示隐藏的组（{{count}}）',
+        hide_hidden: '隐藏“隐藏的组”',
+        select_elements: '选择元素',
+        deselect_all: '取消全选',
+        selection_summary: '所选：{{summary}}',
+        short: {
+          node: '节点',
+          link: '流量',
+          data: '数据',
+          level: '层级',
+          views: '视图'
+        }
+      }
+    }
+  },
+  ja: {
+    translation: {
+      inspector: {
+        view: 'ビュー',
+        back_to_selection: '選択に戻る',
+        pin: 'パネルを固定（描画エリアがその左側でサイズ調整されます）',
+        unpin: 'パネルの固定を解除（描画の上に浮かびます）',
+        // Cibles : singulier / pluriel (fil d'Ariane).
+        target: {
+          view: 'ビュー',
+          node: 'ノード', nodes: 'ノード',
+          link: 'フロー', links: 'フロー',
+          container: 'エリア', containers: 'エリア',
+          legend: '凡例', legends: '凡例',
+          title: 'タイトル', titles: 'タイトル',
+          mixed: '複数種類の選択', elements: '要素'
+        },
+        nothing_here: '{{target}} に利用できる設定はありません。',
+        // Portée & cascade de styles
+        selection: '選択',
+        selection_count: '選択（{{count}}）',
+        styles_count: 'スタイル（{{count}}）',
+        cascade: 'カスケード',
+        style_name: 'スタイル名',
+        new_style: '+ 新しいスタイル',
+        delete_style: '削除',
+        delete_style_tooltip: 'このスタイルを削除します（これに従っている要素は、カスケードの残りのスタイルに戻ります）',
+        attach_style: '選択中の要素にスタイルを付与します（カスケードの末尾で、最も優先されます）',
+        detach_style: 'このスタイルを選択中の要素から外します',
+        edited_style_hint: '強調表示されたスタイルを編集しています：これに従うすべての要素が変わります。カスケードの最後が優先され、個別の上書きは常に優先されます。',
+        divergent_cascade: '1 番目の要素のカスケード — 選択中の他の要素は別のカスケードに従っています。 ',
+        selection_hint: '薄い属性：スタイル（カスケード）から継承。紫の枠：選択中の要素で上書き。オレンジの枠：値が複数あります。',
+        tab_overloaded: '上書きされた属性を含みます',
+        provenance: {
+          local: 'ここで上書き（選択中の要素で）',
+          from_style: 'スタイル «{{style}}» から継承',
+          factory: '工場出荷時の既定値'
+        },
+        // Onglets
+        tab: {
+          stock: 'ストック',
+          tooltip: 'ツールチップ',
+          tags: 'タグ',
+          analysis: '分析',
+          title: 'タイトル',
+          mfa: 'MFA',
+          styles: 'スタイル'
+        },
+        // #1258 — Onglet MFA (espace AFM unifié).
+        mfa: {
+          reconciliation: 'データ調和',
+          open_spreadsheet: 'スプレッドシートを開く（制約）',
+          run_reconciliation: 'Excel で調和…',
+          value_in_mfa: '値の種類、範囲、不確実性は MFA タブで編集します。'
+        },
+        // #1258 — Titres des sections repliables des onglets.
+        section: {
+          page: 'ページ',
+          dressing: '背景とグリッド',
+          scale_sizes: 'スケールとサイズ',
+          advanced: '詳細設定',
+          advanced_geometry: '詳細 — 配置'
+        },
+        // #1259 — Section « Groupe » unifiée (ex-« Cadre géométrique » ZDT + nœuds).
+        group: {
+          title: 'グループ',
+          tooltip: '選択中の要素にノードやテキストエリアを紐づけます：枠はメンバーを囲む位置に配置され、メンバーとともに移動します'
+        },
+        visible: '表示',
+        labels_visible: 'ラベルを表示',
+        stock_enabled: '有効',
+        stock_shape: '形状',
+        stock_shape_tooltip: 'ストックの形状を表示します',
+        stock_labels: 'ラベル',
+        stock_labels_tooltip: 'ストックのラベルを表示します',
+        stock_shape_visible: 'ストックの形状を表示',
+        stock_select_node: 'ストックを持つノードを選択してください。',
+        stock_caption: 'ストックの説明',
+        stock_delta_caption: 'Δ ストックの説明',
+        advanced_editor: '詳細エディタ…',
+        open_editor: 'エディタを開く…',
+        tags_assign_hint: '割り当て（グループは「絞り込み」で編集します）',
+        // OS#1278 — section « Analyse » (graphiques couronne / histogramme).
+        analysis: {
+          decompose_by: '分解の軸',
+          compare_by: '比較の軸',
+          none: '— なし —',
+          inputs: '入ってくるフロー',
+          outputs: '出ていくフロー',
+          inputs_by: '{{group}} 別の入ってくるフロー',
+          outputs_by: '{{group}} 別の出ていくフロー',
+          node_children: '子ノード（{{dim}}）',
+          flux_children: '子フロー（{{dim}}）',
+          repr_auto: '自動',
+          repr_donut: 'ドーナツ',
+          repr_bars: '棒',
+          show_in_tooltip: 'ツールチップに表示',
+          show_on_node: 'ノード上に表示（ドーナツ／ヒストグラム）',
+          select_subject: 'ノードまたはフローを選択してください。'
+        },
+        // OS#1285 — visibilité des blocs d'info-bulle.
+        tooltip_blocks: {
+          title: '表示するブロック',
+          values: '値',
+          flux: 'フロー',
+          tags: 'タグ',
+          series_flux: 'フローの系列',
+          data: 'データ',
+          series_data: 'データの系列',
+          unitary: '単位サンキー',
+          analysis: '分析チャート'
+        },
+        // OS#1286 — registre d'unités du diagramme (grandeurs/unités/défauts).
+        units: {
+          title: '図の単位',
+          none: '— なし —',
+          type_default: '既定',
+          open_editor: '編集…',
+          open_editor_tooltip: '図の単位を編集します（物理量、単位、係数、既定値）',
+          symbol: '記号',
+          coefficient: '係数',
+          coefficient_tooltip: 'この単位を、その物理量の基準単位で表した値（基準単位 = 1）。値は基準単位で保存されます。',
+          display_scale: 'スケール',
+          display_scale_tooltip: 'この物理量専用の表示スケール（e!Sankey と同様）：単位型の帯について、100 px あたりに相当する基準単位の量です。空欄：図のスケールを使います。同じフロー上で異なる物理量（kWh、t、EUR）のバランスをとれます。',
+          default: '既定',
+          default_tooltip: 'この物理量の既定の表示単位（単位を明示していないフローが継承します）',
+          add_unit: '+ 単位',
+          add_unit_type: '+ 物理量',
+          new_unit_name: '単位',
+          new_unit_type_name: '新しい物理量',
+          empty: 'レジストリに物理量がありません — 追加してください。'
+        }
+      },
+      filter_panel: {
+        filter: '絞り込み',
+        select: '選択',
+        select_tooltip: '種類とタグで要素を選択します（一括操作）',
+        edit: '編集',
+        edit_group: 'このグループを編集',
+        show_hidden: '非表示のグループを表示（{{count}}）',
+        hide_hidden: '非表示のグループを隠す',
+        select_elements: '要素を選択',
+        deselect_all: '選択をすべて解除',
+        selection_summary: '選択：{{summary}}',
+        short: {
+          node: 'ノード',
+          link: 'フロー',
+          data: 'データ',
+          level: 'レベル',
+          views: 'ビュー'
+        }
+      }
+    }
   }
 }

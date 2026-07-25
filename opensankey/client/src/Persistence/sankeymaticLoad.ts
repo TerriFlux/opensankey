@@ -26,8 +26,16 @@ export const importSankeymaticText = (text: string, app_data: Class_ApplicationD
  * Contrairement à l'import, on n'ouvre PAS le Tableur : le dialogue des modèles
  * doit juste afficher le diagramme.
  */
-export const loadSankeymaticTemplate = (file_path: string, app_data: Class_ApplicationData): void => {
+export const loadSankeymaticTemplate = (
+  file_path: string,
+  app_data: Class_ApplicationData,
+  // Avance automatique du diaporama de la galerie : marquée dans l'URL pour que
+  // le journal d'usage la compte à part des chargements délibérés
+  // (cf. server/usage_events.py et SankeyTemplates.assetUrl).
+  from_slideshow = false
+): void => {
   const url = window.location.origin + '/opensankey/menus/templates_asset/' + file_path
+    + (from_slideshow ? '?origin=slideshow' : '')
   fetch(url)
     .then(response => response.text())
     .then(text => applySankeymaticText(text, app_data))

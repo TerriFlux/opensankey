@@ -90,10 +90,10 @@ interface TranslationConfig {
  * Convertit le format { key: { en: '...', fr: '...' } }
  * en format i18next { en: { translation: { key: '...' } }, fr: { translation: { key: '...' } } }
  */
-const SUPPORTED_LANGS = ['en', 'fr', 'es', 'de', 'it'] as const
+const SUPPORTED_LANGS = ['en', 'fr', 'es', 'de', 'it', 'zh-CN', 'ja'] as const
 type SupportedLang = typeof SUPPORTED_LANGS[number]
 
-// Langues effectivement présentes dans un objet resources (racines en/fr/es/de/it)
+// Langues effectivement présentes dans un objet resources (racines en/fr/es/de/it/zh-CN/ja)
 const langs_of = (resources: I18nResources): SupportedLang[] =>
   SUPPORTED_LANGS.filter(lang => resources[lang] !== undefined)
 
@@ -143,6 +143,8 @@ export interface I18nResources {
   es?: LanguageResource
   de?: LanguageResource
   it?: LanguageResource
+  'zh-CN'?: LanguageResource
+  ja?: LanguageResource
 }
 
 interface LanguageLabels {
@@ -151,6 +153,8 @@ interface LanguageLabels {
   es?: string
   de?: string
   it?: string
+  'zh-CN'?: string
+  ja?: string
 }
 
 interface LanguageTooltips {
@@ -159,6 +163,8 @@ interface LanguageTooltips {
   es?: string
   de?: string
   it?: string
+  'zh-CN'?: string
+  ja?: string
 }
 
 interface ToggleLabels {
@@ -167,6 +173,8 @@ interface ToggleLabels {
   es?: { true: string; false: string }
   de?: { true: string; false: string }
   it?: { true: string; false: string }
+  'zh-CN'?: { true: string; false: string }
+  ja?: { true: string; false: string }
 }
 
 interface AttributeConfig {

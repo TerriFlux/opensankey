@@ -44,6 +44,11 @@ export class Class_DrawingAreaInteractions {
   // placement). true = « / » (bas-gauche → haut-droit), déduit du sens du glisser.
   private _place_line_flip = false
 
+  // État de geste — outil « nœud » : le relâché ne pose un nœud que si l'appui a eu
+  // lieu sur le FOND. Presser un nœud existant ne doit pas en empiler un second
+  // par-dessus (et son gestionnaire de clic reprendrait la main juste après).
+  private _node_tool_armed = false
+
   /**
    * Pose les écouteurs sur la zone de dessin. Les gestes d'édition (création de flux, sélection)
    * ne sont branchés qu'en mode éditable ; le zoom/pan l'est toujours.
@@ -145,6 +150,16 @@ export class Class_DrawingAreaInteractions {
       if (da.ghost_link == null) {// Start creating  a node & a ghost_link + ghost node
         // Get relative mouse position
         const mouse_position = d3.pointer(event)
+        // Outil « nœud » : aucun flux fantôme n'est amorcé — la pose se fait au
+        // relâché, au point pressé (cf. _eventReleasedClick). C'est ce qui rend
+        // les deux outils réellement distincts : sous l'outil nœud, un glisser ne
+        // trace plus de flux.
+        if (!da.isInLinkTool()) {
+          this._starting_x_point = mouse_position[0]
+          this._starting_y_point = mouse_position[1]
+          this._node_tool_armed = !da.isMouseOverAnExistingNode()
+          return
+        }
         // Create default source node
         const source = da.sankey.addNewDefaultNode()
         source.draw()
@@ -280,6 +295,18 @@ export class Class_DrawingAreaInteractions {
   ) {
     // EDITION MODE =============================================================
     if (da.isInEditionMode()) {
+      // OUTIL NŒUD : le relâché pose UN nœud au point pressé, rien d'autre. Aucun
+      // flux fantôme n'a été amorcé (cf. _eventMaintainedClick), il n'y a donc rien
+      // à résoudre.
+      if (da.ghost_link === null) {
+        const armed = this._node_tool_armed
+        this._node_tool_armed = false
+        if (armed && da.isInNodeTool() && event.button === 0 && da.eventsEnabled()) {
+          this._createNodeAtPoint(da, this._starting_x_point, this._starting_y_point)
+          da.finishToolGesture()
+        }
+        return
+      }
       // When we are creating a link with LMB
       if (da.ghost_link !== null) {
         let ghost_link_json: Type_JSON | undefined
@@ -291,12 +318,26 @@ export class Class_DrawingAreaInteractions {
         if (da.ghost_link.source.isMouseOver()) {
           // If we release the mouse on the source of the link
           // then delete the link & target to keep only the source
-          // So we only created 1 node
           da.deleteNode(da.ghost_link.target as Class_NodeElement)
           da.drawing_link = false
-          // Sélectionner le nœud fraîchement créé (clic simple sans glisser) :
-          // les branches de création de flux sélectionnent leurs éléments, celle-ci
-          // l'oubliait, laissant le nœud non sélectionné après le dessin.
+          if (this._ghost_link_source) {
+            // Outil FLUX, clic sans glisser sur le fond : rien n'est posé. Le nœud
+            // source fantôme est retiré — poser un nœud seul est le rôle de l'outil
+            // nœud, et c'est ce qui rend les deux outils réellement distincts. Geste
+            // annulé : aucune entrée d'historique.
+            da.deleteNode(this._ghost_link_source)
+            this._ghost_link_source = null
+            this._ghost_link_target = null
+            const cancelled_id = da.ghost_link.id
+            da.ghost_link.delete()
+            da.forgetGElementId(cancelled_id)
+            da.ghost_link = null
+            da.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+            da.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+            return
+          }
+          // Relâché sur un nœud EXISTANT (tracé amorcé depuis lui) : rien de créé,
+          // on se contente de le sélectionner.
           da.purgeSelectionOfElement(false)
           da.addElementToSelection(da.ghost_link.source)
           da.application_data.menu_configuration.openConfigMenu()
@@ -429,6 +470,10 @@ export class Class_DrawingAreaInteractions {
               da.nodePositioning.computeParametrization(false)
             })
         }
+        // Flux posé : l'outil rend la main à la sélection (sauf s'il est verrouillé),
+        // l'auteur enchaîne donc sur le réglage des éléments qu'on vient de lui
+        // sélectionner.
+        da.finishToolGesture()
       }
     } else if (da.isInSelectionMode() && event.button == 0) {
       if ((!event.shiftKey) && (!event.ctrlKey) && (!event.metaKey)) {
@@ -522,9 +567,39 @@ export class Class_DrawingAreaInteractions {
       da.saveUndo(undo)
       da.saveRedo(create)
       create()
-      da.exitPlaceContainerMode()
+      // Retour en sélection, sauf outil verrouillé (double-clic sur son bouton) —
+      // même règle que pour les outils nœud et flux.
+      da.finishToolGesture()
       da.orderElementOnDA()
     }
+  }
+
+  /**
+   * Outil « nœud » : pose un nœud centré sur le point donné, le sélectionne et ouvre
+   * l'inspecteur, en une seule transition d'historique. `node` est réassignée par
+   * `create` pour que l'undo qui suit un redo vise bien le nœud recréé (même schéma
+   * que la création d'une zone de texte).
+   */
+  private _createNodeAtPoint(da: Class_DrawingArea, x: number, y: number) {
+    let node: Class_NodeElement
+    const create = () => {
+      node = da.sankey.addNewDefaultNode()
+      node.draw()
+      node.setPosXY(
+        x - (node.getShapeWidthToUse() / 2),
+        y - (node.getShapeHeightToUse() / 2))
+      da.purgeSelectionOfElement(false)
+      da.addElementToSelection(node)
+      da.application_data.menu_configuration.openConfigMenu()
+      da.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+    }
+    const undo = () => {
+      da.deleteNode(node)
+      da.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+    }
+    da.saveUndo(undo)
+    da.saveRedo(create)
+    create()
   }
 
   /**

@@ -112,7 +112,8 @@ export const ModalExcelTemplate = ({
 }) => {
   const { i18n } = new_data
   const langCode = i18n.language?.substring(0, 2) ?? 'en'
-  const lang = (['fr', 'es', 'de', 'it'].includes(langCode)) ? langCode : 'en'
+  // 'zh' est le seul code réduit à 2 lettres qui ne corresponde pas au code de ressource ('zh-CN').
+  const lang = (['fr', 'es', 'de', 'it', 'ja'].includes(langCode)) ? langCode : (langCode === 'zh' ? 'zh-CN' : 'en')
   const labelKey = ('label_' + lang) as 'label_fr' | 'label_en' | 'label_es' | 'label_de' | 'label_it'
 
   const [checked, setChecked] = useState<Record<string, boolean>>(getInitialChecked)
@@ -154,7 +155,9 @@ export const ModalExcelTemplate = ({
       setShow(false)
     } catch (e) {
       toast({
-        title: ({ fr: 'Erreur', en: 'Error', es: 'Error', de: 'Fehler', it: 'Errore' } as Record<string, string>)[lang] ?? 'Error',
+        title: ({ fr: 'Erreur', en: 'Error', es: 'Error', de: 'Fehler', it: 'Errore',
+          'zh-CN': '错误',
+          ja: 'エラー' } as Record<string, string>)[lang] ?? 'Error',
         description: String(e),
         status: 'error',
         duration: 5000,
@@ -202,7 +205,9 @@ export const ModalExcelTemplate = ({
           _active={{ cursor: 'grabbing' }}
         >
           <Text fontWeight='bold' fontSize='sm'>
-            {({ fr: 'Fichier Excel vierge', en: 'Blank Excel file', es: 'Archivo Excel en blanco', de: 'Leere Excel-Datei', it: 'File Excel vuoto' } as Record<string, string>)[lang] ?? 'Blank Excel file'}
+            {({ fr: 'Fichier Excel vierge', en: 'Blank Excel file', es: 'Archivo Excel en blanco', de: 'Leere Excel-Datei', it: 'File Excel vuoto',
+              'zh-CN': '空白 Excel 文件',
+              ja: '空の Excel ファイル' } as Record<string, string>)[lang] ?? 'Blank Excel file'}
           </Text>
           <CloseButton size='sm' onClick={() => setShow(false)} />
         </Box>
@@ -244,10 +249,14 @@ export const ModalExcelTemplate = ({
                   </Box>
                   <Box mt={2} display='flex' gap={2}>
                     <Button size='xs' variant='link' onClick={() => toggleGroup(gi, true)}>
-                      {({ fr: 'Tout', en: 'All', es: 'Todo', de: 'Alle', it: 'Tutto' } as Record<string, string>)[lang] ?? 'All'}
+                      {({ fr: 'Tout', en: 'All', es: 'Todo', de: 'Alle', it: 'Tutto',
+                        'zh-CN': '全部',
+                        ja: 'すべて' } as Record<string, string>)[lang] ?? 'All'}
                     </Button>
                     <Button size='xs' variant='link' onClick={() => toggleGroup(gi, false)}>
-                      {({ fr: 'Aucun', en: 'None', es: 'Ninguno', de: 'Keine', it: 'Nessuno' } as Record<string, string>)[lang] ?? 'None'}
+                      {({ fr: 'Aucun', en: 'None', es: 'Ninguno', de: 'Keine', it: 'Nessuno',
+                        'zh-CN': '无',
+                        ja: 'なし' } as Record<string, string>)[lang] ?? 'None'}
                     </Button>
                   </Box>
                 </TabPanel>
@@ -259,7 +268,9 @@ export const ModalExcelTemplate = ({
         {/* Footer */}
         <Box px={3} py={2} borderTop='1px solid' borderColor='gray.200' display='flex' justifyContent='flex-end' gap={2}>
           <Button size='xs' variant='ghost' onClick={() => setShow(false)}>
-            {({ fr: 'Annuler', en: 'Cancel', es: 'Cancelar', de: 'Abbrechen', it: 'Annulla' } as Record<string, string>)[lang] ?? 'Cancel'}
+            {({ fr: 'Annuler', en: 'Cancel', es: 'Cancelar', de: 'Abbrechen', it: 'Annulla',
+              'zh-CN': '取消',
+              ja: 'キャンセル' } as Record<string, string>)[lang] ?? 'Cancel'}
           </Button>
           <Button
             size='xs'
@@ -268,7 +279,9 @@ export const ModalExcelTemplate = ({
             isLoading={loading}
             isDisabled={selectedSheets.length === 0}
           >
-            {({ fr: 'Télécharger', en: 'Download', es: 'Descargar', de: 'Herunterladen', it: 'Scarica' } as Record<string, string>)[lang] ?? 'Download'} ({selectedSheets.length})
+            {({ fr: 'Télécharger', en: 'Download', es: 'Descargar', de: 'Herunterladen', it: 'Scarica',
+              'zh-CN': '下载',
+              ja: 'ダウンロード' } as Record<string, string>)[lang] ?? 'Download'} ({selectedSheets.length})
           </Button>
         </Box>
       </Box>

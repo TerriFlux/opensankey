@@ -193,5 +193,77 @@ export const resources_template = {
         }
       },
     }
+  },
+  'zh-CN': {
+    translation: {
+      templates: {
+        need_osp: '需要 OpenSankey+',
+        gallery_hint: '点击某个模板即可从示例开始',
+        sankeytheque_hint: '点击某项研究即可打开',
+        pin: '固定图库（绘图区在其左侧调整大小，可逐个试用模板）',
+        unpin: '取消固定图库（浮于绘图之上，一开始操作即关闭）',
+        play: '播放图库（逐个加载各个模型）',
+        pause: '暂停幻灯片',
+        prev: '上一个模型',
+        next: '下一个模型',
+        group_validated: '已验证的研究（已在网站发布）',
+        group_readme_open: '阅读介绍',
+        group_readme_close: '隐藏介绍',
+        group_readme_error: '描述不可用',
+        fr: '法语图表模板',
+        en: '英语图表模板',
+        categories: {
+          opensankey: 'OpenSankey',
+          maps: '地图',
+          web: '网络经典案例',
+          other_formats: '其他格式',
+          sankeymatic: 'SankeyMATIC',
+          stan: 'STAN',
+          esankey: 'e!Sankey',
+          sankeytheque: '桑基图库',
+          // Catégories de la sankeythèque (index MFAData)
+          etudes: '研究',
+          filieres: '部门',
+          recherche: '科研',
+          clients: '客户'
+        }
+      },
+    }
+  },
+  ja: {
+    translation: {
+      templates: {
+        need_osp: 'OpenSankey+ が必要です',
+        gallery_hint: 'テンプレートをクリックすると、その例から始められます',
+        sankeytheque_hint: '研究事例をクリックすると開きます',
+        pin: 'ギャラリーを固定（描画エリアはその左側でサイズ調整され、テンプレートを次々と試せます）',
+        unpin: 'ギャラリーの固定を解除（描画の上に浮かび、作業を始めると閉じます）',
+        play: 'ギャラリーを再生（各モデルを順に読み込みます）',
+        pause: 'スライドショーを一時停止',
+        prev: '前のモデル',
+        next: '次のモデル',
+        group_validated: '検証済みの研究事例（ウェブサイトで公開）',
+        group_readme_open: '紹介を読む',
+        group_readme_close: '紹介を隠す',
+        group_readme_error: '説明を取得できません',
+        fr: 'フランス語の図テンプレート',
+        en: '英語の図テンプレート',
+        categories: {
+          opensankey: 'OpenSankey',
+          maps: '地図',
+          web: 'ウェブの定番例',
+          other_formats: 'その他の形式',
+          sankeymatic: 'SankeyMATIC',
+          stan: 'STAN',
+          esankey: 'e!Sankey',
+          sankeytheque: 'サンキーライブラリ',
+          // Catégories de la sankeythèque (index MFAData)
+          etudes: '研究事例',
+          filieres: '部門',
+          recherche: '研究',
+          clients: '顧客'
+        }
+      },
+    }
   }
 }

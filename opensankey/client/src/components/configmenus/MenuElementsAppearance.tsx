@@ -3761,6 +3761,120 @@ export const missing_menu_translations = {
         }
       }
     }
+  },
+  'zh-CN': {
+    translation: {
+      Menu: {
+        // Onglets principaux
+        tabs: {
+          shape: '形状',
+          name: '标签',
+          value: '数值',
+          icon: '图标'
+        },
+
+        // Modes d'affichage
+        display_mode: {
+          text: '文本',
+          rich: '富文本',
+          editor: '编辑器',
+          value: '数值',
+          icon: '图标',
+          image: '图片',
+          tooltips: {
+            simple_text: '纯文本模式',
+            rich_text: '打开文本编辑器',
+            value: '显示数值',
+            icon: '以图标显示',
+            image: '显示为自定义图片'
+          }
+        },
+
+        // Sections communes
+        sections: {
+          icon_catalog: '图标目录',
+          icon_color: '图标颜色',
+          image_source: '图片来源',
+          position_size_offsets: '位置、尺寸与偏移',
+          link_label_position: '流量',
+          node_geometry: '节点形状',
+          link_geometry: '流量形状',
+          orientation: '方向',
+          shape: '形状',
+          options: '选项',
+          link_background: '流量背景'
+        },
+
+        // Messages communs
+        common: {
+          show_background: '显示背景',
+          background_visible: '背景可见',
+          show_border: '显示边框',
+          border_visible: '边框可见',
+          multiple_values: '多个值',
+          vertical: '垂直',
+          interior: '内部',
+          exterior: '外部'
+        }
+      }
+    }
+  },
+  ja: {
+    translation: {
+      Menu: {
+        // Onglets principaux
+        tabs: {
+          shape: '形状',
+          name: 'ラベル',
+          value: '値',
+          icon: 'アイコン'
+        },
+
+        // Modes d'affichage
+        display_mode: {
+          text: 'テキスト',
+          rich: 'リッチテキスト',
+          editor: 'エディタ',
+          value: '値',
+          icon: 'アイコン',
+          image: '画像',
+          tooltips: {
+            simple_text: 'プレーンテキストモード',
+            rich_text: 'テキストエディタを開く',
+            value: '数値を表示',
+            icon: 'アイコンとして表示します',
+            image: '任意の画像として表示'
+          }
+        },
+
+        // Sections communes
+        sections: {
+          icon_catalog: 'アイコンカタログ',
+          icon_color: 'アイコンの色',
+          image_source: '画像のソース',
+          position_size_offsets: '位置・サイズ・オフセット',
+          link_label_position: 'フロー',
+          node_geometry: 'ノードの形状',
+          link_geometry: 'フローの形状',
+          orientation: '向き',
+          shape: '形状',
+          options: 'オプション',
+          link_background: 'フローの背景'
+        },
+
+        // Messages communs
+        common: {
+          show_background: '背景を表示',
+          background_visible: '背景を表示中',
+          show_border: '枠線を表示',
+          border_visible: '枠線を表示中',
+          multiple_values: '複数の値',
+          vertical: '垂直',
+          interior: '内側',
+          exterior: '外側'
+        }
+      }
+    }
   }
 }
 
@@ -3897,6 +4011,56 @@ export const missing_node_labels_translations = {
         }
       }
     }
+  },
+  'zh-CN': {
+    translation: {
+      Noeud: {
+        labels: {
+          value_label_is_visible: '数值标签',
+          icon_is_visible: '图标',
+          value_label_unit_visible: '单位',
+          value_label_stick_to_label: '贴靠标签',
+
+          tooltips: {
+            value_label_stick_to_label: '将数值相对于标签定位。标签背景（若可见）将同时覆盖标签与数值。',
+            left_align: '左对齐',
+            center_align: '居中',
+            right_align: '右对齐',
+            deb: '起点',
+            milieu_h: '水平居中',
+            fin: '终点',
+            dessous: '下方',
+            milieu_v: '垂直居中',
+            dessus: '上方'
+          }
+        }
+      }
+    }
+  },
+  ja: {
+    translation: {
+      Noeud: {
+        labels: {
+          value_label_is_visible: '値のラベル',
+          icon_is_visible: 'アイコン',
+          value_label_unit_visible: '単位',
+          value_label_stick_to_label: 'ラベルに追従',
+
+          tooltips: {
+            value_label_stick_to_label: '値をラベルを基準に配置します。ラベルの背景（表示されている場合）はラベルと値をまとめて覆います。',
+            left_align: '左揃え',
+            center_align: '中央',
+            right_align: '右揃え',
+            deb: '始点',
+            milieu_h: '水平方向の中央',
+            fin: '終点',
+            dessous: '下',
+            milieu_v: '垂直方向の中央',
+            dessus: '上'
+          }
+        }
+      }
+    }
   }
 }
 
@@ -4023,6 +4187,52 @@ export const missing_node_apparence_translations = {
         }
       }
     }
+  },
+  'zh-CN': {
+    translation: {
+      Noeud: {
+        apparence: {
+          shape_visible: '形状',
+          shape_min_width: '最小宽度',
+          shape_min_height: '最小高度',
+          shape_margin: '分离边距，',
+          shape_margin_left: '左',
+          shape_margin_right: '右',
+          shape_margin_top: '上',
+          shape_margin_bottom: '下',
+
+          tooltips: {
+            margins_linked: '关联边距',
+            shape_margin: '边距',
+            shape_margin_left: '左边距',
+            shape_type: '节点形状类型'
+          }
+        }
+      }
+    }
+  },
+  ja: {
+    translation: {
+      Noeud: {
+        apparence: {
+          shape_visible: '形状',
+          shape_min_width: '最小幅',
+          shape_min_height: '最小の高さ',
+          shape_margin: '余白を個別に指定、',
+          shape_margin_left: '左',
+          shape_margin_right: '右',
+          shape_margin_top: '上',
+          shape_margin_bottom: '下',
+
+          tooltips: {
+            margins_linked: '余白を連動',
+            shape_margin: '余白',
+            shape_margin_left: '左の余白',
+            shape_type: 'ノードの形状の種類'
+          }
+        }
+      }
+    }
   }
 }
 
@@ -4105,6 +4315,36 @@ export const missing_flux_apparence_translations = {
             of_vh: 'Verticale a orizzontale',
             of_hv: 'Orizzontale a verticale',
             shape_is_recycling: 'Flusso di riciclaggio — clic per alternare: auto / forzato riciclaggio / forzato non-riciclaggio'
+          }
+        }
+      }
+    }
+  },
+  'zh-CN': {
+    translation: {
+      Flux: {
+        apparence: {
+          tooltips: {
+            of_hh: '水平到水平',
+            of_vv: '垂直到垂直',
+            of_vh: '垂直到水平',
+            of_hv: '水平到垂直',
+            shape_is_recycling: '回流流量 — 点击可循环切换：自动 / 强制回流 / 强制非回流'
+          }
+        }
+      }
+    }
+  },
+  ja: {
+    translation: {
+      Flux: {
+        apparence: {
+          tooltips: {
+            of_hh: '水平から水平へ',
+            of_vv: '垂直から垂直へ',
+            of_vh: '垂直から水平へ',
+            of_hv: '水平から垂直へ',
+            shape_is_recycling: 'リサイクルフロー — クリックで切り替え：自動／強制リサイクル／強制非リサイクル'
           }
         }
       }

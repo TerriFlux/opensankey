@@ -310,5 +310,27 @@ export const getForcedLanguage = (supported_langs: string[]): string | null => {
     url_lang = null
   }
   const lang = url_lang ?? (typeof window.sankey?.language === 'string' ? window.sankey.language : null)
-  return (lang && supported_langs.includes(lang)) ? lang : null
+  return normalizeLanguage(lang, supported_langs)
+}
+
+/**
+ * Normalise un code de langue quelconque (navigateur, `?lang=`, cache localStorage)
+ * vers un code effectivement supporté par l'appli. Les codes supportés sont
+ * majoritairement sur 2 lettres ('fr', 'en', …) mais le chinois est régionalisé
+ * ('zh-CN', simplifié) : un simple `slice(0, 2)` ne suffit donc plus.
+ * Ordre de résolution : correspondance exacte → insensible à la casse →
+ * première variante supportée de la même langue de base ('zh', 'zh-Hans',
+ * 'zh-SG' → 'zh-CN'). Retourne null si rien ne correspond.
+ */
+export const normalizeLanguage = (
+  raw: string | null | undefined,
+  supported_langs: string[]
+): string | null => {
+  if (!raw) return null
+  const lang = raw.replace('_', '-')
+  if (supported_langs.includes(lang)) return lang
+  const case_insensitive = supported_langs.find(l => l.toLowerCase() === lang.toLowerCase())
+  if (case_insensitive) return case_insensitive
+  const base = lang.split('-')[0].toLowerCase()
+  return supported_langs.find(l => l.toLowerCase().split('-')[0] === base) ?? null
 }

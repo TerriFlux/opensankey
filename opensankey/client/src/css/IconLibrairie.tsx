@@ -657,6 +657,22 @@ const LineShapeIcon: React.FC<ShapeIconProps> = ({
   </svg>
 )
 
+/**
+ * Redessine un logo d'élément à la taille des glyphes de la colonne d'outils, en
+ * conservant ses proportions. Les logos de menu sont posés en 22-26 px : dans un
+ * bouton d'outil (1 rem de contenu) ils débordaient de leur cadre. On ne touche
+ * qu'aux attributs de taille — le dessin, lui, reste celui que l'application
+ * emploie partout ailleurs pour désigner ces mêmes objets.
+ */
+const shrinkLogo = (logo: JSX.Element, target_height = 14): JSX.Element => {
+  const w = Number(logo.props.width)
+  const h = Number(logo.props.height)
+  const width = (Number.isFinite(w) && Number.isFinite(h) && h > 0)
+    ? Math.round(target_height * w / h)
+    : target_height
+  return React.cloneElement(logo, { width, height: target_height })
+}
+
 // Icônes de hachure : carré contour + traits parallèles selon l'orientation.
 // Utilisées par le sélecteur d'orientation de hachure du nœud.
 interface HatchIconProps {
@@ -1571,6 +1587,11 @@ export class Class_IconLibrary {
   protected _icon_capsule_shape = <CapsuleShapeIcon />
   protected _icon_capsule_h_shape = <CapsuleHShapeIcon />
   protected _icon_line_shape = <LineShapeIcon />
+  // Outils de création (colonne d'outils) : les logos d'élément de l'application,
+  // ramenés à la taille des glyphes voisins (cf. shrinkLogo).
+  protected _icon_tool_node = shrinkLogo(logo_node)
+  protected _icon_tool_link = shrinkLogo(logo_flow)
+  protected _icon_tool_text_zone = shrinkLogo(logo_object)
   protected _icon_hatch_vertical = <HatchVerticalIcon />
   protected _icon_hatch_horizontal = <HatchHorizontalIcon />
   protected _icon_hatch_diagonal = <HatchDiagonalIcon />
@@ -2100,6 +2121,9 @@ export class Class_IconLibrary {
   public get icon_rect_shape() { return this.normalizeIcon(this._icon_rect_shape) }
   public get icon_capsule_shape() { return this.normalizeIcon(this._icon_capsule_shape) }
   public get icon_line_shape() { return this.normalizeIcon(this._icon_line_shape) }
+  public get icon_tool_node() { return this.normalizeIcon(this._icon_tool_node) }
+  public get icon_tool_link() { return this.normalizeIcon(this._icon_tool_link) }
+  public get icon_tool_text_zone() { return this.normalizeIcon(this._icon_tool_text_zone) }
   public get icon_hatch_vertical() { return this.normalizeIcon(this._icon_hatch_vertical) }
   public get icon_hatch_horizontal() { return this.normalizeIcon(this._icon_hatch_horizontal) }
   public get icon_hatch_diagonal() { return this.normalizeIcon(this._icon_hatch_diagonal) }
