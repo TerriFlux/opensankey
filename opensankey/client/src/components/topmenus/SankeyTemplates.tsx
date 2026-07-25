@@ -446,15 +446,28 @@ const templateFilePath = (
   return template.variants?.[new_data.i18n.language] ?? template.file_path
 }
 
-/** Titre localisé d'un modèle, avec repli en puis id (sans le préfixe de source). */
+/**
+ * Titre affiché d'un modèle : sa langue, puis en, fr, puis le premier titre
+ * déclaré — un titre écrit dans UNE seule langue doit s'afficher dans toutes les
+ * autres plutôt que disparaître.
+ *
+ * En dernier recours, le NOM DU FICHIER (souligné rendu aux espaces), jamais
+ * l'identifiant : celui-ci dérive du chemin complet, si bien que tous les
+ * modèles d'un même dossier donnaient des libellés identiques une fois tronqués
+ * à deux lignes (« recherche_filiere_alimentation_anima… »).
+ */
 const templateTitle = (
   new_data: Class_ApplicationData,
   id: string,
   template: Type_TemplateInfos
 ) => {
-  return template.title?.[new_data.i18n.language]
-    ?? template.title?.['en']
-    ?? id.split('|').slice(1).join('|')
+  const titles = template.title
+  const localized = titles?.[new_data.i18n.language]
+    ?? titles?.['en'] ?? titles?.['fr']
+    ?? (titles ? Object.values(titles)[0] : undefined)
+  if (localized) return localized
+  const file_name = template.file_path.split('/').pop() ?? id
+  return file_name.replace(/\.json(\.gz)?$/i, '').replace(/_/g, ' ')
 }
 
 // COMPONENTS ===========================================================================
