@@ -172,7 +172,7 @@ describe('tagged_value_bands — bandes internes des valeurs du flux', () => {
 
 describe('OS#1286 — unite attachee au fluxTag (groupe de type unite)', () => {
   it('additive carrier: valueCurrent = SUM (total), unit carrier: selected tag value', () => {
-    const { sankey, link, tagg, acier, cuivre } = makeApp()
+    const { link, tagg, acier, cuivre } = makeApp()
     tagg.banner = 'multi'
     tagg.carries_values = true
     // additif par défaut (pas is_unit_type)
