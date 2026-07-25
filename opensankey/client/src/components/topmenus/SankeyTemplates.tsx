@@ -252,12 +252,12 @@ export const loadTemplate = (
  * seul index, puis regroupées en ONGLETS (voir templateTab). Renvoie :
  *  - `templates` : les modèles (id préfixé par la source pour éviter toute
  *    collision, champ `source` posé sur chacun) ;
- *  - `indexes` : catégorie -> ids, ordre d'index.json (sert aux sous-titres) ;
+ *  - `indexes` : catégorie -> ids, ordre d'index.json ;
  *  - `groups` : dossiers d'étude déclarés par les index (ids préfixés par la
  *    source, comme les modèles), pour les sections repliables de la sankeythèque ;
  *  - `tabs` : onglets ordonnés (TAB_ORDER puis inattendus) ;
- *  - `tab_categories` : onglet -> catégories qu'il regroupe (pour les sous-titres
- *    de la sankeythèque) ;
+ *  - `tab_categories` : onglet -> catégories qu'il regroupe (ordre d'affichage
+ *    des modèles de l'onglet) ;
  *  - `source_tab` : source -> son onglet, pour présélectionner (sankeythèque,
  *    e!Sankey de dev).
  */
@@ -630,9 +630,6 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
   // galerie de dev est active (hors dev, il ne contient que les modèles publiés).
   const is_theque_tab = current_tab === 'sankeytheque'
   const is_esankey_dev_tab = source_tab['esankey-local'] === current_tab
-  // Sous-titres de catégorie utiles seulement si l'onglet en regroupe plusieurs
-  // (la sankeythèque : études / filières / recherche / clients).
-  const show_subheaders = current_tab_categories.length > 1
 
   const mc = new_data.menu_configuration
   // Épinglée, la galerie se docke à GAUCHE du chrome déjà réservé (colonne
@@ -913,26 +910,11 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
         ? 'Galerie locale de développement (ESANKEY_CORPUS_DIR) — corpus propriétaire, non déployé.'
         : new_data.t(is_theque_tab ? 'templates.sankeytheque_hint' : 'templates.gallery_hint')}
     </Text>
+    {/* Un seul niveau : les dossiers d'étude (sections repliables) se suivent
+        dans l'ordre de l'index, sans sous-titre par catégorie — les catégories
+        ne servent plus qu'à ordonner ordered_all. */}
     <Box overflowY='auto' padding='0 0.75rem 0.75rem 0.75rem'>
-      {show_subheaders
-        ? current_tab_categories.map(category => {
-          const ids = indexes[category] ?? []
-          if (ids.length === 0) return null
-          return <Box key={category} marginTop='0.5rem'>
-            <Text
-              fontSize='0.68rem'
-              fontWeight='700'
-              textTransform='uppercase'
-              letterSpacing='0.04em'
-              color='gray.400'
-              margin='0 0 0.4rem 0'
-            >
-              {new_data.t('templates.categories.' + category)}
-            </Text>
-            {renderSections(ids)}
-          </Box>
-        })
-        : <Box marginTop='0.5rem'>{renderSections(ordered_all)}</Box>}
+      <Box marginTop='0.5rem'>{renderSections(ordered_all)}</Box>
     </Box>
   </Box>
 }
