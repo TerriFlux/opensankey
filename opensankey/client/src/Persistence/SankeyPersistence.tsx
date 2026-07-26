@@ -684,20 +684,29 @@ export class LinkElementPersistence extends ProtoElementPersistence {
         link.attributes['value_label_background_color_visible'] = json_local.value_label_background
       }
       link.attributes['value_label_background_type'] = 'ellipse'
+      // `'dragged'` n'existe pas dans le modèle courant : on ne reprend pas la valeur legacy, et
+      // l'attribut retombe sur son style. On l'écrase à `undefined` plutôt que de le `delete` :
+      // `link.attributes` est pré-remplie avec TOUTES les clés à `undefined`, donc supprimer la clé
+      // rendait le premier chargement différent du second (clé absente vs présente à `undefined`) —
+      // sémantiquement identique, mais le round-trip n'était plus un point fixe (#230). Le `delete`
+      // sur `json_local` reste, lui : il évite de réécrire la valeur legacy à la sauvegarde.
       if (json_local.name_label_horiz == 'dragged') {
-        delete link.attributes['name_label_horiz']
+        link.attributes['name_label_horiz'] = undefined
         delete json_local.name_label_horiz
       }
+      // NOTE : la garde teste bien `name_label_horiz` et non `name_label_vert`. Probable
+      // copier-coller d'origine, laissé tel quel — le corriger changerait la sortie de migration
+      // des fichiers legacy, donc leurs golden. À traiter à part.
       if (json_local.name_label_horiz == 'dragged') {
-        delete link.attributes['name_label_vert']
+        link.attributes['name_label_vert'] = undefined
         delete json_local.name_label_vert
       }
       if (json_local.value_label_horiz == 'dragged') {
-        delete link.attributes['value_label_horiz']
+        link.attributes['value_label_horiz'] = undefined
         delete json_local.value_label_horiz
       }
       if (json_local.value_label_vert == 'dragged') {
-        delete link.attributes['value_label_vert']
+        link.attributes['value_label_vert'] = undefined
         delete json_local.value_label_vert
       }
 
@@ -1983,10 +1992,11 @@ export class DrawingAreaPersistence {
     // Verrou de taille (largeur/hauteur/zoom figés au changement de dataTag).
     // Défaut false → sérialisé seulement si activé (absence ⇒ déverrouillé).
     if (drawing_area.size_locked) json_object['size_locked'] = true
-    // #680 — Mode de cadrage automatique (boutons radio d'ajustement). Défaut 'none'
-    // (revu post-#680 : cadrage auto strictement opt-in) → sérialisé seulement si un
-    // mode est actif. 'full' = tout visible ; 'width'/'height' = axe forcé.
-    if (drawing_area.auto_fit_mode !== 'none') json_object['auto_fit_mode'] = drawing_area.auto_fit_mode
+    // #680 — Mode de cadrage automatique (boutons radio d'ajustement). TOUJOURS
+    // sérialisé : l'absence de la clé identifie un fichier antérieur (chargé en 'full',
+    // cf. fromJSON) — un 'none' explicite doit donc survivre au rechargement.
+    // 'full' = tout visible ; 'width'/'height' = axe forcé.
+    json_object['auto_fit_mode'] = drawing_area.auto_fit_mode
     // OS#1315 — Ancrage du cadrage. Défaut 'center' → sérialisé seulement si 'top_left'.
     if (drawing_area.fit_anchor !== 'center') json_object['fit_anchor'] = drawing_area.fit_anchor
     // Mode de représentation import/export (proche / haut-bas) : persisté car les nœuds
@@ -2351,9 +2361,10 @@ export class DrawingAreaPersistence {
     // Absence du flag ⇒ déverrouillé (défaut de la classe).
     drawing_area['_size_locked'] = getBooleanFromJSON(json_object, 'size_locked', false)
     // #680 — Mode de cadrage auto : champ direct (le setter notifie la barre d'outils).
-    // Absence ⇒ 'none' (revu post-#680 : jamais de recadrage automatique non demandé —
-    // les anciens fichiers, qui omettaient 'full', chargent donc SANS cadrage auto).
-    drawing_area['_auto_fit_mode'] = getStringFromJSON(json_object, 'auto_fit_mode', 'none') as Type_AutoFitMode
+    // Absence ⇒ 'full' : un fichier CHARGÉ se cadre automatiquement par défaut ; seul un
+    // 'none' EXPLICITE (toujours sérialisé depuis que toJSON écrit la clé) le désactive.
+    // Un diagramme neuf (jamais chargé) reste 'none' via le défaut de classe.
+    drawing_area['_auto_fit_mode'] = getStringFromJSON(json_object, 'auto_fit_mode', 'full') as Type_AutoFitMode
     // OS#1315 — Ancrage du cadrage : champ direct (le setter notifie la barre d'outils).
     drawing_area['_fit_anchor'] = getStringFromJSON(json_object, 'fit_anchor', 'center') as Type_FitAnchor
     drawing_area['_import_export_above_below'] = getBooleanFromJSON(json_object, 'import_export_above_below', false)
