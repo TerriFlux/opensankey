@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 
-import React, { FC, useRef, useState, ChangeEvent, ReactNode, useEffect, MutableRefObject, CSSProperties, JSX, forwardRef } from 'react'
+import React, { FC, useRef, useState, ChangeEvent, useEffect, MutableRefObject, CSSProperties, JSX, forwardRef } from 'react'
 import { ColorResult, SketchPicker } from 'react-color'
 import {
   Text,
@@ -51,9 +51,7 @@ import {
   MenuList,
   useDisclosure,
   CheckboxProps,
-  Tooltip,
   Select,
-  PlacementWithLogical,
   Textarea,
   SystemStyleObject,
   Divider,
@@ -783,55 +781,14 @@ export const TooltipValueSurcharge = (k: string, t: TFunction) => {
 }
 
 
-// Désactive le rendu des tooltips dans un sous-arbre. Utilisé pour les panneaux détachés en fenêtre
-// PiP : les Tooltip Chakra reposent sur des écouteurs du `document` PRINCIPAL et ne reçoivent jamais
-// le `mouseleave` émis dans la fenêtre fille -> tooltips « collants » impossibles à fermer. Dans ce
-// contexte, OSTooltip rend simplement ses enfants sans wrapper Tooltip.
-export const OSTooltipDisabledContext = React.createContext(false)
-
-// PIÈGE : ne JAMAIS mettre un `Switch`/`Checkbox` Chakra en enfant DIRECT d'OSTooltip.
-// Chakra transmet la ref de ces composants à leur `<input>` visuellement caché, alors que
-// Tooltip pose son écouteur natif `pointerleave` (et ancre le popper) sur cette ref :
-// l'infobulle s'ouvre via le handler React posé sur le `<label>` mais ne se referme jamais.
-// Toujours interposer un `Box`/`Td` (cf. Toolbar.tsx, SankeyPlusMenuConfigurationTags.tsx).
-
-export const OSTooltip = ({ label,disabled=false, delay = 500, placement = 'auto', isAlwaysOpen = false, children }: React.PropsWithChildren<{
-  delay?: number,
-  label: string,
-  disabled?: boolean,
-  placement?: PlacementWithLogical
-  isAlwaysOpen?: boolean
-  children: ReactNode
-}>) => {
-  const tooltips_disabled = React.useContext(OSTooltipDisabledContext)
-  if (tooltips_disabled || label === undefined || label === null) {
-    return <>{children}</>
-  }
-  const element_key = label.split(' ').join('_')
-  if (isAlwaysOpen) {
-    return <Tooltip
-      key={element_key}
-      openDelay={delay}
-      placement={placement}
-      label={disabled ? label+'. OpenSankey+ required.' : label}
-      closeDelay={100}
-      isOpen={true}
-      hasArrow={true}
-    >
-      {children}
-    </Tooltip>
-  } else {
-    return <Tooltip
-      key={element_key}
-      openDelay={delay}
-      placement={placement}
-      label={disabled ? label+'. OpenSankey+ required.' : label}
-      closeDelay={100}
-    >
-      {children}
-    </Tooltip>
-  }
-}
+// OS#1331 — `OSTooltip` et son contexte sont DÉPLACÉS dans `components/ui/OSTooltip`, module de
+// zone viewer : c'est une primitive d'interface générique, et c'était le symbole le plus importé
+// de la zone éditeur par les autres paquets (dont le seul que prenait `login-component`).
+// Réexportés ici pour ne casser aucun import existant.
+// Importés pour l'usage interne de ce module, ET réexportés : un réexport seul n'introduit pas le
+// nom dans la portée locale.
+import { OSTooltip, OSTooltipDisabledContext } from '../ui/OSTooltip'
+export { OSTooltip, OSTooltipDisabledContext }
 
 export type OSChecklistItem = {
   key: string
