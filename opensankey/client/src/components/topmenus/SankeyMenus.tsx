@@ -45,7 +45,7 @@ import { SearchIcon } from '@chakra-ui/icons'
 import { ApplyLayoutDialog } from '../dialogs/SankeyMenuDialogs'
 import {
   DrawerSequenceDataTagg, ToolBarBottom,
-  ComponentMouseMode, ComponentPositionMode, ComponetStretchButtons, ComponentZoomControl
+  ComponentMouseMode, ComponetStretchButtons, ComponentZoomControl
 } from './MenuBottom'
 import { useMainZone, mainZoneRightReservedPx } from '../spreadsheet/MainZoneTabs'
 import { modalResolutionPNG, modalResolutionPDF } from './SankeyExports'
@@ -297,7 +297,8 @@ export const SankeyMenu = (
             détachés du reste ; ils ont rejoint le groupe de création, avec lequel ils
             partagent geste et exclusivité (cf. ComponentMouseMode). */}
         <ComponentMouseMode app_data={app_data} updateParentComponent={refreshToolsColumn} />
-        <ComponentPositionMode app_data={app_data} updateParentComponent={refreshToolsColumn} />
+        {/* Le groupe des modes de position accompagne désormais les data tags
+            (panneau Filtres + topbar, cf. Toolbar.PositionModeMenu). */}
         {/* hide_fullscreen : le plein écran est dans la barre du haut en éditeur. */}
         <ComponetStretchButtons app_data={app_data} updateParentComponent={refreshToolsColumn} hide_fullscreen />
         {/* Indicateur de zoom + boutons -/+ (molette = Ctrl/Cmd+scroll). */}

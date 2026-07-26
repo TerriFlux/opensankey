@@ -4,7 +4,7 @@ import {
   useSteps, Stepper, Step, StepIndicator, StepStatus, StepSeparator, StepTitle
 } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLocationDot, faPercent, faRulerVertical, faPlus, faMinus, faCaretDown } from '@fortawesome/free-solid-svg-icons'
+import { faPlus, faMinus, faCaretDown } from '@fortawesome/free-solid-svg-icons'
 import { ConfigMenuNumberInput, OSTooltip } from '../configmenus/MenuCommon'
 import { useModelBinding } from '../../hooks/useModelBinding'
 import { ZOOM_TOPIC } from '../../types/EventBus'
@@ -67,13 +67,9 @@ export const ToolBarBottom = ({ new_data, right_offset }: {
       : 'calc(' + sizeBottomMenu + 'px + ' + (new_data.drawing_area.fit_margin / 2) + 'px + 1rem)'}
   >
     {btn_mouse_mode_edition}
-    {/* Groupe des modes de position (absolu / proportionnel / échelle) : agit sur le
-        rendu, donc pertinent en publish. En mode statique il est piloté par l'option
-        publish `toolbar` (indépendamment du groupe ajustement ci-dessous). */}
-    {(!new_data.is_static || new_data.publish_options.toolbar) ? <ComponentPositionMode
-      app_data={new_data}
-      updateParentComponent={refreshThis}
-    /> : <></>}
+    {/* Le groupe des modes de position (absolu / proportionnel / échelle) a quitté la
+        toolbar : ces modes n'ont de sens qu'avec des data tags, le sélecteur accompagne
+        désormais les data tags (panneau Filtres + topbar, cf. Toolbar.PositionModeMenu). */}
     {/* Groupe ajustement / verrous / plein écran : en mode statique, piloté par
         l'option publish `fit_toolbar`. En publish, le plein écran est masqué de ce groupe quand
         l'option `fullscreen` est active : il figure alors dans la barre du haut (cf. MenuTop). */}
@@ -203,46 +199,6 @@ export const ComponentMouseMode = (
   </>
 }
 
-
-export const ComponentPositionMode = ({ app_data, updateParentComponent }: { app_data: Class_ApplicationData, updateParentComponent: () => void }) => {
-  const { t, drawing_area } = app_data
-  const size = app_data.is_static ? 'sizeToolbarButtonStatic' : 'sizeToolbarButton'
-  const mode = drawing_area.sankey.styles_dict['default'].shape_position_type
-  // #1231 — Le mode « paramétrique » n'est plus un mode utilisateur : seuls Absolu et
-  // Pourcentage. Bouton paramétrique retiré.
-  return <ButtonGroup className='toolbar_bottom_position_mode' isAttached orientation='vertical'>
-    <OSTooltip placement='left' label={t('Banner.posMode_absolute')}>
-      <Button
-        variant={mode === 'absolute' ? 'toolbar_button_position_mode_activated' : 'toolbar_button_position_mode'}
-        size={size}
-        onClick={() => {
-          if (mode !== 'absolute') { drawing_area.setAbsoluteMode(); drawing_area.draw(); updateParentComponent() }
-        }}>
-        <FontAwesomeIcon icon={faLocationDot} />
-      </Button>
-    </OSTooltip>
-    <OSTooltip placement='left' label={t('Banner.posMode_proportional')}>
-      <Button
-        variant={mode === 'proportional' ? 'toolbar_button_position_mode_activated' : 'toolbar_button_position_mode'}
-        size={size}
-        onClick={() => {
-          if (mode !== 'proportional') { drawing_area.setProportionalMode(); drawing_area.draw(); updateParentComponent() }
-        }}>
-        <FontAwesomeIcon icon={faPercent} />
-      </Button>
-    </OSTooltip>
-    <OSTooltip placement='left' label={t('Banner.posMode_scale_adapted')}>
-      <Button
-        variant={mode === 'scale_adapted' ? 'toolbar_button_position_mode_activated' : 'toolbar_button_position_mode'}
-        size={size}
-        onClick={() => {
-          if (mode !== 'scale_adapted') { drawing_area.setScaleAdaptedMode(); updateParentComponent() }
-        }}>
-        <FontAwesomeIcon icon={faRulerVertical} />
-      </Button>
-    </OSTooltip>
-  </ButtonGroup>
-}
 
 /**
  * Bouton plein écran isolé. Réutilisé dans le groupe ajustement (ComponetStretchButtons) et,
