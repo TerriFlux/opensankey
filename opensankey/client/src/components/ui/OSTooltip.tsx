@@ -55,7 +55,7 @@ export const OSTooltip = ({ label, disabled = false, delay = 500, placement = 'a
       key={element_key}
       openDelay={delay}
       placement={placement}
-      label={disabled ? label + '. OpenSankey+ required.' : label}
+      label={disabled ? label + '. MFASankey Production required.' : label}
       closeDelay={100}
       isOpen={true}
       hasArrow={true}
@@ -67,7 +67,7 @@ export const OSTooltip = ({ label, disabled = false, delay = 500, placement = 'a
       key={element_key}
       openDelay={delay}
       placement={placement}
-      label={disabled ? label + '. OpenSankey+ required.' : label}
+      label={disabled ? label + '. MFASankey Production required.' : label}
       closeDelay={100}
     >
       {children}
