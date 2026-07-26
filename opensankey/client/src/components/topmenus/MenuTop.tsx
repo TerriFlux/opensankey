@@ -1462,7 +1462,11 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
         // Résout les chemins relatifs contre la page courante
         // (ex: "/portfolios/SOCLE/Cereales/diagrams.html" + "X_Resultats.gz")
         const fileUrl = new URL(diagram_file, window.location.href).href
-        const url = 'https://open-sankey.fr/?url=' + encodeURIComponent(fileUrl)
+        // L'éditeur recharge le fichier BRUT : sans état il retomberait sur la vue maître et
+        // les tags par défaut. On lui transmet la vue courante et les sélections de tags.
+        const url_params = new URLSearchParams({ url: fileUrl })
+        new_data.getUrlStateParams().forEach((value, key) => url_params.set(key, value))
+        const url = 'https://open-sankey.fr/?' + url_params.toString()
 
         window.open(url, '_blank')
       }}
