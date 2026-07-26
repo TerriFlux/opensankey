@@ -115,14 +115,17 @@ export type Type_PresentationDiagram = {
 }
 
 /**
- * Provenance d'un diagramme ouvert depuis la sankeythèque (galerie MFAData) :
- * chemin du modèle dans l'index, relatif à la racine MFAData, et nom affiché.
- * Le chemin est le seul champ qui compte côté serveur — il doit être exactement
- * celui de l'index, qui fait liste blanche d'écriture.
+ * Provenance d'un diagramme ouvert depuis une galerie réenregistrable : chemin du
+ * modèle dans l'index, relatif à la racine de sa source, et nom affiché.
+ * `source` désigne la galerie donc le dépôt écrit — 'mfadata' = la sankeythèque
+ * (études), 'sankeydata' = les modèles. Le couple (source, chemin) est le seul
+ * qui compte côté serveur : le chemin doit être exactement celui de l'index de
+ * cette source, lequel fait liste blanche d'écriture.
  */
 export type Type_SankeythequeOrigin = {
   file_path: string
   title: string
+  source: 'mfadata' | 'sankeydata'
 }
 
 // CLASS APPLICATION DATA **************************************************************/
@@ -265,9 +268,10 @@ export class Class_ApplicationData {
   // fichier servi). Non persisté.
   protected _static_diagram_file: string | null = null
 
-  // Étude de la sankeythèque (MFAData) dont vient le diagramme affiché, quand il a
-  // été ouvert depuis la galerie. Sert au réenregistrement en place réservé aux
-  // développeurs (voir MFADataSaveModal / route serveur menus_templates_save).
+  // Modèle de galerie (sankeythèque MFAData ou modèles SankeyData) dont vient le
+  // diagramme affiché, quand il a été ouvert depuis la galerie. Sert au
+  // réenregistrement en place réservé aux développeurs (voir MFADataSaveModal /
+  // route serveur menus_templates_save).
   // NON persisté : c'est une provenance de session, pas une propriété du diagramme —
   // un JSON téléchargé puis rouvert ne doit surtout pas se croire réenregistrable.
   // Effacé par reset(), donc par tout chargement (fromJSON) ou nouveau diagramme.

@@ -1033,9 +1033,10 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
           {new_data.icon_library.icon_save_sankey_excel}
           {t('Menu.open_excel')}
         </MenuItem>
-        {/* Réenregistrement en place d'une étude de la sankeythèque, avec commit git
-            dans MFAData : réservé aux développeurs, et grisé tant que le diagramme
-            affiché ne vient pas de la galerie (rien à écraser). */}
+        {/* Réenregistrement en place d'un modèle de galerie, avec commit git dans
+            son dépôt (MFAData pour la sankeythèque, SankeyData pour les modèles) :
+            réservé aux développeurs, et grisé tant que le diagramme affiché ne
+            vient pas d'une de ces galeries (rien à écraser). */}
         {new_data.has_sankey_dev && <MenuItem
           isDisabled={!new_data.sankeytheque_origin}
           onClick={() => { set_show_mfadata_save(true) }}

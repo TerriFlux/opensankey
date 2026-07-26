@@ -114,11 +114,10 @@ def client_deploye(mfadata):
 DIAGRAM = {"nodes": {"n0": {"name": "Corrige"}}, "links": {}}
 
 
-def save(client, file_path, diagram=None, message="test"):
-    return client.post(
-        "/menus/templates_save",
-        json={"file_path": file_path, "json": diagram or DIAGRAM, "message": message},
-    )
+def save(client, file_path, diagram=None, message="test", **extra):
+    payload = {"file_path": file_path, "json": diagram or DIAGRAM, "message": message}
+    payload.update(extra)
+    return client.post("/menus/templates_save", json=payload)
 
 
 # create_app renvoie une redirection sur 404 (page_not_found) : un refus se lit
@@ -246,3 +245,97 @@ def test_refuse_une_charge_utile_sans_diagramme(client_dev, mfadata):
 
     assert response.status_code == 400
     assert os.path.exists(mfadata / "Etudes" / "demo.json.gz")
+
+
+# ---------------------------------------------------------------------------
+# Adresse publique de l'etude (published_url) : portee par l'index
+# ---------------------------------------------------------------------------
+# La galerie en fait un lien « voir en ligne ». Elle est validee par le
+# developpeur dans le dialogue, donc filtree ici : seul un http(s) est retenu.
+def test_l_index_retient_l_adresse_publiee(client_dev, mfadata):
+    save(client_dev, "Etudes/demo.json.gz",
+         published_url="https://terriflux.com/portfolios/SOCLE/Sucre")
+
+    index = json.loads((mfadata / "index.json").read_text(encoding="utf-8"))
+    assert index["templates"]["demo"]["published_url"] \
+        == "https://terriflux.com/portfolios/SOCLE/Sucre"
+
+
+def test_une_adresse_vide_retire_le_lien_de_l_index(client_dev, mfadata):
+    save(client_dev, "Etudes/demo.json.gz", published_url="https://terriflux.com/p/x")
+    save(client_dev, "Etudes/demo.json", diagram={"nodes": {}}, published_url="")
+
+    index = json.loads((mfadata / "index.json").read_text(encoding="utf-8"))
+    assert "published_url" not in index["templates"]["demo"]
+
+
+def test_une_adresse_non_http_est_ignoree(client_dev, mfadata):
+    save(client_dev, "Etudes/demo.json.gz", published_url="javascript:alert(1)")
+
+    index = json.loads((mfadata / "index.json").read_text(encoding="utf-8"))
+    assert "published_url" not in index["templates"]["demo"]
+
+
+# ---------------------------------------------------------------------------
+# Source sankeydata : les MODELES (SankeyData) sont reenregistrables de meme
+# ---------------------------------------------------------------------------
+# Meme boucle courte, meme liste blanche, autre depot. Sans cela, seule la
+# sankeytheque etait corrigeable depuis l'app alors que les deux galeries sont
+# des JSON versionnes en git.
+@pytest.fixture
+def sankeydata(tmp_path, monkeypatch, mfadata):
+    root = tmp_path / "sankeydata"
+    (root / "templates" / "data").mkdir(parents=True)
+    with gzip.open(root / "templates" / "data" / "modele.json.gz", "wt",
+                   encoding="utf-8") as file_gz:
+        json.dump({"nodes": {}, "links": {}}, file_gz)
+    (root / "hors_index.json").write_text(json.dumps({"non": True}), encoding="utf-8")
+    index = {
+        "categories": ["opensankey"],
+        "templates": {
+            "modele": {
+                "file_path": "templates/data/modele.json.gz",
+                "lang": "fr",
+                "category": "opensankey",
+            },
+        },
+    }
+    (root / "templates" / "index.json").write_text(json.dumps(index, indent=2),
+                                                   encoding="utf-8")
+    git(root, "init", "-q")
+    git(root, "add", "-A")
+    git(root, "-c", "user.name=T", "-c", "user.email=t@t", "commit", "-q", "-m", "init")
+    monkeypatch.setenv("SANKEY_DATA", str(root))
+    return root
+
+
+def test_enregistre_un_modele_de_sankeydata(client_dev, sankeydata, mfadata):
+    response = save(client_dev, "templates/data/modele.json.gz", source="sankeydata")
+
+    assert response.status_code == 200 and response.get_json()["committed"]
+    ecrit = sankeydata / "templates" / "data" / "modele.json"
+    assert json.loads(ecrit.read_text(encoding="utf-8")) == DIAGRAM
+    assert not (sankeydata / "templates" / "data" / "modele.json.gz").exists()
+    # L'index de SankeyData vit dans templates/ : c'est CE chemin qui est committe.
+    index = json.loads(
+        (sankeydata / "templates" / "index.json").read_text(encoding="utf-8"))
+    assert index["templates"]["modele"]["file_path"] == "templates/data/modele.json"
+    fichiers = git(sankeydata, "show", "--name-only", "--format=", "HEAD").stdout.split()
+    assert "templates/index.json" in fichiers
+    # Et MFAData n'a pas bouge : chaque source ecrit dans SON depot.
+    assert (mfadata / "Etudes" / "demo.json.gz").exists()
+
+
+def test_une_source_ne_peut_pas_ecrire_dans_l_autre(client_dev, sankeydata, mfadata):
+    """Le chemin d'une etude MFAData, envoye avec source=sankeydata, ne doit rien
+    ecrire : la liste blanche est celle de la source demandee."""
+    response = save(client_dev, "Etudes/demo.json.gz", source="sankeydata")
+
+    assert response.status_code != 200
+    assert (mfadata / "Etudes" / "demo.json.gz").exists()
+    assert not (sankeydata / "Etudes").exists()
+
+
+def test_refuse_une_source_inconnue(client_dev, sankeydata):
+    assert save(client_dev, "templates/data/modele.json.gz",
+                source="esankey-local").status_code != 200

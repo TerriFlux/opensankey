@@ -1827,23 +1827,45 @@ def is_developer_request():
     return current_app.debug and not hasattr(current_app, "login_manager")
 
 
-def mfadata_declared_json(normalized):
+def templates_declared_json(source, normalized):
     """
-    Chemin du .json d'un modele de la sankeytheque, si le chemin demande est bien
-    DECLARE par index.json — sinon None (rien d'autre n'est lisible ni ecrivable).
+    Chemin du .json d'un modele d'une galerie, si le chemin demande est bien
+    DECLARE par son index.json — sinon None (rien d'autre n'est lisible ni
+    ecrivable).
 
     Tolere l'equivalence .json / .json.gz, a condition que l'un des deux soit
     declare : un modele reenregistre depuis l'app passe de « x.json.gz » a
     « x.json » dans l'index, et une galerie deja ouverte dans un navigateur
     continuerait sinon de demander l'ancien chemin — 404 sur une etude publiee.
     """
-    declared = templates_declared_assets("mfadata")
+    declared = templates_declared_assets(source)
     json_rel = normalized[:-3] if normalized.endswith(".gz") else normalized
     if not json_rel.endswith(".json"):
         return None
     if normalized in declared or json_rel in declared or json_rel + ".gz" in declared:
         return json_rel
     return None
+
+
+def mfadata_declared_json(normalized):
+    """Idem pour la sankeytheque (MFAData), source historique de la regle."""
+    return templates_declared_json("mfadata", normalized)
+
+
+# Galeries dont un modele peut etre REENREGISTRE depuis l'app : celles dont les
+# modeles sont des JSON versionnes dans un depot git que le serveur peut committer.
+# 'esankey-local' en est exclue : corpus proprietaire, binaire, jamais committe.
+TEMPLATES_WRITABLE_SOURCES = {
+    # source -> (variable d'environnement de la racine, sous-dossier de l'index)
+    "mfadata": ("MFAData", "MFAData"),
+    "sankeydata": ("SANKEY_DATA", "SankeyData"),
+}
+
+
+def templates_source_root(source):
+    """Racine sur disque d'une galerie reenregistrable, ou None si non configuree."""
+    env_name = (TEMPLATES_WRITABLE_SOURCES.get(source) or (None, None))[0]
+    return os.environ.get(env_name) if env_name else None
 
 
 def developer_user_email():
@@ -1857,9 +1879,10 @@ def developer_user_email():
         return None
 
 
-def mfadata_git(root, args, timeout=180):
+def templates_git(root, args, timeout=180):
     """
-    Lance une commande git dans MFAData. Renvoie (code_retour, sortie).
+    Lance une commande git dans le depot d'une galerie (MFAData ou SankeyData).
+    Renvoie (code_retour, sortie).
 
     Sans shell et avec des arguments en liste : aucun contenu venant de la requete
     (message de commit, chemin) ne peut etre reinterprete par un interpreteur.
@@ -1882,23 +1905,27 @@ def mfadata_git(root, args, timeout=180):
 @opensankey.route("/menus/templates_save", methods=["POST"])
 def menus_templates_save():
     """
-    Enregistre le diagramme courant PAR-DESSUS l'etude de la sankeytheque dont il
-    vient, puis committe et pousse MFAData. RESERVE AUX DEVELOPPEURS.
+    Enregistre le diagramme courant PAR-DESSUS le modele de galerie dont il vient,
+    puis committe et pousse le depot correspondant. RESERVE AUX DEVELOPPEURS.
 
-    Boucle courte pour mettre a jour les diagrammes publies : ouvrir l'etude depuis
-    la sankeytheque, corriger dans l'app, reenregistrer. Le filet, c'est git : tout
-    passe par un commit signe du compte developpeur, donc relisible et reversible.
+    Deux galeries sont reenregistrables (cf. TEMPLATES_WRITABLE_SOURCES) : la
+    sankeytheque (MFAData, `source=mfadata`, defaut historique) et les modeles
+    (SankeyData, `source=sankeydata`). Meme boucle courte dans les deux cas :
+    ouvrir le modele depuis la galerie, corriger dans l'app, reenregistrer. Le
+    filet, c'est git : tout passe par un commit signe du compte developpeur, donc
+    relisible et reversible.
 
     Garde-fous, dans l'ordre :
       - compte `is_developer` (ou poste de dev sans gestion de comptes du tout,
         cf. is_developer_request) — sinon 404 ;
-      - le chemin cible doit etre DECLARE PAR index.json (meme liste blanche que
-        /menus/templates_asset) : impossible d'ecrire ailleurs dans MFAData, en
-        particulier dans Clients/ ou dans les materiaux non publies ;
-      - le fichier doit deja exister : on ecrase une etude publiee, on n'en cree
-        pas de nouvelle (l'ajout a l'index reste un geste manuel, cf.
+      - le chemin cible doit etre DECLARE PAR l'index.json de la galerie (meme
+        liste blanche que /menus/templates_asset) : impossible d'ecrire ailleurs
+        dans la racine, en particulier dans les dossiers non publies de MFAData
+        (Clients/, materiaux de travail) ;
+      - le fichier doit deja exister : on ecrase un modele publie, on n'en cree
+        pas de nouveau (l'ajout a l'index reste un geste manuel, cf.
         scripts/generate_sankeytheque_index.py) ;
-      - seuls les chemins du modele (+ index.json) sont ajoutes au commit, jamais
+      - seuls les chemins du modele (+ l'index) sont ajoutes au commit, jamais
         `git add -A` : la copie de travail de MFAData est en permanence pleine de
         materiaux de travail non committes qu'il ne faut surtout pas embarquer.
 
@@ -1913,14 +1940,26 @@ def menus_templates_save():
     diagram = payload.get("json")
     requested_path = payload.get("file_path") or ""
     message = " ".join(str(payload.get("message") or "").split())[:200]
+    # Adresse publique de l'etude, telle que validee par le developpeur dans le
+    # dialogue. Absente du payload => l'index n'est pas touche sur ce point ;
+    # chaine vide => l'adresse est retiree de l'index.
+    published_url = payload.get("published_url")
+    if published_url is not None:
+        published_url = str(published_url).strip()[:500]
+        if published_url and not published_url.startswith(("http://", "https://")):
+            published_url = ""
+    source = payload.get("source") or "mfadata"
     if not isinstance(diagram, dict) or not requested_path:
         abort(400)
-    root = os.environ.get("MFAData")
+    if source not in TEMPLATES_WRITABLE_SOURCES:
+        abort(404)
+    root = templates_source_root(source)
     if not root:
-        return templates_save_error("MFAData n'est pas configure sur ce serveur.")
+        return templates_save_error(
+            "%s n'est pas configure sur ce serveur." % TEMPLATES_WRITABLE_SOURCES[source][1])
     normalized = posixpath.normpath(str(requested_path).replace("\\", "/"))
     # Cible = le JSON en clair ; le .gz eventuel du meme modele part au meme commit.
-    json_rel = mfadata_declared_json(normalized)
+    json_rel = templates_declared_json(source, normalized)
     if json_rel is None:
         abort(404)
     gz_rel = json_rel + ".gz"
@@ -1952,36 +1991,54 @@ def menus_templates_save():
             return templates_save_error("Suppression du .gz impossible : %s" % error)
 
     # L'index doit decrire la realite du disque : les outils qui le lisent
-    # (vignettes, publication du site statique) ouvrent file_path tel quel.
-    if json_rel != normalized:
-        data_index = templates_index_load("mfadata") or {}
+    # (vignettes, publication du site statique) ouvrent file_path tel quel. Il
+    # porte aussi, quand elle est connue, l'ADRESSE EN LIGNE de l'etude
+    # (published_url) : la galerie en fait un lien « voir en ligne », sans avoir
+    # a ouvrir le diagramme pour lire ses reglages de publication.
+    if json_rel != normalized or published_url is not None:
+        data_index = templates_index_load(source) or {}
         index_changed = False
         for template in (data_index.get("templates") or {}).values():
-            if (template.get("file_path") or "").replace("\\", "/") == normalized:
+            if (template.get("file_path") or "").replace("\\", "/") != normalized:
+                continue
+            if json_rel != normalized:
                 template["file_path"] = json_rel
                 index_changed = True
+            if published_url is not None and template.get("published_url") != published_url:
+                if published_url:
+                    template["published_url"] = published_url
+                else:
+                    template.pop("published_url", None)
+                index_changed = True
         if index_changed:
-            index_path = templates_index_path("mfadata")
+            index_path = templates_index_path(source)
             try:
                 with open(index_path, "w", encoding="utf-8") as file_index:
                     json.dump(data_index, file_index, ensure_ascii=False, indent=2)
                     file_index.write("\n")
-                committed_paths.append("index.json")
+                # L'index de SankeyData vit dans templates/, celui de MFAData a la
+                # racine : le chemin committe se deduit de la racine, jamais devine.
+                committed_paths.append(
+                    os.path.relpath(index_path, root).replace("\\", "/"))
             except OSError as error:
                 return templates_save_error("Mise a jour de l'index impossible : %s" % error)
 
+    # Un submodule a un `.git` FICHIER (pointeur), pas un dossier : os.path.exists
+    # couvre les deux, SankeyData comme MFAData.
     if not os.path.exists(os.path.join(root, ".git")):
         return templates_save_error(
-            "Fichier enregistre, mais MFAData n'est pas un depot git sur ce serveur.",
+            "Fichier enregistre, mais %s n'est pas un depot git sur ce serveur."
+            % TEMPLATES_WRITABLE_SOURCES[source][1],
             saved=True,
         )
     email = developer_user_email() or "dev@terriflux.com"
     if not message:
-        message = "sankeytheque: mise a jour de %s" % posixpath.basename(json_rel)
-    code, output = mfadata_git(root, ["add", "-A", "--"] + committed_paths)
+        prefix = "sankeytheque" if source == "mfadata" else "modeles"
+        message = "%s: mise a jour de %s" % (prefix, posixpath.basename(json_rel))
+    code, output = templates_git(root, ["add", "-A", "--"] + committed_paths)
     if code != 0:
         return templates_save_error("git add : %s" % output, saved=True)
-    code, output = mfadata_git(
+    code, output = templates_git(
         root,
         [
             "-c", "user.name=OpenSankey",
@@ -2005,8 +2062,8 @@ def menus_templates_save():
                 mimetype="application/json",
             )
         return templates_save_error("git commit : %s" % output, saved=True)
-    _, commit = mfadata_git(root, ["rev-parse", "--short", "HEAD"])
-    code, output = mfadata_git(root, ["push"])
+    _, commit = templates_git(root, ["rev-parse", "--short", "HEAD"])
+    code, output = templates_git(root, ["push"])
     return Response(
         response=json.dumps({
             "ok": True,
