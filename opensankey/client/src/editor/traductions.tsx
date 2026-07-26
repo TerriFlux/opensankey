@@ -32,6 +32,18 @@
  * ce qui est exactement l'objectif de #1331.
  */
 
+import { ZDD_MENU_CONFIG } from '../components/dialogs/ContextZDDConfig'
+import { LINK_MENU_CONFIG } from '../components/dialogs/ContextLinkConfig'
+import { NODE_MENU_CONFIG } from '../components/dialogs/ContextNodeConfig'
+import { translations } from '../components/dialogs/PersistenceProcessDialogConfigs'
+import { ELEMENTS_MENU_CONFIG } from '../components/configmenus/MenuElementsSelection'
+import {
+  missing_flux_apparence_translations,
+  missing_menu_translations,
+  missing_node_apparence_translations,
+  missing_node_labels_translations,
+} from '../components/configmenus/MenuElementsAppearance'
+
 import i18next from '../traductions/traduction'
 import {
   convertToI18nFormat,
@@ -47,18 +59,6 @@ import type { I18nResources, MenuConfig, TranslationConfig } from '../traduction
 import { resources_app_elements } from '../traductions/traduction_app_elements'
 import { resources_nodes } from '../traductions/traduction_nodes'
 import { resources_flux } from '../traductions/traduction_links'
-
-import { ZDD_MENU_CONFIG } from '../components/dialogs/ContextZDDConfig'
-import { LINK_MENU_CONFIG } from '../components/dialogs/ContextLinkConfig'
-import { NODE_MENU_CONFIG } from '../components/dialogs/ContextNodeConfig'
-import { translations } from '../components/dialogs/PersistenceProcessDialogConfigs'
-import { ELEMENTS_MENU_CONFIG } from '../components/configmenus/MenuElementsSelection'
-import {
-  missing_flux_apparence_translations,
-  missing_menu_translations,
-  missing_node_apparence_translations,
-  missing_node_labels_translations,
-} from '../components/configmenus/MenuElementsAppearance'
 
 /** Traductions du dialogue de traitement, converties au format i18n. */
 const converted = convertToI18nFormat(translations as unknown as TranslationConfig)

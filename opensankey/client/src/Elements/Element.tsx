@@ -29,14 +29,21 @@ import i18next from 'i18next'
 import { MouseEvent } from 'react'
 
 import { Type_LangMap, normalizeLang, resolveLangMap } from '../Persistence/persistenceMigrations'
+// Depuis `elementBasics` (module FEUILLE) et NON depuis `types/Utils` : `Utils` importe `Node` à
+// l'exécution, et `Node` mène à `NodeBase` → `DrawLabel` → `Handler`, qui fait
+// `class Class_Handler extends Class_BaseElement` au niveau module. Passer par `Utils` recréerait
+// donc le cycle Element → … → Handler → Element et le TDZ sur `Class_BaseElement`.
+// Invariant à préserver : aucun chemin runtime d'`Element.tsx` vers `Handler.tsx`.
 import {
   const_default_position_x,
   const_default_position_y,
   randomId,
-  Type_BaseElementPosition,
   default_style_id
-} from '../types/Utils'
-import { Class_DrawingArea } from '../types/DrawingArea'
+} from '../types/elementBasics'
+import type { Type_BaseElementPosition } from '../types/elementBasics'
+// `import type` obligatoire : `DrawingArea` mène à `Node` → `Handler`, qui étend `Class_BaseElement`
+// au niveau module (cf. invariant en tête d'`elementBasics.ts`).
+import type { Class_DrawingArea } from '../types/DrawingArea'
 import {
   AttributeConfig,
   IconLabelAttributeTypes,

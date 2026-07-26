@@ -48,10 +48,25 @@ export const default_toast_waiting_delay: number = 500 // 500ms
 export const toast_bypass: boolean =
   typeof window !== 'undefined' ? (window.sankey?.publish ?? false) : false
 
-export type Type_BaseElementPosition = {
-  x: number
-  y: number
+// Réexportés depuis le module FEUILLE `./elementBasics`, qui n'a aucun import. `Element.tsx` les
+// prend directement là-bas : passer par `Utils` créait un chemin runtime
+// Element → Utils → Node → NodeBase → DrawLabel → Handler, et `Handler` étend `Class_BaseElement`
+// au niveau module — d'où « can't access lexical declaration 'Class_BaseElement' before
+// initialization » selon l'ordre d'entrée dans le graphe. Voir l'en-tête d'`elementBasics.ts`.
+// Importés pour l'usage interne de ce module, et réexportés pour ne casser aucun import existant.
+import {
+  const_default_position_x,
+  const_default_position_y,
+  default_style_id,
+  randomId,
+} from './elementBasics'
+export {
+  const_default_position_x,
+  const_default_position_y,
+  default_style_id,
+  randomId,
 }
+export type { Type_BaseElementPosition } from './elementBasics'
 
 export type Type_Position = 'absolute' | 'relative' | 'parametric' | 'proportional' | 'scale_adapted'
 
@@ -94,14 +109,13 @@ export type Type_AnyJSON = { [_: string]: unknown }
 
 export const default_main_sankey_id = 'sankey_maitre'
 
-export const const_default_position_x = 200
-export const const_default_position_y = 200
+// const_default_position_x / _y : déplacées dans `./elementBasics` (réexportées plus haut).
 // export const default_element_position: Type_ElementPosition = {
 //   x: const_default_position_x,
 //   y: const_default_position_y,
 // }
 
-export const default_style_id = 'default'
+// default_style_id : déplacée dans `./elementBasics` (réexportée plus haut).
 export const default_style_name = 'Style par défaut'
 
 
@@ -112,23 +126,9 @@ export type Templates_builder_type = { [y: string]: Dict_templates_type }
 
 // DEDICATED FUNCTIONS *******************************************************************
 
-/**
- * Create random id
- * from https://stackoverflow.com/a/1349426
- * @param {number} length
- * @return {*}
- */
-export function randomId(length: number = 5) {
-  let result = ''
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  const charactersLength = characters.length
-  let counter = 0
-  while (counter < length) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength))
-    counter += 1
-  }
-  return result
-}
+// `randomId` a été déplacée dans le module feuille `./elementBasics` (cf. réexport en tête de
+// fichier) : `Element.tsx` en a besoin sans pouvoir importer `Utils`, qui tire `Node` à l'exécution
+// et refermait un cycle d'initialisation sur `Handler`.
 
 export function makeId(name: string) {
   const std_name = name.toLowerCase()
