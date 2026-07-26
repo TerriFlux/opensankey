@@ -942,10 +942,25 @@ def parse_stan(path, period_id=None, layer_id=None):
 
     display_factor, unit_code = _display_unit(tables, units, retained, layer_id)
 
+    def _unit_factor(unit_id, fallback=1.0):
+        unit = units.get(unit_id)
+        return unit["Factor"] if unit and unit.get("Factor") else fallback
+
     flow_values = {}
     for fv in retained:
-        num_unit = units.get(fv.get("MFNumUnitID"))
-        factor = num_unit["Factor"] if num_unit and num_unit.get("Factor") else 1.0
+        factor = _unit_factor(fv.get("MFNumUnitID"))
+        den_factor = _unit_factor(fv.get("MFDenomUnitID"))
+        # L'incertitude a ses PROPRES unités (MFUNumUnitID/MFUDenomUnitID), qui ne
+        # sont pas forcément celles de la valeur : dans Example.smfa, Flow B est
+        # saisi en kg (115000) alors que son σ est en t (10). Prendre le ratio des
+        # nombres bruts donnait 0.009 % au lieu de 8.696 %, soit un σ mille fois
+        # trop serré — la mesure devenait quasi dure et sur-déterminait le système.
+        # Absentes (fichiers anciens/minimaux), elles valent celles de la valeur.
+        u_factor = _unit_factor(fv.get("MFUNumUnitID"), factor)
+        # Ratio σ/valeur : les deux ramenés en SI, dénominateurs (« /a ») compris.
+        # Ils s'annulent quand ils coïncident, mais pas si STAN les fait diverger.
+        u_si = u_factor / _unit_factor(fv.get("MFUDenomUnitID"), den_factor)
+        v_si = factor / den_factor
         pair = {}
         for stan_key, our_key in (("MFInput", "data"), ("MFCalc", "result")):
             raw = fv.get(stan_key)
@@ -963,11 +978,11 @@ def parse_stan(path, period_id=None, layer_id=None):
         pair["uncertainty"] = None
         u_in, v_in = fv.get("MFUncertInput"), fv.get("MFInput")
         if isinstance(u_in, (int, float)) and isinstance(v_in, (int, float)) and v_in:
-            pair["uncertainty"] = round(abs(u_in) / abs(v_in) * 100.0, 3)
+            pair["uncertainty"] = round(abs(u_in * u_si) / abs(v_in * v_si) * 100.0, 3)
         pair["result_min"] = pair["result_max"] = None
         u_calc = fv.get("MFUncertCalc")
         if isinstance(u_calc, (int, float)) and pair["result"] is not None:
-            half = abs(u_calc) * factor / display_factor
+            half = abs(u_calc) * u_factor / display_factor
             pair["result_min"] = round(pair["result"] - half, 6)
             pair["result_max"] = round(pair["result"] + half, 6)
         flow_values[(fv["PeriodID"], fv["FlowID"])] = pair
@@ -1094,8 +1109,15 @@ def parse_stan(path, period_id=None, layer_id=None):
             if pair["result"] is not None:
                 value_json["result_value"] = pair["result"]
                 value_json["data_value"] = pair["data"]
+            elif pair["data"] is not None:
+                value_json["data_value"] = pair["data"]
             else:
-                value_json["data_value"] = pair["data"] if pair["data"] is not None else 0.0
+                # Flux NON RENSEIGNÉ (Flow C/D/E de Example.smfa : ni MFInput ni
+                # MFCalc) : c'est une INCONNUE, pas un zéro. Écrire data_value = 0
+                # en faisait une mesure — sans incertitude, donc une contrainte
+                # DURE à 0 — qui effondrait tout le sous-graphe amont à la
+                # réconciliation (A = B = C = 0 au lieu de 250/115/…).
+                value_json.pop("data_value", None)
             if pair["hypothesis"]:
                 value_json["data_hypothesis"] = pair["hypothesis"]
             if pair["source"]:
@@ -2263,6 +2285,70 @@ def test_zmfa_incertitude_est_numerique():
     result = parse_stan(path)
     link = next(iter(result["links"].values()))
     assert link["value"]["data_uncertainty"] == 5.0
+
+
+def test_incertitude_dans_une_autre_unite_que_la_valeur():
+    # STAN garde une unite PROPRE pour l'incertitude (MFUNumUnitID), qui peut
+    # differer de celle de la valeur (MFNumUnitID) : dans Example.smfa, Flow B
+    # est saisi en kg (115000) avec un sigma en t (10). Le ratio des nombres
+    # bruts donnait 0.009 % au lieu de 8.696 % — un sigma mille fois trop serre,
+    # donc une mesure quasi dure qui sur-determinait la reconciliation.
+    import tempfile
+    import os
+    path = os.path.join(tempfile.mkdtemp(), "uncert_unit.zmfa")
+    xml = """<MfaSystemData xmlns="http://inkasoft.net/MfaSystemData.xsd">
+  <Process><ProcessID>1</ProcessID><ProcessType>2</ProcessType><Name>A</Name></Process>
+  <Process><ProcessID>2</ProcessID><ProcessType>2</ProcessType><Name>B</Name></Process>
+  <ProcessInput><ProcessInputID>10</ProcessInputID><ProcessID>2</ProcessID></ProcessInput>
+  <ProcessOutput><ProcessOutputID>20</ProcessOutputID><ProcessID>1</ProcessID></ProcessOutput>
+  <Flow><FlowID>1</FlowID><ProcessInputID>10</ProcessInputID><ProcessOutputID>20</ProcessOutputID><Name>F</Name></Flow>
+  <FlowValue><FlowValueID>1</FlowValueID><FlowID>1</FlowID><FlowLayerID>1</FlowLayerID><PeriodID>1</PeriodID>
+    <MFNumUnitID>2</MFNumUnitID><MFUNumUnitID>20</MFUNumUnitID>
+    <MFInput>115000</MFInput><MFUncertInput>10</MFUncertInput></FlowValue>
+  <Unit><UnitID>2</UnitID><UnitCode>kg</UnitCode><Factor>1</Factor></Unit>
+  <Unit><UnitID>20</UnitID><UnitCode>t</UnitCode><Factor>1000</Factor></Unit>
+  <Period><PeriodID>1</PeriodID><PeriodCode>2024</PeriodCode></Period>
+  <FlowLayer><FlowLayerID>1</FlowLayerID><MaterialCode>Good</MaterialCode><Name>Good</Name></FlowLayer>
+</MfaSystemData>
+"""
+    with gzip.open(path, "wb") as fh:
+        fh.write(xml.encode("utf-8"))
+    result = parse_stan(path)
+    link = next(iter(result["links"].values()))
+    assert link["value"]["data_uncertainty"] == 8.696   # 10 t / 115 t, pas 10 / 115000
+
+
+def test_flux_non_renseigne_reste_une_inconnue():
+    # Un flux sans MFInput NI MFCalc (Flow C/D/E de Example.smfa) est une
+    # INCONNUE du systeme, pas un zero. Ecrire data_value = 0 en faisait une
+    # mesure sans incertitude — une contrainte DURE a 0 — qui effondrait tout le
+    # sous-graphe amont a la reconciliation (A = B = C = 0 au lieu de 250/115).
+    import tempfile
+    import os
+    path = os.path.join(tempfile.mkdtemp(), "inconnue.smfa")
+    _build_minimal_smfa(path)
+    con = sqlite3.connect(path)
+    con.executescript("UPDATE FlowValue SET MFInput = NULL WHERE FlowID = 1;")
+    con.commit()
+    con.close()
+
+    result = parse_stan(path)
+    values = [lk["value"] for lk in result["links"].values()]
+    mesures = [v["data_value"] for v in values if "data_value" in v]
+    assert mesures == [250000.0]              # seul Flow A reste mesure
+    assert len(values) == 2                   # ... et Flow B n'a AUCUNE valeur
+    # Meme chose sur le fichier reel, en multi-periode (les feuilles de tags).
+    for fixture in _stan_fixtures():
+        if not fixture.endswith("Example.smfa"):
+            continue
+        links = parse_stan(fixture)["links"]
+        inconnus = [lk for lk in links.values()
+                    if (lk["value"].get("2006") or {}).get("text_value", "").startswith(
+                        ("C,", "D,", "E,"))]
+        assert len(inconnus) == 3
+        for link in inconnus:
+            for period in ("2006", "2007"):
+                assert "data_value" not in link["value"][period]
 
 
 def test_transcoeff_et_calcbalance():
