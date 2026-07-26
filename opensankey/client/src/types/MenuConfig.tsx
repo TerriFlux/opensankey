@@ -37,10 +37,8 @@ import { Class_EventBus, MAIN_ZONE_TOPIC, SELECTION_TOPIC } from './EventBus'
 import { Class_PanelManager, Type_PanelMode } from './PanelManager'
 // `ConverterConfig` est une interface : `import type` suffit, et l'arête vers la zone d'édition
 // disparaît à la compilation (#1331 — le viewer ne doit rien importer de l'éditeur).
-import type {
-  ConverterConfig
-} from '../components/dialogs/PersistenceProcessDialogConfigs'
-import type { Type_TemplateSource } from '../components/topmenus/SankeyTemplates'
+import type { ConverterConfig } from './ConverterConfig'
+import type { Type_TemplateSource } from './TemplateSource'
 import { Class_NodeBase } from '../Elements/NodeBase'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_ElementStyle } from '../Elements/Element'

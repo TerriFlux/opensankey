@@ -142,6 +142,15 @@ export type FCType_ConfigMenuTextInput = {
 
 
 
+// Déclaration du type pour l'EyeDropper API
+declare global {
+  interface Window {
+    EyeDropper?: {
+      new(): EyeDropper
+    }
+  }
+}
+
 export interface EyeDropper {
   open(): Promise<{ sRGBHex: string }>
 }
