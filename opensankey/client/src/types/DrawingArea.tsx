@@ -395,9 +395,10 @@ export class Class_DrawingArea {
   }
 
   // #680 — Mode de cadrage automatique persistant (cf. Type_AutoFitMode). Défaut
-  // 'none' (revu post-#680) : certains diagrammes ne doivent JAMAIS être recadrés
-  // automatiquement — le cadrage auto est strictement opt-in (clic sur un bouton).
-  // Repassé à 'none' par un zoom manuel (cf. Camera.zoom*).
+  // de CLASSE 'none' : un diagramme démarré à vide n'est pas recadré. Un fichier
+  // CHARGÉ, lui, démarre en 'full' sauf 'none' explicite dans le JSON (cf.
+  // DrawingAreaPersistence.fromJSON). Repassé à 'none' par un zoom manuel
+  // (cf. Camera.zoom*).
   protected _auto_fit_mode: Type_AutoFitMode = 'none'
   // #680 — Direction du glissé en cours (deltas monde), posée par eventMouseDrag le temps
   // du re-cadrage puis remise à null. Sur les axes LIBRES (non remplis), le cadrage ancre le

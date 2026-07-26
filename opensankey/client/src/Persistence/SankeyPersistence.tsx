@@ -1983,10 +1983,11 @@ export class DrawingAreaPersistence {
     // Verrou de taille (largeur/hauteur/zoom figés au changement de dataTag).
     // Défaut false → sérialisé seulement si activé (absence ⇒ déverrouillé).
     if (drawing_area.size_locked) json_object['size_locked'] = true
-    // #680 — Mode de cadrage automatique (boutons radio d'ajustement). Défaut 'none'
-    // (revu post-#680 : cadrage auto strictement opt-in) → sérialisé seulement si un
-    // mode est actif. 'full' = tout visible ; 'width'/'height' = axe forcé.
-    if (drawing_area.auto_fit_mode !== 'none') json_object['auto_fit_mode'] = drawing_area.auto_fit_mode
+    // #680 — Mode de cadrage automatique (boutons radio d'ajustement). TOUJOURS
+    // sérialisé : l'absence de la clé identifie un fichier antérieur (chargé en 'full',
+    // cf. fromJSON) — un 'none' explicite doit donc survivre au rechargement.
+    // 'full' = tout visible ; 'width'/'height' = axe forcé.
+    json_object['auto_fit_mode'] = drawing_area.auto_fit_mode
     // OS#1315 — Ancrage du cadrage. Défaut 'center' → sérialisé seulement si 'top_left'.
     if (drawing_area.fit_anchor !== 'center') json_object['fit_anchor'] = drawing_area.fit_anchor
     // Mode de représentation import/export (proche / haut-bas) : persisté car les nœuds
@@ -2351,9 +2352,10 @@ export class DrawingAreaPersistence {
     // Absence du flag ⇒ déverrouillé (défaut de la classe).
     drawing_area['_size_locked'] = getBooleanFromJSON(json_object, 'size_locked', false)
     // #680 — Mode de cadrage auto : champ direct (le setter notifie la barre d'outils).
-    // Absence ⇒ 'none' (revu post-#680 : jamais de recadrage automatique non demandé —
-    // les anciens fichiers, qui omettaient 'full', chargent donc SANS cadrage auto).
-    drawing_area['_auto_fit_mode'] = getStringFromJSON(json_object, 'auto_fit_mode', 'none') as Type_AutoFitMode
+    // Absence ⇒ 'full' : un fichier CHARGÉ se cadre automatiquement par défaut ; seul un
+    // 'none' EXPLICITE (toujours sérialisé depuis que toJSON écrit la clé) le désactive.
+    // Un diagramme neuf (jamais chargé) reste 'none' via le défaut de classe.
+    drawing_area['_auto_fit_mode'] = getStringFromJSON(json_object, 'auto_fit_mode', 'full') as Type_AutoFitMode
     // OS#1315 — Ancrage du cadrage : champ direct (le setter notifie la barre d'outils).
     drawing_area['_fit_anchor'] = getStringFromJSON(json_object, 'fit_anchor', 'center') as Type_FitAnchor
     drawing_area['_import_export_above_below'] = getBooleanFromJSON(json_object, 'import_export_above_below', false)
