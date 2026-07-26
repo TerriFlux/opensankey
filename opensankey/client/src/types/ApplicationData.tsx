@@ -61,6 +61,24 @@ import type { Class_LinkElement } from '../Elements/Link'
 
 // SPECIFIC TYPES **********************************************************************/
 
+/**
+ * Lit un paramètre d'URL contenant un dict `{ groupe : tag }` sérialisé en JSON
+ * (cf. `Class_ApplicationData.getUrlStateParams`). `null` si absent ou malformé — un
+ * paramètre d'URL est une entrée non fiable, on ne casse pas le chargement pour autant.
+ */
+const parseJSONRecordParam = (raw: string | null, name: string): { [k: string]: string } | null => {
+  if (!raw) return null
+  try {
+    const parsed = JSON.parse(raw)
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null
+    return parsed as { [k: string]: string }
+  } catch {
+    // eslint-disable-next-line no-console
+    console.warn(`[OpenSankey] paramètre d'URL ${name} : JSON invalide « ${raw} »`)
+    return null
+  }
+}
+
 export type Type_TextForToastPromise = {
   success?: {
     title?: string,
@@ -977,14 +995,16 @@ export class Class_ApplicationData {
  * @param {string} url_data
  * @memberof Class_ApplicationData
  */
-  public readUrlJSON(url_data: string) {
+  public readUrlJSON(url_data: string): Promise<void> {
     const root = window.location.origin
     const url = root + this.url_prefix + 'url/load_json'
 
     const form_data = new FormData()
     form_data.append('url', url_data)
 
-    fetch(url, {
+    // Promesse rendue : l'appelant enchaîne l'état d'affichage transmis par l'URL
+    // (`applyUrlStateParams`) une fois le diagramme réellement chargé.
+    return fetch(url, {
       method: 'POST',
       body: form_data
     })
@@ -1050,7 +1070,9 @@ export class Class_ApplicationData {
           // Créer un File à partir de l'ArrayBuffer pour la décompression
           const file = new File([arrayBuffer], filename)
 
-          decompressUploadedFileUniversal(file)
+          // `return` indispensable : c'est le chemin des .gz (donc du bouton « Éditer » des
+          // sites publiés). Sans lui la chaîne se résout AVANT le fromJSON.
+          return decompressUploadedFileUniversal(file)
             .then(json_data => {
               this.fromJSON(json_data as Type_JSON)
             })
@@ -1197,9 +1219,39 @@ export class Class_ApplicationData {
     if (!opts.data_tag_selection && !opts.view_tag_selection && !opts.position_mode) return
     const sankey = this._drawing_area.sankey
 
+    // 1) et 2) Présélections de tags (logique partagée avec l'état transmis par l'URL,
+    //    cf. applyUrlStateParams).
+    this.applyTagSelections(opts.data_tag_selection, opts.view_tag_selection)
+
+    // 3) Mode de navigation
+    if (opts.position_mode) {
+      const current = sankey.styles_dict['default'].shape_position_type
+      if (current !== opts.position_mode) {
+        if (opts.position_mode === 'absolute') this._drawing_area.setAbsoluteMode()
+        else if (opts.position_mode === 'proportional') this._drawing_area.setProportionalMode()
+        else if (opts.position_mode === 'scale_adapted') this._drawing_area.setScaleAdaptedMode()
+      }
+    }
+
+    this._drawing_area.draw()
+  }
+
+  /**
+   * Applique une sélection de tags `{ groupe : tag }` (groupe/tag résolus par id OU par nom),
+   * partagée par les options de publication (`applyPublishStateOptions`) et par l'état
+   * d'affichage transmis en paramètres d'URL (`applyUrlStateParams`). Ne redessine pas :
+   * l'appelant enchaîne son propre `draw()`.
+   * @memberof Class_ApplicationData
+   */
+  public applyTagSelections(
+    data_tag_selection?: { [group: string]: string } | null,
+    view_tag_selection?: { [group: string]: string } | null
+  ): void {
+    const sankey = this._drawing_area.sankey
+
     // 1) Présélection des data tags
-    if (opts.data_tag_selection) {
-      for (const [group_key, tag_key] of Object.entries(opts.data_tag_selection)) {
+    if (data_tag_selection) {
+      for (const [group_key, tag_key] of Object.entries(data_tag_selection)) {
         const group = sankey.data_taggs_list.find(g => g.id === group_key || g.name === group_key)
         if (!group) {
           // eslint-disable-next-line no-console
@@ -1222,9 +1274,9 @@ export class Class_ApplicationData {
     //    groupe + view_mode, sélectionner la valeur, puis recalculer la visibilité (caches
     //    node_tags_fingerprint + is_visible) et éventuellement relancer une mise en page auto si
     //    le filtre révèle des nœuds encore à la position par défaut.
-    if (opts.view_tag_selection) {
+    if (view_tag_selection) {
       let any_view_applied = false
-      for (const [group_key, tag_key] of Object.entries(opts.view_tag_selection)) {
+      for (const [group_key, tag_key] of Object.entries(view_tag_selection)) {
         const group = sankey.view_taggs_list.find(g => g.id === group_key || g.name === group_key)
         if (!group) {
           // eslint-disable-next-line no-console
@@ -1263,18 +1315,69 @@ export class Class_ApplicationData {
         }
       }
     }
+  }
 
-    // 3) Mode de navigation
-    if (opts.position_mode) {
-      const current = sankey.styles_dict['default'].shape_position_type
-      if (current !== opts.position_mode) {
-        if (opts.position_mode === 'absolute') this._drawing_area.setAbsoluteMode()
-        else if (opts.position_mode === 'proportional') this._drawing_area.setProportionalMode()
-        else if (opts.position_mode === 'scale_adapted') this._drawing_area.setScaleAdaptedMode()
+  /**
+   * Sérialise l'état d'affichage COURANT (vue active + sélections de data tags / view tags) en
+   * paramètres d'URL. Sert à rouvrir le diagramme ailleurs exactement tel qu'il est affiché ici
+   * — bouton « Éditer » d'un site publié (cf. MenuTop), qui sans cela retombait sur la vue
+   * maître. Symétrique de `applyUrlStateParams`.
+   * @memberof Class_ApplicationData
+   */
+  public getUrlStateParams(): URLSearchParams {
+    const params = new URLSearchParams()
+    const sankey = this._drawing_area.sankey
+    if (this._current_view_id !== default_main_sankey_id) {
+      params.set('view', this._current_view_id)
+    }
+    // Data tags : une valeur sélectionnée par groupe (comme le sélecteur de la barre du haut).
+    const data_tag_selection: { [group: string]: string } = {}
+    sankey.data_taggs_list.forEach(group => {
+      const selected = group.selected_tags_list[0]
+      if (selected) data_tag_selection[group.id] = selected.id
+    })
+    if (Object.keys(data_tag_selection).length > 0) {
+      params.set('dt', JSON.stringify(data_tag_selection))
+    }
+    // View tags : un groupe hors mode filtre est transmis explicitement comme « all ». Le fichier
+    // cible peut avoir le filtre actif par défaut : sans ce marqueur, l'état d'arrivée différerait.
+    const view_tag_selection: { [group: string]: string } = {}
+    sankey.view_taggs_list.forEach(group => {
+      const selected = group.selected_tags_list[0]
+      view_tag_selection[group.id] = (group.view_mode && selected) ? selected.id : 'all'
+    })
+    if (Object.keys(view_tag_selection).length > 0) {
+      params.set('vt', JSON.stringify(view_tag_selection))
+    }
+    return params
+  }
+
+  /**
+   * Rejoue l'état d'affichage transmis en paramètres d'URL (`view`, `dt`, `vt`) — cf.
+   * `getUrlStateParams`. À appeler APRÈS le chargement du diagramme (`readUrlJSON`), une fois
+   * les vues et les tags présents. Sans effet si aucun de ces paramètres n'est présent.
+   * @memberof Class_ApplicationData
+   */
+  public applyUrlStateParams(params: URLSearchParams): void {
+    const view_selection = params.get('view')
+    const data_tag_selection = parseJSONRecordParam(params.get('dt'), 'dt')
+    const view_tag_selection = parseJSONRecordParam(params.get('vt'), 'vt')
+    if (!view_selection && !data_tag_selection && !view_tag_selection) return
+    // La vue d'abord : le switch reconstruit la drawing area (vue heavy) et applique la
+    // visibilité propre de la vue — les sélections de tags se posent PAR-DESSUS.
+    if (view_selection) {
+      const view_id = this._views_reader.resolveViewIdFromSelection(view_selection)
+      if (!view_id) {
+        // eslint-disable-next-line no-console
+        console.warn(`[OpenSankey] paramètre d'URL view : vue introuvable « ${view_selection} »`)
+      } else if (view_id !== this._current_view_id) {
+        this.setCurrentView(view_id)
       }
     }
-
-    this._drawing_area.draw()
+    if (data_tag_selection || view_tag_selection) {
+      this.applyTagSelections(data_tag_selection, view_tag_selection)
+      this._drawing_area.draw()
+    }
   }
 
   /**

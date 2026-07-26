@@ -172,7 +172,11 @@ export const OpenSankeyApp = ({
     }
 
     if (url_info) {
+      // L'état d'affichage (vue courante, sélections de tags) voyage dans l'URL à côté de
+      // ?url= : c'est ce qui permet au bouton « Éditer » d'un site publié de rouvrir le
+      // diagramme sur la vue affichée, et non sur le maître.
       app_data.readUrlJSON(url_info)
+        .then(() => app_data.applyUrlStateParams(new URLSearchParams(window.location.search)))
     }
   }, [])
 
