@@ -874,7 +874,8 @@ export class Class_ApplicationData {
    */
   public saveToJSON(kwargs?: Type_JSON) {
     this.sendWaitingToast(
-      () => {
+      async () => {
+        await this.beforeSaveToJSON()
         this._saveToJSON(kwargs)
       },
       {
@@ -889,6 +890,13 @@ export class Class_ApplicationData {
         }
       })
   }
+
+  /**
+   * Hook ASYNCHRONE exécuté juste avant la sérialisation d'une sauvegarde JSON (dans le toast
+   * d'attente, donc l'utilisateur voit le spinner). OS : rien. OSP y prépare les vignettes de
+   * vues, dont la rasterisation est asynchrone alors que `_toJSON` est synchrone.
+   */
+  protected async beforeSaveToJSON(): Promise<void> { /* rien à préparer en lecture */ }
 
   /**
    * Save to JSON format
