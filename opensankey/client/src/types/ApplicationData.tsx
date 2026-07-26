@@ -48,6 +48,7 @@ import { Class_DrawingArea } from './DrawingArea'
 import { compressJSONToGzip, decompressUploadedFileUniversal } from '../Persistence/UniversalJSONCompression'
 import { parseSankeymaticText } from '../Persistence/sankeymaticParser'
 import { loadEsankeyFile } from '../Persistence/esankeyParser'
+import { convertForeignObjectsInPlace } from '../Persistence/foreignObjectToSvgText'
 import { updateFrom } from '../Algorithms/UpdateFrom'
 import { centerChildrenOnParent } from '../Algorithms/Hierarchies'
 import { DrawingAreaPersistence } from '../Persistence/SankeyPersistence'
@@ -104,190 +105,6 @@ export type Type_PresentationDiagram = {
 export type Type_SankeythequeOrigin = {
   file_path: string
   title: string
-}
-
-// FOREIGN OBJECT → SVG TEXT (rich) *****************************************************
-
-type FOSpanStyle = {
-  bold?: boolean
-  italic?: boolean
-  underline?: boolean
-  color?: string
-  fontSize?: string
-  fontFamily?: string
-  align?: 'left' | 'center' | 'right'
-}
-type FOSpan = FOSpanStyle & { text: string }
-
-const FO_BLOCK_TAGS = new Set(['p', 'div', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote'])
-
-function deriveFOStyle(el: HTMLElement, inherited: FOSpanStyle): FOSpanStyle {
-  const style: FOSpanStyle = { ...inherited }
-  const tag = el.tagName.toLowerCase()
-  if (tag === 'b' || tag === 'strong') style.bold = true
-  if (tag === 'i' || tag === 'em') style.italic = true
-  if (tag === 'u' || tag === 'ins') style.underline = true
-  const inline = el.getAttribute('style') || ''
-  const colorMatch = inline.match(/(^|;)\s*color\s*:\s*([^;]+)/i)
-  if (colorMatch) style.color = colorMatch[2].trim()
-  const sizeMatch = inline.match(/(^|;)\s*font-size\s*:\s*([^;]+)/i)
-  if (sizeMatch) style.fontSize = sizeMatch[2].trim()
-  const familyMatch = inline.match(/(^|;)\s*font-family\s*:\s*([^;]+)/i)
-  if (familyMatch) style.fontFamily = familyMatch[2].trim()
-  const weightMatch = inline.match(/(^|;)\s*font-weight\s*:\s*([^;]+)/i)
-  if (weightMatch) {
-    const w = weightMatch[2].trim()
-    if (w === 'bold' || (/^\d+$/.test(w) && parseInt(w) >= 700)) style.bold = true
-    else if (w === 'normal' || (/^\d+$/.test(w) && parseInt(w) < 700)) style.bold = false
-  }
-  if (/font-style\s*:\s*italic/i.test(inline)) style.italic = true
-  if (/text-decoration[^;]*underline/i.test(inline)) style.underline = true
-  if (FO_BLOCK_TAGS.has(tag)) {
-    const alignMatch = inline.match(/(^|;)\s*text-align\s*:\s*([^;]+)/i)
-    const raw = alignMatch ? alignMatch[2].trim().toLowerCase() : window.getComputedStyle(el).textAlign
-    if (raw === 'center') style.align = 'center'
-    else if (raw === 'right' || raw === 'end') style.align = 'right'
-    else if (raw === 'left' || raw === 'start') style.align = 'left'
-  }
-  return style
-}
-
-type FOEvent =
-  | { type: 'run'; textNode: Text; style: FOSpanStyle }
-  | { type: 'break' }
-
-function collectFOEvents(root: HTMLElement): FOEvent[] {
-  const events: FOEvent[] = []
-  const walk = (node: Node, inherited: FOSpanStyle) => {
-    if (node.nodeType === Node.TEXT_NODE) {
-      const t = node as Text
-      if (t.data) events.push({ type: 'run', textNode: t, style: inherited })
-      return
-    }
-    if (node.nodeType !== Node.ELEMENT_NODE) return
-    const el = node as HTMLElement
-    const tag = el.tagName.toLowerCase()
-    if (tag === 'br') { events.push({ type: 'break' }); return }
-    const style = deriveFOStyle(el, inherited)
-    const isBlock = FO_BLOCK_TAGS.has(tag)
-    if (isBlock && events.length > 0) events.push({ type: 'break' })
-    el.childNodes.forEach(c => walk(c, style))
-  }
-  walk(root, {})
-  return events
-}
-
-function buildFOLines(events: FOEvent[]): FOSpan[][] {
-  const lines: FOSpan[][] = [[]]
-  let lastTop: number | null = null
-  const pushSpan = (span: FOSpan) => { if (span.text) lines[lines.length - 1].push(span) }
-
-  for (const ev of events) {
-    if (ev.type === 'break') { lines.push([]); lastTop = null; continue }
-    const { textNode, style } = ev
-    const data = textNode.data
-    if (!data) continue
-    let pending = ''
-    const re = /\S+|\s+/g
-    let m: RegExpExecArray | null
-    while ((m = re.exec(data)) !== null) {
-      const tok = m[0]
-      const range = document.createRange()
-      range.setStart(textNode, m.index)
-      range.setEnd(textNode, m.index + tok.length)
-      const rects = range.getClientRects()
-      if (rects.length === 0) { pending += tok; continue }
-      const top = rects[0].top
-      if (lastTop !== null && top > lastTop + 1) {
-        pushSpan({ ...style, text: pending.replace(/\s+$/, '') })
-        pending = ''
-        lines.push([])
-      }
-      pending += tok
-      lastTop = top
-    }
-    pushSpan({ ...style, text: pending })
-  }
-  return lines
-}
-
-function convertForeignObjectToSvgText(
-  foNode: SVGForeignObjectElement,
-  divElement: HTMLElement
-): SVGTextElement | null {
-  const foX = parseFloat(foNode.getAttribute('x') || '0')
-  const foY = parseFloat(foNode.getAttribute('y') || '0')
-  const foWidth = parseFloat(foNode.getAttribute('width') || '0')
-
-  const divStyle = window.getComputedStyle(divElement)
-  const baseFontSize = parseFloat(divStyle.fontSize) || 12
-  const lineHeightRaw = parseFloat(divStyle.lineHeight)
-  const lineHeight = isNaN(lineHeightRaw) ? baseFontSize * 1.2 : lineHeightRaw
-  const padTop = parseFloat(divStyle.paddingTop) || 0
-  const padLeft = parseFloat(divStyle.paddingLeft) || 0
-  const padRight = parseFloat(divStyle.paddingRight) || 0
-  const rootAlignRaw = (divStyle.textAlign || '').toLowerCase()
-  const rootAlign: 'left' | 'center' | 'right' =
-    rootAlignRaw === 'center' ? 'center'
-      : (rootAlignRaw === 'right' || rootAlignRaw === 'end') ? 'right'
-        : 'left'
-
-  const anchorForAlign = (a: 'left' | 'center' | 'right') =>
-    a === 'center' ? { anchor: 'middle', x: foX + foWidth / 2 }
-      : a === 'right' ? { anchor: 'end', x: foX + foWidth - padRight }
-        : { anchor: 'start', x: foX + padLeft }
-
-  const events = collectFOEvents(divElement)
-  const lines = buildFOLines(events)
-  if (lines.length === 0 || (lines.length === 1 && lines[0].length === 0)) return null
-
-  const SVG_NS = 'http://www.w3.org/2000/svg'
-  const rootPos = anchorForAlign(rootAlign)
-  const textElement = document.createElementNS(SVG_NS, 'text') as SVGTextElement
-  textElement.setAttribute('x', rootPos.x.toString())
-  textElement.setAttribute('y', (foY + padTop + baseFontSize * 0.8).toString())
-  textElement.setAttribute('font-family', divStyle.fontFamily)
-  textElement.setAttribute('font-size', divStyle.fontSize)
-  textElement.setAttribute('fill', divStyle.color || '#000')
-  textElement.setAttribute('text-anchor', rootPos.anchor)
-
-  // Propage le transform du <foreignObject> (typiquement translate+rotate(-90)
-  // posé pour vertical_text) sur le <text> de remplacement, sinon l'export PNG
-  // perd la rotation et le label apparaît horizontal au mauvais endroit.
-  const foTransform = foNode.getAttribute('transform')
-  if (foTransform) textElement.setAttribute('transform', foTransform)
-
-  lines.forEach((spans, lineIdx) => {
-    const lineAlign = spans[0]?.align || rootAlign
-    const pos = anchorForAlign(lineAlign)
-    if (spans.length === 0) {
-      const tspan = document.createElementNS(SVG_NS, 'tspan')
-      tspan.setAttribute('x', pos.x.toString())
-      tspan.setAttribute('text-anchor', pos.anchor)
-      if (lineIdx > 0) tspan.setAttribute('dy', lineHeight + 'px')
-      tspan.textContent = ' '
-      textElement.appendChild(tspan)
-      return
-    }
-    spans.forEach((span, spanIdx) => {
-      const tspan = document.createElementNS(SVG_NS, 'tspan')
-      if (spanIdx === 0) {
-        tspan.setAttribute('x', pos.x.toString())
-        tspan.setAttribute('text-anchor', pos.anchor)
-        if (lineIdx > 0) tspan.setAttribute('dy', lineHeight + 'px')
-      }
-      if (span.bold) tspan.setAttribute('font-weight', 'bold')
-      if (span.italic) tspan.setAttribute('font-style', 'italic')
-      if (span.underline) tspan.setAttribute('text-decoration', 'underline')
-      if (span.color) tspan.setAttribute('fill', span.color)
-      if (span.fontSize) tspan.setAttribute('font-size', span.fontSize)
-      if (span.fontFamily) tspan.setAttribute('font-family', span.fontFamily)
-      tspan.textContent = span.text
-      textElement.appendChild(tspan)
-    })
-  })
-
-  return textElement
 }
 
 // CLASS APPLICATION DATA **************************************************************/
@@ -874,7 +691,8 @@ export class Class_ApplicationData {
    */
   public saveToJSON(kwargs?: Type_JSON) {
     this.sendWaitingToast(
-      () => {
+      async () => {
+        await this.beforeSaveToJSON()
         this._saveToJSON(kwargs)
       },
       {
@@ -889,6 +707,13 @@ export class Class_ApplicationData {
         }
       })
   }
+
+  /**
+   * Hook ASYNCHRONE exécuté juste avant la sérialisation d'une sauvegarde JSON (dans le toast
+   * d'attente, donc l'utilisateur voit le spinner). OS : rien. OSP y prépare les vignettes de
+   * vues, dont la rasterisation est asynchrone alors que `_toJSON` est synchrone.
+   */
+  protected async beforeSaveToJSON(): Promise<void> { /* rien à préparer en lecture */ }
 
   /**
    * Save to JSON format
@@ -1473,23 +1298,10 @@ export class Class_ApplicationData {
   public pre_process_export_svg(convert_fo: boolean = false) {
     const d3_select = this._pre_process_export_svg()
 
-    if (d3_select && convert_fo) {
-      d3_select.selectAll('foreignObject').nodes().forEach((node: d3.BaseType) => {
-        const foNode = node as SVGForeignObjectElement
-        // Skip the inline edit-input foreignObjects (contenteditable div created by
-        // drawLabelInput, kept display:none until a label is double-clicked). They hold
-        // the raw, unformatted value and would otherwise be baked into a duplicate
-        // <text> overlapping the real label in PNG/PDF/SVG exports. Genuine rich-text
-        // label FOs use a non-editable .ql-editor div, so this leaves them untouched.
-        if (foNode.querySelector('[contenteditable]')) return
-        // Measure wrapping on the LIVE original (clone is detached → no client rects).
-        const originalFO = foNode.id ? document.getElementById(foNode.id) as unknown as SVGForeignObjectElement | null : null
-        const measureDiv = (originalFO || foNode).querySelector('div') as HTMLElement | null
-        if (!measureDiv) return
-        const textElement = convertForeignObjectToSvgText(foNode, measureDiv)
-        if (textElement) foNode.parentNode?.replaceChild(textElement, foNode)
-      })
-    }
+    // Labels rich-text → <text> SVG natifs, pour que l'export se rende sans la feuille de
+    // style de la page (cf. Persistence/foreignObjectToSvgText).
+    const clone_node = d3_select?.node()
+    if (clone_node && convert_fo) convertForeignObjectsInPlace(clone_node)
 
     const legend_w = !this.drawing_area.legend.masked ? this.drawing_area.legend.width : 0
 
