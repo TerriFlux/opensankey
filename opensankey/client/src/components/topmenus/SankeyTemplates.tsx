@@ -99,6 +99,10 @@ export type Type_TemplateInfos = {
   // Source d'origine du modèle, posée côté client à la fusion des index :
   // détermine la racine de service des fichiers et le mode de chargement.
   'source'?: Type_TemplateSource;
+  // Adresse publique du diagramme, quand il est aussi publié en ligne. Posée
+  // par le réenregistrement dans la sankeythèque (cf. MFADataSaveModal) : la
+  // vignette porte alors un lien direct vers le site publié.
+  'published_url'?: string;
 };
 export type Type_TemplatesInfos = { [id: string]: Type_TemplateInfos; };
 export type Type_TemplatesIndexes = { [category: string]: string[]; };
@@ -225,8 +229,11 @@ const loadJsonTemplate = (
       new_data.fromJSON(JSON.parse(decompressed) as Type_JSON, {})
       // Provenance retenue APRÈS fromJSON, qui l'efface (reset). Elle rend le
       // réenregistrement en place possible pour un développeur, cf. MFADataSaveModal.
-      if (source === 'mfadata') {
-        new_data.sankeytheque_origin = { file_path, title: title ?? file_path }
+      // Les deux galeries versionnées en git sont concernées : la sankeythèque
+      // (MFAData) comme les modèles (SankeyData). Le corpus e!Sankey, lui, est
+      // binaire et propriétaire — il ne passe même pas par ce chargeur.
+      if (source === 'mfadata' || source === 'sankeydata') {
+        new_data.sankeytheque_origin = { file_path, title: title ?? file_path, source }
       }
     },
     {
@@ -791,7 +798,31 @@ export const TemplateGalleryPanel = ({ new_data, additionalMenu }:{
         alignItems='center'
         justifyContent='center'
         overflow='hidden'
+        position='relative'
       >
+        {/* Diagramme aussi publié en ligne : accès direct au site, sans le
+            charger dans l'éditeur (le clic sur la vignette, lui, l'ouvre). */}
+        {template.published_url && <Box
+          as='a'
+          href={template.published_url}
+          target='_blank'
+          rel='noreferrer'
+          position='absolute'
+          top='2px'
+          right='4px'
+          zIndex={1}
+          fontSize='0.7rem'
+          lineHeight='1'
+          padding='0.15rem 0.25rem'
+          borderRadius='4px'
+          color={ACCENT}
+          background='rgba(255,255,255,0.85)'
+          _hover={{ background: ACCENT, color: 'white' }}
+          title={new_data.t('templates.published_link')}
+          onClick={(evt: React.MouseEvent) => evt.stopPropagation()}
+        >
+          ↗
+        </Box>}
         <TemplateThumbnail
           title={templateTitle(new_data, id, template)}
           img_path={template.img_path}
