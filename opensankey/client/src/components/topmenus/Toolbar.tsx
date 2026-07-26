@@ -2,9 +2,12 @@
 import {
   Button, Collapse, Box, useDisclosure,
   Heading, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Text, Select, Checkbox, Switch,
-  Menu, MenuButton, MenuList, MenuItem, HStack, VStack, Divider
+  Menu, MenuButton, MenuList, MenuItem, HStack, VStack, Divider, Portal
 } from '@chakra-ui/react'
 import { CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faLocationDot, faPercent, faRulerVertical } from '@fortawesome/free-solid-svg-icons'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { OSMultiSelect, typeElementSelectable, CustomFaEyeCheckIcon, OSTooltip, ConfigMenuNumberInput } from '../configmenus/MenuCommon'
 import { PanelShell } from '../panels/PanelShell'
 import { useMainZone } from '../spreadsheet/MainZoneTabs'
@@ -19,6 +22,7 @@ import { disaggregate, aggregate, resetLocalHierarchy, disaggregationExpansion, 
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_NodeDimension, Type_DisaggregationKind } from '../../Elements/NodeDimension'
 import { Type_DisaggregationGap, const_default_position_x, const_default_position_y, Type_MacroTagGroup } from '../../types/Utils'
+import { Type_PositionMode } from '../../types/PublishOptions'
 
 // #1283 — largeur du tiroir de filtres (comme avant : compact).
 const width_fitler_drawer = 270
@@ -40,8 +44,79 @@ export const applyDataTagChildLinks = (
   app_data.drawing_area.draw()
 }
 
+/**
+ * Bascule le mode d'affichage global (absolu / proportionnel / échelle adaptée). Ces modes
+ * ne prennent sens qu'avec des data tags (ils gouvernent la réaction du diagramme au
+ * changement de données) : le sélecteur vit donc À CÔTÉ des data tags (panneau Filtres et
+ * topbar), plus dans la toolbar de droite. Reproduit le comportement de l'ancien groupe de
+ * boutons : setScaleAdaptedMode fait son propre draw, les deux autres non.
+ */
+export const applyPositionMode = (app_data: Class_ApplicationData, m: Type_PositionMode) => {
+  const da = app_data.drawing_area
+  if (da.sankey.styles_dict['default'].shape_position_type === m) return
+  if (m === 'absolute') { da.setAbsoluteMode(); da.draw() }
+  else if (m === 'proportional') { da.setProportionalMode(); da.draw() }
+  else { da.setScaleAdaptedMode() }
+  // Rafraîchit les deux hôtes du sélecteur (panneau data + topbar), cf. MenuConfig.
+  app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
+}
+
+const POSITION_MODE_META: { value: Type_PositionMode, icon: IconDefinition, label_key: string }[] = [
+  { value: 'absolute', icon: faLocationDot, label_key: 'Banner.posModeShort_absolute' },
+  { value: 'proportional', icon: faPercent, label_key: 'Banner.posModeShort_proportional' },
+  { value: 'scale_adapted', icon: faRulerVertical, label_key: 'Banner.posModeShort_scale_adapted' },
+]
+
+/**
+ * Menu du mode d'affichage, COLLÉ au sélecteur de data tags : déclencheur icône seule
+ * (icône du mode courant, discret), le texte + icône de chaque mode ne se voient que
+ * dans le menu déroulé. Le mode est GLOBAL au diagramme (style 'default') : un seul
+ * menu par hôte, pas un par groupe de data tags.
+ */
+export const PositionModeMenu = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const { t, drawing_area } = app_data
+  const mode = drawing_area.sankey.styles_dict['default'].shape_position_type
+  // Mode hérité hors liste (ex. 'parametric') : on affiche l'icône absolu sans le cocher.
+  const current = POSITION_MODE_META.find(m => m.value === mode) ?? POSITION_MODE_META[0]
+  return <Menu placement='bottom-start'>
+    <OSTooltip placement='bottom' label={t('Banner.posMode_title_tt')}>
+      {/* `variant` obligatoire : le style de base des boutons du thème est vert PLEINE
+          LARGEUR (width 100 %) — sans variant, le bouton écrase le sélecteur voisin.
+          `menuconfigpanel_icon_button` = fond blanc, largeur au contenu, hauteur 1.5rem
+          (celle des sélecteurs xs). */}
+      <MenuButton
+        as={Button}
+        size='xs'
+        variant='menuconfigpanel_icon_button'
+        aria-label={t('Banner.posMode_title')}
+      >
+        <FontAwesomeIcon icon={current.icon} />
+      </MenuButton>
+    </OSTooltip>
+    {/* Portal : hôtes à contexte d'empilement propre (topbar / panneau) — sans lui la
+        MenuList peut s'ouvrir clippée. */}
+    <Portal>
+      <MenuList minWidth='unset' zIndex={50}>
+        {POSITION_MODE_META.map(m => (
+          <MenuItem
+            key={m.value}
+            fontSize='0.75rem'
+            icon={<FontAwesomeIcon icon={m.icon} />}
+            onClick={() => applyPositionMode(app_data, m.value)}
+          >
+            <HStack spacing='0.5rem'>
+              <Box as='span'>{t(m.label_key)}</Box>
+              {m.value === mode ? <CheckIcon boxSize='0.6rem' /> : null}
+            </HStack>
+          </MenuItem>
+        ))}
+      </MenuList>
+    </Portal>
+  </Menu>
+}
+
 export const TopbarNavSelect = ({
-  prefix, options, value, onChange, onPrev, onNext, prev_disabled, next_disabled, select_label, t
+  prefix, options, value, onChange, onPrev, onNext, prev_disabled, next_disabled, select_label, t, trailing
 }: {
   prefix: string
   options: { value: string, label: string }[]
@@ -53,6 +128,8 @@ export const TopbarNavSelect = ({
   next_disabled: boolean
   select_label: string
   t: (key: string) => string
+  // Contrôle collé au sélecteur, dans la même ligne (cf. PositionModeMenu en topbar).
+  trailing?: JSX.Element
 }) => {
   // Flèches : largeur FIXE minuscule (p='0', flexShrink=0) + variant 'ghost' (gris, pas le
   // solid vert par défaut) — sinon elles s'élargissent et écrasent le sélecteur.
@@ -66,7 +143,9 @@ export const TopbarNavSelect = ({
         {icon}
       </Button>
     </OSTooltip>
-  return <VStack spacing='0' align='stretch' w='13rem' mr='0.7rem'>
+  // Un contrôle collé (trailing) prend de la place dans la ligne : on élargit d'autant,
+  // sinon c'est le <Select> qui se réduit.
+  return <VStack spacing='0' align='stretch' w={trailing ? '15rem' : '13rem'} mr='0.7rem'>
     {prefix !== '' ? (
       <Box fontSize='0.6rem' lineHeight='1.1' color='gray.600' whiteSpace='nowrap' overflow='hidden' textOverflow='ellipsis'>
         {prefix}
@@ -87,6 +166,7 @@ export const TopbarNavSelect = ({
         </OSTooltip>
       </Box>
       {arrow(<ChevronRightIcon boxSize='0.9rem' />, onNext, next_disabled, t('Menu.nextView'), 'next')}
+      {trailing ? <Box flexShrink={0} ml='0.2rem'>{trailing}</Box> : null}
     </HStack>
   </VStack>
 }
@@ -101,6 +181,13 @@ export const BannerDataTagTopbar = ({ app_data }: { app_data: Class_ApplicationD
     .filter(grp => (grp as unknown as Class_DataTagGroup).banner === 'topbar') as unknown as Class_DataTagGroup[]
 
   if (topbar_taggs.length === 0) return <></>
+
+  // Mode d'affichage (absolu / proportionnel / échelle adaptée) : collé au DERNIER
+  // sélecteur, dans sa ligne — le mode gouverne la réaction du diagramme au changement
+  // de données, mais il est GLOBAL : un seul bouton, pas un par groupe. En publish,
+  // exposé via l'option `toolbar` (comme l'ancien groupe de la barre du bas).
+  const show_pos_mode = !app_data.is_static || app_data.publish_options.toolbar
+  const last_id = topbar_taggs[topbar_taggs.length - 1].id
 
   return <HStack className='BannerDataTagTopbar' alignItems='center' spacing='0.4rem'>
     {topbar_taggs.map(tagg => {
@@ -126,6 +213,8 @@ export const BannerDataTagTopbar = ({ app_data }: { app_data: Class_ApplicationD
         onNext={() => { if (cur_idx >= 0 && cur_idx < tags.length - 1) select(tags[cur_idx + 1].id) }}
         prev_disabled={cur_idx <= 0}
         next_disabled={cur_idx < 0 || cur_idx >= tags.length - 1}
+        trailing={(show_pos_mode && tagg.id === last_id)
+          ? <PositionModeMenu app_data={app_data} /> : undefined}
       />
     })}
   </HStack>
@@ -1618,6 +1707,19 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, show_hidden_groups }: {
     return <></>
   }
 
+  // Mode d'affichage (absolu / proportionnel / échelle adaptée) : collé au sélecteur du
+  // DERNIER groupe de data tags filtrable — le mode gouverne la réaction du diagramme au
+  // changement de données, mais il est GLOBAL : un seul bouton pour la section, pas un
+  // par groupe. En publish, exposé via l'option `toolbar` (comme l'ancien groupe de la
+  // barre du bas). `isSelectorRow` reprend les conditions de rendu de la ligne ci-dessous.
+  const isSelectorRow = (tagg: Class_TagGroup) =>
+    Object.keys(tagg.tags_dict || {}).length >= 1
+    && tagg.banner !== 'sequence' && tagg.banner !== 'topbar' && tagg.banner !== 'none'
+  const show_pos_mode = mode === 'data' && (!app_data.is_static || app_data.publish_options.toolbar)
+  const pos_mode_host_id = show_pos_mode
+    ? [...taggs_in_banner].reverse().find(isSelectorRow)?.id ?? null
+    : null
+
   // Génération des sélecteurs
   const SelectorOfTagsByGroup = taggs_in_banner.map(tagg => {
     if (Object.keys(tagg.tags_dict || {}).length < 1) {
@@ -1658,9 +1760,18 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, show_hidden_groups }: {
           </Box>}
         {!edit_only && (
           <Box layerStyle='filter_grid_row'>
-            <OSTooltip label={t('Banner.ndd_lst')}>
-              {selector}
-            </OSTooltip>
+            {/* Le bouton de mode partage la cellule du sélecteur pour lui rester collé
+                (la grille n'a que deux colonnes : sélecteur | action). */}
+            <HStack spacing='0.2rem' minWidth='0'>
+              <Box flex='1' minWidth='0'>
+                <OSTooltip label={t('Banner.ndd_lst')}>
+                  {selector}
+                </OSTooltip>
+              </Box>
+              {tagg.id === pos_mode_host_id && (
+                <Box flexShrink={0}><PositionModeMenu app_data={app_data} /></Box>
+              )}
+            </HStack>
             <OSTooltip label={t('Banner.ndd_chk')}>
               <Box justifySelf='end' alignSelf='center'>
                 {actionButton}
