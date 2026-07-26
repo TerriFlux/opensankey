@@ -5,7 +5,7 @@ export const resources_template = {
   en: {
     translation: {
       templates: {
-        need_osp: 'OpenSankey+ needed',
+        need_osp: 'MFASankey Production needed',
         gallery_hint: 'Click a template to start from an example',
         sankeytheque_hint: 'Click a study to open it',
         pin: 'Pin the gallery (the drawing resizes to its left, try templates one after another)',
@@ -45,7 +45,7 @@ export const resources_template = {
   fr: {
     translation: {
       templates: {
-        need_osp: 'OpenSankey+ necessaire',
+        need_osp: 'MFASankey Production necessaire',
         gallery_hint: 'Cliquez sur un modèle pour partir d\'un exemple',
         sankeytheque_hint: 'Cliquez sur une étude pour l\'ouvrir',
         pin: 'Épingler la galerie (le dessin se recadre à gauche, essayez les modèles à la suite)',
@@ -85,7 +85,7 @@ export const resources_template = {
   es: {
     translation: {
       templates: {
-        need_osp: 'Se necesita OpenSankey+',
+        need_osp: 'Se necesita MFASankey Production',
         gallery_hint: 'Haga clic en una plantilla para empezar desde un ejemplo',
         sankeytheque_hint: 'Haga clic en un estudio para abrirlo',
         pin: 'Fijar la galería (el dibujo se reajusta a su izquierda, pruebe las plantillas una tras otra)',
@@ -125,7 +125,7 @@ export const resources_template = {
   de: {
     translation: {
       templates: {
-        need_osp: 'OpenSankey+ erforderlich',
+        need_osp: 'MFASankey Production erforderlich',
         gallery_hint: 'Klicken Sie auf eine Vorlage, um mit einem Beispiel zu starten',
         sankeytheque_hint: 'Klicken Sie auf eine Studie, um sie zu öffnen',
         pin: 'Galerie anheften (die Zeichnung wird links davon neu angepasst, Vorlagen nacheinander ausprobieren)',
@@ -165,7 +165,7 @@ export const resources_template = {
   it: {
     translation: {
       templates: {
-        need_osp: 'OpenSankey+ necessario',
+        need_osp: 'MFASankey Production necessario',
         gallery_hint: 'Clicca su un modello per partire da un esempio',
         sankeytheque_hint: 'Clicca su uno studio per aprirlo',
         pin: 'Fissa la galleria (il disegno si ridimensiona alla sua sinistra, prova i modelli uno dopo l\'altro)',
@@ -202,7 +202,7 @@ export const resources_template = {
   'zh-CN': {
     translation: {
       templates: {
-        need_osp: '需要 OpenSankey+',
+        need_osp: '需要 MFASankey Production',
         gallery_hint: '点击某个模板即可从示例开始',
         sankeytheque_hint: '点击某项研究即可打开',
         pin: '固定图库（绘图区在其左侧调整大小，可逐个试用模板）',
@@ -239,7 +239,7 @@ export const resources_template = {
   ja: {
     translation: {
       templates: {
-        need_osp: 'OpenSankey+ が必要です',
+        need_osp: 'MFASankey Production が必要です',
         gallery_hint: 'テンプレートをクリックすると、その例から始められます',
         sankeytheque_hint: '研究事例をクリックすると開きます',
         pin: 'ギャラリーを固定（描画エリアはその左側でサイズ調整され、テンプレートを次々と試せます）',

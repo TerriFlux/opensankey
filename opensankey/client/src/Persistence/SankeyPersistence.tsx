@@ -684,20 +684,29 @@ export class LinkElementPersistence extends ProtoElementPersistence {
         link.attributes['value_label_background_color_visible'] = json_local.value_label_background
       }
       link.attributes['value_label_background_type'] = 'ellipse'
+      // `'dragged'` n'existe pas dans le modèle courant : on ne reprend pas la valeur legacy, et
+      // l'attribut retombe sur son style. On l'écrase à `undefined` plutôt que de le `delete` :
+      // `link.attributes` est pré-remplie avec TOUTES les clés à `undefined`, donc supprimer la clé
+      // rendait le premier chargement différent du second (clé absente vs présente à `undefined`) —
+      // sémantiquement identique, mais le round-trip n'était plus un point fixe (#230). Le `delete`
+      // sur `json_local` reste, lui : il évite de réécrire la valeur legacy à la sauvegarde.
       if (json_local.name_label_horiz == 'dragged') {
-        delete link.attributes['name_label_horiz']
+        link.attributes['name_label_horiz'] = undefined
         delete json_local.name_label_horiz
       }
+      // NOTE : la garde teste bien `name_label_horiz` et non `name_label_vert`. Probable
+      // copier-coller d'origine, laissé tel quel — le corriger changerait la sortie de migration
+      // des fichiers legacy, donc leurs golden. À traiter à part.
       if (json_local.name_label_horiz == 'dragged') {
-        delete link.attributes['name_label_vert']
+        link.attributes['name_label_vert'] = undefined
         delete json_local.name_label_vert
       }
       if (json_local.value_label_horiz == 'dragged') {
-        delete link.attributes['value_label_horiz']
+        link.attributes['value_label_horiz'] = undefined
         delete json_local.value_label_horiz
       }
       if (json_local.value_label_vert == 'dragged') {
-        delete link.attributes['value_label_vert']
+        link.attributes['value_label_vert'] = undefined
         delete json_local.value_label_vert
       }
 

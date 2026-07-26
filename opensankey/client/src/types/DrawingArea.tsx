@@ -1010,6 +1010,7 @@ export class Class_DrawingArea {
       this._refreshLabelsForFitZoom()
     }
     this._legend.draw()
+    this._sendLegendFramesBehindMembers()
     // Added events listeners
     this.setEventsListeners()
 
@@ -2436,6 +2437,36 @@ export class Class_DrawingArea {
     list.splice(new_max + 1, 0, frame.id)
     this._list_g_element_id = list
     this.orderElementOnDA()
+  }
+
+  /**
+   * OS#1259 — Normalise l'ordre Z des cadres de la LÉGENDE après (re)génération.
+   *
+   * Le générateur (regenerateLegend) crée le cadre racine 'legend' AVANT ses
+   * zones : le constructeur de Class_ContainerElement poussant chaque id à la
+   * fin de `_list_g_element_id`, le cadre se retrouve à un indice PLUS BAS que
+   * ses membres, c'est-à-dire DEVANT eux — il capte alors les clics destinés aux
+   * entrées de légende, exactement ce que sendFrameBehindMembers corrige pour
+   * les groupes.
+   *
+   * Cette normalisation n'était appliquée qu'au CHARGEMENT (DrawingAreaPersistence.
+   * fromJSON), et seulement si les conteneurs venaient du fichier. D'où une
+   * non-idempotence du round-trip sur les fichiers legacy sans conteneurs de
+   * légende (0.91) : 1er chargement = légende générée après le chargement, cadre
+   * devant ses membres ; 2e chargement = conteneurs relus depuis le JSON, donc
+   * normalisés, cadre derrière. On applique donc l'invariant à la source, à
+   * chaque régénération.
+   *
+   * Les blocs de groupe ('legend-block-*', plus profonds) sont traités avant le
+   * cadre racine pour que celui-ci finisse derrière toute sa descendance.
+   */
+  private _sendLegendFramesBehindMembers() {
+    const frame = this._legend.frame
+    if (!frame) return
+    this._legend.children
+      .filter(child => child.tied_to_nodes)
+      .forEach(block => this.sendFrameBehindMembers(block))
+    this.sendFrameBehindMembers(frame)
   }
 
   /**

@@ -24,17 +24,29 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import { TFunction } from 'i18next'
+import type { TFunction } from 'i18next'
 import { useMemo } from 'react'
-import { Class_ApplicationData } from '../types/ApplicationData'
-import { Type_Position } from '../types/Utils'
+// `import type` OBLIGATOIRE sur les cinq suivants — ce ne sont que des annotations, et les
+// importer en valeur refermait un cycle d'initialisation mortel :
+//   Element -> ElementsAttributesConfig -> ApplicationData -> ... -> NodeBase -> DrawLabel
+//   -> Handler -> `class Class_Handler extends Class_BaseElement` alors qu'Element.tsx n'a pas
+//   fini de s'evaluer  =>  « can't access lexical declaration 'Class_BaseElement' before
+//   initialization ».
+// Le cycle etait latent : il ne se manifestait que selon l'arete par laquelle le graphe des
+// Elements etait entre la premiere fois. Un module de configuration d'attributs ne doit de toute
+// facon pas tirer ApplicationData a l'execution.
+import type { Class_ApplicationData } from '../types/ApplicationData'
+import type { Type_Position } from '../types/Utils'
+import type { Class_LinkElement } from './Link'
+import type { UnitType } from './LinkValues'
+import type { Class_NodeBase } from './NodeBase'
+// Reste en import VALEUR : utilise dans un `instanceof` (cf. `menu_for_style`). Le cycle
+// Element <-> ElementsAttributesConfig qui subsiste est inoffensif, aucun des deux modules ne
+// consomme l'autre pendant son evaluation.
 import { Class_ElementStyle } from './Element'
-import { Class_LinkElement } from './Link'
-import { UnitType } from './LinkValues'
-import { Class_NodeBase } from './NodeBase'
 import { isLegendElementId } from './legendIds'
-import { Type_AnalysisDescriptor } from '../Charts/AnalysisDescriptor'
-import { Type_TooltipHiddenBlocks } from './TooltipBlocks'
+import type { Type_AnalysisDescriptor } from '../Charts/AnalysisDescriptor'
+import type { Type_TooltipHiddenBlocks } from './TooltipBlocks'
 
 // Types spécifiques
 // 'line' (OS#1276) : trait libre décoratif porté par un conteneur. La forme est
