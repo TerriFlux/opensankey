@@ -789,6 +789,12 @@ export const TooltipValueSurcharge = (k: string, t: TFunction) => {
 // contexte, OSTooltip rend simplement ses enfants sans wrapper Tooltip.
 export const OSTooltipDisabledContext = React.createContext(false)
 
+// PIÈGE : ne JAMAIS mettre un `Switch`/`Checkbox` Chakra en enfant DIRECT d'OSTooltip.
+// Chakra transmet la ref de ces composants à leur `<input>` visuellement caché, alors que
+// Tooltip pose son écouteur natif `pointerleave` (et ancre le popper) sur cette ref :
+// l'infobulle s'ouvre via le handler React posé sur le `<label>` mais ne se referme jamais.
+// Toujours interposer un `Box`/`Td` (cf. Toolbar.tsx, SankeyPlusMenuConfigurationTags.tsx).
+
 export const OSTooltip = ({ label,disabled=false, delay = 500, placement = 'auto', isAlwaysOpen = false, children }: React.PropsWithChildren<{
   delay?: number,
   label: string,
