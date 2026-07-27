@@ -95,6 +95,25 @@ function canonicalizeForgedIds(json: Type_JSON): Type_JSON {
 }
 
 /**
+ * Retire la version de l'APPLICATION du dump. Elle est réécrite à chaque chargement avec la
+ * version courante, donc elle change à chaque release — et faisait échouer le corpus ENTIER à
+ * chaque bump, sur ce seul chemin, alors qu'aucune migration n'avait bougé. Un échec de masse
+ * pour une raison étrangère à ce que le test surveille : le bruit finit par couvrir le signal.
+ *
+ * Même intention que `canonicalizeForgedIds` juste au-dessus : ce qui est arbitraire ou daté ne
+ * doit pas figurer dans un golden. La version du FORMAT, elle (`format_version`), reste comparée —
+ * c'est elle qui dit quelles migrations se sont appliquées.
+ *
+ * Applique des DEUX côtés (dump et golden lu), pour que les goldens existants restent valables
+ * sans régénération.
+ */
+function stripAppVersion(json: Type_JSON): Type_JSON {
+  const rest = { ...(json as Record<string, unknown>) }
+  delete rest.version
+  return rest as Type_JSON
+}
+
+/**
  * `fromJSON` mute son argument (migrations en place) → on lui passe un clone. Le passage par
  * JSON.stringify/parse normalise aussi les clés à `undefined` (absentes du golden stocké).
  */
@@ -104,7 +123,7 @@ function loadAndDump(json: Type_JSON): Type_JSON {
     app.fromJSON(deepClone(json) as never, {}, false)
     return app.toJSON() as Type_JSON
   })
-  return canonicalizeForgedIds(JSON.parse(JSON.stringify(dump)) as Type_JSON)
+  return stripAppVersion(canonicalizeForgedIds(JSON.parse(JSON.stringify(dump)) as Type_JSON))
 }
 
 const GOLDEN_DIR = 'ref_first_load'
@@ -120,7 +139,7 @@ function writeGolden(abs: string, json: Type_JSON): void {
 }
 
 function readGolden(abs: string): Type_JSON {
-  return JSON.parse(zlib.gunzipSync(fs.readFileSync(abs)).toString('utf-8')) as Type_JSON
+  return stripAppVersion(JSON.parse(zlib.gunzipSync(fs.readFileSync(abs)).toString('utf-8')) as Type_JSON)
 }
 
 /**
