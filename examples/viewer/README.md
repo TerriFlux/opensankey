@@ -17,16 +17,13 @@ dont ce dossier reprend la structure.
 
 ## Installer et builder
 
-Le paquet `@terriflux/opensankey` est publie sur le registre npm GitLab du groupe
-`su-model` (projet prive : token requis, cf. `.npmrc`) :
+`@terriflux/opensankey` est publie sur **npmjs public** : aucun jeton, aucun registre a
+declarer.
 
 ```
-export GITLAB_TOKEN=<personal/deploy token, scope read_api ou read_package_registry>
 npm install
 npm run build      # ou npm start pour le dev server (http://localhost:3000)
 ```
-
-En CI GitLab : `export GITLAB_TOKEN="$CI_JOB_TOKEN"` suffit.
 
 Note : `npm`, pas `pnpm` — ce dossier est volontairement hors du workspace pnpm du repo
 (un `pnpm install` ici serait happe par le workspace racine).
@@ -34,14 +31,24 @@ Note : `npm`, pas `pnpm` — ce dossier est volontairement hors du workspace pnp
 ## Fichiers
 
 - `src/index.tsx` — l'app : fetch du diagramme, selecteur de vues, `ViewerOpenSankeyApp`.
-- `craco.config.cjs` — les 3 amenagements webpack necessaires au paquet (ESM sans
-  extensions, alias react/react-dom dedupliques, retrait du ModuleScopePlugin).
-- `.npmrc` — registre GitLab groupe + `legacy-peer-deps`.
-- `.env` — `GENERATE_SOURCEMAP=false` (indispensable : evite l'OOM au build).
+- `craco.config.cjs` — les amenagements webpack necessaires au paquet (ESM sans extensions,
+  alias react/react-dom dedupliques, retrait du ModuleScopePlugin) et `devtool = false`,
+  qui evite le depassement de tas au build.
+- `.npmrc` — `legacy-peer-deps` uniquement : `react-scripts@5` declare `typescript ^3 || ^4`
+  en peer alors que cet exemple compile en TypeScript 5, ce qui bloque `npm install` depuis
+  npm 7.
+- `package-lock.json` — versionne, pour qu'une derive de dependance transitive ne casse pas
+  la demo sans que personne n'y ait touche.
 
-## Bacs a sable en ligne (CodeSandbox / StackBlitz)
+## Bacs a sable en ligne
 
-Ils ne resolvent pas ce paquet aujourd'hui : le registre GitLab est prive et les bacs a
-sable n'injectent pas de token. La sortie est la publication du viewer MIT sur npmjs.org
-public (cf. issue sankeyapplication#317) — l'exemple basculera alors sans autre changement
-que la suppression du `.npmrc`.
+**Il faut un Devbox, pas un Sandbox.** Le Sandbox (bac a sable historique, accessible sans
+compte) ne lance pas `npm install` : il resout les dependances via son propre CDN,
+`sandpack-cdn-v2.codesandbox.io`, qui ignore le `.npmrc` et echoue sur ce paquet
+(1,1 Mo, 266 fichiers, imports par sous-chemins) — l'erreur affichee est alors
+« Could not fetch dependencies ». Le Devbox, lui, tourne dans un vrai conteneur avec npm ;
+il demande d'etre connecte a CodeSandbox.
+
+[Ouvrir en Devbox](https://codesandbox.io/p/devbox/github/TerriFlux/opensankey/tree/main/examples/viewer)
+
+Le fichier `.codesandbox/tasks.json` de ce dossier decrit l'installation et le demarrage.
