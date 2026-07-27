@@ -108,7 +108,13 @@ const ViewerInner: FC<ViewerOpenSankeyAppProps> = ({ initial_data, ...options })
     app_data.applyPublishStateOptions()
   }, [selection_key, app_data])
 
-  return <div id="sankey_app" style={{ backgroundColor: 'WhiteSmoke' }} />
+  // `height: 100%` n'est pas cosmetique : en mode `embedded`, DrawingArea cadre le diagramme sur
+  // le clientHeight de CE conteneur (window_fitting_height). Sans hauteur, le div s'effondre a la
+  // hauteur intrinseque du SVG, et le dessin se reduit pour tenir dedans — un diagramme minuscule
+  // dans une bande, quelle que soit la taille donnee par l'embarqueur.
+  // Le paquet editeur pose deja `height: '100%'` sur le meme conteneur (App.tsx) : c'est le contrat
+  // normal, l'hote decide de la taille, le viewer la remplit. Il manquait seulement ici.
+  return <div id="sankey_app" style={{ backgroundColor: 'WhiteSmoke', height: '100%' }} />
 }
 
 export const ViewerOpenSankeyApp: FC<ViewerOpenSankeyAppProps> = (props) => (
