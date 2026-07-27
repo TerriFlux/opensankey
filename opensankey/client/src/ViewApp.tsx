@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useEffect, useRef, useState } from 'react'
 import { ChakraProvider, useToast } from '@chakra-ui/react'
 import i18next from 'i18next'
 import { I18nextProvider, initReactI18next, useTranslation } from 'react-i18next'
@@ -72,6 +72,41 @@ const ViewerInner: FC<ViewerOpenSankeyAppProps> = ({ initial_data, ...options })
     // Applique l'état initial demandé via props viewer (position_mode / data_tag_selection)
     app_data.applyPublishStateOptions()
   }, [app_data, initial_data])
+
+  // Ré-application RÉACTIVE des sélections (data tag / view tag / vue / mode) SANS remonter le
+  // viewer. Sans ça, un embarqueur n'a pas le choix : il doit forcer un remount (prop `key`), ce
+  // qui refait tout — fromJSON + draw complet — là où changer de vue ne demande qu'un filtre en
+  // place ou un setCurrentView. Sur un gros diagramme, l'écart se compte en secondes.
+  // On mute les champs de `publish_options` (readonly capturé au load, mais champs mutables) puis
+  // on rappelle `applyPublishStateOptions()`, qui suit exactement le chemin léger des sélecteurs
+  // natifs.
+  //
+  // La clé sérialisée évite les faux déclenchements dus aux objets inline (`{{ region }}`) recréés
+  // à chaque rendu. Le tout premier rendu est ignoré : l'application initiale est faite par l'effet
+  // `initial_data` ci-dessus. Les valeurs sont lues via un ref plutôt que par les deps, pour que
+  // l'effet ne se relance QUE sur un vrai changement de sélection.
+  //
+  // Ce bloc existait déjà dans ViewerSankeyApplication (paquet sankeyapplication) — d'où
+  // `cartofob-sankey/viewer` tire ses deux sélecteurs sans `key`. Il manquait ici, donc les
+  // intégrateurs du paquet MIT étaient les seuls à payer le rechargement complet.
+  const first_apply = useRef(true)
+  const options_ref = useRef(options)
+  options_ref.current = options
+  const selection_key = JSON.stringify([
+    options.data_tag_selection ?? null,
+    options.view_tag_selection ?? null,
+    options.position_mode ?? null,
+  ])
+  useEffect(() => {
+    if (first_apply.current) { first_apply.current = false; return }
+    if (!app_data.menu_configuration) return
+    const o = options_ref.current
+    const po = app_data.publish_options
+    po.data_tag_selection = o.data_tag_selection ?? null
+    po.view_tag_selection = o.view_tag_selection ?? null
+    if (o.position_mode !== undefined) po.position_mode = o.position_mode
+    app_data.applyPublishStateOptions()
+  }, [selection_key, app_data])
 
   return <div id="sankey_app" style={{ backgroundColor: 'WhiteSmoke' }} />
 }
