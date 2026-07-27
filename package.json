@@ -1,0 +1,16 @@
+{
+  "name": "opensankey-repo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Point d'entree du depot public OpenSankey : delegue a l'exemple viewer. La bibliotheque elle-meme se publie depuis opensankey/client (paquet @terriflux/opensankey).",
+  "scripts": {
+    "postinstall": "npm install --prefix examples/viewer",
+    "start": "npm start --prefix examples/viewer",
+    "build": "npm run build --prefix examples/viewer"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TerriFlux/opensankey.git"
+  },
+  "license": "MIT"
+}

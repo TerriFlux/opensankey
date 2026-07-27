@@ -1,0 +1,16 @@
+node_modules/
+build/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+pnpm-lock.yaml
+# package-lock.json est VERSIONNE : sans lui, CodeSandbox reinstalle l'arbre a
+# neuf a chaque ouverture et une derive de dependance transitive casse la demo
+# sans que personne ne l'ait touchee. Le .gitignore du paquet parent l'exclut
+# (le monorepo est en pnpm) : cette negation le reprend pour ce dossier.
+!package-lock.json
