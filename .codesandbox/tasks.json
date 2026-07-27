@@ -1,0 +1,30 @@
+{
+  "$schema": "https://codesandbox.io/schemas/tasks.json",
+  "setupTasks": [
+    {
+      "name": "Installer les dependances",
+      "command": "npm install --prefix examples/viewer"
+    }
+  ],
+  "tasks": {
+    "start": {
+      "name": "Demarrer le viewer",
+      "command": "npm start --prefix examples/viewer",
+      "runAtStart": true,
+      "preview": {
+        "port": 3000
+      },
+      "restartOn": {
+        "files": [
+          "examples/viewer/package.json",
+          "examples/viewer/.npmrc"
+        ]
+      }
+    },
+    "build": {
+      "name": "Build de production",
+      "command": "npm run build --prefix examples/viewer",
+      "runAtStart": false
+    }
+  }
+}

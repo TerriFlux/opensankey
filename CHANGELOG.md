@@ -2,6 +2,32 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [1.2.1] — 2026-07-27
+
+### Viewer embarque — trois corrections pour les integrateurs
+
+- **Le conteneur du viewer a enfin une hauteur.** `ViewerOpenSankeyApp` rendait
+  `<div id="sankey_app">` avec la seule couleur de fond. En mode `embedded`, la zone de dessin
+  se cadre pourtant sur le `clientHeight` de ce conteneur : sans hauteur, il s'effondrait et le
+  diagramme se reduisait pour y tenir — minuscule dans une bande, meme avec un parent en `100vh`.
+  Le paquet editeur posait `height: 100%` sur le meme conteneur depuis toujours.
+- **Changer de vue ou de data tag ne remonte plus le viewer.** `data_tag_selection`,
+  `view_tag_selection` et `position_mode` sont reappliques a chaud, en suivant le chemin leger
+  des selecteurs natifs. Auparavant un embarqueur etait contraint de forcer un remontage
+  (prop `key`), donc un `fromJSON` + `draw` complet a chaque changement — plusieurs secondes sur
+  un gros diagramme. Le paquet `sankeyapplication` avait deja ce mecanisme.
+- **Les fichiers de test ne sont plus publies** : 108 des 476 fichiers du paquet, soit 23 % du
+  compte. Aucun consommateur ne les importe, et ils ralentissaient les bacs a sable en ligne, qui
+  transforment fichier par fichier.
+
+### Distribution
+
+- **`@terriflux/opensankey` est publie sur npmjs public**, en plus du registre GitLab interne.
+  `npm install @terriflux/opensankey` suffit, sans jeton.
+- **Exemples refondus** : un seul exemple maintenu et teste, `examples/viewer`, avec son
+  diagramme embarque (12 ko) et son outillage CodeSandbox. Les dossiers versionnes referencaient
+  des versions npm jamais publiees ou un bundle CDN disparu — aucun ne s'installait.
+
 ## [1.2.0] — 2026-07-06
 
 ### Import & édition texte

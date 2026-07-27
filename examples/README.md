@@ -1,53 +1,45 @@
-# OpenSankey examples
+# Exemples OpenSankey
 
-Self-contained React + TypeScript apps embedding `open-sankey`. Each example has the standard CRA layout: `public/index.html`, `src/index.tsx`, `src/example.js` (the input Sankey JSON), `package.json`, `tsconfig.json`.
+Un seul exemple, maintenu et testé : [`viewer/`](./viewer) — une application React
+autonome qui consomme le paquet npm public
+[`@terriflux/opensankey`](https://www.npmjs.com/package/@terriflux/opensankey).
 
-## Layout
+## Lancer en ligne, sans rien installer
 
-```
-examples/
-├── current/                     # consumes the local OpenSankey build (file: link)
-│   ├── viewer/
-│   ├── editor/
-│   └── html-viewer/
-├── 1.1.1/                       # frozen on open-sankey@1.1.1
-│   ├── viewer/
-│   ├── editor/
-│   └── html-viewer/
-└── 1.0.7/                       # frozen on open-sankey@1.0.7 (legacy)
-    ├── viewer/
-    ├── editor/
-    └── html-viewer/
+[Ouvrir sur CodeSandbox](https://codesandbox.io/p/devbox/github/TerriFlux/opensankey/tree/main/examples/viewer)
+
+## Lancer en local
+
+```bash
+cd examples/viewer
+npm install
+npm start
 ```
 
-- `current/<example>/` — `package.json` resolves `open-sankey` via `file:../../../opensankey/client`. Build the client first (`pnpm dist` in `opensankey/client`) before `pnpm install` here. Use this to validate examples against the work-in-progress code.
-- `<version>/<example>/` — frozen folder pinned to a specific published `open-sankey` version. Each new release gets its own copy so external devs can fork it on https://codesandbox.io and stay reproducible.
+Aucun jeton n'est nécessaire : le paquet est sur npmjs public. Le `.npmrc` du
+dossier ne contient qu'un `legacy-peer-deps=true`, indispensable parce que
+`react-scripts@5` déclare `typescript@^3 || ^4` en peer alors que l'exemple
+compile en TypeScript 5 — sans lui, `npm install` échoue avant la compilation.
 
-## Available examples
+## Ce que l'exemple montre
 
-| Example | What it shows |
-|---|---|
-| `viewer` | Minimal read-only React/TypeScript viewer: `Class_ApplicationData(true)` + `fromJSON` + `draw`, with `window.sankey.publish = true`. |
-| `editor` | Editable React/TypeScript variant with `SpreadSheet` and a "Remplir" button to mutate link values. |
-| `html-viewer` | Pure HTML / `<script>` tag — no build step, loads the OpenSankey UMD bundle from GitLab Pages and configures via `window.sankey`. |
+- l'intégration de `ViewerOpenSankeyApp` dans une application React ;
+- le chargement d'un diagramme distant servi en gzip brut (sans en-tête
+  `Content-Encoding`), décompressé à la volée ;
+- un diagramme **multi-vues** : chaque entrée de la clé `views` est un JSON
+  autonome, et le sélecteur remonte un viewer neuf par vue.
 
-> Multi-views and other OSP-only features are not in this folder — they belong to the `opensankey-plus` package and should be added under its own `examples/` directory.
+## Ce qui a été retiré, et pourquoi
 
-## Adding a new published version
+Les dossiers versionnés (`1.0.7/`, `1.1.4/`, `1.1.7/`, `1.2.0/`, `current/`) ne
+s'installaient plus : ils référençaient soit une version npm jamais publiée
+(`open-sankey` s'arrête à 1.1.4, donc `1.1.7` et `1.2.0` renvoyaient un 404),
+soit un bundle CDN qui n'est plus produit. Ils restent dans l'historique git.
 
-When a new `open-sankey` version ships:
+L'exemple **html-viewer** (bundle CDN, zéro installation) est suspendu pour la
+même raison : plus aucune version ne publie de bundle autonome depuis 1.1.4. Il
+reviendra le jour où la chaîne de build en produira un de nouveau.
 
-1. Copy `current/viewer/` to `<new-version>/viewer/`.
-2. In the new folder's `package.json`, replace `"open-sankey": "file:../../../opensankey/client"` with `"open-sankey": "<new-version>"`.
-3. Bump the example's own `version` and `name` (`open-sankey-viewer-example-<new-version>`).
-4. Upload the folder to CodeSandbox and link it from the project README.
-
-## Running an example
-
-```
-cd examples/<folder>/<example>
-pnpm install
-pnpm start
-```
-
-Open http://localhost:3000.
+Il n'y a pas d'exemple **éditeur** : depuis le découpage viewer/éditeur,
+l'édition vit dans `@terriflux/opensankey-editor`, sous licence AGPL-3.0, qui
+n'est pas publié sur npmjs public.
