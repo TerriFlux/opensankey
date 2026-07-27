@@ -178,7 +178,10 @@ export class Class_MenuConfig {
   //   ]
   ]
 
-  protected _flow_color_origin_type: ('flow' | 'source' | 'target' | 'gradient' | 'auto')[] = ['flow', 'source', 'target']
+  // #1333 (lot A) — les motifs de flux (dégradé, couleur déduite des extrémités)
+  // sont esthétiques : ils font partie de la base gratuite. OpenSankey+ les
+  // ajoutait auparavant sous condition de licence.
+  protected _flow_color_origin_type: ('flow' | 'source' | 'target' | 'gradient' | 'auto')[] = ['flow', 'source', 'target', 'gradient', 'auto']
   protected _shape_type: string[] = ['bezier_path', 'bezier_outline', 'bezier_outline_exact']
 
   protected _spreadsheet_freeze = false
@@ -535,6 +538,11 @@ export class Class_MenuConfig {
   private _ref_to_menu_config_layout_updater: MutableRefObject<() => void>
   private _ref_to_menu_contextual_config_layout_updater: MutableRefObject<() => void>
 
+  // #1333 (lot A) — panneau d'import de l'image de fond. Le slot vivait dans
+  // Class_MenuConfigOSP tant que le panneau était injecté par OpenSankey+ ; il a
+  // suivi le panneau dans la couche d'édition.
+  private _ref_to_config_DA_bg_image_updater: MutableRefObject<() => void>
+
   // Update component SankeyNodeEdition
   private _ref_to_menu_config_nodes_selection_updater: MutableRefObject<() => void>
 
@@ -692,6 +700,7 @@ export class Class_MenuConfig {
     // Layout
     this._ref_to_menu_config_layout_updater = { current: () => null }
     this._ref_to_menu_contextual_config_layout_updater = { current: () => null } //contextual ref updater
+    this._ref_to_config_DA_bg_image_updater = { current: () => null }
 
     // Dimensions
     this._ref_to_menu_config_nodes_dim_selection_updater = { current: () => null }
@@ -896,6 +905,7 @@ export class Class_MenuConfig {
       (_this: Class_MenuConfig) => {
         _this._ref_to_menu_config_layout_updater.current()
         _this._ref_to_menu_contextual_config_layout_updater.current()
+        _this._ref_to_config_DA_bg_image_updater.current()
       }
     )
   }
@@ -1476,6 +1486,10 @@ export class Class_MenuConfig {
 
   public get ref_to_menu_contextual_config_layout_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_contextual_config_layout_updater
+  }
+
+  public get ref_to_config_DA_bg_image_updater(): MutableRefObject<() => void> {
+    return this._ref_to_config_DA_bg_image_updater
   }
 
   public get ref_to_menu_context_drawing_area_updater(): MutableRefObject<(() => void)> {
