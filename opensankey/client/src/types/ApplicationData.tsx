@@ -154,6 +154,13 @@ export class Class_ApplicationData {
   public get has_sankey_afm() { return this._has_sankey_afm || this.is_static }
   public set has_sankey_afm(_) { this._has_sankey_afm = _ }
 
+  /**
+   * Libellé de l'édition active, affiché en pastille à droite du logo de la barre
+   * du haut — le wordmark seul ne dit pas quelle édition tourne. Null = rien à
+   * afficher (OpenSankey libre : le logo suffit). Surchargé en OpenSankey+.
+   */
+  public get edition_badge(): string | null { return null }
+
   /** True hors mode publish, ou en publish si l'option `editable` est activée. */
   public get is_editable(): boolean { return !this.is_static || this.publish_options.editable }
 
