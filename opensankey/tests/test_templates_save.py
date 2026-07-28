@@ -339,3 +339,63 @@ def test_une_source_ne_peut_pas_ecrire_dans_l_autre(client_dev, sankeydata, mfad
 def test_refuse_une_source_inconnue(client_dev, sankeydata):
     assert save(client_dev, "templates/data/modele.json.gz",
                 source="esankey-local").status_code != 200
+
+
+# ---------------------------------------------------------------------------
+# Pre-controle : le geste n'a de sens que sur une copie de travail
+# ---------------------------------------------------------------------------
+# Sur un serveur deploye, la racine vit dans un repertoire de release fige :
+# lecture seule pour le compte qui fait tourner l'app, et remplacee au
+# deploiement suivant. Le seul retour etait alors un « Permission denied » sur un
+# fichier temporaire — illisible. On refuse desormais AVANT d'ecrire, avec la
+# raison, et le dialogue sonde le meme etat pour fermer son bouton.
+def test_un_checkout_detache_est_refuse_avant_toute_ecriture(client_dev, sankeydata):
+    """Cas des serveurs deployes : le depot est pose par le deploiement, sur
+    aucune branche. Un commit y serait injoignable et perdu a la release
+    suivante."""
+    git(sankeydata, "checkout", "-q", "--detach", "HEAD")
+
+    payload = save(client_dev, "templates/data/modele.json.gz",
+                   source="sankeydata").get_json()
+
+    assert payload["ok"] is False and payload["saved"] is False
+    assert "branche" in payload["detail"]
+    # Rien n'a ete touche : ni le .gz d'origine, ni un temporaire laisse a cote.
+    assert (sankeydata / "templates" / "data" / "modele.json.gz").exists()
+    assert not (sankeydata / "templates" / "data" / "modele.json").exists()
+    assert [p.name for p in (sankeydata / "templates" / "data").iterdir()] \
+        == ["modele.json.gz"]
+
+
+def test_une_racine_non_versionnee_est_refusee(client_dev, tmp_path, monkeypatch):
+    """Meme refus si la racine existe mais n'est pas un depot : il n'y a pas de
+    filet git, donc pas de reenregistrement."""
+    nue = tmp_path / "sans_git"
+    nue.mkdir()
+    monkeypatch.setenv("SANKEY_DATA", str(nue))
+
+    payload = save(client_dev, "templates/data/modele.json.gz",
+                   source="sankeydata").get_json()
+
+    assert payload["ok"] is False
+    assert "git" in payload["detail"]
+
+
+def test_l_etat_annonce_au_dialogue_ce_que_le_serveur_peut_faire(client_dev, sankeydata):
+    """Le dialogue desactive son bouton sur cette reponse : elle doit dire oui
+    quand c'est un poste de dev, et non — avec la raison — sinon."""
+    ouvert = client_dev.get("/menus/templates_save_state?source=sankeydata")
+    assert ouvert.status_code == 200
+    assert ouvert.get_json()["available"] is True
+
+    git(sankeydata, "checkout", "-q", "--detach", "HEAD")
+
+    ferme = client_dev.get("/menus/templates_save_state?source=sankeydata").get_json()
+    assert ferme["available"] is False
+    assert ferme["reason"]
+
+
+def test_l_etat_est_ferme_hors_compte_developpeur(client_ferme, sankeydata):
+    """Meme garde que la route d'ecriture : rien ne filtre vers un visiteur."""
+    assert client_ferme.get(
+        "/menus/templates_save_state?source=sankeydata").status_code != 200

@@ -1868,6 +1868,72 @@ def templates_source_root(source):
     return os.environ.get(env_name) if env_name else None
 
 
+def templates_source_state(source):
+    """
+    Est-ce que CE serveur peut reenregistrer un modele de cette galerie ?
+    Renvoie {available, reason} — `reason` explique le refus, en clair.
+
+    Le reenregistrement suppose une COPIE DE TRAVAIL git, c'est-a-dire un poste de
+    developpement. Sur un serveur deploye, la racine vit dans un repertoire de
+    release fige : elle n'appartient pas au compte qui fait tourner l'application
+    (l'ecriture echoue en EACCES) et, meme ouverte en ecriture, le commit serait
+    perdu au deploiement suivant — qui cree une NOUVELLE release. Un checkout
+    detache pose le meme probleme sous une autre forme : le commit ne serait
+    rattache a aucune branche, donc ni poussable ni retrouvable.
+
+    Ce pre-controle est appele par la route d'ecriture ET expose au dialogue, pour
+    que le bouton soit ferme AVANT le clic plutot que de rendre un « Permission
+    denied » sur un fichier temporaire.
+    """
+    label = (TEMPLATES_WRITABLE_SOURCES.get(source) or (None, None))[1] or str(source)
+    root = templates_source_root(source)
+    if not root:
+        return {"available": False,
+                "reason": "%s n'est pas configure sur ce serveur." % label}
+    if not os.path.isdir(root):
+        return {"available": False,
+                "reason": "%s est introuvable sur ce serveur (%s)." % (label, root)}
+    if not os.path.exists(os.path.join(root, ".git")):
+        return {"available": False,
+                "reason": "%s n'est pas un depot git sur ce serveur : le"
+                          " reenregistrement se fait depuis un poste de"
+                          " developpement." % label}
+    if not os.access(root, os.W_OK):
+        return {"available": False,
+                "reason": "%s est en lecture seule sur ce serveur (deploiement"
+                          " fige) : le reenregistrement se fait depuis un poste de"
+                          " developpement, puis se deploie normalement." % label}
+    code, branch = templates_git(root, ["symbolic-ref", "-q", "--short", "HEAD"],
+                                 timeout=20)
+    if code != 0 or not branch:
+        return {"available": False,
+                "reason": "Le depot %s de ce serveur n'est sur aucune branche"
+                          " (checkout detache) : un commit y serait perdu."
+                          " Le reenregistrement se fait depuis un poste de"
+                          " developpement." % label}
+    return {"available": True, "reason": None, "branch": branch}
+
+
+@opensankey.route("/menus/templates_save_state", methods=["GET"])
+def menus_templates_save_state():
+    """
+    Le dialogue de reenregistrement demande ici si le geste est possible sur ce
+    serveur, pour desactiver son bouton au lieu de laisser echouer l'ecriture.
+    Meme garde que la route d'ecriture : 404 pour tout ce qui n'est pas un
+    developpeur, ou une galerie reenregistrable.
+    """
+    if not is_developer_request():
+        abort(404)
+    source = request.args.get("source") or "mfadata"
+    if source not in TEMPLATES_WRITABLE_SOURCES:
+        abort(404)
+    return Response(
+        response=json.dumps(templates_source_state(source)),
+        status=200,
+        mimetype="application/json",
+    )
+
+
 def developer_user_email():
     """Email du compte developpeur a l'origine de la requete, ou None."""
     try:
@@ -1953,10 +2019,14 @@ def menus_templates_save():
         abort(400)
     if source not in TEMPLATES_WRITABLE_SOURCES:
         abort(404)
+    # Pre-controle AVANT toute ecriture : sur un serveur deploye la racine est un
+    # repertoire de release fige (lecture seule, et remplace au deploiement
+    # suivant). Sans ce garde-fou, le seul retour etait un EACCES sur le fichier
+    # temporaire, illisible pour qui ne connait pas la disposition du serveur.
+    state = templates_source_state(source)
+    if not state["available"]:
+        return templates_save_error(state["reason"])
     root = templates_source_root(source)
-    if not root:
-        return templates_save_error(
-            "%s n'est pas configure sur ce serveur." % TEMPLATES_WRITABLE_SOURCES[source][1])
     normalized = posixpath.normpath(str(requested_path).replace("\\", "/"))
     # Cible = le JSON en clair ; le .gz eventuel du meme modele part au meme commit.
     json_rel = templates_declared_json(source, normalized)
