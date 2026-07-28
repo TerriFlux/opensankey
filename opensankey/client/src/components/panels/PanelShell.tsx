@@ -95,12 +95,17 @@ export type Type_PanelShellProps = {
  * pas le mode courant. Le `dragHandleClassName` marque la zone de saisie pour le
  * déplacement des pop-ups (react-draggable cible ce sélecteur).
  *
- * L'ÉPINGLE (OS#321) a deux sens selon le contenant, mais une seule promesse —
- * « garde cette fenêtre sous les yeux » :
- *  - hors pop-up (info-bulle, barre latérale) : promeut le panneau en pop-up
- *    ÉPINGLÉE (le geste est délibéré, la fenêtre doit rester) ;
- *  - en pop-up : bascule entre NON ÉPINGLÉE (transitoire, le clic extérieur la
- *    referme) et ÉPINGLÉE (persistante). L'état est lisible sur le bouton.
+ * L'ÉPINGLE (OS#321) promet toujours la même chose — « garde cette fenêtre sous
+ * les yeux » : depuis une info-bulle ou la barre latérale elle promeut le
+ * panneau en pop-up épinglée ; sur une pop-up transitoire elle la fixe.
+ *
+ * Chaque contenant n'expose donc que le bouton qui lui SERT — les deux fermetures
+ * ne se recouvrent jamais :
+ *  - pop-up NON ÉPINGLÉE : épingle, mais pas de croix (cliquer ailleurs ferme) ;
+ *  - pop-up ÉPINGLÉE : croix, mais pas d'épingle (rien à désépingler — pour
+ *    retrouver une fenêtre transitoire, on la ferme et on reclique) ;
+ *  - info-bulle : épingle seule (elle s'efface d'elle-même) ;
+ *  - barre latérale : épingle (détacher) et croix.
  */
 const PanelHeader = ({
   app_data, panels, id, title, mode, allowedModes, dragHandleClassName, onClose
@@ -163,29 +168,23 @@ const PanelHeader = ({
         </Button>
       )}
 
-      {/* OS#321 — bascule épinglée / non épinglée d'une pop-up. L'épingle
-          couchée (et pâle) dit « transitoire » ; droite et allumée, « je reste ». */}
-      {mode === 'popup' && (
+      {/* OS#321 — épingle d'une pop-up TRANSITOIRE. Absente une fois la fenêtre
+          épinglée : la désépingler n'a pas d'usage (on la ferme, et un nouveau
+          clic rouvre une fenêtre transitoire). L'épingle couchée et pâle dit
+          « celle-ci ne reste pas ». */}
+      {mode === 'popup' && !is_pinned && (
         <Button
           size='xs'
-          variant={is_pinned ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+          variant='menuconfigpanel_option_button'
           sx={{ paddingInline: '0.25rem', minWidth: 'auto', width: 'auto', flex: 'none' }}
-          title={is_pinned
-            ? t('panel.unpin', {
-              defaultValue: 'Détacher : la fenêtre se fermera au prochain clic à l\'extérieur'
-            })
-            : t('panel.pin', {
-              defaultValue: 'Épingler : la fenêtre reste ouverte quand on clique ailleurs'
-            })}
+          title={t('panel.pin', {
+            defaultValue: 'Épingler : la fenêtre reste ouverte quand on clique ailleurs'
+          })}
           aria-label='panel-pin'
-          aria-pressed={is_pinned}
           onMouseDown={(e) => e.stopPropagation()}
-          onClick={() => panels.setPinned(id, !is_pinned)}
+          onClick={() => panels.setPinned(id, true)}
         >
-          <Box
-            as='span'
-            style={is_pinned ? undefined : { transform: 'rotate(45deg)', opacity: 0.55 }}
-          >
+          <Box as='span' style={{ transform: 'rotate(45deg)', opacity: 0.55 }}>
             <FaThumbtack />
           </Box>
         </Button>
@@ -205,10 +204,12 @@ const PanelHeader = ({
         </Button>
       )}
 
-      {/* Pas de croix sur l'INFO-BULLE : elle est transitoire et se ferme d'
-          elle-même quand le curseur la quitte. Une croix n'y servirait à rien,
-          et brouillerait la distinction avec la pop-up/le panneau, eux persistants. */}
-      {mode !== 'tooltip' && (
+      {/* Croix réservée aux contenants PERSISTANTS — pop-up épinglée et barre
+          latérale. Ni l'info-bulle (elle s'efface quand le curseur la quitte) ni
+          la pop-up transitoire (le clic suivant, posé ailleurs, la ferme) n'en
+          ont l'usage : une croix y ferait doublon avec le geste qui les congédie
+          déjà, et brouillerait la distinction avec les fenêtres qu'on garde. */}
+      {(mode === 'sidebar' || (mode === 'popup' && is_pinned)) && (
         <CloseButton
           size='sm'
           aria-label='panel-close'
