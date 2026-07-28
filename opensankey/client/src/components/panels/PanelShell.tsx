@@ -99,13 +99,17 @@ export type Type_PanelShellProps = {
  * les yeux » : depuis une info-bulle ou la barre latérale elle promeut le
  * panneau en pop-up épinglée ; sur une pop-up transitoire elle la fixe.
  *
- * Chaque contenant n'expose donc que le bouton qui lui SERT — les deux fermetures
- * ne se recouvrent jamais :
+ * Chaque contenant n'expose donc que le bouton qui lui SERT — les fermetures ne
+ * se recouvrent jamais :
  *  - pop-up NON ÉPINGLÉE : épingle, mais pas de croix (cliquer ailleurs ferme) ;
  *  - pop-up ÉPINGLÉE : croix, mais pas d'épingle (rien à désépingler — pour
  *    retrouver une fenêtre transitoire, on la ferme et on reclique) ;
  *  - info-bulle : épingle seule (elle s'efface d'elle-même) ;
- *  - barre latérale : épingle (détacher) et croix.
+ *  - barre latérale : épingle (détacher) seule — la barre est un contenant
+ *    toujours à portée (son bouton, Ctrl+B), et chaque menu garde le sien :
+ *    une croix de plus n'y ajoutait rien.
+ *
+ * Échap, lui, referme tout (cf. Class_PanelManager.closeAllPopups).
  */
 const PanelHeader = ({
   app_data, panels, id, title, mode, allowedModes, dragHandleClassName, onClose
@@ -204,12 +208,12 @@ const PanelHeader = ({
         </Button>
       )}
 
-      {/* Croix réservée aux contenants PERSISTANTS — pop-up épinglée et barre
-          latérale. Ni l'info-bulle (elle s'efface quand le curseur la quitte) ni
-          la pop-up transitoire (le clic suivant, posé ailleurs, la ferme) n'en
-          ont l'usage : une croix y ferait doublon avec le geste qui les congédie
-          déjà, et brouillerait la distinction avec les fenêtres qu'on garde. */}
-      {(mode === 'sidebar' || (mode === 'popup' && is_pinned)) && (
+      {/* Croix réservée à la POP-UP ÉPINGLÉE : c'est le seul contenant que rien
+          d'autre ne referme. L'info-bulle s'efface quand le curseur la quitte,
+          la pop-up transitoire au clic suivant posé ailleurs, et la barre
+          latérale reste à portée par son propre bouton (Ctrl+B) comme par celui
+          du menu qu'elle porte. Ailleurs, la croix ferait doublon. */}
+      {mode === 'popup' && is_pinned && (
         <CloseButton
           size='sm'
           aria-label='panel-close'

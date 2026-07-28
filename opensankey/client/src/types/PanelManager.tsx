@@ -250,6 +250,23 @@ export class Class_PanelManager {
     return closed
   }
 
+  /**
+   * Referme TOUTES les pop-ups, épinglées ou non — geste « remets l'écran au
+   * neutre » (Échap). L'épingle protège du clic posé ailleurs, pas d'une demande
+   * explicite de tout refermer. La barre latérale, elle, n'est pas concernée :
+   * c'est un contenant qu'on replie par son propre bouton.
+   */
+  public closeAllPopups(): string[] {
+    const ids = [...this._popups.keys()]
+    ids.forEach(id => {
+      const handler = this._close_handlers.get(id)
+      if (handler) handler()
+      else this._detach(id)
+    })
+    if (ids.length > 0) this._notify()
+    return ids
+  }
+
   /** Renseigne (ou retire) la fermeture propre d'un panneau — appelé par sa
    *  coquille PanelShell au montage / démontage. */
   public setCloseHandler(id: string, handler: (() => void) | null): void {

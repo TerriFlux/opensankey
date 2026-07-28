@@ -89,6 +89,42 @@ describe('#321 congédiement au clic extérieur', () => {
   })
 })
 
+describe('#321 Échap referme tout', () => {
+  it('ferme les pop-ups ÉPINGLÉES comme les autres', () => {
+    const panels = make()
+    panels.setMode('config', 'popup')
+    panels.setMode('presentation:n1', 'popup', { pinned: true })
+    panels.closeAllPopups()
+    expect(panels.open_ids).toEqual([])
+  })
+
+  it('laisse la barre latérale en place (contenant, pas fenêtre)', () => {
+    const panels = make()
+    panels.setMode('filter', 'sidebar')
+    panels.setMode('config', 'popup', { pinned: true })
+    panels.closeAllPopups()
+    expect(panels.getMode('filter')).toBe('sidebar')
+    expect(panels.sidebar_open).toBe(true)
+  })
+
+  it('emprunte la fermeture PROPRE de chaque panneau', () => {
+    const panels = make()
+    const onClose = jest.fn(() => panels.close('search'))
+    panels.setCloseHandler('search', onClose)
+    panels.setMode('search', 'popup', { pinned: true })
+    panels.closeAllPopups()
+    expect(onClose).toHaveBeenCalledTimes(1)
+    expect(panels.getMode('search')).toBeNull()
+  })
+
+  it('n\'ouvre pas de bascule : Échap n\'est pas un clic', () => {
+    const panels = make()
+    panels.setMode('config', 'popup')
+    panels.closeAllPopups()
+    expect(panels.consumeJustDismissed('config')).toBe(false)
+  })
+})
+
 describe('#321 bascule : le clic qui referme ne rouvre pas', () => {
   it('consumeJustDismissed vaut vrai UNE fois, pour le seul id congédié', () => {
     const panels = make()
