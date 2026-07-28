@@ -1009,6 +1009,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
     super._initDraw()
     // Update class attributes
     this.d3_selection?.attr('class', 'gg_links').datum(this)
+    // Le flux fantôme est un APERÇU de geste : il ne doit jamais capter le pointeur.
+    // Sa pointe étant désormais posée exactement sous la pointe du stylo, sa bande
+    // recouvre le nœud visé ; or Class_BaseElement.eventMouseOver ÉTEINT le drapeau
+    // de survol de TOUS les nœuds avant de marquer l'élément survolé. Sans ce
+    // pointer-events:none, le nœud sous le curseur perdrait son drapeau et le
+    // relâché retomberait dans la branche « dans le vide » (nœud créé au lieu du
+    // raccordement) — exactement le symptôme qu'on corrige.
+    if (this.id === 'ghost_link')
+      this.d3_selection?.style('pointer-events', 'none')
   }
 
 
