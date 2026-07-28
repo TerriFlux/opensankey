@@ -1,19 +1,31 @@
 # Exemple viewer OpenSankey — React + TypeScript
 
 L'exemple canonique d'integration : une app React autonome qui embarque le viewer
-`@terriflux/opensankey` (MIT) et affiche un diagramme multi-vues, exactement comme le fait
+`@terriflux/opensankey` (MIT) et affiche un diagramme multi-vues, dans le meme esprit que
 l'application reelle [cartofob-sankey/viewer](https://github.com/IGNF/cartofob-sankey)
 dont ce dossier reprend la structure.
 
 ## Ce que ca montre
 
 - `ViewerOpenSankeyApp` (import profond `@terriflux/opensankey/src/ViewApp`) monte dans une
-  page React avec une topbar custom.
-- Chargement d'un JSON d'exemple de SankeyData servi par
-  `https://open-sankey.fr/opensankey/menus/templates_asset/...` (CORS ouvert, gzip brut
-  decompresse cote navigateur).
-- Selecteur de vues : le JSON embarque plusieurs vues, chaque selection remonte le viewer
-  avec le JSON de la vue en `initial_data`.
+  page React, sous une barre fournie par l'hote.
+- **Selecteur de diagramme** : deux modeles embarques, « Simple business accounting » (sans
+  vues) et « Transport flows with views » (deux vues).
+- **Selecteur de vue** : les vues d'un fichier sont ecrites en clair dans son JSON (cle
+  `views`, `{ id : { name, ... } }`) et la vue ouverte est memorisee dans `current_view` —
+  l'hote construit donc sa liste sans rien demander au viewer, et change de vue en
+  redonnant le meme JSON avec `current_view` positionne (remontage via la prop `key`).
+  Le paquet MIT n'expose pas de commande imperative « aller a la vue X » ; en revanche
+  `data_tag_selection`, `view_tag_selection` et `position_mode` sont REACTIFS et se
+  changent sans rechargement.
+- **Toutes les options de `ViewerOpenSankeyApp`**, documentees dans `src/index.tsx` : ce qui
+  agit reellement dans le paquet MIT (`embedded`, `topbar`, `lock_zoom`, `editable`, `logo`,
+  `position_mode`, `data_tag_selection`, `view_tag_selection`), ce qui n'est lu que par le
+  viewer de l'application complete (tout le chrome : barres, filtres, pied de page…) et ce
+  qui est devenu sans effet.
+
+Les diagrammes sont EMBARQUES : ni requete reseau, ni CORS, ni attente. Un exemple doit
+demarrer.
 
 ## Installer et builder
 
@@ -30,7 +42,10 @@ Note : `npm`, pas `pnpm` — ce dossier est volontairement hors du workspace pnp
 
 ## Fichiers
 
-- `src/index.tsx` — l'app : fetch du diagramme, selecteur de vues, `ViewerOpenSankeyApp`.
+- `src/index.tsx` — l'app : selecteurs de diagramme et de vue, `ViewerOpenSankeyApp` et la
+  documentation complete de ses options.
+- `src/business_simple.json`, `src/transport_dispatch_with_views.json` — les deux modeles,
+  repris des templates livres avec OpenSankey.
 - `craco.config.cjs` — les amenagements webpack necessaires au paquet (ESM sans extensions,
   alias react/react-dom dedupliques, retrait du ModuleScopePlugin) et `devtool = false`,
   qui evite le depassement de tas au build.
