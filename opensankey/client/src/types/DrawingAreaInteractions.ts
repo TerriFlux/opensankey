@@ -620,9 +620,29 @@ export class Class_DrawingAreaInteractions {
         const mouse_position = d3.pointer(event)
         // Move ghost target
         const target = da.ghost_link.target
-        target.setPosXY(
-          mouse_position[0] - (target.getShapeWidthToUse() / 2),
-          mouse_position[1] - (target.getShapeHeightToUse() / 2))
+        const w = target.getShapeWidthToUse()
+        const h = target.getShapeHeightToUse()
+        // La POINTE du flux fantôme doit tomber exactement sur la pointe du stylo.
+        // Le nœud cible fantôme était centré sur le pointeur : le flux s'arrêtant sur
+        // le BORD D'ARRIVÉE de ce nœud, sa pointe était dessinée une demi-largeur de
+        // nœud à gauche du curseur. L'auteur visant naturellement avec la pointe du
+        // flux, il relâchait une demi-largeur trop loin — hors du nœud cible, d'où un
+        // nœud créé au lieu du raccordement (la détection, elle, lit bien le pointeur).
+        //
+        // On pré-pose donc le centre pour que le côté d'accroche se calcule sur la
+        // bonne position relative (position_x/y en écriture directe : pas de redraw),
+        // puis on décale le nœud fantôme du côté lu pour que ce bord soit AU pointeur.
+        target.position_x = mouse_position[0] - (w / 2)
+        target.position_y = mouse_position[1] - (h / 2)
+        let x = mouse_position[0] - (w / 2)
+        let y = mouse_position[1] - (h / 2)
+        switch (da.ghost_link.target_side) {
+        case 'left': x = mouse_position[0]; break
+        case 'right': x = mouse_position[0] - w; break
+        case 'top': y = mouse_position[1]; break
+        case 'bottom': y = mouse_position[1] - h; break
+        }
+        target.setPosXY(x, y)
       }
     } else if (da.isInSelectionMode() || da.isInPlaceContainerMode()) {
       // Même géométrie de rectangle par glisser pour la sélection et pour le
