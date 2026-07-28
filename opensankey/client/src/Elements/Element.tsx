@@ -840,6 +840,7 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   // Contenu du label (cf. Type_NameLabelSource) — désormais portés par le style.
   name_label_source!: NameLabelAttributeTypes['source']
   name_label_text!: NameLabelAttributeTypes['text']
+  name_label_template!: NameLabelAttributeTypes['template']
   name_label_tag_group_id!: NameLabelAttributeTypes['tag_group_id']
   name_label_dimension_id!: NameLabelAttributeTypes['dimension_id']
 
@@ -1230,6 +1231,7 @@ export class Class_ElementStyle {
   // Contenu du label (cf. Type_NameLabelSource) — désormais portés par le style.
   name_label_source!: NameLabelAttributeTypes['source']
   name_label_text!: NameLabelAttributeTypes['text']
+  name_label_template!: NameLabelAttributeTypes['template']
   name_label_tag_group_id!: NameLabelAttributeTypes['tag_group_id']
   name_label_dimension_id!: NameLabelAttributeTypes['dimension_id']
 

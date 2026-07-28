@@ -44,6 +44,10 @@
 import JSZip from 'jszip'
 import { themeEsankey, Type_ThemeJSON } from '../types/Theme'
 import { Type_UnitTypeJSON } from '../types/Units'
+import {
+  canonicalToken, cleanTemplateResult, LEGEND_TEMPLATE_TOKENS, LINK_TEMPLATE_TOKENS,
+  TEMPLATE_TOKEN_REGEX
+} from '../Elements/LabelTemplate'
 
 // opensankey#1301 — la valeur peut aussi être un tableau de points (shape_waypoints).
 type EsLocal = { [k: string]: string | number | boolean | Array<{ x: number, y: number }> }
@@ -144,7 +148,10 @@ export interface EsParsedDiagram {
    * titre visible (frame.name_label_is_visible = false, cf.
    * LegendGenerator.regenerateLegend) — non reprise.
    */
-  legend?: { mask_legend: boolean, legend_dx: number, legend_dy: number, legend_police?: number }
+  legend?: {
+    mask_legend: boolean, legend_dx: number, legend_dy: number,
+    legend_police?: number, legend_entry_template?: string
+  }
   /** OS#1286 — registre d'unités reconstruit depuis les unitTypes e!Sankey. */
   units?: Type_UnitTypeJSON[]
   /**
@@ -388,6 +395,46 @@ export const netFormatDecimalCount = (fmt: string): number | null => {
   if (dot < 0) return 0
   return (fmt.slice(dot + 1).match(/[0#]/g) ?? []).length
 }
+// OS#1314 — gabarit de label e!Sankey (`sankeyArrowLabel/@labelFormat`) →
+// gabarit à jetons OpenSankey. Les mots-clés e!Sankey utiles sont des ALIAS
+// reconnus par le résolveur ({Quantity}, {UnitName}, {PercentProcessSource}…) :
+// le format est donc repris tel quel, à deux corrections près.
+//   1. Les interrupteurs RÉELS de la flèche priment sur le gabarit sérialisé
+//      (e!Sankey masque le nom/la valeur/l'unité sans réécrire labelFormat) :
+//      les jetons correspondants sont retirés.
+//   2. Un jeton sans équivalent chez nous ({PercentArrow}, {GroupName}…) est
+//      retiré plutôt que laissé littéral dans le diagramme importé.
+// Format vide (ou sans jeton) → gabarit constaté sur les 101 démos du corpus.
+const ESANKEY_DEFAULT_LABEL_FORMAT = '{EntryName}: {Quantity} {UnitName}'
+
+export const esankeyLabelTemplate = (arrow: {
+  labelFormat: string, showValue: boolean, showUnit: boolean, showEntryname: boolean
+}): string => {
+  const raw = arrow.labelFormat.includes('{') ? arrow.labelFormat : ESANKEY_DEFAULT_LABEL_FORMAT
+  const dropped = new Set<string>()
+  if (!arrow.showEntryname) dropped.add('EntryName')
+  if (!arrow.showValue) { dropped.add('Quantity'); dropped.add('Value') }
+  if (!arrow.showUnit) { dropped.add('UnitName'); dropped.add('Unit') }
+  let out = raw.replace(TEMPLATE_TOKEN_REGEX, (whole, token: string) => {
+    const name = String(token).trim()
+    if (dropped.has(name)) return ''
+    return canonicalToken(name, LINK_TEMPLATE_TOKENS) === null ? '' : whole
+  })
+  // Symétrique du point 1 : un interrupteur ALLUMÉ dont le jeton manque au
+  // format sérialisé (formats simplifiés, ou nom ajouté après coup) doit quand
+  // même s'afficher — le gabarit remplace ici à lui seul le label de valeur.
+  // Un jeton de POURCENTAGE tient lieu de valeur (e!Sankey remplace alors la
+  // quantité par la part, avec un « % » littéral dans le format) : ni valeur ni
+  // unité à compléter dans ce cas.
+  const has_percent = /\{Percent[^{}]*\}/.test(out)
+  const has_value = has_percent || out.includes('{Quantity}') || out.includes('{Value}')
+  const has_unit = has_percent || out.includes('{UnitName}') || out.includes('{Unit}')
+  if (arrow.showEntryname && !out.includes('{EntryName}')) out = '{EntryName}: ' + out
+  if (arrow.showValue && !has_value) out = out + ' {Value}'
+  if (arrow.showUnit && !has_unit) out = out + ' {Unit}'
+  return cleanTemplateResult(out)
+}
+
 interface EsEntry { name: string, color: string | null, tagId: string, isTransparent: boolean }
 
 const parseUnitTypes = (netModel: Element): { [id: string]: EsUnitType } => {
@@ -1295,6 +1342,24 @@ const parseLegendPosition = (net: Element): { x: number, y: number } | null => {
  * size>`, enfant direct — à ne pas confondre avec le `<textFont>` du `<scale>`
  * voisin). `null` si absent (légende sans police explicite, ou sans légende).
  */
+/**
+ * OS#1314 — gabarit du texte des entrées de légende (`<legend @entryTextFormat>`,
+ * « {EntryName} [{UnitName}] » sur 81 des 101 démos) → gabarit d'entrée
+ * OpenSankey. Les mots-clés e!Sankey sont des alias reconnus ; les jetons sans
+ * équivalent sont retirés. `null` si absent, ou si le format se réduit au seul
+ * nom du tag (comportement par défaut, rien à stocker).
+ */
+const parseLegendEntryTemplate = (net: Element): string | null => {
+  const legend = findLegendElement(net)
+  const raw = legend?.getAttribute('entryTextFormat') ?? ''
+  if (!raw.includes('{')) return null
+  const cleaned = cleanTemplateResult(raw.replace(TEMPLATE_TOKEN_REGEX, (whole, token: string) => {
+    return canonicalToken(String(token).trim(), LEGEND_TEMPLATE_TOKENS) === null ? '' : whole
+  }))
+  if (cleaned === '' || cleaned === '{EntryName}' || cleaned === '{Name}') return null
+  return cleaned
+}
+
 const parseLegendFontSize = (net: Element): number | null => {
   const legend = findLegendElement(net)
   const textFont = legend ? childByTag(legend, 'textFont') : null
@@ -2235,7 +2300,28 @@ export const parseEsankeyXml = (
         // gabarit n'est pas reproduit (« Chlore_r 720 g/t »).
         const showEntryName = graphicalArrow.labelVisible && graphicalArrow.showEntryname &&
           entry !== null && flows.length === 1
-        if (showEntryName) {
+        // OS#1314 — GABARIT. Le `labelFormat` d'e!Sankey est désormais repris
+        // TEL QUEL dans un gabarit à jetons OpenSankey (les mots-clés e!Sankey
+        // {Quantity}/{UnitName}/{PercentProcess*} sont des alias reconnus, les
+        // jetons sans équivalent sont retirés). UN SEUL label porte alors le
+        // nom, la valeur et l'unité — deux-points du gabarit compris, ce que la
+        // construction en 2 labels collés ne savait pas faire.
+        // EXCEPTION : label en % INTÉGRÉ (showPercentage=2), reproduit par une
+        // unité '%' + unit_factor sur le label de VALEUR (cf. plus haut) ; le
+        // jeton {Value} sort le nombre nu, il perdrait le « % ». On garde là
+        // les deux labels collés.
+        const useTemplate = showEntryName && graphicalArrow.showPercentage !== 2
+        if (useTemplate) {
+          link.local.name_label_is_visible = true
+          link.local.name_label_text_source = 'template'
+          link.local.name_label_template = esankeyLabelTemplate(graphicalArrow)
+          link.local.name_label_flux_tag_group_id = ESANKEY_ENTRIES_TAGG_ID
+          // La valeur fait partie du gabarit : plus de label de valeur séparé.
+          link.local.value_label_is_visible = false
+          if (graphicalArrow.labelFontSize > 0) link.local.name_label_font_size = graphicalArrow.labelFontSize
+          if (graphicalArrow.labelColor) link.local.name_label_color = graphicalArrow.labelColor
+          if (textAngle !== 0) link.local.name_label_text_angle = textAngle
+        } else if (showEntryName) {
           link.local.name_label_is_visible = true
           link.local.name_label_text_source = 'tag'
           link.local.name_label_flux_tag_group_id = ESANKEY_ENTRIES_TAGG_ID
@@ -2332,6 +2418,7 @@ export const parseEsankeyXml = (
   Object.entries(shapeZorders).forEach(([id, z]) => zOrderEntries.push({ id, z }))
   const legendPos = parseLegendPosition(net)
   const legendFontSize = parseLegendFontSize(net) // OS#1296
+  const legendEntryTemplate = parseLegendEntryTemplate(net) // OS#1314
 
   // Normalisation des positions : e!Sankey stocke des coordonnées de document
   // potentiellement lointaines de l'origine ; on ramène le coin haut-gauche de
@@ -2421,6 +2508,7 @@ export const parseEsankeyXml = (
     // OS#1296 — police du contenu de la légende (`legend_police`, lue telle
     // quelle par LegendPersistence.fromJSON via la clé `legend` du JSON 0.9).
     if (legendFontSize !== null) result.legend.legend_police = legendFontSize
+    if (legendEntryTemplate !== null) result.legend.legend_entry_template = legendEntryTemplate
   }
   // OS#1286 — registre d'unités (grandeurs e!Sankey), lu par fromJSON.
   if (unitsRegistry.length > 0) {

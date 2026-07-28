@@ -36,13 +36,14 @@ import { Class_Handler } from './Handler'
 import { Class_BaseShape } from './Element'
 import { NodeEventsHandler } from './NodeEventsHandler'
 import { isLegendElementId } from './legendIds'
+import { applyTemplate, resolveTagGroupToken } from './LabelTemplate'
 
 export const default_selected_stroke_width = 3
 //export const label_margin = 0
 
 // Sources possibles pour le contenu du label de nom d'un nœud / d'une zone de
 // texte. Voir l'attribut de style name_label_source (NAME_LABEL_CONFIG).
-export type Type_NameLabelSource = 'name' | 'custom' | 'tag' | 'ancestor'
+export type Type_NameLabelSource = 'name' | 'custom' | 'tag' | 'ancestor' | 'template'
 
 export function sortNodesElements(
   a: Class_NodeBase | Class_ElementStyle,
@@ -669,6 +670,7 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     case 'custom': return this.name_label_text
     case 'tag': return this.resolveTagLabel()
     case 'ancestor': return this.resolveAncestorLabel()
+    case 'template': return this.resolveTemplateLabel()
     default: return this.name_label
     }
   }
@@ -678,6 +680,8 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   // jetons {Tag} au lieu de leur valeur interpolée. Sert aux chemins d'édition
   // (input inline, init rich text) : on édite « {Month} », pas « January ».
   public get name_label_effective_editable(): string {
+    // OS#1314 — un gabarit s'édite tel qu'il est écrit, jetons compris.
+    if (this.name_label_source === 'template') return this.name_label_template
     return this.name_label_effective
   }
 
@@ -686,6 +690,28 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   // l'élément, car un container n'a ni tags assignés ni dimensions.
   protected resolveTagLabel(): string {
     return this.name_label
+  }
+
+  // OS#1314 — source 'template' : gabarit à jetons interpolé au dessin. La base
+  // ne connaît que les jetons universels ({Name} + valeur sélectionnée des
+  // groupes de data/view tags, comme le titre) ; Class_NodeElement enrichit avec
+  // les valeurs, le bilan et les tags assignés.
+  protected resolveTemplateLabel(): string {
+    return applyTemplate(this.name_label_template, token => this.resolveTemplateToken(token))
+  }
+
+  /**
+   * Résolution d'UN jeton. Renvoie null pour un jeton inconnu (laissé tel quel
+   * dans le texte). Surchargé par les sous-classes, qui délèguent ici pour les
+   * jetons universels.
+   */
+  protected resolveTemplateToken(token: string): string | null {
+    if (token === 'Name') return this.name_label
+    return resolveTagGroupToken(
+      token,
+      this.sankey.data_taggs_list,
+      this.sankey.view_taggs_list
+    )
   }
 
   protected resolveAncestorLabel(): string {

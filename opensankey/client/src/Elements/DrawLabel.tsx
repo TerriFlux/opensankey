@@ -2755,6 +2755,9 @@ export class LinkDrawNameLabel extends LinkDrawLabelBase {
       const tag = this.link.flux_tags_list.find(t => t.group.id === group_id)
       return tag ? tag.display_name : this.link.text_value
     }
+    // OS#1314 — gabarit à jetons ({EntryName} : {Value} {Unit}…), interpolé à
+    // chaque dessin comme le titre du diagramme.
+    case 'template': return this.link.template_label
     case 'custom':
     default:
       return this.link.text_value

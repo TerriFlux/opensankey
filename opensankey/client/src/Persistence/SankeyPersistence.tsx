@@ -1056,6 +1056,8 @@ export class LegendPersistence {
     if (legend.legend_horizontal) json_legend['legend_horizontal'] = legend.legend_horizontal
     if (legend.info_link_value_void) json_legend['info_link_value_void'] = legend.info_link_value_void
     if (legend.legend_show_data_type) json_legend['legend_show_data_type'] = legend.legend_show_data_type
+    // OS#1314 — gabarit des entrées de tag, absent tant qu'il n'est pas utilisé.
+    if (legend.entry_template !== '') json_legend['legend_entry_template'] = legend.entry_template
     return json_object
   }
 
@@ -1101,6 +1103,7 @@ export class LegendPersistence {
     legend['_legend_horizontal'] = getBooleanFromJSON(json_legend, 'legend_horizontal', legend.legend_horizontal)
     legend['_info_link_value_void'] = getBooleanFromJSON(json_legend, 'info_link_value_void', legend.info_link_value_void)
     legend['_legend_show_data_type'] = getBooleanFromJSON(json_legend, 'legend_show_data_type', legend.legend_show_data_type)
+    legend['_entry_template'] = getStringFromJSON(json_legend, 'legend_entry_template', legend.entry_template)
   }
 }
 

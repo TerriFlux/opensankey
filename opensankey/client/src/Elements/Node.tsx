@@ -34,7 +34,8 @@ import { Class_Handler } from './Handler'
 import { reorganizeIOOrder } from './reorganizeIOOrder'
 import { orderIOByGeometry, recyclingBellyCentre, bundleTie, Type_IOGeo } from './ioOrderGeometry'
 import { format_value, Type_JSON } from '../types/Utils'
-import { default_element_color } from './ElementsAttributesConfig'
+import { default_element_color, NameLabelAttributeTypes } from './ElementsAttributesConfig'
+import { resolveAssignedTagToken } from './LabelTemplate'
 import { SankeyAnimation } from '../Algorithms/SankeyAnimation'
 import { draw_arrow_part } from './NodeDrawShape'
 import { computeArrowPlacement, arrowMinWidthApplies, computeArrowMinWidthPlacement, applyFanMinWidth } from './arrowLayout'
@@ -659,6 +660,52 @@ export class Class_NodeElement extends Class_NodeBase {
       current = next
     }
     return current ? current.name_label : this.name_label
+  }
+
+  // OS#1314 — jetons d'un gabarit de label de nœud, en plus des jetons
+  // universels de Class_NodeBase ({Name}, valeur des groupes de data/view tags).
+  // Les nombres suivent les réglages du label de VALEUR du nœud (décimales,
+  // notation, unité) mais sortent NUS : l'unité a son propre jeton, et le
+  // gabarit décide seul de ce qu'il montre (indépendamment de « valeur visible »).
+  protected override resolveTemplateToken(token: string): string | null {
+    const type_data = this.sankey.drawing_area.type_data
+    const bare: Partial<NameLabelAttributeTypes> = { is_visible: true, unit_visible: false }
+    const fmt = (v: number) => format_value(type_data, v, this, this.value_unit_name, 'value_label', bare)
+    switch (token) {
+    case 'Value':
+    case 'Quantity': return fmt(this.data_value)
+    case 'Unit':
+    case 'UnitName': return this.value_unit_name
+    case 'Scale': return 'x' + (this.stock_height_scale_factor > 0 ? this.stock_height_scale_factor : 1)
+    case 'SumIn': {
+      const balance = this.getFluxBalance()
+      return balance.has_in ? fmt(balance.input) : ''
+    }
+    case 'SumOut': {
+      const balance = this.getFluxBalance()
+      return balance.has_out ? fmt(balance.output) : ''
+    }
+    case 'Diff': return fmt(this.getFluxBalance().diff)
+    case 'DiffAbs': return fmt(Math.abs(this.getFluxBalance().diff))
+    }
+    const assigned = resolveAssignedTagToken(token, this.tags_list)
+    if (assigned !== null) return assigned
+    return super.resolveTemplateToken(token)
+  }
+
+  /**
+   * Symbole d'unité du label de valeur du nœud — même résolution que
+   * Class_LinkElement.unit_name (unité saisie, registre d'unités OS#1286, ou
+   * tag d'unité sélectionné).
+   */
+  public get value_unit_name(): string {
+    if (this.value_label_unit_type == 'unit_name') return this.value_label_unit
+    if (this.value_label_unit_type == 'unit_model')
+      return this.sankey.units.resolve(this.value_label_unit)?.unit.name ?? ''
+    const unit_taggs = this.sankey.getTagGroupsAsList('data_taggs')
+      .filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
+    const selected_unit = unit_taggs[0]?.selected_tags_list[0]
+    return selected_unit ? selected_unit.name : ''
   }
 
   // TAGS METHODS =======================================================================

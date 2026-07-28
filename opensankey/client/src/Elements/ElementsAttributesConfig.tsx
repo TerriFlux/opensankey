@@ -2248,10 +2248,11 @@ export const NAME_LABEL_CONFIG = {
   // Source du contenu du label (cf. Type_NameLabelSource sur Class_NodeBase) :
   // 'name' (défaut) = nom de l'élément, 'custom' = texte libre (name_label_text),
   // 'tag' = tag assigné dans le groupe name_label_tag_group_id, 'ancestor' = nom
-  // de l'ancêtre racine le long de la dimension name_label_dimension_id.
+  // de l'ancêtre racine le long de la dimension name_label_dimension_id,
+  // 'template' (OS#1314) = gabarit à jetons (name_label_template).
   source: {
-    default: 'name' as 'name' | 'custom' | 'tag' | 'ancestor',
-    type: (() => 'name') as (() => 'name' | 'custom' | 'tag' | 'ancestor'),
+    default: 'name' as 'name' | 'custom' | 'tag' | 'ancestor' | 'template',
+    type: (() => 'name') as (() => 'name' | 'custom' | 'tag' | 'ancestor' | 'template'),
     category: 'name_label' as const,
     actions: ['drawNameLabel'] as BaseActionType[],
     labels: {
@@ -2272,7 +2273,35 @@ export const NAME_LABEL_CONFIG = {
       'zh-CN': '标签文本的来源（元素名称、自定义文本、指派的标签、祖先名称）',
       ja: 'ラベル文字列の取得元（要素名、任意テキスト、割り当てタグ、祖先ノード名）'
     }
-  } satisfies AttributeConfig<'name' | 'custom' | 'tag' | 'ancestor'>,
+  } satisfies AttributeConfig<'name' | 'custom' | 'tag' | 'ancestor' | 'template'>,
+
+  // OS#1314 — gabarit à jetons du label, interpolé AU DESSIN (jetons {Value},
+  // {Unit}, {Source}, {Tag:groupe}, {NomDuGroupeDeDataTags}…). Partagé par les
+  // nœuds/zones de texte (source 'template') et les flux (text_source 'template').
+  template: {
+    default: '',
+    type: (() => '') as (() => string),
+    category: 'name_label' as const,
+    actions: ['drawNameLabel'] as BaseActionType[],
+    labels: {
+      en: 'Template',
+      fr: 'Gabarit',
+      es: 'Plantilla',
+      de: 'Vorlage',
+      it: 'Modello',
+      'zh-CN': '模板',
+      ja: 'テンプレート'
+    },
+    tooltips: {
+      en: 'Text with {tokens} replaced at draw time (e.g. "{Name}: {Value} {Unit}")',
+      fr: 'Texte à jetons {…} remplacés au dessin (ex. « {Name} : {Value} {Unit} »)',
+      es: 'Texto con {tokens} sustituidos al dibujar (p. ej. «{Name}: {Value} {Unit}»)',
+      de: 'Text mit {Platzhaltern}, die beim Zeichnen ersetzt werden (z. B. „{Name}: {Value} {Unit}“)',
+      it: 'Testo con {segnaposto} sostituiti al disegno (es. «{Name}: {Value} {Unit}»)',
+      'zh-CN': '含 {占位符} 的文本，绘制时替换（例如“{Name}: {Value} {Unit}”）',
+      ja: '描画時に置き換えられる {トークン} を含む文字列（例：「{Name}: {Value} {Unit}」）'
+    }
+  } satisfies AttributeConfig<string>,
 
   text: {
     default: '',
@@ -4274,11 +4303,12 @@ export const LINKS_LABEL_SPECIFIC_CONFIG = {
 
   // Source du texte du label de flux. 'custom' = comportement actuel (texte saisi
   // via text_value). 'none' masque, 'source'/'target' affichent le nom du nœud
-  // amont/aval, 'source_target' affiche "source → target".
+  // amont/aval, 'source_target' affiche "source → target", 'template' (OS#1314)
+  // construit le texte depuis le gabarit à jetons name_label_template.
   // Stocké aussi sur value_label par symétrie de createLinkLabelSpecificConfig
   // mais ignoré côté valeur.
   text_source: {
-    default: 'custom' as 'custom' | 'none' | 'flow' | 'source' | 'target' | 'source_target' | 'tag',
+    default: 'custom' as 'custom' | 'none' | 'flow' | 'source' | 'target' | 'source_target' | 'tag' | 'template',
     type: (() => 'custom') as (() => string),
     category: '',
     actions: [] as BaseActionType[],

@@ -26,7 +26,8 @@ const base_config: Type_LegendConfigValues = {
   show_dataTags: false,
   show_constraints: false,
   show_data_type: false,
-  info_link_value_void: false
+  info_link_value_void: false,
+  entry_template: ''
 }
 
 function makeTag(id: string, color = '#123456') {

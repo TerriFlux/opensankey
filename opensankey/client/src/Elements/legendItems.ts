@@ -11,6 +11,7 @@
 // ==================================================================================================
 
 import { LEGEND_CHILD_PREFIX } from './legendIds'
+import { applyTemplate } from './LabelTemplate'
 
 // ITEMS (pur) ========================================================================
 
@@ -55,7 +56,12 @@ export type Type_LegendEnv = {
 
 // Sous-ensemble du modèle utilisé par le calcul du contenu (structurellement
 // compatible avec Class_Sankey — permet un mock trivial dans les tests).
-type Type_TagForLegend = { id: string, name: string, display_name: string, color: string }
+type Type_TagForLegend = {
+  id: string, name: string, display_name: string, color: string,
+  // OS#1314 — jeton {Unit} du gabarit d'entrée : unité référencée par le tag
+  // (groupes « de type unité », registre d'unités OS#1286). Absent ailleurs.
+  resolved_unit?: { unit: { name: string } }
+}
 type Type_TagGroupForLegend = {
   id: string
   name: string
@@ -88,6 +94,9 @@ export type Type_LegendConfigValues = {
   show_constraints: boolean
   show_data_type: boolean
   info_link_value_void: boolean
+  // OS#1314 — gabarit du texte des ENTRÉES de tag (jetons {Name}, {Unit},
+  // {Group}). Vide = comportement historique (le nom long du tag seul).
+  entry_template: string
 }
 
 // Id stable et sûr pour un id HTML à partir d'un id de tag/groupe
@@ -105,6 +114,30 @@ const CONSTRAINT_ROWS = [
   { symbol: '↑→ x%', description: '% flux parent (source)' },
   { symbol: 'x% ↑→', description: '% flux parent (destination)' }
 ]
+
+/**
+ * OS#1314 — texte d'une entrée de tag : le nom long du tag (historique), ou le
+ * gabarit d'entrée interpolé s'il est renseigné (« {Name} [{Unit}] », gabarit
+ * d'entrée d'e!Sankey). Un jeton inconnu reste tel quel (cf. applyTemplate).
+ */
+export function legendEntryText(
+  tag: Type_TagForLegend,
+  tag_group: Type_TagGroupForLegend,
+  entry_template: string
+): string {
+  if (!entry_template) return tag.display_name
+  return applyTemplate(entry_template, token => {
+    switch (token) {
+    case 'Name':
+    case 'EntryName': return tag.display_name
+    case 'Unit':
+    case 'UnitName': return tag.resolved_unit?.unit.name ?? ''
+    case 'Group':
+    case 'GroupName': return tag_group.name
+    }
+    return null
+  })
+}
 
 /**
  * Contenu de la légende : la même logique de filtrage que l'ancienne
@@ -149,7 +182,7 @@ export function computeLegendItems(
       displayed_tags.forEach(tag => {
         items.push({
           id: LEGEND_CHILD_PREFIX + 'tag-' + slug(tag_group.id) + '-' + slug(tag.id),
-          text: tag.display_name,
+          text: legendEntryText(tag, tag_group, config.entry_template),
           swatch_color: tag.color,
           tag_group_id: tag_group.id,
           tag_id: tag.id,

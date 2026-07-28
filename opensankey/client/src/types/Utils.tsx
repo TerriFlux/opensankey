@@ -35,7 +35,10 @@ import { Class_LinkElement } from '../Elements/Link'
 import { Class_DataTagGroup } from './TagGroup'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_BaseShape } from '../Elements/Element'
-import { getNameLabelValues } from '../Elements/ElementsAttributesConfig'
+import { getNameLabelValues, NameLabelAttributeTypes } from '../Elements/ElementsAttributesConfig'
+import {
+  applyTemplate, resolveAssignedTagToken, resolveTagGroupToken
+} from '../Elements/LabelTemplate'
 import type { Type_RatioFluxConstraint, Type_RatioStockFluxConstraint } from './Sankey'
 
 export const default_file_name = 'Diagramme de Sankey'
@@ -523,14 +526,25 @@ export const ratio_flux_constraint_traduction = (c: Type_RatioFluxConstraint): s
   return main
 }
 
-export const link_data_label = (type_data: Type_Structure, link: Class_LinkElement,prefix:'name_label'|'value_label') => {
+export const link_data_label = (
+  type_data: Type_Structure,
+  link: Class_LinkElement,
+  prefix:'name_label'|'value_label',
+  // OS#1314 — appel depuis un gabarit à jetons : `overrides` force certains
+  // réglages du label (nombre nu, toujours visible) ; `with_coef: false` retire
+  // le « (50 %) » de la contrainte ratio, qui a son propre jeton {Coef}.
+  opts?: { overrides?: Partial<NameLabelAttributeTypes>, with_coef?: boolean }
+) => {
+  const fmt = (
+    value: number | undefined | null
+  ) => format_value(type_data, value, link, link.unit_name(prefix), prefix, opts?.overrides)
   // Helper: append target value as "source→target" when target is set and differs from source
   const withTarget = (source_text: string) => {
     const tgt = link.valueCurrentTarget
     if (tgt === null || tgt === undefined) return source_text
     const src = link.valueCurrent
     if (src === tgt) return source_text
-    const target_text = format_value(type_data, tgt, link, link.unit_name(prefix), prefix)
+    const target_text = fmt(tgt)
     return source_text + '\u2192' + target_text
   }
 
@@ -553,7 +567,8 @@ export const link_data_label = (type_data: Type_Structure, link: Class_LinkEleme
   const coef_allowed_for_mode =
     type_data === 'data' || type_data === 'data_label' ||
     ((type_data === 'reconciled' || type_data === 'free_value') && !has_computed_result)
-  const coef = (prefix === 'value_label' && coef_label_values.is_visible && coef_allowed_for_mode)
+  const coef = (prefix === 'value_label' && coef_label_values.is_visible &&
+    coef_allowed_for_mode && (opts?.with_coef ?? true))
     ? link_ratio_coef_label(link, coef_label_values) : null
   const withCoef = (text: string) => coef ? (text ? text + ' (' + coef + ')' : coef) : text
 
@@ -572,7 +587,7 @@ export const link_data_label = (type_data: Type_Structure, link: Class_LinkEleme
 
   if (type_data == 'data' || type_data == 'data_label') {
     if (!link.value?.valueData) return withCoef('')
-    const src_text = formatValueWithOption(link,format_value(type_data, link.value?.valueData, link, link.unit_name(prefix),prefix), link.value?.value_option,prefix)
+    const src_text = formatValueWithOption(link, fmt(link.value?.valueData), link.value?.value_option, prefix)
     return withCoef(withTarget(src_text as string))
   }
   // Reconciled links with min/max — choose data or result source
@@ -583,15 +598,69 @@ export const link_data_label = (type_data: Type_Structure, link: Class_LinkEleme
     if (type_data === 'free_interval') {
       const min = interval_min ?? link.value?.result_min
       const max = interval_max ?? link.value?.result_max
-      return withCoef('[' + format_value(type_data, min, link, link.unit_name(prefix),prefix) + ',' + format_value(type_data, max, link, link.unit_name(prefix),prefix) + ']')
+      return withCoef('[' + fmt(min) + ',' + fmt(max) + ']')
     }
     if (type_data === 'free_value') {
-      return withCoef(withTarget(format_value(type_data, link.valueCurrent!, link, link.unit_name(prefix),prefix)))
+      return withCoef(withTarget(fmt(link.valueCurrent)))
     }
     return withCoef('')
   }
 
-  return withCoef(withTarget(format_value(type_data, link.valueCurrent!, link, link.unit_name(prefix),prefix)))
+  return withCoef(withTarget(fmt(link.valueCurrent)))
+}
+
+/**
+ * OS#1314 — texte d'un label de flux construit par GABARIT à jetons
+ * (`name_label_text_source === 'template'`). Les jetons sont interpolés à chaque
+ * dessin ; un jeton inconnu est laissé tel quel.
+ *
+ * Convention de formatage : les jetons numériques utilisent les réglages du
+ * label de VALEUR du flux (décimales, notation, unité) — c'est là que
+ * l'utilisateur les règle — mais en forçant `is_visible` (le gabarit décide
+ * seul de ce qu'il affiche) et en retirant l'unité, portée par `{Unit}`.
+ */
+export const link_template_label = (link: Class_LinkElement): string => {
+  const type_data = link.sankey.drawing_area.type_data
+  const bare_number: Partial<NameLabelAttributeTypes> = { is_visible: true, unit_visible: false }
+  // Jetons de pourcentage : même calcul que le sélecteur d'unité du label de
+  // valeur (%IS/%OS/%ID/%OD/%PS/%PD), imposé le temps du jeton.
+  const percent = (unit_type: string) => format_value(
+    type_data, link.valueCurrent, link, '', 'value_label',
+    { is_visible: true, unit_visible: true, unit_type } as Partial<NameLabelAttributeTypes>
+  )
+  return applyTemplate(link.name_label_template, token => {
+    switch (token) {
+    case 'Name': return link.text_value
+    case 'Value':
+    case 'Quantity':
+      return link_data_label(type_data, link, 'value_label', { overrides: bare_number, with_coef: false })
+    case 'Unit':
+    case 'UnitName':
+      return link.unit_name('value_label')
+    case 'Source': return link.source?.name_label_effective ?? ''
+    case 'Target': return link.target?.name_label_effective ?? ''
+    case 'Coef': return link_ratio_coef_label(link, getNameLabelValues(link, 'value_label')) ?? ''
+    case 'EntryName': {
+      // Compat e!Sankey : le tag de flux du groupe désigné dans le menu du label
+      // (même réglage que la source 'tag'), à défaut le premier tag assigné.
+      const group_id = link.name_label_flux_tag_group_id
+      const tags = link.flux_tags_list
+      const tag = group_id === '' ? tags[0] : tags.find(t => t.group.id === group_id)
+      return tag ? tag.display_name : ''
+    }
+    case 'PercentSourceOut':
+    case 'PercentProcessSource': return percent('%OS')
+    case 'PercentTargetIn':
+    case 'PercentProcessDestination': return percent('%ID')
+    case 'PercentSourceIn': return percent('%IS')
+    case 'PercentTargetOut': return percent('%OD')
+    case 'PercentSourceTotal': return percent('%PS')
+    case 'PercentTargetTotal': return percent('%PD')
+    }
+    const assigned = resolveAssignedTagToken(token, link.flux_tags_list)
+    if (assigned !== null) return assigned
+    return resolveTagGroupToken(token, link.sankey.data_taggs_list, link.sankey.view_taggs_list)
+  })
 }
 
 export const format_value = (
@@ -599,9 +668,16 @@ export const format_value = (
   data_value: number | undefined | null,
   element: Class_LinkElement | Class_NodeBase,
   unit_name: string,
-  prefix:'name_label'|'value_label'|'stock_label'
+  prefix:'name_label'|'value_label'|'stock_label',
+  // OS#1314 — réglages du label à FORCER pour ce calcul (le reste vient de
+  // l'élément). Sert aux gabarits à jetons : {Value} doit rendre le nombre nu
+  // (unité portée par le jeton {Unit}) et rester calculé même si le label de
+  // valeur est masqué, et les jetons de pourcentage imposent leur unit_type.
+  overrides?: Partial<NameLabelAttributeTypes>
 ) => {
-  const label_values = getNameLabelValues(element, prefix)
+  const label_values = overrides
+    ? { ...getNameLabelValues(element, prefix), ...overrides }
+    : getNameLabelValues(element, prefix)
   /*==========================================================================*/
   // First step. value transformation
   const unit_taggs = element.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]

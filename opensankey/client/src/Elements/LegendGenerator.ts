@@ -77,6 +77,9 @@ export class Class_LegendConfig {
   private _legend_show_constraints: boolean = default_legend_show_constraints
   private _legend_show_data_type: boolean = false
   private _info_link_value_void: boolean = default_info_link_value_void
+  // OS#1314 — gabarit du texte des entrées de tag (jetons {Name}, {Unit},
+  // {Group}). Vide = nom long du tag seul (comportement historique).
+  private _entry_template: string = ''
 
   // Position d'apparition du cadre tant qu'il n'existe pas encore ; ensuite la
   // vérité est la position du conteneur cadre lui-même.
@@ -116,7 +119,8 @@ export class Class_LegendConfig {
       show_dataTags: this._legend_show_dataTags,
       show_constraints: this._legend_show_constraints,
       show_data_type: this._legend_show_data_type,
-      info_link_value_void: this._info_link_value_void
+      info_link_value_void: this._info_link_value_void,
+      entry_template: this._entry_template
     }
   }
 
@@ -173,6 +177,7 @@ export class Class_LegendConfig {
     this._legend_show_constraints = other._legend_show_constraints
     this._legend_show_data_type = other._legend_show_data_type
     this._info_link_value_void = other._info_link_value_void
+    this._entry_template = other._entry_template
     this._initial_position = { ...other._initial_position }
   }
 
@@ -216,6 +221,10 @@ export class Class_LegendConfig {
 
   public get legend_show_data_type(): boolean { return this._legend_show_data_type }
   public set legend_show_data_type(_: boolean) { this._legend_show_data_type = _; this.draw() }
+
+  // OS#1314 — gabarit des entrées de tag (« {Name} [{Unit}] »).
+  public get entry_template(): string { return this._entry_template }
+  public set entry_template(_: string) { this._entry_template = _; this.draw() }
 
   public get info_link_value_void(): boolean { return this._info_link_value_void }
   public set info_link_value_void(_: boolean) { this._info_link_value_void = _; this.draw() }

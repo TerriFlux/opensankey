@@ -35,7 +35,7 @@ import type {
 } from '../types/Tag'
 import type { Class_DataTagGroup, Class_FluxTagGroup, Class_TagGroup } from '../types/TagGroup'
 
-import { Type_BaseElementPosition, link_data_label } from '../types/Utils'
+import { Type_BaseElementPosition, link_data_label, link_template_label } from '../types/Utils'
 import { Class_ElementValueTree, Class_LinkValue, Class_ElementTaggedValue } from './LinkValues'
 import { LinkDrawShape } from './LinkDrawShape'
 import { LinkControlPoints } from './LinkControlPoints'
@@ -2419,6 +2419,17 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
   public data_label(prefix: 'name_label' | 'value_label') {
     return link_data_label(this.sankey.drawing_area.type_data, this, prefix)
+  }
+
+  /**
+   * OS#1314 — texte du label de nom construit par gabarit à jetons
+   * (`name_label_text_source === 'template'`). Exposé ici pour que le rendu
+   * (DrawLabel) n'ait pas à importer types/Utils : ce chemin
+   * DrawLabel -> Utils -> Node -> NodeBase -> DrawLabel refermerait le cycle
+   * d'initialisation des modules (cf. arch_element_handler_init_cycle).
+   */
+  public get template_label(): string {
+    return link_template_label(this)
   }
 
   /**
