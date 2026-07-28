@@ -1,0 +1,27 @@
+{
+  "$schema": "https://codesandbox.io/schemas/tasks.json",
+  "setupTasks": [
+    {
+      "name": "Installer les dependances",
+      "command": "npm install"
+    }
+  ],
+  "tasks": {
+    "start": {
+      "name": "Demarrer le viewer CARTOFOB",
+      "command": "npm start",
+      "runAtStart": true,
+      "preview": {
+        "port": 3000
+      },
+      "restartOn": {
+        "files": ["package.json", ".npmrc"]
+      }
+    },
+    "build": {
+      "name": "Build de production",
+      "command": "npm run build",
+      "runAtStart": false
+    }
+  }
+}
