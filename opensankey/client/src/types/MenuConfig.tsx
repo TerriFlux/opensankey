@@ -328,29 +328,20 @@ export class Class_MenuConfig {
     return this.panels.sidebar_id === 'filter' ? this.panels.getSidebarReservedPx() : 0
   }
 
-  // Galerie de modèles ÉPINGLÉE : même principe que le panneau de config
-  // ci-dessus. Non épinglée, elle flotte en overlay et s'efface dès que
-  // l'utilisateur travaille ; épinglée, elle se docke à droite, réserve sa
-  // largeur et ne se ferme plus que par sa croix (on enchaîne alors les essais
-  // de modèles). État TRANSITOIRE (non sérialisé) ; l'overlay reste le défaut.
-  protected _template_gallery_pinned: boolean = false
-  public get template_gallery_pinned() { return this._template_gallery_pinned }
-  public set template_gallery_pinned(v: boolean) { this._template_gallery_pinned = v; this._notifyMainZone() }
-  /** Largeur (px) réservée à droite par la galerie de modèles épinglée (0 si
-   *  non épinglée). Même largeur que l'overlay. */
-  public getTemplateGalleryPinnedReservedPx(): number {
-    return this._template_gallery_pinned ? TEMPLATE_GALLERY_WIDTH_PX : 0
-  }
-  /** Réserve TOTALE de « chrome » à droite : colonne d'outils + panneau de
-   *  config épinglé + galerie de modèles épinglée. C'est l'offset commun de la
-   *  colonne tableur/doc/unitaire (MainZoneTabs) et de la réserve du diagramme
-   *  — même système de fenêtrage pour tous les panneaux dockés (#1243). */
+  // OS#321 — la galerie de modèles n'a plus d'épinglage ni de bande réservée
+  // PROPRES : c'est un panneau unifié ('templates'), pop-up transitoire ou barre
+  // latérale partagée, comme la config et les filtres. Sa réserve, quand elle est
+  // ancrée, passe donc par panels.getSidebarReservedPx().
+
+  /** Réserve TOTALE de « chrome » à droite : colonne d'outils + barre latérale
+   *  unifiée. C'est l'offset commun de la colonne tableur/doc/unitaire
+   *  (MainZoneTabs) et de la réserve du diagramme — même système de fenêtrage
+   *  pour tous les panneaux dockés (#1243). */
   public getRightChromeReservedPx(): number {
-    // La barre latérale unifiée (config / filtre / recherche) est couverte par
-    // panels.getSidebarReservedPx() — ne PAS ré-additionner la réserve du filtre.
-    return this.getToolsColumnWidthPx() +
-      this.panels.getSidebarReservedPx() +
-      this.getTemplateGalleryPinnedReservedPx()
+    // La barre latérale unifiée (config / filtre / recherche / modèles) est
+    // couverte par panels.getSidebarReservedPx() — ne PAS ré-additionner la
+    // réserve du filtre.
+    return this.getToolsColumnWidthPx() + this.panels.getSidebarReservedPx()
   }
   public get main_zone_show_diagram() { return this._main_zone_show_diagram }
   public set main_zone_show_diagram(v: boolean) { this._main_zone_show_diagram = v; this._notifyMainZone() }
@@ -852,6 +843,12 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_gallery_source.current(null)
     this._dict_setter_show_dialog.ref_setter_show_spreadsheet.current(false)
     this._ref_close_filter_drawer.current(false)
+    // OS#321 — la RECHERCHE et la GALERIE DE MODÈLES sont des menus comme les
+    // autres : Échap les referme, qu'elles soient en pop-up ou ancrées en barre
+    // latérale (où plus aucune croix ne les ferme). Par leur porte propre, pour
+    // que la requête de l'une et l'état de l'autre repartent à zéro.
+    this.panels.closeThrough('search')
+    this.panels.closeThrough('templates')
   }
 
   /**

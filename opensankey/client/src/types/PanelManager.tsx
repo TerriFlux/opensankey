@@ -267,6 +267,17 @@ export class Class_PanelManager {
     return ids
   }
 
+  /**
+   * Ferme un panneau par sa porte PROPRE — quel que soit son contenant. À
+   * préférer à `close` dès qu'un panneau fait davantage que se retirer du modèle
+   * (la recherche remet sa requête à zéro, le filtre son miroir).
+   */
+  public closeThrough(id: string): void {
+    const handler = this._close_handlers.get(id)
+    if (handler) handler()
+    else this.close(id)
+  }
+
   /** Renseigne (ou retire) la fermeture propre d'un panneau — appelé par sa
    *  coquille PanelShell au montage / démontage. */
   public setCloseHandler(id: string, handler: (() => void) | null): void {
