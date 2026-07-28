@@ -159,7 +159,7 @@ const App = () => {
           // memes cles que les options `window.sankey` d'une page publiee.
           // Toutes sont listees ici, y compris celles qu'on ne passe pas :
           // beaucoup n'ont d'effet que dans le viewer de l'application
-          // complete (@terriflux/sankeyapplication), qui embarque la barre du
+          // complete (paquet SankeyApplication), qui embarque la barre du
           // haut, le tiroir de filtres et le pied de page. Le paquet MIT, lui,
           // ne rend AUCUN chrome : juste le diagramme. L'hote fait sa propre
           // interface — comme les deux selecteurs ci-dessus.
