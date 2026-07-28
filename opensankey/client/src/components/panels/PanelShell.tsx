@@ -109,7 +109,9 @@ export type Type_PanelShellProps = {
  *    toujours à portée (son bouton, Ctrl+B), et chaque menu garde le sien :
  *    une croix de plus n'y ajoutait rien.
  *
- * Échap, lui, referme tout (cf. Class_PanelManager.closeAllPopups).
+ * L'épingle n'est pas le seul chemin : tout geste qui PLACE la fenêtre l'épingle
+ * aussi — la déplacer par son en-tête, la détacher de la barre latérale. Échap,
+ * lui, referme tout (cf. Class_PanelManager.closeAllPopups).
  */
 const PanelHeader = ({
   app_data, panels, id, title, mode, allowedModes, dragHandleClassName, onClose
@@ -509,7 +511,16 @@ const PanelFrame = ({
             return
           }
           const g = panels.getPopupGeometry(id)
-          if (g) panels.setPopupGeometry(id, { ...g, x: data.x, y: data.y })
+          if (!g) return
+          // `g` porte encore la position d'AVANT le glisser (elle n'est écrite
+          // qu'ici) : de quoi distinguer un vrai déplacement d'un simple clic
+          // sur l'en-tête, qui déclenche lui aussi onStop.
+          const moved = Math.abs(data.x - g.x) > 2 || Math.abs(data.y - g.y) > 2
+          panels.setPopupGeometry(id, { ...g, x: data.x, y: data.y })
+          // OS#321 — déplacer une fenêtre, c'est la PLACER : le geste dit qu'on
+          // la veut là, donc qu'on la garde. Elle devient épinglée, sans quoi le
+          // clic suivant effacerait le placement qu'on vient de faire.
+          if (moved) panels.setPinned(id, true)
         }}
       >
         <Box
