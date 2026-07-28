@@ -90,10 +90,28 @@ export type Type_PanelShellProps = {
 }
 
 /**
- * En-tête uniforme : Titre · [épingler → pop-up] · [ancrer → barre latérale] ·
- * [✕]. Chaque bouton de mode n'apparaît que si le mode est autorisé ET n'est pas
- * le mode courant. Le `dragHandleClassName` marque la zone de saisie pour le
+ * En-tête uniforme : Titre · [épingle] · [ancrer → barre latérale] · [✕]. Le
+ * bouton d'ancrage n'apparaît que si la barre latérale est autorisée ET n'est
+ * pas le mode courant. Le `dragHandleClassName` marque la zone de saisie pour le
  * déplacement des pop-ups (react-draggable cible ce sélecteur).
+ *
+ * L'ÉPINGLE (OS#321) promet toujours la même chose — « garde cette fenêtre sous
+ * les yeux » : depuis une info-bulle ou la barre latérale elle promeut le
+ * panneau en pop-up épinglée ; sur une pop-up transitoire elle la fixe.
+ *
+ * Chaque contenant n'expose donc que le bouton qui lui SERT — les fermetures ne
+ * se recouvrent jamais :
+ *  - pop-up NON ÉPINGLÉE : épingle, mais pas de croix (cliquer ailleurs ferme) ;
+ *  - pop-up ÉPINGLÉE : croix, mais pas d'épingle (rien à désépingler — pour
+ *    retrouver une fenêtre transitoire, on la ferme et on reclique) ;
+ *  - info-bulle : épingle seule (elle s'efface d'elle-même) ;
+ *  - barre latérale : épingle (détacher) seule — la barre est un contenant
+ *    toujours à portée (son bouton, Ctrl+B), et chaque menu garde le sien :
+ *    une croix de plus n'y ajoutait rien.
+ *
+ * L'épingle n'est pas le seul chemin : tout geste qui PLACE la fenêtre l'épingle
+ * aussi — la déplacer par son en-tête, la détacher de la barre latérale. Échap,
+ * lui, referme tout (cf. Class_PanelManager.closeAllPopups).
  */
 const PanelHeader = ({
   app_data, panels, id, title, mode, allowedModes, dragHandleClassName, onClose
@@ -109,6 +127,7 @@ const PanelHeader = ({
 }) => {
   const { t } = app_data
   const can = (m: Type_PanelMode) => allowedModes.includes(m) && mode !== m
+  const is_pinned = panels.isPinned(id)
   return (
     <Box
       className={dragHandleClassName}
@@ -148,9 +167,32 @@ const PanelHeader = ({
           aria-label='panel-to-popup'
           // L'input/handle de drag ne doit pas capter ce clic.
           onMouseDown={(e) => e.stopPropagation()}
-          onClick={() => panels.setMode(id, 'popup')}
+          // Promotion DÉLIBÉRÉE : la fenêtre obtenue est ÉPINGLÉE (OS#321).
+          onClick={() => panels.setMode(id, 'popup', { pinned: true })}
         >
           <FaThumbtack />
+        </Button>
+      )}
+
+      {/* OS#321 — épingle d'une pop-up TRANSITOIRE. Absente une fois la fenêtre
+          épinglée : la désépingler n'a pas d'usage (on la ferme, et un nouveau
+          clic rouvre une fenêtre transitoire). L'épingle couchée et pâle dit
+          « celle-ci ne reste pas ». */}
+      {mode === 'popup' && !is_pinned && (
+        <Button
+          size='xs'
+          variant='menuconfigpanel_option_button'
+          sx={{ paddingInline: '0.25rem', minWidth: 'auto', width: 'auto', flex: 'none' }}
+          title={t('panel.pin', {
+            defaultValue: 'Épingler : la fenêtre reste ouverte quand on clique ailleurs'
+          })}
+          aria-label='panel-pin'
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={() => panels.setPinned(id, true)}
+        >
+          <Box as='span' style={{ transform: 'rotate(45deg)', opacity: 0.55 }}>
+            <FaThumbtack />
+          </Box>
         </Button>
       )}
 
@@ -168,10 +210,12 @@ const PanelHeader = ({
         </Button>
       )}
 
-      {/* Pas de croix sur l'INFO-BULLE : elle est transitoire et se ferme d'
-          elle-même quand le curseur la quitte. Une croix n'y servirait à rien,
-          et brouillerait la distinction avec la pop-up/le panneau, eux persistants. */}
-      {mode !== 'tooltip' && (
+      {/* Croix réservée à la POP-UP ÉPINGLÉE : c'est le seul contenant que rien
+          d'autre ne referme. L'info-bulle s'efface quand le curseur la quitte,
+          la pop-up transitoire au clic suivant posé ailleurs, et la barre
+          latérale reste à portée par son propre bouton (Ctrl+B) comme par celui
+          du menu qu'elle porte. Ailleurs, la croix ferait doublon. */}
+      {mode === 'popup' && is_pinned && (
         <CloseButton
           size='sm'
           aria-label='panel-close'
@@ -404,7 +448,9 @@ const PanelFrame = ({
         // Seuil : un clic sur l'en-tête ne doit pas détacher le menu.
         if (Math.abs(ev.clientX - start_x) < 8 && Math.abs(ev.clientY - start_y) < 8) return
         detached = true
-        panels.setMode(id, 'popup', { geometry: { ...posAt(ev), w, h } })
+        // Détacher la barre à la main est délibéré : la fenêtre obtenue est
+        // ÉPINGLÉE (OS#321), elle ne doit pas s'évaporer au clic suivant.
+        panels.setMode(id, 'popup', { geometry: { ...posAt(ev), w, h }, pinned: true })
         return
       }
       // Le panneau est désormais une pop-up : on la porte, sans réécrire le
@@ -465,7 +511,16 @@ const PanelFrame = ({
             return
           }
           const g = panels.getPopupGeometry(id)
-          if (g) panels.setPopupGeometry(id, { ...g, x: data.x, y: data.y })
+          if (!g) return
+          // `g` porte encore la position d'AVANT le glisser (elle n'est écrite
+          // qu'ici) : de quoi distinguer un vrai déplacement d'un simple clic
+          // sur l'en-tête, qui déclenche lui aussi onStop.
+          const moved = Math.abs(data.x - g.x) > 2 || Math.abs(data.y - g.y) > 2
+          panels.setPopupGeometry(id, { ...g, x: data.x, y: data.y })
+          // OS#321 — déplacer une fenêtre, c'est la PLACER : le geste dit qu'on
+          // la veut là, donc qu'on la garde. Elle devient épinglée, sans quoi le
+          // clic suivant effacerait le placement qu'on vient de faire.
+          if (moved) panels.setPinned(id, true)
         }}
       >
         <Box
@@ -604,6 +659,49 @@ export const SidebarSurface = ({ app_data }: { app_data: Class_ApplicationData }
   )
 }
 
+// OS#321 — Interfaces FLOTTANTES qui vivent hors du panneau qui les a ouvertes
+// (dialogues, menus déroulants, listes de sélection, popovers). Y cliquer n'est
+// pas « cliquer ailleurs » : c'est poursuivre ce qu'on faisait dans le panneau —
+// on ne referme donc rien.
+const FLOATING_UI_SELECTOR = [
+  '.chakra-modal__content', '.chakra-popover__content',
+  '[role="dialog"]', '[role="alertdialog"]', '[role="menu"]', '[role="listbox"]'
+].join(', ')
+
+/**
+ * OS#321 — CONGÉDIEMENT des pop-ups NON ÉPINGLÉES au clic extérieur.
+ *
+ * Une pop-up ouverte par un clic est transitoire : le clic suivant, posé hors
+ * d'elle, la referme — exactement comme les menus déroulants de la barre du haut
+ * et le menu contextuel, dont on généralise ici le comportement. L'épingle de
+ * l'en-tête est la sortie de secours quand on veut la garder sous les yeux.
+ *
+ * Écoute en CAPTURE sur `pointerdown` : le congédiement doit précéder le
+ * gestionnaire de clic de l'élément visé, pour que celui-ci puisse constater
+ * (via `consumeJustDismissed`) qu'il vient de fermer SA pop-up et s'abstenir de
+ * la rouvrir — c'est la BASCULE (recliquer l'élément referme sa pop-up).
+ *
+ * Monté une seule fois (cf. SankeyMenus) ; ne rend rien.
+ */
+export const PanelDismissLayer = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const panels = app_data.menu_configuration.panels
+  React.useEffect(() => {
+    const onPointerDown = (ev: PointerEvent) => {
+      const target = ev.target as HTMLElement | null
+      if (!target || typeof target.closest !== 'function') return
+      if (target.closest(FLOATING_UI_SELECTOR)) return
+      // Clic DANS un panneau : celui-là seul survit (les autres pop-ups
+      // transitoires se referment — un panneau n'est pas « à l'intérieur » d'un
+      // autre).
+      const host = target.closest('[data-panel-id]') as HTMLElement | null
+      panels.dismissTransientPopups(host?.dataset.panelId)
+    }
+    document.addEventListener('pointerdown', onPointerDown, true)
+    return () => document.removeEventListener('pointerdown', onPointerDown, true)
+  }, [panels])
+  return null
+}
+
 /**
  * Coquille de panneau : rend `children` dans le contenant correspondant au mode
  * courant de `id` (ou rien si le panneau est fermé). Se re-rend sur le topic
@@ -620,6 +718,16 @@ export const PanelShell = ({
   )
   const panels = app_data.menu_configuration.panels
   const mode = panels.getMode(id)
+  // OS#321 — publie la fermeture PROPRE de ce panneau, pour que le congédiement
+  // au clic extérieur emprunte la même porte que la croix (et n'oublie donc
+  // aucun effet de bord : miroir du filtre, requête de la recherche…). Le `ref`
+  // garde l'enregistrement stable alors que `onClose` change à chaque rendu.
+  const close_ref = React.useRef<() => void>(() => panels.close(id))
+  close_ref.current = onClose ?? (() => panels.close(id))
+  React.useEffect(() => {
+    panels.setCloseHandler(id, () => close_ref.current())
+    return () => panels.setCloseHandler(id, null)
+  }, [panels, id])
   if (mode === null) return null
   // Barre latérale FERMÉE (Ctrl+B) : le menu y reste ancré mais rien ne s'affiche
   // ni ne se réserve (cf. getSidebarReservedPx). On le rend MASQUÉ plutôt que de
@@ -627,7 +735,7 @@ export const PanelShell = ({
   // réouverture — même raison que l'enveloppe unique ci-dessus.
   const collapsed = mode === 'sidebar' && !panels.sidebar_open
 
-  const close = onClose ?? (() => panels.close(id))
+  const close = close_ref.current
   const width = sidebarWidthPx ?? panels.sidebar_width_px ?? PANEL_SIDEBAR_DEFAULT_WIDTH_PX
 
   return (

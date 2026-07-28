@@ -148,11 +148,14 @@ export const PresentationPanels = ({ app_data }: { app_data: Class_ApplicationDa
             // programmée par l'élément ; en sortir la reprogramme.
             onTooltipHoverIn={cancelPresentationHoverClose}
             onTooltipHoverOut={() => schedulePresentationHoverClose(app_data)}
-            // L'épingle (clic dans l'info-bulle) fixe la présentation en POP-UP —
-            // jamais en barre latérale (réservée aux menus).
+            // Première interaction DANS l'info-bulle : elle cesse d'être
+            // transitoire et devient une POP-UP — jamais une barre latérale
+            // (réservée aux menus). Cette pop-up-là reste NON ÉPINGLÉE (OS#321) :
+            // le geste dit « je m'en sers », pas « je la garde » ; c'est
+            // l'épingle de l'en-tête qui dit le second.
             onTooltipEditIntent={() => {
               releasePresentationHover()
-              panels.setMode(presentationPanelId(element.id), 'popup')
+              panels.setMode(presentationPanelId(element.id), 'popup', { pinned: false })
             }}
           >
             {mode === 'popup'

@@ -83,6 +83,24 @@ export class Class_PanelManager {
 
   // Pop-ups : PLUSIEURS simultanées (#1). id -> géométrie (pop-ups OUVERTES).
   private _popups: Map<string, Type_PopupGeometry> = new Map()
+  // OS#321 — DEUX TYPES DE POP-UP. Une pop-up ouverte par un clic est
+  // NON ÉPINGLÉE : transitoire, le prochain clic hors d'elle la referme — c'est
+  // déjà le comportement des menus déroulants de la barre du haut et du menu
+  // contextuel, qu'on généralise ici à tous les panneaux. L'ÉPINGLE de l'en-tête
+  // la rend persistante : elle survit aux clics extérieurs, plusieurs épinglées
+  // cohabitent, et seule sa croix la ferme. Cet ensemble ne contient que des ids
+  // de pop-ups ouvertes (`_detach` l'entretient).
+  private _pinned: Set<string> = new Set()
+  // Pop-ups refermées par le CLIC EN COURS (cf. dismissTransientPopups). Vidé à
+  // chaque nouveau clic extérieur ; c'est ce qui permet la BASCULE — recliquer
+  // l'élément qui porte sa pop-up la referme au lieu de la rouvrir aussitôt.
+  private _just_dismissed: Set<string> = new Set()
+  // Fermeture PROPRE à un panneau, renseignée par sa coquille (PanelShell). Le
+  // congédiement au clic extérieur doit emprunter la MÊME porte que la croix de
+  // l'en-tête : plusieurs panneaux font davantage que se retirer du modèle (le
+  // filtre entretient un miroir `filter_drawer_open`, la recherche remet sa
+  // requête à zéro), et sauter leur `onClose` les laisserait désynchronisés.
+  private _close_handlers: Map<string, () => void> = new Map()
   // Mémoire de géométrie par id : SURVIT à la fermeture et à une excursion en
   // barre latérale, pour qu'un aller-retour pop-up → barre → pop-up (ou une
   // réouverture) retrouve la dernière position/taille. Persistée au Lot 4.
@@ -131,12 +149,20 @@ export class Class_PanelManager {
    * mode. Applique les invariants (une seule barre latérale ; une seule
    * info-bulle). `opts.geometry` fixe la position/taille d'une pop-up créée
    * (sinon défaut centré) ; `opts.anchor` le point d'ancrage d'une info-bulle.
+   *
+   * `opts.pinned` (OS#321) décide du type de pop-up : `false`/absent = pop-up
+   * NON ÉPINGLÉE (le clic extérieur la referme) — c'est le défaut de toute
+   * ouverture au clic ; `true` = pop-up ÉPINGLÉE, réservée aux gestes qui
+   * expriment une intention de garder la fenêtre (l'épingle de l'en-tête, le
+   * détachement de la barre latérale). Sans `opts.pinned`, un panneau DÉJÀ
+   * épinglé le reste (une simple réouverture ne le désépingle pas).
    */
   public setMode(
     id: string,
     mode: Type_PanelMode,
-    opts?: { geometry?: Type_PopupGeometry, anchor?: Type_TooltipAnchor }
+    opts?: { geometry?: Type_PopupGeometry, anchor?: Type_TooltipAnchor, pinned?: boolean }
   ): void {
+    const was_pinned = this._pinned.has(id)
     this._detach(id)
     if (mode === 'sidebar') {
       // Éjecte l'ancien menu ancré (un seul à la fois, #2). Ancrer un menu OUVRE
@@ -152,6 +178,7 @@ export class Class_PanelManager {
       const g = opts?.geometry ?? this._popup_geometry_memory.get(id) ?? this._defaultPopupGeometry()
       this._popups.set(id, g)
       this._popup_geometry_memory.set(id, g)
+      if (opts?.pinned ?? was_pinned) this._pinned.add(id)
       // Passer DEPUIS la barre latérale libère la réserve -> recadrer le dessin.
       this._notifySidebar()
     } else {
@@ -178,7 +205,94 @@ export class Class_PanelManager {
       if (this._last_sidebar_id === id) this._last_sidebar_id = null
     }
     this._popups.delete(id)
+    this._pinned.delete(id)
     if (this._tooltip_id === id) this._tooltip_id = null
+  }
+
+  // ÉPINGLE DES POP-UPS (OS#321) ========================================================
+
+  /** Cette pop-up est-elle ÉPINGLÉE (persistante malgré les clics extérieurs) ? */
+  public isPinned(id: string): boolean { return this._pinned.has(id) }
+
+  /** Épingle / désépingle une pop-up OUVERTE (sans effet sur les autres modes). */
+  public setPinned(id: string, pinned: boolean): void {
+    if (!this._popups.has(id)) return
+    if (pinned === this._pinned.has(id)) return
+    if (pinned) this._pinned.add(id)
+    else this._pinned.delete(id)
+    this._notify()
+  }
+
+  /** Ids des pop-ups ouvertes NON ÉPINGLÉES (celles qu'un clic extérieur ferme). */
+  public get transient_popup_ids(): string[] {
+    const ids: string[] = []
+    this._popups.forEach((_g, id) => { if (!this._pinned.has(id)) ids.push(id) })
+    return ids
+  }
+
+  /**
+   * Clic HORS des pop-ups : referme toutes les non épinglées, sauf `keep_id`
+   * (le panneau qui contient le point cliqué, le cas échéant).
+   *
+   * Les ids fermés sont MÉMORISÉS jusqu'au prochain appel : le geste d'ouverture
+   * qui suit dans le même clic les consulte (`consumeJustDismissed`) pour ne pas
+   * rouvrir ce que ce même clic vient de fermer — c'est ce qui fait la BASCULE.
+   */
+  public dismissTransientPopups(keep_id?: string): string[] {
+    const closed = this.transient_popup_ids.filter(id => id !== keep_id)
+    this._just_dismissed = new Set(closed)
+    closed.forEach(id => {
+      const handler = this._close_handlers.get(id)
+      if (handler) handler()
+      else this._detach(id)
+    })
+    if (closed.length > 0) this._notify()
+    return closed
+  }
+
+  /**
+   * Referme TOUTES les pop-ups, épinglées ou non — geste « remets l'écran au
+   * neutre » (Échap). L'épingle protège du clic posé ailleurs, pas d'une demande
+   * explicite de tout refermer. La barre latérale, elle, n'est pas concernée :
+   * c'est un contenant qu'on replie par son propre bouton.
+   */
+  public closeAllPopups(): string[] {
+    const ids = [...this._popups.keys()]
+    ids.forEach(id => {
+      const handler = this._close_handlers.get(id)
+      if (handler) handler()
+      else this._detach(id)
+    })
+    if (ids.length > 0) this._notify()
+    return ids
+  }
+
+  /**
+   * Ferme un panneau par sa porte PROPRE — quel que soit son contenant. À
+   * préférer à `close` dès qu'un panneau fait davantage que se retirer du modèle
+   * (la recherche remet sa requête à zéro, le filtre son miroir).
+   */
+  public closeThrough(id: string): void {
+    const handler = this._close_handlers.get(id)
+    if (handler) handler()
+    else this.close(id)
+  }
+
+  /** Renseigne (ou retire) la fermeture propre d'un panneau — appelé par sa
+   *  coquille PanelShell au montage / démontage. */
+  public setCloseHandler(id: string, handler: (() => void) | null): void {
+    if (handler) this._close_handlers.set(id, handler)
+    else this._close_handlers.delete(id)
+  }
+
+  /**
+   * `id` vient-il d'être refermé par le clic en cours ? Consommé une seule fois :
+   * l'ouverture qui suit renonce, et le clic d'après rouvre normalement.
+   */
+  public consumeJustDismissed(id: string): boolean {
+    if (!this._just_dismissed.has(id)) return false
+    this._just_dismissed.delete(id)
+    return true
   }
 
   // BARRE LATÉRALE =====================================================================
