@@ -1868,22 +1868,54 @@ def templates_source_root(source):
     return os.environ.get(env_name) if env_name else None
 
 
-def templates_source_state(source):
+def templates_target_branch(root):
+    """
+    Branche sur laquelle un commit de ce depot doit atterrir : (nom, attache).
+
+    Un HEAD DETACHE n'est pas une anomalie ici, c'est l'etat NORMAL d'un submodule
+    — `git submodule update` pose un sha, pas une branche — donc celui de tous les
+    serveurs deployes. On commite quand meme, et on pousse avec un refspec
+    explicite (`HEAD:refs/heads/<branche>`) : c'est le push qui met le travail a
+    l'abri, pas la copie de travail, qui est de toute facon remplacee au
+    deploiement suivant.
+
+    La branche visee se lit dans l'ordre : celle sur laquelle HEAD est attache
+    (poste de developpement), sinon celle que suit le depot distant, sinon
+    main/master si l'une des deux existe cote origin. Aucune ? (nom = None) : il
+    n'y a nulle part ou pousser, et la le commit serait vraiment perdu.
+    """
+    code, branch = templates_git(root, ["symbolic-ref", "-q", "--short", "HEAD"],
+                                 timeout=20)
+    if code == 0 and branch:
+        return branch, True
+    code, head = templates_git(
+        root, ["symbolic-ref", "-q", "--short", "refs/remotes/origin/HEAD"], timeout=20)
+    if code == 0 and head.startswith("origin/"):
+        return head.split("/", 1)[1], False
+    for candidate in ("main", "master"):
+        code, _ = templates_git(
+            root, ["rev-parse", "--verify", "-q", "refs/remotes/origin/" + candidate],
+            timeout=20)
+        if code == 0:
+            return candidate, False
+    return None, False
+
+
+def templates_source_state(source, target_dir=None):
     """
     Est-ce que CE serveur peut reenregistrer un modele de cette galerie ?
-    Renvoie {available, reason} — `reason` explique le refus, en clair.
+    Renvoie {available, reason, branch, attached} — `reason` explique le refus.
 
-    Le reenregistrement suppose une COPIE DE TRAVAIL git, c'est-a-dire un poste de
-    developpement. Sur un serveur deploye, la racine vit dans un repertoire de
-    release fige : elle n'appartient pas au compte qui fait tourner l'application
-    (l'ecriture echoue en EACCES) et, meme ouverte en ecriture, le commit serait
-    perdu au deploiement suivant — qui cree une NOUVELLE release. Un checkout
-    detache pose le meme probleme sous une autre forme : le commit ne serait
-    rattache a aucune branche, donc ni poussable ni retrouvable.
+    Deux conditions, et deux seulement : pouvoir ECRIRE le fichier, et savoir OU
+    POUSSER le commit. Le reste (checkout detache, repertoire de release
+    ephemere) n'empeche rien des lors que le commit part chez origin.
 
-    Ce pre-controle est appele par la route d'ecriture ET expose au dialogue, pour
-    que le bouton soit ferme AVANT le clic plutot que de rendre un « Permission
-    denied » sur un fichier temporaire.
+    `target_dir` est le dossier reellement ecrit, quand on le connait : la racine
+    peut etre ouverte en ecriture alors qu'un sous-dossier ne l'est pas — c'est
+    exactement ce qui produisait un EACCES sur le fichier temporaire.
+
+    Ce pre-controle sert de garde-fou a la route d'ecriture ET est expose au
+    dialogue, pour que le bouton soit ferme AVANT le clic.
     """
     label = (TEMPLATES_WRITABLE_SOURCES.get(source) or (None, None))[1] or str(source)
     root = templates_source_root(source)
@@ -1895,23 +1927,23 @@ def templates_source_state(source):
                 "reason": "%s est introuvable sur ce serveur (%s)." % (label, root)}
     if not os.path.exists(os.path.join(root, ".git")):
         return {"available": False,
-                "reason": "%s n'est pas un depot git sur ce serveur : le"
-                          " reenregistrement se fait depuis un poste de"
-                          " developpement." % label}
-    if not os.access(root, os.W_OK):
+                "reason": "%s n'est pas un depot git sur ce serveur : sans le filet"
+                          " du commit, il n'y a pas de reenregistrement." % label}
+    probe = target_dir if target_dir and os.path.isdir(target_dir) else root
+    if not os.access(probe, os.W_OK):
         return {"available": False,
-                "reason": "%s est en lecture seule sur ce serveur (deploiement"
-                          " fige) : le reenregistrement se fait depuis un poste de"
-                          " developpement, puis se deploie normalement." % label}
-    code, branch = templates_git(root, ["symbolic-ref", "-q", "--short", "HEAD"],
-                                 timeout=20)
-    if code != 0 or not branch:
+                "reason": "%s est en lecture seule pour le compte qui fait tourner"
+                          " l'application (%s). Ouvrir ce dossier en ecriture a ce"
+                          " compte, ou reenregistrer depuis un poste de"
+                          " developpement." % (label, probe)}
+    branch, attached = templates_target_branch(root)
+    if not branch:
         return {"available": False,
-                "reason": "Le depot %s de ce serveur n'est sur aucune branche"
-                          " (checkout detache) : un commit y serait perdu."
-                          " Le reenregistrement se fait depuis un poste de"
-                          " developpement." % label}
-    return {"available": True, "reason": None, "branch": branch}
+                "reason": "Le depot %s de ce serveur n'est sur aucune branche et"
+                          " n'a pas de branche distante connue : le commit ne"
+                          " pourrait etre pousse nulle part, donc serait perdu."
+                          % label}
+    return {"available": True, "reason": None, "branch": branch, "attached": attached}
 
 
 @opensankey.route("/menus/templates_save_state", methods=["GET"])
@@ -1919,8 +1951,10 @@ def menus_templates_save_state():
     """
     Le dialogue de reenregistrement demande ici si le geste est possible sur ce
     serveur, pour desactiver son bouton au lieu de laisser echouer l'ecriture.
-    Meme garde que la route d'ecriture : 404 pour tout ce qui n'est pas un
-    developpeur, ou une galerie reenregistrable.
+    `path` (facultatif) est le modele vise : il permet de sonder le dossier
+    REELLEMENT ecrit, et non seulement la racine. Meme garde que la route
+    d'ecriture : 404 pour tout ce qui n'est pas un developpeur, ou une galerie
+    reenregistrable.
     """
     if not is_developer_request():
         abort(404)
@@ -1928,10 +1962,26 @@ def menus_templates_save_state():
     if source not in TEMPLATES_WRITABLE_SOURCES:
         abort(404)
     return Response(
-        response=json.dumps(templates_source_state(source)),
+        response=json.dumps(
+            templates_source_state(source, templates_target_dir(source, request.args.get("path")))),
         status=200,
         mimetype="application/json",
     )
+
+
+def templates_target_dir(source, requested_path):
+    """Dossier ou vivrait le modele demande, ou None si le chemin n'est pas
+    declare par l'index (meme liste blanche que l'ecriture) — sonder ailleurs
+    n'aurait aucun sens."""
+    root = templates_source_root(source)
+    if not root or not requested_path:
+        return None
+    json_rel = templates_declared_json(
+        source, posixpath.normpath(str(requested_path).replace("\\", "/")))
+    if not json_rel:
+        return None
+    json_abs = safe_join(root, json_rel)
+    return os.path.dirname(json_abs) if json_abs else None
 
 
 def developer_user_email():
@@ -2019,14 +2069,15 @@ def menus_templates_save():
         abort(400)
     if source not in TEMPLATES_WRITABLE_SOURCES:
         abort(404)
-    # Pre-controle AVANT toute ecriture : sur un serveur deploye la racine est un
-    # repertoire de release fige (lecture seule, et remplace au deploiement
-    # suivant). Sans ce garde-fou, le seul retour etait un EACCES sur le fichier
-    # temporaire, illisible pour qui ne connait pas la disposition du serveur.
-    state = templates_source_state(source)
-    if not state["available"]:
-        return templates_save_error(state["reason"])
+    # Les controles qui portent sur la RACINE passent avant la liste blanche : sur
+    # un serveur ou la galerie est mal configuree, celle-ci ne trouve pas d'index
+    # et rendrait un 404 muet — la ou le probleme est le serveur, pas le chemin
+    # demande. Ce qui depend du fichier vise (droits d'ecriture du dossier) est
+    # verifie plus bas, une fois le chemin resolu.
     root = templates_source_root(source)
+    if not root or not os.path.isdir(root) \
+            or not os.path.exists(os.path.join(root, ".git")):
+        return templates_save_error(templates_source_state(source)["reason"])
     normalized = posixpath.normpath(str(requested_path).replace("\\", "/"))
     # Cible = le JSON en clair ; le .gz eventuel du meme modele part au meme commit.
     json_rel = templates_declared_json(source, normalized)
@@ -2039,6 +2090,13 @@ def menus_templates_save():
         abort(404)
     if not (os.path.isfile(json_abs) or os.path.isfile(gz_abs)):
         abort(404)
+
+    # Pre-controle AVANT toute ecriture, sur le dossier REELLEMENT vise : sans lui,
+    # le seul retour d'un dossier ferme en ecriture etait un EACCES sur le fichier
+    # temporaire, illisible pour qui ne connait pas la disposition du serveur.
+    state = templates_source_state(source, os.path.dirname(json_abs))
+    if not state["available"]:
+        return templates_save_error(state["reason"])
 
     # Ecriture atomique : un fichier temporaire dans le meme dossier, puis rename.
     # Une ecriture interrompue ne peut pas laisser une etude publiee tronquee.
@@ -2133,7 +2191,24 @@ def menus_templates_save():
             )
         return templates_save_error("git commit : %s" % output, saved=True)
     _, commit = templates_git(root, ["rev-parse", "--short", "HEAD"])
-    code, output = templates_git(root, ["push"])
+    # Refspec EXPLICITE, jamais `git push` nu : sur un checkout detache — l'etat
+    # normal d'un submodule, donc celui des serveurs deployes — git n'a aucune
+    # branche courante a deduire et refuse. `HEAD:refs/heads/<branche>` dit ou le
+    # commit doit atterrir, et vaut aussi quand HEAD est attache.
+    code, output = templates_git(
+        root, ["push", "origin", "HEAD:refs/heads/%s" % state["branch"]])
+    # Un push refuse (depot en retard, identifiants absents) laisse le commit en
+    # local : on le dit franchement plutot que de tenter un rebase automatique
+    # dans une copie de travail pleine de modifications. Sur un checkout detache,
+    # ce commit local ne survivra pas au deploiement suivant — la nuance change ce
+    # qu'il reste a faire, elle doit etre dite.
+    if code == 0:
+        detail = ""
+    else:
+        detail = "Commit local cree, push refuse : %s" % output
+        if not state["attached"]:
+            detail += (" — ATTENTION : ce serveur est un checkout detache,"
+                       " ce commit disparaitra au prochain deploiement.")
     return Response(
         response=json.dumps({
             "ok": True,
@@ -2142,10 +2217,8 @@ def menus_templates_save():
             "pushed": code == 0,
             "path": json_rel,
             "commit": commit,
-            # Un push refuse (depot en retard, identifiants absents) laisse le
-            # commit en local : on le dit franchement plutot que de tenter un
-            # rebase automatique dans une copie de travail pleine de modifications.
-            "detail": "" if code == 0 else "Commit local cree, push refuse : %s" % output,
+            "branch": state["branch"],
+            "detail": detail,
         }),
         status=200,
         mimetype="application/json",

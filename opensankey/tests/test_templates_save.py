@@ -342,27 +342,52 @@ def test_refuse_une_source_inconnue(client_dev, sankeydata):
 
 
 # ---------------------------------------------------------------------------
-# Pre-controle : le geste n'a de sens que sur une copie de travail
+# Serveur deploye : checkout detache, et ecriture a valider avant le temporaire
 # ---------------------------------------------------------------------------
-# Sur un serveur deploye, la racine vit dans un repertoire de release fige :
-# lecture seule pour le compte qui fait tourner l'app, et remplacee au
-# deploiement suivant. Le seul retour etait alors un « Permission denied » sur un
-# fichier temporaire — illisible. On refuse desormais AVANT d'ecrire, avec la
-# raison, et le dialogue sonde le meme etat pour fermer son bouton.
-def test_un_checkout_detache_est_refuse_avant_toute_ecriture(client_dev, sankeydata):
-    """Cas des serveurs deployes : le depot est pose par le deploiement, sur
-    aucune branche. Un commit y serait injoignable et perdu a la release
-    suivante."""
+# Un HEAD detache n'est pas une anomalie : c'est l'etat normal d'un submodule
+# (`git submodule update` pose un sha), donc celui de tous les serveurs deployes.
+# Le geste doit y marcher — ce qui met le travail a l'abri, c'est le push, pas la
+# copie de travail, remplacee au deploiement suivant. Ne restent refuses que les
+# cas ou il n'y a nulle part ou pousser, ou rien a ecrire.
+@pytest.fixture
+def sankeydata_deploye(sankeydata, tmp_path):
+    """Le depot tel qu'un deploiement le laisse : un checkout DETACHE, avec un
+    remote. Renvoie le depot nu qui joue origin."""
+    remote = tmp_path / "sankeydata.git"
+    subprocess.run(["git", "init", "--bare", "-q", str(remote)], capture_output=True)
+    git(sankeydata, "remote", "add", "origin", str(remote))
+    git(sankeydata, "push", "-q", "origin", "HEAD:refs/heads/main")
+    git(sankeydata, "fetch", "-q", "origin")
+    git(sankeydata, "checkout", "-q", "--detach", "HEAD")
+    return remote
+
+
+def test_un_checkout_detache_pousse_sur_la_branche_distante(
+        client_dev, sankeydata, sankeydata_deploye):
+    """`git push` nu echoue sur un HEAD detache, faute de branche courante : le
+    refspec explicite fait atterrir le commit sur la branche que suit origin."""
+    payload = save(client_dev, "templates/data/modele.json.gz", source="sankeydata",
+                   message="modeles: correction depuis le serveur").get_json()
+
+    assert payload["ok"] and payload["committed"] and payload["pushed"]
+    assert payload["branch"] == "main"
+    # Le travail est chez origin, la ou il survivra au prochain deploiement.
+    assert git(sankeydata_deploye, "log", "-1", "--format=%s", "main").stdout.strip() \
+        == "modeles: correction depuis le serveur"
+    fichiers = git(sankeydata_deploye, "show", "--name-only", "--format=", "main").stdout
+    assert "templates/data/modele.json" in fichiers
+
+
+def test_un_checkout_detache_sans_remote_est_refuse(client_dev, sankeydata):
+    """La seule situation vraiment perdante : ni branche locale, ni branche
+    distante. Le commit ne pourrait aller nulle part — autant ne rien ecrire."""
     git(sankeydata, "checkout", "-q", "--detach", "HEAD")
 
     payload = save(client_dev, "templates/data/modele.json.gz",
                    source="sankeydata").get_json()
 
     assert payload["ok"] is False and payload["saved"] is False
-    assert "branche" in payload["detail"]
     # Rien n'a ete touche : ni le .gz d'origine, ni un temporaire laisse a cote.
-    assert (sankeydata / "templates" / "data" / "modele.json.gz").exists()
-    assert not (sankeydata / "templates" / "data" / "modele.json").exists()
     assert [p.name for p in (sankeydata / "templates" / "data").iterdir()] \
         == ["modele.json.gz"]
 
@@ -381,10 +406,32 @@ def test_une_racine_non_versionnee_est_refusee(client_dev, tmp_path, monkeypatch
     assert "git" in payload["detail"]
 
 
+@pytest.mark.skipif(os.name == "nt" or (hasattr(os, "geteuid") and os.geteuid() == 0),
+                    reason="droits POSIX inapplicables (Windows, ou root qui passe outre)")
+def test_un_dossier_ferme_en_ecriture_est_refuse_avant_le_temporaire(
+        client_dev, sankeydata):
+    """Le bug d'origine, tel qu'il se presentait en production : la racine etait
+    ouverte, le sous-dossier vise non — et le seul retour etait un EACCES sur un
+    fichier temporaire. C'est donc le dossier REELLEMENT ecrit qu'on sonde."""
+    dossier = sankeydata / "templates" / "data"
+    dossier.chmod(0o555)
+    try:
+        payload = save(client_dev, "templates/data/modele.json.gz",
+                       source="sankeydata").get_json()
+    finally:
+        dossier.chmod(0o755)
+
+    assert payload["ok"] is False and payload["saved"] is False
+    assert "lecture seule" in payload["detail"]
+    assert not list(dossier.glob("*.tmp"))
+
+
 def test_l_etat_annonce_au_dialogue_ce_que_le_serveur_peut_faire(client_dev, sankeydata):
     """Le dialogue desactive son bouton sur cette reponse : elle doit dire oui
-    quand c'est un poste de dev, et non — avec la raison — sinon."""
-    ouvert = client_dev.get("/menus/templates_save_state?source=sankeydata")
+    tant qu'il y a ou ecrire et ou pousser, et non — avec la raison — sinon."""
+    ouvert = client_dev.get(
+        "/menus/templates_save_state?source=sankeydata"
+        "&path=templates/data/modele.json.gz")
     assert ouvert.status_code == 200
     assert ouvert.get_json()["available"] is True
 
