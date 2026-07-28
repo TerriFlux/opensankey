@@ -104,6 +104,11 @@ export const elementIdOfPanel = (panel_id: string): string =>
  * juxtaposée : la barre latérale est réservée aux menus (config/filtres/
  * recherche), jamais aux éléments. La pop-up a une structure fixe, donc elle a
  * toujours de quoi s'afficher pour un élément réel — on l'ouvre sans condition.
+ *
+ * OS#321 — la pop-up obtenue est NON ÉPINGLÉE : elle se referme au prochain clic
+ * posé ailleurs. Sélectionner les éléments un par un n'empile donc plus les
+ * fenêtres, et l'épingle de l'en-tête reste là pour en garder une sous les yeux.
+ * Renvoie `false` quand le clic n'a fait que REFERMER (bascule).
  */
 export const openPresentationFor = (
   app_data: Class_ApplicationData,
@@ -112,9 +117,18 @@ export const openPresentationFor = (
 ): boolean => {
   const panels = app_data.menu_configuration.panels
   const id = presentationPanelId(element.id)
+  // BASCULE — ce même clic vient de refermer la pop-up de cet élément (couche
+  // PanelDismissLayer) : la rouvrir aussitôt rendrait le clic sans effet.
+  if (panels.consumeJustDismissed(id)) return false
+  // Déjà posée (typiquement épinglée) : on la laisse où elle est plutôt que de
+  // la faire sauter sous le curseur.
+  if (panels.getMode(id) === 'popup') return true
   // Juxtaposée à l'élément, sans recouvrir une pop-up déjà posée.
   enforcePopupCap(app_data, id)
-  panels.setMode(id, 'popup', { geometry: placePopupNear(app_data, anchor, id) })
+  panels.setMode(id, 'popup', {
+    geometry: placePopupNear(app_data, anchor, id),
+    pinned: false
+  })
   return true
 }
 
