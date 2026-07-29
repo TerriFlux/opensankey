@@ -2631,6 +2631,26 @@ const otherStyles = {
     fontSize: '0.5rem'
   }),
 
+  // Pastille d'édition de la barre du haut (Production / Analyse). La baseStyle
+  // ci-dessus fige une largeur de 1.75rem et `display: inline` — taillé pour des
+  // libellés de 3-4 lettres : « Analyse » débordait du fond coloré. Ici la
+  // pastille se dimensionne sur son texte. La couleur est passée en prop, elle
+  // distingue les deux éditions.
+  badge_edition: defineStyle({
+    display: 'inline-flex',
+    alignItems: 'center',
+    width: 'auto',
+    height: 'auto',
+    padding: '0.1rem 0.35rem',
+    borderRadius: '3px',
+    fontSize: '0.55rem',
+    fontWeight: 'bold',
+    lineHeight: '1',
+    letterSpacing: '0.03em',
+    color: 'white',
+    whiteSpace: 'nowrap',
+  }),
+
   badge_on_template_img: defineStyle({
     display: 'inline-grid',
     justifyContent: 'center',
@@ -3352,7 +3372,8 @@ export const opensankey_theme = extendTheme({
     Badge: {
       baseStyle: otherStyles.badge_base_style,
       variants: {
-        badge_on_template_img: otherStyles.badge_on_template_img
+        badge_on_template_img: otherStyles.badge_on_template_img,
+        badge_edition: otherStyles.badge_edition
       }
     },
     Button: {
