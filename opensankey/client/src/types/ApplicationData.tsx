@@ -1698,6 +1698,11 @@ export class Class_ApplicationData {
       // Close all menus
       app_ref.menu_configuration.closeAllMenus()
       app_ref.drawing_area.closeAllContextMenus()
+      // OS#321 — et TOUTES les pop-ups, épinglées ou non : Échap est la demande
+      // explicite de rendre l'écran au neutre, l'épingle ne s'y oppose pas (elle
+      // ne protège que du clic posé ailleurs). Couvre aussi les présentations
+      // d'éléments, que closeAllMenus ne connaît pas.
+      app_ref.menu_configuration.panels.closeAllPopups()
     }
     // Event to delete all selected elements ------------------------------------------
     else if (evtKeyDel) {
