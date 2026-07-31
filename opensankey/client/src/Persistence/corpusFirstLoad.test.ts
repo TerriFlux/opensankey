@@ -16,9 +16,12 @@ import type { Type_JSON } from '../types/Utils'
 // toucher aux ~53 méthodes fromJSON_pre_0_9 / _0_9 / _0_91 (elles mutent l'objet métier, pas le
 // JSON : toute clé legacy oubliée en cours de refactor disparaît en silence).
 //
-// Format du golden : JSON gzippé (les dumps pèsent lourd — le corpus fait déjà 8 Mo). La
-// LISIBILITÉ ne vient donc pas du fichier stocké mais du message d'échec, qui liste les chemins
-// qui diffèrent avec leurs valeurs avant/après.
+// Format du golden : JSON brut, indenté. Il l'a d'abord été gzippé (les dumps pèsent lourd — 8 Mo
+// au total), mais un .gz est un blob OPAQUE pour git : illisible en `git diff` comme en MR, et
+// surtout non delta-compressable, donc chaque régénération ajoutait ~4 Mo définitifs à
+// l'historique. En JSON brut, git delta-compresse et une régénération ne coûte que son diff réel.
+// Le message d'échec ci-dessous (liste des chemins qui diffèrent) reste le premier outil de
+// diagnostic ; le fichier stocké est maintenant relisible en complément.
 //
 // Régénérer après un changement VOULU (et inspecter le diff rapporté !) :
 //   UPDATE_FIRST_LOAD=1 pnpm --filter @terriflux/opensankey run test -- corpusFirstLoad
@@ -130,16 +133,20 @@ const GOLDEN_DIR = 'ref_first_load'
 
 function goldenPath(corpus_dir: string, rel: string): string {
   // Un golden par fichier de corpus, à plat (le '/' de l'arborescence devient '__').
-  return path.join(corpus_dir, GOLDEN_DIR, rel.replace(/[/\\]/g, '__').replace(/\.gz$/, '') + '.golden.json.gz')
+  return path.join(corpus_dir, GOLDEN_DIR, rel.replace(/[/\\]/g, '__').replace(/\.gz$/, '') + '.golden.json')
 }
 
 function writeGolden(abs: string, json: Type_JSON): void {
   fs.mkdirSync(path.dirname(abs), { recursive: true })
-  fs.writeFileSync(abs, zlib.gzipSync(JSON.stringify(json, null, 2)))
+  fs.writeFileSync(abs, JSON.stringify(json, null, 2))
+  // Purge de l'ancien format gzippé, sinon les deux coexistent et le .gz mort
+  // reste dans le dépôt sans que rien ne le lise.
+  const legacy_gz = abs + '.gz'
+  if (fs.existsSync(legacy_gz)) fs.unlinkSync(legacy_gz)
 }
 
 function readGolden(abs: string): Type_JSON {
-  return stripAppVersion(JSON.parse(zlib.gunzipSync(fs.readFileSync(abs)).toString('utf-8')) as Type_JSON)
+  return stripAppVersion(JSON.parse(fs.readFileSync(abs, 'utf-8')) as Type_JSON)
 }
 
 /**

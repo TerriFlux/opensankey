@@ -405,12 +405,19 @@ elementStyleConfigs[LinkOutUnitaryStyle] = {
 
 export const base_styles: readonly ElementStyleKey[] = [NodeStyle, LinkStyle, ContainerStyle, NodeContainerStyle, NodeLeftExtremityStyle, NodeRightExtremityStyle] as const
 // Styles STRUCTURELS : (re)attachés à la construction de l'élément selon son type
-// (NodeStyle->Node, LinkStyle->Link, ContainerStyle->TextZone, NodeContainerStyle->dimension
-// englobante). Eux seuls ne sont pas persistés (sinon accumulation au round-trip, SA#230).
-// À NE PAS confondre avec base_styles, qui inclut en plus les styles d'extrémité :
-// ceux-ci sont appliqués par l'utilisateur / l'autolayout, jamais à la construction, donc
-// doivent être persistés (régression SA#232 : extrémités perdues au chargement).
-export const structural_styles: readonly ElementStyleKey[] = [NodeStyle, LinkStyle, ContainerStyle, NodeContainerStyle] as const
+// (NodeStyle->Node, LinkStyle->Link, ContainerStyle->TextZone). Eux seuls ne sont pas
+// persistés (sinon accumulation au round-trip, SA#230).
+// À NE PAS confondre avec base_styles, qui inclut en plus les styles d'extrémité ET
+// NodeContainerStyle : ceux-ci sont appliqués par une ACTION (utilisateur, autolayout, ou
+// passage en mode englobant), jamais à la construction, donc doivent être persistés
+// (régression SA#232 : extrémités perdues au chargement).
+// NodeContainerStyle en particulier n'est posé que par NodeDimension.setContainerMode(),
+// c.-à-d. pour un parent de dimension englobante. Un nœud-cadre purement esthétique (aucune
+// dimension enfant, style posé à la main) n'a donc AUCUN chemin de réattache : le filtrer
+// le perdait au chargement — fond de forme redevenu visible, bord pointillé disparu — et,
+// le filtre agissant aussi à l'écriture, la référence disparaissait définitivement du
+// fichier au premier réenregistrement.
+export const structural_styles: readonly ElementStyleKey[] = [NodeStyle, LinkStyle, ContainerStyle] as const
 export const product_sector_styles: readonly ElementStyleKey[] = [NodeProductStyle, NodeSectorStyle] as const
 export const node_exchanges_style: readonly ElementStyleKey[] = [
   NodeExportBelowStyle, NodeExportCloseStyle, NodeImportAboveStyle, NodeImportCloseStyle,
