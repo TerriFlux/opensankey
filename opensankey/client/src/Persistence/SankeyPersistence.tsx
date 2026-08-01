@@ -1750,9 +1750,10 @@ export class SankeyPersistence {
    *   identique : l'ancien mode divisait la valeur par unit_factor) ;
    * - sinon l'unité est AJOUTÉE à la grandeur « Unités du fichier » avec
    *   coefficient = unit_factor, et référencée.
-   * Idempotente (après migration le type est `unit_model`) ; un texte vide est
-   * laissé tel quel (rien n'était affiché, rien ne l'est avec le nouveau
-   * défaut `unit_model` à référence vide).
+   * Idempotente : après migration le texte est un id du registre, donc
+   * `units.resolve` le trouve et le second passage sort tout de suite. Un texte
+   * vide est laissé tel quel (rien n'était affiché, rien ne l'est avec le
+   * nouveau défaut `unit_model` à référence vide).
    */
   private static migrate_legacy_unit_names(sankey: Class_Sankey) {
     const prefixes = ['name_label', 'value_label', 'stock_label'] as const
@@ -1761,12 +1762,26 @@ export class SankeyPersistence {
         const type_key = prefix + '_unit_type'
         const unit_key = prefix + '_unit'
         const type = attrs[type_key]
-        // Attribut absent = ancien défaut `unit_name` : à migrer aussi.
-        if (type !== undefined && type !== 'unit_name') return
+        // Le critère de migration porte sur le TEXTE, pas sur le type. Les types
+        // « pourcentage » (%IS, %OS, …) ne portent pas d'unité texte : on les saute.
+        // Tout le reste est candidat, y compris `unit_model` — voir juste en dessous.
+        if (type !== undefined && type !== 'unit_name' && type !== 'unit_model') return
         const text = attrs[unit_key]
         if (typeof text !== 'string' || text.trim() === '') return
-        // Déjà une référence du registre (fichier récent, type par défaut).
+        // Déjà une référence du registre (fichier récent) : rien à faire.
         if (sankey.units.resolve(text)) return
+        // Ici : un texte non vide qui ne résout pas dans le registre — c'est donc
+        // du texte libre hérité, quel que soit le type affiché.
+        //
+        // Ne PAS se fier à `type !== 'unit_model'` pour le détecter : le style
+        // `default` est construit `is_deletable = false`, ce qui PRÉ-REMPLIT son
+        // _storage avec tous les défauts usine (Element.tsx, ctor de
+        // Class_ElementStyle). `value_label_unit_type` y vaut donc 'unit_model'
+        // même dans un fichier qui ne l'a jamais écrit : sur ce style — et sur lui
+        // seul — « absent » est indiscernable de « déjà migré ». Un fichier 1.1.5
+        // déclarant `value_label_unit: "tonnes"` sur le style par défaut voyait
+        // ainsi son unité sautée par la migration, puis perdue à l'affichage
+        // (unit_name() résout 'tonnes' dans le registre, n'y trouve rien, rend '').
         // L'ancien affichage ne divisait que pour unit_factor > 1.
         const factor_raw = attrs[prefix + '_unit_factor']
         const factor = (typeof factor_raw === 'number' && Number.isFinite(factor_raw) && factor_raw > 1)
