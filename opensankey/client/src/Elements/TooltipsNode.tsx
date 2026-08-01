@@ -70,7 +70,7 @@ export class NodeTooltip {
       if (lv.unit_visible) {
         // OS#1286 — en mode unit_model, `unit` porte un id : symbole résolu.
         unit = lv.unit_type === 'unit_model'
-          ? (sampleLink.sankey.units.resolve(lv.unit)?.unit.name ?? '')
+          ? (sampleLink.sankey.units.resolve(lv.unit)?.unit.label ?? '')
           : (lv.unit ?? '').toString().trim()
       }
     }

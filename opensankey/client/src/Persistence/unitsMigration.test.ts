@@ -34,7 +34,7 @@ const linkAttrs = (app: Class_ApplicationData) =>
 
 describe('OS#1286 — migration unit_name → unit_model au chargement', () => {
 
-  test('« tonnes » (facteur 1) → t du catalogue (alias)', () => {
+  test('« tonnes » (facteur 1) → t du catalogue (alias), libellé « tonnes » conservé', () => {
     const app = buildDumpReload({
       value_label_unit_type: 'unit_name',
       value_label_unit: 'tonnes',
@@ -44,6 +44,39 @@ describe('OS#1286 — migration unit_name → unit_model au chargement', () => {
     expect(attrs['value_label_unit']).toBe('mass_t')
     // Rien créé dans « Unités du fichier »
     expect(app.drawing_area.sankey.units.getUnitType(FILE_UNITS_TYPE_ID)).toBeUndefined()
+    // Un alias RECONNAÎT un synonyme, il ne l'impose pas : le diagramme continue
+    // d'écrire « tonnes », tout en référençant l'unité t du catalogue (donc les
+    // conversions t/kt restent celles du catalogue).
+    const unit = app.drawing_area.sankey.units.resolve('mass_t')!.unit
+    expect(unit.name).toBe('t')
+    expect(unit.display_name).toBe('tonnes')
+    expect(unit.label).toBe('tonnes')
+    const link = app.drawing_area.sankey.links_list[0] as unknown as { unit_name: (p: string) => string }
+    expect(link.unit_name('value_label')).toBe('tonnes')
+  })
+
+  test('correspondance EXACTE sur le symbole : aucun libellé posé', () => {
+    const app = buildDumpReload({
+      value_label_unit_type: 'unit_name',
+      value_label_unit: 't',
+    })
+    expect(linkAttrs(app)['value_label_unit']).toBe('mass_t')
+    const unit = app.drawing_area.sankey.units.resolve('mass_t')!.unit
+    expect(unit.display_name).toBeUndefined()
+    expect(unit.label).toBe('t')
+  })
+
+  test('le libellé survit à un aller-retour JSON', () => {
+    const app = buildDumpReload({
+      value_label_unit_type: 'unit_name',
+      value_label_unit: 'tonnes',
+    })
+    const json = app.toJSON() as Type_JSON
+    // Le registre n'est plus le catalogue par défaut : il est donc sérialisé.
+    expect(Array.isArray(json['units'])).toBe(true)
+    const app2 = new Class_ApplicationData(false)
+    app2.fromJSON(deepClone(json) as never, {}, false)
+    expect(app2.drawing_area.sankey.units.resolve('mass_t')!.unit.label).toBe('tonnes')
   })
 
   test('« kt » avec facteur 1000 → kt du catalogue (coefficient identique)', () => {
@@ -164,8 +197,9 @@ describe('OS#1286 — migration unit_name → unit_model au chargement', () => {
 
     const attrs2 = app2.drawing_area.sankey.default_style.attributes as unknown as { [k: string]: unknown }
     expect(attrs2['value_label_unit']).toBe('mass_t')
-    // Ce que voit l'utilisateur : l'unité est de nouveau rendue sur le flux.
+    // Ce que voit l'utilisateur : l'unité est de nouveau rendue sur le flux, et
+    // avec le mot du fichier — pas le symbole canonique.
     const link2 = app2.drawing_area.sankey.links_list[0] as unknown as { unit_name: (p: string) => string }
-    expect(link2.unit_name('value_label')).toBe('t')
+    expect(link2.unit_name('value_label')).toBe('tonnes')
   })
 })

@@ -21,6 +21,7 @@ export type Type_UnitJSON = {
   id: string,
   name: string,
   coefficient: number,
+  display_name?: string,
 }
 
 export type Type_UnitTypeJSON = {
@@ -31,29 +32,55 @@ export type Type_UnitTypeJSON = {
   display_scale?: number,
 }
 
-/** Une unité : symbole affiché + coefficient vers l'unité de base de sa
+/** Une unité : symbole canonique + coefficient vers l'unité de base de sa
  * grandeur (base = quantité × coefficient ⇒ coefficient 1 pour la base). */
 export class Class_Unit {
   public id: string
-  /** Symbole affiché (t, kt, GWh, €…). */
+  /** Symbole CANONIQUE (t, kt, GWh, €…). Sert à la correspondance et reste la
+   * référence ; ce n'est pas forcément ce qui est écrit sur le diagramme. */
   public name: string
   public coefficient: number
+  /** Libellé d'AFFICHAGE, quand le diagramme nomme cette unité autrement que
+   * par son symbole canonique — « tonnes » pour `t`, « MWh élec » pour `MWh`.
+   * C'est le pendant lisible de la table d'alias : `canonicalUnitSymbol`
+   * reconnaît le synonyme à la lecture, `display_name` le restitue à l'écran.
+   * Sans lui, migrer un fichier qui disait « tonnes » l'affichait « t », ce qui
+   * fait d'un alias une conversion à sens unique.
+   * undefined = afficher le symbole canonique. */
+  public display_name?: string
 
-  constructor(id: string, name: string, coefficient: number = 1) {
+  constructor(id: string, name: string, coefficient: number = 1, display_name?: string) {
     this.id = id
     this.name = name
     this.coefficient = coefficient
+    this.display_name = display_name
+  }
+
+  /** Ce qui est écrit sur le diagramme. TOUJOURS passer par là côté rendu —
+   * `name` est la référence, pas l'affichage. */
+  public get label(): string {
+    const custom = this.display_name?.trim()
+    return (custom !== undefined && custom !== '') ? custom : this.name
   }
 
   public toJSON(): Type_UnitJSON {
-    return { id: this.id, name: this.name, coefficient: this.coefficient }
+    const json: Type_UnitJSON = { id: this.id, name: this.name, coefficient: this.coefficient }
+    // Optionnel et omis quand absent : un fichier qui n'y touche pas reste
+    // identique au catalogue par défaut (cf. equalsDefaultCatalog).
+    if (this.display_name !== undefined && this.display_name.trim() !== '') {
+      json.display_name = this.display_name
+    }
+    return json
   }
 
   public static fromJSON(json_object: Type_JSON): Class_Unit {
     return new Class_Unit(
       getStringFromJSON(json_object, 'id', ''),
       getStringFromJSON(json_object, 'name', ''),
-      getNumberFromJSON(json_object, 'coefficient', 1)
+      getNumberFromJSON(json_object, 'coefficient', 1),
+      json_object['display_name'] !== undefined
+        ? getStringFromJSON(json_object, 'display_name', '')
+        : undefined
     )
   }
 }
@@ -222,7 +249,19 @@ export class Class_UnitsRegistry {
    */
   public getOrCreateLegacyUnit(text: string, factor: number = 1): Type_ResolvedUnit {
     const found = this.findLegacyUnit(text, factor)
-    if (found) return found
+    if (found) {
+      // Correspondance par ALIAS (le fichier écrit « tonnes », le catalogue « t ») :
+      // on garde le mot du fichier comme libellé d'affichage. Sans ça, migrer
+      // réécrirait le vocabulaire de l'utilisateur — un alias doit reconnaître un
+      // synonyme, pas l'imposer. Correspondance exacte : rien à mémoriser.
+      // On ne réécrit jamais un display_name déjà posé (premier lu gagne, et un
+      // choix explicite de l'utilisateur prime sur une migration ultérieure).
+      const trimmed = text.trim()
+      if (trimmed !== found.unit.name && found.unit.display_name === undefined) {
+        found.unit.display_name = trimmed
+      }
+      return found
+    }
     let ut = this.getUnitType(FILE_UNITS_TYPE_ID)
     if (!ut) {
       ut = new Class_UnitType(FILE_UNITS_TYPE_ID, FILE_UNITS_TYPE_NAME)

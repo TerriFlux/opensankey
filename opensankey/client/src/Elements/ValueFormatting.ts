@@ -67,6 +67,6 @@ export const resolveValueUnit = (sample_link?: Class_LinkElement): string => {
   if (!lv.unit_visible) return ''
   // OS#1286 — en mode unit_model, `unit` porte un id : on résout le symbole.
   return lv.unit_type === 'unit_model'
-    ? (sample_link.sankey.units.resolve(lv.unit)?.unit.name ?? '')
+    ? (sample_link.sankey.units.resolve(lv.unit)?.unit.label ?? '')
     : (lv.unit ?? '').toString().trim()
 }
