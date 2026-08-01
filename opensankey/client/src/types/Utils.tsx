@@ -815,7 +815,7 @@ export const format_value = (
   else if (label_values.unit_type == 'unit_name') text_value = text_value + ' ' + label_values.unit
   else if (label_values.unit_type == 'unit_model') {
     // OS#1286 — symbole de l'unité résolue depuis le registre (rien si registre vide).
-    if (model_unit) text_value = text_value + ' ' + model_unit.unit.name
+    if (model_unit) text_value = text_value + ' ' + model_unit.unit.label
   }
   else if (label_values.unit_type == 'unit_tag' && unit_taggs.length > 0) {
     //const label_unit = unit_taggs[0].first_selected_tags!.name

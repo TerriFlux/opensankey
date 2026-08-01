@@ -940,7 +940,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       return colored_tag?.color ?? null
     }
     const unit_for = (tv: Class_ElementTaggedValue): string | undefined =>
-      unit_tag_of(tv)?.resolved_unit?.unit.name
+      unit_tag_of(tv)?.resolved_unit?.unit.label
     const bands = tvs.map(tv => ({ id: tv.id, px: Math.max(0, px_for(tv)), color: color_for(tv), value: tv.value as number, unit: unit_for(tv), label_visible: tv.label_visible }))
     const total = bands.reduce((acc, band) => acc + band.px, 0)
     if (total <= 0) return []
@@ -2398,7 +2398,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       if (this.value_label_unit_type == 'unit_name') return this.value_label_unit
       // OS#1286 — unité résolue depuis le registre d'unités du diagramme.
       if (this.value_label_unit_type == 'unit_model')
-        return this.sankey.units.resolve(this.value_label_unit)?.unit.name ?? ''
+        return this.sankey.units.resolve(this.value_label_unit)?.unit.label ?? ''
       const unit_taggs = this.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
       if (unit_taggs.length > 0) {
         if (!this.selected_data_tags_list) return unit_taggs[0].selected_tags_list[0].name
@@ -2408,7 +2408,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
     if (this.name_label_unit_type == 'unit_name') return this.name_label_unit
     if (this.name_label_unit_type == 'unit_model')
-      return this.sankey.units.resolve(this.name_label_unit)?.unit.name ?? ''
+      return this.sankey.units.resolve(this.name_label_unit)?.unit.label ?? ''
     const unit_taggs = this.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
     if (unit_taggs.length > 0) {
       if (!this.selected_data_tags_list) return unit_taggs[0].selected_tags_list[0].name

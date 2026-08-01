@@ -60,7 +60,9 @@ type Type_TagForLegend = {
   id: string, name: string, display_name: string, color: string,
   // OS#1314 — jeton {Unit} du gabarit d'entrée : unité référencée par le tag
   // (groupes « de type unité », registre d'unités OS#1286). Absent ailleurs.
-  resolved_unit?: { unit: { name: string } }
+  // `label` = ce qui est écrit sur le diagramme (Class_Unit.label : display_name
+  // s'il est posé, sinon le symbole canonique). `name` reste la référence.
+  resolved_unit?: { unit: { name: string, label: string } }
 }
 type Type_TagGroupForLegend = {
   id: string
@@ -131,7 +133,7 @@ export function legendEntryText(
     case 'Name':
     case 'EntryName': return tag.display_name
     case 'Unit':
-    case 'UnitName': return tag.resolved_unit?.unit.name ?? ''
+    case 'UnitName': return tag.resolved_unit?.unit.label ?? ''
     case 'Group':
     case 'GroupName': return tag_group.name
     }

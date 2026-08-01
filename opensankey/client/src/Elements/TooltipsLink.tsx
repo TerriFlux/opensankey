@@ -137,7 +137,7 @@ export class LinkTooltip {
       const unit_sym = sub.tags_list
         .map(tag => tag as Class_FluxTag)
         .find(tag => (tag.group as Class_FluxTagGroup).is_unit_type && tag.resolved_unit)
-        ?.resolved_unit?.unit.name
+        ?.resolved_unit?.unit.label
       const value_txt = sub.value === null ? '-' : `${sub.value}${unit_sym ? ' ' + escapeHtml(unit_sym) : ''}`
       html += '<tr>'
       html += `<th>${escapeHtml(coord || '-')}</th>`
@@ -397,7 +397,7 @@ export class LinkTooltip {
     const lv = getNameLabelValues(this._link, 'value_label')
     // OS#1286 — en mode unit_model, `unit` porte un id : afficher le symbole résolu.
     const unit = lv.unit_type === 'unit_model'
-      ? (this._link.sankey.units.resolve(lv.unit)?.unit.name ?? '')
+      ? (this._link.sankey.units.resolve(lv.unit)?.unit.label ?? '')
       : lv.unit
     if (!lv.unit_visible || !unit) return ''
     return `<div class="series-unit">Unité : ${escapeHtml(unit)}</div>`

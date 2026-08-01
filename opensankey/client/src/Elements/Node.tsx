@@ -701,7 +701,7 @@ export class Class_NodeElement extends Class_NodeBase {
   public get value_unit_name(): string {
     if (this.value_label_unit_type == 'unit_name') return this.value_label_unit
     if (this.value_label_unit_type == 'unit_model')
-      return this.sankey.units.resolve(this.value_label_unit)?.unit.name ?? ''
+      return this.sankey.units.resolve(this.value_label_unit)?.unit.label ?? ''
     const unit_taggs = this.sankey.getTagGroupsAsList('data_taggs')
       .filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
     const selected_unit = unit_taggs[0]?.selected_tags_list[0]
