@@ -137,4 +137,35 @@ describe('OS#1286 — migration unit_name → unit_model au chargement', () => {
     app3.fromJSON(deepClone(j1) as never, {}, false)
     expect(app3.toJSON()).toEqual(j1)
   })
+
+  // Régression : un vrai fichier 1.1.5 ne porte AUCUN `value_label_unit_type` —
+  // l'attribut n'existait pas. Le test « styles migrés aussi » ci-dessus pose
+  // explicitement `unit_name`, ce qu'aucun fichier ancien ne fait, et passait donc
+  // à côté du cas réel : sur le style `default` (is_deletable = false), le _storage
+  // est PRÉ-REMPLI de tous les défauts usine, si bien que l'attribut absent se lit
+  // 'unit_model' — indiscernable de « déjà migré ». La migration sautait l'unité,
+  // et unit_name() rendait '' faute de résoudre 'tonnes' dans le registre.
+  // Constaté sur MFAData\Clients\Pays Voironnais\Etude\Déchets.json.
+  test('unité héritée sur le style `default` SANS unit_type (fichier 1.1.5 réel)', () => {
+    const app = new Class_ApplicationData(false)
+    const sankey = app.drawing_area.sankey
+    const a = sankey.addNewNode('a', 'A')
+    const b = sankey.addNewNode('b', 'B')
+    sankey.addNewLink(a, b)
+    const json = app.toJSON() as Type_JSON
+
+    const def = (json['style'] as Type_JSON)['default'] as Record<string, unknown>
+    delete def['value_label_unit_type']
+    def['value_label_unit'] = 'tonnes'
+    def['value_label_unit_visible'] = true
+
+    const app2 = new Class_ApplicationData(false)
+    app2.fromJSON(deepClone(json) as never, {}, false)
+
+    const attrs2 = app2.drawing_area.sankey.default_style.attributes as unknown as { [k: string]: unknown }
+    expect(attrs2['value_label_unit']).toBe('mass_t')
+    // Ce que voit l'utilisateur : l'unité est de nouveau rendue sur le flux.
+    const link2 = app2.drawing_area.sankey.links_list[0] as unknown as { unit_name: (p: string) => string }
+    expect(link2.unit_name('value_label')).toBe('t')
+  })
 })
