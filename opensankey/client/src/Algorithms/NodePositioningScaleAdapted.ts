@@ -59,6 +59,33 @@ export class NodePositioningScaleAdapted {
   }
 
   /**
+   * #369 — Couple capturé du mode « échelle adaptée » (échelle de BASE + valeur de l'élément de
+   * référence), exposé pour la PERSISTANCE. Le mode étant désormais restitué à l'ouverture
+   * (cf. `positionModeOnLoad`), ce couple doit l'être aussi : le `user_scale` écrit dans le
+   * fichier est l'échelle ADAPTÉE au datatag courant (base × valeur_courante / valeur_réf), pas
+   * l'échelle de base. Le laisser recapturer au chargement prendrait donc l'échelle adaptée pour
+   * base et composerait le ratio une seconde fois au dessin suivant → le diagramme changerait de
+   * taille juste après l'ouverture. undefined tant que rien n'a été capturé (rien à écrire).
+   */
+  public get scaleAdaptedReference(): { scale: number, value: number } | undefined {
+    if (this._scale_adapted_ref_scale === undefined) return undefined
+    if (this._scale_adapted_ref_value === undefined) return undefined
+    return { scale: this._scale_adapted_ref_scale, value: this._scale_adapted_ref_value }
+  }
+
+  /**
+   * #369 — Restaure le couple capturé lu dans le fichier (cf. `scaleAdaptedReference`). Valeurs
+   * aberrantes ignorées : la capture paresseuse de `applyAdaptedScale` reprend alors la main
+   * (comportement d'un fichier antérieur, qui ne porte pas ces clés).
+   */
+  public restoreScaleReference(scale: number, value: number) {
+    if (!isFinite(scale) || scale <= 0) return
+    if (!isFinite(value) || value <= 0) return
+    this._scale_adapted_ref_scale = scale
+    this._scale_adapted_ref_value = value
+  }
+
+  /**
    * #1231 — Mode « échelle adaptée » : ajuste l'échelle (valeur→px) du diagramme pour que le
    * flux de référence garde sa taille de référence à tous les datatags. Appelé en tête de
    * `drawElements` avant `_sankey.draw()`. No-op sans flux de référence ou sans capture.
