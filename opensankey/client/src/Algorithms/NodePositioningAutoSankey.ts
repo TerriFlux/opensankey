@@ -120,7 +120,17 @@ export class NodePositioningAutoSankey {
         if (u > max_horizontal_index) max_horizontal_index = u
       })
       // Mark recycling links — préserver les liens verrouillés par l'utilisateur.
-      this.np.cycles.markRecyclingLinks(nodes_to_process, horizontal_indexes_per_nodes_ids)
+      // `position_u` est l'axe de PROGRESSION du flux, pas un axe d'écran : il ordonne le
+      // diagramme quelle que soit son orientation de rendu. On le passe donc aussi comme jeu
+      // de rangées, pour que les flux 'vv' soient jugés dessus plutôt que laissés de côté
+      // (le choix d'axe de markRecyclingLinks vise le recalcul après un drag, qui raisonne
+      // lui sur les x/y bruts). Les flux mixtes 'hv'/'vh' restent hors du recalcul.
+      this.np.cycles.markRecyclingLinks(
+        nodes_to_process,
+        horizontal_indexes_per_nodes_ids,
+        undefined,
+        horizontal_indexes_per_nodes_ids
+      )
     } else {
       // ÉTAPES 1, 2 et 2 bis : socle commun avec `position_u` (opensankey#1253).
       // Amorçage (dont les liens recyclage forcés par l'utilisateur, que le DFS considère déjà

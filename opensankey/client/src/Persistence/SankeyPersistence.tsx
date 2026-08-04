@@ -2020,6 +2020,10 @@ export class DrawingAreaPersistence {
     // Mode de représentation import/export (proche / haut-bas) : persisté car les nœuds
     // import/export siblings sont régénérés au chargement (cf. SplitIOrE).
     if (drawing_area.import_export_above_below) json_object['import_export_above_below'] = true
+    // #153 — Recalcul auto du statut recyclage après un déplacement de nœud. Défaut `true`
+    // (comportement historique) → sérialisé seulement s'il est désactivé : l'absence de la clé
+    // vaut « auto », y compris pour les fichiers antérieurs.
+    if (!drawing_area.application_data.layout_auto_recycling) json_object['layout_auto_recycling'] = false
     // Datatag de référence du mode % (couple flux/datatag). Le flux de réf est persisté
     // via l'attribut de lien `shape_is_reference_flux` ; le MODE lui-même n'est PAS persisté.
     {
@@ -2386,6 +2390,8 @@ export class DrawingAreaPersistence {
     // OS#1315 — Ancrage du cadrage : champ direct (le setter notifie la barre d'outils).
     drawing_area['_fit_anchor'] = getStringFromJSON(json_object, 'fit_anchor', 'center') as Type_FitAnchor
     drawing_area['_import_export_above_below'] = getBooleanFromJSON(json_object, 'import_export_above_below', false)
+    // #153 — Cf. toJSON : clé écrite seulement quand l'utilisateur a figé le recyclage.
+    drawing_area.application_data.layout_auto_recycling = getBooleanFromJSON(json_object, 'layout_auto_recycling', true)
 
     drawing_area.application_data.language = getStringOrUndefinedFromJSON(json_object, 'language')
     drawing_area['_color'] = getStringFromJSON(json_object, 'couleur_fond_sankey', drawing_area.color)

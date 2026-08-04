@@ -149,23 +149,55 @@ export class NodePositioningCyclesCore {
   }
 
   /**
-   * Reflague `shape_is_recycling` d'apres des colonnes deja connues : un flux est en recyclage
-   * s'il ne progresse pas vers la droite (colonne cible <= colonne source). Le verrouillage
-   * tri-state de l'utilisateur (OpenSankey#711) prime toujours sur la geometrie.
+   * Bandes sur lesquelles juger la progression de `link` d'apres son orientation, ou `undefined`
+   * quand la question n'a pas de sens ('hv'/'vh', ou 'vv' sans rangees fournies). Cf.
+   * `markRecyclingLinks` pour la regle. Une orientation absente vaut 'hh' (defaut historique).
+   */
+  private progressionIndexes(
+    link: Class_LinkElement,
+    horizontal_indexes: { [node_id: string]: number },
+    vertical_indexes?: { [node_id: string]: number }
+  ): { [node_id: string]: number } | undefined {
+    const orientation = link.shape_orientation
+    if (orientation === 'vv') return vertical_indexes
+    if (orientation === 'hv' || orientation === 'vh') return undefined
+    return horizontal_indexes
+  }
+
+  /**
+   * Reflague `shape_is_recycling` d'apres des bandes deja connues : un flux est en recyclage
+   * s'il RECULE, c'est-a-dire si sa cible est STRICTEMENT en amont de sa source SUR SON PROPRE
+   * AXE. Un flux dont les deux extremites partagent une bande n'est PAS du recyclage : le rendu
+   * en boucle n'y apporte rien et le declenchement etait trop sensible — la tolerance de
+   * `clusterNodesByAxis` suffit a faire entrer un noeud deplace dans la bande de sa cible. Le
+   * verrouillage tri-state de l'utilisateur (OpenSankey#711) prime toujours sur la geometrie.
+   *
+   * AXE PAR FLUX (`shape_orientation`) :
+   *  - 'hh' (ou orientation absente)  → colonnes `horizontal_indexes` : reculer = aller a gauche ;
+   *  - 'vv'                           → rangees `vertical_indexes` : reculer = remonter ;
+   *  - 'hv' / 'vh'                    → RIEN. Un flux mixte part sur un axe et arrive sur l'autre :
+   *    aucune des deux comparaisons ne decrit sa progression, et trancher revenait a inventer un
+   *    critere. Son statut est laisse tel quel (a l'utilisateur de le poser via le verrou #711).
+   *
+   * Sans cette distinction, un diagramme vertical voyait chacun de ses flux bascule en recyclage
+   * des qu'il descendait en biais vers la gauche, alors qu'il progresse normalement vers le bas.
    *
    * Utilise par la branche `skip_horizontal` de computeAutoSankey (colonnes issues de position_u)
-   * et par le recalcul incremental apres un deplacement de noeud (sankeyapplication#153, colonnes
-   * deduites des x). Les noeuds hors `horizontal_indexes` (echange) ne contraignent rien.
+   * et par le recalcul incremental apres un deplacement de noeud (sankeyapplication#153, bandes
+   * deduites des x/y). Les noeuds hors des index (echange) ne contraignent rien.
    *
    * @param only_touching_nodes Si fourni, seuls les flux dont la source OU la cible est dans cet
    * ensemble sont reflagues ; les autres gardent leur statut (un flux arriere voulu loin du drag
-   * ne doit pas basculer parce que les colonnes globales ont bouge).
+   * ne doit pas basculer parce que les bandes globales ont bouge).
+   * @param vertical_indexes Rangees deduites des y. Absent ⇒ les flux 'vv' sont laisses tels
+   * quels, comme les mixtes (l'appelant ne raisonne alors que sur l'axe horizontal).
    * @returns pour chaque lien dont le statut a CHANGE, sa valeur precedente (utile a l'undo).
    */
   public markRecyclingLinks(
     nodes_to_process: Class_NodeElement[],
     horizontal_indexes: { [node_id: string]: number },
-    only_touching_nodes?: Set<string>
+    only_touching_nodes?: Set<string>,
+    vertical_indexes?: { [node_id: string]: number }
   ): { [link_id: string]: boolean } {
     const forced = this.user_forced_recycling_link_ids
     const forbidden = this.user_forbidden_recycling_link_ids
@@ -178,7 +210,6 @@ export class NodePositioningCyclesCore {
     }
 
     nodes_to_process.forEach(node => {
-      const node_index = horizontal_indexes[node.id]
       node.output_links_list.forEach(link => {
         const link_data = this.drawingArea.sankey.links_dict[link.id]
         if (link_data === undefined) return
@@ -190,11 +221,15 @@ export class NodePositioningCyclesCore {
         if (forced.has(link.id)) return assign(link_data, true)
         if (forbidden.has(link.id)) return assign(link_data, false)
 
-        // Extremite sans colonne (noeud d'echange) : jamais du recyclage. C'est deja ce que
+        const indexes = this.progressionIndexes(link_data, horizontal_indexes, vertical_indexes)
+        if (indexes === undefined) return // flux mixte 'hv'/'vh' : statut laisse tel quel
+
+        // Extremite sans bande (noeud d'echange) : jamais du recyclage. C'est deja ce que
         // pose splitTrade a la creation du noeud d'echange.
-        const target_index = horizontal_indexes[link_data.target.id]
+        const node_index = indexes[node.id]
+        const target_index = indexes[link_data.target.id]
         if (target_index === undefined || node_index === undefined) return assign(link_data, false)
-        assign(link_data, node_index >= target_index)
+        assign(link_data, node_index > target_index)
       })
     })
 
@@ -205,22 +240,29 @@ export class NodePositioningCyclesCore {
    * Verrouille (tristate OpenSankey#711) les flux dont le statut recyclage CHARGE diverge de ce
    * que la geometrie calculerait : le fichier fait foi, la detection auto ne doit jamais
    * rebasculer un flux arriere voulu par l'auteur (sankeyapplication#153). Appele apres le
-   * chargement d'un fichier qui contient une geometrie. Les flux deja verrouilles sont ignores.
+   * chargement d'un fichier qui contient une geometrie. Les flux deja verrouilles sont ignores,
+   * ainsi que les flux mixtes 'hv'/'vh', que le recalcul ne touche de toute facon jamais.
    *
    * @returns les ids des flux verrouilles par la passe.
    */
   public lockRecyclingStatusDivergences(
     nodes_to_process: Class_NodeElement[],
-    horizontal_indexes: { [node_id: string]: number }
+    horizontal_indexes: { [node_id: string]: number },
+    vertical_indexes?: { [node_id: string]: number }
   ): string[] {
     const locked: string[] = []
     nodes_to_process.forEach(node => {
-      const node_index = horizontal_indexes[node.id]
       node.output_links_list.forEach(link => {
         const link_data = this.drawingArea.sankey.links_dict[link.id]
         if (link_data === undefined || link_data.shape_is_recycling_locked === true) return
-        const target_index = horizontal_indexes[link_data.target.id]
-        const geometric = node_index !== undefined && target_index !== undefined && node_index >= target_index
+        // Meme axe et meme critere (strict) que markRecyclingLinks : les deux doivent rester
+        // d'accord, sinon le chargement verrouillerait des flux que le recalcul n'aurait de
+        // toute facon pas touches.
+        const indexes = this.progressionIndexes(link_data, horizontal_indexes, vertical_indexes)
+        if (indexes === undefined) return
+        const node_index = indexes[node.id]
+        const target_index = indexes[link_data.target.id]
+        const geometric = node_index !== undefined && target_index !== undefined && node_index > target_index
         if (link_data.shape_is_recycling !== geometric) {
           link_data.shape_is_recycling_locked = true
           locked.push(link_data.id)

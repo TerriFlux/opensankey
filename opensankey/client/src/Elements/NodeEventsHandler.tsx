@@ -611,9 +611,16 @@ export class NodeEventsHandler {
       // Le marquage est restreint aux flux dont une extrémité a été déplacée : les colonnes
       // globales bougent avec l'ordinal du nœud, mais reflaguer tout le diagramme faisait
       // basculer des flux arrière voulus loin du drag. Ceux-là gardent leur statut.
+      //
+      // Le mode « Réorganisation auto » du nœud (`shape_io_reorg_mode`, menu « Ordre des flux
+      // E/S ») commande AUSSI ce reflaguage : 'none' = l'appli ne réarrange rien toute seule
+      // autour de ce nœud, ni l'ordre des E/S (cf. reorganizeIOLinks) ni le statut recyclage de
+      // ses flux. Sans ce garde-fou, un diagramme volontairement libre (disposition radiale, x
+      // sans sémantique) voyait tout flux tiré vers la gauche basculer en boucle de recyclage.
       const moved_node_ids = new Set(Object.keys(dict_old_pos).filter(id => {
         const n = (drawing_area.sankey.nodes_dict[id] ?? drawing_area.sankey.containers_dict[id]) as Class_NodeBase | undefined
-        return n !== undefined && (n.position_x !== dict_old_pos[id][0] || n.position_y !== dict_old_pos[id][1])
+        if (n === undefined || n.shape_io_reorg_mode === 'none') return false
+        return n.position_x !== dict_old_pos[id][0] || n.position_y !== dict_old_pos[id][1]
       }))
       const dict_old_recycling = drawing_area.application_data.layout_auto_recycling && moved_node_ids.size > 0
         ? drawing_area.nodePositioning.updateRecyclingFromPositions(moved_node_ids)

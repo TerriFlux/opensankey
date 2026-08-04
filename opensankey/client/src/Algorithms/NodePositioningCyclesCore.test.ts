@@ -13,7 +13,9 @@ type Edge = {
   /** Topologie structurelle : un flux à 0 reste traversé, un flux masqué ne l'est pas. */
   structural?: boolean,
   /** Verrouillage tri-state du statut recyclage (OpenSankey#711). */
-  forced_recycling?: boolean
+  forced_recycling?: boolean,
+  /** Axe de progression du flux. Absent ⇒ 'hh' (défaut historique du socle). */
+  orientation?: 'hh' | 'vv' | 'hv' | 'vh'
 }
 
 /** Sous-ensemble de Class_NodeElement/Class_LinkElement réellement lu par le socle. */
@@ -23,7 +25,8 @@ type MockLink = {
   target: MockNode,
   is_visible_ignoring_zero: boolean,
   shape_is_recycling_locked: boolean,
-  shape_is_recycling: boolean
+  shape_is_recycling: boolean,
+  shape_orientation: 'hh' | 'vv' | 'hv' | 'vh'
 }
 
 type MockNode = {
@@ -66,7 +69,8 @@ function buildGraph(node_ids: string[], edges: Edge[]): Graph {
       target: nodes_dict[edge.to],
       is_visible_ignoring_zero: edge.structural !== false,
       shape_is_recycling_locked: edge.forced_recycling === true,
-      shape_is_recycling: edge.forced_recycling === true
+      shape_is_recycling: edge.forced_recycling === true,
+      shape_orientation: edge.orientation ?? 'hh'
     }
     links_dict[id] = link
     nodes_dict[edge.from].output_links_list.push(link)
@@ -210,10 +214,21 @@ describe('#153 markRecyclingLinks — reflaguage d\'apres les colonnes', () => {
     expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(false)
   })
 
-  it('flague un flux dont la cible est dans la meme colonne', () => {
+  it('ne flague PAS un flux dont la cible est dans la meme colonne', () => {
+    // Critere strict : seul un flux qui RECULE est du recyclage. Un flux vertical (memes
+    // colonnes) ne gagne rien au rendu en boucle, et la tolerance de clusterNodesByX suffit
+    // a faire entrer un noeud deplace dans la colonne de sa cible.
     const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B' }])
     columns(g, { A: 1, B: 1 })
-    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(true)
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(false)
+  })
+
+  it('deflague un flux devenu vertical (meme colonne apres deplacement)', () => {
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B' }])
+    g.node('A').output_links_list[0].shape_is_recycling = true
+    const previous = g.core.markRecyclingLinks(g.nodes, { A: 1, B: 1 })
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(false)
+    expect(previous).toEqual({ 'A->B': true })
   })
 
   it('rend les valeurs precedentes des seuls flux modifies (undo)', () => {
@@ -256,6 +271,58 @@ describe('#153 markRecyclingLinks — reflaguage d\'apres les colonnes', () => {
   })
 })
 
+describe('markRecyclingLinks — axe de progression par orientation de flux', () => {
+  const COLS = { A: 2, B: 0 } // A a DROITE de B : recule sur x
+  const ROWS = { A: 0, B: 1 } // A au DESSUS de B : progresse sur y
+
+  it('juge un flux vertical sur les rangees, pas sur les colonnes', () => {
+    // Le cas du diagramme vertical : le flux descend (donc progresse) tout en partant vers la
+    // gauche. Juge sur x il basculait en recyclage ; juge sur y il n'en est pas.
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B', orientation: 'vv' }])
+    g.core.markRecyclingLinks(g.nodes, COLS, undefined, ROWS)
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(false)
+  })
+
+  it('flague un flux vertical qui remonte vraiment', () => {
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B', orientation: 'vv' }])
+    g.core.markRecyclingLinks(g.nodes, { A: 0, B: 1 }, undefined, { A: 2, B: 0 })
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(true)
+  })
+
+  it('juge un flux horizontal sur les colonnes meme quand des rangees sont fournies', () => {
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B', orientation: 'hh' }])
+    g.core.markRecyclingLinks(g.nodes, COLS, undefined, ROWS)
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(true)
+  })
+
+  it('laisse un flux mixte hv/vh intact', () => {
+    // Aucune des deux comparaisons ne decrit sa progression : on ne tranche pas.
+    const g = buildGraph(['A', 'B', 'C', 'D'], [
+      { from: 'A', to: 'B', orientation: 'hv' },
+      { from: 'C', to: 'D', orientation: 'vh' }
+    ])
+    g.node('C').output_links_list[0].shape_is_recycling = true
+    const previous = g.core.markRecyclingLinks(g.nodes,
+      { A: 2, B: 0, C: 2, D: 0 }, undefined, { A: 2, B: 0, C: 2, D: 0 })
+    expect(previous).toEqual({}) // rien n'a change
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(false)
+    expect(g.node('C').output_links_list[0].shape_is_recycling).toBe(true)
+  })
+
+  it('laisse un flux vertical intact quand aucune rangee n\'est fournie', () => {
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B', orientation: 'vv' }])
+    expect(g.core.markRecyclingLinks(g.nodes, COLS)).toEqual({})
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(false)
+  })
+
+  it('le verrou utilisateur prime, quelle que soit l\'orientation', () => {
+    const g = buildGraph(['A', 'B'],
+      [{ from: 'A', to: 'B', orientation: 'hv', forced_recycling: true }])
+    g.core.markRecyclingLinks(g.nodes, { A: 0, B: 1 }, undefined, { A: 0, B: 1 })
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(true)
+  })
+})
+
 describe('#153 lockRecyclingStatusDivergences — passe post-chargement', () => {
   it('verrouille un flux arriere sauve non-recyclage sans changer sa valeur', () => {
     // La geometrie donnerait recyclage (A a droite de B) mais le fichier dit non-recyclage :
@@ -287,6 +354,28 @@ describe('#153 lockRecyclingStatusDivergences — passe post-chargement', () => 
     const locked = g.core.lockRecyclingStatusDivergences(g.nodes, { A: 0, B: 1 })
     expect(locked).toEqual([])
     expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(true)
+  })
+
+  it('ne verrouille pas un flux vertical sauve non-recyclage', () => {
+    // Meme critere strict que markRecyclingLinks : memes colonnes ⇒ pas de recyclage
+    // geometrique, donc aucune divergence a verrouiller.
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B' }])
+    expect(g.core.lockRecyclingStatusDivergences(g.nodes, { A: 1, B: 1 })).toEqual([])
+    expect(g.node('A').output_links_list[0].shape_is_recycling_locked).toBe(false)
+  })
+
+  it('juge un flux vertical sur les rangees', () => {
+    // Sauve non-recyclage, et la geometrie VERTICALE le donne aussi non-recyclage (il descend) :
+    // aucune divergence, donc pas de verrou — alors que les colonnes le diraient en recyclage.
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B', orientation: 'vv' }])
+    expect(g.core.lockRecyclingStatusDivergences(g.nodes, { A: 2, B: 0 }, { A: 0, B: 1 })).toEqual([])
+    expect(g.node('A').output_links_list[0].shape_is_recycling_locked).toBe(false)
+  })
+
+  it('ne verrouille jamais un flux mixte hv/vh', () => {
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B', orientation: 'vh' }])
+    expect(g.core.lockRecyclingStatusDivergences(g.nodes, { A: 2, B: 0 }, { A: 2, B: 0 })).toEqual([])
+    expect(g.node('A').output_links_list[0].shape_is_recycling_locked).toBe(false)
   })
 
   it('est idempotente (second passage sans effet)', () => {
