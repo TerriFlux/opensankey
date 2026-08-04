@@ -22,7 +22,7 @@ export interface SankeyGlobals {
   // Layout / chrome
   topbar?: boolean       // default true
   footer?: boolean       // default false
-  toolbar?: boolean      // default false : sélecteur du mode d'affichage (absolu/proportionnel/échelle) auprès des data tags (panneau Filtres + topbar)
+  toolbar?: boolean      // default false : sélecteur du mode d'affichage (absolu/proportionnel/échelle) auprès des data tags (panneau Filtres + topbar + timeline « Séquence », cf. #370)
   fit_toolbar?: boolean  // default false : groupe ajustement/verrous/plein écran dans la barre du bas
   fullscreen?: boolean   // default true : bouton plein écran isolé en publish, même quand `fit_toolbar` est masqué
   filter_bar?: boolean   // default true : barre de filtres à gauche (drawer)
