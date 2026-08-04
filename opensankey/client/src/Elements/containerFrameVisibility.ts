@@ -34,6 +34,13 @@ export const isContainerFrame = (
  * Le critère porte sur les ENFANTS, jamais sur les flux propres du cadre : en mode
  * `in_children_out_children` le parent est une enveloppe pure, dont les flux — quand
  * il en a — sont de toute façon tous masqués par le mode englobant.
+ *
+ * C'est le pivot des DEUX décisions, exactement complémentaires (#368) :
+ * — faux → `containerFrameIsEmptied` masque le cadre (#364, soustractif) ;
+ * — vrai → `Class_NodeElement.is_visible_as_container_frame` le dessine quels que
+ *   soient ses flux propres (#368, additif).
+ * Un cadre n'a donc plus rien à devoir à ses propres flux, dans un sens comme dans
+ * l'autre — seule la règle orphelin reste au-dessus, comme levier manuel.
  */
 export const hasVisibleFrameMember = (
   dims: Type_ContainerFrameDim[]
