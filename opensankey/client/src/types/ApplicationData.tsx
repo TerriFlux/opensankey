@@ -1113,9 +1113,33 @@ export class Class_ApplicationData {
     if (this._language !== undefined && i18next.language !== this.language)
       i18next.changeLanguage(this.language)
 
+    this._applyDimensionsPositionModeOnLoad()
+
     // ?. : _afterFromJSON peut s'exécuter avant que menu_configuration soit prêt
     // (course à l'auto-chargement au montage en mode publish) — cf. l. 610. (#196)
     this.menu_configuration?.updateAllMenuComponents()
+  }
+
+  /**
+   * #370 — Restitue à l'ouverture le mode d'affichage porté par les dimensions.
+   *
+   * Le mode n'est plus un réglage global : il vit sur chaque dimension et s'impose au
+   * dessin quand on agit sur elle. À l'ouverture, personne n'a encore agi — mais un
+   * fichier enregistré en « échelle adaptée » doit se rouvrir tel quel (c'était l'objet
+   * du #369), et un diagramme publié doit être livré dans son mode.
+   *
+   * Règle : la PREMIÈRE dimension (dans l'ordre des groupes) portant un mode autre
+   * qu'« absolu » impose le sien. Le cas courant — une seule dimension réglée — est donc
+   * exact ; avec plusieurs, l'ordre des groupes tranche, faute d'une notion de « dernière
+   * dimension manipulée » qui, elle, n'aurait aucun sens à la réouverture.
+   *
+   * Une option de publication `position_mode` reste prioritaire : elle s'applique plus
+   * tard, dans `applyPublishStateOptions`.
+   */
+  protected _applyDimensionsPositionModeOnLoad(): void {
+    const carrier = this._drawing_area.sankey.data_taggs_list
+      .find(tagg => tagg.position_mode !== 'absolute')
+    carrier?.applyPositionModeToDrawing()
   }
 
   /**

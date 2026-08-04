@@ -22,7 +22,7 @@ export interface SankeyGlobals {
   // Layout / chrome
   topbar?: boolean       // default true
   footer?: boolean       // default false
-  toolbar?: boolean      // default false : sélecteur du mode d'affichage (absolu/proportionnel/échelle) auprès des data tags (panneau Filtres + topbar + timeline « Séquence », cf. #370)
+  toolbar?: boolean      // default false : sélecteurs du mode d'affichage (absolu/proportionnel/échelle) — un par dimension, sur chacun de ses hôtes : ligne du panneau Filtres, topbar, frise de séquence (cf. #370)
   fit_toolbar?: boolean  // default false : groupe ajustement/verrous/plein écran dans la barre du bas
   fullscreen?: boolean   // default true : bouton plein écran isolé en publish, même quand `fit_toolbar` est masqué
   filter_bar?: boolean   // default true : barre de filtres à gauche (drawer)
@@ -121,8 +121,15 @@ declare global {
 const bool = (v: unknown, def: boolean): boolean => (typeof v === 'boolean' ? v : def)
 const str = (v: unknown): string | null => (typeof v === 'string' ? v : null)
 const POSITION_MODES: Type_PositionMode[] = ['absolute', 'proportional', 'scale_adapted']
-const posMode = (v: unknown): Type_PositionMode | null =>
-  (typeof v === 'string' && (POSITION_MODES as string[]).includes(v)) ? v as Type_PositionMode : null
+/**
+ * #370 — Garde de type des trois modes proposés par le sélecteur. Exporté depuis que le
+ * mode est porté par chaque dimension (`Class_DataTagGroup.position_mode`) et relu d'un
+ * fichier : une valeur inconnue, ou l'ancien mode hérité `parametric`, doit être rejetée
+ * plutôt que castée à l'aveugle.
+ */
+export const isPositionMode = (v: unknown): v is Type_PositionMode =>
+  typeof v === 'string' && (POSITION_MODES as string[]).includes(v)
+const posMode = (v: unknown): Type_PositionMode | null => (isPositionMode(v) ? v : null)
 const strRecord = (v: unknown): Record<string, string> | null => {
   if (!v || typeof v !== 'object' || Array.isArray(v)) return null
   const out: Record<string, string> = {}
