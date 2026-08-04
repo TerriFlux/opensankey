@@ -37,6 +37,7 @@ import { Class_BaseShape } from './Element'
 import { NodeEventsHandler } from './NodeEventsHandler'
 import { isLegendElementId } from './legendIds'
 import { applyTemplate, resolveTagGroupToken } from './LabelTemplate'
+import { tiedFrameRefitLeft } from './tiedFrameRefit'
 
 export const default_selected_stroke_width = 3
 //export const label_margin = 0
@@ -850,6 +851,48 @@ export abstract class Class_NodeBase extends Class_BaseShape {
       if (mx !== m.position_x || my !== m.position_y) { m.position_x = mx; m.position_y = my; changed = true }
       if (changed) { m.settleCenterAnchor(); m.draw() }
     })
+  }
+
+  /**
+   * #363 — Recale le bord GAUCHE du cadre sur l'enveloppe LABELS INCLUS de ses
+   * membres. La TAILLE du cadre est déjà label-incluse
+   * (`_envelopeSize` lit le `getBBox()` du SVG), mais son coin ne l'était qu'en
+   * fin de drag (`expandToContainAttachedNodes`) : un fichier dont les libellés
+   * de nœuds débordent à gauche (`name_label_horiz: 'left'` +
+   * `name_label_inside_horiz: false`) s'ouvrait donc avec un cadre de la bonne
+   * largeur mais TRANSLATÉ vers la droite du débord — il entourait les formes,
+   * pas les libellés — jusqu'au premier clic sur un membre.
+   *
+   * HORIZONTAL seulement, à dessein : le bord haut d'un cadre appartient au mode
+   * de positionnement actif, qui le réécrit à chaque dessin (empilement de
+   * colonne par `anchorParametricNodesToAbsolute`, ancre de centre par
+   * `anchorByCenterIfResized`). Le corriger ici le ferait osciller d'un dessin au
+   * suivant, et comme le ré-empilement des enfants (`restackContainerChildren`,
+   * Phase C de `recomputeParametricLayout`) s'ancre sur le haut du cadre, chaque
+   * passe ferait remonter la pile d'un débord de libellé — dérive sans fin. Rien,
+   * en revanche, ne réécrit le x d'un cadre : la correction y est stable.
+   *
+   * À appeler APRÈS le dessin : le débord des libellés n'entre dans le
+   * `getBBox()` qu'une fois ceux-ci rendus.
+   *
+   * @returns true si le coin a bougé — au caller de redessiner le cadre.
+   */
+  public refitTiedFrameToLabels(): boolean {
+    if (!this._tied_to_nodes || this._attached_node.length === 0) return false
+    const bbox = this._computeEnvelopeBBox(this._attached_node)
+    if (!bbox) return false
+    // Décision isolée en fonction pure (testable sans d3/DOM) : cf. tiedFrameRefit.
+    const new_left = tiedFrameRefitLeft({
+      current_left: this.position_x + this.shape_margin_left,
+      envelope_min_x: bbox.min_x,
+      envelope_max_x: bbox.max_x,
+      margin_left: this.shape_margin_left,
+      margin_right: this.shape_margin_right,
+      shape_min_width: this.shape_min_width,
+    })
+    if (new_left === null) return false
+    this.position_x = new_left - this.shape_margin_left
+    return true
   }
 
   // Full re-fit of the top-left onto the attached-node envelope (grows AND
