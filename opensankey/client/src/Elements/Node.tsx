@@ -33,6 +33,7 @@ import {
 import { Class_Handler } from './Handler'
 import { reorganizeIOOrder } from './reorganizeIOOrder'
 import { orderIOByGeometry, recyclingBellyCentre, bundleTie, Type_IOGeo } from './ioOrderGeometry'
+import { containerFrameIsEmptied } from './containerFrameVisibility'
 import { format_value, Type_JSON } from '../types/Utils'
 import { default_element_color, NameLabelAttributeTypes } from './ElementsAttributesConfig'
 import { resolveAssignedTagToken } from './LabelTemplate'
@@ -2439,6 +2440,13 @@ export class Class_NodeElement extends Class_NodeBase {
 
   private get orphan_visible() {
     if (this.visible_input_links_list.length + this.visible_output_links_list.length == 0) {
+      // #364 — Cadre englobant vidé par la sélection courante : un parent en
+      // `container_mode` est une ENVELOPPE, pas un nœud à part entière. Il n'a
+      // aucun flux visible par construction (ceux qu'il porte sont masqués par le
+      // mode englobant) et tombait donc dans la règle orphelin ci-dessous, qui le
+      // gardait affiché — vide et étiqueté — même quand la sélection de dataTags
+      // ne laisse aucun de ses membres visible. Le critère porte sur les ENFANTS.
+      if (containerFrameIsEmptied(this.dimensions_as_parent)) return false
       // Option globale « Nœuds orphelins » (drawing_area) OU override par-nœud
       // (shape_orphan_node_visible) : un nœud sans lien visible reste affiché.
       if (this.shape_orphan_node_visible || this.drawing_area.show_orphan_nodes) return true
