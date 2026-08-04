@@ -84,6 +84,25 @@ export class NodePositioning {
   public readonly proportional: NodePositioningProportional
   private _parametric: NodePositioningParametric
 
+  // #366 — Haut de RÉFÉRENCE de chaque colonne (`position_u`), pour l'empilement en écartement :
+  // c'est là que se cale la TÊTE de la colonne. Mémorisé au premier empilement sur la
+  // disposition de l'auteur puis gardé fixe, c'est ce qui garde deux colonnes alignées par le
+  // haut quand la sélection de data tags change la taille de leurs nœuds de tête, et ce qui fait
+  // remonter une colonne dont la tête vient d'être masquée. Transitoire, jamais persisté : le
+  // fichier garde la disposition de l'auteur, l'empilement est un affichage. Oublié à chaque
+  // déplacement à la souris, cf. `clearColumnTops`.
+  private _column_top = new Map<number, number>()
+
+  /**
+   * #366 — Oublie les hauts de colonne mémorisés : la disposition courante refera référence au
+   * prochain empilement. À appeler quand l'utilisateur repose lui-même les positions (fin de
+   * drag), sans quoi une tête de colonne déplacée serait rappelée à son ancien haut.
+   */
+  public clearColumnTops() { this._column_top.clear() }
+
+  /** #366 — Hauts de colonne mémorisés (lecture, pour les tests et le diagnostic). */
+  public get columnTops(): ReadonlyMap<number, number> { return this._column_top }
+
   constructor(drawingArea: Class_DrawingArea) {
     this.drawingArea = drawingArea
     this.cycles = new NodePositioningCyclesCore(drawingArea)
@@ -232,9 +251,11 @@ export class NodePositioning {
    * d'ancre) ou un parametric déjà calé → une pile de parametrics pend sous l'ancre
    * absolue.
    *
-   * Le premier nœud d'une colonne, s'il est `parametric`, n'a pas de nœud au-dessus :
-   * il conserve la position que le mode global vient de lui donner (repli
-   * proportionnel/absolu courant).
+   * Le premier nœud d'une colonne, s'il est `parametric`, se cale sur le HAUT DE COLONNE,
+   * mémorisé au premier passage et gardé fixe ensuite (cf. `_column_top`) : sans quoi il garde
+   * son propre CENTRE, et deux colonnes posées à la même hauteur se désalignent dès que leurs
+   * nœuds de tête changent de taille. C'est aussi ce qui fait remonter la colonne quand c'est
+   * sa TÊTE qui disparaît — le suivant prend le haut.
    *
    * À appeler en fin de placement global, AVANT `_sankey.draw()`. À NE PAS appeler en
    * mode global `parametric` (recomputeParametricLayout empile déjà la colonne entière).
@@ -270,6 +291,21 @@ export class NodePositioning {
         if (a.position_v !== b.position_v) return a.position_v - b.position_v
         return a.position_y - b.position_y
       })
+      // #366 — Haut de colonne : la TÊTE en écartement s'y cale. Mémorisé au premier passage
+      // (le mode global vient de la placer : c'est la disposition de l'auteur), puis gardé fixe.
+      // Idempotent — l'empilement replace toujours une tête sur ce haut, donc re-mesurer redonne
+      // la même valeur. Un déplacement à la souris l'oublie (`clearColumnTops`) pour que la
+      // nouvelle disposition fasse foi.
+      const head = sorted[0]
+      if (head !== undefined && head.shape_position_type === 'parametric') {
+        const anchor = this._column_top.get(head.position_u)
+        if (anchor === undefined) {
+          this._column_top.set(head.position_u, head.position_y)
+        } else if (head.position_y !== anchor) {
+          head.position_y = anchor
+          head.applyPosition()
+        }
+      }
       let prev_bottom: number | null = null
       sorted.forEach(node => {
         if (node.shape_position_type === 'parametric' && prev_bottom !== null) {
