@@ -334,78 +334,118 @@ export class NodePositioningParametric {
    * #365 — la passe s'applique à tout cadre de premier niveau, **visible ou non** : c'est la
    * visibilité des FEUILLES qui compte, pas celle du cadre (cf. `containerRootsToRestack`).
    */
-  public restackContainerChildren() {
+  public restackContainerChildren(keeps: (leaf: Class_NodeElement) => boolean = () => false) {
     const mode = this.drawingArea.effective_gap_mode
     // 'keep' = les enfants conservent leur position_y manuelle → aucun ré-empilement.
     if (mode === 'keep') return
     const const_gap = this.drawingArea.disaggregation_gap_value
-    const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
 
-    const isContainerParent = (n: Class_NodeElement): boolean =>
-      n.dimensions_as_parent.some(d => d.container_mode)
-
-    const sortByV = (nodes: Class_NodeElement[]): Class_NodeElement[] =>
-      [...nodes].sort((a, b) =>
-        a.position_v !== b.position_v ? a.position_v - b.position_v : a.position_y - b.position_y)
-
-    // Enfants directs VISIBLES d'un cadre (dédupliqués sur les dims container_mode).
-    const directChildren = (container: Class_NodeElement): Class_NodeElement[] => {
-      const seen = new Set<Class_NodeElement>()
-      const children: Class_NodeElement[] = []
-      container.dimensions_as_parent
-        .filter(d => d.container_mode)
-        .forEach(dim => {
-          dim.children.forEach(child => {
-            const c = child as Class_NodeElement
-            if (seen.has(c)) return
-            seen.add(c)
-            if (!c.is_visible) return
-            if (echangeTag && c.hasGivenTag(echangeTag)) return
-            children.push(c)
-          })
-        })
-      return children
+    // Réancre les sous-cadres imbriqués (bottom-up) sur l'enveloppe de leurs feuilles.
+    const reanchorSubFrames = (container: Class_NodeElement) => {
+      this.containerDirectChildren(container).forEach(c => {
+        if (this.isContainerParent(c)) { reanchorSubFrames(c); c.reanchorTiedFrame() }
+      })
     }
 
-    // Feuilles visibles d'un cadre, dans l'ordre hiérarchique (DFS + tri par v) : on descend dans
-    // les sous-cadres et on ne renvoie QUE les vraies feuilles (pas les cadres eux-mêmes).
+    this.containerLeafChains().forEach(({ container, leaves }) => {
+      // Empilement uniforme des feuilles depuis le haut du cadre de premier niveau.
+      let cursor = container.position_y + container.shape_margin_top
+      leaves.forEach((leaf, i) => {
+        if (i > 0) cursor += Geometry.containerChildGap(leaf, mode, const_gap)
+        // #372 — une feuille RETENUE garde la position qu'on vient de lui poser à la souris et
+        // sert d'ancre au reste de la pile : c'est ce qui permet de mesurer son écart sur la
+        // position définitive de son prédécesseur, sans l'avoir d'abord effacée.
+        if (keeps(leaf)) cursor = leaf.position_y
+        else {
+          leaf.position_y = cursor
+          leaf.applyPosition()
+        }
+        cursor += leaf.getShapeHeightToUse()
+      })
+      // Le centre stocké de chaque feuille devient sa position empilée : sinon le prochain
+      // anchorByCenterIfResized (mode absolu) tenterait de restaurer un centre périmé.
+      leaves.forEach(l => l.captureCenterFromCorner())
+      // Les sous-cadres enveloppent leurs feuilles ; le cadre de premier niveau reste ancré.
+      reanchorSubFrames(container)
+    })
+  }
+
+  /**
+   * Les CHAÎNES d'empilement des cadres englobants : par cadre de premier niveau, ses feuilles
+   * visibles à plat, dans l'ordre hiérarchique (DFS + tri par v) — les sous-cadres eux-mêmes n'y
+   * figurent pas, seulement les vraies feuilles.
+   *
+   * SOURCE UNIQUE des deux sens de lecture, comme `parametricColumnChains` pour les colonnes :
+   * `restackContainerChildren` (écarts → positions) et `settleParametricStacksFromY` (positions →
+   * écarts) parcourent la même chaîne.
+   *
+   * #365 — sur TOUS les nœuds, pas seulement les visibles : un cadre englobant peut être masqué
+   * (sa visibilité suit ses flux propres) alors que ses membres sont dessinés, et ses enfants
+   * doivent être empilés quand même. Cf. `containerRootsToRestack`.
+   */
+  public containerLeafChains(): { container: Class_NodeElement, leaves: Class_NodeElement[] }[] {
     const leavesInOrder = (container: Class_NodeElement): Class_NodeElement[] => {
       const out: Class_NodeElement[] = []
-      sortByV(directChildren(container)).forEach(c => {
-        if (isContainerParent(c)) out.push(...leavesInOrder(c))
+      Geometry.sortStackMembers(this.containerDirectChildren(container)).forEach(c => {
+        if (this.isContainerParent(c)) out.push(...leavesInOrder(c))
         else out.push(c)
       })
       return out
     }
+    return Geometry.containerRootsToRestack(this.drawingArea.sankey.nodes_list)
+      .map(container => ({ container, leaves: leavesInOrder(container) }))
+      .filter(({ leaves }) => leaves.length > 0)
+  }
 
-    // Réancre les sous-cadres imbriqués (bottom-up) sur l'enveloppe de leurs feuilles.
-    const reanchorSubFrames = (container: Class_NodeElement) => {
-      directChildren(container).forEach(c => {
-        if (isContainerParent(c)) { reanchorSubFrames(c); c.reanchorTiedFrame() }
-      })
-    }
+  /** Cadre englobant : parent d'au moins une dimension en `container_mode`. */
+  public isContainerParent(n: Class_NodeElement): boolean {
+    return n.dimensions_as_parent.some(d => d.container_mode)
+  }
 
-    // #365 — sur TOUS les nœuds, pas seulement les visibles : un cadre englobant peut être
-    // masqué (sa visibilité suit ses flux propres) alors que ses membres sont dessinés, et ses
-    // enfants doivent être empilés quand même. Cf. containerRootsToRestack.
-    Geometry.containerRootsToRestack(this.drawingArea.sankey.nodes_list)
-      .forEach(container => {
-        const leaves = leavesInOrder(container)
-        if (leaves.length === 0) return
-        // Empilement uniforme des feuilles depuis le haut du cadre de premier niveau.
-        let cursor = container.position_y + container.shape_margin_top
-        leaves.forEach((leaf, i) => {
-          if (i > 0) cursor += Geometry.containerChildGap(leaf, mode, const_gap)
-          leaf.position_y = cursor
-          leaf.applyPosition()
-          cursor += leaf.getShapeHeightToUse()
+  /**
+   * Enfants directs VISIBLES d'un cadre englobant, dédupliqués sur les dimensions
+   * `container_mode` (nœuds « échange » écartés). Ordre du fichier, non trié.
+   */
+  public containerDirectChildren(container: Class_NodeElement): Class_NodeElement[] {
+    const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
+    const seen = new Set<Class_NodeElement>()
+    const children: Class_NodeElement[] = []
+    container.dimensions_as_parent
+      .filter(d => d.container_mode)
+      .forEach(dim => {
+        dim.children.forEach(child => {
+          const c = child as Class_NodeElement
+          if (seen.has(c)) return
+          seen.add(c)
+          if (!c.is_visible) return
+          if (echangeTag && c.hasGivenTag(echangeTag)) return
+          children.push(c)
         })
-        // Le centre stocké de chaque feuille devient sa position empilée : sinon le prochain
-        // anchorByCenterIfResized (mode absolu) tenterait de restaurer un centre périmé.
-        leaves.forEach(l => l.captureCenterFromCorner())
-        // Les sous-cadres enveloppent leurs feuilles ; le cadre de premier niveau reste ancré.
-        reanchorSubFrames(container)
       })
+    return children
+  }
+
+  /**
+   * #372 — GROUPES d'empilement des cadres englobants : les enfants directs visibles de chaque
+   * cadre (racine ET sous-cadres), déjà ordonnés comme la pile les parcourt. Un groupe par cadre
+   * — et non la liste à plat des feuilles — parce que c'est À L'INTÉRIEUR d'un cadre que l'ordre
+   * se relit : la collecte des feuilles de `restackContainerChildren` retrie cadre par cadre, si
+   * bien qu'un `position_v` permuté par-dessus la frontière d'un sous-cadre serait sans effet.
+   *
+   * Vide en mode d'écart 'keep' : les membres y gardent leur position posée à la main, il n'y a
+   * ni empilement à reproduire ni écart à régler.
+   */
+  public containerChildGroups(): Class_NodeElement[][] {
+    if (this.drawingArea.effective_gap_mode === 'keep') return []
+    const groups: Class_NodeElement[][] = []
+    const collect = (container: Class_NodeElement) => {
+      const children = this.containerDirectChildren(container)
+      if (children.length === 0) return
+      groups.push(Geometry.sortStackMembers(children))
+      children.forEach(c => { if (this.isContainerParent(c)) collect(c) })
+    }
+    Geometry.containerRootsToRestack(this.drawingArea.sankey.nodes_list).forEach(collect)
+    return groups
   }
 
   /**
