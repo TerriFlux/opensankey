@@ -470,7 +470,7 @@ export class NodePositioningParametric {
    */
   public inferPositionUFromX() {
     const dx = this.drawingArea.sankey.styles_dict['default'].shape_position_dx!
-    const clusters = this.clusterNodesByX()
+    const clusters = this.clusterNodesByAxis('x')
 
     // For each cluster, decide the u once, then apply to every non-locked
     // member. A cluster containing a u-locked node inherits its u; otherwise
@@ -506,33 +506,37 @@ export class NodePositioningParametric {
   }
 
   /**
-   * Regroupe les nœuds en colonnes d'après leur `position_x`, par fusion glissante : on trie par
-   * x puis on ouvre un nouveau cluster dès que l'écart au max-x du cluster courant dépasse la
-   * tolérance. C'est le max-x — et non le x de tête — qui est la bonne référence : une chaîne de
-   * nœuds distants deux à deux de moins que la tolérance forme une seule colonne, même si les
-   * extrêmes en sont plus éloignés.
+   * Regroupe les nœuds en bandes d'après leur position sur `axis`, par fusion glissante : on trie
+   * sur l'axe puis on ouvre un nouveau cluster dès que l'écart au max du cluster courant dépasse
+   * la tolérance. C'est le max — et non la valeur de tête — qui est la bonne référence : une
+   * chaîne de nœuds distants deux à deux de moins que la tolérance forme une seule bande, même si
+   * les extrêmes en sont plus éloignés.
    *
-   * Clusters retournés dans l'ordre croissant des x.
+   * Clusters retournés dans l'ordre croissant. `axis = 'x'` donne les COLONNES (diagramme
+   * horizontal), `axis = 'y'` les RANGÉES (diagramme vertical) ; la tolérance suit l'écart de
+   * référence du même axe (`shape_position_dx` / `dy` du style par défaut).
    */
-  private clusterNodesByX(): Class_NodeElement[][] {
-    const dx = this.drawingArea.sankey.styles_dict['default'].shape_position_dx!
-    const tolerance = Math.max(10, dx * 0.05)
+  private clusterNodesByAxis(axis: 'x' | 'y'): Class_NodeElement[][] {
+    const default_style = this.drawingArea.sankey.styles_dict['default']
+    const spacing = (axis === 'x' ? default_style.shape_position_dx : default_style.shape_position_dy)!
+    const tolerance = Math.max(10, spacing * 0.05)
+    const coord = (n: Class_NodeElement) => axis === 'x' ? n.position_x : n.position_y
 
     const eligible = this.nodesEligibleForColumns()
     if (eligible.length === 0) return []
 
-    const sorted = [...eligible].sort((a, b) => a.position_x - b.position_x)
+    const sorted = [...eligible].sort((a, b) => coord(a) - coord(b))
     const clusters: Class_NodeElement[][] = []
     let current: Class_NodeElement[] = []
-    let current_max_x = -Infinity
+    let current_max = -Infinity
     for (const node of sorted) {
-      if (current.length === 0 || node.position_x - current_max_x <= tolerance) {
+      if (current.length === 0 || coord(node) - current_max <= tolerance) {
         current.push(node)
-        if (node.position_x > current_max_x) current_max_x = node.position_x
+        if (coord(node) > current_max) current_max = coord(node)
       } else {
         clusters.push(current)
         current = [node]
-        current_max_x = node.position_x
+        current_max = coord(node)
       }
     }
     if (current.length > 0) clusters.push(current)
@@ -549,10 +553,25 @@ export class NodePositioningParametric {
    */
   public computeColumnsFromX(): { [node_id: string]: number } {
     const columns: { [node_id: string]: number } = {}
-    this.clusterNodesByX().forEach((cluster, index) => {
+    this.clusterNodesByAxis('x').forEach((cluster, index) => {
       cluster.forEach(node => { columns[node.id] = index })
     })
     return columns
+  }
+
+  /**
+   * Rangées ORDINALES (0, 1, 2…) déduites des `position_y` courants — pendant vertical de
+   * `computeColumnsFromX`. Ne mute rien.
+   *
+   * Sert au statut recyclage des flux VERTICAUX (`shape_orientation === 'vv'`), pour qui
+   * « reculer » veut dire remonter, pas aller vers la gauche.
+   */
+  public computeRowsFromY(): { [node_id: string]: number } {
+    const rows: { [node_id: string]: number } = {}
+    this.clusterNodesByAxis('y').forEach((cluster, index) => {
+      cluster.forEach(node => { rows[node.id] = index })
+    })
+    return rows
   }
 
   /**
@@ -569,7 +588,8 @@ export class NodePositioningParametric {
     return this.np.cycles.markRecyclingLinks(
       this.nodesEligibleForColumns(),
       this.computeColumnsFromX(),
-      only_touching_nodes
+      only_touching_nodes,
+      this.computeRowsFromY()
     )
   }
 
@@ -577,7 +597,8 @@ export class NodePositioningParametric {
   public lockRecyclingStatusDivergences(): string[] {
     return this.np.cycles.lockRecyclingStatusDivergences(
       this.nodesEligibleForColumns(),
-      this.computeColumnsFromX()
+      this.computeColumnsFromX(),
+      this.computeRowsFromY()
     )
   }
 

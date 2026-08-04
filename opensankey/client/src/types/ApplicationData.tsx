@@ -538,8 +538,12 @@ export class Class_ApplicationData {
    * sur un diagramme particulier dont l'utilisateur a réglé le recyclage à la main (le
    * verrou par flux reste de toute façon prioritaire sur la géométrie).
    *
-   * Ne déplace AUCUN nœud : une mise en page manuelle survit au recalcul. Mode de session,
-   * non persisté (comme layout_sources_mode / layout_optimize_crossing).
+   * Ne déplace AUCUN nœud : une mise en page manuelle survit au recalcul.
+   *
+   * PERSISTÉ (clé racine `layout_auto_recycling`, sérialisée seulement si `false`) — contrairement
+   * aux autres `layout_*`, qui sont des réglages de session du dialogue de mise en page auto :
+   * celui-ci décrit une propriété du diagramme (« ma disposition est libre, n'y touche pas »), et
+   * repartait à `true` à chaque rechargement, rendant le choix inopérant.
    */
   public layout_auto_recycling: boolean = true
 
