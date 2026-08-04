@@ -372,6 +372,35 @@ describe('#153 lockRecyclingStatusDivergences — passe post-chargement', () => 
     expect(g.node('A').output_links_list[0].shape_is_recycling_locked).toBe(false)
   })
 
+  it('guerit un flux vertical dont le statut vient de l\'ancienne regle', () => {
+    // Sauve en recyclage par la detection sur x (A a droite de B), alors qu'il descend :
+    // le statut s'explique entierement par l'ancienne regle ⇒ recalcule, PAS verrouille.
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B', orientation: 'vv' }])
+    g.node('A').output_links_list[0].shape_is_recycling = true
+    expect(g.core.lockRecyclingStatusDivergences(g.nodes, { A: 2, B: 0 }, { A: 0, B: 1 })).toEqual([])
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(false)
+    expect(g.node('A').output_links_list[0].shape_is_recycling_locked).toBe(false)
+  })
+
+  it('guerit un flux horizontal issu de la comparaison large (meme colonne)', () => {
+    // L'ancienne regle comptait une cible dans la MEME colonne comme un recul.
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B', orientation: 'hh' }])
+    g.node('A').output_links_list[0].shape_is_recycling = true
+    expect(g.core.lockRecyclingStatusDivergences(g.nodes, { A: 1, B: 1 }, { A: 1, B: 1 })).toEqual([])
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(false)
+    expect(g.node('A').output_links_list[0].shape_is_recycling_locked).toBe(false)
+  })
+
+  it('verrouille une divergence que l\'ancienne regle n\'explique pas', () => {
+    // Les DEUX regles donnent ce flux vertical en recyclage (il recule sur x comme sur y), mais
+    // le fichier le dit non-recyclage : aucune sequelle du bug ne l'explique, c'est un choix
+    // d'auteur ⇒ verrouille sans changer la valeur.
+    const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B', orientation: 'vv' }])
+    expect(g.core.lockRecyclingStatusDivergences(g.nodes, { A: 2, B: 0 }, { A: 2, B: 0 })).toEqual(['A->B'])
+    expect(g.node('A').output_links_list[0].shape_is_recycling).toBe(false)
+    expect(g.node('A').output_links_list[0].shape_is_recycling_locked).toBe(true)
+  })
+
   it('ne verrouille jamais un flux mixte hv/vh', () => {
     const g = buildGraph(['A', 'B'], [{ from: 'A', to: 'B', orientation: 'vh' }])
     expect(g.core.lockRecyclingStatusDivergences(g.nodes, { A: 2, B: 0 }, { A: 2, B: 0 })).toEqual([])

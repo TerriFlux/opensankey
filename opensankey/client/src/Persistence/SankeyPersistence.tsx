@@ -769,9 +769,16 @@ export class LinkElementPersistence extends ProtoElementPersistence {
     // au tristate (locked + value), il faut promouvoir ces flux à locked=true
     // sinon ils reviendraient en mode auto et seraient potentiellement
     // recalculés par le DFS comme non-recyclage.
+    //
+    // RÉSERVÉE AUX FICHIERS LEGACY (drapeau posé par SankeyPersistence.fromJSON). Sans cette
+    // garde elle s'appliquait à TOUT fichier : or dans un fichier moderne, `shape_is_recycling`
+    // à true sans clé `locked` veut dire l'exact inverse — recyclage AUTO, non verrouillé. La
+    // migration le figeait en verrou utilisateur, et plus aucun déplacement de nœud ne pouvait
+    // le recalculer (sankeyapplication#153).
     const json_local = getJSONOrUndefinedFromJSON(json_object, 'local')
     if (
       json_local
+      && kwargs?.['legacy_forced_recycling'] === true
       // Clé moderne OU clé legacy `recycling` (fichiers < 0.92, cf. fromJSON_0_91 ligne 628 :
       // `recycling` -> `shape_is_recycling`). Sans la clé legacy ici, un recyclage forcé d'un
       // vieux fichier restait NON verrouillé → traité en auto par SEP à la réconciliation, qui
@@ -1643,6 +1650,16 @@ export class SankeyPersistence {
     }
 
     SankeyPersistence.load_tags(json_object, sankey)
+    // OpenSankey#711 — le fichier est-il ANTÉRIEUR à la sémantique tristate du recyclage ?
+    // Un `format_version` explicite (#22) suffit à le dire moderne ; sinon on retombe sur la
+    // version d'app écrite dans le fichier. Ce drapeau garde la migration « recycling=true ⇒
+    // verrouillé » côté flux, qui sinon fige le recyclage AUTO de tout fichier récent.
+    // NB : le `version` reçu ici est numérique (`+version` côté appelant) et vaut NaN pour les
+    // versions à trois segments ('1.2.1') — il n'est pas exploitable pour ce seuil, d'où la
+    // relecture de la racine.
+    const legacy_forced_recycling =
+      getNumberOrUndefinedFromJSON(json_object, 'format_version') === undefined &&
+      isVersionBelow(getStringOrUndefinedFromJSON(json_object, 'version'), '1.1.4')
     SankeyPersistence.load_links(
       sankey,
       json_object,
@@ -1650,7 +1667,7 @@ export class SankeyPersistence {
         version,
         link,
         link_json as Type_JSON,
-        kwargs
+        { ...(kwargs ?? {}), legacy_forced_recycling }
       )
     )
     // #1231 (1.1.5) — fichier au format « centre » (marqueur explicite node_pos_is_center) ⇒

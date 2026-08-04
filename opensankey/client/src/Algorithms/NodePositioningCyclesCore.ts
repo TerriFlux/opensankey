@@ -243,7 +243,16 @@ export class NodePositioningCyclesCore {
    * chargement d'un fichier qui contient une geometrie. Les flux deja verrouilles sont ignores,
    * ainsi que les flux mixtes 'hv'/'vh', que le recalcul ne touche de toute facon jamais.
    *
-   * @returns les ids des flux verrouilles par la passe.
+   * GUERISON (sankeyapplication#153, correctif de l'axe) : « le fichier fait foi » suppose que le
+   * statut enregistre traduit l'INTENTION de l'auteur. Or les fichiers sauves avant le correctif
+   * portent le verdict de l'ANCIENNE regle — colonnes en x pour tous les flux, comparaison large
+   * — qui declarait en recyclage des flux verticaux progressant normalement. Verrouiller ces
+   * valeurs-la graverait le bug dans le fichier. Quand le statut charge correspond EXACTEMENT au
+   * verdict de l'ancienne regle et diverge de la nouvelle, on l'attribue donc au bug : le flux
+   * est recalcule au lieu d'etre verrouille. Une divergence que l'ancienne regle n'explique pas
+   * reste, elle, un choix d'auteur — verrouille comme avant.
+   *
+   * @returns les ids des flux verrouilles par la passe (les flux gueris n'y figurent pas).
    */
   public lockRecyclingStatusDivergences(
     nodes_to_process: Class_NodeElement[],
@@ -251,6 +260,7 @@ export class NodePositioningCyclesCore {
     vertical_indexes?: { [node_id: string]: number }
   ): string[] {
     const locked: string[] = []
+    const healed: string[] = []
     nodes_to_process.forEach(node => {
       node.output_links_list.forEach(link => {
         const link_data = this.drawingArea.sankey.links_dict[link.id]
@@ -263,12 +273,32 @@ export class NodePositioningCyclesCore {
         const node_index = indexes[node.id]
         const target_index = indexes[link_data.target.id]
         const geometric = node_index !== undefined && target_index !== undefined && node_index > target_index
-        if (link_data.shape_is_recycling !== geometric) {
-          link_data.shape_is_recycling_locked = true
-          locked.push(link_data.id)
+        if (link_data.shape_is_recycling === geometric) return
+
+        // Verdict de l'ancienne regle : colonnes en x quelle que soit l'orientation, comparaison
+        // large (une cible dans la meme colonne comptait comme un recul).
+        const legacy_source = horizontal_indexes[node.id]
+        const legacy_target = horizontal_indexes[link_data.target.id]
+        const legacy_geometric =
+          legacy_source !== undefined && legacy_target !== undefined && legacy_source >= legacy_target
+        if (link_data.shape_is_recycling === legacy_geometric) {
+          link_data.shape_is_recycling = geometric
+          healed.push(link_data.id)
+          return
         }
+
+        link_data.shape_is_recycling_locked = true
+        locked.push(link_data.id)
       })
     })
+    if (healed.length > 0) {
+      console.warn(
+        `[recyclage] ${healed.length} flux remis en mode automatique : leur statut enregistre ` +
+        'provenait de la detection sur l\'axe horizontal, appliquee a tort aux flux verticaux. ' +
+        'Pour en figer un, utilisez le cadenas « Recyclage » de l\'inspecteur.',
+        healed
+      )
+    }
     return locked
   }
 
