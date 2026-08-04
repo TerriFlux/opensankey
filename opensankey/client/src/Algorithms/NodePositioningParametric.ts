@@ -330,6 +330,9 @@ export class NodePositioningParametric {
    *
    * À appeler en FIN de placement (après le mode global + `anchorParametricNodesToAbsolute`), pour
    * écraser le re-centrage individuel des feuilles. Nœuds « échange » et enfants invisibles exclus.
+   *
+   * #365 — la passe s'applique à tout cadre de premier niveau, **visible ou non** : c'est la
+   * visibilité des FEUILLES qui compte, pas celle du cadre (cf. `containerRootsToRestack`).
    */
   public restackContainerChildren() {
     const mode = this.drawingArea.effective_gap_mode
@@ -382,9 +385,10 @@ export class NodePositioningParametric {
       })
     }
 
-    this.drawingArea.sankey.visible_nodes_list
-      .filter(isContainerParent)
-      .filter(n => !n.dimensions_as_child.some(d => d.container_mode))
+    // #365 — sur TOUS les nœuds, pas seulement les visibles : un cadre englobant peut être
+    // masqué (sa visibilité suit ses flux propres) alors que ses membres sont dessinés, et ses
+    // enfants doivent être empilés quand même. Cf. containerRootsToRestack.
+    Geometry.containerRootsToRestack(this.drawingArea.sankey.nodes_list)
       .forEach(container => {
         const leaves = leavesInOrder(container)
         if (leaves.length === 0) return

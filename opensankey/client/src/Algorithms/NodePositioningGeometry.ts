@@ -102,6 +102,39 @@ export function totalContainerStackHeight(
     sum + n.getShapeHeightToUse() + (i > 0 ? containerChildGap(n, mode, const_gap) : 0), 0)
 }
 
+/**
+ * Forme minimale d'un nœud pour décider s'il est un cadre englobant de premier niveau.
+ * Typage structurel volontaire : la décision se teste sans construire de Class_NodeElement.
+ */
+export type Type_ContainerCandidate = {
+  dimensions_as_parent: { container_mode?: unknown }[]
+  dimensions_as_child: { container_mode?: unknown }[]
+}
+
+/**
+ * Cadres englobants de PREMIER NIVEAU dont les enfants sont à ré-empiler : parents d'au moins
+ * une dimension en `container_mode`, et qui ne sont pas eux-mêmes enfants d'un autre cadre
+ * (ceux-là sont pris en charge par la descente de leur cadre racine).
+ *
+ * #365 — CAPITAL : la sélection ne regarde PAS `is_visible` du cadre. La visibilité d'un cadre
+ * dépend de ses flux PROPRES, qu'un cadre en `in_children_out_children` n'a par construction
+ * pas à montrer : un cadre pouvait donc être masqué alors que ses membres, eux, sont dessinés
+ * (cf. #368). Filtrer sur la visibilité du cadre laissait alors ses enfants à la position que
+ * le placement global venait de leur donner INDIVIDUELLEMENT — coin = centre persisté − hauteur
+ * courante. Or un centre enregistré sous un datatag ne vaut que pour LES HAUTEURS DE CE
+ * DATATAG : rouvrir sous un autre datatag rapprochait les enfants de la moitié de l'écart de
+ * hauteur, et ils se chevauchaient (mesuré sur le modèle SOCLE « Détail des modes de
+ * production » : 29,9 px en 2015, 20,1 px en 2019, fichier enregistré en 2023).
+ *
+ * Les enfants invisibles sont écartés plus bas, à la collecte des feuilles : un cadre dont
+ * aucune feuille n'est visible n'empile rien.
+ */
+export function containerRootsToRestack<T extends Type_ContainerCandidate>(nodes: T[]): T[] {
+  return nodes.filter(n =>
+    n.dimensions_as_parent.some(d => d.container_mode) &&
+    !n.dimensions_as_child.some(d => d.container_mode))
+}
+
 /** Tous les descendants (transitifs, via dimensions_as_parent) d'un nœud, lui inclus. */
 export function collectNodeDescendants(node: Class_NodeElement): Set<Class_NodeElement> {
   const out = new Set<Class_NodeElement>()
