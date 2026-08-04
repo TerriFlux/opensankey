@@ -33,7 +33,7 @@ import {
 import { Class_Handler } from './Handler'
 import { reorganizeIOOrder } from './reorganizeIOOrder'
 import { orderIOByGeometry, recyclingBellyCentre, bundleTie, Type_IOGeo } from './ioOrderGeometry'
-import { containerFrameIsEmptied } from './containerFrameVisibility'
+import { containerFrameIsEmptied, hasVisibleFrameMember } from './containerFrameVisibility'
 import { format_value, Type_JSON } from '../types/Utils'
 import { default_element_color, NameLabelAttributeTypes } from './ElementsAttributesConfig'
 import { resolveAssignedTagToken } from './LabelTemplate'
@@ -2356,12 +2356,40 @@ export class Class_NodeElement extends Class_NodeBase {
 
   public get is_visible() {
     // Vue courante OU (mode « afficher aussi les flux porteurs de données »)
-    // nœud révélé parce qu'attaché à un flux portant une valeur collectée saisie.
-    // Dans les deux cas, la porte orphelin s'applique encore.
-    if (this.is_visible_without_orphan || this.is_revealed_by_data) {
+    // nœud révélé parce qu'attaché à un flux portant une valeur collectée saisie
+    // OU (#368) cadre englobant qui a encore un membre à entourer.
+    // Dans les trois cas, la porte orphelin s'applique encore.
+    if (this.is_visible_without_orphan || this.is_revealed_by_data || this.is_visible_as_container_frame) {
       return this.orphan_visible
     }
     return false
+  }
+
+  /**
+   * #368 — Vrai si ce nœud est un CADRE ENGLOBANT ayant au moins un membre visible.
+   * Un tel cadre doit être dessiné quels que soient SES PROPRES flux : il n'est pas
+   * un nœud à part entière mais l'enveloppe de ses enfants (cf. #364, la décision
+   * symétrique qui le masque quand il n'a plus rien à entourer).
+   *
+   * Sans cette porte, la visibilité du cadre dépendait de ses flux propres via
+   * `are_links_visibilities_ok` : un cadre qui n'en porte AUCUN restait affiché
+   * (règle orphelin), tandis qu'un cadre qui en porte, tous invisibles pour la
+   * sélection courante, était masqué — deux résultats différents pour un même
+   * rendu attendu, celui du second dépendant en outre de l'ordre de calcul des
+   * valeurs (d'où l'asymétrie premier rendu / rendus suivants de #368).
+   *
+   * On reprend les portes de `is_visible_without_orphan` SAUF celle des flux — la
+   * règle orphelin reste, elle, le levier de masquage manuel (cf. #364). On ne lit
+   * pas `is_visible_without_orphan` : la récursion s'arrête sur la hiérarchie
+   * parent → enfants, jamais sur la visibilité des flux.
+   */
+  public get is_visible_as_container_frame(): boolean {
+    return (
+      super.is_visible &&
+      this.are_related_node_tags_selected &&
+      this.are_related_dimensions_selected &&
+      hasVisibleFrameMember(this.dimensions_as_parent)
+    )
   }
 
   /**

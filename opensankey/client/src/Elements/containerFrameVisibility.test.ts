@@ -79,3 +79,57 @@ describe('#364 — containerFrameIsEmptied : masquage d\'un cadre englobant sans
     expect(hasVisibleFrameMember([dim(null, [true])])).toBe(false)
   })
 })
+
+// Garde de régression pour l'issue #368 — la décision RÉCIPROQUE. Au premier rendu,
+// un cadre englobant PORTANT des flux propres tous invisibles pour la sélection
+// courante n'était pas dessiné du tout, alors qu'un cadre n'en portant AUCUN restait
+// affiché par la règle orphelin : deux résultats visuels différents pour deux cadres
+// qui ne se distinguent que par un détail de modélisation. Mesuré sur le modèle
+// transversal SOCLE « Détail des modes de production » (millésime 2015) : les cadres
+// « Céréales » (2 flux propres) et « Œufs » (5) manquaient, « Vin » et
+// « Oléoprotéagineux » (0 flux propre) étaient là.
+//
+// Correctif : `Class_NodeElement.is_visible_as_container_frame` dessine le cadre dès
+// qu'il a un membre visible, sans consulter ses flux — `hasVisibleFrameMember` sert
+// donc désormais les deux sens de la même politique.
+describe('#368 — hasVisibleFrameMember : affichage d\'un cadre englobant à membre visible', () => {
+  it('dessine le cadre qui a un membre visible, qu\'il porte ou non des flux propres', () => {
+    // La fonction ne voit délibérément AUCUN flux : c'est là tout le correctif — le
+    // « Céréales » à 2 flux invisibles et le « Vin » à 0 flux donnent la même vue.
+    expect(hasVisibleFrameMember([dim('in_children_out_children', [true, false])])).toBe(true)
+    expect(hasVisibleFrameMember([dim('in_children_out_children', [false, false, true])])).toBe(true)
+  })
+
+  it('est exactement le complémentaire de containerFrameIsEmptied sur un vrai cadre', () => {
+    // Les deux décisions ne peuvent jamais être vraies ensemble ni fausses ensemble
+    // dès qu'il s'agit d'un cadre englobant : masquer (#364) et dessiner (#368)
+    // partagent le même pivot.
+    for (const visibilities of [[true], [false], [true, false], [false, false]]) {
+      const dims = [dim('in_children_out_children', visibilities)]
+      expect(hasVisibleFrameMember(dims)).toBe(!containerFrameIsEmptied(dims))
+    }
+  })
+
+  it('ne réveille aucun nœud ordinaire : la porte exige un mode englobant', () => {
+    // Un parent désagrégé « simple » (container_mode nul) reste soumis à la règle des
+    // flux : ses enfants prennent sa place, ils ne sont pas les membres d'un cadre.
+    expect(hasVisibleFrameMember([dim(null, [true, true])])).toBe(false)
+    expect(hasVisibleFrameMember([])).toBe(false)
+    // Idem pour une feuille marquée d'un mode englobant sans aucun enfant : rien à
+    // entourer, donc rien à forcer.
+    expect(hasVisibleFrameMember([dim('in_children_out_children', [])])).toBe(false)
+  })
+
+  it('juge sur l\'UNION des dimensions englobantes', () => {
+    // Cadre selon deux nomenclatures : un seul membre visible suffit à le dessiner.
+    expect(hasVisibleFrameMember([
+      dim('in_children_out_children', [false, false]),
+      dim('in_children_out_children', [true]),
+    ])).toBe(true)
+    // Un enfant visible porté par une dimension NON englobante ne compte pas.
+    expect(hasVisibleFrameMember([
+      dim('in_children_out_children', [false]),
+      dim(null, [true]),
+    ])).toBe(false)
+  })
+})
