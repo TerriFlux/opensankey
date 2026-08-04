@@ -167,8 +167,8 @@ export class Class_MenuConfig {
       'edit_style',
     ],
     [
-      // Consolidated "Aide" dropdown gathering Visite guidée + Tutoriels (and,
-      // via extra_help_menu_items, upper-layer entries like SA's Sankeythèque).
+      // Consolidated "Aide" dropdown gathering Visite guidée + Tutoriels (and
+      // any entry an upper layer injects via extra_help_menu_items).
       // Legacy split keys ('tour', 'tutoriel') stay registered in
       // dict_components_menu_top for backwards-compatible custom menu_top_order.
       'aide',
