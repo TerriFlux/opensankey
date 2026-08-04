@@ -11,18 +11,26 @@ import type { Type_JSON } from '../types/Utils'
 // diagramme constante d'un dataTag à l'autre — devait être re-choisi à chaque ouverture, et un
 // diagramme publié partait toujours en absolu pour le lecteur.
 //
-// Correctif : les modes d'AFFICHAGE sont écrits (ils l'étaient déjà, via le style 'default')
-// ET restitués. `parametric` (mode « écart » hérité, hors sélecteur) reste ramené à `absolute`.
+// Correctif : « échelle adaptée » est écrite (elle l'était déjà, via le style 'default') ET
+// restituée. Les autres modes restent ramenés à `absolute` : `proportional` (arbitrage
+// utilisateur du 2026-08-05 — le mode ne persiste pas son cadre de référence, le restituer ne
+// rouvrirait donc pas le fichier tel qu'il a été enregistré) et `parametric` (mode « écart »
+// hérité, hors sélecteur).
 
 function deepClone<T>(o: T): T {
   return JSON.parse(JSON.stringify(o)) as T
 }
 
 describe('#369 — positionModeOnLoad (décision pure au chargement)', () => {
-  it('restitue les modes d\'affichage tels quels', () => {
-    expect(positionModeOnLoad('proportional')).toBe('proportional')
+  it('restitue « échelle adaptée »', () => {
     expect(positionModeOnLoad('scale_adapted')).toBe('scale_adapted')
     expect(positionModeOnLoad('absolute')).toBe('absolute')
+  })
+
+  it('ramène le mode proportionnel à `absolute`', () => {
+    // Le mode % ne persiste pas son cadre de référence : le restituer le ferait re-capturer sur
+    // la géométrie du fichier, donc rouvrir le diagramme AUTREMENT qu'enregistré.
+    expect(positionModeOnLoad('proportional')).toBe('absolute')
   })
 
   it('ramène le mode hérité `parametric` à `absolute`', () => {
@@ -58,11 +66,15 @@ describe('#369 — round-trip du mode d\'affichage global', () => {
     expect(reload(json).drawing_area.sankey.default_style.shape_position_type).toBe('scale_adapted')
   })
 
-  it('conserve le mode proportionnel au save puis au load', () => {
+  it('ouvre en absolu un fichier enregistré en mode proportionnel', () => {
+    // Le mode est bien ÉCRIT (il diffère du défaut usine) — c'est la RELECTURE qui le ramène
+    // à l'absolu, faute de cadre de référence persisté.
     const app = new Class_ApplicationData(false)
     app.drawing_area.sankey.default_style.shape_position_type = 'proportional'
-    expect(reload(app.toJSON() as Type_JSON)
-      .drawing_area.sankey.default_style.shape_position_type).toBe('proportional')
+    const json = app.toJSON() as Type_JSON
+    expect((json.style as Type_JSON)['default'] as Type_JSON)
+      .toHaveProperty('shape_position_type', 'proportional')
+    expect(reload(json).drawing_area.sankey.default_style.shape_position_type).toBe('absolute')
   })
 
   it('ouvre en absolu un fichier sans l\'attribut', () => {

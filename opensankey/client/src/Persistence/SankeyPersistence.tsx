@@ -2581,12 +2581,12 @@ export class DrawingAreaPersistence {
     }
     drawing_area.name = getStringFromJSON(json_object, 'name', drawing_area.name)
 
-    // #369 — Le MODE de positionnement GLOBAL est RESTITUÉ tel quel pour les modes d'AFFICHAGE
-    // (proportionnel / échelle adaptée) : ce sont des réglages d'auteur, pas des vues
-    // transitoires (#1231) — sans quoi « échelle adaptée » était à re-choisir à chaque ouverture
-    // et un diagramme publié partait toujours en absolu. Seul `parametric` (mode « écart »
-    // hérité, hors sélecteur) reste ramené à `absolute`, comme un fichier sans l'attribut : la
-    // décision est isolée dans `positionModeOnLoad`. La valeur 'parametric' reste valide en
+    // #369 — Le MODE de positionnement GLOBAL « échelle adaptée » est RESTITUÉ : c'est un réglage
+    // d'auteur, pas une vue transitoire (#1231) — sans quoi il était à re-choisir à chaque
+    // ouverture et un diagramme publié partait toujours en absolu. Les autres modes restent
+    // ramenés à `absolute`, comme un fichier sans l'attribut : `proportional` (qui ne persiste pas
+    // son cadre de référence) et `parametric` (mode « écart » hérité, hors sélecteur). La décision
+    // et ses raisons sont isolées dans `positionModeOnLoad`. La valeur 'parametric' reste valide en
     // interne pour les styles PAR-NŒUD d'échange import/export — on ne touche QUE le style global.
     // On capture le mode d'ORIGINE avant de le normaliser : il décide si u/v font autorité.
     const incoming_position_mode = drawing_area.sankey.default_style.shape_position_type
@@ -2614,8 +2614,8 @@ export class DrawingAreaPersistence {
     // #1231 — Persistance du COUPLE de référence (flux + datatag) du mode %. Le flux est
     // ré-attaché depuis l'attribut `shape_is_reference_flux` ; le datatag de réf est relu ici.
     // En mode absolu rien n'est appliqué tant que l'utilisateur ne réactive pas un mode
-    // d'affichage ; en % / échelle adaptée (restitués depuis #369) ce couple est ce qui pilote
-    // le facteur de compression / l'échelle dès le premier dessin.
+    // d'affichage ; en échelle adaptée (restituée depuis #369) ce couple est ce qui pilote
+    // l'échelle dès le premier dessin.
     drawing_area.nodePositioning.attachReferenceLinkFromAttributes()
     {
       const ref_dt = json_object['prop_reference_datatag']

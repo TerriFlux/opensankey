@@ -216,15 +216,7 @@ export class NodePositioningProportional {
     if (nodes.length === 0) return
     if (this._prop_median_y === undefined || !this._prop_ref_col_sums) {
       this.captureProportionalReference()
-      // #369 — Ne PAS rendre la main après la capture : depuis que le mode est restitué à
-      // l'ouverture, ce chemin « paresseux » est celui d'un fichier rouvert EN MODE %, dont
-      // aucun `setProportionalMode` n'a capturé le cadre. Rendre la main laissait le diagramme
-      // non comprimé jusqu'au dessin suivant — donc indéfiniment si le chargement n'en
-      // déclenche qu'un. La compression peut s'appliquer dans la foulée : le facteur f dérive
-      // du couple (élément, datatag) de référence PERSISTÉ, pas de la capture qu'on vient de
-      // faire (et à défaut d'élément de référence, il vaut 1 — sommes de colonnes capturées à
-      // l'instant). On ne sort que si la capture n'a rien pu poser.
-      if (this._prop_median_y === undefined || !this._prop_ref_col_sums) return
+      return
     }
     // #1231 (1.1.5) — anti-chevauchement GLOBAL : le facteur de compression effectif est
     // borné par le bas par le facteur minimal qui empêche TOUTE colonne de chevaucher
