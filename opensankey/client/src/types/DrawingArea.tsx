@@ -1009,6 +1009,15 @@ export class Class_DrawingArea {
     if (this._font_size_locked && this._k_fit === k_fit_before_fit) {
       this._refreshLabelsForFitZoom()
     }
+    // #363 — deuxième passage de recalage des cadres englobants, ICI et pas
+    // seulement dans drawElements() : en police verrouillée, drawElements() dessine
+    // les labels sur un zoom identité (compensation 1/k = 1, police brute), et
+    // c'est le fit ci-dessus qui les met à l'échelle du cadrage. Le `getBBox()` lu
+    // pendant drawElements() sous-estime donc le débord des libellés d'un facteur
+    // 1/k au PREMIER dessin (les suivants partent du zoom déjà calé). Ce second
+    // passage ne fait que finir le recalage — il est idempotent une fois les
+    // libellés à leur taille définitive.
+    this._refitTiedFramesToLabels()
     this._legend.draw()
     this._sendLegendFramesBehindMembers()
     // Added events listeners
@@ -1280,6 +1289,13 @@ export class Class_DrawingArea {
         this.nodePositioning.enforceStraightLinks()) {
       this._sankey.draw()
     }
+    // #363 — recaler les cadres englobants sur l'enveloppe LABELS INCLUS de leurs
+    // membres. Tourne APRÈS le draw, comme le post-processing « flux droit »
+    // ci-dessus : le débord des libellés n'entre dans le `getBBox()` qu'une fois
+    // ceux-ci rendus. Sans cette passe, le coin du cadre n'était re-fitté qu'en
+    // fin de drag et un fichier s'ouvrait avec ses cadres décalés jusqu'au
+    // premier clic.
+    this._refitTiedFramesToLabels()
     // OS#1246 — passe « exit » du data-join. Le sous-arbre #g_elements_sankey étant
     // désormais réutilisé (non rasé), un <g> dont l'élément n'a pas été (re)dessiné
     // — nœud/flux devenu invisible sans passer par unDraw, flux sous seuil non
@@ -1290,6 +1306,51 @@ export class Class_DrawingArea {
     //this._legend.draw()
     this.drawBgImage()
 
+  }
+
+  /**
+   * #363 — Passe post-dessin : recale le bord gauche de chaque cadre englobant
+   * (nœud ou ZDT `tied_to_nodes`) sur l'enveloppe LABELS INCLUS de ses membres,
+   * puis redessine les seuls cadres qui ont bougé. Voir
+   * `Class_NodeBase.refitTiedFrameToLabels` pour le pourquoi du grow-only et de
+   * la restriction à l'horizontale.
+   *
+   * Ordre bottom-up : un cadre membre d'un autre cadre doit être recalé d'abord,
+   * car `_computeEnvelopeBBox` lit sa géométrie LOGIQUE (`prefer_logical`) et non
+   * son `getBBox()` — sans cet ordre, l'englobant se calerait sur un x périmé.
+   * Même boucle de convergence que le ré-ancrage de `updateFrom`, avec le même
+   * repli en cas de cycle d'attachement.
+   */
+  private _refitTiedFramesToLabels() {
+    const frames: Class_NodeBase[] = [
+      ...this._sankey.nodes_list,
+      ...this._sankey.containers_list,
+    ].filter(el => el.tied_to_nodes && el.attached_node.length > 0 && el.is_visible)
+    if (frames.length === 0) return
+    const moved: Class_NodeBase[] = []
+    const settled = new Set<Class_NodeBase>()
+    const settle = (frame: Class_NodeBase) => {
+      if (frame.refitTiedFrameToLabels()) moved.push(frame)
+      settled.add(frame)
+    }
+    let progressed = true
+    while (progressed && settled.size < frames.length) {
+      progressed = false
+      frames.forEach(frame => {
+        if (settled.has(frame)) return
+        const pending = frame.attached_node.some(n =>
+          n.tied_to_nodes && n.attached_node.length > 0 && !settled.has(n))
+        if (pending) return
+        settle(frame)
+        progressed = true
+      })
+    }
+    frames.forEach(frame => { if (!settled.has(frame)) settle(frame) })
+    if (moved.length === 0) return
+    // Seuls les cadres ont bougé : inutile de rejouer tout le draw, leurs membres
+    // et leurs flux sont inchangés. Même geste qu'en fin de drag (eventMouseDragEnd).
+    moved.forEach(frame => frame.draw())
+    this.orderElementOnDA()
   }
 
   /**
