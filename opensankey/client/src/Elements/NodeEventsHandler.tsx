@@ -489,6 +489,11 @@ export class NodeEventsHandler {
     // first child's current y (and propagating to container.y) or moving the
     // container itself — neither is worth the complexity until a real user
     // flow needs it.
+    // #366 — Un drag repose les positions à la main : les hauts de colonne mémorisés pour
+    // l'empilement en écartement redeviennent la disposition COURANTE. Sans cet oubli, une tête
+    // de colonne déplacée serait rappelée à son ancien haut au dessin suivant.
+    this._node.drawing_area.nodePositioning.clearColumnTops()
+
     if (this._node.sankey.default_style.shape_position_type == 'parametric') {
       this._node.drawing_area.sankey.nodes_list.forEach(n => {
         if (n.shape_position_v_locked !== true) n.position_v = -1
