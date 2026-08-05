@@ -255,6 +255,79 @@ describe('#382 updateFrom — échelle des tags d\'unité', () => {
   })
 })
 
+// Groupe de données « Année » avec deux tags dont on CHOISIT les ids : c'est
+// l'écart d'ids entre source et cible (à noms égaux) qui met `matching_tags_id`
+// en jeu.
+function makeYearTagGroup(
+  app: Class_ApplicationData,
+  tags: Array<[string, string]> // [id, nom]
+) {
+  const tagg = app.drawing_area.sankey.addDataTagGroup('annee', 'Année', false)
+  tags.forEach(([id, name]) => tagg.addTag(name, id))
+  tagg.tags_dict[tags[0][0]].setSelected()
+  return tagg
+}
+
+/** Valeur du lien sous le tag de nom `tag_name` du groupe « annee » de `app`. */
+function valueUnderYear(
+  app: Class_ApplicationData,
+  link: Class_LinkElement,
+  tag_name: string
+) {
+  const tagg = app.drawing_area.sankey._data_taggs['annee']
+  const tag = tagg.tags_list.find(t => t.name === tag_name)
+  if (!tag) return undefined
+  tagg.selectTagsFromIds([tag.id])
+  return link.valueCurrent
+}
+
+describe('updateFrom — tags de données appariés par NOM mais d\'ids différents', () => {
+  it('tagData : les valeurs taguées de la cible survivent à la recopie du groupe', () => {
+    const src = new Class_ApplicationData(false)
+    const tgt = new Class_ApplicationData(false)
+    const s = makePair(src)
+    const t = makePair(tgt)
+
+    // Mêmes noms de tags des deux côtés, ids différents → matching par nom.
+    makeYearTagGroup(src, [['src_a', '2020'], ['src_b', '2021']])
+    const tgt_tagg = makeYearTagGroup(tgt, [['tgt_a', '2020'], ['tgt_b', '2021']])
+
+    // Valeurs portées par le lien de la CIBLE, une par millésime.
+    tgt_tagg.selectTagsFromIds(['tgt_a'])
+    t.link.valueCurrent = 10
+    tgt_tagg.selectTagsFromIds(['tgt_b'])
+    t.link.valueCurrent = 20
+    // Côté source, valeurs différentes — `tagData` ne recopie PAS les valeurs.
+    const src_tagg = src.drawing_area.sankey._data_taggs['annee']
+    src_tagg.selectTagsFromIds(['src_a'])
+    s.link.valueCurrent = 111
+    src_tagg.selectTagsFromIds(['src_b'])
+    s.link.valueCurrent = 222
+
+    updateFrom(tgt.drawing_area, src.drawing_area, ['tagData'])
+
+    expect(valueUnderYear(tgt, t.link, '2020')).toBe(10)
+    expect(valueUnderYear(tgt, t.link, '2021')).toBe(20)
+  })
+
+  it('tagData : le groupe cible ne conserve QUE ses deux tags', () => {
+    const src = new Class_ApplicationData(false)
+    const tgt = new Class_ApplicationData(false)
+    makePair(src)
+    makePair(tgt)
+
+    makeYearTagGroup(src, [['src_a', '2020'], ['src_b', '2021']])
+    makeYearTagGroup(tgt, [['tgt_a', '2020'], ['tgt_b', '2021']])
+
+    updateFrom(tgt.drawing_area, src.drawing_area, ['tagData'])
+
+    const tagg = tgt.drawing_area.sankey._data_taggs['annee']
+    expect(tagg.tags_list.map(t => t.name)).toEqual(['2020', '2021'])
+    // Aucun tag fantôme laissé dans le dictionnaire hors de l'ordre affiché.
+    expect(Object.keys(tagg.tags_dict).sort()).toEqual(['tgt_a', 'tgt_b'])
+  })
+})
+
 describe('#232 updateFrom — non-régression (attribut hors mode préservé)', () => {
   it('un mode inconnu / vide ne modifie ni positions ni attributs', () => {
     const src = new Class_ApplicationData(false)
