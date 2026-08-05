@@ -2819,6 +2819,18 @@ const layerStyles = {
     return acc
   }, {} as Record<string, SystemStyleObject>),
 
+  // OS#376 — rangée de contrôles dont chacun garde sa largeur propre : à réserver aux
+  // groupes de boutons compacts (width:fit-content), qu'une piste de grille en 1fr
+  // rétrécirait sous leur taille — ils déborderaient alors sur le contrôle voisin.
+  // Le retour à la ligne évite le chevauchement quand le panneau devient étroit.
+  options_row_wrap: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: '0.25rem',
+    minWidth: 0,
+  },
+
   options_cards: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr 1fr 1fr',
