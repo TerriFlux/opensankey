@@ -554,6 +554,41 @@ export class Class_NodeTagGroup extends Class_TagGroup {
     if (with_a_tag) this.addTag('Etiquette 0')
   }
 
+  // PUBLIC METHODS =====================================================================
+  /**
+   * #374 — Les références d'un Class_NodeTag sont les nœuds SEULS, alors que la
+   * couleur d'un flux en dérive : en règle 'auto' (comme en 'source' / 'target' /
+   * 'gradient'), Class_LinkElement.getShapeColorToUse() lit les tags des nœuds
+   * source/cible filtrés sur `tag.group.use_colors`. Redessiner les seules
+   * références laissait donc les flux avec leur couleur précédente jusqu'au geste
+   * suivant qui forçait leur redessin (changement de dataTag, décochage d'une
+   * étiquette…). On étend le redessin aux flux incidents des nœuds référencés,
+   * ce qui couvre d'un coup les trois chemins d'écriture de `use_colors`
+   * (interrupteur du bandeau, level tagg, undo/redo) ainsi que la sélection
+   * d'étiquettes. Le coût reste borné par le nombre de flux du diagramme —
+   * moins que le redessin complet que fait déjà Class_DataTagGroup.
+   * @memberof Class_NodeTagGroup
+   */
+  public updateTagsReferences(): void {
+    super.updateTagsReferences()
+    const links_drawn: { [_: string]: boolean } = {}
+    Object.values(this._tags)
+      .forEach(tag => {
+        tag.references
+          .forEach(ref => {
+            if (!(ref instanceof Class_NodeElement)) return
+            ref.input_links_list
+              .concat(ref.output_links_list)
+              .forEach(link => {
+                if (!links_drawn[link.id]) {
+                  links_drawn[link.id] = true
+                  link.draw()
+                }
+              })
+          })
+      })
+  }
+
   // PROTECTED METHODS ==================================================================
   protected createTag(
     name: string,
