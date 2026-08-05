@@ -83,17 +83,34 @@ export function setAbsoluteMode(da: Class_DrawingArea) {
 // entier, cf. NodePositioningScaleAdapted.diagramMagnitude — plus un élément désigné). Les
 // nœuds gardent leur centre fixe (comme l'absolu) pendant qu'ils se redimensionnent.
 export function setScaleAdaptedMode(da: Class_DrawingArea) {
-  da.clearPositionModeSuspension()
   const default_style = da.sankey.styles_dict['default']
-  // #1231 (1.1.5) — si on vient d'un mode d'AFFICHAGE (proportionnel), le coin courant est
-  // comprimé. On revient d'abord aux VRAIS centres (sinon settleCenterAnchor figerait le
-  // coin comprimé comme centre → centres faussés). L'échelle adaptée part donc des positions
-  // absolues réelles ; le draw applique ensuite le rescale autour des centres invariants.
-  da.nodePositioning.deriveAbsoluteNodesFromCenter()
+  const prev_mode = default_style.shape_position_type
+  if (prev_mode === 'proportional' || prev_mode === 'scale_adapted') {
+    // #1231 (1.1.5) — on vient d'un mode d'AFFICHAGE : le coin courant est du scratch (comprimé
+    // par le %, ou rescalé par l'échelle). On revient aux VRAIS centres (sinon settleCenterAnchor
+    // figerait ce coin comme centre → centres faussés).
+    da.nodePositioning.deriveAbsoluteNodesFromCenter()
+  } else {
+    // #384 — on vient de l'absolu (ou du `parametric` hérité) : le coin courant EST la vérité,
+    // on le commit comme centre. Dériver le coin du centre stocké, comme le faisait
+    // inconditionnellement cette fonction, DÉPLAÇAIT les nœuds à la seule sélection du mode :
+    // le fichier stocke des centres valables pour les hauteurs de SON datatag (cf. #365/#369),
+    // les redériver hors de ce contexte recale tout le diagramme. Même dissymétrie que
+    // `setAbsoluteMode`, qui ne dérive du centre qu'en sortant d'un mode d'affichage.
+    da.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
+  }
   default_style.shape_position_type = 'scale_adapted'
+  // #384 — CHOISIR le mode ne change rien au diagramme : il est ARMÉ, pas appliqué, et ne se
+  // fait sentir qu'au premier changement de datatag — ce qu'il gouverne. C'est la règle du
+  // premier rendu du #369, jusqu'ici réservée à l'OUVERTURE d'un fichier ; elle vaut tout
+  // autant pour le choix explicite au sélecteur. Appliquer dès l'entrée déplaçait les nœuds
+  // (recalage d'affichage de `resolveScaleAdaptedOverlaps`) sans qu'aucune donnée ait changé.
+  da.suspendPositionModeUntilDataChange()
+  // La référence est l'état AFFICHÉ à l'entrée du mode. Capturée ici (et rafraîchie à chaque
+  // frame tant que le mode reste armé, cf. drawElements) : sans cela, la capture paresseuse
+  // n'aurait lieu qu'à la première frame APPLIQUÉE, donc déjà au datatag suivant — d'où un
+  // pas de retard, le mode ne « prenant » qu'au deuxième changement de datatag.
   da.nodePositioning.captureScaleReference()
-  // #1231 — redessiner immédiatement pour appliquer l'échelle adaptée dès l'entrée du
-  // mode (sinon le rescale n'apparaissait qu'au draw suivant : navigation datatag).
   da.draw()
 }
 

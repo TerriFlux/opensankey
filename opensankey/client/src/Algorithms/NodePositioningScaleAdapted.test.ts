@@ -167,6 +167,22 @@ describe('#384 — échelle adaptée sur le diagramme entier', () => {
     expect(drawingArea._scale).toBe(100)
   })
 
+  it('ne perd pas la référence en capturant sur un datatag sans valeur', () => {
+    // Retour du test local : tant que le mode est ARMÉ, chaque frame recapture la référence.
+    // Si une de ces frames tombe sur un datatag vide, effacer le couple ferait repartir la
+    // capture de zéro au datatag suivant — le mode ne prendrait qu'au changement d'après.
+    const n = node({ u: 0, outs: [50] })
+    const { np, drawingArea } = positioning([n], 100)
+    np.captureScaleReference()
+    n.visible_output_links_list = []
+    np.captureScaleReference()
+    expect(np.scaleAdaptedReference).toEqual({ scale: 100, magnitude: 50 })
+
+    n.visible_output_links_list = [{ valueCurrent: 200 }]
+    np.applyAdaptedScale()
+    expect(drawingArea._scale).toBe(400)
+  })
+
   it('n\'exige aucun élément de référence pour se déclencher', () => {
     // Aucun `shape_is_reference_flux` / `shape_is_reference_stock` n'est posé ici : avant #384,
     // `applyAdaptedScale` sortait immédiatement faute d'élément désigné.

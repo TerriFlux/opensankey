@@ -112,16 +112,18 @@ export class NodePositioningScaleAdapted {
    * #1231/#384 — Mode « échelle adaptée » : capture l'échelle courante et la grandeur du
    * diagramme. Sert de base au ratio appliqué ensuite (`applyAdaptedScale`). À l'entrée du
    * mode, grandeur_courante == grandeur_ref → échelle inchangée → pas de saut.
+   *
+   * #384 — Appelée aussi à chaque frame tant que le mode est ARMÉ mais pas appliqué (cf.
+   * `DrawingArea.drawElements`) : la frame affichée est alors la référence. D'où le no-op sur
+   * grandeur nulle — un datatag sans aucune valeur ne doit pas EFFACER une référence déjà
+   * posée, sans quoi la capture repartirait de zéro au datatag suivant (pas de retard).
+   * L'oubli explicite de la capture, lui, est le rôle de `clearScaleAdaptation`.
    */
   public captureScaleReference() {
     const m = this.diagramMagnitude()
-    if (m > 0) {
-      this._scale_adapted_ref_magnitude = m
-      this._scale_adapted_ref_scale = this.drawingArea.scale
-    } else {
-      this._scale_adapted_ref_magnitude = undefined
-      this._scale_adapted_ref_scale = undefined
-    }
+    if (!(m > 0)) return
+    this._scale_adapted_ref_magnitude = m
+    this._scale_adapted_ref_scale = this.drawingArea.scale
   }
 
   /**

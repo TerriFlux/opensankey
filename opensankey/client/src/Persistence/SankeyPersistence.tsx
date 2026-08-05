@@ -2652,8 +2652,11 @@ export class DrawingAreaPersistence {
     // Fichier antérieur (clés absentes) : capture paresseuse au premier dessin, comme avant.
     // #384 — Un fichier écrit AVANT le changement de référence ne porte que l'ancienne clé
     // `scale_adapted_ref_value` (valeur d'un élément) : elle est ignorée, sans quoi le ratio
-    // grandeur_courante / valeur_élément ferait sauter l'échelle à l'ouverture. On retombe donc
-    // sur la capture paresseuse, ratio 1, échelle du fichier conservée.
+    // grandeur_courante / valeur_élément ferait sauter l'échelle à l'ouverture. Le couple est
+    // alors reconstitué par les frames de la suspension d'ouverture (cf. `drawElements`), qui
+    // capturent l'état affiché — c'est ce qui évite le pas de retard sur un fichier antérieur.
+    // Ce qui est relu ici reste utile comme AMORCE, pour le cas où le mode s'appliquerait sans
+    // qu'aucune frame suspendue ne soit passée.
     if (loaded_position_mode === 'scale_adapted') {
       const ref_scale = json_object['scale_adapted_ref_scale']
       const ref_magnitude = json_object['scale_adapted_ref_magnitude']
