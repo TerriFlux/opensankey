@@ -801,6 +801,14 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
    * ne quitte jamais le mode hérité `parametric` : il n'est pas proposé par le sélecteur,
    * donc toutes les dimensions le contrediraient par leur défaut « absolu » et la première
    * navigation détruirait silencieusement une mise en page paramétrique.
+   *
+   * Articulation avec le #369 (mode enregistré ARMÉ à l'ouverture, cf.
+   * `Class_DrawingArea.suspendPositionModeUntilDataChange`) : à l'ouverture, le mode courant
+   * est celui du fichier et le dessin est suspendu en absolu. Au premier changement de
+   * sélection, deux cas — si la dimension manipulée porte le mode enregistré, on ne fait
+   * rien ici et la suspension se lève d'elle-même au dessin, ce qui réutilise la référence
+   * géométrique PERSISTÉE (pas de saut d'échelle) ; sinon on bascule, et `set*Mode` lève la
+   * suspension au passage.
    */
   public applyPositionModeToDrawing(force: boolean = false): void {
     const drawing_area = this._ref_sankey.drawing_area
