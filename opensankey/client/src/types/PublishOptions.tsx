@@ -67,6 +67,10 @@ export interface SankeyGlobals {
   // Class_PanelManager), alors que ce bloc-ci est une config viewer read-only.
 
   // État initial
+  // sa#373 — plancher d'épaisseur des flux (px) imposé à l'ouverture, prioritaire sur la
+  // valeur enregistrée dans le diagramme. 0 est valide (flux tracés à leur épaisseur réelle) ;
+  // omettre la clé laisse le réglage du document (ou le défaut 2px).
+  minimum_flux?: number
   position_mode?: Type_PositionMode  // mode de navigation imposé à l'ouverture (absolu/proportionnel/échelle adaptée)
   data_tag_selection?: Record<string, string>  // { groupe (id ou nom) : tag (id ou nom) } préselectionné à l'ouverture
   view_tag_selection?: Record<string, string>  // { groupe (id ou nom) : valeur } : sélectionne une VUE (nom OU id, light/heavy) comme le sélecteur de vue ; sinon filtre le view tag sur ce tag
@@ -101,6 +105,7 @@ export interface PublishOptions {
   lock_zoom: boolean
   tooltip_on_hover: boolean
   language: string | null
+  minimum_flux: number | null
   position_mode: Type_PositionMode | null
   data_tag_selection: Record<string, string> | null
   view_tag_selection: Record<string, string> | null
@@ -120,6 +125,13 @@ declare global {
 
 const bool = (v: unknown, def: boolean): boolean => (typeof v === 'boolean' ? v : def)
 const str = (v: unknown): string | null => (typeof v === 'string' ? v : null)
+// sa#373 — nombre positif ou nul (0 = valeur légitime pour le plancher d'épaisseur).
+// Une chaîne numérique est acceptée : la page publiée est écrite à la main aussi souvent
+// qu'elle est générée.
+const num = (v: unknown): number | null => {
+  const n = (typeof v === 'number') ? v : (typeof v === 'string' && v.trim() !== '') ? Number(v) : NaN
+  return (Number.isFinite(n) && n >= 0) ? n : null
+}
 const POSITION_MODES: Type_PositionMode[] = ['absolute', 'proportional', 'scale_adapted']
 const posMode = (v: unknown): Type_PositionMode | null =>
   (typeof v === 'string' && (POSITION_MODES as string[]).includes(v)) ? v as Type_PositionMode : null
@@ -198,6 +210,7 @@ export const getPublishOptions = (): PublishOptions => {
     lock_zoom: bool(s.lock_zoom, false),
     tooltip_on_hover: bool(s.tooltip_on_hover, false),
     language: str(s.language),
+    minimum_flux: num(s.minimum_flux),
     position_mode: posMode(s.position_mode),
     data_tag_selection: strRecord(s.data_tag_selection),
     view_tag_selection: strRecord(s.view_tag_selection),
@@ -256,6 +269,7 @@ export type ViewerSankeyOptions = {
   tooltip_on_hover?: boolean
   language?: string
   header_i18n?: Record<string, string>
+  minimum_flux?: number
   position_mode?: Type_PositionMode
   data_tag_selection?: Record<string, string>
   view_tag_selection?: Record<string, string>  // valeur = VUE (nom/id, light ou heavy, comme le sélecteur de vue) ou tag à filtrer
@@ -280,7 +294,7 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
     'data_type', 'data_type_intervals', 'value_filter',
     'view_filter', 'level_filter', 'node_filter', 'data_filter',
     'lock_zoom', 'tooltip_on_hover', 'language', 'header_i18n',
-    'position_mode', 'data_tag_selection', 'view_tag_selection',
+    'minimum_flux', 'position_mode', 'data_tag_selection', 'view_tag_selection',
   ]
   for (const k of keys) {
     if (options[k] !== undefined) {

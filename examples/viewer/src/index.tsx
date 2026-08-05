@@ -192,6 +192,12 @@ const App = () => {
           //   d'une VUE » est propre a l'application complete — d'ou le
           //   selecteur de vue par remontage utilise ici.
           // logo : chemin d'un logo substitue a celui d'OpenSankey.
+          // minimum_flux : plancher d'epaisseur des flux, en pixels (sa#373).
+          //   Impose a l'ouverture, prioritaire sur la valeur enregistree dans
+          //   le diagramme. 0 = flux traces a leur epaisseur reelle (aucun
+          //   plancher) ; omettre la cle laisse le reglage du document, ou le
+          //   defaut 2px. Seul levier de lisibilite quand les valeurs s'etalent
+          //   sur plusieurs ordres de grandeur : l'echelle, elle, est globale.
           //
           // --- 2. Lues seulement par l'application complete -----------------
           //     (aucun effet ici : le chrome correspondant n'existe pas)

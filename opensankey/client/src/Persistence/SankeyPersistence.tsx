@@ -2001,7 +2001,13 @@ export class DrawingAreaPersistence {
     if (drawing_area.color != default_background_color) json_object['couleur_fond_sankey'] = drawing_area.color
     if (drawing_area.grid_color != default_grid_color) json_object['default_grid_color'] = drawing_area.grid_color
     if (drawing_area.maximum_flux) json_object['maximum_flux'] = drawing_area.maximum_flux
-    if (drawing_area.minimum_flux) json_object['minimum_flux'] = drawing_area.minimum_flux
+    // sa#373 — le plancher d'épaisseur des flux est sérialisé dès qu'il est DÉFINI, et non
+    // « s'il est vrai » : 0 est une valeur légitime depuis #200 (flux tracés à leur épaisseur
+    // réelle, plus aucun plancher). Le test de véracité le laissait tomber silencieusement,
+    // donc un plancher réglé à 0 dans l'interface ne survivait pas à l'enregistrement et
+    // rouvrait au défaut 2px. « Pas de réglage » reste marqué par l'ABSENCE de la clé
+    // (removeMinimumLinkThickness efface `_minimum_flux`), jamais par un 0.
+    if (drawing_area.minimum_flux !== undefined) json_object['minimum_flux'] = drawing_area.minimum_flux
     if (Object.keys(drawing_area.scale_reference_by_viewtag).length > 0)
       json_object['scale_reference_by_viewtag'] = drawing_area.scale_reference_by_viewtag
     if (drawing_area.maximum_node) json_object['maximum_node'] = drawing_area.maximum_node
