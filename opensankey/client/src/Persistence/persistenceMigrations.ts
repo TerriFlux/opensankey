@@ -257,19 +257,22 @@ export type Type_LoadedPositionMode = 'absolute' | 'proportional' | 'scale_adapt
  * Jusqu'ici (#1231) TOUT fichier se chargeait en `absolute` : le mode était réputé « vue
  * transitoire ». Conséquence relevée au #369 : « échelle adaptée » — seul moyen de garder une
  * taille de diagramme constante d'un datatag à l'autre — devait être re-choisi à chaque
- * ouverture, et un diagramme publié ne pouvait pas être livré dans ce mode. C'est donc ce
- * mode, et lui seul, qui est désormais restitué.
+ * ouverture, et un diagramme publié ne pouvait pas être livré dans ce mode. Les modes
+ * d'AFFICHAGE (`proportional`, `scale_adapted`) sont donc restitués tels quels : le sélecteur
+ * rouvre sur le mode enregistré, et le changement de datatag suit ce mode.
  *
- * Trois cas restent ramenés à `absolute` :
- *  - `proportional` : le mode ne persiste PAS son cadre de référence (médiane, sommes de
- *    hauteurs par colonne). Le restituer le ferait re-capturer sur la géométrie du fichier —
- *    comme un clic sur « Proportionnel » après ouverture — et le plancher anti-chevauchement,
- *    recalculé sur cette géométrie, peut dilater fortement la disposition : le fichier ne se
- *    rouvrirait donc PAS tel qu'il a été enregistré (mesuré : facteur effectif 1,04 à
- *    l'enregistrement, 3,66 à la relecture). Arbitrage utilisateur du 2026-08-05 : mieux vaut
- *    rouvrir en absolu — les positions du fichier sont alors respectées — et laisser
- *    l'utilisateur re-choisir le %. Une restitution fidèle demanderait de persister tout le
- *    cadre de référence.
+ * RÈGLE DU PREMIER RENDU (arbitrage utilisateur du 2026-08-05) : le mode restitué est ARMÉ,
+ * pas appliqué. Le diagramme s'ouvre exactement tel qu'il a été enregistré — dessin en absolu,
+ * à l'échelle du fichier — et le mode ne se fait sentir qu'au PREMIER CHANGEMENT DE DATATAG,
+ * qui est précisément ce qu'il gouverne. C'est la suspension d'ouverture qui porte cette règle
+ * (`Class_DrawingArea.suspendPositionModeUntilDataChange`, armée juste après cet appel).
+ * Nécessaire parce qu'un fichier n'écrit pas ce qu'il AFFICHE dans un mode d'affichage : les
+ * positions persistées sont les CENTRES (jamais la disposition comprimée du %), et le
+ * `user_scale` est l'échelle DÉJÀ adaptée. Le couple `scale_adapted_ref_scale` / `_value` reste
+ * indispensable pour la suite : c'est lui qui, à la levée de la suspension, redonne l'échelle
+ * de base au lieu de recomposer le ratio sur l'échelle adaptée du fichier.
+ *
+ * Deux cas restent ramenés à `absolute` :
  *  - `parametric` (mode « écart » hérité) : c'est lui qui décide si u/v font autorité au
  *    chargement (cf. DrawingAreaPersistence.fromJSON) et le sélecteur ne le propose pas — le
  *    restituer rendrait la mise en page du fichier illisible sans moyen d'en sortir. Le
@@ -280,5 +283,6 @@ export type Type_LoadedPositionMode = 'absolute' | 'proportional' | 'scale_adapt
  * Pur et sans dépendance : testable en isolation.
  */
 export function positionModeOnLoad(incoming: string | undefined): Type_LoadedPositionMode {
-  return (incoming === 'scale_adapted') ? 'scale_adapted' : 'absolute'
+  if (incoming === 'proportional' || incoming === 'scale_adapted') return incoming
+  return 'absolute'
 }

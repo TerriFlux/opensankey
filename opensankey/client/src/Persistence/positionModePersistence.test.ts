@@ -11,26 +11,20 @@ import type { Type_JSON } from '../types/Utils'
 // diagramme constante d'un dataTag à l'autre — devait être re-choisi à chaque ouverture, et un
 // diagramme publié partait toujours en absolu pour le lecteur.
 //
-// Correctif : « échelle adaptée » est écrite (elle l'était déjà, via le style 'default') ET
-// restituée. Les autres modes restent ramenés à `absolute` : `proportional` (arbitrage
-// utilisateur du 2026-08-05 — le mode ne persiste pas son cadre de référence, le restituer ne
-// rouvrirait donc pas le fichier tel qu'il a été enregistré) et `parametric` (mode « écart »
-// hérité, hors sélecteur).
+// Correctif : les modes d'AFFICHAGE sont écrits (ils l'étaient déjà, via le style 'default')
+// ET restitués — sélecteur sur le mode enregistré, changement de dataTag qui le suit — SANS que
+// le premier rendu change le diagramme enregistré (arbitrage utilisateur du 2026-08-05).
+// `parametric` (mode « écart » hérité, hors sélecteur) reste ramené à `absolute`.
 
 function deepClone<T>(o: T): T {
   return JSON.parse(JSON.stringify(o)) as T
 }
 
 describe('#369 — positionModeOnLoad (décision pure au chargement)', () => {
-  it('restitue « échelle adaptée »', () => {
+  it('restitue les modes d\'affichage tels quels', () => {
+    expect(positionModeOnLoad('proportional')).toBe('proportional')
     expect(positionModeOnLoad('scale_adapted')).toBe('scale_adapted')
     expect(positionModeOnLoad('absolute')).toBe('absolute')
-  })
-
-  it('ramène le mode proportionnel à `absolute`', () => {
-    // Le mode % ne persiste pas son cadre de référence : le restituer le ferait re-capturer sur
-    // la géométrie du fichier, donc rouvrir le diagramme AUTREMENT qu'enregistré.
-    expect(positionModeOnLoad('proportional')).toBe('absolute')
   })
 
   it('ramène le mode hérité `parametric` à `absolute`', () => {
@@ -66,15 +60,13 @@ describe('#369 — round-trip du mode d\'affichage global', () => {
     expect(reload(json).drawing_area.sankey.default_style.shape_position_type).toBe('scale_adapted')
   })
 
-  it('ouvre en absolu un fichier enregistré en mode proportionnel', () => {
-    // Le mode est bien ÉCRIT (il diffère du défaut usine) — c'est la RELECTURE qui le ramène
-    // à l'absolu, faute de cadre de référence persisté.
+  it('conserve le mode proportionnel au save puis au load', () => {
     const app = new Class_ApplicationData(false)
     app.drawing_area.sankey.default_style.shape_position_type = 'proportional'
     const json = app.toJSON() as Type_JSON
     expect((json.style as Type_JSON)['default'] as Type_JSON)
       .toHaveProperty('shape_position_type', 'proportional')
-    expect(reload(json).drawing_area.sankey.default_style.shape_position_type).toBe('absolute')
+    expect(reload(json).drawing_area.sankey.default_style.shape_position_type).toBe('proportional')
   })
 
   it('ouvre en absolu un fichier sans l\'attribut', () => {
@@ -91,6 +83,44 @@ describe('#369 — round-trip du mode d\'affichage global', () => {
     app.drawing_area.sankey.default_style.shape_position_type = 'parametric'
     expect(reload(app.toJSON() as Type_JSON)
       .drawing_area.sankey.default_style.shape_position_type).toBe('absolute')
+  })
+})
+
+describe('#369 — le mode restitué est ARMÉ, pas appliqué à l\'ouverture', () => {
+  // Règle du premier rendu : le diagramme s'ouvre tel qu'il a été enregistré ; le mode ne se
+  // fait sentir qu'au premier changement de dataTag. La suspension porte cette règle — sans
+  // elle, le mode s'appliquerait dès le chargement, qui enchaîne plusieurs dessins.
+  const reload = (json: Type_JSON): Class_ApplicationData => {
+    const app = new Class_ApplicationData(false)
+    app.fromJSON(deepClone(json) as never, {}, false)
+    return app
+  }
+  const savedWithMode = (mode: string): Type_JSON => {
+    const app = new Class_ApplicationData(false)
+    app.drawing_area.sankey.default_style.shape_position_type = mode as never
+    return app.toJSON() as Type_JSON
+  }
+
+  it('suspend le mode au chargement d\'un fichier en échelle adaptée', () => {
+    expect(reload(savedWithMode('scale_adapted')).drawing_area.is_position_mode_suspended).toBe(true)
+  })
+
+  it('suspend le mode au chargement d\'un fichier en proportionnel', () => {
+    expect(reload(savedWithMode('proportional')).drawing_area.is_position_mode_suspended).toBe(true)
+  })
+
+  it('ne suspend rien pour un fichier en absolu (rien à armer)', () => {
+    const app = new Class_ApplicationData(false)
+    expect(reload(app.toJSON() as Type_JSON).drawing_area.is_position_mode_suspended).toBe(false)
+    // Idem pour le mode hérité, ramené à absolu.
+    expect(reload(savedWithMode('parametric')).drawing_area.is_position_mode_suspended).toBe(false)
+  })
+
+  it('lève la suspension dès qu\'un mode est choisi explicitement', () => {
+    const app = reload(savedWithMode('scale_adapted'))
+    expect(app.drawing_area.is_position_mode_suspended).toBe(true)
+    app.drawing_area.setAbsoluteMode()
+    expect(app.drawing_area.is_position_mode_suspended).toBe(false)
   })
 })
 
