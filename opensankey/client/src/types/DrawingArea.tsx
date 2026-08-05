@@ -659,6 +659,13 @@ export class Class_DrawingArea {
   private _filter_stock: number = 0
   private _filter_stock_px: number = 0
 
+  // #377 — quand vrai, une étiquette qui ne tient pas dans la hauteur de son élément n'est pas
+  // dessinée (libellé prioritaire, puis valeur — cf. types/LabelFitting). Réglage GLOBAL et non
+  // attribut par élément : la place disponible dépend de la sélection de dataTags affichée à
+  // l'instant (millésime, axe, unité), un choix figé par élément n'aurait pas de réponse unique.
+  // Défaut false : aucun diagramme existant ne change de rendu tant que la case n'est pas cochée.
+  private _prune_unfitting_labels: boolean = false
+
   // #fn — when true, links with a null value stay visible (global override of the
   // null-link filter). Per-link override is Link.shape_visible_when_zero.
   private _show_zero_links: boolean = false
@@ -842,6 +849,7 @@ export class Class_DrawingArea {
     this._filter_node_px = drawing_area_to_copy._filter_node_px
     this._filter_stock = drawing_area_to_copy._filter_stock
     this._filter_stock_px = drawing_area_to_copy._filter_stock_px
+    this._prune_unfitting_labels = drawing_area_to_copy._prune_unfitting_labels
     this._show_zero_links = drawing_area_to_copy._show_zero_links
     this._show_orphan_nodes = drawing_area_to_copy._show_orphan_nodes
     this._fit_margin = drawing_area_to_copy._fit_margin
@@ -3894,6 +3902,15 @@ export class Class_DrawingArea {
       this._filter_node_px, this._filter_stock_px
     )
   }
+
+  /**
+   * #377 — Élagage des étiquettes qui ne tiennent pas dans la hauteur de leur élément.
+   * true = le libellé n'est dessiné que s'il tient, la valeur seulement s'il reste de la place
+   * après lui. Sur un diagramme aux valeurs très étalées, c'est ce qui évite l'amas illisible
+   * d'étiquettes superposées au centre. Défaut false (rendu inchangé pour l'existant).
+   */
+  public get prune_unfitting_labels(): boolean { return this._prune_unfitting_labels }
+  public set prune_unfitting_labels(value: boolean) { this._prune_unfitting_labels = value }
 
   public get show_zero_links(): boolean { return this._show_zero_links }
   public set show_zero_links(value: boolean) { this._show_zero_links = value }

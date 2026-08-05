@@ -2075,6 +2075,8 @@ export class DrawingAreaPersistence {
     if (drawing_area.filter_node_px > 0) json_object['filter_node_px'] = drawing_area.filter_node_px
     if (drawing_area.filter_stock > 0) json_object['filter_stock'] = drawing_area.filter_stock
     if (drawing_area.filter_stock_px > 0) json_object['filter_stock_px'] = drawing_area.filter_stock_px
+    // #377 — écrit seulement si activé : un fichier existant garde un dump inchangé.
+    if (drawing_area.prune_unfitting_labels) json_object['prune_unfitting_labels'] = true
     if (drawing_area.show_zero_links) json_object['show_zero_links'] = true
     if (drawing_area.show_orphan_nodes) json_object['show_orphan_nodes'] = true
     if (drawing_area.type_data != initial_show_structure) json_object['show_structure'] = drawing_area.type_data
@@ -2440,6 +2442,7 @@ export class DrawingAreaPersistence {
     drawing_area['_filter_node_px'] = getNumberFromJSON(json_object, 'filter_node_px', 0)
     drawing_area['_filter_stock'] = getNumberFromJSON(json_object, 'filter_stock', 0)
     drawing_area['_filter_stock_px'] = getNumberFromJSON(json_object, 'filter_stock_px', 0)
+    drawing_area['_prune_unfitting_labels'] = getBooleanFromJSON(json_object, 'prune_unfitting_labels', false)
     drawing_area['_show_zero_links'] = getBooleanFromJSON(json_object, 'show_zero_links', false)
     drawing_area['_show_orphan_nodes'] = getBooleanFromJSON(json_object, 'show_orphan_nodes', false)
     drawing_area['_grid_size'] = getNumberFromJSON(json_object, 'grid_square_size', drawing_area.grid_size)

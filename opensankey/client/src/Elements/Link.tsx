@@ -539,6 +539,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
     labels.attr('font-size', fs)
   }
 
+  /**
+   * #377 — objet de dessin du LIBELLÉ du flux. Exposé pour que le label de valeur puisse
+   * connaître la hauteur déjà consommée par le libellé (règle « libellé prioritaire, puis
+   * valeur »). Lecture seule : l'instance est créée au constructeur et ne change jamais.
+   */
+  public get name_label_drawer(): LinkDrawNameLabel {
+    return this._link_draw_label
+  }
+
   public drawNameLabel() {
     if (this.drawing_area.bypass_redraws) return
     if (!this._link_draw_label) return
