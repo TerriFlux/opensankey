@@ -2608,6 +2608,13 @@ export class DrawingAreaPersistence {
       drawing_area.suspendPositionModeUntilDataChange()
     }
 
+    // #378 — Même endroit, même raison (les tags viennent d'être chargés) : on amorce la
+    // mémoire de sélection de datatags qui déclenche la réorganisation auto de l'ordre des
+    // flux E/S. Le PREMIER dessin ne doit rien réordonner — un fichier se rouvre sur l'ordre
+    // enregistré ; sans cet amorçage, la sélection du fichier ouvert serait comparée à celle
+    // du fichier précédent (la zone de dessin est réutilisée d'une ouverture à l'autre).
+    drawing_area.primeIOReorgOnDataSelection()
+
     // Dérivation de u/v depuis la géométrie au chargement :
     // - Mode d'origine `parametric` : u/v font autorité pour TOUS les nœuds (ils sont
     //   tous persistés). On n'y touche pas, SAUF s'ils sont tous à 0 (jamais calculés).
