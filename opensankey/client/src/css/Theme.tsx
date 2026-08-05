@@ -2688,6 +2688,57 @@ const otherStyles = {
   }),
 }
 
+/**
+ * OS#376 — rangée de menu à colonnes proportionnées, avec REPLI.
+ *
+ * Ces rangées étaient des grilles `Xfr Yfr …`. Sous la largeur minimale du panneau
+ * (PANEL_SIDEBAR_MIN_WIDTH_PX = 220), une piste descend à quelques dizaines de pixels
+ * alors qu'un bouton, lui, ne rétrécit pas : le `minWidth: 0` d'OS#300 autorise la
+ * piste à passer sous son contenu, et le contenu déborde SUR la cellule voisine — des
+ * contrôles superposés, illisibles et incliquables.
+ *
+ * Le rendu flex reproduit la grille tant que la place suffit : mêmes proportions, et
+ * `flex-grow: 0` pour qu'une rangée incomplète laisse ses cellules manquantes vides,
+ * comme le faisait la grille. Quand la place manque, la cellule passe à la LIGNE au
+ * lieu de recouvrir sa voisine.
+ *
+ * Les cellules gardent par défaut le `minWidth: 0` d'OS#300 — c'est lui qui permet à un
+ * champ de rétrécir au lieu de faire déborder la barre latérale. Ce qui change, c'est
+ * que le repli est désormais possible à CHAQUE niveau : une rangée imbriquée qui ne
+ * tient plus passe à la ligne dans sa cellule, au lieu de déborder sur la cellule
+ * voisine.
+ *
+ * `cell_floor` ne se justifie que pour une rangée dont TOUTES les cellules portent un
+ * contrôle incompressible (des boutons-icônes). L'appliquer largement a été essayé puis
+ * écarté : un champ a un `max-content` bien plus large que la place dont il a besoin, et
+ * des rangées qui tenaient à largeur normale se repliaient.
+ */
+const flexRatioRow = (
+  ratios: number[],
+  gap: string,
+  cell_floor?: string
+): SystemStyleObject => {
+  const total = ratios.reduce((a, b) => a + b, 0)
+  const style: Record<string, unknown> = {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap,
+    minWidth: 0,
+    '& > *': { minWidth: cell_floor ?? 0 },
+  }
+  ratios.forEach((ratio, i) => {
+    // nth-child (et non nth-of-type) : l'ordre des cellules est celui des enfants,
+    // quel que soit leur tag — c'est ce que faisait le placement automatique en grille.
+    style[`& > *:nth-child(${i + 1})`] = {
+      // La base retranche UN gap de plus qu'il n'y a d'intervalles : sans cette marge,
+      // les arrondis sous-pixel des largeurs flex font replier une rangée qui tenait
+      // tout juste sur une ligne en grille.
+      flex: `0 1 calc((100% - ${ratios.length} * ${gap}) * ${ratio / total})`,
+    }
+  })
+  return style as SystemStyleObject
+}
+
 // ===============================
 // LAYER STYLES COMPLETS
 // ===============================
@@ -2782,42 +2833,40 @@ const layerStyles = {
     paddingLeft: '1.5rem'
   },
 
-  // OS#300 — minWidth:0 (grille + cellules) partout : sinon l'auto-minimum d'une
-  // cellule vaut son min-content et le contenu (inputs, libellés) déborde la barre
-  // latérale étroite au lieu de rétrécir.
-  options_1_2_1cols: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 2fr 1fr',
-    gridColumnGap: '0.12rem',
-    minWidth: 0,
-    '& > *': { minWidth: 0 },
-  },
-  options_1_2_2cols: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 3fr 2fr',
-    gridColumnGap: '0.12rem',
-    minWidth: 0,
-    '& > *': { minWidth: 0 },
-  },
-  options_2_1_2cols: {
-    display: 'grid',
-    gridTemplateColumns: '2fr 1fr 2fr',
-    gridColumnGap: '0.12rem',
-    minWidth: 0,
-    '& > *': { minWidth: 0 },
-  },
-  // Grid layouts avec factory
+  // Rangées à colonnes proportionnées — cf. flexRatioRow (OS#300 puis OS#376).
+  options_1_2_1cols: flexRatioRow([1, 2, 1], '0.12rem'),
+  options_1_2_2cols: flexRatioRow([1, 3, 2], '0.12rem'),
+  options_2_1_2cols: flexRatioRow([2, 1, 2], '0.12rem'),
+  // Rangées à N colonnes égales — même principe, en factory.
   ...(['2cols', '3cols', '4cols', '5cols', '6cols'] as const).reduce((acc, type) => {
     const colCount = parseInt(type.charAt(0))
+    const gap = '0.12rem'
     acc[`options_${type}`] = {
-      display: 'grid',
-      gridTemplateColumns: `repeat(${colCount}, 1fr)`,
-      gridColumnGap: '0.12rem',
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap,
       minWidth: 0,
-      '& > *': { minWidth: 0 },
+      '& > *': {
+        // Un gap de marge en plus des intervalles : les arrondis sous-pixel des
+        // largeurs flex feraient sinon replier une rangée qui tenait tout juste.
+        flex: `0 1 calc((100% - ${colCount} * ${gap}) / ${colCount})`,
+        minWidth: 0,
+      },
     }
     return acc
   }, {} as Record<string, SystemStyleObject>),
+
+  // OS#376 — rangée de contrôles dont chacun garde sa largeur propre : à réserver aux
+  // groupes de boutons compacts (width:fit-content), qu'une piste de grille en 1fr
+  // rétrécirait sous leur taille — ils déborderaient alors sur le contrôle voisin.
+  // Le retour à la ligne évite le chevauchement quand le panneau devient étroit.
+  options_row_wrap: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: '0.25rem',
+    minWidth: 0,
+  },
 
   options_cards: {
     display: 'grid',
@@ -2827,13 +2876,13 @@ const layerStyles = {
     gridRowGap: '0.25rem'
   },
 
-  option_with_activation: {
-    display: 'grid',
-    gridTemplateColumns: '2fr 1fr',
-    gridColumnGap: '0.12rem',
-    minWidth: 0,
-    '& > *': { minWidth: 0 },
-  },
+  // Contrôle + son bouton d'activation (pastille de couleur + cadenas) : deux
+  // boutons-icônes, rien qui puisse rétrécir. D'où le plancher au contenu — sans lui,
+  // dans un panneau étroit, le crayon recouvrait le champ voisin (OS#376).
+  // Plancher au gabarit d'un bouton-icône, pas au contenu : `fit-content` prendrait le
+  // max-content de la pastille de couleur (~137 px) et replierait la rangée à largeur
+  // normale.
+  option_with_activation: flexRatioRow([2, 1], '0.12rem', '2rem'),
 
   welcome_license_row: {
     display: 'grid',
@@ -2908,29 +2957,13 @@ const layerStyles = {
     '& > *': { minWidth: 0 },
   },
 
-  menuconfigpanel_row_2cols: {
-    display: 'grid',
-    gridTemplateColumns: '2fr 3fr',
-    gridColumnGap: '0.25rem',
-    minWidth: 0,
-    '& > *': { minWidth: 0 },
-  },
+  // Rangées du panneau de configuration : libellé + contrôle(s). Repli sous le
+  // plancher plutôt que compression jusqu'au chevauchement (OS#376).
+  menuconfigpanel_row_2cols: flexRatioRow([2, 3], '0.25rem'),
 
-  menuconfigpanel_row_3cols: {
-    display: 'grid',
-    gridTemplateColumns: '2fr 1.5fr 1.5fr',
-    gridColumnGap: '0.25rem',
-    minWidth: 0,
-    '& > *': { minWidth: 0 },
-  },
+  menuconfigpanel_row_3cols: flexRatioRow([2, 1.5, 1.5], '0.25rem'),
 
-  menuconfigpanel_row_3colsbis: {
-    display: 'grid',
-    gridTemplateColumns: '2fr 1fr 2fr',
-    gridColumnGap: '0.25rem',
-    minWidth: 0,
-    '& > *': { minWidth: 0 },
-  },
+  menuconfigpanel_row_3colsbis: flexRatioRow([2, 1, 2], '0.25rem'),
 
   menuconfigpanel_2row_3cols: {
     display: 'grid',
@@ -3004,9 +3037,16 @@ const layerStyles = {
     gridRowGap: '0.25rem',
   },
 
+  // OS#376 — rangée [ajouter][sélecteur de style][retirer][tout supprimer] : sans
+  // repli, sa largeur naturelle dépassait celle du panneau étroit et poussait les
+  // derniers boutons hors du cadre, hors d'atteinte.
   menustylepanel_row_droplist: {
     display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'center',
     gap: '0.6rem',
+    minWidth: 0,
+    '& > *': { minWidth: 0 },
   },
 
   popover_sidebar_row_tag_filter: {
