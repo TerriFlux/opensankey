@@ -1239,7 +1239,16 @@ export class Class_ApplicationData {
     if (opts.doc && this.documentation_markdown !== '') {
       this.menu_configuration.main_zone_show_doc = true
     }
-    if (!opts.data_tag_selection && !opts.view_tag_selection && !opts.position_mode) return
+    // sa#373 — plancher d'épaisseur des flux imposé par la page hôte (window.sankey.minimum_flux),
+    // prioritaire sur la valeur du document. Posé AVANT la sortie anticipée ci-dessous : c'est une
+    // option d'état à part entière, indépendante des présélections de tags. Champ direct (le
+    // setter redessinerait aussitôt) ; le redessin est celui de la fin de méthode.
+    const forced_minimum_flux = opts.minimum_flux
+    if (forced_minimum_flux !== null) this._drawing_area['_minimum_flux'] = forced_minimum_flux
+    if (!opts.data_tag_selection && !opts.view_tag_selection && !opts.position_mode) {
+      if (forced_minimum_flux !== null) this._drawing_area.draw()
+      return
+    }
     const sankey = this._drawing_area.sankey
 
     // 1) et 2) Présélections de tags (logique partagée avec l'état transmis par l'URL,
