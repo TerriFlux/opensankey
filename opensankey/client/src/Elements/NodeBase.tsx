@@ -308,6 +308,15 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     this.d3_selection_g_shape = this.d3_selection?.append('g').attr('class', 'g_node_shape') ?? null
   }
 
+  /**
+   * #377 — objet de dessin du LIBELLÉ de cette forme. Exposé pour que le label de valeur puisse
+   * connaître la hauteur déjà consommée par le libellé (règle « libellé prioritaire, puis
+   * valeur »). Lecture seule : l'instance est créée au constructeur et ne change jamais.
+   */
+  public get name_label_drawer(): NodeDrawNameLabel {
+    return this._nodeDrawNameLabel
+  }
+
   public getShapeWidthToUse() {
     return Math.max(this.shape_min_width, this._envelopeSize().w)
   }

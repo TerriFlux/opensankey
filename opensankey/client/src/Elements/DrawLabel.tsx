@@ -14,6 +14,7 @@ import { Class_Handler } from './Handler'
 import {
   Type_PathLabelHPosition
 } from './ElementsAttributesConfig'
+import { computeLabelFitPlan, countWrappedLines } from '../types/LabelFitting'
 import { Class_NodeBase, default_selected_stroke_width } from './NodeBase'
 import { Class_NodeElement } from './Node'
 import { isLegendChildId } from './legendIds'
@@ -213,6 +214,104 @@ export abstract class DrawLabelBase {
    */
   protected foScaleTransform(x: number, y: number, comp: number): string {
     return comp !== 1 ? `translate(${x}, ${y}) scale(${comp})` : `translate(${x}, ${y})`
+  }
+
+  // =================== #377 — ÉLAGAGE DES ÉTIQUETTES QUI NE TIENNENT PAS ===================
+  // Sur un diagramme aux valeurs très étalées, la plupart des éléments sont plus fins qu'une
+  // ligne de texte : toutes les étiquettes restent dessinées et se superposent. Quand l'attribut
+  // `prune_if_unfitting` d'une étiquette est actif, on n'affiche le libellé que s'il tient dans
+  // la HAUTEUR DE L'ÉLÉMENT, et la valeur que s'il reste de la place après lui. L'attribut est
+  // porté par CHAQUE étiquette (libellé et valeur séparément) : il s'arbitre élément par élément
+  // ou d'un coup par les styles.
+  //
+  // La décision se prend AVANT le dessin (pas de <text> encore posé) : on mesure donc le texte
+  // avec canvas.measureText à la font_size BRUTE (espace écran), comme la césure des mots longs.
+  // Seul le NOMBRE de lignes est retenu — il est identique en espace local — puis multiplié par
+  // la police effective (compensée du zoom) pour être comparé à une hauteur en repère local.
+
+  /**
+   * Hauteur disponible pour les étiquettes de cet élément, en repère local.
+   * null = élément hors périmètre de la règle (zone de texte, légende, forme de stock…), dont la
+   * taille ne dit rien de la place réellement occupée par le texte.
+   */
+  protected getFitAvailableHeight(): number | null {
+    return null
+  }
+
+  /**
+   * Libellé (name_label) du MÊME élément, ou null. Sert au budget « libellé d'abord » : la valeur
+   * ne s'affiche que sur la hauteur restante. Surchargé par les labels de valeur.
+   */
+  protected getPeerNameLabel(): DrawLabelBase | null {
+    return null
+  }
+
+  /**
+   * Chaîne `font` canvas construite depuis les attributs du label — contrairement à
+   * getCanvasFontStringAtSize, n'exige aucun <text> déjà présent dans le DOM.
+   */
+  private getFitMeasureFont(): string {
+    const lv = this._label_values
+    const style = lv.italic ? 'italic' : 'normal'
+    const weight = lv.bold ? 'bold' : 'normal'
+    return `${style} ${weight} ${lv.font_size}px ${lv.font_family || 'sans-serif'}`
+  }
+
+  /**
+   * Hauteur (repère local) que ce label occuperait s'il était dessiné — 0 s'il n'y a rien à
+   * dessiner (label masqué par l'utilisateur, texte vide, mode icône/image/texte riche, pour
+   * lesquels la hauteur du texte n'a pas de sens).
+   *
+   * Publique : le label de valeur interroge celui du libellé pour connaître la place déjà prise.
+   */
+  public getRequiredLabelHeight(): number {
+    const lv = this._label_values
+    if (!lv.is_visible || lv.has_fo || lv.is_icon || lv.is_image) return 0
+    const raw_text = String(this.getLabelText() ?? '')
+    if (raw_text.trim() === '') return 0
+    const text = lv.uppercase ? raw_text.toUpperCase() : raw_text
+    const ctx = getMeasureContext()
+    let lines = 1
+    if (ctx) {
+      ctx.font = this.getFitMeasureFont()
+      lines = countWrappedLines(
+        text,
+        lv.box_width,
+        (s: string) => ctx.measureText(s).width,
+        lv.wrap_long_words
+      )
+    }
+    return Math.max(1, lines) * this.getEffectiveFontSize()
+  }
+
+  /** Opt-in de CETTE étiquette à l'élagage (attribut `prune_if_unfitting`). */
+  public get prunes_if_unfitting(): boolean {
+    return (this._label_values as { prune_if_unfitting?: boolean }).prune_if_unfitting === true
+  }
+
+  /**
+   * Porte de visibilité #377 : ce label tient-il dans la hauteur de son élément ?
+   * true dès que l'attribut est décoché ou que l'élément est hors périmètre — la règle ne
+   * s'ajoute qu'aux portes existantes, elle n'en remplace aucune.
+   *
+   * Le label de VALEUR consulte le libellé du même élément même quand celui-ci n'élague pas :
+   * un libellé dessiné occupe sa hauteur, donc il la retire du budget de la valeur.
+   */
+  protected fitsInAvailableHeight(): boolean {
+    if (!this.prunes_if_unfitting) return true
+    const available = this.getFitAvailableHeight()
+    if (available === null) return true
+
+    const own = { required: this.getRequiredLabelHeight(), prune: true }
+    if (this.prefix === 'value_label') {
+      const peer = this.getPeerNameLabel()
+      const name = {
+        required: peer?.getRequiredLabelHeight() ?? 0,
+        prune: peer?.prunes_if_unfitting ?? false
+      }
+      return computeLabelFitPlan(available, name, own).value
+    }
+    return computeLabelFitPlan(available, own, { required: 0, prune: false }).name
   }
 
   // =================== STICK TO LABEL (valeur collée au libellé) ===================
@@ -1919,6 +2018,21 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
     return this._element.id
   }
 
+  /**
+   * #377 — hauteur rendue du nœud (cadre englobant inclus : c'est alors la hauteur de son
+   * enveloppe, donc bien « la hauteur de l'élément » demandée, quelle que soit la position du
+   * libellé — à gauche et à l'extérieur pour un cadre).
+   *
+   * Restreint aux nœuds du graphe (Class_NodeElement), dont la hauteur est pilotée par les
+   * données. Les autres formes qui héritent de Class_NodeBase — zones de texte, blocs de
+   * légende (Class_ContainerElement), formes de stock (Class_StockShape) — ont une taille
+   * décorative ou déjà filtrée par son propre seuil : la règle ne s'y applique pas.
+   */
+  protected override getFitAvailableHeight(): number | null {
+    if (!(this.node instanceof Class_NodeElement)) return null
+    return this.node.getShapeHeightToUse()
+  }
+
   protected getLabelPos(): [number, number, string, string] {
     let label_pos_x = 0
     let label_anchor = 'start'
@@ -2142,8 +2256,11 @@ export class NodeDrawNameLabel extends NodeDrawLabelBase {
   }
 
   protected shouldDrawLabel(): boolean {
-    // Seuil d'affichage des labels de nœud (#seuil px).
-    return this._label_values.is_visible && this.node.is_above_label_threshold
+    // Seuil d'affichage des labels de nœud (#seuil px) puis, si l'élagage est actif,
+    // place réellement disponible dans la hauteur du nœud (#377).
+    return this._label_values.is_visible &&
+      this.node.is_above_label_threshold &&
+      this.fitsInAvailableHeight()
   }
 
   // En mode « value », le libellé affiche une valeur calculée : on désactive
@@ -2197,7 +2314,13 @@ export class NodeDrawValueLabel extends NodeDrawLabelBase {
     // (Class_StockShape réutilise NodeDrawValueLabel), le getter dispatche vers le
     // bon seuil (filter_node vs filter_stock).
     if (!this.node.is_above_label_threshold) return false
+    // #377 — la valeur ne s'affiche que sur la hauteur laissée libre par le libellé.
+    if (!this.fitsInAvailableHeight()) return false
     return true
+  }
+
+  protected override getPeerNameLabel(): DrawLabelBase | null {
+    return this.node.name_label_drawer
   }
 
   protected override getLabelPos(): [number, number, string, string] {
@@ -2328,6 +2451,15 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     if (horiz === 'left') return this.link.thicknessSource
     if (horiz === 'right') return this.link.thicknessTarget
     return (this.link.thicknessSource + this.link.thicknessTarget) / 2
+  }
+
+  /**
+   * #377 — hauteur disponible pour une étiquette de flux = ÉPAISSEUR du flux à l'endroit du
+   * label. Vaut aussi quand `pos_auto` repousse le texte au-dessus/au-dessous du flux : c'est
+   * l'épaisseur qui commande, pas la position du texte.
+   */
+  protected override getFitAvailableHeight(): number | null {
+    return this.getThicknessAtLabelPos()
   }
 
   /**
@@ -2781,7 +2913,9 @@ export class LinkDrawNameLabel extends LinkDrawLabelBase {
       !this._label_values.has_fo &&
       text_source !== 'none' &&
       ((link_text ?? '') !== '') &&
-      passes_label_threshold
+      passes_label_threshold &&
+      // #377 — place réellement disponible dans l'épaisseur du flux.
+      this.fitsInAvailableHeight()
     )
   }
 }
@@ -2829,6 +2963,10 @@ export class LinkDrawValueLabel extends LinkDrawLabelBase {
   protected override getInputInitialValue(): string {
     const v = this.link.valueCurrent
     return v === null || v === undefined ? '' : String(v)
+  }
+
+  protected override getPeerNameLabel(): DrawLabelBase | null {
+    return this.link.name_label_drawer
   }
 
   protected override onInputChange(value: string): void {
@@ -2907,6 +3045,9 @@ export class LinkDrawValueLabel extends LinkDrawLabelBase {
     } else if ((link_val ?? 0) < da.filter_label) {
       return false
     }
+
+    // #377 — la valeur ne s'affiche que sur l'épaisseur laissée libre par le libellé du flux.
+    if (!this.fitsInAvailableHeight()) return false
 
     // const x0 = this.link.position_x_start
     // const y0 = this.link.position_y_start
