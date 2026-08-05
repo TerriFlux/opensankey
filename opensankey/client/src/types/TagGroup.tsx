@@ -779,10 +779,18 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   }
 
   // COPY METHODS =======================================================================
+  // L'appariement des ids de tags DOIT être transmis au super : sans lui, deux
+  // groupes de données appariés par NOM mais portant des ids de tags différents
+  // (cas nominal d'`updateFrom`) voient leur `tags_order` réécrit avec les ids de
+  // la SOURCE. Les tags de la cible sortent alors de l'ordre affiché — leurs
+  // branches de valeurs sur les liens deviennent inatteignables — et les tags de
+  // la source sont recréés à vide à côté d'eux : les valeurs taguées de la cible
+  // sont perdues à l'écran comme à l'enregistrement.
   protected _copyFrom(
-    tagg_to_copy: Class_DataTagGroup
+    tagg_to_copy: Class_DataTagGroup,
+    matching_tags_id: { [_: string]: string; } = {}
   ) {
-    super._copyFrom(tagg_to_copy)
+    super._copyFrom(tagg_to_copy, matching_tags_id)
     this._use_colors = tagg_to_copy.use_colors
     this._is_unit = tagg_to_copy._is_unit
     this._propagate_structure = tagg_to_copy._propagate_structure
