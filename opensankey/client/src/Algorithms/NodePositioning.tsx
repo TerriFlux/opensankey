@@ -70,9 +70,13 @@ export class NodePositioning {
   // DrawingAreaPersistence toJSON/fromJSON).
   public get scaleAdaptedReference() { return this._scale.scaleAdaptedReference }
 
-  public restoreScaleReference(scale: number, value: number) {
-    return this._scale.restoreScaleReference(scale, value)
+  public restoreScaleReference(scale: number, magnitude: number) {
+    return this._scale.restoreScaleReference(scale, magnitude)
   }
+
+  // #384 — Grandeur du diagramme (somme de la colonne la plus haute, en valeurs) : reference
+  // du mode << echelle adaptee >> depuis qu'elle a remplace l'element de reference unique.
+  public diagramMagnitude() { return this._scale.diagramMagnitude() }
 
 
   // #1231 / #243 (split modes) — le drapeau de suppression de compression proportionnelle vit

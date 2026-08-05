@@ -78,8 +78,9 @@ export function setAbsoluteMode(da: Class_DrawingArea) {
   }
 }
 
-// #1231 — Mode « échelle adaptée » : le flux de référence (clic droit) garde toujours la
-// même épaisseur ; l'échelle du diagramme s'adapte à chaque datatag en conséquence. Les
+// #1231/#384 — Mode « échelle adaptée » : le DIAGRAMME garde toujours la même hauteur ;
+// l'échelle s'adapte à chaque datatag en conséquence (référence = grandeur du diagramme
+// entier, cf. NodePositioningScaleAdapted.diagramMagnitude — plus un élément désigné). Les
 // nœuds gardent leur centre fixe (comme l'absolu) pendant qu'ils se redimensionnent.
 export function setScaleAdaptedMode(da: Class_DrawingArea) {
   da.clearPositionModeSuspension()

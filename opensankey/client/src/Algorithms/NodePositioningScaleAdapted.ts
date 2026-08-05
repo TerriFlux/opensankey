@@ -7,70 +7,136 @@
 // ==================================================================================================
 
 // Mode « ECHELLE ADAPTEE » (#1231, lot #243 c5) — au lieu de bouger les noeuds pour absorber un
-// changement de datatag, on ajuste l'ECHELLE (valeur -> px) pour que l'element de reference garde
-// une taille rendue constante. Les positions des noeuds ne sont pas touchees ; seul l'affichage
-// est recale (anti-chevauchement par colonne), jamais persiste.
+// changement de datatag, on ajuste l'ECHELLE (valeur -> px) pour que le DIAGRAMME garde la meme
+// hauteur rendue. Les positions des noeuds ne sont pas touchees ; seul l'affichage est recale
+// (anti-chevauchement par colonne), jamais persiste.
 //
-// Ne partage AUCUN etat avec le mode proportionnel : ses deux champs `_scale_adapted_*` lui
-// appartiennent en propre. Le seul terrain commun est l'ELEMENT DE REFERENCE, lu via le socle
-// NodePositioningReference (`this.reference`).
+// #384 — La reference n'est plus un ELEMENT designe (flux / noeud-stock) mais la GRANDEUR DU
+// DIAGRAMME ENTIER (cf. `diagramMagnitude`). Un element unique cassait dans deux cas d'usage :
+// absent (ou nul) a certains datatags, l'echelle n'etait pas adaptee du tout, silencieusement ;
+// et on ne pouvait pas s'adapter sur plusieurs flux a la fois. L'element de reference garde son
+// role pour le mode PROPORTIONNEL et pour le plafond d'epaisseur par view tag ; ce mode-ci n'a
+// plus AUCUN etat commun avec lui (le socle NodePositioningReference n'est plus lu ici).
 //
-// Sous-service compose : `drawingArea` et `reference` sont exposes en getters pour que les corps
-// de methodes soient deplaces VERBATIM depuis NodePositioning.
+// Sous-service compose : `drawingArea` est expose en getter pour que les corps de methodes
+// soient deplaces VERBATIM depuis NodePositioning.
 
 import type { Class_DrawingArea } from '../types/DrawingArea'
 import type { Class_NodeElement } from '../Elements/Node'
+import type { Class_LinkElement } from '../Elements/Link'
 import type { NodePositioning } from './NodePositioning'
-import type { NodePositioningReference } from './NodePositioningReference'
 
 export class NodePositioningScaleAdapted {
   constructor(private readonly np: NodePositioning) { }
 
   private get drawingArea(): Class_DrawingArea { return this.np.drawingArea }
-  private get reference(): NodePositioningReference { return this.np.reference }
 
-  // #1231 — Mode « échelle adaptée » : au lieu de bouger les nœuds, on ajuste l'échelle
-  // (valeur→px) pour que le flux de référence garde TOUJOURS la même épaisseur. Comme
-  // l'épaisseur ∝ valeur / échelle, on garde `échelle / valeur_flux` constant : à chaque
-  // datatag, échelle = échelle_ref × (valeur_flux_courante / valeur_flux_ref). On capture
-  // l'échelle et la valeur du flux à l'entrée du mode. Transitoires.
-  private _scale_adapted_ref_value: number | undefined = undefined
+  // #1231/#384 — Mode « échelle adaptée » : au lieu de bouger les nœuds, on ajuste l'échelle
+  // (valeur→px) pour que le diagramme garde TOUJOURS la même hauteur. Comme la hauteur
+  // ∝ grandeur / échelle, on garde `échelle / grandeur` constant : à chaque datatag,
+  // échelle = échelle_ref × (grandeur_courante / grandeur_ref). On capture l'échelle et la
+  // grandeur à l'entrée du mode. Transitoires.
+  private _scale_adapted_ref_magnitude: number | undefined = undefined
 
   private _scale_adapted_ref_scale: number | undefined = undefined
 
   /**
-   * #1231 — Mode « échelle adaptée » : capture l'échelle courante et la valeur du flux de
-   * référence. Sert de base au ratio appliqué ensuite (`applyAdaptedScale`). À l'entrée du
-   * mode, valeur_courante == valeur_ref → échelle inchangée → pas de saut.
+   * #384 — Grandeur du diagramme au datatag/viewtag courant : la SOMME DE LA COLONNE LA PLUS
+   * HAUTE, exprimée EN VALEURS et non en pixels (aucune circularité avec l'échelle qu'elle sert
+   * à fixer). C'est bien elle qui détermine la hauteur rendue du diagramme : la hauteur d'un
+   * nœud vaut sa valeur ÷ échelle, et la hauteur totale est celle de la colonne la plus chargée.
+   *
+   * Mêmes conventions de colonne que `resolveScaleAdaptedOverlaps` : groupage par `position_u`,
+   * exclusion des nœuds `echange` (import/export, placés au niveau de leur flux — ils gonfleraient
+   * artificiellement une colonne), des nœuds relatifs et des cadres tied. Seuls les éléments
+   * VISIBLES comptent : le cas du mode vue se règle ainsi sans code séparé.
+   *
+   * 0 si le diagramme n'a aucune valeur (garde-fou de `applyAdaptedScale`).
+   */
+  public diagramMagnitude(): number {
+    const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
+    const columns = new Map<number, number>()
+    this.drawingArea.sankey.visible_nodes_list.forEach(n => {
+      if (!n.is_visible) return
+      if (echangeTag && n.hasGivenTag(echangeTag)) return
+      if (n.shape_position_type === 'relative') return
+      if (n.tied_to_nodes && n.attached_node.length > 0) return
+      const v = this.nodeMagnitude(n)
+      if (!(v > 0)) return
+      columns.set(n.position_u, (columns.get(n.position_u) ?? 0) + v)
+    })
+    let max = 0
+    columns.forEach(sum => { if (sum > max) max = sum })
+    return max
+  }
+
+  /**
+   * #384 — Valeur-équivalente de la hauteur d'un nœud : `max(Σ entrées, Σ sorties)`, augmentée
+   * de la valeur de stock quand le nœud est dimensionné par son stock (miroir en valeurs de
+   * `Node._getNaturalShapeHeight`, dont la hauteur-stock est divisée par
+   * `stock_height_scale_factor`). Les planchers/plafonds en pixels (`minimum_flux`,
+   * `maximum_node`) sont volontairement ignorés : ils ne suivent pas l'échelle, et les faire
+   * entrer ici rendrait la grandeur dépendante de l'échelle courante.
+   */
+  private nodeMagnitude(n: Class_NodeElement): number {
+    let sum_in = 0
+    let sum_out = 0
+    n.visible_input_links_list.forEach(l => { sum_in += this.linkMagnitude(l) })
+    n.visible_output_links_list.forEach(l => { sum_out += this.linkMagnitude(l) })
+    let magnitude = Math.max(sum_in, sum_out)
+    if (n.use_stock_for_height) {
+      const si = n.currentStockInitialForHeight()
+      if (si !== null && isFinite(si)) {
+        const factor = n.stock_height_scale_factor > 0 ? n.stock_height_scale_factor : 1
+        magnitude = Math.max(magnitude, Math.abs(si) / factor)
+      }
+    }
+    return magnitude
+  }
+
+  /**
+   * #384 — Valeur-équivalente de l'épaisseur d'un flux. `shape_local_link_scale` divise
+   * l'échelle du flux (cf. `Link.scaleValueToPx`) : un flux à l'échelle locale f rend f fois
+   * plus fin, sa contribution à la hauteur de la colonne est donc valeur/f. Les flux portés par
+   * un tag d'unité ont leur propre échelle, indépendante de celle du diagramme : ils comptent
+   * ici pour leur valeur brute (limite assumée, cf. #382).
+   */
+  private linkMagnitude(l: Class_LinkElement): number {
+    const v = l.valueCurrent
+    if (v === null || v === undefined || !isFinite(v)) return 0
+    const factor = l.shape_local_link_scale || 1
+    return Math.abs(v) / factor
+  }
+
+  /**
+   * #1231/#384 — Mode « échelle adaptée » : capture l'échelle courante et la grandeur du
+   * diagramme. Sert de base au ratio appliqué ensuite (`applyAdaptedScale`). À l'entrée du
+   * mode, grandeur_courante == grandeur_ref → échelle inchangée → pas de saut.
    */
   public captureScaleReference() {
-    // Élément brut : on doit pouvoir capturer la valeur de référence même si l'élément est
-    // momentanément masqué par un filtre vue (cf. referenceFluxRefValue).
-    const ref = this.reference.rawReference
-    const v = ref ? this.reference.referenceFluxRefValue() : undefined
-    if (ref && v && v > 0) {
-      // Valeur au datatag de référence (couple flux/datatag) ; échelle de base = échelle courante.
-      this._scale_adapted_ref_value = v
+    const m = this.diagramMagnitude()
+    if (m > 0) {
+      this._scale_adapted_ref_magnitude = m
       this._scale_adapted_ref_scale = this.drawingArea.scale
     } else {
-      this._scale_adapted_ref_value = undefined
+      this._scale_adapted_ref_magnitude = undefined
       this._scale_adapted_ref_scale = undefined
     }
   }
 
   /**
-   * #369 — Couple capturé du mode « échelle adaptée » (échelle de BASE + valeur de l'élément de
-   * référence), exposé pour la PERSISTANCE. Le mode étant désormais restitué à l'ouverture
-   * (cf. `positionModeOnLoad`), ce couple doit l'être aussi : le `user_scale` écrit dans le
-   * fichier est l'échelle ADAPTÉE au datatag courant (base × valeur_courante / valeur_réf), pas
+   * #369 — Couple capturé du mode « échelle adaptée » (échelle de BASE + grandeur du diagramme),
+   * exposé pour la PERSISTANCE. Le mode étant désormais restitué à l'ouverture (cf.
+   * `positionModeOnLoad`), ce couple doit l'être aussi : le `user_scale` écrit dans le fichier
+   * est l'échelle ADAPTÉE au datatag courant (base × grandeur_courante / grandeur_réf), pas
    * l'échelle de base. Le laisser recapturer au chargement prendrait donc l'échelle adaptée pour
    * base et composerait le ratio une seconde fois au dessin suivant → le diagramme changerait de
    * taille juste après l'ouverture. undefined tant que rien n'a été capturé (rien à écrire).
    */
-  public get scaleAdaptedReference(): { scale: number, value: number } | undefined {
+  public get scaleAdaptedReference(): { scale: number, magnitude: number } | undefined {
     if (this._scale_adapted_ref_scale === undefined) return undefined
-    if (this._scale_adapted_ref_value === undefined) return undefined
-    return { scale: this._scale_adapted_ref_scale, value: this._scale_adapted_ref_value }
+    if (this._scale_adapted_ref_magnitude === undefined) return undefined
+    return { scale: this._scale_adapted_ref_scale, magnitude: this._scale_adapted_ref_magnitude }
   }
 
   /**
@@ -78,41 +144,31 @@ export class NodePositioningScaleAdapted {
    * aberrantes ignorées : la capture paresseuse de `applyAdaptedScale` reprend alors la main
    * (comportement d'un fichier antérieur, qui ne porte pas ces clés).
    */
-  public restoreScaleReference(scale: number, value: number) {
+  public restoreScaleReference(scale: number, magnitude: number) {
     if (!isFinite(scale) || scale <= 0) return
-    if (!isFinite(value) || value <= 0) return
+    if (!isFinite(magnitude) || magnitude <= 0) return
     this._scale_adapted_ref_scale = scale
-    this._scale_adapted_ref_value = value
+    this._scale_adapted_ref_magnitude = magnitude
   }
 
   /**
-   * #1231 — Mode « échelle adaptée » : ajuste l'échelle (valeur→px) du diagramme pour que le
-   * flux de référence garde sa taille de référence à tous les datatags. Appelé en tête de
-   * `drawElements` avant `_sankey.draw()`. No-op sans flux de référence ou sans capture.
-   * Écrit directement `_scale` + le domaine de `_scaleValueToPx` (le setter `scale` redraw →
-   * récursion ; on l'évite).
+   * #1231/#384 — Mode « échelle adaptée » : ajuste l'échelle (valeur→px) du diagramme pour qu'il
+   * garde sa hauteur de référence à tous les datatags. Appelé en tête de `drawElements` avant
+   * `_sankey.draw()`. Écrit directement `_scale` + le domaine de `_scaleValueToPx` (le setter
+   * `scale` redraw → récursion ; on l'évite).
    */
   public applyAdaptedScale() {
-    // En mode vue, l'élément de référence peut être masqué par le filtre → on prend l'élément brut
-    // (sa valeur de réf reste le « gabarit » de taille). Hors vue, version visibilité-gated.
-    const view_active = this.drawingArea.sankey.view_mode_active
-    const ref = view_active ? this.reference.rawReference : this.reference.gatedReference
-    if (!ref) return
-    // Capture paresseuse (1er dessin / après chargement) : base = échelle + valeur courantes
+    // Capture paresseuse (1er dessin / après chargement) : base = échelle + grandeur courantes
     // → ratio 1 à cette frame, pas de saut.
-    if (this._scale_adapted_ref_value === undefined || this._scale_adapted_ref_scale === undefined) {
+    if (this._scale_adapted_ref_magnitude === undefined || this._scale_adapted_ref_scale === undefined) {
       this.captureScaleReference()
       return
     }
-    // En mode vue : v = valeur du CORRESPONDANT de la vue (enfant visible portant l'étiquette
-    // sélectionnée). new_scale = ref_scale × correspondant / valeur_réf → le correspondant est
-    // dessiné à la taille de référence (une vue plus petite dilate l'échelle pour normaliser le
-    // correspondant). Hors vue : valeur courante de l'élément de référence (datatags).
-    const v = view_active
-      ? this.reference.referenceViewValue()
-      : this.reference.referenceCurrentValue()
-    if (v <= 0) return
-    const new_scale = this._scale_adapted_ref_scale * v / this._scale_adapted_ref_value
+    // Grandeur au datatag/viewtag courant. Nulle (datatag sans aucune valeur) : on garde
+    // l'échelle précédente plutôt que de diviser par zéro.
+    const m = this.diagramMagnitude()
+    if (!(m > 0)) return
+    const new_scale = this._scale_adapted_ref_scale * m / this._scale_adapted_ref_magnitude
     if (isFinite(new_scale) && new_scale > 0) {
       this.drawingArea._scale = new_scale
       this.drawingArea._scaleValueToPx.domain([0, new_scale])
@@ -129,7 +185,7 @@ export class NodePositioningScaleAdapted {
       this.drawingArea._scale = this._scale_adapted_ref_scale
       this.drawingArea._scaleValueToPx.domain([0, this._scale_adapted_ref_scale])
     }
-    this._scale_adapted_ref_value = undefined
+    this._scale_adapted_ref_magnitude = undefined
     this._scale_adapted_ref_scale = undefined
   }
 
