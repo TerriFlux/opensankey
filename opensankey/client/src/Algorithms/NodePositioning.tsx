@@ -264,6 +264,66 @@ export class NodePositioning {
    * cadre englobant (positionnés par leur container).
    */
   public anchorParametricNodesToAbsolute() {
+    // #372 — écarts → positions. L'autre sens de lecture de la MÊME chaîne est
+    // `settleParametricStacksFromY` (positions → écarts), en fin de déplacement à la souris.
+    this.parametricColumnChains().forEach(chain => this.stackParametricChain(chain))
+  }
+
+  /**
+   * #372 — Empile une chaîne de colonne : chaque nœud « Écartement » se pose à son écart sous le
+   * bas de celui qui le précède ; les nœuds absolus servent d'ancres et gardent leur position.
+   *
+   * `keeps` retient les nœuds dont la position vient d'être POSÉE à la souris : ils gardent leur
+   * place et servent d'ancre au reste de la pile. C'est ce qui permet au settle de mesurer leur
+   * écart sur la position DÉFINITIVE de leur prédécesseur — laquelle peut bouger si le
+   * déplacement a changé l'ordre de la colonne.
+   */
+  private stackParametricChain(
+    chain: Class_NodeElement[],
+    keeps: (node: Class_NodeElement) => boolean = () => false
+  ) {
+    // #366 — Haut de colonne : la TÊTE en écartement s'y cale. Mémorisé au premier passage (le
+    // mode global vient de la placer : c'est la disposition de l'auteur), puis gardé fixe.
+    // Idempotent — l'empilement replace toujours une tête sur ce haut, donc re-mesurer redonne la
+    // même valeur. Un déplacement à la souris l'oublie (`clearColumnTops`) pour que la nouvelle
+    // disposition fasse foi ; #372 — une tête qu'on vient de DÉPOSER refait donc le haut de sa
+    // colonne, au lieu d'être rappelée à celui que ce même settle vient de mémoriser.
+    const head = chain[0]
+    if (head !== undefined && head.shape_position_type === 'parametric') {
+      const anchor = this._column_top.get(head.position_u)
+      if (anchor === undefined || keeps(head)) {
+        this._column_top.set(head.position_u, head.position_y)
+      } else if (head.position_y !== anchor) {
+        head.position_y = anchor
+        head.applyPosition()
+      }
+    }
+    let prev_bottom: number | null = null
+    chain.forEach(node => {
+      if (node.shape_position_type === 'parametric' && prev_bottom !== null && !keeps(node)) {
+        node.position_y = prev_bottom + (node.shape_position_dy ?? 0)
+        node.applyPosition()
+      }
+      prev_bottom = node.position_y + node.getShapeHeightToUse()
+    })
+  }
+
+  /**
+   * #372 — Chaînes d'empilement du mix « Écartement » : les membres retenus, groupés par colonne
+   * (`position_u`) et déjà ordonnés comme la pile les parcourt.
+   *
+   * SOURCE UNIQUE des deux sens de lecture : `anchorParametricNodesToAbsolute` (écarts →
+   * positions) et `settleParametricStacksFromY` (positions → écarts) doivent voir exactement la
+   * même chaîne — mêmes membres, même ordre, même prédécesseur. Sans quoi le settle écrit des
+   * écarts que la pile ne relit pas, ce qui était précisément le piège de
+   * `backCalculateShapePositionDyFromY` (autre ensemble, autre ordre).
+   *
+   * Exclus : nœuds invisibles, échange, `relative` (collés à un voisin), enfants de cadre
+   * englobant (positionnés par leur cadre). Map VIDE si aucune colonne ne porte de nœud
+   * « Écartement » : il n'y a alors ni empilement à faire, ni écart à régler.
+   */
+  public parametricColumnChains(): Map<number, Class_NodeElement[]> {
+    const chains = new Map<number, Class_NodeElement[]>()
     const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
     const isContainerChild = (n: Class_NodeElement): boolean =>
       n.dimensions_as_child.some(d => d.container_mode)
@@ -277,44 +337,83 @@ export class NodePositioning {
     })
 
     // Rien à faire si aucune colonne ne contient de nœud parametric.
-    if (!members.some(n => n.shape_position_type === 'parametric')) return
+    if (!members.some(n => n.shape_position_type === 'parametric')) return chains
 
-    const columns = new Map<number, Class_NodeElement[]>()
     members.forEach(n => {
-      const col = columns.get(n.position_u) ?? []
+      const col = chains.get(n.position_u) ?? []
       col.push(n)
-      columns.set(n.position_u, col)
+      chains.set(n.position_u, col)
+    })
+    chains.forEach((column, u) => chains.set(u, Geometry.sortStackMembers(column)))
+    return chains
+  }
+
+  /**
+   * #372 — SETTLE : relit les positions DÉPOSÉES à la souris et en redéduit l'ordre et les écarts
+   * des empilements, pour que le dessin suivant les reproduise. Sans lui, la position d'un nœud
+   * en « Écartement » est DÉRIVÉE de son écart au nœud du dessus — écart que le déplacement ne
+   * touchait pas : le nœud revenait à sa place au dessin suivant.
+   *
+   * C'est le pendant PAR NŒUD de ce que `backCalculateShapePositionDyFromY` fait pour le mode
+   * global « écart » ; les deux ne sont pas interchangeables (cf. `parametricColumnChains`).
+   *
+   * Ordre des passes, imposé par le recouvrement des deux empilements : les membres d'un cadre
+   * englobant sont replacés depuis le HAUT du cadre, et la HAUTEUR du cadre est l'enveloppe de
+   * ses membres. On règle donc les cadres d'abord, on les ré-empile (leur hauteur redevient
+   * exacte), et seulement ensuite on règle les colonnes, qui lisent cette hauteur.
+   *
+   * `moved_ids` = les nœuds que le déplacement a réellement bougés. Eux seuls portent une
+   * position DÉPOSÉE, qui fait autorité ; celle des autres sera recalculée au prochain dessin et
+   * ne doit donc rien figer (cf. `settleStackOrderFromY` / `settleStackGapsFromY`).
+   *
+   * Renvoie true si un nœud déplacé appartenait bel et bien à un empilement — le seul cas où le
+   * dessin doit être relancé. Un déplacement qui ne touche aucune pile (diagramme en coordonnées
+   * absolues sans cadre) ne coûte donc pas de redessin complet.
+   */
+  public settleParametricStacksFromY(moved_ids: ReadonlySet<string>): boolean {
+    let settled = false
+    const moved = (n: Class_NodeElement) => moved_ids.has(n.id)
+    // Un nœud ABSOLU n'appartient pas à la pile : il l'ancre. Le déplacer ne le fait donc pas
+    // changer de rang — sa pile le SUIT, comportement propre du mix « Écartement ». Seul le
+    // déplacement d'un membre de pile exprime un rang.
+    const moved_member = (n: Class_NodeElement) => moved(n) && n.shape_position_type === 'parametric'
+
+    // 1. Cadres englobants. La position d'un membre y vient entièrement du cadre : rang dans la
+    //    pile, puis écart. On relit le rang groupe par groupe — enfants DIRECTS d'un même cadre —
+    //    car permuter les v par-dessus la frontière d'un sous-cadre ne voudrait rien dire : la
+    //    collecte des feuilles retrie cadre par cadre.
+    const groups = this.containerChildGroups()
+    if (groups.length > 0) {
+      groups.forEach(group => Geometry.settleStackOrderFromY(group, moved))
+      // Ré-empiler en gardant les membres déposés : les autres reprennent leur place dans le
+      // nouvel ordre, et l'écart d'un membre déposé se mesure donc sur la position DÉFINITIVE de
+      // son prédécesseur. Puis, sauf en mode 'constant' — où l'écart est lu en direct sur la
+      // drawing area et n'appartient pas au membre —, on écrit cet écart.
+      this.restackContainerChildren(moved)
+      if (this.drawingArea.effective_gap_mode !== 'constant') {
+        this._parametric.containerLeafChains()
+          .forEach(({ leaves }) => Geometry.settleStackGapsFromY(leaves, moved))
+      }
+      // Ré-empiler pour de bon : plus rien n'est retenu, la pile est celle que le dessin refera.
+      // Indispensable avant l'étape 2, qui lit la HAUTEUR des cadres — enveloppe de leurs membres,
+      // donc fausse tant qu'un membre traîne là où il a été déposé.
+      this.restackContainerChildren()
+      settled = groups.some(group => group.some(moved))
+    }
+
+    // 2. Colonnes en « Écartement », sur des hauteurs de cadre désormais exactes.
+    this.parametricColumnChains().forEach(chain => {
+      const ordered = Geometry.settleStackOrderFromY(chain, moved_member)
+      // Même raisonnement qu'au 1 : rejouer l'empilement en gardant les nœuds déposés remet leurs
+      // prédécesseurs là où le dessin les mettra, avant de mesurer l'écart.
+      this.stackParametricChain(ordered, moved)
+      Geometry.settleStackGapsFromY(ordered, moved_member)
+      // Un nœud déplacé dans cette colonne, fût-il l'ancre absolue : la pile qui pend sous lui
+      // doit être redessinée pour le suivre.
+      if (chain.some(moved)) settled = true
     })
 
-    columns.forEach(column => {
-      const sorted = [...column].sort((a, b) => {
-        if (a.position_v !== b.position_v) return a.position_v - b.position_v
-        return a.position_y - b.position_y
-      })
-      // #366 — Haut de colonne : la TÊTE en écartement s'y cale. Mémorisé au premier passage
-      // (le mode global vient de la placer : c'est la disposition de l'auteur), puis gardé fixe.
-      // Idempotent — l'empilement replace toujours une tête sur ce haut, donc re-mesurer redonne
-      // la même valeur. Un déplacement à la souris l'oublie (`clearColumnTops`) pour que la
-      // nouvelle disposition fasse foi.
-      const head = sorted[0]
-      if (head !== undefined && head.shape_position_type === 'parametric') {
-        const anchor = this._column_top.get(head.position_u)
-        if (anchor === undefined) {
-          this._column_top.set(head.position_u, head.position_y)
-        } else if (head.position_y !== anchor) {
-          head.position_y = anchor
-          head.applyPosition()
-        }
-      }
-      let prev_bottom: number | null = null
-      sorted.forEach(node => {
-        if (node.shape_position_type === 'parametric' && prev_bottom !== null) {
-          node.position_y = prev_bottom + (node.shape_position_dy ?? 0)
-          node.applyPosition()
-        }
-        prev_bottom = node.position_y + node.getShapeHeightToUse()
-      })
-    })
+    return settled
   }
 
 
@@ -436,7 +535,12 @@ export class NodePositioning {
     this._parametric.recomputeParametricLayout(scope)
   }
 
-  public restackContainerChildren() { this._parametric.restackContainerChildren() }
+  public restackContainerChildren(keeps?: (leaf: Class_NodeElement) => boolean) {
+    this._parametric.restackContainerChildren(keeps)
+  }
+
+  // #372 — groupes d'empilement des cadres englobants (impl dans NodePositioningParametric).
+  public containerChildGroups(): Class_NodeElement[][] { return this._parametric.containerChildGroups() }
 
   /**
    * Redresse immédiatement un flux marqué « à garder droit » (clic droit → « Rendre

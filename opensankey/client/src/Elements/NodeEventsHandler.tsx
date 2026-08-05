@@ -568,6 +568,33 @@ export class NodeEventsHandler {
       }
     }
 
+    // #372 — SETTLE des empilements. Un déplacement à la souris est une COMMANDE de
+    // positionnement : il doit primer sur l'empilement, et l'empilement doit repartir de la
+    // disposition déposée. Or la position d'un nœud en « Écartement » est DÉRIVÉE de son écart au
+    // nœud du dessus, et celle d'un membre de cadre englobant de son rang dans la pile du cadre :
+    // sans relire ces positions pour en redéduire ordre et écarts, le dessin suivant réécrit la
+    // position déposée et le nœud revient à sa place.
+    //
+    // Ici, AVANT la réorganisation des flux E/S et l'instantané d'annulation : ceux-ci doivent
+    // voir les positions finales (le ré-empilement d'un cadre replace ses membres). En mode
+    // global « écart » le settle équivalent est déjà fait plus haut
+    // (backCalculateShapePositionDyFromY) — sur une AUTRE chaîne, cf. parametricColumnChains.
+    const dict_old_stack: { [x: string]: [number, number | undefined] } = {}
+    let stack_settled = false
+    if (this._node.sankey.default_style.shape_position_type !== 'parametric') {
+      // Les nœuds RÉELLEMENT bougés : eux seuls portent une position déposée qui fait autorité.
+      // La position des autres sera recalculée par l'empilement au prochain dessin — la figer
+      // ferait perdre à une pile le droit de suivre l'ancre qu'on vient de déplacer.
+      const moved_ids = new Set<string>([this._node.id])
+      Object.keys(dict_old_pos).forEach(id => {
+        const n = (drawing_area.sankey.nodes_dict[id] ?? drawing_area.sankey.containers_dict[id]) as Class_NodeBase | undefined
+        if (n && (n.position_x !== dict_old_pos[id][0] || n.position_y !== dict_old_pos[id][1])) moved_ids.add(id)
+      })
+      drawing_area.sankey.nodes_list.forEach(n => { dict_old_stack[n.id] = [n.position_v, n.shape_position_dy] })
+      stack_settled = drawing_area.nodePositioning.settleParametricStacksFromY(moved_ids)
+      if (!stack_settled) Object.keys(dict_old_stack).forEach(k => delete dict_old_stack[k])
+    }
+
     // Auto-reorganize IO links + save one combined undo/redo step covering both
     // positions and link orders, so that undo restores the pre-drag layout fully.
     if (position_changed) {
@@ -661,8 +688,26 @@ export class NodeEventsHandler {
         if (!n) n = drawing_area.sankey.containers_dict[k] as Class_NodeBase | undefined
         if (n) dict_new_sizes[k] = [n.shape_min_width, n.shape_min_height]
       })
+      // #372 — Instantané de l'empilement RÉGLÉ (rang + écart). L'annulation doit défaire le
+      // settle en même temps que les positions : restaurer le seul coin laisserait l'écart
+      // d'après le déplacement, que le dessin suivant réappliquerait — le nœud reviendrait à sa
+      // position déplacée. Vide si aucun empilement n'était en jeu (aucun surcoût).
+      const dict_new_stack: { [x: string]: [number, number | undefined] } = {}
+      Object.keys(dict_old_stack).forEach(k => {
+        const n = drawing_area.sankey.nodes_dict[k] as Class_NodeElement | undefined
+        if (n) dict_new_stack[k] = [n.position_v, n.shape_position_dy]
+      })
+      const restoreStack = (_: Class_ProtoElement, snapshot: { [x: string]: [number, number | undefined] }) => {
+        Object.keys(snapshot).forEach(k => {
+          const n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeElement | undefined
+          if (!n) return
+          n.position_v = snapshot[k][0]
+          n.shape_position_dy = snapshot[k][1] as number
+        })
+      }
 
       function undo(_: Class_ProtoElement) {
+        restoreStack(_, dict_old_stack) // #372 — défaire le settle avant de reposer les coins
         Object.keys(dict_old_pos).forEach(k => {
           let n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeBase
           if (!n) n = _.drawing_area.sankey.containers_dict[k]
@@ -689,6 +734,7 @@ export class NodeEventsHandler {
       }
 
       function redo(_: Class_ProtoElement) {
+        restoreStack(_, dict_new_stack) // #372 — refaire le settle avant de reposer les coins
         Object.keys(dict_new_pos).forEach(k => {
           let n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeBase
           if (!n) n = _.drawing_area.sankey.containers_dict[k]
@@ -733,7 +779,10 @@ export class NodeEventsHandler {
     // Un nœud déplacé peut être l'ancre absolue de nœuds « Ecartement » de sa colonne :
     // relancer drawElements pour que anchorParametricNodesToAbsolute les recale sous lui.
     // (else-if : la branche %/échelle ci-dessus a déjà redessiné en absolu.)
-    else if (this._node.sankey.visible_nodes_list.some(n => n.shape_position_type === 'parametric')) {
+    // #372 — `stack_settled` couvre en plus les cadres englobants, dont les membres sont
+    // ré-empilés à chaque dessin même sans aucun nœud en « Écartement ».
+    else if (stack_settled ||
+        this._node.sankey.visible_nodes_list.some(n => n.shape_position_type === 'parametric')) {
       this._node.drawing_area.drawElements()
     }
 

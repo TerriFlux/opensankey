@@ -55,6 +55,106 @@ export function totalStackHeight(nodes: Class_NodeElement[]): number {
   }, 0)
 }
 
+// ------------------------------------------------------------------------------------------
+// #372 — Une pile verticale se lit dans LES DEUX SENS
+//
+// Une pile (colonne en « Écartement », membres d'un cadre englobant) relie un ORDRE et des
+// ÉCARTS à des POSITIONS. Le dessin lit `écarts → positions` (stackNodesVertically,
+// stackContainerChildren, anchorParametricNodesToAbsolute). Un déplacement à la souris, lui,
+// pose des POSITIONS : il faut donc lire la pile dans l'autre sens en fin de déplacement
+// (`positions → ordre + écarts`), sinon le dessin suivant réécrit la position déposée à partir
+// de l'écart d'avant — et le nœud « revient à sa place » (défaut du #372).
+//
+// Les deux sens doivent parcourir la MÊME chaîne : mêmes membres, même ordre, même
+// prédécesseur. Les trois fonctions ci-dessous sont ce vocabulaire commun ; à charge de
+// l'appelant de leur passer exactement la chaîne qu'il empile.
+// ------------------------------------------------------------------------------------------
+
+/** Forme minimale d'un membre de pile verticale (typage structurel, cf. Type_ContainerCandidate). */
+export type Type_StackMember = {
+  position_v: number
+  position_y: number
+  shape_position_dy?: number
+  getShapeHeightToUse(): number
+}
+
+/**
+ * Ordre de parcours d'une pile : `position_v` croissant, `position_y` en départage. C'est le
+ * tri qu'appliquent `anchorParametricNodesToAbsolute` et `restackContainerChildren`.
+ */
+export function sortStackMembers<T extends Type_StackMember>(members: T[]): T[] {
+  return [...members].sort((a, b) =>
+    a.position_v !== b.position_v ? a.position_v - b.position_v : a.position_y - b.position_y)
+}
+
+/**
+ * positions → ORDRE. Réinsère les membres DÉPLACÉS (`moved`) à leur rang vertical déposé, puis
+ * repermute les `position_v` de la pile en conséquence. C'est ce qui fait qu'un nœud tiré
+ * au-dessus de son prédécesseur y RESTE, au lieu d'être ramené juste en dessous par un écart
+ * négatif clampé à 0.
+ *
+ * DEUX RÔLES, à ne pas confondre. Un membre déplacé porte une position DÉPOSÉE, qui fait
+ * autorité ; les autres portent la position que le dernier empilement leur a donnée, laquelle
+ * sera RECALCULÉE au prochain dessin. Trier toute la pile sur les y mélangerait les deux : tirer
+ * une ancre sous sa propre pile ferait passer la pile devant elle, alors que la pile doit
+ * simplement la suivre. Les non-déplacés gardent donc leur ordre relatif, et servent de repères.
+ *
+ * Seules les VALEURS de v sont permutées, l'ensemble est conservé : la pile ne peut pas dériver
+ * vis-à-vis du reste du diagramme (nœuds masqués sous la sélection courante, notamment). Le rang
+ * se compare sur les CENTRES : un membre est « au-dessus » d'un autre quand son centre l'est, ce
+ * qui reste juste entre membres de hauteurs très différentes.
+ *
+ * Renvoie la pile dans son ordre RÉGLÉ — c'est elle qu'il faut passer à `settleStackGapsFromY`.
+ */
+export function settleStackOrderFromY<T extends Type_StackMember>(
+  members: T[],
+  moved: (member: T) => boolean
+): T[] {
+  const before = sortStackMembers(members)
+  if (before.length < 2) return before
+  const movers = before.filter(moved)
+  if (movers.length === 0) return before
+
+  const center = (m: T) => m.position_y + m.getShapeHeightToUse() / 2
+  const after = before.filter(m => !moved(m))
+  movers.forEach(m => {
+    let i = 0
+    while (i < after.length && center(after[i]) <= center(m)) i++
+    after.splice(i, 0, m)
+  })
+  const values = before.map(m => m.position_v)
+  after.forEach((m, i) => { m.position_v = values[i] })
+  return after
+}
+
+/**
+ * positions → ÉCARTS. `shape_position_dy` de chaque membre retenu par `settles` devient l'écart
+ * entre son bord supérieur et le bord INFÉRIEUR DU MEMBRE QUI LE PRÉCÈDE DANS LA CHAÎNE — la
+ * relation exacte que l'empilement relit. Un chevauchement (écart négatif) est clampé à 0.
+ *
+ * `settles` ne doit retenir que les membres DÉPLACÉS : l'écart d'un membre que le dessin va
+ * replacer est déjà juste, et le réécrire depuis sa position courante le figerait là où le
+ * dessin PRÉCÉDENT l'avait mis — la pile ne suivrait plus son ancre.
+ *
+ * `chain` doit être la pile DÉJÀ ORDONNÉE (`sortStackMembers`, ou le retour de
+ * `settleStackOrderFromY`). Renvoie le nombre d'écarts clampés.
+ */
+export function settleStackGapsFromY<T extends Type_StackMember>(
+  chain: T[],
+  settles: (member: T) => boolean = () => true
+): number {
+  let clamped = 0
+  for (let i = 1; i < chain.length; i++) {
+    const curr = chain[i]
+    if (!settles(curr)) continue
+    const prev = chain[i - 1]
+    const raw_dy = curr.position_y - (prev.position_y + prev.getShapeHeightToUse())
+    if (raw_dy < 0) clamped++
+    curr.shape_position_dy = Math.max(0, raw_dy)
+  }
+  return clamped
+}
+
 /**
  * Écart vertical AVANT un enfant de cadre englobant, selon le mode d'écart courant :
  *  - 'constant'  : `const_gap` (lu EN DIRECT sur `disaggregation_gap_value`) — éditer la valeur
