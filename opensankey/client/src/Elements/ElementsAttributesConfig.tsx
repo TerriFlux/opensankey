@@ -1402,22 +1402,22 @@ export const BASE_LABEL_CONFIG = {
     category: '',
     actions: [] as BaseActionType[],
     labels: {
-      en: 'Hide if it does not fit',
-      fr: 'Masquer si ça ne tient pas',
-      es: 'Ocultar si no cabe',
-      de: 'Ausblenden, wenn kein Platz',
-      it: 'Nascondi se non entra',
-      'zh-CN': '放不下时隐藏',
-      ja: '収まらない場合は隠す'
+      en: 'Hide if it overflows',
+      fr: 'Masquer si ça dépasse',
+      es: 'Ocultar si desborda',
+      de: 'Ausblenden bei Überlauf',
+      it: 'Nascondi se fuoriesce',
+      'zh-CN': '超出时隐藏',
+      ja: 'はみ出す場合は隠す'
     },
     tooltips: {
-      en: 'Hide this label when it does not fit in the height of its element (node, container frame, link thickness). The name comes first: the value is shown only if room is left after it.',
-      fr: 'Masquer cette étiquette quand elle ne tient pas dans la hauteur de son élément (nœud, cadre englobant, épaisseur du flux). Le libellé passe en premier : la valeur ne s\'affiche que si la place restante le permet.',
-      es: 'Ocultar esta etiqueta cuando no cabe en la altura de su elemento (nodo, marco contenedor, grosor del flujo). El nombre va primero: el valor solo se muestra si queda espacio.',
-      de: 'Diese Beschriftung ausblenden, wenn sie nicht in die Höhe ihres Elements passt (Knoten, umschließender Rahmen, Flussdicke). Der Name hat Vorrang: der Wert erscheint nur bei verbleibendem Platz.',
-      it: 'Nascondi questa etichetta quando non entra nell\'altezza del suo elemento (nodo, cornice contenitore, spessore del flusso). Il nome viene prima: il valore appare solo se resta spazio.',
-      'zh-CN': '当标签放不进其元素高度（节点、包含框、流量粗细）时隐藏。名称优先：仅在有剩余空间时显示数值。',
-      ja: '要素（ノード、囲み枠、フローの太さ）の高さに収まらない場合、このラベルを隠します。名前が優先され、余白がある場合のみ値を表示します。'
+      en: 'Hide this label when it overflows the height of its element (node, container frame, link thickness). The name comes first: the value is shown only if room is left after it.',
+      fr: 'Masquer cette étiquette quand elle dépasse la hauteur de son élément (nœud, cadre englobant, épaisseur du flux). Le libellé passe en premier : la valeur ne s\'affiche que si la place restante le permet.',
+      es: 'Ocultar esta etiqueta cuando desborda la altura de su elemento (nodo, marco contenedor, grosor del flujo). El nombre va primero: el valor solo se muestra si queda espacio.',
+      de: 'Diese Beschriftung ausblenden, wenn sie über die Höhe ihres Elements hinausragt (Knoten, umschließender Rahmen, Flussdicke). Der Name hat Vorrang: der Wert erscheint nur bei verbleibendem Platz.',
+      it: 'Nascondi questa etichetta quando fuoriesce dall\'altezza del suo elemento (nodo, cornice contenitore, spessore del flusso). Il nome viene prima: il valore appare solo se resta spazio.',
+      'zh-CN': '当标签超出其元素高度（节点、包含框、流量粗细）时隐藏。名称优先：仅在有剩余空间时显示数值。',
+      ja: '要素（ノード、囲み枠、フローの太さ）の高さをはみ出す場合、このラベルを隠します。名前が優先され、余白がある場合のみ値を表示します。'
     }
   } satisfies AttributeConfig<boolean>,
 
