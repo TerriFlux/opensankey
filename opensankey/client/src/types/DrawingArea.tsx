@@ -1324,6 +1324,15 @@ export class Class_DrawingArea {
     // ci-dessous pour tourner AVANT le plafond par view tag (qui s'applique par-dessus).
     if (_position_type === 'scale_adapted') {
       this.nodePositioning.applyAdaptedScale()
+    } else if (this.is_position_mode_suspended
+      && this.sankey.styles_dict['default'].shape_position_type === 'scale_adapted') {
+      // #384 — Mode ARMÉ mais pas encore appliqué (ouverture de fichier, ou choix du mode au
+      // sélecteur) : la frame courante EST la référence, puisque c'est elle que la suspension
+      // s'engage à ne pas changer. On la (re)capture donc à chaque frame suspendue — la
+      // dernière avant le changement de datatag est l'état posé, ce qui évite à la fois le pas
+      // de retard de la capture paresseuse et le risque d'une capture sur une frame de
+      // chargement pas encore stabilisée.
+      this.nodePositioning.captureScaleReference()
     }
     // Plafond d'épaisseur par view tag : recale l'échelle pour que le flux désigné ne dépasse
     // pas son épaisseur seuil dans le view tag courant. Tous modes (y compris « échelle

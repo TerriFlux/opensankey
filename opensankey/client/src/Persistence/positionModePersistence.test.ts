@@ -122,26 +122,39 @@ describe('#369 — le mode restitué est ARMÉ, pas appliqué à l\'ouverture', 
     app.drawing_area.setAbsoluteMode()
     expect(app.drawing_area.is_position_mode_suspended).toBe(false)
   })
+
+  it('#384 — CHOISIR « échelle adaptée » l\'arme aussi, au lieu de l\'appliquer tout de suite', () => {
+    // Retour du test local : passer la dimension en « échelle adaptée » déplaçait les nœuds
+    // (recalage d'affichage par colonne) alors qu'aucune donnée n'avait changé. La règle du
+    // premier rendu du #369 ne valait que pour l'OUVERTURE ; elle vaut tout autant pour le
+    // choix explicite au sélecteur : le mode gouverne le changement de datatag, pas l'instant
+    // où on le choisit.
+    const app = new Class_ApplicationData(false)
+    expect(app.drawing_area.is_position_mode_suspended).toBe(false)
+    app.drawing_area.setScaleAdaptedMode()
+    expect(app.drawing_area.sankey.default_style.shape_position_type).toBe('scale_adapted')
+    expect(app.drawing_area.is_position_mode_suspended).toBe(true)
+  })
 })
 
 describe('#369 — échelle de référence du mode « échelle adaptée »', () => {
-  // `user_scale` est l'échelle DÉJÀ adaptée au datatag courant (base × valeur_courante /
-  // valeur_réf). Sans persistance du couple capturé, la relecture la prendrait pour échelle de
+  // `user_scale` est l'échelle DÉJÀ adaptée au datatag courant (base × grandeur_courante /
+  // grandeur_réf). Sans persistance du couple capturé, la relecture la prendrait pour échelle de
   // BASE et recomposerait le ratio au dessin suivant → le diagramme changerait de taille juste
   // après l'ouverture.
-  it('écrit le couple (échelle de base, valeur de référence) et le relit', () => {
+  it('écrit le couple (échelle de base, grandeur du diagramme) et le relit', () => {
     const app = new Class_ApplicationData(false)
     app.drawing_area.sankey.default_style.shape_position_type = 'scale_adapted'
     app.drawing_area.nodePositioning.restoreScaleReference(1234, 42)
 
     const json = app.toJSON() as Type_JSON
     expect(json['scale_adapted_ref_scale']).toBe(1234)
-    expect(json['scale_adapted_ref_value']).toBe(42)
+    expect(json['scale_adapted_ref_magnitude']).toBe(42)
 
     const app2 = new Class_ApplicationData(false)
     app2.fromJSON(deepClone(json) as never, {}, false)
     expect(app2.drawing_area.nodePositioning.scaleAdaptedReference)
-      .toEqual({ scale: 1234, value: 42 })
+      .toEqual({ scale: 1234, magnitude: 42 })
   })
 
   it('n\'écrit pas le couple hors du mode « échelle adaptée »', () => {
@@ -149,7 +162,7 @@ describe('#369 — échelle de référence du mode « échelle adaptée »', () 
     app.drawing_area.nodePositioning.restoreScaleReference(1234, 42)
     const json = app.toJSON() as Type_JSON
     expect(json['scale_adapted_ref_scale']).toBeUndefined()
-    expect(json['scale_adapted_ref_value']).toBeUndefined()
+    expect(json['scale_adapted_ref_magnitude']).toBeUndefined()
   })
 
   it('laisse la capture paresseuse reprendre la main sur un fichier sans le couple', () => {
@@ -162,6 +175,22 @@ describe('#369 — échelle de référence du mode « échelle adaptée »', () 
     const app2 = new Class_ApplicationData(false)
     app2.fromJSON(deepClone(json) as never, {}, false)
     expect(app2.drawing_area.sankey.default_style.shape_position_type).toBe('scale_adapted')
+    expect(app2.drawing_area.nodePositioning.scaleAdaptedReference).toBeUndefined()
+  })
+
+  it('#384 — ignore l\'ancienne clé `scale_adapted_ref_value` (valeur d\'un élément)', () => {
+    // Un fichier écrit avant #384 porte une valeur d'ÉLÉMENT là où on attend désormais une
+    // grandeur de diagramme. La relire composerait grandeur_courante / valeur_élément → saut
+    // d'échelle à l'ouverture. Le renommage de la clé est ce qui l'évite : la capture paresseuse
+    // reprend la main, ratio 1, échelle du fichier conservée.
+    const app = new Class_ApplicationData(false)
+    app.drawing_area.sankey.default_style.shape_position_type = 'scale_adapted'
+    const json = app.toJSON() as Type_JSON
+    json['scale_adapted_ref_scale'] = 1234
+    json['scale_adapted_ref_value'] = 42
+
+    const app2 = new Class_ApplicationData(false)
+    app2.fromJSON(deepClone(json) as never, {}, false)
     expect(app2.drawing_area.nodePositioning.scaleAdaptedReference).toBeUndefined()
   })
 })

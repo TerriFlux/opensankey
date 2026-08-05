@@ -2054,16 +2054,19 @@ export class DrawingAreaPersistence {
       const ref_dt = drawing_area.nodePositioning.proportionalReferenceDatatagIds
       if (ref_dt && ref_dt.length > 0) json_object['prop_reference_datatag'] = ref_dt
     }
-    // #369 — Mode « échelle adaptée » : couple capturé (échelle de BASE + valeur de l'élément de
-    // référence) qui définit l'épaisseur tenue par l'élément de référence. Sans lui, la relecture
-    // reprendrait `user_scale` (= échelle DÉJÀ adaptée au datatag courant) pour base et
-    // recomposerait le ratio → saut d'échelle juste après l'ouverture. Écrit seulement dans ce
-    // mode : ailleurs le couple n'a pas de sens et ne doit pas ressusciter avec le mode.
+    // #369 — Mode « échelle adaptée » : couple capturé (échelle de BASE + grandeur du diagramme)
+    // qui définit la hauteur tenue par le diagramme. Sans lui, la relecture reprendrait
+    // `user_scale` (= échelle DÉJÀ adaptée au datatag courant) pour base et recomposerait le
+    // ratio → saut d'échelle juste après l'ouverture. Écrit seulement dans ce mode : ailleurs le
+    // couple n'a pas de sens et ne doit pas ressusciter avec le mode.
+    // #384 — La clé de valeur s'appelle désormais `scale_adapted_ref_magnitude` : elle porte une
+    // grandeur de diagramme, plus la valeur d'un élément de référence. Le renommage est ce qui
+    // rend les fichiers antérieurs sûrs (cf. fromJSON).
     if (drawing_area.sankey.default_style.shape_position_type === 'scale_adapted') {
       const scale_ref = drawing_area.nodePositioning.scaleAdaptedReference
       if (scale_ref) {
         json_object['scale_adapted_ref_scale'] = scale_ref.scale
-        json_object['scale_adapted_ref_value'] = scale_ref.value
+        json_object['scale_adapted_ref_magnitude'] = scale_ref.magnitude
       }
     }
     if (drawing_area.filter_label > 0) json_object['filter_label'] = drawing_area.filter_label
@@ -2644,14 +2647,21 @@ export class DrawingAreaPersistence {
       }
     }
     // #369 — Mode « échelle adaptée » restitué : recharger le couple capturé (échelle de base +
-    // valeur de référence) écrit par toJSON, sinon `applyAdaptedScale` recapturerait sur
+    // grandeur du diagramme) écrit par toJSON, sinon `applyAdaptedScale` recapturerait sur
     // l'échelle DÉJÀ adaptée du fichier et le diagramme sauterait d'échelle au dessin suivant.
     // Fichier antérieur (clés absentes) : capture paresseuse au premier dessin, comme avant.
+    // #384 — Un fichier écrit AVANT le changement de référence ne porte que l'ancienne clé
+    // `scale_adapted_ref_value` (valeur d'un élément) : elle est ignorée, sans quoi le ratio
+    // grandeur_courante / valeur_élément ferait sauter l'échelle à l'ouverture. Le couple est
+    // alors reconstitué par les frames de la suspension d'ouverture (cf. `drawElements`), qui
+    // capturent l'état affiché — c'est ce qui évite le pas de retard sur un fichier antérieur.
+    // Ce qui est relu ici reste utile comme AMORCE, pour le cas où le mode s'appliquerait sans
+    // qu'aucune frame suspendue ne soit passée.
     if (loaded_position_mode === 'scale_adapted') {
       const ref_scale = json_object['scale_adapted_ref_scale']
-      const ref_value = json_object['scale_adapted_ref_value']
-      if (typeof ref_scale === 'number' && typeof ref_value === 'number') {
-        drawing_area.nodePositioning.restoreScaleReference(ref_scale, ref_value)
+      const ref_magnitude = json_object['scale_adapted_ref_magnitude']
+      if (typeof ref_scale === 'number' && typeof ref_magnitude === 'number') {
+        drawing_area.nodePositioning.restoreScaleReference(ref_scale, ref_magnitude)
       }
     }
   }

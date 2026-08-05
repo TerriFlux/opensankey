@@ -268,7 +268,7 @@ export type Type_LoadedPositionMode = 'absolute' | 'proportional' | 'scale_adapt
  * (`Class_DrawingArea.suspendPositionModeUntilDataChange`, armée juste après cet appel).
  * Nécessaire parce qu'un fichier n'écrit pas ce qu'il AFFICHE dans un mode d'affichage : les
  * positions persistées sont les CENTRES (jamais la disposition comprimée du %), et le
- * `user_scale` est l'échelle DÉJÀ adaptée. Le couple `scale_adapted_ref_scale` / `_value` reste
+ * `user_scale` est l'échelle DÉJÀ adaptée. Le couple `scale_adapted_ref_scale` / `_magnitude` reste
  * indispensable pour la suite : c'est lui qui, à la levée de la suspension, redonne l'échelle
  * de base au lieu de recomposer le ratio sur l'échelle adaptée du fichier.
  *
