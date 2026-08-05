@@ -10,6 +10,11 @@
 // élément (nœud, cadre englobant, flux). Aucune dépendance au DOM ni à d3 : la mesure de texte
 // est INJECTÉE par l'appelant (canvas.measureText côté rendu, fonction déterministe en test).
 //
+// L'élagage s'active PAR ÉTIQUETTE (attribut `prune_if_unfitting` du libellé et de la valeur,
+// cf. BASE_LABEL_CONFIG) : l'utilisateur arbitre élément par élément, ou d'un coup par les
+// styles. Ce n'est pas un masquage figé dans le document — la place disponible est réévaluée à
+// chaque dessin, donc la réponse suit la sélection de dataTags affichée à l'instant.
+//
 // Règle du ticket, dans cet ordre :
 //   1. le LIBELLÉ s'affiche s'il tient dans la hauteur disponible ;
 //   2. la VALEUR s'affiche seulement s'il reste de la place APRÈS le libellé ;
@@ -95,38 +100,51 @@ export function countWrappedLines(
   return lines
 }
 
+/** Une étiquette vue par la règle : la hauteur qu'elle prendrait, et son opt-in à l'élagage. */
+export type Type_LabelFitCandidate = {
+  /** hauteur qu'occuperait l'étiquette si elle était dessinée (0 = rien à dessiner) */
+  required: number
+  /** attribut `prune_if_unfitting` de CETTE étiquette : false => jamais élaguée */
+  prune: boolean
+}
+
 /**
  * Décide, pour UN élément, ce qui tient dans sa hauteur : le libellé d'abord, la valeur ensuite.
  *
- * @param available_height   hauteur rendue de l'élément (repère local du diagramme)
- * @param name_required      hauteur qu'occuperait le libellé (0 = pas de libellé à dessiner)
- * @param value_required     hauteur qu'occuperait la valeur (0 = pas de valeur à dessiner)
+ * @param available_height hauteur rendue de l'élément (repère local du diagramme)
+ * @param name             libellé de l'élément
+ * @param value            valeur de l'élément
  *
- * Une hauteur requise nulle vaut « rien à placer » : la réponse est `true` (aucune contrainte
- * ajoutée), les autres portes d'affichage tranchant déjà le cas. Un libellé présent mais qui ne
- * tient pas emporte la valeur avec lui (point 3 de la règle) : afficher un nombre seul à la place
- * du nom d'un élément n'aiderait pas à lire le diagramme.
+ * L'opt-in est PAR ÉTIQUETTE (attribut `prune_if_unfitting`), ce qui donne trois nuances :
+ * - une étiquette dont l'attribut est décoché n'est jamais élaguée — mais si elle est dessinée,
+ *   elle occupe quand même sa hauteur, donc elle prive l'autre de la place correspondante ;
+ * - une hauteur requise nulle vaut « rien à placer » : réponse `true`, aucune contrainte
+ *   ajoutée (les autres portes d'affichage tranchent déjà le cas) ;
+ * - un libellé qui est élagué faute de place emporte la valeur avec lui (point 3 de la règle) —
+ *   afficher un nombre seul à la place du nom d'un élément n'aiderait pas à lire le diagramme.
+ *   Sauf si la valeur, elle, a explicitement renoncé à l'élagage : son affichage est alors un
+ *   choix assumé de l'utilisateur, que la règle ne défait pas.
  */
 export function computeLabelFitPlan(
   available_height: number,
-  name_required: number,
-  value_required: number
+  name: Type_LabelFitCandidate,
+  value: Type_LabelFitCandidate
 ): Type_LabelFitPlan {
   const height = Number.isFinite(available_height) ? available_height : 0
-  const has_name = name_required > 0
-  const has_value = value_required > 0
+  const has_name = name.required > 0
+  const has_value = value.required > 0
 
-  const name_fits = !has_name || name_required <= height
+  const name_fits = !has_name || !name.prune || name.required <= height
   const name_drawn = has_name && name_fits
-  const consumed = name_drawn ? name_required : 0
+  const consumed = name_drawn ? name.required : 0
 
   let value_fits: boolean
-  if (!has_value) {
+  if (!has_value || !value.prune) {
     value_fits = true
   } else if (has_name && !name_fits) {
     value_fits = false
   } else {
-    value_fits = consumed + value_required <= height
+    value_fits = consumed + value.required <= height
   }
 
   return { name: name_fits, value: value_fits }

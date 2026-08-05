@@ -218,9 +218,11 @@ export abstract class DrawLabelBase {
 
   // =================== #377 — ÉLAGAGE DES ÉTIQUETTES QUI NE TIENNENT PAS ===================
   // Sur un diagramme aux valeurs très étalées, la plupart des éléments sont plus fins qu'une
-  // ligne de texte : toutes les étiquettes restent dessinées et se superposent. Quand le réglage
-  // global `prune_unfitting_labels` est actif, on n'affiche le libellé que s'il tient dans la
-  // HAUTEUR DE L'ÉLÉMENT, et la valeur que s'il reste de la place après lui.
+  // ligne de texte : toutes les étiquettes restent dessinées et se superposent. Quand l'attribut
+  // `prune_if_unfitting` d'une étiquette est actif, on n'affiche le libellé que s'il tient dans
+  // la HAUTEUR DE L'ÉLÉMENT, et la valeur que s'il reste de la place après lui. L'attribut est
+  // porté par CHAQUE étiquette (libellé et valeur séparément) : il s'arbitre élément par élément
+  // ou d'un coup par les styles.
   //
   // La décision se prend AVANT le dessin (pas de <text> encore posé) : on mesure donc le texte
   // avec canvas.measureText à la font_size BRUTE (espace écran), comme la césure des mots longs.
@@ -282,22 +284,34 @@ export abstract class DrawLabelBase {
     return Math.max(1, lines) * this.getEffectiveFontSize()
   }
 
+  /** Opt-in de CETTE étiquette à l'élagage (attribut `prune_if_unfitting`). */
+  public get prunes_if_unfitting(): boolean {
+    return (this._label_values as { prune_if_unfitting?: boolean }).prune_if_unfitting === true
+  }
+
   /**
    * Porte de visibilité #377 : ce label tient-il dans la hauteur de son élément ?
-   * true dès que le réglage est inactif ou que l'élément est hors périmètre — la règle ne
+   * true dès que l'attribut est décoché ou que l'élément est hors périmètre — la règle ne
    * s'ajoute qu'aux portes existantes, elle n'en remplace aucune.
+   *
+   * Le label de VALEUR consulte le libellé du même élément même quand celui-ci n'élague pas :
+   * un libellé dessiné occupe sa hauteur, donc il la retire du budget de la valeur.
    */
   protected fitsInAvailableHeight(): boolean {
-    if (!this._element.drawing_area?.prune_unfitting_labels) return true
+    if (!this.prunes_if_unfitting) return true
     const available = this.getFitAvailableHeight()
     if (available === null) return true
 
-    const own_required = this.getRequiredLabelHeight()
+    const own = { required: this.getRequiredLabelHeight(), prune: true }
     if (this.prefix === 'value_label') {
-      const name_required = this.getPeerNameLabel()?.getRequiredLabelHeight() ?? 0
-      return computeLabelFitPlan(available, name_required, own_required).value
+      const peer = this.getPeerNameLabel()
+      const name = {
+        required: peer?.getRequiredLabelHeight() ?? 0,
+        prune: peer?.prunes_if_unfitting ?? false
+      }
+      return computeLabelFitPlan(available, name, own).value
     }
-    return computeLabelFitPlan(available, own_required, 0).name
+    return computeLabelFitPlan(available, own, { required: 0, prune: false }).name
   }
 
   // =================== STICK TO LABEL (valeur collée au libellé) ===================

@@ -1390,6 +1390,36 @@ export const BASE_LABEL_CONFIG = {
       ja: 'ラベル幅を超える単語にハイフンを入れて折り返します'
     }
   } satisfies AttributeConfig<boolean>,
+  // #377 — élagage de CETTE étiquette quand elle ne tient pas dans la hauteur de son
+  // élément. Attribut par étiquette (et non réglage global) : il se pose élément par
+  // élément, ou d'un coup par les STYLES. Ce n'est pas un « masquer » figé — la place
+  // disponible est réévaluée à chaque dessin, donc la réponse suit la sélection de
+  // dataTags affichée (un flux gros en 2023 et fin en 2015 est élagué sur le seul
+  // millésime où il ne tient pas). Défaut false : rendu de l'existant inchangé.
+  prune_if_unfitting: {
+    default: false as boolean,
+    type: (() => false) as (() => boolean),
+    category: '',
+    actions: [] as BaseActionType[],
+    labels: {
+      en: 'Hide if it does not fit',
+      fr: 'Masquer si ça ne tient pas',
+      es: 'Ocultar si no cabe',
+      de: 'Ausblenden, wenn kein Platz',
+      it: 'Nascondi se non entra',
+      'zh-CN': '放不下时隐藏',
+      ja: '収まらない場合は隠す'
+    },
+    tooltips: {
+      en: 'Hide this label when it does not fit in the height of its element (node, container frame, link thickness). The name comes first: the value is shown only if room is left after it.',
+      fr: 'Masquer cette étiquette quand elle ne tient pas dans la hauteur de son élément (nœud, cadre englobant, épaisseur du flux). Le libellé passe en premier : la valeur ne s\'affiche que si la place restante le permet.',
+      es: 'Ocultar esta etiqueta cuando no cabe en la altura de su elemento (nodo, marco contenedor, grosor del flujo). El nombre va primero: el valor solo se muestra si queda espacio.',
+      de: 'Diese Beschriftung ausblenden, wenn sie nicht in die Höhe ihres Elements passt (Knoten, umschließender Rahmen, Flussdicke). Der Name hat Vorrang: der Wert erscheint nur bei verbleibendem Platz.',
+      it: 'Nascondi questa etichetta quando non entra nell\'altezza del suo elemento (nodo, cornice contenitore, spessore del flusso). Il nome viene prima: il valore appare solo se resta spazio.',
+      'zh-CN': '当标签放不进其元素高度（节点、包含框、流量粗细）时隐藏。名称优先：仅在有剩余空间时显示数值。',
+      ja: '要素（ノード、囲み枠、フローの太さ）の高さに収まらない場合、このラベルを隠します。名前が優先され、余白がある場合のみ値を表示します。'
+    }
+  } satisfies AttributeConfig<boolean>,
 
   vertical_text: {
     default: false as boolean,
