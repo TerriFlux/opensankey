@@ -243,3 +243,46 @@ export function applyWrapLongWordsRetrocompat(sankey: Class_Sankey, version: str
     })
   })
 }
+
+// ---------------------------------------------------------------------------
+// Mode d'affichage GLOBAL à l'ouverture (#369)
+// ---------------------------------------------------------------------------
+/** Modes d'affichage globaux restituables (cf. Type_PositionMode côté PublishOptions). */
+export type Type_LoadedPositionMode = 'absolute' | 'proportional' | 'scale_adapted'
+
+/**
+ * Issue #369 — Mode d'affichage GLOBAL (`styles_dict['default'].shape_position_type`)
+ * effectivement appliqué au chargement, à partir de celui lu dans le fichier.
+ *
+ * Jusqu'ici (#1231) TOUT fichier se chargeait en `absolute` : le mode était réputé « vue
+ * transitoire ». Conséquence relevée au #369 : « échelle adaptée » — seul moyen de garder une
+ * taille de diagramme constante d'un datatag à l'autre — devait être re-choisi à chaque
+ * ouverture, et un diagramme publié ne pouvait pas être livré dans ce mode. Les modes
+ * d'AFFICHAGE (`proportional`, `scale_adapted`) sont donc restitués tels quels : le sélecteur
+ * rouvre sur le mode enregistré, et le changement de datatag suit ce mode.
+ *
+ * RÈGLE DU PREMIER RENDU (arbitrage utilisateur du 2026-08-05) : le mode restitué est ARMÉ,
+ * pas appliqué. Le diagramme s'ouvre exactement tel qu'il a été enregistré — dessin en absolu,
+ * à l'échelle du fichier — et le mode ne se fait sentir qu'au PREMIER CHANGEMENT DE DATATAG,
+ * qui est précisément ce qu'il gouverne. C'est la suspension d'ouverture qui porte cette règle
+ * (`Class_DrawingArea.suspendPositionModeUntilDataChange`, armée juste après cet appel).
+ * Nécessaire parce qu'un fichier n'écrit pas ce qu'il AFFICHE dans un mode d'affichage : les
+ * positions persistées sont les CENTRES (jamais la disposition comprimée du %), et le
+ * `user_scale` est l'échelle DÉJÀ adaptée. Le couple `scale_adapted_ref_scale` / `_value` reste
+ * indispensable pour la suite : c'est lui qui, à la levée de la suspension, redonne l'échelle
+ * de base au lieu de recomposer le ratio sur l'échelle adaptée du fichier.
+ *
+ * Deux cas restent ramenés à `absolute` :
+ *  - `parametric` (mode « écart » hérité) : c'est lui qui décide si u/v font autorité au
+ *    chargement (cf. DrawingAreaPersistence.fromJSON) et le sélecteur ne le propose pas — le
+ *    restituer rendrait la mise en page du fichier illisible sans moyen d'en sortir. Le
+ *    marquage `parametric` PAR NŒUD (« Ecartement »), lui, reste persisté et respecté.
+ *  - toute valeur absente ou inconnue (fichier antérieur, `relative` posé par erreur sur le
+ *    style global) : rétro-compatibilité, un fichier sans l'attribut s'ouvre en `absolute`.
+ *
+ * Pur et sans dépendance : testable en isolation.
+ */
+export function positionModeOnLoad(incoming: string | undefined): Type_LoadedPositionMode {
+  if (incoming === 'proportional' || incoming === 'scale_adapted') return incoming
+  return 'absolute'
+}

@@ -14,7 +14,11 @@
 
 import type { Class_DrawingArea } from './DrawingArea'
 
+// #369 — Choisir un mode est un geste EXPLICITE : il lève la suspension d'ouverture (qui fait
+// dessiner en absolu jusqu'au premier changement de datatag, cf. DrawingArea) pour que le mode
+// s'applique tout de suite, comme avant #369.
 export function setParametricMode(da: Class_DrawingArea) {
+  da.clearPositionModeSuspension()
   da.withBypassRedraws(() => {
     const default_style = da.sankey.styles_dict['default']
 
@@ -51,6 +55,7 @@ export function setParametricMode(da: Class_DrawingArea) {
 }
 
 export function setAbsoluteMode(da: Class_DrawingArea) {
+  da.clearPositionModeSuspension()
   const default_style = da.sankey.styles_dict['default']
   const prev_mode = default_style.shape_position_type
   // #1231 — quitter l'« échelle adaptée » restaure l'échelle de base.
@@ -77,6 +82,7 @@ export function setAbsoluteMode(da: Class_DrawingArea) {
 // même épaisseur ; l'échelle du diagramme s'adapte à chaque datatag en conséquence. Les
 // nœuds gardent leur centre fixe (comme l'absolu) pendant qu'ils se redimensionnent.
 export function setScaleAdaptedMode(da: Class_DrawingArea) {
+  da.clearPositionModeSuspension()
   const default_style = da.sankey.styles_dict['default']
   // #1231 (1.1.5) — si on vient d'un mode d'AFFICHAGE (proportionnel), le coin courant est
   // comprimé. On revient d'abord aux VRAIS centres (sinon settleCenterAnchor figerait le
@@ -91,6 +97,7 @@ export function setScaleAdaptedMode(da: Class_DrawingArea) {
 }
 
 export function setProportionalMode(da: Class_DrawingArea) {
+  da.clearPositionModeSuspension()
   const default_style = da.sankey.styles_dict['default']
   // #1231 — quitter l'« échelle adaptée » restaure l'échelle de base.
   da.nodePositioning.clearScaleAdaptation()

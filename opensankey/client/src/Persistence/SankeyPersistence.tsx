@@ -52,7 +52,7 @@ import { Class_DrawingArea, Type_AutoFitMode, Type_FitAnchor } from '../types/Dr
 import { backfillTagGroupUseColors, convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
 // Issue #191 — migration de rétro-compat de la césure des libellés, isolée dans
 // son propre module pour rester testable sans le graphe d'imports lourd d'ici.
-import { applyWrapLongWordsRetrocompat, CURRENT_FORMAT_VERSION, effectiveLoadVersion, isVersionBelow, parseLangMap, resolveLangMap, serializeLangMap, Type_LangMap, validateSankeyRootJSON } from './persistenceMigrations'
+import { applyWrapLongWordsRetrocompat, CURRENT_FORMAT_VERSION, effectiveLoadVersion, isVersionBelow, parseLangMap, positionModeOnLoad, resolveLangMap, serializeLangMap, Type_LangMap, validateSankeyRootJSON } from './persistenceMigrations'
 import {
   CONTAINER_KEY_MAP,
   LINK_LOCAL_KEY_MAP,
@@ -2042,10 +2042,23 @@ export class DrawingAreaPersistence {
     // vaut « auto », y compris pour les fichiers antérieurs.
     if (!drawing_area.application_data.layout_auto_recycling) json_object['layout_auto_recycling'] = false
     // Datatag de référence du mode % (couple flux/datatag). Le flux de réf est persisté
-    // via l'attribut de lien `shape_is_reference_flux` ; le MODE lui-même n'est PAS persisté.
+    // via l'attribut de lien `shape_is_reference_flux` ; le MODE, lui, vit dans le style
+    // 'default' (`shape_position_type`) et est restitué au chargement depuis #369.
     {
       const ref_dt = drawing_area.nodePositioning.proportionalReferenceDatatagIds
       if (ref_dt && ref_dt.length > 0) json_object['prop_reference_datatag'] = ref_dt
+    }
+    // #369 — Mode « échelle adaptée » : couple capturé (échelle de BASE + valeur de l'élément de
+    // référence) qui définit l'épaisseur tenue par l'élément de référence. Sans lui, la relecture
+    // reprendrait `user_scale` (= échelle DÉJÀ adaptée au datatag courant) pour base et
+    // recomposerait le ratio → saut d'échelle juste après l'ouverture. Écrit seulement dans ce
+    // mode : ailleurs le couple n'a pas de sens et ne doit pas ressusciter avec le mode.
+    if (drawing_area.sankey.default_style.shape_position_type === 'scale_adapted') {
+      const scale_ref = drawing_area.nodePositioning.scaleAdaptedReference
+      if (scale_ref) {
+        json_object['scale_adapted_ref_scale'] = scale_ref.scale
+        json_object['scale_adapted_ref_value'] = scale_ref.value
+      }
     }
     if (drawing_area.filter_label > 0) json_object['filter_label'] = drawing_area.filter_label
     if (drawing_area.filter_link_value > 0) json_object['filter_link_value'] = drawing_area.filter_link_value
@@ -2568,16 +2581,25 @@ export class DrawingAreaPersistence {
     }
     drawing_area.name = getStringFromJSON(json_object, 'name', drawing_area.name)
 
-    // #1231 — Le MODE de positionnement n'est PAS persisté : tout fichier se charge en mode
-    // ABSOLU (le mode % / échelle adaptée est une vue transitoire que l'utilisateur réactive).
-    // 'parametric' (ancien) et 'proportional' → 'absolute'. La valeur 'parametric' reste valide
-    // en interne pour les styles par-nœud d'échange import/export — on ne force QUE le style global.
-    // On capture le mode d'ORIGINE avant de le forcer : il décide si u/v font autorité.
+    // #369 — Les MODES D'AFFICHAGE globaux (proportionnel / échelle adaptée) sont RESTITUÉS : le
+    // sélecteur rouvre sur le mode enregistré et le changement de datatag le suit, sans que le
+    // PREMIER RENDU change quoi que ce soit au diagramme enregistré (règle et raisons détaillées
+    // dans `positionModeOnLoad`, qui porte la décision). Seuls `parametric` (mode « écart »
+    // hérité, hors sélecteur) et les valeurs absentes ou inconnues sont ramenés à `absolute`. La
+    // valeur 'parametric' reste valide en interne pour les styles PAR-NŒUD d'échange
+    // import/export — on ne touche QUE le style global.
+    // On capture le mode d'ORIGINE avant de le normaliser : il décide si u/v font autorité.
     const incoming_position_mode = drawing_area.sankey.default_style.shape_position_type
-    if (drawing_area.sankey.default_style.shape_position_type === 'parametric' ||
-        drawing_area.sankey.default_style.shape_position_type === 'proportional' ||
-        drawing_area.sankey.default_style.shape_position_type === 'scale_adapted') {
-      drawing_area.sankey.default_style.shape_position_type = 'absolute'
+    const loaded_position_mode = positionModeOnLoad(incoming_position_mode)
+    if (incoming_position_mode !== loaded_position_mode) {
+      drawing_area.sankey.default_style.shape_position_type = loaded_position_mode
+    }
+    // #369 — Le mode restitué est ARMÉ, pas appliqué : le dessin reste absolu jusqu'au premier
+    // changement de datatag, pour que le diagramme s'ouvre exactement tel qu'il a été
+    // enregistré. Posé APRÈS le chargement des tags (la suspension mémorise la sélection
+    // courante). Cf. Class_DrawingArea.suspendPositionModeUntilDataChange.
+    if (loaded_position_mode !== 'absolute') {
+      drawing_area.suspendPositionModeUntilDataChange()
     }
 
     // Dérivation de u/v depuis la géométrie au chargement :
@@ -2598,13 +2620,25 @@ export class DrawingAreaPersistence {
 
     // #1231 — Persistance du COUPLE de référence (flux + datatag) du mode %. Le flux est
     // ré-attaché depuis l'attribut `shape_is_reference_flux` ; le datatag de réf est relu ici.
-    // Le mode étant absolu au chargement, rien n'est appliqué tant que l'utilisateur ne
-    // réactive pas le mode % (qui réutilisera ce couple).
+    // En mode absolu rien n'est appliqué tant que l'utilisateur ne réactive pas un mode
+    // d'affichage ; dans les modes restitués (#369) ce couple pilote l'échelle (échelle adaptée,
+    // dès le premier dessin) ou le facteur de compression (%, au premier changement de datatag).
     drawing_area.nodePositioning.attachReferenceLinkFromAttributes()
     {
       const ref_dt = json_object['prop_reference_datatag']
       if (Array.isArray(ref_dt)) {
         drawing_area.nodePositioning.proportionalReferenceDatatagIds = ref_dt.map(String)
+      }
+    }
+    // #369 — Mode « échelle adaptée » restitué : recharger le couple capturé (échelle de base +
+    // valeur de référence) écrit par toJSON, sinon `applyAdaptedScale` recapturerait sur
+    // l'échelle DÉJÀ adaptée du fichier et le diagramme sauterait d'échelle au dessin suivant.
+    // Fichier antérieur (clés absentes) : capture paresseuse au premier dessin, comme avant.
+    if (loaded_position_mode === 'scale_adapted') {
+      const ref_scale = json_object['scale_adapted_ref_scale']
+      const ref_value = json_object['scale_adapted_ref_value']
+      if (typeof ref_scale === 'number' && typeof ref_value === 'number') {
+        drawing_area.nodePositioning.restoreScaleReference(ref_scale, ref_value)
       }
     }
   }

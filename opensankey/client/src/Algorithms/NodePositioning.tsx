@@ -66,6 +66,14 @@ export class NodePositioning {
 
   public resolveScaleAdaptedOverlaps() { return this._scale.resolveScaleAdaptedOverlaps() }
 
+  // #369 — Couple capture du mode << echelle adaptee >>, persiste avec le mode (cf.
+  // DrawingAreaPersistence toJSON/fromJSON).
+  public get scaleAdaptedReference() { return this._scale.scaleAdaptedReference }
+
+  public restoreScaleReference(scale: number, value: number) {
+    return this._scale.restoreScaleReference(scale, value)
+  }
+
 
   // #1231 / #243 (split modes) — le drapeau de suppression de compression proportionnelle vit
   // desormais dans NodePositioningProportional (ecrit par NodeActions/Hierarchies autour des

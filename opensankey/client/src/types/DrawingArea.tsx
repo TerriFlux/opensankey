@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 import * as d3 from '../d3Modules'
-import { Type_JSON, Type_Structure, Type_DataSource, Type_IntervalDisplay, Type_DisaggregationGap, default_main_sankey_id, randomId } from '../types/Utils'
+import { Type_JSON, Type_Structure, Type_DataSource, Type_IntervalDisplay, Type_DisaggregationGap, Type_Position, default_main_sankey_id, randomId } from '../types/Utils'
 import {
   default_background_color,
   default_DA_marging,
@@ -342,6 +342,51 @@ export class Class_DrawingArea {
     return this._sankey?.default_style?.shape_position_dy ?? 0
   }
   public set disaggregation_gap_value(v: number) { this._disaggregation_gap_value = v }
+
+  // #369 — SUSPENSION du mode d'affichage à l'ouverture d'un fichier. Le mode enregistré
+  // (proportionnel / échelle adaptée) est restitué — le sélecteur rouvre dessus et le
+  // changement de datatag le suit — mais il ne doit RIEN changer au diagramme à l'ouverture :
+  // on rouvre sur ce qui a été enregistré. Tant que la suspension tient, `drawElements`
+  // dessine comme en mode absolu (l'échelle du fichier, qui EST l'échelle adaptée
+  // enregistrée, reste donc telle quelle). Elle est levée dès que la sélection de datatags
+  // CHANGE — d'où la mémorisation de la sélection au chargement plutôt qu'un simple booléen :
+  // le chargement enchaîne plusieurs dessins (cadrage différé, re-render React), qu'un
+  // « lever à la première frame » n'aurait pas distingués d'un vrai changement de données.
+  // Transitoire : jamais persistée, jamais copiée.
+  protected _position_mode_suspended_selection: string | undefined = undefined
+  public get is_position_mode_suspended(): boolean {
+    return this._position_mode_suspended_selection !== undefined
+  }
+
+  /** #369 — Arme la suspension sur la sélection de datatags courante (appelé au chargement). */
+  public suspendPositionModeUntilDataChange() {
+    this._position_mode_suspended_selection = this._selectedDataTagsFingerprint()
+  }
+
+  /** #369 — Lève la suspension (changement de datatag, ou choix explicite d'un mode). */
+  public clearPositionModeSuspension() {
+    this._position_mode_suspended_selection = undefined
+  }
+
+  private _selectedDataTagsFingerprint(): string {
+    return this._sankey.selected_data_tags_list.map(t => t.id).join('|')
+  }
+
+  /**
+   * #369 — Mode d'affichage à APPLIQUER au dessin courant : celui du style global, sauf tant
+   * que la suspension d'ouverture tient (alors : absolu). Lève la suspension au premier
+   * changement de sélection de datatags — quel que soit le chemin emprunté (panneau de
+   * filtres, topbar, frise de séquence, options de publication), puisqu'on compare l'état et
+   * non l'événement.
+   */
+  protected _effectivePositionMode(): Type_Position {
+    if (this._position_mode_suspended_selection !== undefined
+      && this._position_mode_suspended_selection !== this._selectedDataTagsFingerprint()) {
+      this._position_mode_suspended_selection = undefined
+    }
+    if (this._position_mode_suspended_selection !== undefined) return 'absolute'
+    return this._sankey.styles_dict['default'].shape_position_type
+  }
 
   // Surcharge TRANSITOIRE du mode d'écart pour une opération ponctuelle (clic droit).
   // Non persistée, non copiée : posée juste avant l'op puis effacée. Le helper de
@@ -1214,7 +1259,10 @@ export class Class_DrawingArea {
    */
   public drawElements() {
     if (this.bypass_redraws) return
-    const _position_type = this.sankey.styles_dict['default'].shape_position_type
+    // #369 — mode EFFECTIF : celui du style global, ou 'absolute' tant que la suspension
+    // d'ouverture tient (cf. _effectivePositionMode). Lu UNE fois et réutilisé plus bas :
+    // les branches suivantes relisaient le style, ce qui aurait mélangé les deux régimes.
+    const _position_type = this._effectivePositionMode()
     // #1231 — Mode « échelle adaptée » : ajuster d'abord l'échelle (valeur→px) pour que le
     // flux de référence garde la même épaisseur d'un datatag à l'autre. Sorti de la branche
     // ci-dessous pour tourner AVANT le plafond par view tag (qui s'applique par-dessus).
@@ -1259,7 +1307,7 @@ export class Class_DrawingArea {
     // nœud du dessus de leur colonne (un absolu placé par le mode global, ou un
     // parametric déjà calé). Indépendant du mode global, sauf 'parametric' où
     // recomputeParametricLayout empile déjà la colonne entière.
-    if (this.sankey.styles_dict['default'].shape_position_type !== 'parametric') {
+    if (_position_type !== 'parametric') {
       this.nodePositioning.anchorParametricNodesToAbsolute()
       // Ré-empiler les enfants des cadres englobants (container_mode) sur leur hauteur
       // COURANTE. En 'parametric', recomputeParametricLayout (Phase C) le fait déjà ; dans les
@@ -1285,7 +1333,7 @@ export class Class_DrawingArea {
     // global f_eff) place les nœuds de façon déterministe, et déplacer une cible pour « garder
     // droit » casse cet empilement (résultat incohérent). Le flux droit reste actif en absolu /
     // échelle adaptée.
-    if (this.sankey.styles_dict['default'].shape_position_type !== 'proportional' &&
+    if (_position_type !== 'proportional' &&
         this.nodePositioning.enforceStraightLinks()) {
       this._sankey.draw()
     }
