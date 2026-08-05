@@ -158,6 +158,103 @@ describe('#232 updateFrom — attrDrawingArea + échelle', () => {
   })
 })
 
+// #382 — Sur un fichier multi-unités, l'échelle affichée n'est PAS celle de la zone
+// de dessin mais celle de chaque tag d'unité (`Class_DataTag.scale` retombe sur la
+// zone de dessin uniquement si le groupe n'est pas `is_unit`). La case « Échelle »
+// d'« Appliquer la mise en page » doit commander ces échelles-là, et rester la seule
+// à le faire — avant le correctif elle ne transférait que `drawing_area.scale`
+// (invisible ici) tandis que la case « Données » recopiait les échelles unitaires
+// sans condition.
+/** Groupe de données unitaire « Unité » avec deux tags, échelles imposées. */
+function makeUnitTagGroup(
+  app: Class_ApplicationData,
+  scales: { [tag_name: string]: number }
+) {
+  const tagg = app.drawing_area.sankey.addDataTagGroup('unite', 'Unité', false)
+  tagg.is_unit = true
+  Object.entries(scales).forEach(([name, scale]) => {
+    tagg.addTag(name, name)
+    tagg.tags_dict[name].scale = scale
+  })
+  return tagg
+}
+
+describe('#382 updateFrom — échelle des tags d\'unité', () => {
+  it('la case Échelle transfère l\'échelle de chaque tag d\'unité', () => {
+    const src = new Class_ApplicationData(false)
+    const tgt = new Class_ApplicationData(false)
+    makePair(src)
+    makePair(tgt)
+    makeUnitTagGroup(src, { 'kt PB': 8000, 'kt MS': 300 })
+    makeUnitTagGroup(tgt, { 'kt PB': 24617, 'kt MS': 999 })
+
+    updateFrom(tgt.drawing_area, src.drawing_area, ['attrDrawingArea', 'scale'])
+
+    const tagg = tgt.drawing_area.sankey._data_taggs['unite']
+    expect(tagg.tags_dict['kt PB'].scale).toBe(8000)
+    expect(tagg.tags_dict['kt MS'].scale).toBe(300)
+  })
+
+  it('sans la case Échelle, la case Données ne transfère plus les échelles unitaires', () => {
+    const src = new Class_ApplicationData(false)
+    const tgt = new Class_ApplicationData(false)
+    makePair(src)
+    makePair(tgt)
+    makeUnitTagGroup(src, { 'kt PB': 8000, 'kt MS': 300 })
+    makeUnitTagGroup(tgt, { 'kt PB': 24617, 'kt MS': 999 })
+
+    updateFrom(tgt.drawing_area, src.drawing_area, ['attrDrawingArea', 'tagData'])
+
+    const tagg = tgt.drawing_area.sankey._data_taggs['unite']
+    expect(tagg.tags_dict['kt PB'].scale).toBe(24617)
+    expect(tagg.tags_dict['kt MS'].scale).toBe(999)
+  })
+
+  it('case Échelle + case Données : l\'échelle passe quand même', () => {
+    const src = new Class_ApplicationData(false)
+    const tgt = new Class_ApplicationData(false)
+    makePair(src)
+    makePair(tgt)
+    makeUnitTagGroup(src, { 'kt PB': 8000 })
+    makeUnitTagGroup(tgt, { 'kt PB': 24617 })
+
+    updateFrom(tgt.drawing_area, src.drawing_area, ['attrDrawingArea', 'tagData', 'scale'])
+
+    expect(tgt.drawing_area.sankey._data_taggs['unite'].tags_dict['kt PB'].scale).toBe(8000)
+  })
+
+  it('la case Échelle seule (sans attrDrawingArea) transfère les deux porteurs', () => {
+    const src = new Class_ApplicationData(false)
+    const tgt = new Class_ApplicationData(false)
+    makePair(src)
+    makePair(tgt)
+    src.drawing_area.scale = 10000
+    tgt.drawing_area.scale = 100
+    makeUnitTagGroup(src, { 'kt PB': 8000 })
+    makeUnitTagGroup(tgt, { 'kt PB': 24617 })
+
+    updateFrom(tgt.drawing_area, src.drawing_area, ['scale'])
+
+    expect(tgt.drawing_area.scale).toBe(10000)
+    expect(tgt.drawing_area.sankey._data_taggs['unite'].tags_dict['kt PB'].scale).toBe(8000)
+  })
+
+  it('un tag d\'unité absent de la source garde son échelle', () => {
+    const src = new Class_ApplicationData(false)
+    const tgt = new Class_ApplicationData(false)
+    makePair(src)
+    makePair(tgt)
+    makeUnitTagGroup(src, { 'kt PB': 8000 })
+    makeUnitTagGroup(tgt, { 'kt PB': 24617, 'kt MS': 999 })
+
+    updateFrom(tgt.drawing_area, src.drawing_area, ['attrDrawingArea', 'scale'])
+
+    const tagg = tgt.drawing_area.sankey._data_taggs['unite']
+    expect(tagg.tags_dict['kt PB'].scale).toBe(8000)
+    expect(tagg.tags_dict['kt MS'].scale).toBe(999)
+  })
+})
+
 describe('#232 updateFrom — non-régression (attribut hors mode préservé)', () => {
   it('un mode inconnu / vide ne modifie ni positions ni attributs', () => {
     const src = new Class_ApplicationData(false)

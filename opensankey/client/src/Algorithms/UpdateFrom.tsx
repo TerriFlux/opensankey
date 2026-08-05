@@ -382,6 +382,27 @@ export const updateFrom = (
 
   // Update data_tag_dict ------------------------------------------------------------
 
+  // #382 — L'échelle du diagramme a DEUX porteurs. Sur un fichier sans groupe de
+  // données unitaire, c'est `drawing_area.scale` ; dès qu'un groupe porte `is_unit`,
+  // l'échelle réellement affichée (et éditée au menu Mise en page) est celle de
+  // CHAQUE tag d'unité (`Class_DataTag.scale`). La case « Échelle » doit donc
+  // commander les deux — et rester la SEULE à les commander : la recopie des
+  // groupes de données (case « Données ») emportait jusqu'ici `_scale` sans
+  // condition, si bien que la case Échelle était déconnectée dans les deux sens.
+  // On fige donc les échelles unitaires de la cible avant la recopie des groupes,
+  // on les restitue juste après, puis le bloc `scale` ci-dessous applique — ou
+  // non — celles de la source. Même idiome que `scale_to_keep` pour la zone de
+  // dessin plus haut.
+  const copy_scale = mode.includes('scale') || all
+  const unit_scales_to_keep: { [tagg_id: string]: { [tag_id: string]: number } } = {}
+  Object.values(drawing_area.sankey._data_taggs)
+    .filter(tagg => tagg.is_unit)
+    .forEach(tagg => {
+      const scales: { [tag_id: string]: number } = {}
+      tagg.tags_list.forEach(tag => scales[tag.id] = tag.scale)
+      unit_scales_to_keep[tagg.id] = scales
+    })
+
   // Values requires addTagData to create missing value slots in target
   const implicit_add_tag_data = mode.includes('Values') && !mode.includes('addTagData')
   if (mode.includes('tagData') || mode.includes('addTagData') || mode.includes('removeTagData') || implicit_add_tag_data || all) {
@@ -402,6 +423,41 @@ export const updateFrom = (
     if (update_tag_data)
       to_update.forEach(id => {
         drawing_area.sankey._data_taggs[id].copyFrom(other_drawing_area.sankey._data_taggs[matching_taggs_id['dataTags']?.[id] ?? id], matching_tags_id['dataTags']?.[id])
+      })
+  }
+
+  // #382 — Échelle : restitution puis transfert commandé par la seule case « Échelle ».
+  //
+  // 1. Restituer les échelles unitaires figées avant la recopie des groupes de données :
+  //    seule la case Échelle a le droit de les changer.
+  // 2. Si le mode `scale` est demandé, appliquer les échelles de la source — zone de
+  //    dessin ET tags d'unité (appariés par nom via matching_tags_id, comme le reste
+  //    d'updateFrom). Un tag d'unité absent de la source garde son échelle courante.
+  //
+  // La zone de dessin est réécrite ici même quand `attrDrawingArea` n'est pas coché :
+  // la case Échelle est une commande à part entière, elle ne dépend pas de la case
+  // « Attributs généraux » (avant #382, cochée seule, elle ne faisait rien du tout).
+  Object.values(drawing_area.sankey._data_taggs)
+    .filter(tagg => unit_scales_to_keep[tagg.id] !== undefined)
+    .forEach(tagg => {
+      tagg.tags_list.forEach(tag => {
+        const kept = unit_scales_to_keep[tagg.id][tag.id]
+        if (kept !== undefined) tag.scale = kept
+      })
+    })
+  if (copy_scale) {
+    drawing_area._scale = other_drawing_area.scale
+    drawing_area._scaleValueToPx.domain([0, drawing_area._scale])
+    Object.values(drawing_area.sankey._data_taggs)
+      .filter(tagg => tagg.is_unit)
+      .forEach(tagg => {
+        const src_tagg = other_drawing_area.sankey._data_taggs[matching_taggs_id['dataTags']?.[tagg.id] ?? tagg.id]
+        if (!src_tagg || !src_tagg.is_unit) return
+        const matching_tags = matching_tags_id['dataTags']?.[tagg.id] ?? {}
+        tagg.tags_list.forEach(tag => {
+          const src_tag = src_tagg.tags_dict[matching_tags[tag.id] ?? tag.id]
+          if (src_tag) tag.scale = src_tag.scale
+        })
       })
   }
 
