@@ -372,6 +372,62 @@ export class Class_DrawingArea {
     return this._sankey.selected_data_tags_list.map(t => t.id).join('|')
   }
 
+  // #378 — Réorganisation auto de l'ordre des flux E/S au CHANGEMENT DE SÉLECTION de
+  // datatags. L'ordre des ancres est GÉOMÉTRIQUE (cf. Class_NodeElement.reorganizeIOLinks) :
+  // il dépend des centres des nœuds opposés, donc de leur HAUTEUR, donc des VALEURS
+  // affichées. D'un millésime (ou d'une unité, d'un axe) à l'autre, l'ordre optimal change —
+  // mais il n'était recalculé que par un geste qui touche la géométrie (déplacement de nœud,
+  // bouton « Réorganiser », désagrégation). Résultat : après une bascule de sélection, les
+  // flux gardaient l'ordre calculé pour la sélection PRÉCÉDENTE et se croisaient.
+  //
+  // Même mécanique que la suspension du #369 : on mémorise la SIGNATURE de la sélection et
+  // on la compare au dessin — on compare donc l'ÉTAT et non l'événement, ce qui couvre tous
+  // les chemins de bascule (panneau de filtres, sélecteur de la barre du haut, frise de
+  // séquence, lecture automatique de séquence, options de publication) sans les câbler un
+  // par un. Transitoire : jamais persistée, jamais copiée.
+  protected _io_reorg_data_selection: string | undefined = undefined
+
+  /**
+   * #378 — Amorce la mémoire de sélection SANS réorganiser (appelé au chargement d'un
+   * fichier). Sans cet amorçage, le premier dessin comparerait la sélection du fichier
+   * ouvert à celle du fichier précédent et réorganiserait tout : un diagramme se rouvrirait
+   * avec un ordre de flux différent de celui qui a été enregistré.
+   */
+  public primeIOReorgOnDataSelection() {
+    this._io_reorg_data_selection = this._selectedDataTagsFingerprint()
+  }
+
+  /**
+   * #378 — Relance la réorganisation auto de l'ordre des flux E/S si la sélection de
+   * datatags a changé depuis le dernier dessin. Appelé par `drawElements` APRÈS le
+   * placement des nœuds (l'ordre se déduit des positions et hauteurs effectivement
+   * dessinées) et AVANT le dessin lui-même.
+   *
+   * `release_locks = false`, comme un déplacement de nœud : une bascule de sélection est une
+   * NAVIGATION, pas le « recalcul automatique » explicite qui libère les cadenas du menu
+   * « Ordre des flux E/S ». Un arrangement verrouillé par l'utilisateur survit donc au
+   * changement de millésime, les flux libres se réordonnant autour de lui. Les nœuds réglés
+   * sur `io_reorg_mode = 'none'` sortent d'eux-mêmes (cf. reorganizeIOLinks).
+   *
+   * Le premier appel (mémoire vide) ne fait qu'amorcer : on rouvre toujours sur l'ordre
+   * enregistré.
+   *
+   * @returns true si une réorganisation a eu lieu.
+   */
+  public reorganizeIOOnDataSelectionChange(): boolean {
+    const signature = this._selectedDataTagsFingerprint()
+    const previous = this._io_reorg_data_selection
+    this._io_reorg_data_selection = signature
+    if (previous === undefined || previous === signature) return false
+    // Sous bypass : reorganizeIOLinks redessine chaque nœud au passage, ce qui doublerait
+    // le rendu juste avant le draw complet de drawElements.
+    this.withBypassRedraws(
+      () => this._sankey.visible_nodes_list.forEach(n => n.reorganizeIOLinks(false)),
+      false
+    )
+    return true
+  }
+
   /**
    * #369 — Mode d'affichage à APPLIQUER au dessin courant : celui du style global, sauf tant
    * que la suspension d'ouverture tient (alors : absolu). Lève la suspension au premier
@@ -1317,6 +1373,12 @@ export class Class_DrawingArea {
       // Tourne APRÈS le placement des enfants pour l'écraser, AVANT le draw.
       this.nodePositioning.restackContainerChildren()
     }
+    // #378 — Bascule de datatag : recalcule l'ordre des flux E/S sur les valeurs désormais
+    // affichées (no-op tant que la sélection ne change pas). Ici, à la toute fin du
+    // placement : l'ordre est géométrique, il doit être déduit des positions et hauteurs qui
+    // vont réellement être dessinées (les modes proportionnel / échelle adaptée viennent de
+    // les déplacer). Avant le dessin, donc rendu directement dans le bon ordre.
+    this.reorganizeIOOnDataSelectionChange()
     // Draw grid
     this.drawBackground()
     this.drawGrid()
