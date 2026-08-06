@@ -3679,18 +3679,22 @@ export class Class_DrawingArea {
   }
 
   /** Largeur du CHROME. Identique à `window_fitting_width` dès qu'un cadrage
-   *  automatique est actif (le chrome épouse alors la zone cadrée). La gouttière de
-   *  barre de défilement (#292) reste retranchée dans les deux régimes : la barre se
-   *  loge HORS du dessin. */
+   *  automatique est actif : le chrome épouse alors la zone cadrée, gouttière de barre
+   *  de défilement comprise (#292 — la barre se loge HORS du dessin).
+   *
+   *  En caméra libre au contraire, RIEN ne rabote la zone : ni la réserve du panneau,
+   *  ni la gouttière. La barre se dessine PAR-DESSUS le bord du diagramme — la loger
+   *  hors du dessin obligerait à rétrécir la zone, c'est-à-dire exactement le
+   *  recadrage qu'on doit s'interdire ici. */
   public get chrome_fitting_width(): number {
-    return this.window_fitting_width +
-      (this._auto_fit_mode === 'none' ? this.panel_reserve_right : 0)
+    if (this._auto_fit_mode !== 'none') return this.window_fitting_width
+    return this.window_fitting_width + this.panel_reserve_right + this._scrollbar_reserve_right
   }
 
   /** Hauteur du CHROME (cf. `chrome_fitting_width`). */
   public get chrome_fitting_height(): number {
-    return this.window_fitting_height +
-      (this._auto_fit_mode === 'none' ? this.panel_reserve_bottom : 0)
+    if (this._auto_fit_mode !== 'none') return this.window_fitting_height
+    return this.window_fitting_height + this.panel_reserve_bottom + this._scrollbar_reserve_bottom
   }
   // Largeur réservée à droite de la grande zone pour le tableur/doc (split view). Source globale
   // (menu_configuration) plutôt qu'un champ par instance : sinon chaque vue, recréée à la volée par
