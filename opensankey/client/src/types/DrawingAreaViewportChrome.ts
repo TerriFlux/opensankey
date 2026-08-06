@@ -342,14 +342,13 @@ export class Class_ViewportChrome {
     const prevRight = da.scrollbar_reserve_right
     const prevBottom = da.scrollbar_reserve_bottom
     if (!da.suppress_scrollbar_reserve) {
-      // OS#388 — on décide contre les bornes du CHROME : en caméra libre, un panneau
-      // qui s'ouvre RECOUVRE le diagramme, il ne le fait pas déborder — sans quoi une
-      // barre horizontale apparaîtrait au seul fait d'ouvrir la barre latérale, et sa
-      // gouttière raboterait la hauteur du cadre. Le PLACEMENT des barres, lui, suit
-      // bien window_fitting (viewW/viewH plus bas) : elles longent le panneau et
-      // restent visibles.
-      const fullW = da.chrome_fitting_width + da.scrollbar_reserve_right
-      const fullH = da.chrome_fitting_height + da.scrollbar_reserve_bottom
+      // OS#388 — la décision se prend sur la zone VISIBLE (window_fitting), donc réserve
+      // des panneaux comprise, et NON sur les bornes du chrome. Un panneau ouvert masque
+      // une partie du diagramme : il faut alors une barre pour aller la chercher. C'est
+      // aussi le cas d'usage inverse du chrome, qui lui reste calé sur la fenêtre entière
+      // pour que le panneau se superpose au lieu de recadrer (cf. chrome_fitting_width).
+      const fullW = da.window_fitting_width + da.scrollbar_reserve_right
+      const fullH = da.window_fitting_height + da.scrollbar_reserve_bottom
       da.scrollbar_reserve_bottom = (has_bbox && screenW > fullW * 1.01) ? gutter : 0
       da.scrollbar_reserve_right = (has_bbox && screenH > fullH * 1.01) ? gutter : 0
     }
