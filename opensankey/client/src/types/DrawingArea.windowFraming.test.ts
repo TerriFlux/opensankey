@@ -87,6 +87,43 @@ describe('OS#388 — rafraîchissement du fenêtrage', () => {
     expect(draw_elements).not.toHaveBeenCalled()
   })
 
+  // ⚠️ Les deux régimes ci-dessous sont ceux ou l'ancien couple `areaAutoFit() + draw()`
+  // faisait, lui, un vrai recadrage : un raccourci « chrome seul » les aurait laisses
+  // sans aucun ajustement (page a cheval sous la barre laterale, contenu verrouille
+  // debordant de la zone retrecie).
+
+  it('mode papier : recale la page dans le viewport, sans reconstruction', () => {
+    const { app, drawing_area } = buildDrawnApp()
+    drawing_area.paper_format = 'A4'
+    expect(drawing_area.is_paper_mode).toBe(true)
+
+    const area_auto_fit = jest.spyOn(drawing_area, 'areaAutoFit')
+    const draw_elements = jest.spyOn(drawing_area, 'drawElements')
+
+    app.refreshWindowFraming()
+
+    // Argument explicite obligatoire : un appel generique serait re-route vers
+    // applyAutoFitMode -> recenter, qui sort sans rien faire en mode papier.
+    expect(area_auto_fit).toHaveBeenCalled()
+    expect(area_auto_fit.mock.calls[0].slice(0, 3)).toEqual([undefined, true, false])
+    expect(draw_elements).not.toHaveBeenCalled()
+  })
+
+  it('taille verrouillée : rejoue le cadrage figé, sans reconstruction', () => {
+    const { app, drawing_area } = buildDrawnApp()
+    drawing_area.size_locked = true
+
+    const un_draw = jest.spyOn(drawing_area, 'unDraw')
+    const draw_elements = jest.spyOn(drawing_area, 'drawElements')
+    const draw_grid = jest.spyOn(drawing_area, 'drawGrid')
+
+    expect(() => app.refreshWindowFraming()).not.toThrow()
+
+    expect(un_draw).not.toHaveBeenCalled()
+    expect(draw_elements).not.toHaveBeenCalled()
+    expect(draw_grid).toHaveBeenCalled()
+  })
+
   it('zone jamais dessinée : ne jette pas', () => {
     const app = new Class_ApplicationData(false)
     expect(() => app.refreshWindowFraming()).not.toThrow()

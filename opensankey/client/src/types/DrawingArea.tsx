@@ -1144,27 +1144,80 @@ export class Class_DrawingArea {
    * ne mettre à jour, en caméra libre, qu'un cadre et deux barres de défilement — et
    * sortait en prime le toast bloquant « Initialisation de la zone de dessin ».
    *
-   * Deux régimes, exactement ceux de `_drawBody` (cf. `preserve_camera`) :
-   * - caméra préservée (mode 'none', ou taille verrouillée) → chrome seul ;
-   * - mode de cadrage automatique / board unitaire → `areaAutoFit()`, qui refait le
-   *   fit ET la compensation de police, toujours sans reconstruire le SVG.
+   * Ce qui est rejoué reprend, régime par régime, ce que faisait l'ancien couple
+   * `areaAutoFit() + draw()` — SEULE la reconstruction du SVG disparaît :
+   * - mode PAPIER → la page se recale dans le viewport rétréci/élargi ;
+   * - taille VERROUILLÉE → cadrage figé réappliqué, avec le rétrécissement de
+   *   secours si le contenu ne rentre plus dans la zone réduite ;
+   * - mode de cadrage AUTOMATIQUE (largeur / hauteur / tout) ou board unitaire →
+   *   re-fit par `areaAutoFit()`, compensation de police comprise ;
+   * - caméra LIBRE ('none') → rien à recadrer, chrome seul.
    *
    * @memberof Class_DrawingArea
    */
   public refreshWindowFraming() {
     // Zone jamais dessinée : rien à rafraîchir (le premier draw fera le cadrage).
     if (!this.d3_selection_zoom_area) return
-    const preserve_camera = this._size_locked || (this._auto_fit_mode === 'none' && !this.is_unitary)
-    if (preserve_camera) {
-      // Fond + cadre de viewport + découpe #g_clip (drawBackground -> _updateViewportBorder),
-      // grille, puis barres de défilement / translateExtent : tout ce qui se cale sur la
-      // zone visible, donc sur la réserve. Aucun élément Sankey n'est retouché.
-      this.drawBackground()
-      this.drawGrid()
-      this._updateScrollbars()
-    } else {
-      this.areaAutoFit()
+
+    // Mode PAPIER : la page a une taille fixe, mais son cadrage DANS le viewport
+    // dépend de la largeur disponible — sans quoi elle se retrouve à cheval sous la
+    // barre latérale. Le cœur du fit sait le faire (branche `is_paper_mode` de
+    // _areaAutoFitCore), mais un appel GÉNÉRIQUE est re-routé vers le mode de cadrage
+    // actif (applyAutoFitMode -> recenter, qui sort sans rien faire en mode papier) :
+    // on passe donc un argument explicite pour atteindre le cœur, et on force malgré
+    // un éventuel verrou de taille (recaler la page est justement l'objet du mode).
+    if (this.is_paper_mode) {
+      this.areaAutoFit(undefined, true, false)
+      this._refreshWindowChrome()
+      return
     }
+
+    // Cadrage VERROUILLÉ (#1240) : même protocole que _drawBody — le transform courant
+    // fait foi tant qu'on n'est pas dans un état « rétréci pour débordement ».
+    const zoom_node = this.d3_selection_zoom_area.node()
+    const live_zoom_transform = zoom_node ? d3.zoomTransform(zoom_node) : null
+    if (this._size_locked && live_zoom_transform && !this._locked_overflow_shrunk) {
+      this._locked_zoom_transform = live_zoom_transform
+    }
+    const locked_zoom_transform = this._size_locked ? this._locked_zoom_transform : null
+    const recompute_locked = this._size_locked && (this._locked_fit_dirty || !locked_zoom_transform)
+
+    // Caméra libre : la géométrie du contenu ne bouge pas d'un pixel, seul le chrome
+    // se cale sur la nouvelle réserve.
+    if (!this._size_locked && this._auto_fit_mode === 'none' && !this.is_unitary) {
+      this._refreshWindowChrome()
+      return
+    }
+
+    this.areaAutoFit(recompute_locked ? false : undefined, recompute_locked)
+    if (recompute_locked) {
+      this._locked_fit_dirty = false
+      this._captureLockedReference()
+    } else if (locked_zoom_transform) {
+      // La zone a pu RÉTRÉCIR (barre latérale ouverte/élargie) : le cadrage de
+      // référence ne suffit alors plus à tout montrer -> dézoom transitoire, la
+      // référence restant intacte pour ré-agrandir à la fermeture.
+      if (this._lockedContentOverflows(locked_zoom_transform.k)) {
+        this._locked_overflow_shrunk = true
+        this.areaAutoFit(false, true)
+      } else {
+        this._locked_overflow_shrunk = false
+        this.setCamera(locked_zoom_transform)
+      }
+    }
+    this._refreshWindowChrome()
+  }
+
+  /**
+   * OS#388 — Chrome de la zone de dessin : fond + cadre de viewport + découpe #g_clip
+   * (drawBackground -> _updateViewportBorder), grille, puis barres de défilement et
+   * translateExtent. Tout ce qui se cale sur `window_fitting_*`, donc sur la largeur
+   * réservée — et rien d'autre : aucun élément Sankey n'est retouché.
+   */
+  private _refreshWindowChrome() {
+    this.drawBackground()
+    this.drawGrid()
+    this._updateScrollbars()
   }
 
   /**
