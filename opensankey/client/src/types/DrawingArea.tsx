@@ -3131,8 +3131,10 @@ export class Class_DrawingArea {
     const node = this.d3_selection_zoom_area?.node()
     const fm = this._fit_margin / 2
     const navH = this.getNavBarHeight()
-    const vw = this.window_fitting_width
-    const vh = this.window_fitting_height
+    // OS#388 — bornes du CHROME : en caméra libre le fond (et la grille, qui reprend
+    // ces bornes) ne se rétrécit pas quand un panneau s'ouvre par-dessus.
+    const vw = this.chrome_fitting_width
+    const vh = this.chrome_fitting_height
     if (!node) return { x: 0, y: 0, w: vw, h: vh }
     const t = d3.zoomTransform(node)
     if (!t.k) return { x: 0, y: 0, w: vw, h: vh }
@@ -3648,13 +3650,57 @@ export class Class_DrawingArea {
   public get main_zone_bottom_reserved(): number {
     return this.application_data.menu_configuration?.getMainZoneBottomReservedPx() ?? 0
   }
+
+  // OS#388 — CHROME DE LA ZONE vs ZONE CADRÉE ==========================================
+  //
+  // `window_fitting_*` est la zone RÉELLEMENT disponible : c'est elle que vise le
+  // cadrage automatique, et c'est le long de son bord que se logent les barres de
+  // défilement. Le CHROME (cadre de viewport, découpe #g_clip, fond, grille) suit une
+  // largeur distincte, `chrome_fitting_*` : en caméra libre, un panneau qui s'ouvre se
+  // SUPERPOSE au diagramme au lieu de rétrécir la zone. Sans cela le diagramme paraît
+  // se réajuster tout seul (cadre qui recule, fond et grille recalés dessus) alors que
+  // l'utilisateur a la main sur la caméra et n'a rien demandé.
+
+  /** Réserve des panneaux qui S'OUVRENT et se FERMENT — barre latérale (config,
+   *  filtres, modèles) et colonne tableur/doc/unitaire. EXCLUT la colonne d'outils,
+   *  permanente : elle est là au repos, la rendre ferait dessiner sous les boutons.
+   *  Nulle sur une zone détachée, dont le cadrage suit son conteneur hôte. */
+  public get panel_reserve_right(): number {
+    if (this.is_detached) return 0
+    const mc = this.application_data.menu_configuration
+    if (!mc) return 0
+    return Math.max(0, mc.getMainZoneRightReservedPx() - mc.getToolsColumnWidthPx())
+  }
+
+  /** Symétrique en bas : réserve de la doc en mode bandeau. */
+  public get panel_reserve_bottom(): number {
+    if (this.is_detached) return 0
+    return this.main_zone_bottom_reserved
+  }
+
+  /** Largeur du CHROME. Identique à `window_fitting_width` dès qu'un cadrage
+   *  automatique est actif (le chrome épouse alors la zone cadrée). La gouttière de
+   *  barre de défilement (#292) reste retranchée dans les deux régimes : la barre se
+   *  loge HORS du dessin. */
+  public get chrome_fitting_width(): number {
+    return this.window_fitting_width +
+      (this._auto_fit_mode === 'none' ? this.panel_reserve_right : 0)
+  }
+
+  /** Hauteur du CHROME (cf. `chrome_fitting_width`). */
+  public get chrome_fitting_height(): number {
+    return this.window_fitting_height +
+      (this._auto_fit_mode === 'none' ? this.panel_reserve_bottom : 0)
+  }
   // Largeur réservée à droite de la grande zone pour le tableur/doc (split view). Source globale
   // (menu_configuration) plutôt qu'un champ par instance : sinon chaque vue, recréée à la volée par
   // extractViewFromJSON, repartirait à 0 et déborderait sous le tableur. Le diagramme se recadre
   // dans la largeur restante via areaAutoFit() (cf MainZoneTabs, déclenché au toggle / changement
   // de vue).
-  // NB : les panneaux latéraux config et filtres sont des OVERLAYS au-dessus de la grande zone
-  // (aucune réserve de largeur, le diagramme ne bouge pas à leur ouverture/fermeture).
+  // NB (OS#300, corrigé OS#388) : la barre latérale unifiée (config / filtres / modèles)
+  // ENTRE bien dans cette réserve — le commentaire d'origine, qui la disait sans réserve,
+  // datait d'avant OS#300. C'est le CHROME qui la rend en caméra libre, pour que le panneau
+  // se superpose au diagramme au lieu de le recadrer : cf. `chrome_fitting_width`.
   public get main_zone_right_reserved(): number {
     const mc = this.application_data.menu_configuration
     if (!mc) return 0

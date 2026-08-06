@@ -183,6 +183,50 @@ describe('OS#388 — rafraîchissement du fenêtrage', () => {
   })
 })
 
+describe('OS#388 — en caméra libre, un panneau se SUPERPOSE au diagramme', () => {
+
+  // Le chrome (cadre de viewport, découpe, fond, grille) suit `chrome_fitting_*`, la zone
+  // CADRÉE suit `window_fitting_*`. Les deux ne coïncident qu'en cadrage automatique : en
+  // caméra libre, ouvrir un panneau ne doit pas raboter la zone de dessin — sinon le
+  // diagramme paraît se réajuster tout seul alors que la caméra appartient a l'utilisateur.
+
+  it('caméra libre : la zone cadrée se réduit, le chrome ne bouge pas', () => {
+    const { app, drawing_area } = buildDrawnApp()
+    expect(drawing_area.auto_fit_mode).toBe('none')
+    const chrome_avant = drawing_area.chrome_fitting_width
+    const zone_avant = drawing_area.window_fitting_width
+
+    app.menu_configuration.panels.setMode('config', 'sidebar')
+    const reserve = app.menu_configuration.panels.getSidebarReservedPx()
+    expect(reserve).toBeGreaterThan(0)
+
+    expect(drawing_area.window_fitting_width).toBe(zone_avant - reserve)
+    expect(drawing_area.chrome_fitting_width).toBe(chrome_avant)
+  })
+
+  it('cadrage automatique : le chrome épouse la zone cadrée', () => {
+    const { app, drawing_area } = buildDrawnApp()
+    drawing_area.auto_fit_mode = 'full'
+
+    app.menu_configuration.panels.setMode('config', 'sidebar')
+    expect(app.menu_configuration.panels.getSidebarReservedPx()).toBeGreaterThan(0)
+
+    expect(drawing_area.chrome_fitting_width).toBe(drawing_area.window_fitting_width)
+  })
+
+  it('la colonne d\'outils, permanente, n\'est jamais rendue au chrome', () => {
+    const { app, drawing_area } = buildDrawnApp()
+    app.menu_configuration.tools_column_enabled = true
+    const tools = app.menu_configuration.getToolsColumnWidthPx()
+    expect(tools).toBeGreaterThan(0)
+
+    // Aucun panneau ouvert : rien à rendre, chrome == zone cadrée (outils déjà retranchés
+    // des deux côtés). Les rendre ferait dessiner sous les boutons.
+    expect(drawing_area.panel_reserve_right).toBe(0)
+    expect(drawing_area.chrome_fitting_width).toBe(drawing_area.window_fitting_width)
+  })
+})
+
 describe('OS#388 — cas 2 : changer de menu ancré ne change pas la réserve', () => {
 
   it('la somme est constante alors que les deux réserves par panneau s\'inversent', () => {

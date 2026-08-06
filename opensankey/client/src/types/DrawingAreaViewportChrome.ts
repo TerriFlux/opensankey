@@ -342,8 +342,14 @@ export class Class_ViewportChrome {
     const prevRight = da.scrollbar_reserve_right
     const prevBottom = da.scrollbar_reserve_bottom
     if (!da.suppress_scrollbar_reserve) {
-      const fullW = da.window_fitting_width + da.scrollbar_reserve_right
-      const fullH = da.window_fitting_height + da.scrollbar_reserve_bottom
+      // OS#388 — on décide contre les bornes du CHROME : en caméra libre, un panneau
+      // qui s'ouvre RECOUVRE le diagramme, il ne le fait pas déborder — sans quoi une
+      // barre horizontale apparaîtrait au seul fait d'ouvrir la barre latérale, et sa
+      // gouttière raboterait la hauteur du cadre. Le PLACEMENT des barres, lui, suit
+      // bien window_fitting (viewW/viewH plus bas) : elles longent le panneau et
+      // restent visibles.
+      const fullW = da.chrome_fitting_width + da.scrollbar_reserve_right
+      const fullH = da.chrome_fitting_height + da.scrollbar_reserve_bottom
       da.scrollbar_reserve_bottom = (has_bbox && screenW > fullW * 1.01) ? gutter : 0
       da.scrollbar_reserve_right = (has_bbox && screenH > fullH * 1.01) ? gutter : 0
     }
@@ -455,11 +461,14 @@ export class Class_ViewportChrome {
     // viewW/viewH already exclude fit_margin and navbar/bottombar, so they map
     // directly to the framed area (x=fm, y=navH+fm, w=viewW, h=viewH).
     const fm = da.fit_margin / 2
+    // OS#388 — cadre ET découpe (updateClip partage ce rect) sur les bornes du CHROME :
+    // en caméra libre, un panneau qui s'ouvre se superpose au diagramme, il ne rabote
+    // pas la zone de dessin (sinon le diagramme paraît se réajuster tout seul).
     return {
       x: fm,
       y: da.getNavBarHeight() + fm,
-      w: da.window_fitting_width,
-      h: da.window_fitting_height
+      w: da.chrome_fitting_width,
+      h: da.chrome_fitting_height
     }
   }
 
