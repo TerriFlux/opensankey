@@ -299,8 +299,11 @@ export class Class_MenuConfig {
     if (this.panels.isOpen('config')) this.panels.setMode('config', this._config_last_container)
   }
   /** Largeur (px) réservée à droite par la config quand elle est la barre
-   *  latérale (0 sinon). Conservé pour les consommateurs directs (MainZoneTabs,
-   *  galerie) ; la réserve GLOBALE passe par panels.getSidebarReservedPx(). */
+   *  latérale (0 sinon). La réserve GLOBALE passe par panels.getSidebarReservedPx().
+   *  ⚠️ OS#388 — Ne JAMAIS s'en servir pour déclencher un recadrage : la barre
+   *  latérale est partagée, donc changer de menu ancré fait basculer cette valeur
+   *  (270 -> 0) et sa symétrique (0 -> 270) sans que la réserve totale bouge.
+   *  Plus aucun consommateur interne ; conservé pour l'API publique. */
   public getConfigPanelPinnedReservedPx(): number {
     return this.panels.sidebar_id === 'config' ? this.panels.getSidebarReservedPx() : 0
   }
@@ -322,8 +325,9 @@ export class Class_MenuConfig {
   public filter_drawer_open: boolean = false
   public filter_drawer_width_px: number = 0
   /** Largeur (px) réservée à droite par le filtre quand il est la barre latérale
-   *  (0 sinon). Conservé pour les consommateurs directs (MainZoneTabs) ; la
-   *  réserve GLOBALE passe par panels.getSidebarReservedPx(). */
+   *  (0 sinon). La réserve GLOBALE passe par panels.getSidebarReservedPx().
+   *  ⚠️ OS#388 — Même mise en garde que getConfigPanelPinnedReservedPx : ce n'est
+   *  pas un déclencheur de recadrage. Plus aucun consommateur interne. */
   public getFilterPanelPinnedReservedPx(): number {
     return this.panels.sidebar_id === 'filter' ? this.panels.getSidebarReservedPx() : 0
   }

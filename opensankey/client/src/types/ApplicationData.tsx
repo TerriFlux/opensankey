@@ -1220,6 +1220,17 @@ export class Class_ApplicationData {
   }
 
   /**
+   * OS#388 — À appeler quand seule la LARGEUR RÉSERVÉE du fenêtrage change (barre latérale
+   * ancrée ouverte/fermée/redimensionnée, colonne tableur/doc…). Contrairement à `draw()`,
+   * ne reconstruit pas le SVG et ne passe PAS par le toast d'attente : un geste de fenêtrage
+   * doit être instantané, le toast reste réservé aux opérations réellement lourdes.
+   * @memberof Class_ApplicationData
+   */
+  public refreshWindowFraming() {
+    this._drawing_area.refreshWindowFraming()
+  }
+
+  /**
    * Applique l'état initial demandé par les options de publication (`publish_options`) :
    * présélection d'un data tag dans un ou plusieurs groupes, puis mode de navigation
    * (absolu / proportionnel / échelle adaptée). À appeler APRÈS le chargement du diagramme

@@ -1134,6 +1134,40 @@ export class Class_DrawingArea {
   }
 
   /**
+   * OS#388 — Prise en compte d'un changement de la LARGEUR RÉSERVÉE du fenêtrage
+   * (barre latérale ouverte/fermée/redimensionnée, colonne tableur/doc…). Le CONTENU
+   * ne change pas : seul ce qui dépend de `window_fitting_width/height` doit être
+   * rafraîchi.
+   *
+   * Passer par `draw()` était un contresens : il détruit et reconstruit l'intégralité
+   * du SVG (unDraw + _initDraw + drawElements, nœuds, flux et libellés compris) pour
+   * ne mettre à jour, en caméra libre, qu'un cadre et deux barres de défilement — et
+   * sortait en prime le toast bloquant « Initialisation de la zone de dessin ».
+   *
+   * Deux régimes, exactement ceux de `_drawBody` (cf. `preserve_camera`) :
+   * - caméra préservée (mode 'none', ou taille verrouillée) → chrome seul ;
+   * - mode de cadrage automatique / board unitaire → `areaAutoFit()`, qui refait le
+   *   fit ET la compensation de police, toujours sans reconstruire le SVG.
+   *
+   * @memberof Class_DrawingArea
+   */
+  public refreshWindowFraming() {
+    // Zone jamais dessinée : rien à rafraîchir (le premier draw fera le cadrage).
+    if (!this.d3_selection_zoom_area) return
+    const preserve_camera = this._size_locked || (this._auto_fit_mode === 'none' && !this.is_unitary)
+    if (preserve_camera) {
+      // Fond + cadre de viewport + découpe #g_clip (drawBackground -> _updateViewportBorder),
+      // grille, puis barres de défilement / translateExtent : tout ce qui se cale sur la
+      // zone visible, donc sur la réserve. Aucun élément Sankey n'est retouché.
+      this.drawBackground()
+      this.drawGrid()
+      this._updateScrollbars()
+    } else {
+      this.areaAutoFit()
+    }
+  }
+
+  /**
    * Reinit d3 selections
    * @protected
    * @memberof Class_DrawingArea
