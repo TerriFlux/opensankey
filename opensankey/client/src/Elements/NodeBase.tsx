@@ -38,6 +38,7 @@ import { NodeEventsHandler } from './NodeEventsHandler'
 import { isLegendElementId } from './legendIds'
 import { applyTemplate, resolveTagGroupToken } from './LabelTemplate'
 import { tiedFrameRefitLeft } from './tiedFrameRefit'
+import { envelopeBBoxOfMembers, Type_EnvelopeMember } from './envelopeBBox'
 
 export const default_selected_stroke_width = 3
 //export const label_margin = 0
@@ -1292,8 +1293,7 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   protected _computeEnvelopeBBox(
     nodes: Class_NodeBase[]
   ): { min_x: number, min_y: number, max_x: number, max_y: number } | null {
-    let min_x = Infinity, min_y = Infinity, max_x = -Infinity, max_y = -Infinity
-    let found = false
+    const members: Type_EnvelopeMember[] = []
     nodes.forEach(node => {
       if (!node.is_visible) return
       // Pour un nœud lui-même cadre tied (container avec enfants attachés),
@@ -1304,26 +1304,17 @@ export abstract class Class_NodeBase extends Class_BaseShape {
       // ancêtres englobants mal dimensionnés sans ce contournement.
       const prefer_logical = node._tied_to_nodes && node._attached_node.length > 0
       const svg_bbox = prefer_logical ? null : node.d3_selection?.node()?.getBBox()
-      let left: number, top: number, right: number, bottom: number
-      if (svg_bbox && (svg_bbox.width > 0 || svg_bbox.height > 0)) {
-        left = node.position_x + svg_bbox.x
-        top = node.position_y + svg_bbox.y
-        right = left + svg_bbox.width
-        bottom = top + svg_bbox.height
-      } else {
-        left = node.position_x
-        top = node.position_y
-        right = left + node.getShapeWidthToUse()
-        bottom = top + node.getShapeHeightToUse()
-      }
-      if (left < min_x) min_x = left
-      if (top < min_y) min_y = top
-      if (right > max_x) max_x = right
-      if (bottom > max_y) max_y = bottom
-      found = true
+      members.push({
+        position_x: node.position_x,
+        position_y: node.position_y,
+        logical_w: node.getShapeWidthToUse(),
+        logical_h: node.getShapeHeightToUse(),
+        svg_bbox: svg_bbox ?? null,
+      })
     })
-    if (!found) return null
-    return { min_x, min_y, max_x, max_y }
+    // Décision isolée en fonction pure (testable sans d3/DOM) : X labels inclus
+    // (#363), Y sur les seules boîtes des membres (#392). Cf. envelopeBBox.
+    return envelopeBBoxOfMembers(members)
   }
 
   /**
