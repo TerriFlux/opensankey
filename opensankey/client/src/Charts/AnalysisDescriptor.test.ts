@@ -146,19 +146,34 @@ describe('#390 — isGroupedCross : ce qui bascule sur les barres groupées', ()
   })
 })
 
-describe('#390 — l’axe additif est neutralisé par le croisement', () => {
-  it('un croisement de deux comparaisons annule la décomposition', () => {
+// Ce qui neutralise l'axe additif, c'est UN AXE FLUX — jamais le croisement en
+// lui-même. « Décomposer par flux sortants × comparer selon l'année × comparer selon
+// l'unité » est un cas légitime : une grappe par année, une barre par unité, chaque
+// barre empilée par ses flux. Les trois axes coexistent parce que le premier, lui,
+// est bien additif.
+describe('#390 — ce qui neutralise l’axe additif, et ce qui ne le neutralise pas', () => {
+  it('croiser deux groupes de dataTags LAISSE la décomposition (3 axes cohabitent)', () => {
     const d: Type_AnalysisDescriptor = {
       decompose: { kind: 'outputs' },
       compare: dataTagCompare,
       compare_secondary: dataTagCompare2
     }
-    // Sans neutralisation, l'extraction empilerait la décomposition du nœud SOUS
-    // chaque barre du croisement — trois axes dans un graphique qui n'en tient deux.
-    expect(effectiveDecompose(d)).toBeNull()
+    expect(effectiveDecompose(d)).toEqual({ kind: 'outputs' })
   })
 
-  it('un second axe écarté laisse l’empilement intact', () => {
+  it('un axe flux en PREMIER la neutralise (chaque barre est déjà un flux)', () => {
+    expect(effectiveDecompose({
+      decompose: { kind: 'outputs' }, compare: outputsCompare, compare_secondary: dataTagCompare
+    })).toBeNull()
+  })
+
+  it('un axe flux en SECOND la neutralise tout autant', () => {
+    expect(effectiveDecompose({
+      decompose: { kind: 'outputs' }, compare: dataTagCompare, compare_secondary: outputsCompare
+    })).toBeNull()
+  })
+
+  it('un second axe absent laisse l’empilement intact', () => {
     const d: Type_AnalysisDescriptor = {
       decompose: { kind: 'outputs' },
       compare: dataTagCompare,

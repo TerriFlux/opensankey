@@ -83,20 +83,29 @@ export const effectiveCompareSecondary = (d: Type_AnalysisDescriptor): Type_Comp
   return secondary
 }
 
-// Croisement de deux axes NON ADDITIFS (#390) → barres groupées. À ne pas confondre
-// avec `decompose × compare`, qui reste EMPILÉ : là, les parts composent bien un
-// total. Ici aucun des deux axes n'est additif, empiler serait un mensonge visuel.
+// Croisement de deux axes de comparaison (#390) → barres GROUPÉES. Aucun des deux
+// n'étant additif, leurs barres ne s'empilent jamais ENTRE ELLES : ce serait un
+// mensonge visuel. Cela n'interdit pas l'axe additif — chaque barre reste empilée
+// de sa propre décomposition, exactement comme dans `decompose × compare`.
 export const isGroupedCross = (d: Type_AnalysisDescriptor): boolean =>
   !!d.compare && !!effectiveCompareSecondary(d)
 
 // Décomposition EFFECTIVE (#389, étendue par #390) : l'axe additif est SANS OBJET
-// quand on compare selon les flux — chaque barre est déjà un flux, la décomposer
-// répéterait la même décomposition du nœud sous chacune — et tout autant sous un
-// croisement de deux axes de comparaison, qui occupe déjà l'abscisse ET les séries.
+// dès que L'UN des deux axes de comparaison porte sur les flux — chaque barre est
+// alors déjà un flux, la décomposer répéterait la même décomposition du nœud sous
+// chacune.
+//
+// Le croisement de deux axes, à lui seul, ne neutralise RIEN : « décomposer par flux
+// sortants × comparer selon l'année × comparer selon l'unité » est un cas légitime —
+// une grappe par année, une barre par unité, chaque barre empilée par ses flux. Les
+// trois axes coexistent parce que le premier, lui, est additif.
+//
 // Point de vérité unique, consommé par l'extraction, le rendu et l'inspecteur (qui
 // grise le sélecteur en conséquence).
 export const effectiveDecompose = (d: Type_AnalysisDescriptor): Type_DecomposeSpec | null =>
-  (isFluxCompare(d.compare) || isGroupedCross(d)) ? null : d.decompose
+  (isFluxCompare(d.compare) || isFluxCompare(effectiveCompareSecondary(d)))
+    ? null
+    : d.decompose
 
 // Représentation déduite : comparer = axe non-additif → jamais de couronne (une
 // couronne « 2019/2020 » est un mensonge visuel) ; décomposer seul → couronne. Un

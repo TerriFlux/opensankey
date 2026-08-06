@@ -310,6 +310,10 @@ export interface Type_StatSeries {
   id: string
   label: string
   parts: Type_StatSlice[]
+  // Couleur propre à la série (#390) : sert quand c'est ELLE que la couleur
+  // distingue — une barre non empilée dans une grappe. Ignorée dès qu'un
+  // empilement rend la couleur aux catégories.
+  color?: string
 }
 
 export const drawStackedBarChart = (
@@ -423,46 +427,67 @@ export const drawStackedBarChart = (
 }
 
 // ==================================================================================================
-// Histogramme GROUPÉ — croisement de deux axes NON ADDITIFS (#390)
-// Une GRAPPE par série (ex. un mode de production), une BARRE par part dans la
-// grappe (ex. une année). À ne pas confondre avec l'empilé ci-dessus : ici rien ne
-// s'additionne, les barres se juxtaposent. L'ordre et la couleur des barres sont
-// fixés globalement pour que la même série se lise d'une grappe à l'autre.
+// Histogramme GROUPÉ — croisement de deux axes de comparaison (#390)
+// Une GRAPPE par valeur du 1er axe (ex. une année), une BARRE par valeur du 2nd
+// (ex. une unité). À ne pas confondre avec l'empilé ci-dessus : entre elles, les
+// barres d'une grappe se JUXTAPOSENT, rien ne s'additionne. Chaque barre reste
+// toutefois une série à part entière : s'il y a un axe additif, elle s'empile de ses
+// parts (ex. les flux sortants). L'ordre des barres est fixé globalement pour que la
+// même série se lise d'une grappe à l'autre.
 // ==================================================================================================
+
+export interface Type_StatGroup {
+  id: string
+  label: string
+  series: Type_StatSeries[]
+}
 
 export const drawGroupedBarChart = (
   container: HTMLElement,
-  groups: Type_StatSeries[],
+  groups: Type_StatGroup[],
   opts: Type_ChartOptions = {}
 ) => {
   const fmt = opts.format ?? DEFAULT_FORMAT
   const { sel, width, height } = prepareContainer(container)
+  const bar_total = (s: Type_StatSeries) => s.parts.reduce((a, p) => a + p.value, 0)
 
   // Séries retenues : les MAX_GROUPED_SERIES plus grosses (par total sur toutes les
   // grappes), mais rendues dans l'ORDRE DU MODÈLE — un axe « année » doit rester
   // chronologique, la troncature ne doit pas le réordonner.
-  const totals = new Map<string, { label: string, value: number, color?: string, rank: number }>()
-  groups.forEach(g => g.parts.forEach(p => {
-    const acc = totals.get(p.id)
-    if (acc) acc.value += p.value
-    else totals.set(p.id, { label: p.label, value: p.value, color: p.color, rank: totals.size })
+  const weights = new Map<string, { label: string, value: number, color?: string, rank: number }>()
+  groups.forEach(g => g.series.forEach(s => {
+    const acc = weights.get(s.id)
+    if (acc) acc.value += bar_total(s)
+    else weights.set(s.id, { label: s.label, value: bar_total(s), color: s.color, rank: weights.size })
   }))
-  const by_weight = [...totals.entries()].sort((a, b) => b[1].value - a[1].value)
+  const by_weight = [...weights.entries()].sort((a, b) => b[1].value - a[1].value)
   const kept_ids = new Set(by_weight.slice(0, MAX_GROUPED_SERIES).map(([id]) => id))
   const dropped = by_weight.length - kept_ids.size
-  const series_order = [...totals.entries()]
+  const series_order = [...weights.entries()]
     .filter(([id]) => kept_ids.has(id))
     .sort((a, b) => a[1].rank - b[1].rank)
     .map(([id, v], i) => ({ id, label: v.label, color: v.color ?? paletteColor(i) }))
 
-  const max_value = groups.reduce(
-    (m, g) => g.parts.reduce((mm, p) => kept_ids.has(p.id) ? Math.max(mm, p.value) : mm, m), 0)
+  // Y sur la HAUTEUR D'UNE BARRE (total de sa pile), jamais sur la grappe entière.
+  const max_value = groups.reduce((m, g) => g.series.reduce(
+    (mm, s) => kept_ids.has(s.id) ? Math.max(mm, bar_total(s)) : mm, m), 0)
   if (groups.length === 0 || series_order.length === 0 || max_value <= 0 || width < 80 || height < 80) {
     drawEmptyLabel(sel, opts.empty_label ?? '')
     return
   }
 
-  // Mise en page : grappes à gauche, légende des séries à droite (comme l'empilé).
+  // Une barre EMPILÉE quelque part → la couleur porte les catégories de l'axe
+  // additif, plus les séries : la légende bascule sur les catégories et chaque barre
+  // prend alors son propre libellé sous l'axe (sinon on ne saurait plus la nommer).
+  const stacked = groups.some(g => g.series.some(s => s.parts.length > 1))
+  const categories = new Map<string, { label: string, color?: string }>()
+  if (stacked) {
+    groups.forEach(g => g.series.forEach(s => s.parts.forEach(p => {
+      if (!categories.has(p.id)) categories.set(p.id, { label: p.label, color: p.color })
+    })))
+  }
+
+  // Mise en page : grappes à gauche, légende à droite (comme l'empilé).
   const root = sel.append('div')
     .style('display', 'flex').style('align-items', 'stretch')
     .style('gap', '0.5rem').style('width', '100%').style('height', '100%')
@@ -470,7 +495,8 @@ export const drawGroupedBarChart = (
   const chart_width = Math.max(80, width - legend_width - 12)
 
   const rotate_labels = groups.length > 6 || groups.some(g => g.label.length > 8)
-  const margin = { top: 18, right: 8, bottom: rotate_labels ? 46 : 22, left: 8 }
+  const bottom = (rotate_labels ? 46 : 22) + (stacked ? 30 : 0)
+  const margin = { top: 18, right: 8, bottom, left: 8 }
   const w = chart_width - margin.left - margin.right
   const h = height - margin.top - margin.bottom
 
@@ -483,54 +509,81 @@ export const drawGroupedBarChart = (
   const svg = root.append('svg')
     .attr('width', chart_width).attr('height', height).style('flex', '0 0 auto')
   const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
-  const show_values = x_serie.bandwidth() >= MIN_BAR_WIDTH_FOR_VALUE
+  const show_values = !stacked && x_serie.bandwidth() >= MIN_BAR_WIDTH_FOR_VALUE
 
   groups.forEach(grp => {
-    const by_id = new Map(grp.parts.map(p => [p.id, p.value]))
+    const by_id = new Map(grp.series.map(s => [s.id, s]))
     const gx = x_group(grp.id) ?? 0
-    series_order.forEach(s => {
-      const value = by_id.get(s.id) ?? 0
+    series_order.forEach(so => {
+      const serie = by_id.get(so.id)
+      const total = serie ? bar_total(serie) : 0
       // Une barre absente ou nulle laisse SA PLACE VIDE dans la grappe : c'est ainsi
       // qu'on voit qu'une année manque, au lieu de décaler les suivantes.
-      if (value <= 0) return
-      const bx = gx + (x_serie(s.id) ?? 0)
-      g.append('rect')
-        .attr('class', 'node_stats_grouped_bar')
-        .attr('x', bx).attr('y', y(value))
-        .attr('width', x_serie.bandwidth()).attr('height', Math.max(0, h - y(value)))
-        .attr('fill', s.color)
-        .append('title').text(`${grp.label} · ${s.label}\n${fmt(value)}`)
+      if (!serie || total <= 0) return
+      const bx = gx + (x_serie(so.id) ?? 0)
+      let acc = 0
+      serie.parts.forEach((part, pi) => {
+        if (part.value <= 0) return
+        const y0 = y(acc)
+        const y1 = y(acc + part.value)
+        g.append('rect')
+          .attr('class', 'node_stats_grouped_bar')
+          .attr('x', bx).attr('y', y1)
+          .attr('width', x_serie.bandwidth()).attr('height', Math.max(0, y0 - y1))
+          .attr('fill', stacked ? (part.color ?? paletteColor(pi)) : so.color)
+          .attr('stroke', stacked ? 'white' : 'none').attr('stroke-width', stacked ? 0.5 : 0)
+          .append('title')
+          .text(stacked
+            ? `${grp.label} · ${so.label} · ${part.label}\n${fmt(part.value)}`
+            : `${grp.label} · ${so.label}\n${fmt(part.value)}`)
+        acc += part.value
+      })
       if (show_values) {
         g.append('text')
           .attr('class', 'node_stats_bar_value')
-          .attr('x', bx + x_serie.bandwidth() / 2).attr('y', y(value) - 4)
+          .attr('x', bx + x_serie.bandwidth() / 2).attr('y', y(total) - 4)
           .attr('text-anchor', 'middle').attr('font-size', 10).attr('fill', '#2D3748')
-          .text(fmt(value))
+          .text(fmt(total))
+      }
+      // Libellé de barre : seulement quand la couleur sert déjà aux catégories.
+      if (stacked) {
+        g.append('text')
+          .attr('class', 'node_stats_grouped_serie_label')
+          .attr('transform', `translate(${bx + x_serie.bandwidth() / 2},${h + 4}) rotate(-45)`)
+          .attr('text-anchor', 'end').attr('font-size', 8).attr('fill', '#718096')
+          .text(so.label.length > 10 ? so.label.slice(0, 9) + '…' : so.label)
+          .append('title').text(`${grp.label} · ${so.label}`)
       }
     })
   })
 
-  // Ligne de base + libellé de chaque grappe (1er axe).
+  // Ligne de base + libellé de chaque grappe (1er axe), sous les libellés de barre.
   g.append('line').attr('x1', 0).attr('x2', w).attr('y1', h).attr('y2', h).attr('stroke', '#CBD5E0')
+  const group_label_y = h + (stacked ? 34 : 0)
   g.selectAll('text.node_stats_bar_label')
     .data(groups).enter().append('text')
     .attr('class', 'node_stats_bar_label').attr('font-size', 10).attr('fill', '#4A5568')
     .attr('transform', grp => {
       const cx = (x_group(grp.id) ?? 0) + x_group.bandwidth() / 2
-      return rotate_labels ? `translate(${cx},${h + 8}) rotate(-35)` : `translate(${cx},${h + 14})`
+      return rotate_labels
+        ? `translate(${cx},${group_label_y + 8}) rotate(-35)`
+        : `translate(${cx},${group_label_y + 14})`
     })
     .attr('text-anchor', rotate_labels ? 'end' : 'middle')
     .text(grp => grp.label.length > 14 ? grp.label.slice(0, 13) + '…' : grp.label)
     .append('title').text(grp => grp.label)
 
-  // Légende des séries (2nd axe) — indispensable ici : c'est elle qui nomme les
-  // barres d'une grappe, dont l'abscisse ne porte que le nom de la grappe.
+  // Légende — les SÉRIES quand ce sont elles que la couleur distingue, les
+  // CATÉGORIES empilées sinon (les séries sont alors nommées sous chaque barre).
+  const legend_data = stacked
+    ? [...categories.entries()].map(([id, v], i) => ({ id, label: v.label, color: v.color ?? paletteColor(i) }))
+    : series_order
   const legend = root.append('div')
     .style('flex', '1 1 0').style('min-width', '0')
     .style('align-self', 'center').style('max-height', '100%')
     .style('overflow-y', 'auto').style('font-size', '0.75rem')
   const items = legend.selectAll('div.node_stats_legend_item')
-    .data(series_order).enter().append('div')
+    .data(legend_data).enter().append('div')
     .attr('class', 'node_stats_legend_item')
     .style('display', 'flex').style('align-items', 'center')
     .style('gap', '0.35rem').style('padding', '0.1rem 0.2rem')
@@ -622,30 +675,25 @@ export const drawNodeDonutOnGroup = (
 // HISTOGRAMME : une barre par série (empilée par ses parts). Cas d'usage :
 //  - décomposition seule (repr barres) → 1 série, N parts → N barres ;
 //  - comparaison pure → N séries d'1 part → N barres (couleur du dataTag) ;
-//  - croisement décomposer × comparer → N séries × M parts → N barres empilées ;
-//  - croisement comparer × comparer (#390, `grouped`) → N grappes × M barres
-//    JUXTAPOSÉES : aucun des deux axes n'est additif, empiler mentirait.
+//  - croisement décomposer × comparer → N séries × M parts → N barres empilées.
+// Le croisement comparer × comparer (#390) a son propre tracé, cf.
+// drawNodeGroupedBarsOnGroup : ses barres se juxtaposent au lieu de s'empiler.
 // Remplit les bornes width × height du nœud.
 export const drawNodeBarsOnGroup = (
   group_el: SVGGElement,
   series: Type_StatSeries[],
-  geom: Type_NodeChartGeom,
-  grouped = false
+  geom: Type_NodeChartGeom
 ): boolean => {
   const sel = d3.select(group_el)
   sel.selectAll('.' + NODE_CHART_CLASS).remove()
 
   // Série unique → une barre par part ; sinon une barre (empilée) par série.
-  const single = !grouped && series.length === 1
-  const bars: { key: string, label: string, segments: Type_StatSlice[] }[] = single
-    ? (series[0]?.parts ?? []).map(p => ({ key: p.id, label: p.label, segments: [p] }))
-    : series.map(s => ({ key: s.id, label: s.label, segments: s.parts }))
+  const single = series.length === 1
+  const bars: { key: string, segments: Type_StatSlice[] }[] = single
+    ? (series[0]?.parts ?? []).map(p => ({ key: p.id, segments: [p] }))
+    : series.map(s => ({ key: s.id, segments: s.parts }))
 
-  // L'échelle suit ce qu'on dessine : la HAUTEUR D'UNE BARRE en groupé (rien ne
-  // s'empile), le total de la pile sinon.
-  const totals = bars.map(b => grouped
-    ? b.segments.reduce((m, s) => Math.max(m, s.value), 0)
-    : b.segments.reduce((a, s) => a + s.value, 0))
+  const totals = bars.map(b => b.segments.reduce((a, s) => a + s.value, 0))
   const max = totals.reduce((m, v) => Math.max(m, v), 0)
   const n = bars.length
   if (n === 0 || max <= 0 || geom.width <= 0 || geom.height <= 0) return false
@@ -656,25 +704,6 @@ export const drawNodeBarsOnGroup = (
   const bw = slot - pad
   bars.forEach((b, i) => {
     const x = i * slot + pad / 2
-    if (grouped) {
-      // Grappe : les barres se partagent la largeur du créneau, dans l'ordre des
-      // parts — le même d'une grappe à l'autre (garanti par l'extraction).
-      const m = b.segments.length
-      const sub = bw / Math.max(1, m)
-      b.segments.forEach((seg, j) => {
-        if (seg.value <= 0) return
-        const bh = (seg.value / max) * geom.height
-        g.append('rect')
-          .attr('x', x + j * sub)
-          .attr('y', geom.height - bh)
-          .attr('width', Math.max(0, sub * 0.9))
-          .attr('height', bh)
-          .attr('fill', seg.color ?? paletteColor(j))
-          .append('title')
-          .text(`${b.label} · ${seg.label}\n${DEFAULT_FORMAT(seg.value)}`)
-      })
-      return
-    }
     let acc = 0
     b.segments.forEach((seg, j) => {
       if (seg.value <= 0) return
@@ -691,6 +720,54 @@ export const drawNodeBarsOnGroup = (
         .append('title')
         .text(`${seg.label}\n${DEFAULT_FORMAT(seg.value)}`)
       acc += seg.value
+    })
+  })
+  return true
+}
+
+// HISTOGRAMME GROUPÉ sur le nœud (#390) : une grappe par valeur du 1er axe de
+// comparaison, une barre par valeur du 2nd, chaque barre empilée par ses parts s'il
+// reste un axe additif. Les grappes se partagent la largeur du nœud ; l'échelle est
+// celle d'UNE barre, jamais d'une grappe — ici non plus rien ne s'additionne entre
+// barres voisines.
+export const drawNodeGroupedBarsOnGroup = (
+  group_el: SVGGElement,
+  groups: Type_StatGroup[],
+  geom: Type_NodeChartGeom
+): boolean => {
+  const sel = d3.select(group_el)
+  sel.selectAll('.' + NODE_CHART_CLASS).remove()
+
+  const bar_total = (s: Type_StatSeries) => s.parts.reduce((a, p) => a + p.value, 0)
+  const max = groups.reduce((m, g) => g.series.reduce((mm, s) => Math.max(mm, bar_total(s)), m), 0)
+  const n = groups.length
+  if (n === 0 || max <= 0 || geom.width <= 0 || geom.height <= 0) return false
+  const stacked = groups.some(g => g.series.some(s => s.parts.length > 1))
+
+  const g = sel.append('g').classed(NODE_CHART_CLASS, true).attr('transform', chartOrigin(geom))
+  const slot = geom.width / n
+  const pad = slot * 0.2
+  const bw = slot - pad
+  groups.forEach((grp, i) => {
+    const x = i * slot + pad / 2
+    const m = grp.series.length
+    const sub = bw / Math.max(1, m)
+    grp.series.forEach((serie, j) => {
+      let acc = 0
+      serie.parts.forEach((part, k) => {
+        if (part.value <= 0) return
+        const y0 = (acc / max) * geom.height
+        const y1 = ((acc + part.value) / max) * geom.height
+        g.append('rect')
+          .attr('x', x + j * sub)
+          .attr('y', geom.height - y1)
+          .attr('width', Math.max(0, sub * 0.9))
+          .attr('height', y1 - y0)
+          .attr('fill', (stacked ? part.color : serie.color) ?? paletteColor(stacked ? k : j))
+          .append('title')
+          .text(`${grp.label} · ${serie.label}${stacked ? ' · ' + part.label : ''}\n${DEFAULT_FORMAT(part.value)}`)
+        acc += part.value
+      })
     })
   })
   return true
