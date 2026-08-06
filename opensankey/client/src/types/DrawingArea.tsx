@@ -1146,12 +1146,14 @@ export class Class_DrawingArea {
    *
    * Ce qui est rejoué reprend, régime par régime, ce que faisait l'ancien couple
    * `areaAutoFit() + draw()` — SEULE la reconstruction du SVG disparaît :
-   * - mode PAPIER → la page se recale dans le viewport rétréci/élargi ;
+   * - caméra LIBRE ('none') → **rien n'est recadré**, chrome seul, format papier
+   *   compris : la caméra est à l'utilisateur, un geste de fenêtrage ne la lui
+   *   reprend pas ;
    * - taille VERROUILLÉE → cadrage figé réappliqué, avec le rétrécissement de
    *   secours si le contenu ne rentre plus dans la zone réduite ;
+   * - mode PAPIER + cadrage automatique → la page se recale dans le viewport ;
    * - mode de cadrage AUTOMATIQUE (largeur / hauteur / tout) ou board unitaire →
-   *   re-fit par `areaAutoFit()`, compensation de police comprise ;
-   * - caméra LIBRE ('none') → rien à recadrer, chrome seul.
+   *   re-fit, compensation de police comprise.
    *
    * @memberof Class_DrawingArea
    */
@@ -1159,53 +1161,93 @@ export class Class_DrawingArea {
     // Zone jamais dessinée : rien à rafraîchir (le premier draw fera le cadrage).
     if (!this.d3_selection_zoom_area) return
 
-    // Mode PAPIER : la page a une taille fixe, mais son cadrage DANS le viewport
-    // dépend de la largeur disponible — sans quoi elle se retrouve à cheval sous la
-    // barre latérale. Le cœur du fit sait le faire (branche `is_paper_mode` de
-    // _areaAutoFitCore), mais un appel GÉNÉRIQUE est re-routé vers le mode de cadrage
-    // actif (applyAutoFitMode -> recenter, qui sort sans rien faire en mode papier) :
-    // on passe donc un argument explicite pour atteindre le cœur, et on force malgré
-    // un éventuel verrou de taille (recaler la page est justement l'objet du mode).
-    if (this.is_paper_mode) {
-      this.areaAutoFit(undefined, true, false)
+    // Caméra LIBRE : la géométrie du contenu ne bouge pas d'un pixel, seul le chrome
+    // se cale sur la nouvelle réserve. Testé AVANT le mode papier : sans mode de
+    // cadrage actif, même une page A3 ne doit pas se recentrer toute seule quand on
+    // ouvre la barre — l'utilisateur a pris la main sur la caméra.
+    if (!this._size_locked && this._auto_fit_mode === 'none' && !this.is_unitary) {
       this._refreshWindowChrome()
       return
     }
 
     // Cadrage VERROUILLÉ (#1240) : même protocole que _drawBody — le transform courant
     // fait foi tant qu'on n'est pas dans un état « rétréci pour débordement ».
-    const zoom_node = this.d3_selection_zoom_area.node()
-    const live_zoom_transform = zoom_node ? d3.zoomTransform(zoom_node) : null
-    if (this._size_locked && live_zoom_transform && !this._locked_overflow_shrunk) {
-      this._locked_zoom_transform = live_zoom_transform
-    }
-    const locked_zoom_transform = this._size_locked ? this._locked_zoom_transform : null
-    const recompute_locked = this._size_locked && (this._locked_fit_dirty || !locked_zoom_transform)
-
-    // Caméra libre : la géométrie du contenu ne bouge pas d'un pixel, seul le chrome
-    // se cale sur la nouvelle réserve.
-    if (!this._size_locked && this._auto_fit_mode === 'none' && !this.is_unitary) {
+    if (this._size_locked) {
+      const zoom_node = this.d3_selection_zoom_area.node()
+      const live_zoom_transform = zoom_node ? d3.zoomTransform(zoom_node) : null
+      if (live_zoom_transform && !this._locked_overflow_shrunk) {
+        this._locked_zoom_transform = live_zoom_transform
+      }
+      const locked_zoom_transform = this._locked_zoom_transform
+      const recompute_locked = this._locked_fit_dirty || !locked_zoom_transform
+      this.areaAutoFit(recompute_locked ? false : undefined, recompute_locked)
+      if (recompute_locked) {
+        this._locked_fit_dirty = false
+        this._captureLockedReference()
+      } else if (locked_zoom_transform) {
+        // La zone a pu RÉTRÉCIR (barre latérale ouverte/élargie) : le cadrage de
+        // référence ne suffit alors plus à tout montrer -> dézoom transitoire, la
+        // référence restant intacte pour ré-agrandir à la fermeture.
+        if (this._lockedContentOverflows(locked_zoom_transform.k)) {
+          this._locked_overflow_shrunk = true
+          this.areaAutoFit(false, true)
+        } else {
+          this._locked_overflow_shrunk = false
+          this.setCamera(locked_zoom_transform)
+        }
+      }
       this._refreshWindowChrome()
       return
     }
 
-    this.areaAutoFit(recompute_locked ? false : undefined, recompute_locked)
-    if (recompute_locked) {
-      this._locked_fit_dirty = false
-      this._captureLockedReference()
-    } else if (locked_zoom_transform) {
-      // La zone a pu RÉTRÉCIR (barre latérale ouverte/élargie) : le cadrage de
-      // référence ne suffit alors plus à tout montrer -> dézoom transitoire, la
-      // référence restant intacte pour ré-agrandir à la fermeture.
-      if (this._lockedContentOverflows(locked_zoom_transform.k)) {
-        this._locked_overflow_shrunk = true
-        this.areaAutoFit(false, true)
-      } else {
-        this._locked_overflow_shrunk = false
-        this.setCamera(locked_zoom_transform)
-      }
+    // Mode PAPIER (avec un cadrage automatique actif) : la page a une taille fixe,
+    // mais son cadrage DANS le viewport dépend de la place disponible — sans quoi
+    // elle se retrouve à cheval sous la barre latérale. Le cœur du fit sait le faire
+    // (branche `is_paper_mode` de _areaAutoFitCore), mais un appel GÉNÉRIQUE est
+    // re-routé vers le mode actif (applyAutoFitMode -> recenter, qui sort sans rien
+    // faire en mode papier) : on passe donc un argument explicite pour l'atteindre.
+    // Ce calcul-là est une fonction pure de la place disponible (k = min des deux
+    // rapports, aucun libellé en jeu) : une seule passe suffit.
+    if (this.is_paper_mode) {
+      this.areaAutoFit(undefined, true, false)
+      this._refreshWindowChrome()
+      return
     }
+
+    this._autoFitToFixedPoint()
     this._refreshWindowChrome()
+  }
+
+  /**
+   * OS#388 — Recadrage automatique itéré jusqu'à son POINT FIXE.
+   *
+   * `areaAutoFit` n'est pas une fonction pure de la place disponible : la réserve de
+   * débordement des libellés est calculée sur le zoom COURANT (`k_live`, cf.
+   * `skip_text_in_bbox` dans `_areaAutoFitCore`), et en police verrouillée les
+   * libellés sont contre-scalés par 1/k. Le résultat dépend donc du cadrage d'où
+   * l'on part — et l'écart n'est pas symétrique : une RÉDUCTION de la zone converge
+   * du premier coup, un AGRANDISSEMENT ne reprend qu'une partie de la place rendue.
+   * D'où l'effet de cliquet mesuré sur un diagramme réel en police verrouillée
+   * (506 nœuds) : l'échelle perdait ~5 % au premier cycle ouverture/fermeture de la
+   * barre latérale et ne revenait jamais à son point de départ. Défaut ANTÉRIEUR à
+   * ce ticket — l'ancien `areaAutoFit() + draw()` cliquetait pareil, en pire.
+   *
+   * Quelques passes bornées suffisent : on s'arrête dès que l'échelle ne bouge plus.
+   * Le coût reste sans commune mesure avec la reconstruction du SVG qu'on a supprimée.
+   */
+  private _autoFitToFixedPoint() {
+    /** Au-delà, on garde le dernier cadrage : mieux vaut un pixel près que boucler. */
+    const MAX_PASSES = 4
+    /** Écart relatif d'échelle en deçà duquel on considère le cadrage stabilisé. */
+    const TOLERANCE = 0.002
+    for (let pass = 0; pass < MAX_PASSES; pass++) {
+      const k_before = this._k_fit
+      this.areaAutoFit()
+      // Échelle dégénérée (diagramme vide, mesure indisponible) : il n'y a pas de
+      // point fixe à chercher, une passe suffit.
+      if (!Number.isFinite(k_before) || !Number.isFinite(this._k_fit) || k_before === 0) break
+      if (Math.abs(this._k_fit - k_before) <= TOLERANCE * Math.abs(k_before)) break
+    }
   }
 
   /**

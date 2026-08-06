@@ -92,9 +92,10 @@ describe('OS#388 — rafraîchissement du fenêtrage', () => {
   // sans aucun ajustement (page a cheval sous la barre laterale, contenu verrouille
   // debordant de la zone retrecie).
 
-  it('mode papier : recale la page dans le viewport, sans reconstruction', () => {
+  it('mode papier AVEC cadrage automatique : recale la page, sans reconstruction', () => {
     const { app, drawing_area } = buildDrawnApp()
     drawing_area.paper_format = 'A4'
+    drawing_area.auto_fit_mode = 'full'
     expect(drawing_area.is_paper_mode).toBe(true)
 
     const area_auto_fit = jest.spyOn(drawing_area, 'areaAutoFit')
@@ -107,6 +108,22 @@ describe('OS#388 — rafraîchissement du fenêtrage', () => {
     expect(area_auto_fit).toHaveBeenCalled()
     expect(area_auto_fit.mock.calls[0].slice(0, 3)).toEqual([undefined, true, false])
     expect(draw_elements).not.toHaveBeenCalled()
+  })
+
+  it('mode papier SANS cadrage automatique : la camera n\'est pas reprise', () => {
+    const { app, drawing_area } = buildDrawnApp()
+    drawing_area.paper_format = 'A4'
+    expect(drawing_area.auto_fit_mode).toBe('none')
+
+    const area_auto_fit = jest.spyOn(drawing_area, 'areaAutoFit')
+    const draw_grid = jest.spyOn(drawing_area, 'drawGrid')
+
+    app.refreshWindowFraming()
+
+    // La camera appartient a l'utilisateur en mode 'none' : un geste de fenetrage
+    // met a jour le chrome, il ne recentre pas la page.
+    expect(area_auto_fit).not.toHaveBeenCalled()
+    expect(draw_grid).toHaveBeenCalled()
   })
 
   it('taille verrouillée : rejoue le cadrage figé, sans reconstruction', () => {
@@ -122,6 +139,42 @@ describe('OS#388 — rafraîchissement du fenêtrage', () => {
     expect(un_draw).not.toHaveBeenCalled()
     expect(draw_elements).not.toHaveBeenCalled()
     expect(draw_grid).toHaveBeenCalled()
+  })
+
+  // ⚠️ Le recadrage automatique n'est PAS une fonction pure de la place disponible :
+  // la reserve de debordement des libelles se calcule sur le zoom COURANT. Une
+  // REDUCTION de la zone converge du premier coup, un AGRANDISSEMENT non — d'ou un
+  // cliquet (l'echelle perdait ~5 % par cycle ouverture/fermeture de la barre sur un
+  // diagramme reel en police verrouillee, et n'y revenait jamais). On itere donc
+  // jusqu'au point fixe. Ne PAS juger ce comportement au nombre de passes attendu
+  // « en vrai » : ce qui est verifie ici, c'est la boucle — elle s'arrete des que
+  // l'echelle est stable, et elle est bornee quand elle ne l'est pas.
+
+  it('cadrage automatique : une seule passe quand l\'echelle est deja stable', () => {
+    const { app, drawing_area } = buildDrawnApp()
+    drawing_area.auto_fit_mode = 'full'
+
+    const area_auto_fit = jest.spyOn(drawing_area, 'areaAutoFit').mockImplementation(() => { /* echelle inchangee */ })
+
+    app.refreshWindowFraming()
+
+    expect(area_auto_fit).toHaveBeenCalledTimes(1)
+  })
+
+  it('cadrage automatique : itere, et reste borne si l\'echelle ne se stabilise pas', () => {
+    const { app, drawing_area } = buildDrawnApp()
+    drawing_area.auto_fit_mode = 'full'
+
+    // Echelle qui bouge a chaque passe : la boucle doit s'arreter d'elle-meme.
+    const moving = drawing_area as unknown as { _k_fit: number }
+    moving._k_fit = 1
+    const area_auto_fit = jest.spyOn(drawing_area, 'areaAutoFit')
+      .mockImplementation(() => { moving._k_fit *= 0.5 })
+
+    app.refreshWindowFraming()
+
+    expect(area_auto_fit.mock.calls.length).toBeGreaterThan(1)
+    expect(area_auto_fit.mock.calls.length).toBeLessThanOrEqual(4)
   })
 
   it('zone jamais dessinée : ne jette pas', () => {
