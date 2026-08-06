@@ -59,21 +59,51 @@ export interface Type_AnalysisSurfaces {
 export interface Type_AnalysisDescriptor {
   decompose: Type_DecomposeSpec | null
   compare: Type_CompareSpec | null
+  // SECOND axe de comparaison (#390) — OPTIONNEL : un descripteur qui ne le porte
+  // pas garde exactement le comportement d'avant (aucune migration de fichier).
+  // Renseigné, il croise deux axes NON ADDITIFS : une grappe par valeur du 1er axe
+  // (abscisse), une barre par valeur du 2nd (séries) — barres GROUPÉES, jamais
+  // empilées. L'ordre des deux champs est signifiant : c'est lui qui décide qui est
+  // l'abscisse et qui est la série.
+  compare_secondary?: Type_CompareSpec | null
   // Force la représentation ; sinon déduite (cf. deduceRepr).
   repr?: 'donut' | 'bars'
   surfaces?: Type_AnalysisSurfaces
 }
 
-// Décomposition EFFECTIVE (#389) : l'axe additif est SANS OBJET quand on compare
-// selon les flux — chaque barre est déjà un flux, la décomposer répéterait la même
-// décomposition du nœud sous chacune. Point de vérité unique, consommé par
-// l'extraction, le rendu et l'inspecteur (qui grise le sélecteur en conséquence).
+// Second axe de comparaison EFFECTIF (#390). Deux garde-fous, portés ici pour que
+// l'extraction, le rendu et l'inspecteur en héritent :
+//   - il n'existe que SOUS un premier axe (sans abscisse, pas de grappes) ;
+//   - deux axes « flux » ne se croisent pas — les flux entrants d'un nœud ne se
+//     lisent pas « par flux sortant », la cellule du croisement n'existe pas.
+export const effectiveCompareSecondary = (d: Type_AnalysisDescriptor): Type_CompareSpec | null => {
+  const secondary = d.compare_secondary ?? null
+  if (!secondary || !d.compare) return null
+  if (isFluxCompare(d.compare) && isFluxCompare(secondary)) return null
+  return secondary
+}
+
+// Croisement de deux axes NON ADDITIFS (#390) → barres groupées. À ne pas confondre
+// avec `decompose × compare`, qui reste EMPILÉ : là, les parts composent bien un
+// total. Ici aucun des deux axes n'est additif, empiler serait un mensonge visuel.
+export const isGroupedCross = (d: Type_AnalysisDescriptor): boolean =>
+  !!d.compare && !!effectiveCompareSecondary(d)
+
+// Décomposition EFFECTIVE (#389, étendue par #390) : l'axe additif est SANS OBJET
+// quand on compare selon les flux — chaque barre est déjà un flux, la décomposer
+// répéterait la même décomposition du nœud sous chacune — et tout autant sous un
+// croisement de deux axes de comparaison, qui occupe déjà l'abscisse ET les séries.
+// Point de vérité unique, consommé par l'extraction, le rendu et l'inspecteur (qui
+// grise le sélecteur en conséquence).
 export const effectiveDecompose = (d: Type_AnalysisDescriptor): Type_DecomposeSpec | null =>
-  isFluxCompare(d.compare) ? null : d.decompose
+  (isFluxCompare(d.compare) || isGroupedCross(d)) ? null : d.decompose
 
 // Représentation déduite : comparer = axe non-additif → jamais de couronne (une
-// couronne « 2019/2020 » est un mensonge visuel) ; décomposer seul → couronne.
+// couronne « 2019/2020 » est un mensonge visuel) ; décomposer seul → couronne. Un
+// croisement de deux axes de comparaison (#390) ne se replie sur AUCUN override :
+// il n'existe qu'en barres groupées.
 export const deduceRepr = (d: Type_AnalysisDescriptor): 'donut' | 'bars' => {
+  if (isGroupedCross(d)) return 'bars'
   if (d.repr) return d.repr
   return d.compare ? 'bars' : 'donut'
 }

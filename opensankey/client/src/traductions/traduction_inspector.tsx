@@ -95,6 +95,7 @@ export const resources_inspector = {
         analysis: {
           decompose_by: 'Decompose by',
           compare_by: 'Compare across',
+          compare_by_secondary: 'Then across (series)',
           none: '— none —',
           inputs: 'Incoming flows',
           outputs: 'Outgoing flows',
@@ -248,6 +249,7 @@ export const resources_inspector = {
         analysis: {
           decompose_by: 'Décomposer par',
           compare_by: 'Comparer selon',
+          compare_by_secondary: 'Puis selon (séries)',
           none: '— aucune —',
           inputs: 'Flux entrants',
           outputs: 'Flux sortants',
@@ -401,6 +403,7 @@ export const resources_inspector = {
         analysis: {
           decompose_by: 'Descomponer por',
           compare_by: 'Comparar según',
+          compare_by_secondary: 'Luego según (series)',
           none: '— ninguna —',
           inputs: 'Flujos entrantes',
           outputs: 'Flujos salientes',
@@ -554,6 +557,7 @@ export const resources_inspector = {
         analysis: {
           decompose_by: 'Zerlegen nach',
           compare_by: 'Vergleichen über',
+          compare_by_secondary: 'Dann über (Reihen)',
           none: '— keine —',
           inputs: 'Eingehende Flüsse',
           outputs: 'Ausgehende Flüsse',
@@ -707,6 +711,7 @@ export const resources_inspector = {
         analysis: {
           decompose_by: 'Scomporre per',
           compare_by: 'Confrontare per',
+          compare_by_secondary: 'Poi per (serie)',
           none: '— nessuna —',
           inputs: 'Flussi entranti',
           outputs: 'Flussi uscenti',
@@ -863,6 +868,7 @@ export const resources_inspector = {
         analysis: {
           decompose_by: '按此分解',
           compare_by: '按此比较',
+          compare_by_secondary: '再按此比较（系列）',
           none: '— 无 —',
           inputs: '进入的流量',
           outputs: '流出的流量',
@@ -1019,6 +1025,7 @@ export const resources_inspector = {
         analysis: {
           decompose_by: '分解の軸',
           compare_by: '比較の軸',
+          compare_by_secondary: '第2の比較の軸（系列）',
           none: '— なし —',
           inputs: '入ってくるフロー',
           outputs: '出ていくフロー',
