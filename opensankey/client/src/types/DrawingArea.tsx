@@ -1146,11 +1146,11 @@ export class Class_DrawingArea {
    *
    * Ce qui est rejoué reprend, régime par régime, ce que faisait l'ancien couple
    * `areaAutoFit() + draw()` — SEULE la reconstruction du SVG disparaît :
-   * - caméra LIBRE ('none') → **rien n'est recadré**, chrome seul, format papier
-   *   compris : la caméra est à l'utilisateur, un geste de fenêtrage ne la lui
-   *   reprend pas ;
-   * - taille VERROUILLÉE → cadrage figé réappliqué, avec le rétrécissement de
-   *   secours si le contenu ne rentre plus dans la zone réduite ;
+   * - AUCUN cadrage automatique ('none') → **rien n'est recadré**, chrome seul —
+   *   format papier ET taille verrouillée compris : la caméra est à l'utilisateur,
+   *   un geste de fenêtrage ne la lui reprend pas ;
+   * - taille VERROUILLÉE + cadrage automatique → cadrage figé réappliqué, avec le
+   *   rétrécissement de secours si le contenu ne rentre plus dans la zone réduite ;
    * - mode PAPIER + cadrage automatique → la page se recale dans le viewport ;
    * - mode de cadrage AUTOMATIQUE (largeur / hauteur / tout) ou board unitaire →
    *   re-fit, compensation de police comprise.
@@ -1161,17 +1161,25 @@ export class Class_DrawingArea {
     // Zone jamais dessinée : rien à rafraîchir (le premier draw fera le cadrage).
     if (!this.d3_selection_zoom_area) return
 
-    // Caméra LIBRE : la géométrie du contenu ne bouge pas d'un pixel, seul le chrome
-    // se cale sur la nouvelle réserve. Testé AVANT le mode papier : sans mode de
-    // cadrage actif, même une page A3 ne doit pas se recentrer toute seule quand on
-    // ouvre la barre — l'utilisateur a pris la main sur la caméra.
-    if (!this._size_locked && this._auto_fit_mode === 'none' && !this.is_unitary) {
+    // AUCUN CADRAGE AUTOMATIQUE : la géométrie du contenu ne bouge pas d'un pixel,
+    // seul le chrome est rafraîchi. Règle sans exception — c'est le premier test, AVANT
+    // le cadrage verrouillé et AVANT le mode papier :
+    // - une page A3 ne doit pas se recentrer toute seule à l'ouverture de la barre ;
+    // - un diagramme en TAILLE VERROUILLÉE (#1240) non plus. Son dézoom de secours
+    //   (`_lockedContentOverflows`) est fait pour un changement de CONTENU — un dataTag
+    //   plus grand que celui de référence — pas pour un geste de fenêtrage. Déclenché
+    //   ici, il rétrécissait le diagramme dès que la barre s'ouvrait, ce qui donnait
+    //   « le diagramme s'adapte » ET supprimait la barre de défilement attendue (plus
+    //   rien ne dépassait). `size_locked` est en outre posé dans des fichiers existants
+    //   sans que leur auteur l'ait jamais réglé : le régime doit rester invisible.
+    if (this._auto_fit_mode === 'none' && !this.is_unitary) {
       this._refreshWindowChrome()
       return
     }
 
-    // Cadrage VERROUILLÉ (#1240) : même protocole que _drawBody — le transform courant
-    // fait foi tant qu'on n'est pas dans un état « rétréci pour débordement ».
+    // Cadrage VERROUILLÉ (#1240) avec un mode de cadrage actif : même protocole que
+    // _drawBody — le transform courant fait foi tant qu'on n'est pas dans un état
+    // « rétréci pour débordement ».
     if (this._size_locked) {
       const zoom_node = this.d3_selection_zoom_area.node()
       const live_zoom_transform = zoom_node ? d3.zoomTransform(zoom_node) : null

@@ -126,9 +126,10 @@ describe('OS#388 — rafraîchissement du fenêtrage', () => {
     expect(draw_grid).toHaveBeenCalled()
   })
 
-  it('taille verrouillée : rejoue le cadrage figé, sans reconstruction', () => {
+  it('taille verrouillée AVEC cadrage automatique : rejoue le cadrage figé, sans reconstruction', () => {
     const { app, drawing_area } = buildDrawnApp()
     drawing_area.size_locked = true
+    drawing_area.auto_fit_mode = 'full'
 
     const un_draw = jest.spyOn(drawing_area, 'unDraw')
     const draw_elements = jest.spyOn(drawing_area, 'drawElements')
@@ -138,6 +139,29 @@ describe('OS#388 — rafraîchissement du fenêtrage', () => {
 
     expect(un_draw).not.toHaveBeenCalled()
     expect(draw_elements).not.toHaveBeenCalled()
+    expect(draw_grid).toHaveBeenCalled()
+  })
+
+  // ⚠️ `size_locked` est pose dans des fichiers d'etude EXISTANTS sans que leur auteur
+  // l'ait jamais regle : le regime doit rester invisible tant qu'aucun cadrage n'est
+  // demande. Son dezoom de secours (_lockedContentOverflows) vise un changement de
+  // CONTENU — un dataTag plus grand que celui de reference — pas un geste de fenetrage.
+  // Declenche a l'ouverture de la barre laterale, il retrecissait le diagramme (« ca
+  // s'adapte ») ET supprimait la barre de defilement attendue, puisque plus rien ne
+  // depassait. D'ou l'ordre des tests dans refreshWindowFraming : 'none' d'ABORD.
+  it('taille verrouillée SANS cadrage automatique : aucun recadrage', () => {
+    const { app, drawing_area } = buildDrawnApp()
+    drawing_area.size_locked = true
+    expect(drawing_area.auto_fit_mode).toBe('none')
+
+    const area_auto_fit = jest.spyOn(drawing_area, 'areaAutoFit')
+    const set_camera = jest.spyOn(drawing_area, 'setCamera')
+    const draw_grid = jest.spyOn(drawing_area, 'drawGrid')
+
+    app.refreshWindowFraming()
+
+    expect(area_auto_fit).not.toHaveBeenCalled()
+    expect(set_camera).not.toHaveBeenCalled()
     expect(draw_grid).toHaveBeenCalled()
   })
 
