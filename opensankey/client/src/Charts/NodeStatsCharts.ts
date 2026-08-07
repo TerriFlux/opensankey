@@ -38,21 +38,23 @@ export interface Type_ChartOptions {
   // nombre de séries non affichées. Défaut : « +N ».
   truncated_label?: (count: number) => string
   // Régime d'ÉCHELLE (#393). Défaut 'auto' : échelle partagée, sauf quand la mesure
-  // montre qu'une série y est écrasée sous le seuil de visibilité — voir
-  // resolveScaleMode. 'shared' et 'per_series' forcent le régime.
+  // montre qu'une grappe y est écrasée sous le seuil de visibilité — voir
+  // resolveScaleMode. 'shared' et 'per_group' forcent le régime.
   scale_mode?: Type_ScaleMode
-  // Mention affichée quand des séries sont trop petites pour l'échelle partagée mais
-  // restent dessinées au plancher de visibilité (#393). Reçoit leur nombre.
+  // Mention affichée quand des barres ont dû être relevées au plancher de visibilité
+  // (#393) : leur hauteur ne dit plus rien de leur valeur. Reçoit LEUR NOMBRE — celui
+  // des barres effectivement relevées, jamais celui des bandes écrasées : c'est la
+  // barre que le lecteur voit, et c'est d'elle qu'il faut le prévenir.
   out_of_scale_label?: (count: number) => string
-  // Mention affichée quand l'échelle est PAR SÉRIE (#393) : les hauteurs ne sont
-  // alors plus comparables d'une série à l'autre, et le taire serait un mensonge.
+  // Mention affichée quand l'échelle est PAR GRAPPE (#393) : les hauteurs ne sont
+  // alors plus comparables d'une grappe à l'autre, et le taire serait un mensonge.
   independent_scales_label?: string
 }
 
 // Régime d'échelle demandé (#393). 'auto' laisse la MESURE trancher : c'est le seul
 // déclencheur honnête, la nature du groupe de tags n'en étant pas un (deux unités
 // peuvent être commensurables, deux scénarios peuvent ne pas l'être).
-export type Type_ScaleMode = 'auto' | 'shared' | 'per_series'
+export type Type_ScaleMode = 'auto' | 'shared' | 'per_group'
 
 const DEFAULT_FORMAT = (v: number) =>
   new Intl.NumberFormat(undefined, { maximumSignificantDigits: 4 }).format(v)
@@ -77,11 +79,11 @@ const MIN_BAR_WIDTH_FOR_VALUE = 22
 // barre disparue. Le plancher ment sur la hauteur (de 2 px au plus) pour ne pas mentir
 // sur l'existence ; la valeur exacte reste écrite et dans l'info-bulle.
 const MIN_VISIBLE_BAR_PX = 2
-// Seuil d'ÉCRASEMENT d'une série sous l'échelle partagée (#393) : hauteur, en pixels,
-// de sa PLUS GRANDE barre. En dessous, la série ne dit plus rien de son propre profil
-// (on ne lit ni son évolution ni ses écarts internes) — c'est ce que mesure le régime
-// 'auto' pour décider de passer à l'échelle par série.
-const CRUSHED_SERIE_PX = 3
+// Seuil d'ÉCRASEMENT d'une bande sous l'échelle partagée (#393) : hauteur, en pixels,
+// de sa PLUS GRANDE barre. En dessous, la bande ne dit plus rien d'elle-même (on n'y
+// lit plus aucun écart interne) — c'est ce que mesure le régime 'auto' pour décider de
+// passer à l'échelle par grappe.
+const CRUSHED_BAND_PX = 3
 // Réserve verticale d'une mention (#393) dans un graphique qui n'a pas de légende.
 const MENTION_BAND_PX = 12
 // Plancher de visibilité des graphiques dessinés SUR LE NŒUD (#393) : exprimé en
@@ -103,35 +105,34 @@ const paletteColor = (i: number) => PALETTE[i % PALETTE.length]
 export const visibilityLift = (bar_px: number, floor_px: number = MIN_VISIBLE_BAR_PX): number =>
   (bar_px > 0 && bar_px < floor_px) ? floor_px / bar_px : 1
 
-// Régime d'échelle EFFECTIF (#393) à partir des maximums de chaque série et de la
-// hauteur utile. Le déclencheur du régime 'auto' est la MESURE — une série dont même
-// la plus grande barre tient sous CRUSHED_SERIE_PX est illisible en tant que série —
-// et non la nature du groupe de tags comparé.
+// Régime d'échelle EFFECTIF (#393) à partir des plafonds des bandes comparées (les
+// GRAPPES dans le moteur groupé, les barres ailleurs) et de la hauteur utile. Le
+// déclencheur du régime 'auto' est la MESURE — une bande dont même la plus grande
+// barre tient sous CRUSHED_BAND_PX ne dit plus rien d'elle-même — et non la nature du
+// groupe de tags comparé.
 //
-// Deux garde-fous : sans au moins deux séries, l'échelle par série n'apporte rien
-// (elle collerait l'unique série au plafond) ; et le régime 'auto' ne bascule QUE sur
-// écrasement mesuré, pour que le cas courant — des séries commensurables — garde
+// Deux garde-fous : sans au moins deux bandes, séparer les échelles n'apporte rien
+// (l'unique bande irait au plafond) ; et le régime 'auto' ne bascule QUE sur
+// écrasement mesuré, pour que le cas courant — des bandes commensurables — garde
 // l'échelle partagée, qui est celle qui les rend comparables.
 export const resolveScaleMode = (
-  series_maxima: number[],
+  band_maxima: number[],
   height: number,
   requested: Type_ScaleMode = 'auto'
-): 'shared' | 'per_series' => {
-  const positive = series_maxima.filter(v => v > 0)
+): 'shared' | 'per_group' => {
+  const positive = band_maxima.filter(v => v > 0)
   if (positive.length < 2 || height <= 0) return 'shared'
-  if (requested === 'shared' || requested === 'per_series') return requested
+  if (requested === 'shared' || requested === 'per_group') return requested
   const top = Math.max(...positive)
-  return positive.some(v => (v / top) * height < CRUSHED_SERIE_PX) ? 'per_series' : 'shared'
+  return positive.some(v => (v / top) * height < CRUSHED_BAND_PX) ? 'per_group' : 'shared'
 }
 
-// Nombre de séries écrasées sous l'échelle partagée (#393) — ce que compte la mention
-// quand on reste en échelle partagée.
-export const countCrushedSeries = (series_maxima: number[], height: number): number => {
-  const positive = series_maxima.filter(v => v > 0)
-  if (positive.length === 0 || height <= 0) return 0
-  const top = Math.max(...positive)
-  return positive.filter(v => (v / top) * height < CRUSHED_SERIE_PX).length
-}
+// Nombre de barres RELEVÉES au plancher (#393) — ce que compte la mention. On compte
+// les barres, pas les bandes écrasées : la barre est ce que le lecteur voit, et une
+// bande parfaitement lisible peut contenir une barre au plancher (c'est le cas quand
+// l'incommensurable est resté du côté des séries au lieu de l'abscisse).
+export const countLifted = (bar_pixels: number[], floor_px: number = MIN_VISIBLE_BAR_PX): number =>
+  bar_pixels.filter(px => visibilityLift(px, floor_px) > 1).length
 
 // Vide le conteneur et renvoie sa sélection d3 + ses dimensions utiles.
 const prepareContainer = (container: HTMLElement) => {
@@ -311,16 +312,17 @@ export const drawBarChart = (
   // quand ils sont nombreux/longs).
   const rotate_labels = slices.length > 6 || slices.some(s => s.label.length > 8)
   const bottom = rotate_labels ? 46 : 22
-  // Écrasement (#393) : ici chaque barre EST sa propre série, donc l'échelle par
-  // série les mettrait TOUTES au plafond — un graphique où toutes les hauteurs sont
-  // égales n'est plus un graphique. On garde donc l'échelle partagée et on se borne
-  // au plancher de visibilité, annoncé. Détecté en deux passes : sur la hauteur sans
+  // Écrasement (#393) : ici il n'y a pas de grappe — chaque barre est seule de son
+  // espèce, et leur donner à chacune son échelle les mettrait TOUTES au plafond, ce
+  // qui n'est plus un graphique. On garde donc l'échelle partagée et on se borne au
+  // plancher de visibilité, annoncé. Détecté en deux passes : sur la hauteur sans
   // mention, puis la bande de mention est réservée (12 px ne changent pas le verdict).
   const probe_h = height - 18 - bottom
-  const crushed = countCrushedSeries(slices.map(s => s.value), probe_h)
-  const margin = { top: 18 + (crushed > 0 ? MENTION_BAND_PX : 0), right: 8, bottom, left: 8 }
+  const liftedAt = (avail: number) => countLifted(slices.map(s => (s.value / max_value) * avail))
+  const margin = { top: 18 + (liftedAt(probe_h) > 0 ? MENTION_BAND_PX : 0), right: 8, bottom, left: 8 }
   const w = width - margin.left - margin.right
   const h = height - margin.top - margin.bottom
+  const lifted = liftedAt(h)
 
   const x = d3.scaleBand<string>()
     .domain(slices.map(s => s.id))
@@ -386,12 +388,12 @@ export const drawBarChart = (
   // Mention d'ÉCRASEMENT (#393) : ces barres sont au plancher, leur hauteur ne dit
   // plus rien de leur valeur. Le taire laisserait lire « négligeable » là où la donnée
   // est seulement d'un autre ordre de grandeur.
-  if (crushed > 0) {
+  if (lifted > 0) {
     g.append('text')
       .attr('class', 'node_stats_out_of_scale')
       .attr('x', 0).attr('y', -(margin.top) + 10)
       .attr('font-size', 9).attr('font-style', 'italic').attr('fill', '#718096')
-      .text(opts.out_of_scale_label ? opts.out_of_scale_label(crushed) : `${crushed} ⚠`)
+      .text(opts.out_of_scale_label ? opts.out_of_scale_label(lifted) : `${lifted} ⚠`)
   }
 }
 
@@ -466,12 +468,12 @@ export const drawStackedBarChart = (
     .attr('width', chart_width).attr('height', height).style('flex', '0 0 auto')
   const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`)
 
-  // Écrasement (#393) : ici aussi une barre EST sa série (elle n'existe qu'une fois),
-  // donc pas d'échelle par série à proposer — et une échelle logarithmique serait un
-  // contresens sur un empilement, où c'est l'addition des hauteurs qui porte le sens.
-  // Reste le plancher de visibilité, appliqué à la PILE ENTIÈRE : relever les segments
-  // un à un décollerait le sommet de la barre de son total.
-  const crushed = countCrushedSeries(series.map(series_total), h)
+  // Écrasement (#393) : ici non plus il n'y a pas de grappe — une barre par série, et
+  // rien qui les regroupe. Une échelle logarithmique serait par ailleurs un contresens
+  // sur un empilement, où c'est l'addition des hauteurs qui porte le sens. Reste le
+  // plancher de visibilité, appliqué à la PILE ENTIÈRE : relever les segments un à un
+  // décollerait le sommet de la barre de son total.
+  const lifted = countLifted(series.map(s => (series_total(s) / max_total) * h))
 
   // Empilement d'une série dans l'ordre global des catégories.
   series.forEach(s => {
@@ -533,11 +535,11 @@ export const drawStackedBarChart = (
     .attr('title', c => c.label).text(c => c.label)
 
   // Mention d'ÉCRASEMENT (#393), au pied de la légende des catégories.
-  if (crushed > 0) {
+  if (lifted > 0) {
     legend.append('div')
       .attr('class', 'node_stats_legend_out_of_scale')
       .style('padding', '0.1rem 0.2rem').style('color', '#718096').style('font-style', 'italic')
-      .text(opts.out_of_scale_label ? opts.out_of_scale_label(crushed) : `${crushed} ⚠`)
+      .text(opts.out_of_scale_label ? opts.out_of_scale_label(lifted) : `${lifted} ⚠`)
   }
 }
 
@@ -584,15 +586,15 @@ export const drawGroupedBarChart = (
     .map(([id, v], i) => ({ id, label: v.label, color: v.color ?? paletteColor(i) }))
 
   // Y sur la HAUTEUR D'UNE BARRE (total de sa pile), jamais sur la grappe entière.
-  // Maximum de CHAQUE série sur l'ensemble des grappes (#393) : c'est le plafond que
-  // prend l'échelle par série, et c'est sur lui que se mesure l'écrasement — une série
-  // dont même la plus haute barre est invisible ne dit plus rien d'elle-même.
-  const serie_max = new Map<string, number>()
+  // Plafond de CHAQUE GRAPPE (#393) : la plus haute de ses barres. C'est lui que prend
+  // l'échelle par grappe, et c'est sur lui que se mesure l'écrasement — une grappe dont
+  // même la plus haute barre est invisible ne dit plus rien d'elle-même.
+  const group_max = new Map<string, number>()
   groups.forEach(grp => grp.series.forEach(s => {
     if (!kept_ids.has(s.id)) return
-    serie_max.set(s.id, Math.max(serie_max.get(s.id) ?? 0, bar_total(s)))
+    group_max.set(grp.id, Math.max(group_max.get(grp.id) ?? 0, bar_total(s)))
   }))
-  const max_value = [...serie_max.values()].reduce((m, v) => Math.max(m, v), 0)
+  const max_value = [...group_max.values()].reduce((m, v) => Math.max(m, v), 0)
   if (groups.length === 0 || series_order.length === 0 || max_value <= 0 || width < 80 || height < 80) {
     drawEmptyLabel(sel, opts.empty_label ?? '')
     return
@@ -627,17 +629,30 @@ export const drawGroupedBarChart = (
   const x_serie = d3.scaleBand<string>()
     .domain(series_order.map(s => s.id)).range([0, x_group.bandwidth()]).padding(0.08)
 
-  // RÉGIME D'ÉCHELLE (#393). C'est ici, et seulement ici, qu'une série peut avoir son
-  // propre plafond : dans ce moteur une série couvre PLUSIEURS barres (une par
-  // grappe), donc la normaliser garde un sens — on continue de lire son évolution
-  // d'une grappe à l'autre. Ce qu'on perd, ce sont les rapports ENTRE séries : c'est
-  // exactement ce que la mention dit à l'écran, faute de quoi un lecteur lirait un
-  // rapport là où il n'y en a plus.
-  const maxima = series_order.map(so => serie_max.get(so.id) ?? 0)
+  // RÉGIME D'ÉCHELLE (#393). L'échelle se sépare par GRAPPE, jamais par série : la
+  // grappe est la seule bande où les barres se comparent VRAIMENT — elles y sont
+  // côte à côte, sous une même étiquette de « Comparer selon ». Lui donner son propre
+  // plafond rend chaque grappe lisible en son sein, ce qui est le geste utile (comparer
+  // Bio et Conventionnel pour une unité donnée). C'est aussi ce qui fait de l'ORDRE des
+  // deux axes le vrai levier : on met sur l'abscisse ce qui est incommensurable.
+  //
+  // Ce qu'on perd, ce sont les rapports ENTRE grappes — et c'est exactement ce que la
+  // mention dit à l'écran, faute de quoi un lecteur lirait un rapport là où il n'y en
+  // a plus.
+  const maxima = groups.map(grp => group_max.get(grp.id) ?? 0)
   const scale_mode = resolveScaleMode(maxima, h, opts.scale_mode ?? 'auto')
-  const per_series = scale_mode === 'per_series'
-  const crushed = per_series ? 0 : countCrushedSeries(maxima, h)
-  const ceilingOf = (id: string) => (per_series ? (serie_max.get(id) || max_value) : max_value)
+  const per_group = scale_mode === 'per_group'
+  const ceilingOf = (group_id: string) =>
+    (per_group ? (group_max.get(group_id) || max_value) : max_value)
+
+  // Barres relevées au plancher, comptées SOUS L'ÉCHELLE RETENUE. Il en reste parfois
+  // même en « par grappe » : une barre minuscule dans une grappe par ailleurs lisible,
+  // ce qui arrive dès que l'incommensurable est resté du côté des séries au lieu de
+  // l'abscisse. Séparer les échelles ne peut alors rien pour elle — et c'est justement
+  // ce qu'il faut dire, plutôt que de laisser un filet de 2 px passer pour une mesure.
+  const lifted = countLifted(groups.flatMap(grp => grp.series
+    .filter(s => kept_ids.has(s.id))
+    .map(s => (bar_total(s) / ceilingOf(grp.id)) * h)))
 
   const svg = root.append('svg')
     .attr('width', chart_width).attr('height', height).style('flex', '0 0 auto')
@@ -654,9 +669,9 @@ export const drawGroupedBarChart = (
       // qu'on voit qu'une année manque, au lieu de décaler les suivantes.
       if (!serie || total <= 0) return
       const bx = gx + (x_serie(so.id) ?? 0)
-      // Échelle de CETTE barre : le plafond de sa série (ou le plafond global), puis
+      // Échelle de CETTE barre : le plafond de sa grappe (ou le plafond global), puis
       // le plancher de visibilité appliqué à la pile entière.
-      const ceiling = ceilingOf(so.id)
+      const ceiling = ceilingOf(grp.id)
       const px = (v: number) => (v / ceiling) * h
       const lift = visibilityLift(px(total))
       const yPx = (v: number) => h - px(v) * lift
@@ -710,7 +725,12 @@ export const drawGroupedBarChart = (
     })
     .attr('text-anchor', rotate_labels ? 'end' : 'middle')
     .text(grp => grp.label.length > 14 ? grp.label.slice(0, 13) + '…' : grp.label)
-    .append('title').text(grp => grp.label)
+    // Sous échelle par grappe, le libellé porte SON plafond dans son info-bulle : c'est
+    // ce qui rend l'indépendance concrète plutôt que théorique, sans risquer la mise en
+    // page d'un second niveau de texte sous un axe déjà chargé.
+    .append('title').text(grp => per_group
+      ? `${grp.label}\n${fmt(group_max.get(grp.id) ?? 0)}`
+      : grp.label)
 
   // Légende — les SÉRIES quand ce sont elles que la couleur distingue, les
   // CATÉGORIES empilées sinon (les séries sont alors nommées sous chaque barre).
@@ -733,14 +753,6 @@ export const drawGroupedBarChart = (
     .style('flex', '1 1 auto').style('overflow', 'hidden')
     .style('text-overflow', 'ellipsis').style('white-space', 'nowrap')
     .attr('title', s => s.label).text(s => s.label)
-  // Sous échelle par série, chaque entrée porte SON plafond : c'est ce qui rend
-  // l'indépendance des échelles concrète plutôt que théorique — on voit aussitôt que
-  // « kt » et « kt par ha » ne sont pas montés au même barreau.
-  if (per_series && !stacked) {
-    items.append('span')
-      .style('flex', '0 0 auto').style('color', '#718096')
-      .text(s => fmt(serie_max.get(s.id) ?? 0))
-  }
 
   // Troncature ANNONCÉE : une grappe muette sur ce qu'elle omet ferait lire un
   // sous-ensemble pour le tout.
@@ -751,20 +763,22 @@ export const drawGroupedBarChart = (
       .text(opts.truncated_label ? opts.truncated_label(dropped) : `+${dropped}`)
   }
 
-  // Régime d'échelle ANNONCÉ (#393) — le pendant de la troncature. Deux mentions
-  // exclusives : soit les échelles sont indépendantes (et les hauteurs ne se comparent
-  // plus d'une série à l'autre), soit l'échelle est partagée et des séries y tiennent
-  // au plancher (et leur hauteur ne dit plus rien de leur valeur).
-  if (per_series) {
+  // Régime d'échelle ANNONCÉ (#393) — le pendant de la troncature. Les deux mentions
+  // ne s'excluent PAS : les échelles peuvent être indépendantes (les hauteurs ne se
+  // comparent alors plus d'une grappe à l'autre) ET des barres tenir malgré tout au
+  // plancher. Taire l'une des deux laisserait une moitié du graphique se faire lire de
+  // travers.
+  if (per_group) {
     legend.append('div')
       .attr('class', 'node_stats_legend_independent_scales')
       .style('padding', '0.1rem 0.2rem').style('color', '#718096').style('font-style', 'italic')
       .text(opts.independent_scales_label ?? 'independent scales')
-  } else if (crushed > 0) {
+  }
+  if (lifted > 0) {
     legend.append('div')
       .attr('class', 'node_stats_legend_out_of_scale')
       .style('padding', '0.1rem 0.2rem').style('color', '#718096').style('font-style', 'italic')
-      .text(opts.out_of_scale_label ? opts.out_of_scale_label(crushed) : `${crushed} ⚠`)
+      .text(opts.out_of_scale_label ? opts.out_of_scale_label(lifted) : `${lifted} ⚠`)
   }
 }
 

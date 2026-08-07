@@ -69,16 +69,18 @@ export interface Type_AnalysisDescriptor {
   // Force la représentation ; sinon déduite (cf. deduceRepr).
   repr?: 'donut' | 'bars'
   // Force le régime d'ÉCHELLE (#393) ; ABSENT = auto, comme `repr` ci-dessus — et
-  // l'auto vaut échelle PARTAGÉE tant que la mesure ne montre pas qu'une série y est
+  // l'auto vaut échelle PARTAGÉE tant que la mesure ne montre pas qu'une grappe y est
   // écrasée. Le défaut d'un descripteur qui ne porte pas ce champ est donc exactement
   // le comportement d'avant : aucune migration de fichier.
   //
-  // 'per_series' n'a de sens que là où une série couvre plusieurs barres, c'est-à-dire
-  // sous un croisement de deux axes de comparaison (cf. supportsPerSeriesScale) :
-  // ailleurs, chaque série EST une barre, et les normaliser une à une les mettrait
-  // toutes au plafond — un graphique dont toutes les hauteurs sont égales ne compare
-  // plus rien.
-  scale_mode?: 'shared' | 'per_series'
+  // 'per_group' donne son propre plafond à CHAQUE GRAPPE — une grappe par étiquette de
+  // `compare`, l'axe des abscisses. C'est la seule bande où les barres se comparent
+  // vraiment (elles y sont côte à côte), donc la seule qu'il soit utile de normaliser ;
+  // et cela fait de l'ORDRE des deux axes le levier de l'utilisateur : on met sur
+  // l'abscisse ce qui est incommensurable. N'a donc de sens que sous un croisement de
+  // deux axes de comparaison (cf. supportsPerGroupScale) — sans grappes, il n'y a rien
+  // à séparer.
+  scale_mode?: 'shared' | 'per_group'
   surfaces?: Type_AnalysisSurfaces
 }
 
@@ -101,11 +103,12 @@ export const effectiveCompareSecondary = (d: Type_AnalysisDescriptor): Type_Comp
 export const isGroupedCross = (d: Type_AnalysisDescriptor): boolean =>
   !!d.compare && !!effectiveCompareSecondary(d)
 
-// L'ÉCHELLE PAR SÉRIE est-elle applicable (#393) ? Point de vérité unique consommé
-// par le rendu et par l'inspecteur (qui n'expose le réglage que là). Une série n'a un
-// profil propre — donc un plafond propre qui garde du sens — que si elle couvre
-// plusieurs barres : c'est le cas du seul croisement de deux axes de comparaison.
-export const supportsPerSeriesScale = (d: Type_AnalysisDescriptor): boolean =>
+// L'ÉCHELLE PAR GRAPPE est-elle applicable (#393) ? Point de vérité unique consommé
+// par le rendu et par l'inspecteur (qui n'expose le réglage que là). Il n'y a de
+// grappes que sous un croisement de deux axes de comparaison ; ailleurs, chaque barre
+// est seule de son espèce et leur donner à chacune son échelle les mettrait toutes au
+// plafond — un graphique dont toutes les hauteurs sont égales ne compare plus rien.
+export const supportsPerGroupScale = (d: Type_AnalysisDescriptor): boolean =>
   isGroupedCross(d)
 
 // Décomposition EFFECTIVE (#389, étendue par #390) : l'axe additif est SANS OBJET
