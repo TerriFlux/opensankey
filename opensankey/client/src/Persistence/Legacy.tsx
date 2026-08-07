@@ -1685,10 +1685,15 @@ const convert_nodes: convert_nodesFuncType = (
 
     const nn = n as unknown as OSP_type
     if (nn.image != undefined && nn.FO_content == nn.image) {
+      // L'ancien format rangeait l'image du nœud dans un fragment SVG
+      // « <image src=… /> ». Le src y est délimité par des quotes SIMPLES ou
+      // DOUBLES selon la version qui l'a écrit ; découper sur la seule quote
+      // simple perdait silencieusement les images écrites en src="…" (le nœud
+      // se chargeait alors sans image ET sans son FO d'origine).
       nn.has_FO = false
       nn.FO_content = ''
       nn.is_image = true
-      nn.image_src = nn.image.split('\'')[1]
+      nn.image_src = /src\s*=\s*(["'])(.*?)\1/.exec(nn.image)?.[2] ?? ''
       delete nn.image
     }
 
