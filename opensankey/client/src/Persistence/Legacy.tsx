@@ -1880,7 +1880,14 @@ const convert_nodes: convert_nodesFuncType = (
                 children_tags: children_tags
               }
             }
-          } else if (!(n.tags['Primaire'] as string[]).includes('1') && (n.dimensions['Primaire'] && !n.dimensions['Primaire'].parent_name)) {
+            // Le test sur la dimension passe D'ABORD : certains fichiers legacy (0.8 avec plusieurs
+            // niveaux, cf. Filiere Bois Grand Est) n'ont jamais eu de tag 'Primaire' — ni dans
+            // levelTags (supprime plus haut des qu'un autre niveau existe), ni sur les noeuds. Lire
+            // `n.tags['Primaire'].includes` en premier plantait alors tout le chargement.
+          } else if (
+            (n.dimensions['Primaire'] && !n.dimensions['Primaire'].parent_name) &&
+            !(n.tags['Primaire'] as string[] | undefined)?.includes('1')
+          ) {
             n.dimensions[leveltagg_id] = {}
             n.dimensions[leveltagg_id].antitag = true
           }
