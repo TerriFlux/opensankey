@@ -23,7 +23,12 @@ export interface SankeyGlobals {
   topbar?: boolean       // default true
   footer?: boolean       // default false
   toolbar?: boolean      // default false : sélecteurs du mode d'affichage (absolu/proportionnel/échelle) — un par dimension, sur chacun de ses hôtes : ligne du panneau Filtres, topbar, frise de séquence (cf. #370)
-  fit_toolbar?: boolean  // default false : groupe ajustement/verrous/plein écran dans la barre du bas
+  // default TRUE (08/08) : groupe ajustement/verrous + indicateur de zoom dans la
+  // barre du bas. Il l'était à false, et une page publiée n'offrait alors AUCUN
+  // moyen visible de zoomer ni de recadrer — seulement Ctrl+molette, qui ne
+  // s'annonce nulle part, et rien pour revenir quand la vue est perdue. Une page
+  // qui n'en veut pas pose `fit_toolbar: false`.
+  fit_toolbar?: boolean
   fullscreen?: boolean   // default true : bouton plein écran isolé en publish, même quand `fit_toolbar` est masqué
   filter_bar?: boolean   // default true : barre de filtres à gauche (drawer)
   embedded?: boolean     // default false (height = innerHeight) ; true => 100%
@@ -197,7 +202,7 @@ export const getPublishOptions = (): PublishOptions => {
     topbar: bool(s.topbar, true),
     footer: bool(s.footer, false),
     toolbar: bool(s.toolbar, false),
-    fit_toolbar: bool(s.fit_toolbar, false),
+    fit_toolbar: bool(s.fit_toolbar, true),
     fullscreen: bool(s.fullscreen, true),
     filter_bar: bool(s.filter_bar, true),
     embedded: bool(s.embedded, false),
