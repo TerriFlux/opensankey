@@ -256,10 +256,35 @@ export class Class_MenuConfig {
   // permanence. Le pli n'est PAS mémorisé d'une visite à l'autre : chaque
   // chargement rouvre la colonne, sinon un lecteur qui l'a repliée une fois ne
   // retrouverait plus ses filtres.
-  public tools_column_enabled: boolean = false
-  // Disponibilité du panneau de filtres (posée par ToolbarFilter) : conditionne le bouton filtre
-  // dans la colonne d'outils.
-  public filter_bar_available: boolean = false
+  // DEUX DRAPEAUX POSÉS PAR UN RENDU, LUS PAR UN AUTRE — d'où la notification
+  // (08/08). `filter_bar_available` est écrit par `ToolbarFilter`,
+  // `tools_column_enabled` par `SankeyMenus`, et tous deux sont lus par la
+  // BARRE DU HAUT (poignée de pli) et par la colonne elle-même.
+  //
+  // Au premier rendu d'une page publiée, l'ordre joue contre nous : la barre et
+  // la colonne se rendent avant que le filtre ait annoncé sa disponibilité,
+  // donc avec `false`. Sans notification, rien ne les redessinait ensuite : ni
+  // ouvreur de filtres, ni poignée, pour toute la session. Mesuré sur
+  // ProjetsORBE le 08/08 — le bundle CONTENAIT le bouton, il ne s'affichait
+  // jamais.
+  //
+  // Notifier au CHANGEMENT seulement : ces deux affectations ont lieu à chaque
+  // rendu, et notifier inconditionnellement ferait boucler le rendu sur
+  // lui-même.
+  protected _tools_column_enabled: boolean = false
+  public get tools_column_enabled() { return this._tools_column_enabled }
+  public set tools_column_enabled(v: boolean) {
+    if (this._tools_column_enabled === v) return
+    this._tools_column_enabled = v
+    this._notifyMainZone()
+  }
+  protected _filter_bar_available: boolean = false
+  public get filter_bar_available() { return this._filter_bar_available }
+  public set filter_bar_available(v: boolean) {
+    if (this._filter_bar_available === v) return
+    this._filter_bar_available = v
+    this._notifyMainZone()
+  }
   protected _tools_column_open: boolean = true
   // #248 — bus pub/sub générique par topic (remplace la liste plate `_main_zone_listeners`).
   protected _event_bus: Class_EventBus = new Class_EventBus()
