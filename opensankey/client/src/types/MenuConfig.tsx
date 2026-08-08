@@ -315,6 +315,18 @@ export class Class_MenuConfig {
   // config), superposée sans recadrer le dessin.
   protected _filter_last_container: Type_PanelMode = 'popup'
   public get filter_last_container(): Type_PanelMode { return this._filter_last_container }
+  /** Une page PUBLIÉE ouvre ce panneau ANCRÉ (07/08) : c'est sa légende, elle
+   *  accompagne la lecture au lieu de flotter par-dessus le diagramme. Posé UNE
+   *  fois par chargement — `filter_panel_docked_by_default` retient que le
+   *  défaut a été appliqué, pour qu'un lecteur qui dépingle ne se le voie pas
+   *  ré-imposer au rendu suivant. En édition, rien ne change : le filtre reste
+   *  une pop-up tant qu'on ne l'ancre pas. */
+  public filter_panel_docked_by_default = false
+  public applyPublishedFilterDock() {
+    if (this.filter_panel_docked_by_default) return
+    this.filter_panel_docked_by_default = true
+    this._filter_last_container = 'sidebar'
+  }
   public get filter_panel_pinned() { return this.panels.getMode('filter') === 'sidebar' }
   public set filter_panel_pinned(v: boolean) {
     this._filter_last_container = v ? 'sidebar' : 'popup'
