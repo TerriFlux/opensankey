@@ -249,9 +249,13 @@ export class Class_MenuConfig {
   protected _main_zone_spreadsheet_mode: Type_SheetMode = 'grid'
   // Colonne d'outils à droite (éditeur uniquement). `tools_column_enabled` est posé par
   // SankeyMenu (= !is_static) : en mode publish/statique la colonne n'existe pas et ne réserve rien.
-  // OS#300 Lot 2 — la barre d'outils est désormais TOUJOURS visible : `_tools_column_open`
-  // (conservé pour compat) ne pilote plus l'affichage ni la réserve. L'ancien bouton
-  // « afficher/masquer la barre d'outils » est requalifié en bascule de barre latérale (Ctrl+B).
+  // OS#300 Lot 2 avait rendu la barre TOUJOURS visible et neutralisé
+  // `_tools_column_open`. Il REPILOTE de nouveau l'affichage et la réserve
+  // (07/08) : la colonne se replie par sa poignée, ce que demande une page
+  // publiée — la colonne y sert un seul bouton et n'a pas à rogner le dessin en
+  // permanence. Le pli n'est PAS mémorisé d'une visite à l'autre : chaque
+  // chargement rouvre la colonne, sinon un lecteur qui l'a repliée une fois ne
+  // retrouverait plus ses filtres.
   public tools_column_enabled: boolean = false
   // Disponibilité du panneau de filtres (posée par ToolbarFilter) : conditionne le bouton filtre
   // dans la colonne d'outils.
@@ -262,10 +266,15 @@ export class Class_MenuConfig {
   protected _notifyMainZone() { this._event_bus.notify(MAIN_ZONE_TOPIC) }
   public get tools_column_open() { return this._tools_column_open }
   public set tools_column_open(v: boolean) { this._tools_column_open = v; this._notifyMainZone() }
-  /** Largeur (px) réservée à droite par la colonne d'outils (0 si publish/absente).
-   *  Toujours réservée en éditeur (barre d'outils permanente). */
+  /** Largeur (px) réservée à droite par la colonne d'outils.
+   *
+   *  Nulle quand la colonne est REPLIÉE (07/08) : repliée, elle ne laisse
+   *  qu'une poignée flottante, elle ne doit donc plus rogner le dessin — c'est
+   *  tout l'intérêt de la replier sur une page publiée, où chaque pixel de
+   *  diagramme compte. */
   public getToolsColumnWidthPx(): number {
-    return this.tools_column_enabled ? TOOLS_COLUMN_WIDTH_PX : 0
+    return (this.tools_column_enabled && this._tools_column_open)
+      ? TOOLS_COLUMN_WIDTH_PX : 0
   }
 
   // #1283 — Éditeur de groupe de tags injecté par OSP (l'édition vit dans OSP,
