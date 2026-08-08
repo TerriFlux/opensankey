@@ -74,6 +74,12 @@ export interface SankeyGlobals {
   position_mode?: Type_PositionMode  // mode de navigation imposé à l'ouverture (absolu/proportionnel/échelle adaptée)
   data_tag_selection?: Record<string, string>  // { groupe (id ou nom) : tag (id ou nom) } préselectionné à l'ouverture
   view_tag_selection?: Record<string, string>  // { groupe (id ou nom) : valeur } : sélectionne une VUE (nom OU id, light/heavy) comme le sélecteur de vue ; sinon filtre le view tag sur ce tag
+  // sa#397 — ouverture sur une vue / un groupe de vues par LABEL DE VUE (sa#396). Les labels de
+  // vues sont des étiquettes de SÉLECTION posées par l'auteur, PAS les view tags (qui génèrent
+  // des vues — cf. view_tag_selection). Options additives : id/nom ou label inconnu => ignoré
+  // (warn), affichage inchangé.
+  view?: string        // ouvre sur cette vue (id OU nom, comme le sélecteur de vues)
+  view_label?: string  // restreint le sélecteur de vues aux vues portant ce label ; la vue courante devient la première du groupe
 
   // Indexer pour configs per-diagramme (diagrams_list etc.)
   [key: string]: unknown
@@ -109,6 +115,8 @@ export interface PublishOptions {
   position_mode: Type_PositionMode | null
   data_tag_selection: Record<string, string> | null
   view_tag_selection: Record<string, string> | null
+  view: string | null
+  view_label: string | null
   logo: string | null
   header: string | null
   diagram: string | Record<string, unknown> | null
@@ -221,6 +229,8 @@ export const getPublishOptions = (): PublishOptions => {
     position_mode: posMode(s.position_mode),
     data_tag_selection: strRecord(s.data_tag_selection),
     view_tag_selection: strRecord(s.view_tag_selection),
+    view: str(s.view),
+    view_label: str(s.view_label),
     logo: str(s.logo),
     header: header_value,
     diagram: (typeof s.diagram === 'string')
@@ -280,6 +290,8 @@ export type ViewerSankeyOptions = {
   position_mode?: Type_PositionMode
   data_tag_selection?: Record<string, string>
   view_tag_selection?: Record<string, string>  // valeur = VUE (nom/id, light ou heavy, comme le sélecteur de vue) ou tag à filtrer
+  view?: string        // sa#397 : ouvre sur cette vue (id OU nom)
+  view_label?: string  // sa#397 : restreint le sélecteur de vues aux vues portant ce LABEL DE VUE (sa#396)
   // Configs per-diagramme (clé = nom dans diagrams_list)
   diagrams_config?: Record<string, Record<string, unknown>>
 }
@@ -302,6 +314,7 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
     'view_filter', 'level_filter', 'node_filter', 'data_filter',
     'lock_zoom', 'tooltip_on_hover', 'language', 'header_i18n',
     'minimum_flux', 'position_mode', 'data_tag_selection', 'view_tag_selection',
+    'view', 'view_label',
   ]
   for (const k of keys) {
     if (options[k] !== undefined) {

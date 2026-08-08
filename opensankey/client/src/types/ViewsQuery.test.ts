@@ -16,6 +16,7 @@ const makeHost = (opts: {
   show_master_in_views?: boolean
   view_taggs_list?: MockGroup[]
   no_master?: boolean
+  publish_view_label_filter?: string | null
 }): ViewsQueryHost => {
   const views = opts.views ?? {}
   const sankey = { view_taggs_list: opts.view_taggs_list ?? [] }
@@ -29,6 +30,7 @@ const makeHost = (opts: {
     show_master_in_views: opts.show_master_in_views ?? false,
     master_drawing_area: opts.no_master ? undefined : da,
     drawing_area: da,
+    publish_view_label_filter: opts.publish_view_label_filter ?? null,
   }
 }
 
@@ -126,6 +128,99 @@ describe('#244 ViewsQuery.parseViewExtraFields', () => {
   it('entrée absente → no-op (pas de crash)', () => {
     const vm = new ViewsQuery(makeHost({ views: {} }))
     expect(() => vm.parseViewExtraFields('absent', { is_light: true })).not.toThrow()
+  })
+})
+
+// sa#396 — LABELS DE VUES : étiquettes libres de SÉLECTION posées sur les vues. Distinctes des
+// view tags (tag_selection ci-dessus), qui GÉNÈRENT des vues et ne bougent pas.
+describe('sa#396 ViewsQuery — labels de vues', () => {
+  it('parseViewExtraFields : lit labels (tableau de chaînes, nettoyé, dédoublonné)', () => {
+    const views = { v1: view('Vue 1') }
+    const vm = new ViewsQuery(makeHost({ views }))
+    vm.parseViewExtraFields('v1', { labels: ['Résultats', 'Méthode', 'Résultats', '', 42, null] as never })
+    expect(views.v1.labels).toEqual(['Résultats', 'Méthode'])
+  })
+
+  it('parseViewExtraFields : fichier ancien SANS labels → entrée sans labels, sans bruit', () => {
+    const views = { v1: view('Vue 1') }
+    const vm = new ViewsQuery(makeHost({ views }))
+    expect(() => vm.parseViewExtraFields('v1', { tag_selection: { g1: 't1' } })).not.toThrow()
+    expect(views.v1.labels).toBeUndefined()
+  })
+
+  it('parseViewExtraFields : labels non-tableau ou vide → ignoré', () => {
+    const views = { v1: view('Vue 1') }
+    const vm = new ViewsQuery(makeHost({ views }))
+    vm.parseViewExtraFields('v1', { labels: 'Résultats' as never })
+    expect(views.v1.labels).toBeUndefined()
+    vm.parseViewExtraFields('v1', { labels: [] })
+    expect(views.v1.labels).toBeUndefined()
+  })
+
+  it('all_view_labels : union dédoublonnée dans l\'ordre des vues', () => {
+    const vm = new ViewsQuery(makeHost({
+      views: {
+        v1: view('Vue 1', { labels: ['Résultats', 'Interne'] }),
+        v2: view('Vue 2', { labels: ['Méthode', 'Résultats'] }),
+        v3: view('Vue 3'),
+      },
+    }))
+    expect(vm.all_view_labels).toEqual(['Résultats', 'Interne', 'Méthode'])
+  })
+
+  it('viewIdsWithLabel : vues du label dans l\'ordre ; label inconnu → []', () => {
+    const vm = new ViewsQuery(makeHost({
+      views: {
+        v1: view('Vue 1', { labels: ['Résultats'] }),
+        v2: view('Vue 2'),
+        v3: view('Vue 3', { labels: ['Résultats', 'Méthode'] }),
+      },
+    }))
+    expect(vm.viewIdsWithLabel('Résultats')).toEqual(['v1', 'v3'])
+    expect(vm.viewIdsWithLabel('Inconnu')).toEqual([])
+  })
+})
+
+// sa#397 — le viewer publié restreint la navigation aux vues d'un label (publish_view_label_filter).
+describe('sa#397 ViewsQuery — views_navigation_order sous filtre de label', () => {
+  const labeled_views = () => ({
+    v1: view('Vue 1', { labels: ['Résultats'] }),
+    v2: view('Vue 2'),
+    v3: view('Vue 3', { labels: ['Résultats'] }),
+  })
+
+  it('filtre actif : seules les vues du label, maître exclu', () => {
+    const vm = new ViewsQuery(makeHost({
+      views: labeled_views(),
+      show_master_in_views: true,
+      publish_view_label_filter: 'Résultats',
+    }))
+    expect(vm.views_navigation_order).toEqual(['v1', 'v3'])
+  })
+
+  it('sans filtre : comportement historique inchangé', () => {
+    const vm = new ViewsQuery(makeHost({ views: labeled_views(), show_master_in_views: true }))
+    expect(vm.views_navigation_order).toEqual([MASTER_VIEW_ID, 'v1', 'v2', 'v3'])
+  })
+
+  it('garde-fou : label sans aucune vue → filtre ignoré (jamais de sélecteur vide)', () => {
+    const vm = new ViewsQuery(makeHost({
+      views: labeled_views(),
+      publish_view_label_filter: 'Inconnu',
+    }))
+    expect(vm.views_navigation_order).toEqual(['v1', 'v2', 'v3'])
+  })
+
+  it('les flèches Préc./Suiv. suivent l\'ordre filtré', () => {
+    const mk = (current: string) => new ViewsQuery(makeHost({
+      views: labeled_views(),
+      current_view_id: current,
+      publish_view_label_filter: 'Résultats',
+    }))
+    expect(mk('v1').has_view_before).toBe(false)
+    expect(mk('v1').has_view_after).toBe(true)
+    expect(mk('v3').has_view_before).toBe(true)
+    expect(mk('v3').has_view_after).toBe(false)
   })
 })
 

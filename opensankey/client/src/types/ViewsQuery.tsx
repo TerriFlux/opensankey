@@ -19,7 +19,11 @@ export const MASTER_VIEW_ID = default_main_sankey_id
  * gzip de sa DA (`json`) plus le concept unifié vue ⊕ viewtag :
  *  - `tag_selection` : sélection de visibilité { [view_tagg_id]: selected_label_id } ;
  *  - `is_light` : vue « light » (pas d'override géométrie propre, réutilise le maître) ;
- *  - `generated_from_group_id` : id du groupe de view tags dont la vue est auto-générée.
+ *  - `generated_from_group_id` : id du groupe de view tags dont la vue est auto-générée ;
+ *  - `labels` : sa#396 — LABELS DE VUES, étiquettes libres posées par l'auteur pour
+ *    SÉLECTIONNER des vues (publication, constructeur de sites). À ne JAMAIS confondre
+ *    avec les view tags (`viewTags` / tag_selection ci-dessus), qui sont la dimension de
+ *    GÉNÉRATION des vues par combinaison : un label n'a aucun effet sur la génération.
  */
 export type Type_ViewEntry = {
   name: string
@@ -27,6 +31,7 @@ export type Type_ViewEntry = {
   tag_selection?: { [view_tagg_id: string]: string }
   is_light?: boolean
   generated_from_group_id?: string
+  labels?: string[]
 }
 
 /**
@@ -44,6 +49,10 @@ export interface ViewsQueryHost {
   readonly show_master_in_views: boolean
   readonly master_drawing_area: Class_DrawingArea | undefined
   readonly drawing_area: Class_DrawingArea
+  // sa#397 — label de vue imposé par la page publiée (window.sankey.view_label) : restreint
+  // l'ordre de navigation aux vues portant ce label. Optionnel (null/absent = pas de filtre) :
+  // seul le viewer publié le pose, l'éditeur n'est jamais filtré.
+  readonly publish_view_label_filter?: string | null
 }
 
 /**
@@ -118,6 +127,35 @@ export class ViewsQuery {
     if (view_json['is_light']) entry.is_light = true
     const gfg = view_json['generated_from_group_id']
     if (typeof gfg === 'string') entry.generated_from_group_id = gfg
+    // sa#396 — labels de vues : lus si présents (tableau de chaînes non vides, dédoublonné).
+    // Un fichier ancien sans clé `labels` passe ici sans bruit (entry.labels reste undefined).
+    const labels = view_json['labels']
+    if (Array.isArray(labels)) {
+      const cleaned = [...new Set(
+        labels.filter((l): l is string => typeof l === 'string' && l.trim() !== '')
+      )]
+      if (cleaned.length > 0) entry.labels = cleaned
+    }
+  }
+
+  // --- Labels de vues (sa#396/397) ---------------------------------------------------------
+  // Étiquettes libres de SÉLECTION posées sur les vues — rien à voir avec les view tags
+  // (dimension de génération), qui ne sont pas touchés.
+
+  /** Tous les labels utilisés dans le document (ordre de première apparition, dédoublonnés). */
+  public get all_view_labels(): string[] {
+    const seen = new Set<string>()
+    this.host.views_order.forEach(id => {
+      (this.host.views_dict[id]?.labels ?? []).forEach(l => seen.add(l))
+    })
+    return [...seen]
+  }
+
+  /** Ids des vues portant ce label, dans l'ordre des vues. Vide si aucun. */
+  public viewIdsWithLabel(label: string): string[] {
+    return this.host.views_order.filter(id =>
+      (this.host.views_dict[id]?.labels ?? []).includes(label)
+    )
   }
 
   // --- Requêtes / navigation --------------------------------------------------------------
@@ -143,8 +181,16 @@ export class ViewsQuery {
   /**
    * Ordre de navigation (flèches Préc./Suiv. + sélecteur) : le maître y figure en tête
    * UNIQUEMENT si show_master_in_views est actif (sinon atteignable via setCurrentViewToMaster).
+   * sa#397 — si la page publiée impose un label de vue (publish_view_label_filter), l'ordre est
+   * RESTREINT aux vues portant ce label (le maître, qui n'est pas une vue labellisable, est
+   * exclu). Garde-fou : un filtre qui ne matche plus rien est ignoré (jamais de sélecteur vide).
    */
   public get views_navigation_order(): string[] {
+    const label = this.host.publish_view_label_filter
+    if (label) {
+      const filtered = this.viewIdsWithLabel(label)
+      if (filtered.length > 0) return filtered
+    }
     return this.host.show_master_in_views
       ? [MASTER_VIEW_ID, ...this.host.views_order]
       : this.host.views_order

@@ -47,6 +47,9 @@ export class ViewsReader {
   public resolveViewIdFromSelection(selection: string): string | null { return this.query.resolveViewIdFromSelection(selection) }
   public resolveHeavyViewIdFromViewTagSelection(selection: Record<string, string>): string | null { return this.query.resolveHeavyViewIdFromViewTagSelection(selection) }
   public parseViewExtraFields(view_id: string, view_json: Type_JSON) { this.query.parseViewExtraFields(view_id, view_json) }
+  // sa#396/397 — labels de vues (étiquettes de SÉLECTION, distinctes des view tags de génération).
+  public get all_view_labels(): string[] { return this.query.all_view_labels }
+  public viewIdsWithLabel(label: string): string[] { return this.query.viewIdsWithLabel(label) }
 
   public get has_views(): boolean { return this.query.has_views }
   public get is_view_master(): boolean { return this.query.is_view_master }

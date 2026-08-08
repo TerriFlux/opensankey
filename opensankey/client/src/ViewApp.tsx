@@ -96,6 +96,8 @@ const ViewerInner: FC<ViewerOpenSankeyAppProps> = ({ initial_data, ...options })
     options.data_tag_selection ?? null,
     options.view_tag_selection ?? null,
     options.position_mode ?? null,
+    options.view ?? null,
+    options.view_label ?? null,
   ])
   useEffect(() => {
     if (first_apply.current) { first_apply.current = false; return }
@@ -105,6 +107,9 @@ const ViewerInner: FC<ViewerOpenSankeyAppProps> = ({ initial_data, ...options })
     po.data_tag_selection = o.data_tag_selection ?? null
     po.view_tag_selection = o.view_tag_selection ?? null
     if (o.position_mode !== undefined) po.position_mode = o.position_mode
+    // sa#397 — vue / label de vue également réactifs (mêmes règles additives qu'au démarrage).
+    po.view = o.view ?? null
+    po.view_label = o.view_label ?? null
     app_data.applyPublishStateOptions()
   }, [selection_key, app_data])
 

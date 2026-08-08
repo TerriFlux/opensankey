@@ -346,6 +346,14 @@ export class Class_ApplicationData {
   public get keep_camera_across_views(): boolean { return this._keep_camera_across_views }
   public set keep_camera_across_views(v: boolean) { this._keep_camera_across_views = v }
 
+  // sa#397 — Label de vue imposé par la page publiée (`window.sankey.view_label`) : restreint
+  // l'ordre de navigation (sélecteur + flèches) aux vues portant ce label de vue (cf. sa#396,
+  // labels ≠ view tags de génération). Posé UNIQUEMENT par applyPublishStateOptions quand le
+  // label matche au moins une vue ; null = comportement historique inchangé.
+  protected _publish_view_label_filter: string | null = null
+  public get publish_view_label_filter(): string | null { return this._publish_view_label_filter }
+  public set publish_view_label_filter(v: string | null) { this._publish_view_label_filter = v }
+
   // Identité LOGIQUE de la vue courante, découplée de l'id du Sankey de la DA. Nécessaire pour
   // les vues light qui RÉUTILISENT la DA maître : sans ce champ, une vue light serait confondue
   // avec le maître (is_view_master, navigation, suppression…). Vaut default_main_sankey_id pour
@@ -1242,6 +1250,9 @@ export class Class_ApplicationData {
    * - `view_tag_selection` est un dict { groupe : tag } (même résolution id/nom) qui sélectionne la
    *   valeur ET active le filtre vue (view_mode) du groupe, comme l'œil dans la barre du bas.
    * - `position_mode` impose le mode de positionnement, comme un clic dans la barre du bas.
+   * - sa#397 : `view` ouvre sur une vue (id OU nom) ; `view_label` restreint le sélecteur de vues
+   *   aux vues portant ce LABEL DE VUE (sa#396) et ouvre sur la première du groupe. Les deux sont
+   *   additives et tolérantes : valeur inconnue => option ignorée (warn), affichage inchangé.
    * @memberof Class_ApplicationData
    */
   public applyPublishStateOptions(): void {
@@ -1256,6 +1267,39 @@ export class Class_ApplicationData {
     // setter redessinerait aussitôt) ; le redessin est celui de la fin de méthode.
     const forced_minimum_flux = opts.minimum_flux
     if (forced_minimum_flux !== null) this._drawing_area['_minimum_flux'] = forced_minimum_flux
+
+    // sa#397 — Ouverture sur une vue (`view`) ou sur un groupe de vues par LABEL (`view_label`).
+    // Labels de vues = étiquettes de SÉLECTION posées par l'auteur (sa#396) ; rien à voir avec
+    // `view_tag_selection`, qui manipule les view tags GÉNÉRATEURS de vues. Doctrine additive et
+    // tolérante (comme diagrams_list) : label sans aucune vue ou vue inconnue => option ignorée
+    // (warn), l'affichage reste strictement celui d'aujourd'hui.
+    if (!opts.view_label) {
+      // Ré-application réactive (viewers React) : plus de label demandé => plus de restriction.
+      this._publish_view_label_filter = null
+    } else {
+      const labeled_ids = this._views_reader.viewIdsWithLabel(opts.view_label)
+      if (labeled_ids.length === 0) {
+        // eslint-disable-next-line no-console
+        console.warn(`[OpenSankey] view_label : aucune vue ne porte le label « ${opts.view_label} »`)
+      } else {
+        // Restreint le sélecteur/la navigation aux vues du label (cf. views_navigation_order) ;
+        // la vue courante devient la première du groupe si elle n'en fait pas partie.
+        this._publish_view_label_filter = opts.view_label
+        if (!labeled_ids.includes(this._current_view_id)) {
+          this.setCurrentView(labeled_ids[0])
+        }
+      }
+    }
+    if (opts.view) {
+      const view_id = this._views_reader.resolveViewIdFromSelection(opts.view)
+      if (!view_id) {
+        // eslint-disable-next-line no-console
+        console.warn(`[OpenSankey] view : vue introuvable « ${opts.view} »`)
+      } else if (view_id !== this._current_view_id) {
+        this.setCurrentView(view_id)
+      }
+    }
+
     if (!opts.data_tag_selection && !opts.view_tag_selection && !opts.position_mode) {
       if (forced_minimum_flux !== null) this._drawing_area.draw()
       return
@@ -2018,6 +2062,9 @@ export class Class_ApplicationData {
   public get is_current_view_light(): boolean { return this._views_reader.is_current_view_light }
   public get has_master_sankey(): boolean { return this._views_reader.has_master_sankey }
   public get views_navigation_order(): string[] { return this._views_reader.views_navigation_order }
+  // sa#396/397 — labels de vues (étiquettes de SÉLECTION posées sur les vues, cf. Type_ViewEntry).
+  public get all_view_labels(): string[] { return this._views_reader.all_view_labels }
+  public viewIdsWithLabel(label: string): string[] { return this._views_reader.viewIdsWithLabel(label) }
   public get master_view(): Class_DrawingArea | undefined { return this._views_reader.master_view }
   public get has_view_before(): boolean { return this._views_reader.has_view_before }
   public get has_view_after(): boolean { return this._views_reader.has_view_after }
