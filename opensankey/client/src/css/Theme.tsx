@@ -2979,17 +2979,7 @@ const layerStyles = {
   menutop_layout_style: {
     display: 'grid',
     gridColumnGap: '0.25rem',
-    // HAUTEUR PLANCHER, pas hauteur fixe (08/08). En lecture, la barre porte des
-    // contenus qui ne tiennent pas en 2,5 rem : le bouton « Éditer » empile son
-    // icône et son libellé sur deux lignes, et le logo vient de l'auteur, en
-    // n'importe quel rapport de forme. Avec une hauteur figée, les deux
-    // débordaient sous la barre, par-dessus le diagramme.
-    //
-    // Laisser la barre grandir est sans danger : `DrawingArea.getNavBarHeight`
-    // MESURE la barre rendue (`getBoundingClientRect`), la zone de dessin se
-    // décale donc d'elle-même. En édition, rien ne bouge — les boutons y tiennent
-    // tous sur une ligne, le plancher reste la hauteur effective.
-    minHeight: '2.5rem',
+    height: '2.5rem',
     width: 'auto',
     padding: '0',
     margin: '0px 3px 0px 3px',
