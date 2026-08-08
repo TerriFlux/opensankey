@@ -54,6 +54,13 @@ export interface SankeyGlobals {
   diagrams_list?: Record<string, string>    // dropdown multi-diagrammes (clés "a/b" pour groupage)
   /** @deprecated utiliser `diagrams_list` */
   sous_filieres?: Record<string, string>
+  /**
+   * @deprecated Désignation HISTORIQUE du diagramme courant : ces pages chargent
+   * leurs données par `<script src="X.json">` (le fichier est une affectation
+   * `window.sankey['X'] = {…}`) et désignent l'affiché par une RÉFÉRENCE —
+   * `window.sankey.filiere = window.sankey['X']`. Utiliser `diagram`.
+   */
+  filiere?: Record<string, unknown>
 
   // Filtres
   data_type?: boolean             // default true
@@ -197,6 +204,30 @@ export const getPublishOptions = (): PublishOptions => {
       console.warn('[OpenSankey] `window.sankey.sous_filieres` est déprécié, utiliser `diagrams_list`.')
     }
   }
+  // Désignation HISTORIQUE du diagramme courant (22 pages du parc, cf. sa#350).
+  // Ces pages ne posent JAMAIS `window.sankey.diagram` : leurs données arrivent
+  // par `<script src="X.json">` — le fichier est une affectation
+  // `window.sankey['X'] = {…}` — et la page désigne l'affiché par une RÉFÉRENCE,
+  // `window.sankey.filiere = window.sankey['X']`.
+  // Sans ce repli, un runtime moderne ne voit aucun diagramme à charger et
+  // retombe sur le cache localStorage du visiteur (cf. App.tsx) : la page affiche
+  // alors un AUTRE diagramme que le sien, ou rien du tout sur un profil neuf.
+  // Mesuré le 2026-08-08 au banc d'essai sur ProjetsAlimentationAnimale.
+  const inline_json = (value: unknown): Record<string, unknown> | null =>
+    (value && typeof value === 'object' && !Array.isArray(value))
+      ? value as Record<string, unknown>
+      : null
+  const historicDiagram = (): Record<string, unknown> | null => {
+    const designated = inline_json(s.filiere)
+    if (designated) return designated
+    // À défaut de désignation, le PREMIER diagramme du sélecteur : sa valeur est
+    // le nom de la variable que le script de données a posée sur window.sankey.
+    const first = diagrams_list_value ? Object.values(diagrams_list_value)[0] : undefined
+    return (typeof first === 'string')
+      ? inline_json((s as Record<string, unknown>)[first])
+      : null
+  }
+
   // header : variante traduite (header_i18n[langue effective]) prioritaire
   let header_value = str(s.header)
   if (s.header_i18n && typeof s.header_i18n === 'object' && !Array.isArray(s.header_i18n)) {
@@ -242,7 +273,7 @@ export const getPublishOptions = (): PublishOptions => {
       ? s.diagram
       : (s.diagram && typeof s.diagram === 'object' && !Array.isArray(s.diagram))
         ? (s.diagram as Record<string, unknown>)
-        : null,
+        : historicDiagram(),
     diagram_layout: str(s.diagram_layout),
     diagram_layout_options: Array.isArray(s.diagram_layout_options)
       ? (s.diagram_layout_options as string[])
