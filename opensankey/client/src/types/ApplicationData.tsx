@@ -1257,6 +1257,9 @@ export class Class_ApplicationData {
    */
   public applyPublishStateOptions(): void {
     const opts = this.publish_options
+    // sa#409 — crochet d'upgrade headless : exposé D'ABORD (la suite de la méthode a une sortie
+    // anticipée), et idempotent (les viewers React repassent ici à chaque ré-application).
+    if (opts.export_json) this._exportUpgradedJSON()
     // Panneau documentation : ouvert d'office en publish si l'option `doc` est active et qu'une doc existe.
     if (opts.doc && this.documentation_markdown !== '') {
       this.menu_configuration.main_zone_show_doc = true
@@ -1321,6 +1324,45 @@ export class Class_ApplicationData {
     }
 
     this._drawing_area.draw()
+  }
+
+  /**
+   * sa#409 — Crochet du banc d'upgrade headless (`window.sankey.export_json = true`).
+   * Expose sur `window` le fichier re-sérialisé au format COURANT (`__sankey_upgraded_json`,
+   * chaîne JSON) et un résumé indépendant du delta (`__sankey_upgrade_meta`) que le pilote
+   * (Playwright, cf. server/publish_upgrade.py) confronte au fichier SOURCE : version, comptes
+   * nœuds/flux racine, et par vue son nom, ses labels de vues et son nombre de zones de texte
+   * (clé `labels` du diagramme de la vue — cf. la collision corrigée d'sa#396 : c'est
+   * précisément ce que l'upgrade ne doit jamais perdre). En cas d'échec, `__sankey_upgrade_error`
+   * porte le message et rien d'autre n'est posé.
+   */
+  protected _exportUpgradedJSON(): void {
+    const w = window as unknown as Record<string, unknown>
+    try {
+      const out = this.toJSON() as Type_JSON
+      // Résumé calculé sur la forme À PLAT (les vues d'un fichier sont encodées en delta,
+      // #254) : le pilote python n'a pas à connaître cet encodage.
+      const flat = JSON.parse(JSON.stringify(out)) as Type_JSON
+      decodeViewsFromDelta(flat)
+      const count = (v: unknown) => (v && typeof v === 'object' && !Array.isArray(v)) ? Object.keys(v as Type_JSON).length : 0
+      const views = Object.values((flat['views'] ?? {}) as { [id: string]: Type_JSON }).map(v => ({
+        name: v['name'] ?? null,
+        view_labels: Array.isArray(v['view_labels']) ? v['view_labels'] : [],
+        zones: count(v['labels']),
+        nodes: count(v['nodes']),
+        links: count(v['links']),
+      }))
+      w['__sankey_upgrade_meta'] = JSON.stringify({
+        version: flat['version'] ?? null,
+        nodes: count(flat['nodes']),
+        links: count(flat['links']),
+        zones: count(flat['labels']),
+        views,
+      })
+      w['__sankey_upgraded_json'] = JSON.stringify(out)
+    } catch (e) {
+      w['__sankey_upgrade_error'] = String(e)
+    }
   }
 
   /**
