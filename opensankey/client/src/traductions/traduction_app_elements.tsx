@@ -1,6 +1,18 @@
 export const resources_app_elements = {
   en: {
     translation: {
+      // OS#85 — document sheets (independent diagrams, tabs at the bottom of the canvas).
+      sheets: {
+        sheet: 'Sheet',
+        tab_menu: 'Sheet menu',
+        new_sheet: 'New sheet — independent',
+        new_sheet_tooltip: 'New sheet: another diagram, independent, in the same document. For another reading that follows the data, create a view instead.',
+        duplicate_as_sheet: 'Duplicate as new sheet — independent',
+        rename: 'Rename sheet',
+        delete: 'Delete sheet',
+        delete_confirm: 'Delete this sheet? Its diagram will be lost.',
+        copy_prefix: 'Copy of ',
+      },
       Menu: {
         position: 'Position',
         content: 'Content',
@@ -678,6 +690,18 @@ export const resources_app_elements = {
   //=======================================================
   fr: {
     translation: {
+      // OS#85 — feuilles du document (diagrammes indépendants, onglets en bas du canvas).
+      sheets: {
+        sheet: 'Feuille',
+        tab_menu: 'Menu de la feuille',
+        new_sheet: 'Nouvelle feuille — indépendante',
+        new_sheet_tooltip: 'Nouvelle feuille : un autre diagramme, indépendant, dans le même document. Pour une autre lecture qui suit les données, créez plutôt une vue.',
+        duplicate_as_sheet: 'Dupliquer comme nouvelle feuille — indépendante',
+        rename: 'Renommer la feuille',
+        delete: 'Supprimer la feuille',
+        delete_confirm: 'Supprimer cette feuille ? Son diagramme sera perdu.',
+        copy_prefix: 'Copie de ',
+      },
       Menu: {
         position: 'Position',
         content: 'Contenu',
@@ -1365,6 +1389,18 @@ export const resources_app_elements = {
   //=======================================================
   es: {
     translation: {
+      // OS#85 — hojas del documento (diagramas independientes, pestañas abajo del lienzo).
+      sheets: {
+        sheet: 'Hoja',
+        tab_menu: 'Menú de la hoja',
+        new_sheet: 'Nueva hoja — independiente',
+        new_sheet_tooltip: 'Nueva hoja: otro diagrama, independiente, en el mismo documento. Para otra lectura que siga los datos, cree mejor una vista.',
+        duplicate_as_sheet: 'Duplicar como nueva hoja — independiente',
+        rename: 'Renombrar la hoja',
+        delete: 'Eliminar la hoja',
+        delete_confirm: '¿Eliminar esta hoja? Su diagrama se perderá.',
+        copy_prefix: 'Copia de ',
+      },
       Menu: {
         position: 'Posición',
         content: 'Contenido',
@@ -2030,6 +2066,18 @@ export const resources_app_elements = {
   //=======================================================
   de: {
     translation: {
+      // OS#85 — Blätter des Dokuments (unabhängige Diagramme, Tabs unten am Canvas).
+      sheets: {
+        sheet: 'Blatt',
+        tab_menu: 'Blattmenü',
+        new_sheet: 'Neues Blatt — unabhängig',
+        new_sheet_tooltip: 'Neues Blatt: ein anderes, unabhängiges Diagramm im selben Dokument. Für eine andere Lesart, die den Daten folgt, legen Sie stattdessen eine Ansicht an.',
+        duplicate_as_sheet: 'Als neues Blatt duplizieren — unabhängig',
+        rename: 'Blatt umbenennen',
+        delete: 'Blatt löschen',
+        delete_confirm: 'Dieses Blatt löschen? Sein Diagramm geht verloren.',
+        copy_prefix: 'Kopie von ',
+      },
       Menu: {
         position: 'Position',
         content: 'Inhalt',
@@ -2695,6 +2743,18 @@ export const resources_app_elements = {
   //=======================================================
   it: {
     translation: {
+      // OS#85 — fogli del documento (diagrammi indipendenti, schede in basso del canvas).
+      sheets: {
+        sheet: 'Foglio',
+        tab_menu: 'Menu del foglio',
+        new_sheet: 'Nuovo foglio — indipendente',
+        new_sheet_tooltip: 'Nuovo foglio: un altro diagramma, indipendente, nello stesso documento. Per un\'altra lettura che segue i dati, create piuttosto una vista.',
+        duplicate_as_sheet: 'Duplica come nuovo foglio — indipendente',
+        rename: 'Rinomina il foglio',
+        delete: 'Elimina il foglio',
+        delete_confirm: 'Eliminare questo foglio? Il suo diagramma andrà perso.',
+        copy_prefix: 'Copia di ',
+      },
       Menu: {
         position: 'Posizione',
         content: 'Contenuto',
@@ -3357,6 +3417,18 @@ export const resources_app_elements = {
   },
   'zh-CN': {
     translation: {
+      // OS#85 — 文档的工作表（相互独立的图表，画布底部的标签页）。
+      sheets: {
+        sheet: '工作表',
+        tab_menu: '工作表菜单',
+        new_sheet: '新建工作表 — 相互独立',
+        new_sheet_tooltip: '新建工作表：同一文档中另一个独立的图表。若要创建跟随数据的另一种呈现，请改为创建视图。',
+        duplicate_as_sheet: '复制为新工作表 — 相互独立',
+        rename: '重命名工作表',
+        delete: '删除工作表',
+        delete_confirm: '删除此工作表？其图表将丢失。',
+        copy_prefix: '副本 - ',
+      },
       Menu: {
         position: '位置',
         content: '内容',
@@ -4029,6 +4101,18 @@ export const resources_app_elements = {
   },
   ja: {
     translation: {
+      // OS#85 — ドキュメントのシート（独立した図、キャンバス下部のタブ）。
+      sheets: {
+        sheet: 'シート',
+        tab_menu: 'シートメニュー',
+        new_sheet: '新しいシート — 独立',
+        new_sheet_tooltip: '新しいシート：同じドキュメント内の、独立した別の図です。データに追従する別の見せ方が必要な場合は、代わりにビューを作成してください。',
+        duplicate_as_sheet: '新しいシートとして複製 — 独立',
+        rename: 'シート名を変更',
+        delete: 'シートを削除',
+        delete_confirm: 'このシートを削除しますか？その図は失われます。',
+        copy_prefix: 'コピー - ',
+      },
       Menu: {
         position: '位置',
         content: '内容',
