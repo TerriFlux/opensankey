@@ -274,6 +274,11 @@ export class Class_DrawingArea {
 
   protected _magnetic_nodes: boolean = false
 
+  // os#671 — smart guides d'alignement au drag (lignes bords/centres + distances
+  // + snap doux). Actif par défaut ; la grille magnétique, quand elle est
+  // activée, prime (cf. NodeEventsHandler.handleMouseDragStart).
+  protected _smart_guides: boolean = true
+
   // Paper format properties
   protected _paper_format: Type_PaperFormat = default_paper_format
   protected _paper_orientation: Type_PaperOrientation = default_paper_orientation
@@ -904,6 +909,7 @@ export class Class_DrawingArea {
     this._grid_color = drawing_area_to_copy._grid_color
     this._grid_size = drawing_area_to_copy._grid_size
     this._grid_visible = drawing_area_to_copy._grid_visible
+    this._smart_guides = drawing_area_to_copy._smart_guides
     this._height = drawing_area_to_copy._height
     this._maximum_flux = drawing_area_to_copy._maximum_flux
     this._minimum_flux = drawing_area_to_copy._minimum_flux
@@ -4206,6 +4212,10 @@ export class Class_DrawingArea {
 
   public get magnetic_nodes(): boolean { return this._magnetic_nodes }
   public set magnetic_nodes(value: boolean) { this._magnetic_nodes = value }
+
+  // os#671 — activation des smart guides d'alignement au drag.
+  public get smart_guides(): boolean { return this._smart_guides }
+  public set smart_guides(value: boolean) { this._smart_guides = value }
 
   public get list_g_element() { return this._list_g_element_id }
   public set list_g_element(list) { this._list_g_element_id = list }
