@@ -672,6 +672,23 @@ export class Class_MenuConfig {
       }
   > = undefined
   /**
+   * sa#399 — Entrées supplémentaires du menu « Enregistrer » (dropdown dédié + groupe
+   * Enregistrer du menu Fichier). Injectées par OSP (dépôt dans la bibliothèque de
+   * briques) ou d'autres extensions. `label` et `hidden` sont des fonctions évaluées
+   * au rendu : l'entrée suit la langue active et peut n'apparaître que pour un compte
+   * connecté (une entrée cachée n'est pas rendue du tout, contrairement à `disabled`).
+   */
+  public extra_save_menu_items?: Array<{
+    key: string
+    label: () => string
+    icon?: React.ReactNode
+    onClick: () => void
+    disabled?: () => boolean
+    // Returns the tooltip text for the item. Empty string => no tooltip wrapper.
+    tooltip?: () => string
+    hidden?: () => boolean
+  }> = undefined
+  /**
    * Optional handler that saves one standalone JSON file per view, packaged in a
    * single zip. Injected by OSP (views are an OSP feature). When set, the
    * persistence dialog's ``save_one_json_per_view`` JSON output option routes the

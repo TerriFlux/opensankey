@@ -147,6 +147,27 @@ export type Type_SheetEntry = {
   json?: Uint8Array
 }
 
+/**
+ * Association du document ouvert à sa BRIQUE de bibliothèque (sa#399) : id du
+ * projet côté serveur (server/library.py) et chemin du fichier dans le manifeste
+ * des versions. PERSISTÉE dans le JSON du diagramme (clé racine `library_ref`)
+ * pour survivre au fichier : rouvrir le JSON ré-associe le document à sa brique,
+ * et « enregistrer dans ma bibliothèque » y dépose la version suivante au lieu
+ * d'en créer une nouvelle. Un fichier SANS cette clé = nouvelle brique.
+ */
+export type Type_LibraryRef = {
+  project_id: number
+  path: string
+}
+
+/** Relecture défensive de la clé racine `library_ref` : absente ou malformée => null. */
+export const parseLibraryRef = (value: unknown): Type_LibraryRef | null => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+  const ref = value as { project_id?: unknown, path?: unknown }
+  if (typeof ref.project_id !== 'number' || typeof ref.path !== 'string' || !ref.path) return null
+  return { project_id: ref.project_id, path: ref.path }
+}
+
 // CLASS APPLICATION DATA **************************************************************/
 
 /**
@@ -316,6 +337,11 @@ export class Class_ApplicationData {
   // Persistés en JSON pour qu'une re-publication / mise à jour reparte exactement des mêmes réglages.
   // /!\ Distinct de `publish_options` (config viewer runtime read-only issue de window.sankey).
   protected _publish_settings: Type_JSON = {}
+  // sa#399 — Brique de bibliothèque associée au document ouvert. PERSISTÉE en JSON
+  // (contrairement à _sankeytheque_origin, provenance de session) : la référence est une
+  // propriété du diagramme, elle voyage avec le fichier. Null = document jamais déposé,
+  // « enregistrer dans ma bibliothèque » créera un projet (nouvelle brique).
+  protected _library_ref: Type_LibraryRef | null = null
 
 
   /**
@@ -687,6 +713,9 @@ export class Class_ApplicationData {
     // plus à l'écran — le réenregistrement en place doit donc redevenir impossible.
     // (Le chargement d'une étude la repose juste après, cf. loadJsonTemplate.)
     this._sankeytheque_origin = null
+    // sa#399 — Nouveau document = nouvelle brique : la référence bibliothèque ne survit
+    // qu'au travers du JSON (fromJSON la repose juste après si le fichier la porte).
+    this._library_ref = null
     // La doc markdown est attachée au diagramme : un nouveau diagramme repart d'une doc vide.
     this._documentation_markdown = {}
     this._documentation_images = {}
@@ -923,6 +952,8 @@ export class Class_ApplicationData {
     if (doc_serialized !== undefined) json_object['documentation_markdown'] = doc_serialized
     if (Object.keys(this._documentation_images).length > 0) json_object['documentation_images'] = this._documentation_images
     if (Object.keys(this._publish_settings).length > 0) json_object['publish_settings'] = this._publish_settings
+    // sa#399 — Référence de brique de bibliothèque, clé racine persistée avec le diagramme.
+    if (this._library_ref) json_object['library_ref'] = { ...this._library_ref }
     json_object['main_zone'] = this.menu_configuration.mainZoneStateToJSON()
     // OS#300 Lot 4 — tailles + mode des panneaux (barre latérale / pop-ups).
     json_object['panels'] = this.menu_configuration.panels.toJSON()
@@ -1032,6 +1063,9 @@ export class Class_ApplicationData {
     const pub_opts = json_object['publish_settings']
     this._publish_settings = (pub_opts && typeof pub_opts === 'object' && !Array.isArray(pub_opts))
       ? pub_opts as Type_JSON : {}
+    // sa#399 — Brique associée : relue du fichier ; absente ou malformée => null
+    // (un fichier sans library_ref est une nouvelle brique, cf. reset()).
+    this._library_ref = parseLibraryRef(json_object['library_ref'])
     const mz = json_object['main_zone']
     // Garde défensive : menu_configuration n'est posée que par createNewMenuConfiguration ; si
     // _fromJSON s'exécute avant, l'appel jetait et avortait tout le chargement (et donc
@@ -2468,6 +2502,10 @@ export class Class_ApplicationData {
 
   public get sankeytheque_origin(): Type_SankeythequeOrigin | null { return this._sankeytheque_origin }
   public set sankeytheque_origin(value: Type_SankeythequeOrigin | null) { this._sankeytheque_origin = value }
+
+  // sa#399 — brique de bibliothèque associée au document ouvert (persistée en JSON).
+  public get library_ref(): Type_LibraryRef | null { return this._library_ref }
+  public set library_ref(value: Type_LibraryRef | null) { this._library_ref = value }
 
   // Doc résolue pour la langue active (i18next), repli en→fr→première. Le setter
   // écrit dans le slot de la langue active : éditer en mode 'en' ne touche que la
