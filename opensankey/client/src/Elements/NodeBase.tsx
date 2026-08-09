@@ -919,6 +919,17 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     this.position_y = bbox.min_y - this.shape_margin_top
   }
 
+  /**
+   * os#671 / os#1347 — hook de CONTRAINTE fourni par le modèle au geste de drag
+   * (smart guides) : sur quels axes la position déposée fait-elle autorité —
+   * donc mérite un alignement magnétique ? Base (conteneurs, zones, légende…) :
+   * position libre sur les deux axes. `Class_NodeElement` raffine selon la mise
+   * en page pilotée par les données (cf. Node.getFreeDragSnapAxes).
+   */
+  public getFreeDragSnapAxes(): { x: boolean, y: boolean } {
+    return { x: true, y: true }
+  }
+
   public setDragStartPositions(positions: { [x: string]: [number, number] }) { this._drag_start_pos = positions }
   public getDragStartPositions(): { [x: string]: [number, number] } { return this._drag_start_pos }
   public setDragStartSizes(sizes: { [x: string]: [number, number] }) { this._drag_start_sizes = sizes }
