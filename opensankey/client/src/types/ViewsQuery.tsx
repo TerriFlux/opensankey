@@ -128,8 +128,10 @@ export class ViewsQuery {
     const gfg = view_json['generated_from_group_id']
     if (typeof gfg === 'string') entry.generated_from_group_id = gfg
     // sa#396 — labels de vues : lus si présents (tableau de chaînes non vides, dédoublonné).
-    // Un fichier ancien sans clé `labels` passe ici sans bruit (entry.labels reste undefined).
-    const labels = view_json['labels']
+    // Clé `view_labels`, PAS `labels` : au même niveau, `labels` est déjà la clé des zones de
+    // texte du diagramme de la vue (DrawingArea) — la première version d'sa#396 l'écrasait à
+    // chaque sauvegarde. Un fichier sans la clé passe ici sans bruit (entry.labels reste undefined).
+    const labels = view_json['view_labels']
     if (Array.isArray(labels)) {
       const cleaned = [...new Set(
         labels.filter((l): l is string => typeof l === 'string' && l.trim() !== '')

@@ -134,26 +134,29 @@ describe('#244 ViewsQuery.parseViewExtraFields', () => {
 // sa#396 — LABELS DE VUES : étiquettes libres de SÉLECTION posées sur les vues. Distinctes des
 // view tags (tag_selection ci-dessus), qui GÉNÈRENT des vues et ne bougent pas.
 describe('sa#396 ViewsQuery — labels de vues', () => {
-  it('parseViewExtraFields : lit labels (tableau de chaînes, nettoyé, dédoublonné)', () => {
+  it('parseViewExtraFields : lit view_labels (tableau de chaînes, nettoyé, dédoublonné)', () => {
     const views = { v1: view('Vue 1') }
     const vm = new ViewsQuery(makeHost({ views }))
-    vm.parseViewExtraFields('v1', { labels: ['Résultats', 'Méthode', 'Résultats', '', 42, null] as never })
+    vm.parseViewExtraFields('v1', { view_labels: ['Résultats', 'Méthode', 'Résultats', '', 42, null] as never })
     expect(views.v1.labels).toEqual(['Résultats', 'Méthode'])
   })
 
-  it('parseViewExtraFields : fichier ancien SANS labels → entrée sans labels, sans bruit', () => {
+  it('parseViewExtraFields : fichier ancien SANS view_labels → entrée sans labels, sans bruit', () => {
     const views = { v1: view('Vue 1') }
     const vm = new ViewsQuery(makeHost({ views }))
     expect(() => vm.parseViewExtraFields('v1', { tag_selection: { g1: 't1' } })).not.toThrow()
     expect(views.v1.labels).toBeUndefined()
   })
 
-  it('parseViewExtraFields : labels non-tableau ou vide → ignoré', () => {
+  it('parseViewExtraFields : view_labels non-tableau ou vide → ignoré — dont `labels` (zones de texte)', () => {
     const views = { v1: view('Vue 1') }
     const vm = new ViewsQuery(makeHost({ views }))
-    vm.parseViewExtraFields('v1', { labels: 'Résultats' as never })
+    vm.parseViewExtraFields('v1', { view_labels: 'Résultats' as never })
     expect(views.v1.labels).toBeUndefined()
-    vm.parseViewExtraFields('v1', { labels: [] })
+    vm.parseViewExtraFields('v1', { view_labels: [] })
+    expect(views.v1.labels).toBeUndefined()
+    // La clé `labels` d'une vue est celle de ses ZONES DE TEXTE (DrawingArea) : jamais lue ici.
+    vm.parseViewExtraFields('v1', { labels: { zdt1: { text: 'note' } } } as never)
     expect(views.v1.labels).toBeUndefined()
   })
 
