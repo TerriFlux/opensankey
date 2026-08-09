@@ -692,6 +692,8 @@ export class Class_MenuConfig {
   > = undefined
   private _ref_to_modal_pref_updater: MutableRefObject<() => void>
   protected _ref_to_toolbar_bottom_updater: MutableRefObject<() => void>
+  // OS#85 — re-render des onglets de feuilles (bas de la grande zone).
+  protected _ref_to_sheet_tabs_updater: MutableRefObject<() => void> = { current: () => null }
 
   private _ref_to_nodetag_filter_updater: MutableRefObject<() => void>
   private _ref_to_datatag_filter_updater: MutableRefObject<() => void>
@@ -1113,6 +1115,8 @@ export class Class_MenuConfig {
     this.updateAllComponentsRelatedToContainers()
     this.updateComponentPref()
     this._ref_to_toolbar_bottom_updater.current()
+    // OS#85 — onglets de feuilles (un chargement de document a pu en changer la liste).
+    this._ref_to_sheet_tabs_updater.current()
     // Resynchronise le panneau Doc markdown (un nouveau fichier / diagramme a pu être chargé).
     this.ref_to_doc.current()
     this.dict_setter_show_dialog.ref_setter_modal_welcome_active_page.current(v => !v)
@@ -1707,6 +1711,11 @@ export class Class_MenuConfig {
 
   public get ref_to_toolbar_bottom_updater(): MutableRefObject<() => void> {
     return this._ref_to_toolbar_bottom_updater
+  }
+
+  // OS#85 — onglets de feuilles (bas de la grande zone).
+  public get ref_to_sheet_tabs_updater(): MutableRefObject<() => void> {
+    return this._ref_to_sheet_tabs_updater
   }
 
   public get ref_to_menu_config_node_icon_updater() { return this._ref_to_menu_config_node_icon_updater }
