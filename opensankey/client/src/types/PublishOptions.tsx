@@ -93,6 +93,13 @@ export interface SankeyGlobals {
   view?: string        // ouvre sur cette vue (id OU nom, comme le sélecteur de vues)
   view_label?: string  // restreint le sélecteur de vues aux vues portant ce label ; la vue courante devient la première du groupe
 
+  // sa#409 — crochet d'upgrade headless (commande upgrade d'/admin/publications). Quand true,
+  // applyPublishStateOptions expose sur window le fichier RE-SÉRIALISÉ au format courant
+  // (`__sankey_upgraded_json`) et un résumé vérifiable (`__sankey_upgrade_meta`) — ou
+  // `__sankey_upgrade_error`. Réservé aux pages de banc pilotées par le serveur : aucune page
+  // publiée normale ne pose cette clé.
+  export_json?: boolean
+
   // Indexer pour configs per-diagramme (diagrams_list etc.)
   [key: string]: unknown
 }
@@ -129,6 +136,7 @@ export interface PublishOptions {
   view_tag_selection: Record<string, string> | null
   view: string | null
   view_label: string | null
+  export_json: boolean
   logo: string | null
   header: string | null
   diagram: string | Record<string, unknown> | null
@@ -267,6 +275,7 @@ export const getPublishOptions = (): PublishOptions => {
     view_tag_selection: strRecord(s.view_tag_selection),
     view: str(s.view),
     view_label: str(s.view_label),
+    export_json: bool(s.export_json, false),
     logo: str(s.logo),
     header: header_value,
     diagram: (typeof s.diagram === 'string')
