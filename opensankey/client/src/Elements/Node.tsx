@@ -2317,6 +2317,23 @@ export class Class_NodeElement extends Class_NodeBase {
   }
 
   /**
+   * os#671 / os#1347 — contrainte des smart guides pour un NŒUD DE DONNÉES :
+   * un axe dont la position est re-dérivée par la mise en page au drop ne doit
+   * pas snapper (l'alignement serait mensonger, défait au dessin suivant).
+   * - Mise en page paramétrique globale : x est re-quantifié en colonnes
+   *   (inferPositionUFromX → computeParametrization) — x non snappable ; un
+   *   nœud u-verrouillé voit même son x déposé ignoré. Le y déposé, lui, est
+   *   reproduit (backCalculateShapePositionDyFromY) — y reste snappable.
+   * - Nœud en position RELATIVE : son x est défini par rapport à sa source
+   *   (shape_position_dx re-calculé au drop) — x non snappable.
+   */
+  public getFreeDragSnapAxes(): { x: boolean, y: boolean } {
+    const parametric_layout = this.sankey.default_style.shape_position_type === 'parametric'
+    const relative_node = this.shape_position_type === 'relative'
+    return { x: !parametric_layout && !relative_node, y: true }
+  }
+
+  /**
    * Vrai si ce nœud n'est PAS visible dans la vue courante mais est révélé par le
    * mode « afficher aussi les flux porteurs de données » (extrémité d'un flux
    * portant une valeur collectée saisie). Sert à reconnecter ces nœuds au
