@@ -1741,6 +1741,10 @@ export class Class_DrawingArea {
   }
 
   public addElementToSelection(element: Class_ProtoElement) {
+    // os#1340 — garde centrale du verrouillage : un élément verrouillé n'entre
+    // jamais dans la sélection (clic, lasso, Ctrl+A, selectOnly). Le clic droit
+    // ouvre toujours son menu contextuel, par lequel on le déverrouille.
+    if (element.is_locked) return
     // Update selection list
     this._selection[element.id] = element
     // Update selection attribute on given node
@@ -1949,6 +1953,12 @@ export class Class_DrawingArea {
   }
 
   public copyNodes(node_ids: string[]) { CopyPaste.copyNodes(this, node_ids) }
+
+  /** os#1340 (Ctrl+D) — duplique la sélection courante (nœuds + liens internes + zones). */
+  public duplicateSelection() { CopyPaste.duplicateSelection(this) }
+
+  /** os#1340 (alt-glisser = cloner) — duplique la sélection SANS décalage (copies sous les originaux). */
+  public cloneSelectionInPlace() { CopyPaste.cloneSelectionInPlace(this) }
 
   public updateScaleAtLinkValueSetting(previously_valued_count?: number) {
     // Si une seule valeur existe sur tout le diagramme, elle détermine l'échelle.

@@ -122,6 +122,13 @@ export class Class_ContainerElement extends Class_NodeBase {
   // le déplace SEUL à l'intérieur du groupe ; les cadres englobants s'agrandissent
   // EN DIRECT pour continuer à le contenir. Sans devoir le désolidariser.
   protected eventMouseDrag(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+    // os#1340 — alt-glisser = cloner : le geste emporte les COPIES (routage dans
+    // NodeEventsHandler), jamais le groupe de l'original — on saute les branches
+    // de drag délégué ci-dessous.
+    if (this._nodeEventsHandler.is_alt_clone_dragging) {
+      super.eventMouseDrag(event)
+      return
+    }
     if (this.drawing_area.isInSelectionMode()) {
       // Membre saisi seul (entré dans le groupe) -> déplacement individuel.
       if (this.is_selected && !this.tied_to_nodes) {

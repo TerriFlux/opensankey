@@ -46,8 +46,24 @@ export class NodeEventsHandler {
   private _shift_acc_dx: number = 0
   private _shift_acc_dy: number = 0
 
+  // os#1340 — alt-glisser = cloner. `pending` est armé au dragStart (Alt enfoncé sur un
+  // élément sélectionné) mais le clonage n'a lieu qu'au PREMIER mouvement réel : un simple
+  // alt-clic ne clone rien (d3.drag émet toujours start+end, même sans déplacement).
+  // Une fois le clone fait, les COPIES (devenues la sélection) suivent le geste et les
+  // originaux restent en place — sémantique draw.io.
+  private _alt_clone_pending: boolean = false
+  private _alt_clone_active: boolean = false
+  // Positions de naissance des copies (= positions des originaux), pour l'undo du dépôt.
+  private _alt_clone_start_pos: Map<Class_NodeBase, [number, number]> = new Map()
+
   constructor(node: Class_NodeBase) {
     this._node = node
+  }
+
+  /** os#1340 — vrai pendant un alt-glisser = cloner (les copies suivent le geste,
+   * l'original ne bouge pas : ses effets de bord de drag doivent être neutralisés). */
+  public get is_alt_clone_dragging(): boolean {
+    return this._alt_clone_active || this._alt_clone_pending
   }
   /**
  * ✅ Détermine quel type d'élément a été cliqué
@@ -273,6 +289,20 @@ export class NodeEventsHandler {
     this._shift_acc_dx = 0
     this._shift_acc_dy = 0
 
+    // os#1340 — alt-glisser = cloner : armé ici, exécuté au premier mouvement
+    // (handleMouseDrag). Conditions : Alt enfoncé, zone éditable, mode sélection,
+    // et l'élément saisi fait partie de la sélection.
+    const da = this._node.drawing_area
+    this._alt_clone_pending = false
+    this._alt_clone_active = false
+    if (
+      (_event.sourceEvent as MouseEvent | undefined)?.altKey === true &&
+      da.editable && da.isInSelectionMode() &&
+      ([...da.selected_containers_list, ...da.selected_nodes_list] as Class_NodeBase[]).includes(this._node)
+    ) {
+      this._alt_clone_pending = true
+    }
+
     const nodes_selected = [...this._node.sankey.drawing_area.selected_containers_list, ...this._node.sankey.drawing_area.selected_nodes_list] as Class_NodeBase[]
     const dict_old_pos: { [x: string]: [number, number] } = {}
     const dict_old_sizes: { [x: string]: [number, number] } = {}
@@ -384,6 +414,26 @@ export class NodeEventsHandler {
 
     // Get related drawing area
     const drawing_area = this._node.drawing_area
+
+    // os#1340 — alt-glisser = cloner. Au premier mouvement réel : cloner la sélection
+    // SUR PLACE (les copies deviennent la sélection), puis emporter les copies avec le
+    // geste ; les originaux ne bougent pas. Le drag d3 continue d'émettre sur le <g> de
+    // l'ORIGINAL — d'où ce routage dédié (l'original n'est plus dans la sélection).
+    if (this._alt_clone_pending && (event.dx !== 0 || event.dy !== 0)) {
+      this._alt_clone_pending = false
+      this._alt_clone_active = true
+      drawing_area.cloneSelectionInPlace()
+      this._alt_clone_start_pos = new Map(
+        ([...drawing_area.selected_containers_list, ...drawing_area.selected_nodes_list] as Class_NodeBase[])
+          .map(n => [n, [n.position_x, n.position_y] as [number, number]])
+      )
+    }
+    if (this._alt_clone_active) {
+      const clones = [...drawing_area.selected_containers_list, ...drawing_area.selected_nodes_list] as Class_NodeBase[]
+      clones.forEach(n => n.setPosXY(n.position_x + event.dx, n.position_y + event.dy))
+      return
+    }
+
     const nodes_selected = [...this._node.sankey.drawing_area.selected_containers_list, ...this._node.sankey.drawing_area.selected_nodes_list] as Class_NodeBase[]
 
     if (nodes_selected.includes(this._node)) { // Only trigger the drag if we drag a selected node
@@ -431,6 +481,40 @@ export class NodeEventsHandler {
     this._shift_lock_axis = null
     this._shift_acc_dx = 0
     this._shift_acc_dy = 0
+
+    // os#1340 — fin d'un alt-glisser = cloner. Les COPIES ont suivi le geste : on les
+    // settle (#1230/#1231) et on les redessine (liens internes compris), puis on
+    // enregistre le DÉPÔT comme transition d'historique distincte de la création
+    // (cloneSelectionInPlace a déjà poussé la sienne) : undo = copies ramenées à leur
+    // point de naissance, 2e undo = copies supprimées ; redo symétrique.
+    this._alt_clone_pending = false
+    if (this._alt_clone_active) {
+      this._alt_clone_active = false
+      this._node.setDragState(false)
+      const da = this._node.drawing_area
+      const start_pos = this._alt_clone_start_pos
+      this._alt_clone_start_pos = new Map()
+      const final_pos = new Map(
+        [...start_pos.keys()].map(n => [n, [n.position_x, n.position_y] as [number, number]])
+      )
+      const settleAndDraw = (positions: Map<Class_NodeBase, [number, number]>) => () => {
+        positions.forEach((pos, n) => {
+          n.setPosXY(pos[0], pos[1])
+          n.settleCenterAnchor()
+          n.draw()
+        })
+      }
+      const moved = [...start_pos.entries()].some(
+        ([n, pos]) => n.position_x !== pos[0] || n.position_y !== pos[1]
+      )
+      if (moved) {
+        da.application_data.history.saveUndo(settleAndDraw(start_pos))
+        da.application_data.history.saveRedo(settleAndDraw(final_pos))
+      }
+      settleAndDraw(final_pos)()
+      da.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+      return
+    }
 
     // ✅ Utiliser la nouvelle méthode d'accès
     const dict_old_pos: { [x: string]: [number, number] } = { ...this._node.getDragStartPositions() }
