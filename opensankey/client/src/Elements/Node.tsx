@@ -34,6 +34,7 @@ import { Class_Handler } from './Handler'
 import { reorganizeIOOrder } from './reorganizeIOOrder'
 import { orderIOByGeometry, recyclingBellyCentre, bundleTie, Type_IOGeo } from './ioOrderGeometry'
 import { format_value, Type_JSON } from '../types/Utils'
+import type { Type_Origin } from '../types/Origin'
 import { default_element_color } from './ElementsAttributesConfig'
 import { SankeyAnimation } from '../Algorithms/SankeyAnimation'
 import { draw_arrow_part } from './NodeDrawShape'
@@ -2582,6 +2583,12 @@ export class Class_NodeElement extends Class_NodeBase {
 
   public get tooltip_text() { return this._tooltip_text }
   public set tooltip_text(_: string) { this._tooltip_text = _ }
+
+  // #411 — pourquoi ce nœud existe. Voir Link.origin : `undefined` signifie que
+  // le fichier ne le dit pas, jamais que l'utilisateur l'a tracé.
+  private _origin: Type_Origin | undefined = undefined
+  public get origin() { return this._origin }
+  public set origin(v: Type_Origin | undefined) { this._origin = v }
 
   public get data_value() {
     let input_val = 0
