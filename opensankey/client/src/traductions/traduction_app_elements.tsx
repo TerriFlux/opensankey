@@ -162,6 +162,8 @@ export const resources_app_elements = {
         open_excel: 'Excel',
         import_image: 'Image',
         save_sankeytheque: 'Sankey library (dev)',
+        // sa#399 — depot d'une version de brique dans la bibliotheque du compte
+        save_in_library: 'To my library',
         // sa#413 — bouton Partager / Mettre à jour de la barre du haut
         share: 'Share',
         share_tooltip: 'Publish this diagram online or download it as a standalone site',
@@ -866,6 +868,8 @@ export const resources_app_elements = {
         open_excel: 'Excel',
         import_image: 'Image',
         save_sankeytheque: 'Sankeythèque (dev)',
+        // sa#399 — dépôt d'une version de brique dans la bibliothèque du compte
+        save_in_library: 'Dans ma bibliothèque',
         // sa#413 — bouton Partager / Mettre à jour de la barre du haut
         share: 'Partager',
         share_tooltip: 'Publier ce diagramme en ligne ou le télécharger en site autonome',
@@ -1560,6 +1564,8 @@ export const resources_app_elements = {
         open_excel: 'Excel',
         import_image: 'Imagen',
         save_sankeytheque: 'Biblioteca Sankey (dev)',
+        // sa#399 — deposito de una version de ladrillo en la biblioteca de la cuenta
+        save_in_library: 'En mi biblioteca',
         // sa#413 — bouton Partager / Mettre à jour de la barre du haut
         share: 'Compartir',
         share_tooltip: 'Publicar este diagrama en línea o descargarlo como sitio autónomo',
@@ -2237,6 +2243,8 @@ export const resources_app_elements = {
         open_excel: 'Excel',
         import_image: 'Bild',
         save_sankeytheque: 'Sankey-Bibliothek (dev)',
+        // sa#399 — Ablage einer Bausteinversion in der Bibliothek des Kontos
+        save_in_library: 'In meine Bibliothek',
         // sa#413 — bouton Partager / Mettre à jour de la barre du haut
         share: 'Teilen',
         share_tooltip: 'Dieses Diagramm online veröffentlichen oder als eigenständige Website herunterladen',
@@ -2914,6 +2922,8 @@ export const resources_app_elements = {
         open_excel: 'Excel',
         import_image: 'Immagine',
         save_sankeytheque: 'Libreria Sankey (dev)',
+        // sa#399 — deposito di una versione di mattone nella libreria dell'account
+        save_in_library: 'Nella mia libreria',
         // sa#413 — bouton Partager / Mettre à jour de la barre du haut
         share: 'Condividi',
         share_tooltip: 'Pubblica questo diagramma online o scaricalo come sito autonomo',
@@ -3578,6 +3588,8 @@ export const resources_app_elements = {
         open_excel: 'Excel',
         import_image: '图片',
         save_sankeytheque: 'Sankey 图库（开发）',
+        // sa#399 — 将版本存入账户的资料库
+        save_in_library: '存入我的资料库',
         // sa#413 — bouton Partager / Mettre à jour de la barre du haut
         share: '分享',
         share_tooltip: '将此图表在线发布或下载为独立网站',
@@ -4262,6 +4274,8 @@ export const resources_app_elements = {
         open_excel: 'Excel',
         import_image: '画像',
         save_sankeytheque: 'サンキーライブラリ（開発）',
+        // sa#399 — アカウントのライブラリにバージョンを保存
+        save_in_library: 'マイライブラリへ保存',
         // sa#413 — bouton Partager / Mettre à jour de la barre du haut
         share: '共有',
         share_tooltip: 'この図をオンラインで公開するか、独立したサイトとしてダウンロードします',
