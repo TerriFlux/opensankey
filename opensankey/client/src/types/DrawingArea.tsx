@@ -74,6 +74,7 @@ import * as Camera from './DrawingAreaCamera'
 import { ZOOM_TOPIC } from './EventBus'
 import { Class_ViewportChrome } from './DrawingAreaViewportChrome'
 import { Class_DrawingAreaInteractions } from './DrawingAreaInteractions'
+import { Class_ConnectionGestureHandler, Type_ConnectionDirection } from './ConnectionGestureHandler'
 import { Class_NodeBase, sortNodesElements } from '../Elements/NodeBase'
 import {
   ContainerPersistence, LinkElementPersistence, NodeElementPersistence, SankeyPersistence
@@ -154,6 +155,10 @@ export class Class_DrawingArea {
   // #242 — Interactions souris (création de flux au cliquer-glisser, rectangle de sélection,
   // pan/zoom molette) : le module porte l'état de geste (cf. DrawingAreaInteractions).
   private _interactions = new Class_DrawingAreaInteractions()
+  // os#1344/os#1347 — handler du geste de CRÉATION CONNECTÉE (flèches directionnelles au
+  // survol d'un nœud). NodeBase le notifie via cette propriété, sans import runtime
+  // (invariant TDZ Element→Handler, cf. elementInitCycle.test.ts).
+  private _connection_gesture = new Class_ConnectionGestureHandler()
 
 
   public static: boolean = !!window.sankey?.publish
@@ -3925,6 +3930,53 @@ export class Class_DrawingArea {
   // Grid size
   public get grid_size() { return this._grid_size }
   public set grid_size(_: number) { this._grid_size = _; this.drawGrid() }
+
+  // os#1344 — handler du geste de création connectée (notifié par NodeBase au survol).
+  public get connection_gesture(): Class_ConnectionGestureHandler { return this._connection_gesture }
+
+  /**
+   * os#1344/os#1347 — CONTRAINTE DE POSITION pour la création connectée : où poser un
+   * nœud créé depuis un nœud source dans une direction donnée. Espacement raisonnable
+   * (fonction du pas de grille), aligné sur la grille quand le magnétisme est actif
+   * (même pas que moveMagneticNode : grid_size / 4). Le handler de geste ne calcule
+   * rien lui-même : c'est la zone de dessin qui fournit la règle.
+   */
+  public getConnectedCreationPosition(
+    source: Class_NodeBase,
+    direction: Type_ConnectionDirection,
+    width: number,
+    height: number
+  ): { x: number, y: number } {
+    const spacing = Math.max(2 * this._grid_size, 100)
+    const sw = source.getShapeWidthToUse()
+    const sh = source.getShapeHeightToUse()
+    let x = source.position_x
+    let y = source.position_y
+    switch (direction) {
+    case 'right':
+      x = source.position_x + sw + spacing
+      y = source.position_y + (sh - height) / 2
+      break
+    case 'left':
+      x = source.position_x - spacing - width
+      y = source.position_y + (sh - height) / 2
+      break
+    case 'top':
+      x = source.position_x + (sw - width) / 2
+      y = source.position_y - spacing - height
+      break
+    case 'bottom':
+      x = source.position_x + (sw - width) / 2
+      y = source.position_y + sh + spacing
+      break
+    }
+    if (this._magnetic_nodes) {
+      const step = this._grid_size / 4
+      x = Math.round(x / step) * step
+      y = Math.round(y / step) * step
+    }
+    return { x, y }
+  }
 
   public get selection_zone(): Class_ZoneSelection { return this._selection_zone }
 

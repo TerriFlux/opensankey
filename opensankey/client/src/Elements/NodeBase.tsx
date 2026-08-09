@@ -286,6 +286,11 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   public eventMouseOver(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
     super.eventMouseOver(event)
     this._nodeEventsHandler.handleMouseOver(event)
+    // os#1344 — création connectée : montre les flèches directionnelles au survol.
+    // Notification par PROPRIÉTÉ (pas d'import runtime vers un handler depuis un
+    // Element — invariant TDZ, cf. elementInitCycle.test.ts) ; le handler porte
+    // lui-même toutes les gardes (mode, éditable, vrai nœud, pas de drag en cours).
+    this.drawing_area.connection_gesture.onNodeHover(this, event)
   }
 
   //public getShapeColorToUse() { return this.shape_color }
@@ -583,6 +588,8 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   protected eventMouseDragStart(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     super.eventMouseDragStart(event)
     this.drawing_area.beginFitDrag() // #680 — réinitialise l'accumulateur de direction du glissé
+    // os#1344 — un drag de nœud commence : les flèches de création connectée s'effacent.
+    this.drawing_area.connection_gesture.onNodeDragStart()
     this._nodeEventsHandler.handleMouseDragStart(event)
   }
   public eventMouseDragEnd(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
@@ -633,6 +640,8 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   public eventMouseOut(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
     super.eventMouseOut(event)
     this._nodeEventsHandler.handleMouseOut()
+    // os#1344 — masquage DIFFÉRÉ des flèches (le temps d'atteindre une flèche).
+    this.drawing_area.connection_gesture.onNodeOut(this)
   }
 
   // Nom résolu pour la langue active de l'app (repli en→fr→première dispo).
