@@ -36,6 +36,7 @@ import {
 } from '../Elements/ElementsAttributesConfig'
 import { getStringFromJSON, Type_DataSource, Type_IntervalDisplay, Type_DisaggregationGap } from '../types/Utils'
 import { ratio_flux_constraint_traduction } from '../types/Utils'
+import { originFromJSON, originToJSON } from '../types/Origin'
 import { Class_ContainerElement } from '../Elements/TextZone'
 import { Class_NodeElement } from '../Elements/Node'
 import { ConfigType } from '../Elements/ElementsAttributesConfig'
@@ -605,6 +606,10 @@ export class LinkElementPersistence extends ProtoElementPersistence {
     // disaggregate sur un nœud lui-même expansé). Persisté pour que la
     // transitivité survive sauvegarde + rechargement.
     if (link.is_expansion_link) json_object['is_expansion_link'] = true
+    // #411 — la trace d'origine doit survivre à l'aller-retour, sinon tout
+    // élément d'un diagramme rouvert répondrait « lu depuis un JSON », ce qui
+    // n'apprend rien. Réécrite telle quelle : le front ne la fabrique pas.
+    if (link.origin) json_object['origin'] = originToJSON(link.origin)
     // Cadenas + espacement des ancres E/S (cf. menu "Ordre des flux E/S").
     if (link.source_side_locked) {
       json_object['source_side_locked'] = true
@@ -752,6 +757,9 @@ export class LinkElementPersistence extends ProtoElementPersistence {
     if (getBooleanFromJSON(json_object, 'is_expansion_link', false)) {
       link.is_expansion_link = true
     }
+    // #411 — restaure la trace d'origine si le fichier la porte. Absente d'un
+    // fichier antérieur : reste indéfinie, pas de valeur inventée.
+    link.origin = originFromJSON(json_object['origin'])
     // Cadenas + espacement des ancres E/S (cf. menu "Ordre des flux E/S").
     // Clés absentes d'un fichier antérieur → valeurs par défaut (pas de migration).
     link.source_anchor_delta = getNumberFromJSON(json_object, 'source_anchor_delta', 0)
@@ -805,6 +813,8 @@ export class NodeElementPersistence extends NodeBasePersistence {
     super.toJSON(node, json_object, kwargs)
     node._nodeDimensionsManager.toJSON(json_object)
     if (node.tooltip_text) json_object['tooltip_text'] = node.tooltip_text
+    // #411 — trace d'origine du nœud, voir LinkElementPersistence.
+    if (node.origin) json_object['origin'] = originToJSON(node.origin)
 
     // Délégation aux managers
     node._nodeTagsManager.toJSON(json_object)
@@ -987,6 +997,8 @@ export class NodeElementPersistence extends NodeBasePersistence {
     super.fromJSON(version, node, json_node_object, kwargs)
 
     node['_tooltip_text'] = getStringFromJSON(json_node_object, 'tooltip_text', '')
+    // #411 — restaure la trace d'origine du nœud si le fichier la porte.
+    node.origin = originFromJSON(json_node_object['origin'])
 
     // Délégation aux managers
     node._nodeTagsManager.fromJSON(json_node_object)

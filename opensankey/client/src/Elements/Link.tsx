@@ -36,6 +36,7 @@ import type {
 import type { Class_DataTagGroup, Class_FluxTagGroup, Class_TagGroup } from '../types/TagGroup'
 
 import { Type_BaseElementPosition, link_data_label, link_template_label } from '../types/Utils'
+import type { Type_Origin } from '../types/Origin'
 import { Class_ElementValueTree, Class_LinkValue, Class_ElementTaggedValue } from './LinkValues'
 import { LinkDrawShape } from './LinkDrawShape'
 import { LinkControlPoints } from './LinkControlPoints'
@@ -217,6 +218,11 @@ export class Class_LinkElement extends Class_LinkAttribute {
   // a lateral expansion (parent ↔ child of an expanded NodeDimension).
   // Used by contract() to know which links to delete when collapsing back.
   private _is_expansion_link: boolean = false
+  // #411 — pourquoi ce flux existe. Renseigné par le parser (voie de création,
+  // onglet, ligne, déclencheur) et restitué depuis le JSON. `undefined` = le
+  // fichier ne le dit pas : l'inspecteur l'annonce comme inconnu, jamais comme
+  // une saisie de l'utilisateur.
+  private _origin: Type_Origin | undefined = undefined
 
   // I/O anchor lock & delta — per link end ('source' / 'target').
   // The "anchor" of a link is its attachment point on a node side; the side
@@ -1488,6 +1494,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
   // read by contract() to know which links to delete. Not persisted.
   public get is_expansion_link() { return this._is_expansion_link }
   public set is_expansion_link(v: boolean) { this._is_expansion_link = v }
+
+  // #411 — traçabilité de l'origine du flux.
+  public get origin() { return this._origin }
+  public set origin(v: Type_Origin | undefined) { this._origin = v }
 
   public get is_visible() {
     if (this.is_visible_ignoring_container_modes && this.is_allowed_by_container_modes) return true

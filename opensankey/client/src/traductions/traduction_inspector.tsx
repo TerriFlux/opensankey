@@ -55,7 +55,19 @@ export const resources_inspector = {
           analysis: 'Analysis',
           title: 'Title',
           mfa: 'MFA',
+          origin: 'Origin',
           styles: 'Styles'
+        },
+        // #411 — onglet « Origine » : pourquoi cet element existe.
+        origin: {
+          intro: 'Why the selected element exists, traced back to the entry it comes from.',
+          this_element: 'This element',
+          because: 'because',
+          sheet: 'sheet',
+          line: 'line',
+          datatags: 'Tag combination',
+          unknown: 'This file does not say why this element exists (written before origin tracking, or drawn by hand).',
+          select: 'Select a node or a flow.'
         },
         // #1258 — Onglet MFA (espace AFM unifié).
         mfa: {
@@ -219,7 +231,19 @@ export const resources_inspector = {
           analysis: 'Analyse',
           title: 'Titre',
           mfa: 'AFM',
+          origin: 'Origine',
           styles: 'Styles'
+        },
+        // #411 — onglet « Origine » : pourquoi cet element existe.
+        origin: {
+          intro: 'Pourquoi l\'élément sélectionné existe, remonté jusqu\'à la saisie dont il provient.',
+          this_element: 'Cet élément',
+          because: 'parce que',
+          sheet: 'onglet',
+          line: 'ligne',
+          datatags: 'Combinaison d\'étiquettes',
+          unknown: 'Ce fichier ne dit pas pourquoi cet élément existe (écrit avant la traçabilité, ou tracé à la main).',
+          select: 'Sélectionnez un nœud ou un flux.'
         },
         mfa: {
           reconciliation: 'Réconciliation',
@@ -380,7 +404,19 @@ export const resources_inspector = {
           analysis: 'Análisis',
           title: 'Título',
           mfa: 'AFM',
+          origin: 'Origen',
           styles: 'Estilos'
+        },
+        // #411 — onglet « Origine » : pourquoi cet element existe.
+        origin: {
+          intro: 'Por qué existe el elemento seleccionado, remontado hasta la entrada de la que procede.',
+          this_element: 'Este elemento',
+          because: 'porque',
+          sheet: 'hoja',
+          line: 'línea',
+          datatags: 'Combinación de etiquetas',
+          unknown: 'Este archivo no indica por qué existe este elemento (escrito antes del seguimiento de origen, o dibujado a mano).',
+          select: 'Seleccione un nodo o un flujo.'
         },
         mfa: {
           reconciliation: 'Conciliación',
@@ -541,7 +577,19 @@ export const resources_inspector = {
           analysis: 'Analyse',
           title: 'Titel',
           mfa: 'MFA',
+          origin: 'Herkunft',
           styles: 'Stile'
+        },
+        // #411 — onglet « Origine » : pourquoi cet element existe.
+        origin: {
+          intro: 'Warum das ausgewählte Element existiert, zurückverfolgt bis zur Eingabe, aus der es stammt.',
+          this_element: 'Dieses Element',
+          because: 'weil',
+          sheet: 'Blatt',
+          line: 'Zeile',
+          datatags: 'Tag-Kombination',
+          unknown: 'Diese Datei gibt nicht an, warum dieses Element existiert (vor der Herkunftsverfolgung geschrieben oder von Hand gezeichnet).',
+          select: 'Wählen Sie einen Knoten oder einen Fluss aus.'
         },
         mfa: {
           reconciliation: 'Abgleich',
@@ -702,7 +750,19 @@ export const resources_inspector = {
           analysis: 'Analisi',
           title: 'Titolo',
           mfa: 'AFM',
+          origin: 'Origine',
           styles: 'Stili'
+        },
+        // #411 — onglet « Origine » : pourquoi cet element existe.
+        origin: {
+          intro: 'Perché esiste l\'elemento selezionato, risalendo fino all\'inserimento da cui proviene.',
+          this_element: 'Questo elemento',
+          because: 'perché',
+          sheet: 'foglio',
+          line: 'riga',
+          datatags: 'Combinazione di etichette',
+          unknown: 'Questo file non indica perché questo elemento esiste (scritto prima del tracciamento dell\'origine, o disegnato a mano).',
+          select: 'Selezionare un nodo o un flusso.'
         },
         mfa: {
           reconciliation: 'Riconciliazione',
@@ -863,7 +923,19 @@ export const resources_inspector = {
           analysis: '分析',
           title: '标题',
           mfa: 'MFA',
+          origin: '来源',
           styles: '样式'
+        },
+        // #411 — onglet « Origine » : pourquoi cet element existe.
+        origin: {
+          intro: '所选元素为何存在，可追溯至其来源的录入。',
+          this_element: '此元素',
+          because: '因为',
+          sheet: '工作表',
+          line: '行',
+          datatags: '标签组合',
+          unknown: '此文件未说明该元素为何存在（在来源追踪之前写入，或手动绘制）。',
+          select: '请选择一个节点或一条流。'
         },
         // #1258 — Onglet MFA (espace AFM unifié).
         mfa: {
@@ -1027,7 +1099,19 @@ export const resources_inspector = {
           analysis: '分析',
           title: 'タイトル',
           mfa: 'MFA',
+          origin: '由来',
           styles: 'スタイル'
+        },
+        // #411 — onglet « Origine » : pourquoi cet element existe.
+        origin: {
+          intro: '選択した要素が存在する理由を、その入力元まで遡って表示します。',
+          this_element: 'この要素',
+          because: 'なぜなら',
+          sheet: 'シート',
+          line: '行',
+          datatags: 'タグの組み合わせ',
+          unknown: 'このファイルには、この要素が存在する理由が記録されていません（由来の記録より前に書かれたか、手描きです）。',
+          select: 'ノードまたはフローを選択してください。'
         },
         // #1258 — Onglet MFA (espace AFM unifié).
         mfa: {
