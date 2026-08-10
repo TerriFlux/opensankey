@@ -123,3 +123,46 @@ describe('OS#85 — feuilles de dessin : modèle et persistance', () => {
     expect(app.has_sheets).toBe(false)
   })
 })
+
+// 10/08 — demande de Julien pendant les tests du lot 1 : « quand je charge un modèle ou un
+// fichier, ça efface les feuilles — le chargement ne devrait-il pas être associé à la
+// feuille ? ». Sémantique draw.io/Excel retenue : un fichier SANS feuilles se charge DANS
+// la feuille courante ; un fichier AVEC feuilles est un document complet et remplace tout.
+describe('OS#85 — charger un fichier dans la feuille courante', () => {
+  it('fichier SANS feuilles + document à feuilles : chargé dans la feuille courante, les autres restent', () => {
+    const ext = mkApp()
+    ext.file_name = 'externe'
+    const ext_dump = ext.toJSON() as Type_JSON
+
+    const app = mkApp()
+    app.file_name = 'feuille-A'
+    const id2 = app.createNewSheet(false)
+    const id1 = app.sheets_order[0]
+
+    app.fromJSON(deepClone(ext_dump), {}, false)
+    // Le classeur n'a pas bougé : mêmes feuilles, même feuille courante.
+    expect(app.sheets_order).toEqual([id1, id2])
+    expect(app.current_sheet_id).toBe(id2)
+    // Le contenu chargé est sur la feuille courante…
+    expect(app.file_name).toBe('externe')
+    // …la feuille 1 est intacte, et le chargement survit à l'aller-retour.
+    app.switchToSheet(id1, false)
+    expect(app.file_name).toBe('feuille-A')
+    app.switchToSheet(id2, false)
+    expect(app.file_name).toBe('externe')
+  })
+
+  it('fichier AVEC feuilles : document complet, il remplace tout', () => {
+    const doc = mkApp()
+    doc.file_name = 'doc-X'
+    doc.createNewSheet(false)
+    const doc_dump = doc.toJSON() as Type_JSON
+
+    const app = mkApp()
+    app.createNewSheet(false)
+    app.createNewSheet(false)
+    expect(app.sheets_order).toHaveLength(3)
+    app.fromJSON(deepClone(doc_dump), {}, false)
+    expect(app.sheets_order).toHaveLength(2)
+  })
+})
