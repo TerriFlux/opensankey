@@ -29,6 +29,12 @@ export const resources_template = {
         group_readme_open: 'Read the presentation',
         group_readme_close: 'Hide the presentation',
         group_readme_error: 'Description unavailable',
+        library_hint: 'Your versioned projects: click a diagram to open it, a README to read it',
+        library: {
+          read_md: 'Read this document',
+          download: 'Download this file',
+          versions_error: 'Versions unavailable'
+        },
         fr: 'Diagram template in french',
         en: 'Diagram template in english',
         categories: {
@@ -40,6 +46,7 @@ export const resources_template = {
           stan: 'STAN',
           esankey: 'e!Sankey',
           sankeytheque: 'SankeyThèque',
+          library: 'My projects',
           // Catégories de la sankeythèque (index MFAData)
           etudes: 'Studies',
           filieres: 'Sectors',
@@ -79,6 +86,12 @@ export const resources_template = {
         group_readme_open: 'Lire la présentation',
         group_readme_close: 'Masquer la présentation',
         group_readme_error: 'Description indisponible',
+        library_hint: 'Vos projets versionnés : cliquez sur un diagramme pour l\'ouvrir, un README pour le lire',
+        library: {
+          read_md: 'Lire ce document',
+          download: 'Télécharger ce fichier',
+          versions_error: 'Versions indisponibles'
+        },
         fr: 'Modèle de diagramme en français',
         en: 'Modèle de diagramme en anglais',
         categories: {
@@ -90,6 +103,7 @@ export const resources_template = {
           stan: 'STAN',
           esankey: 'e!Sankey',
           sankeytheque: 'SankeyThèque',
+          library: 'Mes projets',
           // Catégories de la sankeythèque (index MFAData)
           etudes: 'Études',
           filieres: 'Filières',
@@ -129,6 +143,12 @@ export const resources_template = {
         group_readme_open: 'Leer la presentación',
         group_readme_close: 'Ocultar la presentación',
         group_readme_error: 'Descripción no disponible',
+        library_hint: 'Sus proyectos versionados: haga clic en un diagrama para abrirlo, en un README para leerlo',
+        library: {
+          read_md: 'Leer este documento',
+          download: 'Descargar este archivo',
+          versions_error: 'Versiones no disponibles'
+        },
         fr: 'Plantilla de diagrama en francés',
         en: 'Plantilla de diagrama en inglés',
         categories: {
@@ -140,6 +160,7 @@ export const resources_template = {
           stan: 'STAN',
           esankey: 'e!Sankey',
           sankeytheque: 'SankeyThèque',
+          library: 'Mis proyectos',
           // Categorías de la sankeyteca (índice MFAData)
           etudes: 'Estudios',
           filieres: 'Sectores',
@@ -179,6 +200,12 @@ export const resources_template = {
         group_readme_open: 'Beschreibung lesen',
         group_readme_close: 'Beschreibung ausblenden',
         group_readme_error: 'Beschreibung nicht verfügbar',
+        library_hint: 'Ihre versionierten Projekte: Klicken Sie auf ein Diagramm, um es zu öffnen, auf ein README, um es zu lesen',
+        library: {
+          read_md: 'Dieses Dokument lesen',
+          download: 'Diese Datei herunterladen',
+          versions_error: 'Versionen nicht verfügbar'
+        },
         fr: 'Diagrammvorlage auf Französisch',
         en: 'Diagrammvorlage auf Englisch',
         categories: {
@@ -190,6 +217,7 @@ export const resources_template = {
           stan: 'STAN',
           esankey: 'e!Sankey',
           sankeytheque: 'SankeyThèque',
+          library: 'Meine Projekte',
           // Kategorien der Sankey-Bibliothek (MFAData-Index)
           etudes: 'Studien',
           filieres: 'Branchen',
@@ -229,6 +257,12 @@ export const resources_template = {
         group_readme_open: 'Leggi la presentazione',
         group_readme_close: 'Nascondi la presentazione',
         group_readme_error: 'Descrizione non disponibile',
+        library_hint: 'I tuoi progetti versionati: clicca su un diagramma per aprirlo, su un README per leggerlo',
+        library: {
+          read_md: 'Leggi questo documento',
+          download: 'Scarica questo file',
+          versions_error: 'Versioni non disponibili'
+        },
         fr: 'Modello di diagramma in francese',
         en: 'Modello di diagramma in inglese',
         categories: {
@@ -240,6 +274,7 @@ export const resources_template = {
           stan: 'STAN',
           esankey: 'e!Sankey',
           sankeytheque: 'SankeyThèque',
+          library: 'I miei progetti',
           // Categorie della sankeyteca (indice MFAData)
           etudes: 'Studi',
           filieres: 'Filiere',
@@ -276,6 +311,12 @@ export const resources_template = {
         group_readme_open: '阅读介绍',
         group_readme_close: '隐藏介绍',
         group_readme_error: '描述不可用',
+        library_hint: '您的版本化项目：点击图表打开，点击 README 阅读',
+        library: {
+          read_md: '阅读此文档',
+          download: '下载此文件',
+          versions_error: '版本不可用'
+        },
         fr: '法语图表模板',
         en: '英语图表模板',
         categories: {
@@ -287,6 +328,7 @@ export const resources_template = {
           stan: 'STAN',
           esankey: 'e!Sankey',
           sankeytheque: '桑基图库',
+          library: '我的项目',
           // Catégories de la sankeythèque (index MFAData)
           etudes: '研究',
           filieres: '部门',
@@ -323,6 +365,12 @@ export const resources_template = {
         group_readme_open: '紹介を読む',
         group_readme_close: '紹介を隠す',
         group_readme_error: '説明を取得できません',
+        library_hint: 'バージョン管理されたプロジェクト：図をクリックすると開き、README をクリックすると読めます',
+        library: {
+          read_md: 'このドキュメントを読む',
+          download: 'このファイルをダウンロード',
+          versions_error: 'バージョンを取得できません'
+        },
         fr: 'フランス語の図テンプレート',
         en: '英語の図テンプレート',
         categories: {
@@ -334,6 +382,7 @@ export const resources_template = {
           stan: 'STAN',
           esankey: 'e!Sankey',
           sankeytheque: 'サンキーライブラリ',
+          library: 'マイプロジェクト',
           // Catégories de la sankeythèque (index MFAData)
           etudes: '研究事例',
           filieres: '部門',

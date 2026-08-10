@@ -2366,6 +2366,23 @@ export class Class_NodeElement extends Class_NodeBase {
   }
 
   /**
+   * os#671 / os#1347 — contrainte des smart guides pour un NŒUD DE DONNÉES :
+   * un axe dont la position est re-dérivée par la mise en page au drop ne doit
+   * pas snapper (l'alignement serait mensonger, défait au dessin suivant).
+   * - Mise en page paramétrique globale : x est re-quantifié en colonnes
+   *   (inferPositionUFromX → computeParametrization) — x non snappable ; un
+   *   nœud u-verrouillé voit même son x déposé ignoré. Le y déposé, lui, est
+   *   reproduit (backCalculateShapePositionDyFromY) — y reste snappable.
+   * - Nœud en position RELATIVE : son x est défini par rapport à sa source
+   *   (shape_position_dx re-calculé au drop) — x non snappable.
+   */
+  public getFreeDragSnapAxes(): { x: boolean, y: boolean } {
+    const parametric_layout = this.sankey.default_style.shape_position_type === 'parametric'
+    const relative_node = this.shape_position_type === 'relative'
+    return { x: !parametric_layout && !relative_node, y: true }
+  }
+
+  /**
    * #368 — Vrai si ce nœud est un CADRE ENGLOBANT ayant au moins un membre visible.
    * Un tel cadre doit être dessiné quels que soient SES PROPRES flux : il n'est pas
    * un nœud à part entière mais l'enveloppe de ses enfants (cf. #364, la décision
