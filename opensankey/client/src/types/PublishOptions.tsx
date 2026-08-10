@@ -14,6 +14,37 @@
 // setScaleAdaptedMode et styles_dict['default'].shape_position_type).
 export type Type_PositionMode = 'absolute' | 'proportional' | 'scale_adapted'
 
+/**
+ * sa#398 — Une entrée de `diagrams_list` : la CHAÎNE historique (nom de fichier servi en
+ * `<valeur>.gz`, ou nom de variable posée sur window.sankey par un script de données), OU un
+ * objet portant sa PROPRE sélection de vues. `view` / `view_label` ont exactement les
+ * sémantiques des options de page sa#397 (ouvrir une vue / restreindre le sélecteur aux vues
+ * portant ce LABEL DE VUE — cf. sa#396, rien à voir avec les view tags générateurs), mais
+ * appliquées au moment où CE diagramme est affiché. Rétro-compatible : la chaîne reste
+ * valide ; un objet sans `file` est ignoré (warn).
+ */
+export type Type_DiagramsListEntry = string | {
+  file: string         // fichier servi (`<file>.gz`) ou nom de variable window.sankey
+  view?: string        // vue ouverte à l'affichage de ce diagramme (id OU nom)
+  view_label?: string  // restreint le sélecteur aux vues portant ce label de vue
+}
+
+/** sa#398 — Sélection de vues effective d'une entrée de `diagrams_list` (entrée ?? page). */
+export type Type_DiagramViewOptions = { view: string | null, view_label: string | null }
+
+/**
+ * sa#398 — Le fichier/nom de variable d'une entrée de `diagrams_list`, quelle que soit sa
+ * forme (chaîne historique ou objet `{file, ...}`). null si l'entrée est invalide.
+ */
+export const diagramsListEntryFile = (entry: unknown): string | null => {
+  if (typeof entry === 'string') return entry
+  if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
+    const file = (entry as { file?: unknown }).file
+    if (typeof file === 'string') return file
+  }
+  return null
+}
+
 export interface SankeyGlobals {
   // Mode
   publish?: boolean      // true => is_static
@@ -51,7 +82,9 @@ export interface SankeyGlobals {
   diagram?: string | Record<string, unknown> // URL d'un JSON à charger, OU objet JSON inline
   diagram_layout?: string                    // URL d'un layout à surimprimer
   diagram_layout_options?: string[]
-  diagrams_list?: Record<string, string>    // dropdown multi-diagrammes (clés "a/b" pour groupage)
+  // Dropdown multi-diagrammes (clés "a/b" pour groupage). sa#398 : chaque valeur peut être
+  // un objet `{file, view?, view_label?}` — sélection de vues PAR diagramme.
+  diagrams_list?: Record<string, Type_DiagramsListEntry>
   /** @deprecated utiliser `diagrams_list` */
   sous_filieres?: Record<string, string>
   /**
@@ -142,7 +175,13 @@ export interface PublishOptions {
   diagram: string | Record<string, unknown> | null
   diagram_layout: string | null
   diagram_layout_options: string[] | null
+  // Toujours NORMALISÉE en {libellé: fichier} : les entrées objet d'sa#398 sont réduites à
+  // leur `file`, les consommateurs historiques (setDiagram, historicDiagram) restent inchangés.
   diagrams_list: Record<string, string> | null
+  // sa#398 — sélection de vues PAR diagramme : options effectives (entrée ?? page) pour CHAQUE
+  // libellé de diagrams_list. null quand aucune entrée ne porte de sélection propre
+  // (comportement historique strictement inchangé, y compris à la bascule de diagramme).
+  diagrams_views: Record<string, Type_DiagramViewOptions> | null
 }
 
 declare global {
@@ -180,6 +219,7 @@ const strRecord = (v: unknown): Record<string, string> | null => {
 }
 
 let _warned_sous_filieres = false
+let _warned_invalid_diagram_entry = false
 
 // Langue effective côté page publiée : ?lang= > window.sankey.language > préférence
 // mémorisée (i18nextLng) > navigateur. Utilisée pour résoudre header_i18n.
@@ -201,15 +241,67 @@ const _effectiveLang = (): string | null => {
 export const getPublishOptions = (): PublishOptions => {
   const s = window.sankey ?? {}
   // Alias rétrocompat : sous_filieres → diagrams_list
-  let diagrams_list_value: Record<string, string> | null = null
+  let raw_diagrams: Record<string, unknown> | null = null
   if (s.diagrams_list && typeof s.diagrams_list === 'object') {
-    diagrams_list_value = s.diagrams_list as Record<string, string>
+    raw_diagrams = s.diagrams_list as Record<string, unknown>
   } else if (s.sous_filieres && typeof s.sous_filieres === 'object') {
-    diagrams_list_value = s.sous_filieres as Record<string, string>
+    raw_diagrams = s.sous_filieres as Record<string, unknown>
     if (!_warned_sous_filieres) {
       _warned_sous_filieres = true
       // eslint-disable-next-line no-console
       console.warn('[OpenSankey] `window.sankey.sous_filieres` est déprécié, utiliser `diagrams_list`.')
+    }
+  }
+
+  // sa#397 — options de page (repli des sélections par diagramme d'sa#398).
+  const page_view = str(s.view)
+  const page_view_label = str(s.view_label)
+
+  // sa#398 — normalisation de diagrams_list : chaque entrée peut être la chaîne historique ou
+  // un objet {file, view?, view_label?}. On en tire (1) la liste {libellé: fichier} qu'attendent
+  // tous les consommateurs existants, et (2) la sélection de vues effective par libellé
+  // (entrée ?? page) — construite SEULEMENT si au moins une entrée porte la sienne, pour que
+  // les pages du parc gardent un comportement strictement identique.
+  let diagrams_list_value: Record<string, string> | null = null
+  let diagrams_views_value: Record<string, Type_DiagramViewOptions> | null = null
+  if (raw_diagrams) {
+    const files: Record<string, string> = {}
+    const views: Record<string, Type_DiagramViewOptions> = {}
+    let has_entry_views = false
+    for (const [label, entry] of Object.entries(raw_diagrams)) {
+      const file = diagramsListEntryFile(entry)
+      if (file === null) {
+        // Entrée invalide (objet sans `file`) : ignorée, doctrine additive et tolérante.
+        if (!_warned_invalid_diagram_entry) {
+          _warned_invalid_diagram_entry = true
+          // eslint-disable-next-line no-console
+          console.warn(`[OpenSankey] diagrams_list : entrée « ${label} » invalide (objet sans \`file\`), ignorée.`)
+        }
+        continue
+      }
+      files[label] = file
+      const entry_view = (typeof entry === 'object') ? str((entry as { view?: unknown }).view) : null
+      const entry_view_label = (typeof entry === 'object') ? str((entry as { view_label?: unknown }).view_label) : null
+      if (entry_view !== null || entry_view_label !== null) has_entry_views = true
+      views[label] = {
+        view: entry_view ?? page_view,
+        view_label: entry_view_label ?? page_view_label,
+      }
+    }
+    diagrams_list_value = Object.keys(files).length > 0 ? files : null
+    diagrams_views_value = has_entry_views ? views : null
+  }
+
+  // sa#398 — le diagramme affiché à l'ouverture est la PREMIÈRE entrée du sélecteur : quand
+  // les entrées portent leur propre sélection de vues, c'est celle de la première qui fait
+  // l'état initial (l'entrée prime sur la page, le repli reste la page).
+  let view_value = page_view
+  let view_label_value = page_view_label
+  if (diagrams_views_value && diagrams_list_value) {
+    const first_views = diagrams_views_value[Object.keys(diagrams_list_value)[0]]
+    if (first_views) {
+      view_value = first_views.view
+      view_label_value = first_views.view_label
     }
   }
   // Désignation HISTORIQUE du diagramme courant (22 pages du parc, cf. sa#350).
@@ -273,8 +365,8 @@ export const getPublishOptions = (): PublishOptions => {
     position_mode: posMode(s.position_mode),
     data_tag_selection: strRecord(s.data_tag_selection),
     view_tag_selection: strRecord(s.view_tag_selection),
-    view: str(s.view),
-    view_label: str(s.view_label),
+    view: view_value,
+    view_label: view_label_value,
     export_json: bool(s.export_json, false),
     logo: str(s.logo),
     header: header_value,
@@ -288,6 +380,7 @@ export const getPublishOptions = (): PublishOptions => {
       ? (s.diagram_layout_options as string[])
       : null,
     diagrams_list: diagrams_list_value,
+    diagrams_views: diagrams_views_value,
   }
 }
 
@@ -317,7 +410,8 @@ export type ViewerSankeyOptions = {
   diagram?: string | Record<string, unknown>
   diagram_layout?: string
   diagram_layout_options?: string[]
-  diagrams_list?: Record<string, string>
+  // sa#398 : chaque valeur peut être un objet {file, view?, view_label?} (vues PAR diagramme)
+  diagrams_list?: Record<string, Type_DiagramsListEntry>
   /** @deprecated utiliser `diagrams_list` */
   sous_filieres?: Record<string, string>
   data_type?: boolean
