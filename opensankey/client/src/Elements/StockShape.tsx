@@ -15,7 +15,9 @@ import { Class_NodeBase } from './NodeBase'
 import { NodeDrawValueLabel } from './DrawLabel'
 import { NodeStyle } from './ElementStyle'
 import { format_value } from '../types/Utils'
-import { openPresentationFor } from '../components/panels/presentation/openPresentation'
+import {
+  openPresentationFor, opensPresentationOnClick
+} from '../components/panels/presentation/openPresentation'
 // Type-only import: avoids a runtime import cycle with Node.tsx (which imports
 // this module to instantiate the stock shape).
 import type { Class_NodeElement } from './Node'
@@ -146,15 +148,17 @@ export class Class_StockShape extends Class_NodeBase {
     event.stopPropagation()
     const mc = da.application_data.menu_configuration
     da.selectOnly(this)
-    // Clic nu : ouvre la PRÉSENTATION, comme pour tout élément du dessin — le
-    // panneau de configuration ne s'ouvre plus qu'à la demande. La sélection,
-    // elle, reste posée : c'est d'elle que ce panneau tire sa cible s'il est
-    // ouvert (d'où `tab_selected` conservé ci-dessous).
-    openPresentationFor(
-      da.application_data,
-      this as unknown as Parameters<typeof openPresentationFor>[1],
-      { x: event.clientX, y: event.clientY }
-    )
+    // Clic nu : ouvre la PRÉSENTATION en LECTURE seulement (cf.
+    // opensPresentationOnClick) — en édition, le clic sert à sélectionner. La
+    // sélection reste posée : c'est d'elle que le panneau de configuration tire
+    // sa cible s'il est ouvert (d'où `tab_selected` conservé ci-dessous).
+    if (opensPresentationOnClick(da.application_data)) {
+      openPresentationFor(
+        da.application_data,
+        this as unknown as Parameters<typeof openPresentationFor>[1],
+        { x: event.clientX, y: event.clientY }
+      )
+    }
     mc.tab_selected = 'shape'
     mc.ref_to_menu_config_updater.current()
     mc.updateAllComponentsRelatedToNodes()

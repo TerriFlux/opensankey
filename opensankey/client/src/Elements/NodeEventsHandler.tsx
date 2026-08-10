@@ -34,7 +34,8 @@ import { Class_NodeElement } from './Node'
 // d'Elements au runtime (types seulement) : pas de nouveau cycle possible.
 import { Class_SmartGuides } from './SmartGuides'
 import {
-  openPresentationFor, canPresentTooltip, matchesPresentationTrigger,
+  openPresentationFor, opensPresentationOnClick, canPresentTooltip,
+  matchesPresentationTrigger,
   schedulePresentationHover, schedulePresentationHoverClose
 } from '../components/panels/presentation/openPresentation'
 
@@ -215,6 +216,8 @@ export class NodeEventsHandler {
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     const app_data = this._node.drawing_area.application_data
+    // En ÉDITION, le clic n'ouvre plus rien : cf. opensPresentationOnClick.
+    if (!opensPresentationOnClick(app_data)) return
     const rect = (event.target as HTMLElement)?.getBoundingClientRect?.()
     openPresentationFor(
       app_data,
