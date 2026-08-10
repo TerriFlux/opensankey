@@ -2084,6 +2084,8 @@ export class DrawingAreaPersistence {
     if (drawing_area.data_source !== 'reconciled') json_object['data_source'] = drawing_area.data_source
     if (drawing_area.interval_display !== 'free_value') json_object['interval_display'] = drawing_area.interval_display
     if (drawing_area.magnetic_nodes) json_object['magnetic_nodes'] = drawing_area.magnetic_nodes
+    // os#671 — smart guides : actifs par défaut, on ne persiste que la désactivation.
+    if (!drawing_area.smart_guides) json_object['smart_guides'] = false
 
     // Paper format
     if (drawing_area.paper_format !== default_paper_format) json_object['paper_format'] = drawing_area.paper_format
@@ -2504,6 +2506,8 @@ export class DrawingAreaPersistence {
     }
     drawing_area['_width'] = getNumberFromJSON(json_object, 'width', drawing_area.width)
     drawing_area['_magnetic_nodes'] = getBooleanFromJSON(json_object, 'magnetic_nodes', drawing_area.magnetic_nodes)
+    // os#671 — smart guides (défaut true : absent du JSON = actif).
+    drawing_area['_smart_guides'] = getBooleanFromJSON(json_object, 'smart_guides', drawing_area.smart_guides)
 
     // Paper format
     drawing_area['_paper_format'] = getStringFromJSON(json_object, 'paper_format', default_paper_format) as Type_PaperFormat

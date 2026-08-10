@@ -30,6 +30,9 @@ import { Class_NodeBase } from './NodeBase'
 import { Class_LinkElement } from './Link'
 import { Class_ProtoElement } from './Element'
 import { Class_NodeElement } from './Node'
+// os#671 — smart guides d'alignement au drag. SmartGuides n'importe AUCUN module
+// d'Elements au runtime (types seulement) : pas de nouveau cycle possible.
+import { Class_SmartGuides } from './SmartGuides'
 import {
   openPresentationFor, canPresentTooltip, matchesPresentationTrigger,
   schedulePresentationHover, schedulePresentationHoverClose
@@ -55,6 +58,10 @@ export class NodeEventsHandler {
   private _alt_clone_active: boolean = false
   // Positions de naissance des copies (= positions des originaux), pour l'undo du dépôt.
   private _alt_clone_start_pos: Map<Class_NodeBase, [number, number]> = new Map()
+
+  // os#671 — contrôleur des smart guides pour le drag EN COURS (null hors drag,
+  // ou quand la fonctionnalité est désactivée / que la grille magnétique prime).
+  private _smart_guides: Class_SmartGuides | null = null
 
   constructor(node: Class_NodeBase) {
     this._node = node
@@ -370,6 +377,18 @@ export class NodeEventsHandler {
     this._node.setDragStartPositions(dict_old_pos)
     this._node.setDragStartSizes(dict_old_sizes)
     this._node.setDragState(true)
+
+    // os#671 — smart guides : un contrôleur par session de drag. L'index des
+    // bords candidats est construit paresseusement au 1er mouvement (d3 émet
+    // start même sur un simple clic). Exclusions = tout ce que le drag emporte
+    // (sélection + descendances de cadres liés), soit les clés de dict_old_pos.
+    // La grille magnétique PRIME quand elle est active (un seul magnétisme à la
+    // fois) ; Alt pendant le drag débraye le snap ponctuellement.
+    this._smart_guides?.clear()
+    this._smart_guides = null
+    if (da.smart_guides && !da.magnetic_nodes && da.isInSelectionMode() && da.application_data.is_editable) {
+      this._smart_guides = new Class_SmartGuides(da, new Set(Object.keys(dict_old_pos)), seed_nodes)
+    }
   }
 
   /**
@@ -447,10 +466,7 @@ export class NodeEventsHandler {
         if (drawing_area.magnetic_nodes)
           this.moveMagneticNode(event, nodes_selected)
         else
-          nodes_selected
-            .forEach(n => {
-              n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
-            })
+          this.moveWithSmartGuides(event, nodes_selected)
       }
     }
     else {
@@ -464,15 +480,80 @@ export class NodeEventsHandler {
         if (drawing_area.magnetic_nodes)
           this.moveMagneticNode(event, [this._node])
         else
-          this._node.setPosXY(this._node.position_x + event.dx, this._node.position_y + event.dy)
+          this.moveWithSmartGuides(event, [this._node])
       }
     }
+  }
+
+  /**
+   * os#671 — déplacement avec smart guides : positions dérivées de la position
+   * de DÉPART + delta cumulé (position brute, insensible aux corrections déjà
+   * appliquées — le snap reste « doux » et s'échappe en continuant le geste),
+   * puis correction d'alignement fournie par le contrôleur de guides. Alt
+   * enfoncé débraye le magnétisme (les guides quasi exacts restent affichés).
+   * Sans contrôleur (option désactivée), déplacement continu historique.
+   */
+  private moveWithSmartGuides(
+    event: d3.D3DragEvent<SVGGElement, unknown, unknown>,
+    nodes_to_move: Class_NodeBase[]
+  ) {
+    if (this._smart_guides === null) {
+      nodes_to_move.forEach(n => n.setPosXY(n.position_x + event.dx, n.position_y + event.dy))
+      return
+    }
+
+    // Delta cumulé (brut) depuis le début du drag — même mécanique que
+    // moveMagneticNode (un seul des deux magnétismes est actif par drag).
+    this._node.updateNodeCurrentDelta(event.dx, event.dy)
+    const { dx: total_dx, dy: total_dy } = this._node.getNodeCurrentDeltas()
+    const start_positions = this._node.getDragStartPositions()
+
+    // Boîte englobante BRUTE de la sélection déplacée (géométrie résultante).
+    let min_x = Infinity
+    let min_y = Infinity
+    let max_x = -Infinity
+    let max_y = -Infinity
+    nodes_to_move.forEach(n => {
+      const s = start_positions[n.id]
+      if (!s) return
+      min_x = Math.min(min_x, s[0] + total_dx)
+      min_y = Math.min(min_y, s[1] + total_dy)
+      max_x = Math.max(max_x, s[0] + total_dx + n.getShapeWidthToUse())
+      max_y = Math.max(max_y, s[1] + total_dy + n.getShapeHeightToUse())
+    })
+    if (!isFinite(min_x) || !isFinite(min_y)) {
+      nodes_to_move.forEach(n => n.setPosXY(n.position_x + event.dx, n.position_y + event.dy))
+      return
+    }
+
+    const snap_enabled = !(event.sourceEvent as MouseEvent | undefined)?.altKey
+    const { dx: snap_dx, dy: snap_dy } = this._smart_guides.update(
+      { x: min_x, y: min_y, w: max_x - min_x, h: max_y - min_y },
+      snap_enabled
+    )
+
+    nodes_to_move.forEach(n => {
+      const s = start_positions[n.id]
+      if (!s) {
+        n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
+        return
+      }
+      const new_x = s[0] + total_dx + snap_dx
+      const new_y = s[1] + total_dy + snap_dy
+      if (new_x !== n.position_x || new_y !== n.position_y) n.setPosXY(new_x, new_y)
+    })
   }
 
   /**
    * Define event when mouse drag element ends
    */
   public handleMouseDragEnd(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+    // os#671 — les guides d'alignement sont un artefact du GESTE : retirés de la
+    // couche de rendu dès la fin du drag, quoi qu'il se passe ensuite (y compris
+    // l'early-return « simple clic » ci-dessous).
+    this._smart_guides?.clear()
+    this._smart_guides = null
+
     // Reset current tracked node shift
     this._node.resetNodeCurrentDelta()
 
