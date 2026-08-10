@@ -427,6 +427,9 @@ export class Class_ApplicationData {
 
   /** Id de la feuille courante ('' tant que le document n'a pas de feuilles). */
   protected _current_sheet_id: string = ''
+  // Vrai pendant qu'un contenu de feuille se charge via fromJSON (cf. _loadSheetContent) :
+  // coupe la redirection « fichier sans feuilles -> feuille courante » de fromJSON.
+  protected _loading_into_sheet: boolean = false
   public get current_sheet_id() { return this._current_sheet_id }
 
   /** True dès que le document porte des feuilles nommées (au moins une entrée). */
@@ -980,6 +983,17 @@ export class Class_ApplicationData {
     kwargs?: Type_JSON,
     draw: boolean = true
   ) {
+    // OS#85 — Charger un fichier SANS feuilles alors que le document en a = charger
+    // DANS la feuille courante : les autres feuilles restent (sémantique draw.io/Excel,
+    // demandée par Julien le 10/08 — « le chargement devrait être associé à la feuille »).
+    // Un fichier AVEC feuilles reste un DOCUMENT complet : il remplace tout, feuilles
+    // comprises. La garde `_loading_into_sheet` coupe la récursion : _loadSheetContent
+    // repasse par fromJSON pour poser le contenu, et lui seul doit faire le vrai reset.
+    if (this.has_sheets && !this._loading_into_sheet && !json_object['sheets']) {
+      this._loadSheetContent(json_object, draw)
+      this.menu_configuration?.ref_to_sheet_tabs_updater.current()
+      return
+    }
     // this.sendWaitingToast(
     //   () => {
     // Always bypass redrawings
@@ -1183,7 +1197,12 @@ export class Class_ApplicationData {
     const sheets = this._sheets
     const order = this._sheets_order
     const current = this._current_sheet_id
-    this.fromJSON(json_object, undefined, draw)
+    this._loading_into_sheet = true
+    try {
+      this.fromJSON(json_object, undefined, draw)
+    } finally {
+      this._loading_into_sheet = false
+    }
     this._sheets = sheets
     this._sheets_order = order
     this._current_sheet_id = current
