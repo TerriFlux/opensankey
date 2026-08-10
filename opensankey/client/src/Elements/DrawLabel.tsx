@@ -2969,20 +2969,44 @@ export class LinkDrawValueLabel extends LinkDrawLabelBase {
     return this.link.name_label_drawer
   }
 
+  /**
+   * Vrai dès qu'une frappe a réellement changé la valeur du flux pendant la session
+   * d'édition en cours. Sert à ne déclencher les effets de bord de fin d'édition
+   * (échelle, menus) que sur une vraie saisie : ouvrir puis refermer l'éditeur sans
+   * rien changer ne doit RIEN recalculer (une échelle réglée à la main resterait
+   * sinon écrasée par le simple fait de double-cliquer sur une valeur).
+   */
+  private _value_edited = false
+
   protected override onInputChange(value: string): void {
+    const before = this.link.valueCurrent
     const trimmed = value.trim()
     if (trimmed === '') {
       this.link.valueCurrent = null
-      return
-    }
-    const parsed = Number(trimmed.replace(',', '.'))
-    if (!Number.isNaN(parsed)) {
+    } else {
+      const parsed = Number(trimmed.replace(',', '.'))
+      if (Number.isNaN(parsed)) return
       this.link.valueCurrent = parsed
     }
+    if (this.link.valueCurrent !== before) this._value_edited = true
   }
 
   public override setInputLabelInvisible() {
     super.setInputLabelInvisible()
+    if (this._value_edited) {
+      this._value_edited = false
+      // Même règle que l'édition de la valeur par le menu (MenuContextLinksData) :
+      // l'échelle du diagramme suit la saisie tant qu'UN SEUL flux porte une valeur
+      // (l'échelle EST alors cette valeur). Sans cela, la saisie inline semble sans
+      // effet : avec l'échelle par défaut (50 = 100 px), un flux unique saisi à 1
+      // reste un trait de 2 px et un flux saisi à 10 000 déborde de l'écran. Appelé
+      // ICI et pas dans onInputChange : la frappe tourne sous bypass_redraws, donc
+      // le setter `scale` (drawElements + areaAutoFit) n'y aurait rien redessiné.
+      this._element.drawing_area.updateScaleAtLinkValueSetting()
+      // Le champ « valeur » du menu contextuel / de l'inspecteur doit refléter la saisie.
+      this._element.drawing_area.application_data
+        .menu_configuration.updateComponentRelatedToLinksData()
+    }
     // Typing was wrapped in bypass_redraws, so source/target thickness and
     // positions weren't updated. Redraw them now that editing is done.
     this.link.drawWithNodes()
