@@ -1,6 +1,20 @@
 export const resources_app_elements = {
   en: {
     translation: {
+      // OS#85 — document sheets (independent diagrams, tabs at the bottom of the canvas).
+      sheets: {
+        sheet: 'Sheet',
+        tab_menu: 'Sheet menu',
+        new_sheet: 'New sheet — independent',
+        new_sheet_tooltip: 'New sheet: another diagram, independent, in the same document. For another reading that follows the data, create a view instead.',
+        duplicate_as_sheet: 'Duplicate as new sheet — independent',
+        rename: 'Rename sheet',
+        delete: 'Delete sheet',
+        delete_confirm: 'Delete this sheet? Its diagram will be lost.',
+        copy_prefix: 'Copy of ',
+        all_sheets: 'All sheets',
+        toggle_bar: 'Show / hide the sheet bar',
+      },
       Menu: {
         position: 'Position',
         content: 'Content',
@@ -150,6 +164,13 @@ export const resources_app_elements = {
         open_excel: 'Excel',
         import_image: 'Image',
         save_sankeytheque: 'Sankey library (dev)',
+        // sa#399 — depot d'une version de brique dans la bibliotheque du compte
+        save_in_library: 'To my library',
+        // sa#413 — bouton Partager / Mettre à jour de la barre du haut
+        share: 'Share',
+        share_tooltip: 'Publish this diagram online or download it as a standalone site',
+        update_publication: 'Update',
+        update_publication_tooltip: 'Save back to the source repository and update the online page',
         open_sankeymatic: 'SankeyMATIC',
         open_stan: 'STAN',
         open_esankey: 'e!Sankey',
@@ -369,6 +390,7 @@ export const resources_app_elements = {
         TCG: 'Grid',
         TCG_shift: 'Shift',
         MN: 'Nodes magnetic to grid',
+        SG: 'Alignment guides while dragging',
         childGapMode: 'Children vertical spacing',
         childGapFill: 'Fill parent slot (default)',
         childGapKeep: 'Keep children positions',
@@ -419,6 +441,7 @@ export const resources_app_elements = {
           ArrowSpikeBaseFactor: 'How much wider and longer the accentuated spike is, relative to the flow thickness (1 = no accentuation, 2 = twice as wide/long).',
           TCG: 'Size of the background grid tiles (in pixels)',
           MN: 'Dragged nodes move by "step" instead of continuously following the mouse',
+          SG: 'While dragging, show alignment guides with distances when edges or centers line up with neighbors, with a soft snap (hold Alt to disable snapping)',
           childGapMode: 'How children are spaced vertically when disaggregating, expanding or enclosing a node',
           childGapValue: 'Constant vertical gap (px) between children in "Constant spacing" mode (default: the default style spacing)',
           SLIP: 'Enable/Disable the presence of the legend when palette of color from elements tags are displayed',
@@ -673,6 +696,20 @@ export const resources_app_elements = {
   //=======================================================
   fr: {
     translation: {
+      // OS#85 — feuilles du document (diagrammes indépendants, onglets en bas du canvas).
+      sheets: {
+        sheet: 'Feuille',
+        tab_menu: 'Menu de la feuille',
+        new_sheet: 'Nouvelle feuille — indépendante',
+        new_sheet_tooltip: 'Nouvelle feuille : un autre diagramme, indépendant, dans le même document. Pour une autre lecture qui suit les données, créez plutôt une vue.',
+        duplicate_as_sheet: 'Dupliquer comme nouvelle feuille — indépendante',
+        rename: 'Renommer la feuille',
+        delete: 'Supprimer la feuille',
+        delete_confirm: 'Supprimer cette feuille ? Son diagramme sera perdu.',
+        copy_prefix: 'Copie de ',
+        all_sheets: 'Toutes les feuilles',
+        toggle_bar: 'Afficher / masquer la barre des feuilles',
+      },
       Menu: {
         position: 'Position',
         content: 'Contenu',
@@ -837,6 +874,13 @@ export const resources_app_elements = {
         open_excel: 'Excel',
         import_image: 'Image',
         save_sankeytheque: 'Sankeythèque (dev)',
+        // sa#399 — dépôt d'une version de brique dans la bibliothèque du compte
+        save_in_library: 'Dans ma bibliothèque',
+        // sa#413 — bouton Partager / Mettre à jour de la barre du haut
+        share: 'Partager',
+        share_tooltip: 'Publier ce diagramme en ligne ou le télécharger en site autonome',
+        update_publication: 'Mettre à jour',
+        update_publication_tooltip: 'Réenregistrer dans le dépôt source et mettre à jour la page en ligne',
         format_converter: 'Convertisseur de format',
         open_sankeymatic: 'SankeyMATIC',
         open_stan: 'STAN',
@@ -1054,6 +1098,7 @@ export const resources_app_elements = {
         TCG: 'Quadrillage',
         TCG_shift: 'Espacement',
         MN: 'Noeuds aimantés à la grille',
+        SG: 'Guides d\'alignement au déplacement',
         childGapMode: 'Écart vertical des enfants',
         childGapFill: 'Remplir le slot du parent (défaut)',
         childGapKeep: 'Garder les positions des enfants',
@@ -1106,6 +1151,7 @@ export const resources_app_elements = {
           ArrowSpikeBaseFactor: 'À quel point la pointe accentuée est plus large et plus longue, relativement à l\'épaisseur du flux (1 = pas d\'accentuation, 2 = deux fois plus large/longue).',
           TCG: 'Taille des carreaux de la grille de fond (en pixel)',
           MN: 'Les noeuds déplacés bougent par "marche" au lieux de suivre continuellement la souris',
+          SG: 'Pendant un déplacement, affiche des guides d\'alignement avec les distances quand les bords ou centres s\'alignent avec les voisins, avec un léger magnétisme (maintenir Alt pour le débrayer)',
           childGapMode: 'Comment les enfants sont espacés verticalement lors de la désagrégation, l\'expansion ou l\'englobement d\'un nœud',
           childGapValue: 'Écart vertical constant (px) entre enfants en mode « Écart constant » (défaut : l\'écart du style par défaut)',
           SLIP: 'Active/désactive l\'affichage de la légende quand les palettes de couleurs des étiquettes sont affichées',
@@ -1355,6 +1401,20 @@ export const resources_app_elements = {
   //=======================================================
   es: {
     translation: {
+      // OS#85 — hojas del documento (diagramas independientes, pestañas abajo del lienzo).
+      sheets: {
+        sheet: 'Hoja',
+        tab_menu: 'Menú de la hoja',
+        new_sheet: 'Nueva hoja — independiente',
+        new_sheet_tooltip: 'Nueva hoja: otro diagrama, independiente, en el mismo documento. Para otra lectura que siga los datos, cree mejor una vista.',
+        duplicate_as_sheet: 'Duplicar como nueva hoja — independiente',
+        rename: 'Renombrar la hoja',
+        delete: 'Eliminar la hoja',
+        delete_confirm: '¿Eliminar esta hoja? Su diagrama se perderá.',
+        copy_prefix: 'Copia de ',
+        all_sheets: 'Todas las hojas',
+        toggle_bar: 'Mostrar / ocultar la barra de hojas',
+      },
       Menu: {
         position: 'Posición',
         content: 'Contenido',
@@ -1514,6 +1574,13 @@ export const resources_app_elements = {
         open_excel: 'Excel',
         import_image: 'Imagen',
         save_sankeytheque: 'Biblioteca Sankey (dev)',
+        // sa#399 — deposito de una version de ladrillo en la biblioteca de la cuenta
+        save_in_library: 'En mi biblioteca',
+        // sa#413 — bouton Partager / Mettre à jour de la barre du haut
+        share: 'Compartir',
+        share_tooltip: 'Publicar este diagrama en línea o descargarlo como sitio autónomo',
+        update_publication: 'Actualizar',
+        update_publication_tooltip: 'Guardar en el repositorio fuente y actualizar la página en línea',
         format_converter: 'Conversor de formato',
         open_sankeymatic: 'SankeyMATIC',
         open_stan: 'STAN',
@@ -1716,6 +1783,7 @@ export const resources_app_elements = {
         TCG: 'Cuadrícula',
         TCG_shift: 'Espaciado',
         MN: 'Nodos imantados a la cuadrícula',
+        SG: 'Guías de alineación al desplazar',
         childGapMode: 'Espaciado vertical de los hijos',
         childGapFill: 'Rellenar el espacio del padre (predeterminado)',
         childGapKeep: 'Mantener las posiciones de los hijos',
@@ -1767,6 +1835,7 @@ export const resources_app_elements = {
           ArrowSpikeBaseFactor: 'Cuánto más ancha y larga es la punta acentuada, en relación con el grosor del flujo (1 = sin acentuación, 2 = el doble de ancha/larga).',
           TCG: 'Tamaño de las celdas de la cuadrícula de fondo (en píxeles)',
           MN: 'Los nodos desplazados se mueven por "pasos" en lugar de seguir continuamente el ratón',
+          SG: 'Al desplazar, muestra guías de alineación con las distancias cuando los bordes o centros se alinean con los vecinos, con un ligero imán (mantener Alt para desactivarlo)',
           childGapMode: 'Cómo se espacian verticalmente los hijos al desagregar, expandir o englobar un nodo',
           childGapValue: 'Espacio vertical constante (px) entre hijos en modo « Espaciado constante » (predeterminado: el espaciado del estilo predeterminado)',
           SLIP: 'Activar/desactivar la visualización de la leyenda cuando se muestran las paletas de colores de etiquetas',
@@ -2015,6 +2084,20 @@ export const resources_app_elements = {
   //=======================================================
   de: {
     translation: {
+      // OS#85 — Blätter des Dokuments (unabhängige Diagramme, Tabs unten am Canvas).
+      sheets: {
+        sheet: 'Blatt',
+        tab_menu: 'Blattmenü',
+        new_sheet: 'Neues Blatt — unabhängig',
+        new_sheet_tooltip: 'Neues Blatt: ein anderes, unabhängiges Diagramm im selben Dokument. Für eine andere Lesart, die den Daten folgt, legen Sie stattdessen eine Ansicht an.',
+        duplicate_as_sheet: 'Als neues Blatt duplizieren — unabhängig',
+        rename: 'Blatt umbenennen',
+        delete: 'Blatt löschen',
+        delete_confirm: 'Dieses Blatt löschen? Sein Diagramm geht verloren.',
+        copy_prefix: 'Kopie von ',
+        all_sheets: 'Alle Blätter',
+        toggle_bar: 'Blattleiste ein-/ausblenden',
+      },
       Menu: {
         position: 'Position',
         content: 'Inhalt',
@@ -2174,6 +2257,13 @@ export const resources_app_elements = {
         open_excel: 'Excel',
         import_image: 'Bild',
         save_sankeytheque: 'Sankey-Bibliothek (dev)',
+        // sa#399 — Ablage einer Bausteinversion in der Bibliothek des Kontos
+        save_in_library: 'In meine Bibliothek',
+        // sa#413 — bouton Partager / Mettre à jour de la barre du haut
+        share: 'Teilen',
+        share_tooltip: 'Dieses Diagramm online veröffentlichen oder als eigenständige Website herunterladen',
+        update_publication: 'Aktualisieren',
+        update_publication_tooltip: 'Im Quell-Repository speichern und die Online-Seite aktualisieren',
         format_converter: 'Formatkonverter',
         open_sankeymatic: 'SankeyMATIC',
         open_stan: 'STAN',
@@ -2376,6 +2466,7 @@ export const resources_app_elements = {
         TCG: 'Raster',
         TCG_shift: 'Abstand',
         MN: 'Knoten am Raster ausrichten',
+        SG: 'Ausrichtungshilfslinien beim Verschieben',
         childGapMode: 'Vertikaler Abstand der Kinder',
         childGapFill: 'Eltern-Slot ausfüllen (Standard)',
         childGapKeep: 'Positionen der Kinder beibehalten',
@@ -2427,6 +2518,7 @@ export const resources_app_elements = {
           ArrowSpikeBaseFactor: 'Wie viel breiter und länger die betonte Spitze im Verhältnis zur Flussstärke ist (1 = keine Betonung, 2 = doppelt so breit/lang).',
           TCG: 'Größe der Hintergrundrasterfelder (in Pixeln)',
           MN: 'Verschobene Knoten bewegen sich in "Schritten" statt dem Mauszeiger kontinuierlich zu folgen',
+          SG: 'Beim Verschieben werden Hilfslinien mit Abständen angezeigt, wenn Kanten oder Mittelpunkte mit Nachbarn fluchten, mit sanftem Einrasten (Alt gedrückt halten zum Deaktivieren)',
           childGapMode: 'Wie Kinder beim Disaggregieren, Expandieren oder Umschließen eines Knotens vertikal angeordnet werden',
           childGapValue: 'Konstanter vertikaler Abstand (px) zwischen Kindern im Modus „Konstanter Abstand" (Standard: der Abstand des Standardstils)',
           SLIP: 'Legendenanzeige aktivieren/deaktivieren, wenn Beschriftungs-Farbpaletten angezeigt werden',
@@ -2675,6 +2767,20 @@ export const resources_app_elements = {
   //=======================================================
   it: {
     translation: {
+      // OS#85 — fogli del documento (diagrammi indipendenti, schede in basso del canvas).
+      sheets: {
+        sheet: 'Foglio',
+        tab_menu: 'Menu del foglio',
+        new_sheet: 'Nuovo foglio — indipendente',
+        new_sheet_tooltip: 'Nuovo foglio: un altro diagramma, indipendente, nello stesso documento. Per un\'altra lettura che segue i dati, create piuttosto una vista.',
+        duplicate_as_sheet: 'Duplica come nuovo foglio — indipendente',
+        rename: 'Rinomina il foglio',
+        delete: 'Elimina il foglio',
+        delete_confirm: 'Eliminare questo foglio? Il suo diagramma andrà perso.',
+        copy_prefix: 'Copia di ',
+        all_sheets: 'Tutti i fogli',
+        toggle_bar: 'Mostra / nascondi la barra dei fogli',
+      },
       Menu: {
         position: 'Posizione',
         content: 'Contenuto',
@@ -2834,6 +2940,13 @@ export const resources_app_elements = {
         open_excel: 'Excel',
         import_image: 'Immagine',
         save_sankeytheque: 'Libreria Sankey (dev)',
+        // sa#399 — deposito di una versione di mattone nella libreria dell'account
+        save_in_library: 'Nella mia libreria',
+        // sa#413 — bouton Partager / Mettre à jour de la barre du haut
+        share: 'Condividi',
+        share_tooltip: 'Pubblica questo diagramma online o scaricalo come sito autonomo',
+        update_publication: 'Aggiorna',
+        update_publication_tooltip: 'Salva nel repository sorgente e aggiorna la pagina online',
         format_converter: 'Convertitore di formato',
         open_sankeymatic: 'SankeyMATIC',
         open_stan: 'STAN',
@@ -3036,6 +3149,7 @@ export const resources_app_elements = {
         TCG: 'Griglia',
         TCG_shift: 'Spaziatura',
         MN: 'Nodi magnetici alla griglia',
+        SG: 'Guide di allineamento durante lo spostamento',
         childGapMode: 'Spaziatura verticale dei figli',
         childGapFill: 'Riempire lo spazio del genitore (predefinito)',
         childGapKeep: 'Mantenere le posizioni dei figli',
@@ -3087,6 +3201,7 @@ export const resources_app_elements = {
           ArrowSpikeBaseFactor: 'Quanto più larga e lunga è la punta accentuata, rispetto allo spessore del flusso (1 = nessuna accentuazione, 2 = due volte più larga/lunga).',
           TCG: 'Dimensione delle celle della griglia di sfondo (in pixel)',
           MN: 'I nodi spostati si muovono a "passi" invece di seguire continuamente il mouse',
+          SG: 'Durante lo spostamento, mostra guide di allineamento con le distanze quando bordi o centri si allineano con i vicini, con un leggero aggancio (tenere premuto Alt per disattivarlo)',
           childGapMode: 'Come i figli vengono distribuiti verticalmente durante la disaggregazione, l\'espansione o l\'inglobamento di un nodo',
           childGapValue: 'Distanza verticale costante (px) tra i figli in modalità « Spaziatura costante » (predefinito: la spaziatura dello stile predefinito)',
           SLIP: 'Attivare/disattivare la visualizzazione della legenda quando vengono mostrate le palette di colori delle etichette',
@@ -3332,6 +3447,20 @@ export const resources_app_elements = {
   },
   'zh-CN': {
     translation: {
+      // OS#85 — 文档的工作表（相互独立的图表，画布底部的标签页）。
+      sheets: {
+        sheet: '工作表',
+        tab_menu: '工作表菜单',
+        new_sheet: '新建工作表 — 相互独立',
+        new_sheet_tooltip: '新建工作表：同一文档中另一个独立的图表。若要创建跟随数据的另一种呈现，请改为创建视图。',
+        duplicate_as_sheet: '复制为新工作表 — 相互独立',
+        rename: '重命名工作表',
+        delete: '删除工作表',
+        delete_confirm: '删除此工作表？其图表将丢失。',
+        copy_prefix: '副本 - ',
+        all_sheets: '所有工作表',
+        toggle_bar: '显示 / 隐藏工作表栏',
+      },
       Menu: {
         position: '位置',
         content: '内容',
@@ -3481,6 +3610,13 @@ export const resources_app_elements = {
         open_excel: 'Excel',
         import_image: '图片',
         save_sankeytheque: 'Sankey 图库（开发）',
+        // sa#399 — 将版本存入账户的资料库
+        save_in_library: '存入我的资料库',
+        // sa#413 — bouton Partager / Mettre à jour de la barre du haut
+        share: '分享',
+        share_tooltip: '将此图表在线发布或下载为独立网站',
+        update_publication: '更新',
+        update_publication_tooltip: '保存回源仓库并更新在线页面',
         open_sankeymatic: 'SankeyMATIC',
         open_stan: 'STAN',
         open_esankey: 'e!Sankey',
@@ -3700,6 +3836,7 @@ export const resources_app_elements = {
         TCG: '网格',
         TCG_shift: '偏移',
         MN: '节点吸附到网格',
+        SG: '拖动时显示对齐参考线',
         childGapMode: '子节点垂直间距',
         childGapFill: '填满父节点空间（默认）',
         childGapKeep: '保持子节点位置',
@@ -3750,6 +3887,7 @@ export const resources_app_elements = {
           ArrowSpikeBaseFactor: '加强尖端相对于流量粗细的加宽与加长倍数（1 = 不加强，2 = 宽/长两倍）。',
           TCG: '背景网格单元的尺寸（像素）',
           MN: '拖动节点时按“步长”移动，而非连续跟随鼠标',
+          SG: '拖动时，当边缘或中心与相邻元素对齐时显示参考线和距离，并带有轻微吸附（按住 Alt 可暂时禁用吸附）',
           childGapMode: '在分解、展开或包围某个节点时，子节点在垂直方向上的间距方式',
           childGapValue: '“恒定间距”模式下子节点之间的恒定垂直间隙（px）（默认：默认样式的间距）',
           SLIP: '当显示元素标签的配色方案时，启用/停用图例的显示',
@@ -3999,6 +4137,20 @@ export const resources_app_elements = {
   },
   ja: {
     translation: {
+      // OS#85 — ドキュメントのシート（独立した図、キャンバス下部のタブ）。
+      sheets: {
+        sheet: 'シート',
+        tab_menu: 'シートメニュー',
+        new_sheet: '新しいシート — 独立',
+        new_sheet_tooltip: '新しいシート：同じドキュメント内の、独立した別の図です。データに追従する別の見せ方が必要な場合は、代わりにビューを作成してください。',
+        duplicate_as_sheet: '新しいシートとして複製 — 独立',
+        rename: 'シート名を変更',
+        delete: 'シートを削除',
+        delete_confirm: 'このシートを削除しますか？その図は失われます。',
+        copy_prefix: 'コピー - ',
+        all_sheets: 'すべてのシート',
+        toggle_bar: 'シートバーの表示 / 非表示',
+      },
       Menu: {
         position: '位置',
         content: '内容',
@@ -4148,6 +4300,13 @@ export const resources_app_elements = {
         open_excel: 'Excel',
         import_image: '画像',
         save_sankeytheque: 'サンキーライブラリ（開発）',
+        // sa#399 — アカウントのライブラリにバージョンを保存
+        save_in_library: 'マイライブラリへ保存',
+        // sa#413 — bouton Partager / Mettre à jour de la barre du haut
+        share: '共有',
+        share_tooltip: 'この図をオンラインで公開するか、独立したサイトとしてダウンロードします',
+        update_publication: '更新',
+        update_publication_tooltip: 'ソースリポジトリに保存し、オンラインページを更新します',
         open_sankeymatic: 'SankeyMATIC',
         open_stan: 'STAN',
         open_esankey: 'e!Sankey',
@@ -4367,6 +4526,7 @@ export const resources_app_elements = {
         TCG: 'グリッド',
         TCG_shift: 'ずらし量',
         MN: 'ノードをグリッドに吸着',
+        SG: 'ドラッグ時の整列ガイド',
         childGapMode: '子ノードの垂直方向の間隔',
         childGapFill: '親の領域を埋める（既定）',
         childGapKeep: '子ノードの位置を維持',
@@ -4417,6 +4577,7 @@ export const resources_app_elements = {
           ArrowSpikeBaseFactor: '強調した矢先を、フローの太さに対してどれだけ幅広く・長くするか（1 = 強調なし、2 = 幅・長さとも 2 倍）。',
           TCG: '背景グリッドのマス目の大きさ（ピクセル）',
           MN: 'ドラッグしたノードがマウスに連続して追従せず、「刻み」で移動します',
+          SG: 'ドラッグ中、端や中心が近隣ノードと揃うとガイド線と距離を表示し、軽いスナップを適用します（Alt キーを押している間は無効）',
           childGapMode: 'ノードを分解・展開・内包するときに、子ノードを垂直方向にどう間隔をとるか',
           childGapValue: '「一定の間隔」モードでの子ノード間の垂直方向の間隔（px）（既定：既定スタイルの間隔）',
           SLIP: '要素のタグの配色を表示する際に、凡例の表示を有効／無効にします',
