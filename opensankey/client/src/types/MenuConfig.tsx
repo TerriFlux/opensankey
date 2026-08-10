@@ -711,6 +711,10 @@ export class Class_MenuConfig {
   protected _ref_to_toolbar_bottom_updater: MutableRefObject<() => void>
   // OS#85 — re-render des onglets de feuilles (bas de la grande zone).
   protected _ref_to_sheet_tabs_updater: MutableRefObject<() => void> = { current: () => null }
+  // OS#85 — barre des feuilles dépliée ? Pendant bas de la bascule de barre latérale : elle
+  // mange le bas du dessin, on doit pouvoir la replier. État de session (comme la barre
+  // latérale), pas une préférence enregistrée.
+  protected _sheet_tabs_visible: boolean = true
 
   private _ref_to_nodetag_filter_updater: MutableRefObject<() => void>
   private _ref_to_datatag_filter_updater: MutableRefObject<() => void>
@@ -1733,6 +1737,16 @@ export class Class_MenuConfig {
   // OS#85 — onglets de feuilles (bas de la grande zone).
   public get ref_to_sheet_tabs_updater(): MutableRefObject<() => void> {
     return this._ref_to_sheet_tabs_updater
+  }
+
+  /** OS#85 — la barre des feuilles est-elle dépliée ? */
+  public get sheet_tabs_visible(): boolean { return this._sheet_tabs_visible }
+  /** Replie / déplie la barre des feuilles. Le recadrage du dessin (la barre du bas change
+   *  de hauteur) est déclenché par la barre elle-même, une fois le DOM à jour — la hauteur
+   *  réservée est LUE dans le DOM (DrawingArea.getBottomBarHeight). */
+  public toggleSheetTabs(): void {
+    this._sheet_tabs_visible = !this._sheet_tabs_visible
+    this._ref_to_sheet_tabs_updater.current()
   }
 
   public get ref_to_menu_config_node_icon_updater() { return this._ref_to_menu_config_node_icon_updater }
