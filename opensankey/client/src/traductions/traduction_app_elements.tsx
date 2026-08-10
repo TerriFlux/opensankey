@@ -12,6 +12,7 @@ export const resources_app_elements = {
         delete: 'Delete sheet',
         delete_confirm: 'Delete this sheet? Its diagram will be lost.',
         copy_prefix: 'Copy of ',
+        all_sheets: 'All sheets',
       },
       Menu: {
         position: 'Position',
@@ -703,6 +704,7 @@ export const resources_app_elements = {
         delete: 'Supprimer la feuille',
         delete_confirm: 'Supprimer cette feuille ? Son diagramme sera perdu.',
         copy_prefix: 'Copie de ',
+        all_sheets: 'Toutes les feuilles',
       },
       Menu: {
         position: 'Position',
@@ -1404,6 +1406,7 @@ export const resources_app_elements = {
         delete: 'Eliminar la hoja',
         delete_confirm: '¿Eliminar esta hoja? Su diagrama se perderá.',
         copy_prefix: 'Copia de ',
+        all_sheets: 'Todas las hojas',
       },
       Menu: {
         position: 'Posición',
@@ -2083,6 +2086,7 @@ export const resources_app_elements = {
         delete: 'Blatt löschen',
         delete_confirm: 'Dieses Blatt löschen? Sein Diagramm geht verloren.',
         copy_prefix: 'Kopie von ',
+        all_sheets: 'Alle Blätter',
       },
       Menu: {
         position: 'Position',
@@ -2762,6 +2766,7 @@ export const resources_app_elements = {
         delete: 'Elimina il foglio',
         delete_confirm: 'Eliminare questo foglio? Il suo diagramma andrà perso.',
         copy_prefix: 'Copia di ',
+        all_sheets: 'Tutti i fogli',
       },
       Menu: {
         position: 'Posizione',
@@ -3438,6 +3443,7 @@ export const resources_app_elements = {
         delete: '删除工作表',
         delete_confirm: '删除此工作表？其图表将丢失。',
         copy_prefix: '副本 - ',
+        all_sheets: '所有工作表',
       },
       Menu: {
         position: '位置',
@@ -4124,6 +4130,7 @@ export const resources_app_elements = {
         delete: 'シートを削除',
         delete_confirm: 'このシートを削除しますか？その図は失われます。',
         copy_prefix: 'コピー - ',
+        all_sheets: 'すべてのシート',
       },
       Menu: {
         position: '位置',
