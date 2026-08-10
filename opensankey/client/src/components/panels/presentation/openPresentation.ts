@@ -100,6 +100,25 @@ export const elementIdOfPanel = (panel_id: string): string =>
   panel_id.slice(PRESENTATION_PREFIX.length)
 
 /**
+ * Le CLIC ouvre-t-il la présentation de l'élément cliqué ?
+ *
+ * LECTURE : oui — c'est le geste du lecteur, et la seule chose qu'il attende d'un
+ * clic sur un élément.
+ *
+ * ÉDITION : NON. Le clic est le geste de TRAVAIL de l'auteur — sélectionner pour
+ * régler, choisir avant de déplacer, cliquer pour poser le focus, enchaîner sur
+ * plusieurs éléments : autant de raisons de cliquer sans vouloir qu'une pop-up
+ * s'ouvre. L'auteur garde le chemin exact du lecteur par le SURVOL (déclencheur
+ * réglé PAR ÉLÉMENT : survol nu, MAJ+survol par défaut, ou Alt+survol —
+ * cf. matchesPresentationTrigger), qui, lui, ne coûte aucun geste d'édition.
+ *
+ * Politique isolée ici pour qu'elle se discute et se change en UN point, plutôt
+ * qu'aux quatre coins des gestionnaires de clic (nœud, flux, stock, groupe).
+ */
+export const opensPresentationOnClick = (app_data: Class_ApplicationData): boolean =>
+  !app_data.is_editable
+
+/**
  * Ouvre la présentation d'un élément — geste de CLIC. Toujours en POP-UP
  * juxtaposée : la barre latérale est réservée aux menus (config/filtres/
  * recherche), jamais aux éléments. La pop-up a une structure fixe, donc elle a

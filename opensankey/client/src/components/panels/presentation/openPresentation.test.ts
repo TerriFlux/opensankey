@@ -1,6 +1,7 @@
 import {
   placePopupNear, matchesPresentationTrigger, MAX_PRESENTATION_POPUPS,
-  presentationPanelId, isPresentationPanelId, elementIdOfPanel, openPresentationFor
+  presentationPanelId, isPresentationPanelId, elementIdOfPanel, openPresentationFor,
+  opensPresentationOnClick
 } from './openPresentation'
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import { Class_PanelManager, type Type_PopupGeometry } from '../../../types/PanelManager'
@@ -35,6 +36,23 @@ describe('#305 identité des panneaux de présentation', () => {
     expect(isPresentationPanelId(id)).toBe(true)
     expect(isPresentationPanelId('config')).toBe(false)
     expect(elementIdOfPanel(id)).toBe('noeud A')
+  })
+})
+
+describe('le CLIC n\'ouvre la présentation qu\'en LECTURE', () => {
+  // En édition, cliquer est le geste de travail de l'auteur (sélectionner,
+  // choisir avant de déplacer, enchaîner sur plusieurs éléments) : une pop-up
+  // « valeur + unité » à chaque clic était subie, pas demandée. L'auteur garde
+  // le chemin du lecteur par le SURVOL (déclencheur par élément).
+  const appWith = (is_editable: boolean) =>
+    ({ is_editable }) as unknown as Class_ApplicationData
+
+  it('lecteur : le clic ouvre', () => {
+    expect(opensPresentationOnClick(appWith(false))).toBe(true)
+  })
+
+  it('éditeur : le clic n\'ouvre pas', () => {
+    expect(opensPresentationOnClick(appWith(true))).toBe(false)
   })
 })
 
