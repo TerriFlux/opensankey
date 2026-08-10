@@ -13,6 +13,7 @@ export const resources_app_elements = {
         delete_confirm: 'Delete this sheet? Its diagram will be lost.',
         copy_prefix: 'Copy of ',
         all_sheets: 'All sheets',
+        toggle_bar: 'Show / hide the sheet bar',
       },
       Menu: {
         position: 'Position',
@@ -705,6 +706,7 @@ export const resources_app_elements = {
         delete_confirm: 'Supprimer cette feuille ? Son diagramme sera perdu.',
         copy_prefix: 'Copie de ',
         all_sheets: 'Toutes les feuilles',
+        toggle_bar: 'Afficher / masquer la barre des feuilles',
       },
       Menu: {
         position: 'Position',
@@ -1407,6 +1409,7 @@ export const resources_app_elements = {
         delete_confirm: '¿Eliminar esta hoja? Su diagrama se perderá.',
         copy_prefix: 'Copia de ',
         all_sheets: 'Todas las hojas',
+        toggle_bar: 'Mostrar / ocultar la barra de hojas',
       },
       Menu: {
         position: 'Posición',
@@ -2087,6 +2090,7 @@ export const resources_app_elements = {
         delete_confirm: 'Dieses Blatt löschen? Sein Diagramm geht verloren.',
         copy_prefix: 'Kopie von ',
         all_sheets: 'Alle Blätter',
+        toggle_bar: 'Blattleiste ein-/ausblenden',
       },
       Menu: {
         position: 'Position',
@@ -2767,6 +2771,7 @@ export const resources_app_elements = {
         delete_confirm: 'Eliminare questo foglio? Il suo diagramma andrà perso.',
         copy_prefix: 'Copia di ',
         all_sheets: 'Tutti i fogli',
+        toggle_bar: 'Mostra / nascondi la barra dei fogli',
       },
       Menu: {
         position: 'Posizione',
@@ -3444,6 +3449,7 @@ export const resources_app_elements = {
         delete_confirm: '删除此工作表？其图表将丢失。',
         copy_prefix: '副本 - ',
         all_sheets: '所有工作表',
+        toggle_bar: '显示 / 隐藏工作表栏',
       },
       Menu: {
         position: '位置',
@@ -4131,6 +4137,7 @@ export const resources_app_elements = {
         delete_confirm: 'このシートを削除しますか？その図は失われます。',
         copy_prefix: 'コピー - ',
         all_sheets: 'すべてのシート',
+        toggle_bar: 'シートバーの表示 / 非表示',
       },
       Menu: {
         position: '位置',
