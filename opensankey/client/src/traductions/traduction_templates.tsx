@@ -32,6 +32,8 @@ export const resources_template = {
         library_hint: 'Your versioned projects: click a diagram to open it, a README to read it',
         library: {
           read_md: 'Read this document',
+          edit_md: 'Edit this document (deposits a new version)',
+          new_readme: 'Create a README (new version of the project)',
           download: 'Download this file',
           versions_error: 'Versions unavailable'
         },
@@ -89,6 +91,8 @@ export const resources_template = {
         library_hint: 'Vos projets versionnés : cliquez sur un diagramme pour l\'ouvrir, un README pour le lire',
         library: {
           read_md: 'Lire ce document',
+          edit_md: 'Éditer ce document (dépose une nouvelle version)',
+          new_readme: 'Créer un README (nouvelle version du projet)',
           download: 'Télécharger ce fichier',
           versions_error: 'Versions indisponibles'
         },
@@ -146,6 +150,8 @@ export const resources_template = {
         library_hint: 'Sus proyectos versionados: haga clic en un diagrama para abrirlo, en un README para leerlo',
         library: {
           read_md: 'Leer este documento',
+          edit_md: 'Editar este documento (deposita una nueva versión)',
+          new_readme: 'Crear un README (nueva versión del proyecto)',
           download: 'Descargar este archivo',
           versions_error: 'Versiones no disponibles'
         },
@@ -203,6 +209,8 @@ export const resources_template = {
         library_hint: 'Ihre versionierten Projekte: Klicken Sie auf ein Diagramm, um es zu öffnen, auf ein README, um es zu lesen',
         library: {
           read_md: 'Dieses Dokument lesen',
+          edit_md: 'Dieses Dokument bearbeiten (legt eine neue Version an)',
+          new_readme: 'Ein README erstellen (neue Version des Projekts)',
           download: 'Diese Datei herunterladen',
           versions_error: 'Versionen nicht verfügbar'
         },
@@ -260,6 +268,8 @@ export const resources_template = {
         library_hint: 'I tuoi progetti versionati: clicca su un diagramma per aprirlo, su un README per leggerlo',
         library: {
           read_md: 'Leggi questo documento',
+          edit_md: 'Modifica questo documento (deposita una nuova versione)',
+          new_readme: 'Crea un README (nuova versione del progetto)',
           download: 'Scarica questo file',
           versions_error: 'Versioni non disponibili'
         },
@@ -314,6 +324,8 @@ export const resources_template = {
         library_hint: '您的版本化项目：点击图表打开，点击 README 阅读',
         library: {
           read_md: '阅读此文档',
+          edit_md: '编辑此文档（提交新版本）',
+          new_readme: '创建 README（项目新版本）',
           download: '下载此文件',
           versions_error: '版本不可用'
         },
@@ -368,6 +380,8 @@ export const resources_template = {
         library_hint: 'バージョン管理されたプロジェクト：図をクリックすると開き、README をクリックすると読めます',
         library: {
           read_md: 'このドキュメントを読む',
+          edit_md: 'このドキュメントを編集（新しいバージョンを登録）',
+          new_readme: 'README を作成（プロジェクトの新バージョン）',
           download: 'このファイルをダウンロード',
           versions_error: 'バージョンを取得できません'
         },
