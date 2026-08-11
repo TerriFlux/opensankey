@@ -122,6 +122,25 @@ body {
   cursor: default;
 }
 
+/* os#1344 — Création connectée : flèches directionnelles au survol d'un nœud.
+   Discrètes par défaut, pleines au survol de la flèche elle-même. */
+.connection_arrow path {
+  opacity: 0.45;
+  transition: opacity 0.1s ease-in;
+}
+.connection_arrow:hover path {
+  opacity: 1;
+}
+
+/* os#1344 — Glisser depuis une flèche : cibles VALIDES surlignées (halo), cible sous
+   le pointeur renforcée. Classes posées/retirées par ConnectionGestureHandler. */
+.connection_candidate {
+  filter: drop-shadow(0 0 3px rgba(34, 160, 107, 0.9));
+}
+.connection_candidate_hover {
+  filter: drop-shadow(0 0 7px rgba(34, 160, 107, 1));
+}
+
 /* Cursor when placing a text zone (drag a rectangle to size/position it) */
 .place_container_mode {
   #g_background,

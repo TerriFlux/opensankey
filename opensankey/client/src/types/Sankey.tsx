@@ -903,6 +903,21 @@ export class Class_Sankey {
     }
   }
 
+  /**
+   * os#1344/os#1347 — hook de VALIDATION de connexion : le MODÈLE décide si un flux
+   * source → target est constructible ; les handlers de geste (création connectée,
+   * outil flux) l'interrogent au lieu de porter la règle. Règles de base : deux vrais
+   * nœuds distincts de CE sankey. Les flux parallèles (2e flux entre les deux mêmes
+   * nœuds) restent permis, comme via addNewLink (id suffixé).
+   */
+  public isValidConnection(source: Class_NodeElement, target: Class_NodeElement): boolean {
+    if (!source || !target) return false
+    if (source === target) return false
+    if (this._nodes[source.id] !== source) return false
+    if (this._nodes[target.id] !== target) return false
+    return true
+  }
+
   public addNewDefaultNode(): Class_NodeElement {
     const n = String(Object.values(this._nodes).length)
     const id = 'node' + n
