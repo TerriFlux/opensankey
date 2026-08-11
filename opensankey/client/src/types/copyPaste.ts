@@ -13,6 +13,7 @@
 import type { Class_DrawingArea } from './DrawingArea'
 import type { Class_NodeElement } from '../Elements/Node'
 import type { Class_LinkElement } from '../Elements/Link'
+import type { Class_ContainerElement } from '../Elements/TextZone'
 
 /**
  * Duplique les nœuds `node_ids` (et les liens internes à la sélection) avec un offset de 50 px,
@@ -23,15 +24,52 @@ import type { Class_LinkElement } from '../Elements/Link'
  * du DERNIER passage, sinon l'undo d'après viserait des instances périmées.
  */
 export function copyNodes(da: Class_DrawingArea, node_ids: string[]) {
+  copyElements(da, node_ids, [])
+}
+
+/**
+ * os#1340 (Ctrl+D) — duplique la SÉLECTION courante : nœuds (+ liens internes) et zones de
+ * texte, en une seule transition d'historique. Les copies deviennent la nouvelle sélection.
+ */
+export function duplicateSelection(da: Class_DrawingArea) {
+  copyElements(
+    da,
+    da.selected_nodes_list.map(n => n.id),
+    da.selected_containers_list.map(c => c.id)
+  )
+}
+
+/**
+ * os#1340 (alt-glisser = cloner) — comme duplicateSelection mais SANS décalage : les copies
+ * naissent exactement sous les originaux, puis le geste de drag les emporte.
+ */
+export function cloneSelectionInPlace(da: Class_DrawingArea) {
+  copyElements(
+    da,
+    da.selected_nodes_list.map(n => n.id),
+    da.selected_containers_list.map(c => c.id),
+    0
+  )
+}
+
+/**
+ * Duplication unifiée nœuds + zones de texte (cf. copyNodes pour le contrat undo/redo).
+ * `container_ids` : zones de texte à dupliquer avec le même offset que les nœuds.
+ */
+export function copyElements(da: Class_DrawingArea, node_ids: string[], container_ids: string[], offset = 50) {
   const sankey = da.sankey
   let created_nodes: Class_NodeElement[] = []
   let created_links: Class_LinkElement[] = []
+  let created_containers: Class_ContainerElement[] = []
 
   const copy = () => da.withBypassRedraws(() => {
     created_nodes = []
     created_links = []
-    const offset = 50
+    created_containers = []
     const source_nodes = node_ids.map(id => sankey.nodes_dict[id]).filter(n => n !== undefined)
+    const source_containers = container_ids
+      .map(id => sankey.containers_dict[id])
+      .filter(c => c !== undefined)
     da.purgeSelection()
     const selected_node_ids = new Set(node_ids)
     const matching_link_id: { [_: string]: string } = {}
@@ -69,6 +107,16 @@ export function copyNodes(da: Class_DrawingArea, node_ids: string[]) {
       const new_node = node_copy_map.get(node.id)
       if (new_node) new_node.keepLinkOrderingFrom(node, matching_link_id)
     })
+
+    // os#1340 — zones de texte : même schéma que les nœuds (id + '_copy', copyFrom, offset).
+    source_containers.forEach(container => {
+      const new_container = sankey.addNewContainer(container.id + '_copy', container.name)
+      new_container.copyFrom(container)
+      new_container.position_x = container.position_x + offset
+      new_container.position_y = container.position_y + offset
+      da.addElementToSelection(new_container)
+      created_containers.push(new_container)
+    })
   })
 
   // Liens puis nœuds, comme deleteSelection : deleteNode supprime en cascade les liens
@@ -76,6 +124,7 @@ export function copyNodes(da: Class_DrawingArea, node_ids: string[]) {
   const undo = () => da.withBypassRedraws(() => {
     created_links.forEach(link => da.deleteLink(link))
     created_nodes.forEach(node => da.deleteNode(node))
+    created_containers.forEach(container => da.deleteContainer(container))
   })
 
   da.saveUndo(undo)

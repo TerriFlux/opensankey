@@ -113,6 +113,15 @@ body {
   }
 }
 
+/* os#1340 — élément verrouillé : ni sélectionnable ni déplaçable, le curseur ne
+   promet donc pas de saisie. Déclaré APRÈS les blocs de mode (même spécificité,
+   l'ordre source tranche) pour gagner sur .selection_mode .gg_nodes. */
+.selection_mode .locked_element,
+.selection_mode .locked_element:active,
+.locked_element {
+  cursor: default;
+}
+
 /* Cursor when placing a text zone (drag a rectangle to size/position it) */
 .place_container_mode {
   #g_background,
