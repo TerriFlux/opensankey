@@ -45,7 +45,12 @@ import type { Class_DrawingArea } from './DrawingArea'
 import type { Class_NodeBase } from '../Elements/NodeBase'
 import type { Class_NodeElement } from '../Elements/Node'
 
-export type Type_ConnectionDirection = 'right' | 'left' | 'top' | 'bottom'
+// Le type et la règle d'orientation vivent dans un module feuille, testable sans
+// réveiller le cycle d'initialisation Element -> Handler. Réexporté ici : les
+// consommateurs existants importent Type_ConnectionDirection depuis ce fichier.
+import { orientationForDirection } from './connectionDirection'
+export type { Type_ConnectionDirection } from './connectionDirection'
+import type { Type_ConnectionDirection } from './connectionDirection'
 
 /** Id du <g> des flèches directionnelles (enfant direct du <g> principal de la DA). */
 const ARROWS_GROUP_ID = 'g_connection_gesture'
@@ -252,7 +257,7 @@ export class Class_ConnectionGestureHandler {
       return
     }
     this._drag_active = false
-    this._resolveConnectionDrop(da, source)
+    this._resolveConnectionDrop(da, source, dir)
   }
 
   /** Amorce l'aperçu du flux : lien fantôme du moteur + surlignage des cibles valides. */
@@ -324,7 +329,11 @@ export class Class_ConnectionGestureHandler {
    * Relâché du glisser : crée le flux si la cible est valide (transaction annulable),
    * sinon ANNULE proprement (aucune trace dans le modèle ni dans l'historique).
    */
-  private _resolveConnectionDrop(da: Class_DrawingArea, source: Class_NodeElement) {
+  private _resolveConnectionDrop(
+    da: Class_DrawingArea,
+    source: Class_NodeElement,
+    dir: Type_ConnectionDirection
+  ) {
     // Nettoyage des surlignages.
     this._candidates.forEach(n => {
       n.d3_selection?.classed('connection_candidate', false)
@@ -365,6 +374,8 @@ export class Class_ConnectionGestureHandler {
     let link: Class_LinkElement
     const create = () => {
       link = da.sankey.addNewLink(source, hit)
+      // Même règle qu'au clic : l'axe du geste donne l'orientation du flux.
+      link.shape_orientation = orientationForDirection(dir)
       link.draw()
       da.purgeSelectionOfElement(false)
       da.addElementToSelection(link)
@@ -426,10 +437,14 @@ export class Class_ConnectionGestureHandler {
       const pos = da.getConnectedCreationPosition(
         source, dir, clone.getShapeWidthToUse(), clone.getShapeHeightToUse())
       clone.setPosXY(pos.x, pos.y)
-      // Flèches droite/bas = nœud AVAL (source → clone) ; gauche/haut = nœud AMONT.
-      const link = (dir === 'left' || dir === 'top')
-        ? da.sankey.addNewLink(clone, source)
-        : da.sankey.addNewLink(source, clone)
+      // La flèche pointe vers l'extérieur : le flux part TOUJOURS du nœud survolé vers
+      // le nouveau, dans le sens montré (cliquer la flèche du haut crée un flux qui
+      // monte). Le nouveau nœud est donc toujours l'AVAL — pour un amont, on trace
+      // depuis le nœud créé, ou on inverse le flux.
+      const link = da.sankey.addNewLink(source, clone)
+      // Orientation cohérente avec l'axe du geste : un flux créé vers le haut ou le bas
+      // sort et entre par les faces horizontales ('vv'), pas par les côtés ('hh', défaut).
+      link.shape_orientation = orientationForDirection(dir)
       link.draw()
       da.purgeSelectionOfElement(false)
       da.addElementToSelection(clone)
