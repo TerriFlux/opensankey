@@ -56,6 +56,31 @@ export const resources_template = {
           clients: 'Clients'
         }
       },
+      // sa#414 — panneau « Explorateur » (projets + classeurs du compte)
+      explorer: {
+        title: 'Explorer',
+        tooltip: 'Browse your projects and workbooks; a diagram opens in a new sheet',
+        hint: 'Your projects and workbooks: click a diagram to open it in a new sheet',
+        workbooks: 'Workbooks',
+        projects_empty: 'No project in your library yet',
+        workbooks_empty: 'No workbook yet',
+        workbook_error: 'Workbook unavailable',
+        open_sheet: 'Open in a new sheet',
+        add_section: 'section',
+        add_page: 'page',
+        add_slot: 'diagram',
+        section_default: 'New section',
+        page_default: 'New page',
+        delete_node: 'Remove',
+        move_up: 'Move up',
+        move_down: 'Move down',
+        rename_hint: 'Double-click to rename',
+        confirm_delete: 'Remove this item and everything under it?',
+        save_error: 'Could not save the workbook',
+        slot_file: 'Choose a file...',
+        slot_add: 'Pin',
+        slot_cancel: 'Cancel'
+      },
     }
   },
   //=======================================================
@@ -114,6 +139,31 @@ export const resources_template = {
           recherche: 'Recherche',
           clients: 'Clients'
         }
+      },
+      // sa#414 — panneau « Explorateur » (projets + classeurs du compte)
+      explorer: {
+        title: 'Explorateur',
+        tooltip: 'Parcourez vos projets et classeurs ; un diagramme s\'ouvre dans une nouvelle feuille',
+        hint: 'Vos projets et classeurs : cliquez sur un diagramme pour l\'ouvrir dans une nouvelle feuille',
+        workbooks: 'Classeurs',
+        projects_empty: 'Aucun projet dans votre bibliothèque pour l\'instant',
+        workbooks_empty: 'Aucun classeur pour l\'instant',
+        workbook_error: 'Classeur indisponible',
+        open_sheet: 'Ouvrir dans une nouvelle feuille',
+        add_section: 'section',
+        add_page: 'page',
+        add_slot: 'diagramme',
+        section_default: 'Nouvelle section',
+        page_default: 'Nouvelle page',
+        delete_node: 'Retirer',
+        move_up: 'Monter',
+        move_down: 'Descendre',
+        rename_hint: 'Double-cliquez pour renommer',
+        confirm_delete: 'Retirer cet élément et tout ce qu\'il contient ?',
+        save_error: 'Échec de l\'enregistrement du classeur',
+        slot_file: 'Choisir un fichier...',
+        slot_add: 'Épingler',
+        slot_cancel: 'Annuler'
       },
     }
   },
@@ -174,6 +224,31 @@ export const resources_template = {
           clients: 'Clientes'
         }
       },
+      // sa#414 — panel « Explorador » (proyectos + libros de la cuenta)
+      explorer: {
+        title: 'Explorador',
+        tooltip: 'Explore sus proyectos y libros; un diagrama se abre en una hoja nueva',
+        hint: 'Sus proyectos y libros: haga clic en un diagrama para abrirlo en una hoja nueva',
+        workbooks: 'Libros',
+        projects_empty: 'Todavía no hay ningún proyecto en su biblioteca',
+        workbooks_empty: 'Todavía no hay ningún libro',
+        workbook_error: 'Libro no disponible',
+        open_sheet: 'Abrir en una hoja nueva',
+        add_section: 'sección',
+        add_page: 'página',
+        add_slot: 'diagrama',
+        section_default: 'Nueva sección',
+        page_default: 'Nueva página',
+        delete_node: 'Quitar',
+        move_up: 'Subir',
+        move_down: 'Bajar',
+        rename_hint: 'Haga doble clic para renombrar',
+        confirm_delete: '¿Quitar este elemento y todo lo que contiene?',
+        save_error: 'No se pudo guardar el libro',
+        slot_file: 'Elegir un archivo...',
+        slot_add: 'Fijar',
+        slot_cancel: 'Cancelar'
+      },
     }
   },
   //=======================================================
@@ -232,6 +307,31 @@ export const resources_template = {
           recherche: 'Forschung',
           clients: 'Kunden'
         }
+      },
+      // sa#414 — Panel „Explorer" (Projekte + Arbeitsmappen des Kontos)
+      explorer: {
+        title: 'Explorer',
+        tooltip: 'Durchsuchen Sie Ihre Projekte und Arbeitsmappen; ein Diagramm öffnet sich in einem neuen Blatt',
+        hint: 'Ihre Projekte und Arbeitsmappen: Klicken Sie auf ein Diagramm, um es in einem neuen Blatt zu öffnen',
+        workbooks: 'Arbeitsmappen',
+        projects_empty: 'Noch kein Projekt in Ihrer Bibliothek',
+        workbooks_empty: 'Noch keine Arbeitsmappe',
+        workbook_error: 'Arbeitsmappe nicht verfügbar',
+        open_sheet: 'In einem neuen Blatt öffnen',
+        add_section: 'Abschnitt',
+        add_page: 'Seite',
+        add_slot: 'Diagramm',
+        section_default: 'Neuer Abschnitt',
+        page_default: 'Neue Seite',
+        delete_node: 'Entfernen',
+        move_up: 'Nach oben',
+        move_down: 'Nach unten',
+        rename_hint: 'Doppelklicken zum Umbenennen',
+        confirm_delete: 'Dieses Element und alles darunter entfernen?',
+        save_error: 'Arbeitsmappe konnte nicht gespeichert werden',
+        slot_file: 'Datei wählen...',
+        slot_add: 'Anheften',
+        slot_cancel: 'Abbrechen'
       },
     }
   },
@@ -292,6 +392,31 @@ export const resources_template = {
           clients: 'Clienti'
         }
       },
+      // sa#414 — pannello « Esplora » (progetti + cartelle di lavoro dell'account)
+      explorer: {
+        title: 'Esplora',
+        tooltip: 'Sfoglia i tuoi progetti e le cartelle di lavoro; un diagramma si apre in un nuovo foglio',
+        hint: 'I tuoi progetti e le tue cartelle di lavoro: clicca su un diagramma per aprirlo in un nuovo foglio',
+        workbooks: 'Cartelle di lavoro',
+        projects_empty: 'Nessun progetto nella tua biblioteca per ora',
+        workbooks_empty: 'Nessuna cartella di lavoro per ora',
+        workbook_error: 'Cartella di lavoro non disponibile',
+        open_sheet: 'Apri in un nuovo foglio',
+        add_section: 'sezione',
+        add_page: 'pagina',
+        add_slot: 'diagramma',
+        section_default: 'Nuova sezione',
+        page_default: 'Nuova pagina',
+        delete_node: 'Rimuovi',
+        move_up: 'Sposta su',
+        move_down: 'Sposta giù',
+        rename_hint: 'Doppio clic per rinominare',
+        confirm_delete: 'Rimuovere questo elemento e tutto ciò che contiene?',
+        save_error: 'Impossibile salvare la cartella di lavoro',
+        slot_file: 'Scegli un file...',
+        slot_add: 'Aggancia',
+        slot_cancel: 'Annulla'
+      },
     }
   },
   'zh-CN': {
@@ -348,6 +473,31 @@ export const resources_template = {
           clients: '客户'
         }
       },
+      // sa#414 — « 资源管理器 » 面板（账户的项目 + 工作簿）
+      explorer: {
+        title: '资源管理器',
+        tooltip: '浏览您的项目和工作簿；图表会在新工作表中打开',
+        hint: '您的项目和工作簿：点击图表即可在新工作表中打开',
+        workbooks: '工作簿',
+        projects_empty: '您的库中还没有项目',
+        workbooks_empty: '还没有工作簿',
+        workbook_error: '工作簿不可用',
+        open_sheet: '在新工作表中打开',
+        add_section: '章节',
+        add_page: '页面',
+        add_slot: '图表',
+        section_default: '新章节',
+        page_default: '新页面',
+        delete_node: '移除',
+        move_up: '上移',
+        move_down: '下移',
+        rename_hint: '双击重命名',
+        confirm_delete: '移除此项及其全部内容？',
+        save_error: '无法保存工作簿',
+        slot_file: '选择文件...',
+        slot_add: '固定',
+        slot_cancel: '取消'
+      },
     }
   },
   ja: {
@@ -403,6 +553,31 @@ export const resources_template = {
           recherche: '研究',
           clients: '顧客'
         }
+      },
+      // sa#414 — « エクスプローラー » パネル（アカウントのプロジェクト + ワークブック）
+      explorer: {
+        title: 'エクスプローラー',
+        tooltip: 'プロジェクトとワークブックを閲覧できます。図は新しいシートで開きます',
+        hint: 'プロジェクトとワークブック：図をクリックすると新しいシートで開きます',
+        workbooks: 'ワークブック',
+        projects_empty: 'ライブラリにはまだプロジェクトがありません',
+        workbooks_empty: 'まだワークブックがありません',
+        workbook_error: 'ワークブックを取得できません',
+        open_sheet: '新しいシートで開く',
+        add_section: 'セクション',
+        add_page: 'ページ',
+        add_slot: '図',
+        section_default: '新しいセクション',
+        page_default: '新しいページ',
+        delete_node: '削除',
+        move_up: '上へ移動',
+        move_down: '下へ移動',
+        rename_hint: 'ダブルクリックで名前を変更',
+        confirm_delete: 'この項目とその配下をすべて削除しますか？',
+        save_error: 'ワークブックを保存できませんでした',
+        slot_file: 'ファイルを選択...',
+        slot_add: 'ピン留め',
+        slot_cancel: 'キャンセル'
       },
     }
   }
