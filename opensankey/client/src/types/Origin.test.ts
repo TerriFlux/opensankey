@@ -8,7 +8,7 @@
 
 import {
   type Type_Origin,
-  originRuleLabel,
+  originRuleKey,
   originIsDeduced,
   originExcelLine,
   originFromJSON,
@@ -47,16 +47,13 @@ describe('#411 origines — lecture et écriture', () => {
 })
 
 describe('#411 origines — présentation', () => {
-  it('affiche le code brut d’une règle inconnue plutôt que rien', () => {
-    // Contrat de compatibilité : un moteur plus récent peut écrire une règle
-    // que ce viewer ne connaît pas encore.
-    expect(originRuleLabel('regle_du_futur', 'fr')).toBe('regle_du_futur')
-  })
-
-  it('répond en français quand la langue l’est, en anglais sinon', () => {
-    expect(originRuleLabel('manual_draw', 'fr')).toMatch(/à la main/)
-    expect(originRuleLabel('manual_draw', 'en')).toMatch(/by hand/)
-    expect(originRuleLabel('manual_draw', undefined)).toMatch(/by hand/)
+  it('désigne le libellé d’une règle par une clé de traduction', () => {
+    // Les libellés vivent dans les ressources i18n, et non dans un catalogue
+    // local : celui-ci aurait sa propre notion de langue courante, qui diverge
+    // de celle de l’application dès que l’utilisateur n’a pas choisi sa langue
+    // explicitement — c’est le défaut constaté au premier essai.
+    expect(originRuleKey('propagate_to_children'))
+      .toBe('inspector.origin.rules.propagate_to_children')
   })
 
   it('distingue une déduction du moteur d’une saisie', () => {
@@ -109,6 +106,9 @@ describe('#411 origines — remontée de la chaîne causale', () => {
     const chain = chainOf({ rule: 'propagate_to_parent', trigger: 'X - Y' }, {})
     expect(chain).toHaveLength(2)
     expect(chain[1].element).toBe('X - Y')
+    // Marqué comme tel : l’interface doit dire « on ne sait pas pourquoi
+    // celui-là existe », pas inventer une règle.
+    expect(chain[1].unresolved).toBe(true)
   })
 
   it('reste borné même sur une chaîne très longue', () => {
