@@ -79,7 +79,10 @@ export const resources_template = {
         save_error: 'Could not save the workbook',
         slot_file: 'Choose a file...',
         slot_add: 'Pin',
-        slot_cancel: 'Cancel'
+        slot_cancel: 'Cancel',
+        delete_project: 'Delete this project',
+        confirm_delete_project: 'Delete the project “{{title}}” and ALL its versions? The action cannot be undone.',
+        delete_project_error: 'Could not delete the project'
       },
     }
   },
@@ -163,7 +166,10 @@ export const resources_template = {
         save_error: 'Échec de l\'enregistrement du classeur',
         slot_file: 'Choisir un fichier...',
         slot_add: 'Épingler',
-        slot_cancel: 'Annuler'
+        slot_cancel: 'Annuler',
+        delete_project: 'Supprimer ce projet',
+        confirm_delete_project: 'Supprimer le projet « {{title}} » et TOUTES ses versions ? L’action est irréversible.',
+        delete_project_error: 'Suppression du projet impossible'
       },
     }
   },
@@ -247,7 +253,10 @@ export const resources_template = {
         save_error: 'No se pudo guardar el libro',
         slot_file: 'Elegir un archivo...',
         slot_add: 'Fijar',
-        slot_cancel: 'Cancelar'
+        slot_cancel: 'Cancelar',
+        delete_project: 'Eliminar este proyecto',
+        confirm_delete_project: '¿Eliminar el proyecto «{{title}}» y TODAS sus versiones? La acción es irreversible.',
+        delete_project_error: 'No se ha podido eliminar el proyecto'
       },
     }
   },
@@ -331,7 +340,10 @@ export const resources_template = {
         save_error: 'Arbeitsmappe konnte nicht gespeichert werden',
         slot_file: 'Datei wählen...',
         slot_add: 'Anheften',
-        slot_cancel: 'Abbrechen'
+        slot_cancel: 'Abbrechen',
+        delete_project: 'Dieses Projekt löschen',
+        confirm_delete_project: 'Projekt „{{title}}“ und ALLE seine Versionen löschen? Der Vorgang ist unwiderruflich.',
+        delete_project_error: 'Projekt konnte nicht gelöscht werden'
       },
     }
   },
@@ -415,7 +427,10 @@ export const resources_template = {
         save_error: 'Impossibile salvare la cartella di lavoro',
         slot_file: 'Scegli un file...',
         slot_add: 'Aggancia',
-        slot_cancel: 'Annulla'
+        slot_cancel: 'Annulla',
+        delete_project: 'Elimina questo progetto',
+        confirm_delete_project: 'Eliminare il progetto «{{title}}» e TUTTE le sue versioni? L’azione è irreversibile.',
+        delete_project_error: 'Impossibile eliminare il progetto'
       },
     }
   },
@@ -496,7 +511,10 @@ export const resources_template = {
         save_error: '无法保存工作簿',
         slot_file: '选择文件...',
         slot_add: '固定',
-        slot_cancel: '取消'
+        slot_cancel: '取消',
+        delete_project: '删除此项目',
+        confirm_delete_project: '删除项目“{{title}}”及其所有版本？此操作不可撤销。',
+        delete_project_error: '无法删除项目'
       },
     }
   },
@@ -577,7 +595,10 @@ export const resources_template = {
         save_error: 'ワークブックを保存できませんでした',
         slot_file: 'ファイルを選択...',
         slot_add: 'ピン留め',
-        slot_cancel: 'キャンセル'
+        slot_cancel: 'キャンセル',
+        delete_project: 'このプロジェクトを削除',
+        confirm_delete_project: 'プロジェクト「{{title}}」とそのすべてのバージョンを削除しますか？この操作は取り消せません。',
+        delete_project_error: 'プロジェクトを削除できませんでした'
       },
     }
   }
