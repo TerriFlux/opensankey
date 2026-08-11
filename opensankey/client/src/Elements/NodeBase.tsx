@@ -565,10 +565,9 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     // Le cadre qui contient l'élément déplacé suit EN DIRECT, comme il le fait
     // déjà quand le membre déplacé est une zone de texte (cf.
     // Class_ContainerElement.eventMouseDrag). Sans ça, il ne se remettait à jour
-    // qu'au relâcher. Écarté pendant un alt-glisser = cloner (os#1340) : ce sont
-    // les COPIES qui suivent le geste, l'original ne bouge pas.
-    if (this.drawing_area.isInSelectionMode()
-      && !this._nodeEventsHandler.is_alt_clone_dragging) {
+    // qu'au relâcher. (Sur main, ce bloc est en plus écarté pendant un
+    // alt-glisser = cloner — os#1340, absent de prod.)
+    if (this.drawing_area.isInSelectionMode()) {
       this.growEnclosingFrames()
     }
     // Geometric frame: drag pushes attached elements along (skipping
