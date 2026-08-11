@@ -50,7 +50,8 @@ import { LinkDrawNameLabel, LinkDrawValueLabel } from './DrawLabel'
 import { Class_ApplicationData } from '../types/ApplicationData'
 import { LinkStyle } from './ElementStyle'
 import {
-  openPresentationFor, canPresentTooltip, matchesPresentationTrigger,
+  openPresentationFor, opensPresentationOnClick, canPresentTooltip,
+  matchesPresentationTrigger,
   schedulePresentationHover, schedulePresentationHoverClose
 } from '../components/panels/presentation/openPresentation'
 
@@ -1269,14 +1270,16 @@ export class Class_LinkElement extends Class_LinkAttribute {
       else {
         drawing_area.selectOnly(this)
         drawing_area.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
-        // Clic nu : ouvre la PRÉSENTATION du flux (pop-up juxtaposée, ou panneau
-        // latéral s'il est ouvert). Le panneau de configuration, outil d'auteur,
-        // ne s'ouvre plus qu'à la demande, par son bouton.
-        openPresentationFor(
-          drawing_area.application_data,
-          this as unknown as Parameters<typeof openPresentationFor>[1],
-          { x: event.clientX, y: event.clientY }
-        )
+        // Le clic n'ouvre la présentation qu'en LECTURE (cf.
+        // opensPresentationOnClick) : en édition, sélectionner un flux est un
+        // geste de travail, pas une demande d'ouvrir une pop-up.
+        if (opensPresentationOnClick(drawing_area.application_data)) {
+          openPresentationFor(
+            drawing_area.application_data,
+            this as unknown as Parameters<typeof openPresentationFor>[1],
+            { x: event.clientX, y: event.clientY }
+          )
+        }
       }
     }
   }
