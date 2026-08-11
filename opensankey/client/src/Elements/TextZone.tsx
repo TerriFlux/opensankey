@@ -134,20 +134,9 @@ export class Class_ContainerElement extends Class_NodeBase {
       if (this.is_selected && !this.tied_to_nodes) {
         super.eventMouseDrag(event)
         // Agrandissement LIVE des cadres englobants (y compris emboîtés) pendant
-        // le déplacement : la taille d'un cadre tied = max(min, enveloppe des
-        // membres), donc un simple redraw le fait grandir vers la droite/bas ;
-        // expandToContainAttachedNodes déplace le coin quand le membre sort en
-        // haut/à gauche. Sans ça, le cadre ne suivait qu'au relâcher (dragEnd).
-        const growEnclosing = (el: Class_NodeBase, seen: Set<Class_NodeBase>) => {
-          el.attached_container.forEach(frame => {
-            if (!frame.tied_to_nodes || seen.has(frame)) return
-            seen.add(frame)
-            frame.growFrameToContainMembers()
-            frame.draw()
-            growEnclosing(frame, seen)
-          })
-        }
-        growEnclosing(this, new Set<Class_NodeBase>([this]))
+        // le déplacement. Mécanique commune à tous les membres (nœud comme zone
+        // de texte) : cf. Class_NodeBase.growEnclosingFrames.
+        this.growEnclosingFrames()
         return
       }
       const parent_frame = this.attached_container.find(c => c.tied_to_nodes)
