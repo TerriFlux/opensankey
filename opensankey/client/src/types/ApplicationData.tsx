@@ -2047,6 +2047,8 @@ export class Class_ApplicationData {
     const evtKeyY = ((evt.key === 'y') || (evt.key === 'Y')) && evtOnDrawingArea
     const evtKeyC = ((evt.key === 'c') || (evt.key === 'C')) && evtOnDrawingArea
     const evtKeyV = ((evt.key === 'v') || (evt.key === 'V')) && evtOnDrawingArea
+    // os#1340 — Ctrl+D duplique la sélection (nœuds + liens internes + zones de texte).
+    const evtKeyD = ((evt.key === 'd') || (evt.key === 'D')) && evtOnDrawingArea
     // OS#1273 — Ctrl+F ouvre la barre de recherche d'élément. Contrairement aux
     // autres raccourcis, il reste actif même hors zone de dessin (dans un input),
     // pour rester déclenchable quand le focus est ailleurs — comme un Ctrl+F natif.
@@ -2067,11 +2069,14 @@ export class Class_ApplicationData {
     // Ultra-shortcuts: typing on selected element opens inline edit ------------------
     // (issue su-model/opensankey#688)
     const evtIsPrintable = evt.key?.length === 1 && !evtModifier && !evt.altKey
+    // os#1340 — F2 ouvre l'édition inline du nom (comme la frappe directe, mais
+    // sans injecter de caractère : le texte existant est sélectionné en entier).
+    const evtIsRename = (evt.key === 'F2')
     const selectedNodes = app_ref.drawing_area.selected_nodes_list
     const selectedLinks = app_ref.drawing_area.selected_links_list
     const selectedContainers = app_ref.drawing_area.selected_containers_list
     if (
-      evtIsPrintable &&
+      (evtIsPrintable || evtIsRename) &&
       evtOnDrawingArea &&
       selectedLinks.length === 0 &&
       (
@@ -2085,47 +2090,53 @@ export class Class_ApplicationData {
         target.name_label_is_visible = true
         target.drawNameLabel()
       }
-      target.setInputLabelVisible(evt.key)
+      target.setInputLabelVisible(evtIsRename ? undefined : evt.key)
       return
     }
-    // Event to move all selected nodes with keyboard arrows --------------------------
+    // Event to move all selected elements with keyboard arrows -----------------------
+    // os#1340 — nudge : flèches = 1 px, Maj+flèches = pas de grille (comme draw.io).
+    // Porte sur toute la sélection déplaçable (nœuds ET zones de texte — avant, les
+    // zones n'étaient déplacées que par une surcharge OSP, retirée depuis).
     if (
       ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(evt.key) &&
       evtOnDrawingArea // Avoid using this hotkey in text-inputs
     ) {
-      // Deplace les noeuds sélectionné avec les flèches du clavier
-      if (evt.key == 'ArrowUp') {
-        app_ref.drawing_area.selected_nodes_list.forEach(node => {
-          node.position_y -= app_ref.drawing_area.grid_size
-          node.draw()
-        })
-      } else if (evt.key == 'ArrowDown') {
-        app_ref.drawing_area.selected_nodes_list.forEach(node => {
-          node.position_y += app_ref.drawing_area.grid_size
-          node.draw()
-        })
-      } else if (evt.key == 'ArrowLeft') {
-        app_ref.drawing_area.selected_nodes_list.forEach(node => {
-          node.position_x -= app_ref.drawing_area.grid_size
-          node.draw()
-        })
-      } else if (evt.key == 'ArrowRight') {
-        app_ref.drawing_area.selected_nodes_list.forEach(node => {
-          node.position_x += app_ref.drawing_area.grid_size
-          node.draw()
-        })
+      const moved = [
+        ...app_ref.drawing_area.selected_nodes_list,
+        ...app_ref.drawing_area.selected_containers_list
+      ]
+      if (moved.length > 0) {
+        // Ne pas laisser la page défiler pendant qu'on déplace la sélection.
+        evt.preventDefault()
+        const step = evt.shiftKey ? app_ref.drawing_area.grid_size : 1
+        const dx = evt.key === 'ArrowLeft' ? -step : (evt.key === 'ArrowRight' ? step : 0)
+        const dy = evt.key === 'ArrowUp' ? -step : (evt.key === 'ArrowDown' ? step : 0)
+        // #1230/#1231 — La position PERSISTÉE d'un nœud est son CENTRE (_center_x/_center_y,
+        // cf. centerForPersistence). Un déplacement aux flèches ne met à jour que le coin et
+        // ne déclenche pas de passe drawElements() complète qui resynchroniserait le centre :
+        // sans settleCenterAnchor, sauver après un déplacement clavier persiste le centre
+        // d'AVANT et le nœud revient à sa place au rechargement. Les zones de texte
+        // persistent leur coin et ne sont donc pas concernées (cohérent avec le drag).
+        const applyDelta = (sign: 1 | -1) => () => {
+          moved.forEach(el => {
+            el.position_x += sign * dx
+            el.position_y += sign * dy
+            el.draw()
+          })
+          // Settle sur les éléments DÉPLACÉS (pas la sélection vivante : au moment
+          // d'un undo, elle peut avoir changé). Sans effet pour les zones de texte.
+          moved.forEach(el => el.settleCenterAnchor())
+        }
+        // Un appui = une transition d'historique (comme le drag souris) : sans ça,
+        // Ctrl+Z après un nudge annulait silencieusement une action plus ancienne.
+        this._history!.saveUndo(applyDelta(-1))
+        this._history!.saveRedo(applyDelta(1))
+        applyDelta(1)()
+        // Update drawing area size so none of elements are outside the DA.
+        // Mode 'none' (revu post-#680) : pas de recadrage auto après un déplacement clavier
+        // (cohérent avec le drag souris).
+        if (this.drawing_area.auto_fit_mode !== 'none') this.drawing_area.areaAutoFit()
       }
-      // #1230/#1231 — La position PERSISTÉE d'un nœud est son CENTRE (_center_x/_center_y,
-      // cf. centerForPersistence). Un déplacement aux flèches ne met à jour que le coin et
-      // ne déclenche pas de passe drawElements() complète qui resynchroniserait le centre :
-      // sans ce commit, sauver après un déplacement clavier persiste le centre d'AVANT et le
-      // nœud revient à sa place au rechargement. Les zones de texte persistent leur coin et
-      // ne sont donc pas concernées (cohérent avec le fix du drag).
-      app_ref.drawing_area.selected_nodes_list.forEach(node => node.settleCenterAnchor())
-      // Update drawing area size so none of elements are outside the DA.
-      // Mode 'none' (revu post-#680) : pas de recadrage auto après un déplacement clavier
-      // (cohérent avec le drag souris).
-      if (this.drawing_area.auto_fit_mode !== 'none') this.drawing_area.areaAutoFit()
     }
     // Open config menu ---------------------------------------------------------------
     else if (evtKeyTab) {
@@ -2219,6 +2230,16 @@ export class Class_ApplicationData {
     else if (evtCtrlY || evtCtrlShiftZ) {
       evt.preventDefault()
       this._history!.applyRedo()
+    }
+    // os#1340 — Ctrl+D : duplique la sélection (nœuds + liens internes + zones de texte)
+    else if (evtCtrl && evtKeyD) {
+      // Prevent default event on ctrl + d (marque-page navigateur)
+      evt.preventDefault()
+      if (app_ref.drawing_area.selected_nodes_list.length > 0 ||
+        app_ref.drawing_area.selected_containers_list.length > 0) {
+        app_ref.drawing_area.duplicateSelection()
+        app_ref.saveInCache()
+      }
     }
     // Copy selected nodes
     else if (evtCtrl && evtKeyC) {
