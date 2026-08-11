@@ -960,6 +960,55 @@ export const AssignLinkLocalAttribute: AssignLinkLocalAttributeFuncType = (l: Sa
 
 
 /**
+ * Bornes d'une variable libre ecrite « [min...max] » dans `display_value` (SA#277).
+ *
+ * La lecture historique choisissait un separateur par cascade en testant '-' EN PREMIER : le signe
+ * du minimum servait alors de separateur.
+ *
+ *   '[-251...501]'.split('-')  ->  ['[', '251...501]']
+ *   free_mini = Number(''.)          = 0     <- borne basse perdue, remplacee par zero
+ *   free_maxi = Number('251...501')  = NaN   <- borne haute detruite
+ *
+ * D'ou les 77 `result_max` NaN de la publication « Filiere Foret Bois Grand Est » (result_max est
+ * lu depuis `extension.free_maxi`, cf. LinkValues.fromJSON) — tous sur des flux a minimum negatif,
+ * les intervalles a minimum positif passant, eux, par la branche '...'.
+ *
+ * On lit donc les deux NOMBRES eux-memes, signe et decimales compris, plutot que de deviner un
+ * separateur. `undefined` si la chaine n'en contient pas deux : l'appelant garde alors son ancienne
+ * cascade, pour un format historique que cette lecture ne reconnaitrait pas.
+ */
+/**
+ * Valeur numerique d'un flux PENDANT la migration, quelle que soit la forme du fichier (SA#277).
+ *
+ * Un 0.5 range la valeur d'un flux dans un TABLEAU (`"value": [1895]`) ; `GetLinkValue` rend alors
+ * ce tableau tel quel, et lire `.value` dessus donnait `undefined`. Le `+undefined` = NaN qui s'en
+ * suivait traversait `original_dist / dist` (repositionnement des flux recycles) jusqu'a
+ * `shape_starting_curve` / `shape_ending_curve` — les deux shifts y sont mappes, cf.
+ * persistenceLegacyKeyMaps. Sept flux recycles de « Filiere Foret Bois Grand Est » en portaient la
+ * trace, et un NaN casse le point fixe du round-trip (JSON le resserialise en `null`).
+ *
+ * Repli sur 0 pour toute forme illisible : une valeur inconnue ne doit pas empoisonner une
+ * geometrie, alors qu'un flux a 0 se dessine.
+ */
+const legacyLinkValue = (
+  data: SankeyData,
+  idLink: string
+): number => {
+  const holder = GetLinkValue(data, idLink) as unknown as { value?: unknown }
+  const raw = (holder && holder.value !== undefined) ? holder.value : holder
+  const numeric = Number(Array.isArray(raw) ? raw[0] : raw)
+  return Number.isFinite(numeric) ? numeric : 0
+}
+
+const parseFreeBounds = (
+  display_value: string
+): [number, number] | undefined => {
+  const numbers = display_value.match(/-?\d+(?:\.\d+)?/g)
+  if (!numbers || numbers.length < 2) return undefined
+  return [Number(numbers[0]), Number(numbers[numbers.length - 1])]
+}
+
+/**
  * Fichiers 0.5 : reconstruit les groupes de niveaux a partir des seules dimensions des noeuds.
  *
  * Un 0.5 range son agregation a DEUX endroits, et aucun n'est un descripteur de groupe :
@@ -2268,8 +2317,9 @@ const convert_links: convert_linksFuncType = (
         else {
           tmp = (v.display_value as string).split(' ')
         }
-        const free_mini = Number(tmp[0].substring(1))
-        const free_maxi = Number(tmp[1].substring(0, tmp[1].length - 1))
+        const bounds = parseFreeBounds(v.display_value as string)
+        const free_mini = bounds ? bounds[0] : Number(tmp[0].substring(1))
+        const free_maxi = bounds ? bounds[1] : Number(tmp[1].substring(0, tmp[1].length - 1))
         if (!v.extension) {
           v.extension = {}
         }
@@ -2679,13 +2729,13 @@ const convert_links: convert_linksFuncType = (
         //const shift_dist_max = 200
         const left_horiz_shift = l.local.left_horiz_shift ? l.local.left_horiz_shift - 50 : -50
         const right_horiz_shift = l.local.right_horiz_shift ? l.local.right_horiz_shift + 50 : 50
-        let original_dist = Math.abs(left_horiz_shift) + scale(+GetLinkValue(data, l.idLink).value)
+        let original_dist = Math.abs(left_horiz_shift) + scale(legacyLinkValue(data, l.idLink))
         //let shift_dist = Math.min(shift_dist_max, original_dist) // Approx to keep general shape
         AssignLinkLocalAttribute(l, 'right_horiz_shift', original_dist / dist) // value in [0; +oo]
         AssignLinkLocalAttribute(l, 'ending_tangeant', 0.001) // value in [0; +oo]
         // }
 
-        original_dist = Math.abs(right_horiz_shift) + scale(+GetLinkValue(data, l.idLink).value)
+        original_dist = Math.abs(right_horiz_shift) + scale(legacyLinkValue(data, l.idLink))
         //curve_dist = Math.max(curve_dist_min, Math.min(curve_dist_max, original_dist * curve_coef)) // Approx to keep general shape
         //shift_dist = Math.min(shift_dist_max, original_dist) // Approx to keep general shape
         AssignLinkLocalAttribute(l, 'left_horiz_shift', original_dist / dist) // value in [0; +oo]
@@ -2820,8 +2870,9 @@ const convert_links: convert_linksFuncType = (
             } else {
               tmp = the_display_value.split(' ')
             }
-            const free_mini = Number(tmp[0].substring(1))
-            const free_maxi = Number(tmp[1].substring(0, tmp[1].length - 1))
+            const bounds = parseFreeBounds(the_display_value)
+            const free_mini = bounds ? bounds[0] : Number(tmp[0].substring(1))
+            const free_maxi = bounds ? bounds[1] : Number(tmp[1].substring(0, tmp[1].length - 1))
             sankey_link_value.extension.free_mini = free_mini
             sankey_link_value.extension.free_maxi = free_maxi;
             (editable_link.value2 as SankeyLinkValue).display_value = ''
