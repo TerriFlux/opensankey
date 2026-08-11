@@ -389,7 +389,6 @@ export class NodeEventsHandler {
     // fois) ; Alt pendant le drag débraye le snap ponctuellement.
     this._smart_guides?.clear()
     this._smart_guides = null
-    const da = this._node.drawing_area
     if (da.smart_guides && !da.magnetic_nodes && da.isInSelectionMode() && da.application_data.is_editable) {
       this._smart_guides = new Class_SmartGuides(da, new Set(Object.keys(dict_old_pos)), seed_nodes)
     }

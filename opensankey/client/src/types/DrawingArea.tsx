@@ -3393,6 +3393,26 @@ export class Class_DrawingArea {
   // réserve à la fin, sur le cadrage final.
   private _suppress_scrollbar_reserve: boolean = false
   public get suppress_scrollbar_reserve(): boolean { return this._suppress_scrollbar_reserve }
+
+  /** Largeur du CHROME. Identique à `window_fitting_width` dès qu'un cadrage automatique
+   *  est actif : le chrome épouse alors la zone cadrée, gouttière de barre de défilement
+   *  comprise (#292 — la barre se loge HORS du dessin). En caméra libre au contraire, RIEN
+   *  ne rabote la zone : la barre se dessine PAR-DESSUS le bord du diagramme.
+   *
+   *  Porté de main pour la minimap (os#1346). La version de main ajoute aussi la réserve
+   *  du panneau (`panel_reserve_right`), notion qui n'existe pas sur cette branche : seule
+   *  la gouttière est prise en compte ici. */
+  public get chrome_fitting_width(): number {
+    if (this._auto_fit_mode !== 'none') return this.window_fitting_width
+    return this.window_fitting_width + this._scrollbar_reserve_right
+  }
+
+  /** Hauteur du CHROME (cf. `chrome_fitting_width`). */
+  public get chrome_fitting_height(): number {
+    if (this._auto_fit_mode !== 'none') return this.window_fitting_height
+    return this.window_fitting_height + this._scrollbar_reserve_bottom
+  }
+
   public get window_fitting_width(): number {
     // DA détachée : on cadre dans le conteneur hôte (modal), pas la fenêtre.
     if (this.is_detached) {
