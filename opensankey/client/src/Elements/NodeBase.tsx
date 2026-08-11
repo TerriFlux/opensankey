@@ -555,7 +555,10 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     this._nodeEventsHandler.handleMouseDrag(event)
     // Geometric frame: drag pushes attached elements along (skipping
     // those already moved by the selection drag, to avoid double offset).
-    if (this._tied_to_nodes && this.drawing_area.isInSelectionMode()) {
+    // os#1340 — pendant un alt-glisser = cloner, l'ORIGINAL ne bouge pas :
+    // il ne doit pas non plus pousser ses membres attachés.
+    if (this._tied_to_nodes && this.drawing_area.isInSelectionMode()
+      && !this._nodeEventsHandler.is_alt_clone_dragging) {
       const da = this.drawing_area
       const already_moved = new Set<Class_NodeBase>([
         ...da.selected_nodes_list as unknown as Class_NodeBase[],
