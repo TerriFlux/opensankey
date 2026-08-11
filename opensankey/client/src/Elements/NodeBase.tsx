@@ -550,9 +550,39 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     this._nodeDrawIcon?.refreshLabelResizeHandles()
   }
 
+  /**
+   * OS#1259 — Fait SUIVRE les cadres qui contiennent cet élément quand il bouge :
+   * chaque cadre tied grandit pour continuer à contenir ses membres, de proche en
+   * proche jusqu'aux cadres emboîtés les plus englobants.
+   *
+   * S'appuie sur `growFrameToContainMembers` (union sur les QUATRE côtés) et NON
+   * sur `expandToContainAttachedNodes`, qui ne déplace le coin que vers le haut et
+   * la gauche : un membre traîné vers le BAS ou la DROITE sortait du cadre sans
+   * que celui-ci suive — le cas le plus courant, puisqu'on descend un nœud sous
+   * ses voisins bien plus souvent qu'on ne le remonte au-dessus.
+   */
+  public growEnclosingFrames(visited: Set<Class_NodeBase> = new Set([this])) {
+    this._attached_container.forEach(cont => {
+      if (visited.has(cont)) return
+      visited.add(cont)
+      if (cont.tied_to_nodes) cont.growFrameToContainMembers()
+      cont.draw()
+      cont.growEnclosingFrames(visited)
+    })
+  }
+
   protected eventMouseDrag(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     super.eventMouseDrag(event)
     this._nodeEventsHandler.handleMouseDrag(event)
+    // Le cadre qui contient l'élément déplacé suit EN DIRECT, comme il le fait
+    // déjà quand le membre déplacé est une zone de texte (cf.
+    // Class_ContainerElement.eventMouseDrag). Sans ça, il ne se remettait à jour
+    // qu'au relâcher. Écarté pendant un alt-glisser = cloner (os#1340) : ce sont
+    // les COPIES qui suivent le geste, l'original ne bouge pas.
+    if (this.drawing_area.isInSelectionMode()
+      && !this._nodeEventsHandler.is_alt_clone_dragging) {
+      this.growEnclosingFrames()
+    }
     // Geometric frame: drag pushes attached elements along (skipping
     // those already moved by the selection drag, to avoid double offset).
     // os#1340 — pendant un alt-glisser = cloner, l'ORIGINAL ne bouge pas :
@@ -592,22 +622,12 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     super.eventMouseDragEnd(event)
     if (this.drawing_area.isInSelectionMode()) {
       // Auto-grow containing frames whose attached child just moved
-      // (push only the impacted side; never shrink). Propagation
-      // récursive vers le haut : un conteneur englobant emboîté doit
-      // aussi croître quand son enfant (lui-même un conteneur) vient
-      // de grandir. Sans ça, dans des modes englobants emboîtés, seule
-      // la boîte la plus immédiate suit le drag, pas ses ancêtres.
-      const visited = new Set<Class_NodeBase>([this])
-      const propagate = (node: Class_NodeBase) => {
-        node._attached_container.forEach(cont => {
-          if (visited.has(cont)) return
-          visited.add(cont)
-          if (cont.tied_to_nodes) cont.expandToContainAttachedNodes()
-          cont.draw()
-          propagate(cont)
-        })
-      }
-      propagate(this)
+      // (grow-only, jamais de rétrécissement). Propagation récursive vers le
+      // haut : un conteneur englobant emboîté doit aussi croître quand son
+      // enfant (lui-même un conteneur) vient de grandir. Sans ça, dans des
+      // modes englobants emboîtés, seule la boîte la plus immédiate suit le
+      // drag, pas ses ancêtres.
+      this.growEnclosingFrames()
       this.drawing_area.orderElementOnDA()
     }
     this._nodeEventsHandler.handleMouseDragEnd(event)
