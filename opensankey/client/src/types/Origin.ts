@@ -5,6 +5,11 @@
 // écrit un code inconnu n'empêche jamais un viewer plus ancien d'afficher
 // quelque chose — il retombe sur le code brut plutôt que sur du vide.
 //
+// Les LIBELLÉS vivent dans les ressources i18n (`inspector.origin.rules.*`) et
+// non ici : un catalogue local aurait sa propre notion de langue courante, qui
+// diverge de celle de l'application dès que l'utilisateur n'a pas choisi sa
+// langue explicitement.
+//
 // Le champ `trigger` est ce qui rend la trace REMONTABLE : il désigne l'élément
 // dont l'existence a entraîné celle-ci, et l'on peut donc dérouler la chaîne
 // jusqu'à la saisie qui en est à l'origine.
@@ -27,82 +32,10 @@ export type Type_Origin = {
   detail?: string
 }
 
-// Libellés des règles. Le français fait foi (langue de travail des études) ;
-// l'anglais sert de repli pour les autres langues. Une règle absente des deux
-// s'affiche par son code — jamais « je ne sais pas » silencieux.
-const ORIGIN_RULE_LABELS_FR: Record<string, string> = {
-  data_sheet: 'saisi sur une ligne d\'une feuille de données',
-  matrix_sheet: 'saisi dans une matrice de flux',
-  min_max_sheet: 'établi par une borne de la feuille « Min Max »',
-  constraints_sheet: 'établi par une équation de la feuille « Contraintes »',
-  ratio_flux_sheet: 'établi par une ligne de la feuille « Ratio Flux »',
-  ratio_stock_flux_sheet: 'établi par une ligne de la feuille « Ratio Stock Flux »',
-  stock_chaining_sheet: 'établi par une ligne de la feuille « Chaînage Stock »',
-  stocks_sheet: 'déclaré sur une ligne de la feuille « Stocks »',
-  stock_parent_aggregate: 'agrégat de stock créé d\'office sur le nœud parent',
-  stock_level_mirror: 'niveau de stock créé en miroir d\'une variation déclarée',
-  nodes_sheet: 'déclaré dans une feuille de nœuds',
-  nodes_agg_sheet: 'déclaré dans une feuille de nœuds agrégée',
-  node_block_parenthood: 'rattaché à un parent par la structure en blocs de la feuille de nœuds',
-  results_sheet: 'lu dans la feuille « Résultats »',
-  analysis_sheet: 'lu dans la feuille « Analyses des résultats »',
-  uncertainty_sheet: 'lu dans la feuille « Analyses d\'incertitudes »',
-  flux_from_secondary_sheet: 'créé depuis un onglet secondaire (option « Créer les flux depuis les onglets secondaires »)',
-  node_from_flux: 'créé parce qu\'un flux le désigne (option « Créer les nœuds depuis les flux »)',
-  propagate_to_parent: 'déduit : un enfant porte ce flux, il est remonté au parent',
-  propagate_to_children: 'déduit : le parent porte ce flux, il est descendu aux enfants',
-  single_child: 'déduit : le nœud n\'a qu\'un seul enfant, le flux lui revient nécessairement',
-  materialize_parent_aggregate: 'déduit : agrégat parent matérialisé pour équilibrer la hiérarchie',
-  datatag_broadcast: 'déduit : la structure du flux a été étendue à cette combinaison d\'étiquettes',
-  manual_draw: 'tracé à la main dans l\'application',
-  json_read: 'lu depuis un diagramme enregistré',
-  duplicate: 'issu d\'une duplication',
-  paste: 'issu d\'un copier-coller',
-  apply_layout: 'issu de l\'application d\'une mise en page',
-  merge_diagrams: 'issu d\'une fusion de diagrammes',
-  spreadsheet_edit: 'saisi dans l\'onglet tableur',
-  node_split: 'issu de la scission d\'un nœud',
-  expansion: 'issu d\'une expansion de nœud',
-}
-
-const ORIGIN_RULE_LABELS_EN: Record<string, string> = {
-  data_sheet: 'entered on a row of a data sheet',
-  matrix_sheet: 'entered in a flow matrix',
-  min_max_sheet: 'established by a bound of the “Min Max” sheet',
-  constraints_sheet: 'established by an equation of the “Constraints” sheet',
-  ratio_flux_sheet: 'established by a row of the “Flow ratio” sheet',
-  ratio_stock_flux_sheet: 'established by a row of the “Stock flow ratio” sheet',
-  stock_chaining_sheet: 'established by a row of the “Stock chaining” sheet',
-  stocks_sheet: 'declared on a row of the “Stocks” sheet',
-  stock_parent_aggregate: 'stock aggregate created on the parent node',
-  stock_level_mirror: 'stock level mirroring a declared variation',
-  nodes_sheet: 'declared in a nodes sheet',
-  nodes_agg_sheet: 'declared in an aggregated nodes sheet',
-  node_block_parenthood: 'attached to a parent by the block structure of the nodes sheet',
-  results_sheet: 'read from the “Results” sheet',
-  analysis_sheet: 'read from the “Results analysis” sheet',
-  uncertainty_sheet: 'read from the “Uncertainty analysis” sheet',
-  flux_from_secondary_sheet: 'created from a secondary sheet (option “Create flows from secondary sheets”)',
-  node_from_flux: 'created because a flow refers to it (option “Create nodes from flows”)',
-  propagate_to_parent: 'deduced: a child carries this flow, it was raised to the parent',
-  propagate_to_children: 'deduced: the parent carries this flow, it was pushed down to the children',
-  single_child: 'deduced: the node has a single child, the flow necessarily belongs to it',
-  materialize_parent_aggregate: 'deduced: parent aggregate materialised to balance the hierarchy',
-  datatag_broadcast: 'deduced: the flow structure was extended to this tag combination',
-  manual_draw: 'drawn by hand in the application',
-  json_read: 'read from a saved diagram',
-  duplicate: 'from a duplication',
-  paste: 'from a copy-paste',
-  apply_layout: 'from applying a layout',
-  merge_diagrams: 'from merging diagrams',
-  spreadsheet_edit: 'entered in the spreadsheet tab',
-  node_split: 'from splitting a node',
-  expansion: 'from expanding a node',
-}
-
 // Règles qui traduisent une DÉDUCTION du moteur et non une saisie : ce sont
 // celles dont il vaut la peine de dérouler la chaîne, puisqu'elles renvoient
-// forcément à un autre élément.
+// forcément à un autre élément. Cette liste double celle du parser
+// (`DEDUCED_RULES` dans origin.py) : les deux doivent bouger ensemble.
 const DEDUCED_RULES = new Set([
   'propagate_to_parent',
   'propagate_to_children',
@@ -116,13 +49,9 @@ const DEDUCED_RULES = new Set([
   'node_block_parenthood',
 ])
 
-/** Libellé lisible d'une règle, dans la langue courante si connue. */
-export const originRuleLabel = (rule: string, lang?: string): string => {
-  if (lang && lang.startsWith('fr')) {
-    return ORIGIN_RULE_LABELS_FR[rule] ?? ORIGIN_RULE_LABELS_EN[rule] ?? rule
-  }
-  return ORIGIN_RULE_LABELS_EN[rule] ?? ORIGIN_RULE_LABELS_FR[rule] ?? rule
-}
+/** Clé i18n du libellé d'une règle. */
+export const originRuleKey = (rule: string): string =>
+  'inspector.origin.rules.' + rule
 
 /** Vrai si l'élément a été déduit par le moteur plutôt que saisi. */
 export const originIsDeduced = (origin: Type_Origin): boolean =>
@@ -175,6 +104,9 @@ export type Type_OriginChainLink = {
   // Élément décrit par ce maillon ('' pour le premier, qui est la sélection).
   element: string
   origin: Type_Origin
+  // Vrai quand le déclencheur est nommé mais que son propre enregistrement est
+  // introuvable : le maillon vaut d'être montré, mais il ne dit pas pourquoi.
+  unresolved?: boolean
 }
 
 /**
@@ -199,10 +131,7 @@ export const walkOriginChain = (
     seen.add(key)
     const next = lookup(key)
     if (next === undefined) {
-      // Le déclencheur est connu de nom mais son propre enregistrement est
-      // introuvable : on le montre quand même comme dernier maillon, c'est une
-      // information utile, et on s'arrête là.
-      chain.push({ element: key, origin: { rule: 'json_read' } })
+      chain.push({ element: key, origin: { rule: 'unknown' }, unresolved: true })
       break
     }
     chain.push({ element: key, origin: next })

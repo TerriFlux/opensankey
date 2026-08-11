@@ -55,11 +55,46 @@ export const resources_inspector = {
           analysis: 'Analysis',
           title: 'Title',
           mfa: 'MFA',
-          origin: 'Origin',
           styles: 'Styles'
         },
-        // #411 — onglet « Origine » : pourquoi cet element existe.
+        // #411 — section « Origine » : pourquoi cet element existe.
         origin: {
+          title: 'Origin',
+          unresolved: 'this element triggered it, but the file does not say why it exists',
+          rules: {
+            data_sheet: 'entered on a row of a data sheet',
+            matrix_sheet: 'entered in a flow matrix',
+            min_max_sheet: 'established by a bound of the “Min Max” sheet',
+            constraints_sheet: 'established by an equation of the “Constraints” sheet',
+            ratio_flux_sheet: 'established by a row of the “Flow ratio” sheet',
+            ratio_stock_flux_sheet: 'established by a row of the “Stock flow ratio” sheet',
+            stock_chaining_sheet: 'established by a row of the “Stock chaining” sheet',
+            stocks_sheet: 'declared on a row of the “Stocks” sheet',
+            stock_parent_aggregate: 'stock aggregate created on the parent node',
+            stock_level_mirror: 'stock level mirroring a declared variation',
+            nodes_sheet: 'declared in a nodes sheet',
+            nodes_agg_sheet: 'declared in an aggregated nodes sheet',
+            node_block_parenthood: 'attached to a parent by the block structure of the nodes sheet',
+            results_sheet: 'read from the “Results” sheet',
+            analysis_sheet: 'read from the “Results analysis” sheet',
+            uncertainty_sheet: 'read from the “Uncertainty analysis” sheet',
+            flux_from_secondary_sheet: 'created from a secondary sheet (option “Create flows from secondary sheets”)',
+            node_from_flux: 'created because a flow refers to it (option “Create nodes from flows”)',
+            propagate_to_parent: 'deduced: a child carries this flow, it was raised to the parent',
+            propagate_to_children: 'deduced: the parent carries this flow, it was pushed down to the children',
+            single_child: 'deduced: the node has a single child, the flow necessarily belongs to it',
+            materialize_parent_aggregate: 'deduced: parent aggregate materialised to balance the hierarchy',
+            datatag_broadcast: 'deduced: the flow structure was extended to this tag combination',
+            manual_draw: 'drawn by hand in the application',
+            json_read: 'read from a saved diagram',
+            duplicate: 'from a duplication',
+            paste: 'from a copy-paste',
+            apply_layout: 'from applying a layout',
+            merge_diagrams: 'from merging diagrams',
+            spreadsheet_edit: 'entered in the spreadsheet tab',
+            node_split: 'from splitting a node',
+            expansion: 'from expanding a node'
+          },
           intro: 'Why the selected element exists, traced back to the entry it comes from.',
           this_element: 'This element',
           because: 'because',
@@ -231,11 +266,46 @@ export const resources_inspector = {
           analysis: 'Analyse',
           title: 'Titre',
           mfa: 'AFM',
-          origin: 'Origine',
           styles: 'Styles'
         },
-        // #411 — onglet « Origine » : pourquoi cet element existe.
+        // #411 — section « Origine » : pourquoi cet element existe.
         origin: {
+          title: 'Origine',
+          unresolved: 'c\'est lui qui l\'a déclenché, mais le fichier ne dit pas pourquoi il existe',
+          rules: {
+            data_sheet: 'saisi sur une ligne d\'une feuille de données',
+            matrix_sheet: 'saisi dans une matrice de flux',
+            min_max_sheet: 'établi par une borne de la feuille « Min Max »',
+            constraints_sheet: 'établi par une équation de la feuille « Contraintes »',
+            ratio_flux_sheet: 'établi par une ligne de la feuille « Ratio Flux »',
+            ratio_stock_flux_sheet: 'établi par une ligne de la feuille « Ratio Stock Flux »',
+            stock_chaining_sheet: 'établi par une ligne de la feuille « Chaînage Stock »',
+            stocks_sheet: 'déclaré sur une ligne de la feuille « Stocks »',
+            stock_parent_aggregate: 'agrégat de stock créé d\'office sur le nœud parent',
+            stock_level_mirror: 'niveau de stock créé en miroir d\'une variation déclarée',
+            nodes_sheet: 'déclaré dans une feuille de nœuds',
+            nodes_agg_sheet: 'déclaré dans une feuille de nœuds agrégée',
+            node_block_parenthood: 'rattaché à un parent par la structure en blocs de la feuille de nœuds',
+            results_sheet: 'lu dans la feuille « Résultats »',
+            analysis_sheet: 'lu dans la feuille « Analyses des résultats »',
+            uncertainty_sheet: 'lu dans la feuille « Analyses d\'incertitudes »',
+            flux_from_secondary_sheet: 'créé depuis un onglet secondaire (option « Créer les flux depuis les onglets secondaires »)',
+            node_from_flux: 'créé parce qu\'un flux le désigne (option « Créer les nœuds depuis les flux »)',
+            propagate_to_parent: 'déduit : un enfant porte ce flux, il est remonté au parent',
+            propagate_to_children: 'déduit : le parent porte ce flux, il est descendu aux enfants',
+            single_child: 'déduit : le nœud n\'a qu\'un seul enfant, le flux lui revient nécessairement',
+            materialize_parent_aggregate: 'déduit : agrégat parent matérialisé pour équilibrer la hiérarchie',
+            datatag_broadcast: 'déduit : la structure du flux a été étendue à cette combinaison d\'étiquettes',
+            manual_draw: 'tracé à la main dans l\'application',
+            json_read: 'lu depuis un diagramme enregistré',
+            duplicate: 'issu d\'une duplication',
+            paste: 'issu d\'un copier-coller',
+            apply_layout: 'issu de l\'application d\'une mise en page',
+            merge_diagrams: 'issu d\'une fusion de diagrammes',
+            spreadsheet_edit: 'saisi dans l\'onglet tableur',
+            node_split: 'issu de la scission d\'un nœud',
+            expansion: 'issu d\'une expansion de nœud'
+          },
           intro: 'Pourquoi l\'élément sélectionné existe, remonté jusqu\'à la saisie dont il provient.',
           this_element: 'Cet élément',
           because: 'parce que',
@@ -404,11 +474,12 @@ export const resources_inspector = {
           analysis: 'Análisis',
           title: 'Título',
           mfa: 'AFM',
-          origin: 'Origen',
           styles: 'Estilos'
         },
-        // #411 — onglet « Origine » : pourquoi cet element existe.
+        // #411 — section « Origine » : pourquoi cet element existe.
         origin: {
+          title: 'Origen',
+          unresolved: 'este elemento lo desencadenó, pero el archivo no indica por qué existe',
           intro: 'Por qué existe el elemento seleccionado, remontado hasta la entrada de la que procede.',
           this_element: 'Este elemento',
           because: 'porque',
@@ -577,11 +648,12 @@ export const resources_inspector = {
           analysis: 'Analyse',
           title: 'Titel',
           mfa: 'MFA',
-          origin: 'Herkunft',
           styles: 'Stile'
         },
-        // #411 — onglet « Origine » : pourquoi cet element existe.
+        // #411 — section « Origine » : pourquoi cet element existe.
         origin: {
+          title: 'Herkunft',
+          unresolved: 'dieses Element hat es ausgelöst, aber die Datei sagt nicht, warum es existiert',
           intro: 'Warum das ausgewählte Element existiert, zurückverfolgt bis zur Eingabe, aus der es stammt.',
           this_element: 'Dieses Element',
           because: 'weil',
@@ -750,11 +822,12 @@ export const resources_inspector = {
           analysis: 'Analisi',
           title: 'Titolo',
           mfa: 'AFM',
-          origin: 'Origine',
           styles: 'Stili'
         },
-        // #411 — onglet « Origine » : pourquoi cet element existe.
+        // #411 — section « Origine » : pourquoi cet element existe.
         origin: {
+          title: 'Origine',
+          unresolved: 'è stato questo elemento a innescarlo, ma il file non dice perché esiste',
           intro: 'Perché esiste l\'elemento selezionato, risalendo fino all\'inserimento da cui proviene.',
           this_element: 'Questo elemento',
           because: 'perché',
@@ -923,11 +996,12 @@ export const resources_inspector = {
           analysis: '分析',
           title: '标题',
           mfa: 'MFA',
-          origin: '来源',
           styles: '样式'
         },
-        // #411 — onglet « Origine » : pourquoi cet element existe.
+        // #411 — section « Origine » : pourquoi cet element existe.
         origin: {
+          title: '来源',
+          unresolved: '由该元素触发，但文件未说明它为何存在',
           intro: '所选元素为何存在，可追溯至其来源的录入。',
           this_element: '此元素',
           because: '因为',
@@ -1099,11 +1173,12 @@ export const resources_inspector = {
           analysis: '分析',
           title: 'タイトル',
           mfa: 'MFA',
-          origin: '由来',
           styles: 'スタイル'
         },
-        // #411 — onglet « Origine » : pourquoi cet element existe.
+        // #411 — section « Origine » : pourquoi cet element existe.
         origin: {
+          title: '由来',
+          unresolved: 'この要素が引き金ですが、それがなぜ存在するかはファイルに記録されていません',
           intro: '選択した要素が存在する理由を、その入力元まで遡って表示します。',
           this_element: 'この要素',
           because: 'なぜなら',
