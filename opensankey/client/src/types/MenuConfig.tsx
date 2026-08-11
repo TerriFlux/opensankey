@@ -162,10 +162,6 @@ export class Class_MenuConfig {
       // (resetDA, open_sankey, save_sankey, export_sankey, mep) stay registered
       // in dict_components_menu_top for backwards-compatible custom orders.
       'fichier',
-      // sa#414 — explorateur de projets/classeurs (bibliothèque du compte) :
-      // la clé est résolue par l'éditeur (dict_components_menu_top), le bouton
-      // se masque quand la bibliothèque ne répond pas (401/503).
-      'explorer',
       'export_sankey',
       'edition',
       'edit_style',
