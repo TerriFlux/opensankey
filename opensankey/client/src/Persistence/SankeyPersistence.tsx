@@ -26,6 +26,7 @@
 
 import {
   default_style_id, getBooleanFromJSON, getJSONFromJSON, getJSONOrUndefinedFromJSON, getNumberFromJSON,
+  getNumberOrNullFromJSON,
   getNumberOrUndefinedFromJSON, getStringListFromJSON, getStringOrUndefinedFromJSON, Type_MacroTagGroup, Type_Structure, type Type_JSON
 } from '../types/Utils'
 import {
@@ -37,6 +38,7 @@ import {
 import { getStringFromJSON, Type_DataSource, Type_IntervalDisplay, Type_DisaggregationGap } from '../types/Utils'
 import { ratio_flux_constraint_traduction } from '../types/Utils'
 import { originFromJSON, originToJSON } from '../types/Origin'
+import { determinationCatalogFromJSON, determinationCatalogToJSON } from '../types/Determination'
 import { Class_ContainerElement } from '../Elements/TextZone'
 import { Class_NodeElement } from '../Elements/Node'
 import { ConfigType } from '../Elements/ElementsAttributesConfig'
@@ -610,6 +612,10 @@ export class LinkElementPersistence extends ProtoElementPersistence {
     // élément d'un diagramme rouvert répondrait « lu depuis un JSON », ce qui
     // n'apprend rien. Réécrite telle quelle : le front ne la fabrique pas.
     if (link.origin) json_object['origin'] = originToJSON(link.origin)
+    // #426 — explication « d'où vient ta valeur » commune aux combinaisons
+    // d'étiquettes du flux. Comme l'origine, elle est réécrite telle quelle :
+    // le front ne dispose pas de la matrice de contraintes qui l'a produite.
+    if (link.determination !== null) json_object['determination'] = link.determination
     // Cadenas + espacement des ancres E/S (cf. menu "Ordre des flux E/S").
     if (link.source_side_locked) {
       json_object['source_side_locked'] = true
@@ -760,6 +766,9 @@ export class LinkElementPersistence extends ProtoElementPersistence {
     // #411 — restaure la trace d'origine si le fichier la porte. Absente d'un
     // fichier antérieur : reste indéfinie, pas de valeur inventée.
     link.origin = originFromJSON(json_object['origin'])
+    // #426 — explication du flux ; absente d'un fichier antérieur ou d'un
+    // diagramme jamais réconcilié : reste nulle, rien n'est inventé.
+    link.determination = getNumberOrNullFromJSON(json_object, 'determination')
     // Cadenas + espacement des ancres E/S (cf. menu "Ordre des flux E/S").
     // Clés absentes d'un fichier antérieur → valeurs par défaut (pas de migration).
     link.source_anchor_delta = getNumberFromJSON(json_object, 'source_anchor_delta', 0)
@@ -1484,6 +1493,12 @@ export class SankeyPersistence {
     // seulement s'il diffère du catalogue par défaut (fichiers existants inchangés).
     if (!sankey.units.equalsDefaultCatalog())
       json_object['units'] = sankey.units.toJSON() as unknown as Type_JSON
+    // #426 — catalogues de traçabilité « d'où vient ta valeur », partagés par
+    // tout le diagramme : les sujets des contraintes, et les explications que
+    // les flux et les cellules indexent. Écrits par la réconciliation, conservés
+    // ici pour que l'enregistrement survive à une sauvegarde depuis l'appli.
+    if (sankey.determination)
+      json_object['determination'] = determinationCatalogToJSON(sankey.determination)
     // Out
     return json_object
   }
@@ -1760,6 +1775,12 @@ export class SankeyPersistence {
       sankey.units.fromJSON(json_object['units'])
     else
       sankey.units.resetToDefault()
+
+    // #426 — catalogues « d'où vient ta valeur ». Un catalogue illisible est
+    // rejeté EN ENTIER (cf. determinationCatalogFromJSON) : des index qui
+    // pointeraient à côté produiraient des explications vraisemblables et
+    // fausses, ce que l'axe A a déjà payé une fois.
+    sankey.determination = determinationCatalogFromJSON(json_object['determination'])
 
     // Legacy migration: older files store the %IS/%OS/... family per-link via
     // value_option; fold them into the canonical list (sankeyexcelparser#116).

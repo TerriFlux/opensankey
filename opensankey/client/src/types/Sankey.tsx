@@ -42,6 +42,7 @@ import type { Class_FluxTag } from '../types/Tag'
 import { Class_NodeTagGroup, Class_FluxTagGroup, Class_DataTagGroup, Class_LevelTagGroup, Class_ViewTagGroup } from './TagGroup'
 import { Class_Theme, themeOpenSankey } from './Theme'
 import { Class_UnitsRegistry } from './Units'
+import type { Type_DeterminationCatalog } from './Determination'
 
 /**
  * Les styles dont un thème est propriétaire : `applyTheme` les ramène à leur AMORCE
@@ -171,6 +172,14 @@ export class Class_Sankey {
   // en diffère (additivité — les anciens fichiers restent inchangés).
   private _units: Class_UnitsRegistry = new Class_UnitsRegistry()
 
+  // #426 — catalogues « d'où vient ta valeur » écrits par la réconciliation :
+  // les sujets des contraintes du modèle, et les explications que les flux et
+  // les cellules désignent par un simple index. Le front les transporte sans
+  // jamais les fabriquer — il n'a pas la matrice de contraintes du solveur.
+  // undefined = ce diagramme n'a pas été réconcilié, ou l'a été par une version
+  // antérieure : l'inspecteur le dit, il n'invente pas d'explication.
+  private _determination: Type_DeterminationCatalog | undefined = undefined
+
   // Thème du diagramme (cf. NOTE-THEMES.md). `opensankey` est volontairement vide :
   // il décrit le comportement historique plutôt qu'il ne le change.
   private _theme: Class_Theme = themeOpenSankey()
@@ -240,6 +249,15 @@ export class Class_Sankey {
   /** OS#1286 — registre d'unités (grandeurs/unités/défauts) du diagramme. */
   public get units(): Class_UnitsRegistry {
     return this._units
+  }
+
+  /** #426 — catalogues « d'où vient ta valeur » produits par la réconciliation. */
+  public get determination(): Type_DeterminationCatalog | undefined {
+    return this._determination
+  }
+
+  public set determination(_: Type_DeterminationCatalog | undefined) {
+    this._determination = _
   }
 
   public delete() {
