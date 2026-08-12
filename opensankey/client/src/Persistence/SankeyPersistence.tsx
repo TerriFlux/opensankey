@@ -2023,6 +2023,11 @@ export class DrawingAreaPersistence {
     // arrow_use_standalone_layout, arrow_spike_*) sont désormais des attributs de
     // flux sérialisés avec les shape_* de chaque flux/style. Plus rien à écrire ici
     // (les anciennes clés restent lues par fromJSON pour migrer les vieux fichiers).
+    // sa#419 — Repli de la minimap : réglage du DOCUMENT, écrit seulement quand la
+    // vignette est dépliée. Refermer la minimap EFFACE donc la clé (retour au défaut),
+    // sans piège de valeur falsy : ici `false` EST le défaut, contrairement au plancher
+    // d'épaisseur ci-dessus où 0 est un réglage à part entière.
+    if (drawing_area.minimap_open) json_object['minimap_open'] = true
     // OS#1272 — Marqueur de bilan (réglages globaux). Sérialisés seulement hors défaut.
     if (drawing_area.balance_marker_enabled) json_object['balance_marker_enabled'] = true
     if (drawing_area.balance_marker_strategy !== 'relative') json_object['balance_marker_strategy'] = drawing_area.balance_marker_strategy
@@ -2490,6 +2495,9 @@ export class DrawingAreaPersistence {
         if (legacy > 0) migrated_link_style.shape_arrow_min_width = legacy
       }
     }
+    // sa#419 — Repli de la minimap. Clé absente (tout fichier antérieur) ⇒ repliée,
+    // c'est-à-dire exactement le comportement d'avant la persistance.
+    drawing_area['_minimap_open'] = getBooleanFromJSON(json_object, 'minimap_open', false)
     // OS#1272 — Marqueur de bilan (réglages globaux).
     drawing_area['_balance_marker_enabled'] = getBooleanFromJSON(json_object, 'balance_marker_enabled', false)
     drawing_area['_balance_marker_strategy'] = getStringFromJSON(json_object, 'balance_marker_strategy', 'relative') as 'exact' | 'absolute' | 'relative'

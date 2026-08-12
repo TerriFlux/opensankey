@@ -43,6 +43,15 @@ export const ZOOM_TOPIC = 'zoom'
  */
 export const PANELS_TOPIC = 'panels'
 
+/**
+ * sa#419 — Topic « repli de la minimap ». Depuis que l'état vit dans le DOCUMENT
+ * (`Class_DrawingArea.minimap_open`) et non plus dans le stockage du poste, il a deux
+ * lecteurs séparés dans l'arbre : le BOUTON, rangé dans la colonne d'outils de droite,
+ * et la VIGNETTE, montée au premier niveau pour exister même sans colonne (page
+ * publiée). Ni l'un ni l'autre ne re-rend l'autre : ils se retrouvent ici.
+ */
+export const MINIMAP_TOPIC = 'minimap'
+
 export class Class_EventBus {
   private _listeners: Map<string, Set<() => void>> = new Map()
 
