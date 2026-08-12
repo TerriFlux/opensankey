@@ -959,6 +959,173 @@ export const AssignLinkLocalAttribute: AssignLinkLocalAttributeFuncType = (l: Sa
 // }
 
 
+/**
+ * Bornes d'une variable libre ecrite « [min...max] » dans `display_value` (SA#277).
+ *
+ * La lecture historique choisissait un separateur par cascade en testant '-' EN PREMIER : le signe
+ * du minimum servait alors de separateur.
+ *
+ *   '[-251...501]'.split('-')  ->  ['[', '251...501]']
+ *   free_mini = Number(''.)          = 0     <- borne basse perdue, remplacee par zero
+ *   free_maxi = Number('251...501')  = NaN   <- borne haute detruite
+ *
+ * D'ou les 77 `result_max` NaN de la publication « Filiere Foret Bois Grand Est » (result_max est
+ * lu depuis `extension.free_maxi`, cf. LinkValues.fromJSON) — tous sur des flux a minimum negatif,
+ * les intervalles a minimum positif passant, eux, par la branche '...'.
+ *
+ * On lit donc les deux NOMBRES eux-memes, signe et decimales compris, plutot que de deviner un
+ * separateur. `undefined` si la chaine n'en contient pas deux : l'appelant garde alors son ancienne
+ * cascade, pour un format historique que cette lecture ne reconnaitrait pas.
+ */
+/**
+ * Valeur numerique d'un flux PENDANT la migration, quelle que soit la forme du fichier (SA#277).
+ *
+ * Un 0.5 range la valeur d'un flux dans un TABLEAU (`"value": [1895]`) ; `GetLinkValue` rend alors
+ * ce tableau tel quel, et lire `.value` dessus donnait `undefined`. Le `+undefined` = NaN qui s'en
+ * suivait traversait `original_dist / dist` (repositionnement des flux recycles) jusqu'a
+ * `shape_starting_curve` / `shape_ending_curve` — les deux shifts y sont mappes, cf.
+ * persistenceLegacyKeyMaps. Sept flux recycles de « Filiere Foret Bois Grand Est » en portaient la
+ * trace, et un NaN casse le point fixe du round-trip (JSON le resserialise en `null`).
+ *
+ * Repli sur 0 pour toute forme illisible : une valeur inconnue ne doit pas empoisonner une
+ * geometrie, alors qu'un flux a 0 se dessine.
+ */
+const legacyLinkValue = (
+  data: SankeyData,
+  idLink: string
+): number => {
+  const holder = GetLinkValue(data, idLink) as unknown as { value?: unknown }
+  const raw = (holder && holder.value !== undefined) ? holder.value : holder
+  const numeric = Number(Array.isArray(raw) ? raw[0] : raw)
+  return Number.isFinite(numeric) ? numeric : 0
+}
+
+const parseFreeBounds = (
+  display_value: string
+): [number, number] | undefined => {
+  const numbers = display_value.match(/-?\d+(?:\.\d+)?/g)
+  if (!numbers || numbers.length < 2) return undefined
+  return [Number(numbers[0]), Number(numbers[numbers.length - 1])]
+}
+
+/**
+ * Fichiers 0.5 : reconstruit les groupes de niveaux a partir des seules dimensions des noeuds.
+ *
+ * Un 0.5 range son agregation a DEUX endroits, et aucun n'est un descripteur de groupe :
+ * la hierarchie dans `nodes[*].dimensions[<dim>] = { level, parent_name }`, et l'etat affiche
+ * dans `display` / `node_visible`. Il n'a ni `levelTags`, ni nodeTag de banniere 'level', ni
+ * nodeTag `Dimensions` — le seul endroit qui fabriquait des levelTags depuis `dimensions[*].level`
+ * (plus haut, `data.nodeTags.Dimensions`) ne se declenchait donc JAMAIS sur un 0.5.
+ *
+ * Sans groupe de niveaux, `NodeHasDisplayedLevel` ne filtre rien et la conversion des dimensions
+ * (`nt[0] in levelTags`, plus bas) ne s'applique a rien : tous les niveaux de toutes les dimensions
+ * s'affichaient EN MEME TEMPS (« Filiere Foret Bois Grand Est » : 186 noeuds au lieu de 47).
+ *
+ * On rejoue donc ce que le fichier montrait :
+ * - un groupe de niveaux par dimension, tags '1'..max, chaque noeud tague de son niveau ;
+ * - le niveau SELECTIONNE est le plus agrege parmi les noeuds affiches (`display`) de la dimension.
+ *   Aucun noeud affiche ⇒ aucun tag selectionne : la dimension est un axe alternatif que le fichier
+ *   ne montrait pas (ici « Especes », « NaN »), et ses noeuds restent masques ;
+ * - une feuille recoit aussi les niveaux PLUS FINS que le sien : descendre au-dela de sa profondeur
+ *   ne doit pas la faire disparaitre (meme intention que la branche `nodeTags.Dimensions`, mais sans
+ *   lui rendre les niveaux plus AGREGES, qui la feraient apparaitre trop tot) ;
+ * - un noeud masque sans aucune relation de parente est marque `antitag` : n'etant ni parent ni
+ *   enfant, aucun filtre de niveau ne peut l'atteindre (cf. checkIfRelatedDimensionsAreSelected).
+ */
+const convert_legacy_dimensions_as_levelTags = (
+  data: SankeyData
+): void => {
+  const is_shown = (n: SankeyNode) => ((n as unknown as { display?: boolean }).display !== false)
+  const dimension_level = (n: SankeyNode, dim: string) => {
+    const level = n.dimensions?.[dim]?.level
+    return (typeof level === 'number' && level >= 1) ? level : undefined
+  }
+
+  // Releve des dimensions QUE PERSONNE NE DECRIT : celles deja portees par un groupe de tags
+  // (levelTags, ou nodeTags converti plus haut) sont laissees telles quelles.
+  const surveys: { [dim: string]: { max_level: number, shown_levels: number[] } } = {}
+  Object.values(data.nodes).forEach(n => {
+    Object.keys(n.dimensions ?? {}).forEach(dim => {
+      if (data.levelTags[dim] || data.nodeTags[dim]) return
+      const level = dimension_level(n, dim)
+      if (level === undefined) return
+      const survey = surveys[dim] ?? (surveys[dim] = { max_level: 1, shown_levels: [] })
+      survey.max_level = Math.max(survey.max_level, level)
+      if (is_shown(n)) survey.shown_levels.push(level)
+    })
+  })
+  const dims = Object.keys(surveys)
+  if (dims.length === 0) return
+
+  // 'Primaire' est traite partout comme le groupe par DEFAUT, jetable des qu'un autre groupe de
+  // niveaux existe (ici meme plus haut, et aussi dans SankeyPersistence / NodeDimension). Sur un
+  // 0.5 multi-dimensions c'est pourtant le groupe PORTANT — celui de tous les noeuds affiches.
+  // On le renomme donc plutot que de compter sur des gardes ecrites pour l'inverse.
+  if (dims.length > 1 && surveys['Primaire']) {
+    let renamed = 'Niveaux'
+    for (let i = 2; surveys[renamed] || data.levelTags[renamed] || data.nodeTags[renamed]; i++) {
+      renamed = 'Niveaux ' + String(i)
+    }
+    surveys[renamed] = surveys['Primaire']
+    delete surveys['Primaire']
+    Object.values(data.nodes).forEach(n => {
+      if (n.dimensions?.['Primaire'] === undefined) return
+      n.dimensions[renamed] = n.dimensions['Primaire']
+      delete n.dimensions['Primaire']
+    })
+  }
+
+  Object.entries(surveys).forEach(([dim, survey]) => {
+    const parents = new Set(
+      Object.values(data.nodes)
+        .map(n => n.dimensions?.[dim]?.parent_name)
+        .filter(parent_name => parent_name !== undefined)
+    )
+    const selected_level = (survey.shown_levels.length > 0)
+      ? Math.min(...survey.shown_levels)
+      : undefined
+
+    data.levelTags[dim] = {
+      group_name: dim,
+      color_map: 'jet',
+      show_legend: false,
+      banner: 'level',
+      tags: {},
+      activated: true,
+      siblings: []
+    }
+    for (let level = 1; level <= survey.max_level; level++) {
+      data.levelTags[dim]['tags'][String(level)] = {
+        name: String(level),
+        selected: level === selected_level
+      }
+    }
+
+    Object.values(data.nodes).forEach(n => {
+      const level = dimension_level(n, dim)
+      if (level === undefined) return
+      n.tags[dim] = [String(level)]
+      if (!parents.has(n.idNode)) {
+        for (let finer = level + 1; finer <= survey.max_level; finer++) {
+          n.tags[dim].push(String(finer))
+        }
+      }
+    })
+  })
+
+  // Noeuds masques qu'aucun filtre de niveau ne peut atteindre (ni parent, ni enfant).
+  Object.values(data.nodes).forEach(n => {
+    if (is_shown(n)) return
+    const own_dims = Object.keys(n.dimensions ?? {}).filter(dim => surveys[dim])
+    const has_relation = own_dims.some(dim =>
+      n.dimensions[dim].parent_name !== undefined ||
+      Object.values(data.nodes).some(other => other.dimensions?.[dim]?.parent_name === n.idNode)
+    )
+    if (has_relation) return
+    own_dims.forEach(dim => { n.dimensions[dim].antitag = true })
+  })
+}
+
 const convert_tags: convert_tagsFuncType = (
   data: SankeyData
 ): void => {
@@ -1337,6 +1504,10 @@ const convert_tags: convert_tagsFuncType = (
       delete data.nodeTags[tagg[0]]
     }
   })
+
+  // Dernier recours : les dimensions que le fichier porte sans les decrire (0.5). Apres les
+  // conversions ci-dessus, pour ne synthetiser que ce qu'aucun groupe ne couvre deja.
+  convert_legacy_dimensions_as_levelTags(data)
 
   // Assign colorMap to either fluxTags or nodesTags since now we can display color palette of both at the same time
   const list_fluxTag = Object.entries(data.fluxTags).filter(ft => ft[1].show_legend)
@@ -2146,8 +2317,9 @@ const convert_links: convert_linksFuncType = (
         else {
           tmp = (v.display_value as string).split(' ')
         }
-        const free_mini = Number(tmp[0].substring(1))
-        const free_maxi = Number(tmp[1].substring(0, tmp[1].length - 1))
+        const bounds = parseFreeBounds(v.display_value as string)
+        const free_mini = bounds ? bounds[0] : Number(tmp[0].substring(1))
+        const free_maxi = bounds ? bounds[1] : Number(tmp[1].substring(0, tmp[1].length - 1))
         if (!v.extension) {
           v.extension = {}
         }
@@ -2557,13 +2729,13 @@ const convert_links: convert_linksFuncType = (
         //const shift_dist_max = 200
         const left_horiz_shift = l.local.left_horiz_shift ? l.local.left_horiz_shift - 50 : -50
         const right_horiz_shift = l.local.right_horiz_shift ? l.local.right_horiz_shift + 50 : 50
-        let original_dist = Math.abs(left_horiz_shift) + scale(+GetLinkValue(data, l.idLink).value)
+        let original_dist = Math.abs(left_horiz_shift) + scale(legacyLinkValue(data, l.idLink))
         //let shift_dist = Math.min(shift_dist_max, original_dist) // Approx to keep general shape
         AssignLinkLocalAttribute(l, 'right_horiz_shift', original_dist / dist) // value in [0; +oo]
         AssignLinkLocalAttribute(l, 'ending_tangeant', 0.001) // value in [0; +oo]
         // }
 
-        original_dist = Math.abs(right_horiz_shift) + scale(+GetLinkValue(data, l.idLink).value)
+        original_dist = Math.abs(right_horiz_shift) + scale(legacyLinkValue(data, l.idLink))
         //curve_dist = Math.max(curve_dist_min, Math.min(curve_dist_max, original_dist * curve_coef)) // Approx to keep general shape
         //shift_dist = Math.min(shift_dist_max, original_dist) // Approx to keep general shape
         AssignLinkLocalAttribute(l, 'left_horiz_shift', original_dist / dist) // value in [0; +oo]
@@ -2698,8 +2870,9 @@ const convert_links: convert_linksFuncType = (
             } else {
               tmp = the_display_value.split(' ')
             }
-            const free_mini = Number(tmp[0].substring(1))
-            const free_maxi = Number(tmp[1].substring(0, tmp[1].length - 1))
+            const bounds = parseFreeBounds(the_display_value)
+            const free_mini = bounds ? bounds[0] : Number(tmp[0].substring(1))
+            const free_maxi = bounds ? bounds[1] : Number(tmp[1].substring(0, tmp[1].length - 1))
             sankey_link_value.extension.free_mini = free_mini
             sankey_link_value.extension.free_maxi = free_maxi;
             (editable_link.value2 as SankeyLinkValue).display_value = ''

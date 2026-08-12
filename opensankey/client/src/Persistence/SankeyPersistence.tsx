@@ -2035,6 +2035,11 @@ export class DrawingAreaPersistence {
     // arrow_use_standalone_layout, arrow_spike_*) sont désormais des attributs de
     // flux sérialisés avec les shape_* de chaque flux/style. Plus rien à écrire ici
     // (les anciennes clés restent lues par fromJSON pour migrer les vieux fichiers).
+    // sa#419 — Repli de la minimap : réglage du DOCUMENT, écrit seulement quand la
+    // vignette est dépliée. Refermer la minimap EFFACE donc la clé (retour au défaut),
+    // sans piège de valeur falsy : ici `false` EST le défaut, contrairement au plancher
+    // d'épaisseur ci-dessus où 0 est un réglage à part entière.
+    if (drawing_area.minimap_open) json_object['minimap_open'] = true
     // OS#1272 — Marqueur de bilan (réglages globaux). Sérialisés seulement hors défaut.
     if (drawing_area.balance_marker_enabled) json_object['balance_marker_enabled'] = true
     if (drawing_area.balance_marker_strategy !== 'relative') json_object['balance_marker_strategy'] = drawing_area.balance_marker_strategy
@@ -2096,6 +2101,11 @@ export class DrawingAreaPersistence {
     if (drawing_area.data_source !== 'reconciled') json_object['data_source'] = drawing_area.data_source
     if (drawing_area.interval_display !== 'free_value') json_object['interval_display'] = drawing_area.interval_display
     if (drawing_area.magnetic_nodes) json_object['magnetic_nodes'] = drawing_area.magnetic_nodes
+    // os#671 — smart guides : actifs par défaut, on ne persiste que la désactivation.
+    if (!drawing_area.smart_guides) json_object['smart_guides'] = false
+    // sa#422 — flèches de création rapide : visibles par défaut, on ne persiste que
+    // leur coupure. Clé absente (tout fichier antérieur) ⇒ comportement historique.
+    if (drawing_area.connection_arrows_off) json_object['connection_arrows_off'] = true
 
     // Paper format
     if (drawing_area.paper_format !== default_paper_format) json_object['paper_format'] = drawing_area.paper_format
@@ -2500,6 +2510,9 @@ export class DrawingAreaPersistence {
         if (legacy > 0) migrated_link_style.shape_arrow_min_width = legacy
       }
     }
+    // sa#419 — Repli de la minimap. Clé absente (tout fichier antérieur) ⇒ repliée,
+    // c'est-à-dire exactement le comportement d'avant la persistance.
+    drawing_area['_minimap_open'] = getBooleanFromJSON(json_object, 'minimap_open', false)
     // OS#1272 — Marqueur de bilan (réglages globaux).
     drawing_area['_balance_marker_enabled'] = getBooleanFromJSON(json_object, 'balance_marker_enabled', false)
     drawing_area['_balance_marker_strategy'] = getStringFromJSON(json_object, 'balance_marker_strategy', 'relative') as 'exact' | 'absolute' | 'relative'
@@ -2516,6 +2529,10 @@ export class DrawingAreaPersistence {
     }
     drawing_area['_width'] = getNumberFromJSON(json_object, 'width', drawing_area.width)
     drawing_area['_magnetic_nodes'] = getBooleanFromJSON(json_object, 'magnetic_nodes', drawing_area.magnetic_nodes)
+    // os#671 — smart guides (défaut true : absent du JSON = actif).
+    drawing_area['_smart_guides'] = getBooleanFromJSON(json_object, 'smart_guides', drawing_area.smart_guides)
+    // sa#422 — flèches de création rapide (défaut false : absent du JSON = flèches visibles).
+    drawing_area['_connection_arrows_off'] = getBooleanFromJSON(json_object, 'connection_arrows_off', false)
 
     // Paper format
     drawing_area['_paper_format'] = getStringFromJSON(json_object, 'paper_format', default_paper_format) as Type_PaperFormat

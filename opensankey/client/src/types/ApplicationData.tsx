@@ -27,6 +27,7 @@
 // External imports
 //import React, { Dispatch, FC, MutableRefObject, SetStateAction, useRef } from 'react'
 import LZString from 'lz-string'
+import pako from 'pako'
 import i18next, { TFunction, i18n } from 'i18next'
 import * as d3 from '../d3Modules'
 
@@ -37,7 +38,7 @@ import { Class_GuidedTour } from './GuidedTour'
 import { CreateToastFnReturn } from '@chakra-ui/react'
 
 import { Class_MenuConfig } from '../types/MenuConfig'
-import { const_default_position_x, const_default_position_y, default_file_name, default_main_sankey_id, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, randomId, toast_bypass, Type_JSON } from './Utils'
+import { const_default_position_x, const_default_position_y, default_file_name, default_main_sankey_id, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, makeId, randomId, toast_bypass, Type_JSON } from './Utils'
 import { getPublishOptions, PublishOptions } from './PublishOptions'
 import { Class_ApplicationHistory } from './ApplicationHistory'
 import { ViewsReader } from './ViewsReader'
@@ -126,6 +127,45 @@ export type Type_SankeythequeOrigin = {
   file_path: string
   title: string
   source: 'mfadata' | 'sankeydata'
+}
+
+/**
+ * OS#85 — Une FEUILLE du document : un AUTRE diagramme, indépendant, dans le même
+ * fichier (règle des deux niveaux, cf. NOTE-CONSTRUCTEUR-DE-SITE.md §6) : une VUE
+ * suit les données de son diagramme (heredited_attr), une FEUILLE porte d'autres
+ * données et vit sa vie. Mécanisme FRÈRE des vues mais au niveau DOCUMENT.
+ */
+export type Type_SheetEntry = {
+  /** Nom affiché dans l'onglet (bas de la grande zone). */
+  name: string
+  /**
+   * Snapshot gzip du diagramme complet de la feuille (JSON du document SANS la clé
+   * racine `sheets` — cf. `_currentDiagramAsSheetJSON`). `undefined` pour la feuille
+   * COURANTE : son contenu est l'état vivant (drawing_area + vues), rafraîchi ici à
+   * chaque bascule / sauvegarde.
+   */
+  json?: Uint8Array
+}
+
+/**
+ * Association du document ouvert à sa BRIQUE de bibliothèque (sa#399) : id du
+ * projet côté serveur (server/library.py) et chemin du fichier dans le manifeste
+ * des versions. PERSISTÉE dans le JSON du diagramme (clé racine `library_ref`)
+ * pour survivre au fichier : rouvrir le JSON ré-associe le document à sa brique,
+ * et « enregistrer dans ma bibliothèque » y dépose la version suivante au lieu
+ * d'en créer une nouvelle. Un fichier SANS cette clé = nouvelle brique.
+ */
+export type Type_LibraryRef = {
+  project_id: number
+  path: string
+}
+
+/** Relecture défensive de la clé racine `library_ref` : absente ou malformée => null. */
+export const parseLibraryRef = (value: unknown): Type_LibraryRef | null => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+  const ref = value as { project_id?: unknown, path?: unknown }
+  if (typeof ref.project_id !== 'number' || typeof ref.path !== 'string' || !ref.path) return null
+  return { project_id: ref.project_id, path: ref.path }
 }
 
 // CLASS APPLICATION DATA **************************************************************/
@@ -297,6 +337,11 @@ export class Class_ApplicationData {
   // Persistés en JSON pour qu'une re-publication / mise à jour reparte exactement des mêmes réglages.
   // /!\ Distinct de `publish_options` (config viewer runtime read-only issue de window.sankey).
   protected _publish_settings: Type_JSON = {}
+  // sa#399 — Brique de bibliothèque associée au document ouvert. PERSISTÉE en JSON
+  // (contrairement à _sankeytheque_origin, provenance de session) : la référence est une
+  // propriété du diagramme, elle voyage avec le fichier. Null = document jamais déposé,
+  // « enregistrer dans ma bibliothèque » créera un projet (nouvelle brique).
+  protected _library_ref: Type_LibraryRef | null = null
 
 
   /**
@@ -361,6 +406,34 @@ export class Class_ApplicationData {
   protected _current_view_id: string = default_main_sankey_id
   public get current_view_id() { return this._current_view_id }
   public set current_view_id(v: string) { this._current_view_id = v }
+
+  // ==========================================================================================
+  // ÉTAT DES FEUILLES (OS#85 — plusieurs feuilles de dessin, comme draw.io)
+  // ------------------------------------------------------------------------------------------
+  // Une feuille = un diagramme indépendant du document (autres données), quand une vue = une
+  // autre lecture des MÊMES données (règle des deux niveaux). Le système de vues reste INTACT :
+  // chaque feuille embarque son diagramme complet, vues comprises. La feuille COURANTE est
+  // l'état vivant de l'application ; les autres sont des snapshots gzip (comme les vues).
+  // Un document sans feuilles (cas historique) a un état vide : aucune clé `sheets` en JSON.
+  // ==========================================================================================
+
+  /** Feuilles du document, indexées par id (snapshot gzip sauf feuille courante). */
+  protected _sheets: { [id: string]: Type_SheetEntry } = {}
+  public get sheets_dict() { return this._sheets }
+
+  /** Ordre d'affichage des onglets de feuilles. Vide = document mono-feuille historique. */
+  protected _sheets_order: string[] = []
+  public get sheets_order() { return this._sheets_order }
+
+  /** Id de la feuille courante ('' tant que le document n'a pas de feuilles). */
+  protected _current_sheet_id: string = ''
+  // Vrai pendant qu'un contenu de feuille se charge via fromJSON (cf. _loadSheetContent) :
+  // coupe la redirection « fichier sans feuilles -> feuille courante » de fromJSON.
+  protected _loading_into_sheet: boolean = false
+  public get current_sheet_id() { return this._current_sheet_id }
+
+  /** True dès que le document porte des feuilles nommées (au moins une entrée). */
+  public get has_sheets(): boolean { return this._sheets_order.length > 0 }
 
   // Service de LECTURE des vues (#1316). Instancié via une fabrique virtuelle : OpenSankey+
   // (Class_ApplicationDataOSP) la surcharge pour fournir un `ViewsManager` (édition) à la place,
@@ -643,11 +716,20 @@ export class Class_ApplicationData {
     // plus à l'écran — le réenregistrement en place doit donc redevenir impossible.
     // (Le chargement d'une étude la repose juste après, cf. loadJsonTemplate.)
     this._sankeytheque_origin = null
+    // sa#399 — Nouveau document = nouvelle brique : la référence bibliothèque ne survit
+    // qu'au travers du JSON (fromJSON la repose juste après si le fichier la porte).
+    this._library_ref = null
     // La doc markdown est attachée au diagramme : un nouveau diagramme repart d'une doc vide.
     this._documentation_markdown = {}
     this._documentation_images = {}
     // Les paramètres de publication sont attachés au diagramme : nouveau diagramme => réglages vierges.
     this._publish_settings = {}
+    // OS#85 — Les feuilles appartiennent au DOCUMENT : en charger un autre les efface.
+    // Les bascules de feuille, qui passent par fromJSON (donc par ici), préservent
+    // l'état autour de l'appel (cf. _loadSheetContent).
+    this._sheets = {}
+    this._sheets_order = []
+    this._current_sheet_id = ''
     // Undraw and create new DA
     this._drawing_area.unDraw()
     this._drawing_area = this.createNewDrawingArea()
@@ -873,9 +955,14 @@ export class Class_ApplicationData {
     if (doc_serialized !== undefined) json_object['documentation_markdown'] = doc_serialized
     if (Object.keys(this._documentation_images).length > 0) json_object['documentation_images'] = this._documentation_images
     if (Object.keys(this._publish_settings).length > 0) json_object['publish_settings'] = this._publish_settings
+    // sa#399 — Référence de brique de bibliothèque, clé racine persistée avec le diagramme.
+    if (this._library_ref) json_object['library_ref'] = { ...this._library_ref }
     json_object['main_zone'] = this.menu_configuration.mainZoneStateToJSON()
     // OS#300 Lot 4 — tailles + mode des panneaux (barre latérale / pop-ups).
     json_object['panels'] = this.menu_configuration.panels.toJSON()
+    // OS#85 — Feuilles du document (clé racine `sheets`). La racine du fichier EST le
+    // contenu de la feuille courante (compat : un ancien lecteur l'affiche telle quelle).
+    this.sheetsToJSON(json_object, kwargs)
     return {
       ...json_object,
       ...DrawingAreaPersistence.toJSON(this.drawing_area, kwargs)
@@ -896,6 +983,17 @@ export class Class_ApplicationData {
     kwargs?: Type_JSON,
     draw: boolean = true
   ) {
+    // OS#85 — Charger un fichier SANS feuilles alors que le document en a = charger
+    // DANS la feuille courante : les autres feuilles restent (sémantique draw.io/Excel,
+    // demandée par Julien le 10/08 — « le chargement devrait être associé à la feuille »).
+    // Un fichier AVEC feuilles reste un DOCUMENT complet : il remplace tout, feuilles
+    // comprises. La garde `_loading_into_sheet` coupe la récursion : _loadSheetContent
+    // repasse par fromJSON pour poser le contenu, et lui seul doit faire le vrai reset.
+    if (this.has_sheets && !this._loading_into_sheet && !json_object['sheets']) {
+      this._loadSheetContent(json_object, draw)
+      this.menu_configuration?.ref_to_sheet_tabs_updater.current()
+      return
+    }
     // this.sendWaitingToast(
     //   () => {
     // Always bypass redrawings
@@ -979,6 +1077,9 @@ export class Class_ApplicationData {
     const pub_opts = json_object['publish_settings']
     this._publish_settings = (pub_opts && typeof pub_opts === 'object' && !Array.isArray(pub_opts))
       ? pub_opts as Type_JSON : {}
+    // sa#399 — Brique associée : relue du fichier ; absente ou malformée => null
+    // (un fichier sans library_ref est une nouvelle brique, cf. reset()).
+    this._library_ref = parseLibraryRef(json_object['library_ref'])
     const mz = json_object['main_zone']
     // Garde défensive : menu_configuration n'est posée que par createNewMenuConfiguration ; si
     // _fromJSON s'exécute avant, l'appel jetait et avortait tout le chargement (et donc
@@ -993,6 +1094,236 @@ export class Class_ApplicationData {
     // No-op si le fichier n'a pas de clé `views`. OpenSankey+ réimplémente `_fromJSON` (sans super)
     // et pilote ses propres appels vues + migration viewtag ; ce chemin ne sert qu'au viewer OS pur.
     this._views_reader.viewsFromJSON(json_object)
+    // OS#85 — Feuilles du document. No-op (silencieux) si le fichier n'a pas de clé `sheets`.
+    this.sheetsFromJSON(json_object)
+  }
+
+  // FEUILLES DE DESSIN (OS#85) =========================================================
+  // Le document peut porter PLUSIEURS feuilles (diagrammes indépendants), naviguées par
+  // des onglets en bas de la grande zone. Voir le bloc « ÉTAT DES FEUILLES » plus haut.
+
+  /**
+   * Sérialise la clé racine `sheets` : `{ current, order, entries: { id: { name, json? } } }`.
+   * L'entrée de la feuille COURANTE n'a pas de `json` : la racine du fichier est son contenu
+   * (un lecteur qui ignore `sheets` affiche donc la feuille courante, sans rien perdre).
+   *
+   * /!\ Chez OpenSankey+ (fichier avec vues), cette clé doit être écrite AVANT
+   * encodeViewsAsDelta : la base du delta = la racine privée de `views`, STRICTEMENT
+   * identique à l'écriture et à la lecture — sinon chaque vue hériterait de `sheets`
+   * (même piège que les vignettes de vues, cf. ApplicationDataOSP._toJSON).
+   */
+  protected sheetsToJSON(json_object: Type_JSON, kwargs?: Type_JSON): void {
+    // `without_sheets` : sérialisation du CONTENU d'une feuille (snapshot) — la clé
+    // racine `sheets` n'y a pas sa place, sinon chaque feuille embarquerait les autres.
+    if (kwargs && kwargs['without_sheets'] === true) return
+    if (this._sheets_order.length === 0) return
+    const entries = {} as Type_JSON
+    this._sheets_order.forEach(id => {
+      const sheet = this._sheets[id]
+      if (!sheet) return
+      const entry = { name: sheet.name } as Type_JSON
+      if (id !== this._current_sheet_id && sheet.json) {
+        entry['json'] = JSON.parse(pako.inflate(sheet.json, { to: 'string' })) as Type_JSON
+      }
+      entries[id] = entry
+    })
+    json_object['sheets'] = {
+      current: this._current_sheet_id,
+      order: [...this._sheets_order],
+      entries
+    } as unknown as Type_JSON
+  }
+
+  /**
+   * Relit la clé racine `sheets`. Un fichier ancien (sans la clé) ou une clé malformée
+   * chargent SANS BRUIT un document mono-feuille : l'état feuilles reste vide.
+   */
+  protected sheetsFromJSON(json_object: Type_JSON): void {
+    const raw = json_object['sheets']
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return
+    const sheets_json = raw as Type_JSON
+    const order = sheets_json['order']
+    const entries = sheets_json['entries']
+    const current = sheets_json['current']
+    if (!Array.isArray(order) || !entries || typeof entries !== 'object' || Array.isArray(entries) || typeof current !== 'string') return
+    const entries_json = entries as Type_JSON
+    const valid_order = (order as unknown[]).filter(
+      (id): id is string => typeof id === 'string' && !!entries_json[id] && typeof entries_json[id] === 'object'
+    )
+    if (valid_order.length === 0 || !valid_order.includes(current)) return
+    const sheets: { [id: string]: Type_SheetEntry } = {}
+    valid_order.forEach(id => {
+      const entry = entries_json[id] as Type_JSON
+      const name = typeof entry['name'] === 'string' && entry['name'] !== '' ? entry['name'] as string : this._defaultSheetName(1)
+      const content = entry['json']
+      let json: Uint8Array | undefined = undefined
+      if (id !== current && content && typeof content === 'object' && !Array.isArray(content)) {
+        // Défense en profondeur : le contenu d'une feuille ne doit jamais porter lui-même
+        // une clé `sheets` (pas de récursion) — on la retire si un fichier bricolé en a une.
+        const content_json = { ...(content as Type_JSON) }
+        delete content_json['sheets']
+        json = compressJSONToGzip(content_json)
+      }
+      sheets[id] = { name, json }
+    })
+    // La feuille courante est portée par la racine du fichier (état vivant) : pas de snapshot.
+    this._sheets = sheets
+    this._sheets_order = valid_order
+    this._current_sheet_id = current
+  }
+
+  /** Nom par défaut d'une feuille (« Feuille N », traduit quand i18n est branché). */
+  protected _defaultSheetName(n: number): string {
+    const raw = this.t('sheets.sheet') as unknown
+    const base = (typeof raw === 'string' && raw !== '' && raw !== 'sheets.sheet') ? raw : 'Feuille'
+    return base + ' ' + n
+  }
+
+  /**
+   * Contenu de la feuille courante = sérialisation COMPLÈTE du document (diagramme + vues +
+   * doc + réglages) SANS la clé racine `sheets` — c'est exactement ce que serait le fichier
+   * si cette feuille était seule.
+   */
+  protected _currentDiagramAsSheetJSON(): Type_JSON {
+    return this.drawing_area.withBypassRedraws(() => this._toJSON({ without_sheets: true }) as Type_JSON)
+  }
+
+  /**
+   * Charge le contenu d'une feuille via fromJSON en PRÉSERVANT l'état feuilles : fromJSON
+   * passe par reset(), qui efface `_sheets` (sémantique « nouveau document ») et REMPLACE
+   * la drawing_area — d'où le stash/restore, et l'usage exclusif des accesseurs ensuite.
+   */
+  protected _loadSheetContent(json_object: Type_JSON, draw: boolean): void {
+    const sheets = this._sheets
+    const order = this._sheets_order
+    const current = this._current_sheet_id
+    this._loading_into_sheet = true
+    try {
+      this.fromJSON(json_object, undefined, draw)
+    } finally {
+      this._loading_into_sheet = false
+    }
+    this._sheets = sheets
+    this._sheets_order = order
+    this._current_sheet_id = current
+  }
+
+  /**
+   * Enregistre le document courant comme première feuille si le document n'en a pas encore
+   * (passage du monde mono-feuille au monde multi-feuilles). Idempotent.
+   */
+  protected _ensureSheetsInitialized(): void {
+    if (this._sheets_order.length > 0) return
+    const id = makeId('sheet')
+    this._sheets[id] = { name: this._defaultSheetName(1) }
+    this._sheets_order = [id]
+    this._current_sheet_id = id
+  }
+
+  /** Rafraîchit le snapshot gzip de la feuille courante depuis l'état vivant. */
+  protected _snapshotCurrentSheet(): void {
+    const current = this._sheets[this._current_sheet_id]
+    if (current) current.json = compressJSONToGzip(this._currentDiagramAsSheetJSON())
+  }
+
+  /**
+   * Crée une NOUVELLE feuille (diagramme vierge, indépendant — règle des deux niveaux :
+   * pour une lecture qui SUIT les données, c'est une vue qu'il faut créer) et bascule dessus.
+   * @returns l'id de la feuille créée.
+   */
+  public createNewSheet(draw: boolean = true): string {
+    this._ensureSheetsInitialized()
+    this._snapshotCurrentSheet()
+    // Diagramme vierge : sérialisation d'une drawing area neuve (et non `{}`, qu'un
+    // chargement sans clé `version` enverrait dans le convertisseur legacy pré-0.9).
+    const blank_da = this.createNewDrawingArea()
+    blank_da.bypass_redraws = true
+    const blank_json = this.dumpDrawingAreaToJSON(blank_da)
+    blank_da.delete()
+    const name = this._defaultSheetName(this._sheets_order.length + 1)
+    this._loadSheetContent(blank_json, draw)
+    const id = makeId('sheet')
+    this._sheets[id] = { name }
+    this._sheets_order.push(id)
+    this._current_sheet_id = id
+    this.menu_configuration?.ref_to_save_in_cache_indicator.current(true)
+    this.menu_configuration?.ref_to_sheet_tabs_updater.current()
+    return id
+  }
+
+  /**
+   * Duplique la feuille courante en NOUVELLE FEUILLE INDÉPENDANTE (les données ne se
+   * propageront pas — le pendant « suivra les données » est la création d'une VUE).
+   * Le contenu affiché ne change pas : seule l'identité de feuille change.
+   * @returns l'id de la feuille créée.
+   */
+  public duplicateCurrentSheetAsNewSheet(): string {
+    this._ensureSheetsInitialized()
+    this._snapshotCurrentSheet()
+    const source = this._sheets[this._current_sheet_id]
+    const id = makeId('sheet')
+    const copy_prefix_raw = this.t('sheets.copy_prefix') as unknown
+    const copy_prefix = (typeof copy_prefix_raw === 'string' && copy_prefix_raw !== 'sheets.copy_prefix') ? copy_prefix_raw : 'Copie de '
+    // Insérée juste après la feuille source, comme draw.io.
+    const idx = this._sheets_order.indexOf(this._current_sheet_id)
+    this._sheets[id] = { name: copy_prefix + source.name }
+    this._sheets_order.splice(idx + 1, 0, id)
+    this._current_sheet_id = id
+    this.menu_configuration?.ref_to_save_in_cache_indicator.current(true)
+    this.menu_configuration?.ref_to_sheet_tabs_updater.current()
+    return id
+  }
+
+  /**
+   * Bascule vers une autre feuille : snapshot de la courante, puis chargement du snapshot
+   * de la cible (même mécanique que les vues : unDraw + remplacement de la drawing_area,
+   * via fromJSON/reset). L'historique undo/redo repart de zéro (comme à tout chargement).
+   */
+  public switchToSheet(id: string, draw: boolean = true): void {
+    if (!this.has_sheets || id === this._current_sheet_id) return
+    const target = this._sheets[id]
+    if (!target || !target.json) return
+    this._snapshotCurrentSheet()
+    const target_json = JSON.parse(pako.inflate(target.json, { to: 'string' })) as Type_JSON
+    this._loadSheetContent(target_json, draw)
+    this._current_sheet_id = id
+    this.menu_configuration?.ref_to_sheet_tabs_updater.current()
+  }
+
+  /** Renomme une feuille (nom vide ignoré). */
+  public renameSheet(id: string, name: string): void {
+    const sheet = this._sheets[id]
+    const trimmed = name.trim()
+    if (!sheet || trimmed === '' || sheet.name === trimmed) return
+    sheet.name = trimmed
+    this.menu_configuration?.ref_to_save_in_cache_indicator.current(true)
+    this.menu_configuration?.ref_to_sheet_tabs_updater.current()
+  }
+
+  /**
+   * Supprime une feuille (jamais la dernière). Si c'est la courante, bascule d'abord sur
+   * sa voisine (précédente, sinon suivante).
+   */
+  public deleteSheet(id: string, draw: boolean = true): void {
+    if (!this._sheets[id] || this._sheets_order.length < 2) return
+    if (id === this._current_sheet_id) {
+      const idx = this._sheets_order.indexOf(id)
+      const fallback = this._sheets_order[idx > 0 ? idx - 1 : 1]
+      this.switchToSheet(fallback, draw)
+    }
+    delete this._sheets[id]
+    const idx = this._sheets_order.indexOf(id)
+    if (idx >= 0) this._sheets_order.splice(idx, 1)
+    this.menu_configuration?.ref_to_save_in_cache_indicator.current(true)
+    this.menu_configuration?.ref_to_sheet_tabs_updater.current()
+  }
+
+  /**
+   * Sérialise une drawing area avec la couche de persistance de la classe (miroir de
+   * `loadDrawingAreaFromJSON`, surchargé en OpenSankey+ pour la persistance OSP).
+   */
+  public dumpDrawingAreaToJSON(drawing_area: Class_DrawingArea): Type_JSON {
+    return DrawingAreaPersistence.toJSON(drawing_area) as Type_JSON
   }
 
 
@@ -1716,6 +2047,8 @@ export class Class_ApplicationData {
     const evtKeyY = ((evt.key === 'y') || (evt.key === 'Y')) && evtOnDrawingArea
     const evtKeyC = ((evt.key === 'c') || (evt.key === 'C')) && evtOnDrawingArea
     const evtKeyV = ((evt.key === 'v') || (evt.key === 'V')) && evtOnDrawingArea
+    // os#1340 — Ctrl+D duplique la sélection (nœuds + liens internes + zones de texte).
+    const evtKeyD = ((evt.key === 'd') || (evt.key === 'D')) && evtOnDrawingArea
     // OS#1273 — Ctrl+F ouvre la barre de recherche d'élément. Contrairement aux
     // autres raccourcis, il reste actif même hors zone de dessin (dans un input),
     // pour rester déclenchable quand le focus est ailleurs — comme un Ctrl+F natif.
@@ -1736,11 +2069,14 @@ export class Class_ApplicationData {
     // Ultra-shortcuts: typing on selected element opens inline edit ------------------
     // (issue su-model/opensankey#688)
     const evtIsPrintable = evt.key?.length === 1 && !evtModifier && !evt.altKey
+    // os#1340 — F2 ouvre l'édition inline du nom (comme la frappe directe, mais
+    // sans injecter de caractère : le texte existant est sélectionné en entier).
+    const evtIsRename = (evt.key === 'F2')
     const selectedNodes = app_ref.drawing_area.selected_nodes_list
     const selectedLinks = app_ref.drawing_area.selected_links_list
     const selectedContainers = app_ref.drawing_area.selected_containers_list
     if (
-      evtIsPrintable &&
+      (evtIsPrintable || evtIsRename) &&
       evtOnDrawingArea &&
       selectedLinks.length === 0 &&
       (
@@ -1754,47 +2090,53 @@ export class Class_ApplicationData {
         target.name_label_is_visible = true
         target.drawNameLabel()
       }
-      target.setInputLabelVisible(evt.key)
+      target.setInputLabelVisible(evtIsRename ? undefined : evt.key)
       return
     }
-    // Event to move all selected nodes with keyboard arrows --------------------------
+    // Event to move all selected elements with keyboard arrows -----------------------
+    // os#1340 — nudge : flèches = 1 px, Maj+flèches = pas de grille (comme draw.io).
+    // Porte sur toute la sélection déplaçable (nœuds ET zones de texte — avant, les
+    // zones n'étaient déplacées que par une surcharge OSP, retirée depuis).
     if (
       ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(evt.key) &&
       evtOnDrawingArea // Avoid using this hotkey in text-inputs
     ) {
-      // Deplace les noeuds sélectionné avec les flèches du clavier
-      if (evt.key == 'ArrowUp') {
-        app_ref.drawing_area.selected_nodes_list.forEach(node => {
-          node.position_y -= app_ref.drawing_area.grid_size
-          node.draw()
-        })
-      } else if (evt.key == 'ArrowDown') {
-        app_ref.drawing_area.selected_nodes_list.forEach(node => {
-          node.position_y += app_ref.drawing_area.grid_size
-          node.draw()
-        })
-      } else if (evt.key == 'ArrowLeft') {
-        app_ref.drawing_area.selected_nodes_list.forEach(node => {
-          node.position_x -= app_ref.drawing_area.grid_size
-          node.draw()
-        })
-      } else if (evt.key == 'ArrowRight') {
-        app_ref.drawing_area.selected_nodes_list.forEach(node => {
-          node.position_x += app_ref.drawing_area.grid_size
-          node.draw()
-        })
+      const moved = [
+        ...app_ref.drawing_area.selected_nodes_list,
+        ...app_ref.drawing_area.selected_containers_list
+      ]
+      if (moved.length > 0) {
+        // Ne pas laisser la page défiler pendant qu'on déplace la sélection.
+        evt.preventDefault()
+        const step = evt.shiftKey ? app_ref.drawing_area.grid_size : 1
+        const dx = evt.key === 'ArrowLeft' ? -step : (evt.key === 'ArrowRight' ? step : 0)
+        const dy = evt.key === 'ArrowUp' ? -step : (evt.key === 'ArrowDown' ? step : 0)
+        // #1230/#1231 — La position PERSISTÉE d'un nœud est son CENTRE (_center_x/_center_y,
+        // cf. centerForPersistence). Un déplacement aux flèches ne met à jour que le coin et
+        // ne déclenche pas de passe drawElements() complète qui resynchroniserait le centre :
+        // sans settleCenterAnchor, sauver après un déplacement clavier persiste le centre
+        // d'AVANT et le nœud revient à sa place au rechargement. Les zones de texte
+        // persistent leur coin et ne sont donc pas concernées (cohérent avec le drag).
+        const applyDelta = (sign: 1 | -1) => () => {
+          moved.forEach(el => {
+            el.position_x += sign * dx
+            el.position_y += sign * dy
+            el.draw()
+          })
+          // Settle sur les éléments DÉPLACÉS (pas la sélection vivante : au moment
+          // d'un undo, elle peut avoir changé). Sans effet pour les zones de texte.
+          moved.forEach(el => el.settleCenterAnchor())
+        }
+        // Un appui = une transition d'historique (comme le drag souris) : sans ça,
+        // Ctrl+Z après un nudge annulait silencieusement une action plus ancienne.
+        this._history!.saveUndo(applyDelta(-1))
+        this._history!.saveRedo(applyDelta(1))
+        applyDelta(1)()
+        // Update drawing area size so none of elements are outside the DA.
+        // Mode 'none' (revu post-#680) : pas de recadrage auto après un déplacement clavier
+        // (cohérent avec le drag souris).
+        if (this.drawing_area.auto_fit_mode !== 'none') this.drawing_area.areaAutoFit()
       }
-      // #1230/#1231 — La position PERSISTÉE d'un nœud est son CENTRE (_center_x/_center_y,
-      // cf. centerForPersistence). Un déplacement aux flèches ne met à jour que le coin et
-      // ne déclenche pas de passe drawElements() complète qui resynchroniserait le centre :
-      // sans ce commit, sauver après un déplacement clavier persiste le centre d'AVANT et le
-      // nœud revient à sa place au rechargement. Les zones de texte persistent leur coin et
-      // ne sont donc pas concernées (cohérent avec le fix du drag).
-      app_ref.drawing_area.selected_nodes_list.forEach(node => node.settleCenterAnchor())
-      // Update drawing area size so none of elements are outside the DA.
-      // Mode 'none' (revu post-#680) : pas de recadrage auto après un déplacement clavier
-      // (cohérent avec le drag souris).
-      if (this.drawing_area.auto_fit_mode !== 'none') this.drawing_area.areaAutoFit()
     }
     // Open config menu ---------------------------------------------------------------
     else if (evtKeyTab) {
@@ -1888,6 +2230,16 @@ export class Class_ApplicationData {
     else if (evtCtrlY || evtCtrlShiftZ) {
       evt.preventDefault()
       this._history!.applyRedo()
+    }
+    // os#1340 — Ctrl+D : duplique la sélection (nœuds + liens internes + zones de texte)
+    else if (evtCtrl && evtKeyD) {
+      // Prevent default event on ctrl + d (marque-page navigateur)
+      evt.preventDefault()
+      if (app_ref.drawing_area.selected_nodes_list.length > 0 ||
+        app_ref.drawing_area.selected_containers_list.length > 0) {
+        app_ref.drawing_area.duplicateSelection()
+        app_ref.saveInCache()
+      }
     }
     // Copy selected nodes
     else if (evtCtrl && evtKeyC) {
@@ -2190,6 +2542,10 @@ export class Class_ApplicationData {
 
   public get sankeytheque_origin(): Type_SankeythequeOrigin | null { return this._sankeytheque_origin }
   public set sankeytheque_origin(value: Type_SankeythequeOrigin | null) { this._sankeytheque_origin = value }
+
+  // sa#399 — brique de bibliothèque associée au document ouvert (persistée en JSON).
+  public get library_ref(): Type_LibraryRef | null { return this._library_ref }
+  public set library_ref(value: Type_LibraryRef | null) { this._library_ref = value }
 
   // Doc résolue pour la langue active (i18next), repli en→fr→première. Le setter
   // écrit dans le slot de la langue active : éditer en mode 'en' ne touche que la

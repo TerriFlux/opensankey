@@ -122,25 +122,21 @@ export class Class_ContainerElement extends Class_NodeBase {
   // le déplace SEUL à l'intérieur du groupe ; les cadres englobants s'agrandissent
   // EN DIRECT pour continuer à le contenir. Sans devoir le désolidariser.
   protected eventMouseDrag(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+    // os#1340 — alt-glisser = cloner : le geste emporte les COPIES (routage dans
+    // NodeEventsHandler), jamais le groupe de l'original — on saute les branches
+    // de drag délégué ci-dessous.
+    if (this._nodeEventsHandler.is_alt_clone_dragging) {
+      super.eventMouseDrag(event)
+      return
+    }
     if (this.drawing_area.isInSelectionMode()) {
       // Membre saisi seul (entré dans le groupe) -> déplacement individuel.
       if (this.is_selected && !this.tied_to_nodes) {
         super.eventMouseDrag(event)
         // Agrandissement LIVE des cadres englobants (y compris emboîtés) pendant
-        // le déplacement : la taille d'un cadre tied = max(min, enveloppe des
-        // membres), donc un simple redraw le fait grandir vers la droite/bas ;
-        // expandToContainAttachedNodes déplace le coin quand le membre sort en
-        // haut/à gauche. Sans ça, le cadre ne suivait qu'au relâcher (dragEnd).
-        const growEnclosing = (el: Class_NodeBase, seen: Set<Class_NodeBase>) => {
-          el.attached_container.forEach(frame => {
-            if (!frame.tied_to_nodes || seen.has(frame)) return
-            seen.add(frame)
-            frame.growFrameToContainMembers()
-            frame.draw()
-            growEnclosing(frame, seen)
-          })
-        }
-        growEnclosing(this, new Set<Class_NodeBase>([this]))
+        // le déplacement. Mécanique commune à tous les membres (nœud comme zone
+        // de texte) : cf. Class_NodeBase.growEnclosingFrames.
+        this.growEnclosingFrames()
         return
       }
       const parent_frame = this.attached_container.find(c => c.tied_to_nodes)

@@ -107,6 +107,8 @@ export abstract class Class_BaseElement {
   }
 
   public setEventsListeners() {
+    // os#1340 — feedback visuel du verrouillage (curseur par défaut via CSS).
+    this.d3_selection?.classed('locked_element', this.is_locked)
     this.d3_selection?.on(
       'contextmenu',
       (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
@@ -147,7 +149,9 @@ export abstract class Class_BaseElement {
           .filter((event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
             !event.ctrlKey && !event.button
             && this.drawing_area.isInSelectionMode()
-            && !this.drawing_area.isInStylePaintMode())
+            && !this.drawing_area.isInStylePaintMode()
+            // os#1340 — un élément verrouillé ne se déplace pas.
+            && !this.is_locked)
           .on('start',
             (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
               this.eventMouseDragStart(event))
@@ -318,6 +322,12 @@ export abstract class Class_BaseElement {
   public setUnSelected() { this._is_selected = false; this.drawAsSelected() }
   public get is_selected() { return this._is_selected }
   protected drawAsSelected() { }
+
+  // os#1340 — verrouillage : un élément verrouillé n'est ni sélectionnable
+  // (garde centrale dans DrawingArea.addElementToSelection) ni déplaçable
+  // (filtre du d3.drag ci-dessus). Les feuilles portant l'attribut
+  // `shape_is_locked` (Class_BaseShape) surchargent ce prédicat.
+  public get is_locked(): boolean { return false }
 
   public get id() { return this._id }
   public get sankey() { return this.drawing_area.sankey }
@@ -1007,6 +1017,8 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   shape_line_y2!: NodeShapeSpecificAttributeTypes['line_y2']
   shape_position_u_locked!: boolean
   shape_position_v_locked!: boolean
+  // os#1340 — verrouillage : ni sélectionnable ni déplaçable (cf. get is_locked).
+  shape_is_locked!: boolean
   shape_margin_bottom!: ShapeAttributeTypes['margin_bottom']
   shape_margin_top!: ShapeAttributeTypes['margin_top']
   shape_margin_left!: ShapeAttributeTypes['margin_left']
@@ -1070,6 +1082,9 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   public getShapeColorToUse() {
     return this.shape_color
   }
+
+  // os#1340 — verrouillage : lit l'attribut de style `shape_is_locked` (défaut false).
+  public override get is_locked(): boolean { return this.shape_is_locked === true }
 }
 
 export abstract class Class_LinkAttribute extends Class_BaseShape {
@@ -1420,6 +1435,8 @@ export class Class_ElementStyle {
   shape_line_y2!: NodeShapeSpecificAttributeTypes['line_y2']
   shape_position_u_locked!: boolean
   shape_position_v_locked!: boolean
+  // os#1340 — verrouillage : ni sélectionnable ni déplaçable (cf. get is_locked).
+  shape_is_locked!: boolean
   shape_margin_bottom!: ShapeAttributeTypes['margin_bottom']
   shape_margin_top!: ShapeAttributeTypes['margin_top']
   shape_margin_left!: ShapeAttributeTypes['margin_left']

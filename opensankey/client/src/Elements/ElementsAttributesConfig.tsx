@@ -3168,6 +3168,35 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       ja: '固定すると、自動レイアウトの計算は列内でのこのノードの相対的な垂直順序（v）を再計算せずに保持します。'
     }
   } satisfies AttributeConfig<boolean>,
+  // os#1340 — verrouillage d'un élément (zones de texte d'abord) : un élément
+  // verrouillé n'est plus sélectionnable (clic, lasso, Ctrl+A) ni déplaçable
+  // (drag, nudge — qui n'agissent que sur la sélection). Le clic droit reste
+  // actif : c'est par le menu contextuel qu'on déverrouille.
+  // Sérialisé génériquement avec les autres attributs ; absent => false.
+  is_locked: {
+    default: false as boolean,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: [] as BaseActionType[],
+    labels: {
+      en: 'Locked',
+      fr: 'Verrouillé',
+      es: 'Bloqueado',
+      de: 'Gesperrt',
+      it: 'Bloccato',
+      'zh-CN': '已锁定',
+      ja: 'ロック済み'
+    },
+    tooltips: {
+      en: 'A locked element can no longer be selected or moved. Unlock it from its right-click menu.',
+      fr: 'Un élément verrouillé n\'est plus sélectionnable ni déplaçable. Déverrouillez-le depuis son menu clic droit.',
+      es: 'Un elemento bloqueado ya no se puede seleccionar ni mover. Desbloquéelo desde su menú contextual.',
+      de: 'Ein gesperrtes Element kann weder ausgewählt noch verschoben werden. Entsperren über das Rechtsklick-Menü.',
+      it: 'Un elemento bloccato non può più essere selezionato né spostato. Sbloccalo dal suo menu contestuale.',
+      'zh-CN': '锁定的元素无法再被选中或移动。可通过右键菜单解锁。',
+      ja: 'ロックされた要素は選択も移動もできません。右クリックメニューからロックを解除できます。'
+    }
+  } satisfies AttributeConfig<boolean>,
   // OS#1276 — sens de la diagonale pour shape_type === 'line'.
   // false : ligne du coin haut-gauche (0,0) au coin bas-droit (w,h) « \ ».
   // true  : ligne du coin bas-gauche (0,h) au coin haut-droit (w,0) « / ».

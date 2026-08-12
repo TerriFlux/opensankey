@@ -30,8 +30,12 @@ import { Class_NodeBase } from './NodeBase'
 import { Class_LinkElement } from './Link'
 import { Class_ProtoElement } from './Element'
 import { Class_NodeElement } from './Node'
+// os#671 — smart guides d'alignement au drag. SmartGuides n'importe AUCUN module
+// d'Elements au runtime (types seulement) : pas de nouveau cycle possible.
+import { Class_SmartGuides } from './SmartGuides'
 import {
-  openPresentationFor, canPresentTooltip, matchesPresentationTrigger,
+  openPresentationFor, opensPresentationOnClick, canPresentTooltip,
+  matchesPresentationTrigger,
   schedulePresentationHover, schedulePresentationHoverClose
 } from '../components/panels/presentation/openPresentation'
 
@@ -46,8 +50,28 @@ export class NodeEventsHandler {
   private _shift_acc_dx: number = 0
   private _shift_acc_dy: number = 0
 
+  // os#1340 — alt-glisser = cloner. `pending` est armé au dragStart (Alt enfoncé sur un
+  // élément sélectionné) mais le clonage n'a lieu qu'au PREMIER mouvement réel : un simple
+  // alt-clic ne clone rien (d3.drag émet toujours start+end, même sans déplacement).
+  // Une fois le clone fait, les COPIES (devenues la sélection) suivent le geste et les
+  // originaux restent en place — sémantique draw.io.
+  private _alt_clone_pending: boolean = false
+  private _alt_clone_active: boolean = false
+  // Positions de naissance des copies (= positions des originaux), pour l'undo du dépôt.
+  private _alt_clone_start_pos: Map<Class_NodeBase, [number, number]> = new Map()
+
+  // os#671 — contrôleur des smart guides pour le drag EN COURS (null hors drag,
+  // ou quand la fonctionnalité est désactivée / que la grille magnétique prime).
+  private _smart_guides: Class_SmartGuides | null = null
+
   constructor(node: Class_NodeBase) {
     this._node = node
+  }
+
+  /** os#1340 — vrai pendant un alt-glisser = cloner (les copies suivent le geste,
+   * l'original ne bouge pas : ses effets de bord de drag doivent être neutralisés). */
+  public get is_alt_clone_dragging(): boolean {
+    return this._alt_clone_active || this._alt_clone_pending
   }
   /**
  * ✅ Détermine quel type d'élément a été cliqué
@@ -208,6 +232,8 @@ export class NodeEventsHandler {
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     const app_data = this._node.drawing_area.application_data
+    // En ÉDITION, le clic n'ouvre plus rien : cf. opensPresentationOnClick.
+    if (!opensPresentationOnClick(app_data)) return
     const rect = (event.target as HTMLElement)?.getBoundingClientRect?.()
     openPresentationFor(
       app_data,
@@ -272,6 +298,20 @@ export class NodeEventsHandler {
     this._shift_lock_axis = null
     this._shift_acc_dx = 0
     this._shift_acc_dy = 0
+
+    // os#1340 — alt-glisser = cloner : armé ici, exécuté au premier mouvement
+    // (handleMouseDrag). Conditions : Alt enfoncé, zone éditable, mode sélection,
+    // et l'élément saisi fait partie de la sélection.
+    const da = this._node.drawing_area
+    this._alt_clone_pending = false
+    this._alt_clone_active = false
+    if (
+      (_event.sourceEvent as MouseEvent | undefined)?.altKey === true &&
+      da.editable && da.isInSelectionMode() &&
+      ([...da.selected_containers_list, ...da.selected_nodes_list] as Class_NodeBase[]).includes(this._node)
+    ) {
+      this._alt_clone_pending = true
+    }
 
     const nodes_selected = [...this._node.sankey.drawing_area.selected_containers_list, ...this._node.sankey.drawing_area.selected_nodes_list] as Class_NodeBase[]
     const dict_old_pos: { [x: string]: [number, number] } = {}
@@ -340,6 +380,18 @@ export class NodeEventsHandler {
     this._node.setDragStartPositions(dict_old_pos)
     this._node.setDragStartSizes(dict_old_sizes)
     this._node.setDragState(true)
+
+    // os#671 — smart guides : un contrôleur par session de drag. L'index des
+    // bords candidats est construit paresseusement au 1er mouvement (d3 émet
+    // start même sur un simple clic). Exclusions = tout ce que le drag emporte
+    // (sélection + descendances de cadres liés), soit les clés de dict_old_pos.
+    // La grille magnétique PRIME quand elle est active (un seul magnétisme à la
+    // fois) ; Alt pendant le drag débraye le snap ponctuellement.
+    this._smart_guides?.clear()
+    this._smart_guides = null
+    if (da.smart_guides && !da.magnetic_nodes && da.isInSelectionMode() && da.application_data.is_editable) {
+      this._smart_guides = new Class_SmartGuides(da, new Set(Object.keys(dict_old_pos)), seed_nodes)
+    }
   }
 
   /**
@@ -384,6 +436,26 @@ export class NodeEventsHandler {
 
     // Get related drawing area
     const drawing_area = this._node.drawing_area
+
+    // os#1340 — alt-glisser = cloner. Au premier mouvement réel : cloner la sélection
+    // SUR PLACE (les copies deviennent la sélection), puis emporter les copies avec le
+    // geste ; les originaux ne bougent pas. Le drag d3 continue d'émettre sur le <g> de
+    // l'ORIGINAL — d'où ce routage dédié (l'original n'est plus dans la sélection).
+    if (this._alt_clone_pending && (event.dx !== 0 || event.dy !== 0)) {
+      this._alt_clone_pending = false
+      this._alt_clone_active = true
+      drawing_area.cloneSelectionInPlace()
+      this._alt_clone_start_pos = new Map(
+        ([...drawing_area.selected_containers_list, ...drawing_area.selected_nodes_list] as Class_NodeBase[])
+          .map(n => [n, [n.position_x, n.position_y] as [number, number]])
+      )
+    }
+    if (this._alt_clone_active) {
+      const clones = [...drawing_area.selected_containers_list, ...drawing_area.selected_nodes_list] as Class_NodeBase[]
+      clones.forEach(n => n.setPosXY(n.position_x + event.dx, n.position_y + event.dy))
+      return
+    }
+
     const nodes_selected = [...this._node.sankey.drawing_area.selected_containers_list, ...this._node.sankey.drawing_area.selected_nodes_list] as Class_NodeBase[]
 
     if (nodes_selected.includes(this._node)) { // Only trigger the drag if we drag a selected node
@@ -397,10 +469,7 @@ export class NodeEventsHandler {
         if (drawing_area.magnetic_nodes)
           this.moveMagneticNode(event, nodes_selected)
         else
-          nodes_selected
-            .forEach(n => {
-              n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
-            })
+          this.moveWithSmartGuides(event, nodes_selected)
       }
     }
     else {
@@ -414,15 +483,80 @@ export class NodeEventsHandler {
         if (drawing_area.magnetic_nodes)
           this.moveMagneticNode(event, [this._node])
         else
-          this._node.setPosXY(this._node.position_x + event.dx, this._node.position_y + event.dy)
+          this.moveWithSmartGuides(event, [this._node])
       }
     }
+  }
+
+  /**
+   * os#671 — déplacement avec smart guides : positions dérivées de la position
+   * de DÉPART + delta cumulé (position brute, insensible aux corrections déjà
+   * appliquées — le snap reste « doux » et s'échappe en continuant le geste),
+   * puis correction d'alignement fournie par le contrôleur de guides. Alt
+   * enfoncé débraye le magnétisme (les guides quasi exacts restent affichés).
+   * Sans contrôleur (option désactivée), déplacement continu historique.
+   */
+  private moveWithSmartGuides(
+    event: d3.D3DragEvent<SVGGElement, unknown, unknown>,
+    nodes_to_move: Class_NodeBase[]
+  ) {
+    if (this._smart_guides === null) {
+      nodes_to_move.forEach(n => n.setPosXY(n.position_x + event.dx, n.position_y + event.dy))
+      return
+    }
+
+    // Delta cumulé (brut) depuis le début du drag — même mécanique que
+    // moveMagneticNode (un seul des deux magnétismes est actif par drag).
+    this._node.updateNodeCurrentDelta(event.dx, event.dy)
+    const { dx: total_dx, dy: total_dy } = this._node.getNodeCurrentDeltas()
+    const start_positions = this._node.getDragStartPositions()
+
+    // Boîte englobante BRUTE de la sélection déplacée (géométrie résultante).
+    let min_x = Infinity
+    let min_y = Infinity
+    let max_x = -Infinity
+    let max_y = -Infinity
+    nodes_to_move.forEach(n => {
+      const s = start_positions[n.id]
+      if (!s) return
+      min_x = Math.min(min_x, s[0] + total_dx)
+      min_y = Math.min(min_y, s[1] + total_dy)
+      max_x = Math.max(max_x, s[0] + total_dx + n.getShapeWidthToUse())
+      max_y = Math.max(max_y, s[1] + total_dy + n.getShapeHeightToUse())
+    })
+    if (!isFinite(min_x) || !isFinite(min_y)) {
+      nodes_to_move.forEach(n => n.setPosXY(n.position_x + event.dx, n.position_y + event.dy))
+      return
+    }
+
+    const snap_enabled = !(event.sourceEvent as MouseEvent | undefined)?.altKey
+    const { dx: snap_dx, dy: snap_dy } = this._smart_guides.update(
+      { x: min_x, y: min_y, w: max_x - min_x, h: max_y - min_y },
+      snap_enabled
+    )
+
+    nodes_to_move.forEach(n => {
+      const s = start_positions[n.id]
+      if (!s) {
+        n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
+        return
+      }
+      const new_x = s[0] + total_dx + snap_dx
+      const new_y = s[1] + total_dy + snap_dy
+      if (new_x !== n.position_x || new_y !== n.position_y) n.setPosXY(new_x, new_y)
+    })
   }
 
   /**
    * Define event when mouse drag element ends
    */
   public handleMouseDragEnd(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+    // os#671 — les guides d'alignement sont un artefact du GESTE : retirés de la
+    // couche de rendu dès la fin du drag, quoi qu'il se passe ensuite (y compris
+    // l'early-return « simple clic » ci-dessous).
+    this._smart_guides?.clear()
+    this._smart_guides = null
+
     // Reset current tracked node shift
     this._node.resetNodeCurrentDelta()
 
@@ -431,6 +565,40 @@ export class NodeEventsHandler {
     this._shift_lock_axis = null
     this._shift_acc_dx = 0
     this._shift_acc_dy = 0
+
+    // os#1340 — fin d'un alt-glisser = cloner. Les COPIES ont suivi le geste : on les
+    // settle (#1230/#1231) et on les redessine (liens internes compris), puis on
+    // enregistre le DÉPÔT comme transition d'historique distincte de la création
+    // (cloneSelectionInPlace a déjà poussé la sienne) : undo = copies ramenées à leur
+    // point de naissance, 2e undo = copies supprimées ; redo symétrique.
+    this._alt_clone_pending = false
+    if (this._alt_clone_active) {
+      this._alt_clone_active = false
+      this._node.setDragState(false)
+      const da = this._node.drawing_area
+      const start_pos = this._alt_clone_start_pos
+      this._alt_clone_start_pos = new Map()
+      const final_pos = new Map(
+        [...start_pos.keys()].map(n => [n, [n.position_x, n.position_y] as [number, number]])
+      )
+      const settleAndDraw = (positions: Map<Class_NodeBase, [number, number]>) => () => {
+        positions.forEach((pos, n) => {
+          n.setPosXY(pos[0], pos[1])
+          n.settleCenterAnchor()
+          n.draw()
+        })
+      }
+      const moved = [...start_pos.entries()].some(
+        ([n, pos]) => n.position_x !== pos[0] || n.position_y !== pos[1]
+      )
+      if (moved) {
+        da.application_data.history.saveUndo(settleAndDraw(start_pos))
+        da.application_data.history.saveRedo(settleAndDraw(final_pos))
+      }
+      settleAndDraw(final_pos)()
+      da.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+      return
+    }
 
     // ✅ Utiliser la nouvelle méthode d'accès
     const dict_old_pos: { [x: string]: [number, number] } = { ...this._node.getDragStartPositions() }
