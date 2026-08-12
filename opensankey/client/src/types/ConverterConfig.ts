@@ -49,6 +49,19 @@ export interface ConverterConfig {
     }
   }
 
+  // sa#424 (lot 1) — LE FORMAT DE SORTIE SUIT LE FORMAT D'ENTREE.
+  //
+  // Une fenetre « Ouvrir » unique doit accepter plusieurs formats d'entree alors
+  // que le chemin de traitement, lui, differe : un JSON se lit entierement cote
+  // client (json -> blob), un classeur Excel passe par le serveur puis est
+  // recharge (excel -> json). Le moteur de lancement s'aiguille deja sur le
+  // COUPLE (entree, sortie) ; il suffit donc que la sortie suive l'entree au
+  // lieu d'etre figee dans la config.
+  //
+  // Absent = comportement historique : la sortie garde le format choisi par
+  // l'utilisateur (ou le premier de ses options), independamment de l'entree.
+  output_format_for_input?: Partial<Record<FormatType, FormatType>>
+
   // Optional per-attribute overrides applied on top of getDefault*Options when
   // initialize() resets the dialog state. Used by shortcut configs (e.g.
   // create_index, create_ter) to pre-select a subset of sheets/options instead
