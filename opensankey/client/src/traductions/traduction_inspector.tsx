@@ -104,6 +104,42 @@ export const resources_inspector = {
           unknown: 'This file does not say why this element exists (written before origin tracking, or drawn by hand).',
           select: 'Select a node or a flow.'
         },
+        // #426 — section « D'où vient cette valeur ? » : ce qui a fixe la valeur.
+        determination: {
+          title: 'Where does this value come from?',
+          intro: 'What fixed the value of the selected flow, and the constraints bearing on it.',
+          unknown: 'This file does not say what fixed this value (diagram not reconciled, or reconciled by an earlier version).',
+          absent: 'This flow does not exist for this tag combination: there is no value to explain.',
+          interval: 'Possible range',
+          contributors: 'Flows involved',
+          fixed_by: 'Its value is fixed by:',
+          takes_part_in: 'No constraint fixes it. It takes part in:',
+          no_constraint: 'No constraint of the model bears on this flow.',
+          classification: {
+            measured: 'measured',
+            redundant: 'redundant',
+            determined: 'determined',
+            free: 'free',
+            free_unbounded: 'free, unbounded',
+            failed: 'not reconciled'
+          },
+          meaning: {
+            measured: 'You entered this value, and nothing in the model allowed recomputing it: reconciliation left it as it was.',
+            redundant: 'You entered this value, and the model could also compute it: reconciliation arbitrated between the two.',
+            determined: 'You did not enter this value: the constraints of the model are enough to fix it, no other solution is possible.',
+            free: 'The constraints are not enough to fix this value; reconciliation picked one within the possible range. To constrain it, enter it or add a constraint on one of the flows below.',
+            free_unbounded: 'The constraints are not enough to fix this value, and nothing bounds it. An entry or a bound is needed to control it.',
+            failed: 'Reconciliation of this tag combination did not succeed: the value shown is the input one.'
+          },
+          kinds: {
+            mat_balance: 'Material balance of node',
+            aggregation: 'Parent/children aggregation on node',
+            stock_aggregation: 'Stock aggregation on node',
+            equality: 'Entered equation (constraint)',
+            bound_min: 'Entered lower bound (constraint)',
+            bound_max: 'Entered upper bound (constraint)'
+          }
+        },
         // #1258 — Onglet MFA (espace AFM unifié).
         mfa: {
           reconciliation: 'Reconciliation',
@@ -315,6 +351,42 @@ export const resources_inspector = {
           unknown: 'Ce fichier ne dit pas pourquoi cet élément existe (écrit avant la traçabilité, ou tracé à la main).',
           select: 'Sélectionnez un nœud ou un flux.'
         },
+        // #426 — section « D'où vient cette valeur ? » : ce qui a fixe la valeur.
+        determination: {
+          title: 'D\'où vient cette valeur ?',
+          intro: 'Ce qui a fixé la valeur du flux sélectionné, et les contraintes qui portent sur elle.',
+          unknown: 'Ce fichier ne dit pas ce qui a fixé cette valeur (diagramme non réconcilié, ou réconcilié par une version antérieure).',
+          absent: 'Ce flux n\'existe pas pour cette combinaison d\'étiquettes : il n\'y a pas de valeur à expliquer.',
+          interval: 'Intervalle possible',
+          contributors: 'Flux concernés',
+          fixed_by: 'Sa valeur est fixée par :',
+          takes_part_in: 'Aucune contrainte ne la fixe. Elle participe à :',
+          no_constraint: 'Aucune contrainte du modèle ne porte sur ce flux.',
+          classification: {
+            measured: 'mesuré',
+            redundant: 'redondant',
+            determined: 'déterminé',
+            free: 'libre',
+            free_unbounded: 'libre, non borné',
+            failed: 'non réconcilié'
+          },
+          meaning: {
+            measured: 'Vous avez saisi cette valeur, et rien dans le modèle ne permettait de la recalculer : la réconciliation l\'a laissée telle quelle.',
+            redundant: 'Vous avez saisi cette valeur, et le modèle permettait aussi de la calculer : la réconciliation a arbitré entre les deux.',
+            determined: 'Vous n\'avez pas saisi cette valeur : les contraintes du modèle suffisent à la fixer, aucune autre solution n\'est possible.',
+            free: 'Les contraintes ne suffisent pas à fixer cette valeur ; la réconciliation en a choisi une dans l\'intervalle possible. Pour la contraindre, saisissez-la ou ajoutez une contrainte sur l\'un des flux ci-dessous.',
+            free_unbounded: 'Les contraintes ne suffisent pas à fixer cette valeur, et rien ne la borne. Une saisie ou une borne est nécessaire pour la maîtriser.',
+            failed: 'La réconciliation de cette combinaison d\'étiquettes n\'a pas abouti : la valeur affichée est celle d\'entrée.'
+          },
+          kinds: {
+            mat_balance: 'Bilan matière du nœud',
+            aggregation: 'Agrégation parent/enfants sur le nœud',
+            stock_aggregation: 'Agrégation des stocks sur le nœud',
+            equality: 'Équation saisie (contrainte)',
+            bound_min: 'Borne inférieure saisie (contrainte)',
+            bound_max: 'Borne supérieure saisie (contrainte)'
+          }
+        },
         mfa: {
           reconciliation: 'Réconciliation',
           open_spreadsheet: 'Ouvrir le tableur (contraintes)',
@@ -522,6 +594,42 @@ export const resources_inspector = {
           datatags: 'Combinación de etiquetas',
           unknown: 'Este archivo no indica por qué existe este elemento (escrito antes del seguimiento de origen, o dibujado a mano).',
           select: 'Seleccione un nodo o un flujo.'
+        },
+        // #426 — section « D'où vient cette valeur ? » : ce qui a fixe la valeur.
+        determination: {
+          title: '¿De dónde viene este valor?',
+          intro: 'Lo que fijó el valor del flujo seleccionado, y las restricciones que actúan sobre él.',
+          unknown: 'Este archivo no indica qué fijó este valor (diagrama no reconciliado, o reconciliado por una versión anterior).',
+          absent: 'Este flujo no existe para esta combinación de etiquetas: no hay valor que explicar.',
+          interval: 'Intervalo posible',
+          contributors: 'Flujos implicados',
+          fixed_by: 'Su valor está fijado por:',
+          takes_part_in: 'Ninguna restricción lo fija. Participa en:',
+          no_constraint: 'Ninguna restricción del modelo actúa sobre este flujo.',
+          classification: {
+            measured: 'medido',
+            redundant: 'redundante',
+            determined: 'determinado',
+            free: 'libre',
+            free_unbounded: 'libre, sin cotas',
+            failed: 'no reconciliado'
+          },
+          meaning: {
+            measured: 'Usted introdujo este valor y nada en el modelo permitía recalcularlo: la reconciliación lo dejó tal cual.',
+            redundant: 'Usted introdujo este valor y el modelo también podía calcularlo: la reconciliación arbitró entre ambos.',
+            determined: 'Usted no introdujo este valor: las restricciones del modelo bastan para fijarlo, no hay otra solución posible.',
+            free: 'Las restricciones no bastan para fijar este valor; la reconciliación eligió uno dentro del intervalo posible. Para restringirlo, introdúzcalo o añada una restricción sobre uno de los flujos siguientes.',
+            free_unbounded: 'Las restricciones no bastan para fijar este valor, y nada lo acota. Se necesita una entrada o una cota para controlarlo.',
+            failed: 'La reconciliación de esta combinación de etiquetas no llegó a término: el valor mostrado es el de entrada.'
+          },
+          kinds: {
+            mat_balance: 'Balance de materia del nodo',
+            aggregation: 'Agregación padre/hijos en el nodo',
+            stock_aggregation: 'Agregación de existencias en el nodo',
+            equality: 'Ecuación introducida (restricción)',
+            bound_min: 'Cota inferior introducida (restricción)',
+            bound_max: 'Cota superior introducida (restricción)'
+          }
         },
         mfa: {
           reconciliation: 'Conciliación',
@@ -731,6 +839,42 @@ export const resources_inspector = {
           unknown: 'Diese Datei gibt nicht an, warum dieses Element existiert (vor der Herkunftsverfolgung geschrieben oder von Hand gezeichnet).',
           select: 'Wählen Sie einen Knoten oder einen Fluss aus.'
         },
+        // #426 — section « D'où vient cette valeur ? » : ce qui a fixe la valeur.
+        determination: {
+          title: 'Woher stammt dieser Wert?',
+          intro: 'Was den Wert des ausgewählten Flusses festgelegt hat, und die Nebenbedingungen, die auf ihn wirken.',
+          unknown: 'Diese Datei sagt nicht, was diesen Wert festgelegt hat (Diagramm nicht abgeglichen oder von einer älteren Version abgeglichen).',
+          absent: 'Dieser Fluss existiert für diese Etikettenkombination nicht: Es gibt keinen Wert zu erklären.',
+          interval: 'Möglicher Bereich',
+          contributors: 'Beteiligte Flüsse',
+          fixed_by: 'Sein Wert wird festgelegt durch:',
+          takes_part_in: 'Keine Nebenbedingung legt ihn fest. Er wirkt mit in:',
+          no_constraint: 'Keine Nebenbedingung des Modells wirkt auf diesen Fluss.',
+          classification: {
+            measured: 'gemessen',
+            redundant: 'redundant',
+            determined: 'bestimmt',
+            free: 'frei',
+            free_unbounded: 'frei, unbeschränkt',
+            failed: 'nicht abgeglichen'
+          },
+          meaning: {
+            measured: 'Sie haben diesen Wert eingegeben, und nichts im Modell erlaubte, ihn neu zu berechnen: Der Abgleich hat ihn unverändert gelassen.',
+            redundant: 'Sie haben diesen Wert eingegeben, und das Modell konnte ihn ebenfalls berechnen: Der Abgleich hat zwischen beiden entschieden.',
+            determined: 'Sie haben diesen Wert nicht eingegeben: Die Nebenbedingungen des Modells genügen, um ihn festzulegen, eine andere Lösung gibt es nicht.',
+            free: 'Die Nebenbedingungen genügen nicht, um diesen Wert festzulegen; der Abgleich hat einen aus dem möglichen Bereich gewählt. Um ihn zu binden, geben Sie ihn ein oder fügen Sie eine Nebenbedingung auf einem der folgenden Flüsse hinzu.',
+            free_unbounded: 'Die Nebenbedingungen genügen nicht, um diesen Wert festzulegen, und nichts beschränkt ihn. Eine Eingabe oder eine Schranke ist nötig.',
+            failed: 'Der Abgleich dieser Etikettenkombination ist gescheitert: Der angezeigte Wert ist der Eingabewert.'
+          },
+          kinds: {
+            mat_balance: 'Massenbilanz des Knotens',
+            aggregation: 'Eltern-/Kind-Aggregation am Knoten',
+            stock_aggregation: 'Bestandsaggregation am Knoten',
+            equality: 'Eingegebene Gleichung (Nebenbedingung)',
+            bound_min: 'Eingegebene Untergrenze (Nebenbedingung)',
+            bound_max: 'Eingegebene Obergrenze (Nebenbedingung)'
+          }
+        },
         mfa: {
           reconciliation: 'Abgleich',
           open_spreadsheet: 'Tabelle öffnen (Nebenbedingungen)',
@@ -939,6 +1083,42 @@ export const resources_inspector = {
           unknown: 'Questo file non indica perché questo elemento esiste (scritto prima del tracciamento dell\'origine, o disegnato a mano).',
           select: 'Selezionare un nodo o un flusso.'
         },
+        // #426 — section « D'où vient cette valeur ? » : ce qui a fixe la valeur.
+        determination: {
+          title: 'Da dove viene questo valore?',
+          intro: 'Ciò che ha fissato il valore del flusso selezionato, e i vincoli che agiscono su di esso.',
+          unknown: 'Questo file non dice cosa ha fissato questo valore (diagramma non riconciliato, o riconciliato da una versione precedente).',
+          absent: 'Questo flusso non esiste per questa combinazione di etichette: non c\'è alcun valore da spiegare.',
+          interval: 'Intervallo possibile',
+          contributors: 'Flussi coinvolti',
+          fixed_by: 'Il suo valore è fissato da:',
+          takes_part_in: 'Nessun vincolo lo fissa. Partecipa a:',
+          no_constraint: 'Nessun vincolo del modello agisce su questo flusso.',
+          classification: {
+            measured: 'misurato',
+            redundant: 'ridondante',
+            determined: 'determinato',
+            free: 'libero',
+            free_unbounded: 'libero, non limitato',
+            failed: 'non riconciliato'
+          },
+          meaning: {
+            measured: 'Hai inserito questo valore e nulla nel modello permetteva di ricalcolarlo: la riconciliazione lo ha lasciato invariato.',
+            redundant: 'Hai inserito questo valore e il modello poteva anche calcolarlo: la riconciliazione ha arbitrato tra i due.',
+            determined: 'Non hai inserito questo valore: i vincoli del modello bastano a fissarlo, non esiste altra soluzione possibile.',
+            free: 'I vincoli non bastano a fissare questo valore; la riconciliazione ne ha scelto uno nell\'intervallo possibile. Per vincolarlo, inseriscilo o aggiungi un vincolo su uno dei flussi seguenti.',
+            free_unbounded: 'I vincoli non bastano a fissare questo valore, e nulla lo limita. Serve un inserimento o un limite per controllarlo.',
+            failed: 'La riconciliazione di questa combinazione di etichette non è riuscita: il valore mostrato è quello di ingresso.'
+          },
+          kinds: {
+            mat_balance: 'Bilancio di materia del nodo',
+            aggregation: 'Aggregazione padre/figli sul nodo',
+            stock_aggregation: 'Aggregazione delle scorte sul nodo',
+            equality: 'Equazione inserita (vincolo)',
+            bound_min: 'Limite inferiore inserito (vincolo)',
+            bound_max: 'Limite superiore inserito (vincolo)'
+          }
+        },
         mfa: {
           reconciliation: 'Riconciliazione',
           open_spreadsheet: 'Aprire il foglio di calcolo (vincoli)',
@@ -1146,6 +1326,42 @@ export const resources_inspector = {
           datatags: '标签组合',
           unknown: '此文件未说明该元素为何存在（在来源追踪之前写入，或手动绘制）。',
           select: '请选择一个节点或一条流。'
+        },
+        // #426 — section « D'où vient cette valeur ? » : ce qui a fixe la valeur.
+        determination: {
+          title: '该数值从何而来？',
+          intro: '是什么确定了所选流的数值，以及作用于它的约束。',
+          unknown: '该文件未说明是什么确定了这个数值（图未经调和，或由较早版本调和）。',
+          absent: '该流在此标签组合下不存在：没有可解释的数值。',
+          interval: '可能区间',
+          contributors: '相关的流',
+          fixed_by: '其数值由以下约束确定：',
+          takes_part_in: '没有任何约束能确定它。它参与：',
+          no_constraint: '模型中没有任何约束作用于该流。',
+          classification: {
+            measured: '实测',
+            redundant: '冗余',
+            determined: '已确定',
+            free: '自由',
+            free_unbounded: '自由且无界',
+            failed: '未调和'
+          },
+          meaning: {
+            measured: '该数值由您录入，模型中没有任何方式可重新计算它：调和保持了原值。',
+            redundant: '该数值由您录入，模型也能够计算它：调和在两者之间进行了权衡。',
+            determined: '该数值并非由您录入：模型的约束足以将其确定，不存在其他可能解。',
+            free: '约束不足以确定该数值；调和在可能区间内选取了一个。若要约束它，请录入该值，或在下列某条流上添加约束。',
+            free_unbounded: '约束不足以确定该数值，且没有任何界限。需要录入数值或设置界限才能掌控它。',
+            failed: '该标签组合的调和未能完成：显示的是输入值。'
+          },
+          kinds: {
+            mat_balance: '节点的物质平衡',
+            aggregation: '节点上的父/子聚合',
+            stock_aggregation: '节点上的存量聚合',
+            equality: '录入的方程（约束）',
+            bound_min: '录入的下界（约束）',
+            bound_max: '录入的上界（约束）'
+          }
         },
         // #1258 — Onglet MFA (espace AFM unifié).
         mfa: {
@@ -1357,6 +1573,42 @@ export const resources_inspector = {
           datatags: 'タグの組み合わせ',
           unknown: 'このファイルには、この要素が存在する理由が記録されていません（由来の記録より前に書かれたか、手描きです）。',
           select: 'ノードまたはフローを選択してください。'
+        },
+        // #426 — section « D'où vient cette valeur ? » : ce qui a fixe la valeur.
+        determination: {
+          title: 'この値はどこから来たのか',
+          intro: '選択したフローの値を決めたものと、そこに掛かっている制約。',
+          unknown: 'このファイルには、この値を決めたものが記録されていません（未調整の図、または以前のバージョンで調整された図）。',
+          absent: 'このタグの組み合わせではこのフローは存在しません。説明すべき値がありません。',
+          interval: '取りうる区間',
+          contributors: '関係するフロー',
+          fixed_by: 'この値は次によって決まります:',
+          takes_part_in: 'どの制約もこの値を決めていません。次に関与しています:',
+          no_constraint: 'モデルのどの制約もこのフローに掛かっていません。',
+          classification: {
+            measured: '実測',
+            redundant: '冗長',
+            determined: '決定済み',
+            free: '自由',
+            free_unbounded: '自由（上下限なし）',
+            failed: '未調整'
+          },
+          meaning: {
+            measured: 'この値はあなたが入力したもので、モデルには再計算する手段がありませんでした。調整はそのまま残しました。',
+            redundant: 'この値はあなたが入力したもので、モデルでも計算できました。調整が両者を調停しました。',
+            determined: 'この値はあなたが入力したものではありません。モデルの制約だけで一意に決まり、他の解はありません。',
+            free: '制約だけではこの値は決まりません。調整は取りうる区間の中から一つを選びました。値を絞るには、この値を入力するか、下記のいずれかのフローに制約を加えてください。',
+            free_unbounded: '制約だけではこの値は決まらず、上下限もありません。入力または境界の設定が必要です。',
+            failed: 'このタグの組み合わせの調整は完了しませんでした。表示されているのは入力値です。'
+          },
+          kinds: {
+            mat_balance: 'ノードの物質収支',
+            aggregation: 'ノード上の親子集計',
+            stock_aggregation: 'ノード上のストック集計',
+            equality: '入力された式（制約）',
+            bound_min: '入力された下限（制約）',
+            bound_max: '入力された上限（制約）'
+          }
         },
         // #1258 — Onglet MFA (espace AFM unifié).
         mfa: {

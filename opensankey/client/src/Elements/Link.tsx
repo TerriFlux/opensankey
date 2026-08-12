@@ -224,6 +224,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
   // fichier ne le dit pas : l'inspecteur l'annonce comme inconnu, jamais comme
   // une saisie de l'utilisateur.
   private _origin: Type_Origin | undefined = undefined
+  // #426 — index de l'explication « d'où vient ta valeur » commune à toutes les
+  // combinaisons d'étiquettes de ce flux, dans le catalogue du diagramme. Une
+  // cellule qui répond autre chose porte le sien (cf. Class_LinkValue).
+  private _determination: number | null = null
 
   // I/O anchor lock & delta — per link end ('source' / 'target').
   // The "anchor" of a link is its attachment point on a node side; the side
@@ -1501,6 +1505,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
   // #411 — traçabilité de l'origine du flux.
   public get origin() { return this._origin }
   public set origin(v: Type_Origin | undefined) { this._origin = v }
+
+  // #426 — traçabilité de la détermination de la valeur du flux.
+  public get determination() { return this._determination }
+  public set determination(v: number | null) { this._determination = v }
 
   public get is_visible() {
     if (this.is_visible_ignoring_container_modes && this.is_allowed_by_container_modes) return true

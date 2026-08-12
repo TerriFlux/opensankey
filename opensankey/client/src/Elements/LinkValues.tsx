@@ -1032,9 +1032,19 @@ export class Class_LinkValue extends Class_ElementValue {
   private _data_source: string | null = null
   private _data_url: string | null = null
   private _data_hypothesis: string | null = null
+  // #426 — index de l'explication de CETTE cellule dans le catalogue du
+  // diagramme. Écrit uniquement quand il diffère de celui du flux, qui couvre
+  // déjà les combinaisons d'étiquettes qui répondent la même chose.
+  // Volontairement absent de `copyFrom` : un flux dupliqué est un autre flux,
+  // que le solveur n'a jamais vu — il ne doit hériter d'aucune explication.
+  private _determination: number | null = null
 
   public get ratio_unit_tag() { return this._ratio_unit_tag }
   public set ratio_unit_tag(_) { this._ratio_unit_tag = _ }
+
+  // #426 — voir _determination.
+  public get determination() { return this._determination }
+  public set determination(_: number | null) { this._determination = _ }
 
   public get data_source() { return this._data_source }
   public set data_source(_: string | null) { this._data_source = _ }
@@ -1217,6 +1227,9 @@ export class Class_LinkValue extends Class_ElementValue {
     if (this._data_hypothesis != null) json_object['data_hypothesis'] = this._data_hypothesis
     // #161 — preserve the structurally-absent marker on save.
     if (this.structurally_absent) json_object['structurally_absent'] = true
+    // #426 — l'explication propre à cette cellule. Réécrite telle quelle : le
+    // front ne la fabrique pas, il n'a pas la matrice de contraintes.
+    if (this._determination !== null) json_object['determination'] = this._determination
     return json_object
   }
 
@@ -1247,6 +1260,9 @@ export class Class_LinkValue extends Class_ElementValue {
     // #161 — the flux does not exist for this dataTag (pruned by the
     // no-propagation option). Absent in legacy files -> defaults to false.
     this.structurally_absent = getBooleanFromJSON(json_object, 'structurally_absent', false)
+    // #426 — explication propre à la cellule ; absente d'un fichier antérieur
+    // ou d'une cellule qui répond comme son flux (cf. Class_LinkElement).
+    this._determination = getNumberOrNullFromJSON(json_object, 'determination')
     if (Object.prototype.hasOwnProperty.call(json_object, 'value')) {
       this.fromJSONLegacy(json_object)
     }
