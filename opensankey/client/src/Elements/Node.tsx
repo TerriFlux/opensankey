@@ -1161,9 +1161,10 @@ export class Class_NodeElement extends Class_NodeBase {
 
   /**
    * Build a link → display-rank map for the geometry-aware I/O order (modes 'simple' and
-   * 'advanced', cf. ioOrderGeometry.ts). Turning links ('vh'/'hv') get the direction-split
-   * + height fan so it does not cross ; straight links ('hh'/'vv') keep the plain
-   * opposite-position order. All positions are taken at node CENTRES ; each link carries the
+   * 'advanced', cf. ioOrderGeometry.ts). Turning links get the direction-split + height fan
+   * so it does not cross ; rectilinear links keep the plain opposite-position order. A link
+   * turns when it changes axis ('vh'/'hv') or when its slope is non-negligible — orientation
+   * alone does not tell (cf. #425). All positions are taken at node CENTRES ; each link carries the
    * curvature on its node-side end (used as a height tie-break in ADVANCED only — `use_curve`).
    * A recycling link additionally carries `stack_ref`, the centre of its loop's belly,
    * because its opposite node — which sits backwards, beyond this node — says nothing about
@@ -1188,16 +1189,19 @@ export class Class_NodeElement extends Class_NodeBase {
       // glued to the node) is a real value and is kept — only a missing value falls back
       // to the default. The order rule uses reach·curve_node as the anchor distance.
       const curve_node = (is_source ? l.shape_starting_curve : l.shape_ending_curve) ?? 0.05
-      // Seuls les flux qui changent d'axe ('vh'/'hv') reçoivent l'éventail split+hauteur ;
-      // les flux droits ('hh'/'vv') gardent le tri par position opposée (cf. orderKey).
-      const turning = (l.shape_orientation === 'vh' || l.shape_orientation === 'hv')
+      // Un flux qui change d'axe ('vh'/'hv') tourne toujours. Un flux qui garde son axe
+      // ('hh'/'vv') tourne dès que sa pente est notable : `shape_orientation` décrit
+      // l'orientation des POINTS D'ATTACHE, pas le tracé — un 'hh' entre deux nœuds de
+      // hauteurs différentes dessine un S (cf. #425). Le test de pente est dans orderKey,
+      // qui dispose déjà du dénivelé (le ventre de la boucle pour un recyclage).
+      const axis_change = (l.shape_orientation === 'vh' || l.shape_orientation === 'hv')
       // Départage de faisceau : pour des flux parallèles (mêmes source/cible/côtés) toutes les
       // autres composantes de la clé sont égales. On signe un ordinal stable et partagé (index
       // global du lien) selon la géométrie du côté pour que la source et la cible ordonnent le
       // faisceau en miroir (CCW à la source, CW à la cible) → pas de croisement. cf. bundleTie.
       const ord = this.sankey.links_list.indexOf(l)
       const [ox, oy] = centre(other)
-      const geo: Type_IOGeo = { side, ox, oy, turning, curve_node, bundle_tie: bundleTie(side, is_source, ord) }
+      const geo: Type_IOGeo = { side, ox, oy, axis_change, curve_node, bundle_tie: bundleTie(side, is_source, ord) }
       if (l.shape_is_recycling) {
         const [sx, sy] = centre(l.source)
         const [tx, ty] = centre(l.target)
