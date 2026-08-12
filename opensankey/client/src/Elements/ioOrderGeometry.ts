@@ -7,10 +7,14 @@
 // THE POLICY (user's rule, #205 rework — under local visual validation)
 //   Each face is split into THREE bands, top→bottom (left→right for top/bottom sides) :
 //     [ turning-up | straight | turning-down ]
-//   0. GATE — only TURNING links (orientation 'vh'/'hv', the link changes axis end-to-end)
-//      get the fan. Straight links ('hh'/'vv') form the MIDDLE band, ordered by the opposite
-//      node's stacking position along the face (its y for left/right, x for top/bottom).
-//      `geo.turning` says which.
+//   0. GATE — only TURNING links get the fan. STRAIGHT links form the MIDDLE band, ordered
+//      by the opposite node's stacking position along the face (its y for left/right, x for
+//      top/bottom). A link turns when it changes axis end-to-end (orientation 'vh'/'hv',
+//      `geo.axis_change`) OR when its two ends are at different heights, i.e. its slope
+//      |stack| / reach exceeds STRAIGHT_SLOPE_TOL. Beware : orientation 'hh'/'vv' does NOT
+//      mean "straight" — it is the orientation of the ATTACHMENT POINTS (horizontal at both
+//      ends), and an 'hh' link between two nodes of different heights draws an S, so it does
+//      turn. Only a null slope makes it truly rectilinear (cf. #425).
 //   1. DIRECTION split (turning links) — the reference decides which band : a turning link
 //      whose opposite node is ABOVE the reorg node turns UP → it sits ABOVE the whole
 //      straight block ; below → it turns DOWN → BELOW the straight block. So turning-up and
@@ -35,13 +39,25 @@
 
 import { Type_Side } from './ElementsAttributesConfig'
 
+/**
+ * Slope (|stack| / reach) below which a link that does NOT change axis is held to be
+ * rectilinear and joins the middle band instead of the fan. A pure ratio on purpose : it
+ * depends neither on the zoom, nor on the drawing scale, nor on the link's value — an
+ * order that moved when the data changed would be the very defect the #205 rework set out
+ * to remove. 0.02 ≈ 1.15°, i.e. a link is "straight" while it drifts by less than 2 % of
+ * the distance it covers. The exact ends of an aligned pair give 0 and always qualify.
+ */
+export const STRAIGHT_SLOPE_TOL = 0.02
+
 export type Type_IOGeo = {
   side: Type_Side
   ox: number         // opposite node centre x
   oy: number         // opposite node centre y
-  turning?: boolean  // link changes axis end-to-end (orientation 'vh'/'hv'). Only turning
-                     // links get the direction-split + height fan ; straight ('hh'/'vv')
-                     // links keep the plain opposite-position order. Defaults to false.
+  axis_change?: boolean // link changes axis end-to-end (orientation 'vh'/'hv') — it then
+                     // turns whatever its slope. A link that keeps its axis ('hh'/'vv')
+                     // still turns as soon as its slope exceeds STRAIGHT_SLOPE_TOL : the
+                     // orientation describes the ATTACHMENT POINTS, not the path (an 'hh'
+                     // link between nodes of different heights draws an S). Defaults to false.
   curve_node: number // curvature factor on THIS node's side (shape_starting_curve when
                      // the link leaves this node, shape_ending_curve when it arrives ;
                      // ratio of the link length ; an explicit 0 — bend glued to the node —
@@ -93,8 +109,9 @@ export function bundleTie(side: Type_Side, is_source: boolean, ord: number): num
 
 // Ranking key for one link : [band, primary, anchorTie, stackTie, bundleTie], lexical.
 //  band      : 3 bands on the face — 0 = turning-up (above the straight block), 1 = straight
-//              ('hh'/'vv'), 2 = turning-down (below the straight block). A turning link that
-//              turns up sits above ALL straight links, one that turns down sits below them.
+//              (no axis change AND a slope under STRAIGHT_SLOPE_TOL), 2 = turning-down (below
+//              the straight block). A turning link that turns up sits above ALL straight
+//              links, one that turns down sits below them.
 //  primary   : turning links → reach (height), signed so ascending sort puts the nearest
 //              (first-turning) link at each band's OUTER extremity ; straight links → the
 //              stacking position itself (plain opposite order, within the middle band).
@@ -118,13 +135,16 @@ function orderKey(geo: Type_IOGeo, nx: number, ny: number, use_curve: boolean): 
     : (horiz ? dy : dx)
   const up = stack < 0
   const bundle = geo.bundle_tie ?? 0
-  // Straight ('hh'/'vv') links : the MIDDLE band (1), no fan — plain order by the opposite
-  // stacking position. Turning links wrap around this block, above or below it.
-  if (!geo.turning)
-    return [1, stack, 0, 0, bundle]
-  // Turning ('vh'/'hv') links : band 0 when they turn up (above the straight block), band 2
-  // when they turn down (below it) ; within the band, HEIGHT (reach) toward the extremity.
   const reach = Math.abs(horiz ? dx : dy)  // toward the opposite (≥ 0), on the emission axis
+  // Does the link turn ? Either it changes axis end-to-end ('vh'/'hv'), or it keeps its axis
+  // but climbs/drops enough for the S it draws to be visible (slope over the tolerance).
+  const turning = (geo.axis_change ?? false) || Math.abs(stack) > STRAIGHT_SLOPE_TOL * reach
+  // Straight links : the MIDDLE band (1), no fan — plain order by the opposite stacking
+  // position. Turning links wrap around this block, above or below it.
+  if (!turning)
+    return [1, stack, 0, 0, bundle]
+  // Turning links : band 0 when they turn up (above the straight block), band 2 when they
+  // turn down (below it) ; within the band, HEIGHT (reach) toward the extremity.
   const anchor = reach * geo.curve_node    // node-side curvature anchor distance (tie-break)
   return [up ? 0 : 2, up ? reach : -reach, use_curve ? (up ? anchor : -anchor) : 0, stack, bundle]
 }
@@ -176,7 +196,7 @@ function cmpKey(a: Type_OrderKey, b: Type_OrderKey): number {
  * Order a node's I/O items with the gated direction-split + height policy.
  *
  * @param items     each link paired with its geometry (opposite node centre, side,
- *                  node-side curvature and the `turning` flag)
+ *                  node-side curvature and the `axis_change` flag)
  * @param nx,ny     reference node centre
  * @param use_curve ADVANCED mode : break height ties by the node-side anchor distance
  *                  reach·curve_node. SIMPLE mode passes false (curvature ignored).

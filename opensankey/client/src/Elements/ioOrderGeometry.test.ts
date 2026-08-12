@@ -1,8 +1,11 @@
 import { orderIOByGeometry, recyclingBellyCentre, bundleTie, Type_IOGeo } from './ioOrderGeometry'
 
 // Geometry-aware I/O ordering — gated direction split + HEIGHT rule (#205 rework).
-//   0. GATE — the fan applies only to TURNING links (orientation 'vh'/'hv'). Straight
-//      links ('hh'/'vv') keep the plain order by the opposite node's stacking position.
+//   0. GATE — the fan applies only to TURNING links. A link turns when it changes axis
+//      ('vh'/'hv', `axis_change`) OR when its slope |stack|/reach exceeds
+//      STRAIGHT_SLOPE_TOL. Only RECTILINEAR links (no axis change, negligible slope) keep
+//      the plain order by the opposite node's stacking position. Orientation 'hh'/'vv' does
+//      not make a link straight — it describes the attachment points (cf. #425).
 //   1. up-going links (reference above the reorg node) are all placed above the down-going
 //      ones, so up and down never cross.
 //   2. within a group, turning links are sorted by HEIGHT — the reach (|opposite − node|
@@ -13,18 +16,20 @@ import { orderIOByGeometry, recyclingBellyCentre, bundleTie, Type_IOGeo } from '
 //      opposite node's stacking position.
 
 type L = { id: string }
-// row = [id, side, ox, oy, turning?, curve_node?, stack_ref?]
-//   turning   default false (straight 'hh'/'vv') — true for 'vh'/'hv'
+// row = [id, side, ox, oy, axis_change?, curve_node?, stack_ref?]
+//   axis_change default false (orientation 'hh'/'vv') — true for 'vh'/'hv'. A row left at
+//              false still turns if its slope exceeds the tolerance : that is the geometry,
+//              not the orientation, and it is what the rows below exercise.
 //   curve_node default 0.05 — only used as a height tie-break in advanced mode
 //   stack_ref  set only for recycling links (the centre of their loop's belly)
 const make = (
   rows: [string, Type_IOGeo['side'], number, number, boolean?, number?, number?][]
 ) =>
-  rows.map(([id, side, ox, oy, turning, cn, sr]) => ({
+  rows.map(([id, side, ox, oy, axis_change, cn, sr]) => ({
     item: { id } as L,
     geo: {
       side, ox, oy,
-      turning: turning ?? false,
+      axis_change: axis_change ?? false,
       curve_node: cn ?? 0.05,
       ...(sr !== undefined ? { stack_ref: sr } : {})
     } as Type_IOGeo
@@ -34,30 +39,44 @@ const run = (
   items: ReturnType<typeof make>, nx: number, ny: number, use_curve?: boolean
 ) => orderIOByGeometry(items, nx, ny, use_curve).map(l => l.id)
 
-describe('gate — straight vs turning links', () => {
-  it('straight links ignore reach : plain order by the opposite stacking position', () => {
-    // Same near-node column (ox identical) so reach is equal ; only oy (the stacking
-    // position on a right side) decides. A fan would never even run here.
+describe('gate — rectilinear vs turning links', () => {
+  it('rectilinear links ignore reach : plain order by the opposite stacking position', () => {
+    // Slopes of 1 %, under the tolerance : these three links run flat and stay in the middle
+    // band, where only oy (the stacking position on a right side) decides. No fan runs here.
     const items = make([
-      ['p', 'right', 300, 300],
-      ['q', 'right', 300, 100],
-      ['r', 'right', 300, 200],
+      ['p', 'right', 1000, 10],
+      ['q', 'right', 1000, -10],
+      ['r', 'right', 1000, 0],
     ])
     expect(run(items, 0, 0)).toEqual(['q', 'r', 'p'])
   })
 
-  it('same coordinates : the turning flag flips the order (gate proof)', () => {
-    // near (small reach, high) vs far (large reach, low), both below the node.
-    const rows: [string, Type_IOGeo['side'], number, number, boolean?][] = [
+  it('the SLOPE opens the fan, not the orientation (#425)', () => {
+    // Same two links, same orientation 'hh' (axis_change stays false) — only their heights
+    // change. Flat : plain stacking order. Sloped : the fan runs and the nearest link takes
+    // the bottom extremity. The regression of #425 was to read 'hh' as "straight" and never
+    // open the fan, whatever the heights.
+    const flat = make([
+      ['near', 'right', 300, 3],
+      ['far', 'right', 1000, 6],
+    ])
+    expect(run(flat, 0, 0)).toEqual(['near', 'far'])
+    const sloped = make([
       ['near', 'right', 300, 100],
       ['far', 'right', 1000, 200],
-    ]
-    // Straight : ordered by opposite stacking (oy) → near (100) then far (200).
-    expect(run(make(rows), 0, 0)).toEqual(['near', 'far'])
-    // Turning : down group ordered by descending reach → far (1000) then near (300).
-    const turning = rows.map(([id, s, ox, oy]) => [id, s, ox, oy, true] as
-      [string, Type_IOGeo['side'], number, number, boolean])
-    expect(run(make(turning), 0, 0)).toEqual(['far', 'near'])
+    ])
+    // Down band ordered by descending reach → far (1000) then near (300).
+    expect(run(sloped, 0, 0)).toEqual(['far', 'near'])
+  })
+
+  it('an axis change turns the link even with a null slope', () => {
+    // 'vh'/'hv' changes axis end-to-end : it turns whatever its height, so it leaves the
+    // middle band even when its two ends are perfectly aligned.
+    const items = make([
+      ['flat', 'right', 1000, 0],
+      ['bent', 'right', 1000, 0, true],
+    ])
+    expect(run(items, 0, 0)).toEqual(['flat', 'bent'])
   })
 })
 
@@ -97,21 +116,21 @@ describe('turning links — direction split + height', () => {
 
 describe('interleaving — turning links wrap the straight block (3 bands)', () => {
   it('turning-up sits above ALL straight, turning-down below — whatever the straight own y', () => {
-    // sHigh is a straight link whose opposite is ABOVE the node, yet it stays in the middle
-    // band : straight links never join a turning band. The turning-up link is above it all,
-    // the turning-down link below it all.
+    // sHigh is a rectilinear link whose opposite is ABOVE the node, yet it stays in the
+    // middle band : rectilinear links never join a turning band. The turning-up link is
+    // above it all, the turning-down link below it all.
     const items = make([
-      ['sLow', 'right', 300, 150],          // straight, below node
+      ['sLow', 'right', 1000, 10],          // rectilinear (1 % slope), just below node
       ['tDown', 'right', 800, 200, true],   // turning-down → bottom band
       ['tUp', 'right', 800, -200, true],    // turning-up → top band
-      ['sHigh', 'right', 300, -100],        // straight, above node — still middle band
+      ['sHigh', 'right', 1000, -10],        // rectilinear, above node — still middle band
     ])
     expect(run(items, 0, 0)).toEqual(['tUp', 'sHigh', 'sLow', 'tDown'])
   })
 
   it('within each turning band the height fan still applies around the straight block', () => {
     const items = make([
-      ['s', 'right', 300, 0],               // lone straight, middle
+      ['s', 'right', 300, 0],               // lone rectilinear, middle
       ['upNear', 'right', 300, -100, true], // up band : nearest at the very top
       ['upFar', 'right', 1200, -100, true],
       ['downFar', 'right', 1200, 100, true],
@@ -143,7 +162,7 @@ describe('bundle tie — parallel links stay untwisted across both ends', () => 
     const mk = (id: string, ord: number) => ({
       item: { id },
       geo: {
-        side, ox, oy, turning: true, curve_node: 0.05,
+        side, ox, oy, axis_change: true, curve_node: 0.05,
         bundle_tie: bundleTie(side, isSource, ord)
       } as Type_IOGeo
     })
@@ -203,28 +222,43 @@ describe('recyclingBellyCentre — geometry of the loop belly', () => {
 })
 
 describe('recycling links — split keyed on the loop belly, not on the opposite node', () => {
+  // Both cases below use a RECTILINEAR witness on the same face : its band never moves, so
+  // the order tells directly which band the recycling link fell into — which is the point
+  // being proved. The Mélasses coordinates are those of the real SOCLE Sucre case (#279).
+  const distillerie = { x: 1090.2, y: 1106.5 }
+  const withWitness = (offset: number) => {
+    const belly = recyclingBellyCentre(2050.3, 660.9, distillerie.x, distillerie.y, offset, 10, 'hh')
+    return make([
+      ['témoin', 'left', 90.2, 1106.5],  // flat inflow, stays in the middle band
+      ['Mélasses', 'left', 2050.3, 660.9, false, 0.0139, belly.y],
+    ])
+  }
+
   it('a loop diving below the node lands in the down group', () => {
     // The Mélasses NODE is HIGH (y=661, above the distillerie at 1106), yet its loop hangs
     // BELOW it (offset +6.75) → the belly, not the node, puts the flow in the down group,
-    // i.e. below the Betteraves inflow. Both links are straight so the split alone decides.
-    const node = { x: 1090.2, y: 1106.5 }
-    const belly = recyclingBellyCentre(2050.3, 660.9, node.x, node.y, 6.75, 10, 'hh')
-    const items = make([
-      ['Betteraves sucrières', 'left', 617.5, 732.8],
-      ['Mélasses', 'left', 2050.3, 660.9, false, 0.0139, belly.y],
-    ])
-    expect(run(items, node.x, node.y)).toEqual(['Betteraves sucrières', 'Mélasses'])
+    // i.e. under the witness inflow.
+    expect(run(withWitness(6.75), distillerie.x, distillerie.y))
+      .toEqual(['témoin', 'Mélasses'])
   })
 
   it('same nodes, loop lifted above the node : it switches to the up group', () => {
     // Only the sign of the offset changes — proving the split keys on the belly, not the node.
-    const node = { x: 1090.2, y: 1106.5 }
-    const belly = recyclingBellyCentre(2050.3, 660.9, node.x, node.y, -600, 10, 'hh')
+    expect(run(withWitness(-600), distillerie.x, distillerie.y))
+      .toEqual(['Mélasses', 'témoin'])
+  })
+
+  it('a recycling loop with a negligible slope stays in the middle band', () => {
+    // Belly 10 px under a node 1000 px away : the loop runs flat along the face and has no
+    // reason to claim an extremity. It keeps its place among the rectilinear links, between
+    // a witness above and a witness below.
+    const node = { x: 1000, y: 1000 }
     const items = make([
-      ['Betteraves sucrières', 'left', 617.5, 732.8],
-      ['Mélasses', 'left', 2050.3, 660.9, false, 0.0139, belly.y],
+      ['bas', 'left', 0, 1015],
+      ['boucle', 'left', 2000, 500, false, 0.05, 1010],
+      ['haut', 'left', 0, 995],
     ])
-    expect(run(items, node.x, node.y)).toEqual(['Mélasses', 'Betteraves sucrières'])
+    expect(run(items, node.x, node.y)).toEqual(['haut', 'boucle', 'bas'])
   })
 
   it('turning recycling links : the height still measures toward the opposite node', () => {
@@ -237,5 +271,41 @@ describe('recycling links — split keyed on the loop belly, not on the opposite
       ['near', 'left', 1500, 900, true, 0.02, belly], // reach  500 → bottom extremity
     ])
     expect(run(items, node.x, node.y)).toEqual(['far', 'near'])
+  })
+})
+
+// Real case of #425 : filière Lait (SOCLE), node « Fabrication de poudre de lait », mode
+// Avancée. Every link of that diagram carries the default orientation 'hh', so the previous
+// gate — which read 'hh' as "straight" — left the whole face out of the fan and ordered it by
+// the opposite node alone. Coordinates are those of the file attached to the issue (taken as
+// centres here : the unit is the ordering rule, not the node geometry).
+describe('#425 — an "hh" face still gets the fan (filière Lait)', () => {
+  const fabrication = { x: 382.99, y: 318.11 }
+  const items = () => {
+    // Crème intermédiaire is a recycling link : it leaves rightwards and loops back to a node
+    // sitting on the LEFT, its belly hanging just under the lower of the two nodes.
+    const belly = recyclingBellyCentre(
+      fabrication.x, fabrication.y, 158.12, 459.91, 11.126, 10, 'hh')
+    return make([
+      ['Poudre de lait intermédiaire', 'right', 624.75, 282.51, false, 0.0285],
+      ['Eau', 'right', 1060.65, 864.19, false, 0.0223],
+      ['Crème intermédiaire', 'right', 158.12, 459.91, false, 0.0025, belly.y],
+    ])
+  }
+
+  it('the recycling link, nearest of the two descending flows, takes the bottom extremity', () => {
+    // Poudre de lait climbs slightly → up band. Eau (reach 678) and Crème (reach 225) both
+    // descend ; the nearest turns first and lands at the very bottom of the face. Under the
+    // old gate the three shared the middle band and sorted by height alone, which wedged
+    // Crème between the two — the reported bug.
+    expect(run(items(), fabrication.x, fabrication.y)).toEqual([
+      'Poudre de lait intermédiaire', 'Eau', 'Crème intermédiaire'
+    ])
+  })
+
+  it('simple mode reaches the same order here — the curvature is only a tie-break', () => {
+    expect(run(items(), fabrication.x, fabrication.y, false)).toEqual([
+      'Poudre de lait intermédiaire', 'Eau', 'Crème intermédiaire'
+    ])
   })
 })
