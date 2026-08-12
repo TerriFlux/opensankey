@@ -89,6 +89,10 @@ export class Class_ConnectionGestureHandler {
     // pas de geste flèche en cours, et l'élément survolé est un VRAI nœud du modèle
     // (pas une zone de texte, pas la légende — elles héritent aussi de NodeBase).
     if (!da.editable) return
+    // sa#422 — interrupteur porté par le bouton « Sélection » de la colonne d'outils :
+    // enclenché, il coupe l'apparition des flèches (le geste lui-même reste intact,
+    // seul son amorce au survol disparaît). Réglage enregistré dans le JSON.
+    if (da.connection_arrows_off) return
     if (!da.isInSelectionMode() || da.isInStylePaintMode()) return
     if (event.buttons !== 0) return
     if (da.drawing_link || da.ghost_link !== null) return
