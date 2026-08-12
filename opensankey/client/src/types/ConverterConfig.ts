@@ -17,8 +17,22 @@
  * decoupage.
  */
 
-/** Nature de l'entree attendue par un convertisseur. */
-export type FormatType = 'base' | 'excel' | 'json' | 'blob' | 'example_excel' | 'example_json'
+/**
+ * Nature de l'entree attendue par un convertisseur.
+ *
+ * sa#424 (lot 2) — les trois formats ETRANGERS (SankeyMATIC, STAN, e!Sankey)
+ * rejoignent cette liste. Ils vivaient auparavant hors du dialogue, derriere des
+ * `<input type=file>` caches du menu : ils n'avaient donc ni bandeau d'erreur,
+ * ni terminal, ni options, et un fichier illisible echouait en silence dans la
+ * console (famille du #381).
+ *
+ * Ils ne portent aucune option de format : `FormatConfigStructure` etant un
+ * `Record<string, ...>`, les tables d'attributs n'ont pas a les declarer, et les
+ * seaux d'options retombent sur `base`.
+ */
+export type FormatType =
+  | 'base' | 'excel' | 'json' | 'blob' | 'example_excel' | 'example_json'
+  | 'sankeymatic' | 'stan' | 'esankey'
 
 export interface ConverterConfig {
   // Textes
