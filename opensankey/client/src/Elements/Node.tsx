@@ -1123,10 +1123,11 @@ export class Class_NodeElement extends Class_NodeBase {
     let recycling_links: Class_LinkElement[]
     let compare: (link_a: Class_LinkElement, link_b: Class_LinkElement) => number
     // Les deux modes passent par l'ordre géométrique (cf. ioOrderGeometry.ts). L'éventail
-    // « split direction + hauteur » ne s'applique qu'aux flux qui tournent ('vh'/'hv') ; les
-    // flux droits ('hh'/'vv') gardent le tri par la position du nœud opposé. Différence
-    // simple/advanced : advanced départage les hauteurs égales par l'ancre reach·curve
-    // (use_curve=true) ; simple ignore la courbure.
+    // « split direction + ancre » ne s'applique qu'aux flux qui TOURNENT ; un flux droit ou
+    // presque reste au centre de la face, trié par la position du nœud opposé. Différence
+    // simple/advanced : advanced classe l'éventail par l'ancre reach·curve (use_curve=true)
+    // et départage par la position opposée ; simple ignore la courbure, donc la position
+    // opposée y est le seul critère.
     if (mode === 'advanced') {
       // Les flux de recyclage rejoignent le groupe « middle » et sont classés par le ventre
       // de leur boucle → on passe recycling_links=[] à reorganizeIOOrder.
@@ -1161,11 +1162,12 @@ export class Class_NodeElement extends Class_NodeBase {
 
   /**
    * Build a link → display-rank map for the geometry-aware I/O order (modes 'simple' and
-   * 'advanced', cf. ioOrderGeometry.ts). Turning links get the direction-split + height fan
-   * so it does not cross ; rectilinear links keep the plain opposite-position order. A link
-   * turns when it changes axis ('vh'/'hv') or when its slope is non-negligible — orientation
-   * alone does not tell (cf. #425). All positions are taken at node CENTRES ; each link carries the
-   * curvature on its node-side end (used as a height tie-break in ADVANCED only — `use_curve`).
+   * 'advanced', cf. ioOrderGeometry.ts). Turning links get the direction-split + anchor fan ;
+   * links that run straight or nearly so stay at the CENTRE of the face, ordered by the
+   * opposite position. A link turns when it changes axis ('vh'/'hv') or when its slope is
+   * non-negligible — orientation alone does not tell (cf. #425). All positions are taken at
+   * node CENTRES ; each link carries the curvature on its node-side end, which drives the fan
+   * in ADVANCED only (`use_curve`).
    * A recycling link additionally carries `stack_ref`, the centre of its loop's belly,
    * because its opposite node — which sits backwards, beyond this node — says nothing about
    * where the loop actually passes.
