@@ -137,6 +137,35 @@ describe('os#1344 — flèches directionnelles au survol', () => {
     }
   })
 
+  // sa#422 — l'interrupteur. Le geste n'avait aucun moyen d'être coupé : les flèches
+  // surgissaient à chaque passage de souris, y compris pour qui ne crée rien.
+  it('interrupteur coupé : aucune flèche au survol, le geste ne s\'amorce plus', () => {
+    const { drawing_area, source } = buildDrawnApp()
+    drawing_area.setSelectionMode()
+    drawing_area.connection_arrows_off = true
+
+    drawing_area.connection_gesture.onNodeHover(source, hoverEvent)
+    expect(document.getElementById('g_connection_gesture')).toBeNull()
+  })
+
+  it('bascule de l\'interrupteur pendant que les flèches sont affichées : elles disparaissent aussitôt', () => {
+    const { drawing_area, source } = buildDrawnApp()
+    drawing_area.setSelectionMode()
+
+    drawing_area.connection_gesture.onNodeHover(source, hoverEvent)
+    expect(document.getElementById('g_connection_gesture')).not.toBeNull()
+
+    // Sans ce nettoyage par le setter, la flèche sous le curseur au moment du clic
+    // resterait à l'écran jusqu'au prochain mouvement : le bouton paraîtrait inerte.
+    drawing_area.connection_arrows_off = true
+    expect(document.getElementById('g_connection_gesture')).toBeNull()
+
+    // Retour à l'état par défaut : les flèches réapparaissent au survol suivant.
+    drawing_area.connection_arrows_off = false
+    drawing_area.connection_gesture.onNodeHover(source, hoverEvent)
+    expect(document.getElementById('g_connection_gesture')).not.toBeNull()
+  })
+
   it('pas de flèches sur une zone de texte (seuls les vrais nœuds du modèle en ont)', () => {
     const { drawing_area, sankey } = buildDrawnApp()
     drawing_area.setSelectionMode()

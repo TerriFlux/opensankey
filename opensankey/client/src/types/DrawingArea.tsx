@@ -284,6 +284,14 @@ export class Class_DrawingArea {
   // activée, prime (cf. NodeEventsHandler.handleMouseDragStart).
   protected _smart_guides: boolean = true
 
+  // sa#422 — Flèches de création rapide au survol d'un nœud (os#1344). Le geste est
+  // utile quand on DESSINE, gênant quand on lit : les flèches surgissaient à chaque
+  // passage de souris sans aucun interrupteur. L'interrupteur est le bouton
+  // « Sélection » de la colonne d'outils, dont l'état n'était jusqu'ici que dérivé
+  // des outils de création. Défaut `false` = comportement historique (flèches
+  // visibles) : aucun fichier existant ne change de comportement.
+  protected _connection_arrows_off: boolean = false
+
   // Paper format properties
   protected _paper_format: Type_PaperFormat = default_paper_format
   protected _paper_orientation: Type_PaperOrientation = default_paper_orientation
@@ -921,6 +929,7 @@ export class Class_DrawingArea {
     this._grid_size = drawing_area_to_copy._grid_size
     this._grid_visible = drawing_area_to_copy._grid_visible
     this._smart_guides = drawing_area_to_copy._smart_guides
+    this._connection_arrows_off = drawing_area_to_copy._connection_arrows_off
     this._height = drawing_area_to_copy._height
     this._maximum_flux = drawing_area_to_copy._maximum_flux
     this._minimum_flux = drawing_area_to_copy._minimum_flux
@@ -4290,6 +4299,16 @@ export class Class_DrawingArea {
   // os#671 — activation des smart guides d'alignement au drag.
   public get smart_guides(): boolean { return this._smart_guides }
   public set smart_guides(value: boolean) { this._smart_guides = value }
+
+  // sa#422 — true = les flèches de création rapide n'apparaissent plus au survol.
+  // Le setter masque immédiatement celles déjà affichées : sans cela, la flèche
+  // sous le curseur au moment du clic sur le bouton resterait à l'écran jusqu'au
+  // prochain mouvement de souris — le clic paraîtrait sans effet.
+  public get connection_arrows_off(): boolean { return this._connection_arrows_off }
+  public set connection_arrows_off(value: boolean) {
+    this._connection_arrows_off = value
+    if (value) this._connection_gesture.hideArrows()
+  }
 
   public get list_g_element() { return this._list_g_element_id }
   public set list_g_element(list) { this._list_g_element_id = list }
