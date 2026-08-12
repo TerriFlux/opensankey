@@ -677,6 +677,12 @@ export class Class_DrawingArea {
   // pourcentage (0–100) en 'relative'. Défaut 1 (= 1 %).
   private _balance_marker_tolerance: number = 1
 
+  // sa#419 — Minimap dépliée ou non. C'est un réglage du DOCUMENT (et non une
+  // préférence de poste, comme il l'a été jusqu'au 2026-08-12) : le fichier
+  // rouvre et se publie dans l'état où son auteur l'a laissé, au même titre que
+  // le mode d'affichage (#369). Défaut faux → aucun fichier existant ne change.
+  private _minimap_open: boolean = false
+
   // Référence d'échelle par view tag : pour un view tag donné (clé = id de l'étiquette),
   // le flux `link_id` est calé à `thickness` px. Quand ce view tag est sélectionné,
   // l'échelle du diagramme est recalculée (applyViewTagScaleReference) pour que ce flux
@@ -918,6 +924,7 @@ export class Class_DrawingArea {
     this._height = drawing_area_to_copy._height
     this._maximum_flux = drawing_area_to_copy._maximum_flux
     this._minimum_flux = drawing_area_to_copy._minimum_flux
+    this._minimap_open = drawing_area_to_copy._minimap_open
     this._balance_marker_enabled = drawing_area_to_copy._balance_marker_enabled
     this._balance_marker_strategy = drawing_area_to_copy._balance_marker_strategy
     this._balance_marker_tolerance = drawing_area_to_copy._balance_marker_tolerance
@@ -4069,6 +4076,11 @@ export class Class_DrawingArea {
       this.drawElements()
     }
   }
+
+  // sa#419 — Repli de la minimap, porté par le document (voir le champ privé).
+  // Pas de redessin : la vignette est du chrome, elle ne touche pas au dessin.
+  public get minimap_open(): boolean { return this._minimap_open }
+  public set minimap_open(value: boolean) { this._minimap_open = value }
 
   public get minimum_flux(): number | undefined { return this._minimum_flux }
   public set minimum_flux(value: number | undefined) {
