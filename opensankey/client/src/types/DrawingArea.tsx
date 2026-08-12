@@ -74,6 +74,7 @@ import * as Camera from './DrawingAreaCamera'
 import { ZOOM_TOPIC } from './EventBus'
 import { Class_ViewportChrome } from './DrawingAreaViewportChrome'
 import { Class_DrawingAreaInteractions } from './DrawingAreaInteractions'
+import { Class_ConnectionGestureHandler, Type_ConnectionDirection } from './ConnectionGestureHandler'
 import { Class_NodeBase, sortNodesElements } from '../Elements/NodeBase'
 import {
   ContainerPersistence, LinkElementPersistence, NodeElementPersistence, SankeyPersistence
@@ -154,6 +155,10 @@ export class Class_DrawingArea {
   // #242 — Interactions souris (création de flux au cliquer-glisser, rectangle de sélection,
   // pan/zoom molette) : le module porte l'état de geste (cf. DrawingAreaInteractions).
   private _interactions = new Class_DrawingAreaInteractions()
+  // os#1344/os#1347 — handler du geste de CRÉATION CONNECTÉE (flèches directionnelles au
+  // survol d'un nœud). NodeBase le notifie via cette propriété, sans import runtime
+  // (invariant TDZ Element→Handler, cf. elementInitCycle.test.ts).
+  private _connection_gesture = new Class_ConnectionGestureHandler()
 
 
   public static: boolean = !!window.sankey?.publish
@@ -273,6 +278,19 @@ export class Class_DrawingArea {
   protected _grid_size: number = default_grid_size
 
   protected _magnetic_nodes: boolean = false
+
+  // os#671 — smart guides d'alignement au drag (lignes bords/centres + distances
+  // + snap doux). Actif par défaut ; la grille magnétique, quand elle est
+  // activée, prime (cf. NodeEventsHandler.handleMouseDragStart).
+  protected _smart_guides: boolean = true
+
+  // sa#422 — Flèches de création rapide au survol d'un nœud (os#1344). Le geste est
+  // utile quand on DESSINE, gênant quand on lit : les flèches surgissaient à chaque
+  // passage de souris sans aucun interrupteur. L'interrupteur est le bouton
+  // « Sélection » de la colonne d'outils, dont l'état n'était jusqu'ici que dérivé
+  // des outils de création. Défaut `false` = comportement historique (flèches
+  // visibles) : aucun fichier existant ne change de comportement.
+  protected _connection_arrows_off: boolean = false
 
   // Paper format properties
   protected _paper_format: Type_PaperFormat = default_paper_format
@@ -667,6 +685,12 @@ export class Class_DrawingArea {
   // pourcentage (0–100) en 'relative'. Défaut 1 (= 1 %).
   private _balance_marker_tolerance: number = 1
 
+  // sa#419 — Minimap dépliée ou non. C'est un réglage du DOCUMENT (et non une
+  // préférence de poste, comme il l'a été jusqu'au 2026-08-12) : le fichier
+  // rouvre et se publie dans l'état où son auteur l'a laissé, au même titre que
+  // le mode d'affichage (#369). Défaut faux → aucun fichier existant ne change.
+  private _minimap_open: boolean = false
+
   // Référence d'échelle par view tag : pour un view tag donné (clé = id de l'étiquette),
   // le flux `link_id` est calé à `thickness` px. Quand ce view tag est sélectionné,
   // l'échelle du diagramme est recalculée (applyViewTagScaleReference) pour que ce flux
@@ -904,9 +928,12 @@ export class Class_DrawingArea {
     this._grid_color = drawing_area_to_copy._grid_color
     this._grid_size = drawing_area_to_copy._grid_size
     this._grid_visible = drawing_area_to_copy._grid_visible
+    this._smart_guides = drawing_area_to_copy._smart_guides
+    this._connection_arrows_off = drawing_area_to_copy._connection_arrows_off
     this._height = drawing_area_to_copy._height
     this._maximum_flux = drawing_area_to_copy._maximum_flux
     this._minimum_flux = drawing_area_to_copy._minimum_flux
+    this._minimap_open = drawing_area_to_copy._minimap_open
     this._balance_marker_enabled = drawing_area_to_copy._balance_marker_enabled
     this._balance_marker_strategy = drawing_area_to_copy._balance_marker_strategy
     this._balance_marker_tolerance = drawing_area_to_copy._balance_marker_tolerance
@@ -1741,6 +1768,10 @@ export class Class_DrawingArea {
   }
 
   public addElementToSelection(element: Class_ProtoElement) {
+    // os#1340 — garde centrale du verrouillage : un élément verrouillé n'entre
+    // jamais dans la sélection (clic, lasso, Ctrl+A, selectOnly). Le clic droit
+    // ouvre toujours son menu contextuel, par lequel on le déverrouille.
+    if (element.is_locked) return
     // Update selection list
     this._selection[element.id] = element
     // Update selection attribute on given node
@@ -1949,6 +1980,12 @@ export class Class_DrawingArea {
   }
 
   public copyNodes(node_ids: string[]) { CopyPaste.copyNodes(this, node_ids) }
+
+  /** os#1340 (Ctrl+D) — duplique la sélection courante (nœuds + liens internes + zones). */
+  public duplicateSelection() { CopyPaste.duplicateSelection(this) }
+
+  /** os#1340 (alt-glisser = cloner) — duplique la sélection SANS décalage (copies sous les originaux). */
+  public cloneSelectionInPlace() { CopyPaste.cloneSelectionInPlace(this) }
 
   public updateScaleAtLinkValueSetting(previously_valued_count?: number) {
     // Si une seule valeur existe sur tout le diagramme, elle détermine l'échelle.
@@ -3926,6 +3963,53 @@ export class Class_DrawingArea {
   public get grid_size() { return this._grid_size }
   public set grid_size(_: number) { this._grid_size = _; this.drawGrid() }
 
+  // os#1344 — handler du geste de création connectée (notifié par NodeBase au survol).
+  public get connection_gesture(): Class_ConnectionGestureHandler { return this._connection_gesture }
+
+  /**
+   * os#1344/os#1347 — CONTRAINTE DE POSITION pour la création connectée : où poser un
+   * nœud créé depuis un nœud source dans une direction donnée. Espacement raisonnable
+   * (fonction du pas de grille), aligné sur la grille quand le magnétisme est actif
+   * (même pas que moveMagneticNode : grid_size / 4). Le handler de geste ne calcule
+   * rien lui-même : c'est la zone de dessin qui fournit la règle.
+   */
+  public getConnectedCreationPosition(
+    source: Class_NodeBase,
+    direction: Type_ConnectionDirection,
+    width: number,
+    height: number
+  ): { x: number, y: number } {
+    const spacing = Math.max(2 * this._grid_size, 100)
+    const sw = source.getShapeWidthToUse()
+    const sh = source.getShapeHeightToUse()
+    let x = source.position_x
+    let y = source.position_y
+    switch (direction) {
+    case 'right':
+      x = source.position_x + sw + spacing
+      y = source.position_y + (sh - height) / 2
+      break
+    case 'left':
+      x = source.position_x - spacing - width
+      y = source.position_y + (sh - height) / 2
+      break
+    case 'top':
+      x = source.position_x + (sw - width) / 2
+      y = source.position_y - spacing - height
+      break
+    case 'bottom':
+      x = source.position_x + (sw - width) / 2
+      y = source.position_y + sh + spacing
+      break
+    }
+    if (this._magnetic_nodes) {
+      const step = this._grid_size / 4
+      x = Math.round(x / step) * step
+      y = Math.round(y / step) * step
+    }
+    return { x, y }
+  }
+
   public get selection_zone(): Class_ZoneSelection { return this._selection_zone }
 
   // Elements Context menu
@@ -4001,6 +4085,11 @@ export class Class_DrawingArea {
       this.drawElements()
     }
   }
+
+  // sa#419 — Repli de la minimap, porté par le document (voir le champ privé).
+  // Pas de redessin : la vignette est du chrome, elle ne touche pas au dessin.
+  public get minimap_open(): boolean { return this._minimap_open }
+  public set minimap_open(value: boolean) { this._minimap_open = value }
 
   public get minimum_flux(): number | undefined { return this._minimum_flux }
   public set minimum_flux(value: number | undefined) {
@@ -4206,6 +4295,20 @@ export class Class_DrawingArea {
 
   public get magnetic_nodes(): boolean { return this._magnetic_nodes }
   public set magnetic_nodes(value: boolean) { this._magnetic_nodes = value }
+
+  // os#671 — activation des smart guides d'alignement au drag.
+  public get smart_guides(): boolean { return this._smart_guides }
+  public set smart_guides(value: boolean) { this._smart_guides = value }
+
+  // sa#422 — true = les flèches de création rapide n'apparaissent plus au survol.
+  // Le setter masque immédiatement celles déjà affichées : sans cela, la flèche
+  // sous le curseur au moment du clic sur le bouton resterait à l'écran jusqu'au
+  // prochain mouvement de souris — le clic paraîtrait sans effet.
+  public get connection_arrows_off(): boolean { return this._connection_arrows_off }
+  public set connection_arrows_off(value: boolean) {
+    this._connection_arrows_off = value
+    if (value) this._connection_gesture.hideArrows()
+  }
 
   public get list_g_element() { return this._list_g_element_id }
   public set list_g_element(list) { this._list_g_element_id = list }

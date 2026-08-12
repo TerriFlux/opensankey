@@ -672,6 +672,23 @@ export class Class_MenuConfig {
       }
   > = undefined
   /**
+   * sa#399 — Entrées supplémentaires du menu « Enregistrer » (dropdown dédié + groupe
+   * Enregistrer du menu Fichier). Injectées par OSP (dépôt dans la bibliothèque de
+   * briques) ou d'autres extensions. `label` et `hidden` sont des fonctions évaluées
+   * au rendu : l'entrée suit la langue active et peut n'apparaître que pour un compte
+   * connecté (une entrée cachée n'est pas rendue du tout, contrairement à `disabled`).
+   */
+  public extra_save_menu_items?: Array<{
+    key: string
+    label: () => string
+    icon?: React.ReactNode
+    onClick: () => void
+    disabled?: () => boolean
+    // Returns the tooltip text for the item. Empty string => no tooltip wrapper.
+    tooltip?: () => string
+    hidden?: () => boolean
+  }> = undefined
+  /**
    * Optional handler that saves one standalone JSON file per view, packaged in a
    * single zip. Injected by OSP (views are an OSP feature). When set, the
    * persistence dialog's ``save_one_json_per_view`` JSON output option routes the
@@ -682,7 +699,12 @@ export class Class_MenuConfig {
   public extra_help_menu_items?: Array<
     {
       key: string
-      label: string
+      // Chaîne, ou FONCTION quand le libellé doit suivre la langue : les entrées sont
+      // enregistrées une seule fois (à l'initialisation des menus), donc une chaîne y est
+      // figée dans la langue du démarrage, alors qu'une fonction est réévaluée à chaque
+      // rendu du menu. Les deux formes restent acceptées (les intégrations hors de ce
+      // dépôt passent une chaîne).
+      label: string | (() => string)
       icon?: React.ReactNode
       onClick: () => void
       disabled?: () => boolean
@@ -692,6 +714,12 @@ export class Class_MenuConfig {
   > = undefined
   private _ref_to_modal_pref_updater: MutableRefObject<() => void>
   protected _ref_to_toolbar_bottom_updater: MutableRefObject<() => void>
+  // OS#85 — re-render des onglets de feuilles (bas de la grande zone).
+  protected _ref_to_sheet_tabs_updater: MutableRefObject<() => void> = { current: () => null }
+  // OS#85 — barre des feuilles dépliée ? Pendant bas de la bascule de barre latérale : elle
+  // mange le bas du dessin, on doit pouvoir la replier. État de session (comme la barre
+  // latérale), pas une préférence enregistrée.
+  protected _sheet_tabs_visible: boolean = true
 
   private _ref_to_nodetag_filter_updater: MutableRefObject<() => void>
   private _ref_to_datatag_filter_updater: MutableRefObject<() => void>
@@ -1113,6 +1141,8 @@ export class Class_MenuConfig {
     this.updateAllComponentsRelatedToContainers()
     this.updateComponentPref()
     this._ref_to_toolbar_bottom_updater.current()
+    // OS#85 — onglets de feuilles (un chargement de document a pu en changer la liste).
+    this._ref_to_sheet_tabs_updater.current()
     // Resynchronise le panneau Doc markdown (un nouveau fichier / diagramme a pu être chargé).
     this.ref_to_doc.current()
     this.dict_setter_show_dialog.ref_setter_modal_welcome_active_page.current(v => !v)
@@ -1707,6 +1737,21 @@ export class Class_MenuConfig {
 
   public get ref_to_toolbar_bottom_updater(): MutableRefObject<() => void> {
     return this._ref_to_toolbar_bottom_updater
+  }
+
+  // OS#85 — onglets de feuilles (bas de la grande zone).
+  public get ref_to_sheet_tabs_updater(): MutableRefObject<() => void> {
+    return this._ref_to_sheet_tabs_updater
+  }
+
+  /** OS#85 — la barre des feuilles est-elle dépliée ? */
+  public get sheet_tabs_visible(): boolean { return this._sheet_tabs_visible }
+  /** Replie / déplie la barre des feuilles. Le recadrage du dessin (la barre du bas change
+   *  de hauteur) est déclenché par la barre elle-même, une fois le DOM à jour — la hauteur
+   *  réservée est LUE dans le DOM (DrawingArea.getBottomBarHeight). */
+  public toggleSheetTabs(): void {
+    this._sheet_tabs_visible = !this._sheet_tabs_visible
+    this._ref_to_sheet_tabs_updater.current()
   }
 
   public get ref_to_menu_config_node_icon_updater() { return this._ref_to_menu_config_node_icon_updater }
