@@ -1,6 +1,6 @@
 import { orderIOByGeometry, recyclingBellyCentre, bundleTie, Type_IOGeo } from './ioOrderGeometry'
 
-// Geometry-aware I/O ordering — gated direction split + HEIGHT rule (#205 rework).
+// Geometry-aware I/O ordering — gated direction split + ANCHOR rule (#205, #425).
 //   0. GATE — the fan applies only to TURNING links. A link turns when it changes axis
 //      ('vh'/'hv', `axis_change`) OR when its slope |stack|/reach exceeds
 //      STRAIGHT_SLOPE_TOL. Only RECTILINEAR links (no axis change, negligible slope) keep
@@ -8,19 +8,19 @@ import { orderIOByGeometry, recyclingBellyCentre, bundleTie, Type_IOGeo } from '
 //      not make a link straight — it describes the attachment points (cf. #425).
 //   1. up-going links (reference above the reorg node) are all placed above the down-going
 //      ones, so up and down never cross.
-//   2. within a group, turning links are sorted by HEIGHT — the reach (|opposite − node|
-//      on the emission axis) : the nearest (first-turning) link goes to the OUTER extremity,
-//      the farthest stays toward the middle. Ascending reach for the up group (nearest at
-//      the top extremity), descending for the down group. Height ties are broken by the
-//      node-side anchor distance reach·curve_node in ADVANCED (use_curve) only, then by the
-//      opposite node's stacking position.
+//   2. within a group, turning links are sorted by the node-side ANCHOR distance
+//      reach·curve_node : the link whose bend starts earliest goes to the OUTER extremity,
+//      the one that turns latest stays toward the middle. Ascending anchor for the up group
+//      (earliest at the top extremity), descending for the down group ; ties broken by the
+//      opposite node's stacking position. The anchor is the ADVANCED criterion — SIMPLE
+//      (use_curve = false) drops it and orders each band by the opposite position alone.
 
 type L = { id: string }
 // row = [id, side, ox, oy, axis_change?, curve_node?, stack_ref?]
 //   axis_change default false (orientation 'hh'/'vv') — true for 'vh'/'hv'. A row left at
 //              false still turns if its slope exceeds the tolerance : that is the geometry,
 //              not the orientation, and it is what the rows below exercise.
-//   curve_node default 0.05 — only used as a height tie-break in advanced mode
+//   curve_node default 0.05 — drives the fan in advanced mode (ignored in simple)
 //   stack_ref  set only for recycling links (the centre of their loop's belly)
 const make = (
   rows: [string, Type_IOGeo['side'], number, number, boolean?, number?, number?][]
@@ -40,7 +40,7 @@ const run = (
 ) => orderIOByGeometry(items, nx, ny, use_curve).map(l => l.id)
 
 describe('gate — rectilinear vs turning links', () => {
-  it('rectilinear links ignore reach : plain order by the opposite stacking position', () => {
+  it('rectilinear links ignore the anchor : plain order by the opposite stacking position', () => {
     // Slopes of 1 %, under the tolerance : these three links run flat and stay in the middle
     // band, where only oy (the stacking position on a right side) decides. No fan runs here.
     const items = make([
@@ -65,7 +65,7 @@ describe('gate — rectilinear vs turning links', () => {
       ['near', 'right', 300, 100],
       ['far', 'right', 1000, 200],
     ])
-    // Down band ordered by descending reach → far (1000) then near (300).
+    // Down band, equal curvature → descending anchor : far (50) then near (15).
     expect(run(sloped, 0, 0)).toEqual(['far', 'near'])
   })
 
@@ -80,14 +80,29 @@ describe('gate — rectilinear vs turning links', () => {
   })
 })
 
-describe('turning links — direction split + height', () => {
-  it('right side, all below : the nearest (first-turning) link lands at the bottom extremity', () => {
+describe('turning links — direction split + anchor', () => {
+  it('right side, all below, equal curvature : the nearest link lands at the bottom extremity', () => {
+    // Same curvature everywhere → the anchor reach·curve is proportional to the reach, so the
+    // nearest link is also the one bending earliest and takes the extremity.
     const items = make([
-      ['A', 'right', 1000, 100, true], // reach 1000 — farthest → toward the middle (top)
-      ['B', 'right', 300, 100, true],  // reach  300 — nearest → bottom extremity
+      ['A', 'right', 1000, 100, true], // anchor 50 — latest bend → toward the middle (top)
+      ['B', 'right', 300, 100, true],  // anchor 15 — earliest bend → bottom extremity
       ['C', 'right', 600, 100, true],
     ])
     expect(run(items, 0, 0)).toEqual(['A', 'C', 'B'])
+  })
+
+  it('the ANCHOR decides, not the reach : a far link that bends early takes the extremity', () => {
+    // The two disagree on purpose. Under an order keyed on the reach alone, 'proche' (300)
+    // would take the bottom extremity ; keyed on the anchor, 'lointain' bends much earlier
+    // (50 against 150) and gets it instead. This is the user's primary criterion.
+    const items = make([
+      ['proche', 'right', 300, 200, true, 0.5],    // reach  300, anchor 150 → late bend
+      ['lointain', 'right', 1000, 200, true, 0.05], // reach 1000, anchor  50 → early bend
+    ])
+    expect(run(items, 0, 0)).toEqual(['proche', 'lointain'])
+    // SIMPLE ignores the curvature : same stacking (200) for both, so they keep source order.
+    expect(run(items, 0, 0, false)).toEqual(['proche', 'lointain'])
   })
 
   it('mixed directions : ALL up links above ALL down links (hard split)', () => {
@@ -97,19 +112,20 @@ describe('turning links — direction split + height', () => {
       ['downNear', 'right', 300, 100, true],
       ['downFar', 'right', 1000, 100, true],
     ])
-    // up group ascending reach (nearest at top) ; down group descending reach (nearest at bottom).
+    // Equal curvature, so the anchor follows the reach : up group ascending (nearest at the
+    // top), down group descending (nearest at the bottom).
     expect(run(items, 0, 0)).toEqual(['upNear', 'upFar', 'downFar', 'downNear'])
   })
 
-  it('bottom side, split left/right : the reach decides within each turn group', () => {
-    // Emission downward ; opposite x splits left/right, |dy| is the height.
+  it('bottom side, split left/right : the anchor decides within each turn group', () => {
+    // Emission downward ; opposite x splits left/right, |dy| feeds the anchor.
     const items = make([
       ['L', 'bottom', -400, 800, true],  // left group, reach 800
       ['R', 'bottom', 900, 500, true],   // right group, reach 500 (nearer)
       ['R2', 'bottom', 900, 1200, true], // right group, reach 1200 (farther)
     ])
-    // left group (x<0) first (group 0), then right. Left group ascending reach : only L.
-    // Right group descending reach : R2 (1200) then R (500).
+    // left group (x<0) first (group 0), then right. Left group ascending anchor : only L.
+    // Right group descending anchor (equal curvature) : R2 (1200) then R (500).
     expect(run(items, 0, 0)).toEqual(['L', 'R2', 'R'])
   })
 })
@@ -128,7 +144,7 @@ describe('interleaving — turning links wrap the straight block (3 bands)', () 
     expect(run(items, 0, 0)).toEqual(['tUp', 'sHigh', 'sLow', 'tDown'])
   })
 
-  it('within each turning band the height fan still applies around the straight block', () => {
+  it('within each turning band the anchor fan still applies around the straight block', () => {
     const items = make([
       ['s', 'right', 300, 0],               // lone rectilinear, middle
       ['upNear', 'right', 300, -100, true], // up band : nearest at the very top
@@ -140,8 +156,8 @@ describe('interleaving — turning links wrap the straight block (3 bands)', () 
   })
 })
 
-describe('height tie-break — anchor distance (advanced only)', () => {
-  it('equal reach : advanced breaks by reach·curve_node, simple keeps source order', () => {
+describe('anchor distance — the fan criterion (advanced only)', () => {
+  it('equal reach : the curvature alone separates them ; simple keeps source order', () => {
     // Same near-node column and same oy → equal reach and equal stacking : only the
     // node-side curvature can separate them. A bigger bend reads as farther → toward the middle.
     const items = make([
@@ -261,7 +277,7 @@ describe('recycling links — split keyed on the loop belly, not on the opposite
     expect(run(items, node.x, node.y)).toEqual(['haut', 'boucle', 'bas'])
   })
 
-  it('turning recycling links : the height still measures toward the opposite node', () => {
+  it('turning recycling links : the anchor still measures toward the opposite node', () => {
     // Two turning recycling links sharing one belly line (so the split and the stacking
     // tie coincide) : only the reach — the span to the opposite node — separates them.
     const node = { x: 1000, y: 1000 }
@@ -303,9 +319,12 @@ describe('#425 — an "hh" face still gets the fan (filière Lait)', () => {
     ])
   })
 
-  it('simple mode reaches the same order here — the curvature is only a tie-break', () => {
+  it('simple mode keeps the plain opposite order — this is what advanced buys', () => {
+    // Without the curvature there is nothing to fan the descending band with, so it falls
+    // back on the opposite position : Crème (belly at +173) before Eau (+546). That is the
+    // very order the issue reported as wrong — the advanced mode is what fixes it.
     expect(run(items(), fabrication.x, fabrication.y, false)).toEqual([
-      'Poudre de lait intermédiaire', 'Eau', 'Crème intermédiaire'
+      'Poudre de lait intermédiaire', 'Crème intermédiaire', 'Eau'
     ])
   })
 })
