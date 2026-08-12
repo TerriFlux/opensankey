@@ -1194,16 +1194,32 @@ export class Class_NodeElement extends Class_NodeBase {
       // Un flux qui change d'axe ('vh'/'hv') tourne toujours. Un flux qui garde son axe
       // ('hh'/'vv') tourne dès que sa pente est notable : `shape_orientation` décrit
       // l'orientation des POINTS D'ATTACHE, pas le tracé — un 'hh' entre deux nœuds de
-      // hauteurs différentes dessine un S (cf. #425). Le test de pente est dans orderKey,
-      // qui dispose déjà du dénivelé (le ventre de la boucle pour un recyclage).
+      // hauteurs différentes dessine un S (cf. #425).
       const axis_change = (l.shape_orientation === 'vh' || l.shape_orientation === 'hv')
+      // Dénivelé qui décide « droit ou non » : l'écart entre les CORPS des deux nœuds sur
+      // l'axe d'empilement, et non entre leurs centres. Deux nœuds de hauteurs différentes
+      // qui se font face ont des centres décalés alors que le flux tracé entre eux est plat
+      // (cf. #425). Nul quand les corps se recouvrent, sinon distance de bord à bord, signée
+      // comme l'écart des centres. Ne dépend que des positions et des tailles — jamais des
+      // emplacements d'attache, qui dépendraient de l'ordre en cours de calcul.
+      const horiz_side = (side === 'left' || side === 'right')
+      const halfSpan = (n: Class_NodeElement) =>
+        (horiz_side ? n.getShapeHeightToUse() : n.getShapeWidthToUse()) / 2
       // Départage de faisceau : pour des flux parallèles (mêmes source/cible/côtés) toutes les
       // autres composantes de la clé sont égales. On signe un ordinal stable et partagé (index
       // global du lien) selon la géométrie du côté pour que la source et la cible ordonnent le
       // faisceau en miroir (CCW à la source, CW à la cible) → pas de croisement. cf. bundleTie.
       const ord = this.sankey.links_list.indexOf(l)
       const [ox, oy] = centre(other)
-      const geo: Type_IOGeo = { side, ox, oy, axis_change, curve_node, bundle_tie: bundleTie(side, is_source, ord) }
+      const centre_offset = horiz_side ? oy - cy : ox - cx
+      const facing = halfSpan(this) + halfSpan(other)
+      const clear_gap = (Math.abs(centre_offset) <= facing)
+        ? 0
+        : Math.sign(centre_offset) * (Math.abs(centre_offset) - facing)
+      const geo: Type_IOGeo = {
+        side, ox, oy, axis_change, clear_gap, curve_node,
+        bundle_tie: bundleTie(side, is_source, ord)
+      }
       if (l.shape_is_recycling) {
         const [sx, sy] = centre(l.source)
         const [tx, ty] = centre(l.target)

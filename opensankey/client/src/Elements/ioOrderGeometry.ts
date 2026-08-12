@@ -11,11 +11,13 @@
 //      not turn : its anchor distance says nothing about it, so it must sit in the MIDDLE
 //      band — at the CENTRE of the face, never at an extremity — ordered by the opposite
 //      node's stacking position (its y for left/right, x for top/bottom). A link turns when
-//      it changes axis end-to-end (orientation 'vh'/'hv', `geo.axis_change`) OR when its
-//      slope |stack| / reach exceeds STRAIGHT_SLOPE_TOL. Beware : orientation 'hh'/'vv' does
-//      NOT mean "straight" — it is the orientation of the ATTACHMENT POINTS (horizontal at
-//      both ends), and an 'hh' link between two nodes of different heights draws an S, so it
-//      does turn. Only the geometry tells (cf. #425).
+//      it loops backwards (recycling), when it changes axis end-to-end (orientation 'vh'/'hv',
+//      `geo.axis_change`), or when its slope exceeds STRAIGHT_SLOPE_TOL. That slope is
+//      measured on the gap between the node BODIES (`clear_gap`), NOT between their centres :
+//      two nodes of different heights facing each other have offset centres and are still
+//      joined by a flat link. Beware also : orientation 'hh'/'vv' does NOT mean "straight" —
+//      it is the orientation of the ATTACHMENT POINTS (horizontal at both ends), and an 'hh'
+//      link between two nodes at different heights draws an S. Only the geometry tells (#425).
 //   1. DIRECTION split (turning links) — the reference decides which band : a turning link
 //      whose opposite node is ABOVE the reorg node turns UP → it sits ABOVE the whole
 //      straight block ; below → it turns DOWN → BELOW the straight block. So turning-up and
@@ -67,6 +69,17 @@ export type Type_IOGeo = {
                      // the link leaves this node, shape_ending_curve when it arrives ;
                      // ratio of the link length ; an explicit 0 — bend glued to the node —
                      // is a real value). Drives the anchor tie-break distance reach·curve_node.
+  clear_gap?: number // Signed gap between the two nodes' BODIES on the stacking axis — 0
+                     // when they face each other (their spans overlap), otherwise the
+                     // distance between the facing edges, signed like the centre offset.
+                     // This — not the centre-to-centre offset — is what decides whether the
+                     // link runs straight : two nodes of different heights have offset
+                     // centres while their bodies face each other, and the link drawn
+                     // between them is flat (cf. #425, « Fabrication de fromages de vache »
+                     // → « Fromages de vache » : centres 79 px apart over a 247 px reach,
+                     // i.e. a 32 % slope, for a link that is horizontal on screen). Only the
+                     // straight/turning test uses it ; the split and the ties keep the
+                     // centres. Defaults to the centre offset when absent.
   stack_ref?: number // RECYCLING links only : absolute coordinate, on the stacking axis
                      // (y for left/right, x for top/bottom), of the centre of the link's
                      // central run — the loop's belly (cf. recyclingBellyCentre). When
@@ -142,9 +155,15 @@ function orderKey(geo: Type_IOGeo, nx: number, ny: number, use_curve: boolean): 
   const up = stack < 0
   const bundle = geo.bundle_tie ?? 0
   const reach = Math.abs(horiz ? dx : dy)  // toward the opposite (≥ 0), on the emission axis
-  // Does the link turn ? Either it changes axis end-to-end ('vh'/'hv'), or it keeps its axis
-  // but climbs/drops enough for the S it draws to be visible (slope over the tolerance).
-  const turning = (geo.axis_change ?? false) || Math.abs(stack) > STRAIGHT_SLOPE_TOL * reach
+  // Does the link turn ? A recycling link loops backwards, so it always does. Otherwise :
+  // either it changes axis end-to-end ('vh'/'hv'), or it keeps its axis but climbs/drops
+  // enough for the S it draws to show. That climb is the gap between the node BODIES, not
+  // between their centres — two nodes facing each other are joined by a flat link however
+  // far apart their centres are (cf. clear_gap).
+  const gap = geo.clear_gap ?? stack
+  const turning = (geo.stack_ref !== undefined)
+    || (geo.axis_change ?? false)
+    || Math.abs(gap) > STRAIGHT_SLOPE_TOL * reach
   // Straight links : the MIDDLE band (1), no fan — the anchor distance says nothing about a
   // link that does not bend, so only the opposite stacking position orders them. Turning
   // links wrap around this block, above or below it.

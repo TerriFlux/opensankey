@@ -69,6 +69,26 @@ describe('gate — rectilinear vs turning links', () => {
     expect(run(sloped, 0, 0)).toEqual(['far', 'near'])
   })
 
+  it('the slope is read on the node BODIES, not on their centres (#425)', () => {
+    // « Fabrication de fromages de vache » (155 px tall) → « Fromages de vache » : the two
+    // centres are 79 px apart over a 247 px reach, i.e. a 32 % slope on paper, while the two
+    // bodies face each other and the link is flat on screen. `clear_gap = 0` says so, and the
+    // link stays at the centre of the face — under the genuinely climbing one, as expected.
+    // Without it, its tiny anchor (1.3) would have sent it to the very top of the up band.
+    const facing = make([
+      ['fromages', 'right', 247, -79, false, 0.0052],
+      ['crème', 'right', 250, -283, false, 0.05],
+    ]).map(x => ({ ...x, geo: { ...x.geo, clear_gap: x.item.id === 'fromages' ? 0 : -199 } }))
+    expect(run(facing, 0, 0)).toEqual(['crème', 'fromages'])
+    // Same coordinates, but this time the bodies really are clear of each other : the link
+    // climbs, joins the up band, and its early bend takes it to the extremity.
+    const clear = make([
+      ['fromages', 'right', 247, -79, false, 0.0052],
+      ['crème', 'right', 250, -283, false, 0.05],
+    ]).map(x => ({ ...x, geo: { ...x.geo, clear_gap: x.item.id === 'fromages' ? -60 : -199 } }))
+    expect(run(clear, 0, 0)).toEqual(['fromages', 'crème'])
+  })
+
   it('an axis change turns the link even with a null slope', () => {
     // 'vh'/'hv' changes axis end-to-end : it turns whatever its height, so it leaves the
     // middle band even when its two ends are perfectly aligned.
@@ -264,17 +284,17 @@ describe('recycling links — split keyed on the loop belly, not on the opposite
       .toEqual(['Mélasses', 'témoin'])
   })
 
-  it('a recycling loop with a negligible slope stays in the middle band', () => {
-    // Belly 10 px under a node 1000 px away : the loop runs flat along the face and has no
-    // reason to claim an extremity. It keeps its place among the rectilinear links, between
-    // a witness above and a witness below.
+  it('a recycling link always turns, however flat its belly runs', () => {
+    // A loop runs backwards and has to wrap around the face whatever its belly does, so it
+    // never joins the middle band : here the belly sits a mere 10 px under the node, yet the
+    // loop still leaves the rectilinear witnesses and takes the descending band below them.
     const node = { x: 1000, y: 1000 }
     const items = make([
       ['bas', 'left', 0, 1015],
       ['boucle', 'left', 2000, 500, false, 0.05, 1010],
       ['haut', 'left', 0, 995],
     ])
-    expect(run(items, node.x, node.y)).toEqual(['haut', 'boucle', 'bas'])
+    expect(run(items, node.x, node.y)).toEqual(['haut', 'bas', 'boucle'])
   })
 
   it('turning recycling links : the anchor still measures toward the opposite node', () => {
