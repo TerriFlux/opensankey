@@ -67,7 +67,7 @@ export class Class_DrawingAreaInteractions {
 
       da.d3_selection?.on(
         'dblclick',
-        () => da.selection_zone.reset())
+        (event: MouseEvent) => this._eventDoubleClick(da, event))
       // Right mouse button maintained
       da.d3_selection?.on(
         'mousedown',
@@ -575,13 +575,36 @@ export class Class_DrawingAreaInteractions {
   }
 
   /**
+   * os#1344 — double-clic sur la zone de dessin. Comportement HISTORIQUE conservé :
+   * replier le rectangle de sélection. NOUVEAU : un double-clic sur le canvas VIDE
+   * (fond ou grille, aucun élément sous le curseur) en mode sélection crée un nœud
+   * standard au point cliqué — même fabrique que l'outil nœud (_createNodeAtPoint) —
+   * avec le nom en édition inline immédiate. Un double-clic sur un ÉLÉMENT continue de
+   * passer par le discriminateur de clic unique des éléments (édition de label…) : le
+   * garde sur la cible DOM (#g_background) exclut tout ce qui n'est pas le fond.
+   */
+  private _eventDoubleClick(da: Class_DrawingArea, event: MouseEvent) {
+    da.selection_zone.reset()
+    if (!da.isInSelectionMode() || !da.eventsEnabled()) return
+    const target = event.target as Element | null
+    // Le fond (rect de couleur) et la grille vivent tous deux sous #g_background.
+    if (!target || !target.closest('#g_background')) return
+    const mouse_position = d3.pointer(event)
+    const node = this._createNodeAtPoint(da, mouse_position[0], mouse_position[1])
+    // Nom en édition inline immédiate (hors transaction : un redo ne rouvre pas l'éditeur).
+    node.setInputLabelVisible()
+  }
+
+  /**
    * Outil « nœud » : pose un nœud centré sur le point donné, le sélectionne et ouvre
    * l'inspecteur, en une seule transition d'historique. `node` est réassignée par
    * `create` pour que l'undo qui suit un redo vise bien le nœud recréé (même schéma
-   * que la création d'une zone de texte).
+   * que la création d'une zone de texte). Renvoie le nœud créé (os#1344 : le double-clic
+   * sur canvas vide réutilise cette fabrique et enchaîne sur l'édition inline du nom).
    */
-  private _createNodeAtPoint(da: Class_DrawingArea, x: number, y: number) {
-    let node: Class_NodeElement
+  private _createNodeAtPoint(da: Class_DrawingArea, x: number, y: number): Class_NodeElement {
+    // Assertion d'affectation : `create()` (appelé plus bas) assigne toujours `node`.
+    let node!: Class_NodeElement
     const create = () => {
       node = da.sankey.addNewDefaultNode()
       node.draw()
@@ -600,6 +623,7 @@ export class Class_DrawingAreaInteractions {
     da.saveUndo(undo)
     da.saveRedo(create)
     create()
+    return node
   }
 
   /**
