@@ -5,7 +5,7 @@ export const resources_template = {
   en: {
     translation: {
       templates: {
-        need_osp: 'MFASankey Production needed',
+        need_osp: 'MFASankey Dataviz needed',
         gallery_hint: 'Click a template to start from an example',
         sankeytheque_hint: 'Click a study to open it',
         pin: 'Pin the gallery (the drawing resizes to its left, try templates one after another)',
@@ -80,6 +80,9 @@ export const resources_template = {
         slot_file: 'Choose a file...',
         slot_add: 'Pin',
         slot_cancel: 'Cancel',
+        search_placeholder: 'Filter projects...',
+        search_no_match: 'No project matches this search',
+        menu_entry: 'From my library...',
         delete_project: 'Delete this project',
         confirm_delete_project: 'Delete the project “{{title}}” and ALL its versions? The action cannot be undone.',
         delete_project_error: 'Could not delete the project'
@@ -92,7 +95,7 @@ export const resources_template = {
   fr: {
     translation: {
       templates: {
-        need_osp: 'MFASankey Production necessaire',
+        need_osp: 'MFASankey Dataviz necessaire',
         gallery_hint: 'Cliquez sur un modèle pour partir d\'un exemple',
         sankeytheque_hint: 'Cliquez sur une étude pour l\'ouvrir',
         pin: 'Épingler la galerie (le dessin se recadre à gauche, essayez les modèles à la suite)',
@@ -167,6 +170,9 @@ export const resources_template = {
         slot_file: 'Choisir un fichier...',
         slot_add: 'Épingler',
         slot_cancel: 'Annuler',
+        search_placeholder: 'Filtrer les projets...',
+        search_no_match: 'Aucun projet ne correspond',
+        menu_entry: 'Depuis ma bibliothèque...',
         delete_project: 'Supprimer ce projet',
         confirm_delete_project: 'Supprimer le projet « {{title}} » et TOUTES ses versions ? L’action est irréversible.',
         delete_project_error: 'Suppression du projet impossible'
@@ -179,7 +185,7 @@ export const resources_template = {
   es: {
     translation: {
       templates: {
-        need_osp: 'Se necesita MFASankey Production',
+        need_osp: 'Se necesita MFASankey Dataviz',
         gallery_hint: 'Haga clic en una plantilla para empezar desde un ejemplo',
         sankeytheque_hint: 'Haga clic en un estudio para abrirlo',
         pin: 'Fijar la galería (el dibujo se reajusta a su izquierda, pruebe las plantillas una tras otra)',
@@ -254,6 +260,9 @@ export const resources_template = {
         slot_file: 'Elegir un archivo...',
         slot_add: 'Fijar',
         slot_cancel: 'Cancelar',
+        search_placeholder: 'Filtrar proyectos...',
+        search_no_match: 'Ningun proyecto coincide',
+        menu_entry: 'Desde mi biblioteca...',
         delete_project: 'Eliminar este proyecto',
         confirm_delete_project: '¿Eliminar el proyecto «{{title}}» y TODAS sus versiones? La acción es irreversible.',
         delete_project_error: 'No se ha podido eliminar el proyecto'
@@ -266,7 +275,7 @@ export const resources_template = {
   de: {
     translation: {
       templates: {
-        need_osp: 'MFASankey Production erforderlich',
+        need_osp: 'MFASankey Dataviz erforderlich',
         gallery_hint: 'Klicken Sie auf eine Vorlage, um mit einem Beispiel zu starten',
         sankeytheque_hint: 'Klicken Sie auf eine Studie, um sie zu öffnen',
         pin: 'Galerie anheften (die Zeichnung wird links davon neu angepasst, Vorlagen nacheinander ausprobieren)',
@@ -341,6 +350,9 @@ export const resources_template = {
         slot_file: 'Datei wählen...',
         slot_add: 'Anheften',
         slot_cancel: 'Abbrechen',
+        search_placeholder: 'Projekte filtern...',
+        search_no_match: 'Kein Projekt entspricht der Suche',
+        menu_entry: 'Aus meiner Bibliothek...',
         delete_project: 'Dieses Projekt löschen',
         confirm_delete_project: 'Projekt „{{title}}“ und ALLE seine Versionen löschen? Der Vorgang ist unwiderruflich.',
         delete_project_error: 'Projekt konnte nicht gelöscht werden'
@@ -353,7 +365,7 @@ export const resources_template = {
   it: {
     translation: {
       templates: {
-        need_osp: 'MFASankey Production necessario',
+        need_osp: 'MFASankey Dataviz necessario',
         gallery_hint: 'Clicca su un modello per partire da un esempio',
         sankeytheque_hint: 'Clicca su uno studio per aprirlo',
         pin: 'Fissa la galleria (il disegno si ridimensiona alla sua sinistra, prova i modelli uno dopo l\'altro)',
@@ -428,6 +440,9 @@ export const resources_template = {
         slot_file: 'Scegli un file...',
         slot_add: 'Aggancia',
         slot_cancel: 'Annulla',
+        search_placeholder: 'Filtra i progetti...',
+        search_no_match: 'Nessun progetto corrisponde',
+        menu_entry: 'Dalla mia libreria...',
         delete_project: 'Elimina questo progetto',
         confirm_delete_project: 'Eliminare il progetto «{{title}}» e TUTTE le sue versioni? L’azione è irreversibile.',
         delete_project_error: 'Impossibile eliminare il progetto'
@@ -437,7 +452,7 @@ export const resources_template = {
   'zh-CN': {
     translation: {
       templates: {
-        need_osp: '需要 MFASankey Production',
+        need_osp: '需要 MFASankey Dataviz',
         gallery_hint: '点击某个模板即可从示例开始',
         sankeytheque_hint: '点击某项研究即可打开',
         pin: '固定图库（绘图区在其左侧调整大小，可逐个试用模板）',
@@ -512,6 +527,9 @@ export const resources_template = {
         slot_file: '选择文件...',
         slot_add: '固定',
         slot_cancel: '取消',
+        search_placeholder: '筛选项目…',
+        search_no_match: '没有匹配的项目',
+        menu_entry: '从我的库中打开…',
         delete_project: '删除此项目',
         confirm_delete_project: '删除项目“{{title}}”及其所有版本？此操作不可撤销。',
         delete_project_error: '无法删除项目'
@@ -521,7 +539,7 @@ export const resources_template = {
   ja: {
     translation: {
       templates: {
-        need_osp: 'MFASankey Production が必要です',
+        need_osp: 'MFASankey Dataviz が必要です',
         gallery_hint: 'テンプレートをクリックすると、その例から始められます',
         sankeytheque_hint: '研究事例をクリックすると開きます',
         pin: 'ギャラリーを固定（描画エリアはその左側でサイズ調整され、テンプレートを次々と試せます）',
@@ -596,6 +614,9 @@ export const resources_template = {
         slot_file: 'ファイルを選択...',
         slot_add: 'ピン留め',
         slot_cancel: 'キャンセル',
+        search_placeholder: 'プロジェクトを絞り込む…',
+        search_no_match: '一致するプロジェクトはありません',
+        menu_entry: 'ライブラリから開く…',
         delete_project: 'このプロジェクトを削除',
         confirm_delete_project: 'プロジェクト「{{title}}」とそのすべてのバージョンを削除しますか？この操作は取り消せません。',
         delete_project_error: 'プロジェクトを削除できませんでした'

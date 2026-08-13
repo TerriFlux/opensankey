@@ -212,6 +212,23 @@ export const updateFrom = (
 
 
 
+  // Registre d'unités ---------------------------------------------------------------
+  // OS#1286 — les attributs transférés (styles, nœuds, flux, zones de texte) portent des
+  // RÉFÉRENCES d'unité : `value_label_unit` vaut un identifiant du registre de la SOURCE. Le
+  // registre lui-même n'était pas transféré : les références atterrissaient chez une cible qui
+  // ne les connaissait pas, ne résolvaient plus, et l'affichage retombait sur l'identifiant brut
+  // (« unit_type_file_kt » au lieu de « kt »). Le cas se rencontre dès qu'on applique une mise en
+  // page issue d'un fichier 1.1.5 : son unité en texte libre a été reclassée à son chargement
+  // dans la grandeur « Unités du fichier », qui n'existe pas chez la cible.
+  // Fusion ADDITIVE (jamais d'écrasement) : on ne comble que les trous, le vocabulaire de la
+  // cible fait foi. Conditionnée aux mêmes modes que les attributs qui portent les références.
+  if (
+    mode.includes('styleDA') || mode.includes('attrNode') || mode.includes('attrFlux') ||
+    mode.includes('attrFreeLabel') || all
+  ) {
+    drawing_area.sankey.units.mergeMissingFrom(other_drawing_area.sankey.units)
+  }
+
   if (mode.includes('styleDA') || all) {
     // Sync style definitions (add / remove / update)
     const [ns_to_remove, ns_to_add, ns_to_update] = get_sync_lists(drawing_area.sankey.styles_dict, other_drawing_area.sankey.styles_dict, {})

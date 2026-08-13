@@ -162,10 +162,6 @@ export class Class_MenuConfig {
       // (resetDA, open_sankey, save_sankey, export_sankey, mep) stay registered
       // in dict_components_menu_top for backwards-compatible custom orders.
       'fichier',
-      // sa#414 — explorateur de projets/classeurs (bibliothèque du compte) :
-      // la clé est résolue par l'éditeur (dict_components_menu_top), le bouton
-      // se masque quand la bibliothèque ne répond pas (401/503).
-      'explorer',
       'export_sankey',
       'edition',
       'edit_style',
@@ -703,7 +699,12 @@ export class Class_MenuConfig {
   public extra_help_menu_items?: Array<
     {
       key: string
-      label: string
+      // Chaîne, ou FONCTION quand le libellé doit suivre la langue : les entrées sont
+      // enregistrées une seule fois (à l'initialisation des menus), donc une chaîne y est
+      // figée dans la langue du démarrage, alors qu'une fonction est réévaluée à chaque
+      // rendu du menu. Les deux formes restent acceptées (les intégrations hors de ce
+      // dépôt passent une chaîne).
+      label: string | (() => string)
       icon?: React.ReactNode
       onClick: () => void
       disabled?: () => boolean

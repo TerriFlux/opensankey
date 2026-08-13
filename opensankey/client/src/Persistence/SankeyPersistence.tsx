@@ -36,6 +36,7 @@ import {
 } from '../Elements/ElementsAttributesConfig'
 import { getStringFromJSON, Type_DataSource, Type_IntervalDisplay, Type_DisaggregationGap } from '../types/Utils'
 import { ratio_flux_constraint_traduction } from '../types/Utils'
+import { originFromJSON, originToJSON } from '../types/Origin'
 import { Class_ContainerElement } from '../Elements/TextZone'
 import { Class_NodeElement } from '../Elements/Node'
 import { ConfigType } from '../Elements/ElementsAttributesConfig'
@@ -605,6 +606,10 @@ export class LinkElementPersistence extends ProtoElementPersistence {
     // disaggregate sur un nœud lui-même expansé). Persisté pour que la
     // transitivité survive sauvegarde + rechargement.
     if (link.is_expansion_link) json_object['is_expansion_link'] = true
+    // #411 — la trace d'origine doit survivre à l'aller-retour, sinon tout
+    // élément d'un diagramme rouvert répondrait « lu depuis un JSON », ce qui
+    // n'apprend rien. Réécrite telle quelle : le front ne la fabrique pas.
+    if (link.origin) json_object['origin'] = originToJSON(link.origin)
     // Cadenas + espacement des ancres E/S (cf. menu "Ordre des flux E/S").
     if (link.source_side_locked) {
       json_object['source_side_locked'] = true
@@ -752,6 +757,9 @@ export class LinkElementPersistence extends ProtoElementPersistence {
     if (getBooleanFromJSON(json_object, 'is_expansion_link', false)) {
       link.is_expansion_link = true
     }
+    // #411 — restaure la trace d'origine si le fichier la porte. Absente d'un
+    // fichier antérieur : reste indéfinie, pas de valeur inventée.
+    link.origin = originFromJSON(json_object['origin'])
     // Cadenas + espacement des ancres E/S (cf. menu "Ordre des flux E/S").
     // Clés absentes d'un fichier antérieur → valeurs par défaut (pas de migration).
     link.source_anchor_delta = getNumberFromJSON(json_object, 'source_anchor_delta', 0)
@@ -805,6 +813,8 @@ export class NodeElementPersistence extends NodeBasePersistence {
     super.toJSON(node, json_object, kwargs)
     node._nodeDimensionsManager.toJSON(json_object)
     if (node.tooltip_text) json_object['tooltip_text'] = node.tooltip_text
+    // #411 — trace d'origine du nœud, voir LinkElementPersistence.
+    if (node.origin) json_object['origin'] = originToJSON(node.origin)
 
     // Délégation aux managers
     node._nodeTagsManager.toJSON(json_object)
@@ -987,6 +997,8 @@ export class NodeElementPersistence extends NodeBasePersistence {
     super.fromJSON(version, node, json_node_object, kwargs)
 
     node['_tooltip_text'] = getStringFromJSON(json_node_object, 'tooltip_text', '')
+    // #411 — restaure la trace d'origine du nœud si le fichier la porte.
+    node.origin = originFromJSON(json_node_object['origin'])
 
     // Délégation aux managers
     node._nodeTagsManager.fromJSON(json_node_object)
@@ -2023,6 +2035,11 @@ export class DrawingAreaPersistence {
     // arrow_use_standalone_layout, arrow_spike_*) sont désormais des attributs de
     // flux sérialisés avec les shape_* de chaque flux/style. Plus rien à écrire ici
     // (les anciennes clés restent lues par fromJSON pour migrer les vieux fichiers).
+    // sa#419 — Repli de la minimap : réglage du DOCUMENT, écrit seulement quand la
+    // vignette est dépliée. Refermer la minimap EFFACE donc la clé (retour au défaut),
+    // sans piège de valeur falsy : ici `false` EST le défaut, contrairement au plancher
+    // d'épaisseur ci-dessus où 0 est un réglage à part entière.
+    if (drawing_area.minimap_open) json_object['minimap_open'] = true
     // OS#1272 — Marqueur de bilan (réglages globaux). Sérialisés seulement hors défaut.
     if (drawing_area.balance_marker_enabled) json_object['balance_marker_enabled'] = true
     if (drawing_area.balance_marker_strategy !== 'relative') json_object['balance_marker_strategy'] = drawing_area.balance_marker_strategy
@@ -2086,6 +2103,9 @@ export class DrawingAreaPersistence {
     if (drawing_area.magnetic_nodes) json_object['magnetic_nodes'] = drawing_area.magnetic_nodes
     // os#671 — smart guides : actifs par défaut, on ne persiste que la désactivation.
     if (!drawing_area.smart_guides) json_object['smart_guides'] = false
+    // sa#422 — flèches de création rapide : visibles par défaut, on ne persiste que
+    // leur coupure. Clé absente (tout fichier antérieur) ⇒ comportement historique.
+    if (drawing_area.connection_arrows_off) json_object['connection_arrows_off'] = true
 
     // Paper format
     if (drawing_area.paper_format !== default_paper_format) json_object['paper_format'] = drawing_area.paper_format
@@ -2490,6 +2510,9 @@ export class DrawingAreaPersistence {
         if (legacy > 0) migrated_link_style.shape_arrow_min_width = legacy
       }
     }
+    // sa#419 — Repli de la minimap. Clé absente (tout fichier antérieur) ⇒ repliée,
+    // c'est-à-dire exactement le comportement d'avant la persistance.
+    drawing_area['_minimap_open'] = getBooleanFromJSON(json_object, 'minimap_open', false)
     // OS#1272 — Marqueur de bilan (réglages globaux).
     drawing_area['_balance_marker_enabled'] = getBooleanFromJSON(json_object, 'balance_marker_enabled', false)
     drawing_area['_balance_marker_strategy'] = getStringFromJSON(json_object, 'balance_marker_strategy', 'relative') as 'exact' | 'absolute' | 'relative'
@@ -2508,6 +2531,8 @@ export class DrawingAreaPersistence {
     drawing_area['_magnetic_nodes'] = getBooleanFromJSON(json_object, 'magnetic_nodes', drawing_area.magnetic_nodes)
     // os#671 — smart guides (défaut true : absent du JSON = actif).
     drawing_area['_smart_guides'] = getBooleanFromJSON(json_object, 'smart_guides', drawing_area.smart_guides)
+    // sa#422 — flèches de création rapide (défaut false : absent du JSON = flèches visibles).
+    drawing_area['_connection_arrows_off'] = getBooleanFromJSON(json_object, 'connection_arrows_off', false)
 
     // Paper format
     drawing_area['_paper_format'] = getStringFromJSON(json_object, 'paper_format', default_paper_format) as Type_PaperFormat
