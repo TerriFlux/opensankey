@@ -11,6 +11,7 @@ import {
   type Type_DeterminationCatalog,
   determinationCatalogFromJSON,
   determinationCatalogToJSON,
+  determinationCoefficient,
   determinationLookup,
   determinationIsFixed,
   determinationIsFree,
@@ -25,8 +26,8 @@ const catalog: Type_DeterminationCatalog = {
     { kind: 'equality', subject: '12', label: 'rendement du process X', constraint_type: 'ratio_flux' }
   ],
   explanations: [
-    { type: 'determined', constraints: [0, 2] },
-    { type: 'free', constraints: [] }
+    { type: 'determined', constraints: [0, 2], coefs: [1, -0.6] },
+    { type: 'free', constraints: [], coefs: [] }
   ]
 }
 
@@ -37,7 +38,7 @@ describe('#426 détermination — lecture et écriture', () => {
 
   it('omet les membres vides, pour ne pas alourdir le fichier', () => {
     const json = determinationCatalogToJSON({
-      subjects: [], explanations: [{ type: 'free', constraints: [] }]
+      subjects: [], explanations: [{ type: 'free', constraints: [], coefs: [] }]
     }) as unknown as Record<string, unknown>
     expect(json.subjects).toBeUndefined()
     expect((json.explanations as unknown[])[0]).toEqual({ type: 'free' })
@@ -75,7 +76,35 @@ describe('#426 détermination — lecture et écriture', () => {
 
   it('accepte un catalogue sans sujets tant qu’aucune explication n’en cite', () => {
     expect(determinationCatalogFromJSON({ explanations: [{ type: 'free' }] }))
-      .toEqual({ subjects: [], explanations: [{ type: 'free', constraints: [] }] })
+      .toEqual({ subjects: [], explanations: [{ type: 'free', constraints: [], coefs: [] }] })
+  })
+
+  it('rejette le catalogue quand les coefficients ne suivent pas les contraintes', () => {
+    // Désalignés, ils attribueraient à chaque flux le coefficient de son
+    // voisin : l'équation affichée serait fausse tout en paraissant normale.
+    const subjects = [{ kind: 'mat_balance', subject: 'Blé' }, { kind: 'equality', subject: '3' }]
+    expect(determinationCatalogFromJSON({
+      subjects, explanations: [{ type: 'determined', constraints: [0, 1], coefs: [1] }]
+    })).toBeUndefined()
+    expect(determinationCatalogFromJSON({
+      subjects, explanations: [{ type: 'determined', constraints: [0], coefs: [1, -1] }]
+    })).toBeUndefined()
+    expect(determinationCatalogFromJSON({
+      subjects, explanations: [{ type: 'determined', constraints: [0], coefs: ['+1'] }]
+    })).toBeUndefined()
+    expect(determinationCatalogFromJSON({
+      subjects, explanations: [{ type: 'determined', constraints: [0], coefs: [Infinity] }]
+    })).toBeUndefined()
+  })
+
+  it('lit un fichier antérieur aux coefficients sans les inventer', () => {
+    // Un moteur plus ancien n'en écrit pas : l'interface montrera les flux sans
+    // signe, ce qui vaut mieux qu'un signe deviné.
+    const read = determinationCatalogFromJSON({
+      subjects: [{ kind: 'mat_balance', subject: 'Blé' }],
+      explanations: [{ type: 'determined', constraints: [0] }]
+    })
+    expect(read?.explanations[0].coefs).toEqual([])
   })
 
   it('garde les compléments facultatifs d’un sujet et ignore ceux mal typés', () => {
@@ -102,6 +131,22 @@ describe('#426 détermination — résolution d’une explication', () => {
     expect(determinationLookup(catalog, 2)).toBeUndefined()
     expect(determinationLookup(catalog, -1)).toBeUndefined()
     expect(determinationLookup(catalog, 1.5)).toBeUndefined()
+  })
+})
+
+describe('#426 détermination — coefficient d’une variable dans une contrainte', () => {
+  it('rend le coefficient de la contrainte demandée, pas celui de sa voisine', () => {
+    const explanation = catalog.explanations[0]
+    expect(determinationCoefficient(explanation, 0)).toBe(1)
+    expect(determinationCoefficient(explanation, 2)).toBe(-0.6)
+  })
+
+  it('ne rend rien quand la contrainte n’est pas la sienne ou n’est pas chiffrée', () => {
+    // undefined ne veut pas dire « zéro » : c'est « le fichier ne le dit pas ».
+    expect(determinationCoefficient(catalog.explanations[0], 1)).toBeUndefined()
+    expect(determinationCoefficient(undefined, 0)).toBeUndefined()
+    expect(determinationCoefficient(
+      { type: 'determined', constraints: [0], coefs: [] }, 0)).toBeUndefined()
   })
 })
 
