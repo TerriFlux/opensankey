@@ -31,8 +31,7 @@
 //      orientation the fan therefore never opens, and this mode behaves like 'simple' (#425).
 //   1. DIRECTION split, as above, around the straight block.
 //   2. WITHIN a turning band — sort by the REACH (height) : nearest at the outer extremity.
-//      The anchor distance only breaks reach ties, and only here (this policy is also what
-//      'simple' runs, with the anchor tie-break switched off).
+//      The anchor distance only breaks reach ties.
 //
 // Cross-side order keeps the historical side priority (right < bottom < left < top).
 //
@@ -49,22 +48,23 @@ import { Type_Side } from './ElementsAttributesConfig'
 
 /**
  * Which ordering policy a face is laid out with — one per "Réorganisation auto" mode that
- * actually reorders (the 'none' mode never reaches this module).
- *   'position' — "Position des nœuds opposés" : Julien's structure with the fan switched off,
- *                so the opposite node's position is the only criterion.
- *   'reach'    — "Courbure, sauf flux droits" : Julien's rework — straight-link gate on the
- *                orientation, reach as the primary, anchor as a tie-break.
- *   'anchor'   — "Courbure, tous les flux" : the user's own rule — no gate, anchor as the
- *                primary, opposite position as the tie-break.
+ * fans its links.
+ *   'reach'  — "Courbure, sauf flux droits" : Julien Alapetite's rework — straight-link gate
+ *              on the orientation, reach as the primary, anchor as a tie-break.
+ *   'anchor' — "Courbure, tous les flux" : the user's own rule — no gate, anchor as the
+ *              primary, opposite position as the tie-break.
+ * The other two modes never reach this module : 'none' freezes the order, and "Position des
+ * nœuds opposés" runs the historical comparator (sortLinksElementsByRelativeNodesPositions),
+ * which keys on the opposite node's TOP EDGE and knows no band at all.
  */
-export type Type_IOOrderPolicy = 'position' | 'reach' | 'anchor'
+export type Type_IOOrderPolicy = 'reach' | 'anchor'
 
 export type Type_IOGeo = {
   side: Type_Side
   ox: number         // opposite node centre x
   oy: number         // opposite node centre y
   axis_change?: boolean // link changes axis end-to-end (orientation 'vh'/'hv'). ONLY the
-                     // 'reach' and 'position' policies read it, as their straight-link gate ;
+                     // 'reach' policy reads it, as its straight-link gate ;
                      // 'anchor' fans every link and ignores it. Beware that it describes the
                      // ATTACHMENT POINTS and not the path — an 'hh' link between nodes at
                      // different heights draws an S yet reads as false. Defaults to false.
@@ -120,16 +120,16 @@ export function bundleTie(side: Type_Side, is_source: boolean, ord: number): num
 // Ranking key for one link : [band, primary, anchorTie, stackTie, bundleTie], lexical. The
 // two policies fill it differently — see the header — but share the same shape so a single
 // comparator serves both.
-//  band      : 'anchor' uses 2 bands (0 = up, 1 = down) ; 'reach'/'position' use 3 (0 = up,
+//  band      : 'anchor' uses 2 bands (0 = up, 1 = down) ; 'reach' uses 3 (0 = up,
 //              1 = straight and centred, 2 = down), a link that turns up sitting above ALL
 //              straight links and one that turns down below them.
 //  primary   : 'anchor' → the node-side anchor distance reach·curve_node, signed so ascending
 //              sort puts the EARLIEST bend at each band's OUTER extremity. 'reach' → the reach
 //              itself, signed the same way, so the NEAREST link takes the extremity ;
-//              'position' → 0, leaving the stacking position as the sole criterion. In the
+//              In the
 //              straight band it is always the stacking position.
 //  anchorTie : 'reach' only — the anchor distance, breaking equal reaches. 0 elsewhere
-//              ('anchor' already spent it as its primary, 'position' ignores curvature).
+//              ('anchor' already spent it as its primary).
 //  stackTie  : reference stacking position — tie-break inside a band.
 //  bundleTie : final, only bites when everything else is equal — i.e. a bundle of parallel
 //              links (same source, same target, same sides). `geo.bundle_tie` (built by the
@@ -157,8 +157,7 @@ function orderKey(geo: Type_IOGeo, nx: number, ny: number, policy: Type_IOOrderP
   // middle band, at the centre of the face, ordered by the opposite stacking position alone.
   if (!(geo.axis_change ?? false))
     return [1, stack, 0, 0, bundle]
-  const use_curve = (policy === 'reach')
-  return [up ? 0 : 2, up ? reach : -reach, use_curve ? (up ? anchor : -anchor) : 0, stack, bundle]
+  return [up ? 0 : 2, up ? reach : -reach, up ? anchor : -anchor, stack, bundle]
 }
 
 /**
