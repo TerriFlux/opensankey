@@ -4,35 +4,24 @@
 // opposite-node geometry and the two side curvatures of each link, and uses the
 // returned order to drive `reorganizeIOOrder`.
 //
-// TWO DISTINCT POLICIES, offered side by side in the "Réorganisation auto" menu (#425).
-// They were merged until the user established that the straight-link exception, however well
-// calibrated, will always disturb arrangements his own rule places correctly — so they are
-// two choices, not one rule with a knob.
-//
-// ── 'anchor' — "Courbure, tous les flux" (the user's own rule, #205/#266/#279) ────────────
-//   Each face is split in TWO bands, top→bottom (left→right for top/bottom sides) :
-//     [ turning-up | turning-down ]
-//   1. DIRECTION split — a link whose reference sits ABOVE the reorg node goes up, below goes
-//      down ; up and down therefore never cross. For top/bottom sides, LEFT vs RIGHT.
-//   2. WITHIN a band — sort by the node-side curvature ANCHOR distance reach·curve_node
-//      (reach = |opposite − node| on the emission axis ; curve_node = the curvature of the end
-//      attached to THIS node). The link whose bend starts EARLIEST goes to the OUTER extremity,
-//      the one that turns latest stays toward the middle. Ascending anchor for the up band,
-//      descending for the down band ; ties broken by the opposite node's stacking position.
-//   EVERY link is fanned — a link that happens to run flat is ordered like the others.
-//
-// ── 'advanced' — "Courbure, sauf flux droits" (Julien Alapetite's rework of #205) ──────────
-//   Each face is split in THREE bands : [ turning-up | straight | turning-down ]
-//   0. GATE — only links that change axis end-to-end (orientation 'vh'/'hv', `axis_change`)
-//      are fanned. The others form the MIDDLE band, at the centre of the face, ordered by the
-//      opposite node's stacking position. ⚠ The gate reads the ORIENTATION, which describes
-//      the ATTACHMENT POINTS and not the path : an 'hh' link between two nodes at different
-//      heights draws an S and still lands in the middle band. On a diagram left at the default
-//      orientation the fan therefore never opens, and this mode behaves like 'simple' (#425).
-//   1. DIRECTION split, as above, around the straight block.
-//   2. WITHIN a turning band — sort by the REACH (height) : nearest at the outer extremity.
-//      The anchor distance only breaks reach ties.
-//
+// THE POLICY (user's rule, #205 rework — under local visual validation)
+//   Each face is split into THREE bands, top→bottom (left→right for top/bottom sides) :
+//     [ turning-up | straight | turning-down ]
+//   0. GATE — only TURNING links (orientation 'vh'/'hv', the link changes axis end-to-end)
+//      get the fan. Straight links ('hh'/'vv') form the MIDDLE band, ordered by the opposite
+//      node's stacking position along the face (its y for left/right, x for top/bottom).
+//      `geo.turning` says which.
+//   1. DIRECTION split (turning links) — the reference decides which band : a turning link
+//      whose opposite node is ABOVE the reorg node turns UP → it sits ABOVE the whole
+//      straight block ; below → it turns DOWN → BELOW the straight block. So turning-up and
+//      turning-down never cross, and each wraps around the straight middle. For top/bottom
+//      sides the analogue is LEFT vs RIGHT.
+//   2. WITHIN a turning band — sort by HEIGHT, i.e. the reach (|opposite − node| on the
+//      emission axis : x for left/right, y for top/bottom). The link that turns FIRST — the
+//      nearest one — goes to the OUTER extremity ; the farthest stays toward the straight
+//      block. Ascending reach for the up band (nearest at the very top), descending for the
+//      down band (nearest at the very bottom). Ties are broken by the node-side curvature
+//      ANCHOR distance reach·curve_node (ADVANCED mode only — `use_curve`), then by stacking.
 // Cross-side order keeps the historical side priority (right < bottom < left < top).
 //
 // RECYCLING LINKS (user's rule) — they take part in the very same ordering, with ONE
@@ -44,34 +33,32 @@
 // recyclingBellyCentre). The reach / anchor distance is unchanged and still measures
 // toward the opposite node.
 
+// ── os#425 — SECONDE POLITIQUE, offerte à côté de la précédente ────────────────────────────
+// La politique décrite ci-dessus (« Courbure, sauf flux droits ») garde son exception des flux
+// droits. La politique 'anchor' (« Courbure, tous les flux ») est la règle d'ORIGINE de
+// l'utilisateur, telle qu'elle était avant le retravail de #205 : DEUX bandes seulement
+// (montante / descendante), AUCUNE exception, et dans chaque bande le classement se fait par
+// la DISTANCE DE PREMIÈRE ANCRE reach·curve_node — le flux dont le coude commence le plus tôt
+// va à l'extrémité — les égalités étant départagées par la hauteur du nœud opposé. Les deux
+// sont deux règles distinctes, non deux réglages d'une même règle : l'exception des flux
+// droits déplace toujours des flux que la règle d'origine plaçait correctement.
+
 import { Type_Side } from './ElementsAttributesConfig'
 
-/**
- * Which ordering policy a face is laid out with — one per "Réorganisation auto" mode that
- * fans its links.
- *   'reach'  — "Courbure, sauf flux droits" : Julien Alapetite's rework — straight-link gate
- *              on the orientation, reach as the primary, anchor as a tie-break.
- *   'anchor' — "Courbure, tous les flux" : the user's own rule — no gate, anchor as the
- *              primary, opposite position as the tie-break.
- * The other two modes never reach this module : 'none' freezes the order, and "Position des
- * nœuds opposés" runs the historical comparator (sortLinksElementsByRelativeNodesPositions),
- * which keys on the opposite node's TOP EDGE and knows no band at all.
- */
+/** Laquelle des deux règles d'éventail dispose la face (cf. l'en-tête). */
 export type Type_IOOrderPolicy = 'reach' | 'anchor'
 
 export type Type_IOGeo = {
   side: Type_Side
   ox: number         // opposite node centre x
   oy: number         // opposite node centre y
-  axis_change?: boolean // link changes axis end-to-end (orientation 'vh'/'hv'). ONLY the
-                     // 'reach' policy reads it, as its straight-link gate ;
-                     // 'anchor' fans every link and ignores it. Beware that it describes the
-                     // ATTACHMENT POINTS and not the path — an 'hh' link between nodes at
-                     // different heights draws an S yet reads as false. Defaults to false.
+  turning?: boolean  // link changes axis end-to-end (orientation 'vh'/'hv'). Only turning
+                     // links get the direction-split + height fan ; straight ('hh'/'vv')
+                     // links keep the plain opposite-position order. Defaults to false.
   curve_node: number // curvature factor on THIS node's side (shape_starting_curve when
                      // the link leaves this node, shape_ending_curve when it arrives ;
                      // ratio of the link length ; an explicit 0 — bend glued to the node —
-                     // is a real value). Drives the anchor distance reach·curve_node.
+                     // is a real value). Drives the anchor tie-break distance reach·curve_node.
   stack_ref?: number // RECYCLING links only : absolute coordinate, on the stacking axis
                      // (y for left/right, x for top/bottom), of the centre of the link's
                      // central run — the loop's belly (cf. recyclingBellyCentre). When
@@ -117,20 +104,16 @@ export function bundleTie(side: Type_Side, is_source: boolean, ord: number): num
   return (is_source ? idx_dir : -idx_dir) * ord
 }
 
-// Ranking key for one link : [band, primary, anchorTie, stackTie, bundleTie], lexical. The
-// two policies fill it differently — see the header — but share the same shape so a single
-// comparator serves both.
-//  band      : 'anchor' uses 2 bands (0 = up, 1 = down) ; 'reach' uses 3 (0 = up,
-//              1 = straight and centred, 2 = down), a link that turns up sitting above ALL
-//              straight links and one that turns down below them.
-//  primary   : 'anchor' → the node-side anchor distance reach·curve_node, signed so ascending
-//              sort puts the EARLIEST bend at each band's OUTER extremity. 'reach' → the reach
-//              itself, signed the same way, so the NEAREST link takes the extremity ;
-//              In the
-//              straight band it is always the stacking position.
-//  anchorTie : 'reach' only — the anchor distance, breaking equal reaches. 0 elsewhere
-//              ('anchor' already spent it as its primary).
-//  stackTie  : reference stacking position — tie-break inside a band.
+// Ranking key for one link : [band, primary, anchorTie, stackTie, bundleTie], lexical.
+//  band      : 3 bands on the face — 0 = turning-up (above the straight block), 1 = straight
+//              ('hh'/'vv'), 2 = turning-down (below the straight block). A turning link that
+//              turns up sits above ALL straight links, one that turns down sits below them.
+//  primary   : turning links → reach (height), signed so ascending sort puts the nearest
+//              (first-turning) link at each band's OUTER extremity ; straight links → the
+//              stacking position itself (plain opposite order, within the middle band).
+//  anchorTie : turning links, ADVANCED only → node-side anchor distance reach·curve_node,
+//              signed like primary ; 0 otherwise.
+//  stackTie  : reference stacking position.
 //  bundleTie : final, only bites when everything else is equal — i.e. a bundle of parallel
 //              links (same source, same target, same sides). `geo.bundle_tie` (built by the
 //              caller via bundleTie()) mirrors the two ends so the bundle stays untwisted.
@@ -138,7 +121,10 @@ export function bundleTie(side: Type_Side, is_source: boolean, ord: number): num
 // is the centre of the loop's belly (geo.stack_ref) — see the header.
 type Type_OrderKey = [number, number, number, number, number]
 
-function orderKey(geo: Type_IOGeo, nx: number, ny: number, policy: Type_IOOrderPolicy): Type_OrderKey {
+function orderKey(
+  geo: Type_IOGeo, nx: number, ny: number, use_curve: boolean,
+  policy: Type_IOOrderPolicy = 'reach'
+): Type_OrderKey {
   const dx = geo.ox - nx
   const dy = geo.oy - ny
   const horiz = isHorizontalSide(geo.side)
@@ -148,16 +134,23 @@ function orderKey(geo: Type_IOGeo, nx: number, ny: number, policy: Type_IOOrderP
     : (horiz ? dy : dx)
   const up = stack < 0
   const bundle = geo.bundle_tie ?? 0
-  const reach = Math.abs(horiz ? dx : dy)  // toward the opposite (≥ 0), on the emission axis
-  const anchor = reach * geo.curve_node    // node-side curvature anchor distance
-  // The user's own rule : no gate, no straight band. Every link is fanned by its anchor.
-  if (policy === 'anchor')
-    return [up ? 0 : 1, up ? anchor : -anchor, 0, stack, bundle]
-  // Julien's rework : only a link that changes axis end-to-end is fanned. The others form the
-  // middle band, at the centre of the face, ordered by the opposite stacking position alone.
-  if (!(geo.axis_change ?? false))
+  // os#425 — « Courbure, tous les flux » : deux bandes, aucune exception, l'ancre classe.
+  // Sort avant le gate, qui n'a pas cours ici. Tout ce qui suit est la politique 'reach',
+  // inchangée.
+  if (policy === 'anchor') {
+    const reach_all = Math.abs(horiz ? dx : dy)
+    const anchor_all = reach_all * geo.curve_node
+    return [up ? 0 : 1, up ? anchor_all : -anchor_all, 0, stack, bundle]
+  }
+  // Straight ('hh'/'vv') links : the MIDDLE band (1), no fan — plain order by the opposite
+  // stacking position. Turning links wrap around this block, above or below it.
+  if (!geo.turning)
     return [1, stack, 0, 0, bundle]
-  return [up ? 0 : 2, up ? reach : -reach, up ? anchor : -anchor, stack, bundle]
+  // Turning ('vh'/'hv') links : band 0 when they turn up (above the straight block), band 2
+  // when they turn down (below it) ; within the band, HEIGHT (reach) toward the extremity.
+  const reach = Math.abs(horiz ? dx : dy)  // toward the opposite (≥ 0), on the emission axis
+  const anchor = reach * geo.curve_node    // node-side curvature anchor distance (tie-break)
+  return [up ? 0 : 2, up ? reach : -reach, use_curve ? (up ? anchor : -anchor) : 0, stack, bundle]
 }
 
 /**
@@ -204,12 +197,13 @@ function cmpKey(a: Type_OrderKey, b: Type_OrderKey): number {
 }
 
 /**
- * Order a node's I/O items with one of the direction-split policies.
+ * Order a node's I/O items with the gated direction-split + height policy.
  *
- * @param items  each link paired with its geometry (opposite node centre, side, node-side
- *               curvature and the `axis_change` flag)
- * @param nx,ny  reference node centre
- * @param policy which rule lays the face out — see Type_IOOrderPolicy and the header.
+ * @param items     each link paired with its geometry (opposite node centre, side,
+ *                  node-side curvature and the `turning` flag)
+ * @param nx,ny     reference node centre
+ * @param use_curve ADVANCED mode : break height ties by the node-side anchor distance
+ *                  reach·curve_node. SIMPLE mode passes false (curvature ignored).
  * @returns the items in display order : side groups concatenated in side-priority
  *          order, each side ordered top→bottom (left/right) or left→right (top/bottom).
  */
@@ -217,13 +211,17 @@ export function orderIOByGeometry<T>(
   items: { item: T; geo: Type_IOGeo }[],
   nx: number,
   ny: number,
-  policy: Type_IOOrderPolicy = 'anchor'
+  use_curve: boolean = true,
+  policy: Type_IOOrderPolicy = 'reach'
 ): T[] {
   return [...items]
     .sort((a, b) => {
       const by_side = side_rank[a.geo.side] - side_rank[b.geo.side]
       if (by_side !== 0) return by_side
-      return cmpKey(orderKey(a.geo, nx, ny, policy), orderKey(b.geo, nx, ny, policy))
+      return cmpKey(
+        orderKey(a.geo, nx, ny, use_curve, policy),
+        orderKey(b.geo, nx, ny, use_curve, policy)
+      )
     })
     .map(x => x.item)
 }
