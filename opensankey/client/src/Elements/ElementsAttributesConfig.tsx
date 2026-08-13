@@ -65,10 +65,20 @@ export const default_anchor_align_horizontal: Type_AnchorAlignHorizontal = 'cent
 // Mode de réorganisation automatique de l'ordre des flux E/S d'un nœud quand le
 // diagramme est modifié (cf. Class_NodeElement.reorganizeIOLinks) :
 //  'none'     = jamais recalculé (ordre figé) ;
-//  'simple'   = tri par la position du nœud opposé (comportement par défaut) ;
-//  'advanced' = ordre géométrique par la courbure (os#205/#266 — « qui tourne le
-//               plus tôt va à l'extrémité »), adapté aux diagrammes rigoureux.
-export type Type_IOReorgMode = 'none' | 'simple' | 'advanced'
+//  'simple'   = « Position des nœuds opposés » — tri par la position du nœud opposé
+//               (comportement par défaut) ;
+//  'advanced' = « Courbure, sauf flux droits » — retravail de os#205 par Julien
+//               Alapetite : les flux droits restent au centre de la face, les autres
+//               s'éventaillent par la portée (la courbure n'y départage que les
+//               portées égales) ;
+//  'anchor'   = « Courbure, tous les flux » — règle d'origine de l'utilisateur
+//               (os#205/#266/#279) : aucune exception, l'éventail classe TOUS les flux
+//               par la distance de la première ancre — « qui tourne le plus tôt va à
+//               l'extrémité ».
+// Les deux derniers sont deux règles distinctes et non deux réglages d'une même règle :
+// l'exception des flux droits, si bien calibrée soit-elle, déplace toujours des flux que
+// la règle d'origine plaçait correctement (os#425).
+export type Type_IOReorgMode = 'none' | 'simple' | 'advanced' | 'anchor'
 export const default_io_reorg_mode: Type_IOReorgMode = 'simple'
 // Orientation des hachures de remplissage d'un nœud ('none' = pas de hachure).
 export type Type_HatchOrientation = 'none' | 'vertical' | 'horizontal' | 'diagonal' | 'antidiagonal'
