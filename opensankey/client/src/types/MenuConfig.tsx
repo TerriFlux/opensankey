@@ -108,6 +108,13 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   // panneau draggable, ouvert depuis l'onglet Valeur de l'inspecteur.
   ref_setter_show_units_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
 
+  // sa#424 (lot 3) — fenêtre « Exporter » UNIQUE : le choix du format de rendu
+  // et ses réglages au même endroit, là où le menu Exporter de la barre
+  // dispersait PNG / PDF / SVG en commandes, chacune rouvrant sa propre modale.
+  ref_setter_show_modal_export: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+
+  // Modales héritées, encore ouvertes par le bouton `export_sankey` conservé
+  // pour les `menu_top_order` personnalisés.
   ref_setter_show_modal_png_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_png_saver_res_h: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>
   ref_setter_png_saver_res_v: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>
@@ -162,7 +169,9 @@ export class Class_MenuConfig {
       // (resetDA, open_sankey, save_sankey, export_sankey, mep) stay registered
       // in dict_components_menu_top for backwards-compatible custom orders.
       'fichier',
-      'export_sankey',
+      // sa#424 (lot 3) — 'export_sankey' RETIRÉ de la barre : Exporter est
+      // devenu une commande du menu Fichier. La clé reste enregistrée dans
+      // dict_components_menu_top pour les menu_top_order personnalisés.
       'edition',
       'edit_style',
     ],
@@ -857,6 +866,7 @@ export class Class_MenuConfig {
       ref_setter_show_tooltip_editor: { current: () => null },
       ref_setter_show_units_editor: { current: () => null },
 
+      ref_setter_show_modal_export: { current: () => null },
       ref_setter_show_modal_png_saver: { current: () => null },
       ref_setter_png_saver_res_h: { current: () => null },
       ref_setter_png_saver_res_v: { current: () => null },
@@ -911,6 +921,7 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_value_type_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_tooltip_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_units_editor.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_modal_export.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_png_saver.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_pdf_saver.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_styles.current(false)
