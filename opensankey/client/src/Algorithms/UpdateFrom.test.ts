@@ -394,3 +394,60 @@ describe('#232 updateFrom — cas limites', () => {
     expect(tgt.drawing_area.sankey.nodes_dict['C'].name).toBe('C')
   })
 })
+
+// OS#1286 — le registre d'unités voyage avec les RÉFÉRENCES d'unité portées par les attributs.
+// Sans ça, appliquer une mise en page issue d'un fichier 1.1.5 (unité en texte libre, reclassée
+// à son chargement dans la grandeur « Unités du fichier ») laissait la cible avec une référence
+// pendante : l'affichage retombait sur l'identifiant brut (« unit_type_file_kt » pour « kt »).
+describe('OS#1286 updateFrom — registre d\'unités', () => {
+  /** Source dont l'unité « kt » a été migrée en unité de fichier (facteur 1). */
+  const makeSourceWithFileUnit = () => {
+    const src = new Class_ApplicationData(false)
+    const nodes = makePair(src)
+    const resolved = src.drawing_area.sankey.units.getOrCreateLegacyUnit('kt', 1)
+    nodes.A.value_label_unit_type = 'unit_model'
+    nodes.A.value_label_unit = resolved.unit.id
+    return { src, nodes, unit_id: resolved.unit.id }
+  }
+
+  it('attrNode : la référence transférée résout chez la cible', () => {
+    const { src, unit_id } = makeSourceWithFileUnit()
+    const tgt = new Class_ApplicationData(false)
+    const t = makePair(tgt)
+    expect(tgt.drawing_area.sankey.units.resolve(unit_id)).toBeUndefined()
+
+    updateFrom(tgt.drawing_area, src.drawing_area, ['posNode', 'attrNode'])
+
+    expect(t.A.value_label_unit).toBe(unit_id)
+    const resolved = tgt.drawing_area.sankey.units.resolve(unit_id)
+    expect(resolved?.unit.name).toBe('kt')
+    expect(resolved?.unit.label).toBe('kt') // et non l'identifiant brut
+  })
+
+  it('sans mode porteur de références (posNode seul), le registre n\'est pas touché', () => {
+    const { src, unit_id } = makeSourceWithFileUnit()
+    const tgt = new Class_ApplicationData(false)
+    makePair(tgt)
+
+    updateFrom(tgt.drawing_area, src.drawing_area, ['posNode'])
+
+    expect(tgt.drawing_area.sankey.units.resolve(unit_id)).toBeUndefined()
+    expect(tgt.drawing_area.sankey.units.equalsDefaultCatalog()).toBe(true)
+  })
+
+  it('fusion additive : une unité déjà définie chez la cible n\'est pas écrasée', () => {
+    const src = new Class_ApplicationData(false)
+    makePair(src)
+    src.drawing_area.sankey.units.getUnitType('unit_type_mass')!
+      .units.find(u => u.id === 'mass_t')!.display_name = 'tonnes source'
+
+    const tgt = new Class_ApplicationData(false)
+    makePair(tgt)
+    tgt.drawing_area.sankey.units.getUnitType('unit_type_mass')!
+      .units.find(u => u.id === 'mass_t')!.display_name = 'tonnes cible'
+
+    updateFrom(tgt.drawing_area, src.drawing_area, ['attrNode'])
+
+    expect(tgt.drawing_area.sankey.units.resolve('mass_t')?.unit.label).toBe('tonnes cible')
+  })
+})
