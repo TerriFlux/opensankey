@@ -632,6 +632,12 @@ export class Class_MenuConfig {
   private _ref_to_toolbar_updater: MutableRefObject<() => void>
   private _ref_to_save_in_cache_indicator: MutableRefObject<(b: boolean) => void>
   private _ref_to_save_in_cache_indicator_value: MutableRefObject<boolean>
+  // sa#424 (lot 4) — signal de RAFRAÎCHISSEMENT de l'alerte « aucun fichier
+  // téléchargé » portée par le bouton d'enregistrement. Un signal distinct est
+  // nécessaire : réutiliser l'indicateur de cache en lui repassant sa valeur
+  // courante ne redessine rien (React abandonne un setState de valeur égale), et
+  // l'alerte restait donc affichée après le premier téléchargement.
+  private _ref_to_last_download_updater: MutableRefObject<() => void>
   // Session toggle "ne jamais enregistrer la vue" : when true, switching away
   // from an edited view discards changes silently (no "Vue non enregistrée"
   // modal). Reset by clicking the cache cloud icon. Lives here (OS base) so the
@@ -812,6 +818,7 @@ export class Class_MenuConfig {
     // Toolbar+
     this._ref_to_save_in_cache_indicator = { current: (_: boolean) => null }
     this._ref_to_save_in_cache_indicator_value = { current: true }
+    this._ref_to_last_download_updater = { current: () => null }
     this._ref_to_never_save_view_session = { current: (_: boolean) => null }
     this._ref_to_never_save_view_session_value = { current: false }
     this._ref_to_toolbar_updater = { current: () => null }
@@ -1680,6 +1687,10 @@ export class Class_MenuConfig {
 
   public get ref_to_save_in_cache_indicator_value(): MutableRefObject<boolean> {
     return this._ref_to_save_in_cache_indicator_value
+  }
+
+  public get ref_to_last_download_updater(): MutableRefObject<() => void> {
+    return this._ref_to_last_download_updater
   }
 
   public get ref_to_never_save_view_session(): MutableRefObject<(b: boolean) => void> {

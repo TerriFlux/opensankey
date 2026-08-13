@@ -803,6 +803,55 @@ export class Class_ApplicationData {
     localStorage.setItem('last_save', 'true')
     // Update logo save in cache
     this.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+    this.requestPersistentStorage()
+  }
+
+  /**
+   * sa#424 (lot 4) — DEMANDER AU NAVIGATEUR DE NE PAS ÉVINCER CE STOCKAGE.
+   *
+   * Ctrl+S écrit dans le stockage local, qui est par défaut « best-effort » : le
+   * navigateur peut le purger sous pression de disque. `storage.persist()` le
+   * fait passer en durable.
+   *
+   * Appelé au moment de l'enregistrement, PAS au démarrage : sous Firefox la
+   * demande peut ouvrir une autorisation, et une invite surgissant à l'ouverture
+   * de l'application serait incompréhensible — ici elle suit un geste délibéré
+   * de l'utilisateur. Une seule tentative par session ; l'échec est sans
+   * conséquence (on retombe sur le comportement d'avant).
+   */
+  protected _persistence_requested = false
+  public requestPersistentStorage() {
+    if (this._persistence_requested) return
+    this._persistence_requested = true
+    const storage = typeof navigator !== 'undefined' ? navigator.storage : undefined
+    if (!storage?.persist) return
+    storage.persisted()
+      .then((already) => (already ? true : storage.persist()))
+      .catch(() => undefined)
+  }
+
+  /**
+   * sa#424 (lot 4) — DATE DU DERNIER VRAI FICHIER ÉCRIT (JSON ou Excel).
+   *
+   * Le stockage de l'application n'est pas une sauvegarde : il est lié à un
+   * navigateur, un profil et une origine, et part avec un nettoyage de données.
+   * Cette date est la seule information qui prévienne d'une perte — d'où son
+   * affichage à côté du bouton d'enregistrement, « jamais » compris.
+   *
+   * Les EXPORTS (PNG, PDF, SVG) ne comptent pas : ce sont des rendus figés, pas
+   * des fichiers réouvrables — la distinction même qui sépare « Enregistrer
+   * sous » d'« Exporter ».
+   */
+  public noteDocumentDownloaded() {
+    localStorage.setItem('last_download', new Date().toISOString())
+    this.menu_configuration.ref_to_last_download_updater.current()
+  }
+
+  public get last_document_download(): Date | null {
+    const raw = localStorage.getItem('last_download')
+    if (!raw) return null
+    const date = new Date(raw)
+    return isNaN(date.getTime()) ? null : date
   }
 
   /**
@@ -859,6 +908,7 @@ export class Class_ApplicationData {
       const blob = new Blob([json_data_str], { type: 'text/plain;charset=utf-8' })
       FileSaver.saveAs(blob, this._file_name + '.json')
     }
+    this.noteDocumentDownloaded()
   }
 
   /**
