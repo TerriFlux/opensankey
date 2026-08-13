@@ -275,6 +275,43 @@ export class Class_UnitsRegistry {
     this.unit_types = other.unit_types.map(ut => Class_UnitType.fromJSON(ut.toJSON() as unknown as Type_JSON))
   }
 
+  /**
+   * OS#1286 — importe d'un autre registre UNIQUEMENT ce qui manque ici : grandeurs absentes
+   * (copiées telles quelles) et, dans les grandeurs communes, unités d'identifiant inconnu.
+   *
+   * Sert au transfert de mise en page (`updateFrom`) : les attributs copiés sur les éléments et
+   * les styles portent des RÉFÉRENCES d'unité (`value_label_unit` = identifiant du registre de
+   * la SOURCE). Sans les unités correspondantes, ces références ne résolvent plus chez la cible
+   * et l'affichage retombe sur l'identifiant brut. Cas typique : une mise en page 1.1.5 dont
+   * l'unité en texte libre a été migrée à son chargement dans la grandeur « Unités du fichier ».
+   *
+   * Strictement ADDITIF : jamais d'écrasement d'une unité existante (coefficient, libellé
+   * d'affichage), ni de l'unité par défaut ou de l'échelle d'une grandeur existante — le
+   * vocabulaire de la cible fait foi, on ne comble que les trous. Donc idempotent.
+   *
+   * @returns nombre d'unités ajoutées (grandeurs neuves comprises).
+   */
+  public mergeMissingFrom(other: Class_UnitsRegistry): number {
+    let added = 0
+    other.unit_types.forEach(src_type => {
+      const own_type = this.unit_types.find(ut => ut.id === src_type.id)
+      if (own_type === undefined) {
+        this.unit_types.push(Class_UnitType.fromJSON(src_type.toJSON() as unknown as Type_JSON))
+        added += src_type.units.length
+        return
+      }
+      src_type.units.forEach(src_unit => {
+        if (own_type.units.some(u => u.id === src_unit.id)) return
+        own_type.addUnit(src_unit.name, src_unit.coefficient, src_unit.id)
+        if (src_unit.display_name !== undefined) {
+          own_type.units[own_type.units.length - 1].display_name = src_unit.display_name
+        }
+        added += 1
+      })
+    })
+    return added
+  }
+
   public toJSON(): Type_UnitTypeJSON[] {
     return this.unit_types.map(ut => ut.toJSON())
   }
