@@ -45,6 +45,12 @@ export type Type_DeterminationExplanation = {
   // Index des sujets de contrainte qui portent sur elle. Vide = aucune
   // contrainte ne la touche.
   constraints: number[]
+  // Coefficient de la variable dans chaque contrainte, dans le MÊME ordre.
+  // C'est ce qui fait la différence entre lister les flux d'une équation et
+  // montrer l'équation : sans lui, un bilan matière se lit comme un sac de flux
+  // au lieu de « ceux-ci entrent, ceux-là sortent ». Vide quand le fichier ne
+  // les porte pas (écrit par un moteur antérieur).
+  coefs: number[]
 }
 
 export type Type_DeterminationCatalog = {
@@ -126,7 +132,17 @@ export const determinationCatalogFromJSON = (
         constraints.push(id)
       }
     }
-    explanations.push({ type: e.type, constraints })
+    const coefs: number[] = []
+    if (e.coefs !== undefined) {
+      // Des coefficients désalignés des contraintes attribueraient à chaque
+      // flux le coefficient de son voisin : le catalogue entier est écarté.
+      if (!Array.isArray(e.coefs) || e.coefs.length !== constraints.length) return undefined
+      for (const coef of e.coefs) {
+        if (typeof coef !== 'number' || !Number.isFinite(coef)) return undefined
+        coefs.push(coef)
+      }
+    }
+    explanations.push({ type: e.type, constraints, coefs })
   }
   return { subjects, explanations }
 }
@@ -141,6 +157,7 @@ export const determinationCatalogToJSON = (
   const explanations = catalog.explanations.map(e => {
     const out: Type_JSON = { type: e.type }
     if (e.constraints.length > 0) out.constraints = e.constraints as unknown as Type_JSON
+    if (e.coefs.length > 0) out.coefs = e.coefs as unknown as Type_JSON
     return out
   })
   const out: Type_JSON = { explanations: explanations as unknown as Type_JSON }
@@ -154,6 +171,23 @@ export const determinationCatalogToJSON = (
     }) as unknown as Type_JSON
   }
   return out
+}
+
+/**
+ * Coefficient d'une variable dans une contrainte donnée, ou undefined.
+ *
+ * undefined ne veut pas dire « zéro » : c'est « le fichier ne le dit pas »
+ * (écrit par un moteur antérieur aux coefficients). L'interface montre alors le
+ * flux sans signe plutôt qu'un signe inventé.
+ */
+export const determinationCoefficient = (
+  explanation: Type_DeterminationExplanation | undefined,
+  subject_id: number
+): number | undefined => {
+  if (explanation === undefined) return undefined
+  const position = explanation.constraints.indexOf(subject_id)
+  if (position < 0 || position >= explanation.coefs.length) return undefined
+  return explanation.coefs[position]
 }
 
 /** Explication désignée par un index, ou undefined si le fichier ne la porte pas. */
