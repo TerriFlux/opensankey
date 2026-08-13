@@ -169,6 +169,7 @@ export const resources_app_elements = {
         // sa#413 — bouton Partager / Mettre à jour de la barre du haut
         share: 'Share',
         share_tooltip: 'Publish this diagram online or download it as a standalone site',
+        update_share_tooltip: 'Update the online page of this diagram',
         update_publication: 'Update',
         update_publication_tooltip: 'Save back to the source repository and update the online page',
         open_sankeymatic: 'SankeyMATIC',
@@ -881,6 +882,7 @@ export const resources_app_elements = {
         // sa#413 — bouton Partager / Mettre à jour de la barre du haut
         share: 'Partager',
         share_tooltip: 'Publier ce diagramme en ligne ou le télécharger en site autonome',
+        update_share_tooltip: 'Mettre à jour la page en ligne de ce diagramme',
         update_publication: 'Mettre à jour',
         update_publication_tooltip: 'Réenregistrer dans le dépôt source et mettre à jour la page en ligne',
         format_converter: 'Convertisseur de format',
@@ -1583,6 +1585,7 @@ export const resources_app_elements = {
         // sa#413 — bouton Partager / Mettre à jour de la barre du haut
         share: 'Compartir',
         share_tooltip: 'Publicar este diagrama en línea o descargarlo como sitio autónomo',
+        update_share_tooltip: 'Actualizar la página en línea de este diagrama',
         update_publication: 'Actualizar',
         update_publication_tooltip: 'Guardar en el repositorio fuente y actualizar la página en línea',
         format_converter: 'Conversor de formato',
@@ -2268,6 +2271,7 @@ export const resources_app_elements = {
         // sa#413 — bouton Partager / Mettre à jour de la barre du haut
         share: 'Teilen',
         share_tooltip: 'Dieses Diagramm online veröffentlichen oder als eigenständige Website herunterladen',
+        update_share_tooltip: 'Die Online-Seite dieses Diagramms aktualisieren',
         update_publication: 'Aktualisieren',
         update_publication_tooltip: 'Im Quell-Repository speichern und die Online-Seite aktualisieren',
         format_converter: 'Formatkonverter',
@@ -2953,6 +2957,7 @@ export const resources_app_elements = {
         // sa#413 — bouton Partager / Mettre à jour de la barre du haut
         share: 'Condividi',
         share_tooltip: 'Pubblica questo diagramma online o scaricalo come sito autonomo',
+        update_share_tooltip: 'Aggiornare la pagina online di questo diagramma',
         update_publication: 'Aggiorna',
         update_publication_tooltip: 'Salva nel repository sorgente e aggiorna la pagina online',
         format_converter: 'Convertitore di formato',
@@ -3625,6 +3630,7 @@ export const resources_app_elements = {
         // sa#413 — bouton Partager / Mettre à jour de la barre du haut
         share: '分享',
         share_tooltip: '将此图表在线发布或下载为独立网站',
+        update_share_tooltip: '更新此图表的在线页面',
         update_publication: '更新',
         update_publication_tooltip: '保存回源仓库并更新在线页面',
         open_sankeymatic: 'SankeyMATIC',
@@ -4317,6 +4323,7 @@ export const resources_app_elements = {
         // sa#413 — bouton Partager / Mettre à jour de la barre du haut
         share: '共有',
         share_tooltip: 'この図をオンラインで公開するか、独立したサイトとしてダウンロードします',
+        update_share_tooltip: 'この図のオンラインページを更新します',
         update_publication: '更新',
         update_publication_tooltip: 'ソースリポジトリに保存し、オンラインページを更新します',
         open_sankeymatic: 'SankeyMATIC',
