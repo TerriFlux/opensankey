@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import JSZip from 'jszip'
-import { parseEsankeyXml, loadEsankeyFile, netFormatDecimalCount, esAngleToTextAngle, ESANKEY_ENTRIES_TAGG_ID } from './esankeyParser'
+import { parseEsankeyXml, loadEsankeyFile, netFormatDecimalCount, esAngleToTextAngle, ESANKEY_ENTRIES_TAGG_ID, esankeyLabelTemplate } from './esankeyParser'
 import { Class_ApplicationData } from '../types/ApplicationData'
 
 // jest 27/jsdom n'expose pas structuredClone (utilisé par Link.copyFrom).
@@ -499,10 +499,11 @@ describe('os#1310 — textes inclinés (label@angle, sankeyArrowLabel@angle, tex
     Object.values(d.links).forEach(l => expect(l.local.value_label_text_angle).toBeUndefined())
   })
 
-  // os#1310b — nom du matériau dans le label (`@showEntryname`, gabarit
-  // `{EntryName}: {Quantity} {UnitName}`) : label de NOM du flux en source
-  // 'tag' + valeur collée (stick). Mono-matériau uniquement.
-  test('showEntryname sur flèche MONO-matériau : nom en source tag + valeur collée', () => {
+  // os#1310b / OS#1314 — nom du matériau dans le label (`@showEntryname`) : le
+  // `labelFormat` d'e!Sankey devient un GABARIT à jetons OpenSankey, un seul
+  // label portant nom + valeur + unité (deux-points compris). Mono-matériau
+  // uniquement. Le label de valeur séparé s'efface (le gabarit le contient).
+  test('showEntryname sur flèche MONO-matériau : label en gabarit à jetons', () => {
     // FIXTURE réduite à un seul flow (le Heat est retiré) → mono-matériau.
     const xml = FIXTURE.replace(
       /<flow id="42"[\s\S]*?<\/flow>/, ''
@@ -511,11 +512,36 @@ describe('os#1310 — textes inclinés (label@angle, sankeyArrowLabel@angle, tex
     expect(links.length).toBe(1)
     const l = links[0]
     expect(l.local.name_label_is_visible).toBe(true)
-    expect(l.local.name_label_text_source).toBe('tag')
+    expect(l.local.name_label_text_source).toBe('template')
+    // labelFormat de la fixture = « {Quantity} {Unit} » ; @showEntryname étant
+    // allumé, le nom manquant est réintroduit en tête.
+    expect(l.local.name_label_template).toBe('{EntryName}: {Quantity} {Unit}')
     expect(l.local.name_label_flux_tag_group_id).toBe(ESANKEY_ENTRIES_TAGG_ID)
-    expect(l.local.value_label_stick_to_label).toBe(true)
-    // Label ~horizontal : la valeur se colle à DROITE du nom.
-    expect(l.local.value_label_horiz).toBe('right')
+    expect(l.local.value_label_is_visible).toBe(false)
+    expect(l.local.value_label_stick_to_label).toBeUndefined()
+  })
+
+  test('esankeyLabelTemplate : interrupteurs et jetons sans équivalent', () => {
+    const arrow = (over: Partial<Parameters<typeof esankeyLabelTemplate>[0]>) => ({
+      labelFormat: '{EntryName}: {Quantity} {UnitName}',
+      showValue: true, showUnit: true, showEntryname: true, ...over
+    })
+    expect(esankeyLabelTemplate(arrow({}))).toBe('{EntryName}: {Quantity} {UnitName}')
+    // Interrupteur éteint : jeton retiré, séparateur orphelin nettoyé.
+    expect(esankeyLabelTemplate(arrow({ showEntryname: false })))
+      .toBe('{Quantity} {UnitName}')
+    expect(esankeyLabelTemplate(arrow({ showUnit: false })))
+      .toBe('{EntryName}: {Quantity}')
+    // Jeton sans équivalent OpenSankey : retiré, pas laissé littéral — et la
+    // parenthèse qui l'habillait disparaît avec lui.
+    expect(esankeyLabelTemplate(arrow({ labelFormat: '{Quantity} ({PercentArrow})' })))
+      .toBe('{EntryName}: {Quantity} {Unit}')
+    // Pourcentage : tient lieu de valeur ET d'unité (le « % » est littéral).
+    expect(esankeyLabelTemplate(arrow({ labelFormat: '{EntryName}: {PercentProcessSource} %' })))
+      .toBe('{EntryName}: {PercentProcessSource} %')
+    // Format vide : gabarit constaté sur le corpus.
+    expect(esankeyLabelTemplate(arrow({ labelFormat: '' })))
+      .toBe('{EntryName}: {Quantity} {UnitName}')
   })
 
   test('showEntryname="false" ou flèche multi-matériaux : pas de label de nom', () => {
@@ -533,16 +559,18 @@ describe('os#1310 — textes inclinés (label@angle, sankeyArrowLabel@angle, tex
     })
   })
 
-  test('nom + label vertical (angle=90) : valeur collée SOUS le nom, dans le sens de lecture', () => {
+  // OS#1314 — le gabarit tient dans UN label : l'inclinaison se lit sur le label
+  // de nom (celui qui est affiché), plus besoin de coller la valeur en dessous.
+  test('nom + label vertical (angle=90) : le gabarit porte l\'inclinaison', () => {
     const xml = FIXTURE
       .replace(/<flow id="42"[\s\S]*?<\/flow>/, '')
       .replace('<sankeyArrowLabel visible="true"', '<sankeyArrowLabel angle="90" visible="true"')
     const l = Object.values(parseEsankeyXml(xml).links)[0]
+    expect(l.local.name_label_text_source).toBe('template')
     expect(l.local.name_label_text_angle).toBe(90)
     expect(l.local.value_label_text_angle).toBe(90)
-    expect(l.local.value_label_stick_to_label).toBe(true)
-    expect(l.local.value_label_vert).toBe('bottom')
-    expect(l.local.value_label_horiz).toBe('middle')
+    expect(l.local.value_label_is_visible).toBe(false)
+    expect(l.local.value_label_stick_to_label).toBeUndefined()
   })
 })
 
@@ -1081,9 +1109,13 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     expect(withoutArrow?.local.shape_source_notch).toBeUndefined()
   })
 
-  test('label de valeur visible (flèche mono-matériau à label affiché) ; unité posée', () => {
+  test('label visible (flèche mono-matériau à label affiché) ; unité posée', () => {
     const link = Object.values(d.links)[0]
-    expect(link.local.value_label_is_visible).toBe(true)
+    // OS#1314 — flèche à @showEntryname : le label est un GABARIT qui porte la
+    // valeur (ici un pourcentage), donc plus de label de valeur séparé.
+    expect(link.local.name_label_text_source).toBe('template')
+    expect(link.local.name_label_template).toBe('{EntryName}: {PercentProcessSource} %')
+    expect(link.local.value_label_is_visible).toBe(false)
     expect(link.local.label_unit_visible).toBe(true)
     // OS#1286 — la référence d'unité (id du registre) est posée, mais le
     // format pourcentage ({PercentProcessSource}) garde la PRIORITÉ sur le
@@ -1276,6 +1308,26 @@ describe('parseEsankeyXml — décor (zones libres, légende, tooltips, images)'
     )
     const dNoFont = parseEsankeyXml(withoutFont, { 'Images/tmp1.tmp': PNG_URI })
     expect(dNoFont.legend?.legend_police).toBeUndefined()
+  })
+
+  // OS#1314 — gabarit des entrées de légende (`<legend @entryTextFormat>`,
+  // « {EntryName} [{UnitName}] » sur 81 des 101 démos du corpus).
+  test('OS#1314 — entryTextFormat → gabarit des entrées de légende', () => {
+    const withFormat = FIXTURE_DECOR.replace(
+      '<legend locationX="100" locationY="200">',
+      '<legend locationX="100" locationY="200" entryTextFormat="{EntryName} [{UnitName}]">'
+    )
+    const dFormat = parseEsankeyXml(withFormat, { 'Images/tmp1.tmp': PNG_URI })
+    expect(dFormat.legend?.legend_entry_template).toBe('{EntryName} [{UnitName}]')
+    // Jeton sans équivalent : retiré (et les crochets orphelins avec lui).
+    const withUnknown = FIXTURE_DECOR.replace(
+      '<legend locationX="100" locationY="200">',
+      '<legend locationX="100" locationY="200" entryTextFormat="{EntryName} [{Lifecycle}]">'
+    )
+    expect(parseEsankeyXml(withUnknown, { 'Images/tmp1.tmp': PNG_URI })
+      .legend?.legend_entry_template).toBeUndefined()
+    // Format par défaut (nom seul) ou absent : rien à stocker.
+    expect(d.legend?.legend_entry_template).toBeUndefined()
   })
 
   test('groupe de tags avec use_colors (colormap = couleurs des entries)', () => {
@@ -1817,25 +1869,23 @@ describeDemos('loadEsankeyFile — démos e!Sankey 5 locales', () => {
       .map(l => l.local.value_label_text_angle)
       .filter((a): a is number => typeof a === 'number')
     expect(angles).toEqual([90, 90, 90, 90])
-    // os#1310b — 3 labels visibles affichent le nom du matériau (@showEntryname
-    // true) : 2 tournés à 90° (ex. « Chlore_r 720 g/t » vers cendre volante) +
-    // 1 horizontal. Nom en source tag, valeur collée (SOUS le nom à 90° — sens
-    // de lecture —, à droite en horizontal), position absolue portée par le
-    // NOM (pas la valeur).
-    const named = Object.values(d.links).filter(l => l.local.name_label_text_source === 'tag')
+    // os#1310b / OS#1314 — 3 labels visibles affichent le nom du matériau
+    // (@showEntryname true) : 2 tournés à 90° (ex. « Chlore_r : 720 g/t » vers
+    // cendre volante) + 1 horizontal. Un SEUL label, construit par gabarit à
+    // jetons ; position absolue portée par ce label de nom.
+    const named = Object.values(d.links).filter(l => l.local.name_label_text_source === 'template')
     expect(named.length).toBe(3)
     named.forEach(l => {
       expect(l.local.name_label_is_visible).toBe(true)
-      expect(l.local.value_label_stick_to_label).toBe(true)
+      expect(l.local.name_label_template).toBe('{EntryName}: {Quantity} {UnitName}')
+      expect(l.local.value_label_is_visible).toBe(false)
       expect(l.local.name_label_position_absolute).toBe(true)
       expect(l.local.value_label_position_absolute).toBeUndefined()
     })
     const namedRotated = named.filter(l => l.local.name_label_text_angle === 90)
     expect(namedRotated.length).toBe(2)
-    namedRotated.forEach(l => expect(l.local.value_label_vert).toBe('bottom'))
     const namedFlat = named.filter(l => l.local.name_label_text_angle === undefined)
     expect(namedFlat.length).toBe(1)
-    namedFlat.forEach(l => expect(l.local.value_label_horiz).toBe('right'))
     // Bout en bout : l'attribut RÉSOLU après fromJSON porte bien la rotation.
     const app = new Class_ApplicationData(false)
     app.fromJSON(d as never)

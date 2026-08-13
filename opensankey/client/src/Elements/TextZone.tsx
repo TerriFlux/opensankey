@@ -75,6 +75,9 @@ export class Class_ContainerElement extends Class_NodeBase {
   // jetons {Tag} tels que saisis, pas leur valeur interpolée : on court-circuite
   // l'interpolation de name_label_effective ci-dessus et on renvoie la base.
   public override get name_label_effective_editable(): string {
+    // OS#1314 — en source 'template', le texte brut à éditer est le gabarit
+    // lui-même (la base commune sait déjà le rendre).
+    if (this.name_label_source === 'template') return super.name_label_effective_editable
     return super.name_label_effective
   }
 

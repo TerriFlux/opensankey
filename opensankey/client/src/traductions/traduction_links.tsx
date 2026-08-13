@@ -170,9 +170,11 @@ export const resources_flux = {
           l_u_v: 'Unit',
           l_u: 'Unit\'s name',
           name_label_text_source: 'Label content',
+          name_label_template: 'Template',
           name_label_tag_group: 'Tag group',
           text_source: {
             custom: 'Custom text',
+            template: 'Token template',
             none: 'None',
             source: 'Source node',
             target: 'Target node',
@@ -181,6 +183,7 @@ export const resources_flux = {
           },
           tooltips: {
             name_label_text_source: 'Pick what the link label displays: typed text, nothing, source/target node name, or source → target',
+            name_label_template: 'Text built from tokens replaced at draw time, e.g. "{EntryName}: {Value} {Unit}"',
             label: 'Display or not the label (data / text) associated to the selected link(s)',
             len: 'Display the label in black, for the selected stream(s)',
             lb: 'Display the label in white, for the selected stream(s)',
@@ -405,9 +408,11 @@ export const resources_flux = {
           node_value: 'Valeur',
           name_label_is_visible: 'Label',
           name_label_text_source: 'Contenu du label',
+          name_label_template: 'Gabarit',
           name_label_tag_group: 'Groupe de tags',
           text_source: {
             custom: 'Texte personnalisé',
+            template: 'Gabarit à jetons',
             none: 'Aucun',
             source: 'Nœud source',
             target: 'Nœud destination',
@@ -420,6 +425,7 @@ export const resources_flux = {
           tp: 'Taille de police',
           tooltips: {
             name_label_text_source: 'Choisir ce qu\'affiche le label du flux : texte saisi, rien, nom du nœud source/destination, ou source → destination',
+            name_label_template: 'Texte construit avec des jetons remplacés au dessin, ex. « {EntryName} : {Value} {Unit} »',
             label: 'Permet d\'afficher ou non le label (donnée / texte) associé au(x) flux sélectionné(s)',
             len: 'Afficher le texte du label en noir, pour le(s) flux sélectionné(s)',
             lb: 'Afficher le texte du label en blanc, pour le(s) flux sélectionné(s)',
@@ -641,6 +647,7 @@ export const resources_flux = {
             dessus: 'Para el/los flujo(s) seleccionado(s), coloca el texto de la etiqueta encima del flujo',
             fin: 'Para el/los flujo(s) seleccionado(s), coloca el texto de la etiqueta cerca del punto de llegada del flujo',
             name_label_text_source: 'Elegir qué muestra la etiqueta del flujo: texto introducido, nada, nombre del nodo origen/destino, u origen → destino',
+            name_label_template: 'Texto construido con marcadores sustituidos al dibujar, p. ej. «{EntryName}: {Value} {Unit}»',
             value: 'Valor'
           },
           '%ID': '% de los flujos entrantes del nodo destino',
@@ -656,6 +663,7 @@ export const resources_flux = {
           name_label_is_visible: 'Etiqueta',
           name_label_tag_group: 'Grupo de etiquetas',
           name_label_text_source: 'Contenido de la etiqueta',
+          name_label_template: 'Plantilla',
           node_value: 'Valor',
           normalized: 'Normalizado (flujo ref.)',
           other_unit_tag: 'Otras unidades nativas',
@@ -666,6 +674,7 @@ export const resources_flux = {
           target: 'Nodo destino',
           text_source: {
             custom: 'Texto personalizado',
+            template: 'Plantilla con marcadores',
             none: 'Ninguno',
             source: 'Nodo origen',
             source_target: 'Origen → destino',
@@ -870,6 +879,7 @@ export const resources_flux = {
             dessus: 'Für die ausgewählten Flüsse: Beschriftungstext oberhalb des Flusses platzieren',
             fin: 'Für die ausgewählten Flüsse: Beschriftungstext am Endpunkt des Flusses platzieren',
             name_label_text_source: 'Wählen, was die Flussbeschriftung anzeigt: eingegebener Text, nichts, Name des Quell-/Zielknotens oder Quelle → Ziel',
+            name_label_template: 'Text aus Platzhaltern, die beim Zeichnen ersetzt werden, z. B. „{EntryName}: {Value} {Unit}“',
             value: 'Wert'
           },
           '%ID': '% der Eingangsflüsse des Zielknotens',
@@ -885,6 +895,7 @@ export const resources_flux = {
           name_label_is_visible: 'Beschriftung',
           name_label_tag_group: 'Tag-Gruppe',
           name_label_text_source: 'Inhalt der Beschriftung',
+          name_label_template: 'Vorlage',
           node_value: 'Wert',
           normalized: 'Normiert (Referenzfluss)',
           other_unit_tag: 'Weitere native Einheiten',
@@ -895,6 +906,7 @@ export const resources_flux = {
           target: 'Zielknoten',
           text_source: {
             custom: 'Benutzerdefinierter Text',
+            template: 'Vorlage mit Platzhaltern',
             none: 'Keine',
             source: 'Quellknoten',
             source_target: 'Quelle → Ziel',
@@ -1099,6 +1111,7 @@ export const resources_flux = {
             dessus: 'Per il/i flussi selezionati, posiziona il testo dell\'etichetta sopra il flusso',
             fin: 'Per il/i flussi selezionati, posiziona il testo dell\'etichetta vicino al punto di arrivo del flusso',
             name_label_text_source: 'Scegliere cosa mostra l\'etichetta del flusso: testo digitato, niente, nome del nodo sorgente/destinazione, o sorgente → destinazione',
+            name_label_template: 'Testo costruito con segnaposto sostituiti al disegno, es. «{EntryName}: {Value} {Unit}»',
             value: 'Valore'
           },
           '%ID': '% dei flussi in entrata del nodo destinazione',
@@ -1114,6 +1127,7 @@ export const resources_flux = {
           name_label_is_visible: 'Etichetta',
           name_label_tag_group: 'Gruppo di tag',
           name_label_text_source: 'Contenuto dell\'etichetta',
+          name_label_template: 'Modello',
           node_value: 'Valore',
           normalized: 'Normalizzato (flusso rif.)',
           other_unit_tag: 'Altre unità native',
@@ -1124,6 +1138,7 @@ export const resources_flux = {
           target: 'Nodo destinazione',
           text_source: {
             custom: 'Testo personalizzato',
+            template: 'Modello con segnaposto',
             none: 'Nessuno',
             source: 'Nodo sorgente',
             source_target: 'Sorgente → destinazione',
@@ -1316,9 +1331,11 @@ export const resources_flux = {
           l_u_v: '单位',
           l_u: '单位名称',
           name_label_text_source: '标签内容',
+          name_label_template: '模板',
           name_label_tag_group: '标签组',
           text_source: {
             custom: '自定义文本',
+            template: '占位符模板',
             none: '无',
             source: '源节点',
             target: '目标节点',
@@ -1327,6 +1344,7 @@ export const resources_flux = {
           },
           tooltips: {
             name_label_text_source: '选择流量标签显示的内容：输入的文本、不显示、源/目标节点名称，或 源 → 目标',
+            name_label_template: '由绘制时替换的占位符组成的文本，例如“{EntryName}: {Value} {Unit}”',
             label: '是否显示与所选流量关联的标签（数据 / 文本）',
             len: '以黑色显示所选流量的标签',
             lb: '以白色显示所选流量的标签',
@@ -1545,9 +1563,11 @@ export const resources_flux = {
           l_u_v: '単位',
           l_u: '単位の名前',
           name_label_text_source: 'ラベルの内容',
+          name_label_template: 'テンプレート',
           name_label_tag_group: 'タググループ',
           text_source: {
             custom: '任意テキスト',
+            template: 'トークンのテンプレート',
             none: 'なし',
             source: '始点ノード',
             target: '終点ノード',
@@ -1556,6 +1576,7 @@ export const resources_flux = {
           },
           tooltips: {
             name_label_text_source: 'フローのラベルに表示する内容を選択：入力したテキスト、なし、始点／終点ノード名、始点 → 終点',
+            name_label_template: '描画時に置き換えられるトークンで組み立てる文字列（例：「{EntryName}: {Value} {Unit}」）',
             label: '選択したフローに紐づくラベル（データ／テキスト）を表示するかどうかを設定します',
             len: '選択したフローのラベルを黒で表示します',
             lb: '選択したフローのラベルを白で表示します',

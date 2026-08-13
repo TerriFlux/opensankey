@@ -1,17 +1,26 @@
 # Exemples OpenSankey
 
-Un seul exemple, maintenu et testé : [`viewer/`](./viewer) — une application React
-autonome qui consomme le paquet npm public
+Deux exemples, maintenus et testés. Chacun est une application React autonome qui
+consomme le paquet npm public
 [`@terriflux/opensankey`](https://www.npmjs.com/package/@terriflux/opensankey).
+
+| Dossier | Ce qu'il montre |
+| --- | --- |
+| [`viewer/`](./viewer) | L'exemple canonique : deux modèles **embarqués** dans le bundle, sélecteur de diagramme et sélecteur de vue, et la documentation exhaustive des options du viewer. |
+| [`cartofob/`](./cartofob) | Le cas grandeur nature : un diagramme **téléchargé** en gzip brut (646 Ko compressés, 7,7 Mo de JSON, 1608 flux), piloté par deux sélecteurs réactifs — data tag et étiquette de vue. Reprend la structure de [cartofob-sankey](https://github.com/IGNF/cartofob-sankey). |
 
 ## Lancer en ligne, sans rien installer
 
-[Ouvrir sur CodeSandbox](https://codesandbox.io/p/devbox/github/TerriFlux/opensankey/tree/main/examples/viewer)
+- [`viewer/` sur CodeSandbox](https://codesandbox.io/p/devbox/github/TerriFlux/opensankey/tree/main/examples/viewer)
+- [`cartofob/` sur CodeSandbox](https://codesandbox.io/p/devbox/github/TerriFlux/opensankey/tree/main/examples/cartofob)
+
+Il faut un **Devbox**, pas un Sandbox : le Sandbox résout les dépendances via son
+propre CDN, qui ignore le `.npmrc` et échoue sur ce paquet.
 
 ## Lancer en local
 
 ```bash
-cd examples/viewer
+cd examples/viewer     # ou examples/cartofob
 npm install
 npm start
 ```
@@ -21,13 +30,27 @@ dossier ne contient qu'un `legacy-peer-deps=true`, indispensable parce que
 `react-scripts@5` déclare `typescript@^3 || ^4` en peer alors que l'exemple
 compile en TypeScript 5 — sans lui, `npm install` échoue avant la compilation.
 
-## Ce que l'exemple montre
+## Ce que `viewer/` montre
 
 - l'intégration de `ViewerOpenSankeyApp` dans une application React ;
-- le chargement d'un diagramme distant servi en gzip brut (sans en-tête
-  `Content-Encoding`), décompressé à la volée ;
-- un diagramme **multi-vues** : chaque entrée de la clé `views` est un JSON
-  autonome, et le sélecteur remonte un viewer neuf par vue.
+- un **sélecteur de diagramme** (deux modèles embarqués) et un **sélecteur de
+  vue** : les vues sont écrites en clair dans le JSON (clé `views`, vue courante
+  dans `current_view`), l'hôte construit donc sa liste lui-même et rouvre le
+  fichier sur la vue choisie ;
+- la documentation, dans `viewer/src/index.tsx`, de **toutes** les options de
+  `ViewerOpenSankeyApp` — celles qui agissent dans le paquet MIT, celles que
+  seul le viewer de l'application complète lit, et celles devenues sans effet.
+
+## Ce que `cartofob/` montre en plus
+
+- le **chargement par URL** d'un `.gz` servi brut (sans `Content-Encoding: gzip`),
+  décompressé côté hôte par `DecompressionStream` — aucune dépendance ajoutée ;
+- le fait que le paquet MIT **n'a pas de chargeur** : `diagram` / `diagrams_list`
+  ne sont lues que par l'application complète, l'hôte fetch lui-même et passe le
+  JSON en `initial_data` — dont il tire au passage ses listes déroulantes ;
+- des sélections **réactives** (`data_tag_selection`, `view_tag_selection`) : le
+  viewer les ré-applique en place, sans prop `key` ni relecture du fichier, ce qui
+  sur un diagramme de cette taille se compte en secondes.
 
 ## Ce qui a été retiré, et pourquoi
 

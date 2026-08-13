@@ -11,14 +11,9 @@
         height: 100%;
         margin: 0;
       }
-      /* Le viewer de @terriflux/opensankey@1.2.0 rend son conteneur #sankey_app sans hauteur :
-         en mode `embedded`, la zone de dessin se cadre sur le clientHeight de ce div, qui
-         s'effondre, et le diagramme se reduit pour tenir dans une bande. Corrige dans le paquet
-         (ViewApp.tsx), mais la correction n'arrivera ici qu'a la prochaine version publiee — cette
-         regle rend l'exemple correct entre-temps, et reste inoffensive apres. */
-      #sankey_app {
-        height: 100%;
-      }
+      /* Rien de plus n'est necessaire : depuis 1.2.1, le viewer dimensionne lui-meme son
+         conteneur #sankey_app. L'hote decide de la taille — ici le plein ecran ci-dessus —
+         et le viewer la remplit. */
     </style>
   </head>
   <body>
