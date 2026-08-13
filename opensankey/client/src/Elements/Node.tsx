@@ -28,7 +28,8 @@ import * as d3 from '../d3Modules'
 import { Class_NodeBase } from './NodeBase'
 
 import {
-  Class_LinkElement
+  Class_LinkElement,
+  sortLinksElementsByRelativeNodesPositions
 } from './Link'
 import { Class_Handler } from './Handler'
 import { reorganizeIOOrder } from './reorganizeIOOrder'
@@ -1122,26 +1123,24 @@ export class Class_NodeElement extends Class_NodeBase {
 
     let recycling_links: Class_LinkElement[]
     let compare: (link_a: Class_LinkElement, link_b: Class_LinkElement) => number
-    // Les trois modes qui réordonnent passent par l'ordre géométrique (cf. ioOrderGeometry.ts),
-    // chacun avec sa politique :
-    //  'simple'   → 'position' : la position du nœud opposé est le seul critère ;
-    //  'advanced' → 'reach'    : règle de Julien — les flux droits restent au centre de la
-    //                            face, les autres s'éventaillent par la portée ;
-    //  'anchor'   → 'anchor'   : règle d'origine de l'utilisateur — aucune exception, TOUS
-    //                            les flux s'éventaillent par la distance de première ancre.
-    // Les deux modes à éventail font participer les flux de recyclage, classés par le ventre
-    // de leur boucle (os#279) → recycling_links=[] ; 'simple' les laisse parqués en bloc
-    // entre le middle et les exports (comportement historique), donc hors index.
-    const policy: Type_IOOrderPolicy =
-      mode === 'anchor' ? 'anchor' : (mode === 'advanced' ? 'reach' : 'position')
-    if (policy === 'position') {
+    // 'simple' — « Position des nœuds opposés » : le tri HISTORIQUE, celui d'avant le
+    // retravail de os#205, restauré tel quel (os#425). Il compare le COIN HAUT du nœud opposé
+    // (`position_y`/`position_x`, cf. sortLinksElementsByRelativeNodesPositions) et ne connaît
+    // ni bande ni split direction — deux écarts avec la version qui passait par
+    // ioOrderGeometry, sensibles dès que les nœuds opposés ont des hauteurs différentes.
+    // Les flux de recyclage restent parqués en bloc entre le middle et les exports.
+    if (mode === 'simple') {
       recycling_links = this._links_order.filter(l => l.shape_is_recycling)
-      const middle = this._links_order.filter(
-        l => !import_links.includes(l) && !export_links.includes(l) && !l.shape_is_recycling
-      )
-      const order_index = this._computeIOOrderIndex(middle, policy)
-      compare = (link_a, link_b) => (order_index.get(link_a) ?? 0) - (order_index.get(link_b) ?? 0)
+      compare = (link_a, link_b) => sortLinksElementsByRelativeNodesPositions(link_a, link_b, this)
     } else {
+      // Les deux modes à éventail passent par l'ordre géométrique (cf. ioOrderGeometry.ts) :
+      //  'advanced' → 'reach'  : règle de Julien — seuls les flux qui changent d'axe sont
+      //                          éventaillés, par la portée ; les autres restent au centre ;
+      //  'anchor'   → 'anchor' : règle d'origine de l'utilisateur — aucune exception, TOUS
+      //                          les flux s'éventaillent par la distance de première ancre.
+      // Tous deux font participer les flux de recyclage, classés par le ventre de leur
+      // boucle (os#279) → recycling_links=[].
+      const policy: Type_IOOrderPolicy = (mode === 'anchor') ? 'anchor' : 'reach'
       const middle = this._links_order.filter(
         l => !import_links.includes(l) && !export_links.includes(l)
       )

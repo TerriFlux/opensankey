@@ -15,13 +15,14 @@ import {
 //              middle band at the centre of the face. Inside a turning band the REACH orders
 //              the fan and the anchor only breaks reach ties.
 //
-//   'position' "Position des nœuds opposés" — same structure as 'reach' with the anchor
-//              tie-break switched off, so the opposite position is the sole criterion.
+// The other two modes never reach this module : « Aucune » freezes the order, and « Position
+// des nœuds opposés » runs the historical comparator (sortLinksElementsByRelativeNodesPositions
+// in Link.tsx), which keys on the opposite node's TOP EDGE and knows no band at all.
 
 type L = { id: string }
 // row = [id, side, ox, oy, axis_change?, curve_node?, stack_ref?]
-//   axis_change  orientation 'vh'/'hv'. Read by 'reach'/'position' as their straight-link
-//                gate ; ignored by 'anchor', which fans everything.
+//   axis_change  orientation 'vh'/'hv'. Read by 'reach' as its straight-link gate ; ignored
+//                by 'anchor', which fans everything.
 //   curve_node   default 0.05 — feeds the anchor distance reach·curve_node
 //   stack_ref    set only for recycling links (the centre of their loop's belly)
 const make = (
@@ -119,27 +120,25 @@ describe('« Courbure, sauf flux droits » (reach) — Julien\'s rework', () => 
     expect(run(items, 0, 0, 'anchor')).toEqual(['B', 'A'])
   })
 
-  it('equal reach : the curvature separates them, and \'position\' ignores it', () => {
+  it('equal reach : the curvature separates them', () => {
     const items = make([
-      ['small', 'right', 500, 100, true, 0.1], // anchor  50
+      ['small', 'right', 500, 100, true, 0.1], // anchor  50 → bottom extremity
       ['big', 'right', 500, 100, true, 0.6],   // anchor 300 → toward the middle
     ])
     expect(run(items, 0, 0, 'reach')).toEqual(['big', 'small'])
-    expect(run(items, 0, 0, 'position')).toEqual(['small', 'big'])
   })
 
-  it('on a diagram left at the default orientation it collapses onto \'position\' (#425)', () => {
+  it('on a diagram left at the default orientation the fan never opens (#425)', () => {
     // Not one 'vh'/'hv' link here — the situation of every SOCLE diagram, where the default
-    // orientation is 'hh'. The gate never opens, so the fan never runs and this mode returns
-    // exactly what « Position des nœuds opposés » returns. That is why the user's rule had to
-    // become a mode of its own rather than a variant of this one.
+    // orientation is 'hh'. The gate never opens, so every link falls into the middle band and
+    // the face ends up ordered by the opposite position alone, curvatures ignored. That is why
+    // the user's rule had to become a mode of its own rather than a variant of this one.
     const items = make([
       ['a', 'right', 300, 200, false, 0.9],
       ['b', 'right', 1200, -150, false, 0.02],
       ['c', 'right', 700, 40, false, 0.1],
     ])
     expect(run(items, 0, 0, 'reach')).toEqual(['b', 'c', 'a'])
-    expect(run(items, 0, 0, 'reach')).toEqual(run(items, 0, 0, 'position'))
     // …whereas the user's rule does order that same face by the curvature : 'a' bends latest
     // of the two descending links (anchor 270 against 70) and yields the extremity to 'c'.
     expect(run(items, 0, 0, 'anchor')).toEqual(['b', 'a', 'c'])
@@ -277,11 +276,11 @@ describe('#425 — filière Lait, « Fabrication de poudre de lait »', () => {
     ])
   })
 
-  it('the two other modes leave this face in the order the issue reported as wrong', () => {
-    // No 'vh'/'hv' link here, so Julien's gate never opens and both modes fall back on the
-    // opposite position : Crème (belly at +173) ahead of Eau (+546).
-    const expected = ['Poudre de lait intermédiaire', 'Crème intermédiaire', 'Eau']
-    expect(run(items(), fabrication.x, fabrication.y, 'reach')).toEqual(expected)
-    expect(run(items(), fabrication.x, fabrication.y, 'position')).toEqual(expected)
+  it('Julien\'s mode leaves this face in the order the issue reported as wrong', () => {
+    // No 'vh'/'hv' link here, so his gate never opens and the face falls back on the opposite
+    // position : Crème (belly at +173) ahead of Eau (+546).
+    expect(run(items(), fabrication.x, fabrication.y, 'reach')).toEqual([
+      'Poudre de lait intermédiaire', 'Crème intermédiaire', 'Eau'
+    ])
   })
 })
