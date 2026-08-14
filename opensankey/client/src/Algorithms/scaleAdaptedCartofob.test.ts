@@ -373,14 +373,16 @@ describeIf('os#1351 — « échelle adaptée » sur le vrai CARTOFOB', () => {
    * Défaut isolé : sur le chemin RÉEL d'une page publiée, `applyPublishOptions` ne pose le mode
    * que sur la DA COURANTE (la vue ouverte, ici la vue LOURDE `view_noo1b`). Les vues d'essence
    * sont `is_light` et réutilisent la DA MAÎTRE, dont le style est resté `absolute` :
-   * `applyViewChange` constate l'écart et rappelle `setScaleAdaptedMode()`, qui RÉ-ARME la
-   * suspension #369. La frame de cette navigation est donc dessinée en ABSOLU.
+   * `applyViewChange` constatait l'écart et rappelait `setScaleAdaptedMode()`, qui RÉ-ARME la
+   * suspension #369 : la frame de cette navigation était dessinée en ABSOLU. os#1352 pose donc
+   * le mode sur les DEUX drawing areas, et la première navigation applique enfin le mode.
    */
-  it('chemin réel d\'une page publiée : la 1re navigation est perdue à ré-armer le mode', () => {
+  it('chemin reel d une page publiee : le mode s applique des la 1re navigation', () => {
     const app = new Class_ApplicationData(false)
     app.fromJSON(loadJSON(CARTOFOB as string) as never, {}, false)
-    // Exactement ce que fait `applyPublishOptions` pour `publish_settings.position_mode`.
-    app.drawing_area.setScaleAdaptedMode()
+    // Chemin REEL d'une page publiee : l'option de page, puis applyPublishStateOptions.
+    ;(app.publish_options as { position_mode: string | null }).position_mode = 'scale_adapted'
+    app.applyPublishStateOptions()
     const master_mode_before = app.master_drawing_area?.sankey.styles_dict['default'].shape_position_type
 
     const modes: string[] = []
@@ -394,7 +396,8 @@ describeIf('os#1351 — « échelle adaptée » sur le vrai CARTOFOB', () => {
       + `mode EFFECTIF à chaque navigation : ${modes.join(', ')}\n`)
 
     // La 1re navigation est dessinée en absolu (ré-armement), les suivantes appliquent le mode.
-    expect(modes[0]).toBe('absolute')
-    expect(modes.slice(1).every(m => m === 'scale_adapted')).toBe(true)
+    // os#1352 — le mode est pose sur la DA MAITRE aussi : plus de re-armement.
+    expect(master_mode_before).toBe('scale_adapted')
+    expect(modes.every(m => m === 'scale_adapted')).toBe(true)
   })
 })
