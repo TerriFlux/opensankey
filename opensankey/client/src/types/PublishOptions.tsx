@@ -67,6 +67,10 @@ export interface SankeyGlobals {
   edit_button?: boolean  // default true : bouton "Éditer" (renvoi vers open-sankey.fr) dans la topbar en publish
   unitary?: boolean      // default false : onglet « Unit. » (sankey unitaire OS+) dans la topbar en publish
   doc?: boolean          // default false : bouton « Doc » (panneau documentation) dans la topbar en publish, visible seulement si une doc existe
+  // sa#402 — document markdown posé À CÔTÉ de la page (README.md du projet, recopié par le rendu).
+  // Nom de fichier RELATIF à la page : le viewer le charge et le prête au panneau « Doc » quand le
+  // diagramme n'embarque pas de documentation. Sa seule présence suffit à faire apparaître le bouton.
+  doc_file?: string
   navigation_help?: boolean  // default false : bouton « Aide à la navigation » dans la topbar en publish
   badge?: boolean        // default true : badge « Made with OpenSankey » (lien terriflux.com) en bas à gauche en publish
 
@@ -151,6 +155,7 @@ export interface PublishOptions {
   edit_button: boolean
   unitary: boolean
   doc: boolean
+  doc_file: string | null
   navigation_help: boolean
   badge: boolean
   data_type: boolean
@@ -349,6 +354,7 @@ export const getPublishOptions = (): PublishOptions => {
     edit_button: bool(s.edit_button, true),
     unitary: bool(s.unitary, false),
     doc: bool(s.doc, false),
+    doc_file: str(s.doc_file),
     navigation_help: bool(s.navigation_help, false),
     badge: bool(s.badge, true),
     data_type: bool(s.data_type, true),
