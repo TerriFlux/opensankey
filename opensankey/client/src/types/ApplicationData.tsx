@@ -399,6 +399,15 @@ export class Class_ApplicationData {
   public get publish_view_label_filter(): string | null { return this._publish_view_label_filter }
   public set publish_view_label_filter(v: string | null) { this._publish_view_label_filter = v }
 
+  // sa#412 — Labels de page déclarés par la page publiée (`window.sankey.view_label` en LISTE) :
+  // le viewer publié rend un sélecteur de label VISIBLE à côté du sélecteur de vues dès que la
+  // liste compte plus d'un label présent dans le fichier ; le filtre ACTIF reste
+  // `publish_view_label_filter` ci-dessus. État runtime, jamais sérialisé ; [] = pas de
+  // sélecteur (comportement historique). L'éditeur n'en tient pas compte.
+  protected _publish_view_labels: string[] = []
+  public get publish_view_labels(): string[] { return this._publish_view_labels }
+  public set publish_view_labels(v: string[]) { this._publish_view_labels = v }
+
   // Identité LOGIQUE de la vue courante, découplée de l'id du Sankey de la DA. Nécessaire pour
   // les vues light qui RÉUTILISENT la DA maître : sans ce champ, une vue light serait confondue
   // avec le maître (is_view_master, navigation, suppression…). Vaut default_main_sankey_id pour
@@ -1624,6 +1633,12 @@ export class Class_ApplicationData {
         }
       }
     }
+    // sa#412 — liste des labels de page (`view_label` en liste) : stockée telle quelle (état
+    // runtime, ré-application réactive : option absente => plus de sélecteur). Le filtre ACTIF
+    // (premier label) est posé par le bloc view_label ci-dessus, garde-fou compris ; l'UI
+    // publish ne rend le sélecteur de label que si > 1 label est présent dans le fichier.
+    this._publish_view_labels = opts.view_labels ?? []
+
     if (opts.view) {
       const view_id = this._views_reader.resolveViewIdFromSelection(opts.view)
       if (!view_id) {

@@ -128,7 +128,11 @@ export interface SankeyGlobals {
   // des vues — cf. view_tag_selection). Options additives : id/nom ou label inconnu => ignoré
   // (warn), affichage inchangé.
   view?: string        // ouvre sur cette vue (id OU nom, comme le sélecteur de vues)
-  view_label?: string  // restreint le sélecteur de vues aux vues portant ce label ; la vue courante devient la première du groupe
+  // Restreint le sélecteur de vues aux vues portant ce label ; la vue courante devient la
+  // première du groupe. sa#412 — accepte aussi une LISTE de labels : le filtre actif est posé
+  // sur le premier, et le viewer publié rend un sélecteur de label VISIBLE à côté du sélecteur
+  // de vues (le visiteur bascule de groupe en groupe). Chaîne simple = comportement historique.
+  view_label?: string | string[]
 
   // sa#409 — crochet d'upgrade headless (commande upgrade d'/admin/publications). Quand true,
   // applyPublishStateOptions expose sur window le fichier RE-SÉRIALISÉ au format courant
@@ -174,6 +178,10 @@ export interface PublishOptions {
   view_tag_selection: Record<string, string> | null
   view: string | null
   view_label: string | null
+  // sa#412 — liste complète des labels de page déclarés par `view_label` (normalisée : une
+  // chaîne simple devient [chaîne]). `view_label` ci-dessus reste le filtre ACTIF (premier de
+  // la liste), seul consommé par les mécaniques historiques (diagrams_views, ouverture).
+  view_labels: string[] | null
   export_json: boolean
   logo: string | null
   header: string | null
@@ -225,6 +233,24 @@ const strRecord = (v: unknown): Record<string, string> | null => {
 
 let _warned_sous_filieres = false
 let _warned_invalid_diagram_entry = false
+let _warned_invalid_view_labels = false
+
+// sa#412 — `view_label` accepte une chaîne (comportement historique) OU une liste de chaînes.
+// Parse tolérant, doctrine additive des options voisines : les entrées invalides d'une liste
+// (non-chaîne, chaîne vide) sont ignorées avec un warn unique ; rien de valide => null
+// (comportement historique inchangé). La liste est dédoublonnée dans l'ordre déclaré.
+const strLabels = (v: unknown): string[] | null => {
+  if (typeof v === 'string') return v !== '' ? [v] : null
+  if (!Array.isArray(v)) return null
+  const valid = v.filter((l): l is string => typeof l === 'string' && l.trim() !== '')
+  if (valid.length < v.length && !_warned_invalid_view_labels) {
+    _warned_invalid_view_labels = true
+    // eslint-disable-next-line no-console
+    console.warn('[OpenSankey] view_label : entrées invalides ignorées (attendu : chaîne ou liste de chaînes non vides).')
+  }
+  const labels = [...new Set(valid)]
+  return labels.length > 0 ? labels : null
+}
 
 // Langue effective côté page publiée : ?lang= > window.sankey.language > préférence
 // mémorisée (i18nextLng) > navigateur. Utilisée pour résoudre header_i18n.
@@ -259,8 +285,11 @@ export const getPublishOptions = (): PublishOptions => {
   }
 
   // sa#397 — options de page (repli des sélections par diagramme d'sa#398).
+  // sa#412 — view_label accepte une liste : le filtre ACTIF de page est son PREMIER label,
+  // la liste complète part dans `view_labels` (sélecteur de label visible du viewer).
   const page_view = str(s.view)
-  const page_view_label = str(s.view_label)
+  const page_view_labels = strLabels(s.view_label)
+  const page_view_label = page_view_labels ? page_view_labels[0] : null
 
   // sa#398 — normalisation de diagrams_list : chaque entrée peut être la chaîne historique ou
   // un objet {file, view?, view_label?}. On en tire (1) la liste {libellé: fichier} qu'attendent
@@ -373,6 +402,7 @@ export const getPublishOptions = (): PublishOptions => {
     view_tag_selection: strRecord(s.view_tag_selection),
     view: view_value,
     view_label: view_label_value,
+    view_labels: page_view_labels,
     export_json: bool(s.export_json, false),
     logo: str(s.logo),
     header: header_value,
@@ -436,7 +466,9 @@ export type ViewerSankeyOptions = {
   data_tag_selection?: Record<string, string>
   view_tag_selection?: Record<string, string>  // valeur = VUE (nom/id, light ou heavy, comme le sélecteur de vue) ou tag à filtrer
   view?: string        // sa#397 : ouvre sur cette vue (id OU nom)
-  view_label?: string  // sa#397 : restreint le sélecteur de vues aux vues portant ce LABEL DE VUE (sa#396)
+  // sa#397 : restreint le sélecteur de vues aux vues portant ce LABEL DE VUE (sa#396).
+  // sa#412 : une LISTE rend en plus le sélecteur de label visible (cf. SankeyGlobals).
+  view_label?: string | string[]
   // Configs per-diagramme (clé = nom dans diagrams_list)
   diagrams_config?: Record<string, Record<string, unknown>>
 }
