@@ -98,8 +98,60 @@ const isDefaultish = (v: unknown): boolean =>
   (isPlainObject(v) && Object.keys(v).length === 0)
 
 /**
+ * Ids des styles STRUCTURELS, (ré)attachés automatiquement aux éléments selon leur type.
+ * Avant le filtre de persistance SA#230, chaque cycle enregistrer/charger réattachait puis
+ * re-sérialisait ces styles : les anciens fichiers en accumulent des copies
+ * (`['default','ContainerStyle','ContainerStyle']` vs le même + une copie). Réappliquer un
+ * style structurel étant idempotent, ces doublons ne changent RIEN au rendu — c'est un
+ * fossile de fichier, pas une différence de contenu.
+ * NB : le filtre de persistance (`structural_styles`, ElementStyle.tsx) ne couvre que les
+ * trois premiers ; `NodeContainerStyle` est persisté depuis SA#232 (nœud-cadre esthétique
+ * sans chemin de réattache) mais il est lui aussi réattaché par setContainerMode() et son
+ * réapplique est tout aussi idempotente : ses doublons hérités sont le même fossile.
+ */
+export const STRUCTURAL_STYLE_IDS: string[] = [
+  'NodeStyle',
+  'LinkStyle',
+  'ContainerStyle',
+  'NodeContainerStyle',
+]
+
+/**
+ * Dédoublonne les occurrences répétées des seuls ids STRUCTURELS (première conservée),
+ * sans toucher aux styles custom. undefined si la valeur n'est pas un tableau de chaînes.
+ */
+const dedupeStructuralStyles = (v: unknown): string[] | undefined => {
+  if (!Array.isArray(v) || !v.every(s => typeof s === 'string')) return undefined
+  const seen = new Set<string>()
+  const out: string[] = []
+  ;(v as string[]).forEach(id => {
+    if (STRUCTURAL_STYLE_IDS.includes(id)) {
+      if (seen.has(id)) return
+      seen.add(id)
+    }
+    out.push(id)
+  })
+  return out
+}
+
+/**
+ * Bruit « styles structurels dupliqués » (fossile du bug SA#230) : feuille `changed` sur une
+ * clé `style` dont les deux listes deviennent ÉGALES (même ordre) une fois les doublons
+ * structurels retirés. Un vrai changement de style (custom ajouté, structurels différents)
+ * ne se normalise pas à l'égalité et reste visible.
+ */
+const isStructuralStyleEcho = (leaf: Type_CompareLeaf): boolean => {
+  if (leaf.op !== 'changed' || leaf.path[leaf.path.length - 1] !== 'style') return false
+  const a = dedupeStructuralStyles(leaf.a)
+  const b = dedupeStructuralStyles(leaf.b)
+  return a !== undefined && b !== undefined &&
+    a.length === b.length && a.every((id, i) => id === b[i])
+}
+
+/**
  * Compare deux vues (JSON de DrawingArea) et agrège le résultat.
- * @param opts.ignore_noise défaut true — écarte les paires clé-absente ↔ valeur-par-défaut.
+ * @param opts.ignore_noise défaut true — écarte les paires clé-absente ↔ valeur-par-défaut
+ *   et les listes `style` ne différant que par des doublons structurels (SA#230).
  * @param opts.tolerance défaut 0 — écarte les écarts numériques ≤ tolerance (px de re-sérialisation).
  */
 export function compareViews(
@@ -118,6 +170,8 @@ export function compareViews(
     const kept: Type_CompareLeaf[] = []
     leaves.forEach(leaf => {
       if ((leaf.op === 'added' || leaf.op === 'removed') && isDefaultish(leaf.a) && isDefaultish(leaf.b)) {
+        noise_dropped += 1
+      } else if (isStructuralStyleEcho(leaf)) {
         noise_dropped += 1
       } else kept.push(leaf)
     })
