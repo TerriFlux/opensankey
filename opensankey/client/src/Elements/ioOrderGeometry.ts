@@ -33,19 +33,22 @@
 // recyclingBellyCentre). The reach / anchor distance is unchanged and still measures
 // toward the opposite node.
 
-// ── os#425 — SECONDE POLITIQUE, offerte à côté de la précédente ────────────────────────────
-// La politique décrite ci-dessus (« Courbure, sauf flux droits ») garde son exception des flux
-// droits. La politique 'anchor' (« Courbure, tous les flux ») est la règle d'ORIGINE de
-// l'utilisateur, telle qu'elle était avant le retravail de #205 : DEUX bandes seulement
-// (montante / descendante), AUCUNE exception, et dans chaque bande le classement se fait par
-// la DISTANCE DE PREMIÈRE ANCRE reach·curve_node — le flux dont le coude commence le plus tôt
-// va à l'extrémité — les égalités étant départagées par la hauteur du nœud opposé. Les deux
-// sont deux règles distinctes, non deux réglages d'une même règle : l'exception des flux
-// droits déplace toujours des flux que la règle d'origine plaçait correctement.
+// ── os#425 — DEUX POLITIQUES, une par mode qui réordonne ───────────────────────────────────
+// 'reach'  sert le mode « Position des nœuds opposés » : la politique décrite ci-dessus, prise
+//          sans la courbure (use_curve = false), inchangée.
+// 'anchor' sert le mode « Courbure des flux » : la règle d'ORIGINE, telle qu'elle était avant
+//          le retravail de #205 — DEUX bandes seulement (montante / descendante), AUCUNE
+//          exception de flux droit, et dans chaque bande le classement par la DISTANCE DE
+//          PREMIÈRE ANCRE reach·curve_node (le flux dont le coude commence le plus tôt va à
+//          l'extrémité), les égalités départagées par la hauteur du nœud opposé.
+// L'exception des flux droits introduite par le retravail de #205 déplaçait des flux que la
+// règle d'origine plaçait correctement ; son auteur a confirmé que la modification du mode
+// avancé n'était pas intentionnelle. Le mode qui la portait a donc été retiré, mais le chemin
+// 'reach' reste emprunté par « Position des nœuds opposés », d'où sa conservation ici.
 
 import { Type_Side } from './ElementsAttributesConfig'
 
-/** Laquelle des deux règles d'éventail dispose la face (cf. l'en-tête). */
+/** Laquelle des deux règles dispose la face (cf. l'en-tête). */
 export type Type_IOOrderPolicy = 'reach' | 'anchor'
 
 export type Type_IOGeo = {
@@ -134,7 +137,7 @@ function orderKey(
     : (horiz ? dy : dx)
   const up = stack < 0
   const bundle = geo.bundle_tie ?? 0
-  // os#425 — « Courbure, tous les flux » : deux bandes, aucune exception, l'ancre classe.
+  // os#425 — « Courbure des flux » : deux bandes, aucune exception, l'ancre classe.
   // Sort avant le gate, qui n'a pas cours ici. Tout ce qui suit est la politique 'reach',
   // inchangée.
   if (policy === 'anchor') {

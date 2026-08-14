@@ -242,7 +242,7 @@ describe('recycling links — split keyed on the loop belly, not on the opposite
   })
 })
 
-// ── os#425 — politique 'anchor' : « Courbure, tous les flux » ────────────────────────────────
+// ── os#425 — politique 'anchor' : le mode « Courbure des flux » ─────────────────────────
 // Règle d'ORIGINE de l'utilisateur, telle qu'elle était avant le retravail de #205. Deux bandes
 // (montante / descendante), AUCUNE exception de flux droit, et dans chaque bande le classement
 // par la DISTANCE DE PREMIÈRE ANCRE reach·curve_node — coude le plus précoce à l'extrémité —
@@ -252,7 +252,7 @@ const runA = (
   items: ReturnType<typeof make>, nx: number, ny: number
 ) => orderIOByGeometry(items, nx, ny, true, 'anchor' as Type_IOOrderPolicy).map(l => l.id)
 
-describe("os#425 — « Courbure, tous les flux » (politique 'anchor')", () => {
+describe("os#425 — « Courbure des flux » (politique 'anchor')", () => {
   it('AUCUNE exception : un flux droit est éventaillé comme les autres', () => {
     // Aucun de ces flux ne change d'axe : la politique 'reach' les range tous dans la bande
     // du milieu et les trie par la position opposée. La règle d'origine, elle, les éventaille
