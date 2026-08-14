@@ -113,6 +113,10 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   // dispersait PNG / PDF / SVG en commandes, chacune rouvrant sa propre modale.
   ref_setter_show_modal_export: MutableRefObject<Dispatch<SetStateAction<boolean>>>
 
+  // sa#424 (lot 5) — fenêtre de choix « Nouveau » (vierge / modèle / classeur
+  // Excel vierge), dernière section du menu Fichier devenue une commande.
+  ref_setter_show_modal_new_document: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+
   // Modales héritées, encore ouvertes par le bouton `export_sankey` conservé
   // pour les `menu_top_order` personnalisés.
   ref_setter_show_modal_png_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
@@ -704,6 +708,25 @@ export class Class_MenuConfig {
     hidden?: () => boolean
   }> = undefined
   /**
+   * sa#424 (lot 5) — Commandes ajoutées EN BAS du menu Fichier, après le dernier
+   * séparateur. Sert au « Partager… » que la couche SaaS y pose : partager n'est
+   * ni un format ni une destination d'enregistrement, c'est une commande à part.
+   *
+   * Point d'injection plutôt qu'appel direct : l'éditeur open-source ignore tout
+   * de la publication (qui vit dans OS+ / SA), et doit continuer à l'ignorer.
+   * Même contrat que `extra_save_menu_items` — `label` et `hidden` évalués au
+   * rendu, pour suivre la langue et l'état de connexion.
+   */
+  public extra_file_menu_items?: Array<{
+    key: string
+    label: () => string
+    icon?: React.ReactNode
+    onClick: () => void
+    disabled?: () => boolean
+    tooltip?: () => string
+    hidden?: () => boolean
+  }> = undefined
+  /**
    * Optional handler that saves one standalone JSON file per view, packaged in a
    * single zip. Injected by OSP (views are an OSP feature). When set, the
    * persistence dialog's ``save_one_json_per_view`` JSON output option routes the
@@ -874,6 +897,7 @@ export class Class_MenuConfig {
       ref_setter_show_units_editor: { current: () => null },
 
       ref_setter_show_modal_export: { current: () => null },
+      ref_setter_show_modal_new_document: { current: () => null },
       ref_setter_show_modal_png_saver: { current: () => null },
       ref_setter_png_saver_res_h: { current: () => null },
       ref_setter_png_saver_res_v: { current: () => null },
@@ -929,6 +953,7 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_tooltip_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_units_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_export.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_modal_new_document.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_png_saver.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_pdf_saver.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_styles.current(false)
