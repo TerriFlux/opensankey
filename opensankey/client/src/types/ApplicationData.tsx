@@ -801,8 +801,13 @@ export class Class_ApplicationData {
     // Push to storage
     localStorage.setItem('data', LZString.compress(JSON.stringify(this._toJSON())))
     localStorage.setItem('last_save', 'true')
+    // sa#424 (lot 4) — HORODATAGE de l'enregistrement, pas seulement son
+    // existence : « enregistré » sans date ne dit pas si cela remonte à une
+    // minute ou à avant-hier. Affiché au survol du bouton.
+    localStorage.setItem('last_save_at', new Date().toISOString())
     // Update logo save in cache
     this.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+    this.menu_configuration.ref_to_last_download_updater.current()
     this.requestPersistentStorage()
   }
 
@@ -848,7 +853,16 @@ export class Class_ApplicationData {
   }
 
   public get last_document_download(): Date | null {
-    const raw = localStorage.getItem('last_download')
+    return this._storedDate('last_download')
+  }
+
+  /** Horodatage du dernier enregistrement dans le stockage de l'application. */
+  public get last_cache_save(): Date | null {
+    return this._storedDate('last_save_at')
+  }
+
+  protected _storedDate(key: string): Date | null {
+    const raw = localStorage.getItem(key)
     if (!raw) return null
     const date = new Date(raw)
     return isNaN(date.getTime()) ? null : date
