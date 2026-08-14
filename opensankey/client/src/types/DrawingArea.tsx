@@ -386,8 +386,25 @@ export class Class_DrawingArea {
     this._position_mode_suspended_selection = undefined
   }
 
+  /**
+   * #369/os#1351 — Empreinte de la SÉLECTION AFFICHÉE : datatags ET viewtags.
+   *
+   * La suspension d'ouverture existe pour qu'un fichier ne saute pas à l'affichage ; elle doit
+   * donc se lever au premier geste de NAVIGATION. Elle ne surveillait que les datatags — or un
+   * diagramme dont les vues sont des view tags (CARTOFOB : une vue par essence) ne change jamais
+   * de datatag en navigant : la suspension ne se levait jamais, et le mode restait « absolu » en
+   * permanence, quel que soit le réglage (constaté le 14/08 sur la page publiée).
+   *
+   * Les deux dimensions comptent parce que les deux changent les VALEURS affichées, donc la
+   * hauteur rendue — ce que les modes « échelle adaptée » et « proportionnel » ont justement
+   * pour rôle de rattraper.
+   */
   private _selectedDataTagsFingerprint(): string {
-    return this._sankey.selected_data_tags_list.map(t => t.id).join('|')
+    const data_tags = this._sankey.selected_data_tags_list.map(t => t.id).join('|')
+    const view_tags = this._sankey.view_taggs_list
+      .map(grp => grp.selected_tags_list.map(t => t.id).join(','))
+      .join('|')
+    return data_tags + '#' + view_tags
   }
 
   // #378 — Réorganisation auto de l'ordre des flux E/S au CHANGEMENT DE SÉLECTION de
@@ -453,6 +470,13 @@ export class Class_DrawingArea {
    * filtres, topbar, frise de séquence, options de publication), puisqu'on compare l'état et
    * non l'événement.
    */
+  /**
+   * #369/os#1351 — Mode de position RÉELLEMENT appliqué au dessin : celui du style global, ou
+   * « absolu » tant que la suspension d'ouverture tient. Exposé en lecture pour que la
+   * suspension soit observable (tests, diagnostic) sans passer par une frame de dessin.
+   */
+  public get effective_position_mode(): Type_Position { return this._effectivePositionMode() }
+
   protected _effectivePositionMode(): Type_Position {
     if (this._position_mode_suspended_selection !== undefined
       && this._position_mode_suspended_selection !== this._selectedDataTagsFingerprint()) {
