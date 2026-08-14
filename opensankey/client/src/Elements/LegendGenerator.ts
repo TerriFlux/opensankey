@@ -290,13 +290,21 @@ function wireTagHover(
       if (!tag) return
       const flux_list = drawing_area.sankey.visible_links_list
       const node_list = drawing_area.sankey.visible_nodes_list
-      const highlighted_nodes = new Set<Class_NodeBase>()
+      // os#1350 — l'appartenance se juge sur l'élément lui-même : un flux est
+      // retenu s'il porte le tag ou si une de ses bandes le porte (hasGivenTag
+      // couvre les deux), jamais parce qu'une de ses extrémités le porte.
+      // Les nœuds retenus se déduisent des flux retenus (extrémités), plus
+      // ceux qui portent eux-mêmes le tag.
+      const kept_flux = new Set(flux_list.filter(l => l.hasGivenTag(tag as Class_Tag)))
+      const kept_nodes = new Set<Class_NodeBase>(node_list.filter(n => n.hasGivenTag(tag as Class_Tag)))
+      // Aucun élément ne porte le tag : ne rien atténuer plutôt que tout éteindre
+      if (kept_flux.size === 0 && kept_nodes.size === 0) return
+      kept_flux.forEach(l => {
+        kept_nodes.add(l.source)
+        kept_nodes.add(l.target)
+      })
       flux_list.forEach(l => {
-        if (l.hasGivenTag(tag as Class_Tag) ||
-          l.source.hasGivenTag(tag as Class_Tag) ||
-          l.target.hasGivenTag(tag as Class_Tag)) {
-          highlighted_nodes.add(l.source)
-          highlighted_nodes.add(l.target)
+        if (kept_flux.has(l)) {
           // #285 — flux ventilé : mettre en exergue la/les BANDE(S) du tag
           // survolé, pas tout le flux. On atténue les bandes des autres valeurs.
           const bands = l.d3_selection?.selectAll('.link_band')
@@ -316,7 +324,7 @@ function wireTagHover(
         }
       })
       node_list.forEach(n => {
-        if (!highlighted_nodes.has(n) && !n.hasGivenTag(tag as Class_Tag)) {
+        if (!kept_nodes.has(n)) {
           n.d3_selection?.attr('opacity', 0.1)
         }
       })
