@@ -261,6 +261,9 @@ export abstract class Class_ProtoTag {
   public toogleSelected() {
     // Set attributes
     this._is_selected = !this._is_selected
+    // sa#283 — vues contextuelles : overlay appliqué APRÈS le basculement, AVANT le
+    // redraw d'update() (slot optionnel enregistré par OSP).
+    this._ref_sankey.drawing_area.application_data.after_tag_selection_change?.()
     // Redraw all related elements
     this.update()
   }
