@@ -38,8 +38,12 @@ export type Type_LegendItem = {
   scale_bar?: boolean
 }
 
-// Hauteur de la barre d'échelle, en multiples de la police (≈ 50 px à 16 px)
-export const SCALE_BAR_HEIGHT_FACTOR = 3
+// Hauteur de la barre d'échelle en px MONDE : le texte affiche scale/2 et
+// scaleValueToPx projette [0, scale] sur [0, 100] px, donc la barre doit faire
+// exactement 100/2 = 50 px monde pour matérialiser la valeur affichée — quelle
+// que soit la police de la légende (et sans compensation de police, qui ne
+// s'applique qu'aux textes, pas aux épaisseurs de flux).
+export const SCALE_BAR_HEIGHT_PX = 50
 
 // Drapeaux d'environnement calculés par l'appelant (certains viennent du DOM ou
 // de l'état applicatif) pour garder computeLegendItems pur et testable.
@@ -294,7 +298,7 @@ export function layoutLegendItems(
   let y = 0
   items.forEach(item => {
     // Hauteur de rangée : une barre d'échelle occupe sa hauteur propre
-    const bar_row_height = SCALE_BAR_HEIGHT_FACTOR * police + 0.5 * police
+    const bar_row_height = SCALE_BAR_HEIGHT_PX + 0.5 * police
     if (config.horizontal) {
       if ((item.starts_group || item.own_line) && x > 0) {
         x = 0
