@@ -269,6 +269,9 @@ export abstract class Class_ProtoTagGroup {
             tag.setUnSelected()
           }
         })
+      // sa#283 — vues contextuelles : overlay appliqué APRÈS le basculement des tags,
+      // AVANT le redraw d'updateTagsReferences (slot optionnel enregistré par OSP).
+      this._ref_sankey.drawing_area.application_data.after_tag_selection_change?.()
       this.updateTagsReferences()
       this._ref_sankey.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToTags()
     }
@@ -291,6 +294,8 @@ export abstract class Class_ProtoTagGroup {
           tag.setUnSelected(false)
         }
       })
+    // sa#283 — vues contextuelles : même point d'accrochage que selectTagsFromId.
+    this._ref_sankey.drawing_area.application_data.after_tag_selection_change?.()
     this.updateTagsReferences()
   }
 
@@ -881,6 +886,9 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
           }
         })
       this.checkSelectionCoherence()
+      // sa#283 — vues contextuelles : overlay appliqué APRÈS le basculement des tags,
+      // AVANT tout redraw (applyPositionModeToDrawing / updateTagsReferences).
+      this._ref_sankey.drawing_area.application_data.after_tag_selection_change?.()
       // #370 — agir sur une dimension impose SON mode d'affichage. Avant
       // `updateTagsReferences` (qui redessine) pour que le dessin parte du bon mode.
       this.applyPositionModeToDrawing()
@@ -906,6 +914,8 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
         }
       })
     this.checkSelectionCoherence()
+    // sa#283 — vues contextuelles : même point d'accrochage que selectTagsFromId.
+    this._ref_sankey.drawing_area.application_data.after_tag_selection_change?.()
     // #370 — même règle que selectTagsFromId : la dimension manipulée impose son mode.
     this.applyPositionModeToDrawing()
     this.updateTagsReferences()
