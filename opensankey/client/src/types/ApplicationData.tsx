@@ -213,6 +213,16 @@ export class Class_ApplicationData {
    */
   public get views_replace_viewtag_topbar(): boolean { return false }
 
+  /**
+   * sa#283 — Vues contextuelles : slot OPTIONNEL enregistré par la couche OSP (pattern
+   * d'enregistrement, AUCUN import runtime OS → OSP — piège TDZ Element→Handler). Appelé
+   * par les méthodes de sélection des groupes de tags (TagGroup.selectTagsFromId /
+   * selectTagsFromIds, Tag.toogleSelected) juste APRÈS le basculement des tags et AVANT
+   * le redraw, pour que l'overlay d'attributs contextuels parte dans le dessin. Null en
+   * OS base : la feature vit entièrement en OpenSankey+.
+   */
+  public after_tag_selection_change: (() => void) | null = null
+
   public createNewMenuConfiguration(toast: CreateToastFnReturn | null = null): Class_MenuConfig {
     this._toast = toast
     this._menu_configuration = new Class_MenuConfig()
