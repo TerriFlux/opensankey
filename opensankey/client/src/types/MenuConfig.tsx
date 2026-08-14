@@ -322,6 +322,21 @@ export class Class_MenuConfig {
   public render_tag_group_editor:
     ((element_tag_name_prop: string, group_id: string) => JSX.Element | null) | null = null
 
+  // sa#283 lot 2 — Enregistrement de vue contextuelle (« personnaliser pour ‹tag› »)
+  // injecté par OSP (même pattern que render_tag_group_editor : la feature vit dans OSP,
+  // le tiroir de filtres dans l'éditeur OS). Sur la carte d'un groupe de dataTags ou de
+  // fluxTags dont UN tag est sélectionné, le tiroir affiche un interrupteur : armé, les
+  // modifications sont capturées par diff au désarmement dans le contexte lié au tag.
+  //  - `armed(group_id)` : id du tag en enregistrement pour ce groupe, sinon null ;
+  //  - `arm(group_id, tag_id)` : arme (désarme AVEC capture un éventuel autre) ;
+  //  - `disarm()` : désarme AVEC capture.
+  // Null en OS pur : la feature n'existe pas sans la couche OSP.
+  public context_recording_ui: {
+    armed: (group_id: string) => string | null
+    arm: (group_id: string, tag_id: string) => void
+    disarm: () => void
+  } | null = null
+
   // OS#300 — Modèle central des « panneaux » (info-bulle / pop-up / barre
   // latérale). Instancié dans le constructeur avec le bus de ce menu, de sorte
   // que les coquilles PanelShell s'abonnent via `subscribe(PANELS_TOPIC, …)`.
