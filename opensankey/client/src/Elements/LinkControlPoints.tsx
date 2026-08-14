@@ -754,15 +754,14 @@ export class LinkControlPoints {
       this.drawControlPoint()
       this.link.drawing_area.application_data.menu_configuration.updateComponentRelatedToApparence()
       // Déplacer un coude change la courbure du flux (shape_starting/ending_curve), qui
-      // nourrit l'ordre géométrique des flux E/S des deux modes à courbure ('advanced' et
-      // 'anchor'). On le recalcule sur les deux extrémités — comme le fait un drag de nœud —
-      // pour éviter à l'utilisateur de cliquer « Réorganiser ». release_locks=false : on
-      // préserve les ancres verrouillées manuellement (#197). En 'simple'/'none' la courbure
-      // n'entre pas dans l'ordre, donc un drag de coude ne le touche pas.
+      // nourrit l'ordre géométrique des flux E/S (mode 'advanced', « Courbure des flux »). On
+      // le recalcule sur les deux extrémités — comme le fait un drag de nœud — pour éviter à
+      // l'utilisateur de cliquer « Réorganiser ». release_locks=false : on préserve les ancres
+      // verrouillées manuellement (#197). Seules les extrémités en mode 'advanced' réagissent ;
+      // en 'simple'/'none' la courbure n'entre pas dans l'ordre.
       ;[this.link.source, this.link.target].forEach(n => {
         const node = n as { reorganizeIOLinks?: (release_locks?: boolean) => void, shape_io_reorg_mode?: string }
-        const mode = node?.shape_io_reorg_mode
-        if (node && typeof node.reorganizeIOLinks === 'function' && (mode === 'advanced' || mode === 'anchor'))
+        if (node && typeof node.reorganizeIOLinks === 'function' && node.shape_io_reorg_mode === 'advanced')
           node.reorganizeIOLinks(false)
       })
       //this.link.drawing_area.areaAutoFit()

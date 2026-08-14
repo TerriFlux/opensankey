@@ -1122,28 +1122,25 @@ export class Class_NodeElement extends Class_NodeBase {
 
     let recycling_links: Class_LinkElement[]
     let compare: (link_a: Class_LinkElement, link_b: Class_LinkElement) => number
-    // Les deux modes passent par l'ordre géométrique (cf. ioOrderGeometry.ts). L'éventail
-    // « split direction + hauteur » ne s'applique qu'aux flux qui tournent ('vh'/'hv') ; les
-    // flux droits ('hh'/'vv') gardent le tri par la position du nœud opposé. Différence
-    // simple/advanced : advanced départage les hauteurs égales par l'ancre reach·curve
-    // (use_curve=true) ; simple ignore la courbure.
-    // os#425 : 'anchor' — « Courbure, tous les flux » — emprunte le même chemin que
-    // 'advanced' (recyclages dans le middle, classés par le ventre de leur boucle) mais avec
-    // la politique d'origine de l'utilisateur : aucune exception de flux droit, l'ancre classe.
-    if (mode === 'advanced' || mode === 'anchor') {
+    // Les deux modes passent par l'ordre géométrique (cf. ioOrderGeometry.ts), chacun avec sa
+    // politique. 'advanced' — « Courbure des flux » — applique la politique 'anchor' : deux
+    // bandes (montante / descendante), AUCUNE exception de flux droit, et dans chaque bande le
+    // classement par la distance de première ancre — qui tourne le plus tôt va à l'extrémité.
+    // 'simple' garde la politique 'reach' sans la courbure, à l'identique de l'existant.
+    if (mode === 'advanced') {
       // Les flux de recyclage rejoignent le groupe « middle » et sont classés par le ventre
       // de leur boucle → on passe recycling_links=[] à reorganizeIOOrder.
       const middle = this._links_order.filter(
         l => !import_links.includes(l) && !export_links.includes(l)
       )
-      const order_index = this._computeIOOrderIndex(
-        middle, true, mode === 'anchor' ? 'anchor' : 'reach'
-      )
+      const order_index = this._computeIOOrderIndex(middle, true, 'anchor')
       recycling_links = []
       compare = (link_a, link_b) => (order_index.get(link_a) ?? 0) - (order_index.get(link_b) ?? 0)
     } else {
-      // 'simple' — mêmes règles sans la courbure ; les flux de recyclage restent parqués en
-      // bloc entre le middle et les exports (comportement historique), donc hors index.
+      // 'simple' — éventail « split direction + hauteur » réservé aux flux qui changent d'axe
+      // ('vh'/'hv'), les autres triés par la position du nœud opposé, courbure ignorée ; les
+      // flux de recyclage restent parqués en bloc entre le middle et les exports
+      // (comportement historique), donc hors index.
       recycling_links = this._links_order.filter(l => l.shape_is_recycling)
       const middle = this._links_order.filter(
         l => !import_links.includes(l) && !export_links.includes(l) && !l.shape_is_recycling
