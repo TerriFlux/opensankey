@@ -57,6 +57,51 @@ describe('os#928 — compareViews : filtres', () => {
   })
 })
 
+describe('os#928 — compareViews : bruit des styles structurels dupliqués (SA#230)', () => {
+  test('doublons d\'un style structurel écartés comme bruit', () => {
+    const a = { labels: { z1: { style: ['default', 'ContainerStyle', 'ContainerStyle'] } } }
+    const b = { labels: { z1: { style: ['default', 'ContainerStyle', 'ContainerStyle', 'ContainerStyle'] } } }
+    const res = compareViews(a, b)
+    expect(res.total).toBe(0)
+    expect(res.noise_dropped).toBe(1)
+  })
+
+  test('un vrai changement de style custom RESTE visible', () => {
+    const res = compareViews(
+      { labels: { z1: { style: ['default'] } } },
+      { labels: { z1: { style: ['default', 'MonStyleCustom'] } } },
+    )
+    expect(res.total).toBe(1)
+    expect(res.noise_dropped).toBe(0)
+  })
+
+  test('structurels DIFFÉRENTS (pas un simple doublon) RESTENT visibles', () => {
+    const res = compareViews(
+      { labels: { z1: { style: ['default', 'ContainerStyle'] } } },
+      { labels: { z1: { style: ['default', 'NodeStyle'] } } },
+    )
+    expect(res.total).toBe(1)
+    expect(res.noise_dropped).toBe(0)
+  })
+
+  test('les styles custom ne sont PAS dédoublonnés', () => {
+    const res = compareViews(
+      { labels: { z1: { style: ['default', 'MonStyleCustom', 'MonStyleCustom'] } } },
+      { labels: { z1: { style: ['default', 'MonStyleCustom'] } } },
+    )
+    expect(res.total).toBe(1)
+    expect(res.noise_dropped).toBe(0)
+  })
+
+  test('ignore_noise: false — le doublon structurel réapparaît', () => {
+    const a = { labels: { z1: { style: ['default', 'ContainerStyle', 'ContainerStyle'] } } }
+    const b = { labels: { z1: { style: ['default', 'ContainerStyle', 'ContainerStyle', 'ContainerStyle'] } } }
+    const res = compareViews(a, b, { ignore_noise: false })
+    expect(res.total).toBe(1)
+    expect(res.noise_dropped).toBe(0)
+  })
+})
+
 describe('os#928 — compareViews : agrégation', () => {
   test('motifs agrégés avec ids, éléments ajoutés/retirés à part', () => {
     const a = {
