@@ -181,6 +181,40 @@ export function compareViews(
   return { groups, total: leaves.length, noise_dropped, tolerance_dropped }
 }
 
+/**
+ * Clés racines qui diffèrent PAR CONSTRUCTION entre deux vues : identité (`id`, `name`),
+ * mécanique des vues (`view_labels`, `heredited_attr`, `heredited_source_id`, `tag_selection`,
+ * `is_light`, `generated_from_group_id`), et enveloppe de fichier pour les blobs « fichier
+ * entier » (`current_view`, `views` imbriquée, `version`, `format_version`). Elles noient les
+ * vrais changements : l'UI les range dans une section « changements attendus » repliée.
+ */
+export const EXPECTED_ROOT_KEYS: string[] = [
+  'id',
+  'name',
+  'view_labels',
+  'heredited_attr',
+  'heredited_source_id',
+  'tag_selection',
+  'is_light',
+  'generated_from_group_id',
+  'current_view',
+  'views',
+  'version',
+  'format_version',
+]
+
+/** Sépare les groupes en liste principale / changements attendus (cf. EXPECTED_ROOT_KEYS). */
+export function partitionExpected(groups: Type_CompareGroup[]): {
+  main: Type_CompareGroup[]
+  expected: Type_CompareGroup[]
+} {
+  const main: Type_CompareGroup[] = []
+  const expected: Type_CompareGroup[] = []
+  groups.forEach(group =>
+    (EXPECTED_ROOT_KEYS.includes(group.root_key) ? expected : main).push(group))
+  return { main, expected }
+}
+
 /** Valeur compacte pour l'affichage (« 106.2 », « "kt" », « {…} » tronqué). */
 export function compactValue(v: unknown, limit: number = 60): string {
   if (v === undefined) return '∅'

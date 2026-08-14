@@ -2,7 +2,13 @@
 // Comportements calqués sur le prototype CLI (MFAData/scripts/diff_sankey_views.py),
 // validé sur le corpus SOCLE Céréales.
 
-import { compareViews, diffLeaves, compactValue } from './viewCompare'
+import {
+  compareViews,
+  diffLeaves,
+  compactValue,
+  partitionExpected,
+  EXPECTED_ROOT_KEYS,
+} from './viewCompare'
 
 describe('os#928 — diffLeaves', () => {
   test('scalaires, ajouts, retraits, chemins', () => {
@@ -86,6 +92,35 @@ describe('os#928 — compareViews : agrégation', () => {
     const res = compareViews(v, JSON.parse(JSON.stringify(v)))
     expect(res.total).toBe(0)
     expect(res.groups).toEqual([])
+  })
+})
+
+describe('os#928 — partitionExpected', () => {
+  test('une clé attendue part dans la section attendue, une vraie clé reste dans la principale', () => {
+    const res = compareViews(
+      { id: 'v1', name: 'Vue A', version: '0.92', nodes: { n1: { x: 1 } } },
+      { id: 'v2', name: 'Vue B', version: '1.0', nodes: { n1: { x: 100 } } },
+    )
+    const { main, expected } = partitionExpected(res.groups)
+    expect(main.map(g => g.root_key)).toEqual(['nodes'])
+    expect(expected.map(g => g.root_key).sort()).toEqual(['id', 'name', 'version'])
+    // Rien ne se perd : la partition couvre tous les groupes.
+    expect(main.length + expected.length).toBe(res.groups.length)
+  })
+
+  test('EXPECTED_ROOT_KEYS couvre les clés différentes par construction', () => {
+    expect(EXPECTED_ROOT_KEYS).toEqual(expect.arrayContaining([
+      'id', 'name', 'view_labels', 'heredited_attr', 'heredited_source_id',
+      'tag_selection', 'is_light', 'generated_from_group_id',
+      'current_view', 'views', 'version', 'format_version',
+    ]))
+  })
+
+  test('aucun changement attendu : section attendue vide', () => {
+    const res = compareViews({ nodes: { n1: { x: 1 } } }, { nodes: { n1: { x: 2 } } })
+    const { main, expected } = partitionExpected(res.groups)
+    expect(main).toHaveLength(1)
+    expect(expected).toEqual([])
   })
 })
 
