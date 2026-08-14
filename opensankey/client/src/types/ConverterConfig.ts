@@ -17,8 +17,22 @@
  * decoupage.
  */
 
-/** Nature de l'entree attendue par un convertisseur. */
-export type FormatType = 'base' | 'excel' | 'json' | 'blob' | 'example_excel' | 'example_json'
+/**
+ * Nature de l'entree attendue par un convertisseur.
+ *
+ * sa#424 (lot 2) — les trois formats ETRANGERS (SankeyMATIC, STAN, e!Sankey)
+ * rejoignent cette liste. Ils vivaient auparavant hors du dialogue, derriere des
+ * `<input type=file>` caches du menu : ils n'avaient donc ni bandeau d'erreur,
+ * ni terminal, ni options, et un fichier illisible echouait en silence dans la
+ * console (famille du #381).
+ *
+ * Ils ne portent aucune option de format : `FormatConfigStructure` etant un
+ * `Record<string, ...>`, les tables d'attributs n'ont pas a les declarer, et les
+ * seaux d'options retombent sur `base`.
+ */
+export type FormatType =
+  | 'base' | 'excel' | 'json' | 'blob' | 'example_excel' | 'example_json'
+  | 'sankeymatic' | 'stan' | 'esankey'
 
 export interface ConverterConfig {
   // Textes
@@ -48,6 +62,33 @@ export interface ConverterConfig {
       options?: FormatType[]
     }
   }
+
+  // sa#424 (lot 1) — LE FORMAT DE SORTIE SUIT LE FORMAT D'ENTREE.
+  //
+  // Une fenetre « Ouvrir » unique doit accepter plusieurs formats d'entree alors
+  // que le chemin de traitement, lui, differe : un JSON se lit entierement cote
+  // client (json -> blob), un classeur Excel passe par le serveur puis est
+  // recharge (excel -> json). Le moteur de lancement s'aiguille deja sur le
+  // COUPLE (entree, sortie) ; il suffit donc que la sortie suive l'entree au
+  // lieu d'etre figee dans la config.
+  //
+  // Absent = comportement historique : la sortie garde le format choisi par
+  // l'utilisateur (ou le premier de ses options), independamment de l'entree.
+  output_format_for_input?: Partial<Record<FormatType, FormatType>>
+
+  // sa#424 (lot 1) — AUCUN FORMAT PRESELECTIONNE.
+  //
+  // Une fenetre d'ouverture ne doit rien presumer : preselectionner un format
+  // revient a demander a l'utilisateur d'annoncer celui de son fichier, et le
+  // selecteur du systeme n'affiche alors que ce format-la. Avec cette option,
+  // aucune pastille n'est surlignee tant qu'aucun fichier n'est choisi et
+  // qu'aucune pastille n'est cliquee, et le filtre presente d'abord TOUS les
+  // formats pris en charge.
+  //
+  // Absent = comportement historique : le premier format des options est actif
+  // des l'ouverture (correct pour les dialogues de conversion, ou le format
+  // d'entree est une decision de l'utilisateur et non une propriete du fichier).
+  no_default_input_format?: boolean
 
   // Optional per-attribute overrides applied on top of getDefault*Options when
   // initialize() resets the dialog state. Used by shortcut configs (e.g.
