@@ -810,8 +810,71 @@ export class Class_ApplicationData {
     // Push to storage
     localStorage.setItem('data', LZString.compress(JSON.stringify(this._toJSON())))
     localStorage.setItem('last_save', 'true')
+    // sa#424 (lot 4) — HORODATAGE de l'enregistrement, pas seulement son
+    // existence : « enregistré » sans date ne dit pas si cela remonte à une
+    // minute ou à avant-hier. Affiché au survol du bouton.
+    localStorage.setItem('last_save_at', new Date().toISOString())
     // Update logo save in cache
     this.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+    this.menu_configuration.ref_to_last_download_updater.current()
+    this.requestPersistentStorage()
+  }
+
+  /**
+   * sa#424 (lot 4) — DEMANDER AU NAVIGATEUR DE NE PAS ÉVINCER CE STOCKAGE.
+   *
+   * Ctrl+S écrit dans le stockage local, qui est par défaut « best-effort » : le
+   * navigateur peut le purger sous pression de disque. `storage.persist()` le
+   * fait passer en durable.
+   *
+   * Appelé au moment de l'enregistrement, PAS au démarrage : sous Firefox la
+   * demande peut ouvrir une autorisation, et une invite surgissant à l'ouverture
+   * de l'application serait incompréhensible — ici elle suit un geste délibéré
+   * de l'utilisateur. Une seule tentative par session ; l'échec est sans
+   * conséquence (on retombe sur le comportement d'avant).
+   */
+  protected _persistence_requested = false
+  public requestPersistentStorage() {
+    if (this._persistence_requested) return
+    this._persistence_requested = true
+    const storage = typeof navigator !== 'undefined' ? navigator.storage : undefined
+    if (!storage?.persist) return
+    storage.persisted()
+      .then((already) => (already ? true : storage.persist()))
+      .catch(() => undefined)
+  }
+
+  /**
+   * sa#424 (lot 4) — DATE DU DERNIER VRAI FICHIER ÉCRIT (JSON ou Excel).
+   *
+   * Le stockage de l'application n'est pas une sauvegarde : il est lié à un
+   * navigateur, un profil et une origine, et part avec un nettoyage de données.
+   * Cette date est la seule information qui prévienne d'une perte — d'où son
+   * affichage à côté du bouton d'enregistrement, « jamais » compris.
+   *
+   * Les EXPORTS (PNG, PDF, SVG) ne comptent pas : ce sont des rendus figés, pas
+   * des fichiers réouvrables — la distinction même qui sépare « Enregistrer
+   * sous » d'« Exporter ».
+   */
+  public noteDocumentDownloaded() {
+    localStorage.setItem('last_download', new Date().toISOString())
+    this.menu_configuration.ref_to_last_download_updater.current()
+  }
+
+  public get last_document_download(): Date | null {
+    return this._storedDate('last_download')
+  }
+
+  /** Horodatage du dernier enregistrement dans le stockage de l'application. */
+  public get last_cache_save(): Date | null {
+    return this._storedDate('last_save_at')
+  }
+
+  protected _storedDate(key: string): Date | null {
+    const raw = localStorage.getItem(key)
+    if (!raw) return null
+    const date = new Date(raw)
+    return isNaN(date.getTime()) ? null : date
   }
 
   /**
@@ -868,6 +931,7 @@ export class Class_ApplicationData {
       const blob = new Blob([json_data_str], { type: 'text/plain;charset=utf-8' })
       FileSaver.saveAs(blob, this._file_name + '.json')
     }
+    this.noteDocumentDownloaded()
   }
 
   /**
