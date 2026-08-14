@@ -1728,7 +1728,6 @@ export class Class_ApplicationData {
       if (forced_minimum_flux !== null) this._drawing_area.draw()
       return
     }
-    const sankey = this._drawing_area.sankey
 
     // 0) os#1352 — Régime de référence de l'« échelle adaptée », AVANT le mode : c'est lui qui
     //    décide de la grandeur que `setScaleAdaptedMode` va capturer. Posé sur la DA courante ET
@@ -1745,14 +1744,25 @@ export class Class_ApplicationData {
     //    cf. applyUrlStateParams).
     this.applyTagSelections(opts.data_tag_selection, opts.view_tag_selection)
 
-    // 3) Mode de navigation
+    // 3) Mode de navigation — posé sur la DA COURANTE **et** sur la DA MAÎTRE.
+    //
+    // os#1352 : les vues « légères » (une sélection de view tags, comme les vues par essence de
+    // CARTOFOB) réutilisent la DA MAÎTRE. En ne posant le mode que sur la DA ouverte, le style
+    // du maître restait `absolute` : à la première navigation, `applyViewChange` constatait
+    // l'écart et rappelait le setter, lequel RÉ-ARME la suspension #369 — cette frame-là était
+    // donc dessinée en absolu, et le lecteur voyait le mode « sauter » un geste. Poser le mode
+    // aux deux endroits supprime l'écart, donc le ré-armement.
     if (opts.position_mode) {
-      const current = sankey.styles_dict['default'].shape_position_type
-      if (current !== opts.position_mode) {
-        if (opts.position_mode === 'absolute') this._drawing_area.setAbsoluteMode()
-        else if (opts.position_mode === 'proportional') this._drawing_area.setProportionalMode()
-        else if (opts.position_mode === 'scale_adapted') this._drawing_area.setScaleAdaptedMode()
+      const mode = opts.position_mode
+      const applyMode = (da: Class_DrawingArea | undefined) => {
+        if (!da) return
+        if (da.sankey.styles_dict['default'].shape_position_type === mode) return
+        if (mode === 'absolute') da.setAbsoluteMode()
+        else if (mode === 'proportional') da.setProportionalMode()
+        else if (mode === 'scale_adapted') da.setScaleAdaptedMode()
       }
+      applyMode(this._drawing_area)
+      applyMode(this._master_drawing_area)
     }
 
     this._drawing_area.draw()
