@@ -14,6 +14,10 @@
 // setScaleAdaptedMode et styles_dict['default'].shape_position_type).
 export type Type_PositionMode = 'absolute' | 'proportional' | 'scale_adapted'
 
+// os#1352 — régime de référence du mode « échelle adaptée ». `import type` : effacé à la
+// compilation, donc aucun cycle de module à l'exécution.
+import type { Type_ScaleAdaptedReference } from './DrawingArea'
+
 /**
  * sa#398 — Une entrée de `diagrams_list` : la CHAÎNE historique (nom de fichier servi en
  * `<valeur>.gz`, ou nom de variable posée sur window.sankey par un script de données), OU un
@@ -121,6 +125,11 @@ export interface SankeyGlobals {
   // omettre la clé laisse le réglage du document (ou le défaut 2px).
   minimum_flux?: number
   position_mode?: Type_PositionMode  // mode de navigation imposé à l'ouverture (absolu/proportionnel/échelle adaptée)
+  // os#1352 — régime de référence du mode « échelle adaptée » : 'diagram' (colonne la plus haute,
+  // défaut sa#384) ou 'element' (taille rendue de l'élément de référence désigné, régime d'avant
+  // sa#384). Forçable ici pour COMPARER les deux régimes sur une page publiée sans refabriquer les
+  // données ; omettre la clé laisse le réglage du document.
+  scale_adapted_reference?: Type_ScaleAdaptedReference
   data_tag_selection?: Record<string, string>  // { groupe (id ou nom) : tag (id ou nom) } préselectionné à l'ouverture
   view_tag_selection?: Record<string, string>  // { groupe (id ou nom) : valeur } : sélectionne une VUE (nom OU id, light/heavy) comme le sélecteur de vue ; sinon filtre le view tag sur ce tag
   // sa#397 — ouverture sur une vue / un groupe de vues par LABEL DE VUE (sa#396). Les labels de
@@ -174,6 +183,7 @@ export interface PublishOptions {
   language: string | null
   minimum_flux: number | null
   position_mode: Type_PositionMode | null
+  scale_adapted_reference: Type_ScaleAdaptedReference | null
   data_tag_selection: Record<string, string> | null
   view_tag_selection: Record<string, string> | null
   view: string | null
@@ -222,6 +232,9 @@ const POSITION_MODES: Type_PositionMode[] = ['absolute', 'proportional', 'scale_
 export const isPositionMode = (v: unknown): v is Type_PositionMode =>
   typeof v === 'string' && (POSITION_MODES as string[]).includes(v)
 const posMode = (v: unknown): Type_PositionMode | null => (isPositionMode(v) ? v : null)
+// os#1352 — seules ces deux valeurs existent ; toute autre est ignorée (réglage du document gardé).
+const scaleAdaptedRef = (v: unknown): Type_ScaleAdaptedReference | null =>
+  (v === 'diagram' || v === 'element') ? v : null
 const strRecord = (v: unknown): Record<string, string> | null => {
   if (!v || typeof v !== 'object' || Array.isArray(v)) return null
   const out: Record<string, string> = {}
@@ -398,6 +411,7 @@ export const getPublishOptions = (): PublishOptions => {
     language: str(s.language),
     minimum_flux: num(s.minimum_flux),
     position_mode: posMode(s.position_mode),
+    scale_adapted_reference: scaleAdaptedRef(s.scale_adapted_reference),
     data_tag_selection: strRecord(s.data_tag_selection),
     view_tag_selection: strRecord(s.view_tag_selection),
     view: view_value,
@@ -463,6 +477,7 @@ export type ViewerSankeyOptions = {
   header_i18n?: Record<string, string>
   minimum_flux?: number
   position_mode?: Type_PositionMode
+  scale_adapted_reference?: Type_ScaleAdaptedReference
   data_tag_selection?: Record<string, string>
   view_tag_selection?: Record<string, string>  // valeur = VUE (nom/id, light ou heavy, comme le sélecteur de vue) ou tag à filtrer
   view?: string        // sa#397 : ouvre sur cette vue (id OU nom)
@@ -490,7 +505,8 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
     'data_type', 'data_type_intervals', 'value_filter',
     'view_filter', 'level_filter', 'node_filter', 'data_filter',
     'lock_zoom', 'tooltip_on_hover', 'language', 'header_i18n',
-    'minimum_flux', 'position_mode', 'data_tag_selection', 'view_tag_selection',
+    'minimum_flux', 'position_mode', 'scale_adapted_reference',
+    'data_tag_selection', 'view_tag_selection',
     'view', 'view_label',
   ]
   for (const k of keys) {
