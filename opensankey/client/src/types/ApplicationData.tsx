@@ -1634,11 +1634,23 @@ export class Class_ApplicationData {
       }
     }
 
-    if (!opts.data_tag_selection && !opts.view_tag_selection && !opts.position_mode) {
+    if (!opts.data_tag_selection && !opts.view_tag_selection && !opts.position_mode
+      && !opts.scale_adapted_reference) {
       if (forced_minimum_flux !== null) this._drawing_area.draw()
       return
     }
     const sankey = this._drawing_area.sankey
+
+    // 0) os#1352 — Régime de référence de l'« échelle adaptée », AVANT le mode : c'est lui qui
+    //    décide de la grandeur que `setScaleAdaptedMode` va capturer. Posé sur la DA courante ET
+    //    sur la DA MAÎTRE, parce qu'une vue `is_light` réutilise cette dernière : ne le poser que
+    //    sur la vue ouverte le perdrait à la première navigation.
+    if (opts.scale_adapted_reference) {
+      this._drawing_area.scale_adapted_reference = opts.scale_adapted_reference
+      if (this._master_drawing_area && this._master_drawing_area !== this._drawing_area) {
+        this._master_drawing_area.scale_adapted_reference = opts.scale_adapted_reference
+      }
+    }
 
     // 1) et 2) Présélections de tags (logique partagée avec l'état transmis par l'URL,
     //    cf. applyUrlStateParams).

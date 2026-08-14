@@ -2022,6 +2022,12 @@ export class DrawingAreaPersistence {
     if (drawing_area.minimum_flux !== undefined) json_object['minimum_flux'] = drawing_area.minimum_flux
     if (Object.keys(drawing_area.scale_reference_by_viewtag).length > 0)
       json_object['scale_reference_by_viewtag'] = drawing_area.scale_reference_by_viewtag
+    // os#1352 — Régime de référence du mode « échelle adaptée » : propriété de la COMPOSITION
+    // (le document a été calé sur un élément de référence, ou sur le diagramme entier), donc
+    // persistée. Écrite seulement si elle diffère du défaut `diagram` → aucun fichier existant
+    // ne grossit, et l'absence de clé continue de signifier « régime par défaut ».
+    if (drawing_area.scale_adapted_reference !== 'diagram')
+      json_object['scale_adapted_reference'] = drawing_area.scale_adapted_reference
     if (drawing_area.maximum_node) json_object['maximum_node'] = drawing_area.maximum_node
     if (drawing_area.minimum_node) json_object['minimum_node'] = drawing_area.minimum_node
     // Écart vertical des enfants englobés (désagrégation / expansion / englobement) : mode global
@@ -2482,6 +2488,14 @@ export class DrawingAreaPersistence {
       })
       drawing_area['_scale_reference_by_viewtag'] = clean
     }
+    // os#1352 — Régime de référence du mode « échelle adaptée ». Absent ⇒ `diagram` (sa#384),
+    // qui reste le défaut : un fichier d'avant sa#384 ne bascule PAS tout seul en `element` même
+    // s'il porte un élément de référence (cf. FORMAT.md — la rétro-compatibilité automatique
+    // ferait changer d'apparence, sans geste de l'auteur, des documents publiés depuis).
+    // Valeur inconnue ⇒ défaut, jamais d'erreur de lecture.
+    const scale_adapted_ref_raw = getStringFromJSON(json_object, 'scale_adapted_reference', 'diagram')
+    drawing_area['_scale_adapted_reference'] =
+      scale_adapted_ref_raw === 'element' ? 'element' : 'diagram'
     drawing_area['_maximum_node'] = getNumberOrUndefinedFromJSON(json_object, 'maximum_node')
     drawing_area['_minimum_node'] = getNumberOrUndefinedFromJSON(json_object, 'minimum_node')
     // Écart vertical des enfants englobés : mode (défaut 'fill' si absent) + valeur constante
