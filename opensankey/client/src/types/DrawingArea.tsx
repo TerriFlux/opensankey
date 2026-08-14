@@ -108,6 +108,20 @@ const UNITARY_CENTRAL_HEIGHT_FRACTION = 0.3
  */
 export type Type_AutoFitMode = 'none' | 'width' | 'height' | 'full'
 
+/**
+ * os#1352 — RÉGIME de référence du mode « échelle adaptée ». Deux règles, même mécanique
+ * (échelle = échelle_réf × grandeur_courante / grandeur_réf), seule la GRANDEUR change :
+ *
+ *  - `diagram` (défaut, sa#384) : grandeur = somme de la colonne la plus haute. Ne dépend
+ *    d'aucun élément en particulier, donc jamais mise en défaut par un élément absent.
+ *  - `element` : grandeur = taille rendue de l'ÉLÉMENT DE RÉFÉRENCE désigné (flux
+ *    `shape_is_reference_flux` ou nœud-stock `shape_is_reference_stock`). C'est la règle
+ *    d'avant sa#384, restituée pour la PORTABILITÉ des documents qui ont été composés
+ *    autour d'un élément de référence — cf. CARTOFOB, calé sur le stock « Bois sur pied »,
+ *    dont la colonne dimensionnante change d'une vue d'essence à l'autre.
+ */
+export type Type_ScaleAdaptedReference = 'diagram' | 'element'
+
 // Outils de création de la colonne d'outils. Les deux premiers sont deux gestes
 // du mode 'edition' (cf. _edition_tool), les deux suivants deux formes du mode
 // 'place_container' (cf. _place_container_shape) : quatre boutons pour l'auteur,
@@ -721,6 +735,12 @@ export class Class_DrawingArea {
   // atteigne cette épaisseur → tous les autres flux et la légende d'échelle suivent.
   // Un seul flux de référence par view tag (la clé écrase). « Vue complète » = pas de clé.
   private _scale_reference_by_viewtag: { [view_tag_id: string]: { link_id: string, thickness: number } } = {}
+
+  // os#1352 — Régime de référence du mode « échelle adaptée » (cf. Type_ScaleAdaptedReference).
+  // Réglage PORTÉ PAR LE DOCUMENT (persisté, round-trippé) : c'est une propriété de la
+  // composition, pas une préférence de session. Défaut `diagram` → aucun fichier existant ne
+  // change de comportement du seul fait de la relecture.
+  private _scale_adapted_reference: Type_ScaleAdaptedReference = 'diagram'
   // Porteur d'échelle surchargé à la frame précédente (pour restaurer sa valeur naturelle
   // avant de recalculer). tag_id défini → data tag unitaire ; sinon → échelle de la DA.
   // `original` = valeur naturelle à restaurer ; `applied` = valeur qu'on a posée (sert à
@@ -4061,6 +4081,19 @@ export class Class_DrawingArea {
 
   // ---- Référence d'échelle par view tag ----
   public get scale_reference_by_viewtag() { return this._scale_reference_by_viewtag }
+
+  /**
+   * os#1352 — Régime de référence du mode « échelle adaptée » (cf. Type_ScaleAdaptedReference).
+   * Changer de régime invalide la capture en cours : les deux grandeurs ne sont pas comparables
+   * (hauteur de colonne vs taille d'un élément), recomposer un ratio de l'une sur l'autre ferait
+   * sauter l'échelle. La capture paresseuse repart au dessin suivant, ratio 1, sans saut.
+   */
+  public get scale_adapted_reference(): Type_ScaleAdaptedReference { return this._scale_adapted_reference }
+  public set scale_adapted_reference(v: Type_ScaleAdaptedReference) {
+    if (this._scale_adapted_reference === v) return
+    this._scale_adapted_reference = v
+    this.nodePositioning.forgetScaleAdaptedCapture()
+  }
 
   /**
    * Désigne (ou retire) le flux de référence d'échelle pour un view tag donné.
