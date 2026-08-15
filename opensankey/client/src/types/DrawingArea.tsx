@@ -444,7 +444,23 @@ export class Class_DrawingArea {
    */
   public primeIOReorgOnDataSelection() {
     this._io_reorg_data_selection = this._selectedDataTagsFingerprint()
+    this._has_been_laid_out = false
   }
+
+  // os#1353 — Cette aire de dessin a-t-elle DÉJÀ été mise en page (au moins un `drawElements`
+  // effectif) depuis le chargement ? Tant que non, la géométrie de ses nœuds n'est PAS la
+  // vérité : les hauteurs valent encore le plancher `shape_min_height` (les épaisseurs de flux
+  // ne sont calculées qu'au dessin), et le coin n'a pas encore été dérivé du centre lu dans le
+  // fichier. Toute opération qui commit le coin courant comme centre (`settleCenterAnchor`)
+  // détruirait donc les centres du fichier — c'est le sens de ce drapeau, cf. `DisplayModes`.
+  //
+  // Le cas réel n'est pas théorique : un document qui s'ouvre sur une VUE laisse la DA MAÎTRE
+  // non dessinée, et une option de page (`position_mode`) pose le mode sur les deux aires.
+  // Transitoire, jamais persisté ; remis à faux au chargement (cf. `primeIOReorgOnDataSelection`,
+  // appelé au même endroit de la persistance).
+  protected _has_been_laid_out: boolean = false
+
+  public get has_been_laid_out(): boolean { return this._has_been_laid_out }
 
   /**
    * #378 — Relance la réorganisation auto de l'ordre des flux E/S si la sélection de
@@ -1523,6 +1539,8 @@ export class Class_DrawingArea {
    */
   public drawElements() {
     if (this.bypass_redraws) return
+    // os#1353 — à partir d'ici la géométrie des nœuds est mise en page (cf. `has_been_laid_out`).
+    this._has_been_laid_out = true
     // #369 — mode EFFECTIF : celui du style global, ou 'absolute' tant que la suspension
     // d'ouverture tient (cf. _effectivePositionMode). Lu UNE fois et réutilisé plus bas :
     // les branches suivantes relisaient le style, ce qui aurait mélangé les deux régimes.
