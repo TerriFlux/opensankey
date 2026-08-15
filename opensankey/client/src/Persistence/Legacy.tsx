@@ -1114,7 +1114,7 @@ const convert_tags: convert_tagsFuncType = (
         group_name: data.nodeTags.Dimensions.tags[tag].name,
         color_map: 'jet',
         show_legend: false,
-        banner: 'level',
+        banner: 'one',
         tags: {},
         activated: true,
         siblings: []
@@ -1324,7 +1324,9 @@ const convert_tags: convert_tagsFuncType = (
   // Convertie les nodeTags avec pour bannière 'level' en levelTags
   if (has_not_converted_nodeTags_as_levelTags(data) || 'Primaire' in data.nodeTags) {
     data.levelTags = Object.assign({}, data.levelTags, Object.fromEntries(Object.entries(data.nodeTags).filter(nt => nt[1].banner === 'level' || nt[0] == 'Primaire')))
-    Object.values(data.levelTags).forEach(tag => tag.banner = 'level')
+    // 'one' : « level » n'est pas une bannière du catalogue moderne — le tiroir de
+    // filtres rendait une carte vide pour un groupe qui la portait encore.
+    Object.values(data.levelTags).forEach(tag => tag.banner = 'one')
     data.nodeTags = Object.fromEntries(Object.entries(data.nodeTags).filter(nt => nt[1].banner !== 'level' && nt[0] !== 'Primaire'))
   }
   Object.entries(data.nodeTags).forEach(tagg => {
