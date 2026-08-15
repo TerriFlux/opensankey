@@ -14,6 +14,29 @@
 
 import type { Class_DrawingArea } from './DrawingArea'
 
+/**
+ * os#1353 — « Settle » des centres : commit le coin courant de chaque nœud comme nouveau centre
+ * de vérité (`settleCenterAnchor` = centre := coin + taille/2). C'est le bon geste quand on
+ * QUITTE l'absolu, où le coin a pu être déplacé explicitement (drag, flèches, op structurelle) —
+ * mais UNIQUEMENT sur une aire déjà mise en page.
+ *
+ * Sur une aire jamais dessinée, le coin et la taille ne sont pas la vérité : les hauteurs valent
+ * encore le plancher `shape_min_height` (3 px — les épaisseurs de flux ne sont calculées qu'au
+ * dessin) et le coin n'a pas encore été dérivé du centre lu dans le fichier (format ≥ 1.1.5 :
+ * `node_pos_is_center`). Le settle y remplaçait donc le centre du fichier par « coin + 1,5 px »,
+ * et le premier dessin, qui dérive coin = centre − hauteur/2, remontait chaque nœud d'environ une
+ * demi-hauteur — d'autant plus haut qu'il est gros, jusqu'à sortir par le haut du diagramme. Les
+ * nœuds dont la hauteur ne vient PAS d'une bande de flux (nœud-stock plafonné par `maximum_node`)
+ * étaient épargnés, ce qui donnait au défaut son allure d'aval qui décroche.
+ *
+ * Ne rien faire est ici le comportement correct : le centre du fichier reste la vérité et le
+ * premier dessin en dérive le coin (`anchorByCenterIfResized`).
+ */
+function settleCentersIfLaidOut(da: Class_DrawingArea) {
+  if (!da.has_been_laid_out) return
+  da.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
+}
+
 // #369 — Choisir un mode est un geste EXPLICITE : il lève la suspension d'ouverture (qui fait
 // dessiner en absolu jusqu'au premier changement de datatag, cf. DrawingArea) pour que le mode
 // s'applique tout de suite, comme avant #369.
@@ -73,8 +96,8 @@ export function setAbsoluteMode(da: Class_DrawingArea) {
   } else {
     // #1230 — prev = absolu / parametric (ex. ops structurelles) : le coin courant EST la
     // nouvelle vérité → on le commit comme centre (settle), pour que le 1er draw n'introduise
-    // aucun saut.
-    da.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
+    // aucun saut. os#1353 — sauf sur une aire jamais mise en page (cf. settleCentersIfLaidOut).
+    settleCentersIfLaidOut(da)
   }
 }
 
@@ -97,7 +120,8 @@ export function setScaleAdaptedMode(da: Class_DrawingArea) {
     // le fichier stocke des centres valables pour les hauteurs de SON datatag (cf. #365/#369),
     // les redériver hors de ce contexte recale tout le diagramme. Même dissymétrie que
     // `setAbsoluteMode`, qui ne dérive du centre qu'en sortant d'un mode d'affichage.
-    da.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
+    // os#1353 — sauf sur une aire jamais mise en page (cf. settleCentersIfLaidOut).
+    settleCentersIfLaidOut(da)
   }
   default_style.shape_position_type = 'scale_adapted'
   // #384 — CHOISIR le mode ne change rien au diagramme : il est ARMÉ, pas appliqué, et ne se
