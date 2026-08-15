@@ -46,6 +46,7 @@ import type { Class_NodeDimension } from './NodeDimension'
 import { Type_Side, getNameLabelValues } from './ElementsAttributesConfig'
 import { transferAnchorLock } from './anchorLockTransfer'
 import { clampLinkThickness } from './flowThickness'
+import { resolveScaleCarrierTag } from '../types/ScaleResolution'
 import { Class_LinkAttribute } from './Element'
 import { LinkDrawNameLabel, LinkDrawValueLabel } from './DrawLabel'
 import { Class_ApplicationData } from '../types/ApplicationData'
@@ -899,8 +900,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
         const leaf = this.valueForTag(tag as Class_DataTag) as Class_LinkValue | null
         const v = leaf === null ? null : (leaf.valueData ?? leaf.valueResult)
         if (v === null || v <= 0) return
-        if (multi_dim.is_unit && (tag as Class_DataTag).scale) {
-          this.setDomainLocalScale((tag as Class_DataTag).scale)
+        // sa#283 — bande par tranche à l'échelle PROPRE de son tag quand il en porte une
+        // (groupes d'unité : comportement historique, own_scale ≡ scale ; groupes
+        // ordinaires : nouveau, un tag legacy sans échelle propre passe dans le else).
+        const band_own_scale = (tag as Class_DataTag).own_scale
+        if (band_own_scale !== undefined && band_own_scale > 0) {
+          this.setDomainLocalScale(band_own_scale)
           bands.push({ id: tag.id, px: Math.max(0, this._scaleValueToPx(v)), color: tag.color, value: v })
         }
         else {
@@ -1395,14 +1400,23 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
   protected scaleValueToPx(_: number) {
     const current_value = this.value
+    // sa#283 — porteur d'échelle GÉNÉRALISÉ (principe du UnitTag étendu à tous les
+    // dataTags) : tag d'unité DE LA VALEUR, ou unique tag de dataTag SÉLECTIONNÉ à
+    // échelle propre — le groupe le plus tardif de taggs_order gagne (résolution unique,
+    // cf. ScaleResolution ; même résolution que le porteur de Class_ScaleOverrides).
+    // Sans porteur : échelle de la zone de dessin, comme toujours. Quand seuls les
+    // groupes d'unité portent des échelles (tout le parc), le porteur EST le tag d'unité
+    // de la valeur : comportement strictement identique à l'historique.
     const unit_tag = current_value?.unit_data_tag()
-    if (unit_tag && !this.shape_local_link_scale) {
-      this.setDomainLocalScale(unit_tag.scale)
+    const carrier = resolveScaleCarrierTag(this.sankey, unit_tag)
+    const carrier_scale = carrier?.own_scale
+    if (carrier_scale !== undefined && !this.shape_local_link_scale) {
+      this.setDomainLocalScale(carrier_scale)
       return this._scaleValueToPx(_)
     }
     if (this.shape_local_link_scale) {
-      if (unit_tag) {
-        this.setDomainLocalScale(unit_tag.scale * this.shape_local_link_scale)
+      if (carrier_scale !== undefined) {
+        this.setDomainLocalScale(carrier_scale * this.shape_local_link_scale)
       } else {
         this.setDomainLocalScale(this.sankey.drawing_area.scale * this.shape_local_link_scale)
       }

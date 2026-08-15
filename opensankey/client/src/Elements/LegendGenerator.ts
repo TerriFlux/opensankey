@@ -368,7 +368,9 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       }
       const scale_text = computeScaleText(
         drawing_area.scale,
-        sankey.data_taggs_list as unknown as Parameters<typeof computeScaleText>[1],
+        // sa#283 — dans l'ordre de taggs_order : la résolution du porteur généralisé
+        // donne la priorité au groupe le plus tardif (cf. computeScaleText).
+        sankey.getTagGroupsAsList('data_taggs') as unknown as Parameters<typeof computeScaleText>[1],
         values,
         env.t_scale ?? 'Echelle'
       )
