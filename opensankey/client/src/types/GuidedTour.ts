@@ -67,6 +67,9 @@ export class Class_GuidedTour {
   /** Tiroir de configuration déjà ouvert au lancement : si non, le tour le referme à la fin. */
   private _drawer_was_open = false
 
+  /** Pop-up de config déjà épinglée au lancement : si non, le tour retire son épingle à la fin. */
+  private _config_was_pinned = false
+
   constructor(app_data: Class_ApplicationData) {
     this._app_data = app_data
   }
@@ -155,6 +158,12 @@ export class Class_GuidedTour {
    */
   private _openConfigDrawer(): void {
     this._app_data.menu_configuration.openConfigMenu()
+    // OS#321 — ouverte en pop-up NON ÉPINGLÉE, la config est congédiée par le premier clic posé
+    // ailleurs… c'est-à-dire par le tracé même que l'étape 1 demande. Or un panneau fermé est
+    // DÉMONTÉ : l'étape « valeur » viserait alors une cible absente et le masque griserait tout
+    // l'écran. Épinglée, la pop-up survit aux gestes ; finish() rend l'épingle à son état
+    // d'origine. Sans effet en barre latérale (setPinned ne concerne que les pop-ups).
+    this._app_data.menu_configuration.panels.setPinned('config', true)
   }
 
   /** Passe la souris en mode édition pour que le geste « tracer un flux » soit possible. */
@@ -219,7 +228,7 @@ export class Class_GuidedTour {
       menu_configuration.ref_to_menu_config_updater.current?.()
     }
     menu_configuration.inspector_requested_tab_id = requested_tab_id
-    menu_configuration.openConfigMenu()
+    this._openConfigDrawer()
     // Indispensable : openConfigMenu ne fait RIEN quand le tiroir est déjà ouvert — et il l'est,
     // le tracé du flux l'ayant ouvert. Sans ce re-render, l'inspecteur ne verrait ni la sélection
     // réduite ni l'onglet demandé, et resterait sur son premier onglet (Forme).
@@ -236,6 +245,12 @@ export class Class_GuidedTour {
     this._stopWatch()
     this._removeFallbackFlow()
     this._app_data.menu_configuration.inspector_requested_tab_id = null
+    // L'épingle posée par le tour (cf. _openConfigDrawer) n'est pas un choix de l'utilisateur :
+    // on la retire — sauf s'il l'avait posée lui-même avant. Fermer efface l'épingle de toute
+    // façon, mais le panneau peut rester ouvert (tiroir déjà ouvert au lancement).
+    if (!this._config_was_pinned) {
+      this._app_data.menu_configuration.panels.setPinned('config', false)
+    }
     if (!this._drawer_was_open) {
       this._app_data.menu_configuration.closeConfigMenu()
     }
@@ -253,6 +268,7 @@ export class Class_GuidedTour {
     this._started_empty = this._sankey.nodes_list.length === 0
     this._fallback_node_ids = []
     this._drawer_was_open = this._app_data.menu_configuration.ref_menu_opened.current?.[0] === true
+    this._config_was_pinned = this._app_data.menu_configuration.panels.isPinned('config')
 
     // Le panneau de config est ouvert DÈS la première étape, même si elle se passe sur la zone de
     // dessin. Ce n'est pas cosmétique : @reactour mesure la cible d'une étape au moment où elle
@@ -282,8 +298,10 @@ export class Class_GuidedTour {
       // La cible est le PANNEAU, pas le champ lui-même : le champ n'apparaît qu'avec l'onglet
       // Valeur, donc après le début de l'étape (cf. la limite de mesure ci-dessus). On ouvre
       // l'onglet pour poser le champ en haut du panneau, et le texte y renvoie.
+      // OS#300 a remplacé le Drawer (`.drawer_menu_config`) par le PanelShell : le repère stable
+      // dans ses deux modes (pop-up, barre latérale) est son attribut data-panel-id.
       {
-        selector: '.drawer_menu_config',
+        selector: '[data-panel-id="config"]',
         stepInteraction: true,
         content: this._started_empty ? t('guide.first_value') : t('guide.link_value'),
         action: () => {
