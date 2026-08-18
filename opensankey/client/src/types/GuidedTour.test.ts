@@ -63,6 +63,14 @@ const makeFakeAppData = (initial_node_ids: string[] = []) => {
     }),
   }
 
+  // OS#321 — la pop-up de config est congédiée au clic extérieur si elle n'est pas épinglée :
+  // le tour doit l'épingler (sinon le tracé de l'étape 1 la ferme) puis rendre l'épingle.
+  const pinned = new Set<string>()
+  const panels = {
+    isPinned: jest.fn((id: string) => pinned.has(id)),
+    setPinned: jest.fn((id: string, v: boolean) => { if (v) pinned.add(id); else pinned.delete(id) }),
+  }
+
   const menu_configuration = {
     ref_menu_opened: { current: [false, jest.fn()] as [boolean, (b: boolean) => void] },
     ref_to_menu_config_updater: { current: jest.fn() },
@@ -71,6 +79,7 @@ const makeFakeAppData = (initial_node_ids: string[] = []) => {
     closeConfigMenu: jest.fn(),
     updateInspector: jest.fn(),
     inspector_requested_tab_id: null as string | null,
+    panels,
   }
 
   const app_data = {
@@ -221,6 +230,31 @@ describe('#1255 — visite guidée « premier geste »', () => {
     expect(menu_configuration.openConfigMenu).toHaveBeenCalled()
   })
 
+  // OS#321 — non épinglée, la pop-up de config est congédiée par le premier clic sur le canevas,
+  // c'est-à-dire par le tracé même que l'étape 1 demande ; fermée, elle est DÉMONTÉE et l'étape
+  // « valeur » griserait tout l'écran (cible absente mesurée 0×0).
+  it('épingle la pop-up de config pendant le tour, puis retire son épingle à la fin', () => {
+    const { app_data, menu_configuration } = makeFakeAppData()
+    const tour = new Class_GuidedTour(app_data)
+    tour.buildSteps()
+
+    expect(menu_configuration.panels.setPinned).toHaveBeenCalledWith('config', true)
+
+    tour.finish()
+    expect(menu_configuration.panels.setPinned).toHaveBeenCalledWith('config', false)
+  })
+
+  it('garde une épingle posée par l’utilisateur avant le tour', () => {
+    const { app_data, menu_configuration } = makeFakeAppData()
+    menu_configuration.panels.setPinned('config', true)
+    menu_configuration.panels.setPinned.mockClear()
+    const tour = new Class_GuidedTour(app_data)
+    tour.buildSteps()
+    tour.finish()
+
+    expect(menu_configuration.panels.setPinned).not.toHaveBeenCalledWith('config', false)
+  })
+
   it('ne vise que des cibles stables, jamais un élément qui apparaît en cours d\'étape', () => {
     const { app_data } = makeFakeAppData()
     const selectors = new Class_GuidedTour(app_data).buildSteps().map(step => step.selector)
@@ -230,7 +264,7 @@ describe('#1255 — visite guidée « premier geste »', () => {
     expect(selectors).not.toContain('.tour_link_value')
     expect(selectors).toEqual([
       '#g_drawing',
-      '.drawer_menu_config',
+      '[data-panel-id="config"]',
       '.inspector_breadcrumb',
       '.topbar_button_save_in_cache',
       '.menutop_button_aide',
