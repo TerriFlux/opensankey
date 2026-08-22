@@ -1,8 +1,9 @@
 import {
   placePopupNear, matchesPresentationTrigger, MAX_PRESENTATION_POPUPS,
   presentationPanelId, isPresentationPanelId, elementIdOfPanel, openPresentationFor,
-  opensPresentationOnClick
+  opensPresentationOnClick, tooltipWouldRenderSomething
 } from './openPresentation'
+import { presentation_block_registry } from './PresentationBlockRegistry'
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import { Class_PanelManager, type Type_PopupGeometry } from '../../../types/PanelManager'
 import { Class_EventBus } from '../../../types/EventBus'
@@ -121,6 +122,36 @@ describe('matchesPresentationTrigger — déclencheur PROPRE À L\'ÉLÉMENT', (
   it('« Alt » exige la touche Alt', () => {
     expect(matchesPresentationTrigger(fakeElement('alt'), { altKey: true })).toBe(true)
     expect(matchesPresentationTrigger(fakeElement('alt'), { shiftKey: true })).toBe(false)
+  })
+})
+
+// Une zone de texte sans description : tous ses blocs rendent null. Ouvrir
+// quand même son info-bulle n affichait que le pis-aller « Rien à afficher pour
+// cet élément » — désormais elle ne s ouvre pas du tout.
+describe('tooltipWouldRenderSomething — info-bulle vide = pas ouverte', () => {
+  const app = {} as unknown as Class_ApplicationData
+  // Non « link-like » -> composition de NŒUD, qui contient os.block.free_text.
+  const element = { id: 'zdt', getElementProperty: () => undefined } as never
+  const BLOCK = 'os.block.free_text'
+
+  afterEach(() => presentation_block_registry.unregister(BLOCK))
+
+  it('registre pas encore peuple : comportement historique, on ouvre', () => {
+    expect(tooltipWouldRenderSomething(app, element)).toBe(true)
+  })
+
+  it('tous les blocs rendent null : rien a montrer, on n ouvre pas', () => {
+    presentation_block_registry.register({
+      id: BLOCK, target: 'node', order: 1, label: () => '', render: () => null
+    })
+    expect(tooltipWouldRenderSomething(app, element)).toBe(false)
+  })
+
+  it('un bloc rend du contenu : il y a a montrer, on ouvre', () => {
+    presentation_block_registry.register({
+      id: BLOCK, target: 'node', order: 1, label: () => '', render: () => 'contenu'
+    })
+    expect(tooltipWouldRenderSomething(app, element)).toBe(true)
   })
 })
 
