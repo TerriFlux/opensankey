@@ -32,7 +32,8 @@ import {
 } from './Link'
 import { Class_Handler } from './Handler'
 import { reorganizeIOOrder } from './reorganizeIOOrder'
-import { orderIOByGeometry, recyclingBellyCentre, bundleTie, Type_IOGeo } from './ioOrderGeometry'
+import { orderIOByGeometry, recyclingBellyCentre, bundleTie, Type_IOGeo, Type_IOOrderPolicy } from './ioOrderGeometry'
+import { containerFrameIsEmptied, hasVisibleFrameMember } from './containerFrameVisibility'
 import { format_value, Type_JSON } from '../types/Utils'
 import type { Type_Origin } from '../types/Origin'
 import { default_element_color, NameLabelAttributeTypes } from './ElementsAttributesConfig'
@@ -702,7 +703,7 @@ export class Class_NodeElement extends Class_NodeBase {
   public get value_unit_name(): string {
     if (this.value_label_unit_type == 'unit_name') return this.value_label_unit
     if (this.value_label_unit_type == 'unit_model')
-      return this.sankey.units.resolve(this.value_label_unit)?.unit.name ?? ''
+      return this.sankey.units.resolve(this.value_label_unit)?.unit.label ?? ''
     const unit_taggs = this.sankey.getTagGroupsAsList('data_taggs')
       .filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
     const selected_unit = unit_taggs[0]?.selected_tags_list[0]
@@ -1121,23 +1122,25 @@ export class Class_NodeElement extends Class_NodeBase {
 
     let recycling_links: Class_LinkElement[]
     let compare: (link_a: Class_LinkElement, link_b: Class_LinkElement) => number
-    // Les deux modes passent par l'ordre géométrique (cf. ioOrderGeometry.ts). L'éventail
-    // « split direction + hauteur » ne s'applique qu'aux flux qui tournent ('vh'/'hv') ; les
-    // flux droits ('hh'/'vv') gardent le tri par la position du nœud opposé. Différence
-    // simple/advanced : advanced départage les hauteurs égales par l'ancre reach·curve
-    // (use_curve=true) ; simple ignore la courbure.
+    // Les deux modes passent par l'ordre géométrique (cf. ioOrderGeometry.ts), chacun avec sa
+    // politique. 'advanced' — « Courbure des flux » — applique la politique 'anchor' : deux
+    // bandes (montante / descendante), AUCUNE exception de flux droit, et dans chaque bande le
+    // classement par la distance de première ancre — qui tourne le plus tôt va à l'extrémité.
+    // 'simple' garde la politique 'reach' sans la courbure, à l'identique de l'existant.
     if (mode === 'advanced') {
       // Les flux de recyclage rejoignent le groupe « middle » et sont classés par le ventre
       // de leur boucle → on passe recycling_links=[] à reorganizeIOOrder.
       const middle = this._links_order.filter(
         l => !import_links.includes(l) && !export_links.includes(l)
       )
-      const order_index = this._computeIOOrderIndex(middle, true)
+      const order_index = this._computeIOOrderIndex(middle, true, 'anchor')
       recycling_links = []
       compare = (link_a, link_b) => (order_index.get(link_a) ?? 0) - (order_index.get(link_b) ?? 0)
     } else {
-      // 'simple' — mêmes règles sans la courbure ; les flux de recyclage restent parqués en
-      // bloc entre le middle et les exports (comportement historique), donc hors index.
+      // 'simple' — éventail « split direction + hauteur » réservé aux flux qui changent d'axe
+      // ('vh'/'hv'), les autres triés par la position du nœud opposé, courbure ignorée ; les
+      // flux de recyclage restent parqués en bloc entre le middle et les exports
+      // (comportement historique), donc hors index.
       recycling_links = this._links_order.filter(l => l.shape_is_recycling)
       const middle = this._links_order.filter(
         l => !import_links.includes(l) && !export_links.includes(l) && !l.shape_is_recycling
@@ -1170,7 +1173,8 @@ export class Class_NodeElement extends Class_NodeBase {
    */
   private _computeIOOrderIndex(
     middle: Class_LinkElement[],
-    use_curve: boolean
+    use_curve: boolean,
+    policy: Type_IOOrderPolicy = 'reach'
   ): Map<Class_LinkElement, number> {
     const cx = this.position_x + this.getShapeWidthToUse() / 2
     const cy = this.position_y + this.getShapeHeightToUse() / 2
@@ -1210,7 +1214,7 @@ export class Class_NodeElement extends Class_NodeBase {
       }
       return { item: l, geo }
     })
-    const ordered = orderIOByGeometry(items, cx, cy, use_curve)
+    const ordered = orderIOByGeometry(items, cx, cy, use_curve, policy)
     const map = new Map<Class_LinkElement, number>()
     ordered.forEach((l, i) => map.set(l, i))
     return map
@@ -2356,9 +2360,10 @@ export class Class_NodeElement extends Class_NodeBase {
 
   public get is_visible() {
     // Vue courante OU (mode « afficher aussi les flux porteurs de données »)
-    // nœud révélé parce qu'attaché à un flux portant une valeur collectée saisie.
-    // Dans les deux cas, la porte orphelin s'applique encore.
-    if (this.is_visible_without_orphan || this.is_revealed_by_data) {
+    // nœud révélé parce qu'attaché à un flux portant une valeur collectée saisie
+    // OU (#368) cadre englobant qui a encore un membre à entourer.
+    // Dans les trois cas, la porte orphelin s'applique encore.
+    if (this.is_visible_without_orphan || this.is_revealed_by_data || this.is_visible_as_container_frame) {
       return this.orphan_visible
     }
     return false
@@ -2379,6 +2384,33 @@ export class Class_NodeElement extends Class_NodeBase {
     const parametric_layout = this.sankey.default_style.shape_position_type === 'parametric'
     const relative_node = this.shape_position_type === 'relative'
     return { x: !parametric_layout && !relative_node, y: true }
+  }
+
+  /**
+   * #368 — Vrai si ce nœud est un CADRE ENGLOBANT ayant au moins un membre visible.
+   * Un tel cadre doit être dessiné quels que soient SES PROPRES flux : il n'est pas
+   * un nœud à part entière mais l'enveloppe de ses enfants (cf. #364, la décision
+   * symétrique qui le masque quand il n'a plus rien à entourer).
+   *
+   * Sans cette porte, la visibilité du cadre dépendait de ses flux propres via
+   * `are_links_visibilities_ok` : un cadre qui n'en porte AUCUN restait affiché
+   * (règle orphelin), tandis qu'un cadre qui en porte, tous invisibles pour la
+   * sélection courante, était masqué — deux résultats différents pour un même
+   * rendu attendu, celui du second dépendant en outre de l'ordre de calcul des
+   * valeurs (d'où l'asymétrie premier rendu / rendus suivants de #368).
+   *
+   * On reprend les portes de `is_visible_without_orphan` SAUF celle des flux — la
+   * règle orphelin reste, elle, le levier de masquage manuel (cf. #364). On ne lit
+   * pas `is_visible_without_orphan` : la récursion s'arrête sur la hiérarchie
+   * parent → enfants, jamais sur la visibilité des flux.
+   */
+  public get is_visible_as_container_frame(): boolean {
+    return (
+      super.is_visible &&
+      this.are_related_node_tags_selected &&
+      this.are_related_dimensions_selected &&
+      hasVisibleFrameMember(this.dimensions_as_parent)
+    )
   }
 
   /**
@@ -2457,6 +2489,13 @@ export class Class_NodeElement extends Class_NodeBase {
 
   private get orphan_visible() {
     if (this.visible_input_links_list.length + this.visible_output_links_list.length == 0) {
+      // #364 — Cadre englobant vidé par la sélection courante : un parent en
+      // `container_mode` est une ENVELOPPE, pas un nœud à part entière. Il n'a
+      // aucun flux visible par construction (ceux qu'il porte sont masqués par le
+      // mode englobant) et tombait donc dans la règle orphelin ci-dessous, qui le
+      // gardait affiché — vide et étiqueté — même quand la sélection de dataTags
+      // ne laisse aucun de ses membres visible. Le critère porte sur les ENFANTS.
+      if (containerFrameIsEmptied(this.dimensions_as_parent)) return false
       // Option globale « Nœuds orphelins » (drawing_area) OU override par-nœud
       // (shape_orphan_node_visible) : un nœud sans lien visible reste affiché.
       if (this.shape_orphan_node_visible || this.drawing_area.show_orphan_nodes) return true

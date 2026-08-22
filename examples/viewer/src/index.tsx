@@ -191,7 +191,20 @@ const App = () => {
           //   valeur est une ETIQUETTE ; la resolution « valeur = nom ou id
           //   d'une VUE » est propre a l'application complete — d'ou le
           //   selecteur de vue par remontage utilise ici.
+          // view : id OU nom d'une vue — ouvre le viewer sur cette vue
+          //   (sa#397). Vue inconnue => option ignoree (warn), rien ne casse.
+          // view_label : LABEL DE VUE (sa#396 — etiquette libre de SELECTION
+          //   posee sur les vues, a ne pas confondre avec les view tags qui
+          //   GENERENT des vues) — restreint le selecteur de vues aux vues
+          //   portant ce label ; la vue courante devient la premiere du
+          //   groupe. Label sans aucune vue => option ignoree (warn).
           // logo : chemin d'un logo substitue a celui d'OpenSankey.
+          // minimum_flux : plancher d'epaisseur des flux, en pixels (sa#373).
+          //   Impose a l'ouverture, prioritaire sur la valeur enregistree dans
+          //   le diagramme. 0 = flux traces a leur epaisseur reelle (aucun
+          //   plancher) ; omettre la cle laisse le reglage du document, ou le
+          //   defaut 2px. Seul levier de lisibilite quand les valeurs s'etalent
+          //   sur plusieurs ordres de grandeur : l'echelle, elle, est globale.
           //
           // --- 2. Lues seulement par l'application complete -----------------
           //     (aucun effet ici : le chrome correspondant n'existe pas)

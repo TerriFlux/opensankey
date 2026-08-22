@@ -65,9 +65,16 @@ export const default_anchor_align_horizontal: Type_AnchorAlignHorizontal = 'cent
 // Mode de réorganisation automatique de l'ordre des flux E/S d'un nœud quand le
 // diagramme est modifié (cf. Class_NodeElement.reorganizeIOLinks) :
 //  'none'     = jamais recalculé (ordre figé) ;
-//  'simple'   = tri par la position du nœud opposé (comportement par défaut) ;
-//  'advanced' = ordre géométrique par la courbure (os#205/#266 — « qui tourne le
-//               plus tôt va à l'extrémité »), adapté aux diagrammes rigoureux.
+//  'simple'   = « Position des nœuds opposés » — tri par la position du nœud opposé
+//               (comportement par défaut) ;
+//  'advanced' = « Courbure des flux » — l'éventail classe TOUS les flux par la distance
+//               de la première ancre : « qui tourne le plus tôt va à l'extrémité »
+//               (os#205/#266/#279).
+// os#425 : le retravail de os#205 avait interposé une exception pour les flux droits, qui
+// déplaçait des flux que la règle ci-dessus plaçait correctement. Son auteur a confirmé que
+// la modification du mode avancé n'était pas intentionnelle — seul le mode simple était
+// visé — donc 'advanced' retrouve ici son sens d'origine, et les fichiers déjà réglés
+// dessus retrouvent le comportement pour lequel ils avaient été réglés.
 export type Type_IOReorgMode = 'none' | 'simple' | 'advanced'
 export const default_io_reorg_mode: Type_IOReorgMode = 'simple'
 // Orientation des hachures de remplissage d'un nœud ('none' = pas de hachure).
@@ -1388,6 +1395,36 @@ export const BASE_LABEL_CONFIG = {
       it: 'Inserisce un trattino per spezzare le parole che superano la larghezza dell\'etichetta',
       'zh-CN': '插入连字符以断开超出标签宽度的单词',
       ja: 'ラベル幅を超える単語にハイフンを入れて折り返します'
+    }
+  } satisfies AttributeConfig<boolean>,
+  // #377 — élagage de CETTE étiquette quand elle ne tient pas dans la hauteur de son
+  // élément. Attribut par étiquette (et non réglage global) : il se pose élément par
+  // élément, ou d'un coup par les STYLES. Ce n'est pas un « masquer » figé — la place
+  // disponible est réévaluée à chaque dessin, donc la réponse suit la sélection de
+  // dataTags affichée (un flux gros en 2023 et fin en 2015 est élagué sur le seul
+  // millésime où il ne tient pas). Défaut false : rendu de l'existant inchangé.
+  prune_if_unfitting: {
+    default: false as boolean,
+    type: (() => false) as (() => boolean),
+    category: '',
+    actions: [] as BaseActionType[],
+    labels: {
+      en: 'Hide if it overflows',
+      fr: 'Masquer si ça dépasse',
+      es: 'Ocultar si desborda',
+      de: 'Ausblenden bei Überlauf',
+      it: 'Nascondi se fuoriesce',
+      'zh-CN': '超出时隐藏',
+      ja: 'はみ出す場合は隠す'
+    },
+    tooltips: {
+      en: 'Hide this label when it overflows the height of its element (node, container frame, link thickness). The name comes first: the value is shown only if room is left after it.',
+      fr: 'Masquer cette étiquette quand elle dépasse la hauteur de son élément (nœud, cadre englobant, épaisseur du flux). Le libellé passe en premier : la valeur ne s\'affiche que si la place restante le permet.',
+      es: 'Ocultar esta etiqueta cuando desborda la altura de su elemento (nodo, marco contenedor, grosor del flujo). El nombre va primero: el valor solo se muestra si queda espacio.',
+      de: 'Diese Beschriftung ausblenden, wenn sie über die Höhe ihres Elements hinausragt (Knoten, umschließender Rahmen, Flussdicke). Der Name hat Vorrang: der Wert erscheint nur bei verbleibendem Platz.',
+      it: 'Nascondi questa etichetta quando fuoriesce dall\'altezza del suo elemento (nodo, cornice contenitore, spessore del flusso). Il nome viene prima: il valore appare solo se resta spazio.',
+      'zh-CN': '当标签超出其元素高度（节点、包含框、流量粗细）时隐藏。名称优先：仅在有剩余空间时显示数值。',
+      ja: '要素（ノード、囲み枠、フローの太さ）の高さをはみ出す場合、このラベルを隠します。名前が優先され、余白がある場合のみ値を表示します。'
     }
   } satisfies AttributeConfig<boolean>,
 

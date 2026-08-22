@@ -158,6 +158,176 @@ describe('#232 updateFrom — attrDrawingArea + échelle', () => {
   })
 })
 
+// #382 — Sur un fichier multi-unités, l'échelle affichée n'est PAS celle de la zone
+// de dessin mais celle de chaque tag d'unité (`Class_DataTag.scale` retombe sur la
+// zone de dessin uniquement si le groupe n'est pas `is_unit`). La case « Échelle »
+// d'« Appliquer la mise en page » doit commander ces échelles-là, et rester la seule
+// à le faire — avant le correctif elle ne transférait que `drawing_area.scale`
+// (invisible ici) tandis que la case « Données » recopiait les échelles unitaires
+// sans condition.
+/** Groupe de données unitaire « Unité » avec deux tags, échelles imposées. */
+function makeUnitTagGroup(
+  app: Class_ApplicationData,
+  scales: { [tag_name: string]: number }
+) {
+  const tagg = app.drawing_area.sankey.addDataTagGroup('unite', 'Unité', false)
+  tagg.is_unit = true
+  Object.entries(scales).forEach(([name, scale]) => {
+    tagg.addTag(name, name)
+    tagg.tags_dict[name].scale = scale
+  })
+  return tagg
+}
+
+describe('#382 updateFrom — échelle des tags d\'unité', () => {
+  it('la case Échelle transfère l\'échelle de chaque tag d\'unité', () => {
+    const src = new Class_ApplicationData(false)
+    const tgt = new Class_ApplicationData(false)
+    makePair(src)
+    makePair(tgt)
+    makeUnitTagGroup(src, { 'kt PB': 8000, 'kt MS': 300 })
+    makeUnitTagGroup(tgt, { 'kt PB': 24617, 'kt MS': 999 })
+
+    updateFrom(tgt.drawing_area, src.drawing_area, ['attrDrawingArea', 'scale'])
+
+    const tagg = tgt.drawing_area.sankey._data_taggs['unite']
+    expect(tagg.tags_dict['kt PB'].scale).toBe(8000)
+    expect(tagg.tags_dict['kt MS'].scale).toBe(300)
+  })
+
+  it('sans la case Échelle, la case Données ne transfère plus les échelles unitaires', () => {
+    const src = new Class_ApplicationData(false)
+    const tgt = new Class_ApplicationData(false)
+    makePair(src)
+    makePair(tgt)
+    makeUnitTagGroup(src, { 'kt PB': 8000, 'kt MS': 300 })
+    makeUnitTagGroup(tgt, { 'kt PB': 24617, 'kt MS': 999 })
+
+    updateFrom(tgt.drawing_area, src.drawing_area, ['attrDrawingArea', 'tagData'])
+
+    const tagg = tgt.drawing_area.sankey._data_taggs['unite']
+    expect(tagg.tags_dict['kt PB'].scale).toBe(24617)
+    expect(tagg.tags_dict['kt MS'].scale).toBe(999)
+  })
+
+  it('case Échelle + case Données : l\'échelle passe quand même', () => {
+    const src = new Class_ApplicationData(false)
+    const tgt = new Class_ApplicationData(false)
+    makePair(src)
+    makePair(tgt)
+    makeUnitTagGroup(src, { 'kt PB': 8000 })
+    makeUnitTagGroup(tgt, { 'kt PB': 24617 })
+
+    updateFrom(tgt.drawing_area, src.drawing_area, ['attrDrawingArea', 'tagData', 'scale'])
+
+    expect(tgt.drawing_area.sankey._data_taggs['unite'].tags_dict['kt PB'].scale).toBe(8000)
+  })
+
+  it('la case Échelle seule (sans attrDrawingArea) transfère les deux porteurs', () => {
+    const src = new Class_ApplicationData(false)
+    const tgt = new Class_ApplicationData(false)
+    makePair(src)
+    makePair(tgt)
+    src.drawing_area.scale = 10000
+    tgt.drawing_area.scale = 100
+    makeUnitTagGroup(src, { 'kt PB': 8000 })
+    makeUnitTagGroup(tgt, { 'kt PB': 24617 })
+
+    updateFrom(tgt.drawing_area, src.drawing_area, ['scale'])
+
+    expect(tgt.drawing_area.scale).toBe(10000)
+    expect(tgt.drawing_area.sankey._data_taggs['unite'].tags_dict['kt PB'].scale).toBe(8000)
+  })
+
+  it('un tag d\'unité absent de la source garde son échelle', () => {
+    const src = new Class_ApplicationData(false)
+    const tgt = new Class_ApplicationData(false)
+    makePair(src)
+    makePair(tgt)
+    makeUnitTagGroup(src, { 'kt PB': 8000 })
+    makeUnitTagGroup(tgt, { 'kt PB': 24617, 'kt MS': 999 })
+
+    updateFrom(tgt.drawing_area, src.drawing_area, ['attrDrawingArea', 'scale'])
+
+    const tagg = tgt.drawing_area.sankey._data_taggs['unite']
+    expect(tagg.tags_dict['kt PB'].scale).toBe(8000)
+    expect(tagg.tags_dict['kt MS'].scale).toBe(999)
+  })
+})
+
+// Groupe de données « Année » avec deux tags dont on CHOISIT les ids : c'est
+// l'écart d'ids entre source et cible (à noms égaux) qui met `matching_tags_id`
+// en jeu.
+function makeYearTagGroup(
+  app: Class_ApplicationData,
+  tags: Array<[string, string]> // [id, nom]
+) {
+  const tagg = app.drawing_area.sankey.addDataTagGroup('annee', 'Année', false)
+  tags.forEach(([id, name]) => tagg.addTag(name, id))
+  tagg.tags_dict[tags[0][0]].setSelected()
+  return tagg
+}
+
+/** Valeur du lien sous le tag de nom `tag_name` du groupe « annee » de `app`. */
+function valueUnderYear(
+  app: Class_ApplicationData,
+  link: Class_LinkElement,
+  tag_name: string
+) {
+  const tagg = app.drawing_area.sankey._data_taggs['annee']
+  const tag = tagg.tags_list.find(t => t.name === tag_name)
+  if (!tag) return undefined
+  tagg.selectTagsFromIds([tag.id])
+  return link.valueCurrent
+}
+
+describe('updateFrom — tags de données appariés par NOM mais d\'ids différents', () => {
+  it('tagData : les valeurs taguées de la cible survivent à la recopie du groupe', () => {
+    const src = new Class_ApplicationData(false)
+    const tgt = new Class_ApplicationData(false)
+    const s = makePair(src)
+    const t = makePair(tgt)
+
+    // Mêmes noms de tags des deux côtés, ids différents → matching par nom.
+    makeYearTagGroup(src, [['src_a', '2020'], ['src_b', '2021']])
+    const tgt_tagg = makeYearTagGroup(tgt, [['tgt_a', '2020'], ['tgt_b', '2021']])
+
+    // Valeurs portées par le lien de la CIBLE, une par millésime.
+    tgt_tagg.selectTagsFromIds(['tgt_a'])
+    t.link.valueCurrent = 10
+    tgt_tagg.selectTagsFromIds(['tgt_b'])
+    t.link.valueCurrent = 20
+    // Côté source, valeurs différentes — `tagData` ne recopie PAS les valeurs.
+    const src_tagg = src.drawing_area.sankey._data_taggs['annee']
+    src_tagg.selectTagsFromIds(['src_a'])
+    s.link.valueCurrent = 111
+    src_tagg.selectTagsFromIds(['src_b'])
+    s.link.valueCurrent = 222
+
+    updateFrom(tgt.drawing_area, src.drawing_area, ['tagData'])
+
+    expect(valueUnderYear(tgt, t.link, '2020')).toBe(10)
+    expect(valueUnderYear(tgt, t.link, '2021')).toBe(20)
+  })
+
+  it('tagData : le groupe cible ne conserve QUE ses deux tags', () => {
+    const src = new Class_ApplicationData(false)
+    const tgt = new Class_ApplicationData(false)
+    makePair(src)
+    makePair(tgt)
+
+    makeYearTagGroup(src, [['src_a', '2020'], ['src_b', '2021']])
+    makeYearTagGroup(tgt, [['tgt_a', '2020'], ['tgt_b', '2021']])
+
+    updateFrom(tgt.drawing_area, src.drawing_area, ['tagData'])
+
+    const tagg = tgt.drawing_area.sankey._data_taggs['annee']
+    expect(tagg.tags_list.map(t => t.name)).toEqual(['2020', '2021'])
+    // Aucun tag fantôme laissé dans le dictionnaire hors de l'ordre affiché.
+    expect(Object.keys(tagg.tags_dict).sort()).toEqual(['tgt_a', 'tgt_b'])
+  })
+})
+
 describe('#232 updateFrom — non-régression (attribut hors mode préservé)', () => {
   it('un mode inconnu / vide ne modifie ni positions ni attributs', () => {
     const src = new Class_ApplicationData(false)
@@ -222,5 +392,62 @@ describe('#232 updateFrom — cas limites', () => {
 
     expect(tgt.drawing_area.sankey.nodes_dict['C']).toBeDefined()
     expect(tgt.drawing_area.sankey.nodes_dict['C'].name).toBe('C')
+  })
+})
+
+// OS#1286 — le registre d'unités voyage avec les RÉFÉRENCES d'unité portées par les attributs.
+// Sans ça, appliquer une mise en page issue d'un fichier 1.1.5 (unité en texte libre, reclassée
+// à son chargement dans la grandeur « Unités du fichier ») laissait la cible avec une référence
+// pendante : l'affichage retombait sur l'identifiant brut (« unit_type_file_kt » pour « kt »).
+describe('OS#1286 updateFrom — registre d\'unités', () => {
+  /** Source dont l'unité « kt » a été migrée en unité de fichier (facteur 1). */
+  const makeSourceWithFileUnit = () => {
+    const src = new Class_ApplicationData(false)
+    const nodes = makePair(src)
+    const resolved = src.drawing_area.sankey.units.getOrCreateLegacyUnit('kt', 1)
+    nodes.A.value_label_unit_type = 'unit_model'
+    nodes.A.value_label_unit = resolved.unit.id
+    return { src, nodes, unit_id: resolved.unit.id }
+  }
+
+  it('attrNode : la référence transférée résout chez la cible', () => {
+    const { src, unit_id } = makeSourceWithFileUnit()
+    const tgt = new Class_ApplicationData(false)
+    const t = makePair(tgt)
+    expect(tgt.drawing_area.sankey.units.resolve(unit_id)).toBeUndefined()
+
+    updateFrom(tgt.drawing_area, src.drawing_area, ['posNode', 'attrNode'])
+
+    expect(t.A.value_label_unit).toBe(unit_id)
+    const resolved = tgt.drawing_area.sankey.units.resolve(unit_id)
+    expect(resolved?.unit.name).toBe('kt')
+    expect(resolved?.unit.label).toBe('kt') // et non l'identifiant brut
+  })
+
+  it('sans mode porteur de références (posNode seul), le registre n\'est pas touché', () => {
+    const { src, unit_id } = makeSourceWithFileUnit()
+    const tgt = new Class_ApplicationData(false)
+    makePair(tgt)
+
+    updateFrom(tgt.drawing_area, src.drawing_area, ['posNode'])
+
+    expect(tgt.drawing_area.sankey.units.resolve(unit_id)).toBeUndefined()
+    expect(tgt.drawing_area.sankey.units.equalsDefaultCatalog()).toBe(true)
+  })
+
+  it('fusion additive : une unité déjà définie chez la cible n\'est pas écrasée', () => {
+    const src = new Class_ApplicationData(false)
+    makePair(src)
+    src.drawing_area.sankey.units.getUnitType('unit_type_mass')!
+      .units.find(u => u.id === 'mass_t')!.display_name = 'tonnes source'
+
+    const tgt = new Class_ApplicationData(false)
+    makePair(tgt)
+    tgt.drawing_area.sankey.units.getUnitType('unit_type_mass')!
+      .units.find(u => u.id === 'mass_t')!.display_name = 'tonnes cible'
+
+    updateFrom(tgt.drawing_area, src.drawing_area, ['attrNode'])
+
+    expect(tgt.drawing_area.sankey.units.resolve('mass_t')?.unit.label).toBe('tonnes cible')
   })
 })

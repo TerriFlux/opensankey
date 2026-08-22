@@ -24,6 +24,62 @@ export const detectCompressionType = (filename: string): CompressionType => {
   return 'none'
 }
 
+/**
+ * #381 — Détecte le type de compression aux OCTETS MAGIQUES du contenu, sans
+ * regarder le nom. Renvoie `undefined` quand aucune signature connue n'est
+ * reconnue (contenu clair, deflate brut, brotli — qui n'a pas de signature).
+ */
+export const detectCompressionTypeFromBytes = (data: ArrayBuffer): CompressionType | undefined => {
+  const bytes = new Uint8Array(data)
+  if (bytes.length < 2) return undefined
+
+  // gzip : 1f 8b (RFC 1952, obligatoire)
+  if (bytes[0] === 0x1f && bytes[1] === 0x8b) return 'gzip'
+  // zip : « PK » (RFC/APPNOTE, obligatoire) — 03 04 archive, 05 06 vide, 07 08 spanned
+  if (bytes[0] === 0x50 && bytes[1] === 0x4b) return 'zip'
+  // zlib (RFC 1950) : CM = 8 dans le quartet bas de CMF, et CMF/FLG multiple de 31.
+  // Aucun début de JSON ne satisfait les deux ('{' = 0x7b, '[' = 0x5b, espaces, BOM).
+  if ((bytes[0] & 0x0f) === 0x08 && (((bytes[0] << 8) | bytes[1]) % 31) === 0) return 'deflate'
+
+  return undefined
+}
+
+/**
+ * #381 — Premier octet significatif : saute le BOM UTF-8 et les blancs ASCII.
+ */
+const firstMeaningfulByte = (bytes: Uint8Array): number | undefined => {
+  let i = 0
+  if (bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) i = 3
+  while (i < bytes.length && (bytes[i] === 0x20 || bytes[i] === 0x09 || bytes[i] === 0x0a || bytes[i] === 0x0d)) i++
+  return i < bytes.length ? bytes[i] : undefined
+}
+
+/**
+ * #381 — Type de compression effectif d'un contenu déjà en mémoire.
+ *
+ * **Le contenu fait foi, pas l'extension** : un diagramme gzippé dont le nom a
+ * perdu son `.gz` (renommage, téléchargement, copie) doit s'ouvrir comme un
+ * `.json.gz`. Le nom ne sert plus que de repli, pour les formats sans signature
+ * reconnaissable (brotli, deflate brut).
+ *
+ * Cas miroir traité aussi : un nom qui annonce gzip/zip alors que le contenu est
+ * du JSON clair (fichier déjà décompressé par le transport, ou renommé à
+ * l'envers). La signature de ces deux formats étant obligatoire, son absence
+ * devant un jeton JSON est une preuve, pas une supposition.
+ */
+export const resolveCompressionType = (data: ArrayBuffer, filename: string): CompressionType => {
+  const sniffed = detectCompressionTypeFromBytes(data)
+  if (sniffed !== undefined) return sniffed
+
+  const by_name = detectCompressionType(filename)
+  if (by_name === 'gzip' || by_name === 'zip') {
+    const first = firstMeaningfulByte(new Uint8Array(data))
+    if (first === 0x7b /* { */ || first === 0x5b /* [ */) return 'none'
+  }
+
+  return by_name
+}
+
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) return error.message
   if (typeof error === 'string') return error
@@ -104,7 +160,7 @@ export const loadUniversalJSON = async (url: string): Promise<DecompressedJSONDa
   }
 
   const data = await response.arrayBuffer()
-  const decompressed = await decompressData(data, detectCompressionType(url), url)
+  const decompressed = await decompressData(data, resolveCompressionType(data, url), url)
 
   return JSON.parse(decompressed) as DecompressedJSONData
 }
@@ -119,7 +175,8 @@ export const decompressUploadedFileUniversal = (file: File): Promise<Decompresse
     reader.onload = async (e: ProgressEvent<FileReader>) => {
       try {
         const data = e.target!.result as ArrayBuffer
-        const compressionType = detectCompressionType(file.name)
+        // #381 — Le contenu fait foi : un gzip nommé `.json` s'ouvre comme un `.gz`.
+        const compressionType = resolveCompressionType(data, file.name)
 
         const decompressed = await decompressData(data, compressionType, file.name)
         resolve(JSON.parse(decompressed) as DecompressedJSONData)

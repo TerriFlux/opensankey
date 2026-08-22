@@ -1,0 +1,297 @@
+{
+ "version": "1.1.4",
+ "format_version": 3,
+ "dataTags": {
+  "unite": {
+   "name": "Unité",
+   "show_legend": true,
+   "is_unit": false,
+   "propagate_structure": true,
+   "banner": "one",
+   "activated": true,
+   "tags": {
+    "kt": {
+     "name": "kt",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    }
+   }
+  },
+  "axe": {
+   "name": "Axe",
+   "show_legend": true,
+   "is_unit": false,
+   "propagate_structure": false,
+   "banner": "one",
+   "activated": true,
+   "tags": {
+    "axe A": {
+     "name": "Axe A",
+     "long_name": "",
+     "selected": true,
+     "color": ""
+    },
+    "axe B": {
+     "name": "Axe B",
+     "long_name": "",
+     "selected": false,
+     "color": ""
+    }
+   }
+  }
+ },
+ "nodeTags": {},
+ "levelTags": {},
+ "nodes": {
+  "GroupeAvecFluxPropre": {
+   "name": "Groupe avec flux propre",
+   "tags": {},
+   "has_material_balance": false,
+   "u": 0,
+   "v": 0,
+   "x": 60,
+   "y": 60,
+   "style": [
+    "default",
+    "NodeContainerStyle"
+   ],
+   "tiedToNode": true,
+   "attachedNodes": [
+    "EnfantMesure",
+    "EnfantAbsent"
+   ],
+   "dimensions": {
+    "dimension 1": {}
+   },
+   "local": {
+    "name_label_is_visible": true,
+    "name_label_font_size": 16
+   }
+  },
+  "EnfantMesure": {
+   "name": "Enfant mesuré",
+   "tags": {},
+   "has_material_balance": false,
+   "u": 0,
+   "v": 0,
+   "x": 60,
+   "y": 80,
+   "style": [
+    "default"
+   ],
+   "dimensions": {
+    "dimension 1": {
+     "parent_name": "GroupeAvecFluxPropre",
+     "container_mode": "in_children_out_children",
+     "preferred_disaggregation": "in_children_out_children"
+    }
+   },
+   "local": {
+    "name_label_is_visible": true
+   }
+  },
+  "EnfantAbsent": {
+   "name": "Enfant absent",
+   "tags": {},
+   "has_material_balance": false,
+   "u": 0,
+   "v": 0,
+   "x": 60,
+   "y": 140,
+   "style": [
+    "default"
+   ],
+   "dimensions": {
+    "dimension 1": {
+     "parent_name": "GroupeAvecFluxPropre",
+     "container_mode": "in_children_out_children",
+     "preferred_disaggregation": "in_children_out_children"
+    }
+   },
+   "local": {
+    "name_label_is_visible": true
+   }
+  },
+  "GroupeSansFluxPropre": {
+   "name": "Groupe sans flux propre",
+   "tags": {},
+   "has_material_balance": false,
+   "u": 0,
+   "v": 0,
+   "x": 60,
+   "y": 260,
+   "style": [
+    "default",
+    "NodeContainerStyle"
+   ],
+   "tiedToNode": true,
+   "attachedNodes": [
+    "TemoinMesure",
+    "TemoinAbsent"
+   ],
+   "dimensions": {
+    "dimension 1": {}
+   },
+   "local": {
+    "name_label_is_visible": true,
+    "name_label_font_size": 16
+   }
+  },
+  "TemoinMesure": {
+   "name": "Témoin mesuré",
+   "tags": {},
+   "has_material_balance": false,
+   "u": 0,
+   "v": 0,
+   "x": 60,
+   "y": 280,
+   "style": [
+    "default"
+   ],
+   "dimensions": {
+    "dimension 1": {
+     "parent_name": "GroupeSansFluxPropre",
+     "container_mode": "in_children_out_children",
+     "preferred_disaggregation": "in_children_out_children"
+    }
+   },
+   "local": {
+    "name_label_is_visible": true
+   }
+  },
+  "TemoinAbsent": {
+   "name": "Témoin absent",
+   "tags": {},
+   "has_material_balance": false,
+   "u": 0,
+   "v": 0,
+   "x": 60,
+   "y": 340,
+   "style": [
+    "default"
+   ],
+   "dimensions": {
+    "dimension 1": {
+     "parent_name": "GroupeSansFluxPropre",
+     "container_mode": "in_children_out_children",
+     "preferred_disaggregation": "in_children_out_children"
+    }
+   },
+   "local": {
+    "name_label_is_visible": true
+   }
+  },
+  "Cible": {
+   "name": "Cible",
+   "tags": {},
+   "has_material_balance": false,
+   "u": 1,
+   "v": 0,
+   "x": 460,
+   "y": 60,
+   "style": [
+    "default"
+   ],
+   "dimensions": {},
+   "local": {
+    "name_label_is_visible": true
+   }
+  }
+ },
+ "links": {
+  "GroupeAvecFluxPropre---Cible": {
+   "idSource": "GroupeAvecFluxPropre",
+   "idTarget": "Cible",
+   "value": {
+    "datatag_group": "unite",
+    "kt": {
+     "datatag_group": "axe",
+     "axe A": {
+      "data_value": 100.0,
+      "data_uncertainty": 10.0
+     },
+     "axe B": {
+      "structurally_absent": true
+     }
+    }
+   }
+  },
+  "EnfantMesure---Cible": {
+   "idSource": "EnfantMesure",
+   "idTarget": "Cible",
+   "value": {
+    "datatag_group": "unite",
+    "kt": {
+     "datatag_group": "axe",
+     "axe A": {
+      "data_value": 40.0,
+      "data_uncertainty": 10.0
+     },
+     "axe B": {
+      "data_value": 40.0,
+      "data_uncertainty": 10.0
+     }
+    }
+   }
+  },
+  "EnfantAbsent---Cible": {
+   "idSource": "EnfantAbsent",
+   "idTarget": "Cible",
+   "value": {
+    "datatag_group": "unite",
+    "kt": {
+     "datatag_group": "axe",
+     "axe A": {
+      "data_value": 40.0,
+      "data_uncertainty": 10.0
+     },
+     "axe B": {
+      "structurally_absent": true
+     }
+    }
+   }
+  },
+  "TemoinMesure---Cible": {
+   "idSource": "TemoinMesure",
+   "idTarget": "Cible",
+   "value": {
+    "datatag_group": "unite",
+    "kt": {
+     "datatag_group": "axe",
+     "axe A": {
+      "data_value": 40.0,
+      "data_uncertainty": 10.0
+     },
+     "axe B": {
+      "data_value": 40.0,
+      "data_uncertainty": 10.0
+     }
+    }
+   }
+  },
+  "TemoinAbsent---Cible": {
+   "idSource": "TemoinAbsent",
+   "idTarget": "Cible",
+   "value": {
+    "datatag_group": "unite",
+    "kt": {
+     "datatag_group": "axe",
+     "axe A": {
+      "data_value": 40.0,
+      "data_uncertainty": 10.0
+     },
+     "axe B": {
+      "structurally_absent": true
+     }
+    }
+   }
+  }
+ },
+ "style": {},
+ "user_scale": 100,
+ "minimum_flux": 2,
+ "width": 900,
+ "height": 500,
+ "grid_visible": false
+}

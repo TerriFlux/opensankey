@@ -342,6 +342,11 @@ export class Class_ViewportChrome {
     const prevRight = da.scrollbar_reserve_right
     const prevBottom = da.scrollbar_reserve_bottom
     if (!da.suppress_scrollbar_reserve) {
+      // OS#388 — la décision se prend sur la zone VISIBLE (window_fitting), donc réserve
+      // des panneaux comprise, et NON sur les bornes du chrome. Un panneau ouvert masque
+      // une partie du diagramme : il faut alors une barre pour aller la chercher. C'est
+      // aussi le cas d'usage inverse du chrome, qui lui reste calé sur la fenêtre entière
+      // pour que le panneau se superpose au lieu de recadrer (cf. chrome_fitting_width).
       const fullW = da.window_fitting_width + da.scrollbar_reserve_right
       const fullH = da.window_fitting_height + da.scrollbar_reserve_bottom
       da.scrollbar_reserve_bottom = (has_bbox && screenW > fullW * 1.01) ? gutter : 0
@@ -455,11 +460,14 @@ export class Class_ViewportChrome {
     // viewW/viewH already exclude fit_margin and navbar/bottombar, so they map
     // directly to the framed area (x=fm, y=navH+fm, w=viewW, h=viewH).
     const fm = da.fit_margin / 2
+    // OS#388 — cadre ET découpe (updateClip partage ce rect) sur les bornes du CHROME :
+    // en caméra libre, un panneau qui s'ouvre se superpose au diagramme, il ne rabote
+    // pas la zone de dessin (sinon le diagramme paraît se réajuster tout seul).
     return {
       x: fm,
       y: da.getNavBarHeight() + fm,
-      w: da.window_fitting_width,
-      h: da.window_fitting_height
+      w: da.chrome_fitting_width,
+      h: da.chrome_fitting_height
     }
   }
 

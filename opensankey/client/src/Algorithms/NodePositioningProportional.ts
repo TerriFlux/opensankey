@@ -216,6 +216,14 @@ export class NodePositioningProportional {
     if (nodes.length === 0) return
     if (this._prop_median_y === undefined || !this._prop_ref_col_sums) {
       this.captureProportionalReference()
+      // #369 — Ce `return` est PORTEUR depuis que le mode est restitué au chargement : ce
+      // chemin est celui d'un fichier rouvert en % (aucun `setProportionalMode` n'a capturé de
+      // cadre). Il capture le cadre sur la géométrie du fichier SANS rien déplacer ; appliquer
+      // f dans la foulée ferait sauter le diagramme, le plancher anti-chevauchement étant
+      // recalculé sur cette géométrie (mesuré : f_eff 3,66 contre 1,04 à l'enregistrement).
+      // Ce n'est que le second filet : c'est la SUSPENSION du mode à l'ouverture
+      // (Class_DrawingArea.suspendPositionModeUntilDataChange) qui garantit que le diagramme
+      // s'ouvre tel qu'enregistré — le chargement enchaîne plusieurs dessins.
       return
     }
     // #1231 (1.1.5) — anti-chevauchement GLOBAL : le facteur de compression effectif est

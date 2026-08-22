@@ -5,6 +5,7 @@ import { SankeyPersistence } from '../Persistence/SankeyPersistence'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_Sankey } from '../types/Sankey'
 import { Class_Tag } from '../types/Tag'
+import type { Class_DataTag } from '../types/Tag'
 import { getStringFromJSON, getStringOrUndefinedFromJSON, Type_JSON } from '../types/Utils'
 import { settleNodeAnchorAfterLayout } from './applyLayoutAnchor'
 
@@ -212,6 +213,23 @@ export const updateFrom = (
 
 
 
+  // Registre d'unités ---------------------------------------------------------------
+  // OS#1286 — les attributs transférés (styles, nœuds, flux, zones de texte) portent des
+  // RÉFÉRENCES d'unité : `value_label_unit` vaut un identifiant du registre de la SOURCE. Le
+  // registre lui-même n'était pas transféré : les références atterrissaient chez une cible qui
+  // ne les connaissait pas, ne résolvaient plus, et l'affichage retombait sur l'identifiant brut
+  // (« unit_type_file_kt » au lieu de « kt »). Le cas se rencontre dès qu'on applique une mise en
+  // page issue d'un fichier 1.1.5 : son unité en texte libre a été reclassée à son chargement
+  // dans la grandeur « Unités du fichier », qui n'existe pas chez la cible.
+  // Fusion ADDITIVE (jamais d'écrasement) : on ne comble que les trous, le vocabulaire de la
+  // cible fait foi. Conditionnée aux mêmes modes que les attributs qui portent les références.
+  if (
+    mode.includes('styleDA') || mode.includes('attrNode') || mode.includes('attrFlux') ||
+    mode.includes('attrFreeLabel') || all
+  ) {
+    drawing_area.sankey.units.mergeMissingFrom(other_drawing_area.sankey.units)
+  }
+
   if (mode.includes('styleDA') || all) {
     // Sync style definitions (add / remove / update)
     const [ns_to_remove, ns_to_add, ns_to_update] = get_sync_lists(drawing_area.sankey.styles_dict, other_drawing_area.sankey.styles_dict, {})
@@ -382,6 +400,29 @@ export const updateFrom = (
 
   // Update data_tag_dict ------------------------------------------------------------
 
+  // #382 — L'échelle du diagramme a DEUX porteurs. Sur un fichier sans groupe de
+  // données unitaire, c'est `drawing_area.scale` ; dès qu'un groupe porte `is_unit`,
+  // l'échelle réellement affichée (et éditée au menu Mise en page) est celle de
+  // CHAQUE tag d'unité (`Class_DataTag.scale`). La case « Échelle » doit donc
+  // commander les deux — et rester la SEULE à les commander : la recopie des
+  // groupes de données (case « Données ») emportait jusqu'ici `_scale` sans
+  // condition, si bien que la case Échelle était déconnectée dans les deux sens.
+  // On fige donc les échelles unitaires de la cible avant la recopie des groupes,
+  // on les restitue juste après, puis le bloc `scale` ci-dessous applique — ou
+  // non — celles de la source. Même idiome que `scale_to_keep` pour la zone de
+  // dessin plus haut.
+  const copy_scale = mode.includes('scale') || all
+  // sa#283 — généralisé aux échelles PROPRES de TOUS les groupes de dataTags (own_scale :
+  // ≡ scale pour un tag d'unité, échelle posée explicitement pour un tag ordinaire —
+  // undefined sinon, et cette absence se fige/restitue aussi).
+  const own_scales_to_keep: { [tagg_id: string]: { [tag_id: string]: number | undefined } } = {}
+  Object.values(drawing_area.sankey._data_taggs)
+    .forEach(tagg => {
+      const scales: { [tag_id: string]: number | undefined } = {}
+      tagg.tags_list.forEach(tag => scales[tag.id] = (tag as Class_DataTag).own_scale)
+      own_scales_to_keep[tagg.id] = scales
+    })
+
   // Values requires addTagData to create missing value slots in target
   const implicit_add_tag_data = mode.includes('Values') && !mode.includes('addTagData')
   if (mode.includes('tagData') || mode.includes('addTagData') || mode.includes('removeTagData') || implicit_add_tag_data || all) {
@@ -402,6 +443,48 @@ export const updateFrom = (
     if (update_tag_data)
       to_update.forEach(id => {
         drawing_area.sankey._data_taggs[id].copyFrom(other_drawing_area.sankey._data_taggs[matching_taggs_id['dataTags']?.[id] ?? id], matching_tags_id['dataTags']?.[id])
+      })
+  }
+
+  // #382 — Échelle : restitution puis transfert commandé par la seule case « Échelle ».
+  //
+  // 1. Restituer les échelles unitaires figées avant la recopie des groupes de données :
+  //    seule la case Échelle a le droit de les changer.
+  // 2. Si le mode `scale` est demandé, appliquer les échelles de la source — zone de
+  //    dessin ET tags d'unité (appariés par nom via matching_tags_id, comme le reste
+  //    d'updateFrom). Un tag d'unité absent de la source garde son échelle courante.
+  //
+  // La zone de dessin est réécrite ici même quand `attrDrawingArea` n'est pas coché :
+  // la case Échelle est une commande à part entière, elle ne dépend pas de la case
+  // « Attributs généraux » (avant #382, cochée seule, elle ne faisait rien du tout).
+  Object.values(drawing_area.sankey._data_taggs)
+    .filter(tagg => own_scales_to_keep[tagg.id] !== undefined)
+    .forEach(tagg => {
+      tagg.tags_list.forEach(tag => {
+        // sa#283 — restitution PRÉSENCE comprise : un tag qui n'avait pas d'échelle
+        // propre la reperd (own_scale = undefined retire le drapeau), un tag d'unité
+        // retrouve son échelle (own_scale ≡ scale pour lui).
+        if (tag.id in own_scales_to_keep[tagg.id]) {
+          (tag as Class_DataTag).own_scale = own_scales_to_keep[tagg.id][tag.id]
+        }
+      })
+    })
+  if (copy_scale) {
+    drawing_area._scale = other_drawing_area.scale
+    drawing_area._scaleValueToPx.domain([0, drawing_area._scale])
+    // sa#283 — transfert des échelles PROPRES de tous les groupes de dataTags (appariés
+    // par nom via matching, comme le reste d'updateFrom). Un tag absent de la source
+    // garde son échelle courante ; un tag d'unité se comporte comme avant (own_scale ≡
+    // scale) ; l'ABSENCE d'échelle propre de la source se transfère aussi (undefined).
+    Object.values(drawing_area.sankey._data_taggs)
+      .forEach(tagg => {
+        const src_tagg = other_drawing_area.sankey._data_taggs[matching_taggs_id['dataTags']?.[tagg.id] ?? tagg.id]
+        if (!src_tagg) return
+        const matching_tags = matching_tags_id['dataTags']?.[tagg.id] ?? {}
+        tagg.tags_list.forEach(tag => {
+          const src_tag = src_tagg.tags_dict[matching_tags[tag.id] ?? tag.id]
+          if (src_tag) (tag as Class_DataTag).own_scale = (src_tag as Class_DataTag).own_scale
+        })
       })
   }
 

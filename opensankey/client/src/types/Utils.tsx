@@ -683,10 +683,16 @@ export const format_value = (
   const unit_taggs = element.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
   const link = element as Class_LinkElement
   const node = element as Class_NodeElement
-  if (label_values.unit_type == 'other_unit_tag' && unit_taggs.length > 0) {
+  // Certaines branches ci-dessous ne valent que pour un FLUX : elles lisent des
+  // membres propres à Class_LinkElement (`valueForTag`, `value`) qui n'existent
+  // ni sur un nœud ni sur un libellé de stock (Class_StockShape, qui dérive de
+  // Class_NodeBase et non de Class_NodeElement). Sans ce garde-fou, régler
+  // l'unité d'un nœud levait un TypeError au dessin.
+  const is_link = element instanceof Class_LinkElement
+  if (label_values.unit_type == 'other_unit_tag' && unit_taggs.length > 0 && is_link) {
     const tag = unit_taggs[0].tags_dict[label_values.unit]
     const new_value = link.valueForTag(tag)
-    data_value = new_value?.valueResult ?? 
+    data_value = new_value?.valueResult ??
     new_value?.valueData
   }
 
@@ -810,16 +816,32 @@ export const format_value = (
     return text_value
   }
   // Add unit suffix
-  if ((data_type == 'data' || data_type == 'data_label') && link.value!.value_option == 'unit_ratio') return text_value
-  if (label_values.unit_type == 'unit_ratio') { text_value = link.value?.valueData + ' ' + unit_name + '/' + link.value?.ratio_unit_tag!.name }
+  // `unit_ratio` (valeur rapportée à un tag d'unité) est un mode propre aux FLUX :
+  // les deux lignes suivantes lisent `link.value`, qui n'existe pas sur un nœud.
+  if (is_link && (data_type == 'data' || data_type == 'data_label') && link.value!.value_option == 'unit_ratio') return text_value
+  if (is_link && label_values.unit_type == 'unit_ratio') { text_value = link.value?.valueData + ' ' + unit_name + '/' + link.value?.ratio_unit_tag!.name }
   else if (label_values.unit_type == 'unit_name') text_value = text_value + ' ' + label_values.unit
   else if (label_values.unit_type == 'unit_model') {
     // OS#1286 — symbole de l'unité résolue depuis le registre (rien si registre vide).
     if (model_unit) text_value = text_value + ' ' + model_unit.unit.label
   }
-  else if (label_values.unit_type == 'unit_tag' && unit_taggs.length > 0) {
-    //const label_unit = unit_taggs[0].first_selected_tags!.name
-    text_value = text_value + ' ' + unit_name
+  else if (
+    (label_values.unit_type == 'unit_tag' ||
+      // Un nœud en « autres unités naturelles » retombe ici : sa valeur est une
+      // SOMME de flux, calculée au tag sélectionné (la conversion vers un autre
+      // tag n'a de sens que flux par flux, cf. le garde-fou plus haut). L'unité
+      // affichée doit donc être celle de cette somme, pas celle du tag demandé.
+      (!is_link && label_values.unit_type == 'other_unit_tag')) &&
+    unit_taggs.length > 0
+  ) {
+    // Le nom d'unité résolu par l'appelant (`unit_name`) n'est fiable que pour les
+    // flux : les nœuds et les libellés de stock transmettent leur champ d'unité
+    // LIBRE (`*_unit`), vide en mode « unité naturelle d'origine » — la valeur
+    // s'affichait donc sans unité. On résout ici depuis le groupe de dataTags
+    // d'unité, exactement comme le fait Class_LinkElement.unit_name (dont la
+    // liste de tags sélectionnés est déjà celle, globale, du diagramme).
+    const label_unit = unit_taggs[0].selected_tags_list[0]?.name ?? ''
+    if (label_unit !== '') text_value = text_value + ' ' + label_unit
   } else if (label_values.unit_type == 'other_unit_tag' && unit_taggs.length > 0) {
     const label_unit = unit_taggs[0].tags_dict[label_values.unit]!.name
     text_value = text_value + ' ' + label_unit

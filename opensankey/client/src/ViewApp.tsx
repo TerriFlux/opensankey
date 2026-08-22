@@ -96,6 +96,8 @@ const ViewerInner: FC<ViewerOpenSankeyAppProps> = ({ initial_data, ...options })
     options.data_tag_selection ?? null,
     options.view_tag_selection ?? null,
     options.position_mode ?? null,
+    options.view ?? null,
+    options.view_label ?? null,
   ])
   useEffect(() => {
     if (first_apply.current) { first_apply.current = false; return }
@@ -105,6 +107,19 @@ const ViewerInner: FC<ViewerOpenSankeyAppProps> = ({ initial_data, ...options })
     po.data_tag_selection = o.data_tag_selection ?? null
     po.view_tag_selection = o.view_tag_selection ?? null
     if (o.position_mode !== undefined) po.position_mode = o.position_mode
+    // sa#397 — vue / label de vue également réactifs (mêmes règles additives qu'au démarrage).
+    po.view = o.view ?? null
+    // sa#412 — `view_label` accepte une LISTE : comme au chargement de page, le filtre actif
+    // reste le PREMIER label et la liste complète alimente le sélecteur de label visible.
+    // Même normalisation que le viewer de la couche SaaS (ViewAppSA) : le correctif y avait
+    // été posé, mais ce chemin RÉACTIF du paquet opensankey était resté sur l'affectation
+    // brute — d'où le build de `main` rouge (TS2322) alors que le paquet SaaS compilait.
+    const raw_view_label = o.view_label ?? null
+    const view_labels = Array.isArray(raw_view_label)
+      ? raw_view_label
+      : (raw_view_label !== null ? [raw_view_label] : null)
+    po.view_labels = view_labels && view_labels.length > 0 ? view_labels : null
+    po.view_label = view_labels && view_labels.length > 0 ? view_labels[0] : null
     app_data.applyPublishStateOptions()
   }, [selection_key, app_data])
 

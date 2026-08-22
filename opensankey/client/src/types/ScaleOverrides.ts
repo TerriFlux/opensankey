@@ -24,6 +24,8 @@
 // des nœuds (qui lit l'échelle courante).
 
 import type { Class_DrawingArea } from './DrawingArea'
+import type { Class_DataTag } from './Tag'
+import { resolveScaleCarrierTag } from './ScaleResolution'
 
 export class Class_ScaleOverrides {
 
@@ -33,10 +35,12 @@ export class Class_ScaleOverrides {
   // Porteur surchargé par le plafond de hauteur de nœud, séparé du précédent (même logique).
   private _max_node_scale_carrier?: { original: number, applied: number }
 
-  private _findUnitDataTag(da: Class_DrawingArea, tag_id: string) {
+  // sa#283 — cherche un tag par id dans TOUS les groupes de dataTags (porteur généralisé :
+  // tag d'unité comme tag ordinaire à échelle propre — ex. la céréale sélectionnée).
+  private _findDataTag(da: Class_DrawingArea, tag_id: string): Class_DataTag | undefined {
     for (const tagg of da.sankey.data_taggs_list) {
       const t = tagg.tags_dict[tag_id]
-      if (t) return t
+      if (t) return t as Class_DataTag
     }
     return undefined
   }
@@ -55,11 +59,13 @@ export class Class_ScaleOverrides {
     // recalculé depuis (cf. doc du module → sa valeur courante devient la base).
     if (this._scale_ref_carrier) {
       const c = this._scale_ref_carrier
-      const tag = c.tag_id ? this._findUnitDataTag(da, c.tag_id) : undefined
-      const current = c.tag_id ? tag?.scale : da._scale
+      const tag = c.tag_id ? this._findDataTag(da, c.tag_id) : undefined
+      // sa#283 — porteur généralisé : l'échelle PROPRE du tag (own_scale ≡ scale pour un
+      // tag d'unité ; échelle posée par ce module pour un tag ordinaire porteur).
+      const current = c.tag_id ? tag?.own_scale : da._scale
       if (current !== undefined && Math.abs(current - c.applied) < 1e-9) {
         if (c.tag_id) {
-          if (tag) tag.scale = c.original
+          if (tag) tag.own_scale = c.original
         } else {
           da._scale = c.original
           da._scaleValueToPx.domain([0, c.original])
@@ -84,13 +90,20 @@ export class Class_ScaleOverrides {
     // l'échelle naturelle, l'épaisseur du flux DÉPASSE ce seuil (sinon le flux est déjà
     // plus fin que le seuil → on ne touche à rien). Augmenter l'échelle réduit l'épaisseur,
     // donc « épaisseur naturelle > seuil » ⟺ « new_scale > échelle naturelle du porteur ».
+    // sa#283 — porteur GÉNÉRALISÉ, résolu par LA MÊME règle que le rendu
+    // (Link.scaleValueToPx → ScaleResolution) : tag d'unité de la valeur du flux, ou
+    // unique tag de dataTag sélectionné à échelle propre (le groupe le plus tardif de
+    // taggs_order gagne), sinon la zone de dessin. Le recalage d'épaisseur de référence
+    // écrit donc dans le tag de la tranche sélectionnée quand elle porte une échelle
+    // (ex. la céréale courante) — l'UI existante devient per-tranche sans nouveau code.
     const unit_tag = link.value?.unit_data_tag()
-    const carrier_original = unit_tag ? unit_tag.scale : da._scale
+    const carrier_tag = resolveScaleCarrierTag(da.sankey, unit_tag)
+    const carrier_original = carrier_tag !== undefined ? (carrier_tag.own_scale as number) : da._scale
     if (!(new_scale > carrier_original)) return
     // 4. Applique sur le porteur effectif du flux (cf. Link.scaleValueToPx).
-    if (unit_tag) {
-      this._scale_ref_carrier = { tag_id: unit_tag.id, original: unit_tag.scale, applied: new_scale }
-      unit_tag.scale = new_scale
+    if (carrier_tag !== undefined) {
+      this._scale_ref_carrier = { tag_id: carrier_tag.id, original: carrier_original, applied: new_scale }
+      carrier_tag.own_scale = new_scale
     } else {
       this._scale_ref_carrier = { original: da._scale, applied: new_scale }
       da._scale = new_scale

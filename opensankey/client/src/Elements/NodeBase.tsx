@@ -37,6 +37,8 @@ import { Class_BaseShape } from './Element'
 import { NodeEventsHandler } from './NodeEventsHandler'
 import { isLegendElementId } from './legendIds'
 import { applyTemplate, resolveTagGroupToken } from './LabelTemplate'
+import { tiedFrameRefitLeft } from './tiedFrameRefit'
+import { envelopeBBoxOfMembers, Type_EnvelopeMember } from './envelopeBBox'
 
 export const default_selected_stroke_width = 3
 //export const label_margin = 0
@@ -312,6 +314,15 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     this.d3_selection_g_shape = this.d3_selection?.append('g').attr('class', 'g_node_shape') ?? null
   }
 
+  /**
+   * #377 — objet de dessin du LIBELLÉ de cette forme. Exposé pour que le label de valeur puisse
+   * connaître la hauteur déjà consommée par le libellé (règle « libellé prioritaire, puis
+   * valeur »). Lecture seule : l'instance est créée au constructeur et ne change jamais.
+   */
+  public get name_label_drawer(): NodeDrawNameLabel {
+    return this._nodeDrawNameLabel
+  }
+
   public getShapeWidthToUse() {
     return Math.max(this.shape_min_width, this._envelopeSize().w)
   }
@@ -571,9 +582,10 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     // Le cadre qui contient l'élément déplacé suit EN DIRECT, comme il le fait
     // déjà quand le membre déplacé est une zone de texte (cf.
     // Class_ContainerElement.eventMouseDrag). Sans ça, il ne se remettait à jour
-    // qu'au relâcher. (Sur main, ce bloc est en plus écarté pendant un
-    // alt-glisser = cloner — os#1340, absent de prod.)
-    if (this.drawing_area.isInSelectionMode()) {
+    // qu'au relâcher. Écarté pendant un alt-glisser = cloner (os#1340) : ce sont
+    // les COPIES qui suivent le geste, l'original ne bouge pas.
+    if (this.drawing_area.isInSelectionMode()
+      && !this._nodeEventsHandler.is_alt_clone_dragging) {
       this.growEnclosingFrames()
     }
     // Geometric frame: drag pushes attached elements along (skipping
@@ -881,6 +893,48 @@ export abstract class Class_NodeBase extends Class_BaseShape {
       if (mx !== m.position_x || my !== m.position_y) { m.position_x = mx; m.position_y = my; changed = true }
       if (changed) { m.settleCenterAnchor(); m.draw() }
     })
+  }
+
+  /**
+   * #363 — Recale le bord GAUCHE du cadre sur l'enveloppe LABELS INCLUS de ses
+   * membres. La TAILLE du cadre est déjà label-incluse
+   * (`_envelopeSize` lit le `getBBox()` du SVG), mais son coin ne l'était qu'en
+   * fin de drag (`expandToContainAttachedNodes`) : un fichier dont les libellés
+   * de nœuds débordent à gauche (`name_label_horiz: 'left'` +
+   * `name_label_inside_horiz: false`) s'ouvrait donc avec un cadre de la bonne
+   * largeur mais TRANSLATÉ vers la droite du débord — il entourait les formes,
+   * pas les libellés — jusqu'au premier clic sur un membre.
+   *
+   * HORIZONTAL seulement, à dessein : le bord haut d'un cadre appartient au mode
+   * de positionnement actif, qui le réécrit à chaque dessin (empilement de
+   * colonne par `anchorParametricNodesToAbsolute`, ancre de centre par
+   * `anchorByCenterIfResized`). Le corriger ici le ferait osciller d'un dessin au
+   * suivant, et comme le ré-empilement des enfants (`restackContainerChildren`,
+   * Phase C de `recomputeParametricLayout`) s'ancre sur le haut du cadre, chaque
+   * passe ferait remonter la pile d'un débord de libellé — dérive sans fin. Rien,
+   * en revanche, ne réécrit le x d'un cadre : la correction y est stable.
+   *
+   * À appeler APRÈS le dessin : le débord des libellés n'entre dans le
+   * `getBBox()` qu'une fois ceux-ci rendus.
+   *
+   * @returns true si le coin a bougé — au caller de redessiner le cadre.
+   */
+  public refitTiedFrameToLabels(): boolean {
+    if (!this._tied_to_nodes || this._attached_node.length === 0) return false
+    const bbox = this._computeEnvelopeBBox(this._attached_node)
+    if (!bbox) return false
+    // Décision isolée en fonction pure (testable sans d3/DOM) : cf. tiedFrameRefit.
+    const new_left = tiedFrameRefitLeft({
+      current_left: this.position_x + this.shape_margin_left,
+      envelope_min_x: bbox.min_x,
+      envelope_max_x: bbox.max_x,
+      margin_left: this.shape_margin_left,
+      margin_right: this.shape_margin_right,
+      shape_min_width: this.shape_min_width,
+    })
+    if (new_left === null) return false
+    this.position_x = new_left - this.shape_margin_left
+    return true
   }
 
   // Full re-fit of the top-left onto the attached-node envelope (grows AND
@@ -1282,8 +1336,7 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   protected _computeEnvelopeBBox(
     nodes: Class_NodeBase[]
   ): { min_x: number, min_y: number, max_x: number, max_y: number } | null {
-    let min_x = Infinity, min_y = Infinity, max_x = -Infinity, max_y = -Infinity
-    let found = false
+    const members: Type_EnvelopeMember[] = []
     nodes.forEach(node => {
       if (!node.is_visible) return
       // Pour un nœud lui-même cadre tied (container avec enfants attachés),
@@ -1294,26 +1347,17 @@ export abstract class Class_NodeBase extends Class_BaseShape {
       // ancêtres englobants mal dimensionnés sans ce contournement.
       const prefer_logical = node._tied_to_nodes && node._attached_node.length > 0
       const svg_bbox = prefer_logical ? null : node.d3_selection?.node()?.getBBox()
-      let left: number, top: number, right: number, bottom: number
-      if (svg_bbox && (svg_bbox.width > 0 || svg_bbox.height > 0)) {
-        left = node.position_x + svg_bbox.x
-        top = node.position_y + svg_bbox.y
-        right = left + svg_bbox.width
-        bottom = top + svg_bbox.height
-      } else {
-        left = node.position_x
-        top = node.position_y
-        right = left + node.getShapeWidthToUse()
-        bottom = top + node.getShapeHeightToUse()
-      }
-      if (left < min_x) min_x = left
-      if (top < min_y) min_y = top
-      if (right > max_x) max_x = right
-      if (bottom > max_y) max_y = bottom
-      found = true
+      members.push({
+        position_x: node.position_x,
+        position_y: node.position_y,
+        logical_w: node.getShapeWidthToUse(),
+        logical_h: node.getShapeHeightToUse(),
+        svg_bbox: svg_bbox ?? null,
+      })
     })
-    if (!found) return null
-    return { min_x, min_y, max_x, max_y }
+    // Décision isolée en fonction pure (testable sans d3/DOM) : X labels inclus
+    // (#363), Y sur les seules boîtes des membres (#392). Cf. envelopeBBox.
+    return envelopeBBoxOfMembers(members)
   }
 
   /**

@@ -131,7 +131,10 @@ describe('legendEntryText', () => {
   const group = { id: 'g1', name: 'Materiaux', use_colors: true, selected_tags_list: [] }
   const tag = {
     id: 't1', name: 'charbon', display_name: 'Charbon', color: '#000000',
-    resolved_unit: { unit: { name: 'kt' } }
+    // `label` = ce qui est écrit sur le diagramme (Class_Unit.label : display_name
+    // s'il est posé, sinon le symbole canonique). Le rendu passe par lui, jamais
+    // par `name` — le mock porte les deux pour rester fidèle à la classe.
+    resolved_unit: { unit: { name: 'kt', label: 'kt' } }
   }
 
   it('sans gabarit : le nom long du tag (comportement historique)', () => {

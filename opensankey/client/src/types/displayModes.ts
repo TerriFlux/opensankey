@@ -14,7 +14,34 @@
 
 import type { Class_DrawingArea } from './DrawingArea'
 
+/**
+ * os#1353 — « Settle » des centres : commit le coin courant de chaque nœud comme nouveau centre
+ * de vérité (`settleCenterAnchor` = centre := coin + taille/2). C'est le bon geste quand on
+ * QUITTE l'absolu, où le coin a pu être déplacé explicitement (drag, flèches, op structurelle) —
+ * mais UNIQUEMENT sur une aire déjà mise en page.
+ *
+ * Sur une aire jamais dessinée, le coin et la taille ne sont pas la vérité : les hauteurs valent
+ * encore le plancher `shape_min_height` (3 px — les épaisseurs de flux ne sont calculées qu'au
+ * dessin) et le coin n'a pas encore été dérivé du centre lu dans le fichier (format ≥ 1.1.5 :
+ * `node_pos_is_center`). Le settle y remplaçait donc le centre du fichier par « coin + 1,5 px »,
+ * et le premier dessin, qui dérive coin = centre − hauteur/2, remontait chaque nœud d'environ une
+ * demi-hauteur — d'autant plus haut qu'il est gros, jusqu'à sortir par le haut du diagramme. Les
+ * nœuds dont la hauteur ne vient PAS d'une bande de flux (nœud-stock plafonné par `maximum_node`)
+ * étaient épargnés, ce qui donnait au défaut son allure d'aval qui décroche.
+ *
+ * Ne rien faire est ici le comportement correct : le centre du fichier reste la vérité et le
+ * premier dessin en dérive le coin (`anchorByCenterIfResized`).
+ */
+function settleCentersIfLaidOut(da: Class_DrawingArea) {
+  if (!da.has_been_laid_out) return
+  da.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
+}
+
+// #369 — Choisir un mode est un geste EXPLICITE : il lève la suspension d'ouverture (qui fait
+// dessiner en absolu jusqu'au premier changement de datatag, cf. DrawingArea) pour que le mode
+// s'applique tout de suite, comme avant #369.
 export function setParametricMode(da: Class_DrawingArea) {
+  da.clearPositionModeSuspension()
   da.withBypassRedraws(() => {
     const default_style = da.sankey.styles_dict['default']
 
@@ -51,6 +78,7 @@ export function setParametricMode(da: Class_DrawingArea) {
 }
 
 export function setAbsoluteMode(da: Class_DrawingArea) {
+  da.clearPositionModeSuspension()
   const default_style = da.sankey.styles_dict['default']
   const prev_mode = default_style.shape_position_type
   // #1231 — quitter l'« échelle adaptée » restaure l'échelle de base.
@@ -68,29 +96,50 @@ export function setAbsoluteMode(da: Class_DrawingArea) {
   } else {
     // #1230 — prev = absolu / parametric (ex. ops structurelles) : le coin courant EST la
     // nouvelle vérité → on le commit comme centre (settle), pour que le 1er draw n'introduise
-    // aucun saut.
-    da.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
+    // aucun saut. os#1353 — sauf sur une aire jamais mise en page (cf. settleCentersIfLaidOut).
+    settleCentersIfLaidOut(da)
   }
 }
 
-// #1231 — Mode « échelle adaptée » : le flux de référence (clic droit) garde toujours la
-// même épaisseur ; l'échelle du diagramme s'adapte à chaque datatag en conséquence. Les
+// #1231/#384 — Mode « échelle adaptée » : le DIAGRAMME garde toujours la même hauteur ;
+// l'échelle s'adapte à chaque datatag en conséquence (référence = grandeur du diagramme
+// entier, cf. NodePositioningScaleAdapted.diagramMagnitude — plus un élément désigné). Les
 // nœuds gardent leur centre fixe (comme l'absolu) pendant qu'ils se redimensionnent.
 export function setScaleAdaptedMode(da: Class_DrawingArea) {
   const default_style = da.sankey.styles_dict['default']
-  // #1231 (1.1.5) — si on vient d'un mode d'AFFICHAGE (proportionnel), le coin courant est
-  // comprimé. On revient d'abord aux VRAIS centres (sinon settleCenterAnchor figerait le
-  // coin comprimé comme centre → centres faussés). L'échelle adaptée part donc des positions
-  // absolues réelles ; le draw applique ensuite le rescale autour des centres invariants.
-  da.nodePositioning.deriveAbsoluteNodesFromCenter()
+  const prev_mode = default_style.shape_position_type
+  if (prev_mode === 'proportional' || prev_mode === 'scale_adapted') {
+    // #1231 (1.1.5) — on vient d'un mode d'AFFICHAGE : le coin courant est du scratch (comprimé
+    // par le %, ou rescalé par l'échelle). On revient aux VRAIS centres (sinon settleCenterAnchor
+    // figerait ce coin comme centre → centres faussés).
+    da.nodePositioning.deriveAbsoluteNodesFromCenter()
+  } else {
+    // #384 — on vient de l'absolu (ou du `parametric` hérité) : le coin courant EST la vérité,
+    // on le commit comme centre. Dériver le coin du centre stocké, comme le faisait
+    // inconditionnellement cette fonction, DÉPLAÇAIT les nœuds à la seule sélection du mode :
+    // le fichier stocke des centres valables pour les hauteurs de SON datatag (cf. #365/#369),
+    // les redériver hors de ce contexte recale tout le diagramme. Même dissymétrie que
+    // `setAbsoluteMode`, qui ne dérive du centre qu'en sortant d'un mode d'affichage.
+    // os#1353 — sauf sur une aire jamais mise en page (cf. settleCentersIfLaidOut).
+    settleCentersIfLaidOut(da)
+  }
   default_style.shape_position_type = 'scale_adapted'
+  // #384 — CHOISIR le mode ne change rien au diagramme : il est ARMÉ, pas appliqué, et ne se
+  // fait sentir qu'au premier changement de datatag — ce qu'il gouverne. C'est la règle du
+  // premier rendu du #369, jusqu'ici réservée à l'OUVERTURE d'un fichier ; elle vaut tout
+  // autant pour le choix explicite au sélecteur. Appliquer dès l'entrée déplaçait les nœuds
+  // (recalage d'affichage de `resolveScaleAdaptedOverlaps`) sans qu'aucune donnée ait changé.
+  da.suspendPositionModeUntilDataChange()
+  // La référence est l'état AFFICHÉ à l'entrée du mode. Capturée ici (et rafraîchie à chaque
+  // frame tant que le mode reste armé, cf. drawElements) : sans cela, la capture paresseuse
+  // n'aurait lieu qu'à la première frame APPLIQUÉE, donc déjà au datatag suivant — d'où un
+  // pas de retard, le mode ne « prenant » qu'au deuxième changement de datatag.
   da.nodePositioning.captureScaleReference()
-  // #1231 — redessiner immédiatement pour appliquer l'échelle adaptée dès l'entrée du
-  // mode (sinon le rescale n'apparaissait qu'au draw suivant : navigation datatag).
   da.draw()
 }
 
 export function setProportionalMode(da: Class_DrawingArea) {
+  da.clearPositionModeSuspension()
   const default_style = da.sankey.styles_dict['default']
   // #1231 — quitter l'« échelle adaptée » restaure l'échelle de base.
   da.nodePositioning.clearScaleAdaptation()

@@ -108,6 +108,17 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   // panneau draggable, ouvert depuis l'onglet Valeur de l'inspecteur.
   ref_setter_show_units_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
 
+  // sa#424 (lot 3) — fenêtre « Exporter » UNIQUE : le choix du format de rendu
+  // et ses réglages au même endroit, là où le menu Exporter de la barre
+  // dispersait PNG / PDF / SVG en commandes, chacune rouvrant sa propre modale.
+  ref_setter_show_modal_export: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+
+  // sa#424 (lot 5) — fenêtre de choix « Nouveau » (vierge / modèle / classeur
+  // Excel vierge), dernière section du menu Fichier devenue une commande.
+  ref_setter_show_modal_new_document: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+
+  // Modales héritées, encore ouvertes par le bouton `export_sankey` conservé
+  // pour les `menu_top_order` personnalisés.
   ref_setter_show_modal_png_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_png_saver_res_h: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>
   ref_setter_png_saver_res_v: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>
@@ -162,13 +173,15 @@ export class Class_MenuConfig {
       // (resetDA, open_sankey, save_sankey, export_sankey, mep) stay registered
       // in dict_components_menu_top for backwards-compatible custom orders.
       'fichier',
-      'export_sankey',
+      // sa#424 (lot 3) — 'export_sankey' RETIRÉ de la barre : Exporter est
+      // devenu une commande du menu Fichier. La clé reste enregistrée dans
+      // dict_components_menu_top pour les menu_top_order personnalisés.
       'edition',
       'edit_style',
     ],
     [
-      // Consolidated "Aide" dropdown gathering Visite guidée + Tutoriels (and,
-      // via extra_help_menu_items, upper-layer entries like SA's Sankeythèque).
+      // Consolidated "Aide" dropdown gathering Visite guidée + Tutoriels (and
+      // any entry an upper layer injects via extra_help_menu_items).
       // Legacy split keys ('tour', 'tutoriel') stay registered in
       // dict_components_menu_top for backwards-compatible custom menu_top_order.
       'aide',
@@ -249,23 +262,57 @@ export class Class_MenuConfig {
   protected _main_zone_spreadsheet_mode: Type_SheetMode = 'grid'
   // Colonne d'outils à droite (éditeur uniquement). `tools_column_enabled` est posé par
   // SankeyMenu (= !is_static) : en mode publish/statique la colonne n'existe pas et ne réserve rien.
-  // OS#300 Lot 2 — la barre d'outils est désormais TOUJOURS visible : `_tools_column_open`
-  // (conservé pour compat) ne pilote plus l'affichage ni la réserve. L'ancien bouton
-  // « afficher/masquer la barre d'outils » est requalifié en bascule de barre latérale (Ctrl+B).
-  public tools_column_enabled: boolean = false
-  // Disponibilité du panneau de filtres (posée par ToolbarFilter) : conditionne le bouton filtre
-  // dans la colonne d'outils.
-  public filter_bar_available: boolean = false
+  // OS#300 Lot 2 avait rendu la barre TOUJOURS visible et neutralisé
+  // `_tools_column_open`. Il REPILOTE de nouveau l'affichage et la réserve
+  // (07/08) : la colonne se replie par sa poignée, ce que demande une page
+  // publiée — la colonne y sert un seul bouton et n'a pas à rogner le dessin en
+  // permanence. Le pli n'est PAS mémorisé d'une visite à l'autre : chaque
+  // chargement rouvre la colonne, sinon un lecteur qui l'a repliée une fois ne
+  // retrouverait plus ses filtres.
+  // DEUX DRAPEAUX POSÉS PAR UN RENDU, LUS PAR UN AUTRE — d'où la notification
+  // (08/08). `filter_bar_available` est écrit par `ToolbarFilter`,
+  // `tools_column_enabled` par `SankeyMenus`, et tous deux sont lus par la
+  // BARRE DU HAUT (poignée de pli) et par la colonne elle-même.
+  //
+  // Au premier rendu d'une page publiée, l'ordre joue contre nous : la barre et
+  // la colonne se rendent avant que le filtre ait annoncé sa disponibilité,
+  // donc avec `false`. Sans notification, rien ne les redessinait ensuite : ni
+  // ouvreur de filtres, ni poignée, pour toute la session. Mesuré sur
+  // ProjetsORBE le 08/08 — le bundle CONTENAIT le bouton, il ne s'affichait
+  // jamais.
+  //
+  // Notifier au CHANGEMENT seulement : ces deux affectations ont lieu à chaque
+  // rendu, et notifier inconditionnellement ferait boucler le rendu sur
+  // lui-même.
+  protected _tools_column_enabled: boolean = false
+  public get tools_column_enabled() { return this._tools_column_enabled }
+  public set tools_column_enabled(v: boolean) {
+    if (this._tools_column_enabled === v) return
+    this._tools_column_enabled = v
+    this._notifyMainZone()
+  }
+  protected _filter_bar_available: boolean = false
+  public get filter_bar_available() { return this._filter_bar_available }
+  public set filter_bar_available(v: boolean) {
+    if (this._filter_bar_available === v) return
+    this._filter_bar_available = v
+    this._notifyMainZone()
+  }
   protected _tools_column_open: boolean = true
   // #248 — bus pub/sub générique par topic (remplace la liste plate `_main_zone_listeners`).
   protected _event_bus: Class_EventBus = new Class_EventBus()
   protected _notifyMainZone() { this._event_bus.notify(MAIN_ZONE_TOPIC) }
   public get tools_column_open() { return this._tools_column_open }
   public set tools_column_open(v: boolean) { this._tools_column_open = v; this._notifyMainZone() }
-  /** Largeur (px) réservée à droite par la colonne d'outils (0 si publish/absente).
-   *  Toujours réservée en éditeur (barre d'outils permanente). */
+  /** Largeur (px) réservée à droite par la colonne d'outils.
+   *
+   *  Nulle quand la colonne est REPLIÉE (07/08) : repliée, elle ne laisse
+   *  qu'une poignée flottante, elle ne doit donc plus rogner le dessin — c'est
+   *  tout l'intérêt de la replier sur une page publiée, où chaque pixel de
+   *  diagramme compte. */
   public getToolsColumnWidthPx(): number {
-    return this.tools_column_enabled ? TOOLS_COLUMN_WIDTH_PX : 0
+    return (this.tools_column_enabled && this._tools_column_open)
+      ? TOOLS_COLUMN_WIDTH_PX : 0
   }
 
   // #1283 — Éditeur de groupe de tags injecté par OSP (l'édition vit dans OSP,
@@ -274,6 +321,21 @@ export class Class_MenuConfig {
   // en OS pur / sans licence : le crayon d'édition ne s'affiche pas.
   public render_tag_group_editor:
     ((element_tag_name_prop: string, group_id: string) => JSX.Element | null) | null = null
+
+  // sa#283 lot 2 — Enregistrement de vue contextuelle (« personnaliser pour ‹tag› »)
+  // injecté par OSP (même pattern que render_tag_group_editor : la feature vit dans OSP,
+  // le tiroir de filtres dans l'éditeur OS). Sur la carte d'un groupe de dataTags ou de
+  // fluxTags dont UN tag est sélectionné, le tiroir affiche un interrupteur : armé, les
+  // modifications sont capturées par diff au désarmement dans le contexte lié au tag.
+  //  - `armed(group_id)` : id du tag en enregistrement pour ce groupe, sinon null ;
+  //  - `arm(group_id, tag_id)` : arme (désarme AVEC capture un éventuel autre) ;
+  //  - `disarm()` : désarme AVEC capture.
+  // Null en OS pur : la feature n'existe pas sans la couche OSP.
+  public context_recording_ui: {
+    armed: (group_id: string) => string | null
+    arm: (group_id: string, tag_id: string) => void
+    disarm: () => void
+  } | null = null
 
   // OS#300 — Modèle central des « panneaux » (info-bulle / pop-up / barre
   // latérale). Instancié dans le constructeur avec le bus de ce menu, de sorte
@@ -299,8 +361,11 @@ export class Class_MenuConfig {
     if (this.panels.isOpen('config')) this.panels.setMode('config', this._config_last_container)
   }
   /** Largeur (px) réservée à droite par la config quand elle est la barre
-   *  latérale (0 sinon). Conservé pour les consommateurs directs (MainZoneTabs,
-   *  galerie) ; la réserve GLOBALE passe par panels.getSidebarReservedPx(). */
+   *  latérale (0 sinon). La réserve GLOBALE passe par panels.getSidebarReservedPx().
+   *  ⚠️ OS#388 — Ne JAMAIS s'en servir pour déclencher un recadrage : la barre
+   *  latérale est partagée, donc changer de menu ancré fait basculer cette valeur
+   *  (270 -> 0) et sa symétrique (0 -> 270) sans que la réserve totale bouge.
+   *  Plus aucun consommateur interne ; conservé pour l'API publique. */
   public getConfigPanelPinnedReservedPx(): number {
     return this.panels.sidebar_id === 'config' ? this.panels.getSidebarReservedPx() : 0
   }
@@ -334,8 +399,9 @@ export class Class_MenuConfig {
   public filter_drawer_open: boolean = false
   public filter_drawer_width_px: number = 0
   /** Largeur (px) réservée à droite par le filtre quand il est la barre latérale
-   *  (0 sinon). Conservé pour les consommateurs directs (MainZoneTabs) ; la
-   *  réserve GLOBALE passe par panels.getSidebarReservedPx(). */
+   *  (0 sinon). La réserve GLOBALE passe par panels.getSidebarReservedPx().
+   *  ⚠️ OS#388 — Même mise en garde que getConfigPanelPinnedReservedPx : ce n'est
+   *  pas un déclencheur de recadrage. Plus aucun consommateur interne. */
   public getFilterPanelPinnedReservedPx(): number {
     return this.panels.sidebar_id === 'filter' ? this.panels.getSidebarReservedPx() : 0
   }
@@ -585,6 +651,12 @@ export class Class_MenuConfig {
   private _ref_to_toolbar_updater: MutableRefObject<() => void>
   private _ref_to_save_in_cache_indicator: MutableRefObject<(b: boolean) => void>
   private _ref_to_save_in_cache_indicator_value: MutableRefObject<boolean>
+  // sa#424 (lot 4) — signal de RAFRAÎCHISSEMENT de l'alerte « aucun fichier
+  // téléchargé » portée par le bouton d'enregistrement. Un signal distinct est
+  // nécessaire : réutiliser l'indicateur de cache en lui repassant sa valeur
+  // courante ne redessine rien (React abandonne un setState de valeur égale), et
+  // l'alerte restait donc affichée après le premier téléchargement.
+  private _ref_to_last_download_updater: MutableRefObject<() => void>
   // Session toggle "ne jamais enregistrer la vue" : when true, switching away
   // from an edited view discards changes silently (no "Vue non enregistrée"
   // modal). Reset by clicking the cache cloud icon. Lives here (OS base) so the
@@ -634,6 +706,42 @@ export class Class_MenuConfig {
       }
   > = undefined
   /**
+   * sa#399 — Entrées supplémentaires du menu « Enregistrer » (dropdown dédié + groupe
+   * Enregistrer du menu Fichier). Injectées par OSP (dépôt dans la bibliothèque de
+   * briques) ou d'autres extensions. `label` et `hidden` sont des fonctions évaluées
+   * au rendu : l'entrée suit la langue active et peut n'apparaître que pour un compte
+   * connecté (une entrée cachée n'est pas rendue du tout, contrairement à `disabled`).
+   */
+  public extra_save_menu_items?: Array<{
+    key: string
+    label: () => string
+    icon?: React.ReactNode
+    onClick: () => void
+    disabled?: () => boolean
+    // Returns the tooltip text for the item. Empty string => no tooltip wrapper.
+    tooltip?: () => string
+    hidden?: () => boolean
+  }> = undefined
+  /**
+   * sa#424 (lot 5) — Commandes ajoutées EN BAS du menu Fichier, après le dernier
+   * séparateur. Sert au « Partager… » que la couche SaaS y pose : partager n'est
+   * ni un format ni une destination d'enregistrement, c'est une commande à part.
+   *
+   * Point d'injection plutôt qu'appel direct : l'éditeur open-source ignore tout
+   * de la publication (qui vit dans OS+ / SA), et doit continuer à l'ignorer.
+   * Même contrat que `extra_save_menu_items` — `label` et `hidden` évalués au
+   * rendu, pour suivre la langue et l'état de connexion.
+   */
+  public extra_file_menu_items?: Array<{
+    key: string
+    label: () => string
+    icon?: React.ReactNode
+    onClick: () => void
+    disabled?: () => boolean
+    tooltip?: () => string
+    hidden?: () => boolean
+  }> = undefined
+  /**
    * Optional handler that saves one standalone JSON file per view, packaged in a
    * single zip. Injected by OSP (views are an OSP feature). When set, the
    * persistence dialog's ``save_one_json_per_view`` JSON output option routes the
@@ -644,7 +752,12 @@ export class Class_MenuConfig {
   public extra_help_menu_items?: Array<
     {
       key: string
-      label: string
+      // Chaîne, ou FONCTION quand le libellé doit suivre la langue : les entrées sont
+      // enregistrées une seule fois (à l'initialisation des menus), donc une chaîne y est
+      // figée dans la langue du démarrage, alors qu'une fonction est réévaluée à chaque
+      // rendu du menu. Les deux formes restent acceptées (les intégrations hors de ce
+      // dépôt passent une chaîne).
+      label: string | (() => string)
       icon?: React.ReactNode
       onClick: () => void
       disabled?: () => boolean
@@ -654,6 +767,12 @@ export class Class_MenuConfig {
   > = undefined
   private _ref_to_modal_pref_updater: MutableRefObject<() => void>
   protected _ref_to_toolbar_bottom_updater: MutableRefObject<() => void>
+  // OS#85 — re-render des onglets de feuilles (bas de la grande zone).
+  protected _ref_to_sheet_tabs_updater: MutableRefObject<() => void> = { current: () => null }
+  // OS#85 — barre des feuilles dépliée ? Pendant bas de la bascule de barre latérale : elle
+  // mange le bas du dessin, on doit pouvoir la replier. État de session (comme la barre
+  // latérale), pas une préférence enregistrée.
+  protected _sheet_tabs_visible: boolean = true
 
   private _ref_to_nodetag_filter_updater: MutableRefObject<() => void>
   private _ref_to_datatag_filter_updater: MutableRefObject<() => void>
@@ -737,6 +856,7 @@ export class Class_MenuConfig {
     // Toolbar+
     this._ref_to_save_in_cache_indicator = { current: (_: boolean) => null }
     this._ref_to_save_in_cache_indicator_value = { current: true }
+    this._ref_to_last_download_updater = { current: () => null }
     this._ref_to_never_save_view_session = { current: (_: boolean) => null }
     this._ref_to_never_save_view_session_value = { current: false }
     this._ref_to_toolbar_updater = { current: () => null }
@@ -791,6 +911,8 @@ export class Class_MenuConfig {
       ref_setter_show_tooltip_editor: { current: () => null },
       ref_setter_show_units_editor: { current: () => null },
 
+      ref_setter_show_modal_export: { current: () => null },
+      ref_setter_show_modal_new_document: { current: () => null },
       ref_setter_show_modal_png_saver: { current: () => null },
       ref_setter_png_saver_res_h: { current: () => null },
       ref_setter_png_saver_res_v: { current: () => null },
@@ -845,6 +967,8 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_value_type_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_tooltip_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_units_editor.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_modal_export.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_modal_new_document.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_png_saver.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_pdf_saver.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_styles.current(false)
@@ -1075,6 +1199,8 @@ export class Class_MenuConfig {
     this.updateAllComponentsRelatedToContainers()
     this.updateComponentPref()
     this._ref_to_toolbar_bottom_updater.current()
+    // OS#85 — onglets de feuilles (un chargement de document a pu en changer la liste).
+    this._ref_to_sheet_tabs_updater.current()
     // Resynchronise le panneau Doc markdown (un nouveau fichier / diagramme a pu être chargé).
     this.ref_to_doc.current()
     this.dict_setter_show_dialog.ref_setter_modal_welcome_active_page.current(v => !v)
@@ -1603,6 +1729,10 @@ export class Class_MenuConfig {
     return this._ref_to_save_in_cache_indicator_value
   }
 
+  public get ref_to_last_download_updater(): MutableRefObject<() => void> {
+    return this._ref_to_last_download_updater
+  }
+
   public get ref_to_never_save_view_session(): MutableRefObject<(b: boolean) => void> {
     return this._ref_to_never_save_view_session
   }
@@ -1669,6 +1799,21 @@ export class Class_MenuConfig {
 
   public get ref_to_toolbar_bottom_updater(): MutableRefObject<() => void> {
     return this._ref_to_toolbar_bottom_updater
+  }
+
+  // OS#85 — onglets de feuilles (bas de la grande zone).
+  public get ref_to_sheet_tabs_updater(): MutableRefObject<() => void> {
+    return this._ref_to_sheet_tabs_updater
+  }
+
+  /** OS#85 — la barre des feuilles est-elle dépliée ? */
+  public get sheet_tabs_visible(): boolean { return this._sheet_tabs_visible }
+  /** Replie / déplie la barre des feuilles. Le recadrage du dessin (la barre du bas change
+   *  de hauteur) est déclenché par la barre elle-même, une fois le DOM à jour — la hauteur
+   *  réservée est LUE dans le DOM (DrawingArea.getBottomBarHeight). */
+  public toggleSheetTabs(): void {
+    this._sheet_tabs_visible = !this._sheet_tabs_visible
+    this._ref_to_sheet_tabs_updater.current()
   }
 
   public get ref_to_menu_config_node_icon_updater() { return this._ref_to_menu_config_node_icon_updater }

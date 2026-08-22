@@ -28,8 +28,27 @@ export type Type_DecomposeSpec =
   | { kind: 'node_children', dimension_id: string }
   | { kind: 'flux_children', dimension_id: string }
 
-// Axe non-additif : la valeur du sujet pour chaque tag d'un groupe de data tags.
-export interface Type_CompareSpec { data_tagg_id: string }
+// Axe non-additif : la valeur du sujet pour chaque tag d'un groupe de data tags,
+// OU (#389) pour chacun des flux entrants / sortants d'un nœud — une barre par
+// flux, libellée par le nœud d'en face. Comparer selon les flux N'EST PAS
+// décomposer selon les flux : des rendements (kt/ha) ne s'additionnent pas, ils se
+// juxtaposent ; c'est pour ça que cet axe est ici et pas dans Type_DecomposeSpec.
+//
+// Le membre « data tags » n'a pas de discriminant OBLIGATOIRE : les descripteurs
+// persistés avant #389 s'écrivent `{ data_tagg_id }` tout court et restent valides
+// tels quels — aucune migration de fichier n'est requise.
+export type Type_CompareSpec =
+  | { kind?: 'data_tag', data_tagg_id: string }
+  | { kind: 'inputs' | 'outputs' }
+
+// L'axe de comparaison porte-t-il sur les flux d'un nœud (#389) ? Prédicat partagé
+// par l'extraction, le rendu et l'inspecteur : c'est lui qui distingue les deux
+// membres de l'union — un test `'data_tagg_id' in spec` serait faux dès qu'un
+// descripteur ancien traîne un champ résiduel.
+export const isFluxCompare = (
+  spec: Type_CompareSpec | null | undefined
+): spec is { kind: 'inputs' | 'outputs' } =>
+  !!spec && (spec.kind === 'inputs' || spec.kind === 'outputs')
 
 // Surfaces où le graphique est publié (au-delà de l'inspecteur, toujours dispo).
 export interface Type_AnalysisSurfaces {
@@ -40,14 +59,81 @@ export interface Type_AnalysisSurfaces {
 export interface Type_AnalysisDescriptor {
   decompose: Type_DecomposeSpec | null
   compare: Type_CompareSpec | null
+  // SECOND axe de comparaison (#390) — OPTIONNEL : un descripteur qui ne le porte
+  // pas garde exactement le comportement d'avant (aucune migration de fichier).
+  // Renseigné, il croise deux axes NON ADDITIFS : une grappe par valeur du 1er axe
+  // (abscisse), une barre par valeur du 2nd (séries) — barres GROUPÉES, jamais
+  // empilées. L'ordre des deux champs est signifiant : c'est lui qui décide qui est
+  // l'abscisse et qui est la série.
+  compare_secondary?: Type_CompareSpec | null
   // Force la représentation ; sinon déduite (cf. deduceRepr).
   repr?: 'donut' | 'bars'
+  // Force le régime d'ÉCHELLE (#393) ; ABSENT = auto, comme `repr` ci-dessus — et
+  // l'auto vaut échelle PARTAGÉE tant que la mesure ne montre pas qu'une grappe y est
+  // écrasée. Le défaut d'un descripteur qui ne porte pas ce champ est donc exactement
+  // le comportement d'avant : aucune migration de fichier.
+  //
+  // 'per_group' donne son propre plafond à CHAQUE GRAPPE — une grappe par étiquette de
+  // `compare`, l'axe des abscisses. C'est la seule bande où les barres se comparent
+  // vraiment (elles y sont côte à côte), donc la seule qu'il soit utile de normaliser ;
+  // et cela fait de l'ORDRE des deux axes le levier de l'utilisateur : on met sur
+  // l'abscisse ce qui est incommensurable. N'a donc de sens que sous un croisement de
+  // deux axes de comparaison (cf. supportsPerGroupScale) — sans grappes, il n'y a rien
+  // à séparer.
+  scale_mode?: 'shared' | 'per_group'
   surfaces?: Type_AnalysisSurfaces
 }
 
+// Second axe de comparaison EFFECTIF (#390). Deux garde-fous, portés ici pour que
+// l'extraction, le rendu et l'inspecteur en héritent :
+//   - il n'existe que SOUS un premier axe (sans abscisse, pas de grappes) ;
+//   - deux axes « flux » ne se croisent pas — les flux entrants d'un nœud ne se
+//     lisent pas « par flux sortant », la cellule du croisement n'existe pas.
+export const effectiveCompareSecondary = (d: Type_AnalysisDescriptor): Type_CompareSpec | null => {
+  const secondary = d.compare_secondary ?? null
+  if (!secondary || !d.compare) return null
+  if (isFluxCompare(d.compare) && isFluxCompare(secondary)) return null
+  return secondary
+}
+
+// Croisement de deux axes de comparaison (#390) → barres GROUPÉES. Aucun des deux
+// n'étant additif, leurs barres ne s'empilent jamais ENTRE ELLES : ce serait un
+// mensonge visuel. Cela n'interdit pas l'axe additif — chaque barre reste empilée
+// de sa propre décomposition, exactement comme dans `decompose × compare`.
+export const isGroupedCross = (d: Type_AnalysisDescriptor): boolean =>
+  !!d.compare && !!effectiveCompareSecondary(d)
+
+// L'ÉCHELLE PAR GRAPPE est-elle applicable (#393) ? Point de vérité unique consommé
+// par le rendu et par l'inspecteur (qui n'expose le réglage que là). Il n'y a de
+// grappes que sous un croisement de deux axes de comparaison ; ailleurs, chaque barre
+// est seule de son espèce et leur donner à chacune son échelle les mettrait toutes au
+// plafond — un graphique dont toutes les hauteurs sont égales ne compare plus rien.
+export const supportsPerGroupScale = (d: Type_AnalysisDescriptor): boolean =>
+  isGroupedCross(d)
+
+// Décomposition EFFECTIVE (#389, étendue par #390) : l'axe additif est SANS OBJET
+// dès que L'UN des deux axes de comparaison porte sur les flux — chaque barre est
+// alors déjà un flux, la décomposer répéterait la même décomposition du nœud sous
+// chacune.
+//
+// Le croisement de deux axes, à lui seul, ne neutralise RIEN : « décomposer par flux
+// sortants × comparer selon l'année × comparer selon l'unité » est un cas légitime —
+// une grappe par année, une barre par unité, chaque barre empilée par ses flux. Les
+// trois axes coexistent parce que le premier, lui, est additif.
+//
+// Point de vérité unique, consommé par l'extraction, le rendu et l'inspecteur (qui
+// grise le sélecteur en conséquence).
+export const effectiveDecompose = (d: Type_AnalysisDescriptor): Type_DecomposeSpec | null =>
+  (isFluxCompare(d.compare) || isFluxCompare(effectiveCompareSecondary(d)))
+    ? null
+    : d.decompose
+
 // Représentation déduite : comparer = axe non-additif → jamais de couronne (une
-// couronne « 2019/2020 » est un mensonge visuel) ; décomposer seul → couronne.
+// couronne « 2019/2020 » est un mensonge visuel) ; décomposer seul → couronne. Un
+// croisement de deux axes de comparaison (#390) ne se replie sur AUCUN override :
+// il n'existe qu'en barres groupées.
 export const deduceRepr = (d: Type_AnalysisDescriptor): 'donut' | 'bars' => {
+  if (isGroupedCross(d)) return 'bars'
   if (d.repr) return d.repr
   return d.compare ? 'bars' : 'donut'
 }

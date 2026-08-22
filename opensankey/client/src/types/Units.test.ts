@@ -109,6 +109,58 @@ describe('OS#1286 — Class_UnitsRegistry', () => {
     expect(reg.getUnitType('unit_type_mass')!.name).toBe('Masse')
   })
 
+  test('mergeMissingFrom : importe la grandeur absente, laisse le reste intact', () => {
+    // Cas réel du transfert de mise en page : la source a migré son unité en texte libre dans
+    // « Unités du fichier », la cible en est au catalogue par défaut.
+    const source = makeDefault()
+    const kt = source.getOrCreateLegacyUnit('kt', 1)
+    expect(kt.unit.id).toBe('unit_type_file_kt')
+
+    const target = makeDefault()
+    expect(target.resolve('unit_type_file_kt')).toBeUndefined()
+    expect(target.mergeMissingFrom(source)).toBe(1)
+    // La référence de la source résout désormais chez la cible, avec le bon SYMBOLE.
+    expect(target.resolve('unit_type_file_kt')?.unit.name).toBe('kt')
+    expect(target.resolve('unit_type_file_kt')?.unit.coefficient).toBe(1)
+    // Idempotent : un 2e appel n'ajoute rien.
+    expect(target.mergeMissingFrom(source)).toBe(0)
+    expect(target.getUnitType(FILE_UNITS_TYPE_ID)!.units.length).toBe(1)
+  })
+
+  test('mergeMissingFrom : additif seulement, n\'écrase jamais la cible', () => {
+    const source = makeDefault()
+    // La source renomme une unité existante, change un défaut et une échelle, et ajoute une unité.
+    const src_mass = source.getUnitType('unit_type_mass')!
+    src_mass.units.find(u => u.id === 'mass_t')!.display_name = 'tonnes source'
+    src_mass.units.find(u => u.id === 'mass_t')!.coefficient = 42
+    src_mass.default_unit_id = 'mass_kg'
+    src_mass.display_scale = 999
+    src_mass.addUnit('Gt', 1e9)
+
+    const target = makeDefault()
+    expect(target.mergeMissingFrom(source)).toBe(1) // seul Gt manquait
+
+    const dst_mass = target.getUnitType('unit_type_mass')!
+    // Unité déjà présente : intouchée (coefficient et libellé d'affichage de la cible).
+    expect(dst_mass.units.find(u => u.id === 'mass_t')!.coefficient).toBe(1)
+    expect(dst_mass.units.find(u => u.id === 'mass_t')!.display_name).toBeUndefined()
+    // Défaut et échelle de la grandeur existante : intouchés.
+    expect(dst_mass.default_unit_id).toBe('mass_t')
+    expect(dst_mass.display_scale).toBeUndefined()
+    // Unité manquante : ajoutée avec son id d'origine (c'est lui que portent les références).
+    expect(dst_mass.units.find(u => u.name === 'Gt')?.id).toBe('unit_type_mass_Gt')
+  })
+
+  test('mergeMissingFrom : le libellé d\'affichage suit l\'unité importée', () => {
+    const source = new Class_UnitsRegistry()
+    const ut = source.addUnitType('Masse fichier')
+    ut.addUnit('t', 1)
+    ut.units[0].display_name = 'tonnes'
+    const target = makeDefault()
+    target.mergeMissingFrom(source)
+    expect(target.resolve(ut.units[0].id)?.unit.label).toBe('tonnes')
+  })
+
   test('fromJSON tolère les entrées invalides', () => {
     const reg = makeDefault()
     reg.fromJSON('not an array')

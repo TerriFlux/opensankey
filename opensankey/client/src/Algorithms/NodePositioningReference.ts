@@ -6,14 +6,14 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-// SOCLE « element de reference » (#243 c5) — partage par les DEUX modes de positionnement :
-//   - mode PROPORTIONNEL (`anchorProportionalNodes`) : la mediane suit le centre de l'element,
-//     et le facteur f suit sa valeur ;
-//   - mode ECHELLE ADAPTEE (`applyAdaptedScale`) : l'echelle suit la valeur de l'element, pour
-//     que sa taille rendue reste constante.
-// Les deux lisent `rawReference` / `gatedReference` : le prefixe historique `_prop_reference_*`
-// est TROMPEUR, cet etat n'appartient pas au mode proportionnel. L'extraire une seule fois est
-// le prealable a la separation des deux modes (lots c5 / c6).
+// SOCLE « element de reference » (#243 c5) — desormais propre au mode PROPORTIONNEL
+// (`anchorProportionalNodes`) : la mediane suit le centre de l'element, et le facteur f suit sa
+// valeur. Il lit `rawReference` / `gatedReference`.
+//
+// #384 — Le mode ECHELLE ADAPTEE ne le lit PLUS : il se cale sur la grandeur du diagramme entier
+// (cf. NodePositioningScaleAdapted.diagramMagnitude), ce qui le rend insensible a l'absence de
+// l'element au datatag courant. Le prefixe `_prop_reference_*`, qualifie de TROMPEUR quand les
+// deux modes partageaient cet etat, redit donc exactement ce qu'il est.
 //
 // L'element de reference est un FLUX ou un NOEUD-STOCK (#1231b), mutuellement exclusifs. Le
 // couple (element, datatag de reference) est PERSISTE via les marqueurs `shape_is_reference_flux`

@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 import * as d3 from '../d3Modules'
-import { Type_JSON, Type_Structure, Type_DataSource, Type_IntervalDisplay, Type_DisaggregationGap, default_main_sankey_id, randomId } from '../types/Utils'
+import { Type_JSON, Type_Structure, Type_DataSource, Type_IntervalDisplay, Type_DisaggregationGap, Type_Position, default_main_sankey_id, randomId } from '../types/Utils'
 import {
   default_background_color,
   default_DA_marging,
@@ -107,6 +107,20 @@ const UNITARY_CENTRAL_HEIGHT_FRACTION = 0.3
  * Un zoom manuel repasse le mode à 'none' (cf. Camera.zoom*). Persisté (SankeyPersistence).
  */
 export type Type_AutoFitMode = 'none' | 'width' | 'height' | 'full'
+
+/**
+ * os#1352 — RÉGIME de référence du mode « échelle adaptée ». Deux règles, même mécanique
+ * (échelle = échelle_réf × grandeur_courante / grandeur_réf), seule la GRANDEUR change :
+ *
+ *  - `diagram` (défaut, sa#384) : grandeur = somme de la colonne la plus haute. Ne dépend
+ *    d'aucun élément en particulier, donc jamais mise en défaut par un élément absent.
+ *  - `element` : grandeur = taille rendue de l'ÉLÉMENT DE RÉFÉRENCE désigné (flux
+ *    `shape_is_reference_flux` ou nœud-stock `shape_is_reference_stock`). C'est la règle
+ *    d'avant sa#384, restituée pour la PORTABILITÉ des documents qui ont été composés
+ *    autour d'un élément de référence — cf. CARTOFOB, calé sur le stock « Bois sur pied »,
+ *    dont la colonne dimensionnante change d'une vue d'essence à l'autre.
+ */
+export type Type_ScaleAdaptedReference = 'diagram' | 'element'
 
 // Outils de création de la colonne d'outils. Les deux premiers sont deux gestes
 // du mode 'edition' (cf. _edition_tool), les deux suivants deux formes du mode
@@ -284,6 +298,14 @@ export class Class_DrawingArea {
   // activée, prime (cf. NodeEventsHandler.handleMouseDragStart).
   protected _smart_guides: boolean = true
 
+  // sa#422 — Flèches de création rapide au survol d'un nœud (os#1344). Le geste est
+  // utile quand on DESSINE, gênant quand on lit : les flèches surgissaient à chaque
+  // passage de souris sans aucun interrupteur. L'interrupteur est le bouton
+  // « Sélection » de la colonne d'outils, dont l'état n'était jusqu'ici que dérivé
+  // des outils de création. Défaut `false` = comportement historique (flèches
+  // visibles) : aucun fichier existant ne change de comportement.
+  protected _connection_arrows_off: boolean = false
+
   // Paper format properties
   protected _paper_format: Type_PaperFormat = default_paper_format
   protected _paper_orientation: Type_PaperOrientation = default_paper_orientation
@@ -352,6 +374,147 @@ export class Class_DrawingArea {
     return this._sankey?.default_style?.shape_position_dy ?? 0
   }
   public set disaggregation_gap_value(v: number) { this._disaggregation_gap_value = v }
+
+  // #369 — SUSPENSION du mode d'affichage à l'ouverture d'un fichier. Le mode enregistré
+  // (proportionnel / échelle adaptée) est restitué — le sélecteur rouvre dessus et le
+  // changement de datatag le suit — mais il ne doit RIEN changer au diagramme à l'ouverture :
+  // on rouvre sur ce qui a été enregistré. Tant que la suspension tient, `drawElements`
+  // dessine comme en mode absolu (l'échelle du fichier, qui EST l'échelle adaptée
+  // enregistrée, reste donc telle quelle). Elle est levée dès que la sélection de datatags
+  // CHANGE — d'où la mémorisation de la sélection au chargement plutôt qu'un simple booléen :
+  // le chargement enchaîne plusieurs dessins (cadrage différé, re-render React), qu'un
+  // « lever à la première frame » n'aurait pas distingués d'un vrai changement de données.
+  // Transitoire : jamais persistée, jamais copiée.
+  protected _position_mode_suspended_selection: string | undefined = undefined
+  public get is_position_mode_suspended(): boolean {
+    return this._position_mode_suspended_selection !== undefined
+  }
+
+  /** #369 — Arme la suspension sur la sélection de datatags courante (appelé au chargement). */
+  public suspendPositionModeUntilDataChange() {
+    this._position_mode_suspended_selection = this._selectedDataTagsFingerprint()
+  }
+
+  /** #369 — Lève la suspension (changement de datatag, ou choix explicite d'un mode). */
+  public clearPositionModeSuspension() {
+    this._position_mode_suspended_selection = undefined
+  }
+
+  /**
+   * #369/os#1351 — Empreinte de la SÉLECTION AFFICHÉE : datatags ET viewtags.
+   *
+   * La suspension d'ouverture existe pour qu'un fichier ne saute pas à l'affichage ; elle doit
+   * donc se lever au premier geste de NAVIGATION. Elle ne surveillait que les datatags — or un
+   * diagramme dont les vues sont des view tags (CARTOFOB : une vue par essence) ne change jamais
+   * de datatag en navigant : la suspension ne se levait jamais, et le mode restait « absolu » en
+   * permanence, quel que soit le réglage (constaté le 14/08 sur la page publiée).
+   *
+   * Les deux dimensions comptent parce que les deux changent les VALEURS affichées, donc la
+   * hauteur rendue — ce que les modes « échelle adaptée » et « proportionnel » ont justement
+   * pour rôle de rattraper.
+   */
+  private _selectedDataTagsFingerprint(): string {
+    const data_tags = this._sankey.selected_data_tags_list.map(t => t.id).join('|')
+    const view_tags = this._sankey.view_taggs_list
+      .map(grp => grp.selected_tags_list.map(t => t.id).join(','))
+      .join('|')
+    return data_tags + '#' + view_tags
+  }
+
+  // #378 — Réorganisation auto de l'ordre des flux E/S au CHANGEMENT DE SÉLECTION de
+  // datatags. L'ordre des ancres est GÉOMÉTRIQUE (cf. Class_NodeElement.reorganizeIOLinks) :
+  // il dépend des centres des nœuds opposés, donc de leur HAUTEUR, donc des VALEURS
+  // affichées. D'un millésime (ou d'une unité, d'un axe) à l'autre, l'ordre optimal change —
+  // mais il n'était recalculé que par un geste qui touche la géométrie (déplacement de nœud,
+  // bouton « Réorganiser », désagrégation). Résultat : après une bascule de sélection, les
+  // flux gardaient l'ordre calculé pour la sélection PRÉCÉDENTE et se croisaient.
+  //
+  // Même mécanique que la suspension du #369 : on mémorise la SIGNATURE de la sélection et
+  // on la compare au dessin — on compare donc l'ÉTAT et non l'événement, ce qui couvre tous
+  // les chemins de bascule (panneau de filtres, sélecteur de la barre du haut, frise de
+  // séquence, lecture automatique de séquence, options de publication) sans les câbler un
+  // par un. Transitoire : jamais persistée, jamais copiée.
+  protected _io_reorg_data_selection: string | undefined = undefined
+
+  /**
+   * #378 — Amorce la mémoire de sélection SANS réorganiser (appelé au chargement d'un
+   * fichier). Sans cet amorçage, le premier dessin comparerait la sélection du fichier
+   * ouvert à celle du fichier précédent et réorganiserait tout : un diagramme se rouvrirait
+   * avec un ordre de flux différent de celui qui a été enregistré.
+   */
+  public primeIOReorgOnDataSelection() {
+    this._io_reorg_data_selection = this._selectedDataTagsFingerprint()
+    this._has_been_laid_out = false
+  }
+
+  // os#1353 — Cette aire de dessin a-t-elle DÉJÀ été mise en page (au moins un `drawElements`
+  // effectif) depuis le chargement ? Tant que non, la géométrie de ses nœuds n'est PAS la
+  // vérité : les hauteurs valent encore le plancher `shape_min_height` (les épaisseurs de flux
+  // ne sont calculées qu'au dessin), et le coin n'a pas encore été dérivé du centre lu dans le
+  // fichier. Toute opération qui commit le coin courant comme centre (`settleCenterAnchor`)
+  // détruirait donc les centres du fichier — c'est le sens de ce drapeau, cf. `DisplayModes`.
+  //
+  // Le cas réel n'est pas théorique : un document qui s'ouvre sur une VUE laisse la DA MAÎTRE
+  // non dessinée, et une option de page (`position_mode`) pose le mode sur les deux aires.
+  // Transitoire, jamais persisté ; remis à faux au chargement (cf. `primeIOReorgOnDataSelection`,
+  // appelé au même endroit de la persistance).
+  protected _has_been_laid_out: boolean = false
+
+  public get has_been_laid_out(): boolean { return this._has_been_laid_out }
+
+  /**
+   * #378 — Relance la réorganisation auto de l'ordre des flux E/S si la sélection de
+   * datatags a changé depuis le dernier dessin. Appelé par `drawElements` APRÈS le
+   * placement des nœuds (l'ordre se déduit des positions et hauteurs effectivement
+   * dessinées) et AVANT le dessin lui-même.
+   *
+   * `release_locks = false`, comme un déplacement de nœud : une bascule de sélection est une
+   * NAVIGATION, pas le « recalcul automatique » explicite qui libère les cadenas du menu
+   * « Ordre des flux E/S ». Un arrangement verrouillé par l'utilisateur survit donc au
+   * changement de millésime, les flux libres se réordonnant autour de lui. Les nœuds réglés
+   * sur `io_reorg_mode = 'none'` sortent d'eux-mêmes (cf. reorganizeIOLinks).
+   *
+   * Le premier appel (mémoire vide) ne fait qu'amorcer : on rouvre toujours sur l'ordre
+   * enregistré.
+   *
+   * @returns true si une réorganisation a eu lieu.
+   */
+  public reorganizeIOOnDataSelectionChange(): boolean {
+    const signature = this._selectedDataTagsFingerprint()
+    const previous = this._io_reorg_data_selection
+    this._io_reorg_data_selection = signature
+    if (previous === undefined || previous === signature) return false
+    // Sous bypass : reorganizeIOLinks redessine chaque nœud au passage, ce qui doublerait
+    // le rendu juste avant le draw complet de drawElements.
+    this.withBypassRedraws(
+      () => this._sankey.visible_nodes_list.forEach(n => n.reorganizeIOLinks(false)),
+      false
+    )
+    return true
+  }
+
+  /**
+   * #369 — Mode d'affichage à APPLIQUER au dessin courant : celui du style global, sauf tant
+   * que la suspension d'ouverture tient (alors : absolu). Lève la suspension au premier
+   * changement de sélection de datatags — quel que soit le chemin emprunté (panneau de
+   * filtres, topbar, frise de séquence, options de publication), puisqu'on compare l'état et
+   * non l'événement.
+   */
+  /**
+   * #369/os#1351 — Mode de position RÉELLEMENT appliqué au dessin : celui du style global, ou
+   * « absolu » tant que la suspension d'ouverture tient. Exposé en lecture pour que la
+   * suspension soit observable (tests, diagnostic) sans passer par une frame de dessin.
+   */
+  public get effective_position_mode(): Type_Position { return this._effectivePositionMode() }
+
+  protected _effectivePositionMode(): Type_Position {
+    if (this._position_mode_suspended_selection !== undefined
+      && this._position_mode_suspended_selection !== this._selectedDataTagsFingerprint()) {
+      this._position_mode_suspended_selection = undefined
+    }
+    if (this._position_mode_suspended_selection !== undefined) return 'absolute'
+    return this._sankey.styles_dict['default'].shape_position_type
+  }
 
   // Surcharge TRANSITOIRE du mode d'écart pour une opération ponctuelle (clic droit).
   // Non persistée, non copiée : posée juste avant l'op puis effacée. Le helper de
@@ -576,12 +739,24 @@ export class Class_DrawingArea {
   // pourcentage (0–100) en 'relative'. Défaut 1 (= 1 %).
   private _balance_marker_tolerance: number = 1
 
+  // sa#419 — Minimap dépliée ou non. C'est un réglage du DOCUMENT (et non une
+  // préférence de poste, comme il l'a été jusqu'au 2026-08-12) : le fichier
+  // rouvre et se publie dans l'état où son auteur l'a laissé, au même titre que
+  // le mode d'affichage (#369). Défaut faux → aucun fichier existant ne change.
+  private _minimap_open: boolean = false
+
   // Référence d'échelle par view tag : pour un view tag donné (clé = id de l'étiquette),
   // le flux `link_id` est calé à `thickness` px. Quand ce view tag est sélectionné,
   // l'échelle du diagramme est recalculée (applyViewTagScaleReference) pour que ce flux
   // atteigne cette épaisseur → tous les autres flux et la légende d'échelle suivent.
   // Un seul flux de référence par view tag (la clé écrase). « Vue complète » = pas de clé.
   private _scale_reference_by_viewtag: { [view_tag_id: string]: { link_id: string, thickness: number } } = {}
+
+  // os#1352 — Régime de référence du mode « échelle adaptée » (cf. Type_ScaleAdaptedReference).
+  // Réglage PORTÉ PAR LE DOCUMENT (persisté, round-trippé) : c'est une propriété de la
+  // composition, pas une préférence de session. Défaut `diagram` → aucun fichier existant ne
+  // change de comportement du seul fait de la relecture.
+  private _scale_adapted_reference: Type_ScaleAdaptedReference = 'diagram'
   // Porteur d'échelle surchargé à la frame précédente (pour restaurer sa valeur naturelle
   // avant de recalculer). tag_id défini → data tag unitaire ; sinon → échelle de la DA.
   // `original` = valeur naturelle à restaurer ; `applied` = valeur qu'on a posée (sert à
@@ -814,9 +989,11 @@ export class Class_DrawingArea {
     this._grid_size = drawing_area_to_copy._grid_size
     this._grid_visible = drawing_area_to_copy._grid_visible
     this._smart_guides = drawing_area_to_copy._smart_guides
+    this._connection_arrows_off = drawing_area_to_copy._connection_arrows_off
     this._height = drawing_area_to_copy._height
     this._maximum_flux = drawing_area_to_copy._maximum_flux
     this._minimum_flux = drawing_area_to_copy._minimum_flux
+    this._minimap_open = drawing_area_to_copy._minimap_open
     this._balance_marker_enabled = drawing_area_to_copy._balance_marker_enabled
     this._balance_marker_strategy = drawing_area_to_copy._balance_marker_strategy
     this._balance_marker_tolerance = drawing_area_to_copy._balance_marker_tolerance
@@ -1020,6 +1197,15 @@ export class Class_DrawingArea {
     if (this._font_size_locked && this._k_fit === k_fit_before_fit) {
       this._refreshLabelsForFitZoom()
     }
+    // #363 — deuxième passage de recalage des cadres englobants, ICI et pas
+    // seulement dans drawElements() : en police verrouillée, drawElements() dessine
+    // les labels sur un zoom identité (compensation 1/k = 1, police brute), et
+    // c'est le fit ci-dessus qui les met à l'échelle du cadrage. Le `getBBox()` lu
+    // pendant drawElements() sous-estime donc le débord des libellés d'un facteur
+    // 1/k au PREMIER dessin (les suivants partent du zoom déjà calé). Ce second
+    // passage ne fait que finir le recalage — il est idempotent une fois les
+    // libellés à leur taille définitive.
+    this._refitTiedFramesToLabels()
     this._legend.draw()
     this._sendLegendFramesBehindMembers()
     // Added events listeners
@@ -1031,6 +1217,143 @@ export class Class_DrawingArea {
     this.orderElementOnDA()
 
     // Init zoom pan constraint (translateExtent) so the first user scroll is already bounded
+    this._updateScrollbars()
+  }
+
+  /**
+   * OS#388 — Prise en compte d'un changement de la LARGEUR RÉSERVÉE du fenêtrage
+   * (barre latérale ouverte/fermée/redimensionnée, colonne tableur/doc…). Le CONTENU
+   * ne change pas : seul ce qui dépend de `window_fitting_width/height` doit être
+   * rafraîchi.
+   *
+   * Passer par `draw()` était un contresens : il détruit et reconstruit l'intégralité
+   * du SVG (unDraw + _initDraw + drawElements, nœuds, flux et libellés compris) pour
+   * ne mettre à jour, en caméra libre, qu'un cadre et deux barres de défilement — et
+   * sortait en prime le toast bloquant « Initialisation de la zone de dessin ».
+   *
+   * Ce qui est rejoué reprend, régime par régime, ce que faisait l'ancien couple
+   * `areaAutoFit() + draw()` — SEULE la reconstruction du SVG disparaît :
+   * - AUCUN cadrage automatique ('none') → **rien n'est recadré**, chrome seul —
+   *   format papier ET taille verrouillée compris : la caméra est à l'utilisateur,
+   *   un geste de fenêtrage ne la lui reprend pas ;
+   * - taille VERROUILLÉE + cadrage automatique → cadrage figé réappliqué, avec le
+   *   rétrécissement de secours si le contenu ne rentre plus dans la zone réduite ;
+   * - mode PAPIER + cadrage automatique → la page se recale dans le viewport ;
+   * - mode de cadrage AUTOMATIQUE (largeur / hauteur / tout) ou board unitaire →
+   *   re-fit, compensation de police comprise.
+   *
+   * @memberof Class_DrawingArea
+   */
+  public refreshWindowFraming() {
+    // Zone jamais dessinée : rien à rafraîchir (le premier draw fera le cadrage).
+    if (!this.d3_selection_zoom_area) return
+
+    // AUCUN CADRAGE AUTOMATIQUE : la géométrie du contenu ne bouge pas d'un pixel,
+    // seul le chrome est rafraîchi. Règle sans exception — c'est le premier test, AVANT
+    // le cadrage verrouillé et AVANT le mode papier :
+    // - une page A3 ne doit pas se recentrer toute seule à l'ouverture de la barre ;
+    // - un diagramme en TAILLE VERROUILLÉE (#1240) non plus. Son dézoom de secours
+    //   (`_lockedContentOverflows`) est fait pour un changement de CONTENU — un dataTag
+    //   plus grand que celui de référence — pas pour un geste de fenêtrage. Déclenché
+    //   ici, il rétrécissait le diagramme dès que la barre s'ouvrait, ce qui donnait
+    //   « le diagramme s'adapte » ET supprimait la barre de défilement attendue (plus
+    //   rien ne dépassait). `size_locked` est en outre posé dans des fichiers existants
+    //   sans que leur auteur l'ait jamais réglé : le régime doit rester invisible.
+    if (this._auto_fit_mode === 'none' && !this.is_unitary) {
+      this._refreshWindowChrome()
+      return
+    }
+
+    // Cadrage VERROUILLÉ (#1240) avec un mode de cadrage actif : même protocole que
+    // _drawBody — le transform courant fait foi tant qu'on n'est pas dans un état
+    // « rétréci pour débordement ».
+    if (this._size_locked) {
+      const zoom_node = this.d3_selection_zoom_area.node()
+      const live_zoom_transform = zoom_node ? d3.zoomTransform(zoom_node) : null
+      if (live_zoom_transform && !this._locked_overflow_shrunk) {
+        this._locked_zoom_transform = live_zoom_transform
+      }
+      const locked_zoom_transform = this._locked_zoom_transform
+      const recompute_locked = this._locked_fit_dirty || !locked_zoom_transform
+      this.areaAutoFit(recompute_locked ? false : undefined, recompute_locked)
+      if (recompute_locked) {
+        this._locked_fit_dirty = false
+        this._captureLockedReference()
+      } else if (locked_zoom_transform) {
+        // La zone a pu RÉTRÉCIR (barre latérale ouverte/élargie) : le cadrage de
+        // référence ne suffit alors plus à tout montrer -> dézoom transitoire, la
+        // référence restant intacte pour ré-agrandir à la fermeture.
+        if (this._lockedContentOverflows(locked_zoom_transform.k)) {
+          this._locked_overflow_shrunk = true
+          this.areaAutoFit(false, true)
+        } else {
+          this._locked_overflow_shrunk = false
+          this.setCamera(locked_zoom_transform)
+        }
+      }
+      this._refreshWindowChrome()
+      return
+    }
+
+    // Mode PAPIER (avec un cadrage automatique actif) : la page a une taille fixe,
+    // mais son cadrage DANS le viewport dépend de la place disponible — sans quoi
+    // elle se retrouve à cheval sous la barre latérale. Le cœur du fit sait le faire
+    // (branche `is_paper_mode` de _areaAutoFitCore), mais un appel GÉNÉRIQUE est
+    // re-routé vers le mode actif (applyAutoFitMode -> recenter, qui sort sans rien
+    // faire en mode papier) : on passe donc un argument explicite pour l'atteindre.
+    // Ce calcul-là est une fonction pure de la place disponible (k = min des deux
+    // rapports, aucun libellé en jeu) : une seule passe suffit.
+    if (this.is_paper_mode) {
+      this.areaAutoFit(undefined, true, false)
+      this._refreshWindowChrome()
+      return
+    }
+
+    this._autoFitToFixedPoint()
+    this._refreshWindowChrome()
+  }
+
+  /**
+   * OS#388 — Recadrage automatique itéré jusqu'à son POINT FIXE.
+   *
+   * `areaAutoFit` n'est pas une fonction pure de la place disponible : la réserve de
+   * débordement des libellés est calculée sur le zoom COURANT (`k_live`, cf.
+   * `skip_text_in_bbox` dans `_areaAutoFitCore`), et en police verrouillée les
+   * libellés sont contre-scalés par 1/k. Le résultat dépend donc du cadrage d'où
+   * l'on part — et l'écart n'est pas symétrique : une RÉDUCTION de la zone converge
+   * du premier coup, un AGRANDISSEMENT ne reprend qu'une partie de la place rendue.
+   * D'où l'effet de cliquet mesuré sur un diagramme réel en police verrouillée
+   * (506 nœuds) : l'échelle perdait ~5 % au premier cycle ouverture/fermeture de la
+   * barre latérale et ne revenait jamais à son point de départ. Défaut ANTÉRIEUR à
+   * ce ticket — l'ancien `areaAutoFit() + draw()` cliquetait pareil, en pire.
+   *
+   * Quelques passes bornées suffisent : on s'arrête dès que l'échelle ne bouge plus.
+   * Le coût reste sans commune mesure avec la reconstruction du SVG qu'on a supprimée.
+   */
+  private _autoFitToFixedPoint() {
+    /** Au-delà, on garde le dernier cadrage : mieux vaut un pixel près que boucler. */
+    const MAX_PASSES = 4
+    /** Écart relatif d'échelle en deçà duquel on considère le cadrage stabilisé. */
+    const TOLERANCE = 0.002
+    for (let pass = 0; pass < MAX_PASSES; pass++) {
+      const k_before = this._k_fit
+      this.areaAutoFit()
+      // Échelle dégénérée (diagramme vide, mesure indisponible) : il n'y a pas de
+      // point fixe à chercher, une passe suffit.
+      if (!Number.isFinite(k_before) || !Number.isFinite(this._k_fit) || k_before === 0) break
+      if (Math.abs(this._k_fit - k_before) <= TOLERANCE * Math.abs(k_before)) break
+    }
+  }
+
+  /**
+   * OS#388 — Chrome de la zone de dessin : fond + cadre de viewport + découpe #g_clip
+   * (drawBackground -> _updateViewportBorder), grille, puis barres de défilement et
+   * translateExtent. Tout ce qui se cale sur `window_fitting_*`, donc sur la largeur
+   * réservée — et rien d'autre : aucun élément Sankey n'est retouché.
+   */
+  private _refreshWindowChrome() {
+    this.drawBackground()
+    this.drawGrid()
     this._updateScrollbars()
   }
 
@@ -1216,12 +1539,26 @@ export class Class_DrawingArea {
    */
   public drawElements() {
     if (this.bypass_redraws) return
-    const _position_type = this.sankey.styles_dict['default'].shape_position_type
+    // os#1353 — à partir d'ici la géométrie des nœuds est mise en page (cf. `has_been_laid_out`).
+    this._has_been_laid_out = true
+    // #369 — mode EFFECTIF : celui du style global, ou 'absolute' tant que la suspension
+    // d'ouverture tient (cf. _effectivePositionMode). Lu UNE fois et réutilisé plus bas :
+    // les branches suivantes relisaient le style, ce qui aurait mélangé les deux régimes.
+    const _position_type = this._effectivePositionMode()
     // #1231 — Mode « échelle adaptée » : ajuster d'abord l'échelle (valeur→px) pour que le
     // flux de référence garde la même épaisseur d'un datatag à l'autre. Sorti de la branche
     // ci-dessous pour tourner AVANT le plafond par view tag (qui s'applique par-dessus).
     if (_position_type === 'scale_adapted') {
       this.nodePositioning.applyAdaptedScale()
+    } else if (this.is_position_mode_suspended
+      && this.sankey.styles_dict['default'].shape_position_type === 'scale_adapted') {
+      // #384 — Mode ARMÉ mais pas encore appliqué (ouverture de fichier, ou choix du mode au
+      // sélecteur) : la frame courante EST la référence, puisque c'est elle que la suspension
+      // s'engage à ne pas changer. On la (re)capture donc à chaque frame suspendue — la
+      // dernière avant le changement de datatag est l'état posé, ce qui évite à la fois le pas
+      // de retard de la capture paresseuse et le risque d'une capture sur une frame de
+      // chargement pas encore stabilisée.
+      this.nodePositioning.captureScaleReference()
     }
     // Plafond d'épaisseur par view tag : recale l'échelle pour que le flux désigné ne dépasse
     // pas son épaisseur seuil dans le view tag courant. Tous modes (y compris « échelle
@@ -1261,7 +1598,7 @@ export class Class_DrawingArea {
     // nœud du dessus de leur colonne (un absolu placé par le mode global, ou un
     // parametric déjà calé). Indépendant du mode global, sauf 'parametric' où
     // recomputeParametricLayout empile déjà la colonne entière.
-    if (this.sankey.styles_dict['default'].shape_position_type !== 'parametric') {
+    if (_position_type !== 'parametric') {
       this.nodePositioning.anchorParametricNodesToAbsolute()
       // Ré-empiler les enfants des cadres englobants (container_mode) sur leur hauteur
       // COURANTE. En 'parametric', recomputeParametricLayout (Phase C) le fait déjà ; dans les
@@ -1271,6 +1608,12 @@ export class Class_DrawingArea {
       // Tourne APRÈS le placement des enfants pour l'écraser, AVANT le draw.
       this.nodePositioning.restackContainerChildren()
     }
+    // #378 — Bascule de datatag : recalcule l'ordre des flux E/S sur les valeurs désormais
+    // affichées (no-op tant que la sélection ne change pas). Ici, à la toute fin du
+    // placement : l'ordre est géométrique, il doit être déduit des positions et hauteurs qui
+    // vont réellement être dessinées (les modes proportionnel / échelle adaptée viennent de
+    // les déplacer). Avant le dessin, donc rendu directement dans le bon ordre.
+    this.reorganizeIOOnDataSelectionChange()
     // Draw grid
     this.drawBackground()
     this.drawGrid()
@@ -1287,10 +1630,17 @@ export class Class_DrawingArea {
     // global f_eff) place les nœuds de façon déterministe, et déplacer une cible pour « garder
     // droit » casse cet empilement (résultat incohérent). Le flux droit reste actif en absolu /
     // échelle adaptée.
-    if (this.sankey.styles_dict['default'].shape_position_type !== 'proportional' &&
+    if (_position_type !== 'proportional' &&
         this.nodePositioning.enforceStraightLinks()) {
       this._sankey.draw()
     }
+    // #363 — recaler les cadres englobants sur l'enveloppe LABELS INCLUS de leurs
+    // membres. Tourne APRÈS le draw, comme le post-processing « flux droit »
+    // ci-dessus : le débord des libellés n'entre dans le `getBBox()` qu'une fois
+    // ceux-ci rendus. Sans cette passe, le coin du cadre n'était re-fitté qu'en
+    // fin de drag et un fichier s'ouvrait avec ses cadres décalés jusqu'au
+    // premier clic.
+    this._refitTiedFramesToLabels()
     // OS#1246 — passe « exit » du data-join. Le sous-arbre #g_elements_sankey étant
     // désormais réutilisé (non rasé), un <g> dont l'élément n'a pas été (re)dessiné
     // — nœud/flux devenu invisible sans passer par unDraw, flux sous seuil non
@@ -1301,6 +1651,51 @@ export class Class_DrawingArea {
     //this._legend.draw()
     this.drawBgImage()
 
+  }
+
+  /**
+   * #363 — Passe post-dessin : recale le bord gauche de chaque cadre englobant
+   * (nœud ou ZDT `tied_to_nodes`) sur l'enveloppe LABELS INCLUS de ses membres,
+   * puis redessine les seuls cadres qui ont bougé. Voir
+   * `Class_NodeBase.refitTiedFrameToLabels` pour le pourquoi du grow-only et de
+   * la restriction à l'horizontale.
+   *
+   * Ordre bottom-up : un cadre membre d'un autre cadre doit être recalé d'abord,
+   * car `_computeEnvelopeBBox` lit sa géométrie LOGIQUE (`prefer_logical`) et non
+   * son `getBBox()` — sans cet ordre, l'englobant se calerait sur un x périmé.
+   * Même boucle de convergence que le ré-ancrage de `updateFrom`, avec le même
+   * repli en cas de cycle d'attachement.
+   */
+  private _refitTiedFramesToLabels() {
+    const frames: Class_NodeBase[] = [
+      ...this._sankey.nodes_list,
+      ...this._sankey.containers_list,
+    ].filter(el => el.tied_to_nodes && el.attached_node.length > 0 && el.is_visible)
+    if (frames.length === 0) return
+    const moved: Class_NodeBase[] = []
+    const settled = new Set<Class_NodeBase>()
+    const settle = (frame: Class_NodeBase) => {
+      if (frame.refitTiedFrameToLabels()) moved.push(frame)
+      settled.add(frame)
+    }
+    let progressed = true
+    while (progressed && settled.size < frames.length) {
+      progressed = false
+      frames.forEach(frame => {
+        if (settled.has(frame)) return
+        const pending = frame.attached_node.some(n =>
+          n.tied_to_nodes && n.attached_node.length > 0 && !settled.has(n))
+        if (pending) return
+        settle(frame)
+        progressed = true
+      })
+    }
+    frames.forEach(frame => { if (!settled.has(frame)) settle(frame) })
+    if (moved.length === 0) return
+    // Seuls les cadres ont bougé : inutile de rejouer tout le draw, leurs membres
+    // et leurs flux sont inchangés. Même geste qu'en fin de drag (eventMouseDragEnd).
+    moved.forEach(frame => frame.draw())
+    this.orderElementOnDA()
   }
 
   /**
@@ -2843,8 +3238,10 @@ export class Class_DrawingArea {
     const node = this.d3_selection_zoom_area?.node()
     const fm = this._fit_margin / 2
     const navH = this.getNavBarHeight()
-    const vw = this.window_fitting_width
-    const vh = this.window_fitting_height
+    // OS#388 — bornes du CHROME : en caméra libre le fond (et la grille, qui reprend
+    // ces bornes) ne se rétrécit pas quand un panneau s'ouvre par-dessus.
+    const vw = this.chrome_fitting_width
+    const vh = this.chrome_fitting_height
     if (!node) return { x: 0, y: 0, w: vw, h: vh }
     const t = d3.zoomTransform(node)
     if (!t.k) return { x: 0, y: 0, w: vw, h: vh }
@@ -3360,13 +3757,61 @@ export class Class_DrawingArea {
   public get main_zone_bottom_reserved(): number {
     return this.application_data.menu_configuration?.getMainZoneBottomReservedPx() ?? 0
   }
+
+  // OS#388 — CHROME DE LA ZONE vs ZONE CADRÉE ==========================================
+  //
+  // `window_fitting_*` est la zone RÉELLEMENT disponible : c'est elle que vise le
+  // cadrage automatique, et c'est le long de son bord que se logent les barres de
+  // défilement. Le CHROME (cadre de viewport, découpe #g_clip, fond, grille) suit une
+  // largeur distincte, `chrome_fitting_*` : en caméra libre, un panneau qui s'ouvre se
+  // SUPERPOSE au diagramme au lieu de rétrécir la zone. Sans cela le diagramme paraît
+  // se réajuster tout seul (cadre qui recule, fond et grille recalés dessus) alors que
+  // l'utilisateur a la main sur la caméra et n'a rien demandé.
+
+  /** Réserve des panneaux qui S'OUVRENT et se FERMENT — barre latérale (config,
+   *  filtres, modèles) et colonne tableur/doc/unitaire. EXCLUT la colonne d'outils,
+   *  permanente : elle est là au repos, la rendre ferait dessiner sous les boutons.
+   *  Nulle sur une zone détachée, dont le cadrage suit son conteneur hôte. */
+  public get panel_reserve_right(): number {
+    if (this.is_detached) return 0
+    const mc = this.application_data.menu_configuration
+    if (!mc) return 0
+    return Math.max(0, mc.getMainZoneRightReservedPx() - mc.getToolsColumnWidthPx())
+  }
+
+  /** Symétrique en bas : réserve de la doc en mode bandeau. */
+  public get panel_reserve_bottom(): number {
+    if (this.is_detached) return 0
+    return this.main_zone_bottom_reserved
+  }
+
+  /** Largeur du CHROME. Identique à `window_fitting_width` dès qu'un cadrage
+   *  automatique est actif : le chrome épouse alors la zone cadrée, gouttière de barre
+   *  de défilement comprise (#292 — la barre se loge HORS du dessin).
+   *
+   *  En caméra libre au contraire, RIEN ne rabote la zone : ni la réserve du panneau,
+   *  ni la gouttière. La barre se dessine PAR-DESSUS le bord du diagramme — la loger
+   *  hors du dessin obligerait à rétrécir la zone, c'est-à-dire exactement le
+   *  recadrage qu'on doit s'interdire ici. */
+  public get chrome_fitting_width(): number {
+    if (this._auto_fit_mode !== 'none') return this.window_fitting_width
+    return this.window_fitting_width + this.panel_reserve_right + this._scrollbar_reserve_right
+  }
+
+  /** Hauteur du CHROME (cf. `chrome_fitting_width`). */
+  public get chrome_fitting_height(): number {
+    if (this._auto_fit_mode !== 'none') return this.window_fitting_height
+    return this.window_fitting_height + this.panel_reserve_bottom + this._scrollbar_reserve_bottom
+  }
   // Largeur réservée à droite de la grande zone pour le tableur/doc (split view). Source globale
   // (menu_configuration) plutôt qu'un champ par instance : sinon chaque vue, recréée à la volée par
   // extractViewFromJSON, repartirait à 0 et déborderait sous le tableur. Le diagramme se recadre
   // dans la largeur restante via areaAutoFit() (cf MainZoneTabs, déclenché au toggle / changement
   // de vue).
-  // NB : les panneaux latéraux config et filtres sont des OVERLAYS au-dessus de la grande zone
-  // (aucune réserve de largeur, le diagramme ne bouge pas à leur ouverture/fermeture).
+  // NB (OS#300, corrigé OS#388) : la barre latérale unifiée (config / filtres / modèles)
+  // ENTRE bien dans cette réserve — le commentaire d'origine, qui la disait sans réserve,
+  // datait d'avant OS#300. C'est le CHROME qui la rend en caméra libre, pour que le panneau
+  // se superpose au diagramme au lieu de le recadrer : cf. `chrome_fitting_width`.
   public get main_zone_right_reserved(): number {
     const mc = this.application_data.menu_configuration
     if (!mc) return 0
@@ -3393,26 +3838,6 @@ export class Class_DrawingArea {
   // réserve à la fin, sur le cadrage final.
   private _suppress_scrollbar_reserve: boolean = false
   public get suppress_scrollbar_reserve(): boolean { return this._suppress_scrollbar_reserve }
-
-  /** Largeur du CHROME. Identique à `window_fitting_width` dès qu'un cadrage automatique
-   *  est actif : le chrome épouse alors la zone cadrée, gouttière de barre de défilement
-   *  comprise (#292 — la barre se loge HORS du dessin). En caméra libre au contraire, RIEN
-   *  ne rabote la zone : la barre se dessine PAR-DESSUS le bord du diagramme.
-   *
-   *  Porté de main pour la minimap (os#1346). La version de main ajoute aussi la réserve
-   *  du panneau (`panel_reserve_right`), notion qui n'existe pas sur cette branche : seule
-   *  la gouttière est prise en compte ici. */
-  public get chrome_fitting_width(): number {
-    if (this._auto_fit_mode !== 'none') return this.window_fitting_width
-    return this.window_fitting_width + this._scrollbar_reserve_right
-  }
-
-  /** Hauteur du CHROME (cf. `chrome_fitting_width`). */
-  public get chrome_fitting_height(): number {
-    if (this._auto_fit_mode !== 'none') return this.window_fitting_height
-    return this.window_fitting_height + this._scrollbar_reserve_bottom
-  }
-
   public get window_fitting_width(): number {
     // DA détachée : on cadre dans le conteneur hôte (modal), pas la fenêtre.
     if (this.is_detached) {
@@ -3676,6 +4101,19 @@ export class Class_DrawingArea {
   public get scale_reference_by_viewtag() { return this._scale_reference_by_viewtag }
 
   /**
+   * os#1352 — Régime de référence du mode « échelle adaptée » (cf. Type_ScaleAdaptedReference).
+   * Changer de régime invalide la capture en cours : les deux grandeurs ne sont pas comparables
+   * (hauteur de colonne vs taille d'un élément), recomposer un ratio de l'une sur l'autre ferait
+   * sauter l'échelle. La capture paresseuse repart au dessin suivant, ratio 1, sans saut.
+   */
+  public get scale_adapted_reference(): Type_ScaleAdaptedReference { return this._scale_adapted_reference }
+  public set scale_adapted_reference(v: Type_ScaleAdaptedReference) {
+    if (this._scale_adapted_reference === v) return
+    this._scale_adapted_reference = v
+    this.nodePositioning.forgetScaleAdaptedCapture()
+  }
+
+  /**
    * Désigne (ou retire) le flux de référence d'échelle pour un view tag donné.
    * `link_id` falsy ou `thickness <= 0` → retire la référence du view tag.
    * Sinon écrase l'éventuelle référence existante (un seul flux par view tag).
@@ -3722,6 +4160,11 @@ export class Class_DrawingArea {
       this.drawElements()
     }
   }
+
+  // sa#419 — Repli de la minimap, porté par le document (voir le champ privé).
+  // Pas de redessin : la vignette est du chrome, elle ne touche pas au dessin.
+  public get minimap_open(): boolean { return this._minimap_open }
+  public set minimap_open(value: boolean) { this._minimap_open = value }
 
   public get minimum_flux(): number | undefined { return this._minimum_flux }
   public set minimum_flux(value: number | undefined) {
@@ -3931,6 +4374,16 @@ export class Class_DrawingArea {
   // os#671 — activation des smart guides d'alignement au drag.
   public get smart_guides(): boolean { return this._smart_guides }
   public set smart_guides(value: boolean) { this._smart_guides = value }
+
+  // sa#422 — true = les flèches de création rapide n'apparaissent plus au survol.
+  // Le setter masque immédiatement celles déjà affichées : sans cela, la flèche
+  // sous le curseur au moment du clic sur le bouton resterait à l'écran jusqu'au
+  // prochain mouvement de souris — le clic paraîtrait sans effet.
+  public get connection_arrows_off(): boolean { return this._connection_arrows_off }
+  public set connection_arrows_off(value: boolean) {
+    this._connection_arrows_off = value
+    if (value) this._connection_gesture.hideArrows()
+  }
 
   public get list_g_element() { return this._list_g_element_id }
   public set list_g_element(list) { this._list_g_element_id = list }

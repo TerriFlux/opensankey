@@ -53,7 +53,7 @@ import { Class_DrawingArea, Type_AutoFitMode, Type_FitAnchor } from '../types/Dr
 import { backfillTagGroupUseColors, convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
 // Issue #191 — migration de rétro-compat de la césure des libellés, isolée dans
 // son propre module pour rester testable sans le graphe d'imports lourd d'ici.
-import { applyWrapLongWordsRetrocompat, CURRENT_FORMAT_VERSION, effectiveLoadVersion, isVersionBelow, parseLangMap, resolveLangMap, serializeLangMap, Type_LangMap, validateSankeyRootJSON } from './persistenceMigrations'
+import { applyWrapLongWordsRetrocompat, CURRENT_FORMAT_VERSION, effectiveLoadVersion, isVersionBelow, parseLangMap, positionModeOnLoad, resolveLangMap, serializeLangMap, Type_LangMap, validateSankeyRootJSON } from './persistenceMigrations'
 import {
   CONTAINER_KEY_MAP,
   LINK_LOCAL_KEY_MAP,
@@ -2013,9 +2013,21 @@ export class DrawingAreaPersistence {
     if (drawing_area.color != default_background_color) json_object['couleur_fond_sankey'] = drawing_area.color
     if (drawing_area.grid_color != default_grid_color) json_object['default_grid_color'] = drawing_area.grid_color
     if (drawing_area.maximum_flux) json_object['maximum_flux'] = drawing_area.maximum_flux
-    if (drawing_area.minimum_flux) json_object['minimum_flux'] = drawing_area.minimum_flux
+    // sa#373 — le plancher d'épaisseur des flux est sérialisé dès qu'il est DÉFINI, et non
+    // « s'il est vrai » : 0 est une valeur légitime depuis #200 (flux tracés à leur épaisseur
+    // réelle, plus aucun plancher). Le test de véracité le laissait tomber silencieusement,
+    // donc un plancher réglé à 0 dans l'interface ne survivait pas à l'enregistrement et
+    // rouvrait au défaut 2px. « Pas de réglage » reste marqué par l'ABSENCE de la clé
+    // (removeMinimumLinkThickness efface `_minimum_flux`), jamais par un 0.
+    if (drawing_area.minimum_flux !== undefined) json_object['minimum_flux'] = drawing_area.minimum_flux
     if (Object.keys(drawing_area.scale_reference_by_viewtag).length > 0)
       json_object['scale_reference_by_viewtag'] = drawing_area.scale_reference_by_viewtag
+    // os#1352 — Régime de référence du mode « échelle adaptée » : propriété de la COMPOSITION
+    // (le document a été calé sur un élément de référence, ou sur le diagramme entier), donc
+    // persistée. Écrite seulement si elle diffère du défaut `diagram` → aucun fichier existant
+    // ne grossit, et l'absence de clé continue de signifier « régime par défaut ».
+    if (drawing_area.scale_adapted_reference !== 'diagram')
+      json_object['scale_adapted_reference'] = drawing_area.scale_adapted_reference
     if (drawing_area.maximum_node) json_object['maximum_node'] = drawing_area.maximum_node
     if (drawing_area.minimum_node) json_object['minimum_node'] = drawing_area.minimum_node
     // Écart vertical des enfants englobés (désagrégation / expansion / englobement) : mode global
@@ -2029,6 +2041,11 @@ export class DrawingAreaPersistence {
     // arrow_use_standalone_layout, arrow_spike_*) sont désormais des attributs de
     // flux sérialisés avec les shape_* de chaque flux/style. Plus rien à écrire ici
     // (les anciennes clés restent lues par fromJSON pour migrer les vieux fichiers).
+    // sa#419 — Repli de la minimap : réglage du DOCUMENT, écrit seulement quand la
+    // vignette est dépliée. Refermer la minimap EFFACE donc la clé (retour au défaut),
+    // sans piège de valeur falsy : ici `false` EST le défaut, contrairement au plancher
+    // d'épaisseur ci-dessus où 0 est un réglage à part entière.
+    if (drawing_area.minimap_open) json_object['minimap_open'] = true
     // OS#1272 — Marqueur de bilan (réglages globaux). Sérialisés seulement hors défaut.
     if (drawing_area.balance_marker_enabled) json_object['balance_marker_enabled'] = true
     if (drawing_area.balance_marker_strategy !== 'relative') json_object['balance_marker_strategy'] = drawing_area.balance_marker_strategy
@@ -2054,10 +2071,26 @@ export class DrawingAreaPersistence {
     // vaut « auto », y compris pour les fichiers antérieurs.
     if (!drawing_area.application_data.layout_auto_recycling) json_object['layout_auto_recycling'] = false
     // Datatag de référence du mode % (couple flux/datatag). Le flux de réf est persisté
-    // via l'attribut de lien `shape_is_reference_flux` ; le MODE lui-même n'est PAS persisté.
+    // via l'attribut de lien `shape_is_reference_flux` ; le MODE, lui, vit dans le style
+    // 'default' (`shape_position_type`) et est restitué au chargement depuis #369.
     {
       const ref_dt = drawing_area.nodePositioning.proportionalReferenceDatatagIds
       if (ref_dt && ref_dt.length > 0) json_object['prop_reference_datatag'] = ref_dt
+    }
+    // #369 — Mode « échelle adaptée » : couple capturé (échelle de BASE + grandeur du diagramme)
+    // qui définit la hauteur tenue par le diagramme. Sans lui, la relecture reprendrait
+    // `user_scale` (= échelle DÉJÀ adaptée au datatag courant) pour base et recomposerait le
+    // ratio → saut d'échelle juste après l'ouverture. Écrit seulement dans ce mode : ailleurs le
+    // couple n'a pas de sens et ne doit pas ressusciter avec le mode.
+    // #384 — La clé de valeur s'appelle désormais `scale_adapted_ref_magnitude` : elle porte une
+    // grandeur de diagramme, plus la valeur d'un élément de référence. Le renommage est ce qui
+    // rend les fichiers antérieurs sûrs (cf. fromJSON).
+    if (drawing_area.sankey.default_style.shape_position_type === 'scale_adapted') {
+      const scale_ref = drawing_area.nodePositioning.scaleAdaptedReference
+      if (scale_ref) {
+        json_object['scale_adapted_ref_scale'] = scale_ref.scale
+        json_object['scale_adapted_ref_magnitude'] = scale_ref.magnitude
+      }
     }
     if (drawing_area.filter_label > 0) json_object['filter_label'] = drawing_area.filter_label
     if (drawing_area.filter_link_value > 0) json_object['filter_link_value'] = drawing_area.filter_link_value
@@ -2076,6 +2109,9 @@ export class DrawingAreaPersistence {
     if (drawing_area.magnetic_nodes) json_object['magnetic_nodes'] = drawing_area.magnetic_nodes
     // os#671 — smart guides : actifs par défaut, on ne persiste que la désactivation.
     if (!drawing_area.smart_guides) json_object['smart_guides'] = false
+    // sa#422 — flèches de création rapide : visibles par défaut, on ne persiste que
+    // leur coupure. Clé absente (tout fichier antérieur) ⇒ comportement historique.
+    if (drawing_area.connection_arrows_off) json_object['connection_arrows_off'] = true
 
     // Paper format
     if (drawing_area.paper_format !== default_paper_format) json_object['paper_format'] = drawing_area.paper_format
@@ -2452,6 +2488,14 @@ export class DrawingAreaPersistence {
       })
       drawing_area['_scale_reference_by_viewtag'] = clean
     }
+    // os#1352 — Régime de référence du mode « échelle adaptée ». Absent ⇒ `diagram` (sa#384),
+    // qui reste le défaut : un fichier d'avant sa#384 ne bascule PAS tout seul en `element` même
+    // s'il porte un élément de référence (cf. FORMAT.md — la rétro-compatibilité automatique
+    // ferait changer d'apparence, sans geste de l'auteur, des documents publiés depuis).
+    // Valeur inconnue ⇒ défaut, jamais d'erreur de lecture.
+    const scale_adapted_ref_raw = getStringFromJSON(json_object, 'scale_adapted_reference', 'diagram')
+    drawing_area['_scale_adapted_reference'] =
+      scale_adapted_ref_raw === 'element' ? 'element' : 'diagram'
     drawing_area['_maximum_node'] = getNumberOrUndefinedFromJSON(json_object, 'maximum_node')
     drawing_area['_minimum_node'] = getNumberOrUndefinedFromJSON(json_object, 'minimum_node')
     // Écart vertical des enfants englobés : mode (défaut 'fill' si absent) + valeur constante
@@ -2480,6 +2524,9 @@ export class DrawingAreaPersistence {
         if (legacy > 0) migrated_link_style.shape_arrow_min_width = legacy
       }
     }
+    // sa#419 — Repli de la minimap. Clé absente (tout fichier antérieur) ⇒ repliée,
+    // c'est-à-dire exactement le comportement d'avant la persistance.
+    drawing_area['_minimap_open'] = getBooleanFromJSON(json_object, 'minimap_open', false)
     // OS#1272 — Marqueur de bilan (réglages globaux).
     drawing_area['_balance_marker_enabled'] = getBooleanFromJSON(json_object, 'balance_marker_enabled', false)
     drawing_area['_balance_marker_strategy'] = getStringFromJSON(json_object, 'balance_marker_strategy', 'relative') as 'exact' | 'absolute' | 'relative'
@@ -2498,6 +2545,8 @@ export class DrawingAreaPersistence {
     drawing_area['_magnetic_nodes'] = getBooleanFromJSON(json_object, 'magnetic_nodes', drawing_area.magnetic_nodes)
     // os#671 — smart guides (défaut true : absent du JSON = actif).
     drawing_area['_smart_guides'] = getBooleanFromJSON(json_object, 'smart_guides', drawing_area.smart_guides)
+    // sa#422 — flèches de création rapide (défaut false : absent du JSON = flèches visibles).
+    drawing_area['_connection_arrows_off'] = getBooleanFromJSON(json_object, 'connection_arrows_off', false)
 
     // Paper format
     drawing_area['_paper_format'] = getStringFromJSON(json_object, 'paper_format', default_paper_format) as Type_PaperFormat
@@ -2584,17 +2633,33 @@ export class DrawingAreaPersistence {
     }
     drawing_area.name = getStringFromJSON(json_object, 'name', drawing_area.name)
 
-    // #1231 — Le MODE de positionnement n'est PAS persisté : tout fichier se charge en mode
-    // ABSOLU (le mode % / échelle adaptée est une vue transitoire que l'utilisateur réactive).
-    // 'parametric' (ancien) et 'proportional' → 'absolute'. La valeur 'parametric' reste valide
-    // en interne pour les styles par-nœud d'échange import/export — on ne force QUE le style global.
-    // On capture le mode d'ORIGINE avant de le forcer : il décide si u/v font autorité.
+    // #369 — Les MODES D'AFFICHAGE globaux (proportionnel / échelle adaptée) sont RESTITUÉS : le
+    // sélecteur rouvre sur le mode enregistré et le changement de datatag le suit, sans que le
+    // PREMIER RENDU change quoi que ce soit au diagramme enregistré (règle et raisons détaillées
+    // dans `positionModeOnLoad`, qui porte la décision). Seuls `parametric` (mode « écart »
+    // hérité, hors sélecteur) et les valeurs absentes ou inconnues sont ramenés à `absolute`. La
+    // valeur 'parametric' reste valide en interne pour les styles PAR-NŒUD d'échange
+    // import/export — on ne touche QUE le style global.
+    // On capture le mode d'ORIGINE avant de le normaliser : il décide si u/v font autorité.
     const incoming_position_mode = drawing_area.sankey.default_style.shape_position_type
-    if (drawing_area.sankey.default_style.shape_position_type === 'parametric' ||
-        drawing_area.sankey.default_style.shape_position_type === 'proportional' ||
-        drawing_area.sankey.default_style.shape_position_type === 'scale_adapted') {
-      drawing_area.sankey.default_style.shape_position_type = 'absolute'
+    const loaded_position_mode = positionModeOnLoad(incoming_position_mode)
+    if (incoming_position_mode !== loaded_position_mode) {
+      drawing_area.sankey.default_style.shape_position_type = loaded_position_mode
     }
+    // #369 — Le mode restitué est ARMÉ, pas appliqué : le dessin reste absolu jusqu'au premier
+    // changement de datatag, pour que le diagramme s'ouvre exactement tel qu'il a été
+    // enregistré. Posé APRÈS le chargement des tags (la suspension mémorise la sélection
+    // courante). Cf. Class_DrawingArea.suspendPositionModeUntilDataChange.
+    if (loaded_position_mode !== 'absolute') {
+      drawing_area.suspendPositionModeUntilDataChange()
+    }
+
+    // #378 — Même endroit, même raison (les tags viennent d'être chargés) : on amorce la
+    // mémoire de sélection de datatags qui déclenche la réorganisation auto de l'ordre des
+    // flux E/S. Le PREMIER dessin ne doit rien réordonner — un fichier se rouvre sur l'ordre
+    // enregistré ; sans cet amorçage, la sélection du fichier ouvert serait comparée à celle
+    // du fichier précédent (la zone de dessin est réutilisée d'une ouverture à l'autre).
+    drawing_area.primeIOReorgOnDataSelection()
 
     // Dérivation de u/v depuis la géométrie au chargement :
     // - Mode d'origine `parametric` : u/v font autorité pour TOUS les nœuds (ils sont
@@ -2614,13 +2679,32 @@ export class DrawingAreaPersistence {
 
     // #1231 — Persistance du COUPLE de référence (flux + datatag) du mode %. Le flux est
     // ré-attaché depuis l'attribut `shape_is_reference_flux` ; le datatag de réf est relu ici.
-    // Le mode étant absolu au chargement, rien n'est appliqué tant que l'utilisateur ne
-    // réactive pas le mode % (qui réutilisera ce couple).
+    // En mode absolu rien n'est appliqué tant que l'utilisateur ne réactive pas un mode
+    // d'affichage ; dans les modes restitués (#369) ce couple pilote l'échelle (échelle adaptée,
+    // dès le premier dessin) ou le facteur de compression (%, au premier changement de datatag).
     drawing_area.nodePositioning.attachReferenceLinkFromAttributes()
     {
       const ref_dt = json_object['prop_reference_datatag']
       if (Array.isArray(ref_dt)) {
         drawing_area.nodePositioning.proportionalReferenceDatatagIds = ref_dt.map(String)
+      }
+    }
+    // #369 — Mode « échelle adaptée » restitué : recharger le couple capturé (échelle de base +
+    // grandeur du diagramme) écrit par toJSON, sinon `applyAdaptedScale` recapturerait sur
+    // l'échelle DÉJÀ adaptée du fichier et le diagramme sauterait d'échelle au dessin suivant.
+    // Fichier antérieur (clés absentes) : capture paresseuse au premier dessin, comme avant.
+    // #384 — Un fichier écrit AVANT le changement de référence ne porte que l'ancienne clé
+    // `scale_adapted_ref_value` (valeur d'un élément) : elle est ignorée, sans quoi le ratio
+    // grandeur_courante / valeur_élément ferait sauter l'échelle à l'ouverture. Le couple est
+    // alors reconstitué par les frames de la suspension d'ouverture (cf. `drawElements`), qui
+    // capturent l'état affiché — c'est ce qui évite le pas de retard sur un fichier antérieur.
+    // Ce qui est relu ici reste utile comme AMORCE, pour le cas où le mode s'appliquerait sans
+    // qu'aucune frame suspendue ne soit passée.
+    if (loaded_position_mode === 'scale_adapted') {
+      const ref_scale = json_object['scale_adapted_ref_scale']
+      const ref_magnitude = json_object['scale_adapted_ref_magnitude']
+      if (typeof ref_scale === 'number' && typeof ref_magnitude === 'number') {
+        drawing_area.nodePositioning.restoreScaleReference(ref_scale, ref_magnitude)
       }
     }
   }

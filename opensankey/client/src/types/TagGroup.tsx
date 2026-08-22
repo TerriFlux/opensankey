@@ -7,6 +7,7 @@ import { Class_NodeElement } from '../Elements/Node'
 import { Class_Sankey } from './Sankey'
 import { tag_banner_type, Class_ProtoTag, Class_Tag, Class_NodeTag, Class_FluxTag, Class_DataTag, Class_LevelTag, Class_ViewTag } from './Tag'
 import { Type_JSON, getStringFromJSON, getBooleanFromJSON, getStringListFromJSON, getStringOrUndefinedFromJSON } from './Utils'
+import { Type_PositionMode, isPositionMode } from './PublishOptions'
 
 // CLASS PROTO TAGGROUP *****************************************************************
 /**
@@ -274,6 +275,9 @@ export abstract class Class_ProtoTagGroup {
             tag.setUnSelected()
           }
         })
+      // sa#283 — vues contextuelles : overlay appliqué APRÈS le basculement des tags,
+      // AVANT le redraw d'updateTagsReferences (slot optionnel enregistré par OSP).
+      this._ref_sankey.drawing_area.application_data.after_tag_selection_change?.()
       this.updateTagsReferences()
       this._ref_sankey.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToTags()
     }
@@ -296,6 +300,8 @@ export abstract class Class_ProtoTagGroup {
           tag.setUnSelected(false)
         }
       })
+    // sa#283 — vues contextuelles : même point d'accrochage que selectTagsFromId.
+    this._ref_sankey.drawing_area.application_data.after_tag_selection_change?.()
     this.updateTagsReferences()
   }
 
@@ -559,6 +565,41 @@ export class Class_NodeTagGroup extends Class_TagGroup {
     if (with_a_tag) this.addTag('Etiquette 0')
   }
 
+  // PUBLIC METHODS =====================================================================
+  /**
+   * #374 — Les références d'un Class_NodeTag sont les nœuds SEULS, alors que la
+   * couleur d'un flux en dérive : en règle 'auto' (comme en 'source' / 'target' /
+   * 'gradient'), Class_LinkElement.getShapeColorToUse() lit les tags des nœuds
+   * source/cible filtrés sur `tag.group.use_colors`. Redessiner les seules
+   * références laissait donc les flux avec leur couleur précédente jusqu'au geste
+   * suivant qui forçait leur redessin (changement de dataTag, décochage d'une
+   * étiquette…). On étend le redessin aux flux incidents des nœuds référencés,
+   * ce qui couvre d'un coup les trois chemins d'écriture de `use_colors`
+   * (interrupteur du bandeau, level tagg, undo/redo) ainsi que la sélection
+   * d'étiquettes. Le coût reste borné par le nombre de flux du diagramme —
+   * moins que le redessin complet que fait déjà Class_DataTagGroup.
+   * @memberof Class_NodeTagGroup
+   */
+  public updateTagsReferences(): void {
+    super.updateTagsReferences()
+    const links_drawn: { [_: string]: boolean } = {}
+    Object.values(this._tags)
+      .forEach(tag => {
+        tag.references
+          .forEach(ref => {
+            if (!(ref instanceof Class_NodeElement)) return
+            ref.input_links_list
+              .concat(ref.output_links_list)
+              .forEach(link => {
+                if (!links_drawn[link.id]) {
+                  links_drawn[link.id] = true
+                  link.draw()
+                }
+              })
+          })
+      })
+  }
+
   // PROTECTED METHODS ==================================================================
   protected createTag(
     name: string,
@@ -709,6 +750,19 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   // (legacy). Mirrors the parser's TagGroup.propagate_structure.
   private _propagate_structure = true
 
+  // #370 — Mode d'affichage (absolu / proportionnel / échelle adaptée) PROPRE à cette
+  // dimension : « comment le diagramme doit réagir quand on fait défiler CETTE
+  // dimension ». C'est désormais la source de vérité du mode — il n'y a plus de réglage
+  // global (décision utilisateur du 2026-08-05, qui remplace celle du #367).
+  //
+  // Le moteur de dessin, lui, ne sait faire qu'UN mode à la fois
+  // (`styles_dict['default'].shape_position_type`) : cet attribut n'est donc pas un état
+  // parallèle, c'est la CONSIGNE que la dimension impose au dessin dès qu'on agit sur
+  // elle (changement de tag, défilement de séquence). Une échelle adaptée sur « Unité »
+  // et un proportionnel sur « Année » ne coexistent pas à l'écran : le diagramme bascule
+  // dans le mode de la dimension que l'on manipule.
+  private _position_mode: Type_PositionMode = 'absolute'
+
   // PROTECTED ATTRIBUTES ===============================================================
   protected _tags: { [_: string]: Class_DataTag; }
 
@@ -736,13 +790,22 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   }
 
   // COPY METHODS =======================================================================
+  // L'appariement des ids de tags DOIT être transmis au super : sans lui, deux
+  // groupes de données appariés par NOM mais portant des ids de tags différents
+  // (cas nominal d'`updateFrom`) voient leur `tags_order` réécrit avec les ids de
+  // la SOURCE. Les tags de la cible sortent alors de l'ordre affiché — leurs
+  // branches de valeurs sur les liens deviennent inatteignables — et les tags de
+  // la source sont recréés à vide à côté d'eux : les valeurs taguées de la cible
+  // sont perdues à l'écran comme à l'enregistrement.
   protected _copyFrom(
-    tagg_to_copy: Class_DataTagGroup
+    tagg_to_copy: Class_DataTagGroup,
+    matching_tags_id: { [_: string]: string; } = {}
   ) {
-    super._copyFrom(tagg_to_copy)
+    super._copyFrom(tagg_to_copy, matching_tags_id)
     this._use_colors = tagg_to_copy.use_colors
     this._is_unit = tagg_to_copy._is_unit
     this._propagate_structure = tagg_to_copy._propagate_structure
+    this._position_mode = tagg_to_copy._position_mode
   }
 
   protected _toJSON(
@@ -753,6 +816,9 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     json_object['use_colors'] = this._use_colors
     json_object['is_unit'] = this._is_unit
     json_object['propagate_structure'] = this._propagate_structure
+    // #370 — le mode d'affichage voyage avec la dimension (ancien #369 : il n'était
+    // persisté nulle part et retombait sur « absolu » à chaque ouverture).
+    json_object['position_mode'] = this._position_mode
   }
 
   protected _fromJSON(
@@ -766,9 +832,50 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     }
     this._is_unit = getBooleanFromJSON(json_object, 'is_unit', this._is_unit)
     this._propagate_structure = getBooleanFromJSON(json_object, 'propagate_structure', this._propagate_structure)
+    // #370 — rétro-compatibilité : un fichier antérieur n'a pas la clé, la dimension
+    // retombe sur « absolu ». Une valeur inconnue (ou l'ancien mode hérité
+    // `parametric`, qui n'est pas proposé par le sélecteur) est ignorée de même.
+    const raw_position_mode = getStringFromJSON(json_object, 'position_mode', this._position_mode)
+    if (isPositionMode(raw_position_mode)) this._position_mode = raw_position_mode
   }
 
   // PUBLIC METHODS =====================================================================
+
+  /**
+   * #370 — Impose au dessin le mode d'affichage de CETTE dimension.
+   *
+   * Appelée à chaque changement de sélection de la dimension. Le garde-fou « mode déjà
+   * courant → on ne fait rien » n'est pas une optimisation : entrer dans un mode
+   * RECAPTURE sa référence géométrique (`captureScaleReference` / `captureProportionalReference`).
+   * Ré-entrer à chaque pas d'une séquence recalerait donc la référence sur les données
+   * du pas courant — et « échelle adaptée » cesserait justement de tenir la taille du
+   * diagramme constante, c'est-à-dire l'inverse du but.
+   *
+   * @param force vrai pour un choix EXPLICITE de l'utilisateur dans le menu. Sans lui, on
+   * ne quitte jamais le mode hérité `parametric` : il n'est pas proposé par le sélecteur,
+   * donc toutes les dimensions le contrediraient par leur défaut « absolu » et la première
+   * navigation détruirait silencieusement une mise en page paramétrique.
+   *
+   * Articulation avec le #369 (mode enregistré ARMÉ à l'ouverture, cf.
+   * `Class_DrawingArea.suspendPositionModeUntilDataChange`) : à l'ouverture, le mode courant
+   * est celui du fichier et le dessin est suspendu en absolu. Au premier changement de
+   * sélection, deux cas — si la dimension manipulée porte le mode enregistré, on ne fait
+   * rien ici et la suspension se lève d'elle-même au dessin, ce qui réutilise la référence
+   * géométrique PERSISTÉE (pas de saut d'échelle) ; sinon on bascule, et `set*Mode` lève la
+   * suspension au passage.
+   */
+  public applyPositionModeToDrawing(force: boolean = false): void {
+    const drawing_area = this._ref_sankey.drawing_area
+    const default_style = this._ref_sankey.default_style
+    if (!drawing_area || !default_style) return
+    if (default_style.shape_position_type === this._position_mode) return
+    if (!force && default_style.shape_position_type === 'parametric') return
+    if (this._position_mode === 'proportional') { drawing_area.setProportionalMode(); drawing_area.draw() }
+    // setScaleAdaptedMode redessine lui-même (cf. displayModes.ts).
+    else if (this._position_mode === 'scale_adapted') { drawing_area.setScaleAdaptedMode() }
+    else { drawing_area.setAbsoluteMode(); drawing_area.draw() }
+  }
+
   public selectTagsFromId(
     id: string
   ) {
@@ -785,6 +892,12 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
           }
         })
       this.checkSelectionCoherence()
+      // sa#283 — vues contextuelles : overlay appliqué APRÈS le basculement des tags,
+      // AVANT tout redraw (applyPositionModeToDrawing / updateTagsReferences).
+      this._ref_sankey.drawing_area.application_data.after_tag_selection_change?.()
+      // #370 — agir sur une dimension impose SON mode d'affichage. Avant
+      // `updateTagsReferences` (qui redessine) pour que le dessin parte du bon mode.
+      this.applyPositionModeToDrawing()
       this.updateTagsReferences()
       this._ref_sankey.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToDataTags()
     }
@@ -807,6 +920,10 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
         }
       })
     this.checkSelectionCoherence()
+    // sa#283 — vues contextuelles : même point d'accrochage que selectTagsFromId.
+    this._ref_sankey.drawing_area.application_data.after_tag_selection_change?.()
+    // #370 — même règle que selectTagsFromId : la dimension manipulée impose son mode.
+    this.applyPositionModeToDrawing()
     this.updateTagsReferences()
   }
 
@@ -882,6 +999,11 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   public get propagate_structure(): boolean { return this._propagate_structure }
 
   public set propagate_structure(value: boolean) { this._propagate_structure = value }
+
+  // #370 — mode d'affichage propre à la dimension (cf. `applyPositionModeToDrawing`).
+  public get position_mode(): Type_PositionMode { return this._position_mode }
+
+  public set position_mode(value: Type_PositionMode) { this._position_mode = value }
 }
 // CLASS LEVEL TAGGROUP *****************************************************************
 /**
