@@ -52,6 +52,17 @@ export const PANELS_TOPIC = 'panels'
  */
 export const MINIMAP_TOPIC = 'minimap'
 
+/**
+ * sa#399 — Topic « la bibliothèque du compte a changé ». L'ÉCRITURE et la LECTURE
+ * vivent dans deux paquets différents : le dépôt d'une version part de la modale
+ * « Dans ma bibliothèque » (opensankey-plus), l'explorateur de projets qui l'affiche
+ * est dans opensankey-editor. La modale ne peut donc pas rappeler le `refresh()` de
+ * l'explorateur : elle notifie ce topic, l'explorateur s'y abonne et refait son
+ * GET /api/library. Sans ce signal, un dépôt réussi n'apparaissait qu'après un F5
+ * (projet créé absent de « MES PROJETS », compteur de versions figé).
+ */
+export const LIBRARY_TOPIC = 'library'
+
 export class Class_EventBus {
   private _listeners: Map<string, Set<() => void>> = new Map()
 

@@ -1456,12 +1456,77 @@ def templates_index_path(source):
 
 
 def templates_index_load(source):
-    """Charge l'index d'une galerie, ou None s'il n'existe pas."""
+    """Charge l'index BRUT d'une galerie, ou None s'il n'existe pas.
+
+    Brut = tel qu'il est sur le disque, entrees non resolues. C'est cet index-la
+    qui fait la liste blanche du DISQUE (templates_declared_assets) : y verser des
+    entrees resolues ouvrirait a l'ecriture (menus_templates_save) des chemins qui
+    ne sont pas des chemins de la source.
+    """
     index_path = templates_index_path(source)
     if not (index_path and os.path.exists(index_path)):
         return None
     with open(index_path, encoding="utf-8") as file_index:
         return json.load(file_index)
+
+
+# ---------------------------------------------------------------------------
+# Resolveur d'entrees de galerie EXTERNES (sa#417)
+# ---------------------------------------------------------------------------
+# Une entree d'index curate peut designer autre chose qu'un chemin de la source :
+# la SankeyTheque migre vers des references de bibliotheque
+# (`projet@version:chemin`), entree par entree. La bibliotheque, les comptes et
+# leur audience publique appartiennent a la couche SaaS ; OpenSankey, lui, ne doit
+# rien en savoir. La couche hote POSE donc un resolveur au demarrage
+# (server/__init__.py, meme patron que install_usage_tracking) et, sans resolveur,
+# tout se comporte exactement comme avant.
+#
+# Contrat, deux fonctions :
+#   resolve_index(source, index) -> index          (entrees non resolues retirees)
+#   asset_response(source, chemin_normalise, index) -> Response | (payload, code)
+#                                                   | None si « pas mon ressort »
+
+_EXTERNAL_GALLERY_RESOLVER = None
+
+
+def set_external_gallery_resolver(resolver):
+    """Pose (ou retire, avec None) le resolveur d'entrees de galerie externes."""
+    global _EXTERNAL_GALLERY_RESOLVER
+    _EXTERNAL_GALLERY_RESOLVER = resolver
+
+
+def templates_index_resolved(source):
+    """Index d'une galerie tel que le FRONT doit le voir : entrees externes
+    resolues, entrees illisibles retirees. Sans resolveur, l'index brut.
+
+    Une exception du resolveur ne fait pas tomber la galerie : on retombe sur
+    l'index brut, ou les entrees externes ne sont que du bruit inerte (ni
+    file_path, ni img_path)."""
+    index = templates_index_load(source)
+    if index is None or _EXTERNAL_GALLERY_RESOLVER is None:
+        return index
+    try:
+        return _EXTERNAL_GALLERY_RESOLVER.resolve_index(source, index)
+    except Exception:
+        current_app.logger.exception(
+            "Galerie « %s » : resolveur d'entrees externes en echec", source)
+        return index
+
+
+def external_gallery_asset(source, normalized):
+    """Reponse du resolveur externe pour ce chemin, ou None si le chemin n'est
+    pas de son ressort (l'appelant poursuit alors sa route disque)."""
+    if _EXTERNAL_GALLERY_RESOLVER is None:
+        return None
+    index = templates_index_load(source)
+    if index is None:
+        return None
+    try:
+        return _EXTERNAL_GALLERY_RESOLVER.asset_response(source, normalized, index)
+    except Exception:
+        current_app.logger.exception(
+            "Galerie « %s » : service d'un fichier externe en echec", source)
+        return None
 
 
 def esankey_corpus_dir():
@@ -1686,7 +1751,10 @@ def menus_templates():
             response=json.dumps(data_index), status=200, mimetype="application/json"
         )
     source = "mfadata" if requested == "mfadata" else "sankeydata"
-    data_index = templates_index_load(source)
+    # Index RESOLU : une entree qui designe une source externe (reference de
+    # bibliotheque, sa#417) est traduite en entree de galerie ordinaire, et
+    # retiree si elle n'est plus lisible. Le front ne voit qu'une seule forme.
+    data_index = templates_index_resolved(source)
     if data_index is None:
         # Pas d'index pour cette source (ex. MFAData absent d'un deploiement) :
         # galerie vide plutot qu'une 500, le front n'affiche alors rien.
@@ -1754,6 +1822,12 @@ def menus_templates_asset(asset):
     # restant sous la racine, donc sans que safe_join / send_from_directory n'y
     # voient une remontee. Le filtre doit porter sur le chemin final.
     normalized = posixpath.normpath(asset.replace("\\", "/"))
+    # Fichier d'une source EXTERNE (sa#417) : le resolveur reconnait ses propres
+    # chemins virtuels et applique SA liste blanche (l'index curate, la aussi).
+    # None = « pas mon ressort », et la route disque continue, inchangee.
+    external = external_gallery_asset(source, normalized)
+    if external is not None:
+        return external
     if source == "mfadata":
         json_rel = mfadata_declared_json(normalized)
         if json_rel is None and normalized not in templates_declared_assets("mfadata"):
