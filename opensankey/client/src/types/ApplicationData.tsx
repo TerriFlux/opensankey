@@ -1411,19 +1411,18 @@ export class Class_ApplicationData {
 
 
   /**
-   * Ouvre le Tableur sur son sous-onglet « Texte » (éditeur SankeyMATIC natif).
+   * Ouvre le dialogue draggable de l'éditeur texte SankeyMATIC (format d'échange).
    * Appelé après tout import SankeyMATIC : le texte source reste ainsi sous les yeux
    * de l'utilisateur, éditable et réappliquable. Sans effet en mode publish/statique,
-   * qui n'a pas de tableur.
+   * qui ne monte pas les dialogues d'édition.
    *
    * @memberof Class_ApplicationData
    */
-  public openSpreadsheetTextEditor() {
+  public openSankeymaticEditor() {
     if (this.is_static) return
     const mc = this._menu_configuration
     if (!mc) return // _fromJSON peut précéder createNewMenuConfiguration
-    mc.main_zone_spreadsheet_mode = 'text'
-    mc.main_zone_show_spreadsheet = true
+    mc.dict_setter_show_dialog.ref_setter_show_sankeymatic_editor.current(true)
   }
 
   /**
@@ -1494,7 +1493,7 @@ export class Class_ApplicationData {
         // l'import fichier de MenuTop (aucun aller-retour Python).
         if (/\.txt$/i.test(filename)) {
           this.fromJSON(parseSankeymaticText(text) as never)
-          this.openSpreadsheetTextEditor()
+          this.openSankeymaticEditor()
           return
         }
 
