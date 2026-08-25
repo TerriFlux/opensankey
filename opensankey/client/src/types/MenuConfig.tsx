@@ -73,8 +73,9 @@ export const DOC_LAYOUTS_WITH_SHEET: Type_MainZoneDocLayout[] =
   ['sheet-right', 'sheet-left', 'sheet-top', 'sheet-bottom']
 // Positions qui placent la doc en bas et raccourcissent le diagramme (réserve verticale).
 export const DOC_LAYOUTS_BOTTOM: Type_MainZoneDocLayout[] = ['diagram-bottom', 'window-bottom']
-// Sous-onglets du panneau Tableur : grille Univer ou éditeur texte (format SankeyMATIC natif).
-export type Type_SheetMode = 'grid' | 'text'
+// Sous-onglets du panneau Tableur : grille Univer ou vue JSON (lecture seule) du diagramme.
+// L'éditeur texte SankeyMATIC, lui, vit dans un dialogue dédié (ref_setter_show_sankeymatic_editor).
+export type Type_SheetMode = 'grid' | 'json'
 // Largeur (px) de la colonne d'outils rétractable à droite (barre verticale + config + filtres +
 // undo/redo/save). Quand ouverte, cette largeur est réservée par le diagramme (cf.
 // getToolsColumnWidthPx / getMainZoneRightReservedPx) pour que la zone de dessin ne morde pas dessus.
@@ -107,6 +108,10 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   // OS#1286 — éditeur du registre d'unités (grandeurs/unités/défauts) en
   // panneau draggable, ouvert depuis l'onglet Valeur de l'inspecteur.
   ref_setter_show_units_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  // Éditeur texte SankeyMATIC en dialogue draggable : ouvert après un import
+  // SankeyMATIC (openSankeymaticEditor) ou depuis le menu d'import. Sorti du
+  // panneau Tableur, dont le sous-onglet texte est devenu la vue JSON.
+  ref_setter_show_sankeymatic_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
 
   // sa#424 (lot 3) — fenêtre « Exporter » UNIQUE : le choix du format de rendu
   // et ses réglages au même endroit, là où le menu Exporter de la barre
@@ -255,10 +260,10 @@ export class Class_MenuConfig {
   // Quand vrai, l'unitaire ne réserve plus d'espace in-app (le diagramme/tableur récupèrent la place)
   // et mainZoneUnitaryRect renvoie null ; OS+ le rend alors en Draggable.
   protected _main_zone_unitary_detached: boolean = false
-  // Sous-onglet courant du Tableur (grille/texte). Porté ici et non par un useState de
+  // Sous-onglet courant du Tableur (grille/JSON). Porté ici et non par un useState de
   // SpreadsheetPanel : le panneau est démonté quand le tableur est fermé, donc un état local
-  // repartirait toujours sur 'grid'. Permet aussi à un import SankeyMATIC d'ouvrir directement
-  // l'éditeur texte. État TRANSITOIRE : volontairement absent de mainZoneStateToJSON/FromJSON.
+  // repartirait toujours sur 'grid'. État TRANSITOIRE : volontairement absent de
+  // mainZoneStateToJSON/FromJSON.
   protected _main_zone_spreadsheet_mode: Type_SheetMode = 'grid'
   // Colonne d'outils à droite (éditeur uniquement). `tools_column_enabled` est posé par
   // SankeyMenu (= !is_static) : en mode publish/statique la colonne n'existe pas et ne réserve rien.
@@ -910,6 +915,7 @@ export class Class_MenuConfig {
       ref_setter_show_value_type_editor: { current: () => null },
       ref_setter_show_tooltip_editor: { current: () => null },
       ref_setter_show_units_editor: { current: () => null },
+      ref_setter_show_sankeymatic_editor: { current: () => null },
 
       ref_setter_show_modal_export: { current: () => null },
       ref_setter_show_modal_new_document: { current: () => null },
@@ -967,6 +973,7 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_value_type_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_tooltip_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_units_editor.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_sankeymatic_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_export.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_new_document.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_png_saver.current(false)
