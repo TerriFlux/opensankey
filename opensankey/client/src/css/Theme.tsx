@@ -2250,7 +2250,8 @@ export const tableStyles = {
     th: basic_th1,
     tr: {
       minHeight: minHeightTableRow1,
-      gridTemplateColumns: '2fr 1fr 1fr',
+      // 4 colonnes depuis sa#396 : Nom | Labels de vues | Position | Suppr.
+      gridTemplateColumns: '2fr 2fr auto auto',
       display: 'grid',
     },
   })
