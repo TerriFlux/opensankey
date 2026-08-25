@@ -116,17 +116,49 @@ export type Type_PresentationDiagram = {
 }
 
 /**
+ * sa#456 — PAGE PUBLIÉE d'où vient le diagramme affiché, quand il a été ouvert par
+ * `?url=` sur une adresse du parc que le serveur a reconnue.
+ *
+ * C'est l'autre visage d'une provenance : `Type_SankeythequeOrigin` désignait un
+ * fichier du DÉPÔT source, elle ne savait pas dire « la page <slug>/<feuille> du
+ * parc, fichier X.json.gz ». `data_file` est le nom que le MANIFESTE de publication
+ * déclare pour cette adresse (jamais celui de l'URL, le parc servant `X.json.gz`,
+ * `X.json`, `X.gz` et jusqu'à `X` tout court) : c'est lui, et lui seul, que la mise
+ * à jour remplace — une page multi-diagrammes voit corriger celui qu'on a ouvert.
+ *
+ * `kind` dit la NATURE de la source du portfolio, donc celle du geste de mise à
+ * jour : 'mfadata' (le portfolio vient d'un dépôt : commit + page, geste
+ * historique) ou 'workbook' (il est rendu depuis un classeur : brique de
+ * bibliothèque + page, cf. server/publish_provenance.py).
+ */
+export type Type_PublicationOrigin = {
+  page_url: string
+  slug: string
+  leaf: string
+  data_file: string
+  /** 'mfadata' (portfolio issu d'un dépôt) ou 'workbook' (rendu depuis un classeur). */
+  kind: string
+}
+
+/**
  * Provenance d'un diagramme ouvert depuis une galerie réenregistrable : chemin du
  * modèle dans l'index, relatif à la racine de sa source, et nom affiché.
  * `source` désigne la galerie donc le dépôt écrit — 'mfadata' = la sankeythèque
  * (études), 'sankeydata' = les modèles. Le couple (source, chemin) est le seul
  * qui compte côté serveur : le chemin doit être exactement celui de l'index de
  * cette source, lequel fait liste blanche d'écriture.
+ *
+ * sa#456 — `file_path` peut être VIDE : une page publiée dont la source n'est pas
+ * un fichier de dépôt (portfolio rendu depuis un classeur, ou étude absente de
+ * l'index curaté) a bien une provenance, mais rien à réenregistrer dans un dépôt.
+ * Le volet dépôt du dialogue se ferme alors, et `source` n'est pas consulté ;
+ * `publication.kind` porte la vérité de ce qui met la page à jour.
  */
 export type Type_SankeythequeOrigin = {
   file_path: string
   title: string
   source: 'mfadata' | 'sankeydata'
+  publication?: Type_PublicationOrigin
 }
 
 /**
