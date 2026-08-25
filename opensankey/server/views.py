@@ -1485,6 +1485,11 @@ def templates_index_load(source):
 #   resolve_index(source, index) -> index          (entrees non resolues retirees)
 #   asset_response(source, chemin_normalise, index) -> Response | (payload, code)
 #                                                   | None si « pas mon ressort »
+#
+# L'index passe au resolveur peut etre None : depuis sa#457 la galerie de la
+# sankeytheque peut n'avoir AUCUN index de disque (la liste vient alors des
+# projets publies de la bibliotheque). Un resolveur pose est donc consulte meme
+# sans index, et c'est lui qui decide s'il a quelque chose a rendre.
 
 _EXTERNAL_GALLERY_RESOLVER = None
 
@@ -1503,7 +1508,7 @@ def templates_index_resolved(source):
     l'index brut, ou les entrees externes ne sont que du bruit inerte (ni
     file_path, ni img_path)."""
     index = templates_index_load(source)
-    if index is None or _EXTERNAL_GALLERY_RESOLVER is None:
+    if _EXTERNAL_GALLERY_RESOLVER is None:
         return index
     try:
         return _EXTERNAL_GALLERY_RESOLVER.resolve_index(source, index)
@@ -1519,8 +1524,6 @@ def external_gallery_asset(source, normalized):
     if _EXTERNAL_GALLERY_RESOLVER is None:
         return None
     index = templates_index_load(source)
-    if index is None:
-        return None
     try:
         return _EXTERNAL_GALLERY_RESOLVER.asset_response(source, normalized, index)
     except Exception:
@@ -1813,21 +1816,25 @@ def menus_templates_asset(asset):
             abort(404)
         return send_from_directory(corpus, normalized)
     source = "mfadata" if requested == "mfadata" else "sankeydata"
-    root = os.environ.get("MFAData" if source == "mfadata" else "SANKEY_DATA")
-    if not root:
-        abort(404)
     # Normaliser AVANT de filtrer, sinon "templates/../tests/x" passe la regle de
     # prefixe (la chaine brute commence bien par "templates/") alors que le chemin
     # reellement ouvert, lui, est normalise ensuite — et sort de templates/ tout en
     # restant sous la racine, donc sans que safe_join / send_from_directory n'y
     # voient une remontee. Le filtre doit porter sur le chemin final.
     normalized = posixpath.normpath(asset.replace("\\", "/"))
-    # Fichier d'une source EXTERNE (sa#417) : le resolveur reconnait ses propres
-    # chemins virtuels et applique SA liste blanche (l'index curate, la aussi).
-    # None = « pas mon ressort », et la route disque continue, inchangee.
+    # Fichier d'une source EXTERNE (sa#417, sa#457) : le resolveur reconnait ses
+    # propres chemins virtuels et applique SA liste blanche. None = « pas mon
+    # ressort », et la route disque continue, inchangee.
+    #
+    # Teste AVANT la racine de disque : une galerie faite des seuls projets
+    # publies de la bibliotheque doit servir ses fichiers meme sur un serveur
+    # sans MFAData — c'est le decouplage vise par sa#457.
     external = external_gallery_asset(source, normalized)
     if external is not None:
         return external
+    root = os.environ.get("MFAData" if source == "mfadata" else "SANKEY_DATA")
+    if not root:
+        abort(404)
     if source == "mfadata":
         json_rel = mfadata_declared_json(normalized)
         if json_rel is None and normalized not in templates_declared_assets("mfadata"):
