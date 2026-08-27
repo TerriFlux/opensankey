@@ -33,6 +33,14 @@ export function splitTrade(da: Class_DrawingArea) {
       node.addStyle(da.sankey.styles_dict[NodeSectorStyle])
       node.addStyle(da.sankey.styles_dict[NodeImportExportCloseStyle])
     }
+    // Un nœud DÉJÀ éclaté n'est pas éclaté une seconde fois — et surtout pas
+    // masqué : c'est lui que la page doit montrer. Les fichiers anciens
+    // stockent l'échange sous sa forme éclatée plutôt qu'agrégée, et la
+    // seconde génération perdrait sa hiérarchie de niveaux
+    // (cf. Class_NodeElement.is_split_trade_node).
+    if ((node as Class_NodeElement).is_split_trade_node) {
+      return
+    }
     if (node.output_links_list.length > 0) {
       (node as Class_NodeElement).SplitIOrE(true)
     }
