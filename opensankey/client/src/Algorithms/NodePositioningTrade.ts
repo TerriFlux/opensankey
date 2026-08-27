@@ -15,6 +15,49 @@ import type { Class_DrawingArea } from '../types/DrawingArea'
 import type { Class_NodeElement } from '../Elements/Node'
 
 /**
+ * Les nœuds d'échange, ANCÊTRES D'ABORD.
+ *
+ * `SplitIOrE` recâble la hiérarchie d'un enfant en allant chercher le produit
+ * DÉJÀ ÉCLATÉ de son parent (`<extrémité>-<parent><suffixe>`). Si le parent n'a
+ * pas encore été éclaté, la recherche ne trouve rien, la dimension n'est pas
+ * créée, et l'enfant se retrouve sans dimension gouvernante — donc visible à
+ * TOUS les niveaux (`checkIfRelatedDimensionsAreSelected` rend `true` faute de
+ * groupe de niveaux porté).
+ *
+ * L'ordre de `nodes_list` étant celui du fichier, le rendu dépendait donc de
+ * l'ordre de déclaration : un agrégat déclaré APRÈS ses enfants faisait
+ * dessiner le parent ET ses enfants en même temps (Bois Savoie :
+ * `HorsPaysDeSavoie` avec `AutresRegionsFrancaises` et `International`, soit
+ * trois fois le même flux d'échange par produit).
+ *
+ * Parcours en profondeur, post-ordre, et sûr en cas de cycle : un nœud déjà en
+ * cours de visite n'est pas revisité — il sera place par son propre appel.
+ */
+function tradeNodesAncestorsFirst(nodes: Class_NodeElement[]): Class_NodeElement[] {
+  const in_scope = new Map(nodes.map(node => [node.id, node]))
+  const placed = new Set<string>()
+  const visiting = new Set<string>()
+  const ordered: Class_NodeElement[] = []
+  const visit = (node: Class_NodeElement) => {
+    if (placed.has(node.id) || visiting.has(node.id)) {
+      return
+    }
+    visiting.add(node.id)
+    Object.values(node.dimensions_as_child).forEach(dim => {
+      const parent = in_scope.get(dim.parent?.id)
+      if (parent !== undefined) {
+        visit(parent)
+      }
+    })
+    visiting.delete(node.id)
+    placed.add(node.id)
+    ordered.push(node)
+  }
+  nodes.forEach(visit)
+  return ordered
+}
+
+/**
  * Initially there is only one node per type of exchanges. It must be split to have one import and
  * one export per product (International → InternationalProduct1Importation / …Exportation).
  */
@@ -23,9 +66,9 @@ export function splitTrade(da: Class_DrawingArea) {
     return
   }
 
-  const trade_nodes = da.sankey.nodes_list.filter(n =>
+  const trade_nodes = tradeNodesAncestorsFirst(da.sankey.nodes_list.filter(n =>
     n.hasGivenTag(da.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'])
-  )
+  ) as Class_NodeElement[])
 
   // first split the nodes
   trade_nodes.forEach(node => {
