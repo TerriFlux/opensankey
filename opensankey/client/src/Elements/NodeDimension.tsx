@@ -997,6 +997,25 @@ export class NodeDimensionsManager {
   // VISIBILITY METHODS =================================================================
 
   /**
+   * Ce nœud porte-t-il un tag appartenant à un groupe de niveaux ACTIVÉ ?
+   *
+   * C'est le second moyen d'entrer dans le système de niveaux, à côté de la
+   * parenté déclarée par une dimension. Un fichier peut n'exprimer un axe
+   * d'agrégation que par les TAGS, sans jamais déclarer de `parent_name` :
+   * c'est le cas des nœuds d'échange de Bois Savoie, où les variantes
+   * « Séparés » (`…-InternationalExportations`,
+   * `…-AutresRegionsFrancaisesExportations`) portent le tag mais aucune
+   * dimension, alors que la variante « Ensemble » en porte une.
+   */
+  private hasTagOfActivatedLevelGroup(): boolean {
+    const level_taggs = this._node.sankey.level_taggs_dict
+    return this._node.tags_list.some(tag => {
+      const level_tagg = level_taggs[tag.group.id]
+      return (level_tagg !== undefined) && level_tagg.activated
+    })
+  }
+
+  /**
    * Check if, based on level tags or dimension, we must show or hide this node
    */
   public checkIfRelatedDimensionsAreSelected(): boolean {
@@ -1004,10 +1023,19 @@ export class NodeDimensionsManager {
     const tagData = this._node.internalTagsData
     // Draw by default if there is no dimensions
     // that relates to this node
+    //
+    // ...SAUF si le nœud porte un tag d'un groupe de niveaux activé. Sans cette
+    // réserve, un nœud gouverné par les seuls TAGS sortait du système de
+    // niveaux et était dessiné à TOUS les niveaux : sur Bois Savoie, les
+    // variantes « Séparés » des nœuds d'échange s'affichaient à côté de la
+    // variante « Ensemble », soit trois fois le même flux par produit. La suite
+    // de la méthode sait déjà décider sur les seuls tags (dernier bloc) ; c'est
+    // uniquement ce raccourci qui l'empêchait d'y arriver.
     if (
       !this.is_child &&
       !this.is_parent &&
-      (tagData.leveltaggs_as_antitagged.length === 0)
+      (tagData.leveltaggs_as_antitagged.length === 0) &&
+      !this.hasTagOfActivatedLevelGroup()
     ) {
       return true
     }
