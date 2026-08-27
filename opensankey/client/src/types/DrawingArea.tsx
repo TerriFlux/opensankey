@@ -1038,11 +1038,13 @@ export class Class_DrawingArea {
     const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
     const exchanges_nodes = this.sankey.nodes_list.filter(n => n.hasGivenTag(echangeTag!))
     // Split dès qu'un nœud échange non encore splitté porte au moins un lien.
-    // `node.sibling` (et non le nombre de liens) marque un nœud déjà issu d'un
-    // split : les siblings import/export portent aussi le tag `echange` et ont
-    // exactement 1 lien, donc l'ancien seuil `> 1` ratait les échanges
-    // mono-flux (mfa_problem#222 : échanges produit/secteur asymétriques).
-    if (exchanges_nodes.some(n => !n.sibling && (n.input_links_list.length > 0 || n.output_links_list.length > 0))) {
+    // Le seuil `> 1` d'origine ratait les échanges mono-flux (mfa_problem#222 :
+    // échanges produit/secteur asymétriques) ; `!n.sibling`, qui l'a remplacé,
+    // est TOUJOURS vrai juste après un chargement (la fratrie n'est pas
+    // persistée), donc il faisait éclater une seconde fois les fichiers qui
+    // stockent l'échange déjà éclaté. `is_split_trade_node` répond aux deux :
+    // il reconnaît la forme d'un nœud éclaté sur le graphe lui-même.
+    if (exchanges_nodes.some(n => !n.is_split_trade_node && (n.input_links_list.length > 0 || n.output_links_list.length > 0))) {
       this.nodePositioning.splitTrade()
     }
     this.nodePositioning.arrangeTrade(true)

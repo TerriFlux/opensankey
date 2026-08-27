@@ -384,6 +384,42 @@ export class Class_NodeElement extends Class_NodeBase {
   public set sibling(_) { this._sibling_node = _ }
 
   /**
+   * Ce nœud d'échange est-il DÉJÀ le produit d'un éclatement import/export ?
+   *
+   * `SplitIOrE` fabrique un nœud par flux, d'identifiant
+   * `<extrémité>-<nœud d'échange><Importations|Exportations>`, relié à cette
+   * seule extrémité. Cette forme se relit donc sur le graphe — ce que `sibling`
+   * ne permet pas : le lien de fratrie n'est PAS persisté (la sauvegarde
+   * réécrit un nœud éclaté en son agrégat, cf. `SankeyPersistence.toJSON`), il
+   * est donc `undefined` sur TOUT fichier fraîchement chargé.
+   *
+   * L'enjeu est un fichier ancien qui stocke les nœuds déjà éclatés au lieu de
+   * leur agrégat (Bois Savoie : 316 de ses 506 nœuds). Les éclater une seconde
+   * fois fabrique une génération dont `setTradeDimensions` ne sait plus
+   * retrouver la racine — il la lit en `id.split('-')[1]`, qui y désigne le
+   * produit et non l'échange. Ces nœuds perdent alors toute hiérarchie de
+   * niveaux, et un nœud sans dimension gouvernante est visible à TOUS les
+   * niveaux (`checkIfRelatedDimensionsAreSelected`) : le diagramme agrégé
+   * affichait 99 flux d'échange au lieu d'une poignée.
+   *
+   * Le test porte sur UN seul flux, parce que c'est ce que produit un
+   * éclatement — un agrégat mono-flux (mfa_problem#222), lui, ne porte pas
+   * l'identifiant de son extrémité en préfixe et reste donc éclatable.
+   */
+  public get is_split_trade_node(): boolean {
+    if (this._sibling_node !== undefined) {
+      return true
+    }
+    const links = [...this.input_links_list, ...this.output_links_list]
+    if (links.length !== 1) {
+      return false
+    }
+    const link = links[0]
+    const extremity = (link.source === this) ? link.target : link.source
+    return (extremity !== this) && this._id.startsWith(extremity.id + '-')
+  }
+
+  /**
    * Issue #1225 — remonte la chaîne dim_as_child via les dims désagrégées
    * (force_show_children) jusqu'à trouver une dim is_expanded. Renvoie le
    * parent expansé et le côté de l'expansion, ou null si ce nœud n'est pas
