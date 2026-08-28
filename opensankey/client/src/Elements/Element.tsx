@@ -313,6 +313,16 @@ export abstract class Class_BaseElement {
   public get is_visible() {
     return (this.sankey.is_visible && this._is_visible)
   }
+  /**
+   * sa#283 lot 4 — état de visibilité PROPRE : le seul drapeau `_is_visible`, celui que
+   * `setVisible()` / `setInvisible()` posent, SANS la porte du diagramme (`sankey.is_visible`)
+   * ni les portes dérivées des sous-classes (tags, niveaux, flux visibles, modes englobants).
+   *
+   * Lecteur légitime : un overlay RÉVERSIBLE qui doit mémoriser l'état d'origine avant de
+   * masquer, puis le restaurer à l'identique (vues contextuelles, `ContextsRuntime`). Pour
+   * savoir si un élément s'affiche, c'est `is_visible` qu'il faut lire, pas ceci.
+   */
+  public get is_own_visible(): boolean { return this._is_visible }
   public get visibility_fingerprint() { return this._visibility_fingerprint }
   public setVisible() { this._is_visible = true; this.updateVisibilityFingerprint(); this.draw() }
   public setInvisible() { this._is_visible = false; this.updateVisibilityFingerprint(); this.draw() }
