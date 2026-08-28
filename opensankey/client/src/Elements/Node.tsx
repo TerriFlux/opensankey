@@ -815,6 +815,22 @@ export class Class_NodeElement extends Class_NodeBase {
     this.dimensionsUpdated()
   }
 
+  /**
+   * sa#283 lot 5 — état de dimension SÉRIALISÉ de ce nœud (forme de `toJSON`).
+   * Cf. `NodeDimensionsManager.dimensionsStateToJSON`.
+   */
+  public dimensionsStateToJSON(dimension_ids?: string[]) {
+    return this._nodeDimensionsManager.dimensionsStateToJSON(dimension_ids)
+  }
+
+  /**
+   * sa#283 lot 5 — remplace l'état de dimension de ce nœud pour les dimensions citées,
+   * cache de visibilité invalidé. Cf. `NodeDimensionsManager.applyDimensionsState`.
+   */
+  public applyDimensionsState(state: Type_JSON) {
+    this._nodeDimensionsManager.applyDimensionsState(state)
+  }
+
   public nodeDimensionAsParent(child: Class_NodeElement) {
     return this._nodeDimensionsManager.nodeDimensionAsParent(child)
   }
