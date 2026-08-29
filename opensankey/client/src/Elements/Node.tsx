@@ -32,6 +32,7 @@ import {
 } from './Link'
 import { Class_Handler } from './Handler'
 import { reorganizeIOOrder } from './reorganizeIOOrder'
+import { reorderLinksByIds } from './linksOrderState'
 import { orderIOByGeometry, recyclingBellyCentre, bundleTie, Type_IOGeo, Type_IOOrderPolicy } from './ioOrderGeometry'
 import { containerFrameIsEmptied, hasVisibleFrameMember } from './containerFrameVisibility'
 import { format_value, Type_JSON } from '../types/Utils'
@@ -760,6 +761,22 @@ export class Class_NodeElement extends Class_NodeBase {
     this.draw()
   }
 
+  /**
+   * sa#283 lot 6 — état de tags SÉRIALISÉ de ce nœud (forme de `toJSON`).
+   * Cf. `NodeTagsManager.tagsStateToJSON`.
+   */
+  public tagsStateToJSON(group_ids?: string[]) {
+    return this._nodeTagsManager.tagsStateToJSON(group_ids)
+  }
+
+  /**
+   * sa#283 lot 6 — remplace l'appartenance de ce nœud aux groupes cités, caches de
+   * visibilité invalidés. Cf. `NodeTagsManager.applyTagsState`.
+   */
+  public applyTagsState(state: Type_JSON) {
+    this._nodeTagsManager.applyTagsState(state)
+  }
+
   public get grouped_taggs_dict() { return this._taggs_dict }
   public get tags_list() { return this._tags }
   public get taggs_dict() {
@@ -1274,6 +1291,36 @@ export class Class_NodeElement extends Class_NodeBase {
 
   public reorganizeIOFromListIds(l: string[]) {
     this._links_order.sort((link_a, link_b) => l.indexOf(link_a.id) - l.indexOf(link_b.id))
+  }
+
+  /**
+   * sa#283 lot 6 — ORDRE DES FLUX autour de ce nœud, sur la forme EXACTE du JSON
+   * (`links_order` : la liste des ids de flux, cf. `SankeyPersistence.toJSON`).
+   *
+   * C'est la QUATRIÈME catégorie de données qui peut différer d'une tranche à l'autre, à
+   * côté des attributs du sac `_storage`, de la présence de l'élément et de la hiérarchie
+   * de dimension : l'empilement des bandes autour du nœud, qui gouverne le rendu et ne vit
+   * dans aucun sac d'attributs.
+   */
+  public linksOrderToJSON(): string[] {
+    return this._links_order.map(link => link.id)
+  }
+
+  /**
+   * sa#283 lot 6 — REPOSE l'ordre des flux de ce nœud. Exactement réversible :
+   * `applyLinksOrder(linksOrderToJSON())` est un no-op, et rejouer l'ordre COMPLET mémorisé
+   * avant l'écriture rend l'ordre d'origine (cf. `reorderLinksByIds`).
+   *
+   * Liste éventuellement PARTIELLE : un id inconnu de ce nœud est ignoré silencieusement
+   * (même règle que partout dans les contextes — un fichier d'époque ne connaît pas tous les
+   * flux du réseau réconcilié), et un flux du nœud absent de la liste passe À LA SUITE, dans
+   * son ordre courant. Jamais de flux inconnu intercalé entre les bandes ordonnées.
+   *
+   * Aucun redessin ici : l'appelant en déclenche un (le runtime des contextes redessine
+   * après l'overlay), comme pour `applyDimensionsState`.
+   */
+  public applyLinksOrder(ordered_ids: string[]) {
+    this._links_order = reorderLinksByIds(this._links_order, ordered_ids)
   }
 
   public moveLinkToPositionInOrderBefore(
