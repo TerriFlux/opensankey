@@ -135,6 +135,17 @@ export class NodeTagsManager {
     }
   }
 
+  /**
+   * Retire l'exclusion de vue (symétrique d'`addAsViewExcluded`). Ajoutée au lot sa#283/6 :
+   * sans elle, l'état de tags n'était pas RÉVERSIBLE — on savait exclure un nœud d'un groupe
+   * de view tags, jamais l'y remettre.
+   */
+  public removeAsViewExcluded(_: Class_ViewTagGroup) {
+    const tagsData = this._node.internalTagsData
+    const idx = tagsData.view_taggs_as_excluded.indexOf(_)
+    if (idx >= 0) tagsData.view_taggs_as_excluded.splice(idx, 1)
+  }
+
   public toJSON(json_object: Type_JSON) {
     // Tags
     if (this._node.taggs_list.length > 0) {
@@ -201,6 +212,99 @@ export class NodeTagsManager {
             })
         }
       })
+  }
+
+  // ÉTAT DE TAGS LISIBLE / RÉINSCRIPTIBLE (sa#283 lot 6) ==============================
+
+  /**
+   * sa#283 lot 6 — ÉTAT DE TAGS de ce nœud, sur la forme EXACTE de `toJSON` :
+   * `{ '<groupe>': ['<tag>', …] }`, anti-tags de niveau et exclusions de vue compris
+   * (ils s'y écrivent `['0']`).
+   *
+   * C'est la CINQUIÈME catégorie de données qui peut différer d'une tranche à l'autre, à
+   * côté des attributs du sac `_storage`, de la présence de l'élément, de la hiérarchie de
+   * dimension et de l'ordre des flux. Elle ne vit PAS dans `_storage` (rien ne la
+   * capturait) et gouverne la visibilité par `are_related_node_tags_selected` — dont les
+   * tags de NIVEAU (`dimension 1`), qui décident du niveau d'agrégation affiché.
+   *
+   * @param group_ids restreint le résultat à ces groupes ; un groupe cité dont le nœud ne
+   *   porte aucun tag vaut `[]` (= n'appartient à aucune étiquette du groupe). Sans
+   *   argument, tous les groupes écrits par `toJSON`.
+   */
+  public tagsStateToJSON(group_ids?: string[]): Type_JSON {
+    const json_object: Type_JSON = {}
+    this.toJSON(json_object)
+    const written = (json_object['tags'] ?? {}) as Type_JSON
+    if (group_ids === undefined) return written
+    const out: Type_JSON = {}
+    group_ids.forEach(id => { out[id] = (written[id] ?? []) as Type_JSON })
+    return out
+  }
+
+  /**
+   * sa#283 lot 6 — REMPLACE l'appartenance de ce nœud aux GROUPES CITÉS, et à eux seuls.
+   * Exactement réversible : `applyTagsState(tagsStateToJSON(ids))` est un no-op, et rejouer
+   * l'état mémorisé avant l'écriture rend l'état d'origine.
+   *
+   * Par groupe cité : TABLE RASE (retrait de tous les tags du nœud dans ce groupe, de
+   * l'anti-tag de niveau et de l'exclusion de vue), puis ré-inscription de la liste donnée.
+   * Un groupe inconnu du diagramme est ignoré, une étiquette inconnue du groupe aussi
+   * (jamais de création d'étiquette ici, contrairement à `fromJSON` : un contexte est une
+   * surcouche de présentation, il n'invente pas de vocabulaire). `'0'` sur un groupe de
+   * niveau = anti-tag, sur un groupe de vue = exclusion — même convention que `fromJSON`.
+   *
+   * INVALIDATION DES CACHES DE VISIBILITÉ — le piège de cette famille, exactement comme au
+   * lot 5, et MESURÉ ici plutôt que supposé (cf. les deux tests « le cache … est invalide »
+   * de nodeContextState.test.ts, chacun vérifié en retirant l'appel correspondant) :
+   *  - `_are_related_node_tags_selected` est déjà rattrapé par la CROSS-RÉFÉRENCE tag ↔ nœud
+   *    (`Class_Tag.addReference` appelle `Class_NodeElement.addTag`, qui invalide) ;
+   *    `tagsUpdated()` reste appelé ici pour ne pas dépendre de ce détour ;
+   *  - `_are_related_dimensions_selected` n'a AUCUNE empreinte de secours et n'est touché
+   *    par aucun de ces chemins : sans `dimensionsUpdated()` explicite, changer les tags de
+   *    NIVEAU d'un nœud (ou son anti-tag, qui ne passe par aucun `addTag`) le laisse replié
+   *    à l'écran alors que son état a bel et bien changé — l'overlay SANS EFFET VISIBLE.
+   * `dimensionsUpdated()` renouvelle en outre l'empreinte de visibilité, dont les VOISINS
+   * dérivent la leur (`getLinksVisibilitiesFingerprint`).
+   */
+  public applyTagsState(state: Type_JSON): void {
+    const node = this._node
+    const sankey = node.sankey
+    let touched = false
+    Object.entries(state).forEach(([group_id, raw]) => {
+      const level_group = sankey.level_taggs_dict[group_id]
+      const view_group = sankey.view_taggs_dict[group_id]
+      const tagg = sankey.node_taggs_dict[group_id] ?? level_group ?? view_group
+      if (tagg === undefined) return // groupe inconnu du diagramme : ignoré silencieusement
+      touched = true
+
+      // 1. TABLE RASE sur ce groupe, et sur lui seul.
+      node.tags_list
+        .filter(tag => tag.group === tagg)
+        .forEach(tag => this.removeTag(tag))
+      if (level_group !== undefined) this.removeAsAntiTagged(level_group as Class_LevelTagGroup)
+      if (view_group !== undefined) this.removeAsViewExcluded(view_group as Class_ViewTagGroup)
+
+      // 2. RÉ-INSCRIPTION de la liste citée.
+      const tag_ids = Array.isArray(raw) ? (raw as unknown[]) : []
+      tag_ids.forEach(raw_tag_id => {
+        const tag_id = String(raw_tag_id)
+        if (+tag_id === 0 && level_group !== undefined) {
+          this.addAsAntiTagged(level_group as Class_LevelTagGroup)
+          return
+        }
+        if (+tag_id === 0 && view_group !== undefined) {
+          this.addAsViewExcluded(view_group as Class_ViewTagGroup)
+          return
+        }
+        const tag = tagg.tags_dict[tag_id]
+        if (tag === undefined) return // étiquette inconnue du groupe : ignorée
+        this.addTag(tag as Class_Tag)
+      })
+    })
+    if (touched) {
+      node.tagsUpdated()
+      node.dimensionsUpdated()
+    }
   }
 
   // TAG MANAGEMENT METHODS =============================================================
