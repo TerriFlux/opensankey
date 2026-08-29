@@ -237,13 +237,27 @@ export class Class_ApplicationData {
   public get is_editable(): boolean { return !this.is_static || this.publish_options.editable }
 
   /**
-   * Hook du concept unifié vue ⊕ viewtag : quand true, le sélecteur de view tags de la
-   * topbar (BannerViewTagTopbar) est masqué car la visibilité passe désormais par des VUES
-   * nommées (« tout est une vue nommée »). Faux en OS base (le sélecteur viewtag historique
-   * reste l'UI) ; surchargé en OpenSankey+ pour valoir vrai quand la feature Vues (plus) est
-   * disponible. Le mécanisme de visibilité, lui, reste en OS (Sankey.view_taggs / Node).
+   * os#1365 — ARBITRE UNIQUE entre les deux sélecteurs de la topbar : la navigation entre
+   * vues (BannerViewNavOSP) rend le sélecteur quand ce drapeau est vrai, le sélecteur de
+   * view tags (BannerViewTagTopbar) quand il est faux. Les deux bannières lisent CETTE
+   * propriété et elle seule : conditions complémentaires, donc jamais deux sélecteurs à
+   * l'écran, jamais zéro.
+   *
+   * Le critère est la PRÉSENCE DE VUES, pas la licence. Dès qu'un view tag a engendré des
+   * vues (préfixe `vt__<groupe>__<tag>`), ce sont les vues qui pilotent — une seule source
+   * de vérité. Sans vues, le sélecteur de view tags reste : c'est la seule UI du diagramme,
+   * le retirer le rendrait inutilisable.
+   *
+   * La version précédente valait `has_sankey_plus` en OpenSankey+, ce qui divergeait de la
+   * garde `has_views` de BannerViewNavOSP et produisait DEUX défauts symétriques :
+   *   - éditeur, vues présentes sans licence plus → les DEUX sélecteurs (le doublon CARTOFOB) ;
+   *   - viewer d'une publication, où `has_sankey_plus` est vrai par `is_static` : sans vues,
+   *     AUCUN sélecteur, le diagramme publié perdait sa seule UI de filtrage.
+   *
+   * Le mécanisme de visibilité, lui, reste en OS (Sankey.view_taggs / Node) : c'est ici une
+   * question d'AFFICHAGE.
    */
-  public get views_replace_viewtag_topbar(): boolean { return false }
+  public get views_replace_viewtag_topbar(): boolean { return this.has_views }
 
   /**
    * sa#283 — Vues contextuelles : slot OPTIONNEL enregistré par la couche OSP (pattern
