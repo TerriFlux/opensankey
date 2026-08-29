@@ -59,6 +59,9 @@ import {
 } from '../Persistence/persistenceMigrations'
 import type { Class_NodeElement } from '../Elements/Node'
 import type { Class_LinkElement } from '../Elements/Link'
+// Module FEUILLE sans aucun import (cf. legendIds.ts) : sûr à tirer ici, où
+// tout autre chemin vers LegendGenerator créerait un cycle à l'initialisation.
+import { isLegendElementId } from '../Elements/legendIds'
 
 // SPECIFIC TYPES **********************************************************************/
 
@@ -1832,10 +1835,18 @@ export class Class_ApplicationData {
       const flat = JSON.parse(JSON.stringify(out)) as Type_JSON
       decodeViewsFromDelta(flat)
       const count = (v: unknown) => (v && typeof v === 'object' && !Array.isArray(v)) ? Object.keys(v as Type_JSON).length : 0
+      // Zones LIBRES : la légende est faite de zones de texte depuis OS#1254
+      // (cadre `legend` + enfants `legend-*`), qu'un fichier antérieur n'a pas.
+      // Les compter avec les autres rendait tout upgrade « en écart » — c'est
+      // ce compte-ci que le vérificateur compare strictement.
+      const countFree = (v: unknown) => (v && typeof v === 'object' && !Array.isArray(v))
+        ? Object.keys(v as Type_JSON).filter(id => !isLegendElementId(id)).length
+        : 0
       const views = Object.values((flat['views'] ?? {}) as { [id: string]: Type_JSON }).map(v => ({
         name: v['name'] ?? null,
         view_labels: Array.isArray(v['view_labels']) ? v['view_labels'] : [],
         zones: count(v['labels']),
+        zones_free: countFree(v['labels']),
         nodes: count(v['nodes']),
         links: count(v['links']),
       }))
@@ -1844,6 +1855,7 @@ export class Class_ApplicationData {
         nodes: count(flat['nodes']),
         links: count(flat['links']),
         zones: count(flat['labels']),
+        zones_free: countFree(flat['labels']),
         views,
       })
       w['__sankey_upgraded_json'] = JSON.stringify(out)
