@@ -694,6 +694,29 @@ export class Class_DrawingArea {
   // (coords monde) ramenée en px écran à la fenêtre disponible. Si oui, draw()
   // dézoome (areaAutoFit) pour tout faire rentrer ; sinon il réapplique la
   // référence. Petite tolérance pour éviter le jitter sur le dataTag de référence.
+  /**
+   * os#1371 — Le dézoom de secours du verrou de taille a-t-il un sens dans le mode courant ?
+   *
+   * NON sous « échelle adaptée » : les deux régulent la MÊME grandeur — la taille apparente du
+   * diagramme — par deux moyens opposés. Le mode la tient côté DONNÉES (échelle valeur→pixel,
+   * hauteur rendue constante) ; le verrou la tient côté CAMÉRA (dézoom dès qu'un datatag déborde
+   * le cadrage de référence). Ensemble, ils s'annulent : les plafonds qui s'appliquent APRÈS le
+   * mode (`maximum_node`, référence d'échelle par view tag) font déborder, le verrou dézoome, et
+   * la taille que le mode venait de fixer change quand même. Deux asservissements sur la même
+   * sortie.
+   *
+   * Le cadrage de référence, lui, continue d'être réappliqué à l'identique : c'est le
+   * RÉTRÉCISSEMENT seul qui n'a pas de sens ici. Et cela ne vaut que pour un débordement dû au
+   * CONTENU ; celui dû à la FENÊTRE (barre latérale ouverte, cf. `refreshWindowFraming`) reste
+   * traité, il ne doit rien au mode.
+   *
+   * `size_locked` est posé dans des fichiers d'étude existants sans que leur auteur l'ait jamais
+   * réglé : la garde vaut donc aussi, et surtout, pour l'existant.
+   */
+  protected get locked_overflow_shrink_allowed(): boolean {
+    return this._effectivePositionMode() !== 'scale_adapted'
+  }
+
   protected _lockedContentOverflows(ref_k: number): boolean {
     const bbox = this.d3_selection_elements_group?.node()?.getBBox()
     if (!bbox || (bbox.width === 0 && bbox.height === 0)) return false
@@ -1181,7 +1204,10 @@ export class Class_DrawingArea {
       // - Non (dataTag plus grand que celui de référence) → on dézoome (fit
       //   vertical) pour tout faire rentrer ; rétrécissement transitoire, la
       //   référence reste intacte pour ré-agrandir ensuite (cf. #1240).
-      if (this._lockedContentOverflows(locked_zoom_transform.k)) {
+      // os#1371 — sous « échelle adaptée », le rétrécissement est neutralisé : c'est le mode
+      // qui tient la taille, pas la caméra (cf. locked_overflow_shrink_allowed).
+      if (this.locked_overflow_shrink_allowed
+        && this._lockedContentOverflows(locked_zoom_transform.k)) {
         this._locked_overflow_shrunk = true
         this.areaAutoFit(false, true)
       } else {
