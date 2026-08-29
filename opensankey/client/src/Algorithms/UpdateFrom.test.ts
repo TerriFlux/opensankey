@@ -328,6 +328,68 @@ describe('updateFrom — tags de données appariés par NOM mais d\'ids différe
   })
 })
 
+// OS#1367 — l'appariement des valeurs ne repose PAS sur leur identifiant.
+// updateFrom le dit lui-même là où il apparie (« match by name to handle
+// differing IDs ») : la coordonnée d'une valeur, ce sont ses tags de données.
+// Depuis ce lot l'id n'est plus écrit du tout, donc un diagramme rechargé
+// depuis un fichier porte des identifiants entièrement neufs — ce test le
+// reproduit en faisant passer la SOURCE par un aller-retour JSON complet avant
+// de la faire servir de référence.
+describe('OS#1367 updateFrom — appariement des valeurs sans identifiant partagé', () => {
+  /** Recharge une application depuis son propre JSON : ids de valeurs reforgés. */
+  function roundTrip(app: Class_ApplicationData): Class_ApplicationData {
+    const json = JSON.parse(JSON.stringify(app.toJSON()))
+    const reloaded = new Class_ApplicationData(false)
+    reloaded.fromJSON(json as never, {}, false)
+    return reloaded
+  }
+
+  it('Values : une source rechargée depuis son JSON transmet bien ses valeurs', () => {
+    const src = new Class_ApplicationData(false)
+    const s = makePair(src)
+    const src_tagg = makeYearTagGroup(src, [['a', '2020'], ['b', '2021']])
+    src_tagg.selectTagsFromIds(['a'])
+    s.link.valueCurrent = 111
+    src_tagg.selectTagsFromIds(['b'])
+    s.link.valueCurrent = 222
+
+    // Le JSON enregistré ne porte plus aucun identifiant de valeur
+    const src_json = JSON.stringify(src.toJSON())
+    expect(src_json).not.toContain('_value__')
+
+    const reloaded_src = roundTrip(src)
+
+    const tgt = new Class_ApplicationData(false)
+    const t = makePair(tgt)
+    const tgt_tagg = makeYearTagGroup(tgt, [['a', '2020'], ['b', '2021']])
+    tgt_tagg.selectTagsFromIds(['a'])
+    t.link.valueCurrent = 1
+    tgt_tagg.selectTagsFromIds(['b'])
+    t.link.valueCurrent = 2
+
+    updateFrom(tgt.drawing_area, reloaded_src.drawing_area, ['Values'])
+
+    expect(valueUnderYear(tgt, t.link, '2020')).toBe(111)
+    expect(valueUnderYear(tgt, t.link, '2021')).toBe(222)
+  })
+
+  it('Values : sans tags de données, la valeur unique du flux passe aussi', () => {
+    const src = new Class_ApplicationData(false)
+    const s = makePair(src)
+    s.link.valueCurrent = 42
+
+    const reloaded_src = roundTrip(src)
+
+    const tgt = new Class_ApplicationData(false)
+    const t = makePair(tgt)
+    t.link.valueCurrent = 1
+
+    updateFrom(tgt.drawing_area, reloaded_src.drawing_area, ['Values'])
+
+    expect(t.link.valueCurrent).toBe(42)
+  })
+})
+
 describe('#232 updateFrom — non-régression (attribut hors mode préservé)', () => {
   it('un mode inconnu / vide ne modifie ni positions ni attributs', () => {
     const src = new Class_ApplicationData(false)

@@ -670,7 +670,15 @@ export class Class_ElementValue {
   // SERIALIZATION ======================================================================
   public toJSON(_kwargs?: Type_JSON): Type_JSON {
     const json_object: Type_JSON = {}
-    json_object['id'] = this._id
+    // OS#1367 — l'`id` d'une valeur n'est PLUS écrit. Il est fabriqué au
+    // constructeur par makeId(), avec un suffixe aléatoire : ce n'est pas une
+    // identité mais une clé de dictionnaire temporaire (getAllValues,
+    // Class_Tag._references), reconstruite à chaque chargement. Rien ne le
+    // référence dans le fichier — la coordonnée d'une valeur, c'est son flux et
+    // ses tags, c'est-à-dire sa position dans la structure. Sur un gros
+    // diagramme ces chaînes pesaient ~18 % du poids du JSON.
+    // La LECTURE reste tolérante (cf. fromJSON) : un fichier ancien porte
+    // encore ces id et les conserve.
     if (this.flux_taggs_list.length > 0) {
       json_object['tags'] = Object.fromEntries(
         this.flux_taggs_list
@@ -692,6 +700,9 @@ export class Class_ElementValue {
     matching_taggs_id: { [_: string]: string; } = {},
     _matching_tags_id: { [_: string]: { [_: string]: string; }; } = {}
   ) {
+    // OS#1367 — tolérance de lecture : l'id n'est plus écrit, mais un fichier
+    // ancien en porte un ; on l'adopte alors tel quel, sinon on garde celui du
+    // constructeur.
     this._id = getStringFromJSON(json_object, 'id', this._id)
     // Get Flux tags
     const flux_taggs_dict = (this.link?.drawing_area.sankey.flux_taggs_dict ?? {})
@@ -945,7 +956,13 @@ export class Class_ElementTaggedValue {
   // SERIALIZATION ======================================================================
   public toJSON(): Type_JSON {
     const json_object: Type_JSON = {}
-    json_object['id'] = this._id
+    // OS#1367 — l'`id` d'une sous-valeur n'est plus écrit non plus. Ce qui
+    // désigne une sous-valeur dans le fichier, c'est sa POSITION dans le
+    // tableau `tagged_values` : la lecture les recrée dans l'ordre, l'encodage
+    // delta des vues (#254) remplace un tableau en bloc, et l'id ne sert qu'en
+    // mémoire (clé de Class_Tag._references, fermetures undo/redo du menu
+    // d'édition, qui capturent l'id de la session courante). Aucune autre
+    // partie du fichier ne le référence.
     if (this._value !== null) json_object['value'] = this._value
     if (this._label_visible) json_object['label_visible'] = true
     if (this._tags.length > 0)
@@ -955,6 +972,7 @@ export class Class_ElementTaggedValue {
   }
 
   public fromJSON(json_object: Type_JSON) {
+    // OS#1367 — tolérance de lecture (cf. Class_ElementValue.fromJSON).
     this._id = getStringFromJSON(json_object, 'id', this._id)
     this._value = getNumberOrNullFromJSON(json_object, 'value')
     this._label_visible = getBooleanFromJSON(json_object, 'label_visible', this._label_visible)
