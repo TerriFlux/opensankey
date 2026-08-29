@@ -141,6 +141,50 @@ describe('#378 — ordre des flux E/S au changement de dataTag', () => {
     reorg.mock.calls.forEach(call => expect(call[0]).toBe(false))
   })
 
+  // ================================================================================================
+  // os#1370 — En échelle adaptée, l'ordre se déduit de la disposition de l'AUTEUR, jamais de
+  // l'anti-chevauchement d'affichage.
+  //
+  // `resolveScaleAdaptedOverlaps` ne fait que pousser des coins pour le datatag courant : il n'est
+  // jamais persisté, alors que `links_order` l'est. Tant que la réorganisation tourne APRÈS lui,
+  // un flux passe sous un autre dans les vues où le push déplace quelque chose, et enregistrer
+  // grave l'artefact dans le fichier (CARTOFOB, « Prélèvements »).
+  // ================================================================================================
+  it('en echelle adaptee, l ordre est calcule AVANT l anti-chevauchement', () => {
+    const { drawing_area, tagg, tag_2021 } = buildDiagram()
+    // Le mode global vit sur le style « default » (cf. DrawingArea ~L516) ; la suspension
+    // d ouverture (#369) doit etre levee pour que la branche du mode soit reellement prise.
+    drawing_area.sankey.styles_dict['default'].shape_position_type = 'scale_adapted'
+    drawing_area.clearPositionModeSuspension()
+
+    const sequence: string[] = []
+    jest.spyOn(drawing_area.nodePositioning, 'resolveScaleAdaptedOverlaps')
+      .mockImplementation(() => { sequence.push('anti-chevauchement') })
+    const reorg = drawing_area.reorganizeIOOnDataSelectionChange.bind(drawing_area)
+    jest.spyOn(drawing_area, 'reorganizeIOOnDataSelectionChange')
+      .mockImplementation(() => { sequence.push('reorganisation'); return reorg() })
+
+    tagg.selectTagsFromId(tag_2021.id)
+
+    // Le push ne peut pas influencer l ordre : il court apres lui.
+    expect(sequence[0]).toBe('reorganisation')
+    expect(sequence[1]).toBe('anti-chevauchement')
+  })
+
+  it('en echelle adaptee, la bascule reordonne quand meme (378 reste vrai)', () => {
+    const { drawing_area, tagg, tag_2021, cible, link_haut, link_bas } = buildDiagram()
+    // Le mode global vit sur le style « default » (cf. DrawingArea ~L516) ; la suspension
+    // d ouverture (#369) doit etre levee pour que la branche du mode soit reellement prise.
+    drawing_area.sankey.styles_dict['default'].shape_position_type = 'scale_adapted'
+    drawing_area.clearPositionModeSuspension()
+
+    tagg.selectTagsFromId(tag_2021.id)
+
+    // Les hauteurs sont deja celles de la selection courante : c est bien le changement de
+    // valeurs qui reordonne, et lui seul.
+    expect(orderAt(cible)).toEqual([link_haut.id, link_bas.id])
+  })
+
   it('un nœud réglé sur « aucune réorganisation » garde son ordre', () => {
     const { tagg, tag_2021, cible, link_haut, link_bas } = buildDiagram()
     cible.shape_io_reorg_mode = 'none'
