@@ -2246,6 +2246,17 @@ export class Class_NodeElement extends Class_NodeBase {
     // Note : Two loops is best because link drawing can trigger other nodes drawLink() methode
     // -> So to avoid mutual blocking between node, it's best to compute first all links positions and then loop
     //    again on links to draw them
+    //
+    // os#1372 — Pendant la PHASE DE PLACEMENT, on n'écrit pas dans le DOM : les flux touchés sont
+    // remis à la zone de dessin, qui les dessinera une seule fois, aux positions définitives (cf.
+    // DrawingArea.drawElements). Le placement appelle `applyPosition` plusieurs fois par nœud et
+    // par passe ; dessiner à chaque fois revenait à tracer des positions intermédiaires aussitôt
+    // remplacées — 468 dessins pour 36 flux affichés sur CARTOFOB. Le choix DES flux à redessiner
+    // reste fait ici, à l'identique : c'est seulement le trait qui est retardé.
+    if (this.drawing_area.defers_link_draws) {
+      this.drawing_area.deferLinkDraws(link_to_redraw)
+      return
+    }
     link_to_redraw
       .forEach(link => {
         link.draw()

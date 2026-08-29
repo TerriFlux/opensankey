@@ -1568,10 +1568,49 @@ export class Class_DrawingArea {
    * Draw all elements inside drawing area
    * @memberof Class_DrawingArea
    */
+  /**
+   * os#1372 — Flux à redessiner, accumulés pendant la phase de PLACEMENT d'un `drawElements`.
+   * `null` hors de cette phase : `Node.updateLinksPositions` dessine alors immédiatement, comme
+   * avant. Un `Set` parce qu'un même flux est touché par ses DEUX extrémités.
+   */
+  private _deferred_link_draws: Set<Class_LinkElement> | null = null
+
+  /** Vrai tant qu'on est dans la phase de placement (les dessins de flux sont différés). */
+  public get defers_link_draws(): boolean { return this._deferred_link_draws !== null }
+
+  /**
+   * Enregistre des flux à redessiner en fin de placement. Appelé par
+   * `Node.updateLinksPositions`, qui garde la responsabilité de DÉCIDER lesquels ont bougé.
+   */
+  public deferLinkDraws(links: Class_LinkElement[]): void {
+    const set = this._deferred_link_draws
+    if (!set) return
+    links.forEach(l => set.add(l))
+  }
+
+  /**
+   * Dessine une fois chacun des flux accumulés, aux positions définitives. La file est fermée
+   * AVANT le parcours : un dessin de flux peut déclencher celui d'un nœud, donc rentrer à
+   * nouveau dans `updateLinksPositions` — qui doit alors dessiner tout de suite, pas ré-empiler.
+   */
+  private _flushDeferredLinkDraws(): void {
+    const set = this._deferred_link_draws
+    this._deferred_link_draws = null
+    if (!set) return
+    set.forEach(l => l.draw())
+  }
+
   public drawElements() {
     if (this.bypass_redraws) return
     // os#1353 — à partir d'ici la géométrie des nœuds est mise en page (cf. `has_been_laid_out`).
     this._has_been_laid_out = true
+    // os#1372 — PHASE DE PLACEMENT : les flux ne sont pas dessinés à chaque déplacement de nœud,
+    // seulement accumulés. Chaque étape de placement (ancrage, ré-empilement, anti-chevauchement,
+    // mode paramétrique) appelle `Node.applyPosition`, qui redessinait aussitôt tous les flux du
+    // nœud — donc plusieurs fois par passe et par flux, sur des positions intermédiaires jetées
+    // juste après. Mesuré sur CARTOFOB : 468 dessins de flux pour 36 flux affichés.
+    // La file est vidée plus bas, avant `_sankey.draw()`, sur les positions DÉFINITIVES.
+    this._deferred_link_draws = new Set()
     // #369 — mode EFFECTIF : celui du style global, ou 'absolute' tant que la suspension
     // d'ouverture tient (cf. _effectivePositionMode). Lu UNE fois et réutilisé plus bas :
     // les branches suivantes relisaient le style, ce qui aurait mélangé les deux régimes.
@@ -1665,6 +1704,11 @@ export class Class_DrawingArea {
     // Draw grid
     this.drawBackground()
     this.drawGrid()
+    // os#1372 — Fin de la phase de placement : les positions sont définitives, on vide la file
+    // des flux à redessiner. Chaque flux touché pendant le placement est dessiné UNE fois, et
+    // `updateLinksPositions` garde son contrôle « rien n'a bougé » intact — c'est lui qui a
+    // rempli la file, la vider ici ne fait que retarder le trait, pas le supprimer.
+    this._flushDeferredLinkDraws()
     // for parametric mode nodes need to be draw in a certain order
     // so that the nodes at the top of the columns are drawn first
     //this._sankey.sortNodes()
