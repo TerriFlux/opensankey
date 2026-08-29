@@ -1104,6 +1104,9 @@ export class Class_DrawingArea {
   ) {
     // This function calls explictly for a redraw
     this.bypass_redraws = false
+    // os#1372 — signale le dessin complet à l'application, qui s'en sert pour ne pas en
+    // déclencher un de plus quand un geste en a déjà provoqué un (cf. draw_epoch).
+    this.application_data.notifyFullDraw()
 
     // OS#1246 — signale aux éléments qu'on est dans un draw COMPLET (cf.
     // isInFullDraw) : les flux doivent alors tous être redessinés.
@@ -4543,7 +4546,7 @@ export class Class_DrawingArea {
 
   public setAbsoluteMode() { DisplayModes.setAbsoluteMode(this) }
 
-  public setScaleAdaptedMode() { DisplayModes.setScaleAdaptedMode(this) }
+  public setScaleAdaptedMode(redraw: boolean = true) { DisplayModes.setScaleAdaptedMode(this, redraw) }
 
   public setProportionalMode() { DisplayModes.setProportionalMode(this) }
 

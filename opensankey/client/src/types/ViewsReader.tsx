@@ -330,7 +330,9 @@ export class ViewsReader {
     // Préserver le mode de position global à travers le switch.
     const new_position_mode = host.drawing_area.sankey.styles_dict['default'].shape_position_type
     if (new_position_mode !== prev_position_mode) {
-      if (prev_position_mode === 'scale_adapted') host.drawing_area.setScaleAdaptedMode()
+      // os#1372 — `false` : le dessin suit immédiatement (sortNodes puis draw ci-dessous), celui
+      // du setter serait intégralement refait.
+      if (prev_position_mode === 'scale_adapted') host.drawing_area.setScaleAdaptedMode(false)
       else if (prev_position_mode === 'proportional') host.drawing_area.setProportionalMode()
       else if (prev_position_mode === 'absolute') host.drawing_area.setAbsoluteMode()
     }
