@@ -12,6 +12,8 @@ import { getBooleanFromJSON, getJSONOrUndefinedFromJSON, getStringFromJSON } fro
 import { DrawingAreaPersistence } from '../Persistence/SankeyPersistence'
 import { decodeViewsFromDelta } from './viewDelta'
 import { ViewsQuery, MASTER_VIEW_ID } from './ViewsQuery'
+import { Class_ViewSwitchProgress, viewSwitchPath } from './viewSwitchProgress'
+import { createViewSwitchOverlay } from './viewSwitchOverlay'
 import type { Class_DrawingArea } from './DrawingArea'
 import type { Type_JSON } from './Utils'
 import type { Class_ApplicationData } from './ApplicationData'
@@ -38,8 +40,24 @@ import type { Class_ApplicationData } from './ApplicationData'
 export class ViewsReader {
   protected readonly query: ViewsQuery
 
+  /**
+   * os#1368 — Ordonnanceur du switch INTERACTIF (cf. `requestViewChange`) : pose l'indicateur,
+   * cède la main au navigateur, puis travaille. Non armé tant que personne ne demande de switch
+   * interactif : `setCurrentView` (chemin programmatique, exports et options de publication)
+   * n'en dépend pas et reste strictement synchrone.
+   */
+  protected switch_progress: Class_ViewSwitchProgress
+
   constructor(protected readonly host: Class_ApplicationData) {
     this.query = new ViewsQuery(host)
+    this.switch_progress = new Class_ViewSwitchProgress({
+      indicator: createViewSwitchOverlay(
+        // Relu à chaque affichage : la drawing area est remplacée au cours du switch.
+        () => (typeof document === 'undefined')
+          ? null
+          : document.querySelector(this.host.drawing_area?.container_selector ?? '#sankey_app')
+      )
+    })
   }
 
   // --- Délégation de la logique pure (ViewsQuery) -----------------------------------------
@@ -232,10 +250,33 @@ export class ViewsReader {
   // SWITCH DE VUE (méthode-gabarit : corps de lecture + hooks d'édition surchargeables)
   // ========================================================================================
 
+  /**
+   * Bascule PROGRAMMATIQUE : strictement synchrone, inchangée. C'est le contrat dont dépendent les
+   * appelants qui lisent la vue au retour — export de toutes les vues (`iterateAllViews`),
+   * application des options de publication à l'ouverture, suites de tests.
+   */
   public setCurrentView(id: string) {
     // OSP peut intercepter (modifs non sauvegardées => pop-up) et avorter le switch immédiat.
     if (this.interceptViewChange(id)) return
     this.applyViewChange(id)
+  }
+
+  /**
+   * os#1368 — Bascule INTERACTIVE (geste d'utilisateur : sélecteur, bandeau, vignette, F7/F8/F9,
+   * lien `view://`). Même corps que `setCurrentView`, seul l'ORDONNANCEMENT change : sur le chemin
+   * heavy, un indicateur est posé, la main est rendue au navigateur le temps qu'il le peigne, puis
+   * seulement le travail lourd démarre — et l'indicateur est retiré au retour, échec compris.
+   *
+   * L'interception OSP (« sauvegarder ? ») reste évaluée SYNCHRONEMENT, avant toute cession : un
+   * switch avorté n'a pas d'indicateur à retirer.
+   *
+   * Le chemin light reste synchrone : il ne reconstruit rien, et lui coûter une frame pour un
+   * clignotement serait pire que rien.
+   */
+  public requestViewChange(id: string): void | Promise<void> {
+    if (this.interceptViewChange(id)) return
+    const path = viewSwitchPath(id, MASTER_VIEW_ID, this.host.views_dict)
+    return this.switch_progress.run(path, () => this.applyViewChange(id))
   }
 
   /** Corps du switch : pose la nouvelle vue (light/heavy), la visibilité, la caméra et redessine. */
@@ -300,32 +341,34 @@ export class ViewsReader {
     this.updateViewMenus()
   }
 
-  public setCurrentViewToMaster() {
+  // Navigation : gestes d'utilisateur (boutons de bandeau, F7 / F8 / F9) => chemin interactif.
+
+  public setCurrentViewToMaster(): void | Promise<void> {
     if (!this.is_view_master) {
-      this.setCurrentView(MASTER_VIEW_ID)
+      return this.requestViewChange(MASTER_VIEW_ID)
     }
   }
 
-  public setCurrentViewToNext() {
+  public setCurrentViewToNext(): void | Promise<void> {
     if (this.has_views && this.has_view_after) {
       const order = this.views_navigation_order
       const idx = order.indexOf(this.host.current_view_id)
-      this.setCurrentView(order[idx + 1])
+      return this.requestViewChange(order[idx + 1])
     }
   }
 
-  public setCurrentViewToPrev() {
+  public setCurrentViewToPrev(): void | Promise<void> {
     if (this.has_views && this.has_view_before) {
       const order = this.views_navigation_order
       const idx = order.indexOf(this.host.current_view_id)
-      this.setCurrentView(order[idx - 1])
+      return this.requestViewChange(order[idx - 1])
     }
   }
 
   /** Doc markdown `view://<id>` links : activer la vue ciblée (no-op si l'id n'existe plus). */
-  public navigateToView(id: string): void {
+  public navigateToView(id: string): void | Promise<void> {
     if (id === MASTER_VIEW_ID || this.host.views_dict[id]) {
-      this.setCurrentView(id)
+      return this.requestViewChange(id)
     }
   }
 }
