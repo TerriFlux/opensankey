@@ -58,6 +58,13 @@ export interface SankeyGlobals {
   topbar?: boolean       // default true
   footer?: boolean       // default false
   toolbar?: boolean      // default false : sélecteurs du mode d'affichage (absolu/proportionnel/échelle) — un par dimension, sur chacun de ses hôtes : ligne du panneau Filtres, topbar, frise de séquence (cf. #370)
+  // os#1366 — default TRUE : le sélecteur de mode d'affichage apparaît DE LUI-MÊME au lecteur
+  // quand le diagramme déclare une référence (`prop_reference_datatag` ou
+  // `scale_reference_by_viewtag`) — le diagramme est alors configuré pour ces modes et son
+  // lecteur doit pouvoir y accéder. Sans référence, rien ne s'affiche (un sélecteur inerte
+  // serait un piège) : cette option n'a donc d'effet que pour COUPER cet automatisme.
+  // `toolbar` reste l'opt-in explicite, qui l'expose sur toutes les dimensions.
+  position_mode_selector?: boolean
   // default TRUE (08/08) : groupe ajustement/verrous + indicateur de zoom dans la
   // barre du bas. Il l'était à false, et une page publiée n'offrait alors AUCUN
   // moyen visible de zoomer ni de recadrer — seulement Ctrl+molette, qui ne
@@ -160,6 +167,9 @@ export interface PublishOptions {
   topbar: boolean
   footer: boolean
   toolbar: boolean
+  // os#1366 — autorise l'apparition automatique du sélecteur de mode d'affichage en lecture
+  // quand le diagramme déclare une référence (cf. SankeyGlobals).
+  position_mode_selector: boolean
   fit_toolbar: boolean
   fullscreen: boolean
   filter_bar: boolean
@@ -388,6 +398,7 @@ export const getPublishOptions = (): PublishOptions => {
     topbar: bool(s.topbar, true),
     footer: bool(s.footer, false),
     toolbar: bool(s.toolbar, false),
+    position_mode_selector: bool(s.position_mode_selector, true),
     fit_toolbar: bool(s.fit_toolbar, true),
     fullscreen: bool(s.fullscreen, true),
     filter_bar: bool(s.filter_bar, true),
@@ -445,6 +456,7 @@ export type ViewerSankeyOptions = {
   topbar?: boolean
   footer?: boolean
   toolbar?: boolean
+  position_mode_selector?: boolean
   fit_toolbar?: boolean
   fullscreen?: boolean
   filter_bar?: boolean
@@ -498,7 +510,7 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
   const next: SankeyGlobals = { ...current, publish: true }
 
   const keys: Array<keyof ViewerSankeyOptions> = [
-    'editable', 'topbar', 'footer', 'toolbar', 'fit_toolbar', 'fullscreen', 'filter_bar', 'embedded', 'recenter',
+    'editable', 'topbar', 'footer', 'toolbar', 'position_mode_selector', 'fit_toolbar', 'fullscreen', 'filter_bar', 'embedded', 'recenter',
     'edit_button', 'unitary', 'doc', 'navigation_help', 'badge',
     'logo', 'header', 'diagram', 'diagram_layout', 'diagram_layout_options',
     'diagrams_list', 'sous_filieres',
