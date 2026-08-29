@@ -1587,6 +1587,19 @@ export class Class_DrawingArea {
       // d'affichage ci-dessous se figerait dans le centre et se traînerait d'un
       // datatag/viewtag à l'autre. Avant _sankey.draw().
       this.nodePositioning.deriveScaleAdaptedCornersFromCenter()
+      // os#1370 — L'ordre des flux E/S se déduit ICI, sur les coins dérivés des CENTRES,
+      // c'est-à-dire la disposition de l'auteur aux hauteurs du datatag courant. Il ne doit
+      // PAS se déduire de l'anti-chevauchement qui suit : celui-ci est d'affichage, recalculé
+      // à chaque datatag/viewtag et jamais persisté, alors que `links_order` est une donnée du
+      // DOCUMENT (sérialisée). Dériver l'une de l'autre faisait passer un flux sous un autre
+      // dans les seules vues où le push a quelque chose à déplacer — et enregistrer depuis
+      // l'éditeur gravait l'artefact dans le fichier (CARTOFOB, « Prélèvements » ; même
+      // phénomène que « Connexes » sous « Sciages » dans le harnais os#1353).
+      //
+      // #378 garde tout son sens : les hauteurs sont déjà celles de la sélection courante,
+      // c'est bien le changement de valeurs qui réordonne. L'appel commun plus bas devient un
+      // no-op de lui-même — la signature de sélection vient d'être consommée.
+      this.reorganizeIOOnDataSelectionChange()
       // #1231 — anti-chevauchement par colonne (depuis le haut) + clamp du haut. D'AFFICHAGE
       // seulement (coin), recalculé pour le datatag/viewtag courant, jamais persisté.
       this.nodePositioning.resolveScaleAdaptedOverlaps()
@@ -1613,8 +1626,12 @@ export class Class_DrawingArea {
     // #378 — Bascule de datatag : recalcule l'ordre des flux E/S sur les valeurs désormais
     // affichées (no-op tant que la sélection ne change pas). Ici, à la toute fin du
     // placement : l'ordre est géométrique, il doit être déduit des positions et hauteurs qui
-    // vont réellement être dessinées (les modes proportionnel / échelle adaptée viennent de
-    // les déplacer). Avant le dessin, donc rendu directement dans le bon ordre.
+    // vont réellement être dessinées (le mode proportionnel vient de les déplacer). Avant le
+    // dessin, donc rendu directement dans le bon ordre.
+    //
+    // os#1370 — L'échelle adaptée fait EXCEPTION et a déjà réorganisé plus haut : son
+    // anti-chevauchement est un artefact d'affichage, dont une donnée persistée ne doit rien
+    // déduire. Cet appel-ci y est donc un no-op (signature déjà consommée).
     this.reorganizeIOOnDataSelectionChange()
     // Draw grid
     this.drawBackground()
