@@ -48,6 +48,14 @@ export class ViewsReader {
    */
   protected switch_progress: Class_ViewSwitchProgress
 
+  /**
+   * Le même ordonnanceur, ouvert aux AUTRES gestes lourds (filtrage par dataTag, os#1369) via
+   * `Class_ApplicationData.runHeavyGesture`. Partagé à dessein : un seul voile à l'écran, et
+   * l'invariant d'ordre vaut alors ENTRE les gestes — un changement de dataTag demandé pendant
+   * une bascule de vue cédée ne s'applique plus avant elle.
+   */
+  public get gesture_progress(): Class_ViewSwitchProgress { return this.switch_progress }
+
   constructor(protected readonly host: Class_ApplicationData) {
     this.query = new ViewsQuery(host)
     this.switch_progress = new Class_ViewSwitchProgress({
