@@ -42,6 +42,7 @@ import { const_default_position_x, const_default_position_y, default_file_name, 
 import { getPublishOptions, PublishOptions } from './PublishOptions'
 import { Class_ApplicationHistory } from './ApplicationHistory'
 import { ViewsReader } from './ViewsReader'
+import { afterViewChange } from './viewSwitchProgress'
 import { decodeViewsFromDelta } from './viewDelta'
 import type { Type_ViewEntry } from './ViewsQuery'
 import { Class_IconLibrary } from '../css/IconLibrairie'
@@ -509,6 +510,27 @@ export class Class_ApplicationData {
   // restituer un fichier multi-vues.
   protected _views_reader: ViewsReader = this.instanciateViewsReader()
   protected instanciateViewsReader(): ViewsReader { return new ViewsReader(this) }
+
+  /**
+   * os#1369 — Exécute un geste LOURD d'interface (filtrage par dataTag, et tout ce qui
+   * redessine le diagramme entier) en cédant d'abord la main au navigateur, voile et sillon
+   * posés. Suite directe d'os#1368 : la cause est la même — le travail est synchrone, donc
+   * un indicateur posé juste avant ne serait JAMAIS peint —, et l'ordonnanceur est le MÊME
+   * instance que celui de la bascule de vue, pour qu'il n'y ait qu'un voile à l'écran et que
+   * l'ordre soit préservé entre les deux familles de gestes.
+   *
+   * `then` court APRÈS le travail, cédé ou non : les hôtes y rafraîchissent leurs composants,
+   * qui sinon liraient l'état d'avant, une frame trop tôt.
+   *
+   * Réservé aux gestes d'UTILISATEUR. Les chemins programmatiques — exports, options de
+   * publication, suites de tests, qui lisent l'état au retour — appellent le travail
+   * directement et restent strictement synchrones, comme `setCurrentView` face à
+   * `requestViewChange`.
+   */
+  public runHeavyGesture(work: () => void, then?: () => void): void {
+    afterViewChange(this._views_reader.gesture_progress.run('heavy', work),
+      then ?? (() => { /* rien à rafraîchir */ }))
+  }
 
   /**
    * History of all actions

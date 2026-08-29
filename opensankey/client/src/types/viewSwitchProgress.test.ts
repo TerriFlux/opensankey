@@ -181,6 +181,34 @@ describe('os#1368 yieldToBrowser', () => {
   })
 })
 
+describe('os#1369 le meme ordonnanceur sert les autres gestes lourds', () => {
+  // Ce que fait Class_ApplicationData.runHeavyGesture pour le filtrage par dataTag :
+  // meme instance que la bascule de vue, chemin heavy impose.
+  it('un geste de filtrage cede la main et pose le voile', async () => {
+    const { indicator, calls } = makeSpyIndicator()
+    const progress = new Class_ViewSwitchProgress({ indicator })
+    const order: string[] = []
+    await progress.run('heavy', () => { order.push('filtrage') })
+    expect(order).toEqual(['filtrage'])
+    expect(calls).toEqual(['show', 'hide'])
+  })
+
+  it('un filtrage demande pendant une bascule cedee ne passe pas devant elle', async () => {
+    const { indicator, calls } = makeSpyIndicator()
+    const progress = new Class_ViewSwitchProgress({ indicator })
+    const order: string[] = []
+    const bascule = progress.run('heavy', () => { order.push('bascule') })
+    // Meme instance : l invariant d ordre vaut ENTRE les deux familles de gestes, donc
+    // le filtrage est differe lui aussi, meme s il se declarait leger.
+    const filtrage = progress.run('light', () => { order.push('filtrage') })
+    expect(order).toEqual([])
+    await Promise.all([bascule, filtrage])
+    expect(order).toEqual(['bascule', 'filtrage'])
+    // Un seul voile, retire au retour du DERNIER travail.
+    expect(calls).toEqual(['show', 'hide'])
+  })
+})
+
 describe('os#1368 afterViewChange', () => {
   it('enchaine immediatement quand le switch etait synchrone', () => {
     let done = false
