@@ -2596,10 +2596,12 @@ export class Class_ApplicationData {
   // ==========================================================================================
   public viewsFromJSON(json_object: Type_JSON): void { this._views_reader.viewsFromJSON(json_object) }
   public setCurrentView(id: string): void { this._views_reader.setCurrentView(id) }
-  public setCurrentViewToMaster(): void { this._views_reader.setCurrentViewToMaster() }
-  public setCurrentViewToNext(): void { this._views_reader.setCurrentViewToNext() }
-  public setCurrentViewToPrev(): void { this._views_reader.setCurrentViewToPrev() }
-  public navigateToView(id: string): void { this._views_reader.navigateToView(id) }
+  // os#1368 — chemin INTERACTIF : indicateur + cession de la main avant le travail lourd.
+  public requestViewChange(id: string): void | Promise<void> { return this._views_reader.requestViewChange(id) }
+  public setCurrentViewToMaster(): void | Promise<void> { return this._views_reader.setCurrentViewToMaster() }
+  public setCurrentViewToNext(): void | Promise<void> { return this._views_reader.setCurrentViewToNext() }
+  public setCurrentViewToPrev(): void | Promise<void> { return this._views_reader.setCurrentViewToPrev() }
+  public navigateToView(id: string): void | Promise<void> { return this._views_reader.navigateToView(id) }
   public extractViewFromJSON(json_object: Uint8Array, view_id: string): void { this._views_reader.extractViewFromJSON(json_object, view_id) }
   public getDrawingAreaFromViewId(id: string): Class_DrawingArea | undefined { return this._views_reader.getDrawingAreaFromViewId(id) }
   public pushViewIdInViewOrder(id: string): void { this._views_reader.pushViewIdInViewOrder(id) }
