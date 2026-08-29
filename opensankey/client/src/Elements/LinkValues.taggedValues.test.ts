@@ -93,12 +93,14 @@ describe('Class_ElementTaggedValue — coordonnée éparse', () => {
     sub.addTag(matiere.tags_dict['acier'])
     sub.addTag(transport.tags_dict['rail'])
 
+    // OS#1367 — l'id de la sous-valeur n'est plus sérialisé : ce qui la
+    // désigne dans le fichier, c'est sa POSITION dans le tableau.
     const json = value.toJSON()
     expect(json['tagged_values']).toEqual([
-      { id: 'sub_a', value: 6, tags: { matiere3: 'acier', transport3: 'rail' } },
+      { value: 6, tags: { matiere3: 'acier', transport3: 'rail' } },
     ])
 
-    // Rechargement dans un document neuf (mêmes ids, instances fraîches)
+    // Rechargement dans un document neuf (mêmes ids de tags, instances fraîches)
     const env2 = makeEnv()
     env2.makeFluxGroup('matiere3', [['acier', 'Acier']])
     env2.makeFluxGroup('transport3', [['rail', 'Rail']])
@@ -106,7 +108,6 @@ describe('Class_ElementTaggedValue — coordonnée éparse', () => {
     reloaded.fromJSON(json)
     expect(reloaded.tagged_values_list).toHaveLength(1)
     const rsub = reloaded.tagged_values_list[0]
-    expect(rsub.id).toBe('sub_a')
     expect(rsub.value).toBe(6)
     expect(rsub.tags_list.map(t => t.id).sort()).toEqual(['acier', 'rail'])
   })
