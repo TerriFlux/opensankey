@@ -278,6 +278,34 @@ export class Class_ApplicationData {
   // posée (cf. applyTagSelections, paramètre `only_if_changed`). La première passe est intacte.
   protected _publish_state_applied_once = false
 
+  /**
+   * os#1372 — Compteur de dessins COMPLETS, incrémenté par `Class_DrawingArea.draw()`.
+   *
+   * Sert à savoir si un geste a DÉJÀ redessiné avant d'en déclencher un de plus. Mesuré sur
+   * CARTOFOB : une bascule de dataTag enchaînait DEUX dessins complets (celui de
+   * `selectTagsFromId` → `updateTagsReferences`, puis celui de fin d'`applyPublishStateOptions`)
+   * et une bascule de vue heavy QUATRE. Supprimer le seul dessin redondant du chemin dataTag
+   * ramène le geste de 1 564 ms à 878 ms (A/B alterné, médianes sur 4 tours).
+   *
+   * Vit sur l'application et non sur la zone de dessin : celle-ci est REMPLACÉE en cours de
+   * geste sur le chemin heavy (`extractViewFromJSON` → `replaceDrawingArea`), un compteur porté
+   * par elle repartirait donc de zéro au milieu du geste.
+   */
+  protected _draw_epoch = 0
+  public get draw_epoch(): number { return this._draw_epoch }
+  /** Appelé par `Class_DrawingArea.draw()` — ne pas appeler ailleurs. */
+  public notifyFullDraw(): void { this._draw_epoch++ }
+
+  /**
+   * os#1372 — Époque de référence posée par un SURCHARGEUR d'`applyPublishStateOptions` avant
+   * son propre travail (OSP ouvre la vue demandée AVANT d'appeler `super`). Sans elle, la garde
+   * du dessin final ne verrait pas le dessin déclenché par cette ouverture et en ajouterait un
+   * second. Consommée par la méthode de base au premier usage.
+   */
+  protected _publish_apply_epoch: number | null = null
+  /** À appeler en tête d'une surcharge d'`applyPublishStateOptions`, avant tout dessin. */
+  protected markPublishApplyStart(): void { this._publish_apply_epoch = this._draw_epoch }
+
   public createNewMenuConfiguration(toast: CreateToastFnReturn | null = null): Class_MenuConfig {
     this._toast = toast
     this._menu_configuration = new Class_MenuConfig()
@@ -1760,6 +1788,15 @@ export class Class_ApplicationData {
     const forced_minimum_flux = opts.minimum_flux
     if (forced_minimum_flux !== null) this._drawing_area['_minimum_flux'] = forced_minimum_flux
 
+    // os#1372 — Époque de dessin à l'entrée, et suivi des mutations qui NE redessinent PAS
+    // d'elles-mêmes. Le dessin de fin de méthode n'est déclenché que s'il sert vraiment :
+    // soit une de ces mutations muettes a eu lieu, soit rien n'a redessiné entre-temps.
+    // Sans cette garde, une bascule de dataTag payait DEUX dessins complets et une bascule de
+    // vue heavy QUATRE (mesuré sur CARTOFOB).
+    const epoch_on_entry = this._publish_apply_epoch ?? this._draw_epoch
+    this._publish_apply_epoch = null
+    let mutated_without_draw = forced_minimum_flux !== null
+
     // sa#397 — Ouverture sur une vue (`view`) ou sur un groupe de vues par LABEL (`view_label`).
     // Labels de vues = étiquettes de SÉLECTION posées par l'auteur (sa#396) ; rien à voir avec
     // `view_tag_selection`, qui manipule les view tags GÉNÉRATEURS de vues. Doctrine additive et
@@ -1813,6 +1850,8 @@ export class Class_ApplicationData {
       if (this._master_drawing_area && this._master_drawing_area !== this._drawing_area) {
         this._master_drawing_area.scale_adapted_reference = opts.scale_adapted_reference
       }
+      // Mutation muette : rien ne redessine ici, le dessin de fin de méthode doit avoir lieu.
+      mutated_without_draw = true
     }
 
     // 1) et 2) Présélections de tags (logique partagée avec l'état transmis par l'URL,
@@ -1838,13 +1877,24 @@ export class Class_ApplicationData {
         if (da.sankey.styles_dict['default'].shape_position_type === mode) return
         if (mode === 'absolute') da.setAbsoluteMode()
         else if (mode === 'proportional') da.setProportionalMode()
-        else if (mode === 'scale_adapted') da.setScaleAdaptedMode()
+        // os#1372 — `false` : le dessin de fin de méthode s'en charge.
+        else if (mode === 'scale_adapted') da.setScaleAdaptedMode(false)
+        // Aucun des trois setters ne redessine désormais depuis ici : c'est donc une mutation
+        // MUETTE, et le dessin de fin de méthode devient obligatoire — y compris si la sélection
+        // de tags vient d'en déclencher un, celui-ci étant antérieur au changement de mode.
+        mutated_without_draw = true
       }
       applyMode(this._drawing_area)
       applyMode(this._master_drawing_area)
     }
 
-    this._drawing_area.draw()
+    // os#1372 — Un seul dessin par geste. On ne redessine ici que si rien ne l'a fait depuis
+    // l'entrée (sélection et mode inchangés), ou si une mutation muette l'exige. Le cas
+    // fréquent — le viewer ré-applique ses props, la sélection de dataTag change et redessine —
+    // économise un dessin complet entier.
+    if (mutated_without_draw || this._draw_epoch === epoch_on_entry) {
+      this._drawing_area.draw()
+    }
   }
 
   /**
