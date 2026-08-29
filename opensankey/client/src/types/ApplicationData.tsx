@@ -273,6 +273,11 @@ export class Class_ApplicationData {
    */
   public after_tag_selection_change: (() => void) | null = null
 
+  // os#1372 — `applyPublishStateOptions` a-t-il déjà tourné ? Les viewers React le rappellent à
+  // chaque changement de prop de sélection ; seules ces RÉ-applications sautent une sélection déjà
+  // posée (cf. applyTagSelections, paramètre `only_if_changed`). La première passe est intacte.
+  protected _publish_state_applied_once = false
+
   public createNewMenuConfiguration(toast: CreateToastFnReturn | null = null): Class_MenuConfig {
     this._toast = toast
     this._menu_configuration = new Class_MenuConfig()
@@ -1812,7 +1817,11 @@ export class Class_ApplicationData {
 
     // 1) et 2) Présélections de tags (logique partagée avec l'état transmis par l'URL,
     //    cf. applyUrlStateParams).
-    this.applyTagSelections(opts.data_tag_selection, opts.view_tag_selection)
+    //    os#1372 — à partir de la DEUXIÈME passe (ré-application réactive d'un viewer React), une
+    //    sélection déjà posée n'est pas rejouée : elle ne coûterait qu'un dessin complet de plus.
+    this.applyTagSelections(
+      opts.data_tag_selection, opts.view_tag_selection, this._publish_state_applied_once)
+    this._publish_state_applied_once = true
 
     // 3) Mode de navigation — posé sur la DA COURANTE **et** sur la DA MAÎTRE.
     //
@@ -1891,13 +1900,37 @@ export class Class_ApplicationData {
    * partagée par les options de publication (`applyPublishStateOptions`) et par l'état
    * d'affichage transmis en paramètres d'URL (`applyUrlStateParams`). Ne redessine pas :
    * l'appelant enchaîne son propre `draw()`.
+   *
+   * os#1372 — `only_if_changed` : ne ré-applique pas une sélection DÉJÀ posée. Réservé aux
+   * RÉ-applications (cf. `applyPublishStateOptions`) ; la toute première passe reste inchangée.
    * @memberof Class_ApplicationData
    */
   public applyTagSelections(
     data_tag_selection?: { [group: string]: string } | null,
-    view_tag_selection?: { [group: string]: string } | null
+    view_tag_selection?: { [group: string]: string } | null,
+    only_if_changed: boolean = false
   ): void {
     const sankey = this._drawing_area.sankey
+
+    // os#1372 — Les viewers React rappellent `applyPublishStateOptions` dès qu'une SEULE de leurs
+    // props de sélection change (cf. ViewApp / ViewAppSA) : changer de vue ré-appliquait à
+    // l'identique la sélection de dataTag, et `selectTagsFromId` enchaîne `updateTagsReferences`
+    // → `drawing_area.draw()`. Sur CARTOFOB cela coûtait un dessin complet de trop par geste
+    // (882 ms mesurés sur une bascule de vue de 4,4 s), et empilait au passage une entrée
+    // d'undo/redo sans changement.
+    //
+    // La garde ne vaut que pour les RÉ-applications, et elle est stricte : dès qu'un seul élément
+    // de l'état diffère, tout est appliqué comme avant. La PREMIÈRE passe ne saute jamais rien —
+    // `selectTagsFromId` y porte deux effets qui ne sont pas des redessins : le mode d'affichage
+    // que la dimension impose (#370) et le crochet des vues contextuelles (sa#283). Ce dernier
+    // abandonne un enregistrement « personnaliser pour ‹tag› » quand la sélection CHANGE : ne pas
+    // le déclencher sur une ré-application identique est d'ailleurs plus fidèle à son intention.
+    const alreadySelected = (
+      group: { selected_tags_list: { id: string }[] },
+      tag_id: string
+    ): boolean =>
+      only_if_changed &&
+      group.selected_tags_list.length === 1 && group.selected_tags_list[0].id === tag_id
 
     // 1) Présélection des data tags
     if (data_tag_selection) {
@@ -1914,6 +1947,7 @@ export class Class_ApplicationData {
           console.warn(`[OpenSankey] data_tag_selection : tag « ${tag_key} » introuvable dans le groupe « ${group_key} »`)
           continue
         }
+        if (alreadySelected(group, tag.id)) continue
         group.selectTagsFromId(tag.id)
       }
     }
@@ -1937,6 +1971,7 @@ export class Class_ApplicationData {
         // toutes les valeurs redeviennent visibles (équivalent de décocher l'œil dans la barre du bas).
         const tag_key_lc = tag_key.toLowerCase()
         if (tag_key_lc === 'all' || tag_key_lc === 'none' || tag_key === '*') {
+          if (only_if_changed && !group.view_mode) continue
           group.view_mode = false
           any_view_applied = true
           continue
@@ -1947,6 +1982,8 @@ export class Class_ApplicationData {
           console.warn(`[OpenSankey] view_tag_selection : tag « ${tag_key} » introuvable dans le groupe « ${group_key} »`)
           continue
         }
+        // État déjà en place (groupe activé, filtre vue actif, valeur sélectionnée) : rien à faire.
+        if (group.activated && group.view_mode && alreadySelected(group, tag.id)) continue
         group.activated = true
         group.view_mode = true
         group.selectTagsFromId(tag.id)
