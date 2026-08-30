@@ -47,6 +47,7 @@ import { decodeViewsFromDelta } from './viewDelta'
 import type { Type_ViewEntry } from './ViewsQuery'
 import { Class_IconLibrary } from '../css/IconLibrairie'
 import { Class_DrawingArea } from './DrawingArea'
+import { exposeDrawCounters } from './DrawCounters'
 import { compressJSONToGzip, decompressUploadedFileUniversal } from '../Persistence/UniversalJSONCompression'
 import { parseSankeymaticText } from '../Persistence/sankeymaticParser'
 import { loadEsankeyFile } from '../Persistence/esankeyParser'
@@ -789,6 +790,10 @@ export class Class_ApplicationData {
     // déclencheur DOCUMENT a été retirée : le déclencheur est désormais un attribut
     // de style PAR ÉLÉMENT (`tooltip_trigger`), il n'y a plus de réglage global à
     // poser ici.
+    // os#1376 — expose `window.sankey_draw_counters` (éteint par défaut). Ici, dans un
+    // constructeur, et non au premier niveau du module : un appel exécutable au top-level
+    // casse l'analyse webpack des consommateurs externes (même raison que ci-dessus).
+    exposeDrawCounters()
     // Options for application
     this.options = options
     // Deals with UI menu updates / each modifications
