@@ -1580,6 +1580,34 @@ export class Class_DrawingArea {
   public get defers_link_draws(): boolean { return this._deferred_link_draws !== null }
 
   /**
+   * os#1374 — Époque d'éventail. Un éventail, c'est les pointes de tous les flux d'un côté de
+   * nœud, calculées ENSEMBLE par `Class_NodeElement.drawLinksArrow` : leur géométrie dépend de
+   * la somme des épaisseurs du côté, donc aucune ne se calcule seule.
+   *
+   * Le cache de pointe d'un flux (`_arrow_shape`) était vidé au début de CHAQUE dessin de flux ;
+   * `_drawArrow` le trouvait vide et redemandait au nœud l'éventail ENTIER — mesuré au chargement
+   * de SOCLE Céréales : 1 823 éventails pour 1 823 flux, et 72 recalculs pour le pire nœud dans
+   * une seule passe. Le coût est quadratique en nombre de flux par côté.
+   *
+   * Une pointe posée pendant l'époque courante n'est donc plus périmée : on la garde. L'époque
+   * change à chaque `Class_Sankey.draw` — c'est-à-dire chaque fois que les positions ont pu
+   * bouger. Hors de ce cadre (`keeps_arrow_caches` faux : glisser-déposer, réglage d'apparence,
+   * `refreshArrow`), rien ne change : le cache est vidé comme avant.
+   */
+  private _arrow_epoch = 0
+  private _in_arrow_epoch = false
+
+  /** Époque courante ; un cache de pointe estampillé à cette valeur est à jour. */
+  public get arrow_epoch(): number { return this._arrow_epoch }
+
+  /** Vrai pendant un `Class_Sankey.draw`, seul cadre où un cache de pointe survit. */
+  public get keeps_arrow_caches(): boolean { return this._in_arrow_epoch }
+
+  public beginArrowEpoch(): void { this._arrow_epoch++; this._in_arrow_epoch = true }
+
+  public endArrowEpoch(): void { this._in_arrow_epoch = false }
+
+  /**
    * os#1373 — Ouvre la phase « calculer les ancres » : à partir d'ici et jusqu'au flush, un nœud
    * qui repositionne ses flux ne fait que les inscrire. Idempotent : la phase court de l'entrée
    * de `drawElements` jusqu'à la fin du join des nœuds, et `Class_Sankey.draw` la rouvre pour
