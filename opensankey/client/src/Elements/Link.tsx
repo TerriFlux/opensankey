@@ -210,6 +210,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
   // le nœud correspondant (cible / source) puis stockée ici.
   private _arrow_shape: string | undefined
   private _arrow_shape_source: string | undefined
+  /**
+   * os#1374 — Époque d'éventail à laquelle chaque pointe a été posée (cf.
+   * `Class_DrawingArea.arrow_epoch`). `-1` = jamais posée.
+   */
+  private _arrow_stamp = -1
+  private _arrow_stamp_source = -1
   // Source notch (negative arrow) chevron, computed at node level and shared by
   // every link leaving the same node side (so several links draw a single notch).
   private _source_notch_shape: string | undefined
@@ -461,8 +467,14 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * taille des nœuds ; appelé par draw() (réutilisation du <g>) ET par unDraw().
    */
   protected _invalidateDrawCaches() {
-    this._arrow_shape = undefined // reset shape also
-    this._arrow_shape_source = undefined
+    // os#1374 — Une pointe posée pendant l'époque d'éventail courante n'est PAS périmée : la
+    // vider ferait redemander au nœud l'éventail entier de son côté, alors qu'il vient de le
+    // calculer pour ces positions-là. Hors d'un `Class_Sankey.draw` (`keeps_arrow_caches` faux),
+    // on vide comme avant — c'est ce que réclament le glisser-déposer et `refreshArrow`.
+    const da = this.sankey.drawing_area
+    const keeps = da.keeps_arrow_caches
+    if (!(keeps && this._arrow_stamp === da.arrow_epoch)) this._arrow_shape = undefined
+    if (!(keeps && this._arrow_stamp_source === da.arrow_epoch)) this._arrow_shape_source = undefined
     this._source_notch_shape = undefined
   }
 
@@ -2866,11 +2878,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
    */
   public set shape_arrow_path(_: string) {
     this._arrow_shape = _
+    // os#1374 — estampiller la pointe : c'est ce qui la fait survivre à l'invalidation des
+    // dessins de flux qui suivent, dans la même époque d'éventail.
+    this._arrow_stamp = this.sankey.drawing_area.arrow_epoch
     this.drawArrow()
   }
 
   public set shape_arrow_path_source(_: string) {
     this._arrow_shape_source = _
+    this._arrow_stamp_source = this.sankey.drawing_area.arrow_epoch
     this.drawArrow()
   }
 
