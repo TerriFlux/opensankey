@@ -1580,6 +1580,16 @@ export class Class_DrawingArea {
   public get defers_link_draws(): boolean { return this._deferred_link_draws !== null }
 
   /**
+   * os#1373 — Ouvre la phase « calculer les ancres » : à partir d'ici et jusqu'au flush, un nœud
+   * qui repositionne ses flux ne fait que les inscrire. Idempotent : la phase court de l'entrée
+   * de `drawElements` jusqu'à la fin du join des nœuds, et `Class_Sankey.draw` la rouvre pour
+   * elle-même quand elle est appelée hors de ce cycle (post-traitement « flux droit »).
+   */
+  public openDeferredLinkDraws(): void {
+    if (this._deferred_link_draws === null) this._deferred_link_draws = new Set()
+  }
+
+  /**
    * Enregistre des flux à redessiner en fin de placement. Appelé par
    * `Node.updateLinksPositions`, qui garde la responsabilité de DÉCIDER lesquels ont bougé.
    */
@@ -1594,7 +1604,7 @@ export class Class_DrawingArea {
    * AVANT le parcours : un dessin de flux peut déclencher celui d'un nœud, donc rentrer à
    * nouveau dans `updateLinksPositions` — qui doit alors dessiner tout de suite, pas ré-empiler.
    */
-  private _flushDeferredLinkDraws(): void {
+  public flushDeferredLinkDraws(): void {
     const set = this._deferred_link_draws
     this._deferred_link_draws = null
     if (!set) return
@@ -1611,6 +1621,11 @@ export class Class_DrawingArea {
       this._drawElementsBody()
     } finally {
       endDrawPass()
+      // os#1373 — Filet : en marche normale `Class_Sankey.draw` a déjà vidé la file (no-op ici).
+      // Mais si le corps jette avant d'y arriver, la file resterait ouverte pour toujours et
+      // TOUS les dessins de flux suivants seraient avalés en silence — un diagramme sans flux.
+      // On la vide donc plutôt que de la laisser béante.
+      this.flushDeferredLinkDraws()
     }
   }
 
@@ -1622,8 +1637,12 @@ export class Class_DrawingArea {
     // mode paramétrique) appelle `Node.applyPosition`, qui redessinait aussitôt tous les flux du
     // nœud — donc plusieurs fois par passe et par flux, sur des positions intermédiaires jetées
     // juste après. Mesuré sur CARTOFOB : 468 dessins de flux pour 36 flux affichés.
-    // La file est vidée plus bas, avant `_sankey.draw()`, sur les positions DÉFINITIVES.
-    this._deferred_link_draws = new Set()
+    // os#1373 — La file est vidée dans `Class_Sankey.draw`, APRÈS le join des nœuds : le
+    // placement n'est pas la seule étape qui repositionne les flux, le dessin des nœuds en est
+    // une autre (chaque `Node.draw` rappelle `applyPosition`). Vider avant lui laissait donc
+    // chaque flux se faire tracer une fois de plus par sa source et une fois de plus par sa
+    // cible — 2 dessins par flux et par passe sur le diagramme de référence d'os#1376.
+    this.openDeferredLinkDraws()
     // #369 — mode EFFECTIF : celui du style global, ou 'absolute' tant que la suspension
     // d'ouverture tient (cf. _effectivePositionMode). Lu UNE fois et réutilisé plus bas :
     // les branches suivantes relisaient le style, ce qui aurait mélangé les deux régimes.
@@ -1717,11 +1736,6 @@ export class Class_DrawingArea {
     // Draw grid
     this.drawBackground()
     this.drawGrid()
-    // os#1372 — Fin de la phase de placement : les positions sont définitives, on vide la file
-    // des flux à redessiner. Chaque flux touché pendant le placement est dessiné UNE fois, et
-    // `updateLinksPositions` garde son contrôle « rien n'a bougé » intact — c'est lui qui a
-    // rempli la file, la vider ici ne fait que retarder le trait, pas le supprimer.
-    this._flushDeferredLinkDraws()
     // for parametric mode nodes need to be draw in a certain order
     // so that the nodes at the top of the columns are drawn first
     //this._sankey.sortNodes()

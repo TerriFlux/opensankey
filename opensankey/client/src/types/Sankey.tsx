@@ -677,7 +677,17 @@ export class Class_Sankey {
     // Le join des flux passe AVANT celui des nœuds : il pose les <g> racine
     // (enter) que node._drawLinks remplit ensuite pendant le dessin des nœuds.
     this._drawLinksJoin()
+    // os#1373 — Le dessin se fait en deux temps, et pas en un seul : d'abord TOUTES les ancres,
+    // ensuite le trait. Dessiner un nœud le repositionne (`Node.draw` → `applyPosition` →
+    // `_drawLinks`), donc chaque flux était tracé une fois par sa source puis une fois par sa
+    // cible, sur des ancres dont la seconde périmait la première. Pendant le join des nœuds les
+    // flux touchés ne sont donc qu'inscrits ; ils sont tracés une seule fois, plus bas, quand
+    // plus aucun nœud ne bougera. Idempotent : si `drawElements` a déjà ouvert la phase pour son
+    // placement, elle continue simplement jusqu'ici.
+    this.drawing_area.openDeferredLinkDraws()
     this._drawNodesJoin()
+    // Fin de la phase des ancres : le trait, une fois par flux.
+    this.drawing_area.flushDeferredLinkDraws()
     this._drawContainersJoin()
     //this.nodes_list.forEach(node => node.unDraw())
     //this.visible_nodes_list_sorted.forEach(node => node.draw())
