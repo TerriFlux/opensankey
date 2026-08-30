@@ -147,25 +147,24 @@ describe('os#1376 — garde-fou de non-regression sur le dessin d un diagramme',
     const report = drawCountersReport()
 
     // ============================================================================================
-    // CLIQUET. La cible du jalon 80 est 1 — un flux trace une fois par passe. On n y est pas.
+    // CLIQUET. La cible du jalon 80 est 1 — un flux trace une fois par passe — et os#1373 vient
+    // de l atteindre en separant les deux temps du dessin : toutes les ancres, puis le trait.
     //
-    // Valeur MESUREE ici, et d ou elle vient : chacun des six flux est trace DEUX fois, une fois
-    // par sa source et une fois par sa cible. Les deux piles d appel sont identiques —
-    // `Sankey._drawNodesJoin` -> `Node.draw` -> `applyPosition` -> `_drawLinks` ->
-    // `updateLinksPositions` -> `link.draw()`. C est le mecanisme meme qu os#1373 doit supprimer
-    // en separant le calcul des ancres du trace ; sur SOCLE Cereales il vaut 16 407 dessins sur
-    // 18 230.
+    // Avant os#1373 cette constante valait 2 : chaque flux etait trace une fois par sa source et
+    // une fois par sa cible, meme pile d appel — `Sankey._drawNodesJoin` -> `Node.draw` ->
+    // `applyPosition` -> `_drawLinks` -> `updateLinksPositions` -> `link.draw()`. Sur SOCLE
+    // Cereales ce doublon valait 16 407 dessins sur 18 230.
     //
     // Ce test se lit dans les DEUX sens :
     //  - un chiffre PLUS HAUT est une regression — du travail refait vient d etre reintroduit ;
     //  - un chiffre PLUS BAS est le but poursuivi — baisser la constante dans le meme commit
     //    fait partie du lot qui l a obtenu.
     // ============================================================================================
-    const DESSINS_PAR_FLUX_ET_PAR_PASSE = 2
+    const DESSINS_PAR_FLUX_ET_PAR_PASSE = 1
 
     expect(report.max_draws_per_link).toBe(DESSINS_PAR_FLUX_ET_PAR_PASSE)
     expect(report.link_draws).toBe(links.length * DESSINS_PAR_FLUX_ET_PAR_PASSE)
-    // Aucun flux epargne : le doublon est structurel, pas un cas particulier de bord.
-    expect(report.links_drawn_twice.length).toBe(links.length)
+    // Plus aucun flux trace deux fois dans la meme passe : c est la definition du but atteint.
+    expect(report.links_drawn_twice).toEqual([])
   })
 })
