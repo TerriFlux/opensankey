@@ -64,6 +64,7 @@ import { Class_Tag } from './Tag'
 import { Class_ContainerElement } from '../Elements/TextZone'
 import { Class_ApplicationData } from './ApplicationData'
 import { compareZOrder, dedupeZOrderKeepFirst } from './zOrder'
+import { beginDrawPass, endDrawPass } from './DrawCounters'
 import * as LabelFilters from './LabelFilters'
 import * as CopyPaste from './copyPaste'
 import * as DisplayModes from './displayModes'
@@ -1602,6 +1603,18 @@ export class Class_DrawingArea {
 
   public drawElements() {
     if (this.bypass_redraws) return
+    // os#1376 — une passe de dessin s'ouvre ici et se referme quoi qu'il arrive : une passe qui
+    // jette laisserait la profondeur en l'air et fausserait toute la suite de la mesure.
+    // Éteint (le cas par défaut), le couple ne fait que lire un booléen.
+    beginDrawPass()
+    try {
+      this._drawElementsBody()
+    } finally {
+      endDrawPass()
+    }
+  }
+
+  private _drawElementsBody() {
     // os#1353 — à partir d'ici la géométrie des nœuds est mise en page (cf. `has_been_laid_out`).
     this._has_been_laid_out = true
     // os#1372 — PHASE DE PLACEMENT : les flux ne sont pas dessinés à chaque déplacement de nœud,

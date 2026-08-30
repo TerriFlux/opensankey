@@ -47,6 +47,7 @@ import { Type_Side, getNameLabelValues } from './ElementsAttributesConfig'
 import { transferAnchorLock } from './anchorLockTransfer'
 import { clampLinkThickness } from './flowThickness'
 import { resolveScaleCarrierTag } from '../types/ScaleResolution'
+import { countLinkDraw } from '../types/DrawCounters'
 import { Class_LinkAttribute } from './Element'
 import { LinkDrawNameLabel, LinkDrawValueLabel } from './DrawLabel'
 import { Class_ApplicationData } from '../types/ApplicationData'
@@ -1197,6 +1198,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @memberof Class_LinkElement
    */
   public drawElements() {
+    // os#1376 — compté ICI, avant la garde ci-dessous, pour rester comparable aux références
+    // mesurées sur os#1372 (18 230 dessins pour 1 823 flux au chargement de SOCLE Céréales) :
+    // la sonde qui a produit ces chiffres instrumentait le tout premier statement de la méthode.
+    countLinkDraw(this.id)
     if (!this._link_shape || !this._link_draw_value || !this._link_draw_label || !this._link_draw_icon) return
     this._link_shape.drawShape()
     this._drawArrow()
