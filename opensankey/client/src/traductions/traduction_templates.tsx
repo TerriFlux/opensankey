@@ -58,6 +58,7 @@ export const resources_template = {
       },
       // sa#414 — panneau « Explorateur » (projets + classeurs du compte)
       explorer: {
+        theque: 'SankeyThèque',
         title: 'Explorer',
         tooltip: 'Browse your projects and workbooks; a diagram opens in a new sheet',
         hint: 'Your projects and workbooks: click a diagram to open it in a new sheet',
@@ -149,6 +150,7 @@ export const resources_template = {
       },
       // sa#414 — panneau « Explorateur » (projets + classeurs du compte)
       explorer: {
+        theque: 'SankeyThèque',
         title: 'Explorateur',
         tooltip: 'Parcourez vos projets et classeurs ; un diagramme s\'ouvre dans une nouvelle feuille',
         hint: 'Vos projets et classeurs : cliquez sur un diagramme pour l\'ouvrir dans une nouvelle feuille',
@@ -240,6 +242,7 @@ export const resources_template = {
       },
       // sa#414 — panel « Explorador » (proyectos + libros de la cuenta)
       explorer: {
+        theque: 'SankeyThèque',
         title: 'Explorador',
         tooltip: 'Explore sus proyectos y libros; un diagrama se abre en una hoja nueva',
         hint: 'Sus proyectos y libros: haga clic en un diagrama para abrirlo en una hoja nueva',
@@ -331,6 +334,7 @@ export const resources_template = {
       },
       // sa#414 — Panel „Explorer" (Projekte + Arbeitsmappen des Kontos)
       explorer: {
+        theque: 'SankeyThèque',
         title: 'Explorer',
         tooltip: 'Durchsuchen Sie Ihre Projekte und Arbeitsmappen; ein Diagramm öffnet sich in einem neuen Blatt',
         hint: 'Ihre Projekte und Arbeitsmappen: Klicken Sie auf ein Diagramm, um es in einem neuen Blatt zu öffnen',
@@ -422,6 +426,7 @@ export const resources_template = {
       },
       // sa#414 — pannello « Esplora » (progetti + cartelle di lavoro dell'account)
       explorer: {
+        theque: 'SankeyThèque',
         title: 'Esplora',
         tooltip: 'Sfoglia i tuoi progetti e le cartelle di lavoro; un diagramma si apre in un nuovo foglio',
         hint: 'I tuoi progetti e le tue cartelle di lavoro: clicca su un diagramma per aprirlo in un nuovo foglio',
@@ -510,6 +515,7 @@ export const resources_template = {
       },
       // sa#414 — « 资源管理器 » 面板（账户的项目 + 工作簿）
       explorer: {
+        theque: 'SankeyThèque',
         title: '资源管理器',
         tooltip: '浏览您的项目和工作簿；图表会在新工作表中打开',
         hint: '您的项目和工作簿：点击图表即可在新工作表中打开',
@@ -598,6 +604,7 @@ export const resources_template = {
       },
       // sa#414 — « エクスプローラー » パネル（アカウントのプロジェクト + ワークブック）
       explorer: {
+        theque: 'SankeyThèque',
         title: 'エクスプローラー',
         tooltip: 'プロジェクトとワークブックを閲覧できます。図は新しいシートで開きます',
         hint: 'プロジェクトとワークブック：図をクリックすると新しいシートで開きます',
