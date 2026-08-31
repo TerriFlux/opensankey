@@ -138,6 +138,16 @@ export const resources_inspector = {
             free_unbounded: 'The constraints are not enough to fix this value, and nothing bounds it.',
             failed: 'Reconciliation of this tag combination did not succeed: the value shown is the input one.'
           },
+          shape: {
+            equal: 'Same as another flux',
+            factor: 'A share of another flux',
+            children: 'Sum of its {{n}} child flux',
+            into: 'Sum of everything entering {{node}}',
+            out_of: 'Sum of everything leaving {{node}}',
+            sum: 'Sum of {{n}} flux',
+            balance_node: 'Balance of node {{node}}',
+            balance: '{{added}} flux added, {{removed}} subtracted'
+          },
           kinds: {
             mat_balance: 'Material balance of node',
             aggregation: 'Parent/children aggregation on node',
@@ -394,6 +404,16 @@ export const resources_inspector = {
             free_unbounded: 'Les contraintes ne suffisent pas à fixer cette valeur, et rien ne la borne.',
             failed: 'La réconciliation de cette combinaison d\'étiquettes n\'a pas abouti : la valeur affichée est celle d\'entrée.'
           },
+          shape: {
+            equal: 'Report d’un autre flux',
+            factor: 'Proportion d’un autre flux',
+            children: 'Somme de ses {{n}} flux enfants',
+            into: 'Somme de tout ce qui entre dans {{node}}',
+            out_of: 'Somme de tout ce qui sort de {{node}}',
+            sum: 'Somme de {{n}} flux',
+            balance_node: 'Bilan du nœud {{node}}',
+            balance: '{{added}} flux ajoutés, {{removed}} retranchés'
+          },
           kinds: {
             mat_balance: 'Bilan matière du nœud',
             aggregation: 'Agrégation parent/enfants sur le nœud',
@@ -646,6 +666,16 @@ export const resources_inspector = {
             free: 'Las restricciones no bastan para fijar este valor; la reconciliación eligió uno dentro del intervalo posible.',
             free_unbounded: 'Las restricciones no bastan para fijar este valor, y nada lo acota.',
             failed: 'La reconciliación de esta combinación de etiquetas no llegó a término: el valor mostrado es el de entrada.'
+          },
+          shape: {
+            equal: 'Igual a otro flujo',
+            factor: 'Proporción de otro flujo',
+            children: 'Suma de sus {{n}} flujos hijos',
+            into: 'Suma de todo lo que entra en {{node}}',
+            out_of: 'Suma de todo lo que sale de {{node}}',
+            sum: 'Suma de {{n}} flujos',
+            balance_node: 'Balance del nodo {{node}}',
+            balance: '{{added}} flujos sumados, {{removed}} restados'
           },
           kinds: {
             mat_balance: 'Balance de materia del nodo',
@@ -900,6 +930,16 @@ export const resources_inspector = {
             free_unbounded: 'Die Nebenbedingungen genügen nicht, um diesen Wert festzulegen, und nichts beschränkt ihn.',
             failed: 'Der Abgleich dieser Etikettenkombination ist gescheitert: Der angezeigte Wert ist der Eingabewert.'
           },
+          shape: {
+            equal: 'Gleich einem anderen Fluss',
+            factor: 'Anteil eines anderen Flusses',
+            children: 'Summe seiner {{n}} untergeordneten Flüsse',
+            into: 'Summe aller Zuflüsse in {{node}}',
+            out_of: 'Summe aller Abflüsse aus {{node}}',
+            sum: 'Summe aus {{n}} Flüssen',
+            balance_node: 'Bilanz des Knotens {{node}}',
+            balance: '{{added}} Flüsse addiert, {{removed}} subtrahiert'
+          },
           kinds: {
             mat_balance: 'Massenbilanz des Knotens',
             aggregation: 'Eltern-/Kind-Aggregation am Knoten',
@@ -1153,6 +1193,16 @@ export const resources_inspector = {
             free_unbounded: 'I vincoli non bastano a fissare questo valore, e nulla lo limita.',
             failed: 'La riconciliazione di questa combinazione di etichette non è riuscita: il valore mostrato è quello di ingresso.'
           },
+          shape: {
+            equal: 'Uguale a un altro flusso',
+            factor: 'Quota di un altro flusso',
+            children: 'Somma dei suoi {{n}} flussi figli',
+            into: 'Somma di tutto ciò che entra in {{node}}',
+            out_of: 'Somma di tutto ciò che esce da {{node}}',
+            sum: 'Somma di {{n}} flussi',
+            balance_node: 'Bilancio del nodo {{node}}',
+            balance: '{{added}} flussi sommati, {{removed}} sottratti'
+          },
           kinds: {
             mat_balance: 'Bilancio di materia del nodo',
             aggregation: 'Aggregazione padre/figli sul nodo',
@@ -1405,6 +1455,16 @@ export const resources_inspector = {
             free: '约束不足以确定该数值；调和在可能区间内选取了一个。',
             free_unbounded: '约束不足以确定该数值，且没有任何界限。',
             failed: '该标签组合的调和未能完成：显示的是输入值。'
+          },
+          shape: {
+            equal: '等于另一条流',
+            factor: '另一条流的一部分',
+            children: '其 {{n}} 条子流之和',
+            into: '进入 {{node}} 的全部之和',
+            out_of: '离开 {{node}} 的全部之和',
+            sum: '{{n}} 条流之和',
+            balance_node: '节点 {{node}} 的平衡',
+            balance: '相加 {{added}} 条流，相减 {{removed}} 条'
           },
           kinds: {
             mat_balance: '节点的物质平衡',
@@ -1661,6 +1721,16 @@ export const resources_inspector = {
             free: '制約だけではこの値は決まりません。調整は取りうる区間の中から一つを選びました。',
             free_unbounded: '制約だけではこの値は決まらず、上下限もありません。',
             failed: 'このタグの組み合わせの調整は完了しませんでした。表示されているのは入力値です。'
+          },
+          shape: {
+            equal: '他のフローと同じ',
+            factor: '他のフローの一部',
+            children: 'その子フロー {{n}} 件の合計',
+            into: '{{node}} に入るすべての合計',
+            out_of: '{{node}} から出るすべての合計',
+            sum: 'フロー {{n}} 件の合計',
+            balance_node: 'ノード {{node}} の収支',
+            balance: '{{added}} 件を加算、{{removed}} 件を減算'
           },
           kinds: {
             mat_balance: 'ノードの物質収支',
