@@ -118,3 +118,30 @@ def test_refuse_tout_ce_qui_n_est_pas_publie(client, asset, sankey_data):
 
     assert response.status_code != 200, f"{asset} ne doit pas etre servi"
     assert b"interdit" not in response.data
+
+
+def test_la_source_mfadata_ne_sert_plus_le_disque(client, sankey_data,
+                                                  tmp_path, monkeypatch):
+    """Retrait sa#457 (31/08/2026) : la sankeytheque n'a plus de racine de
+    disque. Meme avec l'env posee et un index present, un chemin de fichier
+    MFAData repond 404 — seuls les chemins virtuels du resolveur externe
+    (@library/..., pose par la couche SaaS) se servent sous cette source."""
+    root = tmp_path / "mfadata"
+    (root / "Etudes").mkdir(parents=True)
+    (root / "Etudes" / "etude.json").write_text(
+        json.dumps({"secret": "interdit"}), encoding="utf-8")
+    (root / "index.json").write_text(json.dumps({
+        "categories": ["etudes"],
+        "templates": {"etude": {"file_path": "Etudes/etude.json",
+                                "lang": "fr", "category": "etudes"}},
+    }), encoding="utf-8")
+    monkeypatch.setenv("MFAData", str(root))
+
+    response = client.get("/menus/templates_asset/Etudes/etude.json?source=mfadata")
+
+    assert response.status_code != 200
+    assert b"interdit" not in response.data
+    # Et l'index du disque n'alimente plus la galerie de la theque.
+    gallery = client.post("/menus/templates", json={"source": "mfadata"})
+    assert gallery.status_code == 200
+    assert gallery.get_json()["templates"] == {}
