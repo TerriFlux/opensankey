@@ -84,6 +84,14 @@ export interface SankeyGlobals {
   doc_file?: string
   navigation_help?: boolean  // default false : bouton « Aide à la navigation » dans la topbar en publish
   badge?: boolean        // default true : badge « Made with OpenSankey » (lien terriflux.com) en bas à gauche en publish
+  // default true — les deux boutons de DROITE de la topbar, jusqu'ici sans réglage :
+  // `app_info` = le « i » (version, canal, commit, lien changelog, contact support) ;
+  // `sidebar_toggle` = la bascule de la barre latérale (Ctrl+B). Ils servent au lecteur
+  // d'une page d'étude, mais une page de communication (site institutionnel, embed) veut
+  // parfois une topbar réduite au strict nécessaire. Défaut à true : le parc existant ne
+  // bouge pas. Sans effet hors publish — l'éditeur les garde toujours.
+  app_info?: boolean
+  sidebar_toggle?: boolean
 
   // Langue
   language?: string      // force la langue de l'UI ('fr', 'en', ...) ; le paramètre d'URL ?lang= est prioritaire
@@ -181,6 +189,8 @@ export interface PublishOptions {
   doc_file: string | null
   navigation_help: boolean
   badge: boolean
+  app_info: boolean
+  sidebar_toggle: boolean
   data_type: boolean
   data_type_intervals: boolean
   value_filter: boolean
@@ -410,6 +420,8 @@ export const getPublishOptions = (): PublishOptions => {
     doc_file: str(s.doc_file),
     navigation_help: bool(s.navigation_help, false),
     badge: bool(s.badge, true),
+    app_info: bool(s.app_info, true),
+    sidebar_toggle: bool(s.sidebar_toggle, true),
     data_type: bool(s.data_type, true),
     data_type_intervals: bool(s.data_type_intervals, true),
     value_filter: bool(s.value_filter, true),
