@@ -24,6 +24,7 @@
 import type { Class_DrawingArea } from '../types/DrawingArea'
 import type { Class_NodeElement } from '../Elements/Node'
 import type { Class_LinkElement } from '../Elements/Link'
+import type { Class_DataTag } from '../types/Tag'
 import type { NodePositioning } from './NodePositioning'
 
 export class NodePositioningScaleAdapted {
@@ -54,6 +55,28 @@ export class NodePositioningScaleAdapted {
    * 0 si le diagramme n'a aucune valeur (garde-fou de `applyAdaptedScale`).
    */
   public diagramMagnitude(): number {
+    return this._columnsMagnitude(undefined)
+  }
+
+  /**
+   * os#1372 — La même grandeur, mais lue à un jeu de datatags EXPLICITE : c'est elle qui sert de
+   * référence quand le document désigne un datatag de référence.
+   *
+   * La VISIBILITÉ reste celle de la sélection courante — seules les VALEURS changent. C'est
+   * voulu : le mode compare une même vue d'un datatag à l'autre, donc la référence doit être la
+   * grandeur de CETTE vue au datatag de référence. C'est aussi ce qui règle le défaut qui avait
+   * motivé sa#384 : plus besoin qu'un élément désigné soit visible dans la vue.
+   *
+   * Limites héritées de `Link.valueForDataTags` (mêmes que le mode proportionnel) : un flux
+   * d'expansion, dont la valeur est calculée depuis la sélection courante, et les valeurs
+   * coordonnées d'un groupe porteur ne sont pas relues au datatag demandé.
+   */
+  public diagramMagnitudeForDataTags(tags: Class_DataTag[]): number {
+    return this._columnsMagnitude(tags)
+  }
+
+  /** Corps commun : somme par colonne (`position_u`), maximum des colonnes. */
+  private _columnsMagnitude(tags: Class_DataTag[] | undefined): number {
     const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
     const columns = new Map<number, number>()
     this.drawingArea.sankey.visible_nodes_list.forEach(n => {
@@ -61,13 +84,48 @@ export class NodePositioningScaleAdapted {
       if (echangeTag && n.hasGivenTag(echangeTag)) return
       if (n.shape_position_type === 'relative') return
       if (n.tied_to_nodes && n.attached_node.length > 0) return
-      const v = this.nodeMagnitude(n)
+      const v = this.nodeMagnitude(n, tags)
       if (!(v > 0)) return
       columns.set(n.position_u, (columns.get(n.position_u) ?? 0) + v)
     })
     let max = 0
     columns.forEach(sum => { if (sum > max) max = sum })
     return max
+  }
+
+  /**
+   * os#1372 — Grandeur du diagramme AU DATATAG DE RÉFÉRENCE désigné par le document, ou
+   * `undefined` s'il n'y en a pas (ou s'il ne désigne plus rien de connu).
+   *
+   * CALCULÉE, jamais stockée : c'est tout l'objet du réglage. La grandeur capturée au vol
+   * (`scale_adapted_ref_magnitude`) figeait un nombre pris au dataTag qui se trouvait à l'écran
+   * quand le mode a pris, que rien ne nommait et que la moindre correction de données rendait
+   * faux. Ici la référence est ÉNONCÉE (des tags), et la grandeur s'en déduit à chaque dessin.
+   */
+  public referenceDataTagMagnitude(): number | undefined {
+    const tags = this.referenceDataTags()
+    if (tags === undefined) return undefined
+    const m = this.diagramMagnitudeForDataTags(tags)
+    return m > 0 ? m : undefined
+  }
+
+  /**
+   * Tags du datatag de référence, résolus depuis les ids persistés. `undefined` si aucun n'est
+   * désigné — un id inconnu (dimension supprimée depuis) est simplement ignoré, la référence
+   * restant valable sur les dimensions qui subsistent.
+   */
+  private referenceDataTags(): Class_DataTag[] | undefined {
+    const ids = this.drawingArea.scale_adapted_reference_datatag
+    if (!ids || ids.length === 0) return undefined
+    const tags: Class_DataTag[] = []
+    this.drawingArea.sankey.data_taggs_list.forEach(tagg => {
+      const found = tagg.tags_list.find(t => ids.includes(t.id))
+      // Dimension non nommée par la référence : on garde sa sélection courante, comme le fait
+      // `Link.valueForTag`. La référence peut donc ne porter que sur UNE dimension.
+      const kept = found ?? tagg.selected_tags_list[0]
+      if (kept) tags.push(kept as Class_DataTag)
+    })
+    return tags.length > 0 ? tags : undefined
   }
 
   /**
@@ -78,14 +136,14 @@ export class NodePositioningScaleAdapted {
    * `maximum_node`) sont volontairement ignorés : ils ne suivent pas l'échelle, et les faire
    * entrer ici rendrait la grandeur dépendante de l'échelle courante.
    */
-  private nodeMagnitude(n: Class_NodeElement): number {
+  private nodeMagnitude(n: Class_NodeElement, tags?: Class_DataTag[]): number {
     let sum_in = 0
     let sum_out = 0
-    n.visible_input_links_list.forEach(l => { sum_in += this.linkMagnitude(l) })
-    n.visible_output_links_list.forEach(l => { sum_out += this.linkMagnitude(l) })
+    n.visible_input_links_list.forEach(l => { sum_in += this.linkMagnitude(l, tags) })
+    n.visible_output_links_list.forEach(l => { sum_out += this.linkMagnitude(l, tags) })
     let magnitude = Math.max(sum_in, sum_out)
     if (n.use_stock_for_height) {
-      const si = n.currentStockInitialForHeight()
+      const si = tags ? n.stockInitialForDataTags(tags) : n.currentStockInitialForHeight()
       if (si !== null && isFinite(si)) {
         const factor = n.stock_height_scale_factor > 0 ? n.stock_height_scale_factor : 1
         magnitude = Math.max(magnitude, Math.abs(si) / factor)
@@ -101,8 +159,8 @@ export class NodePositioningScaleAdapted {
    * un tag d'unité ont leur propre échelle, indépendante de celle du diagramme : ils comptent
    * ici pour leur valeur brute (limite assumée, cf. #382).
    */
-  private linkMagnitude(l: Class_LinkElement): number {
-    const v = l.valueCurrent
+  private linkMagnitude(l: Class_LinkElement, tags?: Class_DataTag[]): number {
+    const v = tags ? l.valueForDataTags(tags) : l.valueCurrent
     if (v === null || v === undefined || !isFinite(v)) return 0
     const factor = l.shape_local_link_scale || 1
     return Math.abs(v) / factor
@@ -120,6 +178,15 @@ export class NodePositioningScaleAdapted {
    * L'oubli explicite de la capture, lui, est le rôle de `clearScaleAdaptation`.
    */
   public captureScaleReference() {
+    // os#1372 — Datatag de référence désigné : la grandeur est CALCULÉE, on ne capture donc que
+    // l'échelle de base, et une seule fois (sans quoi chaque frame la ramènerait à l'échelle
+    // déjà adaptée et le ratio se composerait avec lui-même).
+    if (this.referenceDataTagMagnitude() !== undefined) {
+      if (this._scale_adapted_ref_scale === undefined) {
+        this._scale_adapted_ref_scale = this.drawingArea.scale
+      }
+      return
+    }
     const m = this.referenceMagnitudeForCapture()
     if (m === undefined || !(m > 0)) return
     this._scale_adapted_ref_magnitude = m
@@ -259,9 +326,15 @@ export class NodePositioningScaleAdapted {
    * `scale` redraw → récursion ; on l'évite).
    */
   public applyAdaptedScale() {
+    // os#1372 — Grandeur de référence : celle du datatag DÉSIGNÉ si le document en nomme un
+    // (calculée à chaque dessin), sinon celle capturée au vol (fichiers antérieurs).
+    const designated = this.referenceDataTagMagnitude()
     // Capture paresseuse (1er dessin / après chargement) : base = échelle + grandeur courantes
-    // → ratio 1 à cette frame, pas de saut.
-    if (this._scale_adapted_ref_magnitude === undefined || this._scale_adapted_ref_scale === undefined) {
+    // → ratio 1 à cette frame, pas de saut. Avec un datatag désigné, seule l'échelle est à
+    // capturer — et le ratio vaut 1 uniquement si l'on est SUR le datatag de référence, ce qui
+    // est le propre d'une référence énoncée.
+    if ((designated === undefined && this._scale_adapted_ref_magnitude === undefined)
+      || this._scale_adapted_ref_scale === undefined) {
       this.captureScaleReference()
       // os#1352 — régime `element` : si la capture n'a rien pu prendre, c'est que l'élément de
       // référence manque. Le dire tout de suite plutôt qu'au dessin suivant.
@@ -281,7 +354,8 @@ export class NodePositioningScaleAdapted {
     }
     this._scale_adapted_warning = undefined
     this._warned_selection = undefined
-    const new_scale = this._scale_adapted_ref_scale * m / this._scale_adapted_ref_magnitude
+    const ref_magnitude = designated ?? (this._scale_adapted_ref_magnitude as number)
+    const new_scale = this._scale_adapted_ref_scale * m / ref_magnitude
     if (isFinite(new_scale) && new_scale > 0) {
       this.drawingArea._scale = new_scale
       this.drawingArea._scaleValueToPx.domain([0, new_scale])

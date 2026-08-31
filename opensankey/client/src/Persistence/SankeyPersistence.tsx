@@ -2085,11 +2085,21 @@ export class DrawingAreaPersistence {
     // #384 — La clé de valeur s'appelle désormais `scale_adapted_ref_magnitude` : elle porte une
     // grandeur de diagramme, plus la valeur d'un élément de référence. Le renommage est ce qui
     // rend les fichiers antérieurs sûrs (cf. fromJSON).
+    // os#1372 — Datatag de RÉFÉRENCE : propriété de la composition, écrite dès qu'elle existe
+    // (indépendamment du mode courant — le régler puis basculer le mode ne doit pas la perdre).
+    if (drawing_area.scale_adapted_reference_datatag.length > 0) {
+      json_object['scale_adapted_reference_datatag'] = drawing_area.scale_adapted_reference_datatag
+    }
     if (drawing_area.sankey.default_style.shape_position_type === 'scale_adapted') {
       const scale_ref = drawing_area.nodePositioning.scaleAdaptedReference
       if (scale_ref) {
         json_object['scale_adapted_ref_scale'] = scale_ref.scale
-        json_object['scale_adapted_ref_magnitude'] = scale_ref.magnitude
+        // os#1372 — La grandeur n'est plus écrite quand un datatag de référence est désigné :
+        // elle est CALCULÉE à chaque dessin. L'écrire quand même ferait ressusciter, à la
+        // relecture d'un fichier dont les données ont bougé, une référence périmée.
+        if (drawing_area.scale_adapted_reference_datatag.length === 0) {
+          json_object['scale_adapted_ref_magnitude'] = scale_ref.magnitude
+        }
       }
     }
     if (drawing_area.filter_label > 0) json_object['filter_label'] = drawing_area.filter_label
@@ -2700,6 +2710,16 @@ export class DrawingAreaPersistence {
     // capturent l'état affiché — c'est ce qui évite le pas de retard sur un fichier antérieur.
     // Ce qui est relu ici reste utile comme AMORCE, pour le cas où le mode s'appliquerait sans
     // qu'aucune frame suspendue ne soit passée.
+    // os#1372 — Datatag de référence, relu AVANT le couple : c'est lui qui décide si la grandeur
+    // capturée sert encore. Relu hors du test de mode — la référence appartient à la composition,
+    // pas au mode actif au moment de l'enregistrement.
+    {
+      const ref_dt = json_object['scale_adapted_reference_datatag']
+      if (Array.isArray(ref_dt)) {
+        drawing_area.scale_adapted_reference_datatag =
+          ref_dt.filter((id): id is string => typeof id === 'string')
+      }
+    }
     if (loaded_position_mode === 'scale_adapted') {
       const ref_scale = json_object['scale_adapted_ref_scale']
       const ref_magnitude = json_object['scale_adapted_ref_magnitude']
