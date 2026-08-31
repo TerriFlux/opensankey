@@ -70,7 +70,8 @@ describe('os#1376 — comptage des passes et des dessins', () => {
     startDrawCounters()
     expect(drawCountersReport()).toEqual({
       passes: 0, link_draws: 0, max_draws_per_link: 0, links_drawn_twice: [],
-      arrow_fans: 0, max_fans_per_node: 0,
+      arrow_fans: 0, max_fans_per_node: 0, pass_origins: [],
+      draws_per_pass: [], fans_per_pass: [],
     })
   })
 
@@ -118,6 +119,34 @@ describe('os#1376 — comptage des passes et des dessins', () => {
     // vient de se passer, pas seulement les passes deja refermees.
     expect(drawCountersReport().max_draws_per_link).toBe(2)
     endDrawPass()
+  })
+
+  it('note qui a declenche chaque passe', () => {
+    startDrawCounters()
+    beginDrawPass(); endDrawPass()
+    beginDrawPass()
+    beginDrawPass(); endDrawPass()   // imbriquee : pas une passe de plus, pas une origine de plus
+    endDrawPass()
+    const origins = drawCountersReport().pass_origins
+    // Une origine par passe de premier niveau, dans l ordre. Se compter est une chose, savoir QUI
+    // appelle en est une autre : c est ce qui a permis d attribuer les dessins de flux.
+    expect(origins).toHaveLength(2)
+    expect(origins.every(o => typeof o === 'string')).toBe(true)
+  })
+
+  it('rend compte de ce qu a coute CHAQUE passe, pas seulement du total', () => {
+    startDrawCounters()
+    // Une passe qui ne dessine rien — un diagramme encore vide — ne coute rien, et la supprimer
+    // ne gagnerait rien. Le total seul ne permet pas de le voir.
+    beginDrawPass(); endDrawPass()
+    beginDrawPass()
+    countLinkDraw('a'); countLinkDraw('b'); countArrowFan('n')
+    endDrawPass()
+    const report = drawCountersReport()
+    expect(report.draws_per_pass).toEqual([0, 2])
+    expect(report.fans_per_pass).toEqual([0, 1])
+    // Pas de passe fantome : `closeCurrentPass` court a l ouverture ET a la fermeture.
+    expect(report.draws_per_pass).toHaveLength(report.passes)
   })
 
   it('compte les eventails de pointes par nœud et par passe', () => {
