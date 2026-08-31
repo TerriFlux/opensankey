@@ -51,6 +51,13 @@ export type Type_DeterminationExplanation = {
   // au lieu de « ceux-ci entrent, ceux-là sortent ». Vide quand le fichier ne
   // les porte pas (écrit par un moteur antérieur).
   coefs: number[]
+  // Parmi ces contraintes, celles qui posent la borne BASSE de l'intervalle, et
+  // celles qui posent la borne HAUTE — pour une valeur libre uniquement. Vides
+  // quand le moteur n'a pas su les nommer : la borne vient alors d'une
+  // combinaison du système réduit, qui n'a pas de nom dans le modèle. Vide veut
+  // dire « on ne sait pas », jamais « aucune contrainte ».
+  min_by: number[]
+  max_by: number[]
 }
 
 export type Type_DeterminationCatalog = {
@@ -142,7 +149,23 @@ export const determinationCatalogFromJSON = (
         coefs.push(coef)
       }
     }
-    explanations.push({ type: e.type, constraints, coefs })
+    // Un rôle qui désignerait une contrainte absente de `constraints` serait
+    // inexploitable : l'interface n'aurait pas son coefficient, donc pas son
+    // équation. Comme partout ici, on écarte le catalogue entier plutôt que
+    // d'en montrer une part fausse.
+    const roles: { min_by: number[], max_by: number[] } = { min_by: [], max_by: [] }
+    for (const role of ['min_by', 'max_by'] as const) {
+      const raw = e[role]
+      if (raw === undefined) continue
+      if (!Array.isArray(raw)) return undefined
+      for (const id of raw) {
+        if (typeof id !== 'number' || !Number.isInteger(id) || !constraints.includes(id)) {
+          return undefined
+        }
+        roles[role].push(id)
+      }
+    }
+    explanations.push({ type: e.type, constraints, coefs, ...roles })
   }
   return { subjects, explanations }
 }
@@ -158,6 +181,8 @@ export const determinationCatalogToJSON = (
     const out: Type_JSON = { type: e.type }
     if (e.constraints.length > 0) out.constraints = e.constraints as unknown as Type_JSON
     if (e.coefs.length > 0) out.coefs = e.coefs as unknown as Type_JSON
+    if (e.min_by.length > 0) out.min_by = e.min_by as unknown as Type_JSON
+    if (e.max_by.length > 0) out.max_by = e.max_by as unknown as Type_JSON
     return out
   })
   const out: Type_JSON = { explanations: explanations as unknown as Type_JSON }

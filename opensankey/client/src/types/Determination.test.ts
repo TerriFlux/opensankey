@@ -26,8 +26,8 @@ const catalog: Type_DeterminationCatalog = {
     { kind: 'equality', subject: '12', label: 'rendement du process X', constraint_type: 'ratio_flux' }
   ],
   explanations: [
-    { type: 'determined', constraints: [0, 2], coefs: [1, -0.6] },
-    { type: 'free', constraints: [], coefs: [] }
+    { type: 'determined', constraints: [0, 2], coefs: [1, -0.6], min_by: [], max_by: [] },
+    { type: 'free', constraints: [], coefs: [], min_by: [], max_by: [] }
   ]
 }
 
@@ -38,7 +38,7 @@ describe('#426 détermination — lecture et écriture', () => {
 
   it('omet les membres vides, pour ne pas alourdir le fichier', () => {
     const json = determinationCatalogToJSON({
-      subjects: [], explanations: [{ type: 'free', constraints: [], coefs: [] }]
+      subjects: [], explanations: [{ type: 'free', constraints: [], coefs: [], min_by: [], max_by: [] }]
     }) as unknown as Record<string, unknown>
     expect(json.subjects).toBeUndefined()
     expect((json.explanations as unknown[])[0]).toEqual({ type: 'free' })
@@ -76,7 +76,39 @@ describe('#426 détermination — lecture et écriture', () => {
 
   it('accepte un catalogue sans sujets tant qu’aucune explication n’en cite', () => {
     expect(determinationCatalogFromJSON({ explanations: [{ type: 'free' }] }))
-      .toEqual({ subjects: [], explanations: [{ type: 'free', constraints: [], coefs: [] }] })
+      .toEqual({ subjects: [], explanations: [{ type: 'free', constraints: [], coefs: [], min_by: [], max_by: [] }] })
+  })
+
+  it('lit qui pose la borne basse et qui pose la borne haute', () => {
+    const json = {
+      subjects: [{ kind: 'aggregation', subject: 'Poudre' },
+        { kind: 'aggregation', subject: 'Alimentation' }],
+      explanations: [{ type: 'free', constraints: [0, 1], coefs: [1, -1], min_by: [0], max_by: [1] }]
+    }
+    const read = determinationCatalogFromJSON(json)
+    expect(read?.explanations[0].min_by).toEqual([0])
+    expect(read?.explanations[0].max_by).toEqual([1])
+  })
+
+  it('rejette un rôle qui désigne une contrainte étrangère à l’explication', () => {
+    // L'interface n'aurait pas le coefficient de cette contrainte, donc pas son
+    // calcul : elle afficherait un bloc vide sous un titre affirmatif.
+    const json = {
+      subjects: [{ kind: 'aggregation', subject: 'Poudre' },
+        { kind: 'aggregation', subject: 'Alimentation' }],
+      explanations: [{ type: 'free', constraints: [0], coefs: [1], min_by: [1] }]
+    }
+    expect(determinationCatalogFromJSON(json)).toBeUndefined()
+  })
+
+  it('n’invente aucun rôle quand le fichier n’en porte pas', () => {
+    const json = {
+      subjects: [{ kind: 'aggregation', subject: 'Poudre' }],
+      explanations: [{ type: 'free', constraints: [0], coefs: [1] }]
+    }
+    const read = determinationCatalogFromJSON(json)
+    expect(read?.explanations[0].min_by).toEqual([])
+    expect(read?.explanations[0].max_by).toEqual([])
   })
 
   it('rejette le catalogue quand les coefficients ne suivent pas les contraintes', () => {
@@ -146,7 +178,7 @@ describe('#426 détermination — coefficient d’une variable dans une contrain
     expect(determinationCoefficient(catalog.explanations[0], 1)).toBeUndefined()
     expect(determinationCoefficient(undefined, 0)).toBeUndefined()
     expect(determinationCoefficient(
-      { type: 'determined', constraints: [0], coefs: [] }, 0)).toBeUndefined()
+      { type: 'determined', constraints: [0], coefs: [], min_by: [], max_by: [] }, 0)).toBeUndefined()
   })
 })
 

@@ -138,6 +138,10 @@ export const resources_inspector = {
             free_unbounded: 'The constraints are not enough to fix this value, and nothing bounds it.',
             failed: 'Reconciliation of this tag combination did not succeed: the value shown is the input one.'
           },
+          holds_min: 'What holds it at {{value}} or above:',
+          holds_max: 'What holds it at {{value}} or below:',
+          at_least: 'at least',
+          at_most: 'at most',
           shape: {
             equal: 'Same as another flux',
             factor: 'A share of another flux',
@@ -404,6 +408,10 @@ export const resources_inspector = {
             free_unbounded: 'Les contraintes ne suffisent pas à fixer cette valeur, et rien ne la borne.',
             failed: 'La réconciliation de cette combinaison d\'étiquettes n\'a pas abouti : la valeur affichée est celle d\'entrée.'
           },
+          holds_min: 'Ce qui l’empêche de descendre sous {{value}} :',
+          holds_max: 'Ce qui l’empêche de dépasser {{value}} :',
+          at_least: 'au moins',
+          at_most: 'au plus',
           shape: {
             equal: 'Report d’un autre flux',
             factor: 'Proportion d’un autre flux',
@@ -667,6 +675,10 @@ export const resources_inspector = {
             free_unbounded: 'Las restricciones no bastan para fijar este valor, y nada lo acota.',
             failed: 'La reconciliación de esta combinación de etiquetas no llegó a término: el valor mostrado es el de entrada.'
           },
+          holds_min: 'Lo que impide que baje de {{value}}:',
+          holds_max: 'Lo que impide que supere {{value}}:',
+          at_least: 'como mínimo',
+          at_most: 'como máximo',
           shape: {
             equal: 'Igual a otro flujo',
             factor: 'Proporción de otro flujo',
@@ -930,6 +942,10 @@ export const resources_inspector = {
             free_unbounded: 'Die Nebenbedingungen genügen nicht, um diesen Wert festzulegen, und nichts beschränkt ihn.',
             failed: 'Der Abgleich dieser Etikettenkombination ist gescheitert: Der angezeigte Wert ist der Eingabewert.'
           },
+          holds_min: 'Was verhindert, dass er unter {{value}} fällt:',
+          holds_max: 'Was verhindert, dass er {{value}} übersteigt:',
+          at_least: 'mindestens',
+          at_most: 'höchstens',
           shape: {
             equal: 'Gleich einem anderen Fluss',
             factor: 'Anteil eines anderen Flusses',
@@ -1193,6 +1209,10 @@ export const resources_inspector = {
             free_unbounded: 'I vincoli non bastano a fissare questo valore, e nulla lo limita.',
             failed: 'La riconciliazione di questa combinazione di etichette non è riuscita: il valore mostrato è quello di ingresso.'
           },
+          holds_min: 'Ciò che impedisce di scendere sotto {{value}}:',
+          holds_max: 'Ciò che impedisce di superare {{value}}:',
+          at_least: 'almeno',
+          at_most: 'al massimo',
           shape: {
             equal: 'Uguale a un altro flusso',
             factor: 'Quota di un altro flusso',
@@ -1456,6 +1476,10 @@ export const resources_inspector = {
             free_unbounded: '约束不足以确定该数值，且没有任何界限。',
             failed: '该标签组合的调和未能完成：显示的是输入值。'
           },
+          holds_min: '使其不低于 {{value}} 的原因：',
+          holds_max: '使其不超过 {{value}} 的原因：',
+          at_least: '至少',
+          at_most: '至多',
           shape: {
             equal: '等于另一条流',
             factor: '另一条流的一部分',
@@ -1722,6 +1746,10 @@ export const resources_inspector = {
             free_unbounded: '制約だけではこの値は決まらず、上下限もありません。',
             failed: 'このタグの組み合わせの調整は完了しませんでした。表示されているのは入力値です。'
           },
+          holds_min: '{{value}} を下回らない理由：',
+          holds_max: '{{value}} を超えない理由：',
+          at_least: '最小',
+          at_most: '最大',
           shape: {
             equal: '他のフローと同じ',
             factor: '他のフローの一部',
