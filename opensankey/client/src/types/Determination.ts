@@ -58,6 +58,13 @@ export type Type_DeterminationExplanation = {
   // dire « on ne sait pas », jamais « aucune contrainte ».
   min_by: number[]
   max_by: number[]
+  // Parmi ces contraintes, celles qui SUFFISENT à calculer la valeur, leurs
+  // autres termes étant déjà connus — de la plus courte à la plus longue. Ce
+  // sont des équations du modèle, qui portent leur nom : un bilan de nœud, une
+  // agrégation, ou l'équation écrite par le modéliste avec sa traduction. Vide
+  // quand il n'y en a aucune : reste alors l'équation du système réduit, exacte
+  // mais anonyme.
+  fixed_by: number[]
 }
 
 export type Type_DeterminationCatalog = {
@@ -153,8 +160,9 @@ export const determinationCatalogFromJSON = (
     // inexploitable : l'interface n'aurait pas son coefficient, donc pas son
     // équation. Comme partout ici, on écarte le catalogue entier plutôt que
     // d'en montrer une part fausse.
-    const roles: { min_by: number[], max_by: number[] } = { min_by: [], max_by: [] }
-    for (const role of ['min_by', 'max_by'] as const) {
+    const roles: { min_by: number[], max_by: number[], fixed_by: number[] } =
+      { min_by: [], max_by: [], fixed_by: [] }
+    for (const role of ['min_by', 'max_by', 'fixed_by'] as const) {
       const raw = e[role]
       if (raw === undefined) continue
       if (!Array.isArray(raw)) return undefined
@@ -183,6 +191,7 @@ export const determinationCatalogToJSON = (
     if (e.coefs.length > 0) out.coefs = e.coefs as unknown as Type_JSON
     if (e.min_by.length > 0) out.min_by = e.min_by as unknown as Type_JSON
     if (e.max_by.length > 0) out.max_by = e.max_by as unknown as Type_JSON
+    if (e.fixed_by.length > 0) out.fixed_by = e.fixed_by as unknown as Type_JSON
     return out
   })
   const out: Type_JSON = { explanations: explanations as unknown as Type_JSON }
