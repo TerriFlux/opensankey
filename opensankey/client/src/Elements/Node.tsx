@@ -53,6 +53,7 @@ import { Class_StockValue, Class_ElementValueTree } from './LinkValues'
 import { Class_StockShape } from './StockShape'
 import { Type_Side } from './ElementsAttributesConfig'
 import { clampBandThickness } from './nodeBandHeight'
+import { countArrowFan } from '../types/DrawCounters'
 import { NodeStyle, NodeImportCloseStyle, NodeExportCloseStyle, NodeImportExportCloseStyle, LinkImportCloseStyle, LinkExportCloseStyle, LinkImportExportCloseStyle, LinkImportExportAboveBelowStyle, NodeExportBelowStyle, NodeImportAboveStyle, NodeImportExportAboveBelowStyle, NodeSectorStyle, LinkStyle } from './ElementStyle'
 // 
 // CLASSE PRINCIPALE AVEC LIENS RÉINTÉGRÉS *********************************************
@@ -891,6 +892,9 @@ export class Class_NodeElement extends Class_NodeBase {
 
   // 🔄 DRAW LINKS ARROW - RÉINTÉGRÉ DIRECTEMENT
   public drawLinksArrow() {
+    // os#1374 — un éventail = les pointes de TOUS les flux d'un côté, reposées ensemble.
+    // C'est l'unité de travail qu'on surveille, pas la pointe isolée.
+    countArrowFan(this.id)
     this._drawLinksArrow()
     this._orderD3Elements()
   }

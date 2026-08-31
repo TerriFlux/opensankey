@@ -32,6 +32,10 @@ export type Type_DrawCountersReport = {
   max_draws_per_link: number
   /** Identifiants des flux tracés plus d'une fois dans une même passe, du pire au moins pire. */
   links_drawn_twice: string[]
+  /** os#1374 — Éventails de pointes recalculés (`Class_NodeElement.drawLinksArrow`). */
+  arrow_fans: number
+  /** Le pire des nœuds : nombre de fois que son éventail a été recalculé dans une seule passe. */
+  max_fans_per_node: number
 }
 
 /**
@@ -51,6 +55,11 @@ const state = {
   per_link: new Map<string, number>(),
   /** Pire compte par flux, toutes passes confondues. Ne retient que les flux tracés 2 fois ou plus. */
   repeated: new Map<string, number>(),
+  /** os#1374 — Éventails de pointes recalculés, toutes passes confondues. */
+  arrow_fans: 0,
+  /** Éventails par nœud dans la passe COURANTE. */
+  per_node_fans: new Map<string, number>(),
+  max_fans_per_node: 0,
 }
 
 /** Démarre (ou redémarre) la mesure en repartant de zéro. */
@@ -62,6 +71,9 @@ export function startDrawCounters(): void {
   state.depth = 0
   state.per_link.clear()
   state.repeated.clear()
+  state.arrow_fans = 0
+  state.per_node_fans.clear()
+  state.max_fans_per_node = 0
 }
 
 /** Arrête la mesure. Le rapport reste lisible après l'arrêt. */
@@ -90,6 +102,10 @@ function closeCurrentPass(): void {
     if (count > worst) state.repeated.set(id, count)
   })
   state.per_link.clear()
+  state.per_node_fans.forEach(count => {
+    if (count > state.max_fans_per_node) state.max_fans_per_node = count
+  })
+  state.per_node_fans.clear()
 }
 
 /**
@@ -120,6 +136,17 @@ export function countLinkDraw(link_id: string): void {
   state.per_link.set(link_id, (state.per_link.get(link_id) ?? 0) + 1)
 }
 
+/**
+ * os#1374 — Compte un recalcul d'éventail de pointes. Appelé par
+ * `Class_NodeElement.drawLinksArrow`, qui repose les pointes de TOUS les flux d'un côté : c'est
+ * l'unité de travail à ne pas refaire, pas le dessin d'une pointe isolée.
+ */
+export function countArrowFan(node_id: string): void {
+  if (!state.enabled) return
+  state.arrow_fans++
+  state.per_node_fans.set(node_id, (state.per_node_fans.get(node_id) ?? 0) + 1)
+}
+
 /** Photographie des compteurs, passe courante incluse. Ne remet rien à zéro. */
 export function drawCountersReport(): Type_DrawCountersReport {
   // La passe en cours (s'il y en a une) doit entrer dans le rapport, sinon lire les compteurs
@@ -130,6 +157,8 @@ export function drawCountersReport(): Type_DrawCountersReport {
     if (count > max) max = count
     if (count >= 2 && count > (repeated.get(id) ?? 0)) repeated.set(id, count)
   })
+  let max_fans = state.max_fans_per_node
+  state.per_node_fans.forEach(count => { if (count > max_fans) max_fans = count })
   return {
     passes: state.passes,
     link_draws: state.link_draws,
@@ -137,6 +166,8 @@ export function drawCountersReport(): Type_DrawCountersReport {
     links_drawn_twice: [...repeated.entries()]
       .sort((a, b) => b[1] - a[1])
       .map(([id]) => id),
+    arrow_fans: state.arrow_fans,
+    max_fans_per_node: max_fans,
   }
 }
 

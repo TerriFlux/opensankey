@@ -685,9 +685,18 @@ export class Class_Sankey {
     // plus aucun nœud ne bougera. Idempotent : si `drawElements` a déjà ouvert la phase pour son
     // placement, elle continue simplement jusqu'ici.
     this.drawing_area.openDeferredLinkDraws()
-    this._drawNodesJoin()
-    // Fin de la phase des ancres : le trait, une fois par flux.
-    this.drawing_area.flushDeferredLinkDraws()
+    // os#1374 — Nouvelle époque d'éventail : les positions ont pu bouger, les pointes calculées
+    // au dessin précédent sont périmées. Pendant cette époque en revanche, une pointe posée par
+    // l'éventail d'un nœud reste valable — sans quoi chaque flux redemandait l'éventail entier
+    // de son côté (1 823 éventails pour 1 823 flux sur SOCLE Céréales, 72 pour le pire nœud).
+    this.drawing_area.beginArrowEpoch()
+    try {
+      this._drawNodesJoin()
+      // Fin de la phase des ancres : le trait, une fois par flux.
+      this.drawing_area.flushDeferredLinkDraws()
+    } finally {
+      this.drawing_area.endArrowEpoch()
+    }
     this._drawContainersJoin()
     //this.nodes_list.forEach(node => node.unDraw())
     //this.visible_nodes_list_sorted.forEach(node => node.draw())
