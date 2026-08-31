@@ -6,6 +6,7 @@ import {
   beginDrawPass,
   endDrawPass,
   countLinkDraw,
+  countArrowFan,
 } from './DrawCounters'
 
 // ==================================================================================================
@@ -69,6 +70,7 @@ describe('os#1376 — comptage des passes et des dessins', () => {
     startDrawCounters()
     expect(drawCountersReport()).toEqual({
       passes: 0, link_draws: 0, max_draws_per_link: 0, links_drawn_twice: [],
+      arrow_fans: 0, max_fans_per_node: 0,
     })
   })
 
@@ -116,6 +118,31 @@ describe('os#1376 — comptage des passes et des dessins', () => {
     // vient de se passer, pas seulement les passes deja refermees.
     expect(drawCountersReport().max_draws_per_link).toBe(2)
     endDrawPass()
+  })
+
+  it('compte les eventails de pointes par nœud et par passe', () => {
+    startDrawCounters()
+    // os#1374 — un nœud dont l eventail est recalcule a chaque flux de son cote : c est le
+    // travail refait qu on surveille. Mesure browser avant le correctif, au chargement de SOCLE
+    // Cereales : 1823 eventails pour 1823 flux, 72 recalculs pour le pire nœud.
+    beginDrawPass()
+    countArrowFan('noeud_charge'); countArrowFan('noeud_charge'); countArrowFan('noeud_calme')
+    endDrawPass()
+    beginDrawPass()
+    countArrowFan('noeud_charge')
+    endDrawPass()
+    const report = drawCountersReport()
+    expect(report.arrow_fans).toBe(4)
+    // Un eventail par passe est le regime normal ; deux dans la MEME passe est le defaut.
+    expect(report.max_fans_per_node).toBe(2)
+  })
+
+  it('un eventail par nœud et par passe ne signale rien', () => {
+    startDrawCounters()
+    for (let i = 0; i < 3; i++) { beginDrawPass(); countArrowFan('noeud'); endDrawPass() }
+    const report = drawCountersReport()
+    expect(report.arrow_fans).toBe(3)
+    expect(report.max_fans_per_node).toBe(1)
   })
 
   it('une passe qui jette ne laisse pas la profondeur en l air', () => {
