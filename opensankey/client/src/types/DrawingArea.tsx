@@ -665,6 +665,29 @@ export class Class_DrawingArea {
   // les positions finales puis repasse à false, ce qui fige le cadrage pour les
   // changements de dataTag suivants. Évite de figer un transform périmé calculé
   // trop tôt (avant recenter), cf. ApplicationData.fromJSON (draw → recenter → draw).
+  /**
+   * os#1372 — DATATAG DE RÉFÉRENCE du mode « échelle adaptée » : ids des tags qui désignent la
+   * sélection sur laquelle le diagramme est calé. Persisté — c'est une propriété de la
+   * COMPOSITION, au même titre que le régime de référence.
+   *
+   * Ce qu'il remplace : une grandeur CAPTURÉE au vol (`scale_adapted_ref_magnitude`), prise au
+   * datatag qui se trouvait à l'écran quand le mode a pris effet. Personne ne l'avait choisie,
+   * rien ne disait laquelle c'était, et la moindre correction de données la rendait fausse
+   * puisqu'elle était figée dans le fichier. Ici la référence est ÉNONCÉE, et la grandeur s'en
+   * déduit à chaque dessin (cf. `NodePositioningScaleAdapted.referenceDataTagMagnitude`).
+   *
+   * Une seule dimension peut être nommée : les autres gardent leur sélection courante.
+   */
+  protected _scale_adapted_reference_datatag: string[] = []
+
+  public get scale_adapted_reference_datatag(): string[] { return this._scale_adapted_reference_datatag }
+
+  public set scale_adapted_reference_datatag(ids: string[]) {
+    this._scale_adapted_reference_datatag = ids ?? []
+    // La base capturée n'a plus de sens : elle a été prise contre une AUTRE référence.
+    this.nodePositioning.forgetScaleAdaptedCapture()
+  }
+
   protected _locked_fit_dirty: boolean = true
 
   // Cadrage de RÉFÉRENCE en mode taille verrouillée : le transform (zoom/pan)
@@ -1034,6 +1057,9 @@ export class Class_DrawingArea {
     this._font_size_locked = drawing_area_to_copy._font_size_locked
     // Idem : champ direct, le setter size_locked déclenche un re-fit.
     this._size_locked = drawing_area_to_copy._size_locked
+    // os#1372 — Le datatag de référence suit la copie (une vue doit se caler sur la même
+    // référence que le maître). Champ direct : le setter oublie la capture d'échelle.
+    this._scale_adapted_reference_datatag = [...drawing_area_to_copy._scale_adapted_reference_datatag]
     this._auto_fit_mode = drawing_area_to_copy._auto_fit_mode
     this._fit_anchor = drawing_area_to_copy._fit_anchor
     this._import_export_above_below = drawing_area_to_copy._import_export_above_below
