@@ -48,7 +48,7 @@ import pandas as pd
 from .views_utils import cut_layout
 import openpyxl
 
-from .views_utils import clean_file, handle_json_or_compressed, parse_folder
+from .views_utils import clean_file, handle_json_or_compressed
 import requests
 
 from threading import Thread, Lock
@@ -558,17 +558,13 @@ def launch_conversion():
 
         if input_format == "example_excel" or input_format == "example_json":
             exemple = request.form["file_name"]
-            # Racine de resolution des exemples, selon la source qui a liste le
-            # fichier (le client la passe explicitement) :
-            #  - 'sankeydata' (defaut) : templates + tutoriels, servis par
-            #    /menus/tutorials & l'index sur SANKEY_DATA (migration phase 1) ;
-            #  - 'mfadata' : la sankeytheque (Etudes/Clients), servie par
-            #    /menus/examples = parse_folder sur MFAData (PAS encore migree).
-            # NB : on ne peut PAS deduire le chemin depuis __file__ ici, car
-            # opensankey est installe (copie) en site-packages cote serveur.
-            example_root = request.form.get("example_root", "sankeydata")
-            root_env = "MFAData" if example_root == "mfadata" else "SANKEY_DATA"
-            data_root = os.environ.get(root_env)
+            # Racine de resolution des exemples : SANKEY_DATA (templates +
+            # tutoriels). L'ancienne racine 'mfadata' (sankeytheque servie
+            # depuis le disque) est retiree (sa#457) : les cartes de la theque
+            # se chargent par /menus/templates_asset (@library), jamais par le
+            # converter. NB : on ne peut PAS deduire le chemin depuis __file__
+            # ici, car opensankey est installe (copie) en site-packages.
+            data_root = os.environ.get("SANKEY_DATA")
             input_file_name = os.path.join(data_root, exemple) if data_root else exemple
             if input_format == "example_json":
                 # Tolerance .json / .json.gz + conversion automatique en .json.gz
@@ -1033,15 +1029,8 @@ def clean():
     return Response(response="{}", status=200, mimetype="application/json")
 
 
-@opensankey.route("/example/download", methods=["POST"])
-def download_examples():
-    data_folder = os.environ.get("MFAData")
-    # exemples_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exemples')
-    exemple = request.get_data().decode("utf-8")
-    exemple_file_path = os.path.join(data_folder, exemple)
-    if os.path.exists(exemple_file_path):
-        return send_file(exemple_file_path, as_attachment=True)
-    return Response(exemple_file_path, status=400, mimetype="text")
+# /example/download (envoi d'un fichier du disque MFAData) est RETIRE
+# (sa#457) : plus aucun appelant, et la galerie ne sert plus ce disque.
 
 
 @opensankey.route("/menus/excel_template", methods=["POST"])
@@ -1439,20 +1428,18 @@ def templates_index_path(source):
     Chemin de l'index d'une galerie, selon sa source.
 
     - 'sankeydata' (defaut) : les modeles, dans le submodule SankeyData (env
-      SANKEY_DATA, sous-dossier templates/) ; repli sur MFAData/Modeles/Template/
-      tant que la migration n'est pas deployee partout.
-    - 'mfadata' : la sankeytheque, index a la racine de MFAData (env MFAData),
-      qui liste nos etudes publiees.
+      SANKEY_DATA, sous-dossier templates/).
+    - 'mfadata' : la sankeytheque. PLUS AUCUN index de disque (retrait sa#457,
+      31/08/2026) : la liste vient des projets publies de la bibliotheque, via
+      le resolveur externe (set_external_gallery_resolver), qui est consulte
+      meme sans index. La galerie ne lit plus le disque MFAData — c'etait la
+      derive structurelle mesuree le 25/08 (une entree d'index pointant un etat
+      vieux de deux generations sans que rien ne le signale).
     """
     if source == "mfadata":
-        mfa_data = os.environ.get("MFAData")
-        return os.path.join(mfa_data, "index.json") if mfa_data else None
+        return None
     sankey_data = os.environ.get("SANKEY_DATA")
-    index_path = os.path.join(sankey_data, "templates", "index.json") if sankey_data else None
-    if not (index_path and os.path.exists(index_path)):
-        mfa_data = os.environ.get("MFAData")
-        index_path = os.path.join(mfa_data, "Modèles", "Template", "index.json") if mfa_data else None
-    return index_path
+    return os.path.join(sankey_data, "templates", "index.json") if sankey_data else None
 
 
 def templates_index_load(source):
@@ -1688,39 +1675,43 @@ def templates_declared_assets(source):
     return declared
 
 
-# Compression a la volee des .json de la sankeytheque : chemin absolu -> (empreinte
-# mtime/taille, octets gzippes). Quelques entrees suffisent (on ne recharge qu'un
-# modele a la fois) ; l'empreinte invalide le cache des que le fichier change.
-_MFADATA_GZ_CACHE = {}
-_MFADATA_GZ_CACHE_LOCK = Lock()
-_MFADATA_GZ_CACHE_MAX = 4
+# Compression a la volee des .json declares : chemin absolu -> (empreinte
+# mtime/taille, octets gzippes). Quelques entrees suffisent (on ne recharge
+# qu'un modele a la fois) ; l'empreinte invalide le cache des que le fichier
+# change. Nee pour la sankeytheque (MFAData), la regle survit a son retrait
+# (sa#457) parce que SankeyData a exactement le meme probleme : c'est un clone
+# git-pull sur les serveurs.
+_JSON_GZ_CACHE = {}
+_JSON_GZ_CACHE_LOCK = Lock()
+_JSON_GZ_CACHE_MAX = 4
 
 
-def mfadata_gzip_json_response(json_abs):
+def gzip_json_response(json_abs):
     """
-    Sert un .json de MFAData compresse EN MEMOIRE, sans jamais ecrire de .gz.
+    Sert un .json d'une galerie git compresse EN MEMOIRE, sans jamais ecrire
+    de .gz.
 
-    handle_json_or_compressed, lui, MET EN CACHE SUR DISQUE le .gz qu'il fabrique
-    (a cote du .json). C'est inacceptable dans MFAData depuis que les etudes
-    enregistrees par l'app y sont ecrites en .json versionne : le .gz de cache
-    n'est pas suivi par git, donc un `git pull` qui met a jour le .json laisserait
-    le cache perime en place — et le serveur continuerait de servir l'ancienne
-    version, indefiniment. On compresse donc en RAM (memo par mtime+taille) et on
-    pose un ETag pour que le navigateur puisse se contenter d'un 304.
+    handle_json_or_compressed, lui, MET EN CACHE SUR DISQUE le .gz qu'il
+    fabrique (a cote du .json) ET ajoute une cle `file_name` au contenu — le
+    round-trip d'un modele reenregistre n'est plus l'octet pres. Et le .gz de
+    cache n'est pas suivi par git : un `git pull` qui met a jour le .json
+    laisserait le cache perime en place, servi indefiniment. On compresse donc
+    en RAM (memo par mtime+taille) et on pose un ETag pour que le navigateur
+    puisse se contenter d'un 304.
     """
     stat = os.stat(json_abs)
     key = os.path.abspath(json_abs)
     stamp = (stat.st_mtime_ns, stat.st_size)
-    with _MFADATA_GZ_CACHE_LOCK:
-        cached = _MFADATA_GZ_CACHE.get(key)
+    with _JSON_GZ_CACHE_LOCK:
+        cached = _JSON_GZ_CACHE.get(key)
         payload = cached[1] if (cached and cached[0] == stamp) else None
     if payload is None:
         with open(json_abs, "rb") as file_json:
             payload = gzip.compress(file_json.read())
-        with _MFADATA_GZ_CACHE_LOCK:
-            if len(_MFADATA_GZ_CACHE) >= _MFADATA_GZ_CACHE_MAX:
-                _MFADATA_GZ_CACHE.clear()
-            _MFADATA_GZ_CACHE[key] = (stamp, payload)
+        with _JSON_GZ_CACHE_LOCK:
+            if len(_JSON_GZ_CACHE) >= _JSON_GZ_CACHE_MAX:
+                _JSON_GZ_CACHE.clear()
+            _JSON_GZ_CACHE[key] = (stamp, payload)
     # Servi BRUT (pas de Content-Encoding) : le front degzippe lui-meme, comme
     # pour les .gz du disque (regle etablie pour les portfolios).
     response = make_response(payload)
@@ -1832,24 +1823,29 @@ def menus_templates_asset(asset):
     external = external_gallery_asset(source, normalized)
     if external is not None:
         return external
-    root = os.environ.get("MFAData" if source == "mfadata" else "SANKEY_DATA")
+    if source == "mfadata":
+        # Retrait sa#457 : la sankeytheque n'a PLUS de racine de disque. Ses
+        # fichiers sont tous des chemins virtuels du resolveur (@library/...),
+        # deja servis ci-dessus — tout le reste est mort, sans distinction
+        # (meme doctrine de 404 indifferencie que library_public).
+        abort(404)
+    root = os.environ.get("SANKEY_DATA")
     if not root:
         abort(404)
-    if source == "mfadata":
-        json_rel = mfadata_declared_json(normalized)
-        if json_rel is None and normalized not in templates_declared_assets("mfadata"):
-            abort(404)
-        # Une etude enregistree depuis l'app (voir menus_templates_save) est ecrite
-        # en .json LISIBLE et son .json.gz d'origine est supprime. Le .json fait
-        # donc foi des qu'il existe, quelle que soit l'extension declaree par
-        # l'index, et il est compresse en RAM (jamais de .gz de cache sur disque).
-        if json_rel:
-            json_abs = safe_join(root, json_rel)
-            if json_abs and os.path.isfile(json_abs):
-                return mfadata_gzip_json_response(json_abs)
     # Modeles : tout SankeyData/templates/ est publiable, la regle de prefixe suffit.
-    elif not normalized.startswith("templates/"):
+    if not normalized.startswith("templates/"):
         abort(404)
+    # Un modele REENREGISTRE depuis l'app (menus_templates_save) est ecrit en
+    # .json LISIBLE et son .json.gz d'origine supprime. Le .json fait donc foi
+    # des qu'il existe, quelle que soit l'extension declaree par l'index, et il
+    # est compresse en RAM — jamais de .gz de cache sur disque (perime au
+    # premier git pull), jamais de contenu mute (handle_json_or_compressed
+    # ajoute une cle file_name).
+    json_rel = templates_declared_json("sankeydata", normalized)
+    if json_rel:
+        json_abs = safe_join(root, json_rel)
+        if json_abs and os.path.isfile(json_abs):
+            return gzip_json_response(json_abs)
     if normalized.endswith(".json") or normalized.endswith(".json.gz"):
         # L'index declare "x.json" alors que, le plus souvent, seul "x.json.gz"
         # existe sur disque. handle_json_or_compressed applique la meme tolerance
@@ -1928,9 +1924,8 @@ def templates_declared_json(source, normalized):
     return None
 
 
-def mfadata_declared_json(normalized):
-    """Idem pour la sankeytheque (MFAData), source historique de la regle."""
-    return templates_declared_json("mfadata", normalized)
+# mfadata_declared_json est RETIRE (sa#457) : la regle survit pour SankeyData
+# via templates_declared_json, la sankeytheque n'a plus de disque a declarer.
 
 
 # Galeries dont un modele peut etre REENREGISTRE depuis l'app : celles dont les
@@ -1938,7 +1933,9 @@ def mfadata_declared_json(normalized):
 # 'esankey-local' en est exclue : corpus proprietaire, binaire, jamais committe.
 TEMPLATES_WRITABLE_SOURCES = {
     # source -> (variable d'environnement de la racine, sous-dossier de l'index)
-    "mfadata": ("MFAData", "MFAData"),
+    # 'mfadata' n'y est PLUS (retrait sa#457) : la sankeytheque est servie par
+    # la bibliotheque, un modele ne se reenregistre plus dans un depot git —
+    # sa contrepartie est le depot d'une version de brique (sa#456).
     "sankeydata": ("SANKEY_DATA", "SankeyData"),
 }
 
@@ -2315,47 +2312,10 @@ def templates_save_error(detail, saved=False):
     )
 
 
-@opensankey.route("/menus/examples", methods=["POST"])
-def menus_examples():
-    """
-    Arborescence brute de MFAData (dossiers + fichiers), pour l'explorateur interne.
-
-    Reserve aux comptes developpeur : c'est un parcours de notre repertoire de
-    travail, pas du contenu publie. Ce qui est publie passe par l'index
-    (/menus/templates?source=mfadata), qui fait liste blanche.
-    """
-    if not is_developer_user():
-        abort(403)
-    data_folder = os.environ.get("MFAData")
-    menus = {}
-    # try:
-    parse_folder(data_folder, menus)
-    context = {"exemples_menu": menus}
-    json_data = json.dumps(context)
-    response = Response(response=json_data, status=200, mimetype="application/json")
-    # except Exception as expt:
-    #     response = Response(
-    #         response=str(expt),
-    #         status=500,
-    #         mimetype='application/json'
-    #     )
-    # Try to import images from MFAData/OpenSankey/image_preview to static/media
-    try:
-        current_folder = os.environ.get("MFAData")
-        list_in_folder = os.listdir(current_folder)
-        if "MFAData" in list_in_folder and "image_preview" in os.listdir(
-            current_folder + "\\MFAData\\Formations\\Démos\\OpenSankey\\"
-        ):
-            folder_image = current_folder + "\\MFAData\\Formations\\Démos\\OpenSankey\\image_preview"
-            for i in os.listdir(folder_image):
-                if i not in os.listdir(image_template_folder):
-                    os.symlink(folder_image + "\\" + i, image_template_folder + "\\" + i)
-    except Exception as expt:
-        print(str(expt))
-        response = Response(response=str(expt), status=500, mimetype="application/json")
-        return response
-
-    return response
+# Le navigateur MFAData brut (/menus/examples, parse_folder sur le disque) est
+# RETIRE (sa#457/sa#474, arbitrage du 31/08 : « c'est plus utilise ») : la
+# sankeytheque est servie par la bibliotheque, et le parcours du repertoire de
+# travail n'a plus de raison d'exister cote application.
 
 
 @opensankey.route("/menus/tutorials", methods=["POST"])
