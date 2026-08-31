@@ -15,9 +15,11 @@
 // reproductible. C'est le compteur qui a permis de trier cinq optimisations « évidentes »
 // mesurées à zéro, et de démasquer trois sondes gagnantes qui gagnaient en RETIRANT du contenu.
 //
-// Références mesurées au chargement de « [SOCLE] Céréales - 2015 » (380 nœuds, 4 050 flux) :
-// 3 passes, 18 230 dessins de flux pour 1 823 flux affichés, soit DIX dessins par flux.
-// La cible du jalon 80 est un dessin par flux et par passe (os#1373, os#1374).
+// Références mesurées au chargement de « [SOCLE] Céréales - 2015 » (380 nœuds, 4 050 flux dont
+// 1 823 tracés), page publiée, avant les lots du jalon 80 : 2 passes, 1 823 dessins de flux, et
+// 1 823 éventails de pointes — un par dessin de flux, 72 pour le pire nœud dans une seule passe.
+// Après os#1373 et os#1374 : 183 éventails, 1 par nœud et par passe, chargement -42 %.
+// Reste 2 passes là où une suffirait : c'est os#1375.
 //
 // Coût quand les compteurs sont éteints — l'état par défaut — : une lecture de booléen par
 // dessin de flux, rien d'autre. Aucune allocation, aucune pile d'appel.
@@ -36,6 +38,23 @@ export type Type_DrawCountersReport = {
   arrow_fans: number
   /** Le pire des nœuds : nombre de fois que son éventail a été recalculé dans une seule passe. */
   max_fans_per_node: number
+  /**
+   * os#1375 — Qui a déclenché chaque passe, dans l'ordre. Une pile d'appel compacte par passe.
+   *
+   * Se compter est une chose, savoir QUI appelle en est une autre : c'est ce qui a permis
+   * d'attribuer les dessins de flux à `updateLinksPositions` plutôt qu'au rendu. Le coût
+   * (`new Error().stack`) est ici négligeable — deux ou trois passes par geste — alors qu'il
+   * fausse tout dès qu'on le paie par dessin de flux : la sonde d'os#1372 le payait 18 230 fois
+   * et ses durées ont dû être retirées.
+   */
+  pass_origins: string[]
+  /**
+   * os#1375 — Dessins de flux et eventails de chaque passe, dans l ordre. Deux passes ne coutent
+   * pas forcement la meme chose : une passe sur un diagramme encore vide est gratuite, et la
+   * supprimer ne gagnerait rien. Le total seul ne le dit pas.
+   */
+  draws_per_pass: number[]
+  fans_per_pass: number[]
 }
 
 /**
@@ -60,6 +79,40 @@ const state = {
   /** Éventails par nœud dans la passe COURANTE. */
   per_node_fans: new Map<string, number>(),
   max_fans_per_node: 0,
+  /** os#1375 — Pile d'appel compacte de chaque passe, dans l'ordre. Plafonnée, cf. MAX_ORIGINS. */
+  pass_origins: [] as string[],
+  /** os#1375 — Ce qu'a coûté chaque passe fermée, dans l'ordre. */
+  draws_per_pass: [] as number[],
+  fans_per_pass: [] as number[],
+  /** Compteurs de la passe COURANTE. */
+  draws_in_pass: 0,
+  fans_in_pass: 0,
+  /**
+   * Vrai entre l ouverture d une passe et sa fermeture. `closeCurrentPass` est appelé aussi bien
+   * à l ouverture d une passe (pour replier la précédente) qu à sa fermeture : sans ce drapeau,
+   * on enregistrerait une passe vide sur deux.
+   */
+  pass_open: false,
+}
+
+/**
+ * Au-delà, on cesse d'enregistrer les origines : une mesure qui part en boucle ne doit pas
+ * remplir la mémoire. Le compteur `passes`, lui, continue de compter.
+ */
+const MAX_ORIGINS = 50
+
+/** Pile d'appel compacte : les cadres utiles, sans les chemins de fichier. */
+function callSite(): string {
+  try {
+    return (new Error().stack || '')
+      .split('\n')
+      .slice(3, 11)
+      .map(l => l.trim().replace(/^at /, '').replace(/ \(.*$/, '').replace(/^.*[\\/]/, ''))
+      .filter(l => l.length > 0)
+      .join(' < ')
+  } catch {
+    return '(pile indisponible)'
+  }
 }
 
 /** Démarre (ou redémarre) la mesure en repartant de zéro. */
@@ -74,6 +127,12 @@ export function startDrawCounters(): void {
   state.arrow_fans = 0
   state.per_node_fans.clear()
   state.max_fans_per_node = 0
+  state.pass_origins = []
+  state.draws_per_pass = []
+  state.fans_per_pass = []
+  state.draws_in_pass = 0
+  state.fans_in_pass = 0
+  state.pass_open = false
 }
 
 /** Arrête la mesure. Le rapport reste lisible après l'arrêt. */
@@ -106,6 +165,13 @@ function closeCurrentPass(): void {
     if (count > state.max_fans_per_node) state.max_fans_per_node = count
   })
   state.per_node_fans.clear()
+  if (state.pass_open) {
+    state.draws_per_pass.push(state.draws_in_pass)
+    state.fans_per_pass.push(state.fans_in_pass)
+  }
+  state.pass_open = false
+  state.draws_in_pass = 0
+  state.fans_in_pass = 0
 }
 
 /**
@@ -118,6 +184,8 @@ export function beginDrawPass(): void {
   if (state.depth === 0) {
     closeCurrentPass()
     state.passes++
+    if (state.pass_origins.length < MAX_ORIGINS) state.pass_origins.push(callSite())
+    state.pass_open = true
   }
   state.depth++
 }
@@ -133,6 +201,7 @@ export function endDrawPass(): void {
 export function countLinkDraw(link_id: string): void {
   if (!state.enabled) return
   state.link_draws++
+  state.draws_in_pass++
   state.per_link.set(link_id, (state.per_link.get(link_id) ?? 0) + 1)
 }
 
@@ -144,6 +213,7 @@ export function countLinkDraw(link_id: string): void {
 export function countArrowFan(node_id: string): void {
   if (!state.enabled) return
   state.arrow_fans++
+  state.fans_in_pass++
   state.per_node_fans.set(node_id, (state.per_node_fans.get(node_id) ?? 0) + 1)
 }
 
@@ -168,6 +238,11 @@ export function drawCountersReport(): Type_DrawCountersReport {
       .map(([id]) => id),
     arrow_fans: state.arrow_fans,
     max_fans_per_node: max_fans,
+    pass_origins: [...state.pass_origins],
+    draws_per_pass: state.pass_open
+      ? [...state.draws_per_pass, state.draws_in_pass] : [...state.draws_per_pass],
+    fans_per_pass: state.pass_open
+      ? [...state.fans_per_pass, state.fans_in_pass] : [...state.fans_per_pass],
   }
 }
 
