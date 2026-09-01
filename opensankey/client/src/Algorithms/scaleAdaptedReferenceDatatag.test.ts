@@ -29,6 +29,12 @@ function buildDiagram() {
   const cible = sankey.addNewNode('cible', 'Cible')
   source.setPosXY(0, 0)
   cible.setPosXY(600, 0)
+  // La grandeur groupe les nœuds par COLONNE (`position_u`, cf. `_columnsMagnitude`), qui est
+  // l'axe de progression du flux et non l'abscisse à l'écran : `setPosXY` ne la renseigne pas.
+  // Sans colonnes distinctes, source et cible tombent dans la même et leurs valeurs s'AJOUTENT
+  // (200 au lieu de 100), ce qui n'a rien à voir avec le datatag de référence testé ici.
+  source.position_u = 1
+  cible.position_u = 2
   const lien = sankey.addNewLink(source, cible)
 
   const tagg = sankey.addDataTagGroup('annee', 'Annee', false) as Class_DataTagGroup
