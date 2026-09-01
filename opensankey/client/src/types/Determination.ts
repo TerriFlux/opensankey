@@ -65,6 +65,10 @@ export type Type_DeterminationExplanation = {
   // quand il n'y en a aucune : reste alors l'équation du système réduit, exacte
   // mais anonyme.
   fixed_by: number[]
+  // Toutes les équations traversées en descendant jusqu'aux données saisies :
+  // c'est de leur combinaison que sort l'équation aplatie, et le coefficient
+  // qu'elle porte. Sans elles, ce coefficient sort de nulle part.
+  combines: number[]
 }
 
 export type Type_DeterminationCatalog = {
@@ -160,16 +164,22 @@ export const determinationCatalogFromJSON = (
     // inexploitable : l'interface n'aurait pas son coefficient, donc pas son
     // équation. Comme partout ici, on écarte le catalogue entier plutôt que
     // d'en montrer une part fausse.
-    const roles: { min_by: number[], max_by: number[], fixed_by: number[] } =
-      { min_by: [], max_by: [], fixed_by: [] }
-    for (const role of ['min_by', 'max_by', 'fixed_by'] as const) {
+    const roles: {
+      min_by: number[], max_by: number[], fixed_by: number[], combines: number[]
+    } = { min_by: [], max_by: [], fixed_by: [], combines: [] }
+    for (const role of ['min_by', 'max_by', 'fixed_by', 'combines'] as const) {
       const raw = e[role]
       if (raw === undefined) continue
       if (!Array.isArray(raw)) return undefined
       for (const id of raw) {
-        if (typeof id !== 'number' || !Number.isInteger(id) || !constraints.includes(id)) {
-          return undefined
-        }
+        if (typeof id !== 'number' || !Number.isInteger(id)) return undefined
+        // Un rôle porte sur une contrainte de l'explication — sinon l'interface
+        // n'en aurait pas le coefficient. `combines` nomme en revanche des
+        // équations traversées plus bas, que la variable ne porte pas.
+        const valid = role === 'combines'
+          ? id >= 0 && id < subjects.length
+          : constraints.includes(id)
+        if (!valid) return undefined
         roles[role].push(id)
       }
     }
@@ -192,6 +202,7 @@ export const determinationCatalogToJSON = (
     if (e.min_by.length > 0) out.min_by = e.min_by as unknown as Type_JSON
     if (e.max_by.length > 0) out.max_by = e.max_by as unknown as Type_JSON
     if (e.fixed_by.length > 0) out.fixed_by = e.fixed_by as unknown as Type_JSON
+    if (e.combines.length > 0) out.combines = e.combines as unknown as Type_JSON
     return out
   })
   const out: Type_JSON = { explanations: explanations as unknown as Type_JSON }
