@@ -2113,14 +2113,18 @@ export class Class_ApplicationData {
     // sa#1354 — La REPRÉSENTATION : quels panneaux de la grande zone sont ouverts. Ce sont
     // des booléens indépendants (diagramme + tableur côte à côte est un état légitime), d'où
     // une liste et non une valeur unique. Absent = l'état par défaut, diagramme seul.
+    // `_menu_configuration` est optionnel (posé à la première lecture de
+    // `menu_configuration`) : sans lui, pas de grande zone à décrire.
     const mc = this._menu_configuration
-    const shown: string[] = []
-    if (mc.main_zone_show_diagram) shown.push('diagram')
-    if (mc.main_zone_show_spreadsheet) shown.push('spreadsheet')
-    if (mc.main_zone_show_doc) shown.push('doc')
-    if (mc.main_zone_show_unitary) shown.push('unitary')
-    if (shown.join(',') !== 'diagram') {
-      params.set('rep', shown.join(','))
+    if (mc) {
+      const shown: string[] = []
+      if (mc.main_zone_show_diagram) shown.push('diagram')
+      if (mc.main_zone_show_spreadsheet) shown.push('spreadsheet')
+      if (mc.main_zone_show_doc) shown.push('doc')
+      if (mc.main_zone_show_unitary) shown.push('unitary')
+      if (shown.join(',') !== 'diagram') {
+        params.set('rep', shown.join(','))
+      }
     }
     return params
   }
@@ -2165,11 +2169,15 @@ export class Class_ApplicationData {
         // eslint-disable-next-line no-console
         console.warn(`[OpenSankey] paramètre d'URL rep : représentation inconnue « ${unknown.join(', ')} »`)
       }
+      // Garde explicite plutôt que le getter `menu_configuration`, qui porte une
+      // assertion non-nulle : un viewer sans configuration de menus ne doit pas lever.
       const mc = this._menu_configuration
-      mc.main_zone_show_diagram = shown.includes('diagram')
-      mc.main_zone_show_spreadsheet = shown.includes('spreadsheet')
-      mc.main_zone_show_doc = shown.includes('doc')
-      mc.main_zone_show_unitary = shown.includes('unitary')
+      if (mc) {
+        mc.main_zone_show_diagram = shown.includes('diagram')
+        mc.main_zone_show_spreadsheet = shown.includes('spreadsheet')
+        mc.main_zone_show_doc = shown.includes('doc')
+        mc.main_zone_show_unitary = shown.includes('unitary')
+      }
     }
     // sa#1354 — La COUCHE DE DONNÉES. Valeurs validées : une URL bricolée ne doit pas poser
     // un mode que le rendu ne sait pas lire.
@@ -2194,7 +2202,7 @@ export class Class_ApplicationData {
     // sa#1354 — Le NIVEAU passe par l'applicateur injecté par l'éditeur (cf.
     // `MenuConfig.level_selection_applier`) : agréger/désagréger n'est pas un setter.
     if (level_tag_selection) {
-      const applier = this._menu_configuration.level_selection_applier
+      const applier = this._menu_configuration?.level_selection_applier ?? null
       if (!applier) {
         // eslint-disable-next-line no-console
         console.warn('[OpenSankey] paramètre d\'URL lvl : aucun applicateur de niveau enregistré, niveau ignoré')
