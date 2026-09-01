@@ -26,8 +26,8 @@ const catalog: Type_DeterminationCatalog = {
     { kind: 'equality', subject: '12', label: 'rendement du process X', constraint_type: 'ratio_flux' }
   ],
   explanations: [
-    { type: 'determined', constraints: [0, 2], coefs: [1, -0.6], min_by: [], max_by: [], fixed_by: [] },
-    { type: 'free', constraints: [], coefs: [], min_by: [], max_by: [], fixed_by: [] }
+    { type: 'determined', constraints: [0, 2], coefs: [1, -0.6], min_by: [], max_by: [], fixed_by: [], combines: [] },
+    { type: 'free', constraints: [], coefs: [], min_by: [], max_by: [], fixed_by: [], combines: [] }
   ]
 }
 
@@ -38,7 +38,7 @@ describe('#426 détermination — lecture et écriture', () => {
 
   it('omet les membres vides, pour ne pas alourdir le fichier', () => {
     const json = determinationCatalogToJSON({
-      subjects: [], explanations: [{ type: 'free', constraints: [], coefs: [], min_by: [], max_by: [], fixed_by: [] }]
+      subjects: [], explanations: [{ type: 'free', constraints: [], coefs: [], min_by: [], max_by: [], fixed_by: [], combines: [] }]
     }) as unknown as Record<string, unknown>
     expect(json.subjects).toBeUndefined()
     expect((json.explanations as unknown[])[0]).toEqual({ type: 'free' })
@@ -76,7 +76,7 @@ describe('#426 détermination — lecture et écriture', () => {
 
   it('accepte un catalogue sans sujets tant qu’aucune explication n’en cite', () => {
     expect(determinationCatalogFromJSON({ explanations: [{ type: 'free' }] }))
-      .toEqual({ subjects: [], explanations: [{ type: 'free', constraints: [], coefs: [], min_by: [], max_by: [], fixed_by: [] }] })
+      .toEqual({ subjects: [], explanations: [{ type: 'free', constraints: [], coefs: [], min_by: [], max_by: [], fixed_by: [], combines: [] }] })
   })
 
   it('lit qui pose la borne basse et qui pose la borne haute', () => {
@@ -178,7 +178,7 @@ describe('#426 détermination — coefficient d’une variable dans une contrain
     expect(determinationCoefficient(catalog.explanations[0], 1)).toBeUndefined()
     expect(determinationCoefficient(undefined, 0)).toBeUndefined()
     expect(determinationCoefficient(
-      { type: 'determined', constraints: [0], coefs: [], min_by: [], max_by: [], fixed_by: [] }, 0)).toBeUndefined()
+      { type: 'determined', constraints: [0], coefs: [], min_by: [], max_by: [], fixed_by: [], combines: [] }, 0)).toBeUndefined()
   })
 })
 
