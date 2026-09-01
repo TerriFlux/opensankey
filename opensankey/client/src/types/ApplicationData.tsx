@@ -38,7 +38,7 @@ import { Class_GuidedTour } from './GuidedTour'
 import { CreateToastFnReturn } from '@chakra-ui/react'
 
 import { Class_MenuConfig } from '../types/MenuConfig'
-import { const_default_position_x, const_default_position_y, default_file_name, default_main_sankey_id, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, makeId, randomId, toast_bypass, Type_JSON } from './Utils'
+import { const_default_position_x, const_default_position_y, default_file_name, default_main_sankey_id, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, makeId, randomId, toast_bypass, Type_DataSource, Type_IntervalDisplay, Type_JSON } from './Utils'
 import { getPublishOptions, PublishOptions } from './PublishOptions'
 import { Class_ApplicationHistory } from './ApplicationHistory'
 import { ViewsReader } from './ViewsReader'
@@ -2091,6 +2091,37 @@ export class Class_ApplicationData {
     if (Object.keys(view_tag_selection).length > 0) {
       params.set('vt', JSON.stringify(view_tag_selection))
     }
+    // sa#1354 — Le NIVEAU d'agrégation, même forme que les data tags. Il manquait :
+    // une URL rouvrait le diagramme replié alors qu'on l'avait déplié.
+    const level_tag_selection: { [group: string]: string } = {}
+    sankey.level_taggs_list.forEach(group => {
+      const selected = group.selected_tags_list[0]
+      if (selected) level_tag_selection[group.id] = selected.id
+    })
+    if (Object.keys(level_tag_selection).length > 0) {
+      params.set('lvl', JSON.stringify(level_tag_selection))
+    }
+    // sa#1354 — La COUCHE DE DONNÉES (structure / collectées / calculées) et l'affichage
+    // des intervalles. Seulement quand ils s'écartent du défaut, pour ne pas allonger
+    // toutes les URL : `applyUrlStateParams` laisse le fichier décider en leur absence.
+    if (this._drawing_area.data_source !== 'reconciled') {
+      params.set('ds', this._drawing_area.data_source)
+    }
+    if (this._drawing_area.interval_display !== 'free_value') {
+      params.set('iv', this._drawing_area.interval_display)
+    }
+    // sa#1354 — La REPRÉSENTATION : quels panneaux de la grande zone sont ouverts. Ce sont
+    // des booléens indépendants (diagramme + tableur côte à côte est un état légitime), d'où
+    // une liste et non une valeur unique. Absent = l'état par défaut, diagramme seul.
+    const mc = this._menu_configuration
+    const shown: string[] = []
+    if (mc.main_zone_show_diagram) shown.push('diagram')
+    if (mc.main_zone_show_spreadsheet) shown.push('spreadsheet')
+    if (mc.main_zone_show_doc) shown.push('doc')
+    if (mc.main_zone_show_unitary) shown.push('unitary')
+    if (shown.join(',') !== 'diagram') {
+      params.set('rep', shown.join(','))
+    }
     return params
   }
 
@@ -2104,7 +2135,15 @@ export class Class_ApplicationData {
     const view_selection = params.get('view')
     const data_tag_selection = parseJSONRecordParam(params.get('dt'), 'dt')
     const view_tag_selection = parseJSONRecordParam(params.get('vt'), 'vt')
-    if (!view_selection && !data_tag_selection && !view_tag_selection) return
+    // sa#1354 — niveau, couche de données, représentation.
+    const level_tag_selection = parseJSONRecordParam(params.get('lvl'), 'lvl')
+    const data_source = params.get('ds')
+    const interval_display = params.get('iv')
+    const representation = params.get('rep')
+    if (
+      !view_selection && !data_tag_selection && !view_tag_selection &&
+      !level_tag_selection && !data_source && !interval_display && representation === null
+    ) return
     // La vue d'abord : le switch reconstruit la drawing area (vue heavy) et applique la
     // visibilité propre de la vue — les sélections de tags se posent PAR-DESSUS.
     if (view_selection) {
@@ -2116,8 +2155,74 @@ export class Class_ApplicationData {
         this.setCurrentView(view_id)
       }
     }
+    // sa#1354 — La REPRÉSENTATION d'abord : elle ne touche pas au modèle, seulement à la
+    // grande zone, et l'appliquer avant le dessin évite un rendu dans la mauvaise géométrie.
+    if (representation !== null) {
+      const shown = representation.split(',').map(s => s.trim()).filter(Boolean)
+      const known = ['diagram', 'spreadsheet', 'doc', 'unitary']
+      const unknown = shown.filter(s => !known.includes(s))
+      if (unknown.length > 0) {
+        // eslint-disable-next-line no-console
+        console.warn(`[OpenSankey] paramètre d'URL rep : représentation inconnue « ${unknown.join(', ')} »`)
+      }
+      const mc = this._menu_configuration
+      mc.main_zone_show_diagram = shown.includes('diagram')
+      mc.main_zone_show_spreadsheet = shown.includes('spreadsheet')
+      mc.main_zone_show_doc = shown.includes('doc')
+      mc.main_zone_show_unitary = shown.includes('unitary')
+    }
+    // sa#1354 — La COUCHE DE DONNÉES. Valeurs validées : une URL bricolée ne doit pas poser
+    // un mode que le rendu ne sait pas lire.
+    if (data_source !== null) {
+      const valid: Type_DataSource[] = ['structure', 'data', 'data_label', 'reconciled']
+      if (valid.includes(data_source as Type_DataSource)) {
+        this._drawing_area.data_source = data_source as Type_DataSource
+      } else {
+        // eslint-disable-next-line no-console
+        console.warn(`[OpenSankey] paramètre d'URL ds : couche de données inconnue « ${data_source} »`)
+      }
+    }
+    if (interval_display !== null) {
+      const valid: Type_IntervalDisplay[] = ['structure', 'free_value', 'free_interval']
+      if (valid.includes(interval_display as Type_IntervalDisplay)) {
+        this._drawing_area.interval_display = interval_display as Type_IntervalDisplay
+      } else {
+        // eslint-disable-next-line no-console
+        console.warn(`[OpenSankey] paramètre d'URL iv : affichage d'intervalle inconnu « ${interval_display} »`)
+      }
+    }
+    // sa#1354 — Le NIVEAU passe par l'applicateur injecté par l'éditeur (cf.
+    // `MenuConfig.level_selection_applier`) : agréger/désagréger n'est pas un setter.
+    if (level_tag_selection) {
+      const applier = this._menu_configuration.level_selection_applier
+      if (!applier) {
+        // eslint-disable-next-line no-console
+        console.warn('[OpenSankey] paramètre d\'URL lvl : aucun applicateur de niveau enregistré, niveau ignoré')
+      } else {
+        for (const [group_key, tag_key] of Object.entries(level_tag_selection)) {
+          const group = this._drawing_area.sankey.level_taggs_list
+            .find(g => g.id === group_key || g.name === group_key)
+          if (!group) {
+            // eslint-disable-next-line no-console
+            console.warn(`[OpenSankey] paramètre d'URL lvl : groupe de niveau introuvable « ${group_key} »`)
+            continue
+          }
+          const tag = group.tags_list.find(t => t.id === tag_key || t.name === tag_key)
+          if (!tag) {
+            // eslint-disable-next-line no-console
+            console.warn(`[OpenSankey] paramètre d'URL lvl : niveau « ${tag_key} » introuvable dans « ${group_key} »`)
+            continue
+          }
+          applier(group.id, tag.id)
+        }
+      }
+    }
     if (data_tag_selection || view_tag_selection) {
       this.applyTagSelections(data_tag_selection, view_tag_selection)
+      this._drawing_area.draw()
+    } else if (data_source !== null || interval_display !== null) {
+      // La couche de données ne passe pas par `applyTagSelections` : redessiner ici, sinon
+      // l'épaisseur des flux resterait celle du mode précédent.
       this._drawing_area.draw()
     }
   }
