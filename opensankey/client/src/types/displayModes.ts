@@ -105,7 +105,7 @@ export function setAbsoluteMode(da: Class_DrawingArea) {
 // l'échelle s'adapte à chaque datatag en conséquence (référence = grandeur du diagramme
 // entier, cf. NodePositioningScaleAdapted.diagramMagnitude — plus un élément désigné). Les
 // nœuds gardent leur centre fixe (comme l'absolu) pendant qu'ils se redimensionnent.
-export function setScaleAdaptedMode(da: Class_DrawingArea) {
+export function setScaleAdaptedMode(da: Class_DrawingArea, redraw: boolean = true) {
   const default_style = da.sankey.styles_dict['default']
   const prev_mode = default_style.shape_position_type
   if (prev_mode === 'proportional' || prev_mode === 'scale_adapted') {
@@ -135,7 +135,12 @@ export function setScaleAdaptedMode(da: Class_DrawingArea) {
   // n'aurait lieu qu'à la première frame APPLIQUÉE, donc déjà au datatag suivant — d'où un
   // pas de retard, le mode ne « prenant » qu'au deuxième changement de datatag.
   da.nodePositioning.captureScaleReference()
-  da.draw()
+  // os#1372 — `redraw = false` quand l'appelant redessine lui-même juste après (restauration du
+  // mode dans un changement de vue, options de publication). Le dessin fait ici serait
+  // intégralement refait par le sien : sur CARTOFOB, une bascule de vue heavy en payait deux.
+  // Seul `setScaleAdaptedMode` a ce dessin ; `setAbsoluteMode` et `setProportionalMode` n'en
+  // ont pas, l'appelant a toujours redessiné pour eux.
+  if (redraw) da.draw()
 }
 
 export function setProportionalMode(da: Class_DrawingArea) {

@@ -907,6 +907,116 @@ export class NodeDimensionsManager {
     }
   }
 
+  // ÉTAT DE DIMENSION LISIBLE / RÉINSCRIPTIBLE (sa#283 lot 5) ==========================
+
+  /**
+   * sa#283 lot 5 — ÉTAT DE DIMENSION de ce nœud, sur la forme EXACTE de `toJSON` :
+   * `{ '<dimension>': { parent_name, force_show_children | force_show_parent |
+   * container_mode | expanded_left | expanded_right, preferred_disaggregation } }`.
+   *
+   * C'est la TROISIÈME catégorie de données qui peut différer d'une tranche à l'autre, à
+   * côté des attributs du sac `_storage` et de la présence de l'élément : la place du nœud
+   * dans la hiérarchie d'agrégation, et l'état d'affichage de la dimension qui l'y relie.
+   * Elle ne vit PAS dans `_storage` (rien ne la capturait), et gouverne la visibilité par
+   * `checkIfRelatedDimensionsAreSelected`.
+   *
+   * @param dimension_ids restreint le résultat à ces dimensions ; une dimension citée mais
+   *   dont le nœud n'a aucune relation vaut `{}` (= détaché). Sans argument, toutes les
+   *   dimensions écrites par `toJSON`.
+   */
+  public dimensionsStateToJSON(dimension_ids?: string[]): Type_JSON {
+    const json_object: Type_JSON = {}
+    this.toJSON(json_object)
+    const written = (json_object['dimensions'] ?? {}) as Type_JSON
+    if (dimension_ids === undefined) return written
+    const out: Type_JSON = {}
+    dimension_ids.forEach(id => { out[id] = (written[id] ?? {}) as Type_JSON })
+    return out
+  }
+
+  /**
+   * sa#283 lot 5 — REMPLACE l'état de dimension de ce nœud pour les DIMENSIONS CITÉES, et
+   * elles seules. Exactement réversible : `applyDimensionsState(dimensionsStateToJSON(ids))`
+   * est un no-op, et rejouer l'état mémorisé avant l'écriture rend l'état d'origine.
+   *
+   * Par dimension citée :
+   *  1. PARENTÉ — `parent_name` absent ⇒ le nœud est DÉTACHÉ de cette dimension ; différent
+   *     du parent courant ⇒ détaché puis rattaché au nouveau parent (créé si besoin par
+   *     `getOrCreateLowerDimension`). Un parent introuvable dans `nodes_dict` laisse le nœud
+   *     détaché — jamais de nœud fantôme (même règle qu'au chargement, cf. #193).
+   *  2. AFFICHAGE — les états sont MUTUELLEMENT EXCLUSIFS (cf. l'en-tête de la classe) :
+   *     englobement, puis expansion, puis désagrégation, puis agrégation, sinon NEUTRE.
+   *     L'entrée est posée SUR LA DIMENSION, partagée entre le parent et TOUS ses enfants —
+   *     c'est déjà ce que fait le JSON, où chaque enfant réécrit le même drapeau.
+   *  3. PRÉFÉRENCE mémorisée (`preferred_disaggregation`, #1231) : réinscrite telle quelle,
+   *     y compris à `null`, pour que le passage par `setForceToShowChildren` ne la salisse pas.
+   *
+   * INVALIDATION DU CACHE DE VISIBILITÉ — le piège de ce lot. `are_related_dimensions_selected`
+   * MÉMOÏSE dans `_are_related_dimensions_selected` : sans invalidation, la structure change
+   * et l'affichage ne bouge pas. Les setters de dimension appellent `_updated()` (parent +
+   * enfants), mais pas les chemins de détachement ni le cas « rien à changer ». On invalide
+   * donc EXPLICITEMENT le nœud, l'ancien et le nouveau parent, et tous les enfants des
+   * dimensions touchées. Les VOISINS suivent d'eux-mêmes : `dimensionsUpdated()` renouvelle
+   * l'empreinte de visibilité, et `getLinksVisibilitiesFingerprint` d'un voisin agrège celle
+   * des deux extrémités de chacun de ses flux.
+   */
+  public applyDimensionsState(state: Type_JSON): void {
+    Object.entries(state).forEach(([dimension_id, raw]) => {
+      const entry = (raw ?? {}) as Type_JSON
+      const touched = new Set<Class_NodeElement>([this._node])
+      const mark = (dim: Class_NodeDimension) => {
+        touched.add(dim.parent)
+        dim.children.forEach(child => touched.add(child))
+      }
+
+      // 1. PARENTÉ.
+      const desired_parent_id = getStringOrUndefinedFromJSON(entry, 'parent_name')
+      let dim = this.dimensions_as_child.filter(_ => _.id === dimension_id)[0]
+      if (dim && (desired_parent_id === undefined || dim.parent.id !== desired_parent_id)) {
+        mark(dim)
+        this._node.removeDimensionAsChild(dim)
+        dim = undefined as unknown as Class_NodeDimension
+      }
+      if (!dim && desired_parent_id !== undefined) {
+        const parent = this._node.sankey.nodes_dict[desired_parent_id]
+        if (parent) {
+          dim = this.getOrCreateLowerDimension(parent, this._node, dimension_id) as Class_NodeDimension
+        }
+      }
+
+      // 2 + 3. AFFICHAGE et préférence mémorisée.
+      if (dim) {
+        mark(dim)
+        const container_mode = getStringOrUndefinedFromJSON(entry, 'container_mode')
+        if (
+          container_mode === 'in_children_out_parent' ||
+          container_mode === 'in_parent_out_children' ||
+          container_mode === 'in_children_out_children' ||
+          container_mode === 'in_parent_out_parent'
+        ) {
+          // fromJSON = true : pas de `drawElements()` ici, un redessin complet suit.
+          dim.setContainerMode(container_mode, true)
+        } else if (entry['expanded_left'] === true) {
+          dim.setExpandedSide('left', true)
+        } else if (entry['expanded_right'] === true) {
+          dim.setExpandedSide('right', true)
+        } else if (entry['force_show_children'] === true) {
+          // fromJSON = false : on VEUT le réordonnancement des flux (il ne dessine pas),
+          // la salissure de `preferred_disaggregation` est corrigée juste après.
+          dim.setForceToShowChildren()
+        } else if (entry['force_show_parent'] === true) {
+          dim.setForceToShowParent()
+        } else {
+          dim.unsetForcingToShow()
+        }
+        const preferred = getStringOrUndefinedFromJSON(entry, 'preferred_disaggregation')
+        dim.preferred_disaggregation = (preferred ?? null) as Type_DisaggregationKind | null
+      }
+
+      touched.forEach(node => node.dimensionsUpdated())
+    })
+  }
+
   // DIMENSION MANAGEMENT METHODS =======================================================
   public getOrCreateLowerDimension(
     parent: Class_NodeElement,

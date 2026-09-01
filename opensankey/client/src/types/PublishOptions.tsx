@@ -58,6 +58,13 @@ export interface SankeyGlobals {
   topbar?: boolean       // default true
   footer?: boolean       // default false
   toolbar?: boolean      // default false : sélecteurs du mode d'affichage (absolu/proportionnel/échelle) — un par dimension, sur chacun de ses hôtes : ligne du panneau Filtres, topbar, frise de séquence (cf. #370)
+  // os#1366 — default TRUE : le sélecteur de mode d'affichage apparaît DE LUI-MÊME au lecteur
+  // quand le diagramme déclare une référence (`prop_reference_datatag` ou
+  // `scale_reference_by_viewtag`) — le diagramme est alors configuré pour ces modes et son
+  // lecteur doit pouvoir y accéder. Sans référence, rien ne s'affiche (un sélecteur inerte
+  // serait un piège) : cette option n'a donc d'effet que pour COUPER cet automatisme.
+  // `toolbar` reste l'opt-in explicite, qui l'expose sur toutes les dimensions.
+  position_mode_selector?: boolean
   // default TRUE (08/08) : groupe ajustement/verrous + indicateur de zoom dans la
   // barre du bas. Il l'était à false, et une page publiée n'offrait alors AUCUN
   // moyen visible de zoomer ni de recadrer — seulement Ctrl+molette, qui ne
@@ -77,6 +84,14 @@ export interface SankeyGlobals {
   doc_file?: string
   navigation_help?: boolean  // default false : bouton « Aide à la navigation » dans la topbar en publish
   badge?: boolean        // default true : badge « Made with OpenSankey » (lien terriflux.com) en bas à gauche en publish
+  // default true — les deux boutons de DROITE de la topbar, jusqu'ici sans réglage :
+  // `app_info` = le « i » (version, canal, commit, lien changelog, contact support) ;
+  // `sidebar_toggle` = la bascule de la barre latérale (Ctrl+B). Ils servent au lecteur
+  // d'une page d'étude, mais une page de communication (site institutionnel, embed) veut
+  // parfois une topbar réduite au strict nécessaire. Défaut à true : le parc existant ne
+  // bouge pas. Sans effet hors publish — l'éditeur les garde toujours.
+  app_info?: boolean
+  sidebar_toggle?: boolean
 
   // Langue
   language?: string      // force la langue de l'UI ('fr', 'en', ...) ; le paramètre d'URL ?lang= est prioritaire
@@ -160,6 +175,9 @@ export interface PublishOptions {
   topbar: boolean
   footer: boolean
   toolbar: boolean
+  // os#1366 — autorise l'apparition automatique du sélecteur de mode d'affichage en lecture
+  // quand le diagramme déclare une référence (cf. SankeyGlobals).
+  position_mode_selector: boolean
   fit_toolbar: boolean
   fullscreen: boolean
   filter_bar: boolean
@@ -171,6 +189,8 @@ export interface PublishOptions {
   doc_file: string | null
   navigation_help: boolean
   badge: boolean
+  app_info: boolean
+  sidebar_toggle: boolean
   data_type: boolean
   data_type_intervals: boolean
   value_filter: boolean
@@ -388,6 +408,7 @@ export const getPublishOptions = (): PublishOptions => {
     topbar: bool(s.topbar, true),
     footer: bool(s.footer, false),
     toolbar: bool(s.toolbar, false),
+    position_mode_selector: bool(s.position_mode_selector, true),
     fit_toolbar: bool(s.fit_toolbar, true),
     fullscreen: bool(s.fullscreen, true),
     filter_bar: bool(s.filter_bar, true),
@@ -399,6 +420,8 @@ export const getPublishOptions = (): PublishOptions => {
     doc_file: str(s.doc_file),
     navigation_help: bool(s.navigation_help, false),
     badge: bool(s.badge, true),
+    app_info: bool(s.app_info, true),
+    sidebar_toggle: bool(s.sidebar_toggle, true),
     data_type: bool(s.data_type, true),
     data_type_intervals: bool(s.data_type_intervals, true),
     value_filter: bool(s.value_filter, true),
@@ -445,6 +468,7 @@ export type ViewerSankeyOptions = {
   topbar?: boolean
   footer?: boolean
   toolbar?: boolean
+  position_mode_selector?: boolean
   fit_toolbar?: boolean
   fullscreen?: boolean
   filter_bar?: boolean
@@ -498,7 +522,7 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
   const next: SankeyGlobals = { ...current, publish: true }
 
   const keys: Array<keyof ViewerSankeyOptions> = [
-    'editable', 'topbar', 'footer', 'toolbar', 'fit_toolbar', 'fullscreen', 'filter_bar', 'embedded', 'recenter',
+    'editable', 'topbar', 'footer', 'toolbar', 'position_mode_selector', 'fit_toolbar', 'fullscreen', 'filter_bar', 'embedded', 'recenter',
     'edit_button', 'unitary', 'doc', 'navigation_help', 'badge',
     'logo', 'header', 'diagram', 'diagram_layout', 'diagram_layout_options',
     'diagrams_list', 'sous_filieres',

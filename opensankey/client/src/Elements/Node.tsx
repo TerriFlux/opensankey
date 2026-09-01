@@ -32,6 +32,7 @@ import {
 } from './Link'
 import { Class_Handler } from './Handler'
 import { reorganizeIOOrder } from './reorganizeIOOrder'
+import { reorderLinksByIds } from './linksOrderState'
 import { orderIOByGeometry, recyclingBellyCentre, bundleTie, Type_IOGeo, Type_IOOrderPolicy } from './ioOrderGeometry'
 import { containerFrameIsEmptied, hasVisibleFrameMember } from './containerFrameVisibility'
 import { format_value, Type_JSON } from '../types/Utils'
@@ -52,6 +53,7 @@ import { Class_StockValue, Class_ElementValueTree } from './LinkValues'
 import { Class_StockShape } from './StockShape'
 import { Type_Side } from './ElementsAttributesConfig'
 import { clampBandThickness } from './nodeBandHeight'
+import { countArrowFan } from '../types/DrawCounters'
 import { NodeStyle, NodeImportCloseStyle, NodeExportCloseStyle, NodeImportExportCloseStyle, LinkImportCloseStyle, LinkExportCloseStyle, LinkImportExportCloseStyle, LinkImportExportAboveBelowStyle, NodeExportBelowStyle, NodeImportAboveStyle, NodeImportExportAboveBelowStyle, NodeSectorStyle, LinkStyle } from './ElementStyle'
 // 
 // CLASSE PRINCIPALE AVEC LIENS RÉINTÉGRÉS *********************************************
@@ -760,6 +762,22 @@ export class Class_NodeElement extends Class_NodeBase {
     this.draw()
   }
 
+  /**
+   * sa#283 lot 6 — état de tags SÉRIALISÉ de ce nœud (forme de `toJSON`).
+   * Cf. `NodeTagsManager.tagsStateToJSON`.
+   */
+  public tagsStateToJSON(group_ids?: string[]) {
+    return this._nodeTagsManager.tagsStateToJSON(group_ids)
+  }
+
+  /**
+   * sa#283 lot 6 — remplace l'appartenance de ce nœud aux groupes cités, caches de
+   * visibilité invalidés. Cf. `NodeTagsManager.applyTagsState`.
+   */
+  public applyTagsState(state: Type_JSON) {
+    this._nodeTagsManager.applyTagsState(state)
+  }
+
   public get grouped_taggs_dict() { return this._taggs_dict }
   public get tags_list() { return this._tags }
   public get taggs_dict() {
@@ -815,6 +833,22 @@ export class Class_NodeElement extends Class_NodeBase {
     this.dimensionsUpdated()
   }
 
+  /**
+   * sa#283 lot 5 — état de dimension SÉRIALISÉ de ce nœud (forme de `toJSON`).
+   * Cf. `NodeDimensionsManager.dimensionsStateToJSON`.
+   */
+  public dimensionsStateToJSON(dimension_ids?: string[]) {
+    return this._nodeDimensionsManager.dimensionsStateToJSON(dimension_ids)
+  }
+
+  /**
+   * sa#283 lot 5 — remplace l'état de dimension de ce nœud pour les dimensions citées,
+   * cache de visibilité invalidé. Cf. `NodeDimensionsManager.applyDimensionsState`.
+   */
+  public applyDimensionsState(state: Type_JSON) {
+    this._nodeDimensionsManager.applyDimensionsState(state)
+  }
+
   public nodeDimensionAsParent(child: Class_NodeElement) {
     return this._nodeDimensionsManager.nodeDimensionAsParent(child)
   }
@@ -858,6 +892,9 @@ export class Class_NodeElement extends Class_NodeBase {
 
   // 🔄 DRAW LINKS ARROW - RÉINTÉGRÉ DIRECTEMENT
   public drawLinksArrow() {
+    // os#1374 — un éventail = les pointes de TOUS les flux d'un côté, reposées ensemble.
+    // C'est l'unité de travail qu'on surveille, pas la pointe isolée.
+    countArrowFan(this.id)
     this._drawLinksArrow()
     this._orderD3Elements()
   }
@@ -1258,6 +1295,36 @@ export class Class_NodeElement extends Class_NodeBase {
 
   public reorganizeIOFromListIds(l: string[]) {
     this._links_order.sort((link_a, link_b) => l.indexOf(link_a.id) - l.indexOf(link_b.id))
+  }
+
+  /**
+   * sa#283 lot 6 — ORDRE DES FLUX autour de ce nœud, sur la forme EXACTE du JSON
+   * (`links_order` : la liste des ids de flux, cf. `SankeyPersistence.toJSON`).
+   *
+   * C'est la QUATRIÈME catégorie de données qui peut différer d'une tranche à l'autre, à
+   * côté des attributs du sac `_storage`, de la présence de l'élément et de la hiérarchie
+   * de dimension : l'empilement des bandes autour du nœud, qui gouverne le rendu et ne vit
+   * dans aucun sac d'attributs.
+   */
+  public linksOrderToJSON(): string[] {
+    return this._links_order.map(link => link.id)
+  }
+
+  /**
+   * sa#283 lot 6 — REPOSE l'ordre des flux de ce nœud. Exactement réversible :
+   * `applyLinksOrder(linksOrderToJSON())` est un no-op, et rejouer l'ordre COMPLET mémorisé
+   * avant l'écriture rend l'ordre d'origine (cf. `reorderLinksByIds`).
+   *
+   * Liste éventuellement PARTIELLE : un id inconnu de ce nœud est ignoré silencieusement
+   * (même règle que partout dans les contextes — un fichier d'époque ne connaît pas tous les
+   * flux du réseau réconcilié), et un flux du nœud absent de la liste passe À LA SUITE, dans
+   * son ordre courant. Jamais de flux inconnu intercalé entre les bandes ordonnées.
+   *
+   * Aucun redessin ici : l'appelant en déclenche un (le runtime des contextes redessine
+   * après l'overlay), comme pour `applyDimensionsState`.
+   */
+  public applyLinksOrder(ordered_ids: string[]) {
+    this._links_order = reorderLinksByIds(this._links_order, ordered_ids)
   }
 
   public moveLinkToPositionInOrderBefore(
@@ -2183,6 +2250,17 @@ export class Class_NodeElement extends Class_NodeBase {
     // Note : Two loops is best because link drawing can trigger other nodes drawLink() methode
     // -> So to avoid mutual blocking between node, it's best to compute first all links positions and then loop
     //    again on links to draw them
+    //
+    // os#1372 — Pendant la PHASE DE PLACEMENT, on n'écrit pas dans le DOM : les flux touchés sont
+    // remis à la zone de dessin, qui les dessinera une seule fois, aux positions définitives (cf.
+    // DrawingArea.drawElements). Le placement appelle `applyPosition` plusieurs fois par nœud et
+    // par passe ; dessiner à chaque fois revenait à tracer des positions intermédiaires aussitôt
+    // remplacées — 468 dessins pour 36 flux affichés sur CARTOFOB. Le choix DES flux à redessiner
+    // reste fait ici, à l'identique : c'est seulement le trait qui est retardé.
+    if (this.drawing_area.defers_link_draws) {
+      this.drawing_area.deferLinkDraws(link_to_redraw)
+      return
+    }
     link_to_redraw
       .forEach(link => {
         link.draw()

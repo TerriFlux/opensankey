@@ -462,10 +462,21 @@ export abstract class Class_NodeBase extends Class_BaseShape {
    * exact depuis le centre (applyCenterToCorner via anchorByCenterIfResized).
    */
   public setStoredCenter(x: number, y: number) {
+    const w = this.getShapeWidthToUse()
+    const h = this.getShapeHeightToUse()
     this._center_x = x
     this._center_y = y
-    this.position_x = x - this.getShapeWidthToUse() / 2
-    this.position_y = y - this.getShapeHeightToUse() / 2
+    this.position_x = x - w / 2
+    this.position_y = y - h / 2
+    // #1231 — RÉ-ANCRER sur la taille qui vient de servir à dériver le coin. Sans cela
+    // l'ancrage reste celui d'AVANT, et un `anchorByCenterIfResized()` ultérieur peut
+    // conclure « taille inchangée » en comparant à cet ancrage périmé : il recapture alors le
+    // centre depuis un coin dérivé, lui, d'une AUTRE taille — et le centre posé est détruit.
+    // Mesuré sur les vues contextuelles (sa#283) : au SECOND passage sur la céréale riz, le
+    // nœud `RizUsine` lisait un centre de 997,40 au lieu des 594,68 posés, soit 402,7 px de
+    // saut ; le premier passage, lui, était juste — signature d'un ancrage périmé.
+    this._center_anchor_w = w
+    this._center_anchor_h = h
   }
 
   /**

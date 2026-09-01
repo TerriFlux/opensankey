@@ -392,12 +392,39 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
     const desired_ids = new Set(items.map(i => i.id))
     items.forEach(i => { if (i.block_id) desired_ids.add(i.block_id) })
 
-    // Origine du contenu = position courante du cadre (ou position d'apparition)
     const existing_frame = sankey.containers_dict[LEGEND_FRAME_ID]
-    const origin = {
-      x: (existing_frame?.position_x ?? config.initial_position.x) + LEGEND_PADDING,
-      y: (existing_frame?.position_y ?? config.initial_position.y) + LEGEND_PADDING
-    }
+
+    // os#1373 — DÉRIVE de la légende, corrigée ici.
+    //
+    // Le contenu était posé à `cadre + LEGEND_PADDING`, puis le cadre épousait le contenu
+    // (`computeSizeAndPositionFromAttachedNodes`, plus bas), lequel recale le coin sur la bbox
+    // des membres — sans marge. Le padding s'ajoutait donc à CHAQUE régénération, c'est-à-dire à
+    // chaque changement de dataTag tant que la légende est gérée : 10 px vers le bas et vers la
+    // droite à chaque fois. Ailleurs le cadrage automatique recadrait et absorbait la dérive ;
+    // en échelle adaptée la caméra est fixe, et la légende s'en allait pour de bon.
+    //
+    // On pose maintenant le contenu de sorte que sa boîte retombe EXACTEMENT sur le cadre
+    // existant : le cycle « je place, puis j'épouse » devient un point fixe. Le rendu ne change
+    // pas — le cadre continue d'épouser le contenu au pixel près. Le padding ne sert plus qu'à
+    // la PREMIÈRE apparition, pour écarter la légende de sa position d'apparition.
+    //
+    // Le minimum des positions relatives est retranché plutôt que supposé nul : si la mise en
+    // page commençait à un décalage non nul, il se rajouterait à chaque passage comme le faisait
+    // le padding.
+    let min_x = Infinity
+    let min_y = Infinity
+    positions.forEach(p => {
+      if (p.x < min_x) min_x = p.x
+      if (p.y < min_y) min_y = p.y
+    })
+    if (!isFinite(min_x)) min_x = 0
+    if (!isFinite(min_y)) min_y = 0
+    const origin = existing_frame
+      ? { x: existing_frame.position_x - min_x, y: existing_frame.position_y - min_y }
+      : {
+        x: config.initial_position.x + LEGEND_PADDING,
+        y: config.initial_position.y + LEGEND_PADDING
+      }
 
     // Supprime les zones obsolètes (et le cadre si plus aucun contenu)
     sankey.containers_list
