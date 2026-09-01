@@ -2066,6 +2066,49 @@ export class Class_ApplicationData {
    * maître. Symétrique de `applyUrlStateParams`.
    * @memberof Class_ApplicationData
    */
+  // os#1354 — Clés d'état de lecture portées par l'URL. Listées ici parce que la
+  // synchronisation doit RETIRER les anciennes avant de reposer les nouvelles : sans ça,
+  // désélectionner un axe laisserait sa clé dans l'adresse.
+  private static readonly URL_STATE_KEYS = ['view', 'dt', 'vt', 'lvl', 'ds', 'iv', 'rep']
+
+  /** Signature du dernier état écrit dans la barre d'adresse — évite un `replaceState` inutile. */
+  private _url_state_signature: string | null = null
+
+  /**
+   * Tant que l'état initial de l'URL n'a pas été appliqué, on n'écrit pas : sinon le premier
+   * dessin écraserait les paramètres qu'on s'apprête tout juste à lire.
+   */
+  private _url_sync_enabled: boolean = false
+
+  /**
+   * Reporte l'état de lecture courant dans la barre d'adresse, sans entrée d'historique
+   * (`replaceState` : le bouton Retour reste celui de la navigation, pas des réglages).
+   *
+   * C'est ce qui rend l'état PARTAGEABLE : avant, `getUrlStateParams` n'avait qu'un appelant,
+   * le bouton « Éditer » d'une page publiée — l'adresse ne bougeait jamais, et il n'y avait donc
+   * rien à copier.
+   * @memberof Class_ApplicationData
+   */
+  public syncUrlState(): void {
+    if (!this._url_sync_enabled) return
+    if (typeof window === 'undefined' || !window.history?.replaceState) return
+    const next = this.getUrlStateParams()
+    const signature = next.toString()
+    if (signature === this._url_state_signature) return
+    this._url_state_signature = signature
+    try {
+      const url = new URL(window.location.href)
+      Class_ApplicationData.URL_STATE_KEYS.forEach(k => url.searchParams.delete(k))
+      next.forEach((value, key) => url.searchParams.set(key, value))
+      window.history.replaceState(null, '', url.toString())
+    } catch (e) {
+      // Une URL exotique (blob:, data:) ne se réécrit pas : l'application continue.
+      // eslint-disable-next-line no-console
+      console.warn('[OpenSankey] synchronisation de l\'URL impossible', e)
+      this._url_sync_enabled = false
+    }
+  }
+
   public getUrlStateParams(): URLSearchParams {
     const params = new URLSearchParams()
     const sankey = this._drawing_area.sankey
@@ -2144,6 +2187,10 @@ export class Class_ApplicationData {
     const data_source = params.get('ds')
     const interval_display = params.get('iv')
     const representation = params.get('rep')
+    // os#1354 — L'état initial de l'URL est LU : à partir d'ici, les dessins suivants peuvent
+    // la réécrire sans risque d'écraser ce qu'on n'aurait pas encore appliqué. Posé avant le
+    // retour anticipé : une URL sans paramètre doit elle aussi devenir vivante.
+    this._url_sync_enabled = true
     if (
       !view_selection && !data_tag_selection && !view_tag_selection &&
       !level_tag_selection && !data_source && !interval_display && representation === null
