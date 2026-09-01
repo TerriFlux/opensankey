@@ -1143,6 +1143,14 @@ export class Class_DrawingArea {
     } finally {
       this._in_full_draw = false
     }
+    // os#1354 — La barre d'adresse suit l'état de lecture. Accroché ici parce que tout
+    // changement de coordonnée finit par un dessin : aucun appelant à instrumenter, et
+    // pas d'axe oublié par construction.
+    //
+    // Coût par dessin volontairement réduit : `syncUrlState` construit une signature et
+    // ne touche au DOM que si elle a changé — pendant un glisser, la signature est stable,
+    // donc aucun `replaceState`.
+    this.application_data.syncUrlState()
   }
 
   /**
