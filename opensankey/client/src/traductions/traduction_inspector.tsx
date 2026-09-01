@@ -138,6 +138,8 @@ export const resources_inspector = {
             free_unbounded: 'The constraints are not enough to fix this value, and nothing bounds it.',
             failed: 'Reconciliation of this tag combination did not succeed: the value shown is the input one.'
           },
+          step_by_step: 'Step by step:',
+          flat_equation: 'The equation that determines it:',
           computed_from: '{{flux}} is itself computed by…',
           holds_min: 'What holds it at {{value}} or above:',
           holds_max: 'What holds it at {{value}} or below:',
@@ -409,6 +411,8 @@ export const resources_inspector = {
             free_unbounded: 'Les contraintes ne suffisent pas à fixer cette valeur, et rien ne la borne.',
             failed: 'La réconciliation de cette combinaison d\'étiquettes n\'a pas abouti : la valeur affichée est celle d\'entrée.'
           },
+          step_by_step: 'Le cheminement, étape par étape :',
+          flat_equation: 'L’équation qui détermine :',
           computed_from: '{{flux}} est lui-même calculé par…',
           holds_min: 'Ce qui l’empêche de descendre sous {{value}} :',
           holds_max: 'Ce qui l’empêche de dépasser {{value}} :',
@@ -677,6 +681,8 @@ export const resources_inspector = {
             free_unbounded: 'Las restricciones no bastan para fijar este valor, y nada lo acota.',
             failed: 'La reconciliación de esta combinación de etiquetas no llegó a término: el valor mostrado es el de entrada.'
           },
+          step_by_step: 'Paso a paso:',
+          flat_equation: 'La ecuación que la determina:',
           computed_from: '{{flux}} se calcula a su vez por…',
           holds_min: 'Lo que impide que baje de {{value}}:',
           holds_max: 'Lo que impide que supere {{value}}:',
@@ -945,6 +951,8 @@ export const resources_inspector = {
             free_unbounded: 'Die Nebenbedingungen genügen nicht, um diesen Wert festzulegen, und nichts beschränkt ihn.',
             failed: 'Der Abgleich dieser Etikettenkombination ist gescheitert: Der angezeigte Wert ist der Eingabewert.'
           },
+          step_by_step: 'Schritt für Schritt:',
+          flat_equation: 'Die Gleichung, die ihn bestimmt:',
           computed_from: '{{flux}} wird seinerseits berechnet durch…',
           holds_min: 'Was verhindert, dass er unter {{value}} fällt:',
           holds_max: 'Was verhindert, dass er {{value}} übersteigt:',
@@ -1213,6 +1221,8 @@ export const resources_inspector = {
             free_unbounded: 'I vincoli non bastano a fissare questo valore, e nulla lo limita.',
             failed: 'La riconciliazione di questa combinazione di etichette non è riuscita: il valore mostrato è quello di ingresso.'
           },
+          step_by_step: 'Passo dopo passo:',
+          flat_equation: 'L’equazione che lo determina:',
           computed_from: '{{flux}} è a sua volta calcolato da…',
           holds_min: 'Ciò che impedisce di scendere sotto {{value}}:',
           holds_max: 'Ciò che impedisce di superare {{value}}:',
@@ -1481,6 +1491,8 @@ export const resources_inspector = {
             free_unbounded: '约束不足以确定该数值，且没有任何界限。',
             failed: '该标签组合的调和未能完成：显示的是输入值。'
           },
+          step_by_step: '逐步推导：',
+          flat_equation: '确定它的方程：',
           computed_from: '{{flux}} 本身由以下方式计算：',
           holds_min: '使其不低于 {{value}} 的原因：',
           holds_max: '使其不超过 {{value}} 的原因：',
@@ -1752,6 +1764,8 @@ export const resources_inspector = {
             free_unbounded: '制約だけではこの値は決まらず、上下限もありません。',
             failed: 'このタグの組み合わせの調整は完了しませんでした。表示されているのは入力値です。'
           },
+          step_by_step: '順を追って：',
+          flat_equation: 'この値を決める式：',
           computed_from: '{{flux}} 自体は次によって計算されます：',
           holds_min: '{{value}} を下回らない理由：',
           holds_max: '{{value}} を超えない理由：',
