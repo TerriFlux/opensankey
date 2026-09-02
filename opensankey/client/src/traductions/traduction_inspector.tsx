@@ -162,7 +162,7 @@ export const resources_inspector = {
           },
           kinds: {
             mat_balance: 'Material balance of node',
-            aggregation: 'Parent/children aggregation on node',
+            aggregation: 'Hierarchical relation — aggregation of child flows',
             stock_aggregation: 'Stock aggregation on node',
             equality: 'Entered equation (constraint)',
             bound_min: 'Entered lower bound (constraint)',
@@ -440,7 +440,7 @@ export const resources_inspector = {
           },
           kinds: {
             mat_balance: 'Bilan matière du nœud',
-            aggregation: 'Agrégation parent/enfants sur le nœud',
+            aggregation: 'Relation hiérarchique — agrégation des flux enfants',
             stock_aggregation: 'Agrégation des stocks sur le nœud',
             equality: 'Équation saisie (contrainte)',
             bound_min: 'Borne inférieure saisie (contrainte)',
@@ -715,7 +715,7 @@ export const resources_inspector = {
           },
           kinds: {
             mat_balance: 'Balance de materia del nodo',
-            aggregation: 'Agregación padre/hijos en el nodo',
+            aggregation: 'Relación jerárquica — agregación de los flujos hijos',
             stock_aggregation: 'Agregación de existencias en el nodo',
             equality: 'Ecuación introducida (restricción)',
             bound_min: 'Cota inferior introducida (restricción)',
@@ -990,7 +990,7 @@ export const resources_inspector = {
           },
           kinds: {
             mat_balance: 'Massenbilanz des Knotens',
-            aggregation: 'Eltern-/Kind-Aggregation am Knoten',
+            aggregation: 'Hierarchische Beziehung — Aggregation der Kindflüsse',
             stock_aggregation: 'Bestandsaggregation am Knoten',
             equality: 'Eingegebene Gleichung (Nebenbedingung)',
             bound_min: 'Eingegebene Untergrenze (Nebenbedingung)',
@@ -1265,7 +1265,7 @@ export const resources_inspector = {
           },
           kinds: {
             mat_balance: 'Bilancio di materia del nodo',
-            aggregation: 'Aggregazione padre/figli sul nodo',
+            aggregation: 'Relazione gerarchica — aggregazione dei flussi figli',
             stock_aggregation: 'Aggregazione delle scorte sul nodo',
             equality: 'Equazione inserita (vincolo)',
             bound_min: 'Limite inferiore inserito (vincolo)',
@@ -1540,7 +1540,7 @@ export const resources_inspector = {
           },
           kinds: {
             mat_balance: '节点的物质平衡',
-            aggregation: '节点上的父/子聚合',
+            aggregation: '层级关系 — 子流的聚合',
             stock_aggregation: '节点上的存量聚合',
             equality: '录入的方程（约束）',
             bound_min: '录入的下界（约束）',
@@ -1818,7 +1818,7 @@ export const resources_inspector = {
           },
           kinds: {
             mat_balance: 'ノードの物質収支',
-            aggregation: 'ノード上の親子集計',
+            aggregation: '階層関係 — 子フローの集計',
             stock_aggregation: 'ノード上のストック集計',
             equality: '入力された式（制約）',
             bound_min: '入力された下限（制約）',
