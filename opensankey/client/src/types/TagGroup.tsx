@@ -9,6 +9,16 @@ import { tag_banner_type, Class_ProtoTag, Class_Tag, Class_NodeTag, Class_FluxTa
 import { Type_JSON, getStringFromJSON, getBooleanFromJSON, getStringListFromJSON, getStringOrUndefinedFromJSON } from './Utils'
 import { Type_PositionMode, isPositionMode } from './PublishOptions'
 
+// #486 - separateurs de la feuille Etiquettes du format Excel. Le « / » separe les
+// groupes antagonistes declares sur une meme ligne, le « : » les etiquettes d'un
+// groupe : un libelle qui contient l'un des deux (« m3 / kt produit ») rendait la
+// feuille illisible. L'utilisateur peut desormais choisir les siens, groupe par
+// groupe ; ils ne servent qu'a la lecture et a l'ecriture Excel, jamais a
+// l'affichage. Le front les PORTE (et ne les perd pas a l'enregistrement), sans
+// quoi un aller-retour par l'application reecrirait la feuille avec les defauts.
+export const DEFAULT_TAGS_SEPARATOR = ':'
+export const DEFAULT_ANTAGONISTS_SEPARATOR = '/'
+
 // CLASS PROTO TAGGROUP *****************************************************************
 /**
  * Class that define a TagGroup object
@@ -39,6 +49,12 @@ export abstract class Class_ProtoTagGroup {
    * @memberof Class_TagGroup
    */
   private _is_currently_deleted = false
+
+  // #486 - separateurs Excel choisis par l'utilisateur. undefined = non declare,
+  // donc defaut du format : on garde la distinction pour n'ecrire la cle que
+  // quand elle a ete demandee (fichiers existants inchanges).
+  private _tags_separator: string | undefined = undefined
+  private _antagonists_separator: string | undefined = undefined
 
   // PROTECTED ATTRIBUTES ===============================================================
   protected abstract _tags: { [id: string]: Class_ProtoTag; };
@@ -97,6 +113,11 @@ export abstract class Class_ProtoTagGroup {
     this._name_map = { ...tagg_to_copy._name_map }
     this._banner = tagg_to_copy._banner
     this._tag_count = tagg_to_copy._tag_count
+    // #486 - les separateurs suivent le groupe : sans cette ligne, un updateFrom
+    // (fusion de mise en page, duplication) les perdrait silencieusement et le
+    // prochain export Excel casserait les libelles qui contiennent « / ».
+    this._tags_separator = tagg_to_copy._tags_separator
+    this._antagonists_separator = tagg_to_copy._antagonists_separator
     // tagg_to_copy._tags_order holds the SOURCE group's tag ids. When the two
     // groups were matched by name but carry different tag ids (e.g. updateFrom
     // a JSON whose tags were renamed), copying the order verbatim would leave
@@ -145,6 +166,10 @@ export abstract class Class_ProtoTagGroup {
     json_object['name'] = serializeLangMap(this._name_map) ?? ''
     json_object['banner'] = this._banner
     json_object['tags_order'] = this._tags_order
+    // #486 - ecrits seulement quand ils s'ecartent du defaut : un diagramme qui
+    // n'en declare pas produit exactement le meme JSON qu'avant.
+    if (this._tags_separator !== undefined) json_object['tags_separator'] = this._tags_separator
+    if (this._antagonists_separator !== undefined) json_object['antagonists_separator'] = this._antagonists_separator
     // Update tags infos
     const json_object_tags = {} as Type_JSON
     this.tags_list
@@ -180,6 +205,13 @@ export abstract class Class_ProtoTagGroup {
     // les groupes de niveaux) : le tiroir de filtres ne rend que les valeurs du
     // type, une valeur inconnue y produit une carte vide (ni sélecteur ni action).
     // Hors catalogue → on garde le défaut du groupe.
+    // #486 - cle absente (fichier anterieur) = defaut du format : on laisse
+    // undefined plutot que de figer ':' / '/', pour ne pas transformer un fichier
+    // muet en fichier qui declare les defauts.
+    const tags_sep_read = getStringOrUndefinedFromJSON(json_object, 'tags_separator')
+    if (tags_sep_read !== undefined && tags_sep_read !== '') this._tags_separator = tags_sep_read
+    const anta_sep_read = getStringOrUndefinedFromJSON(json_object, 'antagonists_separator')
+    if (anta_sep_read !== undefined && anta_sep_read !== '') this._antagonists_separator = anta_sep_read
     const banner_read = getStringFromJSON(json_object, 'banner', this._banner) as tag_banner_type
     const valid_banners: tag_banner_type[] = ['none', 'one', 'multi', 'sequence', 'topbar']
     if (valid_banners.includes(banner_read)) this._banner = banner_read
@@ -232,6 +264,33 @@ export abstract class Class_ProtoTagGroup {
         this._ref_sankey.drawing_area.application_data.language
       )
     }
+  }
+
+  // PUBLIC GETTERS / SETTERS ===========================================================
+  /**
+   * #486 - Separateur effectif entre les etiquettes de ce groupe dans le format
+   * Excel (colonne Etiquettes, et colonnes portant le nom du groupe). ':' par defaut.
+   */
+  public get tags_separator(): string {
+    return this._tags_separator ?? DEFAULT_TAGS_SEPARATOR
+  }
+
+  public set tags_separator(value: string) {
+    // Vide = revenir au defaut du format, pas figer une chaine vide (qui ferait
+    // eclater chaque libelle caractere par caractere a la relecture).
+    this._tags_separator = (value === '') ? undefined : value
+  }
+
+  /**
+   * #486 - Separateur effectif entre groupes antagonistes declares sur une meme
+   * ligne de la feuille Etiquettes. '/' par defaut.
+   */
+  public get antagonists_separator(): string {
+    return this._antagonists_separator ?? DEFAULT_ANTAGONISTS_SEPARATOR
+  }
+
+  public set antagonists_separator(value: string) {
+    this._antagonists_separator = (value === '') ? undefined : value
   }
 
   // PUBLIC METHODS =====================================================================
