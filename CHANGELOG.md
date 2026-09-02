@@ -2,6 +2,54 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [1.3.0] — 2026-08-22
+
+### Menu Fichier — refonte complète (sa#424)
+
+- **Une seule entrée « Ouvrir »**, sans format présélectionné : le format se déduit du fichier.
+  SankeyMATIC, STAN et e!Sankey deviennent des formats de la fenêtre d'ouverture au lieu
+  d'entrées de menu distinctes.
+- **Documents récents**, limités à ce qu'un navigateur sait réellement rouvrir, avec horodatage
+  au survol.
+- **Fenêtre « Exporter » unique** : le menu Exporter quitte la barre du haut. « Enregistrer
+  sous… » devient unique, et le stockage navigateur annonce ce qu'il vaut.
+- Le menu ne contient plus que des commandes ; « Partager » y entre.
+
+### Édition — gestes du jalon 75
+
+- **Guides d'alignement dynamiques** avec distances et snap doux (os#671).
+- **Minimap de navigation** et **scratchpad de motifs réutilisables** (os#1346) ; le repli de la
+  minimap est un réglage du document, écrit dans le JSON (sa#419).
+- **Création connectée** par flèches directionnelles au survol d'un nœud (os#1344), avec un
+  interrupteur dédié dans la colonne d'outils (sa#422).
+- **Quick wins** : F2 pour éditer, frappe directe pour remplacer, nudge 1 px (Maj), Ctrl+D,
+  alt-cloner, verrouillage (os#1340).
+- **Sélection au clavier** dans les listes de nœuds et de flux : Maj+clic et Entrée (os#161).
+
+### Mise en page et analyse
+
+- **Quatre modes de réorganisation automatique**, sur deux règles distinctes : l'ancre redevient
+  le critère primaire de l'éventail, la pente se lit entre les corps des nœuds (os#425).
+- **Comparer deux vues** — diff structurel intégré, qui range à part les changements attendus
+  et filtre le bruit des styles structurels dupliqués (os#928).
+- **Plusieurs feuilles de dessin** dans un même document (os#85).
+- **Échelle adaptée** recalée sur l'élément de référence, et suspension levée au changement de
+  view tag (os#1351, os#1352, os#1353).
+- **Fusionner plusieurs diagrammes** en un document à plusieurs vues.
+- **Échelle par étiquette de données** généralisée, sur le principe du UnitTag (sa#283).
+
+### Corrections
+
+- Les fichiers 0.5 ne chargent plus de valeurs NaN (sa#277).
+- La bannière legacy « level » des groupes de niveaux est normalisée : la hiérarchie redevient
+  visible et le filtre n'est plus vide.
+- La barre d'échelle de la légende mesure 50 px monde, la valeur affichée correspond.
+- Visite guidée : l'étape « valeur » ne grise plus tout l'écran (os#1255).
+- Le registre d'unités voyage avec les références de mise en page (os#1286).
+- Pas de dialogue d'accueil à l'arrivée par lien `?url=`.
+- Réconciliation : les étiquettes non déclarées ne cassent plus la grille de dataTags, et la
+  colonne « Étiquettes » du classeur devient facultative (ssm#835, ssm#836).
+
 ## [1.2.1] — 2026-07-27
 
 ### Viewer embarque — trois corrections pour les integrateurs

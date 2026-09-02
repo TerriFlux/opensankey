@@ -13,16 +13,20 @@
 // OS#305 (Lot 3) — Ouverture d'une présentation, ISOLÉE du rendu.
 //
 // Ce module est volontairement LÉGER : il n'importe que le modèle pur
-// (PresentationComposition) et des types. Les gestes de canvas
-// (NodeEventsHandler, Link) l'appellent ; s'ils importaient le module de RENDU,
-// on refermerait un cycle — PresentationPanels tire les blocs, qui tirent
-// ElementsAttributesConfig, qui redescend jusqu'à NodeEventsHandler.
+// (PresentationComposition), le REGISTRE plat des blocs (types + Map, sans les
+// blocs eux-mêmes) et des types. Les gestes de canvas (NodeEventsHandler, Link)
+// l'appellent ; s'ils importaient le module de RENDU, on refermerait un cycle —
+// PresentationPanels tire les blocs, qui tirent ElementsAttributesConfig, qui
+// redescend jusqu'à NodeEventsHandler.
 
 import type { Class_ApplicationData } from '../../../types/ApplicationData'
 import type { Type_PopupGeometry } from '../../../types/PanelManager'
 import {
-  hasContentFor, DEFAULT_BLOCK_VISIBILITY, type Type_Composition
+  hasContentFor, blocksFor, DEFAULT_BLOCK_VISIBILITY, type Type_Composition
 } from '../../../types/PresentationComposition'
+import {
+  presentation_block_registry, renderPresentationBlock
+} from './PresentationBlockRegistry'
 import { isTooltipBlockVisible, type Type_TooltipHiddenBlocks } from '../../../Elements/TooltipBlocks'
 
 // COMPOSITION PAR DÉFAUT de l'INFO-BULLE : les blocs légers, cochables dans le
@@ -245,6 +249,33 @@ export const matchesPresentationTrigger = (
 export const canPresentTooltip = (element: Type_Presentable): boolean =>
   hasContentFor(compositionOf(element), 'tooltip')
 
+/**
+ * Au moins un bloc coché RENDRA-t-il quelque chose pour cet élément ? La
+ * composition dit ce qui est coché ; chaque bloc, lui, rend `null` quand
+ * l'élément n'a pas la donnée (texte libre vide, aucun flux, aucun tag). Une
+ * zone de texte sans description n'a alors RIEN à montrer : ouvrir l'info-bulle
+ * n'afficherait que le pis-aller « Rien à afficher pour cet élément » — autant
+ * ne rien ouvrir du tout.
+ */
+export const tooltipWouldRenderSomething = (
+  app_data: Class_ApplicationData,
+  element: Type_Presentable
+): boolean => {
+  const entries = blocksFor(compositionOf(element), 'tooltip')
+  // Registre pas encore peuplé (les blocs sont enregistrés à l'import du rendu) :
+  // impossible de juger, on garde le comportement historique — ouvrir.
+  if (!entries.some(entry => presentation_block_registry.has(entry.block))) return true
+  return entries.some(entry => {
+    const node = renderPresentationBlock(entry.block, {
+      app_data,
+      element: element as unknown as null,
+      mode: 'tooltip',
+      options: entry.options
+    })
+    return node !== null && node !== undefined
+  })
+}
+
 /** Ouvre la présentation en INFO-BULLE — geste de SURVOL, seul contenant qu'il
  *  ouvre (ajustement #4) — si elle a quelque chose à y montrer. */
 export const openPresentationTooltip = (
@@ -253,6 +284,7 @@ export const openPresentationTooltip = (
   anchor: { x: number, y: number }
 ): boolean => {
   if (!hasContentFor(compositionOf(element), 'tooltip')) return false
+  if (!tooltipWouldRenderSomething(app_data, element)) return false
   app_data.menu_configuration.panels.setMode(
     presentationPanelId(element.id), 'tooltip', { anchor })
   return true

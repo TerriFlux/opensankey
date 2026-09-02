@@ -123,6 +123,28 @@ describe('#369 — le mode restitué est ARMÉ, pas appliqué à l\'ouverture', 
     expect(app.drawing_area.is_position_mode_suspended).toBe(false)
   })
 
+  it('os#1351 — un changement de VIEW TAG leve la suspension, comme un datatag', () => {
+    // Constate le 14/08 sur la page publiee CARTOFOB : ses vues sont des view tags (une par
+    // essence), jamais des datatags. L'empreinte de suspension ne regardait que les datatags,
+    // si bien que naviguer d'une essence a l'autre ne la levait PAS : le mode restait
+    // « absolu » en permanence et l'echelle ne s'adaptait jamais.
+    const app = reload(savedWithMode('scale_adapted'))
+    const groupe = app.drawing_area.sankey.addViewTagGroup('essence', 'Essence')
+    groupe.addTag('Chene', 'chene')
+    groupe.addTag('Hetre', 'hetre')
+    groupe.tags_dict['chene'].is_selected = true
+    groupe.tags_dict['hetre'].is_selected = false
+    // La suspension est (re)armee sur la selection courante, comme au chargement.
+    app.drawing_area.suspendPositionModeUntilDataChange()
+    expect(app.drawing_area.is_position_mode_suspended).toBe(true)
+
+    // Bascule d'etiquette de VUE : la selection affichee change, la suspension tombe.
+    groupe.tags_dict['chene'].is_selected = false
+    groupe.tags_dict['hetre'].is_selected = true
+    expect(app.drawing_area.effective_position_mode).toBe('scale_adapted')
+    expect(app.drawing_area.is_position_mode_suspended).toBe(false)
+  })
+
   it('#384 — CHOISIR « échelle adaptée » l\'arme aussi, au lieu de l\'appliquer tout de suite', () => {
     // Retour du test local : passer la dimension en « échelle adaptée » déplaçait les nœuds
     // (recalage d'affichage par colonne) alors qu'aucune donnée n'avait changé. La règle du

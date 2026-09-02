@@ -1089,7 +1089,7 @@ const convert_legacy_dimensions_as_levelTags = (
       group_name: dim,
       color_map: 'jet',
       show_legend: false,
-      banner: 'level',
+      banner: 'one',
       tags: {},
       activated: true,
       siblings: []
@@ -1281,7 +1281,7 @@ const convert_tags: convert_tagsFuncType = (
         group_name: data.nodeTags.Dimensions.tags[tag].name,
         color_map: 'jet',
         show_legend: false,
-        banner: 'level',
+        banner: 'one',
         tags: {},
         activated: true,
         siblings: []
@@ -1491,7 +1491,9 @@ const convert_tags: convert_tagsFuncType = (
   // Convertie les nodeTags avec pour bannière 'level' en levelTags
   if (has_not_converted_nodeTags_as_levelTags(data) || 'Primaire' in data.nodeTags) {
     data.levelTags = Object.assign({}, data.levelTags, Object.fromEntries(Object.entries(data.nodeTags).filter(nt => nt[1].banner === 'level' || nt[0] == 'Primaire')))
-    Object.values(data.levelTags).forEach(tag => tag.banner = 'level')
+    // 'one' : « level » n'est pas une bannière du catalogue moderne — le tiroir de
+    // filtres rendait une carte vide pour un groupe qui la portait encore.
+    Object.values(data.levelTags).forEach(tag => tag.banner = 'one')
     data.nodeTags = Object.fromEntries(Object.entries(data.nodeTags).filter(nt => nt[1].banner !== 'level' && nt[0] !== 'Primaire'))
   }
   Object.entries(data.nodeTags).forEach(tagg => {
@@ -1926,13 +1928,30 @@ const convert_nodes: convert_nodesFuncType = (
       // All input exchange nodes must also be desaggregated
       node.inputLinksId
         .forEach(lid => {
+          // SYMÉTRIE avec la boucle sortante ci-dessous, qui se garde déjà du lien
+          // absent et de l'étiquette manquante — ce côté-ci ne le faisait pas, et
+          // lisait `tags['type de noeud'][0]` sur un nœud qui n'a pas l'étiquette.
+          // La garde du dessus (`data.nodeTags['type de noeud']`) ne dit que ceci : le
+          // DIAGRAMME connaît ce groupe d'étiquettes. Elle ne dit rien de CE nœud-là.
+          // Un seul nœud source sans l'étiquette faisait tomber tout le chargement —
+          // constaté sur `referentiel-coefficients` (220 vues), au passage à la 3ᵉ vue.
+          if (!data.links[lid]) {
+            console.warn(`Legacy: flux entrant introuvable (${lid}), nœud ${node.idNode} ignoré`)
+            return
+          }
           const input_node = data.nodes[data.links[lid].idSource]
-          if (input_node.tags['type de noeud'][0] == 'echange') {
-            if (set_children) {
-              input_node.dimensions[dim].force_show_children = true
-            } else {
-              input_node.dimensions[dim].force_show_parent = true
-            }
+          // Nœud d'échange = celui dont la PREMIÈRE étiquette est « echange » ; sans
+          // étiquette, ce n'en est pas un, il n'y a rien à désagréger.
+          if (!input_node || input_node.tags['type de noeud']?.[0] !== 'echange') {
+            return
+          }
+          if (!input_node.dimensions[dim]) {
+            return
+          }
+          if (set_children) {
+            input_node.dimensions[dim].force_show_children = true
+          } else {
+            input_node.dimensions[dim].force_show_parent = true
           }
         })
 

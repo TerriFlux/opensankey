@@ -65,9 +65,16 @@ export const default_anchor_align_horizontal: Type_AnchorAlignHorizontal = 'cent
 // Mode de réorganisation automatique de l'ordre des flux E/S d'un nœud quand le
 // diagramme est modifié (cf. Class_NodeElement.reorganizeIOLinks) :
 //  'none'     = jamais recalculé (ordre figé) ;
-//  'simple'   = tri par la position du nœud opposé (comportement par défaut) ;
-//  'advanced' = ordre géométrique par la courbure (os#205/#266 — « qui tourne le
-//               plus tôt va à l'extrémité »), adapté aux diagrammes rigoureux.
+//  'simple'   = « Position des nœuds opposés » — tri par la position du nœud opposé
+//               (comportement par défaut) ;
+//  'advanced' = « Courbure des flux » — l'éventail classe TOUS les flux par la distance
+//               de la première ancre : « qui tourne le plus tôt va à l'extrémité »
+//               (os#205/#266/#279).
+// os#425 : le retravail de os#205 avait interposé une exception pour les flux droits, qui
+// déplaçait des flux que la règle ci-dessus plaçait correctement. Son auteur a confirmé que
+// la modification du mode avancé n'était pas intentionnelle — seul le mode simple était
+// visé — donc 'advanced' retrouve ici son sens d'origine, et les fichiers déjà réglés
+// dessus retrouvent le comportement pour lequel ils avaient été réglés.
 export type Type_IOReorgMode = 'none' | 'simple' | 'advanced'
 export const default_io_reorg_mode: Type_IOReorgMode = 'simple'
 // Orientation des hachures de remplissage d'un nœud ('none' = pas de hachure).

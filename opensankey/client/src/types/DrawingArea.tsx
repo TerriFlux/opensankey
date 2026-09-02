@@ -64,6 +64,7 @@ import { Class_Tag } from './Tag'
 import { Class_ContainerElement } from '../Elements/TextZone'
 import { Class_ApplicationData } from './ApplicationData'
 import { compareZOrder, dedupeZOrderKeepFirst } from './zOrder'
+import { beginDrawPass, endDrawPass } from './DrawCounters'
 import * as LabelFilters from './LabelFilters'
 import * as CopyPaste from './copyPaste'
 import * as DisplayModes from './displayModes'
@@ -107,6 +108,20 @@ const UNITARY_CENTRAL_HEIGHT_FRACTION = 0.3
  * Un zoom manuel repasse le mode à 'none' (cf. Camera.zoom*). Persisté (SankeyPersistence).
  */
 export type Type_AutoFitMode = 'none' | 'width' | 'height' | 'full'
+
+/**
+ * os#1352 — RÉGIME de référence du mode « échelle adaptée ». Deux règles, même mécanique
+ * (échelle = échelle_réf × grandeur_courante / grandeur_réf), seule la GRANDEUR change :
+ *
+ *  - `diagram` (défaut, sa#384) : grandeur = somme de la colonne la plus haute. Ne dépend
+ *    d'aucun élément en particulier, donc jamais mise en défaut par un élément absent.
+ *  - `element` : grandeur = taille rendue de l'ÉLÉMENT DE RÉFÉRENCE désigné (flux
+ *    `shape_is_reference_flux` ou nœud-stock `shape_is_reference_stock`). C'est la règle
+ *    d'avant sa#384, restituée pour la PORTABILITÉ des documents qui ont été composés
+ *    autour d'un élément de référence — cf. CARTOFOB, calé sur le stock « Bois sur pied »,
+ *    dont la colonne dimensionnante change d'une vue d'essence à l'autre.
+ */
+export type Type_ScaleAdaptedReference = 'diagram' | 'element'
 
 // Outils de création de la colonne d'outils. Les deux premiers sont deux gestes
 // du mode 'edition' (cf. _edition_tool), les deux suivants deux formes du mode
@@ -386,8 +401,25 @@ export class Class_DrawingArea {
     this._position_mode_suspended_selection = undefined
   }
 
+  /**
+   * #369/os#1351 — Empreinte de la SÉLECTION AFFICHÉE : datatags ET viewtags.
+   *
+   * La suspension d'ouverture existe pour qu'un fichier ne saute pas à l'affichage ; elle doit
+   * donc se lever au premier geste de NAVIGATION. Elle ne surveillait que les datatags — or un
+   * diagramme dont les vues sont des view tags (CARTOFOB : une vue par essence) ne change jamais
+   * de datatag en navigant : la suspension ne se levait jamais, et le mode restait « absolu » en
+   * permanence, quel que soit le réglage (constaté le 14/08 sur la page publiée).
+   *
+   * Les deux dimensions comptent parce que les deux changent les VALEURS affichées, donc la
+   * hauteur rendue — ce que les modes « échelle adaptée » et « proportionnel » ont justement
+   * pour rôle de rattraper.
+   */
   private _selectedDataTagsFingerprint(): string {
-    return this._sankey.selected_data_tags_list.map(t => t.id).join('|')
+    const data_tags = this._sankey.selected_data_tags_list.map(t => t.id).join('|')
+    const view_tags = this._sankey.view_taggs_list
+      .map(grp => grp.selected_tags_list.map(t => t.id).join(','))
+      .join('|')
+    return data_tags + '#' + view_tags
   }
 
   // #378 — Réorganisation auto de l'ordre des flux E/S au CHANGEMENT DE SÉLECTION de
@@ -413,7 +445,23 @@ export class Class_DrawingArea {
    */
   public primeIOReorgOnDataSelection() {
     this._io_reorg_data_selection = this._selectedDataTagsFingerprint()
+    this._has_been_laid_out = false
   }
+
+  // os#1353 — Cette aire de dessin a-t-elle DÉJÀ été mise en page (au moins un `drawElements`
+  // effectif) depuis le chargement ? Tant que non, la géométrie de ses nœuds n'est PAS la
+  // vérité : les hauteurs valent encore le plancher `shape_min_height` (les épaisseurs de flux
+  // ne sont calculées qu'au dessin), et le coin n'a pas encore été dérivé du centre lu dans le
+  // fichier. Toute opération qui commit le coin courant comme centre (`settleCenterAnchor`)
+  // détruirait donc les centres du fichier — c'est le sens de ce drapeau, cf. `DisplayModes`.
+  //
+  // Le cas réel n'est pas théorique : un document qui s'ouvre sur une VUE laisse la DA MAÎTRE
+  // non dessinée, et une option de page (`position_mode`) pose le mode sur les deux aires.
+  // Transitoire, jamais persisté ; remis à faux au chargement (cf. `primeIOReorgOnDataSelection`,
+  // appelé au même endroit de la persistance).
+  protected _has_been_laid_out: boolean = false
+
+  public get has_been_laid_out(): boolean { return this._has_been_laid_out }
 
   /**
    * #378 — Relance la réorganisation auto de l'ordre des flux E/S si la sélection de
@@ -453,6 +501,13 @@ export class Class_DrawingArea {
    * filtres, topbar, frise de séquence, options de publication), puisqu'on compare l'état et
    * non l'événement.
    */
+  /**
+   * #369/os#1351 — Mode de position RÉELLEMENT appliqué au dessin : celui du style global, ou
+   * « absolu » tant que la suspension d'ouverture tient. Exposé en lecture pour que la
+   * suspension soit observable (tests, diagnostic) sans passer par une frame de dessin.
+   */
+  public get effective_position_mode(): Type_Position { return this._effectivePositionMode() }
+
   protected _effectivePositionMode(): Type_Position {
     if (this._position_mode_suspended_selection !== undefined
       && this._position_mode_suspended_selection !== this._selectedDataTagsFingerprint()) {
@@ -610,6 +665,29 @@ export class Class_DrawingArea {
   // les positions finales puis repasse à false, ce qui fige le cadrage pour les
   // changements de dataTag suivants. Évite de figer un transform périmé calculé
   // trop tôt (avant recenter), cf. ApplicationData.fromJSON (draw → recenter → draw).
+  /**
+   * os#1372 — DATATAG DE RÉFÉRENCE du mode « échelle adaptée » : ids des tags qui désignent la
+   * sélection sur laquelle le diagramme est calé. Persisté — c'est une propriété de la
+   * COMPOSITION, au même titre que le régime de référence.
+   *
+   * Ce qu'il remplace : une grandeur CAPTURÉE au vol (`scale_adapted_ref_magnitude`), prise au
+   * datatag qui se trouvait à l'écran quand le mode a pris effet. Personne ne l'avait choisie,
+   * rien ne disait laquelle c'était, et la moindre correction de données la rendait fausse
+   * puisqu'elle était figée dans le fichier. Ici la référence est ÉNONCÉE, et la grandeur s'en
+   * déduit à chaque dessin (cf. `NodePositioningScaleAdapted.referenceDataTagMagnitude`).
+   *
+   * Une seule dimension peut être nommée : les autres gardent leur sélection courante.
+   */
+  protected _scale_adapted_reference_datatag: string[] = []
+
+  public get scale_adapted_reference_datatag(): string[] { return this._scale_adapted_reference_datatag }
+
+  public set scale_adapted_reference_datatag(ids: string[]) {
+    this._scale_adapted_reference_datatag = ids ?? []
+    // La base capturée n'a plus de sens : elle a été prise contre une AUTRE référence.
+    this.nodePositioning.forgetScaleAdaptedCapture()
+  }
+
   protected _locked_fit_dirty: boolean = true
 
   // Cadrage de RÉFÉRENCE en mode taille verrouillée : le transform (zoom/pan)
@@ -640,6 +718,29 @@ export class Class_DrawingArea {
   // (coords monde) ramenée en px écran à la fenêtre disponible. Si oui, draw()
   // dézoome (areaAutoFit) pour tout faire rentrer ; sinon il réapplique la
   // référence. Petite tolérance pour éviter le jitter sur le dataTag de référence.
+  /**
+   * os#1371 — Le dézoom de secours du verrou de taille a-t-il un sens dans le mode courant ?
+   *
+   * NON sous « échelle adaptée » : les deux régulent la MÊME grandeur — la taille apparente du
+   * diagramme — par deux moyens opposés. Le mode la tient côté DONNÉES (échelle valeur→pixel,
+   * hauteur rendue constante) ; le verrou la tient côté CAMÉRA (dézoom dès qu'un datatag déborde
+   * le cadrage de référence). Ensemble, ils s'annulent : les plafonds qui s'appliquent APRÈS le
+   * mode (`maximum_node`, référence d'échelle par view tag) font déborder, le verrou dézoome, et
+   * la taille que le mode venait de fixer change quand même. Deux asservissements sur la même
+   * sortie.
+   *
+   * Le cadrage de référence, lui, continue d'être réappliqué à l'identique : c'est le
+   * RÉTRÉCISSEMENT seul qui n'a pas de sens ici. Et cela ne vaut que pour un débordement dû au
+   * CONTENU ; celui dû à la FENÊTRE (barre latérale ouverte, cf. `refreshWindowFraming`) reste
+   * traité, il ne doit rien au mode.
+   *
+   * `size_locked` est posé dans des fichiers d'étude existants sans que leur auteur l'ait jamais
+   * réglé : la garde vaut donc aussi, et surtout, pour l'existant.
+   */
+  protected get locked_overflow_shrink_allowed(): boolean {
+    return this._effectivePositionMode() !== 'scale_adapted'
+  }
+
   protected _lockedContentOverflows(ref_k: number): boolean {
     const bbox = this.d3_selection_elements_group?.node()?.getBBox()
     if (!bbox || (bbox.width === 0 && bbox.height === 0)) return false
@@ -697,6 +798,12 @@ export class Class_DrawingArea {
   // atteigne cette épaisseur → tous les autres flux et la légende d'échelle suivent.
   // Un seul flux de référence par view tag (la clé écrase). « Vue complète » = pas de clé.
   private _scale_reference_by_viewtag: { [view_tag_id: string]: { link_id: string, thickness: number } } = {}
+
+  // os#1352 — Régime de référence du mode « échelle adaptée » (cf. Type_ScaleAdaptedReference).
+  // Réglage PORTÉ PAR LE DOCUMENT (persisté, round-trippé) : c'est une propriété de la
+  // composition, pas une préférence de session. Défaut `diagram` → aucun fichier existant ne
+  // change de comportement du seul fait de la relecture.
+  private _scale_adapted_reference: Type_ScaleAdaptedReference = 'diagram'
   // Porteur d'échelle surchargé à la frame précédente (pour restaurer sa valeur naturelle
   // avant de recalculer). tag_id défini → data tag unitaire ; sinon → échelle de la DA.
   // `original` = valeur naturelle à restaurer ; `applied` = valeur qu'on a posée (sert à
@@ -950,6 +1057,9 @@ export class Class_DrawingArea {
     this._font_size_locked = drawing_area_to_copy._font_size_locked
     // Idem : champ direct, le setter size_locked déclenche un re-fit.
     this._size_locked = drawing_area_to_copy._size_locked
+    // os#1372 — Le datatag de référence suit la copie (une vue doit se caler sur la même
+    // référence que le maître). Champ direct : le setter oublie la capture d'échelle.
+    this._scale_adapted_reference_datatag = [...drawing_area_to_copy._scale_adapted_reference_datatag]
     this._auto_fit_mode = drawing_area_to_copy._auto_fit_mode
     this._fit_anchor = drawing_area_to_copy._fit_anchor
     this._import_export_above_below = drawing_area_to_copy._import_export_above_below
@@ -978,11 +1088,13 @@ export class Class_DrawingArea {
     const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
     const exchanges_nodes = this.sankey.nodes_list.filter(n => n.hasGivenTag(echangeTag!))
     // Split dès qu'un nœud échange non encore splitté porte au moins un lien.
-    // `node.sibling` (et non le nombre de liens) marque un nœud déjà issu d'un
-    // split : les siblings import/export portent aussi le tag `echange` et ont
-    // exactement 1 lien, donc l'ancien seuil `> 1` ratait les échanges
-    // mono-flux (mfa_problem#222 : échanges produit/secteur asymétriques).
-    if (exchanges_nodes.some(n => !n.sibling && (n.input_links_list.length > 0 || n.output_links_list.length > 0))) {
+    // Le seuil `> 1` d'origine ratait les échanges mono-flux (mfa_problem#222 :
+    // échanges produit/secteur asymétriques) ; `!n.sibling`, qui l'a remplacé,
+    // est TOUJOURS vrai juste après un chargement (la fratrie n'est pas
+    // persistée), donc il faisait éclater une seconde fois les fichiers qui
+    // stockent l'échange déjà éclaté. `is_split_trade_node` répond aux deux :
+    // il reconnaît la forme d'un nœud éclaté sur le graphe lui-même.
+    if (exchanges_nodes.some(n => !n.is_split_trade_node && (n.input_links_list.length > 0 || n.output_links_list.length > 0))) {
       this.nodePositioning.splitTrade()
     }
     this.nodePositioning.arrangeTrade(true)
@@ -1019,6 +1131,9 @@ export class Class_DrawingArea {
   ) {
     // This function calls explictly for a redraw
     this.bypass_redraws = false
+    // os#1372 — signale le dessin complet à l'application, qui s'en sert pour ne pas en
+    // déclencher un de plus quand un geste en a déjà provoqué un (cf. draw_epoch).
+    this.application_data.notifyFullDraw()
 
     // OS#1246 — signale aux éléments qu'on est dans un draw COMPLET (cf.
     // isInFullDraw) : les flux doivent alors tous être redessinés.
@@ -1119,7 +1234,10 @@ export class Class_DrawingArea {
       // - Non (dataTag plus grand que celui de référence) → on dézoome (fit
       //   vertical) pour tout faire rentrer ; rétrécissement transitoire, la
       //   référence reste intacte pour ré-agrandir ensuite (cf. #1240).
-      if (this._lockedContentOverflows(locked_zoom_transform.k)) {
+      // os#1371 — sous « échelle adaptée », le rétrécissement est neutralisé : c'est le mode
+      // qui tient la taille, pas la caméra (cf. locked_overflow_shrink_allowed).
+      if (this.locked_overflow_shrink_allowed
+        && this._lockedContentOverflows(locked_zoom_transform.k)) {
         this._locked_overflow_shrunk = true
         this.areaAutoFit(false, true)
       } else {
@@ -1477,8 +1595,108 @@ export class Class_DrawingArea {
    * Draw all elements inside drawing area
    * @memberof Class_DrawingArea
    */
+  /**
+   * os#1372 — Flux à redessiner, accumulés pendant la phase de PLACEMENT d'un `drawElements`.
+   * `null` hors de cette phase : `Node.updateLinksPositions` dessine alors immédiatement, comme
+   * avant. Un `Set` parce qu'un même flux est touché par ses DEUX extrémités.
+   */
+  private _deferred_link_draws: Set<Class_LinkElement> | null = null
+
+  /** Vrai tant qu'on est dans la phase de placement (les dessins de flux sont différés). */
+  public get defers_link_draws(): boolean { return this._deferred_link_draws !== null }
+
+  /**
+   * os#1374 — Époque d'éventail. Un éventail, c'est les pointes de tous les flux d'un côté de
+   * nœud, calculées ENSEMBLE par `Class_NodeElement.drawLinksArrow` : leur géométrie dépend de
+   * la somme des épaisseurs du côté, donc aucune ne se calcule seule.
+   *
+   * Le cache de pointe d'un flux (`_arrow_shape`) était vidé au début de CHAQUE dessin de flux ;
+   * `_drawArrow` le trouvait vide et redemandait au nœud l'éventail ENTIER — mesuré au chargement
+   * de SOCLE Céréales : 1 823 éventails pour 1 823 flux, et 72 recalculs pour le pire nœud dans
+   * une seule passe. Le coût est quadratique en nombre de flux par côté.
+   *
+   * Une pointe posée pendant l'époque courante n'est donc plus périmée : on la garde. L'époque
+   * change à chaque `Class_Sankey.draw` — c'est-à-dire chaque fois que les positions ont pu
+   * bouger. Hors de ce cadre (`keeps_arrow_caches` faux : glisser-déposer, réglage d'apparence,
+   * `refreshArrow`), rien ne change : le cache est vidé comme avant.
+   */
+  private _arrow_epoch = 0
+  private _in_arrow_epoch = false
+
+  /** Époque courante ; un cache de pointe estampillé à cette valeur est à jour. */
+  public get arrow_epoch(): number { return this._arrow_epoch }
+
+  /** Vrai pendant un `Class_Sankey.draw`, seul cadre où un cache de pointe survit. */
+  public get keeps_arrow_caches(): boolean { return this._in_arrow_epoch }
+
+  public beginArrowEpoch(): void { this._arrow_epoch++; this._in_arrow_epoch = true }
+
+  public endArrowEpoch(): void { this._in_arrow_epoch = false }
+
+  /**
+   * os#1373 — Ouvre la phase « calculer les ancres » : à partir d'ici et jusqu'au flush, un nœud
+   * qui repositionne ses flux ne fait que les inscrire. Idempotent : la phase court de l'entrée
+   * de `drawElements` jusqu'à la fin du join des nœuds, et `Class_Sankey.draw` la rouvre pour
+   * elle-même quand elle est appelée hors de ce cycle (post-traitement « flux droit »).
+   */
+  public openDeferredLinkDraws(): void {
+    if (this._deferred_link_draws === null) this._deferred_link_draws = new Set()
+  }
+
+  /**
+   * Enregistre des flux à redessiner en fin de placement. Appelé par
+   * `Node.updateLinksPositions`, qui garde la responsabilité de DÉCIDER lesquels ont bougé.
+   */
+  public deferLinkDraws(links: Class_LinkElement[]): void {
+    const set = this._deferred_link_draws
+    if (!set) return
+    links.forEach(l => set.add(l))
+  }
+
+  /**
+   * Dessine une fois chacun des flux accumulés, aux positions définitives. La file est fermée
+   * AVANT le parcours : un dessin de flux peut déclencher celui d'un nœud, donc rentrer à
+   * nouveau dans `updateLinksPositions` — qui doit alors dessiner tout de suite, pas ré-empiler.
+   */
+  public flushDeferredLinkDraws(): void {
+    const set = this._deferred_link_draws
+    this._deferred_link_draws = null
+    if (!set) return
+    set.forEach(l => l.draw())
+  }
+
   public drawElements() {
     if (this.bypass_redraws) return
+    // os#1376 — une passe de dessin s'ouvre ici et se referme quoi qu'il arrive : une passe qui
+    // jette laisserait la profondeur en l'air et fausserait toute la suite de la mesure.
+    // Éteint (le cas par défaut), le couple ne fait que lire un booléen.
+    beginDrawPass()
+    try {
+      this._drawElementsBody()
+    } finally {
+      endDrawPass()
+      // os#1373 — Filet : en marche normale `Class_Sankey.draw` a déjà vidé la file (no-op ici).
+      // Mais si le corps jette avant d'y arriver, la file resterait ouverte pour toujours et
+      // TOUS les dessins de flux suivants seraient avalés en silence — un diagramme sans flux.
+      // On la vide donc plutôt que de la laisser béante.
+      this.flushDeferredLinkDraws()
+    }
+  }
+
+  private _drawElementsBody() {
+    // os#1353 — à partir d'ici la géométrie des nœuds est mise en page (cf. `has_been_laid_out`).
+    this._has_been_laid_out = true
+    // os#1372 — PHASE DE PLACEMENT : les flux ne sont pas dessinés à chaque déplacement de nœud,
+    // seulement accumulés. Chaque étape de placement (ancrage, ré-empilement, anti-chevauchement,
+    // mode paramétrique) appelle `Node.applyPosition`, qui redessinait aussitôt tous les flux du
+    // nœud — donc plusieurs fois par passe et par flux, sur des positions intermédiaires jetées
+    // juste après. Mesuré sur CARTOFOB : 468 dessins de flux pour 36 flux affichés.
+    // os#1373 — La file est vidée dans `Class_Sankey.draw`, APRÈS le join des nœuds : le
+    // placement n'est pas la seule étape qui repositionne les flux, le dessin des nœuds en est
+    // une autre (chaque `Node.draw` rappelle `applyPosition`). Vider avant lui laissait donc
+    // chaque flux se faire tracer une fois de plus par sa source et une fois de plus par sa
+    // cible — 2 dessins par flux et par passe sur le diagramme de référence d'os#1376.
+    this.openDeferredLinkDraws()
     // #369 — mode EFFECTIF : celui du style global, ou 'absolute' tant que la suspension
     // d'ouverture tient (cf. _effectivePositionMode). Lu UNE fois et réutilisé plus bas :
     // les branches suivantes relisaient le style, ce qui aurait mélangé les deux régimes.
@@ -1523,6 +1741,19 @@ export class Class_DrawingArea {
       // d'affichage ci-dessous se figerait dans le centre et se traînerait d'un
       // datatag/viewtag à l'autre. Avant _sankey.draw().
       this.nodePositioning.deriveScaleAdaptedCornersFromCenter()
+      // os#1370 — L'ordre des flux E/S se déduit ICI, sur les coins dérivés des CENTRES,
+      // c'est-à-dire la disposition de l'auteur aux hauteurs du datatag courant. Il ne doit
+      // PAS se déduire de l'anti-chevauchement qui suit : celui-ci est d'affichage, recalculé
+      // à chaque datatag/viewtag et jamais persisté, alors que `links_order` est une donnée du
+      // DOCUMENT (sérialisée). Dériver l'une de l'autre faisait passer un flux sous un autre
+      // dans les seules vues où le push a quelque chose à déplacer — et enregistrer depuis
+      // l'éditeur gravait l'artefact dans le fichier (CARTOFOB, « Prélèvements » ; même
+      // phénomène que « Connexes » sous « Sciages » dans le harnais os#1353).
+      //
+      // #378 garde tout son sens : les hauteurs sont déjà celles de la sélection courante,
+      // c'est bien le changement de valeurs qui réordonne. L'appel commun plus bas devient un
+      // no-op de lui-même — la signature de sélection vient d'être consommée.
+      this.reorganizeIOOnDataSelectionChange()
       // #1231 — anti-chevauchement par colonne (depuis le haut) + clamp du haut. D'AFFICHAGE
       // seulement (coin), recalculé pour le datatag/viewtag courant, jamais persisté.
       this.nodePositioning.resolveScaleAdaptedOverlaps()
@@ -1549,8 +1780,12 @@ export class Class_DrawingArea {
     // #378 — Bascule de datatag : recalcule l'ordre des flux E/S sur les valeurs désormais
     // affichées (no-op tant que la sélection ne change pas). Ici, à la toute fin du
     // placement : l'ordre est géométrique, il doit être déduit des positions et hauteurs qui
-    // vont réellement être dessinées (les modes proportionnel / échelle adaptée viennent de
-    // les déplacer). Avant le dessin, donc rendu directement dans le bon ordre.
+    // vont réellement être dessinées (le mode proportionnel vient de les déplacer). Avant le
+    // dessin, donc rendu directement dans le bon ordre.
+    //
+    // os#1370 — L'échelle adaptée fait EXCEPTION et a déjà réorganisé plus haut : son
+    // anti-chevauchement est un artefact d'affichage, dont une donnée persistée ne doit rien
+    // déduire. Cet appel-ci y est donc un no-op (signature déjà consommée).
     this.reorganizeIOOnDataSelectionChange()
     // Draw grid
     this.drawBackground()
@@ -4039,6 +4274,19 @@ export class Class_DrawingArea {
   public get scale_reference_by_viewtag() { return this._scale_reference_by_viewtag }
 
   /**
+   * os#1352 — Régime de référence du mode « échelle adaptée » (cf. Type_ScaleAdaptedReference).
+   * Changer de régime invalide la capture en cours : les deux grandeurs ne sont pas comparables
+   * (hauteur de colonne vs taille d'un élément), recomposer un ratio de l'une sur l'autre ferait
+   * sauter l'échelle. La capture paresseuse repart au dessin suivant, ratio 1, sans saut.
+   */
+  public get scale_adapted_reference(): Type_ScaleAdaptedReference { return this._scale_adapted_reference }
+  public set scale_adapted_reference(v: Type_ScaleAdaptedReference) {
+    if (this._scale_adapted_reference === v) return
+    this._scale_adapted_reference = v
+    this.nodePositioning.forgetScaleAdaptedCapture()
+  }
+
+  /**
    * Désigne (ou retire) le flux de référence d'échelle pour un view tag donné.
    * `link_id` falsy ou `thickness <= 0` → retire la référence du view tag.
    * Sinon écrase l'éventuelle référence existante (un seul flux par view tag).
@@ -4423,7 +4671,7 @@ export class Class_DrawingArea {
 
   public setAbsoluteMode() { DisplayModes.setAbsoluteMode(this) }
 
-  public setScaleAdaptedMode() { DisplayModes.setScaleAdaptedMode(this) }
+  public setScaleAdaptedMode(redraw: boolean = true) { DisplayModes.setScaleAdaptedMode(this, redraw) }
 
   public setProportionalMode() { DisplayModes.setProportionalMode(this) }
 

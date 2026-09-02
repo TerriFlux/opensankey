@@ -23,7 +23,9 @@
 
 import React from 'react'
 import { Box, Button, CloseButton, Text } from '@chakra-ui/react'
-import { FaThumbtack, FaAngleDoubleRight, FaExpandAlt, FaArrowsAltH } from 'react-icons/fa'
+import {
+  FaThumbtack, FaAngleDoubleRight, FaExpandAlt, FaArrowsAltH, FaRegWindowRestore
+} from 'react-icons/fa'
 import Draggable, { DraggableProps } from 'react-draggable'
 
 import type { Class_ApplicationData } from '../../types/ApplicationData'
@@ -90,24 +92,31 @@ export type Type_PanelShellProps = {
 }
 
 /**
- * En-tête uniforme : Titre · [épingle] · [ancrer → barre latérale] · [✕]. Le
- * bouton d'ancrage n'apparaît que si la barre latérale est autorisée ET n'est
- * pas le mode courant. Le `dragHandleClassName` marque la zone de saisie pour le
- * déplacement des pop-ups (react-draggable cible ce sélecteur).
+ * En-tête uniforme : Titre · [détacher] · [ancrer] · [épingle] · [✕]. Le
+ * `dragHandleClassName` marque la zone de saisie pour le déplacement des
+ * pop-ups (react-draggable cible ce sélecteur).
  *
- * L'ÉPINGLE (OS#321) promet toujours la même chose — « garde cette fenêtre sous
- * les yeux » : depuis une info-bulle ou la barre latérale elle promeut le
- * panneau en pop-up épinglée ; sur une pop-up transitoire elle la fixe.
+ * DEUX AXES, DEUX VOCABULAIRES — une icône ne dit jamais les deux :
+ *  - OÙ : ⧉ « Détacher en fenêtre » et ≫ « Ancrer dans le panneau latéral ».
+ *    Ce sont des DÉPLACEMENTS, et chaque contenant n'offre que celui qui mène
+ *    ailleurs. L'épingle a longtemps tenu ce rôle depuis l'info-bulle et la
+ *    barre : elle promettait « ça reste » là où elle voulait dire « ça va là »,
+ *    juste à côté d'un ancrage qui, lui aussi, fait rester — d'où une
+ *    redondance apparente entre les deux boutons, qu'on retire ici.
+ *  - COMBIEN DE TEMPS : 📌 « Garder ouvert », sur la seule fenêtre TRANSITOIRE
+ *    (OS#321) — le seul contenant dont la durée de vie soit en question.
+ *    L'info-bulle s'efface d'elle-même, la barre latérale et la fenêtre
+ *    épinglée restent : rien à y épingler.
  *
- * Chaque contenant n'expose donc que le bouton qui lui SERT — les fermetures ne
- * se recouvrent jamais :
- *  - pop-up NON ÉPINGLÉE : épingle, mais pas de croix (cliquer ailleurs ferme) ;
- *  - pop-up ÉPINGLÉE : croix, mais pas d'épingle (rien à désépingler — pour
+ * Chaque contenant n'expose donc que ce qui lui SERT — les fermetures ne se
+ * recouvrent jamais :
+ *  - info-bulle : détacher, ancrer (elle s'efface d'elle-même) ;
+ *  - pop-up NON ÉPINGLÉE : épingle + ancrer, mais pas de croix (cliquer
+ *    ailleurs ferme) ;
+ *  - pop-up ÉPINGLÉE : ancrer + croix, pas d'épingle (rien à désépingler — pour
  *    retrouver une fenêtre transitoire, on la ferme et on reclique) ;
- *  - info-bulle : épingle seule (elle s'efface d'elle-même) ;
- *  - barre latérale : épingle (détacher) seule — la barre est un contenant
- *    toujours à portée (son bouton, Ctrl+B), et chaque menu garde le sien :
- *    une croix de plus n'y ajoutait rien.
+ *  - barre latérale : détacher seul — la barre est à portée (son bouton,
+ *    Ctrl+B), et chaque menu garde le sien : une croix de plus n'ajoutait rien.
  *
  * L'épingle n'est pas le seul chemin : tout geste qui PLACE la fenêtre l'épingle
  * aussi — la déplacer par son en-tête, la détacher de la barre latérale. Échap,
@@ -163,14 +172,15 @@ const PanelHeader = ({
           size='xs'
           variant='menuconfigpanel_option_button'
           sx={{ paddingInline: '0.25rem', minWidth: 'auto', width: 'auto', flex: 'none' }}
-          title={t('panel.to_popup', { defaultValue: 'Épingler en fenêtre' })}
+          title={t('panel.to_popup', { defaultValue: 'Détacher en fenêtre' })}
           aria-label='panel-to-popup'
           // L'input/handle de drag ne doit pas capter ce clic.
           onMouseDown={(e) => e.stopPropagation()}
-          // Promotion DÉLIBÉRÉE : la fenêtre obtenue est ÉPINGLÉE (OS#321).
+          // Promotion DÉLIBÉRÉE : la fenêtre obtenue est ÉPINGLÉE (OS#321) — on
+          // détache pour garder sous les yeux, pas pour perdre au clic suivant.
           onClick={() => panels.setMode(id, 'popup', { pinned: true })}
         >
-          <FaThumbtack />
+          <FaRegWindowRestore />
         </Button>
       )}
 
@@ -611,14 +621,12 @@ const PanelFrame = ({
 }
 
 /**
- * FOND de la barre latérale — la bande elle-même, indépendamment de ce qu'elle
- * contient (ajustement #4).
+ * FOND de la barre latérale — la bande elle-même, sous le menu qu'elle porte.
  *
- * La barre est devenue un contenant à part entière : elle peut être ouverte et
- * VIDE, état qui a un sens propre (« ouvre les prochains clics ici »). Sans ce
- * fond, une barre vide ne serait qu'un blanc inexpliqué au bord du dessin, alors
- * qu'elle en réserve la largeur. Rendu SOUS les panneaux (z-index inférieur) :
- * le menu ancré, quand il y en a un, le recouvre exactement.
+ * La barre n'existe plus VIDE : `sidebar_open` implique un menu ancré, et ce
+ * menu recouvre exactement ce fond (rendu sous lui, z-index inférieur). Le fond
+ * reste néanmoins peint, pour que la bande ne laisse jamais voir au travers
+ * pendant qu'une coquille se (re)monte — la largeur, elle, est déjà réservée.
  */
 export const SidebarSurface = ({ app_data }: { app_data: Class_ApplicationData }) => {
   useModelBinding<() => void>(
@@ -639,23 +647,7 @@ export const SidebarSurface = ({ app_data }: { app_data: Class_ApplicationData }
       zIndex={PANEL_Z_SIDEBAR - 1}
       bg='white'
       borderLeft='1px solid #e2e8f0'
-      display='flex'
-      alignItems='center'
-      justifyContent='center'
-      padding='0.6rem'
-    >
-      {panels.sidebar_id === null && (
-        <Text
-          style={{
-            fontSize: default_font_size, opacity: 0.5, textAlign: 'center', lineHeight: 1.35
-          }}
-        >
-          {app_data.t('panel.sidebar_empty', {
-            defaultValue: 'Panneau ouvert. Cliquez un élément ou un menu pour l\'afficher ici.'
-          })}
-        </Text>
-      )}
-    </Box>
+    />
   )
 }
 

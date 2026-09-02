@@ -2043,6 +2043,12 @@ export class DrawingAreaPersistence {
     if (drawing_area.minimum_flux !== undefined) json_object['minimum_flux'] = drawing_area.minimum_flux
     if (Object.keys(drawing_area.scale_reference_by_viewtag).length > 0)
       json_object['scale_reference_by_viewtag'] = drawing_area.scale_reference_by_viewtag
+    // os#1352 — Régime de référence du mode « échelle adaptée » : propriété de la COMPOSITION
+    // (le document a été calé sur un élément de référence, ou sur le diagramme entier), donc
+    // persistée. Écrite seulement si elle diffère du défaut `diagram` → aucun fichier existant
+    // ne grossit, et l'absence de clé continue de signifier « régime par défaut ».
+    if (drawing_area.scale_adapted_reference !== 'diagram')
+      json_object['scale_adapted_reference'] = drawing_area.scale_adapted_reference
     if (drawing_area.maximum_node) json_object['maximum_node'] = drawing_area.maximum_node
     if (drawing_area.minimum_node) json_object['minimum_node'] = drawing_area.minimum_node
     // Écart vertical des enfants englobés (désagrégation / expansion / englobement) : mode global
@@ -2100,11 +2106,21 @@ export class DrawingAreaPersistence {
     // #384 — La clé de valeur s'appelle désormais `scale_adapted_ref_magnitude` : elle porte une
     // grandeur de diagramme, plus la valeur d'un élément de référence. Le renommage est ce qui
     // rend les fichiers antérieurs sûrs (cf. fromJSON).
+    // os#1372 — Datatag de RÉFÉRENCE : propriété de la composition, écrite dès qu'elle existe
+    // (indépendamment du mode courant — le régler puis basculer le mode ne doit pas la perdre).
+    if (drawing_area.scale_adapted_reference_datatag.length > 0) {
+      json_object['scale_adapted_reference_datatag'] = drawing_area.scale_adapted_reference_datatag
+    }
     if (drawing_area.sankey.default_style.shape_position_type === 'scale_adapted') {
       const scale_ref = drawing_area.nodePositioning.scaleAdaptedReference
       if (scale_ref) {
         json_object['scale_adapted_ref_scale'] = scale_ref.scale
-        json_object['scale_adapted_ref_magnitude'] = scale_ref.magnitude
+        // os#1372 — La grandeur n'est plus écrite quand un datatag de référence est désigné :
+        // elle est CALCULÉE à chaque dessin. L'écrire quand même ferait ressusciter, à la
+        // relecture d'un fichier dont les données ont bougé, une référence périmée.
+        if (drawing_area.scale_adapted_reference_datatag.length === 0) {
+          json_object['scale_adapted_ref_magnitude'] = scale_ref.magnitude
+        }
       }
     }
     if (drawing_area.filter_label > 0) json_object['filter_label'] = drawing_area.filter_label
@@ -2503,6 +2519,14 @@ export class DrawingAreaPersistence {
       })
       drawing_area['_scale_reference_by_viewtag'] = clean
     }
+    // os#1352 — Régime de référence du mode « échelle adaptée ». Absent ⇒ `diagram` (sa#384),
+    // qui reste le défaut : un fichier d'avant sa#384 ne bascule PAS tout seul en `element` même
+    // s'il porte un élément de référence (cf. FORMAT.md — la rétro-compatibilité automatique
+    // ferait changer d'apparence, sans geste de l'auteur, des documents publiés depuis).
+    // Valeur inconnue ⇒ défaut, jamais d'erreur de lecture.
+    const scale_adapted_ref_raw = getStringFromJSON(json_object, 'scale_adapted_reference', 'diagram')
+    drawing_area['_scale_adapted_reference'] =
+      scale_adapted_ref_raw === 'element' ? 'element' : 'diagram'
     drawing_area['_maximum_node'] = getNumberOrUndefinedFromJSON(json_object, 'maximum_node')
     drawing_area['_minimum_node'] = getNumberOrUndefinedFromJSON(json_object, 'minimum_node')
     // Écart vertical des enfants englobés : mode (défaut 'fill' si absent) + valeur constante
@@ -2707,6 +2731,16 @@ export class DrawingAreaPersistence {
     // capturent l'état affiché — c'est ce qui évite le pas de retard sur un fichier antérieur.
     // Ce qui est relu ici reste utile comme AMORCE, pour le cas où le mode s'appliquerait sans
     // qu'aucune frame suspendue ne soit passée.
+    // os#1372 — Datatag de référence, relu AVANT le couple : c'est lui qui décide si la grandeur
+    // capturée sert encore. Relu hors du test de mode — la référence appartient à la composition,
+    // pas au mode actif au moment de l'enregistrement.
+    {
+      const ref_dt = json_object['scale_adapted_reference_datatag']
+      if (Array.isArray(ref_dt)) {
+        drawing_area.scale_adapted_reference_datatag =
+          ref_dt.filter((id): id is string => typeof id === 'string')
+      }
+    }
     if (loaded_position_mode === 'scale_adapted') {
       const ref_scale = json_object['scale_adapted_ref_scale']
       const ref_magnitude = json_object['scale_adapted_ref_magnitude']

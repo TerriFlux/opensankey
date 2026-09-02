@@ -46,6 +46,8 @@ import type { Class_NodeDimension } from './NodeDimension'
 import { Type_Side, getNameLabelValues } from './ElementsAttributesConfig'
 import { transferAnchorLock } from './anchorLockTransfer'
 import { clampLinkThickness } from './flowThickness'
+import { resolveScaleCarrierTag } from '../types/ScaleResolution'
+import { countLinkDraw } from '../types/DrawCounters'
 import { Class_LinkAttribute } from './Element'
 import { LinkDrawNameLabel, LinkDrawValueLabel } from './DrawLabel'
 import { Class_ApplicationData } from '../types/ApplicationData'
@@ -208,6 +210,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
   // le nœud correspondant (cible / source) puis stockée ici.
   private _arrow_shape: string | undefined
   private _arrow_shape_source: string | undefined
+  /**
+   * os#1374 — Époque d'éventail à laquelle chaque pointe a été posée (cf.
+   * `Class_DrawingArea.arrow_epoch`). `-1` = jamais posée.
+   */
+  private _arrow_stamp = -1
+  private _arrow_stamp_source = -1
   // Source notch (negative arrow) chevron, computed at node level and shared by
   // every link leaving the same node side (so several links draw a single notch).
   private _source_notch_shape: string | undefined
@@ -463,8 +471,14 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * taille des nœuds ; appelé par draw() (réutilisation du <g>) ET par unDraw().
    */
   protected _invalidateDrawCaches() {
-    this._arrow_shape = undefined // reset shape also
-    this._arrow_shape_source = undefined
+    // os#1374 — Une pointe posée pendant l'époque d'éventail courante n'est PAS périmée : la
+    // vider ferait redemander au nœud l'éventail entier de son côté, alors qu'il vient de le
+    // calculer pour ces positions-là. Hors d'un `Class_Sankey.draw` (`keeps_arrow_caches` faux),
+    // on vide comme avant — c'est ce que réclament le glisser-déposer et `refreshArrow`.
+    const da = this.sankey.drawing_area
+    const keeps = da.keeps_arrow_caches
+    if (!(keeps && this._arrow_stamp === da.arrow_epoch)) this._arrow_shape = undefined
+    if (!(keeps && this._arrow_stamp_source === da.arrow_epoch)) this._arrow_shape_source = undefined
     this._source_notch_shape = undefined
   }
 
@@ -903,8 +917,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
         const leaf = this.valueForTag(tag as Class_DataTag) as Class_LinkValue | null
         const v = leaf === null ? null : (leaf.valueData ?? leaf.valueResult)
         if (v === null || v <= 0) return
-        if (multi_dim.is_unit && (tag as Class_DataTag).scale) {
-          this.setDomainLocalScale((tag as Class_DataTag).scale)
+        // sa#283 — bande par tranche à l'échelle PROPRE de son tag quand il en porte une
+        // (groupes d'unité : comportement historique, own_scale ≡ scale ; groupes
+        // ordinaires : nouveau, un tag legacy sans échelle propre passe dans le else).
+        const band_own_scale = (tag as Class_DataTag).own_scale
+        if (band_own_scale !== undefined && band_own_scale > 0) {
+          this.setDomainLocalScale(band_own_scale)
           bands.push({ id: tag.id, px: Math.max(0, this._scaleValueToPx(v)), color: tag.color, value: v })
         }
         else {
@@ -1196,6 +1214,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @memberof Class_LinkElement
    */
   public drawElements() {
+    // os#1376 — compté ICI, avant la garde ci-dessous, pour rester comparable aux références
+    // mesurées sur os#1372 (18 230 dessins pour 1 823 flux au chargement de SOCLE Céréales) :
+    // la sonde qui a produit ces chiffres instrumentait le tout premier statement de la méthode.
+    countLinkDraw(this.id)
     if (!this._link_shape || !this._link_draw_value || !this._link_draw_label || !this._link_draw_icon) return
     this._link_shape.drawShape()
     this._drawArrow()
@@ -1399,14 +1421,23 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
   protected scaleValueToPx(_: number) {
     const current_value = this.value
+    // sa#283 — porteur d'échelle GÉNÉRALISÉ (principe du UnitTag étendu à tous les
+    // dataTags) : tag d'unité DE LA VALEUR, ou unique tag de dataTag SÉLECTIONNÉ à
+    // échelle propre — le groupe le plus tardif de taggs_order gagne (résolution unique,
+    // cf. ScaleResolution ; même résolution que le porteur de Class_ScaleOverrides).
+    // Sans porteur : échelle de la zone de dessin, comme toujours. Quand seuls les
+    // groupes d'unité portent des échelles (tout le parc), le porteur EST le tag d'unité
+    // de la valeur : comportement strictement identique à l'historique.
     const unit_tag = current_value?.unit_data_tag()
-    if (unit_tag && !this.shape_local_link_scale) {
-      this.setDomainLocalScale(unit_tag.scale)
+    const carrier = resolveScaleCarrierTag(this.sankey, unit_tag)
+    const carrier_scale = carrier?.own_scale
+    if (carrier_scale !== undefined && !this.shape_local_link_scale) {
+      this.setDomainLocalScale(carrier_scale)
       return this._scaleValueToPx(_)
     }
     if (this.shape_local_link_scale) {
-      if (unit_tag) {
-        this.setDomainLocalScale(unit_tag.scale * this.shape_local_link_scale)
+      if (carrier_scale !== undefined) {
+        this.setDomainLocalScale(carrier_scale * this.shape_local_link_scale)
       } else {
         this.setDomainLocalScale(this.sankey.drawing_area.scale * this.shape_local_link_scale)
       }
@@ -2855,11 +2886,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
    */
   public set shape_arrow_path(_: string) {
     this._arrow_shape = _
+    // os#1374 — estampiller la pointe : c'est ce qui la fait survivre à l'invalidation des
+    // dessins de flux qui suivent, dans la même époque d'éventail.
+    this._arrow_stamp = this.sankey.drawing_area.arrow_epoch
     this.drawArrow()
   }
 
   public set shape_arrow_path_source(_: string) {
     this._arrow_shape_source = _
+    this._arrow_stamp_source = this.sankey.drawing_area.arrow_epoch
     this.drawArrow()
   }
 

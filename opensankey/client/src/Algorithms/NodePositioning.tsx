@@ -78,6 +78,12 @@ export class NodePositioning {
   // du mode << echelle adaptee >> depuis qu'elle a remplace l'element de reference unique.
   public diagramMagnitude() { return this._scale.diagramMagnitude() }
 
+  // os#1352 — Regime `element` : oubli de la capture au changement de regime, et diagnostic
+  // expose quand l'element de reference est absent ou nul.
+  public forgetScaleAdaptedCapture() { return this._scale.forgetScaleAdaptedCapture() }
+
+  public get scaleAdaptedWarning() { return this._scale.scaleAdaptedWarning }
+
 
   // #1231 / #243 (split modes) — le drapeau de suppression de compression proportionnelle vit
   // desormais dans NodePositioningProportional (ecrit par NodeActions/Hierarchies autour des

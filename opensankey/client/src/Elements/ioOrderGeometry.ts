@@ -33,7 +33,23 @@
 // recyclingBellyCentre). The reach / anchor distance is unchanged and still measures
 // toward the opposite node.
 
+// ── os#425 — DEUX POLITIQUES, une par mode qui réordonne ───────────────────────────────────
+// 'reach'  sert le mode « Position des nœuds opposés » : la politique décrite ci-dessus, prise
+//          sans la courbure (use_curve = false), inchangée.
+// 'anchor' sert le mode « Courbure des flux » : la règle d'ORIGINE, telle qu'elle était avant
+//          le retravail de #205 — DEUX bandes seulement (montante / descendante), AUCUNE
+//          exception de flux droit, et dans chaque bande le classement par la DISTANCE DE
+//          PREMIÈRE ANCRE reach·curve_node (le flux dont le coude commence le plus tôt va à
+//          l'extrémité), les égalités départagées par la hauteur du nœud opposé.
+// L'exception des flux droits introduite par le retravail de #205 déplaçait des flux que la
+// règle d'origine plaçait correctement ; son auteur a confirmé que la modification du mode
+// avancé n'était pas intentionnelle. Le mode qui la portait a donc été retiré, mais le chemin
+// 'reach' reste emprunté par « Position des nœuds opposés », d'où sa conservation ici.
+
 import { Type_Side } from './ElementsAttributesConfig'
+
+/** Laquelle des deux règles dispose la face (cf. l'en-tête). */
+export type Type_IOOrderPolicy = 'reach' | 'anchor'
 
 export type Type_IOGeo = {
   side: Type_Side
@@ -108,7 +124,10 @@ export function bundleTie(side: Type_Side, is_source: boolean, ord: number): num
 // is the centre of the loop's belly (geo.stack_ref) — see the header.
 type Type_OrderKey = [number, number, number, number, number]
 
-function orderKey(geo: Type_IOGeo, nx: number, ny: number, use_curve: boolean): Type_OrderKey {
+function orderKey(
+  geo: Type_IOGeo, nx: number, ny: number, use_curve: boolean,
+  policy: Type_IOOrderPolicy = 'reach'
+): Type_OrderKey {
   const dx = geo.ox - nx
   const dy = geo.oy - ny
   const horiz = isHorizontalSide(geo.side)
@@ -118,6 +137,14 @@ function orderKey(geo: Type_IOGeo, nx: number, ny: number, use_curve: boolean): 
     : (horiz ? dy : dx)
   const up = stack < 0
   const bundle = geo.bundle_tie ?? 0
+  // os#425 — « Courbure des flux » : deux bandes, aucune exception, l'ancre classe.
+  // Sort avant le gate, qui n'a pas cours ici. Tout ce qui suit est la politique 'reach',
+  // inchangée.
+  if (policy === 'anchor') {
+    const reach_all = Math.abs(horiz ? dx : dy)
+    const anchor_all = reach_all * geo.curve_node
+    return [up ? 0 : 1, up ? anchor_all : -anchor_all, 0, stack, bundle]
+  }
   // Straight ('hh'/'vv') links : the MIDDLE band (1), no fan — plain order by the opposite
   // stacking position. Turning links wrap around this block, above or below it.
   if (!geo.turning)
@@ -187,13 +214,17 @@ export function orderIOByGeometry<T>(
   items: { item: T; geo: Type_IOGeo }[],
   nx: number,
   ny: number,
-  use_curve: boolean = true
+  use_curve: boolean = true,
+  policy: Type_IOOrderPolicy = 'reach'
 ): T[] {
   return [...items]
     .sort((a, b) => {
       const by_side = side_rank[a.geo.side] - side_rank[b.geo.side]
       if (by_side !== 0) return by_side
-      return cmpKey(orderKey(a.geo, nx, ny, use_curve), orderKey(b.geo, nx, ny, use_curve))
+      return cmpKey(
+        orderKey(a.geo, nx, ny, use_curve, policy),
+        orderKey(b.geo, nx, ny, use_curve, policy)
+      )
     })
     .map(x => x.item)
 }

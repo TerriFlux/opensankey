@@ -16,8 +16,16 @@ export const resources_spreadsheet = {
       Spreadsheet: {
         // --- Onglets (noms de feuilles) ---
         mode_grid: 'Table',
-        mode_text: 'Text',
+        mode_json: 'JSON',
+        json: {
+          help: 'Native JSON of the diagram, as written when saving (read-only).',
+          other: 'Other',
+          refresh: 'Reload from diagram',
+          copy: 'Copy',
+          copied: 'Copied',
+        },
         text: {
+          title: 'SankeyMATIC editor',
           help: 'One flow per line: "source [value] target" (SankeyMATIC) or 3 columns "source ; target ; value".',
           apply: 'Apply',
           refresh: 'Reload from diagram',
@@ -211,8 +219,16 @@ export const resources_spreadsheet = {
     translation: {
       Spreadsheet: {
         mode_grid: 'Tableur',
-        mode_text: 'Texte',
+        mode_json: 'JSON',
+        json: {
+          help: 'JSON natif du diagramme, tel qu\'écrit à l\'enregistrement (lecture seule).',
+          other: 'Autres',
+          refresh: 'Recharger depuis le diagramme',
+          copy: 'Copier',
+          copied: 'Copié',
+        },
         text: {
+          title: 'Éditeur SankeyMATIC',
           help: 'Un flux par ligne : « source [valeur] cible » (SankeyMATIC) ou 3 colonnes « source ; cible ; valeur ».',
           apply: 'Appliquer',
           refresh: 'Recharger depuis le diagramme',
@@ -398,8 +414,16 @@ export const resources_spreadsheet = {
     translation: {
       Spreadsheet: {
         mode_grid: 'Tabla',
-        mode_text: 'Texto',
+        mode_json: 'JSON',
+        json: {
+          help: 'JSON nativo del diagrama, tal como se escribe al guardar (solo lectura).',
+          other: 'Otros',
+          refresh: 'Recargar desde el diagrama',
+          copy: 'Copiar',
+          copied: 'Copiado',
+        },
         text: {
+          title: 'Editor SankeyMATIC',
           help: 'Un flujo por línea: «origen [valor] destino» (SankeyMATIC) o 3 columnas «origen ; destino ; valor».',
           apply: 'Aplicar',
           refresh: 'Recargar desde el diagrama',
@@ -585,8 +609,16 @@ export const resources_spreadsheet = {
     translation: {
       Spreadsheet: {
         mode_grid: 'Tabelle',
-        mode_text: 'Text',
+        mode_json: 'JSON',
+        json: {
+          help: 'Natives JSON des Diagramms, wie beim Speichern geschrieben (schreibgeschützt).',
+          other: 'Sonstiges',
+          refresh: 'Aus Diagramm neu laden',
+          copy: 'Kopieren',
+          copied: 'Kopiert',
+        },
         text: {
+          title: 'SankeyMATIC-Editor',
           help: 'Ein Fluss pro Zeile: „Quelle [Wert] Ziel“ (SankeyMATIC) oder 3 Spalten „Quelle ; Ziel ; Wert“.',
           apply: 'Anwenden',
           refresh: 'Aus Diagramm neu laden',
@@ -772,8 +804,16 @@ export const resources_spreadsheet = {
     translation: {
       Spreadsheet: {
         mode_grid: 'Tabella',
-        mode_text: 'Testo',
+        mode_json: 'JSON',
+        json: {
+          help: 'JSON nativo del diagramma, come scritto al salvataggio (sola lettura).',
+          other: 'Altro',
+          refresh: 'Ricarica dal diagramma',
+          copy: 'Copia',
+          copied: 'Copiato',
+        },
         text: {
+          title: 'Editor SankeyMATIC',
           help: 'Un flusso per riga: «origine [valore] destinazione» (SankeyMATIC) o 3 colonne «origine ; destinazione ; valore».',
           apply: 'Applica',
           refresh: 'Ricarica dal diagramma',
@@ -957,8 +997,16 @@ export const resources_spreadsheet = {
       Spreadsheet: {
         // --- Onglets (noms de feuilles) ---
         mode_grid: '表格',
-        mode_text: '文本',
+        mode_json: 'JSON',
+        json: {
+          help: '图表的原生 JSON，与保存文件时写出的内容一致（只读）。',
+          other: '其他',
+          refresh: '从图表重新加载',
+          copy: '复制',
+          copied: '已复制',
+        },
         text: {
+          title: 'SankeyMATIC 编辑器',
           help: '每行一条流量："source [value] target"（SankeyMATIC），或三列 "source ; target ; value"。',
           apply: '应用',
           refresh: '从图表重新加载',
@@ -1150,8 +1198,16 @@ export const resources_spreadsheet = {
       Spreadsheet: {
         // --- Onglets (noms de feuilles) ---
         mode_grid: '表',
-        mode_text: 'テキスト',
+        mode_json: 'JSON',
+        json: {
+          help: '図のネイティブ JSON。保存時に書き出される内容と同じです（読み取り専用）。',
+          other: 'その他',
+          refresh: '図から読み込み直す',
+          copy: 'コピー',
+          copied: 'コピーしました',
+        },
         text: {
+          title: 'SankeyMATIC エディタ',
           help: '1 行に 1 フロー："source [value] target"（SankeyMATIC）、または 3 列の "source ; target ; value"。',
           apply: '適用',
           refresh: '図から読み込み直す',

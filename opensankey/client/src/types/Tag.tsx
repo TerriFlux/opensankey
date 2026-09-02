@@ -261,6 +261,9 @@ export abstract class Class_ProtoTag {
   public toogleSelected() {
     // Set attributes
     this._is_selected = !this._is_selected
+    // sa#283 — vues contextuelles : overlay appliqué APRÈS le basculement, AVANT le
+    // redraw d'update() (slot optionnel enregistré par OSP).
+    this._ref_sankey.drawing_area.application_data.after_tag_selection_change?.()
     // Redraw all related elements
     this.update()
   }
@@ -552,6 +555,16 @@ export class Class_DataTag extends Class_ProtoTag {
   protected _group: Class_DataTagGroup
 
   private _scale: number
+
+  // sa#283 — Généralisation de l'échelle par tag à TOUS les groupes de dataTags (retour
+  // Julien, pilote Céréales : les volumes varient de plusieurs ordres de grandeur entre
+  // tranches, une seule échelle de dessin ne peut pas convenir). `_scale` existe depuis
+  // toujours mais n'est SIGNIFIANT que pour les groupes d'unité (défaut 10 sérialisé sur
+  // tous les tags des fichiers historiques — bruit inexploitable). Ce drapeau, additif et
+  // absent des fichiers legacy, dit qu'un tag NON-unité porte une échelle PROPRE : c'est
+  // lui (et lui seul) qui fait participer le tag à la résolution du porteur d'échelle
+  // (cf. ScaleResolution.resolveScaleCarrier).
+  private _has_own_scale: boolean = false
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -586,6 +599,10 @@ export class Class_DataTag extends Class_ProtoTag {
   ) {
     super._toJSON(json_object,_kwargs)
     json_object['scale'] = this._scale
+    // sa#283 — clé ADDITIVE : seul un tag non-unité à échelle propre l'écrit (les groupes
+    // d'unité restent régis par `scale` seul, comme toujours). Absente d'un fichier
+    // legacy → false → comportement strictement inchangé.
+    if (this._has_own_scale) json_object['scale_owned'] = true
   }
 
   /**
@@ -597,6 +614,7 @@ export class Class_DataTag extends Class_ProtoTag {
   protected _copyFrom(tag_to_copy: Class_ProtoTag) {
     super._copyFrom(tag_to_copy)
     this._scale = (tag_to_copy as Class_DataTag)._scale
+    this._has_own_scale = (tag_to_copy as Class_DataTag)._has_own_scale
   }
 
   /**
@@ -612,6 +630,8 @@ export class Class_DataTag extends Class_ProtoTag {
   ): void {
     super._fromJSON(json_object,_kwargs)
     this._scale = getNumberFromJSON(json_object, 'scale', this._scale)
+    // sa#283 — cf. _toJSON : absent (tous les fichiers legacy) → false.
+    this._has_own_scale = json_object['scale_owned'] === true
   }
 
 
@@ -678,6 +698,28 @@ export class Class_DataTag extends Class_ProtoTag {
   public set scale(_) {
     if (this.group.is_unit) this._scale = _
     else this._scale = _
+  }
+
+  /**
+   * sa#283 — Échelle PROPRE du tag, ou undefined s'il n'en porte pas :
+   *  - groupe d'UNITÉ : toujours `_scale` (sémantique historique : chaque unité a la
+   *    sienne, « quantité par 100 px pour cette unité ») ;
+   *  - groupe ordinaire : `_scale` si explicitement posée (drapeau `scale_owned`),
+   *    sinon undefined (le tag suit l'échelle du porteur résolu / de la zone de dessin —
+   *    le `scale: 10` par défaut des fichiers historiques n'est PAS une échelle propre).
+   * Poser undefined retire l'échelle propre d'un tag ordinaire (no-op pour une unité).
+   */
+  public get own_scale(): number | undefined {
+    if (this.group.is_unit) return this._scale
+    return this._has_own_scale ? this._scale : undefined
+  }
+  public set own_scale(_: number | undefined) {
+    if (_ === undefined) {
+      if (!this.group.is_unit) this._has_own_scale = false
+      return
+    }
+    this._scale = _
+    this._has_own_scale = true
   }
 }
 

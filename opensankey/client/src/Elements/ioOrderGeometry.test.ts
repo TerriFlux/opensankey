@@ -1,4 +1,6 @@
-import { orderIOByGeometry, recyclingBellyCentre, bundleTie, Type_IOGeo } from './ioOrderGeometry'
+import {
+  orderIOByGeometry, recyclingBellyCentre, bundleTie, Type_IOGeo, Type_IOOrderPolicy
+} from './ioOrderGeometry'
 
 // Geometry-aware I/O ordering — gated direction split + HEIGHT rule (#205 rework).
 //   0. GATE — the fan applies only to TURNING links (orientation 'vh'/'hv'). Straight
@@ -237,5 +239,81 @@ describe('recycling links — split keyed on the loop belly, not on the opposite
       ['near', 'left', 1500, 900, true, 0.02, belly], // reach  500 → bottom extremity
     ])
     expect(run(items, node.x, node.y)).toEqual(['far', 'near'])
+  })
+})
+
+// ── os#425 — politique 'anchor' : le mode « Courbure des flux » ─────────────────────────
+// Règle d'ORIGINE de l'utilisateur, telle qu'elle était avant le retravail de #205. Deux bandes
+// (montante / descendante), AUCUNE exception de flux droit, et dans chaque bande le classement
+// par la DISTANCE DE PREMIÈRE ANCRE reach·curve_node — coude le plus précoce à l'extrémité —
+// départagée par la hauteur du nœud opposé. Les tests ci-dessus, eux, portent sur la politique
+// par défaut ('reach') et restent inchangés : les deux règles cohabitent.
+const runA = (
+  items: ReturnType<typeof make>, nx: number, ny: number
+) => orderIOByGeometry(items, nx, ny, true, 'anchor' as Type_IOOrderPolicy).map(l => l.id)
+
+describe("os#425 — « Courbure des flux » (politique 'anchor')", () => {
+  it('AUCUNE exception : un flux droit est éventaillé comme les autres', () => {
+    // Aucun de ces flux ne change d'axe : la politique 'reach' les range tous dans la bande
+    // du milieu et les trie par la position opposée. La règle d'origine, elle, les éventaille
+    // par l'ancre — c'est toute la différence entre les deux modes.
+    const items = make([
+      ['a', 'right', 300, 200, false, 0.9],   // ancre 270 — coude tardif
+      ['b', 'right', 1200, -150, false, 0.02],
+      ['c', 'right', 700, 40, false, 0.1],    // ancre  70 — coude précoce
+    ])
+    expect(run(items, 0, 0)).toEqual(['b', 'c', 'a'])   // 'reach' : par position opposée
+    expect(runA(items, 0, 0)).toEqual(['b', 'a', 'c'])  // 'anchor' : par ancre
+  })
+
+  it("l'ancre prime la portée", () => {
+    // 'proche' est le plus proche mais son coude est tardif (ancre 150) ; 'lointain' est loin
+    // et tourne tôt (ancre 50). La règle d'origine donne l'extrémité au coude le plus précoce,
+    // celle de #205 la donne au plus proche.
+    const items = make([
+      ['proche', 'right', 300, 200, true, 0.5],
+      ['lointain', 'right', 1000, 200, true, 0.05],
+    ])
+    expect(runA(items, 0, 0)).toEqual(['proche', 'lointain'])
+    expect(run(items, 0, 0)).toEqual(['lointain', 'proche'])
+  })
+
+  it('split direction : tous les montants au-dessus de tous les descendants', () => {
+    const items = make([
+      ['upFar', 'right', 1000, -100],
+      ['upNear', 'right', 300, -100],
+      ['downNear', 'right', 300, 100],
+      ['downFar', 'right', 1000, 100],
+    ])
+    // À courbure égale l'ancre suit la portée : bande montante croissante, descendante
+    // décroissante — le coude le plus précoce à chaque extrémité.
+    expect(runA(items, 0, 0)).toEqual(['upNear', 'upFar', 'downFar', 'downNear'])
+  })
+
+  it('ancres égales : la hauteur du nœud opposé départage', () => {
+    const items = make([
+      ['bas', 'right', 500, 300],
+      ['haut', 'right', 500, 100],
+    ])
+    expect(runA(items, 0, 0)).toEqual(['haut', 'bas'])
+  })
+
+  it('un recyclage est éventaillé par son ancre, depuis le ventre de sa boucle', () => {
+    // Cas réel de la filière Lait, nœud « Fabrication de poudre de lait » (coordonnées du
+    // fichier joint à l'issue, prises comme centres). Poudre de lait intermédiaire remonte
+    // légèrement → bande montante. Eau et le recyclage vers Crème descendent tous deux ; le
+    // ventre de la boucle plonge sous le nœud et sa courbure quasi nulle (0,0025) lui donne
+    // l'ancre la plus faible (0,6 contre 15,1), donc l'extrémité basse. C'est l'ordre demandé
+    // à l'ouverture de l'issue.
+    const fab = { x: 382.99, y: 318.11 }
+    const belly = recyclingBellyCentre(fab.x, fab.y, 158.12, 459.91, 11.126, 10, 'hh')
+    const items = make([
+      ['Poudre de lait intermédiaire', 'right', 624.75, 282.51, false, 0.0285],
+      ['Eau', 'right', 1060.65, 864.19, false, 0.0223],
+      ['Crème intermédiaire', 'right', 158.12, 459.91, false, 0.0025, belly.y],
+    ])
+    expect(runA(items, fab.x, fab.y)).toEqual([
+      'Poudre de lait intermédiaire', 'Eau', 'Crème intermédiaire'
+    ])
   })
 })

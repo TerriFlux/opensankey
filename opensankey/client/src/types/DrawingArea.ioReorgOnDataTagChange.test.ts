@@ -83,6 +83,25 @@ function buildDiagram() {
 
 const orderAt = (node: Class_NodeElement) => node.links_order.map(l => l.id)
 
+/**
+ * Place le dessin en « échelle adaptée » pour la bascule qui suit.
+ *
+ * Trois verrous, et non un seul :
+ *  - le mode global vit sur le style « default » (cf. DrawingArea._effectivePositionMode) ;
+ *  - la suspension d'ouverture (#369) dessine en absolu tant qu'elle tient ;
+ *  - #370 — la DIMENSION impose son propre mode à chaque changement de sélection
+ *    (`applyPositionModeToDrawing`). Sans le poser aussi sur le groupe, la bascule rappelait
+ *    `setAbsoluteMode` et la branche « échelle adaptée » de `drawElements` n'était jamais prise :
+ *    `resolveScaleAdaptedOverlaps` ne tournait pas du tout, et le test ne mesurait rien.
+ *    Les deux valeurs étant égales, le garde-fou de `applyPositionModeToDrawing` court-circuite —
+ *    on ne re-rentre donc pas dans le mode (ce qui re-suspendrait, cf. setScaleAdaptedMode).
+ */
+function armScaleAdapted(drawing_area: Class_ApplicationData['drawing_area'], tagg: Class_DataTagGroup) {
+  drawing_area.sankey.styles_dict['default'].shape_position_type = 'scale_adapted'
+  tagg.position_mode = 'scale_adapted'
+  drawing_area.clearPositionModeSuspension()
+}
+
 describe('#378 — ordre des flux E/S au changement de dataTag', () => {
   it('recalcule l\'ordre des entrées à la bascule de millésime', () => {
     const { tagg, tag_2021, cible, link_haut, link_bas } = buildDiagram()
@@ -139,6 +158,44 @@ describe('#378 — ordre des flux E/S au changement de dataTag', () => {
     // release_locks=false, comme un déplacement de nœud (cf. NodeEventsHandler).
     expect(reorg).toHaveBeenCalled()
     reorg.mock.calls.forEach(call => expect(call[0]).toBe(false))
+  })
+
+  // ================================================================================================
+  // os#1370 — En échelle adaptée, l'ordre se déduit de la disposition de l'AUTEUR, jamais de
+  // l'anti-chevauchement d'affichage.
+  //
+  // `resolveScaleAdaptedOverlaps` ne fait que pousser des coins pour le datatag courant : il n'est
+  // jamais persisté, alors que `links_order` l'est. Tant que la réorganisation tourne APRÈS lui,
+  // un flux passe sous un autre dans les vues où le push déplace quelque chose, et enregistrer
+  // grave l'artefact dans le fichier (CARTOFOB, « Prélèvements »).
+  // ================================================================================================
+  it('en echelle adaptee, l ordre est calcule AVANT l anti-chevauchement', () => {
+    const { drawing_area, tagg, tag_2021 } = buildDiagram()
+    armScaleAdapted(drawing_area, tagg)
+
+    const sequence: string[] = []
+    jest.spyOn(drawing_area.nodePositioning, 'resolveScaleAdaptedOverlaps')
+      .mockImplementation(() => { sequence.push('anti-chevauchement') })
+    const reorg = drawing_area.reorganizeIOOnDataSelectionChange.bind(drawing_area)
+    jest.spyOn(drawing_area, 'reorganizeIOOnDataSelectionChange')
+      .mockImplementation(() => { sequence.push('reorganisation'); return reorg() })
+
+    tagg.selectTagsFromId(tag_2021.id)
+
+    // Le push ne peut pas influencer l ordre : il court apres lui.
+    expect(sequence[0]).toBe('reorganisation')
+    expect(sequence[1]).toBe('anti-chevauchement')
+  })
+
+  it('en echelle adaptee, la bascule reordonne quand meme (378 reste vrai)', () => {
+    const { drawing_area, tagg, tag_2021, cible, link_haut, link_bas } = buildDiagram()
+    armScaleAdapted(drawing_area, tagg)
+
+    tagg.selectTagsFromId(tag_2021.id)
+
+    // Les hauteurs sont deja celles de la selection courante : c est bien le changement de
+    // valeurs qui reordonne, et lui seul.
+    expect(orderAt(cible)).toEqual([link_haut.id, link_bas.id])
   })
 
   it('un nœud réglé sur « aucune réorganisation » garde son ordre', () => {

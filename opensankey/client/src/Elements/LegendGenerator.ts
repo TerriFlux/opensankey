@@ -28,7 +28,7 @@ import {
 import { LEGEND_FRAME_ID, isLegendChildId } from './legendIds'
 import {
   computeLegendItems, computeScaleText, layoutLegendItems,
-  SCALE_BAR_HEIGHT_FACTOR, Type_LegendConfigValues, Type_LegendEnv, Type_LegendItem, Type_SankeyForLegend
+  SCALE_BAR_HEIGHT_PX, Type_LegendConfigValues, Type_LegendEnv, Type_LegendItem, Type_SankeyForLegend
 } from './legendItems'
 
 // Ré-exports : les identifiants (legendIds) et la partie pure du générateur
@@ -368,7 +368,9 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       }
       const scale_text = computeScaleText(
         drawing_area.scale,
-        sankey.data_taggs_list as unknown as Parameters<typeof computeScaleText>[1],
+        // sa#283 — dans l'ordre de taggs_order : la résolution du porteur généralisé
+        // donne la priorité au groupe le plus tardif (cf. computeScaleText).
+        sankey.getTagGroupsAsList('data_taggs') as unknown as Parameters<typeof computeScaleText>[1],
         values,
         env.t_scale ?? 'Echelle'
       )
@@ -390,12 +392,39 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
     const desired_ids = new Set(items.map(i => i.id))
     items.forEach(i => { if (i.block_id) desired_ids.add(i.block_id) })
 
-    // Origine du contenu = position courante du cadre (ou position d'apparition)
     const existing_frame = sankey.containers_dict[LEGEND_FRAME_ID]
-    const origin = {
-      x: (existing_frame?.position_x ?? config.initial_position.x) + LEGEND_PADDING,
-      y: (existing_frame?.position_y ?? config.initial_position.y) + LEGEND_PADDING
-    }
+
+    // os#1373 — DÉRIVE de la légende, corrigée ici.
+    //
+    // Le contenu était posé à `cadre + LEGEND_PADDING`, puis le cadre épousait le contenu
+    // (`computeSizeAndPositionFromAttachedNodes`, plus bas), lequel recale le coin sur la bbox
+    // des membres — sans marge. Le padding s'ajoutait donc à CHAQUE régénération, c'est-à-dire à
+    // chaque changement de dataTag tant que la légende est gérée : 10 px vers le bas et vers la
+    // droite à chaque fois. Ailleurs le cadrage automatique recadrait et absorbait la dérive ;
+    // en échelle adaptée la caméra est fixe, et la légende s'en allait pour de bon.
+    //
+    // On pose maintenant le contenu de sorte que sa boîte retombe EXACTEMENT sur le cadre
+    // existant : le cycle « je place, puis j'épouse » devient un point fixe. Le rendu ne change
+    // pas — le cadre continue d'épouser le contenu au pixel près. Le padding ne sert plus qu'à
+    // la PREMIÈRE apparition, pour écarter la légende de sa position d'apparition.
+    //
+    // Le minimum des positions relatives est retranché plutôt que supposé nul : si la mise en
+    // page commençait à un décalage non nul, il se rajouterait à chaque passage comme le faisait
+    // le padding.
+    let min_x = Infinity
+    let min_y = Infinity
+    positions.forEach(p => {
+      if (p.x < min_x) min_x = p.x
+      if (p.y < min_y) min_y = p.y
+    })
+    if (!isFinite(min_x)) min_x = 0
+    if (!isFinite(min_y)) min_y = 0
+    const origin = existing_frame
+      ? { x: existing_frame.position_x - min_x, y: existing_frame.position_y - min_y }
+      : {
+        x: config.initial_position.x + LEGEND_PADDING,
+        y: config.initial_position.y + LEGEND_PADDING
+      }
 
     // Supprime les zones obsolètes (et le cadre si plus aucun contenu)
     sankey.containers_list
@@ -445,12 +474,15 @@ export function regenerateLegend(drawing_area: Class_DrawingArea): void {
       zone.shape_border_visible = false
       zone.shape_border_radius = 3
       if (item.scale_bar) {
-        // Échelle : trait vertical fin dont la hauteur matérialise l'échelle
+        // Échelle : trait vertical fin dont la hauteur matérialise l'échelle.
+        // Hauteur en px MONDE bruts (PAS multipliée par la police ni par la
+        // compensation) : elle doit coïncider avec l'épaisseur d'un flux de la
+        // valeur affichée (scale/2 ↔ 50 px via scaleValueToPx).
         zone.shape_color = 'black'
         zone.shape_opacity = 1
         zone.shape_border_radius = 0
         zone.shape_min_width = Math.max(2, layout_values.police / 8)
-        zone.shape_min_height = SCALE_BAR_HEIGHT_FACTOR * layout_values.police
+        zone.shape_min_height = SCALE_BAR_HEIGHT_PX
       } else if (item.swatch_color !== undefined) {
         // Pastille en px monde effectifs (suit la compensation de police)
         zone.shape_min_width = layout_values.police
