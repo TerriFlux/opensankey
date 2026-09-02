@@ -476,6 +476,19 @@ export class Class_MenuConfig {
   // `main_zone_show_unitary` (le panneau est un membre de la grande zone, persisté). `toggleUnitaryTab`
   // reste exposé pour les points d'entrée OS+ (clic droit / onglet tooltip de nœud).
   public unitary_tab_available: boolean = false
+
+  // sa#1354 — Applicateur de NIVEAU, injecté par la couche éditeur.
+  //
+  // Les autres axes du contrôleur se restaurent par un simple setter ; le niveau
+  // d'agrégation, lui, emporte l'agrégation/désagrégation effective des nœuds
+  // (préférences par nœud, expansions, cadres englobants), et cette logique vit
+  // dans `Toolbar.handleTagSelection` — donc au-dessus d'OpenSankey, qui ne peut
+  // pas l'appeler. D'où ce créneau, sur le même patron que
+  // `unitary_tab_available` : la couche qui sait faire s'y déclare.
+  //
+  // Absent (viewer OS pur, tests), `applyUrlStateParams` ignore le niveau sans
+  // erreur : l'URL reste lisible, elle restaure simplement un axe de moins.
+  public level_selection_applier: ((tagg_id: string, tag_id: string) => void) | null = null
   public toggleUnitaryTab: () => void = () => { /* injecté par OS+ */ }
   /**
    * Largeur (px) réservée à droite par le tableur/doc en mode split (0 sinon). Source unique de
