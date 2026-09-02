@@ -63,18 +63,21 @@ export class Class_PanelManager {
 
   private _bus: Class_EventBus
 
-  // La barre latérale est un CONTENANT, pas un menu : elle s'ouvre et se ferme
-  // pour elle-même (bouton de la barre du haut / Ctrl+B) et accueille AU PLUS UN
-  // menu à la fois (#2). Les deux états sont indépendants — elle peut donc être
-  // OUVERTE ET VIDE, ce qui est un état utile : c'est la façon dont le lecteur
-  // déclare « je veux que les clics s'ouvrent ici » avant même d'avoir cliqué
-  // quoi que ce soit (cf. `defaultOpenMode`).
+  // La barre latérale est un CONTENANT à UN SEUL menu (#2), et elle n'existe QUE
+  // GARNIE : il n'y a plus d'état « ouverte et vide ». Une bande de 270 px qui ne
+  // montre rien ne rend aucun service et recadre le dessin pour rien ; le seul
+  // usage qu'elle avait — dire « ouvre les prochains clics ici » — est désormais
+  // porté par le menu ancré lui-même : tant qu'il y en a un, les clics s'ouvrent
+  // dans la barre (cf. `defaultOpenMode`).
   //
-  // Fermée par défaut : un diagramme s'ouvre sur son dessin, pas sur une bande
-  // de 270 px, et les menus s'ouvrent alors en pop-up — le comportement d'avant
+  // Vide par défaut : un diagramme s'ouvre sur son dessin, pas sur une bande de
+  // 270 px, et les menus s'ouvrent alors en pop-up — le comportement d'avant
   // #300, que la rétrocompatibilité demande de retrouver tel quel.
-  private _sidebar_open: boolean = false
   private _sidebar_id: string | null = null
+  // Repli du menu ancré (Ctrl+B / bouton de la barre du haut) : il RESTE ancré,
+  // simplement masqué, et ne réserve plus sa largeur. Sans menu ancré, il n'y a
+  // rien à replier — cet indicateur ne dit alors rien (cf. `sidebar_open`).
+  private _sidebar_collapsed: boolean = false
   private _sidebar_width_px: number = PANEL_SIDEBAR_DEFAULT_WIDTH_PX
   // Dernier menu ayant occupé la barre : sert à la REGARNIR quand on la rouvre.
   // Effacé quand le lecteur ferme ce menu (✕) ou l'en détache : dans les deux cas
@@ -170,7 +173,7 @@ export class Class_PanelManager {
       // mémorisé pour la réouverture.
       this._sidebar_id = id
       this._last_sidebar_id = id
-      this._sidebar_open = true
+      this._sidebar_collapsed = false
       this._notifySidebar()
     } else if (mode === 'popup') {
       // Géométrie : explicite > dernière connue (mémoire, survit à la barre
@@ -298,38 +301,52 @@ export class Class_PanelManager {
   // BARRE LATÉRALE =====================================================================
 
   public get sidebar_id(): string | null { return this._sidebar_id }
-  /** La barre latérale est-elle déployée ? Vrai même si elle est VIDE — c'est le
-   *  contenant qui est ouvert, indépendamment de ce qu'il contient. */
-  public get sidebar_open(): boolean { return this._sidebar_open }
+  /** La barre latérale est-elle déployée ? Uniquement si elle porte un menu ET
+   *  qu'il n'est pas replié : le contenant n'existe pas sans contenu. */
+  public get sidebar_open(): boolean {
+    return this._sidebar_id !== null && !this._sidebar_collapsed
+  }
+
   /** Alias historique (#300) : la barre réserve sa largeur dès qu'elle est ouverte. */
-  public get sidebar_visible(): boolean { return this._sidebar_open }
+  public get sidebar_visible(): boolean { return this.sidebar_open }
 
   /**
-   * OÙ un clic ouvre un panneau. Règle UNIQUE, sans réglage ni exception
-   * (ajustement #4) : la barre latérale si elle est ouverte, une pop-up sinon.
+   * OÙ un clic ouvre un panneau. Règle UNIQUE, sans réglage ni exception : la
+   * barre latérale si elle est déployée, une pop-up sinon.
    *
-   * C'est le lecteur qui arbitre, par un geste qu'il fait déjà — ouvrir ou
-   * fermer la barre — au lieu d'un choix d'auteur à régler par menu et par
-   * élément. La barre ouverte VIDE est donc un état pleinement utile : elle dit
-   * « ouvre les choses ici ». Le survol, lui, ne passe jamais par ici : il
-   * n'ouvre que des info-bulles.
+   * C'est le lecteur qui arbitre, par un geste qu'il fait déjà — ancrer un menu,
+   * le détacher — au lieu d'un choix d'auteur à régler par menu et par élément.
+   * Le menu ancré vaut donc préférence : « les prochains clics s'ouvrent ici ».
+   * Le survol, lui, ne passe jamais par ici : il n'ouvre que des info-bulles.
    */
   public defaultOpenMode(): 'sidebar' | 'popup' {
-    return this._sidebar_open ? 'sidebar' : 'popup'
+    return this.sidebar_open ? 'sidebar' : 'popup'
   }
 
   /**
-   * Ouvre / ferme la barre latérale elle-même (bouton de la barre du haut,
-   * Ctrl+B). À l'ouverture, elle retrouve le dernier menu qu'elle contenait ;
-   * s'il n'y en a pas, elle s'ouvre VIDE — prête à recevoir le prochain clic.
-   * Fermer ne détruit rien : le menu ancré reste ancré, simplement masqué.
+   * Bascule de la barre latérale (bouton de la barre du haut, Ctrl+B).
+   *
+   * La barre n'existant jamais vide, le geste porte toujours sur un MENU :
+   *  - un menu est ancré -> on le replie / le déplie (il reste ancré) ;
+   *  - la barre est vide -> on la garnit, du dernier menu qu'elle a porté, sinon
+   *    de la fenêtre ouverte la plus récente — « range ça sur le côté » ;
+   *  - rien d'ouvert du tout -> rien à faire (il n'y a pas de bande à montrer).
    */
   public toggleSidebar(): void {
-    this._sidebar_open = !this._sidebar_open
-    if (this._sidebar_open && this._sidebar_id === null && this._last_sidebar_id !== null) {
-      this._sidebar_id = this._last_sidebar_id
+    if (this._sidebar_id !== null) {
+      this._sidebar_collapsed = !this._sidebar_collapsed
+      this._notifySidebar()
+      return
     }
-    this._notifySidebar()
+    const id = this._last_sidebar_id ?? [...this._popups.keys()].pop() ?? null
+    if (id === null) return
+    this.setMode(id, 'sidebar')
+  }
+
+  /** Le geste de bascule a-t-il prise ? Faux quand rien n'est ancré ni ouvert :
+   *  la barre n'a alors rien à montrer, et son bouton rien à faire. */
+  public canToggleSidebar(): boolean {
+    return this._sidebar_id !== null || this._last_sidebar_id !== null || this._popups.size > 0
   }
 
   public get sidebar_width_px(): number { return this._sidebar_width_px }
@@ -339,11 +356,11 @@ export class Class_PanelManager {
     this._notifySidebar()
   }
 
-  /** Largeur (px) réservée à droite par la barre latérale (0 si fermée). Réservée
-   *  dès qu'elle est OUVERTE, même vide : c'est le contenant qui prend la place.
+  /** Largeur (px) réservée à droite par la barre latérale : 0 tant qu'elle ne
+   *  porte pas de menu déployé — elle ne prend la place que de ce qu'elle montre.
    *  Entre dans Class_MenuConfig.getRightChromeReservedPx (réserve du dessin). */
   public getSidebarReservedPx(): number {
-    return this._sidebar_open ? this._sidebar_width_px : 0
+    return this.sidebar_open ? this._sidebar_width_px : 0
   }
 
   // POP-UPS ============================================================================
@@ -402,7 +419,7 @@ export class Class_PanelManager {
       // '' = barre vide (Type_JSON n'accepte pas null).
       sidebar_id: this._sidebar_id ?? '',
       sidebar_width_px: this._sidebar_width_px,
-      sidebar_open: this._sidebar_open,
+      sidebar_open: this.sidebar_open,
       popups
     }
   }
@@ -415,11 +432,13 @@ export class Class_PanelManager {
     const sid = getStringFromJSON(json, 'sidebar_id', '')
     this._sidebar_id = sid !== '' ? sid : null
     this._last_sidebar_id = this._sidebar_id
-    // Ouverture de la barre. Documents antérieurs à l'ajustement #4 : ils ne
-    // portaient pas `sidebar_open` mais `sidebar_collapsed`, et la barre y
-    // existait UNIQUEMENT via son menu ancré — d'où la reconstruction.
-    this._sidebar_open = getBooleanFromJSON(json, 'sidebar_open',
+    // Repli de la barre. Deux générations de documents à relire : ceux d'avant
+    // l'ajustement #4 portaient `sidebar_collapsed`, ceux d'après `sidebar_open`
+    // — lequel pouvait valoir vrai SANS menu ancré (la barre ouverte et vide,
+    // état qui n'existe plus : sans menu, il n'y a rien à déplier).
+    const was_open = getBooleanFromJSON(json, 'sidebar_open',
       this._sidebar_id !== null && !getBooleanFromJSON(json, 'sidebar_collapsed', false))
+    this._sidebar_collapsed = this._sidebar_id !== null && !was_open
     // Un éventuel `presentation_trigger` / `presentation_delay_ms` (réglages
     // document d'une version antérieure) est ignoré : déclencheur et délai sont
     // désormais des attributs de style par élément. De même pour un bloc `menus`
