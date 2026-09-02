@@ -49,6 +49,18 @@ export class Class_DrawingAreaInteractions {
   // par-dessus (et son gestionnaire de clic reprendrait la main juste après).
   private _node_tool_armed = false
 
+  // #485 — État de geste : l'appui du bouton a-t-il eu lieu DANS la zone de dessin ?
+  // Un glisser amorcé ailleurs (sélection du texte d'un champ de l'inspecteur, poignée
+  // de redimensionnement du panneau latéral) et relâché au-dessus du dessin envoie tout
+  // de même un `mouseup` au SVG : la DA le prenait pour un clic sur le fond et purgeait
+  // la sélection — précisément celle que l'auteur était en train de configurer.
+  private _press_started_on_da = false
+  // Guetteur de relâché posé sur le document le temps du geste (même idiome que les
+  // poignées de PanelShell) : il désarme aussi quand le relâché tombe HORS de la DA,
+  // sinon l'appui resterait « en vol » et le relâché étranger SUIVANT serait pris pour
+  // la fin de ce geste-là.
+  private _release_watcher: (() => void) | null = null
+
   /**
    * Pose les écouteurs sur la zone de dessin. Les gestes d'édition (création de flux, sélection)
    * ne sont branchés qu'en mode éditable ; le zoom/pan l'est toujours.
@@ -132,6 +144,28 @@ export class Class_DrawingAreaInteractions {
   }
 
   /**
+   * #485 — Mémorise qu'un appui vient d'avoir lieu dans la zone de dessin, et arme un
+   * guetteur de relâché au niveau du document pour désarmer quel que soit l'endroit où
+   * le bouton est relâché. Le guetteur est posé sur le document de la DA (fenêtre fille
+   * comprise, quand la zone de dessin est détachée) et se retire de lui-même.
+   *
+   * Ordre garanti : le `mouseup` remonte d'abord au groupe de dessin (`_eventReleasedClick`,
+   * qui lit le drapeau) puis au document (ce guetteur, qui l'efface).
+   */
+  private _armPressOnDrawingArea(da: Class_DrawingArea) {
+    this._press_started_on_da = true
+    if (this._release_watcher !== null) return
+    const doc = da.d3_selection_zoom_area?.node()?.ownerDocument ?? document
+    const watcher = () => {
+      this._press_started_on_da = false
+      doc.removeEventListener('mouseup', watcher)
+      this._release_watcher = null
+    }
+    this._release_watcher = watcher
+    doc.addEventListener('mouseup', watcher)
+  }
+
+  /**
    * Define maintained left mouse button click for drawing area
    */
   private _eventMaintainedClick(
@@ -139,6 +173,9 @@ export class Class_DrawingAreaInteractions {
     event: MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     event.preventDefault()
+    // #485 — l'appui a bien eu lieu dans la zone de dessin : le relâché qui suivra
+    // pourra être traité comme un geste du dessin.
+    this._armPressOnDrawingArea(da)
     // EDITION MODE =============================================================
     // event.button==0 check if we use LMB
     if (da.isInEditionMode() && event.button == 0 && da.eventsEnabled()) {
@@ -293,6 +330,16 @@ export class Class_DrawingAreaInteractions {
     da: Class_DrawingArea,
     event: MouseEvent
   ) {
+    // #485 — Un relâché dont l'appui n'a PAS eu lieu dans la zone de dessin n'est pas un
+    // geste du dessin : on le laisse passer sans rien décider. Les modes SÉLECTION et
+    // PLACEMENT sont les seuls concernés — ce sont les deux qui agissent sur le seul
+    // relâché (purge de la sélection, création d'une zone de texte). Le mode ÉDITION,
+    // lui, n'agit que s'il porte déjà un flux fantôme ou un outil armé, et ce fantôme
+    // peut légitimement avoir été amorcé sur un NŒUD (NodeEventsHandler) et non sur le
+    // fond : le garde le casserait.
+    const press_started_on_da = this._press_started_on_da
+    this._press_started_on_da = false
+    if (!press_started_on_da && (da.isInSelectionMode() || da.isInPlaceContainerMode())) return
     // EDITION MODE =============================================================
     if (da.isInEditionMode()) {
       // OUTIL NŒUD : le relâché pose UN nœud au point pressé, rien d'autre. Aucun
