@@ -401,12 +401,12 @@ export const resources_inspector = {
           takes_part_in: 'Aucune contrainte ne la fixe. Elle participe à :',
           no_constraint: 'Aucune contrainte du modèle ne porte sur ce flux.',
           classification: {
-            measured: 'saisi',
-            redundant: 'redondant',
-            determined: 'déterminé',
+            measured: 'saisie',
+            redundant: 'redondante',
+            determined: 'déterminée',
             free: 'libre',
-            free_unbounded: 'libre, non borné',
-            failed: 'non réconcilié'
+            free_unbounded: 'libre, non bornée',
+            failed: 'non réconciliée'
           },
           meaning: {
             measured: 'La valeur a été saisie, et rien dans le modèle ne permettait de la recalculer : la réconciliation l\'a laissée telle quelle.',
