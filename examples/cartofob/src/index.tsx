@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
+// Import a EFFET DE BORD : ce module initialise i18next et enregistre les
+// traductions du viewer. Le point d'entree du paquet, lui, n'exporte rien et ne
+// fait rien (c'est ecrit dans son index.d.ts) — sans cette ligne, i18next n'a
+// aucune ressource et `t('cle')` renvoie la CLE. Ca se voyait dans la legende :
+// « scale : 0.149 Mm3/an » au lieu de « Echelle : 0.149 Mm3/an ».
+import "@terriflux/opensankey/src/traductions/traduction";
 import { ViewerOpenSankeyApp } from "@terriflux/opensankey/src/ViewApp";
 import type { Type_AnyJSON } from "@terriflux/opensankey/src/types/Utils";
 
@@ -124,9 +130,17 @@ const App = () => {
     () => tagsToOptions((diagram as any)?.dataTags?.[REGION_GROUP], "long_name"),
     [diagram]
   );
+  // Le premier choix eteint le filtre : on retombe sur la vue MAITRE, dont le
+  // fichier porte le nom (`master_view_name`, « Agregees » ici). Il ne faut pas
+  // l'appeler « Toutes essences » : c'est le nom d'une AUTRE vue du fichier
+  // (`view_noo1b`), lourde, avec sa geometrie propre, ou les onze essences sont
+  // dessinees cote a cote. Le viewer MIT ne sait pas l'ouvrir — `view_tag_selection`
+  // y filtre la vue COURANTE par une etiquette, il ne change pas de vue (cf.
+  // l'en-tete de ce fichier). Confondre les deux libelles laissait croire qu'on
+  // l'affichait.
   const essences = useMemo(
     () => [
-      { value: ALL_ESSENCES, label: "Toutes essences (agrege)" },
+      { value: ALL_ESSENCES, label: (diagram as any)?.master_view_name || "Agregees" },
       ...tagsToOptions((diagram as any)?.viewTags?.[ESSENCE_GROUP], "name"),
     ],
     [diagram]
