@@ -73,8 +73,9 @@ export const DOC_LAYOUTS_WITH_SHEET: Type_MainZoneDocLayout[] =
   ['sheet-right', 'sheet-left', 'sheet-top', 'sheet-bottom']
 // Positions qui placent la doc en bas et raccourcissent le diagramme (réserve verticale).
 export const DOC_LAYOUTS_BOTTOM: Type_MainZoneDocLayout[] = ['diagram-bottom', 'window-bottom']
-// Sous-onglets du panneau Tableur : grille Univer ou éditeur texte (format SankeyMATIC natif).
-export type Type_SheetMode = 'grid' | 'text'
+// Sous-onglets du panneau Tableur : grille Univer ou vue JSON (lecture seule) du diagramme.
+// L'éditeur texte SankeyMATIC, lui, vit dans un dialogue dédié (ref_setter_show_sankeymatic_editor).
+export type Type_SheetMode = 'grid' | 'json'
 // Largeur (px) de la colonne d'outils rétractable à droite (barre verticale + config + filtres +
 // undo/redo/save). Quand ouverte, cette largeur est réservée par le diagramme (cf.
 // getToolsColumnWidthPx / getMainZoneRightReservedPx) pour que la zone de dessin ne morde pas dessus.
@@ -107,7 +108,22 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   // OS#1286 — éditeur du registre d'unités (grandeurs/unités/défauts) en
   // panneau draggable, ouvert depuis l'onglet Valeur de l'inspecteur.
   ref_setter_show_units_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  // Éditeur texte SankeyMATIC en dialogue draggable : ouvert après un import
+  // SankeyMATIC (openSankeymaticEditor) ou depuis le menu d'import. Sorti du
+  // panneau Tableur, dont le sous-onglet texte est devenu la vue JSON.
+  ref_setter_show_sankeymatic_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
 
+  // sa#424 (lot 3) — fenêtre « Exporter » UNIQUE : le choix du format de rendu
+  // et ses réglages au même endroit, là où le menu Exporter de la barre
+  // dispersait PNG / PDF / SVG en commandes, chacune rouvrant sa propre modale.
+  ref_setter_show_modal_export: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+
+  // sa#424 (lot 5) — fenêtre de choix « Nouveau » (vierge / modèle / classeur
+  // Excel vierge), dernière section du menu Fichier devenue une commande.
+  ref_setter_show_modal_new_document: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+
+  // Modales héritées, encore ouvertes par le bouton `export_sankey` conservé
+  // pour les `menu_top_order` personnalisés.
   ref_setter_show_modal_png_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_png_saver_res_h: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>
   ref_setter_png_saver_res_v: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>
@@ -162,7 +178,9 @@ export class Class_MenuConfig {
       // (resetDA, open_sankey, save_sankey, export_sankey, mep) stay registered
       // in dict_components_menu_top for backwards-compatible custom orders.
       'fichier',
-      'export_sankey',
+      // sa#424 (lot 3) — 'export_sankey' RETIRÉ de la barre : Exporter est
+      // devenu une commande du menu Fichier. La clé reste enregistrée dans
+      // dict_components_menu_top pour les menu_top_order personnalisés.
       'edition',
       'edit_style',
     ],
@@ -242,10 +260,10 @@ export class Class_MenuConfig {
   // Quand vrai, l'unitaire ne réserve plus d'espace in-app (le diagramme/tableur récupèrent la place)
   // et mainZoneUnitaryRect renvoie null ; OS+ le rend alors en Draggable.
   protected _main_zone_unitary_detached: boolean = false
-  // Sous-onglet courant du Tableur (grille/texte). Porté ici et non par un useState de
+  // Sous-onglet courant du Tableur (grille/JSON). Porté ici et non par un useState de
   // SpreadsheetPanel : le panneau est démonté quand le tableur est fermé, donc un état local
-  // repartirait toujours sur 'grid'. Permet aussi à un import SankeyMATIC d'ouvrir directement
-  // l'éditeur texte. État TRANSITOIRE : volontairement absent de mainZoneStateToJSON/FromJSON.
+  // repartirait toujours sur 'grid'. État TRANSITOIRE : volontairement absent de
+  // mainZoneStateToJSON/FromJSON.
   protected _main_zone_spreadsheet_mode: Type_SheetMode = 'grid'
   // Colonne d'outils à droite (éditeur uniquement). `tools_column_enabled` est posé par
   // SankeyMenu (= !is_static) : en mode publish/statique la colonne n'existe pas et ne réserve rien.
@@ -308,6 +326,21 @@ export class Class_MenuConfig {
   // en OS pur / sans licence : le crayon d'édition ne s'affiche pas.
   public render_tag_group_editor:
     ((element_tag_name_prop: string, group_id: string) => JSX.Element | null) | null = null
+
+  // sa#283 lot 2 — Enregistrement de vue contextuelle (« personnaliser pour ‹tag› »)
+  // injecté par OSP (même pattern que render_tag_group_editor : la feature vit dans OSP,
+  // le tiroir de filtres dans l'éditeur OS). Sur la carte d'un groupe de dataTags ou de
+  // fluxTags dont UN tag est sélectionné, le tiroir affiche un interrupteur : armé, les
+  // modifications sont capturées par diff au désarmement dans le contexte lié au tag.
+  //  - `armed(group_id)` : id du tag en enregistrement pour ce groupe, sinon null ;
+  //  - `arm(group_id, tag_id)` : arme (désarme AVEC capture un éventuel autre) ;
+  //  - `disarm()` : désarme AVEC capture.
+  // Null en OS pur : la feature n'existe pas sans la couche OSP.
+  public context_recording_ui: {
+    armed: (group_id: string) => string | null
+    arm: (group_id: string, tag_id: string) => void
+    disarm: () => void
+  } | null = null
 
   // OS#300 — Modèle central des « panneaux » (info-bulle / pop-up / barre
   // latérale). Instancié dans le constructeur avec le bus de ce menu, de sorte
@@ -623,6 +656,12 @@ export class Class_MenuConfig {
   private _ref_to_toolbar_updater: MutableRefObject<() => void>
   private _ref_to_save_in_cache_indicator: MutableRefObject<(b: boolean) => void>
   private _ref_to_save_in_cache_indicator_value: MutableRefObject<boolean>
+  // sa#424 (lot 4) — signal de RAFRAÎCHISSEMENT de l'alerte « aucun fichier
+  // téléchargé » portée par le bouton d'enregistrement. Un signal distinct est
+  // nécessaire : réutiliser l'indicateur de cache en lui repassant sa valeur
+  // courante ne redessine rien (React abandonne un setState de valeur égale), et
+  // l'alerte restait donc affichée après le premier téléchargement.
+  private _ref_to_last_download_updater: MutableRefObject<() => void>
   // Session toggle "ne jamais enregistrer la vue" : when true, switching away
   // from an edited view discards changes silently (no "Vue non enregistrée"
   // modal). Reset by clicking the cache cloud icon. Lives here (OS base) so the
@@ -685,6 +724,25 @@ export class Class_MenuConfig {
     onClick: () => void
     disabled?: () => boolean
     // Returns the tooltip text for the item. Empty string => no tooltip wrapper.
+    tooltip?: () => string
+    hidden?: () => boolean
+  }> = undefined
+  /**
+   * sa#424 (lot 5) — Commandes ajoutées EN BAS du menu Fichier, après le dernier
+   * séparateur. Sert au « Partager… » que la couche SaaS y pose : partager n'est
+   * ni un format ni une destination d'enregistrement, c'est une commande à part.
+   *
+   * Point d'injection plutôt qu'appel direct : l'éditeur open-source ignore tout
+   * de la publication (qui vit dans OS+ / SA), et doit continuer à l'ignorer.
+   * Même contrat que `extra_save_menu_items` — `label` et `hidden` évalués au
+   * rendu, pour suivre la langue et l'état de connexion.
+   */
+  public extra_file_menu_items?: Array<{
+    key: string
+    label: () => string
+    icon?: React.ReactNode
+    onClick: () => void
+    disabled?: () => boolean
     tooltip?: () => string
     hidden?: () => boolean
   }> = undefined
@@ -803,6 +861,7 @@ export class Class_MenuConfig {
     // Toolbar+
     this._ref_to_save_in_cache_indicator = { current: (_: boolean) => null }
     this._ref_to_save_in_cache_indicator_value = { current: true }
+    this._ref_to_last_download_updater = { current: () => null }
     this._ref_to_never_save_view_session = { current: (_: boolean) => null }
     this._ref_to_never_save_view_session_value = { current: false }
     this._ref_to_toolbar_updater = { current: () => null }
@@ -856,7 +915,10 @@ export class Class_MenuConfig {
       ref_setter_show_value_type_editor: { current: () => null },
       ref_setter_show_tooltip_editor: { current: () => null },
       ref_setter_show_units_editor: { current: () => null },
+      ref_setter_show_sankeymatic_editor: { current: () => null },
 
+      ref_setter_show_modal_export: { current: () => null },
+      ref_setter_show_modal_new_document: { current: () => null },
       ref_setter_show_modal_png_saver: { current: () => null },
       ref_setter_png_saver_res_h: { current: () => null },
       ref_setter_png_saver_res_v: { current: () => null },
@@ -911,6 +973,9 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_value_type_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_tooltip_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_units_editor.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_sankeymatic_editor.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_modal_export.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_modal_new_document.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_png_saver.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_pdf_saver.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_styles.current(false)
@@ -1669,6 +1734,10 @@ export class Class_MenuConfig {
 
   public get ref_to_save_in_cache_indicator_value(): MutableRefObject<boolean> {
     return this._ref_to_save_in_cache_indicator_value
+  }
+
+  public get ref_to_last_download_updater(): MutableRefObject<() => void> {
+    return this._ref_to_last_download_updater
   }
 
   public get ref_to_never_save_view_session(): MutableRefObject<(b: boolean) => void> {

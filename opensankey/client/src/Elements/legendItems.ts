@@ -38,8 +38,12 @@ export type Type_LegendItem = {
   scale_bar?: boolean
 }
 
-// Hauteur de la barre d'échelle, en multiples de la police (≈ 50 px à 16 px)
-export const SCALE_BAR_HEIGHT_FACTOR = 3
+// Hauteur de la barre d'échelle en px MONDE : le texte affiche scale/2 et
+// scaleValueToPx projette [0, scale] sur [0, 100] px, donc la barre doit faire
+// exactement 100/2 = 50 px monde pour matérialiser la valeur affichée — quelle
+// que soit la police de la légende (et sans compensation de police, qui ne
+// s'applique qu'aux textes, pas aux épaisseurs de flux).
+export const SCALE_BAR_HEIGHT_PX = 50
 
 // Drapeaux d'environnement calculés par l'appelant (certains viennent du DOM ou
 // de l'état applicatif) pour garder computeLegendItems pur et testable.
@@ -239,23 +243,47 @@ export function computeLegendItems(
 /**
  * Texte de l'échelle (reprend la logique de l'ancien drawSankeyScale, sans la
  * barre draggable) : échelle du dessin / 2, éventuellement remplacée par celle
- * du tag d'unité sélectionné, divisée par le ratio utilisateur.
+ * du porteur effectif, divisée par le ratio utilisateur.
+ *
+ * sa#283 — porteur généralisé (même règle que ScaleResolution, sans contexte de
+ * valeur) : du DERNIER groupe de dataTags au premier, un groupe d'unité porte par
+ * son premier tag sélectionné (comportement historique de cette légende), un
+ * groupe ordinaire par son UNIQUE tag sélectionné à échelle propre (`own_scale`).
+ * `data_taggs` doit être donné dans l'ordre de `taggs_order`. Fichier legacy
+ * (échelles d'unité seules) : résultat strictement identique.
  */
 export function computeScaleText(
   drawing_area_scale: number,
   data_taggs: {
     is_unit?: boolean
-    selected_tags_list: { name: string, scale?: number, is_selected?: boolean }[]
+    selected_tags_list: { name: string, scale?: number, is_selected?: boolean, own_scale?: number }[]
   }[],
   config: Type_LegendConfigValues,
   t_scale: string
 ): string {
   let scale = drawing_area_scale / 2
   let unit = ''
+  for (let i = data_taggs.length - 1; i >= 0; i--) {
+    const tagg = data_taggs[i]
+    if (tagg.is_unit) {
+      const selected_unit = tagg.selected_tags_list.find(t => t.is_selected)
+      if (selected_unit?.scale !== undefined) {
+        scale = selected_unit.scale / 2
+        break
+      }
+    } else {
+      const scaled_selected = tagg.selected_tags_list.filter(t => t.is_selected && t.own_scale !== undefined && t.own_scale > 0)
+      if (scaled_selected.length === 1) {
+        scale = (scaled_selected[0].own_scale as number) / 2
+        break
+      }
+    }
+  }
+  // Libellé d'unité : celui du tag d'unité sélectionné, comme toujours (le porteur
+  // généralisé change l'ÉCHELLE affichée, pas l'unité dans laquelle elle s'exprime).
   const unit_tagg = data_taggs.find(tagg => tagg.is_unit)
   if (unit_tagg) {
     const selected_unit = unit_tagg.selected_tags_list.find(t => t.is_selected)
-    if (selected_unit?.scale !== undefined) scale = selected_unit.scale / 2
     unit = selected_unit ? ' ' + selected_unit.name : ''
   }
   scale = scale / config.scale_ratio
@@ -294,7 +322,7 @@ export function layoutLegendItems(
   let y = 0
   items.forEach(item => {
     // Hauteur de rangée : une barre d'échelle occupe sa hauteur propre
-    const bar_row_height = SCALE_BAR_HEIGHT_FACTOR * police + 0.5 * police
+    const bar_row_height = SCALE_BAR_HEIGHT_PX + 0.5 * police
     if (config.horizontal) {
       if ((item.starts_group || item.own_line) && x > 0) {
         x = 0

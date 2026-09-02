@@ -12,13 +12,13 @@ export const applySankeymaticText = (text: string, app_data: Class_ApplicationDa
 }
 
 /**
- * Import SankeyMATIC : applique le texte ET ouvre le Tableur sur l'éditeur texte,
+ * Import SankeyMATIC : applique le texte ET ouvre le dialogue de l'éditeur texte,
  * pour que la source reste visible et modifiable. Réservé aux points d'entrée
  * « import » — SankeyTextEditor applique depuis l'éditeur, déjà à l'écran.
  */
 export const importSankeymaticText = (text: string, app_data: Class_ApplicationData): void => {
   applySankeymaticText(text, app_data)
-  app_data.openSpreadsheetTextEditor()
+  app_data.openSankeymaticEditor()
 }
 
 /**

@@ -328,6 +328,68 @@ describe('updateFrom — tags de données appariés par NOM mais d\'ids différe
   })
 })
 
+// OS#1367 — l'appariement des valeurs ne repose PAS sur leur identifiant.
+// updateFrom le dit lui-même là où il apparie (« match by name to handle
+// differing IDs ») : la coordonnée d'une valeur, ce sont ses tags de données.
+// Depuis ce lot l'id n'est plus écrit du tout, donc un diagramme rechargé
+// depuis un fichier porte des identifiants entièrement neufs — ce test le
+// reproduit en faisant passer la SOURCE par un aller-retour JSON complet avant
+// de la faire servir de référence.
+describe('OS#1367 updateFrom — appariement des valeurs sans identifiant partagé', () => {
+  /** Recharge une application depuis son propre JSON : ids de valeurs reforgés. */
+  function roundTrip(app: Class_ApplicationData): Class_ApplicationData {
+    const json = JSON.parse(JSON.stringify(app.toJSON()))
+    const reloaded = new Class_ApplicationData(false)
+    reloaded.fromJSON(json as never, {}, false)
+    return reloaded
+  }
+
+  it('Values : une source rechargée depuis son JSON transmet bien ses valeurs', () => {
+    const src = new Class_ApplicationData(false)
+    const s = makePair(src)
+    const src_tagg = makeYearTagGroup(src, [['a', '2020'], ['b', '2021']])
+    src_tagg.selectTagsFromIds(['a'])
+    s.link.valueCurrent = 111
+    src_tagg.selectTagsFromIds(['b'])
+    s.link.valueCurrent = 222
+
+    // Le JSON enregistré ne porte plus aucun identifiant de valeur
+    const src_json = JSON.stringify(src.toJSON())
+    expect(src_json).not.toContain('_value__')
+
+    const reloaded_src = roundTrip(src)
+
+    const tgt = new Class_ApplicationData(false)
+    const t = makePair(tgt)
+    const tgt_tagg = makeYearTagGroup(tgt, [['a', '2020'], ['b', '2021']])
+    tgt_tagg.selectTagsFromIds(['a'])
+    t.link.valueCurrent = 1
+    tgt_tagg.selectTagsFromIds(['b'])
+    t.link.valueCurrent = 2
+
+    updateFrom(tgt.drawing_area, reloaded_src.drawing_area, ['Values'])
+
+    expect(valueUnderYear(tgt, t.link, '2020')).toBe(111)
+    expect(valueUnderYear(tgt, t.link, '2021')).toBe(222)
+  })
+
+  it('Values : sans tags de données, la valeur unique du flux passe aussi', () => {
+    const src = new Class_ApplicationData(false)
+    const s = makePair(src)
+    s.link.valueCurrent = 42
+
+    const reloaded_src = roundTrip(src)
+
+    const tgt = new Class_ApplicationData(false)
+    const t = makePair(tgt)
+    t.link.valueCurrent = 1
+
+    updateFrom(tgt.drawing_area, reloaded_src.drawing_area, ['Values'])
+
+    expect(t.link.valueCurrent).toBe(42)
+  })
+})
+
 describe('#232 updateFrom — non-régression (attribut hors mode préservé)', () => {
   it('un mode inconnu / vide ne modifie ni positions ni attributs', () => {
     const src = new Class_ApplicationData(false)
@@ -392,5 +454,62 @@ describe('#232 updateFrom — cas limites', () => {
 
     expect(tgt.drawing_area.sankey.nodes_dict['C']).toBeDefined()
     expect(tgt.drawing_area.sankey.nodes_dict['C'].name).toBe('C')
+  })
+})
+
+// OS#1286 — le registre d'unités voyage avec les RÉFÉRENCES d'unité portées par les attributs.
+// Sans ça, appliquer une mise en page issue d'un fichier 1.1.5 (unité en texte libre, reclassée
+// à son chargement dans la grandeur « Unités du fichier ») laissait la cible avec une référence
+// pendante : l'affichage retombait sur l'identifiant brut (« unit_type_file_kt » pour « kt »).
+describe('OS#1286 updateFrom — registre d\'unités', () => {
+  /** Source dont l'unité « kt » a été migrée en unité de fichier (facteur 1). */
+  const makeSourceWithFileUnit = () => {
+    const src = new Class_ApplicationData(false)
+    const nodes = makePair(src)
+    const resolved = src.drawing_area.sankey.units.getOrCreateLegacyUnit('kt', 1)
+    nodes.A.value_label_unit_type = 'unit_model'
+    nodes.A.value_label_unit = resolved.unit.id
+    return { src, nodes, unit_id: resolved.unit.id }
+  }
+
+  it('attrNode : la référence transférée résout chez la cible', () => {
+    const { src, unit_id } = makeSourceWithFileUnit()
+    const tgt = new Class_ApplicationData(false)
+    const t = makePair(tgt)
+    expect(tgt.drawing_area.sankey.units.resolve(unit_id)).toBeUndefined()
+
+    updateFrom(tgt.drawing_area, src.drawing_area, ['posNode', 'attrNode'])
+
+    expect(t.A.value_label_unit).toBe(unit_id)
+    const resolved = tgt.drawing_area.sankey.units.resolve(unit_id)
+    expect(resolved?.unit.name).toBe('kt')
+    expect(resolved?.unit.label).toBe('kt') // et non l'identifiant brut
+  })
+
+  it('sans mode porteur de références (posNode seul), le registre n\'est pas touché', () => {
+    const { src, unit_id } = makeSourceWithFileUnit()
+    const tgt = new Class_ApplicationData(false)
+    makePair(tgt)
+
+    updateFrom(tgt.drawing_area, src.drawing_area, ['posNode'])
+
+    expect(tgt.drawing_area.sankey.units.resolve(unit_id)).toBeUndefined()
+    expect(tgt.drawing_area.sankey.units.equalsDefaultCatalog()).toBe(true)
+  })
+
+  it('fusion additive : une unité déjà définie chez la cible n\'est pas écrasée', () => {
+    const src = new Class_ApplicationData(false)
+    makePair(src)
+    src.drawing_area.sankey.units.getUnitType('unit_type_mass')!
+      .units.find(u => u.id === 'mass_t')!.display_name = 'tonnes source'
+
+    const tgt = new Class_ApplicationData(false)
+    makePair(tgt)
+    tgt.drawing_area.sankey.units.getUnitType('unit_type_mass')!
+      .units.find(u => u.id === 'mass_t')!.display_name = 'tonnes cible'
+
+    updateFrom(tgt.drawing_area, src.drawing_area, ['attrNode'])
+
+    expect(tgt.drawing_area.sankey.units.resolve('mass_t')?.unit.label).toBe('tonnes cible')
   })
 })

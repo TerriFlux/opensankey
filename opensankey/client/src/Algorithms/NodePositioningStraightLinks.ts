@@ -50,6 +50,33 @@ export function enforceStraightLinks(da: Class_DrawingArea): boolean {
     return L.shape_must_stay_straight ? 'source' : null
   }
 
+  // os#1372 — Candidats redressables calculés UNE FOIS pour tout l'appel, au lieu d'être
+  // re-filtrés pour chaque flux marqué `include_children`. Le profil CARTOFOB (1 608 flux, 36
+  // dessinés) donnait 1,9 s sur une bascule de vue de 4,4 s à cette seule fonction : chaque flux
+  // marqué relisait `is_visible` — accesseur dérivé, non mémoïsé — sur les 1 608 flux, à chaque
+  // dessin, et il y a 2 à 3 dessins par geste. On passe de O(marqués × total × is_visible) à
+  // O(total × is_visible + marqués × total) en lectures d'ensemble.
+  //
+  // Le calcul est PARESSEUX : sans aucun flux `include_children`, le coût reste celui d'avant
+  // (`isStraightenable` évalué pour les seuls flux marqués). Il est sûr de le mémoriser : rien
+  // n'est déplacé pendant la collecte — les positions ne bougent que dans la boucle suivante.
+  let straightenable_links: Class_LinkElement[] | null = null
+  const straightenableLinks = (): Class_LinkElement[] => {
+    if (!straightenable_links) {
+      straightenable_links = da.sankey.links_list
+        .filter(L => isStraightenable(L as Class_LinkElement)) as Class_LinkElement[]
+    }
+    return straightenable_links
+  }
+  // Même raison pour les descendances : `collectNodeDescendants` remonte toute la hiérarchie de
+  // dimensions et était recalculé pour chaque flux marqué, source et cible.
+  const descendants_cache = new Map<Class_NodeElement, Set<Class_NodeElement>>()
+  const descendantsOf = (n: Class_NodeElement): Set<Class_NodeElement> => {
+    let set = descendants_cache.get(n)
+    if (!set) { set = collectNodeDescendants(n); descendants_cache.set(n, set) }
+    return set
+  }
+
   // Flux à redresser → mode. Marqués visibles + (si include_children) flux visibles dont source
   // ET cible descendent des nœuds d'un flux marqué (même hidden) ; les enfants héritent du mode.
   const to_straighten = new Map<Class_LinkElement, Type_StraightMode>()
@@ -58,7 +85,7 @@ export function enforceStraightLinks(da: Class_DrawingArea): boolean {
     if (!mode) return
     if (isStraightenable(L)) to_straighten.set(L as Class_LinkElement, mode)
     if (L.shape_straight_include_children) {
-      collectDescendantStraightLinks(da, L as Class_LinkElement, isStraightenable)
+      collectDescendantStraightLinks(L as Class_LinkElement, straightenableLinks(), descendantsOf)
         .forEach(c => { if (!to_straighten.has(c)) to_straighten.set(c, mode) })
     }
   })
@@ -113,16 +140,19 @@ export function enforceStraightLinks(da: Class_DrawingArea): boolean {
  * #1231 — Flux « enfant-enfant » d'un flux marqué avec `shape_straight_include_children` : flux
  * visibles redressables dont la source descend (hiérarchie de dimensions) de la source du flux
  * marqué ET la cible descend de sa cible. Calculé à la volée → la droiture survit à la désagrégation.
+ *
+ * os#1372 — reçoit les candidats DÉJÀ filtrés (`is_visible` évalué une fois pour tout l'appel) et
+ * un accès mémoïsé aux descendances, au lieu de re-parcourir `links_list` par flux marqué.
  */
 function collectDescendantStraightLinks(
-  da: Class_DrawingArea,
   parent_link: Class_LinkElement,
-  isStraightenable: (L: Class_LinkElement) => boolean
+  candidates: Class_LinkElement[],
+  descendantsOf: (n: Class_NodeElement) => Set<Class_NodeElement>
 ): Class_LinkElement[] {
-  const src_desc = collectNodeDescendants(parent_link.source as Class_NodeElement)
-  const tgt_desc = collectNodeDescendants(parent_link.target as Class_NodeElement)
-  return da.sankey.links_list.filter(L =>
-    L !== parent_link && isStraightenable(L) &&
+  const src_desc = descendantsOf(parent_link.source as Class_NodeElement)
+  const tgt_desc = descendantsOf(parent_link.target as Class_NodeElement)
+  return candidates.filter(L =>
+    L !== parent_link &&
     src_desc.has(L.source as Class_NodeElement) && tgt_desc.has(L.target as Class_NodeElement)
-  ) as Class_LinkElement[]
+  )
 }

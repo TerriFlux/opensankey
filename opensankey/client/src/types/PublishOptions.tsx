@@ -14,6 +14,10 @@
 // setScaleAdaptedMode et styles_dict['default'].shape_position_type).
 export type Type_PositionMode = 'absolute' | 'proportional' | 'scale_adapted'
 
+// os#1352 — régime de référence du mode « échelle adaptée ». `import type` : effacé à la
+// compilation, donc aucun cycle de module à l'exécution.
+import type { Type_ScaleAdaptedReference } from './DrawingArea'
+
 /**
  * sa#398 — Une entrée de `diagrams_list` : la CHAÎNE historique (nom de fichier servi en
  * `<valeur>.gz`, ou nom de variable posée sur window.sankey par un script de données), OU un
@@ -54,6 +58,13 @@ export interface SankeyGlobals {
   topbar?: boolean       // default true
   footer?: boolean       // default false
   toolbar?: boolean      // default false : sélecteurs du mode d'affichage (absolu/proportionnel/échelle) — un par dimension, sur chacun de ses hôtes : ligne du panneau Filtres, topbar, frise de séquence (cf. #370)
+  // os#1366 — default TRUE : le sélecteur de mode d'affichage apparaît DE LUI-MÊME au lecteur
+  // quand le diagramme déclare une référence (`prop_reference_datatag` ou
+  // `scale_reference_by_viewtag`) — le diagramme est alors configuré pour ces modes et son
+  // lecteur doit pouvoir y accéder. Sans référence, rien ne s'affiche (un sélecteur inerte
+  // serait un piège) : cette option n'a donc d'effet que pour COUPER cet automatisme.
+  // `toolbar` reste l'opt-in explicite, qui l'expose sur toutes les dimensions.
+  position_mode_selector?: boolean
   // default TRUE (08/08) : groupe ajustement/verrous + indicateur de zoom dans la
   // barre du bas. Il l'était à false, et une page publiée n'offrait alors AUCUN
   // moyen visible de zoomer ni de recadrer — seulement Ctrl+molette, qui ne
@@ -67,8 +78,20 @@ export interface SankeyGlobals {
   edit_button?: boolean  // default true : bouton "Éditer" (renvoi vers open-sankey.fr) dans la topbar en publish
   unitary?: boolean      // default false : onglet « Unit. » (sankey unitaire OS+) dans la topbar en publish
   doc?: boolean          // default false : bouton « Doc » (panneau documentation) dans la topbar en publish, visible seulement si une doc existe
+  // sa#402 — document markdown posé À CÔTÉ de la page (README.md du projet, recopié par le rendu).
+  // Nom de fichier RELATIF à la page : le viewer le charge et le prête au panneau « Doc » quand le
+  // diagramme n'embarque pas de documentation. Sa seule présence suffit à faire apparaître le bouton.
+  doc_file?: string
   navigation_help?: boolean  // default false : bouton « Aide à la navigation » dans la topbar en publish
   badge?: boolean        // default true : badge « Made with OpenSankey » (lien terriflux.com) en bas à gauche en publish
+  // default true — les deux boutons de DROITE de la topbar, jusqu'ici sans réglage :
+  // `app_info` = le « i » (version, canal, commit, lien changelog, contact support) ;
+  // `sidebar_toggle` = la bascule de la barre latérale (Ctrl+B). Ils servent au lecteur
+  // d'une page d'étude, mais une page de communication (site institutionnel, embed) veut
+  // parfois une topbar réduite au strict nécessaire. Défaut à true : le parc existant ne
+  // bouge pas. Sans effet hors publish — l'éditeur les garde toujours.
+  app_info?: boolean
+  sidebar_toggle?: boolean
 
   // Langue
   language?: string      // force la langue de l'UI ('fr', 'en', ...) ; le paramètre d'URL ?lang= est prioritaire
@@ -117,6 +140,11 @@ export interface SankeyGlobals {
   // omettre la clé laisse le réglage du document (ou le défaut 2px).
   minimum_flux?: number
   position_mode?: Type_PositionMode  // mode de navigation imposé à l'ouverture (absolu/proportionnel/échelle adaptée)
+  // os#1352 — régime de référence du mode « échelle adaptée » : 'diagram' (colonne la plus haute,
+  // défaut sa#384) ou 'element' (taille rendue de l'élément de référence désigné, régime d'avant
+  // sa#384). Forçable ici pour COMPARER les deux régimes sur une page publiée sans refabriquer les
+  // données ; omettre la clé laisse le réglage du document.
+  scale_adapted_reference?: Type_ScaleAdaptedReference
   data_tag_selection?: Record<string, string>  // { groupe (id ou nom) : tag (id ou nom) } préselectionné à l'ouverture
   view_tag_selection?: Record<string, string>  // { groupe (id ou nom) : valeur } : sélectionne une VUE (nom OU id, light/heavy) comme le sélecteur de vue ; sinon filtre le view tag sur ce tag
   // sa#397 — ouverture sur une vue / un groupe de vues par LABEL DE VUE (sa#396). Les labels de
@@ -124,7 +152,11 @@ export interface SankeyGlobals {
   // des vues — cf. view_tag_selection). Options additives : id/nom ou label inconnu => ignoré
   // (warn), affichage inchangé.
   view?: string        // ouvre sur cette vue (id OU nom, comme le sélecteur de vues)
-  view_label?: string  // restreint le sélecteur de vues aux vues portant ce label ; la vue courante devient la première du groupe
+  // Restreint le sélecteur de vues aux vues portant ce label ; la vue courante devient la
+  // première du groupe. sa#412 — accepte aussi une LISTE de labels : le filtre actif est posé
+  // sur le premier, et le viewer publié rend un sélecteur de label VISIBLE à côté du sélecteur
+  // de vues (le visiteur bascule de groupe en groupe). Chaîne simple = comportement historique.
+  view_label?: string | string[]
 
   // sa#409 — crochet d'upgrade headless (commande upgrade d'/admin/publications). Quand true,
   // applyPublishStateOptions expose sur window le fichier RE-SÉRIALISÉ au format courant
@@ -143,6 +175,9 @@ export interface PublishOptions {
   topbar: boolean
   footer: boolean
   toolbar: boolean
+  // os#1366 — autorise l'apparition automatique du sélecteur de mode d'affichage en lecture
+  // quand le diagramme déclare une référence (cf. SankeyGlobals).
+  position_mode_selector: boolean
   fit_toolbar: boolean
   fullscreen: boolean
   filter_bar: boolean
@@ -151,8 +186,11 @@ export interface PublishOptions {
   edit_button: boolean
   unitary: boolean
   doc: boolean
+  doc_file: string | null
   navigation_help: boolean
   badge: boolean
+  app_info: boolean
+  sidebar_toggle: boolean
   data_type: boolean
   data_type_intervals: boolean
   value_filter: boolean
@@ -165,10 +203,15 @@ export interface PublishOptions {
   language: string | null
   minimum_flux: number | null
   position_mode: Type_PositionMode | null
+  scale_adapted_reference: Type_ScaleAdaptedReference | null
   data_tag_selection: Record<string, string> | null
   view_tag_selection: Record<string, string> | null
   view: string | null
   view_label: string | null
+  // sa#412 — liste complète des labels de page déclarés par `view_label` (normalisée : une
+  // chaîne simple devient [chaîne]). `view_label` ci-dessus reste le filtre ACTIF (premier de
+  // la liste), seul consommé par les mécaniques historiques (diagrams_views, ouverture).
+  view_labels: string[] | null
   export_json: boolean
   logo: string | null
   header: string | null
@@ -209,6 +252,9 @@ const POSITION_MODES: Type_PositionMode[] = ['absolute', 'proportional', 'scale_
 export const isPositionMode = (v: unknown): v is Type_PositionMode =>
   typeof v === 'string' && (POSITION_MODES as string[]).includes(v)
 const posMode = (v: unknown): Type_PositionMode | null => (isPositionMode(v) ? v : null)
+// os#1352 — seules ces deux valeurs existent ; toute autre est ignorée (réglage du document gardé).
+const scaleAdaptedRef = (v: unknown): Type_ScaleAdaptedReference | null =>
+  (v === 'diagram' || v === 'element') ? v : null
 const strRecord = (v: unknown): Record<string, string> | null => {
   if (!v || typeof v !== 'object' || Array.isArray(v)) return null
   const out: Record<string, string> = {}
@@ -220,6 +266,24 @@ const strRecord = (v: unknown): Record<string, string> | null => {
 
 let _warned_sous_filieres = false
 let _warned_invalid_diagram_entry = false
+let _warned_invalid_view_labels = false
+
+// sa#412 — `view_label` accepte une chaîne (comportement historique) OU une liste de chaînes.
+// Parse tolérant, doctrine additive des options voisines : les entrées invalides d'une liste
+// (non-chaîne, chaîne vide) sont ignorées avec un warn unique ; rien de valide => null
+// (comportement historique inchangé). La liste est dédoublonnée dans l'ordre déclaré.
+const strLabels = (v: unknown): string[] | null => {
+  if (typeof v === 'string') return v !== '' ? [v] : null
+  if (!Array.isArray(v)) return null
+  const valid = v.filter((l): l is string => typeof l === 'string' && l.trim() !== '')
+  if (valid.length < v.length && !_warned_invalid_view_labels) {
+    _warned_invalid_view_labels = true
+    // eslint-disable-next-line no-console
+    console.warn('[OpenSankey] view_label : entrées invalides ignorées (attendu : chaîne ou liste de chaînes non vides).')
+  }
+  const labels = [...new Set(valid)]
+  return labels.length > 0 ? labels : null
+}
 
 // Langue effective côté page publiée : ?lang= > window.sankey.language > préférence
 // mémorisée (i18nextLng) > navigateur. Utilisée pour résoudre header_i18n.
@@ -254,8 +318,11 @@ export const getPublishOptions = (): PublishOptions => {
   }
 
   // sa#397 — options de page (repli des sélections par diagramme d'sa#398).
+  // sa#412 — view_label accepte une liste : le filtre ACTIF de page est son PREMIER label,
+  // la liste complète part dans `view_labels` (sélecteur de label visible du viewer).
   const page_view = str(s.view)
-  const page_view_label = str(s.view_label)
+  const page_view_labels = strLabels(s.view_label)
+  const page_view_label = page_view_labels ? page_view_labels[0] : null
 
   // sa#398 — normalisation de diagrams_list : chaque entrée peut être la chaîne historique ou
   // un objet {file, view?, view_label?}. On en tire (1) la liste {libellé: fichier} qu'attendent
@@ -341,6 +408,7 @@ export const getPublishOptions = (): PublishOptions => {
     topbar: bool(s.topbar, true),
     footer: bool(s.footer, false),
     toolbar: bool(s.toolbar, false),
+    position_mode_selector: bool(s.position_mode_selector, true),
     fit_toolbar: bool(s.fit_toolbar, true),
     fullscreen: bool(s.fullscreen, true),
     filter_bar: bool(s.filter_bar, true),
@@ -349,8 +417,11 @@ export const getPublishOptions = (): PublishOptions => {
     edit_button: bool(s.edit_button, true),
     unitary: bool(s.unitary, false),
     doc: bool(s.doc, false),
+    doc_file: str(s.doc_file),
     navigation_help: bool(s.navigation_help, false),
     badge: bool(s.badge, true),
+    app_info: bool(s.app_info, true),
+    sidebar_toggle: bool(s.sidebar_toggle, true),
     data_type: bool(s.data_type, true),
     data_type_intervals: bool(s.data_type_intervals, true),
     value_filter: bool(s.value_filter, true),
@@ -363,10 +434,12 @@ export const getPublishOptions = (): PublishOptions => {
     language: str(s.language),
     minimum_flux: num(s.minimum_flux),
     position_mode: posMode(s.position_mode),
+    scale_adapted_reference: scaleAdaptedRef(s.scale_adapted_reference),
     data_tag_selection: strRecord(s.data_tag_selection),
     view_tag_selection: strRecord(s.view_tag_selection),
     view: view_value,
     view_label: view_label_value,
+    view_labels: page_view_labels,
     export_json: bool(s.export_json, false),
     logo: str(s.logo),
     header: header_value,
@@ -395,6 +468,7 @@ export type ViewerSankeyOptions = {
   topbar?: boolean
   footer?: boolean
   toolbar?: boolean
+  position_mode_selector?: boolean
   fit_toolbar?: boolean
   fullscreen?: boolean
   filter_bar?: boolean
@@ -427,10 +501,13 @@ export type ViewerSankeyOptions = {
   header_i18n?: Record<string, string>
   minimum_flux?: number
   position_mode?: Type_PositionMode
+  scale_adapted_reference?: Type_ScaleAdaptedReference
   data_tag_selection?: Record<string, string>
   view_tag_selection?: Record<string, string>  // valeur = VUE (nom/id, light ou heavy, comme le sélecteur de vue) ou tag à filtrer
   view?: string        // sa#397 : ouvre sur cette vue (id OU nom)
-  view_label?: string  // sa#397 : restreint le sélecteur de vues aux vues portant ce LABEL DE VUE (sa#396)
+  // sa#397 : restreint le sélecteur de vues aux vues portant ce LABEL DE VUE (sa#396).
+  // sa#412 : une LISTE rend en plus le sélecteur de label visible (cf. SankeyGlobals).
+  view_label?: string | string[]
   // Configs per-diagramme (clé = nom dans diagrams_list)
   diagrams_config?: Record<string, Record<string, unknown>>
 }
@@ -445,14 +522,15 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
   const next: SankeyGlobals = { ...current, publish: true }
 
   const keys: Array<keyof ViewerSankeyOptions> = [
-    'editable', 'topbar', 'footer', 'toolbar', 'fit_toolbar', 'fullscreen', 'filter_bar', 'embedded', 'recenter',
+    'editable', 'topbar', 'footer', 'toolbar', 'position_mode_selector', 'fit_toolbar', 'fullscreen', 'filter_bar', 'embedded', 'recenter',
     'edit_button', 'unitary', 'doc', 'navigation_help', 'badge',
     'logo', 'header', 'diagram', 'diagram_layout', 'diagram_layout_options',
     'diagrams_list', 'sous_filieres',
     'data_type', 'data_type_intervals', 'value_filter',
     'view_filter', 'level_filter', 'node_filter', 'data_filter',
     'lock_zoom', 'tooltip_on_hover', 'language', 'header_i18n',
-    'minimum_flux', 'position_mode', 'data_tag_selection', 'view_tag_selection',
+    'minimum_flux', 'position_mode', 'scale_adapted_reference',
+    'data_tag_selection', 'view_tag_selection',
     'view', 'view_label',
   ]
   for (const k of keys) {

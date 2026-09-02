@@ -32,7 +32,8 @@ import {
 } from './Link'
 import { Class_Handler } from './Handler'
 import { reorganizeIOOrder } from './reorganizeIOOrder'
-import { orderIOByGeometry, recyclingBellyCentre, bundleTie, Type_IOGeo } from './ioOrderGeometry'
+import { reorderLinksByIds } from './linksOrderState'
+import { orderIOByGeometry, recyclingBellyCentre, bundleTie, Type_IOGeo, Type_IOOrderPolicy } from './ioOrderGeometry'
 import { containerFrameIsEmptied, hasVisibleFrameMember } from './containerFrameVisibility'
 import { format_value, Type_JSON } from '../types/Utils'
 import type { Type_Origin } from '../types/Origin'
@@ -52,6 +53,7 @@ import { Class_StockValue, Class_ElementValueTree } from './LinkValues'
 import { Class_StockShape } from './StockShape'
 import { Type_Side } from './ElementsAttributesConfig'
 import { clampBandThickness } from './nodeBandHeight'
+import { countArrowFan } from '../types/DrawCounters'
 import { NodeStyle, NodeImportCloseStyle, NodeExportCloseStyle, NodeImportExportCloseStyle, LinkImportCloseStyle, LinkExportCloseStyle, LinkImportExportCloseStyle, LinkImportExportAboveBelowStyle, NodeExportBelowStyle, NodeImportAboveStyle, NodeImportExportAboveBelowStyle, NodeSectorStyle, LinkStyle } from './ElementStyle'
 // 
 // CLASSE PRINCIPALE AVEC LIENS RÉINTÉGRÉS *********************************************
@@ -382,6 +384,42 @@ export class Class_NodeElement extends Class_NodeBase {
 
   public get sibling() { return this._sibling_node }
   public set sibling(_) { this._sibling_node = _ }
+
+  /**
+   * Ce nœud d'échange est-il DÉJÀ le produit d'un éclatement import/export ?
+   *
+   * `SplitIOrE` fabrique un nœud par flux, d'identifiant
+   * `<extrémité>-<nœud d'échange><Importations|Exportations>`, relié à cette
+   * seule extrémité. Cette forme se relit donc sur le graphe — ce que `sibling`
+   * ne permet pas : le lien de fratrie n'est PAS persisté (la sauvegarde
+   * réécrit un nœud éclaté en son agrégat, cf. `SankeyPersistence.toJSON`), il
+   * est donc `undefined` sur TOUT fichier fraîchement chargé.
+   *
+   * L'enjeu est un fichier ancien qui stocke les nœuds déjà éclatés au lieu de
+   * leur agrégat (Bois Savoie : 316 de ses 506 nœuds). Les éclater une seconde
+   * fois fabrique une génération dont `setTradeDimensions` ne sait plus
+   * retrouver la racine — il la lit en `id.split('-')[1]`, qui y désigne le
+   * produit et non l'échange. Ces nœuds perdent alors toute hiérarchie de
+   * niveaux, et un nœud sans dimension gouvernante est visible à TOUS les
+   * niveaux (`checkIfRelatedDimensionsAreSelected`) : le diagramme agrégé
+   * affichait 99 flux d'échange au lieu d'une poignée.
+   *
+   * Le test porte sur UN seul flux, parce que c'est ce que produit un
+   * éclatement — un agrégat mono-flux (mfa_problem#222), lui, ne porte pas
+   * l'identifiant de son extrémité en préfixe et reste donc éclatable.
+   */
+  public get is_split_trade_node(): boolean {
+    if (this._sibling_node !== undefined) {
+      return true
+    }
+    const links = [...this.input_links_list, ...this.output_links_list]
+    if (links.length !== 1) {
+      return false
+    }
+    const link = links[0]
+    const extremity = (link.source === this) ? link.target : link.source
+    return (extremity !== this) && this._id.startsWith(extremity.id + '-')
+  }
 
   /**
    * Issue #1225 — remonte la chaîne dim_as_child via les dims désagrégées
@@ -724,6 +762,22 @@ export class Class_NodeElement extends Class_NodeBase {
     this.draw()
   }
 
+  /**
+   * sa#283 lot 6 — état de tags SÉRIALISÉ de ce nœud (forme de `toJSON`).
+   * Cf. `NodeTagsManager.tagsStateToJSON`.
+   */
+  public tagsStateToJSON(group_ids?: string[]) {
+    return this._nodeTagsManager.tagsStateToJSON(group_ids)
+  }
+
+  /**
+   * sa#283 lot 6 — remplace l'appartenance de ce nœud aux groupes cités, caches de
+   * visibilité invalidés. Cf. `NodeTagsManager.applyTagsState`.
+   */
+  public applyTagsState(state: Type_JSON) {
+    this._nodeTagsManager.applyTagsState(state)
+  }
+
   public get grouped_taggs_dict() { return this._taggs_dict }
   public get tags_list() { return this._tags }
   public get taggs_dict() {
@@ -779,6 +833,22 @@ export class Class_NodeElement extends Class_NodeBase {
     this.dimensionsUpdated()
   }
 
+  /**
+   * sa#283 lot 5 — état de dimension SÉRIALISÉ de ce nœud (forme de `toJSON`).
+   * Cf. `NodeDimensionsManager.dimensionsStateToJSON`.
+   */
+  public dimensionsStateToJSON(dimension_ids?: string[]) {
+    return this._nodeDimensionsManager.dimensionsStateToJSON(dimension_ids)
+  }
+
+  /**
+   * sa#283 lot 5 — remplace l'état de dimension de ce nœud pour les dimensions citées,
+   * cache de visibilité invalidé. Cf. `NodeDimensionsManager.applyDimensionsState`.
+   */
+  public applyDimensionsState(state: Type_JSON) {
+    this._nodeDimensionsManager.applyDimensionsState(state)
+  }
+
   public nodeDimensionAsParent(child: Class_NodeElement) {
     return this._nodeDimensionsManager.nodeDimensionAsParent(child)
   }
@@ -822,6 +892,9 @@ export class Class_NodeElement extends Class_NodeBase {
 
   // 🔄 DRAW LINKS ARROW - RÉINTÉGRÉ DIRECTEMENT
   public drawLinksArrow() {
+    // os#1374 — un éventail = les pointes de TOUS les flux d'un côté, reposées ensemble.
+    // C'est l'unité de travail qu'on surveille, pas la pointe isolée.
+    countArrowFan(this.id)
     this._drawLinksArrow()
     this._orderD3Elements()
   }
@@ -1122,23 +1195,25 @@ export class Class_NodeElement extends Class_NodeBase {
 
     let recycling_links: Class_LinkElement[]
     let compare: (link_a: Class_LinkElement, link_b: Class_LinkElement) => number
-    // Les deux modes passent par l'ordre géométrique (cf. ioOrderGeometry.ts). L'éventail
-    // « split direction + hauteur » ne s'applique qu'aux flux qui tournent ('vh'/'hv') ; les
-    // flux droits ('hh'/'vv') gardent le tri par la position du nœud opposé. Différence
-    // simple/advanced : advanced départage les hauteurs égales par l'ancre reach·curve
-    // (use_curve=true) ; simple ignore la courbure.
+    // Les deux modes passent par l'ordre géométrique (cf. ioOrderGeometry.ts), chacun avec sa
+    // politique. 'advanced' — « Courbure des flux » — applique la politique 'anchor' : deux
+    // bandes (montante / descendante), AUCUNE exception de flux droit, et dans chaque bande le
+    // classement par la distance de première ancre — qui tourne le plus tôt va à l'extrémité.
+    // 'simple' garde la politique 'reach' sans la courbure, à l'identique de l'existant.
     if (mode === 'advanced') {
       // Les flux de recyclage rejoignent le groupe « middle » et sont classés par le ventre
       // de leur boucle → on passe recycling_links=[] à reorganizeIOOrder.
       const middle = this._links_order.filter(
         l => !import_links.includes(l) && !export_links.includes(l)
       )
-      const order_index = this._computeIOOrderIndex(middle, true)
+      const order_index = this._computeIOOrderIndex(middle, true, 'anchor')
       recycling_links = []
       compare = (link_a, link_b) => (order_index.get(link_a) ?? 0) - (order_index.get(link_b) ?? 0)
     } else {
-      // 'simple' — mêmes règles sans la courbure ; les flux de recyclage restent parqués en
-      // bloc entre le middle et les exports (comportement historique), donc hors index.
+      // 'simple' — éventail « split direction + hauteur » réservé aux flux qui changent d'axe
+      // ('vh'/'hv'), les autres triés par la position du nœud opposé, courbure ignorée ; les
+      // flux de recyclage restent parqués en bloc entre le middle et les exports
+      // (comportement historique), donc hors index.
       recycling_links = this._links_order.filter(l => l.shape_is_recycling)
       const middle = this._links_order.filter(
         l => !import_links.includes(l) && !export_links.includes(l) && !l.shape_is_recycling
@@ -1171,7 +1246,8 @@ export class Class_NodeElement extends Class_NodeBase {
    */
   private _computeIOOrderIndex(
     middle: Class_LinkElement[],
-    use_curve: boolean
+    use_curve: boolean,
+    policy: Type_IOOrderPolicy = 'reach'
   ): Map<Class_LinkElement, number> {
     const cx = this.position_x + this.getShapeWidthToUse() / 2
     const cy = this.position_y + this.getShapeHeightToUse() / 2
@@ -1211,7 +1287,7 @@ export class Class_NodeElement extends Class_NodeBase {
       }
       return { item: l, geo }
     })
-    const ordered = orderIOByGeometry(items, cx, cy, use_curve)
+    const ordered = orderIOByGeometry(items, cx, cy, use_curve, policy)
     const map = new Map<Class_LinkElement, number>()
     ordered.forEach((l, i) => map.set(l, i))
     return map
@@ -1219,6 +1295,36 @@ export class Class_NodeElement extends Class_NodeBase {
 
   public reorganizeIOFromListIds(l: string[]) {
     this._links_order.sort((link_a, link_b) => l.indexOf(link_a.id) - l.indexOf(link_b.id))
+  }
+
+  /**
+   * sa#283 lot 6 — ORDRE DES FLUX autour de ce nœud, sur la forme EXACTE du JSON
+   * (`links_order` : la liste des ids de flux, cf. `SankeyPersistence.toJSON`).
+   *
+   * C'est la QUATRIÈME catégorie de données qui peut différer d'une tranche à l'autre, à
+   * côté des attributs du sac `_storage`, de la présence de l'élément et de la hiérarchie
+   * de dimension : l'empilement des bandes autour du nœud, qui gouverne le rendu et ne vit
+   * dans aucun sac d'attributs.
+   */
+  public linksOrderToJSON(): string[] {
+    return this._links_order.map(link => link.id)
+  }
+
+  /**
+   * sa#283 lot 6 — REPOSE l'ordre des flux de ce nœud. Exactement réversible :
+   * `applyLinksOrder(linksOrderToJSON())` est un no-op, et rejouer l'ordre COMPLET mémorisé
+   * avant l'écriture rend l'ordre d'origine (cf. `reorderLinksByIds`).
+   *
+   * Liste éventuellement PARTIELLE : un id inconnu de ce nœud est ignoré silencieusement
+   * (même règle que partout dans les contextes — un fichier d'époque ne connaît pas tous les
+   * flux du réseau réconcilié), et un flux du nœud absent de la liste passe À LA SUITE, dans
+   * son ordre courant. Jamais de flux inconnu intercalé entre les bandes ordonnées.
+   *
+   * Aucun redessin ici : l'appelant en déclenche un (le runtime des contextes redessine
+   * après l'overlay), comme pour `applyDimensionsState`.
+   */
+  public applyLinksOrder(ordered_ids: string[]) {
+    this._links_order = reorderLinksByIds(this._links_order, ordered_ids)
   }
 
   public moveLinkToPositionInOrderBefore(
@@ -2144,6 +2250,17 @@ export class Class_NodeElement extends Class_NodeBase {
     // Note : Two loops is best because link drawing can trigger other nodes drawLink() methode
     // -> So to avoid mutual blocking between node, it's best to compute first all links positions and then loop
     //    again on links to draw them
+    //
+    // os#1372 — Pendant la PHASE DE PLACEMENT, on n'écrit pas dans le DOM : les flux touchés sont
+    // remis à la zone de dessin, qui les dessinera une seule fois, aux positions définitives (cf.
+    // DrawingArea.drawElements). Le placement appelle `applyPosition` plusieurs fois par nœud et
+    // par passe ; dessiner à chaque fois revenait à tracer des positions intermédiaires aussitôt
+    // remplacées — 468 dessins pour 36 flux affichés sur CARTOFOB. Le choix DES flux à redessiner
+    // reste fait ici, à l'identique : c'est seulement le trait qui est retardé.
+    if (this.drawing_area.defers_link_draws) {
+      this.drawing_area.deferLinkDraws(link_to_redraw)
+      return
+    }
     link_to_redraw
       .forEach(link => {
         link.draw()

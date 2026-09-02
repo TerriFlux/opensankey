@@ -176,7 +176,13 @@ export abstract class Class_ProtoTagGroup {
         this._ref_sankey.drawing_area.application_data.language
       )
     }
-    this._banner = getStringFromJSON(json_object, 'banner', this._banner) as tag_banner_type
+    // Les fichiers d'avant 0.9 portent des bannières hors catalogue (« level » sur
+    // les groupes de niveaux) : le tiroir de filtres ne rend que les valeurs du
+    // type, une valeur inconnue y produit une carte vide (ni sélecteur ni action).
+    // Hors catalogue → on garde le défaut du groupe.
+    const banner_read = getStringFromJSON(json_object, 'banner', this._banner) as tag_banner_type
+    const valid_banners: tag_banner_type[] = ['none', 'one', 'multi', 'sequence', 'topbar']
+    if (valid_banners.includes(banner_read)) this._banner = banner_read
     // Create new tags & read their attributes
     const matching_tags_id: { [_: string]: string; } = (kwargs && kwargs['matching_tags_id']) ? kwargs['matching_tags_id'] as { [_: string]: string; } : {}
     Object.entries(json_object['tags'])
@@ -269,6 +275,9 @@ export abstract class Class_ProtoTagGroup {
             tag.setUnSelected()
           }
         })
+      // sa#283 — vues contextuelles : overlay appliqué APRÈS le basculement des tags,
+      // AVANT le redraw d'updateTagsReferences (slot optionnel enregistré par OSP).
+      this._ref_sankey.drawing_area.application_data.after_tag_selection_change?.()
       this.updateTagsReferences()
       this._ref_sankey.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToTags()
     }
@@ -291,6 +300,8 @@ export abstract class Class_ProtoTagGroup {
           tag.setUnSelected(false)
         }
       })
+    // sa#283 — vues contextuelles : même point d'accrochage que selectTagsFromId.
+    this._ref_sankey.drawing_area.application_data.after_tag_selection_change?.()
     this.updateTagsReferences()
   }
 
@@ -881,6 +892,9 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
           }
         })
       this.checkSelectionCoherence()
+      // sa#283 — vues contextuelles : overlay appliqué APRÈS le basculement des tags,
+      // AVANT tout redraw (applyPositionModeToDrawing / updateTagsReferences).
+      this._ref_sankey.drawing_area.application_data.after_tag_selection_change?.()
       // #370 — agir sur une dimension impose SON mode d'affichage. Avant
       // `updateTagsReferences` (qui redessine) pour que le dessin parte du bon mode.
       this.applyPositionModeToDrawing()
@@ -906,6 +920,8 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
         }
       })
     this.checkSelectionCoherence()
+    // sa#283 — vues contextuelles : même point d'accrochage que selectTagsFromId.
+    this._ref_sankey.drawing_area.application_data.after_tag_selection_change?.()
     // #370 — même règle que selectTagsFromId : la dimension manipulée impose son mode.
     this.applyPositionModeToDrawing()
     this.updateTagsReferences()
@@ -1022,6 +1038,12 @@ export class Class_LevelTagGroup  extends Class_NodeTagGroup{
    */
   constructor(id: string, name: string, sankey: Class_Sankey,with_a_tag: boolean = false) {
     super(id,name,sankey,with_a_tag)
+    // Un seul niveau sélectionné à la fois : bannière 'one' (le 'multi' de la classe
+    // de base n'a pas de sens pour une hiérarchie). C'est aussi le repli de fromJSON
+    // pour les fichiers qui portent la bannière hors catalogue « level » (< 0.9,
+    // jamais migrée par les fichiers 0.91) : sans lui, le tiroir de filtres rendait
+    // une carte vide — hiérarchie invisible et impilotable.
+    this.banner = 'one'
   }
 
   // CLEANING METHODS ====================================================================

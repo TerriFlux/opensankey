@@ -42,10 +42,12 @@ import { const_default_position_x, const_default_position_y, default_file_name, 
 import { getPublishOptions, PublishOptions } from './PublishOptions'
 import { Class_ApplicationHistory } from './ApplicationHistory'
 import { ViewsReader } from './ViewsReader'
+import { afterViewChange } from './viewSwitchProgress'
 import { decodeViewsFromDelta } from './viewDelta'
 import type { Type_ViewEntry } from './ViewsQuery'
 import { Class_IconLibrary } from '../css/IconLibrairie'
 import { Class_DrawingArea } from './DrawingArea'
+import { exposeDrawCounters } from './DrawCounters'
 import { compressJSONToGzip, decompressUploadedFileUniversal } from '../Persistence/UniversalJSONCompression'
 import { parseSankeymaticText } from '../Persistence/sankeymaticParser'
 import { loadEsankeyFile } from '../Persistence/esankeyParser'
@@ -59,6 +61,9 @@ import {
 } from '../Persistence/persistenceMigrations'
 import type { Class_NodeElement } from '../Elements/Node'
 import type { Class_LinkElement } from '../Elements/Link'
+// Module FEUILLE sans aucun import (cf. legendIds.ts) : sûr à tirer ici, où
+// tout autre chemin vers LegendGenerator créerait un cycle à l'initialisation.
+import { isLegendElementId } from '../Elements/legendIds'
 
 // SPECIFIC TYPES **********************************************************************/
 
@@ -116,17 +121,49 @@ export type Type_PresentationDiagram = {
 }
 
 /**
+ * sa#456 — PAGE PUBLIÉE d'où vient le diagramme affiché, quand il a été ouvert par
+ * `?url=` sur une adresse du parc que le serveur a reconnue.
+ *
+ * C'est l'autre visage d'une provenance : `Type_SankeythequeOrigin` désignait un
+ * fichier du DÉPÔT source, elle ne savait pas dire « la page <slug>/<feuille> du
+ * parc, fichier X.json.gz ». `data_file` est le nom que le MANIFESTE de publication
+ * déclare pour cette adresse (jamais celui de l'URL, le parc servant `X.json.gz`,
+ * `X.json`, `X.gz` et jusqu'à `X` tout court) : c'est lui, et lui seul, que la mise
+ * à jour remplace — une page multi-diagrammes voit corriger celui qu'on a ouvert.
+ *
+ * `kind` dit la NATURE de la source du portfolio, donc celle du geste de mise à
+ * jour : 'mfadata' (le portfolio vient d'un dépôt : commit + page, geste
+ * historique) ou 'workbook' (il est rendu depuis un classeur : brique de
+ * bibliothèque + page, cf. server/publish_provenance.py).
+ */
+export type Type_PublicationOrigin = {
+  page_url: string
+  slug: string
+  leaf: string
+  data_file: string
+  /** 'mfadata' (portfolio issu d'un dépôt) ou 'workbook' (rendu depuis un classeur). */
+  kind: string
+}
+
+/**
  * Provenance d'un diagramme ouvert depuis une galerie réenregistrable : chemin du
  * modèle dans l'index, relatif à la racine de sa source, et nom affiché.
  * `source` désigne la galerie donc le dépôt écrit — 'mfadata' = la sankeythèque
  * (études), 'sankeydata' = les modèles. Le couple (source, chemin) est le seul
  * qui compte côté serveur : le chemin doit être exactement celui de l'index de
  * cette source, lequel fait liste blanche d'écriture.
+ *
+ * sa#456 — `file_path` peut être VIDE : une page publiée dont la source n'est pas
+ * un fichier de dépôt (portfolio rendu depuis un classeur, ou étude absente de
+ * l'index curaté) a bien une provenance, mais rien à réenregistrer dans un dépôt.
+ * Le volet dépôt du dialogue se ferme alors, et `source` n'est pas consulté ;
+ * `publication.kind` porte la vérité de ce qui met la page à jour.
  */
 export type Type_SankeythequeOrigin = {
   file_path: string
   title: string
   source: 'mfadata' | 'sankeydata'
+  publication?: Type_PublicationOrigin
 }
 
 /**
@@ -205,13 +242,70 @@ export class Class_ApplicationData {
   public get is_editable(): boolean { return !this.is_static || this.publish_options.editable }
 
   /**
-   * Hook du concept unifié vue ⊕ viewtag : quand true, le sélecteur de view tags de la
-   * topbar (BannerViewTagTopbar) est masqué car la visibilité passe désormais par des VUES
-   * nommées (« tout est une vue nommée »). Faux en OS base (le sélecteur viewtag historique
-   * reste l'UI) ; surchargé en OpenSankey+ pour valoir vrai quand la feature Vues (plus) est
-   * disponible. Le mécanisme de visibilité, lui, reste en OS (Sankey.view_taggs / Node).
+   * os#1365 — ARBITRE UNIQUE entre les deux sélecteurs de la topbar : la navigation entre
+   * vues (BannerViewNavOSP) rend le sélecteur quand ce drapeau est vrai, le sélecteur de
+   * view tags (BannerViewTagTopbar) quand il est faux. Les deux bannières lisent CETTE
+   * propriété et elle seule : conditions complémentaires, donc jamais deux sélecteurs à
+   * l'écran, jamais zéro.
+   *
+   * Le critère est la PRÉSENCE DE VUES, pas la licence. Dès qu'un view tag a engendré des
+   * vues (préfixe `vt__<groupe>__<tag>`), ce sont les vues qui pilotent — une seule source
+   * de vérité. Sans vues, le sélecteur de view tags reste : c'est la seule UI du diagramme,
+   * le retirer le rendrait inutilisable.
+   *
+   * La version précédente valait `has_sankey_plus` en OpenSankey+, ce qui divergeait de la
+   * garde `has_views` de BannerViewNavOSP et produisait DEUX défauts symétriques :
+   *   - éditeur, vues présentes sans licence plus → les DEUX sélecteurs (le doublon CARTOFOB) ;
+   *   - viewer d'une publication, où `has_sankey_plus` est vrai par `is_static` : sans vues,
+   *     AUCUN sélecteur, le diagramme publié perdait sa seule UI de filtrage.
+   *
+   * Le mécanisme de visibilité, lui, reste en OS (Sankey.view_taggs / Node) : c'est ici une
+   * question d'AFFICHAGE.
    */
-  public get views_replace_viewtag_topbar(): boolean { return false }
+  public get views_replace_viewtag_topbar(): boolean { return this.has_views }
+
+  /**
+   * sa#283 — Vues contextuelles : slot OPTIONNEL enregistré par la couche OSP (pattern
+   * d'enregistrement, AUCUN import runtime OS → OSP — piège TDZ Element→Handler). Appelé
+   * par les méthodes de sélection des groupes de tags (TagGroup.selectTagsFromId /
+   * selectTagsFromIds, Tag.toogleSelected) juste APRÈS le basculement des tags et AVANT
+   * le redraw, pour que l'overlay d'attributs contextuels parte dans le dessin. Null en
+   * OS base : la feature vit entièrement en OpenSankey+.
+   */
+  public after_tag_selection_change: (() => void) | null = null
+
+  // os#1372 — `applyPublishStateOptions` a-t-il déjà tourné ? Les viewers React le rappellent à
+  // chaque changement de prop de sélection ; seules ces RÉ-applications sautent une sélection déjà
+  // posée (cf. applyTagSelections, paramètre `only_if_changed`). La première passe est intacte.
+  protected _publish_state_applied_once = false
+
+  /**
+   * os#1372 — Compteur de dessins COMPLETS, incrémenté par `Class_DrawingArea.draw()`.
+   *
+   * Sert à savoir si un geste a DÉJÀ redessiné avant d'en déclencher un de plus. Mesuré sur
+   * CARTOFOB : une bascule de dataTag enchaînait DEUX dessins complets (celui de
+   * `selectTagsFromId` → `updateTagsReferences`, puis celui de fin d'`applyPublishStateOptions`)
+   * et une bascule de vue heavy QUATRE. Supprimer le seul dessin redondant du chemin dataTag
+   * ramène le geste de 1 564 ms à 878 ms (A/B alterné, médianes sur 4 tours).
+   *
+   * Vit sur l'application et non sur la zone de dessin : celle-ci est REMPLACÉE en cours de
+   * geste sur le chemin heavy (`extractViewFromJSON` → `replaceDrawingArea`), un compteur porté
+   * par elle repartirait donc de zéro au milieu du geste.
+   */
+  protected _draw_epoch = 0
+  public get draw_epoch(): number { return this._draw_epoch }
+  /** Appelé par `Class_DrawingArea.draw()` — ne pas appeler ailleurs. */
+  public notifyFullDraw(): void { this._draw_epoch++ }
+
+  /**
+   * os#1372 — Époque de référence posée par un SURCHARGEUR d'`applyPublishStateOptions` avant
+   * son propre travail (OSP ouvre la vue demandée AVANT d'appeler `super`). Sans elle, la garde
+   * du dessin final ne verrait pas le dessin déclenché par cette ouverture et en ajouterait un
+   * second. Consommée par la méthode de base au premier usage.
+   */
+  protected _publish_apply_epoch: number | null = null
+  /** À appeler en tête d'une surcharge d'`applyPublishStateOptions`, avant tout dessin. */
+  protected markPublishApplyStart(): void { this._publish_apply_epoch = this._draw_epoch }
 
   public createNewMenuConfiguration(toast: CreateToastFnReturn | null = null): Class_MenuConfig {
     this._toast = toast
@@ -249,7 +343,7 @@ export class Class_ApplicationData {
   }
 
   // App
-  public version: string = '1.2.1'
+  public version: string = '1.3.0'
   public fit_screen: boolean
   public static_path: string = 'static/opensankey'
   public options: { [_: string]: boolean | string } = {}
@@ -399,6 +493,15 @@ export class Class_ApplicationData {
   public get publish_view_label_filter(): string | null { return this._publish_view_label_filter }
   public set publish_view_label_filter(v: string | null) { this._publish_view_label_filter = v }
 
+  // sa#412 — Labels de page déclarés par la page publiée (`window.sankey.view_label` en LISTE) :
+  // le viewer publié rend un sélecteur de label VISIBLE à côté du sélecteur de vues dès que la
+  // liste compte plus d'un label présent dans le fichier ; le filtre ACTIF reste
+  // `publish_view_label_filter` ci-dessus. État runtime, jamais sérialisé ; [] = pas de
+  // sélecteur (comportement historique). L'éditeur n'en tient pas compte.
+  protected _publish_view_labels: string[] = []
+  public get publish_view_labels(): string[] { return this._publish_view_labels }
+  public set publish_view_labels(v: string[]) { this._publish_view_labels = v }
+
   // Identité LOGIQUE de la vue courante, découplée de l'id du Sankey de la DA. Nécessaire pour
   // les vues light qui RÉUTILISENT la DA maître : sans ce champ, une vue light serait confondue
   // avec le maître (is_view_master, navigation, suppression…). Vaut default_main_sankey_id pour
@@ -441,6 +544,27 @@ export class Class_ApplicationData {
   // restituer un fichier multi-vues.
   protected _views_reader: ViewsReader = this.instanciateViewsReader()
   protected instanciateViewsReader(): ViewsReader { return new ViewsReader(this) }
+
+  /**
+   * os#1369 — Exécute un geste LOURD d'interface (filtrage par dataTag, et tout ce qui
+   * redessine le diagramme entier) en cédant d'abord la main au navigateur, voile et sillon
+   * posés. Suite directe d'os#1368 : la cause est la même — le travail est synchrone, donc
+   * un indicateur posé juste avant ne serait JAMAIS peint —, et l'ordonnanceur est le MÊME
+   * instance que celui de la bascule de vue, pour qu'il n'y ait qu'un voile à l'écran et que
+   * l'ordre soit préservé entre les deux familles de gestes.
+   *
+   * `then` court APRÈS le travail, cédé ou non : les hôtes y rafraîchissent leurs composants,
+   * qui sinon liraient l'état d'avant, une frame trop tôt.
+   *
+   * Réservé aux gestes d'UTILISATEUR. Les chemins programmatiques — exports, options de
+   * publication, suites de tests, qui lisent l'état au retour — appellent le travail
+   * directement et restent strictement synchrones, comme `setCurrentView` face à
+   * `requestViewChange`.
+   */
+  public runHeavyGesture(work: () => void, then?: () => void): void {
+    afterViewChange(this._views_reader.gesture_progress.run('heavy', work),
+      then ?? (() => { /* rien à rafraîchir */ }))
+  }
 
   /**
    * History of all actions
@@ -666,6 +790,10 @@ export class Class_ApplicationData {
     // déclencheur DOCUMENT a été retirée : le déclencheur est désormais un attribut
     // de style PAR ÉLÉMENT (`tooltip_trigger`), il n'y a plus de réglage global à
     // poser ici.
+    // os#1376 — expose `window.sankey_draw_counters` (éteint par défaut). Ici, dans un
+    // constructeur, et non au premier niveau du module : un appel exécutable au top-level
+    // casse l'analyse webpack des consommateurs externes (même raison que ci-dessus).
+    exposeDrawCounters()
     // Options for application
     this.options = options
     // Deals with UI menu updates / each modifications
@@ -801,8 +929,71 @@ export class Class_ApplicationData {
     // Push to storage
     localStorage.setItem('data', LZString.compress(JSON.stringify(this._toJSON())))
     localStorage.setItem('last_save', 'true')
+    // sa#424 (lot 4) — HORODATAGE de l'enregistrement, pas seulement son
+    // existence : « enregistré » sans date ne dit pas si cela remonte à une
+    // minute ou à avant-hier. Affiché au survol du bouton.
+    localStorage.setItem('last_save_at', new Date().toISOString())
     // Update logo save in cache
     this.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+    this.menu_configuration.ref_to_last_download_updater.current()
+    this.requestPersistentStorage()
+  }
+
+  /**
+   * sa#424 (lot 4) — DEMANDER AU NAVIGATEUR DE NE PAS ÉVINCER CE STOCKAGE.
+   *
+   * Ctrl+S écrit dans le stockage local, qui est par défaut « best-effort » : le
+   * navigateur peut le purger sous pression de disque. `storage.persist()` le
+   * fait passer en durable.
+   *
+   * Appelé au moment de l'enregistrement, PAS au démarrage : sous Firefox la
+   * demande peut ouvrir une autorisation, et une invite surgissant à l'ouverture
+   * de l'application serait incompréhensible — ici elle suit un geste délibéré
+   * de l'utilisateur. Une seule tentative par session ; l'échec est sans
+   * conséquence (on retombe sur le comportement d'avant).
+   */
+  protected _persistence_requested = false
+  public requestPersistentStorage() {
+    if (this._persistence_requested) return
+    this._persistence_requested = true
+    const storage = typeof navigator !== 'undefined' ? navigator.storage : undefined
+    if (!storage?.persist) return
+    storage.persisted()
+      .then((already) => (already ? true : storage.persist()))
+      .catch(() => undefined)
+  }
+
+  /**
+   * sa#424 (lot 4) — DATE DU DERNIER VRAI FICHIER ÉCRIT (JSON ou Excel).
+   *
+   * Le stockage de l'application n'est pas une sauvegarde : il est lié à un
+   * navigateur, un profil et une origine, et part avec un nettoyage de données.
+   * Cette date est la seule information qui prévienne d'une perte — d'où son
+   * affichage à côté du bouton d'enregistrement, « jamais » compris.
+   *
+   * Les EXPORTS (PNG, PDF, SVG) ne comptent pas : ce sont des rendus figés, pas
+   * des fichiers réouvrables — la distinction même qui sépare « Enregistrer
+   * sous » d'« Exporter ».
+   */
+  public noteDocumentDownloaded() {
+    localStorage.setItem('last_download', new Date().toISOString())
+    this.menu_configuration.ref_to_last_download_updater.current()
+  }
+
+  public get last_document_download(): Date | null {
+    return this._storedDate('last_download')
+  }
+
+  /** Horodatage du dernier enregistrement dans le stockage de l'application. */
+  public get last_cache_save(): Date | null {
+    return this._storedDate('last_save_at')
+  }
+
+  protected _storedDate(key: string): Date | null {
+    const raw = localStorage.getItem(key)
+    if (!raw) return null
+    const date = new Date(raw)
+    return isNaN(date.getTime()) ? null : date
   }
 
   /**
@@ -859,6 +1050,7 @@ export class Class_ApplicationData {
       const blob = new Blob([json_data_str], { type: 'text/plain;charset=utf-8' })
       FileSaver.saveAs(blob, this._file_name + '.json')
     }
+    this.noteDocumentDownloaded()
   }
 
   /**
@@ -1328,19 +1520,18 @@ export class Class_ApplicationData {
 
 
   /**
-   * Ouvre le Tableur sur son sous-onglet « Texte » (éditeur SankeyMATIC natif).
+   * Ouvre le dialogue draggable de l'éditeur texte SankeyMATIC (format d'échange).
    * Appelé après tout import SankeyMATIC : le texte source reste ainsi sous les yeux
    * de l'utilisateur, éditable et réappliquable. Sans effet en mode publish/statique,
-   * qui n'a pas de tableur.
+   * qui ne monte pas les dialogues d'édition.
    *
    * @memberof Class_ApplicationData
    */
-  public openSpreadsheetTextEditor() {
+  public openSankeymaticEditor() {
     if (this.is_static) return
     const mc = this._menu_configuration
     if (!mc) return // _fromJSON peut précéder createNewMenuConfiguration
-    mc.main_zone_spreadsheet_mode = 'text'
-    mc.main_zone_show_spreadsheet = true
+    mc.dict_setter_show_dialog.ref_setter_show_sankeymatic_editor.current(true)
   }
 
   /**
@@ -1411,7 +1602,7 @@ export class Class_ApplicationData {
         // l'import fichier de MenuTop (aucun aller-retour Python).
         if (/\.txt$/i.test(filename)) {
           this.fromJSON(parseSankeymaticText(text) as never)
-          this.openSpreadsheetTextEditor()
+          this.openSankeymaticEditor()
           return
         }
 
@@ -1602,6 +1793,15 @@ export class Class_ApplicationData {
     const forced_minimum_flux = opts.minimum_flux
     if (forced_minimum_flux !== null) this._drawing_area['_minimum_flux'] = forced_minimum_flux
 
+    // os#1372 — Époque de dessin à l'entrée, et suivi des mutations qui NE redessinent PAS
+    // d'elles-mêmes. Le dessin de fin de méthode n'est déclenché que s'il sert vraiment :
+    // soit une de ces mutations muettes a eu lieu, soit rien n'a redessiné entre-temps.
+    // Sans cette garde, une bascule de dataTag payait DEUX dessins complets et une bascule de
+    // vue heavy QUATRE (mesuré sur CARTOFOB).
+    const epoch_on_entry = this._publish_apply_epoch ?? this._draw_epoch
+    this._publish_apply_epoch = null
+    let mutated_without_draw = forced_minimum_flux !== null
+
     // sa#397 — Ouverture sur une vue (`view`) ou sur un groupe de vues par LABEL (`view_label`).
     // Labels de vues = étiquettes de SÉLECTION posées par l'auteur (sa#396) ; rien à voir avec
     // `view_tag_selection`, qui manipule les view tags GÉNÉRATEURS de vues. Doctrine additive et
@@ -1624,6 +1824,12 @@ export class Class_ApplicationData {
         }
       }
     }
+    // sa#412 — liste des labels de page (`view_label` en liste) : stockée telle quelle (état
+    // runtime, ré-application réactive : option absente => plus de sélecteur). Le filtre ACTIF
+    // (premier label) est posé par le bloc view_label ci-dessus, garde-fou compris ; l'UI
+    // publish ne rend le sélecteur de label que si > 1 label est présent dans le fichier.
+    this._publish_view_labels = opts.view_labels ?? []
+
     if (opts.view) {
       const view_id = this._views_reader.resolveViewIdFromSelection(opts.view)
       if (!view_id) {
@@ -1634,27 +1840,66 @@ export class Class_ApplicationData {
       }
     }
 
-    if (!opts.data_tag_selection && !opts.view_tag_selection && !opts.position_mode) {
+    if (!opts.data_tag_selection && !opts.view_tag_selection && !opts.position_mode
+      && !opts.scale_adapted_reference) {
       if (forced_minimum_flux !== null) this._drawing_area.draw()
       return
     }
-    const sankey = this._drawing_area.sankey
+
+    // 0) os#1352 — Régime de référence de l'« échelle adaptée », AVANT le mode : c'est lui qui
+    //    décide de la grandeur que `setScaleAdaptedMode` va capturer. Posé sur la DA courante ET
+    //    sur la DA MAÎTRE, parce qu'une vue `is_light` réutilise cette dernière : ne le poser que
+    //    sur la vue ouverte le perdrait à la première navigation.
+    if (opts.scale_adapted_reference) {
+      this._drawing_area.scale_adapted_reference = opts.scale_adapted_reference
+      if (this._master_drawing_area && this._master_drawing_area !== this._drawing_area) {
+        this._master_drawing_area.scale_adapted_reference = opts.scale_adapted_reference
+      }
+      // Mutation muette : rien ne redessine ici, le dessin de fin de méthode doit avoir lieu.
+      mutated_without_draw = true
+    }
 
     // 1) et 2) Présélections de tags (logique partagée avec l'état transmis par l'URL,
     //    cf. applyUrlStateParams).
-    this.applyTagSelections(opts.data_tag_selection, opts.view_tag_selection)
+    //    os#1372 — à partir de la DEUXIÈME passe (ré-application réactive d'un viewer React), une
+    //    sélection déjà posée n'est pas rejouée : elle ne coûterait qu'un dessin complet de plus.
+    this.applyTagSelections(
+      opts.data_tag_selection, opts.view_tag_selection, this._publish_state_applied_once)
+    this._publish_state_applied_once = true
 
-    // 3) Mode de navigation
+    // 3) Mode de navigation — posé sur la DA COURANTE **et** sur la DA MAÎTRE.
+    //
+    // os#1352 : les vues « légères » (une sélection de view tags, comme les vues par essence de
+    // CARTOFOB) réutilisent la DA MAÎTRE. En ne posant le mode que sur la DA ouverte, le style
+    // du maître restait `absolute` : à la première navigation, `applyViewChange` constatait
+    // l'écart et rappelait le setter, lequel RÉ-ARME la suspension #369 — cette frame-là était
+    // donc dessinée en absolu, et le lecteur voyait le mode « sauter » un geste. Poser le mode
+    // aux deux endroits supprime l'écart, donc le ré-armement.
     if (opts.position_mode) {
-      const current = sankey.styles_dict['default'].shape_position_type
-      if (current !== opts.position_mode) {
-        if (opts.position_mode === 'absolute') this._drawing_area.setAbsoluteMode()
-        else if (opts.position_mode === 'proportional') this._drawing_area.setProportionalMode()
-        else if (opts.position_mode === 'scale_adapted') this._drawing_area.setScaleAdaptedMode()
+      const mode = opts.position_mode
+      const applyMode = (da: Class_DrawingArea | undefined) => {
+        if (!da) return
+        if (da.sankey.styles_dict['default'].shape_position_type === mode) return
+        if (mode === 'absolute') da.setAbsoluteMode()
+        else if (mode === 'proportional') da.setProportionalMode()
+        // os#1372 — `false` : le dessin de fin de méthode s'en charge.
+        else if (mode === 'scale_adapted') da.setScaleAdaptedMode(false)
+        // Aucun des trois setters ne redessine désormais depuis ici : c'est donc une mutation
+        // MUETTE, et le dessin de fin de méthode devient obligatoire — y compris si la sélection
+        // de tags vient d'en déclencher un, celui-ci étant antérieur au changement de mode.
+        mutated_without_draw = true
       }
+      applyMode(this._drawing_area)
+      applyMode(this._master_drawing_area)
     }
 
-    this._drawing_area.draw()
+    // os#1372 — Un seul dessin par geste. On ne redessine ici que si rien ne l'a fait depuis
+    // l'entrée (sélection et mode inchangés), ou si une mutation muette l'exige. Le cas
+    // fréquent — le viewer ré-applique ses props, la sélection de dataTag change et redessine —
+    // économise un dessin complet entier.
+    if (mutated_without_draw || this._draw_epoch === epoch_on_entry) {
+      this._drawing_area.draw()
+    }
   }
 
   /**
@@ -1676,10 +1921,18 @@ export class Class_ApplicationData {
       const flat = JSON.parse(JSON.stringify(out)) as Type_JSON
       decodeViewsFromDelta(flat)
       const count = (v: unknown) => (v && typeof v === 'object' && !Array.isArray(v)) ? Object.keys(v as Type_JSON).length : 0
+      // Zones LIBRES : la légende est faite de zones de texte depuis OS#1254
+      // (cadre `legend` + enfants `legend-*`), qu'un fichier antérieur n'a pas.
+      // Les compter avec les autres rendait tout upgrade « en écart » — c'est
+      // ce compte-ci que le vérificateur compare strictement.
+      const countFree = (v: unknown) => (v && typeof v === 'object' && !Array.isArray(v))
+        ? Object.keys(v as Type_JSON).filter(id => !isLegendElementId(id)).length
+        : 0
       const views = Object.values((flat['views'] ?? {}) as { [id: string]: Type_JSON }).map(v => ({
         name: v['name'] ?? null,
         view_labels: Array.isArray(v['view_labels']) ? v['view_labels'] : [],
         zones: count(v['labels']),
+        zones_free: countFree(v['labels']),
         nodes: count(v['nodes']),
         links: count(v['links']),
       }))
@@ -1688,6 +1941,7 @@ export class Class_ApplicationData {
         nodes: count(flat['nodes']),
         links: count(flat['links']),
         zones: count(flat['labels']),
+        zones_free: countFree(flat['labels']),
         views,
       })
       w['__sankey_upgraded_json'] = JSON.stringify(out)
@@ -1701,13 +1955,37 @@ export class Class_ApplicationData {
    * partagée par les options de publication (`applyPublishStateOptions`) et par l'état
    * d'affichage transmis en paramètres d'URL (`applyUrlStateParams`). Ne redessine pas :
    * l'appelant enchaîne son propre `draw()`.
+   *
+   * os#1372 — `only_if_changed` : ne ré-applique pas une sélection DÉJÀ posée. Réservé aux
+   * RÉ-applications (cf. `applyPublishStateOptions`) ; la toute première passe reste inchangée.
    * @memberof Class_ApplicationData
    */
   public applyTagSelections(
     data_tag_selection?: { [group: string]: string } | null,
-    view_tag_selection?: { [group: string]: string } | null
+    view_tag_selection?: { [group: string]: string } | null,
+    only_if_changed: boolean = false
   ): void {
     const sankey = this._drawing_area.sankey
+
+    // os#1372 — Les viewers React rappellent `applyPublishStateOptions` dès qu'une SEULE de leurs
+    // props de sélection change (cf. ViewApp / ViewAppSA) : changer de vue ré-appliquait à
+    // l'identique la sélection de dataTag, et `selectTagsFromId` enchaîne `updateTagsReferences`
+    // → `drawing_area.draw()`. Sur CARTOFOB cela coûtait un dessin complet de trop par geste
+    // (882 ms mesurés sur une bascule de vue de 4,4 s), et empilait au passage une entrée
+    // d'undo/redo sans changement.
+    //
+    // La garde ne vaut que pour les RÉ-applications, et elle est stricte : dès qu'un seul élément
+    // de l'état diffère, tout est appliqué comme avant. La PREMIÈRE passe ne saute jamais rien —
+    // `selectTagsFromId` y porte deux effets qui ne sont pas des redessins : le mode d'affichage
+    // que la dimension impose (#370) et le crochet des vues contextuelles (sa#283). Ce dernier
+    // abandonne un enregistrement « personnaliser pour ‹tag› » quand la sélection CHANGE : ne pas
+    // le déclencher sur une ré-application identique est d'ailleurs plus fidèle à son intention.
+    const alreadySelected = (
+      group: { selected_tags_list: { id: string }[] },
+      tag_id: string
+    ): boolean =>
+      only_if_changed &&
+      group.selected_tags_list.length === 1 && group.selected_tags_list[0].id === tag_id
 
     // 1) Présélection des data tags
     if (data_tag_selection) {
@@ -1724,6 +2002,7 @@ export class Class_ApplicationData {
           console.warn(`[OpenSankey] data_tag_selection : tag « ${tag_key} » introuvable dans le groupe « ${group_key} »`)
           continue
         }
+        if (alreadySelected(group, tag.id)) continue
         group.selectTagsFromId(tag.id)
       }
     }
@@ -1747,6 +2026,7 @@ export class Class_ApplicationData {
         // toutes les valeurs redeviennent visibles (équivalent de décocher l'œil dans la barre du bas).
         const tag_key_lc = tag_key.toLowerCase()
         if (tag_key_lc === 'all' || tag_key_lc === 'none' || tag_key === '*') {
+          if (only_if_changed && !group.view_mode) continue
           group.view_mode = false
           any_view_applied = true
           continue
@@ -1757,6 +2037,8 @@ export class Class_ApplicationData {
           console.warn(`[OpenSankey] view_tag_selection : tag « ${tag_key} » introuvable dans le groupe « ${group_key} »`)
           continue
         }
+        // État déjà en place (groupe activé, filtre vue actif, valeur sélectionnée) : rien à faire.
+        if (group.activated && group.view_mode && alreadySelected(group, tag.id)) continue
         group.activated = true
         group.view_mode = true
         group.selectTagsFromId(tag.id)
@@ -2440,10 +2722,12 @@ export class Class_ApplicationData {
   // ==========================================================================================
   public viewsFromJSON(json_object: Type_JSON): void { this._views_reader.viewsFromJSON(json_object) }
   public setCurrentView(id: string): void { this._views_reader.setCurrentView(id) }
-  public setCurrentViewToMaster(): void { this._views_reader.setCurrentViewToMaster() }
-  public setCurrentViewToNext(): void { this._views_reader.setCurrentViewToNext() }
-  public setCurrentViewToPrev(): void { this._views_reader.setCurrentViewToPrev() }
-  public navigateToView(id: string): void { this._views_reader.navigateToView(id) }
+  // os#1368 — chemin INTERACTIF : indicateur + cession de la main avant le travail lourd.
+  public requestViewChange(id: string): void | Promise<void> { return this._views_reader.requestViewChange(id) }
+  public setCurrentViewToMaster(): void | Promise<void> { return this._views_reader.setCurrentViewToMaster() }
+  public setCurrentViewToNext(): void | Promise<void> { return this._views_reader.setCurrentViewToNext() }
+  public setCurrentViewToPrev(): void | Promise<void> { return this._views_reader.setCurrentViewToPrev() }
+  public navigateToView(id: string): void | Promise<void> { return this._views_reader.navigateToView(id) }
   public extractViewFromJSON(json_object: Uint8Array, view_id: string): void { this._views_reader.extractViewFromJSON(json_object, view_id) }
   public getDrawingAreaFromViewId(id: string): Class_DrawingArea | undefined { return this._views_reader.getDrawingAreaFromViewId(id) }
   public pushViewIdInViewOrder(id: string): void { this._views_reader.pushViewIdInViewOrder(id) }

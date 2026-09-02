@@ -33,8 +33,10 @@ describe('sa#397 getPublishOptions — view / view_label', () => {
     expect(opts.view_label).toBe('Résultats')
   })
 
-  it('valeurs non-string : ignorées (null), pas d\'écran cassé', () => {
-    window.sankey = { publish: true, view: 42 as never, view_label: ['a'] as never }
+  it('valeurs invalides : ignorées (null), pas d\'écran cassé', () => {
+    // sa#412 : une LISTE de chaînes est désormais VALIDE pour view_label (cf. suite dédiée) ;
+    // les types réellement invalides restent ignorés.
+    window.sankey = { publish: true, view: 42 as never, view_label: 42 as never }
     const opts = getPublishOptions()
     expect(opts.view).toBeNull()
     expect(opts.view_label).toBeNull()
@@ -48,6 +50,54 @@ describe('sa#397 getPublishOptions — view / view_label', () => {
     const opts = getPublishOptions()
     expect(opts.view).toBe('Ma Vue')
     expect(opts.view_label).toBe('Méthode')
+  })
+})
+
+// sa#412 — `view_label` accepte une LISTE de labels : le filtre actif de page est le PREMIER,
+// la liste complète part dans `view_labels` (sélecteur de label VISIBLE du viewer publié).
+// Une chaîne simple garde exactement le comportement historique (view_labels = [chaîne]).
+describe('sa#412 getPublishOptions — view_label en liste', () => {
+  afterEach(() => {
+    delete window.sankey
+  })
+
+  it('chaîne simple : view_label inchangé, view_labels normalisée en [chaîne]', () => {
+    window.sankey = { publish: true, view_label: 'Sources' }
+    const opts = getPublishOptions()
+    expect(opts.view_label).toBe('Sources')
+    expect(opts.view_labels).toEqual(['Sources'])
+  })
+
+  it('liste : filtre actif = PREMIER label, liste complète dans view_labels', () => {
+    window.sankey = { publish: true, view_label: ['Sources', 'Méthode', 'Niveau de confiance'] }
+    const opts = getPublishOptions()
+    expect(opts.view_label).toBe('Sources')
+    expect(opts.view_labels).toEqual(['Sources', 'Méthode', 'Niveau de confiance'])
+  })
+
+  it('liste : entrées invalides ignorées (warn), doublons dédoublonnés', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => { /* silencieux */ })
+    window.sankey = { publish: true, view_label: ['Sources', '', 42, 'Sources', 'Méthode'] as never }
+    const opts = getPublishOptions()
+    expect(opts.view_label).toBe('Sources')
+    expect(opts.view_labels).toEqual(['Sources', 'Méthode'])
+    expect(warn).toHaveBeenCalled()
+    warn.mockRestore()
+  })
+
+  it('rien de valide (liste vide ou sans chaîne, option absente) : null, comportement inchangé', () => {
+    window.sankey = { publish: true, view_label: [] }
+    expect(getPublishOptions().view_label).toBeNull()
+    expect(getPublishOptions().view_labels).toBeNull()
+    window.sankey = { publish: true }
+    expect(getPublishOptions().view_labels).toBeNull()
+  })
+
+  it('applyViewerOptions : une liste voyage jusqu\'à getPublishOptions', () => {
+    applyViewerOptions({ view_label: ['Sources', 'Méthode'] })
+    const opts = getPublishOptions()
+    expect(opts.view_label).toBe('Sources')
+    expect(opts.view_labels).toEqual(['Sources', 'Méthode'])
   })
 })
 

@@ -5,7 +5,7 @@ export const resources_template = {
   en: {
     translation: {
       templates: {
-        need_osp: 'MFASankey Production needed',
+        need_osp: 'MFASankey Dataviz needed',
         gallery_hint: 'Click a template to start from an example',
         sankeytheque_hint: 'Click a study to open it',
         pin: 'Pin the gallery (the drawing resizes to its left, try templates one after another)',
@@ -58,6 +58,7 @@ export const resources_template = {
       },
       // sa#414 — panneau « Explorateur » (projets + classeurs du compte)
       explorer: {
+        theque: 'SankeyThèque',
         title: 'Explorer',
         tooltip: 'Browse your projects and workbooks; a diagram opens in a new sheet',
         hint: 'Your projects and workbooks: click a diagram to open it in a new sheet',
@@ -80,6 +81,9 @@ export const resources_template = {
         slot_file: 'Choose a file...',
         slot_add: 'Pin',
         slot_cancel: 'Cancel',
+        group_root: 'Folder documents',
+        search_placeholder: 'Filter projects...',
+        search_no_match: 'No project matches this search',
         menu_entry: 'From my library...',
         delete_project: 'Delete this project',
         confirm_delete_project: 'Delete the project “{{title}}” and ALL its versions? The action cannot be undone.',
@@ -93,7 +97,7 @@ export const resources_template = {
   fr: {
     translation: {
       templates: {
-        need_osp: 'MFASankey Production necessaire',
+        need_osp: 'MFASankey Dataviz necessaire',
         gallery_hint: 'Cliquez sur un modèle pour partir d\'un exemple',
         sankeytheque_hint: 'Cliquez sur une étude pour l\'ouvrir',
         pin: 'Épingler la galerie (le dessin se recadre à gauche, essayez les modèles à la suite)',
@@ -146,6 +150,7 @@ export const resources_template = {
       },
       // sa#414 — panneau « Explorateur » (projets + classeurs du compte)
       explorer: {
+        theque: 'SankeyThèque',
         title: 'Explorateur',
         tooltip: 'Parcourez vos projets et classeurs ; un diagramme s\'ouvre dans une nouvelle feuille',
         hint: 'Vos projets et classeurs : cliquez sur un diagramme pour l\'ouvrir dans une nouvelle feuille',
@@ -168,6 +173,9 @@ export const resources_template = {
         slot_file: 'Choisir un fichier...',
         slot_add: 'Épingler',
         slot_cancel: 'Annuler',
+        group_root: 'Documents du dossier',
+        search_placeholder: 'Filtrer les projets...',
+        search_no_match: 'Aucun projet ne correspond',
         menu_entry: 'Depuis ma bibliothèque...',
         delete_project: 'Supprimer ce projet',
         confirm_delete_project: 'Supprimer le projet « {{title}} » et TOUTES ses versions ? L’action est irréversible.',
@@ -181,7 +189,7 @@ export const resources_template = {
   es: {
     translation: {
       templates: {
-        need_osp: 'Se necesita MFASankey Production',
+        need_osp: 'Se necesita MFASankey Dataviz',
         gallery_hint: 'Haga clic en una plantilla para empezar desde un ejemplo',
         sankeytheque_hint: 'Haga clic en un estudio para abrirlo',
         pin: 'Fijar la galería (el dibujo se reajusta a su izquierda, pruebe las plantillas una tras otra)',
@@ -234,6 +242,7 @@ export const resources_template = {
       },
       // sa#414 — panel « Explorador » (proyectos + libros de la cuenta)
       explorer: {
+        theque: 'SankeyThèque',
         title: 'Explorador',
         tooltip: 'Explore sus proyectos y libros; un diagrama se abre en una hoja nueva',
         hint: 'Sus proyectos y libros: haga clic en un diagrama para abrirlo en una hoja nueva',
@@ -256,6 +265,9 @@ export const resources_template = {
         slot_file: 'Elegir un archivo...',
         slot_add: 'Fijar',
         slot_cancel: 'Cancelar',
+        group_root: 'Documentos de la carpeta',
+        search_placeholder: 'Filtrar proyectos...',
+        search_no_match: 'Ningun proyecto coincide',
         menu_entry: 'Desde mi biblioteca...',
         delete_project: 'Eliminar este proyecto',
         confirm_delete_project: '¿Eliminar el proyecto «{{title}}» y TODAS sus versiones? La acción es irreversible.',
@@ -269,7 +281,7 @@ export const resources_template = {
   de: {
     translation: {
       templates: {
-        need_osp: 'MFASankey Production erforderlich',
+        need_osp: 'MFASankey Dataviz erforderlich',
         gallery_hint: 'Klicken Sie auf eine Vorlage, um mit einem Beispiel zu starten',
         sankeytheque_hint: 'Klicken Sie auf eine Studie, um sie zu öffnen',
         pin: 'Galerie anheften (die Zeichnung wird links davon neu angepasst, Vorlagen nacheinander ausprobieren)',
@@ -322,6 +334,7 @@ export const resources_template = {
       },
       // sa#414 — Panel „Explorer" (Projekte + Arbeitsmappen des Kontos)
       explorer: {
+        theque: 'SankeyThèque',
         title: 'Explorer',
         tooltip: 'Durchsuchen Sie Ihre Projekte und Arbeitsmappen; ein Diagramm öffnet sich in einem neuen Blatt',
         hint: 'Ihre Projekte und Arbeitsmappen: Klicken Sie auf ein Diagramm, um es in einem neuen Blatt zu öffnen',
@@ -344,6 +357,9 @@ export const resources_template = {
         slot_file: 'Datei wählen...',
         slot_add: 'Anheften',
         slot_cancel: 'Abbrechen',
+        group_root: 'Dokumente des Ordners',
+        search_placeholder: 'Projekte filtern...',
+        search_no_match: 'Kein Projekt entspricht der Suche',
         menu_entry: 'Aus meiner Bibliothek...',
         delete_project: 'Dieses Projekt löschen',
         confirm_delete_project: 'Projekt „{{title}}“ und ALLE seine Versionen löschen? Der Vorgang ist unwiderruflich.',
@@ -357,7 +373,7 @@ export const resources_template = {
   it: {
     translation: {
       templates: {
-        need_osp: 'MFASankey Production necessario',
+        need_osp: 'MFASankey Dataviz necessario',
         gallery_hint: 'Clicca su un modello per partire da un esempio',
         sankeytheque_hint: 'Clicca su uno studio per aprirlo',
         pin: 'Fissa la galleria (il disegno si ridimensiona alla sua sinistra, prova i modelli uno dopo l\'altro)',
@@ -410,6 +426,7 @@ export const resources_template = {
       },
       // sa#414 — pannello « Esplora » (progetti + cartelle di lavoro dell'account)
       explorer: {
+        theque: 'SankeyThèque',
         title: 'Esplora',
         tooltip: 'Sfoglia i tuoi progetti e le cartelle di lavoro; un diagramma si apre in un nuovo foglio',
         hint: 'I tuoi progetti e le tue cartelle di lavoro: clicca su un diagramma per aprirlo in un nuovo foglio',
@@ -432,6 +449,9 @@ export const resources_template = {
         slot_file: 'Scegli un file...',
         slot_add: 'Aggancia',
         slot_cancel: 'Annulla',
+        group_root: 'Documenti della cartella',
+        search_placeholder: 'Filtra i progetti...',
+        search_no_match: 'Nessun progetto corrisponde',
         menu_entry: 'Dalla mia libreria...',
         delete_project: 'Elimina questo progetto',
         confirm_delete_project: 'Eliminare il progetto «{{title}}» e TUTTE le sue versioni? L’azione è irreversibile.',
@@ -442,7 +462,7 @@ export const resources_template = {
   'zh-CN': {
     translation: {
       templates: {
-        need_osp: '需要 MFASankey Production',
+        need_osp: '需要 MFASankey Dataviz',
         gallery_hint: '点击某个模板即可从示例开始',
         sankeytheque_hint: '点击某项研究即可打开',
         pin: '固定图库（绘图区在其左侧调整大小，可逐个试用模板）',
@@ -495,6 +515,7 @@ export const resources_template = {
       },
       // sa#414 — « 资源管理器 » 面板（账户的项目 + 工作簿）
       explorer: {
+        theque: 'SankeyThèque',
         title: '资源管理器',
         tooltip: '浏览您的项目和工作簿；图表会在新工作表中打开',
         hint: '您的项目和工作簿：点击图表即可在新工作表中打开',
@@ -517,6 +538,9 @@ export const resources_template = {
         slot_file: '选择文件...',
         slot_add: '固定',
         slot_cancel: '取消',
+        group_root: '文件夹文档',
+        search_placeholder: '筛选项目…',
+        search_no_match: '没有匹配的项目',
         menu_entry: '从我的库中打开…',
         delete_project: '删除此项目',
         confirm_delete_project: '删除项目“{{title}}”及其所有版本？此操作不可撤销。',
@@ -527,7 +551,7 @@ export const resources_template = {
   ja: {
     translation: {
       templates: {
-        need_osp: 'MFASankey Production が必要です',
+        need_osp: 'MFASankey Dataviz が必要です',
         gallery_hint: 'テンプレートをクリックすると、その例から始められます',
         sankeytheque_hint: '研究事例をクリックすると開きます',
         pin: 'ギャラリーを固定（描画エリアはその左側でサイズ調整され、テンプレートを次々と試せます）',
@@ -580,6 +604,7 @@ export const resources_template = {
       },
       // sa#414 — « エクスプローラー » パネル（アカウントのプロジェクト + ワークブック）
       explorer: {
+        theque: 'SankeyThèque',
         title: 'エクスプローラー',
         tooltip: 'プロジェクトとワークブックを閲覧できます。図は新しいシートで開きます',
         hint: 'プロジェクトとワークブック：図をクリックすると新しいシートで開きます',
@@ -602,6 +627,9 @@ export const resources_template = {
         slot_file: 'ファイルを選択...',
         slot_add: 'ピン留め',
         slot_cancel: 'キャンセル',
+        group_root: 'フォルダの文書',
+        search_placeholder: 'プロジェクトを絞り込む…',
+        search_no_match: '一致するプロジェクトはありません',
         menu_entry: 'ライブラリから開く…',
         delete_project: 'このプロジェクトを削除',
         confirm_delete_project: 'プロジェクト「{{title}}」とそのすべてのバージョンを削除しますか？この操作は取り消せません。',

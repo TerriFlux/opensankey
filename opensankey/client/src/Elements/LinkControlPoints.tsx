@@ -754,11 +754,11 @@ export class LinkControlPoints {
       this.drawControlPoint()
       this.link.drawing_area.application_data.menu_configuration.updateComponentRelatedToApparence()
       // Déplacer un coude change la courbure du flux (shape_starting/ending_curve), qui
-      // nourrit l'ordre géométrique des flux E/S (mode 'advanced'). On le recalcule sur
-      // les deux extrémités — comme le fait un drag de nœud — pour éviter à l'utilisateur
-      // de cliquer « Réorganiser ». release_locks=false : on préserve les ancres
-      // verrouillées manuellement (#197). Seules les extrémités en mode 'advanced'
-      // réagissent ; en 'simple'/'none' l'ordre n'est pas touché par un drag de coude.
+      // nourrit l'ordre géométrique des flux E/S (mode 'advanced', « Courbure des flux »). On
+      // le recalcule sur les deux extrémités — comme le fait un drag de nœud — pour éviter à
+      // l'utilisateur de cliquer « Réorganiser ». release_locks=false : on préserve les ancres
+      // verrouillées manuellement (#197). Seules les extrémités en mode 'advanced' réagissent ;
+      // en 'simple'/'none' la courbure n'entre pas dans l'ordre.
       ;[this.link.source, this.link.target].forEach(n => {
         const node = n as { reorganizeIOLinks?: (release_locks?: boolean) => void, shape_io_reorg_mode?: string }
         if (node && typeof node.reorganizeIOLinks === 'function' && node.shape_io_reorg_mode === 'advanced')
