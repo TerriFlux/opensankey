@@ -204,17 +204,27 @@ export type typeElementSelectable = {
  * @return {*} 
  */
 
-export const OSMultiSelect = ({ elements, onClick }: {
+export const OSMultiSelect = ({ elements, onClick, placeholder, with_select_all = true }: {
   t: TFunction,
   elements: typeElementSelectable,
-  onClick: (entries: typeElementSelectable) => void
+  onClick: (entries: typeElementSelectable) => void,
+  // Libellé du bouton quand rien n'est sélectionné. Par défaut « Aucune
+  // sélection » (sélecteur d'éléments) ; un menu d'OPTIONS préfère annoncer ce
+  // qu'il contient — « Options » — plutôt qu'un vide.
+  placeholder?: string,
+  // « Tout sélectionner » n'a de sens que pour une LISTE d'éléments homogènes.
+  // Un menu d'options hétérogènes (chacune avec son effet, parfois destructif)
+  // le désactive.
+  with_select_all?: boolean
 }) => {
   const [menuListItems, setMenuListItems] = useState<JSX.Element[]>([])
   const [displayBgOverlay, setDisplayBgOverlay] = useState(false)
 
   const selected_elements = elements.filter(el => el.selected)
-  const textBtn = selected_elements.length > 0 ? selected_elements.map(el => el.label).join(',') : 'Aucune sélection'
-  const selecAll = elements.length > 0 ? <>
+  const textBtn = selected_elements.length > 0
+    ? selected_elements.map(el => el.label).join(', ')
+    : (placeholder ?? 'Aucune sélection')
+  const selecAll = (with_select_all && elements.length > 0) ? <>
     <MenuItem
       icon={(selected_elements.length == elements.length) ? <FontAwesomeIcon icon={faSquareCheck} /> : <FaSquare />}
       onClick={() => {
