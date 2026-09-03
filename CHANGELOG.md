@@ -2,6 +2,12 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [Non publié]
+
+### Réconciliation
+
+- **« min » et « max » comme valeur objectif d'une feuille de données** ([sankeyapplication#487](https://gitlab.com/su-model/sankeyapplication/-/issues/487)). Écrire `min` dans la colonne Valeur demande au moteur la plus petite valeur du flux compatible avec le reste du modèle ; le flux ressort **déterminé**, avec une valeur au lieu d'un intervalle. C'est le besoin des flux d'équilibrage — écarts statistiques, « Indéterminé », pertes non documentées — dont la valeur juste est la plus petite possible. Le calcul vit dans MFAProblem, la lecture et l'écriture du classeur dans SankeyExcelParser ; côté application, la seule chose à faire était de **reconduire l'intention** (`data_value_objective` et son rang) à l'enregistrement, faute de quoi ouvrir puis enregistrer une étude l'aurait effacée sans rien dire.
+
 ## [1.3.1] — 2026-09-04
 
 - **Cycle de dessin : calculer une fois, tracer une fois** (jalon 80, os#1373 à os#1376).
