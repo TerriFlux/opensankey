@@ -922,17 +922,30 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
    * rien ici et la suspension se lève d'elle-même au dessin, ce qui réutilise la référence
    * géométrique PERSISTÉE (pas de saut d'échelle) ; sinon on bascule, et `set*Mode` lève la
    * suspension au passage.
+   *
+   * @param redraw faux quand l'APPELANT redessine juste après (c'est le cas des deux méthodes
+   * de sélection ci-dessous, qui enchaînent `updateTagsReferences`). Le dessin fait ici serait
+   * intégralement refait par le sien : au chargement de CARTOFOB, il coûtait une passe entière
+   * de plus (36 dessins de flux sur 211) — os#1377. C'est la même garde que celle posée par le
+   * lot D d'os#1372 sur `applyViewChange`, étendue à cet appelant-ci, que la première ne
+   * couvrait pas.
    */
-  public applyPositionModeToDrawing(force: boolean = false): void {
+  public applyPositionModeToDrawing(force: boolean = false, redraw: boolean = true): void {
     const drawing_area = this._ref_sankey.drawing_area
     const default_style = this._ref_sankey.default_style
     if (!drawing_area || !default_style) return
     if (default_style.shape_position_type === this._position_mode) return
     if (!force && default_style.shape_position_type === 'parametric') return
-    if (this._position_mode === 'proportional') { drawing_area.setProportionalMode(); drawing_area.draw() }
+    if (this._position_mode === 'proportional') {
+      drawing_area.setProportionalMode()
+      if (redraw) drawing_area.draw()
+    }
     // setScaleAdaptedMode redessine lui-même (cf. displayModes.ts).
-    else if (this._position_mode === 'scale_adapted') { drawing_area.setScaleAdaptedMode() }
-    else { drawing_area.setAbsoluteMode(); drawing_area.draw() }
+    else if (this._position_mode === 'scale_adapted') { drawing_area.setScaleAdaptedMode(redraw) }
+    else {
+      drawing_area.setAbsoluteMode()
+      if (redraw) drawing_area.draw()
+    }
   }
 
   public selectTagsFromId(
@@ -956,7 +969,9 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
       this._ref_sankey.drawing_area.application_data.after_tag_selection_change?.()
       // #370 — agir sur une dimension impose SON mode d'affichage. Avant
       // `updateTagsReferences` (qui redessine) pour que le dessin parte du bon mode.
-      this.applyPositionModeToDrawing()
+      // os#1377 — et SANS dessiner : c'est `updateTagsReferences`, juste en dessous, qui
+      // dessine — le mode est posé avant lui précisément pour qu'il en parte.
+      this.applyPositionModeToDrawing(false, false)
       this.updateTagsReferences()
       this._ref_sankey.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToDataTags()
     }
@@ -982,7 +997,8 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     // sa#283 — vues contextuelles : même point d'accrochage que selectTagsFromId.
     this._ref_sankey.drawing_area.application_data.after_tag_selection_change?.()
     // #370 — même règle que selectTagsFromId : la dimension manipulée impose son mode.
-    this.applyPositionModeToDrawing()
+    // os#1377 — sans dessiner : `updateTagsReferences` le fait juste après.
+    this.applyPositionModeToDrawing(false, false)
     this.updateTagsReferences()
   }
 

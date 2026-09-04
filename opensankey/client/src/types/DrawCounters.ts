@@ -55,6 +55,21 @@ export type Type_DrawCountersReport = {
    */
   draws_per_pass: number[]
   fans_per_pass: number[]
+  /**
+   * os#1377 — Dessins de flux qui n'ont lieu DANS AUCUNE passe (`depth === 0`), et par qui.
+   *
+   * `draws_per_pass` ne les voit pas — ils sont jetés à la fermeture de passe — et
+   * `link_draws` les compte sans dire d'où ils viennent : au chargement de CARTOFOB, 230 des
+   * 441 dessins de flux étaient dans ce cas, donc hors de portée de la séparation
+   * ancres/tracé d'os#1373, qui n'opère qu'à l'intérieur de `drawElements`.
+   *
+   * La pile est capturée au plus `MAX_OUT_OF_PASS_CAPTURES` fois : c'est le même arbitrage que
+   * `pass_origins` — gratuit tant que le cas est rare (l'état sain en compte zéro), borné
+   * quand il ne l'est pas. Le COMPTE, lui, reste exact.
+   */
+  out_of_pass_draws: number
+  /** Origines des dessins hors passe, de la plus fréquente à la moins fréquente. */
+  out_of_pass_origins: [string, number][]
 }
 
 /**
@@ -93,6 +108,10 @@ const state = {
    * on enregistrerait une passe vide sur deux.
    */
   pass_open: false,
+  /** os#1377 — Dessins de flux hors de toute passe, et par qui (cf. le rapport). */
+  out_of_pass_draws: 0,
+  out_of_pass_origins: new Map<string, number>(),
+  out_of_pass_captures: 0,
 }
 
 /**
@@ -101,17 +120,39 @@ const state = {
  */
 const MAX_ORIGINS = 50
 
-/** Pile d'appel compacte : les cadres utiles, sans les chemins de fichier. */
-function callSite(): string {
+/**
+ * os#1377 — Même arbitrage pour les dessins hors passe, à ceci près qu'ils se comptent par
+ * CENTAINES là où les passes se comptent sur les doigts : le plafond borne le nombre de piles
+ * capturées, jamais le compte.
+ */
+const MAX_OUT_OF_PASS_CAPTURES = 200
+
+/**
+ * Pile d'appel compacte : les cadres utiles, sans les chemins de fichier.
+ *
+ * `frames` : combien de cadres retenir. Huit suffisent à nommer l'origine d'une passe ; un
+ * dessin hors passe en demande davantage — les siens partent d'un accesseur d'attribut ou
+ * d'une boucle de placement, et le nom qui explique le dessin est plus haut (os#1377).
+ */
+function callSite(frames: number = 8): string {
+  // V8 ne CONSERVE que 10 cadres par défaut : en demander davantage sans lever ce plafond
+  // laisse la pile tronquée sans le dire — piège vécu, les premières captures d'os#1377
+  // s'arrêtaient juste avant le nom qui explique le dessin (`setScaleAdaptedMode`). Levé le
+  // temps de la capture, restauré ensuite ; ailleurs qu'en V8, la propriété n'existe pas et
+  // la comparaison est fausse, donc rien ne bouge.
+  const previous_limit = Error.stackTraceLimit
   try {
+    if (frames + 3 > previous_limit) Error.stackTraceLimit = frames + 3
     return (new Error().stack || '')
       .split('\n')
-      .slice(3, 11)
+      .slice(3, 3 + frames)
       .map(l => l.trim().replace(/^at /, '').replace(/ \(.*$/, '').replace(/^.*[\\/]/, ''))
       .filter(l => l.length > 0)
       .join(' < ')
   } catch {
     return '(pile indisponible)'
+  } finally {
+    Error.stackTraceLimit = previous_limit
   }
 }
 
@@ -133,6 +174,9 @@ export function startDrawCounters(): void {
   state.draws_in_pass = 0
   state.fans_in_pass = 0
   state.pass_open = false
+  state.out_of_pass_draws = 0
+  state.out_of_pass_origins.clear()
+  state.out_of_pass_captures = 0
 }
 
 /** Arrête la mesure. Le rapport reste lisible après l'arrêt. */
@@ -203,6 +247,15 @@ export function countLinkDraw(link_id: string): void {
   state.link_draws++
   state.draws_in_pass++
   state.per_link.set(link_id, (state.per_link.get(link_id) ?? 0) + 1)
+  // os#1377 — hors de toute passe : ni `draws_per_pass` ni les lots d'os#1373 ne le voient.
+  if (state.depth === 0) {
+    state.out_of_pass_draws++
+    if (state.out_of_pass_captures < MAX_OUT_OF_PASS_CAPTURES) {
+      state.out_of_pass_captures++
+      const site = callSite(16)
+      state.out_of_pass_origins.set(site, (state.out_of_pass_origins.get(site) ?? 0) + 1)
+    }
+  }
 }
 
 /**
@@ -243,6 +296,8 @@ export function drawCountersReport(): Type_DrawCountersReport {
       ? [...state.draws_per_pass, state.draws_in_pass] : [...state.draws_per_pass],
     fans_per_pass: state.pass_open
       ? [...state.fans_per_pass, state.fans_in_pass] : [...state.fans_per_pass],
+    out_of_pass_draws: state.out_of_pass_draws,
+    out_of_pass_origins: [...state.out_of_pass_origins.entries()].sort((a, b) => b[1] - a[1]),
   }
 }
 

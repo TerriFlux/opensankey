@@ -72,6 +72,7 @@ describe('os#1376 — comptage des passes et des dessins', () => {
       passes: 0, link_draws: 0, max_draws_per_link: 0, links_drawn_twice: [],
       arrow_fans: 0, max_fans_per_node: 0, pass_origins: [],
       draws_per_pass: [], fans_per_pass: [],
+      out_of_pass_draws: 0, out_of_pass_origins: [],
     })
   })
 
@@ -149,6 +150,24 @@ describe('os#1376 — comptage des passes et des dessins', () => {
     expect(report.draws_per_pass).toHaveLength(report.passes)
   })
 
+  it('compte a part les dessins de flux qui n ont lieu dans AUCUNE passe', () => {
+    startDrawCounters()
+    // os#1377 — ceux-la echappent a `draws_per_pass` (jete a la fermeture de passe) comme aux
+    // lots d os#1373, qui n operent qu a l interieur de `drawElements`. Au chargement de
+    // CARTOFOB ils etaient 230 sur 441 : un setter d attribut qui tracait le flux, un par un.
+    countLinkDraw('hors_passe')
+    beginDrawPass()
+    countLinkDraw('dans_la_passe')
+    endDrawPass()
+    countLinkDraw('hors_passe')
+    const report = drawCountersReport()
+    expect(report.link_draws).toBe(3)
+    expect(report.out_of_pass_draws).toBe(2)
+    // Et l origine, sans quoi le compte ne dit pas quoi corriger.
+    expect(report.out_of_pass_origins.length).toBeGreaterThan(0)
+    expect(report.out_of_pass_origins.reduce((n, [, c]) => n + c, 0)).toBe(2)
+  })
+
   it('compte les eventails de pointes par nœud et par passe', () => {
     startDrawCounters()
     // os#1374 — un nœud dont l eventail est recalcule a chaque flux de son cote : c est le
@@ -222,5 +241,8 @@ describe('os#1376 — garde-fou de non-regression sur le dessin d un diagramme',
     expect(report.link_draws).toBe(links.length * DESSINS_PAR_FLUX_ET_PAR_PASSE)
     // Plus aucun flux trace deux fois dans la meme passe : c est la definition du but atteint.
     expect(report.links_drawn_twice).toEqual([])
+    // os#1377 — et aucun flux trace HORS passe : ceux-la echappent aux lots d os#1373 (qui
+    // n operent qu a l interieur de `drawElements`) et ne se voient pas dans `draws_per_pass`.
+    expect(report.out_of_pass_draws).toBe(0)
   })
 })

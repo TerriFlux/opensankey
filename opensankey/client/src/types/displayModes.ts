@@ -123,7 +123,15 @@ export function setScaleAdaptedMode(da: Class_DrawingArea, redraw: boolean = tru
     // os#1353 — sauf sur une aire jamais mise en page (cf. settleCentersIfLaidOut).
     settleCentersIfLaidOut(da)
   }
-  default_style.shape_position_type = 'scale_adapted'
+  // os#1377 — poser le mode sur le style GLOBAL déclenche les actions de dessin de l'attribut :
+  // chaque nœud du style se redessine un par un, et chacun repositionne puis retrace ses flux —
+  // HORS de toute passe, donc invisible de `draws_per_pass` et hors de portée des lots d'os#1373.
+  // C'était la TOTALITÉ des 49 dessins hors passe qui restaient au chargement de CARTOFOB.
+  // Un dessin complet suit pourtant toujours : celui de la fin de cette fonction, ou celui de
+  // l'appelant quand `redraw` est faux (c'est le contrat du paramètre, cf. plus bas).
+  // `withBypassRedraws(…, false)` neutralise donc ces dessins unitaires — l'affectation, elle,
+  // a bien lieu. Même geste que `setParametricMode`, qui enveloppe tout son corps.
+  da.withBypassRedraws(() => { default_style.shape_position_type = 'scale_adapted' }, false)
   // #384 — CHOISIR le mode ne change rien au diagramme : il est ARMÉ, pas appliqué, et ne se
   // fait sentir qu'au premier changement de datatag — ce qu'il gouverne. C'est la règle du
   // premier rendu du #369, jusqu'ici réservée à l'OUVERTURE d'un fichier ; elle vaut tout
