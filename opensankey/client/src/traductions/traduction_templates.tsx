@@ -201,7 +201,15 @@ export const resources_template = {
         publish_target: 'Target address: {{url}}',
         publish_runtime: 'runtime {{key}}',
         publish_snapshot: 'snapshot {{sha}}',
-        publish_warnings: 'Warnings ({{n}})'
+        publish_warnings: 'Warnings ({{n}})',
+        publish_long_notice: 'Rendering can take several minutes: pages, diagrams, Excel workbooks and thumbnails are all rebuilt. Keep this tab open.',
+        publish_elapsed: '{{seconds}} s',
+        publish_phase: 'step: {{phase}}',
+        publish_cut: 'Connection lost ({{message}}). Rendering most likely continues on the server: do not start it again and do not close this tab. Reopen this panel in a few minutes to see the result.',
+        publish_busy: 'A publication is already running for this address: that is the one followed here.',
+        publish_lost: 'Rendering is no longer responding — the server most likely restarted. Nothing was left half online: start the publication again.',
+        publish_duration: 'Duration: {{seconds}} s',
+        publish_slowest: 'slowest phase: {{phase}} ({{seconds}} s)'
       },
     }
   },
@@ -408,7 +416,15 @@ export const resources_template = {
         publish_target: 'Adresse visée : {{url}}',
         publish_runtime: 'runtime {{key}}',
         publish_snapshot: 'instantané {{sha}}',
-        publish_warnings: 'Avertissements ({{n}})'
+        publish_warnings: 'Avertissements ({{n}})',
+        publish_long_notice: 'Le rendu peut prendre plusieurs minutes : pages, diagrammes, classeurs Excel et vignettes sont refabriqués. Laissez cet onglet ouvert.',
+        publish_elapsed: '{{seconds}} s',
+        publish_phase: 'étape : {{phase}}',
+        publish_cut: 'Connexion interrompue ({{message}}). Le rendu se poursuit probablement sur le serveur : ne le relancez pas et ne fermez pas cet onglet. Rouvrez ce bloc dans quelques minutes pour voir le résultat.',
+        publish_busy: 'Une publication est déjà en cours pour cette adresse : c’est elle qui est suivie ici.',
+        publish_lost: 'Le rendu ne donne plus signe de vie — le serveur a probablement redémarré. Rien n’est resté à moitié en ligne : relancez la publication.',
+        publish_duration: 'Durée : {{seconds}} s',
+        publish_slowest: 'phase la plus longue : {{phase}} ({{seconds}} s)'
       },
     }
   },
@@ -610,7 +626,15 @@ export const resources_template = {
         publish_target: 'Dirección prevista: {{url}}',
         publish_runtime: 'runtime {{key}}',
         publish_snapshot: 'instantánea {{sha}}',
-        publish_warnings: 'Advertencias ({{n}})'
+        publish_warnings: 'Advertencias ({{n}})',
+        publish_long_notice: 'La renderización puede tardar varios minutos: se rehacen páginas, diagramas, libros de Excel y miniaturas. Deje esta pestaña abierta.',
+        publish_elapsed: '{{seconds}} s',
+        publish_phase: 'etapa: {{phase}}',
+        publish_cut: 'Conexión interrumpida ({{message}}). Es probable que la renderización continúe en el servidor: no la reinicie ni cierre esta pestaña. Vuelva a abrir este panel en unos minutos para ver el resultado.',
+        publish_busy: 'Ya hay una publicación en curso para esta dirección: es la que se sigue aquí.',
+        publish_lost: 'La renderización ya no da señales de vida — probablemente el servidor se reinició. Nada quedó a medias en línea: vuelva a lanzar la publicación.',
+        publish_duration: 'Duración: {{seconds}} s',
+        publish_slowest: 'fase más larga: {{phase}} ({{seconds}} s)'
       },
     }
   },
@@ -812,7 +836,15 @@ export const resources_template = {
         publish_target: 'Zieladresse: {{url}}',
         publish_runtime: 'Runtime {{key}}',
         publish_snapshot: 'Momentaufnahme {{sha}}',
-        publish_warnings: 'Warnungen ({{n}})'
+        publish_warnings: 'Warnungen ({{n}})',
+        publish_long_notice: 'Das Rendern kann mehrere Minuten dauern: Seiten, Diagramme, Excel-Mappen und Vorschaubilder werden neu erzeugt. Lassen Sie diesen Tab offen.',
+        publish_elapsed: '{{seconds}} s',
+        publish_phase: 'Schritt: {{phase}}',
+        publish_cut: 'Verbindung abgebrochen ({{message}}). Das Rendern läuft auf dem Server sehr wahrscheinlich weiter: nicht erneut starten und diesen Tab nicht schließen. Öffnen Sie diesen Bereich in einigen Minuten erneut, um das Ergebnis zu sehen.',
+        publish_busy: 'Für diese Adresse läuft bereits eine Veröffentlichung: ihr wird hier gefolgt.',
+        publish_lost: 'Das Rendern meldet sich nicht mehr — der Server wurde vermutlich neu gestartet. Es ist nichts halb online geblieben: Veröffentlichung erneut starten.',
+        publish_duration: 'Dauer: {{seconds}} s',
+        publish_slowest: 'längste Phase: {{phase}} ({{seconds}} s)'
       },
     }
   },
@@ -1014,7 +1046,15 @@ export const resources_template = {
         publish_target: 'Indirizzo previsto: {{url}}',
         publish_runtime: 'runtime {{key}}',
         publish_snapshot: 'istantanea {{sha}}',
-        publish_warnings: 'Avvisi ({{n}})'
+        publish_warnings: 'Avvisi ({{n}})',
+        publish_long_notice: 'Il rendering può richiedere diversi minuti: pagine, diagrammi, cartelle Excel e miniature vengono rifatti. Lasci aperta questa scheda.',
+        publish_elapsed: '{{seconds}} s',
+        publish_phase: 'fase: {{phase}}',
+        publish_cut: 'Connessione interrotta ({{message}}). Il rendering probabilmente prosegue sul server: non rilanciarlo e non chiudere questa scheda. Riapra questo pannello tra qualche minuto per vedere il risultato.',
+        publish_busy: 'Una pubblicazione è già in corso per questo indirizzo: è quella seguita qui.',
+        publish_lost: 'Il rendering non dà più segni di vita — probabilmente il server è stato riavviato. Nulla è rimasto a metà in linea: rilanci la pubblicazione.',
+        publish_duration: 'Durata: {{seconds}} s',
+        publish_slowest: 'fase più lunga: {{phase}} ({{seconds}} s)'
       },
     }
   },
@@ -1212,7 +1252,15 @@ export const resources_template = {
         publish_target: '目标地址：{{url}}',
         publish_runtime: 'runtime {{key}}',
         publish_snapshot: '快照 {{sha}}',
-        publish_warnings: '警告（{{n}}）'
+        publish_warnings: '警告（{{n}}）',
+        publish_long_notice: '渲染可能需要数分钟：页面、图表、Excel 工作簿和缩略图都会重新生成。请保持此标签页打开。',
+        publish_elapsed: '{{seconds}} 秒',
+        publish_phase: '阶段：{{phase}}',
+        publish_cut: '连接已中断（{{message}}）。渲染很可能仍在服务器上继续：请勿重新发起，也不要关闭此标签页。几分钟后重新打开此面板即可查看结果。',
+        publish_busy: '该地址已有一个发布正在进行：此处跟踪的正是它。',
+        publish_lost: '渲染已无响应 — 服务器很可能已重启。没有任何内容半途上线：请重新发起发布。',
+        publish_duration: '耗时：{{seconds}} 秒',
+        publish_slowest: '最长阶段：{{phase}}（{{seconds}} 秒）'
       },
     }
   },
@@ -1411,7 +1459,15 @@ export const resources_template = {
         publish_target: '対象アドレス：{{url}}',
         publish_runtime: 'runtime {{key}}',
         publish_snapshot: 'スナップショット {{sha}}',
-        publish_warnings: '警告（{{n}}）'
+        publish_warnings: '警告（{{n}}）',
+        publish_long_notice: 'レンダリングには数分かかることがあります。ページ、図、Excel ブック、サムネイルがすべて再生成されます。このタブは開いたままにしてください。',
+        publish_elapsed: '{{seconds}} 秒',
+        publish_phase: '段階：{{phase}}',
+        publish_cut: '接続が切断されました（{{message}}）。レンダリングはサーバー側で続いている可能性が高いため、再実行せず、このタブも閉じないでください。数分後にこのパネルを開き直すと結果を確認できます。',
+        publish_busy: 'このアドレスでは既に公開処理が進行中です。ここではそれを追跡しています。',
+        publish_lost: 'レンダリングが応答しなくなりました。サーバーが再起動した可能性があります。中途半端に公開されたものはありません。公開をやり直してください。',
+        publish_duration: '所要時間：{{seconds}} 秒',
+        publish_slowest: '最長の段階：{{phase}}（{{seconds}} 秒）'
       },
     }
   }
