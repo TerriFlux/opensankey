@@ -2,6 +2,17 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [1.3.1] — 2026-09-04
+
+- **Cycle de dessin : calculer une fois, tracer une fois** (jalon 80, os#1373 à os#1376).
+  Les ancres sont toutes calculées avant que quoi que ce soit ne soit tracé, et l'éventail
+  de pointes d'un nœud n'est plus recalculé à chaque flux de son côté. Sur une étude de
+  4 050 flux : éventails 1 823 → 183, chargement −42 %, rendu identique au pixel.
+  Des compteurs de dessin sont exposés (`window.sankey_draw_counters`) pour que la
+  prochaine régression se mesure au lieu de se deviner.
+- Traçabilité de la détermination d'un flux dans l'inspecteur (#426).
+- Échelle adaptée : dataTag de référence, grandeur calculée (os#1372).
+
 ## [1.3.0] — 2026-08-22
 
 ### Menu Fichier — refonte complète (sa#424)
