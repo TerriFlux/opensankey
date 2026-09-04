@@ -61,6 +61,15 @@ const DEFAULT_REGION = "84"; // Auvergne-Rhone-Alpes
 // « * » font la meme chose.)
 const ALL_ESSENCES = "all";
 
+// Prefixe des choix qui designent une VUE et non une etiquette. Les deux ne se
+// pilotent pas par la meme prop : `view_tag_selection` FILTRE la vue courante par
+// une etiquette, `view` OUVRE une vue nommee (sa#397). Confondre les deux revient
+// a afficher une vue en croyant en afficher une autre.
+const VUE_PREFIX = "vue:";
+
+// Identifiant de la vue maitre dans le format de fichier.
+const VUE_MAITRE = "sankey_maitre";
+
 type Option = { value: string; label: string };
 
 /**
@@ -138,18 +147,57 @@ const App = () => {
   // y filtre la vue COURANTE par une etiquette, il ne change pas de vue (cf.
   // l'en-tete de ce fichier). Confondre les deux libelles laissait croire qu'on
   // l'affichait.
+  // Les vues AUTONOMES du fichier : celles qui ne sont pas engendrees depuis le
+  // groupe d'etiquettes, donc qui ont leur propre geometrie. « Toutes essences »
+  // en est une — les onze essences dessinees cote a cote. On ne code aucun
+  // identifiant en dur : une vue est autonome quand `generated_from_group_id`
+  // manque, et son nom se lit soit a plat, soit dans le delta de vue
+  // (`__patch.name.$set`, encodage introduit avec `format_version: 3`).
+  const vues_autonomes = useMemo(() => {
+    const views = ((diagram as any)?.views || {}) as Record<string, any>;
+    return Object.entries(views)
+      .filter(([, v]) => v && !v.generated_from_group_id)
+      .map(([id, v]) => ({
+        id,
+        label: v.name ?? v.__patch?.name?.$set ?? id,
+      }));
+  }, [diagram]);
+
+  // Trois familles dans un seul selecteur, et elles ne se pilotent PAS pareil :
+  //  - la vue MAITRE : on eteint le filtre d'etiquettes (`all`) ;
+  //  - une vue AUTONOME : on la fait OUVRIR, cf. `initial_data` plus bas ;
+  //  - une essence : on filtre la vue courante par son etiquette.
+  // Le libelle du premier choix est celui que porte le fichier
+  // (`master_view_name`, « Agregees » ici) : il ne faut surtout pas l'appeler
+  // « Toutes essences », qui est le nom d'une AUTRE vue — la confusion a fait
+  // croire un temps qu'on affichait celle-ci alors qu'on filtrait le maitre.
   const essences = useMemo(
     () => [
       { value: ALL_ESSENCES, label: (diagram as any)?.master_view_name || "Agregees" },
+      ...vues_autonomes.map((v) => ({ value: VUE_PREFIX + v.id, label: v.label })),
       ...tagsToOptions((diagram as any)?.viewTags?.[ESSENCE_GROUP], "name"),
     ],
-    [diagram]
+    [diagram, vues_autonomes]
   );
 
   // Objets memoises : les props de selection sont comparees par valeur
   // serialisee cote viewer, mais autant ne pas recreer un objet a chaque rendu.
   const data_tag_selection = useMemo(() => ({ [REGION_GROUP]: region }), [region]);
-  const view_tag_selection = useMemo(() => ({ [ESSENCE_GROUP]: essence }), [essence]);
+
+  // Une vue autonome demandee ? Sinon on reste sur le maitre, filtre par etiquette.
+  const vue_ouverte = essence.startsWith(VUE_PREFIX)
+    ? essence.slice(VUE_PREFIX.length)
+    : VUE_MAITRE;
+
+  // Sur une vue autonome le filtre d'etiquettes n'a pas de sens : elle porte
+  // deja sa propre selection. On l'eteint.
+  const view_tag_selection = useMemo(
+    () => ({ [ESSENCE_GROUP]: vue_ouverte === VUE_MAITRE ? essence : ALL_ESSENCES }),
+    [essence, vue_ouverte]
+  );
+
+  // Mode de positionnement, pilote depuis la topbar. Reactif lui aussi.
+  const [mode, setMode] = useState<"scale_adapted" | "absolute">("scale_adapted");
 
   return (
     <div
@@ -207,6 +255,19 @@ const App = () => {
             ))}
           </select>
         </label>
+
+        <label style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <span style={label_style}>Echelle</span>
+          <select
+            style={select_style}
+            value={mode}
+            disabled={!diagram}
+            onChange={(e) => setMode(e.target.value as typeof mode)}
+          >
+            <option value="scale_adapted">Adaptee a la selection</option>
+            <option value="absolute">Absolue (comparable)</option>
+          </select>
+        </label>
       </div>
 
       {/* Le conteneur du viewer doit avoir une hauteur reelle : avec `embedded`,
@@ -232,6 +293,11 @@ const App = () => {
             // Region : { groupe : etiquette } sur les DATA tags — quelle serie
             // de valeurs afficher.
             data_tag_selection={data_tag_selection}
+            // Vue OUVERTE (id ou nom, sa#397). C'est ce qui permet d'afficher
+            // « Toutes essences », vue autonome a la geometrie propre, qu'aucun
+            // filtre d'etiquette ne saurait reconstituer. `sankey_maitre` ramene
+            // au maitre. Reactif : pas de remontage.
+            view={vue_ouverte}
             // Essence : { groupe : etiquette } sur les etiquettes de VUE — ce
             // qui est visible. Attention, dans le paquet MIT la valeur est une
             // ETIQUETTE (ou « all » pour eteindre le filtre) ; la resolution
@@ -241,9 +307,11 @@ const App = () => {
             // depuis ce meme groupe d'etiquettes : filtrer sur l'etiquette
             // donne exactement le meme resultat qu'ouvrir la vue.
             view_tag_selection={view_tag_selection}
-            // Mode de positionnement du fichier d'origine : l'echelle s'adapte
-            // a la selection courante (une region peu boisee reste lisible).
-            position_mode="scale_adapted"
+            // Mode de positionnement, pilote par le troisieme selecteur.
+            // « Echelle adaptee » recalcule l'echelle pour la selection courante
+            // (une region peu boisee reste lisible) ; « Absolu » garde l'echelle
+            // du fichier, donc les regions se comparent entre elles. Reactif.
+            position_mode={mode}
             embedded={true}
             topbar={false}
             // Le diagramme est cadre a l'ouverture ; laisser le zoom molette
