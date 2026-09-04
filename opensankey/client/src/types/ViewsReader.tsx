@@ -218,7 +218,12 @@ export class ViewsReader {
       this.extractViewFromJSON(this.host.views_dict[active_view_id].json, active_view_id)
     }
     this.applyViewTagSelection(this.host.views_dict[active_view_id].tag_selection)
-    this.host.drawing_area.draw()
+    // os#1377 — pas ce dessin-ci quand la lecture en cours se termine par le sien
+    // (`fromJSON(..., draw = true)`, cf. `from_json_will_draw`) : il serait intégralement
+    // refait, et sur CARTOFOB il coûtait 70 des 211 dessins de flux du chargement — la
+    // géométrie de la vue enregistrée, que les options de publication remplacent aussitôt.
+    // Appelée hors chargement (ex. ModalCreateUnitaryViewOSP), la méthode dessine comme avant.
+    if (!this.host.from_json_will_draw) this.host.drawing_area.draw()
   }
 
   /**
