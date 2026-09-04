@@ -92,7 +92,28 @@ export const resources_template = {
         publish_none: 'not published yet',
         publish_rendered: 'rendered on {{date}}',
         publish_stale: 'modified since',
-        publish_open: 'Open the published page'
+        publish_open: 'Open the published page',
+        // sa#491 — publishing a workbook from the explorer: dry run first, then
+        // going online. The address is pre-filled and read-only on purpose.
+        publish_action: 'Publish',
+        publish_close: 'Close',
+        publish_address: 'Online address',
+        publish_address_change: 'Change',
+        publish_address_computed: 'never published — address derived from the title',
+        publish_address_diff: 'Different from “{{slug}}”: a separate site will be created next to it.',
+        publish_dry: 'Dry run',
+        publish_dry_busy: 'dry run in progress...',
+        publish_dry_ok: 'Dry run passed: {{pages}} page(s), {{diagrams}} diagram(s).',
+        publish_go: 'Go online',
+        publish_go_busy: 'going online...',
+        publish_confirm: 'Publish “{{title}}” at address {{slug}}? The previous rendering moves to versions/.',
+        publish_done: 'Online: {{url}}',
+        publish_failed: 'Refused: {{message}}',
+        publish_unsaved: 'Saving in progress — the dry run covers the saved state of the workbook.',
+        publish_target: 'Target address: {{url}}',
+        publish_runtime: 'runtime {{key}}',
+        publish_snapshot: 'snapshot {{sha}}',
+        publish_warnings: 'Warnings ({{n}})'
       },
     }
   },
@@ -189,7 +210,29 @@ export const resources_template = {
         publish_none: 'pas encore publié',
         publish_rendered: 'rendu le {{date}}',
         publish_stale: 'modifié depuis',
-        publish_open: 'Ouvrir la page publiée'
+        publish_open: 'Ouvrir la page publiée',
+        // sa#491 — publier un classeur depuis l'explorateur : essai à blanc
+        // d'abord, mise en ligne ensuite. L'adresse est pré-remplie et en
+        // lecture seule à dessein (un champ vide créait un site fantôme).
+        publish_action: 'Publier',
+        publish_close: 'Fermer',
+        publish_address: 'Adresse en ligne',
+        publish_address_change: 'Changer',
+        publish_address_computed: 'jamais publié — adresse calculée depuis le titre',
+        publish_address_diff: 'Différente de « {{slug}} » : un site distinct sera créé à côté.',
+        publish_dry: 'Essai à blanc',
+        publish_dry_busy: 'essai à blanc en cours...',
+        publish_dry_ok: 'Essai vert : {{pages}} page(s), {{diagrams}} diagramme(s).',
+        publish_go: 'Mettre en ligne',
+        publish_go_busy: 'mise en ligne en cours...',
+        publish_confirm: 'Publier « {{title}} » à l’adresse {{slug}} ? Le rendu précédent part dans versions/.',
+        publish_done: 'En ligne : {{url}}',
+        publish_failed: 'Refusé : {{message}}',
+        publish_unsaved: 'Enregistrement en cours — l’essai porte sur l’état enregistré du classeur.',
+        publish_target: 'Adresse visée : {{url}}',
+        publish_runtime: 'runtime {{key}}',
+        publish_snapshot: 'instantané {{sha}}',
+        publish_warnings: 'Avertissements ({{n}})'
       },
     }
   },
@@ -286,7 +329,28 @@ export const resources_template = {
         publish_none: 'aún no publicado',
         publish_rendered: 'generado el {{date}}',
         publish_stale: 'modificado desde entonces',
-        publish_open: 'Abrir la página publicada'
+        publish_open: 'Abrir la página publicada',
+        // sa#491 — publicar un cuaderno desde el explorador: primero la prueba
+        // en seco, luego la puesta en línea. La dirección viene rellenada.
+        publish_action: 'Publicar',
+        publish_close: 'Cerrar',
+        publish_address: 'Dirección en línea',
+        publish_address_change: 'Cambiar',
+        publish_address_computed: 'nunca publicado — dirección derivada del título',
+        publish_address_diff: 'Distinta de «{{slug}}»: se creará un sitio aparte junto a él.',
+        publish_dry: 'Prueba en seco',
+        publish_dry_busy: 'prueba en seco en curso...',
+        publish_dry_ok: 'Prueba correcta: {{pages}} página(s), {{diagrams}} diagrama(s).',
+        publish_go: 'Poner en línea',
+        publish_go_busy: 'puesta en línea en curso...',
+        publish_confirm: '¿Publicar «{{title}}» en la dirección {{slug}}? La generación anterior pasa a versions/.',
+        publish_done: 'En línea: {{url}}',
+        publish_failed: 'Rechazado: {{message}}',
+        publish_unsaved: 'Guardado en curso — la prueba cubre el estado guardado del cuaderno.',
+        publish_target: 'Dirección prevista: {{url}}',
+        publish_runtime: 'runtime {{key}}',
+        publish_snapshot: 'instantánea {{sha}}',
+        publish_warnings: 'Advertencias ({{n}})'
       },
     }
   },
@@ -383,7 +447,28 @@ export const resources_template = {
         publish_none: 'noch nicht veröffentlicht',
         publish_rendered: 'erzeugt am {{date}}',
         publish_stale: 'seitdem geändert',
-        publish_open: 'Veröffentlichte Seite öffnen'
+        publish_open: 'Veröffentlichte Seite öffnen',
+        // sa#491 — eine Mappe aus dem Explorer veröffentlichen: zuerst der
+        // Trockenlauf, dann die Onlinestellung. Die Adresse ist vorbelegt.
+        publish_action: 'Veröffentlichen',
+        publish_close: 'Schließen',
+        publish_address: 'Online-Adresse',
+        publish_address_change: 'Ändern',
+        publish_address_computed: 'nie veröffentlicht — Adresse aus dem Titel abgeleitet',
+        publish_address_diff: 'Anders als „{{slug}}“: daneben entsteht eine eigene Website.',
+        publish_dry: 'Trockenlauf',
+        publish_dry_busy: 'Trockenlauf läuft...',
+        publish_dry_ok: 'Trockenlauf bestanden: {{pages}} Seite(n), {{diagrams}} Diagramm(e).',
+        publish_go: 'Online stellen',
+        publish_go_busy: 'Onlinestellung läuft...',
+        publish_confirm: '„{{title}}“ unter der Adresse {{slug}} veröffentlichen? Die vorherige Ausgabe wandert nach versions/.',
+        publish_done: 'Online: {{url}}',
+        publish_failed: 'Abgelehnt: {{message}}',
+        publish_unsaved: 'Speichern läuft — der Trockenlauf betrifft den gespeicherten Stand der Mappe.',
+        publish_target: 'Zieladresse: {{url}}',
+        publish_runtime: 'Runtime {{key}}',
+        publish_snapshot: 'Momentaufnahme {{sha}}',
+        publish_warnings: 'Warnungen ({{n}})'
       },
     }
   },
@@ -480,7 +565,28 @@ export const resources_template = {
         publish_none: 'non ancora pubblicato',
         publish_rendered: 'generato il {{date}}',
         publish_stale: 'modificato da allora',
-        publish_open: 'Apri la pagina pubblicata'
+        publish_open: 'Apri la pagina pubblicata',
+        // sa#491 — pubblicare una cartella dall'esploratore: prima la prova a
+        // vuoto, poi la messa in linea. L'indirizzo è precompilato.
+        publish_action: 'Pubblica',
+        publish_close: 'Chiudi',
+        publish_address: 'Indirizzo in linea',
+        publish_address_change: 'Cambia',
+        publish_address_computed: 'mai pubblicato — indirizzo derivato dal titolo',
+        publish_address_diff: 'Diverso da «{{slug}}»: verrà creato un sito distinto accanto.',
+        publish_dry: 'Prova a vuoto',
+        publish_dry_busy: 'prova a vuoto in corso...',
+        publish_dry_ok: 'Prova superata: {{pages}} pagina/e, {{diagrams}} diagramma/i.',
+        publish_go: 'Metti in linea',
+        publish_go_busy: 'messa in linea in corso...',
+        publish_confirm: 'Pubblicare «{{title}}» all’indirizzo {{slug}}? La resa precedente passa in versions/.',
+        publish_done: 'In linea: {{url}}',
+        publish_failed: 'Rifiutato: {{message}}',
+        publish_unsaved: 'Salvataggio in corso — la prova riguarda lo stato salvato della cartella.',
+        publish_target: 'Indirizzo previsto: {{url}}',
+        publish_runtime: 'runtime {{key}}',
+        publish_snapshot: 'istantanea {{sha}}',
+        publish_warnings: 'Avvisi ({{n}})'
       },
     }
   },
@@ -574,7 +680,27 @@ export const resources_template = {
         publish_none: '尚未发布',
         publish_rendered: '生成于 {{date}}',
         publish_stale: '此后已修改',
-        publish_open: '打开已发布页面'
+        publish_open: '打开已发布页面',
+        // sa#491 — 从资源管理器发布工作簿：先试运行，再上线。地址已预填。
+        publish_action: '发布',
+        publish_close: '关闭',
+        publish_address: '在线地址',
+        publish_address_change: '更改',
+        publish_address_computed: '尚未发布 — 地址由标题推导',
+        publish_address_diff: '与“{{slug}}”不同：将在其旁新建一个独立站点。',
+        publish_dry: '试运行',
+        publish_dry_busy: '正在试运行…',
+        publish_dry_ok: '试运行通过：{{pages}} 个页面，{{diagrams}} 个图表。',
+        publish_go: '上线',
+        publish_go_busy: '正在上线…',
+        publish_confirm: '将“{{title}}”发布到地址 {{slug}}？先前的生成结果将移入 versions/。',
+        publish_done: '已上线：{{url}}',
+        publish_failed: '被拒绝：{{message}}',
+        publish_unsaved: '正在保存 — 试运行针对工作簿已保存的状态。',
+        publish_target: '目标地址：{{url}}',
+        publish_runtime: 'runtime {{key}}',
+        publish_snapshot: '快照 {{sha}}',
+        publish_warnings: '警告（{{n}}）'
       },
     }
   },
@@ -668,7 +794,28 @@ export const resources_template = {
         publish_none: 'まだ公開されていません',
         publish_rendered: '{{date}} に生成',
         publish_stale: 'それ以降に変更あり',
-        publish_open: '公開ページを開く'
+        publish_open: '公開ページを開く',
+        // sa#491 — エクスプローラーからワークブックを公開：まず試行、次に公開。
+        // アドレスはあらかじめ入力されている。
+        publish_action: '公開',
+        publish_close: '閉じる',
+        publish_address: '公開アドレス',
+        publish_address_change: '変更',
+        publish_address_computed: '未公開 — タイトルから算出したアドレス',
+        publish_address_diff: '「{{slug}}」とは異なります：隣に別のサイトが作成されます。',
+        publish_dry: '試行',
+        publish_dry_busy: '試行中…',
+        publish_dry_ok: '試行成功：{{pages}} ページ、{{diagrams}} 個の図。',
+        publish_go: '公開する',
+        publish_go_busy: '公開中…',
+        publish_confirm: '「{{title}}」をアドレス {{slug}} に公開しますか？以前の生成結果は versions/ に移ります。',
+        publish_done: '公開済み：{{url}}',
+        publish_failed: '拒否されました：{{message}}',
+        publish_unsaved: '保存中 — 試行はワークブックの保存済みの状態を対象とします。',
+        publish_target: '対象アドレス：{{url}}',
+        publish_runtime: 'runtime {{key}}',
+        publish_snapshot: 'スナップショット {{sha}}',
+        publish_warnings: '警告（{{n}}）'
       },
     }
   }
