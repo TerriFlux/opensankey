@@ -87,7 +87,23 @@ export const resources_template = {
         menu_entry: 'From my library...',
         delete_project: 'Delete this project',
         confirm_delete_project: 'Delete the project “{{title}}” and ALL its versions? The action cannot be undone.',
-        delete_project_error: 'Could not delete the project'
+        delete_project_error: 'Could not delete the project',
+        // sa#495 — starting view of a workbook slot, picked among the REAL
+        // views of the pinned diagram (the admin workshop only had free text).
+        views_start: 'Starting view',
+        views_start_hint: 'the view the published page opens on',
+        views_all: 'All views',
+        views_group_views: 'Diagram views',
+        views_group_labels: 'View labels',
+        views_mode_view: 'A specific view',
+        views_mode_label: 'Views with a label',
+        views_value_placeholder: 'view id or label',
+        views_loading: 'Reading the diagram views...',
+        views_error: 'Diagram unreadable: free text',
+        views_empty: 'This diagram carries no view: free text',
+        views_unknown: 'This value is not among the diagram views; it is kept as is',
+        views_runtime_warning: 'The published runtime ignores view options: the selection will be recorded, not applied',
+        views_not_first: 'Only the selection of the first slot of the page is applied at render time'
       },
     }
   },
@@ -179,7 +195,23 @@ export const resources_template = {
         menu_entry: 'Depuis ma bibliothèque...',
         delete_project: 'Supprimer ce projet',
         confirm_delete_project: 'Supprimer le projet « {{title}} » et TOUTES ses versions ? L’action est irréversible.',
-        delete_project_error: 'Suppression du projet impossible'
+        delete_project_error: 'Suppression du projet impossible',
+        // sa#495 — vue de départ d'un emplacement de classeur, choisie parmi les
+        // vues RÉELLES du diagramme épinglé (l'atelier admin n'a que la saisie).
+        views_start: 'Vue de départ',
+        views_start_hint: 'la vue sur laquelle la page publiée s\'ouvre',
+        views_all: 'Toutes les vues',
+        views_group_views: 'Vues du diagramme',
+        views_group_labels: 'Labels de vues',
+        views_mode_view: 'Une vue précise',
+        views_mode_label: 'Les vues d\'un label',
+        views_value_placeholder: 'id de vue ou label',
+        views_loading: 'Lecture des vues du diagramme...',
+        views_error: 'Diagramme illisible : saisie libre',
+        views_empty: 'Ce diagramme ne porte aucune vue : saisie libre',
+        views_unknown: 'Cette valeur ne figure pas dans les vues du diagramme ; elle est conservée telle quelle',
+        views_runtime_warning: 'Le rendu publié ignore les options de vues : la sélection sera consignée, pas appliquée',
+        views_not_first: 'Seule la sélection du premier emplacement de la page est appliquée au rendu'
       },
     }
   },
@@ -271,7 +303,22 @@ export const resources_template = {
         menu_entry: 'Desde mi biblioteca...',
         delete_project: 'Eliminar este proyecto',
         confirm_delete_project: '¿Eliminar el proyecto «{{title}}» y TODAS sus versiones? La acción es irreversible.',
-        delete_project_error: 'No se ha podido eliminar el proyecto'
+        delete_project_error: 'No se ha podido eliminar el proyecto',
+        // sa#495
+        views_start: 'Vista inicial',
+        views_start_hint: 'la vista con la que se abre la página publicada',
+        views_all: 'Todas las vistas',
+        views_group_views: 'Vistas del diagrama',
+        views_group_labels: 'Etiquetas de vistas',
+        views_mode_view: 'Una vista concreta',
+        views_mode_label: 'Las vistas de una etiqueta',
+        views_value_placeholder: 'id de vista o etiqueta',
+        views_loading: 'Leyendo las vistas del diagrama...',
+        views_error: 'Diagrama ilegible: entrada libre',
+        views_empty: 'Este diagrama no tiene ninguna vista: entrada libre',
+        views_unknown: 'Este valor no está entre las vistas del diagrama; se conserva tal cual',
+        views_runtime_warning: 'El motor publicado ignora las opciones de vistas: la selección se registrará, pero no se aplicará',
+        views_not_first: 'Solo se aplica la selección del primer emplazamiento de la página'
       },
     }
   },
@@ -363,7 +410,22 @@ export const resources_template = {
         menu_entry: 'Aus meiner Bibliothek...',
         delete_project: 'Dieses Projekt löschen',
         confirm_delete_project: 'Projekt „{{title}}“ und ALLE seine Versionen löschen? Der Vorgang ist unwiderruflich.',
-        delete_project_error: 'Projekt konnte nicht gelöscht werden'
+        delete_project_error: 'Projekt konnte nicht gelöscht werden',
+        // sa#495
+        views_start: 'Startansicht',
+        views_start_hint: 'die Ansicht, mit der die veröffentlichte Seite öffnet',
+        views_all: 'Alle Ansichten',
+        views_group_views: 'Ansichten des Diagramms',
+        views_group_labels: 'Ansichts-Labels',
+        views_mode_view: 'Eine bestimmte Ansicht',
+        views_mode_label: 'Die Ansichten eines Labels',
+        views_value_placeholder: 'Ansichts-ID oder Label',
+        views_loading: 'Ansichten des Diagramms werden gelesen...',
+        views_error: 'Diagramm nicht lesbar: freie Eingabe',
+        views_empty: 'Dieses Diagramm enthält keine Ansicht: freie Eingabe',
+        views_unknown: 'Dieser Wert gehört nicht zu den Ansichten des Diagramms; er bleibt unverändert',
+        views_runtime_warning: 'Die veröffentlichte Laufzeit ignoriert Ansichtsoptionen: die Auswahl wird vermerkt, aber nicht angewendet',
+        views_not_first: 'Beim Rendern wird nur die Auswahl des ersten Platzes der Seite angewendet'
       },
     }
   },
@@ -455,7 +517,22 @@ export const resources_template = {
         menu_entry: 'Dalla mia libreria...',
         delete_project: 'Elimina questo progetto',
         confirm_delete_project: 'Eliminare il progetto «{{title}}» e TUTTE le sue versioni? L’azione è irreversibile.',
-        delete_project_error: 'Impossibile eliminare il progetto'
+        delete_project_error: 'Impossibile eliminare il progetto',
+        // sa#495
+        views_start: 'Vista iniziale',
+        views_start_hint: 'la vista con cui si apre la pagina pubblicata',
+        views_all: 'Tutte le viste',
+        views_group_views: 'Viste del diagramma',
+        views_group_labels: 'Etichette di viste',
+        views_mode_view: 'Una vista precisa',
+        views_mode_label: 'Le viste di un\'etichetta',
+        views_value_placeholder: 'id di vista o etichetta',
+        views_loading: 'Lettura delle viste del diagramma...',
+        views_error: 'Diagramma illeggibile: inserimento libero',
+        views_empty: 'Questo diagramma non contiene alcuna vista: inserimento libero',
+        views_unknown: 'Questo valore non è tra le viste del diagramma; viene conservato così com\'è',
+        views_runtime_warning: 'Il runtime pubblicato ignora le opzioni di viste: la selezione sarà registrata, non applicata',
+        views_not_first: 'Al rendering si applica solo la selezione del primo slot della pagina'
       },
     }
   },
@@ -544,7 +621,22 @@ export const resources_template = {
         menu_entry: '从我的库中打开…',
         delete_project: '删除此项目',
         confirm_delete_project: '删除项目“{{title}}”及其所有版本？此操作不可撤销。',
-        delete_project_error: '无法删除项目'
+        delete_project_error: '无法删除项目',
+        // sa#495
+        views_start: '起始视图',
+        views_start_hint: '发布页面打开时显示的视图',
+        views_all: '全部视图',
+        views_group_views: '图表视图',
+        views_group_labels: '视图标签',
+        views_mode_view: '指定某个视图',
+        views_mode_label: '某个标签的视图',
+        views_value_placeholder: '视图 id 或标签',
+        views_loading: '正在读取图表视图...',
+        views_error: '图表无法读取：可手动输入',
+        views_empty: '该图表没有任何视图：可手动输入',
+        views_unknown: '该值不在图表的视图中，将原样保留',
+        views_runtime_warning: '发布运行时不支持视图选项：该选择会被记录但不会生效',
+        views_not_first: '渲染时仅应用页面第一个位置的选择'
       },
     }
   },
@@ -633,7 +725,22 @@ export const resources_template = {
         menu_entry: 'ライブラリから開く…',
         delete_project: 'このプロジェクトを削除',
         confirm_delete_project: 'プロジェクト「{{title}}」とそのすべてのバージョンを削除しますか？この操作は取り消せません。',
-        delete_project_error: 'プロジェクトを削除できませんでした'
+        delete_project_error: 'プロジェクトを削除できませんでした',
+        // sa#495
+        views_start: '開始ビュー',
+        views_start_hint: '公開ページを開いたときに表示するビュー',
+        views_all: 'すべてのビュー',
+        views_group_views: 'ダイアグラムのビュー',
+        views_group_labels: 'ビューのラベル',
+        views_mode_view: '特定のビュー',
+        views_mode_label: 'ラベルのビュー',
+        views_value_placeholder: 'ビュー ID またはラベル',
+        views_loading: 'ダイアグラムのビューを読み込み中...',
+        views_error: 'ダイアグラムを読み取れません：自由入力',
+        views_empty: 'このダイアグラムにはビューがありません：自由入力',
+        views_unknown: 'この値はダイアグラムのビューにありません。そのまま保持されます',
+        views_runtime_warning: '公開ランタイムはビューオプションに対応していません：選択は記録されますが適用されません',
+        views_not_first: 'レンダリング時に適用されるのはページ最初の枠の選択のみです'
       },
     }
   }
