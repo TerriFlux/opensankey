@@ -117,6 +117,30 @@ export const resources_template = {
         settings_default: 'Default',
         settings_custom: 'Other path...',
         settings_custom_hint: 'path/in/the/project.png',
+        // sa#493 — TEXTES du site et des pages, écrits dans le classeur
+        // (workbooks.doc, workbook_nodes.doc) : une pastille par langue dans
+        // l'explorateur, l'édition dans l'éditeur markdown déjà là. Une langue
+        // que le classeur ne dit pas garde le README du projet épinglé.
+        doc_toggle: 'text',
+        doc_site: 'Site home text',
+        doc_node: 'Text',
+        doc_lang_default: 'Default',
+        doc_filled: 'Text written in the workbook',
+        doc_missing: 'No text: the README of the pinned project is used',
+        doc_none_hint: 'No text: the home page will show the README of the pinned project.',
+        doc_untranslated: 'Without a text, these languages keep the project one: {{langs}}',
+        doc_lang_dead: 'Never served: French is the default language, write it under “Default”.',
+        doc_language: 'Language',
+        doc_panel_label: 'Workbook text editor',
+        doc_placeholder: '# Title\n\nHome text, in markdown...',
+        doc_hint: 'The workbook text overrides the project README, language by language.',
+        doc_fallback_hint: 'A language without a text keeps the one of the pinned project.',
+        doc_default_first: 'Start with the default language: the others fall back on it.',
+        doc_discard: 'Discard the text being written?',
+        doc_saved: 'Text saved',
+        doc_cleared: 'Text removed: this language falls back on the pinned project',
+        doc_close: 'Close',
+        doc_save: 'Save',
         // sa#495 — starting view of a workbook slot, picked among the REAL
         // views of the pinned diagram (the admin workshop only had free text).
         views_start: 'Starting view',
@@ -299,6 +323,30 @@ export const resources_template = {
         settings_default: 'Par défaut',
         settings_custom: 'Autre chemin...',
         settings_custom_hint: 'chemin/dans/le/projet.png',
+        // sa#493 — TEXTES du site et des pages, écrits dans le classeur
+        // (workbooks.doc, workbook_nodes.doc) : une pastille par langue dans
+        // l'explorateur, l'édition dans l'éditeur markdown déjà là. Une langue
+        // que le classeur ne dit pas garde le README du projet épinglé.
+        doc_toggle: 'texte',
+        doc_site: 'Texte d\'accueil du site',
+        doc_node: 'Texte',
+        doc_lang_default: 'Par défaut',
+        doc_filled: 'Texte écrit dans le classeur',
+        doc_missing: 'Aucun texte : le README du projet épinglé est repris',
+        doc_none_hint: 'Aucun texte : l\'accueil reprendra le README du projet épinglé.',
+        doc_untranslated: 'Sans texte, ces langues gardent celui du projet : {{langs}}',
+        doc_lang_dead: 'Variante jamais servie : le français est la langue par défaut, écrivez-le sous « Par défaut ».',
+        doc_language: 'Langue',
+        doc_panel_label: 'Éditeur du texte du classeur',
+        doc_placeholder: '# Titre\n\nTexte d\'accueil, en markdown...',
+        doc_hint: 'Le texte du classeur prime sur le README du projet, langue par langue.',
+        doc_fallback_hint: 'Une langue sans texte garde celui du projet épinglé.',
+        doc_default_first: 'Commencez par la langue par défaut : c\'est le repli des autres.',
+        doc_discard: 'Abandonner le texte en cours de saisie ?',
+        doc_saved: 'Texte enregistré',
+        doc_cleared: 'Texte retiré : cette langue revient au projet épinglé',
+        doc_close: 'Fermer',
+        doc_save: 'Enregistrer',
         // sa#495 — vue de départ d'un emplacement de classeur, choisie parmi les
         // vues RÉELLES du diagramme épinglé (l'atelier admin n'a que la saisie).
         views_start: 'Vue de départ',
@@ -482,6 +530,30 @@ export const resources_template = {
         settings_default: 'Por defecto',
         settings_custom: 'Otra ruta...',
         settings_custom_hint: 'ruta/en/el/proyecto.png',
+        // sa#493 — TEXTES du site et des pages, écrits dans le classeur
+        // (workbooks.doc, workbook_nodes.doc) : une pastille par langue dans
+        // l'explorateur, l'édition dans l'éditeur markdown déjà là. Une langue
+        // que le classeur ne dit pas garde le README du projet épinglé.
+        doc_toggle: 'texto',
+        doc_site: 'Texto de inicio del sitio',
+        doc_node: 'Texto',
+        doc_lang_default: 'Por defecto',
+        doc_filled: 'Texto escrito en el libro',
+        doc_missing: 'Sin texto: se retoma el README del proyecto anclado',
+        doc_none_hint: 'Sin texto: la página de inicio mostrará el README del proyecto anclado.',
+        doc_untranslated: 'Sin texto, estos idiomas conservan el del proyecto: {{langs}}',
+        doc_lang_dead: 'Variante nunca servida: el francés es el idioma por defecto, escríbalo en «Por defecto».',
+        doc_language: 'Idioma',
+        doc_panel_label: 'Editor del texto del libro',
+        doc_placeholder: '# Título\n\nTexto de inicio, en markdown...',
+        doc_hint: 'El texto del libro prevalece sobre el README del proyecto, idioma por idioma.',
+        doc_fallback_hint: 'Un idioma sin texto conserva el del proyecto anclado.',
+        doc_default_first: 'Empiece por el idioma por defecto: los demás recurren a él.',
+        doc_discard: '¿Descartar el texto en curso?',
+        doc_saved: 'Texto guardado',
+        doc_cleared: 'Texto retirado: este idioma vuelve al proyecto anclado',
+        doc_close: 'Cerrar',
+        doc_save: 'Guardar',
         // sa#495
         views_start: 'Vista inicial',
         views_start_hint: 'la vista con la que se abre la página publicada',
@@ -660,6 +732,30 @@ export const resources_template = {
         settings_default: 'Standard',
         settings_custom: 'Anderer Pfad...',
         settings_custom_hint: 'pfad/im/projekt.png',
+        // sa#493 — TEXTES du site et des pages, écrits dans le classeur
+        // (workbooks.doc, workbook_nodes.doc) : une pastille par langue dans
+        // l'explorateur, l'édition dans l'éditeur markdown déjà là. Une langue
+        // que le classeur ne dit pas garde le README du projet épinglé.
+        doc_toggle: 'Text',
+        doc_site: 'Startseitentext der Website',
+        doc_node: 'Text',
+        doc_lang_default: 'Standard',
+        doc_filled: 'Im Arbeitsbuch geschriebener Text',
+        doc_missing: 'Kein Text: die README des angehefteten Projekts wird übernommen',
+        doc_none_hint: 'Kein Text: die Startseite zeigt die README des angehefteten Projekts.',
+        doc_untranslated: 'Ohne Text behalten diese Sprachen den des Projekts: {{langs}}',
+        doc_lang_dead: 'Nie ausgeliefert: Französisch ist die Standardsprache, schreiben Sie ihn unter „Standard“.',
+        doc_language: 'Sprache',
+        doc_panel_label: 'Editor für den Text des Arbeitsbuchs',
+        doc_placeholder: '# Titel\n\nStartseitentext, in Markdown...',
+        doc_hint: 'Der Text des Arbeitsbuchs hat Vorrang vor der README des Projekts, Sprache für Sprache.',
+        doc_fallback_hint: 'Eine Sprache ohne Text behält den des angehefteten Projekts.',
+        doc_default_first: 'Beginnen Sie mit der Standardsprache: die anderen greifen darauf zurück.',
+        doc_discard: 'Den begonnenen Text verwerfen?',
+        doc_saved: 'Text gespeichert',
+        doc_cleared: 'Text entfernt: diese Sprache fällt auf das angeheftete Projekt zurück',
+        doc_close: 'Schließen',
+        doc_save: 'Speichern',
         // sa#495
         views_start: 'Startansicht',
         views_start_hint: 'die Ansicht, mit der die veröffentlichte Seite öffnet',
@@ -838,6 +934,30 @@ export const resources_template = {
         settings_default: 'Predefinito',
         settings_custom: 'Altro percorso...',
         settings_custom_hint: 'percorso/nel/progetto.png',
+        // sa#493 — TEXTES du site et des pages, écrits dans le classeur
+        // (workbooks.doc, workbook_nodes.doc) : une pastille par langue dans
+        // l'explorateur, l'édition dans l'éditeur markdown déjà là. Une langue
+        // que le classeur ne dit pas garde le README du projet épinglé.
+        doc_toggle: 'testo',
+        doc_site: 'Testo di apertura del sito',
+        doc_node: 'Testo',
+        doc_lang_default: 'Predefinita',
+        doc_filled: 'Testo scritto nella cartella',
+        doc_missing: 'Nessun testo: viene ripreso il README del progetto agganciato',
+        doc_none_hint: 'Nessun testo: la pagina iniziale mostrerà il README del progetto agganciato.',
+        doc_untranslated: 'Senza testo, queste lingue conservano quello del progetto: {{langs}}',
+        doc_lang_dead: 'Variante mai servita: il francese è la lingua predefinita, scrivetelo sotto «Predefinita».',
+        doc_language: 'Lingua',
+        doc_panel_label: 'Editor del testo della cartella',
+        doc_placeholder: '# Titolo\n\nTesto di apertura, in markdown...',
+        doc_hint: 'Il testo della cartella prevale sul README del progetto, lingua per lingua.',
+        doc_fallback_hint: 'Una lingua senza testo conserva quello del progetto agganciato.',
+        doc_default_first: 'Iniziate dalla lingua predefinita: le altre vi fanno riferimento.',
+        doc_discard: 'Abbandonare il testo in corso?',
+        doc_saved: 'Testo salvato',
+        doc_cleared: 'Testo rimosso: questa lingua torna al progetto agganciato',
+        doc_close: 'Chiudi',
+        doc_save: 'Salva',
         // sa#495
         views_start: 'Vista iniziale',
         views_start_hint: 'la vista con cui si apre la pagina pubblicata',
@@ -1013,6 +1133,30 @@ export const resources_template = {
         settings_default: '默认',
         settings_custom: '其他路径…',
         settings_custom_hint: '项目/中的/路径.png',
+        // sa#493 — TEXTES du site et des pages, écrits dans le classeur
+        // (workbooks.doc, workbook_nodes.doc) : une pastille par langue dans
+        // l'explorateur, l'édition dans l'éditeur markdown déjà là. Une langue
+        // que le classeur ne dit pas garde le README du projet épinglé.
+        doc_toggle: '文本',
+        doc_site: '站点首页文本',
+        doc_node: '文本',
+        doc_lang_default: '默认',
+        doc_filled: '已在工作簿中撰写',
+        doc_missing: '无文本：将沿用所钉项目的 README',
+        doc_none_hint: '无文本：首页将显示所钉项目的 README。',
+        doc_untranslated: '没有文本时，这些语言保留项目的内容：{{langs}}',
+        doc_lang_dead: '永不使用的变体：法语是默认语言，请写在“默认”下。',
+        doc_language: '语言',
+        doc_panel_label: '工作簿文本编辑器',
+        doc_placeholder: '# 标题\n\n首页文本，markdown 格式...',
+        doc_hint: '工作簿文本逐语言优先于项目的 README。',
+        doc_fallback_hint: '没有文本的语言保留所钉项目的内容。',
+        doc_default_first: '请先写默认语言：其他语言以它为后备。',
+        doc_discard: '放弃正在输入的文本？',
+        doc_saved: '文本已保存',
+        doc_cleared: '文本已删除：该语言回到所钉项目',
+        doc_close: '关闭',
+        doc_save: '保存',
         // sa#495
         views_start: '起始视图',
         views_start_hint: '发布页面打开时显示的视图',
@@ -1187,6 +1331,30 @@ export const resources_template = {
         settings_default: '既定',
         settings_custom: '別のパス…',
         settings_custom_hint: 'プロジェクト内/のパス.png',
+        // sa#493 — TEXTES du site et des pages, écrits dans le classeur
+        // (workbooks.doc, workbook_nodes.doc) : une pastille par langue dans
+        // l'explorateur, l'édition dans l'éditeur markdown déjà là. Une langue
+        // que le classeur ne dit pas garde le README du projet épinglé.
+        doc_toggle: 'テキスト',
+        doc_site: 'サイトのトップテキスト',
+        doc_node: 'テキスト',
+        doc_lang_default: '既定',
+        doc_filled: 'ワークブックに記述済み',
+        doc_missing: 'テキストなし：ピン留めしたプロジェクトの README を使用',
+        doc_none_hint: 'テキストなし：トップページはピン留めしたプロジェクトの README を表示します。',
+        doc_untranslated: 'テキストがない言語はプロジェクトのものを保ちます：{{langs}}',
+        doc_lang_dead: '配信されない変種：フランス語が既定言語です。「既定」に記述してください。',
+        doc_language: '言語',
+        doc_panel_label: 'ワークブックのテキストエディタ',
+        doc_placeholder: '# タイトル\n\nトップテキスト（markdown）...',
+        doc_hint: 'ワークブックのテキストは言語ごとにプロジェクトの README より優先します。',
+        doc_fallback_hint: 'テキストのない言語はピン留めしたプロジェクトのものを保ちます。',
+        doc_default_first: 'まず既定言語から：他の言語はそれを参照します。',
+        doc_discard: '入力中のテキストを破棄しますか？',
+        doc_saved: 'テキストを保存しました',
+        doc_cleared: 'テキストを削除：この言語はプロジェクトに戻ります',
+        doc_close: '閉じる',
+        doc_save: '保存',
         // sa#495
         views_start: '開始ビュー',
         views_start_hint: '公開ページを開いたときに表示するビュー',
