@@ -556,6 +556,39 @@ export { Class_ElementValueTree as Class_LinkValueTree }
  * @export
  * @class Class_ElementValue
  */
+// SA#487 — le vocabulaire de la valeur objectif, partagé par toutes les
+// surfaces où une valeur de flux se saisit : le panneau des flux, l'onglet
+// tableur, et demain toute autre. Il reprend exactement celui du parser Excel
+// (io_excel_constants.DATA_VALUE_OBJECTIVE_KEYWORDS) : ce qui s'écrit dans un
+// classeur doit s'écrire dans l'application, sinon le même modèle ne se dit pas
+// de la même façon selon la porte par laquelle on entre.
+export const VALUE_OBJECTIVE_MIN = 'min'
+export const VALUE_OBJECTIVE_MAX = 'max'
+const VALUE_OBJECTIVE_KEYWORDS: { [_: string]: string } = {
+  min: VALUE_OBJECTIVE_MIN,
+  mini: VALUE_OBJECTIVE_MIN,
+  minimum: VALUE_OBJECTIVE_MIN,
+  minimal: VALUE_OBJECTIVE_MIN,
+  minimale: VALUE_OBJECTIVE_MIN,
+  max: VALUE_OBJECTIVE_MAX,
+  maxi: VALUE_OBJECTIVE_MAX,
+  maximum: VALUE_OBJECTIVE_MAX,
+  maximal: VALUE_OBJECTIVE_MAX,
+  maximale: VALUE_OBJECTIVE_MAX,
+}
+
+/**
+ * SA#487 — « min » / « max » écrit à la place d'un nombre, ou null.
+ *
+ * Insensible à la casse et aux espaces. Tout autre texte rend null : ce n'est
+ * pas une intention, c'est une saisie que l'appelant doit traiter comme il
+ * traitait le texte avant — un nombre, ou rien.
+ */
+export function parseValueObjective(text: string | null | undefined): string | null {
+  if (text === null || text === undefined) return null
+  return VALUE_OBJECTIVE_KEYWORDS[String(text).trim().toLowerCase()] ?? null
+}
+
 export class Class_ElementValue {
 
   // PUBLIC ATTRIBUTES ==================================================================
