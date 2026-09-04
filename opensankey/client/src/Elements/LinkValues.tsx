@@ -556,6 +556,39 @@ export { Class_ElementValueTree as Class_LinkValueTree }
  * @export
  * @class Class_ElementValue
  */
+// SA#487 — le vocabulaire de la valeur objectif, partagé par toutes les
+// surfaces où une valeur de flux se saisit : le panneau des flux, l'onglet
+// tableur, et demain toute autre. Il reprend exactement celui du parser Excel
+// (io_excel_constants.DATA_VALUE_OBJECTIVE_KEYWORDS) : ce qui s'écrit dans un
+// classeur doit s'écrire dans l'application, sinon le même modèle ne se dit pas
+// de la même façon selon la porte par laquelle on entre.
+export const VALUE_OBJECTIVE_MIN = 'min'
+export const VALUE_OBJECTIVE_MAX = 'max'
+const VALUE_OBJECTIVE_KEYWORDS: { [_: string]: string } = {
+  min: VALUE_OBJECTIVE_MIN,
+  mini: VALUE_OBJECTIVE_MIN,
+  minimum: VALUE_OBJECTIVE_MIN,
+  minimal: VALUE_OBJECTIVE_MIN,
+  minimale: VALUE_OBJECTIVE_MIN,
+  max: VALUE_OBJECTIVE_MAX,
+  maxi: VALUE_OBJECTIVE_MAX,
+  maximum: VALUE_OBJECTIVE_MAX,
+  maximal: VALUE_OBJECTIVE_MAX,
+  maximale: VALUE_OBJECTIVE_MAX,
+}
+
+/**
+ * SA#487 — « min » / « max » écrit à la place d'un nombre, ou null.
+ *
+ * Insensible à la casse et aux espaces. Tout autre texte rend null : ce n'est
+ * pas une intention, c'est une saisie que l'appelant doit traiter comme il
+ * traitait le texte avant — un nombre, ou rien.
+ */
+export function parseValueObjective(text: string | null | undefined): string | null {
+  if (text === null || text === undefined) return null
+  return VALUE_OBJECTIVE_KEYWORDS[String(text).trim().toLowerCase()] ?? null
+}
+
 export class Class_ElementValue {
 
   // PUBLIC ATTRIBUTES ==================================================================
@@ -574,6 +607,16 @@ export class Class_ElementValue {
   // option: the flux does not exist for this dataTag. Used to omit the link
   // from the diagram for that dataTag (see getValueForDataTags). Default false.
   public structurally_absent: boolean = false
+
+  // SA#487 — intention d'optimisation portée par la cellule Valeur de la feuille
+  // de données : « min » / « max » au lieu d'un nombre, et le rang de
+  // déclaration qui arbitre entre plusieurs demandes concurrentes. Le front ne
+  // les fabrique ni ne les interprète — c'est le moteur qui établit la valeur —
+  // mais il doit les RECONDUIRE : sans cela, ouvrir puis enregistrer une étude
+  // depuis l'application effacerait la demande, puisque toJSON réécrit le
+  // dictionnaire champ par champ.
+  public value_objective: string | null = null
+  public value_objective_rank: number | null = null
 
   // VALUE VECTORS =====================================================================
   // Each vector has length = vectorSize (set by subclass).
@@ -645,6 +688,10 @@ export class Class_ElementValue {
       this._result_max[i] = element._result_max[i]
     }
     this.text_value = element.text_value
+    // SA#487 : recopiée avec le reste, sinon une duplication de flux perdrait
+    // l'intention sans que rien ne le dise (cf. #385).
+    this.value_objective = element.value_objective
+    this.value_objective_rank = element.value_objective_rank
     // Tags - Cleaning
     this.flux_tags_list.forEach(tag => tag.removeReference(this))
     this._flux_tags = []
@@ -1248,6 +1295,11 @@ export class Class_LinkValue extends Class_ElementValue {
     // #426 — l'explication propre à cette cellule. Réécrite telle quelle : le
     // front ne la fabrique pas, il n'a pas la matrice de contraintes.
     if (this._determination !== null) json_object['determination'] = this._determination
+    // SA#487 — « min » / « max » demandé sur cette cellule, et son rang.
+    if (this.value_objective !== null) json_object['data_value_objective'] = this.value_objective
+    if (this.value_objective_rank !== null) {
+      json_object['data_value_objective_rank'] = this.value_objective_rank
+    }
     return json_object
   }
 
@@ -1281,6 +1333,10 @@ export class Class_LinkValue extends Class_ElementValue {
     // #426 — explication propre à la cellule ; absente d'un fichier antérieur
     // ou d'une cellule qui répond comme son flux (cf. Class_LinkElement).
     this._determination = getNumberOrNullFromJSON(json_object, 'determination')
+    // SA#487 — absent des fichiers antérieurs : la cellule n'exprime alors
+    // aucune intention, et rien ne change.
+    this.value_objective = getStringOrNullFromJSON(json_object, 'data_value_objective')
+    this.value_objective_rank = getNumberOrNullFromJSON(json_object, 'data_value_objective_rank')
     if (Object.prototype.hasOwnProperty.call(json_object, 'value')) {
       this.fromJSONLegacy(json_object)
     }
