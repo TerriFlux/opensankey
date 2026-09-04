@@ -343,7 +343,7 @@ export class Class_ApplicationData {
   }
 
   // App
-  public version: string = '1.3.0'
+  public version: string = '1.3.1'
   public fit_screen: boolean
   public static_path: string = 'static/opensankey'
   public options: { [_: string]: boolean | string } = {}
