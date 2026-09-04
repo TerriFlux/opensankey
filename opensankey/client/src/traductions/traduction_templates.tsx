@@ -88,6 +88,25 @@ export const resources_template = {
         delete_project: 'Delete this project',
         confirm_delete_project: 'Delete the project “{{title}}” and ALL its versions? The action cannot be undone.',
         delete_project_error: 'Could not delete the project',
+        // sa#494 — completing a library project from the explorer: a project
+        // deposited from the app carried a single `diagramme.json`, where a real
+        // study carries fourteen files (workbooks, logo, names.json, READMEs).
+        add_files: 'Add files',
+        add_files_hint: 'Add files to this project (creates a new version)',
+        add_files_in: 'Add files into “{{folder}}”',
+        drop_hint: 'Drop a folder or files here',
+        deposit_confirm: 'Add {{count}} file(s) to the project “{{title}}”? A new version (v{{number}}) will be created: versions are immutable.',
+        deposit_running: 'Depositing into the library...',
+        deposit_done: 'v{{number}} created — {{count}} file(s) added',
+        deposit_unchanged: 'Same as v{{number}}: nothing new to version',
+        deposit_error: 'Deposit failed',
+        deposit_refused: {
+          empty: 'No file to deposit.',
+          gz: 'Compressed file refused: “{{name}}”. A library project only carries plain JSON — uncompress it before depositing.',
+          too_many: 'Too many files at once ({{count}}, 200 maximum).',
+          too_big: 'File too large: “{{name}}” (100 MB maximum).',
+          bad_path: 'Invalid file path: “{{name}}”.'
+        },
         // sa#490 — publication state of a workbook, shown on its row
         publish_none: 'not published yet',
         publish_rendered: 'rendered on {{date}}',
@@ -206,6 +225,25 @@ export const resources_template = {
         delete_project: 'Supprimer ce projet',
         confirm_delete_project: 'Supprimer le projet « {{title}} » et TOUTES ses versions ? L’action est irréversible.',
         delete_project_error: 'Suppression du projet impossible',
+        // sa#494 — compléter une brique depuis l'explorateur : une brique déposée
+        // par l'application ne portait qu'un `diagramme.json`, quand une filière
+        // conforme en porte quatorze (classeurs, logo, names.json, README).
+        add_files: 'Ajouter des fichiers',
+        add_files_hint: 'Ajouter des fichiers à ce projet (crée une nouvelle version)',
+        add_files_in: 'Ajouter des fichiers dans « {{folder}} »',
+        drop_hint: 'Glissez ici un dossier ou des fichiers',
+        deposit_confirm: 'Ajouter {{count}} fichier(s) au projet « {{title}} » ? Une nouvelle version (v{{number}}) sera créée : les versions sont immuables.',
+        deposit_running: 'Dépôt dans la bibliothèque...',
+        deposit_done: 'v{{number}} créée — {{count}} fichier(s) ajouté(s)',
+        deposit_unchanged: 'Identique à la v{{number}} : rien de neuf à versionner',
+        deposit_error: 'Échec du dépôt',
+        deposit_refused: {
+          empty: 'Aucun fichier à déposer.',
+          gz: 'Fichier compressé refusé : « {{name}} ». Une brique ne porte que du JSON en clair — décompressez avant de déposer.',
+          too_many: 'Trop de fichiers d\'un coup ({{count}}, 200 au maximum).',
+          too_big: 'Fichier trop lourd : « {{name}} » (100 Mo au maximum).',
+          bad_path: 'Chemin de fichier invalide : « {{name}} ».'
+        },
         // sa#490 — état de publication du classeur, affiché sur sa ligne
         publish_none: 'pas encore publié',
         publish_rendered: 'rendu le {{date}}',
@@ -325,6 +363,22 @@ export const resources_template = {
         delete_project: 'Eliminar este proyecto',
         confirm_delete_project: '¿Eliminar el proyecto «{{title}}» y TODAS sus versiones? La acción es irreversible.',
         delete_project_error: 'No se ha podido eliminar el proyecto',
+        add_files: 'Añadir archivos',
+        add_files_hint: 'Añadir archivos a este proyecto (crea una nueva versión)',
+        add_files_in: 'Añadir archivos en «{{folder}}»',
+        drop_hint: 'Arrastre aquí una carpeta o archivos',
+        deposit_confirm: '¿Añadir {{count}} archivo(s) al proyecto «{{title}}»? Se creará una nueva versión (v{{number}}): las versiones son inmutables.',
+        deposit_running: 'Depositando en la biblioteca...',
+        deposit_done: 'v{{number}} creada — {{count}} archivo(s) añadidos',
+        deposit_unchanged: 'Idéntico a la v{{number}}: nada nuevo que versionar',
+        deposit_error: 'Error al depositar',
+        deposit_refused: {
+          empty: 'Ningún archivo que depositar.',
+          gz: 'Archivo comprimido rechazado: «{{name}}». Un proyecto solo admite JSON sin comprimir — descomprímalo antes de depositarlo.',
+          too_many: 'Demasiados archivos a la vez ({{count}}, 200 como máximo).',
+          too_big: 'Archivo demasiado pesado: «{{name}}» (100 MB como máximo).',
+          bad_path: 'Ruta de archivo no válida: «{{name}}».'
+        },
         // sa#490 — estado de publicación del cuaderno, en su línea
         publish_none: 'aún no publicado',
         publish_rendered: 'generado el {{date}}',
@@ -443,6 +497,22 @@ export const resources_template = {
         delete_project: 'Dieses Projekt löschen',
         confirm_delete_project: 'Projekt „{{title}}“ und ALLE seine Versionen löschen? Der Vorgang ist unwiderruflich.',
         delete_project_error: 'Projekt konnte nicht gelöscht werden',
+        add_files: 'Dateien hinzufügen',
+        add_files_hint: 'Dateien zu diesem Projekt hinzufügen (erzeugt eine neue Version)',
+        add_files_in: 'Dateien in „{{folder}}“ hinzufügen',
+        drop_hint: 'Ordner oder Dateien hierher ziehen',
+        deposit_confirm: '{{count}} Datei(en) zum Projekt „{{title}}“ hinzufügen? Es wird eine neue Version (v{{number}}) erstellt: Versionen sind unveränderlich.',
+        deposit_running: 'Wird in die Bibliothek abgelegt...',
+        deposit_done: 'v{{number}} erstellt — {{count}} Datei(en) hinzugefügt',
+        deposit_unchanged: 'Identisch mit v{{number}}: nichts Neues zu versionieren',
+        deposit_error: 'Ablegen fehlgeschlagen',
+        deposit_refused: {
+          empty: 'Keine Datei zum Ablegen.',
+          gz: 'Komprimierte Datei abgelehnt: „{{name}}“. Ein Projekt trägt nur unkomprimiertes JSON — bitte vor dem Ablegen entpacken.',
+          too_many: 'Zu viele Dateien auf einmal ({{count}}, maximal 200).',
+          too_big: 'Datei zu groß: „{{name}}“ (maximal 100 MB).',
+          bad_path: 'Ungültiger Dateipfad: „{{name}}“.'
+        },
         // sa#490 — Veröffentlichungsstand der Mappe, in ihrer Zeile
         publish_none: 'noch nicht veröffentlicht',
         publish_rendered: 'erzeugt am {{date}}',
@@ -561,6 +631,22 @@ export const resources_template = {
         delete_project: 'Elimina questo progetto',
         confirm_delete_project: 'Eliminare il progetto «{{title}}» e TUTTE le sue versioni? L’azione è irreversibile.',
         delete_project_error: 'Impossibile eliminare il progetto',
+        add_files: 'Aggiungi file',
+        add_files_hint: 'Aggiungere file a questo progetto (crea una nuova versione)',
+        add_files_in: 'Aggiungere file in «{{folder}}»',
+        drop_hint: 'Trascina qui una cartella o dei file',
+        deposit_confirm: 'Aggiungere {{count}} file al progetto «{{title}}»? Verrà creata una nuova versione (v{{number}}): le versioni sono immutabili.',
+        deposit_running: 'Deposito nella biblioteca...',
+        deposit_done: 'v{{number}} creata — {{count}} file aggiunti',
+        deposit_unchanged: 'Identico alla v{{number}}: nulla di nuovo da versionare',
+        deposit_error: 'Deposito non riuscito',
+        deposit_refused: {
+          empty: 'Nessun file da depositare.',
+          gz: 'File compresso rifiutato: «{{name}}». Un progetto contiene solo JSON non compresso — decomprimerlo prima di depositarlo.',
+          too_many: 'Troppi file in una volta ({{count}}, massimo 200).',
+          too_big: 'File troppo pesante: «{{name}}» (massimo 100 MB).',
+          bad_path: 'Percorso di file non valido: «{{name}}».'
+        },
         // sa#490 — stato di pubblicazione della cartella, sulla sua riga
         publish_none: 'non ancora pubblicato',
         publish_rendered: 'generato il {{date}}',
@@ -676,6 +762,22 @@ export const resources_template = {
         delete_project: '删除此项目',
         confirm_delete_project: '删除项目“{{title}}”及其所有版本？此操作不可撤销。',
         delete_project_error: '无法删除项目',
+        add_files: '添加文件',
+        add_files_hint: '向该项目添加文件（将创建一个新版本）',
+        add_files_in: '在“{{folder}}”中添加文件',
+        drop_hint: '将文件夹或文件拖放到此处',
+        deposit_confirm: '向项目“{{title}}”添加 {{count}} 个文件？将创建新版本（v{{number}}）：版本不可修改。',
+        deposit_running: '正在存入资料库...',
+        deposit_done: '已创建 v{{number}} — 添加了 {{count}} 个文件',
+        deposit_unchanged: '与 v{{number}} 相同：没有新内容需要版本化',
+        deposit_error: '存入失败',
+        deposit_refused: {
+          empty: '没有要存入的文件。',
+          gz: '拒绝压缩文件：“{{name}}”。项目只接受未压缩的 JSON — 请先解压再存入。',
+          too_many: '一次提交的文件过多（{{count}}，最多 200 个）。',
+          too_big: '文件过大：“{{name}}”（最大 100 MB）。',
+          bad_path: '文件路径无效：“{{name}}”。'
+        },
         // sa#490 — 工作簿的发布状态，显示在其行上
         publish_none: '尚未发布',
         publish_rendered: '生成于 {{date}}',
@@ -790,6 +892,22 @@ export const resources_template = {
         delete_project: 'このプロジェクトを削除',
         confirm_delete_project: 'プロジェクト「{{title}}」とそのすべてのバージョンを削除しますか？この操作は取り消せません。',
         delete_project_error: 'プロジェクトを削除できませんでした',
+        add_files: 'ファイルを追加',
+        add_files_hint: 'このプロジェクトにファイルを追加します（新しいバージョンが作成されます）',
+        add_files_in: '「{{folder}}」にファイルを追加',
+        drop_hint: 'フォルダーまたはファイルをここにドロップ',
+        deposit_confirm: 'プロジェクト「{{title}}」に {{count}} 個のファイルを追加しますか？新しいバージョン（v{{number}}）が作成されます：バージョンは変更できません。',
+        deposit_running: 'ライブラリに保存しています...',
+        deposit_done: 'v{{number}} を作成しました — {{count}} 個のファイルを追加',
+        deposit_unchanged: 'v{{number}} と同一です：新しく記録するものはありません',
+        deposit_error: '保存に失敗しました',
+        deposit_refused: {
+          empty: '保存するファイルがありません。',
+          gz: '圧縮ファイルは受け付けません：「{{name}}」。プロジェクトは非圧縮の JSON のみを扱います — 展開してから保存してください。',
+          too_many: '一度に扱えるファイル数を超えています（{{count}}、最大 200）。',
+          too_big: 'ファイルが大きすぎます：「{{name}}」（最大 100 MB）。',
+          bad_path: 'ファイルパスが不正です：「{{name}}」。'
+        },
         // sa#490 — ワークブックの公開状態を行に表示
         publish_none: 'まだ公開されていません',
         publish_rendered: '{{date}} に生成',
