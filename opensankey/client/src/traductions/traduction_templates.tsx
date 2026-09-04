@@ -117,6 +117,23 @@ export const resources_template = {
         settings_default: 'Default',
         settings_custom: 'Other path...',
         settings_custom_hint: 'path/in/the/project.png',
+        // sa#500 — mise en page d'une SECTION : « sans dossier » (sa#433) et
+        // vignette, les deux derniers réglages qui n'existaient que dans
+        // l'administration. La vignette se CHOISIT dans les briques épinglées
+        // par les PAGES de la section — une section n'a pas d'emplacement à
+        // elle — la saisie libre restant un repli.
+        section_toggle: 'layout',
+        section_flat: 'Placement',
+        section_flat_folder: 'Its own folder',
+        section_flat_group: 'A group on the home page',
+        section_flat_hint: 'Without a folder, the section title becomes a home page heading and its pages stay at the first level',
+        section_flat_no_title: 'Without a title the section makes no group: the site will show no heading.',
+        section_thumbnail: 'Thumbnail',
+        section_thumbnail_hint: 'path/in/a/project.png or URL',
+        section_thumbnail_orphan: 'Image missing from the pinned projects: kept as it is.',
+        section_thumbnail_no_slot: 'Pin a diagram in a page first: the images come from the projects of the section',
+        section_thumbnail_none: 'No image in the projects pinned by the pages',
+        section_thumbnail_pending: 'The thumbnail is saved but not served by the renderer yet.',
         // sa#493 — TEXTES du site et des pages, écrits dans le classeur
         // (workbooks.doc, workbook_nodes.doc) : une pastille par langue dans
         // l'explorateur, l'édition dans l'éditeur markdown déjà là. Une langue
@@ -331,6 +348,23 @@ export const resources_template = {
         settings_default: 'Par défaut',
         settings_custom: 'Autre chemin...',
         settings_custom_hint: 'chemin/dans/le/projet.png',
+        // sa#500 — mise en page d'une SECTION : « sans dossier » (sa#433) et
+        // vignette, les deux derniers réglages qui n'existaient que dans
+        // l'administration. La vignette se CHOISIT dans les briques épinglées
+        // par les PAGES de la section — une section n'a pas d'emplacement à
+        // elle — la saisie libre restant un repli.
+        section_toggle: 'mise en page',
+        section_flat: 'Rangement',
+        section_flat_folder: 'Un dossier à part',
+        section_flat_group: 'Un groupe sur l\'accueil',
+        section_flat_hint: 'Sans dossier, le titre de la section devient un intertitre de l\'accueil et ses pages restent au premier niveau',
+        section_flat_no_title: 'Sans titre, la section ne fait pas groupe : le site n\'affichera aucun intertitre.',
+        section_thumbnail: 'Vignette',
+        section_thumbnail_hint: 'chemin/dans/une/brique.png ou URL',
+        section_thumbnail_orphan: 'Image absente des briques épinglées : conservée telle quelle.',
+        section_thumbnail_no_slot: 'Épinglez d\'abord un diagramme dans une page : les images viennent des briques de la section',
+        section_thumbnail_none: 'Aucune image dans les briques épinglées par les pages',
+        section_thumbnail_pending: 'La vignette est enregistrée mais pas encore servie par le rendu.',
         // sa#493 — TEXTES du site et des pages, écrits dans le classeur
         // (workbooks.doc, workbook_nodes.doc) : une pastille par langue dans
         // l'explorateur, l'édition dans l'éditeur markdown déjà là. Une langue
@@ -546,6 +580,23 @@ export const resources_template = {
         settings_default: 'Por defecto',
         settings_custom: 'Otra ruta...',
         settings_custom_hint: 'ruta/en/el/proyecto.png',
+        // sa#500 — mise en page d'une SECTION : « sans dossier » (sa#433) et
+        // vignette, les deux derniers réglages qui n'existaient que dans
+        // l'administration. La vignette se CHOISIT dans les briques épinglées
+        // par les PAGES de la section — une section n'a pas d'emplacement à
+        // elle — la saisie libre restant un repli.
+        section_toggle: 'disposición',
+        section_flat: 'Ubicación',
+        section_flat_folder: 'Una carpeta propia',
+        section_flat_group: 'Un grupo en la portada',
+        section_flat_hint: 'Sin carpeta, el título de la sección se convierte en un encabezado de la portada y sus páginas quedan en el primer nivel',
+        section_flat_no_title: 'Sin título la sección no forma grupo: el sitio no mostrará ningún encabezado.',
+        section_thumbnail: 'Miniatura',
+        section_thumbnail_hint: 'ruta/en/un/proyecto.png o URL',
+        section_thumbnail_orphan: 'Imagen ausente de los proyectos anclados: se conserva tal cual.',
+        section_thumbnail_no_slot: 'Ancle primero un diagrama en una página: las imágenes vienen de los proyectos de la sección',
+        section_thumbnail_none: 'Ninguna imagen en los proyectos anclados por las páginas',
+        section_thumbnail_pending: 'La miniatura se guarda pero el renderizado aún no la sirve.',
         // sa#493 — TEXTES du site et des pages, écrits dans le classeur
         // (workbooks.doc, workbook_nodes.doc) : une pastille par langue dans
         // l'explorateur, l'édition dans l'éditeur markdown déjà là. Une langue
@@ -756,6 +807,23 @@ export const resources_template = {
         settings_default: 'Standard',
         settings_custom: 'Anderer Pfad...',
         settings_custom_hint: 'pfad/im/projekt.png',
+        // sa#500 — mise en page d'une SECTION : « sans dossier » (sa#433) et
+        // vignette, les deux derniers réglages qui n'existaient que dans
+        // l'administration. La vignette se CHOISIT dans les briques épinglées
+        // par les PAGES de la section — une section n'a pas d'emplacement à
+        // elle — la saisie libre restant un repli.
+        section_toggle: 'Layout',
+        section_flat: 'Einordnung',
+        section_flat_folder: 'Ein eigener Ordner',
+        section_flat_group: 'Eine Gruppe auf der Startseite',
+        section_flat_hint: 'Ohne Ordner wird der Titel des Abschnitts zur Zwischenüberschrift der Startseite und seine Seiten bleiben auf der ersten Ebene',
+        section_flat_no_title: 'Ohne Titel bildet der Abschnitt keine Gruppe: die Website zeigt keine Zwischenüberschrift.',
+        section_thumbnail: 'Vorschaubild',
+        section_thumbnail_hint: 'pfad/in/einem/projekt.png oder URL',
+        section_thumbnail_orphan: 'Bild in den angehefteten Projekten nicht vorhanden: unverändert beibehalten.',
+        section_thumbnail_no_slot: 'Heften Sie zuerst ein Diagramm an eine Seite: die Bilder stammen aus den Projekten des Abschnitts',
+        section_thumbnail_none: 'Kein Bild in den von den Seiten angehefteten Projekten',
+        section_thumbnail_pending: 'Das Vorschaubild wird gespeichert, aber noch nicht ausgeliefert.',
         // sa#493 — TEXTES du site et des pages, écrits dans le classeur
         // (workbooks.doc, workbook_nodes.doc) : une pastille par langue dans
         // l'explorateur, l'édition dans l'éditeur markdown déjà là. Une langue
@@ -966,6 +1034,23 @@ export const resources_template = {
         settings_default: 'Predefinito',
         settings_custom: 'Altro percorso...',
         settings_custom_hint: 'percorso/nel/progetto.png',
+        // sa#500 — mise en page d'une SECTION : « sans dossier » (sa#433) et
+        // vignette, les deux derniers réglages qui n'existaient que dans
+        // l'administration. La vignette se CHOISIT dans les briques épinglées
+        // par les PAGES de la section — une section n'a pas d'emplacement à
+        // elle — la saisie libre restant un repli.
+        section_toggle: 'impaginazione',
+        section_flat: 'Collocazione',
+        section_flat_folder: 'Una cartella a sé',
+        section_flat_group: 'Un gruppo nella pagina iniziale',
+        section_flat_hint: 'Senza cartella, il titolo della sezione diventa un sottotitolo della pagina iniziale e le sue pagine restano al primo livello',
+        section_flat_no_title: 'Senza titolo la sezione non forma un gruppo: il sito non mostrerà alcun sottotitolo.',
+        section_thumbnail: 'Miniatura',
+        section_thumbnail_hint: 'percorso/in/un/progetto.png o URL',
+        section_thumbnail_orphan: 'Immagine assente dai progetti agganciati: conservata com\'è.',
+        section_thumbnail_no_slot: 'Aggancia prima un diagramma in una pagina: le immagini vengono dai progetti della sezione',
+        section_thumbnail_none: 'Nessuna immagine nei progetti agganciati dalle pagine',
+        section_thumbnail_pending: 'La miniatura viene salvata ma non è ancora servita dal rendering.',
         // sa#493 — TEXTES du site et des pages, écrits dans le classeur
         // (workbooks.doc, workbook_nodes.doc) : une pastille par langue dans
         // l'explorateur, l'édition dans l'éditeur markdown déjà là. Une langue
@@ -1173,6 +1258,23 @@ export const resources_template = {
         settings_default: '默认',
         settings_custom: '其他路径…',
         settings_custom_hint: '项目/中的/路径.png',
+        // sa#500 — mise en page d'une SECTION : « sans dossier » (sa#433) et
+        // vignette, les deux derniers réglages qui n'existaient que dans
+        // l'administration. La vignette se CHOISIT dans les briques épinglées
+        // par les PAGES de la section — une section n'a pas d'emplacement à
+        // elle — la saisie libre restant un repli.
+        section_toggle: '版式',
+        section_flat: '归置',
+        section_flat_folder: '单独的文件夹',
+        section_flat_group: '首页上的一个分组',
+        section_flat_hint: '不建文件夹时，章节标题成为首页的小标题，其页面保留在第一层',
+        section_flat_no_title: '没有标题就不成组：站点不会显示任何小标题。',
+        section_thumbnail: '缩略图',
+        section_thumbnail_hint: '项目/中的/路径.png 或 URL',
+        section_thumbnail_orphan: '该图片不在已固定的项目中：原样保留。',
+        section_thumbnail_no_slot: '请先在某个页面固定一个图表：图片来自本章节的项目',
+        section_thumbnail_none: '页面固定的项目中没有图片',
+        section_thumbnail_pending: '缩略图已保存，但渲染尚未提供。',
         // sa#493 — TEXTES du site et des pages, écrits dans le classeur
         // (workbooks.doc, workbook_nodes.doc) : une pastille par langue dans
         // l'explorateur, l'édition dans l'éditeur markdown déjà là. Une langue
@@ -1379,6 +1481,23 @@ export const resources_template = {
         settings_default: '既定',
         settings_custom: '別のパス…',
         settings_custom_hint: 'プロジェクト内/のパス.png',
+        // sa#500 — mise en page d'une SECTION : « sans dossier » (sa#433) et
+        // vignette, les deux derniers réglages qui n'existaient que dans
+        // l'administration. La vignette se CHOISIT dans les briques épinglées
+        // par les PAGES de la section — une section n'a pas d'emplacement à
+        // elle — la saisie libre restant un repli.
+        section_toggle: 'レイアウト',
+        section_flat: '配置',
+        section_flat_folder: '独立したフォルダ',
+        section_flat_group: 'ホームのグループ',
+        section_flat_hint: 'フォルダを作らない場合、セクション名はホームの見出しになり、ページは第一階層に残ります',
+        section_flat_no_title: 'タイトルがないとグループになりません：サイトに見出しは表示されません。',
+        section_thumbnail: 'サムネイル',
+        section_thumbnail_hint: 'プロジェクト内/のパス.png または URL',
+        section_thumbnail_orphan: 'ピン留めしたプロジェクトにない画像です：そのまま保持します。',
+        section_thumbnail_no_slot: 'まずページに図をピン留めしてください：画像はセクションのプロジェクトから取得します',
+        section_thumbnail_none: 'ページがピン留めしたプロジェクトに画像がありません',
+        section_thumbnail_pending: 'サムネイルは保存されますが、レンダリングではまだ提供されません。',
         // sa#493 — TEXTES du site et des pages, écrits dans le classeur
         // (workbooks.doc, workbook_nodes.doc) : une pastille par langue dans
         // l'explorateur, l'édition dans l'éditeur markdown déjà là. Une langue
