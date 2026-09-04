@@ -1,4 +1,4 @@
-import { Class_LinkValue } from './LinkValues'
+import { Class_LinkValue, parseValueObjective } from './LinkValues'
 import { Class_FluxTagGroup } from '../types/TagGroup'
 import type { Class_LinkElement } from './Link'
 import type { Class_Sankey } from '../types/Sankey'
@@ -64,6 +64,24 @@ describe('SA#487 — l\'intention « min » / « max » survit à un enregistrem
 
     expect(value.value_objective).toBeNull()
     expect(value.value_objective_rank).toBeNull()
+  })
+
+  it('reconnaît les orthographes acceptées, et rien d\'autre', () => {
+    // Le même vocabulaire que le parser Excel : ce qui s'écrit dans un classeur
+    // doit s'écrire dans l'application, sinon le même modèle ne se dit pas de la
+    // même façon selon la porte par laquelle on entre.
+    expect(parseValueObjective('min')).toBe('min')
+    expect(parseValueObjective('  MIN ')).toBe('min')
+    expect(parseValueObjective('Minimum')).toBe('min')
+    expect(parseValueObjective('minimale')).toBe('min')
+    expect(parseValueObjective('MAX')).toBe('max')
+    expect(parseValueObjective('maximum')).toBe('max')
+    // Une faute de frappe n'est pas une intention : l'appelant la traitera comme
+    // il traitait le texte avant, c'est-à-dire comme un nombre ou comme rien.
+    expect(parseValueObjective('mn')).toBeNull()
+    expect(parseValueObjective('42')).toBeNull()
+    expect(parseValueObjective('')).toBeNull()
+    expect(parseValueObjective(null)).toBeNull()
   })
 
   it('la copie d\'une valeur emporte l\'intention', () => {
