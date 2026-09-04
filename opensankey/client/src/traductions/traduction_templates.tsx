@@ -87,7 +87,12 @@ export const resources_template = {
         menu_entry: 'From my library...',
         delete_project: 'Delete this project',
         confirm_delete_project: 'Delete the project “{{title}}” and ALL its versions? The action cannot be undone.',
-        delete_project_error: 'Could not delete the project'
+        delete_project_error: 'Could not delete the project',
+        // sa#490 — publication state of a workbook, shown on its row
+        publish_none: 'not published yet',
+        publish_rendered: 'rendered on {{date}}',
+        publish_stale: 'modified since',
+        publish_open: 'Open the published page'
       },
     }
   },
@@ -179,7 +184,12 @@ export const resources_template = {
         menu_entry: 'Depuis ma bibliothèque...',
         delete_project: 'Supprimer ce projet',
         confirm_delete_project: 'Supprimer le projet « {{title}} » et TOUTES ses versions ? L’action est irréversible.',
-        delete_project_error: 'Suppression du projet impossible'
+        delete_project_error: 'Suppression du projet impossible',
+        // sa#490 — état de publication du classeur, affiché sur sa ligne
+        publish_none: 'pas encore publié',
+        publish_rendered: 'rendu le {{date}}',
+        publish_stale: 'modifié depuis',
+        publish_open: 'Ouvrir la page publiée'
       },
     }
   },
@@ -271,7 +281,12 @@ export const resources_template = {
         menu_entry: 'Desde mi biblioteca...',
         delete_project: 'Eliminar este proyecto',
         confirm_delete_project: '¿Eliminar el proyecto «{{title}}» y TODAS sus versiones? La acción es irreversible.',
-        delete_project_error: 'No se ha podido eliminar el proyecto'
+        delete_project_error: 'No se ha podido eliminar el proyecto',
+        // sa#490 — estado de publicación del cuaderno, en su línea
+        publish_none: 'aún no publicado',
+        publish_rendered: 'generado el {{date}}',
+        publish_stale: 'modificado desde entonces',
+        publish_open: 'Abrir la página publicada'
       },
     }
   },
@@ -363,7 +378,12 @@ export const resources_template = {
         menu_entry: 'Aus meiner Bibliothek...',
         delete_project: 'Dieses Projekt löschen',
         confirm_delete_project: 'Projekt „{{title}}“ und ALLE seine Versionen löschen? Der Vorgang ist unwiderruflich.',
-        delete_project_error: 'Projekt konnte nicht gelöscht werden'
+        delete_project_error: 'Projekt konnte nicht gelöscht werden',
+        // sa#490 — Veröffentlichungsstand der Mappe, in ihrer Zeile
+        publish_none: 'noch nicht veröffentlicht',
+        publish_rendered: 'erzeugt am {{date}}',
+        publish_stale: 'seitdem geändert',
+        publish_open: 'Veröffentlichte Seite öffnen'
       },
     }
   },
@@ -455,7 +475,12 @@ export const resources_template = {
         menu_entry: 'Dalla mia libreria...',
         delete_project: 'Elimina questo progetto',
         confirm_delete_project: 'Eliminare il progetto «{{title}}» e TUTTE le sue versioni? L’azione è irreversibile.',
-        delete_project_error: 'Impossibile eliminare il progetto'
+        delete_project_error: 'Impossibile eliminare il progetto',
+        // sa#490 — stato di pubblicazione della cartella, sulla sua riga
+        publish_none: 'non ancora pubblicato',
+        publish_rendered: 'generato il {{date}}',
+        publish_stale: 'modificato da allora',
+        publish_open: 'Apri la pagina pubblicata'
       },
     }
   },
@@ -544,7 +569,12 @@ export const resources_template = {
         menu_entry: '从我的库中打开…',
         delete_project: '删除此项目',
         confirm_delete_project: '删除项目“{{title}}”及其所有版本？此操作不可撤销。',
-        delete_project_error: '无法删除项目'
+        delete_project_error: '无法删除项目',
+        // sa#490 — 工作簿的发布状态，显示在其行上
+        publish_none: '尚未发布',
+        publish_rendered: '生成于 {{date}}',
+        publish_stale: '此后已修改',
+        publish_open: '打开已发布页面'
       },
     }
   },
@@ -633,7 +663,12 @@ export const resources_template = {
         menu_entry: 'ライブラリから開く…',
         delete_project: 'このプロジェクトを削除',
         confirm_delete_project: 'プロジェクト「{{title}}」とそのすべてのバージョンを削除しますか？この操作は取り消せません。',
-        delete_project_error: 'プロジェクトを削除できませんでした'
+        delete_project_error: 'プロジェクトを削除できませんでした',
+        // sa#490 — ワークブックの公開状態を行に表示
+        publish_none: 'まだ公開されていません',
+        publish_rendered: '{{date}} に生成',
+        publish_stale: 'それ以降に変更あり',
+        publish_open: '公開ページを開く'
       },
     }
   }
