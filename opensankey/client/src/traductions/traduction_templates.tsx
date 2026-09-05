@@ -226,7 +226,18 @@ export const resources_template = {
         publish_busy: 'A publication is already running for this address: that is the one followed here.',
         publish_lost: 'Rendering is no longer responding — the server most likely restarted. Nothing was left half online: start the publication again.',
         publish_duration: 'Duration: {{seconds}} s',
-        publish_slowest: 'slowest phase: {{phase}} ({{seconds}} s)'
+        publish_slowest: 'slowest phase: {{phase}} ({{seconds}} s)',
+        // sa#502 — creating and deleting a WORKBOOK, the last two gestures that
+        // lived only in the administration. The work group follows the server
+        // rule (default_group_id): the client never guesses it.
+        create_workbook: 'workbook',
+        create_workbook_hint: 'Create an empty workbook',
+        create_workbook_placeholder: 'Workbook title',
+        create_workbook_submit: 'Create',
+        create_workbook_error: 'Could not create the workbook',
+        delete_workbook: 'Delete this workbook',
+        confirm_delete_workbook: 'Delete the workbook “{{title}}”? The action cannot be undone. The pinned bricks are left untouched: they stay in the library, and an already published site stays online.',
+        delete_workbook_error: 'Could not delete the workbook'
       },
     }
   },
@@ -458,7 +469,18 @@ export const resources_template = {
         publish_busy: 'Une publication est déjà en cours pour cette adresse : c’est elle qui est suivie ici.',
         publish_lost: 'Le rendu ne donne plus signe de vie — le serveur a probablement redémarré. Rien n’est resté à moitié en ligne : relancez la publication.',
         publish_duration: 'Durée : {{seconds}} s',
-        publish_slowest: 'phase la plus longue : {{phase}} ({{seconds}} s)'
+        publish_slowest: 'phase la plus longue : {{phase}} ({{seconds}} s)',
+        // sa#502 — CRÉER et SUPPRIMER un classeur, les deux derniers gestes qui
+        // ne vivaient qu'en administration. Le groupe de travail suit la règle
+        // du serveur (default_group_id) : le client ne le devine jamais.
+        create_workbook: 'classeur',
+        create_workbook_hint: 'Créer un classeur vide',
+        create_workbook_placeholder: 'Titre du classeur',
+        create_workbook_submit: 'Créer',
+        create_workbook_error: 'Création du classeur impossible',
+        delete_workbook: 'Supprimer ce classeur',
+        confirm_delete_workbook: 'Supprimer le classeur « {{title}} » ? L’action est irréversible. Les briques épinglées ne sont pas touchées : elles restent en bibliothèque, et un site déjà publié reste en ligne.',
+        delete_workbook_error: 'Suppression du classeur impossible'
       },
     }
   },
@@ -685,7 +707,18 @@ export const resources_template = {
         publish_busy: 'Ya hay una publicación en curso para esta dirección: es la que se sigue aquí.',
         publish_lost: 'La renderización ya no da señales de vida — probablemente el servidor se reinició. Nada quedó a medias en línea: vuelva a lanzar la publicación.',
         publish_duration: 'Duración: {{seconds}} s',
-        publish_slowest: 'fase más larga: {{phase}} ({{seconds}} s)'
+        publish_slowest: 'fase más larga: {{phase}} ({{seconds}} s)',
+        // sa#502 — crear y eliminar un libro, los dos últimos gestos que solo
+        // existían en la administración. El grupo de trabajo sigue la regla del
+        // servidor (default_group_id): el cliente nunca lo adivina.
+        create_workbook: 'libro',
+        create_workbook_hint: 'Crear un libro vacío',
+        create_workbook_placeholder: 'Título del libro',
+        create_workbook_submit: 'Crear',
+        create_workbook_error: 'No se ha podido crear el libro',
+        delete_workbook: 'Eliminar este libro',
+        confirm_delete_workbook: '¿Eliminar el libro «{{title}}»? La acción es irreversible. Los bloques anclados no se tocan: siguen en la biblioteca, y un sitio ya publicado sigue en línea.',
+        delete_workbook_error: 'No se ha podido eliminar el libro'
       },
     }
   },
@@ -912,7 +945,18 @@ export const resources_template = {
         publish_busy: 'Für diese Adresse läuft bereits eine Veröffentlichung: ihr wird hier gefolgt.',
         publish_lost: 'Das Rendern meldet sich nicht mehr — der Server wurde vermutlich neu gestartet. Es ist nichts halb online geblieben: Veröffentlichung erneut starten.',
         publish_duration: 'Dauer: {{seconds}} s',
-        publish_slowest: 'längste Phase: {{phase}} ({{seconds}} s)'
+        publish_slowest: 'längste Phase: {{phase}} ({{seconds}} s)',
+        // sa#502 — eine Arbeitsmappe ANLEGEN und LÖSCHEN, die beiden letzten
+        // Gesten, die es nur in der Verwaltung gab. Die Arbeitsgruppe folgt der
+        // Serverregel (default_group_id): der Client rät sie nie.
+        create_workbook: 'Arbeitsmappe',
+        create_workbook_hint: 'Eine leere Arbeitsmappe anlegen',
+        create_workbook_placeholder: 'Titel der Arbeitsmappe',
+        create_workbook_submit: 'Anlegen',
+        create_workbook_error: 'Arbeitsmappe konnte nicht angelegt werden',
+        delete_workbook: 'Diese Arbeitsmappe löschen',
+        confirm_delete_workbook: 'Arbeitsmappe „{{title}}“ löschen? Der Vorgang ist unwiderruflich. Die angehefteten Bausteine bleiben unberührt: Sie bleiben in der Bibliothek, und eine bereits veröffentlichte Website bleibt online.',
+        delete_workbook_error: 'Arbeitsmappe konnte nicht gelöscht werden'
       },
     }
   },
@@ -1139,7 +1183,19 @@ export const resources_template = {
         publish_busy: 'Una pubblicazione è già in corso per questo indirizzo: è quella seguita qui.',
         publish_lost: 'Il rendering non dà più segni di vita — probabilmente il server è stato riavviato. Nulla è rimasto a metà in linea: rilanci la pubblicazione.',
         publish_duration: 'Durata: {{seconds}} s',
-        publish_slowest: 'fase più lunga: {{phase}} ({{seconds}} s)'
+        publish_slowest: 'fase più lunga: {{phase}} ({{seconds}} s)',
+        // sa#502 — creare ed eliminare una cartella di lavoro, gli ultimi due
+        // gesti che vivevano solo nell'amministrazione. Il gruppo di lavoro
+        // segue la regola del server (default_group_id): il client non la
+        // indovina mai.
+        create_workbook: 'cartella',
+        create_workbook_hint: 'Creare una cartella di lavoro vuota',
+        create_workbook_placeholder: 'Titolo della cartella di lavoro',
+        create_workbook_submit: 'Crea',
+        create_workbook_error: 'Impossibile creare la cartella di lavoro',
+        delete_workbook: 'Elimina questa cartella di lavoro',
+        confirm_delete_workbook: 'Eliminare la cartella di lavoro «{{title}}»? L’azione è irreversibile. I mattoni appuntati non vengono toccati: restano nella biblioteca e un sito già pubblicato resta online.',
+        delete_workbook_error: 'Impossibile eliminare la cartella di lavoro'
       },
     }
   },
@@ -1362,7 +1418,17 @@ export const resources_template = {
         publish_busy: '该地址已有一个发布正在进行：此处跟踪的正是它。',
         publish_lost: '渲染已无响应 — 服务器很可能已重启。没有任何内容半途上线：请重新发起发布。',
         publish_duration: '耗时：{{seconds}} 秒',
-        publish_slowest: '最长阶段：{{phase}}（{{seconds}} 秒）'
+        publish_slowest: '最长阶段：{{phase}}（{{seconds}} 秒）',
+        // sa#502 — 新建和删除工作簿，这是仅存于管理后台的最后两个操作。
+        // 工作组遵循服务端规则（default_group_id）：客户端从不猜测。
+        create_workbook: '工作簿',
+        create_workbook_hint: '新建一个空工作簿',
+        create_workbook_placeholder: '工作簿标题',
+        create_workbook_submit: '创建',
+        create_workbook_error: '无法创建工作簿',
+        delete_workbook: '删除此工作簿',
+        confirm_delete_workbook: '删除工作簿“{{title}}”？此操作不可撤销。已固定的构件不受影响：它们仍留在资料库中，已发布的站点也仍然在线。',
+        delete_workbook_error: '无法删除工作簿'
       },
     }
   },
@@ -1586,7 +1652,18 @@ export const resources_template = {
         publish_busy: 'このアドレスでは既に公開処理が進行中です。ここではそれを追跡しています。',
         publish_lost: 'レンダリングが応答しなくなりました。サーバーが再起動した可能性があります。中途半端に公開されたものはありません。公開をやり直してください。',
         publish_duration: '所要時間：{{seconds}} 秒',
-        publish_slowest: '最長の段階：{{phase}}（{{seconds}} 秒）'
+        publish_slowest: '最長の段階：{{phase}}（{{seconds}} 秒）',
+        // sa#502 — ワークブックの作成と削除。管理画面にしかなかった最後の
+        // 二つの操作。ワークグループはサーバーの規則（default_group_id）に
+        // 従い、クライアントは決して推測しない。
+        create_workbook: 'ワークブック',
+        create_workbook_hint: '空のワークブックを作成',
+        create_workbook_placeholder: 'ワークブックの名称',
+        create_workbook_submit: '作成',
+        create_workbook_error: 'ワークブックを作成できませんでした',
+        delete_workbook: 'このワークブックを削除',
+        confirm_delete_workbook: 'ワークブック「{{title}}」を削除しますか？この操作は取り消せません。ピン留めされた部品はそのままライブラリに残り、公開済みのサイトもオンラインのままです。',
+        delete_workbook_error: 'ワークブックを削除できませんでした'
       },
     }
   }
