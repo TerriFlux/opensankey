@@ -192,6 +192,9 @@ export const EXPECTED_ROOT_KEYS: string[] = [
   'id',
   'name',
   'view_labels',
+  // os#1357 — l'annuaire des labels est une clé d'enveloppe de fichier, comme `current_view` :
+  // il ne dit rien du contenu d'une vue et noierait les vrais écarts s'il était comparé.
+  'view_label_defs',
   'heredited_attr',
   'heredited_source_id',
   'tag_selection',

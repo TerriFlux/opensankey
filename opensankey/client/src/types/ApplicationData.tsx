@@ -44,7 +44,7 @@ import { Class_ApplicationHistory } from './ApplicationHistory'
 import { ViewsReader } from './ViewsReader'
 import { afterViewChange } from './viewSwitchProgress'
 import { decodeViewsFromDelta } from './viewDelta'
-import type { Type_ViewEntry } from './ViewsQuery'
+import type { Type_ViewEntry, Type_ViewLabelDef } from './ViewsQuery'
 import { Class_IconLibrary } from '../css/IconLibrairie'
 import { Class_DrawingArea } from './DrawingArea'
 import { exposeDrawCounters } from './DrawCounters'
@@ -514,6 +514,15 @@ export class Class_ApplicationData {
   protected _publish_view_labels: string[] = []
   public get publish_view_labels(): string[] { return this._publish_view_labels }
   public set publish_view_labels(v: string[]) { this._publish_view_labels = v }
+
+  // os#1357 — Annuaire des labels de vues : id stable, nom modifiable, groupe optionnel.
+  //
+  // Vit à la RACINE du fichier et non sur le Sankey : chaque vue lourde sérialise son propre
+  // Sankey complet, un annuaire posé là serait dupliqué par vue et divergerait en silence.
+  // Ordonné par le tableau lui-même — pas de second registre d'ordre à tenir cohérent.
+  protected _view_label_defs: Type_ViewLabelDef[] = []
+  public get view_label_defs(): Type_ViewLabelDef[] { return this._view_label_defs }
+  public set view_label_defs(v: Type_ViewLabelDef[]) { this._view_label_defs = v }
 
   // Identité LOGIQUE de la vue courante, découplée de l'id du Sankey de la DA. Nécessaire pour
   // les vues light qui RÉUTILISENT la DA maître : sans ce champ, une vue light serait confondue
@@ -2934,6 +2943,10 @@ export class Class_ApplicationData {
   // sa#396/397 — labels de vues (étiquettes de SÉLECTION posées sur les vues, cf. Type_ViewEntry).
   public get all_view_labels(): string[] { return this._views_reader.all_view_labels }
   public viewIdsWithLabel(label: string): string[] { return this._views_reader.viewIdsWithLabel(label) }
+  // os#1357 — annuaire : définitions utilisées, résolution id/nom, libellé affichable.
+  public get used_view_label_defs(): Type_ViewLabelDef[] { return this._views_reader.used_view_label_defs }
+  public labelIdFromIdOrName(v: string): string { return this._views_reader.labelIdFromIdOrName(v) }
+  public labelNameOf(id: string): string { return this._views_reader.labelNameOf(id) }
   public get master_view(): Class_DrawingArea | undefined { return this._views_reader.master_view }
   public get has_view_before(): boolean { return this._views_reader.has_view_before }
   public get has_view_after(): boolean { return this._views_reader.has_view_after }
