@@ -12,6 +12,7 @@ import { getBooleanFromJSON, getJSONOrUndefinedFromJSON, getStringFromJSON } fro
 import { DrawingAreaPersistence } from '../Persistence/SankeyPersistence'
 import { decodeViewsFromDelta } from './viewDelta'
 import { ViewsQuery, MASTER_VIEW_ID } from './ViewsQuery'
+import type { Type_ViewLabelDef } from './ViewsQuery'
 import { Class_ViewSwitchProgress, viewSwitchPath } from './viewSwitchProgress'
 import { createViewSwitchOverlay } from './viewSwitchOverlay'
 import type { Class_DrawingArea } from './DrawingArea'
@@ -189,6 +190,28 @@ export class ViewsReader {
     this.host.master_view_name = getStringFromJSON(json_object, 'master_view_name', '')
     // OS#1315 — Caméra conservée entre les vues (rétro-compat : conservée si absent).
     this.host.keep_camera_across_views = getBooleanFromJSON(json_object, 'keep_camera_across_views', true)
+
+    // os#1357 — Annuaire des labels, lu AVANT les vues : `parseViewExtraFields` s'en sert pour
+    // résoudre — et au besoin compléter — les labels de chaque vue. Absent d'un fichier
+    // antérieur : l'annuaire se reconstruit alors depuis les noms rencontrés dans les vues.
+    const defs_raw = json_object['view_label_defs']
+    const defs: Type_ViewLabelDef[] = []
+    if (Array.isArray(defs_raw)) {
+      defs_raw.forEach(d => {
+        if (!d || typeof d !== 'object' || Array.isArray(d)) return
+        const entry = d as Type_JSON
+        const id = entry['id']
+        const name = entry['name']
+        if (typeof id !== 'string' || id === '' || typeof name !== 'string') return
+        if (defs.some(x => x.id === id)) return
+        const group = entry['group']
+        defs.push(typeof group === 'string' && group !== ''
+          ? { id, name, group }
+          : { id, name })
+      })
+    }
+    this.host.view_label_defs.length = 0
+    this.host.view_label_defs.push(...defs)
 
     Object.entries(views_json)
       .forEach(([view_id, view_json]) => {
