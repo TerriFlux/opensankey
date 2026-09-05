@@ -77,6 +77,11 @@ export class ViewsReader {
   // sa#396/397 — labels de vues (étiquettes de SÉLECTION, distinctes des view tags de génération).
   public get all_view_labels(): string[] { return this.query.all_view_labels }
   public viewIdsWithLabel(label: string): string[] { return this.query.viewIdsWithLabel(label) }
+  // os#1357 — annuaire des labels : résolution, libellé, renommage.
+  public get used_view_label_defs(): Type_ViewLabelDef[] { return this.query.used_view_label_defs }
+  public labelIdFromIdOrName(v: string, create: boolean = false): string { return this.query.labelIdFromIdOrName(v, create) }
+  public labelNameOf(id: string): string { return this.query.labelNameOf(id) }
+  public renameViewLabel(id: string, name: string): boolean { return this.query.renameViewLabel(id, name) }
 
   public get has_views(): boolean { return this.query.has_views }
   public get is_view_master(): boolean { return this.query.is_view_master }

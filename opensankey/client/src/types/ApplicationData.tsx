@@ -2947,6 +2947,9 @@ export class Class_ApplicationData {
   public get used_view_label_defs(): Type_ViewLabelDef[] { return this._views_reader.used_view_label_defs }
   public labelIdFromIdOrName(v: string): string { return this._views_reader.labelIdFromIdOrName(v) }
   public labelNameOf(id: string): string { return this._views_reader.labelNameOf(id) }
+  public renameViewLabel(id: string, name: string): boolean { return this._views_reader.renameViewLabel(id, name) }
+  /** Crée le label s'il n'existe pas, et renvoie son id. Utilisé à la saisie d'un label. */
+  public ensureViewLabelId(name: string): string { return this._views_reader.labelIdFromIdOrName(name, true) }
   public get master_view(): Class_DrawingArea | undefined { return this._views_reader.master_view }
   public get has_view_before(): boolean { return this._views_reader.has_view_before }
   public get has_view_after(): boolean { return this._views_reader.has_view_after }

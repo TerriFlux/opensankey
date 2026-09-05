@@ -207,6 +207,26 @@ export class ViewsQuery {
     return this.labelDefById(id)?.name ?? id
   }
 
+  /**
+   * Renomme un label. C'est le geste que l'annuaire rend sûr : le nom change, l'identifiant
+   * ne bouge pas, donc les vues qui le portent et les pages publiées qui le ciblent par id
+   * suivent sans rien casser.
+   *
+   * Deux refus : un nom vide, et un nom déjà porté par un AUTRE label — deux définitions
+   * homonymes rendraient la résolution par nom (celle des pages anciennes) ambiguë.
+   * Renvoie `false` sans rien changer dans ces cas.
+   */
+  public renameViewLabel(id: string, raw_name: string): boolean {
+    const name = raw_name.trim()
+    if (name === '') return false
+    const def = this.labelDefById(id)
+    if (!def) return false
+    if (def.name === name) return true
+    if (this.host.view_label_defs.some(d => d.id !== id && d.name === name)) return false
+    def.name = name
+    return true
+  }
+
   // --- Labels de vues (sa#396/397) ---------------------------------------------------------
   // Étiquettes libres de SÉLECTION posées sur les vues — rien à voir avec les view tags
   // (dimension de génération), qui ne sont pas touchés.
