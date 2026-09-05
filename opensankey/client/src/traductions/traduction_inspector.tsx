@@ -267,6 +267,9 @@ export const resources_inspector = {
         }
       },
       filter_panel: {
+        // Jalon 79 — « coordonnées » (année, scénario, géographie : mêmes nœuds,
+        // d'autres chiffres), pas « légende » : ce panneau pilote la lecture.
+        title: 'Filters and coordinates',
         filter: 'Filter',
         select: 'Select',
         select_tooltip: 'Select elements by type and tag (bulk operations)',
@@ -542,6 +545,7 @@ export const resources_inspector = {
         }
       },
       filter_panel: {
+        title: 'Filtres et coordonnées',
         filter: 'Filtrer',
         select: 'Sélectionner',
         select_tooltip: 'Sélectionner des éléments par type et par tag (opérations groupées)',
@@ -817,6 +821,7 @@ export const resources_inspector = {
         }
       },
       filter_panel: {
+        title: 'Filtros y coordenadas',
         filter: 'Filtrar',
         select: 'Seleccionar',
         select_tooltip: 'Seleccionar elementos por tipo y etiqueta (operaciones en grupo)',
@@ -1092,6 +1097,7 @@ export const resources_inspector = {
         }
       },
       filter_panel: {
+        title: 'Filter und Koordinaten',
         filter: 'Filtern',
         select: 'Auswählen',
         select_tooltip: 'Elemente nach Typ und Tag auswählen (Sammelvorgänge)',
@@ -1367,6 +1373,7 @@ export const resources_inspector = {
         }
       },
       filter_panel: {
+        title: 'Filtri e coordinate',
         filter: 'Filtrare',
         select: 'Selezionare',
         select_tooltip: 'Selezionare elementi per tipo e tag (operazioni di gruppo)',
@@ -1645,6 +1652,7 @@ export const resources_inspector = {
         }
       },
       filter_panel: {
+        title: '筛选与坐标',
         filter: '筛选',
         select: '选择',
         select_tooltip: '按类型与标签选择元素（批量操作）',
@@ -1923,6 +1931,7 @@ export const resources_inspector = {
         }
       },
       filter_panel: {
+        title: '絞り込みと座標',
         filter: '絞り込み',
         select: '選択',
         select_tooltip: '種類とタグで要素を選択します（一括操作）',
