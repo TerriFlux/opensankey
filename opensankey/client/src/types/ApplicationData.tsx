@@ -2112,6 +2112,14 @@ export class Class_ApplicationData {
    * rien à copier.
    * @memberof Class_ApplicationData
    */
+  /**
+   * Arme la synchronisation sans rien appliquer. Pour les chargements qui ne passent pas
+   * par `?url=` (reprise du cache, diagramme inline, page vierge) : il n'y a alors aucun
+   * état à lire, mais l'adresse doit tout de même devenir vivante.
+   * @memberof Class_ApplicationData
+   */
+  public enableUrlStateSync(): void { this._url_sync_enabled = true }
+
   public syncUrlState(): void {
     if (!this._url_sync_enabled) return
     if (typeof window === 'undefined' || !window.history?.replaceState) return
