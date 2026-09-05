@@ -82,6 +82,10 @@ export class ViewsReader {
   public labelIdFromIdOrName(v: string, create: boolean = false): string { return this.query.labelIdFromIdOrName(v, create) }
   public labelNameOf(id: string): string { return this.query.labelNameOf(id) }
   public renameViewLabel(id: string, name: string): boolean { return this.query.renameViewLabel(id, name) }
+  public setViewLabelGroup(id: string, group: string): boolean { return this.query.setViewLabelGroup(id, group) }
+  public deleteViewLabel(id: string): boolean { return this.query.deleteViewLabel(id) }
+  public get view_label_groups(): string[] { return this.query.view_label_groups }
+  public labelDefsInGroup(group: string): Type_ViewLabelDef[] { return this.query.labelDefsInGroup(group) }
 
   public get has_views(): boolean { return this.query.has_views }
   public get is_view_master(): boolean { return this.query.is_view_master }

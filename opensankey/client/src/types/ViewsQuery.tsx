@@ -227,6 +227,51 @@ export class ViewsQuery {
     return true
   }
 
+  /**
+   * Range un label dans un groupe, ou l'en sort (groupe vide).
+   *
+   * Le groupe est une DIMENSION de classement, pas une décoration : « Public visé » avec
+   * « Grand public » et « Experts » dit qu'un lecteur choisit UNE valeur parmi celles du
+   * groupe, là où deux labels sans groupe sont deux étiquettes sans rapport. C'est ce qui
+   * distingue un annuaire d'une liste de mots-clés.
+   */
+  public setViewLabelGroup(id: string, raw_group: string): boolean {
+    const def = this.labelDefById(id)
+    if (!def) return false
+    const group = raw_group.trim()
+    if (group === '') delete def.group
+    else def.group = group
+    return true
+  }
+
+  /**
+   * Retire une définition de l'annuaire — refusé tant qu'une vue la porte.
+   *
+   * Sans ce refus, la vue garderait un identifiant que plus rien ne nomme : l'étiquette
+   * retomberait sur l'id brut, illisible. On ne supprime donc que ce que plus personne
+   * n'utilise ; retirer le label des vues reste le geste préalable.
+   */
+  public deleteViewLabel(id: string): boolean {
+    const defs = this.host.view_label_defs
+    const idx = defs.findIndex(d => d.id === id)
+    if (idx < 0) return false
+    if (this.viewIdsWithLabel(id).length > 0) return false
+    defs.splice(idx, 1)
+    return true
+  }
+
+  /** Groupes déclarés dans l'annuaire, dédoublonnés, dans l'ordre où ils apparaissent. */
+  public get view_label_groups(): string[] {
+    const seen = new Set<string>()
+    this.host.view_label_defs.forEach(d => { if (d.group) seen.add(d.group) })
+    return [...seen]
+  }
+
+  /** Labels d'un groupe donné — les valeurs possibles de cette dimension. */
+  public labelDefsInGroup(group: string): Type_ViewLabelDef[] {
+    return this.host.view_label_defs.filter(d => (d.group ?? '') === group)
+  }
+
   // --- Labels de vues (sa#396/397) ---------------------------------------------------------
   // Étiquettes libres de SÉLECTION posées sur les vues — rien à voir avec les view tags
   // (dimension de génération), qui ne sont pas touchés.

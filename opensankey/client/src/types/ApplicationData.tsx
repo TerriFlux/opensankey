@@ -2948,6 +2948,10 @@ export class Class_ApplicationData {
   public labelIdFromIdOrName(v: string): string { return this._views_reader.labelIdFromIdOrName(v) }
   public labelNameOf(id: string): string { return this._views_reader.labelNameOf(id) }
   public renameViewLabel(id: string, name: string): boolean { return this._views_reader.renameViewLabel(id, name) }
+  public setViewLabelGroup(id: string, group: string): boolean { return this._views_reader.setViewLabelGroup(id, group) }
+  public deleteViewLabel(id: string): boolean { return this._views_reader.deleteViewLabel(id) }
+  public get view_label_groups(): string[] { return this._views_reader.view_label_groups }
+  public labelDefsInGroup(group: string): Type_ViewLabelDef[] { return this._views_reader.labelDefsInGroup(group) }
   /** Crée le label s'il n'existe pas, et renvoie son id. Utilisé à la saisie d'un label. */
   public ensureViewLabelId(name: string): string { return this._views_reader.labelIdFromIdOrName(name, true) }
   public get master_view(): Class_DrawingArea | undefined { return this._views_reader.master_view }
