@@ -58,6 +58,15 @@ function makeArea(has_been_laid_out: boolean, height: number) {
     suspendPositionModeUntilDataChange: () => undefined,
     clearPositionModeSuspension: () => undefined,
     draw: () => { draws++ },
+    // os#1377 — `setScaleAdaptedMode` pose desormais le mode sous cette enveloppe, pour que
+    // l affectation ne declenche pas les actions de dessin de l attribut (un dessin par nœud et
+    // par flux, hors de toute passe). La doublure execute le corps et respecte le contrat du
+    // second parametre : dessiner ensuite, sauf quand on lui dit de ne pas le faire.
+    withBypassRedraws: <T>(fn: () => T, redraw: boolean = true): T => {
+      const result = fn()
+      if (redraw) draws++
+      return result
+    },
   }
   return { area: area as unknown as Class_DrawingArea, nodes, draws: () => draws }
 }

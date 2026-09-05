@@ -2355,8 +2355,57 @@ export class Class_LinkElement extends Class_LinkAttribute {
     if (value !== null) {
       value.valueData = _
       value.valueResult = null
+      // SA#487 — une valeur chiffrée et un « min » / « max » ne peuvent pas
+      // coexister : le moteur ne saurait pas s'il doit honorer la valeur ou
+      // chercher l'optimum. Saisir un nombre retire donc l'intention, et vider
+      // le champ la retire aussi — c'est la même case, elle ne porte qu'une
+      // chose à la fois. Même règle que le parser Excel côté ligne de données.
+      value.value_objective = null
+      value.value_objective_rank = null
       this.redrawNodesSourceTarget()
     }
+  }
+
+  /**
+   * SA#487 — intention d'optimisation sur la valeur de ce flux : « min », « max »
+   * ou null. Écrite là où l'utilisateur formule son intention — la case Valeur —
+   * exactement comme dans la colonne Valeur d'une feuille de données.
+   *
+   * Le rang est attribué ici, et il compte : c'est lui qui arbitre entre
+   * plusieurs « min » concurrents, que le moteur fige l'un après l'autre. Dans
+   * un classeur, c'est l'ordre des lignes ; dans l'application, il n'y a pas de
+   * lignes — l'ordre est donc celui des déclarations, et le rang se prend à la
+   * suite du plus grand déjà posé sur le diagramme.
+   */
+  public get valueObjectiveCurrent(): string | null {
+    return this.value?.value_objective ?? null
+  }
+
+  public set valueObjectiveCurrent(_: string | null) {
+    const value = this.value
+    if (value === null) return
+    value.value_objective = _
+    if (_ === null) {
+      value.value_objective_rank = null
+    } else {
+      value.valueData = null
+      value.valueResult = null
+      if (value.value_objective_rank === null) {
+        value.value_objective_rank = this.nextValueObjectiveRank()
+      }
+    }
+    this.redrawNodesSourceTarget()
+  }
+
+  private nextValueObjectiveRank(): number {
+    let max_rank = -1
+    this.drawing_area.sankey.links_list.forEach(link => {
+      Object.values(link.getAllValues()).forEach(([value]) => {
+        const rank = value.value_objective_rank
+        if (rank !== null && rank > max_rank) max_rank = rank
+      })
+    })
+    return max_rank + 1
   }
 
   /**
@@ -3068,11 +3117,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this._tooltip_text = value
   }
 
-  public static updateLinks = <K extends 'valueCurrent' | 'valueCurrentTarget' | 'text_value' | 'dataMin' | 'dataMax' | 'dataUncertainty'>(
+  public static updateLinks = <K extends 'valueCurrent' | 'valueCurrentTarget' | 'text_value' | 'dataMin' | 'dataMax' | 'dataUncertainty' | 'valueObjectiveCurrent'>(
     data: Class_ApplicationData,
     elements: Class_LinkElement[],
     key: K,
-    value: K extends 'text_value' ? string : number | null,
+    // SA#487 — « valueObjectiveCurrent » porte un mot-clé, donc une chaîne ou
+    // rien ; les autres clés restent ce qu'elles étaient.
+    value: K extends 'text_value' ? string
+      : K extends 'valueObjectiveCurrent' ? string | null
+        : number | null,
     refreshParentComponent: () => void
   ) => {
     const dict_old_val: { [id: string]: number | string | null } = {}
