@@ -307,6 +307,19 @@ export class Class_ApplicationData {
   /** À appeler en tête d'une surcharge d'`applyPublishStateOptions`, avant tout dessin. */
   protected markPublishApplyStart(): void { this._publish_apply_epoch = this._draw_epoch }
 
+  /**
+   * os#1377 — Vrai pendant la lecture d'un fichier qui se terminera par un dessin complet
+   * (`fromJSON(..., draw = true)`). Ce que la lecture dessine d'elle-même serait alors refait
+   * à l'identique : `ViewsReader.viewsFromJSON` s'en abstient, ce qui économise une passe
+   * ENTIÈRE au chargement — 70 dessins de flux sur 211 pour CARTOFOB, sur la géométrie de la
+   * vue enregistrée que les options de publication remplacent aussitôt après.
+   *
+   * Faux hors chargement et pour un `fromJSON(..., draw = false)` (réconciliation, tests de
+   * corpus) : là, le dessin de la lecture est le seul, et rien ne change.
+   */
+  protected _from_json_will_draw = false
+  public get from_json_will_draw(): boolean { return this._from_json_will_draw }
+
   public createNewMenuConfiguration(toast: CreateToastFnReturn | null = null): Class_MenuConfig {
     this._toast = toast
     this._menu_configuration = new Class_MenuConfig()
@@ -343,7 +356,7 @@ export class Class_ApplicationData {
   }
 
   // App
-  public version: string = '1.3.0'
+  public version: string = '1.3.2'
   public fit_screen: boolean
   public static_path: string = 'static/opensankey'
   public options: { [_: string]: boolean | string } = {}
@@ -1194,7 +1207,17 @@ export class Class_ApplicationData {
     this.reset(kwargs)
     this._drawing_area.bypass_redraws = true
     // Read json file
-    this._fromJSON(json_object, kwargs)
+    // os#1377 — le temps de la lecture, on annonce à qui lit le fichier qu'un dessin complet
+    // suivra (ou non) : `ViewsReader.viewsFromJSON` s'abstient alors du sien, que celui de la
+    // fin de méthode referait à l'identique. La valeur précédente est restaurée plutôt
+    // qu'effacée : `_loadSheetContent` repasse par `fromJSON` (chargement imbriqué).
+    const previous_will_draw = this._from_json_will_draw
+    this._from_json_will_draw = draw
+    try {
+      this._fromJSON(json_object, kwargs)
+    } finally {
+      this._from_json_will_draw = previous_will_draw
+    }
     // Post processing & menu updating
     this._afterFromJSON()
     // Le « filtre vue » fait partie de l'état persistant du diagramme : s'il était actif
