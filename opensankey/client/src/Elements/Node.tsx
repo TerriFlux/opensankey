@@ -2709,7 +2709,14 @@ export class Class_NodeElement extends Class_NodeBase {
         input_or_output_link.addStyle(styles_dict[specific_link_style])
       }
 
-      input_or_output_link.shape_is_recycling = false
+      // os#1377 — n'écrire QUE si la valeur change. Le setter d'attribut enchaîne ses actions
+      // (`drawWithNodes`, `drawElements`, `drawControlPoint`, cf. ElementsAttributesConfig) et
+      // trace donc le flux, un par un, HORS de toute passe de dessin — la ré-explosion des
+      // nœuds d'échange au chargement en payait 211 sur les 230 dessins hors passe de CARTOFOB.
+      // Poser `false` sur un flux déjà à `false` ne change rien d'autre : le rétablissement des
+      // tangentes de `customShapeIsRecycling` ne concerne que la transition true → false, qui
+      // passe toujours, elle, par le setter complet.
+      if (input_or_output_link.shape_is_recycling) input_or_output_link.shape_is_recycling = false
 
       extremity_node.tags_list.forEach(tag => {
         if (tag.group.id === 'type de noeud') {
