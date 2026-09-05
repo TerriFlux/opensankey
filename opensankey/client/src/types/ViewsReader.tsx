@@ -199,16 +199,17 @@ export class ViewsReader {
     // os#1357 — Annuaire des labels, lu AVANT les vues : `parseViewExtraFields` s'en sert pour
     // résoudre — et au besoin compléter — les labels de chaque vue. Absent d'un fichier
     // antérieur : l'annuaire se reconstruit alors depuis les noms rencontrés dans les vues.
+    // Sérialisé en DICTIONNAIRE indexé par identifiant, comme `views` et `contexts` : c'est la
+    // seule forme d'objet que `Type_JSON` sait porter (pas de tableau d'objets), et l'unicité
+    // de l'identifiant y est structurelle.
     const defs_raw = json_object['view_label_defs']
     const defs: Type_ViewLabelDef[] = []
-    if (Array.isArray(defs_raw)) {
-      defs_raw.forEach(d => {
-        if (!d || typeof d !== 'object' || Array.isArray(d)) return
+    if (defs_raw && typeof defs_raw === 'object' && !Array.isArray(defs_raw)) {
+      Object.entries(defs_raw as Type_JSON).forEach(([id, d]) => {
+        if (id === '' || !d || typeof d !== 'object' || Array.isArray(d)) return
         const entry = d as Type_JSON
-        const id = entry['id']
         const name = entry['name']
-        if (typeof id !== 'string' || id === '' || typeof name !== 'string') return
-        if (defs.some(x => x.id === id)) return
+        if (typeof name !== 'string' || name === '') return
         const group = entry['group']
         defs.push(typeof group === 'string' && group !== ''
           ? { id, name, group }
