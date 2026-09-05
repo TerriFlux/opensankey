@@ -2,6 +2,14 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [1.3.2] — 2026-09-05
+
+- **Chargement : quatre dessins de flux refaits en moins** (os#1377). Deux causes,
+  toutes deux invisibles au total : des dessins hors de toute passe — donc hors de
+  la separation ancres/trace de 1.3.1 — et un mode d affichage rejoue avant la
+  mise en page. Le compteur `out_of_pass_draws` les a designes ; un test
+  verrouille desormais leur absence.
+
 ## [Non publié]
 
 ### Réconciliation
