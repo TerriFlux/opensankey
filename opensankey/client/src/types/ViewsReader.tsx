@@ -235,6 +235,22 @@ export class ViewsReader {
         // Hook OSP : migration heredited_attr (édition). No-op en lecture OS.
         this.onViewParsed(view_id, view_json as Type_JSON)
       })
+    // os#1358 — Ordre explicite s'il est là ; sinon l'ordre des clés de `views` fait foi, ce
+    // que la boucle ci-dessus vient d'établir — un fichier antérieur se relit donc à
+    // l'identique. On ignore les ids inconnus et on garde en queue les vues absentes de la
+    // liste : un fichier partiellement à jour ne perd aucune vue.
+    const order_raw = json_object['views_order']
+    if (Array.isArray(order_raw)) {
+      const known = new Set(this.host.views_order)
+      const explicit = [...new Set(
+        order_raw.filter((id): id is string => typeof id === 'string' && known.has(id))
+      )]
+      const seen = new Set(explicit)
+      const rest = this.host.views_order.filter(id => !seen.has(id))
+      this.host.views_order.length = 0
+      this.host.views_order.push(...explicit, ...rest)
+    }
+
     let active_view_id = getStringFromJSON(json_object, 'current_view', MASTER_VIEW_ID)
     if (this.host.is_static && active_view_id == MASTER_VIEW_ID) active_view_id = Object.keys(views_json)[0]
     // current_view peut pointer vers une vue absente (vieux fichier, vue supprimée) => master.

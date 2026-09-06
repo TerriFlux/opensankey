@@ -35,6 +35,10 @@ export type Type_ViewEntry = {
   // fichier antérieur porte des noms : ils sont migrés à la lecture (cf.
   // `parseViewExtraFields`), de façon transparente.
   labels?: string[]
+  // os#1358 — Texte libre de l'auteur sur la vue. Page, section et site en ont un
+  // (`WorkbookNode.doc`, `Workbook.doc`) ; la vue, qui est pourtant l'unité publiable,
+  // n'en avait pas. Candidat naturel au texte d'accompagnement d'une page publiée.
+  description?: string
 }
 
 /**
@@ -166,6 +170,11 @@ export class ViewsQuery {
       const ids = [...new Set(cleaned.map(l => this.labelIdFromIdOrName(l, true)))]
       if (ids.length > 0) entry.labels = ids
     }
+    // os#1358 — description de la vue. Clé `view_description`, PAS `description` : au même
+    // niveau, la racine du JSON d'une vue est celle d'une DrawingArea, et lui prendre un nom
+    // générique est exactement ce qui avait détruit les zones de texte avec `labels`.
+    const desc = view_json['view_description']
+    if (typeof desc === 'string' && desc !== '') entry.description = desc
   }
 
   // --- Annuaire des labels (os#1357) -------------------------------------------------------
