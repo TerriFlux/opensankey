@@ -391,6 +391,20 @@ describe('#153 lockRecyclingStatusDivergences — passe post-chargement', () => 
     expect(g.node('A').output_links_list[0].shape_is_recycling_locked).toBe(false)
   })
 
+  it('ne fabrique pas un recyclage absent du fichier (flux vertical montant)', () => {
+    // Le classique « Flux de matiere de l'economie » : l'atelier au centre, les satellites au
+    // dessus (exports, emissions) et en dessous (imports). Un flux vertical qui MONTE recule sur
+    // les rangees, mais le fichier ne l'a jamais dit en recyclage et l'ancienne regle ne l'y
+    // mettait pas non plus (la cible est a droite). Il doit rester droit, pas devenir une boucle.
+    const g = buildGraph(['ATELIER', 'EXPORTS'],
+      [{ from: 'ATELIER', to: 'EXPORTS', orientation: 'vv' }])
+    const locked = g.core.lockRecyclingStatusDivergences(g.nodes,
+      { ATELIER: 3, EXPORTS: 6 }, { ATELIER: 2, EXPORTS: 0 })
+    expect(g.node('ATELIER').output_links_list[0].shape_is_recycling).toBe(false)
+    expect(locked).toEqual(['ATELIER->EXPORTS'])
+    expect(g.node('ATELIER').output_links_list[0].shape_is_recycling_locked).toBe(true)
+  })
+
   it('verrouille une divergence que l\'ancienne regle n\'explique pas', () => {
     // Les DEUX regles donnent ce flux vertical en recyclage (il recule sur x comme sur y), mais
     // le fichier le dit non-recyclage : aucune sequelle du bug ne l'explique, c'est un choix
