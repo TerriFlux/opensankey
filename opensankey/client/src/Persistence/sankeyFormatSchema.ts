@@ -20,6 +20,50 @@ import { z } from 'zod'
 const jsonObjectBag = z.object({}).passthrough()
 
 /**
+ * os#1378 (U0) — un port de brique : un nœud d'échange vu comme interface du
+ * procédé. Contrairement au reste de la racine, la structure est ici CONTRAINTE
+ * (et non laissée en passthrough) : c'est un contrat neuf, sans historique de
+ * fichiers à ménager, et `direction` est ce qui décide du côté du bilan.
+ */
+const unitaryProcessPortSchema = z
+  .object({
+    direction: z.enum(['input', 'output']),
+    port_type: z.string().optional(),
+    // Par unité d'activité ; somme des entrées = 1 (convention V1, non vérifiée
+    // ici — cf. types/UnitaryProcess.ts).
+    coefficient: z.number().optional(),
+    // Référence du registre d'unités du diagramme (OS#1286), multi-flux U4.
+    unit_ref: z.string().optional(),
+  })
+  .passthrough()
+
+/**
+ * os#1378 (U0) — la section racine `process`, qui fait d'un fichier OpenSankey
+ * ordinaire une BRIQUE Sankey unitaire. Additive : absente de tout fichier qui
+ * n'est pas une brique (cf. FORMAT.md, pas d'incrément de `format_version`).
+ */
+const unitaryProcessSchema = z
+  .object({
+    // Seul membre requis : l'id du nœud qui EST le procédé.
+    central_node_id: z.string(),
+    // Nomenclature de ports partagée entre briques (version non épinglée = courante).
+    nomenclature_ref: z
+      .object({ name: z.string(), version: z.string().optional() })
+      .passthrough()
+      .optional(),
+    // Niveau d'activité auquel les coefficients ont été établis.
+    activity_reference: z
+      .object({ value: z.number(), unit_ref: z.string().optional() })
+      .passthrough()
+      .optional(),
+    // Durée de vie en années (dimension dynamique WooDyn).
+    lifetime_years: z.number().optional(),
+    // Un port par nœud d'échange, keyé par id de nœud.
+    ports: z.record(unitaryProcessPortSchema).optional(),
+  })
+  .passthrough()
+
+/**
  * Schéma de la racine du document Sankey. `.passthrough()` : toute clé non listée
  * (theme, ratio_*_constraints, réglages de drawing area, etc.) est acceptée telle
  * quelle — on ne valide que l'enveloppe.
@@ -42,6 +86,17 @@ export const sankeyRootSchema = z
     // `views` (concept OpenSankey+) : forme variable selon l'époque (objet keyé
     // par id OU tableau). Non contraint pour éviter les faux positifs (cf. #233).
     views: z.unknown().optional(),
+    // os#1378 — section brique Sankey unitaire, absente des fichiers ordinaires.
+    //
+    // `.catch()` : ce schéma-ci est un BARRAGE (`DrawingAreaPersistence.fromJSON`
+    // LÈVE quand la validation trouve un problème), et une section `process`
+    // abîmée ne doit surtout pas rendre un fichier inouvrable — le diagramme
+    // reste parfaitement lisible, il n'est simplement pas une brique. Le contrat
+    // est donc DÉCRIT ici (et publié dans sankey.schema.json, `required`
+    // compris) mais ARBITRÉ par `unitaryProcessFromJSON`, qui écarte la section
+    // en entier et rend `null`. La valeur de repli n'est jamais consommée :
+    // `validateSankeyRootJSON` ne lit que les erreurs, jamais la donnée parsée.
+    process: unitaryProcessSchema.catch({ central_node_id: '' }).optional(),
   })
   .passthrough()
 

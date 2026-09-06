@@ -48,7 +48,80 @@
           "properties": {},
           "additionalProperties": true
         },
-        "views": {}
+        "views": {},
+        "process": {
+          "type": "object",
+          "properties": {
+            "central_node_id": {
+              "type": "string"
+            },
+            "nomenclature_ref": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "additionalProperties": true
+            },
+            "activity_reference": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "number"
+                },
+                "unit_ref": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "value"
+              ],
+              "additionalProperties": true
+            },
+            "lifetime_years": {
+              "type": "number"
+            },
+            "ports": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "direction": {
+                    "type": "string",
+                    "enum": [
+                      "input",
+                      "output"
+                    ]
+                  },
+                  "port_type": {
+                    "type": "string"
+                  },
+                  "coefficient": {
+                    "type": "number"
+                  },
+                  "unit_ref": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "direction"
+                ],
+                "additionalProperties": true
+              }
+            }
+          },
+          "required": [
+            "central_node_id"
+          ],
+          "additionalProperties": true
+        }
       },
       "additionalProperties": true
     }

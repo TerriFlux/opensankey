@@ -63,6 +63,10 @@ import { sortNodesElements } from '../Elements/NodeBase'
 import { ALL_ATTRIBUTES_CONFIG, default_title_bold, default_title_font_size, default_title_id, default_title_text } from '../Elements/ElementsAttributesConfig'
 import { Class_ElementStyle, Class_ProtoElement, StorageType } from '../Elements/Element'
 import { Class_ContainerElement } from '../Elements/TextZone'
+// os#1378 — section `process` (brique Sankey unitaire). Module FEUILLE : import
+// de valeur sans risque de cycle, il ne dépend lui-même de rien à l'exécution.
+import { unitaryProcessClone } from './UnitaryProcess'
+import type { Type_UnitaryProcess } from './UnitaryProcess'
 
 // One Ratio Flux constraint row (mirror of SankeyExcelParser
 // iter_ratio_flux_constraints / the "Ratio Flux" Excel sheet). "*" on a side
@@ -180,6 +184,13 @@ export class Class_Sankey {
   // antérieure : l'inspecteur le dit, il n'invente pas d'explication.
   private _determination: Type_DeterminationCatalog | undefined = undefined
 
+  // os#1378 (U0) — section `process` du fichier : ce qui fait de ce diagramme
+  // une BRIQUE Sankey unitaire (nœud procédé central, ports typés, coefficients
+  // d'échange, niveau d'activité, durée de vie). `null` = ce n'est pas une
+  // brique, c'est un diagramme ordinaire — l'immense majorité des fichiers ;
+  // la clé est alors absente du JSON. Cf. NOTE-SANKEY-UNITAIRES.md §5.
+  private _unitary_process: Type_UnitaryProcess | null = null
+
   // Thème du diagramme (cf. NOTE-THEMES.md). `opensankey` est volontairement vide :
   // il décrit le comportement historique plutôt qu'il ne le change.
   private _theme: Class_Theme = themeOpenSankey()
@@ -204,6 +215,7 @@ export class Class_Sankey {
     this._ratio_stock_flux_constraints = []
     this._stock_chaining_constraints = []
     this._spreadsheet_state = {}
+    this._unitary_process = null
     this._units.resetToDefault()
 
     this._styles[default_style_id] = this.createNewElementStyle(default_style_id, default_style_name, false)
@@ -258,6 +270,15 @@ export class Class_Sankey {
 
   public set determination(_: Type_DeterminationCatalog | undefined) {
     this._determination = _
+  }
+
+  /** os#1378 — section `process` : `null` quand le diagramme n'est pas une brique. */
+  public get unitary_process(): Type_UnitaryProcess | null {
+    return this._unitary_process
+  }
+
+  public set unitary_process(_: Type_UnitaryProcess | null) {
+    this._unitary_process = _
   }
 
   public delete() {
@@ -386,6 +407,11 @@ export class Class_Sankey {
       })
     // OS#1286 — copie du registre d'unités
     this._units.copyFrom(sankey_to_copy.units)
+    // os#1378 — copie de la section brique, EN PROFONDEUR : partager la
+    // référence ferait que retyper un port de la copie retyperait l'original.
+    this._unitary_process = sankey_to_copy.unitary_process !== null
+      ? unitaryProcessClone(sankey_to_copy.unitary_process)
+      : null
   }
 
   public get container_activated() { return this._container_activated }
