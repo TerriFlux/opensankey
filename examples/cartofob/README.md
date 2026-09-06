@@ -31,19 +31,32 @@ Pour pointer un fichier distant plutot que local, remplacer `DIAGRAM_URL` par un
 absolue ; le serveur doit alors autoriser le CORS (open-sankey.fr renvoie
 `Access-Control-Allow-Origin: *` sur ses modeles).
 
-## Etiquette de vue, et non vue
+## Filtrer une vue, ou en ouvrir une : deux props, deux choses
 
-Le selecteur « Essence » passe une **etiquette de vue** (`view_tag_selection`), pas un
-identifiant de vue. C'est la difference notable avec cartofob-sankey : la resolution
-« la valeur designe une VUE, ouvre-la comme le selecteur de vue » appartient a
-`@terriflux/sankeyapplication`. Dans le paquet MIT, la valeur est une etiquette, plus
-le mot-cle `all` qui eteint le filtre du groupe (retour a l'agrege).
+Le selecteur « Essence » melange trois familles, et elles ne se pilotent pas pareil.
 
-Ici les deux reviennent au meme : les 11 vues du fichier sont des vues « light »
-engendrees depuis ce meme groupe d'etiquettes, donc filtrer sur l'etiquette produit
-exactement le dessin de la vue correspondante. Un fichier dont les vues portent une
-geometrie propre (vues « heavy ») demanderait, lui, le paquet complet — ou un
-remontage sur `current_view`, comme le fait [`../viewer`](../viewer).
+| choix | prop utilisee | effet |
+|---|---|---|
+| « Agregees » (le nom vient du fichier) | `view_tag_selection` = `all` | eteint le filtre : on voit la vue **maitre** |
+| une essence (Hetre, Douglas…) | `view_tag_selection` = l'etiquette | **filtre** la vue courante par cette etiquette |
+| « Toutes essences » | `view` = l'identifiant de la vue | **ouvre** une vue autonome |
+
+La distinction n'est pas cosmetique. `view_tag_selection` filtre la vue **courante** ;
+`view` (sa#397, id **ou** nom) en **ouvre** une autre. Les 11 vues d'essence sont des
+vues « light » engendrees depuis le meme groupe d'etiquettes : filtrer sur l'etiquette
+donne exactement le meme dessin qu'ouvrir la vue. Mais « Toutes essences » est une vue
+**autonome**, avec sa geometrie propre — les onze essences cote a cote — qu'aucun filtre
+ne reconstitue. Confondre les deux fait afficher une vue en croyant en afficher une autre.
+
+Les deux props sont **reactives** : le viewer les reapplique en place, sans remontage.
+
+Le selecteur ne code aucun identifiant en dur. Une vue est reputee autonome quand
+`generated_from_group_id` lui manque, et son nom se lit soit a plat, soit dans le delta
+de vue (`__patch.name.$set`, encodage arrive avec `format_version: 3`). Une vue autonome
+ajoutee au classeur apparaitra donc d'elle-meme.
+
+Le troisieme selecteur pilote `position_mode` : echelle adaptee a la selection courante,
+ou absolue — auquel cas les regions se comparent entre elles.
 
 ## Lancer
 
@@ -57,6 +70,26 @@ npm run build    # build/ pret a servir
 Aucun jeton n'est necessaire, `@terriflux/opensankey` est sur npmjs public. Le `.npmrc`
 ne contient qu'un `legacy-peer-deps=true`, indispensable parce que `react-scripts@5`
 declare `typescript@^3 || ^4` en peer alors que l'exemple compile en TypeScript 5.
+
+### Essayer un changement de la bibliotheque, sans publier
+
+```bash
+OS_LOCAL=1 npm start        # rechargement a chaud sur les sources du depot
+OS_LOCAL=1 npm run build    # build de verification
+```
+
+Par defaut l'exemple consomme le paquet **publie** — c'est ce qui garantit qu'il
+s'installe sans jeton, chez un integrateur comme sur CodeSandbox. Le revers etait la
+boucle d'essai : pour voir l'effet d'une modification de la bibliotheque, il fallait la
+faire fusionner, publier une version, jouer le miroir, puis attendre CodeSandbox.
+
+`OS_LOCAL=1` reroute `@terriflux/opensankey/src` vers `opensankey/client/src` et ajoute
+ces fichiers au perimetre de transpilation — sans quoi les `.tsx` de la bibliotheque
+arrivent bruts au bundler, CRA ne compilant que le `src/` de l'application.
+
+Le drapeau est **inerte par defaut** : ni CodeSandbox ni la CI ne le posent. Il n'a de
+sens que dans le monorepo ; dans une copie isolee de l'exemple, la configuration s'arrete
+avec un message explicite plutot que de compiler autre chose que ce qu'on croit.
 
 ## En ligne
 

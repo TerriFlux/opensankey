@@ -39,6 +39,7 @@ import { getStringFromJSON, Type_DataSource, Type_IntervalDisplay, Type_Disaggre
 import { ratio_flux_constraint_traduction } from '../types/Utils'
 import { originFromJSON, originToJSON } from '../types/Origin'
 import { determinationCatalogFromJSON, determinationCatalogToJSON } from '../types/Determination'
+import { unitaryProcessFromJSON, unitaryProcessToJSON } from '../types/UnitaryProcess'
 import { Class_ContainerElement } from '../Elements/TextZone'
 import { Class_NodeElement } from '../Elements/Node'
 import { ConfigType } from '../Elements/ElementsAttributesConfig'
@@ -1499,6 +1500,12 @@ export class SankeyPersistence {
     // ici pour que l'enregistrement survive à une sauvegarde depuis l'appli.
     if (sankey.determination)
       json_object['determination'] = determinationCatalogToJSON(sankey.determination)
+    // os#1378 (U0) — section `process` : ce qui fait de ce fichier une BRIQUE
+    // Sankey unitaire (nœud procédé, ports typés, coefficients d'échange…).
+    // Additive, et la clé est OMISE quand le diagramme n'est pas une brique :
+    // un fichier ordinaire se réécrit octet pour octet comme avant.
+    if (sankey.unitary_process !== null)
+      json_object['process'] = unitaryProcessToJSON(sankey.unitary_process)
     // Out
     return json_object
   }
@@ -1781,6 +1788,14 @@ export class SankeyPersistence {
     // pointeraient à côté produiraient des explications vraisemblables et
     // fausses, ce que l'axe A a déjà payé une fois.
     sankey.determination = determinationCatalogFromJSON(json_object['determination'])
+
+    // os#1378 (U0) — section `process` (brique Sankey unitaire). Additive :
+    // clé absente -> null, c'est un diagramme ordinaire. Une section illisible
+    // est rejetée EN ENTIER (cf. unitaryProcessFromJSON) : une brique
+    // partiellement lue aurait des coefficients d'entrée qui ne sommeraient
+    // plus à 1, et la composition (U3) fermerait ses bilans sur un procédé
+    // amputé sans que rien ne le signale.
+    sankey['_unitary_process'] = unitaryProcessFromJSON(json_object['process'])
 
     // Legacy migration: older files store the %IS/%OS/... family per-link via
     // value_option; fold them into the canonical list (sankeyexcelparser#116).
