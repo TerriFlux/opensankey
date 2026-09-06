@@ -1330,17 +1330,9 @@ export const buttonStyles = {
     _active: {
       color: 'white  '
     }
-  }),
-  btn_create_unitary_from_nodes: defineStyle({
-    height: '1.5rem',
-    padding: '0.5rem',
-    fontSize: 'unset',
-    backgroundColor: 'primaire.2',
-    color: 'white',
-    _active: {
-      backgroundColor: 'secondaire.2  '
-    },
   })
+  // os#1382 — la variante `btn_create_unitary_from_nodes` est retirée : son seul usage
+  // était le bouton « Générer » de la modale de création de vues unitaires, supprimée.
 }
 
 // ===============================

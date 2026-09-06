@@ -24,9 +24,10 @@
 // `visible_output_links_list` (`Elements/Node.tsx:2570` et `:2573`), jamais
 // `input_links_list` : sur un diagramme à plusieurs niveaux, les listes complètes
 // mêlent le flux agrégé et ses enfants, et l'étoile double-compterait (symptôme
-// Bois Savoie). Et on ne les lit que sur le diagramme SOURCE : après création d'un
-// view tag unitaire, `is_unitary_tag` court-circuite la porte des niveaux
-// (`Node.tsx:2753-2754`) et ces getters ne veulent plus dire la même chose.
+// Bois Savoie). On les lit sur le diagramme SOURCE, avant toute amputation —
+// la brique, elle, ne contient plus que l'étoile, ses getters de visibilité
+// n'ont donc plus la même assiette. (Historique : les view tags unitaires et
+// leur bypass de la porte des niveaux ont été supprimés par os#1382.)
 //
 // NŒUDS D'ÉCHANGE — l'extraction travaille sur l'état ÉCLATÉ (les nœuds splittés
 // par `afterFromJSON`), parce que ce sont ces identifiants-là que la clé de `ports`
@@ -44,6 +45,7 @@
 // qui fait qu'une brique est un fichier OpenSankey ordinaire.
 
 import { Class_ApplicationData } from '../types/ApplicationData'
+import { DrawingAreaPersistence } from '../Persistence/SankeyPersistence'
 import { link_ratio_constraint } from '../types/Utils'
 import { unitaryAssemblyToJSON, unitaryAssemblyFromJSON } from '../types/UnitaryAssembly'
 import type { Class_NodeElement } from '../Elements/Node'
@@ -241,6 +243,95 @@ const jsonSubObject = (json: Type_JSON, key: string): { [id: string]: unknown } 
   (json[key] as { [id: string]: unknown } | undefined) ?? {}
 
 /**
+ * Fabrique le JSON d'UNE brique : copie complète de la source puis suppression de
+ * tout ce qui est hors de l'étoile, et pose de la section `process`.
+ *
+ * C'est le geste unique partagé par `extractUnitaryBricks` (qui l'appelle une
+ * fois par procédé) et `extractUnitaryBrickFor` (qui l'appelle une seule fois,
+ * pour un nœud arbitraire). Le JSON source lui est PASSÉ : l'appelant en série ne
+ * le resérialise pas à chaque brique — et chacun choisit le NIVEAU auquel il
+ * sérialise (application pour l'extraction, drawing area pour l'aperçu, cf.
+ * `extractUnitaryBrickFor`).
+ */
+const buildBrickJSON = (
+  source_json: Type_JSON,
+  star: Set<string>,
+  process_section: Type_UnitaryProcess
+): Type_JSON => {
+  const brick_app = loadDetachedApp(source_json)
+  const brick_sankey = brick_app.drawing_area.sankey
+  // Copie complète puis suppression : `deleteNode` cascade sur les flux, donc
+  // l'ordre « flux puis nœuds » n'a pas à être orchestré ici.
+  brick_sankey.nodes_list
+    .filter(brick_node => !star.has(brick_node.id))
+    .forEach(brick_node => brick_app.drawing_area.deleteNode(brick_node))
+  brick_sankey.unitary_process = process_section
+  return brick_app.toJSON(SERIALIZATION_KWARGS) as Type_JSON
+}
+
+/**
+ * L'étoile d'UN nœud arbitraire, rendue comme un fichier OpenSankey de brique —
+ * la matière première de l'APERÇU unitaire (os#1382, chantier U5).
+ *
+ * Le board unitaire accepte tout nœud VISIBLE qui n'est pas un nœud d'échange
+ * (cf. `ModalUnitarySankeyOSP.tsx`, `centralCandidates`) : produit, secteur, ou
+ * nœud d'un diagramme sans groupe `'type de noeud'` du tout. On ne filtre donc
+ * PAS sur le tag `secteur` ici — c'est la différence avec `extractUnitaryBricks`,
+ * qui, lui, dérive un modèle de procédés et n'a de sens que sur les secteurs.
+ *
+ * `null` quand le nœud est inconnu ou invisible : il n'y a alors pas d'étoile à
+ * montrer, et ce n'est pas une erreur (un focus sur un nœud masqué par un
+ * changement de niveau, par exemple).
+ *
+ * PERF — O(graphe) par appel : la brique est fabriquée par copie complète du
+ * global puis suppression, comme les briques de l'extraction. C'est assumé,
+ * parce que c'est exactement le coût d'ouverture du board unitaire d'aujourd'hui
+ * (`buildUnitaryDrawingArea` sérialise et recharge le global entier). Un focus
+ * successif sur N nœuds paie donc N fois ce prix, pas une fois.
+ *
+ * POURQUOI CE POINT D'ENTRÉE SÉRIALISE AU NIVEAU DRAWING AREA, et non
+ * `app_data.toJSON` comme `extractUnitaryBricks` — deux raisons, toutes deux
+ * propres à l'aperçu :
+ *
+ *  1. LA VUE AFFICHÉE. Sur une application à vues hors du maître
+ *     (`ApplicationDataOSP._toJSONWithoutContextOverlay`), `toJSON` rend à la
+ *     racine le MAÎTRE et range la vue courante dans `_views`. On lit pourtant le
+ *     nœud, ses flux et leurs valeurs sur `app_data.drawing_area`, c'est-à-dire
+ *     sur la VUE : la brique serait découpée dans un autre diagramme que celui
+ *     qu'on vient de mesurer, et l'aperçu montrerait l'étoile du maître avec les
+ *     coefficients de la vue. `DrawingAreaPersistence.toJSON` sérialise
+ *     exactement la drawing area qu'on a lue — la même, toujours.
+ *  2. ZÉRO EFFET DE BORD. Ce même chemin gzippe la vue courante dans `_views` et
+ *     lève `ref_to_save_in_cache_indicator`. L'aperçu s'ouvre et se refocalise à
+ *     chaque clic : il n'a rien à faire enregistrer.
+ *
+ * L'aval ne change pas : la RACINE d'un fichier OpenSankey EST un JSON de
+ * drawing area (`ApplicationData._toJSON` n'ajoute que des clés de niveau
+ * application par-dessus). Le rechargement dans une application neuve, ici comme
+ * côté board, lit donc la même chose. Les kwargs passent tels quels :
+ * `keep_siblings` est consommé plus bas, par `SankeyPersistence.toJSON` (c'est
+ * lui qui décide d'écrire les nœuds d'échange éclatés ou agrégés) ; seul
+ * `without_sheets` devient sans objet, les feuilles étant de niveau application
+ * — une brique n'en portait de toute façon aucune.
+ *
+ * `extractUnitaryBricks`, lui, RESTE au niveau application : son shell doit être
+ * le global entier, clés d'application comprises, sous peine de casser la recette
+ * `global → (briques + assemblage) → global` du chantier U2.
+ */
+export const extractUnitaryBrickFor = (
+  app_data: Class_ApplicationData,
+  node_id: string
+): Type_JSON | null => {
+  const drawing_area = app_data.drawing_area
+  const node = drawing_area.sankey.nodes_dict[node_id] as Class_NodeElement | undefined
+  if (node === undefined || !node.is_visible) return null
+  const source_json = DrawingAreaPersistence.toJSON(drawing_area, SERIALIZATION_KWARGS) as Type_JSON
+  // La section `process` se lit sur le diagramme SOURCE, avant toute amputation
+  // (cf. « niveau d'agrégation » en tête de module).
+  return buildBrickJSON(source_json, starNodeIds(node), buildProcessSection(node))
+}
+
+/**
  * Extrait d'un global chargé un fichier OpenSankey de brique par procédé, plus le
  * fichier d'assemblage qui porte l'échelle de chaque brique, le graphe port-à-port
  * et le SHELL — le global amputé de tout ce qui est parti dans une brique.
@@ -267,16 +358,7 @@ export const extractUnitaryBricks = (app_data: Class_ApplicationData): Type_Unit
 
   const bricks: { [process_node_id: string]: Type_JSON } = {}
   process_nodes.forEach(node => {
-    const star = stars[node.id]
-    const brick_app = loadDetachedApp(global_json)
-    const brick_sankey = brick_app.drawing_area.sankey
-    // Copie complète puis suppression : `deleteNode` cascade sur les flux, donc
-    // l'ordre « flux puis nœuds » n'a pas à être orchestré ici.
-    brick_sankey.nodes_list
-      .filter(brick_node => !star.has(brick_node.id))
-      .forEach(brick_node => brick_app.drawing_area.deleteNode(brick_node))
-    brick_sankey.unitary_process = process_sections[node.id]
-    bricks[node.id] = brick_app.toJSON(SERIALIZATION_KWARGS) as Type_JSON
+    bricks[node.id] = buildBrickJSON(global_json, stars[node.id], process_sections[node.id])
   })
 
   // Le shell : le global moins ce que les briques emportent. On lit les identifiants

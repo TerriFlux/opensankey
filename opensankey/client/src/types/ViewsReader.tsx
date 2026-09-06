@@ -229,14 +229,16 @@ export class ViewsReader {
   /**
    * Applique la sélection de visibilité d'une vue sur le Sankey OS courant : pour chaque groupe
    * de view tags, sélectionne l'étiquette demandée + active le mode filtre, ou éteint le filtre
-   * si la vue ne contraint pas ce groupe (vue complète). Les groupes unitaires câblés sont
-   * laissés à leur propre logique.
+   * si la vue ne contraint pas ce groupe (vue complète).
+   *
+   * os#1382 : plus de cas particulier pour les groupes unitaires câblés — ils ne sont
+   * plus créés, et un ancien fichier qui en porte les décrit avec view_mode=false, donc
+   * la boucle les traverse sans rien changer.
    */
   public applyViewTagSelection(selection: { [view_tagg_id: string]: string } | undefined) {
     const sankey = this.host.drawing_area.sankey
     let changed = false
     Object.values(sankey.view_taggs_dict).forEach((group) => {
-      if (group.id === 'unitary' || group.id === 'product_unitary' || group.id === 'sector_unitary') return
       const selected_label = selection ? selection[group.id] : undefined
       if (selected_label) {
         group.activated = true
