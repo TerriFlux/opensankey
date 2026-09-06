@@ -27,7 +27,7 @@ import type { Class_DataTagGroup } from '../../types/TagGroup'
 import type { Type_PositionMode } from '../../types/PublishOptions'
 
 /** Sections du tiroir de filtres (miroir de `TagFilterMode` dans Toolbar.tsx). */
-export type Type_TagFilterMode = 'element' | 'level' | 'data' | 'unitary' | 'flux'
+export type Type_TagFilterMode = 'element' | 'level' | 'data' | 'flux'
 
 /** Ce que la décision a besoin de savoir d'un groupe de tags. */
 export type Type_PositionModeCandidate = {
@@ -41,8 +41,8 @@ export type Type_PositionModeCandidate = {
  *
  * @param tagg groupe de tags rendu par l'hôte
  * @param is_data_group vrai si le groupe est une DIMENSION (et non une étiquette) — les
- * sections « Étiquettes de nœuds », « Niveaux » et le tableau unitaire rendent des
- * groupes qui ne pilotent aucune donnée : le mode n'y a pas de sens.
+ * sections « Étiquettes de nœuds » et « Niveaux » rendent des groupes qui ne
+ * pilotent aucune donnée : le mode n'y a pas de sens.
  * @param enabled gate d'affichage (cf. `positionModeSelectorEnabled`)
  */
 export const shouldShowDimensionPositionMode = (
