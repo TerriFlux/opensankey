@@ -252,6 +252,14 @@ export class NodePositioningCyclesCore {
    * est recalcule au lieu d'etre verrouille. Une divergence que l'ancienne regle n'explique pas
    * reste, elle, un choix d'auteur — verrouille comme avant.
    *
+   * SENS UNIQUE de la guerison : elle ne defait qu'un recyclage enregistre A TORT (true → false),
+   * jamais l'inverse. Le bug d'axe SURDECLARAIT le recyclage (comparaison large sur x) ; un statut
+   * `false` n'en est donc jamais une sequelle. Le prendre pour tel FABRIQUAIT une boucle que
+   * l'auteur n'a jamais vue : dans un diagramme classique a satellites (imports sous l'atelier,
+   * exports au-dessus), tout flux vertical montant est « en arriere » sur les rangees alors qu'il
+   * progresse normalement, et se retrouvait dessine en recyclage au chargement. Ces flux-la sont
+   * desormais verrouilles sur la valeur du fichier, comme n'importe quelle autre divergence.
+   *
    * @returns les ids des flux verrouilles par la passe (les flux gueris n'y figurent pas).
    */
   public lockRecyclingStatusDivergences(
@@ -281,7 +289,10 @@ export class NodePositioningCyclesCore {
         const legacy_target = horizontal_indexes[link_data.target.id]
         const legacy_geometric =
           legacy_source !== undefined && legacy_target !== undefined && legacy_source >= legacy_target
-        if (link_data.shape_is_recycling === legacy_geometric) {
+        // Guerison a SENS UNIQUE : seul un recyclage enregistre (true) que l'ancienne regle
+        // explique peut etre defait. Un `false` n'est jamais une sequelle du bug d'axe — le
+        // « guerir » inventerait une boucle absente du fichier.
+        if (link_data.shape_is_recycling === true && legacy_geometric === true) {
           link_data.shape_is_recycling = geometric
           healed.push(link_data.id)
           return
