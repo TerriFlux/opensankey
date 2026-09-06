@@ -1,7 +1,12 @@
 import { Class_ApplicationData } from '../types/ApplicationData'
 import { CURRENT_FORMAT_VERSION } from '../Persistence/persistenceMigrations'
-import { extractUnitaryBricks, composeUnitaryBricks } from './UnitaryExtraction'
+import { extractUnitaryBricks, extractUnitaryBrickFor, composeUnitaryBricks } from './UnitaryExtraction'
+import { updateUnitaryStyles } from './UnitaryBoard'
 import { unitaryAssemblyFromJSON, unitaryAssemblyToJSON } from '../types/UnitaryAssembly'
+import {
+  SankeyUnitaryNodeStyle, SankeyUnitaryNodeInputStyle, SankeyUnitaryNodeOutputStyle,
+  LinkInUnitaryStyle, LinkOutUnitaryStyle, node_unitary_styles, elementStyleConfigs
+} from '../Elements/ElementStyle'
 import type { Type_UnitaryProcess } from '../types/UnitaryProcess'
 import type { Type_JSON } from '../types/Utils'
 
@@ -456,5 +461,190 @@ describe('os#1379 — module UnitaryAssembly (lecture et ecriture)', () => {
   it('composer depuis un assemblage illisible leve une erreur explicite', () => {
     expect(() => composeUnitaryBricks({}, { bricks: {} } as Type_JSON))
       .toThrow(/assemblage/)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 8. os#1382 (U5) — la brique d UN nœud arbitraire, matiere de l apercu
+// ---------------------------------------------------------------------------
+
+/**
+ * `extractUnitaryBrickFor` sert l APERCU unitaire : le board accepte tout nœud
+ * VISIBLE non-echange (cf. `centralCandidates` de ModalUnitarySankeyOSP), donc un
+ * produit et un nœud de diagramme sans groupe « type de noeud » aussi bien qu un
+ * secteur. C est la difference avec `extractUnitaryBricks`, qui derive un modele
+ * de procedes et ne retient que les secteurs.
+ */
+describe('os#1382 — brique d un nœud arbitraire', () => {
+  it('rend l etoile d un nœud PRODUIT, section process comprise', () => {
+    const app = loadApp(bipartite())
+    // Pmid est un produit : il n a jamais de brique dans l extraction complete.
+    const brick = extractUnitaryBrickFor(app, 'Pmid') as Type_JSON
+    expect(brick).not.toBeNull()
+    // L etoile de Pmid : lui-meme, son amont S1, son aval S2 — et rien d autre.
+    expect(nodeIdsOf(brick)).toEqual(['Pmid', 'S1', 'S2'])
+    expect(linkIdsOf(brick)).toEqual(['mid_s2', 's1_mid'])
+    const process = processOf(brick)
+    expect(process.central_node_id).toBe('Pmid')
+    expect(process.activity_reference).toEqual({ value: 40 })
+    // Les cles de ports sont les ids des VOISINS, pas ceux des flux.
+    expect(Object.keys(process.ports).sort()).toEqual(['S1', 'S2'])
+    expect(process.ports.S1).toEqual({ direction: 'input', coefficient: 1 })
+    expect(process.ports.S2).toEqual({ direction: 'output', coefficient: 1 })
+  })
+
+  it('laisse le diagramme source intact', () => {
+    const app = loadApp(bipartite())
+    const before = dump(app)
+    extractUnitaryBrickFor(app, 'Pmid')
+    expect(dump(app)).toEqual(before)
+  })
+
+  it('rend null sur un nœud inconnu ou invisible', () => {
+    expect(extractUnitaryBrickFor(loadApp(bipartite()), 'Pfantome')).toBeNull()
+    // `Pd1` porte le niveau « Detail », non selectionne : il existe mais n est pas
+    // visible, et une etoile qu on ne peut pas montrer n en est pas une.
+    const app = loadApp(deuxNiveaux())
+    expect(app.drawing_area.sankey.nodes_dict['Pd1']).toBeDefined()
+    expect(app.drawing_area.sankey.nodes_dict['Pd1'].is_visible).toBe(false)
+    expect(extractUnitaryBrickFor(app, 'Pd1')).toBeNull()
+  })
+
+  it('marche sur un diagramme sans groupe type de noeud', () => {
+    // Le cas que l ancien board couvrait par sa branche « unitary » simple : aucun
+    // tag de type, donc aucun procede — mais l etoile d un nœud reste definie.
+    const brick = extractUnitaryBrickFor(loadApp(sansTypeDeNoeud()), 'A') as Type_JSON
+    expect(brick).not.toBeNull()
+    expect(nodeIdsOf(brick)).toEqual(['A', 'B'])
+    expect(linkIdsOf(brick)).toEqual(['a_b'])
+    const process = processOf(brick)
+    expect(process.central_node_id).toBe('A')
+    // `A` n a aucune entree : repli documente sur ses sorties.
+    expect(process.activity_reference).toEqual({ value: 3 })
+    expect(process.ports.B).toEqual({ direction: 'output', coefficient: 1 })
+  })
+
+  it('rend un fichier OpenSankey complet, qui se recharge tel quel', () => {
+    // La source est serialisee au niveau DRAWING AREA (et non application) pour
+    // que l apercu decoupe la VUE affichee, sans effet de bord d enregistrement.
+    // La racine d un fichier ETANT un JSON de drawing area, la brique reste un
+    // fichier ordinaire : elle porte le socle et fait l aller-retour.
+    const brick = extractUnitaryBrickFor(loadApp(bipartite()), 'Pmid') as Type_JSON
+    expect(brick.format_version).toBe(CURRENT_FORMAT_VERSION)
+    expect(brick.nodeTags).toBeDefined()
+    const reloaded = dump(loadApp(brick))
+    expect(nodeIdsOf(reloaded)).toEqual(['Pmid', 'S1', 'S2'])
+    expect(linkIdsOf(reloaded)).toEqual(['mid_s2', 's1_mid'])
+    expect(processOf(reloaded)).toEqual(processOf(brick))
+    // Et un second aller-retour ne bouge plus : la brique est un point fixe.
+    expect(canon(reloaded)).toEqual(canon(brick))
+  })
+
+  it('ne se laisse pas piper par les niveaux masques', () => {
+    // `S1` a quatre flux de sortie dans le fichier, un seul visible : l etoile ne
+    // doit porter que le niveau agrege (meme garde que l extraction complete).
+    const brick = extractUnitaryBrickFor(loadApp(deuxNiveaux()), 'S1') as Type_JSON
+    expect(nodeIdsOf(brick)).toEqual(['Pin', 'Ptot', 'S1'])
+    expect(processOf(brick).activity_reference).toEqual({ value: 40 })
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 9. os#1382 (U5) — updateUnitaryStyles pilote par le centre
+// ---------------------------------------------------------------------------
+
+/**
+ * Les styles UNITAIRES assignes a un element. On filtre : `computeAutoSankey`
+ * (appele par `updateUnitaryStyles`) pose en plus les styles d extremite, et les
+ * styles structurels sont la depuis la construction — ils ne sont pas le sujet.
+ */
+const UNITARY_STYLE_IDS: string[] = [
+  SankeyUnitaryNodeStyle, SankeyUnitaryNodeInputStyle, SankeyUnitaryNodeOutputStyle,
+  LinkInUnitaryStyle, LinkOutUnitaryStyle
+]
+const unitaryStyleIdsOf = (element: { style: readonly { id: string }[] }): string[] =>
+  element.style.map(style => style.id).filter(id => UNITARY_STYLE_IDS.includes(id)).sort()
+
+const nodeStyleIds = (app: Class_ApplicationData, node_id: string): string[] =>
+  unitaryStyleIdsOf(app.drawing_area.sankey.nodes_dict[node_id])
+const linkStyleIds = (app: Class_ApplicationData, link_id: string): string[] =>
+  unitaryStyleIdsOf(app.drawing_area.sankey.links_dict[link_id])
+
+/**
+ * Les styles unitaires ne font pas partie de `base_styles` : c est l appelant qui
+ * les cree sur le diagramme du board (cf. `buildUnitaryDrawingArea`, OS+). Sans
+ * eux, `addStyle` ne poserait rien — et ce test ne mesurerait rien.
+ */
+const creerStylesUnitaires = (app: Class_ApplicationData): void => {
+  node_unitary_styles.forEach(style_id =>
+    app.drawing_area.sankey.create_internal_style(style_id, elementStyleConfigs))
+}
+
+/** Une brique de `Pmid` chargee dans une application neuve, prete a styler. */
+const briqueDePmid = (): Class_ApplicationData => {
+  const app = loadApp(extractUnitaryBrickFor(loadApp(bipartite()), 'Pmid') as Type_JSON)
+  creerStylesUnitaires(app)
+  return app
+}
+
+describe('os#1382 — updateUnitaryStyles sur une brique', () => {
+  it('pose le style central sur le nœud donne en parametre', () => {
+    const app = briqueDePmid()
+    updateUnitaryStyles(app.drawing_area, 'Pmid')
+    expect(nodeStyleIds(app, 'Pmid')).toEqual([SankeyUnitaryNodeStyle])
+    // Et le board memorise ce centre pour son cadrage.
+    expect(app.drawing_area.unitary_center_node_id).toBe('Pmid')
+  })
+
+  it('pose les styles entree et sortie selon la topologie', () => {
+    const app = briqueDePmid()
+    updateUnitaryStyles(app.drawing_area, 'Pmid')
+    // S1 alimente Pmid : c est une entree. S2 en recoit : c est une sortie.
+    expect(nodeStyleIds(app, 'S1')).toEqual([SankeyUnitaryNodeInputStyle])
+    expect(nodeStyleIds(app, 'S2')).toEqual([SankeyUnitaryNodeOutputStyle])
+    expect(linkStyleIds(app, 's1_mid')).toEqual([LinkInUnitaryStyle])
+    expect(linkStyleIds(app, 'mid_s2')).toEqual([LinkOutUnitaryStyle])
+  })
+
+  it('retrouve le centre dans la section process quand on ne le lui donne pas', () => {
+    const app = briqueDePmid()
+    // C est la voie de l apercu : la brique porte son centre, l appelant n a rien
+    // a savoir du diagramme.
+    expect(app.drawing_area.sankey.unitary_process?.central_node_id).toBe('Pmid')
+    updateUnitaryStyles(app.drawing_area)
+    expect(nodeStyleIds(app, 'Pmid')).toEqual([SankeyUnitaryNodeStyle])
+    expect(nodeStyleIds(app, 'S1')).toEqual([SankeyUnitaryNodeInputStyle])
+  })
+
+  it('centrer sur un autre nœud repart d une feuille blanche', () => {
+    const app = briqueDePmid()
+    updateUnitaryStyles(app.drawing_area, 'Pmid')
+    // Deuxieme focus, sur S2 : Pmid devient une entree de S2, et ne garde AUCUN
+    // reste du passage precedent.
+    updateUnitaryStyles(app.drawing_area, 'S2')
+    expect(nodeStyleIds(app, 'S2')).toEqual([SankeyUnitaryNodeStyle])
+    expect(nodeStyleIds(app, 'Pmid')).toEqual([SankeyUnitaryNodeInputStyle])
+    expect(app.drawing_area.unitary_center_node_id).toBe('S2')
+  })
+
+  it('ne touche a rien sans centre resoluble', () => {
+    // Un diagramme ordinaire : pas de section process, pas de parametre. L ancien
+    // code cherchait des view tags ; le garde reste le meme — on sort avant
+    // d avoir pose quoi que ce soit, bypass_redraws compris.
+    const app = loadApp(bipartite())
+    creerStylesUnitaires(app)
+    expect(app.drawing_area.sankey.unitary_process).toBeNull()
+    // `bypass_redraws` remis a false a la main : c est l etat d un diagramme qui
+    // dessine, et ce que le garde doit rendre intact (sinon tous les draw() qui
+    // suivent deviennent des no-op silencieux).
+    app.drawing_area.bypass_redraws = false
+    updateUnitaryStyles(app.drawing_area)
+    expect(nodeStyleIds(app, 'S1')).toEqual([])
+    expect(app.drawing_area.unitary_center_node_id).toBeUndefined()
+    expect(app.drawing_area.bypass_redraws).toBe(false)
+    // Un id qui ne designe aucun nœud est traite comme une absence de centre.
+    updateUnitaryStyles(app.drawing_area, 'Pfantome')
+    expect(nodeStyleIds(app, 'S1')).toEqual([])
+    expect(app.drawing_area.bypass_redraws).toBe(false)
   })
 })
