@@ -2306,7 +2306,20 @@ export class Class_ApplicationData {
     // Labels rich-text → <text> SVG natifs, pour que l'export se rende sans la feuille de
     // style de la page (cf. Persistence/foreignObjectToSvgText).
     const clone_node = d3_select?.node()
-    if (clone_node && convert_fo) convertForeignObjectsInPlace(clone_node)
+    if (clone_node && convert_fo) {
+      convertForeignObjectsInPlace(clone_node)
+      // Blink (Chrome, Edge) considère qu'un SVG contenant un <foreignObject> n'est PAS
+      // « origin-clean » : le dessiner sur un canvas souille celui-ci, et toBlob lève
+      // alors « Tainted canvases may not be exported ». L'export PNG échouait donc sous
+      // Chrome sur TOUT diagramme, même à un seul flux, alors qu'il passait sous Firefox.
+      // Or il en reste toujours : convertForeignObjectsInPlace épargne délibérément ceux
+      // qui portent un [contenteditable] — le champ d'édition en ligne posé sous chaque
+      // label, masqué tant qu'on ne double-clique pas. Ce sont des accessoires d'édition,
+      // ils n'ont rien à faire dans un export : on les retire du clone. Les <foreignObject>
+      // que la conversion n'a pas su traduire partent aussi, faute de quoi ils
+      // continueraient de bloquer l'export entier pour un seul label récalcitrant.
+      clone_node.querySelectorAll('foreignObject').forEach(fo => fo.remove())
+    }
 
     const legend_w = !this.drawing_area.legend.masked ? this.drawing_area.legend.width : 0
 
