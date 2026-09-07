@@ -126,6 +126,12 @@ export interface SankeyGlobals {
   level_filter?: boolean          // default true : section "niveaux/hiérarchies" (level_taggs) dans le drawer
   node_filter?: boolean           // default true : section "tags d'éléments" (node/flux_taggs) dans le drawer
   data_filter?: boolean           // default true : section "sélection de données" (data_taggs) dans le drawer
+  // os#1359 — case « Toutes données » (reveal_data_links) dans « Données affichées ».
+  // DÉFAUT FALSE, à l'inverse des autres filtres : elle révèle les flux porteurs d'une donnée
+  // collectée tous niveaux confondus, donc la matière première de l'étude. L'ouvrir à un
+  // visiteur est un geste d'auteur, et aucune page déjà publiée ne doit changer d'aspect.
+  // En édition la case reste visible sans cette option.
+  data_links_reveal?: boolean     // default false
 
   // Interaction (viewer publish)
   lock_zoom?: boolean             // default false : bloque le zoom molette/scale (le pan au bouton milieu reste actif)
@@ -198,6 +204,7 @@ export interface PublishOptions {
   level_filter: boolean
   node_filter: boolean
   data_filter: boolean
+  data_links_reveal: boolean
   lock_zoom: boolean
   tooltip_on_hover: boolean
   language: string | null
@@ -429,6 +436,7 @@ export const getPublishOptions = (): PublishOptions => {
     level_filter: bool(s.level_filter, true),
     node_filter: bool(s.node_filter, true),
     data_filter: bool(s.data_filter, true),
+    data_links_reveal: bool(s.data_links_reveal, false),
     lock_zoom: bool(s.lock_zoom, false),
     tooltip_on_hover: bool(s.tooltip_on_hover, false),
     language: str(s.language),
@@ -495,6 +503,7 @@ export type ViewerSankeyOptions = {
   level_filter?: boolean
   node_filter?: boolean
   data_filter?: boolean
+  data_links_reveal?: boolean
   lock_zoom?: boolean
   tooltip_on_hover?: boolean
   language?: string
@@ -527,7 +536,7 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
     'logo', 'header', 'diagram', 'diagram_layout', 'diagram_layout_options',
     'diagrams_list', 'sous_filieres',
     'data_type', 'data_type_intervals', 'value_filter',
-    'view_filter', 'level_filter', 'node_filter', 'data_filter',
+    'view_filter', 'level_filter', 'node_filter', 'data_filter', 'data_links_reveal',
     'lock_zoom', 'tooltip_on_hover', 'language', 'header_i18n',
     'minimum_flux', 'position_mode', 'scale_adapted_reference',
     'data_tag_selection', 'view_tag_selection',
