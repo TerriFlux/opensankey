@@ -123,6 +123,16 @@ export const resources_loading_toasts = {
           loading: {
             title: 'Computing nodes positions',
           },
+        },
+        value_edit: {
+          collected_kept: {
+            title: 'Collected data kept',
+            desc: 'You have just corrected a reconciled result: the collected datum of the flow is left untouched. Switch the data layer to \'Collected\' to edit the input datum itself.'
+          },
+          result_dropped: {
+            title: 'Reconciled result dropped',
+            desc: 'The collected datum of this flow has changed: its reconciled result no longer follows from it and has been removed. Run the reconciliation again to obtain a new one.'
+          }
         }
       },
     }
@@ -252,6 +262,16 @@ export const resources_loading_toasts = {
             title: 'Recalcul des positions des noeuds',
           },
         },
+        value_edit: {
+          collected_kept: {
+            title: 'Donnée collectée conservée',
+            desc: 'Vous venez de corriger un résultat réconcilié : la donnée collectée du flux reste intacte. Basculez la couche de données sur « Collectées » pour modifier la donnée d\'entrée elle-même.'
+          },
+          result_dropped: {
+            title: 'Résultat réconcilié périmé',
+            desc: 'La donnée collectée de ce flux a changé : son résultat réconcilié n\'en découle plus et a été retiré. Relancez la réconciliation pour en obtenir un nouveau.'
+          }
+        }
       },
     }
   },
@@ -380,6 +400,16 @@ export const resources_loading_toasts = {
             title: 'Calculando posiciones de los nodos',
           },
         },
+        value_edit: {
+          collected_kept: {
+            title: 'Dato recopilado conservado',
+            desc: 'Acaba de corregir un resultado reconciliado: el dato recopilado del flujo permanece intacto. Cambie la capa de datos a «Recopilados» para modificar el propio dato de entrada.'
+          },
+          result_dropped: {
+            title: 'Resultado reconciliado descartado',
+            desc: 'El dato recopilado de este flujo ha cambiado: su resultado reconciliado ya no se deriva de él y se ha retirado. Vuelva a ejecutar la reconciliación para obtener uno nuevo.'
+          }
+        }
       },
     }
   },
@@ -508,6 +538,16 @@ export const resources_loading_toasts = {
             title: 'Knotenpositionen werden berechnet',
           },
         },
+        value_edit: {
+          collected_kept: {
+            title: 'Erfasster Wert bleibt erhalten',
+            desc: 'Sie haben soeben ein abgeglichenes Ergebnis korrigiert: der erfasste Wert des Flusses bleibt unangetastet. Wechseln Sie die Datenebene auf „Erfasst“, um den Eingangswert selbst zu bearbeiten.'
+          },
+          result_dropped: {
+            title: 'Abgeglichenes Ergebnis verworfen',
+            desc: 'Der erfasste Wert dieses Flusses hat sich geändert: sein abgeglichenes Ergebnis folgt nicht mehr daraus und wurde entfernt. Führen Sie den Abgleich erneut aus, um ein neues zu erhalten.'
+          }
+        }
       },
     }
   },
@@ -636,6 +676,16 @@ export const resources_loading_toasts = {
             title: 'Calcolo delle posizioni dei nodi',
           },
         },
+        value_edit: {
+          collected_kept: {
+            title: 'Dato raccolto conservato',
+            desc: 'Hai appena corretto un risultato riconciliato: il dato raccolto del flusso resta intatto. Cambia il livello di dati su «Raccolti» per modificare il dato di ingresso stesso.'
+          },
+          result_dropped: {
+            title: 'Risultato riconciliato scartato',
+            desc: 'Il dato raccolto di questo flusso è cambiato: il suo risultato riconciliato non ne deriva più ed è stato rimosso. Rilancia la riconciliazione per ottenerne uno nuovo.'
+          }
+        }
       },
     }
   },
@@ -760,6 +810,16 @@ export const resources_loading_toasts = {
           loading: {
             title: '正在计算节点位置',
           },
+        },
+        value_edit: {
+          collected_kept: {
+            title: '已保留采集数据',
+            desc: '您刚刚修正的是协调后的结果：该流量的采集数据保持不变。若要修改输入数据本身，请将数据层切换为“采集”。'
+          },
+          result_dropped: {
+            title: '协调结果已作废',
+            desc: '该流量的采集数据已变更：其协调结果不再由其推导，已被移除。请重新运行协调以获得新结果。'
+          }
         }
       },
     }
@@ -885,6 +945,16 @@ export const resources_loading_toasts = {
           loading: {
             title: 'ノードの位置を計算中',
           },
+        },
+        value_edit: {
+          collected_kept: {
+            title: '収集データを保持しました',
+            desc: '調整済みの結果を修正しました。このフローの収集データはそのまま保たれます。入力データ自体を編集するには、データ層を「収集」に切り替えてください。'
+          },
+          result_dropped: {
+            title: '調整結果を破棄しました',
+            desc: 'このフローの収集データが変わったため、調整結果はそれに由来しなくなり削除されました。新しい結果を得るには調整を再実行してください。'
+          }
         }
       },
     }
