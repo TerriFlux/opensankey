@@ -7,7 +7,9 @@
 //     pour COUPER l'apparition automatique), et une page déjà publiée qui ne la pose pas garde
 //     donc exactement le comportement décidé par la présence d'une référence.
 
-import { applyPositionMode } from './positionModeHost'
+import {
+  applyPositionMode, setScaleAdaptedReferenceDataTag, scaleAdaptedReferenceDataTagOf
+} from './positionModeHost'
 import { getPublishOptions } from '../../types/PublishOptions'
 import type { Class_ApplicationData } from '../../types/ApplicationData'
 import type { Class_DataTagGroup } from '../../types/TagGroup'
@@ -61,6 +63,56 @@ describe('os#1366 applyPositionMode — reglage de lecture, volatile', () => {
     applyPositionMode(app_data, tagg, 'absolute')
     expect(trace.save_in_cache).toEqual([])
     expect(trace.serialisations).toBe(0)
+  })
+})
+
+// os#1383 — La référence du mode « échelle adaptée » se DÉSIGNE. Le modèle existait depuis
+// os#1372 (`scale_adapted_reference_datatag`, persisté et lu par l'algorithme) mais aucune
+// interface ne le posait : la grandeur de référence restait celle capturée au vol, donc
+// dépendante du chemin de clics. Ce geste est la commande manquante.
+describe('os#1383 setScaleAdaptedReferenceDataTag — la reference est enoncee', () => {
+  const makeRefStubs = () => {
+    const { app_data, tagg, trace } = makeStubs()
+    const oublis: number[] = []
+    let ids: string[] = []
+    // La zone de dessin réduite à ce que le geste touche, setter compris : c'est lui qui
+    // oublie la base capturée contre l'ANCIENNE référence.
+    const drawing_area = {
+      get scale_adapted_reference_datatag() { return ids },
+      set scale_adapted_reference_datatag(v: string[]) { ids = v; oublis.push(1) },
+    }
+    Object.defineProperty(app_data, 'drawing_area', { value: drawing_area, configurable: true })
+    Object.defineProperty(tagg, 'tags_list', {
+      value: [{ id: 'chene', name: 'Chêne' }, { id: 'pin', name: 'Pin maritime' }],
+      configurable: true,
+    })
+    return { app_data, tagg, trace, oublis, lire: () => ids, poser: (v: string[]) => { ids = v } }
+  }
+
+  it('designe un tag, et le relit', () => {
+    const { app_data, tagg, trace, oublis } = makeRefStubs()
+    setScaleAdaptedReferenceDataTag(app_data, tagg, 'chene')
+    expect(scaleAdaptedReferenceDataTagOf(app_data, tagg)).toBe('chene')
+    // La base capturée est oubliée : elle valait contre une autre référence.
+    expect(oublis).toEqual([1])
+    // Rejouer le mode est ce qui fait VOIR la nouvelle référence.
+    expect(trace.applied_force).toEqual([true])
+  })
+
+  it('remplace la reference de SA dimension et laisse celle des autres', () => {
+    const { app_data, tagg, poser, lire } = makeRefStubs()
+    poser(['pin', 'annee_2020'])
+    setScaleAdaptedReferenceDataTag(app_data, tagg, 'chene')
+    // Au plus un tag par dimension : `pin` cède la place, `annee_2020` reste.
+    expect(lire()).toEqual(['annee_2020', 'chene'])
+  })
+
+  it('undefined libere la reference : retour a la selection courante', () => {
+    const { app_data, tagg, poser, lire } = makeRefStubs()
+    poser(['chene', 'annee_2020'])
+    setScaleAdaptedReferenceDataTag(app_data, tagg, undefined)
+    expect(lire()).toEqual(['annee_2020'])
+    expect(scaleAdaptedReferenceDataTagOf(app_data, tagg)).toBeUndefined()
   })
 })
 
