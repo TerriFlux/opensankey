@@ -107,9 +107,21 @@ describe('os#1344 — flèches directionnelles au survol', () => {
 
   const hoverEvent = { buttons: 0 } as unknown as React.MouseEvent<HTMLButtonElement, React.MouseEvent>
 
+  // sa#422 — les flèches sont COUPÉES par défaut : chaque test qui les attend à l'écran
+  // rallume explicitement l'interrupteur, comme le fait le bouton « Sélection ».
+  it('par défaut, aucune flèche au survol : l\'interrupteur part coupé', () => {
+    const { drawing_area, source } = buildDrawnApp()
+    drawing_area.setSelectionMode()
+    expect(drawing_area.connection_arrows_off).toBe(true)
+
+    drawing_area.connection_gesture.onNodeHover(source, hoverEvent)
+    expect(document.getElementById('g_connection_gesture')).toBeNull()
+  })
+
   it('survol d\'un nœud en mode sélection : les 4 flèches apparaissent ; masquage immédiat OK', () => {
     const { drawing_area, source } = buildDrawnApp()
     drawing_area.setSelectionMode()
+    drawing_area.connection_arrows_off = false
     expect(drawing_area.editable).toBe(true)
     expect(drawing_area.isInSelectionMode()).toBe(true)
 
@@ -125,6 +137,7 @@ describe('os#1344 — flèches directionnelles au survol', () => {
   it('pas de flèches pendant un geste (bouton enfoncé) ni hors mode sélection', () => {
     const { drawing_area, source } = buildDrawnApp()
     drawing_area.setSelectionMode()
+    drawing_area.connection_arrows_off = false
 
     const dragging = { buttons: 1 } as unknown as React.MouseEvent<HTMLButtonElement, React.MouseEvent>
     drawing_area.connection_gesture.onNodeHover(source, dragging)
@@ -151,6 +164,7 @@ describe('os#1344 — flèches directionnelles au survol', () => {
   it('bascule de l\'interrupteur pendant que les flèches sont affichées : elles disparaissent aussitôt', () => {
     const { drawing_area, source } = buildDrawnApp()
     drawing_area.setSelectionMode()
+    drawing_area.connection_arrows_off = false
 
     drawing_area.connection_gesture.onNodeHover(source, hoverEvent)
     expect(document.getElementById('g_connection_gesture')).not.toBeNull()
@@ -169,6 +183,7 @@ describe('os#1344 — flèches directionnelles au survol', () => {
   it('pas de flèches sur une zone de texte (seuls les vrais nœuds du modèle en ont)', () => {
     const { drawing_area, sankey } = buildDrawnApp()
     drawing_area.setSelectionMode()
+    drawing_area.connection_arrows_off = false
     // Sans dessin (bypass) : le rendu d'une ZDT passe par d3-textwrap, non supporté
     // en jsdom, et le guard testé (vrai nœud du modèle) n'a pas besoin du DOM.
     const zdt = drawing_area.withBypassRedraws(() => sankey.addNewDefaultContainer(), false)
