@@ -64,7 +64,12 @@ export const registerBaseRepresentations = (): void => {
     // Même critère que `hasDocToShow` (publishedDoc, couche éditeur) : la doc
     // embarquée dans le diagramme, ou le document prêté par la page publiée.
     // Recopié plutôt qu'importé — OS base ne remonte pas vers l'éditeur.
+    //
+    // os#1356 — le critère ne vaut QU'EN LECTURE. En édition, l'onglet est le seul
+    // endroit d'où l'on ÉCRIT la documentation : l'exiger déjà écrite le rendrait
+    // inatteignable sur tout diagramme qui n'en a pas encore.
     isAvailable: ({ app_data }: { app_data: Class_ApplicationData }) =>
+      !app_data.is_static ||
       app_data.documentation_markdown !== '' ||
       app_data.menu_configuration.doc_external !== null,
     toggle: {
@@ -78,6 +83,7 @@ export const registerBaseRepresentations = (): void => {
     scale: 'diagram',
     order: 40,
     label: (a) => a.t('Spreadsheet.zone.unitary'),
+    short_label: (a) => a.t('Spreadsheet.zone.unit'),
     icon: <FaShareAlt />,
     publish_option: 'unitary',
     // La brique est portée par OS+, qui lève ce drapeau. Sans OS+, l'entrée

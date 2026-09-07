@@ -116,6 +116,13 @@ type Type_RepresentationCommon = {
   order: number
   /** Libellé déjà traduit. */
   label: (app_data: Class_ApplicationData) => string
+  /**
+   * os#1356 — abrégé traduit pour un sélecteur qui n'a pas la place du libellé
+   * entier (les boutons de la barre du haut font 2,7 rem : « Sankey unitaire » y
+   * était tronqué là où l'existant écrivait « Unit. »). Absent = le libellé sert
+   * des deux côtés ; c'est le cas normal, seuls les noms longs le posent.
+   */
+  short_label?: (app_data: Class_ApplicationData) => string
   /** Icône du bouton du sélecteur. */
   icon?: React.ReactNode
   /** Exigences sur le DIAGRAMME (cf. Type_RepresentationNeeds). */
