@@ -320,6 +320,46 @@ export class Class_ApplicationData {
   protected _from_json_will_draw = false
   public get from_json_will_draw(): boolean { return this._from_json_will_draw }
 
+  /**
+   * os#1359 — Ce qui a déjà été dit une fois n'est pas redit. Voir `notifyUser`.
+   */
+  private _notified_once: Set<string> = new Set()
+
+  /**
+   * os#1359 — un mot bref, non bloquant, sur une conséquence que la saisie ne montre pas
+   * d'elle-même (typiquement : quelle couche de données vient d'être écrite, et laquelle
+   * vient d'être périmée).
+   *
+   * `once` vaut pour une règle de fonctionnement, qui ne change pas d'une saisie à l'autre :
+   * la répéter à chaque valeur corrigée transformerait l'explication en gêne, et l'utilisateur
+   * apprendrait surtout à ne plus lire les bandeaux. L'`id` dédoublonne aussi le reste, sans
+   * quoi corriger vingt flux sélectionnés empilerait vingt fois le même message.
+   *
+   * Silencieux tant qu'aucun toast n'est monté (rendu hors React, tests, mode publié sans
+   * ChakraProvider) : c'est un confort de lecture, jamais une condition d'exécution.
+   */
+  public notifyUser(
+    id: string,
+    title: string,
+    description?: string,
+    status: 'info' | 'warning' = 'info',
+    once: boolean = false
+  ): void {
+    if (!this._toast) return
+    if (once) {
+      if (this._notified_once.has(id)) return
+      this._notified_once.add(id)
+    } else if (this._toast.isActive(id)) return
+    this._toast({
+      id,
+      title,
+      description,
+      status,
+      duration: default_toast_duration,
+      isClosable: true
+    })
+  }
+
   public createNewMenuConfiguration(toast: CreateToastFnReturn | null = null): Class_MenuConfig {
     this._toast = toast
     this._menu_configuration = new Class_MenuConfig()
