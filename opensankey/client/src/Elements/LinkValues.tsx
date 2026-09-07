@@ -181,21 +181,54 @@ export class Class_ElementValueTree {
     return json_object
   }
 
+  /**
+   * @param mark_missing_as_absent FICHIERS LEGACY (cf. `SankeyPersistence.fromJSON`) : une
+   * étiquette de dataTag que le fichier ne mentionne PAS pour ce flux vaut « le flux n'existe
+   * pas là », et non « valeur pas encore saisie ». Les feuilles correspondantes sont donc
+   * marquées `structurally_absent` (#188), ce qui les masque au lieu de les tracer en fantôme
+   * pointillé. Sans ce marquage, un diagramme legacy à granularités alternatives (un flux par
+   * niveau, cf. « Filière végétale » : 18 flux au niveau 1, 50 au 2, 124 au 3) affichait à
+   * chaque niveau les flux des DEUX autres en pointillé. Les fichiers modernes portent le
+   * marqueur eux-mêmes (SEP l'écrit à la réconciliation) : pour eux une feuille absente garde
+   * son sens de valeur manquante, d'où la garde de version.
+   */
   public fromJSON(
     json_object: Type_JSON,
     matching_taggs_id: { [_: string]: string; } = {},
-    matching_tags_id: { [_: string]: { [_: string]: string; }; } = {}
+    matching_tags_id: { [_: string]: { [_: string]: string; }; } = {},
+    mark_missing_as_absent = false
   ) {
+    const cited_tag_ids = new Set<string>()
     Object.entries(json_object)
       .filter(([id,]) => id !== 'datatag_group')
       .forEach(([id, sub_json_object]) => {
-        if (typeof sub_json_object === 'object')
-          this.children[id]?.fromJSON(
-            sub_json_object as Type_JSON,
-            matching_taggs_id,
-            matching_tags_id
-          )
+        if (typeof sub_json_object === 'object') {
+          cited_tag_ids.add(id)
+          const child = this.children[id]
+          if (child instanceof Class_ElementValueTree)
+            child.fromJSON(
+              sub_json_object as Type_JSON,
+              matching_taggs_id,
+              matching_tags_id,
+              mark_missing_as_absent
+            )
+          else
+            child?.fromJSON(
+              sub_json_object as Type_JSON,
+              matching_taggs_id,
+              matching_tags_id
+            )
+        }
       })
+    if (!mark_missing_as_absent) return
+    Object.entries(this.children)
+      .filter(([id,]) => !cited_tag_ids.has(id))
+      .forEach(([, child]) => child.markStructurallyAbsent())
+  }
+
+  /** Cf. `fromJSON` : propage le marqueur #188 à toutes les feuilles de la branche. */
+  public markStructurallyAbsent() {
+    Object.values(this.children).forEach(child => child.markStructurallyAbsent())
   }
 
   // PUBLIC METHODS =====================================================================
@@ -617,6 +650,11 @@ export class Class_ElementValue {
   // dictionnaire champ par champ.
   public value_objective: string | null = null
   public value_objective_rank: number | null = null
+
+  /** Cf. `Class_ElementValueTree.fromJSON` : feuille qu'un fichier legacy ne mentionne pas. */
+  public markStructurallyAbsent() {
+    this.structurally_absent = true
+  }
 
   // VALUE VECTORS =====================================================================
   // Each vector has length = vectorSize (set by subclass).

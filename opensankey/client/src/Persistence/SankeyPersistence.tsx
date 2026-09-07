@@ -45,6 +45,7 @@ import { Class_NodeElement } from '../Elements/Node'
 import { ConfigType } from '../Elements/ElementsAttributesConfig'
 import { Class_BaseElement, Class_ElementStyle, Class_ProtoElement, ExtractAttributeValue, TRANSLATABLE_TEXT_ATTRIBUTES } from '../Elements/Element'
 import { Class_LinkElement } from '../Elements/Link'
+import { Class_ElementValueTree } from '../Elements/LinkValues'
 import { Class_NodeBase, Type_NameLabelSource } from '../Elements/NodeBase'
 import { Class_LegendConfig } from '../Elements/LegendGenerator'
 import { Class_Sankey, Type_RatioFluxConstraint, Type_RatioStockFluxConstraint, Type_StockChainingConstraint, Type_SpreadsheetState } from '../types/Sankey'
@@ -754,11 +755,24 @@ export class LinkElementPersistence extends ProtoElementPersistence {
       link.setDomainLocalScale(link.shape_local_link_scale)
     }
 
-    link['_values'].fromJSON(
-      getJSONFromJSON(json_object, 'value', {}),
-      matching_taggs_id,
-      matching_tags_id
-    )
+    // #188 — dans un fichier LEGACY, une étiquette de dataTag que le fichier ne mentionne pas
+    // pour ce flux veut dire « le flux n'existe pas là », pas « valeur à saisir » : les feuilles
+    // manquantes sont marquées absentes pour que le flux soit masqué, non tracé en fantôme
+    // pointillé (cf. Class_ElementValueTree.fromJSON).
+    const values = link['_values']
+    if (values instanceof Class_ElementValueTree)
+      values.fromJSON(
+        getJSONFromJSON(json_object, 'value', {}),
+        matching_taggs_id,
+        matching_tags_id,
+        kwargs?.['legacy_file'] === true
+      )
+    else
+      values.fromJSON(
+        getJSONFromJSON(json_object, 'value', {}),
+        matching_taggs_id,
+        matching_tags_id
+      )
     link.tooltip_text = getStringFromJSON(json_object, 'tooltip_text', '')
     // Issue #1225 — restaurer le marker d'expansion s'il est dans le JSON.
     if (getBooleanFromJSON(json_object, 'is_expansion_link', false)) {
@@ -796,7 +810,7 @@ export class LinkElementPersistence extends ProtoElementPersistence {
     const json_local = getJSONOrUndefinedFromJSON(json_object, 'local')
     if (
       json_local
-      && kwargs?.['legacy_forced_recycling'] === true
+      && kwargs?.['legacy_file'] === true
       // Clé moderne OU clé legacy `recycling` (fichiers < 0.92, cf. fromJSON_0_91 ligne 628 :
       // `recycling` -> `shape_is_recycling`). Sans la clé legacy ici, un recyclage forcé d'un
       // vieux fichier restait NON verrouillé → traité en auto par SEP à la réconciliation, qui
@@ -902,7 +916,8 @@ export class NodeElementPersistence extends NodeBasePersistence {
     matching_links_id: { [_: string]: string } = {}
   ) {
     // Input links
-    getStringListFromJSON(json_node_object, 'inputLinksId', [])
+    const input_ids = getStringListFromJSON(json_node_object, 'inputLinksId', [])
+    input_ids
       .forEach(l_id => {
         if (l_id !== 'ghost_link') {
           const link_id = matching_links_id[l_id] ?? l_id
@@ -910,22 +925,33 @@ export class NodeElementPersistence extends NodeBasePersistence {
         }
       })
     // Output links
-    getStringListFromJSON(json_node_object, 'outputLinksId', [])
+    const output_ids = getStringListFromJSON(json_node_object, 'outputLinksId', [])
+    output_ids
       .forEach(l_id => {
         if (l_id !== 'ghost_link') {
           const link_id = matching_links_id[l_id] ?? l_id
           node.addOutputLink(node.sankey.links_dict[link_id] as Class_LinkElement)
         }
       })
-    // Ordering
+    // Ordering — `links_order` quand le fichier la porte (les fichiers legacy la reçoivent de
+    // `convert_data_legacy`, qui la fabrique par `inputLinksId.concat(outputLinksId)`), sinon
+    // les deux listes E/S elles-mêmes.
+    //
+    // La liste est appliquée par `applyLinksOrder` (les flux cités d'abord, dans l'ordre de la
+    // liste, les autres à la suite), et NON par une affectation directe gardée par une égalité
+    // de longueurs. Cette égalité lâchait dès que le nœud portait un flux DES DEUX CÔTÉS : un
+    // flux qui boucle sur son nœud figure dans les deux listes, donc deux fois dans
+    // `links_order`, et la longueur enregistrée dépassait celle du nœud (« Filière végétale »,
+    // Transformation : 93 citations pour 80 flux). L'ordre du fichier était alors ABANDONNÉ en
+    // silence, et le nœud gardait l'ordre d'accrochage des flux à leur création
+    // (`Class_Sankey.createNewLink`), c'est-à-dire celui du dictionnaire `links` du fichier.
+    // Une affectation directe était en outre capable d'insérer des `undefined` (id cité mais
+    // inconnu) ou de perdre un flux non cité ; `applyLinksOrder` ne peut ni l'un ni l'autre.
     const ordered_link_ids = getStringListFromJSON(json_node_object, 'links_order', [])
-    if (ordered_link_ids.length === node.links_order.length) {
-      node['_links_order'] = ordered_link_ids
-        .map(_ => {
-          const link_id = matching_links_id[_] ?? _
-          return node.sankey.links_dict[link_id]
-        }) as Class_LinkElement[]
-    }
+    const wanted_order = (ordered_link_ids.length > 0 ? ordered_link_ids : [...input_ids, ...output_ids])
+      .filter(l_id => l_id !== 'ghost_link')
+      .map(l_id => matching_links_id[l_id] ?? l_id)
+    if (wanted_order.length > 0) node.applyLinksOrder(wanted_order)
   }
   public static fromJSON_pre_0_9(
     node: Class_NodeElement,
@@ -1684,14 +1710,18 @@ export class SankeyPersistence {
     }
 
     SankeyPersistence.load_tags(json_object, sankey)
-    // OpenSankey#711 — le fichier est-il ANTÉRIEUR à la sémantique tristate du recyclage ?
+    // Le fichier est-il ANTÉRIEUR aux sémantiques que le chargeur de flux doit migrer ?
     // Un `format_version` explicite (#22) suffit à le dire moderne ; sinon on retombe sur la
-    // version d'app écrite dans le fichier. Ce drapeau garde la migration « recycling=true ⇒
-    // verrouillé » côté flux, qui sinon fige le recyclage AUTO de tout fichier récent.
+    // version d'app écrite dans le fichier. Deux migrations en dépendent :
+    //  - OpenSankey#711, « recycling=true ⇒ verrouillé », qui sinon fige le recyclage AUTO de
+    //    tout fichier récent ;
+    //  - #188, une feuille de dataTag ABSENTE vaut « le flux n'existe pas pour cette étiquette »
+    //    (cf. Class_ElementValueTree.fromJSON), alors qu'un fichier moderne écrit le marqueur
+    //    lui-même et garde le sens « valeur pas encore saisie ».
     // NB : le `version` reçu ici est numérique (`+version` côté appelant) et vaut NaN pour les
     // versions à trois segments ('1.2.1') — il n'est pas exploitable pour ce seuil, d'où la
     // relecture de la racine.
-    const legacy_forced_recycling =
+    const legacy_file =
       getNumberOrUndefinedFromJSON(json_object, 'format_version') === undefined &&
       isVersionBelow(getStringOrUndefinedFromJSON(json_object, 'version'), '1.1.4')
     SankeyPersistence.load_links(
@@ -1701,7 +1731,7 @@ export class SankeyPersistence {
         version,
         link,
         link_json as Type_JSON,
-        { ...(kwargs ?? {}), legacy_forced_recycling }
+        { ...(kwargs ?? {}), legacy_file }
       )
     )
     // #1231 (1.1.5) — fichier au format « centre » (marqueur explicite node_pos_is_center) ⇒
