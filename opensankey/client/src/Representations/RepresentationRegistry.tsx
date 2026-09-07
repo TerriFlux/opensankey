@@ -25,13 +25,37 @@
 // Aucun `switch` à compléter ailleurs — c'est la recette de l'issue.
 //
 //  1. Écrire le rendu. La forme normale est IMPÉRATIVE : `draw(container, ctx)`
-//     dessine dans un conteneur DOM (d3, canvas, ce que vous voulez) et rend une
-//     fonction de démontage. C'est ce qu'attendent les hôtes existants (pop-up
-//     d'élément, panneau) et ce dont ont besoin camembert / histogramme / sunburst.
+//     dessine dans un conteneur DOM (d3, canvas, ce que vous voulez). C'est ce
+//     qu'attendent les hôtes existants (pop-up d'élément, panneau) et ce dont ont
+//     besoin camembert / histogramme / sunburst.
 //     La variante `toggle` est réservée aux représentations qui ont DÉJÀ leur
 //     hôte React et ne se dessinent donc pas dans un conteneur qu'on leur donne
 //     (Sankey, Tableur, Doc : la grande zone les monte, le registre ne fait que
 //     les allumer). N'inventez pas une troisième forme.
+//
+//  1bis. CE QUE `draw` REND — et quand fournir `redraw`.
+//     Trois retours sont légaux, du plus simple au plus complet :
+//       - `void`             : rien à défaire (rare).
+//       - `() => void`       : la fonction de DÉMONTAGE, et c'est tout.
+//       - `{ redraw?, cleanup? }` : le démontage ET un redessin sur place.
+//
+//     Fournissez `redraw` dès que la représentation dépend d'un axe du
+//     contrôleur qu'elle ne surveille pas elle-même : dataTag, niveau
+//     d'agrégation, couche de données, changement de vue. Ces changements ne
+//     touchent NI la taille du conteneur NI l'identité de l'entrée — l'hôte n'a
+//     donc aucune raison de vous démonter, et sans `redraw` il ne pourrait
+//     rafraîchir vos chiffres qu'en détruisant puis recréant votre dessin (ce
+//     qui perd l'état interne : survol, secteur ouvert, animation en cours).
+//     Le patron : isolez votre `draw()` interne et rendez-la comme `redraw`.
+//
+//     Le simple démontage suffit quand la représentation ne lit rien qui puisse
+//     changer sans qu'elle soit remontée, ou quand elle surveille déjà elle-même
+//     ce dont elle dépend — un ResizeObserver interne, par exemple, n'a pas
+//     besoin de `redraw` : le REDIMENSIONNEMENT reste l'affaire de la
+//     représentation, `redraw` est l'affaire des DONNÉES.
+//
+//     Ne pas fournir `redraw` reste parfaitement légal : l'hôte remontera
+//     l'entrée, comme il le fait aujourd'hui.
 //
 //  2. `representation_registry.register({ ... })` depuis une fonction
 //     `registerXxxRepresentations()` appelée par la couche (OS, OS+, SA) —
@@ -100,8 +124,27 @@ export type Type_RepresentationContext = {
   options: { [key: string]: unknown }
 }
 
-/** Démontage rendu par `draw` ; `void` quand il n'y a rien à défaire. */
+/** Démontage seul ; `void` quand il n'y a rien à défaire. */
 export type Type_RepresentationCleanup = (() => void) | void
+
+/**
+ * Poignée d'une représentation qui sait se REDESSINER sur place (os#1361, à la
+ * demande de D1). `redraw` sert aux changements de DONNÉES que la représentation
+ * ne surveille pas elle-même — dataTag, niveau, couche, vue : le conteneur n'a
+ * pas bougé, l'entrée non plus, la remonter perdrait l'état interne du dessin
+ * pour rien. Le redimensionnement, lui, reste l'affaire de la représentation.
+ */
+export type Type_RepresentationHandle = {
+  redraw?: () => void
+  cleanup?: () => void
+}
+
+/**
+ * Ce que `draw` a le droit de rendre. Les trois formes sont légales et la plus
+ * ancienne reste la plus simple : une représentation qui ne sait pas se
+ * redessiner rend sa fonction de démontage, comme avant, et l'hôte la remontera.
+ */
+export type Type_RepresentationMount = Type_RepresentationHandle | Type_RepresentationCleanup
 
 /** Clés BOOLÉENNES de PublishOptions — les seules qui puissent offrir ou retirer. */
 export type Type_PublishToggle = {
@@ -147,8 +190,8 @@ type Type_RepresentationCommon = {
  */
 export type Type_RepresentationEntry =
   | (Type_RepresentationCommon & {
-    /** Dessine dans le conteneur ; rend son démontage. */
-    draw: (container: HTMLElement, ctx: Type_RepresentationContext) => Type_RepresentationCleanup
+    /** Dessine dans le conteneur ; rend son démontage, ou une poignée complète. */
+    draw: (container: HTMLElement, ctx: Type_RepresentationContext) => Type_RepresentationMount
     toggle?: never
   })
   | (Type_RepresentationCommon & {
@@ -285,21 +328,69 @@ export const elementContext = (
 ): Type_RepresentationContext => ({ app_data, scale: 'element', element, options })
 
 /**
- * Monte une représentation par son id dans un conteneur, et rend son démontage.
- * Rend `undefined` si l'id est INCONNU ou si l'entrée n'est pas de la forme
- * `draw` : même tolérance que les blocs de présentation — une page publiée par
- * une version plus récente cite un id qu'on ne connaît pas, on le saute au lieu
- * de casser l'écran.
+ * Une représentation MONTÉE, vue par son hôte. Forme NORMALISÉE : quoi qu'ait
+ * rendu `draw`, l'hôte voit toujours ces trois champs — c'est ce qui lui permet
+ * de piloter camembert, sunburst ou unitaire sans connaître aucun des trois.
  */
-export const drawRepresentation = (
+export type Type_MountedRepresentation = {
+  /** Id de l'entrée montée. */
+  id: string
+  /** `null` quand la représentation ne sait pas se redessiner (cf. redrawMounted). */
+  redraw: (() => void) | null
+  /** Toujours appelable, même quand `draw` n'avait rien rendu à défaire. */
+  cleanup: () => void
+}
+
+/** Ramène les trois retours légaux de `draw` à la forme que l'hôte manipule. */
+const normalizeMount = (
+  mount: Type_RepresentationMount
+): { redraw: (() => void) | null, cleanup: () => void } => {
+  if (typeof mount === 'function') return { redraw: null, cleanup: mount }
+  if (mount && typeof mount === 'object') {
+    return {
+      redraw: typeof mount.redraw === 'function' ? mount.redraw : null,
+      cleanup: typeof mount.cleanup === 'function' ? mount.cleanup : () => { /* rien à défaire */ }
+    }
+  }
+  return { redraw: null, cleanup: () => { /* rien à défaire */ } }
+}
+
+/**
+ * Monte une représentation par son id dans un conteneur.
+ *
+ * Rend `null` si l'id est INCONNU, si l'entrée n'est pas de la forme `draw`, ou
+ * si son gate refuse : même tolérance que les blocs de présentation — une page
+ * publiée par une version plus récente cite un id qu'on ne connaît pas, on le
+ * saute au lieu de casser l'écran.
+ */
+export const mountRepresentation = (
   id: string,
   container: HTMLElement,
   ctx: Type_RepresentationContext
-): Type_RepresentationCleanup => {
+): Type_MountedRepresentation | null => {
   const entry = representation_registry.get(id)
-  if (!entry?.draw) return undefined
-  if (entry.gate && !entry.gate(ctx.app_data)) return undefined
-  return entry.draw(container, ctx)
+  if (!entry?.draw) return null
+  if (entry.gate && !entry.gate(ctx.app_data)) return null
+  return { id, ...normalizeMount(entry.draw(container, ctx)) }
+}
+
+/**
+ * Redessine une représentation montée SANS la démonter, sur un changement de
+ * données (dataTag, niveau, couche, vue).
+ *
+ * Rend `false` — sans rien casser — quand la représentation ne sait pas le
+ * faire, ou quand son redessin lève : à l'hôte de la remonter, ce qu'il savait
+ * déjà faire. C'est cette réponse booléenne qui dispense l'hôte de connaître la
+ * forme interne de chaque entrée.
+ */
+export const redrawMounted = (mounted: Type_MountedRepresentation | null): boolean => {
+  if (!mounted?.redraw) return false
+  try {
+    mounted.redraw()
+    return true
+  } catch {
+    return false
+  }
 }
 
 /** Libellé d'une représentation, ou '' si l'id est inconnu. */
