@@ -216,6 +216,17 @@ export class Class_LinkElement extends Class_LinkAttribute {
    */
   private _arrow_stamp = -1
   private _arrow_stamp_source = -1
+  /**
+   * os#1384 — ANCRE dont chaque pointe a été déduite, à côté de l'époque. L'époque seule ne
+   * suffit pas : elle ne change qu'à `Class_Sankey.draw`, alors qu'À L'INTÉRIEUR d'une passe les
+   * ancres bougent encore (un nœud placé après la cible, une migration de coordonnées après le
+   * premier dessin). Une pointe posée avant que l'ancre soit connue portait le numéro de l'époque
+   * courante, survivait donc à l'invalidation, et le `draw()` qui avait la bonne ancre réutilisait
+   * la forme périmée — mesuré à l'import e!Sankey « Building Energy Footprint » : pointe centrée
+   * sur y = 0 au lieu de 679,647, corps du flux juste.
+   */
+  private _arrow_stamp_anchor = ''
+  private _arrow_stamp_source_anchor = ''
   // Source notch (negative arrow) chevron, computed at node level and shared by
   // every link leaving the same node side (so several links draw a single notch).
   private _source_notch_shape: string | undefined
@@ -475,11 +486,33 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // vider ferait redemander au nœud l'éventail entier de son côté, alors qu'il vient de le
     // calculer pour ces positions-là. Hors d'un `Class_Sankey.draw` (`keeps_arrow_caches` faux),
     // on vide comme avant — c'est ce que réclament le glisser-déposer et `refreshArrow`.
+    // os#1384 — ...À CONDITION qu'elle ait été déduite de l'ancre COURANTE. L'époque ne change
+    // qu'entre deux passes ; l'ancre, elle, se fixe PENDANT la passe. Comparer les deux garde le
+    // gain d'os#1374 (une fois les positions posées, l'ancre ne bouge plus et le cache tient)
+    // sans laisser survivre une pointe calculée trop tôt.
     const da = this.sankey.drawing_area
     const keeps = da.keeps_arrow_caches
-    if (!(keeps && this._arrow_stamp === da.arrow_epoch)) this._arrow_shape = undefined
-    if (!(keeps && this._arrow_stamp_source === da.arrow_epoch)) this._arrow_shape_source = undefined
+    // Court-circuit voulu : la clé d'ancre n'est calculée que si l'époque concorde déjà.
+    const target_fresh = keeps && this._arrow_stamp === da.arrow_epoch &&
+      this._arrow_stamp_anchor === this._targetAnchorKey()
+    const source_fresh = keeps && this._arrow_stamp_source === da.arrow_epoch &&
+      this._arrow_stamp_source_anchor === this._sourceAnchorKey()
+    if (!target_fresh) this._arrow_shape = undefined
+    if (!source_fresh) this._arrow_shape_source = undefined
     this._source_notch_shape = undefined
+  }
+
+  /**
+   * os#1384 — Ancre RÉELLEMENT consommée par l'éventail, côté cible puis côté source : ce sont
+   * les mêmes valeurs que `Class_NodeElement.drawLinksArrow` lit pour placer l'apex
+   * (`bandTransversePos`), donc deux pointes d'ancres identiques ont la même géométrie.
+   */
+  private _targetAnchorKey(): string {
+    return this.position_x_end + '|' + this.position_y_end
+  }
+
+  private _sourceAnchorKey(): string {
+    return this.position_x_start + '|' + this.position_y_start
   }
 
   /**
@@ -1038,6 +1071,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
     // Draw only if we have starting & ending points
     if (starting_point && ending_point) {
+      // os#1384 — RE-invalider ICI, pas seulement dans `draw()`. `Element.draw()` appelle
+      // `_invalidateDrawCaches()` AVANT `_draw()`, donc avant les lignes ci-dessus qui
+      // rafraîchissent `_position` / `_position_ending` depuis les nœuds : le garde d'ancre y
+      // compare l'ancre de la passe PRÉCÉDENTE et conclut « rien n'a bougé » alors que l'ancre
+      // change juste après. Une pointe calculée quand l'ancre valait encore (0,0) survivait donc
+      // au dessin qui, lui, traçait le corps à la bonne place — corps juste, pointe restée en
+      // haut (import e!Sankey « Building Energy Footprint »). Le second appel voit les positions
+      // définitives ; quand rien n'a bougé il ne vide rien, donc le gain d'os#1374 tient.
+      this._invalidateDrawCaches()
       // Draw elements
       this.drawElements()
     }
@@ -1652,27 +1694,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
   private _is_visible_ignoring_container_modes(require_non_zero: boolean): boolean {
     if (this.sankey.drawing_area.drawing_link) {
       return super.is_visible
-    }
-    const unitary_tagg = this.sankey.view_taggs_dict['unitary']?.id || this.sankey.view_taggs_dict['product_unitary']?.id || this.sankey.view_taggs_dict['sector_unitary']?.id
-    if (unitary_tagg) {
-      const node_type = this.sankey.node_taggs_dict['type de noeud']
-      const productTag = node_type?.tags_dict['produit']
-      const sectorTag = node_type?.tags_dict['secteur']
-      // Le tagg unitaire d'une extrémité dépend de SON propre type (produit/secteur),
-      // pas de l'opposé de la source. L'ancien code supposait une structure bipartite
-      // produit↔secteur : pour un lien produit→produit (ex. Production biologique →
-      // Bois sur pied), il testait la cible dans 'sector_unitary' (groupe inexistant
-      // pour un nœud produit) → undefined → lien masqué. On teste chaque bout dans son
-      // groupe réel (les cas produit→secteur / secteur→produit restent identiques).
-      const unitaryTaggOf = (node: Class_NodeElement) =>
-        node.hasGivenTag(productTag) ? 'product_unitary' : node.hasGivenTag(sectorTag) ? 'sector_unitary' : 'unitary'
-      const source_unitary_tagg = unitaryTaggOf(this.source)
-      const target_unitary_tagg = unitaryTaggOf(this.target)
-      const visible = this.source.grouped_taggs_dict[source_unitary_tagg] &&
-        this.source.grouped_taggs_dict[source_unitary_tagg][0].is_selected ||
-        this.target.grouped_taggs_dict[target_unitary_tagg] &&
-        this.target.grouped_taggs_dict[target_unitary_tagg][0].is_selected
-      if (!visible) return false
     }
     return (
       super.is_visible &&
@@ -2937,13 +2958,16 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this._arrow_shape = _
     // os#1374 — estampiller la pointe : c'est ce qui la fait survivre à l'invalidation des
     // dessins de flux qui suivent, dans la même époque d'éventail.
+    // os#1384 — avec l'ancre dont elle vient : une ancre qui bouge ensuite la périme.
     this._arrow_stamp = this.sankey.drawing_area.arrow_epoch
+    this._arrow_stamp_anchor = this._targetAnchorKey()
     this.drawArrow()
   }
 
   public set shape_arrow_path_source(_: string) {
     this._arrow_shape_source = _
     this._arrow_stamp_source = this.sankey.drawing_area.arrow_epoch
+    this._arrow_stamp_source_anchor = this._sourceAnchorKey()
     this.drawArrow()
   }
 

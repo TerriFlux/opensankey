@@ -3,20 +3,32 @@ import {
   LinkOutUnitaryStyle, LinkInUnitaryStyle
 } from '../Elements/ElementStyle'
 import { Class_DrawingArea } from '../types/DrawingArea'
-import { Class_DataTagGroup, Class_ViewTagGroup } from '../types/TagGroup'
+import { Class_DataTagGroup } from '../types/TagGroup'
 
-// Fonction utilitaire pour gérer les styles unitaires dynamiquement
-export const updateUnitaryStyles = (drawing_area: Class_DrawingArea) => {
-  const center_nodes = drawing_area.sankey.visible_nodes_list
-    .filter(node => node.tags_dict['unitary']?.is_selected ||
-            (node.tags_dict['product_unitary']?.group as Class_ViewTagGroup)?.activated && node.tags_dict['product_unitary']?.is_selected ||
-            (node.tags_dict['sector_unitary']?.group as Class_ViewTagGroup)?.activated && node.tags_dict['sector_unitary']?.is_selected)
+/**
+ * Pose styles, échelle et disposition du board unitaire autour d'UN nœud central.
+ *
+ * os#1382 (U5) — LE CENTRE EST DÉSORMAIS DONNÉ, plus deviné. Auparavant on le
+ * dérivait des view tags `unitary` / `product_unitary` / `sector_unitary` que le
+ * board créait sur le diagramme copié ; l'aperçu unitaire est maintenant rendu
+ * depuis une BRIQUE extraite (`Algorithms/UnitaryExtraction.ts`), qui porte son
+ * centre dans sa section racine `process`. Deux sources, dans cet ordre :
+ *   1. `center_node_id`, quand l'appelant sait de quel nœud il parle ;
+ *   2. `drawing_area.sankey.unitary_process.central_node_id`, posé par l'extraction.
+ * Sans ni l'un ni l'autre — ou si l'id ne désigne aucun nœud — on ne touche à rien.
+ */
+export const updateUnitaryStyles = (drawing_area: Class_DrawingArea, center_node_id?: string) => {
+  const resolved_center_id = center_node_id ?? drawing_area.sankey.unitary_process?.central_node_id
+  const center_node = resolved_center_id !== undefined
+    ? drawing_area.sankey.nodes_dict[resolved_center_id]
+    : undefined
 
-  // IMPORTANT : ne poser bypass_redraws qu'APRÈS ce garde. Sinon, pour un view tag
-  // GÉNÉRIQUE (pas de nœud central unitaire), on return early en laissant
-  // bypass_redraws=true → tous les draw()/recenter() suivants deviennent no-op
-  // (positions calculées mais pas rendues : « il faut re-sélectionner pour voir »).
-  if (center_nodes.length === 0) return
+  // IMPORTANT : ne poser bypass_redraws qu'APRÈS ce garde. Sinon, pour un diagramme
+  // sans nœud central unitaire, on return early en laissant bypass_redraws=true →
+  // tous les draw()/recenter() suivants deviennent no-op (positions calculées mais
+  // pas rendues : « il faut re-sélectionner pour voir »).
+  if (center_node === undefined) return
+  const center_nodes = [center_node]
   drawing_area.bypass_redraws = true
 
   // Mémoriser le nœud central : areaAutoFit (scopé is_unitary) cale ce nœud au centre
