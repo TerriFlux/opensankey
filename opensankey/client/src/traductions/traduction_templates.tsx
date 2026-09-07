@@ -8,6 +8,16 @@ export const resources_template = {
         need_osp: 'MFASankey Dataviz needed',
         gallery_hint: 'Click a template to start from an example',
         sankeytheque_hint: 'Click a study to open it',
+        // sa#509 — panneau SankeyThèque à vignettes
+        theque: {
+          hint: 'Published studies: click a study to browse its diagrams, then a diagram to open it in a new sheet',
+          loading: 'Loading the library…',
+          empty: 'No published study yet',
+          back: 'All studies',
+          open_study: 'Open this study',
+          diagrams: '{{count}} diagram(s)',
+          versions: 'Published versions'
+        },
         pin: 'Pin the gallery (the drawing resizes to its left, try templates one after another)',
         unpin: 'Unpin the gallery (floats over the drawing, closes as soon as you start working)',
         play: 'Play the gallery (loads each model one after another)',
@@ -249,6 +259,16 @@ export const resources_template = {
         need_osp: 'MFASankey Dataviz necessaire',
         gallery_hint: 'Cliquez sur un modèle pour partir d\'un exemple',
         sankeytheque_hint: 'Cliquez sur une étude pour l\'ouvrir',
+        // sa#509 — panneau SankeyThèque à vignettes
+        theque: {
+          hint: 'Études publiées : cliquez sur une étude pour parcourir ses diagrammes, puis sur un diagramme pour l\'ouvrir dans une nouvelle feuille',
+          loading: 'Chargement de la thèque…',
+          empty: 'Aucune étude publiée pour l\'instant',
+          back: 'Toutes les études',
+          open_study: 'Ouvrir cette étude',
+          diagrams: '{{count}} diagramme(s)',
+          versions: 'Versions publiées'
+        },
         pin: 'Épingler la galerie (le dessin se recadre à gauche, essayez les modèles à la suite)',
         unpin: 'Détacher la galerie (survol du dessin, elle se ferme dès que vous travaillez)',
         play: 'Lancer la galerie (charge chaque modèle l\'un après l\'autre)',
@@ -491,6 +511,16 @@ export const resources_template = {
         need_osp: 'Se necesita MFASankey Dataviz',
         gallery_hint: 'Haga clic en una plantilla para empezar desde un ejemplo',
         sankeytheque_hint: 'Haga clic en un estudio para abrirlo',
+        // sa#509 — panneau SankeyThèque à vignettes
+        theque: {
+          hint: 'Estudios publicados: haga clic en un estudio para recorrer sus diagramas, luego en un diagrama para abrirlo en una nueva hoja',
+          loading: 'Cargando la biblioteca…',
+          empty: 'Ningún estudio publicado por ahora',
+          back: 'Todos los estudios',
+          open_study: 'Abrir este estudio',
+          diagrams: '{{count}} diagrama(s)',
+          versions: 'Versiones publicadas'
+        },
         pin: 'Fijar la galería (el dibujo se reajusta a su izquierda, pruebe las plantillas una tras otra)',
         unpin: 'Desacoplar la galería (flota sobre el dibujo, se cierra en cuanto empieza a trabajar)',
         play: 'Reproducir la galería (carga cada modelo uno tras otro)',
@@ -728,6 +758,16 @@ export const resources_template = {
         need_osp: 'MFASankey Dataviz erforderlich',
         gallery_hint: 'Klicken Sie auf eine Vorlage, um mit einem Beispiel zu starten',
         sankeytheque_hint: 'Klicken Sie auf eine Studie, um sie zu öffnen',
+        // sa#509 — panneau SankeyThèque à vignettes
+        theque: {
+          hint: 'Veröffentlichte Studien: Klicken Sie auf eine Studie, um ihre Diagramme zu durchsuchen, dann auf ein Diagramm, um es in einem neuen Blatt zu öffnen',
+          loading: 'Bibliothek wird geladen…',
+          empty: 'Noch keine veröffentlichte Studie',
+          back: 'Alle Studien',
+          open_study: 'Diese Studie öffnen',
+          diagrams: '{{count}} Diagramm(e)',
+          versions: 'Veröffentlichte Versionen'
+        },
         pin: 'Galerie anheften (die Zeichnung wird links davon neu angepasst, Vorlagen nacheinander ausprobieren)',
         unpin: 'Galerie lösen (schwebt über der Zeichnung, schließt sich, sobald Sie arbeiten)',
         play: 'Galerie abspielen (lädt jedes Modell nacheinander)',
@@ -965,6 +1005,16 @@ export const resources_template = {
         need_osp: 'MFASankey Dataviz necessario',
         gallery_hint: 'Clicca su un modello per partire da un esempio',
         sankeytheque_hint: 'Clicca su uno studio per aprirlo',
+        // sa#509 — panneau SankeyThèque à vignettes
+        theque: {
+          hint: 'Studi pubblicati: clicca su uno studio per sfogliarne i diagrammi, poi su un diagramma per aprirlo in un nuovo foglio',
+          loading: 'Caricamento della biblioteca…',
+          empty: 'Nessuno studio pubblicato per ora',
+          back: 'Tutti gli studi',
+          open_study: 'Apri questo studio',
+          diagrams: '{{count}} diagramma/i',
+          versions: 'Versioni pubblicate'
+        },
         pin: 'Fissa la galleria (il disegno si ridimensiona alla sua sinistra, prova i modelli uno dopo l\'altro)',
         unpin: 'Sgancia la galleria (fluttua sopra il disegno, si chiude appena inizi a lavorare)',
         play: 'Avvia la galleria (carica ogni modello uno dopo l\'altro)',
@@ -1200,6 +1250,16 @@ export const resources_template = {
         need_osp: '需要 MFASankey Dataviz',
         gallery_hint: '点击某个模板即可从示例开始',
         sankeytheque_hint: '点击某项研究即可打开',
+        // sa#509 — panneau SankeyThèque à vignettes
+        theque: {
+          hint: '已发布的研究：点击某项研究浏览其图表，再点击图表在新工作表中打开',
+          loading: '正在加载图库…',
+          empty: '暂无已发布的研究',
+          back: '全部研究',
+          open_study: '打开此研究',
+          diagrams: '{{count}} 个图表',
+          versions: '已发布版本'
+        },
         pin: '固定图库（绘图区在其左侧调整大小，可逐个试用模板）',
         unpin: '取消固定图库（浮于绘图之上，一开始操作即关闭）',
         play: '播放图库（逐个加载各个模型）',
@@ -1432,6 +1492,16 @@ export const resources_template = {
         need_osp: 'MFASankey Dataviz が必要です',
         gallery_hint: 'テンプレートをクリックすると、その例から始められます',
         sankeytheque_hint: '研究事例をクリックすると開きます',
+        // sa#509 — panneau SankeyThèque à vignettes
+        theque: {
+          hint: '公開済みの研究事例：研究をクリックして図を一覧し、図をクリックすると新しいシートで開きます',
+          loading: 'ライブラリを読み込み中…',
+          empty: '公開済みの研究事例はまだありません',
+          back: 'すべての研究事例',
+          open_study: 'この研究事例を開く',
+          diagrams: '{{count}} 件の図',
+          versions: '公開済みバージョン'
+        },
         pin: 'ギャラリーを固定（描画エリアはその左側でサイズ調整され、テンプレートを次々と試せます）',
         unpin: 'ギャラリーの固定を解除（描画の上に浮かび、作業を始めると閉じます）',
         play: 'ギャラリーを再生（各モデルを順に読み込みます）',

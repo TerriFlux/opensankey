@@ -1788,16 +1788,18 @@ export class Class_Sankey {
   public get view_taggs_dict() { return this._view_taggs }
   public get view_taggs_list() { return Object.values(this._view_taggs) }
   /**
-   * Groupes de view tags en « mode filtre » (activés + view_mode), HORS les groupes
-   * unitaires câblés (unitary/product_unitary/sector_unitary, qui ont leur propre
-   * logique de voisinage dans is_unitary_tag). Sélectionner une étiquette d'un tel
-   * groupe filtre la visibilité en court-circuitant les level tags (cf.
-   * Node.viewTagVisibility). Visibilité seulement — pas de remontée vers les ancêtres.
+   * Groupes de view tags en « mode filtre » (activés + view_mode). Sélectionner une
+   * étiquette d'un tel groupe filtre la visibilité en court-circuitant les level tags
+   * (cf. Node.viewTagVisibility). Visibilité seulement — pas de remontée vers les
+   * ancêtres.
+   *
+   * os#1382 : les groupes unitaires câblés (unitary/product_unitary/sector_unitary)
+   * ne sont plus créés et n'ont plus d'exclusion ici. Un ancien fichier qui en porte
+   * les décrit avec view_mode=false (jamais posé par l'ex-createUnitaryView) : ils ne
+   * sont donc pas retenus de toute façon.
    */
   public get view_mode_groups(): Class_ViewTagGroup[] {
-    return this.view_taggs_list.filter(t =>
-      t.activated && t.view_mode &&
-      t.id !== 'unitary' && t.id !== 'product_unitary' && t.id !== 'sector_unitary')
+    return this.view_taggs_list.filter(t => t.activated && t.view_mode)
   }
   /** True dès qu'au moins un groupe de view tags est en mode filtre. */
   public get view_mode_active(): boolean {

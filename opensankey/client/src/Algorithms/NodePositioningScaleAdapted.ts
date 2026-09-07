@@ -75,6 +75,28 @@ export class NodePositioningScaleAdapted {
     return this._columnsMagnitude(tags)
   }
 
+  /**
+   * os#1383 — Valeur-équivalente du nœud VISIBLE le plus haut, tous nœuds confondus (le plafond
+   * de hauteur s'applique à chacun, sans les exclusions de colonne de `diagramMagnitude`).
+   *
+   * Sert au plafond EXACT du mode « échelle adaptée » sans élément de référence : l'échelle qui
+   * amène ce nœud à `maximum_node` px vaut `grandeur × 100 / maximum_node`. Calculée EN VALEURS
+   * et non depuis la hauteur rendue, parce que celle-ci est plancher-ée (hauteur minimale de
+   * nœud, `minimum_flux`) : à grande échelle, un nœud de 3 px rend 40, et un facteur pris sur
+   * 40 ne l'amènerait jamais au plafond.
+   *
+   * 0 si aucun nœud visible ne porte de valeur.
+   */
+  public tallestNodeMagnitude(): number {
+    let max = 0
+    this.drawingArea.sankey.visible_nodes_list.forEach(n => {
+      if (!n.is_visible) return
+      const v = this.nodeMagnitude(n, undefined)
+      if (v > max) max = v
+    })
+    return max
+  }
+
   /** Corps commun : somme par colonne (`position_u`), maximum des colonnes. */
   private _columnsMagnitude(tags: Class_DataTag[] | undefined): number {
     const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
@@ -103,6 +125,15 @@ export class NodePositioningScaleAdapted {
    * faux. Ici la référence est ÉNONCÉE (des tags), et la grandeur s'en déduit à chaque dessin.
    */
   public referenceDataTagMagnitude(): number | undefined {
+    // os#1383 — Régime `element` : la grandeur de référence est la VALEUR DE L'ÉLÉMENT au
+    // datatag de référence (`prop_reference_datatag`), recalculée à chaque dessin. La grandeur
+    // de diagramme n'est pas commensurable avec la grandeur courante de ce régime (valeur de
+    // l'élément) : la mélanger au ratio gonflait Corse ×8 dès qu'un datatag était désigné.
+    if (this.drawingArea.scale_adapted_reference === 'element') {
+      if (this.np.reference.resolveReferenceDataTags().length === 0) return undefined
+      const v = this.np.reference.referenceFluxRefValue()
+      return v !== undefined && v > 0 ? v : undefined
+    }
     const tags = this.referenceDataTags()
     if (tags === undefined) return undefined
     const m = this.diagramMagnitudeForDataTags(tags)
@@ -115,8 +146,12 @@ export class NodePositioningScaleAdapted {
    * restant valable sur les dimensions qui subsistent.
    */
   private referenceDataTags(): Class_DataTag[] | undefined {
-    const ids = this.drawingArea.scale_adapted_reference_datatag
-    if (!ids || ids.length === 0) return undefined
+    // os#1383 — UN SEUL datatag de référence pour le document : à défaut d'une désignation
+    // propre au mode adapté (os#1372), celle du couple élément/datatag (`prop_reference_datatag`,
+    // que l'interface pose désormais) fait foi.
+    let ids = this.drawingArea.scale_adapted_reference_datatag
+    if (!ids || ids.length === 0) ids = this.np.reference.proportionalReferenceDatatagIds ?? []
+    if (ids.length === 0) return undefined
     const tags: Class_DataTag[] = []
     this.drawingArea.sankey.data_taggs_list.forEach(tagg => {
       const found = tagg.tags_list.find(t => ids.includes(t.id))
@@ -181,16 +216,15 @@ export class NodePositioningScaleAdapted {
     // os#1372 — Datatag de référence désigné : la grandeur est CALCULÉE, on ne capture donc que
     // l'échelle de base, et une seule fois (sans quoi chaque frame la ramènerait à l'échelle
     // déjà adaptée et le ratio se composerait avec lui-même).
-    if (this.referenceDataTagMagnitude() !== undefined) {
-      if (this._scale_adapted_ref_scale === undefined) {
-        this._scale_adapted_ref_scale = this.drawingArea.scale
-      }
-      return
-    }
+    // os#1383 — La base capturée est l'échelle de BASE (`base_scale`), jamais l'échelle
+    // effective d'une frame : celle-ci porte déjà les plafonds, et la prendre pour base
+    // composait le ratio avec eux à la frame suivante.
+    // Datatag désigné : rien à capturer, l'échelle adaptée est sans état (cf. applyAdaptedScale).
+    if (this.referenceDataTagMagnitude() !== undefined) return
     const m = this.referenceMagnitudeForCapture()
     if (m === undefined || !(m > 0)) return
     this._scale_adapted_ref_magnitude = m
-    this._scale_adapted_ref_scale = this.drawingArea.scale
+    this._scale_adapted_ref_scale = this.drawingArea.base_scale
   }
 
   /**
@@ -295,11 +329,10 @@ export class NodePositioningScaleAdapted {
   /**
    * #369 — Couple capturé du mode « échelle adaptée » (échelle de BASE + grandeur du diagramme),
    * exposé pour la PERSISTANCE. Le mode étant désormais restitué à l'ouverture (cf.
-   * `positionModeOnLoad`), ce couple doit l'être aussi : le `user_scale` écrit dans le fichier
-   * est l'échelle ADAPTÉE au datatag courant (base × grandeur_courante / grandeur_réf), pas
-   * l'échelle de base. Le laisser recapturer au chargement prendrait donc l'échelle adaptée pour
-   * base et composerait le ratio une seconde fois au dessin suivant → le diagramme changerait de
-   * taille juste après l'ouverture. undefined tant que rien n'a été capturé (rien à écrire).
+   * `positionModeOnLoad`), ce couple doit l'être aussi : la grandeur capturée d'un document à
+   * élément de référence n'est pas recalculable à l'ouverture. os#1383 — `user_scale`, lui,
+   * est désormais toujours l'échelle de BASE de l'utilisateur (l'adaptation n'écrit plus que
+   * l'échelle effective de la frame). undefined tant que rien n'a été capturé (rien à écrire).
    */
   public get scaleAdaptedReference(): { scale: number, magnitude: number } | undefined {
     if (this._scale_adapted_ref_scale === undefined) return undefined
@@ -322,19 +355,26 @@ export class NodePositioningScaleAdapted {
   /**
    * #1231/#384 — Mode « échelle adaptée » : ajuste l'échelle (valeur→px) du diagramme pour qu'il
    * garde sa hauteur de référence à tous les datatags. Appelé en tête de `drawElements` avant
-   * `_sankey.draw()`. Écrit directement `_scale` + le domaine de `_scaleValueToPx` (le setter
-   * `scale` redraw → récursion ; on l'évite).
+   * `_sankey.draw()`. Écrit l'échelle EFFECTIVE de la frame (`setEffectiveScale`, os#1383) —
+   * jamais `_scale`, l'échelle absolue de l'utilisateur, ni via le setter `scale` (redraw →
+   * récursion).
+   *
+   * Retourne vrai si une échelle a été adaptée, faux si le document ne fournit aucune grandeur
+   * de référence exploitable (CARTOFOB : régime `element` sans élément désigné). Dans ce cas
+   * `drawElements` rend le plafond de hauteur EXACT : c'est lui qui adapte.
    */
-  public applyAdaptedScale() {
+  public applyAdaptedScale(): boolean {
     // os#1372 — Grandeur de référence : celle du datatag DÉSIGNÉ si le document en nomme un
     // (calculée à chaque dessin), sinon celle capturée au vol (fichiers antérieurs).
     const designated = this.referenceDataTagMagnitude()
     // Capture paresseuse (1er dessin / après chargement) : base = échelle + grandeur courantes
-    // → ratio 1 à cette frame, pas de saut. Avec un datatag désigné, seule l'échelle est à
-    // capturer — et le ratio vaut 1 uniquement si l'on est SUR le datatag de référence, ce qui
-    // est le propre d'une référence énoncée.
-    if ((designated === undefined && this._scale_adapted_ref_magnitude === undefined)
-      || this._scale_adapted_ref_scale === undefined) {
+    // → ratio 1 à cette frame, pas de saut. os#1383 — Avec un datatag désigné, RIEN n'est
+    // capturé : la base est l'échelle de base de l'utilisateur et la grandeur de référence se
+    // recalcule à chaque dessin. L'échelle adaptée ne dépend alors d'aucun état, donc d'aucun
+    // chemin — et le ratio vaut 1 uniquement SUR le datatag de référence, ce qui est le propre
+    // d'une référence énoncée.
+    if (designated === undefined
+      && (this._scale_adapted_ref_magnitude === undefined || this._scale_adapted_ref_scale === undefined)) {
       this.captureScaleReference()
       // os#1352 — régime `element` : si la capture n'a rien pu prendre, c'est que l'élément de
       // référence manque. Le dire tout de suite plutôt qu'au dessin suivant.
@@ -342,36 +382,37 @@ export class NodePositioningScaleAdapted {
         && this.drawingArea.scale_adapted_reference === 'element') {
         this.warnElementReferenceUnusable()
       }
-      return
+      // Capture faite (ratio 1 à cette frame) ou impossible : rien d'adapté cette frame.
+      return false
     }
     // Grandeur au datatag/viewtag courant, selon le régime. Inexploitable (datatag sans aucune
-    // valeur, ou élément de référence absent/nul) : on garde l'échelle précédente plutôt que de
-    // diviser par zéro — mais, en régime `element`, on le SIGNALE (os#1352).
+    // valeur, ou élément de référence absent/nul) : rien d'adapté — mais, en régime `element`,
+    // on le SIGNALE (os#1352).
     const m = this.currentMagnitude()
     if (m === undefined || !(m > 0)) {
       if (this.drawingArea.scale_adapted_reference === 'element') this.warnElementReferenceUnusable()
-      return
+      return false
     }
     this._scale_adapted_warning = undefined
     this._warned_selection = undefined
     const ref_magnitude = designated ?? (this._scale_adapted_ref_magnitude as number)
-    const new_scale = this._scale_adapted_ref_scale * m / ref_magnitude
-    if (isFinite(new_scale) && new_scale > 0) {
-      this.drawingArea._scale = new_scale
-      this.drawingArea._scaleValueToPx.domain([0, new_scale])
-    }
+    // Datatag désigné : base = échelle de base de l'utilisateur (sans état) ; sinon la base
+    // capturée avec la grandeur (fichiers antérieurs, régime sans référence énoncée).
+    const base = designated !== undefined
+      ? this.drawingArea.base_scale
+      : (this._scale_adapted_ref_scale as number)
+    const new_scale = base * m / ref_magnitude
+    if (!(isFinite(new_scale) && new_scale > 0)) return false
+    this.drawingArea.setEffectiveScale(new_scale)
+    return true
   }
 
   /**
-   * #1231 — Sortie du mode « échelle adaptée » : restaure l'échelle de base capturée (pour
-   * ne pas laisser le diagramme à une échelle adaptée d'un autre datatag) et oublie la
-   * capture. L'échelle restaurée s'affiche au prochain dessin.
+   * #1231 — Sortie du mode « échelle adaptée » : oublie la capture. os#1383 — plus rien à
+   * restaurer : l'adaptation n'écrivait que l'échelle effective de la frame, l'échelle de base
+   * de l'utilisateur est intacte et la prochaine frame repart d'elle.
    */
   public clearScaleAdaptation() {
-    if (this._scale_adapted_ref_scale !== undefined && this._scale_adapted_ref_scale > 0) {
-      this.drawingArea._scale = this._scale_adapted_ref_scale
-      this.drawingArea._scaleValueToPx.domain([0, this._scale_adapted_ref_scale])
-    }
     this._scale_adapted_ref_magnitude = undefined
     this._scale_adapted_ref_scale = undefined
   }
