@@ -65,6 +65,12 @@ export type Type_PresentationBlock = {
    */
   render: (ctx: Type_BlockRenderContext) => React.ReactNode
   /**
+   * Résumé d'UNE LIGNE affiché à côté du titre quand le bloc est REPLIÉ (« 13
+   * valeurs · Mm³ », « Niveau Essences »). Il dit ce que le bloc contient sans
+   * qu'on ait à l'ouvrir. `null` quand il n'y a rien de tel à annoncer.
+   */
+  summary?: (ctx: Type_BlockRenderContext) => string | null
+  /**
    * Réglages propres au bloc, ÉDITÉS PAR L'AUTEUR dans le composeur (Lot 2).
    * Absent = le bloc n'a rien à régler. `setOptions` reçoit l'objet complet :
    * c'est l'appelant qui le persiste dans la composition (avec undo).
@@ -145,4 +151,20 @@ export const renderPresentationBlock = (
   if (!block) return null
   if (block.gate && !block.gate(ctx.app_data)) return null
   return block.render(ctx)
+}
+
+/** Titre d'un bloc (celui du catalogue), ou '' si l'id est inconnu. */
+export const presentationBlockLabel = (
+  id: string,
+  app_data: Class_ApplicationData
+): string => presentation_block_registry.get(id)?.label(app_data) ?? ''
+
+/** Résumé d'un bloc replié. `null` si l'id est inconnu ou si le bloc n'en a pas. */
+export const presentationBlockSummary = (
+  id: string,
+  ctx: Type_BlockRenderContext
+): string | null => {
+  const block = presentation_block_registry.get(id)
+  if (!block?.summary) return null
+  try { return block.summary(ctx) } catch { return null }
 }
