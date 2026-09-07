@@ -4184,6 +4184,10 @@ export class Class_DrawingArea {
   }
   public set scale(value: number) {
     if (value > 0) {
+      // os#1383 — échelle posée DÉLIBÉRÉMENT : elle devient la base. Les plafonds
+      // (référence d'épaisseur par view tag, hauteur maximale de nœud) oublient donc la leur,
+      // sans la défaire — sinon la frame suivante restaurerait par-dessus ce choix.
+      this._scale_overrides.invalidate()
       this._scale = value
       this._scaleValueToPx.domain([0, value])
       this.application_data.menu_configuration.updateComponentRelatedToLayoutApparence()
