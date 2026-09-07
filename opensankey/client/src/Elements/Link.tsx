@@ -1071,6 +1071,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
     // Draw only if we have starting & ending points
     if (starting_point && ending_point) {
+      // os#1384 — RE-invalider ICI, pas seulement dans `draw()`. `Element.draw()` appelle
+      // `_invalidateDrawCaches()` AVANT `_draw()`, donc avant les lignes ci-dessus qui
+      // rafraîchissent `_position` / `_position_ending` depuis les nœuds : le garde d'ancre y
+      // compare l'ancre de la passe PRÉCÉDENTE et conclut « rien n'a bougé » alors que l'ancre
+      // change juste après. Une pointe calculée quand l'ancre valait encore (0,0) survivait donc
+      // au dessin qui, lui, traçait le corps à la bonne place — corps juste, pointe restée en
+      // haut (import e!Sankey « Building Energy Footprint »). Le second appel voit les positions
+      // définitives ; quand rien n'a bougé il ne vide rien, donc le gain d'os#1374 tient.
+      this._invalidateDrawCaches()
       // Draw elements
       this.drawElements()
     }
