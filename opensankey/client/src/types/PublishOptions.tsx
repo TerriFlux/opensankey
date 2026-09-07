@@ -105,10 +105,15 @@ export interface SankeyGlobals {
   diagram?: string | Record<string, unknown> // URL d'un JSON à charger, OU objet JSON inline
   diagram_layout?: string                    // URL d'un layout à surimprimer
   diagram_layout_options?: string[]
-  // Dropdown multi-diagrammes (clés "a/b" pour groupage). sa#398 : chaque valeur peut être
-  // un objet `{file, view?, view_label?}` — sélection de vues PAR diagramme.
+  // Dropdown multi-diagrammes. Une clé « a/b » ouvre un second dropdown : le premier
+  // segment est le PÉRIMÈTRE au sens du modèle (os#1360), le second le diagramme.
+  // sa#398 : chaque valeur peut être un objet `{file, view?, view_label?}` — sélection
+  // de vues PAR diagramme.
   diagrams_list?: Record<string, Type_DiagramsListEntry>
-  /** @deprecated utiliser `diagrams_list` */
+  /**
+   * @deprecated utiliser `diagrams_list`. Lue pour les pages anciennes (os#1360) ;
+   * l'application ne pose plus jamais cette clé elle-même.
+   */
   sous_filieres?: Record<string, string>
   /**
    * @deprecated Désignation HISTORIQUE du diagramme courant : ces pages chargent
@@ -486,7 +491,10 @@ export type ViewerSankeyOptions = {
   diagram_layout_options?: string[]
   // sa#398 : chaque valeur peut être un objet {file, view?, view_label?} (vues PAR diagramme)
   diagrams_list?: Record<string, Type_DiagramsListEntry>
-  /** @deprecated utiliser `diagrams_list` */
+  /**
+   * @deprecated utiliser `diagrams_list`. Prop encore acceptée, mais reversée dans
+   * `diagrams_list` : elle n'atteint plus `window.sankey` sous son ancien nom (os#1360).
+   */
   sous_filieres?: Record<string, string>
   data_type?: boolean
   data_type_intervals?: boolean
@@ -525,7 +533,7 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
     'editable', 'topbar', 'footer', 'toolbar', 'position_mode_selector', 'fit_toolbar', 'fullscreen', 'filter_bar', 'embedded', 'recenter',
     'edit_button', 'unitary', 'doc', 'navigation_help', 'badge',
     'logo', 'header', 'diagram', 'diagram_layout', 'diagram_layout_options',
-    'diagrams_list', 'sous_filieres',
+    'diagrams_list',
     'data_type', 'data_type_intervals', 'value_filter',
     'view_filter', 'level_filter', 'node_filter', 'data_filter',
     'lock_zoom', 'tooltip_on_hover', 'language', 'header_i18n',
@@ -536,6 +544,19 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
   for (const k of keys) {
     if (options[k] !== undefined) {
       (next as Record<string, unknown>)[k as string] = options[k] as unknown
+    }
+  }
+  // os#1360 — la prop depreciee est LUE, jamais REPRODUITE : elle atterrit sous
+  // `diagrams_list`, la seule cle que l'application ecrive desormais. Recopier
+  // `sous_filieres` sur window.sankey aurait fait naitre la cle historique dans des
+  // pages neuves, alors que le jalon la cantonne aux fichiers anciens.
+  // `diagrams_list` gagne si les deux props sont fournies (regle documentee).
+  if (options.sous_filieres !== undefined && options.diagrams_list === undefined) {
+    (next as Record<string, unknown>).diagrams_list = options.sous_filieres
+    if (!_warned_sous_filieres) {
+      _warned_sous_filieres = true
+      // eslint-disable-next-line no-console
+      console.warn('[OpenSankey] la prop `sous_filieres` est dépréciée, utiliser `diagrams_list`.')
     }
   }
   if (options.diagrams_config) {
