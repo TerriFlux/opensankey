@@ -16,7 +16,8 @@ export const resources_template = {
           back: 'All studies',
           open_study: 'Open this study',
           diagrams: '{{count}} diagram(s)',
-          versions: 'Published versions'
+          versions: 'Published versions',
+          others: 'Other diagrams'
         },
         pin: 'Pin the gallery (the drawing resizes to its left, try templates one after another)',
         unpin: 'Unpin the gallery (floats over the drawing, closes as soon as you start working)',
@@ -267,7 +268,8 @@ export const resources_template = {
           back: 'Toutes les études',
           open_study: 'Ouvrir cette étude',
           diagrams: '{{count}} diagramme(s)',
-          versions: 'Versions publiées'
+          versions: 'Versions publiées',
+          others: 'Autres diagrammes'
         },
         pin: 'Épingler la galerie (le dessin se recadre à gauche, essayez les modèles à la suite)',
         unpin: 'Détacher la galerie (survol du dessin, elle se ferme dès que vous travaillez)',
@@ -519,7 +521,8 @@ export const resources_template = {
           back: 'Todos los estudios',
           open_study: 'Abrir este estudio',
           diagrams: '{{count}} diagrama(s)',
-          versions: 'Versiones publicadas'
+          versions: 'Versiones publicadas',
+          others: 'Otros diagramas'
         },
         pin: 'Fijar la galería (el dibujo se reajusta a su izquierda, pruebe las plantillas una tras otra)',
         unpin: 'Desacoplar la galería (flota sobre el dibujo, se cierra en cuanto empieza a trabajar)',
@@ -766,7 +769,8 @@ export const resources_template = {
           back: 'Alle Studien',
           open_study: 'Diese Studie öffnen',
           diagrams: '{{count}} Diagramm(e)',
-          versions: 'Veröffentlichte Versionen'
+          versions: 'Veröffentlichte Versionen',
+          others: 'Weitere Diagramme'
         },
         pin: 'Galerie anheften (die Zeichnung wird links davon neu angepasst, Vorlagen nacheinander ausprobieren)',
         unpin: 'Galerie lösen (schwebt über der Zeichnung, schließt sich, sobald Sie arbeiten)',
@@ -1013,7 +1017,8 @@ export const resources_template = {
           back: 'Tutti gli studi',
           open_study: 'Apri questo studio',
           diagrams: '{{count}} diagramma/i',
-          versions: 'Versioni pubblicate'
+          versions: 'Versioni pubblicate',
+          others: 'Altri diagrammi'
         },
         pin: 'Fissa la galleria (il disegno si ridimensiona alla sua sinistra, prova i modelli uno dopo l\'altro)',
         unpin: 'Sgancia la galleria (fluttua sopra il disegno, si chiude appena inizi a lavorare)',
@@ -1258,7 +1263,8 @@ export const resources_template = {
           back: '全部研究',
           open_study: '打开此研究',
           diagrams: '{{count}} 个图表',
-          versions: '已发布版本'
+          versions: '已发布版本',
+          others: '其他图表'
         },
         pin: '固定图库（绘图区在其左侧调整大小，可逐个试用模板）',
         unpin: '取消固定图库（浮于绘图之上，一开始操作即关闭）',
@@ -1500,7 +1506,8 @@ export const resources_template = {
           back: 'すべての研究事例',
           open_study: 'この研究事例を開く',
           diagrams: '{{count}} 件の図',
-          versions: '公開済みバージョン'
+          versions: '公開済みバージョン',
+          others: 'その他の図'
         },
         pin: 'ギャラリーを固定（描画エリアはその左側でサイズ調整され、テンプレートを次々と試せます）',
         unpin: 'ギャラリーの固定を解除（描画の上に浮かび、作業を始めると閉じます）',
