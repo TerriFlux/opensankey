@@ -34,6 +34,7 @@ import { blocksFor } from '../../../types/PresentationComposition'
 import { PanelShell } from '../PanelShell'
 import { renderPresentationBlock } from './PresentationBlockRegistry'
 import { registerBasePresentationBlocks } from './registerBaseBlocks'
+import { registerBaseRepresentations } from '../../../Representations/registerBaseRepresentations'
 import { PresentationPopup } from './PresentationPopup'
 import {
   isPresentationPanelId, elementIdOfPanel, compositionOf, type Type_Presentable,
@@ -42,6 +43,11 @@ import {
 } from './openPresentation'
 
 registerBasePresentationBlocks()
+// os#1361 — les représentations de base (échelle diagramme). Enregistrées ICI
+// faute d'hôte propre tant qu'A3 (os#1356) n'a pas donné son sélecteur au
+// lecteur : ce module est le seul d'OS base à être monté dans tous les cas.
+// L'enregistrement est idempotent par id, le futur hôte pourra le refaire.
+registerBaseRepresentations()
 
 // Contenants offerts à un élément : jamais la barre latérale (réservée aux menus).
 const ELEMENT_MODES: Type_PanelMode[] = ['tooltip', 'popup']
