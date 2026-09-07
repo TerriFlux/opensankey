@@ -78,6 +78,16 @@ export interface SankeyGlobals {
   edit_button?: boolean  // default true : bouton "Éditer" (renvoi vers open-sankey.fr) dans la topbar en publish
   unitary?: boolean      // default false : onglet « Unit. » (sankey unitaire OS+) dans la topbar en publish
   doc?: boolean          // default false : bouton « Doc » (panneau documentation) dans la topbar en publish, visible seulement si une doc existe
+  // os#1356 — default false : la REPRÉSENTATION DU DIAGRAMME ENTIER offerte au lecteur, soit le
+  // groupe complet Diagramme / Tableur / Doc / Unit. Sans elle, ce groupe n'existait qu'en édition
+  // (`is_static` le coupait) : le lecteur d'un site publié ne pouvait pas passer au tableur, alors
+  // que les données sont dans le bundle qu'il a déjà téléchargé.
+  // À ne pas confondre avec l'analyse d'un ÉLÉMENT (couronne / barres / unitaire de la pop-up
+  // d'élément) : ce sont deux échelles, elles ne partagent pas de sélecteur.
+  // Elle ENGLOBE `unitary` et `doc`, qui n'exposaient chacun qu'un bouton de ce groupe : quand
+  // elle est active, ces deux options n'ont plus d'effet propre (cf. MenuTopButtonsStatic), sinon
+  // le même bouton apparaîtrait deux fois dans la barre.
+  representation?: boolean
   // sa#402 — document markdown posé À CÔTÉ de la page (README.md du projet, recopié par le rendu).
   // Nom de fichier RELATIF à la page : le viewer le charge et le prête au panneau « Doc » quand le
   // diagramme n'embarque pas de documentation. Sa seule présence suffit à faire apparaître le bouton.
@@ -187,6 +197,8 @@ export interface PublishOptions {
   unitary: boolean
   doc: boolean
   doc_file: string | null
+  // os#1356 — représentation du diagramme entier offerte au lecteur (cf. SankeyGlobals).
+  representation: boolean
   navigation_help: boolean
   badge: boolean
   app_info: boolean
@@ -418,6 +430,7 @@ export const getPublishOptions = (): PublishOptions => {
     unitary: bool(s.unitary, false),
     doc: bool(s.doc, false),
     doc_file: str(s.doc_file),
+    representation: bool(s.representation, false),
     navigation_help: bool(s.navigation_help, false),
     badge: bool(s.badge, true),
     app_info: bool(s.app_info, true),
@@ -477,6 +490,8 @@ export type ViewerSankeyOptions = {
   edit_button?: boolean
   unitary?: boolean
   doc?: boolean
+  // os#1356 — cf. SankeyGlobals : englobe `unitary` et `doc`.
+  representation?: boolean
   navigation_help?: boolean
   badge?: boolean
   logo?: string
@@ -523,7 +538,7 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
 
   const keys: Array<keyof ViewerSankeyOptions> = [
     'editable', 'topbar', 'footer', 'toolbar', 'position_mode_selector', 'fit_toolbar', 'fullscreen', 'filter_bar', 'embedded', 'recenter',
-    'edit_button', 'unitary', 'doc', 'navigation_help', 'badge',
+    'edit_button', 'unitary', 'doc', 'representation', 'navigation_help', 'badge',
     'logo', 'header', 'diagram', 'diagram_layout', 'diagram_layout_options',
     'diagrams_list', 'sous_filieres',
     'data_type', 'data_type_intervals', 'value_filter',
