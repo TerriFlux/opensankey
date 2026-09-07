@@ -2788,10 +2788,24 @@ export class Class_ApplicationData {
             description: intake?.loading?.desc ?? this.t('toast.default.loading.desc'),
             duration: default_toast_duration
           },
-          error: {
-            title: intake?.error?.title ?? this.t('toast.default.error.title'),
-            description: intake?.error?.desc ?? this.t('toast.default.error.desc'),
-            duration: default_toast_duration
+          // La raison du rejet était JETÉE : l'utilisateur voyait un titre
+          // générique, la console ne montrait rien, et un échec survenu sur une
+          // autre machine restait indiagnosticable — c'est exactement ce qui a
+          // fait perdre une semaine sur l'export PNG. Chakra accepte une
+          // fonction ici : on y récupère l'erreur, on la trace et on la montre.
+          // L'erreur reste affichée (duration null) et refermable : c'est un
+          // message que l'utilisateur doit pouvoir lire et recopier.
+          error: (err: Error) => {
+            console.error('[toast] tache en echec :', err)
+            const detail = err?.message ? String(err.message) : ''
+            const base = intake?.error?.desc
+            const description = [base, detail].filter(Boolean).join(' — ')
+            return {
+              title: intake?.error?.title ?? this.t('toast.default.error.title'),
+              description: description || this.t('toast.default.error.desc'),
+              duration: detail ? null : default_toast_duration,
+              isClosable: true
+            }
           },
         }
       )
