@@ -78,6 +78,18 @@ export interface SankeyGlobals {
   edit_button?: boolean  // default true : bouton "Éditer" (renvoi vers open-sankey.fr) dans la topbar en publish
   unitary?: boolean      // default false : onglet « Unit. » (sankey unitaire OS+) dans la topbar en publish
   doc?: boolean          // default false : bouton « Doc » (panneau documentation) dans la topbar en publish, visible seulement si une doc existe
+  // os#1356 — default false : la REPRÉSENTATION DU DIAGRAMME ENTIER offerte au lecteur, soit le
+  // groupe complet Diagramme / Tableur / Doc / Unit. Sans elle, ce groupe n'existait qu'en édition
+  // (`is_static` le coupait) : le lecteur d'un site publié ne pouvait pas passer au tableur, alors
+  // que les données sont dans le bundle qu'il a déjà téléchargé.
+  // À ne pas confondre avec l'analyse d'un ÉLÉMENT (couronne / barres / unitaire de la pop-up
+  // d'élément) : ce sont deux échelles, elles ne partagent pas de sélecteur.
+  // Elle OUVRE le sélecteur ; `representations` (liste blanche d'ids) et le `publish_option` de
+  // chaque entrée du registre disent ensuite CE QU'IL CONTIENT. `unitary` et `doc` sont
+  // précisément ces `publish_option`-là : une page peut donc offrir la représentation sans
+  // offrir l'unitaire. Ils ne posent simplement plus leur bouton isolé quand le groupe est là
+  // (cf. MenuTopButtonsStatic), sinon le même bouton apparaîtrait deux fois.
+  representation?: boolean
   // sa#402 — document markdown posé À CÔTÉ de la page (README.md du projet, recopié par le rendu).
   // Nom de fichier RELATIF à la page : le viewer le charge et le prête au panneau « Doc » quand le
   // diagramme n'embarque pas de documentation. Sa seule présence suffit à faire apparaître le bouton.
@@ -176,6 +188,13 @@ export interface SankeyGlobals {
   // publiée normale ne pose cette clé.
   export_json?: boolean
 
+  // os#1361 — LISTE BLANCHE des représentations offertes au lecteur, par id de
+  // registre ('os.repr.sankey', 'osp.repr.donut', …). C'est ici que la
+  // publication déclare l'axe « représentation » du contrôleur.
+  // Absente : toutes celles que le registre propose — donc une page écrite avant
+  // D0 ne change pas de comportement.
+  representations?: string[]
+
   // Indexer pour configs per-diagramme (diagrams_list etc.)
   [key: string]: unknown
 }
@@ -198,6 +217,8 @@ export interface PublishOptions {
   unitary: boolean
   doc: boolean
   doc_file: string | null
+  // os#1356 — représentation du diagramme entier offerte au lecteur (cf. SankeyGlobals).
+  representation: boolean
   navigation_help: boolean
   badge: boolean
   app_info: boolean
@@ -224,6 +245,8 @@ export interface PublishOptions {
   // chaîne simple devient [chaîne]). `view_label` ci-dessus reste le filtre ACTIF (premier de
   // la liste), seul consommé par les mécaniques historiques (diagrams_views, ouverture).
   view_labels: string[] | null
+  // os#1361 — ids de représentations offertes au lecteur ; null = toutes.
+  representations: string[] | null
   export_json: boolean
   logo: string | null
   header: string | null
@@ -295,6 +318,17 @@ const strLabels = (v: unknown): string[] | null => {
   }
   const labels = [...new Set(valid)]
   return labels.length > 0 ? labels : null
+}
+
+// os#1361 — liste blanche d'ids de représentations. Doctrine additive : une clé absente
+// ou vide vaut « toutes » (null), jamais « aucune » — sinon une page mal écrite masquerait
+// jusqu'au Sankey lui-même. Une chaîne seule est acceptée : ces pages s'écrivent à la main.
+const idList = (v: unknown): string[] | null => {
+  const raw = (typeof v === 'string') ? [v] : (Array.isArray(v) ? v : null)
+  if (!raw) return null
+  const valid = raw.filter((s): s is string => typeof s === 'string' && s.trim() !== '')
+  const ids = [...new Set(valid)]
+  return ids.length > 0 ? ids : null
 }
 
 // Langue effective côté page publiée : ?lang= > window.sankey.language > préférence
@@ -430,6 +464,7 @@ export const getPublishOptions = (): PublishOptions => {
     unitary: bool(s.unitary, false),
     doc: bool(s.doc, false),
     doc_file: str(s.doc_file),
+    representation: bool(s.representation, false),
     navigation_help: bool(s.navigation_help, false),
     badge: bool(s.badge, true),
     app_info: bool(s.app_info, true),
@@ -453,6 +488,7 @@ export const getPublishOptions = (): PublishOptions => {
     view: view_value,
     view_label: view_label_value,
     view_labels: page_view_labels,
+    representations: idList(s.representations),
     export_json: bool(s.export_json, false),
     logo: str(s.logo),
     header: header_value,
@@ -490,6 +526,8 @@ export type ViewerSankeyOptions = {
   edit_button?: boolean
   unitary?: boolean
   doc?: boolean
+  // os#1356 — cf. SankeyGlobals : englobe `unitary` et `doc`.
+  representation?: boolean
   navigation_help?: boolean
   badge?: boolean
   logo?: string
@@ -525,6 +563,8 @@ export type ViewerSankeyOptions = {
   // sa#397 : restreint le sélecteur de vues aux vues portant ce LABEL DE VUE (sa#396).
   // sa#412 : une LISTE rend en plus le sélecteur de label visible (cf. SankeyGlobals).
   view_label?: string | string[]
+  // os#1361 — ids de représentations offertes au lecteur (cf. SankeyGlobals).
+  representations?: string[]
   // Configs per-diagramme (clé = nom dans diagrams_list)
   diagrams_config?: Record<string, Record<string, unknown>>
 }
@@ -540,7 +580,7 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
 
   const keys: Array<keyof ViewerSankeyOptions> = [
     'editable', 'topbar', 'footer', 'toolbar', 'position_mode_selector', 'fit_toolbar', 'fullscreen', 'filter_bar', 'embedded', 'recenter',
-    'edit_button', 'unitary', 'doc', 'navigation_help', 'badge',
+    'edit_button', 'unitary', 'doc', 'representation', 'navigation_help', 'badge',
     'logo', 'header', 'diagram', 'diagram_layout', 'diagram_layout_options',
     'diagrams_list',
     'data_type', 'data_type_intervals', 'value_filter',
@@ -548,7 +588,7 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
     'lock_zoom', 'tooltip_on_hover', 'language', 'header_i18n',
     'minimum_flux', 'position_mode', 'scale_adapted_reference',
     'data_tag_selection', 'view_tag_selection',
-    'view', 'view_label',
+    'view', 'view_label', 'representations',
   ]
   for (const k of keys) {
     if (options[k] !== undefined) {

@@ -107,9 +107,14 @@ export type MenuColorPickerProps = {
   textDisabled?: string
 }
 
-/** Un diagramme proposé dans la pop-up de présentation d'un élément (bouton +
- *  rendu). Fourni par OS+ via `Class_ApplicationData.presentation_diagrams_for`. */
-export type Type_PresentationDiagram = {
+/** Une ANALYSE D'UN ÉLÉMENT proposée dans sa pop-up (bouton + rendu) : couronne, barres,
+ *  sankey unitaire. Fournie par OS+ via `Class_ApplicationData.element_analyses_for`.
+ *
+ *  os#1356 — s'appelait « diagramme de présentation », ce qui la confondait avec la
+ *  REPRÉSENTATION DU DIAGRAMME ENTIER (Diagramme / Tableur / Doc / Unit., cf.
+ *  `DiagramRepresentationButtons`). Deux échelles, deux sélecteurs : celle-ci porte sur UN
+ *  nœud ou UN flux, l'autre sur tout le système. */
+export type Type_ElementAnalysis = {
   /** Id stable ('unit' | 'donut' | 'bar'). */
   id: string
   /** Libellé du bouton (déjà traduit). */
@@ -440,12 +445,12 @@ export class Class_ApplicationData {
     height: number
   ) => boolean = undefined
 
-  /** Hook injecté par OS+ : DIAGRAMMES proposés pour un élément dans la pop-up de
-   * présentation (colonne de boutons Unit. / Couronne / Barres). Chacun sait se
-   * dessiner dans un conteneur DOM. Absent hors OS+ (pas de colonne de diagrammes). */
-  public presentation_diagrams_for?: (
+  /** Hook injecté par OS+ : ANALYSES proposées pour UN élément dans sa pop-up
+   * (colonne de boutons Unit. / Couronne / Barres). Chacune sait se dessiner dans un
+   * conteneur DOM. Absent hors OS+ (pas de colonne d'analyses). */
+  public element_analyses_for?: (
     element: Class_NodeElement | Class_LinkElement
-  ) => Type_PresentationDiagram[] = undefined
+  ) => Type_ElementAnalysis[] = undefined
 
   protected _waiting_processes: { [id: string]: NodeJS.Timeout } = {}
   protected _waiting_time_for_processes: number = 50 // ms

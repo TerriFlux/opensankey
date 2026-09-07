@@ -12,6 +12,10 @@ export const resources_inspector = {
   en: {
     translation: {
       inspector: {
+        // os#1356 — la colonne d’analyses de la pop-up d’un élément (couronne, barres,
+        // unitaire). Elle porte sur UN nœud ou UN flux, là où
+        // `Spreadsheet.zone.diagram_representation` porte sur le diagramme entier.
+        element_analysis: 'Element analysis',
         view: 'View',
         back_to_selection: 'Back to selection',
         pin: 'Pin the panel (the drawing resizes to its left)',
@@ -296,6 +300,10 @@ export const resources_inspector = {
   fr: {
     translation: {
       inspector: {
+        // os#1356 — la colonne d’analyses de la pop-up d’un élément (couronne, barres,
+        // unitaire). Elle porte sur UN nœud ou UN flux, là où
+        // `Spreadsheet.zone.diagram_representation` porte sur le diagramme entier.
+        element_analysis: 'Analyse de l’élément',
         view: 'Vue',
         back_to_selection: 'Retour à la sélection',
         pin: 'Épingler le panneau (le dessin se recadre à gauche)',
@@ -572,6 +580,10 @@ export const resources_inspector = {
   es: {
     translation: {
       inspector: {
+        // os#1356 — la colonne d’analyses de la pop-up d’un élément (couronne, barres,
+        // unitaire). Elle porte sur UN nœud ou UN flux, là où
+        // `Spreadsheet.zone.diagram_representation` porte sur le diagramme entier.
+        element_analysis: 'Análisis del elemento',
         view: 'Vista',
         back_to_selection: 'Volver a la selección',
         pin: 'Fijar el panel (el dibujo se reajusta a su izquierda)',
@@ -848,6 +860,10 @@ export const resources_inspector = {
   de: {
     translation: {
       inspector: {
+        // os#1356 — la colonne d’analyses de la pop-up d’un élément (couronne, barres,
+        // unitaire). Elle porte sur UN nœud ou UN flux, là où
+        // `Spreadsheet.zone.diagram_representation` porte sur le diagramme entier.
+        element_analysis: 'Analyse des Elements',
         view: 'Ansicht',
         back_to_selection: 'Zurück zur Auswahl',
         pin: 'Panel anheften (die Zeichnung wird links davon neu angepasst)',
@@ -1124,6 +1140,10 @@ export const resources_inspector = {
   it: {
     translation: {
       inspector: {
+        // os#1356 — la colonne d’analyses de la pop-up d’un élément (couronne, barres,
+        // unitaire). Elle porte sur UN nœud ou UN flux, là où
+        // `Spreadsheet.zone.diagram_representation` porte sur le diagramme entier.
+        element_analysis: 'Analisi dell’elemento',
         view: 'Vista',
         back_to_selection: 'Torna alla selezione',
         pin: 'Fissa il pannello (il disegno si ridimensiona alla sua sinistra)',
@@ -1397,6 +1417,10 @@ export const resources_inspector = {
   'zh-CN': {
     translation: {
       inspector: {
+        // os#1356 — la colonne d’analyses de la pop-up d’un élément (couronne, barres,
+        // unitaire). Elle porte sur UN nœud ou UN flux, là où
+        // `Spreadsheet.zone.diagram_representation` porte sur le diagramme entier.
+        element_analysis: '要素分析',
         view: '视图',
         back_to_selection: '返回所选内容',
         pin: '固定面板（绘图区在其左侧重新调整大小）',
@@ -1676,6 +1700,10 @@ export const resources_inspector = {
   ja: {
     translation: {
       inspector: {
+        // os#1356 — la colonne d’analyses de la pop-up d’un élément (couronne, barres,
+        // unitaire). Elle porte sur UN nœud ou UN flux, là où
+        // `Spreadsheet.zone.diagram_representation` porte sur le diagramme entier.
+        element_analysis: '要素の分析',
         view: 'ビュー',
         back_to_selection: '選択に戻る',
         pin: 'パネルを固定（描画エリアがその左側でサイズ調整されます）',
