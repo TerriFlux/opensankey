@@ -217,7 +217,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
   private _arrow_stamp = -1
   private _arrow_stamp_source = -1
   /**
-   * os#1378 — ANCRE dont chaque pointe a été déduite, à côté de l'époque. L'époque seule ne
+   * os#1384 — ANCRE dont chaque pointe a été déduite, à côté de l'époque. L'époque seule ne
    * suffit pas : elle ne change qu'à `Class_Sankey.draw`, alors qu'À L'INTÉRIEUR d'une passe les
    * ancres bougent encore (un nœud placé après la cible, une migration de coordonnées après le
    * premier dessin). Une pointe posée avant que l'ancre soit connue portait le numéro de l'époque
@@ -486,7 +486,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // vider ferait redemander au nœud l'éventail entier de son côté, alors qu'il vient de le
     // calculer pour ces positions-là. Hors d'un `Class_Sankey.draw` (`keeps_arrow_caches` faux),
     // on vide comme avant — c'est ce que réclament le glisser-déposer et `refreshArrow`.
-    // os#1378 — ...À CONDITION qu'elle ait été déduite de l'ancre COURANTE. L'époque ne change
+    // os#1384 — ...À CONDITION qu'elle ait été déduite de l'ancre COURANTE. L'époque ne change
     // qu'entre deux passes ; l'ancre, elle, se fixe PENDANT la passe. Comparer les deux garde le
     // gain d'os#1374 (une fois les positions posées, l'ancre ne bouge plus et le cache tient)
     // sans laisser survivre une pointe calculée trop tôt.
@@ -503,7 +503,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   /**
-   * os#1378 — Ancre RÉELLEMENT consommée par l'éventail, côté cible puis côté source : ce sont
+   * os#1384 — Ancre RÉELLEMENT consommée par l'éventail, côté cible puis côté source : ce sont
    * les mêmes valeurs que `Class_NodeElement.drawLinksArrow` lit pour placer l'apex
    * (`bandTransversePos`), donc deux pointes d'ancres identiques ont la même géométrie.
    */
@@ -2949,7 +2949,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this._arrow_shape = _
     // os#1374 — estampiller la pointe : c'est ce qui la fait survivre à l'invalidation des
     // dessins de flux qui suivent, dans la même époque d'éventail.
-    // os#1378 — avec l'ancre dont elle vient : une ancre qui bouge ensuite la périme.
+    // os#1384 — avec l'ancre dont elle vient : une ancre qui bouge ensuite la périme.
     this._arrow_stamp = this.sankey.drawing_area.arrow_epoch
     this._arrow_stamp_anchor = this._targetAnchorKey()
     this.drawArrow()

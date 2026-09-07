@@ -6,22 +6,24 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-// #242 — Domaine « surcharges transitoires d'échelle » extrait de Class_DrawingArea : deux règles
-// recalculent l'échelle valeur→px à chaque frame, l'une pour qu'un flux de référence atteigne une
-// épaisseur cible (référence par view tag), l'autre pour qu'aucun nœud ne dépasse un plafond de
-// hauteur (#1231b).
+// #242 — Domaine « surcharges d'échelle » extrait de Class_DrawingArea : deux règles recalculent
+// l'échelle valeur→px à chaque frame, l'une pour qu'un flux de référence atteigne une épaisseur
+// cible (référence par view tag), l'autre pour qu'aucun nœud ne dépasse un plafond de hauteur
+// (#1231b).
 //
-// Les deux partagent le même protocole, et c'est lui qui justifie de les tenir ensemble : la valeur
-// naturelle du PORTEUR (data tag unitaire du flux, ou échelle de la DA) est capturée avant d'être
-// surchargée, puis restaurée à la frame suivante — mais UNIQUEMENT si le porteur vaut encore ce
-// qu'on y avait posé. S'il a changé entre-temps (mode « échelle adaptée », édition utilisateur), sa
-// valeur courante EST la nouvelle base : on ne l'écrase pas, la surcharge s'applique par-dessus.
-// Cette classe possède donc les deux « porteurs » (état transitoire d'une frame à l'autre).
+// os#1383 — Côté ZONE DE DESSIN, elles n'écrivent plus `_scale` (l'échelle absolue de
+// l'utilisateur) mais l'ÉCHELLE EFFECTIVE de la frame (`DrawingArea.setEffectiveScale`), remise à
+// la base en tête de chaque dessin. Il n'y a donc plus rien à « restaurer à la frame suivante »,
+// et plus de garde « sauf si une autre source a recalculé depuis » — cette garde voyait la
+// surcharge de l'AUTRE plafond, l'adoptait comme base, et l'échelle adaptée d'une vue finissait
+// dans `user_scale`. Le protocole porteur/restauration ne subsiste que pour l'échelle PROPRE d'un
+// tag (sa#283), qui n'a pas d'équivalent « effectif » et reste écrite en place.
 //
-// Les deux règles ont une sémantique de MAXIMUM : elles ne font rien si la contrainte est déjà
-// respectée (on ne grossit jamais le diagramme). Appelées depuis drawElements, dans cet ordre :
-// applyAdaptedScale → applyViewTagScaleReference → applyMaximumNodeScale, avant le positionnement
-// des nœuds (qui lit l'échelle courante).
+// Appelées depuis drawElements, dans cet ordre : applyAdaptedScale → applyViewTagScaleReference →
+// applyMaximumNodeScale, avant le positionnement des nœuds (qui lit l'échelle courante). Chacune
+// lit l'échelle effective laissée par la précédente (`da.scale`) et ne peut que la relever
+// (sémantique de MAXIMUM : on ne grossit jamais le diagramme) — sauf le plafond de hauteur en mode
+// « échelle adaptée » sans élément de référence, qui devient EXACT (cf. `applyMaximumNodeScale`).
 
 import type { Class_DrawingArea } from './DrawingArea'
 import type { Class_DataTag } from './Tag'
@@ -29,52 +31,29 @@ import { resolveScaleCarrierTag } from './ScaleResolution'
 
 export class Class_ScaleOverrides {
 
-  // Porteur surchargé par la référence d'épaisseur : `original` = valeur naturelle à restaurer,
-  // `applied` = valeur posée (sert à détecter qu'une autre source a recalculé depuis).
-  private _scale_ref_carrier?: { tag_id?: string, original: number, applied: number }
-  // Porteur surchargé par le plafond de hauteur de nœud, séparé du précédent (même logique).
-  private _max_node_scale_carrier?: { original: number, applied: number }
+  // sa#283 — Tag porteur surchargé par la référence d'épaisseur : `original` = échelle propre à
+  // restaurer à la frame suivante. Seul vestige du protocole porteur (cf. en-tête).
+  private _scale_ref_carrier?: { tag_id: string, original: number }
 
-  /**
-   * os#1383 — Défait la surcharge d'épaisseur de référence, sans condition. Séparé pour être
-   * appelable aussi bien en tête de `applyViewTagScaleReference` que depuis `invalidate`.
-   */
+  /** Défait la surcharge d'épaisseur posée sur un TAG à la frame précédente, sans condition. */
   private _restoreScaleRefCarrier(da: Class_DrawingArea) {
     const c = this._scale_ref_carrier
     if (!c) return
-    if (c.tag_id) {
-      // sa#283 — porteur généralisé : l'échelle PROPRE du tag (own_scale ≡ scale pour un tag
-      // d'unité ; échelle posée par ce module pour un tag ordinaire porteur).
-      const tag = this._findDataTag(da, c.tag_id)
-      if (tag) tag.own_scale = c.original
-    } else {
-      da._scale = c.original
-      da._scaleValueToPx.domain([0, c.original])
-    }
+    // sa#283 — porteur généralisé : l'échelle PROPRE du tag (own_scale ≡ scale pour un tag
+    // d'unité ; échelle posée par ce module pour un tag ordinaire porteur).
+    const tag = this._findDataTag(da, c.tag_id)
+    if (tag) tag.own_scale = c.original
     this._scale_ref_carrier = undefined
-  }
-
-  /** os#1383 — Idem pour le plafond de hauteur de nœud. */
-  private _restoreMaxNodeCarrier(da: Class_DrawingArea) {
-    const c = this._max_node_scale_carrier
-    if (!c) return
-    da._scale = c.original
-    da._scaleValueToPx.domain([0, c.original])
-    this._max_node_scale_carrier = undefined
   }
 
   /**
-   * os#1383 — Une échelle posée DÉLIBÉRÉMENT (setter public `scale`, échelle propre d'un tag
-   * réglée dans l'interface) devient la nouvelle base : on OUBLIE les surcharges sans les
-   * défaire, sinon la frame suivante restaurerait par-dessus le choix de l'utilisateur.
-   *
-   * C'est ce que l'ancienne garde « sauf si une autre source a recalculé depuis » cherchait à
-   * obtenir. Elle ne savait pas distinguer un choix delibere de la surcharge de l'autre plafond,
-   * et prenait donc la seconde pour le premier.
+   * os#1383 — Une échelle propre de tag posée DÉLIBÉRÉMENT dans l'interface devient la nouvelle
+   * base : on OUBLIE la surcharge sans la défaire, sinon la frame suivante restaurerait
+   * par-dessus le choix de l'utilisateur. Le setter `scale` de la zone de dessin l'appelle aussi,
+   * par symétrie — pour la zone de dessin elle-même il n'y a plus rien à oublier.
    */
   public invalidate() {
     this._scale_ref_carrier = undefined
-    this._max_node_scale_carrier = undefined
   }
 
   // sa#283 — cherche un tag par id dans TOUS les groupes de dataTags (porteur généralisé :
@@ -90,27 +69,14 @@ export class Class_ScaleOverrides {
   /**
    * Recalcule l'échelle pour que le flux désigné comme référence du view tag COURANT atteigne son
    * épaisseur cible (px). Touche uniquement l'échelle du porteur effectif du flux (son data tag
-   * unitaire s'il en a un, sinon l'échelle de la DA), avec prise en compte de son
+   * unitaire s'il en a un, sinon l'échelle effective de la DA), avec prise en compte de son
    * `local_link_scale`. Les autres flux et la légende suivent.
    *
    * No-op sans référence pour le view tag courant, et no-op si le flux est DÉJÀ plus fin que le
    * seuil (sémantique « maximum » : l'épaisseur cible est un plafond).
    */
   public applyViewTagScaleReference(da: Class_DrawingArea) {
-    // 1. Restaure le porteur surchargé à la frame précédente — INCONDITIONNELLEMENT.
-    //
-    // os#1383 — la restauration était gardée par « sauf si une autre source a recalculé
-    // depuis », et cette garde faisait exactement ce qu'elle voulait empêcher. Les deux
-    // plafonds de ce module s'appliquent l'un après l'autre sur la même échelle : celui-ci,
-    // puis `applyMaximumNodeScale`. Chacun voyait donc la surcharge de l'AUTRE et concluait
-    // qu'un tiers avait recalculé — donc renonçait à défaire la sienne et adoptait comme base
-    // une échelle qui la contenait déjà. À chaque bascule d'essence le cliquet montait d'un
-    // cran : mesuré sur CARTOFOB, +111 unités par aller-retour chêne/pin maritime, sans fin,
-    // et les nœuds grossissaient de 536 à 662 en trois tours.
-    //
-    // Un vrai changement d'échelle voulu (le setter public `scale`, une échelle propre de tag
-    // posée par l'UI) appelle desormais `invalidate()` : la base disparaît alors sans être
-    // restaurée, et la nouvelle valeur devient la base. La garde n'a donc plus lieu d'être.
+    // 1. Un tag surchargé à la frame précédente reprend son échelle propre.
     this._restoreScaleRefCarrier(da)
     // 2. Résout la référence du view tag courant.
     const vt_id = da.sankey.current_scale_reference_viewtag_id
@@ -126,9 +92,9 @@ export class Class_ScaleOverrides {
     const new_scale = v * 100 / (ref.thickness * factor)
     if (!(isFinite(new_scale) && new_scale > 0)) return
     // 3. Sémantique « maximum » : l'épaisseur cible est un SEUIL. On ne recale QUE si, à
-    // l'échelle naturelle, l'épaisseur du flux DÉPASSE ce seuil (sinon le flux est déjà
+    // l'échelle courante, l'épaisseur du flux DÉPASSE ce seuil (sinon le flux est déjà
     // plus fin que le seuil → on ne touche à rien). Augmenter l'échelle réduit l'épaisseur,
-    // donc « épaisseur naturelle > seuil » ⟺ « new_scale > échelle naturelle du porteur ».
+    // donc « épaisseur > seuil » ⟺ « new_scale > échelle courante du porteur ».
     // sa#283 — porteur GÉNÉRALISÉ, résolu par LA MÊME règle que le rendu
     // (Link.scaleValueToPx → ScaleResolution) : tag d'unité de la valeur du flux, ou
     // unique tag de dataTag sélectionné à échelle propre (le groupe le plus tardif de
@@ -137,16 +103,14 @@ export class Class_ScaleOverrides {
     // (ex. la céréale courante) — l'UI existante devient per-tranche sans nouveau code.
     const unit_tag = link.value?.unit_data_tag()
     const carrier_tag = resolveScaleCarrierTag(da.sankey, unit_tag)
-    const carrier_original = carrier_tag !== undefined ? (carrier_tag.own_scale as number) : da._scale
-    if (!(new_scale > carrier_original)) return
+    const current = carrier_tag !== undefined ? (carrier_tag.own_scale as number) : da.scale
+    if (!(new_scale > current)) return
     // 4. Applique sur le porteur effectif du flux (cf. Link.scaleValueToPx).
     if (carrier_tag !== undefined) {
-      this._scale_ref_carrier = { tag_id: carrier_tag.id, original: carrier_original, applied: new_scale }
+      this._scale_ref_carrier = { tag_id: carrier_tag.id, original: current }
       carrier_tag.own_scale = new_scale
     } else {
-      this._scale_ref_carrier = { original: da._scale, applied: new_scale }
-      da._scale = new_scale
-      da._scaleValueToPx.domain([0, new_scale])
+      da.setEffectiveScale(new_scale)
     }
   }
 
@@ -157,31 +121,43 @@ export class Class_ScaleOverrides {
    * y rentre exactement. Tout le diagramme suit la même échelle → aucun flux entrant/sortant ne
    * dépasse de son nœud, et les proportions relatives sont conservées.
    *
-   * No-op si aucun nœud ne dépasse. Le clamp par-nœud de `getShapeHeightToUse` devient alors un
+   * `exact` (os#1383) — mode « échelle adaptée » SANS élément de référence : le plafond devient
+   * l'adaptation elle-même. Le nœud le plus haut est amené À `maximum_node`, dans les deux sens.
+   * C'est ce que faisait CARTOFOB sans le dire : son fichier ne désigne aucun élément de
+   * référence, l'adaptation n'y calcule donc rien, et « le stock remplit l'écran à chaque région »
+   * venait de ce que le plafond mordait à chaque frame sur une base assez petite. Dès qu'une
+   * bascule laissait une base plus grande, il ne mordait plus (stock à 619 px au lieu de 1585) ;
+   * et une vue dont aucun nœud n'atteint le plafond (peuplier, 228 px) ne remplissait jamais.
+   *
+   * Sinon (mode absolu, ou adapté avec référence) : no-op si aucun nœud ne dépasse — on ne
+   * grossit jamais le diagramme. Le clamp par-nœud de `getShapeHeightToUse` devient alors un
    * no-op (natural == max_node) → pas de troncature.
    */
-  public applyMaximumNodeScale(da: Class_DrawingArea) {
-    // 1. Restaure l'échelle de base posée à la frame précédente — INCONDITIONNELLEMENT,
-    // pour la même raison que dans `applyViewTagScaleReference` (os#1383) : la garde
-    // « sauf si une autre source a recalculé » prenait la surcharge de l'AUTRE plafond pour
-    // un recalcul légitime, et faisait donc du plafond déjà appliqué la nouvelle base.
-    this._restoreMaxNodeCarrier(da)
+  public applyMaximumNodeScale(da: Class_DrawingArea, exact: boolean = false) {
     const max_node = da.maximum_node
     if (!max_node || !(max_node > 0)) return
-    // 2. Hauteur naturelle (non clampée) du nœud le plus haut, à l'échelle courante.
+    if (exact) {
+      // EN VALEURS, pas en pixels : la hauteur rendue est plancher-ée (hauteur minimale de nœud,
+      // `minimum_flux`), et un facteur pris sur un plancher n'amènerait jamais un petit nœud au
+      // plafond. px = valeur / échelle × 100 → l'échelle qui rend la plus grande valeur à
+      // `max_node` px vaut valeur × 100 / max_node.
+      const magnitude = da.nodePositioning.tallestNodeMagnitude()
+      if (!(magnitude > 0)) return
+      da.setEffectiveScale(magnitude * 100 / max_node)
+      return
+    }
+    // Hauteur naturelle (non clampée) du nœud le plus haut, à l'échelle courante.
     let tallest = 0
     da.sankey.visible_nodes_list.forEach(n => {
       const h = n.getNaturalShapeHeight()
       if (h > tallest) tallest = h
     })
     if (!(tallest > max_node)) return
-    // 3. scaleValueToPx ∝ 1/scale : multiplier l'échelle par tallest/max_node (> 1) réduit les
+    // scaleValueToPx ∝ 1/scale : multiplier l'échelle par tallest/max_node (> 1) réduit les
     // px/valeur → le plus haut nœud rend exactement à max_node.
-    const new_scale = da._scale * (tallest / max_node)
+    const new_scale = da.scale * (tallest / max_node)
     if (!(isFinite(new_scale) && new_scale > 0)) return
-    this._max_node_scale_carrier = { original: da._scale, applied: new_scale }
-    da._scale = new_scale
-    da._scaleValueToPx.domain([0, new_scale])
+    da.setEffectiveScale(new_scale)
   }
 
 }

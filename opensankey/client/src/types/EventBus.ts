@@ -63,6 +63,16 @@ export const MINIMAP_TOPIC = 'minimap'
  */
 export const LIBRARY_TOPIC = 'library'
 
+/**
+ * sa#508 — Topic « un import vient de réussir ». Notifié par le dialogue de
+ * persistance (opensankey-editor) une fois le diagramme chargé, le format
+ * d'entrée étant posé dans `Class_MenuConfig.last_import`. Abonné : la couche
+ * OS+ qui, après un classeur Excel chargé SANS licence, propose l'essai — le
+ * moment où l'offre payante a un sens, plutôt qu'un bouton permanent en bas
+ * d'écran. L'éditeur ne connaît pas les essais : il signale, il ne décide pas.
+ */
+export const IMPORT_TOPIC = 'import'
+
 export class Class_EventBus {
   private _listeners: Map<string, Set<() => void>> = new Map()
 
